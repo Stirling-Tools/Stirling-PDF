@@ -34,11 +34,12 @@ downloadUnavailable = "དངོས་པོ་འདི་ཕབ་ལེན་
 edit = "རྩོམ་སྒྲིག"
 editSecret = "གནས་གོང་འདི་རྩོམ་སྒྲིག"
 editYourNewFiles = "ཁྱེད་རང་གི་ཡིག་ཆ་གསར་པ་རྩོམ་སྒྲིག་བྱེད་དགོས།"
-encryptedFilesBlocked_one = "ཡིག་ཆ་འདི་གསང་ཨང་བདམས་པ་ཡིན། དང་པོ་གསང་ཨང་ཕྱིར་འདོར་དགོས།"
-encryptedFilesBlocked_other = "{{count}} ཡིག་ཆ་གསང་ཨང་བདམས་པ་ཡིན། དང་པོ་དེ་ཚོར་གསང་ཨང་ཕྱིར་འདོར་དགོས།"
 exportAndContinue = "ཕྱིར་གཏོང་དང་མུ་མཐུད་པ།"
 false = "ནོར་འཁྲུལ"
+fileChangedOnDisk = "Changed on disk since you edited it"
+fileDiskUnavailable = "Cannot reach the file on disk"
 fileNotSavedToDisk = "སྣོད་སྡེར་ནང་ཉར་མ་བྱས།"
+fileOriginalDeleted = "Original deleted - save to keep a copy"
 fileSavedToDisk = "ཡིག་ཆ་དེ་སྣོད་སྡེར་ནང་ཉར་ཟིན།"
 fileSelected = "བདམས་པ།: {{filename}}"
 filesSelected = "{{count}} ཡིག་ཆ་བདམས་པ།"
@@ -559,6 +560,47 @@ close = "གཏན་པ"
 error = "ནོར་འཁྲུལ"
 expand = "རྒྱ་སྐྱེད་གཏོང"
 
+[admin.formDetection]
+confirmUninstall = "Click to confirm"
+description = "Detects text fields, checkboxes and signature areas in a PDF and turns them into fillable form fields. Detection runs on this server with the model you install below."
+downloadingNote = "{{percent}}% of {{size}}"
+enableFeature = "Enable feature"
+engineUnavailable = "This build does not include the detection engine, so the tool stays unavailable even with a model installed."
+errorTitle = "Something went wrong"
+install = "Install"
+installFailed = "Install failed"
+licenseLabel = "Licence"
+modelsLabel = "Detection model"
+notAvailable = "No download URL/checksum configured yet, so this model cannot be installed."
+notWritable = "The model directory is not writable; check the configs volume mount."
+saveFailed = "Failed to save setting"
+sizeUnknown = "size unknown"
+switch = "Use this model"
+title = "AI Form Detection"
+uninstall = "Uninstall"
+uninstallFailed = "Uninstall failed"
+verifyingNote = "Verifying SHA-256 checksum..."
+
+[admin.formDetection.airgap]
+intro = "No internet on the server? Download the model elsewhere, verify it, and copy it into the model directory. It is picked up on restart."
+noSha = "(checksum not set)"
+show = "Offline / air-gapped install"
+step1 = "1. Download on a machine with internet:"
+step2 = "2. Check the SHA-256 checksum matches:"
+step3 = "3. Copy it into the model directory on this server:"
+step4 = "4. Set formDetection.activeModelId to the model's id in settings.yml and restart. <configs> is the configs volume (e.g. /configs in Docker). The air-gapped image ships with a model already installed."
+
+[admin.formDetection.badge]
+active = "Active"
+installed = "Installed"
+
+[admin.formDetection.state]
+downloading = "Downloading..."
+failed = "Failed"
+notInstalled = "No model installed"
+ready = "Ready"
+verifying = "Verifying..."
+
 [admin.settings]
 discard = "འདོར་བ"
 error = "སྒྲིག་འགོད་ཉར་མ་ཐུབ།"
@@ -688,6 +730,9 @@ manualLinks = "ལག་ཐོག་ཕབ་ལེན: འབྲེལ་མཐ
 noLanguages = "སྒྲིག་བཀོད་ཟིན་པའི་སྣོད་འཛིན་ནང་ tessdata སྐད་ཡིག་མ་རྙེད།"
 permissionNotice = "tessdata འགྲུལ་ལམ་འུར་བྱེད་མི་ཐུབ། ཕབ་ལེན་ཚུལ་དེ་བརྡ་འཚོལ་ཆས་ནས་ཁ་ཕྱེའོ། .traineddata ཡིག་ཆ་དེ་རང་ལས་ tessdata སྣོད་འཛིན་ནང་ཉར་ཚགས་བྱོས།"
 
+[admin.settings.ai]
+description = "Connect Stirling to the Python AI engine, choose its models, and set the guardrails it runs under."
+
 [admin.settings.ai.documents]
 description = "ཡིག་ཆའི་ཐོག་དྲི་བར་ལན་འདེབས་པར་སྤྱོད་པའི embedding model དང retrieval སྒྲིག་འགོད་སྒྲིག་སྦྱོར་བྱོས། ཉར་ཚགས་བྱས་རྗེས AI engine ལ་སྤྱོད་འཐུས།"
 title = "ཡིག་ཆ་དང RAG"
@@ -727,6 +772,7 @@ description = "འཚོལ་ཞིབ་རེར་ལེན་པའི་�
 label = "Top K"
 
 [admin.settings.ai.general]
+connection = "Connection"
 description = "Stirling དེ Python AI engine དང་མཐུད་ནས AI ནུས་པ་གང་དག་སྟོན་དགོས་འདེམས། བསྒྱུར་བ་རྣམས restart སྐབས་ནུས་པ་འཐོན།"
 title = "AI Engine"
 
@@ -818,6 +864,7 @@ openai = "OpenAI API key"
 setPlaceholder = "ཉར་ཚགས་བྱས་ཟིན - ད་ལྟའི key ཉར་དགོས་ན་སྟོང་པར་བཞག"
 
 [admin.settings.ai.models.baseUrl]
+contextWindow = "Use a context window of at least 16,384 tokens. Smaller windows silently drop part of the prompt. Ollama defaults to 4,096 - raise OLLAMA_CONTEXT_LENGTH."
 description = "OpenAI-compatible / Ollama endpoint གི Base URL, དཔེར་ན http://ollama:11434/v1."
 label = "Provider base URL"
 warning = "base URL དེ་ཡིད་ཆེས་རུང་བའི་ནང་ཁུལ endpoint ལ་ངེས་པར་དུ་སྟོན་དགོས། engine གིས་དེར server-side རེ་ཞུ་བྱེད་པས། ཡིད་མི་ཆེས་པའི་ཐང་ནི SSRF-sensitive ཡིན།"
@@ -852,6 +899,7 @@ clickToUpgrade = "མནན་ནས་པར་འཆར་ཞིབ་ལྟ"
 
 [admin.settings.connections]
 connect = "འབྲེལ་བ"
+connectedServicesDescription = "Services this server is wired up to. Sign-in providers live under Sign-in & security."
 description = "ཕྱི་ཕྱོགས་ཀྱི་བདེན་དཔང་མཁོ་སྤྲོད་བྱེད་མཁན་OAuth2དང་SAMLལ་སྒྲིག་བཀོད་བྱེད།"
 disconnect = "མཐུད་མཚམས་ཆད་པ།"
 disconnected = "མཁོ་སྤྲོད་བྱེད་མཁན་གྱིས་འབྲེལ་བ་ཆད་པ་ལེགས་འགྲུབ་བྱུང་བ།"
@@ -974,6 +1022,8 @@ configuration = "གཞི་གྲངས་མཛོད་སྒྲིག་བ
 confirmCodeLabel = "མུ་མཐུད་བྱེད་པར་གཏན་འཁེལ་ཨང་གྲངས་ནང་འཇུག"
 confirmImport = "ནང་འཇུག་གཏན་འཁེལ"
 confirmImportTitle = "གཞི་གྲངས་མཛོད་ནང་འཇུག་གཏན་འཁེལ།"
+connection = "Connection"
+connectionDescription = "Point Stirling at an external database instead of the embedded one."
 createBackup = "གྲབས་ཉར་བཟོ"
 created = "བཟོས་པ།"
 delete = "སུབ།"
@@ -1114,6 +1164,7 @@ placeholder = "/data/inbox"
 remove = "folder root འདོར"
 
 [admin.settings.general]
+branding = "Branding & appearance"
 description = "ཚོང་རྟགས་བཟོ་སྟངས་དང་སྔོན་སྒྲིག་སྤྱོད་ཚུལ་ཚུད་པའི་མ་ལག་ཆ་ཚང་གི་བཀོལ་སྤྱོད་སྒྲིག་སྟངས་སྒྲིག་བཀོད་བྱེད།"
 system = "མ་ལག"
 title = "མ་ལག་སྒྲིག་བཀོད།"
@@ -1217,14 +1268,6 @@ description = "སྤྱོད་མཁན་གྱིས་འདེམས་�
 label = "སྐད་ཆ།"
 placeholder = "སྐད་ཡིག་འདེམས་པ།"
 
-[admin.settings.general.logoStyle]
-classic = "སྔར་སྲོལ་གྱི་ཆ་ནས།"
-classicAlt = "སྔར་སྲོལ་གྱི་རྟགས་མཚན།"
-description = "སར་བར་འདིའི་སྟེང་དུ་སྤྱོད་མཁན་ཚང་མའི་ཆེད་དུ་སྔོན་སྒྲིག་མཚོན་རྟགས་བཟོ་སྟངས་སྒྲིག་དགོས། བེད་སྤྱོད་པ་ཚོས་ཁོང་ཚོའི་སྒེར་གྱི་དགའ་ཕྱོགས་ནང་ལ་སྒྲིག་བཀོད་འདི་ལས་བརྒལ་ཐུབ།"
-label = "རྟགས་མཚན་བཟོ་ལྟ།"
-modern = "དེང་རབས"
-modernAlt = "དེང་རབས་ཀྱི་མཚོན་རྟགས།"
-
 [admin.settings.general.showUpdate]
 description = "ཐོན་རིམ་གསར་པ་ཐོབ་པའི་སྐབས་ལ་བརྡ་ཐོ་བཀྲམ་སྟོན་བྱེད།"
 label = "བརྡ་ཐོ་གསར་བཅོས་བྱེད་པ།"
@@ -1235,6 +1278,7 @@ label = "འཛིན་སྐྱོང་པ་ཁོ་ནར་གསར་�
 
 [admin.settings.legal]
 description = "ཁྲིམས་ཡིག་གི་ཡིག་ཆ་དང་སྲིད་ཇུས་ཀྱི་འབྲེལ་མཐུད་སྒྲིག་བཀོད་བྱེད་པ།"
+documentsDescription = "Links users are shown for terms, privacy, cookies and the impressum."
 title = "ཁྲིམས་ལུགས་ཡིག་ཆ།"
 
 [admin.settings.legal.accessibilityStatement]
@@ -1488,8 +1532,7 @@ label = "རྩིས་ཞིབ་དྲན་ཐོ།"
 showDetails = "ཞིབ་བཤེར་གནས་རིམ་གྱི་ཞིབ་ཕྲ་མངོན་པ།"
 
 [admin.settings.security.audit.advancedOptions]
-description = "འོག་གི་འདེམས་ཚན་ཚུ་གིས་ལས་སྦྱོར་དུས་ཚོད་དང་དྲན་ཚད་བེད་སྤྱོད་འཕར། དགོས་ངེས་ཡོད་ཚེ་ཙམ་སྤྱོད།"
-title = "མཐོ་རིམ་འདེམས་ཚན།"
+cost = "Now increasing processing time and memory usage on every operation."
 
 [admin.settings.security.audit.captureFileHash]
 description = "ཡར་འཇོག་པའི PDF ཡིག་ཆའི SHA-256 hash ཕྱིར་འདོན་བྱས་ནས ཆེད་དུས་ལྟ་བ། ཞིབ་བཤེར་གནས་རིམ་ལས་རང་བཞིན།"
@@ -1833,6 +1876,7 @@ comment = "བསམ་བཀོད"
 comments = "བསམ་བཀོད"
 contents = "ཡིག་གཞི"
 delete = "སུབ"
+deleted = "Annotation deleted"
 drawing = "རི་མོ"
 editSelectDescription = "དེའི་ཚོས་གཞི་དང་། དྭངས་ཚད། ཡིག་འབྲུ་ཡང་ན་ཚད་གཞི་རྩོམ་སྒྲིག་བྱེད་པར་ད་ཡོད་ཀྱི་མཆན་འགྲེལ་ལ་སྣུན་དགོས།"
 editText = "ཡིག་ཚགས་སྒྲོམ་བཙུགས།"
@@ -1874,6 +1918,7 @@ textAlignment = "ཡིག་ཚགས།"
 textMarkup = "ཡིག་གཟུགས།"
 title = "མཆན་འགྲེམ་པ།"
 underline = "འོག་ཏུ།"
+undoDelete = "Undo"
 width = "ཞེང་ཚད"
 
 [app]
@@ -2059,6 +2104,50 @@ bullet1 = "མིང་བྱང་དང་མགོ་བརྗོད་ལྟ
 bullet2 = "བརྟག་དཔྱད་བྱས་པའི་མིང་ནས་ཡིག་ཆའི་མིང་གཙང་མ་ཞིག་བཟོས།"
 bullet3 = "གལ་ཏེ་འོས་འཚམ་གྱི་མིང་མ་རྙེད་ན་མིང་ངོ་མ་དེ་ཉར་དགོས།"
 title = "མིང་འདོགས་བཟང་པོ།"
+
+[autoFormDetection]
+loading = "Detecting form fields..."
+submit = "Detect form fields"
+
+[autoFormDetection.detects]
+checkboxes = "Checkboxes"
+label = "Finds and makes fillable"
+signatures = "Signatures"
+text = "Text fields"
+
+[autoFormDetection.error]
+failed = "An error occurred while detecting form fields."
+
+[autoFormDetection.progress]
+detecting = "Analyzing your document..."
+
+[autoFormDetection.results]
+title = "Review fillable PDF"
+
+[autoFormDetection.sensitivity]
+balanced = "Balanced"
+balancedHint = "Recommended for most forms."
+high = "Thorough"
+highHint = "Finds more fields, but may add some where none belong."
+label = "Detection sensitivity"
+low = "Strict"
+lowHint = "Only very confident matches - fewer fields, fewer mistakes."
+
+[autoFormDetection.settings]
+title = "Settings"
+
+[autoFormDetection.summary]
+checkboxes = "Checkboxes"
+noneBody = "The document may not contain form-like areas. Undo, switch sensitivity to \"Thorough\", and run again to look harder."
+noneTitle = "No form fields found"
+pages_one = "Across {{count}} page."
+pages_other = "Across {{count}} pages."
+radioButtons = "Radio buttons"
+signatures = "Signatures"
+stepTitle = "Detection results"
+textFields = "Text fields"
+title_one = "{{count}} fillable field added"
+title_other = "{{count}} fillable fields added"
 
 [automate]
 copyToSaved = "སྐྱོབ་པའི་ངོ་བཤུས།"
@@ -2369,6 +2458,35 @@ bullet3 = "བསྣོལ་བའི་སྒལ་ཚིགས་ལ་བས
 bullet4 = "ཐུང་བའི་པར་འཕྲུལ་གྱི་ཆེད་དུ། 'མཐའ་མཚམས་ཐུང་བའི་སྟེང་དུ་ 'flip' གདམ་ག།"
 text = "དེབ་ཆུང་ཡག་ཤོས་ཀྱི་ཆེད་དུ་གོམ་པ་འདི་དག་ལ་བསྟུན་དགོས།"
 title = "དཔར་ལེན་དང་འདུ་འཛོམས།"
+
+[brickGame]
+balls = "Balls"
+best = "Best"
+close = "Close game"
+effectTimer = "{{label}} {{seconds}}s"
+hint = "Move with the pointer or the arrow keys. Click to capture the pointer, Esc to get back to work."
+hintPointerLocked = "Pointer captured. Esc releases it, then Esc again to get back to work."
+score = "Score"
+title = "Hidden game"
+
+[brickGame.effect]
+fast = "Fast"
+narrow = "Narrow"
+reversed = "Reversed"
+slow = "Slow"
+wide = "Wide"
+
+[brickGame.lost]
+detail = "Click or press Space to try again"
+headline = "Out of balls"
+
+[brickGame.ready]
+detail = "Click or press Space to serve"
+headline = "Ready"
+
+[brickGame.won]
+detail = "Click or press Space to play again"
+headline = "All clear"
 
 [bulkSelection]
 syntaxError = "ཚིག་སྦྱོར་གྱི་གནད་དོན་ཡོད། རོགས་རམ་ཆེད་དུ་ཤོག་ངོས་འདེམས་སྒྲུག་བྱེད་པའི་བསླབ་བྱ་ལ་གཟིགས།"
@@ -3001,6 +3119,363 @@ summary_one = "ལག་ཆ་ 1 སྒྲུབ་ཟིན"
 summary_other = "ལག་ཆ་ {{count}} སྒྲུབ་ཟིན"
 unknownTool = "མི་ཤེས་པའི་ལག་ཆ་"
 
+[classification.families]
+correspondence = "Correspondence"
+education = "Education"
+engineering = "Engineering"
+finance = "Financial"
+forms = "Forms"
+government = "Government"
+health = "Medical"
+hr = "HR"
+legal = "Legal"
+operations = "Operations"
+projects = "Projects"
+property = "Property"
+reports = "Reports"
+sales = "Marketing"
+travel = "Travel"
+
+[classification.labels]
+academic-record = "Academic record"
+action-plan = "Action plan"
+addendum = "Addendum"
+advertisement = "Advertisement"
+affidavit = "Affidavit"
+agenda = "Agenda"
+amendment = "Amendment"
+analytics-report = "Analytics report"
+announcement = "Announcement"
+annual-report = "Annual report"
+api-documentation = "API documentation"
+application-form = "Application form"
+appraisal-report = "Appraisal report"
+architecture-document = "Architecture document"
+articles-of-incorporation = "Articles of incorporation"
+assignment-brief = "Assignment brief"
+audit-report = "Audit report"
+balance-sheet = "Balance sheet"
+bank-statement = "Bank statement"
+benefits-summary = "Benefits summary"
+bill-of-lading = "Bill of lading"
+bill-of-materials = "Bill of materials"
+blueprint = "Blueprint"
+board-report = "Board report"
+board-resolution = "Board resolution"
+booking-confirmation = "Booking confirmation"
+brochure = "Brochure"
+budget = "Budget"
+business-plan = "Business plan"
+business-proposal = "Business proposal"
+bylaws = "Bylaws"
+campaign-brief = "Campaign brief"
+case-study = "Case study"
+cash-flow-statement = "Cash flow statement"
+catalog = "Catalog"
+cease-and-desist = "Cease and desist"
+certificate = "Certificate"
+certificate-of-completion = "Certificate of completion"
+change-log = "Change log"
+checklist = "Checklist"
+claim-form = "Claim form"
+closing-statement = "Closing statement"
+complaint-letter = "Complaint letter"
+compliance-document = "Compliance document"
+confirmation-letter = "Confirmation letter"
+consent-form = "Consent form"
+contract = "Contract"
+course-syllabus = "Course syllabus"
+court-filing = "Court filing"
+cover-letter = "Cover letter"
+credit-note = "Credit note"
+customs-declaration = "Customs declaration"
+customs-form = "Customs form"
+cv = "CV"
+datasheet = "Datasheet"
+debit-note = "Debit note"
+deed = "Deed"
+delivery-note = "Delivery note"
+demand-letter = "Demand letter"
+design-document = "Design document"
+diploma = "Diploma"
+discharge-summary = "Discharge summary"
+dissertation = "Dissertation"
+donation-receipt = "Donation receipt"
+dunning-letter = "Dunning letter"
+email-thread = "Email thread"
+employee-handbook = "Employee handbook"
+employment-contract = "Employment contract"
+estimate = "Estimate"
+event-agenda = "Event agenda"
+event-program = "Event program"
+eviction-notice = "Eviction notice"
+exam-paper = "Exam paper"
+expense-report = "Expense report"
+expense-summary = "Expense summary"
+explanation-of-benefits = "Explanation of benefits"
+fact-sheet = "Fact sheet"
+faq-document = "FAQ document"
+feasibility-study = "Feasibility study"
+feedback-form = "Feedback form"
+financial-forecast = "Financial forecast"
+financial-statement = "Financial statement"
+floor-plan = "Floor plan"
+flyer = "Flyer"
+form = "Form"
+franchise-agreement = "Franchise agreement"
+freight-document = "Freight document"
+gift-certificate = "Gift certificate"
+glossary = "Glossary"
+government-notice = "Government notice"
+grade-report = "Grade report"
+grant-agreement = "Grant agreement"
+grant-application = "Grant application"
+hoa-document = "HOA document"
+home-inspection-report = "Home inspection report"
+hr-memo = "HR memo"
+hr-policy = "HR policy"
+immigration-document = "Immigration document"
+immunization-record = "Immunization record"
+incident-report = "Incident report"
+income-statement = "Income statement"
+index = "Index"
+inspection-report = "Inspection report"
+insurance-certificate = "Insurance certificate"
+insurance-claim = "Insurance claim"
+insurance-policy = "Insurance policy"
+intake-form = "Intake form"
+inventory-list = "Inventory list"
+investment-summary = "Investment summary"
+invitation = "Invitation"
+invoice = "Invoice"
+itinerary = "Itinerary"
+job-application = "Job application"
+job-description = "Job description"
+lab-report = "Lab report"
+lease-agreement = "Lease agreement"
+leave-request = "Leave request"
+legal-brief = "Legal brief"
+legal-filing = "Legal filing"
+legal-notice = "Legal notice"
+legal-opinion = "Legal opinion"
+lesson-plan = "Lesson plan"
+letter = "Letter"
+letter-of-intent = "Letter of intent"
+license = "License"
+license-agreement = "License agreement"
+loan-agreement = "Loan agreement"
+loan-document = "Loan document"
+maintenance-log = "Maintenance log"
+manual = "Manual"
+market-research = "Market research"
+marketing-plan = "Marketing plan"
+media-kit = "Media kit"
+medical-invoice = "Medical invoice"
+medical-report = "Medical report"
+meeting-agenda = "Meeting agenda"
+meeting-minutes = "Meeting minutes"
+meeting-notes = "Meeting notes"
+membership-document = "Membership document"
+memo = "Memo"
+memorandum-of-understanding = "Memorandum of understanding"
+mortgage-document = "Mortgage document"
+nda = "NDA"
+newsletter = "Newsletter"
+non-compete-agreement = "Non-compete agreement"
+notice = "Notice"
+offer-letter = "Offer letter"
+onboarding-document = "Onboarding document"
+order-confirmation = "Order confirmation"
+order-form = "Order form"
+organization-chart = "Organization chart"
+packing-slip = "Packing slip"
+partnership-agreement = "Partnership agreement"
+patent = "Patent"
+pathology-report = "Pathology report"
+payment-reminder = "Payment reminder"
+payroll-document = "Payroll document"
+payslip = "Payslip"
+performance-review = "Performance review"
+permit = "Permit"
+petition = "Petition"
+pitch-deck = "Pitch deck"
+power-of-attorney = "Power of attorney"
+prescription = "Prescription"
+presentation = "Presentation"
+press-release = "Press release"
+price-list = "Price list"
+pricing-sheet = "Pricing sheet"
+privacy-policy = "Privacy policy"
+product-sheet = "Product sheet"
+proforma-invoice = "Proforma invoice"
+progress-report = "Progress report"
+project-charter = "Project charter"
+project-plan = "Project plan"
+promotional-material = "Promotional material"
+property-listing = "Property listing"
+proposal = "Proposal"
+public-notice = "Public notice"
+purchase-agreement = "Purchase agreement"
+purchase-order = "Purchase order"
+quality-report = "Quality report"
+quarterly-report = "Quarterly report"
+questionnaire = "Questionnaire"
+quick-start-guide = "Quick start guide"
+quote = "Quote"
+radiology-report = "Radiology report"
+receipt = "Receipt"
+recommendation-letter = "Recommendation letter"
+reference-letter = "Reference letter"
+referral-letter = "Referral letter"
+registration-confirmation = "Registration confirmation"
+registration-form = "Registration form"
+regulatory-filing = "Regulatory filing"
+release-notes = "Release notes"
+remittance-advice = "Remittance advice"
+rental-agreement = "Rental agreement"
+report = "Report"
+request-for-proposal = "Request for proposal"
+request-for-quotation = "Request for quotation"
+requirements-document = "Requirements document"
+research-abstract = "Research abstract"
+research-paper = "Research paper"
+reservation = "Reservation"
+resignation-letter = "Resignation letter"
+resume = "Resume"
+retrospective = "Retrospective"
+return-authorization = "Return authorization"
+risk-assessment = "Risk assessment"
+roadmap = "Roadmap"
+safety-data-sheet = "Safety data sheet"
+safety-procedure = "Safety procedure"
+sales-proposal = "Sales proposal"
+sales-report = "Sales report"
+schematic = "Schematic"
+scope-of-work = "Scope of work"
+service-agreement = "Service agreement"
+service-report = "Service report"
+settlement-agreement = "Settlement agreement"
+shareholder-agreement = "Shareholder agreement"
+shipping-confirmation = "Shipping confirmation"
+specification = "Specification"
+sponsorship-agreement = "Sponsorship agreement"
+standard-operating-procedure = "Standard operating procedure"
+statement-of-account = "Statement of account"
+statement-of-work = "Statement of work"
+status-report = "Status report"
+stock-report = "Stock report"
+study-guide = "Study guide"
+subpoena = "Subpoena"
+subscription-confirmation = "Subscription confirmation"
+supply-order = "Supply order"
+survey-form = "Survey form"
+survey-results = "Survey results"
+sustainability-report = "Sustainability report"
+table-of-contents = "Table of contents"
+tax-form = "Tax form"
+tax-return = "Tax return"
+tax-statement = "Tax statement"
+technical-drawing = "Technical drawing"
+technical-specification = "Technical specification"
+tenancy-agreement = "Tenancy agreement"
+tender-document = "Tender document"
+termination-letter = "Termination letter"
+terms-and-conditions = "Terms and conditions"
+terms-of-service = "Terms of service"
+test-plan = "Test plan"
+test-report = "Test report"
+thesis = "Thesis"
+ticket = "Ticket"
+timeline = "Timeline"
+timesheet = "Timesheet"
+title-document = "Title document"
+training-material = "Training material"
+transcript = "Transcript"
+travel-itinerary = "Travel itinerary"
+trust-document = "Trust document"
+user-guide = "User guide"
+utility-bill = "Utility bill"
+vendor-agreement = "Vendor agreement"
+visa-document = "Visa document"
+waiver = "Waiver"
+warehouse-receipt = "Warehouse receipt"
+warranty-document = "Warranty document"
+waybill = "Waybill"
+white-paper = "White paper"
+will = "Will"
+work-instruction = "Work instruction"
+work-order = "Work order"
+
+[classificationDemo]
+folderName = "Downloads"
+
+[classificationDemo.buttons]
+done = "Done"
+notNow = "Not now"
+skip = "Skip"
+stop = "Stop"
+
+[classificationDemo.chart]
+centre = "documents"
+hint = "Select a slice to see the document types behind it."
+label = "Documents by type: {{summary}}"
+noTypes = "These documents did not match a known type."
+
+[classificationDemo.defaultApp]
+body = "Make Stirling your default PDF app. Every PDF you open, from email, your browser, or your desktop, lands here, ready to read or edit. You can change this any time in Settings."
+cta = "Make Stirling my default"
+title = "Open every PDF in Stirling"
+
+[classificationDemo.followUp]
+background = "This runs in the background. The ring on the left shows progress."
+batchCta = "Process another {{count}}"
+free = "They are all covered by your remaining free allowance."
+partial = "{{count}} of them are covered by your remaining free allowance."
+restCta = "Process the rest"
+title = "Want to keep going? You have {{count}} more PDFs in your Downloads folder."
+
+[classificationDemo.groups]
+other = "Other"
+
+[classificationDemo.offer]
+body = "Classify and organise the {{count}} most recent PDFs in your Downloads folder by type."
+cta = "Process my Downloads folder"
+privacy = "Everything stays on this device and you can stop anytime."
+title = "See what Stirling can do with a whole folder"
+
+[classificationDemo.phase]
+finishing = "Finishing up..."
+gathering = "Gathering PDF files..."
+processing = "Processing file {{done}}/{{total}}..."
+reading = "Reading Downloads folder..."
+
+[classificationDemo.processing]
+counts = "of {{total}} PDFs processed"
+
+[classificationDemo.results]
+documentCount_one = "{{count}} PDF"
+documentCount_other = "{{count}} PDFs"
+failedBody = "Stirling could not read your Downloads folder. Nothing on your computer was changed."
+failedTitle = "That did not finish"
+heading = "Your Downloads, sorted"
+summary = "Stirling read {{documents}} and sorted them into {{types}}."
+typeCount_one = "{{count}} type"
+typeCount_other = "{{count}} types"
+
+[classificationDemo.ring]
+done = "{{folder}} classified"
+doneDetail = "{{count}} PDFs sorted by type"
+progress = "{{done}} of {{total}} PDFs ({{percent}}%)"
+running = "Classifying {{folder}}"
+
+[classificationDemo.status]
+checked = "Checked {{checked}} of {{total}} files..."
+checking = "Checking each file's name and date..."
+connecting = "Connecting your Downloads folder..."
+library = "Adding it to your file library..."
+listing = "Listing the files in Downloads..."
+picking = "Looking for the {{count}} most recent PDFs..."
+
 [cloudBadge]
 tooltip = "བཀོལ་སྤྱོད་འདིས་ཁྱེད་ཀྱི cloud credits སྤྱོད།"
 
@@ -3016,6 +3491,7 @@ title = "ཁ་དོག་འདེམས།"
 actions = "Actions"
 back = "རྒྱབ་ངོས"
 cancel = "འདོར་བ"
+clearFilters = "Clear filters"
 close = "གཏན་པ"
 codeSample = "Code sample"
 collapse = "རྡིབ་པ"
@@ -3027,6 +3503,7 @@ done = "བགྱིས་པ"
 enterValue = "Enter value"
 error = "ནོར་འཁྲུལ"
 expand = "རྒྱ་སྐྱེད་གཏོང"
+filterEmpty = "Nothing to filter on"
 loading = "ཁུར་པོ།"
 next = "རྗེས་མ"
 open = "Open"
@@ -3036,6 +3513,7 @@ refresh = "གསར་སྐྲུན་བྱེད་པ།"
 remaining = "ལྷག་མ"
 retry = "ངལ་གསོ་ཡང་བསྐྱར་བྱེད་པ།"
 save = "སྐྱོབ་པ"
+search = "Search"
 stepOf = "Step {{current}} of {{total}}"
 
 [compare]
@@ -3227,7 +3705,9 @@ tags = "མཆིལ་མ་ཆུང་ཆུང་དང་ཆུང་ཆུ
 
 [config]
 plan = "འཆར་གཞི"
+planDescription = "Your plan, credits and spend limit, and the invoices behind them."
 team = "Team"
+teamDescription = "Who shares this workspace, and invitations still waiting on an answer."
 
 [config.account.overview]
 confirmDelete = "ངའི་རྩིས་ཁྲོད་སུབ"
@@ -3319,7 +3799,6 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
-title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -3350,6 +3829,42 @@ basic = "གཞི་རྩའི་སྒྲིག་བཀོད།"
 integration = "མཉམ་སྡེབ་སྒྲིག་བཀོད།"
 security = "བདེ་འཇགས་སྒྲིག་བཀོད།"
 system = "མ་ལག་སྒྲིག་བཀོད།"
+
+[connect]
+loading = "Checking this request."
+redirecting = "Returning you to your server."
+step = "Step {{current}} of {{total}}"
+
+[connect.confirm]
+acknowledge = "I recognise this address and want to connect it to my team"
+approve = "Connect server"
+cannotDecide = "Only a team owner can approve or decline this connection. Use a different account or dismiss this prompt to continue using Stirling."
+deny = "Decline"
+dismiss = "Dismiss"
+lead = "A Stirling server is asking to connect to your team. Check the address below is yours before you approve."
+originLabel = "Address"
+signedInAs = "Signed in as"
+switchAccount = "Use a different account"
+title = "Connect this server?"
+unknownAccount = "an unknown account"
+
+[connect.confirm.insecure]
+body = "This address does not use HTTPS, so your sign-in will be sent over an unencrypted connection. Only approve it on a network you trust."
+label = "Not an encrypted address"
+
+[connect.declined]
+body = "Nothing was connected. You can close this page."
+title = "Request declined"
+
+[connect.error]
+failed = "That did not go through. Only a team owner can connect a server."
+
+[connect.meta]
+title = "Connect a server"
+
+[connect.notFound]
+body = "This connection request is not valid. It may have expired, or already been used. Start another one from your server."
+title = "Request not valid"
 
 [convert]
 autoRotate = "རླངས་འཁོར་འཁོར་སྐྱོད་བྱེད་པ།"
@@ -3494,6 +4009,26 @@ description = "ཀུ་ཀི་འདི་དག་དྲ་ཚིགས་�
 posthog = "རྗེས་ཀྱི་ཧོག་དབྱེ་ཞིབ།"
 scarf = "སི་ཀར་ཕི་པིག་སེལ།"
 
+[createPortfolio]
+coverTitle = "Cover page title"
+coverTitlePlaceholder = "PDF Portfolio"
+description = "Every selected file is kept whole inside the new PDF, whatever its type. Readers that don't support portfolios show a cover page with the files attached."
+goToFileEditor = "Go to file editor"
+info = "Combines your files into one PDF that keeps each file whole inside it. Open the result to browse the files and view or save any of them on their own."
+settings = "Portfolio Settings"
+submit = "Create Portfolio"
+title = "Portfolio Results"
+viewerModeHint = "A portfolio needs 2 or more files. Head to the file editor to select them."
+
+[createPortfolio.error]
+failed = "An error occurred while creating the PDF portfolio."
+
+[createPortfolio.tooltip.description]
+title = "What it does"
+
+[createPortfolio.tooltip.header]
+title = "About PDF Portfolios"
+
 [crop]
 autoCrop = "རང་འགུལ་གྱིས་ས་ཞིང་དཀར་པོའི་བར་སྟོང་།"
 noFileSelected = "འདེབས་འཛུགས་བྱེད་འགོ་ཚུགས་པར་PDFཡིག་ཆ་འདེམས།"
@@ -3567,6 +4102,36 @@ title = "སྒྲིག་སྟངས་སྒོ་ཕྱེས་པ།"
 [defaultApp.success]
 message = "སི་ཊར་ལིང་PDFནི་ད་ལྟ་ཁྱེད་ཀྱི་སྔོན་སྒྲིག་PDFརྩོམ་སྒྲིག་པ་ཡིན།"
 title = "སྔོན་སྒྲིག་མཉེན་ཆས་ཆ་ཚན་ཆ་ཚང་།"
+
+[desktopFileLink]
+saveAs = "Save as…"
+useDiskVersion = "Use disk version"
+
+[desktopFileLink.conflict]
+hint = "Keeping your changes overwrites the file on disk when you next save."
+keepMine = "Keep my changes"
+prompt = "This file changed on disk while you had unsaved changes here. Only one version can be kept."
+remaining = "{{count}} more to review"
+title = "File changed on disk"
+useDisk = "Use the disk version"
+
+[desktopFileLink.missing]
+body = "\"{{name}}\" has been deleted or moved on disk, so it has been removed from your files."
+title = "File no longer exists"
+
+[desktopFileLink.openDeleted]
+body_one = "\"{{name}}\" no longer exists on disk. It is still open here - saving will ask you for a new location."
+body_other = "{{count}} files no longer exist on disk. They are still open here - saving each one will ask you for a new location."
+title_one = "File deleted on disk"
+title_other = "Files deleted on disk"
+
+[desktopFileLink.reloaded]
+body = "\"{{name}}\" changed on disk and has been reloaded."
+title = "Updated from disk"
+
+[desktopFileLink.tooLarge]
+body = "\"{{name}}\" changed on disk. It is large enough that reloading it will take a while, so the version here has been left alone."
+title = "File changed on disk"
 
 [desktopUpdate]
 downloading = "གསར་སྒྱུར་ཕབ་ལེན་བཞིན་པ..."
@@ -3820,7 +4385,6 @@ mobileShort = "ཁ་པར"
 mobileUpload = "ཁ་པར་ཡར་འཇུག"
 mobileUploadNotAvailable = "ཁ་པར་ཡར་འཇུག་མ་འགོ་སློངས།"
 moreOptions = "འདེམས་ཚན་དེ་བས་མང་བ"
-myFiles = "ངའི་ཡིག་ཆ།"
 nextFile = "ཡིག་ཆ་རྗེས་མ"
 noFiles = "ཡིག་ཆ་མེད།"
 noFilesFound = "ཁྱེད་རང་གི་འཚོལ་ཞིབ་ལ་མཐུན་པའི་ཡིག་ཆ་གང་ཡང་མཐོང་མ་བྱུང་།"
@@ -3880,6 +4444,7 @@ versionHistory = "Version history"
 [files]
 addFiles = "ཡིག་ཆ་ཁ་སྣོན།"
 created = "བསྐྲུན།"
+notIncludedInToolRun = "Not included in this tool run"
 selectFromWorkbench = "ལས་ཀའི་སྟེགས་བུ་ནས་ཡིག་ཆ་འདེམས།"
 selectMultipleFromWorkbench = "ལས་ཀའི་སྟེགས་བུ་ནས་ཉུང་མཐར {{count}} ཡིག་ཆ་འདེམས་པའམ་ "
 size = "ཡིག་ཆའི་ཆེ་ཆུང་།"
@@ -3920,8 +4485,6 @@ dropToAdd = "Drop files to add"
 duplicateFailed = "Could not duplicate file"
 expand = "ཟུར་པང་རྒྱས"
 googleDrive = "Google Drive"
-googleDriveDisabled = "Google Drive སྒྲིག་འགོད་མ་བྱས"
-leaveMyFiles = "ངའི་ཡིག་ཆ་ནས་ཕྱིར་འདོན"
 library = "PDF དཔེ་མཛོད"
 myFiles = "ངའི་ཡིག་ཆ"
 noFiles = "ད་ཚུན་ཡིག་ཆ་མེད"
@@ -3968,6 +4531,7 @@ back = "ཕྱིར་ལོག"
 backToFolder = "{{folder}} ལ་ཕྱིར་ལོག"
 backToMyFiles = "ངའི་ཡིག་ཆར་ཕྱིར་ལོག"
 breadcrumbs = "སྣོད་ཁུངས་ལམ"
+breadcrumbsOverflow = "Show parent folders"
 bulkActions = "བྱ་སྤྱོད།"
 cancel = "འདོར"
 classification = "རིགས་དབྱེ"
@@ -4002,6 +4566,7 @@ downloadAll = "ཚང་མ་ཕབ་ལེན"
 downloadVersion = "པར་གཞི་འདི་ཕབ་ལེན"
 dropOverlay = "ཡིག་ཆ་བཀོག་ནས་ཡར་འཇུག"
 dropOverlaySub = "ཡིག་ཆ་ཚང་མ Local ནས་འགོ་བཙུགས། 'Move to' ཡང་ན 'Save to cloud' བེད་སྤྱོད་ནས་སྣོད་འགེངས་ནང་སྒྲིག་འགོད་བྱེད།"
+dropOverlaySubFolder = "They'll be added to this folder."
 duplicate = "Duplicate"
 file = "ཡིག་ཆ"
 fileInfo = "File info"
@@ -4010,15 +4575,22 @@ folder = "སྣོད་འགེངས"
 folderItems_one = "{{count}} item"
 folderItems_other = "{{count}} items"
 folderMenu = "སྣོད་འགེངས་ཀྱི་བྱ་བ"
+folderSettings = "Folder settings"
 inPath = "{{path}} ནང་"
 inWorkspace = "ཁ་ཕྱེས"
 inWorkspaceAria = "ལས་གནས་ནང་ཡོད་ཟིན"
 loading = "མངོན་གསལ་བཞིན་པ…"
-localFoldersUnavailable = "སྣོད་འགེངས་ཚང་མ cloud ཙམ་ཡིན་པས—སྣོད་འགེངས་ནང་སྒྲིག་འགོད་བྱ་དགོས་ན་ཡིག་ཆ་ཞིག cloud ལ་ཉར།"
+localFolderManagedByDisk = "This folder is managed by its directory on disk."
+moveAcrossKindsBlocked = "These folders live in different places, so one can't go inside the other."
+moveIntoMountCloudSkipped_one = "{{count}} server file stayed in your files. It lives on the server, not on this disk."
+moveIntoMountCloudSkipped_other = "{{count}} server files stayed in your files. They live on the server, not on this disk."
+moveIntoMountFailed_one = "{{count}} file could not be written into the folder."
+moveIntoMountFailed_other = "{{count}} files could not be written into the folder."
+moveIntoVirtualCloudSkipped_one = "{{count}} server file was left in place. Server files can't live in browser-only folders."
+moveIntoVirtualCloudSkipped_other = "{{count}} server files were left in place. Server files can't live in browser-only folders."
 moveSkippedRemote_one = "{{count}} file couldn't be moved on the server (no permission or already deleted)."
 moveSkippedRemote_other = "{{count}} files couldn't be moved on the server (no permission or already deleted)."
 moveTo = "སྤོ་བསྒྱུར…"
-myFiles = "ངའི་ཡིག་ཆ"
 newFolder = "སྣོད་འགེངས་གསར་པ"
 newFolderStorageDisabled = "སར་བར་སྣོད་འགེངས་ཉར་གསོག་སྤྱོད་མེད། དོ་དམ་པ་ལ་དབང་སྤྲོད་རོགས།"
 newFolderTabUnavailable = "སྣོད་འགེངས་གསར་པ་བཟོ་ནས All ཡང་ན Cloud ལ་སོར་བརྗེ།"
@@ -4028,18 +4600,18 @@ openVersionInWorkspace = "ལས་གནས་ནང་ཁ་ཕྱེ"
 originFilter = "ཁུངས་གཏན་འབེབས"
 refresh = "སར་བར་ནས་གསར་སྒྱུར"
 remove = "སུབ"
+removeLocalFolder = "Unmount from Stirling"
 removeVersion = "པར་གཞི་སུབ"
 rename = "མིང་བསྐྱར་བཏགས"
 renamed = "མིང་བསྐྱར་བཏགས"
 renameFolder = "སྣོད་འགེངས་མིང་བསྐྱར་བཏགས"
-resizeFolderTree = "སྣོད་འགེངས་རྩ་འབྲེལ་ཆེ་ཆུང་བཟོ (arrow keys, Shift ཕལ་ཆེར་གོམ་པ; ཐེབས་ཚར་གཉིས་གནོན་ནས་རང་འགུལ་སྒྲིག)"
 save = "སྲུངས"
 saveToServer = "སར་བར་ཉར"
 saveToServerDisabledHint = "སར་བར་ལ་ཉར་བ་འདི་སར་བར་འདིར་སྤྱོད་མེད། དོ་དམ་པ་ལ་དབང་སྤྲོད་རོགས།"
 selectAll = "སྤྱིར་འདེམས"
-selectAllHint = "མཐེབ་གནོན་ནས་ཚང་མ་འདེམས། ཕན་བསླབ: Ctrl (ཡང་ན Cmd) བཟུང་ནས་ཡིག་ཆ་རྡོག་རྡོག་སྣོན ཡང་ན Shift བཟུང་ནས་ཁྱབ་ཁོངས་འདེམས།"
 selectedCount = "{{count}} འདེམས་ཟིན"
 selectFile = "ཡིག་ཆ {{name}} འདེམས"
+serverFolderNeedsConnection = "Sign in to Stirling Cloud or connect a self-hosted server to use server folders."
 shareDisabledHint = "ཡིག་ཆ་མཉམ་སྤྱོད་སྤྱོད་མེད། དོ་དམ་པ་ལ་དབང་སྤྲོད་རོགས།"
 shareManage = "མཉམ་སྤྱོད་དོ་དམ"
 showDetails = "ཞིབ་ཕྲ་མངོན"
@@ -4047,8 +4619,10 @@ signInRequired = "Sign in to use cloud storage."
 summary_one = "{{count}} item"
 summary_other = "{{count}} items"
 tree = "སྣོད་འགེངས"
+unmount = "Unmount"
+unmountFolderBody = "Unmount \"{{name}}\"? The folder and its files stay on your disk."
+unmountFolderTitle = "Unmount from Stirling?"
 upload = "ཡར་འཇུག"
-uploadedToLocal = "ཡར་འཇུག་བྱས་པ་ཚང་མ Local ནས་འགོ་བཙུགས། 'Save to cloud' བེད་སྤྱོད་ནས་སྣོད་འགེངས་ནང་བཙུགས།"
 uploadFromMobile = "སྒུལ་ཁུངས་ནས་ཡར་འཇུག"
 versionActions = "པར་གཞི་བྱ་བ"
 versionCollapse = "བར་གྱི་པར་གཞི་སྡུར་བྱེད"
@@ -4061,6 +4635,8 @@ viewVersionHistory = "Version journey ({{count}})"
 
 [filesPage.appearance]
 colour = "ཁ་དོག"
+done = "Done"
+edit = "Appearance..."
 icon = "རིས་རྟགས"
 title = "ཚོར་སྣང"
 useColour = "ཁ་དོག {{c}} སྤྱོད"
@@ -4069,6 +4645,7 @@ useColour = "ཁ་དོག {{c}} སྤྱོད"
 modified = "བཟོ་བཅོས"
 name = "མིང"
 size = "ཆེ་ཆུང"
+status = "Status"
 type = "རིགས"
 
 [filesPage.deleteScope]
@@ -4079,9 +4656,29 @@ deviceHint = "Removes the local copy. The cloud copy is kept."
 everywhere = "Everywhere"
 everywhereHint = "Deletes the file from this device and the cloud."
 
+[filesPage.diskLink]
+conflict = "Disk changed"
+conflictHint = "The file on disk changed while you had unsaved edits. Your version is shown - saving will overwrite the one on disk."
+orphaned = "Not on disk"
+orphanedHint = "The original at {{path}} is gone. This copy is only here - saving it will ask for a new location."
+unavailable = "Unavailable"
+unavailableHintOffline = "The drive or share this file lives on is not connected. Reconnect it to pick up changes again."
+unavailableHintPermission = "Stirling is not allowed to read this location. Grant access in System Settings to pick up changes again."
+unavailableHintUnknown = "This file cannot be reached right now. The copy here is unchanged."
+
+[filesPage.diskState]
+all = "All"
+done = "Ready"
+doneHint = "Processed - opens the result"
+failed = "Failed"
+processing = "Processing"
+processingHint = "Processing - available when it finishes"
+retry = "Retry"
+retryHint = "Run this file again"
+waiting = "Queued"
+
 [filesPage.empty]
 hint = "ཤོག་ངོས་འདི་ནང་གང་རུང་དུ་ PDF བཀོག་ནས་ཡར་འཇུག ཡང་ན 'སྣོད་འགེངས་གསར' མཐེབ་གནོན་ནས་ཡིག་ཆ་སྒྲིག་འགོད་བྱས་ཆོག"
-newFolderCta = "སྣོད་འགེངས་བཟོ"
 title = "སྣོད་འགེངས་འདི་སྟོང་པ"
 uploadCta = "ཡིག་ཆ་ཡར་འཇུག"
 
@@ -4090,10 +4687,6 @@ hint = "ཡིག་ཆ་ཞིག་ཡར་འཇུག་བྱས་ནས
 offlineHint = "cloud མཛོད་མངོན་བྱེད་ལ་སླར་མཐུད།"
 offlineTitle = "cloud ཡིག་ཆ་ཡིག་མཛོད་མེད།"
 title = "cloud ཡིག་ཆ་ད་དུང་མེད"
-
-[filesPage.empty.local]
-hint = "ཡར་འཇུག་མ་བྱས་པའི་ཡིག་ཆ་ཚང་མ་འདིར་སྲུངས། ཡིག་ཆ་བཀོག་ནས་ཁ་སྣོན།"
-title = "Local ཙམ་གྱི་ཡིག་ཆ་མེད"
 
 [filesPage.empty.noResults]
 hint = "No files in this folder match your filter. Try a different term or clear the filter."
@@ -4114,6 +4707,8 @@ title = "ཁྱེད་ཀྱིས་ད་དུང་ཡིག་ཆ་མ�
 [filesPage.error]
 actionFailed = "{{action}} བྱ་མ་ཐུབ།"
 actionFailedDetail = "{{action}} བྱ་མ་ཐུབ: {{message}}"
+addFolderFailed = "Could not add the folder."
+addFolderFailedDetail = "Could not add the folder: {{message}}"
 cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
 deleteFolderFailed = "སྣོད་འགེངས་སུབ་མ་ཐུབ།"
@@ -4126,8 +4721,20 @@ moveFilesFailed = "ཡིག་ཆ་སྤོ་མ་ཐུབ།"
 moveFilesFailedDetail = "ཡིག་ཆ་སྤོ་མ་ཐུབ: {{message}}"
 moveFolderFailed = "སྣོད་འགེངས་སྤོ་མ་ཐུབ།"
 moveFolderFailedDetail = "སྣོད་འགེངས་སྤོ་མ་ཐུབ: {{message}}"
+openDiskFileFailed = "Could not open {{name}}."
+openDiskFileFailedDetail = "Could not open {{name}}: {{message}}"
+readFolderFailed = "Could not read the folder."
+readFolderFailedDetail = "Could not read the folder: {{message}}"
 removeFilesFailed = "ཡིག་ཆ་སུབ་མ་ཐུབ།"
 removeFilesFailedDetail = "ཡིག་ཆ་སུབ་མ་ཐུབ: {{message}}"
+removeFolderFailed = "Could not remove folder."
+removeFolderFailedDetail = "Could not remove folder: {{message}}"
+retryFailed = "Could not retry {{name}}."
+retryFailedDetail = "Could not retry {{name}}: {{message}}"
+revertAllFailed = "Could not restore originals."
+revertAllFailedDetail = "Could not restore originals: {{message}}"
+revertFailed = "Could not restore {{name}}."
+revertFailedDetail = "Could not restore {{name}}: {{message}}"
 uploadFilesFailed = "ཡིག་ཆ་ཡར་འཇུག་མ་ཐུབ།"
 uploadFilesFailedDetail = "ཡིག་ཆ་ཡར་འཇུག་མ་ཐུབ: {{message}}"
 
@@ -4147,11 +4754,20 @@ activeCount = "འཚག་ཆས་{{count}} སྤྱོད་བཞིན།"
 clearAll = "འཚག་ཆས་ཚང་མ་གསལ་བཟོ།"
 label = "འཚག་ཆས།"
 
+[filesPage.folderKind]
+local = "Local folder"
+virtual = "Browser folder"
+
 [filesPage.folderName]
 cancel = "འདོར"
 error = "སྣོད་འགེངས་སྲུངས་མ་ཐུབ། བསྐྱར་འདོད།"
 label = "སྣོད་འགེངས་མིང"
 placeholder = "སྣོད་འགེངས་མིང"
+
+[filesPage.folderOrigin]
+diskHint = "A folder mounted from a directory on your disk"
+serverHint = "A folder stored on the Stirling server"
+virtualHint = "A folder that lives only in this browser"
 
 [filesPage.moveDialog]
 cancel = "འདོར"
@@ -4166,14 +4782,44 @@ newFolderPlaceholder = "སྣོད་འགེངས་མིང"
 newFolderToggle = "སྣོད་འགེངས་གསར་པ་བཟོ…"
 title = "སྣོད་འགེངས་ལ་སྤོ་བསྒྱུར"
 
+[filesPage.newFolderMenu]
+addExisting = "Add local folder"
+server = "New folder on the server"
+serverHint = "Synced to your account, available wherever you sign in."
+
 [filesPage.origin]
 all = "ཁུངས་ཡོངས"
 cloud = "Cloud"
 cloudHint = "Stirling སར་བར་ནང་ཉར"
+diskHint = "A file in the mounted folder on your disk"
 local = "Local"
 localHint = "མི་སྣང་ཆས་འདི་ནང་ཙམ་ཉར"
 shared = "མཉམ་སྤྱོད"
 sharedHint = "འབྲེལ་མཐུད་བརྒྱུད་ནས་མཉམ་སྤྱོད"
+
+[filesPage.processing]
+active = "Processing folder"
+blockedNeedsConnection = "Sign in to Stirling Cloud or connect a self-hosted server to process folders."
+edit = "Edit processing..."
+nothingToRestore = "No originals to restore - these files are already their originals."
+paused = "Processing paused"
+remove = "Remove processing"
+restore = "Restore original"
+restoreAll = "Restore all originals"
+resume = "Resume processing"
+revertCancel = "Cancel"
+revertConfirm = "Restore and pause"
+revertConfirmAll = "Restore every original in this folder? Processing will be paused, and restored files show as queued until you resume."
+revertConfirmFile = "Restore \"{{name}}\" to its original? Processing for this folder will be paused, and the file shows as queued until you resume."
+revertConfirmTitle = "Restore originals?"
+section = "Processing"
+start = "Process files in this folder..."
+stop = "Pause processing"
+sweep = "Retry failed files"
+
+[filesPage.processingSetup]
+back = "Back"
+cancel = "Cancel"
 
 [filesPage.search]
 clear = "Clear filter"
@@ -4196,16 +4842,6 @@ server = "སར་བར་ནང་སྣོད་འགེངས་མཉམ�
 
 [filesPage.tabName]
 local = "Local"
-recent = "Recent"
-shared = "ང་ལ་མཉམ་སྤྱོད"
-sharedByMe = "ངས་མཉམ་སྤྱོད"
-
-[filesPage.tabs]
-all = "ཚང་མ"
-ariaLabel = "ཡིག་ཆ་ལྟ་ཚུལ"
-recent = "Recent"
-shared = "ང་ལ་མཉམ་སྤྱོད"
-sharedByMe = "ངས་མཉམ་སྤྱོད"
 
 [filesPage.treeMenu]
 actions = "{{name}} ཡི་སྣོད་འགེངས་བྱ་བ"
@@ -4626,6 +5262,12 @@ desc = "མིག་ལ་གཞོལ་བ། རི་མོ་འབྲི�
 tags = "མཆན་འགྲེམས། འོད་མདངས། འབྲི་བ།"
 title = "མཆན་འགྲེམ་པ།"
 
+[home.autoFormDetection]
+desc = "Automatically detect form fields with AI and make your PDF fillable."
+tags = "form,detect,fillable,acroform,auto detect,ai,fields,make fillable,form detection"
+title = "Auto Form Detection"
+unavailable = "Needs the AI detection model, which isn't installed on this server. An administrator can add it under Settings > Features > AI Form Detection."
+
 [home.automate]
 desc = "གོམ་པ་མང་པོའི་ལས་ཀའི་འགྲོ་ལུགས་དེ་PDFབྱ་སྤྱོད་མཉམ་དུ་སྒྲིག་ནས་བཟོས། ལས་འགན་ཡང་བསྐྱར་འཚོག་པར་འཚམ་པོ་ཡོད།"
 tags = "ལས་ཀའི་འགྲོ་ལམ། རྗེས་འདེད། རང་འགུལ་ཅན།"
@@ -4687,6 +5329,11 @@ title = "བདེ་རྩུབ།"
 desc = "རྣམ་གཞག་མི་འདྲ་བའི་བར་ལ་ཡིག་ཆ་བསྒྱུར་བ།"
 tags = "སྒྱུར་བཅོས།"
 title = "ཆོས་ལ་ཁུག་མཁན"
+
+[home.createPortfolio]
+desc = "Bundle multiple files into an Adobe PDF Portfolio"
+tags = "portfolio,collection,package,bundle,combine files,pdf portfolio,adobe portfolio,pdf collection,container"
+title = "Create Portfolio"
 
 [home.crop]
 desc = "ཚད་གཞི་ཉུང་དུ་གཏོང་ཆེད་PDFཡིས་(ཡིག་ཆ་རྒྱུན་སྐྱོང་བྱེད།)"
@@ -5047,7 +5694,6 @@ unexpectedError = "རྗེས་འགྲོ་མ་ངེས་པའི་�
 updatePassword = "གསང་ཨང་གསར་སྒྱུར"
 useMagicLink = "དེའི་ཚབ་ཏུ་མུན་ནག་གི་སྦྲེལ་མཐུད་བེད་སྤྱོད་བྱེད།"
 username = "མིང་།"
-youAreLoggedIn = "ཁྱེད་རང་ནང་འཛུལ་འདུག"
 
 [margin]
 large = "ཤིན་ཏུ་ཆེན་པོ"
@@ -5097,39 +5743,45 @@ sort = "རིགས"
 title = "མཉམ་སྡེབ་སྒྲིག་སྟངས་སྤྱི་བསྡོམས།"
 
 [mobileScanner]
-addToBatch = "ཚོགས་སྣོན"
+addMore = "Add More"
 back = "ཕྱིར་ལོག"
-batchImages = "ཚོགས"
 camera = "བརྙན་ཆས"
 cameraAccessDenied = "བརྙན་ཆས་དབང་ཆ་བཀག་ཟིན། དབང་ཆ་སྤྲོད་རོགས།"
 cameraDescription = "ཁྱེད་ཀྱི་ཐབས་འཕྲུལ་བརྙན་ཆས་སྤྱད་ནས་ཡིག་ཆ་ཞིབ་བཤེར། མཐའ་མཚམས་རང་འགུལ་འཚོལ་འཐེན་ཡོད།"
 capture = "པར་འཛིན"
 chooseMethod = "ཡར་འཇུག་ཐབས་ལམ་འདེམས"
 chooseMethodDescription = "གཞི་བཙུགས་དང་ཡར་འཇུག་བྱ་ཐབས་ལམ་གདམ་གསེས་བྱ།"
-clearBatch = "བསལ"
+clearAll = "Clear All"
+closeTabHint = "You can close this tab now."
+dismiss = "Dismiss"
 edgeDetection = "མཐའ་མཚམས་འཚོལ་འཐེན"
 fileDescription = "ཐོག་མའི་པར་རིས་དང་ཡིག་ཆ་ཁྱེད་ཀྱི་ཐབས་འཕྲུལ་ནས་ཡར་འཇུག"
+fileReadFailed = "Could not read that file."
 fileUpload = "ཡིག་ཆ་ཡར་འཇུག"
-flash = "འོད་འཕྲོ"
 flashlight = "འོད་གཏོར"
 httpsRequired = "བརྙན་ཆས་དབང་ཆ དགོས་ HTTPS ཡང་ན localhost ཡིན། HTTPS ཡང་ན localhost བཀོལ་རོགས།"
-noSession = "Session ནུས་མེད"
+imageCount_one = "{{count}} image"
+imageCount_other = "{{count}} images"
+imagePosition = "Image {{index}} of {{total}}"
+invalidFileType = "Please choose an image file."
 noSessionMessage = "ཤོག་ངོས་འདི་ལ་འཛུལ་ཐུབ་པར་ ནུས་ལྡན་ QR ཨང་ཡིག་བསྣུན་རོགས།"
 processing = "ལས་སྒྲུབ..."
+remove = "Remove"
 retake = "ཡང་བསྐྱར་འཛིན"
+scanAnother = "Scan another"
 selectFilesPrompt = "ཡར་འཇུག་བྱ་ཡིག་ཆ་འདེམས"
-selectImage = "པར་རིས་འདེམས"
+selectImages = "Select Images"
 sessionExpired = "Session འདི་དུས་ཡོལ་བྱས་ཟིན། སྒུལ་སྟངས་བསྐྱར་བཟོས་ནས་ཚོད་ལྟ་བྱེད།"
 sessionInvalid = "Session ནོར་འཁྲུལ"
 sessionNotFound = "Session རྙེད་མ་སོ། སྒུལ་སྟངས་བསྐྱར་བཟོས་ནས་ཚོད་ལྟ་བྱེད།"
 sessionValidationError = "Session བདེན་བཤད་མ་ཐུབ། ཡང་བསྐྱར་ཚོད་ལྟ་བྱེད།"
+startingCamera = "Starting camera…"
 title = "ཁ་པར་བཤར་འབེབས་ཆས"
-upload = "ཡར་འཇུག"
-uploadAll = "ཡོངས་རྫོགས་ཡར་འཇུག"
 uploadFailed = "ཡར་འཇུག་ཕམ། ཡང་བསྐྱར་ཚོད་ལྟ་བྱེད།"
 uploading = "ཡར་འཇུག..."
 uploadSuccess = "ཡར་འཇུག་ལེགས་འགྲུབ!"
 uploadSuccessMessage = "ཁྱེད་ཀྱི་པར་རིས་སྤོ་ལེན་བྱས་ཟིན།"
+uploadWithCount = "Upload ({{total}})"
 validating = "Session བདེན་བཤད་བཤེར་བཞིན..."
 
 [mobileSign]
@@ -5187,24 +5839,31 @@ count = "{{remaining}} of {{total}}"
 label = "Free credits"
 
 [notifications]
+adoptFailed = "The document was unlocked but could not be opened here. Try the tool directly."
 empty = "ཡར་ཞུ་བྱ་རྒྱུ་མེད།"
 handoffUnavailable = "བཤར་ཆས་འདིས་སྒྲིག་སྦྱོར་ཆས་ནས་ཡིག་ཆ་རྩོམ་སྒྲིག་ཆས་ལ་སྤྲོད་དུ་མི་འཇུག དེའི་ཚབ་ཏུ་རྩོམ་སྒྲིག་ཆས་ནས་ཁ་ཕྱེ།"
 noDocumentLinked = "ཕམ་ཉེས་འདི་ཡིག་ཆ་དམིགས་བསལ་ཞིག་དང་སྦྲེལ་མེད་པས། འདིར་ཁ་ཕྱེ་རྒྱུ་མེད།"
 notOnThisDevice = "ཡིག་ཆ་འདི་སྒྲིག་ཆས་འདིར་མེད་པས། འདིར་ཁ་ཕྱེ་མི་ཐུབ།"
 occurrences = "ཐེངས་{{count}}"
 open = "བརྡ་ཐོ་ཁ་ཕྱེ།"
+repairAdoptFailed = "The document was repaired but could not be opened here. Try the Repair tool directly."
+repairedNotRerun = "The document was repaired and opened here, but the policy could not be run on it again."
+repairedRerunNotAdopted = "The repaired document went through, but its result could not be opened here."
+repairedRerunUndelivered = "The document was repaired and the policy re-run started, but its result cannot be delivered here, so this failure stays open."
+rerunRejected = "The policy could not be run again just now. Try again in a moment."
+rerunUndelivered = "The policy re-run started, but its result cannot be delivered here, so this failure stays open."
+retryUnavailable = "This document can no longer be retried from this browser."
 title = "བརྡ་ཐོ།"
+unlockedNotRerun = "The document was unlocked and opened here, but the policy could not be run on it again."
+unlockedRerunUndelivered = "The document was unlocked and the policy re-run started, but its result cannot be delivered here, so this failure stays open."
 unread = "ཀློག་མེད།"
 
 [notifications.action]
+copiedLog = "Copied"
+copyLog = "Copy log"
 failed = "དེ་ལས་མ་ཐུབ། ཅུང་ཙམ་རྗེས་ནས་ཡང་བསྐྱར་ཚོད་ལྟ་བྱོས།"
+more = "More options"
 unavailable = "བརྡ་ཐོ་འདིར་སྤྱོད་མི་རུང་།"
-
-[notifications.detail]
-copied = "འདྲ་བཤུས་བྱས་ཟིན།"
-copy = "ནོར་འཁྲུལ་འདྲ་བཤུས།"
-less = "ཉུང་ཙམ་སྟོན།"
-more = "འཕྲིན་ཐུང་ཆ་ཚང་སྟོན།"
 
 [notifications.section]
 earlier = "སྔོན་མ།"
@@ -5355,7 +6014,9 @@ wrapUp = "ཁྱེད་ཚོ་ཚང་མ་སྒྲིག་ཟིན་�
 
 [onboarding.buttons]
 back = "རྒྱབ་ངོས"
+continue = "Continue"
 download = "ཕབ་ལེན →"
+getStarted = "Get started"
 next = "རྗེས་མ་ →"
 showMeAround = "ང་ལ་སྟོན་དང་།"
 skipForNow = "ད་ལྟ་མཆོང་།"
@@ -5386,6 +6047,11 @@ body = "སི་ཊར་ལིང་གིས་ཀམ་པུ་ཊར་ག
 selectOs = "བཀོལ་སྤྱོད་མ་ལག་འདེམས"
 title = "ཕབ་ལེན"
 titleWithOs = "{{osLabel}} ལ་ཕབ་ལེན།"
+
+[onboarding.desktopWelcome]
+body = "There's a whole host of new changes to explore, including <strong>Agent Chat</strong>, automatic document <strong>classification</strong>, and more."
+freeLine = "The editor is now <free>completely free</free>."
+title = "Welcome to Stirling <product>Desktop</product>"
 
 [onboarding.mfa]
 authenticationCode = "ར་སྤྲོད་ཨང་རྟགས"
@@ -5736,7 +6402,7 @@ noKey = "VITE_STRIPE_PUBLISHABLE_KEY is unset. Real iframe mounts here once conf
 title = "Stripe Embedded Checkout (mock mode)"
 
 [payg.confirm]
-body = "Your team can now run automation, AI, and API operations beyond your 500 free PDFs."
+bodyWithAllowance = "Your team can now run automation, AI, and API operations beyond your {{limit}} free PDFs."
 capValue = "{{symbol}}{{amount}} / month"
 noCap = "No cap"
 note = "You can change your cap, cancel, or open the Stripe customer portal any time from this page."
@@ -5763,7 +6429,7 @@ benefit3Body = "call any Stirling endpoint programmatically"
 benefit3Title = "API access"
 button = "Turn on Processor →"
 reassurance = "No minimum · Set a $0 cap to test · Cancel anytime"
-subtitle = "Keep going past your 500 free PDFs with automation, AI, and the API. Set a monthly ceiling, so you stay in control."
+subtitleWithAllowance = "Keep going past your {{limit}} free PDFs with automation, AI, and the API. Set a monthly ceiling, so you stay in control."
 title = "Turn on the Processor plan"
 
 [payg.free.editor]
@@ -5841,17 +6507,16 @@ leader = "Team owner"
 member = "Member"
 
 [payg.signupRequired]
-body = "Stirling PDF gives every signed-up account 500 free operations, enough to keep most workflows humming without paying a cent. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing."
-cancel = "Not now"
-cta = "Sign up free"
-subtext = "Creating an account is free and takes a few seconds. No credit card required."
-title = "Sign up to use {{category}}"
-
-[payg.signupRequired.category]
-ai = "AI features"
-api = "this tool"
-automation = "automations"
-default = "this feature"
+aiPromo = "Create, edit and ask about PDFs with AI"
+apiPromo = "Connect your apps and AI assistants"
+automationPromo = "Automate repetitive PDF tasks"
+createAccount = "Create free account"
+editorLabel = "PDF Editor"
+login = "Log in"
+manualToolsPromo = "Unlimited free manual PDF tools"
+processorLabel = "PDF Processor"
+processorTitle = "Create an account to unlock the best of Stirling"
+readerLabel = "PDF Reader"
 
 [payg.spendCapMeter]
 barAria = "Spend against cap"
@@ -5902,7 +6567,7 @@ apiBody = "programmatic access to any Stirling endpoint"
 apiTitle = "API calls"
 automationBody = "chained tools or scheduled runs that don't need clicks"
 automationTitle = "Automation pipelines"
-footnote = "Manual tools (viewing, editing, merging, splitting, watermarking, compressing, manual OCR) are always free, even past 500. The distinction is the type of work, not where you click."
+footnoteUnlimited = "Manual tools (viewing, editing, merging, splitting, watermarking, compressing, manual OCR) are always free, even after your included credits are used. The distinction is the type of work, not where you click."
 title = "What we count toward billing"
 
 [payg.upgrade.promise]
@@ -5941,27 +6606,58 @@ licenseKey = "ཁྱོད་ཀྱི་ལག་འཁྱེར་ལྡེ་
 licensePollingError = "གླ་ཆ་ལེགས་འགྲུབ་བྱུང་ཡོད་ཀྱང་། ང་ཚོས་ཁྱེད་ཀྱི་ཆོག་མཆན་ལྡེ་མིག་རང་འགུལ་གྱིས་ཕྱིར་ལེན་ཐུབ་ཀྱི་མེད། ཁྱེད་རང་གི་གློག་འཕྲིན་ཡང་ན་འབྲེལ་གཏུག་རྒྱབ་སྐྱོར་དེ་དངུལ་སྤྲོད་པའི་གཏན་འཁེལ་གྱི་ཐོག་ནས་བརྟག་དཔྱད་གནང་རོགས།"
 licenseRetrievalError = "གླ་ཆ་ལེགས་འགྲུབ་བྱུང་ཡོད་ཀྱང་ཆོག་མཆན་སླར་ལེན་དེ་ཕམ་སོང། ཁྱེད་ལ་གློག་འཕྲིན་བརྒྱུད་ནས་ཁྱེད་ཀྱི་ཆོག་མཆན་ལྡེ་མིག་ཐོབ་རྒྱུ་རེད། སྐར་མ་བཅུའི་ནང་ཚུད་མ་ཐོབ་ན་རྒྱབ་སྐྱོར་གནང་རོགས་གནང་།"
 licenseSaveError = "ཆོག་མཆན་ལྡེ་མིག་གསོག་འཇོག་མ་ཐུབ་པ། ཁྱེད་རང་གི་ལག་འཁྱེར་གྱི་ལྡེ་མིག་གིས་རྒྱབ་སྐྱོར་བྱེད་ནས་ཤུགས་སྣོན་གཏོང་རོགས།"
+manageSubscription = "Manage subscription"
 monthly = "ཟླ་རེར།"
 paymentCanceled = "དངུལ་སྤྲོད་རྒྱུ་མེད་པར་བཟོས་ཡོད། ཉེས་འཛུགས་གང་ཡང་བཏང་མེད།"
 perMonth = "/ཟླ་བ"
 preparing = "ཁྱེད་རང་གི་དངུལ་བཏོན་གྲ་སྒྲིག་བྱེད་པ།"
 redirecting = "བདེ་འཇགས་ལྡན་པའི་དངུལ་བཏོན་པར་བསྐྱར་གཏོང་བྱེད་པ་..."
+stepOf = "Step {{n}} of {{total}}"
 success = "གླ་ཆ་ལེགས་འགྲུབ་བྱུང་།"
 successMessage = "ཁྱེད་ཀྱི་མངགས་ཉོ་དེ་ལེགས་འགྲུབ་བྱུང་ཡོད། ཁྱེད་ལ་གཏན་འཁེལ་གྱི་གློག་འཕྲིན་ཞིག་མགྱོགས་པོ་ཐོབ་རྒྱུ་རེད།"
 syncError = "གླ་ཆ་ལེགས་འགྲུབ་བྱུང་ཡོད་ཀྱང་ཆོག་མཆན་གྱི་དུས་མཉམ་ལམ་ལྷོང་མ་བྱུང་། ཁྱེད་ཀྱི་ཆོག་མཆན་དེ་མགྱོགས་པོ་གསར་བརྗེ་བྱ་རྒྱུ་རེད། གལ་ཏེ་གནད་དོན་མུ་མཐུད་གནས་ན་རྒྱབ་སྐྱོར་འབྲེལ་བ་གནང་རོགས།"
 syncingLicense = "ཁྱེད་རང་གི་ཡར་རྒྱས་བཏང་བའི་ཆོག་མཆན་མཉམ་སྒྲིག"
+teamActivated = "Your Team capacity is active"
+teamActivating = "Confirming your Team capacity..."
+teamPending = "Your Team purchase is still processing. Refresh this page shortly."
+teamProcessing = "Team purchase processing"
 upgradeComplete = "རིམ་སྤོར་འཐུས་ཚང་།"
 upgradeCompleteMessage = "ཁྱེད་ཀྱི་མངགས་ཉོ་དེ་ལེགས་འགྲུབ་བྱུང་ཡོད། ཁྱེད་ཀྱི་ད་ལྟའི་ཆོག་མཆན་ལྡེ་མིག་དེ་གསར་བརྗེ་བྱས་ཡོད།"
 upgradeSuccess = "གླ་ཆ་ལེགས་འགྲུབ་བྱུང་། ཁྱེད་ཀྱི་མངགས་ཉོ་དེ་ཡར་རྒྱས་བཏང་ཡོད། ཆོག་མཆན་དེ་ཁྱེད་ཀྱི་གསབ་ལེན་ཐོག་ལ་གསར་བརྗེ་བྱས་ཡོད། ཁྱེད་ལ་གཏན་འཁེལ་གྱི་གློག་འཕྲིན་ཞིག་མགྱོགས་པོ་ཐོབ་རྒྱུ་རེད།"
 upgradeTitle = "{{planName}} ལ་རིམ་སྤོར"
 yearly = "ལོ་རེ་རེ།"
 
+[payment.addCapacity]
+currently = "Currently up to {{users}} users"
+title = "Add capacity"
+
+[payment.capacityStage]
+adjustmentNote = "Stripe will show the exact charge, any prorations and your next billing date before you confirm. Your saved payment method will be used if available."
+continue = "Continue to payment"
+customHint = "Rounded up to the next block of {{users}}."
+customLabel = "Number of users"
+dueToday = "Due today"
+enterpriseQuote = "Get an enterprise quote"
+lineItem = "Team · {{price}}{{period}} per {{block}} users"
+minimumForCurrentUsers = "You have {{users}} users, so the plan must cover at least {{minimum}}."
+modalTitle = "Upgrade to {{planName}}"
+newPlanTotal = "New plan total"
+other = "Other"
+perMonth = "/mo"
+perYear = "/yr"
+renewalNote = "Renews at {{total}}{{period}}. Cancel any time in Usage & Billing."
+reviewChange = "Review change in Stripe"
+subheading = "Covers everyone you invite, in blocks of {{users}} users."
+subheadingAdd = "Your plan covers {{current}} users today. Choose the new total."
+userDelta = "+{{users}} users"
+usersLabel = "Users"
+userTotal = "{{users}} users"
+
 [payment.emailStage]
 continue = "མུ་མཐུད"
 description = "ང་ཚོས་འདི་བེད་སྤྱད་ནས་ཁྱེད་ཀྱི་ལག་འཁྱེར་གྱི་ལྡེ་མིག་དང་དངུལ་འབབ་བསྐུར་རྒྱུ་ཡིན།"
 emailLabel = "གློག་འཕྲིན་ཁ་བྱང་།"
 emailPlaceholder = "yk@e@email.com"
-modalTitle = "འགོ་འཛུགས་ - {{planName}}"
 
 [payment.paymentStage]
 modalTitle = "དངུལ་སྤྲོད་མཇུག་སྒྲིལ་ - {{planName}}"
@@ -5971,8 +6667,13 @@ billedYearly = "{{currency}}{{amount}} ལོ་རེའི་དངུལ་�
 modalTitle = "དངུལ་འབབ་དུས་ཡུན་འདེམས་པ་ - {{planName}}"
 savePercent = "{{percent}}% ཉར་ཐུབ།"
 savingsAmount = "{{amount}} ཉར་ཐུབ།"
+selectedMonthly = "Monthly"
+selectedYearly = "Yearly"
 selectMonthly = "ཟླ་རེར་འདེམས།"
 selectYearly = "ལོ་རེ་འདེམས་པ།"
+
+[payment.upgradeTeam]
+title = "Upgrade to Team"
 
 [pdfCommentAgent]
 submit = "མཆན་བཟོ"
@@ -6025,99 +6726,271 @@ REVERSE_ORDER = "ཡིག་ཆ་དེ་གཡུག་ནས་ཤོག་
 SIDE_STITCH_BOOKLET_SORT = "ཟུར་སྣོན་དེབ་ཆུང་པར་སྐྲུན་གྱི་ཤོག་ངོས་སྒྲིག་དགོས། (ཕྱོགས་ལ་སྒྲིག་འཇུག་བྱེད་པར་ལེགས་བཅོས་བྱས།)"
 
 [pdfTextEditor]
-conversionFailed = "PDF བསྒྱུར་མ་ཐུབ་པ། བསྐྱར་དུ་ཚོད་ལྟ་གནང་རོགས།"
-converting = "PDF རྩོམ་སྒྲིག་བྱེད་ཐུབ་པའི་རྩ་སྒྲིག་ལ་སྒྱུར་བ།"
-currentFile = "ད་ལྟའི་ཡིག་ཆ: {{name}}"
-imageLabel = "པར་རིས་བཞག་པ།"
-noTextOnPage = "ཤོག་ངོས་འདིའི་སྟེང་དུ་རྩོམ་སྒྲིག་བྱེད་ཐུབ་པའི་ཡིག་ཆ་གང་ཡང་མཐོང་མ་བྱུང་།"
-pagePreviewAlt = "ཤོག་ངོས་སྔོན་ལྟ།"
-pageSummary = "ཤོག་ངོས {{total}} ནང་གི་{{number}}"
+download = "Download"
+downloadTooltip = "Save and download the edited PDF"
+save = "Save PDF"
+saveTooltip = "Apply changes to the file in your workspace ({{shortcut}})"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDFཡིག་འབྲིའི་རྩོམ་སྒྲིག་པ།"
-viewLabel = "PDF རྩོམ་སྒྲིག་པ།"
+unsaved = "(unsaved)"
+workbenchLabel = "Editor"
 
-[pdfTextEditor.actions]
-applyChanges = "འགྱུར་བ་འཇུག་པ།"
-clearText = "ཡི་གེ་གཙང་སེལ"
-downloadCopy = "འདྲ་བཤུས་ཕབ་ལེན།"
-moreOptions = "འདེམས་ཚན་དེ་བས་མང་བ"
-reset = "བསྐྱར་སྒྲིག་བསྐྱར་སྒྲིག་བྱེད་པ།"
+[pdfTextEditor.annotations]
+freetext = "Annotation text - not page text, so it can't be edited here"
+stamp = "Stamp annotation - not page text, so it can't be edited here"
+widget = "Form field - not page text, so it can't be edited here"
 
-[pdfTextEditor.badges]
-earlyAccess = "སྔ་སྣུར་ཡོང་བ།"
-modified = "སྒྲིག་འགྱུར།"
+[pdfTextEditor.discard]
+body = "Opening {{name}} closes the document you are editing. Your unsaved changes will be lost."
+cancel = "Cancel"
+confirm = "Discard and open"
+hint = "Cancel, then Save PDF to keep them in your workspace first."
+title = "Discard unsaved changes?"
 
-[pdfTextEditor.empty]
-dropzone = "འདིར་PDFཞིག་འདྲུད་ནས་བཞག་པའམ་ཡང་ན་ལྟ་ཀློག་བྱེད་པར་སྣུན་རོགས།"
-dropzoneWithFiles = "ཡིག་ཆའི་མཆོང་ལྡེ་ནས་ཡིག་ཆ་ཞིག་འདེམས་པའམ་ཡང་ན་འདིར་PDFཞིག་འདྲུད་ནས་བཞག་པའམ་ཡང་ན་བསྣུན་ནས་བལྟ་དགོས།"
-title = "ཡིག་ཆ་མ་བཀོད།"
+[pdfTextEditor.drop]
+hint = "Releases on the editor stage replace any open document."
+title = "Drop a PDF to open"
 
-[pdfTextEditor.errors]
-invalidJson = "JSON ཡིག་ཆ་ཀློག་མི་ཐུབ་པ། དེ་PDFཡིས་JSONལག་ཆས་ནས་ཐོན་པར་ངེས་གཏན་བཟོས་དགོས།"
-pdfConversion = "རྩོམ་སྒྲིག་བྱས་པའི་JSONདེ་PDFལ་སྒྱུར་མི་ཐུབ།"
+[pdfTextEditor.error]
+decodeImage = "Could not decode the selected image."
+insertImage = "Could not insert the selected image."
 
-[pdfTextEditor.fontAnalysis]
-allFonts = "ཡིག་གཟུགས།"
-currentPageFonts = "ཤོག་ངོས་འདིའི་ཡིག་གཟུགས་ཀྱི་གཏིང་ཚད།"
-details = "ཡིག་གཟུགས་ཞིབ་ཕྲ།"
-embedded = "བཙོན་འཇུག་བྱས་ཟིན།"
-fallback = "མར་འགོད།"
-infoMessage = "ཡིག་གཟུགས་བསྐྱར་བཟོའི་གནས་ཚུལ་ཡོད།"
-missing = "བོར་བའི"
-perfect = "ལེགས་པོ"
-perfectMessage = "ཡིག་གཟུགས་ཚང་མ་ཡང་དག་པར་བསྐྱར་བཟོ་བྱེད་ཐུབ།"
-subset = "ཆ་ཤས།"
-suggestions = "དྲན་ཐོ།"
-type = "རིགས"
-warningMessage = "ཡིག་གཟུགས་འགའ་ཤས་ཀྱིས་ཡང་དག་པར་བསྒྱུར་མི་ཐུབ།"
-warnings = "ཉེན་བརྡ།"
-webFormat = "དྲ་མིག་གི་རྩ་སྒྲིག།"
+[pdfTextEditor.find]
+close = "Close find bar"
+count = "{{current}} of {{total}}"
+findPlaceholder = "Find"
+ignoreAccents = "Ignore accents"
+matchCase = "Match case"
+next = "Next match"
+noMatches = "No matches"
+previous = "Previous match"
+replace = "Replace"
+replaceAll = "Replace all"
+replaced = "{{count}} replaced"
+replacePlaceholder = "Replace with"
+wholeWord = "Whole word"
 
-[pdfTextEditor.groupingMode]
-auto = "མོ་ཊ།"
-paragraph = "དོན་ཚན་ཅན།"
-singleLine = "ཐིག་གཅིག་པ།"
+[pdfTextEditor.fontPicker]
+builtInGroup = "Built-in fonts"
+deviceFontsNone = "No extra device fonts were found."
+deviceFontsUnavailable = "Device fonts are unavailable. The built-in fonts still work."
+deviceGroup = "Device fonts"
+documentGroup = "Document font"
+label = "Font family"
+mixed = "Mixed"
+noMatch = "No matching font"
+placeholder = "Font family"
+useDeviceFonts = "Use device fonts"
 
-[pdfTextEditor.manual]
-expandWidth = "ཤོག་ངོས་མཐའ་ལ་རྒྱ་བསྐྱེད་པ།"
-merge = "འདེམས་སྒྲུག་མཉམ་བསྲེས་བྱེད་པ།"
-mergeTooltip = "འདེམས་སྒྲུག་བྱས་པའི་སྒམ་མཉམ་སྡེབ།"
-resetWidth = "བསྐྱར་འཛུགས་ཀྱི་ཞེང་ཚད།"
-resizeHandle = "ཡིག་གཟུགས་ཀྱི་ཞེང་ཚད་སྙོམ་སྒྲིག་བྱེད་པ།"
-ungroup = "ཚོགས་སྡེ་མང་གདམ་གསེས་པ།"
-ungroupTooltip = "དོན་ཚན་ཁ་ཕྲལ་ལ་ལོག་པའི་གྲལ་རིམ་དུ་བགོས་པ།"
-widthMenu = "རྒྱ་ཚད་གདམ་ག།"
+[pdfTextEditor.fonts]
+allPresent = "All letters & numbers present"
+missing = "Missing: {{glyphs}}"
+title = "Fonts"
 
-[pdfTextEditor.modeChange]
-cancel = "འདོར་བ"
-confirm = "བསྐྱར་སྒྲིག་དང་བསྒྱུར་བའི་ཐབས་ལམ།"
-title = "ཐབས་ལམ་བསྒྱུར་བཅོས།"
-warning = "ཡིག་ཆའི་སྡེ་ཚན་བཟོ་བའི་ཐབས་ལམ་བསྒྱུར་ན་གསོག་འཇོག་མེད་པའི་བསྒྱུར་བཅོས་ཚང་མ་སླར་གསོ་བྱེད། ཁྱེད་རང་མུ་མཐུད་འདོད་ཀྱི་ཡོད་དམ།"
+[pdfTextEditor.fonts.compat]
+info = "Existing text edits perfectly. A new character an embedded font doesn't include falls back to a standard font."
+ok = "Every font includes the full alphabet and digits - type freely."
+warnOther = "{{count}} fonts missing some letters or numbers - typing those uses a standard fallback font."
 
-[pdfTextEditor.options.advanced]
-title = "ཡར་ཐོན་ཅན་གྱི་སྒྲིག་སྟངས།"
+[pdfTextEditor.fonts.pill]
+info = "Embedded"
+ok = "All glyphs"
+warn = "{{count}} with gaps"
 
-[pdfTextEditor.options.autoScaleText]
-description = "རང་འགུལ་གྱིས་ཡིག་གཟུགས་དེ་PDFལས་མི་འདྲ་བའི་སྐབས་ལ་ཡིག་འབྲུ་ཐད་ཀར་ཚད་འཇལ་ནས་དེའི་མཚམས་ཐིག་ཐོག་མའི་ནང་དུ་འཚམ་པོ་ཡོད།"
-title = "རང་འགུལ་གྱིས་སྒྲོམ་ལ་འཚམ་པའི་ཡིག་གཟུགས།"
+[pdfTextEditor.fonts.status.embedded]
+label = "Embedded"
 
-[pdfTextEditor.options.forceSingleElement]
-description = "རྩོམ་སྒྲིག་པས་རྩོམ་སྒྲིག་བྱས་པའི་ཡིག་སྒྲོམ་རེ་རེ་བཞིན་PDFཡི་ཚིག་ཡིག་གི་ཆ་ཤས་གཅིག་ལྟར་ཕྱིར་གཏོང་བྱེད་ཀྱི་ཡོད།"
-title = "ལྡེ་མིག་གིས་ཚིག་ཡིག་དེ་PDFཡི་ཆ་ཤས་གཅིག་ལ་རྩོམ་སྒྲིག་བྱས།"
+[pdfTextEditor.fonts.status.standard]
+label = "Standard"
 
-[pdfTextEditor.options.groupingMode]
-autoDescription = "རང་འགུལ་གྱིས་ཤོག་ངོས་རིགས་དང་སྡེ་ཚན་གྱིས་ཡིག་ཆ་འོས་འཚམ་གྱིས་ཤེས་རྟོགས་ཐུབ།"
-paragraphDescription = "སྡེ་ཚན་གྱིས་གྲལ་ཐིག་དེ་གྲལ་ཐིག་སྣ་ཚོགས་ཀྱི་ཚིག་ཡིག་སྒྲོམ་ནང་དུ་སྒྲིག་ཡོད།"
-singleLineDescription = "PDF ཡིག་འབྲུ་རེ་རེ་བཞིན་ཡིག་སྒྲོམ་སོ་སོ་ལྟར་ཉར་དགོས།"
-title = "ཡིག་ཚགས་སྡེ་ཚན་བཟོ་བའི་ཐབས་ལམ།"
+[pdfTextEditor.fonts.status.subset]
+label = "Subset"
 
-[pdfTextEditor.pageType]
-paragraph = "དོན་ཚན་ཤོག་ངོས།"
-sparse = "ཡིག་འབྲུ་དཀོན་པོ།"
+[pdfTextEditor.help]
+ariaLabel = "Keyboard shortcuts"
+title = "Keyboard shortcuts"
+tooltip = "Keyboard shortcuts (?)"
 
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
+[pdfTextEditor.help.clipboard]
+copyDesc = "Copy selected text"
+cutDesc = "Cut selected (copy + delete)"
+heading = "Clipboard"
+pasteDesc = "Paste clipboard text as new run"
+pastePlainDesc = "Paste as plain text"
+
+[pdfTextEditor.help.document]
+escDesc = "Clear selection / close find / close help"
+heading = "Document"
+helpDesc = "This help"
+saveDesc = "Save to your workspace"
+
+[pdfTextEditor.help.editing]
+deleteDesc = "Remove selected"
+duplicateDesc = "Duplicate selected"
+groupDesc = "Group selected runs into one paragraph"
+heading = "Editing"
+marqueeDesc = "Marquee multi-select"
+moveDesc = "Move text run"
+selectAllDesc = "Select all"
+shiftClickDesc = "Add / remove a run from selection"
+undoRedoDesc = "Undo / Redo"
+
+[pdfTextEditor.help.find]
+heading = "Find & replace"
+nextDesc = "Next match (add Shift for previous)"
+openDesc = "Open find bar (and replace)"
+
+[pdfTextEditor.help.navigation]
+firstLastDesc = "First / last page"
+heading = "Navigation"
+pageDesc = "Previous / next page"
+zoomDesc = "Zoom in / out"
+
+[pdfTextEditor.inspector]
+document = "Document"
+fontEmbedded = "Embedded font · a character it lacks falls back to Helvetica."
+fontGap = "{{name}} · missing {{glyphs}} - typing those falls back to Helvetica."
+geometry = "Position & size"
+height = "Height"
+heightHint = "A text box's height follows its type size and line count."
+image = "Image"
+images = "Images"
+manyImages = "{{count}} images"
+manyText = "Text · {{count}} boxes"
+mixed = "{{count}} objects"
+multiGeometry = "Select a single object to edit its position and size."
+nothingSelected = "Nothing selected"
+nothingSelectedHint = "Click any text or image on the page to edit it here."
+oneImage = "Image"
+oneText = "Text"
+pages = "Pages"
+tabDocument = "Document"
+tabSelected = "Selected"
+textBoxes = "Text boxes"
+width = "Width"
+widthHint = "A text box's width follows its content and wrapping."
+x = "X"
+y = "Y"
+
+[pdfTextEditor.password]
+cancel = "Cancel"
+incorrect = "Incorrect password - try again."
+label = "Password"
+open = "Open"
+protected = "This PDF is password-protected."
+protectedNamed = "\"{{fileName}}\" is password-protected."
+title = "Password required"
+
+[pdfTextEditor.rulers]
+guide = "Alignment guide at {{value}} {{unit}} - drag onto a ruler to remove"
+hint = "Drag from a ruler to add an alignment guide"
+horizontal = "Horizontal ruler"
+unit = "pt"
+vertical = "Vertical ruler"
+
+[pdfTextEditor.run]
+lockedTitle = "Locked - use the Unlock button to edit"
+
+[pdfTextEditor.saveRisk]
+cancel = "Cancel"
+intro = "Saving the edited copy changes the file. That means:"
+note = "Your edits are kept. The changes listed above are unavoidable when saving the edited copy."
+saveAnyway = "Save anyway"
+title = "Saving will change this PDF"
+
+[pdfTextEditor.settings]
+advanced = "Advanced"
+find = "Find in document"
+findTooltip = "Find ({{shortcut}})"
+view = "View"
+
+[pdfTextEditor.sidebar]
+addImage = "Add image"
+addText = "Add text"
+clickPageToAddText = "Click page to add text"
+document = "Document"
+group = "Group"
+groupingAuto = "Auto"
+groupingAutoHint = "Groups equal-spaced lines into paragraphs. Changing this re-reads the document and clears undo history."
+groupingLine = "Line"
+groupTooltip = "Merge selected runs into one paragraph ({{shortcut}})"
+groupTooltipDisabled = "Select 2+ runs to merge"
+noFile = "No file loaded"
+noFileHint = "Pick a PDF from the Files panel on the left, or drop one in. The editor will open it automatically."
+opening = "Opening document..."
+paragraph = "Paragraph"
+rulers = "Rulers and guides"
+textBoxWidth = "New text box width"
+textGrouping = "Text grouping"
+ungroup = "Ungroup"
+ungroupTooltip = "Split this paragraph into one run per line"
+ungroupTooltipDisabled = "Select a multi-line paragraph to ungroup"
+widthGrow = "Grow"
+widthGrowHint = "Grow widens a box as you type; Wrap keeps its width and flows onto new lines."
+widthWrap = "Wrap"
+
+[pdfTextEditor.spellcheck]
+auto = "Automatic"
+enable = "Check spelling as you type"
+language = "Dictionary language"
+
+[pdfTextEditor.stage]
+loadingDocument = "Loading document"
+loadingProgress = "Loading progress"
+noDocument = "No document loaded."
+pickPrompt = "Pick a PDF from the Files panel on the left to begin editing."
+renderingPreview = "Rendering preview"
+
+[pdfTextEditor.toolbar]
+addTextTooltip = "Add a text box - then click the page"
+advancedColour = "Advanced colour"
+advancedColourTooltip = "Advanced colour (glyph outline)"
+alignBottom = "Align bottom"
+alignCentre = "Align centre"
+alignLabel = "Align · needs 2+ objects"
+alignLeft = "Align left"
+alignMiddle = "Align middle"
+alignRight = "Align right"
+alignTop = "Align top"
+arrange = "Arrange"
+bringForward = "Bring forward"
+bringToFront = "Bring to front"
+caseLower = "lowercase"
+caseSentence = "Sentence case"
+caseTitle = "Title Case"
+caseUpper = "UPPERCASE"
+changeCase = "Change case"
+changeCaseTooltip = "Change case (text runs only)"
+delete = "Delete selected"
+deleteTooltip = "Delete (Del)"
+distributeHorizontally = "Distribute horizontally"
+distributeLabel = "Distribute · needs 3+ objects"
+distributeVertically = "Distribute vertically"
+editImageExternally = "Edit in another app"
+flipHorizontal = "Flip horizontal"
+flipVertical = "Flip vertical"
+fontColour = "Font colour"
+fontSize = "Font size"
+formatting = "Text formatting"
+italic = "Italic"
+italicUnavailable = "This font has no italic version. Load your device fonts or pick another font family."
+lock = "Lock selection"
+lockTooltip = "Lock selection - prevents accidental edits"
+more = "More actions"
+order = "Order"
+outlineColour = "Outline colour"
+outlineWidth = "Outline width (0 = none)"
+redo = "Redo"
+redoTooltip = "Redo ({{shortcut}})"
+replaceImage = "Replace, keeping placement"
+rotateLeft = "Rotate 90° left"
+rotateRight = "Rotate 90° right"
+sendBackward = "Send backward"
+sendToBack = "Send to back"
+undo = "Undo"
+undoTooltip = "Undo ({{shortcut}})"
+unlock = "Unlock selection"
+unlockTooltip = "Unlock selection - makes it editable again"
 
 [pdfTextEditor.tooltip.alpha]
 text = "འདི་ལྟ་བུའི་ཨལ་ཕ་ལྟ་མཁན་འདི་ད་དུང་འཕེལ་རྒྱས་འགྲོ་བཞིན་ཡོད། ཡིག་གཟུགས་འགའ་ཤས་དང་། ཁ་དོག དྭངས་གསལ་གྱི་ནུས་པ། བརྗེ་རེས་མ་བྱེད་གོང་ལ་ཐོན་པའི་PDFལ་ཞིབ་བཤེར་ཐེངས་གཉིས་གནང་རོགས།"
@@ -6134,31 +7007,12 @@ title = "སྔོན་ལྟ། འགྱུར་བ།"
 text = "ལས་ཀའི་ས་ཁོངས་འདིས་ཡིག་ཆ་རྩོམ་སྒྲིག་དང་བཙུགས་པའི་པར་རིས་བརྗེ་སྒྱུར་བྱེད་པར་གཙོ་བོར་བལྟས་ཡོད། ཤོག་ངོས་སྒྱུ་རྩལ་གྱི་ལས་ཀ་སྣ་ཚོགས་དང་། འབྲི་ཤོག་གི་ཝི་ཇེཊ། དེ་བཞིན་བང་རིམ་ཅན་གྱི་རི་མོ་བཅས་ཕྱིར་གཏོང་ཆེད་དུ་ཉར་ཚགས་བྱས་ཡོད་ཀྱང་། འདིར་ཆ་ཚང་རྩོམ་སྒྲིག་བྱེད་ཐུབ་ཀྱི་མེད།"
 title = "ཡིག་ཆ་དང་པར་རིས་དམིགས་ཡུལ།"
 
-[pdfTextEditor.welcomeBanner]
-bestFor = "བརྩམས་ཆོས་ལེགས་ཤོས་ནི།"
-bestFor1 = "གཙོ་བོ་ཡི་གེ་དང་པར་རིས་ཡོད་པའི་PDFའཇམ་པོ།"
-bestFor2 = "ཚད་ལྡན་གྱི་དོན་ཚན་རྩ་སྒྲིག་དང་ཡིག་ཆ།"
-bestFor3 = "ཡི་གེ་དང་རྩོམ་ཡིག སྙན་ཐོ་དང་གཞི་རྩའི་ཡིག་ཆ།"
-dontShowAgain = "ཡང་བསྐྱར་མ་སྟོན།"
-experimental = "འདི་ནི་འཕེལ་རྒྱས་ཤུགས་ཆེན་གྱི་ཚོད་ལྟའི་ཁྱད་ཆོས་ཤིག་རེད། བེད་སྤྱོད་བྱེད་སྐབས་བརྟན་ལྷིང་མེད་པ་དང་གནད་དོན་ཁ་ཤས་རེ་བ་བྱེད་དགོས།"
-feedback = "འདི་ནི་སྔ་མོ་ནས་འཛུལ་ཞུགས་བྱེད་པའི་ཁྱད་ཆོས་ཤིག་རེད། ཁྱེད་རང་ལ་འཕྲད་པའི་གནད་དོན་གང་རུང་ལ་ཡར་རྒྱས་གཏོང་བར་ཕན་ཐོགས་པའི་གནད་དོན་གང་རུང་སྙན་ཞུ་གནང་རོགས།"
-gotIt = "ཧ་གོ་སོང"
-howItWorks = "ལག་ཆ་འདིས་ཁྱེད་ཀྱི་PDF རྩོམ་སྒྲིག་བྱེད་ཐུབ་པའི་རྩ་སྒྲིག་ལ་སྒྱུར་བ་དང་། དེའི་ནང་ཁྱེད་ཀྱིས་ཡིག་འབྲུའི་ནང་དོན་ལ་བསྒྱུར་བཅོས་བྱེད་ཐུབ་པ་དང་པར་རིས་བརྗེ་སྒྱུར་བྱེད་ཐུབ། འགྱུར་བ་དེ་ཚོ་PDFགསར་པ་ལྟར་ཉར་ཚགས་བྱེད་ཀྱི་ཡོད།"
-issue1 = "ཡིག་ཆའི་ཚོན་མདོག་ད་ལྟ་ཉར་ཚགས་བྱས་མེད།(མགྱོགས་པོ་ཁ་སྣོན་བྱེད་རྒྱུ་ཡིན།)"
-issue2 = "དོན་ཚན་གྱི་ཐབས་ལམ་ལ་ཕྲེང་སྒྲིག་དང་བར་ཐག་གི་གནད་དོན་མང་བ་ཡོད།"
-issue3 = "ཕྱིར་གཏོང་བྱས་པའི་PDFདང་མི་འདྲ་བར་སྔོན་ལྟའི་བརྙན་ཤེལ་དེ་ཕྱིར་གཏོང་བྱས་པའི་PDFདང་འདྲ་བ་རེད།"
-issue4 = "འཁོར་བའི་ཚིག་ཡིག་སྒྲིག་སྟངས་ལ་ལག་ཐོག་ནས་སྙོམ་སྒྲིག་བྱེད་དགོས་སྲིད།"
-issue5 = "དྭངས་གསལ་དང་བང་རིམ་གྱི་ནུས་པ་དེ་ཐོག་མ་དང་མི་འདྲ་བ་ཆགས་སྲིད།"
-knownIssues = "ཤེས་རྟོགས་བྱུང་བའི་གནད་དོན་(གཏན་འཁེལ་བྱུང་བ):"
-limitation1 = "ཡིག་གཟུགས་ཀྱི་པར་རིས་དེ་PDFཐོག་མ་དང་ཅུང་མི་འདྲ་བ་ཡོད་སྲིད།"
-limitation2 = "སྣ་མང་རི་མོ་དང་། འབྲི་ཤོག་ཡིག་དུམ། མཆན་འགྲེལ་བཅས་ཉར་ཚགས་བྱས་ཀྱང་རྩོམ་སྒྲིག་བྱེད་མི་ཐུབ།"
-limitation3 = "ཡིག་ཆ་ཆེན་པོ་རྣམས་སྒྱུར་བ་དང་ལས་སྣོན་བྱེད་པར་དུས་ཚོད་འགོར་སྲིད།"
-limitations = "ད་ལྟའི་ཚད་གཞི།"
-notIdealFor = "བསམ་ན་མི་འདུག"
-notIdealFor1 = "PDFs དམིགས་བསལ་གྱི་རྩ་སྒྲིག་དང་མདེའུ་ཡི་ས་ཚིགས་དང་། རེའུ་མིག ཡང་ན་ཀ་རིལ་སྣ་ཚོགས་ཀྱི་བཀོད་སྒྲིག"
-notIdealFor2 = "དུས་དེབ་དང་ཡིག་ཆ་ཡང་ན་ཡིག་ཆ་མང་པོ་བཀོད་སྒྲིག་བྱས་ཡོད།"
-notIdealFor3 = "བཀོད་སྒྲིག་རྙོག་འཛིང་ཅན་གྱི་མཛུབ་སྟོན་ལག་དེབ་དང་།"
-title = "PDFཡི་ཡིག་ཆ་རྩོམ་སྒྲིག་པ་ལ་དགའ་བསུ་ཞུ།"
+[pdfTextEditor.zoom]
+fit = "Fit"
+fitToWidth = "Fit to width"
+in = "Zoom in"
+out = "Zoom out"
+reset = "Reset zoom to 100%"
 
 [PDFToCSV]
 header = "PDF ནས་ CSV བར།"
@@ -6298,10 +7152,10 @@ saml = "SAML"
 secureLoginSupport = "བདེ་འཇགས་ནང་འཛུལ་རྒྱབ་སྐྱོར"
 selfHostedDeployment = "རང་འཛིན་སྤེལ་སྟངས"
 sso = "SSO"
-unlimitedUsers = "སྤྱོད་མཁན་ཚང་མ"
 upToFiveUsers = "སྤྱོད་མཁན 5 ཚན་ཚོད"
 upToFiveUsersLowercase = "སྤྱོད་མཁན 5 ཚན་ཚོད"
 usageTracking = "བཀོལ་སྤྱོད་འཚོར"
+usersIncluded = "100 users included"
 usersLimitedToSeats = "སྤྱོད་མཁན་ seats ལྟར་ཚད་བཀག"
 
 [plan.free]
@@ -6330,9 +7184,9 @@ saveWithAnnualBilling = "ལོ་རིམ་གླ་སྒྲིག་བྱ�
 selfHosted = "རང་འཛིན"
 selfHostedOnInfrastructure = "ཁྱེད་རང་གི་གཞི་བརྩི་སྟེང་རང་འཛིན"
 ssoOAuth = "SSO (OAuth2/OIDC)"
-unlimitedUsers = "སྤྱོད་མཁན་ཚང་མ"
 upToFiveUsers = "སྤྱོད་མཁན 5 ཚན་ཚོད"
 usageTrackingPrometheus = "བཀོལ་སྤྱོད་འཚོར དང་ Prometheus"
+usersIncluded = "100 users included"
 
 [plan.licenseWarning]
 body = "ཁྱེད་ལ་{{total}} སྤྱོད་མཁན་ཡོད་པ་ཡིན་ན་ཡང་། རིན་མེད་གནས་ཚད་ནི་སར་བར་རེ་ལ་{{limit}} ཙམ་རང་ལ་རྒྱབ་སྐྱོར་བྱེད། Stirling PDF ཚགས་པའི་ངང་འགྲོ་བར་རིམ་སྤོར་བྱོས།"
@@ -6379,11 +7233,29 @@ keyDescription = "ཁྱེད་རང་གི་གློག་འཕྲི�
 success = "ལག་འཁྱེར་སྒུལ་ཤུགས་ལྡན་པ།"
 successMessage = "ཁྱེད་ཀྱི་ཆོག་མཆན་དེ་ལེགས་འགྲུབ་བྱུང་ཡོད། ཁྱོད་ཀྱིས་ད་ལྟ་སྒེའུ་ཁུང་འདི་ཁ་རྒྱག་ཐུབ།"
 
+[plan.team]
+maxUsers = "100 users"
+name = "Team"
+
 [policies.activity]
 outputsUnavailable = "སྲིད་བྱང་མཇུག་འབྲས་དེ་རྣམས་ད་དུང་ཕབ་ལེན་མི་ཐུབ།"
 partialOutputsUnavailable = "སྲིད་བྱང་མཇུག་འབྲས་ཁ་ཤས་ད་དུང་ཕབ་ལེན་མི་ཐུབ།"
 runNotFound = "བཀོལ་སྤྱོད་འགུལ་སྐྱོད་དེ་ད་དུང་མ་རྙེད།"
 timedOut = "མཇུག་མ་བསྡུ་བའི་སྔོན་དུ་ བཀོལ་སྤྱོད་དུས་ཚོད་ཡོལ་བ།"
+
+[policies.editorPanel]
+collapse = "Hide pipelines"
+empty = "Nothing runs on import or export yet"
+expand = "Show pipelines"
+openProcessor = "Open the PDF Processor"
+rowFailed = "{{label}} - last run failed"
+rowIdle = "{{label}} runs automatically"
+rowRunning = "{{label}} is running now"
+runsToday_one = "{{count}} run today"
+runsToday_other = "{{count}} runs today"
+title = "PDF Processor"
+triggerExport = "Runs on export"
+triggerImport = "Runs on import"
 
 [policies.enforcement]
 applying = "{{names}} བཀོལ་སྤྱོད་བཞིན"
@@ -6422,59 +7294,44 @@ badgeRan = "{{name}} སྲིད་ཇུས་ཡིག་ཆ་འདིའ�
 badgeRunning = "{{name}} སྤེལ་བཞིན..."
 blockingAction = "སྲིད་ཇུས་ལག་བསྟར་སྐབས་ {{action}} འགོག་བྱས། སྒུག་རོགས..."
 dismiss = "ཁེབས་རིས་སེལ"
-enforcingTitle = "སྲིད་ཇུས་ལག་བསྟར་བཞིན..."
+enforcingPipelineTitle = "Enforcing pipeline..."
+enforcingPolicyTitle = "Enforcing policy..."
+exportBlocked = "A required policy failed. The export was cancelled. Try exporting again."
+recoveryBody = "We couldn't apply a required policy to these files. Try again, or close the affected files to continue working."
+recoveryClose_one = "Close file"
+recoveryClose_other = "Close {{count}} files"
+recoveryClosing_one = "Closing file..."
+recoveryClosing_other = "Closing {{count}} files..."
+recoveryContactAdmin = "Contact your administrator for help."
+recoveryContactOwner = "Contact {{owner}} for help."
+recoveryError = "The action couldn't be completed. Try again."
+recoveryOwnedPolicy = "Check the policy settings, then retry."
+recoveryRetry_one = "Retry file"
+recoveryRetry_other = "Retry {{count}} files"
+recoveryRetrying_one = "Retrying file..."
+recoveryRetrying_other = "Retrying {{count}} files..."
+recoverySummary_one = "{{count}} file affected."
+recoverySummary_other = "{{count}} files affected."
+recoveryTechnicalDetails = "Technical details"
+recoveryTitle = "Policy enforcement failed"
 viewAnyway = "ཡིག་ཆ་ལྟ (སྲིད་ཇུས་ད་དུང་ལག་བསྟར་བཞིན)"
 
 [policyOption]
-autoRedactPhi = "PHI རང་འགུལ་ནག་བསུབ"
-blockExport = "ཕྱིར་འདོན་འགོག"
-ccpa = "CCPA"
-contracts = "གན་རྒྱ"
-documents = "ཡིག་ཆ"
-fedramp = "FedRAMP"
-financialReports = "དངུལ་རྩིས་སྙན་ཐོ"
-flagForReview = "བསྐྱར་ཞིབ་ཆེད་རྟགས་འགོད"
-gdpr = "GDPR"
-hipaa = "HIPAA"
-hold = "ཉར་འཇོག"
-hrRecords = "HR ཟིན་ཐོ"
-indefinite = "དུས་ཚད་མེད་པ"
-insurance = "འགན་བཅོལ"
-invoices = "འཛིན་ཤོག"
-iso27001 = "ISO 27001"
-legalFilings = "ཁྲིམས་ལུགས་འབུལ་ཡིག"
-medicalPhi = "སྨན་བཅོས / PHI"
-never = "ནམ་ཡང་མིན"
-ninetyDays = "ཉིན་ 90"
-oneYear = "ལོ་ 1"
-p60 = "60%"
-p70 = "70%"
-p80 = "80%"
-p90 = "90%"
-p95 = "95%"
-pciDss = "PCI DSS"
-quarantineDocument = "ཡིག་ཆ་ཟུར་འཇོག"
-routeToBucket = "bucket ལ་ལམ་སྒྲིག"
-s3Bucket = "S3 bucket"
-sevenYears = "ལོ་ 7"
-sharePoint = "SharePoint"
-soc2 = "SOC 2"
-taxDocuments = "ཁྲལ་ཡིག་ཆ"
-thirtyDays = "ཉིན་ 30"
-threeYears = "ལོ་ 3"
-webhook = "Webhook"
-
-[portal]
-comingSoon = "མགྱོགས་པོར་ཡོང་རྒྱུ"
+pdfa-1 = "PDF/A-1b"
+pdfa-2b = "PDF/A-2b"
+pdfa-3b = "PDF/A-3b"
 
 [portal.accountLink.card]
 billingNote = "ལྟ་སྐྱོང་མེད་པའི་ལས་སྣོན་གྱི་རིན་འབབ་ཁྱེད་ཀྱི་ཚོགས་པའི་དངུལ་ཁུག་ནས་རྩིས་འབུལ་བྱེད།"
+connectDescription = "Connect this server to use your team’s processing allowance in Stirling Cloud."
+disconnectBody = "This server will stop using your team’s processing allowance in Stirling Cloud. Your local files stay on this server. To connect again, follow the original connection steps."
+disconnectTitle = "Disconnect this instance?"
 eyebrow = "རྩིས་ཐོ་སྦྲེལ་མཐུད"
 linkButton = "ཁྱེད་ཀྱི Stirling རྩིས་ཐོ་སྦྲེལ"
-linked = "སྦྲེལ་ཟིན"
-linkedAs = "{{name}} ཡི་མིང་ཐོག་སྦྲེལ་ཟིན།"
-linkedGeneric = "དཔེ་མཚོན་འདི་སྦྲེལ་ཟིན།"
+loading = "Checking account connection"
 notLinked = "སྦྲེལ་མེད"
+signedInAs = "Signed in to Stirling Cloud as"
+statusError = "Couldn’t check the account connection"
 title = "ཚོགས་པ་འདི་དེའི Stirling རྩིས་ཐོ་དང་སྦྲེལ"
 unlink = "སྦྲེལ་མཐུད་གཅོད"
 
@@ -6482,48 +7339,93 @@ unlink = "སྦྲེལ་མཐུད་གཅོད"
 title = "སྦྲེལ་མ་ཐུབ"
 
 [portal.accountLink.card.loginNotConfigured]
-after = "hosted Stirling རྩིས་ཐོ་དང་རྩིས་ཐོ་སྦྲེལ་མཐུད་སྤྱོད་ཐུབ་པར། dev ནང་ཁྱེད་ཀྱིས་སྦྲེལ་མཐུད་གླེང་སྒྲོམ་ནས་ནང་འཛུལ་དཔེ་སྟོན་བྱེད་ཐུབ།"
-before = "སྒྲིག"
+description = "Ask your server administrator to enable the connection to Stirling Cloud."
 title = "SaaS ནང་འཛུལ་སྒྲིག་མེད"
 
+[portal.accountLink.connect]
+close = "Close"
+exhaustedLede = "This server has used its free credits for the month. They reset when the period rolls over. Connecting a Stirling account adds a further monthly allowance on top."
+notNow = "Not now"
+start = "Connect Stirling account"
+step = "Step {{current}} of {{total}}"
+
+[portal.accountLink.connect.benefits]
+creditsDetailMonthly = "Free monthly allowance"
+creditsLabel = "Credits"
+processorDetail = "Pipelines, policies, sources and audit"
+processorLabel = "Processor"
+teamsDetail = "Free for up to 5 users"
+teamsLabel = "Teams"
+
+[portal.accountLink.connect.callback]
+linkedNotSignedIn = "You are not signed in to Stirling in this browser, so usage and billing will ask you to sign in."
+retry = "Try again"
+signedInAnyway = "You are signed in to Stirling, so billing and usage will load. Only the server link is incomplete."
+working = "Finishing the connection."
+
+[portal.accountLink.connect.callback.expired]
+body = "Connection requests are short lived. Start another one."
+title = "Request expired"
+
+[portal.accountLink.connect.callback.malformed]
+body = "This page was opened without a valid connection response. Start the connection from settings."
+title = "Could not read the response"
+
+[portal.accountLink.connect.callback.rejected]
+body = "This request was declined or has already been used. Start another one if that was not intended."
+title = "Connection not completed"
+
+[portal.accountLink.connect.callback.unfinished]
+body = "Stirling did not confirm the connection. This is usually temporary."
+title = "Not finished yet"
+
+[portal.accountLink.connect.done]
+accountLabel = "Account"
+addPolicy = "Add a policy"
+buildPipeline = "Set up a pipeline"
+creditsBarLabel = "Free credits remaining"
+creditsSuffix = "of {{allowance}} free credits left"
+cta = "Done"
+inviteTeam = "Invite your team"
+lede = "This server now runs against your Stirling account."
+pendingTitle = "Almost there"
+switchOnProcessor = "Switch on the Processor"
+title = "Connected"
+
+[portal.accountLink.connect.handoff]
+going = "Taking you to stirling.com"
+reauthLede = "Your Stirling session expired. Signing in again keeps usage and billing visible. This server stays connected either way."
+title = "Connecting"
+
+[portal.accountLink.connectionNotice]
+expiredBody = "This server has not reached Stirling Cloud within its offline allowance. Cloud-backed Team features and Processor work are paused. Existing data and installed licence rights are preserved. Access returns automatically after a successful connection confirms your plan."
+expiredTitle = "Cloud access paused"
+offlineBody = "Your last confirmed plan remains available until {{deadline}}. Restore this server’s connection before then to avoid pausing cloud-backed features and processing."
+offlineTitle = "Stirling Cloud is unreachable"
+retry = "Check connection"
+revokedBody = "Stirling Cloud rejected this account connection. Reconnect the account in Settings to restore eligible cloud-backed features."
+revokedTitle = "Account connection revoked"
+
 [portal.accountLink.gate]
-action = "རྩིས་ཐོ་སྦྲེལ"
-description = "རིན་འབབ་ཡོད་པའི་ཁྱད་ཆོས་སྤྱོད་ཆེད་ཚོགས་པ་འདིའི Stirling རྩིས་ཐོ་སྦྲེལ།"
-title = "སྦྲེལ་ནས་སྒོ་འབྱེད"
-titleFeature = "{{feature}} སྒོ་འབྱེད་ཆེད་སྦྲེལ"
+retry = "Try again"
 
 [portal.accountLink.instances]
-active = "འགུལ་སྐྱོད"
-revoke = "ཕྱིར་འཐེན"
-revoked = "ཕྱིར་འཐེན་ཟིན"
 unnamed = "མིང་མེད་དཔེ་མཚོན"
-
-[portal.accountLink.instances.columns]
-instance = "དཔེ་མཚོན"
-lastSeen = "མཐའ་མར་མཐོང་བ"
-linked = "སྦྲེལ་ཟིན"
-status = "གནས་ཚུལ"
 
 [portal.accountLink.instances.empty]
 description = "ཚོགས་པ་འདིའི་རྩིས་ཐོ་སྦྲེལ་ནས། དེ་རྗེས་ཁྱེད་ཀྱི་རང་གིས་གནས་སྤེལ་བྱས་པའི་དཔེ་མཚོན་ཐོ་འགོད་བྱས་ན་འདིར་མཐོང་ཐུབ།"
+otherDescription = "This is the only connected instance shown for your team."
+otherTitle = "No other connected instances"
 title = "སྦྲེལ་ཟིན་པའི་དཔེ་མཚོན་མེད"
 
-[portal.accountLink.instances.time]
-daysAgo_one = "{{count}} ཉིན་སྔོན"
-daysAgo_other = "{{count}} ཉིན་སྔོན"
-hoursAgo_one = "{{count}} ཆུ་ཚོད་སྔོན"
-hoursAgo_other = "{{count}} ཆུ་ཚོད་སྔོན"
-justNow = "ད་ལྟ་རང"
-minutesAgo_one = "{{count}} སྐར་མ་སྔོན"
-minutesAgo_other = "{{count}} སྐར་མ་སྔོན"
-never = "ནམ་ཡང་མིན"
-
 [portal.accountLink.modal]
-linkSubtitle = "server འདིས་རིན་འབབ་བསྡུ་དགོས་པའི་རྩིས་ཐོར་ནང་འཛུལ་བྱོས།"
+cancel = "Cancel"
+continueReauth = "Sign in again"
+exhaustedTitle = "Add more monthly credits"
 linkTitle = "ཁྱེད་ཀྱི Stirling རྩིས་ཐོ་སྦྲེལ"
-reauthSubtitle = "ཁྱེད་ཀྱི་ལས་ཡུན་དུས་ཡོལ་སོང་ — ཁྱེད་ཀྱི Stirling རྩིས་ཐོར་ཡང་བསྐྱར་ནང་འཛུལ་བྱོས། ཁྱེད་ཀྱི་དཔེ་མཚོན་སྦྲེལ་ཟིན་པར་གནས་ཡོད།"
+noAuthorizeUrl = "Stirling did not return somewhere to continue. Try again in a moment."
 reauthTitle = "ཡང་བསྐྱར་ནང་འཛུལ"
-simulateSignIn = "ནང་འཛུལ་དཔེ་བཟོ (dev)"
+startFailed = "Could not reach Stirling to start the connection. Check this server's outbound network access, then try again."
 
 [portal.accountLink.modal.loginNotConfigured]
 after = "hosted Stirling རྩིས་ཐོ་དང app ནང་སྦྲེལ་བ་ནུས་སྤེལ་བྱེད་པར།"
@@ -6534,6 +7436,9 @@ title = "SaaS ནང་འཛུལ་སྒྲིག་མེད"
 [portal.accountLink.panel]
 instancesSub = "ཚོགས་པ་འདིར་ཐོ་འགོད་བྱས་པའི་རང་གིས་གཉེར་བའི་དཔེ་མཚོན་ཚང་མ། དེའི་ལྟ་མེད་འཛུལ་སྤྱོད་འཕྲལ་དུ་གཅོད་པར་དཔང་ཡིག་ཕྱིར་འཐེན་བྱོས།"
 instancesTitle = "སྦྲེལ་ཟིན་པའི་དཔེ་མཚོན"
+manageCloud = "Manage on stirling.com"
+otherInstancesSub = "Other self-hosted servers connected to the same team in Stirling Cloud."
+otherInstancesTitle = "Other connected instances"
 revokeError = "དཔེ་མཚོན་ཕྱིར་འཐེན་མ་ཐུབ"
 sub = "རང་གིས་གཉེར་བའི་ཚོགས་པ་འདི་དེའི Stirling རྩིས་ཐོ་དང་སྦྲེལ་ནས། ལྟ་མེད་ལས་སྒྲུབ་ཀྱི་རིན་འབབ་ཁྱེད་ཀྱི་ཚོགས་པའི་དངུལ་ཁུག་ལ་བརྩི་རུ་འཇུག"
 
@@ -6541,6 +7446,12 @@ sub = "རང་གིས་གཉེར་བའི་ཚོགས་པ་འ�
 forbidden = "ཚོགས་པའི་བདག་པོ་ཁོ་ནས་ཚོགས་པའི་སྦྲེལ་ཟིན་པའི་དཔེ་མཚོན་ལྟ་ཐུབ།"
 generic = "རུ་ཁག་གི་སྦྲེལ་ཟིན་པའི་དཔེ་མཚོན་འཇུག་ལེན་མ་ཐུབ། སྐབས་ཤིག་རྗེས་ཡང་བསྐྱར་ཚོད་ལྟ་བྱོས།"
 title = "སྦྲེལ་ཟིན་པའི་དཔེ་མཚོན་འཇུག་ལེན་མ་ཐུབ"
+
+[portal.accountLink.rail]
+cta = "Connect"
+later = "Not now"
+sub = "Adds monthly credits and room for more users. Everything on this server already works without one."
+title = "Connect your Stirling account"
 
 [portal.accountLink.state]
 free = "རྩོམ་སྒྲིག་འཆར་གཞི"
@@ -6613,72 +7524,84 @@ title = "ཁྱེད་ཀྱི Processor འཆར་གཞི་ནུས་
 limit = "ཟླ་རེའི་སྤྱོད་འགྲོ་ཚད {{amount}}/mo། ཚད་ལ་སླེབས་དུས་ལས་སྒྲུབ་མཚམས་འཇོག"
 limitNoCap = "སྤྱོད་འགྲོ་ཚད་མེད། ལས་སྒྲུབ་མཚམས་མི་འཇོག འཛིན་ཤོག་ཟླ་རེར་སྤེལ་ཡོང་།"
 
-[portal.billing.enterpriseUpsell]
-cta = "Enterprise ལ་ཞིབ་ལྟ"
-description = "ཁས་ལེན་བྱས་པའི་སྤྱོད་ཚད་ཀྱི་ཆག་ཡང་། air-gapped deployment། མངགས་བཟོ MSA དང་བདེ་འཇགས་ཞིབ་བཤེར། 3rd-party བཀྲམ་སྤེལ་མཉམ་ལས།"
-eyebrow = "སྤྱོད་ཚད་ཆག་ཡང་ · 1M+ PDFs"
-title = "Stirling Enterprise"
+[portal.billing.chip]
+invoices = "Invoices"
+nav = "Sections"
+payment = "Payment"
+plan = "Plan"
+procurement = "Procurement"
+usage = "Usage"
 
-[portal.billing.freeEditors]
-activeThisMonth = "ཟླ་འདིར་སྤྱོད་བཞིན"
-cost = "རིན་གོང"
-editorsDeployed = "བཀོད་སྤེལ་བྱས་པའི་རྩོམ་སྒྲིག་ཆས"
-inviteTeammates = "རུ་གྲོགས་གདན་འདྲེན"
-pdfsEdited = "རྩོམ་སྒྲིག་བྱས་པའི PDFs"
-subtitle = "གང་དུ་ཡང་བཀོད་སྤེལ་བྱོས། ཁྱེད་ཀྱི་རུ་ཁག་ཚང་མའི་ཆེད།"
-title = "རིན་མེད PDF རྩོམ་སྒྲིག་ཆས"
+[portal.billing.cycle]
+credits = "Credits"
+creditsNote = "{{units}} used · includes free and prepaid credits"
+day = "Day {{day}} of {{of}}"
+editors = "Editors deployed"
+estimated = "estimated · the meter settles at close"
+estimatedPending = "estimated · includes {{pending}} not yet synced from your instances"
+pdfs = "PDFs processed"
+users = "Users"
+
+[portal.billing.enterprise]
+cta = "Get an enterprise quote"
+sub = "Air-gapped deployment, SCIM, data residency, uptime SLAs, and an agreement to match."
+title = "Running Stirling in a regulated environment?"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "checkout འགོ་འཛུགས་མ་ཐུབ"
-currentPlan = "མིག་སྔའི་འཆར་གཞི"
-freeForever = "རྟག་ཏུ་རིན་མེད"
 noTeamResolved = "ཁྱེད་ཀྱི་དངུལ་ཁུག་སྟེང་རུ་ཁག་ད་དུང་གཏན་འཁེལ་མ་བྱུང་ — བསྐྱར་གསོ་བྱས་ནས་ཡང་བསྐྱར་ཚོད་ལྟ་བྱོས།"
-ownerOnly = "རུ་ཁག་གི་བདག་པོ་ཁོ་ནས Processor འཆར་གཞི་སྤོར་ཐུབ།"
 payInvoice = "མཇུག་སྒྲུབ་ཆེད་འཛིན་ཤོག་སྤྲོད"
-planName = "Editor"
-ssoIncluded = "SSO ཚུད་ཡོད"
-switchOnProcessor = "Processor སྤོར →"
-unlimitedUsers = "སྤྱོད་མཁན་ཚད་མེད"
 viewQuote = "རིན་གོང་ལྟ"
 
-[portal.billing.invoices]
-columnAmount = "དངུལ་འབོར"
-columnDate = "ཚེས་གྲངས"
-columnDescription = "འགྲེལ་བཤད"
-columnPdfsProcessed = "ལས་སྒྲུབ་བྱས་པའི PDFs"
-columnStatus = "གནས་ཚུལ"
-descriptionFallback = "འཛིན་ཤོག"
-downloadAriaLabel = "འཛིན་ཤོག {{number}} PDF ལྟར་ཕབ་ལེན"
-emptyDescription = "ཁྱེད་ཀྱི་རུ་ཁག་གིས་མངགས་ཉོ་བྱས་ནས་འཁོར་ཡུན་དང་པོ་མཇུག་སྒྲིལ་རྗེས། ཁྱེད་ཀྱི་འཛིན་ཤོག་འདིར་མངོན་ཡོང་།"
-emptyTitle = "ད་དུང་འཛིན་ཤོག་མེད"
-fetchLimitNote_one = "ཁྱེད་ཀྱི་ཉེ་ཆར་གྱི་འཛིན་ཤོག {{count}} སྟོན་བཞིན་ཡོད། འཛིན་ཤོག་རྙིང་པ་རྣམས་ Stripe portal ནང་ཡོད།"
-fetchLimitNote_other = "ཁྱེད་ཀྱི་ཉེ་ཆར་གྱི་འཛིན་ཤོག {{count}} སྟོན་བཞིན་ཡོད། འཛིན་ཤོག་རྙིང་པ་རྣམས་ Stripe portal ནང་ཡོད།"
-loadError = "འཛིན་ཤོག་འཇུག་ལེན་མ་ཐུབ། {{error}}"
-pdfLink = "PDF ↓"
-showAll_one = "ཚང་མ {{count}} སྟོན"
-showAll_other = "ཚང་མ {{count}} སྟོན"
-showFewer_one = "ཉུང་ཙམ་སྟོན (མགོའི {{count}})"
-showFewer_other = "ཉུང་ཙམ་སྟོན (མགོའི {{count}})"
-showMostRecent_one = "ཉེ་ཆར་གྱི {{count}} སྟོན"
-showMostRecent_other = "ཉེ་ཆར་གྱི {{count}} སྟོན"
-title = "འཛིན་ཤོག་ལོ་རྒྱུས"
-viewAriaLabel = "Stripe ནང་འཛིན་ཤོག {{number}} ལྟ"
-viewLink = "ལྟ ↗"
+[portal.billing.identity.free]
+chipAnywhere = "Web, desktop & self-hosted"
+chipCredits = "{{allowance}} free credits monthly"
+chipTools = "Every PDF tool"
+name = "Free"
+sub = "The full PDF Editor."
 
-[portal.billing.linkPrompt]
-cta = "Stirling རྩིས་ཐོ་སྦྲེལ"
-description = "ལག་སྒུལ PDF རྩོམ་སྒྲིག — ལྟ་བ། མིང་རྟགས་འགོད་པ། མཉམ་སྒྲིལ། དབྱེ་བ། ཆུ་རྟགས། སྡུད་བཙིར། བསྒྱུར་བ། ལག་སྒུལ OCR — ནམ་ཡང་རིན་མེད་ཡིན། སྦྲེལ་ཡོད་མེད་གང་ཡང་འདྲ། ཚད་འཇལ་ལས་སྒྲུབ (automation, AI, དང API) གི་རིན་མེད PDFs 500 ལེན་པར་སྦྲེལ། དེ་ལས་མང་བ་དགོས་དུས། Processor འཆར་གཞི་སྤོར་ནས་ཁྱེད་ཀྱིས་སྤྱད་པ་ཁོ་ནར་རིན་སྤྲོད།"
-title = "ཁྱེད་ཀྱི Stirling རྩིས་ཐོ་སྦྲེལ"
+[portal.billing.identity.processor]
+chipMetered = "Metered processing"
+chipPipelines = "Pipelines & API"
+name = "Processor"
+sub = "Team base plus {{rate}} per credit"
+subNoRate = "Team base plus metered processing"
 
-[portal.billing.paymentMethod]
-billedMonthly = "ཟླ་རེར་རིན་འབབ་བསྡུ"
-cardEnding = "{{brand}} མཇུག་ཨང་ {{last4}}"
-cardFallback = "གཱ"
-expiresBilledMonthly = "དུས་ཚོད {{expiry}} ལ་ཟད · ཟླ་རེར་རིན་འབབ་བསྡུ"
-eyebrow = "སྤྲོད་ཐབས"
-managedSub = "ཁྱེད་ཀྱི་གཱ་དང་རིན་འབབ་ཞིབ་ཆ་ Stripe ཡི་མཁོ་མཁན portal ནང་བདེ་འཇགས་ངང་ཉར་ཡོད།"
-managedTitle = "Stripe ནང་དོ་དམ་བྱས"
-update = "གསར་སྒྱུར"
+[portal.billing.identity.team]
+chipFleet = "Fleet control"
+chipIncluded = "{{allowance}} included credits monthly"
+chipSso = "SSO"
+name = "Team"
+sub = "Up to {{users}} users"
+subNoLimit = "No user limit"
+
+[portal.billing.invoiceRow]
+current = "Current"
+failed = "Unpaid"
+paid = "Paid"
+undated = "Undated"
+unknownAmount = "Unknown"
+view = "View"
+
+[portal.billing.license]
+add = "Add"
+addTitle = "Add license"
+empty = "No license installed"
+label = "License key"
+update = "Update"
+updateTitle = "Update license"
+view = "View"
+
+[portal.billing.payment]
+billedTo = "Billed to"
+card = "{{brand}} ending {{last4}}"
+cardWithExpiry = "{{brand}} ending {{last4}} · expires {{month}} / {{year}}"
+dateUnavailable = "Billing date not available yet"
+invoicesTo = "Invoices go to"
+method = "Payment method"
+nextInvoice = "Next invoice"
+noCard = "No card on file"
+update = "Update"
 
 [portal.billing.pdfsProcessed]
 emptyPeriod = "དུས་ཡུན་འདིར་ད་དུང་ལས་སྒྲུབ་མེད།"
@@ -6692,7 +7615,6 @@ segmentApiDesc = "ཐད་ཀར API རེ་ཞུ"
 segmentApiLabel = "API"
 segmentAutomationDesc = "Automations & pipelines"
 segmentAutomationLabel = "Automation"
-sizeMultiplier = "{{formatted}} PDFs ལ་ཆེ་ཆུང་སྒྱུར་རྟེན་སྤྱད་ཡོད"
 summary = "{{unique}} ཁེར་རྐྱང་ · {{units}} meter units · PDF རེར་ཆ་སྙོམས {{avg}}"
 summaryNoRate = "{{unique}} ཁེར་རྐྱང་ · {{units}} meter units"
 unit = "PDFs"
@@ -6798,6 +7720,38 @@ exhausted = "སྤྱད་ཚར་"
 healthy = "མང་པོ་ལྷག་"
 low = "ཉུང་དུ་འགྲོ་བཞིན་"
 
+[portal.billing.processor]
+activate = "Switch on the Processor"
+factCapped = "{{pct}}% of {{cap}}"
+factFree = "{{used}} of {{allowance}} used"
+factNoCap = "no limit"
+included = "Included in your license"
+includedCredits = "Included credits"
+includedRenewal = "{{summary}} · Renews {{date}}"
+meteredCapTooltip = "Pauses metered processing at your spend limit."
+midIncluded = "{{rate}} per credit · {{allowance}} included every month"
+midIncludedNoRate = "{{allowance}} included every month"
+midMetered = "{{spend}} metered this cycle"
+midMeteredUnknown = "Metered this cycle"
+raiseLimit = "Raise limit"
+rowName = "Processor"
+
+[portal.billing.section]
+cycle = "This cycle"
+invoices = "Invoices"
+payment = "Payment"
+plan = "Your plan"
+
+[portal.billing.serverPlan]
+active = "Active self-hosted license"
+connectBody = "Connect to add cloud processing credits. Your server license stays active."
+enterprise = "Enterprise"
+enterpriseConnectBody = "Your Enterprise license includes processing on this server. Connecting an account is optional."
+included = "Included with your license"
+seats = "{{seats}} licensed seats"
+server = "Server"
+unlimited = "Unlimited users"
+
 [portal.billing.spendLimit]
 adjustLimit = "ཚད་བཀག་སྒྲིག་"
 cancel = "རྩིས་མེད་"
@@ -6823,14 +7777,8 @@ body_one = "{{rate}}/ཉིན་རེར་ལྟར་ན། ཁྱེད་ 
 body_other = "{{rate}}/ཉིན་རེར་ལྟར་ན། ཁྱེད་ ~{{count}} ཉིན་ནང་ཚད་བཀག་ལ་སླེབས་ (~{{monthEnd}} ཟླ་མཇུག)། འོས་སྦྱོར་ཚད་བཀག་ ~{{suggested}}།"
 label = "བརྒལ་རྒྱུར་སྔོན་དཔག་བྱས་པ།"
 
-[portal.billing.spendThisMonth]
-eyebrow = "ཟླ་འདིའི་འགྲོ་གྲོན་"
-freeRemaining_one = "རིན་མེད PDF {{formatted}} ལྷག་"
-freeRemaining_other = "རིན་མེད PDFs {{formatted}} ལྷག་"
-processed_one = "PDF {{formattedCount}} སྒྲིག་གཅོད་བྱས།"
-processed_other = "PDFs {{formattedCount}} སྒྲིག་གཅོད་བྱས།"
-processedWithRate_one = "PDF {{formattedCount}} སྒྲིག་གཅོད་བྱས། རེ་རེར་ {{rate}}།"
-processedWithRate_other = "PDFs {{formattedCount}} སྒྲིག་གཅོད་བྱས། རེ་རེར་ {{rate}}།"
+[portal.billing.spendLimitModal]
+title = "Monthly spend limit"
 
 [portal.billing.subscribedPlan.capWarn]
 approachingBody = "རང་འགུལ་སྒྲིག་གཅོད་ནམ་ཡང་མཚམས་མི་འཇོག་པའི་ཆེད་ད་ལྟ་དེ་སྤར།"
@@ -6842,18 +7790,15 @@ reachedTitle = "ཟླ་རེའི་འགྲོ་གྲོན་ཚད་�
 [portal.billing.subscribedPlan.portalError]
 title = "Stripe སྒོ་མོ་ཁ་ཕྱེ་མ་ཐུབ་"
 
-[portal.billing.walletMeter]
-barAria = "Free PDFs remaining"
-capSuffix_one = "རིན་མེད PDFs {{allowance}} ནས་སྤྱད་པ་"
-capSuffix_other = "རིན་མེད PDFs {{allowance}} ནས་སྤྱད་པ་"
-eyebrow = "སྒྲིག་གཅོད་ཆས་ཚོད་སྤྱོད་"
-statusLabel_one = "{{used}} སྤྱད་ཟིན།"
-statusLabel_other = "{{used}} སྤྱད་ཟིན།"
-sub = "PDF རྩོམ་སྒྲིག་ཆས་རིན་མེད་སྤྱོད། PDFs རང་འགུལ་སྒྲིག་གཅོད་ལ་དངུལ་སྤྲོད།"
-title_one = "PDFs {{allowance}} རིན་མེད་སྒྲིག་གཅོད་"
-title_other = "PDFs {{allowance}} རིན་མེད་སྒྲིག་གཅོད་"
-titleWithRate_one = "PDFs {{allowance}} རིན་མེད་སྒྲིག་གཅོད། དེ་རྗེས་ {{rate}}/PDF"
-titleWithRate_other = "PDFs {{allowance}} རིན་མེད་སྒྲིག་གཅོད། དེ་རྗེས་ {{rate}}/PDF"
+[portal.billing.team]
+addCapacity = "Add capacity"
+fact = "{{users}} of {{licensed}} users"
+factNoLimit = "{{users}} users"
+midFree = "The Team plan covers 100 users"
+midFreeSelfHosted = "The free tier covers your first users"
+midIncluded = "Included with your Team base"
+midPrice = "$99/mo per 100 users"
+rowName = "Users"
 
 [portal.components.billingUnit]
 approval = "ཆོག་མཆན་"
@@ -7431,114 +8376,34 @@ status = "གནས་ཚུལ"
 time = "དུས་ཚོད"
 user = "སྤྱོད་མཁན"
 
-[portal.editorAdmin]
-subtitle = "Stirling PDF Editor འགྲེམ་སྤེལ་བྱོས། self-hosted instances རང་གི org དང་སྦྱོར། གནས་གཅིག་ནས་འཁོར་བཞིན་པའི fleet — targets, health, credentials དང offline activation སྐྱོང་།"
-title = "Editor འགྲེམ་སྤེལ"
-
-[portal.editorAdmin.health.columns]
-activeUsers = "འགུལ་སྐྱོད་སྤྱོད་མཁན"
-host = "Host"
-lastSeen = "མཐའ་མར་མཐོང་བ"
-region = "ས་ཁུལ"
-status = "གནས་ཚུལ"
-target = "Target"
-version = "Version"
-
-[portal.editorAdmin.health.empty]
-description = "Target ཞིག་འགྲེམ་སྤེལ་དང་སྦྱོར་བ་བྱས་ནས་འདིར live instance health ལྟོས།"
-title = "ཡར་ཞུ་བྱེད་པའི instances མེད"
-
-[portal.editorAdmin.offlineActivation]
-enterpriseTag = "Enterprise"
-generateButton = "Offline bundle བཟོ"
-lockCopy = "Offline དང on-prem activation ནི Enterprise ཡི་ཆ་ཤས་ཡིན།"
-subtitle = "ཕྱིར་འབྲེལ་དྲ་ལམ་མེད་པའི offline ཡང་ན on-prem install ཆེད་མིང་རྟགས་བཀོད་པའི activation bundle བཟོ། དེ instance ལ་སྤོ་བཤུད་བྱས་ནས first-run setup སྐབས་སྤྱོད།"
-talkToSales = "Sales ལ་འབྲེལ་གཏུག"
-title = "Air-gapped activation"
-
-[portal.editorAdmin.offlineActivation.readyBanner]
-description = "{{file}} ལ་མིང་རྟགས་བཀོད་ཟིན་ཞིང་སྤོ་བཤུད་བྱེད་རུང་ཡིན། དེས instance གཅིག་སྐུལ་སློང་བྱེད་ཅིང་ཉིན་14 ནང་དུ་དུས་ཡོལ་འགྲོ"
-title = "Bundle གྲ་སྒྲིག"
-
-[portal.editorAdmin.pairing]
-generated = "བཟོས་ཟིན ✓"
-generateNewCode = "Code གསར་པ་བཟོ"
-lockCopy = "IaC provisioning ནི Enterprise ཡི་ཆ་ཤས་ཡིན།"
-rotate = "Rotate"
-talkToSales = "Sales ལ་འབྲེལ་གཏུག"
-
-[portal.editorAdmin.sections.health]
-sub = "Editor instance ཚང་མས་ཡར་ཞུ་བྱེད — version, region, status, last seen དང active users།"
-title = "Instance health"
-
-[portal.editorAdmin.sections.pairing]
-sub = "Self-hosted editor ཞིག org འདི་དང་མཐུད། token བཟོ། code ཐུང་ངུ་སྤྲོད། ཡང་ན IaC བརྒྱུད་མཐུད།"
-title = "Pairing"
-
-[portal.editorAdmin.sections.targets]
-sub = "Editor འཁོར་ས། self-hosted instance སློང་བར snippet འདྲ་བཤུས་བྱོས། ཡང་ན ops མེད་པའི Managed Cloud སྤྱོད།"
-title = "Deployment targets"
-
-[portal.editorAdmin.serviceToken]
-currentToken = "ད་ལྟའི token"
-lastRotated = "མཐའ་མཇུག་ཏུ་བསྐོར་བ"
-rotateButton = "ཞབས་ཞུའི་མཚོན་རྟགས་བསྐོར་བ"
-subtitle = "དཔེ་གཞི་ཁག་གིས་དཔང་ཡིག་འདི་སྤྱད་ནས་རྩ་འཛུགས་ལ་ཐོབ་ཐང་ར་སྤྲོད་བྱེད། དུས་བཀག་ལྟར་བསྐོར་བའམ། ཕྱིར་ཤོར་བ་དོགས་པའི་རྗེས་སུ་འཕྲལ་མར་བསྐོར་བྱོས།"
-title = "ཞབས་ཞུའི་མཚོན་རྟགས"
-
-[portal.editorAdmin.serviceToken.rotatedBanner]
-description = "མཚོན་རྟགས་གསར་པ་སྤྲད་ཟིན། ཆུ་ཚོད་24ཡི་བར་ཡངས་ནང་རང་གིས་གནས་སྡོད་བྱས་པའི་དཔེ་གཞི་རེ་རེའི STIRLING_SERVICE_TOKEN གསར་སྒྱུར་བྱོས། དེ་མིན་ན་དེ་དག་དྲ་ཕྱིར་ལྷུང་སྲིད།"
-title = "འཁོར་སྐྱོད་ཀྱི་དཔེ་གཞི་བསྐོར་བ"
-
-[portal.editorAdmin.status]
-degraded = "སྤུས་ཚད་ཉམས་པ"
-healthy = "བདེ་ཐང"
-offline = "དྲ་ཕྱི"
-pairing = "ཆ་སྒྲིག་བཞིན"
-
-[portal.editorAdmin.targets]
-instanceCount_one = "{{count}} དཔེ་གཞི"
-instanceCount_other = "{{count}} དཔེ་གཞི"
-talkToSales = "ཚོང་འཚོང་ཚན་པར་འབྲེལ་བ་བྱོས"
-upgradePlan = "འཆར་གཞི་རིམ་སྤར"
-
-[portal.editorAdmin.targets.lock]
-enterprise = "On-prem དང Kubernetes རང་གིས་གནས་སྡོད་བྱེད་པ་ནི Enterprise ཡི་ཆ་ཤས་ཡིན།"
-paid = "Docker དང Kubernetes སྤྱད་པའི་རང་གིས་གནས་སྡོད་བྱེད་པ་ནི་སྤྲོད་དངུལ་འཆར་གཞི་ཐོག་ནས་ཁ་ཕྱེ་ཐུབ།"
-
-[portal.editorAdmin.targets.state]
-available = "སྤྱོད་རུང"
-locked = "བསྡམས་པ"
-running = "འཁོར་སྐྱོད་བཞིན"
-
 [portal.errorBoundary]
 description = "མཐོང་ངོས་འདིར་མ་བསམ་པའི་ནོར་འཁྲུལ་ཞིག་བྱུང་། ཡང་བསྐྱར་ཚོད་ལྟ་བྱོས། ཡང་ན་ཟུར་གྱི་དཀར་ཆག་ནས་སྡེ་ཚན་གཞན་ཞིག་འདེམས།"
 retry = "ཡང་བསྐྱར་ཚོད་ལྟ་བྱོས"
 title = "ཤོག་ངོས་འདིར་གནད་དོན་ཞིག་བྱུང་།"
 
 [portal.failures]
-fromSource = "From source {{source}}"
+closedBySystem = "Stirling"
+noMatches = "Nothing matches the current filters"
 occurrences = "{{count}} occurrences"
-reportedBy = "Hit by {{actor}}"
-runReference = "Run {{runId}}"
-subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
-title = "Failures"
+searchPlaceholder = "Search issues, users and errors"
 
 [portal.failures.action]
 acknowledge = "Acknowledge"
-confirm = "Are you sure?"
+decrypt = "Unlock"
 dismiss = "Dismiss"
-dismissSkipFile = "Skip this file"
+openInTool = "Retry"
+repair = "Repair"
 viewFile = "ཡིག་ཆ་ལྟ།"
 viewInProcessor = "སྒྲིག་སྦྱོར་ཆས་ནང་ལྟ།"
 
-[portal.failures.debug]
-copyJson = "Copy JSON"
-dismissAll = "Dismiss all ({{total}})"
-dismissing = "Dismissing..."
-hideJson = "Hide raw JSON ({{total}})"
-refresh = "Refresh failures"
-showJson = "Show raw JSON ({{total}})"
+[portal.failures.columns]
+closedBy = "Closed by"
+date = "Date"
+failure = "Issue"
+origin = "Raised in"
+outcome = "Outcome"
+source = "Source"
+user = "User"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
@@ -7550,25 +8415,86 @@ unavailable = "Not available for this failure."
 description = "Policy runs that fail will appear here with the actions you can take."
 title = "No failures recorded"
 
+[portal.failures.emptyClosed]
+description = "Items you dismiss or resolve are kept here with their outcome."
+title = "Nothing closed yet"
+
+[portal.failures.filters]
+origin = "Raised in"
+source = "Source"
+type = "Type"
+user = "User"
+
+[portal.failures.kind.complianceNotMet]
+description = "The compliance check refused this document because it does not meet the standard the policy validates against. The violation is shown below."
+title = "Compliance standard not met"
+
+[portal.failures.kind.inputCorrupted]
+description = "Your file is damaged, so the run could not read it."
+title = "Damaged document"
+
+[portal.failures.kind.inputEmpty]
+description = "Your file has no content in it, so there was nothing for the run to work on."
+title = "Empty file"
+
 [portal.failures.kind.inputPasswordProtected]
 description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
 title = "Password-protected document"
 
+[portal.failures.kind.inputUnavailable]
+description = "The file behind this run could not be reached, so it was never processed."
+title = "File unavailable"
+
+[portal.failures.kind.inputUnreadable]
+description = "Your file could not be opened, so the run could not read it."
+title = "Unreadable file"
+
+[portal.failures.kind.inputUnrepairable]
+description = "Your file is damaged beyond what the repair tools can fix."
+title = "File could not be repaired"
+
+[portal.failures.kind.inputWrongType]
+description = "Your file is not a format this step can open, so the run could not read it."
+title = "Wrong file type"
+
+[portal.failures.kind.stepCannotRenderPage]
+description = "A page in your file could not be drawn, so the run could not finish."
+title = "Page could not be rendered"
+
+[portal.failures.kind.toolNotInstalled]
+description = "This server is missing software the step needs, so the run could not start it."
+title = "Software not installed"
+
 [portal.failures.kind.unknown]
 description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
 title = "Unrecognised failure"
+
+[portal.failures.log]
+copy = "Copy error"
+view = "View error"
 
 [portal.failures.origin]
 pipeline = "Pipeline"
 policy = "Policy"
 tool = "Tool run"
 
-[portal.failures.stage]
-blocked = "Blocked"
-input = "Input"
-internal = "Internal"
-never_ran = "Never ran"
-output = "Output"
+[portal.failures.outcome]
+dismissed = "Dismissed"
+fileRemoved = "File deleted"
+open = "Open"
+resolved = "Resolved"
+
+[portal.failures.scope]
+ariaLabel = "Review state"
+closed = "Closed"
+open = "Open"
+
+[portal.failures.source]
+editor = "Editor"
+
+[portal.failures.unavailable]
+description = "This queue is visible to team leaders on workspaces that run policies."
+title = "Nothing to review"
 
 [portal.home.download]
 back = "ཕྱིར་ལོག"
@@ -7644,12 +8570,6 @@ kubernetes = "རང་གིས་གནས་སྡོད · Kubernetes"
 afternoon = "ཉིན་གུང་བདེ་ལེགས"
 evening = "དགོང་དྲོ་བདེ་ལེགས"
 morning = "སྔ་དྲོ་བདེ་ལེགས"
-
-[portal.infrastructure]
-manageEditorDeployment = "Editor འགྲེམས་སྤེལ་དོ་དམ"
-sectionsAriaLabel = "རྨང་གཞི་སྒྲིག་བཀོད་སྡེ་ཚན"
-subtitle = "ཁྱེད་ཀྱི Stirling ལས་ཁུལ་གྱི་འགྲེམས་སྤེལ། དཔང་ཡིག བདེ་འཇགས་གནས་བབ། གསོག་ཉར། དང་ཞིབ་བཤེར་རྗེས་ཤུལ།"
-title = "རྨང་གཞི་སྒྲིག་བཀོད"
 
 [portal.infrastructure.apiKeys]
 createKey = "ལྡེ་མིག་གསར་བཟོ"
@@ -7760,17 +8680,175 @@ subtitleCreated = "ད་ལྟ་གསང་བ་འདི་འདྲ་བ�
 title = "API ལྡེ་མིག་གསར་སྐྲུན"
 titleCreated = "ལྡེ་མིག་གསར་སྐྲུན་ཟིན་པ"
 
+[portal.infrastructure.encryption]
+heading = "Encryption at rest"
+hintLabel = "More about this section"
+subheading = "Stored files are encrypted before they reach disk, the database or object storage."
+unknown = "Unknown"
+
+[portal.infrastructure.encryption.auditNotice]
+description = "Encryption is active on this licence, but encrypt, decrypt, revocation and export events are not written to the audit trail. Encryption itself is unaffected."
+title = "Audit events need an Enterprise licence"
+
+[portal.infrastructure.encryption.coverage]
+decryptOnlyNote = "New uploads are stored as plaintext. Files encrypted earlier are still readable."
+encrypted = "Encrypted files"
+heading = "Coverage"
+percentEncrypted = "{{percent}}% encrypted"
+plaintext = "Plaintext files"
+progressLabel = "{{percent}}% of stored files encrypted"
+subheading = "Covers files in My Files and signing workflows. Files a pipeline reads in place, including network sources, are not stored here and are not encrypted."
+
+[portal.infrastructure.encryption.error]
+action = "That key change could not be applied. Please try again."
+keyMissing = "That key no longer exists. Refresh to see the current list."
+migrationStart = "The migration could not be started. Please try again."
+rotate = "The re-wrap could not be completed. Please try again."
+
+[portal.infrastructure.encryption.generatedKey]
+backupGuide = "How to back it up"
+description = "No encryption key was configured, so one was created on this server. Back it up now: if it is lost, encrypted files cannot be recovered."
+title = "This key was generated for you"
+
+[portal.infrastructure.encryption.keys]
+changedAt = "Changed {{when}}"
+changedBy = "By {{actor}}"
+changedByAt = "By {{actor}} on {{when}}"
+heading = "Scope keys"
+keyVersion = "Version {{version}}"
+neverChanged = "Never changed"
+restore = "Restore access"
+retiredNote = "A retired key still decrypts the files stored under it, but a newer key wraps new uploads."
+revoke = "Revoke"
+subheading = "One key per scope. Revoking a key blocks reads of everything stored under it."
+
+[portal.infrastructure.encryption.keys.columns]
+actions = "Actions"
+lastChange = "Last change"
+scope = "Scope"
+status = "Status"
+
+[portal.infrastructure.encryption.keys.empty]
+description = "A key is created the first time someone uploads a file, not at startup."
+title = "No keys yet"
+
+[portal.infrastructure.encryption.masterKey]
+backend = "Storage backend"
+compareNote = "Compare this against the fingerprint in your key backup and in the startup log."
+copied = "Copied"
+copy = "Copy"
+copyFailed = "This browser would not allow copying. The fingerprint is selected, so copy it manually."
+fingerprint = "Fingerprint"
+fingerprintHelp = "What is this fingerprint for?"
+heading = "Master key"
+notMaterialised = "The key machinery has not started on this node yet."
+s3StreamingNote = "While anything is encrypted, object-store downloads are streamed through this server rather than redirected, so they use its bandwidth."
+subheading = "Wraps every scope key. Never shown or accepted over the API."
+version = "Version"
+
+[portal.infrastructure.encryption.migration]
+backlog_one = "{{formatted}} file is stored as plaintext and can be encrypted now."
+backlog_other = "{{formatted}} files are stored as plaintext and can be encrypted now."
+encrypted = "Encrypted"
+failedCount = "Failed"
+heading = "Encrypt existing files"
+hint = "Encrypts the plaintext backlog left from before encryption was switched on. Progress is held in memory, so a backend restart resets it to not started. Running again skips files that are already encrypted."
+noBacklog = "Every stored file is already encrypted."
+progressLabel = "{{processed}} of {{total}} files encrypted"
+requiresEncryptionOn = "Switch encryption on before running this: the backlog is encrypted using the same write path as new uploads."
+runAgain = "Run again"
+skipped = "Skipped"
+skippedHelp = "What does skipped mean?"
+skippedNote = "Skipped files were replaced by a user while the run was in progress, so their copy was left alone."
+start = "Start"
+startedAt = "Started {{when}}"
+
+[portal.infrastructure.encryption.migration.confirm]
+cancel = "Cancel"
+confirm = "Start encrypting"
+noCancel = "There is no stop control. Once started, the run continues until it finishes or encryption is switched off."
+rewrites_one = "Rewrites {{formatted}} stored file, replacing the plaintext copy with an encrypted one."
+rewrites_other = "Rewrites {{formatted}} stored files, replacing the plaintext copies with encrypted ones."
+throttled = "The job is throttled and safe to re-run. Files already encrypted are skipped."
+title = "Encrypt the existing backlog?"
+
+[portal.infrastructure.encryption.migration.failed]
+description = "Encryption was switched off while the migration was running, so the remaining files were left untouched. Switch it back on and run again."
+title = "The run stopped early"
+
+[portal.infrastructure.encryption.migration.state]
+COMPLETED = "Completed"
+FAILED = "Failed"
+IDLE = "Not started"
+RUNNING = "Running"
+
+[portal.infrastructure.encryption.revoke]
+cancel = "Cancel"
+clusterDelay = "On a cluster, other nodes apply this within 60 seconds."
+confirm = "Revoke access"
+readsFail = "Files already stored under this key stop opening, for everyone."
+reversible = "This is reversible. No key material is deleted."
+title = "Revoke access to this key?"
+uploadsContinue = "New uploads keep working. They get a fresh key, so they stay readable."
+
+[portal.infrastructure.encryption.rotation]
+currentVersion = "Current version"
+heading = "Master key rotation"
+hint = "Re-wraps scope keys under a new master key; file contents are never rewritten. The new key is set in configuration and applied on restart, so this button only performs the re-wrap."
+pendingRows = "Rows on an older version"
+rewrap = "Re-wrap keys"
+rewrapped_one = "{{count}} key row re-wrapped."
+rewrapped_other = "{{count}} key rows re-wrapped."
+runbook = "Rotation runbook"
+
+[portal.infrastructure.encryption.rotation.confirm]
+cancel = "Cancel"
+confirm = "Re-wrap keys"
+noFiles = "File contents are not touched. Only the key table is rewritten."
+rerunnable = "Safe to run again if it does not finish."
+rewraps_one = "Re-wraps {{count}} key row under the current master key."
+rewraps_other = "Re-wraps {{count}} key rows under the current master key."
+title = "Re-wrap the key table?"
+
+[portal.infrastructure.encryption.rotation.pending]
+description = "Do not remove the previous key from configuration yet. Files under those keys would stop opening."
+title_one = "{{count}} key row is still on the previous master key"
+title_other = "{{count}} key rows are still on the previous master key"
+
+[portal.infrastructure.encryption.scope]
+global = "All users"
+source = "Source {{id}}"
+team = "Team {{id}}"
+
+[portal.infrastructure.encryption.status]
+ACTIVE = "Active"
+DISABLED = "Revoked"
+RETIRED = "Retired"
+
+[portal.infrastructure.encryption.unavailable.forbidden]
+description = "Your account does not have permission to view encryption settings."
+title = "Not available for your account"
+
+[portal.infrastructure.encryption.unavailable.registry-unavailable]
+description = "The encryption key registry could not be read. Check the database connection and the application logs."
+title = "Key registry unavailable"
+
+[portal.infrastructure.encryption.unavailable.storage-disabled]
+description = "File storage is switched off on this server, so there is nothing to encrypt."
+title = "Storage is disabled"
+
+[portal.infrastructure.encryption.unavailable.unknown]
+description = "Encryption status could not be loaded. Please try again."
+title = "Status unavailable"
+
+[portal.infrastructure.encryption.writeState]
+decryptOnly = "Decrypt only"
+encrypting = "Encrypting new uploads"
+off = "Off"
+
 [portal.infrastructure.keyLabel]
 active = "ཤུགས་ལྡན"
 revoked = "ཕྱིར་འཐེན་བྱས་པ"
-
-[portal.infrastructure.tabs]
-apiKeys = "API ལྡེ་མིག"
-audit = "རྩིས་བཤེར་ཉིན་ཐོ"
-deployments = "སྤེལ་འཇོག"
-models = "དཔེ་དབྱིབས"
-security = "བདེ་འཇགས"
-storage = "གསོག་ཉར"
 
 [portal.integrations]
 availableHeading = "སྤྱོད་རུང"
@@ -7827,6 +8905,7 @@ integrations = "མཉམ་འདྲེས"
 pipelines = "ལས་རིམ་རྒྱུན"
 policies = "སྲིད་ཇུས"
 procurement = "ཉོ་སྒྲུབ"
+review = "Review"
 sources = "ཁུངས"
 usage = "བེད་སྤྱོད་དང་རྩིས་འབོར"
 users = "སྤྱོད་མཁན"
@@ -7836,11 +8915,16 @@ platform = "PDF སྟེགས་བུ"
 processor = "PDF སྒྲིག་གཅོད་ཆས"
 
 [portal.pipelines]
+permissionsRetry = "Retry"
+permissionsUnavailable = "Couldn't check whether you can manage policies, so policy actions are unavailable for now."
 subtitle = "རྒྱབ་སྣེའི་ཡིག་ཆ་རང་འགུལ་ལས་རིམ་རྒྱུན་ཚང་མ། སྐུལ་རྐྱེན་སྟེང་འཁོར་བའི་ཁུངས་ཚོགས་ཤིག་སྟེང་གི་བཀོལ་སྤྱོད་རིམ་པ་ཅན་གྱི་ཕྲེང་བ་ཞིག དེའི་གོམ་པ་དང་ཁུངས་ལ་ལྟ་ཕྱིར་ཕྲེང་ཐིག་ཅིག་ལ་གནོན།"
 title = "ལས་རིམ་རྒྱུན"
 
 [portal.pipelines.actions]
-newPipeline = "ལས་རིམ་རྒྱུན་གསར་པ"
+newCustomPipeline = "New custom pipeline"
+
+[portal.pipelines.all]
+title = "All pipelines"
 
 [portal.pipelines.builder]
 activate = "Activate"
@@ -7851,6 +8935,9 @@ chooseDestination = "དམིགས་ས་ཞིག་འདེམས"
 chooseOperation = "གོམ་པ་འདིས་ཅི་བྱེད་འདེམས"
 chooseSource = "ཁུངས་ཤིག་འདེམས"
 discard = "འགྱུར་བ་དོར"
+editorDestination = "Editor"
+editorDestinationDetail = "Replaces the file you ran it on"
+editorDestinationHelp = "This pipeline runs on the files in your workspace, and its results replace the file it ran on. There is nowhere else to send them."
 inputs = "ནང་འཇུག"
 inputSource = "ནང་འཇུག་ཁུངས"
 inputTrigger = "སྐུལ་རྐྱེན"
@@ -7862,6 +8949,10 @@ needsSource = "No source chosen"
 noToolMatches = "ཁྱེད་ཀྱི་འཚོལ་བཤེར་དང་མཐུན་པའི་ལག་ཆ་མེད།"
 pause = "Pause"
 rename = "Rename pipeline"
+runOn = "Runs on"
+runOnExport = "Every export"
+runOnTooltip = "Choose when this pipeline runs on your files: when you add them, or when you export them."
+runOnUpload = "Every upload"
 searchTools = "ལག་ཆ་འཚོལ"
 sendToSystem = "མ་ལག་གཞན་ཞིག་ལ་སྐུར"
 stepsIncompatible = "གོམ་པ་འདི་དག་དེའི་གོམ་པ་སྔོན་མས་བཟོས་པའི་ཐོན་འབྲས་སྟེང་འཁོར་མི་ཐུབ། {{tools}}"
@@ -7875,10 +8966,14 @@ usesDefaults = "སྔོན་སྒྲིག་སྒྲིག་འགོད�
 viewDefinition = "View definition"
 
 [portal.pipelines.builder.blocker]
+aiClassification = "Enable AI classification in Settings, or remove the Classify step"
 destination = "Choose a destination"
 heading = "To create this pipeline:"
 incompatible = "Fix steps that can't run in order: {{tools}}"
+managerOnly = "Only an admin or team leader can modify a policy"
 name = "Give the pipeline a name"
+routing = "Give every route document types and a destination"
+routingNeedsClassify = "Add a Classify step, or turn off routing by document type"
 saveHeading = "To save your changes:"
 schedule = "Set how often it runs"
 setup = "Finish setting up: {{tools}}"
@@ -7891,6 +8986,33 @@ format-mismatch = "{{accepts}} དགོས། འོན་ཀྱང་གོམ
 output-uncertain = "འཁོར་མི་སྲིད། གོམ་པ་སྔོན་མའི་ཐོན་འབྲས་ནི་དེ་ཇི་ལྟར་སྒྲིག་པར་རག་ལས"
 source-mismatch = "{{accepts}} དགོས། འོན་ཀྱང་ལས་རིམ་རྒྱུན་འདིའི་ནང་འཇུག་ནི་{{produced}} ཡིན"
 undeclared-operation = "གོམ་པ་འདིས་གང་ལེན་ཐུབ་མིན་ཞིབ་བཤེར་བྱེད་མི་ཐུབ"
+
+[portal.pipelines.builder.icon]
+label = "Change icon"
+
+[portal.pipelines.builder.routing]
+addRule = "Add a route"
+aiDisabled = "AI classification is not enabled. Enable it in Settings, or route on a document property instead."
+aiToolDisabled = "Unavailable until AI classification is enabled in Settings"
+aiUnavailable = "Document-type routing is disabled because AI classification is unavailable. Route on a document property instead."
+extensionPlaceholder = "pdf, docx, png"
+fallback = "Everything else goes to"
+heading = "Routes"
+matchAuthor = "PDF author"
+matchBy = "Match by"
+matchDocumentType = "Document type (AI classification)"
+matchDocumentTypeDisabled = "Document type (AI unavailable)"
+matchExtension = "File extension"
+matchFilename = "Exact filename"
+matchTitle = "PDF title"
+matchValues = "Values to match"
+needsClassify = "Add a Classify step to use document-type routing, or match on a document property instead."
+nodeSummary_one = "1 route, then a fallback"
+nodeSummary_other = "{{count}} routes, then a fallback"
+toggle = "Send document types to different places"
+toggleOff = "Every document goes to the destination below."
+toggleOn = "Documents are routed by the first document condition they match."
+valuePlaceholder = "Enter exact values, separated by commas"
 
 [portal.pipelines.composer]
 addTool = "ལག་ཆ་ཁ་སྣོན"
@@ -7941,6 +9063,12 @@ connectSource = "ཁུངས་ཤིག་འབྲེལ་མཐུད"
 description = "ཁྱེད་ཀྱི་ལས་རིམ་རྒྱུན་དང་པོ་བཟོ། དེ་འཁོར་སའི་ཁུངས་འདེམས། བཀོལ་སྤྱོད་ཕྲེང་བར་སྦྲེལ། དེ་ནས་ཐོན་འབྲས་གང་དུ་འགྲོ་བ་འདེམས།"
 title = "ད་དུང་ལས་རིམ་རྒྱུན་མེད"
 
+[portal.pipelines.enforce]
+desc = "A policy blocks a file that fails it; an ordinary pipeline reports the error but lets the file through."
+info = "What enforcing as a policy means"
+label = "Enforce as policy"
+managerOnly = "Only an admin or team leader can enforce a pipeline as a policy"
+
 [portal.pipelines.graph]
 addFirstTool = "Add a tool"
 dragHint = "Drop on a line to move it"
@@ -7972,11 +9100,6 @@ failed_other = "Failed after {{done}} of {{count}} steps"
 running_one = "Running the only step"
 running_other = "Running step {{done}} of {{count}}"
 
-[portal.pipelines.kpi]
-active = "འཁོར་བཞིན"
-paused = "མཚམས་བཞག"
-total = "ལས་རིམ་རྒྱུན"
-
 [portal.pipelines.run]
 allProcessed_one = "འཁོར་རྒྱུ་མེད། ཁུངས་ཀྱི་ཡིག་ཆ་{{count}} སྔོན་ནས་སྒྲིག་གཅོད་ཟིན།"
 allProcessed_other = "འཁོར་རྒྱུ་མེད། ཁུངས་ནང་གི་ཡིག་ཆ་{{count}} ཚང་མ་སྔོན་ནས་སྒྲིག་གཅོད་ཟིན།"
@@ -8000,20 +9123,29 @@ sources = "ཁུངས"
 status = "གནས་ཚུལ"
 steps = "གོམ་པ"
 trigger = "Trigger"
+type = "Type"
+
+[portal.pipelines.templates]
+setUp = "Set up"
+title = "Templates"
 
 [portal.pipelines.trigger]
+editor-export = "Every export"
+editor-upload = "Every upload"
 folder-watch = "ཡིག་ཁུག་ལྟ་སྲུང"
 manual = "ལག་སྒུལ"
 schedule = "དུས་ཚོད་བཀོད་པ"
+storage-folder-watch = "New files in storage folder"
+
+[portal.pipelines.type]
+pipeline = "Pipeline"
+policy = "Policy"
 
 [portal.policies]
 defaultName = "{{category}} སྲིད་ཇུས"
-subtitle = "ཡིག་ཆ་རེ་རེའི་ཐོག་ལག་ཆའི་རྒྱུད་རིམ་བཙན་སྐུལ་ལག་བསྟར་བྱེད་པའི་རྒྱུན་གནས་རང་འགུལ་ལས་རིམ། སྲིད་ཇུས་རེ་རེ་ཡར་སྐུར་རམ་ཕྱིར་འདོན་སྐབས་འགོ་སློང་བྱེད་ཅིང་། ལག་ཆའི་རྒྱུད་རིམ་སྒྲུབ་ནས་བཙན་སྐུལ་བྱས་པའི་པར་གཞི་དེ་མ་ཡིག་དང་མཉམ་དུ་ཉར་ཚགས་བྱེད།"
-title = "སྲིད་ཇུས"
 
 [portal.policies.card]
 comingSoon = "Enterprise ལ་རིམ་སྤར་བྱེད"
-notSetUp = "སྒྲིག་འགོད་བྱས་མེད"
 requiresAiEngine = "AI engine དགོས"
 
 [portal.policies.categories.classification]
@@ -8053,12 +9185,6 @@ summary = "ཡར་སྐུར་བྱས་པའི་ཡིག་ཆ་ཚ
 [portal.policies.config.compliance]
 summary = "ཡིག་ཆ་མ་ལག་ནས་མ་ཐོན་གོང་སྒྲིག་ཁྲིམས་སྒྲོམ་གཞི་དང་བསྡུར་ནས་ར་སྤྲོད་བྱེད།"
 
-[portal.policies.config.compliance.fields]
-accessLog = "འཛུལ་སྤྱོད་ཟིན་ཐོ"
-auditTrail = "རྩིས་ཞིབ་ཤུལ་ལམ"
-frameworks = "སྒྲོམ་གཞི"
-onViolation = "ཚད་མི་མཐུན་སྐབས"
-
 [portal.policies.config.compliance.rules]
 0 = "སྒྲོམ་གཞི་བཤེར་འབེབས"
 1 = "བྱ་ཐབས་བཙན་སྐུལ"
@@ -8067,15 +9193,15 @@ onViolation = "ཚད་མི་མཐུན་སྐབས"
 [portal.policies.config.ingestion]
 summary = "ཡིག་ཆ་རིགས་དབྱེ་བྱེད། སྒྲིག་ཡོད་གཞི་གྲངས་འདོན། མིང་འདོགས་བཙན་སྐུལ་བྱེད། ཤོག་ངོས་ཚད་ལྡན་བཟོ།"
 
-[portal.policies.config.ingestion.fields]
-belowThreshold = "མཚམས་ཐང་ལས་དམའ་བ"
-minConfidence = "ཡིད་ཆེས་ཉུང་མཐའ"
-
 [portal.policies.config.ingestion.rules]
 0 = "རིགས་དབྱེ"
 1 = "འདོན"
 2 = "མིང་འདོགས"
 3 = "ཚད་ལྡན་བཟོ"
+
+[portal.policies.config.pdfa.fields.outputFormat]
+help = "PDF/A-2b suits most archives. PDF/A-1b is the strictest and most widely accepted; PDF/A-3b additionally allows attachments."
+label = "Archival profile"
 
 [portal.policies.config.purview]
 label = "Microsoft Purview ཚོར་སྐྱེན་ཤོག་བྱང་སྦྱར"
@@ -8116,11 +9242,6 @@ keepFor = "ཉར་ཡུན"
 [portal.policies.config.routing]
 summary = "རིགས་དང་རིགས་དབྱེ་ལ་གཞིགས་ནས་ཡིག་ཆ་འོས་འཚམ་གྱི་དམིགས་ཡུལ་ལ་སྐྱེལ།"
 
-[portal.policies.config.routing.fields]
-destination = "དམིགས་ཡུལ"
-notify = "ལམ་སྟོན་སྐབས་བརྡ་ཐོངས"
-webhookUrl = "Webhook URL"
-
 [portal.policies.config.routing.rules]
 0 = "རང་འགུལ་རིགས་དབྱེ"
 1 = "ཡིག་ཁུག་ལ་སྐྱེལ"
@@ -8134,36 +9255,6 @@ summary = "PII འཚོལ་རྙེད་དང་སྦས་འགེབ�
 1 = "JavaScript སེལ"
 2 = "ཆུ་རྟགས"
 
-[portal.policies.detail]
-enforces = "བཙན་སྐུལ་ལག་བསྟར"
-onEveryExport = "ཕྱིར་འདོན་རེ་རེའི་སྐབས"
-onEveryUpload = "ཡར་སྐུར་རེ་རེའི་སྐབས"
-outputAsNewFile = "ཡིག་ཆ་གསར་པ་ཞིག་ཏུ"
-outputAsNewVersion = "པར་གཞི་གསར་པ་ཞིག་ཏུ"
-recentActivity = "ཉེ་ཆར་གྱི་བྱ་འགུལ"
-retry = "ཡང་བསྐྱར་ཚོད་ལྟ"
-showLess = "ཉུང་ཙམ་སྟོན"
-showMore = "མང་ཙམ་སྟོན"
-sources = "ཁུངས"
-
-[portal.policies.detail.actions]
-clearHistory = "སྒྲིག་གཅོད་ཟིན་པའི་ལོ་རྒྱུས་གཙང་སེལ"
-delete = "སུབ"
-editSettings = "སྒྲིག་འགོད་རྩོམ་སྒྲིག"
-pause = "གནས་སྐབས་མཚམས་འཇོག"
-resume = "མུ་མཐུད"
-runNow = "ད་ལྟ་སྒྲུབ"
-
-[portal.policies.detail.clearHistory]
-body = "སྲིད་ཇུས་འདིས་སྔོན་མ་སྒྲིག་གཅོད་བྱས་ཟིན་པའི་ཡིག་ཆ་ཚང་མ་བརྗེད་ནས། རྗེས་མའི་སྒྲུབ་ཐེངས་སུ་ད་ལྟ་དེའི་ཁུངས་ནང་ཡོད་པ་ཚང་མ་ཡང་བསྐྱར་སྒྲིག་གཅོད་བྱེད། ཡིག་ཆ་རང་ཉིད་ལ་འགྱུར་བ་མེད། འདི་ཕྱིར་ལོག་བྱེད་མི་ཐུབ།"
-cancel = "དོར"
-confirm = "ལོ་རྒྱུས་གཙང་སེལ"
-title = "སྒྲིག་གཅོད་ཟིན་པའི་ལོ་རྒྱུས་གཙང་སེལ་བྱེད་དམ།"
-
-[portal.policies.detail.emptyActivity]
-description = "སྲིད་ཇུས་འདི་སྒྲུབ་རྗེས་ཡིག་ཆ་འདིར་མངོན་ཡོང་།"
-title = "ད་དུང་བྱ་འགུལ་མེད"
-
 [portal.policies.endpoints]
 addWatermark = "ཆུ་རྟགས"
 autoRedact = "PII སྦས་འགེབས"
@@ -8171,12 +9262,9 @@ classifyAndLabel = "རིགས་དབྱེ"
 compressPdf = "སྡུད་སྐུང"
 flatten = "ལེབ་བཟོ"
 ocrPdf = "OCR"
+pdfa = "Convert to PDF/A"
 sanitizePdf = "JavaScript སེལ"
-
-[portal.policies.offline]
-description = "ཁྱེད་ཀྱི་སྲིད་ཇུས་ཉར་ཚགས་བྱས་ཟིན་པས། འབྲེལ་མཐུད་སླར་གསོ་བྱས་རྗེས་མངོན་ཡོང་།"
-retry = "ཡང་བསྐྱར་ཚོད་ལྟ"
-title = "Backend སྤྱོད་མི་ཐུབ"
+validateCompliance = "Validate compliance"
 
 [portal.policies.operations]
 change = "གོམ་པ་འདིས་ཅི་བྱེད་པ་བསྒྱུར"
@@ -8373,48 +9461,20 @@ label = "webhook ལ་ཡིག་ཆ་སྤེལ"
 description = "འཁོར་སྐྱོད་ཀྱི་ཞིབ་ཕྲ་ཁྱེད་ཀྱི་རང་འགུལ་ལ་སྤྲོད།"
 label = "Zap ཡང་ན Make scenario སྐུལ་སློང"
 
-[portal.policies.stats]
-activeFor = "བེད་སྤྱོད་ནང"
-dataProcessed = "ལས་སྣོན་བྱས་པའི་གཞི་གྲངས"
-docsEnforced = "ལག་བསྟར་བྱས་པའི་ཡིག་ཆ"
-
-[portal.policies.status]
-active = "བེད་སྤྱོད་ནང"
-paused = "མཚམས་བཞག"
-
-[portal.policies.summary.active]
-description = "ཡར་འཇུག/ཕྱིར་འདྲེན་སྐབས་ལག་བསྟར"
-label = "བེད་སྤྱོད་ནང་གི་སྲིད་ཇུས"
-
-[portal.policies.summary.categories]
-description = "སྒྲིག་འགོད་ལ་སྤྱོད་རུང"
-label = "རིགས་དབྱེ"
-
-[portal.policies.summary.docsEnforced]
-description = "བེད་སྤྱོད་ནང་གི་སྲིད་ཇུས་ཡོངས་སུ"
-label = "ལག་བསྟར་བྱས་པའི་ཡིག་ཆ"
-
-[portal.policies.summary.paused]
-description = "སྒྲིག་འགོད་བྱས་ཡོད་ཀྱང་སྤེལ་མེད"
-label = "མཚམས་བཞག"
-
-[portal.policies.table]
-appliesTo = "ལ་ཁྱབ"
-docs = "ལག་བསྟར་བྱས་པའི་ཡིག་ཆ"
-enforces = "ལག་བསྟར་བྱེད"
-policy = "སྲིད་ཇུས"
-status = "གནས་ཚུལ"
-
 [portal.policies.wizard.actions]
-back = "ཕྱིར་ལོག"
 cancel = "འདོར་བ"
-continue = "མུ་མཐུད"
+customise = "Customise"
+customiseUnavailable = "The full builder lives on Processor"
 enablePolicy = "སྲིད་ཇུས་སྤེལ"
 saveChanges = "འགྱུར་བ་ཉར"
 
 [portal.policies.wizard.capability.classify]
 desc = "ཁྱེད་ཀྱི་ཚོགས་པའི་མཚོན་རྟགས་དང་ཤོག་བྱང་ནས་ཡིག་ཆའི་རིགས་ངོས་འཛིན་བྱས་ཏེ་ཤོག་བྱང་འགོད་པས། རིགས་དབྱེ་ལྟར་ཡིག་ཚགས་དང་འཚོལ་བྱེད་ཐུབ།"
 label = "ཡིག་ཆ་རིགས་དབྱེ"
+
+[portal.policies.wizard.capability.complianceCheck]
+desc = "Validates the finished document against PDF/A and stops the run if it does not hold up."
+label = "Check the document meets the standard"
 
 [portal.policies.wizard.capability.compress]
 desc = "ཡིག་ཆ་སྔར་ལས་ཆུང་བའི་ཡིག་ཆའི་ཆེ་ཆུང་ལ་བསྡུ་གནོན་བྱེད།"
@@ -8427,6 +9487,10 @@ label = "ཡིག་ཆ་ཁོད་སྙོམས་བྱེད"
 [portal.policies.wizard.capability.ocr]
 desc = "OCR སྤེལ་ནས་བཤར་འབེབས་ཤོག་ངོས་རྣམས་འདེམས་ཐུབ་དང་འཚོལ་ཐུབ་པའི་ཡི་གེར་འགྱུར།"
 label = "ཡི་གེ་འཚོལ་ཐུབ་པར་བྱེད"
+
+[portal.policies.wizard.capability.pdfa]
+desc = "Rewrites the document in the ISO archival format, embedding its fonts and colour profiles so it still renders the same years from now. Invalidates digital signatures."
+label = "Convert to PDF/A for archiving"
 
 [portal.policies.wizard.capability.redact]
 desc = "སྤྱི་ཚོགས་བདེ་སྲུང་ཨང་གྲངས་དང་བྱང་བུའི་ཨང་གྲངས་ལྟ་བུའི་ཚོར་སྐྱེན་ཞིབ་ཕྲ་རྙེད་ནས་ནག་པོས་བཀག་པས་ཀློག་མི་ཐུབ།"
@@ -8452,38 +9516,21 @@ labelsHeading = "རིགས་དབྱེ་མཚོན་རྟགས"
 noTools = "སྔོན་ལ workflow ནང་ལག་ཆ་ཉུང་མཐར་གཅིག་སྤེལ།"
 saveFailed = "སྲིད་ཇུས་ཉར་མ་ཐུབ། སླར་ཚོད་ལྟ་གནང་རོགས།"
 
-[portal.policies.wizard.output]
-heading = "ཐོན་སྐྱེད་དང་འཁོར་སྐྱོད"
-
-[portal.policies.wizard.output.filenameRule]
-autoNumber = "རང་འགུལ་ཨང་འགོད"
-label = "ཡིག་ཆའི་མིང་སྒྲིག་སྲོལ"
-placeholder = "སྣོན་རྒྱུའི་ཡི་གེ (འདེམས་རུང)"
-prefix = "སྔོན་འཇུག"
-suffix = "རྗེས་འཇུག"
-
-[portal.policies.wizard.output.outputAs]
-label = "ཐོན་སྐྱེད་རྣམ་པ"
-newFile = "ཡིག་ཆ་གསར་པ"
-newVersion = "པར་གཞི་གསར་པ"
-
-[portal.policies.wizard.output.runOn]
-export = "ཕྱིར་འདྲེན"
-helper = "སྲིད་ཇུས་སྤེལ་སྐབས། ཡར་འཇུག་སྐབས་སམ་ཕྱིར་འདྲེན་གོང་།"
-label = "གང་དུ་འཁོར་སྐྱོད"
-upload = "ཡར་འཇུག"
-
-[portal.policies.wizard.settings]
-heading = "སྒྲིག་འགོད"
+[portal.policies.wizard.routing]
+chooseDestination = "Choose a destination"
+chooseSource = "Choose what to watch"
+description = "Each document is classified first, then delivered to the first rule it matches. Anything matching none goes to the destination below."
+destinationAria = "Destination"
+labelAria = "Document types"
+labelPlaceholder = "Choose document types"
+needsDestination = "Add a destination below first - a rule needs somewhere to send documents to."
+needsSource = "Connect a folder, bucket or webhook for this policy to watch."
+remove = "Remove rule"
+sourceDescription = "Documents arriving here are classified, then sent on by the rules below."
+sourceHeading = "Watch"
 
 [portal.policies.wizard.sources]
-heading = "ཁུངས"
-loading = "ཁུངས་འགེལ་བཞིན་པ…"
-
-[portal.policies.wizard.tabs]
-ariaLabel = "སྒྲིག་འགོད་གོམ་སྟབས"
-settings = "སྒྲིག་འགོད"
-workflow = "བྱ་སྤྱོད"
+connect = "Connect a source"
 
 [portal.policies.wizard.title]
 edit = "{{category}} སྲིད་ཇུས་རྩོམ་སྒྲིག"
@@ -8491,9 +9538,6 @@ setUp = "{{category}} སྲིད་ཇུས་སྒྲིག"
 
 [portal.policies.wizard.workflow]
 description = "སྲིད་ཇུས་འདིས་ལས་སྣོན་བྱེད་པའི་ཡིག་ཆ་རེ་རེར་གང་བྱེད་པ་འདེམས།"
-
-[portal.policySummary.action]
-setUp = "སྒྲིག"
 
 [portal.processorFlow]
 footnote = "གྲངས་ཀ་ནི་ཆུ་ཚོད་24 མཐའ་མ་ལ་བརྩིས་པ་ཡིན། རྒྱུན་རིམ་མྱུར་ཚད་ནི་མཚོན་བྱེད་ཙམ་ཡིན།"
@@ -8692,6 +9736,7 @@ sentenceTrial = "ཁྱེད་ཀྱི་ཚོད་ལྟའི་ལས་
 [portal.procurement.journey]
 daysLeft_one = "{{count}} ཉིན་ལྷག་ཡོད"
 daysLeft_other = "{{count}} ཉིན་ལྷག་ཡོད"
+expired = "Trial expired"
 
 [portal.procurement.journeySteps.agreement]
 blurb = "མིང་རྟགས་གཅིག་གིས MSA, མངགས་ཐོ། EULA དང DPA ཚང་མ་ཁེབས།"
@@ -8806,8 +9851,9 @@ maxed = "མཐོ་ཚད་ལ་སླེབས"
 subtitle = "ཁྱེད་ཀྱི་རིན་མེད་ཚོད་སྤྱོད {{date}} བར་འགྲོ སྤྱོད་བྱང་མི་དགོས།"
 title = "ཁེ་ལས་ཚོད་སྤྱོད"
 
-[portal.settings.groups]
-admin = "དོ་དམ་པ"
+[portal.review]
+subtitle = "Anything from your policy runs and your team's editors that needs your attention."
+title = "Review"
 
 [portal.settings.sections]
 account-link = "རྩིས་ཐོ་འབྲེལ་མཐུད"
@@ -8817,7 +9863,6 @@ appEditor = "རྩོམ་སྒྲིག་ཆས"
 appProcessor = "ལས་སྒྲུབ་ཆས"
 linkAccount = "Stirling རྩིས་ཐོ་འབྲེལ་མཐུད"
 primaryNav = "གཙོ་བོའི་ཁ་ཕྱོགས་འདྲེན"
-switchApp = "app བརྗེ"
 
 [portal.shell.topbar]
 closeNav = "ཁ་ཕྱོགས་འདྲེན་ཁ་རྒྱག"
@@ -8825,6 +9870,7 @@ openNav = "ཁ་ཕྱོགས་འདྲེན་ཁ་ཕྱེ"
 search = "འཚོལ"
 
 [portal.sources]
+processingModeHelp = "Track keeps originals and processes each version once. Snapshot keeps originals and processes them on every run. Consume deletes originals after successful delivery."
 subtitle = "ཡིག་ཆ་རྣམས Stirling ནང་འཇུག་པའི་བསྐྱར་སྤྱོད་ཆོག་པའི་ནང་འཇུག་འབྲེལ་མཐུད། ཁུངས་ཞིག་ཐེངས་གཅིག་སྒྲིག་རྗེས། ལས་རིམ་རྒྱུན་གྲངས་མང་ནས་དེ་ལ་གཞི་བཅོལ་བྱེད་ཆོག"
 title = "ཁུངས"
 
@@ -8857,11 +9903,6 @@ cancel = "འདོར"
 confirm = "སུབ"
 title = "ཁུངས་སུབ་བམ།"
 
-[portal.sources.kpi]
-inUse = "སྤྱོད་བཞིན"
-total = "འབྲེལ་མཐུད"
-unused = "སྤྱོད་མེད"
-
 [portal.sources.networkFields.connection]
 helperText = "server ཁ་བྱང་དང་དཔང་ཡིག་ཡོད་པའི་ཉར་ཚགས་འབྲེལ་མཐུད། དེ་ལ་གཞི་བཅོལ་བྱེད་པའི་ཁུངས་ཚང་མས་བསྐྱར་སྤྱོད་བྱེད།"
 label = "འབྲེལ་མཐུད"
@@ -8872,12 +9913,12 @@ label = "ཡིག་སྣོད"
 placeholder = "incoming/"
 
 [portal.sources.networkFields.mode]
-helperText = "Consume ཡིས་སྲིད་ཇུས་ཚང་མས་བཟོ་སྦྱོར་བྱས་རྗེས་ཡིག་ཆ་རེ་རེ server ནས་སུབ་སྐྱེལ་བྱེད།"
 label = "ཀློག་སྟངས"
 
 [portal.sources.networkFields.mode.options]
 consume = "Consume: ཡིག་ཆ་རེ་རེ་ཐེངས་གཅིག་བཟོ་སྦྱོར"
 snapshot = "Snapshot: འཁོར་རེར་ཡིག་སྣོད་སླར་ཀློག"
+track = "Keep originals; process changes once"
 
 [portal.sources.networkFields.recursive]
 helperText = "ཁྱེད་ཀྱི་ཡིག་ཆ་ནང་སྦས་ཡིག་ཁུག་ཏུ་སྒྲིག་ཡོད་ན། ཡན་ལག་ཡིག་ཁུག་ཚུད་པར་བྱེད་པའམ། རིམ་པ་གོང་མ་ཁོ་ན་ལ་ལྟ་ཞིབ་བྱེད།"
@@ -8940,6 +9981,7 @@ label = "ཀློག་སྟངས"
 [portal.sources.types.folder.fields.mode.options]
 consume = "Consume: ཡིག་ཆ་རེ་རེ་ཐེངས་གཅིག་བཟོ་སྦྱོར"
 snapshot = "Snapshot: འཁོར་རེར་ཡིག་སྣོད་སླར་ཀློག"
+track = "Keep it, and only process it again if it changes"
 
 [portal.sources.types.folder.fields.recursive]
 helperText = "ཁྱེད་ཀྱི་ཡིག་ཆ་ནང་སྦས་ཡིག་ཁུག་ཏུ་སྒྲིག་ཡོད་ན། ཡན་ལག་ཡིག་ཁུག་ཚུད་པར་བྱེད་པའམ། རིམ་པ་གོང་མ་ཁོ་ན་ལ་ལྟ་ཞིབ་བྱེད།"
@@ -8974,12 +10016,12 @@ helperText = "bucket དང་དཔང་ཡིག་ཉར་ཚགས་བ�
 label = "འབྲེལ་མཐུད"
 
 [portal.sources.types.s3.fields.mode]
-helperText = "Consume ཡིས་སྲིད་ཇུས་ཚང་མས་བ处理་བྱས་རྗེས bucket ནས object རེ་རེ་འདོར་བ་ཡིན།"
 label = "ཀློག་སྟངས"
 
 [portal.sources.types.s3.fields.mode.options]
 consume = "Consume: object རེ་རེ་ཐེངས་གཅིག་བ处理་བྱེད"
 snapshot = "Snapshot: འཁོར་ཐེངས་རེར bucket བསྐྱར་ཀློག་བྱེད"
+track = "Keep originals; process changes once"
 
 [portal.sources.types.s3.fields.prefix]
 helperText = "གཙོ་ཚིག་འདིས་འགོ་ཚུགས་པའི་ལྡེ་མིག་ཡོད་པའི object ཁོ་ན་བ处理་བྱེད།"
@@ -9025,7 +10067,6 @@ type = "རིགས"
 close = "ཁ་རྒྱག"
 
 [portal.usage]
-managePayment = "དངུལ་སྤྲོད་དོ་དམ"
 subtitle = "PDF ཚང་མར Stirling གིས་རིན་བསྡུས་པའི་སྤྱོད་ཚད། འཛིན་ཤོག དང་འཆར་གཞི་དོ་དམ་ཚང་མ་འཛིན་སྟེགས་གཅིག་ནང་།"
 title = "སྤྱོད་ཚད་ & རིན་བསྡུ"
 
@@ -9033,6 +10074,14 @@ title = "སྤྱོད་ཚད་ & རིན་བསྡུ"
 loadWallet = "wallet འཇུག་མ་ཐུབ"
 openStripePortal = "Stripe portal ཁ་འབྱེད་མ་ཐུབ"
 walletUnavailable = "wallet མེད་པ། {{status}} {{statusText}}"
+
+[portal.usage.freeTier]
+adminOnly = "This server's monthly credits are shared by everyone on it, so only an administrator can see the figures. Everything you can run stays available."
+connect = "Connect a Stirling account"
+connectBody = "Connecting adds a second monthly allowance, raises the users this server can have, and turns on the Processor."
+connectTitle = "This server has no Stirling account"
+loadError = "Couldn't read this server's credit usage. Try again in a moment."
+loadErrorTitle = "Couldn't load credit usage"
 
 [portal.usage.sessionExpired]
 action = "ཡང་བསྐྱར་ནང་འཛུལ"
@@ -9088,6 +10137,88 @@ unlimited = "{{used}} · ཚད་མེད"
 
 [printFile]
 title = "པར་སྐྲུན།"
+
+[processingFolders.downloads]
+approve = "Process my Downloads"
+cancelSweep = "Cancel"
+capped = "You have {{found}} PDFs; the first {{limit}} are processed now and the rest follow."
+close = "Done"
+explain_one = "Stirling can classify the {{count}} PDF already in your Downloads folder and open the results here."
+explain_other = "Stirling can classify the {{count}} PDFs already in your Downloads folder and open the results here."
+failed = "Could not set that up. Your files have not been changed."
+finished_one = "Classified {{count}} file and opened {{opened}} of them here, ready to work on."
+finished_other = "Classified {{count}} files and opened {{opened}} of them here, ready to work on."
+nothingNew_one = "Nothing new to process - this {{count}} file has already been through."
+nothingNew_other = "Nothing new to process - these {{count}} files have already been through."
+notModified = "Your files in Downloads are not changed - Stirling reads them and opens them here."
+notNow = "Not now"
+progressCounts = "of {{total}} processed"
+someFailed_one = "{{count}} could not be processed and was left untouched."
+someFailed_other = "{{count}} could not be processed and were left untouched."
+stillRunning = "Some files are still being processed in the background."
+title = "Organize your Downloads?"
+trigger_one = "Process {{count}} PDF in Downloads"
+trigger_other = "Process {{count}} PDFs in Downloads"
+typesFound_one = "{{count}} document type found"
+typesFound_other = "{{count}} document types found"
+working = "Processing ..."
+
+[processingFolders.setup]
+addFolder = "Add folder"
+advancedSteps = "This folder uses a processing setup this wizard cannot edit. Its saved steps have not been changed."
+change = "Change"
+changeLocation = "Change folder location"
+chooseFolder = "Which folder should we process?"
+chooseParent = "Choose where to create the folder"
+chooseProcessing = "Choose processing"
+computer = "On this computer"
+computerDescription = "Click to choose a folder from your computer."
+computerHeading = "Process your own folder"
+createIn = "Create in"
+downloadsAction = "Try processing your downloads folder"
+dropDescription = "or click to choose one from your computer."
+dropError = "Drop a single folder here, or click to choose one."
+dropHeading = "Drop a folder here"
+editFolder = "Edit {{name}}"
+editTitle = "Edit folder processing"
+enable = "Enable processing"
+existingTitle = "Set up folder processing"
+folder = "Folder"
+folderChoice = "Use an existing folder or create one"
+folderName = "Folder name"
+fromComputer = "From computer..."
+invalidName = "Enter a folder name without path separators."
+location = "Folder location"
+namePlaceholder = "e.g. Invoices"
+newFolder = "New folder"
+noFolders = "No folders here."
+noMatchingFolders = "No matching folders."
+openFolder = "Open {{name}}"
+portalOnlyPreset = "Configure this preset in the portal."
+presetInfo = "About {{name}}"
+presetsLabel = "Processing presets"
+processing = "Processing"
+progress = "Setup progress"
+replaceWarning = "\"{{name}}\" already has processing. Saving will replace its current processing settings."
+retry = "Try again"
+review = "Review"
+saveChanges = "Save changes"
+saveFolder = "Save folder"
+searchFolders = "Search folders..."
+searchLocations = "Search locations..."
+selectFolder = "Select a folder"
+server = "Server storage"
+serverAction = "Or add a new folder to your server"
+settings = "Adjust settings"
+title = "Set up folder processing"
+useExisting = "Use existing folder"
+viewLabels = "View classification labels"
+
+[processingFolders.wall]
+done = "Done"
+failed = "Failed"
+title = "Processing this folder"
+waiting = "Queued ..."
 
 [provider.googledrive]
 name = "Google Drive"
@@ -9296,8 +10427,33 @@ automate = "རང་འགུལ་ཅན།"
 config = "སྒྲིག་བཀོད།"
 files = "ཡིག་ཆ།"
 
+[quickNav]
+account = "Account"
+docs = "Documentation"
+editor = "Editor"
+home = "Stirling"
+invite = "Invite"
+landmark = "Quick navigation"
+noProcessorAccess = "Ask an admin for processor access"
+notifications = "Notifications"
+processor = "Processor"
+reader = "Reader"
+
 [read]
 tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
+
+[reader.rail]
+addDocument = "Add file"
+bookmarks = "Bookmarks"
+close = "Close document"
+comment = "Comments"
+label = "Reading tools"
+readAloud = "Read aloud"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+search = "Find in document"
+switchDocument = "Switch document"
+thumbnails = "Pages"
 
 [redact]
 submit = "སྲུང་བརྩི་བྱེད་པ།"
@@ -9817,8 +10973,11 @@ expired = "ཁྱེད་རང་གི་ཚོགས་ཐུན་དུས
 
 [settings]
 backToSections = "སྒྲིག་འགོད་ཚང་མ།"
-close = "ཁ་རྒྱག"
 title = "སྒྲིག་འགོད།"
+
+[settings.about]
+description = "Tours, legal documents and the licences of everything bundled with this build."
+title = "About"
 
 [settings.ai]
 documents = "ཡིག་ཆ་ & RAG"
@@ -9833,12 +10992,45 @@ database = "གཞི་གྲངས་རྟེན་གཞི།"
 endpoints = "མཇུག་སྡོམ།"
 features = "ཁྱད་ཆོས"
 folderAccess = "ཡིག་ཁུག་འཛུལ་སྤྱོད"
+integrations = "Integrations"
 mcp = "MCP Server"
 storageSharing = "ཡིག་ཆའི་གསོག་འཇོག་དང་མཉམ་སྤྱོད"
 systemSettings = "མ་ལག་སྒྲིག་བཀོད།"
-title = "བཀོད་སྒྲིག།"
+
+[settings.connectedInstances]
+confirmBody = "This revokes the instance’s access to your team in Stirling Cloud. It does not delete local files or remove usage already recorded. To connect again, follow the original connection steps on the instance."
+confirmTitle = "Remove {{name}}?"
+connectedAt = "Connected: {{date}}"
+connectedDate = "Connected"
+connectHelp = "To connect a server, open Settings → Account connection on your self-hosted instance and follow the connection steps."
+copied = "ID copied"
+copyError = "Couldn’t copy the ID. Select it to copy manually."
+copyId = "Copy ID"
+details = "Details"
+displayName = "Display name (optional)"
+editName = "Edit name"
+empty = "No connected instances"
+id = "Instance ID"
+justConnected = "Connected just now"
+lastSeen = "Last seen: {{date}}"
+loadError = "Couldn’t load connected instances"
+loadErrorBody = "Your connections could not be checked. Try again."
+loading = "Loading connected instances"
+ownerOnly = "Only the team owner can manage connected instances."
+remove = "Remove connection"
+removedSuccess = "{{name}} has been disconnected from your team."
+removeError = "Couldn’t remove the connection. Try again."
+renameError = "Couldn’t save the name. Try again."
+retry = "Try again"
+saveName = "Save name"
+subtitle = "Manage the self-hosted servers connected to your team."
+teamNote = "These instances share your team’s processing allowance."
+title = "Connected instances"
+unknown = "Not available"
+yourTeam = "Your team"
 
 [settings.connection]
+description = "Work locally on this machine or connect the app to a Stirling server."
 localDescription = "ཁྱེད་ཀྱིས་རྩིས་ཁྲོད་མེད་པར་རང་གནས་རྒྱབ་སྟེགས་སྤྱོད་བཞིན། སྤྱི་དྲ་སྔོན་འགྲོའི་ལས་སྦྱོར་དམ་རང་དབང་ཞབས་ཞུ་དགོས་པའི་ལག་ཆ་ཁ་ཤས་མི་འཐོབ།"
 logout = "དྲན་ཐོ།"
 server = "སར་བར།"
@@ -9853,13 +11045,12 @@ selfhosted = "རང་གིས་རང་ལ་མགྲོན་ཁང་།
 
 [settings.developer]
 apiKeys = "APIལྡེ་མིག"
+apiKeysDescription = "Personal keys for calling the Stirling API from scripts and integrations."
 title = "གོང་འཕེལ་གཏོང་མཁན།"
 
 [settings.general]
 autoUnzip = "རང་འགུལ་གྱིས་APIལན་འདེབས།"
-autoUnzipDescription = "རང་འགུལ་གྱིས་ཡིག་ཚགས་ཀྱི་ལན་འདེབས་ལས་ཡིག་ཚགས་བཏོན་པ།"
 autoUnzipFileLimit = "རང་འགུལ་གྱིས་ཡིག་ཚགས་ཚད་གཞི།"
-autoUnzipFileLimitDescription = "ཆེས་མང་བའི་ཡིག་ཆའི་གྲངས་འབོར།"
 autoUnzipFileLimitTooltip = "གལ་ཏེ་ZIPནང་དུ་ཡིག་ཆ་མང་པོ་ཡང་ན་ཉུང་བ་ཡོད་ན། ZIPs ཆེ་བ་འདོན་ཆེད་དུ་མཐོ་རུ་བཅུག"
 autoUnzipTooltip = "རང་འགུལ་གྱིས་APIབཀོལ་སྤྱོད་ནས་ཕྱིར་ལོག་པའི་ZIPཡིག་ཆ་འཐེན་ཐུབ། ZIP ཡིག་ཆ་དེ་དག་བཟོད་སྒོམ་བྱེད་མི་ཐུབ་པ་རེད། འདིས་རང་འགུལ་ལས་ཀའི་འགྲོ་ལུགས་ལ་ཤུགས་རྐྱེན་ཐེབས་མི་ཐུབ།"
 defaultPdfEditor = "སྔོན་སྒྲིག་PDFརྩོམ་སྒྲིག་པ།"
@@ -9910,12 +11101,6 @@ intro = "ཁྱེད་རང་གི་སྒྲིག་འཛུགས་�
 learnMore = "ཡིག་ཚགས་ནང་དུ་མང་ཙམ་ཤེས་དགོས།"
 title = "མ་ལག་འཛིན་སྐྱོང་པ་ལ།"
 
-[settings.general.loginLanding]
-description = "Stirling Cloud ལ་ནང་འཛུལ་བྱས་རྗེས app གང་ཁ་འབྱེད་དགོས་འདེམས།"
-editor = "Editor"
-processor = "Processor"
-title = "ནང་འཛུལ་རྗེས"
-
 [settings.general.mode]
 fullscreen = "བརྙན་ཤེལ་ཆ་ཚང་།"
 sidebar = "ཟུར་པར།"
@@ -9958,6 +11143,7 @@ fitPage = "ཤོག་ངོས་ལ་འཚམ"
 fitWidth = "ཞེང་ཚད་ལ་འཚམ"
 
 [settings.help]
+description = "Guided walkthroughs of the editor and the admin area."
 label = "ལམ་སྟོན"
 title = "རོགས་རམ"
 
@@ -9990,6 +11176,7 @@ mac = "⌘ (བཀའ་བཀོད་) ⌥ (གདམ་ཁ་) ཡང་ན�
 windows = "ཁྱེད་རང་གི་མགྱོགས་ལམ་ནང་ལ་Ctrl, Alt, ཡང་ན་བསྒྱུར་བཅོས་བྱེད་མཁན་གཞན་ཞིག་ཚུད་ཡོད།"
 
 [settings.legal]
+description = "Terms, privacy policy and your cookie preferences."
 label = "Legal"
 title = "Legal"
 
@@ -10018,9 +11205,15 @@ version = "Version"
 
 [settings.licensingAnalytics]
 audit = "རྩིས་ཞིབ་པ།"
+auditDescription = "Who did what on this server, and how long that record is kept."
 plan = "འཆར་གཞི"
-title = "ཆོག་མཆན་དང་དབྱེ་ཞིབ།"
+planDescription = "Your licence, seats and what the current plan unlocks."
+usage = "Usage Analytics"
 usageAnalytics = "བེད་སྤྱོད་དབྱེ་ཞིབ།"
+usageDescription = "How the server is being used: operations, volume and trends over time."
+
+[settings.monitoring]
+title = "Monitoring"
 
 [settings.planBilling]
 currentPlan = "མིག་སྔའི་གྲལ་གཞི"
@@ -10058,18 +11251,6 @@ memberCount_one = "{{count}} team member"
 memberCount_other = "{{count}} team members"
 memberCount_zero = "no team members"
 
-[settings.planBilling.tier]
-enterprise = "ལས་སྡེ་ཆེན"
-enterpriseDescription = "ལས་སྡེ་ཆེན་དོན་གྱི་རང་མོས་ཁྱད་ཆོས་དང་རོགས་རམ"
-free = "Free"
-freeDescription = "ཟླ་རེར credits 50"
-team = "ཚོགས་པ"
-teamBadge = "ཚོགས་པ"
-teamDescription = "500 credits/ཟླ ཚུད་པ། ཞབས་ཞུ་མཚམས་མེད་པར ཚད་ལས་བརྒལ་ཐོ་རྩིས་རང་འགུལ།"
-teamTooltipCredits = "Team གྲལ་གཞིར {{credits}} credits/ཟླ ཚུད།"
-teamTooltipFineprint = "ཚུད་པའི credits ལས་བརྒལ་བའི་སྤྱོད་ཚད་ཙམ་ལ་གླ་ཆ་སྤྲོད།"
-teamTooltipOverage = "{{price}}/credit གི་ཚད་ལས་བརྒལ་གླ་ཆ་རང་འགུལ་གྱིས ཞབས་ཞུ་མཚམས་མེད་པར་བྱེད།"
-
 [settings.planBilling.trial]
 daysRemaining = "ཉིན་{{days}} ལྷག་ལུས"
 daysRemainingFull = "ཁྱེད་ཀྱི་ཚོད་ལྟ་ {{days}} ཉིན་ནང་མཇུག་སྒྲིལ"
@@ -10094,6 +11275,10 @@ privacy = "གསང་བ"
 title = "སྲིད་ཇུས་དང་གསང་བ།"
 
 [settings.preferences]
+appearance = "Appearance"
+description = "How the editor looks and behaves for you, and your account."
+downloads = "Downloads"
+editorDefaults = "Editor defaults"
 title = "འདོད་པ།"
 
 [settings.security]
@@ -10120,6 +11305,10 @@ connections = "འབྲེལ་མཐུད།"
 security = "ཉེན་སྲུང"
 telegram = "Telegram"
 title = "བདེ་འཇགས་དང་བདེན་དཔང་།"
+
+[settings.server]
+system = "System"
+title = "Server"
 
 [settings.signOut]
 confirm = "ཁྱེད་རང་ཕྱིར་འཐོན་བྱེད་གཏན་འཁེལ་ཡིན་ནམ།"
@@ -10797,17 +11986,26 @@ leaveButton = "ཚོགས་པ་ནས་ཕྱིར་འཐེན"
 leaveError = "ཚོགས་པ་ནས་ཕྱིར་འཐེན་མ་ཐུབ"
 leaveSuccess = "ཚོགས་པ་ནས་ཕྱིར་འཐེན་ལེགས་པར།"
 loading = "ཚོགས་པའི་ཆ་འཕྲིན་ཕབ་ལེན་བརྒྱབ་བཞིན..."
+makeOwner = "Make owner"
 memberCount_one = "{{count}} member"
 memberCount_other = "{{count}} members"
 memberCount_zero = "no members"
 memberRemoved = "སྡེ་ཚོགས་མི་སུབ་ལེགས་པར།"
 namePlaceholder = "ཚོགས་པའི་མིང་འཇུག"
+noOwner = "This team has no owner"
 personal = "རང་དོན"
+recoverBody = "An existing member can recover ownership to manage the team and its billing settings."
+recoverOwner = "Become team owner"
+recoverSuccess = "You are now the team owner."
 removeError = "སྡེ་ཚོགས་མི་སུབ་མ་ཐུབ"
 renameCancel = "མིང་བསྐྱར་འདོགས་དོར"
 renameError = "ཚོགས་པའི་མིང་བསྐྱར་བཏགས་ཕམ་པ"
 renameSubmit = "རུ་ཁག་མིང་ཉར"
 renameSuccess = "ཚོགས་པའི་མིང་བསྐྱར་བཏགས་ལེགས་པར།"
+transferBody = "Make {{email}} the team owner? They will control team membership and organization billing settings. You will become a member. The team’s subscription and wallet stay with the team."
+transferError = "Ownership could not be transferred. Refresh the team and try again."
+transferSuccess = "Team ownership transferred. Your role is now member."
+transferTitle = "Transfer team ownership"
 
 [team.invitationBanner]
 acceptButton = "དང་ལེན"
@@ -10912,8 +12110,6 @@ ZIP = "ZIP ཉར་ཚགས་ཤིག"
 [toolPanel]
 alpha = "ཨལ་ཕ།"
 backToAllTools = "ལག་ཆས་ཚང་མར་ཕྱིར་ལོག"
-collapse = "པང་གཞི་བསྡམས"
-expand = "པང་གཞི་རྒྱས"
 goBack = "ཕྱིར་ལོག"
 pdfTools = "PDF ལག་ཆ།"
 placeholder = "འགོ་འཛུགས་བྱེད་པའི་ལག་ཆ་ཞིག་འདེམས།"
@@ -11084,6 +12280,7 @@ visits = "གཟིགས་སྐོར་བ།"
 lastActive = "མཐའ་མའི་བྱ་འགུལ།"
 learnMore = "འགན་འཁྲི་དང་འཛུལ་སྤྱོད་སྐོར་སྔར་ལས་མང་བ་ཤེས་པ།"
 locked = "སྒོ་བརྒྱབ་ཟིན།"
+ownerSetupRequired = "The organization owner has not completed first login. Complete setup or ask the server operator to recover ownership before transferring ownership."
 roleFor = "{{name}} ཡི་འགན་འཁྲི།"
 rowActions = "{{name}} ཡི་བྱ་སྤྱོད།"
 showAll = "{{count}} ཚང་མ་སྟོན།"
@@ -11105,6 +12302,7 @@ removeTeam = "ཚོགས་ཆུང་ནས་སྤོར།"
 rename = "ཚོགས་ཆུང་གི་མིང་བསྐྱར་འདོགས།"
 resetPw = "གསང་ཨང་བསྐྱར་སྒྲིག"
 suspend = "གནས་སྐབས་མཚམས་འཇོག"
+transferOwnership = "Transfer ownership"
 unlock = "རྩིས་ཁྲའི་སྒོ་ཕྱེ།"
 
 [users.activity]
@@ -11143,6 +12341,8 @@ disableMfaTitle = "MFA བསྐྱར་སྒྲིག"
 removeBody = "{{name}} རྩ་འཛུགས་ནས་གཏན་འཇགས་སུ་སྤོར་དགོས་སམ། འདི་ཕྱིར་བསྒྱུར་མི་ཐུབ།"
 removeTeamBody = "{{name}} ཚོགས་ཆུང་ནས་སྤོར་དགོས་སམ། ཁོང་ཚོས་རྩིས་ཁྲ་ཉར་བ་ཡིན་ཡང་། ཚོགས་ཆུང་འདིའི་ཐོན་ཁུངས་ལ་འཛུལ་སྤྱོད་དབང་ཚད་ཤོར་འགྲོ"
 removeTitle = "ཁོངས་མི་སྤོར།"
+transferOwnershipBody = "Make {{name}} the organization owner? They will become an admin. You will remain an admin but lose ownership. Only the new owner or the server operator can transfer it back."
+transferOwnershipTitle = "Transfer organization ownership"
 
 [users.empty]
 description = "མཉམ་ལས་འགོ་འཛུགས་ཆེད་ཁྱེད་ཀྱི་ཚོགས་ཆུང་ལ་གདན་ཞུ་བྱོས།"
@@ -11150,11 +12350,11 @@ title = "ད་དུང་ཁོངས་མི་མེད།"
 
 [users.group]
 addToTeam = "ཚོགས་ཆུང་ལ་སྣོན།"
+administrators = "{{count}} administrators"
 guestCount = "མགྲོན་པོ་{{count}}"
 guests = "མགྲོན་པོ།"
 ledBy = "{{owner}} ཡིས་འགོ་ཁྲིད་བྱས།"
 org = "རྩ་འཛུགས།"
-owners = "བདག་པོ་{{count}}"
 team = "{{name}} ཚོགས་ཆུང་།"
 teamMeta = "མི་{{count}}"
 
@@ -11214,15 +12414,9 @@ title = "ཚོགས་ཆུང་ལ་སྤོ།"
 [users.newTeam]
 action = "+ ཚོགས་ཆུང་གསར་པ།"
 create = "ཚོགས་ཆུང་བཟོ།"
-emailError = "ནུས་ལྡན་གློག་ཡིག་ཁ་བྱང་ཞིག་འཇུག་རོགས།"
 name = "ཚོགས་ཆུང་མིང་།"
 namePlaceholder = "དཔེར་ན། དངུལ་རྩིས།"
 nameRequired = "ཚོགས་ཆུང་མིང་དགོས་ངེས་ཡིན།"
-owner = "ཚོགས་ཆུང་བདག་པོ།"
-ownerFailed = "ཚོགས་ཆུང་བཟོས་ཟིན། འོན་ཀྱང་བདག་པོ་གདན་ཞུ་བྱ་མ་ཐུབ། མིང་ཐོ་ནས་གཅིག་བསྐོ་རོགས།"
-ownerHelper = "ཚོགས་ཆུང་རེ་རེར་འགོ་ཁྲིད་མཁན་ཞིག་ཡོད། ཁོང་ཚོ་ཚོགས་ཆུང་བདག་པོར་གདན་ཞུ་བྱེད། ལས་སྣོན་པ་སྤྱོད་ནུས་ཡོད། དེས་གཞན་རྣམས་སྣོན་ཐུབ། རྗེས་སུ་བསྐྱར་བསྐོ་བྱ་ཐུབ།"
-ownerPlaceholder = "owner@company.com"
-subtitle = "ཁོང་ཚོའི་འཛུལ་སྤྱོད་སྐྱོང་མཁན་ཚོགས་ཆུང་བདག་པོའི་འོག་མི་སྣ་སྡེབ་སྒྲིག་བྱོས།"
 title = "ཚོགས་ཆུང་གསར་པ།"
 
 [users.renameTeam]
@@ -11246,6 +12440,7 @@ title = "གསང་ཚིག་བསྐྱར་སྒྲིག"
 tooShort = "གསང་ཚིག་ལ་ཉུང་མཐར་ཡིག་འབྲུ་8 ཡོད་དགོས།"
 
 [users.role]
+admin = "Admin"
 guest = "མགྲོན་པོ"
 member = "ཚོགས་མི"
 orgOwner = "རྩ་འཛུགས་བདག་པོ"
@@ -11357,11 +12552,15 @@ validUntrusted = "ནུས་པ་ཡོད། མིང་རྟགས་པ�
 cannotPreviewFile = "སྔོན་ལྟའི་ཡིག་འབྲུའི་ཡིག་ཚགས་བཟོ་མི་རུང་།"
 copyText = "Copy"
 disableColorFilter = "ཁ་དོག་འཚག་བཟོ་བར་བཀག"
+documentUpdated = "Document updated"
 dualPageView = "ཤོག་ངོས་གཉིས་ལྡན་གྱི་མཐོང་སྣང་།"
 enableDarkFilter = "མུན་མཐོང་འཚག་བཟོ་ལྕོགས་འགུལ"
 enableSepiaFilter = "Sepia འཚག་བཟོ་ལྕོགས་འགུལ"
+engineLoadError = "Failed to initialize PDF viewer engine"
+engineSlowWarning = "PDF engine initialization is taking longer than expected. Please check your browser WebAssembly and Worker settings, or reload the page."
 firstPage = "ཤོག་ངོས་དང་པོ།"
 lastPage = "ཤོག་ངོས་མཐའ་མ།"
+loadingEngine = "Loading PDF Engine..."
 moreOptions = "གདམ་གསེས་མང་བ"
 nextPage = "ཤོག་ངོས་རྗེས་མ།"
 onlyPdfSupported = "ལྟ་མཁན་གྱིས་PDFཡིག་ཆ་ལ་རྒྱབ་སྐྱོར་བྱེད་ཀྱི་ཡོད། ཡིག་ཆ་འདི་རྩ་སྒྲིག་མི་འདྲ་བ་ཞིག་ཡིན་པ་འདྲ།"
@@ -11382,6 +12581,7 @@ close = "ཟུར་སྣོན་ཁ་རྒྱག"
 closeSidebar = "ཟུར་སྦྱར་ཡིག་ཆའི་ཟུར་སྒྲོམ་ཁ་རྒྱོབ"
 download = "ཟུར་སྦྱར་ཡིག་ཆ་ཕབ་ལེན"
 empty = "ཡིག་ཆ་འདིར་ཟུར་སྣོན་མེད།"
+loadFailed = "Failed to load attachments"
 loading = "ཟུར་སྣོན་ཡར་འཇུག་བཞིན..."
 noDocument = "PDF ཞིག་ཁ་ཕྱེས་ནས་ཟུར་སྣོན་ལ་ལྟ།"
 noMatch = "ཁྱེད་ཀྱི་འཚོལ་བ་དང་མཐུན་པའི་ཟུར་སྣོན་མེད།"
@@ -11389,6 +12589,7 @@ noSupport = "སྟོན་ཆས་འདིའི་དོན་ལ་ཟུ�
 retry = "ཡང་བསྐྱར་ཚོད་ལྟ"
 searchPlaceholder = "ཟུར་སྣོན་འཚོལ"
 title = "ཟུར་སྣོན"
+untitled = "Untitled"
 
 [viewer.bookmarks]
 addBookmark = "Add bookmark"
@@ -11396,6 +12597,7 @@ bookmarkTitle = "དཔེ་རྟགས་ཁ་བྱང"
 bookmarkTitleRequired = "དཔེ་རྟགས་ཁ་བྱང་དགོས་ངེས་ཡིན།"
 closeSidebar = "དཔེ་རྟགས་ཟུར་སྒྲོམ་ཁ་རྒྱོབ"
 collapseAll = "དཔེ་རྟགས་ཚང་མ་བསྡུ"
+editorOnly = "This document's bookmarks can only be edited in the editor."
 empty = "No bookmarks in this document"
 expandAll = "དཔེ་རྟགས་ཚང་མ་རྒྱ་སྐྱེད"
 searchPlaceholder = "དཔེ་རྟགས་འཚོལ"
@@ -11471,7 +12673,19 @@ renderMarkdown = "markdown མངོན"
 sortedBy = "གོང་འབྱེད: {{column}}"
 textStats = "{{lines}} ཕྲེང · {{size}}"
 
+[viewer.portfolio]
+addFile = "Add file"
+count_one = "{{count}} file in this portfolio"
+count_other = "{{count}} files in this portfolio"
+import = "Import into Stirling"
+importFailed = "This file could not be added to your workspace."
+memberUnavailable = "This file could not be read from the portfolio."
+preview = "Preview"
+searchPlaceholder = "Search files"
+title = "Portfolio"
+
 [viewer.redaction]
+applyAll = "Apply Redactions"
 removeMark = "རྟགས་འདོར"
 
 [viewer.search]
@@ -11796,6 +13010,10 @@ title = "ཆུའི་མཚོན་རྟགས་ཡིག་གནས།"
 image = "པར་རིས"
 text = "ཡིག་གཞི"
 
+[workbench.sessionRestore]
+none = "Your previous files are no longer stored on this device."
+partial = "Restored {{restored}} of {{total}} files. The rest are no longer stored on this device."
+
 [workbenchBar]
 activeFiles = "སྐྱོད་བཞིན་པའི་ཡིག་ཆ"
 annotations = "མཆན་བཀོད"
@@ -11897,10 +13115,10 @@ lockedBadge = "བཀག་ཡོད"
 loginRequired = "ནང་འཇུག་ཐབས་ལམ་ཐོག་མར་ལྕོགས་ཅན་བཟོ་བ།"
 memberActions = "ཚོགས་མིའི་བྱ་སྤྱོད"
 noMembersFound = "འཐུས་མི་གང་ཡང་མ་ཐོབ།"
+ownerLocked = "Transfer organization ownership in Settings → Workspace → Users before changing the owner’s role or account."
 role = "འཁྲབ་ཚན"
 searchMembers = "འཚོལ་ཞིབ་ཚོགས་མི།..."
 team = "རུ་ཁག"
-title = "མི་དམངས"
 unlockAccount = "རྩིས་ཁྲོད་ཕྱེ"
 unlockUserError = "སྤྱོད་པའི་རྩིས་ཁྲོད་ཕྱེ་མི་ཐུབ།"
 unlockUserSuccess = "སྤྱོད་པའི་རྩིས་ཁྲོད་ཕྱེ་ཚར་བ།"
@@ -12054,7 +13272,6 @@ system = "མ་ལག"
 teamActions = "རུ་ཁག་གི་བྱ་སྤྱོད"
 teamName = "རུ་ཁག་གི་མིང་།"
 teamNotFound = "རུ་ཁག་མ་རྙེད་པ།"
-title = "རུ་ཁག"
 totalMembers = "འཐུས་མི།"
 viewTeam = "རུ་ཁག་ལ་ལྟོས།"
 

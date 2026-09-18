@@ -34,11 +34,12 @@ downloadUnavailable = "この項目はダウンロードできません"
 edit = "編集"
 editSecret = "この値を編集"
 editYourNewFiles = "新しいファイルを編集"
-encryptedFilesBlocked_one = "ファイルはパスワードで保護されています。先に解除してください。"
-encryptedFilesBlocked_other = "{{count}} 件のファイルはパスワードで保護されています。先に解除してください。"
 exportAndContinue = "エクスポートして続行"
 false = "偽"
+fileChangedOnDisk = "Changed on disk since you edited it"
+fileDiskUnavailable = "Cannot reach the file on disk"
 fileNotSavedToDisk = "ディスクに保存されていません"
+fileOriginalDeleted = "Original deleted - save to keep a copy"
 fileSavedToDisk = "ファイルをディスクに保存しました"
 fileSelected = "選択中：{{filename}}"
 filesSelected = "{{count}} 個のファイル"
@@ -559,6 +560,47 @@ close = "閉じる"
 error = "エラー"
 expand = "展開"
 
+[admin.formDetection]
+confirmUninstall = "Click to confirm"
+description = "Detects text fields, checkboxes and signature areas in a PDF and turns them into fillable form fields. Detection runs on this server with the model you install below."
+downloadingNote = "{{percent}}% of {{size}}"
+enableFeature = "Enable feature"
+engineUnavailable = "This build does not include the detection engine, so the tool stays unavailable even with a model installed."
+errorTitle = "Something went wrong"
+install = "Install"
+installFailed = "Install failed"
+licenseLabel = "Licence"
+modelsLabel = "Detection model"
+notAvailable = "No download URL/checksum configured yet, so this model cannot be installed."
+notWritable = "The model directory is not writable; check the configs volume mount."
+saveFailed = "Failed to save setting"
+sizeUnknown = "size unknown"
+switch = "Use this model"
+title = "AI Form Detection"
+uninstall = "Uninstall"
+uninstallFailed = "Uninstall failed"
+verifyingNote = "Verifying SHA-256 checksum..."
+
+[admin.formDetection.airgap]
+intro = "No internet on the server? Download the model elsewhere, verify it, and copy it into the model directory. It is picked up on restart."
+noSha = "(checksum not set)"
+show = "Offline / air-gapped install"
+step1 = "1. Download on a machine with internet:"
+step2 = "2. Check the SHA-256 checksum matches:"
+step3 = "3. Copy it into the model directory on this server:"
+step4 = "4. Set formDetection.activeModelId to the model's id in settings.yml and restart. <configs> is the configs volume (e.g. /configs in Docker). The air-gapped image ships with a model already installed."
+
+[admin.formDetection.badge]
+active = "Active"
+installed = "Installed"
+
+[admin.formDetection.state]
+downloading = "Downloading..."
+failed = "Failed"
+notInstalled = "No model installed"
+ready = "Ready"
+verifying = "Verifying..."
+
 [admin.settings]
 discard = "破棄"
 error = "設定の保存に失敗しました"
@@ -688,6 +730,9 @@ manualLinks = "手動ダウンロード: リンクをクリックし、ファイ
 noLanguages = "設定されたディレクトリに tessdata 言語が見つかりません。"
 permissionNotice = "tessdata パスに書き込めません。ダウンロードはブラウザで開かれます。.traineddata ファイルを手動で tessdata フォルダーに保存してください。"
 
+[admin.settings.ai]
+description = "Connect Stirling to the Python AI engine, choose its models, and set the guardrails it runs under."
+
 [admin.settings.ai.documents]
 description = "ドキュメントに関する質問に回答するために使用する埋め込みモデルと取得設定を構成します。保存すると AI エンジンに適用されます。"
 title = "ドキュメント & RAG"
@@ -727,6 +772,7 @@ description = "検索ごとに取得する最も関連性の高いチャンク�
 label = "Top K"
 
 [admin.settings.ai.general]
+connection = "Connection"
 description = "Stirling を Python AI エンジンに接続し、公開する AI 機能を選択します。変更は再起動後に適用されます。"
 title = "AI エンジン"
 
@@ -818,6 +864,7 @@ openai = "OpenAI API key"
 setPlaceholder = "保存済み - 現在の key を保持するには空白のままにしてください"
 
 [admin.settings.ai.models.baseUrl]
+contextWindow = "Use a context window of at least 16,384 tokens. Smaller windows silently drop part of the prompt. Ollama defaults to 4,096 - raise OLLAMA_CONTEXT_LENGTH."
 description = "OpenAI 互換 / Ollama エンドポイントの Base URL。例: http://ollama:11434/v1。"
 label = "プロバイダー base URL"
 warning = "base URL は信頼できる内部エンドポイントを指す必要があります。エンジンはそこへサーバー側リクエストを行うため、信頼できない値は SSRF に関して危険です。"
@@ -852,6 +899,7 @@ clickToUpgrade = "クリックしてプラン詳細を表示"
 
 [admin.settings.connections]
 connect = "接続"
+connectedServicesDescription = "Services this server is wired up to. Sign-in providers live under Sign-in & security."
 description = "OAuth2 や SAML などの外部認証プロバイダを構成します。"
 disconnect = "切断"
 disconnected = "プロバイダの切断に成功しました"
@@ -974,6 +1022,8 @@ configuration = "データベース構成"
 confirmCodeLabel = "続行するには確認コードを入力してください"
 confirmImport = "インポートを確認"
 confirmImportTitle = "データベースのインポートを確認"
+connection = "Connection"
+connectionDescription = "Point Stirling at an external database instead of the embedded one."
 createBackup = "バックアップを作成"
 created = "作成日"
 delete = "削除"
@@ -1114,6 +1164,7 @@ placeholder = "/data/inbox"
 remove = "フォルダールートを削除"
 
 [admin.settings.general]
+branding = "Branding & appearance"
 description = "ブランディングや既定の動作など、アプリ全体の設定を構成します。"
 system = "システム"
 title = "システム設定"
@@ -1217,14 +1268,6 @@ description = "ユーザーが選択できる言語（空にすると全言語�
 label = "利用可能な言語"
 placeholder = "言語を選択"
 
-[admin.settings.general.logoStyle]
-classic = "クラシック"
-classicAlt = "クラシックロゴ"
-description = "最新のミニマリストロゴかクラシックな S アイコンを選択"
-label = "ロゴスタイル"
-modern = "モダン"
-modernAlt = "モダンロゴ"
-
 [admin.settings.general.showUpdate]
 description = "新しいバージョンが利用可能なときに通知を表示"
 label = "更新通知を表示"
@@ -1235,6 +1278,7 @@ label = "管理者のみに更新を表示"
 
 [admin.settings.legal]
 description = "法的ドキュメントおよびポリシーへのリンクを構成します。"
+documentsDescription = "Links users are shown for terms, privacy, cookies and the impressum."
 title = "法的ドキュメント"
 
 [admin.settings.legal.accessibilityStatement]
@@ -1488,8 +1532,7 @@ label = "監査ログ"
 showDetails = "監査レベルの詳細を表示"
 
 [admin.settings.security.audit.advancedOptions]
-description = "以下のオプションは処理時間とメモリ使用量を増加させます。本当に必要な場合のみ有効にしてください。"
-title = "詳細オプション"
+cost = "Now increasing processing time and memory usage on every operation."
 
 [admin.settings.security.audit.captureFileHash]
 description = "アップロードされた PDF ファイルの整合性確認のために SHA-256 ハッシュを抽出します。監査レベルに依存しません。"
@@ -1833,6 +1876,7 @@ comment = "コメント"
 comments = "コメント"
 contents = "テキスト"
 delete = "削除"
+deleted = "Annotation deleted"
 drawing = "描画"
 editSelectDescription = "既存の注釈をクリックして、色、不透明度、テキスト、サイズを編集します。"
 editText = "テキストボックスを編集"
@@ -1874,6 +1918,7 @@ textAlignment = "テキストの配置"
 textMarkup = "テキストマークアップ"
 title = "注釈"
 underline = "下線"
+undoDelete = "Undo"
 width = "幅"
 
 [app]
@@ -2059,6 +2104,50 @@ bullet1 = "タイトルや見出しと見なせるテキストを探します"
 bullet2 = "検出したタイトルからクリーンで有効なファイル名を作成します"
 bullet3 = "適切なタイトルが見つからない場合は元の名前を保持します"
 title = "スマートリネーム"
+
+[autoFormDetection]
+loading = "Detecting form fields..."
+submit = "Detect form fields"
+
+[autoFormDetection.detects]
+checkboxes = "Checkboxes"
+label = "Finds and makes fillable"
+signatures = "Signatures"
+text = "Text fields"
+
+[autoFormDetection.error]
+failed = "An error occurred while detecting form fields."
+
+[autoFormDetection.progress]
+detecting = "Analyzing your document..."
+
+[autoFormDetection.results]
+title = "Review fillable PDF"
+
+[autoFormDetection.sensitivity]
+balanced = "Balanced"
+balancedHint = "Recommended for most forms."
+high = "Thorough"
+highHint = "Finds more fields, but may add some where none belong."
+label = "Detection sensitivity"
+low = "Strict"
+lowHint = "Only very confident matches - fewer fields, fewer mistakes."
+
+[autoFormDetection.settings]
+title = "Settings"
+
+[autoFormDetection.summary]
+checkboxes = "Checkboxes"
+noneBody = "The document may not contain form-like areas. Undo, switch sensitivity to \"Thorough\", and run again to look harder."
+noneTitle = "No form fields found"
+pages_one = "Across {{count}} page."
+pages_other = "Across {{count}} pages."
+radioButtons = "Radio buttons"
+signatures = "Signatures"
+stepTitle = "Detection results"
+textFields = "Text fields"
+title_one = "{{count}} fillable field added"
+title_other = "{{count}} fillable fields added"
 
 [automate]
 copyToSaved = "保存済みにコピー"
@@ -2369,6 +2458,35 @@ bullet3 = "折り目に沿ってホチキス留めや製本をする"
 bullet4 = "短辺反転プリンターの場合：「短辺で反転」を有効化"
 text = "完璧な小冊子のための手順："
 title = "印刷と組み立て方法"
+
+[brickGame]
+balls = "Balls"
+best = "Best"
+close = "Close game"
+effectTimer = "{{label}} {{seconds}}s"
+hint = "Move with the pointer or the arrow keys. Click to capture the pointer, Esc to get back to work."
+hintPointerLocked = "Pointer captured. Esc releases it, then Esc again to get back to work."
+score = "Score"
+title = "Hidden game"
+
+[brickGame.effect]
+fast = "Fast"
+narrow = "Narrow"
+reversed = "Reversed"
+slow = "Slow"
+wide = "Wide"
+
+[brickGame.lost]
+detail = "Click or press Space to try again"
+headline = "Out of balls"
+
+[brickGame.ready]
+detail = "Click or press Space to serve"
+headline = "Ready"
+
+[brickGame.won]
+detail = "Click or press Space to play again"
+headline = "All clear"
 
 [bulkSelection]
 syntaxError = "構文に問題があります。ページ選択のヒントを参照してください。"
@@ -3001,6 +3119,363 @@ summary_one = "ツールを1件実行しました"
 summary_other = "ツールを{{count}}件実行しました"
 unknownTool = "不明なツール"
 
+[classification.families]
+correspondence = "Correspondence"
+education = "Education"
+engineering = "Engineering"
+finance = "Financial"
+forms = "Forms"
+government = "Government"
+health = "Medical"
+hr = "HR"
+legal = "Legal"
+operations = "Operations"
+projects = "Projects"
+property = "Property"
+reports = "Reports"
+sales = "Marketing"
+travel = "Travel"
+
+[classification.labels]
+academic-record = "Academic record"
+action-plan = "Action plan"
+addendum = "Addendum"
+advertisement = "Advertisement"
+affidavit = "Affidavit"
+agenda = "Agenda"
+amendment = "Amendment"
+analytics-report = "Analytics report"
+announcement = "Announcement"
+annual-report = "Annual report"
+api-documentation = "API documentation"
+application-form = "Application form"
+appraisal-report = "Appraisal report"
+architecture-document = "Architecture document"
+articles-of-incorporation = "Articles of incorporation"
+assignment-brief = "Assignment brief"
+audit-report = "Audit report"
+balance-sheet = "Balance sheet"
+bank-statement = "Bank statement"
+benefits-summary = "Benefits summary"
+bill-of-lading = "Bill of lading"
+bill-of-materials = "Bill of materials"
+blueprint = "Blueprint"
+board-report = "Board report"
+board-resolution = "Board resolution"
+booking-confirmation = "Booking confirmation"
+brochure = "Brochure"
+budget = "Budget"
+business-plan = "Business plan"
+business-proposal = "Business proposal"
+bylaws = "Bylaws"
+campaign-brief = "Campaign brief"
+case-study = "Case study"
+cash-flow-statement = "Cash flow statement"
+catalog = "Catalog"
+cease-and-desist = "Cease and desist"
+certificate = "Certificate"
+certificate-of-completion = "Certificate of completion"
+change-log = "Change log"
+checklist = "Checklist"
+claim-form = "Claim form"
+closing-statement = "Closing statement"
+complaint-letter = "Complaint letter"
+compliance-document = "Compliance document"
+confirmation-letter = "Confirmation letter"
+consent-form = "Consent form"
+contract = "Contract"
+course-syllabus = "Course syllabus"
+court-filing = "Court filing"
+cover-letter = "Cover letter"
+credit-note = "Credit note"
+customs-declaration = "Customs declaration"
+customs-form = "Customs form"
+cv = "CV"
+datasheet = "Datasheet"
+debit-note = "Debit note"
+deed = "Deed"
+delivery-note = "Delivery note"
+demand-letter = "Demand letter"
+design-document = "Design document"
+diploma = "Diploma"
+discharge-summary = "Discharge summary"
+dissertation = "Dissertation"
+donation-receipt = "Donation receipt"
+dunning-letter = "Dunning letter"
+email-thread = "Email thread"
+employee-handbook = "Employee handbook"
+employment-contract = "Employment contract"
+estimate = "Estimate"
+event-agenda = "Event agenda"
+event-program = "Event program"
+eviction-notice = "Eviction notice"
+exam-paper = "Exam paper"
+expense-report = "Expense report"
+expense-summary = "Expense summary"
+explanation-of-benefits = "Explanation of benefits"
+fact-sheet = "Fact sheet"
+faq-document = "FAQ document"
+feasibility-study = "Feasibility study"
+feedback-form = "Feedback form"
+financial-forecast = "Financial forecast"
+financial-statement = "Financial statement"
+floor-plan = "Floor plan"
+flyer = "Flyer"
+form = "Form"
+franchise-agreement = "Franchise agreement"
+freight-document = "Freight document"
+gift-certificate = "Gift certificate"
+glossary = "Glossary"
+government-notice = "Government notice"
+grade-report = "Grade report"
+grant-agreement = "Grant agreement"
+grant-application = "Grant application"
+hoa-document = "HOA document"
+home-inspection-report = "Home inspection report"
+hr-memo = "HR memo"
+hr-policy = "HR policy"
+immigration-document = "Immigration document"
+immunization-record = "Immunization record"
+incident-report = "Incident report"
+income-statement = "Income statement"
+index = "Index"
+inspection-report = "Inspection report"
+insurance-certificate = "Insurance certificate"
+insurance-claim = "Insurance claim"
+insurance-policy = "Insurance policy"
+intake-form = "Intake form"
+inventory-list = "Inventory list"
+investment-summary = "Investment summary"
+invitation = "Invitation"
+invoice = "Invoice"
+itinerary = "Itinerary"
+job-application = "Job application"
+job-description = "Job description"
+lab-report = "Lab report"
+lease-agreement = "Lease agreement"
+leave-request = "Leave request"
+legal-brief = "Legal brief"
+legal-filing = "Legal filing"
+legal-notice = "Legal notice"
+legal-opinion = "Legal opinion"
+lesson-plan = "Lesson plan"
+letter = "Letter"
+letter-of-intent = "Letter of intent"
+license = "License"
+license-agreement = "License agreement"
+loan-agreement = "Loan agreement"
+loan-document = "Loan document"
+maintenance-log = "Maintenance log"
+manual = "Manual"
+market-research = "Market research"
+marketing-plan = "Marketing plan"
+media-kit = "Media kit"
+medical-invoice = "Medical invoice"
+medical-report = "Medical report"
+meeting-agenda = "Meeting agenda"
+meeting-minutes = "Meeting minutes"
+meeting-notes = "Meeting notes"
+membership-document = "Membership document"
+memo = "Memo"
+memorandum-of-understanding = "Memorandum of understanding"
+mortgage-document = "Mortgage document"
+nda = "NDA"
+newsletter = "Newsletter"
+non-compete-agreement = "Non-compete agreement"
+notice = "Notice"
+offer-letter = "Offer letter"
+onboarding-document = "Onboarding document"
+order-confirmation = "Order confirmation"
+order-form = "Order form"
+organization-chart = "Organization chart"
+packing-slip = "Packing slip"
+partnership-agreement = "Partnership agreement"
+patent = "Patent"
+pathology-report = "Pathology report"
+payment-reminder = "Payment reminder"
+payroll-document = "Payroll document"
+payslip = "Payslip"
+performance-review = "Performance review"
+permit = "Permit"
+petition = "Petition"
+pitch-deck = "Pitch deck"
+power-of-attorney = "Power of attorney"
+prescription = "Prescription"
+presentation = "Presentation"
+press-release = "Press release"
+price-list = "Price list"
+pricing-sheet = "Pricing sheet"
+privacy-policy = "Privacy policy"
+product-sheet = "Product sheet"
+proforma-invoice = "Proforma invoice"
+progress-report = "Progress report"
+project-charter = "Project charter"
+project-plan = "Project plan"
+promotional-material = "Promotional material"
+property-listing = "Property listing"
+proposal = "Proposal"
+public-notice = "Public notice"
+purchase-agreement = "Purchase agreement"
+purchase-order = "Purchase order"
+quality-report = "Quality report"
+quarterly-report = "Quarterly report"
+questionnaire = "Questionnaire"
+quick-start-guide = "Quick start guide"
+quote = "Quote"
+radiology-report = "Radiology report"
+receipt = "Receipt"
+recommendation-letter = "Recommendation letter"
+reference-letter = "Reference letter"
+referral-letter = "Referral letter"
+registration-confirmation = "Registration confirmation"
+registration-form = "Registration form"
+regulatory-filing = "Regulatory filing"
+release-notes = "Release notes"
+remittance-advice = "Remittance advice"
+rental-agreement = "Rental agreement"
+report = "Report"
+request-for-proposal = "Request for proposal"
+request-for-quotation = "Request for quotation"
+requirements-document = "Requirements document"
+research-abstract = "Research abstract"
+research-paper = "Research paper"
+reservation = "Reservation"
+resignation-letter = "Resignation letter"
+resume = "Resume"
+retrospective = "Retrospective"
+return-authorization = "Return authorization"
+risk-assessment = "Risk assessment"
+roadmap = "Roadmap"
+safety-data-sheet = "Safety data sheet"
+safety-procedure = "Safety procedure"
+sales-proposal = "Sales proposal"
+sales-report = "Sales report"
+schematic = "Schematic"
+scope-of-work = "Scope of work"
+service-agreement = "Service agreement"
+service-report = "Service report"
+settlement-agreement = "Settlement agreement"
+shareholder-agreement = "Shareholder agreement"
+shipping-confirmation = "Shipping confirmation"
+specification = "Specification"
+sponsorship-agreement = "Sponsorship agreement"
+standard-operating-procedure = "Standard operating procedure"
+statement-of-account = "Statement of account"
+statement-of-work = "Statement of work"
+status-report = "Status report"
+stock-report = "Stock report"
+study-guide = "Study guide"
+subpoena = "Subpoena"
+subscription-confirmation = "Subscription confirmation"
+supply-order = "Supply order"
+survey-form = "Survey form"
+survey-results = "Survey results"
+sustainability-report = "Sustainability report"
+table-of-contents = "Table of contents"
+tax-form = "Tax form"
+tax-return = "Tax return"
+tax-statement = "Tax statement"
+technical-drawing = "Technical drawing"
+technical-specification = "Technical specification"
+tenancy-agreement = "Tenancy agreement"
+tender-document = "Tender document"
+termination-letter = "Termination letter"
+terms-and-conditions = "Terms and conditions"
+terms-of-service = "Terms of service"
+test-plan = "Test plan"
+test-report = "Test report"
+thesis = "Thesis"
+ticket = "Ticket"
+timeline = "Timeline"
+timesheet = "Timesheet"
+title-document = "Title document"
+training-material = "Training material"
+transcript = "Transcript"
+travel-itinerary = "Travel itinerary"
+trust-document = "Trust document"
+user-guide = "User guide"
+utility-bill = "Utility bill"
+vendor-agreement = "Vendor agreement"
+visa-document = "Visa document"
+waiver = "Waiver"
+warehouse-receipt = "Warehouse receipt"
+warranty-document = "Warranty document"
+waybill = "Waybill"
+white-paper = "White paper"
+will = "Will"
+work-instruction = "Work instruction"
+work-order = "Work order"
+
+[classificationDemo]
+folderName = "Downloads"
+
+[classificationDemo.buttons]
+done = "Done"
+notNow = "Not now"
+skip = "Skip"
+stop = "Stop"
+
+[classificationDemo.chart]
+centre = "documents"
+hint = "Select a slice to see the document types behind it."
+label = "Documents by type: {{summary}}"
+noTypes = "These documents did not match a known type."
+
+[classificationDemo.defaultApp]
+body = "Make Stirling your default PDF app. Every PDF you open, from email, your browser, or your desktop, lands here, ready to read or edit. You can change this any time in Settings."
+cta = "Make Stirling my default"
+title = "Open every PDF in Stirling"
+
+[classificationDemo.followUp]
+background = "This runs in the background. The ring on the left shows progress."
+batchCta = "Process another {{count}}"
+free = "They are all covered by your remaining free allowance."
+partial = "{{count}} of them are covered by your remaining free allowance."
+restCta = "Process the rest"
+title = "Want to keep going? You have {{count}} more PDFs in your Downloads folder."
+
+[classificationDemo.groups]
+other = "Other"
+
+[classificationDemo.offer]
+body = "Classify and organise the {{count}} most recent PDFs in your Downloads folder by type."
+cta = "Process my Downloads folder"
+privacy = "Everything stays on this device and you can stop anytime."
+title = "See what Stirling can do with a whole folder"
+
+[classificationDemo.phase]
+finishing = "Finishing up..."
+gathering = "Gathering PDF files..."
+processing = "Processing file {{done}}/{{total}}..."
+reading = "Reading Downloads folder..."
+
+[classificationDemo.processing]
+counts = "of {{total}} PDFs processed"
+
+[classificationDemo.results]
+documentCount_one = "{{count}} PDF"
+documentCount_other = "{{count}} PDFs"
+failedBody = "Stirling could not read your Downloads folder. Nothing on your computer was changed."
+failedTitle = "That did not finish"
+heading = "Your Downloads, sorted"
+summary = "Stirling read {{documents}} and sorted them into {{types}}."
+typeCount_one = "{{count}} type"
+typeCount_other = "{{count}} types"
+
+[classificationDemo.ring]
+done = "{{folder}} classified"
+doneDetail = "{{count}} PDFs sorted by type"
+progress = "{{done}} of {{total}} PDFs ({{percent}}%)"
+running = "Classifying {{folder}}"
+
+[classificationDemo.status]
+checked = "Checked {{checked}} of {{total}} files..."
+checking = "Checking each file's name and date..."
+connecting = "Connecting your Downloads folder..."
+library = "Adding it to your file library..."
+listing = "Listing the files in Downloads..."
+picking = "Looking for the {{count}} most recent PDFs..."
+
 [cloudBadge]
 tooltip = "この操作はクラウドクレジットを消費します"
 
@@ -3016,6 +3491,7 @@ title = "色を選択"
 actions = "Actions"
 back = "戻る"
 cancel = "キャンセル"
+clearFilters = "Clear filters"
 close = "閉じる"
 codeSample = "Code sample"
 collapse = "折りたたむ"
@@ -3027,6 +3503,7 @@ done = "完了"
 enterValue = "Enter value"
 error = "エラー"
 expand = "展開"
+filterEmpty = "Nothing to filter on"
 loading = "読み込み中..."
 next = "次へ"
 open = "Open"
@@ -3036,6 +3513,7 @@ refresh = "更新"
 remaining = "残り"
 retry = "再試行"
 save = "保存"
+search = "Search"
 stepOf = "Step {{current}} of {{total}}"
 
 [compare]
@@ -3227,7 +3705,9 @@ tags = "圧縮,小さく,軽量"
 
 [config]
 plan = "プラン"
+planDescription = "Your plan, credits and spend limit, and the invoices behind them."
 team = "Team"
+teamDescription = "Who shares this workspace, and invitations still waiting on an answer."
 
 [config.account.overview]
 confirmDelete = "自分のアカウントを削除"
@@ -3319,7 +3799,6 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
-title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -3350,6 +3829,42 @@ basic = "基本構成"
 integration = "統合構成"
 security = "セキュリティ構成"
 system = "システム構成"
+
+[connect]
+loading = "Checking this request."
+redirecting = "Returning you to your server."
+step = "Step {{current}} of {{total}}"
+
+[connect.confirm]
+acknowledge = "I recognise this address and want to connect it to my team"
+approve = "Connect server"
+cannotDecide = "Only a team owner can approve or decline this connection. Use a different account or dismiss this prompt to continue using Stirling."
+deny = "Decline"
+dismiss = "Dismiss"
+lead = "A Stirling server is asking to connect to your team. Check the address below is yours before you approve."
+originLabel = "Address"
+signedInAs = "Signed in as"
+switchAccount = "Use a different account"
+title = "Connect this server?"
+unknownAccount = "an unknown account"
+
+[connect.confirm.insecure]
+body = "This address does not use HTTPS, so your sign-in will be sent over an unencrypted connection. Only approve it on a network you trust."
+label = "Not an encrypted address"
+
+[connect.declined]
+body = "Nothing was connected. You can close this page."
+title = "Request declined"
+
+[connect.error]
+failed = "That did not go through. Only a team owner can connect a server."
+
+[connect.meta]
+title = "Connect a server"
+
+[connect.notFound]
+body = "This connection request is not valid. It may have expired, or already been used. Start another one from your server."
+title = "Request not valid"
 
 [convert]
 autoRotate = "自動回転"
@@ -3494,6 +4009,26 @@ description = "これらのCookieはウェブサイトが正常に機能する�
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[createPortfolio]
+coverTitle = "Cover page title"
+coverTitlePlaceholder = "PDF Portfolio"
+description = "Every selected file is kept whole inside the new PDF, whatever its type. Readers that don't support portfolios show a cover page with the files attached."
+goToFileEditor = "Go to file editor"
+info = "Combines your files into one PDF that keeps each file whole inside it. Open the result to browse the files and view or save any of them on their own."
+settings = "Portfolio Settings"
+submit = "Create Portfolio"
+title = "Portfolio Results"
+viewerModeHint = "A portfolio needs 2 or more files. Head to the file editor to select them."
+
+[createPortfolio.error]
+failed = "An error occurred while creating the PDF portfolio."
+
+[createPortfolio.tooltip.description]
+title = "What it does"
+
+[createPortfolio.tooltip.header]
+title = "About PDF Portfolios"
+
 [crop]
 autoCrop = "余白を自動トリミング"
 noFileSelected = "トリミングを開始する PDF ファイルを選択してください"
@@ -3567,6 +4102,36 @@ title = "設定を開きました"
 [defaultApp.success]
 message = "Stirling PDF が既定のPDFエディターになりました"
 title = "既定のアプリを設定"
+
+[desktopFileLink]
+saveAs = "Save as…"
+useDiskVersion = "Use disk version"
+
+[desktopFileLink.conflict]
+hint = "Keeping your changes overwrites the file on disk when you next save."
+keepMine = "Keep my changes"
+prompt = "This file changed on disk while you had unsaved changes here. Only one version can be kept."
+remaining = "{{count}} more to review"
+title = "File changed on disk"
+useDisk = "Use the disk version"
+
+[desktopFileLink.missing]
+body = "\"{{name}}\" has been deleted or moved on disk, so it has been removed from your files."
+title = "File no longer exists"
+
+[desktopFileLink.openDeleted]
+body_one = "\"{{name}}\" no longer exists on disk. It is still open here - saving will ask you for a new location."
+body_other = "{{count}} files no longer exist on disk. They are still open here - saving each one will ask you for a new location."
+title_one = "File deleted on disk"
+title_other = "Files deleted on disk"
+
+[desktopFileLink.reloaded]
+body = "\"{{name}}\" changed on disk and has been reloaded."
+title = "Updated from disk"
+
+[desktopFileLink.tooLarge]
+body = "\"{{name}}\" changed on disk. It is large enough that reloading it will take a while, so the version here has been left alone."
+title = "File changed on disk"
 
 [desktopUpdate]
 downloading = "更新をダウンロード中..."
@@ -3820,7 +4385,6 @@ mobileShort = "モバイル"
 mobileUpload = "モバイルアップロード"
 mobileUploadNotAvailable = "モバイルアップロードは有効になっていません"
 moreOptions = "その他のオプション"
-myFiles = "マイファイル"
 nextFile = "次のファイル"
 noFiles = "ファイルはありません"
 noFilesFound = "検索条件に一致するファイルが見つかりません"
@@ -3880,6 +4444,7 @@ versionHistory = "Version history"
 [files]
 addFiles = "ファイルを追加"
 created = "作成日時"
+notIncludedInToolRun = "Not included in this tool run"
 selectFromWorkbench = "ワークベンチからファイルを選択または "
 selectMultipleFromWorkbench = "ワークベンチから少なくとも {{count}} 件選択または "
 size = "ファイルサイズ"
@@ -3920,8 +4485,6 @@ dropToAdd = "Drop files to add"
 duplicateFailed = "Could not duplicate file"
 expand = "サイドバーを展開"
 googleDrive = "Google Drive"
-googleDriveDisabled = "Google Drive が未設定です"
-leaveMyFiles = "マイファイルを離れる"
 library = "PDF ライブラリ"
 myFiles = "マイファイル"
 noFiles = "まだファイルがありません"
@@ -3968,6 +4531,7 @@ back = "戻る"
 backToFolder = "{{folder}} に戻る"
 backToMyFiles = "マイファイルに戻る"
 breadcrumbs = "フォルダパス"
+breadcrumbsOverflow = "Show parent folders"
 bulkActions = "アクション"
 cancel = "キャンセル"
 classification = "分類"
@@ -4002,6 +4566,7 @@ downloadAll = "すべてダウンロード"
 downloadVersion = "このバージョンをダウンロード"
 dropOverlay = "ドロップしてアップロード"
 dropOverlaySub = "ファイルは最初はローカルに追加されます。フォルダに整理するには『Move to』または『Save to cloud』を使用してください。"
+dropOverlaySubFolder = "They'll be added to this folder."
 duplicate = "Duplicate"
 file = "ファイル"
 fileInfo = "File info"
@@ -4010,15 +4575,22 @@ folder = "フォルダ"
 folderItems_one = "{{count}} item"
 folderItems_other = "{{count}} items"
 folderMenu = "フォルダの操作"
+folderSettings = "Folder settings"
 inPath = "{{path}} 内"
 inWorkspace = "開く"
 inWorkspaceAria = "すでにワークスペースにあります"
 loading = "読み込み中…"
-localFoldersUnavailable = "フォルダはクラウド専用です。フォルダに整理するには、ファイルをクラウドに保存してください。"
+localFolderManagedByDisk = "This folder is managed by its directory on disk."
+moveAcrossKindsBlocked = "These folders live in different places, so one can't go inside the other."
+moveIntoMountCloudSkipped_one = "{{count}} server file stayed in your files. It lives on the server, not on this disk."
+moveIntoMountCloudSkipped_other = "{{count}} server files stayed in your files. They live on the server, not on this disk."
+moveIntoMountFailed_one = "{{count}} file could not be written into the folder."
+moveIntoMountFailed_other = "{{count}} files could not be written into the folder."
+moveIntoVirtualCloudSkipped_one = "{{count}} server file was left in place. Server files can't live in browser-only folders."
+moveIntoVirtualCloudSkipped_other = "{{count}} server files were left in place. Server files can't live in browser-only folders."
 moveSkippedRemote_one = "{{count}} file couldn't be moved on the server (no permission or already deleted)."
 moveSkippedRemote_other = "{{count}} files couldn't be moved on the server (no permission or already deleted)."
 moveTo = "移動…"
-myFiles = "マイファイル"
 newFolder = "新しいフォルダ"
 newFolderStorageDisabled = "サーバーのフォルダ保存機能が有効ではありません。管理者に有効化を依頼してください。"
 newFolderTabUnavailable = "［すべて］または［クラウド］に切り替えてフォルダを作成してください。"
@@ -4028,18 +4600,18 @@ openVersionInWorkspace = "ワークスペースで開く"
 originFilter = "ソースでフィルター"
 refresh = "サーバーから再読み込み"
 remove = "削除"
+removeLocalFolder = "Unmount from Stirling"
 removeVersion = "このバージョンを削除"
 rename = "名前の変更"
 renamed = "名前を変更しました"
 renameFolder = "フォルダ名を変更"
-resizeFolderTree = "フォルダツリーのサイズ変更（矢印キー、Shiftで大きく移動；ダブルクリックで自動調整）"
 save = "保存"
 saveToServer = "サーバーに保存"
 saveToServerDisabledHint = "このサーバーでサーバーへの保存は有効になっていません。管理者に有効化を依頼してください。"
 selectAll = "すべて選択"
-selectAllHint = "クリックですべて選択。ヒント: Ctrl（または Cmd）でファイルを個別に追加、Shift で範囲選択。"
 selectedCount = "{{count}} 件を選択"
 selectFile = "ファイル {{name}} を選択"
+serverFolderNeedsConnection = "Sign in to Stirling Cloud or connect a self-hosted server to use server folders."
 shareDisabledHint = "このサーバーでファイル共有は有効になっていません。管理者に有効化を依頼してください。"
 shareManage = "共有を管理"
 showDetails = "詳細を表示"
@@ -4047,8 +4619,10 @@ signInRequired = "Sign in to use cloud storage."
 summary_one = "{{count}} item"
 summary_other = "{{count}} items"
 tree = "フォルダ"
+unmount = "Unmount"
+unmountFolderBody = "Unmount \"{{name}}\"? The folder and its files stay on your disk."
+unmountFolderTitle = "Unmount from Stirling?"
 upload = "アップロード"
-uploadedToLocal = "アップロードしたファイルは最初にローカルに追加されます。フォルダに入れるには『クラウドに保存』を使用してください。"
 uploadFromMobile = "モバイルからアップロード"
 versionActions = "バージョンの操作"
 versionCollapse = "中間のバージョンを折りたたむ"
@@ -4061,6 +4635,8 @@ viewVersionHistory = "Version journey ({{count}})"
 
 [filesPage.appearance]
 colour = "色"
+done = "Done"
+edit = "Appearance..."
 icon = "アイコン"
 title = "外観"
 useColour = "色 {{c}} を使用"
@@ -4069,6 +4645,7 @@ useColour = "色 {{c}} を使用"
 modified = "更新日時"
 name = "名前"
 size = "サイズ"
+status = "Status"
 type = "種類"
 
 [filesPage.deleteScope]
@@ -4079,9 +4656,29 @@ deviceHint = "Removes the local copy. The cloud copy is kept."
 everywhere = "Everywhere"
 everywhereHint = "Deletes the file from this device and the cloud."
 
+[filesPage.diskLink]
+conflict = "Disk changed"
+conflictHint = "The file on disk changed while you had unsaved edits. Your version is shown - saving will overwrite the one on disk."
+orphaned = "Not on disk"
+orphanedHint = "The original at {{path}} is gone. This copy is only here - saving it will ask for a new location."
+unavailable = "Unavailable"
+unavailableHintOffline = "The drive or share this file lives on is not connected. Reconnect it to pick up changes again."
+unavailableHintPermission = "Stirling is not allowed to read this location. Grant access in System Settings to pick up changes again."
+unavailableHintUnknown = "This file cannot be reached right now. The copy here is unchanged."
+
+[filesPage.diskState]
+all = "All"
+done = "Ready"
+doneHint = "Processed - opens the result"
+failed = "Failed"
+processing = "Processing"
+processingHint = "Processing - available when it finishes"
+retry = "Retry"
+retryHint = "Run this file again"
+waiting = "Queued"
+
 [filesPage.empty]
 hint = "このページのどこにでも PDF をドロップしてアップロードするか、「新しいフォルダ」ボタンでファイルを整理できます。"
-newFolderCta = "フォルダを作成"
 title = "このフォルダは空です"
 uploadCta = "ファイルをアップロード"
 
@@ -4090,10 +4687,6 @@ hint = "まずファイルをアップロードするか、整理用にフォル
 offlineHint = "再接続してクラウドライブラリを読み込みます。"
 offlineTitle = "クラウドファイルのキャッシュなし"
 title = "まだクラウドファイルがありません"
-
-[filesPage.empty.local]
-hint = "アップロードせずに保存したファイルはここに残ります。ファイルをドロップして追加できます。"
-title = "ローカル専用のファイルはありません"
 
 [filesPage.empty.noResults]
 hint = "No files in this folder match your filter. Try a different term or clear the filter."
@@ -4114,6 +4707,8 @@ title = "まだファイルを共有していません"
 [filesPage.error]
 actionFailed = "{{action}}できませんでした。"
 actionFailedDetail = "{{action}}できませんでした: {{message}}"
+addFolderFailed = "Could not add the folder."
+addFolderFailedDetail = "Could not add the folder: {{message}}"
 cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
 deleteFolderFailed = "フォルダを削除できませんでした。"
@@ -4126,8 +4721,20 @@ moveFilesFailed = "ファイルを移動できませんでした。"
 moveFilesFailedDetail = "ファイルを移動できませんでした: {{message}}"
 moveFolderFailed = "フォルダを移動できませんでした。"
 moveFolderFailedDetail = "フォルダを移動できませんでした: {{message}}"
+openDiskFileFailed = "Could not open {{name}}."
+openDiskFileFailedDetail = "Could not open {{name}}: {{message}}"
+readFolderFailed = "Could not read the folder."
+readFolderFailedDetail = "Could not read the folder: {{message}}"
 removeFilesFailed = "ファイルを削除できませんでした。"
 removeFilesFailedDetail = "ファイルを削除できませんでした: {{message}}"
+removeFolderFailed = "Could not remove folder."
+removeFolderFailedDetail = "Could not remove folder: {{message}}"
+retryFailed = "Could not retry {{name}}."
+retryFailedDetail = "Could not retry {{name}}: {{message}}"
+revertAllFailed = "Could not restore originals."
+revertAllFailedDetail = "Could not restore originals: {{message}}"
+revertFailed = "Could not restore {{name}}."
+revertFailedDetail = "Could not restore {{name}}: {{message}}"
 uploadFilesFailed = "ファイルをアップロードできませんでした。"
 uploadFilesFailedDetail = "ファイルをアップロードできませんでした: {{message}}"
 
@@ -4147,11 +4754,20 @@ activeCount = "{{count}} 件のフィルターが有効"
 clearAll = "フィルターをクリア"
 label = "フィルター"
 
+[filesPage.folderKind]
+local = "Local folder"
+virtual = "Browser folder"
+
 [filesPage.folderName]
 cancel = "キャンセル"
 error = "フォルダを保存できませんでした。もう一度お試しください。"
 label = "フォルダ名"
 placeholder = "フォルダ名"
+
+[filesPage.folderOrigin]
+diskHint = "A folder mounted from a directory on your disk"
+serverHint = "A folder stored on the Stirling server"
+virtualHint = "A folder that lives only in this browser"
 
 [filesPage.moveDialog]
 cancel = "キャンセル"
@@ -4166,14 +4782,44 @@ newFolderPlaceholder = "フォルダ名"
 newFolderToggle = "新しいフォルダを作成…"
 title = "フォルダへ移動"
 
+[filesPage.newFolderMenu]
+addExisting = "Add local folder"
+server = "New folder on the server"
+serverHint = "Synced to your account, available wherever you sign in."
+
 [filesPage.origin]
 all = "すべてのソース"
 cloud = "クラウド"
 cloudHint = "Stirling サーバーに保存"
+diskHint = "A file in the mounted folder on your disk"
 local = "ローカル"
 localHint = "このブラウザにのみ保存"
 shared = "共有"
 sharedHint = "リンクであなたと共有"
+
+[filesPage.processing]
+active = "Processing folder"
+blockedNeedsConnection = "Sign in to Stirling Cloud or connect a self-hosted server to process folders."
+edit = "Edit processing..."
+nothingToRestore = "No originals to restore - these files are already their originals."
+paused = "Processing paused"
+remove = "Remove processing"
+restore = "Restore original"
+restoreAll = "Restore all originals"
+resume = "Resume processing"
+revertCancel = "Cancel"
+revertConfirm = "Restore and pause"
+revertConfirmAll = "Restore every original in this folder? Processing will be paused, and restored files show as queued until you resume."
+revertConfirmFile = "Restore \"{{name}}\" to its original? Processing for this folder will be paused, and the file shows as queued until you resume."
+revertConfirmTitle = "Restore originals?"
+section = "Processing"
+start = "Process files in this folder..."
+stop = "Pause processing"
+sweep = "Retry failed files"
+
+[filesPage.processingSetup]
+back = "Back"
+cancel = "Cancel"
 
 [filesPage.search]
 clear = "Clear filter"
@@ -4196,16 +4842,6 @@ server = "フォルダ同期中にサーバーエラーが発生しました。"
 
 [filesPage.tabName]
 local = "ローカル"
-recent = "最近使用"
-shared = "自分と共有"
-sharedByMe = "自分が共有"
-
-[filesPage.tabs]
-all = "すべて"
-ariaLabel = "ファイルビュー"
-recent = "最近使用"
-shared = "自分と共有"
-sharedByMe = "自分が共有"
 
 [filesPage.treeMenu]
 actions = "{{name}} のフォルダ操作"
@@ -4626,6 +5262,12 @@ desc = "ビューワーでハイライト、描画、ノートや図形の追加
 tags = "注釈,ハイライト,描画"
 title = "注釈"
 
+[home.autoFormDetection]
+desc = "Automatically detect form fields with AI and make your PDF fillable."
+tags = "form,detect,fillable,acroform,auto detect,ai,fields,make fillable,form detection"
+title = "Auto Form Detection"
+unavailable = "Needs the AI detection model, which isn't installed on this server. An administrator can add it under Settings > Features > AI Form Detection."
+
 [home.automate]
 desc = "PDF アクションを連結して複数ステップのワークフローを構築。繰り返し作業に最適です。"
 tags = "ワークフロー,シーケンス,自動化"
@@ -4687,6 +5329,11 @@ title = "圧縮"
 desc = "異なる形式間でファイルを変換"
 tags = "変換,変更"
 title = "変換"
+
+[home.createPortfolio]
+desc = "Bundle multiple files into an Adobe PDF Portfolio"
+tags = "portfolio,collection,package,bundle,combine files,pdf portfolio,adobe portfolio,pdf collection,container"
+title = "Create Portfolio"
 
 [home.crop]
 desc = "PDFをトリミングしてサイズを縮小します (テキストは維持します！)。"
@@ -5047,7 +5694,6 @@ unexpectedError = "予期しないエラー：{{message}}"
 updatePassword = "パスワードを更新"
 useMagicLink = "代わりにマジックリンクを使う"
 username = "ユーザー名"
-youAreLoggedIn = "ログイン済みです！"
 
 [margin]
 large = "大"
@@ -5097,39 +5743,45 @@ sort = "ソート"
 title = "結合設定の概要"
 
 [mobileScanner]
-addToBatch = "バッチに追加"
+addMore = "Add More"
 back = "戻る"
-batchImages = "バッチ"
 camera = "カメラ"
 cameraAccessDenied = "カメラへのアクセスが拒否されました。カメラアクセスを有効にしてください。"
 cameraDescription = "自動エッジ検出付きでデバイスのカメラを使って文書をスキャン"
 capture = "撮影"
 chooseMethod = "アップロード方法を選択"
 chooseMethodDescription = "文書のスキャンとアップロード方法を選択してください"
-clearBatch = "クリア"
+clearAll = "Clear All"
+closeTabHint = "You can close this tab now."
+dismiss = "Dismiss"
 edgeDetection = "エッジ検出"
 fileDescription = "デバイス内の既存の写真や文書をアップロード"
+fileReadFailed = "Could not read that file."
 fileUpload = "ファイルアップロード"
-flash = "フラッシュ"
 flashlight = "フラッシュライト"
 httpsRequired = "カメラアクセスには HTTPS または localhost が必要です。HTTPS を使用するか、localhost からアクセスしてください。"
-noSession = "無効なセッション"
+imageCount_one = "{{count}} image"
+imageCount_other = "{{count}} images"
+imagePosition = "Image {{index}} of {{total}}"
+invalidFileType = "Please choose an image file."
 noSessionMessage = "有効な QR コードをスキャンしてこのページにアクセスしてください。"
 processing = "処理中..."
+remove = "Remove"
 retake = "撮り直し"
+scanAnother = "Scan another"
 selectFilesPrompt = "アップロードするファイルを選択"
-selectImage = "画像を選択"
+selectImages = "Select Images"
 sessionExpired = "このセッションの有効期限が切れました。更新して再試行してください。"
 sessionInvalid = "セッションエラー"
 sessionNotFound = "セッションが見つかりません。更新して再試行してください。"
 sessionValidationError = "セッションを検証できません。もう一度お試しください。"
+startingCamera = "Starting camera…"
 title = "モバイルスキャナー"
-upload = "アップロード"
-uploadAll = "すべてアップロード"
 uploadFailed = "アップロードに失敗しました。もう一度お試しください。"
 uploading = "アップロード中..."
 uploadSuccess = "アップロード成功！"
 uploadSuccessMessage = "画像の転送が完了しました。"
+uploadWithCount = "Upload ({{total}})"
 validating = "セッションを検証中..."
 
 [mobileSign]
@@ -5187,24 +5839,31 @@ count = "{{remaining}} of {{total}}"
 label = "Free credits"
 
 [notifications]
+adoptFailed = "The document was unlocked but could not be opened here. Try the tool directly."
 empty = "報告する内容はありません。"
 handoffUnavailable = "このブラウザーでは、プロセッサーからエディターにドキュメントを渡せません。代わりにエディターから開いてください。"
 noDocumentLinked = "この失敗は特定のドキュメントに関連付けられていないため、ここで開くものはありません。"
 notOnThisDevice = "このドキュメントはこのデバイス上にないため、ここでは開けません。"
 occurrences = "{{count}} 回"
 open = "通知"
+repairAdoptFailed = "The document was repaired but could not be opened here. Try the Repair tool directly."
+repairedNotRerun = "The document was repaired and opened here, but the policy could not be run on it again."
+repairedRerunNotAdopted = "The repaired document went through, but its result could not be opened here."
+repairedRerunUndelivered = "The document was repaired and the policy re-run started, but its result cannot be delivered here, so this failure stays open."
+rerunRejected = "The policy could not be run again just now. Try again in a moment."
+rerunUndelivered = "The policy re-run started, but its result cannot be delivered here, so this failure stays open."
+retryUnavailable = "This document can no longer be retried from this browser."
 title = "通知"
+unlockedNotRerun = "The document was unlocked and opened here, but the policy could not be run on it again."
+unlockedRerunUndelivered = "The document was unlocked and the policy re-run started, but its result cannot be delivered here, so this failure stays open."
 unread = "未読"
 
 [notifications.action]
+copiedLog = "Copied"
+copyLog = "Copy log"
 failed = "実行できませんでした。しばらくしてからもう一度お試しください。"
+more = "More options"
 unavailable = "この通知では利用できません。"
-
-[notifications.detail]
-copied = "コピーしました"
-copy = "エラーをコピー"
-less = "表示を減らす"
-more = "完全なメッセージを表示"
 
 [notifications.section]
 earlier = "以前"
@@ -5355,7 +6014,9 @@ wrapUp = "準備完了です！アプリの主要エリアとその使い方を�
 
 [onboarding.buttons]
 back = "戻る"
+continue = "Continue"
 download = "ダウンロード →"
+getStarted = "Get started"
 next = "次へ →"
 showMeAround = "ツアーを見る"
 skipForNow = "今はスキップ"
@@ -5386,6 +6047,11 @@ body = "Stirling はデスクトップアプリとして最適に動作します
 selectOs = "オペレーティングシステムを選択"
 title = "ダウンロード"
 titleWithOs = "{{osLabel}} 用をダウンロード"
+
+[onboarding.desktopWelcome]
+body = "There's a whole host of new changes to explore, including <strong>Agent Chat</strong>, automatic document <strong>classification</strong>, and more."
+freeLine = "The editor is now <free>completely free</free>."
+title = "Welcome to Stirling <product>Desktop</product>"
 
 [onboarding.mfa]
 authenticationCode = "認証コード"
@@ -5736,7 +6402,7 @@ noKey = "VITE_STRIPE_PUBLISHABLE_KEY is unset. Real iframe mounts here once conf
 title = "Stripe Embedded Checkout (mock mode)"
 
 [payg.confirm]
-body = "Your team can now run automation, AI, and API operations beyond your 500 free PDFs."
+bodyWithAllowance = "Your team can now run automation, AI, and API operations beyond your {{limit}} free PDFs."
 capValue = "{{symbol}}{{amount}} / month"
 noCap = "No cap"
 note = "You can change your cap, cancel, or open the Stripe customer portal any time from this page."
@@ -5763,7 +6429,7 @@ benefit3Body = "call any Stirling endpoint programmatically"
 benefit3Title = "API access"
 button = "Turn on Processor →"
 reassurance = "No minimum · Set a $0 cap to test · Cancel anytime"
-subtitle = "Keep going past your 500 free PDFs with automation, AI, and the API. Set a monthly ceiling, so you stay in control."
+subtitleWithAllowance = "Keep going past your {{limit}} free PDFs with automation, AI, and the API. Set a monthly ceiling, so you stay in control."
 title = "Turn on the Processor plan"
 
 [payg.free.editor]
@@ -5841,17 +6507,16 @@ leader = "Team owner"
 member = "Member"
 
 [payg.signupRequired]
-body = "Stirling PDF gives every signed-up account 500 free operations, enough to keep most workflows humming without paying a cent. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing."
-cancel = "Not now"
-cta = "Sign up free"
-subtext = "Creating an account is free and takes a few seconds. No credit card required."
-title = "Sign up to use {{category}}"
-
-[payg.signupRequired.category]
-ai = "AI features"
-api = "this tool"
-automation = "automations"
-default = "this feature"
+aiPromo = "Create, edit and ask about PDFs with AI"
+apiPromo = "Connect your apps and AI assistants"
+automationPromo = "Automate repetitive PDF tasks"
+createAccount = "Create free account"
+editorLabel = "PDF Editor"
+login = "Log in"
+manualToolsPromo = "Unlimited free manual PDF tools"
+processorLabel = "PDF Processor"
+processorTitle = "Create an account to unlock the best of Stirling"
+readerLabel = "PDF Reader"
 
 [payg.spendCapMeter]
 barAria = "Spend against cap"
@@ -5902,7 +6567,7 @@ apiBody = "programmatic access to any Stirling endpoint"
 apiTitle = "API calls"
 automationBody = "chained tools or scheduled runs that don't need clicks"
 automationTitle = "Automation pipelines"
-footnote = "Manual tools (viewing, editing, merging, splitting, watermarking, compressing, manual OCR) are always free, even past 500. The distinction is the type of work, not where you click."
+footnoteUnlimited = "Manual tools (viewing, editing, merging, splitting, watermarking, compressing, manual OCR) are always free, even after your included credits are used. The distinction is the type of work, not where you click."
 title = "What we count toward billing"
 
 [payg.upgrade.promise]
@@ -5941,27 +6606,58 @@ licenseKey = "あなたのライセンスキー"
 licensePollingError = "支払いは完了しましたが、ライセンスキーを自動取得できませんでした。メールを確認するか、支払い確認情報とともにサポートへお問い合わせください。"
 licenseRetrievalError = "支払いは完了しましたが、ライセンスの取得に失敗しました。ライセンスキーはメールでお送りします。10分以内に届かない場合はサポートへご連絡ください。"
 licenseSaveError = "ライセンスキーの保存に失敗しました。ライセンスキーを添えてサポートへご連絡のうえ、有効化を完了してください。"
+manageSubscription = "Manage subscription"
 monthly = "月額"
 paymentCanceled = "支払いをキャンセルしました。課金は行われていません。"
 perMonth = "/月"
 preparing = "チェックアウトを準備しています..."
 redirecting = "安全なチェックアウトにリダイレクトしています..."
+stepOf = "Step {{n}} of {{total}}"
 success = "支払いが完了しました"
 successMessage = "サブスクリプションが有効化されました。まもなく確認メールが届きます。"
 syncError = "支払いは完了しましたが、ライセンスの同期に失敗しました。間もなくライセンスが更新されます。問題が続く場合はサポートへご連絡ください。"
 syncingLicense = "アップグレード済みライセンスを同期中..."
+teamActivated = "Your Team capacity is active"
+teamActivating = "Confirming your Team capacity..."
+teamPending = "Your Team purchase is still processing. Refresh this page shortly."
+teamProcessing = "Team purchase processing"
 upgradeComplete = "アップグレード完了"
 upgradeCompleteMessage = "サブスクリプションは正常にアップグレードされ、既存のライセンスキーが更新されました。"
 upgradeSuccess = "支払いに成功しました！ サブスクリプションがアップグレードされ、ライセンスがサーバーに更新されました。確認メールをまもなくお送りします。"
 upgradeTitle = "{{planName}} にアップグレード"
 yearly = "年額"
 
+[payment.addCapacity]
+currently = "Currently up to {{users}} users"
+title = "Add capacity"
+
+[payment.capacityStage]
+adjustmentNote = "Stripe will show the exact charge, any prorations and your next billing date before you confirm. Your saved payment method will be used if available."
+continue = "Continue to payment"
+customHint = "Rounded up to the next block of {{users}}."
+customLabel = "Number of users"
+dueToday = "Due today"
+enterpriseQuote = "Get an enterprise quote"
+lineItem = "Team · {{price}}{{period}} per {{block}} users"
+minimumForCurrentUsers = "You have {{users}} users, so the plan must cover at least {{minimum}}."
+modalTitle = "Upgrade to {{planName}}"
+newPlanTotal = "New plan total"
+other = "Other"
+perMonth = "/mo"
+perYear = "/yr"
+renewalNote = "Renews at {{total}}{{period}}. Cancel any time in Usage & Billing."
+reviewChange = "Review change in Stripe"
+subheading = "Covers everyone you invite, in blocks of {{users}} users."
+subheadingAdd = "Your plan covers {{current}} users today. Choose the new total."
+userDelta = "+{{users}} users"
+usersLabel = "Users"
+userTotal = "{{users}} users"
+
 [payment.emailStage]
 continue = "続行"
 description = "ライセンスキーと領収書の送付に使用します。"
 emailLabel = "メールアドレス"
 emailPlaceholder = "your@email.com"
-modalTitle = "開始する - {{planName}}"
 
 [payment.paymentStage]
 modalTitle = "支払いを完了 - {{planName}}"
@@ -5971,8 +6667,13 @@ billedYearly = "年額 {{currency}}{{amount}} で請求"
 modalTitle = "請求期間を選択 - {{planName}}"
 savePercent = "{{percent}}% お得"
 savingsAmount = "{{amount}} 節約"
+selectedMonthly = "Monthly"
+selectedYearly = "Yearly"
 selectMonthly = "月額を選択"
 selectYearly = "年額を選択"
+
+[payment.upgradeTeam]
+title = "Upgrade to Team"
 
 [pdfCommentAgent]
 submit = "コメントを生成"
@@ -6025,99 +6726,271 @@ REVERSE_ORDER = "最後のページが最初になるように反転。"
 SIDE_STITCH_BOOKLET_SORT = "小冊子（側面綴じ）印刷用にページを配置（側面綴じに最適化）。"
 
 [pdfTextEditor]
-conversionFailed = "PDF の変換に失敗しました。もう一度お試しください。"
-converting = "PDF を編集可能形式に変換中..."
-currentFile = "現在のファイル: {{name}}"
-imageLabel = "配置済み画像"
-noTextOnPage = "このページで編集可能なテキストは検出されませんでした。"
-pagePreviewAlt = "ページプレビュー"
-pageSummary = "{{total}} ページ中 {{number}} ページ目"
+download = "Download"
+downloadTooltip = "Save and download the edited PDF"
+save = "Save PDF"
+saveTooltip = "Apply changes to the file in your workspace ({{shortcut}})"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF JSON エディター"
-viewLabel = "PDF エディター"
+unsaved = "(unsaved)"
+workbenchLabel = "Editor"
 
-[pdfTextEditor.actions]
-applyChanges = "変更を適用"
-clearText = "テキストをクリア"
-downloadCopy = "コピーをダウンロード"
-moreOptions = "その他のオプション"
-reset = "変更をリセット"
+[pdfTextEditor.annotations]
+freetext = "Annotation text - not page text, so it can't be edited here"
+stamp = "Stamp annotation - not page text, so it can't be edited here"
+widget = "Form field - not page text, so it can't be edited here"
 
-[pdfTextEditor.badges]
-earlyAccess = "早期アクセス"
-modified = "編集済み"
+[pdfTextEditor.discard]
+body = "Opening {{name}} closes the document you are editing. Your unsaved changes will be lost."
+cancel = "Cancel"
+confirm = "Discard and open"
+hint = "Cancel, then Save PDF to keep them in your workspace first."
+title = "Discard unsaved changes?"
 
-[pdfTextEditor.empty]
-dropzone = "ここに PDF または JSON ファイルをドラッグ＆ドロップするか、クリックして参照"
-dropzoneWithFiles = "ファイルタブからファイルを選択するか、ここに PDF または JSON ファイルをドラッグ＆ドロップするか、クリックして参照"
-title = "ドキュメントが読み込まれていません"
+[pdfTextEditor.drop]
+hint = "Releases on the editor stage replace any open document."
+title = "Drop a PDF to open"
 
-[pdfTextEditor.errors]
-invalidJson = "JSONファイルを読み取れません。PDF to JSONツールで生成されたものか確認してください。"
-pdfConversion = "編集したJSONをPDFに変換できませんでした。"
+[pdfTextEditor.error]
+decodeImage = "Could not decode the selected image."
+insertImage = "Could not insert the selected image."
 
-[pdfTextEditor.fontAnalysis]
-allFonts = "すべてのフォント"
-currentPageFonts = "このページのフォント"
-details = "フォント詳細"
-embedded = "埋め込み"
-fallback = "フォールバック"
-infoMessage = "フォント再現情報があります。"
-missing = "欠落"
-perfect = "完全"
-perfectMessage = "すべてのフォントを完全に再現できます。"
-subset = "サブセット"
-suggestions = "注記"
-type = "種類"
-warningMessage = "一部のフォントは正しく表示されない可能性があります。"
-warnings = "警告"
-webFormat = "Web形式"
+[pdfTextEditor.find]
+close = "Close find bar"
+count = "{{current}} of {{total}}"
+findPlaceholder = "Find"
+ignoreAccents = "Ignore accents"
+matchCase = "Match case"
+next = "Next match"
+noMatches = "No matches"
+previous = "Previous match"
+replace = "Replace"
+replaceAll = "Replace all"
+replaced = "{{count}} replaced"
+replacePlaceholder = "Replace with"
+wholeWord = "Whole word"
 
-[pdfTextEditor.groupingMode]
-auto = "自動"
-paragraph = "段落"
-singleLine = "1行"
+[pdfTextEditor.fontPicker]
+builtInGroup = "Built-in fonts"
+deviceFontsNone = "No extra device fonts were found."
+deviceFontsUnavailable = "Device fonts are unavailable. The built-in fonts still work."
+deviceGroup = "Device fonts"
+documentGroup = "Document font"
+label = "Font family"
+mixed = "Mixed"
+noMatch = "No matching font"
+placeholder = "Font family"
+useDeviceFonts = "Use device fonts"
 
-[pdfTextEditor.manual]
-expandWidth = "ページ端まで拡張"
-merge = "選択を結合"
-mergeTooltip = "選択ボックスを結合"
-resetWidth = "幅をリセット"
-resizeHandle = "テキストの幅を調整"
-ungroup = "選択を分割"
-ungroupTooltip = "段落を行に分割"
-widthMenu = "幅オプション"
+[pdfTextEditor.fonts]
+allPresent = "All letters & numbers present"
+missing = "Missing: {{glyphs}}"
+title = "Fonts"
 
-[pdfTextEditor.modeChange]
-cancel = "キャンセル"
-confirm = "リセットしてモード変更"
-title = "モード変更の確認"
-warning = "テキストのグループ化モードを変更すると、未保存の変更はすべてリセットされます。続行してよろしいですか？"
+[pdfTextEditor.fonts.compat]
+info = "Existing text edits perfectly. A new character an embedded font doesn't include falls back to a standard font."
+ok = "Every font includes the full alphabet and digits - type freely."
+warnOther = "{{count}} fonts missing some letters or numbers - typing those uses a standard fallback font."
 
-[pdfTextEditor.options.advanced]
-title = "詳細設定"
+[pdfTextEditor.fonts.pill]
+info = "Embedded"
+ok = "All glyphs"
+warn = "{{count}} with gaps"
 
-[pdfTextEditor.options.autoScaleText]
-description = "フォントレンダリングがPDFと異なる場合に、元のバウンディングボックス内に収まるよう横方向に自動スケールします。"
-title = "ボックスに収まるようテキストを自動スケール"
+[pdfTextEditor.fonts.status.embedded]
+label = "Embedded"
 
-[pdfTextEditor.options.forceSingleElement]
-description = "有効にすると、編集した各テキストボックスを1つのPDFテキスト要素としてエクスポートし、グリフの重なりやフォント混在を避けます。"
-title = "編集したテキストを1つのPDF要素に固定"
+[pdfTextEditor.fonts.status.standard]
+label = "Standard"
 
-[pdfTextEditor.options.groupingMode]
-autoDescription = "ページ種別を自動判定し、適切にテキストをグループ化します。"
-paragraphDescription = "整列した行を複数行の段落テキストボックスにまとめます。"
-singleLineDescription = "各PDFのテキスト行を個別のテキストボックスとして保持します。"
-title = "テキストのグループ化モード"
+[pdfTextEditor.fonts.status.subset]
+label = "Subset"
 
-[pdfTextEditor.pageType]
-paragraph = "段落ページ"
-sparse = "疎なテキスト"
+[pdfTextEditor.help]
+ariaLabel = "Keyboard shortcuts"
+title = "Keyboard shortcuts"
+tooltip = "Keyboard shortcuts (?)"
 
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
+[pdfTextEditor.help.clipboard]
+copyDesc = "Copy selected text"
+cutDesc = "Cut selected (copy + delete)"
+heading = "Clipboard"
+pasteDesc = "Paste clipboard text as new run"
+pastePlainDesc = "Paste as plain text"
+
+[pdfTextEditor.help.document]
+escDesc = "Clear selection / close find / close help"
+heading = "Document"
+helpDesc = "This help"
+saveDesc = "Save to your workspace"
+
+[pdfTextEditor.help.editing]
+deleteDesc = "Remove selected"
+duplicateDesc = "Duplicate selected"
+groupDesc = "Group selected runs into one paragraph"
+heading = "Editing"
+marqueeDesc = "Marquee multi-select"
+moveDesc = "Move text run"
+selectAllDesc = "Select all"
+shiftClickDesc = "Add / remove a run from selection"
+undoRedoDesc = "Undo / Redo"
+
+[pdfTextEditor.help.find]
+heading = "Find & replace"
+nextDesc = "Next match (add Shift for previous)"
+openDesc = "Open find bar (and replace)"
+
+[pdfTextEditor.help.navigation]
+firstLastDesc = "First / last page"
+heading = "Navigation"
+pageDesc = "Previous / next page"
+zoomDesc = "Zoom in / out"
+
+[pdfTextEditor.inspector]
+document = "Document"
+fontEmbedded = "Embedded font · a character it lacks falls back to Helvetica."
+fontGap = "{{name}} · missing {{glyphs}} - typing those falls back to Helvetica."
+geometry = "Position & size"
+height = "Height"
+heightHint = "A text box's height follows its type size and line count."
+image = "Image"
+images = "Images"
+manyImages = "{{count}} images"
+manyText = "Text · {{count}} boxes"
+mixed = "{{count}} objects"
+multiGeometry = "Select a single object to edit its position and size."
+nothingSelected = "Nothing selected"
+nothingSelectedHint = "Click any text or image on the page to edit it here."
+oneImage = "Image"
+oneText = "Text"
+pages = "Pages"
+tabDocument = "Document"
+tabSelected = "Selected"
+textBoxes = "Text boxes"
+width = "Width"
+widthHint = "A text box's width follows its content and wrapping."
+x = "X"
+y = "Y"
+
+[pdfTextEditor.password]
+cancel = "Cancel"
+incorrect = "Incorrect password - try again."
+label = "Password"
+open = "Open"
+protected = "This PDF is password-protected."
+protectedNamed = "\"{{fileName}}\" is password-protected."
+title = "Password required"
+
+[pdfTextEditor.rulers]
+guide = "Alignment guide at {{value}} {{unit}} - drag onto a ruler to remove"
+hint = "Drag from a ruler to add an alignment guide"
+horizontal = "Horizontal ruler"
+unit = "pt"
+vertical = "Vertical ruler"
+
+[pdfTextEditor.run]
+lockedTitle = "Locked - use the Unlock button to edit"
+
+[pdfTextEditor.saveRisk]
+cancel = "Cancel"
+intro = "Saving the edited copy changes the file. That means:"
+note = "Your edits are kept. The changes listed above are unavoidable when saving the edited copy."
+saveAnyway = "Save anyway"
+title = "Saving will change this PDF"
+
+[pdfTextEditor.settings]
+advanced = "Advanced"
+find = "Find in document"
+findTooltip = "Find ({{shortcut}})"
+view = "View"
+
+[pdfTextEditor.sidebar]
+addImage = "Add image"
+addText = "Add text"
+clickPageToAddText = "Click page to add text"
+document = "Document"
+group = "Group"
+groupingAuto = "Auto"
+groupingAutoHint = "Groups equal-spaced lines into paragraphs. Changing this re-reads the document and clears undo history."
+groupingLine = "Line"
+groupTooltip = "Merge selected runs into one paragraph ({{shortcut}})"
+groupTooltipDisabled = "Select 2+ runs to merge"
+noFile = "No file loaded"
+noFileHint = "Pick a PDF from the Files panel on the left, or drop one in. The editor will open it automatically."
+opening = "Opening document..."
+paragraph = "Paragraph"
+rulers = "Rulers and guides"
+textBoxWidth = "New text box width"
+textGrouping = "Text grouping"
+ungroup = "Ungroup"
+ungroupTooltip = "Split this paragraph into one run per line"
+ungroupTooltipDisabled = "Select a multi-line paragraph to ungroup"
+widthGrow = "Grow"
+widthGrowHint = "Grow widens a box as you type; Wrap keeps its width and flows onto new lines."
+widthWrap = "Wrap"
+
+[pdfTextEditor.spellcheck]
+auto = "Automatic"
+enable = "Check spelling as you type"
+language = "Dictionary language"
+
+[pdfTextEditor.stage]
+loadingDocument = "Loading document"
+loadingProgress = "Loading progress"
+noDocument = "No document loaded."
+pickPrompt = "Pick a PDF from the Files panel on the left to begin editing."
+renderingPreview = "Rendering preview"
+
+[pdfTextEditor.toolbar]
+addTextTooltip = "Add a text box - then click the page"
+advancedColour = "Advanced colour"
+advancedColourTooltip = "Advanced colour (glyph outline)"
+alignBottom = "Align bottom"
+alignCentre = "Align centre"
+alignLabel = "Align · needs 2+ objects"
+alignLeft = "Align left"
+alignMiddle = "Align middle"
+alignRight = "Align right"
+alignTop = "Align top"
+arrange = "Arrange"
+bringForward = "Bring forward"
+bringToFront = "Bring to front"
+caseLower = "lowercase"
+caseSentence = "Sentence case"
+caseTitle = "Title Case"
+caseUpper = "UPPERCASE"
+changeCase = "Change case"
+changeCaseTooltip = "Change case (text runs only)"
+delete = "Delete selected"
+deleteTooltip = "Delete (Del)"
+distributeHorizontally = "Distribute horizontally"
+distributeLabel = "Distribute · needs 3+ objects"
+distributeVertically = "Distribute vertically"
+editImageExternally = "Edit in another app"
+flipHorizontal = "Flip horizontal"
+flipVertical = "Flip vertical"
+fontColour = "Font colour"
+fontSize = "Font size"
+formatting = "Text formatting"
+italic = "Italic"
+italicUnavailable = "This font has no italic version. Load your device fonts or pick another font family."
+lock = "Lock selection"
+lockTooltip = "Lock selection - prevents accidental edits"
+more = "More actions"
+order = "Order"
+outlineColour = "Outline colour"
+outlineWidth = "Outline width (0 = none)"
+redo = "Redo"
+redoTooltip = "Redo ({{shortcut}})"
+replaceImage = "Replace, keeping placement"
+rotateLeft = "Rotate 90° left"
+rotateRight = "Rotate 90° right"
+sendBackward = "Send backward"
+sendToBack = "Send to back"
+undo = "Undo"
+undoTooltip = "Undo ({{shortcut}})"
+unlock = "Unlock selection"
+unlockTooltip = "Unlock selection - makes it editable again"
 
 [pdfTextEditor.tooltip.alpha]
 text = "このアルファ版ビューアーは発展途上のため、一部のフォント、色、透明効果、レイアウトがわずかに変化することがあります。共有前に生成された PDF を再確認してください。"
@@ -6134,31 +7007,12 @@ title = "プレビュー差異"
 text = "このワークスペースはテキストの編集と埋め込み画像の位置調整に重点を置いています。複雑なページのアートワーク、フォームウィジェット、レイヤー化されたグラフィックは書き出し時に保持されますが、ここでは完全には編集できません。"
 title = "テキストと画像のフォーカス"
 
-[pdfTextEditor.welcomeBanner]
-bestFor = "最適："
-bestFor1 = "主にテキストと画像で構成されたシンプルなPDF"
-bestFor2 = "標準的な段落書式のドキュメント"
-bestFor3 = "手紙、エッセイ、レポートなどの基本的なドキュメント"
-dontShowAgain = "今後表示しない"
-experimental = "これは開発中の実験的機能です。使用中の不安定さや不具合が発生する可能性があります。"
-feedback = "これは早期アクセス機能です。問題があればご報告ください。改善に役立ちます。"
-gotIt = "了解"
-howItWorks = "このツールはPDFを編集可能な形式に変換し、テキストの編集や画像の再配置が行えます。変更は新しいPDFとして保存されます。"
-issue1 = "テキストの色は現在保持されません（近日対応予定）"
-issue2 = "段落モードは整列や行間の問題が多いため、単一行モードを推奨します"
-issue3 = "プレビュー表示は書き出し後のPDFと異なる場合があります（書き出しPDFの方が原本に近い）"
-issue4 = "回転テキストの整列は手動調整が必要な場合があります"
-issue5 = "透明度やレイヤー効果は原本と異なる場合があります"
-knownIssues = "既知の問題（修正中）："
-limitation1 = "フォントの描画が元のPDFとわずかに異なる場合があります"
-limitation2 = "複雑なグラフィックス、フォームフィールド、注釈は保持されますが編集できません"
-limitation3 = "大きなファイルは変換と処理に時間がかかる場合があります"
-limitations = "現在の制限："
-notIdealFor = "不向き："
-notIdealFor1 = "箇条書き、表、複数段組などの特別な書式を含むPDF"
-notIdealFor2 = "雑誌、パンフレットなどデザイン性の高いドキュメント"
-notIdealFor3 = "複雑なレイアウトの取扱説明書"
-title = "PDF Text Editor（早期アクセス）へようこそ"
+[pdfTextEditor.zoom]
+fit = "Fit"
+fitToWidth = "Fit to width"
+in = "Zoom in"
+out = "Zoom out"
+reset = "Reset zoom to 100%"
 
 [PDFToCSV]
 header = "PDFをCSVに変換"
@@ -6298,10 +7152,10 @@ saml = "SAML"
 secureLoginSupport = "セキュアログイン対応"
 selfHostedDeployment = "セルフホスト展開"
 sso = "SSO"
-unlimitedUsers = "ユーザー無制限"
 upToFiveUsers = "最大 5 ユーザー"
 upToFiveUsersLowercase = "最大 5 ユーザー"
 usageTracking = "利用状況の追跡"
+usersIncluded = "100 users included"
 usersLimitedToSeats = "ユーザー数は席数に制限"
 
 [plan.free]
@@ -6330,9 +7184,9 @@ saveWithAnnualBilling = "年払いでお得"
 selfHosted = "セルフホスト"
 selfHostedOnInfrastructure = "あなたのインフラ上でセルフホスト"
 ssoOAuth = "SSO（OAuth2/OIDC）"
-unlimitedUsers = "ユーザー無制限"
 upToFiveUsers = "最大 5 ユーザー"
 usageTrackingPrometheus = "利用状況の追跡 & Prometheus"
+usersIncluded = "100 users included"
 
 [plan.licenseWarning]
 body = "ユーザーは {{total}} 人ですが、無料枠はサーバーあたり {{limit}} 人までです。Stirling PDF を円滑に運用するにはアップグレードしてください。"
@@ -6379,11 +7233,29 @@ keyDescription = "メールに記載のライセンスキーを貼り付け"
 success = "ライセンスを有効化しました！"
 successMessage = "ライセンスは正常に有効化されました。このウィンドウを閉じても構いません。"
 
+[plan.team]
+maxUsers = "100 users"
+name = "Team"
+
 [policies.activity]
 outputsUnavailable = "ポリシーの出力は、もうダウンロードできません。"
 partialOutputsUnavailable = "一部のポリシー出力は、ダウンロードできなくなりました。"
 runNotFound = "適用の実行が見つからなくなりました。"
 timedOut = "実行が完了する前に適用がタイムアウトしました。"
+
+[policies.editorPanel]
+collapse = "Hide pipelines"
+empty = "Nothing runs on import or export yet"
+expand = "Show pipelines"
+openProcessor = "Open the PDF Processor"
+rowFailed = "{{label}} - last run failed"
+rowIdle = "{{label}} runs automatically"
+rowRunning = "{{label}} is running now"
+runsToday_one = "{{count}} run today"
+runsToday_other = "{{count}} runs today"
+title = "PDF Processor"
+triggerExport = "Runs on export"
+triggerImport = "Runs on import"
 
 [policies.enforcement]
 applying = "{{names}} を適用中"
@@ -6422,59 +7294,44 @@ badgeRan = "{{name}} ポリシーがこのファイルで実行されました"
 badgeRunning = "{{name}} 実行中..."
 blockingAction = "ポリシー適用中のため {{action}} がブロックされました。お待ちください..."
 dismiss = "オーバーレイを閉じる"
-enforcingTitle = "ポリシーを適用中..."
+enforcingPipelineTitle = "Enforcing pipeline..."
+enforcingPolicyTitle = "Enforcing policy..."
+exportBlocked = "A required policy failed. The export was cancelled. Try exporting again."
+recoveryBody = "We couldn't apply a required policy to these files. Try again, or close the affected files to continue working."
+recoveryClose_one = "Close file"
+recoveryClose_other = "Close {{count}} files"
+recoveryClosing_one = "Closing file..."
+recoveryClosing_other = "Closing {{count}} files..."
+recoveryContactAdmin = "Contact your administrator for help."
+recoveryContactOwner = "Contact {{owner}} for help."
+recoveryError = "The action couldn't be completed. Try again."
+recoveryOwnedPolicy = "Check the policy settings, then retry."
+recoveryRetry_one = "Retry file"
+recoveryRetry_other = "Retry {{count}} files"
+recoveryRetrying_one = "Retrying file..."
+recoveryRetrying_other = "Retrying {{count}} files..."
+recoverySummary_one = "{{count}} file affected."
+recoverySummary_other = "{{count}} files affected."
+recoveryTechnicalDetails = "Technical details"
+recoveryTitle = "Policy enforcement failed"
 viewAnyway = "ファイルを表示（ポリシーはまだ適用中）"
 
 [policyOption]
-autoRedactPhi = "PHIを自動墨消し"
-blockExport = "エクスポートをブロック"
-ccpa = "CCPA"
-contracts = "契約書"
-documents = "ドキュメント"
-fedramp = "FedRAMP"
-financialReports = "財務報告書"
-flagForReview = "レビュー用にフラグ付け"
-gdpr = "GDPR"
-hipaa = "HIPAA"
-hold = "保留"
-hrRecords = "人事記録"
-indefinite = "無期限"
-insurance = "保険"
-invoices = "請求書"
-iso27001 = "ISO 27001"
-legalFilings = "法的提出書類"
-medicalPhi = "医療 / PHI"
-never = "なし"
-ninetyDays = "90日"
-oneYear = "1年"
-p60 = "60%"
-p70 = "70%"
-p80 = "80%"
-p90 = "90%"
-p95 = "95%"
-pciDss = "PCI DSS"
-quarantineDocument = "ドキュメントを隔離"
-routeToBucket = "バケットへルーティング"
-s3Bucket = "S3 バケット"
-sevenYears = "7年"
-sharePoint = "SharePoint"
-soc2 = "SOC 2"
-taxDocuments = "税務書類"
-thirtyDays = "30日"
-threeYears = "3年"
-webhook = "Webhook"
-
-[portal]
-comingSoon = "近日公開"
+pdfa-1 = "PDF/A-1b"
+pdfa-2b = "PDF/A-2b"
+pdfa-3b = "PDF/A-3b"
 
 [portal.accountLink.card]
 billingNote = "無人処理は組織ウォレットに請求されます。"
+connectDescription = "Connect this server to use your team’s processing allowance in Stirling Cloud."
+disconnectBody = "This server will stop using your team’s processing allowance in Stirling Cloud. Your local files stay on this server. To connect again, follow the original connection steps."
+disconnectTitle = "Disconnect this instance?"
 eyebrow = "アカウントリンク"
 linkButton = "Stirling アカウントをリンク"
-linked = "リンク済み"
-linkedAs = "{{name}} としてリンク済み。"
-linkedGeneric = "このインスタンスはリンクされています。"
+loading = "Checking account connection"
 notLinked = "未リンク"
+signedInAs = "Signed in to Stirling Cloud as"
+statusError = "Couldn’t check the account connection"
 title = "この組織を Stirling アカウントにリンク"
 unlink = "リンクを解除"
 
@@ -6482,48 +7339,93 @@ unlink = "リンクを解除"
 title = "リンクできませんでした"
 
 [portal.accountLink.card.loginNotConfigured]
-after = "を設定して、ホストされた Stirling アカウントとのアカウントリンクを有効にしてください。開発環境では、リンクダイアログからサインインをシミュレートできます。"
-before = "設定"
+description = "Ask your server administrator to enable the connection to Stirling Cloud."
 title = "SaaS ログインが設定されていません"
 
+[portal.accountLink.connect]
+close = "Close"
+exhaustedLede = "This server has used its free credits for the month. They reset when the period rolls over. Connecting a Stirling account adds a further monthly allowance on top."
+notNow = "Not now"
+start = "Connect Stirling account"
+step = "Step {{current}} of {{total}}"
+
+[portal.accountLink.connect.benefits]
+creditsDetailMonthly = "Free monthly allowance"
+creditsLabel = "Credits"
+processorDetail = "Pipelines, policies, sources and audit"
+processorLabel = "Processor"
+teamsDetail = "Free for up to 5 users"
+teamsLabel = "Teams"
+
+[portal.accountLink.connect.callback]
+linkedNotSignedIn = "You are not signed in to Stirling in this browser, so usage and billing will ask you to sign in."
+retry = "Try again"
+signedInAnyway = "You are signed in to Stirling, so billing and usage will load. Only the server link is incomplete."
+working = "Finishing the connection."
+
+[portal.accountLink.connect.callback.expired]
+body = "Connection requests are short lived. Start another one."
+title = "Request expired"
+
+[portal.accountLink.connect.callback.malformed]
+body = "This page was opened without a valid connection response. Start the connection from settings."
+title = "Could not read the response"
+
+[portal.accountLink.connect.callback.rejected]
+body = "This request was declined or has already been used. Start another one if that was not intended."
+title = "Connection not completed"
+
+[portal.accountLink.connect.callback.unfinished]
+body = "Stirling did not confirm the connection. This is usually temporary."
+title = "Not finished yet"
+
+[portal.accountLink.connect.done]
+accountLabel = "Account"
+addPolicy = "Add a policy"
+buildPipeline = "Set up a pipeline"
+creditsBarLabel = "Free credits remaining"
+creditsSuffix = "of {{allowance}} free credits left"
+cta = "Done"
+inviteTeam = "Invite your team"
+lede = "This server now runs against your Stirling account."
+pendingTitle = "Almost there"
+switchOnProcessor = "Switch on the Processor"
+title = "Connected"
+
+[portal.accountLink.connect.handoff]
+going = "Taking you to stirling.com"
+reauthLede = "Your Stirling session expired. Signing in again keeps usage and billing visible. This server stays connected either way."
+title = "Connecting"
+
+[portal.accountLink.connectionNotice]
+expiredBody = "This server has not reached Stirling Cloud within its offline allowance. Cloud-backed Team features and Processor work are paused. Existing data and installed licence rights are preserved. Access returns automatically after a successful connection confirms your plan."
+expiredTitle = "Cloud access paused"
+offlineBody = "Your last confirmed plan remains available until {{deadline}}. Restore this server’s connection before then to avoid pausing cloud-backed features and processing."
+offlineTitle = "Stirling Cloud is unreachable"
+retry = "Check connection"
+revokedBody = "Stirling Cloud rejected this account connection. Reconnect the account in Settings to restore eligible cloud-backed features."
+revokedTitle = "Account connection revoked"
+
 [portal.accountLink.gate]
-action = "アカウントをリンク"
-description = "請求対象機能を使用するには、この組織の Stirling アカウントをリンクしてください。"
-title = "リンクしてロック解除"
-titleFeature = "リンクして {{feature}} をロック解除"
+retry = "Try again"
 
 [portal.accountLink.instances]
-active = "アクティブ"
-revoke = "取り消す"
-revoked = "取り消し済み"
 unnamed = "名前のないインスタンス"
-
-[portal.accountLink.instances.columns]
-instance = "インスタンス"
-lastSeen = "最終確認"
-linked = "リンク済み"
-status = "ステータス"
 
 [portal.accountLink.instances.empty]
 description = "この組織のアカウントをリンクし、セルフホストのインスタンスを登録すると、ここに表示されます。"
+otherDescription = "This is the only connected instance shown for your team."
+otherTitle = "No other connected instances"
 title = "リンクされたインスタンスはありません"
 
-[portal.accountLink.instances.time]
-daysAgo_one = "{{count}}日前"
-daysAgo_other = "{{count}}日前"
-hoursAgo_one = "{{count}}時間前"
-hoursAgo_other = "{{count}}時間前"
-justNow = "たった今"
-minutesAgo_one = "{{count}}分前"
-minutesAgo_other = "{{count}}分前"
-never = "なし"
-
 [portal.accountLink.modal]
-linkSubtitle = "このサーバーの請求先にするアカウントにサインインしてください。"
+cancel = "Cancel"
+continueReauth = "Sign in again"
+exhaustedTitle = "Add more monthly credits"
 linkTitle = "Stirling アカウントをリンク"
-reauthSubtitle = "セッションの有効期限が切れました — Stirling アカウントに再度サインインしてください。インスタンスのリンクは維持されます。"
+noAuthorizeUrl = "Stirling did not return somewhere to continue. Try again in a moment."
 reauthTitle = "再度サインイン"
-simulateSignIn = "サインインをシミュレート（dev）"
+startFailed = "Could not reach Stirling to start the connection. Check this server's outbound network access, then try again."
 
 [portal.accountLink.modal.loginNotConfigured]
 after = "を設定して、ホストされた Stirling アカウントとのアプリ内リンクを有効にしてください。"
@@ -6534,6 +7436,9 @@ title = "SaaS ログインが設定されていません"
 [portal.accountLink.panel]
 instancesSub = "この組織に登録されているすべてのセルフホストインスタンス。認証情報を取り消すと、無人アクセスを直ちに遮断できます。"
 instancesTitle = "リンクされたインスタンス"
+manageCloud = "Manage on stirling.com"
+otherInstancesSub = "Other self-hosted servers connected to the same team in Stirling Cloud."
+otherInstancesTitle = "Other connected instances"
 revokeError = "インスタンスを取り消せませんでした"
 sub = "このセルフホスト組織を Stirling アカウントにリンクして、無人処理を組織ウォレットに請求します。"
 
@@ -6541,6 +7446,12 @@ sub = "このセルフホスト組織を Stirling アカウントにリンクし
 forbidden = "チームオーナーのみが組織のリンクされたインスタンスを表示できます。"
 generic = "チームのリンクされたインスタンスを読み込めませんでした。しばらくしてからもう一度お試しください。"
 title = "リンクされたインスタンスを読み込めませんでした"
+
+[portal.accountLink.rail]
+cta = "Connect"
+later = "Not now"
+sub = "Adds monthly credits and room for more users. Everything on this server already works without one."
+title = "Connect your Stirling account"
 
 [portal.accountLink.state]
 free = "Editorプラン"
@@ -6613,72 +7524,84 @@ title = "Processorプランを有効化中..."
 limit = "月額利用上限 {{amount}}/月。上限に達すると処理が一時停止します。"
 limitNoCap = "利用上限なし。処理は一時停止しません。請求書は毎月発行されます。"
 
-[portal.billing.enterpriseUpsell]
-cta = "Enterprise 見積もりを作成"
-description = "コミット済みボリューム割引、エアギャップデプロイ、カスタム MSA とセキュリティレビュー、サードパーティ販売代理店パートナーシップ。"
-eyebrow = "ボリューム割引 · 100万以上のPDF"
-title = "Stirling Enterprise"
+[portal.billing.chip]
+invoices = "Invoices"
+nav = "Sections"
+payment = "Payment"
+plan = "Plan"
+procurement = "Procurement"
+usage = "Usage"
 
-[portal.billing.freeEditors]
-activeThisMonth = "今月のアクティブ数"
-cost = "コスト"
-editorsDeployed = "デプロイ済みエディター"
-inviteTeammates = "チームメイトを招待"
-pdfsEdited = "編集されたPDF数"
-subtitle = "どこにでも、チーム全体にデプロイできます。"
-title = "無料 PDF エディター"
+[portal.billing.cycle]
+credits = "Credits"
+creditsNote = "{{units}} used · includes free and prepaid credits"
+day = "Day {{day}} of {{of}}"
+editors = "Editors deployed"
+estimated = "estimated · the meter settles at close"
+estimatedPending = "estimated · includes {{pending}} not yet synced from your instances"
+pdfs = "PDFs processed"
+users = "Users"
+
+[portal.billing.enterprise]
+cta = "Get an enterprise quote"
+sub = "Air-gapped deployment, SCIM, data residency, uptime SLAs, and an agreement to match."
+title = "Running Stirling in a regulated environment?"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "チェックアウトを開始できませんでした"
-currentPlan = "現在のプラン"
-freeForever = "ずっと無料"
 noTeamResolved = "ウォレット上でチームがまだ解決されていません — 更新してもう一度お試しください。"
-ownerOnly = "チームオーナーのみが Processorプランを有効にできます。"
 payInvoice = "完了するには請求書を支払う"
-planName = "Editor"
-ssoIncluded = "SSO 含む"
-switchOnProcessor = "Processor を有効にする →"
-unlimitedUsers = "無制限のユーザー"
 viewQuote = "見積もりを表示"
 
-[portal.billing.invoices]
-columnAmount = "金額"
-columnDate = "日付"
-columnDescription = "説明"
-columnPdfsProcessed = "処理されたPDF数"
-columnStatus = "ステータス"
-descriptionFallback = "請求書"
-downloadAriaLabel = "請求書 {{number}} を PDF としてダウンロード"
-emptyDescription = "チームがサブスクライブし、最初のサイクルが終了すると、請求書がここに表示されます。"
-emptyTitle = "請求書はまだありません"
-fetchLimitNote_one = "最新の請求書 {{count}} 件を表示しています。古い請求書は Stripe ポータルにあります。"
-fetchLimitNote_other = "最新の請求書 {{count}} 件を表示しています。古い請求書は Stripe ポータルにあります。"
-loadError = "請求書を読み込めませんでした: {{error}}"
-pdfLink = "PDF ↓"
-showAll_one = "すべて表示 {{count}}"
-showAll_other = "すべて表示 {{count}}"
-showFewer_one = "少なく表示（上位 {{count}} 件）"
-showFewer_other = "少なく表示（上位 {{count}} 件）"
-showMostRecent_one = "最新 {{count}} 件を表示"
-showMostRecent_other = "最新 {{count}} 件を表示"
-title = "請求書履歴"
-viewAriaLabel = "請求書 {{number}} を Stripe で表示"
-viewLink = "表示 ↗"
+[portal.billing.identity.free]
+chipAnywhere = "Web, desktop & self-hosted"
+chipCredits = "{{allowance}} free credits monthly"
+chipTools = "Every PDF tool"
+name = "Free"
+sub = "The full PDF Editor."
 
-[portal.billing.linkPrompt]
-cta = "Stirling アカウントをリンク"
-description = "手動のPDF編集 — 表示、署名、結合、分割、透かし、圧縮、変換、手動 OCR — はリンクの有無に関係なく常に無料です。リンクすると、従量制処理（自動化、AI、API）の無料PDF 500件を受け取れます。さらに必要な場合は Processorプランを有効にし、使用した分だけお支払いください。"
-title = "Stirling アカウントをリンク"
+[portal.billing.identity.processor]
+chipMetered = "Metered processing"
+chipPipelines = "Pipelines & API"
+name = "Processor"
+sub = "Team base plus {{rate}} per credit"
+subNoRate = "Team base plus metered processing"
 
-[portal.billing.paymentMethod]
-billedMonthly = "月次請求"
-cardEnding = "{{brand}} 下4桁 {{last4}}"
-cardFallback = "カード"
-expiresBilledMonthly = "有効期限 {{expiry}} · 月次請求"
-eyebrow = "支払い方法"
-managedSub = "カードと請求情報は Stripe のカスタマーポータルで安全に保管されます。"
-managedTitle = "Stripe で管理"
-update = "更新"
+[portal.billing.identity.team]
+chipFleet = "Fleet control"
+chipIncluded = "{{allowance}} included credits monthly"
+chipSso = "SSO"
+name = "Team"
+sub = "Up to {{users}} users"
+subNoLimit = "No user limit"
+
+[portal.billing.invoiceRow]
+current = "Current"
+failed = "Unpaid"
+paid = "Paid"
+undated = "Undated"
+unknownAmount = "Unknown"
+view = "View"
+
+[portal.billing.license]
+add = "Add"
+addTitle = "Add license"
+empty = "No license installed"
+label = "License key"
+update = "Update"
+updateTitle = "Update license"
+view = "View"
+
+[portal.billing.payment]
+billedTo = "Billed to"
+card = "{{brand}} ending {{last4}}"
+cardWithExpiry = "{{brand}} ending {{last4}} · expires {{month}} / {{year}}"
+dateUnavailable = "Billing date not available yet"
+invoicesTo = "Invoices go to"
+method = "Payment method"
+nextInvoice = "Next invoice"
+noCard = "No card on file"
+update = "Update"
 
 [portal.billing.pdfsProcessed]
 emptyPeriod = "この期間の従量制処理はまだありません。"
@@ -6692,7 +7615,6 @@ segmentApiDesc = "直接 API リクエスト"
 segmentApiLabel = "API"
 segmentAutomationDesc = "自動化とパイプライン"
 segmentAutomationLabel = "自動化"
-sizeMultiplier = "{{formatted}} PDFs にサイズ倍率が適用されました"
 summary = "{{unique}} 個のユニーク · {{units}} メーター単位 · PDF あたり平均 {{avg}}"
 summaryNoRate = "{{unique}} 個のユニーク · {{units}} メーター単位"
 unit = "従量制PDF"
@@ -6798,6 +7720,38 @@ exhausted = "使い切りました"
 healthy = "十分に残っています"
 low = "残りわずか"
 
+[portal.billing.processor]
+activate = "Switch on the Processor"
+factCapped = "{{pct}}% of {{cap}}"
+factFree = "{{used}} of {{allowance}} used"
+factNoCap = "no limit"
+included = "Included in your license"
+includedCredits = "Included credits"
+includedRenewal = "{{summary}} · Renews {{date}}"
+meteredCapTooltip = "Pauses metered processing at your spend limit."
+midIncluded = "{{rate}} per credit · {{allowance}} included every month"
+midIncludedNoRate = "{{allowance}} included every month"
+midMetered = "{{spend}} metered this cycle"
+midMeteredUnknown = "Metered this cycle"
+raiseLimit = "Raise limit"
+rowName = "Processor"
+
+[portal.billing.section]
+cycle = "This cycle"
+invoices = "Invoices"
+payment = "Payment"
+plan = "Your plan"
+
+[portal.billing.serverPlan]
+active = "Active self-hosted license"
+connectBody = "Connect to add cloud processing credits. Your server license stays active."
+enterprise = "Enterprise"
+enterpriseConnectBody = "Your Enterprise license includes processing on this server. Connecting an account is optional."
+included = "Included with your license"
+seats = "{{seats}} licensed seats"
+server = "Server"
+unlimited = "Unlimited users"
+
 [portal.billing.spendLimit]
 adjustLimit = "上限を調整"
 cancel = "キャンセル"
@@ -6823,14 +7777,8 @@ body_one = "{{rate}}/日のペースでは、約 {{count}} 日で上限に達し
 body_other = "{{rate}}/日のペースでは、約 {{count}} 日で上限に達します（月末見込み 約 {{monthEnd}}）。推奨上限は約 {{suggested}} です。"
 label = "超過が予測されています。"
 
-[portal.billing.spendThisMonth]
-eyebrow = "今月の利用額"
-freeRemaining_one = "無料 PDF が {{formatted}} 件残っています"
-freeRemaining_other = "無料 PDFs が {{formatted}} 件残っています"
-processed_one = "{{formattedCount}} 件のPDFを処理しました。"
-processed_other = "{{formattedCount}} 件のPDFを処理しました。"
-processedWithRate_one = "{{formattedCount}} 件のPDFを処理しました。単価は {{rate}} です。"
-processedWithRate_other = "{{formattedCount}} 件のPDFを処理しました。単価は {{rate}} です。"
+[portal.billing.spendLimitModal]
+title = "Monthly spend limit"
 
 [portal.billing.subscribedPlan.capWarn]
 approachingBody = "自動処理が停止しないよう、今すぐ引き上げてください。"
@@ -6842,18 +7790,15 @@ reachedTitle = "月間利用額上限に達しました"
 [portal.billing.subscribedPlan.portalError]
 title = "Stripe ポータルを開けませんでした"
 
-[portal.billing.walletMeter]
-barAria = "Free PDFs remaining"
-capSuffix_one = "{{allowance}} 件の無料PDFのうち使用済み"
-capSuffix_other = "{{allowance}} 件の無料PDFのうち使用済み"
-eyebrow = "Processor トライアル"
-statusLabel_one = "{{used}} 使用済み"
-statusLabel_other = "{{used}} 使用済み"
-sub = "PDF Editor は無料で使用できます。PDF を自動処理する場合はお支払いください。"
-title_one = "{{allowance}} 件のPDFを無料で処理"
-title_other = "{{allowance}} 件のPDFを無料で処理"
-titleWithRate_one = "{{allowance}} 件のPDFを無料で処理、その後 {{rate}}/PDF"
-titleWithRate_other = "{{allowance}} 件のPDFを無料で処理、その後 {{rate}}/PDF"
+[portal.billing.team]
+addCapacity = "Add capacity"
+fact = "{{users}} of {{licensed}} users"
+factNoLimit = "{{users}} users"
+midFree = "The Team plan covers 100 users"
+midFreeSelfHosted = "The free tier covers your first users"
+midIncluded = "Included with your Team base"
+midPrice = "$99/mo per 100 users"
+rowName = "Users"
 
 [portal.components.billingUnit]
 approval = "承認"
@@ -7431,114 +8376,34 @@ status = "ステータス"
 time = "時刻"
 user = "ユーザー"
 
-[portal.editorAdmin]
-subtitle = "Stirling PDF Editor をデプロイし、セルフホスト型インスタンスを組織にペアリングして、実行中のフリート（ターゲット、健全性、認証情報、オフラインアクティベーション）を一元管理します。"
-title = "Editor デプロイメント"
-
-[portal.editorAdmin.health.columns]
-activeUsers = "アクティブユーザー"
-host = "ホスト"
-lastSeen = "最終確認"
-region = "リージョン"
-status = "ステータス"
-target = "Target"
-version = "バージョン"
-
-[portal.editorAdmin.health.empty]
-description = "ターゲットをデプロイしてペアリングすると、ライブのインスタンス健全性がここに表示されます。"
-title = "報告しているインスタンスはありません"
-
-[portal.editorAdmin.offlineActivation]
-enterpriseTag = "Enterprise"
-generateButton = "オフラインバンドルを生成"
-lockCopy = "オフラインおよびオンプレミスのアクティベーションは Enterprise の一部です。"
-subtitle = "外部ネットワーク経路のないオフラインまたはオンプレミスのインストール用に、署名済みアクティベーションバンドルを生成します。インスタンスに転送し、初回起動セットアップ時に適用します。"
-talkToSales = "営業に相談"
-title = "エアギャップ環境でのアクティベーション"
-
-[portal.editorAdmin.offlineActivation.readyBanner]
-description = "{{file}} は署名済みで、転送の準備ができています。1 つのインスタンスをアクティベートし、14 日後に期限切れになります。"
-title = "バンドルの準備完了"
-
-[portal.editorAdmin.pairing]
-generated = "生成済み ✓"
-generateNewCode = "新しいコードを生成"
-lockCopy = "IaC プロビジョニングは Enterprise の一部です。"
-rotate = "ローテーション"
-talkToSales = "営業に相談"
-
-[portal.editorAdmin.sections.health]
-sub = "報告しているすべての Editor インスタンス — バージョン、リージョン、ステータス、最終確認、アクティブユーザー。"
-title = "インスタンスの健全性"
-
-[portal.editorAdmin.sections.pairing]
-sub = "セルフホスト型エディターをこの組織に接続します。トークンを生成し、短いコードを渡すか、IaC 経由で接続します。"
-title = "ペアリング"
-
-[portal.editorAdmin.sections.targets]
-sub = "Editor の実行場所。スニペットをコピーしてセルフホスト型インスタンスを立ち上げるか、運用不要の Managed Cloud を使用します。"
-title = "デプロイメントターゲット"
-
-[portal.editorAdmin.serviceToken]
-currentToken = "現在のトークン"
-lastRotated = "最終ローテーション"
-rotateButton = "サービストークンをローテーション"
-subtitle = "インスタンスはこの認証情報で組織に認証します。スケジュールに従って、または漏えいが疑われる直後にローテーションしてください。"
-title = "サービストークン"
-
-[portal.editorAdmin.serviceToken.rotatedBanner]
-description = "新しいトークンが発行されました。24 時間の猶予期間内に各セルフホスト型インスタンスの STIRLING_SERVICE_TOKEN を更新してください。更新しないとオフラインになります。"
-title = "実行中のインスタンスをローテーション"
-
-[portal.editorAdmin.status]
-degraded = "低下"
-healthy = "正常"
-offline = "オフライン"
-pairing = "ペアリング中"
-
-[portal.editorAdmin.targets]
-instanceCount_one = "{{count}} 件のインスタンス"
-instanceCount_other = "{{count}} 件のインスタンス"
-talkToSales = "営業に相談"
-upgradePlan = "プランをアップグレード"
-
-[portal.editorAdmin.targets.lock]
-enterprise = "オンプレミスおよび Kubernetes セルフホスティングは Enterprise の一部です。"
-paid = "Docker と Kubernetes によるセルフホスティングは有料プランで利用できます。"
-
-[portal.editorAdmin.targets.state]
-available = "利用可能"
-locked = "ロック中"
-running = "実行中"
-
 [portal.errorBoundary]
 description = "このビューで予期しないエラーが発生しました。再試行するか、サイドバーから別のセクションを選択してください。"
 retry = "再試行"
 title = "このページで問題が発生しました"
 
 [portal.failures]
-fromSource = "From source {{source}}"
+closedBySystem = "Stirling"
+noMatches = "Nothing matches the current filters"
 occurrences = "{{count}} occurrences"
-reportedBy = "Hit by {{actor}}"
-runReference = "Run {{runId}}"
-subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
-title = "Failures"
+searchPlaceholder = "Search issues, users and errors"
 
 [portal.failures.action]
 acknowledge = "Acknowledge"
-confirm = "Are you sure?"
+decrypt = "Unlock"
 dismiss = "Dismiss"
-dismissSkipFile = "Skip this file"
+openInTool = "Retry"
+repair = "Repair"
 viewFile = "ファイルを表示"
 viewInProcessor = "プロセッサーで表示"
 
-[portal.failures.debug]
-copyJson = "Copy JSON"
-dismissAll = "Dismiss all ({{total}})"
-dismissing = "Dismissing..."
-hideJson = "Hide raw JSON ({{total}})"
-refresh = "Refresh failures"
-showJson = "Show raw JSON ({{total}})"
+[portal.failures.columns]
+closedBy = "Closed by"
+date = "Date"
+failure = "Issue"
+origin = "Raised in"
+outcome = "Outcome"
+source = "Source"
+user = "User"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
@@ -7550,25 +8415,86 @@ unavailable = "Not available for this failure."
 description = "Policy runs that fail will appear here with the actions you can take."
 title = "No failures recorded"
 
+[portal.failures.emptyClosed]
+description = "Items you dismiss or resolve are kept here with their outcome."
+title = "Nothing closed yet"
+
+[portal.failures.filters]
+origin = "Raised in"
+source = "Source"
+type = "Type"
+user = "User"
+
+[portal.failures.kind.complianceNotMet]
+description = "The compliance check refused this document because it does not meet the standard the policy validates against. The violation is shown below."
+title = "Compliance standard not met"
+
+[portal.failures.kind.inputCorrupted]
+description = "Your file is damaged, so the run could not read it."
+title = "Damaged document"
+
+[portal.failures.kind.inputEmpty]
+description = "Your file has no content in it, so there was nothing for the run to work on."
+title = "Empty file"
+
 [portal.failures.kind.inputPasswordProtected]
 description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
 title = "Password-protected document"
 
+[portal.failures.kind.inputUnavailable]
+description = "The file behind this run could not be reached, so it was never processed."
+title = "File unavailable"
+
+[portal.failures.kind.inputUnreadable]
+description = "Your file could not be opened, so the run could not read it."
+title = "Unreadable file"
+
+[portal.failures.kind.inputUnrepairable]
+description = "Your file is damaged beyond what the repair tools can fix."
+title = "File could not be repaired"
+
+[portal.failures.kind.inputWrongType]
+description = "Your file is not a format this step can open, so the run could not read it."
+title = "Wrong file type"
+
+[portal.failures.kind.stepCannotRenderPage]
+description = "A page in your file could not be drawn, so the run could not finish."
+title = "Page could not be rendered"
+
+[portal.failures.kind.toolNotInstalled]
+description = "This server is missing software the step needs, so the run could not start it."
+title = "Software not installed"
+
 [portal.failures.kind.unknown]
 description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
 title = "Unrecognised failure"
+
+[portal.failures.log]
+copy = "Copy error"
+view = "View error"
 
 [portal.failures.origin]
 pipeline = "Pipeline"
 policy = "Policy"
 tool = "Tool run"
 
-[portal.failures.stage]
-blocked = "Blocked"
-input = "Input"
-internal = "Internal"
-never_ran = "Never ran"
-output = "Output"
+[portal.failures.outcome]
+dismissed = "Dismissed"
+fileRemoved = "File deleted"
+open = "Open"
+resolved = "Resolved"
+
+[portal.failures.scope]
+ariaLabel = "Review state"
+closed = "Closed"
+open = "Open"
+
+[portal.failures.source]
+editor = "Editor"
+
+[portal.failures.unavailable]
+description = "This queue is visible to team leaders on workspaces that run policies."
+title = "Nothing to review"
 
 [portal.home.download]
 back = "戻る"
@@ -7644,12 +8570,6 @@ kubernetes = "セルフホスト型 · Kubernetes"
 afternoon = "こんにちは"
 evening = "こんばんは"
 morning = "おはようございます"
-
-[portal.infrastructure]
-manageEditorDeployment = "Editor デプロイメントを管理"
-sectionsAriaLabel = "インフラストラクチャセクション"
-subtitle = "Stirling ワークスペースのデプロイメント、認証情報、セキュリティ態勢、ストレージ、監査証跡。"
-title = "インフラストラクチャ"
 
 [portal.infrastructure.apiKeys]
 createKey = "キーを作成"
@@ -7760,17 +8680,175 @@ subtitleCreated = "今すぐこのシークレットをコピーしてくださ�
 title = "API キーを作成"
 titleCreated = "キーが作成されました"
 
+[portal.infrastructure.encryption]
+heading = "Encryption at rest"
+hintLabel = "More about this section"
+subheading = "Stored files are encrypted before they reach disk, the database or object storage."
+unknown = "Unknown"
+
+[portal.infrastructure.encryption.auditNotice]
+description = "Encryption is active on this licence, but encrypt, decrypt, revocation and export events are not written to the audit trail. Encryption itself is unaffected."
+title = "Audit events need an Enterprise licence"
+
+[portal.infrastructure.encryption.coverage]
+decryptOnlyNote = "New uploads are stored as plaintext. Files encrypted earlier are still readable."
+encrypted = "Encrypted files"
+heading = "Coverage"
+percentEncrypted = "{{percent}}% encrypted"
+plaintext = "Plaintext files"
+progressLabel = "{{percent}}% of stored files encrypted"
+subheading = "Covers files in My Files and signing workflows. Files a pipeline reads in place, including network sources, are not stored here and are not encrypted."
+
+[portal.infrastructure.encryption.error]
+action = "That key change could not be applied. Please try again."
+keyMissing = "That key no longer exists. Refresh to see the current list."
+migrationStart = "The migration could not be started. Please try again."
+rotate = "The re-wrap could not be completed. Please try again."
+
+[portal.infrastructure.encryption.generatedKey]
+backupGuide = "How to back it up"
+description = "No encryption key was configured, so one was created on this server. Back it up now: if it is lost, encrypted files cannot be recovered."
+title = "This key was generated for you"
+
+[portal.infrastructure.encryption.keys]
+changedAt = "Changed {{when}}"
+changedBy = "By {{actor}}"
+changedByAt = "By {{actor}} on {{when}}"
+heading = "Scope keys"
+keyVersion = "Version {{version}}"
+neverChanged = "Never changed"
+restore = "Restore access"
+retiredNote = "A retired key still decrypts the files stored under it, but a newer key wraps new uploads."
+revoke = "Revoke"
+subheading = "One key per scope. Revoking a key blocks reads of everything stored under it."
+
+[portal.infrastructure.encryption.keys.columns]
+actions = "Actions"
+lastChange = "Last change"
+scope = "Scope"
+status = "Status"
+
+[portal.infrastructure.encryption.keys.empty]
+description = "A key is created the first time someone uploads a file, not at startup."
+title = "No keys yet"
+
+[portal.infrastructure.encryption.masterKey]
+backend = "Storage backend"
+compareNote = "Compare this against the fingerprint in your key backup and in the startup log."
+copied = "Copied"
+copy = "Copy"
+copyFailed = "This browser would not allow copying. The fingerprint is selected, so copy it manually."
+fingerprint = "Fingerprint"
+fingerprintHelp = "What is this fingerprint for?"
+heading = "Master key"
+notMaterialised = "The key machinery has not started on this node yet."
+s3StreamingNote = "While anything is encrypted, object-store downloads are streamed through this server rather than redirected, so they use its bandwidth."
+subheading = "Wraps every scope key. Never shown or accepted over the API."
+version = "Version"
+
+[portal.infrastructure.encryption.migration]
+backlog_one = "{{formatted}} file is stored as plaintext and can be encrypted now."
+backlog_other = "{{formatted}} files are stored as plaintext and can be encrypted now."
+encrypted = "Encrypted"
+failedCount = "Failed"
+heading = "Encrypt existing files"
+hint = "Encrypts the plaintext backlog left from before encryption was switched on. Progress is held in memory, so a backend restart resets it to not started. Running again skips files that are already encrypted."
+noBacklog = "Every stored file is already encrypted."
+progressLabel = "{{processed}} of {{total}} files encrypted"
+requiresEncryptionOn = "Switch encryption on before running this: the backlog is encrypted using the same write path as new uploads."
+runAgain = "Run again"
+skipped = "Skipped"
+skippedHelp = "What does skipped mean?"
+skippedNote = "Skipped files were replaced by a user while the run was in progress, so their copy was left alone."
+start = "Start"
+startedAt = "Started {{when}}"
+
+[portal.infrastructure.encryption.migration.confirm]
+cancel = "Cancel"
+confirm = "Start encrypting"
+noCancel = "There is no stop control. Once started, the run continues until it finishes or encryption is switched off."
+rewrites_one = "Rewrites {{formatted}} stored file, replacing the plaintext copy with an encrypted one."
+rewrites_other = "Rewrites {{formatted}} stored files, replacing the plaintext copies with encrypted ones."
+throttled = "The job is throttled and safe to re-run. Files already encrypted are skipped."
+title = "Encrypt the existing backlog?"
+
+[portal.infrastructure.encryption.migration.failed]
+description = "Encryption was switched off while the migration was running, so the remaining files were left untouched. Switch it back on and run again."
+title = "The run stopped early"
+
+[portal.infrastructure.encryption.migration.state]
+COMPLETED = "Completed"
+FAILED = "Failed"
+IDLE = "Not started"
+RUNNING = "Running"
+
+[portal.infrastructure.encryption.revoke]
+cancel = "Cancel"
+clusterDelay = "On a cluster, other nodes apply this within 60 seconds."
+confirm = "Revoke access"
+readsFail = "Files already stored under this key stop opening, for everyone."
+reversible = "This is reversible. No key material is deleted."
+title = "Revoke access to this key?"
+uploadsContinue = "New uploads keep working. They get a fresh key, so they stay readable."
+
+[portal.infrastructure.encryption.rotation]
+currentVersion = "Current version"
+heading = "Master key rotation"
+hint = "Re-wraps scope keys under a new master key; file contents are never rewritten. The new key is set in configuration and applied on restart, so this button only performs the re-wrap."
+pendingRows = "Rows on an older version"
+rewrap = "Re-wrap keys"
+rewrapped_one = "{{count}} key row re-wrapped."
+rewrapped_other = "{{count}} key rows re-wrapped."
+runbook = "Rotation runbook"
+
+[portal.infrastructure.encryption.rotation.confirm]
+cancel = "Cancel"
+confirm = "Re-wrap keys"
+noFiles = "File contents are not touched. Only the key table is rewritten."
+rerunnable = "Safe to run again if it does not finish."
+rewraps_one = "Re-wraps {{count}} key row under the current master key."
+rewraps_other = "Re-wraps {{count}} key rows under the current master key."
+title = "Re-wrap the key table?"
+
+[portal.infrastructure.encryption.rotation.pending]
+description = "Do not remove the previous key from configuration yet. Files under those keys would stop opening."
+title_one = "{{count}} key row is still on the previous master key"
+title_other = "{{count}} key rows are still on the previous master key"
+
+[portal.infrastructure.encryption.scope]
+global = "All users"
+source = "Source {{id}}"
+team = "Team {{id}}"
+
+[portal.infrastructure.encryption.status]
+ACTIVE = "Active"
+DISABLED = "Revoked"
+RETIRED = "Retired"
+
+[portal.infrastructure.encryption.unavailable.forbidden]
+description = "Your account does not have permission to view encryption settings."
+title = "Not available for your account"
+
+[portal.infrastructure.encryption.unavailable.registry-unavailable]
+description = "The encryption key registry could not be read. Check the database connection and the application logs."
+title = "Key registry unavailable"
+
+[portal.infrastructure.encryption.unavailable.storage-disabled]
+description = "File storage is switched off on this server, so there is nothing to encrypt."
+title = "Storage is disabled"
+
+[portal.infrastructure.encryption.unavailable.unknown]
+description = "Encryption status could not be loaded. Please try again."
+title = "Status unavailable"
+
+[portal.infrastructure.encryption.writeState]
+decryptOnly = "Decrypt only"
+encrypting = "Encrypting new uploads"
+off = "Off"
+
 [portal.infrastructure.keyLabel]
 active = "アクティブ"
 revoked = "取り消し済み"
-
-[portal.infrastructure.tabs]
-apiKeys = "API キー"
-audit = "監査ログ"
-deployments = "デプロイメント"
-models = "モデル"
-security = "セキュリティ"
-storage = "ストレージ"
 
 [portal.integrations]
 availableHeading = "利用可能"
@@ -7827,6 +8905,7 @@ integrations = "連携"
 pipelines = "パイプライン"
 policies = "ポリシー"
 procurement = "調達"
+review = "Review"
 sources = "ソース"
 usage = "使用量と請求"
 users = "ユーザー"
@@ -7836,11 +8915,16 @@ platform = "PDF プラットフォーム"
 processor = "PDF プロセッサー"
 
 [portal.pipelines]
+permissionsRetry = "Retry"
+permissionsUnavailable = "Couldn't check whether you can manage policies, so policy actions are unavailable for now."
 subtitle = "バックエンド上のすべての自動ドキュメントパイプライン: ソースセットに対する操作の順序付きチェーンで、トリガーによって実行されます。行をクリックすると、そのステップとソースが表示されます。"
 title = "パイプライン"
 
 [portal.pipelines.actions]
-newPipeline = "新しいパイプライン"
+newCustomPipeline = "New custom pipeline"
+
+[portal.pipelines.all]
+title = "All pipelines"
 
 [portal.pipelines.builder]
 activate = "Activate"
@@ -7851,6 +8935,9 @@ chooseDestination = "宛先を選択"
 chooseOperation = "このステップの処理を選択"
 chooseSource = "ソースを選択"
 discard = "変更を破棄"
+editorDestination = "Editor"
+editorDestinationDetail = "Replaces the file you ran it on"
+editorDestinationHelp = "This pipeline runs on the files in your workspace, and its results replace the file it ran on. There is nowhere else to send them."
 inputs = "入力"
 inputSource = "入力ソース"
 inputTrigger = "トリガー"
@@ -7862,6 +8949,10 @@ needsSource = "No source chosen"
 noToolMatches = "検索に一致するツールはありません。"
 pause = "Pause"
 rename = "Rename pipeline"
+runOn = "Runs on"
+runOnExport = "Every export"
+runOnTooltip = "Choose when this pipeline runs on your files: when you add them, or when you export them."
+runOnUpload = "Every upload"
 searchTools = "ツールを検索"
 sendToSystem = "別のシステムへ送信"
 stepsIncompatible = "これらのステップは、前のステップが生成するものでは実行できません: {{tools}}。"
@@ -7875,10 +8966,14 @@ usesDefaults = "デフォルト設定で実行"
 viewDefinition = "View definition"
 
 [portal.pipelines.builder.blocker]
+aiClassification = "Enable AI classification in Settings, or remove the Classify step"
 destination = "Choose a destination"
 heading = "To create this pipeline:"
 incompatible = "Fix steps that can't run in order: {{tools}}"
+managerOnly = "Only an admin or team leader can modify a policy"
 name = "Give the pipeline a name"
+routing = "Give every route document types and a destination"
+routingNeedsClassify = "Add a Classify step, or turn off routing by document type"
 saveHeading = "To save your changes:"
 schedule = "Set how often it runs"
 setup = "Finish setting up: {{tools}}"
@@ -7891,6 +8986,33 @@ format-mismatch = "{{accepts}} が必要ですが、前のステップは {{prod
 output-uncertain = "実行されない可能性があります: 前のステップの出力は設定方法に依存します"
 source-mismatch = "{{accepts}} が必要ですが、このパイプラインの入力は {{produced}} です"
 undeclared-operation = "このステップが受け付けるものを確認できません"
+
+[portal.pipelines.builder.icon]
+label = "Change icon"
+
+[portal.pipelines.builder.routing]
+addRule = "Add a route"
+aiDisabled = "AI classification is not enabled. Enable it in Settings, or route on a document property instead."
+aiToolDisabled = "Unavailable until AI classification is enabled in Settings"
+aiUnavailable = "Document-type routing is disabled because AI classification is unavailable. Route on a document property instead."
+extensionPlaceholder = "pdf, docx, png"
+fallback = "Everything else goes to"
+heading = "Routes"
+matchAuthor = "PDF author"
+matchBy = "Match by"
+matchDocumentType = "Document type (AI classification)"
+matchDocumentTypeDisabled = "Document type (AI unavailable)"
+matchExtension = "File extension"
+matchFilename = "Exact filename"
+matchTitle = "PDF title"
+matchValues = "Values to match"
+needsClassify = "Add a Classify step to use document-type routing, or match on a document property instead."
+nodeSummary_one = "1 route, then a fallback"
+nodeSummary_other = "{{count}} routes, then a fallback"
+toggle = "Send document types to different places"
+toggleOff = "Every document goes to the destination below."
+toggleOn = "Documents are routed by the first document condition they match."
+valuePlaceholder = "Enter exact values, separated by commas"
 
 [portal.pipelines.composer]
 addTool = "ツールを追加"
@@ -7941,6 +9063,12 @@ connectSource = "ソースを接続"
 description = "最初のパイプラインを作成します: 実行対象のソースを選び、操作を連結し、出力先を選択します。"
 title = "パイプラインはまだありません"
 
+[portal.pipelines.enforce]
+desc = "A policy blocks a file that fails it; an ordinary pipeline reports the error but lets the file through."
+info = "What enforcing as a policy means"
+label = "Enforce as policy"
+managerOnly = "Only an admin or team leader can enforce a pipeline as a policy"
+
 [portal.pipelines.graph]
 addFirstTool = "Add a tool"
 dragHint = "Drop on a line to move it"
@@ -7972,11 +9100,6 @@ failed_other = "Failed after {{done}} of {{count}} steps"
 running_one = "Running the only step"
 running_other = "Running step {{done}} of {{count}}"
 
-[portal.pipelines.kpi]
-active = "アクティブ"
-paused = "一時停止中"
-total = "パイプライン"
-
 [portal.pipelines.run]
 allProcessed_one = "実行するものがありません: ソースの {{count}} 件のドキュメントはすでに処理済みです。"
 allProcessed_other = "実行するものがありません: ソース内の全 {{count}} 件のドキュメントはすでに処理済みです。"
@@ -8000,20 +9123,29 @@ sources = "ソース"
 status = "ステータス"
 steps = "ステップ"
 trigger = "Trigger"
+type = "Type"
+
+[portal.pipelines.templates]
+setUp = "Set up"
+title = "Templates"
 
 [portal.pipelines.trigger]
+editor-export = "Every export"
+editor-upload = "Every upload"
 folder-watch = "フォルダー監視"
 manual = "手動"
 schedule = "スケジュール済み"
+storage-folder-watch = "New files in storage folder"
+
+[portal.pipelines.type]
+pipeline = "Pipeline"
+policy = "Policy"
 
 [portal.policies]
 defaultName = "{{category}} ポリシー"
-subtitle = "すべてのドキュメントにツールパイプラインを適用する常設の自動化です。各ポリシーはアップロードまたはエクスポート時に発火し、ツールチェーンを実行し、適用済みバージョンを元のファイルと並べて保存します。"
-title = "ポリシー"
 
 [portal.policies.card]
 comingSoon = "Enterprise にアップグレード"
-notSetUp = "未設定"
 requiresAiEngine = "AI エンジンが必要です"
 
 [portal.policies.categories.classification]
@@ -8053,12 +9185,6 @@ summary = "アップロードされたすべてのドキュメントをチーム
 [portal.policies.config.compliance]
 summary = "ドキュメントがシステムを離れる前に、規制フレームワークに照らして検証します。"
 
-[portal.policies.config.compliance.fields]
-accessLog = "アクセスログ"
-auditTrail = "監査証跡"
-frameworks = "フレームワーク"
-onViolation = "非準拠時"
-
 [portal.policies.config.compliance.rules]
 0 = "フレームワークスキャン"
 1 = "アクションを適用"
@@ -8067,15 +9193,15 @@ onViolation = "非準拠時"
 [portal.policies.config.ingestion]
 summary = "ドキュメントを分類し、構造化データを抽出し、命名を適用し、ページを正規化します。"
 
-[portal.policies.config.ingestion.fields]
-belowThreshold = "しきい値未満"
-minConfidence = "最小信頼度"
-
 [portal.policies.config.ingestion.rules]
 0 = "分類"
 1 = "抽出"
 2 = "命名"
 3 = "正規化"
+
+[portal.policies.config.pdfa.fields.outputFormat]
+help = "PDF/A-2b suits most archives. PDF/A-1b is the strictest and most widely accepted; PDF/A-3b additionally allows attachments."
+label = "Archival profile"
 
 [portal.policies.config.purview]
 label = "Microsoft Purview 感度ラベルを適用"
@@ -8116,11 +9242,6 @@ keepFor = "保持期間"
 [portal.policies.config.routing]
 summary = "種類と分類に基づいて、ドキュメントを適切な宛先にルーティングします。"
 
-[portal.policies.config.routing.fields]
-destination = "宛先"
-notify = "ルーティング時に通知"
-webhookUrl = "Webhook URL"
-
 [portal.policies.config.routing.rules]
 0 = "自動分類"
 1 = "フォルダーへルーティング"
@@ -8134,36 +9255,6 @@ summary = "PII を検出して墨消しし、アクティブコンテンツ（Ja
 1 = "JavaScript を削除"
 2 = "透かし"
 
-[portal.policies.detail]
-enforces = "適用内容"
-onEveryExport = "すべてのエクスポート時"
-onEveryUpload = "すべてのアップロード時"
-outputAsNewFile = "新しいファイルとして"
-outputAsNewVersion = "新しいバージョンとして"
-recentActivity = "最近のアクティビティ"
-retry = "再試行"
-showLess = "表示を減らす"
-showMore = "さらに表示"
-sources = "ソース"
-
-[portal.policies.detail.actions]
-clearHistory = "処理履歴をクリア"
-delete = "削除"
-editSettings = "設定を編集"
-pause = "一時停止"
-resume = "再開"
-runNow = "今すぐ実行"
-
-[portal.policies.detail.clearHistory]
-body = "このポリシーは、すでに処理したすべてのファイルを忘れ、次回の実行時に現在のソース内のすべてを再処理します。ファイル自体は変更されません。この操作は元に戻せません。"
-cancel = "キャンセル"
-confirm = "履歴をクリア"
-title = "処理履歴をクリアしますか？"
-
-[portal.policies.detail.emptyActivity]
-description = "このポリシーが実行されると、ドキュメントがここに表示されます。"
-title = "まだアクティビティはありません"
-
 [portal.policies.endpoints]
 addWatermark = "透かし"
 autoRedact = "PII を墨消し"
@@ -8171,12 +9262,9 @@ classifyAndLabel = "分類"
 compressPdf = "圧縮"
 flatten = "フラット化"
 ocrPdf = "OCR"
+pdfa = "Convert to PDF/A"
 sanitizePdf = "JavaScript を削除"
-
-[portal.policies.offline]
-description = "ポリシーは保存されており、接続が復元されると表示されます。"
-retry = "再試行"
-title = "Backend を利用できません"
+validateCompliance = "Validate compliance"
 
 [portal.policies.operations]
 change = "このステップの処理を変更"
@@ -8373,48 +9461,20 @@ label = "ドキュメントを webhook に投稿"
 description = "実行の詳細を自動化に渡します。"
 label = "Zap または Make シナリオをトリガー"
 
-[portal.policies.stats]
-activeFor = "アクティブ"
-dataProcessed = "処理済みデータ"
-docsEnforced = "適用済みドキュメント"
-
-[portal.policies.status]
-active = "アクティブ"
-paused = "一時停止中"
-
-[portal.policies.summary.active]
-description = "アップロード/エクスポート時に適用"
-label = "アクティブなポリシー"
-
-[portal.policies.summary.categories]
-description = "設定可能"
-label = "カテゴリ"
-
-[portal.policies.summary.docsEnforced]
-description = "アクティブなポリシー全体"
-label = "適用済みドキュメント"
-
-[portal.policies.summary.paused]
-description = "設定済みだが実行されていません"
-label = "一時停止中"
-
-[portal.policies.table]
-appliesTo = "適用先"
-docs = "適用済みドキュメント"
-enforces = "強制内容"
-policy = "ポリシー"
-status = "ステータス"
-
 [portal.policies.wizard.actions]
-back = "戻る"
 cancel = "キャンセル"
-continue = "続行"
+customise = "Customise"
+customiseUnavailable = "The full builder lives on Processor"
 enablePolicy = "ポリシーを有効化"
 saveChanges = "変更を保存"
 
 [portal.policies.wizard.capability.classify]
 desc = "チームのラベルからドキュメントの種類を識別してタグ付けし、カテゴリ別にファイルおよび検索できるようにします。"
 label = "ドキュメントを分類"
+
+[portal.policies.wizard.capability.complianceCheck]
+desc = "Validates the finished document against PDF/A and stops the run if it does not hold up."
+label = "Check the document meets the standard"
 
 [portal.policies.wizard.capability.compress]
 desc = "ドキュメントを圧縮してファイルサイズを小さくします。"
@@ -8427,6 +9487,10 @@ label = "ドキュメントをフラット化"
 [portal.policies.wizard.capability.ocr]
 desc = "OCR を実行して、スキャンしたページを選択可能で検索可能なテキストにします。"
 label = "テキストを検索可能にする"
+
+[portal.policies.wizard.capability.pdfa]
+desc = "Rewrites the document in the ISO archival format, embedding its fonts and colour profiles so it still renders the same years from now. Invalidates digital signatures."
+label = "Convert to PDF/A for archiving"
 
 [portal.policies.wizard.capability.redact]
 desc = "社会保障番号やカード番号などの機密情報を見つけて黒塗りし、読めないようにします。"
@@ -8452,38 +9516,21 @@ labelsHeading = "分類ラベル"
 noTools = "まずワークフローで少なくとも1つのツールを有効にしてください。"
 saveFailed = "ポリシーを保存できませんでした。もう一度お試しください。"
 
-[portal.policies.wizard.output]
-heading = "出力と実行"
-
-[portal.policies.wizard.output.filenameRule]
-autoNumber = "自動番号付け"
-label = "ファイル名ルール"
-placeholder = "追加するテキスト（任意）"
-prefix = "接頭辞"
-suffix = "接尾辞"
-
-[portal.policies.wizard.output.outputAs]
-label = "出力形式"
-newFile = "新しいファイル"
-newVersion = "新しいバージョン"
-
-[portal.policies.wizard.output.runOn]
-export = "エクスポート"
-helper = "ポリシーの発火タイミング：アップロード時、またはエクスポート前。"
-label = "実行タイミング"
-upload = "アップロード"
-
-[portal.policies.wizard.settings]
-heading = "設定"
+[portal.policies.wizard.routing]
+chooseDestination = "Choose a destination"
+chooseSource = "Choose what to watch"
+description = "Each document is classified first, then delivered to the first rule it matches. Anything matching none goes to the destination below."
+destinationAria = "Destination"
+labelAria = "Document types"
+labelPlaceholder = "Choose document types"
+needsDestination = "Add a destination below first - a rule needs somewhere to send documents to."
+needsSource = "Connect a folder, bucket or webhook for this policy to watch."
+remove = "Remove rule"
+sourceDescription = "Documents arriving here are classified, then sent on by the rules below."
+sourceHeading = "Watch"
 
 [portal.policies.wizard.sources]
-heading = "ソース"
-loading = "ソースを読み込み中…"
-
-[portal.policies.wizard.tabs]
-ariaLabel = "セットアップ手順"
-settings = "設定"
-workflow = "アクション"
+connect = "Connect a source"
 
 [portal.policies.wizard.title]
 edit = "{{category}} ポリシーを編集"
@@ -8491,9 +9538,6 @@ setUp = "{{category}} ポリシーをセットアップ"
 
 [portal.policies.wizard.workflow]
 description = "このポリシーが処理する各ドキュメントに何を行うかを選択します。"
-
-[portal.policySummary.action]
-setUp = "セットアップ"
 
 [portal.processorFlow]
 footnote = "件数は過去 24 時間のものです。フロー速度は例示です。"
@@ -8692,6 +9736,7 @@ sentenceTrial = "トライアルワークスペースのセットアップ"
 [portal.procurement.journey]
 daysLeft_one = "残り {{count}}日"
 daysLeft_other = "残り {{count}}日"
+expired = "Trial expired"
 
 [portal.procurement.journeySteps.agreement]
 blurb = "1つの署名で MSA、注文書、EULA、DPA をカバーします。"
@@ -8806,8 +9851,9 @@ maxed = "上限に達しました"
 subtitle = "無料トライアルは {{date}} まで有効です。カードは不要です。"
 title = "Enterprise トライアル"
 
-[portal.settings.groups]
-admin = "管理者"
+[portal.review]
+subtitle = "Anything from your policy runs and your team's editors that needs your attention."
+title = "Review"
 
 [portal.settings.sections]
 account-link = "アカウントリンク"
@@ -8817,7 +9863,6 @@ appEditor = "エディター"
 appProcessor = "プロセッサー"
 linkAccount = "Stirling アカウントをリンク"
 primaryNav = "プライマリナビゲーション"
-switchApp = "アプリを切り替え"
 
 [portal.shell.topbar]
 closeNav = "ナビゲーションを閉じる"
@@ -8825,6 +9870,7 @@ openNav = "ナビゲーションを開く"
 search = "検索"
 
 [portal.sources]
+processingModeHelp = "Track keeps originals and processes each version once. Snapshot keeps originals and processes them on every run. Consume deletes originals after successful delivery."
 subtitle = "ドキュメントを Stirling に供給する再利用可能な入力接続です。一度接続を設定すれば、任意の数のポリシーから参照できます。行をクリックすると、その設定と使用中のポリシーを確認できます。"
 title = "ソース"
 
@@ -8857,11 +9903,6 @@ cancel = "キャンセル"
 confirm = "削除"
 title = "ソースを削除しますか？"
 
-[portal.sources.kpi]
-inUse = "使用中"
-total = "接続"
-unused = "未使用"
-
 [portal.sources.networkFields.connection]
 helperText = "サーバーアドレスと認証情報を持つ保存済み接続です。それを参照するすべてのソースで再利用されます。"
 label = "接続"
@@ -8872,12 +9913,12 @@ label = "フォルダー"
 placeholder = "incoming/"
 
 [portal.sources.networkFields.mode]
-helperText = "Consume は、すべてのポリシーで処理された後、各ファイルをサーバーから削除します。"
 label = "読み取りモード"
 
 [portal.sources.networkFields.mode.options]
 consume = "Consume: 各ファイルを 1 回処理"
 snapshot = "Snapshot: 実行ごとにフォルダーを再読み取り"
+track = "Keep originals; process changes once"
 
 [portal.sources.networkFields.recursive]
 helperText = "ファイルが入れ子のフォルダーに整理されている場合はサブフォルダーを含めるか、最上位のみを監視します。"
@@ -8940,6 +9981,7 @@ label = "読み取りモード"
 [portal.sources.types.folder.fields.mode.options]
 consume = "消費: 各ファイルを1回処理"
 snapshot = "スナップショット: 実行ごとにフォルダーを再読み込み"
+track = "Keep it, and only process it again if it changes"
 
 [portal.sources.types.folder.fields.recursive]
 helperText = "ファイルが入れ子のフォルダーに整理されている場合はサブフォルダーを含めるか、最上位のみを監視します。"
@@ -8974,12 +10016,12 @@ helperText = "バケットと認証情報を保持する保存済み接続です
 label = "接続"
 
 [portal.sources.types.s3.fields.mode]
-helperText = "Consume は、すべてのポリシーで処理された後、各オブジェクトをバケットから削除します。"
 label = "読み取りモード"
 
 [portal.sources.types.s3.fields.mode.options]
 consume = "Consume: 各オブジェクトを 1 回処理"
 snapshot = "Snapshot: 実行ごとにバケットを再読み取り"
+track = "Keep originals; process changes once"
 
 [portal.sources.types.s3.fields.prefix]
 helperText = "キーがこのプレフィックスで始まるオブジェクトのみ処理されます。"
@@ -9025,7 +10067,6 @@ type = "タイプ"
 close = "閉じる"
 
 [portal.usage]
-managePayment = "支払いを管理"
 subtitle = "Stirling が請求対象としたすべての PDF の使用量、請求書、プラン管理を1つのコンソールで行えます。"
 title = "使用量と請求"
 
@@ -9033,6 +10074,14 @@ title = "使用量と請求"
 loadWallet = "ウォレットを読み込めませんでした"
 openStripePortal = "Stripe ポータルを開けませんでした"
 walletUnavailable = "ウォレットを利用できません: {{status}} {{statusText}}"
+
+[portal.usage.freeTier]
+adminOnly = "This server's monthly credits are shared by everyone on it, so only an administrator can see the figures. Everything you can run stays available."
+connect = "Connect a Stirling account"
+connectBody = "Connecting adds a second monthly allowance, raises the users this server can have, and turns on the Processor."
+connectTitle = "This server has no Stirling account"
+loadError = "Couldn't read this server's credit usage. Try again in a moment."
+loadErrorTitle = "Couldn't load credit usage"
 
 [portal.usage.sessionExpired]
 action = "再度サインイン"
@@ -9088,6 +10137,88 @@ unlimited = "{{used}} · 無制限"
 
 [printFile]
 title = "ファイルの印刷"
+
+[processingFolders.downloads]
+approve = "Process my Downloads"
+cancelSweep = "Cancel"
+capped = "You have {{found}} PDFs; the first {{limit}} are processed now and the rest follow."
+close = "Done"
+explain_one = "Stirling can classify the {{count}} PDF already in your Downloads folder and open the results here."
+explain_other = "Stirling can classify the {{count}} PDFs already in your Downloads folder and open the results here."
+failed = "Could not set that up. Your files have not been changed."
+finished_one = "Classified {{count}} file and opened {{opened}} of them here, ready to work on."
+finished_other = "Classified {{count}} files and opened {{opened}} of them here, ready to work on."
+nothingNew_one = "Nothing new to process - this {{count}} file has already been through."
+nothingNew_other = "Nothing new to process - these {{count}} files have already been through."
+notModified = "Your files in Downloads are not changed - Stirling reads them and opens them here."
+notNow = "Not now"
+progressCounts = "of {{total}} processed"
+someFailed_one = "{{count}} could not be processed and was left untouched."
+someFailed_other = "{{count}} could not be processed and were left untouched."
+stillRunning = "Some files are still being processed in the background."
+title = "Organize your Downloads?"
+trigger_one = "Process {{count}} PDF in Downloads"
+trigger_other = "Process {{count}} PDFs in Downloads"
+typesFound_one = "{{count}} document type found"
+typesFound_other = "{{count}} document types found"
+working = "Processing ..."
+
+[processingFolders.setup]
+addFolder = "Add folder"
+advancedSteps = "This folder uses a processing setup this wizard cannot edit. Its saved steps have not been changed."
+change = "Change"
+changeLocation = "Change folder location"
+chooseFolder = "Which folder should we process?"
+chooseParent = "Choose where to create the folder"
+chooseProcessing = "Choose processing"
+computer = "On this computer"
+computerDescription = "Click to choose a folder from your computer."
+computerHeading = "Process your own folder"
+createIn = "Create in"
+downloadsAction = "Try processing your downloads folder"
+dropDescription = "or click to choose one from your computer."
+dropError = "Drop a single folder here, or click to choose one."
+dropHeading = "Drop a folder here"
+editFolder = "Edit {{name}}"
+editTitle = "Edit folder processing"
+enable = "Enable processing"
+existingTitle = "Set up folder processing"
+folder = "Folder"
+folderChoice = "Use an existing folder or create one"
+folderName = "Folder name"
+fromComputer = "From computer..."
+invalidName = "Enter a folder name without path separators."
+location = "Folder location"
+namePlaceholder = "e.g. Invoices"
+newFolder = "New folder"
+noFolders = "No folders here."
+noMatchingFolders = "No matching folders."
+openFolder = "Open {{name}}"
+portalOnlyPreset = "Configure this preset in the portal."
+presetInfo = "About {{name}}"
+presetsLabel = "Processing presets"
+processing = "Processing"
+progress = "Setup progress"
+replaceWarning = "\"{{name}}\" already has processing. Saving will replace its current processing settings."
+retry = "Try again"
+review = "Review"
+saveChanges = "Save changes"
+saveFolder = "Save folder"
+searchFolders = "Search folders..."
+searchLocations = "Search locations..."
+selectFolder = "Select a folder"
+server = "Server storage"
+serverAction = "Or add a new folder to your server"
+settings = "Adjust settings"
+title = "Set up folder processing"
+useExisting = "Use existing folder"
+viewLabels = "View classification labels"
+
+[processingFolders.wall]
+done = "Done"
+failed = "Failed"
+title = "Processing this folder"
+waiting = "Queued ..."
 
 [provider.googledrive]
 name = "Google Drive"
@@ -9296,8 +10427,33 @@ automate = "自動化"
 config = "構成"
 files = "ファイル"
 
+[quickNav]
+account = "Account"
+docs = "Documentation"
+editor = "Editor"
+home = "Stirling"
+invite = "Invite"
+landmark = "Quick navigation"
+noProcessorAccess = "Ask an admin for processor access"
+notifications = "Notifications"
+processor = "Processor"
+reader = "Reader"
+
 [read]
 tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
+
+[reader.rail]
+addDocument = "Add file"
+bookmarks = "Bookmarks"
+close = "Close document"
+comment = "Comments"
+label = "Reading tools"
+readAloud = "Read aloud"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+search = "Find in document"
+switchDocument = "Switch document"
+thumbnails = "Pages"
 
 [redact]
 submit = "編集"
@@ -9817,8 +10973,11 @@ expired = "セッションが期限切れです。ページを更新してもう
 
 [settings]
 backToSections = "すべての設定"
-close = "閉じる"
 title = "設定"
+
+[settings.about]
+description = "Tours, legal documents and the licences of everything bundled with this build."
+title = "About"
 
 [settings.ai]
 documents = "ドキュメント & RAG"
@@ -9833,12 +10992,45 @@ database = "データベース"
 endpoints = "エンドポイント"
 features = "機能"
 folderAccess = "フォルダーアクセス"
+integrations = "Integrations"
 mcp = "MCP Server"
 storageSharing = "ファイルストレージと共有"
 systemSettings = "システム設定"
-title = "構成"
+
+[settings.connectedInstances]
+confirmBody = "This revokes the instance’s access to your team in Stirling Cloud. It does not delete local files or remove usage already recorded. To connect again, follow the original connection steps on the instance."
+confirmTitle = "Remove {{name}}?"
+connectedAt = "Connected: {{date}}"
+connectedDate = "Connected"
+connectHelp = "To connect a server, open Settings → Account connection on your self-hosted instance and follow the connection steps."
+copied = "ID copied"
+copyError = "Couldn’t copy the ID. Select it to copy manually."
+copyId = "Copy ID"
+details = "Details"
+displayName = "Display name (optional)"
+editName = "Edit name"
+empty = "No connected instances"
+id = "Instance ID"
+justConnected = "Connected just now"
+lastSeen = "Last seen: {{date}}"
+loadError = "Couldn’t load connected instances"
+loadErrorBody = "Your connections could not be checked. Try again."
+loading = "Loading connected instances"
+ownerOnly = "Only the team owner can manage connected instances."
+remove = "Remove connection"
+removedSuccess = "{{name}} has been disconnected from your team."
+removeError = "Couldn’t remove the connection. Try again."
+renameError = "Couldn’t save the name. Try again."
+retry = "Try again"
+saveName = "Save name"
+subtitle = "Manage the self-hosted servers connected to your team."
+teamNote = "These instances share your team’s processing allowance."
+title = "Connected instances"
+unknown = "Not available"
+yourTeam = "Your team"
 
 [settings.connection]
+description = "Work locally on this machine or connect the app to a Stirling server."
 localDescription = "アカウントなしでローカルバックエンドを使用しています。クラウド処理またはセルフホストサーバーを必要とする一部のツールは使用できません。"
 logout = "ログアウト"
 server = "サーバー"
@@ -9853,13 +11045,12 @@ selfhosted = "セルフホスト"
 
 [settings.developer]
 apiKeys = "APIキー"
+apiKeysDescription = "Personal keys for calling the Stirling API from scripts and integrations."
 title = "開発者"
 
 [settings.general]
 autoUnzip = "API 応答を自動解凍"
-autoUnzipDescription = "ZIP 応答からファイルを自動的に抽出"
 autoUnzipFileLimit = "自動解凍のファイル数上限"
-autoUnzipFileLimitDescription = "ZIP から抽出する最大ファイル数"
 autoUnzipFileLimitTooltip = "ZIP に含まれるファイル数がこの数以下の場合のみ解凍します。大きな ZIP を展開するには上限を上げてください。"
 autoUnzipTooltip = "API 操作で返された ZIP ファイルを自動的に展開します。ZIP をそのまま保持するには無効にします。自動化ワークフローには影響しません。"
 defaultPdfEditor = "既定のPDFエディター"
@@ -9910,12 +11101,6 @@ intro = "組織向けにユーザー認証、チーム管理、ワークスペ�
 learnMore = "ドキュメントで詳しく見る"
 title = "システム管理者向け"
 
-[settings.general.loginLanding]
-description = "Stirling Cloud にサインインしたときに開くアプリを選択します。"
-editor = "エディター"
-processor = "プロセッサー"
-title = "サインイン後"
-
 [settings.general.mode]
 fullscreen = "フルスクリーン"
 sidebar = "サイドバー"
@@ -9958,6 +11143,7 @@ fitPage = "ページに合わせる"
 fitWidth = "幅に合わせる"
 
 [settings.help]
+description = "Guided walkthroughs of the editor and the admin area."
 label = "ツアー"
 title = "ヘルプ"
 
@@ -9990,6 +11176,7 @@ mac = "ショートカットに⌘（Command）、⌥（Option）などの修飾
 windows = "ショートカットにCtrl、Altなどの修飾キーを含めてください。"
 
 [settings.legal]
+description = "Terms, privacy policy and your cookie preferences."
 label = "Legal"
 title = "Legal"
 
@@ -10018,9 +11205,15 @@ version = "バージョン"
 
 [settings.licensingAnalytics]
 audit = "監査"
+auditDescription = "Who did what on this server, and how long that record is kept."
 plan = "プラン"
-title = "ライセンスと分析"
+planDescription = "Your licence, seats and what the current plan unlocks."
+usage = "Usage Analytics"
 usageAnalytics = "利用分析"
+usageDescription = "How the server is being used: operations, volume and trends over time."
+
+[settings.monitoring]
+title = "Monitoring"
 
 [settings.planBilling]
 currentPlan = "現在のプラン"
@@ -10058,18 +11251,6 @@ memberCount_one = "{{count}} team member"
 memberCount_other = "{{count}} team members"
 memberCount_zero = "no team members"
 
-[settings.planBilling.tier]
-enterprise = "Enterprise"
-enterpriseDescription = "エンタープライズ向けのカスタム機能とサポート"
-free = "Free"
-freeDescription = "月 50 クレジット"
-team = "Team"
-teamBadge = "Team"
-teamDescription = "月 500 クレジットを含み、サービスが途切れない自動超過課金に対応"
-teamTooltipCredits = "Team プランには月 {{credits}} クレジットが含まれます。"
-teamTooltipFineprint = "含まれるクレジットを超えた分だけお支払いください。"
-teamTooltipOverage = "自動超過課金（{{price}}/クレジット）でサービスの継続性を確保します。"
-
 [settings.planBilling.trial]
 daysRemaining = "残り {{days}} 日"
 daysRemainingFull = "トライアルはあと {{days}} 日で終了します"
@@ -10094,6 +11275,10 @@ privacy = "プライバシー"
 title = "ポリシーとプライバシー"
 
 [settings.preferences]
+appearance = "Appearance"
+description = "How the editor looks and behaves for you, and your account."
+downloads = "Downloads"
+editorDefaults = "Editor defaults"
 title = "環境設定"
 
 [settings.security]
@@ -10120,6 +11305,10 @@ connections = "接続"
 security = "セキュリティ"
 telegram = "Telegram"
 title = "セキュリティと認証"
+
+[settings.server]
+system = "System"
+title = "Server"
 
 [settings.signOut]
 confirm = "サインアウトしてもよろしいですか？"
@@ -10797,17 +11986,26 @@ leaveButton = "チームを退出"
 leaveError = "チームの退出に失敗しました"
 leaveSuccess = "チームを退出しました"
 loading = "チーム情報を読み込み中..."
+makeOwner = "Make owner"
 memberCount_one = "{{count}} member"
 memberCount_other = "{{count}} members"
 memberCount_zero = "no members"
 memberRemoved = "メンバーを削除しました"
 namePlaceholder = "チーム名を入力"
+noOwner = "This team has no owner"
 personal = "個人"
+recoverBody = "An existing member can recover ownership to manage the team and its billing settings."
+recoverOwner = "Become team owner"
+recoverSuccess = "You are now the team owner."
 removeError = "メンバーの削除に失敗しました"
 renameCancel = "名前変更をキャンセル"
 renameError = "チーム名の変更に失敗しました"
 renameSubmit = "チーム名を保存"
 renameSuccess = "チーム名を変更しました"
+transferBody = "Make {{email}} the team owner? They will control team membership and organization billing settings. You will become a member. The team’s subscription and wallet stay with the team."
+transferError = "Ownership could not be transferred. Refresh the team and try again."
+transferSuccess = "Team ownership transferred. Your role is now member."
+transferTitle = "Transfer team ownership"
 
 [team.invitationBanner]
 acceptButton = "承認"
@@ -10912,8 +12110,6 @@ ZIP = "ZIP アーカイブ"
 [toolPanel]
 alpha = "アルファ"
 backToAllTools = "すべてのツールに戻る"
-collapse = "パネルを折りたたむ"
-expand = "パネルを展開"
 goBack = "戻る"
 pdfTools = "PDF ツール"
 placeholder = "ツールを選択して開始"
@@ -11084,6 +12280,7 @@ visits = "訪問数"
 lastActive = "最終アクティブ"
 learnMore = "ロールとアクセスについて詳しく見る。"
 locked = "ロック中"
+ownerSetupRequired = "The organization owner has not completed first login. Complete setup or ask the server operator to recover ownership before transferring ownership."
 roleFor = "{{name}} のロール"
 rowActions = "{{name}} のアクション"
 showAll = "{{count}}件すべて表示"
@@ -11105,6 +12302,7 @@ removeTeam = "チームから削除"
 rename = "チーム名を変更"
 resetPw = "パスワードをリセット"
 suspend = "停止"
+transferOwnership = "Transfer ownership"
 unlock = "アカウントのロック解除"
 
 [users.activity]
@@ -11143,6 +12341,8 @@ disableMfaTitle = "MFA をリセット"
 removeBody = "{{name}} を組織から完全に削除しますか？この操作は元に戻せません。"
 removeTeamBody = "{{name}} をチームから削除しますか？アカウントは保持されますが、このチームのリソースへのアクセス権を失います。"
 removeTitle = "メンバーを削除"
+transferOwnershipBody = "Make {{name}} the organization owner? They will become an admin. You will remain an admin but lose ownership. Only the new owner or the server operator can transfer it back."
+transferOwnershipTitle = "Transfer organization ownership"
 
 [users.empty]
 description = "チームを招待して共同作業を開始しましょう。"
@@ -11150,11 +12350,11 @@ title = "まだメンバーはいません"
 
 [users.group]
 addToTeam = "チームに追加"
+administrators = "{{count}} administrators"
 guestCount = "{{count}}人のゲスト"
 guests = "ゲスト"
 ledBy = "{{owner}} が主導"
 org = "組織"
-owners = "{{count}}人のオーナー"
 team = "{{name}} チーム"
 teamMeta = "{{count}}人"
 
@@ -11214,15 +12414,9 @@ title = "チームに移動"
 [users.newTeam]
 action = "+ 新しいチーム"
 create = "チームを作成"
-emailError = "有効なメールアドレスを入力してください"
 name = "チーム名"
 namePlaceholder = "例：財務"
 nameRequired = "チーム名は必須です"
-owner = "チーム所有者"
-ownerFailed = "チームは作成されましたが、所有者を招待できませんでした。メンバー一覧から割り当ててください。"
-ownerHelper = "各チームにはリーダーがいます。そのユーザーはチーム所有者として招待され、Processor が有効になり、他のメンバーを追加できます。後で再割り当てできます。"
-ownerPlaceholder = "owner@company.com"
-subtitle = "アクセスを管理するチーム所有者の下にユーザーをグループ化します。"
 title = "新しいチーム"
 
 [users.renameTeam]
@@ -11246,6 +12440,7 @@ title = "パスワードをリセット"
 tooShort = "パスワードは8文字以上である必要があります"
 
 [users.role]
+admin = "Admin"
 guest = "ゲスト"
 member = "メンバー"
 orgOwner = "組織所有者"
@@ -11357,11 +12552,15 @@ validUntrusted = "有効（署名者は未確認）"
 cannotPreviewFile = "ファイルをプレビューできません"
 copyText = "Copy"
 disableColorFilter = "カラーフィルターを無効化"
+documentUpdated = "Document updated"
 dualPageView = "見開き表示"
 enableDarkFilter = "ダークフィルターを有効化"
 enableSepiaFilter = "セピアフィルターを有効化"
+engineLoadError = "Failed to initialize PDF viewer engine"
+engineSlowWarning = "PDF engine initialization is taking longer than expected. Please check your browser WebAssembly and Worker settings, or reload the page."
 firstPage = "最初のページ"
 lastPage = "最後のページ"
+loadingEngine = "Loading PDF Engine..."
 moreOptions = "その他"
 nextPage = "次のページ"
 onlyPdfSupported = "このビューアは PDF ファイルのみをサポートしています。このファイルは別の形式のようです。"
@@ -11382,6 +12581,7 @@ close = "添付ファイルを閉じる"
 closeSidebar = "添付ファイルのサイドバーを閉じる"
 download = "添付ファイルをダウンロード"
 empty = "このドキュメントには添付ファイルがありません"
+loadFailed = "Failed to load attachments"
 loading = "添付ファイルを読み込み中..."
 noDocument = "添付ファイルを表示するには PDF を開いてください。"
 noMatch = "検索条件に一致する添付ファイルはありません"
@@ -11389,6 +12589,7 @@ noSupport = "このビューアでは添付ファイルはサポートされて�
 retry = "再試行"
 searchPlaceholder = "添付ファイルを検索"
 title = "添付ファイル"
+untitled = "Untitled"
 
 [viewer.bookmarks]
 addBookmark = "Add bookmark"
@@ -11396,6 +12597,7 @@ bookmarkTitle = "ブックマークのタイトル"
 bookmarkTitleRequired = "ブックマークのタイトルは必須です"
 closeSidebar = "ブックマークのサイドバーを閉じる"
 collapseAll = "すべてのブックマークを折りたたむ"
+editorOnly = "This document's bookmarks can only be edited in the editor."
 empty = "No bookmarks in this document"
 expandAll = "すべてのブックマークを展開"
 searchPlaceholder = "ブックマークを検索"
@@ -11471,7 +12673,19 @@ renderMarkdown = "Markdown をレンダリング"
 sortedBy = "並び替え基準: {{column}}"
 textStats = "{{lines}} 行 · {{size}}"
 
+[viewer.portfolio]
+addFile = "Add file"
+count_one = "{{count}} file in this portfolio"
+count_other = "{{count}} files in this portfolio"
+import = "Import into Stirling"
+importFailed = "This file could not be added to your workspace."
+memberUnavailable = "This file could not be read from the portfolio."
+preview = "Preview"
+searchPlaceholder = "Search files"
+title = "Portfolio"
+
 [viewer.redaction]
+applyAll = "Apply Redactions"
 removeMark = "このマークを削除"
 
 [viewer.search]
@@ -11796,6 +13010,10 @@ title = "透かしテキスト"
 image = "画像"
 text = "テキスト"
 
+[workbench.sessionRestore]
+none = "Your previous files are no longer stored on this device."
+partial = "Restored {{restored}} of {{total}} files. The rest are no longer stored on this device."
+
 [workbenchBar]
 activeFiles = "アクティブなファイル"
 annotations = "注釈"
@@ -11897,10 +13115,10 @@ lockedBadge = "ロック中"
 loginRequired = "先にログインモードを有効にしてください"
 memberActions = "メンバー操作"
 noMembersFound = "メンバーが見つかりません"
+ownerLocked = "Transfer organization ownership in Settings → Workspace → Users before changing the owner’s role or account."
 role = "役割"
 searchMembers = "メンバーを検索..."
 team = "チーム"
-title = "メンバー"
 unlockAccount = "アカウントのロックを解除"
 unlockUserError = "ユーザーアカウントのロック解除に失敗しました"
 unlockUserSuccess = "ユーザーアカウントのロックを解除しました"
@@ -12054,7 +13272,6 @@ system = "システム"
 teamActions = "チーム操作"
 teamName = "チーム名"
 teamNotFound = "チームが見つかりません"
-title = "チーム"
 totalMembers = "メンバー総数"
 viewTeam = "チームを表示"
 
