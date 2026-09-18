@@ -5,6 +5,7 @@ import {
   PDFDocument,
   PDFName,
   PDFNumber,
+  PDFObject,
   PDFString,
 } from "@cantoo/pdf-lib";
 
@@ -30,7 +31,7 @@ const measureDict = (
   unit: string,
 ): PDFDict => {
   const fmt = PDFDict.fromMapWithContext(
-    new Map([
+    new Map<PDFName, PDFObject>([
       [PDFName.of("C"), PDFNumber.of(factor)],
       [PDFName.of("U"), PDFString.of(unit)],
     ]),
@@ -74,7 +75,7 @@ describe("extractPageMeasureScales", () => {
     const bbox = PDFArray.withContext(doc.context);
     for (const n of [0, 0, 600, 800]) bbox.push(PDFNumber.of(n));
     const entry = PDFDict.fromMapWithContext(
-      new Map([
+      new Map<PDFName, PDFObject>([
         [PDFName.of("Measure"), measureDict(doc, 25.4, "mm")],
         [PDFName.of("BBox"), bbox],
       ]),
