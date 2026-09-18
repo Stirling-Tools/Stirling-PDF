@@ -83,7 +83,11 @@ export function DocumentSwapBridge({
           if (!cancelled) onFailed(error);
         }
       })
-      .catch(onFailed);
+      .catch((error) => {
+        // A superseded open rejecting must not clear the newer pending
+        // document its replacement already queued.
+        if (!cancelled && generation === generationRef.current) onFailed(error);
+      });
 
     return () => {
       cancelled = true;
