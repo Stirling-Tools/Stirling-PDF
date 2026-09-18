@@ -52,6 +52,7 @@ import stirling.software.proprietary.policy.source.SourceController;
 import stirling.software.proprietary.policy.source.SourceOverviewService;
 import stirling.software.proprietary.policy.store.InProcessPolicyStore;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
+import stirling.software.proprietary.security.configuration.ee.DatabaseLicenseGuard;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.storage.model.FilePurpose;
@@ -155,7 +156,9 @@ class StorageFolderAuthorizationTest {
                         new InProcessSourceDocCounter(),
                         new InProcessProcessedLedger(),
                         properties,
-                        policies);
+                        policies,
+                        mock(DatabaseLicenseGuard.class),
+                        mock(org.springframework.context.ApplicationEventPublisher.class));
     }
 
     @Test

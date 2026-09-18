@@ -9,5 +9,7 @@ package stirling.software.proprietary.policy.engine;
 public enum SweepKind {
     FULL,
     LIGHT,
-    USER
+    USER,
+    /** Full listing with at most 100 new runs, leaving the rest for the next automatic sweep. */
+    BATCH
 }

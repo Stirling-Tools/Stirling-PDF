@@ -26,7 +26,11 @@ export function PortalBillingGate() {
   const { openLinkModal, trialSetupRequested } = useUI();
   const { loading, gated, connect } = useConnectGate();
   const isAdmin = usePortalAdmin();
-  const { serverPlan, loading: licenseLoading } = useServerPlan(isAdmin);
+  const {
+    serverPlan,
+    usersInUse,
+    loading: licenseLoading,
+  } = useServerPlan(isAdmin);
   const serverPlanAction = serverPlan ? <ManageBillingButton /> : undefined;
   const link = useLinkOptional();
   const [searchParams] = useSearchParams();
@@ -66,6 +70,7 @@ export function PortalBillingGate() {
     );
   return (
     <Usage
+      localUsersInUse={usersInUse}
       serverPlan={serverPlan}
       serverPlanAction={serverPlanAction}
       onWalletLoaded={onWalletLoaded}

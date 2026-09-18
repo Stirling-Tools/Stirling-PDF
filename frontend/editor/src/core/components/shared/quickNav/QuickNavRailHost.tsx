@@ -17,6 +17,7 @@ import { stripBasePath } from "@app/constants/app";
 import { rememberSettingsOrigin } from "@app/utils/settingsNavigation";
 import { canCreateProcessingFolders } from "@app/hooks/useProcessingFolderCreation";
 import { requestProcessingFolderCreation } from "@app/utils/pendingProcessingFolderCreation";
+import { requestProcessorSignup } from "@app/services/processorSignup";
 
 import { Icon } from "@app/ui/Icon";
 const SIZE = "1.125rem";
@@ -114,12 +115,17 @@ export function QuickNavRailHost() {
     label: t("quickNav.processor", "Processor"),
     icon: <Icon name="cpu" size={SIZE} filled={inPortal} />,
     current: inPortal,
-    disabled: HAS_PORTAL && !inPortal && !host?.portalAccess,
+    disabled:
+      HAS_PORTAL && !inPortal && !host?.portalAccess && !host?.isAnonymous,
     reason:
-      HAS_PORTAL && !inPortal && !host?.portalAccess
+      HAS_PORTAL && !inPortal && !host?.portalAccess && !host?.isAnonymous
         ? t("quickNav.noProcessorAccess", "Ask an admin for processor access")
         : undefined,
     onClick: () => {
+      if (host?.isAnonymous) {
+        requestProcessorSignup();
+        return;
+      }
       if (inPortal) {
         returnHome();
         return;
@@ -176,6 +182,10 @@ export function QuickNavRailHost() {
             label: t("processingFolders.setup.title"),
             icon: <Icon name="folder-plus" size={SIZE} />,
             onClick: () => {
+              if (host?.isAnonymous) {
+                requestProcessorSignup();
+                return;
+              }
               const open = host?.actions.current?.createProcessingFolder;
               if (open) open();
               else

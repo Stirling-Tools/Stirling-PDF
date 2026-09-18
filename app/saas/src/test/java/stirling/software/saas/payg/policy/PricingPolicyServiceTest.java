@@ -201,10 +201,13 @@ class PricingPolicyServiceTest {
         PricingPolicy promoted = policy(2L, "v1-enterprise", true);
         when(policyRepo.findById(2L)).thenReturn(Optional.of(overridePolicy));
         when(policyRepo.save(any(PricingPolicy.class))).thenReturn(promoted);
+        defaultPolicy.setTeamIncludedUnits(2700L);
+        when(policyRepo.findFirstByIsDefaultTrue()).thenReturn(Optional.of(defaultPolicy));
 
         PricingPolicy result = service.setDefault(2L);
 
         verify(policyRepo).clearDefaultFlag();
+        assertThat(overridePolicy.getTeamIncludedUnits()).isEqualTo(2700L);
         assertThat(result.getIsDefault()).isTrue();
         verify(events, atLeastOnce()).publishEvent(any(PolicyChangedEvent.class));
     }

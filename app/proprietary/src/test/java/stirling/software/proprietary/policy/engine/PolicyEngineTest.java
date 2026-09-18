@@ -287,7 +287,11 @@ class PolicyEngineTest {
                         new InProcessSourceDocCounter(),
                         ledger,
                         properties,
-                        mock(PolicyAccessGuard.class));
+                        mock(PolicyAccessGuard.class),
+                        org.mockito.Mockito.mock(
+                                stirling.software.proprietary.security.configuration.ee
+                                        .DatabaseLicenseGuard.class),
+                        mock(org.springframework.context.ApplicationEventPublisher.class));
 
         SweepOutcome outcome = runner.run(policy);
 
