@@ -17,6 +17,8 @@ import {
   savedToastBody,
 } from "@app/components/shared/config/configSections/aiEngineSettings";
 import { AiConnectionCard } from "@app/components/shared/config/configSections/ai/AiConnectionCard";
+import { AiStatusCard } from "@app/components/shared/config/configSections/ai/AiStatusCard";
+import { AiAboutNotice } from "@app/components/shared/config/configSections/ai/AiAboutNotice";
 import { AiCapabilitiesCard } from "@app/components/shared/config/configSections/ai/AiCapabilitiesCard";
 import { AiModelsCard } from "@app/components/shared/config/configSections/ai/AiModelsCard";
 import { AiDocumentsCard } from "@app/components/shared/config/configSections/ai/AiDocumentsCard";
@@ -26,6 +28,7 @@ import "@app/components/shared/config/configSections/ai/AdminAiSection.css";
 /** Keys the backend applies only on restart; everything else is pushed live. */
 const RESTART_KEYS = [
   "enabled",
+  "mode",
   "url",
   "timeoutSeconds",
   "longRunningTimeoutSeconds",
@@ -83,6 +86,9 @@ export default function AdminAiSection() {
 
       const deltaSettings: Record<string, unknown> = {
         "aiEngine.enabled": s.enabled ?? false,
+        "aiEngine.mode": s.mode ?? "SELF_HOSTED",
+        "aiEngine.cloud.allowDocumentUpload":
+          s.cloud?.allowDocumentUpload ?? false,
         "aiEngine.url": s.url ?? "",
         // Timeouts must be >= 1s; a 0 would make every engine call fail/deadlock.
         "aiEngine.timeoutSeconds": clampMin(s.timeoutSeconds, 1),
@@ -213,14 +219,26 @@ export default function AdminAiSection() {
     <div className="settings-section-container">
       <Stack gap="lg" className="settings-section-content">
         <SettingsCard
+          id="adminAiStatus"
+          title={t("admin.settings.ai.status.title", "Status")}
+          description={t(
+            "admin.settings.ai.status.description",
+            "Whether the engine is reachable, whether it accepts this server, and what it is running.",
+          )}
+        >
+          <AiStatusCard settings={settings} />
+        </SettingsCard>
+
+        <SettingsCard
           id="adminAiGeneral"
           title={t("admin.settings.ai.general.connection", "Connection")}
           description={t(
             "admin.settings.ai.general.description",
-            "Connect Stirling to the Python AI engine and choose which AI capabilities are exposed. Changes apply on restart.",
+            "Choose where AI runs. Changes here apply on restart.",
           )}
         >
           <AiConnectionCard {...card} />
+          <AiAboutNotice />
         </SettingsCard>
 
         <SettingsCard

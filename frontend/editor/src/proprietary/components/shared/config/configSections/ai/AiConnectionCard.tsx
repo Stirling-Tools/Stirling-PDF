@@ -1,25 +1,103 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { useTranslation } from "react-i18next";
 import {
   TextInput,
   NumberInput,
-  Switch,
+  Radio,
   Stack,
   Paper,
   Text,
   Group,
-  Alert,
-  Code,
 } from "@mantine/core";
 import { alert } from "@app/components/toast";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import apiClient from "@app/services/apiClient";
 import { Button } from "@app/ui/Button";
+import { StatusBadge } from "@app/ui/StatusBadge";
+import { Switch } from "@mantine/core";
+import { useAccountLinked } from "@app/components/shared/config/configSections/ai/useAiEngineStatus";
 import type { AiCardProps } from "@app/components/shared/config/configSections/ai/aiCardProps";
 
-/** Whether the engine is on and how to reach it. Restart-required, all of it. */
+/** The three places AI could run. Only two of them exist. */
+type AiMode = "off" | "self" | "cloud";
+
+interface ModeOptionProps {
+  mode: AiMode;
+  selected: AiMode;
+  title: string;
+  description: string;
+  onSelect: (mode: AiMode) => void;
+  disabled?: boolean;
+  badge?: ReactNode;
+  icon?: string;
+  children?: ReactNode;
+}
+
+/**
+ * One row of the mode chooser. A real radio, so the group is arrow-navigable and screen readers
+ * announce it as a choice rather than three unrelated switches.
+ */
+function ModeOption({
+  mode,
+  selected,
+  title,
+  description,
+  onSelect,
+  disabled = false,
+  badge,
+  icon,
+  children,
+}: ModeOptionProps) {
+  const active = selected === mode;
+  return (
+    <Paper
+      withBorder
+      p="md"
+      radius="md"
+      style={{
+        borderColor: active ? "var(--c-accent-text)" : undefined,
+        opacity: disabled ? 0.75 : 1,
+      }}
+    >
+      <Group gap="sm" align="flex-start" wrap="nowrap">
+        <Radio
+          value={mode}
+          checked={active}
+          disabled={disabled}
+          onChange={() => onSelect(mode)}
+          aria-label={title}
+          mt={2}
+        />
+        <div style={{ flexGrow: 1, minWidth: 0 }}>
+          <Group gap="xs" align="center" wrap="nowrap">
+            {icon && <LocalIcon icon={icon} width="1rem" height="1rem" />}
+            <Text fw={600} size="sm">
+              {title}
+            </Text>
+            {badge}
+          </Group>
+          <Text size="sm" c="dimmed" mt={2}>
+            {description}
+          </Text>
+          {active && children ? <div>{children}</div> : null}
+        </div>
+      </Group>
+    </Paper>
+  );
+}
+
+/**
+ * Where AI runs, and - for a self-hosted engine - how to reach it.
+ *
+ * Was a bare "Enable AI" switch above four always-visible fields, which gave the URL and timeouts
+ * equal billing with the decision that makes them relevant. As a mode choice the engine fields sit
+ * under the option that owns them, and there is somewhere honest to put Stirling Cloud: visible, so
+ * the option is discoverable, and disabled, because nothing behind it exists yet.
+ *
+ * Every key here is restart-required.
+ */
 export function AiConnectionCard({
   settings,
   setSettings,
@@ -28,6 +106,28 @@ export function AiConnectionCard({
   const { t } = useTranslation();
   const [testingConnection, setTestingConnection] = useState(false);
   const enabled = settings.enabled || false;
+  const linked = useAccountLinked();
+  const mode: AiMode = !enabled
+    ? "off"
+    : settings.mode === "CLOUD"
+      ? "cloud"
+      : "self";
+
+  const selectMode = (next: AiMode) => {
+    if (next === "cloud" && !linked) return;
+    setSettings({
+      ...settings,
+      enabled: next !== "off",
+      // Leave the stored mode alone when switching off, so turning AI back on returns the admin
+      // to the engine they had rather than silently moving their traffic.
+      mode:
+        next === "off"
+          ? settings.mode
+          : next === "cloud"
+            ? "CLOUD"
+            : "SELF_HOSTED",
+    });
+  };
 
   const handleTestConnection = async () => {
     setTestingConnection(true);
@@ -66,174 +166,246 @@ export function AiConnectionCard({
   };
 
   return (
-    <>
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="md">
-          <Group justify="space-between" align="flex-start" wrap="nowrap">
-            <div>
-              <Text fw={500} size="sm">
-                {t("admin.settings.ai.general.enabled.label", "Enable AI")}{" "}
-                <InfoTooltip
-                  label={t(
-                    "admin.settings.ai.general.enabled.description",
-                    "Master switch. When off, no AI tools, agents, or engine calls are available.",
-                  )}
-                />
+    <Radio.Group
+      value={mode}
+      onChange={(value) => selectMode(value as AiMode)}
+      aria-label={t("admin.settings.ai.general.mode.label", "Where AI runs")}
+    >
+      <Stack gap="sm">
+        <ModeOption
+          mode="off"
+          selected={mode}
+          onSelect={selectMode}
+          title={t("admin.settings.ai.general.mode.off.title", "Off")}
+          description={t(
+            "admin.settings.ai.general.mode.off.description",
+            "No AI tools anywhere in the app, and nothing leaves this server.",
+          )}
+        />
+
+        <ModeOption
+          mode="self"
+          selected={mode}
+          onSelect={selectMode}
+          title={t(
+            "admin.settings.ai.general.mode.self.title",
+            "Run your own engine",
+          )}
+          description={t(
+            "admin.settings.ai.general.mode.self.description",
+            "A container you host, pointed at a model provider of your choosing. Your key, your bill, your data path.",
+          )}
+          badge={<PendingBadge show={isFieldPending("enabled")} />}
+        >
+          <Stack gap="sm" mt="md">
+            <TextInput
+              label={
+                <Group gap="xs">
+                  <span>
+                    {t("admin.settings.ai.general.url.label", "AI engine URL")}
+                  </span>
+                  <PendingBadge show={isFieldPending("url")} />
+                  <InfoTooltip
+                    label={t(
+                      "admin.settings.ai.general.url.description",
+                      "Internal URL of the Python AI engine, e.g. http://stirling-pdf-engine:5001.",
+                    )}
+                  />
+                </Group>
+              }
+              value={settings.url || ""}
+              onChange={(e) =>
+                setSettings({ ...settings, url: e.target.value })
+              }
+              placeholder="http://stirling-pdf-engine:5001"
+            />
+
+            <Group
+              gap="sm"
+              grow
+              align="flex-start"
+              style={{ alignItems: "flex-start" }}
+            >
+              <NumberInput
+                label={
+                  <Group gap="xs">
+                    <span>
+                      {t(
+                        "admin.settings.ai.general.timeoutSeconds.label",
+                        "Request timeout (seconds)",
+                      )}
+                    </span>
+                    <PendingBadge show={isFieldPending("timeoutSeconds")} />
+                    <InfoTooltip
+                      label={t(
+                        "admin.settings.ai.general.timeoutSeconds.description",
+                        "Timeout for standard AI requests to the engine.",
+                      )}
+                    />
+                  </Group>
+                }
+                value={settings.timeoutSeconds ?? 0}
+                onChange={(value) =>
+                  setSettings({ ...settings, timeoutSeconds: Number(value) })
+                }
+                min={1}
+              />
+
+              <NumberInput
+                label={
+                  <Group gap="xs">
+                    <span>
+                      {t(
+                        "admin.settings.ai.general.longRunningTimeoutSeconds.label",
+                        "Long-running timeout (seconds)",
+                      )}
+                    </span>
+                    <PendingBadge
+                      show={isFieldPending("longRunningTimeoutSeconds")}
+                    />
+                    <InfoTooltip
+                      label={t(
+                        "admin.settings.ai.general.longRunningTimeoutSeconds.description",
+                        "Timeout for heavier agent operations such as document generation.",
+                      )}
+                    />
+                  </Group>
+                }
+                value={settings.longRunningTimeoutSeconds ?? 0}
+                onChange={(value) =>
+                  setSettings({
+                    ...settings,
+                    longRunningTimeoutSeconds: Number(value),
+                  })
+                }
+                min={1}
+              />
+
+              <NumberInput
+                label={
+                  <Group gap="xs">
+                    <span>
+                      {t(
+                        "admin.settings.ai.general.streamTimeoutSeconds.label",
+                        "Stream timeout (seconds)",
+                      )}
+                    </span>
+                    <PendingBadge
+                      show={isFieldPending("streamTimeoutSeconds")}
+                    />
+                    <InfoTooltip
+                      label={t(
+                        "admin.settings.ai.general.streamTimeoutSeconds.description",
+                        "Timeout for streamed (token-by-token) chat responses.",
+                      )}
+                    />
+                  </Group>
+                }
+                value={settings.streamTimeoutSeconds ?? 0}
+                onChange={(value) =>
+                  setSettings({
+                    ...settings,
+                    streamTimeoutSeconds: Number(value),
+                  })
+                }
+                min={1}
+              />
+            </Group>
+
+            <Group justify="space-between" align="center">
+              <Text size="xs" c="dimmed">
+                {t(
+                  "admin.settings.ai.general.restartNote",
+                  "Changing the URL or any timeout takes effect after a restart.",
+                )}
               </Text>
-            </div>
-            <Group gap="xs">
+              <Button
+                variant="secondary"
+                size="sm"
+                loading={testingConnection}
+                onClick={handleTestConnection}
+              >
+                {t("admin.settings.ai.general.test.button", "Test connection")}
+              </Button>
+            </Group>
+          </Stack>
+        </ModeOption>
+
+        <ModeOption
+          mode="cloud"
+          selected={mode}
+          onSelect={selectMode}
+          disabled={linked === false}
+          icon="cloud-rounded"
+          title={t(
+            "admin.settings.ai.general.mode.cloud.title",
+            "Use Stirling Cloud AI",
+          )}
+          description={t(
+            "admin.settings.ai.general.mode.cloud.description",
+            "No container, no provider key, no model choice — the work runs on Stirling Cloud and is billed to the account this server is linked to.",
+          )}
+          badge={
+            linked === false ? (
+              <StatusBadge tone="neutral" size="sm" showDot={false}>
+                {t(
+                  "admin.settings.ai.general.mode.cloud.notLinked",
+                  "Link an account first",
+                )}
+              </StatusBadge>
+            ) : null
+          }
+        >
+          <Stack gap="sm" mt="md">
+            <Group justify="space-between" align="flex-start" wrap="nowrap">
+              <div style={{ flexGrow: 1, minWidth: 0 }}>
+                <Group gap={4} wrap="nowrap">
+                  <Text fw={500} size="sm">
+                    {t(
+                      "admin.settings.ai.general.cloud.upload.label",
+                      "Send documents to Stirling Cloud",
+                    )}
+                  </Text>
+                  <InfoTooltip
+                    label={t(
+                      "admin.settings.ai.general.cloud.upload.description",
+                      "Chat and single questions send only the text a request needs. Indexing a document for repeated questions uploads the whole file, and Stirling Cloud then stores it.",
+                    )}
+                  />
+                </Group>
+                <Text size="sm" c="dimmed" mt={2}>
+                  {t(
+                    "admin.settings.ai.general.cloud.upload.help",
+                    "Off means document questions are unavailable rather than quietly uploading your files.",
+                  )}
+                </Text>
+              </div>
               <Switch
-                checked={enabled}
+                checked={settings.cloud?.allowDocumentUpload ?? false}
                 onChange={(e) =>
-                  setSettings({ ...settings, enabled: e.target.checked })
+                  setSettings({
+                    ...settings,
+                    cloud: {
+                      ...(settings.cloud || {}),
+                      allowDocumentUpload: e.target.checked,
+                    },
+                  })
                 }
                 aria-label={t(
-                  "admin.settings.ai.general.enabled.label",
-                  "Enable AI",
+                  "admin.settings.ai.general.cloud.upload.label",
+                  "Send documents to Stirling Cloud",
                 )}
               />
-              <PendingBadge show={isFieldPending("enabled")} />
             </Group>
-          </Group>
-
-          <TextInput
-            label={
-              <Group gap="xs">
-                <span>
-                  {t("admin.settings.ai.general.url.label", "AI engine URL")}
-                </span>
-                <PendingBadge show={isFieldPending("url")} />
-                <InfoTooltip
-                  label={t(
-                    "admin.settings.ai.general.url.description",
-                    "Internal URL of the Python AI engine, e.g. http://stirling-pdf-engine:5001.",
-                  )}
-                />
-              </Group>
-            }
-            value={settings.url || ""}
-            onChange={(e) => setSettings({ ...settings, url: e.target.value })}
-            placeholder="http://stirling-pdf-engine:5001"
-            disabled={!enabled}
-          />
-
-          <Group justify="flex-end">
-            <Button
-              variant="secondary"
-              size="sm"
-              loading={testingConnection}
-              onClick={handleTestConnection}
-            >
-              {t("admin.settings.ai.general.test.button", "Test connection")}
-            </Button>
-          </Group>
-
-          <NumberInput
-            label={
-              <Group gap="xs">
-                <span>
-                  {t(
-                    "admin.settings.ai.general.timeoutSeconds.label",
-                    "Request timeout (seconds)",
-                  )}
-                </span>
-                <PendingBadge show={isFieldPending("timeoutSeconds")} />
-                <InfoTooltip
-                  label={t(
-                    "admin.settings.ai.general.timeoutSeconds.description",
-                    "Timeout for standard AI requests to the engine.",
-                  )}
-                />
-              </Group>
-            }
-            value={settings.timeoutSeconds ?? 0}
-            onChange={(value) =>
-              setSettings({ ...settings, timeoutSeconds: Number(value) })
-            }
-            min={1}
-            disabled={!enabled}
-          />
-
-          <NumberInput
-            label={
-              <Group gap="xs">
-                <span>
-                  {t(
-                    "admin.settings.ai.general.longRunningTimeoutSeconds.label",
-                    "Long-running timeout (seconds)",
-                  )}
-                </span>
-                <PendingBadge
-                  show={isFieldPending("longRunningTimeoutSeconds")}
-                />
-                <InfoTooltip
-                  label={t(
-                    "admin.settings.ai.general.longRunningTimeoutSeconds.description",
-                    "Timeout for heavier agent operations such as document generation.",
-                  )}
-                />
-              </Group>
-            }
-            value={settings.longRunningTimeoutSeconds ?? 0}
-            onChange={(value) =>
-              setSettings({
-                ...settings,
-                longRunningTimeoutSeconds: Number(value),
-              })
-            }
-            min={1}
-            disabled={!enabled}
-          />
-
-          <NumberInput
-            label={
-              <Group gap="xs">
-                <span>
-                  {t(
-                    "admin.settings.ai.general.streamTimeoutSeconds.label",
-                    "Stream timeout (seconds)",
-                  )}
-                </span>
-                <PendingBadge show={isFieldPending("streamTimeoutSeconds")} />
-                <InfoTooltip
-                  label={t(
-                    "admin.settings.ai.general.streamTimeoutSeconds.description",
-                    "Timeout for streamed (token-by-token) chat responses.",
-                  )}
-                />
-              </Group>
-            }
-            value={settings.streamTimeoutSeconds ?? 0}
-            onChange={(value) =>
-              setSettings({
-                ...settings,
-                streamTimeoutSeconds: Number(value),
-              })
-            }
-            min={1}
-            disabled={!enabled}
-          />
-        </Stack>
-      </Paper>
-
-      <Alert
-        variant="light"
-        color="blue"
-        title={t("admin.settings.ai.general.note.title", "About the AI engine")}
-        icon={<LocalIcon icon="info-rounded" width="1rem" height="1rem" />}
-      >
-        <Text size="xs">
-          {t(
-            "admin.settings.ai.general.note.body",
-            "The AI engine runs as a separate service. Its shared secret",
-          )}{" "}
-          <Code>STIRLING_ENGINE_SHARED_SECRET</Code>{" "}
-          {t(
-            "admin.settings.ai.general.note.body2",
-            "is set via a container environment variable. Provider API keys can be entered on these pages or supplied as engine environment variables; keys entered here are pushed to the engine when saved.",
-          )}
-        </Text>
-      </Alert>
-    </>
+            <Text size="xs" c="dimmed">
+              {t(
+                "admin.settings.ai.general.cloud.note",
+                "Models and provider keys are managed by Stirling Cloud, so those settings do not apply in this mode.",
+              )}
+            </Text>
+          </Stack>
+        </ModeOption>
+      </Stack>
+    </Radio.Group>
   );
 }
