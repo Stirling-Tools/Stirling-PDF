@@ -57,7 +57,7 @@ it("keeps payment language for a first purchase", () => {
       />
     </MantineProvider>,
   );
-  expect(screen.getByText("Due today")).toBeInTheDocument();
+  expect(screen.getByText("Estimated total")).toBeInTheDocument();
   expect(
     screen.getByRole("button", { name: "Continue to payment" }),
   ).toBeEnabled();

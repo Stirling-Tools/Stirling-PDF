@@ -77,9 +77,29 @@ async function invoke<T>(
   }
   const { data, error } = await supabase.functions.invoke<T>(name, { body });
   if (error) {
-    throw new StripeFunctionError(
-      error.message ?? `Edge function ${name} failed`,
-    );
+    let message = error.message ?? `Edge function ${name} failed`;
+    let code: string | undefined;
+    if (error.context instanceof Response) {
+      try {
+        const details: unknown = await error.context.clone().json();
+        if (details && typeof details === "object") {
+          if ("error" in details && typeof details.error === "string") {
+            code = details.error;
+            message = details.error;
+          }
+          if ("message" in details && typeof details.message === "string")
+            message = details.message;
+          if (
+            "stripe_error" in details &&
+            typeof details.stripe_error === "string"
+          )
+            message = details.stripe_error;
+        }
+      } catch {
+        // Gateway failures may not return JSON.
+      }
+    }
+    throw new StripeFunctionError(message, code);
   }
   if (data == null) {
     throw new StripeFunctionError(`Edge function ${name} returned no data`);
@@ -303,10 +323,42 @@ export async function createCheckoutSession(
   };
 }
 
+export interface BundlePricing {
+  currency: string;
+  unitAmountMinor: number;
+}
+
+/** Reads the customer's billing currency and configured rate without creating a quote. */
+export async function fetchBundlePricing(
+  teamId: number,
+): Promise<BundlePricing> {
+  const res = await invoke<{
+    success?: boolean;
+    currency?: string;
+    unit_amount_minor?: number;
+    error?: string;
+  }>("create-payg-bundle-quote", { team_id: teamId, preview: true });
+  if (
+    !res.success ||
+    !res.currency ||
+    res.unit_amount_minor == null ||
+    !Number.isFinite(res.unit_amount_minor) ||
+    res.unit_amount_minor <= 0
+  ) {
+    throw new StripeFunctionError(
+      res.error ?? "Bundle pricing is unavailable.",
+    );
+  }
+  return { currency: res.currency, unitAmountMinor: res.unit_amount_minor };
+}
+
 /** Result of {@link createBundleStripeQuote} — the Stripe-issued quote handles. */
 export interface BundleStripeQuote {
   stripeQuoteId: string;
   stripeQuoteNumber: string | null;
+  currency?: string;
+  amountSubtotal?: number;
+  amountTotal?: number;
 }
 
 interface BundleStripeQuoteRequest {
@@ -320,6 +372,9 @@ interface BundleStripeQuoteRequest {
 }
 
 interface BundleStripeQuoteResponse {
+  currency?: string;
+  amount_subtotal?: number;
+  amount_total?: number;
   success?: boolean;
   stripe_quote_id?: string;
   stripe_quote_number?: string | null;
@@ -351,6 +406,13 @@ export async function createBundleStripeQuote(
   return {
     stripeQuoteId: res.stripe_quote_id,
     stripeQuoteNumber: res.stripe_quote_number ?? null,
+    ...(res.currency
+      ? {
+          currency: res.currency,
+          amountSubtotal: res.amount_subtotal,
+          amountTotal: res.amount_total,
+        }
+      : {}),
   };
 }
 

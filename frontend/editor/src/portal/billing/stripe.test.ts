@@ -24,6 +24,7 @@ import {
   createCheckoutSession,
   createPortalSession,
   fetchBundleQuotePdf,
+  fetchBundlePricing,
   finalizeBundleInvoice,
   getLatestBundleQuote,
   StripeFunctionError,
@@ -380,5 +381,61 @@ describe("createPortalSession", () => {
     await expect(
       createPortalSession({ teamId: 1, returnUrl: "r" }),
     ).rejects.toBeInstanceOf(StripeFunctionError);
+  });
+});
+
+it("reads Stripe's billing currency and fractional credit rate before prepay", async () => {
+  invoke.mockResolvedValue({
+    data: { success: true, currency: "gbp", unit_amount_minor: 0.75 },
+    error: null,
+  });
+  expect(await fetchBundlePricing(42)).toEqual({
+    currency: "gbp",
+    unitAmountMinor: 0.75,
+  });
+  expect(invoke).toHaveBeenCalledWith("create-payg-bundle-quote", {
+    body: { team_id: 42, preview: true },
+  });
+});
+
+it("uses the minted quote's currency and total instead of the estimate", async () => {
+  invoke.mockResolvedValue({
+    data: {
+      success: true,
+      stripe_quote_id: "qt_1",
+      currency: "gbp",
+      amount_subtotal: 12000,
+      amount_total: 10000,
+    },
+    error: null,
+  });
+  expect(
+    await createBundleStripeQuote({ teamId: 42, quoteId: 7 }),
+  ).toMatchObject({
+    currency: "gbp",
+    amountSubtotal: 12000,
+    amountTotal: 10000,
+  });
+});
+
+it("shows Stripe's error details when a quote request fails", async () => {
+  invoke.mockResolvedValue({
+    data: null,
+    error: {
+      message: "Edge Function returned a non-2xx status code",
+      context: new Response(
+        JSON.stringify({
+          error: "quote_creation_failed",
+          stripe_error: "Currency mismatch",
+        }),
+        { status: 500 },
+      ),
+    },
+  });
+  await expect(
+    createBundleStripeQuote({ teamId: 42, quoteId: 7 }),
+  ).rejects.toMatchObject({
+    code: "quote_creation_failed",
+    message: "Currency mismatch",
   });
 });

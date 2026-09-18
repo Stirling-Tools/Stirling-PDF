@@ -423,7 +423,7 @@ function CheckoutStep({
       >
         <StripeCheckoutPanel
           teamId={teamId}
-          currency={currency?.toLowerCase() ?? "gbp"}
+          currency={currency?.toLowerCase() ?? "usd"}
           capUsd={effectiveCap}
           onComplete={onComplete}
         />

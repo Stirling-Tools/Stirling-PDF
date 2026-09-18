@@ -155,7 +155,9 @@ const licenseService = {
         });
       }
 
-      const currencySymbol = getCurrencySymbol(currency);
+      const currencySymbol = getCurrencySymbol("usd");
+      const priceCurrency = (key: string) =>
+        getCurrencySymbol(priceMap.get(key)?.currency ?? "usd");
 
       // Helper to get price info
       const getPriceInfo = (lookupKey: string, fallback: number = 0) => {
@@ -170,7 +172,7 @@ const licenseService = {
           lookupKey: "selfhosted:server:monthly",
           name: "Team - Monthly",
           price: getPriceInfo("selfhosted:server:monthly"),
-          currency: currencySymbol,
+          currency: priceCurrency("selfhosted:server:monthly"),
           period: "/month",
           popular: false,
           features: planFeatures.SERVER,
@@ -181,7 +183,7 @@ const licenseService = {
           lookupKey: "selfhosted:server:yearly",
           name: "Team - Yearly",
           price: getPriceInfo("selfhosted:server:yearly"),
-          currency: currencySymbol,
+          currency: priceCurrency("selfhosted:server:yearly"),
           period: "/year",
           popular: true,
           features: planFeatures.SERVER,
@@ -193,7 +195,7 @@ const licenseService = {
           name: "Enterprise - Monthly",
           price: getPriceInfo("selfhosted:server:monthly"),
           seatPrice: getPriceInfo("selfhosted:enterpriseseat:monthly"),
-          currency: currencySymbol,
+          currency: priceCurrency("selfhosted:server:monthly"),
           period: "/month",
           popular: false,
           requiresSeats: true,
@@ -206,7 +208,7 @@ const licenseService = {
           name: "Enterprise - Yearly",
           price: getPriceInfo("selfhosted:server:yearly"),
           seatPrice: getPriceInfo("selfhosted:enterpriseseat:yearly"),
-          currency: currencySymbol,
+          currency: priceCurrency("selfhosted:server:yearly"),
           period: "/year",
           popular: false,
           requiresSeats: true,

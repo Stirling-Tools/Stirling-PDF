@@ -24,6 +24,8 @@ import {
   cancelBundleQuote,
   createBundleStripeQuote,
   fetchBundleQuotePdf,
+  fetchBundlePricing,
+  type BundlePricing,
   finalizeBundleInvoice,
   getLatestBundleQuote,
   StripeFunctionError,
@@ -31,7 +33,6 @@ import {
   type BundleInvoice,
   type BundleQuote,
   type BundleStripeQuote,
-  type LatestBundleQuote,
 } from "@portal/billing/stripe";
 import { PrepayModalHeader } from "@portal/components/billing/PrepayModalHeader";
 import "@portal/theme/surface.css";
@@ -192,7 +193,7 @@ interface Props {
   onClose: () => void;
   /** Return to payment choices without cancelling the saved quote; omitted for top-ups. */
   onBack?: () => void;
-  /** Drives teamId, per-run rate, currency, and top-up vs first-buy copy. */
+  /** Identifies the team and whether this is a top-up. Stripe supplies pricing. */
   wallet: Wallet;
   /** Fired after a completed purchase so the parent can refetch the wallet. */
   onComplete?: () => void;
@@ -209,10 +210,16 @@ export function BundleCheckoutModal({
 }: Props) {
   const { t } = useTranslation();
   const teamId = wallet.teamId;
-  const currency = wallet.currency ?? "usd";
+  const [pricing, setPricing] = useState<BundlePricing | null>(null);
+  const [persistedCurrency, setPersistedCurrency] = useState<string | null>(
+    null,
+  );
+  const [persistedSubtotal, setPersistedSubtotal] = useState<number | null>(
+    null,
+  );
   // The pool is priced per size-scaled RUN at the prepaid-bundle rate (bundle:processor), NOT the
   // metered per-document rate — so the estimate matches the amount the checkout edge fn charges.
-  const ratePerRunMinor = wallet.bundleRatePerCreditMinor;
+  const ratePerRunMinor = pricing?.unitAmountMinor ?? null;
 
   const [phase, setPhase] = useState<Phase>("calc");
   const [users, setUsers] = useState(DEFAULT_USERS);
@@ -286,6 +293,9 @@ export function BundleCheckoutModal({
       setStripeQuoteSig(null);
       setInvoice(null);
       setPersistedPriceMinor(null);
+      setPersistedCurrency(null);
+      setPersistedSubtotal(null);
+      setPricing(null);
       setPersistedPoolCredits(null);
       setBusy(false);
       setPdfBusy(false);
@@ -298,13 +308,20 @@ export function BundleCheckoutModal({
     }
     let cancelled = false;
     (async () => {
-      let latest: LatestBundleQuote | null;
-      try {
-        latest = await getLatestBundleQuote(teamId);
-      } catch {
-        latest = null; // no backend / not a leader — fall through to local progress
-      }
+      const [pricingResult, quoteResult] = await Promise.allSettled([
+        fetchBundlePricing(teamId),
+        getLatestBundleQuote(teamId),
+      ]);
       if (cancelled) return;
+      const latest =
+        quoteResult.status === "fulfilled" ? quoteResult.value : null;
+      const resolvedPricing =
+        pricingResult.status === "fulfilled" ? pricingResult.value : null;
+      setPricing(resolvedPricing);
+      if (pricingResult.status === "rejected" && !latest?.stripeRef) {
+        const error = pricingResult.reason;
+        setActionError(error instanceof Error ? error.message : String(error));
+      }
       const saved = readCalcSettings(teamId);
       if (latest) {
         // Resume the existing quote: restore its sizing + consent + id (landing on the calculator), and
@@ -315,12 +332,18 @@ export function BundleCheckoutModal({
         setPipelineId(pipelineIdFor(latest.pipelineMult));
         setConsented(latest.consentedAt != null);
         setQuoteId(latest.quoteId);
-        setPersistedPriceMinor(latest.priceMinor);
+        const sameCurrency = latest.currency === resolvedPricing?.currency;
+        setPersistedPriceMinor(
+          (sameCurrency && latest.stripeQuoteId) || latest.stripeRef
+            ? latest.priceMinor
+            : null,
+        );
+        setPersistedCurrency(latest.currency);
         setPersistedPoolCredits(latest.poolCredits);
         if (saved?.poNumber) setPoNumber(saved.poNumber);
         if (saved?.companyName) setCompanyName(saved.companyName);
         if (saved?.accountName) setAccountName(saved.accountName);
-        if (latest.stripeQuoteId) {
+        if (latest.stripeQuoteId && (sameCurrency || latest.stripeRef)) {
           setStripeQuote({
             stripeQuoteId: latest.stripeQuoteId,
             stripeQuoteNumber: latest.stripeQuoteNumber,
@@ -410,6 +433,11 @@ export function BundleCheckoutModal({
     [users, postureId, sizeId, pipelineId, ratePerRunMinor],
   );
 
+  const currency =
+    persistedPriceMinor != null && persistedPoolCredits === quote.poolCredits
+      ? (persistedCurrency ?? pricing?.currency ?? "usd")
+      : (pricing?.currency ?? "usd");
+
   // The receipt shows the persisted (server) total on resume so it matches the quote the buyer
   // created, not a figure recomputed from a since-changed rate — but only while the sizing is
   // unchanged (same pool). Editing the calculator changes the pool and reverts to the live estimate.
@@ -424,12 +452,13 @@ export function BundleCheckoutModal({
     return {
       ...quote,
       priceMinor: persistedPriceMinor,
+      listMinor: persistedSubtotal,
       savingsMinor:
-        quote.listMinor != null
-          ? quote.listMinor - persistedPriceMinor
-          : quote.savingsMinor,
+        persistedSubtotal != null
+          ? persistedSubtotal - persistedPriceMinor
+          : null,
     };
-  }, [quote, persistedPriceMinor, persistedPoolCredits]);
+  }, [quote, persistedPriceMinor, persistedPoolCredits, persistedSubtotal]);
 
   // Flip the loader on synchronously the moment the modal opens (React's "adjust state during render"),
   // so the resume runs behind a loader from the very first frame — the calculator never shows en route to
@@ -443,7 +472,10 @@ export function BundleCheckoutModal({
 
   // calc → pay only needs a valid pool; consent + the account-holder name are captured on the payment
   // step, so they gate the commit (accept + finalize).
-  const canContinue = quote.poolCredits > 0 && !quote.overEnterprise;
+  const canContinue =
+    (pricing != null || invoice != null) &&
+    quote.poolCredits > 0 &&
+    !quote.overEnterprise;
   const nameProvided = accountName.trim().length > 0;
   // Once the invoice is issued, the recipient details + consent are already captured on it and the fields
   // are locked, so on resume Pay/Download just re-open the existing invoice — don't re-gate on the (now
@@ -465,7 +497,7 @@ export function BundleCheckoutModal({
         pipelineMult: pipelineMultFor(pipelineId),
         provisionedMonthlyVolume: quote.provisionedMonthlyVolume,
         poolCredits: quote.poolCredits,
-        priceMinor: quote.priceMinor,
+        priceMinor: receiptQuote.priceMinor,
         currency,
         consented,
         eulaVersion: CONSENT_EULA_VERSION,
@@ -508,6 +540,12 @@ export function BundleCheckoutModal({
       poNumber: poNumber.trim() || undefined,
     });
     setStripeQuote(sq);
+    if (sq.currency && sq.amountTotal != null) {
+      setPersistedCurrency(sq.currency);
+      setPersistedSubtotal(sq.amountSubtotal ?? null);
+      setPersistedPriceMinor(sq.amountTotal);
+      setPersistedPoolCredits(quote.poolCredits);
+    }
     setStripeQuoteSig(sig);
     return { quoteId: q.quoteId, stripeQuote: sq };
   }
@@ -540,9 +578,12 @@ export function BundleCheckoutModal({
   // returns the existing invoice, an already-finalized invoice comes back as-is. Returns the current
   // (simulated) invoice when there's no SaaS backend.
   async function acceptAndFinalize(): Promise<BundleInvoice | null> {
+    if (invoiceIssued) return invoice;
     if (teamId == null || quoteId == null) return invoice;
-    await ensureQuote(); // persists consented=true (pay-step state) so accept can verify it
-    await acceptBundleStripeQuote({ teamId, quoteId });
+    if (!invoice) {
+      await ensureQuote();
+      await acceptBundleStripeQuote({ teamId, quoteId });
+    }
     const inv = await finalizeBundleInvoice({
       teamId,
       quoteId,
@@ -612,7 +653,7 @@ export function BundleCheckoutModal({
   // Download the Stripe-rendered quote PDF. Mints the quote (if not already) — that's what makes the
   // PDF exist — then streams it. No SaaS backend → nothing to download.
   async function downloadPdf() {
-    if (busy || pdfBusy || quote.poolCredits <= 0) return;
+    if (busy || pdfBusy || !canContinue) return;
     setPdfBusy(true);
     setActionError(null);
     try {
