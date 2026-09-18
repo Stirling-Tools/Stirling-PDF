@@ -363,9 +363,6 @@ export function LocalEmbedPDF({
   } | null>(null);
   const initialDocumentOpenedRef = useRef(false);
   const openedContentKeyRef = useRef<string | null>(null);
-  // Where the selection menu last sat, so a delete can keep an undo menu there
-  // for any delete path (menu button, keyboard, sidebar).
-  const annotationMenuAnchorRef = useRef<AnnotationMenuAnchor | null>(null);
   // Anchors survive deselection per annotation id, so a delete that happens
   // while no menu is open (keyboard, sidebar) still has somewhere to appear.
   const annotationAnchorsByIdRef = useRef<Map<string, AnnotationMenuAnchor>>(
@@ -375,7 +372,6 @@ export function LocalEmbedPDF({
     useState<AnnotationMenuAnchor | null>(null);
   const handleAnnotationMenuAnchor = useCallback(
     (anchor: AnnotationMenuAnchor | null) => {
-      annotationMenuAnchorRef.current = anchor;
       if (anchor) {
         annotationAnchorsByIdRef.current.set(anchor.annotationId, anchor);
       }
@@ -384,8 +380,9 @@ export function LocalEmbedPDF({
   );
   const getAnnotationAnchor = useCallback(
     (annotationId: string) =>
-      annotationAnchorsByIdRef.current.get(annotationId) ??
-      annotationMenuAnchorRef.current,
+      // Only the anchor keyed by this annotation: falling back to the
+      // last-open menu would pin a deletion to another annotation's spot.
+      annotationAnchorsByIdRef.current.get(annotationId) ?? null,
     [],
   );
   const handleAnnotationDeleted = useCallback(
@@ -514,7 +511,6 @@ export function LocalEmbedPDF({
   useEffect(() => {
     // A replacement document has no relation to the deleted annotation.
     setDeletedAnnotationMenu(null);
-    annotationMenuAnchorRef.current = null;
     annotationAnchorsByIdRef.current.clear();
   }, [fileStableKey]);
 
