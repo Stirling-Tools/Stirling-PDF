@@ -65,7 +65,7 @@ start_unoserver() {
   log "Starting unoserver on ${INTERFACE}:${PORT} (uno-port ${UNO_PORT}, timeout ${CONVERSION_TIMEOUT}s, profile ${PROFILE_DIR})"
   # Pass --user-installation as a plain path; unoserver 3.6 wraps it itself
   # and crashes if pre-wrapped as a file:// URI.
-  env ${OFFICE_LD_PRELOAD:+LD_PRELOAD="$OFFICE_LD_PRELOAD"} unoserver \
+  env ${OFFICE_LD_PRELOAD:+LD_PRELOAD="$OFFICE_LD_PRELOAD${LD_PRELOAD:+ $LD_PRELOAD}"} unoserver \
     --interface "$INTERFACE" \
     --port "$PORT" \
     --uno-port "$UNO_PORT" \

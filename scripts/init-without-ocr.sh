@@ -283,7 +283,7 @@ start_unoserver_instance() {
   local profile_dir="${LIBREOFFICE_PROFILE}/instance_${port}"
   run_as_runtime_user mkdir -p "$profile_dir"
   # --user-installation is a plain path; unoserver 3.6 crashes if pre-wrapped as file://.
-  run_as_runtime_user env ${OFFICE_LD_PRELOAD:+LD_PRELOAD="$OFFICE_LD_PRELOAD"} "$UNOSERVER_BIN" \
+  run_as_runtime_user env ${OFFICE_LD_PRELOAD:+LD_PRELOAD="$OFFICE_LD_PRELOAD${LD_PRELOAD:+ $LD_PRELOAD}"} "$UNOSERVER_BIN" \
     --interface 127.0.0.1 \
     --port "$port" \
     --uno-port "$uno_port" \
