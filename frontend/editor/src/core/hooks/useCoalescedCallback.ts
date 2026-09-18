@@ -8,7 +8,8 @@ const DEFAULT_WINDOW_MS = 300;
  * library scan cannot fire once per thumbnail write.
  *
  * A promise-returning callback is serialized: a trigger that lands while the
- * scan is still settling marks one trailing run instead of starting a second.
+ * scan is still settling marks one trailing run, which waits out the remainder
+ * of the window instead of firing on settle.
  */
 export function useCoalescedCallback(
   callback: () => void | Promise<void>,
@@ -18,8 +19,22 @@ export function useCoalescedCallback(
   const lastRunAt = useRef(0);
   const inFlight = useRef(false);
   const trailing = useRef(false);
+  // The one pending wake-up, whether leading or trailing: a fresh schedule
+  // always supersedes the previous one, so overlapping timers can never stack
+  // a phantom run behind the scan they both owe.
+  const pendingTimer = useRef<number | null>(null);
 
   useEffect(() => {
+    const schedule = (wait: number): void => {
+      if (pendingTimer.current !== null) {
+        window.clearTimeout(pendingTimer.current);
+      }
+      pendingTimer.current = window.setTimeout(() => {
+        pendingTimer.current = null;
+        void run();
+      }, wait);
+    };
+
     const run = async (): Promise<void> => {
       if (inFlight.current) {
         trailing.current = true;
@@ -37,15 +52,17 @@ export function useCoalescedCallback(
         inFlight.current = false;
         if (trailing.current) {
           trailing.current = false;
-          void run();
+          schedule(Math.max(0, lastRunAt.current + windowMs - Date.now()));
         }
       }
     };
 
-    const wait = Math.max(0, lastRunAt.current + windowMs - Date.now());
-    const timer = window.setTimeout(() => {
-      void run();
-    }, wait);
-    return () => window.clearTimeout(timer);
+    schedule(Math.max(0, lastRunAt.current + windowMs - Date.now()));
+    return () => {
+      if (pendingTimer.current !== null) {
+        window.clearTimeout(pendingTimer.current);
+        pendingTimer.current = null;
+      }
+    };
   }, [callback, trigger, windowMs]);
 }

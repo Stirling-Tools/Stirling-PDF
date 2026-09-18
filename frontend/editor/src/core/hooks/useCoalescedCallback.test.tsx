@@ -98,6 +98,96 @@ describe("useCoalescedCallback", () => {
       resolveFirst();
       await Promise.resolve();
     });
+    expect(callback).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      vi.advanceTimersByTime(100);
+    });
+    expect(callback).toHaveBeenCalledTimes(2);
+  });
+
+  it("delays the trailing run until the window has elapsed", async () => {
+    vi.useFakeTimers();
+    let resolveFirst!: () => void;
+    const callback = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveFirst = resolve;
+        }),
+    );
+
+    const { rerender } = renderHook(
+      ({ trigger }: { trigger: number }) =>
+        useCoalescedCallback(callback, trigger, 100),
+      { initialProps: { trigger: 0 } },
+    );
+    await act(async () => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(callback).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      rerender({ trigger: 1 });
+    });
+    act(() => {
+      vi.advanceTimersByTime(20);
+    });
+    expect(callback).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      resolveFirst();
+      await Promise.resolve();
+    });
+    // The scan settled 21ms after it started, so the trailing run still owes
+    // most of the 100ms window.
+    act(() => {
+      vi.advanceTimersByTime(70);
+    });
+    expect(callback).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      vi.advanceTimersByTime(30);
+    });
+    expect(callback).toHaveBeenCalledTimes(2);
+  });
+
+  it("a fresh trigger supersedes a scheduled trailing run instead of doubling it", async () => {
+    vi.useFakeTimers();
+    const resolvers: Array<() => void> = [];
+    const callback = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          resolvers.push(resolve);
+        }),
+    );
+
+    const { rerender } = renderHook(
+      ({ trigger }: { trigger: number }) =>
+        useCoalescedCallback(callback, trigger, 100),
+      { initialProps: { trigger: 0 } },
+    );
+    await act(async () => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(callback).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      rerender({ trigger: 1 });
+    });
+    act(() => {
+      vi.advanceTimersByTime(20);
+    });
+    await act(async () => {
+      resolvers[0]();
+      await Promise.resolve();
+    });
+    // Trailing run is now scheduled ~80ms out; a new trigger replaces it.
+    act(() => {
+      rerender({ trigger: 2 });
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(200);
+    });
     expect(callback).toHaveBeenCalledTimes(2);
   });
 
@@ -140,6 +230,11 @@ describe("useCoalescedCallback", () => {
     await act(async () => {
       resolvers[0]();
       await Promise.resolve();
+    });
+    expect(callback).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      vi.advanceTimersByTime(1);
     });
     expect(callback).toHaveBeenCalledTimes(2);
 
