@@ -239,12 +239,21 @@ test("a tool output keeps the page width and zoom readout steady", async ({
       indicators: [],
     };
     window.__steadySampler = state;
+    const isRendered = (el: HTMLElement): boolean => {
+      try {
+        return el.checkVisibility({ checkVisibilityCSS: true });
+      } catch {
+        return el.getBoundingClientRect().width > 0;
+      }
+    };
     const tick = () => {
       if (state.stop) return;
       const pageEl = document.querySelector<HTMLElement>(
         '[data-page-index="0"]',
       );
-      if (pageEl)
+      // Only painted frames count: the swap hides the scroller while the
+      // carried zoom lands, and hidden layout is not a visible flash.
+      if (pageEl && isRendered(pageEl))
         state.widths.push(Math.round(pageEl.getBoundingClientRect().width));
       const indicator = Array.from(
         document.querySelectorAll<HTMLElement>("span,div,input"),
