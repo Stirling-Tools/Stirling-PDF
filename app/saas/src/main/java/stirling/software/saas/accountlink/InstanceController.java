@@ -24,6 +24,7 @@ import stirling.software.proprietary.billing.UnitCalcPolicy;
 import stirling.software.saas.model.SaasTeamExtensions;
 import stirling.software.saas.payg.billing.TeamBillingContext;
 import stirling.software.saas.payg.billing.TeamBillingService;
+import stirling.software.saas.payg.bundle.PrepaidBundleService;
 import stirling.software.saas.payg.entitlement.EntitlementService;
 import stirling.software.saas.payg.entitlement.EntitlementSnapshot;
 import stirling.software.saas.payg.instance.InstanceUsageIngestService;
@@ -55,6 +56,7 @@ import stirling.software.saas.repository.SaasTeamExtensionsRepository;
 @ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
 public class InstanceController {
 
+    private final PrepaidBundleService prepaidBundleService;
     private final EntitlementService entitlementService;
     private final TeamBillingService billingService;
     private final AccountLinkService accountLinkService;
@@ -72,7 +74,9 @@ public class InstanceController {
             InstanceUsageIngestService usageIngestService,
             LinkedInstanceRepository linkedInstanceRepository,
             SaasTeamExtensionsRepository teamExtensionsRepository,
+            PrepaidBundleService prepaidBundleService,
             FleetSeatService fleetSeats) {
+        this.prepaidBundleService = prepaidBundleService;
         this.fleetSeats = fleetSeats;
         this.entitlementService = entitlementService;
         this.billingService = billingService;
@@ -108,6 +112,7 @@ public class InstanceController {
             LocalDateTime periodStart,
             LocalDateTime periodEnd,
             int automationStepLimit,
+            long prepaidRemainingUnits,
             Integer fleetUserLimit) {}
 
     @GetMapping("/whoami")
@@ -251,6 +256,7 @@ public class InstanceController {
                 snap.periodStart(),
                 snap.periodEnd(),
                 policy.resolveStepLimit(JobSource.PIPELINE),
+                prepaidBundleService.prepaidRemainingUnits(teamId),
                 fleetSeats.allowance(teamId, instanceId));
     }
 

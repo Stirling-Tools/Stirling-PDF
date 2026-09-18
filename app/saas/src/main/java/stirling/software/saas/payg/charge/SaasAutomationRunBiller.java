@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.proprietary.automation.AutomationRunBiller;
+import stirling.software.proprietary.automation.AutomationRunSource;
 import stirling.software.proprietary.billing.DocumentUnitCalculator;
 import stirling.software.proprietary.billing.DocumentUnitCalculator.FileSize;
 import stirling.software.proprietary.billing.UnitCalcPolicy;
@@ -38,7 +39,7 @@ public class SaasAutomationRunBiller implements AutomationRunBiller {
     private final JobChargeService jobChargeService;
 
     @Override
-    public void recordAutomationRun(List<FileSize> inputs) {
+    public void recordAutomationRun(List<FileSize> inputs, AutomationRunSource source) {
         if (inputs.isEmpty()) {
             return;
         }
@@ -56,13 +57,13 @@ public class SaasAutomationRunBiller implements AutomationRunBiller {
                         policy.getFileUnitCap());
         int units = DocumentUnitCalculator.unitsForGroup(inputs, unitCalc);
 
-        JobSource source =
+        JobSource jobSource =
                 auth instanceof ApiKeyAuthenticationToken ? JobSource.API : JobSource.WEB;
         ChargeContext ctx =
                 new ChargeContext(
                         user.getId(),
                         user.getTeam().getId(),
-                        source,
+                        jobSource,
                         ProcessType.AUTOMATION,
                         BillingCategory.AUTOMATION);
         // chargeStandalone re-resolves the effective policy and applies its minChargeUnits floor.

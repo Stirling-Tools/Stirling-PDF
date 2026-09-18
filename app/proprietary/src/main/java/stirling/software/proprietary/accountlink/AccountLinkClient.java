@@ -383,6 +383,7 @@ public class AccountLinkClient {
                 parseDateTime(root, "periodEnd"),
                 licensedUsers,
                 root.path("automationStepLimit").asInt(0),
+                root.path("prepaidRemainingUnits").asLong(0),
                 root.hasNonNull("fleetUserLimit")
                         ? Math.max(0, root.get("fleetUserLimit").asInt())
                         : null);

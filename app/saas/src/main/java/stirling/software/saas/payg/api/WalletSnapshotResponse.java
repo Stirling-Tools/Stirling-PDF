@@ -100,7 +100,9 @@ public record WalletSnapshotResponse(
         long prepaidUnitsTotal,
         String prepaidExpiresAt,
         String billingMode,
-        BigDecimal bundleRatePerCreditMinor) {
+        BigDecimal bundleRatePerCreditMinor,
+        String includedPeriodStart,
+        String includedPeriodEnd) {
 
     // Prepaid usage bundles, aggregated across the team's in-term pools (drawn ahead of the meter,
     // outside the spend cap):

@@ -210,6 +210,11 @@ export function BillingScreen({
         chips: [
           t("portal.billing.identity.team.chipSso", "SSO"),
           t("portal.billing.identity.team.chipFleet", "Fleet control"),
+          t(
+            "portal.billing.identity.team.chipIncluded",
+            "{{allowance}} included credits monthly",
+            { allowance: wallet.freeAllowance.toLocaleString() },
+          ),
         ],
       };
     }

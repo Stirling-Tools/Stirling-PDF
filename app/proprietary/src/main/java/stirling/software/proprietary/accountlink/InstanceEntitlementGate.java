@@ -9,7 +9,8 @@ import org.springframework.stereotype.Service;
 import stirling.software.common.service.LicenseServiceInterface;
 
 /**
- * Enforces cloud processing allowance and the shared offline deadline; manual tools remain free.
+ * Enforces cloud processing allowance and the shared offline deadline. Manual tools and direct PDF
+ * tool API calls covered by a Server licence do not consume processing credits.
  */
 @Service
 @Profile("!saas")
@@ -43,6 +44,14 @@ public class InstanceEntitlementGate {
 
     /** Evaluates the gate for a request, resolving live state from the store + cache. */
     public GateDecision evaluate(boolean billable) {
+        return evaluate(billable, false);
+    }
+
+    /**
+     * {@code directToolApi} is true only for direct PDF tool API calls, never Processor runs, AI
+     * tools or internally dispatched automation steps.
+     */
+    public GateDecision evaluate(boolean billable, boolean directToolApi) {
         if (!properties.isEnabled()) {
             return GateDecision.allow(GateDecision.Reason.FLAG_OFF);
         }
@@ -51,6 +60,9 @@ public class InstanceEntitlementGate {
         }
         if (licenseService.isRunningEE()) {
             return GateDecision.allow(GateDecision.Reason.ENTERPRISE_LICENSE);
+        }
+        if (directToolApi && licenseService.hasServerLicense()) {
+            return GateDecision.allow(GateDecision.Reason.SERVER_LICENSE);
         }
         boolean linked = credentialStore.isLinked();
         long freeTierRemaining = linked ? 0L : freeTierUsageService.balance().remainingUnits();
@@ -128,6 +140,11 @@ public class InstanceEntitlementGate {
         if (e.state() == EntitlementState.OVER_LIMIT || e.state() == EntitlementState.REVOKED) {
             return false;
         }
+        long pendingAfterIncluded = Math.max(0, pendingUnsyncedUnits - e.freeRemainingUnits());
+        if (e.freeRemainingUnits() > Math.max(0, pendingUnsyncedUnits)
+                || e.prepaidRemainingUnits() > pendingAfterIncluded) {
+            return true;
+        }
         if (e.subscribed()) {
             if (e.periodCapUnits() == null) {
                 return true; // uncapped subscription
@@ -135,7 +152,7 @@ public class InstanceEntitlementGate {
             // Project the cap the way the grant is projected: synced paid spend plus the paid part
             // of local usage not yet synced (free grant is consumed first, so only the excess
             // bills) — stops at the cap in real time instead of overshooting until the next sync.
-            long pendingPaid = Math.max(0, pendingUnsyncedUnits - e.freeRemainingUnits());
+            long pendingPaid = Math.max(0, pendingAfterIncluded - e.prepaidRemainingUnits());
             return e.periodSpendUnits() + pendingPaid < e.periodCapUnits();
         }
         // Unsubscribed: free pool must cover SaaS-charged usage (in freeRemainingUnits) plus local
