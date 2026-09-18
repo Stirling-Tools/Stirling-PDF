@@ -17,8 +17,9 @@ type PortalSectionModule =
 
 function portalSection(
   pick: (m: PortalSectionModule) => ComponentType | null,
+  { requiresProcessor = true }: { requiresProcessor?: boolean } = {},
 ): ComponentType | null {
-  if (!HAS_PORTAL) return null;
+  if (requiresProcessor && !HAS_PORTAL) return null;
   const Lazy = lazy(async () => {
     const m =
       await import("@portal/components/settings/portalSettingsSections");
@@ -34,32 +35,21 @@ function portalSection(
   };
 }
 
-const UsersSection = portalSection((m) => m.PortalUsersSection);
+// Org administration, not a processor surface, so it is the one section a build
+// without the processor still gets. Still lazy: unopened means unpulled.
+const UsersSection = portalSection((m) => m.PortalUsersSection, {
+  requiresProcessor: false,
+});
 const ApiKeysSection = portalSection((m) => m.PortalApiKeysSection);
 const AuditSection = portalSection((m) => m.PortalAuditSection);
 const EncryptionSection = portalSection((m) => m.PortalEncryptionSection);
 const BillingSection = portalSection((m) => m.PortalBillingSection);
 const AccountLinkSection = portalSection((m) => m.PortalAccountLinkSection);
 
-/**
- * The processor's Users / Infrastructure / Usage & Billing views as settings
- * sections: administration of the whole deployment rather than a pipeline
- * step. Empty in builds without the portal.
- *
- * @param includeAccountLink self-hosted links the instance to a Stirling
- *   account; SaaS has nothing to link, so it passes false.
- * @param includeAudit SaaS has no other audit surface; self-hosted has the
- *   admin one under Monitoring and passes false.
- * @param includeEncryption encryption at rest is deployment-wide server
- *   configuration, so only a self-hosted admin can act on it. SaaS operates
- *   the storage itself and passes false for every user.
- * @param includeBilling what the deployment spends is the operator's business,
- *   not every member's, so self-hosted passes its admin flag. On SaaS the
- *   signed-in account owns the wallet, so it stays on.
- *
- * These flags only decide what is offered: the endpoints behind each section
- * enforce the same rule server-side.
- */
+/** The processor's deployment-administration views as settings sections; empty
+ *  without the portal. The include* flags only decide what is offered - the
+ *  endpoints enforce the same rules server-side. includeRoster is the one that
+ *  does not need the processor, being the build's only roster. */
 export function buildPortalSettingsSections(
   t: TFunction<"translation", undefined>,
   {
@@ -67,18 +57,20 @@ export function buildPortalSettingsSections(
     includeAudit = false,
     includeEncryption = false,
     includeBilling = true,
+    includeRoster = true,
+    includeApiKeys = true,
   }: {
     includeAccountLink?: boolean;
     includeAudit?: boolean;
     includeEncryption?: boolean;
     includeBilling?: boolean;
+    includeRoster?: boolean;
+    includeApiKeys?: boolean;
   } = {},
 ): ConfigNavSection[] {
-  if (!UsersSection || !ApiKeysSection || !AuditSection || !BillingSection) {
-    return [];
-  }
-  const workspace: ConfigNavItem[] = [
-    {
+  const workspace: ConfigNavItem[] = [];
+  if (UsersSection && includeRoster) {
+    workspace.push({
       key: "users",
       label: t("portal.nav.users", "Users"),
       description: t(
@@ -88,9 +80,9 @@ export function buildPortalSettingsSections(
       icon: "group-rounded",
       component: <UsersSection />,
       fullBleed: true,
-    },
-  ];
-  if (includeBilling) {
+    });
+  }
+  if (includeBilling && BillingSection) {
     workspace.push({
       key: "billing",
       label: t("portal.nav.usage", "Usage & Billing"),
@@ -112,15 +104,20 @@ export function buildPortalSettingsSections(
       fullBleed: true,
     });
   }
-  const groups: ConfigNavSection[] = [
-    {
-      id: "workspace",
-      title: t("settings.workspace.title", "Workspace"),
-      items: workspace,
-    },
-    // Keys belong to you, not to the server, so they join your own settings
-    // rather than standing alone under a heading of their own.
-    {
+  const groups: ConfigNavSection[] =
+    workspace.length > 0
+      ? [
+          {
+            id: "workspace",
+            title: t("settings.workspace.title", "Workspace"),
+            items: workspace,
+          },
+        ]
+      : [];
+  // Keys belong to you, not the server, so they join your own settings. Only the
+  // processor's tab supersedes the build's own; without it the build keeps its own.
+  if (ApiKeysSection && includeApiKeys) {
+    groups.push({
       id: "preferences",
       title: t("settings.preferences.title", "Preferences"),
       mergeAt: "append",
@@ -137,8 +134,8 @@ export function buildPortalSettingsSections(
           fullBleed: true,
         },
       ],
-    },
-  ];
+    });
+  }
   if (includeEncryption && EncryptionSection) {
     groups.push({
       id: "server",
@@ -162,7 +159,7 @@ export function buildPortalSettingsSections(
       ],
     });
   }
-  if (includeAudit) {
+  if (includeAudit && AuditSection) {
     groups.push({
       id: "monitoring",
       title: t("settings.monitoring.title", "Monitoring"),
@@ -185,17 +182,24 @@ export function buildPortalSettingsSections(
   return groups;
 }
 
-/** Settings sections the portal ones supersede; dropped when they are shown. */
-export const PORTAL_SUPERSEDED_SECTION_KEYS: readonly NavKey[] = [
-  "people",
-  "teams",
-  // The cloud builds carry their own roster under this key; the processor's is
-  // the superset, so it replaces rather than duplicates it.
-  "users",
-  "api-keys",
-  "plan",
-  "adminPlan",
-];
+/** Settings sections the given portal sections supersede, to drop from the build's
+ *  own nav. Derived from what was built: dropping an unreplaced key deletes it. */
+export function portalSupersededSectionKeys(
+  sections: readonly ConfigNavSection[],
+): NavKey[] {
+  const provided = new Set(
+    sections.flatMap((group) => group.items.map((item) => item.key)),
+  );
+  const superseded: NavKey[] = [];
+  if (provided.has("users")) {
+    // The cloud builds carry their own roster under "users"; the processor's is
+    // the superset, so it replaces rather than duplicates it.
+    superseded.push("people", "teams", "users");
+  }
+  if (provided.has("api-keys")) superseded.push("api-keys");
+  if (provided.has("billing")) superseded.push("plan", "adminPlan");
+  return superseded;
+}
 
 /** Where a superseded section's bookmarks and search results now land. */
 export const PORTAL_SECTION_ALIASES: Partial<Record<string, NavKey>> = {
