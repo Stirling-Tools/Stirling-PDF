@@ -2,6 +2,9 @@
 
 This directory contains the organized Docker configurations for the split frontend/backend architecture.
 
+See [Container runtime users](README-runtime-users.md) for root, non-root, and
+read-only container configuration.
+
 ## Using Taskfile (Recommended)
 
 All Docker commands can be run from the project root using [Task](https://taskfile.dev/):
