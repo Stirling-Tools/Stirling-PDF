@@ -11,6 +11,19 @@ import { expect, type Page, type Locator } from "@playwright/test";
 
 const MANTINE_MODAL_OVERLAY = ".mantine-Modal-overlay";
 
+/** Opens Recents through in-app navigation, preserving the current workspace. */
+export async function openRecents(page: Page): Promise<void> {
+  await page
+    .getByRole("navigation", { name: /Quick navigation/i })
+    .getByRole("button", { name: /^File library$/i })
+    .click();
+  await page
+    .getByRole("navigation", { name: "File sources", exact: true })
+    .getByRole("button", { name: "Recents", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/files\?view=recent$/);
+}
+
 /**
  * Suppress the native OS file picker for the whole page, on every browser.
  *

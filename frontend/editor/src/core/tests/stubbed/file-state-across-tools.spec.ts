@@ -1,5 +1,5 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
-import { uploadFiles } from "@app/tests/helpers/ui-helpers";
+import { openRecents, uploadFiles } from "@app/tests/helpers/ui-helpers";
 import path from "path";
 
 // Reads the library as cards, so it asks for the grid.
@@ -24,26 +24,17 @@ test.describe("File state persists across tool navigation", () => {
   }) => {
     await uploadFiles(page, SAMPLE_PDF);
 
-    // Sanity: My Files page lists the upload
-    await page
-      .getByRole("navigation", { name: /Quick navigation/i })
-      .getByRole("button", { name: /^File library$/i })
-      .click();
+    await openRecents(page);
     // The library's grid, which loads its own listing: in the library the sidebar
     // shows folders, not files, so nothing answers this sooner.
     await expect(
       page.locator(".files-page-card").filter({ hasText: /sample\.pdf/i }),
     ).toBeVisible({ timeout: 15_000 });
 
-    // Navigate to /split
     await page.goto("/split");
     await page.waitForLoadState("domcontentloaded");
 
-    // Re-open My Files - sample.pdf must still be there (persisted across tools)
-    await page
-      .getByRole("navigation", { name: /Quick navigation/i })
-      .getByRole("button", { name: /^File library$/i })
-      .click();
+    await openRecents(page);
     // The library's grid, which loads its own listing: in the library the sidebar
     // shows folders, not files, so nothing answers this sooner.
     await expect(
@@ -78,10 +69,7 @@ test.describe("File state persists across tool navigation", () => {
 
     // The upload must still be listed after the tool switch. A "no files"
     // empty state here would mean the client-side nav silently dropped it.
-    await page
-      .getByRole("navigation", { name: /Quick navigation/i })
-      .getByRole("button", { name: /^File library$/i })
-      .click();
+    await openRecents(page);
     await expect(
       page.locator(".files-page-card").filter({ hasText: /sample\.pdf/i }),
     ).toBeVisible({ timeout: 15_000 });

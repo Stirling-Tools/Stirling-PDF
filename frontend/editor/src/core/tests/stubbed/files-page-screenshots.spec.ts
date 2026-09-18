@@ -178,7 +178,7 @@ test.describe("Files page screenshots", () => {
       { id: "bravo", name: "bravo.pdf", remoteStorageId: null },
       { id: "cloud-c", name: "cloud-c.pdf", remoteStorageId: 1001 },
     ]);
-    await page.goto("/files", { waitUntil: "domcontentloaded" });
+    await page.goto("/files?view=recent", { waitUntil: "domcontentloaded" });
     await expect(
       page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
     ).toBeVisible({
@@ -193,7 +193,7 @@ test.describe("Files page screenshots", () => {
     await seedFiles(page, [
       { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
     ]);
-    await page.goto("/files", { waitUntil: "domcontentloaded" });
+    await page.goto("/files?view=recent", { waitUntil: "domcontentloaded" });
     await expect(
       page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
     ).toBeVisible({
@@ -236,7 +236,7 @@ test.describe("Files page screenshots", () => {
     await seedFiles(page, [
       { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
     ]);
-    await page.goto("/files", { waitUntil: "domcontentloaded" });
+    await page.goto("/files?view=recent", { waitUntil: "domcontentloaded" });
     await expect(
       page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
     ).toBeVisible({
@@ -258,7 +258,7 @@ test.describe("Files page screenshots", () => {
     await seedFiles(page, [
       { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
     ]);
-    await page.goto("/files", { waitUntil: "domcontentloaded" });
+    await page.goto("/files?view=recent", { waitUntil: "domcontentloaded" });
     await expect(
       page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
     ).toBeVisible({
@@ -281,7 +281,7 @@ test.describe("Files page screenshots", () => {
     await seedFiles(page, [
       { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
     ]);
-    await page.goto("/files", { waitUntil: "domcontentloaded" });
+    await page.goto("/files?view=recent", { waitUntil: "domcontentloaded" });
     await expect(
       page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
     ).toBeVisible({
@@ -312,7 +312,7 @@ test.describe("Files page screenshots", () => {
       { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
     ]);
     await page.setViewportSize({ width: 900, height: 700 });
-    await page.goto("/files", { waitUntil: "domcontentloaded" });
+    await page.goto("/files?view=recent", { waitUntil: "domcontentloaded" });
     await expect(
       page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
     ).toBeVisible({
@@ -349,7 +349,7 @@ test.describe("Files page screenshots", () => {
       },
       { times: 5 },
     );
-    await page.goto("/files", { waitUntil: "domcontentloaded" });
+    await page.goto("/files?view=recent", { waitUntil: "domcontentloaded" });
     await expect(
       page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
     ).toBeVisible({
@@ -402,7 +402,7 @@ test.describe("Files page screenshots", () => {
       { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
       { id: "bravo", name: "bravo.pdf", remoteStorageId: null },
     ]);
-    await page.goto("/files", { waitUntil: "domcontentloaded" });
+    await page.goto("/files?view=recent", { waitUntil: "domcontentloaded" });
     await expect(
       page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
     ).toBeVisible({
@@ -418,7 +418,7 @@ test.describe("Files page screenshots", () => {
     await seedFiles(page, [
       { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
     ]);
-    await page.goto("/files", { waitUntil: "domcontentloaded" });
+    await page.goto("/files?view=recent", { waitUntil: "domcontentloaded" });
     await expect(
       page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
     ).toBeVisible({
@@ -478,7 +478,7 @@ test.describe("Files page screenshots", () => {
       { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
       { id: "bravo", name: "bravo.pdf", remoteStorageId: null },
     ]);
-    await page.goto("/files", { waitUntil: "domcontentloaded" });
+    await page.goto("/files?view=recent", { waitUntil: "domcontentloaded" });
     await expect(
       page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
     ).toBeVisible({
@@ -494,7 +494,7 @@ test.describe("Files page screenshots", () => {
     await seedFiles(page, [
       { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
     ]);
-    await page.goto("/files", { waitUntil: "domcontentloaded" });
+    await page.goto("/files?view=recent", { waitUntil: "domcontentloaded" });
     await expect(
       page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
     ).toBeVisible({
@@ -522,7 +522,7 @@ test.describe("Files page screenshots", () => {
     await seedFiles(page, [
       { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
     ]);
-    await page.goto("/files", { waitUntil: "domcontentloaded" });
+    await page.goto("/files?view=recent", { waitUntil: "domcontentloaded" });
     await expect(
       page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
     ).toBeVisible({
@@ -545,7 +545,7 @@ test.describe("Files page screenshots", () => {
     await seedFiles(page, [
       { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
     ]);
-    await page.goto("/files", { waitUntil: "domcontentloaded" });
+    await page.goto("/files?view=recent", { waitUntil: "domcontentloaded" });
     await expect(
       page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
     ).toBeVisible({
@@ -620,7 +620,7 @@ test.describe("Files page screenshots", () => {
       { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
     ]);
     await page.setViewportSize({ width: 500, height: 900 });
-    await page.goto("/files", { waitUntil: "domcontentloaded" });
+    await page.goto("/files?view=recent", { waitUntil: "domcontentloaded" });
     await expect(
       page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
     ).toBeVisible({
