@@ -55,3 +55,37 @@ export function ragIngestStepConfigured(
     params.exportChunksJsonl === true;
   return doesSomething && hasFiles && ragChunkingConfigured(params);
 }
+
+/** Vector destinations consume only the final step's chunks export. */
+export function vectorDestinationConfigured(steps: WorkingToolStep[]): boolean {
+  const last = steps.at(-1);
+  if (!last || !isRagIngestStep(last)) return false;
+  const params = last.params as RagIngestStepParams;
+  return (
+    params.exportChunksJsonl === true &&
+    params.includeOriginal === false &&
+    params.exportMarkdown !== true
+  );
+}
+
+export function prepareVectorDestination(
+  steps: WorkingToolStep[],
+): WorkingToolStep[] {
+  const last = steps.at(-1);
+  const existing = last && isRagIngestStep(last);
+  const step = existing ? last : newRagIngestStep();
+  const params = step.params as RagIngestStepParams;
+  return [
+    ...(existing ? steps.slice(0, -1) : steps),
+    {
+      ...step,
+      params: {
+        ...params,
+        index: existing ? params.index : false,
+        includeOriginal: false,
+        exportMarkdown: false,
+        exportChunksJsonl: true,
+      } as unknown as ErasedToolParams,
+    },
+  ];
+}
