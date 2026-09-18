@@ -1,13 +1,25 @@
 vi.mock("@portal/queries/infrastructure", () => ({
   useFleetStats: () => ({ data: null, loading: false, error: null }),
 }));
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import type { ReactElement } from "react";
 import { StrictMode } from "react";
 import { MemoryRouter, useLocation } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { UIProvider } from "@portal/contexts/UIContext";
+import { baseQueryOptions } from "@app/query/queryClient";
+import {
+  resetTabVisibility,
+  setTabHidden,
+} from "@app/tests/utils/tabVisibility";
 import type { ProcurementSnapshot } from "@portal/api/procurement";
 
 // Usage renders Mantine-backed @app/ui components (e.g. the "Manage Payment"
@@ -22,17 +34,25 @@ function Location() {
   );
 }
 
+// The app's own query defaults, so a test can't pass on a library default the
+// app overrides - staleTime and refetchOnWindowFocus both govern this page.
 const renderUsage = (ui: ReactElement, entry = "/settings/billing") =>
   render(
     <StrictMode>
-      <MemoryRouter initialEntries={[entry]}>
-        <UIProvider>
-          <MantineProvider>
-            {ui}
-            <Location />
-          </MantineProvider>
-        </UIProvider>
-      </MemoryRouter>
+      <QueryClientProvider
+        client={
+          new QueryClient({ defaultOptions: { queries: baseQueryOptions } })
+        }
+      >
+        <MemoryRouter initialEntries={[entry]}>
+          <UIProvider>
+            <MantineProvider>
+              {ui}
+              <Location />
+            </MantineProvider>
+          </UIProvider>
+        </MemoryRouter>
+      </QueryClientProvider>
     </StrictMode>,
   );
 
@@ -383,4 +403,122 @@ it("requests pending usage for a self-hosted instance", async () => {
   fetchLocalUsage.mockClear();
   renderUsage(<Usage localUsersInUse={null} />);
   await waitFor(() => expect(fetchLocalUsage).toHaveBeenCalled());
+});
+
+describe("Usage — refresh cost", () => {
+  const wallet = {
+    status: "free",
+    role: "member",
+    currency: "usd",
+    freeAllowance: 500,
+    freeRemaining: 500,
+    spendUnitsThisPeriod: 0,
+    docsProcessedThisPeriod: 0,
+    sizeMultiplierPdfsThisPeriod: 0,
+    estimatedBillMinor: 0,
+    pricePerDocMinor: 1,
+    billingPeriodStart: "2026-09-01T00:00:00",
+    billingPeriodEnd: "2026-10-01T00:00:00",
+    team: { held: false, licensedUsers: null, usersInUse: 1 },
+    processor: { active: false },
+  };
+
+  beforeEach(() => {
+    fetchWallet.mockReset().mockResolvedValue(wallet);
+    refreshWalletCache.mockReset().mockResolvedValue(undefined);
+    fetchLocalUsage.mockReset().mockResolvedValue(null);
+    bundleFlow.status = "none";
+    procurement.loading = false;
+    procurement.loadError = null;
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+  });
+
+  afterEach(() => {
+    resetTabVisibility();
+    vi.useRealTimers();
+  });
+
+  /** Settles the mount read before counting anything after it. */
+  async function mounted() {
+    await waitFor(() => expect(fetchWallet).toHaveBeenCalled());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    return fetchWallet.mock.calls.length;
+  }
+
+  it("does not re-read the wallet for every window focus", async () => {
+    renderUsage(<Usage />);
+    const base = await mounted();
+
+    // Alt-tab, closing a dialog, clicking back from another app: all fire this.
+    for (let i = 0; i < 5; i += 1) {
+      fireEvent.focus(window);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+    }
+
+    expect(fetchWallet).toHaveBeenCalledTimes(base);
+  });
+
+  it("re-reads on a schedule while the page is open", async () => {
+    renderUsage(<Usage />);
+    const base = await mounted();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(90_000);
+    });
+
+    expect(fetchWallet.mock.calls.length).toBeGreaterThan(base);
+  });
+
+  it("catches up on a tab return, but not for a return inside the fresh window", async () => {
+    renderUsage(<Usage />);
+    const base = await mounted();
+
+    // Straight back: the figures are seconds old, so the return costs nothing.
+    setTabHidden(true);
+    setTabHidden(false);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(fetchWallet).toHaveBeenCalledTimes(base);
+
+    // Back after long enough that they are stale, which is worth a read.
+    setTabHidden(true);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(120_000);
+    });
+    setTabHidden(false);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(fetchWallet.mock.calls.length).toBeGreaterThan(base);
+  });
+
+  it("stops reading while the tab is hidden", async () => {
+    renderUsage(<Usage />);
+    const base = await mounted();
+
+    setTabHidden(true);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300_000);
+    });
+
+    expect(fetchWallet).toHaveBeenCalledTimes(base);
+  });
+
+  it("keeps the figures on screen while it re-reads", async () => {
+    const view = renderUsage(<Usage />);
+    await mounted();
+    const shown = view.container.textContent;
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(60_000);
+    });
+
+    // A revalidation must not blank the page back to its loading state.
+    expect(view.container.textContent).toBe(shown);
+  });
 });

@@ -20,6 +20,8 @@ export const qk = {
   appConfig: () => ["portal", "appConfig"] as const,
   /** Storage-encryption migration progress, polled while a run is active. */
   encryptionMigration: () => ["portal", "encryptionMigration"] as const,
+  /** Usage accrued on this instance since the last sync; self-hosted only. */
+  localUsage: () => ["portal", "localUsage"] as const,
   // Keyed on scope: the open queue and the closed one are different reads.
   fileRunEvents: (scope: FileRunEventScope) =>
     ["portal", "fileRunEvents", scope] as const,

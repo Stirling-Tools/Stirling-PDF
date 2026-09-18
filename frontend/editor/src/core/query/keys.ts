@@ -20,6 +20,8 @@ export const qk = {
   /** Per-state file counts for one processing folder, polled while on screen. */
   processingFolderCounts: (recordId: string) =>
     ["editor", "processingFolderCounts", recordId] as const,
+  /** Every processing-folder record; shared by every folder row on the files page. */
+  processingFolders: () => ["editor", "processingFolders"] as const,
   /** The runs feed behind one folder's live sweep wall. */
   processingFolderRuns: (policyId: string) =>
     ["editor", "processingFolderRuns", policyId] as const,
