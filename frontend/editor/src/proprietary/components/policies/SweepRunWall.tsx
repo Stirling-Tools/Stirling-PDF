@@ -26,13 +26,18 @@ export interface SweepWallCard {
   labels: string[];
 }
 
-/** Fold one poll of the runs feed into the wall's cards; a done card never regresses. */
+/**
+ * Fold one poll of the runs feed into the wall's cards; a done card never regresses.
+ * Returns {@code prev} when the poll said nothing new, so a sweep that has settled
+ * stops re-rendering the wall on every tick.
+ */
 export function mergeRunsIntoCards(
   prev: SweepWallCard[],
   runs: ProcessingFolderRun[],
 ): SweepWallCard[] {
   const byName = new Map(prev.map((card) => [card.name, card]));
   const next: SweepWallCard[] = [...prev];
+  let changed = false;
   for (const run of [...runs].reverse()) {
     const name = run.fileName?.trim();
     if (!name) continue;
@@ -47,13 +52,15 @@ export function mergeRunsIntoCards(
       const card: SweepWallCard = { name, state, labels: [] };
       byName.set(name, card);
       next.push(card);
+      changed = true;
     } else if (existing.state !== state && existing.state !== "done") {
       const index = next.indexOf(existing);
       next[index] = { ...existing, state };
       byName.set(name, next[index]);
+      changed = true;
     }
   }
-  return next;
+  return changed ? next : prev;
 }
 
 /** The wall itself: every document a sweep took on, lighting up as its run settles.
@@ -135,8 +142,10 @@ function FolderSweepWallFor({ policyId }: { policyId: string }) {
     refetchInterval: POLL_MS,
   });
 
-  // dataUpdatedAt, not the rows: an unchanged feed keeps its array identity under
-  // structural sharing, and the stand-down counts polls rather than changes.
+  // Keyed on when the poll landed, not on the rows: an unchanged feed keeps its
+  // array identity under structural sharing, and the stand-down counts polls
+  // rather than changes. The cost is a render per poll while a sweep is on
+  // screen, which is what the old interval cost too.
   const foldedRef = useRef(0);
   useEffect(() => {
     if (!dataUpdatedAt || foldedRef.current === dataUpdatedAt || !runs) return;
