@@ -1,5 +1,8 @@
 import apiClient from "@app/services/apiClient";
-import { getServerAutomationSession } from "@app/services/serverAutomationSession";
+import {
+  getServerAutomationSession,
+  type ServerAutomationSession,
+} from "@app/services/serverAutomationSession";
 import type { AutomationMeterPayload } from "@core/services/automationMeter";
 export type {
   AutomationMeterPayload,
@@ -9,12 +12,13 @@ export type {
 /** Matches AutomationMeterController.MAX_INPUTS; larger payloads are truncated by the server. */
 const MAX_METER_INPUTS = 10_000;
 
-/** Reports browser classification to its connected server; server pipelines meter themselves. */
+/** Reports browser classification to its connected server; server pipelines meter themselves.
+ *  Pass the session a caller already resolved to skip re-resolving it (auth + routing) here. */
 export function meterAutomationRun(
   payload: AutomationMeterPayload,
-  sessionKey?: string,
+  session?: ServerAutomationSession,
 ): void {
-  void getServerAutomationSession()
+  void (session ? Promise.resolve(session) : getServerAutomationSession())
     .then(async (session) => {
       for (
         let offset = 0;
@@ -29,7 +33,7 @@ export function meterAutomationRun(
           },
           {
             suppressErrorToast: true,
-            automationSession: sessionKey ?? session.key,
+            automationSession: session.key,
           },
         );
       }

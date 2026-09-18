@@ -131,7 +131,7 @@ describe("runClassificationDemoSweep", () => {
           { pages: 0, bytes: 1 },
         ],
       }),
-      "session",
+      { key: "session", baseUrl: "https://server.test" },
     );
   });
 
@@ -486,7 +486,7 @@ describe("settling swept documents locally", () => {
 
     expect(meterAutomationRun).toHaveBeenCalledWith(
       expect.objectContaining({ automationName: "Onboarding classification" }),
-      "session",
+      { key: "session", baseUrl: "https://server.test" },
     );
   });
 });

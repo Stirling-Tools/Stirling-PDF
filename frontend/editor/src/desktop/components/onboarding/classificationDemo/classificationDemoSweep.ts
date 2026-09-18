@@ -365,7 +365,7 @@ export async function runClassificationDemoSweep(
         operations: [CLASSIFY_STEP],
         inputs: metered,
       },
-      session.key,
+      session,
     );
   }
 
