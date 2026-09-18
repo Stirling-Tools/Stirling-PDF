@@ -2,10 +2,12 @@ import type { ServerPlan } from "@app/billing/serverPlan";
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
 } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { Banner, Button } from "@app/ui";
@@ -19,17 +21,14 @@ import {
   refreshWalletCache,
   type Wallet,
 } from "@portal/api/billing";
-import {
-  fetchLocalUsage,
-  triggerLocalSync,
-  type LocalUsage,
-} from "@portal/api/link";
+import { fetchLocalUsage, triggerLocalSync } from "@portal/api/link";
 import { useStripePortal } from "@portal/hooks/useStripePortal";
 import { useBundleFlowState } from "@portal/hooks/useBundleFlowState";
 import { FreePlanView } from "@portal/components/billing/FreePlanView";
 import { PaymentSection } from "@portal/components/billing/PaymentSection";
 import { InvoicesSection } from "@portal/components/billing/InvoicesSection";
 import { useFleetStats } from "@portal/queries/infrastructure";
+import { qk } from "@portal/queries/keys";
 import { useCheckoutOptional } from "@app/contexts/CheckoutContext";
 import { SubscribedPlanView } from "@portal/components/billing/SubscribedPlanView";
 import {
@@ -71,6 +70,9 @@ export interface UsageProps {
  * re-reads it. Only the {@code extras} sections still branch on {@code wallet.status} — the two
  * products render from their own holdings, which that axis cannot express.
  */
+/** How often the page re-reads the wallet while it is open and the tab is visible. */
+const WALLET_POLL_MS = 30_000;
+
 export function Usage({
   localUsersInUse,
   serverPlan,
@@ -80,7 +82,29 @@ export function Usage({
   renderLicenseSection,
 }: UsageProps = {}) {
   const { t } = useTranslation();
-  const [wallet, setWallet] = useState<Wallet | null>(null);
+  const queryClient = useQueryClient();
+  const walletKey = qk.wallet(true);
+  const {
+    data: wallet = null,
+    isPending: walletPending,
+    error: walletError,
+    refetch: refetchWallet,
+  } = useQuery({
+    queryKey: walletKey,
+    queryFn: fetchWallet,
+    // A live meter, so it re-reads on a schedule and again on coming back to the
+    // tab. staleTime is what makes the second cheap: this page used to reload in
+    // full on every window focus event, which fires for an alt-tab or a dialog
+    // closing, not just a real return.
+    refetchInterval: WALLET_POLL_MS,
+    refetchOnWindowFocus: true,
+    staleTime: WALLET_POLL_MS,
+    // A failure is surfaced to the operator, and the next tick retries.
+    retry: false,
+  });
+  const refresh = useCallback(() => {
+    void refetchWallet();
+  }, [refetchWallet]);
   const procurement = useProcurement();
   const { trialSetupRequested, clearTrialSetupRequest } = useUI();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -129,12 +153,14 @@ export function Usage({
   // Locally-accrued usage SaaS hasn't billed yet; added to the synced figure so
   // "current usage" reflects work since the last daily sync. Best-effort.
   const hasLocalInstance = localUsersInUse !== undefined;
-  const [localUsage, setLocalUsage] = useState<LocalUsage | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  // The SaaS session has lapsed and needs a re-sign-in (self-hosted only).
-  const [sessionExpired, setSessionExpired] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const { data: localUsage = null } = useQuery({
+    queryKey: qk.localUsage(),
+    queryFn: () => fetchLocalUsage().catch(() => null),
+    enabled: hasLocalInstance,
+    refetchInterval: WALLET_POLL_MS,
+    staleTime: WALLET_POLL_MS,
+    retry: false,
+  });
   const previousDeal = useRef(procurement.data);
   useEffect(() => {
     const previous = previousDeal.current;
@@ -145,7 +171,7 @@ export function Usage({
     void refreshWalletCache()
       .catch(() => {})
       .then(() => {
-        if (!cancelled) setRefreshKey((key) => key + 1);
+        if (!cancelled) refresh();
       });
     return () => {
       cancelled = true;
@@ -172,69 +198,28 @@ export function Usage({
     };
   }, []);
 
+  // Reported as a fact to the link gate, which derives "subscribed" from it.
   useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    setSessionExpired(false);
-    // Independent of the wallet load — a local-usage failure must not break the
-    // page; it just means no unsynced delta is shown.
-    if (hasLocalInstance)
-      fetchLocalUsage()
-        .then((u) => {
-          if (!cancelled) setLocalUsage(u);
-        })
-        .catch(() => {
-          if (!cancelled) setLocalUsage(null);
-        });
-    fetchWallet()
-      .then((w) => {
-        if (cancelled) return;
-        setWallet(w);
-        onWalletLoaded?.(w);
-      })
-      .catch((e) => {
-        if (cancelled) return;
-        if (e instanceof SaasNotLinkedError) {
-          // The attended SaaS session expired — offer a re-sign-in.
-          setSessionExpired(true);
-        } else if (e instanceof SaasUnconfiguredError) {
-          setError(e.message);
-        } else if (e instanceof HttpError) {
-          setError(
-            t(
-              "portal.usage.error.walletUnavailable",
-              "Wallet unavailable: {{status}} {{statusText}}",
-              {
-                status: e.status,
-                statusText: e.statusText,
-              },
-            ),
-          );
-        } else {
-          setError(e instanceof Error ? e.message : String(e));
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [refreshKey, onWalletLoaded, t, hasLocalInstance]);
+    if (wallet) onWalletLoaded?.(wallet);
+  }, [wallet, onWalletLoaded]);
 
-  const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
-  useEffect(() => {
-    const refreshVisible = () => {
-      if (document.visibilityState === "visible") refresh();
-    };
-    window.addEventListener("focus", refreshVisible);
-    const interval = window.setInterval(refreshVisible, 30_000);
-    return () => {
-      window.removeEventListener("focus", refreshVisible);
-      window.clearInterval(interval);
-    };
-  }, [refresh]);
+  // The SaaS session has lapsed and needs a re-sign-in (self-hosted only).
+  const sessionExpired = walletError instanceof SaasNotLinkedError;
+  const error = useMemo(() => {
+    if (!walletError || sessionExpired) return null;
+    if (walletError instanceof SaasUnconfiguredError)
+      return walletError.message;
+    if (walletError instanceof HttpError)
+      return t(
+        "portal.usage.error.walletUnavailable",
+        "Wallet unavailable: {{status}} {{statusText}}",
+        { status: walletError.status, statusText: walletError.statusText },
+      );
+    return walletError instanceof Error
+      ? walletError.message
+      : String(walletError);
+  }, [walletError, sessionExpired, t]);
+
   useEffect(() => {
     const onBillingUpdated = () => {
       void refreshWalletCache()
@@ -267,7 +252,7 @@ export function Usage({
       combinedChoose: true,
       currentLimit: heldLimit,
       minimumSeats: usersInUse ?? undefined,
-      onSuccess: () => setRefreshKey((k) => k + 1),
+      onSuccess: refresh,
     });
   }, [checkout, heldLimit, usersInUse]);
 
@@ -285,8 +270,7 @@ export function Usage({
         const w = await fetchWallet();
         if (!mounted.current) return false;
         if (w.status === "subscribed") {
-          setWallet(w);
-          onWalletLoaded?.(w);
+          queryClient.setQueryData(walletKey, w);
           // Nudge the local instance to refresh its gate now so billable work
           // unblocks immediately rather than on its next poll. Fire-and-forget;
           // a no-op on SaaS (no local instance to sync).
@@ -301,7 +285,7 @@ export function Usage({
     }
     // Webhook still hasn't landed: re-fetch once more and report back so the modal
     // shows its "almost there" notice rather than the page silently self-healing.
-    setRefreshKey((k) => k + 1);
+    refresh();
     return false;
   }, [onWalletLoaded, hasLocalInstance]);
 
@@ -326,7 +310,7 @@ export function Usage({
       wallet={wallet}
       serverPlan={serverPlan}
       serverPlanAction={serverPlanAction}
-      loading={loading}
+      loading={walletPending}
       pendingUnits={localUsage?.totalUnsyncedUnits ?? 0}
       notices={
         <>

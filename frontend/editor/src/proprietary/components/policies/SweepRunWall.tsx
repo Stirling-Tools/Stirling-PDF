@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useLabelName } from "@app/data/labelDisplay";
+import { qk } from "@app/query/keys";
 import {
   fetchProcessingFolderRuns,
   type ProcessingFolderRun,
@@ -24,13 +26,18 @@ export interface SweepWallCard {
   labels: string[];
 }
 
-/** Fold one poll of the runs feed into the wall's cards; a done card never regresses. */
+/**
+ * Fold one poll of the runs feed into the wall's cards; a done card never regresses.
+ * Returns {@code prev} when the poll said nothing new, so a sweep that has settled
+ * stops re-rendering the wall on every tick.
+ */
 export function mergeRunsIntoCards(
   prev: SweepWallCard[],
   runs: ProcessingFolderRun[],
 ): SweepWallCard[] {
   const byName = new Map(prev.map((card) => [card.name, card]));
   const next: SweepWallCard[] = [...prev];
+  let changed = false;
   for (const run of [...runs].reverse()) {
     const name = run.fileName?.trim();
     if (!name) continue;
@@ -45,13 +52,15 @@ export function mergeRunsIntoCards(
       const card: SweepWallCard = { name, state, labels: [] };
       byName.set(name, card);
       next.push(card);
+      changed = true;
     } else if (existing.state !== state && existing.state !== "done") {
       const index = next.indexOf(existing);
       next[index] = { ...existing, state };
       byName.set(name, next[index]);
+      changed = true;
     }
   }
-  return next;
+  return changed ? next : prev;
 }
 
 /** The wall itself: every document a sweep took on, lighting up as its run settles.
@@ -101,8 +110,18 @@ export interface FolderSweepWallProps {
 /**
  * A working folder's live sweep, wherever it came from. Polls the runs feed and raises a
  * one-line strip only while runs execute: the grid below already wears each file's badge.
+ *
+ * The poll stands down while the tab is hidden: the wall keeps watching for the next
+ * sweep long after it has hidden itself, so a background tab polled indefinitely.
  */
 export function FolderSweepWall({ policyId }: FolderSweepWallProps) {
+  if (!policyId) return null;
+  // Keyed, so opening a different folder starts from a clean wall rather than
+  // inheriting the previous one's cards.
+  return <FolderSweepWallFor key={policyId} policyId={policyId} />;
+}
+
+function FolderSweepWallFor({ policyId }: { policyId: string }) {
   const { t } = useTranslation();
   const [cards, setCards] = useState<SweepWallCard[]>([]);
   const [visible, setVisible] = useState(false);
@@ -112,42 +131,41 @@ export function FolderSweepWall({ policyId }: FolderSweepWallProps) {
   const wokeRef = useRef(false);
   const idleRef = useRef(0);
 
-  useEffect(() => {
-    setCards([]);
-    setVisible(false);
-    setAnyRunning(false);
-    wokeRef.current = false;
-    idleRef.current = 0;
-    if (!policyId) return;
-    let cancelled = false;
-    const tick = async () => {
-      const runs = await fetchProcessingFolderRuns(policyId).catch(
+  const { data: runs, dataUpdatedAt } = useQuery({
+    queryKey: qk.processingFolderRuns(policyId),
+    // A failed read is an empty poll, not an error: it still advances the
+    // stand-down count, so a wall left up by a broken feed comes down.
+    queryFn: () =>
+      fetchProcessingFolderRuns(policyId).catch(
         () => [] as ProcessingFolderRun[],
-      );
-      if (cancelled) return;
-      const live = runs.some((run) => !TERMINAL.includes(run.status));
-      setAnyRunning(live);
-      if (live) {
-        wokeRef.current = true;
-        idleRef.current = 0;
-        setVisible(true);
+      ),
+    refetchInterval: POLL_MS,
+  });
+
+  // Keyed on when the poll landed, not on the rows: an unchanged feed keeps its
+  // array identity under structural sharing, and the stand-down counts polls
+  // rather than changes. The cost is a render per poll while a sweep is on
+  // screen, which is what the old interval cost too.
+  const foldedRef = useRef(0);
+  useEffect(() => {
+    if (!dataUpdatedAt || foldedRef.current === dataUpdatedAt || !runs) return;
+    foldedRef.current = dataUpdatedAt;
+    const live = runs.some((run) => !TERMINAL.includes(run.status));
+    setAnyRunning(live);
+    if (live) {
+      wokeRef.current = true;
+      idleRef.current = 0;
+      setVisible(true);
+    }
+    if (wokeRef.current) {
+      setCards((prev) => mergeRunsIntoCards(prev, runs));
+      if (!live && ++idleRef.current >= IDLE_POLLS) {
+        wokeRef.current = false;
+        setVisible(false);
+        setCards([]);
       }
-      if (wokeRef.current) {
-        setCards((prev) => mergeRunsIntoCards(prev, runs));
-        if (!live && ++idleRef.current >= IDLE_POLLS) {
-          wokeRef.current = false;
-          setVisible(false);
-          setCards([]);
-        }
-      }
-    };
-    void tick();
-    const timer = setInterval(() => void tick(), POLL_MS);
-    return () => {
-      cancelled = true;
-      clearInterval(timer);
-    };
-  }, [policyId]);
+    }
+  }, [dataUpdatedAt, runs]);
 
   if (!visible || cards.length === 0) return null;
   const settled = cards.filter(

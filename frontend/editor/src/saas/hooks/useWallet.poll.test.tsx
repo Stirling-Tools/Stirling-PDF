@@ -1,6 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, act, waitFor } from "@testing-library/react";
+import { renderHook, act, cleanup, waitFor } from "@testing-library/react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import type { ReactNode } from "react";
 import { expectConsole } from "@app/tests/failOnConsole";
+import {
+  resetTabVisibility,
+  setTabHidden,
+} from "@app/tests/utils/tabVisibility";
 
 const get = vi.fn();
 vi.mock("@app/services/apiClient", () => ({
@@ -13,6 +19,16 @@ vi.mock("@app/services/billing", () => ({ createPortalSession: vi.fn() }));
 vi.mock("@app/platform/openExternal", () => ({ openExternal: vi.fn() }));
 
 const { useWallet } = await import("@app/hooks/useWallet");
+const { createAppQueryClient } = await import("@app/query/queryClient");
+
+/** The hook reads through the shared cache, so it needs the app's own client. */
+function wrapper({ children }: { children: ReactNode }) {
+  return (
+    <QueryClientProvider client={createAppQueryClient()}>
+      {children}
+    </QueryClientProvider>
+  );
+}
 
 /** Full enough for the hook's deep-compare, which reads every field. */
 function walletWith(freeRemaining: number) {
@@ -56,10 +72,13 @@ describe("useWallet — keeping the figures fresh", () => {
     get.mockReset();
     get.mockResolvedValue(walletWith(500));
   });
-  afterEach(() => vi.useRealTimers());
+  afterEach(() => {
+    cleanup();
+    vi.useRealTimers();
+  });
 
   it("re-reads the wallet on the poll interval", async () => {
-    const { result } = renderHook(() => useWallet());
+    const { result } = renderHook(() => useWallet(), { wrapper });
     await waitFor(() => expect(result.current.wallet).not.toBeNull());
     expect(get).toHaveBeenCalledTimes(1);
 
@@ -72,7 +91,7 @@ describe("useWallet — keeping the figures fresh", () => {
   });
 
   it("polls silently, so consumers gating on loading/error don't flicker", async () => {
-    const { result } = renderHook(() => useWallet());
+    const { result } = renderHook(() => useWallet(), { wrapper });
     await waitFor(() => expect(result.current.wallet).not.toBeNull());
 
     // A poll that fails must leave the last good snapshot, and must not raise
@@ -87,34 +106,30 @@ describe("useWallet — keeping the figures fresh", () => {
     expect(result.current.wallet?.freeRemaining).toBe(500);
   });
 
-  it("settles loading when a silent poll supersedes an in-flight visible load", async () => {
-    // The mount load raises `loading`; a poll firing before it lands cancels it.
-    // If clearing the flag were the silent load's to skip, both would decline
-    // and `loading` would stay true forever — which permanently suppresses the
-    // limit modals, since they do `if (loading || !wallet) return null`.
-    const visibility = vi.spyOn(document, "visibilityState", "get");
-    visibility.mockReturnValue("visible");
-
+  it("settles loading when a poll arrives over an in-flight visible load", async () => {
+    // `loading` staying true would permanently suppress the limit modals, which
+    // do `if (loading || !wallet) return null`. A poll landing on top of the
+    // mount read is the case that used to risk it.
     let landMount: (v: unknown) => void = () => {};
     get.mockReturnValueOnce(
       new Promise((resolve) => {
         landMount = resolve;
       }),
     );
-    const { result } = renderHook(() => useWallet());
+    const { result } = renderHook(() => useWallet(), { wrapper });
     expect(result.current.loading).toBe(true);
 
     get.mockResolvedValue(walletWith(470));
     await act(async () => {
-      document.dispatchEvent(new Event("visibilitychange"));
+      setTabHidden(false);
     });
     await act(async () => {
       landMount(walletWith(500));
     });
 
-    await waitFor(() => expect(result.current.wallet?.freeRemaining).toBe(470));
-    expect(result.current.loading).toBe(false);
-    visibility.mockRestore();
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.wallet).not.toBeNull();
+    resetTabVisibility();
   });
 
   it("clears a stale error once a silent poll succeeds", async () => {
@@ -122,7 +137,7 @@ describe("useWallet — keeping the figures fresh", () => {
     // retries stay quiet.
     expectConsole.warn(/\[useWallet\] fetch failed/);
     get.mockRejectedValueOnce(new Error("network blip"));
-    const { result } = renderHook(() => useWallet());
+    const { result } = renderHook(() => useWallet(), { wrapper });
     await waitFor(() => expect(result.current.error).not.toBeNull());
 
     get.mockResolvedValue(walletWith(500));
@@ -135,24 +150,20 @@ describe("useWallet — keeping the figures fresh", () => {
   });
 
   it("stops polling while the tab is hidden and re-reads on return", async () => {
-    const visibility = vi.spyOn(document, "visibilityState", "get");
-    visibility.mockReturnValue("visible");
-    const { result } = renderHook(() => useWallet());
+    const { result } = renderHook(() => useWallet(), { wrapper });
     await waitFor(() => expect(result.current.wallet).not.toBeNull());
     const afterMount = get.mock.calls.length;
 
-    visibility.mockReturnValue("hidden");
     await act(async () => {
-      document.dispatchEvent(new Event("visibilitychange"));
+      setTabHidden(true);
       vi.advanceTimersByTime(120_000);
     });
     expect(get).toHaveBeenCalledTimes(afterMount);
 
-    visibility.mockReturnValue("visible");
     await act(async () => {
-      document.dispatchEvent(new Event("visibilitychange"));
+      setTabHidden(false);
     });
     await waitFor(() => expect(get.mock.calls.length).toBe(afterMount + 1));
-    visibility.mockRestore();
+    resetTabVisibility();
   });
 });

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
   Banner,
@@ -27,6 +28,7 @@ import {
   type MigrationStatus,
   type StorageEncryptionStatus,
 } from "@portal/api/storageEncryption";
+import { qk } from "@portal/queries/keys";
 import { InfoHint } from "@portal/components/InfoHint";
 import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
 import { EncryptionKeyTable } from "@portal/components/infrastructure/EncryptionKeyTable";
@@ -112,23 +114,30 @@ export function EncryptionPanel({
   }, [load]);
 
   // Progress lives in the backend's memory, so poll only while a run is active.
+  // The poll also stands down while the tab is hidden: a long migration left in
+  // a background tab asked every 2s for its whole duration.
+  const { data: polled, dataUpdatedAt } = useQuery({
+    queryKey: qk.encryptionMigration(),
+    queryFn: fetchMigrationStatus,
+    enabled: migration?.state === "RUNNING",
+    refetchInterval: MIGRATION_POLL_MS,
+    // A failed read is transient; the next tick retries and the progress on
+    // screen stands, so a retry here would only double the request.
+    retry: false,
+  });
+
+  // Keyed on when the read landed, not on the rows: an unchanged run keeps its
+  // object identity under structural sharing, and the finish check must see
+  // every poll.
+  const foldedRef = useRef(0);
   useEffect(() => {
-    if (migration?.state !== "RUNNING") return;
-    const timer = window.setInterval(() => {
-      void fetchMigrationStatus()
-        .then((next) => {
-          if (!mounted.current) return;
-          setMigration(next);
-          // The run has just changed the encrypted/plaintext split, so re-read
-          // status: without this the coverage card keeps its pre-run counts.
-          if (next.state !== "RUNNING") void load();
-        })
-        .catch(() => {
-          /* transient: the next tick retries */
-        });
-    }, MIGRATION_POLL_MS);
-    return () => window.clearInterval(timer);
-  }, [migration?.state, load]);
+    if (!polled || foldedRef.current === dataUpdatedAt) return;
+    foldedRef.current = dataUpdatedAt;
+    setMigration(polled);
+    // The run has just changed the encrypted/plaintext split, so re-read
+    // status: without this the coverage card keeps its pre-run counts.
+    if (polled.state !== "RUNNING") void load();
+  }, [polled, dataUpdatedAt, load]);
 
   const runKeyAction = async (
     key: EncryptionKeyInfo,
