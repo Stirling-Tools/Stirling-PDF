@@ -1,3 +1,4 @@
+import { AccountConnectionNotice } from "@portal/components/account-link/AccountConnectionNotice";
 import { useLocation } from "react-router-dom";
 import { AppConfigProvider } from "@app/contexts/AppConfigContext";
 import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
@@ -27,6 +28,7 @@ function RoutedContent() {
  * PortalProviders, not here.
  */
 export function PortalChrome() {
+  const { pathname } = useLocation();
   return (
     // One app-config instance for every portal consumer (the search gates, the
     // sidebar) so they can't fetch twice or disagree.
@@ -34,6 +36,7 @@ export function PortalChrome() {
       {/* The pipeline builder reads the tool registry to list and configure operations. */}
       <ToolRegistryProvider>
         <AppShell>
+          {!pathname.endsWith("/account-link") && <AccountConnectionNotice />}
           <RoutedContent />
         </AppShell>
       </ToolRegistryProvider>
