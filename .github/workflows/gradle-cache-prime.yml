@@ -29,6 +29,7 @@ jobs:
       contents: read
     outputs:
       files_hash: ${{ steps.hash.outputs.files_hash }}
+      java_version: ${{ steps.hash.outputs.java_version }}
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -42,6 +43,7 @@ jobs:
         run: |
           HASH="$FILES_HASH"
           echo "files_hash=$HASH" >> "$GITHUB_OUTPUT"
+          echo "java_version=${{ env.JAVA_VERSION }}" >> "$GITHUB_OUTPUT"
   gradle-cache-prime:
     environment:
       name: ci-unsigned
@@ -51,7 +53,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java${{ env.JAVA_VERSION }}
+      GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java${{ needs.hash_pr.outputs.java_version }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
