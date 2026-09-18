@@ -31,3 +31,8 @@ export function loadPolicies(): PoliciesByKey {
 export function rawStoredPolicies(): string | null {
   return canReadPolicies() ? rawServerPolicies() : null;
 }
+
+/** Reads through the guarded loadPolicies, so a local-only session enforces nothing. */
+export function isEnforcedPolicy(policyKey: string | undefined): boolean {
+  return policyKey != null && loadPolicies()[policyKey]?.required === true;
+}
