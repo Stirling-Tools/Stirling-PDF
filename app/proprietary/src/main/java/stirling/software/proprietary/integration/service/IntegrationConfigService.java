@@ -167,6 +167,9 @@ public class IntegrationConfigService {
         if (!ownership.canManage(TYPE, cfg, currentUser)) {
             throw forbidden("You cannot manage this integration");
         }
+        if (cfg.isLocked() && !ownership.isAdmin(currentUser)) {
+            throw forbidden("This integration is locked by an administrator");
+        }
         // Refuse to pull a connection out from under whatever still references it.
         List<String> usages =
                 usageChecks.stream()

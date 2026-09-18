@@ -1,0 +1,290 @@
+{
+  "version": 2,
+  "language": "eu",
+  "labels": [
+    {
+      "id": "invoice",
+      "phrases": [
+        { "text": "faktura", "weight": 24, "where": "title" },
+        { "text": "balio erantsiaren gaineko zerga", "weight": 8 }
+      ]
+    },
+    {
+      "id": "receipt",
+      "phrases": [{ "text": "ordainagiri", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "credit-note",
+      "phrases": [{ "text": "kreditu-agiri", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "purchase-order",
+      "phrases": [{ "text": "erosketa agindu", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "packing-slip",
+      "phrases": [{ "text": "ordainagiri", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "payslip",
+      "phrases": [{ "text": "soldata orri", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "expense-report",
+      "phrases": [{ "text": "gastu", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "financial-statement",
+      "phrases": [
+        { "text": "urteko kontuak", "weight": 20, "where": "title" },
+        { "text": "balantze-orri", "weight": 12 }
+      ]
+    },
+    {
+      "id": "tax-return",
+      "phrases": [
+        { "text": "errenta aitorpen", "weight": 22, "where": "title" }
+      ]
+    },
+    {
+      "id": "tax-form",
+      "phrases": [
+        { "text": "errenta aitorpen", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "contract",
+      "phrases": [{ "text": "kontratu", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "employment-contract",
+      "phrases": [{ "text": "lan-kontratu", "weight": 24, "where": "title" }]
+    },
+    {
+      "id": "privacy-policy",
+      "phrases": [
+        { "text": "pribatutasun-politika", "weight": 24, "where": "title" },
+        { "text": "datuak babesteko erregelamendu orokorra", "weight": 10 }
+      ]
+    },
+    {
+      "id": "will",
+      "phrases": [{ "text": "testamentu", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "mortgage-document",
+      "phrases": [
+        { "text": "hipoteka-mailegu", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "insurance-policy",
+      "phrases": [{ "text": "aseguru-poliza", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "resume",
+      "phrases": [{ "text": "cv labur", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "certificate",
+      "phrases": [{ "text": "diploma", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "transcript",
+      "phrases": [{ "text": "noten agiri", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "thesis",
+      "phrases": [{ "text": "tesi", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "patent",
+      "phrases": [{ "text": "patente", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "prescription",
+      "phrases": [{ "text": "farmazia", "weight": 10 }]
+    },
+    {
+      "id": "medical-report",
+      "phrases": [
+        { "text": "historia kliniko", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "immunization-record",
+      "phrases": [{ "text": "txertaketa", "weight": 12 }]
+    },
+    {
+      "id": "questionnaire",
+      "phrases": [{ "text": "galdetegi", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "technical-drawing",
+      "phrases": [
+        { "text": "marrazketa tekniko", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "newsletter",
+      "phrases": [{ "text": "buletin", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "business-plan",
+      "phrases": [{ "text": "negozio-plan", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "white-paper",
+      "phrases": [{ "text": "liburu zuri", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "meeting-minutes",
+      "phrases": [{ "text": "akta", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "meeting-agenda",
+      "phrases": [{ "text": "gai zerrenda", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "memo",
+      "phrases": [{ "text": "memorandum", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "customs-declaration",
+      "phrases": [{ "text": "aduana-aitorpen", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "visa-document",
+      "phrases": [{ "text": "bisa", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "utility-bill",
+      "phrases": [{ "text": "wattordugailu", "weight": 12 }]
+    },
+    {
+      "id": "menu",
+      "phrases": [{ "text": "menu", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "recipe",
+      "phrases": [{ "text": "errezeta", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "presentation",
+      "phrases": [{ "text": "aurkezpen", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "report",
+      "phrases": [{ "text": "txosten", "weight": 8, "where": "title" }]
+    },
+    {
+      "id": "letter",
+      "phrases": [{ "text": "eskutitz", "weight": 8, "where": "title" }]
+    },
+    {
+      "id": "form",
+      "phrases": [{ "text": "formulario", "weight": 10, "where": "title" }]
+    },
+    {
+      "id": "audit-report",
+      "phrases": [{ "text": "kontu-ikuskaritza", "weight": 12 }]
+    },
+    {
+      "id": "property-listing",
+      "phrases": [{ "text": "ondasun higiezin", "weight": 8 }]
+    },
+    {
+      "id": "email-thread",
+      "phrases": [{ "text": "posta elektroniko", "weight": 8 }]
+    },
+    {
+      "id": "book-ebook",
+      "phrases": [{ "text": "aurkibide", "weight": 6 }]
+    },
+    {
+      "id": "magazine-article",
+      "phrases": [{ "text": "aldizkari", "weight": 10 }]
+    },
+    {
+      "id": "lesson-plan",
+      "phrases": [
+        { "text": "unitate didaktiko", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "offer-letter",
+      "phrases": [{ "text": "hautapen-prozesu", "weight": 8 }]
+    },
+    {
+      "id": "purchase-agreement",
+      "phrases": [
+        { "text": "salerosketa kontratu", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "consent-form",
+      "phrases": [
+        { "text": "baimen informatu", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "lab-report",
+      "phrases": [{ "text": "proba analitiko", "weight": 12 }]
+    },
+    {
+      "id": "insurance-claim",
+      "phrases": [{ "text": "aseguru", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "safety-procedure",
+      "phrases": [{ "text": "laneko segurtasun eta osasuna", "weight": 10 }]
+    },
+    {
+      "id": "budget",
+      "phrases": [{ "text": "aurrekontu", "weight": 14, "where": "title" }]
+    },
+    {
+      "id": "order-confirmation",
+      "phrases": [
+        { "text": "salmenta-eskaera", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "application-form",
+      "phrases": [{ "text": "enplegu-eskaera", "weight": 14, "where": "title" }]
+    },
+    {
+      "id": "organization-chart",
+      "phrases": [{ "text": "organigrama", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "case-study",
+      "phrases": [{ "text": "kasu azterketa", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "board-report",
+      "phrases": [{ "text": "administrazio kontseilu", "weight": 10 }]
+    },
+    {
+      "id": "investment-summary",
+      "phrases": [{ "text": "inbestimendu", "weight": 8 }]
+    },
+    {
+      "id": "analytics-report",
+      "phrases": [{ "text": "web-analitika", "weight": 10 }]
+    },
+    {
+      "id": "hoa-document",
+      "phrases": [{ "text": "jabeen erkidego", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "assignment-brief",
+      "phrases": [{ "text": "etxeko lan", "weight": 12 }]
+    }
+  ],
+  "patterns": {
+    "toc": [{ "pattern": "aurkibide" }],
+    "references": [{ "pattern": "bibliografia" }],
+    "signature": [{ "pattern": "sinadura" }]
+  }
+}
