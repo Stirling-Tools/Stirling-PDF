@@ -18,6 +18,7 @@ import {
   FolderHero,
   FollowUpPanel,
   PrivacyNote,
+  ProcessingCounts,
   ProcessingHero,
   useProcessingLabel,
 } from "@app/components/onboarding/classificationDemo/classificationDemoSlides";
@@ -255,9 +256,14 @@ export const Processing: Story = {
     <div className={styles.view}>
       <div className={styles.viewColumn}>
         <ProcessingHero label="Processing file 18/50..." />
-        <p className={styles.counts}>
-          <span className={styles.countsNumber}>17</span>of 50 PDFs processed
-        </p>
+        <ProcessingCounts
+          progress={{
+            phase: "processing",
+            processed: 17,
+            total: 50,
+            groups: GROUPS.slice(0, 4),
+          }}
+        />
         <CategoryTicker groups={GROUPS.slice(0, 4)} />
         <div className={styles.viewActions}>
           <Button variant="quiet" accent="neutral">
@@ -579,10 +585,16 @@ function WalkthroughDemo({
         <CloseCorner onClick={close} />
         <div className={styles.viewColumn}>
           <ProcessingHero label={processingLabel} />
-          <p className={styles.counts}>
-            <span className={styles.countsNumber}>{batch.processed}</span>
-            of {batchTotal} PDFs processed
-          </p>
+          <ProcessingCounts
+            progress={{
+              phase,
+              processed: batch.processed,
+              total: batchTotal,
+              groups: batch.groups,
+              listing:
+                phase === "gathering" ? { checked: 96, total: 212 } : undefined,
+            }}
+          />
           <CategoryTicker groups={batch.groups} />
           <div className={styles.viewActions}>
             <Button variant="quiet" accent="neutral" onClick={close}>

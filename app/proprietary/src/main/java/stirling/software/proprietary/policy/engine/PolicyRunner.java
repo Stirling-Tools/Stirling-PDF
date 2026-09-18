@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -53,6 +55,7 @@ public class PolicyRunner {
     private final PolicyAccessGuard policyAccessGuard;
     private final DatabaseLicenseGuard databaseLicenseGuard;
     private final PolicyFailureRecorder failureRecorder;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * One admission gate per sweep: every run is visible immediately, but only this many execute at
@@ -127,12 +130,13 @@ public class PolicyRunner {
             // folder outputs are pruned instead of accumulating until the policy is deleted.
             runIds.add(
                     startRun(
-                            policy,
-                            null,
-                            null,
-                            PolicyInputs.of(List.of()),
-                            unused -> {},
-                            admission));
+                                    policy,
+                                    null,
+                                    null,
+                                    PolicyInputs.of(List.of()),
+                                    unused -> {},
+                                    admission)
+                            .runId());
         }
         for (PipelineInput input : inputs) {
             String sourceId = input.sourceId();
@@ -280,23 +284,62 @@ public class PolicyRunner {
             return List.of();
         }
         List<String> runIds = new ArrayList<>();
+        List<CompletableFuture<PolicyRun>> completions = new ArrayList<>();
         long docsFed = 0;
         for (ResolvedInput unit : work) {
-            runIds.add(
+            PolicyRunHandle handle =
                     startRun(
                             policy,
                             storedSource,
                             unit.fileIdentity(),
                             unit.inputs(),
                             unit.onComplete(),
-                            admission));
+                            admission);
+            runIds.add(handle.runId());
+            completions.add(
+                    handle.completion()
+                            .handle(
+                                    (run, error) -> {
+                                        if (error != null) {
+                                            log.warn(
+                                                    "Could not finish run {} in source batch {} for policy {}",
+                                                    handle.runId(),
+                                                    storedSource.id(),
+                                                    policy.id(),
+                                                    error);
+                                            return null;
+                                        }
+                                        return run;
+                                    }));
             docsFed += unit.inputs().primary().size();
+        }
+        if (!completions.isEmpty()) {
+            CompletableFuture.allOf(completions.toArray(CompletableFuture[]::new))
+                    .thenRun(
+                            () -> {
+                                if (completions.stream()
+                                        .map(CompletableFuture::join)
+                                        .anyMatch(PolicyRunner::madeProgress)) {
+                                    eventPublisher.publishEvent(
+                                            new SourceBatchSettledEvent(
+                                                    policy.id(), storedSource.id()));
+                                }
+                            })
+                    .exceptionally(
+                            error -> {
+                                log.warn(
+                                        "Could not finish source batch {} for policy {}",
+                                        storedSource.id(),
+                                        policy.id(),
+                                        error);
+                                return null;
+                            });
         }
         docCounter.record(storedSource.id(), docsFed);
         return runIds;
     }
 
-    private String startRun(
+    private PolicyRunHandle startRun(
             Policy policy,
             Source source,
             String fileIdentity,
@@ -313,29 +356,36 @@ public class PolicyRunner {
                         source,
                         fileIdentity,
                         admission);
-        handle.completion()
-                .whenComplete(
-                        (run, throwable) -> {
-                            boolean cancelled =
-                                    run != null && run.getStatus() == PolicyRunStatus.CANCELLED;
-                            boolean neverAdmitted =
-                                    run != null
-                                            && PolicyEngine.QUEUE_FULL_CODE.equals(
-                                                    run.getErrorCode());
-                            if (cancelled || neverAdmitted) {
-                                // Neither is a verdict on the file: cancellation is the
-                                // user's intent, and queue-full means nothing was attempted.
-                                // Settle, then drop the row, so the file reads as queued and
-                                // the next sweep takes it again.
-                                onComplete.accept(false);
-                                if (fileIdentity != null) {
-                                    processedLedger.forget(policy.id(), fileIdentity);
-                                }
-                                return;
-                            }
-                            onComplete.accept(succeeded(run, throwable));
-                        });
-        return handle.runId();
+        CompletableFuture<PolicyRun> settled =
+                handle.completion()
+                        .whenComplete(
+                                (run, throwable) -> {
+                                    boolean cancelled =
+                                            run != null
+                                                    && run.getStatus() == PolicyRunStatus.CANCELLED;
+                                    boolean neverAdmitted =
+                                            run != null
+                                                    && PolicyEngine.QUEUE_FULL_CODE.equals(
+                                                            run.getErrorCode());
+                                    if (cancelled || neverAdmitted) {
+                                        // Neither cancellation nor queue rejection is a verdict
+                                        // on the file; a later sweep may claim it again.
+                                        onComplete.accept(false);
+                                        if (fileIdentity != null) {
+                                            processedLedger.forget(policy.id(), fileIdentity);
+                                        }
+                                        return;
+                                    }
+                                    onComplete.accept(succeeded(run, throwable));
+                                });
+        return new PolicyRunHandle(handle.runId(), settled);
+    }
+
+    private static boolean madeProgress(PolicyRun run) {
+        return run != null
+                && (run.getStatus() == PolicyRunStatus.COMPLETED
+                        || run.getStatus() == PolicyRunStatus.FAILED)
+                && !PolicyEngine.QUEUE_FULL_CODE.equals(run.getErrorCode());
     }
 
     private static boolean succeeded(PolicyRun run, Throwable throwable) {

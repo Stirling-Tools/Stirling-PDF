@@ -159,7 +159,8 @@ class StorageFolderAuthorizationTest {
                         properties,
                         policies,
                         mock(DatabaseLicenseGuard.class),
-                        mock(PolicyFailureRecorder.class));
+                        mock(PolicyFailureRecorder.class),
+                        mock(org.springframework.context.ApplicationEventPublisher.class));
     }
 
     @Test
