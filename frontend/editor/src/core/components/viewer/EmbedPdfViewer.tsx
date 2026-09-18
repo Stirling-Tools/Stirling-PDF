@@ -349,6 +349,10 @@ const EmbedPdfViewerContent = ({
       expectSwap,
       fractionApplied: false,
     };
+    // Arm the pre-paint restore gates (the per-page layout hook and the swap
+    // layout effect); every completion path clears through
+    // clearPendingScrollRestore.
+    setRestorePending(true);
     swapTargetRef.current = null;
     swapLayoutRef.current = null;
     documentSwappedRef.current = false;
