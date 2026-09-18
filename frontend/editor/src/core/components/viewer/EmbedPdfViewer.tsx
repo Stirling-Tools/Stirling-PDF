@@ -86,7 +86,11 @@ export interface EmbedPdfViewerProps {
 const documentCacheKey = (file: StirlingFile): string =>
   `${file.fileId}|${file.quickKey}`;
 
-const SWAP_REVEAL_DEADLINE_MS = 700;
+// Slow engines can take seconds to report the replacement's page count and
+// land the carried zoom; the hide lasts until then, not for a fixed flash.
+const SWAP_REVEAL_DEADLINE_MS = 5_000;
+// Re-checks how often the hide decides whether the carried zoom has landed.
+const SWAP_REVEAL_HIDE_RECHECK_MS = 250;
 
 const findScrollableAncestor = (el: HTMLElement | null): HTMLElement | null => {
   let node = el?.parentElement ?? null;
@@ -240,11 +244,14 @@ const EmbedPdfViewerContent = ({
   // the swap backstop cost nothing during ordinary scrolling.
   const [restorePending, setRestorePending] = useState(false);
   // A replacement renders at the wrong scale until its zoom lands, so the
-  // scroller hides for that window; the deadline cannot leave it hidden.
+  // scroller hides for that window. The hide survives until the carried zoom
+  // lands (revealing early shows a wrong-scale frame), capped so a failed
+  // restore can never leave it hidden.
   const swapRevealRef = useRef<{
     scroller: HTMLElement | null;
     timer: ReturnType<typeof setTimeout> | null;
-  }>({ scroller: null, timer: null });
+    deadline: number;
+  }>({ scroller: null, timer: null, deadline: 0 });
   // Last scroll target the restore computed, used to reveal only once the
   // layout has stopped moving the target around.
   const swapTargetRef = useRef<number | null>(null);
@@ -305,14 +312,27 @@ const EmbedPdfViewerContent = ({
     (scroller: HTMLElement | null) => {
       if (!scroller) return;
       swapRevealRef.current.scroller = scroller;
+      swapRevealRef.current.deadline =
+        performance.now() + SWAP_REVEAL_DEADLINE_MS;
       scroller.style.visibility = "hidden";
-      if (swapRevealRef.current.timer !== null) {
-        clearTimeout(swapRevealRef.current.timer);
-      }
-      swapRevealRef.current.timer = setTimeout(
-        clearPendingScrollRestore,
-        SWAP_REVEAL_DEADLINE_MS,
-      );
+      const arm = () => {
+        if (swapRevealRef.current.timer !== null) {
+          clearTimeout(swapRevealRef.current.timer);
+        }
+        swapRevealRef.current.timer = setTimeout(() => {
+          // The carried zoom is the reason the scroller is hidden: a reveal
+          // before it lands paints the wrong scale on the next frame.
+          if (
+            pendingZoomRestoreRef.current !== null &&
+            performance.now() < swapRevealRef.current.deadline
+          ) {
+            arm();
+            return;
+          }
+          clearPendingScrollRestore();
+        }, SWAP_REVEAL_HIDE_RECHECK_MS);
+      };
+      arm();
     },
     [clearPendingScrollRestore],
   );
@@ -1751,7 +1771,9 @@ const EmbedPdfViewerContent = ({
     if (levelToRestore === null) return;
 
     let cancelled = false;
-    const deadline = performance.now() + 1_500;
+    // Matches the reveal cap: the scroller stays hidden until this loop either
+    // lands the zoom or runs out, so the two deadlines must not disagree.
+    const deadline = performance.now() + SWAP_REVEAL_DEADLINE_MS;
 
     const matchesLevel = () => {
       const current = getZoomState();

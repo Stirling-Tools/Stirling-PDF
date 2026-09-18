@@ -90,7 +90,13 @@ test("phone: rotating the viewport keeps the document and does not crash", async
 }) => {
   test.setTimeout(240_000);
   const errors: string[] = [];
-  page.on("pageerror", (error) => errors.push(String(error)));
+  page.on("pageerror", (error) => {
+    const message = String(error);
+    // WebKit surfaces the benign ResizeObserver-loop warning as a page error;
+    // reproduced on a clean upstream checkout, so only real errors fail here.
+    if (/ResizeObserver loop (completed|limit exceeded)/.test(message)) return;
+    errors.push(message);
+  });
   await loadViewer(page);
   await page.getByRole("button", { name: "Next Page" }).first().click();
   await page.waitForTimeout(600);

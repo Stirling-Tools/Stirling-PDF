@@ -205,6 +205,24 @@ async function readSwapSampler(page: import("@playwright/test").Page) {
     return state;
   });
 }
+
+// The reveal waits for the carried zoom, which slow engines can take seconds
+// to land; sampling before it would read only hidden frames.
+async function waitForRevealedFrame(page: import("@playwright/test").Page) {
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => {
+          const state = window.__swapSampler;
+          if (!state) return -1;
+          return state.liveCounts.findIndex(
+            (count, index) => count > 0 && state.hidden[index] !== true,
+          );
+        }),
+      { timeout: 15_000 },
+    )
+    .toBeGreaterThanOrEqual(0);
+}
 test("saving annotations keeps the live document mounted", async ({ page }) => {
   test.setTimeout(180_000);
   await loadViewer(page);
@@ -497,7 +515,7 @@ test("a tool output reload shows the saved position in its first frame", async (
   await expect
     .poll(() => page.locator("[data-page-index]").count(), { timeout: 60_000 })
     .toBe(3);
-  await page.waitForTimeout(1_500);
+  await waitForRevealedFrame(page);
   const swap = await readSwapSampler(page);
   const samples = swap?.samples ?? [];
   const pageTops = swap?.pageTops ?? [];
