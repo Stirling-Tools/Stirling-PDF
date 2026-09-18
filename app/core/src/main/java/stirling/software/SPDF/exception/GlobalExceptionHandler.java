@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ExceptionUtils.*;
+import stirling.software.common.util.PdfErrorUtils;
 import stirling.software.common.util.RegexPatternUtils;
 
 import tools.jackson.databind.ObjectMapper;
@@ -1142,6 +1143,29 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).contentType(PROBLEM_JSON).body(problemDetail);
     }
 
+    /**
+     * Route a typed exception to the handler that owns its status. Spring dispatches on the thrown
+     * type only, so anything reclassified after the fact has to be routed here by hand or it keeps
+     * the generic 500 that {@link #handleBaseApp} gives.
+     */
+    private ResponseEntity<ProblemDetail> dispatchBaseApp(
+            BaseAppException appEx, HttpServletRequest request) {
+        if (appEx instanceof PdfPasswordException) {
+            return handlePdfPassword((PdfPasswordException) appEx, request);
+        } else if (appEx instanceof ComplianceNotMetException complianceEx) {
+            return handleComplianceNotMet(complianceEx, request);
+        } else if (appEx instanceof PdfCorruptedException
+                || appEx instanceof PdfEncryptionException
+                || appEx instanceof OutOfMemoryDpiException) {
+            return handlePdfAndDpiExceptions(appEx, request);
+        } else if (appEx instanceof GhostscriptException) {
+            return handleGhostscriptException((GhostscriptException) appEx, request);
+        } else if (appEx instanceof FfmpegRequiredException) {
+            return handleFfmpegRequired((FfmpegRequiredException) appEx, request);
+        }
+        return handleBaseApp(appEx, request);
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ProblemDetail> handleRuntimeException(
             RuntimeException ex, HttpServletRequest request) {
@@ -1149,22 +1173,7 @@ public class GlobalExceptionHandler {
         // Check if this RuntimeException wraps a typed exception from job execution
         Throwable cause = ex.getCause();
         if (cause instanceof BaseAppException appEx) {
-            // Delegate to specific BaseAppException handlers
-            if (appEx instanceof PdfPasswordException) {
-                return handlePdfPassword((PdfPasswordException) appEx, request);
-            } else if (appEx instanceof ComplianceNotMetException complianceEx) {
-                return handleComplianceNotMet(complianceEx, request);
-            } else if (appEx instanceof PdfCorruptedException
-                    || appEx instanceof PdfEncryptionException
-                    || appEx instanceof OutOfMemoryDpiException) {
-                return handlePdfAndDpiExceptions(appEx, request);
-            } else if (appEx instanceof GhostscriptException) {
-                return handleGhostscriptException((GhostscriptException) appEx, request);
-            } else if (appEx instanceof FfmpegRequiredException) {
-                return handleFfmpegRequired((FfmpegRequiredException) appEx, request);
-            } else {
-                return handleBaseApp(appEx, request);
-            }
+            return dispatchBaseApp(appEx, request);
         } else if (cause instanceof BaseValidationException valEx) {
             // Delegate to validation exception handlers
             if (valEx instanceof CbrFormatException
@@ -1180,6 +1189,15 @@ public class GlobalExceptionHandler {
         } else if (cause instanceof IllegalArgumentException) {
             // Unwrap and handle IllegalArgumentException (business logic validation errors)
             return handleIllegalArgument((IllegalArgumentException) cause, request);
+        }
+
+        // Engine-level PDF failures (jpdfium's unchecked family) are not typed exceptions of ours,
+        // so classify them here rather than reporting a locked or damaged file as a server fault.
+        if (ExceptionUtils.isPasswordError(ex)) {
+            return dispatchBaseApp(ExceptionUtils.createPdfPasswordException(ex), request);
+        }
+        if (PdfErrorUtils.isCorruptedPdfError(ex)) {
+            return dispatchBaseApp(ExceptionUtils.createPdfCorruptedException(null, ex), request);
         }
 
         // Not a wrapped exception - treat as unexpected error
@@ -1255,10 +1273,8 @@ public class GlobalExceptionHandler {
         IOException processedException =
                 ExceptionUtils.handlePdfException(ex, request.getRequestURI());
 
-        // If it was wrapped as a specific PDF exception, the more specific handler will catch it on
-        // retry
-        if (processedException instanceof BaseAppException) {
-            return handleBaseApp((BaseAppException) processedException, request);
+        if (processedException instanceof BaseAppException appEx) {
+            return dispatchBaseApp(appEx, request);
         }
 
         // Check if this is a NoSuchFileException (temp file was deleted prematurely)

@@ -129,7 +129,7 @@ class OverlayImageControllerTest {
     }
 
     @Test
-    void overlayImage_ioException_returnsBadRequest() throws Exception {
+    void overlayImage_ioException_propagatesSoItCanBeClassified() throws Exception {
         OverlayImageRequest request = new OverlayImageRequest();
         request.setFileInput(pdfFile);
         request.setImageFile(imageFile);
@@ -139,9 +139,9 @@ class OverlayImageControllerTest {
 
         when(pdfDocumentFactory.load(any(byte[].class))).thenThrow(new IOException("bad PDF"));
 
-        ResponseEntity<Resource> response = controller.overlayImage(request);
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        IOException thrown =
+                assertThrows(IOException.class, () -> controller.overlayImage(request));
+        assertEquals("bad PDF", thrown.getMessage());
     }
 
     @Test
@@ -219,7 +219,7 @@ class OverlayImageControllerTest {
                         .getBytes();
         byte[] sanitized =
                 ("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\">"
-                                + "<image x=\"0\" y=\"0\" width=\"10\" height=\"10\"/>"
+                                + "<rect x=\"0\" y=\"0\" width=\"10\" height=\"10\"/>"
                                 + "</svg>")
                         .getBytes();
         when(svgSanitizer.sanitize(maliciousSvg)).thenReturn(sanitized);
