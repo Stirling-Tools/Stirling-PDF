@@ -1,4 +1,4 @@
-import { MultiSelect, Popover, Select, Stack, TextInput } from "@mantine/core";
+import { MultiSelect, Popover, Select, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
@@ -12,41 +12,37 @@ interface FilesToolbarFilterMenuProps {
   availableTypes: string[];
   typeFilter: string[];
   onTypeChange: (value: string[]) => void;
-  search: string;
-  onSearchChange: (value: string) => void;
+  zIndex?: number;
 }
 
-/**
- * Source, type and name filters collapsed behind one icon. Side by side these
- * three need ~480px, so on narrow viewports they were each truncated to
- * unreadable stubs ("All sour"). In the popover they get their full width back,
- * and a dot on the trigger keeps an active filter discoverable while hidden.
- */
+/** The trigger indicates active source and type filters while the popover is closed. */
 export function FilesToolbarFilterMenu({
   originFilter,
   onOriginChange,
   availableTypes,
   typeFilter,
   onTypeChange,
-  search,
-  onSearchChange,
+  zIndex,
 }: FilesToolbarFilterMenuProps) {
   const { t } = useTranslation();
 
   const activeCount =
-    (originFilter !== "all" ? 1 : 0) +
-    (typeFilter.length > 0 ? 1 : 0) +
-    (search.trim() !== "" ? 1 : 0);
+    (originFilter !== "all" ? 1 : 0) + (typeFilter.length > 0 ? 1 : 0);
   const label = t("filesPage.filters.label", "Filters");
 
   const clearAll = () => {
     onOriginChange("all");
     onTypeChange([]);
-    onSearchChange("");
   };
 
   return (
-    <Popover width={260} position="bottom-end" shadow="md" withinPortal>
+    <Popover
+      width={260}
+      position="bottom-end"
+      shadow="md"
+      withinPortal
+      zIndex={zIndex}
+    >
       <Popover.Target>
         <div>
           <Tooltip
@@ -76,26 +72,6 @@ export function FilesToolbarFilterMenu({
       </Popover.Target>
       <Popover.Dropdown>
         <Stack gap="xs">
-          <TextInput
-            size="xs"
-            value={search}
-            onChange={(e) => onSearchChange(e.currentTarget.value)}
-            placeholder={t("filesPage.search.placeholder", "Filter files…")}
-            leftSection={<Icon name="search" size={"1rem"} />}
-            rightSection={
-              search ? (
-                <ActionIcon
-                  variant="tertiary"
-                  size="sm"
-                  onClick={() => onSearchChange("")}
-                  aria-label={t("filesPage.search.clear", "Clear filter")}
-                >
-                  <Icon name="x" size={"0.9rem"} />
-                </ActionIcon>
-              ) : null
-            }
-            aria-label={t("filesPage.search.label", "Filter files by name")}
-          />
           <Select
             size="xs"
             value={originFilter}
@@ -114,7 +90,7 @@ export function FilesToolbarFilterMenu({
             label={t("filesPage.originFilter", "Filter by source")}
             comboboxProps={{ withinPortal: false }}
           />
-          {availableTypes.length > 1 && (
+          {(availableTypes.length > 1 || typeFilter.length > 0) && (
             <MultiSelect
               size="xs"
               value={typeFilter}

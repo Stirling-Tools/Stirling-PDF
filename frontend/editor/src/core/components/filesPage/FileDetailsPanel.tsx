@@ -1,11 +1,11 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Badge, Tooltip } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Icon } from "@app/ui/Icon";
 import { FileId } from "@app/types/file";
-import { FolderRecord } from "@app/types/folder";
+import type { FolderId, FolderRecord } from "@app/types/folder";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { formatFileSize, getFileDate } from "@app/utils/fileUtils";
 import {
@@ -23,16 +23,19 @@ import {
   DetailField,
 } from "@app/components/filesPage/VersionTimeline";
 import { FileDetailsActions } from "@app/components/filesPage/FileDetailsActions";
+import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
 import "@app/components/filesPage/FilesPage.css";
 
 interface FileDetailsPanelProps {
+  /** Picker hosts choose a version without exposing workspace or library mutations. */
+  onPickVersion?: (file: StirlingFileStub) => void;
   selectedFileIds: FileId[];
   fileMap: Map<FileId, StirlingFileStub>;
-  currentFolder: FolderRecord | null;
+  foldersById: ReadonlyMap<FolderId, FolderRecord>;
   onClose: () => void;
-  onAddToWorkspace: (fileIds: FileId[]) => void;
-  onMove: (fileIds: FileId[]) => void;
-  onRemove: (fileIds: FileId[]) => void;
+  onAddToWorkspace?: (fileIds: FileId[]) => void;
+  onMove?: (fileIds: FileId[]) => void;
+  onRemove?: (fileIds: FileId[]) => void;
   /** Save to server; only shown when at least one selected file is local-only. */
   onSaveToServer?: (files: StirlingFileStub[]) => void;
   /** When set, Save to server renders disabled with this tooltip (storage off). */
@@ -44,9 +47,10 @@ interface FileDetailsPanelProps {
 }
 
 export function FileDetailsPanel({
+  onPickVersion,
   selectedFileIds,
   fileMap,
-  currentFolder,
+  foldersById,
   onClose,
   onAddToWorkspace,
   onMove,
@@ -66,21 +70,17 @@ export function FileDetailsPanel({
     [selectedFileIds, fileMap],
   );
 
-  // Hooks must run before any early return.
   const [downloading, setDownloading] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   // Metadata (size/type/dates) is collapsed by default so the panel stays
   // short and the action buttons keep their pinned footer in view.
   const [fieldsOpen, setFieldsOpen] = useState(false);
-  // Version journey is collapsed by default so the panel stays short.
   const [versionsOpen, setVersionsOpen] = useState(false);
-  // Document classification read from PDF metadata, plus its (collapsed) section.
-  // Stored as label ids; resolve to display names via the seam.
+  // Stored label IDs need the display-name seam for localization.
   const [classification, setClassification] = useState<string[] | null>(null);
   const [classificationOpen, setClassificationOpen] = useState(false);
   const classificationEnabled = useClassificationEnabled();
   const labelName = useLabelName();
-  // Version chain for the selected file; empty for v1 or multi-select.
   const [versionChain, setVersionChain] = useState<StirlingFileStub[]>([]);
   const singleFileForChain = files.length === 1 ? files[0] : null;
   useEffect(() => {
@@ -105,11 +105,7 @@ export function FileDetailsPanel({
     };
   }, [singleFileForChain]);
 
-  // Show the file's classification labels: the stub's cached copy when present
-  // (free — no byte load), else read the PDF metadata via the shared service.
-  // Gated on classification being enabled (SaaS + AI): off-feature we never read
-  // the metadata or show the section, so a PDF that happens to carry the
-  // StirlingPDFClassification key never reveals the feature in a build without it.
+  // PDFs may carry labels even when classification is disabled for this build.
   useEffect(() => {
     setClassification(null);
     if (!classificationEnabled) return;
@@ -133,9 +129,11 @@ export function FileDetailsPanel({
   }
 
   const single = files.length === 1 ? files[0] : null;
+  const selectedFolder = single?.folderId
+    ? foldersById.get(single.folderId)
+    : undefined;
   const totalSize = files.reduce((sum, f) => sum + f.size, 0);
   const ext = single ? (single.name.split(".").pop() ?? "").toUpperCase() : "";
-  // Files still needing a server upload; drives Save-to-server visibility.
   const localOnlyFiles = files.filter((f) => f.remoteStorageId == null);
 
   const handleDownload = async () => {
@@ -210,10 +208,7 @@ export function FileDetailsPanel({
               <h3 style={{ margin: 0, wordBreak: "break-word", flex: 1 }}>
                 {single.name}
               </h3>
-              {ext && (
-                // Custom span; Mantine Badge default rendered invisible in dark mode.
-                <span className="files-page-details-ext-tag">{ext}</span>
-              )}
+              {ext && <span className="files-page-details-ext-tag">{ext}</span>}
               {(single.versionNumber ?? 1) > 1 && (
                 <Badge size="sm" color="blue">
                   v{single.versionNumber}
@@ -262,9 +257,11 @@ export function FileDetailsPanel({
                 <DetailField
                   label={t("filesPage.field.folder", "Folder")}
                   value={
-                    currentFolder
-                      ? currentFolder.name
-                      : t("filesPage.allFiles", "All files")
+                    selectedFolder
+                      ? selectedFolder.name
+                      : !single.folderId && getFileOrigin(single) === "local"
+                        ? t("filesPage.recentFiles", "Recents")
+                        : t("filesPage.allFiles", "Stirling library")
                   }
                 />
               </div>
@@ -333,7 +330,7 @@ export function FileDetailsPanel({
               (compactVersions && onOpenVersionHistory ? (
                 <Button
                   leftSection={<Icon name="rotate-ccw-clock" size={20} />}
-                  variant="secondary"
+                  variant="tertiary"
                   onClick={onOpenVersionHistory}
                 >
                   {t(
@@ -371,6 +368,7 @@ export function FileDetailsPanel({
                   </Button>
                   {versionsOpen && (
                     <VersionTimeline
+                      onPickVersion={onPickVersion}
                       chain={versionChain}
                       currentId={single.id}
                       onAddToWorkspace={onAddToWorkspace}
@@ -395,23 +393,24 @@ export function FileDetailsPanel({
         )}
       </div>
 
-      <FileDetailsActions
-        selectedFileIds={selectedFileIds}
-        single={single}
-        fileCount={files.length}
-        localOnlyFiles={localOnlyFiles}
-        sharingEnabled={sharingEnabled}
-        downloading={downloading}
-        onDownload={handleDownload}
-        onAddToWorkspace={onAddToWorkspace}
-        onMove={onMove}
-        onRemove={onRemove}
-        onSaveToServer={onSaveToServer}
-        saveToServerDisabledReason={saveToServerDisabledReason}
-        onShare={() => setShareModalOpen(true)}
-      />
-      {/* Single panel-level mount; gated on sharingEnabled. */}
-      {single && sharingEnabled && (
+      {onAddToWorkspace && onMove && onRemove && (
+        <FileDetailsActions
+          selectedFileIds={selectedFileIds}
+          single={single}
+          fileCount={files.length}
+          localOnlyFiles={localOnlyFiles}
+          sharingEnabled={sharingEnabled}
+          downloading={downloading}
+          onDownload={handleDownload}
+          onAddToWorkspace={onAddToWorkspace}
+          onMove={onMove}
+          onRemove={onRemove}
+          onSaveToServer={onSaveToServer}
+          saveToServerDisabledReason={saveToServerDisabledReason}
+          onShare={() => setShareModalOpen(true)}
+        />
+      )}
+      {single && sharingEnabled && !onPickVersion && (
         <ShareManagementModal
           opened={shareModalOpen}
           onClose={() => setShareModalOpen(false)}

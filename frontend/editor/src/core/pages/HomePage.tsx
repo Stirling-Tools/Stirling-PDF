@@ -60,15 +60,13 @@ import {
   useFilesPage,
 } from "@app/contexts/FilesPageContext";
 import { useFolders } from "@app/contexts/FolderContext";
-import { folderKind } from "@app/types/folder";
-import { useServerFolderBlock } from "@app/hooks/useServerFolderBlock";
 import { useNewFolderFlow } from "@app/hooks/useNewFolderFlow";
 import { NewFolderButton } from "@app/components/filesPage/NewFolderButton";
 import MobileUploadModal from "@app/components/shared/MobileUploadModal";
 import { useLibraryRefresh } from "@app/hooks/useLibraryRefresh";
 import { useAuth } from "@app/auth/UseSession";
 import { canPickDirectory } from "@app/services/directoryPicker";
-import { useFileHandler } from "@app/hooks/useFileHandler";
+import { useLibraryUpload } from "@app/components/filesPage/useLibraryUpload";
 import { useProcessingFolderCreation } from "@app/hooks/useProcessingFolderCreation";
 import { consumeProcessingFolderCreationRequest } from "@app/utils/pendingProcessingFolderCreation";
 import type { FileSidebarProps } from "@app/components/shared/FileSidebar";
@@ -719,7 +717,6 @@ export default function HomePage() {
                 </span>
               </Button>
             </div>
-            <FileManager selectedTool={selectedTool} />
           </div>
         ) : (
           <Group
@@ -750,9 +747,9 @@ export default function HomePage() {
             {wingsMounted && !hideToolPanel && <RightSidebar />}
             {readerMode && <ReaderRail />}
             {readerMode && <ReaderSuperSearch />}
-            <FileManager selectedTool={selectedTool} />
           </Group>
         )}
+        <FileManager selectedTool={selectedTool} />
       </FilesPageProvider>
     </div>
   );
@@ -779,9 +776,13 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { t } = useTranslation();
     const filesPage = useFilesPage();
     const folders = useFolders();
-    const { addFiles } = useFileHandler();
-    const { addLocalFolder, createFolderHere, createFolderHereBlockedReason } =
-      useNewFolderFlow();
+    const handleUpload = useLibraryUpload();
+    const {
+      addLocalFolder,
+      createFolderHere,
+      createFolderHereBlockedReason: newFolderDisabledReason,
+      serverFolderBlock,
+    } = useNewFolderFlow();
     const { refreshing, refresh: refreshLibrary } = useLibraryRefresh();
     const { isAnonymous } = useAuth();
     const { config: appConfig } = useAppConfig();
@@ -794,35 +795,6 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
     const signInRequired = isAnonymous
       ? t("filesPage.signInRequired", "Sign in to use cloud storage.")
       : null;
-
-    const handleUpload = useCallback(
-      async (files: File[]) => {
-        const added = await addFiles(files, { skipWorkspaceDispatch: true });
-        await filesPage.refresh();
-        // If the user is inside a cloud folder, place uploads there.
-        if (folders.currentFolderId !== null && added.length > 0) {
-          await filesPage.moveFilesTo(
-            added.map((f) => f.fileId),
-            folders.currentFolderId,
-          );
-        }
-      },
-      [addFiles, filesPage, folders.currentFolderId],
-    );
-
-    // Kind-aware: only a server folder's subfolder needs the server, and a mounted
-    // directory takes no subfolders from here at all.
-    const railCurrentFolder = folders.currentFolderId
-      ? folders.foldersById.get(folders.currentFolderId)
-      : undefined;
-    const railCurrentKind = railCurrentFolder
-      ? folderKind(railCurrentFolder)
-      : null;
-    const serverFolderBlock = useServerFolderBlock();
-    const newFolderDisabledReason =
-      railCurrentKind === "server"
-        ? serverFolderBlock
-        : createFolderHereBlockedReason;
 
     return (
       <>

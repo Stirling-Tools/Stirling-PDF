@@ -27,11 +27,13 @@ function useColumnCount(el: HTMLElement | null): number {
   return columns;
 }
 
-/** The scrolling ancestor the virtualiser measures against. */
+/** Lists scroll themselves; the card grid scrolls within its content pane. */
 function useScrollParent(el: HTMLElement | null): HTMLElement | null {
   const [parent, setParent] = useState<HTMLElement | null>(null);
   useEffect(() => {
-    setParent(el?.closest<HTMLElement>(".files-page-content") ?? null);
+    setParent(
+      el?.closest<HTMLElement>(".files-page-list, .files-page-content") ?? null,
+    );
   }, [el]);
   return parent;
 }

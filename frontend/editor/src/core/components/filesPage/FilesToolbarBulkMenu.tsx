@@ -16,11 +16,7 @@ interface FilesToolbarBulkMenuProps {
   onClearSelection: () => void;
 }
 
-/**
- * Everything that acts on the current selection, behind one trigger. A strip of
- * five buttons only fits the widest viewports, and shrinking it to icons costs
- * every label; one menu reads the same at any width.
- */
+/** Keeps selection actions labelled even when the toolbar is narrow. */
 export function FilesToolbarBulkMenu({
   selectedCount,
   onAddToWorkspace,
@@ -45,7 +41,8 @@ export function FilesToolbarBulkMenu({
       <Menu.Target>
         <Button
           size="sm"
-          variant="secondary"
+          variant="tertiary"
+          shape="pill"
           className="files-page-toolbar-bulk-trigger"
           rightSection={<Icon name="chevron-down" size={"1.1rem"} />}
           aria-label={t("filesPage.bulkActions", "Actions")}

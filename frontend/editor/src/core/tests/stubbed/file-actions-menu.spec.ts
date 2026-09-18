@@ -1,13 +1,13 @@
 import path from "path";
 import type { Page } from "@playwright/test";
 import { test, expect } from "@app/tests/helpers/stub-test-base";
-import { uploadFiles } from "@app/tests/helpers/ui-helpers";
+import { openRecents, uploadFiles } from "@app/tests/helpers/ui-helpers";
 
 // Reads the library as cards, so it asks for the grid.
 test.use({ filesViewMode: "grid" });
 
 // Per-file actions live behind a kebab on two surfaces - the file sidebar and
-// the My Files grid. They must offer the same file actions on both.
+// the Recents grid. They must offer the same file actions on both.
 
 const SAMPLE = path.join(import.meta.dirname, "../test-fixtures/sample.pdf");
 
@@ -110,24 +110,18 @@ test("a duplicate inherits the original's classification", async ({ page }) => {
   await expect(financial.locator(".file-sidebar-group-count")).toHaveText("2");
 });
 
-// ─── My Files grid: the same actions, same behaviour ────────────────────────
-
 const cards = (page: Page) => page.locator(".files-page-card:not(.is-folder)");
 
-/** Upload a file, cross to My Files, and open the card's kebab. */
 async function openCardKebab(page: Page): Promise<void> {
   await uploadFiles(page, SAMPLE);
-  await page
-    .getByRole("navigation", { name: /Quick navigation/i })
-    .getByRole("button", { name: /^File library$/i })
-    .click();
+  await openRecents(page);
   const card = cards(page).filter({ hasText: "sample.pdf" }).first();
   await expect(card).toBeVisible();
   await card.getByRole("button", { name: /File actions/i }).click();
   await expect(page.getByRole("menu")).toBeVisible();
 }
 
-test("My Files offers the same file actions as the sidebar", async ({
+test("Recents offers the same file actions as the sidebar", async ({
   page,
 }) => {
   await openCardKebab(page);
@@ -143,7 +137,7 @@ test("My Files offers the same file actions as the sidebar", async ({
   await expect(menu.getByRole("menuitem", { name: "Delete" })).toBeVisible();
 });
 
-test("My Files Download saves the file under its current name", async ({
+test("Recents Download saves the file under its current name", async ({
   page,
 }) => {
   await openCardKebab(page);
@@ -153,7 +147,7 @@ test("My Files Download saves the file under its current name", async ({
   expect((await download).suggestedFilename()).toBe("sample.pdf");
 });
 
-test("My Files Rename updates the card", async ({ page }) => {
+test("Recents Rename updates the card", async ({ page }) => {
   await openCardKebab(page);
   await page.getByRole("menuitem", { name: "Rename" }).click();
 
@@ -163,7 +157,7 @@ test("My Files Rename updates the card", async ({ page }) => {
   await expect(cards(page).filter({ hasText: "statement.pdf" })).toHaveCount(1);
 });
 
-test("My Files Duplicate adds a copy", async ({ page }) => {
+test("Recents Duplicate adds a copy", async ({ page }) => {
   await openCardKebab(page);
   await page.getByRole("menuitem", { name: "Duplicate" }).click();
 

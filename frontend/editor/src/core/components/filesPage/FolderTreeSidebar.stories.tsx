@@ -11,8 +11,7 @@ import { ROOT_FOLDER_ID } from "@app/types/folder";
  * FilesPageContext, neither of which is part of the shared preview
  * decorators. Both providers also pull in IndexedDBContext (via
  * FileContextProvider) further up the tree, so all three are stood up here.
- * No folders are seeded into IndexedDB, so the tree renders with just the
- * pinned "All files" / "Local" rows - an accurate empty state.
+ * No folders are seeded into IndexedDB, so only the pinned library views render.
  */
 function withFolderContexts(Story: () => React.JSX.Element) {
   return (

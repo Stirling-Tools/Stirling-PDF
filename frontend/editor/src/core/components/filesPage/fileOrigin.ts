@@ -8,6 +8,7 @@
  */
 
 import { StirlingFileStub } from "@app/types/fileContext";
+import type { FolderId, FolderRecord } from "@app/types/folder";
 
 export type FileOrigin = "local" | "cloud" | "shared-with-me";
 
@@ -19,4 +20,15 @@ export function getFileOrigin(file: StirlingFileStub): FileOrigin {
     return "cloud";
   }
   return "local";
+}
+
+/** Unfiled browser copies appear in Recents until assigned to a library folder. */
+export function isUnfiledLocalFile(
+  file: StirlingFileStub,
+  foldersById: ReadonlyMap<FolderId, FolderRecord>,
+): boolean {
+  return (
+    getFileOrigin(file) === "local" &&
+    (!file.folderId || !foldersById.has(file.folderId))
+  );
 }

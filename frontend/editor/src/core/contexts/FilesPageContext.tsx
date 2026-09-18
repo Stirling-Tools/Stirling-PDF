@@ -1,5 +1,3 @@
-/** Shared state for the My Files view. */
-
 import React, {
   createContext,
   useCallback,
@@ -38,10 +36,11 @@ import {
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { useDiskLinkReconcile } from "@app/hooks/useDiskLinkReconcile";
 import { useFolders } from "@app/contexts/FolderContext";
+import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
+import { useRoutedLibraryViewState } from "@app/components/filesPage/useRoutedLibraryViewState";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useAuth } from "@app/auth/UseSession";
 
-/** View-toggle modes; tuple keeps the union and iterator in sync. */
 export const FILES_PAGE_VIEW_MODES = ["grid", "list"] as const;
 export type FilesPageViewMode = (typeof FILES_PAGE_VIEW_MODES)[number];
 export type FilesPageSortMode =
@@ -57,7 +56,6 @@ export type FilesPageOriginFilter =
   | "cloud"
   | "shared-with-me";
 
-/** all|local|cloud|recent|shared filter presets. */
 export type FilesPageTab = "all" | "cloud" | "recent" | "shared" | "sharedByMe";
 
 export interface FolderNameDialogState {
@@ -77,11 +75,6 @@ export interface MoveDialogState {
 
 const VIEW_MODE_STORAGE_KEY = "stirling.filesPageViewMode";
 
-/**
- * The list is the default: it shows more files per screen and carries the columns the
- * grid has no room for. The grid is one click away, and the choice is the user's from
- * then on.
- */
 function readPersistedViewMode(): FilesPageViewMode {
   try {
     const stored = localStorage.getItem(VIEW_MODE_STORAGE_KEY);
@@ -93,23 +86,20 @@ function readPersistedViewMode(): FilesPageViewMode {
 }
 
 interface FilesPageContextValue {
-  // Cached files (leaf-only)
+  /** Leaf versions only; includes local and server library entries. */
   allFiles: StirlingFileStub[];
   fileMap: Map<FileId, StirlingFileStub>;
   fileCountsByFolder: Map<FolderId | null, number>;
   loading: boolean;
   refresh: () => Promise<void>;
-  /** Bumped to re-read a mounted directory, which is listed from disk rather than
-   *  from storage and so has nothing to react to when its contents change. */
+  /** Invalidates disk listings, which cannot observe IndexedDB revisions. */
   diskRevision: number;
   bumpDiskRevision: () => void;
 
-  // Selection
   selectedFileIds: Set<FileId>;
   setSelectedFileIds: React.Dispatch<React.SetStateAction<Set<FileId>>>;
   clearSelection: () => void;
 
-  // View + sort + search + filters
   viewMode: FilesPageViewMode;
   setViewMode: (mode: FilesPageViewMode) => void;
   sortMode: FilesPageSortMode;
@@ -123,11 +113,11 @@ interface FilesPageContextValue {
   typeFilter: string[];
   setTypeFilter: (next: string[]) => void;
 
-  /** Active filter-tab. Drives which files appear and which UI affordances enable. */
   currentTab: FilesPageTab;
   setCurrentTab: (tab: FilesPageTab) => void;
+  /** Opens the folder in Stirling library with one browser history entry. */
+  openFolder: (id: FolderId | null) => void;
 
-  // Dialog state
   folderNameDialog: FolderNameDialogState;
   openNewFolderDialog: (parentId?: FolderId | null, kind?: FolderKind) => void;
   openRenameFolderDialog: (folder: FolderRecord) => void;
@@ -138,7 +128,6 @@ interface FilesPageContextValue {
   promptMoveFiles: (fileIds: FileId[]) => void;
   closeMoveDialog: () => void;
 
-  // Action helpers
   moveFilesTo: (fileIds: FileId[], folderId: FolderId | null) => Promise<void>;
   moveFolderTo: (
     folderId: FolderId,
@@ -188,10 +177,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
 
   const [allFiles, setAllFiles] = useState<StirlingFileStub[]>([]);
   const [loading, setLoading] = useState(true);
-  // Generation counter to drop stale reconcile results when a second refresh
-  // overlaps the first. Mirrors the pattern FolderContext.pullFromServer uses
-  // via pullInFlight, but kept as a counter so we can also discard results
-  // from clearly-out-of-date calls instead of just serializing them.
+  // Only the newest refresh may publish results or clear loading.
   const refreshGenRef = useRef(0);
 
   // Narrow dep so refresh isn't recreated on every folders field change.
@@ -206,7 +192,6 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     try {
       const localStubs = await fileStorage.getAllStirlingFileStubs();
-      // Bail if a newer refresh started while IDB was reading.
       if (gen !== refreshGenRef.current) return;
       // A file the user deleted outside the app must not be offered here, so
       // reconcile before anything is rendered. Leaves only: every version behind
@@ -227,8 +212,6 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
         shareLinksEnabled,
         isAnonymous,
       });
-      // Drop the merged result if a newer refresh has already started -
-      // otherwise its stale snapshot will clobber the newer one's state.
       if (gen !== refreshGenRef.current) return;
       setAllFiles(merged);
     } catch (err) {
@@ -238,7 +221,6 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
         err instanceof Error ? err.message : "Failed to load files",
       );
     } finally {
-      // Only the latest refresh should clear the loading state.
       if (gen === refreshGenRef.current) setLoading(false);
     }
   }, [
@@ -266,23 +248,29 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
     for (const f of folders.folders) map.set(f.id, 0);
     for (const file of allFiles) {
       const fid = file.folderId ?? null;
+      if (fid === null && getFileOrigin(file) === "local") continue;
       map.set(fid, (map.get(fid) ?? 0) + 1);
     }
     return map;
   }, [allFiles, folders.folders]);
 
-  // Selection ---------------------------------------------------------------
-  const [selectedFileIds, setSelectedFileIds] = useState<Set<FileId>>(
-    () => new Set(),
-  );
-  const clearSelection = useCallback(() => setSelectedFileIds(new Set()), []);
+  const {
+    selectedFileIds,
+    setSelectedFileIds,
+    clearSelection,
+    sortMode,
+    setSortMode,
+    search,
+    setSearch,
+    originFilter,
+    setOriginFilter,
+    typeFilter,
+    setTypeFilter,
+    currentTab,
+    setCurrentTab,
+    openFolder,
+  } = useRoutedLibraryViewState();
 
-  // Clear selection when folder changes.
-  useEffect(() => {
-    clearSelection();
-  }, [folders.currentFolderId, clearSelection]);
-
-  // View + sort + search + filters ----------------------------------------
   const [viewMode, setViewModeState] = useState<FilesPageViewMode>(
     readPersistedViewMode,
   );
@@ -294,14 +282,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       // A browser that refuses storage still gets the choice for this session.
     }
   }, []);
-  const [sortMode, setSortMode] = useState<FilesPageSortMode>("modified-desc");
-  const [search, setSearch] = useState("");
-  const [originFilter, setOriginFilter] =
-    useState<FilesPageOriginFilter>("all");
-  const [typeFilter, setTypeFilter] = useState<string[]>([]);
-  const [currentTab, setCurrentTab] = useState<FilesPageTab>("all");
 
-  // Dialog: folder name -----------------------------------------------------
   const [folderNameDialog, setFolderNameDialog] =
     useState<FolderNameDialogState>({ mode: null });
 
@@ -343,7 +324,6 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
     [folderNameDialog, folders, navigate],
   );
 
-  // Dialog: move ------------------------------------------------------------
   const [moveDialog, setMoveDialog] = useState<MoveDialogState>({
     open: false,
     initial: ROOT_FOLDER_ID,
@@ -351,7 +331,11 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
 
   const promptMoveFiles = useCallback(
     (fileIds: FileId[]) => {
-      setMoveDialog({ open: true, fileIds, initial: folders.currentFolderId });
+      setMoveDialog({
+        open: true,
+        fileIds,
+        initial: folders.currentFolderId,
+      });
     },
     [folders.currentFolderId],
   );
@@ -359,8 +343,6 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const closeMoveDialog = useCallback(() => {
     setMoveDialog((m) => ({ ...m, open: false }));
   }, []);
-
-  // Action helpers ----------------------------------------------------------
 
   /** Cloud files move server-first; local files auto-upload then move. */
   const moveFilesTo = useCallback(
@@ -789,6 +771,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       setTypeFilter,
       currentTab,
       setCurrentTab,
+      openFolder,
       folderNameDialog,
       openNewFolderDialog,
       openRenameFolderDialog,
@@ -819,13 +802,20 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       diskRevision,
       bumpDiskRevision,
       selectedFileIds,
+      setSelectedFileIds,
       clearSelection,
       viewMode,
       sortMode,
+      setSortMode,
       search,
+      setSearch,
       originFilter,
+      setOriginFilter,
       typeFilter,
+      setTypeFilter,
       currentTab,
+      setCurrentTab,
+      openFolder,
       folderNameDialog,
       openNewFolderDialog,
       openRenameFolderDialog,

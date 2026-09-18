@@ -55,10 +55,10 @@ export type DiskFileState = "done" | "processing" | "failed" | "waiting";
 export interface FilesPageEntry {
   kind: "folder" | "file" | "diskFile";
   folder?: FolderRecord;
-  /** Number of files inside this folder (folder entries only). */
+
   folderFileCount?: number;
   file?: StirlingFileStub;
-  /** A file read straight off a mounted directory (kind "diskFile"). */
+
   disk?: DiskFileEntry;
   /** The disk file's processing state; absent on a folder with no pipeline. */
   diskState?: DiskFileState;
@@ -67,20 +67,30 @@ export interface FilesPageEntry {
   parentPath?: string;
 }
 
+/** Picker mode hides library mutations; opening a file confirms its selection. */
+export interface FileGridPicker {
+  disabledReason: (entry: FilesPageEntry) => string | undefined;
+  selectedDiskPaths: ReadonlySet<string>;
+  onSelectDiskFile: (entry: DiskFileEntry, shift: boolean) => void;
+  onSetDiskSelection: (entries: DiskFileEntry[]) => void;
+  onUnzipFile: (file: StirlingFileStub) => void;
+}
+
 interface FileGridProps {
+  picker?: FileGridPicker;
   entries: FilesPageEntry[];
   selectedFileIds: Set<FileId>;
-  /** Ids of files loaded in the active workspace. */
+
   activeWorkspaceFileIds?: Set<string>;
   viewMode: FilesPageViewMode;
   onSelectFile: (id: FileId, shiftKey: boolean, ctrlKey: boolean) => void;
-  /** Replace the entire selection set. */
+
   onSetSelection?: (ids: Set<FileId>) => void;
   onOpenFolder: (id: FolderId) => void;
   /** "Add to workspace". */
   onOpenFile: (file: StirlingFileStub) => void;
   onOpenDiskFile?: (entry: DiskFileEntry) => void;
-  /** Open the processing-setup dialog for a folder (create or edit). */
+
   onStartProcessing?: (folder: FolderRecord) => void;
   /** Retry one failed file, by its name in the open folder. */
   onRetryFile?: (name: string) => void;
@@ -88,38 +98,38 @@ interface FileGridProps {
   onRevertFile?: (name: string) => void;
   /** Ask to restore every original in a folder; the confirm dialog lives upstream. */
   onRequestRevertAll?: (folder: FolderRecord) => void;
-  onMoveFiles: (
+  onMoveFiles?: (
     fileIds: FileId[],
     targetFolderId: FolderId | null,
   ) => void | Promise<void>;
-  onMoveFolder: (
+  onMoveFolder?: (
     folderId: FolderId,
     newParentId: FolderId | null,
   ) => void | Promise<void>;
-  onRenameFolder: (folder: FolderRecord) => void;
-  onDeleteFolder: (folder: FolderRecord) => void;
-  onChangeFolderAppearance: (
+  onRenameFolder?: (folder: FolderRecord) => void;
+  onDeleteFolder?: (folder: FolderRecord) => void;
+  onChangeFolderAppearance?: (
     folderId: FolderId,
     appearance: { color?: string; icon?: string | null },
   ) => void;
-  onRemoveFiles: (fileIds: FileId[]) => void;
-  onPromptMoveFiles: (fileIds: FileId[]) => void;
+  onRemoveFiles?: (fileIds: FileId[]) => void;
+  onPromptMoveFiles?: (fileIds: FileId[]) => void;
   /** Per-file Save to server; hidden when file already has remoteStorageId. */
   onSaveToServer?: (file: StirlingFileStub) => void;
   /** Open the version-history modal for a file (only when it has >1 version). */
   onVersionHistory?: (file: StirlingFileStub) => void;
-  /** Download a copy (desktop: save a copy). */
+
   onDownloadFile?: (file: StirlingFileStub) => void;
-  /** Open the rename dialog for a file. */
+
   onRenameFile?: (file: StirlingFileStub) => void;
-  /** Save a second copy of the file into the library. */
+
   onDuplicateFile?: (file: StirlingFileStub) => void;
   /** When set, the Save to server item renders disabled with this tooltip. */
   saveToServerDisabledReason?: string | null;
   /** When supplied the list-view column headers become sortable. */
   sortMode?: FilesPageSortMode;
   onChangeSortMode?: (mode: FilesPageSortMode) => void;
-  /** Drives the empty-state copy. */
+
   currentTab?: "all" | "cloud" | "recent" | "shared" | "sharedByMe";
   /** A filter is applied; an empty result then means "no matches", not "no files". */
   searchActive?: boolean;
@@ -127,35 +137,15 @@ interface FileGridProps {
   serverReachable?: boolean;
   /** Empty-state CTA handlers; if absent the matching button hides. */
   onEmptyUpload?: () => void;
-  /** The New-folder control for the empty state, built by the page that owns the
-   *  destinations. Passed in rather than rebuilt here so the empty state and the
-   *  header cannot offer different things. */
+  /** Reuse the host's folder control so header and empty-state destinations agree. */
   emptyNewFolderControl?: React.ReactNode;
   /** Non-null disables the New folder CTA with this reason as tooltip. */
   newFolderDisabledReason?: string | null;
-  /**
-   * Where a failed drop reports its message. A prop rather than the folder
-   * context so the grid renders without a FolderProvider (its tests do), and
-   * so no item needs a context subscription that memoization would then fight.
-   */
+  /** Report failures through the host; per-row context subscriptions defeat memoization. */
   onActionError?: (message: string) => void;
-  /**
-   * What acts on the current selection, built by the page that owns the
-   * handlers. Rendered in the list's column header, which grid view lacks.
-   */
-  selectionActions?: React.ReactNode;
 }
 
-/**
- * One stable dispatch object shared by every card and row. The grid's
- * callback props change identity on every parent render, and per-item
- * closures would too — either defeats React.memo and turns each selection
- * click or landed thumbnail into a full-list re-render. Items call these
- * with their own id/record instead; the ref always sees the current props,
- * so behavior stays live while identity stays fixed. Selection-aware
- * behavior (drag payloads, multi-move) lives here too, so items never hold
- * the selection Set — whose identity changes on every click — as a prop.
- */
+/** Stable callbacks let memoized rows skip unrelated selection changes; refs supply current props. */
 interface FileGridActions {
   selectFile: (id: FileId, shiftKey: boolean, ctrlKey: boolean) => void;
   openFolder: (id: FolderId) => void;
@@ -165,7 +155,7 @@ interface FileGridActions {
   retryFile: (name: string) => void;
   revertFile: (name: string) => void;
   requestRevertAll: (folder: FolderRecord) => void;
-  /** Surface a failed folder action's reason the way a failed drop's is. */
+
   reportError: (err: unknown, label: string) => void;
   renameFolder: (folder: FolderRecord) => void;
   deleteFolder: (folder: FolderRecord) => void;
@@ -173,11 +163,7 @@ interface FileGridActions {
     folderId: FolderId,
     appearance: { color?: string; icon?: string | null },
   ) => void;
-  /**
-   * Failures surface here, not in the item: the memoized folder items would
-   * otherwise each need the folder context for its error banner, and one
-   * context subscription inside an item undoes what the memo buys.
-   */
+
   dropFilesOnFolder: (fileIds: FileId[], target: FolderId) => void;
   dropFolderOnFolder: (folderId: FolderId, target: FolderId) => void;
   removeFile: (id: FileId) => void;
@@ -190,6 +176,8 @@ interface FileGridActions {
   downloadFile: (file: StirlingFileStub) => void;
   renameFile: (file: StirlingFileStub) => void;
   duplicateFile: (file: StirlingFileStub) => void;
+  selectDiskFile: (entry: DiskFileEntry, shift: boolean) => void;
+  unzipFile: (file: StirlingFileStub) => void;
 }
 
 export function FileGrid(props: FileGridProps & { loading?: boolean }) {
@@ -209,11 +197,9 @@ export function FileGrid(props: FileGridProps & { loading?: boolean }) {
   const { t } = useTranslation();
   const translateRef = useRef(t);
   translateRef.current = t;
-  // One subscription for the whole grid: every row calling the badge hook
-  // would rebuild the full badge map per row on any file or run change. The
-  // hook keeps per-file array identity stable across rebuilds, so memoized
-  // items re-render only when their own badges change.
+  // One badge subscription avoids rebuilding the full map per row.
   const policyBadges = usePolicyFileBadges();
+  const processingBlock = useServerProcessingBlock();
   const actions = useMemo<FileGridActions>(() => {
     const reportDrop = (err: unknown, label: string) => {
       console.error(`[FileGrid] ${label}`, err);
@@ -232,6 +218,9 @@ export function FileGrid(props: FileGridProps & { loading?: boolean }) {
       );
     };
     return {
+      selectDiskFile: (entry, shift) =>
+        latest.current.picker?.onSelectDiskFile(entry, shift),
+      unzipFile: (file) => latest.current.picker?.onUnzipFile(file),
       selectFile: (id, shiftKey, ctrlKey) =>
         latest.current.onSelectFile(id, shiftKey, ctrlKey),
       openFolder: (id) => latest.current.onOpenFolder(id),
@@ -242,24 +231,24 @@ export function FileGrid(props: FileGridProps & { loading?: boolean }) {
       revertFile: (name) => latest.current.onRevertFile?.(name),
       requestRevertAll: (folder) => latest.current.onRequestRevertAll?.(folder),
       reportError: (err, label) => reportDrop(err, label),
-      renameFolder: (folder) => latest.current.onRenameFolder(folder),
-      deleteFolder: (folder) => latest.current.onDeleteFolder(folder),
+      renameFolder: (folder) => latest.current.onRenameFolder?.(folder),
+      deleteFolder: (folder) => latest.current.onDeleteFolder?.(folder),
       changeFolderAppearance: (folderId, appearance) =>
-        latest.current.onChangeFolderAppearance(folderId, appearance),
+        latest.current.onChangeFolderAppearance?.(folderId, appearance),
       dropFilesOnFolder: (fileIds, target) => {
-        Promise.resolve(latest.current.onMoveFiles(fileIds, target)).catch(
+        Promise.resolve(latest.current.onMoveFiles?.(fileIds, target)).catch(
           (err) => reportDrop(err, "move files into folder"),
         );
       },
       dropFolderOnFolder: (folderId, target) => {
-        Promise.resolve(latest.current.onMoveFolder(folderId, target)).catch(
+        Promise.resolve(latest.current.onMoveFolder?.(folderId, target)).catch(
           (err) => reportDrop(err, "move folder"),
         );
       },
-      removeFile: (id) => latest.current.onRemoveFiles([id]),
+      removeFile: (id) => latest.current.onRemoveFiles?.([id]),
       requestMoveFile: (id) => {
         const selected = latest.current.selectedFileIds;
-        latest.current.onPromptMoveFiles(
+        latest.current.onPromptMoveFiles?.(
           selected.has(id) ? Array.from(selected) : [id],
         );
       },
@@ -282,8 +271,8 @@ export function FileGrid(props: FileGridProps & { loading?: boolean }) {
     return <SkeletonGrid viewMode={viewMode} />;
   }
 
-  if (entries.length === 0) {
-    const emptyState = (
+  const emptyState =
+    entries.length === 0 ? (
       <EmptyState
         tab={currentTab}
         searchActive={searchActive}
@@ -291,31 +280,31 @@ export function FileGrid(props: FileGridProps & { loading?: boolean }) {
         onUpload={onEmptyUpload}
         newFolderControl={emptyNewFolderControl}
       />
-    );
-    // When a filter empties the list view, keep the column headers in place and
-    // show the no-results message beneath them, rather than replacing the whole
-    // table. Grid view (cards, no headers) just shows the empty state.
-    if (viewMode === "list" && searchActive) {
-      return (
-        <>
-          <ListView {...props} actions={actions} policyBadges={policyBadges} />
-          {emptyState}
-        </>
-      );
-    }
-    return emptyState;
-  }
+    ) : null;
 
-  if (viewMode === "list") {
+  if (viewMode === "list" && (entries.length > 0 || searchActive)) {
     return (
-      <ListView {...props} actions={actions} policyBadges={policyBadges} />
+      <ListView
+        {...props}
+        actions={actions}
+        policyBadges={policyBadges}
+        processingBlock={processingBlock}
+        emptyState={emptyState}
+      />
     );
   }
-  return <GridView {...props} actions={actions} policyBadges={policyBadges} />;
+  if (emptyState) return emptyState;
+  return (
+    <GridView
+      {...props}
+      actions={actions}
+      policyBadges={policyBadges}
+      processingBlock={processingBlock}
+    />
+  );
 }
 
 function SkeletonGrid({ viewMode }: { viewMode: FilesPageViewMode }) {
-  // Six placeholders mirroring the card layout while IDB resolves.
   const placeholders = Array.from({ length: 6 });
   if (viewMode === "list") {
     return (
@@ -367,7 +356,6 @@ function SkeletonGrid({ viewMode }: { viewMode: FilesPageViewMode }) {
 }
 
 interface EmptyStateProps {
-  /** Drives copy + iconography. */
   tab?: "all" | "cloud" | "recent" | "shared" | "sharedByMe";
   /** When true the empty list is the result of a filter, not a bare folder. */
   searchActive?: boolean;
@@ -388,8 +376,6 @@ function EmptyState({
 }: EmptyStateProps) {
   const { t } = useTranslation();
 
-  // A filter with no matches isn't an empty folder - say so, and skip the
-  // upload / new-folder CTAs since clearing the filter is the way out.
   if (searchActive) {
     return (
       <div className="files-page-empty">
@@ -459,7 +445,7 @@ function EmptyState({
         };
     }
   })();
-  // Recent/Shared tabs are read-only filters; Local is cloud-only for folders.
+
   const readOnlyTab =
     tab === "recent" || tab === "shared" || tab === "sharedByMe";
   const showUpload = Boolean(onUpload) && !readOnlyTab;
@@ -490,7 +476,14 @@ function EmptyState({
   );
 }
 
+type FileGridLayoutProps = FileGridProps & {
+  actions: FileGridActions;
+  policyBadges: Map<string, FileItemPolicyRef[]>;
+  processingBlock: string | null;
+};
+
 function GridView({
+  picker,
   entries,
   selectedFileIds,
   activeWorkspaceFileIds,
@@ -503,10 +496,8 @@ function GridView({
   serverReachable,
   actions,
   policyBadges,
-}: FileGridProps & {
-  actions: FileGridActions;
-  policyBadges: Map<string, FileItemPolicyRef[]>;
-}) {
+  processingBlock,
+}: FileGridLayoutProps) {
   const { range, padTop, padBottom, setContainer } = useVirtualFileRows(
     entries.length,
     rowHeightPx(true),
@@ -526,10 +517,12 @@ function GridView({
           return (
             <FolderCard
               key={`folder-${entry.folder.id}`}
+              selectionOnly={Boolean(picker)}
               folder={entry.folder}
               fileCount={entry.folderFileCount ?? 0}
               parentPath={entry.parentPath}
               serverReachable={serverReachable ?? false}
+              processingBlock={processingBlock}
               actions={actions}
             />
           );
@@ -538,6 +531,9 @@ function GridView({
           return (
             <DiskFileCard
               key={`disk-${entry.disk.path}`}
+              selectionOnly={Boolean(picker)}
+              isSelected={picker?.selectedDiskPaths.has(entry.disk.path)}
+              disabledReason={picker?.disabledReason(entry)}
               entry={entry.disk}
               state={entry.diskState}
               hasOriginal={entry.hasOriginal}
@@ -549,6 +545,8 @@ function GridView({
           return (
             <FileCard
               key={`file-${entry.file.id}`}
+              selectionOnly={Boolean(picker)}
+              disabledReason={picker?.disabledReason(entry)}
               file={entry.file}
               parentPath={entry.parentPath}
               processingState={entry.diskState}
@@ -556,7 +554,7 @@ function GridView({
               isInWorkspace={
                 activeWorkspaceFileIds?.has(entry.file.id) ?? false
               }
-              multiSelectActive={selectedFileIds.size >= 2}
+              multiSelectActive={Boolean(picker) || selectedFileIds.size >= 2}
               downloadAvailable={Boolean(onDownloadFile)}
               renameAvailable={Boolean(onRenameFile)}
               duplicateAvailable={Boolean(onDuplicateFile)}
@@ -581,26 +579,29 @@ function GridView({
   );
 }
 
-interface FolderCardProps {
+interface FolderItemProps {
+  selectionOnly?: boolean;
   folder: FolderRecord;
   fileCount: number;
-  /** Subtitle for search results outside current folder. */
+
   parentPath?: string;
   serverReachable: boolean;
+  processingBlock: string | null;
   actions: FileGridActions;
 }
 
 const FolderCard = React.memo(function FolderCard({
+  selectionOnly,
   folder,
   fileCount,
   parentPath,
   serverReachable,
+  processingBlock,
   actions,
-}: FolderCardProps) {
+}: FolderItemProps) {
   const { t } = useTranslation();
   const onOpen = () => actions.openFolder(folder.id);
-  // Only a server folder can go offline: the other kinds take their name, look and
-  // lifetime from elsewhere, so their edit items are hidden rather than disabled.
+  // Mounted folders are managed on disk; only server folders can be offline.
   const kind = folderKind(folder);
   const {
     stateFor: processingStateFor,
@@ -611,8 +612,7 @@ const FolderCard = React.memo(function FolderCard({
     listFiles: listProcessingFiles,
   } = useProcessingFolders();
   const processing = processingStateFor(folder);
-  // Each action surfaces its own failure the way a failed drop does; the
-  // backend's reason (invalid pipeline, storage disabled) is the useful part.
+
   const resumeProcessing = (label: string) =>
     Promise.resolve(enableProcessing(folder)).catch((err) =>
       actions.reportError(err, label),
@@ -630,7 +630,6 @@ const FolderCard = React.memo(function FolderCard({
       actions.reportError(err, label),
     );
   const editsDisabled = kind === "server" && !serverReachable;
-  const processingBlock = useServerProcessingBlock();
   const editsHidden = kind === "local";
   const offlineHint = t(
     "filesPage.offlineNoFolderEdits",
@@ -654,7 +653,7 @@ const FolderCard = React.memo(function FolderCard({
     <div
       role="listitem"
       tabIndex={0}
-      draggable
+      draggable={!selectionOnly}
       onDragStart={(e) => {
         e.dataTransfer.setData(
           FILES_PAGE_DRAG_TYPE,
@@ -665,15 +664,15 @@ const FolderCard = React.memo(function FolderCard({
         );
         e.dataTransfer.effectAllowed = "move";
       }}
-      {...dropHandlers}
+      {...(selectionOnly ? {} : dropHandlers)}
       className={`files-page-card is-folder${isDropTarget ? " is-drop-target" : ""}`}
-      onDoubleClick={onOpen}
+      onClick={onOpen}
       onContextMenu={(e) => {
         e.preventDefault();
         kebabRef.current?.click();
       }}
       onKeyDown={(e) => {
-        if (e.key === "Enter") onOpen();
+        if (e.target === e.currentTarget && e.key === "Enter") onOpen();
       }}
     >
       <div
@@ -721,56 +720,60 @@ const FolderCard = React.memo(function FolderCard({
             })
           )}
         </div>
-        {processing && (
+        {processing && !selectionOnly && (
           <ProcessingFolderStats
             recordId={processing.id}
             listFiles={listProcessingFiles}
           />
         )}
       </div>
-      <div className="files-page-card-actions">
-        <FolderMenu
-          folder={folder}
-          processing={processing}
-          continuous={kind === "virtual"}
-          isMount={editsHidden}
-          canUnmount={folder.parentFolderId === null}
-          editsDisabled={editsDisabled}
-          editsDisabledHint={offlineHint}
-          processingBlock={processingBlock}
-          variant="kebab"
-          triggerRef={kebabRef}
-          onOpen={onOpen}
-          onStartProcessing={() => actions.startProcessing(folder)}
-          onRunProcessing={() => void runProcessing("process folder now")}
-          onStopProcessing={() =>
-            void stopProcessing("pause processing folder")
-          }
-          onResumeProcessing={() => void resumeProcessing("resume processing")}
-          onRemoveProcessing={() =>
-            void removeProcessing("remove processing folder")
-          }
-          onEditProcessing={() => actions.startProcessing(folder)}
-          onRevertAll={
-            kind === "local"
-              ? () => actions.requestRevertAll(folder)
-              : undefined
-          }
-          onRename={() => actions.renameFolder(folder)}
-          onChangeAppearance={(appearance) =>
-            actions.changeFolderAppearance(folder.id, appearance)
-          }
-          onDelete={() => actions.deleteFolder(folder)}
-        />
+      <div
+        className="files-page-card-actions"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {!selectionOnly && (
+          <FolderMenu
+            folder={folder}
+            processing={processing}
+            continuous={kind === "virtual"}
+            isMount={editsHidden}
+            canUnmount={folder.parentFolderId === null}
+            editsDisabled={editsDisabled}
+            editsDisabledHint={offlineHint}
+            processingBlock={processingBlock}
+            variant="kebab"
+            triggerRef={kebabRef}
+            onOpen={onOpen}
+            onStartProcessing={() => actions.startProcessing(folder)}
+            onRunProcessing={() => void runProcessing("process folder now")}
+            onStopProcessing={() =>
+              void stopProcessing("pause processing folder")
+            }
+            onResumeProcessing={() =>
+              void resumeProcessing("resume processing")
+            }
+            onRemoveProcessing={() =>
+              void removeProcessing("remove processing folder")
+            }
+            onEditProcessing={() => actions.startProcessing(folder)}
+            onRevertAll={
+              kind === "local"
+                ? () => actions.requestRevertAll(folder)
+                : undefined
+            }
+            onRename={() => actions.renameFolder(folder)}
+            onChangeAppearance={(appearance) =>
+              actions.changeFolderAppearance(folder.id, appearance)
+            }
+            onDelete={() => actions.deleteFolder(folder)}
+          />
+        )}
       </div>
     </div>
   );
 });
 
-/**
- * A working folder's live per-state counts. The row variant clips, so the states
- * worth acting on come first and the title repeats the whole breakdown.
- */
+/** Put actionable states first because narrow rows clip the breakdown. */
 function ProcessingFolderStats({
   recordId,
   listFiles,
@@ -811,7 +814,6 @@ function ProcessingFolderStats({
   );
 }
 
-/** A file's pipeline state chip; a failed state adds an inline retry. */
 function FileStateBadge({
   state,
   onRetry,
@@ -854,8 +856,7 @@ function FileStateBadge({
         title={retryHint}
         aria-label={`${failed}: ${retryHint}`}
       >
-        {/* Both labels share one grid cell, so the chip is as wide as the wider
-            of them and swapping on hover moves nothing around it. */}
+        {/* Reserve both labels' widths to prevent a hover layout shift. */}
         <span className="files-page-state-retry-rest" aria-hidden="true">
           {failed}
         </span>
@@ -876,25 +877,25 @@ function FileStateBadge({
 /** Stable empty value so badge-less rows keep identical props across renders. */
 const NO_BADGES: FileItemPolicyRef[] = [];
 
-/** Per-file actions. Shared verbatim by the grid card and the list row, and
- *  kept in step with the file sidebar's kebab so both surfaces offer the same. */
 interface FileActionsMenuProps {
+  selectionOnly?: boolean;
   file: StirlingFileStub;
   triggerRef: React.RefObject<HTMLButtonElement | null>;
-  /** Download / rename / duplicate menu items offered. */
+
   downloadAvailable: boolean;
   renameAvailable: boolean;
   duplicateAvailable: boolean;
-  /** Kebab Save to server offered; only fires when file is local-only. */
+
   saveToServerAvailable: boolean;
-  /** Version-history menu item offered; shown only when file has >1 version. */
+
   versionHistoryAvailable: boolean;
-  /** When set, the kebab Save to server is disabled with this tooltip. */
+
   saveToServerDisabledReason?: string | null;
   actions: FileGridActions;
 }
 
 function FileActionsMenu({
+  selectionOnly,
   file,
   triggerRef,
   downloadAvailable,
@@ -912,6 +913,24 @@ function FileActionsMenu({
     saveToServerAvailable && file.remoteStorageId == null;
   const showVersionHistory =
     versionHistoryAvailable && (file.versionNumber ?? 1) > 1;
+  if (selectionOnly) {
+    if (!file.name.toLowerCase().endsWith(".zip")) return null;
+    return (
+      <Tooltip label={t("fileManager.unzip", "Unzip")} withinPortal>
+        <ActionIcon
+          variant="tertiary"
+          aria-label={t("fileManager.unzip", "Unzip")}
+          onClick={(event) => {
+            event.stopPropagation();
+            actions.unzipFile(file);
+          }}
+        >
+          <Icon name="archive-restore" size={20} />
+        </ActionIcon>
+      </Tooltip>
+    );
+  }
+
   return (
     <Menu shadow="md" position="bottom-end" withinPortal width={220}>
       <Menu.Target>
@@ -989,8 +1008,7 @@ function FileActionsMenu({
         )}
 
         {(showSaveToServer || showVersionHistory) && <Menu.Divider />}
-        {/* Per-file Save to server; shown for local-only files. When
-            storage is off it stays visible but disabled with a tooltip. */}
+
         {showSaveToServer && (
           <Tooltip
             label={saveToServerDisabledReason}
@@ -1046,22 +1064,24 @@ function FileActionsMenu({
 }
 
 interface FileCardProps {
+  selectionOnly?: boolean;
+  disabledReason?: string;
   file: StirlingFileStub;
   isSelected: boolean;
   isInWorkspace: boolean;
-  /** Subtitle for search results outside current folder. */
+
   parentPath?: string;
-  /** Shows the checkbox once 2+ files are selected. */
+
   multiSelectActive: boolean;
-  /** Download / rename / duplicate menu items offered. */
+
   downloadAvailable: boolean;
   renameAvailable: boolean;
   duplicateAvailable: boolean;
-  /** Kebab Save to server offered; only fires when file is local-only. */
+
   saveToServerAvailable: boolean;
-  /** Version-history menu item offered; shown only when file has >1 version. */
+
   versionHistoryAvailable: boolean;
-  /** When set, the kebab Save to server is disabled with this tooltip. */
+
   saveToServerDisabledReason?: string | null;
   badges: FileItemPolicyRef[];
   processingState?: DiskFileState;
@@ -1069,6 +1089,8 @@ interface FileCardProps {
 }
 
 const FileCard = React.memo(function FileCard({
+  selectionOnly,
+  disabledReason,
   file,
   parentPath,
   isSelected,
@@ -1094,13 +1116,13 @@ const FileCard = React.memo(function FileCard({
 
   const onClick = useCallback(
     (e: React.MouseEvent) =>
+      !disabledReason &&
       actions.selectFile(file.id, e.shiftKey, e.metaKey || e.ctrlKey),
-    [actions, file.id],
+    [actions, file.id, disabledReason],
   );
-  const onDoubleClick = useCallback(
-    () => actions.openFile(file),
-    [actions, file],
-  );
+  const onDoubleClick = useCallback(() => {
+    if (!disabledReason) actions.openFile(file);
+  }, [actions, file, disabledReason]);
 
   const handleDragStart = useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
@@ -1110,7 +1132,7 @@ const FileCard = React.memo(function FileCard({
       );
       e.dataTransfer.effectAllowed = "move";
     },
-    [actions, file.id],
+    [actions, file.id, disabledReason],
   );
 
   const extension = file.name.split(".").pop()?.toUpperCase() ?? "";
@@ -1125,7 +1147,7 @@ const FileCard = React.memo(function FileCard({
   const handleContextMenu = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault();
-      // Right-click on unselected card selects first, then opens menu.
+
       if (!isSelected) onClick(e);
       kebabRef.current?.click();
     },
@@ -1137,12 +1159,18 @@ const FileCard = React.memo(function FileCard({
       ref={cardRef}
       role="listitem"
       tabIndex={0}
-      draggable
+      draggable={!selectionOnly}
+      aria-disabled={Boolean(disabledReason)}
+      title={disabledReason}
       onDragStart={handleDragStart}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       onContextMenu={handleContextMenu}
       onKeyDown={(e) => {
+        if (e.key === " " && selectionOnly) {
+          e.preventDefault();
+          if (!disabledReason) actions.selectFile(file.id, e.shiftKey, true);
+        }
         if (e.key === "Enter") onDoubleClick();
       }}
       className={`files-page-card${isSelected ? " is-selected" : ""}${isInWorkspace ? " is-in-workspace" : ""}`}
@@ -1156,17 +1184,13 @@ const FileCard = React.memo(function FileCard({
           {t("filesPage.inWorkspace", "Open")}
         </span>
       )}
-      {/* Checkbox only renders once the user is explicitly in multi-select
-          mode (2+ files chosen via Ctrl/Shift-click, or one file then
-          another). For single-select the highlight border on the card is
-          the only state indicator - avoids the always-on-checkbox
-          visual noise and matches the file-explorer model. */}
+
       {multiSelectActive && (
         <div className="files-page-card-selector">
           <Checkbox
+            disabled={Boolean(disabledReason)}
             checked={isSelected}
             onClick={(e) => {
-              // Ctrl-click semantics: toggle this file in/out of the selection.
               e.stopPropagation();
               actions.selectFile(file.id, false, true);
             }}
@@ -1199,7 +1223,9 @@ const FileCard = React.memo(function FileCard({
         </div>
         <FileStateBadge
           state={processingState}
-          onRetry={() => actions.retryFile(file.name)}
+          onRetry={
+            selectionOnly ? undefined : () => actions.retryFile(file.name)
+          }
         />
       </div>
       <div className="files-page-card-body">
@@ -1222,6 +1248,7 @@ const FileCard = React.memo(function FileCard({
       </div>
       <div className="files-page-card-actions">
         <FileActionsMenu
+          selectionOnly={selectionOnly}
           file={file}
           triggerRef={kebabRef}
           downloadAvailable={downloadAvailable}
@@ -1238,11 +1265,11 @@ const FileCard = React.memo(function FileCard({
 });
 
 function ListView({
+  picker,
   entries,
   selectedFileIds,
   activeWorkspaceFileIds,
   onSetSelection,
-  selectionActions,
   onSaveToServer,
   onVersionHistory,
   onDownloadFile,
@@ -1254,31 +1281,27 @@ function ListView({
   serverReachable,
   actions,
   policyBadges,
-}: FileGridProps & {
-  sortMode?: FilesPageSortMode;
-  onChangeSortMode?: (next: FilesPageSortMode) => void;
-  actions: FileGridActions;
-  policyBadges: Map<string, FileItemPolicyRef[]>;
-}) {
+  processingBlock,
+  emptyState,
+}: FileGridLayoutProps & { emptyState?: React.ReactNode }) {
   const { t } = useTranslation();
 
-  // Tri-state header checkbox state - computed from current entries.
-  const visibleFileIds = useMemo(
-    () =>
-      entries
-        .filter(
-          (e): e is FilesPageEntry & { file: StirlingFileStub } =>
-            e.kind === "file" && !!e.file,
-        )
-        .map((e) => e.file.id),
-    [entries],
+  const selectableEntries = entries.filter(
+    (entry) => !picker?.disabledReason(entry),
   );
-  const allSelected =
-    visibleFileIds.length > 0 &&
-    visibleFileIds.every((id) => selectedFileIds.has(id));
-  const someSelected =
-    !allSelected && visibleFileIds.some((id) => selectedFileIds.has(id));
-  const selecting = Boolean(selectionActions) && selectedFileIds.size > 0;
+  const visibleFileIds = selectableEntries.flatMap((entry) =>
+    entry.file ? [entry.file.id] : [],
+  );
+  const visibleDiskFiles = picker
+    ? selectableEntries.flatMap((entry) => (entry.disk ? [entry.disk] : []))
+    : [];
+  const visibleCount = visibleFileIds.length + visibleDiskFiles.length;
+  const selectedCount =
+    visibleFileIds.filter((id) => selectedFileIds.has(id)).length +
+    visibleDiskFiles.filter((disk) => picker?.selectedDiskPaths.has(disk.path))
+      .length;
+  const allSelected = visibleCount > 0 && selectedCount === visibleCount;
+  const someSelected = selectedCount > 0 && !allSelected;
 
   const sortIndicator = (asc: FilesPageSortMode, desc: FilesPageSortMode) => {
     if (sortMode === asc) return " ↑";
@@ -1310,21 +1333,28 @@ function ListView({
   );
   return (
     <div className="files-page-list" role="grid" ref={setContainer}>
-      {/* Each direct child is a columnheader: a role="row" may only own cells, so
-          the sort controls and the select-all box have to sit inside one. */}
-      <div
-        className={`files-page-list-row is-header${selecting ? " is-selecting" : ""}`}
-        role="row"
-      >
-        {onSetSelection && visibleFileIds.length > 0 ? (
+      <div className="files-page-list-row is-header" role="row">
+        {onSetSelection && visibleCount > 0 ? (
           <span role="columnheader">
             <Checkbox
               checked={allSelected}
               indeterminate={someSelected}
               onChange={() => {
-                onSetSelection(
-                  allSelected ? new Set() : new Set(visibleFileIds),
-                );
+                if (picker) {
+                  const next = new Set(selectedFileIds);
+                  for (const id of visibleFileIds) {
+                    if (allSelected) next.delete(id);
+                    else next.add(id);
+                  }
+                  onSetSelection(next);
+                  picker.onSetDiskSelection(
+                    allSelected ? [] : visibleDiskFiles,
+                  );
+                } else {
+                  onSetSelection(
+                    allSelected ? new Set() : new Set(visibleFileIds),
+                  );
+                }
               }}
               aria-label={
                 allSelected
@@ -1336,44 +1366,31 @@ function ListView({
         ) : (
           <span aria-hidden="true" />
         )}
-        {selecting ? (
-          <span role="columnheader" className="files-page-list-selection-bar">
-            <span className="files-page-list-selection-count">
-              {t("filesPage.selectedCount", "{{count}} selected", {
-                count: selectedFileIds.size,
-              })}
-            </span>
-            {selectionActions}
+        <span role="columnheader">
+          <span {...headerProps("name-asc", "name-desc")}>
+            {t("filesPage.column.name", "Name")}
+            {sortIndicator("name-asc", "name-desc")}
           </span>
-        ) : (
-          <>
-            <span role="columnheader">
-              <span {...headerProps("name-asc", "name-desc")}>
-                {t("filesPage.column.name", "Name")}
-                {sortIndicator("name-asc", "name-desc")}
-              </span>
-            </span>
-            <span role="columnheader">
-              {t("filesPage.column.type", "Type")}
-            </span>
-            <span role="columnheader">
-              <span {...headerProps("size-asc", "size-desc")}>
-                {t("filesPage.column.size", "Size")}
-                {sortIndicator("size-asc", "size-desc")}
-              </span>
-            </span>
-            <span role="columnheader">
-              <span {...headerProps("modified-asc", "modified-desc")}>
-                {t("filesPage.column.modified", "Modified")}
-                {sortIndicator("modified-asc", "modified-desc")}
-              </span>
-            </span>
-            <span role="columnheader">
-              {t("filesPage.column.status", "Status")}
-            </span>
-            <span aria-hidden="true" />
-          </>
+        </span>
+        <span role="columnheader">{t("filesPage.column.type", "Type")}</span>
+        <span role="columnheader">
+          <span {...headerProps("size-asc", "size-desc")}>
+            {t("filesPage.column.size", "Size")}
+            {sortIndicator("size-asc", "size-desc")}
+          </span>
+        </span>
+        <span role="columnheader">
+          <span {...headerProps("modified-asc", "modified-desc")}>
+            {t("filesPage.column.modified", "Modified")}
+            {sortIndicator("modified-asc", "modified-desc")}
+          </span>
+        </span>
+        {!picker && (
+          <span role="columnheader">
+            {t("filesPage.column.status", "Status")}
+          </span>
         )}
+        <span aria-hidden="true" />
       </div>
       {padTop > 0 && (
         <div
@@ -1382,15 +1399,22 @@ function ListView({
           style={{ height: padTop }}
         />
       )}
+      {emptyState && (
+        <div role="row">
+          <div role="gridcell">{emptyState}</div>
+        </div>
+      )}
       {entries.slice(range.start, range.end).map((entry) => {
         if (entry.kind === "folder" && entry.folder) {
           return (
             <FolderRow
               key={`folder-${entry.folder.id}`}
+              selectionOnly={Boolean(picker)}
               folder={entry.folder}
               fileCount={entry.folderFileCount ?? 0}
               parentPath={entry.parentPath}
               serverReachable={serverReachable ?? false}
+              processingBlock={processingBlock}
               actions={actions}
             />
           );
@@ -1399,6 +1423,9 @@ function ListView({
           return (
             <DiskFileRow
               key={`disk-${entry.disk.path}`}
+              selectionOnly={Boolean(picker)}
+              isSelected={picker?.selectedDiskPaths.has(entry.disk.path)}
+              disabledReason={picker?.disabledReason(entry)}
               entry={entry.disk}
               state={entry.diskState}
               hasOriginal={entry.hasOriginal}
@@ -1410,6 +1437,8 @@ function ListView({
           return (
             <FileRow
               key={`file-${entry.file.id}`}
+              selectionOnly={Boolean(picker)}
+              disabledReason={picker?.disabledReason(entry)}
               file={entry.file}
               parentPath={entry.parentPath}
               processingState={entry.diskState}
@@ -1417,7 +1446,7 @@ function ListView({
               isInWorkspace={
                 activeWorkspaceFileIds?.has(entry.file.id) ?? false
               }
-              multiSelectActive={selectedFileIds.size >= 2}
+              multiSelectActive={Boolean(picker) || selectedFileIds.size >= 2}
               downloadAvailable={Boolean(onDownloadFile)}
               renameAvailable={Boolean(onRenameFile)}
               duplicateAvailable={Boolean(onDuplicateFile)}
@@ -1442,24 +1471,18 @@ function ListView({
   );
 }
 
-interface FolderRowProps {
-  folder: FolderRecord;
-  fileCount: number;
-  parentPath?: string;
-  serverReachable: boolean;
-  actions: FileGridActions;
-}
-
 const FolderRow = React.memo(function FolderRow({
+  selectionOnly,
   folder,
   fileCount,
   parentPath,
   serverReachable,
+  processingBlock,
   actions,
-}: FolderRowProps) {
+}: FolderItemProps) {
   const { t } = useTranslation();
   const onOpen = () => actions.openFolder(folder.id);
-  // Kinds gate the edit items, as in FolderCard.
+
   const kind = folderKind(folder);
   const {
     stateFor: processingStateFor,
@@ -1470,8 +1493,7 @@ const FolderRow = React.memo(function FolderRow({
     listFiles: listProcessingFiles,
   } = useProcessingFolders();
   const processing = processingStateFor(folder);
-  // Each action surfaces its own failure the way a failed drop does; the
-  // backend's reason (invalid pipeline, storage disabled) is the useful part.
+
   const resumeProcessing = (label: string) =>
     Promise.resolve(enableProcessing(folder)).catch((err) =>
       actions.reportError(err, label),
@@ -1489,7 +1511,6 @@ const FolderRow = React.memo(function FolderRow({
       actions.reportError(err, label),
     );
   const editsDisabled = kind === "server" && !serverReachable;
-  const processingBlock = useServerProcessingBlock();
   const editsHidden = kind === "local";
   const offlineHint = t(
     "filesPage.offlineNoFolderEdits",
@@ -1513,7 +1534,7 @@ const FolderRow = React.memo(function FolderRow({
     <div
       role="row"
       tabIndex={0}
-      draggable
+      draggable={!selectionOnly}
       onDragStart={(e) => {
         e.dataTransfer.setData(
           FILES_PAGE_DRAG_TYPE,
@@ -1524,20 +1545,19 @@ const FolderRow = React.memo(function FolderRow({
         );
         e.dataTransfer.effectAllowed = "move";
       }}
-      {...dropHandlers}
-      onDoubleClick={onOpen}
+      {...(selectionOnly ? {} : dropHandlers)}
+      onClick={onOpen}
       onContextMenu={(e) => {
         e.preventDefault();
         kebabRef.current?.click();
       }}
       onKeyDown={(e) => {
-        if (e.key === "Enter") onOpen();
+        if (e.target === e.currentTarget && e.key === "Enter") onOpen();
       }}
       className={`files-page-list-row${isDropTarget ? " is-drop-target" : ""}`}
     >
       <span aria-hidden="true" />
-      {/* Each direct child is a gridcell: a role="row" may only own cells, so the
-          actions menu has to sit inside one. */}
+
       <span
         role="gridcell"
         style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
@@ -1593,70 +1613,78 @@ const FolderRow = React.memo(function FolderRow({
       <span role="gridcell">
         {getFileDate({ lastModified: folder.updatedAt })}
       </span>
-      <span role="gridcell" className="files-page-list-status">
-        {processing && (
-          <ProcessingFolderStats
-            recordId={processing.id}
-            listFiles={listProcessingFiles}
-            variant="row"
+      {!selectionOnly && (
+        <span role="gridcell" className="files-page-list-status">
+          {processing && (
+            <ProcessingFolderStats
+              recordId={processing.id}
+              listFiles={listProcessingFiles}
+              variant="row"
+            />
+          )}
+        </span>
+      )}
+      <span role="gridcell" onClick={(e) => e.stopPropagation()}>
+        {!selectionOnly && (
+          <FolderMenu
+            folder={folder}
+            processing={processing}
+            continuous={kind === "virtual"}
+            isMount={editsHidden}
+            canUnmount={folder.parentFolderId === null}
+            editsDisabled={editsDisabled}
+            editsDisabledHint={offlineHint}
+            processingBlock={processingBlock}
+            variant="kebab"
+            triggerRef={kebabRef}
+            onOpen={onOpen}
+            onStartProcessing={() => actions.startProcessing(folder)}
+            onRunProcessing={() => void runProcessing("process folder now")}
+            onStopProcessing={() =>
+              void stopProcessing("pause processing folder")
+            }
+            onResumeProcessing={() =>
+              void resumeProcessing("resume processing")
+            }
+            onRemoveProcessing={() =>
+              void removeProcessing("remove processing folder")
+            }
+            onEditProcessing={() => actions.startProcessing(folder)}
+            onRevertAll={
+              kind === "local"
+                ? () => actions.requestRevertAll(folder)
+                : undefined
+            }
+            onRename={() => actions.renameFolder(folder)}
+            onChangeAppearance={(appearance) =>
+              actions.changeFolderAppearance(folder.id, appearance)
+            }
+            onDelete={() => actions.deleteFolder(folder)}
           />
         )}
-      </span>
-      <span role="gridcell">
-        <FolderMenu
-          folder={folder}
-          processing={processing}
-          continuous={kind === "virtual"}
-          isMount={editsHidden}
-          canUnmount={folder.parentFolderId === null}
-          editsDisabled={editsDisabled}
-          editsDisabledHint={offlineHint}
-          processingBlock={processingBlock}
-          variant="kebab"
-          triggerRef={kebabRef}
-          onOpen={onOpen}
-          onStartProcessing={() => actions.startProcessing(folder)}
-          onRunProcessing={() => void runProcessing("process folder now")}
-          onStopProcessing={() =>
-            void stopProcessing("pause processing folder")
-          }
-          onResumeProcessing={() => void resumeProcessing("resume processing")}
-          onRemoveProcessing={() =>
-            void removeProcessing("remove processing folder")
-          }
-          onEditProcessing={() => actions.startProcessing(folder)}
-          onRevertAll={
-            kind === "local"
-              ? () => actions.requestRevertAll(folder)
-              : undefined
-          }
-          onRename={() => actions.renameFolder(folder)}
-          onChangeAppearance={(appearance) =>
-            actions.changeFolderAppearance(folder.id, appearance)
-          }
-          onDelete={() => actions.deleteFolder(folder)}
-        />
       </span>
     </div>
   );
 });
 
 interface FileRowProps {
+  selectionOnly?: boolean;
+  disabledReason?: string;
   file: StirlingFileStub;
   isSelected: boolean;
   isInWorkspace: boolean;
   parentPath?: string;
-  /** Shows the checkbox once 2+ files are selected. */
+
   multiSelectActive: boolean;
-  /** Download / rename / duplicate menu items offered. */
+
   downloadAvailable: boolean;
   renameAvailable: boolean;
   duplicateAvailable: boolean;
-  /** Kebab Save to server offered; only fires when file is local-only. */
+
   saveToServerAvailable: boolean;
-  /** Version-history menu item offered; shown only when file has >1 version. */
+
   versionHistoryAvailable: boolean;
-  /** When set, the kebab Save to server is disabled with this tooltip. */
+
   saveToServerDisabledReason?: string | null;
   badges: FileItemPolicyRef[];
   processingState?: DiskFileState;
@@ -1664,6 +1692,8 @@ interface FileRowProps {
 }
 
 const FileRow = React.memo(function FileRow({
+  selectionOnly,
+  disabledReason,
   file,
   isSelected,
   isInWorkspace,
@@ -1693,14 +1723,19 @@ const FileRow = React.memo(function FileRow({
     file.thumbnailUrl,
   );
   const onClick = (e: React.MouseEvent) =>
+    !disabledReason &&
     actions.selectFile(file.id, e.shiftKey, e.metaKey || e.ctrlKey);
-  const onOpen = () => actions.openFile(file);
+  const onOpen = () => {
+    if (!disabledReason) actions.openFile(file);
+  };
   return (
     <div
       role="row"
       aria-selected={isSelected}
       tabIndex={0}
-      draggable
+      draggable={!selectionOnly}
+      aria-disabled={Boolean(disabledReason)}
+      title={disabledReason}
       onDragStart={(e) => {
         e.dataTransfer.setData(
           FILES_PAGE_DRAG_TYPE,
@@ -1716,22 +1751,20 @@ const FileRow = React.memo(function FileRow({
         kebabRef.current?.click();
       }}
       onKeyDown={(e) => {
+        if (e.key === " " && selectionOnly) {
+          e.preventDefault();
+          if (!disabledReason) actions.selectFile(file.id, e.shiftKey, true);
+        }
         if (e.key === "Enter") onOpen();
       }}
       className={`files-page-list-row${isSelected ? " is-selected" : ""}${isInWorkspace ? " is-in-workspace" : ""}`}
     >
-      {/* Each direct child is a gridcell: a role="row" may only own cells, so the
-          checkbox and the actions menu have to sit inside one.
-
-          The checkbox only shows in multi-select mode (see FileCard). When it is
-          hidden the first grid column collapses, but the row's CSS grid keeps the
-          columns aligned via the named template, so no empty cell shows. */}
       {multiSelectActive ? (
         <span role="gridcell">
           <Checkbox
+            disabled={Boolean(disabledReason)}
             checked={isSelected}
             onClick={(e) => {
-              // Toggle this file in/out of the selection without modifier keys.
               e.stopPropagation();
               actions.selectFile(file.id, false, true);
             }}
@@ -1744,7 +1777,6 @@ const FileRow = React.memo(function FileRow({
           />
         </span>
       ) : (
-        // Empty cell preserves grid column alignment.
         <span aria-hidden="true" />
       )}
       <span
@@ -1756,9 +1788,7 @@ const FileRow = React.memo(function FileRow({
           minWidth: 0,
         }}
       >
-        {/* Fixed slot: the fallback and the thumbnail are different sizes, and a
-            thumbnail arrives after first paint, so sizing to the content would
-            leave the names ragged and then shift them as each one landed. */}
+        {/* Reserve thumbnail width so names do not shift when images load. */}
         <span className="files-page-list-thumb">
           {resolvedThumbnail ? (
             <img
@@ -1811,14 +1841,17 @@ const FileRow = React.memo(function FileRow({
       <span role="gridcell">{ext || t("filesPage.file", "File")}</span>
       <span role="gridcell">{fileSize}</span>
       <span role="gridcell">{fileDate}</span>
-      <span role="gridcell" className="files-page-list-status">
-        <FileStateBadge
-          state={processingState}
-          onRetry={() => actions.retryFile(file.name)}
-        />
-      </span>
+      {!selectionOnly && (
+        <span role="gridcell" className="files-page-list-status">
+          <FileStateBadge
+            state={processingState}
+            onRetry={() => actions.retryFile(file.name)}
+          />
+        </span>
+      )}
       <span role="gridcell">
         <FileActionsMenu
+          selectionOnly={selectionOnly}
           file={file}
           triggerRef={kebabRef}
           downloadAvailable={downloadAvailable}
@@ -1834,27 +1867,30 @@ const FileRow = React.memo(function FileRow({
   );
 });
 
-// Re-export root constant for caller convenience
 export { ROOT_FOLDER_ID };
 
 /**
- * No stub behind it, so no selection, move, rename or delete: the disk owns the
- * file and the only affordance is adding it to the workspace.
+ * Disk entries stay on disk until opened; picker selection only records their paths.
  */
 const DiskFileCard = React.memo(function DiskFileCard({
+  selectionOnly,
+  isSelected,
+  disabledReason,
   entry,
   state,
   hasOriginal,
   actions,
 }: {
+  selectionOnly?: boolean;
+  isSelected?: boolean;
+  disabledReason?: string;
   entry: DiskFileEntry;
   state?: DiskFileState;
   hasOriginal?: boolean;
   actions: FileGridActions;
 }) {
-  // A file mid-processing is locked: its bytes are about to be replaced, so opening
-  // it would show a result that is not there yet.
-  const locked = state === "processing";
+  // Processing replaces the bytes, so opening is blocked until it finishes.
+  const locked = state === "processing" || Boolean(disabledReason);
   const onOpen = () => {
     if (!locked) actions.openDiskFile(entry);
   };
@@ -1866,22 +1902,49 @@ const DiskFileCard = React.memo(function DiskFileCard({
   const isPdf = extension === "PDF";
   return (
     <div
-      className={`files-page-card${locked ? " is-locked" : ""}`}
+      className={`files-page-card${locked ? " is-locked" : ""}${isSelected ? " is-selected" : ""}`}
       role="listitem"
       tabIndex={0}
+      aria-selected={isSelected}
+      aria-disabled={locked}
+      onClick={(event) => {
+        if (selectionOnly && !locked)
+          actions.selectDiskFile(entry, event.shiftKey);
+      }}
       onDoubleClick={onOpen}
       onKeyDown={(e) => {
+        if (e.key === " " && selectionOnly) {
+          e.preventDefault();
+          if (!locked) actions.selectDiskFile(entry, e.shiftKey);
+        }
         if (e.key === "Enter") onOpen();
       }}
       title={
-        locked
+        disabledReason ??
+        (locked
           ? t(
               "filesPage.diskState.processingHint",
               "Processing - available when it finishes",
             )
-          : entry.path
+          : entry.path)
       }
     >
+      {selectionOnly && (
+        <div className="files-page-card-selector">
+          <Checkbox
+            checked={Boolean(isSelected)}
+            disabled={locked}
+            onClick={(event) => {
+              event.stopPropagation();
+              actions.selectDiskFile(entry, event.shiftKey);
+            }}
+            onChange={() => {}}
+            aria-label={t("filesPage.selectFile", "Select file {{name}}", {
+              name: entry.name,
+            })}
+          />
+        </div>
+      )}
       <div className="files-page-card-thumb">
         {thumbnail ? (
           <img src={thumbnail} alt="" draggable={false} />
@@ -1907,7 +1970,9 @@ const DiskFileCard = React.memo(function DiskFileCard({
         </div>
         <FileStateBadge
           state={state}
-          onRetry={() => actions.retryFile(entry.name)}
+          onRetry={
+            selectionOnly ? undefined : () => actions.retryFile(entry.name)
+          }
         />
       </div>
       <div className="files-page-card-body">
@@ -1921,59 +1986,65 @@ const DiskFileCard = React.memo(function DiskFileCard({
         </div>
       </div>
       <div className="files-page-card-actions">
-        <Menu shadow="md" position="bottom-end" withinPortal>
-          <Menu.Target>
-            <ActionIcon
-              size="sm"
-              onClick={(e) => e.stopPropagation()}
-              aria-label={t("filesPage.fileMenu", "File actions")}
-            >
-              <Icon name="ellipsis-vertical" size={20} />
-            </ActionIcon>
-          </Menu.Target>
-          <Menu.Dropdown>
-            <Menu.Item
-              leftSection={<Icon name="external-link" size={20} />}
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpen();
-              }}
-            >
-              {t("filesPage.addToWorkspace", "Add to workspace")}
-            </Menu.Item>
-            {hasOriginal && (
+        {!selectionOnly && (
+          <Menu shadow="md" position="bottom-end" withinPortal>
+            <Menu.Target>
+              <ActionIcon
+                size="sm"
+                onClick={(e) => e.stopPropagation()}
+                aria-label={t("filesPage.fileMenu", "File actions")}
+              >
+                <Icon name="ellipsis-vertical" size={20} />
+              </ActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown>
               <Menu.Item
-                leftSection={<Icon name="rotate-ccw-clock" size={20} />}
+                leftSection={<Icon name="external-link" size={20} />}
                 onClick={(e) => {
                   e.stopPropagation();
-                  actions.revertFile(entry.name);
+                  onOpen();
                 }}
               >
-                {t("filesPage.processing.restore", "Restore original")}
+                {t("filesPage.addToWorkspace", "Add to workspace")}
               </Menu.Item>
-            )}
-          </Menu.Dropdown>
-        </Menu>
+              {hasOriginal && (
+                <Menu.Item
+                  leftSection={<Icon name="rotate-ccw-clock" size={20} />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    actions.revertFile(entry.name);
+                  }}
+                >
+                  {t("filesPage.processing.restore", "Restore original")}
+                </Menu.Item>
+              )}
+            </Menu.Dropdown>
+          </Menu>
+        )}
       </div>
     </div>
   );
 });
 
-/** List-view sibling of {@link DiskFileCard}; same single affordance. */
 const DiskFileRow = React.memo(function DiskFileRow({
+  selectionOnly,
+  isSelected,
+  disabledReason,
   entry,
   state,
   hasOriginal,
   actions,
 }: {
+  selectionOnly?: boolean;
+  isSelected?: boolean;
+  disabledReason?: string;
   entry: DiskFileEntry;
   state?: DiskFileState;
   hasOriginal?: boolean;
   actions: FileGridActions;
 }) {
-  // A file mid-processing is locked: its bytes are about to be replaced, so opening
-  // it would show a result that is not there yet.
-  const locked = state === "processing";
+  // Processing replaces the bytes, so opening is blocked until it finishes.
+  const locked = state === "processing" || Boolean(disabledReason);
   const onOpen = () => {
     if (!locked) actions.openDiskFile(entry);
   };
@@ -1986,14 +2057,39 @@ const DiskFileRow = React.memo(function DiskFileRow({
     <div
       role="row"
       tabIndex={0}
-      className={`files-page-list-row${locked ? " is-locked" : ""}`}
+      aria-selected={isSelected}
+      aria-disabled={locked}
+      onClick={(event) => {
+        if (selectionOnly && !locked)
+          actions.selectDiskFile(entry, event.shiftKey);
+      }}
+      className={`files-page-list-row${locked ? " is-locked" : ""}${isSelected ? " is-selected" : ""}`}
       onDoubleClick={onOpen}
       onKeyDown={(e) => {
+        if (e.key === " " && selectionOnly) {
+          e.preventDefault();
+          if (!locked) actions.selectDiskFile(entry, e.shiftKey);
+        }
         if (e.key === "Enter") onOpen();
       }}
-      title={entry.path}
+      title={disabledReason ?? entry.path}
     >
-      <span aria-hidden="true" />
+      <span role="gridcell">
+        {selectionOnly && (
+          <Checkbox
+            checked={Boolean(isSelected)}
+            disabled={locked}
+            onClick={(event) => {
+              event.stopPropagation();
+              actions.selectDiskFile(entry, event.shiftKey);
+            }}
+            onChange={() => {}}
+            aria-label={t("filesPage.selectFile", "Select file {{name}}", {
+              name: entry.name,
+            })}
+          />
+        )}
+      </span>
       <span
         role="gridcell"
         style={{
@@ -2036,41 +2132,45 @@ const DiskFileRow = React.memo(function DiskFileRow({
       <span role="gridcell">
         {getFileDate({ lastModified: entry.lastModified })}
       </span>
-      <span role="gridcell" className="files-page-list-status">
-        <FileStateBadge
-          state={state}
-          onRetry={() => actions.retryFile(entry.name)}
-        />
-      </span>
+      {!selectionOnly && (
+        <span role="gridcell" className="files-page-list-status">
+          <FileStateBadge
+            state={state}
+            onRetry={() => actions.retryFile(entry.name)}
+          />
+        </span>
+      )}
       <span role="gridcell">
-        <Menu shadow="md" position="bottom-end" withinPortal>
-          <Menu.Target>
-            <ActionIcon
-              variant="tertiary"
-              size="sm"
-              onClick={(e) => e.stopPropagation()}
-              aria-label={t("filesPage.fileMenu", "File actions")}
-            >
-              <Icon name="ellipsis-vertical" size={20} />
-            </ActionIcon>
-          </Menu.Target>
-          <Menu.Dropdown>
-            <Menu.Item
-              leftSection={<Icon name="external-link" size={20} />}
-              onClick={onOpen}
-            >
-              {t("filesPage.addToWorkspace", "Add to workspace")}
-            </Menu.Item>
-            {hasOriginal && (
-              <Menu.Item
-                leftSection={<Icon name="rotate-ccw-clock" size={20} />}
-                onClick={() => actions.revertFile(entry.name)}
+        {!selectionOnly && (
+          <Menu shadow="md" position="bottom-end" withinPortal>
+            <Menu.Target>
+              <ActionIcon
+                variant="tertiary"
+                size="sm"
+                onClick={(e) => e.stopPropagation()}
+                aria-label={t("filesPage.fileMenu", "File actions")}
               >
-                {t("filesPage.processing.restore", "Restore original")}
+                <Icon name="ellipsis-vertical" size={20} />
+              </ActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item
+                leftSection={<Icon name="external-link" size={20} />}
+                onClick={onOpen}
+              >
+                {t("filesPage.addToWorkspace", "Add to workspace")}
               </Menu.Item>
-            )}
-          </Menu.Dropdown>
-        </Menu>
+              {hasOriginal && (
+                <Menu.Item
+                  leftSection={<Icon name="rotate-ccw-clock" size={20} />}
+                  onClick={() => actions.revertFile(entry.name)}
+                >
+                  {t("filesPage.processing.restore", "Restore original")}
+                </Menu.Item>
+              )}
+            </Menu.Dropdown>
+          </Menu>
+        )}
       </span>
     </div>
   );

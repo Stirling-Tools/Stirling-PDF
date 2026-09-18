@@ -66,17 +66,19 @@ function ToolLabel({ operation }: { operation: ToolOperation }) {
 }
 
 export interface VersionTimelineProps {
+  onPickVersion?: (file: StirlingFileStub) => void;
   /** Chain sorted oldest-first. */
   chain: StirlingFileStub[];
   /** Currently selected version. */
   currentId: FileId;
-  onAddToWorkspace: (fileIds: FileId[]) => void;
-  onRemove: (fileIds: FileId[]) => void;
+  onAddToWorkspace?: (fileIds: FileId[]) => void;
+  onRemove?: (fileIds: FileId[]) => void;
   hideHeader?: boolean;
 }
 
 /** Clean, spacious version timeline with minimal clutter. */
 export function VersionTimeline({
+  onPickVersion,
   chain,
   currentId,
   onAddToWorkspace,
@@ -244,7 +246,20 @@ export function VersionTimeline({
                     </Text>
                   </Group>
 
-                  {!isActive && (
+                  {onPickVersion && (
+                    <ActionIcon
+                      variant="tertiary"
+                      aria-label={t(
+                        "filePicker.selectVersion",
+                        "Select version {{version}}",
+                        { version: v.versionNumber },
+                      )}
+                      onClick={() => onPickVersion(v)}
+                    >
+                      <Icon name="plus" size={20} />
+                    </ActionIcon>
+                  )}
+                  {!isActive && !onPickVersion && (
                     <Menu position="bottom-end" withinPortal shadow="md">
                       <Menu.Target>
                         <ActionIcon
@@ -262,7 +277,7 @@ export function VersionTimeline({
                       <Menu.Dropdown>
                         <Menu.Item
                           leftSection={<Icon name="external-link" size={20} />}
-                          onClick={() => onAddToWorkspace([v.id])}
+                          onClick={() => onAddToWorkspace?.([v.id])}
                         >
                           {t(
                             "filesPage.openVersionInWorkspace",
@@ -284,7 +299,7 @@ export function VersionTimeline({
                         <Menu.Item
                           color="red"
                           leftSection={<Icon name="trash" size={20} />}
-                          onClick={() => onRemove([v.id])}
+                          onClick={() => onRemove?.([v.id])}
                         >
                           {t("filesPage.removeVersion", "Remove this version")}
                         </Menu.Item>
