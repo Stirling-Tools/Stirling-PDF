@@ -24,6 +24,7 @@ import stirling.software.proprietary.billing.UnitCalcPolicy;
 import stirling.software.saas.model.SaasTeamExtensions;
 import stirling.software.saas.payg.billing.TeamBillingContext;
 import stirling.software.saas.payg.billing.TeamBillingService;
+import stirling.software.saas.payg.bundle.PrepaidBundleService;
 import stirling.software.saas.payg.entitlement.EntitlementService;
 import stirling.software.saas.payg.entitlement.EntitlementSnapshot;
 import stirling.software.saas.payg.instance.InstanceUsageIngestService;
@@ -55,6 +56,7 @@ import stirling.software.saas.repository.SaasTeamExtensionsRepository;
 @ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
 public class InstanceController {
 
+    private final PrepaidBundleService prepaidBundleService;
     private final EntitlementService entitlementService;
     private final TeamBillingService billingService;
     private final AccountLinkService accountLinkService;
@@ -70,7 +72,9 @@ public class InstanceController {
             PricingPolicyService pricingPolicyService,
             InstanceUsageIngestService usageIngestService,
             LinkedInstanceRepository linkedInstanceRepository,
-            SaasTeamExtensionsRepository teamExtensionsRepository) {
+            SaasTeamExtensionsRepository teamExtensionsRepository,
+            PrepaidBundleService prepaidBundleService) {
+        this.prepaidBundleService = prepaidBundleService;
         this.entitlementService = entitlementService;
         this.billingService = billingService;
         this.accountLinkService = accountLinkService;
@@ -104,7 +108,8 @@ public class InstanceController {
             UnitCalcPolicy unitCalcPolicy,
             LocalDateTime periodStart,
             LocalDateTime periodEnd,
-            int automationStepLimit) {}
+            int automationStepLimit,
+            long prepaidRemainingUnits) {}
 
     @GetMapping("/whoami")
     @PreAuthorize("hasRole('LINKED_INSTANCE')")
@@ -230,7 +235,8 @@ public class InstanceController {
                         policy.getFileUnitCap()),
                 snap.periodStart(),
                 snap.periodEnd(),
-                policy.resolveStepLimit(JobSource.PIPELINE));
+                policy.resolveStepLimit(JobSource.PIPELINE),
+                prepaidBundleService.prepaidRemainingUnits(teamId));
     }
 
     /**
