@@ -51,12 +51,9 @@ export class OperationRouter {
     return url.replace(/\/$/, "");
   }
 
-  /** Automation executes on the connected server; standalone tools retain mode-based routing. */
-  async getExecutionTarget(operation?: string): Promise<ExecutionTarget> {
-    if (this.isServerAutomationEndpoint(operation)) {
-      await this.getConnectedServerBaseUrl();
-      return "remote";
-    }
+  /** Standalone tools route by connection mode. Automation endpoints never reach here —
+   *  getBaseUrl resolves those via getConnectedServerBaseUrl before this is consulted. */
+  async getExecutionTarget(): Promise<ExecutionTarget> {
     const mode = await connectionModeService.getCurrentMode();
 
     if (mode === "saas" || mode === "local") {
@@ -318,7 +315,7 @@ export class OperationRouter {
     }
 
     // Existing logic for local/remote routing
-    const target = await this.getExecutionTarget(operation);
+    const target = await this.getExecutionTarget();
 
     if (target === "local") {
       // Use dynamically assigned port from backend service

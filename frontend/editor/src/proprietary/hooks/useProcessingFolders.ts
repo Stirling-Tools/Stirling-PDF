@@ -392,4 +392,8 @@ export function resetProcessingFolders(): void {
   loadError = null;
   inFlight = null;
   listeners.forEach((listener) => listener());
+  // The load effect keys on `enabled`, which is unchanged on a server-to-server switch
+  // (saas <-> selfhosted while still signed in), so reload here or the list stays empty
+  // and loading forever. In a mode without a session, load() fails closed to an empty list.
+  void load();
 }

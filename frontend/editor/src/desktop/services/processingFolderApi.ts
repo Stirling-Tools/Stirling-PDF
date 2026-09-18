@@ -17,6 +17,7 @@ export {
 import { localProcessingFolderStorage as storage } from "@app/services/localProcessingFolderStorage";
 import {
   cancelLocalProcessingRuns,
+  deleteLocalProcessingFolder,
   isLocalProcessingFolder,
   localProcessingFolders,
   requireLocalProcessingFolder,
@@ -26,12 +27,19 @@ import {
 } from "@app/services/localProcessingFolders";
 import { listDirectory } from "@app/services/localFolderContents";
 
-/** Combines connected-server folders with this account's desktop watches. */
+/** Combines connected-server folders with this account's desktop watches. A server hiccup
+ *  must not hide the local watches, so the remote list is fetched independently and its
+ *  failure degrades to local-only rather than rejecting the whole read. */
 export async function fetchProcessingFolders(): Promise<
   server.ProcessingFolder[]
 > {
   const local = await localProcessingFolders();
-  const remote = await server.fetchProcessingFolders();
+  let remote: server.ProcessingFolder[] = [];
+  try {
+    remote = await server.fetchProcessingFolders();
+  } catch (error) {
+    console.warn("[processingFolders] server list unavailable", error);
+  }
   return [...remote.filter((folder) => folder.folderId !== null), ...local];
 }
 
@@ -62,10 +70,7 @@ export async function cancelProcessingRuns(id: string): Promise<void> {
 /** Removes desktop watch settings and history; on-disk inputs and archived originals remain. */
 export async function deleteProcessingFolder(id: string): Promise<void> {
   if (!isLocalProcessingFolder(id)) return server.deleteProcessingFolder(id);
-  await cancelLocalProcessingRuns(id);
-  await storage.deleteFolder(id);
-  for (const entry of await storage.files(id))
-    await storage.deleteFile(entry.id);
+  await deleteLocalProcessingFolder(id);
 }
 
 export async function fetchProcessingFolderRuns(

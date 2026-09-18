@@ -101,7 +101,9 @@ export async function saveLocalProcessingFolder(
     directory,
     folderId: null,
     name: directory.split(/[/\\]/).filter(Boolean).pop() ?? directory,
-    enabled: request.enabled ?? true,
+    // Editing a paused folder must not silently resume it: keep the existing state unless
+    // the request explicitly sets one; a fresh folder defaults to enabled.
+    enabled: request.enabled ?? existing?.enabled ?? true,
     steps: request.steps,
     output: { ...request.output, directory, replace: true },
   };
@@ -371,6 +373,19 @@ export async function cancelLocalProcessingRuns(id: string): Promise<void> {
       });
     }
   }
+}
+
+/** Removes a desktop watch and all its history. Deletes under the processing lock so an
+ *  in-flight run finishes its final write before the rows go: otherwise processFile's terminal
+ *  save re-creates an orphan file row for a folder that no longer exists. */
+export async function deleteLocalProcessingFolder(id: string): Promise<void> {
+  await cancelLocalProcessingRuns(id);
+  await navigator.locks.request(`processing:${id}`, async () => {
+    for (const entry of await storage.files(id))
+      await storage.deleteFile(entry.id);
+    await storage.deleteFolder(id);
+  });
+  cancelled.delete(id);
 }
 
 /** Restores one archived input only if none of this run's outputs were subsequently edited. */
