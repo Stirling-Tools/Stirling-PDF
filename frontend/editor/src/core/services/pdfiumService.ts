@@ -1385,6 +1385,47 @@ export interface ReadAloudTextItem {
   viewportTransform: number[];
 }
 
+/**
+ * PageViewport-compatible transform mapping PDF user space to viewer CSS
+ * space, including the page's /Rotate. Matches pdf.js PageViewport for a
+ * zero-based view box; width/height are the UNROTATED user-space dims.
+ */
+export function readAloudViewportTransform(
+  quarters: number,
+  width: number,
+  height: number,
+  zoom: number,
+): number[] {
+  switch (quarters & 3) {
+    case 1:
+      return [0, zoom, zoom, 0, 0, 0];
+    case 2:
+      return [-zoom, 0, 0, zoom, width * zoom, 0];
+    case 3:
+      return [0, -zoom, -zoom, 0, height * zoom, width * zoom];
+    default:
+      return [zoom, 0, 0, -zoom, 0, height * zoom];
+  }
+}
+
+/**
+ * Visual reading order for extracted words: top-to-bottom with a same-line
+ * threshold, then left-to-right. PDF content order is not a reliable reading
+ * order for multi-column layouts.
+ */
+export function sortReadAloudItems(
+  items: ReadAloudTextItem[],
+): ReadAloudTextItem[] {
+  const SAME_LINE_PX = 5;
+  const topOf = (item: ReadAloudTextItem) =>
+    (item.transform[5] ?? 0) + item.height;
+  return [...items].sort((a, b) => {
+    const vertical = topOf(b) - topOf(a);
+    if (Math.abs(vertical) > SAME_LINE_PX) return vertical;
+    return (a.transform[4] ?? 0) - (b.transform[4] ?? 0);
+  });
+}
+
 export async function extractPageTextItemsForReadAloud(
   data: ArrayBuffer | Uint8Array,
   pageIndex: number,
@@ -1404,10 +1445,19 @@ export async function extractPageTextItemsForReadAloud(
     pagePtr = m.FPDF_LoadPage(docPtr, pageIndex);
     if (!pagePtr) return [];
 
-    const pHeight =
+    // GetPageWidthF/HeightF already account for /Rotate; recover the
+    // unrotated user-space dims for the viewport transform below.
+    const rotatedWidth =
+      typeof m.FPDF_GetPageWidthF === "function"
+        ? m.FPDF_GetPageWidthF(pagePtr)
+        : m.FPDF_GetPageWidth(pagePtr);
+    const rotatedHeight =
       typeof m.FPDF_GetPageHeightF === "function"
         ? m.FPDF_GetPageHeightF(pagePtr)
         : m.FPDF_GetPageHeight(pagePtr);
+    const quarters = (m.FPDFPage_GetRotation(pagePtr) | 0) & 3;
+    const width = quarters & 1 ? rotatedHeight : rotatedWidth;
+    const height = quarters & 1 ? rotatedWidth : rotatedHeight;
 
     textPagePtr = m.FPDFText_LoadPage(pagePtr);
     if (!textPagePtr) return [];
@@ -1415,7 +1465,12 @@ export async function extractPageTextItemsForReadAloud(
     const charCount = m.FPDFText_CountChars(textPagePtr);
     if (charCount <= 0) return [];
 
-    const viewportTransform = [zoom, 0, 0, -zoom, 0, pHeight * zoom];
+    const viewportTransform = readAloudViewportTransform(
+      quarters,
+      width,
+      height,
+      zoom,
+    );
     const items: ReadAloudTextItem[] = [];
 
     let currentChars: string[] = [];
@@ -1470,7 +1525,7 @@ export async function extractPageTextItemsForReadAloud(
     }
     flushWord();
 
-    return items;
+    return sortReadAloudItems(items);
   } finally {
     m.pdfium.wasmExports.free(rectMem);
     if (textPagePtr != null) m.FPDFText_ClosePage(textPagePtr);
