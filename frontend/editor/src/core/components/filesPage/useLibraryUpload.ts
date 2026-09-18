@@ -6,7 +6,7 @@ import { useFileHandler } from "@app/hooks/useFileHandler";
 import { writeIntoMount } from "@app/services/mountWrites";
 import { folderKind } from "@app/types/folder";
 
-/** Imports into the current library folder without opening files in the editor; root imports appear in Recent. */
+/** Imports into the current folder without opening the editor; root imports appear in Recents. */
 export function useLibraryUpload() {
   const { t } = useTranslation();
   const folders = useFolders();

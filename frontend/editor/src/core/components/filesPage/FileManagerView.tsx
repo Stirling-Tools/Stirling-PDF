@@ -125,7 +125,6 @@ export default function FileManagerView() {
   const signInRequiredReason = isAnonymous
     ? t("filesPage.signInRequired", "Sign in to use cloud storage.")
     : null;
-  // Match the backend storage gate: login and storage must both be enabled.
   const uploadEnabled = appConfig?.storageEnabled === true;
   const saveToServerDisabledReason: string | null =
     signInRequiredReason ??
@@ -712,7 +711,6 @@ export default function FileManagerView() {
     navigate(EDITOR_BASENAME);
   }, [navigate]);
 
-  // Focus the super-search input (stable id), used by the "/" shortcut.
   const focusSearch = useCallback(() => {
     (
       document.getElementById("super-search-input") as HTMLInputElement | null
@@ -805,8 +803,6 @@ export default function FileManagerView() {
     [removeFiles],
   );
 
-  // Same actions the file sidebar's kebab offers, so both surfaces match.
-
   /** Cloud-only rows hold no bytes; pull them local before acting on them. */
   const localCopyOf = useCallback(
     async (file: StirlingFileStub): Promise<StirlingFileStub | null> => {
@@ -890,9 +886,6 @@ export default function FileManagerView() {
     [renameTarget, localCopyOf, fileActions, refresh, t],
   );
 
-  const currentFolderRecord = currentFolderId
-    ? (foldersById.get(currentFolderId) ?? null)
-    : null;
   const totalCount = entries.length;
   const selectedFiles = useMemo(
     () => Array.from(selectedFileIds),
@@ -1296,7 +1289,7 @@ export default function FileManagerView() {
           <FileDetailsPanel
             selectedFileIds={selectedFiles}
             fileMap={fileMap}
-            currentFolder={currentFolderRecord}
+            foldersById={foldersById}
             onClose={() => clearSelection()}
             onAddToWorkspace={handleAddToWorkspace}
             onMove={promptMoveFiles}
@@ -1338,7 +1331,7 @@ export default function FileManagerView() {
             <FileDetailsPanel
               selectedFileIds={selectedFiles}
               fileMap={fileMap}
-              currentFolder={currentFolderRecord}
+              foldersById={foldersById}
               onClose={() => setMobileDetailsOpen(false)}
               onAddToWorkspace={handleAddToWorkspace}
               onMove={promptMoveFiles}
@@ -1360,17 +1353,10 @@ export default function FileManagerView() {
 
       <MoveToFolderDialog
         opened={moveDialog.open}
-        addToLibrary={moveDialog.intent === "addToLibrary"}
         onClose={closeMoveDialog}
         // Files can go anywhere, but a folder moves only within its own kind and
         // never into a mount - a directory's subfolders are the filesystem's.
         folders={folders.folders.filter((candidate) => {
-          if (
-            moveDialog.intent === "addToLibrary" &&
-            folderKind(candidate) === "server"
-          ) {
-            return serverFolderDisabledReason === null;
-          }
           if (!moveDialog.folderId) return true;
           if (folderKind(candidate) === "local") return false;
           const moving = folders.foldersById.get(moveDialog.folderId);

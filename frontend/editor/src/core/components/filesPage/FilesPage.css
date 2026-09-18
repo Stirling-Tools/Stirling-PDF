@@ -115,7 +115,6 @@
   flex-shrink: 0;
   flex-wrap: wrap;
   min-height: 3rem;
-  /* Contain toolbar overflow within the main pane. */
   overflow-x: hidden;
 }
 
@@ -143,11 +142,9 @@
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: 0.5rem;
-  /* Allow wrapping before controls overlap the details panel. */
   min-width: 0;
 }
 
-/* Wrap controls as whole units so their labels remain readable. */
 .files-page-toolbar-actions > .mantine-Select-root,
 .files-page-toolbar-actions > .mantine-MultiSelect-root,
 .files-page-toolbar-actions > .mantine-TextInput-root {
@@ -446,7 +443,6 @@
   letter-spacing: -0.005em;
 }
 
-/* Keep sizes and units together when metadata wraps. */
 .files-page-card-meta {
   font-size: 0.76rem;
   color: var(--c-text-subtle);
@@ -1014,7 +1010,6 @@
 
 .files-page-details-body {
   padding: 0.3rem 1.1rem 1.1rem;
-  /* Scroll details independently so the action footer remains visible. */
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -1514,11 +1509,6 @@
     width: auto !important;
   }
 }
-
-/* ── Mobile (≤640px) ────────────────────────────────────────────────
-   Tighten the chrome so the file manager fits inside the mobile workspace
-   slide: the slide-rail's bottom tab bar already carries the navigation, and
-   uploads have the centre drop overlay. */
 
 @media (max-width: 640px) {
   .files-page-grid {

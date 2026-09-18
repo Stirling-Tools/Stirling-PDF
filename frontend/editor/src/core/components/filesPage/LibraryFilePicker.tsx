@@ -484,7 +484,7 @@ export function LibraryFilePicker({
     <FileDetailsPanel
       selectedFileIds={[...selectedFileIds]}
       fileMap={fileMap}
-      currentFolder={currentFolder ?? null}
+      foldersById={folders.foldersById}
       onClose={() => setDetailsOpen(false)}
       onPickVersion={(stub) => selectItem({ kind: "stored", stub })}
     />

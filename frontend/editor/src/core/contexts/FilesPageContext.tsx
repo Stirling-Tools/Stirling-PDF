@@ -68,7 +68,6 @@ export interface FolderNameDialogState {
 
 export interface MoveDialogState {
   open: boolean;
-  intent?: "move" | "addToLibrary";
   fileIds?: FileId[];
   folderId?: FolderId;
   initial: FolderId | null;
@@ -126,10 +125,7 @@ interface FilesPageContextValue {
   submitFolderName: (name: string) => Promise<void>;
 
   moveDialog: MoveDialogState;
-  promptMoveFiles: (
-    fileIds: FileId[],
-    intent?: MoveDialogState["intent"],
-  ) => void;
+  promptMoveFiles: (fileIds: FileId[]) => void;
   closeMoveDialog: () => void;
 
   moveFilesTo: (fileIds: FileId[], folderId: FolderId | null) => Promise<void>;
@@ -334,13 +330,11 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   });
 
   const promptMoveFiles = useCallback(
-    (fileIds: FileId[], intent: MoveDialogState["intent"] = "move") => {
+    (fileIds: FileId[]) => {
       setMoveDialog({
         open: true,
         fileIds,
-        intent,
-        initial:
-          intent === "addToLibrary" ? ROOT_FOLDER_ID : folders.currentFolderId,
+        initial: folders.currentFolderId,
       });
     },
     [folders.currentFolderId],

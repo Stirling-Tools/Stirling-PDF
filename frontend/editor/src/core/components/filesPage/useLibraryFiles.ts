@@ -36,7 +36,7 @@ export function useLibraryFiles({
 }: LibraryFilters & {
   allFiles: StirlingFileStub[];
   diskEntries?: DiskFileEntry[];
-  /** Uncommitted imports follow All/Recent filters without belonging to a stored folder. */
+  /** Uncommitted imports follow library and Recents filters without belonging to a stored folder. */
   stagedFiles?: StirlingFileStub[];
 }) {
   const { folders: folderRecords, foldersById } = useFolders();

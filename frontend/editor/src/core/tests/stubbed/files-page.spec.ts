@@ -180,16 +180,17 @@ async function openMenuItem(
   return dropdown.getByRole("menuitem", { name });
 }
 
-/** Navigate to /files and wait for at least one real (non-skeleton) card.
- *  `.files-page-card` also matches the loading-state skeleton placeholders, and
- *  their parent grid carries `aria-busy="true"` which intercepts pointer events
- *  -- so waiting for any `.files-page-card` races the skeleton→real transition
- *  and causes flaky timeouts on slower CI runners. */
+/** Waits for an interactive card; skeleton cards also match the general card class. */
 async function gotoFilesPage(
   page: Page,
-  { timeout = 10_000 }: { timeout?: number } = {},
+  {
+    timeout = 10_000,
+    view = "recent",
+  }: { timeout?: number; view?: "all" | "recent" } = {},
 ): Promise<void> {
-  await page.goto("/files", { waitUntil: "domcontentloaded" });
+  await page.goto(view === "recent" ? "/files?view=recent" : "/files", {
+    waitUntil: "domcontentloaded",
+  });
   await expect(
     page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
   ).toBeVisible({ timeout });
@@ -473,7 +474,7 @@ test.describe("Files page", () => {
       await expect(page).not.toHaveURL(/\/files/, { timeout: 3_000 });
 
       // Re-add the now-active file; activation branches on requested stubs.
-      await page.goto("/files", { waitUntil: "domcontentloaded" });
+      await page.goto("/files?view=recent", { waitUntil: "domcontentloaded" });
       const card2 = page
         .locator(".files-page-card:not(.is-folder)")
         .filter({ hasText: "active-test.pdf" });
@@ -517,7 +518,7 @@ test.describe("Files page", () => {
       });
 
       // Back to the library and open the same file again.
-      await page.goto("/files", { waitUntil: "domcontentloaded" });
+      await page.goto("/files?view=recent", { waitUntil: "domcontentloaded" });
       await expect(card()).toBeVisible({ timeout: 10_000 });
       await card().dblclick();
       await expect(page).not.toHaveURL(/\/files/, { timeout: 5_000 });
@@ -905,9 +906,9 @@ test.describe("Files page", () => {
           parentFolderId: i === 0 ? undefined : ids[i - 1],
         })),
       );
-      await gotoFilesPage(page);
+      await gotoFilesPage(page, { view: "all" });
 
-      const header = page.locator(".files-page-tabs-row");
+      const header = page.locator(".files-page-navigation");
       const atRoot = await header.evaluate(
         (el) => el.getBoundingClientRect().height,
       );
@@ -944,9 +945,9 @@ test.describe("Files page", () => {
         [{ id: "h-1", name: "h-1.pdf", remoteStorageId: null }],
         [{ id: CHROME_FOLDER, name: "Invoices" }],
       );
-      await gotoFilesPage(page);
+      await gotoFilesPage(page, { view: "all" });
 
-      const header = page.locator(".files-page-tabs-row");
+      const header = page.locator(".files-page-navigation");
       const atRoot = await header.evaluate(
         (el) => el.getBoundingClientRect().height,
       );
@@ -976,7 +977,7 @@ test.describe("Files page", () => {
       await seedFiles(page, [
         { id: "l-1", name: "l-1.pdf", remoteStorageId: null },
       ]);
-      await page.goto("/files", { waitUntil: "domcontentloaded" });
+      await page.goto("/files?view=recent", { waitUntil: "domcontentloaded" });
 
       await expect(page.locator(".files-page-list-row").first()).toBeVisible({
         timeout: 15_000,
@@ -1031,7 +1032,7 @@ test.describe("Files page", () => {
         { id: "s-2", name: "beta.pdf", remoteStorageId: null },
         { id: "s-3", name: "gamma.pdf", remoteStorageId: null },
       ]);
-      await page.goto("/files", { waitUntil: "domcontentloaded" });
+      await page.goto("/files?view=recent", { waitUntil: "domcontentloaded" });
 
       const rows = page.locator(".files-page-list-row:not(.is-header)");
       await expect(rows.first()).toBeVisible({ timeout: 15_000 });
@@ -1046,7 +1047,7 @@ test.describe("Files page", () => {
       const before = await topOf();
       await rows.nth(0).click();
       await rows.nth(1).click({ modifiers: ["ControlOrMeta"] });
-      await expect(page.locator(".files-page-list-selection-count")).toHaveText(
+      await expect(page.locator(".files-page-toolbar-info")).toHaveText(
         /2 selected/i,
       );
       await expect.poll(topOf, { timeout: 15_000 }).toBeCloseTo(before, 0);
@@ -1070,15 +1071,15 @@ test.describe("Files page", () => {
           { id: NESTED, name: "Signed originals", parentFolderId: PARENT },
         ],
       );
-      await gotoFilesPage(page);
+      await gotoFilesPage(page, { view: "all" });
 
       const bar = page.locator(".workbench-bar");
       await expect(bar).toBeVisible({ timeout: 10_000 });
-      const row = page.locator(".files-page-tabs-row");
+      const row = page.locator(".files-page-navigation");
       // On the library's row, and not in the bar above it.
       await expect(
         row.getByRole("navigation", { name: /Folder path/i }),
-      ).toBeVisible();
+      ).toHaveCount(0);
       await expect(
         row.getByRole("button", { name: /New folder/i }),
       ).toHaveCount(0);

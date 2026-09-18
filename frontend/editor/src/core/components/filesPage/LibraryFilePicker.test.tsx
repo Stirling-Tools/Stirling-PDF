@@ -117,6 +117,9 @@ vi.mock("@app/services/localFolderContents", () => ({
 vi.mock("@app/services/zipFileService", () => ({
   zipFileService: { extractAllFiles: state.extractAllFiles },
 }));
+vi.mock("@app/services/fileStorage", () => ({
+  fileStorage: { getHistoryChainStubs: vi.fn().mockResolvedValue([]) },
+}));
 
 const file = (id: string, name: string, folderId: string | null = null) =>
   ({
@@ -171,6 +174,22 @@ beforeEach(() => {
 });
 
 describe("library file picker", () => {
+  it("shows the selected file's folder when browsing Recents", async () => {
+    state.folders = [folder("invoices", "Invoices")];
+    state.files = [file("filed", "Filed.pdf", "invoices")];
+    const user = userEvent.setup();
+    show();
+
+    await user.click(screen.getByText("Filed.pdf"));
+    await user.click(screen.getByRole("button", { name: "Details" }));
+    const details = within(
+      screen.getByRole("complementary", { name: "Details" }),
+    );
+    await user.click(details.getByRole("button", { name: "File info" }));
+
+    expect(details.getByText("Invoices")).toBeVisible();
+  });
+
   it.each(["list", "grid"] as const)(
     "keeps the %s selection when switching between the library and Recents",
     async (viewMode) => {

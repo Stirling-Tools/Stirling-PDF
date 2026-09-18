@@ -18,8 +18,6 @@ interface MoveToFolderDialogProps {
   opened: boolean;
   onClose: () => void;
   folders: FolderRecord[];
-  /** Adding unfiled copies requires a folder; moving to the root would leave them in Recents. */
-  addToLibrary?: boolean;
   /** Folder being moved; excludes its descendants from destinations. */
   disabledFolderId?: FolderId | null;
   initialFolderId?: FolderId | null;
@@ -35,7 +33,6 @@ export function MoveToFolderDialog({
   opened,
   onClose,
   folders,
-  addToLibrary = false,
   disabledFolderId,
   initialFolderId = ROOT_FOLDER_ID,
   onConfirm,
@@ -107,11 +104,7 @@ export function MoveToFolderDialog({
     <Modal
       opened={opened}
       onClose={onClose}
-      title={
-        addToLibrary
-          ? t("filesPage.addToLibrary", "Add to Stirling library")
-          : t("filesPage.moveDialog.title", "Move to folder")
-      }
+      title={t("filesPage.moveDialog.title", "Move to folder")}
       centered
       size="md"
       keepMounted
@@ -119,15 +112,10 @@ export function MoveToFolderDialog({
     >
       <Stack gap="xs">
         <Text size="sm" c="dimmed">
-          {addToLibrary
-            ? t(
-                "filesPage.addToLibraryHint",
-                "Choose or create a folder. Server folders upload a copy of your files.",
-              )
-            : t(
-                "filesPage.moveDialog.hint",
-                "Pick a destination folder. Tip: you can also drag and drop files onto folders in the tree on the left.",
-              )}
+          {t(
+            "filesPage.moveDialog.hint",
+            "Pick a destination folder. Tip: you can also drag and drop files onto folders in the tree on the left.",
+          )}
         </Text>
         <div
           style={{
@@ -276,11 +264,7 @@ export function MoveToFolderDialog({
           </Button>
           <Button
             loading={submitting}
-            disabled={
-              creating ||
-              (addToLibrary && target === ROOT_FOLDER_ID) ||
-              (target !== null && blocked.has(target))
-            }
+            disabled={creating || (target !== null && blocked.has(target))}
             onClick={async () => {
               setSubmitting(true);
               setError(null);
@@ -301,9 +285,7 @@ export function MoveToFolderDialog({
               }
             }}
           >
-            {addToLibrary
-              ? t("filesPage.addToLibraryConfirm", "Add here")
-              : t("filesPage.moveDialog.confirm", "Move here")}
+            {t("filesPage.moveDialog.confirm", "Move here")}
           </Button>
         </Group>
       </Stack>

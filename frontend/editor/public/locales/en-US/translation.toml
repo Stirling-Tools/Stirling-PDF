@@ -4477,9 +4477,6 @@ save = "Rename"
 title = "Rename file"
 
 [filesPage]
-addToLibrary = "Add to Stirling library"
-addToLibraryConfirm = "Add here"
-addToLibraryHint = "Choose or create a folder. Server folders upload a copy of your files."
 addToWorkspace = "Add to workspace"
 addToWorkspaceCount = "Add {{count}} to workspace"
 allFiles = "Stirling library"

@@ -19,7 +19,6 @@ const folder: FolderRecord = {
 
 function show(
   options: {
-    addToLibrary?: boolean;
     onConfirm?: (id: FolderRecord["id"] | null) => Promise<void>;
     onCreateFolder?: (
       name: string,
@@ -44,54 +43,47 @@ function show(
 }
 
 describe("MoveToFolderDialog", () => {
-  it("requires a folder when adding to the library", async () => {
+  it("moves files to the selected folder and closes on success", async () => {
     const user = userEvent.setup();
-    const { onConfirm, onClose } = show({ addToLibrary: true });
-    expect(screen.getByRole("button", { name: "Add here" })).toBeDisabled();
+    const { onConfirm, onClose } = show();
 
     await user.click(screen.getByRole("button", { name: "Documents" }));
-    await user.click(screen.getByRole("button", { name: "Stirling library" }));
-    expect(screen.getByRole("button", { name: "Add here" })).toBeDisabled();
-    expect(onConfirm).not.toHaveBeenCalled();
-
-    await user.click(screen.getByRole("button", { name: "Documents" }));
-    await user.click(screen.getByRole("button", { name: "Add here" }));
+    await user.click(screen.getByRole("button", { name: "Move here" }));
     expect(onConfirm).toHaveBeenCalledWith(folder.id);
     await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
   });
 
-  it("still allows moving an existing library file to the root", async () => {
+  it("allows moving a file to the root", async () => {
     const { onConfirm } = show();
     await userEvent.click(screen.getByRole("button", { name: "Move here" }));
     expect(onConfirm).toHaveBeenCalledWith(null);
   });
 
-  it("selects a newly created folder as the add destination", async () => {
+  it("selects a newly created folder as the destination", async () => {
     const user = userEvent.setup();
     const created = { ...folder, id: createFolderId(), name: "Invoices" };
     const onCreateFolder = vi.fn().mockResolvedValue(created);
-    const { onConfirm } = show({ addToLibrary: true, onCreateFolder });
+    const { onConfirm } = show({ onCreateFolder });
 
     await user.click(screen.getByTestId("move-dialog-create-folder-toggle"));
     await user.type(screen.getByLabelText("New folder name"), "Invoices");
     await user.click(screen.getByRole("button", { name: "Create" }));
     await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Add here" })).toBeEnabled(),
+      expect(screen.getByRole("button", { name: "Move here" })).toBeEnabled(),
     );
-    await user.click(screen.getByRole("button", { name: "Add here" }));
+    await user.click(screen.getByRole("button", { name: "Move here" }));
 
     expect(onCreateFolder).toHaveBeenCalledWith("Invoices", null);
     expect(onConfirm).toHaveBeenCalledWith(created.id);
   });
 
-  it("keeps the destination picker open when adding fails", async () => {
+  it("keeps the destination picker open when moving fails", async () => {
     const user = userEvent.setup();
     const { onClose } = show({
-      addToLibrary: true,
       onConfirm: vi.fn().mockRejectedValue(new Error("Upload failed")),
     });
     await user.click(screen.getByRole("button", { name: "Documents" }));
-    await user.click(screen.getByRole("button", { name: "Add here" }));
+    await user.click(screen.getByRole("button", { name: "Move here" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Upload failed");
     expect(onClose).not.toHaveBeenCalled();
   });
