@@ -23,6 +23,7 @@ import { userManagementService } from "@app/services/userManagementService";
 import { teamService, Team } from "@app/services/teamService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { MIN_PASSWORD_LENGTH } from "@app/constants/passwordPolicy";
 import { useNavigate } from "react-router-dom";
 
 interface InviteMembersModalProps {
@@ -147,6 +148,21 @@ export default function InviteMembersModal({
         title: t(
           "workspace.people.addMember.passwordRequired",
           "Password is required",
+        ),
+      });
+      return;
+    }
+
+    if (
+      inviteForm.authType === "WEB" &&
+      inviteForm.password.length < MIN_PASSWORD_LENGTH
+    ) {
+      alert({
+        alertType: "error",
+        title: t(
+          "workspace.people.addMember.passwordTooShort",
+          "Password must be at least 8 characters",
+          { count: MIN_PASSWORD_LENGTH },
         ),
       });
       return;
@@ -781,6 +797,11 @@ export default function InviteMembersModal({
                     type="password"
                     placeholder={t(
                       "workspace.people.addMember.passwordPlaceholder",
+                    )}
+                    description={t(
+                      "workspace.people.addMember.passwordHint",
+                      "At least 8 characters",
+                      { count: MIN_PASSWORD_LENGTH },
                     )}
                     value={inviteForm.password}
                     onChange={(e) =>

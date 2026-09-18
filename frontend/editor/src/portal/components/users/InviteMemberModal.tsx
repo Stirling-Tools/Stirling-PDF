@@ -8,6 +8,7 @@ import {
   type AuthType,
 } from "@portal/api/users";
 import { usersBackend } from "@app/portal/usersBackend";
+import { MIN_PASSWORD_LENGTH } from "@app/constants/passwordPolicy";
 import { createGrant } from "@portal/api/access";
 import { errorMessage } from "@portal/api/http";
 import type { Team } from "@portal/api/teams";
@@ -147,7 +148,8 @@ export function InviteMemberModal({
   const emailValid = EMAIL_RE.test(email.trim());
   const usernameValid = username.trim().length >= 3;
   const needsPassword = mode === "direct" && authType === "WEB";
-  const passwordValid = !needsPassword || password.length >= 8;
+  const passwordValid =
+    !needsPassword || password.length >= MIN_PASSWORD_LENGTH;
 
   const error =
     (touched && mode === "email" && !emailValid
