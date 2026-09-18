@@ -81,7 +81,12 @@ export class HistoryStack {
       startedAt - this.lastExecuteAt <= COALESCE_WINDOW_MS ||
       cmd.coalesceIgnoresTimeWindow?.(previous) === true;
     if (key !== null && key === this.lastCoalesceKey && top && inWindow) {
-      if (top instanceof CompositeCommand) {
+      // Prefer the command's own merge: for typing this keeps one command and
+      // one revert snapshot instead of one per keystroke.
+      const merged = top.absorb?.(cmd) ?? null;
+      if (merged) {
+        this.undoStack[this.undoStack.length - 1] = merged;
+      } else if (top instanceof CompositeCommand) {
         top.push(cmd);
       } else {
         this.undoStack[this.undoStack.length - 1] = new CompositeCommand([

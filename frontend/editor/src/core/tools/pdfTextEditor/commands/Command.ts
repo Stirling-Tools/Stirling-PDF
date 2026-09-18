@@ -15,6 +15,12 @@ export interface Command {
   // Optional - when true, a matching `coalesceKey` merges this command into the
   // previous undo step however long ago that step ran.
   coalesceIgnoresTimeWindow?(previous: Command | null): boolean;
+  // Optional - fold an already-applied follow-up into this command instead of
+  // wrapping both in a CompositeCommand. Returns the command the history
+  // should keep, or null when a merge would not be equivalent. Must never
+  // mutate `this`: the caller needs the returned object to be a different
+  // reference so saved-position dirty tracking still sees a new step.
+  absorb?(next: Command): Command | null;
 }
 
 export class RolledBackError extends Error {

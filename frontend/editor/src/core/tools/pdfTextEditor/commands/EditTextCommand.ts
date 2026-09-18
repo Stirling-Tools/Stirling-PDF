@@ -91,10 +91,15 @@ export class EditTextCommand implements Command {
   readonly type = "edit-text";
   private readonly pageIndex: number;
   private readonly runId: string;
-  private readonly nextText: string;
+  private nextText: string;
   private prevText: string | null = null;
 
   private overlaid = false;
+  // Set when the whole edit was one in-place SetText on the run's own object:
+  // the only path whose revert/redo is a single SetText, so merging a burst
+  // into one command is provably equivalent there. Overlay/partial/paragraph
+  // paths create objects per keystroke and need their own revert records.
+  private directSetText = false;
   private prevObjPtr = 0;
   private prevFontId: string | null = null;
   /**
@@ -144,6 +149,9 @@ export class EditTextCommand implements Command {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     if (!run) return;
+    // Re-derived every apply so a redo that lands on another path cannot leave
+    // a stale "direct" claim for a later absorb decision.
+    this.directSetText = false;
     if (this.prevText === null) this.prevText = run.text;
     // No-op edit: a contentEditable insert can fire several `input` events for
     // one keystroke burst, re-dispatching the SAME final text.
@@ -303,7 +311,10 @@ export class EditTextCommand implements Command {
       run.text = this.nextText;
       run.dirty = true;
       page.markDirty();
-      if (PdfiumTextWriter.commitRunText(doc, page, run)) return;
+      if (PdfiumTextWriter.commitRunText(doc, page, run)) {
+        this.directSetText = true;
+        return;
+      }
       // The object's font could not encode the new text - `run.fontId` said
       // base-14 but `pdfiumObjPtr` still pointed at the original (Type 3 /
       // symbolic subset) object, so SetText wrote filler charcodes. Undo and
@@ -1214,6 +1225,32 @@ export class EditTextCommand implements Command {
   /** Consecutive typing on the SAME run coalesces into one undo step. */
   coalesceKey(): string {
     return `edit-text:${this.pageIndex}:${this.runId}`;
+  }
+
+  // Typing a burst keeps ONE command, not one per keystroke: a CompositeCommand
+  // of 120 edits retains 120 revert snapshots, which was the typing heap slope.
+  // The merged command's revert state is this command's own first-keystroke
+  // record, and the existing revert paths already clear whatever objects the
+  // later keystrokes left (they remove the run's CURRENT leaf pointers), so the
+  // end state matches reverting the composite in reverse.
+  absorb(next: Command): Command | null {
+    if (!(next instanceof EditTextCommand)) return null;
+    if (next.pageIndex !== this.pageIndex || next.runId !== this.runId) {
+      return null;
+    }
+    // Both sides must have taken the in-place SetText path: its revert is one
+    // SetText of prevText and its redo one of nextText, so folding a burst
+    // into a single command cannot orphan objects. The overlay paths create
+    // per-keystroke objects and were measured to orphan a fragment on redo.
+    if (!this.directSetText || !next.directSetText) return null;
+    // Contiguity: the follow-up must start from exactly this command's result.
+    if (this.nextText !== next.prevText) return null;
+    const merged: EditTextCommand = Object.assign(
+      Object.create(Object.getPrototypeOf(this) as object) as EditTextCommand,
+      this,
+    );
+    merged.nextText = next.nextText;
+    return merged;
   }
 
   /** The text this edit produced - lets the history compare adjacent edits. */
