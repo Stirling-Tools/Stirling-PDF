@@ -23,6 +23,12 @@ import UploadToServerModal from "@app/components/shared/UploadToServerModal";
 import ShareFileModal from "@app/components/shared/ShareFileModal";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import ShareManagementModal from "@app/components/shared/ShareManagementModal";
+import SaveToSharedModal from "@app/components/shared/SaveToSharedModal";
+import {
+  canEditSharedFile,
+  hasNewerSharedVersion,
+  useSharedFileActions,
+} from "@app/hooks/useSharedFileActions";
 import apiClient from "@app/services/apiClient";
 import { absoluteWithBasePath } from "@app/constants/app";
 import { alert } from "@app/components/toast";
@@ -56,6 +62,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showShareManageModal, setShowShareManageModal] = useState(false);
+  const [showSaveToSharedModal, setShowSaveToSharedModal] = useState(false);
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const {
@@ -122,6 +129,11 @@ const FileListItem: React.FC<FileListItemProps> = ({
     Boolean(file.remoteHasShareLinks) &&
     Boolean(file.remoteStorageId);
   const canDownloadFile = Boolean(onDownload) && hasReadAccess;
+  const canSaveToShared =
+    sharingEnabled && isLatestVersion && canEditSharedFile(file);
+  const hasRemoteUpdate =
+    sharingEnabled && isSharedWithYou && hasNewerSharedVersion(file);
+  const { fetchLatestCopy } = useSharedFileActions();
 
   const shareBaseUrl = useMemo(() => {
     const frontendUrl = (config?.frontendUrl || "").trim();
@@ -240,6 +252,16 @@ const FileListItem: React.FC<FileListItemProps> = ({
               {sharingEnabled && isSharedWithYou ? (
                 <Badge size="xs" variant="light" color="grape">
                   {t("fileManager.sharedWithYou", "Shared with you")}
+                </Badge>
+              ) : null}
+              {hasRemoteUpdate ? (
+                <Badge
+                  size="xs"
+                  variant="light"
+                  color="orange"
+                  leftSection={<Icon name="refresh-cw" size={12} />}
+                >
+                  {t("storageCollab.updateAvailable", "Update available")}
                 </Badge>
               ) : null}
               {sharingEnabled &&
@@ -373,6 +395,37 @@ const FileListItem: React.FC<FileListItemProps> = ({
                 </Menu.Item>
               )}
 
+              {canSaveToShared && (
+                <Menu.Item
+                  leftSection={<Icon name="refresh-cw" size={16} />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowSaveToSharedModal(true);
+                  }}
+                >
+                  {t("storageCollab.saveToShared", "Save to shared file")}
+                </Menu.Item>
+              )}
+
+              {sharingEnabled && isSharedWithYou && isLatestVersion && (
+                <Menu.Item
+                  leftSection={<Icon name="download" size={16} />}
+                  rightSection={
+                    hasRemoteUpdate ? (
+                      <Badge size="xs" color="orange" variant="filled">
+                        {t("storageCollab.newBadge", "New")}
+                      </Badge>
+                    ) : undefined
+                  }
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void fetchLatestCopy(file);
+                  }}
+                >
+                  {t("storageCollab.getLatest", "Get latest version")}
+                </Menu.Item>
+              )}
+
               {canShare && (
                 <Menu.Item
                   leftSection={<Icon name="link" size={16} />}
@@ -486,6 +539,14 @@ const FileListItem: React.FC<FileListItemProps> = ({
           onClose={() => setShowShareModal(false)}
           file={file}
           onUploaded={refreshRecentFiles}
+        />
+      )}
+      {canSaveToShared && (
+        <SaveToSharedModal
+          opened={showSaveToSharedModal}
+          onClose={() => setShowSaveToSharedModal(false)}
+          file={file}
+          onSaved={refreshRecentFiles}
         />
       )}
       {canManageShare && (
