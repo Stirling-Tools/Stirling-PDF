@@ -1,16 +1,8 @@
-import { BASE_PATH } from "@app/constants/app";
 import pdfiumWasmAssetUrl from "@embedpdf/pdfium/pdfium.wasm?url";
 
+// Resolved against the document: the raw URL is relative in dev, and workers
+// need an absolute URL too.
 const getWasmUrl = (): string => {
-  // In dev, Vite serves the statically-copied asset from the dev server root.
-  if (import.meta.env.DEV) {
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
-    return `${origin}${BASE_PATH}/pdfium/pdfium.wasm`;
-  }
-
-  // Vite has already produced a base-aware asset URL (absolute under a relative
-  // base, root-relative under an absolute base). Resolve it against the document
-  // to get a fetchable absolute URL that is also safe to pass to Web Workers.
   if (typeof window !== "undefined") {
     return new URL(pdfiumWasmAssetUrl, window.location.href).href;
   }
