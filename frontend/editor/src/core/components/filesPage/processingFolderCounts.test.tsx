@@ -1,33 +1,64 @@
-import { act, render } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, expect, test } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import { useProcessingFolderCounts } from "@app/components/filesPage/processingFolderCounts";
 
-/**
- * The hook holds module-level state, so each case imports its own copy.
- */
-async function loadHook() {
-  vi.resetModules();
-  return (await import("@app/components/filesPage/processingFolderCounts"))
-    .useProcessingFolderCounts;
+const COUNTS = '{"processing":1,"done":2}';
+
+let calls = 0;
+
+/** Stable identity, as the real call site's useCallback lister has. */
+const listFiles = async (): Promise<{ state: string }[]> => {
+  calls += 1;
+  return [{ state: "processing" }, { state: "done" }, { state: "done" }];
+};
+
+function Counts({ recordId, testId }: { recordId: string; testId: string }) {
+  const counts = useProcessingFolderCounts(recordId, listFiles);
+  return (
+    <span data-testid={testId}>{counts ? JSON.stringify(counts) : "-"}</span>
+  );
 }
 
-describe("useProcessingFolderCounts", () => {
-  it("reads once for a mounted folder, however many times it renders", async () => {
-    const useProcessingFolderCounts = await loadHook();
-    const listFiles = vi.fn(async () => [{ state: "done" }]);
+beforeEach(() => {
+  calls = 0;
+});
 
-    function Row() {
-      const counts = useProcessingFolderCounts("folder-1", listFiles);
-      return <span>{counts ? Object.keys(counts).join() : "none"}</span>;
-    }
+test("reads the folder once and reports what it found", async () => {
+  render(<Counts recordId="rec-read" testId="only" />);
 
-    render(<Row />);
-    // Each settled read notifies subscribers, so a renewed subscription would
-    // read again on the render that follows: several turns is enough to tell a
-    // single read from a loop.
-    for (let turn = 0; turn < 10; turn += 1) {
-      await act(async () => {});
-    }
+  await waitFor(() =>
+    expect(screen.getByTestId("only")).toHaveTextContent(COUNTS),
+  );
+  expect(calls).toBe(1);
+});
 
-    expect(listFiles).toHaveBeenCalledTimes(1);
-  });
+test("a second view of the same folder rides on the first one's request", async () => {
+  render(
+    <>
+      <Counts recordId="rec-shared" testId="card" />
+      <Counts recordId="rec-shared" testId="row" />
+    </>,
+  );
+
+  await waitFor(() =>
+    expect(screen.getByTestId("row")).toHaveTextContent(COUNTS),
+  );
+  expect(screen.getByTestId("card")).toHaveTextContent(COUNTS);
+  expect(calls).toBe(1);
+});
+
+/**
+ * The counts arriving re-renders every subscriber. When that re-render resubscribed -
+ * an inline subscribe closure is a new identity each time - the store dropped its last
+ * subscriber, cleared the numbers and read again, at the speed of the network.
+ */
+test("the render its own result causes does not start another read", async () => {
+  render(<Counts recordId="rec-loop" testId="loop" />);
+
+  await waitFor(() =>
+    expect(screen.getByTestId("loop")).toHaveTextContent(COUNTS),
+  );
+  await new Promise((resolve) => setTimeout(resolve, 200));
+
+  expect(calls).toBe(1);
 });
