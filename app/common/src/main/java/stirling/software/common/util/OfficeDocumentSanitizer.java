@@ -130,11 +130,16 @@ public class OfficeDocumentSanitizer {
                                 new ByteArrayInputStream(documentBytes));
                 ZipOutputStream zipOut = new ZipOutputStream(out)) {
 
+            // Keeps the per-entry, total and entry-count caps a hostile archive would otherwise
+            // blow past; ZipBombException is an IOException, so it exits as a refusal below.
+            // Keeps the per-entry, total and entry-count caps a hostile archive would otherwise
+            // blow past; ZipBombException is an IOException, so it exits as a refusal below.
+            ZipBombGuard.Budget budget = new ZipBombGuard.Budget();
             ZipEntry entry;
             while ((entry = zipIn.getNextEntry()) != null) {
                 entriesRead++;
                 String name = entry.getName();
-                byte[] bytes = entry.isDirectory() ? new byte[0] : zipIn.readAllBytes();
+                byte[] bytes = entry.isDirectory() ? new byte[0] : budget.readEntry(zipIn);
 
                 if (!entry.isDirectory()) {
                     bytes = sanitizeEntry(name, bytes);

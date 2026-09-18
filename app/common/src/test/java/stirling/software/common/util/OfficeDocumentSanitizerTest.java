@@ -1036,6 +1036,21 @@ class OfficeDocumentSanitizerTest {
     }
 
     @Test
+    void sanitize_archiveBeyondTheEntryBudgetIsRefused() throws IOException {
+        // Guards the ZipBombGuard wiring: without a budget the rewrite copies every entry and a
+        // hostile archive is bounded only by the upload limit.
+        Map<String, byte[]> entries = new LinkedHashMap<>();
+        for (int i = 0; i <= ZipBombGuard.MAX_ENTRIES; i++) {
+            entries.put("part" + i + ".bin", new byte[0]);
+        }
+        byte[] container = zip(entries);
+
+        assertThrows(
+                OfficeDocumentSanitizer.UnsanitizableDocumentException.class,
+                () -> sanitizer.sanitize(container));
+    }
+
+    @Test
     void sanitize_unreadableZipPartIsRefusedWithoutEchoingItsName() throws IOException {
         Map<String, byte[]> entries = new LinkedHashMap<>();
         entries.put(
