@@ -1,5 +1,6 @@
 package stirling.software.proprietary.automation;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -7,15 +8,24 @@ import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.core.env.MapPropertySource;
 
 import stirling.software.common.service.LicenseServiceInterface;
+import stirling.software.proprietary.accountlink.DeviceCredentialStore;
 import stirling.software.proprietary.accountlink.EntitlementCache;
 import stirling.software.proprietary.accountlink.EntitlementState;
+import stirling.software.proprietary.accountlink.FreeTierUsageService;
 import stirling.software.proprietary.accountlink.InstanceEntitlement;
 import stirling.software.proprietary.accountlink.UsageMeterService;
 import stirling.software.proprietary.billing.BillingCategory;
@@ -27,18 +37,128 @@ import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker
 
 class AccountLinkAutomationRunBillerTest {
 
+    private final DeviceCredentialStore credentials = mock(DeviceCredentialStore.class);
+    private final FreeTierUsageService freeTier = mock(FreeTierUsageService.class);
+
+    @BeforeEach
+    void linkedByDefault() {
+        when(credentials.isLinked()).thenReturn(true);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "true", "false"})
+    void localMeterIsAvailableByDefaultAndHonoursKillSwitch(String enabled) {
+        when(credentials.isLinked()).thenReturn(false);
+        try (var context = new AnnotationConfigApplicationContext()) {
+            if (!enabled.isEmpty()) {
+                context.getEnvironment()
+                        .getPropertySources()
+                        .addFirst(
+                                new MapPropertySource(
+                                        "test",
+                                        Map.of("stirling.billing.account-link.enabled", enabled)));
+            }
+            context.registerBean(DeviceCredentialStore.class, () -> credentials);
+            context.registerBean(FreeTierUsageService.class, () -> freeTier);
+            context.registerBean(EntitlementCache.class, () -> mock(EntitlementCache.class));
+            context.registerBean(
+                    LicenseServiceInterface.class, () -> mock(LicenseServiceInterface.class));
+            context.register(AccountLinkAutomationRunBiller.class);
+            context.refresh();
+
+            assertEquals(
+                    !enabled.equals("false"),
+                    context.getBeanProvider(AutomationRunBiller.class).getIfAvailable() != null);
+            if (!enabled.equals("false")) {
+                context.getBean(AutomationRunBiller.class)
+                        .recordAutomationRun(
+                                List.of(new FileSize(1, 10L)), AutomationRunSource.PROCESSOR);
+                verify(freeTier).accrue(BillingCategory.AUTOMATION, 1L, null);
+            } else {
+                org.mockito.Mockito.verifyNoInteractions(freeTier);
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @EnumSource(AutomationRunSource.class)
+    void unlinkedRunsUseLocalAllowanceWithoutCloudMeter(AutomationRunSource source) {
+        when(credentials.isLinked()).thenReturn(false);
+        EntitlementCache cache = mock(EntitlementCache.class);
+        AccountLinkAutomationRunBiller biller =
+                new AccountLinkAutomationRunBiller(
+                        cache,
+                        providerOf(null),
+                        credentials,
+                        freeTier,
+                        mock(LicenseServiceInterface.class));
+
+        biller.recordAutomationRun(
+                List.of(new FileSize(26, 100L), new FileSize(1, 6L * 1024 * 1024)), source);
+
+        verify(freeTier).accrue(BillingCategory.AUTOMATION, 4L, null);
+        org.mockito.Mockito.verifyNoInteractions(cache);
+    }
+
     @Test
-    void serverAutomateDoesNotReadCloudStateOrAccrueCredits() {
+    void unlinkedServerProcessorAndUnspecifiedRunsUseLocalAllowance() {
+        when(credentials.isLinked()).thenReturn(false);
         EntitlementCache cache = mock(EntitlementCache.class);
         UsageMeterService meter = mock(UsageMeterService.class);
         LicenseServiceInterface license = mock(LicenseServiceInterface.class);
         when(license.hasServerLicense()).thenReturn(true);
         AccountLinkAutomationRunBiller biller =
-                new AccountLinkAutomationRunBiller(cache, providerOf(meter), license);
+                new AccountLinkAutomationRunBiller(
+                        cache, providerOf(meter), credentials, freeTier, license);
+
+        biller.recordAutomationRun(List.of(new FileSize(1, 10L)), AutomationRunSource.PROCESSOR);
+        biller.recordAutomationRun(List.of(new FileSize(1, 10L)), null);
+
+        verify(freeTier, org.mockito.Mockito.times(2)).accrue(BillingCategory.AUTOMATION, 1L, null);
+        org.mockito.Mockito.verifyNoInteractions(cache, meter);
+    }
+
+    @Test
+    void linkingAndUnlinkingSwitchesLedgersWithoutChargingBoth() {
+        EntitlementCache cache = mock(EntitlementCache.class);
+        when(cache.current()).thenReturn(Optional.of(entitlement(POLICY, PERIOD)));
+        UsageMeterService meter = mock(UsageMeterService.class);
+        AccountLinkAutomationRunBiller biller =
+                new AccountLinkAutomationRunBiller(
+                        cache,
+                        providerOf(meter),
+                        credentials,
+                        freeTier,
+                        mock(LicenseServiceInterface.class));
+        List<FileSize> inputs = List.of(new FileSize(25, 5000L));
+
+        when(credentials.isLinked()).thenReturn(false);
+        biller.recordAutomationRun(inputs, AutomationRunSource.PROCESSOR);
+        when(credentials.isLinked()).thenReturn(true);
+        biller.recordAutomationRun(inputs, AutomationRunSource.PROCESSOR);
+        when(credentials.isLinked()).thenReturn(false);
+        biller.recordAutomationRun(inputs, AutomationRunSource.PROCESSOR);
+
+        verify(freeTier, org.mockito.Mockito.times(2)).accrue(BillingCategory.AUTOMATION, 1L, null);
+        verify(meter).accrue(PERIOD, BillingCategory.AUTOMATION, 3L, null);
+        verify(cache).current();
+        org.mockito.Mockito.verifyNoMoreInteractions(freeTier, meter);
+    }
+
+    @Test
+    void serverAutomateDoesNotReadCloudStateOrAccrueCredits() {
+        when(credentials.isLinked()).thenReturn(false);
+        EntitlementCache cache = mock(EntitlementCache.class);
+        UsageMeterService meter = mock(UsageMeterService.class);
+        LicenseServiceInterface license = mock(LicenseServiceInterface.class);
+        when(license.hasServerLicense()).thenReturn(true);
+        AccountLinkAutomationRunBiller biller =
+                new AccountLinkAutomationRunBiller(
+                        cache, providerOf(meter), credentials, freeTier, license);
 
         biller.recordAutomationRun(List.of(new FileSize(25, 5000L)), AutomationRunSource.AUTOMATE);
 
-        org.mockito.Mockito.verifyNoInteractions(cache, meter);
+        org.mockito.Mockito.verifyNoInteractions(cache, meter, credentials, freeTier);
     }
 
     @Test
@@ -49,7 +169,8 @@ class AccountLinkAutomationRunBillerTest {
         LicenseServiceInterface license = mock(LicenseServiceInterface.class);
         when(license.hasServerLicense()).thenReturn(true);
         AccountLinkAutomationRunBiller biller =
-                new AccountLinkAutomationRunBiller(cache, providerOf(meter), license);
+                new AccountLinkAutomationRunBiller(
+                        cache, providerOf(meter), credentials, freeTier, license);
 
         biller.recordAutomationRun(List.of(new FileSize(25, 5000L)), AutomationRunSource.PROCESSOR);
         biller.recordAutomationRun(List.of(new FileSize(25, 5000L)), null);
@@ -68,7 +189,11 @@ class AccountLinkAutomationRunBillerTest {
         when(checker.getLicenseKeyResult()).thenReturn(License.NORMAL);
         AccountLinkAutomationRunBiller biller =
                 new AccountLinkAutomationRunBiller(
-                        cache, providerOf(meter), new DynamicLicenseService(checker));
+                        cache,
+                        providerOf(meter),
+                        credentials,
+                        freeTier,
+                        new DynamicLicenseService(checker));
 
         biller.recordAutomationRun(List.of(new FileSize(25, 5000L)), AutomationRunSource.AUTOMATE);
 
@@ -82,10 +207,11 @@ class AccountLinkAutomationRunBillerTest {
         UsageMeterService meter = mock(UsageMeterService.class);
         LicenseServiceInterface license = mock(LicenseServiceInterface.class);
         AccountLinkAutomationRunBiller biller =
-                new AccountLinkAutomationRunBiller(cache, providerOf(meter), license);
+                new AccountLinkAutomationRunBiller(
+                        cache, providerOf(meter), credentials, freeTier, license);
         when(license.hasServerLicense()).thenReturn(true);
         biller.recordAutomationRun(List.of(new FileSize(25, 5000L)), AutomationRunSource.AUTOMATE);
-        org.mockito.Mockito.verifyNoInteractions(cache, meter);
+        org.mockito.Mockito.verifyNoInteractions(cache, meter, credentials, freeTier);
 
         when(license.hasServerLicense()).thenReturn(false);
         biller.recordAutomationRun(List.of(new FileSize(25, 5000L)), AutomationRunSource.AUTOMATE);
@@ -103,10 +229,11 @@ class AccountLinkAutomationRunBillerTest {
         LicenseServiceInterface license = mock(LicenseServiceInterface.class);
         when(license.isRunningEE()).thenReturn(true);
         AccountLinkAutomationRunBiller biller =
-                new AccountLinkAutomationRunBiller(cache, providerOf(meter), license);
+                new AccountLinkAutomationRunBiller(
+                        cache, providerOf(meter), credentials, freeTier, license);
         List<FileSize> inputs = List.of(new FileSize(25, 5000L));
         biller.recordAutomationRun(inputs, AutomationRunSource.PROCESSOR);
-        org.mockito.Mockito.verifyNoInteractions(cache, meter);
+        org.mockito.Mockito.verifyNoInteractions(cache, meter, credentials, freeTier);
         when(license.isRunningEE()).thenReturn(false);
         biller.recordAutomationRun(inputs, AutomationRunSource.PROCESSOR);
         verify(meter).accrue(PERIOD, BillingCategory.AUTOMATION, 3L, null);
@@ -131,7 +258,11 @@ class AccountLinkAutomationRunBillerTest {
         UsageMeterService meter = mock(UsageMeterService.class);
         AccountLinkAutomationRunBiller biller =
                 new AccountLinkAutomationRunBiller(
-                        cache, providerOf(meter), mock(LicenseServiceInterface.class));
+                        cache,
+                        providerOf(meter),
+                        credentials,
+                        freeTier,
+                        mock(LicenseServiceInterface.class));
 
         // 25 pages -> ceil(25/10)=3 page units; 5000 bytes -> 1 byte unit; max = 3.
         biller.recordAutomationRun(List.of(new FileSize(25, 5000L)), AutomationRunSource.PROCESSOR);
@@ -144,7 +275,11 @@ class AccountLinkAutomationRunBillerTest {
         EntitlementCache cache = mock(EntitlementCache.class);
         AccountLinkAutomationRunBiller biller =
                 new AccountLinkAutomationRunBiller(
-                        cache, providerOf(null), mock(LicenseServiceInterface.class));
+                        cache,
+                        providerOf(null),
+                        credentials,
+                        freeTier,
+                        mock(LicenseServiceInterface.class));
 
         biller.recordAutomationRun(List.of(new FileSize(1, 10L)), AutomationRunSource.PROCESSOR);
 
@@ -158,7 +293,11 @@ class AccountLinkAutomationRunBillerTest {
         UsageMeterService meter = mock(UsageMeterService.class);
         AccountLinkAutomationRunBiller biller =
                 new AccountLinkAutomationRunBiller(
-                        cache, providerOf(meter), mock(LicenseServiceInterface.class));
+                        cache,
+                        providerOf(meter),
+                        credentials,
+                        freeTier,
+                        mock(LicenseServiceInterface.class));
 
         biller.recordAutomationRun(List.of(new FileSize(1, 10L)), AutomationRunSource.PROCESSOR);
 
@@ -179,7 +318,11 @@ class AccountLinkAutomationRunBillerTest {
         UsageMeterService meter = mock(UsageMeterService.class);
         AccountLinkAutomationRunBiller biller =
                 new AccountLinkAutomationRunBiller(
-                        cache, providerOf(meter), mock(LicenseServiceInterface.class));
+                        cache,
+                        providerOf(meter),
+                        credentials,
+                        freeTier,
+                        mock(LicenseServiceInterface.class));
 
         biller.recordAutomationRun(List.of(new FileSize(1, 10L)), AutomationRunSource.PROCESSOR);
         biller.recordAutomationRun(List.of(new FileSize(1, 10L)), AutomationRunSource.PROCESSOR);
@@ -198,7 +341,11 @@ class AccountLinkAutomationRunBillerTest {
         UsageMeterService meter = mock(UsageMeterService.class);
         AccountLinkAutomationRunBiller biller =
                 new AccountLinkAutomationRunBiller(
-                        cache, providerOf(meter), mock(LicenseServiceInterface.class));
+                        cache,
+                        providerOf(meter),
+                        credentials,
+                        freeTier,
+                        mock(LicenseServiceInterface.class));
 
         biller.recordAutomationRun(List.of(), AutomationRunSource.PROCESSOR);
 
