@@ -1281,6 +1281,281 @@ export async function getMetadata(
   }
 }
 
+export interface PdfiumFullMetadata {
+  title: string;
+  author: string;
+  subject: string;
+  keywords: string;
+  creator: string;
+  producer: string;
+  creationDate: string;
+  modificationDate: string;
+  trapped: "True" | "False" | "Unknown";
+  customMetadata: Array<{ id: string; key: string; value: string }>;
+}
+
+export async function getFullMetadata(
+  data: ArrayBuffer | Uint8Array,
+  password?: string,
+): Promise<PdfiumFullMetadata> {
+  const m = await getPdfiumModule();
+  const docPtr = await openRawDocumentSafe(data, password);
+  try {
+    const readTag = (tag: string): string => {
+      const len = m.FPDF_GetMetaText(docPtr, tag, 0, 0);
+      if (len <= 2) return "";
+      const buf = m.pdfium.wasmExports.malloc(len);
+      try {
+        m.FPDF_GetMetaText(docPtr, tag, buf, len);
+        return readUtf16(m, buf, len);
+      } finally {
+        m.pdfium.wasmExports.free(buf);
+      }
+    };
+
+    const title = readTag("Title");
+    const author = readTag("Author");
+    const subject = readTag("Subject");
+    const keywords = readTag("Keywords");
+    const creator = readTag("Creator");
+    const producer = readTag("Producer");
+    const creationDate = readTag("CreationDate");
+    const modificationDate = readTag("ModDate");
+
+    let trapped: "True" | "False" | "Unknown" = "Unknown";
+    if (typeof m.EPDF_GetMetaTrapped === "function") {
+      const rawTrapped = Number(m.EPDF_GetMetaTrapped(docPtr));
+      if (rawTrapped === 1) trapped = "True";
+      else if (rawTrapped === 2) trapped = "False";
+    }
+
+    const customMetadata: Array<{ id: string; key: string; value: string }> =
+      [];
+    if (
+      typeof m.EPDF_GetMetaKeyCount === "function" &&
+      typeof m.EPDF_GetMetaKeyName === "function"
+    ) {
+      const customCount = Number(m.EPDF_GetMetaKeyCount(docPtr, true));
+      for (let i = 0; i < customCount; i++) {
+        const keyLen = m.EPDF_GetMetaKeyName(docPtr, i, true, 0, 0);
+        if (keyLen > 0) {
+          const keyBuf = m.pdfium.wasmExports.malloc(keyLen);
+          try {
+            m.EPDF_GetMetaKeyName(docPtr, i, true, keyBuf, keyLen);
+            const keyName = m.pdfium.UTF8ToString(keyBuf);
+            if (keyName) {
+              const val = readTag(keyName);
+              if (val) {
+                customMetadata.push({
+                  id: `custom${i + 1}`,
+                  key: keyName,
+                  value: val,
+                });
+              }
+            }
+          } finally {
+            m.pdfium.wasmExports.free(keyBuf);
+          }
+        }
+      }
+    }
+
+    return {
+      title,
+      author,
+      subject,
+      keywords,
+      creator,
+      producer,
+      creationDate,
+      modificationDate,
+      trapped,
+      customMetadata,
+    };
+  } finally {
+    closeDocAndFreeBuffer(m, docPtr);
+  }
+}
+
+export interface ReadAloudTextItem {
+  str: string;
+  transform: number[];
+  width: number;
+  height: number;
+  viewportTransform: number[];
+}
+
+/**
+ * PageViewport-compatible transform mapping PDF user space to viewer CSS
+ * space, including the page's /Rotate. Matches pdf.js PageViewport for a
+ * zero-based view box; width/height are the UNROTATED user-space dims.
+ */
+export function readAloudViewportTransform(
+  quarters: number,
+  width: number,
+  height: number,
+  zoom: number,
+): number[] {
+  switch (quarters & 3) {
+    case 1:
+      return [0, zoom, zoom, 0, 0, 0];
+    case 2:
+      return [-zoom, 0, 0, zoom, width * zoom, 0];
+    case 3:
+      return [0, -zoom, -zoom, 0, height * zoom, width * zoom];
+    default:
+      return [zoom, 0, 0, -zoom, 0, height * zoom];
+  }
+}
+
+/**
+ * Visual reading order for extracted words: top-to-bottom with a same-line
+ * threshold, then left-to-right. PDF content order is not a reliable reading
+ * order for multi-column layouts.
+ */
+export function sortReadAloudItems(
+  items: ReadAloudTextItem[],
+): ReadAloudTextItem[] {
+  const SAME_LINE_PX = 5;
+  const topOf = (item: ReadAloudTextItem) =>
+    (item.transform[5] ?? 0) + item.height;
+  return [...items].sort((a, b) => {
+    const vertical = topOf(b) - topOf(a);
+    if (Math.abs(vertical) > SAME_LINE_PX) return vertical;
+    return (a.transform[4] ?? 0) - (b.transform[4] ?? 0);
+  });
+}
+
+export async function extractPageTextItemsForReadAloud(
+  data: ArrayBuffer | Uint8Array,
+  pageIndex: number,
+  zoom: number,
+): Promise<ReadAloudTextItem[]> {
+  const m = await getPdfiumModule();
+  const docPtr = await openRawDocumentSafe(data);
+  try {
+    return await extractPageTextItemsForReadAloudFromDoc(
+      docPtr,
+      pageIndex,
+      zoom,
+    );
+  } finally {
+    closeDocAndFreeBuffer(m, docPtr);
+  }
+}
+
+/**
+ * Page extraction against an already-open document handle. Lets long-lived
+ * sessions (read-aloud across pages) reuse one document instead of paying a
+ * full open+parse per page. The caller owns the handle: it must outlive the
+ * call and be closed with closeRawDocument.
+ */
+export async function extractPageTextItemsForReadAloudFromDoc(
+  docPtr: number,
+  pageIndex: number,
+  zoom: number,
+): Promise<ReadAloudTextItem[]> {
+  const m = await getPdfiumModule();
+  let pagePtr: number | null = null;
+  let textPagePtr: number | null = null;
+  const rectMem = m.pdfium.wasmExports.malloc(32);
+  const l = rectMem;
+  const r = rectMem + 8;
+  const b = rectMem + 16;
+  const t = rectMem + 24;
+
+  try {
+    pagePtr = m.FPDF_LoadPage(docPtr, pageIndex);
+    if (!pagePtr) return [];
+
+    // GetPageWidthF/HeightF already account for /Rotate; recover the
+    // unrotated user-space dims for the viewport transform below.
+    const rotatedWidth =
+      typeof m.FPDF_GetPageWidthF === "function"
+        ? m.FPDF_GetPageWidthF(pagePtr)
+        : m.FPDF_GetPageWidth(pagePtr);
+    const rotatedHeight =
+      typeof m.FPDF_GetPageHeightF === "function"
+        ? m.FPDF_GetPageHeightF(pagePtr)
+        : m.FPDF_GetPageHeight(pagePtr);
+    const quarters = (m.FPDFPage_GetRotation(pagePtr) | 0) & 3;
+    const width = quarters & 1 ? rotatedHeight : rotatedWidth;
+    const height = quarters & 1 ? rotatedWidth : rotatedHeight;
+
+    textPagePtr = m.FPDFText_LoadPage(pagePtr);
+    if (!textPagePtr) return [];
+
+    const charCount = m.FPDFText_CountChars(textPagePtr);
+    if (charCount <= 0) return [];
+
+    const viewportTransform = readAloudViewportTransform(
+      quarters,
+      width,
+      height,
+      zoom,
+    );
+    const items: ReadAloudTextItem[] = [];
+
+    let currentChars: string[] = [];
+    let minLeft = Infinity;
+    let maxRight = -Infinity;
+    let minBottom = Infinity;
+    let maxTop = -Infinity;
+
+    const flushWord = () => {
+      if (currentChars.length === 0) return;
+      const str = currentChars.join("");
+      const width = Math.max(0, maxRight - minLeft);
+      const height = Math.max(0, maxTop - minBottom);
+      if (width > 0 && height > 0) {
+        items.push({
+          str,
+          transform: [1, 0, 0, 1, minLeft, minBottom],
+          width,
+          height,
+          viewportTransform,
+        });
+      }
+      currentChars = [];
+      minLeft = Infinity;
+      maxRight = -Infinity;
+      minBottom = Infinity;
+      maxTop = -Infinity;
+    };
+
+    for (let i = 0; i < charCount; i++) {
+      const uc = m.FPDFText_GetUnicode(textPagePtr, i);
+      const char = String.fromCodePoint(uc);
+
+      if (char === "\n" || char === "\r" || char === " " || char === "\t") {
+        flushWord();
+        continue;
+      }
+
+      m.FPDFText_GetCharBox(textPagePtr, i, l, r, b, t);
+      const left = m.pdfium.getValue(l, "double");
+      const right = m.pdfium.getValue(r, "double");
+      const bottom = m.pdfium.getValue(b, "double");
+      const top = m.pdfium.getValue(t, "double");
+
+      if (Number.isFinite(left) && Number.isFinite(right)) {
+        currentChars.push(char);
+        if (left < minLeft) minLeft = left;
+        if (right > maxRight) maxRight = right;
+        if (bottom < minBottom) minBottom = bottom;
+        if (top > maxTop) maxTop = top;
+      }
+    }
+    flushWord();
+
+    return sortReadAloudItems(items);
+  } finally {
+    m.pdfium.wasmExports.free(rectMem);
+    if (textPagePtr != null) m.FPDFText_ClosePage(textPagePtr);
+    if (pagePtr != null) m.FPDF_ClosePage(pagePtr);
+  }
+}
+
 export interface PdfiumSignatureFieldRect {
   pageIndex: number;
   x: number;
