@@ -47,6 +47,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.configuration.CorsPaths;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.security.model.User;
@@ -402,7 +403,9 @@ public class SupabaseSecurityConfig {
         cfg.setAllowCredentials(true);
         cfg.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource allowListed = new UrlBasedCorsConfigurationSource();
-        allowListed.registerCorsConfiguration("/**", cfg);
+        for (String pathPattern : CorsPaths.CROSS_ORIGIN_PATTERNS) {
+            allowListed.registerCorsConfiguration(pathPattern, cfg);
+        }
         if (!accountLinkEnabled) {
             return allowListed;
         }
@@ -417,8 +420,12 @@ public class SupabaseSecurityConfig {
         // would have rejected falls through to the linked-instance config.
         return request -> {
             String origin = request.getHeader(HttpHeaders.ORIGIN);
-            // "/**" is registered above unconditionally, so this always resolves.
+            // Only the API and doc paths registered above resolve; anything else (static
+            // resources, views) gets no CORS config so those responses stay cacheable.
             CorsConfiguration known = allowListed.getCorsConfiguration(request);
+            if (known == null) {
+                return null;
+            }
             if (origin == null || known.checkOrigin(origin) != null) {
                 return known;
             }
