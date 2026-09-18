@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type {
   TextRunSnapshot,
@@ -290,6 +290,20 @@ function baselinesFor(
   return out;
 }
 
+/**
+ * Page-level callbacks the overlay dispatches through. One stable object per
+ * page keeps the memoized overlay from re-rendering for a new closure, which
+ * would otherwise defeat memo() on every page on every store patch.
+ */
+export interface TextRunActions {
+  select(runId: string, shiftKey: boolean): void;
+  edit(runId: string, nextText: string): void;
+  /** Ctrl+drag committed; dx/dy in PDF points. */
+  move(runId: string, dx: number, dy: number): void;
+  /** Wrap-mode reflow request; maxWidthPt in PDF points. */
+  wrap(runId: string, maxWidthPt: number): void;
+}
+
 interface TextRunOverlayProps {
   run: TextRunSnapshot;
   pageHeight: number;
@@ -304,13 +318,7 @@ interface TextRunOverlayProps {
   /** True when this run is the active find-match (yellow highlight). */
   highlighted?: boolean;
   pageRevision?: number;
-  onSelect: (shiftKey: boolean) => void;
-  onEdit: (nextText: string) => void;
-  /** Fires when the user Ctrl+drags the run to a new position. dx/dy are PDF points. */
-  onMove?: (dx: number, dy: number) => void;
-  // Fires on blur in Wrap mode when the edited content overflows the locked box
-  // width.
-  onWrap?: (maxWidthPt: number) => void;
+  actions: TextRunActions;
 }
 
 /**
@@ -351,7 +359,7 @@ function edgeZoneAt(
 }
 
 /** One editable HTML element per PDF text run. */
-export function TextRunOverlay({
+function TextRunOverlayImpl({
   run,
   pageHeight,
   pageWidth,
@@ -361,10 +369,7 @@ export function TextRunOverlay({
   selected,
   highlighted,
   pageRevision,
-  onSelect,
-  onEdit,
-  onMove,
-  onWrap,
+  actions,
 }: TextRunOverlayProps) {
   const { t } = useTranslation();
   // Subscribed, so toggling the preference re-renders every overlay.
@@ -652,8 +657,13 @@ export function TextRunOverlay({
 
   const pdfWidth = run.bounds.width * scale;
   // Widen the overlay so every source line still fits in CSS metrics, and so
-  // typed text wider than the original bounds isn't clipped.
-  const measuredWidth = measureMaxLineWidth(run.text, font);
+  // typed text wider than the original bounds isn't clipped. Memoized: this
+  // runs for EVERY overlay on every store patch, so measuring the whole run
+  // here made one keystroke cost O(document text).
+  const measuredWidth = useMemo(
+    () => measureMaxLineWidth(run.text, font),
+    [run.text, font],
+  );
   // Width behaviour is user-controlled: - "grow": box widens to the right to
   // fit the content.
   const wrapMode = widthMode === "wrap";
@@ -681,7 +691,10 @@ export function TextRunOverlay({
   // text that can wrap, because the overflow has somewhere else to go; a word
   // with no break in it has nowhere, so the cap stops protecting the page
   // margin and just hides what the user is typing.
-  const longestTokenWidth = measureLongestTokenWidth(run.text, font);
+  const longestTokenWidth = useMemo(
+    () => measureLongestTokenWidth(run.text, font),
+    [run.text, font],
+  );
   const wrapWidth = Math.max(
     Math.min(wrapLockWidth, pageCap),
     longestTokenWidth + fontSizePx,
@@ -729,17 +742,17 @@ export function TextRunOverlay({
   // window, so running it mid-burst does not fragment undo.
   const wrapTarget = wrapWidth;
   useEffect(() => {
-    if (!wantWrap || !onWrap || !focused) return;
+    if (!wantWrap || !focused) return;
     const el = ref.current;
     if (!el || composingRef.current) return;
     const widest = measureMaxLineWidth(readOverlayText(el), font);
     if (widest <= wrapTarget + 1) return;
     const timer = window.setTimeout(
-      () => onWrap(wrapTarget / scale),
+      () => actions.wrap(run.id, wrapTarget / scale),
       LIVE_WRAP_MS,
     );
     return () => window.clearTimeout(timer);
-  }, [wantWrap, onWrap, focused, editTick, wrapTarget, font, scale]);
+  }, [wantWrap, actions, run.id, focused, editTick, wrapTarget, font, scale]);
 
   // Which dictionary the browser should load. "auto" falls back to the
   // page's own language, which is what the element would inherit anyway.
@@ -800,7 +813,7 @@ export function TextRunOverlay({
 
         // Ctrl+drag still moves from anywhere inside, so existing muscle
         // memory keeps working; grabbing the frame is the discoverable path.
-        if ((e.ctrlKey || e.metaKey || zone === "move") && onMove) {
+        if (e.ctrlKey || e.metaKey || zone === "move") {
           const viaFrame = zone === "move" && !(e.ctrlKey || e.metaKey);
           if (viaFrame) e.preventDefault();
           dragOriginRef.current = { x: e.clientX, y: e.clientY };
@@ -836,10 +849,10 @@ export function TextRunOverlay({
             // a plain click (select); with Ctrl held it is the multi-select
             // gesture it looks like.
             if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) {
-              onSelect(!viaFrame);
+              actions.select(run.id, !viaFrame);
               return;
             }
-            onMove(dx, dy);
+            actions.move(run.id, dx, dy);
           };
           window.addEventListener("pointermove", onPointerMove);
           window.addEventListener("pointerup", onPointerUp);
@@ -848,12 +861,12 @@ export function TextRunOverlay({
         // Shift-click EXTENDS the multi-object selection.
         if (e.shiftKey) {
           e.preventDefault();
-          onSelect(true);
+          actions.select(run.id, true);
           return;
         }
         pointerFocusRef.current = true;
         (e.currentTarget as HTMLDivElement).focus({ preventScroll: true });
-        onSelect(false);
+        actions.select(run.id, false);
       }}
       onFocus={(e) => {
         setFocused(true);
@@ -912,7 +925,7 @@ export function TextRunOverlay({
         }
         // Wrap mode: when the just-edited content overflows the locked box
         // width.
-        if (!wantWrap || !onWrap) return;
+        if (!wantWrap) return;
         const el = e.currentTarget as HTMLDivElement;
         const domText = readOverlayText(el);
         if (domText === focusTextRef.current) return; // not edited
@@ -934,7 +947,7 @@ export function TextRunOverlay({
         // still move words between lines the moment the box lost focus. The
         // base branch never reflowed here at all.
         if (widest <= target + 1) return;
-        onWrap(target / scale);
+        actions.wrap(run.id, target / scale);
       }}
       onCompositionStart={() => {
         composingRef.current = true;
@@ -943,7 +956,7 @@ export function TextRunOverlay({
         composingRef.current = false;
         // Commit the composed string once, like onInput's non-IME path.
         const el = e.currentTarget as HTMLDivElement;
-        onEdit(readOverlayText(el).replace(/\u00A0/g, " "));
+        actions.edit(run.id, readOverlayText(el).replace(/\u00A0/g, " "));
       }}
       onInput={(e) => {
         setTouched(true);
@@ -962,7 +975,7 @@ export function TextRunOverlay({
         // soft-wraps.
         const raw = readOverlayText(el);
         const text = raw.replace(/\u00A0/g, " ");
-        onEdit(text);
+        actions.edit(run.id, text);
         // No per-keystroke reflow: while focused, the box is CAPPED to the page
         // and wraps via CSS, so the editing view is always on-page.
       }}
@@ -1071,3 +1084,8 @@ export function TextRunOverlay({
     />
   );
 }
+
+// Memoized: a store patch re-renders the page list, and every overlay that is
+// shallow-equal keeps its last render. Data props only; callbacks arrive in the
+// stable actions object.
+export const TextRunOverlay = memo(TextRunOverlayImpl);

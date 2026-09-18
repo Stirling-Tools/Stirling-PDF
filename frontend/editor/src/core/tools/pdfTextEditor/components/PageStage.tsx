@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Box,
   Center,
@@ -70,6 +70,80 @@ export function PageStage() {
   // inspector derives from the same controller, so both surfaces read one
   // source of truth.
   const controller = useToolbarController(store, state, selection);
+  // Stable PageView callbacks: the page list re-renders on every store patch,
+  // and a new closure here would re-render every page and overlay.
+  const mode = state.mode;
+  const onSelectRun = useCallback(
+    (runId: string, shiftKey: boolean) => {
+      if (shiftKey) store.selection.toggle(runId);
+      else store.selection.selectOne(runId);
+    },
+    [store],
+  );
+  const onSelectImage = useCallback(
+    (imageId: string) => store.selection.selectImage(imageId),
+    [store],
+  );
+  const onEditRun = useCallback(
+    (pageIndex: number, runId: string, nextText: string) => {
+      // contentEditable can fire several input events per keystroke burst.
+      const current = store.document?.page(pageIndex).findRun(runId);
+      if (current && current.text === nextText) return;
+      store.dispatch(new EditTextCommand({ pageIndex, runId, nextText }));
+    },
+    [store],
+  );
+  const onMoveRun = useCallback(
+    (pageIndex: number, runId: string, dx: number, dy: number) => {
+      store.dispatch(new MoveTextRunCommand({ pageIndex, runId, dx, dy }));
+    },
+    [store],
+  );
+  const onWrapRun = useCallback(
+    (pageIndex: number, runId: string, maxWidthPt: number) => {
+      store.dispatch(new ReflowWrapCommand({ pageIndex, runId, maxWidthPt }));
+    },
+    [store],
+  );
+  const onPageClick = useCallback(
+    (pageIndex: number, pageX: number, pageY: number) => {
+      if (mode !== "addText") return;
+      const cmd = new InsertTextCommand({
+        pageIndex,
+        x: pageX,
+        y: pageY,
+        text: "New text",
+      });
+      store.dispatch(cmd);
+      if (cmd.insertedRunId) {
+        store.selection.selectOne(cmd.insertedRunId);
+      }
+      store.setMode("select");
+    },
+    [store, mode],
+  );
+  const onTransformImage = useCallback(
+    (
+      pageIndex: number,
+      imageId: string,
+      nextBounds: { x: number; y: number; width: number; height: number },
+    ) => {
+      store.dispatch(
+        new SetImageTransformCommand({ pageIndex, imageId, nextBounds }),
+      );
+    },
+    [store],
+  );
+  const onFirstVisible = useCallback(
+    (pageIndex: number) => ensurePageRead(store, pageIndex),
+    [store],
+  );
+  const onFirstRendered = useCallback(
+    (pageIndex: number) => {
+      if (pageIndex === 0) store.markFirstPageRendered();
+    },
+    [store],
+  );
   const topBar = (
     <EditorTopBar
       controller={controller}
@@ -277,63 +351,15 @@ export function PageStage() {
                     selectedRunIds={selection.runIds}
                     selectedImageIds={selection.imageIds}
                     highlightedRunId={highlightedRunId}
-                    onSelectRun={(runId, shiftKey) => {
-                      if (shiftKey) store.selection.toggle(runId);
-                      else store.selection.selectOne(runId);
-                    }}
-                    onSelectImage={(imageId) =>
-                      store.selection.selectImage(imageId)
-                    }
-                    onEditRun={(pageIndex, runId, nextText) => {
-                      // contentEditable can fire several input events per
-                      // keystroke burst.
-                      const current = store.document
-                        ?.page(pageIndex)
-                        .findRun(runId);
-                      if (current && current.text === nextText) return;
-                      store.dispatch(
-                        new EditTextCommand({ pageIndex, runId, nextText }),
-                      );
-                    }}
-                    onMoveRun={(pageIndex, runId, dx, dy) => {
-                      store.dispatch(
-                        new MoveTextRunCommand({ pageIndex, runId, dx, dy }),
-                      );
-                    }}
-                    onWrapRun={(pageIndex, runId, maxWidthPt) => {
-                      store.dispatch(
-                        new ReflowWrapCommand({ pageIndex, runId, maxWidthPt }),
-                      );
-                    }}
-                    onPageClick={(pageIndex, pageX, pageY) => {
-                      if (state.mode !== "addText") return;
-                      const cmd = new InsertTextCommand({
-                        pageIndex,
-                        x: pageX,
-                        y: pageY,
-                        text: "New text",
-                      });
-                      store.dispatch(cmd);
-                      if (cmd.insertedRunId) {
-                        store.selection.selectOne(cmd.insertedRunId);
-                      }
-                      store.setMode("select");
-                    }}
-                    onTransformImage={(pageIndex, imageId, nextBounds) => {
-                      store.dispatch(
-                        new SetImageTransformCommand({
-                          pageIndex,
-                          imageId,
-                          nextBounds,
-                        }),
-                      );
-                    }}
-                    onFirstVisible={(pageIndex) =>
-                      ensurePageRead(store, pageIndex)
-                    }
-                    onFirstRendered={(pageIndex) => {
-                      if (pageIndex === 0) store.markFirstPageRendered();
-                    }}
+                    onSelectRun={onSelectRun}
+                    onSelectImage={onSelectImage}
+                    onEditRun={onEditRun}
+                    onMoveRun={onMoveRun}
+                    onWrapRun={onWrapRun}
+                    onPageClick={onPageClick}
+                    onTransformImage={onTransformImage}
+                    onFirstVisible={onFirstVisible}
+                    onFirstRendered={onFirstRendered}
                   />
                 ) : null,
               )}

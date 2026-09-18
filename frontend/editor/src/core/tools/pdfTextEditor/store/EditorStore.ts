@@ -369,7 +369,14 @@ export class EditorStore {
           // page and would give identity-preserved RUNS too, but it re-runs
           // grouping, font registration and the annotation walk on every tick
           // for no gain while only positions may safely be adopted mid-edit.
-          const changed = PdfiumTextReader.recapturePositions(doc, page);
+          // Commands mark the runs they edit, so a tick reads the edited runs
+          // instead of every character on the page.
+          const dirtyRuns = page.runs.filter((r) => r.dirty);
+          const changed = PdfiumTextReader.recapturePositions(
+            doc,
+            page,
+            dirtyRuns.length > 0 ? dirtyRuns : undefined,
+          );
           if (changed.size > 0) changedByPage.set(page.index, changed);
         } catch {
           continue;

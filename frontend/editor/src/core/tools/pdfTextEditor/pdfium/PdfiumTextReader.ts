@@ -81,7 +81,14 @@ export class PdfiumTextReader {
 
   // Returns the runs whose captured positions actually moved, so the caller
   // can re-snapshot just those instead of re-rendering every overlay per tick.
-  static recapturePositions(doc: EditorDocument, page: Page): Set<TextRun> {
+  // `onlyRuns` asks for a targeted read: the tick already knows which runs an
+  // edit touched, and re-reading a whole page's characters per keystroke made
+  // typing cost scale with page text, not with the edit.
+  static recapturePositions(
+    doc: EditorDocument,
+    page: Page,
+    onlyRuns?: TextRun[],
+  ): Set<TextRun> {
     const m = doc.module;
     if (!page.loaded || page.runs.length === 0) return new Set();
     // No flush: like FPDF_RenderPageBitmap, FPDFText_LoadPage walks the live
@@ -90,7 +97,12 @@ export class PdfiumTextReader {
     const textPagePtr = m.FPDFText_LoadPage(page.pagePtr);
     if (!textPagePtr) return new Set();
     try {
-      const geometry = collectCharGeometry(m, page, textPagePtr);
+      let geometry = collectCharGeometry(m, page, textPagePtr, onlyRuns);
+      // The targeted read is incomplete (object not visible to the text page):
+      // fall back to the full walk rather than leave positions stale.
+      if (!geometry && onlyRuns && onlyRuns.length > 0) {
+        geometry = collectCharGeometry(m, page, textPagePtr);
+      }
       return geometry ? captureCharPositions(geometry) : new Set();
     } finally {
       m.FPDFText_ClosePage(textPagePtr);
@@ -126,12 +138,17 @@ interface CharGeometry {
   originX: number;
 }
 
-// Read every character's geometry once. Both consumers below need the same
-// characters, so doing this twice was pure duplicated WASM traffic.
+// Read character geometry. Both consumers below need the same characters, so
+// doing this twice was pure duplicated WASM traffic. With `onlyRuns` the
+// per-character object read still scans the page (one call per char, the only
+// way to key chars to objects) but the three geometry reads are spent on the
+// target runs' characters alone; returns null when a target run has no
+// characters in the page, so the caller can redo the full walk.
 function collectCharGeometry(
   m: WrappedPdfiumModule,
   page: Page,
   textPagePtr: number,
+  onlyRuns?: TextRun[],
 ): CharGeometry[] | null {
   if (page.runs.length === 0) return null;
   const probe = m as unknown as {
@@ -147,25 +164,23 @@ function collectCharGeometry(
   const charCount = m.FPDFText_CountChars(textPagePtr);
   if (charCount <= 1) return null;
 
-  const ptrToRun = indexRunsByObjectPtr(page.runs);
+  const ptrToRun = indexRunsByObjectPtr(onlyRuns ?? page.runs);
   const wasm = m.pdfium.wasmExports;
   const rectBuf = wasm.malloc(16); // FS_RECT: 4 floats {l, t, r, b}
   const xPtr = wasm.malloc(8);
   const yPtr = wasm.malloc(8);
   const out: CharGeometry[] = [];
   try {
-    for (let i = 0; i < charCount; i += 1) {
+    const read = (i: number, run: TextRun | null): CharGeometry => {
       const cp = m.FPDFText_GetUnicode(textPagePtr, i);
-      const objPtr = m.FPDFText_GetTextObject(textPagePtr, i);
-      const run = objPtr ? (ptrToRun.get(objPtr) ?? null) : null;
-      const boxed = probe.FPDFText_GetLooseCharBox(textPagePtr, i, rectBuf);
+      const boxed = probe.FPDFText_GetLooseCharBox!(textPagePtr, i, rectBuf);
       const heap = (m.pdfium as unknown as { HEAPU8: Uint8Array }).HEAPU8;
       const f = new Float32Array(heap.buffer, rectBuf, 4);
       let originX = Number.NaN;
       if (probe.FPDFText_GetCharOrigin?.(textPagePtr, i, xPtr, yPtr)) {
         originX = m.pdfium.getValue(xPtr, "double");
       }
-      out.push({
+      return {
         cp,
         run,
         ok: boxed,
@@ -173,7 +188,36 @@ function collectCharGeometry(
         right: boxed ? f[2] : Number.NaN,
         bottom: boxed ? f[3] : Number.NaN,
         originX,
-      });
+      };
+    };
+    if (onlyRuns && onlyRuns.length > 0) {
+      const targets = new Set<number>();
+      for (const run of onlyRuns) {
+        for (const ptr of run.paragraphLeafPtrs.length > 0
+          ? run.paragraphLeafPtrs
+          : run.mergedFromPtrs.length > 0
+            ? run.mergedFromPtrs
+            : [run.pdfiumObjPtr]) {
+          if (ptr) targets.add(ptr);
+        }
+      }
+      const matched = new Set<TextRun>();
+      for (let i = 0; i < charCount; i += 1) {
+        const objPtr = m.FPDFText_GetTextObject(textPagePtr, i);
+        if (!objPtr || !targets.has(objPtr)) continue;
+        const run = ptrToRun.get(objPtr);
+        if (!run) continue;
+        matched.add(run);
+        out.push(read(i, run));
+      }
+      for (const run of onlyRuns) {
+        if (!matched.has(run)) return null;
+      }
+      return out;
+    }
+    for (let i = 0; i < charCount; i += 1) {
+      const objPtr = m.FPDFText_GetTextObject(textPagePtr, i);
+      out.push(read(i, objPtr ? (ptrToRun.get(objPtr) ?? null) : null));
     }
   } finally {
     wasm.free(rectBuf);

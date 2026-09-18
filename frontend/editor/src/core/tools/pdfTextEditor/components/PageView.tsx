@@ -1,10 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { Box, Loader } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { PdfiumPageRenderer } from "@app/tools/pdfTextEditor/pdfium/PdfiumPageRenderer";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/types";
-import { TextRunOverlay } from "@app/tools/pdfTextEditor/components/TextRunOverlay";
+import {
+  TextRunOverlay,
+  type TextRunActions,
+} from "@app/tools/pdfTextEditor/components/TextRunOverlay";
 import { ImageHandle } from "@app/tools/pdfTextEditor/components/ImageHandle";
 import { AnnotationOutline } from "@app/tools/pdfTextEditor/components/AnnotationOutline";
 import { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
@@ -64,7 +67,7 @@ function nearestScrollRoot(el: HTMLElement): HTMLElement | null {
 
 // One PDF page: a PDFium-rendered bitmap plus an HTML overlay layer with one
 // positioned, editable element per text run.
-export function PageView({
+function PageViewImpl({
   document,
   page,
   scale,
@@ -100,7 +103,23 @@ export function PageView({
   );
   // Raw-PDF -> display (CropBox/rotation) transform for this page. Identity for
   // normal pages, so every overlay/click computation below is unchanged there.
-  const transform = DisplayTransform.fromData(page.display);
+  // Memoized: a fresh instance per render was a new prop for every overlay.
+  const transform = useMemo(
+    () => DisplayTransform.fromData(page.display),
+    [page.display],
+  );
+  // One stable callback bag per page: overlay memoization compares props by
+  // identity, so per-run closures here would undo it on every store patch.
+  const runActions = useMemo<TextRunActions>(
+    () => ({
+      select: (runId, shiftKey) => onSelectRun(runId, shiftKey),
+      edit: (runId, nextText) => onEditRun(page.pageIndex, runId, nextText),
+      move: (runId, dx, dy) => onMoveRun?.(page.pageIndex, runId, dx, dy),
+      wrap: (runId, maxWidthPt) =>
+        onWrapRun?.(page.pageIndex, runId, maxWidthPt),
+    }),
+    [onSelectRun, onEditRun, onMoveRun, onWrapRun, page.pageIndex],
+  );
   const visibleFiredRef = useRef(false);
   const firstRenderFiredRef = useRef(false);
   // Both flags describe ONE loaded document, not the component's lifetime.
@@ -360,12 +379,7 @@ export function PageView({
             pageRevision={paintedRevision}
             selected={selectedRunIds.includes(run.id)}
             highlighted={highlightedRunId === run.id}
-            onSelect={(shiftKey) => onSelectRun(run.id, shiftKey)}
-            onEdit={(nextText) => onEditRun(page.pageIndex, run.id, nextText)}
-            onMove={(dx, dy) => onMoveRun?.(page.pageIndex, run.id, dx, dy)}
-            onWrap={(maxWidthPt) =>
-              onWrapRun?.(page.pageIndex, run.id, maxWidthPt)
-            }
+            actions={runActions}
           />
         ))}
         {showRulers && (
@@ -381,3 +395,8 @@ export function PageView({
     </Box>
   );
 }
+
+// Memoized: the page list re-renders on every store patch, and only the page
+// whose snapshot changed has new props. Callbacks must stay stable for this to
+// skip, which is what PageStage's useCallback props guarantee.
+export const PageView = memo(PageViewImpl);

@@ -5,6 +5,11 @@ export interface FontMetrics {
 
 let sharedCanvas: HTMLCanvasElement | null = null;
 const metricsCache = new Map<string, FontMetrics>();
+// canvas measureText is the single most-called browser API on the typing path
+// (refit + advance prediction re-measure the same tokens every keystroke), so
+// widths are memoized per (font, text).
+const advanceCache = new Map<string, number>();
+const ADVANCE_CACHE_LIMIT = 4096;
 
 export function cssFontShorthand(
   fontStyle: string,
@@ -23,11 +28,21 @@ function context(): CanvasRenderingContext2D | null {
 
 export function measureAdvancePx(text: string, font: string): number {
   if (text === "") return 0;
+  const key = `${font}\u0000${text}`;
+  const cached = advanceCache.get(key);
+  if (cached !== undefined) return cached;
   const ctx = context();
   if (!ctx) return 0;
   ctx.font = font;
   if ("letterSpacing" in ctx) ctx.letterSpacing = "0px";
-  return ctx.measureText(text).width;
+  const width = ctx.measureText(text).width;
+  // Bounded: a long editing session must not grow this without limit.
+  if (advanceCache.size >= ADVANCE_CACHE_LIMIT) {
+    const oldest = advanceCache.keys().next().value;
+    if (oldest !== undefined) advanceCache.delete(oldest);
+  }
+  advanceCache.set(key, width);
+  return width;
 }
 
 export function measureMaxLineWidth(text: string, font: string): number {
@@ -78,4 +93,5 @@ export function measureFontMetrics(
 
 export function resetTextMetricsCache(): void {
   metricsCache.clear();
+  advanceCache.clear();
 }
