@@ -305,4 +305,3 @@ class CloudAiEndToEndTest {
         assertThat(call.userId()).isEqualTo("instance:42:alice");
     }
 }
-
