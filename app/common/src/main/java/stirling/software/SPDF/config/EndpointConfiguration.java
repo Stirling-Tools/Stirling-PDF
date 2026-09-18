@@ -8,12 +8,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.LicenseServiceInterface;
 import stirling.software.common.service.PdfaLevelAServiceInterface;
 
 @Service
@@ -53,6 +55,7 @@ public class EndpointConfiguration {
     private Map<String, DisableReason> groupDisableReasons = new ConcurrentHashMap<>();
     private Map<String, Set<String>> endpointAlternatives = new ConcurrentHashMap<>();
     private final boolean runningProOrHigher;
+    @Autowired @Lazy private LicenseServiceInterface licenseService;
     private final boolean pdfUaAvailable;
 
     public EndpointConfiguration(
@@ -129,6 +132,10 @@ public class EndpointConfiguration {
         if (endpoint.startsWith("/")) {
             endpoint = endpoint.substring(1);
         }
+        if (endpointGroups.getOrDefault("enterprise", Set.of()).contains(endpoint)
+                && !hasPaidPlan()) {
+            return false;
+        }
 
         // Rule 1: Explicit flag wins - if disabled via disableEndpoint(), stay disabled
         Boolean explicitStatus = endpointStatuses.get(endpoint);
@@ -188,6 +195,7 @@ public class EndpointConfiguration {
     }
 
     public boolean isGroupEnabled(String group) {
+        if ("enterprise".equals(group) && !hasPaidPlan()) return false;
         // Rule 1: If group is explicitly disabled, it stays disabled
         if (disabledGroups.contains(group)) {
             log.debug("isGroupEnabled('{}') -> false (explicitly disabled)", group);
@@ -648,9 +656,6 @@ public class EndpointConfiguration {
                 }
             }
         }
-        if (!runningProOrHigher) {
-            disableGroup("enterprise");
-        }
 
         if (!pdfUaAvailable) {
             disableEndpoint("pdf-to-ua");
@@ -674,6 +679,10 @@ public class EndpointConfiguration {
         return endpointGroups.values().stream()
                 .flatMap(Set::stream)
                 .collect(java.util.stream.Collectors.toSet());
+    }
+
+    private boolean hasPaidPlan() {
+        return licenseService == null ? runningProOrHigher : licenseService.isRunningProOrHigher();
     }
 
     private boolean isToolGroup(String group) {

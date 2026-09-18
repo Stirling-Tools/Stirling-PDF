@@ -90,7 +90,7 @@ describe("FreeTierPlanView", () => {
 
     expect(await screen.findByText("120 of 500 used")).toBeInTheDocument();
     // No rate is known locally, so the row quotes the allowance rather than a price.
-    expect(screen.getByText("500 free every month")).toBeInTheDocument();
+    expect(screen.getByText("500 included every month")).toBeInTheDocument();
   });
 
   it("reads only the instance's own ledger for the meter", async () => {
