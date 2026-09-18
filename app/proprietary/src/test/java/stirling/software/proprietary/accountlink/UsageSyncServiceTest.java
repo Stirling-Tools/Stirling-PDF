@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 
 @ExtendWith(MockitoExtension.class)
@@ -30,6 +31,8 @@ class UsageSyncServiceTest {
     @Mock private DeviceCredentialStore credentialStore;
     @Mock private AccountLinkClient client;
     @Mock private EntitlementCache entitlementCache;
+
+    @Mock private ApplicationEventPublisher events;
 
     private UsageSyncService service;
     private final LocalDateTime period = LocalDateTime.of(2026, 6, 1, 0, 0);
@@ -43,7 +46,8 @@ class UsageSyncServiceTest {
                         credentialStore,
                         client,
                         entitlementCache,
-                        new AccountLinkProperties());
+                        new AccountLinkProperties(),
+                        events);
     }
 
     @Test
@@ -52,7 +56,13 @@ class UsageSyncServiceTest {
         props.getMetering().setSyncIntervalHours(6);
         UsageSyncService svc =
                 new UsageSyncService(
-                        counters, syncState, credentialStore, client, entitlementCache, props);
+                        counters,
+                        syncState,
+                        credentialStore,
+                        client,
+                        entitlementCache,
+                        props,
+                        events);
 
         ScheduledTaskRegistrar registrar = new ScheduledTaskRegistrar();
         svc.configureTasks(registrar);
@@ -84,7 +94,7 @@ class UsageSyncServiceTest {
 
         service.syncNow();
 
-        verifyNoInteractions(client, entitlementCache);
+        verifyNoInteractions(client, entitlementCache, events);
         verify(counters, never()).findPeriodsWithUnsyncedUsage();
     }
 
@@ -100,9 +110,10 @@ class UsageSyncServiceTest {
         // surfaces on the gate immediately instead of waiting out the entitlement-cache TTL.
         verifyNoInteractions(client);
         verify(syncState, never()).save(any());
-        verify(entitlementCache, never()).accept(any());
+        verify(entitlementCache, never()).accept(any(), any());
         verify(entitlementCache).invalidate();
         verify(entitlementCache).current();
+        verify(events).publishEvent(any(EntitlementRefreshedEvent.class));
     }
 
     @Test
@@ -131,7 +142,8 @@ class UsageSyncServiceTest {
         verify(counters, never()).markSynced(eq(period), eq("AUTOMATION"), anyLong());
         // Two saves: the pre-report seq reservation + the post-success timestamp.
         verify(syncState, times(2)).save(state);
-        verify(entitlementCache).accept(fresh);
+        verify(entitlementCache).accept("dev-1", fresh);
+        verify(events).publishEvent(any(EntitlementRefreshedEvent.class));
     }
 
     @Test
@@ -149,7 +161,10 @@ class UsageSyncServiceTest {
 
         verify(counters, never()).markSynced(any(), any(), anyLong());
         verify(syncState, times(1)).save(state); // seq reserved, success not recorded
-        verify(entitlementCache).accept(null); // nothing fresh adopted
+        verify(entitlementCache).accept("dev-1", null); // nothing fresh adopted
+        // accept() no-ops on null, so saying the entitlement was refreshed would be a lie: the
+        // licence tier listens to this and would re-read a plan nobody fetched.
+        verify(events, never()).publishEvent(any(EntitlementRefreshedEvent.class));
     }
 
     @Test
@@ -166,6 +181,6 @@ class UsageSyncServiceTest {
         service.syncNow();
 
         verify(counters, never()).markSynced(any(), any(), anyLong());
-        verify(entitlementCache, never()).accept(any());
+        verify(entitlementCache, never()).accept(any(), any());
     }
 }

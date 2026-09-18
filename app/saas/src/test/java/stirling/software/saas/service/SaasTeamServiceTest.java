@@ -323,10 +323,7 @@ class SaasTeamServiceTest {
             service.inviteUserToTeam(teamId, "b@x.com", inviter);
 
             verify(saasTeamExtensionService).setPersonal(t, false);
-            // Still the sentinel. A standard team has no user limit until it buys one, and nothing
-            // enforces capacity for one, so stating the free allowance here would announce a
-            // ceiling nothing honours.
-            verify(saasTeamExtensionService).setSeats(t, Integer.MAX_VALUE, Integer.MAX_VALUE);
+            verify(saasTeamExtensionService).setSeats(t, 5, 5);
         }
 
         @Test
