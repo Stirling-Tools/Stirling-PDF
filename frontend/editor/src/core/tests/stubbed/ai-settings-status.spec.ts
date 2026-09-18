@@ -156,10 +156,14 @@ test("the status card adds a Status anchor to the section nav", async ({
     authenticated: true,
   });
 
-  // The section's cards mount lazily, and WebKit gets here before the last of them has,
-  // so wait on the list settling rather than reading it once.
+  // Poll because the cards mount lazily, and trim because WebKit keeps the whitespace around
+  // each heading that Chromium strips - the raw strings are not comparable across engines.
   await expect
-    .poll(() => page.locator(".settings-card__toggle").allInnerTexts())
+    .poll(async () =>
+      (await page.locator(".settings-card__toggle").allInnerTexts()).map((t) =>
+        t.trim(),
+      ),
+    )
     .toEqual([
       "Status",
       "Connection",
