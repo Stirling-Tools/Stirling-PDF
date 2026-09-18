@@ -15,6 +15,8 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -30,6 +32,7 @@ import stirling.software.proprietary.policy.asset.PolicyAsset;
 import stirling.software.proprietary.policy.asset.PolicyAssetRefs;
 import stirling.software.proprietary.policy.asset.PolicyAssetStore;
 import stirling.software.proprietary.policy.input.InputSource;
+import stirling.software.proprietary.policy.model.EditorConfig;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineInput;
@@ -67,6 +70,81 @@ class PolicyValidatorTest {
                         sourceStore,
                         assetStore,
                         new ToolChainValidator(path -> java.util.Optional.empty()));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"upload", "export"})
+    void rejectsCorpusExportsFromEditorPolicies(String runOn) {
+        for (Map<String, Object> params :
+                List.<Map<String, Object>>of(
+                        Map.of("exportChunksJsonl", true),
+                        Map.of("exportChunksJsonl", "true", "index", true),
+                        Map.of("exportMarkdown", true),
+                        Map.of("exportMarkdown", "true"),
+                        Map.of("includeOriginal", false))) {
+            Policy policy = ingestionPolicy(params, new EditorConfig(true, runOn));
+            IllegalArgumentException error =
+                    assertThrows(IllegalArgumentException.class, () -> validator.validate(policy));
+            assertTrue(error.getMessage().contains("Choose a file or database destination"));
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"upload", "export"})
+    void allowsEditorCorpusExportsToSavedDestinations(String runOn) {
+        Policy policy =
+                ingestionPolicy(
+                                Map.of(
+                                        "index",
+                                        false,
+                                        "exportChunksJsonl",
+                                        true,
+                                        "includeOriginal",
+                                        false),
+                                new EditorConfig(true, runOn))
+                        .withOutputIds(List.of("destination"));
+        validator.validateEditorOutput(policy);
+    }
+
+    @Test
+    void allowsEditorIndexingWithoutCorpusFiles() {
+        when(outputSink.supports(any())).thenReturn(true);
+        validator.validate(ingestionPolicy(Map.of("index", true), EditorConfig.onUpload()));
+        validator.validate(
+                ingestionPolicy(
+                        Map.of(
+                                "index",
+                                true,
+                                "includeOriginal",
+                                true,
+                                "exportChunksJsonl",
+                                false,
+                                "exportMarkdown",
+                                "false"),
+                        EditorConfig.onExport()));
+    }
+
+    @Test
+    void keepsCorpusExportsAvailableOutsideEditorPolicies() {
+        when(outputSink.supports(any())).thenReturn(true);
+        validator.validate(
+                ingestionPolicy(
+                        Map.of("index", false, "exportChunksJsonl", true),
+                        EditorConfig.disabled()));
+    }
+
+    private Policy ingestionPolicy(Map<String, Object> params, EditorConfig editor) {
+        return new Policy(
+                "ingestion",
+                "Ingestion",
+                "owner",
+                true,
+                List.of(),
+                List.of(new PipelineStep("/api/v1/docparse/rag-ingest", params, Map.of())),
+                OutputSpec.inline(),
+                List.of(),
+                null,
+                editor);
     }
 
     @Test
