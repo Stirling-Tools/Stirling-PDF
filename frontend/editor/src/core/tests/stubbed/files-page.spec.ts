@@ -1038,13 +1038,18 @@ test.describe("Files page", () => {
       const topOf = async () =>
         (await rows.first().boundingBox())?.y ?? Number.NaN;
 
+      // boundingBox() can be null for a beat after the row is "visible" (WebKit
+      // layout timing), so wait for a real y before capturing the baseline.
+      await expect
+        .poll(async () => Number.isFinite(await topOf()), { timeout: 15_000 })
+        .toBe(true);
       const before = await topOf();
       await rows.nth(0).click();
       await rows.nth(1).click({ modifiers: ["ControlOrMeta"] });
       await expect(page.locator(".files-page-list-selection-count")).toHaveText(
         /2 selected/i,
       );
-      expect(await topOf()).toBeCloseTo(before, 0);
+      await expect.poll(topOf, { timeout: 15_000 }).toBeCloseTo(before, 0);
     });
   });
 
