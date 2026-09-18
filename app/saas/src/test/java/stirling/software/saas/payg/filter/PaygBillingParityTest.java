@@ -47,6 +47,7 @@ import stirling.software.proprietary.accountlink.InstanceEntitlementGate;
 import stirling.software.proprietary.accountlink.InstanceEntitlementInterceptor;
 import stirling.software.proprietary.accountlink.UsageMeterService;
 import stirling.software.proprietary.billing.UnitCalcPolicy;
+import stirling.software.proprietary.service.AiEngineRouter;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
@@ -225,7 +226,8 @@ class PaygBillingParityTest {
                         cache,
                         meterProviderOf(meter),
                         mock(FreeTierUsageService.class),
-                        mock(TempFileManager.class));
+                        mock(TempFileManager.class),
+                        AiEngineRouter.selfHosted(new ApplicationProperties(), null));
         MockMultipartHttpServletRequest shReq = new MockMultipartHttpServletRequest();
         shReq.setRequestURI("/api/v1/security/add-password");
         shReq.addFile(
@@ -321,7 +323,8 @@ class PaygBillingParityTest {
                         cache,
                         meterProviderOf(meter),
                         mock(FreeTierUsageService.class),
-                        mock(TempFileManager.class));
+                        mock(TempFileManager.class),
+                        AiEngineRouter.selfHosted(new ApplicationProperties(), null));
 
         if (op.apiKey()) {
             SecurityContextHolder.getContext()

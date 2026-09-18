@@ -26,6 +26,8 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.mcp.catalog.McpToolCatalog;
 import stirling.software.proprietary.mcp.catalog.OperationCategory;
 import stirling.software.proprietary.mcp.catalog.OperationMeta;
+import stirling.software.proprietary.service.AiEngineRouter;
+import stirling.software.proprietary.service.AiEngineTarget;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -44,19 +46,20 @@ public class EngineCapabilityClient {
     private final McpToolCatalog catalog;
     private final ObjectMapper mapper;
     private final HttpClient httpClient;
-    private final String sharedSecret;
+    private final AiEngineRouter router;
 
     private ScheduledExecutorService scheduler;
 
     public EngineCapabilityClient(
             ApplicationProperties applicationProperties,
             McpToolCatalog catalog,
-            ObjectMapper mapper) {
+            ObjectMapper mapper,
+            AiEngineRouter router) {
         this.applicationProperties = applicationProperties;
         this.catalog = catalog;
         this.mapper = mapper;
         this.httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
-        this.sharedSecret = System.getenv("STIRLING_ENGINE_SHARED_SECRET");
+        this.router = router;
     }
 
     @PostConstruct
@@ -105,18 +108,17 @@ public class EngineCapabilityClient {
             catalog.replaceAiCapabilities(Map.of());
             return;
         }
-        // Trim whitespace and any trailing slash to avoid a malformed URI.
-        String base = applicationProperties.getAiEngine().getUrl().strip().replaceAll("/+$", "");
-        URI uri = URI.create(base + "/api/v1/agents/capabilities");
+        // Same routing as every other engine call, so cloud mode reaches the gateway rather than
+        // a local URL nobody is listening on.
+        AiEngineTarget target = router.resolve();
+        URI uri = URI.create(target.urlFor("/api/v1/agents/capabilities"));
         HttpRequest.Builder reqBuilder =
                 HttpRequest.newBuilder()
                         .uri(uri)
                         .timeout(Duration.ofSeconds(10))
                         .header("Accept", "application/json")
                         .GET();
-        if (sharedSecret != null && !sharedSecret.isBlank()) {
-            reqBuilder.header("X-Engine-Auth", sharedSecret);
-        }
+        target.headers().forEach(reqBuilder::header);
         HttpResponse<String> response =
                 httpClient.send(reqBuilder.build(), HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() != 200) {

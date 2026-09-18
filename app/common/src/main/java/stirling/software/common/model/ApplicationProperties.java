@@ -352,6 +352,14 @@ public class ApplicationProperties {
     @Data
     public static class AiEngine {
         private boolean enabled = false;
+
+        /**
+         * Where the reasoning runs. {@code SELF_HOSTED} calls {@link #url} directly; {@code CLOUD}
+         * calls Stirling Cloud's instance AI gateway with this server's account-link device
+         * credential, so the customer runs no engine of their own.
+         */
+        private AiEngineMode mode = AiEngineMode.SELF_HOSTED;
+
         private String url = "http://localhost:5001";
         private int timeoutSeconds = 120;
 
@@ -382,6 +390,31 @@ public class ApplicationProperties {
 
         /** Per-capability on/off switches so an admin can disable individual AI tools. */
         private Features features = new Features();
+
+        /** Settings that only apply when {@link #mode} is {@code CLOUD}. */
+        private Cloud cloud = new Cloud();
+
+        /** Where the reasoning runs. */
+        public enum AiEngineMode {
+            SELF_HOSTED,
+            CLOUD
+        }
+
+        @Data
+        public static class Cloud {
+
+            /**
+             * Whether whole documents may be sent to Stirling Cloud for indexing.
+             *
+             * <p>Off by default, and deliberately separate from the capability switches: those
+             * decide what the app offers, this decides what leaves the building. Chat and
+             * single-shot questions send only the text a request needs, but RAG ingestion uploads
+             * the whole document and Stirling Cloud then stores it. An admin who wants cloud AI
+             * without a copy of their corpus living elsewhere turns everything else on and leaves
+             * this off; document-question features then degrade rather than silently upload.
+             */
+            private boolean allowDocumentUpload = false;
+        }
 
         @Data
         public static class Models {

@@ -44,12 +44,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.method.HandlerMethod;
 
 import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.billing.BillingCategory;
 import stirling.software.proprietary.billing.UnitCalcPolicy;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.service.AiEngineRouter;
 
 @ExtendWith(MockitoExtension.class)
 class InstanceEntitlementInterceptorTest {
@@ -62,7 +64,12 @@ class InstanceEntitlementInterceptorTest {
 
     private InstanceEntitlementInterceptor interceptor() {
         return new InstanceEntitlementInterceptor(
-                gate, entitlementCache, meterProvider, freeTierUsageService, tempFileManager);
+                gate,
+                entitlementCache,
+                meterProvider,
+                freeTierUsageService,
+                tempFileManager,
+                AiEngineRouter.selfHosted(new ApplicationProperties(), null));
     }
 
     @AfterEach
