@@ -25,15 +25,6 @@ import stirling.software.proprietary.service.UserLicenseSettingsService;
 import stirling.software.saas.model.SaasTeamExtensions;
 import stirling.software.saas.repository.SaasTeamExtensionsRepository;
 
-/**
- * Unit tests for {@link SaasTeamExtensionService}.
- *
- * <p>The service is a thin read/write facade over {@link SaasTeamExtensionsRepository}. Reads
- * return safe defaults when no row exists (non-personal, STANDARD type, seatsUsed=0, maxSeats=the
- * free allowance, createdBy=null, hasAvailableSeats=true, canInviteMembers=true); writes create the
- * row lazily via {@code getOrCreate}. Pure delegation + Optional mapping, so everything is mocked
- * at the repository boundary.
- */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class SaasTeamExtensionServiceTest {
@@ -274,6 +265,7 @@ class SaasTeamExtensionServiceTest {
     class FleetCapacity {
         @Test
         void unavailableSnapshot_blocksAdmissions() {
+            when(repository.fleetHasAvailableSeats(TEAM_ID)).thenReturn(null);
             assertThat(service.hasAvailableSeats(team())).isFalse();
             assertThat(service.canInviteMembers(team())).isFalse();
         }
