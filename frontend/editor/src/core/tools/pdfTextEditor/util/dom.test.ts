@@ -17,11 +17,11 @@ describe("yieldToBrowser", () => {
     }
   });
 
-  it("prefers scheduler.yield when the browser offers it", async () => {
+  it("never uses scheduler.yield, whose continuation outranks React commits", async () => {
     const yielded = vi.fn(async () => {});
     vi.stubGlobal("scheduler", { yield: yielded });
     await yieldToBrowser();
-    expect(yielded).toHaveBeenCalledTimes(1);
+    expect(yielded).not.toHaveBeenCalled();
   });
 
   it("falls back to a timer when MessageChannel is absent", async () => {

@@ -63,16 +63,14 @@ export function pageElements(): HTMLElement[] {
   ).filter((el) => /^pdf-editor-page-\d+$/.test(el.dataset.testid ?? ""));
 }
 
-// Yield without the 4ms floor of nested setTimeout, so load and save steps
-// still let the browser paint progress. Falls back where scheduler is absent.
-// See https://developer.mozilla.org/en-US/docs/Web/API/Scheduler/yield
-interface SchedulerRoot {
-  scheduler?: { yield?: () => Promise<void> };
-}
-
+// Yield so React can commit the state updates queued before the await (load
+// progress, and the empty page list between two documents).
+//
+// Deliberately NOT scheduler.yield(): its continuation task outranks React's
+// normal-priority work, so several loader steps can run before React commits
+// anything and the empty-pages commit is coalesced away entirely.
+// https://developer.mozilla.org/en-US/docs/Web/API/Scheduler/yield
 export function yieldToBrowser(): Promise<void> {
-  const scheduler = (globalThis as SchedulerRoot).scheduler;
-  if (typeof scheduler?.yield === "function") return scheduler.yield();
   return new Promise<void>((resolve) => {
     if (typeof MessageChannel !== "undefined") {
       const channel = new MessageChannel();

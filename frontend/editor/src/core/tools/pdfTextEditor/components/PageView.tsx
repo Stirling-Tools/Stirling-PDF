@@ -103,6 +103,14 @@ export function PageView({
   const transform = DisplayTransform.fromData(page.display);
   const visibleFiredRef = useRef(false);
   const firstRenderFiredRef = useRef(false);
+  // Both flags describe ONE loaded document, not the component's lifetime.
+  // React can reuse this instance across a reopen (the empty page list is
+  // coalesced into the publish), and a stale flag then leaves the loader
+  // overlay up forever with no first-render callback.
+  useEffect(() => {
+    visibleFiredRef.current = false;
+    firstRenderFiredRef.current = false;
+  }, [document]);
   const [rendering, setRendering] = useState(false);
   const [paintedRevision, setPaintedRevision] = useState(-1);
   const [renderError, setRenderError] = useState<string | null>(null);
