@@ -9,6 +9,7 @@ permissions:
   contents: read
 
 env:
+  VERSION: 1
   JAVA_VERSION: 25
   FILES_TO_HASH: |
     gradle/wrapper/gradle-wrapper.properties
@@ -92,3 +93,26 @@ jobs:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
+
+      - name: Display cache information
+        env:
+          CACHE_IS_FORK: ${{ steps.cache.outputs.is-fork }}
+          CACHE_READ_ONLY: ${{ steps.cache.outputs.read-only }}
+          CACHE_HIT: ${{ steps.cache.outputs.cache-hit }}
+        shell: bash
+        run: |
+          echo "Fork: $CACHE_IS_FORK"
+          echo "Read-only: $CACHE_READ_ONLY"
+          echo "Cache Hit: $CACHE_HIT"
+
+      - name: Upload Gradle cache artifact for trusted publisher
+        if: ${{ steps.cache.outputs.cache-hit == 'false' && github.event_name == 'pull_request' && success() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: cache-the-planet-pr-${{ github.event.pull_request.number }}-gradle-java${{ env.JAVA_VERSION }}-${{ needs.hash_pr.outputs.files_hash }}-v${{ env.VERSION }}
+          path: |
+            .cache/gradle-java${{ env.JAVA_VERSION }}/caches
+            .cache/gradle-java${{ env.JAVA_VERSION }}/wrapper
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 1
