@@ -45,11 +45,6 @@
   transition: none !important;
 }
 
-/* Page movement animations */
-.pageMoveAnimation {
-  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
 /* Animations */
 @keyframes pulse {
   0%,
