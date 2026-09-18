@@ -17,7 +17,7 @@ import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
-import { isStirlingFile } from "@app/types/fileContext";
+import { getFormFillFileId } from "@app/types/fileContext";
 
 interface FormSaveBarProps {
   /** The current file being viewed */
@@ -43,15 +43,10 @@ export function FormSaveBar({
   const [applying, setApplying] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
-  // Reset the dismissed state only when a genuinely different document opens;
-  // a workbench record id changes on save, which is close enough here.
-  const fileRootKey = file
-    ? isStirlingFile(file)
-      ? file.fileId
-      : file instanceof File
-        ? `${file.name}-${file.size}`
-        : file
-    : null;
+  // Reset the dismissed state only when genuinely different bytes open: the
+  // key folds the content identity (quickKey) in, so a disk reload under an
+  // unchanged record id still brings the bar back.
+  const fileRootKey = getFormFillFileId(file);
   const [prevFileRootKey, setPrevFileRootKey] = useState<unknown>(fileRootKey);
   if (fileRootKey !== prevFileRootKey) {
     setPrevFileRootKey(fileRootKey);
