@@ -70,6 +70,25 @@ public class NotificationController {
         }
     }
 
+    @PostMapping("/{notificationId}/actions/{actionId}")
+    @Operation(
+            summary = "Run one of a notification's server-side actions",
+            description =
+                    "Takes the prefixed notification id, not the producing row's id. Only actions"
+                            + " the row already offers this caller can be run; the producing"
+                            + " service re-checks that, and the action authorises its own effects.")
+    public NotificationView act(
+            @PathVariable String notificationId, @PathVariable String actionId) {
+        try {
+            return notifications.act(notificationId, actionId);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+        } catch (FailureActionException e) {
+            throw new ResponseStatusException(
+                    FailureActionException.statusOf(e.getReason()), e.getMessage(), e);
+        }
+    }
+
     /** Wrapped so paging or a total can be added without breaking clients. */
     public record NotificationsResponse(
             List<NotificationView> notifications,

@@ -226,8 +226,12 @@ public class FileRunEventService {
         // Answered here, or the client reports "not on this device" about a document the row never
         // identified in the first place.
         boolean documentless = event.fileId() == null || event.fileId().isBlank();
+        boolean inSmartFolder =
+                FileRunEventView.DocumentLocation.of(event)
+                        == FileRunEventView.DocumentLocation.SMART_FOLDER;
         return event.kind().getOfferedActions().stream()
                 .filter(offer -> offeredTo(offer.audience(), ownership, reviewsTeam))
+                .filter(offer -> offer.id() != FailureActionId.RETRY_IN_FOLDER || inSmartFolder)
                 .map(offer -> availability(offer, closed, unattended, documentless))
                 .toList();
     }

@@ -30,7 +30,14 @@ public enum FailureActionId {
     /** Open the document behind the incident, in whichever client can resolve its id. */
     VIEW_FILE(Execution.CLIENT, "View file"),
 
-    VIEW_IN_PROCESSOR(Execution.CLIENT, "View in processor");
+    VIEW_IN_PROCESSOR(Execution.CLIENT, "View in processor"),
+
+    /**
+     * Run a smart folder's document again, on the server: the client has neither the file nor a way
+     * to address it. Offered to the folder's owner alone, and its handler re-checks that rather
+     * than trusting the offer.
+     */
+    RETRY_IN_FOLDER(Execution.SERVER, "Try again");
 
     /** Dispatch refuses a {@code CLIENT} id, so this is enforced rather than merely documented. */
     public enum Execution {

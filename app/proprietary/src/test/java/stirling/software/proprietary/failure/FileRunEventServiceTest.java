@@ -48,7 +48,10 @@ class FileRunEventServiceTest {
         store = new FileRunEventStore(new InMemoryFileRunEventRepository());
         FailureActionRegistry registry =
                 new FailureActionRegistry(
-                        List.of(new AcknowledgeAction(store), new DismissAction(store)));
+                        List.of(
+                                new AcknowledgeAction(store),
+                                new DismissAction(store),
+                                new NoopRetryInFolderAction()));
         registry.verifyEveryDeclaredActionHasAHandler();
 
         service = new FileRunEventService(store, registry, authority, userService, props);
@@ -801,7 +804,10 @@ class FileRunEventServiceTest {
         void acceptsACompleteSetOfHandlers() {
             FailureActionRegistry complete =
                     new FailureActionRegistry(
-                            List.of(new AcknowledgeAction(store), new DismissAction(store)));
+                            List.of(
+                                    new AcknowledgeAction(store),
+                                    new DismissAction(store),
+                                    new NoopRetryInFolderAction()));
 
             complete.verifyEveryDeclaredActionHasAHandler();
 
@@ -816,7 +822,10 @@ class FileRunEventServiceTest {
             // Otherwise every client action would need an empty handler beside it.
             FailureActionRegistry serverOnly =
                     new FailureActionRegistry(
-                            List.of(new AcknowledgeAction(store), new DismissAction(store)));
+                            List.of(
+                                    new AcknowledgeAction(store),
+                                    new DismissAction(store),
+                                    new NoopRetryInFolderAction()));
 
             assertThatCode(serverOnly::verifyEveryDeclaredActionHasAHandler)
                     .doesNotThrowAnyException();

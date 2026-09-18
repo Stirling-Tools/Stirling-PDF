@@ -37,12 +37,15 @@ vi.mock("@app/services/notificationPolicyRetry", () => ({
 }));
 
 const reportNotificationResolved = vi.fn();
+const dispatchNotificationAction = vi.fn();
 vi.mock("@app/services/notifications", async () => ({
   ...(await vi.importActual<typeof import("@app/services/notifications")>(
     "@app/services/notifications",
   )),
   reportNotificationResolved: (...args: unknown[]) =>
     reportNotificationResolved(...args),
+  dispatchNotificationAction: (...args: unknown[]) =>
+    dispatchNotificationAction(...args),
 }));
 
 const navigate = vi.fn();
@@ -160,6 +163,7 @@ beforeEach(() => {
   // The adopted document's own id, not the reference the failure was filed against.
   addFiles.mockReset().mockResolvedValue([{ fileId: "f-unlocked" }]);
   reportNotificationResolved.mockReset().mockResolvedValue(true);
+  dispatchNotificationAction.mockReset().mockResolvedValue(null);
   retryWithPassword.mockReset().mockResolvedValue({ ok: true, files: [] });
   // The unlock succeeds by default: most cases below are about what happens afterwards.
   unlockLocalDocument.mockReset().mockResolvedValue({
@@ -590,5 +594,55 @@ describe("retrying an attended policy run", () => {
         "The policy re-run started, but its result cannot be delivered here, so this failure stays open.",
     });
     expect(reportNotificationResolved).not.toHaveBeenCalled();
+  });
+});
+
+describe("RETRY_IN_FOLDER", () => {
+  const inFolder = () => ({
+    notification: notification({
+      kindId: "UNKNOWN",
+      documentLocation: "SMART_FOLDER" as const,
+      sourceKind: "SMART_FOLDER" as const,
+      sourceId: "src-downloads",
+      fileId: null,
+    }),
+    hasLocalFile: false,
+    retryPayload: null,
+  });
+
+  it("is wired, because the server offers it to the bell", () => {
+    // The gap this test exists for: the server can offer an action the bell then drops on the
+    // floor, because an id with no spec here is skipped rather than rendered.
+    expect(registry().RETRY_IN_FOLDER).toBeDefined();
+  });
+
+  it("is offered for a smart folder's row and nothing else", () => {
+    expect(registry().RETRY_IN_FOLDER?.available(inFolder())).toBe(true);
+    expect(
+      registry().RETRY_IN_FOLDER?.available(context({ kindId: "UNKNOWN" })),
+    ).toBe(false);
+  });
+
+  it("asks the server by the row's own prefixed id", async () => {
+    // The bell never holds a raw row id, so dispatching by anything else would 400.
+    await registry().RETRY_IN_FOLDER?.run(inFolder());
+
+    expect(dispatchNotificationAction).toHaveBeenCalledWith(
+      "failure:evt-1",
+      "RETRY_IN_FOLDER",
+    );
+  });
+
+  it("reports the server's refusal rather than claiming it worked", async () => {
+    dispatchNotificationAction.mockResolvedValue(
+      "No smart folder to run this document in",
+    );
+
+    const outcome = await registry().RETRY_IN_FOLDER?.run(inFolder());
+
+    expect(outcome).toEqual({
+      ok: false,
+      message: "No smart folder to run this document in",
+    });
   });
 });

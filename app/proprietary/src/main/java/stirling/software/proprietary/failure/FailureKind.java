@@ -4,9 +4,11 @@ import static stirling.software.proprietary.failure.FailureActionId.DECRYPT;
 import static stirling.software.proprietary.failure.FailureActionId.DISMISS;
 import static stirling.software.proprietary.failure.FailureActionId.OPEN_IN_TOOL;
 import static stirling.software.proprietary.failure.FailureActionId.REPAIR;
+import static stirling.software.proprietary.failure.FailureActionId.RETRY_IN_FOLDER;
 import static stirling.software.proprietary.failure.FailureActionId.VIEW_FILE;
 import static stirling.software.proprietary.failure.FailureActionId.VIEW_IN_PROCESSOR;
 import static stirling.software.proprietary.failure.FailureActionSlot.OVERFLOW;
+import static stirling.software.proprietary.failure.FailureActionSlot.RESOLUTION;
 import static stirling.software.proprietary.failure.FailureActionSlot.SECONDARY;
 import static stirling.software.proprietary.failure.FailureAudience.ANYONE_WHO_SEES;
 import static stirling.software.proprietary.failure.FailureAudience.OWNER;
@@ -174,6 +176,26 @@ public enum FailureKind {
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
 
     /**
+     * A source could not be listed at all: a watched folder that was unplugged, renamed or had its
+     * permissions changed. Scoped to the source, so a folder that has been gone a week is one
+     * incident rather than one per sweep.
+     *
+     * <p>Claims no error code: nothing throws a coded exception here. The sweep records it
+     * directly, which is why it is reached without the classifier.
+     */
+    SOURCE_UNREADABLE(
+            FailureStage.INPUT,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_CONFIG_FIX,
+            FailureScope.SOURCE,
+            noErrorCodes(),
+            fallback("This folder could not be read, so nothing in it was processed."),
+            // No document to view: the sweep never got as far as one. Fixing it means fixing the
+            // folder, which happens outside Stirling.
+            global(VIEW_IN_PROCESSOR, OWNER, SECONDARY),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /**
      * Ghostscript reached a page it could not draw, which its output names.
      *
      * <p>Only the recognised page-drawing failure belongs here. E051 is the bucket {@code
@@ -200,8 +222,11 @@ public enum FailureKind {
             FailureScope.RUN,
             noErrorCodes(),
             fallback("This run failed for a reason Stirling does not yet recognise."),
-            // No known fix to declare, so a plain retry leads: these are often one-offs.
+            // No known fix to declare, so a plain retry leads: these are often one-offs. The
+            // server-side twin is for a document only the server can reach; it is dropped for any
+            // row that is not a smart folder's, so the two never appear together.
             global(OPEN_IN_TOOL, OWNER, SECONDARY),
+            global(RETRY_IN_FOLDER, OWNER, RESOLUTION),
             global(VIEW_FILE, OWNER, SECONDARY),
             global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW));

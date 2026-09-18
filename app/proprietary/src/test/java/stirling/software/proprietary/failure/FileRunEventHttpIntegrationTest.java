@@ -75,6 +75,23 @@ class FileRunEventHttpIntegrationTest {
                 .id();
     }
 
+    /** As {@link #seed}, for a row a source fed rather than a client. */
+    private String seedFromSource(FailureKind kind, String sourceId, String identity) {
+        FileRunEventStore store = new FileRunEventStore(repository);
+        return store.record(
+                        new RecordFailure(
+                                kind,
+                                FailureOrigin.POLICY,
+                                TEAM,
+                                "author@example.com",
+                                "policy-1",
+                                "run-1",
+                                sourceId,
+                                identity,
+                                "boom"))
+                .id();
+    }
+
     private HttpResponse<String> get(String path) throws Exception {
         return http.send(
                 HttpRequest.newBuilder(URI.create("http://localhost:" + port + path)).GET().build(),
@@ -95,6 +112,23 @@ class FileRunEventHttpIntegrationTest {
     @Nested
     @DisplayName("the read path")
     class ReadPath {
+
+        @Test
+        void serialisesASourceFedRowWithoutThePathBehindIt() throws Exception {
+            // The portal is the second surface that renders these rows, and it maps them itself,
+            // so the withholding is asserted here too rather than only on the bell's projection.
+            seedFromSource(
+                    FailureKind.UNKNOWN,
+                    "src-downloads",
+                    "/Users/someone/Documents/Payroll/march.pdf");
+
+            HttpResponse<String> response = get("/api/v1/file-run-events");
+
+            JsonNode row = mapper.readTree(response.body()).get("events").get(0);
+            assertThat(row.get("documentLocation").asString()).isEqualTo("SMART_FOLDER");
+            assertThat(row.get("fileId").isNull()).isTrue();
+            assertThat(response.body()).doesNotContain("/Users/someone", "march.pdf");
+        }
 
         @Test
         void serialisesAnEventWithItsFacetsCopyKeysAndResolvedActions() throws Exception {
@@ -418,6 +452,16 @@ class FileRunEventHttpIntegrationTest {
         @Bean
         DismissAction dismissAction(FileRunEventStore store) {
             return new DismissAction(store);
+        }
+
+        /**
+         * A stand-in, so the registry's completeness check passes without dragging a policy store,
+         * a ledger and a runner into an HTTP-layer test. What it does is covered by {@code
+         * RetryInFolderActionTest}.
+         */
+        @Bean
+        FailureAction retryInFolderAction() {
+            return new NoopRetryInFolderAction();
         }
 
         @Bean

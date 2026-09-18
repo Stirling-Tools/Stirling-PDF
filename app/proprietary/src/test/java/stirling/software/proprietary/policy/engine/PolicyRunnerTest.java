@@ -37,6 +37,7 @@ import org.springframework.core.io.ByteArrayResource;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
+import stirling.software.proprietary.failure.PolicyFailureRecorder;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.input.FolderInputSource;
@@ -93,6 +94,7 @@ class PolicyRunnerTest {
                         new ApplicationProperties(),
                         reachableOwners(),
                         databaseLicenseGuard,
+                        mock(PolicyFailureRecorder.class),
                         eventPublisher);
     }
 
@@ -134,6 +136,7 @@ class PolicyRunnerTest {
                         org.mockito.Mockito.mock(
                                 stirling.software.proprietary.security.configuration.ee
                                         .DatabaseLicenseGuard.class),
+                        org.mockito.Mockito.mock(PolicyFailureRecorder.class),
                         eventPublisher);
         InputSpec spec = InputSpec.folder("/in");
         Policy policy = policy(List.of(spec));
@@ -534,6 +537,7 @@ class PolicyRunnerTest {
                         org.mockito.Mockito.mock(
                                 stirling.software.proprietary.security.configuration.ee
                                         .DatabaseLicenseGuard.class),
+                        org.mockito.Mockito.mock(PolicyFailureRecorder.class),
                         eventPublisher);
         for (String owner : new String[] {null, "", "deleted-user"}) {
             Source source =
@@ -583,6 +587,7 @@ class PolicyRunnerTest {
                         org.mockito.Mockito.mock(
                                 stirling.software.proprietary.security.configuration.ee
                                         .DatabaseLicenseGuard.class),
+                        org.mockito.Mockito.mock(PolicyFailureRecorder.class),
                         eventPublisher);
 
         SweepOutcome outcome = enforced.run(stranded.withSurface(Policy.SURFACE_PROCESSING_FOLDER));
