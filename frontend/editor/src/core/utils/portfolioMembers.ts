@@ -1,8 +1,4 @@
-import type {
-  PDFDict,
-  PDFDocument,
-  PDFRawStream,
-} from "@cantoo/pdf-lib";
+import type { PDFDict, PDFDocument, PDFRawStream } from "@cantoo/pdf-lib";
 import type { PdfAttachmentObject } from "@embedpdf/models";
 import { getDocumentBytes } from "@app/services/documentBytesCache";
 
@@ -75,10 +71,7 @@ const collectSpecs = (
   if (!node || depth > MAX_NAME_TREE_DEPTH || seen.has(node)) return;
   seen.add(node);
 
-  const names = node.lookupMaybe(
-    pdfLib.PDFName.of(KEY_NAMES),
-    pdfLib.PDFArray,
-  );
+  const names = node.lookupMaybe(pdfLib.PDFName.of(KEY_NAMES), pdfLib.PDFArray);
   if (names) {
     for (let i = 0; i + 1 < names.size(); i += 2) {
       const name = decodeText(names.lookup(i), pdfLib);
@@ -115,18 +108,14 @@ const load = async (file: File): Promise<LoadedPortfolio | null> => {
     collectSpecs(
       doc.catalog
         .lookupMaybe(pdfLib.PDFName.of(KEY_NAMES), pdfLib.PDFDict)
-        ?.lookupMaybe(
-          pdfLib.PDFName.of(KEY_EMBEDDED_FILES),
-          pdfLib.PDFDict,
-        ),
+        ?.lookupMaybe(pdfLib.PDFName.of(KEY_EMBEDDED_FILES), pdfLib.PDFDict),
       specs,
       pdfLib,
     );
     return {
       doc,
       specs,
-      isPortfolio:
-        doc.catalog.get(pdfLib.PDFName.of(KEY_COLLECTION)) != null,
+      isPortfolio: doc.catalog.get(pdfLib.PDFName.of(KEY_COLLECTION)) != null,
     };
   } catch {
     return null;
@@ -166,7 +155,8 @@ const streamOf = (
   pdfLib: PdfLib,
 ): PDFRawStream | undefined => {
   const ef = spec.lookupMaybe(pdfLib.PDFName.of(KEY_EF), pdfLib.PDFDict);
-  const ref = ef?.get(pdfLib.PDFName.of(KEY_F)) ?? ef?.get(pdfLib.PDFName.of(KEY_UF));
+  const ref =
+    ef?.get(pdfLib.PDFName.of(KEY_F)) ?? ef?.get(pdfLib.PDFName.of(KEY_UF));
   const stream = ref ? loaded.doc.context.lookup(ref) : undefined;
   return stream instanceof pdfLib.PDFRawStream ? stream : undefined;
 };
@@ -202,18 +192,13 @@ export async function readPortfolioMembers(
       description:
         decodeText(spec.get(pdfLib.PDFName.of(KEY_DESC)), pdfLib) ?? "",
       mimeType:
-        decodeText(
-          stream?.dict.get(pdfLib.PDFName.of(KEY_SUBTYPE)),
-          pdfLib,
-        ) ?? "",
+        decodeText(stream?.dict.get(pdfLib.PDFName.of(KEY_SUBTYPE)), pdfLib) ??
+        "",
       size: params
         ?.lookupMaybe(pdfLib.PDFName.of(KEY_SIZE), pdfLib.PDFNumber)
         ?.asNumber(),
       creationDate: parsePdfDate(
-        decodeText(
-          params?.get(pdfLib.PDFName.of(KEY_CREATION_DATE)),
-          pdfLib,
-        ),
+        decodeText(params?.get(pdfLib.PDFName.of(KEY_CREATION_DATE)), pdfLib),
       ),
       checksum: "",
     });
