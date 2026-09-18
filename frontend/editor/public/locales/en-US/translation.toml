@@ -12071,11 +12071,14 @@ ZIP = "a ZIP archive"
 [toolPanel]
 alpha = "Alpha"
 backToAllTools = "Back to all tools"
+beta = "Beta"
 goBack = "Go back"
+new = "New"
 pdfTools = "PDF Tools"
 placeholder = "Choose a tool to get started"
 premiumFeature = "Premium feature:"
 toolsHeader = "Tools"
+updated = "Updated"
 viewAllTools = "View all tools"
 
 [toolPanel.fullscreen]
