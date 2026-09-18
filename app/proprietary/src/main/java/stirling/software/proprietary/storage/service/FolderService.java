@@ -69,6 +69,7 @@ public class FolderService {
     private final StoredFileRepository storedFileRepository;
     private final ApplicationProperties applicationProperties;
     private final ApplicationEventPublisher eventPublisher;
+    private final FileStorageService fileStorageService;
 
     /**
      * Gate every public method on storage being enabled, mirroring {@code
@@ -232,7 +233,11 @@ public class FolderService {
         }
 
         if (!removed.isEmpty()) {
+            // Read before the association goes: the listing reports each file's folder, and
+            // these files are about to lose theirs.
+            List<StoredFile> orphaned = storedFileRepository.findAllByFolderIdIn(removed);
             folderRepository.clearFolderForFiles(removed);
+            fileStorageService.invalidateListingsFor(orphaned);
             folderRepository.deleteAllByIdInBatch(removed);
             log.info(
                     "Folder subtree deleted: user={} root={} count={}",
@@ -263,6 +268,8 @@ public class FolderService {
                                                 "File not found or not owned by current user"));
         file.setFolder(resolveOwnedFolder(folderId, user));
         storedFileRepository.save(file);
+        // The listing carries each file's folder, so a move changes what it says.
+        fileStorageService.invalidateListingsFor(List.of(file));
         eventPublisher.publishEvent(new StorageFolderArrivalEvent(folderId));
     }
 
@@ -296,6 +303,7 @@ public class FolderService {
         try {
             storedFileRepository.saveAll(owned);
             storedFileRepository.flush();
+            fileStorageService.invalidateListingsFor(owned);
         } catch (DataIntegrityViolationException ex) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,

@@ -1,10 +1,14 @@
 package stirling.software.proprietary.storage.service;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -20,6 +24,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -28,6 +34,7 @@ import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.cluster.KeyValueCache;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
@@ -53,6 +60,8 @@ import stirling.software.proprietary.storage.repository.FolderRepository;
 import stirling.software.proprietary.storage.repository.StorageCleanupEntryRepository;
 import stirling.software.proprietary.storage.repository.StoredFileRepository;
 
+import tools.jackson.databind.ObjectMapper;
+
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -68,6 +77,8 @@ public class FileStorageService {
     private final FileShareRepository fileShareRepository;
     private final FileShareAccessRepository fileShareAccessRepository;
     private final UserRepository userRepository;
+    private final KeyValueCache keyValueCache;
+    private final ObjectMapper objectMapper;
     private final ApplicationProperties applicationProperties;
     private final StorageProvider storageProvider;
     private final Optional<EmailService> emailService;
@@ -151,7 +162,9 @@ public class FileStorageService {
             applyHistoryMetadata(storedFile, historyObject);
             applyAuditMetadata(storedFile, auditObject);
             try {
-                return storedFileRepository.save(storedFile);
+                StoredFile saved = storedFileRepository.save(storedFile);
+                evictListing(owner);
+                return saved;
             } catch (RuntimeException saveError) {
                 cleanupStoredObject(mainObject);
                 cleanupStoredObject(historyObject);
@@ -233,6 +246,7 @@ public class FileStorageService {
             StoredFile updated;
             try {
                 updated = storedFileRepository.save(existing);
+                evictListingsFor(updated);
             } catch (RuntimeException saveError) {
                 cleanupStoredObject(mainObject);
                 cleanupStoredObject(historyObject);
@@ -361,9 +375,168 @@ public class FileStorageService {
         return buildResponse(updated, owner);
     }
 
+    private static final String LISTING_CACHE_NAMESPACE = "storage-file-listing";
+    private static final String GENERATION_PREFIX = "gen:";
+
+    /** Backstop for a mutation path that forgets to evict. */
+    private static final Duration LISTING_CACHE_TTL = Duration.ofSeconds(60);
+
+    /**
+     * One entry per user, holding the generation it was built under. Keying the entry itself by
+     * generation would strand the previous payload on every rollover: the in-process cache only
+     * discards an expired value when that exact key is read, and nothing reads a retired one.
+     */
+    private record CachedListing(String generation, List<StoredFileResponse> files) {}
+
+    /** Valkey where the cluster backplane is one, this JVM's heap otherwise. */
     public List<StoredFileResponse> listAccessibleFileResponses(User user) {
+        // A hit never reaches listAccessibleFiles, where this otherwise runs.
+        ensureStorageEnabled();
+        String userKey = listingCacheKey(user);
+        if (userKey == null) {
+            return readAccessibleFileResponses(user);
+        }
+        // Read before the listing below and stamped onto it afterwards. A mutation that lands
+        // while that read is in flight retires the generation, so the response written below
+        // no longer matches and is never served.
+        String generation = listingGeneration(userKey);
+        Optional<String> cached = cacheGet(userKey);
+        if (cached.isPresent()) {
+            try {
+                CachedListing entry = objectMapper.readValue(cached.get(), CachedListing.class);
+                if (generation.equals(entry.generation())) {
+                    return entry.files();
+                }
+            } catch (Exception ex) {
+                // Unreadable is worth no more than a miss.
+                log.warn("Dropping unreadable cached file listing for user {}", userKey, ex);
+                cacheEvict(userKey);
+            }
+        }
+        List<StoredFileResponse> responses = readAccessibleFileResponses(user);
+        try {
+            cachePut(
+                    userKey,
+                    objectMapper.writeValueAsString(new CachedListing(generation, responses)));
+        } catch (Exception ex) {
+            // Serving the listing matters; caching it does not.
+            log.warn("Could not cache file listing for user {}", userKey, ex);
+        }
+        return responses;
+    }
+
+    /**
+     * The user's current generation, minted when absent. Two readers minting at once is harmless:
+     * one of them caches under a generation the other will not match.
+     */
+    private String listingGeneration(String userKey) {
+        String generationKey = GENERATION_PREFIX + userKey;
+        return cacheGet(generationKey)
+                .orElseGet(
+                        () -> {
+                            String minted = UUID.randomUUID().toString();
+                            cachePut(generationKey, minted);
+                            return minted;
+                        });
+    }
+
+    /** A cache that is down must slow the listing, never fail it. */
+    private Optional<String> cacheGet(String key) {
+        try {
+            return keyValueCache.get(LISTING_CACHE_NAMESPACE, key);
+        } catch (Exception ex) {
+            log.warn("File listing cache unreachable on read", ex);
+            return Optional.empty();
+        }
+    }
+
+    private void cachePut(String key, String value) {
+        try {
+            keyValueCache.put(LISTING_CACHE_NAMESPACE, key, value, LISTING_CACHE_TTL);
+        } catch (Exception ex) {
+            log.warn("File listing cache unreachable on write", ex);
+        }
+    }
+
+    private void cacheEvict(String key) {
+        try {
+            keyValueCache.evict(LISTING_CACHE_NAMESPACE, key);
+        } catch (Exception ex) {
+            log.warn("File listing cache unreachable on evict", ex);
+        }
+    }
+
+    private String listingCacheKey(User user) {
+        return user == null || user.getId() == null ? null : String.valueOf(user.getId());
+    }
+
+    /**
+     * Retires one user's listing once the write is visible to other connections. This class is
+     * transactional, and an inline eviction lets a concurrent read cache the pre-commit state.
+     */
+    private void evictListing(User user) {
+        String userKey = listingCacheKey(user);
+        if (userKey == null) {
+            return;
+        }
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            retireListing(userKey);
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCompletion(int status) {
+                        // On rollback too: a read may have cached a state that never committed.
+                        retireListing(userKey);
+                    }
+                });
+    }
+
+    private void retireListing(String userKey) {
+        cacheEvict(GENERATION_PREFIX + userKey);
+        cacheEvict(userKey);
+    }
+
+    private void evictListingsFor(StoredFile file) {
+        if (file != null) {
+            invalidateListingsFor(List.of(file));
+        }
+    }
+
+    /**
+     * Retires the listings these files appear in - their owners' and every grantee's. Public for
+     * callers that change what a listing says about a file without going through the mutations
+     * here, such as moving one between folders or deleting the folder it sat in.
+     */
+    public void invalidateListingsFor(Collection<StoredFile> files) {
+        if (files == null || files.isEmpty()) {
+            return;
+        }
+        Set<Long> retired = new HashSet<>();
+        for (StoredFile file : files) {
+            User owner = file.getOwner();
+            if (owner != null && owner.getId() != null && retired.add(owner.getId())) {
+                evictListing(owner);
+            }
+        }
+        List<Long> fileIds =
+                files.stream().map(StoredFile::getId).filter(Objects::nonNull).toList();
+        if (fileIds.isEmpty()) {
+            return;
+        }
+        for (FileShare share : fileShareRepository.findByFileIdInWithUser(fileIds)) {
+            User grantee = share.getSharedWithUser();
+            if (grantee != null && grantee.getId() != null && retired.add(grantee.getId())) {
+                evictListing(grantee);
+            }
+        }
+    }
+
+    private List<StoredFileResponse> readAccessibleFileResponses(User user) {
         List<StoredFile> files = listAccessibleFiles(user);
         Map<Long, ShareAccessRole> roleByFileId = new HashMap<>();
+        Map<Long, List<FileShare>> sharesByFileId = new HashMap<>();
         if (!files.isEmpty()) {
             List<FileShare> shares = fileShareRepository.findBySharedWithUserAndFileIn(user, files);
             for (FileShare share : shares) {
@@ -372,10 +545,26 @@ public class FileStorageService {
                     roleByFileId.put(sharedFile.getId(), resolveShareRole(share));
                 }
             }
+            // The listing query leaves shares unfetched; load them once, not per file.
+            List<Long> fileIds = files.stream().map(StoredFile::getId).toList();
+            for (FileShare share : fileShareRepository.findByFileIdInWithUser(fileIds)) {
+                StoredFile shared = share.getFile();
+                if (shared != null && shared.getId() != null) {
+                    sharesByFileId
+                            .computeIfAbsent(shared.getId(), id -> new ArrayList<>())
+                            .add(share);
+                }
+            }
         }
         return files.stream()
                 .sorted(Comparator.comparing(StoredFile::getCreatedAt).reversed())
-                .map(file -> buildResponse(file, user, roleByFileId.get(file.getId())))
+                .map(
+                        file ->
+                                buildResponse(
+                                        file,
+                                        user,
+                                        roleByFileId.get(file.getId()),
+                                        sharesByFileId.getOrDefault(file.getId(), List.of())))
                 .toList();
     }
 
@@ -389,6 +578,7 @@ public class FileStorageService {
         StoredFile file = getOwnedFile(owner, fileId);
         shareWithUser(owner, file, username, role);
         StoredFile updated = getOwnedFile(owner, fileId);
+        evictListingsFor(updated);
         return buildResponse(updated, owner);
     }
 
@@ -398,6 +588,15 @@ public class FileStorageService {
 
     private StoredFileResponse buildResponse(
             StoredFile file, User currentUser, ShareAccessRole accessRoleOverride) {
+        return buildResponse(file, currentUser, accessRoleOverride, file.getShares());
+    }
+
+    /** Takes {@code shares} so a bulk caller does not fault the lazy collection per file. */
+    private StoredFileResponse buildResponse(
+            StoredFile file,
+            User currentUser,
+            ShareAccessRole accessRoleOverride,
+            Collection<FileShare> shares) {
         boolean ownedByCurrentUser =
                 file.getOwner() != null
                         && Objects.equals(file.getOwner().getId(), currentUser.getId());
@@ -410,7 +609,7 @@ public class FileStorageService {
                                 .toLowerCase(Locale.ROOT);
         List<String> sharedWithUsers =
                 ownedByCurrentUser
-                        ? file.getShares().stream()
+                        ? shares.stream()
                                 .map(FileShare::getSharedWithUser)
                                 .filter(Objects::nonNull)
                                 .map(User::getUsername)
@@ -419,7 +618,7 @@ public class FileStorageService {
                         : List.of();
         List<ShareLinkResponse> shareLinks =
                 ownedByCurrentUser && isShareLinksEnabled()
-                        ? file.getShares().stream()
+                        ? shares.stream()
                                 .filter(share -> share.getShareToken() != null)
                                 .filter(share -> !isShareLinkExpired(share))
                                 .map(
@@ -438,7 +637,7 @@ public class FileStorageService {
                         : List.of();
         List<SharedUserResponse> sharedUsers =
                 ownedByCurrentUser
-                        ? file.getShares().stream()
+                        ? shares.stream()
                                 .filter(share -> share.getSharedWithUser() != null)
                                 .map(
                                         share ->
@@ -532,6 +731,7 @@ public class FileStorageService {
         }
         validateWorkflowDeletion(file, owner);
         List<String> storageKeys = collectStorageKeys(file);
+        evictListingsFor(file);
         List<FileShare> shareLinks = fileShareRepository.findShareLinks(file);
         for (FileShare share : shareLinks) {
             fileShareAccessRepository.deleteByFileShare(share);
@@ -628,6 +828,8 @@ public class FileStorageService {
         fileShareRepository
                 .findByFileAndSharedWithUser(file, targetUser)
                 .ifPresent(fileShareRepository::delete);
+        evictListing(owner);
+        evictListing(targetUser);
     }
 
     public void leaveUserShare(User user, StoredFile file) {
@@ -644,6 +846,8 @@ public class FileStorageService {
                                         new ResponseStatusException(
                                                 HttpStatus.NOT_FOUND, "Share not found"));
         fileShareRepository.delete(share);
+        evictListing(user);
+        evictListing(file.getOwner());
     }
 
     public FileShare createShareLink(User owner, StoredFile file, ShareAccessRole role) {
@@ -658,7 +862,9 @@ public class FileStorageService {
         share.setShareToken(UUID.randomUUID().toString());
         share.setAccessRole(role);
         share.setExpiresAt(resolveShareLinkExpiration());
-        return fileShareRepository.save(share);
+        FileShare saved = fileShareRepository.save(share);
+        evictListing(owner);
+        return saved;
     }
 
     public void revokeShareLink(User owner, StoredFile file, String token) {
@@ -666,6 +872,7 @@ public class FileStorageService {
         if (!isOwner(file, owner)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the owner can revoke");
         }
+        evictListing(owner);
         FileShare share =
                 fileShareRepository
                         .findByShareToken(token)
