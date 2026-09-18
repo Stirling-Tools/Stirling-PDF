@@ -1,8 +1,11 @@
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner } from "@app/ui";
 import { isSaasSupabaseConfigured } from "@portal/auth/saasSupabase";
 import { ConnectBenefitsSlide } from "@portal/components/account-link/connect/ConnectBenefitsSlide";
-import "@portal/components/account-link/connect/connect.css";
+import { FreeTierExhaustedSummary } from "@portal/components/account-link/connect/FreeTierExhaustedSummary";
+import { ExhaustedAccountLinkContent } from "@app/components/account-link/ExhaustedAccountLinkModal";
+import "@app/components/account-link/connect.css";
 
 interface Props {
   /** Re-auth says why it is being asked; a first link is pitched instead. */
@@ -14,9 +17,16 @@ interface Props {
   exhausted?: boolean;
   /** A hand-off that failed to start drops back here, so this is where its reason belongs. */
   error?: string | null;
+  /** Undefined uses the Processor ledger; null deliberately omits unavailable figures. */
+  summary?: ReactNode;
 }
 
-export function ConnectAskStep({ reauth, exhausted = false, error }: Props) {
+export function ConnectAskStep({
+  reauth,
+  exhausted = false,
+  error,
+  summary,
+}: Props) {
   const { t } = useTranslation();
 
   return (
@@ -28,18 +38,14 @@ export function ConnectAskStep({ reauth, exhausted = false, error }: Props) {
             "Your Stirling session expired. Signing in again keeps usage and billing visible. This server stays connected either way.",
           )}
         </p>
+      ) : exhausted ? (
+        <ExhaustedAccountLinkContent
+          summary={
+            summary === undefined ? <FreeTierExhaustedSummary /> : summary
+          }
+        />
       ) : (
-        <>
-          {exhausted && (
-            <p className="portal-connect__lede">
-              {t(
-                "portal.accountLink.connect.exhaustedLede",
-                "This server has used its free credits for the month. They reset when the period rolls over. Connecting a Stirling account adds a further monthly allowance on top.",
-              )}
-            </p>
-          )}
-          <ConnectBenefitsSlide />
-        </>
+        <ConnectBenefitsSlide />
       )}
 
       {!isSaasSupabaseConfigured && (

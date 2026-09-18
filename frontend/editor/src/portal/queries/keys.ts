@@ -1,5 +1,6 @@
 import type { Tier } from "@portal/contexts/TierContext";
 import type { FileRunEventScope } from "@portal/api/fileRunEvents";
+import { pipelineQueryKeys } from "@app/policies/queryKeys";
 
 /**
  * The portal's TanStack Query keys, in one place. Convention:
@@ -11,13 +12,13 @@ import type { FileRunEventScope } from "@portal/api/fileRunEvents";
  */
 export const qk = {
   // Tier-independent
-  policiesList: () => ["portal", "policies", "list"] as const,
+  ...pipelineQueryKeys,
   policyRuns: () => ["portal", "policies", "runs"] as const,
   sources: () => ["portal", "sources"] as const,
-  pipelines: () => ["portal", "pipelines"] as const,
   policyPermissions: () => ["portal", "policies", "permissions"] as const,
   fleetStats: () => ["portal", "fleetStats"] as const,
   appConfig: () => ["portal", "appConfig"] as const,
+  freeTier: () => ["portal", "freeTier"] as const,
   // Keyed on scope: the open queue and the closed one are different reads.
   fileRunEvents: (scope: FileRunEventScope) =>
     ["portal", "fileRunEvents", scope] as const,

@@ -1,7 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { PortalSettingsSectionHost } from "@portal/components/settings/PortalSettingsSectionHost";
 import { useLinkOptional } from "@portal/contexts/LinkContext";
+import {
+  clearAccountLinkBlock,
+  reportFreeTierExhausted,
+} from "@app/services/accountLinkBlock";
 
 const { fetchStatus } = vi.hoisted(() => ({ fetchStatus: vi.fn() }));
 vi.mock("@portal/api/link", () => ({ fetchStatus }));
@@ -9,7 +14,17 @@ vi.mock("@portal/auth/saasSupabase", () => ({
   isSaasSupabaseConfigured: true,
 }));
 vi.mock("@portal/components/account-link/LinkAccountModal", () => ({
-  LinkAccountModal: () => null,
+  LinkAccountModal: ({
+    mode,
+    onClose,
+  }: {
+    mode: string;
+    onClose: () => void;
+  }) => (
+    <div role="dialog" aria-label={mode}>
+      <button onClick={onClose}>Not now</button>
+    </div>
+  ),
 }));
 
 function LinkState() {
@@ -21,8 +36,22 @@ function LinkState() {
   );
 }
 
+function renderHost(path = "/settings/billing") {
+  return render(
+    <MemoryRouter initialEntries={[path]}>
+      <PortalSettingsSectionHost>
+        <LinkState />
+      </PortalSettingsSectionHost>
+    </MemoryRouter>,
+  );
+}
+
 describe("settings link status", () => {
-  beforeEach(() => fetchStatus.mockReset());
+  beforeEach(() => {
+    fetchStatus.mockReset();
+    sessionStorage.clear();
+    clearAccountLinkBlock();
+  });
 
   it("does not claim an unlinked server while its status is still loading", async () => {
     let resolve!: (value: { linked: boolean }) => void;
@@ -31,11 +60,7 @@ describe("settings link status", () => {
         resolve = done;
       }),
     );
-    render(
-      <PortalSettingsSectionHost>
-        <LinkState />
-      </PortalSettingsSectionHost>,
-    );
+    renderHost();
     expect(screen.getByText("checking")).toBeInTheDocument();
     resolve({ linked: true });
     expect(await screen.findByText("linked")).toBeInTheDocument();
@@ -43,11 +68,47 @@ describe("settings link status", () => {
 
   it("uses a confirmed unlinked status for local billing", async () => {
     fetchStatus.mockResolvedValue({ linked: false });
-    render(
-      <PortalSettingsSectionHost>
-        <LinkState />
-      </PortalSettingsSectionHost>,
-    );
+    renderHost();
     expect(await screen.findByText("unlinked")).toBeInTheDocument();
+  });
+
+  it.each(["/settings/billing", "/settings/account-link"])(
+    "shows a foreground exhaustion prompt only once at %s",
+    async (path) => {
+      fetchStatus.mockResolvedValue({ linked: false });
+      renderHost(path);
+      await screen.findByText("unlinked");
+
+      act(() => reportFreeTierExhausted());
+      expect(
+        screen.getByRole("dialog", { name: "exhausted" }),
+      ).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "Not now" }));
+      act(() => reportFreeTierExhausted());
+      expect(screen.queryByRole("dialog")).toBeNull();
+    },
+  );
+
+  it("leaves foreground prompts to the editor on unrelated routes", async () => {
+    fetchStatus.mockResolvedValue({ linked: false });
+    renderHost("/editor");
+    await screen.findByText("unlinked");
+
+    act(() => reportFreeTierExhausted());
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("opens a billing modal once for background policy exhaustion", async () => {
+    fetchStatus.mockResolvedValue({ linked: false });
+    renderHost();
+    await screen.findByText("unlinked");
+
+    act(() => reportFreeTierExhausted());
+    expect(
+      screen.getByRole("dialog", { name: "exhausted" }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Not now" }));
+    act(() => reportFreeTierExhausted());
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 });

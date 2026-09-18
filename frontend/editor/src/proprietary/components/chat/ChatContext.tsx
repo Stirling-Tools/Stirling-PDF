@@ -14,6 +14,10 @@ import apiClient from "@app/services/apiClient";
 import { getAiBaseUrl } from "@app/services/aiBaseUrl";
 import { getAuthHeaders } from "@app/services/apiClientSetup";
 import { dispatchPaygLimitReached } from "@app/services/usageLimitBridge";
+import {
+  reportAccountLinkBlock,
+  reportFreeTierExhausted,
+} from "@app/services/accountLinkBlock";
 import { createChildStub } from "@app/contexts/file/fileActions";
 import {
   createNewStirlingFileStub,
@@ -581,7 +585,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             // A 402 carrying a usage-limit sentinel means the agent call itself was gated.
             // Fire the usage-limit modal (free → subscribe, subscribed → raise cap) and show a
             // brief line below — not a generic "engine failed" error.
-            if (response.status === 402 && isPaygLimitCode(code)) {
+            if (reportAccountLinkBlock({ status: response.status, body })) {
+              limitHandled = true;
+            } else if (response.status === 402 && isPaygLimitCode(code)) {
               dispatchPaygLimitReached(
                 typeof body?.subscribed === "boolean" ? body.subscribed : null,
               );
@@ -647,8 +653,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             // result (not via the apiClient interceptor that pops the modal for direct calls).
             // Fire the matching modal and replace the raw "tool failed: 402…" reason with a
             // brief, non-alarming line.
-            const isLimit = isPaygLimitCode(data.errorCode);
-            if (isLimit) {
+            const localLimit = data.errorCode === "FREE_TIER_EXHAUSTED";
+            const isLimit = localLimit || isPaygLimitCode(data.errorCode);
+            if (localLimit) {
+              reportFreeTierExhausted();
+            } else if (isLimit) {
               dispatchPaygLimitReached(data.errorSubscribed ?? null);
             }
             const replyContent = isLimit

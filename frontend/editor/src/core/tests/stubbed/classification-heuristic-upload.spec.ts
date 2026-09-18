@@ -81,11 +81,10 @@ test("a 10-file upload wave classifies every file into its group", async ({
     page.getByRole("button", { name: `${name} ${count}`, exact: true });
   await expect(header("Financial", 3)).toBeVisible({ timeout: 90_000 });
   await expect(header("HR", 3)).toBeVisible({ timeout: 30_000 });
-  await expect(header("Legal", 2)).toBeVisible({ timeout: 30_000 });
+  await expect(header("Legal", 3)).toBeVisible({ timeout: 30_000 });
 
-  // The regression: nothing classifiable may be stranded in Other - only the
-  // genuinely unlabellable pair (generic prose + non-English) belongs there.
-  await expect(header("Other", 2)).toBeVisible({ timeout: 30_000 });
+  // Spanish contracts are supported; only the generic prose belongs in Other.
+  await expect(header("Other", 1)).toBeVisible({ timeout: 30_000 });
   // The filename can render in several places (Recent, group, viewer); any hit proves presence.
   await expect(page.getByText("generic_notes.pdf").first()).toBeVisible();
   await expect(page.getByText("spanish_contrato.pdf").first()).toBeVisible();

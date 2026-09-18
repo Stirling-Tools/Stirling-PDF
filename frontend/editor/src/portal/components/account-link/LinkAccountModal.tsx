@@ -1,7 +1,13 @@
+import { useEffect, useRef, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import { PORTAL_BASENAME } from "@app/routes/portalBasename";
+import { useAuth } from "@app/auth";
+import { useClipboard } from "@mantine/hooks";
 import { Button } from "@app/ui";
 import { FlowModal } from "@portal/components/shared/FlowModal";
 import { StepModalHeader } from "@portal/components/shared/StepModalHeader";
+import { ExhaustedAccountLinkModal } from "@app/components/account-link/ExhaustedAccountLinkModal";
 import { ConnectAskStep } from "@portal/components/account-link/connect/ConnectAskStep";
 import { ConnectHandoffGhost } from "@portal/components/account-link/connect/ConnectHandoffGhost";
 import {
@@ -11,6 +17,7 @@ import {
 } from "@portal/components/account-link/ConnectCallbackView";
 import { useConnectHandoff } from "@portal/hooks/useConnectHandoff";
 import type { LinkModalMode } from "@portal/contexts/UIContext";
+import type { AccountLinkBlockContext } from "@app/services/accountLinkBlock";
 import "@portal/views/ConnectCallback.css";
 
 /**
@@ -22,12 +29,15 @@ const STEP_ORDER = ["ask", "handoff", "outcome"] as const;
 type StepId = (typeof STEP_ORDER)[number];
 
 interface Props {
+  failureContext?: AccountLinkBlockContext;
   open: boolean;
   onClose: () => void;
   /** "reauth" only re-establishes the browser session, so it stays one step with no pitch. */
   mode?: LinkModalMode;
   /** Published by the callback route; present means the admin is returning from Stirling. */
   outcome?: ConnectOutcome | null;
+  /** Editor hosts supply their own balance without mounting the Processor providers. */
+  summary?: ReactNode;
 }
 
 /**
@@ -39,8 +49,30 @@ export function LinkAccountModal({
   onClose,
   mode = "link",
   outcome = null,
+  summary,
+  failureContext,
 }: Props) {
+  const navigate = useNavigate();
+  // This dialog unmounts on close, so retain its trigger before FocusTrap moves focus.
+  const trigger = useRef(document.activeElement);
+  useEffect(
+    () => () => {
+      if (
+        trigger.current instanceof HTMLElement &&
+        trigger.current.isConnected
+      ) {
+        trigger.current.focus({ preventScroll: true });
+      }
+    },
+    [],
+  );
   const { t } = useTranslation();
+  const { isAdmin, loading: authLoading } = useAuth();
+  const clipboard = useClipboard();
+  const adminMessage = t(
+    "portal.accountLink.connect.adminRequired",
+    "Ask your server administrator to open Usage & billing and link a Stirling account for more monthly credits. Manual PDF tools are still available.",
+  );
   const reauth = mode === "reauth";
   const exhausted = mode === "exhausted";
   const handoff = useConnectHandoff(reauth);
@@ -54,17 +86,44 @@ export function LinkAccountModal({
   const current = STEP_ORDER.indexOf(step) + 1;
 
   // Re-auth is one step, so it carries no count and no progress bar.
-  const stepChrome = reauth
-    ? {}
-    : {
-        step: current,
-        total: STEP_ORDER.length,
-        stepLabel: t(
-          "portal.accountLink.connect.step",
-          "Step {{current}} of {{total}}",
-          { current, total: STEP_ORDER.length },
-        ),
-      };
+  const stepChrome =
+    reauth || !isAdmin
+      ? {}
+      : {
+          step: current,
+          total: STEP_ORDER.length,
+          stepLabel: t(
+            "portal.accountLink.connect.step",
+            "Step {{current}} of {{total}}",
+            {
+              current,
+              total: STEP_ORDER.length,
+            },
+          ),
+        };
+
+  if (exhausted && step === "ask") {
+    return (
+      <ExhaustedAccountLinkModal
+        failureContext={failureContext}
+        open={open}
+        onClose={onClose}
+        onStart={handoff.begin}
+        onManagePipeline={(id) =>
+          navigate(
+            `${PORTAL_BASENAME}/pipelines${id ? `/${encodeURIComponent(id)}` : ""}`,
+          )
+        }
+      >
+        <ConnectAskStep
+          reauth={false}
+          exhausted
+          error={handoff.error}
+          summary={summary}
+        />
+      </ExhaustedAccountLinkModal>
+    );
+  }
 
   return (
     <FlowModal
@@ -85,19 +144,19 @@ export function LinkAccountModal({
   );
 
   function stepTitle(): string {
+    if (!isAdmin && !reauth)
+      return t(
+        "portal.accountLink.connect.adminTitle",
+        "Ask your server administrator",
+      );
     if (reauth) {
       return t("portal.accountLink.modal.reauthTitle", "Sign in again");
     }
     if (step === "ask") {
-      return exhausted
-        ? t(
-            "portal.accountLink.modal.exhaustedTitle",
-            "Add more monthly credits",
-          )
-        : t(
-            "portal.accountLink.modal.linkTitle",
-            "Connect your Stirling account",
-          );
+      return t(
+        "portal.accountLink.modal.linkTitle",
+        "Connect your Stirling account",
+      );
     }
     if (step === "handoff") {
       return t("portal.accountLink.connect.handoff.title", "Connecting");
@@ -111,11 +170,14 @@ export function LinkAccountModal({
   function stepBody() {
     switch (step) {
       case "ask":
+        if (!isAdmin && !reauth) {
+          return <p className="portal-connect__lede">{adminMessage}</p>;
+        }
         return (
           <ConnectAskStep
             reauth={reauth}
-            exhausted={exhausted}
             error={handoff.error}
+            summary={summary}
           />
         );
       case "handoff":
@@ -149,6 +211,23 @@ export function LinkAccountModal({
 
   function stepFooter() {
     if (step === "ask") {
+      if (!isAdmin && !reauth)
+        return (
+          <>
+            {closeButton()}
+            <Button
+              variant="secondary"
+              onClick={() => clipboard.copy(adminMessage)}
+            >
+              {clipboard.copied
+                ? t("portal.accountLink.connect.copied", "Copied")
+                : t(
+                    "portal.accountLink.connect.copyAdminMessage",
+                    "Copy message for administrator",
+                  )}
+            </Button>
+          </>
+        );
       const dismiss = reauth
         ? t("portal.accountLink.modal.cancel", "Cancel")
         : t("portal.accountLink.connect.notNow", "Not now");
@@ -160,7 +239,11 @@ export function LinkAccountModal({
           <Button variant="quiet" accent="neutral" onClick={onClose}>
             {dismiss}
           </Button>
-          <Button variant="primary" onClick={handoff.begin}>
+          <Button
+            variant="primary"
+            onClick={handoff.begin}
+            disabled={authLoading}
+          >
             {start}
           </Button>
         </>

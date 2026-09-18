@@ -14,8 +14,13 @@ import { CheckoutProvider } from "@app/contexts/CheckoutContext";
 
 /** The one and only account-link modal, whichever step it is on. */
 function LinkModalHost() {
-  const { linkModalOpen, linkModalMode, closeLinkModal, connectOutcome } =
-    useUI();
+  const {
+    linkModalOpen,
+    linkModalMode,
+    linkModalFailureContext,
+    closeLinkModal,
+    connectOutcome,
+  } = useUI();
   // Being unlinked prompts nothing: the free tier is the whole product. The only unprompted ask is
   // the server reporting the month's grant spent.
   useFreeTierExhaustedPrompt();
@@ -27,6 +32,7 @@ function LinkModalHost() {
     <LinkAccountModal
       open
       mode={linkModalMode}
+      failureContext={linkModalFailureContext}
       onClose={closeLinkModal}
       outcome={connectOutcome}
     />

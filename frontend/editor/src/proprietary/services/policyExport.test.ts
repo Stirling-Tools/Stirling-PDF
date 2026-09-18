@@ -8,10 +8,14 @@ vi.mock("@app/services/policyStorage", () => ({
   loadPolicies: () => loadPolicies(),
 }));
 
-const runStoredPolicy = vi.fn(async (_id: string, _files: File[]) => "run-1");
+const runStoredPolicy = vi.fn(
+  async (_id: string, _files: File[], _fileId?: string, _source?: string) =>
+    "run-1",
+);
 const output = { name: "doc.pdf", type: "application/pdf" };
 vi.mock("@app/services/policyApi", () => ({
-  runStoredPolicy: (id: string, files: File[]) => runStoredPolicy(id, files),
+  runStoredPolicy: (...args: Parameters<typeof runStoredPolicy>) =>
+    runStoredPolicy(...args),
   // One output, so a run completes rather than throwing "produced no output" - which would abort
   // the per-file policy loop after the first policy and hide the order under test.
   getPolicyRun: async () => ({
@@ -31,9 +35,10 @@ vi.mock("@app/components/policies/policyRunStore", () => ({
 vi.mock("@app/components/policies/enforcementQueue", () => ({
   runQueued: <T>(_meta: unknown, task: () => Promise<T>) => task(),
 }));
+const { updateToast } = vi.hoisted(() => ({ updateToast: vi.fn() }));
 vi.mock("@app/components/toast", () => ({
   alert: () => "toast-1",
-  updateToast: vi.fn(),
+  updateToast,
   dismissToast: vi.fn(),
 }));
 vi.mock("@app/i18n", () => ({ default: { t: (key: string) => key } }));
@@ -66,10 +71,58 @@ describe("export-time policy selection", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     runStoredPolicy.mockClear();
+    updateToast.mockClear();
     output.name = "doc.pdf";
     output.type = "application/pdf";
   });
   afterEach(() => vi.useRealTimers());
+
+  it("retains the failure warning for an optional export policy with insufficient credits", async () => {
+    loadPolicies.mockReturnValue({
+      security: exportPolicy({ runsOnEditor: true, required: false }),
+    });
+    runStoredPolicy.mockRejectedValueOnce({
+      response: {
+        status: 402,
+        data: { error: "ACCOUNT_LINK_REQUIRED", reason: "FREE_TIER_EXHAUSTED" },
+      },
+    });
+    await enforceExportPolicies([pdf()], ["file-1"]);
+    expect(runStoredPolicy).toHaveBeenCalledWith(
+      "backend-1",
+      expect.any(Array),
+      undefined,
+      "background",
+    );
+    expect(updateToast).toHaveBeenCalledWith(
+      "toast-1",
+      expect.objectContaining({
+        alertType: "warning",
+        title: "policies.enforcement.failureTitle",
+      }),
+    );
+  });
+
+  it("blocks export when a required policy has insufficient credits", async () => {
+    loadPolicies.mockReturnValue({
+      security: exportPolicy({ runsOnEditor: true, required: true }),
+    });
+    runStoredPolicy.mockRejectedValueOnce({
+      response: {
+        status: 402,
+        data: { error: "ACCOUNT_LINK_REQUIRED", reason: "FREE_TIER_EXHAUSTED" },
+      },
+    });
+    await expect(enforceExportPolicies([pdf()], ["file-1"])).rejects.toThrow(
+      "policy.exportBlocked",
+    );
+    expect(runStoredPolicy).toHaveBeenCalledWith(
+      "backend-1",
+      expect.any(Array),
+      undefined,
+      "background",
+    );
+  });
 
   it("selects each pipeline by its first input and rechecks converted outputs", async () => {
     const image = new File(["image"], "scan.PNG", { type: "image/png" });
@@ -188,6 +241,8 @@ describe("export-time policy selection", () => {
     expect(runStoredPolicy).toHaveBeenCalledWith(
       "backend-editor",
       expect.anything(),
+      undefined,
+      "background",
     );
   });
 
@@ -224,6 +279,8 @@ describe("export-time policy selection", () => {
     expect(runStoredPolicy).toHaveBeenCalledWith(
       "backend-security",
       expect.anything(),
+      undefined,
+      "background",
     );
   });
 
