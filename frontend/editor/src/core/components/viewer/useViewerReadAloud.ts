@@ -6,9 +6,12 @@ import { useStopReadAloudOnNavigation } from "@app/components/viewer/useStopRead
 import { StirlingFile } from "@app/types/fileContext";
 import { ZINDEX } from "@app/constants/zIndex";
 import {
-  extractPageTextItemsForReadAloud,
+  extractPageTextItemsForReadAloudFromDoc,
+  openRawDocumentSafe,
+  closeRawDocument,
   ReadAloudTextItem,
 } from "@app/services/pdfiumService";
+import { createReadAloudDocSession } from "@app/components/viewer/readAloudDocSession";
 
 type TextItemWithGeometry = ReadAloudTextItem;
 
@@ -74,6 +77,21 @@ export function useViewerReadAloud(defaultLanguage?: string) {
   const cachedTextItemsRef = useRef<TextItemWithGeometry[] | null>(null);
   const cachedArrayBufferRef = useRef<ArrayBuffer | null>(null);
   const cachedFileRef = useRef<StirlingFile | File | null>(null);
+  // One PDFium document shared by every page of the reading session, so page
+  // advances do not pay a full open+parse each. Lazily created so tests and
+  // non-reading mounts never touch the WASM module.
+  const docSessionRef = useRef<ReturnType<
+    typeof createReadAloudDocSession
+  > | null>(null);
+  const getDocSession = useCallback(() => {
+    if (!docSessionRef.current) {
+      docSessionRef.current = createReadAloudDocSession(
+        (bytes) => openRawDocumentSafe(bytes),
+        (docPtr) => closeRawDocument(docPtr),
+      );
+    }
+    return docSessionRef.current;
+  }, []);
 
   // Helper to find best voice for language
   const findVoiceForLanguage = useCallback(
@@ -181,7 +199,20 @@ export function useViewerReadAloud(defaultLanguage?: string) {
     cachedTextItemsRef.current = null;
     cachedArrayBufferRef.current = null;
     cachedFileRef.current = null;
+    docSessionRef.current?.close();
   }, []);
+
+  // Session document handle for readPage: opens once per file, shared across
+  // page advances, closed by cleanupReadingSession. A superseded open (file
+  // changed mid-open) is closed instead of cached.
+  const ensureReadAloudDoc = useCallback(
+    async (
+      currentFile: StirlingFile | File,
+      arrayBuffer: ArrayBuffer,
+    ): Promise<number | null> =>
+      getDocSession().ensure(currentFile, arrayBuffer),
+    [getDocSession],
+  );
 
   const stopReadingAloud = useCallback(() => {
     if (typeof window !== "undefined" && window.speechSynthesis) {
@@ -266,8 +297,13 @@ export function useViewerReadAloud(defaultLanguage?: string) {
         cachedFileRef.current = currentFile;
       }
 
-      const mergedItems = await extractPageTextItemsForReadAloud(
-        arrayBuffer,
+      const docPtr = await ensureReadAloudDoc(currentFile, arrayBuffer);
+      if (docPtr === null) {
+        return null;
+      }
+
+      const mergedItems = await extractPageTextItemsForReadAloudFromDoc(
+        docPtr,
         pageNumber - 1,
         zoom,
       );
@@ -304,7 +340,7 @@ export function useViewerReadAloud(defaultLanguage?: string) {
       highlightWord(highlightIndex, words, pageNumber);
       return { spokenText, words };
     },
-    [highlightWord, viewer],
+    [ensureReadAloudDoc, highlightWord, viewer],
   );
 
   const speakFromCharIndex = useCallback(

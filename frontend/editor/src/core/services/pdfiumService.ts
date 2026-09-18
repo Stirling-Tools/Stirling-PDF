@@ -1433,6 +1433,29 @@ export async function extractPageTextItemsForReadAloud(
 ): Promise<ReadAloudTextItem[]> {
   const m = await getPdfiumModule();
   const docPtr = await openRawDocumentSafe(data);
+  try {
+    return await extractPageTextItemsForReadAloudFromDoc(
+      docPtr,
+      pageIndex,
+      zoom,
+    );
+  } finally {
+    closeDocAndFreeBuffer(m, docPtr);
+  }
+}
+
+/**
+ * Page extraction against an already-open document handle. Lets long-lived
+ * sessions (read-aloud across pages) reuse one document instead of paying a
+ * full open+parse per page. The caller owns the handle: it must outlive the
+ * call and be closed with closeRawDocument.
+ */
+export async function extractPageTextItemsForReadAloudFromDoc(
+  docPtr: number,
+  pageIndex: number,
+  zoom: number,
+): Promise<ReadAloudTextItem[]> {
+  const m = await getPdfiumModule();
   let pagePtr: number | null = null;
   let textPagePtr: number | null = null;
   const rectMem = m.pdfium.wasmExports.malloc(32);
@@ -1530,7 +1553,6 @@ export async function extractPageTextItemsForReadAloud(
     m.pdfium.wasmExports.free(rectMem);
     if (textPagePtr != null) m.FPDFText_ClosePage(textPagePtr);
     if (pagePtr != null) m.FPDF_ClosePage(pagePtr);
-    closeDocAndFreeBuffer(m, docPtr);
   }
 }
 
