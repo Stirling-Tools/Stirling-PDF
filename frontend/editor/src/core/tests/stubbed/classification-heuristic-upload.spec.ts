@@ -75,24 +75,29 @@ test("a 10-file upload wave classifies every file into its group", async ({
     ].map((f) => path.join(FIXTURES, f)),
   );
 
-  // Group headers are collapsible buttons whose name carries the live member
-  // count. Classification drains a few files per idle pass, and until a file's
-  // verdict lands it is unclassified and counted under Other (see
-  // fileSidebarGroupingLogic). Every count therefore climbs to a final value, so
-  // the assertions must read the settled state, not a mid-drain snapshot.
-  const header = (name: string, count: number) =>
-    page.getByRole("button", { name: `${name} ${count}`, exact: true });
+  // Other counts every file without a verdict yet (see fileSidebarGroupingLogic),
+  // so it climbs as the wave arrives and drains as verdicts land.
+  const groupCounts = () =>
+    page
+      .locator(".file-sidebar-group-header")
+      .evaluateAll((headers) =>
+        Object.fromEntries(
+          headers.map((header) => [
+            header
+              .querySelector(".file-sidebar-group-label")
+              ?.textContent?.trim(),
+            Number(
+              header.querySelector(".file-sidebar-group-count")?.textContent,
+            ),
+          ]),
+        ),
+      );
 
-  // Other falls to its one terminal member (generic_notes.pdf) only after every
-  // other file has classified out of it: the drain-complete signal to wait on.
-  await expect(header("Other", 1)).toBeVisible({ timeout: 150_000 });
-
-  // Settled distribution. spanish_contrato.pdf is a Spanish lease agreement the
-  // Spanish rules label as Legal, so nothing classifiable is stranded in Other -
-  // only genuinely unlabellable generic prose belongs there.
-  await expect(header("Financial", 3)).toBeVisible();
-  await expect(header("HR", 3)).toBeVisible();
-  await expect(header("Legal", 3)).toBeVisible();
+  // One atomic poll: no mid-wave snapshot satisfies it, and a verdict that moves a
+  // file reports the counts it found. spanish_contrato.pdf is a lease, so Legal.
+  await expect
+    .poll(groupCounts, { timeout: 150_000 })
+    .toEqual({ Recent: 8, Financial: 3, HR: 3, Legal: 3, Other: 1 });
 
   // A filename can render in Recent, its group, or the viewer; any hit proves presence.
   await expect(page.getByText("generic_notes.pdf").first()).toBeVisible();
