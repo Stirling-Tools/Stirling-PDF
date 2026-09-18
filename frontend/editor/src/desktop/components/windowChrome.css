@@ -1,49 +1,39 @@
-/* Desktop (Windows) custom window chrome.
+/* Desktop window chrome: the window controls live in the app's full-width top
+ * bar (see AppFrame / WorkbenchTopBar), so neither OS needs a separate title bar
+ * strip. These rules inset the bar for the controls and keep it present as a
+ * drag surface even on pages that don't fill it.
  *
- * The window controls are a fixed overlay in the top-right corner (see
- * WindowTitleBar). These rules keep the app's own chrome clear of that corner.
+ * Two skins, keyed off the data-window-controls flag WindowTitleBar sets on
+ * <html> only when active:
+ *   "custom"         Windows — custom min/max/close overlay in the top-RIGHT.
+ *   "native-overlay" macOS   — native traffic lights in the top-LEFT
+ *                              (titleBarStyle: Overlay).
  *
- * Loaded only in the desktop build (imported by WindowTitleBar) and gated on the
- * data-window-controls flag the overlay sets on <html> only when active, so it
- * is inert on macOS/Linux (flag never set) and absent from web builds. It
- * targets core layout class names on purpose: this is the single, contained
- * coupling point between the desktop chrome and the core layout, kept here in
- * the desktop layer so the core components stay unaware of window chrome. */
+ * Loaded only in the desktop build (imported by WindowTitleBar); inert on Linux
+ * (flag never set) and absent from web builds. It targets core layout class
+ * names on purpose: the single, contained coupling point between the desktop
+ * chrome and the core layout, kept in the desktop layer so core stays unaware. */
 
-html[data-window-controls="custom"] {
-  --wincontrols-w: 8.625rem; /* three 46px controls */
-  --wincontrols-h: 2rem; /* control height */
+/* The bar carries the surface + hairline full width (including under the
+   controls), so it hosts the controls even on pages that portal nothing into it
+   (its min-height keeps it from collapsing), and the toolbar within stays
+   transparent rather than painting a second surface. */
+html[data-window-controls] .app-frame__topbar {
+  min-height: 2.375rem;
+  background: var(--c-surface);
+  border-bottom: 1px solid var(--c-border-subtle);
+}
+html[data-window-controls] .app-frame__topbar .workbench-bar {
+  background: transparent;
+  border-bottom: 0;
 }
 
-/* Files-page toolbar spans the width; reflow search + actions left of the
-   controls by shrinking the grid's right edge. */
-html[data-window-controls="custom"] .files-page-header {
-  padding-right: calc(0.75rem + var(--wincontrols-w));
+/* Reserve the controls' end of the bar so the toolbar never runs under them:
+   the traffic lights on the left (macOS), the custom controls on the right
+   (Windows). The empty strip that leaves is part of the window drag region. */
+html[data-window-controls="native-overlay"] .app-frame__topbar {
+  padding-left: 4.75rem;
 }
-
-/* Right panel, expanded: move the header (PDF Tools, or an active tool such as
-   Automate) below the controls instead of squashing its title. */
-html[data-window-controls="custom"] .tool-panel__compact-header,
-html[data-window-controls="custom"] .tool-panel .sui-panelhdr {
-  margin-top: var(--wincontrols-h);
-}
-
-html[data-window-controls="custom"] .reader-rail {
-  padding-top: calc(0.75rem + var(--wincontrols-h));
-}
-
-/* The tool picker draws no header to carry the offset, so the panel takes it. */
-html[data-window-controls="custom"]
-  .tool-panel:not(:has(.tool-panel__compact-header)):not(:has(.sui-panelhdr)) {
-  padding-top: var(--wincontrols-h);
-}
-
-/* Mobile layout: the top bar spans the full width. Keep the brand top-left
-   (already clear of the top-right controls) and drop the view switcher below
-   them by top-aligning the row and nudging the switcher down. */
-html[data-window-controls="custom"] .mobile-toggle {
-  align-items: flex-start;
-}
-html[data-window-controls="custom"] .mobile-toggle-buttons {
-  margin-top: var(--wincontrols-h);
+html[data-window-controls="custom"] .app-frame__topbar {
+  padding-right: 8.625rem; /* three 46px controls */
 }

@@ -54,6 +54,16 @@ fn build_window(app: &AppHandle, label: &str, url: &str) -> Result<WebviewWindow
         // macOS/Linux keep native decorations.
         .decorations(false);
 
+    // macOS: overlay the native traffic lights on the content instead of a
+    // separate title bar, matching the main window (tauri.conf.json). The lights
+    // are inset to sit centred in the app's top bar (windowChrome.css reserves
+    // their width there).
+    #[cfg(target_os = "macos")]
+    let builder = builder
+        .title_bar_style(tauri::TitleBarStyle::Overlay)
+        .hidden_title(true)
+        .traffic_light_position(tauri::LogicalPosition::new(13.0, 18.0));
+
     builder.build().map_err(|e| e.to_string())
 }
 

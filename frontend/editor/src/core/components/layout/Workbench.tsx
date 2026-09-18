@@ -13,7 +13,7 @@ import {
 import { isBaseWorkbench } from "@app/types/workbench";
 import { VIEWER_SUPPORTED_EXTENSIONS } from "@app/utils/fileUtils";
 import { useSigningOverlay } from "@app/contexts/SigningOverlayContext";
-import { useIsPhone } from "@app/hooks/useIsMobile";
+import { useIsMobile, useIsPhone } from "@app/hooks/useIsMobile";
 import styles from "@app/components/layout/Workbench.module.css";
 
 import WorkbenchBar from "@app/components/shared/WorkbenchBar";
@@ -61,6 +61,9 @@ export default function Workbench() {
   const { overlay: signingOverlay } = useSigningOverlay();
   // Below this width the rail, and the bell it carries, is gone.
   const isPhone = useIsPhone();
+  // Desktop hoists the toolbar to the shell's full-width top bar; it stays in the
+  // workbench column only on mobile.
+  const isMobile = useIsMobile();
 
   // Get navigation state - this is the source of truth
   const { selectedTool: selectedToolId } = useNavigationState();
@@ -95,9 +98,17 @@ export default function Workbench() {
   // Reading hides the bar; the rail's Reader entry is the way back. A takeover hides
   // the switcher and search too: both navigate away from a flow that must finish.
   const showWorkbenchBar =
-    topControlsAvailable && hasWorkbenchContent && !readerMode && !takeover;
+    isMobile &&
+    topControlsAvailable &&
+    hasWorkbenchContent &&
+    !readerMode &&
+    !takeover;
   const showFloatingSearch =
-    topControlsAvailable && !hasWorkbenchContent && !readerMode && !takeover;
+    isMobile &&
+    topControlsAvailable &&
+    !hasWorkbenchContent &&
+    !readerMode &&
+    !takeover;
 
   // On the transition, so reading sets the toolbar's start state without locking it.
   const prevReaderModeRef = useRef(readerMode);
