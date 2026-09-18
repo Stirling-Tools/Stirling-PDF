@@ -78,8 +78,8 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
   const total = blockPrice * serverQuantity;
   const [draftUsers, setDraftUsers] = useState<number | string>(covered);
 
-  // Adding capacity cannot reduce the purchased allowance or strand existing users.
-  const minBlocks = blocksForUsers(Math.max(currentUsers, currentLimit ?? 0));
+  const minBlocks = currentLimit == null ? blocksForUsers(currentUsers) : 1;
+  const reducing = currentLimit != null && covered < currentLimit;
   const minUsers = usersForBlocks(minBlocks);
   const maxUsers = usersForBlocks(SELF_SERVE_MAX_BLOCKS);
   const belowMinimumCapacity = serverQuantity < minBlocks;
@@ -220,6 +220,14 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
       )}
 
       {periodPicker}
+      {reducing && (
+        <Text size="sm" c="dimmed">
+          {t(
+            "payment.capacityStage.reductionNote",
+            "The lower capacity starts at your next renewal. Until then, you can use your current allowance. Existing users stay; new users are blocked if you are over capacity when the change takes effect.",
+          )}
+        </Text>
+      )}
 
       <Stack gap="sm" className="team-capacity__receipt">
         <Group justify="space-between">

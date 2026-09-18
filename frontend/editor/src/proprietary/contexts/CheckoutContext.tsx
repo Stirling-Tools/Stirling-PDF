@@ -148,12 +148,22 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
           window.dispatchEvent(new Event("stirling:billing-updated"));
           alert({
             alertType: result.success ? "success" : "warning",
-            title: result.success
-              ? t("payment.teamActivated", "Your Team capacity is active")
-              : t(
-                  "payment.teamPending",
-                  "Your Team purchase is still processing. Refresh this page shortly.",
-                ),
+            title: result.scheduledAt
+              ? t(
+                  "payment.teamScheduled",
+                  "Your Team change is scheduled for {{date}}. Your current capacity stays active until then.",
+                  {
+                    date: new Date(
+                      result.scheduledAt * 1000,
+                    ).toLocaleDateString(),
+                  },
+                )
+              : result.success
+                ? t("payment.teamActivated", "Your Team capacity is active")
+                : t(
+                    "payment.teamPending",
+                    "Your Team purchase is still processing. Refresh this page shortly.",
+                  ),
           });
           return;
         }
