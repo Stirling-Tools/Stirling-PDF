@@ -25,8 +25,6 @@ interface LayerSidebarProps {
   documentCacheKey?: string;
   /** Called when the user applies layer visibility changes. Receives the modified PDF blob. */
   onApplyLayers: (modifiedBlob: Blob) => Promise<void>;
-  /** Called when layer detection completes, reporting whether the PDF has layers. */
-  onLayersDetected?: (hasLayers: boolean) => void;
 }
 
 type LoadStatus = "idle" | "loading" | "ready" | "no-layers" | "error";
@@ -37,7 +35,6 @@ export function LayerSidebar({
   file,
   documentCacheKey,
   onApplyLayers,
-  onLayersDetected,
 }: LayerSidebarProps) {
   const { t } = useTranslation();
   const { toggleLayerSidebar } = useViewer();
@@ -51,7 +48,8 @@ export function LayerSidebar({
   // Track whether visibility was set by user interaction (not initial load)
   const userChangedRef = useRef(false);
 
-  // Load layers when the document changes
+  // Detect on panel open, not on document open: parsing runs only when the
+  // user asks for layers, so viewer opens never pay for pdf.js.
   useEffect(() => {
     if (!file || !documentCacheKey) {
       setStatus("idle");
@@ -59,9 +57,10 @@ export function LayerSidebar({
       setVisibility({});
       loadedKeyRef.current = null;
       userChangedRef.current = false;
-      onLayersDetected?.(false);
       return;
     }
+
+    if (!visible) return;
 
     if (loadedKeyRef.current === documentCacheKey) return;
 
@@ -80,7 +79,6 @@ export function LayerSidebar({
           setStatus("no-layers");
           setLayers([]);
           setVisibility({});
-          onLayersDetected?.(false);
           return;
         }
 
@@ -100,7 +98,6 @@ export function LayerSidebar({
         setLayers(layerList);
         setVisibility(visMap);
         setStatus("ready");
-        onLayersDetected?.(true);
       })
       .catch((err) => {
         if (cancelled) return;
@@ -109,13 +106,12 @@ export function LayerSidebar({
         setLoadError(
           err instanceof Error ? err.message : "Failed to read PDF layers",
         );
-        onLayersDetected?.(false);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [file, documentCacheKey, onLayersDetected]);
+  }, [file, documentCacheKey, visible]);
 
   // Reset when document changes
   useEffect(() => {
