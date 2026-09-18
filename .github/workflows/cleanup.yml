@@ -1,0 +1,51 @@
+name: Garbage collection
+concurrency:
+  group: cache-garbage-collection
+  cancel-in-progress: false
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Cleanup mode
+        required: true
+        default: orphan
+        type: choice
+        options: [expired, orphan, all, object]
+      object:
+        description: SHA-256 hash or asset filename when mode is object
+        required: false
+        type: string
+      dry_run:
+        { description: Dry run, required: false, default: true, type: boolean }
+      delete_shared:
+        description: Delete all shared cache references and unused shared assets (manual expired mode only)
+        required: false
+        default: false
+        type: boolean
+  schedule: [{ cron: "0 3 * * *" }]
+jobs:
+  gc:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: 
+      contents: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Run garbage collection
+        run: node dist/gc.js
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GC_MODE: ${{ github.event_name == 'schedule' && 'expired' || inputs.mode || 'expired' }}
+          GC_EXPIRE_ALL_UNTRUSTED: ${{ github.event_name == 'workflow_dispatch' && inputs.mode == 'expired' && 'true' || 'false' }}
+          GC_DELETE_SHARED: ${{ github.event_name == 'workflow_dispatch' && inputs.mode == 'expired' && inputs.delete_shared && 'true' || 'false' }}
+          UNTRUSTED_TTL_HOURS: 24
+          GC_OBJECT: ${{ inputs.object || '' }}
+          DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || (inputs.dry_run && 'true' || 'false') }}
