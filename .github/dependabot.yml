@@ -60,6 +60,7 @@ updates:
     directories:
       - /devTools
       - /frontend
+      - /frontend/desktop-e2e
       - /testing/compose/mcp-client-check
     schedule:
       interval: "weekly"

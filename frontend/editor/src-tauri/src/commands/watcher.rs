@@ -569,7 +569,9 @@ mod tests {
         let given = link.join("report.pdf").to_string_lossy().to_string();
         let (routes, _) = build_routes(std::slice::from_ref(&given));
 
-        let reported_dir = real.canonicalize().unwrap();
+        // Resolve through the link: canonicalising `real` only differs from `real`
+        // where the temp root is itself a symlink, which is macOS and not Linux.
+        let reported_dir = link.canonicalize().unwrap();
         assert_ne!(reported_dir, link, "the symlink must actually resolve");
         assert_eq!(
             routed(
