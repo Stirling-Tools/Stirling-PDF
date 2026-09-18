@@ -34,6 +34,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.failure.PolicyFailureRecorder;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.engine.PolicyEngine;
@@ -157,7 +158,8 @@ class StorageFolderAuthorizationTest {
                         new InProcessProcessedLedger(),
                         properties,
                         policies,
-                        mock(DatabaseLicenseGuard.class));
+                        mock(DatabaseLicenseGuard.class),
+                        mock(PolicyFailureRecorder.class));
     }
 
     @Test

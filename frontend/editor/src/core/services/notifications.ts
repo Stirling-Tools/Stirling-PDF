@@ -15,6 +15,15 @@ export type NotificationOwnership = "MINE" | "THEIRS" | "UNOWNED";
 /** How much of the row an action has earned; `promoteActions` turns it into a place. */
 export type NotificationActionSlot = "RESOLUTION" | "SECONDARY" | "OVERFLOW";
 
+/**
+ * Where the document behind a row is. The server decides: this browser cannot tell a file id it
+ * minted from a reference held on a server it has never seen.
+ */
+export type DocumentLocation = "BROWSER" | "SMART_FOLDER" | "NONE";
+
+/** What produced a row, so it can name the smart folder rather than just failing silently. */
+export type SourceKind = "SMART_FOLDER" | "POLICY" | "EDITOR";
+
 /** `id` is an open string, not a union: the server may know actions this build does not. */
 export interface NotificationActionOffer {
   id: string;
@@ -40,8 +49,11 @@ export interface AppNotification {
   titleKey: string;
   defaultTitle: string;
   detail: string | null;
-  /** Two id spaces share this field, and `sourceId` says which: see `isResolvableHere`. */
+  /** Only ever an id this browser minted, so it needs no disambiguating: null otherwise. */
   fileId: string | null;
+  documentLocation: DocumentLocation;
+  /** What produced the row, so it can say where the work came from. */
+  sourceKind: SourceKind;
   /** Which folder, bucket or webhook fed the run, and null for an attended one. */
   sourceId: string | null;
   policyId: string | null;
@@ -94,5 +106,28 @@ export async function reportNotificationResolved(
     return true;
   } catch {
     return false;
+  }
+}
+
+/**
+ * Run one of a row's server-side actions. Unlike a resolve, the reader pressed a button and is
+ * owed an answer, so a refusal is reported rather than swallowed.
+ *
+ * @returns null when it worked, or the server's reason for refusing.
+ */
+export async function dispatchNotificationAction(
+  notificationId: string,
+  actionId: string,
+): Promise<string | null> {
+  try {
+    await apiClient.post(
+      `${NOTIFICATIONS_PATH}/${encodeURIComponent(notificationId)}/actions/${encodeURIComponent(actionId)}`,
+    );
+    return null;
+  } catch (error) {
+    const detail = (
+      error as { response?: { data?: { detail?: string; title?: string } } }
+    )?.response?.data;
+    return detail?.detail ?? detail?.title ?? "";
   }
 }

@@ -5,8 +5,10 @@ import java.util.List;
 /**
  * Wire shape of one incident. Carries i18n keys plus {@code defaultTitle} rather than rendered
  * copy, so the server can ship a new kind without a client release, and {@code actions} arrive
- * already resolved so the client needs no rules. No document name: {@code fileId} is an opaque
- * reference.
+ * already resolved so the client needs no rules.
+ *
+ * <p>A source-fed row carries no {@code fileId}: the identity behind it is a path on the operator's
+ * disk, and the client has nothing to resolve it against anyway. See {@link #documentLocation}.
  */
 public record FileRunEventView(
         String id,
@@ -24,6 +26,8 @@ public record FileRunEventView(
         String runId,
         String sourceId,
         String fileId,
+        /** Where the document is, so the client stops inferring it from {@code sourceId}. */
+        DocumentLocation documentLocation,
         String actor,
         int occurrences,
         FileRunEventStatus status,
@@ -32,9 +36,31 @@ public record FileRunEventView(
         long createdAt,
         long lastSeenAt) {
 
+    /** Where the document behind an incident lives, which decides what can be offered for it. */
+    public enum DocumentLocation {
+        /** The reader's own browser minted the id, so client-side fixes can find it. */
+        BROWSER,
+        /** A folder the server watches. Only the server can reach it, and only for its owner. */
+        SMART_FOLDER,
+        /** The row is about no document, or one nothing here can address. */
+        NONE;
+
+        /**
+         * A row with no source was reported by a client, which is the only producer whose file ids
+         * that client can resolve. Everything else was fed by a source the server owns.
+         */
+        public static DocumentLocation of(FileRunEvent event) {
+            if (event.fileId() == null || event.fileId().isBlank()) {
+                return NONE;
+            }
+            return event.sourceId() == null || event.sourceId().isBlank() ? BROWSER : SMART_FOLDER;
+        }
+    }
+
     public static FileRunEventView of(
             FileRunEvent event, List<FileRunEventService.AvailableAction> actions) {
         FailureKind kind = event.kind();
+        DocumentLocation location = DocumentLocation.of(event);
         return new FileRunEventView(
                 event.id(),
                 kind.getId(),
@@ -50,7 +76,10 @@ public record FileRunEventView(
                 event.policyId(),
                 event.runId(),
                 event.sourceId(),
-                event.fileId(),
+                // Withheld for anything the client cannot resolve, so a disk path never leaves the
+                // server even to a reader entitled to the row.
+                location == DocumentLocation.BROWSER ? event.fileId() : null,
+                location,
                 event.actor(),
                 event.occurrences(),
                 event.status(),

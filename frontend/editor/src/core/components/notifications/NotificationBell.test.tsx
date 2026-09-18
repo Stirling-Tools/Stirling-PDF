@@ -141,6 +141,8 @@ function notification(
     defaultTitle: title,
     detail: "boom",
     fileId: "f-1",
+    documentLocation: "BROWSER",
+    sourceKind: "EDITOR",
     sourceId: null,
     policyId: null,
     occurrences: 1,
@@ -490,19 +492,25 @@ describe("NotificationBell", () => {
     ).toBeTruthy();
   });
 
-  it("claims nothing about a device for a row it never looks up", async () => {
-    // Never on any device, so never probed, and an absent lookup is not an absent document.
+  it("says where a server-held document is rather than that it is missing", async () => {
+    // Never on any device, so never probed, and an absent lookup is not an absent document. Saying
+    // "not on this device" would read as something having gone wrong with a folder working exactly
+    // as configured.
     h.hasLocalFile = false;
     fetchNotifications.mockResolvedValue([
       notification("a", "Password-protected document", {
         origin: "POLICY",
-        sourceId: "src-s3-invoices",
+        sourceId: "src-downloads",
+        sourceKind: "SMART_FOLDER",
+        documentLocation: "SMART_FOLDER",
+        fileId: null,
       }),
     ]);
     render(<NotificationBell />);
     await openPanel();
 
     expect(await screen.findByText("Password-protected document")).toBeTruthy();
+    expect(screen.getByText(/is in a smart folder/)).toBeTruthy();
     expect(
       screen.queryByText(
         /not on this device|not linked to a specific document/,

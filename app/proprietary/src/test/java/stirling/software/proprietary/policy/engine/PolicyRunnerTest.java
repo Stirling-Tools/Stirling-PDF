@@ -32,6 +32,7 @@ import org.springframework.core.io.ByteArrayResource;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
+import stirling.software.proprietary.failure.PolicyFailureRecorder;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.input.FolderInputSource;
@@ -86,7 +87,8 @@ class PolicyRunnerTest {
                         processedLedger,
                         new ApplicationProperties(),
                         reachableOwners(),
-                        databaseLicenseGuard);
+                        databaseLicenseGuard,
+                        mock(PolicyFailureRecorder.class));
     }
 
     @Test
@@ -126,7 +128,8 @@ class PolicyRunnerTest {
                         reachableOwners(),
                         org.mockito.Mockito.mock(
                                 stirling.software.proprietary.security.configuration.ee
-                                        .DatabaseLicenseGuard.class));
+                                        .DatabaseLicenseGuard.class),
+                        org.mockito.Mockito.mock(PolicyFailureRecorder.class));
         InputSpec spec = InputSpec.folder("/in");
         Policy policy = policy(List.of(spec));
         // One file already processed at its current version, one parked by a failed run.
@@ -413,7 +416,8 @@ class PolicyRunnerTest {
                         guardOver(loginOn, noUsers()),
                         org.mockito.Mockito.mock(
                                 stirling.software.proprietary.security.configuration.ee
-                                        .DatabaseLicenseGuard.class));
+                                        .DatabaseLicenseGuard.class),
+                        org.mockito.Mockito.mock(PolicyFailureRecorder.class));
         for (String owner : new String[] {null, "", "deleted-user"}) {
             Source source =
                     sourceStore.save(
@@ -461,7 +465,8 @@ class PolicyRunnerTest {
                         guardOver(loginOn, noUsers()),
                         org.mockito.Mockito.mock(
                                 stirling.software.proprietary.security.configuration.ee
-                                        .DatabaseLicenseGuard.class));
+                                        .DatabaseLicenseGuard.class),
+                        org.mockito.Mockito.mock(PolicyFailureRecorder.class));
 
         SweepOutcome outcome = enforced.run(stranded.withSurface(Policy.SURFACE_PROCESSING_FOLDER));
 

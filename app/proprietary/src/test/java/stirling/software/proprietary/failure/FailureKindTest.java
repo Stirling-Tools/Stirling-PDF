@@ -240,10 +240,18 @@ class FailureKindTest {
 
         @Test
         void offersARetryToItsOwnerAndTheRunToWhoeverReviews() {
-            // No known fix, so no resolution; a retry is still worth offering for a one-off.
+            // No known fix, so no client resolution; a retry is still worth offering for a one-off.
+            // The server-side twin is the same offer for a document only the server can reach, and
+            // FileRunEventService drops it for any row that is not a smart folder's, so an owner
+            // is never shown both.
             assertThat(FailureKind.UNKNOWN.getOfferedActions())
                     .containsExactly(
                             offered(FailureActionId.OPEN_IN_TOOL, OWNER, SECONDARY, "openInTool"),
+                            offered(
+                                    FailureActionId.RETRY_IN_FOLDER,
+                                    OWNER,
+                                    RESOLUTION,
+                                    "retryInFolder"),
                             offered(FailureActionId.VIEW_FILE, OWNER, SECONDARY, "viewFile"),
                             offered(
                                     FailureActionId.VIEW_IN_PROCESSOR,
@@ -394,9 +402,9 @@ class FailureKindTest {
         @Test
         void aKindWithNothingToOfferDeclaresNoResolutionRatherThanAWeakOne() {
             // Zero resolutions is legal, so nothing else would notice one of these quietly
-            // gaining a button. Each is here because no action the client can run would change
-            // the outcome: the file is the wrong type, empty, gone, or the server is missing a
-            // binary. A retry belongs to UNKNOWN, which says plainly that we do not know.
+            // gaining a button. Each is here because no action would change the outcome: the file
+            // is the wrong type, empty, gone, the folder cannot be read, or the server is missing
+            // a binary. A retry belongs to UNKNOWN, which says plainly that we do not know.
             assertThat(
                             Stream.of(FailureKind.values())
                                     .filter(
@@ -415,8 +423,21 @@ class FailureKindTest {
                             FailureKind.INPUT_EMPTY,
                             FailureKind.INPUT_UNAVAILABLE,
                             FailureKind.TOOL_NOT_INSTALLED,
-                            FailureKind.STEP_CANNOT_RENDER_PAGE,
-                            FailureKind.UNKNOWN);
+                            FailureKind.SOURCE_UNREADABLE,
+                            FailureKind.STEP_CANNOT_RENDER_PAGE);
+        }
+
+        @Test
+        void unknownsOnlyResolutionIsOneTheServerRunsForASmartFolder() {
+            // The exception to the rule above, and the reason it is worth stating: an unrecognised
+            // failure may well be a one-off, and a smart folder's document is one the server can
+            // run again itself. Every other kind fails the same way however often it is retried.
+            assertThat(
+                            FailureKind.UNKNOWN.getOfferedActions().stream()
+                                    .filter(offer -> offer.slot() == RESOLUTION)
+                                    .map(FailureKind.OfferedAction::id)
+                                    .toList())
+                    .containsExactly(FailureActionId.RETRY_IN_FOLDER);
         }
 
         @Test

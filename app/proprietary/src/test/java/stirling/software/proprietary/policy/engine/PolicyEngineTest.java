@@ -290,7 +290,8 @@ class PolicyEngineTest {
                         mock(PolicyAccessGuard.class),
                         org.mockito.Mockito.mock(
                                 stirling.software.proprietary.security.configuration.ee
-                                        .DatabaseLicenseGuard.class));
+                                        .DatabaseLicenseGuard.class),
+                        org.mockito.Mockito.mock(PolicyFailureRecorder.class));
 
         SweepOutcome outcome = runner.run(policy);
 
@@ -305,7 +306,9 @@ class PolicyEngineTest {
                             any(),
                             eq(source.id()),
                             anyString(),
-                            isNull(),
+                            // The source's owner: nobody attended this, and the same person the
+                            // job was scoped to below is the one holding the documents.
+                            eq("source-owner"),
                             anyString(),
                             any(Throwable.class));
         }
@@ -450,7 +453,7 @@ class PolicyEngineTest {
                         any(),
                         eq("src-s3-invoices"),
                         eq("file-hash-1"),
-                        isNull(),
+                        eq("carol"),
                         anyString(),
                         any(Throwable.class));
     }
@@ -489,10 +492,12 @@ class PolicyEngineTest {
     }
 
     @Test
-    void anUnattendedFailureIsRecordedWithNoActorWhileStillBillingTheOwner() throws Exception {
-        // The two identities are deliberately different, and this pins both at once: usage is
-        // charged to the owner (MDC audit principal on the worker), but the failure has no actor,
-        // which is what makes it UNOWNED and hands the owner actions to the team's reviewer.
+    void anUnattendedFailureIsFiledUnderTheDocumentsOwnerWhileStillBillingThePolicysOwner()
+            throws Exception {
+        // The identities are deliberately different, and this pins both at once: usage is charged
+        // to the policy's owner (MDC audit principal on the worker), and the failure is filed under
+        // whoever owns the document. Filed under nobody it reached only a team leader, so the
+        // person whose smart folder had stopped working was the one person not told.
         when(toolMetadataService.isMultiInput(ROTATE)).thenReturn(false);
         String[] principalAtDispatch = {"<none>"};
         when(internalApiClient.post(eq(ROTATE), any()))
@@ -526,7 +531,7 @@ class PolicyEngineTest {
                         any(),
                         eq("src-watched-folder"),
                         eq("file-hash-1"),
-                        isNull(),
+                        eq("carol"),
                         anyString(),
                         any(Throwable.class));
     }

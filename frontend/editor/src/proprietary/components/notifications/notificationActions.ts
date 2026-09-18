@@ -16,6 +16,7 @@ import {
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { fileStorage } from "@app/services/fileStorage";
 import { rerunPolicy } from "@app/services/notificationPolicyRetry";
+import { dispatchNotificationAction } from "@app/services/notifications";
 import { isValidToolId, type ToolId } from "@app/types/toolId";
 import type { FileId } from "@app/types/file";
 import {
@@ -208,6 +209,29 @@ export function useNotificationActions(): ClientActionRegistry {
       run: () => navigate(REVIEW_DESTINATION),
     };
 
+    // The only action here the server performs. The document is in a folder this browser cannot
+    // reach, so all the client does is ask, and the row names which file it is about.
+    const retryInFolder: ClientActionSpec = {
+      available: (context) =>
+        context.notification.documentLocation === "SMART_FOLDER",
+      run: async (context): Promise<ClientActionOutcome | void> => {
+        const refusal = await dispatchNotificationAction(
+          context.notification.id,
+          "RETRY_IN_FOLDER",
+        );
+        if (refusal === null) return;
+        return {
+          ok: false,
+          message:
+            refusal ||
+            t(
+              "notifications.retryInFolderFailed",
+              "That document could not be run again just now.",
+            ),
+        };
+      },
+    };
+
     const resolutions = Object.fromEntries(
       RESOLUTIONS.map((resolution) => [
         resolution.actionId,
@@ -218,6 +242,7 @@ export function useNotificationActions(): ClientActionRegistry {
     return {
       OPEN_IN_TOOL: openInTool,
       ...resolutions,
+      RETRY_IN_FOLDER: retryInFolder,
       VIEW_FILE: viewFile,
       VIEW_IN_PROCESSOR: viewInProcessor,
     };

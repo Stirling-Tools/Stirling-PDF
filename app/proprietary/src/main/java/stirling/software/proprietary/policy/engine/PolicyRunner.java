@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.failure.FailureKind;
+import stirling.software.proprietary.failure.PolicyFailureRecorder;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.input.ResolvedInput;
@@ -50,6 +52,7 @@ public class PolicyRunner {
     private final ApplicationProperties applicationProperties;
     private final PolicyAccessGuard policyAccessGuard;
     private final DatabaseLicenseGuard databaseLicenseGuard;
+    private final PolicyFailureRecorder failureRecorder;
 
     /**
      * One admission gate per sweep: every run is visible immediately, but only this many execute at
@@ -263,6 +266,15 @@ public class PolicyRunner {
                     "Failed to resolve source '{}' for policy {}: {}",
                     spec.type(),
                     policy.id(),
+                    e.getMessage());
+            // Told, not just logged: an unreadable folder processes nothing at all, and its owner
+            // would otherwise see a folder that has quietly stopped working.
+            failureRecorder.recordRunFailureAs(
+                    FailureKind.SOURCE_UNREADABLE,
+                    null,
+                    policy.id(),
+                    storedSource.id(),
+                    policy.owner(),
                     e.getMessage());
             context.vetoCleanup();
             return List.of();

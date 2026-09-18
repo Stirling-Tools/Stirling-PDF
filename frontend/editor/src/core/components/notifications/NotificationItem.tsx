@@ -53,6 +53,13 @@ function noteFor(
     });
   if (notification.ownership !== "MINE" || documentState.hasLocalFile)
     return null;
+  // Said before the missing-document cases: this one is not missing, it is somewhere this browser
+  // was never going to reach.
+  if (notification.documentLocation === "SMART_FOLDER")
+    return t(
+      "notifications.inSmartFolder",
+      "This document is in a smart folder, so it is handled on the server rather than here.",
+    );
   if (!notification.fileId)
     return t(
       "notifications.noDocumentLinked",

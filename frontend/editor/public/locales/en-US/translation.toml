@@ -5842,9 +5842,11 @@ label = "Free credits"
 adoptFailed = "The document was unlocked but could not be opened here. Try the tool directly."
 empty = "You're all caught up."
 handoffUnavailable = "This browser will not let the processor pass the document to the editor. Open it from the editor instead."
+inSmartFolder = "This document is in a smart folder, so it is handled on the server rather than here."
 noDocumentLinked = "This failure is not linked to a specific document, so it cannot be opened or retried here."
 notOnThisDevice = "This document is not on this device, so it cannot be opened or retried here."
 occurrences = "{{count}} times"
+retryInFolderFailed = "That document could not be run again just now."
 open = "Notifications"
 repairAdoptFailed = "The document was repaired but could not be opened here. Try the Repair tool directly."
 repairedNotRerun = "The document was repaired and opened here, but the policy could not be run on it again."
@@ -8390,6 +8392,7 @@ decrypt = "Unlock"
 dismiss = "Dismiss"
 openInTool = "Retry"
 repair = "Repair"
+retryInFolder = "Try again"
 viewFile = "View file"
 viewInProcessor = "View in processor"
 
@@ -8453,6 +8456,10 @@ title = "File could not be repaired"
 [portal.failures.kind.inputWrongType]
 description = "Your file is not a format this step can open, so the run could not read it."
 title = "Wrong file type"
+
+[portal.failures.kind.sourceUnreadable]
+description = "Your smart folder could not be read, so nothing in it was processed."
+title = "Folder could not be read"
 
 [portal.failures.kind.stepCannotRenderPage]
 description = "A page in your file could not be drawn, so the run could not finish."

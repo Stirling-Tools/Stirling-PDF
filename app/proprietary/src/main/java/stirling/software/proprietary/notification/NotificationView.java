@@ -10,8 +10,9 @@ import stirling.software.proprietary.failure.FileRunEventView;
 import stirling.software.proprietary.failure.Ownership;
 
 /**
- * A source's row flattened to what a bell renders. {@code fileId} is an opaque reference, never a
- * name, and two id spaces share it: {@code sourceId} tells them apart.
+ * A source's row flattened to what a bell renders. {@code fileId} is an opaque reference the
+ * reader's own client minted, and is present only when {@code documentLocation} is {@code BROWSER}:
+ * a document the server holds is described by its kind alone, never named or addressed.
  */
 public record NotificationView(
         String id,
@@ -25,6 +26,9 @@ public record NotificationView(
         String defaultTitle,
         String detail,
         String fileId,
+        FileRunEventView.DocumentLocation documentLocation,
+        /** What fed the run, for a row the reader did not cause. Null for an editor report. */
+        SourceKind sourceKind,
         String sourceId,
         String policyId,
         int occurrences,

@@ -22,6 +22,7 @@ import stirling.software.proprietary.notification.NotificationController;
 import stirling.software.proprietary.notification.NotificationService;
 import stirling.software.proprietary.notification.NotificationView;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
+import stirling.software.proprietary.policy.store.PolicyStore;
 
 /** Reporting a client-side retry that worked: the bell's one write. */
 @ExtendWith(MockitoExtension.class)
@@ -36,6 +37,8 @@ class NotificationResolveTest {
 
     private FileRunEventStore store;
     private FileRunEventService failures;
+    @Mock private PolicyStore policyStore;
+
     private NotificationController controller;
 
     @BeforeEach
@@ -51,7 +54,7 @@ class NotificationResolveTest {
                         authority,
                         userService,
                         props);
-        controller = new NotificationController(new NotificationService(failures));
+        controller = new NotificationController(new NotificationService(failures, policyStore));
 
         lenient().when(authority.currentUserTeamId()).thenReturn(TEAM);
         lenient().when(authority.canEditPolicies()).thenReturn(true);

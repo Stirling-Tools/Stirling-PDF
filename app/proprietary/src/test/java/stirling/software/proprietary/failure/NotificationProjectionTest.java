@@ -21,6 +21,7 @@ import stirling.software.proprietary.notification.NotificationService;
 import stirling.software.proprietary.notification.NotificationSource;
 import stirling.software.proprietary.notification.NotificationView;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
+import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
  * What the bell is given to render: never a raw event id, and only the actions the client itself
@@ -37,6 +38,8 @@ class NotificationProjectionTest {
 
     private FileRunEventStore store;
     private FileRunEventService failures;
+    @Mock private PolicyStore policyStore;
+
     private NotificationController controller;
 
     @BeforeEach
@@ -52,7 +55,7 @@ class NotificationProjectionTest {
                         authority,
                         userService,
                         props);
-        controller = new NotificationController(new NotificationService(failures));
+        controller = new NotificationController(new NotificationService(failures, policyStore));
 
         lenient().when(authority.currentUserTeamId()).thenReturn(TEAM);
         lenient().when(authority.canEditPolicies()).thenReturn(true);
@@ -148,9 +151,11 @@ class NotificationProjectionTest {
         }
 
         @Test
-        void namesTheSourceThatFedAnUnattendedRunSoItsFileIdIsNotMistakenForAClientsOwn() {
-            // Without the source a client looks up a hash it can never resolve and calls it
-            // missing.
+        void withholdsTheReferenceBehindASourceFedRow() {
+            // A folder source builds its identity from the file's canonical path, so sending the
+            // reference would hand every reader a location on the operator's disk. The client has
+            // nothing to resolve it against either, so the row says what kind of failure it is and
+            // nothing about which document.
             store.record(
                     RecordFailure.forRun(
                             FailureKind.INPUT_PASSWORD_PROTECTED,
@@ -159,13 +164,36 @@ class NotificationProjectionTest {
                             "policy-1",
                             "run-1",
                             "source-7",
-                            "hashed-identity",
+                            "/Users/someone/Documents/Payroll/march.pdf",
                             "boom"));
 
             NotificationView notification = controller.list(null).notifications().getFirst();
 
             assertThat(notification.sourceId()).isEqualTo("source-7");
-            assertThat(notification.fileId()).isEqualTo("hashed-identity");
+            assertThat(notification.documentLocation())
+                    .isEqualTo(FileRunEventView.DocumentLocation.SMART_FOLDER);
+            assertThat(notification.fileId()).isNull();
+        }
+
+        @Test
+        void putsNoPartOfASourcePathInFrontOfAReader() {
+            // Not the directory, not the account, not the filename - including for a team leader,
+            // who reads rows that are not theirs.
+            store.record(
+                    RecordFailure.forRun(
+                            FailureKind.UNKNOWN,
+                            TEAM,
+                            null,
+                            "policy-1",
+                            "run-1",
+                            "source-7",
+                            "/Users/someone/Private/Legal/settlement.pdf",
+                            "boom"));
+
+            NotificationView notification = controller.list(null).notifications().getFirst();
+
+            assertThat(notification.toString())
+                    .doesNotContain("Users", "Private", "Legal", "settlement");
         }
 
         @Test

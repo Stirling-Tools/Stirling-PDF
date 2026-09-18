@@ -240,12 +240,15 @@ class PolicyFailureAttributionTest {
     class UnattendedSweep {
 
         @Test
-        void theRowIsRecordedWithNoActorWhileStillBillingTheOwner() throws Exception {
+        void theRowIsRecordedAgainstTheSourcesOwnerWhileStillBillingThePolicysOwner()
+                throws Exception {
+            // Two different people on purpose: alice owns the policy and pays for the sweep, carol
+            // owns the folder the documents came from and is the one who needs to hear about them.
             runAndFail(null, "src-watched-folder", "file-hash-1");
 
             assertThat(asReviewer("alice").actor())
-                    .as("a trigger-fired run has no user to name")
-                    .isNull();
+                    .as("an unattended run names the owner of the documents it pulled")
+                    .isEqualTo("carol");
         }
 
         @Test
@@ -258,9 +261,9 @@ class PolicyFailureAttributionTest {
         }
 
         @Test
-        void aMemberDoesNotInheritAnUnattendedFailureAsTheirOwn() throws Exception {
-            // An unowned row must not fall to whoever happens to be reading: with no actor there is
-            // nothing for a member's narrowed read to match.
+        void aMemberWhoOwnsNeitherTheSourceNorTheRunReadsNothing() throws Exception {
+            // The narrowed read matches on the actor, so naming the source's owner hands the row to
+            // that one person rather than to whoever happens to be reading.
             runAndFail(null, "src-watched-folder", "file-hash-1");
 
             assertThat(asMember("bob")).isNull();
