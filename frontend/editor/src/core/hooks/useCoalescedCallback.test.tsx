@@ -66,6 +66,82 @@ describe("useCoalescedCallback", () => {
     expect(callback).not.toHaveBeenCalled();
   });
 
+  it("does not run the stale callback after unmount while in flight", async () => {
+    vi.useFakeTimers();
+    let resolveFirst!: () => void;
+    const callback = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveFirst = resolve;
+        }),
+    );
+
+    const { rerender, unmount } = renderHook(
+      ({ trigger }: { trigger: number }) =>
+        useCoalescedCallback(callback, trigger, 100),
+      { initialProps: { trigger: 0 } },
+    );
+    await act(async () => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(callback).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      rerender({ trigger: 1 });
+    });
+    act(() => {
+      vi.advanceTimersByTime(150);
+    });
+    unmount();
+
+    await act(async () => {
+      resolveFirst();
+      await Promise.resolve();
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(200);
+    });
+    expect(callback).toHaveBeenCalledTimes(1);
+  });
+
+  it("runs the latest callback for trailing work after a callback change", async () => {
+    vi.useFakeTimers();
+    let resolveFirst!: () => void;
+    const first = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveFirst = resolve;
+        }),
+    );
+    const second = vi.fn();
+
+    const { rerender } = renderHook(
+      ({ cb }: { cb: () => void | Promise<void> }) =>
+        useCoalescedCallback(cb, 0, 100),
+      { initialProps: { cb: first } },
+    );
+    await act(async () => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(first).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      rerender({ cb: second });
+    });
+    act(() => {
+      vi.advanceTimersByTime(150);
+    });
+    await act(async () => {
+      resolveFirst();
+      await Promise.resolve();
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(200);
+    });
+    expect(first).toHaveBeenCalledTimes(1);
+    expect(second).toHaveBeenCalledTimes(1);
+  });
+
   it("waits for an in-flight run before starting the trailing one", async () => {
     vi.useFakeTimers();
     let resolveFirst!: () => void;
