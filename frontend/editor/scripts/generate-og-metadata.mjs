@@ -23,6 +23,10 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "..");
 const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
 
+const publicToolContent = JSON.parse(
+  read("src/core/data/publicToolContent.json"),
+);
+
 const SITE_NAME = "Stirling PDF";
 // SITE_TITLE is the home page's own title/social headline; SITE_NAME is the
 // suffix every other page carries, so the download count appears once.
@@ -43,97 +47,84 @@ const CONVERT_SEO_PAGES = {
   "/pdf-to-word": {
     name: "PDF to Word Converter",
     description:
-      "Convert PDF files into editable Microsoft Word (DOCX) documents. Free, fast, and private - no signup or email required.",
+      "Convert PDF files into editable Microsoft Word (DOCX) documents.",
   },
   "/pdf-to-xlsx": {
     name: "PDF to Excel Converter",
     description:
-      "Convert PDF tables into editable Microsoft Excel (XLSX) spreadsheets. Free, fast, and private.",
+      "Convert PDF tables into editable Microsoft Excel (XLSX) spreadsheets.",
   },
   "/pdf-to-csv": {
     name: "PDF to CSV Converter",
-    description:
-      "Extract tables from PDF files into CSV data. Free, fast, and private - no signup required.",
+    description: "Extract tables from PDF files into CSV data.",
   },
   "/pdf-to-img": {
     name: "PDF to Image Converter",
-    description:
-      "Convert PDF pages into high-quality JPG or PNG images. Free and private, right in your browser.",
+    description: "Convert PDF pages into high-quality JPG or PNG images.",
   },
   "/pdf-to-presentation": {
     name: "PDF to PowerPoint Converter",
     description:
-      "Convert PDF files into editable PowerPoint (PPTX) presentations. Free, fast, and private.",
+      "Convert PDF files into editable PowerPoint (PPTX) presentations.",
   },
   "/pdf-to-text": {
     name: "PDF to Text Converter",
-    description:
-      "Extract plain text from PDF documents. Free, fast, and private - no signup or email required.",
+    description: "Extract plain text from PDF documents.",
   },
   "/pdf-to-markdown": {
     name: "PDF to Markdown Converter",
-    description:
-      "Convert PDF documents into clean Markdown text. Free and private, right in your browser.",
+    description: "Convert PDF documents into clean Markdown text.",
   },
   "/pdf-to-html": {
     name: "PDF to HTML Converter",
-    description:
-      "Convert PDF documents into HTML web pages. Free and private, right in your browser.",
+    description: "Convert PDF documents into HTML web pages.",
   },
   "/pdf-to-xml": {
     name: "PDF to XML Converter",
-    description:
-      "Convert PDF documents into structured XML. Free, fast, and private.",
+    description: "Convert PDF documents into structured XML.",
   },
   "/pdf-to-pdfa": {
     name: "PDF to PDF/A Converter",
     description:
-      "Convert PDFs to the PDF/A archival standard for long-term preservation. Free and private.",
+      "Convert PDFs to the PDF/A archival standard for long-term preservation.",
   },
   "/img-to-pdf": {
     name: "Image to PDF Converter",
     description:
-      "Convert JPG, PNG, and other images into a single PDF document. Free, fast, and private.",
+      "Convert JPG, PNG, and other images into a single PDF document.",
   },
   "/html-to-pdf": {
     name: "HTML to PDF Converter",
-    description:
-      "Convert HTML files and web pages into PDF documents. Free, fast, and private.",
+    description: "Convert HTML files and web pages into PDF documents.",
   },
   "/markdown-to-pdf": {
     name: "Markdown to PDF Converter",
-    description:
-      "Convert Markdown files into polished PDF documents. Free and private, right in your browser.",
+    description: "Convert Markdown files into polished PDF documents.",
   },
   "/eml-to-pdf": {
     name: "Email (EML) to PDF Converter",
-    description:
-      "Convert email (EML) files into PDF documents. Free, fast, and private - no signup required.",
+    description: "Convert email (EML) files into PDF documents.",
   },
   "/file-to-pdf": {
     name: "File to PDF Converter",
     description:
-      "Convert Word, Excel, PowerPoint, and more into PDF documents. Free, fast, and private.",
+      "Convert Word, Excel, PowerPoint, and more into PDF documents.",
   },
   "/cbr-to-pdf": {
     name: "CBR to PDF Converter",
-    description:
-      "Convert CBR comic book archives into PDF documents. Free and private, right in your browser.",
+    description: "Convert CBR comic book archives into PDF documents.",
   },
   "/pdf-to-cbr": {
     name: "PDF to CBR Converter",
-    description:
-      "Convert PDF documents into CBR comic book archives. Free and private.",
+    description: "Convert PDF documents into CBR comic book archives.",
   },
   "/cbz-to-pdf": {
     name: "CBZ to PDF Converter",
-    description:
-      "Convert CBZ comic book archives into PDF documents. Free and private.",
+    description: "Convert CBZ comic book archives into PDF documents.",
   },
   "/pdf-to-cbz": {
     name: "PDF to CBZ Converter",
-    description:
-      "Convert PDF documents into CBZ comic book archives. Free and private.",
+    description: "Convert PDF documents into CBZ comic book archives.",
   },
 };
 
@@ -221,13 +212,15 @@ const SAAS_ROUTE_OVERRIDES = {
       "Redaction, retention, and encryption policies enforced everywhere PDFs enter your org. Distribute the free Editor anywhere. 1¢ per PDF.",
     // Metered product - a price-0 Offer would contradict the page copy.
     noOffer: true,
+    // The processor route mounts an authenticated dashboard, not a public tool.
+    noindex: true,
   },
   "/editor": {
     image: "/og_images/saas/app-editor.png",
-    title: "Stirling - The world's most secure PDF editor",
-    ogTitle: "The world's most secure PDF editor",
+    title: "Online PDF Editor - Stirling PDF",
+    ogTitle: "Online PDF Editor",
     description:
-      "Edit, sign, redact, and convert PDFs in your browser. Free forever, open source, and self-hostable.",
+      "Edit, sign, redact, and convert PDFs with Stirling PDF. Use the online workspace or explore the open-source, self-hostable project.",
   },
 };
 
@@ -534,6 +527,15 @@ if (missingSaasImages.length)
   console.warn(
     `\nWARNING: SaaS OG cards reference missing images: ${missingSaasImages.join(", ")}`,
   );
+
+for (const output of [manifest, saasManifest]) {
+  for (const [id, entry] of Object.entries(output.byTool)) {
+    const content =
+      publicToolContent[id] ||
+      (CONVERT_SEO_PAGES[id] ? publicToolContent.convert : null);
+    if (content && !entry.noindex) entry.content = content;
+  }
+}
 
 const mapJson = JSON.stringify(ogImageMap, null, 2) + "\n";
 const manifestJson = JSON.stringify(manifest, null, 2) + "\n";

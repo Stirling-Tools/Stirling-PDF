@@ -91,7 +91,11 @@ function compressStaticCopyPlugin(): PluginOption {
 // origin serves the page (correct for self-hosted Docker). Indexing signals
 // (canonical, JSON-LD, sitemap) need VITE_OG_BASE_URL specifically - see below.
 // Logic lives in scripts/og-prerender.mjs so it can be unit-tested without a full build.
-function prerenderOgPlugin(isSaas: boolean): PluginOption {
+function prerenderOgPlugin(
+  isSaas: boolean,
+  env: Record<string, string>,
+  baseHref: string,
+): PluginOption {
   // SaaS (stirling.com) prerenders the marketing cards from a dedicated
   // manifest; every other flavour uses the tool-registry manifest.
   const manifestFile = isSaas
@@ -104,15 +108,22 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
       const { prerenderOg, buildSitemap, resolveDeployBases } =
         // oxlint-disable-next-line no-restricted-imports -- vite config runs before path aliases resolve, so a relative import is required here
         await import("./scripts/og-prerender.mjs");
-      const canonicalOrigin = process.env.VITE_OG_BASE_URL || "";
-      const deployOrigin = process.env.CF_PAGES_URL || "";
-      // Absolute deploy base for nested routes' <base href> (matches vite `base`).
-      const subpath = (process.env.RUN_SUBPATH || "").replace(/^\/+|\/+$/g, "");
-      const baseHref = subpath ? `/${subpath}/` : "/";
+      const canonicalOrigin = env.VITE_OG_BASE_URL || "";
+      const deployOrigin = env.CF_PAGES_URL || "";
+      const preview =
+        env.VITE_BUILD_FOR_PREVIEW === "1" ||
+        Boolean(
+          deployOrigin && env.CF_PAGES_BRANCH !== env.VITE_OG_PRODUCTION_BRANCH,
+        );
+      if (isSaas && deployOrigin && !preview && !canonicalOrigin) {
+        throw new Error("Public SaaS deployment requires VITE_OG_BASE_URL");
+      }
       const { ogBase, canonicalBase } = resolveDeployBases({
         canonicalOrigin,
         deployOrigin,
-        baseHref,
+        baseHref: env.VITE_OG_CANONICAL_SUBPATH
+          ? `/${env.VITE_OG_CANONICAL_SUBPATH.replace(/^\/+|\/+$/g, "")}/`
+          : baseHref,
       });
       if (!canonicalBase && ogBase) {
         console.warn(
@@ -127,12 +138,11 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
         manifest = JSON.parse(
           await fs.readFile(path.resolve(__dirname, manifestFile), "utf8"),
         );
-      } catch {
-        console.warn(
-          `[prerender-og] ${manifestFile} missing; skipping OG prerender. ` +
-            "Run `node scripts/generate-og-metadata.mjs`.",
+      } catch (cause) {
+        throw new Error(
+          `[prerender-og] Cannot read ${manifestFile}; run scripts/generate-og-metadata.mjs`,
+          { cause },
         );
-        return;
       }
       const distDir = path.resolve(__dirname, "dist");
       // The crawlable landing body only pays for itself where a crawler can
@@ -145,6 +155,8 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
         canonicalBase,
         baseHref,
         injectLanding,
+        noindex: preview,
+        staticHosting: Boolean(deployOrigin),
       });
       console.log(
         `[prerender-og] wrote ${count} prerendered route pages` +
@@ -153,9 +165,10 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
             : " (root-relative URLs, no landing body)"),
       );
 
-      // Sitemaps are an indexing instruction, so they need the canonical origin,
-      // not just any absolute one. Self-hosted and preview builds skip it.
-      const sitemap = buildSitemap(manifest, { canonicalBase });
+      // Preview hosts must never become sitemap discovery targets.
+      const sitemap = preview
+        ? null
+        : buildSitemap(manifest, { canonicalBase });
       if (sitemap) {
         await fs.writeFile(path.join(distDir, "sitemap.xml"), sitemap);
         // Point robots.txt at the sitemap (best-effort; robots.txt may be absent).
@@ -262,6 +275,7 @@ export default defineConfig(async ({ mode, command }) => {
         ? "core"
         : "proprietary");
 
+  Object.assign(env, loadEnv(effectiveMode, import.meta.dirname, ""));
   const tsconfigProject = TSCONFIG_MAP[effectiveMode];
 
   // Subpath the app is served under (base becomes "/<runSubpath>/"). Empty = root.
@@ -330,7 +344,8 @@ export default defineConfig(async ({ mode, command }) => {
       }),
       compression({
         threshold: 1024,
-        exclude: [/\.(png|jpg|jpeg|gif|webp|woff|woff2)$/],
+        // HTML is rewritten in closeBundle; precompressed copies would contain stale SEO.
+        exclude: [/\.(html|png|jpg|jpeg|gif|webp|woff|woff2)$/],
         algorithms: [
           defineAlgorithm("gzip", { level: 9 }),
           defineAlgorithm("brotliCompress", {
@@ -394,7 +409,11 @@ export default defineConfig(async ({ mode, command }) => {
         ],
       }),
       compressStaticCopyPlugin(),
-      prerenderOgPlugin(effectiveMode === "saas"),
+      prerenderOgPlugin(
+        effectiveMode === "saas",
+        env,
+        runSubpath ? `/${runSubpath}/` : "/",
+      ),
     ],
     // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`,
     // so without this `@app/*` resolves in the app and fails in a worker.

@@ -50,7 +50,7 @@ export default function Landing() {
     return (
       <div
         style={{
-          minHeight: "100vh",
+          minHeight: "var(--app-viewport-height, 100dvh)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -83,15 +83,9 @@ export default function Landing() {
   // returns to /editor after login rather than to the role router.
   const returnTo = encodeURIComponent(location.pathname + location.search);
 
-  // If auto-authentication failed, navigate to login with error state
-  if (autoAuthError && shouldTriggerAutoAuth) {
-    return (
-      <Navigate
-        to={`/login?next=${returnTo}`}
-        replace
-        state={{ autoAuthError, from: location }}
-      />
-    );
+  // Public descriptions remain at their tool URL when guest authentication fails.
+  if (autoAuthError && isCurrentPathTool) {
+    return <Login />;
   }
 
   // If we're at home route ("/"), show login directly (marketing/landing page)
