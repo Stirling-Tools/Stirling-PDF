@@ -31,12 +31,6 @@ public class RagIngestApiRequest extends PDFFile {
     private int overlap = 64;
 
     @Schema(
-            description = "Tier to use: 'auto' picks per document, or force 'basic'/'advanced'",
-            allowableValues = {"auto", "basic", "advanced"},
-            defaultValue = "auto")
-    private String mode = "auto";
-
-    @Schema(
             description = "Index the document into the built-in knowledge base",
             defaultValue = "true")
     private boolean index = true;

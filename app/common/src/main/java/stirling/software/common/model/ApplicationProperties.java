@@ -476,17 +476,13 @@ public class ApplicationProperties {
 
     /**
      * DocParse settings (top-level {@code docparse.*}): document understanding for ingestion
-     * pipelines. The basic tier (text layer) always works; the advanced tier lives in the engine's
-     * docparse addon.
+     * pipelines.
      */
     @Data
     public static class Docparse {
 
         /** Master switch; hides the DocParse endpoints when false. */
         private boolean enabled = true;
-
-        /** Requested tier: 'auto', 'basic', or 'advanced'. 'auto' resolves per document. */
-        private String mode = "auto";
     }
 
     /**

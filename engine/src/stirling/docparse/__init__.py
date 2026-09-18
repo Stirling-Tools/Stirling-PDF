@@ -1,16 +1,5 @@
-"""DocParse: document understanding for ingestion pipelines.
+"""DocParse: preparing caller-converted documents for RAG ingestion.
 
-This package holds the basic (text-layer) tier; the advanced tier (Docling
-layout parsing) is delivered as an optional addon and probed at runtime.
+Java's layout-aware PDF-to-Markdown converter supplies the structure; this
+package packs those blocks into chunks the document store can index.
 """
-
-from __future__ import annotations
-
-from stirling.docparse.capability import activate_site, probe_capabilities
-from stirling.docparse.chunking import basic_chunks
-
-__all__ = [
-    "activate_site",
-    "basic_chunks",
-    "probe_capabilities",
-]

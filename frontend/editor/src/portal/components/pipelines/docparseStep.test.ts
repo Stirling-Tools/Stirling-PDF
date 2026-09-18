@@ -11,7 +11,6 @@ describe("RAG chunk parameter limits", () => {
     { chunkSize: 100.5 },
     { overlap: -1 },
     { chunkSize: 8192, overlap: 4097 },
-    { mode: "advanced" },
   ])("rejects invalid chunk settings %j", (parameters) => {
     const step = newRagIngestStep();
     expect(

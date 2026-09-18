@@ -10,10 +10,24 @@ from fastapi.testclient import TestClient
 from stirling.api import app
 from stirling.api.dependencies import get_document_service
 from stirling.contracts.documents import PageText
-from stirling.documents import DocumentService, EmbeddingService, SqliteVecStore
+from stirling.documents import DocumentService, SqliteVecStore
 from stirling.models import FileId, OwnerId, PrincipalId
 
 HEADERS = {"X-User-Id": "test-user"}
+
+
+def block(
+    markdown: str,
+    page: int = 1,
+    page_end: int | None = None,
+    headings: list[str] | None = None,
+) -> dict[str, Any]:
+    return {
+        "markdown": markdown,
+        "pageStart": page,
+        "pageEnd": page_end if page_end is not None else page,
+        "headingPath": headings or [],
+    }
 
 
 class StubDocumentService:
@@ -74,15 +88,16 @@ def client(stub_service: StubDocumentService) -> Iterator[TestClient]:
         app.dependency_overrides.pop(get_document_service, None)
 
 
-def test_rag_ingest_basic_tier_indexes_chunks_with_metadata(
-    client: TestClient, stub_service: StubDocumentService
-) -> None:
+def test_rag_ingest_indexes_chunks_with_metadata(client: TestClient, stub_service: StubDocumentService) -> None:
     response = client.post(
         "/api/v1/docparse/rag-ingest",
         json={
-            "fileName": "report.pdf",
             "documentId": "doc-1",
-            "pages": [{"pageNumber": 1, "text": "para one"}, {"pageNumber": 2, "text": "para two"}],
+            "blocks": [
+                block("## Findings", headings=["Findings"]),
+                block("para one", headings=["Findings"]),
+                block("para two", page=2),
+            ],
             "chunkSize": 64,
             "overlap": 0,
         },
@@ -90,27 +105,25 @@ def test_rag_ingest_basic_tier_indexes_chunks_with_metadata(
     )
     assert response.status_code == 200
     body = response.json()
-    assert body["mode"] == "basic"
     assert body["documentId"] == "doc-1"
-    assert body["chunksIndexed"] == 2
-    assert body["pages"] == 2
-    assert body["markdown"] is None
+    assert body["chunksIndexed"] == 1
     assert body["chunks"] is None
 
     call = stub_service.calls[0]
     assert call["collection"] == "doc-1"
     assert call["source"] == "docparse"
     text, metadata = call["chunks"][0]
-    assert text == "para one"
+    assert text == "## Findings\n\npara one\n\npara two"
     assert metadata["content_type"] == "docparse_chunk"
     assert metadata["page_start"] == "1"
-    assert metadata["page_end"] == "1"
+    assert metadata["page_end"] == "2"
+    assert metadata["heading_path"] == "Findings"
 
 
 def test_rag_ingest_defaults_owner_and_readers_to_caller(client: TestClient, stub_service: StubDocumentService) -> None:
     client.post(
         "/api/v1/docparse/rag-ingest",
-        json={"fileName": "a.pdf", "documentId": "d", "pages": [{"pageNumber": 1, "text": "t"}]},
+        json={"documentId": "d", "blocks": [block("t")]},
         headers=HEADERS,
     )
     call = stub_service.calls[0]
@@ -125,13 +138,12 @@ def test_rag_ingest_passes_explicit_owner_acl_and_expiry_through(
     client.post(
         "/api/v1/docparse/rag-ingest",
         json={
-            "fileName": "a.pdf",
             "documentId": "d",
             "source": "handbook.pdf",
             "ownerId": "org:acme",
             "readPrincipals": ["group:eng", "user:bob"],
             "expiresAt": "2030-01-01T00:00:00Z",
-            "pages": [{"pageNumber": 1, "text": "t"}],
+            "blocks": [block("t")],
         },
         headers=HEADERS,
     )
@@ -142,15 +154,15 @@ def test_rag_ingest_passes_explicit_owner_acl_and_expiry_through(
     assert call["expires_at"] is not None
 
 
-def test_rag_ingest_export_only_skips_the_store(client: TestClient, stub_service: StubDocumentService) -> None:
+def test_rag_ingest_chunks_only_skips_the_store(client: TestClient, stub_service: StubDocumentService) -> None:
     response = client.post(
         "/api/v1/docparse/rag-ingest",
         json={
-            "fileName": "a.pdf",
             "documentId": "d",
-            "pages": [{"pageNumber": 1, "text": "alpha"}, {"pageNumber": 2, "text": "beta"}],
+            "blocks": [block("alpha"), block("beta", page=2)],
+            "chunkSize": 64,
+            "overlap": 0,
             "index": False,
-            "includeMarkdown": True,
             "includeChunks": True,
         },
         headers=HEADERS,
@@ -159,81 +171,37 @@ def test_rag_ingest_export_only_skips_the_store(client: TestClient, stub_service
     body = response.json()
     assert stub_service.calls == []
     assert body["chunksIndexed"] == 0
-    assert body["markdown"] == "alpha\n\nbeta"
-    assert [c["text"] for c in body["chunks"]] == ["alpha", "beta"]
+    assert [c["text"] for c in body["chunks"]] == ["alpha\n\nbeta"]
     assert body["chunks"][0]["pageStart"] == 1
+    assert body["chunks"][0]["pageEnd"] == 2
 
 
 def test_rag_ingest_index_off_with_no_export_is_422(client: TestClient) -> None:
     response = client.post(
         "/api/v1/docparse/rag-ingest",
-        json={
-            "fileName": "a.pdf",
-            "documentId": "d",
-            "pages": [{"pageNumber": 1, "text": "t"}],
-            "index": False,
-        },
+        json={"documentId": "d", "blocks": [block("t")], "index": False},
         headers=HEADERS,
     )
     assert response.status_code == 422
 
 
-def test_rag_ingest_advanced_mode_needs_the_addon(client: TestClient) -> None:
-    response = client.post(
-        "/api/v1/docparse/rag-ingest",
-        json={
-            "fileName": "x.pdf",
-            "documentId": "d",
-            "mode": "advanced",
-            "pages": [{"pageNumber": 1, "text": "t"}],
-        },
-        headers=HEADERS,
-    )
-    assert response.status_code == 501
-    assert response.json()["detail"]["addonRequired"] == "docparse"
-
-
-def test_rag_ingest_without_pages_is_422(client: TestClient) -> None:
-    response = client.post(
-        "/api/v1/docparse/rag-ingest", json={"fileName": "x.pdf", "documentId": "d"}, headers=HEADERS
-    )
+def test_rag_ingest_without_blocks_is_422(client: TestClient) -> None:
+    response = client.post("/api/v1/docparse/rag-ingest", json={"documentId": "d"}, headers=HEADERS)
     assert response.status_code == 422
 
 
 def test_rag_ingest_rejects_missing_user_header(client: TestClient) -> None:
-    response = client.post(
-        "/api/v1/docparse/rag-ingest",
-        json={"fileName": "x.pdf", "documentId": "d", "pages": [{"pageNumber": 1, "text": "t"}]},
-    )
+    response = client.post("/api/v1/docparse/rag-ingest", json={"documentId": "d", "blocks": [block("t")]})
     assert response.status_code == 401
 
 
 def test_rag_ingest_rejects_empty_document_id(client: TestClient) -> None:
     response = client.post(
         "/api/v1/docparse/rag-ingest",
-        json={"fileName": "x.pdf", "documentId": "", "pages": [{"pageNumber": 1, "text": "t"}]},
+        json={"documentId": "", "blocks": [block("t")]},
         headers=HEADERS,
     )
     assert response.status_code == 422
-
-
-@pytest.mark.parametrize("api_key, configured", [(None, False), ("test-key", True)])
-def test_capabilities_reports_actual_embedding_configuration(
-    monkeypatch: pytest.MonkeyPatch, api_key: str | None, configured: bool
-) -> None:
-    monkeypatch.delenv("VOYAGE_API_KEY", raising=False)
-    service = DocumentService(
-        embedder=EmbeddingService("voyage-4", provider="voyageai", api_key=api_key),
-        store=SqliteVecStore.ephemeral(),
-    )
-    app.dependency_overrides[get_document_service] = lambda: service
-    try:
-        response = TestClient(app).get("/api/v1/docparse/capabilities?refresh=true", headers=HEADERS)
-        assert response.status_code == 200
-        assert isinstance(response.json()["advancedInstalled"], bool)
-        assert response.json()["indexingConfigured"] is configured
-    finally:
-        app.dependency_overrides.pop(get_document_service, None)
 
 
 @pytest.mark.anyio
@@ -242,13 +210,9 @@ async def test_rag_ingest_reingest_replaces_instead_of_duplicating() -> None:
     app.dependency_overrides[get_document_service] = lambda: service
     try:
         client = TestClient(app)
-        payload = {
-            "fileName": "report.pdf",
-            "documentId": "doc-replace",
-            "pages": [{"pageNumber": 1, "text": "first version"}],
-        }
+        payload: dict[str, Any] = {"documentId": "doc-replace", "blocks": [block("first version")]}
         assert client.post("/api/v1/docparse/rag-ingest", json=payload, headers=HEADERS).status_code == 200
-        payload["pages"] = [{"pageNumber": 1, "text": "second version"}]
+        payload["blocks"] = [block("second version")]
         assert client.post("/api/v1/docparse/rag-ingest", json=payload, headers=HEADERS).status_code == 200
     finally:
         app.dependency_overrides.pop(get_document_service, None)
@@ -265,9 +229,8 @@ def test_rag_ingest_rejects_overlap_at_or_above_chunk_size(client: TestClient) -
     response = client.post(
         "/api/v1/docparse/rag-ingest",
         json={
-            "fileName": "report.pdf",
             "documentId": "doc-1",
-            "pages": [{"pageNumber": 1, "text": "para one"}],
+            "blocks": [block("para one")],
             "chunkSize": 128,
             "overlap": 128,
         },
@@ -285,9 +248,12 @@ def test_rag_ingest_forwards_pages_so_the_document_is_readable_whole(
     client.post(
         "/api/v1/docparse/rag-ingest",
         json={
-            "fileName": "report.pdf",
             "documentId": "doc-1",
-            "pages": [{"pageNumber": 1, "text": "para one"}],
+            "blocks": [
+                block("page one para"),
+                block("a table stitched over the break", page=2, page_end=3),
+                block("page three para", page=3),
+            ],
             "chunkSize": 128,
             "overlap": 0,
         },
@@ -295,4 +261,9 @@ def test_rag_ingest_forwards_pages_so_the_document_is_readable_whole(
     )
     pages = stub_service.calls[0]["pages"]
     assert pages is not None
-    assert [p.page_number for p in pages] == [1]
+    # The stitched block belongs to page 2 alone, so page 3 carries only its own text.
+    assert [(p.page_number, p.text) for p in pages] == [
+        (1, "page one para"),
+        (2, "a table stitched over the break"),
+        (3, "page three para"),
+    ]

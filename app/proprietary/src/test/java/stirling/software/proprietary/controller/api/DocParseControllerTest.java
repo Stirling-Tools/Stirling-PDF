@@ -5,9 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -32,9 +29,7 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.proprietary.model.api.docparse.RagIngestApiRequest;
 import stirling.software.proprietary.model.docparse.DocChunk;
-import stirling.software.proprietary.model.docparse.DocparseTier;
 import stirling.software.proprietary.model.docparse.IngestOutcome;
-import stirling.software.proprietary.model.docparse.RagIngestResponse;
 import stirling.software.proprietary.service.AiToolResponseHeaders;
 import stirling.software.proprietary.service.DocParseService;
 
@@ -68,28 +63,18 @@ class DocParseControllerTest {
     }
 
     private static IngestOutcome outcome(int pages, int sourcePages) {
-        RagIngestResponse response =
-                new RagIngestResponse(
-                        DocparseTier.BASIC,
-                        "doc-1",
-                        3,
-                        pages,
-                        "# Invoice\n\nbody text",
-                        List.of(new DocChunk(0, "body text", 1, 1, List.of("Invoice"))));
-        return new IngestOutcome(response, sourcePages, sourcePages > pages);
+        return new IngestOutcome(
+                "doc-1",
+                3,
+                List.of(new DocChunk(0, "body text", 1, 1, List.of("Invoice"))),
+                "# Invoice\n\nbody text",
+                pages,
+                sourcePages,
+                sourcePages > pages);
     }
 
     private void stubService(IngestOutcome result) throws IOException {
-        when(docParseService.ragIngest(
-                        any(),
-                        isNull(),
-                        anyInt(),
-                        anyInt(),
-                        any(),
-                        anyBoolean(),
-                        anyBoolean(),
-                        anyBoolean()))
-                .thenReturn(result);
+        when(docParseService.ragIngest(any())).thenReturn(result);
     }
 
     private static Map<String, String> unzip(Resource body) throws IOException {
@@ -167,7 +152,6 @@ class DocParseControllerTest {
 
         JsonNode report = report(controller().ragIngest(request(false, false)));
 
-        assertEquals("basic", report.get("mode").asString());
         assertEquals("doc-1", report.get("documentId").asString());
         assertEquals(3, report.get("chunksIndexed").asInt());
         assertEquals(2, report.get("pages").asInt());

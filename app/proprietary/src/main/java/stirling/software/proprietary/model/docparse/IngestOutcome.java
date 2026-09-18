@@ -1,4 +1,13 @@
 package stirling.software.proprietary.model.docparse;
 
-/** The ingest response plus the source page count and whether extraction hit a configured limit. */
-public record IngestOutcome(RagIngestResponse response, int sourcePages, boolean truncated) {}
+import java.util.List;
+
+/** Everything the controller needs to build the report header and the export ZIP. */
+public record IngestOutcome(
+        String documentId,
+        int chunksIndexed,
+        List<DocChunk> chunks,
+        String markdown,
+        int pages,
+        int sourcePages,
+        boolean truncated) {}

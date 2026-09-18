@@ -172,7 +172,6 @@ describe("rag ingest wire round-trip", () => {
     expect(wire.parameters).toEqual({
       chunkSize: 1024,
       overlap: 32,
-      mode: "auto",
       index: true,
       exportMarkdown: true,
       exportChunksJsonl: false,

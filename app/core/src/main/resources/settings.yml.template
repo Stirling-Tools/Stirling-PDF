@@ -407,11 +407,9 @@ aiEngine:
     classify: true # Automatic document classification/labelling
 
 # DocParse: document understanding for ingestion pipelines (chunking + knowledge-base
-# indexing). The basic tier (text layer) always works; the advanced tier (layout parsing)
-# requires the engine's docparse addon. Env overrides: DOCPARSE_ENABLED, DOCPARSE_MODE.
+# indexing). Env override: DOCPARSE_ENABLED.
 docparse:
   enabled: true # Master switch; hides the DocParse endpoints when false
-  mode: auto # Tier selection: 'auto' (best available), 'basic', or 'advanced'
 
 formDetection:
   enabled: true # Master on/off switch for the Auto Form Detection feature

@@ -1084,10 +1084,6 @@ export interface RagIngestApiRequest {
    */
   index?: boolean;
   /**
-   * Tier to use: 'auto' picks per document, or force 'basic'/'advanced'
-   */
-  mode?: "auto" | "basic" | "advanced";
-  /**
    * Overlap between adjacent chunks in characters (0-4096)
    */
   overlap?: number;

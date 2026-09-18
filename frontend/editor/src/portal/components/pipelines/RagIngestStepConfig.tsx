@@ -1,7 +1,6 @@
-import { fetchDocparseCapabilities } from "@portal/api/docparse";
-import { useAsync } from "@portal/hooks/useAsync";
 import { useTranslation } from "react-i18next";
-import { Banner, FormField, Input, Select, ToggleSwitch } from "@app/ui";
+import { Banner, FormField, Input, ToggleSwitch } from "@app/ui";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 import type { RagIngestStepParams } from "@portal/components/pipelines/docparseStep";
 
 interface RagIngestStepConfigProps {
@@ -10,14 +9,17 @@ interface RagIngestStepConfigProps {
   onChange: (parameters: RagIngestStepParams) => void;
 }
 
-/** Settings for the rag-ingest step: what it produces, how it chunks, and which parse tier. */
+/** Settings for the rag-ingest step: what it produces and how it chunks. */
 export function RagIngestStepConfig({
   parameters,
   editorInput = false,
   onChange,
 }: RagIngestStepConfigProps) {
   const { t } = useTranslation();
-  const capabilities = useAsync(() => fetchDocparseCapabilities(), []);
+  const { config, loading } = useAppConfig();
+  // DocParse has its own master switch, so the engine being on is not enough to run the step.
+  const available =
+    Boolean(config?.aiEngineEnabled) && config?.docparseEnabled !== false;
   const chunkSize = parameters.chunkSize ?? 512;
   const overlap = parameters.overlap ?? 64;
   const index = parameters.index !== false;
@@ -38,10 +40,7 @@ export function RagIngestStepConfig({
 
   return (
     <div className="portal-policies__capability-config">
-      {(capabilities.error ||
-        (capabilities.data &&
-          (!capabilities.data.enabled ||
-            !capabilities.data.engineReachable))) && (
+      {!loading && !available && (
         <Banner
           tone="warning"
           description={t("portal.pipelines.builder.ragIngest.unavailable")}
@@ -137,29 +136,6 @@ export function RagIngestStepConfig({
           step={16}
           value={parameters.overlap ?? ""}
           onChange={(e) => setNumber("overlap", e.target.value)}
-        />
-      </FormField>
-      <FormField
-        label={t("portal.pipelines.builder.ragIngest.mode")}
-        helperText={t("portal.pipelines.builder.ragIngest.modeHint")}
-      >
-        <Select
-          inputSize="sm"
-          value={parameters.mode ?? "auto"}
-          onChange={(value) =>
-            (value === "auto" || value === "basic") &&
-            onChange({ ...parameters, mode: value })
-          }
-          options={[
-            {
-              value: "auto",
-              label: t("portal.pipelines.builder.ragIngest.modeAuto"),
-            },
-            {
-              value: "basic",
-              label: t("portal.pipelines.builder.ragIngest.modeBasic"),
-            },
-          ]}
         />
       </FormField>
     </div>
