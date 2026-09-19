@@ -235,6 +235,39 @@ class ExceptionUtilsTest {
         }
 
         @Test
+        void aFailedDecryptionIsEncryptionRatherThanCorruption() {
+            // Unmocked, in PDFBox's own wording: these were listed as corruption indicators too,
+            // and corruption was tested first, so an undecryptable file read as damaged.
+            for (String message :
+                    new String[] {
+                        "BadPaddingException",
+                        "Given final block not properly padded",
+                        "AES initialization vector not fully read"
+                    }) {
+                IOException result = ExceptionUtils.handlePdfException(new IOException(message));
+                assertTrue(
+                        result.getMessage().contains("corrupted encryption data"),
+                        message + " should read as an encryption failure");
+            }
+        }
+
+        @Test
+        void structuralDamageIsStillCorruption() {
+            IOException result =
+                    ExceptionUtils.handlePdfException(
+                            new IOException("Error: End-of-File, expected line at offset 45"));
+            assertTrue(result.getMessage().contains("corrupted or damaged"));
+        }
+
+        @Test
+        void aMissingPasswordOutranksBoth() {
+            IOException result =
+                    ExceptionUtils.handlePdfException(
+                            new IOException("PDF contains an encryption dictionary"));
+            assertTrue(result.getMessage().contains("passworded"));
+        }
+
+        @Test
         void testHandlePdfExceptionWhenNoSpecialError() {
             IOException original = new IOException("something else");
             try (MockedStatic<PdfErrorUtils> mock = mockStatic(PdfErrorUtils.class)) {
