@@ -27,6 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.saas.accountlink.InstanceAiGatewayService.EngineReply;
+import stirling.software.saas.payg.model.FeatureGate;
+import stirling.software.saas.payg.cap.RequiresFeature;
 import stirling.software.saas.accountlink.InstanceAiGatewayService.StreamedReply;
 
 /**
@@ -46,6 +48,11 @@ import stirling.software.saas.accountlink.InstanceAiGatewayService.StreamedReply
 @ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
 @Hidden
 @Tag(name = "Instance AI")
+// Puts a linked instance's cloud AI behind the same plan gate a SaaS user's AI sits behind, so a
+// team without AI cannot reach it by linking a server. It gates without charging: the charge
+// interceptor short-circuits on routes with no multipart input, which leaves InstanceAiUsageService
+// the single meter and keeps one action from billing twice.
+@RequiresFeature(FeatureGate.AI_SUPPORT)
 public class InstanceAiController {
 
     private final InstanceAiGatewayService gateway;

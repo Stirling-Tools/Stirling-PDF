@@ -389,6 +389,7 @@ aiEngine:
   streamTimeoutSeconds: 1800 # SSE stream timeout (seconds) for long-running orchestrator runs
   pushConfigToEngine: true # Push admin AI config to the engine on startup + save; false = engine stays fully env-controlled
   cloud: # Only applies when mode is CLOUD
+    baseUrl: https://api.stirling.com # Stirling Cloud's API host. Must be the deployment that issued this server's account-link credential; blank falls back to the account-link URL
     allowDocumentUpload: false # Whether whole documents may be uploaded to Stirling Cloud for indexing. Off means document questions are unavailable rather than silently sending your files off-site
   models:
     provider: anthropic # Model provider: 'anthropic', 'openai', 'ollama', or 'custom' (OpenAI-compatible)

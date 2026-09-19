@@ -82,12 +82,43 @@ class AiEngineRouterTest {
 
         assertThat(target.cloud()).isTrue();
         assertThat(target.urlFor("/api/v1/orchestrator"))
-                .isEqualTo("https://stirling.com/app/api/v1/instance/ai/api/v1/orchestrator");
+                .isEqualTo("https://api.stirling.com/api/v1/instance/ai/api/v1/orchestrator");
         // The engine shared secret is this server's, and means nothing to Stirling Cloud.
         assertThat(target.headers())
                 .containsOnly(
                         java.util.Map.entry("X-Device-Id", "dev-1"),
                         java.util.Map.entry("X-Device-Secret", "sec-1"));
+    }
+
+    @Test
+    void cloudModeUsesTheConfiguredApiHostOverTheAccountLinkHost() {
+        ApplicationProperties cloud = props(AiEngineMode.CLOUD);
+        cloud.getAiEngine().getCloud().setBaseUrl("https://api.stirling.com/");
+        AiEngineRouter router =
+                new AiEngineRouter(
+                        cloud,
+                        providing(linkedStore()),
+                        providing(saasAt("https://stirling.com/app")),
+                        null);
+
+        assertThat(router.resolve().urlFor("/health"))
+                .isEqualTo("https://api.stirling.com/api/v1/instance/ai/health");
+    }
+
+    @Test
+    void aBlankApiHostFallsBackToTheAccountLinkHost() {
+        // One host serves both in a single-origin deployment.
+        ApplicationProperties cloud = props(AiEngineMode.CLOUD);
+        cloud.getAiEngine().getCloud().setBaseUrl("  ");
+        AiEngineRouter router =
+                new AiEngineRouter(
+                        cloud,
+                        providing(linkedStore()),
+                        providing(saasAt("https://stirling.com/app")),
+                        null);
+
+        assertThat(router.resolve().urlFor("/health"))
+                .isEqualTo("https://stirling.com/app/api/v1/instance/ai/health");
     }
 
     @Test

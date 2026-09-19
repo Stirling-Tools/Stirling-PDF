@@ -150,8 +150,8 @@ public class AiEngineRouter {
                                                 "Stirling Cloud AI is selected but this server is"
                                                         + " not linked to a Stirling account."));
 
-        AccountLinkProperties linkProperties = accountLinkProperties.getIfAvailable();
-        if (linkProperties == null || linkProperties.getSaasBaseUrl() == null) {
+        String base = cloudBaseUrl();
+        if (base.isEmpty()) {
             throw new ResponseStatusException(
                     HttpStatus.SERVICE_UNAVAILABLE,
                     "Stirling Cloud AI is selected but no Stirling Cloud address is configured.");
@@ -160,10 +160,21 @@ public class AiEngineRouter {
         Map<String, String> headers = new LinkedHashMap<>();
         headers.put(HEADER_DEVICE_ID, credential.getDeviceId());
         headers.put(HEADER_DEVICE_SECRET, credential.getDeviceSecret());
-        return new AiEngineTarget(
-                trimTrailingSlashes(linkProperties.getSaasBaseUrl()) + CLOUD_GATEWAY_PATH,
-                headers,
-                true);
+        return new AiEngineTarget(base + CLOUD_GATEWAY_PATH, headers, true);
+    }
+
+    /**
+     * The configured API host, or the account-link host when it is blank. One host serves both in a
+     * single-origin deployment; they differ when the API sits on its own name.
+     */
+    private String cloudBaseUrl() {
+        String configured =
+                trimTrailingSlashes(applicationProperties.getAiEngine().getCloud().getBaseUrl());
+        if (!configured.isEmpty()) {
+            return configured;
+        }
+        AccountLinkProperties linkProperties = accountLinkProperties.getIfAvailable();
+        return linkProperties == null ? "" : trimTrailingSlashes(linkProperties.getSaasBaseUrl());
     }
 
     private static String trimTrailingSlashes(String value) {

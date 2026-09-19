@@ -414,6 +414,14 @@ public class ApplicationProperties {
              * this off; document-question features then degrade rather than silently upload.
              */
             private boolean allowDocumentUpload = false;
+
+            /**
+             * Stirling Cloud's API host. Must be the same deployment that issued this server's
+             * account-link device credential, since that credential is what authenticates the call.
+             * Blank falls back to the account-link base URL, for a deployment that serves both from
+             * one host.
+             */
+            private String baseUrl = "https://api.stirling.com";
         }
 
         @Data

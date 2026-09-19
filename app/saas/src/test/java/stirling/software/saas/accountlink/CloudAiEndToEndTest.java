@@ -180,6 +180,12 @@ class CloudAiEndToEndTest {
 
         AccountLinkProperties linkProps = new AccountLinkProperties();
         linkProps.setSaasBaseUrl("http://127.0.0.1:" + cloud.getAddress().getPort());
+        // The configured API host wins over the account-link host, so point it at the test server
+        // or this would dial the real api.stirling.com.
+        instanceProps
+                .getAiEngine()
+                .getCloud()
+                .setBaseUrl("http://127.0.0.1:" + cloud.getAddress().getPort());
 
         AiEngineRouter router =
                 new AiEngineRouter(
@@ -232,6 +238,10 @@ class CloudAiEndToEndTest {
         when(unlinked.get()).thenReturn(Optional.empty());
         AccountLinkProperties linkProps = new AccountLinkProperties();
         linkProps.setSaasBaseUrl("http://127.0.0.1:" + cloud.getAddress().getPort());
+        instanceProps
+                .getAiEngine()
+                .getCloud()
+                .setBaseUrl("http://127.0.0.1:" + cloud.getAddress().getPort());
         AiEngineClient client =
                 new AiEngineClient(
                         instanceProps,
