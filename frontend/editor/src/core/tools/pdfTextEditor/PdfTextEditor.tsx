@@ -83,7 +83,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   const [applying, setApplying] = useState(false);
 
   useEditorTestGlobal(store);
-  useUnsavedChangesGuard(state.dirty);
   const pinWorkbench = useWorkbenchPin({
     workbenchId: WORKBENCH_ID,
     workbenchViewId: WORKBENCH_VIEW_ID,
@@ -246,6 +245,23 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     setSaveRisks(null);
     void doSave(pendingDownloadRef.current);
   }, [store, doSave]);
+
+  const handleDiscardChanges = useCallback(() => {
+    store.revertToSaved();
+  }, [store]);
+
+  const handleApplyChanges = useCallback(async () => {
+    await runSave(false);
+  }, [runSave]);
+
+  const checkIsDirty = useCallback(() => store.isDirty(), [store]);
+
+  useUnsavedChangesGuard({
+    dirty: state.dirty,
+    isDirty: checkIsDirty,
+    onApply: handleApplyChanges,
+    onDiscard: handleDiscardChanges,
+  });
 
   const handleInsertImage = useCallback(
     async (file: File) => {

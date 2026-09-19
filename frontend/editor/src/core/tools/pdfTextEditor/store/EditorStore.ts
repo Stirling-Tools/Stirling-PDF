@@ -529,8 +529,19 @@ export class EditorStore {
     this.patch({ pages });
   }
 
+  /** Revert uncommitted edits back to the last saved checkpoint. */
+  revertToSaved(): void {
+    if (!this.doc) return;
+    while (this.history.canUndo && this.history.peekUndo() !== this.savedTop) {
+      this.history.undo(this.doc);
+    }
+    this.selection.clear();
+    this.resnapshot();
+    this.patch({ dirty: this.isDirty() });
+  }
+
   /** Document-level dirty bit. */
-  private isDirty(): boolean {
+  isDirty(): boolean {
     if (!this.doc) return false;
     return this.bakedDirty || this.history.peekUndo() !== this.savedTop;
   }

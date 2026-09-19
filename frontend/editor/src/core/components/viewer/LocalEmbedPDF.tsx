@@ -95,6 +95,7 @@ import { RedactionSelectionMenu } from "@app/components/viewer/RedactionSelectio
 import { AnnotationSelectionMenu } from "@app/components/viewer/AnnotationSelectionMenu";
 import { AnnotationMenuEvents } from "@app/components/viewer/AnnotationMenuEvents";
 import { DocumentSwapBridge } from "@app/components/viewer/DocumentSwapBridge";
+import "@app/components/viewer/SwapProgressAffordance.css";
 import { AnnotationDeletedMenu } from "@app/components/viewer/AnnotationDeletedMenu";
 import { TextSelectionMenu } from "@app/components/viewer/TextSelectionMenu";
 import {
@@ -361,8 +362,22 @@ export function LocalEmbedPDF({
     buffer: ArrayBuffer;
     name: string;
   } | null>(null);
+  const [isSlowSwap, setIsSlowSwap] = useState(false);
   const initialDocumentOpenedRef = useRef(false);
   const openedContentKeyRef = useRef<string | null>(null);
+
+  // When a background document open takes longer than 300ms, display a subtle
+  // progress affordance. Faster swaps complete with 0 indicator renders.
+  useEffect(() => {
+    if (!pendingDocument) {
+      setIsSlowSwap(false);
+      return;
+    }
+    const timer = setTimeout(() => {
+      setIsSlowSwap(true);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [pendingDocument]);
   // Anchors survive deselection per annotation id, so a delete that happens
   // while no menu is open (keyboard, sidebar) still has somewhere to appear.
   const annotationAnchorsByIdRef = useRef<Map<string, AnnotationMenuAnchor>>(
@@ -748,6 +763,16 @@ export function LocalEmbedPDF({
         <span className="sr-only" aria-live="polite" aria-atomic="true">
           {swapAnnouncement}
         </span>
+        {isSlowSwap && (
+          <div
+            className="swap-progress-affordance"
+            data-testid="swap-progress-affordance"
+            role="progressbar"
+            aria-label={t("viewer.documentReloading", "Updating document")}
+          >
+            <div className="swap-progress-bar" />
+          </div>
+        )}
         <EmbedPDF
           engine={engine}
           plugins={plugins}

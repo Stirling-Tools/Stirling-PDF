@@ -1,22 +1,44 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 
-// Guard unsaved edits on BOTH exit routes.
-//
-// `beforeunload` only covers a full-page unload (tab close / reload / external
-// navigation). Switching tools inside the SPA never triggers it, so on its own
-// this hook let the editor drop every edit silently. NavigationContext is the
-// app's own in-app guard - it is what PageEditor uses - and it drives
-// NavigationWarningModal.
-export function useUnsavedChangesGuard(dirty: boolean): void {
+export interface UnsavedChangesGuardOptions {
+  dirty: boolean;
+  isDirty?: () => boolean;
+  onApply?: () => Promise<void>;
+  onDiscard?: () => Promise<void> | void;
+}
+
+/** Guard unsaved edits on browser exit and SPA tool navigation. */
+export function useUnsavedChangesGuard(
+  optionsOrDirty: boolean | UnsavedChangesGuardOptions,
+): void {
   const { actions } = useNavigationActions();
-  const setHasUnsavedChanges = actions.setHasUnsavedChanges;
+  const {
+    setHasUnsavedChanges,
+    registerUnsavedChangesChecker,
+    unregisterUnsavedChangesChecker,
+    registerNavigationWarningHandlers,
+    unregisterNavigationWarningHandlers,
+  } = actions;
+
+  const options =
+    typeof optionsOrDirty === "boolean"
+      ? { dirty: optionsOrDirty }
+      : optionsOrDirty;
+
+  const { dirty, isDirty, onApply, onDiscard } = options;
+
+  const onApplyRef = useRef(onApply);
+  onApplyRef.current = onApply;
+  const onDiscardRef = useRef(onDiscard);
+  onDiscardRef.current = onDiscard;
+  const isDirtyRef = useRef(isDirty);
+  isDirtyRef.current = isDirty;
 
   useEffect(() => {
     if (!dirty) return;
     const handler = (e: BeforeUnloadEvent) => {
       e.preventDefault();
-      e.returnValue = "";
     };
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
@@ -24,8 +46,34 @@ export function useUnsavedChangesGuard(dirty: boolean): void {
 
   useEffect(() => {
     setHasUnsavedChanges(dirty);
-    // Clear on unmount so a stale flag cannot block navigation after the
-    // editor is gone.
     return () => setHasUnsavedChanges(false);
   }, [dirty, setHasUnsavedChanges]);
+
+  useEffect(() => {
+    if (!isDirtyRef.current) return;
+    registerUnsavedChangesChecker(() => isDirtyRef.current?.() ?? false);
+    return () => unregisterUnsavedChangesChecker();
+  }, [registerUnsavedChangesChecker, unregisterUnsavedChangesChecker]);
+
+  useEffect(() => {
+    if (!onApply && !onDiscard) return;
+    registerNavigationWarningHandlers({
+      onApplyAndContinue: onApply
+        ? async () => {
+            await onApplyRef.current?.();
+          }
+        : undefined,
+      onDiscardAndContinue: onDiscard
+        ? async () => {
+            await onDiscardRef.current?.();
+          }
+        : undefined,
+    });
+    return () => unregisterNavigationWarningHandlers();
+  }, [
+    onApply,
+    onDiscard,
+    registerNavigationWarningHandlers,
+    unregisterNavigationWarningHandlers,
+  ]);
 }

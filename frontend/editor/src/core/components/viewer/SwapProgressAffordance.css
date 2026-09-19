@@ -1,0 +1,42 @@
+/* Progress affordance displayed when a background document reload takes longer than 300ms. */
+.swap-progress-affordance {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 30;
+  pointer-events: none;
+  overflow: hidden;
+  background-color: var(--c-border-subtle);
+}
+
+.swap-progress-bar {
+  width: 40%;
+  height: 100%;
+  background-color: var(--c-primary);
+  border-radius: 1px;
+  will-change: transform;
+  animation: swap-progress-indeterminate 1.4s cubic-bezier(0.4, 0, 0.2, 1)
+    infinite;
+}
+
+@keyframes swap-progress-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swap-progress-bar {
+    animation: none;
+    width: 100%;
+    opacity: 0.6;
+  }
+}
