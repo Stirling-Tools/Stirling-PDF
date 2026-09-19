@@ -30,7 +30,11 @@ public class PdfSigningServiceImpl implements PdfSigningService {
             String name,
             String location,
             String reason,
-            boolean showLogo)
+            boolean showLogo,
+            Double signatureRectX,
+            Double signatureRectY,
+            Double signatureRectWidth,
+            Double signatureRectHeight)
             throws Exception {
 
         CertSignController.CreateSignature createSignature =
@@ -50,7 +54,11 @@ public class PdfSigningServiceImpl implements PdfSigningService {
                 name,
                 location,
                 reason,
-                showLogo);
+                showLogo,
+                signatureRectX,
+                signatureRectY,
+                signatureRectWidth,
+                signatureRectHeight);
 
         return outputStream.toByteArray();
     }
