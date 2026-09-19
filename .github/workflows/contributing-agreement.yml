@@ -1,0 +1,123 @@
+name: Contributing agreement
+
+on:
+  pull_request_target:
+    types: [closed]
+
+concurrency:
+  group: contributing-agreement-${{ github.event.action == 'closed' && 'merged' || github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  check-agreement:
+    permissions:
+      # Required to append the contributor agreement to CONTRIBUTORS.md after a merge.
+      # Read access is sufficient for the agreement validation itself.
+      contents: write
+    name: Record contributor agreement
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate agreement
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          AGREEMENT_MARKER: "<!-- contributing-agreement -->"
+          CONTRIBUTORS_FILE: "CONTRIBUTORS.md"
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const pullRequest = context.payload.pull_request;
+            const openingDescription = pullRequest.body || '';
+
+            // Older PRs do not contain the marker and are intentionally
+            // grandfathered in.
+            if (!openingDescription.includes(process.env.AGREEMENT_MARKER)) {
+              core.info(`Skipping contributor agreement for PR #${pullRequest.number}: marker not found.`);
+              return;
+            }
+
+            const crypto = require('crypto');
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const branch = context.payload.repository.default_branch;
+            const login = pullRequest.user.login;
+
+            async function getFile(path, ref = branch) {
+              let response;
+              try {
+                response = await github.rest.repos.getContent({ owner, repo, path, ref });
+              } catch (error) {
+                if (path !== process.env.CONTRIBUTORS_FILE || error.status !== 404) {
+                  throw error;
+                }
+
+                // CONTRIBUTORS.md may not exist yet on repositories upgrading
+                // to this workflow. Treat it as an empty file so the first
+                // accepted merge can create it.
+                return {
+                  content: '# Contributors\n\n| GitHub user | Merged Pull Request | `CONTRIBUTING.md` SHA-256 |\n| --- | --- | --- |\n',
+                  sha: null,
+                };
+              }
+
+              if (Array.isArray(response.data) || response.data.encoding !== 'base64') {
+                throw new Error(`${path} is not a regular base64-encoded file.`);
+              }
+              return {
+                content: Buffer.from(response.data.content, 'base64').toString('utf8'),
+                sha: response.data.sha,
+              };
+            }
+
+            const contributing = await getFile('CONTRIBUTING.md', pullRequest.merge_commit_sha);
+            const contributingHash = crypto.createHash('sha256')
+              .update(Buffer.from(contributing.content, 'utf8'))
+              .digest('hex');
+            const contributors = await getFile(process.env.CONTRIBUTORS_FILE);
+            const existingEntry = contributors.content
+              .split(/\r?\n/)
+              .find((line) => line.startsWith(`| @${login} |`));
+            const alreadyAgreed = existingEntry?.includes(contributingHash) === true;
+            core.info(`Agreement accepted for @${login} (CONTRIBUTING.md SHA-256: ${contributingHash}).`);
+
+            if (alreadyAgreed) {
+              core.info(`@${login} is already listed for this CONTRIBUTING.md version.`);
+              return;
+            }
+
+            const line = `| @${login} | [#${pullRequest.number}](${pullRequest.html_url}) | ${contributingHash} |`;
+            for (let attempt = 1; attempt <= 3; attempt += 1) {
+              const latest = await getFile(process.env.CONTRIBUTORS_FILE);
+              if (latest.content.split(/\r?\n/).some((entry) => entry.startsWith(`| @${login} |`) && entry.includes(contributingHash))) {
+                core.info(`@${login} was recorded by a concurrent merge.`);
+                return;
+              }
+
+              try {
+                const updatedContent = latest.content.trimEnd() + `\n${line}\n`;
+                await github.rest.repos.createOrUpdateFileContents({
+                  owner,
+                  repo,
+                  path: process.env.CONTRIBUTORS_FILE,
+                  message: `docs: record contributor agreement for #${pullRequest.number}`,
+                  content: Buffer.from(updatedContent, 'utf8').toString('base64'),
+                  branch,
+                  ...(latest.sha ? { sha: latest.sha } : {}),
+                  committer: {
+                    name: 'github-actions[bot]',
+                    email: '41898282+github-actions[bot]@users.noreply.github.com',
+                  },
+                  author: {
+                    name: 'github-actions[bot]',
+                    email: '41898282+github-actions[bot]@users.noreply.github.com',
+                  },
+                });
+                core.info(`Added @${login} to ${process.env.CONTRIBUTORS_FILE}.`);
+                return;
+              } catch (error) {
+                if (error.status !== 409 || attempt === 3) {
+                  throw error;
+                }
+                core.warning(`Concurrent update detected; retrying (${attempt}/3).`);
+              }
+            }
