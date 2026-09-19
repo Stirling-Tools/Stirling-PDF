@@ -219,9 +219,21 @@ test.describe("CertSign tool - hardware signing (desktop)", () => {
       page.getByRole("button", { name: /windows certificate store/i }),
     ).toBeVisible({ timeout: 10_000 });
 
-    // The single enumerated cert is auto-selected into the picker input.
+    // The single enumerated cert is auto-selected, and the panel names it.
+    await expect(page.getByText("Anthony Stirling").first()).toBeVisible({
+      timeout: 10_000,
+    });
+
+    // The list itself lives in a dialog, where there is room to tell certificates apart.
+    await page.getByRole("button", { name: /change certificate/i }).click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible({ timeout: 10_000 });
     await expect(
-      page.getByRole("textbox", { name: /^certificate$/i }),
-    ).toHaveValue(/Anthony Stirling/, { timeout: 10_000 });
+      dialog.getByRole("columnheader", { name: /issued by/i }),
+    ).toBeVisible();
+    await expect(
+      dialog.getByRole("columnheader", { name: /valid until/i }),
+    ).toBeVisible();
+    await expect(dialog.getByText("Anthony Stirling").first()).toBeVisible();
   });
 });
