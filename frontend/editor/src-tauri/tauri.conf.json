@@ -18,6 +18,8 @@
         "height": 800,
         "resizable": true,
         "fullscreen": false,
+        "visible": false,
+        "center": true,
         "dragDropEnabled": false,
         "additionalBrowserArgs": "--enable-features=CertVerifierBuiltinFeature"
       }
