@@ -349,6 +349,20 @@ public class GeneralUtils {
      * @param host the hostname to resolve
      * @return {@code true} if the host should be considered unsafe
      */
+    /**
+     * Whether the server should refuse to contact this host.
+     *
+     * <p>Same check {@link #isURLReachable(String)} applies, exposed on its own for callers that
+     * are about to make the request themselves and need the guard without paying for an extra probe
+     * first. Resolution failures count as unsafe.
+     *
+     * @param host hostname or literal address taken from a URL
+     * @return {@code true} if the host resolves into a range that must not be reached
+     */
+    public boolean isSensitiveHost(String host) {
+        return isDisallowedNetworkLocation(host);
+    }
+
     private boolean isDisallowedNetworkLocation(String host) {
         // Resolution is delegated to the JVM/OS resolver which already applies system
         // configured query limits and timeouts. We only need the resolved addresses here so

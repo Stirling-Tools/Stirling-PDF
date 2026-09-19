@@ -1,0 +1,26 @@
+[package]
+name = "stirling-ocr-setup"
+version = "0.1.0"
+edition = "2021"
+
+# A DLL, not an executable, and that is forced by the requirement rather than a
+# preference: an MSI custom action of type EXE runs out of process and never
+# receives the installer session handle, so it cannot move the progress bar. A
+# DLL entry point is handed the MSIHANDLE and can talk to the wizard.
+[lib]
+name = "stirling_ocr_setup"
+crate-type = ["cdylib"]
+
+[dependencies]
+# ureq rather than reqwest: this runs inside msiexec, so a synchronous client
+# with no async runtime keeps the DLL small and the failure modes obvious.
+ureq = { version = "2.10", default-features = false, features = ["tls", "json"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sha2 = "0.10"
+zip = { version = "2.2", default-features = false, features = ["deflate"] }
+
+[profile.release]
+opt-level = "z"
+lto = true
+strip = true
