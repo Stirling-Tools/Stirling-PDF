@@ -199,6 +199,66 @@ function surrogatePairsSurviveTogether(
   return true;
 }
 
+// Characters that bind to the character before them: combining marks, ZWJ /
+// ZWNJ joiners, variation selectors. A diff boundary inside such a sequence
+// would emit the pieces as separate glyph runs, so those plans are refused and
+// the caller falls back to a full re-emit. The check can only make the plan
+// more conservative; it never drops text.
+function isClusterExtender(cp: number): boolean {
+  return (
+    (cp >= 0x0300 && cp <= 0x036f) ||
+    (cp >= 0x0483 && cp <= 0x0489) ||
+    (cp >= 0x1ab0 && cp <= 0x1aff) ||
+    (cp >= 0x1dc0 && cp <= 0x1dff) ||
+    (cp >= 0x20d0 && cp <= 0x20ff) ||
+    (cp >= 0xfe00 && cp <= 0xfe0f) ||
+    (cp >= 0xfe20 && cp <= 0xfe2f) ||
+    cp === 0x200c ||
+    cp === 0x200d
+  );
+}
+
+function clusterBoundariesIntact(
+  prev: string,
+  next: string,
+  keptA: Set<number>,
+  keptB: Set<number>,
+  alignment: Array<{ aIdx: number; bIdx: number }>,
+): boolean {
+  const aToB = new Map<number, number>();
+  const bToA = new Map<number, number>();
+  for (const { aIdx, bIdx } of alignment) {
+    aToB.set(aIdx, bIdx);
+    bToA.set(bIdx, aIdx);
+  }
+  const scan = (
+    text: string,
+    kept: Set<number>,
+    toOther: Map<number, number>,
+  ): boolean => {
+    const sameFate = (a: number, b: number): boolean => {
+      const aKept = kept.has(a);
+      if (aKept !== kept.has(b)) return false;
+      if (!aKept) return true;
+      const otherA = toOther.get(a);
+      return otherA !== undefined && toOther.get(b) === otherA + 1;
+    };
+    for (let i = 1; i < text.length; i++) {
+      const cp = text.codePointAt(i) ?? 0;
+      if (!isClusterExtender(cp)) continue;
+      // The extender binds to its base on the left...
+      if (!sameFate(i - 1, i)) return false;
+      // ...and a joiner also binds whatever it joins on the right, so a
+      // trailing ZWJ with its base dropped is a split too.
+      if ((cp === 0x200c || cp === 0x200d) && i + 1 < text.length) {
+        if (!sameFate(i, i + 1)) return false;
+      }
+    }
+    return true;
+  };
+  return scan(prev, keptA, aToB) && scan(next, keptB, bToA);
+}
+
 /** Diff-driven partial editing. */
 export interface PartialEditOp {
   type: "keep" | "insert" | "modify";
@@ -311,6 +371,11 @@ export function planPartialEdit(
     astral &&
     !surrogatePairsSurviveTogether(prevText, nextText, keptA, keptB, alignment)
   ) {
+    return null;
+  }
+  // ...and a boundary landing inside a grapheme cluster (combining mark, ZWJ
+  // sequence) would emit the pieces as separate runs.
+  if (!clusterBoundariesIntact(prevText, nextText, keptA, keptB, alignment)) {
     return null;
   }
 
