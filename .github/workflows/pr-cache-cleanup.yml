@@ -16,8 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
-      actions: write
-      contents: read
+      contents: write
 
     steps:
       - name: Check out repository
@@ -33,7 +32,7 @@ jobs:
           package-manager-cache: false
 
       - name: Clean up pull request cache
-        run: node dist/pr-cleanup.js
+        uses: Ludy87/cache-the-planet/pr-cleanup@v1.7.0
         env:
           PR_REPOSITORY: ${{ github.event.repository.full_name }}
           PR_NUMBER: ${{ github.event.pull_request.number }}

@@ -52,10 +52,10 @@ jobs:
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
           
       - name: Garbage collect cache
-        uses: Ludy87/cache-the-planet/gc@v1
+        uses: Ludy87/cache-the-planet/gc@v1.7.0
         with:
-          repository: Ludy87/cache-the-planet
-          token: ${{ secrets.CACHE_REPOSITORY_TOKEN }}
+          repository: Stirling-Tools/Stirling-PDF
+          token: ${{ steps.setup-bot.outputs.token }}
           mode: expired
           untrusted-ttl-hours: "24"
           dry-run: "false"
