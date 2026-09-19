@@ -10,9 +10,9 @@ import json
 import os
 import subprocess
 import sys
-from concurrent.futures import ThreadPoolExecutor
 import time
 import tomllib
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 
@@ -23,7 +23,7 @@ def run_command(cmd, description=""):
         print(f"Step: {description}")
         print(f"{'=' * 60}")
 
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=False)
 
     if result.stdout:
         print(result.stdout)
@@ -155,7 +155,7 @@ def translate_batches(batch_files, language_code, api_key, timeout=600, model="g
         cmd = f'python3 scripts/translations/batch_translator.py "{batch_file}" --language {language_code} --api-key "{api_key}" --model {model}'
 
         try:
-            result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout)
+            result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout, check=False)
         except subprocess.TimeoutExpired:
             print(f"✗ Timed out after {timeout}s: {batch_file}", file=sys.stderr)
             return None
@@ -388,7 +388,7 @@ Examples:
     except KeyboardInterrupt:
         print("\n\n⚠ Translation interrupted by user")
         sys.exit(1)
-    except Exception as e:
+    except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as e:
         print(f"\n\n✗ Error: {e}")
         import traceback
 
