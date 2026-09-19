@@ -137,6 +137,20 @@ export function maintenanceMayRewrite(
   return !(record.data instanceof Blob) || blobValuesSupported;
 }
 
+/**
+ * True when a still-fresh thumbnail is past half its TTL and should be re-dated
+ * so an active library does not expire it. Listings rewrite only the records
+ * that cross the halfway mark, instead of every thumbnailed record per scan.
+ */
+export function shouldBumpThumbnailTtl(
+  record: Pick<StoredStirlingFileRecord, "thumbnail" | "thumbnailStoredAt">,
+  now: number = Date.now(),
+): boolean {
+  if (!record.thumbnail || !record.thumbnailStoredAt) return false;
+  const age = now - record.thumbnailStoredAt;
+  return age >= THUMBNAIL_TTL_MS / 2 && age < THUMBNAIL_TTL_MS;
+}
+
 /** WebKit loses backing stores for blobs it accepted, and only a real read shows
  *  it. One byte is enough: what fails is opening the store, not the length. */
 async function blobReadFailure(data: Blob): Promise<unknown> {
@@ -786,8 +800,8 @@ class FileStorageService {
               record.thumbnail &&
               maintenanceMayRewrite(record, this.blobValuesSupported)
             ) {
-              if (fresh) tobump.push(record.id);
-              else toexpire.push(record.id);
+              if (shouldBumpThumbnailTtl(record)) tobump.push(record.id);
+              else if (!fresh) toexpire.push(record.id);
             }
             this.reportIfUnreadable(record);
             stubs.push({
@@ -894,8 +908,8 @@ class FileStorageService {
               record.thumbnail &&
               maintenanceMayRewrite(record, this.blobValuesSupported)
             ) {
-              if (fresh) tobump.push(record.id);
-              else toexpire.push(record.id);
+              if (shouldBumpThumbnailTtl(record)) tobump.push(record.id);
+              else if (!fresh) toexpire.push(record.id);
             }
             this.reportIfUnreadable(record);
             leafStubs.push({
