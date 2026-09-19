@@ -74,15 +74,13 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
   }, [t]);
 
   useEffect(() => {
-    setupCompleteRef.current = setupComplete;
-  }, [setupComplete]);
-
-  useEffect(() => {
     void fetchMfaSetup();
 
     return () => {
       if (!setupCompleteRef.current) {
-        void accountService.cancelMfaSetup();
+        accountService.cancelMfaSetup().catch(() => {
+          // No pending secret to clear once MFA is enabled; ignore the 409.
+        });
       }
     };
   }, [fetchMfaSetup]);
