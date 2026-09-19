@@ -1,0 +1,175 @@
+name: Publish PR cache artifacts
+run-name: "Publish PR cache artifacts - ${{ github.event.workflow_run.display_title || format('run #{0}', github.event.workflow_run.id) }}"
+
+on:
+  workflow_run:
+    workflows: [Build and Test Workflow]
+    types: [completed]
+
+jobs:
+  publish:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.repository.full_name == github.repository &&
+      github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
+    timeout-minutes: 5
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout trusted publisher
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+
+      - name: Setup GitHub App Bot
+        id: setup-bot
+        uses: ./.github/actions/setup-bot
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - name: Resolve PR cache artifact names
+        id: pr
+        run: |
+          curl --fail-with-body --silent --show-error \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts?per_page=100" \
+            > "$RUNNER_TEMP/pr-cache-artifacts.json"
+          node <<'NODE'
+          const fs = require("fs");
+          const output = process.env.GITHUB_OUTPUT;
+          const artifacts = JSON.parse(
+            fs.readFileSync(process.env.RUNNER_TEMP + "/pr-cache-artifacts.json", "utf8"),
+          ).artifacts || [];
+          const names = artifacts
+            .map((artifact) => artifact.name)
+            .filter((name) =>
+              /^cache-the-planet-pr-[1-9]\d*-[A-Za-z0-9_-]{1,32}-[0-9a-f]{8,128}-v[1-9]\d*$/i.test(
+                name,
+              ),
+            );
+          const pullRequests = [
+            ...new Set(
+              names.map((name) =>
+                name.match(/^cache-the-planet-pr-([1-9]\d*)-/)[1],
+              ),
+            ),
+          ];
+          if (pullRequests.length > 1) {
+            throw new Error(
+              `artifacts identify multiple pull requests: ${pullRequests.join(", ")}`,
+            );
+          }
+          fs.appendFileSync(
+            output,
+            `number=${pullRequests[0] || ""}\ncount=${names.length}\nname=${
+              names.length === 1 ? names[0] : ""
+            }\n`,
+          );
+          if (!names.length) {
+            console.log("No PR cache artifacts found; nothing to publish.");
+          }
+          NODE
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+
+      - name: Download single PR cache artifact
+        if: ${{ steps.pr.outputs.count == '1' }}
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+          name: ${{ steps.pr.outputs.name }}
+          path: pr-cache-artifacts/${{ steps.pr.outputs.name }}
+
+      - name: Download multiple PR cache artifacts
+        if: ${{ steps.pr.outputs.count > 1 }}
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+          pattern: cache-the-planet-pr-*
+          path: pr-cache-artifacts
+          merge-multiple: false
+
+      - name: Publish isolated PR caches
+        if: ${{ steps.pr.outputs.number != '' }}
+        env:
+          GITHUB_TOKEN: ${{ steps.setup-bot.outputs.token }}
+          SOURCE_ARTIFACT_TOKEN: ${{ github.token }}
+          ARTIFACT_RUN_ID: ${{ github.event.workflow_run.id }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          EXPECTED_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          EXPECTED_WORKFLOW: Cache integration save suite
+          CACHE_CONFIG_FILE: .cache-the-planet.json
+          PR_CACHE_ARTIFACTS_DIR: ${{ github.workspace }}/pr-cache-artifacts
+        run: node scripts/publish-pr-cache-artifacts.js
+
+      - name: Delete published PR cache artifacts
+        if: ${{ steps.pr.outputs.number != '' }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ARTIFACT_RUN_ID: ${{ github.event.workflow_run.id }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          node <<'NODE'
+          const repository = process.env.GITHUB_REPOSITORY;
+          const runId = process.env.ARTIFACT_RUN_ID;
+          const prNumber = process.env.PR_NUMBER;
+          const token = process.env.GITHUB_TOKEN;
+          const api = `https://api.github.com/repos/${repository}`;
+          const headers = {
+            Accept: "application/vnd.github+json",
+            Authorization: `Bearer ${token}`,
+            "X-GitHub-Api-Version": "2022-11-28",
+          };
+          const prefix = `cache-the-planet-pr-${prNumber}-`;
+          const namePattern = new RegExp(
+            `^cache-the-planet-pr-${prNumber}-[A-Za-z0-9_-]{1,32}-[0-9a-f]{8,128}-v[1-9]\\d*$`,
+            "i",
+          );
+
+          async function request(url, options = {}) {
+            const response = await fetch(url, { ...options, headers });
+            if (!response.ok) {
+              throw new Error(`${options.method || "GET"} ${url} failed: ${response.status}`);
+            }
+            return response.status === 204 ? null : response.json();
+          }
+
+          (async () => {
+            const data = await request(
+              `${api}/actions/runs/${encodeURIComponent(runId)}/artifacts?per_page=100`,
+            );
+            const artifacts = (data.artifacts || []).filter(
+              (artifact) =>
+                !artifact.expired &&
+                typeof artifact.id === "number" &&
+                typeof artifact.name === "string" &&
+                artifact.name.startsWith(prefix) &&
+                namePattern.test(artifact.name),
+            );
+            for (const artifact of artifacts) {
+              await request(`${api}/actions/artifacts/${artifact.id}`, {
+                method: "DELETE",
+              });
+              console.log(`Deleted source artifact ${artifact.name}`);
+            }
+            console.log(`Deleted ${artifacts.length} published PR cache artifact(s).`);
+          })().catch((error) => {
+            console.error(error.message);
+            process.exitCode = 1;
+          });
+          NODE
