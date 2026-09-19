@@ -37,7 +37,7 @@ jobs:
           package-manager-cache: false
 
       - name: Clean up pull request cache
-        uses: Ludy87/cache-the-planet/pr-cleanup@v1.7.0
+        uses: Ludy87/cache-the-planet/pr-cleanup@7b13e629dbb33bcda505cba4cdb5c6d5898d3168 # v1.7.0
         env:
           PR_REPOSITORY: ${{ github.event.repository.full_name }}
           PR_NUMBER: ${{ github.event.pull_request.number }}

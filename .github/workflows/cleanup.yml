@@ -52,7 +52,7 @@ jobs:
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
           
       - name: Garbage collect cache
-        uses: Ludy87/cache-the-planet/gc@v1.7.0
+        uses: Ludy87/cache-the-planet/gc@7b13e629dbb33bcda505cba4cdb5c6d5898d3168 # v1.7.0
         with:
           repository: Stirling-Tools/Stirling-PDF
           token: ${{ steps.setup-bot.outputs.token }}
