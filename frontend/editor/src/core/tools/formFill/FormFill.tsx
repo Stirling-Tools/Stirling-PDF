@@ -391,7 +391,6 @@ const FormFill = (_props: BaseToolProps) => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (formState.isDirty) {
         e.preventDefault();
-        e.returnValue = "";
       }
     };
     window.addEventListener("beforeunload", handleBeforeUnload);

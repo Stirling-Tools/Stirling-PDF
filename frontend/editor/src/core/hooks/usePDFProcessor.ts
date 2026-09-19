@@ -108,7 +108,7 @@ export function usePDFProcessor() {
         pdfWorkerManager.destroyDocument(pdf);
 
         const document: PDFDocument = {
-          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
           name: file.name,
           file,
           pages,

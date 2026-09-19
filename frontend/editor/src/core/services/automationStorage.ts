@@ -64,7 +64,7 @@ class AutomationStorage {
     const timestamp = new Date().toISOString();
 
     const automationWithMeta: AutomationConfig = {
-      id: `automation-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: `automation-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
       ...automation,
       createdAt: timestamp,
       updatedAt: timestamp,
