@@ -427,6 +427,11 @@ export function fontIsSymbolic(
   return symbolic;
 }
 
+/** Test-only: clear the symbolic-font cache. */
+export function _clearSymbolicFontCacheForTests(): void {
+  symbolicFontCache.clear();
+}
+
 export function findFontForChar(
   unicodeChar: string,
   ctx: ResolverContext,
