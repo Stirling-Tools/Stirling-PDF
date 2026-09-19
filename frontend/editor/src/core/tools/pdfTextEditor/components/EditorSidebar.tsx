@@ -173,10 +173,24 @@ function useSelectedFontNote(
     if (selection.runIds.length === 0) return null;
     const picked = new Set(selection.runIds);
     const fontIds = new Set<string>();
-    for (const page of state.pages)
-      for (const run of page.runs)
-        if (picked.has(run.id)) fontIds.add(run.fontId);
+    // Form XObjects cannot be written back into (no insert API), so an edited
+    // run from one lands at page level; say so rather than let the user wonder
+    // why the form's transform no longer applies.
+    let fromForm = false;
+    for (const page of state.pages) {
+      for (const run of page.runs) {
+        if (!picked.has(run.id)) continue;
+        fontIds.add(run.fontId);
+        if (run.fromForm) fromForm = true;
+      }
+    }
     if (fontIds.size === 0) return null;
+    if (fromForm) {
+      return t(
+        "pdfTextEditor.inspector.fromForm",
+        "From a form XObject · edits are written at page level.",
+      );
+    }
 
     const fonts = analyzePageFonts(state.pages).filter((f) =>
       // analyzePageFonts keys by display name + status, so match on the names

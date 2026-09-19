@@ -6,6 +6,7 @@ import type {
 } from "@app/tools/pdfTextEditor/charcode/CharcodeStrategy";
 import { getActiveCharcodeStrategy } from "@app/tools/pdfTextEditor/charcode/CharcodeStrategy";
 import { getCachedFontProgramSha256 } from "@app/tools/pdfTextEditor/charcode/CmapResolver";
+import { isPrivateUse } from "@app/tools/pdfTextEditor/util/textScripts";
 
 /** Strategy 3: ask the Spring backend (PDFBox) to encode chars. */
 
@@ -386,6 +387,51 @@ export function _clearReusableFontCacheForTests(): void {
   reusableFontCache.clear();
 }
 
+// PDF font descriptor flags: bit 3 (0x4) SYMBOLIC, bit 6 (0x20) NON_SYMBOLIC.
+const SYMBOLIC_FLAG = 0x4;
+const NON_SYMBOLIC_FLAG = 0x20;
+
+const symbolicFontCache = new Map<number, boolean>();
+
+/**
+ * Whether a font declares itself symbolic (and not nonsymbolic). Borrowing a
+ * standard Unicode character into one is a mapping guess: symbol fonts use
+ * ad-hoc code pages, so the charcode that renders "A" here may render a Greek
+ * letter there. Private-use characters are exempt - the run's own PUA text is
+ * exactly what those faces carry.
+ */
+export function fontIsSymbolic(
+  m: ResolverContext["module"],
+  fontPtr: number,
+): boolean {
+  if (!fontPtr) return false;
+  const cached = symbolicFontCache.get(fontPtr);
+  if (cached !== undefined) return cached;
+  const getFlags = (
+    m as unknown as { FPDFFont_GetFlags?: (font: number) => number }
+  ).FPDFFont_GetFlags;
+  if (typeof getFlags !== "function") {
+    // No API: assume a normal encoding rather than vetoing every borrow.
+    symbolicFontCache.set(fontPtr, false);
+    return false;
+  }
+  let symbolic = false;
+  try {
+    const flags = getFlags(fontPtr);
+    symbolic =
+      (flags & SYMBOLIC_FLAG) !== 0 && (flags & NON_SYMBOLIC_FLAG) === 0;
+  } catch {
+    symbolic = false;
+  }
+  symbolicFontCache.set(fontPtr, symbolic);
+  return symbolic;
+}
+
+/** Test-only: clear the symbolic-font cache. */
+export function _clearSymbolicFontCacheForTests(): void {
+  symbolicFontCache.clear();
+}
+
 export function findFontForChar(
   unicodeChar: string,
   ctx: ResolverContext,
@@ -453,6 +499,11 @@ export function findFontForChar(
           if (!got || got.bold !== want.bold || got.italic !== want.italic) {
             continue;
           }
+        }
+        // A symbolic face would map this standard character through its own
+        // code page; prefer any nonsymbolic candidate (Noto fallback included).
+        if (!isPrivateUse(cp) && fontIsSymbolic(m, f)) {
+          continue;
         }
         if (!likeName || baseFontFamily(readFontName(m, f)) === likeName) {
           fontForCharCache.set(cacheK, f);

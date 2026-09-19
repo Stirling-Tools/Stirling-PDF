@@ -6849,6 +6849,7 @@ zoomDesc = "Zoom in / out"
 [pdfTextEditor.inspector]
 document = "Document"
 fontEmbedded = "Embedded font · a character it lacks falls back to Helvetica."
+fromForm = "From a form XObject · edits are written at page level."
 fontGap = "{{name}} · missing {{glyphs}} - typing those falls back to Helvetica."
 geometry = "Position & size"
 height = "Height"

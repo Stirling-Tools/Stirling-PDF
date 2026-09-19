@@ -75,19 +75,33 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
     [matchCase, wholeWord, ignoreAccents],
   );
 
+  // The pages array gets a new identity on every store patch (selection,
+  // overlay refresh), which re-scanned every run per keystroke while the bar
+  // is open. The signature only changes when a page's content actually does,
+  // so unrelated patches reuse the previous result.
+  const run = useRef(pages);
+  run.current = pages;
+  const pageSignature = useMemo(
+    () =>
+      pages
+        .map((p) => `${p.pageIndex}:${p.revision}:${p.runs.length}`)
+        .join("|"),
+    [pages],
+  );
   const matches: Match[] = useMemo(() => {
     if (!query) return [];
     const out: Match[] = [];
-    for (const page of pages) {
-      for (const run of page.runs) {
-        const ranges = findMatches(run.text, query, options);
+    for (const page of run.current) {
+      for (const r of page.runs) {
+        const ranges = findMatches(r.text, query, options);
         if (ranges.length > 0) {
-          out.push({ pageIndex: page.pageIndex, runId: run.id, run, ranges });
+          out.push({ pageIndex: page.pageIndex, runId: r.id, run: r, ranges });
         }
       }
     }
     return out;
-  }, [query, pages, options]);
+    // pageSignature stands in for pages so unrelated patches skip the scan.
+  }, [query, pageSignature, options]);
 
   const focusMatch = useCallback(
     (idx: number) => {

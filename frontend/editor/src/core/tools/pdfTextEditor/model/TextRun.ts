@@ -193,6 +193,7 @@ export class TextRun {
       paragraphLineLefts: this.lineLefts(),
       locked: this.locked || undefined,
       lockReason: this.lockReason ?? undefined,
+      fromForm: this.topLevelContainerPtr !== 0 || undefined,
     };
   }
 

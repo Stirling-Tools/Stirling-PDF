@@ -83,6 +83,8 @@ export interface TextRunSnapshot {
   locked?: boolean;
   /** Why the run is locked (auto-classified at read time, or manual). */
   lockReason?: string;
+  /** True when the run came out of a form XObject rather than the page. */
+  fromForm?: boolean;
 }
 
 export interface ImageObjectSnapshot {
