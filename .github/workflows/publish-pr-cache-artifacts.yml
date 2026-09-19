@@ -29,6 +29,14 @@ jobs:
           ref: main
           persist-credentials: false
 
+      - name: Checkout cache publisher script
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: Ludy87/cache-the-planet
+          ref: v1.7.0
+          path: cache-the-planet
+          persist-credentials: false
+
       - name: Setup GitHub App Bot
         id: setup-bot
         uses: ./.github/actions/setup-bot
@@ -114,7 +122,7 @@ jobs:
           EXPECTED_WORKFLOW: Cache integration save suite
           CACHE_CONFIG_FILE: .cache-the-planet.json
           PR_CACHE_ARTIFACTS_DIR: ${{ github.workspace }}/pr-cache-artifacts
-        run: node scripts/publish-pr-cache-artifacts.js
+        run: node cache-the-planet/scripts/publish-pr-cache-artifacts.js
 
       - name: Delete published PR cache artifacts
         if: ${{ steps.pr.outputs.number != '' }}
