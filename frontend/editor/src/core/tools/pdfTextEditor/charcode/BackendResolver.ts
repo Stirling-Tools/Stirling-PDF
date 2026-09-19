@@ -427,11 +427,6 @@ export function fontIsSymbolic(
   return symbolic;
 }
 
-/** Test-only: clear the symbolic-font cache. */
-export function _clearSymbolicFontCacheForTests(): void {
-  symbolicFontCache.clear();
-}
-
 export function findFontForChar(
   unicodeChar: string,
   ctx: ResolverContext,
@@ -500,11 +495,6 @@ export function findFontForChar(
             continue;
           }
         }
-        // A symbolic face would map this standard character through its own
-        // code page; prefer any nonsymbolic candidate (Noto fallback included).
-        if (!isPrivateUse(cp) && fontIsSymbolic(m, f)) {
-          continue;
-        }
         if (!likeName || baseFontFamily(readFontName(m, f)) === likeName) {
           fontForCharCache.set(cacheK, f);
           return f;
@@ -515,6 +505,15 @@ export function findFontForChar(
       }
     }
     if (fallback !== null) {
+      // The fallback is an UNRELATED family's first match. A symbolic one would
+      // map a standard character through its own code page; refuse it and let
+      // the caller use the Noto fallback instead. Deciding this AFTER the scan
+      // keeps the scan from restarting on the next keystroke (measured: in-loop
+      // vetoing cost 4x the wasm reads per burst on mushroom-life).
+      if (!isPrivateUse(cp) && fontIsSymbolic(m, fallback)) {
+        fontForCharCache.set(cacheK, null);
+        return null;
+      }
       fontForCharCache.set(cacheK, fallback);
       return fallback;
     }
