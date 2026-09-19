@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@app/auth/UseSession";
 import { NavItem } from "@app/ui";
 import { useUI } from "@portal/contexts/UIContext";
 import { useLink } from "@portal/contexts/LinkContext";
@@ -15,7 +16,9 @@ export function LinkAccountFooterItem() {
   const { t } = useTranslation();
   const { openLinkModal } = useUI();
   const { linkState, statusKnown } = useLink();
-  if (!statusKnown || linkState !== "unlinked") return null;
+  const { user } = useAuth();
+  if (!statusKnown || linkState !== "unlinked" || user?.orgOwner !== true)
+    return null;
   return (
     <NavItem
       id="account-link"

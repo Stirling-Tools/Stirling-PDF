@@ -11,6 +11,8 @@ import { MantineProvider } from "@mantine/core";
 import type { UseAccountLink } from "@portal/hooks/useAccountLink";
 
 const state = vi.hoisted(() => ({
+  owner: true,
+  loading: false,
   fetchInstances: vi.fn(),
   revokeInstance: vi.fn(),
   openLinkModal: vi.fn(),
@@ -19,6 +21,13 @@ const state = vi.hoisted(() => ({
   status: { linked: true, name: "Production" } as UseAccountLink["status"],
   statusError: null as string | null,
   email: "owner@example.com" as string | null,
+}));
+vi.mock("@app/auth/context", () => ({
+  useAuth: () => ({
+    user: { orgOwner: state.owner },
+    isAdmin: true,
+    loading: state.loading,
+  }),
 }));
 vi.mock("@portal/hooks/useLinkedAccountEmail", () => ({
   useLinkedAccountEmail: () => state.email,
@@ -72,6 +81,8 @@ function mount() {
 
 describe("Self-hosted account connection", () => {
   beforeEach(() => {
+    state.owner = true;
+    state.loading = false;
     vi.stubEnv("VITE_SAAS_FRONTEND_URL", "https://cloud.example/app/");
     state.fetchInstances.mockReset().mockResolvedValue([instance]);
     state.revokeInstance.mockReset().mockResolvedValue(undefined);
@@ -84,6 +95,45 @@ describe("Self-hosted account connection", () => {
   });
 
   afterEach(() => vi.unstubAllEnvs());
+
+  it.each([false, true])(
+    "blocks direct access without fetching instances when linked=%s",
+    (linked) => {
+      state.owner = false;
+      state.status = { linked };
+      mount();
+      expect(screen.queryByRole("heading")).toBeNull();
+      expect(screen.queryByRole("button")).toBeNull();
+      expect(state.fetchInstances).not.toHaveBeenCalled();
+    },
+  );
+
+  it("removes the current owner's page after transfer and loads it for the successor", async () => {
+    const view = mount();
+    await waitFor(() => expect(state.fetchInstances).toHaveBeenCalledTimes(1));
+    state.owner = false;
+    view.rerender(
+      <MantineProvider>
+        <AccountLinkPanel />
+      </MantineProvider>,
+    );
+    expect(
+      screen.queryByRole("link", { name: "Manage on stirling.com" }),
+    ).toBeNull();
+    state.owner = true;
+    view.rerender(
+      <MantineProvider>
+        <AccountLinkPanel />
+      </MantineProvider>,
+    );
+    await waitFor(() => expect(state.fetchInstances).toHaveBeenCalledTimes(2));
+  });
+
+  it("waits for refreshed ownership before fetching cloud instances", () => {
+    state.loading = true;
+    mount();
+    expect(state.fetchInstances).not.toHaveBeenCalled();
+  });
 
   it("opens cloud management at the configured app path", async () => {
     await act(async () => {

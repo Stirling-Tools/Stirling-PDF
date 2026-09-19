@@ -1,9 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { WithOrgOwner } from "@portal/test/WithOrgOwner";
 import { LinkAccountModal } from "@portal/components/account-link/LinkAccountModal";
 
 const meta: Meta<typeof LinkAccountModal> = {
   title: "Portal/AccountLink/LinkAccountModal",
   component: LinkAccountModal,
+  decorators: [WithOrgOwner],
   parameters: { layout: "fullscreen" },
   args: {
     open: true,
@@ -19,6 +21,10 @@ type Story = StoryObj<typeof LinkAccountModal>;
  * the provider will not redirect back to a hostname it does not know.
  */
 export const Default: Story = {};
+
+export const OtherAdministrator: Story = {
+  parameters: { orgOwner: false },
+};
 
 /** "reauth" mode — the server stays linked; only the browser session is renewed. */
 export const Reauth: Story = {

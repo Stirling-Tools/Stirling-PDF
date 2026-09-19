@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui";
+import { useAuth } from "@app/auth/UseSession";
+import { Banner, Button } from "@app/ui";
 import { FlowModal } from "@portal/components/shared/FlowModal";
 import { StepModalHeader } from "@portal/components/shared/StepModalHeader";
 import { ConnectAskStep } from "@portal/components/account-link/connect/ConnectAskStep";
@@ -41,7 +42,9 @@ export function LinkAccountModal({
   outcome = null,
 }: Props) {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const reauth = mode === "reauth";
+  const ownerRequired = !reauth && !outcome && user?.orgOwner !== true;
   const exhausted = mode === "exhausted";
   const handoff = useConnectHandoff(reauth);
 
@@ -109,6 +112,16 @@ export function LinkAccountModal({
   }
 
   function stepBody() {
+    if (ownerRequired) {
+      return (
+        <Banner tone="neutral">
+          {t(
+            "portal.accountLink.ownerRequired",
+            "Only the org owner can link or unlink this server.",
+          )}
+        </Banner>
+      );
+    }
     switch (step) {
       case "ask":
         return (
@@ -148,6 +161,7 @@ export function LinkAccountModal({
   }
 
   function stepFooter() {
+    if (ownerRequired) return closeButton();
     if (step === "ask") {
       const dismiss = reauth
         ? t("portal.accountLink.modal.cancel", "Cancel")

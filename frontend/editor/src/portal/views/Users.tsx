@@ -4,8 +4,6 @@ import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button, EmptyState, Skeleton } from "@app/ui";
 import {
-  transferOwnership,
-  transferTeamOwnership,
   claimTeamOwnership,
   changeMemberRole,
   disableMemberMfa,
@@ -36,6 +34,12 @@ import { RenameTeamModal } from "@portal/components/users/RenameTeamModal";
 import { ConfirmModal } from "@portal/components/users/ConfirmModal";
 import type { TeamGroup } from "@portal/components/users/directory";
 import { useUsersData } from "@portal/views/usersData";
+import {
+  OwnershipTransferModal,
+  type OwnershipStatus,
+} from "@app/components/shared/ownership/OwnershipTransferModal";
+import { ownershipAdapter, pendingOwnership } from "@portal/api/ownership";
+import { useUI } from "@portal/contexts/UIContext";
 
 interface Confirm {
   title: string;
@@ -52,6 +56,13 @@ interface Confirm {
 export function Users() {
   const { t } = useTranslation();
   const { refreshSession } = useAuth();
+  const { openLinkModal } = useUI();
+  const [ownershipTarget, setOwnershipTarget] = useState<Pick<
+    Member,
+    "id" | "name" | "email" | "teamId"
+  > | null>(null);
+  const [pendingTransfer, setPendingTransfer] =
+    useState<OwnershipStatus | null>(null);
   const [actionBusy, setActionBusy] = useState(false);
   const { usersState, grantsState, teamsState, authState, refresh } =
     useUsersData();
@@ -103,6 +114,19 @@ export function Users() {
     name: string;
   } | null>(null);
   const [confirm, setConfirm] = useState<Confirm | null>(null);
+
+  useEffect(() => {
+    if (!buildCaps.adminRole || !viewer?.orgOwner || ownershipTarget) return;
+    let active = true;
+    pendingOwnership()
+      .then((value) => {
+        if (active) setPendingTransfer(value);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [viewer?.orgOwner, ownershipTarget]);
 
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -275,30 +299,7 @@ export function Users() {
     });
   }
   function transferOwner(member: Member) {
-    setConfirm({
-      title: t(
-        "users.confirm.transferOwnershipTitle",
-        "Transfer organization ownership",
-      ),
-      body: !buildCaps.adminRole
-        ? t(
-            "team.transferBody",
-            "Make {{email}} the team owner? They will control team membership and organization billing settings. You will become a member. The team’s subscription and wallet stay with the team.",
-            { email: member.email ?? member.name },
-          )
-        : t(
-            "users.confirm.transferOwnershipBody",
-            "Make {{name}} the organization owner? They will become an admin. You will remain an admin but lose ownership. Only the new owner or the server operator can transfer it back.",
-            { name: member.name },
-          ),
-      confirmLabel: t("users.action.transferOwnership", "Transfer ownership"),
-      danger: true,
-      action: async () => {
-        if (buildCaps.adminRole) await transferOwnership(member);
-        else await transferTeamOwnership(member);
-        await refreshSession();
-      },
-    });
+    setOwnershipTarget(member);
   }
 
   function removeUser(member: Member) {
@@ -376,6 +377,29 @@ export function Users() {
           )}
         </div>
       </header>
+
+      {pendingTransfer && viewer?.orgOwner && (
+        <div role="status">
+          <p>
+            {t(
+              "ownership.pending",
+              "An ownership transfer to {{name}} is pending.",
+              { name: pendingTransfer.targetName },
+            )}
+          </p>
+          <Button
+            onClick={() =>
+              setOwnershipTarget({
+                id: String(pendingTransfer.targetId),
+                name: pendingTransfer.targetName,
+                email: pendingTransfer.targetEmail ?? "",
+              })
+            }
+          >
+            {t("ownership.resume", "Resume transfer")}
+          </Button>
+        </div>
+      )}
 
       {members.some((member) => member.orgOwner && member.isFirstLogin) && (
         <p role="status">
@@ -506,6 +530,20 @@ export function Users() {
         manageGrants={caps.manageGrants}
         onNotice={setActionError}
       />
+      {ownershipTarget && (
+        <OwnershipTransferModal
+          key={ownershipTarget.id}
+          adapter={ownershipAdapter(ownershipTarget, buildCaps.adminRole, () =>
+            openLinkModal("reauth"),
+          )}
+          onClose={() => setOwnershipTarget(null)}
+          onTransferred={() => {
+            setPendingTransfer(null);
+            refresh();
+            void refreshSession();
+          }}
+        />
+      )}
       <NewTeamModal
         open={newTeamOpen}
         onClose={() => setNewTeamOpen(false)}

@@ -1,7 +1,7 @@
 package stirling.software.proprietary.service;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -21,22 +21,36 @@ import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.common.model.enumeration.Role;
+import stirling.software.proprietary.accountlink.*;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.*;
 import stirling.software.proprietary.security.repository.OrgOwnerRepository;
 import stirling.software.proprietary.security.service.DatabaseServiceInterface;
 
 @DataJpaTest(properties = "spring.jpa.show-sql=false")
-@Import(OrgOwnerService.class)
+@Import({
+    OrgOwnerService.class,
+    OwnershipHandoverService.class,
+    ConnectService.class,
+    AccountLinkService.class,
+    DeviceCredentialStore.class
+})
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 class OrgOwnerServiceTest {
     @Autowired OrgOwnerService owners;
     @Autowired OrgOwnerRepository ownerRepository;
     @Autowired UserRepository users;
     @Autowired PlatformTransactionManager transactions;
+    @Autowired OwnershipHandoverService handovers;
+    @Autowired DeviceCredentialRepository credentials;
+    @Autowired AccountLinkClient cloud;
+    @Autowired ConnectService connect;
+    @Autowired AccountLinkService accountLink;
+    @Autowired ConnectStateRepository connectStates;
 
     @BeforeEach
     void clear() {
+        reset(credentials, cloud, connectStates);
         new TransactionTemplate(transactions)
                 .executeWithoutResult(
                         s -> {
@@ -195,6 +209,160 @@ class OrgOwnerServiceTest {
         assertEquals(Optional.of(target.getId()), owners.ownerId());
     }
 
+    @Test
+    void linkedHandoverPersistsAndOriginalEndpointEnforcesCloudFirst() throws Exception {
+        User first = user("first", Role.ADMIN.getRoleId(), false, true);
+        User second = user("second", Role.USER.getRoleId(), false, true);
+        second.setEmail("second@example.com");
+        users.saveAndFlush(second);
+        owners.resolveOwner();
+        DeviceCredential device = new DeviceCredential();
+        device.setDeviceId("device");
+        device.setTeamId(9L);
+        when(credentials.findCredential()).thenReturn(Optional.of(device));
+        when(cloud.ownership(any(), eq("second@example.com"), isNull(), eq("status"), isNull()))
+                .thenReturn(
+                        new CloudOwnershipStatus(
+                                9L,
+                                "Cloud team",
+                                10L,
+                                20L,
+                                2L,
+                                true,
+                                CloudOwnershipStatus.State.READY));
+        assertThrows(
+                ResponseStatusException.class, () -> owners.transfer(second.getId(), auth(first)));
+        handovers.prepare(second.getId(), auth(first));
+        assertEquals(
+                second.getId(), ownerRepository.findById(1L).orElseThrow().getHandoverTargetId());
+        assertThrows(
+                ResponseStatusException.class, () -> owners.transfer(second.getId(), auth(first)));
+        assertEquals(Optional.of(first.getId()), owners.ownerId());
+        when(cloud.ownership(any(), eq("second@example.com"), isNull(), eq("status"), isNull()))
+                .thenReturn(
+                        new CloudOwnershipStatus(
+                                9L,
+                                "Cloud team",
+                                20L,
+                                20L,
+                                2L,
+                                true,
+                                CloudOwnershipStatus.State.TRANSFERRED));
+        owners.transfer(second.getId(), auth(first));
+        assertEquals(Optional.of(second.getId()), owners.ownerId());
+        assertNull(ownerRepository.findById(1L).orElseThrow().getHandoverTargetId());
+        assertEquals(
+                Role.ADMIN.getRoleId(),
+                users.findById(first.getId()).orElseThrow().getRolesAsString());
+        assertEquals(
+                Role.ADMIN.getRoleId(),
+                users.findById(second.getId()).orElseThrow().getRolesAsString());
+    }
+
+    @Test
+    void linkAuthorityMovesWithOwnershipAndOldHandshakesCannotComplete() throws Exception {
+        User first = user("first", Role.ADMIN.getRoleId(), false, true);
+        User second = user("second", Role.USER.getRoleId(), false, true);
+        User admin = user("admin", Role.ADMIN.getRoleId(), false, true);
+        owners.resolveOwner();
+        var hint = new ConnectService.CallbackHint(null, null, "https://pdf.example.com");
+        when(cloud.connectRequest(any(), any(), any(), any(), any()))
+                .thenReturn(
+                        new AccountLinkClient.ConnectRequestResult(
+                                "request", 900, "https://cloud.example.com/link"));
+
+        SecurityContextHolder.getContext().setAuthentication(auth(admin));
+        assertEquals(
+                403,
+                assertThrows(ResponseStatusException.class, () -> connect.start("server", hint))
+                        .getStatusCode()
+                        .value());
+        assertEquals(
+                403,
+                assertThrows(ResponseStatusException.class, () -> accountLink.unlink())
+                        .getStatusCode()
+                        .value());
+        verifyNoInteractions(cloud);
+
+        SecurityContextHolder.getContext().setAuthentication(auth(first));
+        connect.start("server", hint);
+        var saved = org.mockito.ArgumentCaptor.forClass(ConnectState.class);
+        verify(connectStates).save(saved.capture());
+        ConnectState pending = saved.getValue();
+        when(connectStates.findById(1L)).thenReturn(Optional.of(pending));
+        owners.transfer(second.getId(), auth(first));
+        clearInvocations(cloud, credentials);
+
+        assertEquals(
+                403,
+                assertThrows(
+                                ResponseStatusException.class,
+                                () -> connect.complete(pending.getNonce()))
+                        .getStatusCode()
+                        .value());
+        assertEquals(
+                403,
+                assertThrows(ResponseStatusException.class, () -> connect.start("server", hint))
+                        .getStatusCode()
+                        .value());
+        assertEquals(
+                403,
+                assertThrows(ResponseStatusException.class, () -> accountLink.unlink())
+                        .getStatusCode()
+                        .value());
+        verifyNoInteractions(cloud);
+
+        SecurityContextHolder.getContext()
+                .setAuthentication(auth(users.findById(second.getId()).orElseThrow()));
+        assertEquals(
+                "LINK_OWNER_CHANGED",
+                assertThrows(
+                                ResponseStatusException.class,
+                                () -> connect.complete(pending.getNonce()))
+                        .getReason());
+        verifyNoInteractions(cloud);
+        connect.start("server", hint);
+        verify(connectStates, times(2)).save(saved.capture());
+        ConnectState fresh = saved.getValue();
+        when(connectStates.findById(1L)).thenReturn(Optional.of(fresh));
+        when(cloud.connectClaim(fresh.getRequestId(), fresh.getClaimSecret()))
+                .thenReturn(
+                        new AccountLinkClient.ConnectClaimResult(
+                                AccountLinkClient.ConnectClaimOutcome.GRANTED,
+                                "device",
+                                "secret",
+                                9L));
+        assertEquals(ConnectService.Phase.LINKED, connect.complete(fresh.getNonce()).phase());
+        verify(credentials).save(any(DeviceCredential.class));
+        assertDoesNotThrow(() -> accountLink.unlink());
+    }
+
+    @Test
+    void pendingHandoverBlocksLinkingBeforeContactingCloud() {
+        User first = user("first", Role.ADMIN.getRoleId(), false, true);
+        User second = user("second", Role.USER.getRoleId(), false, true);
+        owners.resolveOwner();
+        handovers.prepare(second.getId(), auth(first));
+        SecurityContextHolder.getContext().setAuthentication(auth(first));
+        assertEquals(
+                409,
+                assertThrows(
+                                ResponseStatusException.class,
+                                () ->
+                                        connect.start(
+                                                "server",
+                                                new ConnectService.CallbackHint(
+                                                        null, null, "https://pdf.example.com")))
+                        .getStatusCode()
+                        .value());
+        assertEquals(
+                409,
+                assertThrows(ResponseStatusException.class, () -> accountLink.unlink())
+                        .getStatusCode()
+                        .value());
+        verifyNoInteractions(cloud);
+    }
+
     @SpringBootConfiguration
     @EntityScan(
             basePackages = {
@@ -207,6 +375,31 @@ class OrgOwnerServiceTest {
                 "stirling.software.proprietary.security.repository"
             })
     static class TestApp {
+        @Bean
+        ConnectStateRepository connectStates() {
+            return mock(ConnectStateRepository.class);
+        }
+
+        @Bean
+        EntitlementCache entitlementCache() {
+            return mock(EntitlementCache.class);
+        }
+
+        @Bean
+        stirling.software.common.model.ApplicationProperties applicationProperties() {
+            return new stirling.software.common.model.ApplicationProperties();
+        }
+
+        @Bean
+        DeviceCredentialRepository credentials() {
+            return mock(DeviceCredentialRepository.class);
+        }
+
+        @Bean
+        AccountLinkClient cloud() {
+            return mock(AccountLinkClient.class);
+        }
+
         @Bean
         AuditService auditService() {
             return mock(AuditService.class);

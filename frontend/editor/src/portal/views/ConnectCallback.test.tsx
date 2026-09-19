@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
 import { UIProvider, useUI } from "@portal/contexts/UIContext";
 import type { ConnectOutcome } from "@portal/components/account-link/ConnectCallbackView";
+import { HttpError } from "@portal/api/http";
 
 /** A live session token rides in the fragment: strip it at once, refuse what cannot be verified. */
 const { completeConnect, startConnect, setSession, refresh } = vi.hoisted(
@@ -216,4 +217,16 @@ describe("account-link callback", () => {
     await waitFor(() => expect(lastOutcome()?.state).toBe("expired"));
     expect(lastOutcome()?.reclaim).toBeUndefined();
   });
+
+  it.each([403, 409])(
+    "does not retry a link rejected after ownership changes (%s)",
+    async (status) => {
+      landOn(`#type=link&nonce=${NONCE}`);
+      completeConnect.mockRejectedValue(new HttpError(status, "Rejected", {}));
+      renderFlow();
+      await waitFor(() => expect(lastOutcome()?.state).toBe("rejected"));
+      expect(lastOutcome()?.reclaim).toBeUndefined();
+      expect(refresh).not.toHaveBeenCalled();
+    },
+  );
 });

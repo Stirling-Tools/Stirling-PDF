@@ -1,5 +1,6 @@
 import { AccountConnectionNotice } from "@portal/components/account-link/AccountConnectionNotice";
 import { useCallback, useState } from "react";
+import { useAuth } from "@app/auth/context";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, InfoTooltip, Skeleton } from "@app/ui";
 import { Icon } from "@app/ui/Icon";
@@ -18,6 +19,12 @@ import "@portal/views/AccountLink.css";
 
 /** Self-hosted connection status plus the owning team's connected instances. */
 export function AccountLinkPanel() {
+  const { user, isAdmin, loading } = useAuth();
+  if (loading || !isAdmin || user?.orgOwner !== true) return null;
+  return <OwnerAccountLinkPanel />;
+}
+
+function OwnerAccountLinkPanel() {
   const { t } = useTranslation();
   const link = useAccountLinkContext();
 

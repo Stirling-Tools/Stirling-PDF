@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@app/auth/context";
 import { Button } from "@app/ui";
 import { useConnectGate } from "@portal/hooks/useConnectGate";
 import "@portal/components/ConnectAccountRail.css";
@@ -18,9 +19,10 @@ function readDismissed(): boolean {
 export function ConnectAccountRail() {
   const { t } = useTranslation();
   const { gated, loading, connect } = useConnectGate();
+  const { user } = useAuth();
   const [dismissed, setDismissed] = useState(readDismissed);
 
-  if (loading || !gated || dismissed) return null;
+  if (loading || !gated || dismissed || user?.orgOwner !== true) return null;
 
   const dismiss = () => {
     try {
