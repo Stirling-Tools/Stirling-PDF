@@ -432,6 +432,73 @@ export function _clearSymbolicFontCacheForTests(): void {
   symbolicFontCache.clear();
 }
 
+interface PageGlyphEntry {
+  font: number;
+  style: FontStyleClass | null;
+  family: string | undefined;
+}
+
+// Index of unique glyphs and their font metadata per page pointer.
+// Avoids repeated O(N) wasm text object scans per keystroke.
+const pageGlyphIndex = new Map<number, Map<number, PageGlyphEntry[]>>();
+
+function getPageGlyphIndex(
+  ctx: ResolverContext,
+): Map<number, PageGlyphEntry[]> | null {
+  const cached = pageGlyphIndex.get(ctx.pagePtr);
+  if (cached) return cached;
+  const m = ctx.module;
+  const tpMod = m as unknown as TextPageModule;
+  const fontMod = m as unknown as FontReadModule;
+  if (
+    !tpMod.FPDFText_LoadPage ||
+    !tpMod.FPDFText_CountChars ||
+    !tpMod.FPDFText_GetUnicode ||
+    !tpMod.FPDFText_GetTextObject ||
+    !fontMod.FPDFTextObj_GetFont
+  ) {
+    return null;
+  }
+  const textPage = tpMod.FPDFText_LoadPage(ctx.pagePtr);
+  if (!textPage) return null;
+  const index = new Map<number, PageGlyphEntry[]>();
+  try {
+    const count = tpMod.FPDFText_CountChars(textPage);
+    for (let i = 0; i < count; i++) {
+      const u = tpMod.FPDFText_GetUnicode(textPage, i);
+      if (!u) continue;
+      const obj = tpMod.FPDFText_GetTextObject(textPage, i);
+      if (!obj) continue;
+      let f = 0;
+      try {
+        f = fontMod.FPDFTextObj_GetFont(obj);
+      } catch {
+        continue;
+      }
+      if (!f) continue;
+      let entries = index.get(u);
+      if (!entries) {
+        entries = [];
+        index.set(u, entries);
+      }
+      if (entries.some((e) => e.font === f)) continue;
+      const style = fontStyleClass(m, f);
+      const family = baseFontFamily(readFontName(m, f));
+      entries.push({ font: f, style, family });
+    }
+  } finally {
+    if (tpMod.FPDFText_ClosePage) {
+      try {
+        tpMod.FPDFText_ClosePage(textPage);
+      } catch {
+        /* best-effort */
+      }
+    }
+  }
+  pageGlyphIndex.set(ctx.pagePtr, index);
+  return index;
+}
+
 export function findFontForChar(
   unicodeChar: string,
   ctx: ResolverContext,
@@ -460,76 +527,39 @@ export function findFontForChar(
     : undefined;
   const cacheK = `${ctx.pagePtr}:${styleK}${likeName ?? ""}|${cp}`;
   if (fontForCharCache.has(cacheK)) return fontForCharCache.get(cacheK) ?? null;
-  const tpMod = m as unknown as TextPageModule;
-  const fontMod = m as unknown as FontReadModule;
-  if (
-    !tpMod.FPDFText_LoadPage ||
-    !tpMod.FPDFText_CountChars ||
-    !tpMod.FPDFText_GetUnicode ||
-    !tpMod.FPDFText_GetTextObject ||
-    !fontMod.FPDFTextObj_GetFont
-  ) {
+
+  const index = getPageGlyphIndex(ctx);
+  if (!index) {
     fontForCharCache.set(cacheK, null);
     return null;
   }
-  const textPage = tpMod.FPDFText_LoadPage(ctx.pagePtr);
-  if (!textPage) {
+  const entries = index.get(cp);
+  if (!entries || entries.length === 0) {
     fontForCharCache.set(cacheK, null);
     return null;
   }
-  try {
-    const count = tpMod.FPDFText_CountChars(textPage);
-    // The run's OWN family, wherever the page happens to draw this char in it,
-    // beats whichever style-compatible face comes first in content order. A
-    // word the document already uses otherwise came back in a near-miss face -
-    // right weight, slightly wrong shapes and advances.
-    let fallback: number | null = null;
-    for (let i = 0; i < count; i++) {
-      const u = tpMod.FPDFText_GetUnicode(textPage, i);
-      if (u !== cp) continue;
-      const obj = tpMod.FPDFText_GetTextObject(textPage, i);
-      if (!obj) continue;
-      try {
-        const f = fontMod.FPDFTextObj_GetFont(obj);
-        if (!f) continue;
-        if (want) {
-          const got = fontStyleClass(m, f);
-          // An unnamed font can't be vouched for; skip it rather than risk a
-          // weight change.
-          if (!got || got.bold !== want.bold || got.italic !== want.italic) {
-            continue;
-          }
-        }
-        if (!likeName || baseFontFamily(readFontName(m, f)) === likeName) {
-          fontForCharCache.set(cacheK, f);
-          return f;
-        }
-        if (fallback === null) fallback = f;
-      } catch {
+
+  let fallback: number | null = null;
+  for (const entry of entries) {
+    if (want) {
+      const got = entry.style;
+      if (!got || got.bold !== want.bold || got.italic !== want.italic) {
         continue;
       }
     }
-    if (fallback !== null) {
-      // The fallback is an UNRELATED family's first match. A symbolic one would
-      // map a standard character through its own code page; refuse it and let
-      // the caller use the Noto fallback instead. Deciding this AFTER the scan
-      // keeps the scan from restarting on the next keystroke (measured: in-loop
-      // vetoing cost 4x the wasm reads per burst on mushroom-life).
-      if (!isPrivateUse(cp) && fontIsSymbolic(m, fallback)) {
-        fontForCharCache.set(cacheK, null);
-        return null;
-      }
-      fontForCharCache.set(cacheK, fallback);
-      return fallback;
+    if (!likeName || entry.family === likeName) {
+      fontForCharCache.set(cacheK, entry.font);
+      return entry.font;
     }
-  } finally {
-    if (tpMod.FPDFText_ClosePage) {
-      try {
-        tpMod.FPDFText_ClosePage(textPage);
-      } catch {
-        /* best-effort */
-      }
+    if (fallback === null) fallback = entry.font;
+  }
+  if (fallback !== null) {
+    if (!isPrivateUse(cp) && fontIsSymbolic(m, fallback)) {
+      fontForCharCache.set(cacheK, null);
+      return null;
     }
+    fontForCharCache.set(cacheK, fallback);
+    return fallback;
   }
   fontForCharCache.set(cacheK, null);
   return null;
@@ -538,6 +568,7 @@ export function findFontForChar(
 /** Test-only: clear the per-char-font cache. */
 export function _clearFontForCharCacheForTests(): void {
   fontForCharCache.clear();
+  pageGlyphIndex.clear();
 }
 
 interface FontNameModule {
@@ -892,6 +923,7 @@ export function resetBackendResolverCaches(): void {
   inFlight.clear();
   prewarmedPages.clear();
   fontForCharCache.clear();
+  pageGlyphIndex.clear();
   serializedCache = null;
   autoPrefetchActive = 0;
 }

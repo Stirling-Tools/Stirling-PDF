@@ -243,4 +243,26 @@ describe("findFontForChar", () => {
     expect(findFontForChar("o", ctxFor(m))).toBe(TYPE3);
     expect(fontIsReusable(m, TYPE3)).toBe(false);
   });
+
+  it("indexes page glyphs so subsequent lookups do not rescan wasm text page", () => {
+    const m = makeModule(
+      [
+        ["a", REGULAR],
+        ["b", BOLD],
+      ],
+      REAL_FONTS,
+    );
+    const ctx = ctxFor(m);
+    expect(findFontForChar("a", ctx)).toBe(REGULAR);
+    const mock = m.FPDFText_CountChars as { mock: { calls: unknown[] } };
+    expect(mock.mock.calls.length).toBe(1);
+
+    // Subsequent lookup for another character reuses the cached page glyph index.
+    expect(findFontForChar("b", ctx)).toBe(BOLD);
+    expect(mock.mock.calls.length).toBe(1);
+
+    // Non-existent character is resolved directly from index with zero wasm calls.
+    expect(findFontForChar("z", ctx)).toBeNull();
+    expect(mock.mock.calls.length).toBe(1);
+  });
 });
