@@ -4,8 +4,18 @@ import type {
   ResolverContext,
 } from "@app/tools/pdfTextEditor/charcode/CharcodeStrategy";
 
-// Strategy 2: scrape Unicode→charcode mappings by walking the page's existing
-// text via PDFium's text page API.
+// Sequential-CID guess, NOT a content-stream scan.
+//
+// This resolver walks the page's text page and assigns each new Unicode a
+// sequential CID starting at 1. It never reads a content stream, and the guess
+// only holds for fonts whose layout happens to match discovery order, which is
+// why the ladder only consults it for subset fonts on a single code point
+// (see the allowGuessFallback gates in charcodeRegistry).
+//
+// Asymmetry to keep in mind before building on it: PDFium exposes
+// FPDFText_SetCharcodes on the write side, but no API that reads back the
+// charcodes an existing object carries, so this is the closest available
+// reconstruction. fpdf_edit.h marks FPDFText_SetCharcodes as Experimental.
 
 interface TextPageModule {
   FPDFText_LoadPage?: (page: number) => number;
@@ -22,7 +32,10 @@ interface FontReadModule {
 /** Cache: per-page-pointer Map<font, Map<unicode, charcode>>. */
 const perPageCache = new Map<number, Map<number, Map<number, number>>>();
 
-export class ContentStreamResolver implements CharcodeResolver {
+export class SequentialCidResolver implements CharcodeResolver {
+  // The id stays "content-stream": it is a persisted strategy name used by
+  // telemetry, tests and the resolver ladder, and renaming it would be a wire
+  // change, not an honesty fix.
   readonly name = "content-stream" as const;
 
   resolve(
@@ -37,7 +50,7 @@ export class ContentStreamResolver implements CharcodeResolver {
         charcodes: [],
         coverage: 0,
         missing: [...text],
-        note: "content-stream scan returned no entries for this font",
+        note: "sequential-CID guess has no entries for this font",
       };
     }
     const charcodes: number[] = [];
@@ -55,7 +68,7 @@ export class ContentStreamResolver implements CharcodeResolver {
       charcodes,
       coverage: charcodes.length,
       missing,
-      note: `content-stream entries: ${unicodeToCharcode.size}, requested: ${text.length}, resolved: ${charcodes.length}`,
+      note: `sequential-CID entries: ${unicodeToCharcode.size}, requested: ${text.length}, resolved: ${charcodes.length}`,
     };
   }
 }

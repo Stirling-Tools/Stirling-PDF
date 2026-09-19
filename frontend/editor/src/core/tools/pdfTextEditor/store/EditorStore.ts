@@ -12,7 +12,7 @@ import {
 } from "@app/tools/pdfTextEditor/pdfium/PdfiumModelSync";
 import { resetBackendResolverCaches } from "@app/tools/pdfTextEditor/charcode/BackendResolver";
 import { resetCmapCache } from "@app/tools/pdfTextEditor/charcode/CmapResolver";
-import { resetContentStreamCache } from "@app/tools/pdfTextEditor/charcode/ContentStreamResolver";
+import { resetContentStreamCache } from "@app/tools/pdfTextEditor/charcode/SequentialCidResolver";
 import {
   resetCharCoverageCache,
   resetDroppedBase14Chars,

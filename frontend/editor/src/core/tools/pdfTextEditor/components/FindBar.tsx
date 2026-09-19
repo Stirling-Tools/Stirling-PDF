@@ -43,9 +43,9 @@ interface Match {
  * Replace and Replace All rewrite the matching runs via batched
  * `EditTextCommand`s.
  *
- * Triggered from Ctrl+F in PdfTextEditor. Matches that haven't been
- * lazy-loaded yet won't show until the user scrolls past those pages
- * (the `ensurePageRead` hook will populate them on intersection).
+ * Triggered from Ctrl+F in PdfTextEditor. Opening the bar reads every
+ * not-yet-loaded page up front (see the ensureAllPagesRead effect below), so a
+ * match on a page the user never scrolled to still shows.
  */
 export function FindBar({ store, pages, onClose }: FindBarProps) {
   const { t } = useTranslation();

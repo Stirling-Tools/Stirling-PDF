@@ -20,7 +20,7 @@ import {
   ResolverContext,
 } from "@app/tools/pdfTextEditor/charcode/CharcodeStrategy";
 import { CmapResolver } from "@app/tools/pdfTextEditor/charcode/CmapResolver";
-import { ContentStreamResolver } from "@app/tools/pdfTextEditor/charcode/ContentStreamResolver";
+import { SequentialCidResolver } from "@app/tools/pdfTextEditor/charcode/SequentialCidResolver";
 
 /** Per-emit telemetry. */
 export interface CharcodeEvent {
@@ -103,7 +103,7 @@ export function emitCharcodeEvent(
 const resolvers: Record<CharcodeStrategy, CharcodeResolver | null> = {
   helvetica: null, // legacy: do nothing, caller falls back.
   cmap: new CmapResolver(),
-  "content-stream": new ContentStreamResolver(),
+  "content-stream": new SequentialCidResolver(),
   backend: new BackendResolver(),
 };
 
