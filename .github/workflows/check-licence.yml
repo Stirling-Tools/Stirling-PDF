@@ -8,7 +8,41 @@ on:
 permissions:
   contents: read
 
+env:
+  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle
+  FILES_TO_HASH:
+    gradle/wrapper/gradle-wrapper.properties
+    gradle/libs.versions.toml
+    buildSrc/src/**
+    buildSrc/build.gradle
+    settings.gradle
+    build.gradle
+    app/**/build.gradle
+    gradle/**/*.gradle
+  JAVA_VERSION: "25"
+
 jobs:
+  hash_pr:
+    name: Hash Gradle files
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      files_hash: ${{ steps.hash.outputs.files_hash }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Hash Gradle files
+        id: hash
+        env:
+          FILES_HASH: ${{ hashFiles(env.FILES_TO_HASH) }}
+        run: |
+          HASH="$FILES_HASH"
+          echo "files_hash=$HASH" >> "$GITHUB_OUTPUT"
   check-licence:
     environment:
       name: ci-unsigned
@@ -20,25 +54,42 @@ jobs:
         with:
           egress-policy: audit
 
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Restore cache Gradle User Home
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Setup GitHub App Bot
+        if: ${{ github.event_name != 'pull_request' }}
+        id: setup-bot
+        uses: ./.github/actions/setup-bot
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
-      - name: Set up JDK 25
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Restore Gradle cache asset
+        id: cache
+        uses: Ludy87/cache-the-planet@main
+        with:
+          cache-name: gradle-java${{ env.JAVA_VERSION }}
+          scope: shared
+          save-scope: shared
+          token: ${{ steps.bot-token.outputs.token || github.token }}
+          key: ${{ needs.hash_pr.outputs.files_hash }}
+          allow-shared-restore: true
+          path: |
+            ${{ env.GRADLE_USER_HOME }}/caches
+            ${{ env.GRADLE_USER_HOME }}/wrapper
+          strict: true
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: ./.github/actions/java
         with:
-          java-version: "25"
+          java-version: ${{ env.JAVA_VERSION }}
 
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+        
       - name: Check licenses for compatibility
+
         run: task backend:licenses:check
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
