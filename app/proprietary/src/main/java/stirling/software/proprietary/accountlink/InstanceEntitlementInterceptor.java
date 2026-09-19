@@ -37,6 +37,7 @@ import stirling.software.proprietary.billing.DocumentUnitCalculator.FileSize;
 import stirling.software.proprietary.billing.UnitCalcPolicy;
 import stirling.software.proprietary.policy.controller.PolicyRunRoutes;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
+import stirling.software.proprietary.service.AiEngineRouter;
 
 /**
  * Request-time gate + meter for combined billing. {@code preHandle} blocks billable (API / AI /
@@ -68,18 +69,21 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
     private final ObjectProvider<UsageMeterService> meterProvider;
     private final FreeTierUsageService freeTierUsageService;
     private final TempFileManager tempFileManager;
+    private final AiEngineRouter aiEngineRouter;
 
     public InstanceEntitlementInterceptor(
             InstanceEntitlementGate gate,
             EntitlementCache entitlementCache,
             ObjectProvider<UsageMeterService> meterProvider,
             FreeTierUsageService freeTierUsageService,
-            TempFileManager tempFileManager) {
+            TempFileManager tempFileManager,
+            AiEngineRouter aiEngineRouter) {
         this.gate = gate;
         this.entitlementCache = entitlementCache;
         this.meterProvider = meterProvider;
         this.freeTierUsageService = freeTierUsageService;
         this.tempFileManager = tempFileManager;
+        this.aiEngineRouter = aiEngineRouter;
     }
 
     @Override
@@ -184,6 +188,11 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
         }
         if (!(request.getAttribute(ATTR_CATEGORY) instanceof BillingCategory category)
                 || category == BillingCategory.BYPASSED) {
+            return;
+        }
+        // In cloud AI mode the work ran on Stirling Cloud, which billed it there. Metering it here
+        // too would put two DEBITs on the same team's wallet for one user action.
+        if (category == BillingCategory.AI && aiEngineRouter.isCloudMode()) {
             return;
         }
         try {

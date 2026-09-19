@@ -1,6 +1,7 @@
 package stirling.software.proprietary.controller.api;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -32,6 +33,7 @@ import stirling.software.common.model.job.ResultFile;
 import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.service.TaskManager;
 import stirling.software.common.service.UserServiceInterface;
+import stirling.software.proprietary.model.api.ai.AiEngineStatus;
 import stirling.software.proprietary.model.api.ai.AiWorkflowProgressEvent;
 import stirling.software.proprietary.model.api.ai.AiWorkflowRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
@@ -63,6 +65,7 @@ public class AiEngineController {
     private final AiEngineEndpointResolver endpointResolver;
     private final AiFeatureGate aiFeatureGate;
     private final UserServiceInterface userService;
+    private final ApplicationProperties applicationProperties;
 
     /**
      * SSE emitter timeout (ms), long enough for multi-gigabyte PDF workflows without completing out
@@ -90,6 +93,7 @@ public class AiEngineController {
         this.endpointResolver = endpointResolver;
         this.aiFeatureGate = aiFeatureGate;
         this.userService = userService;
+        this.applicationProperties = applicationProperties;
         this.streamTimeoutMs =
                 applicationProperties.getAiEngine().getStreamTimeoutSeconds() * 1000L;
     }
@@ -105,6 +109,94 @@ public class AiEngineController {
     public ResponseEntity<String> health() throws IOException {
         String response = aiEngineClient.get("/health", currentUserId());
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
+    }
+
+    /**
+     * The engine's own {@code /health} is exempt from the shared-secret check and never contacts
+     * the model provider, so it stays green while every real route answers 401. Probing a
+     * secret-gated route as well is what separates "something is listening" from "it will take our
+     * requests".
+     */
+    @GetMapping("/status")
+    @Operation(
+            summary = "AI engine status",
+            description =
+                    "Reachability, round-trip time, the models in use, and whether the engine"
+                            + " accepted this server's shared secret.")
+    public AiEngineStatus status() {
+        ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
+        if (!config.isEnabled()) {
+            return AiEngineStatus.builder().enabled(false).reachable(false).build();
+        }
+
+        AiEngineStatus.AiEngineStatusBuilder status = AiEngineStatus.builder().enabled(true);
+        String userId = currentUserId();
+
+        long startedAt = System.nanoTime();
+        String health;
+        try {
+            health = aiEngineClient.get("/health", userId);
+        } catch (IOException | RuntimeException e) {
+            // Unreachable is the whole answer; there is nothing left worth probing.
+            return status.reachable(false).error(describeFailure(e)).build();
+        }
+        status.reachable(true)
+                .latencyMs(Duration.ofNanos(System.nanoTime() - startedAt).toMillis());
+
+        try {
+            JsonNode body = objectMapper.readTree(health);
+            status.smartModel(textOrNull(body, "smartModel"))
+                    .fastModel(textOrNull(body, "fastModel"));
+        } catch (JacksonException e) {
+            log.debug("AI engine health returned a body we could not parse", e);
+        }
+
+        status.authenticated(probeAuthentication(userId, status));
+        return status.build();
+    }
+
+    /**
+     * @return true when the secret-gated route answered, false when it rejected us, null when the
+     *     call failed for some other reason and the question is genuinely unanswered.
+     */
+    private Boolean probeAuthentication(
+            String userId, AiEngineStatus.AiEngineStatusBuilder status) {
+        try {
+            aiEngineClient.get("/api/v1/agents/capabilities", userId);
+            return true;
+        } catch (ResponseStatusException e) {
+            int code = e.getStatusCode().value();
+            String reason = e.getReason();
+            if (code == HttpStatus.UNAUTHORIZED.value()) {
+                status.error("The engine rejected this server's shared secret.");
+                return false;
+            }
+            // The client collapses every engine 5xx to 502, so the engine's own fail-closed 503
+            // ("auth required but no secret configured") only survives in the message.
+            if (code == HttpStatus.BAD_GATEWAY.value()
+                    && reason != null
+                    && reason.endsWith("503")) {
+                status.error("The engine requires a shared secret but none is configured on it.");
+                return false;
+            }
+            log.debug("AI engine capabilities probe returned {}", code);
+            return null;
+        } catch (IOException | RuntimeException e) {
+            log.debug("AI engine capabilities probe failed", e);
+            return null;
+        }
+    }
+
+    private static String textOrNull(JsonNode body, String field) {
+        JsonNode value = body.path(field);
+        return value.isTextual() ? value.asText() : null;
+    }
+
+    private static String describeFailure(Exception e) {
+        if (e instanceof ResponseStatusException rse && rse.getReason() != null) {
+            return rse.getReason();
+        }
+        return e.getMessage();
     }
 
     @PostMapping(value = "/orchestrate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

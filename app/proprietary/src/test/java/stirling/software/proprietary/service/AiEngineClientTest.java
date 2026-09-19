@@ -37,7 +37,11 @@ class AiEngineClientTest {
         applicationProperties.getAiEngine().setUrl("http://localhost:5001");
         applicationProperties.getAiEngine().setTimeoutSeconds(5);
         httpClient = mock(HttpClient.class);
-        client = new AiEngineClient(applicationProperties, httpClient);
+        client =
+                new AiEngineClient(
+                        applicationProperties,
+                        httpClient,
+                        AiEngineRouter.selfHosted(applicationProperties, null));
     }
 
     @Test
@@ -92,7 +96,10 @@ class AiEngineClientTest {
         // engine route (post/delete/get) must present X-Engine-Auth, or the route 401s once the
         // secret is set. delete() backs the logout-time RAG purge, so a miss silently leaks data.
         AiEngineClient secured =
-                new AiEngineClient(applicationProperties, httpClient, "top-secret");
+                new AiEngineClient(
+                        applicationProperties,
+                        httpClient,
+                        AiEngineRouter.selfHosted(applicationProperties, "top-secret"));
         HttpResponse<String> ok = mock(HttpResponse.class);
         when(ok.statusCode()).thenReturn(200);
         when(ok.body()).thenReturn("{}");
@@ -115,7 +122,11 @@ class AiEngineClientTest {
     @Test
     @SuppressWarnings("unchecked")
     void noEngineAuthHeaderWhenSecretUnset() throws Exception {
-        AiEngineClient noSecret = new AiEngineClient(applicationProperties, httpClient, null);
+        AiEngineClient noSecret =
+                new AiEngineClient(
+                        applicationProperties,
+                        httpClient,
+                        AiEngineRouter.selfHosted(applicationProperties, null));
         HttpResponse<String> ok = mock(HttpResponse.class);
         when(ok.statusCode()).thenReturn(200);
         when(ok.body()).thenReturn("{}");

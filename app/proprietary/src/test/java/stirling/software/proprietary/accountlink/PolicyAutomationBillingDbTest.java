@@ -54,6 +54,7 @@ import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
+import stirling.software.proprietary.service.AiEngineRouter;
 
 import tools.jackson.databind.json.JsonMapper;
 
@@ -91,7 +92,12 @@ class PolicyAutomationBillingDbTest {
                         internalApiClient, metadata, tempFiles, JsonMapper.builder().build());
         interceptor =
                 new InstanceEntitlementInterceptor(
-                        gate, entitlementCache, meterProvider, freeTierUsageService, tempFiles);
+                        gate,
+                        entitlementCache,
+                        meterProvider,
+                        freeTierUsageService,
+                        tempFiles,
+                        AiEngineRouter.selfHosted(properties, null));
         when(gate.evaluate(anyBoolean(), anyBoolean()))
                 .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
         when(meterProvider.getIfAvailable())
