@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
 import {
   SCRATCH,
+  releaseScratch,
   scratchPtr,
-  scratchSlotCount,
 } from "@app/tools/pdfTextEditor/util/wasmScratch";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 
@@ -37,14 +37,13 @@ describe("scratchPtr", () => {
     expect(malloc).toHaveBeenCalledTimes(2);
   });
 
-  it("grows a slot in place and frees the old buffer", () => {
+  it("grows a slot and frees the old buffer", () => {
     const { m, malloc, free } = fakeModule();
     const small = scratchPtr(m, SCRATCH.readerBounds, 8);
     const big = scratchPtr(m, SCRATCH.readerBounds, 64);
     expect(big).not.toBe(small);
     expect(free).toHaveBeenCalledWith(small);
     expect(malloc).toHaveBeenLastCalledWith(64);
-    // And the grown slot is reused from then on.
     expect(scratchPtr(m, SCRATCH.readerBounds, 32)).toBe(big);
     expect(malloc).toHaveBeenCalledTimes(2);
   });
@@ -55,6 +54,15 @@ describe("scratchPtr", () => {
     expect(malloc).toHaveBeenCalledWith(4);
   });
 
+  it("grows geometrically so a growing text buffer stops re-allocating", () => {
+    const { m, malloc } = fakeModule();
+    for (let bytes = 4; bytes <= 4096; bytes += 4) {
+      scratchPtr(m, SCRATCH.editRunText, bytes);
+    }
+    // Doubling from 4 to 4096 is 11 allocations; fitting exactly would be 1024.
+    expect(malloc.mock.calls.length).toBeLessThanOrEqual(12);
+  });
+
   it("keeps arenas per module", () => {
     const a = fakeModule();
     const b = fakeModule();
@@ -62,7 +70,23 @@ describe("scratchPtr", () => {
     scratchPtr(b.m, SCRATCH.readerCharRect, 16);
     expect(a.malloc).toHaveBeenCalledTimes(1);
     expect(b.malloc).toHaveBeenCalledTimes(1);
-    expect(scratchSlotCount(a.m)).toBe(1);
-    expect(scratchSlotCount(b.m)).toBe(1);
+  });
+
+  it("releases every slot and re-allocates on next use", () => {
+    const { m, malloc, free } = fakeModule();
+    const rect = scratchPtr(m, SCRATCH.readerCharRect, 16);
+    const fill = scratchPtr(m, SCRATCH.readerFill, 16);
+    releaseScratch(m);
+    expect(free).toHaveBeenCalledWith(rect);
+    expect(free).toHaveBeenCalledWith(fill);
+    expect(free).toHaveBeenCalledTimes(2);
+    scratchPtr(m, SCRATCH.readerCharRect, 16);
+    expect(malloc).toHaveBeenCalledTimes(3);
+  });
+
+  it("releases an untouched module without calling free", () => {
+    const { m, free } = fakeModule();
+    releaseScratch(m);
+    expect(free).not.toHaveBeenCalled();
   });
 });

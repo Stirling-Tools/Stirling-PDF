@@ -56,9 +56,8 @@ function makeModule(
 ): PdfiumModule {
   const memory = { buffer: new ArrayBuffer(heapBytes) };
   let next = 8; // pointer 0 means "absent" to the code under test
-  let live = 0;
-  // Map from allocated pointer → aligned block size, so free() can reclaim
-  // the exact range and hand it to the next malloc that fits.
+  // Pooled scratch buffers outlive a free() of a neighbouring block, so free()
+  // returns the range to a list instead of resetting the bump pointer.
   const blocks = new Map<number, number>();
   const freeList: Array<{ ptr: number; size: number }> = [];
   const view = () => new DataView(memory.buffer);
@@ -68,19 +67,16 @@ function makeModule(
         memory,
         malloc(n: number): number {
           const aligned = (n + 7) & ~7;
-          // Prefer a free block that fits exactly to avoid bump growth.
           const slot = freeList.findIndex((b) => b.size >= aligned);
           if (slot !== -1) {
             const { ptr } = freeList.splice(slot, 1)[0];
             blocks.set(ptr, aligned);
-            live++;
             return ptr;
           }
           const ptr = next;
           next += aligned;
           if (next > heapBytes) throw new Error("fake heap exhausted");
           blocks.set(ptr, aligned);
-          live++;
           return ptr;
         },
         free(ptr: number): void {
@@ -88,7 +84,6 @@ function makeModule(
           if (size === undefined) return;
           blocks.delete(ptr);
           freeList.push({ ptr, size });
-          live--;
         },
       },
       getValue(ptr: number): number {

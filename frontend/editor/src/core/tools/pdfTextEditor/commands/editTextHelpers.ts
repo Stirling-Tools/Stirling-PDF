@@ -1,4 +1,4 @@
-import { readUtf16, writeUtf16 } from "@app/services/pdfiumService";
+import { readUtf16 } from "@app/services/pdfiumService";
 import type {
   ParagraphLineSlot,
   TextRun,
@@ -366,8 +366,6 @@ function charOriginPt(
     };
   } catch {
     return null;
-  } finally {
-    /* pooled buffer: nothing to free */
   }
 }
 
@@ -387,8 +385,6 @@ function looseBoxAdvancePt(
     return width > 0 ? width : null;
   } catch {
     return null;
-  } finally {
-    /* pooled buffer: nothing to free */
   }
 }
 
@@ -406,8 +402,6 @@ function objMatrixScale(
     return s > 0 ? s : 1;
   } catch {
     return 1;
-  } finally {
-    /* pooled buffer: nothing to free */
   }
 }
 
@@ -1226,12 +1220,8 @@ export function readObjTexts(
           continue;
         }
         const buf = scratchPtr(m, SCRATCH.editRunText, len);
-        try {
-          mod.FPDFTextObj_GetText(objPtr, tp, buf, len);
-          out[i] = readUtf16(m, buf, len);
-        } finally {
-          /* pooled buffer: nothing to free */
-        }
+        mod.FPDFTextObj_GetText(objPtr, tp, buf, len);
+        out[i] = readUtf16(m, buf, len);
       } catch {
         out[i] = null;
       }
@@ -1265,12 +1255,8 @@ function readBackTextObj(
     const len = mod.FPDFTextObj_GetText(objPtr, tp, 0, 0);
     if (len <= 2) return "";
     const buf = scratchPtr(m, SCRATCH.editObjText, len);
-    try {
-      mod.FPDFTextObj_GetText(objPtr, tp, buf, len);
-      return readUtf16(m, buf, len);
-    } finally {
-      /* pooled buffer: nothing to free */
-    }
+    mod.FPDFTextObj_GetText(objPtr, tp, buf, len);
+    return readUtf16(m, buf, len);
   } catch {
     return null;
   } finally {
@@ -1286,17 +1272,11 @@ export function measureObjRightEdgePt(
   m: WrappedPdfiumModule,
   objPtr: number,
 ): number {
-  // One allocation for the four out-params, so a per-word emit costs one
-  // malloc/free pair instead of four.
   const buf = scratchPtr(m, SCRATCH.editBoxA, 16);
-  try {
-    if (!m.FPDFPageObj_GetBounds(objPtr, buf, buf + 4, buf + 8, buf + 12)) {
-      return 0;
-    }
-    return m.pdfium.getValue(buf + 8, "float");
-  } finally {
-    /* pooled buffer: nothing to free */
+  if (!m.FPDFPageObj_GetBounds(objPtr, buf, buf + 4, buf + 8, buf + 12)) {
+    return 0;
   }
+  return m.pdfium.getValue(buf + 8, "float");
 }
 
 /**
@@ -1310,39 +1290,33 @@ export function measureObjSpanPt(
   m: WrappedPdfiumModule,
   ptrs: number[],
 ): { left: number; right: number } | null {
-  // One scratch rect reused across the whole span, not four allocs per call.
   const buf = scratchPtr(m, SCRATCH.editBoxB, 16);
-  try {
-    let left = Infinity;
-    let right = -Infinity;
-    for (const ptr of ptrs) {
-      if (!ptr) continue;
-      try {
-        if (!m.FPDFPageObj_GetBounds(ptr, buf, buf + 4, buf + 8, buf + 12)) {
-          continue;
-        }
-      } catch {
+  let left = Infinity;
+  let right = -Infinity;
+  for (const ptr of ptrs) {
+    if (!ptr) continue;
+    try {
+      if (!m.FPDFPageObj_GetBounds(ptr, buf, buf + 4, buf + 8, buf + 12)) {
         continue;
       }
-      const lo = m.pdfium.getValue(buf, "float");
-      const hi = m.pdfium.getValue(buf + 8, "float");
-      if (!Number.isFinite(lo) || !Number.isFinite(hi)) continue;
-      if (lo < left) left = lo;
-      if (hi > right) right = hi;
+    } catch {
+      continue;
     }
-    return right > left ? { left, right } : null;
-  } finally {
-    /* pooled buffer: nothing to free */
+    const lo = m.pdfium.getValue(buf, "float");
+    const hi = m.pdfium.getValue(buf + 8, "float");
+    if (!Number.isFinite(lo) || !Number.isFinite(hi)) continue;
+    if (lo < left) left = lo;
+    if (hi > right) right = hi;
   }
+  return right > left ? { left, right } : null;
 }
 
 function setTextOn(m: WrappedPdfiumModule, ptr: number, text: string): void {
-  const textPtr = writeUtf16(m, text);
-  try {
-    m.FPDFText_SetText(ptr, textPtr);
-  } finally {
-    m.pdfium.wasmExports.free(textPtr);
-  }
+  // FPDFText_SetText copies, so a pooled buffer is safe to overwrite next call.
+  const byteLen = (text.length + 1) * 2;
+  const textPtr = scratchPtr(m, SCRATCH.editSetText, byteLen);
+  m.pdfium.stringToUTF16(text, textPtr, byteLen);
+  m.FPDFText_SetText(ptr, textPtr);
 }
 
 interface InkState {
