@@ -342,7 +342,9 @@ jobs:
           echo "All required checks passed."
   publish-pr-cache-artifacts:
     needs: all-checks-passed
-    if: github.event_name == 'pull_request' && success()
+    if: >-
+      github.event_name == 'pull_request' &&
+      needs.all-checks-passed.result == 'success'
     uses: ./.github/workflows/publish-pr-cache-artifacts.yml
     permissions:
       actions: write
