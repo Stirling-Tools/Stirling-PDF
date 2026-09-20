@@ -124,7 +124,9 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: cache-the-planet-pr-${{ github.event.pull_request.number }}-gradle-java${{ env.JAVA_VERSION }}-${{ needs.hash_pr.outputs.files_hash }}-v${{ env.VERSION }}
-          path: cache-artifact
+          path: |
+            .cache/gradle-java${{ env.JAVA_VERSION }}/caches
+            .cache/gradle-java${{ env.JAVA_VERSION }}/wrapper
           include-hidden-files: true
           if-no-files-found: warn
           retention-days: 1
