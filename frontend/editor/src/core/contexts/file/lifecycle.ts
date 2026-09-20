@@ -3,7 +3,8 @@
  */
 
 import { FileId } from "@app/types/file";
-import { releaseSharedDocument } from "@app/services/pdfiumService";
+import { releaseSharedDocumentWhenIdle } from "@app/services/pdfiumService";
+import { releaseDocumentBytes } from "@app/services/documentBytesCache";
 import {
   FileContextAction,
   FileContextState,
@@ -86,7 +87,7 @@ export class FileLifecycleManager {
     this.fileGenerations.clear();
 
     // No file survives teardown, so neither should its shared document.
-    releaseSharedDocument();
+    releaseSharedDocumentWhenIdle();
 
     // Clear files ref
     this.filesRef.current.clear();
@@ -156,7 +157,7 @@ export class FileLifecycleManager {
     fileId: FileId,
     stateRef?: React.MutableRefObject<FileContextState>,
   ): void => {
-    // Remove from files ref
+    const file = this.filesRef.current.get(fileId);
     this.filesRef.current.delete(fileId);
 
     // Cancel cleanup timer and generation
@@ -167,9 +168,11 @@ export class FileLifecycleManager {
     }
     this.fileGenerations.delete(fileId);
 
-    // Scans are keyed by buffer identity, so a removed file's document can
-    // never be reused; release waits for any in-flight reader.
-    releaseSharedDocument();
+    // A scan queued before this removal can still open the document, so the
+    // release runs behind the queue. The byte cache entry is keyed by the file
+    // and cannot be reused once it leaves the workbench.
+    releaseSharedDocumentWhenIdle();
+    if (file) releaseDocumentBytes(file);
 
     // Clean up blob URLs from file record if we have access to state
     if (stateRef) {
