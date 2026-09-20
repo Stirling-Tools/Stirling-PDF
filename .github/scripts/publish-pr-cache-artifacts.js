@@ -23,8 +23,16 @@ const artifacts = fs.readdirSync(artifactRoot, { withFileTypes: true })
 
 if (artifacts.length > 16) throw new Error("too many PR cache artifacts");
 
+const headSha = process.env.EXPECTED_HEAD_SHA || process.env.GITHUB_SHA;
 const eventPath = path.join(process.env.RUNNER_TEMP || artifactRoot, "cache-pr-event.json");
-fs.writeFileSync(eventPath, JSON.stringify({ repository: { full_name: repository }, pull_request: { number: Number(prNumber) } }));
+fs.writeFileSync(eventPath, JSON.stringify({
+  repository: { full_name: repository, default_branch: "main" },
+  pull_request: {
+    number: Number(prNumber),
+    head: { sha: headSha, repo: { full_name: repository } },
+    base: { repo: { full_name: repository } },
+  },
+}));
 
 try {
   for (const artifact of artifacts) {
@@ -35,7 +43,7 @@ try {
     try {
       cp.execFileSync(process.execPath, [path.join(publisherRoot, "dist", "save.js")], {
         cwd: publisherRoot,
-        env: { ...process.env, CACHE_CONFIG_FILE: "", CACHE_ALLOWED_CACHE_NAMES: artifacts.map((item) => item.cacheName).join(","), GITHUB_EVENT_NAME: "pull_request", GITHUB_EVENT_PATH: eventPath, GITHUB_REF: `refs/pull/${prNumber}/merge`, INPUT_REPOSITORY: repository, "INPUT_CACHE-NAME": artifact.cacheName, INPUT_SCOPE: "untrusted", "INPUT_ALLOW-PR-CACHE": "true", INPUT_KEY: artifact.key, INPUT_VERSION: artifact.version, INPUT_PATH: `.cache/${artifact.cacheName}`, INPUT_STRICT: "false" },
+        env: { ...process.env, CACHE_CONFIG_FILE: "", CACHE_ALLOWED_CACHE_NAMES: artifacts.map((item) => item.cacheName).join(","), GITHUB_EVENT_NAME: "pull_request", GITHUB_EVENT_PATH: eventPath, GITHUB_REPOSITORY: repository, GITHUB_SHA: headSha, GITHUB_REF: `refs/pull/${prNumber}/merge`, GITHUB_REF_TYPE: "branch", INPUT_REPOSITORY: repository, "INPUT_CACHE-NAME": artifact.cacheName, INPUT_SCOPE: "untrusted", "INPUT_ALLOW-PR-CACHE": "true", INPUT_KEY: artifact.key, INPUT_VERSION: artifact.version, INPUT_PATH: `.cache/${artifact.cacheName}`, INPUT_STRICT: "false" },
         stdio: "inherit",
       });
     } finally { fs.rmSync(stagingRoot, { recursive: true, force: true }); }
