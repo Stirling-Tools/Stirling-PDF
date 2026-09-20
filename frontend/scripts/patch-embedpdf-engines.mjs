@@ -46,6 +46,8 @@ const patchedSnippets = [
   "delete wasmInitMessage.wasmModule",
   "__stirlingCreatedUrls",
   "URL.revokeObjectURL(__stirlingUrl)",
+  "__stirlingScratchBitmap",
+  "bitmap kept for reuse",
 ];
 
 if (checkOnly) {
@@ -171,6 +173,48 @@ export {
 export {
   createPdfiumEngine
 };`,
+  },
+  {
+    // One bitmap buffer per worker, grown in place. Every render path frees its
+    // pixel buffer right after copying the pixels out, so the next render can
+    // take the same block instead of asking the allocator for megabytes again.
+    label: "worker: pool the render bitmap buffer",
+    find: "function buildUserToDeviceMatrix(rect, rotation, outW, outH) {",
+    // The worker source is stored as an escaped string, so newlines stay as
+    // literal backslash-n and the injected block remains inside that string.
+    replace: [
+      "const __stirlingScratchStats = { renders: 0, allocs: 0, reuses: 0, bytes: 0 };",
+      "let __stirlingBitmapPtr = 0;",
+      "let __stirlingBitmapBytes = 0;",
+      "function __stirlingScratchBitmap(manager, bytes) {",
+      "  __stirlingScratchStats.renders += 1;",
+      "  if (__stirlingBitmapPtr && __stirlingBitmapBytes >= bytes) {",
+      "    __stirlingScratchStats.reuses += 1;",
+      "    return __stirlingBitmapPtr;",
+      "  }",
+      "  if (__stirlingBitmapPtr) manager.free(__stirlingBitmapPtr);",
+      "  __stirlingBitmapPtr = manager.malloc(bytes);",
+      "  __stirlingBitmapBytes = __stirlingBitmapPtr ? bytes : 0;",
+      "  if (__stirlingBitmapPtr) {",
+      "    __stirlingScratchStats.allocs += 1;",
+      "    if (bytes > __stirlingScratchStats.bytes) __stirlingScratchStats.bytes = bytes;",
+      "  }",
+      "  return __stirlingBitmapPtr;",
+      "}",
+      "globalThis.__stirlingScratchStats = __stirlingScratchStats;",
+      "function buildUserToDeviceMatrix(rect, rotation, outW, outH) {",
+    ].join("\\n"),
+  },
+  {
+    label: "worker: take the render bitmap from the pool",
+    find: /const heapPtr = this\.memoryManager\.malloc\(bytes\);/g,
+    replace:
+      "const heapPtr = __stirlingScratchBitmap(this.memoryManager, bytes);",
+  },
+  {
+    label: "worker: return the render bitmap to the pool",
+    find: /this\.memoryManager\.free\(heapPtr\);/g,
+    replace: "/* bitmap kept for reuse by __stirlingScratchBitmap */",
   },
 ];
 
