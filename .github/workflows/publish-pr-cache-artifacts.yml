@@ -51,7 +51,7 @@ jobs:
         with:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Resolve PR cache artifact names
         id: pr
@@ -123,7 +123,7 @@ jobs:
       - name: Publish isolated PR caches
         if: ${{ steps.pr.outputs.number != '' }}
         env:
-          GITHUB_TOKEN: ${{ steps.setup-bot.outputs.token }}
+          GITHUB_TOKEN: ${{ steps.setup-bot.outputs.token || github.token }}
           SOURCE_ARTIFACT_TOKEN: ${{ github.token }}
           ARTIFACT_RUN_ID: ${{ github.event.workflow_run.id || github.run_id }}
           PR_NUMBER: ${{ steps.pr.outputs.number }}
