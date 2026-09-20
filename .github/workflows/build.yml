@@ -347,4 +347,6 @@ jobs:
     permissions:
       actions: write
       contents: write
+    with:
+      called-from-build: true
     secrets: inherit

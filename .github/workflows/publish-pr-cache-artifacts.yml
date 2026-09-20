@@ -7,11 +7,16 @@ on:
     types: [completed]
   workflow_dispatch:
   workflow_call:
+    inputs:
+      called-from-build:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   publish:
     if: >-
-      (github.event_name == 'workflow_call' && github.repository == github.event.repository.full_name) ||
+      inputs.called-from-build ||
       (github.event.workflow_run.conclusion == 'success' &&
        github.event.workflow_run.repository.full_name == github.repository &&
        github.event.workflow_run.event == 'pull_request')
