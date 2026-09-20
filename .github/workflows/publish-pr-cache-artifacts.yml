@@ -45,6 +45,9 @@ jobs:
           path: cache-the-planet
           persist-credentials: false
 
+      - name: Prepare trusted cache configuration
+        run: cp .github/config/.cache-the-planet.json cache-the-planet/.cache-the-planet.json
+
       - name: Setup GitHub App Bot
         id: setup-bot
         uses: ./.github/actions/setup-bot
@@ -131,7 +134,7 @@ jobs:
           EXPECTED_WORKFLOW: Cache integration save suite
           PR_CACHE_ARTIFACTS_DIR: ${{ github.workspace }}/pr-cache-artifacts
         working-directory: cache-the-planet
-        run: node scripts/publish-pr-cache-artifacts.js
+        run: node "$GITHUB_WORKSPACE/.github/scripts/publish-pr-cache-artifacts.js"
 
       - name: Delete published PR cache artifacts
         if: ${{ steps.pr.outputs.number != '' }}
