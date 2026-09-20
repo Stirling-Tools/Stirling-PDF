@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,12 +25,10 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-
 import stirling.software.saas.accountlink.InstanceAiGatewayService.EngineReply;
-import stirling.software.saas.payg.model.FeatureGate;
-import stirling.software.saas.payg.cap.RequiresFeature;
 import stirling.software.saas.accountlink.InstanceAiGatewayService.StreamedReply;
+import stirling.software.saas.payg.cap.RequiresFeature;
+import stirling.software.saas.payg.model.FeatureGate;
 
 /**
  * The AI engine, as a linked self-hosted server sees it.
@@ -124,9 +123,9 @@ public class InstanceAiController {
     }
 
     /**
-     * Copies the engine's response through as it arrives. Billing happens up front here rather
-     * than after the body: the status is known before the first frame, and holding the charge
-     * until the stream closes would lose it whenever a client disconnects mid-run.
+     * Copies the engine's response through as it arrives. Billing happens up front here rather than
+     * after the body: the status is known before the first frame, and holding the charge until the
+     * stream closes would lose it whenever a client disconnects mid-run.
      */
     private ResponseEntity<?> streamed(
             String method,

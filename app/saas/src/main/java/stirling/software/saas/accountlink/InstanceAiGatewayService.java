@@ -24,8 +24,8 @@ import lombok.extern.slf4j.Slf4j;
  * <p>Tenancy is carried in the owner id rather than in the engine. The engine's {@code OwnerId} is
  * an opaque string it never parses, and every document read already resolves through its ACL by
  * owner, so prefixing the instance id is enough to keep two customers' corpora apart without the
- * engine knowing instances exist. Two servers that both have a user called "admin" get
- * {@code instance:1:admin} and {@code instance:2:admin}.
+ * engine knowing instances exist. Two servers that both have a user called "admin" get {@code
+ * instance:1:admin} and {@code instance:2:admin}.
  *
  * <p>The instance is never trusted for identity: the caller-supplied {@code X-User-Id} becomes the
  * suffix, and the prefix comes from the device credential the request authenticated with.
@@ -99,7 +99,8 @@ public class InstanceAiGatewayService {
             int longRunningTimeoutSeconds,
             String engineSharedSecret,
             HttpClient httpClient) {
-        this.engineBaseUrl = engineBaseUrl == null ? "" : engineBaseUrl.strip().replaceAll("/+$", "");
+        this.engineBaseUrl =
+                engineBaseUrl == null ? "" : engineBaseUrl.strip().replaceAll("/+$", "");
         this.timeoutSeconds = timeoutSeconds;
         this.longRunningTimeoutSeconds = longRunningTimeoutSeconds;
         this.engineSharedSecret = engineSharedSecret;
@@ -108,7 +109,8 @@ public class InstanceAiGatewayService {
 
     /** The owner the engine sees. Built here, never taken from the instance. */
     public static String namespacedOwner(Long instanceId, String instanceUserId) {
-        String user = instanceUserId == null || instanceUserId.isBlank() ? "anonymous" : instanceUserId;
+        String user =
+                instanceUserId == null || instanceUserId.isBlank() ? "anonymous" : instanceUserId;
         return "instance:" + instanceId + ":" + user;
     }
 

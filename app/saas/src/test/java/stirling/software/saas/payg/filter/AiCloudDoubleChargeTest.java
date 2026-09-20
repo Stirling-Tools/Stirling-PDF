@@ -13,14 +13,14 @@ import stirling.software.proprietary.billing.BillingCategory;
 import stirling.software.saas.payg.cap.AiToolRoutes;
 
 /**
- * Which AI paths would be charged twice if a linked self-hosted instance ever ran its AI on Stirling
- * Cloud.
+ * Which AI paths would be charged twice if a linked self-hosted instance ever ran its AI on
+ * Stirling Cloud.
  *
- * <p>The two meters are independent and neither knows the other exists. A self-hosted instance bills
- * locally through {@code InstanceEntitlementInterceptor} and reports the total to
- * {@code /api/v1/instance/sync}; the cloud bills live through {@link PaygChargeInterceptor}. Both
- * land as a DEBIT on the same team's {@code wallet_ledger}. So for any path where <b>both</b>
- * classifiers say "billable", one user action costs the customer two charges.
+ * <p>The two meters are independent and neither knows the other exists. A self-hosted instance
+ * bills locally through {@code InstanceEntitlementInterceptor} and reports the total to {@code
+ * /api/v1/instance/sync}; the cloud bills live through {@link PaygChargeInterceptor}. Both land as
+ * a DEBIT on the same team's {@code wallet_ledger}. So for any path where <b>both</b> classifiers
+ * say "billable", one user action costs the customer two charges.
  *
  * <p>That is not a live bug: cloud AI does not exist, and {@code
  * stirling.billing.account-link.metering.enabled} defaults to false. It is the constraint on
@@ -82,9 +82,7 @@ class AiCloudDoubleChargeTest {
                 .as("cloud meter bills %s as AI", path.uri())
                 .isEqualTo(path.doubleCharges());
         assertThat(selfHostedBills && cloudBills)
-                .as(
-                        "%s would be charged on both ledgers for one user action",
-                        path.uri())
+                .as("%s would be charged on both ledgers for one user action", path.uri())
                 .isEqualTo(path.doubleCharges());
     }
 
@@ -95,7 +93,8 @@ class AiCloudDoubleChargeTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("aiPaths")
     void aContextPathDoesNotChangeTheExposure(AiPath path) {
-        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/stirling" + path.uri());
+        MockHttpServletRequest request =
+                new MockHttpServletRequest("POST", "/stirling" + path.uri());
         request.setRequestURI("/stirling" + path.uri());
         request.setContextPath("/stirling");
 

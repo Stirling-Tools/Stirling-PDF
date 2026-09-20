@@ -229,7 +229,8 @@ class CloudAiEndToEndTest {
         // recordCall is still invoked; the free-path decision lives inside it, and its own test
         // covers that. What matters here is that a health probe is not a billable orchestration.
         verify(usageService).recordCall(99L, 42L, "/health");
-        verify(usageService, never()).recordCall(any(), any(), org.mockito.ArgumentMatchers.eq("/api/v1/orchestrator"));
+        verify(usageService, never())
+                .recordCall(any(), any(), org.mockito.ArgumentMatchers.eq("/api/v1/orchestrator"));
     }
 
     @Test

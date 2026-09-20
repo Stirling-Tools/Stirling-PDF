@@ -44,8 +44,7 @@ class InstanceAiGatewayServiceTest {
     void theOwnerTheEngineSeesIsNamespacedByInstance() throws Exception {
         gateway.forward("POST", "/api/v1/orchestrator", "{}", 7L, "admin");
 
-        assertThat(sent.getValue().headers().firstValue("X-User-Id"))
-                .contains("instance:7:admin");
+        assertThat(sent.getValue().headers().firstValue("X-User-Id")).contains("instance:7:admin");
     }
 
     @Test
@@ -122,7 +121,7 @@ class InstanceAiGatewayServiceTest {
     void documentIngestIsTheOnlyUploadPath() {
         assertThat(InstanceAiGatewayService.isDocumentUpload("/api/v1/documents")).isTrue();
         assertThat(InstanceAiGatewayService.isDocumentUpload("/api/v1/orchestrator")).isFalse();
-}
+    }
 
     @Test
     void theLogoutPurgeIsForwardedAsADelete() throws Exception {
