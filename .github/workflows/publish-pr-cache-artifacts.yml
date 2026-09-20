@@ -5,6 +5,7 @@ on:
   workflow_run:
     workflows: [Build and Test Workflow]
     types: [completed]
+  workflow_dispatch:
 
 jobs:
   publish:
