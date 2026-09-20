@@ -88,8 +88,7 @@ export default function AdminAiSection() {
       const deltaSettings: Record<string, unknown> = {
         "aiEngine.enabled": s.enabled ?? false,
         "aiEngine.mode": s.mode ?? "SELF_HOSTED",
-        "aiEngine.cloud.allowDocumentUpload":
-          s.cloud?.allowDocumentUpload ?? false,
+        "aiEngine.cloudDocumentIndexing": s.cloudDocumentIndexing ?? false,
         "aiEngine.url": s.url ?? "",
         // Timeouts must be >= 1s; a 0 would make every engine call fail/deadlock.
         "aiEngine.timeoutSeconds": clampMin(s.timeoutSeconds, 1),

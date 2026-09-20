@@ -251,13 +251,15 @@ test("a linked server can pick cloud AI, and ingestion is off until asked for", 
 
   // The switch that decides whether whole documents leave the building, off by default.
   const upload = page.getByRole("switch", {
-    name: /Send documents to Stirling Cloud/i,
+    name: /Let Stirling Cloud keep indexed documents/i,
   });
   await expect(upload).not.toBeChecked();
   // Click the visible label wrapper, not the hidden input - the house pattern for Mantine
   // switches, because force-clicking the input does not register in Firefox.
   await page
-    .locator('label:has(input[aria-label="Send documents to Stirling Cloud"])')
+    .locator(
+      'label:has(input[aria-label="Let Stirling Cloud keep indexed documents"])',
+    )
     .click();
   await expect(upload).toBeChecked();
 });
@@ -269,7 +271,7 @@ test("a server already in cloud mode opens on it", async ({ page }) => {
     {
       ...ENABLED_SETTINGS,
       mode: "CLOUD",
-      cloud: { allowDocumentUpload: true },
+      cloudDocumentIndexing: true,
     },
     true,
   );
@@ -278,7 +280,9 @@ test("a server already in cloud mode opens on it", async ({ page }) => {
     page.getByRole("radio", { name: /Stirling Cloud AI/i }),
   ).toBeChecked();
   await expect(
-    page.getByRole("switch", { name: /Send documents to Stirling Cloud/i }),
+    page.getByRole("switch", {
+      name: /Let Stirling Cloud keep indexed documents/i,
+    }),
   ).toBeChecked();
 });
 

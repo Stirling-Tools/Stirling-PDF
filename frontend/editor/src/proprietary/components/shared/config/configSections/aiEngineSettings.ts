@@ -45,15 +45,14 @@ export interface AiEngineFeatures {
 /** Where the reasoning runs; mirrors ApplicationProperties.AiEngine.AiEngineMode. */
 export type AiEngineMode = "SELF_HOSTED" | "CLOUD";
 
-export interface AiEngineCloud {
-  /** Whether whole documents may be uploaded to Stirling Cloud for indexing. */
-  allowDocumentUpload?: boolean;
-}
-
 export interface AiEngineSettingsData {
   enabled?: boolean;
   mode?: AiEngineMode;
-  cloud?: AiEngineCloud;
+  /**
+   * Cloud mode only. Whether Stirling Cloud may keep a document's text indexed for later
+   * questions. Retention, not transmission: every AI tool sends page text either way.
+   */
+  cloudDocumentIndexing?: boolean;
   url?: string;
   /**
    * Whether the processor forwards settings to the engine; SaaS pins it false, so a save

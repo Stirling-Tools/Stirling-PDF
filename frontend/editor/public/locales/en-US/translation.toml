@@ -786,10 +786,10 @@ title = "Capabilities"
 [admin.settings.ai.general.cloud]
 note = "Models and provider keys are managed by Stirling Cloud, so those settings do not apply in this mode."
 
-[admin.settings.ai.general.cloud.upload]
-description = "Chat and single questions send only the text a request needs. Indexing a document for repeated questions uploads the whole file, and Stirling Cloud then stores it."
-help = "Off means document questions are unavailable rather than quietly uploading your files."
-label = "Send documents to Stirling Cloud"
+[admin.settings.ai.general.cloud.indexing]
+description = "Every AI tool sends the page text it needs to answer. This decides whether Stirling Cloud may also keep that text, indexed, so later questions can search across the document."
+help = "Off means document questions are unavailable. It does not stop text being sent - only stored."
+label = "Let Stirling Cloud keep indexed documents"
 
 [admin.settings.ai.general.cloudNote]
 body = "The reasoning runs on Stirling's infrastructure, billed to the account this server is linked to. There is no container to run and no provider key to hold here. Whatever the AI reads is processed by Stirling Cloud rather than on your own hardware."
