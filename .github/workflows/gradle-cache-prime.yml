@@ -79,6 +79,7 @@ jobs:
         with:
           client-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+        continue-on-error: true
 
       - name: Restore Gradle cache asset
         id: cache
