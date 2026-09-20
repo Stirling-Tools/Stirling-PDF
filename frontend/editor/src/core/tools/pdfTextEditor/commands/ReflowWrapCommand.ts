@@ -8,6 +8,7 @@ import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import { readUtf16 } from "@app/services/pdfiumService";
 import { rotationFromMatrix } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
 import { transformObject } from "@app/tools/pdfTextEditor/util/objectTransform";
+import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
 
 /** Reflow a text run's EXISTING glyph objects to fit within `maxWidthPt`. */
 
@@ -508,36 +509,28 @@ function readObjBounds(
   m: WrappedPdfiumModule,
   ptr: number,
 ): { x: number; right: number } | null {
-  const l = m.pdfium.wasmExports.malloc(4);
-  const b = m.pdfium.wasmExports.malloc(4);
-  const r = m.pdfium.wasmExports.malloc(4);
-  const t = m.pdfium.wasmExports.malloc(4);
+  const buf = scratchPtr(m, SCRATCH.reflowBbox, 16);
   try {
-    if (!m.FPDFPageObj_GetBounds(ptr, l, b, r, t)) return null;
+    if (!m.FPDFPageObj_GetBounds(ptr, buf, buf + 4, buf + 8, buf + 12)) {
+      return null;
+    }
     return {
-      x: m.pdfium.getValue(l, "float"),
-      right: m.pdfium.getValue(r, "float"),
+      x: m.pdfium.getValue(buf, "float"),
+      right: m.pdfium.getValue(buf + 8, "float"),
     };
   } catch {
     return null;
-  } finally {
-    m.pdfium.wasmExports.free(l);
-    m.pdfium.wasmExports.free(b);
-    m.pdfium.wasmExports.free(r);
-    m.pdfium.wasmExports.free(t);
   }
 }
 
 /** The text-matrix baseline (translation `f`) - consistent across a line. */
 function readObjBaseline(m: WrappedPdfiumModule, ptr: number): number {
-  const buf = m.pdfium.wasmExports.malloc(6 * 4);
+  const buf = scratchPtr(m, SCRATCH.reflowMatrix, 6 * 4);
   try {
     if (!m.FPDFPageObj_GetMatrix(ptr, buf)) return 0;
     return m.pdfium.getValue(buf + 20, "float");
   } catch {
     return 0;
-  } finally {
-    m.pdfium.wasmExports.free(buf);
   }
 }
 
@@ -549,13 +542,9 @@ function readObjText(
   try {
     const len = m.FPDFTextObj_GetText(ptr, textPage, 0, 0);
     if (len <= 2) return "";
-    const buf = m.pdfium.wasmExports.malloc(len);
-    try {
-      m.FPDFTextObj_GetText(ptr, textPage, buf, len);
-      return readUtf16(m, buf, len);
-    } finally {
-      m.pdfium.wasmExports.free(buf);
-    }
+    const buf = scratchPtr(m, SCRATCH.reflowText, len);
+    m.FPDFTextObj_GetText(ptr, textPage, buf, len);
+    return readUtf16(m, buf, len);
   } catch {
     return "";
   }

@@ -9,6 +9,7 @@ import {
   embedBitmapImageOnPage,
   embedJpegImageOnPage,
 } from "@app/utils/pdfiumBitmapUtils";
+import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
 
 interface ZOrderModule {
   FPDFPage_InsertObjectAtIndex?: (
@@ -251,7 +252,11 @@ function writeMatrixStruct(
   const setter = mod.FPDFPageObj_SetMatrix;
   const rt = mod.pdfium;
   if (!setter || !rt?.setValue || !rt.wasmExports?.malloc) return;
-  const ptr = rt.wasmExports.malloc(6 * 4);
+  const ptr = scratchPtr(
+    mod as unknown as import("@app/tools/pdfTextEditor/util/wasmScratch").ScratchHost,
+    SCRATCH.imageMatrix,
+    6 * 4,
+  );
   if (!ptr) return;
   const values = [matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f];
   try {
@@ -259,7 +264,5 @@ function writeMatrixStruct(
     setter(objPtr, ptr);
   } catch {
     /* best-effort */
-  } finally {
-    rt.wasmExports.free?.(ptr);
   }
 }

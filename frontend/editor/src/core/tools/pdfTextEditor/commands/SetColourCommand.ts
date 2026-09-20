@@ -3,6 +3,7 @@ import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocume
 import type { RGBA } from "@app/tools/pdfTextEditor/types";
 import { PdfiumTextWriter } from "@app/tools/pdfTextEditor/pdfium/PdfiumTextWriter";
 import { collectMemberPtrs } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
+import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
 
 export class SetColourCommand implements Command {
   readonly type = "set-colour";
@@ -90,14 +91,10 @@ function readObjFill(
   m: import("@embedpdf/pdfium").WrappedPdfiumModule,
   objPtr: number,
 ): RGBA | null {
-  const exports = m.pdfium.wasmExports as unknown as {
-    malloc: (n: number) => number;
-    free: (p: number) => void;
-  };
-  const r = exports.malloc(4);
-  const g = exports.malloc(4);
-  const b = exports.malloc(4);
-  const a = exports.malloc(4);
+  const r = scratchPtr(m, SCRATCH.colourR, 4);
+  const g = scratchPtr(m, SCRATCH.colourG, 4);
+  const b = scratchPtr(m, SCRATCH.colourB, 4);
+  const a = scratchPtr(m, SCRATCH.colourA, 4);
   try {
     if (!m.FPDFPageObj_GetFillColor(objPtr, r, g, b, a)) return null;
     return {
@@ -108,10 +105,5 @@ function readObjFill(
     };
   } catch {
     return null;
-  } finally {
-    exports.free(r);
-    exports.free(g);
-    exports.free(b);
-    exports.free(a);
   }
 }
