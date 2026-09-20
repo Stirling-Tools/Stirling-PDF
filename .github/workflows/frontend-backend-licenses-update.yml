@@ -4,12 +4,15 @@ on:
   push:
     branches:
       - main
+      - dev-cache
   pull_request:
     branches:
       - main
+      - dev-cache
   merge_group:
     branches:
       - main
+      - dev-cache
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref_name || github.ref }}

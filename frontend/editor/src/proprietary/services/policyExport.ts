@@ -13,6 +13,7 @@
 import { loadPolicies } from "@app/services/policyStorage";
 import { assertFilesNotBlocked } from "@app/services/policyFileGuard";
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
+import { editorTriggerOf } from "@app/policies/runOn";
 import { policyAcceptsFile } from "@app/services/policyInput";
 import { splitFileName } from "@app/utils/fileUtils";
 import {
@@ -66,27 +67,30 @@ function activeExportPolicies(): ExportPolicy[] {
   );
   return (
     Object.entries(loadPolicies())
-      .filter(
-        ([, s]) =>
-          s.configured &&
-          s.enabled &&
-          s.backendId &&
-          s.runsOnEditor &&
-          s.runOn === "export",
-      )
+      .filter(([, s]) => editorTriggerOf(s) === "export")
       // Same team-wide run order the upload path uses: enforcement is not commutative (a watermark
       // then a flatten is not a flatten then a watermark), so both paths must agree on the sequence.
       .sort(([, a], [, b]) => (a.order ?? 0) - (b.order ?? 0))
-      .map(([id, s]) => ({
-        policyKey: id,
-        backendId: s.backendId as string,
-        firstOperation: s.firstOperation,
-        // A builder pipeline has no built-in category, so it labels by its own name.
-        label: labels.get(id) ?? s.name ?? "Policy",
-        outputMode: s.outputMode === "new_file" ? "new_file" : "new_version",
-        required: s.required === true,
-        accent: `var(--color-${ROW_ACCENT[id] ?? "blue"})`,
-      }))
+      .map(([id, s]) => {
+        const required = s.required === true;
+        return {
+          policyKey: id,
+          backendId: s.backendId as string,
+          firstOperation: s.firstOperation,
+          // A builder pipeline has no built-in category, so it labels by its own name.
+          label:
+            labels.get(id) ??
+            s.name ??
+            i18n.t(
+              required
+                ? "portal.pipelines.type.policy"
+                : "portal.pipelines.type.pipeline",
+            ),
+          outputMode: s.outputMode === "new_file" ? "new_file" : "new_version",
+          required,
+          accent: `var(--color-${ROW_ACCENT[id] ?? "blue"})`,
+        };
+      })
   );
 }
 

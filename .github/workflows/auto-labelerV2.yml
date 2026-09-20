@@ -4,6 +4,7 @@ on:
     types: [opened, synchronize]
     branches:
       - main
+      - dev-cache
       - V3
 
 permissions:

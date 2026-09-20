@@ -736,10 +736,12 @@ const FormFill = (_props: BaseToolProps) => {
                               className={styles.fieldTypeIcon}
                               style={{
                                 color: `var(--mantine-color-${FIELD_TYPE_COLOR[field.type]}-6)`,
-                                fontSize: "0.875rem",
                               }}
                             >
-                              {FIELD_TYPE_ICON[field.type]}
+                              <Icon
+                                name={FIELD_TYPE_ICON[field.type]}
+                                size={14}
+                              />
                             </span>
                             <span className={styles.fieldName}>
                               {field.label || field.name}
