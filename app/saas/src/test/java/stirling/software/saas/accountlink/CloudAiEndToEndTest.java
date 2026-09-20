@@ -201,8 +201,7 @@ class CloudAiEndToEndTest {
         // or this would dial the real api.stirling.com.
         instanceProps
                 .getAiEngine()
-                .getCloud()
-                .setBaseUrl("http://127.0.0.1:" + cloud.getAddress().getPort());
+                .setCloudBaseUrl("http://127.0.0.1:" + cloud.getAddress().getPort());
 
         AiEngineRouter router =
                 new AiEngineRouter(
@@ -258,8 +257,7 @@ class CloudAiEndToEndTest {
         linkProps.setSaasBaseUrl("http://127.0.0.1:" + cloud.getAddress().getPort());
         instanceProps
                 .getAiEngine()
-                .getCloud()
-                .setBaseUrl("http://127.0.0.1:" + cloud.getAddress().getPort());
+                .setCloudBaseUrl("http://127.0.0.1:" + cloud.getAddress().getPort());
         AiEngineClient client =
                 new AiEngineClient(
                         instanceProps,
@@ -286,7 +284,7 @@ class CloudAiEndToEndTest {
 
     @Test
     void turningCloudIngestionOnLetsTheDocumentThrough() throws Exception {
-        instanceProps.getAiEngine().getCloud().setAllowDocumentUpload(true);
+        instanceProps.getAiEngine().setCloudDocumentIndexing(true);
 
         linkedInstanceClient().post("/api/v1/documents", "{}", "alice");
 

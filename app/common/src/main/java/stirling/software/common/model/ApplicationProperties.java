@@ -391,37 +391,28 @@ public class ApplicationProperties {
         /** Per-capability on/off switches so an admin can disable individual AI tools. */
         private Features features = new Features();
 
-        /** Settings that only apply when {@link #mode} is {@code CLOUD}. */
-        private Cloud cloud = new Cloud();
+        /**
+         * Whether Stirling Cloud may keep a document's text and index it for later questions.
+         *
+         * <p>Cloud mode only, and off by default. This is about retention, not transmission: every
+         * AI tool already sends extracted page text, so turning this off does not keep a document
+         * on-site. What it stops is the copy that outlives the request - RAG ingestion stores the
+         * text under an owner with an expiry so later questions can retrieve it. Off, document
+         * questions degrade rather than quietly leaving a corpus on someone else's disk.
+         */
+        private boolean cloudDocumentIndexing = false;
+
+        /**
+         * Stirling Cloud's API host. Not in settings.yml: it is a deployment constant, and it must
+         * be the same deployment that issued this server's account-link credential, since that
+         * credential is what authenticates the call. Blank falls back to the account-link base URL.
+         */
+        private String cloudBaseUrl = "https://api.stirling.com";
 
         /** Where the reasoning runs. */
         public enum AiEngineMode {
             SELF_HOSTED,
             CLOUD
-        }
-
-        @Data
-        public static class Cloud {
-
-            /**
-             * Whether whole documents may be sent to Stirling Cloud for indexing.
-             *
-             * <p>Off by default, and deliberately separate from the capability switches: those
-             * decide what the app offers, this decides what leaves the building. Chat and
-             * single-shot questions send only the text a request needs, but RAG ingestion uploads
-             * the whole document and Stirling Cloud then stores it. An admin who wants cloud AI
-             * without a copy of their corpus living elsewhere turns everything else on and leaves
-             * this off; document-question features then degrade rather than silently upload.
-             */
-            private boolean allowDocumentUpload = false;
-
-            /**
-             * Stirling Cloud's API host. Must be the same deployment that issued this server's
-             * account-link device credential, since that credential is what authenticates the call.
-             * Blank falls back to the account-link base URL, for a deployment that serves both from
-             * one host.
-             */
-            private String baseUrl = "https://api.stirling.com";
         }
 
         @Data

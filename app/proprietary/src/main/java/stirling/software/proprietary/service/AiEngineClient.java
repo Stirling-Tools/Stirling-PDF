@@ -51,10 +51,11 @@ public class AiEngineClient {
     }
 
     /**
-     * Path this server refuses to send to Stirling Cloud when the admin has not allowed document
-     * upload. Enforced here rather than at the callers because this client is the one place every
-     * engine call passes through - a new caller inherits the guard instead of having to remember
-     * it.
+     * The one engine route that makes Stirling Cloud <em>keep</em> a document rather than read it
+     * for a single request. Every AI route sends extracted page text, so gating this is about
+     * retention, not about keeping the text on-site. Enforced here because this client is the one
+     * place every engine call passes through - a new caller inherits the guard rather than having
+     * to remember it.
      */
     private static final String DOCUMENT_INGEST_PATH = "/api/v1/documents";
 
@@ -62,10 +63,10 @@ public class AiEngineClient {
         AiEngineTarget target = router.resolve();
         if (target.cloud()
                 && DOCUMENT_INGEST_PATH.equals(path)
-                && !router.documentUploadAllowed()) {
+                && !router.documentIndexingAllowed()) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
-                    "Uploading documents to Stirling Cloud is turned off on this server, so"
+                    "Storing documents on Stirling Cloud is turned off on this server, so"
                             + " document questions are unavailable in cloud AI mode.");
         }
         return target;

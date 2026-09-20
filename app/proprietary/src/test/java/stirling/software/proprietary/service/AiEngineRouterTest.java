@@ -93,7 +93,7 @@ class AiEngineRouterTest {
     @Test
     void cloudModeUsesTheConfiguredApiHostOverTheAccountLinkHost() {
         ApplicationProperties cloud = props(AiEngineMode.CLOUD);
-        cloud.getAiEngine().getCloud().setBaseUrl("https://api.stirling.com/");
+        cloud.getAiEngine().setCloudBaseUrl("https://api.stirling.com/");
         AiEngineRouter router =
                 new AiEngineRouter(
                         cloud,
@@ -109,7 +109,7 @@ class AiEngineRouterTest {
     void aBlankApiHostFallsBackToTheAccountLinkHost() {
         // One host serves both in a single-origin deployment.
         ApplicationProperties cloud = props(AiEngineMode.CLOUD);
-        cloud.getAiEngine().getCloud().setBaseUrl("  ");
+        cloud.getAiEngine().setCloudBaseUrl("  ");
         AiEngineRouter router =
                 new AiEngineRouter(
                         cloud,
@@ -125,7 +125,7 @@ class AiEngineRouterTest {
     void theCloudHostIsExposedWithoutTheGatewayPathOnIt() {
         // The public status endpoint sits outside the gateway, so the probe needs the bare host.
         ApplicationProperties cloud = props(AiEngineMode.CLOUD);
-        cloud.getAiEngine().getCloud().setBaseUrl("https://api.stirling.com/");
+        cloud.getAiEngine().setCloudBaseUrl("https://api.stirling.com/");
         AiEngineRouter router =
                 new AiEngineRouter(
                         cloud,
@@ -164,9 +164,9 @@ class AiEngineRouterTest {
     @Test
     void documentUploadIsAlwaysAllowedAgainstAnEngineTheCustomerRuns() {
         ApplicationProperties selfHosted = props(AiEngineMode.SELF_HOSTED);
-        selfHosted.getAiEngine().getCloud().setAllowDocumentUpload(false);
+        selfHosted.getAiEngine().setCloudDocumentIndexing(false);
 
-        assertThat(AiEngineRouter.selfHosted(selfHosted, null).documentUploadAllowed()).isTrue();
+        assertThat(AiEngineRouter.selfHosted(selfHosted, null).documentIndexingAllowed()).isTrue();
     }
 
     @Test
@@ -176,9 +176,9 @@ class AiEngineRouterTest {
                 new AiEngineRouter(
                         cloud, providing(linkedStore()), providing(saasAt("https://x/app")), null);
 
-        assertThat(router.documentUploadAllowed()).isFalse();
+        assertThat(router.documentIndexingAllowed()).isFalse();
 
-        cloud.getAiEngine().getCloud().setAllowDocumentUpload(true);
-        assertThat(router.documentUploadAllowed()).isTrue();
+        cloud.getAiEngine().setCloudDocumentIndexing(true);
+        assertThat(router.documentIndexingAllowed()).isTrue();
     }
 }
