@@ -12,7 +12,7 @@ on:
   schedule:
     - cron: "20 7 * * 2"
   push:
-    branches: ["main", "dev-cache"]
+    branches: ["main"]
 permissions: read-all
 
 jobs:
