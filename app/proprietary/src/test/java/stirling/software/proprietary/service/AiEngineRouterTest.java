@@ -122,6 +122,23 @@ class AiEngineRouterTest {
     }
 
     @Test
+    void theCloudHostIsExposedWithoutTheGatewayPathOnIt() {
+        // The public status endpoint sits outside the gateway, so the probe needs the bare host.
+        ApplicationProperties cloud = props(AiEngineMode.CLOUD);
+        cloud.getAiEngine().getCloud().setBaseUrl("https://api.stirling.com/");
+        AiEngineRouter router =
+                new AiEngineRouter(
+                        cloud,
+                        providing(linkedStore()),
+                        providing(saasAt("https://stirling.com/app")),
+                        null);
+
+        assertThat(router.cloudHost()).isEqualTo("https://api.stirling.com");
+        assertThat(router.resolve().baseUrl())
+                .isEqualTo("https://api.stirling.com/api/v1/instance/ai");
+    }
+
+    @Test
     void cloudModeWithoutALinkFailsLoudlyRatherThanCallingLocalhost() {
         DeviceCredentialStore unlinked = mock(DeviceCredentialStore.class);
         when(unlinked.get()).thenReturn(Optional.empty());

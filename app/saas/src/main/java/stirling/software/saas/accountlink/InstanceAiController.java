@@ -2,6 +2,8 @@ package stirling.software.saas.accountlink;
 
 import java.io.IOException;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
@@ -56,12 +58,38 @@ public class InstanceAiController {
 
     private final InstanceAiGatewayService gateway;
     private final InstanceAiUsageService usageService;
+    private final boolean sharingEnabled;
 
+    @Autowired
     public InstanceAiController(
-            InstanceAiGatewayService gateway, InstanceAiUsageService usageService) {
+            InstanceAiGatewayService gateway,
+            InstanceAiUsageService usageService,
+            @Value("${stirling.cloud-ai.sharing-enabled:false}") boolean sharingEnabled) {
         this.gateway = gateway;
         this.usageService = usageService;
+        this.sharingEnabled = sharingEnabled;
     }
+
+    /** Sharing on, for tests and callers that are not wiring the property. */
+    InstanceAiController(InstanceAiGatewayService gateway, InstanceAiUsageService usageService) {
+        this(gateway, usageService, true);
+    }
+
+    /**
+     * What a linked instance may ask without being forwarded anywhere: whether this deployment
+     * shares its AI at all, and whether the engine behind it is answering.
+     *
+     * <p>Deliberately outside the sharing gate. An instance that is refused needs to be able to
+     * tell "switched off here" from "cloud is down", and a gated status endpoint could say neither.
+     */
+    @GetMapping("/status")
+    @PreAuthorize("hasRole('LINKED_INSTANCE')")
+    public InstanceAiStatus status() {
+        return new InstanceAiStatus(sharingEnabled, sharingEnabled && gateway.engineReachable());
+    }
+
+    /** Answer to {@code GET /api/v1/instance/ai/status}. */
+    public record InstanceAiStatus(boolean sharingEnabled, boolean engineReachable) {}
 
     @GetMapping("/**")
     @PreAuthorize("hasRole('LINKED_INSTANCE')")
@@ -104,6 +132,13 @@ public class InstanceAiController {
         if (!(auth instanceof LinkedInstanceAuthenticationToken token)) {
             // hasRole already guarantees this; never leak a non-instance principal into the owner.
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        if (!sharingEnabled) {
+            // Not a fault: this deployment simply does not lend its engine out. Said plainly so
+            // the instance's own settings page can show it rather than reporting the cloud down.
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body("Stirling Cloud AI sharing is not enabled on this deployment.");
         }
 
         String enginePath = enginePathOf(request);

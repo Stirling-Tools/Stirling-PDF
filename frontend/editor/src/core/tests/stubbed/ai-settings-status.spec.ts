@@ -331,6 +331,99 @@ test("cloud mode reports on Stirling Cloud, not on a local engine", async ({
   ).toHaveCount(0);
 });
 
+test("cloud mode reports Stirling Cloud itself as its own status point", async ({
+  page,
+}) => {
+  await openAiSettings(
+    page,
+    {
+      enabled: true,
+      reachable: true,
+      authenticated: true,
+      cloudUp: true,
+      cloudSharingEnabled: true,
+    },
+    { ...ENABLED_SETTINGS, mode: "CLOUD" },
+    true,
+  );
+
+  const statusCard = page.locator(".settings-card").first();
+  await expect(
+    statusCard.getByText("Stirling.com", { exact: true }),
+  ).toBeVisible();
+  await expect(statusCard.getByText("Up", { exact: true })).toBeVisible();
+  await expect(
+    statusCard.getByText("AI sharing", { exact: true }),
+  ).toBeVisible();
+  await expect(statusCard.getByText("Enabled", { exact: true })).toBeVisible();
+});
+
+test("sharing switched off reads as switched off, not as an outage", async ({
+  page,
+}) => {
+  await openAiSettings(
+    page,
+    {
+      enabled: true,
+      reachable: false,
+      cloudUp: true,
+      cloudSharingEnabled: false,
+      error: "Stirling Cloud AI sharing is switched off for linked servers.",
+    },
+    { ...ENABLED_SETTINGS, mode: "CLOUD" },
+    true,
+  );
+
+  const statusCard = page.locator(".settings-card").first();
+  // The host being up is the whole point: it separates "switched off" from "down".
+  await expect(statusCard.getByText("Up", { exact: true })).toBeVisible();
+  await expect(statusCard.getByText("Disabled", { exact: true })).toBeVisible();
+  await expect(
+    statusCard.getByText(
+      "Stirling Cloud AI sharing is switched off for linked servers.",
+    ),
+  ).toBeVisible();
+});
+
+test("a Stirling Cloud outage shows the host down", async ({ page }) => {
+  await openAiSettings(
+    page,
+    {
+      enabled: true,
+      reachable: false,
+      cloudUp: false,
+      error: "Stirling Cloud is not responding.",
+    },
+    { ...ENABLED_SETTINGS, mode: "CLOUD" },
+    true,
+  );
+
+  const statusCard = page.locator(".settings-card").first();
+  await expect(statusCard.getByText("Down", { exact: true })).toBeVisible();
+  // Sharing is unknown while the host is unreachable, and must not read as "off".
+  await expect(statusCard.getByText("Disabled", { exact: true })).toHaveCount(
+    0,
+  );
+});
+
+test("self-hosted mode shows no Stirling Cloud status points", async ({
+  page,
+}) => {
+  await openAiSettings(
+    page,
+    { enabled: true, reachable: true, authenticated: true },
+    ENABLED_SETTINGS,
+  );
+
+  const statusCard = page.locator(".settings-card").first();
+  await expect(statusCard.getByText("AI sharing", { exact: true })).toHaveCount(
+    0,
+  );
+  await expect(
+    statusCard.getByText("Stirling.com", { exact: true }),
+  ).toHaveCount(0);
+});
+
 test("cloud mode makes the settings Stirling Cloud owns read-only", async ({
   page,
 }) => {

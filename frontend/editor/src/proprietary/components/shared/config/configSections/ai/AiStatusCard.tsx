@@ -237,6 +237,39 @@ export function AiStatusCard({ settings }: AiStatusCardProps) {
               }
               value={authLabel}
             />
+            {cloud && (
+              <Fact
+                label={t(
+                  "admin.settings.ai.status.cloud.hostLabel",
+                  "Stirling Cloud",
+                )}
+                value={
+                  status?.cloudUp == null
+                    ? "—"
+                    : status.cloudUp
+                      ? t("admin.settings.ai.status.cloud.hostUp", "Up")
+                      : t("admin.settings.ai.status.cloud.hostDown", "Down")
+                }
+              />
+            )}
+            {cloud && (
+              <Fact
+                label={t(
+                  "admin.settings.ai.status.cloud.sharingLabel",
+                  "AI sharing",
+                )}
+                value={
+                  status?.cloudSharingEnabled == null
+                    ? "—"
+                    : status.cloudSharingEnabled
+                      ? t("admin.settings.ai.status.cloud.sharingOn", "Enabled")
+                      : t(
+                          "admin.settings.ai.status.cloud.sharingOff",
+                          "Disabled",
+                        )
+                }
+              />
+            )}
             <Fact
               label={t("admin.settings.ai.status.smartModel", "Smart model")}
               value={status?.smartModel || "—"}

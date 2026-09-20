@@ -114,6 +114,36 @@ public class InstanceAiGatewayService {
         return "instance:" + instanceId + ":" + user;
     }
 
+    /**
+     * Whether the engine behind this gateway answers its health check. Health needs no secret and
+     * never reaches a model provider, so this says "something is listening" and nothing more -
+     * enough for a linked instance to tell a switched-off deployment from a broken one.
+     */
+    public boolean engineReachable() {
+        try {
+            HttpRequest.Builder builder =
+                    HttpRequest.newBuilder()
+                            .uri(URI.create(engineBaseUrl + "/health"))
+                            .timeout(Duration.ofSeconds(5))
+                            .GET();
+            // The shipped engine exempts /health from the secret check, but an engine configured
+            // to fail closed does not - and a probe that reads 401 as "down" would be wrong.
+            if (engineSharedSecret != null && !engineSharedSecret.isBlank()) {
+                builder.header("X-Engine-Auth", engineSharedSecret);
+            }
+            return httpClient
+                            .send(builder.build(), HttpResponse.BodyHandlers.ofString())
+                            .statusCode()
+                    < 400;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        } catch (IOException | RuntimeException e) {
+            log.debug("Cloud AI engine health probe failed", e);
+            return false;
+        }
+    }
+
     public static boolean isAllowedPath(String path) {
         return path != null && ALLOWED_PATHS.contains(path);
     }

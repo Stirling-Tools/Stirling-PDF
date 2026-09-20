@@ -40,8 +40,10 @@ import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResultFile;
 import stirling.software.proprietary.service.AiEngineClient;
 import stirling.software.proprietary.service.AiEngineEndpointResolver;
+import stirling.software.proprietary.service.AiEngineRouter;
 import stirling.software.proprietary.service.AiFeatureGate;
 import stirling.software.proprietary.service.AiWorkflowService;
+import stirling.software.proprietary.service.CloudStatusProbe;
 
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
@@ -66,6 +68,8 @@ public class AiEngineController {
     private final AiFeatureGate aiFeatureGate;
     private final UserServiceInterface userService;
     private final ApplicationProperties applicationProperties;
+    private final AiEngineRouter aiEngineRouter;
+    private final CloudStatusProbe cloudStatusProbe;
 
     /**
      * SSE emitter timeout (ms), long enough for multi-gigabyte PDF workflows without completing out
@@ -83,6 +87,8 @@ public class AiEngineController {
             AiEngineEndpointResolver endpointResolver,
             AiFeatureGate aiFeatureGate,
             ApplicationProperties applicationProperties,
+            AiEngineRouter aiEngineRouter,
+            CloudStatusProbe cloudStatusProbe,
             @Autowired(required = false) UserServiceInterface userService) {
         this.aiEngineClient = aiEngineClient;
         this.aiWorkflowService = aiWorkflowService;
@@ -94,6 +100,8 @@ public class AiEngineController {
         this.aiFeatureGate = aiFeatureGate;
         this.userService = userService;
         this.applicationProperties = applicationProperties;
+        this.aiEngineRouter = aiEngineRouter;
+        this.cloudStatusProbe = cloudStatusProbe;
         this.streamTimeoutMs =
                 applicationProperties.getAiEngine().getStreamTimeoutSeconds() * 1000L;
     }
@@ -132,6 +140,28 @@ public class AiEngineController {
         AiEngineStatus.AiEngineStatusBuilder status = AiEngineStatus.builder().enabled(true);
         String userId = currentUserId();
 
+        // Cloud mode answers two questions the engine probe cannot: is Stirling Cloud up at all,
+        // and does it lend its AI out. Asked first, because either being false explains a failure
+        // below that would otherwise read as "unreachable" with no cause an admin can act on.
+        boolean cloud = aiEngineRouter.isCloudMode();
+        if (cloud) {
+            boolean cloudUp = cloudStatusProbe.isUp(aiEngineRouter.cloudHost());
+            status.cloudUp(cloudUp);
+            if (!cloudUp) {
+                return status.reachable(false)
+                        .cloudSharingEnabled(null)
+                        .error("Stirling Cloud is not responding.")
+                        .build();
+            }
+            Boolean sharing = probeCloudSharing(userId);
+            status.cloudSharingEnabled(sharing);
+            if (Boolean.FALSE.equals(sharing)) {
+                return status.reachable(false)
+                        .error("Stirling Cloud AI sharing is switched off for linked servers.")
+                        .build();
+            }
+        }
+
         long startedAt = System.nanoTime();
         String health;
         try {
@@ -153,6 +183,23 @@ public class AiEngineController {
 
         status.authenticated(probeAuthentication(userId, status));
         return status.build();
+    }
+
+    /**
+     * Asks the cloud gateway whether it shares its AI. Outside the gateway's own sharing gate on
+     * purpose, so a switched-off deployment answers plainly instead of looking unreachable.
+     *
+     * @return false only when the gateway said so; null when the question went unanswered
+     */
+    private Boolean probeCloudSharing(String userId) {
+        try {
+            JsonNode body = objectMapper.readTree(aiEngineClient.get("/status", userId));
+            JsonNode enabled = body.path("sharingEnabled");
+            return enabled.isBoolean() ? enabled.asBoolean() : null;
+        } catch (IOException | RuntimeException e) {
+            log.debug("Cloud AI sharing probe failed", e);
+            return null;
+        }
     }
 
     /**

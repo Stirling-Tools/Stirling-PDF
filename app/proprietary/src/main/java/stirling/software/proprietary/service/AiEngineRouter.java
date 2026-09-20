@@ -164,6 +164,17 @@ public class AiEngineRouter {
     }
 
     /**
+     * The Stirling Cloud host this server would call, with no gateway path on it. Public because
+     * the status endpoint probes the host's own {@code /api/v1/info/status}, which sits outside the
+     * gateway and needs no credential.
+     *
+     * @return the base URL, or empty when none is configured
+     */
+    public String cloudHost() {
+        return cloudBaseUrl();
+    }
+
+    /**
      * The configured API host, or the account-link host when it is blank. One host serves both in a
      * single-origin deployment; they differ when the API sits on its own name.
      */

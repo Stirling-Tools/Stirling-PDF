@@ -947,7 +947,13 @@ title = "Status"
 url = "Engine URL"
 
 [admin.settings.ai.status.cloud]
+hostDown = "Down"
+hostLabel = "Stirling.com"
+hostUp = "Up"
 name = "Stirling Cloud"
+sharingLabel = "AI sharing"
+sharingOff = "Disabled"
+sharingOn = "Enabled"
 
 [admin.settings.ai.status.cloud.degraded]
 body = "Stirling Cloud answered but refused this server. The account link may have been revoked."

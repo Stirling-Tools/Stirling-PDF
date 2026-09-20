@@ -122,6 +122,23 @@ class CloudAiEndToEndTest {
                         LinkedInstanceAuthenticationToken auth =
                                 new LinkedInstanceAuthenticationToken(42L, 99L);
                         String userId = exchange.getRequestHeaders().getFirst("X-User-Id");
+                        // Stands in for Spring picking the exact /status mapping over the
+                        // catch-all /** the forwarding methods are bound to.
+                        if ("GET".equals(exchange.getRequestMethod())
+                                && exchange.getRequestURI()
+                                        .getPath()
+                                        .endsWith("/api/v1/instance/ai/status")) {
+                            InstanceAiController.InstanceAiStatus body = controller.status();
+                            respond(
+                                    exchange,
+                                    200,
+                                    "{\"sharingEnabled\":"
+                                            + body.sharingEnabled()
+                                            + ",\"engineReachable\":"
+                                            + body.engineReachable()
+                                            + "}");
+                            return;
+                        }
                         ResponseEntity<?> reply =
                                 switch (exchange.getRequestMethod()) {
                                     case "GET" -> controller.get(request, auth, userId);
@@ -314,5 +331,15 @@ class CloudAiEndToEndTest {
         assertThat(call.path()).isEqualTo("/api/v1/documents/by-owner");
         // Scoped to this instance's namespace, so it cannot purge another tenant.
         assertThat(call.userId()).isEqualTo("instance:42:alice");
+    }
+
+    @Test
+    void aLinkedInstanceCanAskWhetherTheCloudSharesItsAi() throws Exception {
+        // The probe the self-hosted status card makes, over the same two hops a real call takes.
+        String body = linkedInstanceClient().get("/status", "alice");
+
+        assertThat(body).contains("\"sharingEnabled\":true");
+        assertThat(body).contains("\"engineReachable\":true");
+        assertThat(cloudFailure.get()).isNull();
     }
 }

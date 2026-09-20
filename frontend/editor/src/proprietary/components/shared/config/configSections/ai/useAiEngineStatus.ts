@@ -11,6 +11,10 @@ export interface AiEngineStatusData {
   smartModel?: string | null;
   fastModel?: string | null;
   error?: string | null;
+  /** Cloud mode only: did the Stirling Cloud host answer its public status endpoint. */
+  cloudUp?: boolean | null;
+  /** Cloud mode only: does that deployment lend its AI to linked servers. */
+  cloudSharingEnabled?: boolean | null;
 }
 
 /** What the card paints. `degraded` is reachable-but-refusing, the case /health cannot see. */
