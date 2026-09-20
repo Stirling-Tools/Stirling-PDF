@@ -10,9 +10,9 @@ name: Build and Test Workflow
 
 on:
   pull_request:
-    branches: ["main"]
+    branches: ["main", "dev-cache"]
   merge_group:
-    branches: ["main"]
+    branches: ["main", "dev-cache"]
   workflow_dispatch:
 
 # cancel in-progress jobs if a new job is triggered

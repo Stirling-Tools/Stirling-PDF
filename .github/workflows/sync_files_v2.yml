@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - dev-cache
     paths:
       - "build.gradle"
       - "app/common/build.gradle"
