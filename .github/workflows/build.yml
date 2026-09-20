@@ -344,4 +344,7 @@ jobs:
     needs: all-checks-passed
     if: github.event_name == 'pull_request' && success()
     uses: ./.github/workflows/publish-pr-cache-artifacts.yml
+    permissions:
+      actions: write
+      contents: write
     secrets: inherit

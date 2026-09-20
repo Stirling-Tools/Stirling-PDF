@@ -11,9 +11,10 @@ on:
 jobs:
   publish:
     if: >-
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.repository.full_name == github.repository &&
-      github.event.workflow_run.event == 'pull_request'
+      (github.event_name == 'workflow_call' && github.repository == github.event.repository.full_name) ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.repository.full_name == github.repository &&
+       github.event.workflow_run.event == 'pull_request')
     runs-on: ubuntu-latest
     permissions:
       actions: write
@@ -92,7 +93,7 @@ jobs:
           NODE
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_ID: ${{ github.event.workflow_run.id || github.run_id }}
 
       - name: Download single PR cache artifact
         if: ${{ steps.pr.outputs.count == '1' }}
@@ -118,9 +119,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ steps.setup-bot.outputs.token }}
           SOURCE_ARTIFACT_TOKEN: ${{ github.token }}
-          ARTIFACT_RUN_ID: ${{ github.event.workflow_run.id }}
+          ARTIFACT_RUN_ID: ${{ github.event.workflow_run.id || github.run_id }}
           PR_NUMBER: ${{ steps.pr.outputs.number }}
-          EXPECTED_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          EXPECTED_HEAD_SHA: ${{ github.event.workflow_run.head_sha || github.event.pull_request.head.sha }}
           EXPECTED_WORKFLOW: Cache integration save suite
           CACHE_CONFIG_FILE: .github/config/.cache-the-planet.json
           PR_CACHE_ARTIFACTS_DIR: ${{ github.workspace }}/pr-cache-artifacts
@@ -131,7 +132,7 @@ jobs:
         if: ${{ steps.pr.outputs.number != '' }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          ARTIFACT_RUN_ID: ${{ github.event.workflow_run.id }}
+          ARTIFACT_RUN_ID: ${{ github.event.workflow_run.id || github.run_id }}
           PR_NUMBER: ${{ steps.pr.outputs.number }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
