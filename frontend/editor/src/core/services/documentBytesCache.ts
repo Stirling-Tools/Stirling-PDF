@@ -23,7 +23,11 @@ const resolvedByFileKey = new Map<
 >();
 const pendingByFileKey = new Map<string, Promise<ArrayBuffer>>();
 
-function fileKey(blob: Blob): string | null {
+/**
+ * Identity of a File's content for cross-wrapper lookups: name, size, type and
+ * mtime. Bare Blobs carry no metadata and return null.
+ */
+export function documentFileKey(blob: Blob): string | null {
   if (!(blob instanceof File)) return null;
   return `${blob.name}\u0000${blob.size}\u0000${blob.type}\u0000${blob.lastModified}`;
 }
@@ -45,7 +49,7 @@ function rememberFileKey(key: string, buffer: ArrayBuffer): void {
 export function releaseDocumentBytes(blob: Blob): void {
   resolved.delete(blob);
   pending.delete(blob);
-  const key = fileKey(blob);
+  const key = documentFileKey(blob);
   if (key) {
     resolvedByFileKey.delete(key);
     pendingByFileKey.delete(key);
@@ -56,7 +60,7 @@ export function getDocumentBytes(blob: Blob): Promise<ArrayBuffer> {
   const alive = resolved.get(blob)?.deref();
   if (alive) return Promise.resolve(alive);
 
-  const key = fileKey(blob);
+  const key = documentFileKey(blob);
   if (key) {
     const shared = resolvedByFileKey.get(key);
     if (shared && shared.size === blob.size) {
