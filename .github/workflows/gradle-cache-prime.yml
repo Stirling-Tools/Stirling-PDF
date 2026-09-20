@@ -3,7 +3,7 @@ name: Prime Gradle Cache
 on:
   workflow_call:
   push:
-    branches: ["main", "dev-cache"]
+    branches: ["dev-cache"]
 
 permissions:
   contents: read

@@ -340,3 +340,8 @@ jobs:
           fi
           echo ""
           echo "All required checks passed."
+  publish-pr-cache-artifacts:
+    needs: all-checks-passed
+    if: github.event_name == 'pull_request' && success()
+    uses: ./.github/workflows/publish-pr-cache-artifacts.yml
+    secrets: inherit
