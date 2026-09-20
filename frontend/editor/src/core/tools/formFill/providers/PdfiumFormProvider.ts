@@ -15,8 +15,8 @@
  */
 import { PDF_FORM_FIELD_TYPE } from "@app/services/pdfiumService";
 import { getDocumentBytes } from "@app/services/documentBytesCache";
+import { documentHasFormFields } from "@app/services/documentFormProbe";
 import { runPdfiumScan } from "@app/services/pdfiumScanQueue";
-import { hasAcroForm } from "@app/utils/asciiBytes";
 import { FPDF_ANNOT_WIDGET, FLAT_PRINT } from "@app/utils/pdfiumBitmapUtils";
 import type {
   FormField,
@@ -39,12 +39,10 @@ import {
   extractFormFields,
   getPdfiumModule,
   openRawDocumentSafe,
-  readRawFormType,
   readUtf16,
   saveRawDocument,
   type PdfiumFormField,
 } from "@app/services/pdfiumService";
-import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 
 /**
  * Map PDFium form field type enum to our FormFieldType string.
@@ -150,19 +148,7 @@ export class PdfiumFormProvider implements IFormDataProvider {
   async fetchFields(file: File | Blob): Promise<FormField[]> {
     try {
       const arrayBuffer = await getDocumentBytes(file);
-      // A literal miss cannot see a catalog inside a compressed object stream
-      // (qpdf --object-streams=generate), so confirm against the catalog's form
-      // type before calling the document form-less.
-      if (!hasAcroForm(new Uint8Array(arrayBuffer))) {
-        // Nothing opens documents this large on the main thread, so a probe
-        // here would cost a second full copy.
-        if (file.size >= LARGE_PDF_PARSE_LIMIT) return [];
-        const formType = await runPdfiumScan(() =>
-          readRawFormType(arrayBuffer),
-        );
-        // null: the pinned build cannot answer; extract rather than miss.
-        if (formType === 0) return [];
-      }
+      if (!(await documentHasFormFields(arrayBuffer, file.size))) return [];
       const pdfiumFields = await runPdfiumScan(() =>
         extractFormFields(arrayBuffer),
       );

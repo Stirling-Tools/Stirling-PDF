@@ -13,8 +13,8 @@
  */
 import { useStaleBakedFieldNames } from "@app/tools/formFill/FormFillContext";
 import { getDocumentBytes } from "@app/services/documentBytesCache";
+import { documentHasFormFields } from "@app/services/documentFormProbe";
 import { runPdfiumScan } from "@app/services/pdfiumScanQueue";
-import { hasAcroForm } from "@app/utils/asciiBytes";
 import React, { useEffect, useMemo, useRef, useState, memo } from "react";
 import {
   renderSignatureFieldAppearances,
@@ -54,7 +54,7 @@ async function resolveFields(
 
   _cachePromise = (async () => {
     const buf = await getDocumentBytes(source);
-    if (!hasAcroForm(new Uint8Array(buf))) return [];
+    if (!(await documentHasFormFields(buf, source.size))) return [];
     // One main-thread scan at a time, so a second full document copy cannot
     // be opened while this one runs.
     const appearances = await runPdfiumScan(() =>
