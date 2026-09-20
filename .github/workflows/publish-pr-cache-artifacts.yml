@@ -38,9 +38,6 @@ jobs:
           path: cache-the-planet
           persist-credentials: false
 
-      - name: Prepare trusted cache configuration
-        run: cp .github/config/.cache-the-planet.json cache-the-planet/.cache-the-planet.json
-
       - name: Setup GitHub App Bot
         id: setup-bot
         uses: ./.github/actions/setup-bot
