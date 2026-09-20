@@ -6,6 +6,7 @@ export interface QuickNavIdentity {
 /** The last resolved account data, retained across view changes. */
 export interface QuickNavAccount {
   accountId: string | null;
+  isAnonymous: boolean;
   identity: QuickNavIdentity | null;
   signingBadge: number;
   portalAccess: boolean;
@@ -16,6 +17,7 @@ export type QuickNavAccountUpdate = Partial<QuickNavAccount>;
 
 export const EMPTY_QUICK_NAV_ACCOUNT: QuickNavAccount = {
   accountId: null,
+  isAnonymous: false,
   identity: null,
   signingBadge: 0,
   portalAccess: false,
@@ -32,6 +34,7 @@ export function updateQuickNavAccount(
     accountId === previous.accountId ? previous : EMPTY_QUICK_NAV_ACCOUNT;
   const next: QuickNavAccount = {
     accountId,
+    isAnonymous: update.isAnonymous ?? current.isAnonymous,
     identity:
       update.identity === undefined ? current.identity : update.identity,
     signingBadge: update.signingBadge ?? current.signingBadge,
@@ -40,6 +43,7 @@ export function updateQuickNavAccount(
 
   const unchanged =
     next.accountId === previous.accountId &&
+    next.isAnonymous === previous.isAnonymous &&
     next.signingBadge === previous.signingBadge &&
     next.portalAccess === previous.portalAccess &&
     next.identity?.displayName === previous.identity?.displayName &&

@@ -79,6 +79,11 @@ export const test = base.extend<StubFixtures>({
         localStorage.setItem("stirling.filesPageViewMode", mode);
       }, filesViewMode);
     }
+    if (filesViewMode) {
+      await page.addInitScript((mode) => {
+        localStorage.setItem("stirling.filesPageViewMode", mode);
+      }, filesViewMode);
+    }
     await mockAppApis(page, stubOptions);
     if (autoGoto !== false) {
       // waitUntil: 'domcontentloaded' avoids hanging on third-party CDN
