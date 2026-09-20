@@ -1,7 +1,0 @@
-{
-  "security": {
-    "allowed_cache_names": [
-      "gradle-java25"
-    ]
-  }
-}
