@@ -9,12 +9,15 @@ vi.mock("@app/services/pdfiumScanQueue", () => ({
   runPdfiumScan: (task: () => Promise<unknown>) => task(),
 }));
 
+vi.mock("@app/services/documentFormProbe", () => ({
+  documentHasFormFields: vi.fn(async () => false),
+}));
+
 vi.mock("@app/services/pdfiumService", () => ({
   PDF_FORM_FIELD_TYPE: new Proxy({}, { get: (_target, prop) => String(prop) }),
   extractFormFields: vi.fn(async () => []),
   openRawDocumentSafe: vi.fn(async () => 1),
   closeDocAndFreeBuffer: vi.fn(),
-  readRawFormType: vi.fn(async () => 0),
   getPdfiumModule: vi.fn(async () => ({
     FPDF_CloseDocument: vi.fn(),
     PDFiumExt_OpenFormFillInfo: vi.fn(() => 1),
@@ -25,79 +28,41 @@ vi.mock("@app/services/pdfiumService", () => ({
 import { allowConsole } from "@app/tests/failOnConsole";
 
 import { getDocumentBytes } from "@app/services/documentBytesCache";
-import {
-  extractFormFields,
-  readRawFormType,
-} from "@app/services/pdfiumService";
-import { hasAcroForm } from "@app/utils/asciiBytes";
-import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
+import { documentHasFormFields } from "@app/services/documentFormProbe";
+import { extractFormFields } from "@app/services/pdfiumService";
 import { PdfiumFormProvider } from "@app/tools/formFill/providers/PdfiumFormProvider";
 
 describe("PdfiumFormProvider", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (readRawFormType as Mock).mockResolvedValue(0);
+    (documentHasFormFields as Mock).mockResolvedValue(false);
   });
 
-  const noLiteralBytes = () =>
-    new TextEncoder().encode(
-      "%PDF-1.7\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF",
-    );
-
-  it("keeps the fast path when the catalog probe reports no form", async () => {
-    const bytes = noLiteralBytes();
-    expect(hasAcroForm(bytes)).toBe(false);
-    (getDocumentBytes as Mock).mockResolvedValue(bytes.buffer);
-    (readRawFormType as Mock).mockResolvedValue(0);
+  it("returns [] and skips extraction when the document has no form", async () => {
+    (getDocumentBytes as Mock).mockResolvedValue(new ArrayBuffer(16));
 
     const provider = new PdfiumFormProvider();
-    await provider.fetchFields(new Blob([bytes]));
+    const fields = await provider.fetchFields(new Blob([]));
 
-    expect(readRawFormType).toHaveBeenCalledTimes(1);
+    expect(fields).toEqual([]);
     expect(extractFormFields).not.toHaveBeenCalled();
   });
 
-  it("extracts when the catalog probe finds a form the literal scan missed", async () => {
+  it("extracts when the probe finds a form the literal scan missed", async () => {
     // qpdf --object-streams=generate hides the catalog, so the byte scan is
-    // not a proof of absence; the form-type probe is.
-    const bytes = noLiteralBytes();
-    (getDocumentBytes as Mock).mockResolvedValue(bytes.buffer);
-    (readRawFormType as Mock).mockResolvedValue(1);
+    // not proof of absence; the catalog probe is.
+    (getDocumentBytes as Mock).mockResolvedValue(new ArrayBuffer(16));
+    (documentHasFormFields as Mock).mockResolvedValue(true);
 
     const provider = new PdfiumFormProvider();
-    await provider.fetchFields(new Blob([bytes]));
+    await provider.fetchFields(new Blob([]));
 
     expect(extractFormFields).toHaveBeenCalledTimes(1);
-  });
-
-  it("extracts when the probe cannot answer (unknown is not a miss)", async () => {
-    const bytes = noLiteralBytes();
-    (getDocumentBytes as Mock).mockResolvedValue(bytes.buffer);
-    (readRawFormType as Mock).mockResolvedValue(null);
-
-    const provider = new PdfiumFormProvider();
-    await provider.fetchFields(new Blob([bytes]));
-
-    expect(extractFormFields).toHaveBeenCalledTimes(1);
-  });
-
-  it("skips the probe above the full-parse limit so large files stay gated", async () => {
-    const bytes = noLiteralBytes();
-    (getDocumentBytes as Mock).mockResolvedValue(bytes.buffer);
-    const largeBlob = new Blob([bytes]);
-    Object.defineProperty(largeBlob, "size", {
-      value: LARGE_PDF_PARSE_LIMIT,
-    });
-
-    const provider = new PdfiumFormProvider();
-    await provider.fetchFields(largeBlob);
-
-    expect(readRawFormType).not.toHaveBeenCalled();
-    expect(extractFormFields).not.toHaveBeenCalled();
   });
 
   it("characterizes field mapping: transforms PdfiumFormField into FormField model", async () => {
     const bytes = new TextEncoder().encode("/AcroForm");
+    (documentHasFormFields as Mock).mockResolvedValue(true);
     (getDocumentBytes as Mock).mockResolvedValue(bytes.buffer);
     (extractFormFields as Mock).mockResolvedValue([
       {
