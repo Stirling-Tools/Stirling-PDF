@@ -72,6 +72,15 @@
         <appender-ref ref="GENERAL"/>
     </logger>
 
+    <!-- Same treatment for PDType0Font: the same reverse-CMap probe loop makes it
+         emit one "No Unicode mapping for CID+N" WARN per unmapped CID per cold
+         font (measured in CharcodeEncodeBenchmarkTest on Type0 subsets). -->
+    <logger name="org.apache.pdfbox.pdmodel.font.PDType0Font"
+            level="ERROR" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="GENERAL"/>
+    </logger>
+
     <!-- Root Logger -->
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>

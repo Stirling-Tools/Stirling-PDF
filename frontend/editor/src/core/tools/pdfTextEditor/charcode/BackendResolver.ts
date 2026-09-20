@@ -6,6 +6,8 @@ import type {
 } from "@app/tools/pdfTextEditor/charcode/CharcodeStrategy";
 import { getActiveCharcodeStrategy } from "@app/tools/pdfTextEditor/charcode/CharcodeStrategy";
 import { getCachedFontProgramSha256 } from "@app/tools/pdfTextEditor/charcode/CmapResolver";
+import { isPrivateUse } from "@app/tools/pdfTextEditor/util/textScripts";
+import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
 
 /** Strategy 3: ask the Spring backend (PDFBox) to encode chars. */
 
@@ -24,6 +26,11 @@ function setTransientNull(key: string): void {
 
 /** Track in-flight prefetches so we don't double-fire. */
 const inFlight = new Set<string>();
+
+/** Fonts with an auto-prefetch currently running. Keystrokes in a burst type
+ * different chars of one font, so keying in-flight work on exact chars never
+ * dedupes and a 12-key burst POSTs the whole document 12 times. */
+const autoPrefetchByFont = new Set<number>();
 
 /** Hard cap on CONCURRENT auto-prefetches. */
 const MAX_CONCURRENT_AUTO_PREFETCH = 2;
@@ -149,140 +156,158 @@ function maybeAutoPrefetch(
   // Concurrency cap: dropping is safe - the chars stay cache-miss and a
   // later keystroke re-fires once a slot frees up.
   if (autoPrefetchActive >= MAX_CONCURRENT_AUTO_PREFETCH) return;
+  // One flight per font: the running batch already carries this font, and a
+  // miss stays a miss until it lands, when the next keystroke re-fires.
+  if (autoPrefetchByFont.has(fontPtr)) return;
   // Avoid re-firing while a prefetch for these chars is in flight.
   const reqKey = `auto:${fontPtr}:${chars.join("")}`;
   if (inFlight.has(reqKey)) return;
   inFlight.add(reqKey);
+  autoPrefetchByFont.add(fontPtr);
   autoPrefetchActive += 1;
-  void (async () => {
-    try {
-      const { PdfiumSave } =
-        await import("@app/tools/pdfTextEditor/pdfium/PdfiumSave");
-      const doc = getEditorDocument();
-      if (!doc) {
-        if (typeof console !== "undefined") {
-          console.warn(
-            "[charcode] backend auto-prefetch: editor document unavailable",
-          );
-        }
-        for (const ch of chars) setTransientNull(cacheKey(fontPtr, ch));
-        return;
-      }
-      const bytes = serializeDocCached(PdfiumSave, doc);
-      if (!bytes) {
-        for (const ch of chars) setTransientNull(cacheKey(fontPtr, ch));
-        return;
-      }
-      const pdfBase64 = uint8ToBase64(bytes);
-      const pageIdx = pageIdxOfPagePtr(ctx);
+  // Deferred out of the keydown task: the dynamic import below resolves in a
+  // microtask, so serialize + base64 + POST ran inside the keystroke and
+  // measured as a 40-75ms long task on the first typed character. Prefetch
+  // only fills the cache for a later keystroke, so a later task is safe.
+  setTimeout(
+    () => void runAutoPrefetch(fontPtr, chars as string[], ctx, reqKey),
+    0,
+  );
+}
 
-      // Batch by font: one request per font carrying all of that font's
-      // missing chars, mirroring prewarmPageCharcodes. Previously this fired
-      // one request per character, each re-sending the entire base64 PDF.
-      const byFont = new Map<number, string[]>();
-      for (const ch of chars) {
-        const perCharFont = findFontForChar(ch, ctx) || fontPtr;
-        const arr = byFont.get(perCharFont);
-        if (arr) arr.push(ch);
-        else byFont.set(perCharFont, [ch]);
-      }
-
-      const batches = [...byFont.entries()];
-      let batchIdx = 0;
-      const workers: Promise<void>[] = [];
-      for (
-        let w = 0;
-        w < Math.min(PREFETCH_BATCH_CONCURRENCY, batches.length);
-        w++
-      ) {
-        workers.push(
-          (async () => {
-            while (true) {
-              const me = batchIdx++;
-              if (me >= batches.length) return;
-              const [perCharFont, fontChars] = batches[me];
-              const json = await postCharcodes({
-                pdfBase64,
-                pageIndex: pageIdx >= 0 ? pageIdx : 0,
-                // Any of this font's chars is a valid locator.
-                locatorChar: fontChars[0],
-                fontName: readFontName(ctx.module, perCharFont),
-                // Program-bytes hash: the only identity that survives PDFium's
-                // subset-tag stripping.
-                fontSha256:
-                  getCachedFontProgramSha256(perCharFont) ?? undefined,
-                text: fontChars.join(""),
-              });
-
-              if (!json || json.error) {
-                // Network failure / backend error: retry after the TTL. Only a
-                // real "encoded 0 of N" answer is a permanent miss.
-                for (const ch of fontChars) {
-                  setTransientNull(cacheKey(perCharFont, ch));
-                }
-              } else {
-                // The backend appends one charcode per NON-missing char, in
-                // request order.
-                const missing = new Set(json.missing ?? []);
-                const codes = json.charcodes ?? [];
-                let k = 0;
-                for (const ch of fontChars) {
-                  if (missing.has(ch)) {
-                    charCache.set(cacheKey(perCharFont, ch), null);
-                    continue;
-                  }
-                  const code = codes[k++];
-                  charCache.set(
-                    cacheKey(perCharFont, ch),
-                    typeof code === "number" ? code : null,
-                  );
-                }
-              }
-
-              // Stop the per-keystroke prefetch storm. resolve looks these
-              // chars up under the QUERIED font, not perCharFont. Use the
-              // TTL'd null: this font was never actually asked, so a permanent
-              // null would kill the pair for the rest of the session.
-              if (perCharFont !== fontPtr) {
-                for (const ch of fontChars) {
-                  setTransientNull(cacheKey(fontPtr, ch));
-                }
-              }
-            }
-          })(),
+async function runAutoPrefetch(
+  fontPtr: number,
+  chars: string[],
+  ctx: ResolverContext,
+  reqKey: string,
+): Promise<void> {
+  try {
+    const { PdfiumSave } =
+      await import("@app/tools/pdfTextEditor/pdfium/PdfiumSave");
+    const doc = getEditorDocument();
+    if (!doc) {
+      if (typeof console !== "undefined") {
+        console.warn(
+          "[charcode] backend auto-prefetch: editor document unavailable",
         );
       }
-      await Promise.all(workers);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      if (typeof console !== "undefined") {
-        console.warn("[charcode] backend prefetch threw:", err);
-      }
-      // Negative-cache with TTL so we don't retry the same chars in a tight
-      // loop but DO recover once the backend is reachable again.
       for (const ch of chars) setTransientNull(cacheKey(fontPtr, ch));
-      // Lazy-import charcodeRegistry to avoid the cyclic
-      // BackendResolver ↔ charcodeRegistry module init.
-      try {
-        const { emitCharcodeEvent } =
-          await import("@app/tools/pdfTextEditor/charcode/charcodeRegistry");
-        emitCharcodeEvent({
-          strategy: getActiveCharcodeStrategy(),
-          text: chars.join(""),
-          fontPtr,
-          resolved: [],
-          missing: [...chars],
-          note: `backend prefetch threw: ${msg}`,
-          outcome: "partial-coverage-fallback",
-        });
-      } catch {
-        /* registry import itself failed - already logged above */
-      }
-    } finally {
-      inFlight.delete(reqKey);
-      autoPrefetchActive -= 1;
+      return;
     }
-  })();
+    const bytes = serializeDocCached(PdfiumSave, doc);
+    if (!bytes) {
+      for (const ch of chars) setTransientNull(cacheKey(fontPtr, ch));
+      return;
+    }
+    const pdfBase64 = uint8ToBase64(bytes);
+    const pageIdx = pageIdxOfPagePtr(ctx);
+
+    // Batch by font: one request per font carrying all of that font's
+    // missing chars, mirroring prewarmPageCharcodes. Previously this fired
+    // one request per character, each re-sending the entire base64 PDF.
+    const byFont = new Map<number, string[]>();
+    for (const ch of chars) {
+      const perCharFont = findFontForChar(ch, ctx) || fontPtr;
+      const arr = byFont.get(perCharFont);
+      if (arr) arr.push(ch);
+      else byFont.set(perCharFont, [ch]);
+    }
+
+    const batches = [...byFont.entries()];
+    let batchIdx = 0;
+    const workers: Promise<void>[] = [];
+    for (
+      let w = 0;
+      w < Math.min(PREFETCH_BATCH_CONCURRENCY, batches.length);
+      w++
+    ) {
+      workers.push(
+        (async () => {
+          while (true) {
+            const me = batchIdx++;
+            if (me >= batches.length) return;
+            const [perCharFont, fontChars] = batches[me];
+            const json = await postCharcodes({
+              pdfBase64,
+              pageIndex: pageIdx >= 0 ? pageIdx : 0,
+              // Any of this font's chars is a valid locator.
+              locatorChar: fontChars[0],
+              fontName: readFontName(ctx.module, perCharFont),
+              // Program-bytes hash: the only identity that survives PDFium's
+              // subset-tag stripping.
+              fontSha256: getCachedFontProgramSha256(perCharFont) ?? undefined,
+              text: fontChars.join(""),
+            });
+
+            if (!json || json.error) {
+              // Network failure / backend error: retry after the TTL. Only a
+              // real "encoded 0 of N" answer is a permanent miss.
+              for (const ch of fontChars) {
+                setTransientNull(cacheKey(perCharFont, ch));
+              }
+            } else {
+              // The backend appends one charcode per NON-missing char, in
+              // request order.
+              const missing = new Set(json.missing ?? []);
+              const codes = json.charcodes ?? [];
+              let k = 0;
+              for (const ch of fontChars) {
+                if (missing.has(ch)) {
+                  charCache.set(cacheKey(perCharFont, ch), null);
+                  continue;
+                }
+                const code = codes[k++];
+                charCache.set(
+                  cacheKey(perCharFont, ch),
+                  typeof code === "number" ? code : null,
+                );
+              }
+            }
+
+            // Stop the per-keystroke prefetch storm. resolve looks these
+            // chars up under the QUERIED font, not perCharFont. Use the
+            // TTL'd null: this font was never actually asked, so a permanent
+            // null would kill the pair for the rest of the session.
+            if (perCharFont !== fontPtr) {
+              for (const ch of fontChars) {
+                setTransientNull(cacheKey(fontPtr, ch));
+              }
+            }
+          }
+        })(),
+      );
+    }
+    await Promise.all(workers);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (typeof console !== "undefined") {
+      console.warn("[charcode] backend prefetch threw:", err);
+    }
+    // Negative-cache with TTL so we don't retry the same chars in a tight
+    // loop but DO recover once the backend is reachable again.
+    for (const ch of chars) setTransientNull(cacheKey(fontPtr, ch));
+    // Lazy-import charcodeRegistry to avoid the cyclic
+    // BackendResolver ↔ charcodeRegistry module init.
+    try {
+      const { emitCharcodeEvent } =
+        await import("@app/tools/pdfTextEditor/charcode/charcodeRegistry");
+      emitCharcodeEvent({
+        strategy: getActiveCharcodeStrategy(),
+        text: chars.join(""),
+        fontPtr,
+        resolved: [],
+        missing: [...chars],
+        note: `backend prefetch threw: ${msg}`,
+        outcome: "partial-coverage-fallback",
+      });
+    } catch {
+      /* registry import itself failed - already logged above */
+    }
+  } finally {
+    inFlight.delete(reqKey);
+    autoPrefetchByFont.delete(fontPtr);
+    autoPrefetchActive -= 1;
+  }
 }
 
 interface TextPageModule {
@@ -368,14 +393,14 @@ export function fontIsReusable(
   // program. PDFium still answers "true" for it, but reports a length of 0 -
   // the length is the part that distinguishes a real face.
   let ok = false;
-  const out = m.pdfium.wasmExports.malloc(4);
+  const out = scratchPtr(m, SCRATCH.backendOut, 4);
   try {
     m.pdfium.setValue(out, 0, "i32");
     ok = getData(fontPtr, 0, 0, out) && m.pdfium.getValue(out, "i32") > 0;
   } catch {
     ok = false;
   } finally {
-    m.pdfium.wasmExports.free(out);
+    /* pooled buffer: nothing to free */
   }
   reusableFontCache.set(fontPtr, ok);
   return ok;
@@ -384,6 +409,118 @@ export function fontIsReusable(
 /** Test-only: clear the reusable-font cache. */
 export function _clearReusableFontCacheForTests(): void {
   reusableFontCache.clear();
+}
+
+// PDF font descriptor flags: bit 3 (0x4) SYMBOLIC, bit 6 (0x20) NON_SYMBOLIC.
+const SYMBOLIC_FLAG = 0x4;
+const NON_SYMBOLIC_FLAG = 0x20;
+
+const symbolicFontCache = new Map<number, boolean>();
+
+/**
+ * Whether a font declares itself symbolic (and not nonsymbolic). Borrowing a
+ * standard Unicode character into one is a mapping guess: symbol fonts use
+ * ad-hoc code pages, so the charcode that renders "A" here may render a Greek
+ * letter there. Private-use characters are exempt - the run's own PUA text is
+ * exactly what those faces carry.
+ */
+export function fontIsSymbolic(
+  m: ResolverContext["module"],
+  fontPtr: number,
+): boolean {
+  if (!fontPtr) return false;
+  const cached = symbolicFontCache.get(fontPtr);
+  if (cached !== undefined) return cached;
+  const getFlags = (
+    m as unknown as { FPDFFont_GetFlags?: (font: number) => number }
+  ).FPDFFont_GetFlags;
+  if (typeof getFlags !== "function") {
+    // No API: assume a normal encoding rather than vetoing every borrow.
+    symbolicFontCache.set(fontPtr, false);
+    return false;
+  }
+  let symbolic = false;
+  try {
+    const flags = getFlags(fontPtr);
+    symbolic =
+      (flags & SYMBOLIC_FLAG) !== 0 && (flags & NON_SYMBOLIC_FLAG) === 0;
+  } catch {
+    symbolic = false;
+  }
+  symbolicFontCache.set(fontPtr, symbolic);
+  return symbolic;
+}
+
+/** Test-only: clear the symbolic-font cache. */
+export function _clearSymbolicFontCacheForTests(): void {
+  symbolicFontCache.clear();
+}
+
+interface PageGlyphEntry {
+  font: number;
+  style: FontStyleClass | null;
+  family: string | undefined;
+}
+
+// Index of unique glyphs and their font metadata per page pointer.
+// Avoids repeated O(N) wasm text object scans per keystroke.
+const pageGlyphIndex = new Map<number, Map<number, PageGlyphEntry[]>>();
+
+function getPageGlyphIndex(
+  ctx: ResolverContext,
+): Map<number, PageGlyphEntry[]> | null {
+  const cached = pageGlyphIndex.get(ctx.pagePtr);
+  if (cached) return cached;
+  const m = ctx.module;
+  const tpMod = m as unknown as TextPageModule;
+  const fontMod = m as unknown as FontReadModule;
+  if (
+    !tpMod.FPDFText_LoadPage ||
+    !tpMod.FPDFText_CountChars ||
+    !tpMod.FPDFText_GetUnicode ||
+    !tpMod.FPDFText_GetTextObject ||
+    !fontMod.FPDFTextObj_GetFont
+  ) {
+    return null;
+  }
+  const textPage = tpMod.FPDFText_LoadPage(ctx.pagePtr);
+  if (!textPage) return null;
+  const index = new Map<number, PageGlyphEntry[]>();
+  try {
+    const count = tpMod.FPDFText_CountChars(textPage);
+    for (let i = 0; i < count; i++) {
+      const u = tpMod.FPDFText_GetUnicode(textPage, i);
+      if (!u) continue;
+      const obj = tpMod.FPDFText_GetTextObject(textPage, i);
+      if (!obj) continue;
+      let f = 0;
+      try {
+        f = fontMod.FPDFTextObj_GetFont(obj);
+      } catch {
+        continue;
+      }
+      if (!f) continue;
+      let entries = index.get(u);
+      if (!entries) {
+        entries = [];
+        index.set(u, entries);
+      }
+      if (entries.some((e) => e.font === f)) continue;
+      const style = fontStyleClass(m, f);
+      const family = baseFontFamily(readFontName(m, f));
+      entries.push({ font: f, style, family });
+    }
+  } finally {
+    if (tpMod.FPDFText_ClosePage) {
+      try {
+        tpMod.FPDFText_ClosePage(textPage);
+      } catch {
+        /* best-effort */
+      }
+    }
+  }
+  pageGlyphIndex.set(ctx.pagePtr, index);
+  return index;
 }
 
 export function findFontForChar(
@@ -414,67 +551,39 @@ export function findFontForChar(
     : undefined;
   const cacheK = `${ctx.pagePtr}:${styleK}${likeName ?? ""}|${cp}`;
   if (fontForCharCache.has(cacheK)) return fontForCharCache.get(cacheK) ?? null;
-  const tpMod = m as unknown as TextPageModule;
-  const fontMod = m as unknown as FontReadModule;
-  if (
-    !tpMod.FPDFText_LoadPage ||
-    !tpMod.FPDFText_CountChars ||
-    !tpMod.FPDFText_GetUnicode ||
-    !tpMod.FPDFText_GetTextObject ||
-    !fontMod.FPDFTextObj_GetFont
-  ) {
+
+  const index = getPageGlyphIndex(ctx);
+  if (!index) {
     fontForCharCache.set(cacheK, null);
     return null;
   }
-  const textPage = tpMod.FPDFText_LoadPage(ctx.pagePtr);
-  if (!textPage) {
+  const entries = index.get(cp);
+  if (!entries || entries.length === 0) {
     fontForCharCache.set(cacheK, null);
     return null;
   }
-  try {
-    const count = tpMod.FPDFText_CountChars(textPage);
-    // The run's OWN family, wherever the page happens to draw this char in it,
-    // beats whichever style-compatible face comes first in content order. A
-    // word the document already uses otherwise came back in a near-miss face -
-    // right weight, slightly wrong shapes and advances.
-    let fallback: number | null = null;
-    for (let i = 0; i < count; i++) {
-      const u = tpMod.FPDFText_GetUnicode(textPage, i);
-      if (u !== cp) continue;
-      const obj = tpMod.FPDFText_GetTextObject(textPage, i);
-      if (!obj) continue;
-      try {
-        const f = fontMod.FPDFTextObj_GetFont(obj);
-        if (!f) continue;
-        if (want) {
-          const got = fontStyleClass(m, f);
-          // An unnamed font can't be vouched for; skip it rather than risk a
-          // weight change.
-          if (!got || got.bold !== want.bold || got.italic !== want.italic) {
-            continue;
-          }
-        }
-        if (!likeName || baseFontFamily(readFontName(m, f)) === likeName) {
-          fontForCharCache.set(cacheK, f);
-          return f;
-        }
-        if (fallback === null) fallback = f;
-      } catch {
+
+  let fallback: number | null = null;
+  for (const entry of entries) {
+    if (want) {
+      const got = entry.style;
+      if (!got || got.bold !== want.bold || got.italic !== want.italic) {
         continue;
       }
     }
-    if (fallback !== null) {
-      fontForCharCache.set(cacheK, fallback);
-      return fallback;
+    if (!likeName || entry.family === likeName) {
+      fontForCharCache.set(cacheK, entry.font);
+      return entry.font;
     }
-  } finally {
-    if (tpMod.FPDFText_ClosePage) {
-      try {
-        tpMod.FPDFText_ClosePage(textPage);
-      } catch {
-        /* best-effort */
-      }
+    if (fallback === null) fallback = entry.font;
+  }
+  if (fallback !== null) {
+    if (!isPrivateUse(cp) && fontIsSymbolic(m, fallback)) {
+      fontForCharCache.set(cacheK, null);
+      return null;
     }
+    fontForCharCache.set(cacheK, fallback);
+    return fallback;
   }
   fontForCharCache.set(cacheK, null);
   return null;
@@ -483,6 +592,7 @@ export function findFontForChar(
 /** Test-only: clear the per-char-font cache. */
 export function _clearFontForCharCacheForTests(): void {
   fontForCharCache.clear();
+  pageGlyphIndex.clear();
 }
 
 interface FontNameModule {
@@ -827,6 +937,7 @@ export function _clearBackendCacheForTests(): void {
   charCache.clear();
   negativeUntil.clear();
   inFlight.clear();
+  autoPrefetchByFont.clear();
 }
 
 // Reset ALL module-level caches keyed by raw PDFium pointers (per-char
@@ -835,8 +946,10 @@ export function resetBackendResolverCaches(): void {
   charCache.clear();
   negativeUntil.clear();
   inFlight.clear();
+  autoPrefetchByFont.clear();
   prewarmedPages.clear();
   fontForCharCache.clear();
+  pageGlyphIndex.clear();
   serializedCache = null;
   autoPrefetchActive = 0;
 }

@@ -505,6 +505,7 @@ export interface EncodeCharcodesRequest {
   locatorChar?: string;
   pageIndex?: number;
   pdfBase64?: string;
+  pdfSha256?: string;
   text?: string;
 }
 export type ExtractAttachmentsRequest = Record<string, never>;

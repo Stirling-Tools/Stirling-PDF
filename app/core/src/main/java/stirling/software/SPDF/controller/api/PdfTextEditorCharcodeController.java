@@ -80,6 +80,40 @@ public class PdfTextEditorCharcodeController {
     private static final java.util.Map<String, java.util.Map<String, Long>> REVERSE_MAP_CACHE =
             java.util.Collections.synchronizedMap(new BoundedReverseMapCache());
 
+    /**
+     * Content-addressed PDF bytes (SHA-256 hex -> raw bytes) so repeat requests for an unchanged
+     * document send only the hash, not the whole file. A typing burst serializes identical bytes
+     * for several prefetches; without this each one re-uploads the full PDF (measured 2.4MB per
+     * 12-key burst on a 305KB doc). Bounded by entries and total bytes; eviction just costs the
+     * client one re-upload (409 + retry with bytes).
+     */
+    private static final int PDF_BYTES_CACHE_MAX_ENTRIES = 8;
+
+    private static final long PDF_BYTES_CACHE_MAX_BYTES = 128L * 1024 * 1024;
+
+    private static final java.util.LinkedHashMap<String, byte[]> PDF_BYTES_CACHE =
+            new java.util.LinkedHashMap<>(16, 0.75f, true);
+
+    private static long pdfBytesCacheSize = 0L;
+
+    private static synchronized byte[] cachedPdfBytes(String shaHex) {
+        return PDF_BYTES_CACHE.get(shaHex);
+    }
+
+    private static synchronized void cachePdfBytes(String shaHex, byte[] bytes) {
+        byte[] prev = PDF_BYTES_CACHE.put(shaHex, bytes);
+        pdfBytesCacheSize += bytes.length - (prev == null ? 0 : prev.length);
+        java.util.Iterator<java.util.Map.Entry<String, byte[]>> it =
+                PDF_BYTES_CACHE.entrySet().iterator();
+        while ((PDF_BYTES_CACHE.size() > PDF_BYTES_CACHE_MAX_ENTRIES
+                        || pdfBytesCacheSize > PDF_BYTES_CACHE_MAX_BYTES)
+                && it.hasNext()) {
+            java.util.Map.Entry<String, byte[]> eldest = it.next();
+            pdfBytesCacheSize -= eldest.getValue().length;
+            it.remove();
+        }
+    }
+
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     // NOTE: PDFBox's PDSimpleFont emits one "No Unicode mapping for .notdef" WARN per probed
@@ -92,8 +126,19 @@ public class PdfTextEditorCharcodeController {
     @Data
     public static class EncodeCharcodesRequest {
 
-        /** Base64-encoded original PDF. The frontend already has the bytes loaded. */
+        /**
+         * Base64-encoded original PDF. The frontend already has the bytes loaded. Optional when
+         * {@code pdfSha256} hits the server's bytes cache (repeat requests for an unchanged
+         * document); required otherwise.
+         */
         private String pdfBase64;
+
+        /**
+         * Lowercase hex SHA-256 of the raw PDF bytes. Sent with every request; lets the backend
+         * reuse cached bytes ({@code pdfBase64} omitted) and guards the cache against poisoning (a
+         * bytes-carrying request whose hash mismatches is rejected).
+         */
+        private String pdfSha256;
 
         /** 0-based page index containing the font sample. */
         private int pageIndex;
@@ -145,6 +190,13 @@ public class PdfTextEditorCharcodeController {
 
         /** Set when the request failed entirely (bad pdf bytes, no matching font, etc.). */
         private String error;
+
+        /**
+         * True when the request carried only {@code pdfSha256} but the server no longer holds those
+         * bytes (evicted/restarted). The client must retry the same request WITH {@code pdfBase64};
+         * any other error must not be retried this way.
+         */
+        private Boolean bytesExpired;
     }
 
     @Operation(
@@ -167,16 +219,17 @@ public class PdfTextEditorCharcodeController {
             @RequestBody EncodeCharcodesRequest request) {
         EncodeCharcodesResponse resp = new EncodeCharcodesResponse();
         if (request == null
-                || request.getPdfBase64() == null
                 || request.getText() == null
-                || request.getLocatorChar() == null) {
+                || request.getLocatorChar() == null
+                || (request.getPdfBase64() == null
+                        && (request.getPdfSha256() == null || request.getPdfSha256().isEmpty()))) {
             resp.setError("missing required fields");
             return ResponseEntity.badRequest().body(resp);
         }
         // length/4*3 bounds the decoded size without decoding, so we reject early before
         // allocating.
         String b64 = request.getPdfBase64();
-        if ((long) b64.length() / 4 * 3 > MAX_PDF_BYTES) {
+        if (b64 != null && (long) b64.length() / 4 * 3 > MAX_PDF_BYTES) {
             resp.setError("pdf too large");
             return ResponseEntity.status(413).body(resp);
         }
@@ -190,11 +243,29 @@ public class PdfTextEditorCharcodeController {
             return ResponseEntity.badRequest().body(resp);
         }
         byte[] pdfBytes;
-        try {
-            pdfBytes = Base64.getDecoder().decode(b64);
-        } catch (IllegalArgumentException e) {
-            resp.setError("pdfBase64 is not valid base64");
-            return ResponseEntity.badRequest().body(resp);
+        if (b64 != null) {
+            try {
+                pdfBytes = Base64.getDecoder().decode(b64);
+            } catch (IllegalArgumentException e) {
+                resp.setError("pdfBase64 is not valid base64");
+                return ResponseEntity.badRequest().body(resp);
+            }
+            if (request.getPdfSha256() != null && !request.getPdfSha256().isEmpty()) {
+                String sha = request.getPdfSha256().toLowerCase(java.util.Locale.ROOT);
+                if (!sha256Hex(pdfBytes).equals(sha)) {
+                    resp.setError("pdfSha256 does not match pdfBase64");
+                    return ResponseEntity.badRequest().body(resp);
+                }
+                cachePdfBytes(sha, pdfBytes);
+            }
+        } else {
+            String sha = request.getPdfSha256().toLowerCase(java.util.Locale.ROOT);
+            pdfBytes = cachedPdfBytes(sha);
+            if (pdfBytes == null) {
+                resp.setError("pdf-bytes-expired");
+                resp.setBytesExpired(true);
+                return ResponseEntity.status(409).body(resp);
+            }
         }
         try (PDDocument doc = pdfDocumentFactory.load(pdfBytes, true)) {
             if (request.getPageIndex() < 0 || request.getPageIndex() >= doc.getNumberOfPages()) {
@@ -236,8 +307,10 @@ public class PdfTextEditorCharcodeController {
             // charcodes 0..0xFFFF, call font.toUnicode(cc) for each, and record the inverse
             // mapping for the chars the user wants to write.
             PDFont font = located.font();
-            java.util.Map<String, Long> reverseMap =
-                    buildReverseUnicodeMap(pdfBytes, located, request.getPageIndex());
+            // Built lazily on the first encode() failure: the full 0..0xFFFF ToUnicode
+            // probe costs up to ~1.3s cold (type3-sample), so requests where encode()
+            // covers every char must not pay for a map they never read.
+            java.util.Map<String, Long> reverseMap = null;
             List<Long> charcodes = new ArrayList<>();
             List<String> missing = new ArrayList<>();
             String text = request.getText();
@@ -267,6 +340,10 @@ public class PdfTextEditorCharcodeController {
                         | IllegalArgumentException
                         | UnsupportedOperationException encodeEx) {
                     // 2nd try: ToUnicode reverse lookup - works for Type3 + anything with a CMap
+                    if (reverseMap == null) {
+                        reverseMap =
+                                buildReverseUnicodeMap(pdfBytes, located, request.getPageIndex());
+                    }
                     packed = reverseMap.get(oneChar);
                 }
                 if (packed != null) charcodes.add(packed);
