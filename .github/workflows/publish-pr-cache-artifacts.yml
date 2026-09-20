@@ -2,7 +2,6 @@ name: Publish PR cache artifacts
 run-name: "Publish PR cache artifacts - PR #${{ github.event.pull_request.number || 'manual' }}"
 
 on:
-  workflow_call:
   workflow_dispatch:
   workflow_call:
     inputs:
