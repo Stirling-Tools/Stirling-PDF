@@ -31,13 +31,13 @@ import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.jpdfium.PdfDocument;
+import stirling.software.proprietary.billing.AiCallRecord;
 import stirling.software.proprietary.billing.BillingCategory;
 import stirling.software.proprietary.billing.DocumentUnitCalculator;
 import stirling.software.proprietary.billing.DocumentUnitCalculator.FileSize;
 import stirling.software.proprietary.billing.UnitCalcPolicy;
 import stirling.software.proprietary.policy.controller.PolicyRunRoutes;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
-import stirling.software.proprietary.service.AiEngineRouter;
 
 /**
  * Request-time gate + meter for combined billing. {@code preHandle} blocks billable (API / AI /
@@ -69,21 +69,18 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
     private final ObjectProvider<UsageMeterService> meterProvider;
     private final FreeTierUsageService freeTierUsageService;
     private final TempFileManager tempFileManager;
-    private final AiEngineRouter aiEngineRouter;
 
     public InstanceEntitlementInterceptor(
             InstanceEntitlementGate gate,
             EntitlementCache entitlementCache,
             ObjectProvider<UsageMeterService> meterProvider,
             FreeTierUsageService freeTierUsageService,
-            TempFileManager tempFileManager,
-            AiEngineRouter aiEngineRouter) {
+            TempFileManager tempFileManager) {
         this.gate = gate;
         this.entitlementCache = entitlementCache;
         this.meterProvider = meterProvider;
         this.freeTierUsageService = freeTierUsageService;
         this.tempFileManager = tempFileManager;
-        this.aiEngineRouter = aiEngineRouter;
     }
 
     @Override
@@ -190,9 +187,12 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
                 || category == BillingCategory.BYPASSED) {
             return;
         }
-        // In cloud AI mode the work ran on Stirling Cloud, which billed it there. Metering it here
-        // too would put two DEBITs on the same team's wallet for one user action.
-        if (category == BillingCategory.AI && aiEngineRouter.isCloudMode()) {
+        // Charge AI only for work this server's own engine did. Stirling Cloud bills what it
+        // runs, so metering that here too would put two DEBITs on one team's wallet for one user
+        // action - and a route that answered without calling the engine at all (an already
+        // classified document, say) has nothing to bill for on either side.
+        if (category == BillingCategory.AI
+                && !AiCallRecord.ranLocally(request.getAttribute(AiCallRecord.attributeName()))) {
             return;
         }
         try {

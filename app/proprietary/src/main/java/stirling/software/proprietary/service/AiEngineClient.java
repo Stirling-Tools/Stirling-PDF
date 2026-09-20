@@ -18,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.billing.AiCallRecord;
 
 @Slf4j
 @Service
@@ -107,7 +108,7 @@ public class AiEngineClient {
                         .POST(HttpRequest.BodyPublishers.ofString(jsonBody));
         addUserHeader(builder, userId);
         addEngineAuthHeader(builder, target);
-        HttpResponse<String> response = sendRequest(builder.build());
+        HttpResponse<String> response = sendRequest(builder.build(), target);
 
         log.debug("AI engine responded with status {}", response.statusCode());
         checkResponseStatus(response);
@@ -219,7 +220,7 @@ public class AiEngineClient {
                         .DELETE();
         addUserHeader(builder, userId);
         addEngineAuthHeader(builder, target);
-        HttpResponse<String> response = sendRequest(builder.build());
+        HttpResponse<String> response = sendRequest(builder.build(), target);
 
         log.debug("AI engine responded with status {}", response.statusCode());
         checkResponseStatus(response);
@@ -245,7 +246,7 @@ public class AiEngineClient {
                         .GET();
         addUserHeader(builder, userId);
         addEngineAuthHeader(builder, target);
-        HttpResponse<String> response = sendRequest(builder.build());
+        HttpResponse<String> response = sendRequest(builder.build(), target);
 
         log.debug("AI engine responded with status {}", response.statusCode());
         checkResponseStatus(response);
@@ -264,9 +265,16 @@ public class AiEngineClient {
                 : e.getClass().getSimpleName() + " (nothing listening on the configured URL?)";
     }
 
-    private HttpResponse<String> sendRequest(HttpRequest request) throws IOException {
+    private HttpResponse<String> sendRequest(HttpRequest request, AiEngineTarget target)
+            throws IOException {
         try {
-            return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response =
+                    httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            // Recorded on any answer, not only a 2xx. A call that failed was not billed by the
+            // cloud either, and the meter skips failed requests on status anyway.
+            AiCallRecord.record(
+                    target.cloud() ? AiCallRecord.Where.REMOTE : AiCallRecord.Where.LOCAL);
+            return response;
         } catch (HttpTimeoutException e) {
             throw new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT, "AI engine timed out", e);
         } catch (IOException e) {

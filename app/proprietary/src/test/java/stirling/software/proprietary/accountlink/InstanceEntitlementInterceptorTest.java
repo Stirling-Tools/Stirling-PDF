@@ -41,17 +41,18 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.mock.web.MockMultipartHttpServletRequest;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.method.HandlerMethod;
 
 import stirling.software.common.annotations.AutoJobPostMapping;
-import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
+import stirling.software.proprietary.billing.AiCallRecord;
 import stirling.software.proprietary.billing.BillingCategory;
 import stirling.software.proprietary.billing.UnitCalcPolicy;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
-import stirling.software.proprietary.service.AiEngineRouter;
 
 @ExtendWith(MockitoExtension.class)
 class InstanceEntitlementInterceptorTest {
@@ -64,12 +65,7 @@ class InstanceEntitlementInterceptorTest {
 
     private InstanceEntitlementInterceptor interceptor() {
         return new InstanceEntitlementInterceptor(
-                gate,
-                entitlementCache,
-                meterProvider,
-                freeTierUsageService,
-                tempFileManager,
-                AiEngineRouter.selfHosted(new ApplicationProperties(), null));
+                gate, entitlementCache, meterProvider, freeTierUsageService, tempFileManager);
     }
 
     @AfterEach
@@ -83,6 +79,20 @@ class InstanceEntitlementInterceptorTest {
                         new MockHttpServletRequest("GET", "/api/v1/ai/tools/x"),
                         response,
                         new Object());
+    }
+
+    /**
+     * What the engine client does on a real AI call. Metering keys off this rather than off the
+     * configured mode, so a test that meters has to have made the call it is being billed for.
+     */
+    private static void engineCalled(
+            jakarta.servlet.http.HttpServletRequest request, AiCallRecord.Where where) {
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+        try {
+            AiCallRecord.record(where);
+        } finally {
+            RequestContextHolder.resetRequestAttributes();
+        }
     }
 
     @Test
@@ -180,6 +190,7 @@ class InstanceEntitlementInterceptorTest {
         MockMultipartHttpServletRequest req = fileRequest("/api/v1/ai/tools/x");
         MockHttpServletResponse resp = new MockHttpServletResponse();
         interceptor.preHandle(req, resp, new Object());
+        engineCalled(req, AiCallRecord.Where.LOCAL);
         interceptor.afterCompletion(req, resp, new Object(), null);
 
         verify(freeTierUsageService).accrue(eq(BillingCategory.AI), eq(1L), isNull());
@@ -271,10 +282,48 @@ class InstanceEntitlementInterceptorTest {
         MockMultipartHttpServletRequest req = fileRequest("/api/v1/ai/tools/x");
         MockHttpServletResponse resp = new MockHttpServletResponse();
         interceptor.preHandle(req, resp, new Object()); // stashes AI category
+        engineCalled(req, AiCallRecord.Where.LOCAL);
         interceptor.afterCompletion(req, resp, new Object(), null);
 
         // A tiny non-PDF input bills the 1-unit byte floor; a standalone op has a null key.
         verify(meter).accrue(eq(period), eq(BillingCategory.AI), eq(1L), isNull(), eq(10));
+    }
+
+    @Test
+    void doesNotMeterAiThatStirlingCloudAlreadyBilled() throws Exception {
+        // Cloud mode: the work ran on Stirling Cloud, which billed it on success. Metering here
+        // too would put two DEBITs on one team's wallet for a single user action.
+        when(gate.evaluate(anyBoolean(), anyBoolean()))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        MockMultipartHttpServletRequest req = fileRequest("/api/v1/ai/tools/x");
+        MockHttpServletResponse resp = new MockHttpServletResponse();
+        interceptor.preHandle(req, resp, new Object());
+        engineCalled(req, AiCallRecord.Where.REMOTE);
+        interceptor.afterCompletion(req, resp, new Object(), null);
+
+        // Nothing downstream is even consulted: the skip happens before any meter is resolved.
+        verify(meterProvider, never()).getIfAvailable();
+        verifyNoInteractions(freeTierUsageService);
+    }
+
+    @Test
+    void doesNotMeterAnAiRouteThatNeverCalledTheEngine() throws Exception {
+        // An AI route can answer successfully without reasoning over anything - a document that
+        // already carries a verdict, or no labels configured to classify against. Nobody did any
+        // work, so nobody should be billed. Reading the mode instead would have charged for this.
+        when(gate.evaluate(anyBoolean(), anyBoolean()))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        MockMultipartHttpServletRequest req = fileRequest("/api/v1/ai/tools/x");
+        MockHttpServletResponse resp = new MockHttpServletResponse();
+        interceptor.preHandle(req, resp, new Object());
+        // No engineCalled(...) on purpose: the route returned without reaching the engine.
+        interceptor.afterCompletion(req, resp, new Object(), null);
+
+        // Nothing downstream is even consulted: the skip happens before any meter is resolved.
+        verify(meterProvider, never()).getIfAvailable();
+        verifyNoInteractions(freeTierUsageService);
     }
 
     @Test
@@ -293,6 +342,7 @@ class InstanceEntitlementInterceptorTest {
         MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/ai/tools/x");
         MockHttpServletResponse resp = new MockHttpServletResponse();
         interceptor.preHandle(req, resp, new Object());
+        engineCalled(req, AiCallRecord.Where.LOCAL);
         interceptor.afterCompletion(req, resp, new Object(), null);
 
         verify(meter, never()).accrue(any(), any(), anyLong(), any(), eq(10));
@@ -321,6 +371,7 @@ class InstanceEntitlementInterceptorTest {
         req.addFile(new MockMultipartFile("file", "doc.pdf", "application/pdf", fivePagePdf()));
         MockHttpServletResponse resp = new MockHttpServletResponse();
         interceptor.preHandle(req, resp, new Object());
+        engineCalled(req, AiCallRecord.Where.LOCAL);
         interceptor.afterCompletion(req, resp, new Object(), null);
 
         // 5 pages, and a null key: a standalone op (no run) is its own charge - never deduped.
@@ -363,6 +414,7 @@ class InstanceEntitlementInterceptorTest {
         MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/ai/tools/x");
         MockHttpServletResponse resp = new MockHttpServletResponse();
         interceptor.preHandle(req, resp, new Object());
+        engineCalled(req, AiCallRecord.Where.LOCAL);
         interceptor.afterCompletion(req, resp, new Object(), null);
 
         // Meter absent → no entitlement lookup, no accrual.
