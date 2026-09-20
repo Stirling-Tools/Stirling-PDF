@@ -42,8 +42,18 @@ export interface AiEngineFeatures {
   classify?: boolean;
 }
 
+/** Where the reasoning runs; mirrors ApplicationProperties.AiEngine.AiEngineMode. */
+export type AiEngineMode = "SELF_HOSTED" | "CLOUD";
+
+export interface AiEngineCloud {
+  /** Whether whole documents may be uploaded to Stirling Cloud for indexing. */
+  allowDocumentUpload?: boolean;
+}
+
 export interface AiEngineSettingsData {
   enabled?: boolean;
+  mode?: AiEngineMode;
+  cloud?: AiEngineCloud;
   url?: string;
   /**
    * Whether the processor forwards settings to the engine; SaaS pins it false, so a save
