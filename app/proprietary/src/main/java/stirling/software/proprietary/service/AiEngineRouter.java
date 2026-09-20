@@ -118,12 +118,12 @@ public class AiEngineRouter {
     }
 
     /**
-     * Whether whole documents may be uploaded for indexing. Always true self-hosted - the engine is
-     * the customer's own - and admin-controlled in cloud mode, where an upload leaves their estate.
+     * Whether a document's text may be kept and indexed for later questions. Always true
+     * self-hosted, where the store is the customer's own; admin-controlled in cloud mode, where the
+     * copy would outlive the request on someone else's disk.
      */
-    public boolean documentUploadAllowed() {
-        return !isCloudMode()
-                || applicationProperties.getAiEngine().getCloud().isAllowDocumentUpload();
+    public boolean documentIndexingAllowed() {
+        return !isCloudMode() || applicationProperties.getAiEngine().isCloudDocumentIndexing();
     }
 
     /**
@@ -180,7 +180,7 @@ public class AiEngineRouter {
      */
     private String cloudBaseUrl() {
         String configured =
-                trimTrailingSlashes(applicationProperties.getAiEngine().getCloud().getBaseUrl());
+                trimTrailingSlashes(applicationProperties.getAiEngine().getCloudBaseUrl());
         if (!configured.isEmpty()) {
             return configured;
         }

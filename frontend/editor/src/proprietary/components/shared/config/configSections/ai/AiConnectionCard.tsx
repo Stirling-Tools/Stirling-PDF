@@ -392,38 +392,35 @@ export function AiConnectionCard({
                 <Group gap={4} wrap="nowrap">
                   <Text fw={500} size="sm">
                     {t(
-                      "admin.settings.ai.general.cloud.upload.label",
-                      "Send documents to Stirling Cloud",
+                      "admin.settings.ai.general.cloud.indexing.label",
+                      "Let Stirling Cloud keep indexed documents",
                     )}
                   </Text>
                   <InfoTooltip
                     label={t(
-                      "admin.settings.ai.general.cloud.upload.description",
-                      "Chat and single questions send only the text a request needs. Indexing a document for repeated questions uploads the whole file, and Stirling Cloud then stores it.",
+                      "admin.settings.ai.general.cloud.indexing.description",
+                      "Every AI tool sends the page text it needs to answer. This decides whether Stirling Cloud may also keep that text, indexed, so later questions can search across the document.",
                     )}
                   />
                 </Group>
                 <Text size="sm" c="dimmed" mt={2}>
                   {t(
-                    "admin.settings.ai.general.cloud.upload.help",
-                    "Off means document questions are unavailable rather than quietly uploading your files.",
+                    "admin.settings.ai.general.cloud.indexing.help",
+                    "Off means document questions are unavailable. It does not stop text being sent - only stored.",
                   )}
                 </Text>
               </div>
               <Switch
-                checked={settings.cloud?.allowDocumentUpload ?? false}
+                checked={settings.cloudDocumentIndexing ?? false}
                 onChange={(e) =>
                   setSettings({
                     ...settings,
-                    cloud: {
-                      ...(settings.cloud || {}),
-                      allowDocumentUpload: e.target.checked,
-                    },
+                    cloudDocumentIndexing: e.target.checked,
                   })
                 }
                 aria-label={t(
-                  "admin.settings.ai.general.cloud.upload.label",
-                  "Send documents to Stirling Cloud",
+                  "admin.settings.ai.general.cloud.indexing.label",
+                  "Let Stirling Cloud keep indexed documents",
                 )}
               />
             </Group>
