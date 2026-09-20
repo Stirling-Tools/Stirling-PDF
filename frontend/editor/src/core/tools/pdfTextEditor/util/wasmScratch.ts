@@ -119,6 +119,12 @@ export function scratchPtr(
   // and refitting would put a malloc/free pair back on every keystroke.
   const size = Math.max(4, bytes, slot ? slot.size * 2 : 0);
   const ptr = arena.exports.malloc(size);
+  // malloc only returns 0 when memory.grow failed, so a retry cannot help. A
+  // cached 0 would be handed to PDFium as a null out-param and never retried.
+  if (!ptr) {
+    arena.slots[key.id] = undefined;
+    throw new Error(`WASM scratch allocation failed (${size} bytes)`);
+  }
   arena.slots[key.id] = { ptr, size };
   return ptr;
 }

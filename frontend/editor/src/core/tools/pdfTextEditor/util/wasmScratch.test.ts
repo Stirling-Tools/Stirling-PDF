@@ -89,4 +89,23 @@ describe("scratchPtr", () => {
     releaseScratch(m);
     expect(free).not.toHaveBeenCalled();
   });
+
+  it("does not cache a zero allocation and retries on the next call", () => {
+    let calls = 0;
+    const malloc = vi.fn((n: number) => {
+      calls += 1;
+      return calls === 1 ? 0 : 4096 + n;
+    });
+    const free = vi.fn();
+    const m = {
+      pdfium: { wasmExports: { malloc, free } },
+    } as unknown as WrappedPdfiumModule;
+
+    expect(() => scratchPtr(m, SCRATCH.readerCharRect, 16)).toThrow(
+      /scratch allocation failed/,
+    );
+    expect(scratchPtr(m, SCRATCH.readerCharRect, 16)).toBe(4112);
+    expect(malloc).toHaveBeenCalledTimes(2);
+    expect(free).not.toHaveBeenCalled();
+  });
 });
