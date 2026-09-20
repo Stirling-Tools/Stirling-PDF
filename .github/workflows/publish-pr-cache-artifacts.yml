@@ -51,6 +51,7 @@ jobs:
         with:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+        continue-on-error: false
 
       - name: Resolve PR cache artifact names
         id: pr
