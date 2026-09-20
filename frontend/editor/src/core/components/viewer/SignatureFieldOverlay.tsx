@@ -13,7 +13,7 @@
  */
 import { useStaleBakedFieldNames } from "@app/tools/formFill/FormFillContext";
 import { getDocumentBytes } from "@app/services/documentBytesCache";
-import { documentHasFormFields } from "@app/services/documentFormProbe";
+import { documentHasFormFieldsFor } from "@app/services/documentFormProbe";
 import { runPdfiumScan } from "@app/services/pdfiumScanQueue";
 import React, { useEffect, useMemo, useRef, useState, memo } from "react";
 import {
@@ -53,8 +53,8 @@ async function resolveFields(
   _cachedSource = source;
 
   _cachePromise = (async () => {
+    if (!(await documentHasFormFieldsFor(source))) return [];
     const buf = await getDocumentBytes(source);
-    if (!(await documentHasFormFields(buf, source.size))) return [];
     // One main-thread scan at a time, so a second full document copy cannot
     // be opened while this one runs.
     const appearances = await runPdfiumScan(() =>

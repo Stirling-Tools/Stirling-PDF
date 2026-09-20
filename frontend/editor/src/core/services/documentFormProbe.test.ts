@@ -7,11 +7,28 @@ vi.mock("@app/services/pdfiumScanQueue", () => ({
   runPdfiumScan: (task: () => Promise<unknown>) => task(),
 }));
 
+vi.mock("@app/services/documentBytesCache", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@app/services/documentBytesCache")>();
+  const { readFileSync } = await import("node:fs");
+  const path = await import("node:path");
+  const fixture = new Uint8Array(
+    readFileSync(
+      path.join(import.meta.dirname, "../tests/test-fixtures/big-sample.pdf"),
+    ),
+  ).buffer;
+  return { ...actual, getDocumentBytes: vi.fn(async () => fixture) };
+});
+
 vi.mock("@app/services/pdfiumService", () => ({
   readRawFormType: vi.fn(async () => 0),
 }));
 
-import { documentHasFormFields } from "@app/services/documentFormProbe";
+import {
+  documentHasFormFields,
+  documentHasFormFieldsFor,
+} from "@app/services/documentFormProbe";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
 import { readRawFormType } from "@app/services/pdfiumService";
 import { hasAcroForm } from "@app/utils/asciiBytes";
 import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
@@ -80,5 +97,54 @@ describe("documentHasFormFields", () => {
     );
     expect(readRawFormType).not.toHaveBeenCalled();
     load.mockRestore();
+  });
+});
+
+describe("documentHasFormFieldsFor", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  const formlessFile = (lastModified: number): File =>
+    new File([fixtureBytes("big-sample.pdf")], "big-sample.pdf", {
+      lastModified,
+    });
+
+  it("seeds the answer from a buffer and reuses it for another File wrapper", async () => {
+    const bytes = fixtureBytes("big-sample.pdf");
+    const stamp = 1_700_000_000_000;
+
+    expect(await documentHasFormFieldsFor(formlessFile(stamp), bytes)).toBe(
+      false,
+    );
+    expect(getDocumentBytes).not.toHaveBeenCalled();
+
+    // Same bytes and metadata, fresh object: the answer travels by file key.
+    expect(await documentHasFormFieldsFor(formlessFile(stamp))).toBe(false);
+    expect(getDocumentBytes).not.toHaveBeenCalled();
+  });
+
+  it("reads once for a Blob-only caller and memoizes the in-flight promise", async () => {
+    const file = formlessFile(1_700_000_000_100);
+
+    const [first, second] = await Promise.all([
+      documentHasFormFieldsFor(file),
+      documentHasFormFieldsFor(file),
+    ]);
+
+    expect(first).toBe(false);
+    expect(second).toBe(false);
+    expect(getDocumentBytes).toHaveBeenCalledTimes(1);
+    expect(await documentHasFormFieldsFor(file)).toBe(false);
+    expect(getDocumentBytes).toHaveBeenCalledTimes(1);
+  });
+
+  it("probes a different document separately", async () => {
+    const other = new File([fixtureBytes("big-sample.pdf")], "big-sample.pdf", {
+      lastModified: 1_700_000_000_200,
+    });
+
+    expect(await documentHasFormFieldsFor(other)).toBe(false);
+    expect(getDocumentBytes).toHaveBeenCalledTimes(1);
   });
 });
