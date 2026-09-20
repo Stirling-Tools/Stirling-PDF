@@ -7,7 +7,7 @@ name: AI Engine CI
 on:
   workflow_call:
   push:
-    branches: [main, dev-cache]
+    branches: [main]
 
 permissions:
   contents: read

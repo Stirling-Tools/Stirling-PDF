@@ -21,7 +21,7 @@ on:
         type: boolean
         default: false
   push:
-    branches: ["main", "dev-cache"]
+    branches: ["main"]
   schedule:
     - cron: "0 4 * * *"
   workflow_dispatch:
