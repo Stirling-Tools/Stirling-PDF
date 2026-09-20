@@ -145,15 +145,9 @@ export async function getPdfiumModule(): Promise<WrappedPdfiumModule> {
  * Next call to getPdfiumModule() will create a fresh instance.
  */
 export function resetPdfiumModule(): void {
-<<<<<<< HEAD
   // The module is discarded here, so a handle no reader holds is closed now.
   // A handle a reader still holds is left to that reader: its close frees the
   // data buffer against the module it captured.
-=======
-  // The module is discarded here, so a handle no reader holds is closed now.
-  // With readers it is dropped, and their later close only closes the document
-  // pointer; the pixel buffer goes with the discarded module.
->>>>>>> a4bc366ea0 (fix(viewer): release cached bytes and the shared document on removal)
   try {
     if (sharedDocument && sharedDocument.refs <= 0 && _module) {
       closeDocumentNow(_module, sharedDocument.docPtr);
