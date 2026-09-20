@@ -15,8 +15,8 @@ import {
   type SignatureFieldAppearance,
 } from "@app/services/pdfiumService";
 import { getDocumentBytes } from "@app/services/documentBytesCache";
+import { documentHasFormFields } from "@app/services/documentFormProbe";
 import { runPdfiumScan } from "@app/services/pdfiumScanQueue";
-import { hasAcroForm } from "@app/utils/asciiBytes";
 
 interface ButtonAppearanceOverlayProps {
   pageIndex: number;
@@ -32,8 +32,8 @@ async function resolveButtonAppearances(
 ): Promise<SignatureFieldAppearance[]> {
   if (source === _cachedSource && _cachePromise) return _cachePromise;
   _cachedSource = source;
-  _cachePromise = getDocumentBytes(source).then((buf) => {
-    if (!hasAcroForm(new Uint8Array(buf))) return [];
+  _cachePromise = getDocumentBytes(source).then(async (buf) => {
+    if (!(await documentHasFormFields(buf, source.size))) return [];
     return runPdfiumScan(() => renderButtonFieldAppearances(buf));
   });
   return _cachePromise;
