@@ -18,4 +18,19 @@ describe("pdfiumScanQueue", () => {
     await Promise.all([a, b]);
     expect(order).toEqual(["a", "b"]);
   });
+
+  it("runs the next scan after a failure and surfaces the failure to its caller", async () => {
+    const order: string[] = [];
+    const failing = runPdfiumScan(async () => {
+      order.push("a");
+      throw new Error("boom");
+    });
+    const next = runPdfiumScan(async () => {
+      order.push("b");
+    });
+
+    await expect(failing).rejects.toThrow("boom");
+    await next;
+    expect(order).toEqual(["a", "b"]);
+  });
 });
