@@ -28,7 +28,7 @@ export class FileLifecycleManager {
   private fileGenerations = new Map<string, number>(); // Generation tokens to prevent stale cleanup
 
   constructor(
-    private filesRef: React.MutableRefObject<Map<FileId, File>>,
+    private filesRef: React.RefObject<Map<FileId, File>>,
     private dispatch: React.Dispatch<FileContextAction>,
   ) {}
 
@@ -57,7 +57,7 @@ export class FileLifecycleManager {
    */
   cleanupFile = (
     fileId: FileId,
-    stateRef?: React.MutableRefObject<FileContextState>,
+    stateRef?: React.RefObject<FileContextState>,
   ): void => {
     forgetFile(fileId);
     // Use comprehensive cleanup (same as removeFiles)
@@ -99,7 +99,7 @@ export class FileLifecycleManager {
   scheduleCleanup = (
     fileId: FileId,
     delay: number = 30000,
-    stateRef?: React.MutableRefObject<FileContextState>,
+    stateRef?: React.RefObject<FileContextState>,
   ): void => {
     // Cancel existing timer
     const existingTimer = this.cleanupTimers.get(fileId);
@@ -138,7 +138,7 @@ export class FileLifecycleManager {
    */
   removeFiles = (
     fileIds: FileId[],
-    stateRef?: React.MutableRefObject<FileContextState>,
+    stateRef?: React.RefObject<FileContextState>,
   ): void => {
     fileIds.forEach((fileId) => {
       forgetFile(fileId);
@@ -155,7 +155,7 @@ export class FileLifecycleManager {
    */
   private cleanupAllResourcesForFile = (
     fileId: FileId,
-    stateRef?: React.MutableRefObject<FileContextState>,
+    stateRef?: React.RefObject<FileContextState>,
   ): void => {
     const file = this.filesRef.current.get(fileId);
     this.filesRef.current.delete(fileId);
@@ -199,7 +199,7 @@ export class FileLifecycleManager {
   updateStirlingFileStub = (
     fileId: FileId,
     updates: Partial<StirlingFileStub>,
-    stateRef?: React.MutableRefObject<FileContextState>,
+    stateRef?: React.RefObject<FileContextState>,
   ): void => {
     // Guard against updating removed files (race condition protection)
     if (!this.filesRef.current.has(fileId)) {
