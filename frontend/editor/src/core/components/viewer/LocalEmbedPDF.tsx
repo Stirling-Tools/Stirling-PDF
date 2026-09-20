@@ -88,6 +88,9 @@ import { BookmarkAPIBridge } from "@app/components/viewer/BookmarkAPIBridge";
 import { AttachmentAPIBridge } from "@app/components/viewer/AttachmentAPIBridge";
 import { PrintAPIBridge } from "@app/components/viewer/PrintAPIBridge";
 import { isPdfFile } from "@app/utils/fileUtils";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
+import { documentHasFormFields } from "@app/services/documentFormProbe";
+import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 import { useTranslation } from "react-i18next";
 import { LinkLayer } from "@app/components/viewer/LinkLayer";
 import { TextSelectionHandler } from "@app/components/viewer/TextSelectionHandler";
@@ -342,6 +345,24 @@ export function LocalEmbedPDF({
   // FileContext produces new File object references for the same file content.
   const fileStableKey =
     fileId ?? (file ? `${(file as File).name}-${file.size}` : null);
+  const initialBufferRef = useRef<ArrayBuffer | null>(null);
+  // Kept so the large-document release can empty the arrays in place: rebuilding
+  // the plugin list would re-trigger a document open.
+  const initialDocsArraysRef = useRef<InitialDocumentOptions[][]>([]);
+
+  // The plugin keeps listeners for the registry's whole life and this one shares
+  // the scope holding the document bytes; without the unsubscribe it pins them.
+  const annotationUnsubscribeRef = useRef<(() => void) | null>(null);
+
+  // The listener shares the scope holding the document bytes, so it must not
+  // outlive the component.
+  useEffect(
+    () => () => {
+      annotationUnsubscribeRef.current?.();
+      annotationUnsubscribeRef.current = null;
+    },
+    [],
+  );
 
   // Keyed by fileStableKey to avoid recomputing on every FileContext re-render.
   const exportFileName = useMemo(() => {
@@ -354,7 +375,6 @@ export function LocalEmbedPDF({
   // The first document goes through the registry; replacements open in the
   // background and activate once ready, so the viewer never blanks.
   const [initialDocument, setInitialDocument] = useState<{
-    buffer: ArrayBuffer;
     name: string;
   } | null>(null);
   const [pendingDocument, setPendingDocument] = useState<{
@@ -393,13 +413,8 @@ export function LocalEmbedPDF({
     () => setDeletedAnnotationMenu(null),
     [],
   );
-  // The published blob URL is revoked by its replacement or on unmount, never
-  // by the effect run that decided to skip a swap.
-  const publishedObjectUrlRef = useRef<string | null>(null);
-  const revokeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Reads bytes on the main thread for the worker, and lands bytes plus URL in
-  // one commit so the registry rebuilds once per replacement.
+  // Reads bytes on the main thread for the worker; the file path hands the
+  // buffer to the registry, so no blob URL is involved.
   useEffect(() => {
     if (fileStableKey && shouldSkipBytes?.(fileStableKey)) {
       // The live document already shows this save; swapping the bytes would
@@ -407,7 +422,6 @@ export function LocalEmbedPDF({
       return;
     }
     let cancelled = false;
-    let objectUrl: string | null = null;
     const openDocument = (
       buffer: ArrayBuffer,
       name: string,
@@ -419,9 +433,17 @@ export function LocalEmbedPDF({
       openedContentKeyRef.current = contentKey;
       if (!initialDocumentOpenedRef.current) {
         initialDocumentOpenedRef.current = true;
-        setInitialDocument({ buffer, name });
+        initialBufferRef.current = buffer;
+        setInitialDocument({ name });
         return;
       }
+      // The replacement becomes the live document through the bridge, so the
+      // initial copy is dead weight from here on.
+      initialBufferRef.current = null;
+      for (const docs of initialDocsArraysRef.current) {
+        docs.length = 0;
+      }
+      initialDocsArraysRef.current.length = 0;
       setPendingDocument({ buffer, name });
     };
     const fail = (source: string) => (err: unknown) => {
@@ -431,18 +453,10 @@ export function LocalEmbedPDF({
       );
     };
     if (file && typeof (file as Blob).arrayBuffer === "function") {
-      (file as Blob)
-        .arrayBuffer()
+      getDocumentBytes(file as Blob)
         .then((buf) => {
           if (cancelled) return;
-          objectUrl = URL.createObjectURL(file);
-          const previous = publishedObjectUrlRef.current;
-          publishedObjectUrlRef.current = objectUrl;
           openDocument(buf, exportFileName, fileStableKey);
-          setPdfUrl(objectUrl);
-          if (previous && previous !== objectUrl) {
-            URL.revokeObjectURL(previous);
-          }
         })
         .catch(fail("file"));
     } else if (url) {
@@ -456,36 +470,19 @@ export function LocalEmbedPDF({
     } else {
       initialDocumentOpenedRef.current = false;
       openedContentKeyRef.current = null;
+      initialBufferRef.current = null;
+      for (const docs of initialDocsArraysRef.current) {
+        docs.length = 0;
+      }
+      initialDocsArraysRef.current.length = 0;
       setInitialDocument(null);
       setPendingDocument(null);
       setPdfUrl(null);
     }
     return () => {
       cancelled = true;
-      // Revokes only URLs that never reached state; the published one is
-      // replaced or revoked on real unmount below.
-      if (objectUrl && publishedObjectUrlRef.current !== objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-      }
     };
   }, [file ? fileStableKey : null, url, shouldSkipBytes, exportFileName]);
-
-  useEffect(() => {
-    // A pending revocation belongs to a previous mount of this effect; cancel
-    // it so React's strict-mode simulated unmount cannot revoke the live URL.
-    if (revokeTimerRef.current !== null) {
-      clearTimeout(revokeTimerRef.current);
-      revokeTimerRef.current = null;
-    }
-    return () => {
-      revokeTimerRef.current = setTimeout(() => {
-        revokeTimerRef.current = null;
-        const urlToRevoke = publishedObjectUrlRef.current;
-        publishedObjectUrlRef.current = null;
-        if (urlToRevoke) URL.revokeObjectURL(urlToRevoke);
-      }, 0);
-    };
-  }, []);
 
   const [swapAnnouncement, setSwapAnnouncement] = useState<string | null>(null);
 
@@ -524,12 +521,21 @@ export function LocalEmbedPDF({
 
   // Create plugins configuration
   const plugins = useMemo(() => {
-    const initialSource = initialDocument ?? urlPluginsSource;
+    const initialSource =
+      initialDocument && initialBufferRef.current
+        ? { buffer: initialBufferRef.current, name: initialDocument.name }
+        : urlPluginsSource;
     if (!initialSource) return [];
     const initialDocuments: InitialDocumentOptions[] =
       "buffer" in initialSource
         ? [{ buffer: initialSource.buffer, name: initialSource.name }]
         : [{ url: initialSource.url, name: initialSource.name }];
+    if (initialBufferRef.current) {
+      // React may run this memo more than once for the same buffer (StrictMode
+      // double render), and each run builds a fresh config array; keep them all
+      // so the release below can empty every array that holds the buffer.
+      initialDocsArraysRef.current.push(initialDocuments);
+    }
 
     // Calculate 3.5rem in pixels dynamically based on root font size
     const rootFontSize = parseFloat(
@@ -752,6 +758,55 @@ export function LocalEmbedPDF({
           engine={engine}
           plugins={plugins}
           onInitialized={async (registry: PluginRegistry) => {
+            // Only safe when nothing main-thread can need the bytes afterwards:
+            // large files are never opened for thumbnails, and the same catalog
+            // probe the overlays use answers [] for a form-less file without a
+            // PDFium scan.
+            const dropEligible = async (
+              sizeBytes: number,
+              bytes: ArrayBuffer,
+            ) =>
+              sizeBytes >= LARGE_PDF_PARSE_LIMIT &&
+              !(await documentHasFormFields(bytes, sizeBytes));
+
+            // Drop the main-thread copy (and the cache entry) once the worker
+            // has its clone. Emptied in place; a rebuild would re-open the doc.
+            const releaseLargeBuffer = async () => {
+              const buf = initialBufferRef.current;
+              if (!file || !buf) return;
+              if (!(await dropEligible((file as Blob).size, buf))) return;
+              // A replacement may have landed while the probe ran.
+              if (initialBufferRef.current !== buf) return;
+              initialBufferRef.current = null;
+              for (const docs of initialDocsArraysRef.current) {
+                docs.length = 0;
+              }
+              initialDocsArraysRef.current.length = 0;
+            };
+
+            try {
+              const docManager = registry.getPlugin("document-manager");
+              if (docManager && docManager.provides) {
+                const docManagerApi = docManager.provides() as {
+                  getActiveDocument?: () => unknown;
+                  onDocumentOpened?: (cb: () => void) => () => void;
+                };
+                if (docManagerApi.getActiveDocument?.()) {
+                  void releaseLargeBuffer();
+                } else if (docManagerApi.onDocumentOpened) {
+                  const unsub = docManagerApi.onDocumentOpened(() => {
+                    unsub?.();
+                    void releaseLargeBuffer();
+                  });
+                } else {
+                  void releaseLargeBuffer();
+                }
+              } else {
+                void releaseLargeBuffer();
+              }
+            } catch {
+              void releaseLargeBuffer();
+            }
             // v2.0: Use registry.getPlugin() to access plugin APIs
             const annotationPlugin = registry.getPlugin("annotation");
             if (!annotationPlugin || !annotationPlugin.provides) return;
@@ -1171,71 +1226,73 @@ export function LocalEmbedPDF({
                 },
               });
 
-              annotationApi.onAnnotationEvent((event: AnnotationEvent) => {
-                if (event.type === "create" && event.committed) {
-                  setAnnotations((prev) => [
-                    ...prev,
-                    {
-                      id: event.annotation.id,
-                      pageIndex: event.pageIndex,
-                      rect: event.annotation.rect,
-                    },
-                  ]);
+              annotationUnsubscribeRef.current?.();
+              annotationUnsubscribeRef.current =
+                annotationApi.onAnnotationEvent((event: AnnotationEvent) => {
+                  if (event.type === "create" && event.committed) {
+                    setAnnotations((prev) => [
+                      ...prev,
+                      {
+                        id: event.annotation.id,
+                        pageIndex: event.pageIndex,
+                        rect: event.annotation.rect,
+                      },
+                    ]);
 
-                  // If the annotation doesn't have customData.toolId, patch it from the active tool.
-                  // EmbedPDF doesn't always persist customData from setToolDefaults into created annotations.
-                  const annotationId = event.annotation.id;
-                  const existingCustomData = (
-                    event.annotation as unknown as {
-                      customData?: Record<string, unknown>;
-                    }
-                  ).customData;
-                  if (annotationId && !existingCustomData?.toolId) {
-                    const activeTool = (
-                      annotationApi as unknown as {
-                        getActiveTool?: () => { id: string } | null;
+                    // If the annotation doesn't have customData.toolId, patch it from the active tool.
+                    // EmbedPDF doesn't always persist customData from setToolDefaults into created annotations.
+                    const annotationId = event.annotation.id;
+                    const existingCustomData = (
+                      event.annotation as unknown as {
+                        customData?: Record<string, unknown>;
                       }
-                    ).getActiveTool?.();
-                    if (activeTool?.id && activeTool.id !== "select") {
+                    ).customData;
+                    if (annotationId && !existingCustomData?.toolId) {
+                      const activeTool = (
+                        annotationApi as unknown as {
+                          getActiveTool?: () => { id: string } | null;
+                        }
+                      ).getActiveTool?.();
+                      if (activeTool?.id && activeTool.id !== "select") {
+                        (
+                          annotationApi as unknown as {
+                            updateAnnotation?: (
+                              page: number,
+                              id: string,
+                              patch: Record<string, unknown>,
+                            ) => void;
+                          }
+                        ).updateAnnotation?.(event.pageIndex, annotationId, {
+                          customData: {
+                            ...(existingCustomData ?? {}),
+                            toolId: activeTool.id,
+                          },
+                        });
+                      }
+                    }
+
+                    // Auto-select the annotation after creation so the selection menu appears immediately,
+                    // letting users discover the editing options before they click away.
+                    if (annotationId) {
                       (
                         annotationApi as unknown as {
-                          updateAnnotation?: (
-                            page: number,
+                          selectAnnotation?: (
+                            pageIndex: number,
                             id: string,
-                            patch: Record<string, unknown>,
                           ) => void;
                         }
-                      ).updateAnnotation?.(event.pageIndex, annotationId, {
-                        customData: {
-                          ...(existingCustomData ?? {}),
-                          toolId: activeTool.id,
-                        },
-                      });
+                      ).selectAnnotation?.(event.pageIndex, annotationId);
                     }
-                  }
 
-                  // Auto-select the annotation after creation so the selection menu appears immediately,
-                  // letting users discover the editing options before they click away.
-                  if (annotationId) {
-                    (
-                      annotationApi as unknown as {
-                        selectAnnotation?: (
-                          pageIndex: number,
-                          id: string,
-                        ) => void;
-                      }
-                    ).selectAnnotation?.(event.pageIndex, annotationId);
+                    if (onSignatureAdded) {
+                      onSignatureAdded(event.annotation);
+                    }
+                  } else if (event.type === "delete" && event.committed) {
+                    setAnnotations((prev) =>
+                      prev.filter((ann) => ann.id !== event.annotation.id),
+                    );
                   }
-
-                  if (onSignatureAdded) {
-                    onSignatureAdded(event.annotation);
-                  }
-                } else if (event.type === "delete" && event.committed) {
-                  setAnnotations((prev) =>
-                    prev.filter((ann) => ann.id !== event.annotation.id),
-                  );
-                }
-              });
+                });
             }
           }}
         >
