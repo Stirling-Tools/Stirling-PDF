@@ -10,7 +10,7 @@ vi.mock("@app/services/pdfiumScanQueue", () => ({
 }));
 
 vi.mock("@app/services/documentFormProbe", () => ({
-  documentHasFormFields: vi.fn(async () => false),
+  documentHasFormFieldsFor: vi.fn(async () => false),
 }));
 
 vi.mock("@app/services/pdfiumService", () => ({
@@ -28,23 +28,25 @@ vi.mock("@app/services/pdfiumService", () => ({
 import { allowConsole } from "@app/tests/failOnConsole";
 
 import { getDocumentBytes } from "@app/services/documentBytesCache";
-import { documentHasFormFields } from "@app/services/documentFormProbe";
+import { documentHasFormFieldsFor } from "@app/services/documentFormProbe";
 import { extractFormFields } from "@app/services/pdfiumService";
 import { PdfiumFormProvider } from "@app/tools/formFill/providers/PdfiumFormProvider";
 
 describe("PdfiumFormProvider", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (documentHasFormFields as Mock).mockResolvedValue(false);
+    (documentHasFormFieldsFor as Mock).mockResolvedValue(false);
   });
 
   it("returns [] and skips extraction when the document has no form", async () => {
-    (getDocumentBytes as Mock).mockResolvedValue(new ArrayBuffer(16));
-
     const provider = new PdfiumFormProvider();
-    const fields = await provider.fetchFields(new Blob([]));
+    const file = new Blob([]);
+    const fields = await provider.fetchFields(file);
 
     expect(fields).toEqual([]);
+    expect(documentHasFormFieldsFor).toHaveBeenCalledWith(file);
+    // The answer comes from the per-document probe, so no bytes are read.
+    expect(getDocumentBytes).not.toHaveBeenCalled();
     expect(extractFormFields).not.toHaveBeenCalled();
   });
 
@@ -52,7 +54,7 @@ describe("PdfiumFormProvider", () => {
     // qpdf --object-streams=generate hides the catalog, so the byte scan is
     // not proof of absence; the catalog probe is.
     (getDocumentBytes as Mock).mockResolvedValue(new ArrayBuffer(16));
-    (documentHasFormFields as Mock).mockResolvedValue(true);
+    (documentHasFormFieldsFor as Mock).mockResolvedValue(true);
 
     const provider = new PdfiumFormProvider();
     await provider.fetchFields(new Blob([]));
@@ -62,7 +64,7 @@ describe("PdfiumFormProvider", () => {
 
   it("characterizes field mapping: transforms PdfiumFormField into FormField model", async () => {
     const bytes = new TextEncoder().encode("/AcroForm");
-    (documentHasFormFields as Mock).mockResolvedValue(true);
+    (documentHasFormFieldsFor as Mock).mockResolvedValue(true);
     (getDocumentBytes as Mock).mockResolvedValue(bytes.buffer);
     (extractFormFields as Mock).mockResolvedValue([
       {
@@ -150,6 +152,7 @@ describe("PdfiumFormProvider", () => {
 
   it("returns empty array and does not throw when getDocumentBytes fails", async () => {
     allowConsole.warn(/Failed to extract form fields/);
+    (documentHasFormFieldsFor as Mock).mockResolvedValue(true);
     (getDocumentBytes as Mock).mockRejectedValue(new Error("Disk error"));
 
     const provider = new PdfiumFormProvider();

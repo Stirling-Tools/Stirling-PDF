@@ -89,7 +89,7 @@ import { AttachmentAPIBridge } from "@app/components/viewer/AttachmentAPIBridge"
 import { PrintAPIBridge } from "@app/components/viewer/PrintAPIBridge";
 import { isPdfFile } from "@app/utils/fileUtils";
 import { getDocumentBytes } from "@app/services/documentBytesCache";
-import { documentHasFormFields } from "@app/services/documentFormProbe";
+import { documentHasFormFieldsFor } from "@app/services/documentFormProbe";
 import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 import { useTranslation } from "react-i18next";
 import { LinkLayer } from "@app/components/viewer/LinkLayer";
@@ -758,23 +758,18 @@ export function LocalEmbedPDF({
           engine={engine}
           plugins={plugins}
           onInitialized={async (registry: PluginRegistry) => {
-            // Only safe when nothing main-thread can need the bytes afterwards:
-            // large files are never opened for thumbnails, and the same catalog
-            // probe the overlays use answers [] for a form-less file without a
-            // PDFium scan.
-            const dropEligible = async (
-              sizeBytes: number,
-              bytes: ArrayBuffer,
-            ) =>
-              sizeBytes >= LARGE_PDF_PARSE_LIMIT &&
-              !(await documentHasFormFields(bytes, sizeBytes));
-
-            // Drop the main-thread copy (and the cache entry) once the worker
-            // has its clone. Emptied in place; a rebuild would re-open the doc.
+            // Drop the main-thread copy once the worker has its clone, but only
+            // when nothing main-thread can need the bytes afterwards: large
+            // files are never opened for thumbnails, and a form-less answer
+            // means the overlays return [] without a scan. Seeding the probe
+            // with this buffer is what lets them answer without reading the
+            // document back after the drop. Emptied in place; a rebuild would
+            // re-open the doc.
             const releaseLargeBuffer = async () => {
               const buf = initialBufferRef.current;
               if (!file || !buf) return;
-              if (!(await dropEligible((file as Blob).size, buf))) return;
+              if ((file as Blob).size < LARGE_PDF_PARSE_LIMIT) return;
+              if (await documentHasFormFieldsFor(file as Blob, buf)) return;
               // A replacement may have landed while the probe ran.
               if (initialBufferRef.current !== buf) return;
               initialBufferRef.current = null;
