@@ -15,6 +15,8 @@ import type {
 } from "@app/tools/pdfTextEditor/types";
 import { readUtf16 } from "@app/services/pdfiumService";
 import { registerEmbeddedFace } from "@app/tools/pdfTextEditor/util/embeddedFace";
+import { classifyRunText } from "@app/tools/pdfTextEditor/util/textScripts";
+import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
 
 /** PDFium page-object type constants - mirrors `public/fpdf_edit.h`. */
 const FPDF_PAGEOBJ_TEXT = 1;
@@ -81,7 +83,14 @@ export class PdfiumTextReader {
 
   // Returns the runs whose captured positions actually moved, so the caller
   // can re-snapshot just those instead of re-rendering every overlay per tick.
-  static recapturePositions(doc: EditorDocument, page: Page): Set<TextRun> {
+  // `onlyRuns` asks for a targeted read: the tick already knows which runs an
+  // edit touched, and re-reading a whole page's characters per keystroke made
+  // typing cost scale with page text, not with the edit.
+  static recapturePositions(
+    doc: EditorDocument,
+    page: Page,
+    onlyRuns?: TextRun[],
+  ): Set<TextRun> {
     const m = doc.module;
     if (!page.loaded || page.runs.length === 0) return new Set();
     // No flush: like FPDF_RenderPageBitmap, FPDFText_LoadPage walks the live
@@ -90,7 +99,12 @@ export class PdfiumTextReader {
     const textPagePtr = m.FPDFText_LoadPage(page.pagePtr);
     if (!textPagePtr) return new Set();
     try {
-      const geometry = collectCharGeometry(m, page, textPagePtr);
+      let geometry = collectCharGeometry(m, page, textPagePtr, onlyRuns);
+      // The targeted read is incomplete (object not visible to the text page):
+      // fall back to the full walk rather than leave positions stale.
+      if (!geometry && onlyRuns && onlyRuns.length > 0) {
+        geometry = collectCharGeometry(m, page, textPagePtr);
+      }
       return geometry ? captureCharPositions(geometry) : new Set();
     } finally {
       m.FPDFText_ClosePage(textPagePtr);
@@ -126,12 +140,17 @@ interface CharGeometry {
   originX: number;
 }
 
-// Read every character's geometry once. Both consumers below need the same
-// characters, so doing this twice was pure duplicated WASM traffic.
+// Read character geometry. Both consumers below need the same characters, so
+// doing this twice was pure duplicated WASM traffic. With `onlyRuns` the
+// per-character object read still scans the page (one call per char, the only
+// way to key chars to objects) but the three geometry reads are spent on the
+// target runs' characters alone; returns null when a target run has no
+// characters in the page, so the caller can redo the full walk.
 function collectCharGeometry(
   m: WrappedPdfiumModule,
   page: Page,
   textPagePtr: number,
+  onlyRuns?: TextRun[],
 ): CharGeometry[] | null {
   if (page.runs.length === 0) return null;
   const probe = m as unknown as {
@@ -147,25 +166,22 @@ function collectCharGeometry(
   const charCount = m.FPDFText_CountChars(textPagePtr);
   if (charCount <= 1) return null;
 
-  const ptrToRun = indexRunsByObjectPtr(page.runs);
-  const wasm = m.pdfium.wasmExports;
-  const rectBuf = wasm.malloc(16); // FS_RECT: 4 floats {l, t, r, b}
-  const xPtr = wasm.malloc(8);
-  const yPtr = wasm.malloc(8);
+  const ptrToRun = indexRunsByObjectPtr(onlyRuns ?? page.runs);
+  const rectBuf = scratchPtr(m, SCRATCH.readerCharRect, 16);
+  const xPtr = scratchPtr(m, SCRATCH.readerCharX, 8);
+  const yPtr = scratchPtr(m, SCRATCH.readerCharY, 8);
   const out: CharGeometry[] = [];
   try {
-    for (let i = 0; i < charCount; i += 1) {
+    const read = (i: number, run: TextRun | null): CharGeometry => {
       const cp = m.FPDFText_GetUnicode(textPagePtr, i);
-      const objPtr = m.FPDFText_GetTextObject(textPagePtr, i);
-      const run = objPtr ? (ptrToRun.get(objPtr) ?? null) : null;
-      const boxed = probe.FPDFText_GetLooseCharBox(textPagePtr, i, rectBuf);
+      const boxed = probe.FPDFText_GetLooseCharBox!(textPagePtr, i, rectBuf);
       const heap = (m.pdfium as unknown as { HEAPU8: Uint8Array }).HEAPU8;
       const f = new Float32Array(heap.buffer, rectBuf, 4);
       let originX = Number.NaN;
       if (probe.FPDFText_GetCharOrigin?.(textPagePtr, i, xPtr, yPtr)) {
         originX = m.pdfium.getValue(xPtr, "double");
       }
-      out.push({
+      return {
         cp,
         run,
         ok: boxed,
@@ -173,12 +189,39 @@ function collectCharGeometry(
         right: boxed ? f[2] : Number.NaN,
         bottom: boxed ? f[3] : Number.NaN,
         originX,
-      });
+      };
+    };
+    if (onlyRuns && onlyRuns.length > 0) {
+      const targets = new Set<number>();
+      for (const run of onlyRuns) {
+        for (const ptr of run.paragraphLeafPtrs.length > 0
+          ? run.paragraphLeafPtrs
+          : run.mergedFromPtrs.length > 0
+            ? run.mergedFromPtrs
+            : [run.pdfiumObjPtr]) {
+          if (ptr) targets.add(ptr);
+        }
+      }
+      const matched = new Set<TextRun>();
+      for (let i = 0; i < charCount; i += 1) {
+        const objPtr = m.FPDFText_GetTextObject(textPagePtr, i);
+        if (!objPtr || !targets.has(objPtr)) continue;
+        const run = ptrToRun.get(objPtr);
+        if (!run) continue;
+        matched.add(run);
+        out.push(read(i, run));
+      }
+      for (const run of onlyRuns) {
+        if (run.text.length > 0 && !matched.has(run)) return null;
+      }
+      return out;
+    }
+    for (let i = 0; i < charCount; i += 1) {
+      const objPtr = m.FPDFText_GetTextObject(textPagePtr, i);
+      out.push(read(i, objPtr ? (ptrToRun.get(objPtr) ?? null) : null));
     }
   } finally {
-    wasm.free(rectBuf);
-    wasm.free(xPtr);
-    wasm.free(yPtr);
+    /* pooled buffer: nothing to free */
   }
   return out;
 }
@@ -498,16 +541,16 @@ function getFormContainer(
 }
 
 function readBounds(m: WrappedPdfiumModule, objPtr: number): PageRect | null {
-  const lPtr = m.pdfium.wasmExports.malloc(4);
-  const bPtr = m.pdfium.wasmExports.malloc(4);
-  const rPtr = m.pdfium.wasmExports.malloc(4);
-  const tPtr = m.pdfium.wasmExports.malloc(4);
+  // One 16-byte scratch rect per object instead of four 4-byte allocs.
+  const buf = scratchPtr(m, SCRATCH.readerBounds, 16);
   try {
-    if (!m.FPDFPageObj_GetBounds(objPtr, lPtr, bPtr, rPtr, tPtr)) return null;
-    const left = m.pdfium.getValue(lPtr, "float");
-    const bottom = m.pdfium.getValue(bPtr, "float");
-    const right = m.pdfium.getValue(rPtr, "float");
-    const top = m.pdfium.getValue(tPtr, "float");
+    if (!m.FPDFPageObj_GetBounds(objPtr, buf, buf + 4, buf + 8, buf + 12)) {
+      return null;
+    }
+    const left = m.pdfium.getValue(buf, "float");
+    const bottom = m.pdfium.getValue(buf + 4, "float");
+    const right = m.pdfium.getValue(buf + 8, "float");
+    const top = m.pdfium.getValue(buf + 12, "float");
     return {
       x: Math.min(left, right),
       y: Math.min(bottom, top),
@@ -515,51 +558,45 @@ function readBounds(m: WrappedPdfiumModule, objPtr: number): PageRect | null {
       height: Math.abs(top - bottom),
     };
   } finally {
-    m.pdfium.wasmExports.free(lPtr);
-    m.pdfium.wasmExports.free(bPtr);
-    m.pdfium.wasmExports.free(rPtr);
-    m.pdfium.wasmExports.free(tPtr);
+    /* pooled buffer: nothing to free */
   }
 }
 
 function readMatrix(m: WrappedPdfiumModule, objPtr: number): Affine {
   // FS_MATRIX: { a, b, c, d, e, f } as floats.
-  const buf = m.pdfium.wasmExports.malloc(6 * 4);
-  try {
-    const ok = m.FPDFPageObj_GetMatrix(objPtr, buf);
-    if (!ok) return { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
-    return {
-      a: m.pdfium.getValue(buf, "float"),
-      b: m.pdfium.getValue(buf + 4, "float"),
-      c: m.pdfium.getValue(buf + 8, "float"),
-      d: m.pdfium.getValue(buf + 12, "float"),
-      e: m.pdfium.getValue(buf + 16, "float"),
-      f: m.pdfium.getValue(buf + 20, "float"),
-    };
-  } finally {
-    m.pdfium.wasmExports.free(buf);
-  }
+  const buf = scratchPtr(m, SCRATCH.readerMatrix, 6 * 4);
+  const ok = m.FPDFPageObj_GetMatrix(objPtr, buf);
+  if (!ok) return { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
+  return {
+    a: m.pdfium.getValue(buf, "float"),
+    b: m.pdfium.getValue(buf + 4, "float"),
+    c: m.pdfium.getValue(buf + 8, "float"),
+    d: m.pdfium.getValue(buf + 12, "float"),
+    e: m.pdfium.getValue(buf + 16, "float"),
+    f: m.pdfium.getValue(buf + 20, "float"),
+  };
 }
 
 function readFill(m: WrappedPdfiumModule, objPtr: number): RGBA {
-  const r = m.pdfium.wasmExports.malloc(4);
-  const g = m.pdfium.wasmExports.malloc(4);
-  const b = m.pdfium.wasmExports.malloc(4);
-  const a = m.pdfium.wasmExports.malloc(4);
+  // One scratch block for the RGBA out-params, freed once per object.
+  const buf = scratchPtr(m, SCRATCH.readerFill, 16);
   try {
-    const ok = m.FPDFPageObj_GetFillColor(objPtr, r, g, b, a);
+    const ok = m.FPDFPageObj_GetFillColor(
+      objPtr,
+      buf,
+      buf + 4,
+      buf + 8,
+      buf + 12,
+    );
     if (!ok) return { r: 0, g: 0, b: 0, a: 255 };
     return {
-      r: m.pdfium.getValue(r, "i32") & 0xff,
-      g: m.pdfium.getValue(g, "i32") & 0xff,
-      b: m.pdfium.getValue(b, "i32") & 0xff,
-      a: m.pdfium.getValue(a, "i32") & 0xff,
+      r: m.pdfium.getValue(buf, "i32") & 0xff,
+      g: m.pdfium.getValue(buf + 4, "i32") & 0xff,
+      b: m.pdfium.getValue(buf + 8, "i32") & 0xff,
+      a: m.pdfium.getValue(buf + 12, "i32") & 0xff,
     };
   } finally {
-    m.pdfium.wasmExports.free(r);
-    m.pdfium.wasmExports.free(g);
-    m.pdfium.wasmExports.free(b);
-    m.pdfium.wasmExports.free(a);
+    /* pooled buffer: nothing to free */
   }
 }
 
@@ -589,37 +626,26 @@ function readStroke(
   const getColor = mod.FPDFPageObj_GetStrokeColor;
   const getWidth = mod.FPDFPageObj_GetStrokeWidth;
   if (!getColor) return { stroke: null, strokeWidth: 0 };
-  const r = m.pdfium.wasmExports.malloc(4);
-  const g = m.pdfium.wasmExports.malloc(4);
-  const b = m.pdfium.wasmExports.malloc(4);
-  const a = m.pdfium.wasmExports.malloc(4);
-  const w = m.pdfium.wasmExports.malloc(4);
-  try {
-    if (!getColor(objPtr, r, g, b, a)) return { stroke: null, strokeWidth: 0 };
-    const alpha = m.pdfium.getValue(a, "i32") & 0xff;
-    let strokeWidth = 0;
-    if (getWidth && getWidth(objPtr, w)) {
-      const raw = m.pdfium.getValue(w, "float");
-      if (Number.isFinite(raw) && raw > 0) strokeWidth = raw;
-    }
-    return {
-      stroke: {
-        r: m.pdfium.getValue(r, "i32") & 0xff,
-        g: m.pdfium.getValue(g, "i32") & 0xff,
-        b: m.pdfium.getValue(b, "i32") & 0xff,
-        a: alpha,
-      },
-      strokeWidth,
-    };
-  } catch {
+  // One block for RGBA plus width, freed once per stroked object.
+  const buf = scratchPtr(m, SCRATCH.readerStroke, 20);
+  if (!getColor(objPtr, buf, buf + 4, buf + 8, buf + 12)) {
     return { stroke: null, strokeWidth: 0 };
-  } finally {
-    m.pdfium.wasmExports.free(r);
-    m.pdfium.wasmExports.free(g);
-    m.pdfium.wasmExports.free(b);
-    m.pdfium.wasmExports.free(a);
-    m.pdfium.wasmExports.free(w);
   }
+  const alpha = m.pdfium.getValue(buf + 12, "i32") & 0xff;
+  let strokeWidth = 0;
+  if (getWidth && getWidth(objPtr, buf + 16)) {
+    const raw = m.pdfium.getValue(buf + 16, "float");
+    if (Number.isFinite(raw) && raw > 0) strokeWidth = raw;
+  }
+  return {
+    stroke: {
+      r: m.pdfium.getValue(buf, "i32") & 0xff,
+      g: m.pdfium.getValue(buf + 4, "i32") & 0xff,
+      b: m.pdfium.getValue(buf + 8, "i32") & 0xff,
+      a: alpha,
+    },
+    strokeWidth,
+  };
 }
 
 function readTextObjString(
@@ -630,12 +656,12 @@ function readTextObjString(
   // First call returns size in bytes for the UTF-16 buffer (including NUL).
   const len = m.FPDFTextObj_GetText(objPtr, textPagePtr, 0, 0);
   if (len <= 2) return "";
-  const buf = m.pdfium.wasmExports.malloc(len);
+  const buf = scratchPtr(m, SCRATCH.readerReadTextA, len);
   try {
     m.FPDFTextObj_GetText(objPtr, textPagePtr, buf, len);
     return readUtf16(m, buf, len);
   } finally {
-    m.pdfium.wasmExports.free(buf);
+    /* pooled buffer: nothing to free */
   }
 }
 
@@ -650,12 +676,12 @@ function readFontNameVia(
 ): string | null {
   const len = getName(fontPtr, 0, 0);
   if (len <= 1) return null;
-  const buf = m.pdfium.wasmExports.malloc(len);
+  const buf = scratchPtr(m, SCRATCH.readerReadTextB, len);
   try {
     getName(fontPtr, buf, len);
     return m.pdfium.UTF8ToString(buf);
   } finally {
-    m.pdfium.wasmExports.free(buf);
+    /* pooled buffer: nothing to free */
   }
 }
 
@@ -707,14 +733,14 @@ function readTextRun(
     const bounds = ident ? localBounds : transformRect(transform, localBounds);
     const matrix = ident ? localMatrix : composeAffine(transform, localMatrix);
 
-    const sizePtr = m.pdfium.wasmExports.malloc(4);
+    const sizePtr = scratchPtr(m, SCRATCH.readerSize, 4);
     let rawFontSize = 12;
     try {
       if (m.FPDFTextObj_GetFontSize(objPtr, sizePtr)) {
         rawFontSize = m.pdfium.getValue(sizePtr, "float");
       }
     } finally {
-      m.pdfium.wasmExports.free(sizePtr);
+      /* pooled buffer: nothing to free */
     }
     // The on-page visible font size is `rawFontSize * |matrix scale|`.
     const matrixScale =
@@ -750,6 +776,17 @@ function readTextRun(
 
     const { stroke, strokeWidth } = readStroke(m, objPtr, renderMode);
 
+    // Lock what a full read/re-emit cycle cannot reproduce: undecodable glyphs
+    // (replacement chars) and bidi-ordered text. Private-use text stays
+    // editable because its charcodes are preserved on re-emit.
+    const textClass = classifyRunText(text);
+    const autoLock =
+      textClass === "undecodable"
+        ? "Some glyphs in this run could not be decoded; editing would corrupt them."
+        : textClass === "rtl"
+          ? "Right-to-left text is read-only in this editor."
+          : null;
+
     return new TextRun({
       id: `p${page.index}-t${index}`,
       pageIndex: page.index,
@@ -764,6 +801,8 @@ function readTextRun(
       renderMode,
       stroke: stroke ?? undefined,
       strokeWidth,
+      locked: autoLock !== null,
+      lockReason: autoLock ?? undefined,
     });
   }
 }

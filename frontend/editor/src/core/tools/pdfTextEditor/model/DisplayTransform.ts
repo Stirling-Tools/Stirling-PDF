@@ -1,4 +1,5 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
+import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
 
 /** Maps a page's raw PDF object coordinates to "display-PDF" space. */
 export interface DisplayTransformData {
@@ -322,36 +323,28 @@ function readBox(
   mod: CropBoxModule,
   pagePtr: number,
 ): PageBox | null {
-  const exports = m.pdfium.wasmExports as unknown as {
-    malloc: (n: number) => number;
-    free: (p: number) => void;
-  };
-  const buf = exports.malloc(16);
+  const buf = scratchPtr(m, SCRATCH.displayRect, 16);
   if (!buf) return null;
-  try {
-    const slot = (i: number): number => m.pdfium.getValue(buf + i * 4, "float");
-    const bounding = mod.FPDF_GetPageBoundingBox;
-    if (bounding) {
-      const ok = callSafely(() => !!bounding(pagePtr, buf), false);
-      const effective = ok
-        ? normaliseBox(slot(0), slot(3), slot(2), slot(1))
-        : null;
-      if (effective) return effective;
-    }
-    const readRect = (fn?: BoxReader): PageBox | null => {
-      if (!fn) return null;
-      const ok = callSafely(
-        () => !!fn(pagePtr, buf, buf + 4, buf + 8, buf + 12),
-        false,
-      );
-      if (!ok) return null;
-      return normaliseBox(slot(0), slot(1), slot(2), slot(3));
-    };
-    const crop = readRect(mod.FPDFPage_GetCropBox);
-    const media = readRect(mod.FPDFPage_GetMediaBox);
-    if (crop && media) return intersectBoxes(crop, media) ?? media;
-    return crop ?? media;
-  } finally {
-    exports.free(buf);
+  const slot = (i: number): number => m.pdfium.getValue(buf + i * 4, "float");
+  const bounding = mod.FPDF_GetPageBoundingBox;
+  if (bounding) {
+    const ok = callSafely(() => !!bounding(pagePtr, buf), false);
+    const effective = ok
+      ? normaliseBox(slot(0), slot(3), slot(2), slot(1))
+      : null;
+    if (effective) return effective;
   }
+  const readRect = (fn?: BoxReader): PageBox | null => {
+    if (!fn) return null;
+    const ok = callSafely(
+      () => !!fn(pagePtr, buf, buf + 4, buf + 8, buf + 12),
+      false,
+    );
+    if (!ok) return null;
+    return normaliseBox(slot(0), slot(1), slot(2), slot(3));
+  };
+  const crop = readRect(mod.FPDFPage_GetCropBox);
+  const media = readRect(mod.FPDFPage_GetMediaBox);
+  if (crop && media) return intersectBoxes(crop, media) ?? media;
+  return crop ?? media;
 }

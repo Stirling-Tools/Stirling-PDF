@@ -19,6 +19,7 @@ import { getActiveCharcodeStrategy } from "@app/tools/pdfTextEditor/charcode/Cha
 import { emitFallbackTextObject } from "@app/tools/pdfTextEditor/util/fallbackFont";
 import { emitDeviceFontTextObject } from "@app/tools/pdfTextEditor/util/deviceFontEmbed";
 import { nearestStandardFont } from "@app/tools/pdfTextEditor/util/fontFamily";
+import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
 
 // Remove a PAGE-level object and FREE its PDFium allocation.
 // `FPDFPage_RemoveObject` only detaches the object.
@@ -356,7 +357,7 @@ function charOriginPt(
   const mod = m as unknown as LooseBoxModule;
   if (!mod.FPDFText_GetCharOrigin) return null;
   // FPDFText_GetCharOrigin takes two double* out-params.
-  const buf = m.pdfium.wasmExports.malloc(16);
+  const buf = scratchPtr(m, SCRATCH.editOrigin, 16);
   try {
     if (!mod.FPDFText_GetCharOrigin(tp, idx, buf, buf + 8)) return null;
     return {
@@ -366,7 +367,7 @@ function charOriginPt(
   } catch {
     return null;
   } finally {
-    m.pdfium.wasmExports.free(buf);
+    /* pooled buffer: nothing to free */
   }
 }
 
@@ -377,12 +378,7 @@ function looseBoxAdvancePt(
 ): number | null {
   const mod = m as unknown as LooseBoxModule;
   if (!mod.FPDFText_GetLooseCharBox) return null;
-  const wasm = (
-    m.pdfium as unknown as {
-      wasmExports: { malloc: (n: number) => number; free: (p: number) => void };
-    }
-  ).wasmExports;
-  const buf = wasm.malloc(16); // FS_RECT = 4 floats {left, top, right, bottom}
+  const buf = scratchPtr(m, SCRATCH.editLoose, 16);
   try {
     if (!mod.FPDFText_GetLooseCharBox(tp, idx, buf)) return null;
     const heap = (m.pdfium as unknown as { HEAPU8: Uint8Array }).HEAPU8;
@@ -392,7 +388,7 @@ function looseBoxAdvancePt(
   } catch {
     return null;
   } finally {
-    wasm.free(buf);
+    /* pooled buffer: nothing to free */
   }
 }
 
@@ -401,7 +397,7 @@ function objMatrixScale(
   m: import("@embedpdf/pdfium").WrappedPdfiumModule,
   objPtr: number,
 ): number {
-  const buf = m.pdfium.wasmExports.malloc(6 * 4);
+  const buf = scratchPtr(m, SCRATCH.editMatrix, 6 * 4);
   try {
     if (!m.FPDFPageObj_GetMatrix(objPtr, buf)) return 1;
     const a = m.pdfium.getValue(buf, "float");
@@ -411,7 +407,7 @@ function objMatrixScale(
   } catch {
     return 1;
   } finally {
-    m.pdfium.wasmExports.free(buf);
+    /* pooled buffer: nothing to free */
   }
 }
 
@@ -1229,12 +1225,12 @@ export function readObjTexts(
           out[i] = "";
           continue;
         }
-        const buf = m.pdfium.wasmExports.malloc(len);
+        const buf = scratchPtr(m, SCRATCH.editRunText, len);
         try {
           mod.FPDFTextObj_GetText(objPtr, tp, buf, len);
           out[i] = readUtf16(m, buf, len);
         } finally {
-          m.pdfium.wasmExports.free(buf);
+          /* pooled buffer: nothing to free */
         }
       } catch {
         out[i] = null;
@@ -1268,12 +1264,12 @@ function readBackTextObj(
   try {
     const len = mod.FPDFTextObj_GetText(objPtr, tp, 0, 0);
     if (len <= 2) return "";
-    const buf = m.pdfium.wasmExports.malloc(len);
+    const buf = scratchPtr(m, SCRATCH.editObjText, len);
     try {
       mod.FPDFTextObj_GetText(objPtr, tp, buf, len);
       return readUtf16(m, buf, len);
     } finally {
-      m.pdfium.wasmExports.free(buf);
+      /* pooled buffer: nothing to free */
     }
   } catch {
     return null;
@@ -1290,18 +1286,16 @@ export function measureObjRightEdgePt(
   m: WrappedPdfiumModule,
   objPtr: number,
 ): number {
-  const l = m.pdfium.wasmExports.malloc(4);
-  const b = m.pdfium.wasmExports.malloc(4);
-  const r = m.pdfium.wasmExports.malloc(4);
-  const t = m.pdfium.wasmExports.malloc(4);
+  // One allocation for the four out-params, so a per-word emit costs one
+  // malloc/free pair instead of four.
+  const buf = scratchPtr(m, SCRATCH.editBoxA, 16);
   try {
-    if (!m.FPDFPageObj_GetBounds(objPtr, l, b, r, t)) return 0;
-    return m.pdfium.getValue(r, "float");
+    if (!m.FPDFPageObj_GetBounds(objPtr, buf, buf + 4, buf + 8, buf + 12)) {
+      return 0;
+    }
+    return m.pdfium.getValue(buf + 8, "float");
   } finally {
-    m.pdfium.wasmExports.free(l);
-    m.pdfium.wasmExports.free(b);
-    m.pdfium.wasmExports.free(r);
-    m.pdfium.wasmExports.free(t);
+    /* pooled buffer: nothing to free */
   }
 }
 
@@ -1316,32 +1310,29 @@ export function measureObjSpanPt(
   m: WrappedPdfiumModule,
   ptrs: number[],
 ): { left: number; right: number } | null {
-  const l = m.pdfium.wasmExports.malloc(4);
-  const b = m.pdfium.wasmExports.malloc(4);
-  const r = m.pdfium.wasmExports.malloc(4);
-  const t = m.pdfium.wasmExports.malloc(4);
+  // One scratch rect reused across the whole span, not four allocs per call.
+  const buf = scratchPtr(m, SCRATCH.editBoxB, 16);
   try {
     let left = Infinity;
     let right = -Infinity;
     for (const ptr of ptrs) {
       if (!ptr) continue;
       try {
-        if (!m.FPDFPageObj_GetBounds(ptr, l, b, r, t)) continue;
+        if (!m.FPDFPageObj_GetBounds(ptr, buf, buf + 4, buf + 8, buf + 12)) {
+          continue;
+        }
       } catch {
         continue;
       }
-      const lo = m.pdfium.getValue(l, "float");
-      const hi = m.pdfium.getValue(r, "float");
+      const lo = m.pdfium.getValue(buf, "float");
+      const hi = m.pdfium.getValue(buf + 8, "float");
       if (!Number.isFinite(lo) || !Number.isFinite(hi)) continue;
       if (lo < left) left = lo;
       if (hi > right) right = hi;
     }
     return right > left ? { left, right } : null;
   } finally {
-    m.pdfium.wasmExports.free(l);
-    m.pdfium.wasmExports.free(b);
-    m.pdfium.wasmExports.free(r);
-    m.pdfium.wasmExports.free(t);
+    /* pooled buffer: nothing to free */
   }
 }
 
