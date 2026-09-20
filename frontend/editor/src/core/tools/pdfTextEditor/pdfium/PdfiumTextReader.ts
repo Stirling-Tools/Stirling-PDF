@@ -15,7 +15,6 @@ import type {
 } from "@app/tools/pdfTextEditor/types";
 import { readUtf16 } from "@app/services/pdfiumService";
 import { registerEmbeddedFace } from "@app/tools/pdfTextEditor/util/embeddedFace";
-import { classifyRunText } from "@app/tools/pdfTextEditor/util/textScripts";
 import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
 
 /** PDFium page-object type constants - mirrors `public/fpdf_edit.h`. */
@@ -776,17 +775,6 @@ function readTextRun(
 
     const { stroke, strokeWidth } = readStroke(m, objPtr, renderMode);
 
-    // Lock what a full read/re-emit cycle cannot reproduce: undecodable glyphs
-    // (replacement chars) and bidi-ordered text. Private-use text stays
-    // editable because its charcodes are preserved on re-emit.
-    const textClass = classifyRunText(text);
-    const autoLock =
-      textClass === "undecodable"
-        ? "Some glyphs in this run could not be decoded; editing would corrupt them."
-        : textClass === "rtl"
-          ? "Right-to-left text is read-only in this editor."
-          : null;
-
     return new TextRun({
       id: `p${page.index}-t${index}`,
       pageIndex: page.index,
@@ -801,8 +789,6 @@ function readTextRun(
       renderMode,
       stroke: stroke ?? undefined,
       strokeWidth,
-      locked: autoLock !== null,
-      lockReason: autoLock ?? undefined,
     });
   }
 }
