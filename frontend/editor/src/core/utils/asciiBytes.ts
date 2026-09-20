@@ -6,21 +6,34 @@
  * /AcroForm are memoised per buffer because the form, signature and button
  * scanners all ask the same question about the same document.
  */
-function containsAscii(bytes: Uint8Array, ascii: string): boolean {
-  const first = ascii.charCodeAt(0);
-  if (ascii.length === 1) return bytes.indexOf(first) !== -1;
+// ISO 32000-1, 7.2.3: whitespace and the delimiters that end a name token.
+const NAME_DELIMITER = new Set([
+  0x00, 0x09, 0x0a, 0x0c, 0x0d, 0x20, 0x28, 0x29, 0x3c, 0x3e, 0x5b, 0x5d, 0x7b,
+  0x7d, 0x2f, 0x25,
+]);
+
+/**
+ * True when `name` appears as a whole PDF name token. Matching the raw bytes
+ * alone would treat `/AcroFormExtra` or a name inside a content stream as a hit
+ * and send a form-less file down the expensive path.
+ */
+function containsPdfName(bytes: Uint8Array, name: string): boolean {
+  const first = name.charCodeAt(0);
   let from = 0;
-  while (from <= bytes.length - ascii.length) {
+  while (from <= bytes.length - name.length) {
     const idx = bytes.indexOf(first, from);
-    if (idx === -1 || idx > bytes.length - ascii.length) return false;
+    if (idx === -1 || idx > bytes.length - name.length) return false;
     let match = true;
-    for (let j = 1; j < ascii.length; j++) {
-      if (bytes[idx + j] !== ascii.charCodeAt(j)) {
+    for (let j = 1; j < name.length; j++) {
+      if (bytes[idx + j] !== name.charCodeAt(j)) {
         match = false;
         break;
       }
     }
-    if (match) return true;
+    const after = idx + name.length;
+    if (match && (after === bytes.length || NAME_DELIMITER.has(bytes[after]))) {
+      return true;
+    }
     from = idx + 1;
   }
   return false;
@@ -31,7 +44,11 @@ const acroFormResults = new WeakMap<
   { offset: number; length: number; result: boolean }
 >();
 
-/** True when the document may contain interactive form fields. */
+/**
+ * True when the bytes contain a literal /AcroForm name. This is a hint only:
+ * the name can live inside a compressed object stream, and it can appear in a
+ * stream or comment. `documentHasFormFields` confirms the catalog.
+ */
 export function hasAcroForm(bytes: Uint8Array): boolean {
   const key = bytes.buffer as ArrayBuffer;
   const cached = acroFormResults.get(key);
@@ -42,7 +59,7 @@ export function hasAcroForm(bytes: Uint8Array): boolean {
   ) {
     return cached.result;
   }
-  const result = containsAscii(bytes, "/AcroForm");
+  const result = containsPdfName(bytes, "/AcroForm");
   acroFormResults.set(key, {
     offset: bytes.byteOffset,
     length: bytes.byteLength,
