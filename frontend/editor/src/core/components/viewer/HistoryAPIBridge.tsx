@@ -174,13 +174,13 @@ export const HistoryAPIBridge = forwardRef<HistoryAPI>(
         }
       };
 
-      // Add the event listener
+      // The plugin's emitter outlives this component, so keep the unsubscribe.
       const unsubscribe = annotationApi.onAnnotationEvent(
         handleAnnotationEvent,
       );
 
       return () => {
-        unsubscribe();
+        unsubscribe?.();
       };
     }, [annotationApi, documentReady, getImageData, storeImageData]);
 
