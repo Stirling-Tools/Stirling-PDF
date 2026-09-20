@@ -1,9 +1,13 @@
 /** Contract of the shared document-bytes cache: one read per live Blob (or per
- * identical File wrapper), concurrent callers share it, and a failed read is
- * retryable. Each Blob's `arrayBuffer` is stubbed with the bytes it stands for,
- * so the assertions do not depend on the global jsdom Blob mock. */
+ * identical File wrapper), concurrent callers share it, a failed read is
+ * retryable, and `releaseDocumentBytes` drops the entry. Each Blob's
+ * `arrayBuffer` is stubbed with the bytes it stands for, so the assertions do
+ * not depend on the global jsdom Blob mock. */
 import { describe, expect, it, vi } from "vitest";
-import { getDocumentBytes } from "@app/services/documentBytesCache";
+import {
+  getDocumentBytes,
+  releaseDocumentBytes,
+} from "@app/services/documentBytesCache";
 
 const bytesOf = (bytes: number[]): ArrayBuffer => new Uint8Array(bytes).buffer;
 
@@ -84,6 +88,21 @@ describe("documentBytesCache", () => {
 
     expect(second).not.toBe(first);
     expect(Array.from(new Uint8Array(second))).toEqual([4, 5, 6]);
+  });
+
+  it("re-reads after releaseDocumentBytes", async () => {
+    const file = makeFile("released.pdf", [7, 8, 9]);
+    const spy = vi
+      .spyOn(file, "arrayBuffer")
+      .mockImplementation(() => Promise.resolve(bytesOf([7, 8, 9])));
+
+    const first = await getDocumentBytes(file);
+    releaseDocumentBytes(file);
+    const second = await getDocumentBytes(file);
+
+    expect(spy).toHaveBeenCalledTimes(2);
+    expect(Array.from(new Uint8Array(second))).toEqual([7, 8, 9]);
+    expect(second).not.toBe(first);
   });
 
   it("does not cache a failed read, so a retry re-reads", async () => {

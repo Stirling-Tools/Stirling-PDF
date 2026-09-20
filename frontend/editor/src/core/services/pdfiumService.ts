@@ -22,6 +22,7 @@ import {
   startEagerWasmCompilation,
   pdfiumWasmUrl,
 } from "@app/services/wasmPrecompiler";
+import { runPdfiumScan } from "@app/services/pdfiumScanQueue";
 import type { FormField, WidgetCoordinates } from "@app/tools/formFill/types";
 
 export interface ExtendedPdfiumRuntime {
@@ -143,8 +144,9 @@ export async function getPdfiumModule(): Promise<WrappedPdfiumModule> {
  * Next call to getPdfiumModule() will create a fresh instance.
  */
 export function resetPdfiumModule(): void {
-  // The module is discarded here, so a handle no reader holds is closed now;
-  // with readers it is dropped and their own close does the freeing.
+  // The module is discarded here, so a handle no reader holds is closed now.
+  // With readers it is dropped, and their later close only closes the document
+  // pointer; the pixel buffer goes with the discarded module.
   try {
     if (sharedDocument && sharedDocument.refs <= 0 && _module) {
       closeDocumentNow(_module, sharedDocument.docPtr);
@@ -470,6 +472,14 @@ export function releaseSharedDocument(): void {
   if (_module) {
     closeDocumentNow(_module, session.docPtr);
   }
+}
+
+/**
+ * Close the shared document once every queued scan has finished. A scan queued
+ * before the file left can still open it, so the release runs behind the queue.
+ */
+export function releaseSharedDocumentWhenIdle(): void {
+  void runPdfiumScan(async () => releaseSharedDocument());
 }
 
 /**
