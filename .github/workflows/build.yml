@@ -62,7 +62,7 @@ jobs:
           filters: .github/config/.files.yaml
 
   gradle-cache-prime:
-    if: ${{ !cancelled() && needs.files-changed.outputs.backend == 'true' }}
+    if: ${{ !cancelled() && needs.files-changed.outputs.backend == 'true' && false }}
     needs: [files-changed]
     uses: ./.github/workflows/gradle-cache-prime.yml
     secrets: inherit
@@ -342,9 +342,6 @@ jobs:
           echo "All required checks passed."
   publish-pr-cache-artifacts:
     needs: all-checks-passed
-    if: >-
-      github.event_name == 'pull_request' &&
-      needs.all-checks-passed.result == 'success'
     uses: ./.github/workflows/publish-pr-cache-artifacts.yml
     permissions:
       actions: write
