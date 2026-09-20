@@ -43,7 +43,7 @@ try {
     try {
       cp.execFileSync(process.execPath, [path.join(publisherRoot, "dist", "save.js")], {
         cwd: publisherRoot,
-        env: { ...process.env, CACHE_CONFIG_FILE: "", CACHE_ALLOWED_CACHE_NAMES: artifacts.map((item) => item.cacheName).join(","), GITHUB_EVENT_NAME: "pull_request", GITHUB_EVENT_PATH: eventPath, GITHUB_REPOSITORY: repository, GITHUB_SHA: headSha, GITHUB_REF: `refs/pull/${prNumber}/merge`, GITHUB_REF_TYPE: "branch", INPUT_REPOSITORY: repository, "INPUT_CACHE-NAME": artifact.cacheName, INPUT_SCOPE: "untrusted", "INPUT_ALLOW-PR-CACHE": "true", INPUT_KEY: artifact.key, INPUT_VERSION: artifact.version, INPUT_PATH: `.cache/${artifact.cacheName}`, INPUT_STRICT: "false" },
+        env: { ...process.env, CACHE_CONFIG_FILE: "", CACHE_ALLOWED_CACHE_NAMES: artifacts.map((item) => item.cacheName).join(","), GITHUB_WORKSPACE: publisherRoot, GITHUB_EVENT_NAME: "pull_request", GITHUB_EVENT_PATH: eventPath, GITHUB_REPOSITORY: repository, GITHUB_SHA: headSha, GITHUB_REF: `refs/pull/${prNumber}/merge`, GITHUB_REF_TYPE: "branch", INPUT_REPOSITORY: repository, "INPUT_CACHE-NAME": artifact.cacheName, INPUT_SCOPE: "untrusted", "INPUT_ALLOW-PR-CACHE": "true", INPUT_KEY: artifact.key, INPUT_VERSION: artifact.version, INPUT_PATH: `.cache/${artifact.cacheName}`, INPUT_STRICT: "false" },
         stdio: "inherit",
       });
     } finally { fs.rmSync(stagingRoot, { recursive: true, force: true }); }
