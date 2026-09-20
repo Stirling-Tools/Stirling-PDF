@@ -231,6 +231,21 @@ describe("shared document lifecycle", () => {
     expect(closeCalls()).toHaveLength(1);
   });
 
+  it("queues the release behind a scan so a late open cannot linger", async () => {
+    const data = new ArrayBuffer(16);
+    const scan = runPdfiumScan(async () => {
+      const doc = await openRawDocumentSafe(data);
+      await Promise.resolve();
+      closeDocAndFreeBuffer(await getPdfiumModule(), doc);
+    });
+    // The file left the workbench while the scan was queued.
+    releaseSharedDocumentWhenIdle();
+    await scan;
+    await runPdfiumScan(async () => undefined);
+
+    expect(closeCalls()).toHaveLength(1);
+  });
+
   it("open with different bytes closes a zero-ref shared handle and clears a pending release", async () => {
     const dataA = new ArrayBuffer(16);
     const dataB = new ArrayBuffer(24);
