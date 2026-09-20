@@ -35,6 +35,7 @@ import stirling.software.proprietary.security.controller.api.UserController;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.saas.accountlink.LinkedInstanceAuthenticationToken;
 import stirling.software.saas.payg.cap.AiToolRoutes;
 import stirling.software.saas.payg.cap.RequiresFeature;
 import stirling.software.saas.payg.model.FeatureGate;
@@ -250,6 +251,11 @@ public class EntitlementGuard implements HandlerInterceptor {
     }
 
     private Long resolveTeamId(Authentication auth) {
+        // A linked instance is not a user and has no Supabase id, so the lookup below would find
+        // nothing and the caller would fail open. Its team is on the token already.
+        if (auth instanceof LinkedInstanceAuthenticationToken instance) {
+            return instance.getTeamId();
+        }
         if (auth instanceof ApiKeyAuthenticationToken
                 && auth.getPrincipal() instanceof User apiUser) {
             return apiUser.getTeam() == null ? null : apiUser.getTeam().getId();

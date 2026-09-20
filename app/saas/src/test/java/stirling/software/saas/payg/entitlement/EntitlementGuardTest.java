@@ -36,6 +36,7 @@ import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.saas.accountlink.LinkedInstanceAuthenticationToken;
 import stirling.software.saas.payg.cap.RequiresFeature;
 import stirling.software.saas.payg.model.EntitlementState;
 import stirling.software.saas.payg.model.FeatureGate;
@@ -445,6 +446,42 @@ class EntitlementGuardTest {
         assertThat(res.getStatus()).isEqualTo(402);
         JsonNode body = json.readTree(res.getContentAsByteArray());
         assertThat(body.get("missingGates").get(0).asText()).isEqualTo("AI_SUPPORT");
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // Linked instances: a device credential is not a user, so its team comes off the token
+    // ---------------------------------------------------------------------------------------
+
+    @Test
+    void linkedInstance_aiRouteDegraded_returns402() throws Exception {
+        // The gateway a self-hosted server calls for cloud AI. Its principal is an instance id,
+        // not a Supabase uuid, so resolving the team by user lookup would fail open and hand a
+        // team without AI_SUPPORT the whole engine.
+        SecurityContextHolder.getContext()
+                .setAuthentication(new LinkedInstanceAuthenticationToken(9L, 42L));
+        when(entitlementService.getSnapshot(42L)).thenReturn(degradedSnapshot());
+
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        boolean proceed = guard.preHandle(new MockHttpServletRequest(), res, handlerFor("aiOnly"));
+
+        assertThat(proceed).isFalse();
+        assertThat(res.getStatus()).isEqualTo(402);
+        JsonNode body = json.readTree(res.getContentAsByteArray());
+        assertThat(body.get("missingGates").get(0).asText()).isEqualTo("AI_SUPPORT");
+        Mockito.verifyNoInteractions(userRepository);
+    }
+
+    @Test
+    void linkedInstance_aiRouteEntitled_passesThrough() throws Exception {
+        SecurityContextHolder.getContext()
+                .setAuthentication(new LinkedInstanceAuthenticationToken(9L, 42L));
+        when(entitlementService.getSnapshot(42L)).thenReturn(fullSnapshot());
+
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        boolean proceed = guard.preHandle(new MockHttpServletRequest(), res, handlerFor("aiOnly"));
+
+        assertThat(proceed).isTrue();
+        assertThat(res.getStatus()).isEqualTo(200);
     }
 
     // ---------------------------------------------------------------------------------------
