@@ -54,7 +54,7 @@ export const KIND_ERROR_CODES: Record<string, readonly string[]> = {
   INPUT_UNREADABLE: ["E010", "E015", "E021", "E034"],
   INPUT_EMPTY: ["E005", "E012", "E016", "E020", "E032"],
   INPUT_UNAVAILABLE: ["E030", "E033"],
-  TOOL_NOT_INSTALLED: ["E042", "E062", "E063", "E080"],
+  TOOL_NOT_INSTALLED: ["E042", "E062", "E063"],
   STEP_CANNOT_RENDER_PAGE: ["E054"],
 };
 

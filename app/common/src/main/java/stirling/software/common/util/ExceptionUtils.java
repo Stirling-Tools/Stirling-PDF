@@ -581,14 +581,14 @@ public class ExceptionUtils {
         return new IOException(message, cause);
     }
 
-    public static IOException createImageReadException(String filename) {
+    public static FileReadException createImageReadException(String filename) {
         requireNonNull(filename, "filename");
         String message =
                 getMessage(
                         ErrorCode.IMAGE_READ_ERROR.getMessageKey(),
                         ErrorCode.IMAGE_READ_ERROR.getDefaultMessage(),
                         filename);
-        return new IOException(message);
+        return new FileReadException(message, ErrorCode.IMAGE_READ_ERROR.getCode());
     }
 
     /**
@@ -635,15 +635,16 @@ public class ExceptionUtils {
         return new IllegalArgumentException(message);
     }
 
-    /** Create file validation exceptions. */
-    public static IllegalArgumentException createHtmlFileRequiredException() {
+    // Coded rather than plain: a plain IllegalArgumentException reaches the handler that attaches
+    // no errorCode, so the failure classifies as unrecognised even though the enum names it.
+    public static FileValidationException createHtmlFileRequiredException() {
         String message = getMessage(ErrorCode.HTML_FILE_REQUIRED);
-        return new IllegalArgumentException(message);
+        return new FileValidationException(message, ErrorCode.HTML_FILE_REQUIRED.getCode());
     }
 
-    public static IllegalArgumentException createPdfFileRequiredException() {
+    public static FileValidationException createPdfFileRequiredException() {
         String message = getMessage(ErrorCode.PDF_NOT_PDF);
-        return new IllegalArgumentException(message);
+        return new FileValidationException(message, ErrorCode.PDF_NOT_PDF.getCode());
     }
 
     public static IllegalArgumentException createInvalidPageSizeException(String size) {
@@ -661,14 +662,25 @@ public class ExceptionUtils {
         return new FileValidationException(message, ErrorCode.FILE_NULL_OR_EMPTY.getCode());
     }
 
-    public static IllegalArgumentException createFileNoNameException() {
+    public static FileValidationException createFileNoNameException() {
         String message = getMessage(ErrorCode.FILE_NO_NAME);
-        return new IllegalArgumentException(message);
+        return new FileValidationException(message, ErrorCode.FILE_NO_NAME.getCode());
     }
 
-    public static IllegalArgumentException createPdfNoPages() {
+    public static FileValidationException createPdfNoPages() {
         String message = getMessage(ErrorCode.PDF_NO_PAGES);
-        return new IllegalArgumentException(message);
+        return new FileValidationException(message, ErrorCode.PDF_NO_PAGES.getCode());
+    }
+
+    /** A stored file that an id no longer resolves to. Checked, like the reads that raise it. */
+    public static FileReadException createFileNotFoundException(String fileId) {
+        requireNonNull(fileId, "fileId");
+        String message =
+                getMessage(
+                        ErrorCode.FILE_NOT_FOUND.getMessageKey(),
+                        ErrorCode.FILE_NOT_FOUND.getDefaultMessage(),
+                        fileId);
+        return new FileReadException(message, ErrorCode.FILE_NOT_FOUND.getCode());
     }
 
     /** Create OCR-related exceptions. */
@@ -682,9 +694,9 @@ public class ExceptionUtils {
         return new IOException(message);
     }
 
-    public static IOException createOcrToolsUnavailableException() {
+    public static ToolRequiredException createOcrToolsUnavailableException() {
         String message = getMessage(ErrorCode.OCR_TOOLS_UNAVAILABLE);
-        return new IOException(message);
+        return new ToolRequiredException(message, ErrorCode.OCR_TOOLS_UNAVAILABLE.getCode());
     }
 
     public static IOException createOcrInvalidRenderTypeException() {
@@ -742,9 +754,9 @@ public class ExceptionUtils {
         return new FfmpegRequiredException(message, ErrorCode.FFMPEG_REQUIRED.getCode());
     }
 
-    public static IOException createPythonRequiredForWebpException() {
-        return createIOException(
-                "error.toolRequired", "{0} is required for {1}", null, "Python", "WebP conversion");
+    public static ToolRequiredException createPythonRequiredForWebpException() {
+        String message = getMessage(ErrorCode.PYTHON_REQUIRED_WEBP);
+        return new ToolRequiredException(message, ErrorCode.PYTHON_REQUIRED_WEBP.getCode());
     }
 
     /** Create compression-related exceptions. */
@@ -1361,6 +1373,26 @@ public class ExceptionUtils {
 
         public FfmpegRequiredException(String message, Throwable cause, String errorCode) {
             super(message, cause, errorCode);
+        }
+    }
+
+    /**
+     * A binary or runtime the step needs is absent from this deployment. Answered 503 like {@link
+     * FfmpegRequiredException}: the document is fine; a retry fails until an operator installs it.
+     */
+    public static class ToolRequiredException extends BaseAppException {
+        public ToolRequiredException(String message, String errorCode) {
+            super(message, null, errorCode);
+        }
+    }
+
+    /**
+     * A file that cannot be read: undecodable image bytes, or a stored id that no longer resolves.
+     * Stays a checked {@link IOException}, so no caller's catch changes meaning.
+     */
+    public static class FileReadException extends BaseAppException {
+        public FileReadException(String message, String errorCode) {
+            super(message, null, errorCode);
         }
     }
 
