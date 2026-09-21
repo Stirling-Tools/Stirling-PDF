@@ -37,6 +37,15 @@ function viewerMode(page: import("@playwright/test").Page) {
   });
 }
 
+function grabCursorCount(page: import("@playwright/test").Page) {
+  return page.evaluate(
+    () =>
+      Array.from(document.querySelectorAll<HTMLElement>("div")).filter(
+        (el) => el.style.cursor === "grab",
+      ).length,
+  );
+}
+
 test("exiting redaction restores text selection", async ({ page }) => {
   test.setTimeout(120_000);
   const firstPage = await loadViewer(page);
@@ -86,4 +95,132 @@ test("exiting redaction restores text selection", async ({ page }) => {
   await expect(firstPage.locator(SELECTION_RECTS).first()).toBeAttached({
     timeout: 5_000,
   });
+});
+
+test("switching to the reader leaves an active pan mode alone", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await loadViewer(page);
+
+  const panButton = page.getByRole("button", { name: "Pan Mode" }).first();
+  await expect(panButton).toBeVisible({ timeout: 10_000 });
+  await panButton.click();
+  await expect
+    .poll(() => grabCursorCount(page), { timeout: 10_000 })
+    .toBeGreaterThan(0);
+
+  // Pan is a manual interaction mode and must survive a tool switch (#7678);
+  // asserted on a switch that does not touch redaction.
+  await page
+    .getByRole("navigation", { name: "Quick navigation" })
+    .getByRole("button", { name: "Reader" })
+    .click();
+
+  await expect
+    .poll(() => grabCursorCount(page), { timeout: 10_000 })
+    .toBeGreaterThan(0);
+});
+
+test("switching the redact tool back to automatic leaves redaction mode", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await loadViewer(page);
+
+  const redactButton = page.getByRole("button", { name: /redact/i }).first();
+  await expect(redactButton).toBeVisible({ timeout: 10_000 });
+  await redactButton.click();
+
+  await expect
+    .poll(async () => (await viewerMode(page)).cursor, { timeout: 15_000 })
+    .toBe("crosshair");
+
+  // The panel is lazy: the mode selector appears once the tool has loaded.
+  const automatic = page.getByText("Automatic", { exact: true }).first();
+  await expect(automatic).toBeVisible({ timeout: 20_000 });
+  await automatic.click();
+
+  await expect
+    .poll(async () => (await viewerMode(page)).touchScroll, { timeout: 10_000 })
+    .toBe("on");
+});
+
+test("redacting from the text selection menu queues a pending redaction", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  const firstPage = await loadViewer(page);
+
+  const box = await firstPage.boundingBox();
+  if (!box) throw new Error("Page wrapper has no bounding box");
+  const y = box.y + box.height * 0.105;
+  await page.mouse.move(box.x + box.width * 0.15, y);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.6, y, { steps: 15 });
+  await page.mouse.up();
+
+  const redactInMenu = page
+    .locator('[data-text-selection-menu] button[aria-label="Redact"]')
+    .first();
+  await expect(redactInMenu).toBeVisible({ timeout: 5_000 });
+  await redactInMenu.click();
+
+  // The plugin mirrors REDACT annotations into its pending state, so the mark
+  // is immediately actionable rather than only drawable.
+  await expect(page.getByText(/Apply Redactions/).first()).toBeVisible({
+    timeout: 10_000,
+  });
+});
+
+test("saving redactions keeps the live document mounted", async ({ page }) => {
+  test.setTimeout(180_000);
+  const firstPage = await loadViewer(page);
+
+  await page.evaluate(() => {
+    const span = document.querySelector<HTMLElement>(
+      ".ph-no-capture:has([data-page-index])",
+    );
+    span?.setAttribute("data-reload-probe", "1");
+    for (const el of document.querySelectorAll("[data-page-index]")) {
+      el.setAttribute("data-reload-page-probe", "1");
+    }
+  });
+
+  const box = await firstPage.boundingBox();
+  if (!box) throw new Error("Page wrapper has no bounding box");
+  const y = box.y + box.height * 0.105;
+  await page.mouse.move(box.x + box.width * 0.15, y);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.6, y, { steps: 15 });
+  await page.mouse.up();
+  const redactInMenu = page
+    .locator('[data-text-selection-menu] button[aria-label="Redact"]')
+    .first();
+  await expect(redactInMenu).toBeVisible({ timeout: 5_000 });
+  await redactInMenu.click();
+
+  const save = page.getByRole("button", { name: "Save Changes" }).first();
+  await expect(save).toBeEnabled({ timeout: 15_000 });
+  await expect(page.getByText(/Apply Redactions/).first()).toBeVisible({
+    timeout: 10_000,
+  });
+  await save.click();
+
+  // The committed save clears the pending set and keeps the redacted live
+  // document: the same page nodes stay mounted, so the view cannot move.
+  await expect(page.getByText(/Apply Redactions/).first()).not.toBeVisible({
+    timeout: 30_000,
+  });
+  expect(
+    await page.evaluate(
+      () => document.querySelector('[data-reload-probe="1"]') !== null,
+    ),
+  ).toBe(true);
+  expect(
+    await page.evaluate(
+      () =>
+        document.querySelectorAll('[data-reload-page-probe="1"]').length > 0,
+    ),
+  ).toBe(true);
 });
