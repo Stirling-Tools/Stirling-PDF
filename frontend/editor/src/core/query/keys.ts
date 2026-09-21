@@ -24,6 +24,9 @@ export const qk = {
     ["editor", "processingFolderCounts", recordId] as const,
   /** Every processing-folder record; shared by every folder row on the files page. */
   processingFolders: () => ["editor", "processingFolders"] as const,
+  /** A working folder's per-file pipeline states, polled while it is open. */
+  processingFolderFiles: (recordId: string) =>
+    ["editor", "processingFolderFiles", recordId] as const,
   /** The runs feed behind one folder's live sweep wall. */
   processingFolderRuns: (policyId: string) =>
     ["editor", "processingFolderRuns", policyId] as const,
