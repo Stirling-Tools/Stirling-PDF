@@ -43,10 +43,10 @@ public record FileRunEventView(
         /** A folder the server watches. Only the server can reach it, and only for its owner. */
         SMART_FOLDER,
         /**
-         * The row is about no document, or one nothing here can reach: a policy fed from a bucket
-         * or a webhook names a file no browser holds and no folder action can address.
+         * Nothing here can act on the document: the row names none, or a policy fed from a bucket
+         * or a webhook named a file no browser holds and no folder action can address.
          */
-        NONE;
+        UNREACHABLE;
 
         /**
          * Gated on the source, decided by what produced it. A source's reference is a location on
@@ -57,12 +57,12 @@ public record FileRunEventView(
          */
         public static DocumentLocation of(FileRunEvent event, SourceKind source) {
             if (event.fileId() == null || event.fileId().isBlank()) {
-                return NONE;
+                return UNREACHABLE;
             }
             if (event.sourceId() == null || event.sourceId().isBlank()) {
                 return BROWSER;
             }
-            return source == SourceKind.SMART_FOLDER ? SMART_FOLDER : NONE;
+            return source == SourceKind.SMART_FOLDER ? SMART_FOLDER : UNREACHABLE;
         }
     }
 

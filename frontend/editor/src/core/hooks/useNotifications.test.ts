@@ -194,6 +194,32 @@ describe("useNotifications", () => {
     expect(hasLocalFile).not.toHaveBeenCalled();
   });
 
+  it("shows a member the row about their folder itself, which names no document at all", async () => {
+    // An unreadable folder processes nothing, so there is no document row to carry the news. The
+    // row is about the folder, and its owner is the one person it was recorded for.
+    fetchNotifications.mockResolvedValue(
+      feed(
+        [
+          notification("folder-unreadable", {
+            kindId: "SOURCE_UNREADABLE",
+            origin: "POLICY",
+            sourceId: "src-downloads",
+            sourceKind: "SMART_FOLDER",
+            documentLocation: "UNREACHABLE",
+            fileId: null,
+          }),
+        ],
+        false,
+      ),
+    );
+
+    const { result } = renderHook(() => useNotifications());
+
+    await waitFor(() => expect(result.current.notifications).toHaveLength(1));
+    expect(result.current.notifications[0].id).toBe("folder-unreadable");
+    expect(hasLocalFile).not.toHaveBeenCalled();
+  });
+
   it("shows a reviewer both rows, document here or not", async () => {
     // A reviewer keeps a row for a file they cannot open: it is how they see a policy needs fixing.
     hasLocalFile.mockImplementation((id: string) =>

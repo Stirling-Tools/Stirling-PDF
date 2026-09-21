@@ -236,8 +236,11 @@ public class FileRunEventService {
         // operator owns everything they can see.
         boolean unattended = enforced() && ownership == Ownership.UNOWNED;
         // Answered here, or the client reports "not on this device" about a document the row never
-        // identified in the first place.
-        boolean documentless = event.fileId() == null || event.fileId().isBlank();
+        // identified in the first place. A source-scoped row names none by design: the folder is
+        // the subject, so nothing about it is missing.
+        boolean documentless =
+                (event.fileId() == null || event.fileId().isBlank())
+                        && event.scope() != FailureScope.SOURCE;
         boolean inSmartFolder =
                 FileRunEventView.DocumentLocation.of(event, source)
                         == FileRunEventView.DocumentLocation.SMART_FOLDER;
