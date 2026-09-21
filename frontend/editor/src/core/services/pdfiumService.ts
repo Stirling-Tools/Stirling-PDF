@@ -158,15 +158,21 @@ export function resetPdfiumModule(): void {
   sharedReleasePending = false;
   _module = null;
   _initPromise = null;
-  _docDataPtrs.clear();
+  _docFileAccess.clear();
 }
 
-/**
- * Map of document pointer → WASM data buffer pointer.
- * FPDF_LoadMemDocument does NOT copy the data — it keeps a reference, so the
- * buffer must stay alive until FPDF_CloseDocument is called.
- */
-const _docDataPtrs = new Map<number, number>();
+interface FileAccess {
+  accessPtr: number;
+  getBlockPtr: number;
+  /** The bytes the callback reads from; kept alive for the document's life. */
+  bytes: Uint8Array;
+}
+const _docFileAccess = new Map<number, FileAccess>();
+
+// FPDF_FILEACCESS: unsigned long m_FileLen, get_block m_GetBlock, void* m_Param.
+const FILE_ACCESS_BYTES = 12;
+// int(void* param, unsigned long position, unsigned char* buf, unsigned long size)
+const GET_BLOCK_SIGNATURE = "iiiii";
 
 /**
  * Read an annotation rectangle using the CropBox-adjusted `EPDFAnnot_GetRect`
@@ -295,14 +301,6 @@ export function readEffectivePageBox(
  * Creates a fresh Uint8Array view of the WASM memory buffer AFTER malloc
  * so it is never stale even if malloc triggered a memory growth.
  */
-function copyToWasmHeap(
-  m: WrappedPdfiumModule,
-  bytes: Uint8Array,
-  ptr: number,
-): void {
-  (m.pdfium as typeof m.pdfium & ExtendedPdfiumRuntime).HEAPU8.set(bytes, ptr);
-}
-
 /** Human-readable message for an FPDF_GetLastError() code. */
 function pdfiumOpenErrorMessage(err: number): string {
   switch (err) {
@@ -354,12 +352,52 @@ interface SharedDocument {
 let sharedDocument: SharedDocument | null = null;
 let sharedReleasePending = false;
 
+/**
+ * Opens the document through an FPDF_FILEACCESS callback instead of copying the
+ * whole file into the WASM heap. PDFium reads 64 KB blocks from the JS bytes as
+ * it needs them, so a large file costs its metadata plus the blocks actually
+ * touched, not a second copy of every byte. The callback and its struct live
+ * until closeDocumentNow.
+ */
+function openWithFileAccess(
+  m: WrappedPdfiumModule,
+  bytes: Uint8Array,
+  password?: string,
+): number {
+  const accessPtr = m.pdfium.wasmExports.malloc(FILE_ACCESS_BYTES);
+  const getBlockPtr = m.pdfium.addFunction(
+    (_param: number, position: number, bufferPtr: number, size: number) => {
+      const end = position + size;
+      if (position < 0 || end > bytes.length) return 0;
+      (m.pdfium as typeof m.pdfium & ExtendedPdfiumRuntime).HEAPU8.set(
+        bytes.subarray(position, end),
+        bufferPtr,
+      );
+      return 1;
+    },
+    GET_BLOCK_SIGNATURE,
+  );
+  m.pdfium.setValue(accessPtr, bytes.length, "i32");
+  m.pdfium.setValue(accessPtr + 4, getBlockPtr, "i32");
+  m.pdfium.setValue(accessPtr + 8, 0, "i32");
+
+  const docPtr = m.FPDF_LoadCustomDocument(accessPtr, password ?? "");
+  if (!docPtr) {
+    m.pdfium.removeFunction(getBlockPtr);
+    m.pdfium.wasmExports.free(accessPtr);
+    throw new PdfiumOpenError(m.FPDF_GetLastError());
+  }
+  _docFileAccess.set(docPtr, { accessPtr, getBlockPtr, bytes });
+  return docPtr;
+}
+
 function closeDocumentNow(m: WrappedPdfiumModule, docPtr: number): void {
   m.FPDF_CloseDocument(docPtr);
-  const dataPtr = _docDataPtrs.get(docPtr);
-  if (dataPtr) {
-    m.pdfium.wasmExports.free(dataPtr);
-    _docDataPtrs.delete(docPtr);
+  const access = _docFileAccess.get(docPtr);
+  if (access) {
+    m.pdfium.removeFunction(access.getBlockPtr);
+    m.pdfium.wasmExports.free(access.accessPtr);
+    _docFileAccess.delete(docPtr);
   }
 }
 
@@ -379,17 +417,7 @@ export async function openRawDocument(
   }
 
   const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
-  const len = bytes.length;
-  const ptr = m.pdfium.wasmExports.malloc(len);
-  copyToWasmHeap(m, bytes, ptr);
-
-  const docPtr = m.FPDF_LoadMemDocument(ptr, len, password ?? "");
-  if (!docPtr) {
-    m.pdfium.wasmExports.free(ptr);
-    throw new PdfiumOpenError(m.FPDF_GetLastError());
-  }
-  // Keep the buffer alive; freed by closeDocumentNow()
-  _docDataPtrs.set(docPtr, ptr);
+  const docPtr = openWithFileAccess(m, bytes, password);
 
   if (!password) {
     // A scan still reading the previous document keeps it open; only adopt the
