@@ -31,22 +31,25 @@ export function PortalBillingGate() {
   const {
     serverPlan,
     usersInUse,
+    userLimit,
     loading: licenseLoading,
   } = useServerPlan(isOwner);
   const serverPlanAction = serverPlan ? <ManageBillingButton /> : undefined;
   const link = useLinkOptional();
   const [searchParams] = useSearchParams();
   const prompted = useRef(false);
-  const procurementRequested =
-    trialSetupRequested || searchParams.get("procurement") === "start";
+  const accountLinkRequested =
+    trialSetupRequested ||
+    searchParams.get("procurement") === "start" ||
+    searchParams.get("upgrade") === "team";
 
   useEffect(() => {
-    if (!procurementRequested || link?.isLinked) prompted.current = false;
+    if (!accountLinkRequested || link?.isLinked) prompted.current = false;
     else if (isOwner && !loading && gated && !prompted.current) {
       prompted.current = true;
       connect();
     }
-  }, [procurementRequested, link?.isLinked, isOwner, loading, gated, connect]);
+  }, [accountLinkRequested, link?.isLinked, isOwner, loading, gated, connect]);
 
   const onWalletLoaded = useCallback(
     (w: Wallet) => applyLinkFacts(true, w.status === "subscribed"),
@@ -72,6 +75,7 @@ export function PortalBillingGate() {
   return (
     <Usage
       localUsersInUse={usersInUse}
+      localUserLimit={userLimit}
       serverPlan={serverPlan}
       serverPlanAction={serverPlanAction}
       onWalletLoaded={onWalletLoaded}
