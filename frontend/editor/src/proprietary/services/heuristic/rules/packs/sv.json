@@ -1,0 +1,364 @@
+{
+  "version": 2,
+  "language": "sv",
+  "labels": [
+    {
+      "id": "invoice",
+      "phrases": [
+        { "text": "faktura", "weight": 24, "where": "title" },
+        { "text": "mervärdesskatt", "weight": 8 }
+      ]
+    },
+    {
+      "id": "receipt",
+      "phrases": [{ "text": "kvitto", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "packing-slip",
+      "phrases": [{ "text": "kvitto", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "payslip",
+      "phrases": [
+        { "text": "lönespecifikation", "weight": 22, "where": "title" }
+      ]
+    },
+    {
+      "id": "expense-report",
+      "phrases": [{ "text": "kostnad", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "financial-statement",
+      "phrases": [
+        { "text": "årsredovisning", "weight": 20, "where": "title" },
+        { "text": "balansräkning", "weight": 12 }
+      ]
+    },
+    {
+      "id": "tax-return",
+      "phrases": [
+        { "text": "självdeklaration", "weight": 22, "where": "title" }
+      ]
+    },
+    {
+      "id": "tax-form",
+      "phrases": [
+        { "text": "självdeklaration", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "contract",
+      "phrases": [{ "text": "avtal", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "employment-contract",
+      "phrases": [
+        { "text": "anställningsavtal", "weight": 24, "where": "title" }
+      ]
+    },
+    {
+      "id": "lease-agreement",
+      "phrases": [
+        { "text": "hyreskontrakt", "weight": 18, "where": "title" },
+        { "text": "hyresvärd", "weight": 8 }
+      ]
+    },
+    {
+      "id": "nda",
+      "phrases": [{ "text": "sekretessavtal", "weight": 24, "where": "title" }]
+    },
+    {
+      "id": "privacy-policy",
+      "phrases": [{ "text": "dataskyddsförordningen", "weight": 10 }]
+    },
+    {
+      "id": "affidavit",
+      "phrases": [{ "text": "affidavit", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "will",
+      "phrases": [{ "text": "testamente", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "deed",
+      "phrases": [{ "text": "urkund", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "mortgage-document",
+      "phrases": [{ "text": "bostadslån", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "insurance-policy",
+      "phrases": [{ "text": "självrisk", "weight": 8 }]
+    },
+    {
+      "id": "cover-letter",
+      "phrases": [{ "text": "personligt brev", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "certificate",
+      "phrases": [{ "text": "examensbevis", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "thesis",
+      "phrases": [{ "text": "examensarbete", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "patent",
+      "phrases": [{ "text": "patent", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "prescription",
+      "phrases": [
+        { "text": "recept", "weight": 20, "where": "title" },
+        { "text": "farmaci", "weight": 10 }
+      ]
+    },
+    {
+      "id": "medical-report",
+      "phrases": [{ "text": "patientjournal", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "immunization-record",
+      "phrases": [{ "text": "vaccination", "weight": 12 }]
+    },
+    {
+      "id": "questionnaire",
+      "phrases": [{ "text": "enkät", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "warranty-document",
+      "phrases": [{ "text": "garanti", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "safety-data-sheet",
+      "phrases": [
+        { "text": "säkerhetsdatablad", "weight": 24, "where": "title" }
+      ]
+    },
+    {
+      "id": "technical-drawing",
+      "phrases": [{ "text": "teknisk ritning", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "press-release",
+      "phrases": [{ "text": "pressmeddelande", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "newsletter",
+      "phrases": [{ "text": "nyhetsbrev", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "brochure",
+      "phrases": [{ "text": "broschyr", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "business-plan",
+      "phrases": [{ "text": "affärsplan", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "white-paper",
+      "phrases": [{ "text": "vitbok", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "meeting-minutes",
+      "phrases": [{ "text": "mötesprotokoll", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "meeting-agenda",
+      "phrases": [{ "text": "dagordning", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "memo",
+      "phrases": [{ "text": "promemoria", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "ticket",
+      "phrases": [{ "text": "biljett", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "waybill",
+      "phrases": [{ "text": "fraktsedel", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "visa-document",
+      "phrases": [{ "text": "visum", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "utility-bill",
+      "phrases": [{ "text": "elmätare", "weight": 12 }]
+    },
+    {
+      "id": "menu",
+      "phrases": [{ "text": "restaurangmeny", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "recipe",
+      "phrases": [{ "text": "recept", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "presentation",
+      "phrases": [{ "text": "föredragning", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "letter",
+      "phrases": [{ "text": "brev", "weight": 8, "where": "title" }]
+    },
+    {
+      "id": "form",
+      "phrases": [{ "text": "formulär", "weight": 10, "where": "title" }]
+    },
+    {
+      "id": "license",
+      "phrases": [{ "text": "licens", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "public-notice",
+      "phrases": [{ "text": "bulletin", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "audit-report",
+      "phrases": [{ "text": "revision", "weight": 12 }]
+    },
+    {
+      "id": "property-listing",
+      "phrases": [{ "text": "fastighet", "weight": 8 }]
+    },
+    {
+      "id": "grant-agreement",
+      "phrases": [{ "text": "anslag", "weight": 12 }]
+    },
+    {
+      "id": "tender-document",
+      "phrases": [{ "text": "entreprenad", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "subscription-confirmation",
+      "phrases": [{ "text": "abonnemang", "weight": 10 }]
+    },
+    {
+      "id": "email-thread",
+      "phrases": [{ "text": "e-post", "weight": 8 }]
+    },
+    {
+      "id": "book-ebook",
+      "phrases": [{ "text": "innehållsförteckning", "weight": 6 }]
+    },
+    {
+      "id": "magazine-article",
+      "phrases": [{ "text": "tidskrift", "weight": 10 }]
+    },
+    {
+      "id": "course-syllabus",
+      "phrases": [{ "text": "kursplan", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "performance-review",
+      "phrases": [
+        { "text": "utvecklingssamtal", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "offer-letter",
+      "phrases": [{ "text": "rekrytering", "weight": 8 }]
+    },
+    {
+      "id": "shareholder-agreement",
+      "phrases": [{ "text": "aktieägaravtal", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "settlement-agreement",
+      "phrases": [{ "text": "förlikning", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "discharge-summary",
+      "phrases": [{ "text": "slutenvård", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "insurance-claim",
+      "phrases": [{ "text": "försäkring", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "quality-report",
+      "phrases": [{ "text": "kvalitetskontroll", "weight": 10 }]
+    },
+    {
+      "id": "test-report",
+      "phrases": [{ "text": "kalibrering", "weight": 12 }]
+    },
+    {
+      "id": "api-documentation",
+      "phrases": [
+        { "text": "applikationsprogrammeringsgränssnitt", "weight": 8 }
+      ]
+    },
+    {
+      "id": "license-agreement",
+      "phrases": [
+        { "text": "slutanvändaravtal", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "sales-proposal",
+      "phrases": [{ "text": "anbud", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "budget",
+      "phrases": [{ "text": "budget", "weight": 14, "where": "title" }]
+    },
+    {
+      "id": "registration-form",
+      "phrases": [
+        { "text": "university of new zealand", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "gift-certificate",
+      "phrases": [{ "text": "presentkort", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "organization-chart",
+      "phrases": [
+        { "text": "organisationsschema", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "case-study",
+      "phrases": [{ "text": "fallstudie", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "board-report",
+      "phrases": [{ "text": "styrelse", "weight": 10 }]
+    },
+    {
+      "id": "investment-summary",
+      "phrases": [{ "text": "investering", "weight": 8 }]
+    },
+    {
+      "id": "letter-of-intent",
+      "phrases": [
+        { "text": "avsiktsförklaring", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "quarterly-report",
+      "phrases": [{ "text": "kvartalsrapport", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "analytics-report",
+      "phrases": [{ "text": "webbanalys", "weight": 10 }]
+    },
+    {
+      "id": "benefits-summary",
+      "phrases": [{ "text": "löneförmån", "weight": 14 }]
+    },
+    {
+      "id": "assignment-brief",
+      "phrases": [{ "text": "läxa", "weight": 12 }]
+    }
+  ],
+  "patterns": {
+    "toc": [{ "pattern": "innehållsförteckning" }],
+    "references": [{ "pattern": "bibliografi" }]
+  }
+}
