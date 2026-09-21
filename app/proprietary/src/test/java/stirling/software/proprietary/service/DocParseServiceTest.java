@@ -38,7 +38,7 @@ import stirling.software.common.pdf.MarkdownBlock;
 import stirling.software.common.pdf.MarkdownBlocks;
 import stirling.software.common.pdf.PdfMarkdownExtractor;
 import stirling.software.common.util.TempFileManager;
-import stirling.software.proprietary.model.api.docparse.RagIngestApiRequest;
+import stirling.software.proprietary.model.api.docparse.IngestApiRequest;
 import stirling.software.proprietary.model.docparse.IngestOutcome;
 
 import tools.jackson.databind.JsonNode;
@@ -102,13 +102,13 @@ class DocParseServiceTest {
         when(markdownExtractor.extractBlocks(any())).thenReturn(blocks);
     }
 
-    private static RagIngestApiRequest apiRequest(
+    private static IngestApiRequest apiRequest(
             MultipartFile file,
             String documentId,
             boolean index,
             boolean markdown,
             boolean chunks) {
-        RagIngestApiRequest request = new RagIngestApiRequest();
+        IngestApiRequest request = new IngestApiRequest();
         request.setFileInput(file);
         request.setDocumentId(documentId);
         request.setIndex(index);
@@ -119,7 +119,7 @@ class DocParseServiceTest {
 
     private IngestOutcome ingest(String documentId, boolean index, boolean markdown, boolean chunks)
             throws IOException {
-        return service.ragIngest(apiRequest(pdfFile(), documentId, index, markdown, chunks));
+        return service.ingest(apiRequest(pdfFile(), documentId, index, markdown, chunks));
     }
 
     private JsonNode ingestAndCaptureRequest(
@@ -127,7 +127,7 @@ class DocParseServiceTest {
         stubConversion(BLOCKS);
         ArgumentCaptor<String> body = ArgumentCaptor.forClass(String.class);
         when(aiEngineClient.postLongRunning(
-                        eq("/api/v1/docparse/rag-ingest"), body.capture(), isNull()))
+                        eq("/api/v1/docparse/ingest"), body.capture(), isNull()))
                 .thenReturn(ENGINE_RESPONSE);
 
         IngestOutcome outcome = ingest(documentId, index, markdown, chunks);
@@ -136,7 +136,7 @@ class DocParseServiceTest {
     }
 
     @Test
-    void ragIngestSendsTheMarkdownBlocksAsTheWireContract() throws IOException {
+    void ingestSendsTheMarkdownBlocksAsTheWireContract() throws IOException {
         JsonNode request = ingestAndCaptureRequest("doc-1", true, false, false);
 
         assertEquals("doc-1", request.get("documentId").asString());
@@ -159,14 +159,14 @@ class DocParseServiceTest {
     }
 
     @Test
-    void ragIngestDefaultsDocumentIdToContentHash() throws IOException {
+    void ingestDefaultsDocumentIdToContentHash() throws IOException {
         when(fileIdStrategy.idFor(any(MultipartFile.class))).thenReturn("sha-abc");
         JsonNode request = ingestAndCaptureRequest("  ", true, false, false);
         assertEquals("sha-abc", request.get("documentId").asString());
     }
 
     @Test
-    void ragIngestForwardsTheChunkExportFlag() throws IOException {
+    void ingestForwardsTheChunkExportFlag() throws IOException {
         JsonNode request = ingestAndCaptureRequest("doc-1", false, true, true);
         assertFalse(request.get("index").asBoolean());
         assertTrue(request.get("includeChunks").asBoolean());
@@ -228,7 +228,7 @@ class DocParseServiceTest {
         stubConversion(BLOCKS);
         SpendableMultipartFile file = new SpendableMultipartFile(pdfBytes(2));
 
-        service.ragIngest(apiRequest(file, "doc-1", false, true, false));
+        service.ingest(apiRequest(file, "doc-1", false, true, false));
 
         assertEquals(pdfBytes(2).length, file.getBytes().length);
     }
@@ -268,7 +268,7 @@ class DocParseServiceTest {
     }
 
     @Test
-    void ragIngestWithNothingToDoIs400() throws IOException {
+    void ingestWithNothingToDoIs400() throws IOException {
         ResponseStatusException error =
                 assertThrows(
                         ResponseStatusException.class, () -> ingest("doc", false, false, false));
@@ -277,7 +277,7 @@ class DocParseServiceTest {
     }
 
     @Test
-    void ragIngestWhenDisabledIs503() throws IOException {
+    void ingestWhenDisabledIs503() throws IOException {
         properties.getDocparse().setEnabled(false);
         ResponseStatusException error =
                 assertThrows(

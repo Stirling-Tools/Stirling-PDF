@@ -452,7 +452,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Automation", "pipeline");
 
         // Adding endpoints to "DocParse" group (ingestion: chunk + index + export)
-        addEndpointToGroup("DocParse", "rag-ingest");
+        addEndpointToGroup("DocParse", "ingest");
 
         // Adding endpoints to "DeveloperTools" group
         addEndpointToGroup("DeveloperTools", "show-javascript");

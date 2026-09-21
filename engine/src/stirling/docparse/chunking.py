@@ -1,4 +1,4 @@
-"""Structure-aware packing of Markdown blocks into RAG chunks.
+"""Structure-aware packing of Markdown blocks into chunks.
 
 Java's PDF-to-Markdown converter supplies page-attributed blocks; whole blocks are
 packed up to chunk_size so a heading is never separated from the text it introduces.

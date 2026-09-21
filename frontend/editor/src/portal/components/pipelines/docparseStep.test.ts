@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
-  newRagIngestStep,
-  ragIngestStepConfigured,
+  newIngestStep,
+  ingestStepConfigured,
 } from "@portal/components/pipelines/docparseStep";
 
 describe("RAG chunk parameter limits", () => {
@@ -12,18 +12,18 @@ describe("RAG chunk parameter limits", () => {
     { overlap: -1 },
     { chunkSize: 8192, overlap: 4097 },
   ])("rejects invalid chunk settings %j", (parameters) => {
-    const step = newRagIngestStep();
+    const step = newIngestStep();
     expect(
-      ragIngestStepConfigured({
+      ingestStepConfigured({
         ...step,
         params: { ...step.params, ...parameters },
       }),
     ).toBe(false);
   });
   it("allows zero overlap", () => {
-    const step = newRagIngestStep();
+    const step = newIngestStep();
     expect(
-      ragIngestStepConfigured({
+      ingestStepConfigured({
         ...step,
         params: { ...step.params, overlap: 0 },
       }),

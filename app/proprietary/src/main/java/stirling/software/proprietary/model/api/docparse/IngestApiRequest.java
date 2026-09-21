@@ -9,7 +9,7 @@ import stirling.software.common.model.api.PDFFile;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class RagIngestApiRequest extends PDFFile {
+public class IngestApiRequest extends PDFFile {
 
     @Schema(
             description =

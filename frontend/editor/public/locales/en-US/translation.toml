@@ -8951,7 +8951,7 @@ undeclared-operation = "Can't check what this step accepts"
 [portal.pipelines.builder.icon]
 label = "Change icon"
 
-[portal.pipelines.builder.ragIngest]
+[portal.pipelines.builder.ingest]
 chunkSize = "Chunk size"
 chunkSizeHint = "Characters per chunk. Smaller chunks retrieve more precisely; larger ones keep more context together."
 editorPdfOnly = "Editor policies return PDFs only. To export chunks or Markdown, choose a saved input source and a file destination."
@@ -9242,7 +9242,7 @@ compressPdf = "Compress"
 flatten = "Flatten"
 ocrPdf = "OCR"
 pdfa = "Convert to PDF/A"
-ragIngest = "Prepare for knowledge search"
+ingest = "Prepare for knowledge search"
 sanitizePdf = "Remove JavaScript"
 validateCompliance = "Validate compliance"
 
@@ -9472,7 +9472,7 @@ label = "Make text searchable"
 desc = "Rewrites the document in the ISO archival format, embedding its fonts and colour profiles so it still renders the same years from now. Invalidates digital signatures."
 label = "Convert to PDF/A for archiving"
 
-[portal.policies.wizard.capability.ragIngest]
+[portal.policies.wizard.capability.ingest]
 desc = "Prepare searchable chunks for the built-in knowledge base, a connected vector database, or a corpus export."
 label = "Prepare for knowledge search"
 

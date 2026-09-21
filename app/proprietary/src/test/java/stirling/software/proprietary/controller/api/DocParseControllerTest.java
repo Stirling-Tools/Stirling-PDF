@@ -27,7 +27,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
-import stirling.software.proprietary.model.api.docparse.RagIngestApiRequest;
+import stirling.software.proprietary.model.api.docparse.IngestApiRequest;
 import stirling.software.proprietary.model.docparse.DocChunk;
 import stirling.software.proprietary.model.docparse.IngestOutcome;
 import stirling.software.proprietary.service.AiToolResponseHeaders;
@@ -53,8 +53,8 @@ class DocParseControllerTest {
         return new DocParseController(docParseService, jsonMapper);
     }
 
-    private static RagIngestApiRequest request(boolean markdown, boolean chunksJsonl) {
-        RagIngestApiRequest request = new RagIngestApiRequest();
+    private static IngestApiRequest request(boolean markdown, boolean chunksJsonl) {
+        IngestApiRequest request = new IngestApiRequest();
         request.setFileInput(
                 new MockMultipartFile("fileInput", "invoice.pdf", "application/pdf", PDF_BYTES));
         request.setExportMarkdown(markdown);
@@ -74,7 +74,7 @@ class DocParseControllerTest {
     }
 
     private void stubService(IngestOutcome result) throws IOException {
-        when(docParseService.ragIngest(any())).thenReturn(result);
+        when(docParseService.ingest(any())).thenReturn(result);
     }
 
     private static Map<String, String> unzip(Resource body) throws IOException {
@@ -98,28 +98,28 @@ class DocParseControllerTest {
     @Test
     void chunksOnlyStillReturnsAOneEntryZip() throws IOException {
         stubService(outcome(2, 2));
-        RagIngestApiRequest request = request(false, true);
+        IngestApiRequest request = request(false, true);
         request.setIncludeOriginal(false);
         var file = spy(request.getFileInput());
         request.setFileInput(file);
-        Map<String, String> entries = unzip(controller().ragIngest(request).getBody());
+        Map<String, String> entries = unzip(controller().ingest(request).getBody());
         assertEquals(List.of("invoice.chunks.jsonl"), new ArrayList<>(entries.keySet()));
         verify(file, never()).getBytes();
     }
 
     @Test
     void excludingTheOriginalRequiresAnExport() {
-        RagIngestApiRequest request = request(false, false);
+        IngestApiRequest request = request(false, false);
         request.setIncludeOriginal(false);
         org.junit.jupiter.api.Assertions.assertThrows(
-                IllegalArgumentException.class, () -> controller().ragIngest(request));
+                IllegalArgumentException.class, () -> controller().ingest(request));
     }
 
     @Test
     void indexOnlyStillReturnsAZipSoTheResponseShapeNeverVaries() throws IOException {
         stubService(outcome(2, 2));
 
-        ResponseEntity<Resource> response = controller().ragIngest(request(false, false));
+        ResponseEntity<Resource> response = controller().ingest(request(false, false));
 
         // A varying body would have to be declared as both SISO and SIMO; the executor reads one
         // doc-type per endpoint, so an index-only run returns the original inside a ZIP too.
@@ -132,7 +132,7 @@ class DocParseControllerTest {
     void exportsRideAlongsideTheUntouchedOriginal() throws IOException {
         stubService(outcome(2, 2));
 
-        ResponseEntity<Resource> response = controller().ragIngest(request(true, true));
+        ResponseEntity<Resource> response = controller().ingest(request(true, true));
 
         Map<String, String> entries = unzip(response.getBody());
         assertEquals(3, entries.size());
@@ -150,7 +150,7 @@ class DocParseControllerTest {
     void theReportCarriesTheIngestSummary() throws IOException {
         stubService(outcome(2, 2));
 
-        JsonNode report = report(controller().ragIngest(request(false, false)));
+        JsonNode report = report(controller().ingest(request(false, false)));
 
         assertEquals("doc-1", report.get("documentId").asString());
         assertEquals(3, report.get("chunksIndexed").asInt());
@@ -165,7 +165,7 @@ class DocParseControllerTest {
         // partially-indexed document is indistinguishable from a fully-indexed one.
         stubService(outcome(50, 900));
 
-        JsonNode report = report(controller().ragIngest(request(false, false)));
+        JsonNode report = report(controller().ingest(request(false, false)));
 
         assertTrue(report.get("truncated").asBoolean());
         assertEquals(50, report.get("pages").asInt());

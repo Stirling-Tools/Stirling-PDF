@@ -1,8 +1,8 @@
 import { requiresClassification } from "@app/data/classificationConditions";
 import { isConditionComplete } from "@app/conditions/validation";
 import {
-  isRagIngestStep,
-  ragIngestStepConfigured,
+  isIngestStep,
+  ingestStepConfigured,
 } from "@portal/components/pipelines/docparseStep";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -589,7 +589,7 @@ export function PipelineBuilder() {
           i !== index ||
           (step.toolId === null &&
             !isIntegrationStep(step) &&
-            !isRagIngestStep(step))
+            !isIngestStep(step))
         )
           return step;
         // Resolve the update against the CURRENT step params, so a settings UI firing several
@@ -626,7 +626,7 @@ export function PipelineBuilder() {
     if (op) return t(op.labelKey);
     if (isIntegrationStep(step))
       return t("portal.pipelines.builder.sendToSystem");
-    if (isRagIngestStep(step)) return t("portal.policies.endpoints.ragIngest");
+    if (isIngestStep(step)) return t("portal.policies.endpoints.ingest");
     const entry = step.toolId ? allTools[step.toolId] : undefined;
     return entry?.name ?? humanizeOperation(step.operation);
   }
@@ -653,7 +653,7 @@ export function PipelineBuilder() {
     .filter(
       (step) =>
         !integrationStepConfigured(step) ||
-        !ragIngestStepConfigured(step, isEditorInput) ||
+        !ingestStepConfigured(step, isEditorInput) ||
         stepNeedsConfiguring(step, allTools),
     )
     .map(stepLabel);
@@ -1251,7 +1251,7 @@ export function PipelineBuilder() {
       return t("portal.pipelines.builder.usesDefaults");
     // Integration and DocParse steps are toolId-less by design and carry their own settings UI,
     // so "unknown" here means "not a registry tool", not "we cannot drive this".
-    if (isIntegrationStep(step) || isRagIngestStep(step)) return undefined;
+    if (isIntegrationStep(step) || isIngestStep(step)) return undefined;
     if (step.support === "unknown")
       return t("portal.pipelines.builder.unknownStep");
     return undefined;

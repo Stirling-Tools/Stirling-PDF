@@ -26,11 +26,11 @@ import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.jpdfium.PdfDocument;
-import stirling.software.proprietary.model.api.docparse.RagIngestApiRequest;
+import stirling.software.proprietary.model.api.docparse.IngestApiRequest;
 import stirling.software.proprietary.model.docparse.DocChunk;
 import stirling.software.proprietary.model.docparse.IngestOutcome;
-import stirling.software.proprietary.model.docparse.RagIngestRequest;
-import stirling.software.proprietary.model.docparse.RagIngestResponse;
+import stirling.software.proprietary.model.docparse.IngestRequest;
+import stirling.software.proprietary.model.docparse.IngestResponse;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -47,7 +47,7 @@ import tools.jackson.databind.ObjectMapper;
 @Service
 public class DocParseService {
 
-    private static final String RAG_INGEST_ENDPOINT = "/api/v1/docparse/rag-ingest";
+    private static final String INGEST_ENDPOINT = "/api/v1/docparse/ingest";
 
     private final AiEngineClient aiEngineClient;
     private final PdfMarkdownExtractor markdownExtractor;
@@ -84,9 +84,9 @@ public class DocParseService {
 
     /**
      * Convert the document to Markdown blocks, then chunk, embed, and index them into the engine's
-     * RAG store and/or hand them back for corpus export.
+     * knowledge base and/or hand them back for corpus export.
      */
-    public IngestOutcome ragIngest(RagIngestApiRequest apiRequest) throws IOException {
+    public IngestOutcome ingest(IngestApiRequest apiRequest) throws IOException {
         requireEnabled();
         MultipartFile file = apiRequest.getFileInput();
         boolean index = apiRequest.isIndex();
@@ -146,8 +146,8 @@ public class DocParseService {
             String callerId = currentUserId();
             // Null expiresAt = persistent until explicit delete; ingest here is a deliberate
             // knowledge-base action, unlike the TTL'd auto-ingest in AiWorkflowService.
-            RagIngestRequest request =
-                    new RagIngestRequest(
+            IngestRequest request =
+                    new IngestRequest(
                             docId,
                             fileName(file),
                             callerId,
@@ -162,11 +162,8 @@ public class DocParseService {
                             includeChunks);
             String responseJson =
                     aiEngineClient.postLongRunning(
-                            RAG_INGEST_ENDPOINT,
-                            objectMapper.writeValueAsString(request),
-                            callerId);
-            RagIngestResponse response =
-                    objectMapper.readValue(responseJson, RagIngestResponse.class);
+                            INGEST_ENDPOINT, objectMapper.writeValueAsString(request), callerId);
+            IngestResponse response = objectMapper.readValue(responseJson, IngestResponse.class);
             chunksIndexed = response.chunksIndexed();
             chunks = response.chunks();
         }

@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from stirling.api.dependencies import get_document_service, require_user_id
 from stirling.config import AppSettings, load_settings
-from stirling.contracts.docparse import DocChunk, RagIngestRequest, RagIngestResponse
+from stirling.contracts.docparse import DocChunk, IngestRequest, IngestResponse
 from stirling.docparse.chunking import pack_blocks, page_texts
 from stirling.documents import DocumentService
 from stirling.documents.service import CONTENT_TYPE_METADATA_KEY, DOCPARSE_CHUNK_CONTENT_TYPE
@@ -39,12 +39,12 @@ def _chunk_metadata(chunk: DocChunk) -> dict[str, str]:
     return meta
 
 
-@router.post("/rag-ingest", response_model=RagIngestResponse)
-async def rag_ingest(
-    request: RagIngestRequest,
+@router.post("/ingest", response_model=IngestResponse)
+async def ingest(
+    request: IngestRequest,
     documents: Annotated[DocumentService, Depends(get_document_service)],
     user_id: Annotated[UserId, Depends(require_user_id)],
-) -> RagIngestResponse:
+) -> IngestResponse:
     """Pack the caller's Markdown blocks into chunks, then embed and index them.
     Re-ingesting a documentId replaces its stored content (never duplicates).
     ``index=False`` skips the store; ``includeChunks`` returns the chunks."""
@@ -90,8 +90,8 @@ async def rag_ingest(
             pages=page_texts(request.blocks),
         )
 
-    logger.info("docparse: rag-ingested %s: %d chunks indexed", request.document_id, chunks_indexed)
-    return RagIngestResponse(
+    logger.info("docparse: ingested %s: %d chunks indexed", request.document_id, chunks_indexed)
+    return IngestResponse(
         document_id=request.document_id,
         chunks_indexed=chunks_indexed,
         chunks=chunks if request.include_chunks else None,

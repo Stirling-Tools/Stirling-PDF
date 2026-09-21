@@ -197,7 +197,7 @@ public class PolicyValidator {
             return;
         }
         for (PipelineStep step : policy.steps()) {
-            if (!"/api/v1/docparse/rag-ingest".equals(step.operation())) {
+            if (!"/api/v1/docparse/ingest".equals(step.operation())) {
                 continue;
             }
             Map<String, Object> params = step.parameters();

@@ -88,9 +88,9 @@ def client(stub_service: StubDocumentService) -> Iterator[TestClient]:
         app.dependency_overrides.pop(get_document_service, None)
 
 
-def test_rag_ingest_indexes_chunks_with_metadata(client: TestClient, stub_service: StubDocumentService) -> None:
+def test_ingest_indexes_chunks_with_metadata(client: TestClient, stub_service: StubDocumentService) -> None:
     response = client.post(
-        "/api/v1/docparse/rag-ingest",
+        "/api/v1/docparse/ingest",
         json={
             "documentId": "doc-1",
             "blocks": [
@@ -120,9 +120,9 @@ def test_rag_ingest_indexes_chunks_with_metadata(client: TestClient, stub_servic
     assert metadata["heading_path"] == "Findings"
 
 
-def test_rag_ingest_defaults_owner_and_readers_to_caller(client: TestClient, stub_service: StubDocumentService) -> None:
+def test_ingest_defaults_owner_and_readers_to_caller(client: TestClient, stub_service: StubDocumentService) -> None:
     client.post(
-        "/api/v1/docparse/rag-ingest",
+        "/api/v1/docparse/ingest",
         json={"documentId": "d", "blocks": [block("t")]},
         headers=HEADERS,
     )
@@ -132,11 +132,11 @@ def test_rag_ingest_defaults_owner_and_readers_to_caller(client: TestClient, stu
     assert call["expires_at"] is None
 
 
-def test_rag_ingest_passes_explicit_owner_acl_and_expiry_through(
+def test_ingest_passes_explicit_owner_acl_and_expiry_through(
     client: TestClient, stub_service: StubDocumentService
 ) -> None:
     client.post(
-        "/api/v1/docparse/rag-ingest",
+        "/api/v1/docparse/ingest",
         json={
             "documentId": "d",
             "source": "handbook.pdf",
@@ -154,9 +154,9 @@ def test_rag_ingest_passes_explicit_owner_acl_and_expiry_through(
     assert call["expires_at"] is not None
 
 
-def test_rag_ingest_chunks_only_skips_the_store(client: TestClient, stub_service: StubDocumentService) -> None:
+def test_ingest_chunks_only_skips_the_store(client: TestClient, stub_service: StubDocumentService) -> None:
     response = client.post(
-        "/api/v1/docparse/rag-ingest",
+        "/api/v1/docparse/ingest",
         json={
             "documentId": "d",
             "blocks": [block("alpha"), block("beta", page=2)],
@@ -176,28 +176,28 @@ def test_rag_ingest_chunks_only_skips_the_store(client: TestClient, stub_service
     assert body["chunks"][0]["pageEnd"] == 2
 
 
-def test_rag_ingest_index_off_with_no_export_is_422(client: TestClient) -> None:
+def test_ingest_index_off_with_no_export_is_422(client: TestClient) -> None:
     response = client.post(
-        "/api/v1/docparse/rag-ingest",
+        "/api/v1/docparse/ingest",
         json={"documentId": "d", "blocks": [block("t")], "index": False},
         headers=HEADERS,
     )
     assert response.status_code == 422
 
 
-def test_rag_ingest_without_blocks_is_422(client: TestClient) -> None:
-    response = client.post("/api/v1/docparse/rag-ingest", json={"documentId": "d"}, headers=HEADERS)
+def test_ingest_without_blocks_is_422(client: TestClient) -> None:
+    response = client.post("/api/v1/docparse/ingest", json={"documentId": "d"}, headers=HEADERS)
     assert response.status_code == 422
 
 
-def test_rag_ingest_rejects_missing_user_header(client: TestClient) -> None:
-    response = client.post("/api/v1/docparse/rag-ingest", json={"documentId": "d", "blocks": [block("t")]})
+def test_ingest_rejects_missing_user_header(client: TestClient) -> None:
+    response = client.post("/api/v1/docparse/ingest", json={"documentId": "d", "blocks": [block("t")]})
     assert response.status_code == 401
 
 
-def test_rag_ingest_rejects_empty_document_id(client: TestClient) -> None:
+def test_ingest_rejects_empty_document_id(client: TestClient) -> None:
     response = client.post(
-        "/api/v1/docparse/rag-ingest",
+        "/api/v1/docparse/ingest",
         json={"documentId": "", "blocks": [block("t")]},
         headers=HEADERS,
     )
@@ -205,15 +205,15 @@ def test_rag_ingest_rejects_empty_document_id(client: TestClient) -> None:
 
 
 @pytest.mark.anyio
-async def test_rag_ingest_reingest_replaces_instead_of_duplicating() -> None:
+async def test_ingest_reingest_replaces_instead_of_duplicating() -> None:
     service = DocumentService(embedder=StubEmbedder(), store=SqliteVecStore.ephemeral(), default_top_k=3)  # type: ignore[arg-type]
     app.dependency_overrides[get_document_service] = lambda: service
     try:
         client = TestClient(app)
         payload: dict[str, Any] = {"documentId": "doc-replace", "blocks": [block("first version")]}
-        assert client.post("/api/v1/docparse/rag-ingest", json=payload, headers=HEADERS).status_code == 200
+        assert client.post("/api/v1/docparse/ingest", json=payload, headers=HEADERS).status_code == 200
         payload["blocks"] = [block("second version")]
-        assert client.post("/api/v1/docparse/rag-ingest", json=payload, headers=HEADERS).status_code == 200
+        assert client.post("/api/v1/docparse/ingest", json=payload, headers=HEADERS).status_code == 200
     finally:
         app.dependency_overrides.pop(get_document_service, None)
 
@@ -223,11 +223,11 @@ async def test_rag_ingest_reingest_replaces_instead_of_duplicating() -> None:
     assert results[0].document.metadata["source"] == "docparse"
 
 
-def test_rag_ingest_rejects_overlap_at_or_above_chunk_size(client: TestClient) -> None:
+def test_ingest_rejects_overlap_at_or_above_chunk_size(client: TestClient) -> None:
     """chunk_text derives its stride as chunk_size - overlap, so an overlap that meets or
     exceeds the chunk size either raises on a zero step or silently drops over-long text."""
     response = client.post(
-        "/api/v1/docparse/rag-ingest",
+        "/api/v1/docparse/ingest",
         json={
             "documentId": "doc-1",
             "blocks": [block("para one")],
@@ -240,13 +240,13 @@ def test_rag_ingest_rejects_overlap_at_or_above_chunk_size(client: TestClient) -
     assert "overlap" in response.json()["detail"]
 
 
-def test_rag_ingest_forwards_pages_so_the_document_is_readable_whole(
+def test_ingest_forwards_pages_so_the_document_is_readable_whole(
     client: TestClient, stub_service: StubDocumentService
 ) -> None:
     """Chunks alone make a document searchable but not readable: read_pages backs the
     whole-document agents, so the page representation has to be written too."""
     client.post(
-        "/api/v1/docparse/rag-ingest",
+        "/api/v1/docparse/ingest",
         json={
             "documentId": "doc-1",
             "blocks": [

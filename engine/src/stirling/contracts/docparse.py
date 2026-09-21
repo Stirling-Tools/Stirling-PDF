@@ -37,7 +37,7 @@ class DocChunk(ApiModel):
     heading_path: list[str] = Field(default_factory=list)
 
 
-class RagIngestRequest(ApiModel):
+class IngestRequest(ApiModel):
     """Pack the caller's Markdown blocks into chunks, then optionally embed and index.
 
     ``owner_id``/``read_principals`` default to the calling user (personal-doc
@@ -58,7 +58,7 @@ class RagIngestRequest(ApiModel):
     include_chunks: bool = False
 
 
-class RagIngestResponse(ApiModel):
+class IngestResponse(ApiModel):
     document_id: FileId
     chunks_indexed: int = Field(ge=0)
     chunks: list[DocChunk] | None = None

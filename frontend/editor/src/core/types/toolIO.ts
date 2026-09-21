@@ -362,7 +362,7 @@ export const TOOL_IO: ToolIOTable = {
     produces: "PDF",
     arity: "SISO",
   },
-  "/api/v1/docparse/rag-ingest": {
+  "/api/v1/docparse/ingest": {
     accepts: ["PDF"],
     produces: "PDF",
     arity: "SIMO",

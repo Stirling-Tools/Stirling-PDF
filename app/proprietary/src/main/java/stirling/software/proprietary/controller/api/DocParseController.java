@@ -28,7 +28,7 @@ import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.model.tool.ToolIOCase;
 import stirling.software.common.model.tool.ToolIOWhen;
-import stirling.software.proprietary.model.api.docparse.RagIngestApiRequest;
+import stirling.software.proprietary.model.api.docparse.IngestApiRequest;
 import stirling.software.proprietary.model.docparse.DocChunk;
 import stirling.software.proprietary.model.docparse.IngestOutcome;
 import stirling.software.proprietary.service.AiToolResponseHeaders;
@@ -57,7 +57,7 @@ public class DocParseController {
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            value = "/rag-ingest",
+            value = "/ingest",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @ToolIO(
             produces = ToolFormat.PDF,
@@ -87,14 +87,14 @@ public class DocParseController {
                         arity = ToolArity.SIMO)
             })
     @Operation(
-            summary = "Chunk, embed, and index a document into the RAG store (pipeline shape)",
+            summary = "Chunk, embed, and index a document into the knowledge base (pipeline shape)",
             description =
-                    "Ingests the document into the engine's RAG store under a stable documentId"
+                    "Ingests the document into the engine's knowledge base under a stable documentId"
                             + " (default: content hash). Returns a ZIP containing the original PDF"
                             + " when includeOriginal is true and any selected markdown or chunks"
                             + " JSONL exports. Pipelines unpack the ZIP for the next step. The"
                             + " X-Stirling-Tool-Report header contains the ingest summary JSON.")
-    public ResponseEntity<Resource> ragIngest(@ModelAttribute RagIngestApiRequest request)
+    public ResponseEntity<Resource> ingest(@ModelAttribute IngestApiRequest request)
             throws IOException {
         if (!request.isIncludeOriginal()
                 && !request.isExportMarkdown()
@@ -102,7 +102,7 @@ public class DocParseController {
             throw new IllegalArgumentException(
                     "Select at least one corpus export when excluding the original PDF");
         }
-        IngestOutcome outcome = docParseService.ragIngest(request);
+        IngestOutcome outcome = docParseService.ingest(request);
 
         // The report header must stay small: summary fields only, never the parsed content.
         ObjectNode report = objectMapper.createObjectNode();
@@ -129,7 +129,7 @@ public class DocParseController {
 
     /** Original + requested corpus files in one ZIP, so destinations receive them together. */
     private byte[] exportZip(
-            String fileName, byte[] original, IngestOutcome outcome, RagIngestApiRequest request)
+            String fileName, byte[] original, IngestOutcome outcome, IngestApiRequest request)
             throws IOException {
         String base = baseName(fileName);
         ByteArrayOutputStream out = new ByteArrayOutputStream();

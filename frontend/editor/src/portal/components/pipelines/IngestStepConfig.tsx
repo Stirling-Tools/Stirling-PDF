@@ -1,20 +1,20 @@
 import { useTranslation } from "react-i18next";
 import { Banner, FormField, Input, ToggleSwitch } from "@app/ui";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import type { RagIngestStepParams } from "@portal/components/pipelines/docparseStep";
+import type { IngestStepParams } from "@portal/components/pipelines/docparseStep";
 
-interface RagIngestStepConfigProps {
-  parameters: RagIngestStepParams;
+interface IngestStepConfigProps {
+  parameters: IngestStepParams;
   editorInput?: boolean;
-  onChange: (parameters: RagIngestStepParams) => void;
+  onChange: (parameters: IngestStepParams) => void;
 }
 
-/** Settings for the rag-ingest step: what it produces and how it chunks. */
-export function RagIngestStepConfig({
+/** Settings for the ingest step: what it produces and how it chunks. */
+export function IngestStepConfig({
   parameters,
   editorInput = false,
   onChange,
-}: RagIngestStepConfigProps) {
+}: IngestStepConfigProps) {
   const { t } = useTranslation();
   const { config, loading } = useAppConfig();
   const available = Boolean(config?.aiEngineEnabled);
@@ -41,14 +41,14 @@ export function RagIngestStepConfig({
       {!loading && !available && (
         <Banner
           tone="warning"
-          description={t("portal.pipelines.builder.ragIngest.unavailable")}
+          description={t("portal.pipelines.builder.ingest.unavailable")}
         />
       )}
       {editorInput && (
         <Banner
           tone="info"
           description={t(
-            "portal.pipelines.builder.ragIngest.editorPdfOnly",
+            "portal.pipelines.builder.ingest.editorPdfOnly",
             "Editor policies return PDFs only. To export chunks or Markdown, choose a saved input source and a file destination.",
           )}
         />
@@ -60,18 +60,16 @@ export function RagIngestStepConfig({
           onChange={(checked) =>
             onChange({ ...parameters, includeOriginal: checked })
           }
-          label={t("portal.pipelines.builder.ragIngest.includeOriginal")}
-          description={t(
-            "portal.pipelines.builder.ragIngest.includeOriginalHint",
-          )}
+          label={t("portal.pipelines.builder.ingest.includeOriginal")}
+          description={t("portal.pipelines.builder.ingest.includeOriginalHint")}
         />
       )}
       <ToggleSwitch
         size="sm"
         checked={index}
         onChange={(checked) => onChange({ ...parameters, index: checked })}
-        label={t("portal.pipelines.builder.ragIngest.index")}
-        description={t("portal.pipelines.builder.ragIngest.indexHint")}
+        label={t("portal.pipelines.builder.ingest.index")}
+        description={t("portal.pipelines.builder.ingest.indexHint")}
       />
       {(!editorInput || markdown) && (
         <ToggleSwitch
@@ -80,10 +78,8 @@ export function RagIngestStepConfig({
           onChange={(checked) =>
             onChange({ ...parameters, exportMarkdown: checked })
           }
-          label={t("portal.pipelines.builder.ragIngest.exportMarkdown")}
-          description={t(
-            "portal.pipelines.builder.ragIngest.exportMarkdownHint",
-          )}
+          label={t("portal.pipelines.builder.ingest.exportMarkdown")}
+          description={t("portal.pipelines.builder.ingest.exportMarkdownHint")}
         />
       )}
       {(!editorInput || chunksJsonl) && (
@@ -93,18 +89,18 @@ export function RagIngestStepConfig({
           onChange={(checked) =>
             onChange({ ...parameters, exportChunksJsonl: checked })
           }
-          label={t("portal.pipelines.builder.ragIngest.exportChunks")}
-          description={t("portal.pipelines.builder.ragIngest.exportChunksHint")}
+          label={t("portal.pipelines.builder.ingest.exportChunks")}
+          description={t("portal.pipelines.builder.ingest.exportChunksHint")}
         />
       )}
       {doesNothing && (
         <p className="portal-pipelines__step-hint">
-          {t("portal.pipelines.builder.ragIngest.nothingToDo")}
+          {t("portal.pipelines.builder.ingest.nothingToDo")}
         </p>
       )}
       <FormField
-        label={t("portal.pipelines.builder.ragIngest.chunkSize")}
-        helperText={t("portal.pipelines.builder.ragIngest.chunkSizeHint")}
+        label={t("portal.pipelines.builder.ingest.chunkSize")}
+        helperText={t("portal.pipelines.builder.ingest.chunkSizeHint")}
       >
         <Input
           type="number"
@@ -117,13 +113,13 @@ export function RagIngestStepConfig({
         />
       </FormField>
       <FormField
-        label={t("portal.pipelines.builder.ragIngest.overlap")}
+        label={t("portal.pipelines.builder.ingest.overlap")}
         helperText={
           overlapTooBig
-            ? t("portal.pipelines.builder.ragIngest.overlapTooBig", {
+            ? t("portal.pipelines.builder.ingest.overlapTooBig", {
                 chunkSize,
               })
-            : t("portal.pipelines.builder.ragIngest.overlapHint")
+            : t("portal.pipelines.builder.ingest.overlapHint")
         }
       >
         <Input

@@ -22,9 +22,9 @@ class DocparseWireContractTest {
     private final JsonMapper mapper = JsonMapper.builder().build();
 
     @Test
-    void ragIngestRequestSerializesTheEngineContract() {
-        RagIngestRequest request =
-                new RagIngestRequest(
+    void ingestRequestSerializesTheEngineContract() {
+        IngestRequest request =
+                new IngestRequest(
                         "doc-1",
                         "report.pdf",
                         "user:alice",
@@ -59,13 +59,13 @@ class DocparseWireContractTest {
     }
 
     @Test
-    void ragIngestResponseReadsTheEngineShapeIncludingEchoedChunks() {
+    void ingestResponseReadsTheEngineShapeIncludingEchoedChunks() {
         String engineJson =
                 "{\"documentId\":\"doc-1\",\"chunksIndexed\":2,"
                         + "\"chunks\":[{\"index\":0,\"text\":\"t\",\"pageStart\":1,\"pageEnd\":2,"
                         + "\"headingPath\":[\"Intro\"]}]}";
 
-        RagIngestResponse response = mapper.readValue(engineJson, RagIngestResponse.class);
+        IngestResponse response = mapper.readValue(engineJson, IngestResponse.class);
 
         assertEquals("doc-1", response.documentId());
         assertEquals(2, response.chunksIndexed());
@@ -74,10 +74,10 @@ class DocparseWireContractTest {
     }
 
     @Test
-    void ragIngestResponseToleratesAbsentChunks() {
+    void ingestResponseToleratesAbsentChunks() {
         String engineJson = "{\"documentId\":\"d\",\"chunksIndexed\":0}";
 
-        RagIngestResponse response = mapper.readValue(engineJson, RagIngestResponse.class);
+        IngestResponse response = mapper.readValue(engineJson, IngestResponse.class);
 
         assertNull(response.chunks());
         assertEquals(0, response.chunksIndexed());
