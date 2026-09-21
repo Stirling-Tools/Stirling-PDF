@@ -21,7 +21,16 @@ RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
       software-properties-common ca-certificates curl gnupg tini; \
-    add-apt-repository -y ppa:libreoffice/ppa; \
+    # Launchpad's signing-key API can fail transiently during PPA setup.
+    for attempt in 1 2 3; do \
+      if add-apt-repository -y ppa:libreoffice/ppa; then break; fi; \
+      if [ "$attempt" -eq 3 ]; then \
+        echo "Failed to add LibreOffice PPA after $attempt attempts" >&2; \
+        exit 1; \
+      fi; \
+      echo "LibreOffice PPA setup failed (attempt $attempt/3); retrying in 10 seconds" >&2; \
+      sleep 10; \
+    done; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
       python3 python3-venv python3-uno python3-packaging \

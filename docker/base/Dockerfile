@@ -384,7 +384,16 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update; \
     # Add LibreOffice Fresh PPA for latest version (26.2.x)
     apt-get install -y --no-install-recommends software-properties-common; \
-    add-apt-repository -y ppa:libreoffice/ppa; \
+    # Launchpad's signing-key API can fail transiently during PPA setup.
+    for attempt in 1 2 3; do \
+      if add-apt-repository -y ppa:libreoffice/ppa; then break; fi; \
+      if [ "$attempt" -eq 3 ]; then \
+        echo "Failed to add LibreOffice PPA after $attempt attempts" >&2; \
+        exit 1; \
+      fi; \
+      echo "LibreOffice PPA setup failed (attempt $attempt/3); retrying in 10 seconds" >&2; \
+      sleep 10; \
+    done; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
       # Core tools
