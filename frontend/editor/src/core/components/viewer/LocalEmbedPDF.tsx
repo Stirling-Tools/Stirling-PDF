@@ -347,6 +347,9 @@ export function LocalEmbedPDF({
   const fileStableKey =
     fileId ?? (file ? `${(file as File).name}-${file.size}` : null);
   const initialBufferRef = useRef<ArrayBuffer | null>(null);
+  // The engine streams from the Blob handle: the local engine patch reads 64 KB
+  // blocks through FileReaderSync, so the worker never holds a second copy.
+  const initialSourceRef = useRef<Blob | null>(null);
   // Kept so the large-document release can empty the arrays in place: rebuilding
   // the plugin list would re-trigger a document open.
   const initialDocsArraysRef = useRef<InitialDocumentOptions[][]>([]);
@@ -379,7 +382,7 @@ export function LocalEmbedPDF({
     name: string;
   } | null>(null);
   const [pendingDocument, setPendingDocument] = useState<{
-    buffer: ArrayBuffer;
+    source: Blob | ArrayBuffer;
     name: string;
   } | null>(null);
   const initialDocumentOpenedRef = useRef(false);
@@ -435,6 +438,7 @@ export function LocalEmbedPDF({
       if (!initialDocumentOpenedRef.current) {
         initialDocumentOpenedRef.current = true;
         initialBufferRef.current = buffer;
+        initialSourceRef.current = file ?? null;
         setInitialDocument({ name });
         return;
       }
@@ -445,7 +449,7 @@ export function LocalEmbedPDF({
         docs.length = 0;
       }
       initialDocsArraysRef.current.length = 0;
-      setPendingDocument({ buffer, name });
+      setPendingDocument({ source: file ?? buffer, name });
     };
     const fail = (source: string) => (err: unknown) => {
       console.error(
@@ -524,12 +528,19 @@ export function LocalEmbedPDF({
   const plugins = useMemo(() => {
     if (!initialDocument && !urlPluginsSource) return [];
     const initialDocuments: InitialDocumentOptions[] =
-      initialDocument && initialBufferRef.current
-        ? [{ buffer: initialBufferRef.current, name: initialDocument.name }]
+      initialDocument && initialSourceRef.current
+        ? [
+            {
+              // The engine patch accepts a Blob here and streams it, so the
+              // worker holds a handle plus its block cache, not the document.
+              buffer: initialSourceRef.current as unknown as ArrayBuffer,
+              name: initialDocument.name,
+            },
+          ]
         : urlPluginsSource
           ? [{ url: urlPluginsSource.url, name: urlPluginsSource.name }]
           : [];
-    if (initialBufferRef.current) {
+    if (initialSourceRef.current) {
       // React may run this memo more than once for the same buffer (StrictMode
       // double render), and each run builds a fresh config array; keep them all
       // so the release below can empty every array that holds the buffer.

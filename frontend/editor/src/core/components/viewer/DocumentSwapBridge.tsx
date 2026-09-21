@@ -2,7 +2,9 @@ import { useEffect, useRef } from "react";
 import { useDocumentManagerCapability } from "@embedpdf/plugin-document-manager/react";
 
 interface PendingDocument {
-  buffer: ArrayBuffer;
+  /** Blob sources stream in the worker; ArrayBuffer sources (URL documents)
+   *  are still copied there. */
+  source: Blob | ArrayBuffer;
   name: string;
 }
 
@@ -31,7 +33,7 @@ export function DocumentSwapBridge({
 
     void documentManager
       .openDocumentBuffer({
-        buffer: pending.buffer,
+        buffer: pending.source as unknown as ArrayBuffer,
         name: pending.name,
         autoActivate: false,
       })
