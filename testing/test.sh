@@ -30,6 +30,8 @@ find_root() {
 }
 
 PROJECT_ROOT=$(find_root)
+# The coverage compose override mounts host paths through this variable.
+export PROJECT_ROOT
 
 REPORT_DIR="$PROJECT_ROOT/testing/reports"
 mkdir -p "$REPORT_DIR"
@@ -887,6 +889,9 @@ main() {
             echo "::warning::STIRLING_PDF_TEST_COVERAGE=1 but build/jacoco/jacocoagent.jar is missing - run ./gradlew copyJacocoAgent first"
         else
             mkdir -p "$PROJECT_ROOT/testing/cucumber-coverage"
+            # The JVM in the container runs as uid 1000 and dumps the .exec on
+            # shutdown; the runner user owns the directory.
+            chmod 777 "$PROJECT_ROOT/testing/cucumber-coverage"
             rm -f "$PROJECT_ROOT/testing/cucumber-coverage/cucumber.exec"
             COVERAGE_COMPOSE_FILE="$PROJECT_ROOT/testing/compose/docker-compose-coverage.override.yml"
             echo "Cucumber JaCoCo coverage enabled - exec will land at testing/cucumber-coverage/cucumber.exec"
