@@ -59,4 +59,24 @@ describe("useConfirmedSaaSMode", () => {
     await act(async () => notify?.({ mode: "saas" }));
     expect(result.current).toBe(true);
   });
+
+  it("ignores a stale initial SaaS read after switching to local", async () => {
+    let resolveMode: (mode: string) => void = () => {};
+    getCurrentModeMock.mockReturnValue(
+      new Promise<string>((resolve) => {
+        resolveMode = resolve;
+      }),
+    );
+    let notify: (cfg: { mode: string }) => void = () => {};
+    subscribeToModeChangesMock.mockImplementation((listener) => {
+      notify = listener;
+      return () => {};
+    });
+    const { result } = renderHook(() => useConfirmedSaaSMode());
+    await act(async () => {
+      notify({ mode: "local" });
+      resolveMode("saas");
+    });
+    expect(result.current).toBe(false);
+  });
 });
