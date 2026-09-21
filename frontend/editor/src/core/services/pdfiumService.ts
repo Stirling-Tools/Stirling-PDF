@@ -247,44 +247,6 @@ interface PageBox {
  * The returned values use the standard PDF coordinate system:
  *   left < right, bottom < top, origin at lower-left.
  */
-/**
- * Buffers reused across one scan. PDFium writes out-params into wasm memory and
- * the string is copied to JS immediately, so one buffer per shape is enough;
- * allocating per field put a malloc/free pair on every widget of a form.
- */
-interface ScanBuffers {
-  rect: number;
-  text: number;
-  textSize: number;
-}
-
-function createScanBuffers(m: WrappedPdfiumModule): ScanBuffers {
-  return { rect: m.pdfium.wasmExports.malloc(16), text: 0, textSize: 0 };
-}
-
-function freeScanBuffers(m: WrappedPdfiumModule, buffers: ScanBuffers): void {
-  if (buffers.rect) m.pdfium.wasmExports.free(buffers.rect);
-  if (buffers.text) m.pdfium.wasmExports.free(buffers.text);
-}
-
-/** Read a UTF-16 string of `byteLen` bytes that `fill` writes into the buffer. */
-function readScratchUtf16(
-  m: WrappedPdfiumModule,
-  buffers: ScanBuffers,
-  byteLen: number,
-  fill: (ptr: number) => void,
-): string {
-  if (buffers.textSize < byteLen) {
-    if (buffers.text) m.pdfium.wasmExports.free(buffers.text);
-    // Double rather than fit exactly: a field that grows a character at a time
-    // would otherwise re-allocate on every read.
-    buffers.textSize = Math.max(byteLen, buffers.textSize * 2);
-    buffers.text = m.pdfium.wasmExports.malloc(buffers.textSize);
-  }
-  fill(buffers.text);
-  return readUtf16(m, buffers.text, byteLen);
-}
-
 export function readEffectivePageBox(
   m: WrappedPdfiumModule,
   pagePtr: number,
@@ -339,6 +301,57 @@ export function readEffectivePageBox(
     };
   }
   return result;
+}
+
+/**
+ * Buffers reused across one scan. PDFium writes out-params into wasm memory and
+ * the string is copied to JS immediately, so one buffer per shape is enough;
+ * allocating per field put a malloc/free pair on every widget of a form.
+ */
+interface ScanBuffers {
+  rect: number;
+  annotRect: number;
+  text: number;
+  textSize: number;
+}
+
+function createScanBuffers(m: WrappedPdfiumModule): ScanBuffers {
+  return {
+    rect: m.pdfium.wasmExports.malloc(16),
+    annotRect: 0,
+    text: 0,
+    textSize: 0,
+  };
+}
+
+/** Annotation rect buffer, allocated on the first widget that needs one. */
+function annotRectBuffer(m: WrappedPdfiumModule, buffers: ScanBuffers): number {
+  if (!buffers.annotRect) buffers.annotRect = m.pdfium.wasmExports.malloc(16);
+  return buffers.annotRect;
+}
+
+function freeScanBuffers(m: WrappedPdfiumModule, buffers: ScanBuffers): void {
+  if (buffers.rect) m.pdfium.wasmExports.free(buffers.rect);
+  if (buffers.annotRect) m.pdfium.wasmExports.free(buffers.annotRect);
+  if (buffers.text) m.pdfium.wasmExports.free(buffers.text);
+}
+
+/** Read a UTF-16 string of `byteLen` bytes that `fill` writes into the buffer. */
+function readScratchUtf16(
+  m: WrappedPdfiumModule,
+  buffers: ScanBuffers,
+  byteLen: number,
+  fill: (ptr: number) => void,
+): string {
+  if (buffers.textSize < byteLen) {
+    if (buffers.text) m.pdfium.wasmExports.free(buffers.text);
+    // Double rather than fit exactly: a field that grows a character at a time
+    // would otherwise re-allocate on every read.
+    buffers.textSize = Math.max(byteLen, buffers.textSize * 2);
+    buffers.text = m.pdfium.wasmExports.malloc(buffers.textSize);
+  }
+  fill(buffers.text);
+  return readUtf16(m, buffers.text, byteLen);
 }
 
 /**
@@ -1616,14 +1629,13 @@ export async function extractSignatureFieldRects(
         );
         let name = "";
         if (nameLen > 0) {
-          const nameBuf = m.pdfium.wasmExports.malloc(nameLen);
-          m.FPDFAnnot_GetFormFieldName(formEnvPtr, annotPtr, nameBuf, nameLen);
-          name = readUtf16(m, nameBuf, nameLen);
-          m.pdfium.wasmExports.free(nameBuf);
+          name = readScratchUtf16(m, buffers, nameLen, (ptr) =>
+            m.FPDFAnnot_GetFormFieldName(formEnvPtr, annotPtr, ptr, nameLen),
+          );
         }
 
         // Get rect — use standard FPDFAnnot_GetRect + CropBox adjustment
-        const rectBuf = m.pdfium.wasmExports.malloc(4 * 4);
+        const rectBuf = annotRectBuffer(m, buffers);
         const hasRect = m.FPDFAnnot_GetRect(annotPtr, rectBuf);
         if (hasRect) {
           const rawLeft = m.pdfium.getValue(rectBuf, "float");
@@ -1650,7 +1662,6 @@ export async function extractSignatureFieldRects(
             fieldName: name,
           });
         }
-        m.pdfium.wasmExports.free(rectBuf);
         m.FPDFPage_CloseAnnot(annotPtr);
       }
 
@@ -1897,25 +1908,22 @@ export async function renderSignatureFieldAppearances(
         );
         let name = "";
         if (nameLen > 0) {
-          const nameBuf = m.pdfium.wasmExports.malloc(nameLen);
-          m.FPDFAnnot_GetFormFieldName(formEnvPtr, annotPtr, nameBuf, nameLen);
-          name = readUtf16(m, nameBuf, nameLen);
-          m.pdfium.wasmExports.free(nameBuf);
+          name = readScratchUtf16(m, buffers, nameLen, (ptr) =>
+            m.FPDFAnnot_GetFormFieldName(formEnvPtr, annotPtr, ptr, nameLen),
+          );
         }
         // Use standard FPDFAnnot_GetRect + explicit CropBox adjustment,
         // identical to extractFormFields (this_extractAnnotation). This
         // ensures coordinates are in the same space as FormFieldOverlay.
-        const rectBuf = m.pdfium.wasmExports.malloc(4 * 4);
+        const rectBuf = annotRectBuffer(m, buffers);
         let hasRect = false;
         try {
           hasRect = m.FPDFAnnot_GetRect(annotPtr, rectBuf);
         } catch {
-          m.pdfium.wasmExports.free(rectBuf);
           m.FPDFPage_CloseAnnot(annotPtr);
           continue;
         }
         if (!hasRect) {
-          m.pdfium.wasmExports.free(rectBuf);
           m.FPDFPage_CloseAnnot(annotPtr);
           continue;
         }
@@ -1925,7 +1933,6 @@ export async function renderSignatureFieldAppearances(
         const rawBottom = m.pdfium.getValue(rectBuf + 4, "float");
         const rawRight = m.pdfium.getValue(rectBuf + 8, "float");
         const rawTop = m.pdfium.getValue(rectBuf + 12, "float");
-        m.pdfium.wasmExports.free(rectBuf);
 
         // Normalise
         const annotLeft = Math.min(rawLeft, rawRight);
@@ -2160,23 +2167,20 @@ export async function renderButtonFieldAppearances(
         );
         let btnName = "";
         if (nameLen > 0) {
-          const nameBuf = m.pdfium.wasmExports.malloc(nameLen);
-          m.FPDFAnnot_GetFormFieldName(formEnvPtr, annotPtr, nameBuf, nameLen);
-          btnName = readUtf16(m, nameBuf, nameLen);
-          m.pdfium.wasmExports.free(nameBuf);
+          btnName = readScratchUtf16(m, buffers, nameLen, (ptr) =>
+            m.FPDFAnnot_GetFormFieldName(formEnvPtr, annotPtr, ptr, nameLen),
+          );
         }
 
-        const rectBuf = m.pdfium.wasmExports.malloc(4 * 4);
+        const rectBuf = annotRectBuffer(m, buffers);
         let hasRect = false;
         try {
           hasRect = m.FPDFAnnot_GetRect(annotPtr, rectBuf);
         } catch {
-          m.pdfium.wasmExports.free(rectBuf);
           m.FPDFPage_CloseAnnot(annotPtr);
           continue;
         }
         if (!hasRect) {
-          m.pdfium.wasmExports.free(rectBuf);
           m.FPDFPage_CloseAnnot(annotPtr);
           continue;
         }
@@ -2185,7 +2189,6 @@ export async function renderButtonFieldAppearances(
         const rawBottom = m.pdfium.getValue(rectBuf + 4, "float");
         const rawRight = m.pdfium.getValue(rectBuf + 8, "float");
         const rawTop = m.pdfium.getValue(rectBuf + 12, "float");
-        m.pdfium.wasmExports.free(rectBuf);
 
         const annotLeft = Math.min(rawLeft, rawRight);
         const annotBottom = Math.min(rawBottom, rawTop);
