@@ -182,12 +182,21 @@ function reducer(state: FormFillState, action: Action): FormFillState {
             if (
               !mergedWidgets.some(
                 (mw) =>
-                  mw.pageIndex === w.pageIndex && mw.x === w.x && mw.y === w.y,
+                  mw.pageIndex === w.pageIndex &&
+                  mw.x === w.x &&
+                  mw.y === w.y &&
+                  mw.width === w.width &&
+                  mw.height === w.height &&
+                  (mw.exportValue ?? "") === (w.exportValue ?? ""),
               )
             ) {
               mergedWidgets.push(w);
             }
           }
+          // A radio value is the widget's index, and the fill counts widgets
+          // page by page; keep the merged list in page order however the pages
+          // happened to load.
+          mergedWidgets.sort((a, b) => a.pageIndex - b.pageIndex);
           fieldMap.set(newField.name, { ...existing, widgets: mergedWidgets });
         } else {
           fieldMap.set(newField.name, newField);
@@ -530,6 +539,8 @@ export function FormFillProvider({
   } | null>(null);
 
   const loadedPagesRef = useRef<Set<number>>(new Set());
+  /** The fetch currently in flight, so page loads can wait for it. */
+  const fetchInFlightRef = useRef<Promise<void> | null>(null);
   const isExhaustiveRef = useRef<boolean>(false);
   const activeFileRef = useRef<File | Blob | null>(null);
 
@@ -547,22 +558,25 @@ export function FormFillProvider({
   }, []);
 
   const fetchFields = useCallback(
-    async (
+    (
       file: File | Blob,
       fileId?: string,
       options?: { exhaustive?: boolean },
-    ) => {
+    ): Promise<void> => {
       // Increment version so any in-flight fetch for a previous file is discarded.
       // NOTE: setProviderMode() also increments fetchVersionRef to invalidate
       // in-flight fetches when switching providers. This is intentional — the
       // fetch started here captures the NEW version, so stale results are
       // correctly discarded.
       const version = ++fetchVersionRef.current;
+      const previousFile = activeFileRef.current;
       activeFileRef.current = file;
-      if (options?.exhaustive) {
-        isExhaustiveRef.current = true;
-        loadedPagesRef.current.clear();
-      } else {
+      // A save-time exhaustive fetch for the file already on screen keeps the
+      // loaded fields until the full set arrives: a failed load must not leave
+      // validation with an empty list.
+      const keepExisting =
+        options?.exhaustive === true && previousFile === file;
+      if (!options?.exhaustive) {
         isExhaustiveRef.current = false;
         loadedPagesRef.current.clear();
         loadedPagesRef.current.add(0);
@@ -602,82 +616,98 @@ export function FormFillProvider({
       retainedValuesRef.current = null;
 
       lastKnownFileIdRef.current = fileId ?? null;
-      // Immediately clear previous state so FormFieldOverlay's stale-file guards
-      // prevent rendering fields from a previous document during the fetch.
-      forFileIdRef.current = null;
-      setForFileId(null);
-      valuesStore.reset({});
-      dispatch({ type: "RESET" });
+      if (!keepExisting) {
+        // Immediately clear previous state so FormFieldOverlay's stale-file guards
+        // prevent rendering fields from a previous document during the fetch.
+        forFileIdRef.current = null;
+        setForFileId(null);
+        valuesStore.reset({});
+        dispatch({ type: "RESET" });
+      }
       // Deliberately keeps create/modify state: the viewer re-fetches on provider
       // switch and file load, which must not wipe in-progress edits.
       dispatch({ type: "FETCH_START" });
-      try {
-        // Only pdfbox mode can use them: the bundle is PDFBox's own view of the document.
-        const bundled = bundledFieldsRef.current;
-        bundledFieldsRef.current = null;
-        const usable =
-          bundled &&
-          bundled.size === file.size &&
-          providerModeRef.current === "pdfbox";
-        const fetchOpts = options?.exhaustive ? {} : { pageIndices: [0] };
-        let fields = usable
-          ? bundled.fields
-          : await providerRef.current.fetchFields(file, fetchOpts);
-        // If another fetch or reset happened while we were waiting, discard this result
-        if (fetchVersionRef.current !== version) {
-          console.debug(
-            "[FormFill] Discarding stale fetch result (version mismatch)",
-          );
-          return;
-        }
-
-        // pdfbox returns signature fields without a rendered appearance; merge the
-        // pdfium ones by name, since appending would list a signature twice.
-        if (providerModeRef.current === "pdfbox") {
-          try {
-            // Cache-shared read: the pdfium provider path reads the same Blob
-            // through documentBytesCache, so this must not mint a second
-            // full-file copy.
-            const arrayBuffer = await getDocumentBytes(file);
-            const sigFields =
-              await fetchSignatureFieldsWithAppearances(arrayBuffer);
-            if (fetchVersionRef.current !== version) return; // stale check after async
-            fields = mergeSignatureAppearances(fields, sigFields);
-          } catch (e) {
-            console.warn(
-              "[FormFill] Failed to extract signature appearances for pdfbox mode:",
-              e,
+      const run = (async () => {
+        try {
+          // Only pdfbox mode can use them: the bundle is PDFBox's own view of the document.
+          const bundled = bundledFieldsRef.current;
+          bundledFieldsRef.current = null;
+          const usable =
+            bundled &&
+            bundled.size === file.size &&
+            providerModeRef.current === "pdfbox";
+          const fetchOpts = options?.exhaustive ? {} : { pageIndices: [0] };
+          let fields = usable
+            ? bundled.fields
+            : await providerRef.current.fetchFields(file, fetchOpts);
+          // If another fetch or reset happened while we were waiting, discard this result
+          if (fetchVersionRef.current !== version) {
+            console.debug(
+              "[FormFill] Discarding stale fetch result (version mismatch)",
             );
+            return;
           }
-        }
 
-        // Initialise values in the external store
-        const values: Record<string, string> = {};
-        let edited = false;
-        for (const field of fields) {
-          const stored = field.value ?? "";
-          values[field.name] = carried[field.name] ?? stored;
-          edited = edited || values[field.name] !== stored;
+          // pdfbox returns signature fields without a rendered appearance; merge the
+          // pdfium ones by name, since appending would list a signature twice.
+          if (providerModeRef.current === "pdfbox") {
+            try {
+              // Cache-shared read: the pdfium provider path reads the same Blob
+              // through documentBytesCache, so this must not mint a second
+              // full-file copy.
+              const arrayBuffer = await getDocumentBytes(file);
+              const sigFields =
+                await fetchSignatureFieldsWithAppearances(arrayBuffer);
+              if (fetchVersionRef.current !== version) return; // stale check after async
+              fields = mergeSignatureAppearances(fields, sigFields);
+            } catch (e) {
+              console.warn(
+                "[FormFill] Failed to extract signature appearances for pdfbox mode:",
+                e,
+              );
+            }
+          }
+
+          // Initialise values in the external store
+          const values: Record<string, string> = {};
+          let edited = false;
+          for (const field of fields) {
+            const stored = field.value ?? "";
+            values[field.name] = carried[field.name] ?? stored;
+            edited = edited || values[field.name] !== stored;
+          }
+          valuesStore.reset(values);
+          forFileIdRef.current = fileId ?? null;
+          setForFileId(fileId ?? null);
+          dispatch({ type: "FETCH_SUCCESS", fields });
+          // The full set is adopted, so page-scoped loads have nothing left to add.
+          if (options?.exhaustive || providerModeRef.current === "pdfbox") {
+            isExhaustiveRef.current = true;
+            loadedPagesRef.current.clear();
+          }
+          // After FETCH_SUCCESS, which clears the flag; and only when a value genuinely differs,
+          // or the unsaved-changes prompt cries wolf on every navigation.
+          if (edited) {
+            dispatch({ type: "MARK_DIRTY" });
+          }
+        } catch (err) {
+          // A failed load stays retryable, so the exhaustive flag only lands on success.
+          isExhaustiveRef.current = false;
+          if (fetchVersionRef.current !== version) return; // stale
+          const msg =
+            (isAxiosError<{ message?: string }>(err)
+              ? err.response?.data?.message
+              : undefined) ||
+            (err instanceof Error ? err.message : undefined) ||
+            "Failed to fetch form fields";
+          dispatch({ type: "FETCH_ERROR", error: msg });
         }
-        valuesStore.reset(values);
-        forFileIdRef.current = fileId ?? null;
-        setForFileId(fileId ?? null);
-        dispatch({ type: "FETCH_SUCCESS", fields });
-        // After FETCH_SUCCESS, which clears the flag; and only when a value genuinely differs,
-        // or the unsaved-changes prompt cries wolf on every navigation.
-        if (edited) {
-          dispatch({ type: "MARK_DIRTY" });
-        }
-      } catch (err) {
-        if (fetchVersionRef.current !== version) return; // stale
-        const msg =
-          (isAxiosError<{ message?: string }>(err)
-            ? err.response?.data?.message
-            : undefined) ||
-          (err instanceof Error ? err.message : undefined) ||
-          "Failed to fetch form fields";
-        dispatch({ type: "FETCH_ERROR", error: msg });
-      }
+      })();
+      fetchInFlightRef.current = run;
+      void run.finally(() => {
+        if (fetchInFlightRef.current === run) fetchInFlightRef.current = null;
+      });
+      return run;
     },
     [valuesStore, clearEditingState],
   );
@@ -787,6 +817,14 @@ export function FormFillProvider({
 
   const ensurePageFields = useCallback(
     async (pageIndex: number) => {
+      // pdfbox answers with the whole document, so a page request would re-fetch
+      // every field from the backend for each page that scrolls into view.
+      if (providerModeRef.current === "pdfbox") return;
+      // A page request must not race the initial fetch: its MERGE_PAGE_FIELDS
+      // would be replaced by the later FETCH_SUCCESS while the page stays marked
+      // loaded, so wait for the fetch in flight first.
+      const inFlight = fetchInFlightRef.current;
+      if (inFlight) await inFlight.catch(() => {});
       if (isExhaustiveRef.current || loadedPagesRef.current.has(pageIndex))
         return;
       loadedPagesRef.current.add(pageIndex);
@@ -806,6 +844,18 @@ export function FormFillProvider({
         )
           return;
         if (pageFields.length > 0) {
+          // The page can render before an exhaustive reload, so its prefilled
+          // values must exist; never overwrite what the user already typed.
+          for (const field of pageFields) {
+            if (
+              !Object.prototype.hasOwnProperty.call(
+                valuesStore.values,
+                field.name,
+              )
+            ) {
+              valuesStore.setValue(field.name, field.value ?? "");
+            }
+          }
           dispatch({
             type: "MERGE_PAGE_FIELDS",
             pageIndex,
@@ -820,7 +870,7 @@ export function FormFillProvider({
         );
       }
     },
-    [dispatch],
+    [dispatch, valuesStore],
   );
 
   /**
