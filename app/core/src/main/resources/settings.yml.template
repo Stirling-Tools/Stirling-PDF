@@ -415,7 +415,7 @@ aiEngine:
     classify: true # Automatic document classification/labelling
 
 # DocParse: document understanding for ingestion pipelines (chunking + knowledge-base
-# indexing). Env override: DOCPARSE_ENABLED.
+# indexing).
 docparse:
   enabled: true # Master switch; hides the DocParse endpoints when false
 

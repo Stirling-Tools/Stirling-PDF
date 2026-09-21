@@ -385,13 +385,8 @@ export const TOOL_IO: ToolIOTable = {
       },
       {
         when: [
+          { param: "includeOriginal", matches: ["false"], default: "true" },
           { param: "exportMarkdown", matches: ["true"], default: "false" },
-        ],
-        produces: "ANY",
-        arity: "SIMO",
-      },
-      {
-        when: [
           { param: "exportChunksJsonl", matches: ["true"], default: "false" },
         ],
         produces: "ANY",

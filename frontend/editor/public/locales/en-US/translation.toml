@@ -8967,7 +8967,7 @@ nothingToDo = "Turn on at least one of indexing or an export, or this step has n
 overlap = "Overlap"
 overlapHint = "Characters repeated between neighbouring chunks, so a sentence split across two is still findable."
 overlapTooBig = "Overlap must be smaller than the chunk size ({{chunkSize}})."
-unavailable = "RAG preparation needs the AI engine and DocParse turned on, including when the destination database generates embeddings."
+unavailable = "AI ingestion needs the AI engine and DocParse turned on, including when the destination database generates embeddings."
 
 [portal.pipelines.builder.routing]
 addRule = "Add a route"
@@ -9242,7 +9242,7 @@ compressPdf = "Compress"
 flatten = "Flatten"
 ocrPdf = "OCR"
 pdfa = "Convert to PDF/A"
-ragIngest = "Prepare documents for RAG"
+ragIngest = "Prepare for knowledge search"
 sanitizePdf = "Remove JavaScript"
 validateCompliance = "Validate compliance"
 
@@ -9473,7 +9473,7 @@ desc = "Rewrites the document in the ISO archival format, embedding its fonts an
 label = "Convert to PDF/A for archiving"
 
 [portal.policies.wizard.capability.ragIngest]
-desc = "Prepare searchable chunks for the built-in knowledge base, a connected RAG database, or a corpus export."
+desc = "Prepare searchable chunks for the built-in knowledge base, a connected vector database, or a corpus export."
 label = "Prepare for knowledge search"
 
 [portal.policies.wizard.capability.redact]

@@ -78,11 +78,11 @@ public class DocParseController {
                         produces = ToolFormat.MARKDOWN,
                         arity = ToolArity.SIMO),
                 @ToolIOCase(
-                        when = @ToolIOWhen(param = "exportMarkdown", matches = "true"),
-                        produces = ToolFormat.ANY,
-                        arity = ToolArity.SIMO),
-                @ToolIOCase(
-                        when = @ToolIOWhen(param = "exportChunksJsonl", matches = "true"),
+                        when = {
+                            @ToolIOWhen(param = "includeOriginal", matches = "false"),
+                            @ToolIOWhen(param = "exportMarkdown", matches = "true"),
+                            @ToolIOWhen(param = "exportChunksJsonl", matches = "true")
+                        },
                         produces = ToolFormat.ANY,
                         arity = ToolArity.SIMO)
             })
@@ -93,8 +93,7 @@ public class DocParseController {
                             + " (default: content hash). Returns a ZIP containing the original PDF"
                             + " when includeOriginal is true and any selected markdown or chunks"
                             + " JSONL exports. Pipelines unpack the ZIP for the next step. The"
-                            + " X-Stirling-Tool-Report header contains the ingest summary JSON."
-                            + " Input:PDF Output:ZIP Type:SIMO")
+                            + " X-Stirling-Tool-Report header contains the ingest summary JSON.")
     public ResponseEntity<Resource> ragIngest(@ModelAttribute RagIngestApiRequest request)
             throws IOException {
         if (!request.isIncludeOriginal()
