@@ -97,7 +97,9 @@ recycle_supervisor() {
   fi
 
   if [ "$IDLE_TIMEOUT" -gt 0 ]; then
-    log "Idle shutdown enabled: stop after ${IDLE_TIMEOUT}s of inactivity (Note: remote clients cannot wake an idle-stopped standalone instance over TCP)"
+    log "Idle shutdown enabled: stop after ${IDLE_TIMEOUT}s of inactivity"
+    log "Wake source required: only a writer sharing /tmp/uno-last-used can restart it;"
+    log "keep UNOSERVER_IDLE_TIMEOUT_SECONDS=0 for standalone or remote-unoserver setups"
   fi
 
   # Track last activity via demand file (Java writes to this)
