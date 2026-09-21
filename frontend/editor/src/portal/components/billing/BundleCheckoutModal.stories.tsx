@@ -23,6 +23,8 @@ const meta: Meta<typeof BundleCheckoutModal> = {
               success: true,
               currency: "usd",
               unit_amount_minor: 1,
+              available_currencies: ["usd"],
+              currency_locked: false,
             }),
         ),
         http.post(

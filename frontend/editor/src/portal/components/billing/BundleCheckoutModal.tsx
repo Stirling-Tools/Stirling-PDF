@@ -8,6 +8,7 @@ import {
   Input,
   Modal,
   NumberInput,
+  Select,
   Skeleton,
 } from "@app/ui";
 import {
@@ -211,6 +212,7 @@ export function BundleCheckoutModal({
   const { t } = useTranslation();
   const teamId = wallet.teamId;
   const [pricing, setPricing] = useState<BundlePricing | null>(null);
+  const pricingRequest = useRef(0);
   const [persistedCurrency, setPersistedCurrency] = useState<string | null>(
     null,
   );
@@ -315,8 +317,25 @@ export function BundleCheckoutModal({
       if (cancelled) return;
       const latest =
         quoteResult.status === "fulfilled" ? quoteResult.value : null;
-      const resolvedPricing =
+      let resolvedPricing =
         pricingResult.status === "fulfilled" ? pricingResult.value : null;
+      if (
+        latest?.currency &&
+        resolvedPricing?.currencyLocked === false &&
+        latest.currency !== resolvedPricing.currency &&
+        resolvedPricing.availableCurrencies.includes(latest.currency)
+      ) {
+        try {
+          resolvedPricing = await fetchBundlePricing(teamId, latest.currency);
+        } catch (error) {
+          resolvedPricing = null;
+          if (!cancelled)
+            setActionError(
+              error instanceof Error ? error.message : String(error),
+            );
+        }
+        if (cancelled) return;
+      }
       setPricing(resolvedPricing);
       if (pricingResult.status === "rejected" && !latest?.stripeRef) {
         const error = pricingResult.reason;
@@ -391,8 +410,39 @@ export function BundleCheckoutModal({
     })();
     return () => {
       cancelled = true;
+      pricingRequest.current += 1;
     };
   }, [open, teamId]);
+
+  async function changeCurrency(selected: string) {
+    if (
+      teamId == null ||
+      pricing?.currencyLocked !== false ||
+      busy ||
+      pdfBusy ||
+      invoice
+    )
+      return;
+    const request = ++pricingRequest.current;
+    setBusy(true);
+    setActionError(null);
+    try {
+      const next = await fetchBundlePricing(teamId, selected);
+      if (request !== pricingRequest.current) return;
+      setPricing(next);
+      setPersistedPriceMinor(null);
+      setPersistedCurrency(null);
+      setPersistedSubtotal(null);
+      setStripeQuote(null);
+      setStripeQuoteSig(null);
+    } catch (error) {
+      if (request === pricingRequest.current) {
+        setActionError(error instanceof Error ? error.message : String(error));
+      }
+    } finally {
+      if (request === pricingRequest.current) setBusy(false);
+    }
+  }
 
   // Persist pre-quote calculator progress so close/reload keeps the buyer's place. Held until hydration
   // completes so it can't clobber restored values.
@@ -805,6 +855,9 @@ export function BundleCheckoutModal({
             setPipelineId={setPipelineId}
             quote={receiptQuote}
             currency={currency}
+            pricing={pricing}
+            onCurrencyChange={(selected) => void changeCurrency(selected)}
+            currencyBusy={busy || pdfBusy || !!invoice}
             onDownload={downloadPdf}
             downloading={pdfBusy}
             actionError={actionError}
@@ -963,6 +1016,9 @@ interface CalcProps {
   setPipelineId: (v: string) => void;
   quote: BundleQuoteBreakdown;
   currency: string;
+  pricing: BundlePricing | null;
+  onCurrencyChange: (currency: string) => void;
+  currencyBusy: boolean;
   /** Mint-if-needed + stream the Stripe quote PDF. */
   onDownload: () => void;
   /** PDF download in flight. */
@@ -989,6 +1045,9 @@ function CalculatorStep({
   setPipelineId,
   quote,
   currency,
+  pricing,
+  onCurrencyChange,
+  currencyBusy,
   onDownload,
   downloading,
   actionError,
@@ -1186,6 +1245,35 @@ function CalculatorStep({
 
   return (
     <div className="portal-billing__bundle-calc">
+      {pricing && (
+        <FormField
+          label={t("portal.billing.prepaid.calc.currency", "Quote currency")}
+          helperText={
+            pricing.currencyLocked !== false
+              ? t(
+                  "portal.billing.prepaid.calc.currencyLocked",
+                  "Uses your existing Stripe billing currency.",
+                )
+              : undefined
+          }
+        >
+          <Select
+            aria-label={t(
+              "portal.billing.prepaid.calc.currency",
+              "Quote currency",
+            )}
+            value={currency}
+            comboboxProps={{ withinPortal: false }}
+            options={(pricing.availableCurrencies ?? [currency]).map(
+              (code) => ({ value: code, label: code.toUpperCase() }),
+            )}
+            disabled={currencyBusy || pricing.currencyLocked !== false}
+            onChange={(selected) => {
+              if (selected) onCurrencyChange(selected);
+            }}
+          />
+        </FormField>
+      )}
       {actionError && (
         <Banner
           tone="danger"

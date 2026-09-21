@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@app/auth/supabase";
 import { useAuth } from "@app/auth/UseSession";
+import { getPreferredCurrency } from "@app/utils/currencyDetection";
+import { stripeAmountToMajor } from "@app/utils/stripeCurrency";
 
 // Currency mapping
 const getCurrencySymbol = (currency: string): string => {
@@ -51,7 +53,7 @@ export interface PlansData {
   activeSince?: string;
 }
 
-export const usePlans = (currency: string = "usd") => {
+export const usePlans = (currency: string = getPreferredCurrency()) => {
   const { t } = useTranslation();
   const { isPro, refreshProStatus } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -167,7 +169,10 @@ export const usePlans = (currency: string = "usd") => {
         id: "pro",
         name: t("plan.pro.name", "Pro"),
         price: dynamicPrices.get("pro")
-          ? dynamicPrices.get("pro")!.unit_amount / 100
+          ? stripeAmountToMajor(
+              dynamicPrices.get("pro")!.unit_amount,
+              dynamicPrices.get("pro")!.currency,
+            )
           : 8,
         currency: dynamicPrices.get("pro")
           ? getCurrencySymbol(dynamicPrices.get("pro")!.currency)
@@ -244,7 +249,9 @@ export const usePlans = (currency: string = "usd") => {
     // Helper function to get price info
     const getPriceInfo = (key: string, fallbackPrice: number) => {
       const priceObj = dynamicPrices.get(key);
-      const price = priceObj ? priceObj.unit_amount / 100 : fallbackPrice;
+      const price = priceObj
+        ? stripeAmountToMajor(priceObj.unit_amount, priceObj.currency)
+        : fallbackPrice;
       const currencySymbol = priceObj
         ? getCurrencySymbol(priceObj.currency)
         : getCurrencySymbol("usd");

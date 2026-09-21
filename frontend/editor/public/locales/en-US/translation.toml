@@ -7645,6 +7645,8 @@ step = "Step {{current}} of {{total}}"
 
 [portal.billing.prepaid.calc]
 change = "Change"
+currency = "Quote currency"
+currencyLocked = "Uses your existing Stripe billing currency."
 deployRow = "Deployment"
 done = "Done"
 enterpriseHint = "This is enterprise scale. At this volume, enterprise rates beat any self-serve discount. Rate lock, terms, and a quote in minutes."

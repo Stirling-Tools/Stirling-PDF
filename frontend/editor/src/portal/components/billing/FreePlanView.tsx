@@ -27,10 +27,6 @@ interface Props {
   onActivationClosed?: () => void;
 }
 
-function isSaasCurrency(c: string | null): c is SaasCurrency {
-  return c === "usd" || c === "eur" || c === "gbp";
-}
-
 /** Owns activation dialogs and prepaid capacity; the host supplies the Processor row action. */
 export function FreePlanView({
   wallet,
@@ -50,9 +46,7 @@ export function FreePlanView({
   const [missingTeam, setMissingTeam] = useState<string | null>(null);
 
   const isLeader = wallet.role === "leader";
-  const currency: SaasCurrency = isSaasCurrency(wallet.currency)
-    ? wallet.currency
-    : "usd";
+  const currency: SaasCurrency = wallet.currency ?? "usd";
 
   function requireTeam(): boolean {
     if (wallet.teamId == null) {

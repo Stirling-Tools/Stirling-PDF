@@ -392,9 +392,33 @@ it("reads Stripe's billing currency and fractional credit rate before prepay", a
   expect(await fetchBundlePricing(42)).toEqual({
     currency: "gbp",
     unitAmountMinor: 0.75,
+    availableCurrencies: ["gbp"],
+    currencyLocked: true,
   });
   expect(invoke).toHaveBeenCalledWith("create-payg-bundle-quote", {
     body: { team_id: 42, preview: true },
+  });
+});
+
+it("requests a chosen quote currency without setting a Checkout currency", async () => {
+  invoke.mockResolvedValue({
+    data: {
+      success: true,
+      currency: "eur",
+      unit_amount_minor: 0.9,
+      available_currencies: ["usd", "eur"],
+      currency_locked: false,
+    },
+    error: null,
+  });
+  expect(await fetchBundlePricing(42, "eur")).toEqual({
+    currency: "eur",
+    unitAmountMinor: 0.9,
+    availableCurrencies: ["usd", "eur"],
+    currencyLocked: false,
+  });
+  expect(invoke).toHaveBeenCalledWith("create-payg-bundle-quote", {
+    body: { team_id: 42, preview: true, currency: "eur" },
   });
 });
 

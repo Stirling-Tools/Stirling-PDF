@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { getPreferredCurrency } from "@app/utils/currencyDetection";
 import licenseService, {
   PlanTier,
   PlansResponse,
@@ -15,7 +16,9 @@ export interface UsePlansReturn {
   refetch: () => Promise<void>;
 }
 
-export const usePlans = (currency: string = "usd"): UsePlansReturn => {
+export const usePlans = (
+  currency: string = getPreferredCurrency(),
+): UsePlansReturn => {
   const planFeatures = usePlanFeatures();
   const planHighlights = usePlanHighlights();
   const [plans, setPlans] = useState<PlanTier[]>([]);

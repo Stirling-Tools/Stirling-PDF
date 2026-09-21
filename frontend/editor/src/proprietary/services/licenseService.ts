@@ -1,4 +1,5 @@
 import apiClient from "@app/services/apiClient";
+import { stripeAmountToMajor } from "@app/utils/stripeCurrency";
 import { supabase, isSupabaseConfigured } from "@app/services/supabaseClient";
 import type {
   PlanFeaturesMap,
@@ -162,7 +163,9 @@ const licenseService = {
       // Helper to get price info
       const getPriceInfo = (lookupKey: string, fallback: number = 0) => {
         const priceData = priceMap.get(lookupKey);
-        return priceData ? priceData.unit_amount / 100 : fallback;
+        return priceData
+          ? stripeAmountToMajor(priceData.unit_amount, priceData.currency)
+          : fallback;
       };
 
       // Build plan tiers

@@ -7,29 +7,36 @@ vi.mock("@app/services/supabaseClient", () => ({
 vi.mock("@app/services/apiClient", () => ({ default: {} }));
 import licenseService from "@app/services/licenseService";
 
-it("labels returned prices with Stripe's currency when the requested currency is unavailable", async () => {
-  invoke.mockResolvedValue({
-    data: {
-      prices: {
-        "selfhosted:server:monthly": { unit_amount: 9900, currency: "usd" },
-        "selfhosted:server:yearly": { unit_amount: 99900, currency: "usd" },
+it.each([
+  ["usd", 9900, "$", 99],
+  ["jpy", 15000, "JPY", 15000],
+  ["cad", 13900, "CAD", 139],
+])(
+  "uses Stripe's %s amounts when the requested GBP currency differs",
+  async (currency, amount, symbol, expected) => {
+    invoke.mockResolvedValue({
+      data: {
+        prices: {
+          "selfhosted:server:monthly": { unit_amount: amount, currency },
+          "selfhosted:server:yearly": { unit_amount: amount * 10, currency },
+        },
+        missing: [],
       },
-      missing: [],
-    },
-    error: null,
-  });
-  const result = await licenseService.getPlans(
-    { FREE: [], SERVER: [], ENTERPRISE: [] },
-    {
-      FREE: [],
-      SERVER_MONTHLY: [],
-      SERVER_YEARLY: [],
-      ENTERPRISE_MONTHLY: [],
-      ENTERPRISE_YEARLY: [],
-    },
-    "gbp",
-  );
-  expect(
-    result.plans.find((p) => p.id === "selfhosted:server:monthly"),
-  ).toMatchObject({ currency: "$", price: 99 });
-});
+      error: null,
+    });
+    const result = await licenseService.getPlans(
+      { FREE: [], SERVER: [], ENTERPRISE: [] },
+      {
+        FREE: [],
+        SERVER_MONTHLY: [],
+        SERVER_YEARLY: [],
+        ENTERPRISE_MONTHLY: [],
+        ENTERPRISE_YEARLY: [],
+      },
+      "gbp",
+    );
+    expect(
+      result.plans.find((p) => p.id === "selfhosted:server:monthly"),
+    ).toMatchObject({ currency: symbol, price: expected });
+  },
+);

@@ -27,7 +27,7 @@ interface Props {
   onBack?: () => void;
   /** Caller's resolved team id. The edge function needs it to scope checkout. */
   teamId: number;
-  /** "usd" | "eur" | "gbp" — the SaaS PAYG offering's supported set. */
+  /** Currency of the wallet amounts; Stripe resolves the payment currency. */
   currency: SaasCurrency;
   /** Per-document rate in minor units, for the cap→PDF estimate on step 1. */
   pricePerDocMinor?: number | null;

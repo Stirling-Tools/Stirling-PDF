@@ -20,8 +20,8 @@ export class StripeFunctionError extends Error {
   }
 }
 
-/** Currencies the SaaS PAYG offering supports. Default for new checkouts is "usd". */
-export type SaasCurrency = "usd" | "eur" | "gbp";
+/** Lower-case ISO currency; Stripe determines availability for the customer and price. */
+export type SaasCurrency = string;
 
 interface CheckoutSessionRequest {
   teamId: number;
@@ -326,18 +326,27 @@ export async function createCheckoutSession(
 export interface BundlePricing {
   currency: string;
   unitAmountMinor: number;
+  availableCurrencies: string[];
+  currencyLocked: boolean;
 }
 
 /** Reads the customer's billing currency and configured rate without creating a quote. */
 export async function fetchBundlePricing(
   teamId: number,
+  currency?: string,
 ): Promise<BundlePricing> {
   const res = await invoke<{
     success?: boolean;
     currency?: string;
     unit_amount_minor?: number;
+    available_currencies?: string[];
+    currency_locked?: boolean;
     error?: string;
-  }>("create-payg-bundle-quote", { team_id: teamId, preview: true });
+  }>("create-payg-bundle-quote", {
+    team_id: teamId,
+    preview: true,
+    ...(currency ? { currency } : {}),
+  });
   if (
     !res.success ||
     !res.currency ||
@@ -349,7 +358,12 @@ export async function fetchBundlePricing(
       res.error ?? "Bundle pricing is unavailable.",
     );
   }
-  return { currency: res.currency, unitAmountMinor: res.unit_amount_minor };
+  return {
+    currency: res.currency,
+    unitAmountMinor: res.unit_amount_minor,
+    availableCurrencies: res.available_currencies ?? [res.currency],
+    currencyLocked: res.currency_locked ?? true,
+  };
 }
 
 /** Result of {@link createBundleStripeQuote} — the Stripe-issued quote handles. */

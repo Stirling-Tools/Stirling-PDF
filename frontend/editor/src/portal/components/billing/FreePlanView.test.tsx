@@ -54,6 +54,7 @@ function ResumedActivation() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  HTMLElement.prototype.scrollIntoView = vi.fn();
   sessionStorage.clear();
   api.getLatestBundleQuote.mockResolvedValue(savedQuote);
   api.fetchBundlePricing.mockResolvedValue({
@@ -63,9 +64,27 @@ beforeEach(() => {
 });
 
 describe("Processor activation navigation", () => {
+  it("keeps the wallet currency beyond USD, EUR and GBP", async () => {
+    render(
+      <MantineProvider env="test">
+        <FreePlanView
+          wallet={{ ...freeWallet, currency: "cad" }}
+          step="payg"
+          onStepChange={vi.fn()}
+        />
+      </MantineProvider>,
+    );
+    expect(
+      await screen.findByRole("button", { name: "CAD 100" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "$100" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("returns from a saved quote to monthly limit selection without cancelling or purchasing", async () => {
     render(
-      <MantineProvider>
+      <MantineProvider env="test">
         <ResumedActivation />
       </MantineProvider>,
     );
@@ -81,7 +100,7 @@ describe("Processor activation navigation", () => {
 
   it("returns from the monthly limit to the same annual quote without minting another", async () => {
     render(
-      <MantineProvider>
+      <MantineProvider env="test">
         <ResumedActivation />
       </MantineProvider>,
     );
@@ -101,7 +120,7 @@ describe("Processor activation navigation", () => {
   it("keeps Cancel for a subscribed team's standalone top-up", async () => {
     const onClose = vi.fn();
     render(
-      <MantineProvider>
+      <MantineProvider env="test">
         <BundleCheckoutModal open wallet={subscribedWallet} onClose={onClose} />
       </MantineProvider>,
     );
@@ -123,7 +142,7 @@ describe("Processor activation navigation", () => {
       stripeQuoteNumber: null,
     });
     render(
-      <MantineProvider>
+      <MantineProvider env="test">
         <BundleCheckoutModal open wallet={subscribedWallet} onClose={vi.fn()} />
       </MantineProvider>,
     );
@@ -144,10 +163,73 @@ describe("Processor activation navigation", () => {
     expect(api.createBundleStripeQuote).toHaveBeenCalledOnce();
   });
 
+  it("lets a new customer select a configured quote currency and reprices before issuing it", async () => {
+    api.fetchBundlePricing.mockImplementation(
+      (_teamId: number, currency = "usd") =>
+        Promise.resolve({
+          currency,
+          unitAmountMinor: currency === "gbp" ? 0.75 : 1,
+          availableCurrencies: ["usd", "gbp"],
+          currencyLocked: false,
+        }),
+    );
+    api.upsertBundleQuote.mockResolvedValue({ quoteId: 7 });
+    api.createBundleStripeQuote.mockResolvedValue({
+      stripeQuoteId: "qt_gbp",
+      stripeQuoteNumber: null,
+    });
+    render(
+      <MantineProvider env="test">
+        <BundleCheckoutModal open wallet={subscribedWallet} onClose={vi.fn()} />
+      </MantineProvider>,
+    );
+    const selector = await screen.findByRole("textbox", {
+      name: "Quote currency",
+    });
+    expect(selector).toHaveValue("USD");
+    fireEvent.click(selector);
+    fireEvent.click(await screen.findByRole("option", { name: "GBP" }));
+    expect(await screen.findByText("£3,600.00")).toBeInTheDocument();
+    expect(api.fetchBundlePricing).toHaveBeenCalledWith(
+      subscribedWallet.teamId,
+      "gbp",
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Continue to payment" }),
+    );
+    await waitFor(() =>
+      expect(api.upsertBundleQuote).toHaveBeenCalledWith(
+        expect.objectContaining({
+          currency: "gbp",
+          priceMinor: 360000,
+        }),
+      ),
+    );
+  });
+
+  it("locks the quote selector to the customer's established Stripe currency", async () => {
+    api.fetchBundlePricing.mockResolvedValue({
+      currency: "gbp",
+      unitAmountMinor: 0.75,
+      availableCurrencies: ["gbp"],
+      currencyLocked: true,
+    });
+    render(
+      <MantineProvider env="test">
+        <BundleCheckoutModal open wallet={subscribedWallet} onClose={vi.fn()} />
+      </MantineProvider>,
+    );
+    const selector = await screen.findByRole("textbox", {
+      name: "Quote currency",
+    });
+    expect(selector).toHaveValue("GBP");
+    expect(selector).toBeDisabled();
+  });
+
   it("blocks new purchases when authoritative pricing cannot be loaded", async () => {
     api.fetchBundlePricing.mockRejectedValue(new Error("Pricing unavailable"));
     render(
-      <MantineProvider>
+      <MantineProvider env="test">
         <BundleCheckoutModal open wallet={subscribedWallet} onClose={vi.fn()} />
       </MantineProvider>,
     );
@@ -172,7 +254,7 @@ describe("Processor activation navigation", () => {
       hostedInvoiceUrl: null,
     });
     render(
-      <MantineProvider>
+      <MantineProvider env="test">
         <BundleCheckoutModal open wallet={subscribedWallet} onClose={vi.fn()} />
       </MantineProvider>,
     );
