@@ -24,6 +24,7 @@ import { useOpenFolder } from "@app/components/filesPage/useOpenFolder";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
+import { useDropzoneFiles } from "@app/hooks/useDropzoneFiles";
 import {
   useNavigationActions,
   useNavigationGuard,
@@ -544,6 +545,7 @@ export default function FileManagerView() {
   const [isDraggingExternal, setIsDraggingExternal] = useState(false);
 
   const handleNativeUpload = useLibraryUpload();
+  const getDropzoneFiles = useDropzoneFiles();
 
   const onFileInputChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -673,9 +675,11 @@ export default function FileManagerView() {
       e.preventDefault();
       counter = 0;
       setIsDraggingExternal(false);
-      const dropped = Array.from(e.dataTransfer?.files ?? []);
-      if (dropped.length > 0) {
-        handleNativeUpload(dropped).catch((err) =>
+      getDropzoneFiles(e)
+        .then((dropped) =>
+          handleNativeUpload(dropped.filter((item) => item instanceof File)),
+        )
+        .catch((err) =>
           folders.setError(
             err instanceof Error
               ? t("filesPage.error.uploadFilesFailedDetail", {
@@ -688,7 +692,6 @@ export default function FileManagerView() {
                 ),
           ),
         );
-      }
     };
     node.addEventListener("dragenter", onEnter);
     node.addEventListener("dragover", onOver);
@@ -700,7 +703,7 @@ export default function FileManagerView() {
       node.removeEventListener("dragleave", onLeave);
       node.removeEventListener("drop", onDrop);
     };
-  }, [handleNativeUpload]);
+  }, [getDropzoneFiles, handleNativeUpload, folders, t]);
 
   const handleClose = useCallback(() => {
     // Drop the return-route hint so the workbench doesn't show a stale back.

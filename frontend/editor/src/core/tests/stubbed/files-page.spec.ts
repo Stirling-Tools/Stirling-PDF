@@ -1,4 +1,5 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { readFileSync } from "node:fs";
 import type { Locator, Page, Route } from "@playwright/test";
 import { DATABASE_CONFIGS } from "@app/services/indexedDBManager";
 
@@ -539,6 +540,74 @@ test.describe("Files page", () => {
       ]);
     });
     test.use({ autoGoto: false });
+
+    test("imports dropped folders and loose files despite an unreadable entry", async ({
+      page,
+    }) => {
+      await gotoFilesPage(page);
+      const bytes = Array.from(
+        readFileSync(
+          new URL("../test-fixtures/form-fields-sample.pdf", import.meta.url),
+        ),
+      );
+      await page.locator(".files-page").evaluate((element, pdfBytes) => {
+        const file = (name: string) =>
+          new File([new Uint8Array(pdfBytes)], name, {
+            type: "application/pdf",
+          });
+        const fileEntry = (name: string) => ({
+          isFile: true,
+          file: (resolve: (value: File) => void) => resolve(file(name)),
+        });
+        const directory = (batches: object[][]) => ({
+          isDirectory: true,
+          createReader: () => ({
+            readEntries: (resolve: (entries: object[]) => void) =>
+              setTimeout(() => resolve(batches.shift() ?? []), 0),
+          }),
+        });
+        const folder = directory([
+          [
+            directory([[fileEntry("nested.pdf")]]),
+            {
+              isFile: true,
+              name: "unreadable.pdf",
+              file: (_resolve: unknown, reject: (error: Error) => void) =>
+                reject(new Error("Access denied")),
+            },
+          ],
+          [fileEntry("later-batch.pdf")],
+        ]);
+        const loose = file("loose.pdf");
+        element.dispatchEvent(
+          Object.assign(
+            new Event("drop", { bubbles: true, cancelable: true }),
+            {
+              dataTransfer: {
+                types: ["Files"],
+                files: [loose],
+                items: [
+                  { kind: "file", webkitGetAsEntry: () => folder },
+                  { kind: "file", getAsFile: () => loose },
+                ],
+              },
+            },
+          ),
+        );
+      }, bytes);
+
+      await expect(
+        page.getByText("unreadable.pdf: Access denied"),
+      ).toBeVisible();
+      const cards = page.locator(".files-page-card:not(.is-folder)");
+      for (const name of ["nested.pdf", "later-batch.pdf", "loose.pdf"]) {
+        await expect(cards.filter({ hasText: name })).toBeVisible({
+          timeout: 15_000,
+        });
+      }
+      await expect(cards).toHaveCount(4);
+      await expect(page).toHaveURL(/\/files\?view=recent$/);
+    });
 
     test("card thumbnail <img> is not natively draggable", async ({ page }) => {
       // draggable={false} keeps the card's onDragStart as drag authority.
