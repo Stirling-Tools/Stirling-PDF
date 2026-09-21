@@ -3866,6 +3866,13 @@ title = "Connect a server"
 body = "This connection request is not valid. It may have expired, or already been used. Start another one from your server."
 title = "Request not valid"
 
+[connect.renewal]
+approve = "Renew sign-in"
+failed = "Your sign-in could not be renewed. Try again, or dismiss this page and start again from your server."
+lead = "This server is already linked to your account. Renew your sign-in to return to billing and usage on your server."
+title = "Renew your server sign-in"
+wrongAccount = "This account cannot renew this server's sign-in. Switch to the account originally used to link the server. That account must still own the linked team."
+
 [convert]
 autoRotate = "Auto Rotate"
 autoRotateDescription = "Automatically rotate images to better fit the PDF page"
@@ -7393,7 +7400,7 @@ switchOnProcessor = "Switch on the Processor"
 title = "Connected"
 
 [portal.accountLink.connect.handoff]
-going = "Taking you to stirling.com"
+opening = "Opening Stirling sign-in..."
 reauthLede = "Your Stirling session expired. Signing in again keeps usage and billing visible. This server stays connected either way."
 title = "Connecting"
 
@@ -7419,12 +7426,13 @@ otherTitle = "No other connected instances"
 title = "No connected instances"
 
 [portal.accountLink.modal]
+callbackMismatch = "This server's configured frontend address does not match the address you opened. Open the server at its configured address, or update Frontend URL in General settings, then try again."
 cancel = "Cancel"
 continueReauth = "Sign in again"
 exhaustedTitle = "Add more monthly credits"
+identity = "Stirling account"
 linkTitle = "Connect your Stirling account"
 noAuthorizeUrl = "Stirling did not return somewhere to continue. Try again in a moment."
-reauthTitle = "Sign in again"
 startFailed = "Could not reach Stirling to start the connection. Check this server's outbound network access, then try again."
 
 [portal.accountLink.modal.loginNotConfigured]
@@ -7440,6 +7448,7 @@ manageCloud = "Manage on stirling.com"
 otherInstancesSub = "Other self-hosted servers connected to the same team in Stirling Cloud."
 otherInstancesTitle = "Other connected instances"
 revokeError = "Couldn't revoke instance"
+sessionRequired = "Connected instances will appear after you renew billing access."
 sub = "Manage this server’s connection to your Stirling Cloud account."
 
 [portal.accountLink.panel.loadError]
@@ -7447,11 +7456,20 @@ forbidden = "Only the team owner can manage connected instances."
 generic = "Your connections could not be checked. Try again."
 title = "Couldn’t load connected instances"
 
-[portal.accountLink.rail]
-cta = "Connect"
-later = "Not now"
-sub = "Adds monthly credits and room for more users. Everything on this server already works without one."
-title = "Connect your Stirling account"
+[portal.accountLink.renewal]
+dataUnavailable = "Your plan and usage will appear after you renew billing access. This server stays connected, and local document processing remains available."
+expired = "This sign-in request expired. Try again to renew billing access; your server is still connected."
+expiredTitle = "Sign-in request expired"
+incomplete = "This server is still connected, but we could not restore billing access in this browser. Try signing in again."
+malformed = "We could not verify this sign-in response. Start again from Usage & billing; your server is still connected."
+malformedTitle = "Could not verify sign-in"
+rejected = "This sign-in request was declined or has already been used. Try again to renew billing access."
+rejectedTitle = "Sign-in not completed"
+retry = "Stirling could not finish renewing billing access. Try again in a moment; your server is still connected."
+retryTitle = "Billing access not restored"
+success = "Your billing access has been renewed. This server is still connected to the same Stirling account."
+title = "Renew billing access"
+working = "Restoring billing access."
 
 [portal.accountLink.state]
 free = "Editor plan"
@@ -7473,6 +7491,9 @@ typing = "Typing"
 [portal.auth]
 loading = "Loading"
 redirectingToEditor = "Redirecting to the editor..."
+
+[portal.billing]
+dataUnavailable = "Usage figures are currently unavailable."
 
 [portal.billing.activation]
 maybeLater = "Maybe later"
@@ -10084,9 +10105,7 @@ loadError = "Couldn't read this server's credit usage. Try again in a moment."
 loadErrorTitle = "Couldn't load credit usage"
 
 [portal.usage.sessionExpired]
-action = "Sign in again"
 body = "Your Stirling account session has expired. Sign in again to view billing — your instance stays linked."
-title = "Session expired"
 
 [portal.users]
 title = "Users"
