@@ -1,31 +1,36 @@
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
-import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+// The validity probe reads the blob's prefix, which setupTests stubs with fixed
+// bytes no parser can read; gate on the declared type instead so the extraction
+// path under test still runs.
+vi.mock("@app/services/fileAnalyzer", () => ({
+  FileAnalyzer: {
+    isValidPDF: async (file: File) => file.type === "application/pdf",
+  },
+}));
+
+// PDFium loads through a precompiled module from wasmPrecompiler, which starts
+// its own fetch at import time; compile the real wasm here so the service
+// exercises PDFium instead of a fetch stub that lands too late.
+vi.mock("@app/services/wasmPrecompiler", async () => {
+  const wasmPath = createRequire(import.meta.url).resolve(
+    "@embedpdf/pdfium/pdfium.wasm",
+  );
+  const wasmBytes = await readFile(wasmPath);
+  return {
+    pdfiumWasmModulePromise: WebAssembly.compile(wasmBytes),
+    startEagerWasmCompilation: () => {},
+    pdfiumWasmUrl: () => "mem://pdfium-test.wasm",
+  };
+});
+
 import { extractPDFMetadata } from "@app/services/pdfMetadataService";
 import { TrappedStatus } from "@app/types/metadata";
 import { PDFDocument, PDFName, PDFString } from "@cantoo/pdf-lib";
 
 describe("pdfMetadataService", () => {
-  beforeAll(async () => {
-    const wasmPath = createRequire(import.meta.url).resolve(
-      "@embedpdf/pdfium/pdfium.wasm",
-    );
-    const wasmBytes = await readFile(wasmPath);
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () =>
-        Promise.resolve(
-          new Response(wasmBytes, {
-            headers: { "Content-Type": "application/wasm" },
-          }),
-        ),
-      ),
-    );
-  });
-
-  afterAll(() => {
-    vi.unstubAllGlobals();
-  });
   it("rejects non-PDF files", async () => {
     const file = new File(["not a pdf content"], "test.txt", {
       type: "text/plain",
@@ -58,6 +63,11 @@ describe("pdfMetadataService", () => {
     const bytes = await doc.save();
     const file = new File([bytes as unknown as BlobPart], "sample.pdf", {
       type: "application/pdf",
+    });
+    // setupTests stubs Blob.arrayBuffer with fixed bytes, which no parser can read.
+    Object.defineProperty(file, "arrayBuffer", {
+      configurable: true,
+      value: async () => bytes.buffer.slice(0) as ArrayBuffer,
     });
 
     const result = await extractPDFMetadata(file);
