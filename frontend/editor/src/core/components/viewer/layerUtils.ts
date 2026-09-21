@@ -72,20 +72,43 @@ export async function documentHasLayers(
  * a pdfjs parse of the whole document, so the sidebar gates its button on this
  * cheap catalog probe and reads the list only when the panel opens.
  */
-export async function documentHasLayers(file: Blob): Promise<boolean> {
-  try {
-    const [{ PDFDocument, PDFName }, bytes] = await Promise.all([
-      import("@cantoo/pdf-lib"),
-      getDocumentBytes(file),
-    ]);
-    const doc = await PDFDocument.load(bytes, {
-      ignoreEncryption: true,
-      updateMetadata: false,
-    });
-    return doc.catalog.get(PDFName.of("OCProperties")) !== undefined;
-  } catch {
-    return false;
+export function documentHasLayers(
+  file: Blob,
+  bytes?: ArrayBuffer,
+): Promise<boolean> {
+  const key = documentFileKey(file);
+  const cached =
+    layerAnswers.get(file) ??
+    (key ? layerAnswersByFileKey.get(key) : undefined);
+  if (cached) return cached;
+
+  const answer = (async () => {
+    try {
+      const [{ PDFDocument, PDFName }, buffer] = await Promise.all([
+        import("@cantoo/pdf-lib"),
+        bytes ? Promise.resolve(bytes) : getDocumentBytes(file),
+      ]);
+      const doc = await PDFDocument.load(buffer, {
+        ignoreEncryption: true,
+        updateMetadata: false,
+      });
+      return doc.catalog.get(PDFName.of("OCProperties")) !== undefined;
+    } catch {
+      return false;
+    }
+  })();
+
+  layerAnswers.set(file, answer);
+  if (key) {
+    layerAnswersByFileKey.delete(key);
+    layerAnswersByFileKey.set(key, answer);
+    while (layerAnswersByFileKey.size > LAYER_CACHE_LIMIT) {
+      const oldest = layerAnswersByFileKey.keys().next().value;
+      if (oldest === undefined) break;
+      layerAnswersByFileKey.delete(oldest);
+    }
   }
+  return answer;
 }
 
 /**
