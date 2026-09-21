@@ -52,6 +52,7 @@ const patchedSnippets = [
   "__stirlingReleaseFileAccess",
   "FPDF_LoadCustomDocument",
   "__stirlingWorkerHeapBytes",
+  "__stirlingWorkerDocBytes",
 ];
 
 if (checkOnly) {
@@ -257,6 +258,7 @@ export {
       '    this.pdfiumModule.pdfium.setValue(filePtr + 8, 0, "i32");',
       "    __stirlingDocAccess.set(filePtr, getBlockPtr);",
       "    globalThis.__stirlingWorkerHeapBytes = () => this.pdfiumModule.pdfium.wasmExports.memory.buffer.byteLength;",
+      "    globalThis.__stirlingWorkerDocBytes = length;",
       '    const docPtr = this.pdfiumModule.FPDF_LoadCustomDocument(filePtr, (options == null ? void 0 : options.password) ?? "");',
     ].join("\\n"),
   },
