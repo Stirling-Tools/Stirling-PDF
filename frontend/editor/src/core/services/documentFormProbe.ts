@@ -63,9 +63,15 @@ export function documentHasFormFieldsFor(
 
   const answer = bytes
     ? documentHasFormFields(bytes, source.size)
-    : getDocumentBytes(source).then((buffer) =>
-        documentHasFormFields(buffer, source.size),
-      );
+    : getDocumentBytes(source)
+        .then((buffer) => documentHasFormFields(buffer, source.size))
+        .catch((error: unknown) => {
+          // A failed read is retryable, so it must not stay memoized as an
+          // answer; drop it and let the next caller read again.
+          answers.delete(source);
+          if (key) answersByFileKey.delete(key);
+          throw error;
+        });
   answers.set(source, answer);
   if (key) {
     answersByFileKey.delete(key);
