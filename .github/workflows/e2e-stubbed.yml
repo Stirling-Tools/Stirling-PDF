@@ -48,6 +48,11 @@ jobs:
           - { label: "webkit 3/5", artifact: webkit-3of5, browser: webkit, project: stubbed-webkit, shard: 3, shards: 5 }
           - { label: "webkit 4/5", artifact: webkit-4of5, browser: webkit, project: stubbed-webkit, shard: 4, shards: 5 }
           - { label: "webkit 5/5", artifact: webkit-5of5, browser: webkit, project: stubbed-webkit, shard: 5, shards: 5 }
+          # The frame-sampling viewer swap specs run serially on an unloaded
+          # runner (see the stubbed-viewer-swap projects in playwright.config.ts).
+          - { label: "chromium viewer-swap", artifact: chromium-viewer-swap, browser: chromium, project: stubbed-viewer-swap, workers: 1 }
+          - { label: "firefox viewer-swap", artifact: firefox-viewer-swap, browser: firefox, project: stubbed-viewer-swap-firefox, workers: 1 }
+          - { label: "webkit viewer-swap", artifact: webkit-viewer-swap, browser: webkit, project: stubbed-viewer-swap-webkit, workers: 1 }
           # The disk-link suite exercises a seam chosen at build time, so it
           # needs a desktop-mode bundle of its own. Chromium only: it is not
           # testing engine behaviour.
@@ -88,7 +93,7 @@ jobs:
           NPM_CONFIG_FETCH_RETRY_FACTOR: "2"
           NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: "1000"
           NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT: "120000"
-        run: task e2e:stubbed-project PROJECT=${{ matrix.project }} -- --workers=3 --shard=${{ matrix.shard }}/${{ matrix.shards }}
+        run: task e2e:stubbed-project PROJECT=${{ matrix.project }} -- --workers=${{ matrix.workers || 3 }} ${{ matrix.shard && format('--shard={0}/{1}', matrix.shard, matrix.shards) || '' }}
       - name: Build frontend (desktop mode, for the disk-link suite)
         if: matrix.suite == 'desktop'
         env:
