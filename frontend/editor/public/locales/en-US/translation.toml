@@ -1876,6 +1876,7 @@ comment = "Comment"
 comments = "Comments"
 contents = "Text"
 delete = "Delete"
+deleted = "Annotation deleted"
 drawing = "Drawing"
 editSelectDescription = "Click an existing annotation to edit its color, opacity, text, or size."
 editText = "Edit"
@@ -1917,6 +1918,7 @@ textAlignment = "Text Alignment"
 textMarkup = "Text Markup"
 title = "Annotate"
 underline = "Underline"
+undoDelete = "Undo"
 width = "Width"
 
 [app]
@@ -8468,6 +8470,22 @@ title = "Folder could not be read"
 description = "A page in your file could not be drawn, so the run could not finish."
 title = "Page could not be rendered"
 
+[portal.failures.kind.stepInterrupted]
+description = "This step was stopped before it finished, so your file was not processed. Running it again usually works."
+title = "Step was interrupted"
+
+[portal.failures.kind.stepMisconfigured]
+description = "This step's settings are not valid, so it could not run on any file. Edit the step to fix them."
+title = "Step settings are invalid"
+
+[portal.failures.kind.stepPageTooLarge]
+description = "A page in your file could not be rendered at the requested resolution. Lower the DPI in the step, or split the file."
+title = "Page too large to render"
+
+[portal.failures.kind.stepToolFailed]
+description = "A tool this step relies on could not process your file."
+title = "Tool could not process the file"
+
 [portal.failures.kind.toolNotInstalled]
 description = "This server is missing software the step needs, so the run could not start it."
 title = "Software not installed"
@@ -12559,6 +12577,7 @@ validUntrusted = "Valid, signer not verified"
 cannotPreviewFile = "Cannot Preview File"
 copyText = "Copy"
 disableColorFilter = "Disable Color Filter"
+documentUpdated = "Document updated"
 dualPageView = "Dual Page View"
 enableDarkFilter = "Enable Dark Filter"
 enableSepiaFilter = "Enable Sepia Filter"
