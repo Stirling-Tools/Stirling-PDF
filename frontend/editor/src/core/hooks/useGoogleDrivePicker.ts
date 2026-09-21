@@ -1,7 +1,3 @@
-/**
- * React hook for Google Drive file picker
- */
-
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import {
@@ -20,17 +16,17 @@ interface UseGoogleDrivePickerReturn {
   isEnabled: boolean;
   isLoading: boolean;
   error: string | null;
+  clearError: () => void;
   openPicker: (options?: UseGoogleDrivePickerOptions) => Promise<File[]>;
 }
 
-/**
- * Hook to use Google Drive file picker
- */
+/** Opens Drive lazily; failures return no files and remain visible until cleared or retried. */
 export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
   const { config } = useAppConfig();
   const [isEnabled, setIsEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const clearError = useCallback(() => setError(null), []);
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Memoize backend config to only track Google Drive specific properties
@@ -44,19 +40,14 @@ export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
     ],
   );
 
-  // Check if Google Drive is configured and reset initialization if disabled
   useEffect(() => {
     const configured = isGoogleDriveConfigured(googleDriveBackendConfig);
     setIsEnabled(configured);
-    // Reset initialization state if Google Drive becomes disabled
     if (!configured) {
       setIsInitialized(false);
     }
   }, [googleDriveBackendConfig]);
 
-  /**
-   * Initialize the Google Drive service (lazy initialization)
-   */
   const initializeService = useCallback(async () => {
     if (isInitialized) return;
 
@@ -70,9 +61,6 @@ export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
     setIsInitialized(true);
   }, [isInitialized, googleDriveBackendConfig]);
 
-  /**
-   * Open the Google Drive picker
-   */
   const openPicker = useCallback(
     async (options: UseGoogleDrivePickerOptions = {}): Promise<File[]> => {
       if (!isEnabled) {
@@ -84,10 +72,8 @@ export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
         setIsLoading(true);
         setError(null);
 
-        // Initialize service if needed
         await initializeService();
 
-        // Open picker
         const service = getGoogleDrivePickerService();
         const files = await service.openPicker({
           multiple: options.multiple ?? true,
@@ -114,6 +100,7 @@ export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
     isEnabled,
     isLoading,
     error,
+    clearError,
     openPicker,
   };
 }

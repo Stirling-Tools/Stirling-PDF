@@ -596,7 +596,10 @@ export function LibraryFilePicker({
         <Alert
           title={t("filePicker.errorTitle", "Couldn't add files")}
           withCloseButton
-          onClose={() => setError(null)}
+          onClose={() => {
+            setError(null);
+            drive.clearError();
+          }}
           role="alert"
         >
           {error ?? drive.error}

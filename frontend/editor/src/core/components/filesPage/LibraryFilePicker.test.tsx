@@ -49,6 +49,8 @@ const state = vi.hoisted(() => ({
   maxSelectable: null as number | null,
   viewMode: "list" as "list" | "grid",
   storageEnabled: false,
+  driveError: null as string | null,
+  clearDriveError: vi.fn(),
 }));
 
 vi.mock("@app/contexts/FilesPageContext", async (importOriginal) => ({
@@ -90,7 +92,11 @@ vi.mock("@app/hooks/useSharingEnabled", () => ({
   useSharingEnabled: () => ({ sharingEnabled: false }),
 }));
 vi.mock("@app/hooks/useGoogleDrivePicker", () => ({
-  useGoogleDrivePicker: () => ({ isEnabled: false }),
+  useGoogleDrivePicker: () => ({
+    isEnabled: false,
+    error: state.driveError,
+    clearError: state.clearDriveError,
+  }),
 }));
 vi.mock("@app/hooks/useIsMobile", () => ({ useIsMobile: () => false }));
 vi.mock("@app/hooks/usePolicyFileBadges", () => ({
@@ -165,6 +171,10 @@ beforeEach(() => {
   state.maxSelectable = null;
   state.viewMode = "list";
   state.storageEnabled = false;
+  state.driveError = null;
+  state.clearDriveError.mockImplementation(() => {
+    state.driveError = null;
+  });
   state.listDirectory.mockImplementation(async () => ({
     files: state.diskFiles,
     directories: [],
@@ -175,6 +185,31 @@ beforeEach(() => {
 });
 
 describe("library file picker", () => {
+  it("dismisses a Drive error without losing selected files", async () => {
+    state.driveError = "Drive access denied";
+    const user = userEvent.setup();
+    const view = show();
+    await user.click(screen.getByText("One.pdf"));
+    const alert = screen.getByRole("alert");
+    expect(alert).toHaveTextContent("Drive access denied");
+    await user.click(within(alert).getByRole("button"));
+    expect(state.clearDriveError).toHaveBeenCalledOnce();
+    view.rerender(
+      <MantineProvider env="test">
+        <LibraryFilePicker
+          onBusyChange={vi.fn()}
+          onExternalPickerChange={vi.fn()}
+        />
+      </MantineProvider>,
+    );
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Add 1 files" }));
+    expect(state.selected).toHaveBeenCalledExactlyOnceWith(
+      [state.files[0]],
+      [],
+    );
+  });
+
   it("shows the selected file's folder when browsing Recents", async () => {
     state.folders = [folder("invoices", "Invoices")];
     state.files = [file("filed", "Filed.pdf", "invoices")];
