@@ -68,6 +68,7 @@ import { FolderProcessingSetup } from "@app/components/policies/FolderProcessing
 import { useServerProcessingBlock } from "@app/hooks/useServerProcessingBlock";
 import { FolderSweepWall } from "@app/components/policies/SweepRunWall";
 import { RestoreOriginalsDialog } from "@app/components/filesPage/RestoreOriginalsDialog";
+import { useNewFailureNotifications } from "@app/components/filesPage/useNewFailureNotifications";
 import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
 import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerModal";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
@@ -611,6 +612,8 @@ export default function FileManagerView() {
       clearInterval(timer);
     };
   }, [processingView, processingRecordId, listFiles]);
+
+  useNewFailureNotifications(processingRecordId, fileStates);
 
   const [processingSetupFolder, setProcessingSetupFolder] =
     useState<FolderRecord | null>(null);
