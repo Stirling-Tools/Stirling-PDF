@@ -45,7 +45,8 @@ public class LinkedInstance {
     private Long teamId;
 
     /**
-     * Admin who registered the instance; informational (no FK, so a user delete never offlines it).
+     * Account allowed to renew browser sign-in. No FK: deleting the user does not stop device
+     * access.
      */
     @Column(name = "created_by_user_id")
     private Long createdByUserId;

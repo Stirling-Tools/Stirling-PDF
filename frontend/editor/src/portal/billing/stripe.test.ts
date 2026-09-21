@@ -11,7 +11,9 @@ const { getClient, invoke, rpc } = vi.hoisted(() => ({
   rpc: vi.fn(),
 }));
 
-vi.mock("@portal/auth/saasSupabase", () => ({ ensureSaasSupabase: vi.fn() }));
+vi.mock("@app/portal/auth/saasSupabase", () => ({
+  ensureSaasSupabase: vi.fn(),
+}));
 vi.mock("@app/auth/supabase/supabaseClient", () => ({
   getSupabaseClient: () => getClient(),
   configureSupabase: vi.fn(),
@@ -28,14 +30,23 @@ import {
   getLatestBundleQuote,
   StripeFunctionError,
   upsertBundleQuote,
-} from "@portal/billing/stripe";
+} from "@app/portal/billing/stripe";
+import { SaasSessionRequiredError } from "@app/portal/auth/portalSaasSession";
 
 const req = { teamId: 1, successUrl: "s", cancelUrl: "c" } as const;
 
 beforeEach(() => {
   invoke.mockReset();
   rpc.mockReset();
-  getClient.mockReset().mockReturnValue({ functions: { invoke }, rpc });
+  getClient.mockReset().mockReturnValue({
+    functions: { invoke },
+    rpc,
+    auth: {
+      getSession: async () => ({
+        data: { session: { access_token: "billing-token" } },
+      }),
+    },
+  });
 });
 afterEach(() => vi.restoreAllMocks());
 
@@ -216,6 +227,18 @@ describe("upsertBundleQuote", () => {
     eulaVersion: "2026-07-draft",
   } as const;
 
+  it("does not replay a quote mutation after a 401", async () => {
+    rpc.mockResolvedValue({
+      data: null,
+      error: { message: "expired" },
+      status: 401,
+    });
+    await expect(upsertBundleQuote(quoteInput)).rejects.toBeInstanceOf(
+      SaasSessionRequiredError,
+    );
+    expect(rpc).toHaveBeenCalledOnce();
+  });
+
   it("maps the RPC row and sends p_* args (create — no p_quote_id)", async () => {
     rpc.mockResolvedValue({
       data: [
@@ -268,6 +291,31 @@ describe("upsertBundleQuote", () => {
     expect(err).toBeInstanceOf(StripeFunctionError);
     expect((err as StripeFunctionError).code).toBe("42501");
   });
+});
+
+it("renews once when reading a saved quote returns 401", async () => {
+  const refreshSession = vi
+    .fn()
+    .mockResolvedValue({ data: { session: { access_token: "renewed" } } });
+  getClient.mockReturnValue({
+    rpc,
+    auth: {
+      getSession: vi
+        .fn()
+        .mockResolvedValue({ data: { session: { access_token: "old" } } }),
+      refreshSession,
+    },
+  });
+  rpc
+    .mockResolvedValueOnce({
+      data: null,
+      error: { message: "expired" },
+      status: 401,
+    })
+    .mockResolvedValueOnce({ data: [], error: null, status: 200 });
+  await expect(getLatestBundleQuote(1)).resolves.toBeNull();
+  expect(refreshSession).toHaveBeenCalledOnce();
+  expect(rpc).toHaveBeenCalledTimes(2);
 });
 
 describe("finalizeBundleInvoice", () => {
