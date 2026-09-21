@@ -168,7 +168,9 @@ public enum FailureKind {
             FailureSeverity.ERROR,
             FailureRemedy.NEEDS_SERVER_FIX,
             FailureScope.SERVER,
-            errorCodes("E042", "E062", "E063", "E080"),
+            // E080 (MD5 unavailable) is deliberately not claimed: its one thrower has no throws
+            // clause and its caller swallows it for a fallback hash, so it cannot reach a run.
+            errorCodes("E042", "E062", "E063", "E064"),
             fallback("This server is missing software the step needs, so it could not be run."),
             // Nothing for an owner to press: their document is fine, and a retry fails the same
             // way until someone installs the binary.
@@ -196,11 +198,8 @@ public enum FailureKind {
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
 
     /**
-     * Ghostscript reached a page it could not draw, which its output names.
-     *
-     * <p>Only the recognised page-drawing failure belongs here. E051 is the bucket {@code
-     * ExceptionUtils.analyzeGhostscriptOutput} falls back to for output it does not recognise, so
-     * it also carries killed processes and full disks, which a retry does clear.
+     * Ghostscript reached a page it could not draw, which its output names. Only that recognised
+     * failure belongs here; the bucket Ghostscript output falls into otherwise is STEP_TOOL_FAILED.
      */
     STEP_CANNOT_RENDER_PAGE(
             FailureStage.INTERNAL,
@@ -213,6 +212,71 @@ public enum FailureKind {
             global(VIEW_FILE, OWNER, SECONDARY),
             global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
             global(OPEN_IN_TOOL, OWNER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /**
+     * A tool the step shells out to ran and did not deliver: OCRmyPDF or qpdf exited non-zero,
+     * LibreOffice produced no PDF/A. E051 is also the bucket unrecognised Ghostscript output falls
+     * into, so it carries killed processes and full disks too; the retry offered first clears
+     * those.
+     */
+    STEP_TOOL_FAILED(
+            FailureStage.INTERNAL,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_FILE_FIX,
+            FailureScope.FILE,
+            errorCodes("E044", "E051", "E052", "E060"),
+            fallback("A tool this step relies on could not process this document."),
+            global(OPEN_IN_TOOL, OWNER, SECONDARY),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /** The thread running the step was interrupted: a shutdown or a cancel, not the document. */
+    STEP_INTERRUPTED(
+            FailureStage.INTERNAL,
+            FailureSeverity.ERROR,
+            FailureRemedy.TRANSIENT,
+            FailureScope.FILE,
+            errorCodes("E053"),
+            fallback(
+                    "This step was stopped before it finished, so the document was not processed."),
+            global(OPEN_IN_TOOL, OWNER, SECONDARY),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /**
+     * A page ran the renderer out of memory at the requested resolution. The page's size and the
+     * step's DPI decide it together, so one oversized page fails while its neighbours succeed.
+     */
+    STEP_PAGE_TOO_LARGE(
+            FailureStage.INTERNAL,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_CONFIG_FIX,
+            FailureScope.FILE,
+            errorCodes("E081"),
+            fallback(
+                    "A page in this document was too large to render at the requested resolution."),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /**
+     * The step's settings, not the document, were refused: no OCR language, an unparseable page
+     * size. Scoped to the policy, since every document it reaches fails identically until the step
+     * is edited, and one incident says that best.
+     */
+    STEP_MISCONFIGURED(
+            FailureStage.INTERNAL,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_CONFIG_FIX,
+            FailureScope.POLICY,
+            errorCodes("E040", "E041", "E043", "E050", "E070", "E072"),
+            fallback("This step's settings are not valid, so it could not run."),
+            // Nothing for an owner to press: their document is fine, and only whoever can edit the
+            // policy can change the settings.
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, SECONDARY),
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
 
     UNKNOWN(
