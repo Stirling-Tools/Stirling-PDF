@@ -2,13 +2,15 @@ import {
   createContext,
   useContext,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
 import { navigateToSettings } from "@app/utils/settingsNavigation";
 import type { NavKey } from "@app/components/shared/config/types";
-import type { ConnectOutcome } from "@portal/components/account-link/ConnectCallbackView";
 import type { AccountLinkBlockContext } from "@app/services/accountLinkBlock";
+import type { ConnectOutcome } from "@app/portal/components/account-link/ConnectCallbackView";
+import { clearPendingConnect } from "@app/portal/auth/pendingConnect";
 
 /**
  * Why the dialog is open. All three run the same handshake; the mode only chooses the pitch.
@@ -88,6 +90,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] =
     useState(readSidebarCollapsed);
   const [assistantOpen, setAssistantOpen] = useState(false);
+  const linkModalActive = useRef(false);
   const [linkModalOpen, setLinkModalOpen] = useState(false);
   const [linkModalFailureContext, setLinkModalFailureContext] =
     useState<AccountLinkBlockContext>();
@@ -130,9 +133,13 @@ export function UIProvider({ children }: { children: ReactNode }) {
         mode: LinkModalMode = "link",
         failureContext?: AccountLinkBlockContext,
       ) => {
+        // Background failures must not replace a handoff or callback already in progress.
+        if (linkModalActive.current) return;
+        linkModalActive.current = true;
         setLinkModalFailureContext(failureContext);
         setMobileNavOpen(false);
         setLinkModalMode(mode);
+        setConnectOutcome(null);
         setLinkModalOpen(true);
       },
       trialSetupRequested,
@@ -143,14 +150,18 @@ export function UIProvider({ children }: { children: ReactNode }) {
       clearTrialSetupRequest: () => setTrialSetupRequested(false),
       connectOutcome,
       publishConnectOutcome: (outcome: ConnectOutcome) => {
+        linkModalActive.current = true;
         setMobileNavOpen(false);
         setConnectOutcome(outcome);
-        setLinkModalMode("link");
+        setLinkModalMode(outcome.mode ?? "link");
         setLinkModalOpen(true);
       },
       clearConnectOutcome: () => setConnectOutcome(null),
       closeLinkModal: () => {
         setLinkModalFailureContext(undefined);
+        linkModalActive.current = false;
+        connectOutcome?.cancel?.();
+        clearPendingConnect();
         setLinkModalOpen(false);
         setLinkModalMode("link");
         // A reopen from a CTA is a fresh flow, not a handshake already dismissed.

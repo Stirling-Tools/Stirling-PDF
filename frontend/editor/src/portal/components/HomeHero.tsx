@@ -1,4 +1,4 @@
-import { EditorStatusCard } from "@portal/components/EditorStatusCard";
+import { EditorStatusCard } from "@app/portal/components/EditorStatusCard";
 
 export function HomeHero() {
   return <EditorStatusCard />;

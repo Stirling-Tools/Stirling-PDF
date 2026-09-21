@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner } from "@app/ui";
-import { isSaasSupabaseConfigured } from "@portal/auth/saasSupabase";
-import { ConnectBenefitsSlide } from "@portal/components/account-link/connect/ConnectBenefitsSlide";
-import { FreeTierExhaustedSummary } from "@portal/components/account-link/connect/FreeTierExhaustedSummary";
+import { isSaasSupabaseConfigured } from "@app/portal/auth/saasSupabase";
+import { ConnectBenefitsSlide } from "@app/portal/components/account-link/connect/ConnectBenefitsSlide";
+import { FreeTierExhaustedSummary } from "@app/portal/components/account-link/connect/FreeTierExhaustedSummary";
 import { ExhaustedAccountLinkContent } from "@app/components/account-link/ExhaustedAccountLinkModal";
 import "@app/components/account-link/connect.css";
 
@@ -50,7 +50,7 @@ export function ConnectAskStep({
 
       {!isSaasSupabaseConfigured && (
         <Banner
-          tone="warning"
+          tone="neutral"
           title={t(
             "portal.accountLink.modal.loginNotConfigured.title",
             "Stirling connection not configured",

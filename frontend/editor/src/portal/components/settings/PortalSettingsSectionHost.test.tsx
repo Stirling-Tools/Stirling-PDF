@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
@@ -7,24 +8,40 @@ import {
   clearAccountLinkBlock,
   reportFreeTierExhausted,
 } from "@app/services/accountLinkBlock";
+import { useUI } from "@app/portal/contexts/UIContext";
+
+vi.mock("@app/portal/hooks/useAccountLinkOwner", () => ({
+  useAccountLinkOwner: () => true,
+}));
 
 const { fetchStatus } = vi.hoisted(() => ({ fetchStatus: vi.fn() }));
-vi.mock("@portal/api/link", () => ({ fetchStatus }));
-vi.mock("@portal/auth/saasSupabase", () => ({
+vi.mock("@app/portal/api/link", () => ({ fetchStatus }));
+vi.mock("@app/portal/auth/saasSupabase", () => ({
   isSaasSupabaseConfigured: true,
 }));
-vi.mock("@portal/components/account-link/LinkAccountModal", () => ({
-  LinkAccountModal: ({
-    mode,
-    onClose,
-  }: {
-    mode: string;
-    onClose: () => void;
-  }) => (
-    <div role="dialog" aria-label={mode}>
-      <button onClick={onClose}>Not now</button>
-    </div>
-  ),
+vi.mock("@app/portal/components/account-link/LinkAccountModal", () => ({
+  LinkAccountModalHost: () => {
+    const { linkModalOpen, linkModalMode, closeLinkModal } = useUI();
+    return linkModalOpen ? (
+      <div role="dialog" aria-label={linkModalMode}>
+        <button onClick={closeLinkModal}>Not now</button>
+      </div>
+    ) : null;
+  },
+}));
+
+vi.mock(
+  "@app/portal/components/account-link/AccountLinkSessionBoundary",
+  () => ({
+    AccountLinkSessionBoundary: ({ children }: { children: ReactNode }) =>
+      children,
+  }),
+);
+vi.mock("@app/portal/components/account-link/SaasSessionBanner", () => ({
+  SaasSessionBanner: () => null,
+}));
+vi.mock("@app/portal/components/account-link/ConnectCallbackHost", () => ({
+  ConnectCallbackHost: () => null,
 }));
 
 function LinkState() {

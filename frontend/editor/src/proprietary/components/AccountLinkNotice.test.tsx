@@ -15,7 +15,13 @@ const { alert, begin, auth, get } = vi.hoisted(() => ({
   get: vi.fn(),
   auth: { isAdmin: true, loading: false },
 }));
-vi.mock("@app/auth", () => ({ useAuth: () => auth }));
+vi.mock("@app/auth", () => ({
+  useAuth: () => ({
+    ...auth,
+    user: { orgOwner: auth.isAdmin },
+    loading: false,
+  }),
+}));
 vi.mock("@app/components/toast", () => ({ alert }));
 vi.mock("@app/services/apiClient", () => ({ default: { get } }));
 vi.mock("@portal/hooks/useConnectHandoff", () => ({

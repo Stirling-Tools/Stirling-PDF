@@ -1,9 +1,15 @@
 import { useCallback, useEffect, useState, useRef } from "react";
-import { errorMessage } from "@portal/api/http";
-import { isSaasSupabaseConfigured } from "@portal/auth/saasSupabase";
-import { fetchStatus, unlinkInstance, type LinkStatus } from "@portal/api/link";
-import { useApplyLinkFacts, useLink } from "@portal/contexts/LinkContext";
 import { clearAccountLinkBlock } from "@app/services/accountLinkBlock";
+import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
+import { errorMessage } from "@app/portal/api/http";
+import { isSaasSupabaseConfigured } from "@app/portal/auth/saasSupabase";
+import {
+  fetchStatus,
+  unlinkInstance,
+  type LinkStatus,
+} from "@app/portal/api/link";
+import { useApplyLinkFacts, useLink } from "@app/portal/contexts/LinkContext";
+import { clearAccountLinkSession } from "@app/portal/auth/accountLinkSession";
 
 /** Reads and clears THIS instance's link status. */
 
@@ -25,6 +31,7 @@ export interface UseAccountLink {
 }
 
 export function useAccountLink(): UseAccountLink {
+  const isOwner = useAccountLinkOwner();
   const applyLinkFacts = useApplyLinkFacts();
   const { markStatusKnown } = useLink();
   const [status, setStatus] = useState<LinkStatus | null>(null);
@@ -33,11 +40,19 @@ export function useAccountLink(): UseAccountLink {
   const [error, setError] = useState<string | null>(null);
 
   const previousLinked = useRef<boolean | null>(null);
+  const statusRequest = useRef(0);
   const refresh = useCallback(
     async (force = false) => {
+      const request = ++statusRequest.current;
       setStatusError(null);
+      if (!isOwner) {
+        setStatus(null);
+        previousLinked.current = null;
+        return;
+      }
       try {
         const s = await fetchStatus(force);
+        if (request !== statusRequest.current) return;
         setStatus(s);
         if (s.linked) clearAccountLinkBlock();
         // A linked instance is at least linked-free; subscription comes from the wallet.
@@ -47,23 +62,30 @@ export function useAccountLink(): UseAccountLink {
         // Success only: marking this in the catch would read "could not ask" as "not linked".
         markStatusKnown();
       } catch (e) {
-        setStatusError(errorMessage(e));
+        if (request === statusRequest.current) setStatusError(errorMessage(e));
       }
     },
-    [applyLinkFacts, markStatusKnown],
+    [applyLinkFacts, markStatusKnown, isOwner],
   );
 
   useEffect(() => {
     void refresh();
+    if (!isOwner) return;
     const timer = window.setInterval(() => void refresh(), 60_000);
-    return () => window.clearInterval(timer);
-  }, [refresh]);
+    return () => {
+      window.clearInterval(timer);
+      statusRequest.current++;
+    };
+  }, [refresh, isOwner]);
 
   const unlink = useCallback(async () => {
+    if (!isOwner) return;
     setPhase("linking");
     setError(null);
     try {
       await unlinkInstance();
+      clearAccountLinkSession();
+      statusRequest.current++;
       setStatus({ linked: false, name: null });
       previousLinked.current = false;
       setPhase("idle");
@@ -72,7 +94,7 @@ export function useAccountLink(): UseAccountLink {
       setError(e instanceof Error ? e.message : String(e));
       setPhase("error");
     }
-  }, [applyLinkFacts]);
+  }, [applyLinkFacts, isOwner]);
 
   return {
     loginConfigured: isSaasSupabaseConfigured,

@@ -4,8 +4,14 @@
     "paths": {
       "@app/*": ["./src/prototypes/*", "./src/proprietary/*", "./src/core/*"],
       "@proprietary/*": ["./src/proprietary/*"],
-      "@portal/*": ["./src/portal/*"],
-      "@core/*": ["./src/core/*"]
+      "@core/*": ["./src/core/*"],
+      "@app/portal/*": [
+        "./src/prototypes/portal/*",
+        "./src/proprietary/portal/*",
+        "./src/core/portal/*",
+        "./src/portal/*"
+      ],
+      "@portal/*": ["./src/portal/*"]
     }
   },
   "exclude": [

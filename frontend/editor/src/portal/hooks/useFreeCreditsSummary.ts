@@ -1,8 +1,9 @@
+import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useLink } from "@portal/contexts/LinkContext";
-import { fetchWallet } from "@portal/api/billing";
-import { qk } from "@portal/queries/keys";
+import { useLink } from "@app/portal/contexts/LinkContext";
+import { fetchWallet } from "@app/portal/api/billing";
+import { qk } from "@app/portal/queries/keys";
 import {
   readCachedCredits,
   writeCachedCredits,
@@ -31,12 +32,14 @@ import { type NavFooterCredits } from "@app/components/shared/navFooter/NavFoote
  */
 export function useFreeCreditsSummary(): NavFooterCredits | null {
   const { isLinked } = useLink();
+  const isOwner = useAccountLinkOwner();
+  const canRead = isLinked && isOwner;
   // Shared query key, so the footer rides the same cached snapshot as any other
   // wallet reader rather than adding a fetch per mount.
   const { data: wallet } = useQuery({
     queryKey: qk.wallet(isLinked),
     queryFn: fetchWallet,
-    enabled: isLinked,
+    enabled: canRead,
   });
   // Shared with the editor's seam, so crossing between the two apps shows the
   // figures the other one last saw rather than re-fetching into an empty row.
@@ -51,14 +54,14 @@ export function useFreeCreditsSummary(): NavFooterCredits | null {
   useEffect(() => {
     // Only once linked: an unlinked instance never asks, so it has no answer of
     // its own and must not overwrite what the editor recorded.
-    if (isLinked && live !== undefined) writeCachedCredits(live);
+    if (canRead && live !== undefined) writeCachedCredits(live);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wallet, isLinked]);
+  }, [wallet, canRead]);
 
   // Linkage gates the seed as well as the fetch. The cache outlives an unlink
   // — nothing refetches or rewrites it once the instance stops asking — so
   // without this an unlinked instance would keep showing the figures from when
   // it was linked, indefinitely.
-  if (!isLinked) return null;
+  if (!canRead) return null;
   return (live !== undefined ? live : seed) ?? null;
 }

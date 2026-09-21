@@ -13,6 +13,8 @@ import {
 } from "@app/services/accountLinkBlock";
 
 export interface ExhaustedAccountLinkModalProps {
+  /** Browser linking requires the server owner; native hosts supply their own action. */
+  canLink?: boolean;
   /** Only the operation that opened this instance may supply pipeline controls. */
   failureContext?: AccountLinkBlockContext;
   open: boolean;
@@ -56,9 +58,11 @@ export function ExhaustedAccountLinkModal({
   summary,
   children,
   failureContext: context,
+  canLink,
 }: ExhaustedAccountLinkModalProps) {
   const { t } = useTranslation();
   const { isAdmin, loading } = useAuth();
+  const canManageAccount = canLink ?? isAdmin;
   const clipboard = useClipboard();
   const dismiss = () => {
     acknowledgeAccountLinkPrompt();
@@ -94,7 +98,7 @@ export function ExhaustedAccountLinkModal({
       }
     : null;
   const cause = context && causes ? causes[context.trigger] : "";
-  const title = isAdmin
+  const title = canManageAccount
     ? t(
         "portal.accountLink.modal.exhaustedTitle",
         "Keep your workflows running",
@@ -113,7 +117,7 @@ export function ExhaustedAccountLinkModal({
       onClose={dismiss}
       label={title}
       footer={
-        isAdmin ? (
+        canManageAccount ? (
           <>
             <Button variant="quiet" accent="neutral" onClick={dismiss}>
               {t("portal.accountLink.connect.notNow", "Not now")}
@@ -159,13 +163,15 @@ export function ExhaustedAccountLinkModal({
         closeLabel={t("portal.accountLink.connect.close", "Close")}
         onClose={dismiss}
       />
-      {!isAdmin && cause && <p className="portal-connect__lede">{cause}</p>}
-      {isAdmin ? (
+      {!canManageAccount && cause && (
+        <p className="portal-connect__lede">{cause}</p>
+      )}
+      {canManageAccount ? (
         (children ?? <ExhaustedAccountLinkContent summary={summary} />)
       ) : (
         <p className="portal-connect__lede">{adminMessage}</p>
       )}
-      {isAdmin && context?.pipelineId && (
+      {canManageAccount && context?.pipelineId && (
         <CreditPromptPipelines
           affectedPipelineId={context?.pipelineId}
           onManagePipeline={
