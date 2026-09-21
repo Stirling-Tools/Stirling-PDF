@@ -92,9 +92,8 @@ jobs:
           sftp-host: ${{ secrets.CACHE_SFTP_HOST }}
           sftp-port: ${{ secrets.CACHE_SFTP_PORT || '22' }}
           sftp-username: ${{ secrets.CACHE_SFTP_USERNAME }}
-          sftp-private-key: ${{ secrets.CACHE_SFTP_PRIVATE_KEY }}
           sftp-password: ${{ secrets.CACHE_SFTP_PASSWORD }}
-          sftp-base-path: ${{ secrets.CACHE_SFTP_BASE_PATH || '/cache-the-planet' }}
+          sftp-base-path: ${{ secrets.CACHE_SFTP_BASE_PATH || '/files/cache-the-planet' }}
           key: ${{ needs.hash_pr.outputs.files_hash }}
           allow-shared-restore: true
           path: |
