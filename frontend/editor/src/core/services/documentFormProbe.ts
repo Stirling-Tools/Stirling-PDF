@@ -52,13 +52,14 @@ const ANSWER_CACHE_LIMIT = 64;
  * miss and never re-derive an answer for a document already answered, so a
  * released copy is not read back to answer the same question.
  */
-export function documentHasFormFieldsFor(
+export async function documentHasFormFieldsFor(
   source: Blob,
   bytes?: ArrayBuffer,
 ): Promise<boolean> {
-  const key = documentFileKey(source);
-  const cached =
-    answers.get(source) ?? (key ? answersByFileKey.get(key) : undefined);
+  const byIdentity = answers.get(source);
+  if (byIdentity) return byIdentity;
+  const key = await documentFileKey(source);
+  const cached = key ? answersByFileKey.get(key) : undefined;
   if (cached) return cached;
 
   const answer = bytes
