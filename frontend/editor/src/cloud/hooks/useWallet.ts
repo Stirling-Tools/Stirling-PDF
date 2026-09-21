@@ -259,7 +259,9 @@ export function useWallet(enabled = true): UseWalletResult {
       }
 
       try {
-        const res = await apiClient.get<Wallet>("/api/v1/payg/wallet");
+        const res = await apiClient.get<Wallet>("/api/v1/payg/wallet", {
+          suppressErrorToast: true,
+        });
         if (cancelled || reqId !== latestReqId.current) return;
         setWallet((prev) => reuseIfEqual(prev, res.data));
         // Fresh data retires any earlier failure, including one a silent poll
