@@ -705,7 +705,6 @@ export function LocalEmbedPDF({
   }, [engine]);
   useMemo(() => {
     if (!probeSource) return null;
-    beginEngineDocumentOpen(probeSource);
     const probeWith = <T,>(
       run: (live: EngineDocumentProbeApi) => EngineDocumentProbeTask<T>,
     ): Promise<T> => {
@@ -722,6 +721,9 @@ export function LocalEmbedPDF({
       (documentId) =>
         probeWith((live) => live.getDocumentLayerVerdict(documentId)),
     );
+    // After the registration, so a cleared document id leaves a fresh pending
+    // open for callers that ask before the engine reports the new id.
+    beginEngineDocumentOpen(probeSource);
     return probeSource;
   }, [probeSource, engine]);
   // A failed engine must not leave callers waiting on a document that will never

@@ -51,6 +51,17 @@ function createPendingOpen(): PendingOpen {
   return { promise, resolve };
 }
 
+/** Bumped whenever keyed state is cleared, so a publish that started before the
+ *  clear cannot land afterwards with a stale answer. */
+let cacheGeneration = 0;
+
+function clearKeyedAnswers(key: string): void {
+  answersByKey.delete(key);
+  layerAnswersByKey.delete(key);
+  idsByKey.delete(key);
+  cacheGeneration += 1;
+}
+
 function trim<T>(map: Map<string, T>): void {
   while (map.size > KEY_ENTRY_LIMIT) {
     const oldest = map.keys().next().value;
@@ -68,17 +79,18 @@ export function registerEngineDocumentProbe(
   probe: EngineProbeRunner,
   layerProbe: EngineLayerRunner,
 ): void {
-  if (runners.get(source)?.engine !== engine) {
-    invalidateEngineDocumentProbe(source);
+  const engineChanged = runners.get(source)?.engine !== engine;
+  invalidateEngineDocumentProbe(source);
+  if (engineChanged) {
+    // The old engine's document id must not be handed to the new runner; the
+    // next open resolves a fresh one.
+    documentIds.delete(source);
   }
   runners.set(source, { engine, probe, layerProbe });
   void documentFileKey(source).then((key) => {
     if (!key) return;
     if (runnersByKey.get(key)?.engine !== engine) {
-      answersByKey.delete(key);
-      layerAnswersByKey.delete(key);
-      idsByKey.delete(key);
-      pendingOpensByKey.delete(key);
+      clearKeyedAnswers(key);
     }
     runnersByKey.set(key, { engine, probe, layerProbe });
     trim(runnersByKey);
@@ -116,8 +128,7 @@ export function resolveEngineDocumentOpen(
     }
     pendingOpensByKey.get(key)?.resolve(documentId);
     pendingOpensByKey.delete(key);
-    answersByKey.delete(key);
-    layerAnswersByKey.delete(key);
+    clearKeyedAnswers(key);
   });
 }
 
@@ -126,6 +137,10 @@ export function resolveEngineDocumentOpen(
 export function invalidateEngineDocumentProbe(source: Blob): void {
   answers.delete(source);
   layerAnswers.delete(source);
+  cacheGeneration += 1;
+  void documentFileKey(source).then((key) => {
+    if (key) clearKeyedAnswers(key);
+  });
 }
 
 async function documentIdFor(source: Blob): Promise<string | null> {
@@ -151,6 +166,7 @@ function runOnce<T>(
 ): Promise<T> {
   const existing = memo.get(source);
   if (existing) return existing;
+  const generation = cacheGeneration;
   const answer = (async (): Promise<T> => {
     const key = await documentFileKey(source);
     const cached = key ? keyedMemo.get(key) : undefined;
@@ -164,7 +180,8 @@ function runOnce<T>(
   })().catch(() => fallback);
   memo.set(source, answer);
   void documentFileKey(source).then((key) => {
-    if (key && !keyedMemo.has(key)) keyedMemo.set(key, answer);
+    if (!key || cacheGeneration !== generation) return;
+    if (!keyedMemo.has(key)) keyedMemo.set(key, answer);
   });
   return answer;
 }

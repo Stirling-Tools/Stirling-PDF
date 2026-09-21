@@ -76,6 +76,60 @@ describe("documentProbeEngine", () => {
     await expect(runEngineDocumentProbe(file)).resolves.toEqual(probeAnswer(2));
   });
 
+  it("replaces a fallback answer once a runner is registered", async () => {
+    const file = blob();
+    await expect(runEngineDocumentProbe(file)).resolves.toBeNull();
+
+    registerEngineDocumentProbe(
+      file,
+      engine,
+      async () => probeAnswer(3),
+      async () => null,
+    );
+    resolveEngineDocumentOpen(file, "doc-late");
+    await expect(runEngineDocumentProbe(file)).resolves.toEqual(probeAnswer(3));
+  });
+
+  it("drops the old document id when the engine changes", async () => {
+    const file = blob();
+    const probe = vi.fn(async () => probeAnswer(1));
+    registerEngineDocumentProbe(file, engine, probe, async () => null);
+    resolveEngineDocumentOpen(file, "doc-a");
+    await expect(runEngineDocumentProbe(file)).resolves.toEqual(probeAnswer(1));
+
+    const nextEngine = {};
+    registerEngineDocumentProbe(file, nextEngine, probe, async () => null);
+    // The previous engine's id must not reach the new runner.
+    await expect(runEngineDocumentProbe(file)).resolves.toBeNull();
+
+    beginEngineDocumentOpen(file);
+    resolveEngineDocumentOpen(file, "doc-b");
+    await expect(runEngineDocumentProbe(file)).resolves.toEqual(probeAnswer(1));
+    expect(probe).toHaveBeenLastCalledWith("doc-b");
+  });
+
+  it("does not publish a keyed answer after an invalidation", async () => {
+    const lastModified = 1_700_000_000_000;
+    const makeFile = (label: string) =>
+      new File([`%PDF-1.4 ${label}`], "same.pdf", {
+        type: "application/pdf",
+        lastModified,
+      });
+    const first = makeFile("same");
+    const second = makeFile("same");
+    const probe = vi.fn(async () => probeAnswer(1));
+    registerEngineDocumentProbe(first, engine, probe, async () => null);
+    resolveEngineDocumentOpen(first, "doc-a");
+    await expect(runEngineDocumentProbe(first)).resolves.toEqual(
+      probeAnswer(1),
+    );
+
+    invalidateEngineDocumentProbe(first);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    // An equivalent file must not read the pre-invalidation answer.
+    await expect(runEngineDocumentProbe(second)).resolves.toBeNull();
+  });
+
   it("passes the layer verdict through, including cannot-decide", async () => {
     const decided = blob();
     registerEngineDocumentProbe(
