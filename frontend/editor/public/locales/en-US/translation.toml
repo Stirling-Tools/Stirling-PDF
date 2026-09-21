@@ -195,9 +195,6 @@ title = "What it does"
 [AddAttachmentsRequest.tooltip.header]
 title = "About Add Attachments"
 
-[addFileCard]
-upload = "Upload"
-
 [addImage]
 applySignatures = "Apply Images"
 header = "Add images to PDFs"
