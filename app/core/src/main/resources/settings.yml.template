@@ -328,6 +328,12 @@ endpoints:
 metrics:
   enabled: true # 'true' to enable Info APIs (`/api/*`) endpoints, 'false' to disable
 
+toolRecommendations:
+  enabled: true # 'true' to rank the recommended-tools list from real usage (per user, team and install) and record which tool sequences get applied to a document; 'false' keeps the static list and records nothing. Also requires system.enableAnalytics: true, since usage is recorded per user. Nothing is recorded when security.enableLogin is 'false', since there is no user to attribute a run to
+  retentionDays: 180 # days of daily usage and workflow rollups to keep before the retention sweep removes them; 0 or less never sweeps, and anything below windowDays is raised to it
+  windowDays: 30 # scoring lookback window in days
+  recentWindowDays: 7 # events within this many days count double when scoring; capped at windowDays
+
 # Automatically Generated Settings (Do Not Edit Directly)
 # Generated on first boot and written back here. In a cluster EVERY node must carry the SAME key and
 # UUID (env: AUTOMATICALLYGENERATED_KEY / AUTOMATICALLYGENERATED_UUID) or nodes cannot read each other's data.
@@ -408,6 +414,11 @@ aiEngine:
     pdfComment: true # AI-authored PDF comments/annotations
     classify: true # Automatic document classification/labelling
 
+# DocParse: document understanding for ingestion pipelines (chunking + knowledge-base
+# indexing).
+docparse:
+  enabled: true # Master switch; hides the DocParse endpoints when false
+
 formDetection:
   enabled: true # Master on/off switch for the Auto Form Detection feature
   activeModelId: "" # Id of the installed Auto Form Detection model (set automatically after an admin installs one)
@@ -426,6 +437,7 @@ policies:
   # disabled in SaaS mode.
   allowedFolderRoots: [] # e.g. ["/data/inbox", "/data/outbox"]
   scheduleSweepSeconds: 60 # How often (seconds) scheduled policies are checked for being due
+  storageFolderSweepSeconds: 60 # Seconds between safety-net sweeps of server processing folders (arrivals sweep immediately)
   watchReconcileSeconds: 300 # How often (seconds) folder-watch re-syncs watches and re-runs as a safety net for missed events
   watchQuietPeriodMs: 500 # How long (ms) folder-watch coalesces a burst of file events into a single run
   streamTimeoutMs: 1800000 # SSE timeout (ms) for live run-progress streams

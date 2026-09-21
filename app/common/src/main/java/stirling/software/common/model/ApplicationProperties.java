@@ -64,6 +64,7 @@ public class ApplicationProperties {
     private Ui ui = new Ui();
     private Endpoints endpoints = new Endpoints();
     private Metrics metrics = new Metrics();
+    private ToolRecommendations toolRecommendations = new ToolRecommendations();
     private AutomaticallyGenerated automaticallyGenerated = new AutomaticallyGenerated();
 
     private Mail mail = new Mail();
@@ -79,6 +80,7 @@ public class ApplicationProperties {
     private PdfEditor pdfEditor = new PdfEditor();
     private AiEngine aiEngine = new AiEngine();
     private FormDetection formDetection = new FormDetection();
+    private Docparse docparse = new Docparse();
     private Mcp mcp = new Mcp();
     private InternalApi internalApi = new InternalApi();
     private Cluster cluster = new Cluster();
@@ -229,6 +231,12 @@ public class ApplicationProperties {
 
         /** How often (seconds) the schedule trigger checks for policies whose schedule is due. */
         private long scheduleSweepSeconds = 60;
+
+        /**
+         * Seconds between safety-net sweeps of server processing folders; minimum one second.
+         * Placement sweeps the folder itself, so this only catches what this instance never saw.
+         */
+        private long storageFolderSweepSeconds = 60;
 
         /**
          * How often (seconds) the folder-watch trigger reconciles its watch registrations and
@@ -472,6 +480,17 @@ public class ApplicationProperties {
          * place rather than copied. Blank disables seeding.
          */
         private String preinstalledModelDir = "";
+    }
+
+    /**
+     * DocParse settings (top-level {@code docparse.*}): document understanding for ingestion
+     * pipelines.
+     */
+    @Data
+    public static class Docparse {
+
+        /** Master switch; hides the DocParse endpoints when false. */
+        private boolean enabled = true;
     }
 
     /**
@@ -1587,6 +1606,37 @@ public class ApplicationProperties {
     @Data
     public static class Metrics {
         private boolean enabled = true;
+    }
+
+    @Data
+    public static class ToolRecommendations {
+        // Extra off-switch on top of system.enableAnalytics, which must also consent to tracking.
+        private boolean enabled = true;
+        // How long usage and workflow rollups are kept before the retention sweep removes them.
+        private int retentionDays = 180;
+        // Scoring lookback window; events in the recent window count double.
+        private int windowDays = 30;
+        private int recentWindowDays = 7;
+
+        // The getters below clamp rather than reject: a mistyped window should narrow the ranking,
+        // never stop the app booting.
+
+        public int getWindowDays() {
+            return Math.max(1, windowDays);
+        }
+
+        /** Beyond the scoring window every event would be "recent", which says nothing. */
+        public int getRecentWindowDays() {
+            return Math.min(Math.max(0, recentWindowDays), getWindowDays());
+        }
+
+        /**
+         * Zero or less disables the sweep. Otherwise it never runs inside the scoring window, so
+         * retention cannot delete the days the ranking is still reading.
+         */
+        public int getRetentionDays() {
+            return retentionDays <= 0 ? retentionDays : Math.max(retentionDays, getWindowDays());
+        }
     }
 
     @Data
