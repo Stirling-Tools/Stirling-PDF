@@ -133,7 +133,7 @@ interface FilesPageContextValue {
     folderId: FolderId,
     newParentId: FolderId | null,
   ) => Promise<void>;
-  /** Queue files for deletion - opens the DeleteFilesDialog. */
+  /** Prompts for a scope if any selected server copy is owned; otherwise deletes browser copies. */
   removeFiles: (fileIds: FileId[]) => Promise<void>;
   /** Files currently queued in the delete dialog (empty when closed). */
   deleteDialogFileIds: FileId[];
@@ -540,11 +540,9 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
     [folders, t],
   );
 
-  // Local-only deletion is immediate; server copies require a scope choice.
   const [deleteDialogFileIds, setDeleteDialogFileIds] = useState<FileId[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  // Shared by immediate local deletion and confirmed server-copy deletion.
   const performDelete = useCallback(
     async (fileIds: FileId[], scope: DeleteScope) => {
       const stubs = fileIds
@@ -613,8 +611,6 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const removeFiles = useCallback(
     async (fileIds: FileId[]) => {
       if (fileIds.length === 0) return;
-      // Only prompt when a cloud copy is in play (the user must pick where to
-      // delete). Local-only files have nothing to choose - delete immediately.
       const hasDeletableCloud = fileIds.some((id) => {
         const s = fileMap.get(id);
         return (

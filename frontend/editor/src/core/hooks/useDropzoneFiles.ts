@@ -3,7 +3,10 @@ import { useTranslation } from "react-i18next";
 import { alert } from "@app/components/toast";
 import { getDropzoneFiles } from "@app/utils/getDropzoneFiles";
 
-/** Reads partial drops with visible failures; pair with useFsAccessApi=false on the dropzone. */
+/**
+ * Keeps readable files when entries fail; reports errors through onError or a toast.
+ * Mantine dropzones must set useFsAccessApi=false; native drop events work directly.
+ */
 export function useDropzoneFiles(onError?: (error: Error) => void) {
   const { t } = useTranslation();
   return useCallback(

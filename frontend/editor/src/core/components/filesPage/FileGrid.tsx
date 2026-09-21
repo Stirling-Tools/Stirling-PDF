@@ -1879,7 +1879,6 @@ const FileRow = React.memo(function FileRow({
 
 export { ROOT_FOLDER_ID };
 
-/** Selecting a disk entry records its path; bytes are read only when opened. */
 const DiskFileCard = React.memo(function DiskFileCard({
   selectionOnly,
   isSelected,

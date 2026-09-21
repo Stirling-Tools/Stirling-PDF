@@ -7,7 +7,10 @@ import { canPickDirectory, pickDirectory } from "@app/services/directoryPicker";
 import { useServerFolderBlock } from "@app/hooks/useServerFolderBlock";
 import { folderKind } from "@app/types/folder";
 
-/** Shares folder creation and its availability rules across library controls. */
+/**
+ * Mounts and opens picked directories; otherwise opens the creation dialog.
+ * Reports picker and mount failures through FolderContext.
+ */
 export function useNewFolderFlow() {
   const { t } = useTranslation();
   const folders = useFolders();

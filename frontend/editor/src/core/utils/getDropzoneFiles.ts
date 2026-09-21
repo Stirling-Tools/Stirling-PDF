@@ -38,10 +38,10 @@ function dropErrorMessage(cause: unknown): string {
 }
 
 /**
- * Captures dropped files before the event's data store closes, without reopening
- * them through permission-gated handles. Retains recursive directory drops.
- * Pair with useFsAccessApi=false: file dialogs must supply input events.
- * With onError, reports unreadable entries once and returns the readable files; otherwise rejects.
+ * Call during the drop event to capture files and directory entries before its data store closes.
+ * Expands nested directories without permission-gated handles. Earlier drag events return metadata only.
+ * Mantine callers must set useFsAccessApi=false so file dialogs supply input events.
+ * With onError, reports unreadable entries once and returns readable files; otherwise rejects.
  */
 export async function getDropzoneFiles(
   event: DropEvent,

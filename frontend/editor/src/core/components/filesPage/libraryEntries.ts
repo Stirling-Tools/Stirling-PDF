@@ -21,7 +21,7 @@ interface Options {
   diskEntries?: DiskFileEntry[];
 }
 
-/** A mount lists native entries; other folders list stored files. Both hosts use identical ordering. */
+/** diskEntries replaces visibleFiles for mounts; folders always precede files. */
 export function libraryEntries({
   visibleFiles,
   visibleFolders,

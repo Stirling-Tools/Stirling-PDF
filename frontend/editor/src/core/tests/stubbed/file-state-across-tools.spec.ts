@@ -7,7 +7,6 @@ test.use({ filesViewMode: "grid" });
 const FIXTURES_DIR = path.join(import.meta.dirname, "../test-fixtures");
 const SAMPLE_PDF = path.join(FIXTURES_DIR, "sample.pdf");
 
-/** Exercises file persistence through full reloads and tool navigation. */
 test.describe("File state persists across tool navigation", () => {
   test("file uploaded on /merge survives navigation to /split", async ({
     page,

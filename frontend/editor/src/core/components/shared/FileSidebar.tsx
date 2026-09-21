@@ -999,7 +999,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                     label={action.disabledTooltip ?? action.label}
                     position="right"
                     withinPortal
-                    // Long disabled reasons need a multiline tooltip.
                     multiline={Boolean(
                       action.disabled && action.disabledTooltip,
                     )}
@@ -1045,7 +1044,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
           <NavSurface className="file-sidebar-files-box">
             <div className="file-sidebar-scroll">
-              {/* The library uses a folder tree; the editor uses workspace file rows. */}
               {currentWorkbench === "myFiles" && <FolderTreeSection />}
 
               {currentWorkbench !== "myFiles" && (

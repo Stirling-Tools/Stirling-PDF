@@ -191,8 +191,6 @@ export default function HomePage() {
   }, [handleBackToTools, actions, activeFiles.length]);
 
   // Reconcile route and workspace only on transitions, or the old route can undo a view change.
-
-  // Route changes, including Back/Forward and deep links, select the workspace view.
   const derivedFromPath = actions.viewDerivedFromPathRef;
   useEffect(() => {
     if (derivedFromPath.current === location.pathname) return;

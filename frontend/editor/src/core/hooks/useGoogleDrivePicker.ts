@@ -20,7 +20,7 @@ interface UseGoogleDrivePickerReturn {
   openPicker: (options?: UseGoogleDrivePickerOptions) => Promise<File[]>;
 }
 
-/** Opens Drive lazily; failures return no files and remain visible until cleared or retried. */
+/** Initializes Drive lazily; failed picks resolve to [] and set error until cleared or retried. */
 export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
   const { config } = useAppConfig();
   const [isEnabled, setIsEnabled] = useState(false);
@@ -29,7 +29,7 @@ export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
   const clearError = useCallback(() => setError(null), []);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Memoize backend config to only track Google Drive specific properties
+  // Unrelated app settings must not invalidate Drive's config or picker callbacks.
   const googleDriveBackendConfig = useMemo(
     () => extractGoogleDriveBackendConfig(config),
     [

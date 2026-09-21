@@ -102,7 +102,7 @@ export default function FileManagerView() {
 
   const useFullScreenDrawer = useMediaQuery("(max-width: 640px)") ?? false;
   const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false);
-  // Uploads go to the server root; moving into a folder is a separate action.
+  // Saving existing files to the server targets its root, independent of the open folder.
   const [saveToServerTarget, setSaveToServerTarget] = useState<
     StirlingFileStub[] | null
   >(null);
@@ -515,7 +515,6 @@ export default function FileManagerView() {
             return next;
           }
         }
-        // In multi-select mode, plain clicks toggle membership until selection is cleared.
         const inMultiSelectMode = prev.size >= 2;
         if (ctrl || inMultiSelectMode) {
           if (next.has(fileId)) next.delete(fileId);

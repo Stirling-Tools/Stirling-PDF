@@ -25,10 +25,10 @@ type Props = Pick<
   setTypeFilter: (value: string[]) => void;
   viewMode: FilesPageViewMode;
   setViewMode: (value: FilesPageViewMode) => void;
+  /** Popovers are portalled; modal hosts must place them above their overlay. */
   dropdownZIndex?: number;
 };
 
-/** Controlled toolbar shared by the library page and its file picker. */
 export function LibraryToolbar({
   isMobile,
   availableTypes,

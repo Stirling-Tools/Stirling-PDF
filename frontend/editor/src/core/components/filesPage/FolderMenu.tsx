@@ -27,8 +27,7 @@ interface FolderMenuProps {
   canUnmount: boolean;
   editsDisabled: boolean;
   editsDisabledHint?: string;
-  /** Why processing cannot run, or null. Gates the processing entries alone: a
-   *  build with no server behind it can still rename and recolour a folder. */
+  /** Disables only processing actions; library edits remain available. */
   processingBlock?: string | null;
   onStartProcessing: () => void;
   onRunProcessing: () => void;
@@ -51,7 +50,6 @@ interface FolderMenuProps {
   triggerRef?: React.Ref<HTMLButtonElement>;
 }
 
-/** Shared folder actions for the current folder and folder rows. */
 export function FolderMenu({
   folder,
   processing,
