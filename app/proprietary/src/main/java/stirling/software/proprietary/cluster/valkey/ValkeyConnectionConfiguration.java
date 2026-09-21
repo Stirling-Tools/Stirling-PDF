@@ -631,7 +631,7 @@ public class ValkeyConnectionConfiguration {
 
     /**
      * WRONGPASS/NOAUTH/NOPERM are all unrecoverable at boot, so they share this fast-fail path. No
-     * typed auth exception in spring-data-redis 4.0.5 / Lettuce 6.8.2, hence the text match.
+     * typed auth exception in spring-data-redis or Lettuce, hence the text match.
      */
     static boolean isAuthFailure(Throwable t) {
         for (Throwable cur = t; cur != null; cur = cur.getCause()) {
