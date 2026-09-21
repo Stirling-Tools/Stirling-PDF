@@ -50,9 +50,17 @@ jobs:
         with:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          
+
       - name: Garbage collect cache
-        uses: Ludy87/cache-the-planet/gc@7b13e629dbb33bcda505cba4cdb5c6d5898d3168 # v1.7.0
+        uses: Ludy87/cache-the-planet/gc@v1.8
+        env:
+          CACHE_STORAGE: sftp
+          SFTP_HOST: ${{ secrets.CACHE_SFTP_HOST }}
+          SFTP_PORT: ${{ secrets.CACHE_SFTP_PORT || '22' }}
+          SFTP_USERNAME: ${{ secrets.CACHE_SFTP_USERNAME }}
+          SFTP_PRIVATE_KEY: ${{ secrets.CACHE_SFTP_PRIVATE_KEY }}
+          SFTP_PASSWORD: ${{ secrets.CACHE_SFTP_PASSWORD }}
+          SFTP_BASE_PATH: ${{ secrets.CACHE_SFTP_BASE_PATH || '/cache-the-planet' }}
         with:
           repository: Stirling-Tools/Stirling-PDF
           token: ${{ steps.setup-bot.outputs.token }}
