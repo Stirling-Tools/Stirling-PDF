@@ -37,6 +37,9 @@ jobs:
           egress-policy: audit
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          # Full history so the flaky gate can diff a PR against its base sha.
+          fetch-depth: 0
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -79,14 +82,12 @@ jobs:
           PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results-desktop.json
         run: task e2e:stubbed-desktop -- --workers=3
       - name: Flag flaky tests
-        # Runs regardless of the test outcome: a flaky test (passed on retry)
-        # leaves the step green, so this is the only place it surfaces. Emits
-        # ::warning:: annotations + a job summary; never fails the job.
         if: always()
         working-directory: frontend
         run: npx tsx editor/scripts/report-flaky-tests.mts "$PLAYWRIGHT_JSON_OUTPUT_FILE"
         env:
           PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results.json
+          FLAKY_STRICT_BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || '' }}
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
