@@ -1,10 +1,9 @@
-// Regression for the large-document drop: a form-less document at or above
-// LARGE_PDF_PARSE_LIMIT is probed once by the viewer's drop path (which seeds
-// the per-document answer), so the form overlays must answer from the memo
-// instead of reading the document back on the main thread.
+// Regression for the large-document open: the engine worker answers the form
+// and layer probes from the open document, so a form-less document at or above
+// LARGE_PDF_PARSE_LIMIT is never read on the main thread, not even once.
 //
 // The fixture is generated (just over the limit) because a 100 MB file cannot
-// be committed; the app only drops and seeds above that threshold.
+// be committed; the app only treats files above that threshold as large.
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import { existsSync, writeFileSync } from "node:fs";
 import os from "node:os";
@@ -73,7 +72,7 @@ test.beforeAll(() => {
   }
 });
 
-test("a large form-less document is not read back by the form overlays", async ({
+test("a large form-less document opens without a main-thread read", async ({
   page,
 }) => {
   test.setTimeout(300_000);
@@ -113,12 +112,5 @@ test("a large form-less document is not read back by the form overlays", async (
       ).__blobReads,
   );
   const fullReads = reads.filter((read) => read.size >= LIMIT);
-  expect(fullReads.length).toBeGreaterThanOrEqual(1);
-
-  const overlayReads = fullReads.filter((read) =>
-    /documentFormProbe|ButtonAppearanceOverlay|SignatureFieldOverlay|PdfiumFormProvider/.test(
-      read.stack,
-    ),
-  );
-  expect(overlayReads).toEqual([]);
+  expect(fullReads).toEqual([]);
 });
