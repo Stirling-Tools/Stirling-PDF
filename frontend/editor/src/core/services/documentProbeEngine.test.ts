@@ -3,7 +3,7 @@
  * document id, a failed answer is retried after a reopen, and the layer verdict
  * can say "cannot decide" so the caller parses instead.
  */
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   beginEngineDocumentOpen,
   invalidateEngineDocumentProbe,
@@ -13,7 +13,12 @@ import {
   runEngineDocumentProbe,
 } from "@app/services/documentProbeEngine";
 
-const blob = () => new Blob(["%PDF-1.4"], { type: "application/pdf" });
+let sequence = 0;
+const blob = () => {
+  sequence += 1;
+  return new Blob([`%PDF-1.4 probe ${sequence}`], { type: "application/pdf" });
+};
+const engine = {};
 
 const probeAnswer = (formType: number) => ({ formType, attachmentCount: 0 });
 
@@ -27,7 +32,7 @@ describe("documentProbeEngine", () => {
     const file = blob();
     const probe = vi.fn(async () => probeAnswer(1));
     beginEngineDocumentOpen(file);
-    registerEngineDocumentProbe(file, probe, async () => null);
+    registerEngineDocumentProbe(file, engine, probe, async () => null);
 
     const pending = runEngineDocumentProbe(file);
     expect(probe).not.toHaveBeenCalled();
@@ -41,7 +46,7 @@ describe("documentProbeEngine", () => {
     const file = blob();
     const probe = vi.fn(async () => probeAnswer(0));
     beginEngineDocumentOpen(file);
-    registerEngineDocumentProbe(file, probe, async () => null);
+    registerEngineDocumentProbe(file, engine, probe, async () => null);
 
     const pending = runEngineDocumentProbe(file);
     resolveEngineDocumentOpen(file, null);
@@ -61,7 +66,7 @@ describe("documentProbeEngine", () => {
       .fn<(documentId: string) => Promise<ReturnType<typeof probeAnswer>>>()
       .mockRejectedValueOnce(new Error("worker gone"))
       .mockResolvedValueOnce(probeAnswer(2));
-    registerEngineDocumentProbe(file, probe, async () => null);
+    registerEngineDocumentProbe(file, engine, probe, async () => null);
     resolveEngineDocumentOpen(file, "doc-1");
 
     await expect(runEngineDocumentProbe(file)).resolves.toBeNull();
@@ -75,6 +80,7 @@ describe("documentProbeEngine", () => {
     const decided = blob();
     registerEngineDocumentProbe(
       decided,
+      engine,
       async () => probeAnswer(0),
       async () => false,
     );
@@ -84,6 +90,7 @@ describe("documentProbeEngine", () => {
     const unknown = blob();
     registerEngineDocumentProbe(
       unknown,
+      engine,
       async () => probeAnswer(0),
       async () => null,
     );

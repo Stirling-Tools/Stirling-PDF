@@ -696,24 +696,31 @@ export function LocalEmbedPDF({
   // button) run before this component's effects and must find the runners; the
   // document id resolves once the engine reports the document active.
   const probeSource = file ?? null;
+  // The runners read the engine from a ref: child probe effects run before this
+  // component's effect has created the engine, and a StrictMode remount replaces
+  // it, so a probe that waits for the document id must ask the live instance.
+  const engineRef = useRef<typeof engine>(null);
+  useEffect(() => {
+    engineRef.current = engine;
+  }, [engine]);
   useMemo(() => {
     if (!probeSource) return null;
     beginEngineDocumentOpen(probeSource);
+    const probeWith = <T,>(
+      run: (live: EngineDocumentProbeApi) => EngineDocumentProbeTask<T>,
+    ): Promise<T> => {
+      const live = engineRef.current;
+      if (!hasEngineDocumentProbe(live)) {
+        return Promise.reject(new Error("engine has no document probe"));
+      }
+      return engineProbe(run(live));
+    };
     registerEngineDocumentProbe(
       probeSource,
       engine,
-      (documentId) => {
-        if (!hasEngineDocumentProbe(engine)) {
-          return Promise.reject(new Error("engine has no document probe"));
-        }
-        return engineProbe(engine.getDocumentProbe(documentId));
-      },
-      (documentId) => {
-        if (!hasEngineDocumentProbe(engine)) {
-          return Promise.reject(new Error("engine has no document probe"));
-        }
-        return engineProbe(engine.getDocumentLayerVerdict(documentId));
-      },
+      (documentId) => probeWith((live) => live.getDocumentProbe(documentId)),
+      (documentId) =>
+        probeWith((live) => live.getDocumentLayerVerdict(documentId)),
     );
     return probeSource;
   }, [probeSource, engine]);

@@ -7,8 +7,12 @@ import {
   resolveEngineDocumentOpen,
 } from "@app/services/documentProbeEngine";
 
+let fixtureSequence = 0;
+
 const buildPdfWithLayers = async (hasLayers: boolean): Promise<File> => {
+  fixtureSequence += 1;
   const doc = await PDFDocument.create();
+  doc.setProducer(`layer-fixture-${fixtureSequence}`);
   doc.addPage([612, 792]);
   if (hasLayers) {
     const context = doc.context;
@@ -78,6 +82,7 @@ describe("documentHasLayers", () => {
     const file = await buildPdfWithLayers(true);
     registerEngineDocumentProbe(
       file,
+      {},
       async () => ({ formType: 0, attachmentCount: 0 }),
       async () => false,
     );
@@ -92,6 +97,7 @@ describe("documentHasLayers", () => {
     const file = await buildPdfWithLayers(true);
     registerEngineDocumentProbe(
       file,
+      {},
       async () => ({ formType: 0, attachmentCount: 0 }),
       async () => null,
     );
