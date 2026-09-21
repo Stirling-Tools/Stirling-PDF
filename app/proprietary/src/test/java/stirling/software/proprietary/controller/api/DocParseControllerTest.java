@@ -27,6 +27,9 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
+import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.util.TempFileManager;
+import stirling.software.common.util.TempFileRegistry;
 import stirling.software.proprietary.model.api.docparse.IngestApiRequest;
 import stirling.software.proprietary.model.docparse.DocChunk;
 import stirling.software.proprietary.model.docparse.IngestOutcome;
@@ -50,7 +53,10 @@ class DocParseControllerTest {
     private final JsonMapper jsonMapper = JsonMapper.builder().build();
 
     private DocParseController controller() {
-        return new DocParseController(docParseService, jsonMapper);
+        return new DocParseController(
+                docParseService,
+                jsonMapper,
+                new TempFileManager(new TempFileRegistry(), new ApplicationProperties()));
     }
 
     private static IngestApiRequest request(boolean markdown, boolean chunksJsonl) {

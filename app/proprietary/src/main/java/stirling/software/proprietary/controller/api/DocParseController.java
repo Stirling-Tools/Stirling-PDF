@@ -1,12 +1,13 @@
 package stirling.software.proprietary.controller.api;
 
-import java.io.ByteArrayOutputStream;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -28,6 +29,9 @@ import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.model.tool.ToolIOCase;
 import stirling.software.common.model.tool.ToolIOWhen;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
+import stirling.software.common.util.WebResponseUtils;
 import stirling.software.proprietary.model.api.docparse.IngestApiRequest;
 import stirling.software.proprietary.model.docparse.DocChunk;
 import stirling.software.proprietary.model.docparse.IngestOutcome;
@@ -54,6 +58,7 @@ public class DocParseController {
 
     private final DocParseService docParseService;
     private final ObjectMapper objectMapper;
+    private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -113,30 +118,52 @@ public class DocParseController {
         // Without this a capped ingest is indistinguishable from a complete one.
         report.put("truncated", outcome.truncated());
         report.put("indexed", request.isIndex());
+        String reportJson = objectMapper.writeValueAsString(report);
 
         MultipartFile file = request.getFileInput();
         String fileName = DocParseService.fileName(file);
-        byte[] original = request.isIncludeOriginal() ? file.getBytes() : new byte[0];
-        HttpHeaders headers = new HttpHeaders();
-        headers.set(AiToolResponseHeaders.TOOL_REPORT, objectMapper.writeValueAsString(report));
 
-        byte[] zip = exportZip(fileName, original, outcome, request);
-        headers.setContentType(MediaType.parseMediaType("application/zip"));
-        headers.setContentDispositionFormData("attachment", baseName(fileName) + "-ingested.zip");
-        headers.setContentLength(zip.length);
-        return ResponseEntity.ok().headers(headers).body(new ByteArrayResource(zip));
+        // Stream the archive to disk: a 2 GB upload must never be held in heap, and this endpoint
+        // is not queued, so several can run at once.
+        TempFile zip = tempFileManager.createManagedTempFile(".zip");
+        try {
+            writeZip(zip, fileName, file, outcome, request);
+        } catch (IOException e) {
+            zip.close();
+            throw e;
+        }
+
+        // fileToWebResponse streams the temp file and deletes it once the response body is closed.
+        ResponseEntity<Resource> response =
+                WebResponseUtils.fileToWebResponse(
+                        zip,
+                        baseName(fileName) + "-ingested.zip",
+                        MediaType.parseMediaType("application/zip"));
+        HttpHeaders headers = new HttpHeaders();
+        headers.addAll(response.getHeaders());
+        headers.set(AiToolResponseHeaders.TOOL_REPORT, reportJson);
+        return new ResponseEntity<>(response.getBody(), headers, response.getStatusCode());
     }
 
     /** Original + requested corpus files in one ZIP, so destinations receive them together. */
-    private byte[] exportZip(
-            String fileName, byte[] original, IngestOutcome outcome, IngestApiRequest request)
+    private void writeZip(
+            TempFile target,
+            String fileName,
+            MultipartFile file,
+            IngestOutcome outcome,
+            IngestApiRequest request)
             throws IOException {
         String base = baseName(fileName);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        try (ZipOutputStream zip = new ZipOutputStream(out)) {
+        try (ZipOutputStream zip =
+                new ZipOutputStream(
+                        new BufferedOutputStream(Files.newOutputStream(target.getPath())))) {
             if (request.isIncludeOriginal()) {
                 zip.putNextEntry(new ZipEntry(fileName));
-                zip.write(original);
+                // Copied from the upload's stream (disk-backed for large files) rather than
+                // getBytes(), so the original is never materialised in heap.
+                try (InputStream original = file.getInputStream()) {
+                    original.transferTo(zip);
+                }
                 zip.closeEntry();
             }
             if (request.isExportMarkdown()) {
@@ -152,7 +179,6 @@ public class DocParseController {
                 zip.closeEntry();
             }
         }
-        return out.toByteArray();
     }
 
     /** One chunk per line, each self-describing: the documentId travels on every line. */
