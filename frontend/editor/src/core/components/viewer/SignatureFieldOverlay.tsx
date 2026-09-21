@@ -78,11 +78,13 @@ async function resolvePageFields(
     );
 
     // A single signature per single field is the one case where reason/time
-    // can be attributed without knowing the document-wide field order.
+    // can be attributed without knowing the document-wide field order, and the
+    // only case where this page's field can be called signed: with several
+    // appearances a document-wide signature does not name which one it covers.
     const exactMatch = appearances.length === 1 && signatures.length === 1;
     return appearances.map((f) => ({
       ...f,
-      isSigned: signatures.length > 0,
+      isSigned: exactMatch,
       reason: exactMatch ? signatures[0].reason : undefined,
       time: exactMatch ? signatures[0].time : undefined,
     }));
