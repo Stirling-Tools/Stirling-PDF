@@ -122,7 +122,7 @@ async function rpc<T>(
 /** Inputs to {@link upsertBundleQuote} — the sized config + computed figures. */
 export interface BundleQuoteInput {
   teamId: number;
-  users: number;
+  users: number | null;
   posturePolicies: number;
   sizeMult: number;
   pipelineMult: number;
