@@ -37,20 +37,22 @@ export function documentHasLayers(
   if (cached) return cached;
 
   const answer = (async () => {
-    try {
-      const [{ PDFDocument, PDFName }, buffer] = await Promise.all([
-        import("@cantoo/pdf-lib"),
-        bytes ? Promise.resolve(bytes) : getDocumentBytes(file),
-      ]);
-      const doc = await PDFDocument.load(buffer, {
-        ignoreEncryption: true,
-        updateMetadata: false,
-      });
-      return doc.catalog.get(PDFName.of("OCProperties")) !== undefined;
-    } catch {
-      return false;
-    }
-  })();
+    const [{ PDFDocument, PDFName }, buffer] = await Promise.all([
+      import("@cantoo/pdf-lib"),
+      bytes ? Promise.resolve(bytes) : getDocumentBytes(file),
+    ]);
+    const doc = await PDFDocument.load(buffer, {
+      ignoreEncryption: true,
+      updateMetadata: false,
+    });
+    return doc.catalog.get(PDFName.of("OCProperties")) !== undefined;
+  })().catch(() => {
+    // A transient import, read or parse failure is not an answer: drop the memo
+    // so the next open retries, and report "no layers" for this attempt only.
+    layerAnswers.delete(file);
+    if (key) layerAnswersByFileKey.delete(key);
+    return false;
+  });
 
   layerAnswers.set(file, answer);
   if (key) {
