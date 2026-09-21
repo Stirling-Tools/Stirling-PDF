@@ -14,7 +14,8 @@ import stirling.software.common.util.ExceptionUtils.ErrorCodeProvider;
 
 /**
  * Factories whose exceptions used to carry a coded message but no code. Each is pinned to its code
- * and to the supertype it always had, so no caller's catch or throws changed meaning.
+ * and to its supertype: the one it always had, or for the OCR settings and PDF/A ones the type a
+ * bad parameter or a failed tool should have been all along.
  */
 class ExceptionUtilsCodedFactoriesTest {
 
@@ -48,7 +49,53 @@ class ExceptionUtilsCodedFactoriesTest {
                 coded(
                         "E062",
                         ExceptionUtils::createPythonRequiredForWebpException,
-                        IOException.class));
+                        IOException.class),
+                coded(
+                        "E040",
+                        ExceptionUtils::createOcrLanguageRequiredException,
+                        IllegalArgumentException.class),
+                coded(
+                        "E041",
+                        ExceptionUtils::createOcrInvalidLanguagesException,
+                        IllegalArgumentException.class),
+                coded(
+                        "E043",
+                        ExceptionUtils::createOcrInvalidRenderTypeException,
+                        IllegalArgumentException.class),
+                coded(
+                        "E044",
+                        () -> ExceptionUtils.createOcrProcessingFailedException(2),
+                        IOException.class),
+                coded(
+                        "E050",
+                        ExceptionUtils::createCompressionOptionsRequiredException,
+                        IllegalArgumentException.class),
+                coded(
+                        "E051",
+                        () -> ExceptionUtils.createGhostscriptConversionException("pdf"),
+                        IOException.class),
+                coded(
+                        "E052",
+                        () -> ExceptionUtils.createQpdfCompressionException(new IOException("x")),
+                        IOException.class),
+                coded(
+                        "E053",
+                        () ->
+                                ExceptionUtils.createProcessingInterruptedException(
+                                        "qpdf", new InterruptedException()),
+                        IOException.class),
+                coded(
+                        "E060",
+                        ExceptionUtils::createPdfaConversionFailedException,
+                        IOException.class),
+                coded(
+                        "E070",
+                        () -> ExceptionUtils.createInvalidArgumentException("comparator", "~"),
+                        IllegalArgumentException.class),
+                coded(
+                        "E072",
+                        () -> ExceptionUtils.createInvalidPageSizeException("A9"),
+                        IllegalArgumentException.class));
     }
 
     private static Arguments coded(

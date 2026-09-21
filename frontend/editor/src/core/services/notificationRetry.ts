@@ -56,6 +56,9 @@ export const KIND_ERROR_CODES: Record<string, readonly string[]> = {
   INPUT_UNAVAILABLE: ["E030", "E033"],
   TOOL_NOT_INSTALLED: ["E042", "E062", "E063"],
   STEP_CANNOT_RENDER_PAGE: ["E054"],
+  STEP_TOOL_FAILED: ["E044", "E051", "E052", "E060"],
+  STEP_INTERRUPTED: ["E053"],
+  STEP_MISCONFIGURED: ["E040", "E041", "E043", "E050", "E070", "E072", "E081"],
 };
 
 /** Every code any kind claims, so an unclaimed one can be recognised as belonging to UNKNOWN. */

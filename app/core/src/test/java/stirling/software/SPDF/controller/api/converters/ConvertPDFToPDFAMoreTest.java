@@ -402,7 +402,7 @@ class ConvertPDFToPDFAMoreTest {
                 when(executor.runCommandWithOutputHandling(any(List.class))).thenReturn(notAvail);
 
                 assertThatThrownBy(() -> newController().pdfToPdfA(request))
-                        .isInstanceOf(RuntimeException.class);
+                        .isInstanceOf(IOException.class);
             }
         }
     }
