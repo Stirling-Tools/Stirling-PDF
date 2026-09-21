@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "references": {
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8098/gradle-java25/linux-x64/6d151a3d963905ac3310b7c80f228caedfc964128169cb785f9cc2ab897241d9/v1": {
+      "object": "sha256:fdeb51c189ff56fd5fe4c0a773f9192b8b463380a9a18272dca429d47e18ffd9",
+      "updated_at": "2026-09-21T17:59:21.407Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 470949013
+    }
+  },
+  "monitoring": {
+    "window_started_at": "2026-09-21T17:59:21.407Z",
+    "writes": 1
+  }
+}
