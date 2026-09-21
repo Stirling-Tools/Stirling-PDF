@@ -87,7 +87,7 @@ jobs:
         with:
           cache-name: "gradle-java${{ env.JAVA_VERSION }}"
           save-scope: shared
-          token: ${{ steps.setup-bot.outputs.token || github.token }}
+          # token: ${{ steps.setup-bot.outputs.token || github.token }}
           storage: sftp
           sftp-host: ${{ secrets.CACHE_SFTP_HOST }}
           sftp-port: ${{ secrets.CACHE_SFTP_PORT || '22' }}
