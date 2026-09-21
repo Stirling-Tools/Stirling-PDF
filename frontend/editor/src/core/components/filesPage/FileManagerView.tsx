@@ -36,6 +36,7 @@ import { useOpenFolder } from "@app/components/filesPage/useOpenFolder";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
+import { openFilesFromDisk } from "@app/services/openFilesFromDisk";
 import { useServerFolderBlock } from "@app/hooks/useServerFolderBlock";
 import {
   useNavigationActions,
@@ -958,14 +959,27 @@ export default function FileManagerView() {
     [addFiles, currentFolderId, currentTab, folders, moveFilesTo, refresh, t],
   );
 
+  const reportUploadError = useCallback(
+    (err: unknown) =>
+      folders.setError(
+        err instanceof Error
+          ? t("filesPage.error.uploadFilesFailedDetail", {
+              message: err.message,
+              defaultValue: `Could not upload files: ${err.message}`,
+            })
+          : t("filesPage.error.uploadFilesFailed", "Could not upload files."),
+      ),
+    [folders, t],
+  );
+
   const onFileInputChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const list = Array.from(e.target.files ?? []);
       e.target.value = "";
       if (list.length === 0) return;
-      await handleNativeUpload(list);
+      await handleNativeUpload(list).catch(reportUploadError);
     },
-    [handleNativeUpload],
+    [handleNativeUpload, reportUploadError],
   );
 
   // ─── add to workspace ───────────────────────────────────────────────────
@@ -1089,19 +1103,7 @@ export default function FileManagerView() {
       setIsDraggingExternal(false);
       const dropped = Array.from(e.dataTransfer?.files ?? []);
       if (dropped.length > 0) {
-        handleNativeUpload(dropped).catch((err) =>
-          folders.setError(
-            err instanceof Error
-              ? t("filesPage.error.uploadFilesFailedDetail", {
-                  message: err.message,
-                  defaultValue: `Could not upload files: ${err.message}`,
-                })
-              : t(
-                  "filesPage.error.uploadFilesFailed",
-                  "Could not upload files.",
-                ),
-          ),
-        );
+        handleNativeUpload(dropped).catch(reportUploadError);
       }
     };
     node.addEventListener("dragenter", onEnter);
@@ -1114,7 +1116,7 @@ export default function FileManagerView() {
       node.removeEventListener("dragleave", onLeave);
       node.removeEventListener("drop", onDrop);
     };
-  }, [handleNativeUpload]);
+  }, [handleNativeUpload, reportUploadError]);
 
   // ─── close / exit ───────────────────────────────────────────────────────
   const handleClose = useCallback(() => {
@@ -1387,7 +1389,16 @@ export default function FileManagerView() {
   // Stable identities, here and for the controls built below: the bar re-registers
   // whenever what it was given changes, so a value rebuilt per render turns that into
   // an endless register -> render -> register loop.
-  const openFilePicker = useCallback(() => fileInputRef.current?.click(), []);
+  const openFilePicker = useCallback(async () => {
+    try {
+      const files = await openFilesFromDisk({
+        onFallbackOpen: () => fileInputRef.current?.click(),
+      });
+      await handleNativeUpload(files);
+    } catch (err) {
+      reportUploadError(err);
+    }
+  }, [handleNativeUpload, reportUploadError]);
 
   const newFolderControl = useMemo(
     () => (
@@ -1927,7 +1938,7 @@ export default function FileManagerView() {
               // handlers the corner header buttons use so behaviour
               // (disabled tooltips, native file picker, dialog) is
               // identical regardless of where the user clicks from.
-              onEmptyUpload={() => fileInputRef.current?.click()}
+              onEmptyUpload={openFilePicker}
               emptyNewFolderControl={
                 <NewFolderButton
                   label={t("filesPage.newFolder", "New folder")}

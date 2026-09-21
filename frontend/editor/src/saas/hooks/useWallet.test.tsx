@@ -135,7 +135,9 @@ it("reads the wallet on mount", async () => {
 
   expect(hook!.wallet).not.toBeNull();
   expect(hook!.loading).toBe(false);
-  expect(get).toHaveBeenCalledWith("/api/v1/payg/wallet");
+  expect(get).toHaveBeenCalledWith("/api/v1/payg/wallet", {
+    suppressErrorToast: true,
+  });
 });
 
 it("re-reads on a schedule, and stops while the tab is hidden", async () => {

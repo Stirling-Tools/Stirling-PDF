@@ -1,7 +1,8 @@
+import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useLink } from "@portal/contexts/LinkContext";
-import { walletQuery } from "@portal/queries/wallet";
+import { useLink } from "@app/portal/contexts/LinkContext";
+import { walletQuery } from "@app/portal/queries/wallet";
 import {
   readCachedCredits,
   writeCachedCredits,
@@ -33,7 +34,12 @@ export function useFreeCreditsSummary(): NavFooterCredits | null {
   // Shared definition, not just a shared key: per-observer options are resolved
   // per-observer, so differing retry or interval settings here would make the
   // behaviour depend on which reader happened to fetch.
-  const { data: wallet } = useQuery(walletQuery(isLinked));
+  const isOwner = useAccountLinkOwner();
+  const canRead = isLinked && isOwner;
+  const { data: wallet } = useQuery({
+    ...walletQuery(isLinked),
+    enabled: canRead,
+  });
   // Shared with the editor's seam, so crossing between the two apps shows the
   // figures the other one last saw rather than re-fetching into an empty row.
   const [seed] = useState(readCachedCredits);
@@ -47,14 +53,14 @@ export function useFreeCreditsSummary(): NavFooterCredits | null {
   useEffect(() => {
     // Only once linked: an unlinked instance never asks, so it has no answer of
     // its own and must not overwrite what the editor recorded.
-    if (isLinked && live !== undefined) writeCachedCredits(live);
+    if (canRead && live !== undefined) writeCachedCredits(live);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wallet, isLinked]);
+  }, [wallet, canRead]);
 
   // Linkage gates the seed as well as the fetch. The cache outlives an unlink
   // — nothing refetches or rewrites it once the instance stops asking — so
   // without this an unlinked instance would keep showing the figures from when
   // it was linked, indefinitely.
-  if (!isLinked) return null;
+  if (!canRead) return null;
   return (live !== undefined ? live : seed) ?? null;
 }

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, cleanup, waitFor } from "@testing-library/react";
 import { QueryClientProvider } from "@tanstack/react-query";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { expectConsole } from "@app/tests/failOnConsole";
 import {
   resetTabVisibility,
@@ -23,11 +23,8 @@ const { createAppQueryClient } = await import("@app/query/queryClient");
 
 /** The hook reads through the shared cache, so it needs the app's own client. */
 function wrapper({ children }: { children: ReactNode }) {
-  return (
-    <QueryClientProvider client={createAppQueryClient()}>
-      {children}
-    </QueryClientProvider>
-  );
+  const [client] = useState(createAppQueryClient);
+  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
 }
 
 /** Full enough for the hook's deep-compare, which reads every field. */
@@ -165,5 +162,37 @@ describe("useWallet — keeping the figures fresh", () => {
     });
     await waitFor(() => expect(get.mock.calls.length).toBe(afterMount + 1));
     resetTabVisibility();
+  });
+
+  it("stops a disabled reader and discards its in-flight wallet response", async () => {
+    const { result, rerender } = renderHook(
+      ({ enabled }) => useWallet(enabled),
+      { initialProps: { enabled: false }, wrapper },
+    );
+    expect(get).not.toHaveBeenCalled();
+
+    rerender({ enabled: true });
+    await waitFor(() => expect(result.current.wallet).not.toBeNull());
+
+    let finishPoll: (value: ReturnType<typeof walletWith>) => void = () => {};
+    get.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finishPoll = resolve;
+      }),
+    );
+    await act(async () => {
+      vi.advanceTimersByTime(30_000);
+    });
+    expect(get).toHaveBeenCalledTimes(2);
+
+    rerender({ enabled: false });
+    await act(async () => {
+      finishPoll(walletWith(480));
+      vi.advanceTimersByTime(90_000);
+    });
+    expect(get).toHaveBeenCalledTimes(2);
+    expect(result.current.wallet).toBeNull();
+    expect(result.current.loading).toBe(false);
+    expect(result.current.error).toBeNull();
   });
 });

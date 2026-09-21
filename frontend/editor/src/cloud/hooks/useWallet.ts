@@ -132,7 +132,11 @@ export function useWallet(enabled = true): UseWalletResult {
     queryFn: async () =>
       devPreview
         ? devPreview.buildWallet(devPreview.role())
-        : (await apiClient.get<Wallet>("/api/v1/payg/wallet")).data,
+        : (
+            await apiClient.get<Wallet>("/api/v1/payg/wallet", {
+              suppressErrorToast: true,
+            })
+          ).data,
     enabled,
     // The dev-preview wallet is synthesised locally, so there is nothing to
     // re-read; a hidden tab pauses either way.
