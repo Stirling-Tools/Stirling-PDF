@@ -177,6 +177,10 @@ jobs:
           # Save the dependency cache even if a later step fails
           cache-on-failure: true
 
+      # The shared key is only ever written by the Linux prime job, so on
+      # Windows and macOS it never hits and every PR leg downloaded the Gradle
+      # distribution and every dependency. Fall back to the cache the nightly
+      # warm run saves for this OS.
       - name: Restore cache Gradle User Home
         if: inputs.use_shared_cache
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -185,6 +189,8 @@ jobs:
             ~/.gradle/caches
             ~/.gradle/wrapper
           key: gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+          restore-keys: |
+            gradle-tauri-build-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-
 
       - name: Restore cache Gradle
         if: inputs.use_shared_cache == false
@@ -194,6 +200,8 @@ jobs:
             ~/.gradle/caches
             ~/.gradle/wrapper
           key: gradle-tauri-build-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+          restore-keys: |
+            gradle-tauri-build-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-
 
       - name: Set up x86_64 JDK 25 (macOS universal JRE)
         if: matrix.platform == 'macos-15'
