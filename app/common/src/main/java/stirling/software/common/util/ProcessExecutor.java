@@ -203,14 +203,19 @@ public class ProcessExecutor {
         boolean useSemaphore = true;
         List<String> commandToRun = command;
 
+        boolean useUnoServerPool = shouldUseUnoServerPool(command);
+
         // Signal the on-demand manager to start unoserver if needed.
         // Must happen before acquiring the semaphore/lease so the manager has
         // time to spin up soffice while we wait.
         if (processType == Processes.LIBRE_OFFICE) {
             signalUnoServerDemand();
+            if (useUnoServerPool) {
+                awaitUnoServerReady();
+            }
         }
 
-        if (shouldUseUnoServerPool(command)) {
+        if (useUnoServerPool) {
             try {
                 unoLease = unoServerPool.acquireEndpoint(timeoutDuration, TimeUnit.MINUTES);
             } catch (TimeoutException e) {
@@ -570,6 +575,35 @@ public class ProcessExecutor {
             }
         }
         // For relative paths, trust that PATH resolution will work or fail appropriately
+    }
+
+    /**
+     * How long a conversion waits for a local unoserver endpoint to accept connections after
+     * signalling demand. The manager notices the demand file on its own schedule and then starts
+     * soffice, which takes a few seconds; the wait is bounded so a broken setup still reaches the
+     * soffice fallback quickly.
+     */
+    private static final long UNO_SERVER_READY_WAIT_SECONDS = 15;
+
+    /**
+     * Waits for a local unoserver endpoint to accept connections. Runs before the semaphore and the
+     * lease, so concurrent requests wait in parallel rather than behind one another, and a
+     * remote-only pool returns immediately because it has no local endpoint to wake.
+     */
+    private static void awaitUnoServerReady() {
+        if (unoServerPool == null) {
+            return;
+        }
+        try {
+            if (!unoServerPool.waitForLocalEndpoint(
+                    UNO_SERVER_READY_WAIT_SECONDS, TimeUnit.SECONDS)) {
+                log.warn(
+                        "No local unoserver endpoint accepted connections within {}s; continuing",
+                        UNO_SERVER_READY_WAIT_SECONDS);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     /**

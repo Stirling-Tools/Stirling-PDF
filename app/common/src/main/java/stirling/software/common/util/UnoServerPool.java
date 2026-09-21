@@ -1,5 +1,8 @@
 package stirling.software.common.util;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -13,6 +16,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import stirling.software.common.model.ApplicationProperties;
 
 public class UnoServerPool {
+
+    private static final long READY_PROBE_INTERVAL_MILLIS = 250;
+    private static final int READY_PROBE_CONNECT_TIMEOUT_MILLIS = 500;
 
     private final List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints;
     private final BlockingQueue<Integer> availableIndices;
@@ -65,6 +71,56 @@ public class UnoServerPool {
         }
         host = host.trim().toLowerCase(Locale.ROOT);
         return "127.0.0.1".equals(host) || "localhost".equals(host) || "::1".equals(host);
+    }
+
+    /**
+     * Waits until one local endpoint accepts a TCP connection, or the timeout passes. Returns true
+     * immediately for a remote-only pool, which has nothing to wake. Callers use this after
+     * signalling demand so the first conversion after an idle shutdown does not race the server
+     * that is still starting.
+     */
+    public boolean waitForLocalEndpoint(long timeout, TimeUnit unit) throws InterruptedException {
+        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> locals = new ArrayList<>();
+        if (endpoints.isEmpty()) {
+            locals.add(defaultEndpoint());
+        } else {
+            for (ApplicationProperties.ProcessExecutor.UnoServerEndpoint endpoint : endpoints) {
+                if (isLocalEndpoint(endpoint)) {
+                    locals.add(endpoint);
+                }
+            }
+        }
+        if (locals.isEmpty()) {
+            return true;
+        }
+
+        long deadline = System.nanoTime() + unit.toNanos(timeout);
+        while (true) {
+            for (ApplicationProperties.ProcessExecutor.UnoServerEndpoint endpoint : locals) {
+                if (canConnect(endpoint)) {
+                    return true;
+                }
+            }
+            if (System.nanoTime() >= deadline) {
+                return false;
+            }
+            Thread.sleep(READY_PROBE_INTERVAL_MILLIS);
+        }
+    }
+
+    private static boolean canConnect(
+            ApplicationProperties.ProcessExecutor.UnoServerEndpoint endpoint) {
+        if (endpoint == null || endpoint.getHost() == null) {
+            return false;
+        }
+        try (Socket socket = new Socket()) {
+            socket.connect(
+                    new InetSocketAddress(endpoint.getHost(), endpoint.getPort()),
+                    READY_PROBE_CONNECT_TIMEOUT_MILLIS);
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     public UnoServerLease acquireEndpoint() throws InterruptedException {

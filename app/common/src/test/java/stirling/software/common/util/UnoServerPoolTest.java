@@ -2,6 +2,7 @@ package stirling.software.common.util;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -27,6 +28,61 @@ public class UnoServerPoolTest {
         assertNotNull(lease, "Should return a default lease for empty pool");
         assertNotNull(lease.getEndpoint(), "Default lease should have an endpoint");
         lease.close(); // Should not throw
+    }
+
+    @Test
+    void testWaitForLocalEndpointSkipsRemoteOnlyPools() throws InterruptedException {
+        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints = new ArrayList<>();
+        ApplicationProperties.ProcessExecutor.UnoServerEndpoint remote =
+                new ApplicationProperties.ProcessExecutor.UnoServerEndpoint();
+        remote.setHost("unoserver1");
+        remote.setPort(2002);
+        remote.setHostLocation("remote");
+        endpoints.add(remote);
+        UnoServerPool pool = new UnoServerPool(endpoints);
+
+        assertTrue(
+                pool.waitForLocalEndpoint(1, TimeUnit.MILLISECONDS),
+                "A remote-only pool has no local endpoint to wake");
+    }
+
+    @Test
+    void testWaitForLocalEndpointTimesOutWhenNothingListens() throws Exception {
+        int closedPort;
+        try (ServerSocket socket = new ServerSocket(0)) {
+            closedPort = socket.getLocalPort();
+        }
+        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints = new ArrayList<>();
+        ApplicationProperties.ProcessExecutor.UnoServerEndpoint local =
+                new ApplicationProperties.ProcessExecutor.UnoServerEndpoint();
+        local.setHost("127.0.0.1");
+        local.setPort(closedPort);
+        local.setHostLocation("local");
+        endpoints.add(local);
+        UnoServerPool pool = new UnoServerPool(endpoints);
+
+        assertFalse(
+                pool.waitForLocalEndpoint(1, TimeUnit.MILLISECONDS),
+                "A closed local port must not report ready");
+    }
+
+    @Test
+    void testWaitForLocalEndpointSeesAListeningEndpoint() throws Exception {
+        try (ServerSocket listener = new ServerSocket(0)) {
+            List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints =
+                    new ArrayList<>();
+            ApplicationProperties.ProcessExecutor.UnoServerEndpoint local =
+                    new ApplicationProperties.ProcessExecutor.UnoServerEndpoint();
+            local.setHost("127.0.0.1");
+            local.setPort(listener.getLocalPort());
+            local.setHostLocation("local");
+            endpoints.add(local);
+            UnoServerPool pool = new UnoServerPool(endpoints);
+
+            assertTrue(
+                    pool.waitForLocalEndpoint(1, TimeUnit.SECONDS),
+                    "A listening local port reports ready");
+        }
     }
 
     @Test
