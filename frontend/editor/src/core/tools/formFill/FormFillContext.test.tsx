@@ -68,6 +68,23 @@ function result(skipped: FieldEditResult["skipped"]): FieldEditResult {
   return { blob: blob(), skipped, skippedTotal: skipped.length };
 }
 
+const pageField = (name: string, pageIndex: number): FormField[] => [
+  {
+    name,
+    label: name,
+    type: "text",
+    value: "",
+    options: null,
+    displayOptions: null,
+    required: false,
+    readOnly: false,
+    multiSelect: false,
+    multiline: false,
+    tooltip: null,
+    widgets: [{ pageIndex, x: 1, y: 2, width: 10, height: 10 }],
+  },
+];
+
 describe("FormFillContext staged-edit ownership", () => {
   beforeEach(() => {
     applyFieldEdits.mockReset();
@@ -288,9 +305,7 @@ describe("FormFillContext value retention", () => {
   beforeEach(() => {
     applyFieldEdits.mockReset();
     fetchFields.mockReset();
-    fetchFields.mockResolvedValue([
-      { name: "who", type: "text", value: "", widgets: [{ pageIndex: 0 }] },
-    ]);
+    fetchFields.mockResolvedValue(pageField("who", 0));
   });
 
   it("keeps what the user typed when the same file is re-fetched", async () => {
@@ -361,23 +376,6 @@ describe("FormFillContext per-page loading", () => {
     fetchFields.mockReset();
     fetchFields.mockResolvedValue([]);
   });
-
-  const pageField = (name: string, pageIndex: number): FormField[] => [
-    {
-      name,
-      label: name,
-      type: "text",
-      value: "",
-      options: null,
-      displayOptions: null,
-      required: false,
-      readOnly: false,
-      multiSelect: false,
-      multiline: false,
-      tooltip: null,
-      widgets: [{ pageIndex, x: 1, y: 2, width: 10, height: 10 }],
-    },
-  ];
 
   it("merges on-demand page fields without dropping page 0", async () => {
     const { result: hook } = renderHook(() => useFormFill(), { wrapper });
