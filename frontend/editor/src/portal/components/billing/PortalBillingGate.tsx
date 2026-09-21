@@ -1,19 +1,20 @@
-import { useServerPlan } from "@portal/hooks/useServerPlan";
-import { useAuth } from "@app/auth/UseSession";
+import { useServerPlan } from "@app/portal/hooks/useServerPlan";
 import { ManageBillingButton } from "@app/components/shared/ManageBillingButton";
 import { useCallback, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { ServerLicenseSection } from "@portal/components/billing/ServerLicenseSection";
+import { ServerLicenseSection } from "@app/portal/components/billing/ServerLicenseSection";
 import {
   useApplyLinkFacts,
   useLinkOptional,
-} from "@portal/contexts/LinkContext";
-import { useUI } from "@portal/contexts/UIContext";
-import { useConnectGate } from "@portal/hooks/useConnectGate";
-import { usePortalAdmin } from "@portal/hooks/usePortalAdmin";
-import { FreeTierPlanView } from "@portal/components/billing/FreeTierPlanView";
-import { Usage } from "@portal/views/Usage";
-import type { Wallet } from "@portal/api/billing";
+} from "@app/portal/contexts/LinkContext";
+import { useUI } from "@app/portal/contexts/UIContext";
+import { useConnectGate } from "@app/portal/hooks/useConnectGate";
+import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
+import { AccountConnectionNotice } from "@app/portal/components/account-link/AccountConnectionNotice";
+import { SaasSessionBanner } from "@app/portal/components/account-link/SaasSessionBanner";
+import { FreeTierPlanView } from "@app/portal/components/billing/FreeTierPlanView";
+import { Usage } from "@app/portal/views/Usage";
+import type { Wallet } from "@app/portal/api/billing";
 
 /**
  * The seam the SaaS build shadows: picks which usage page this instance has one of.
@@ -23,17 +24,15 @@ import type { Wallet } from "@portal/api/billing";
  * the wallet would flip the whole portal to linked.
  */
 export function PortalBillingGate() {
-  const { user, isAdmin, loading } = useAuth();
-  if (loading || !isAdmin || user?.orgOwner !== true) return null;
-  return <OwnerBilling />;
-}
-
-function OwnerBilling() {
   const applyLinkFacts = useApplyLinkFacts();
-  const { openLinkModal, trialSetupRequested } = useUI();
+  const { trialSetupRequested } = useUI();
   const { loading, gated, connect } = useConnectGate();
-  const isAdmin = usePortalAdmin();
-  const { serverPlan, loading: licenseLoading } = useServerPlan(isAdmin);
+  const isOwner = useAccountLinkOwner();
+  const {
+    serverPlan,
+    usersInUse,
+    loading: licenseLoading,
+  } = useServerPlan(isOwner);
   const serverPlanAction = serverPlan ? <ManageBillingButton /> : undefined;
   const link = useLinkOptional();
   const [searchParams] = useSearchParams();
@@ -43,21 +42,20 @@ function OwnerBilling() {
 
   useEffect(() => {
     if (!procurementRequested || link?.isLinked) prompted.current = false;
-    else if (isAdmin && !loading && gated && !prompted.current) {
+    else if (isOwner && !loading && gated && !prompted.current) {
       prompted.current = true;
       connect();
     }
-  }, [procurementRequested, link?.isLinked, isAdmin, loading, gated, connect]);
+  }, [procurementRequested, link?.isLinked, isOwner, loading, gated, connect]);
 
   const onWalletLoaded = useCallback(
     (w: Wallet) => applyLinkFacts(true, w.status === "subscribed"),
     [applyLinkFacts],
   );
-  const onReauth = useCallback(() => openLinkModal("reauth"), [openLinkModal]);
 
-  // Administrators only: the figures are instance-wide and the endpoints ADMIN-gated. The nav
-  // hides the entry to match, so this is the backstop for a typed URL.
-  if (!isAdmin) return null;
+  // Only the organization owner manages the server's account and billing.
+  // The nav hides these sections too; this guards a directly entered URL.
+  if (!isOwner) return null;
   // Neither page while the answer is unknown: showing the local meter to a linked instance would
   // present a dormant ledger as its live one.
   if (loading || licenseLoading) return null;
@@ -73,13 +71,19 @@ function OwnerBilling() {
     );
   return (
     <Usage
+      localUsersInUse={usersInUse}
       serverPlan={serverPlan}
       serverPlanAction={serverPlanAction}
       onWalletLoaded={onWalletLoaded}
-      onReauth={onReauth}
       renderLicenseSection={(onSaved) => (
         <ServerLicenseSection onSaved={onSaved} />
       )}
+      sessionRecovery={
+        <>
+          <SaasSessionBanner />
+          <AccountConnectionNotice />
+        </>
+      }
     />
   );
 }

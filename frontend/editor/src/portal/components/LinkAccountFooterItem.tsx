@@ -1,9 +1,9 @@
+import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@app/auth/UseSession";
 import { NavItem } from "@app/ui";
-import { useUI } from "@portal/contexts/UIContext";
-import { useLink } from "@portal/contexts/LinkContext";
-import { LinkIcon } from "@portal/components/icons";
+import { useUI } from "@app/portal/contexts/UIContext";
+import { useLink } from "@app/portal/contexts/LinkContext";
+import { LinkIcon } from "@app/portal/components/icons";
 
 /**
  * Sidebar-footer link-account CTA. Only visible when the org is unlinked — once
@@ -13,12 +13,11 @@ import { LinkIcon } from "@portal/components/icons";
  * IS the SaaS account, so there is nothing to link.
  */
 export function LinkAccountFooterItem() {
+  const isOwner = useAccountLinkOwner();
   const { t } = useTranslation();
   const { openLinkModal } = useUI();
   const { linkState, statusKnown } = useLink();
-  const { user } = useAuth();
-  if (!statusKnown || linkState !== "unlinked" || user?.orgOwner !== true)
-    return null;
+  if (!isOwner || !statusKnown || linkState !== "unlinked") return null;
   return (
     <NavItem
       id="account-link"

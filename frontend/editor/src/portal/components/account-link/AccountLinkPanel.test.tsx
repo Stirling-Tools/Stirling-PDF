@@ -8,11 +8,9 @@ import {
   within,
 } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import type { UseAccountLink } from "@portal/hooks/useAccountLink";
+import type { UseAccountLink } from "@app/portal/hooks/useAccountLink";
 
 const state = vi.hoisted(() => ({
-  owner: true,
-  loading: false,
   fetchInstances: vi.fn(),
   revokeInstance: vi.fn(),
   openLinkModal: vi.fn(),
@@ -21,18 +19,22 @@ const state = vi.hoisted(() => ({
   status: { linked: true, name: "Production" } as UseAccountLink["status"],
   statusError: null as string | null,
   email: "owner@example.com" as string | null,
+  isOwner: true,
 }));
 vi.mock("@app/auth/context", () => ({
-  useAuth: () => ({
-    user: { orgOwner: state.owner },
-    isAdmin: true,
-    loading: state.loading,
-  }),
+  useAuth: () => ({ user: { orgOwner: state.isOwner } }),
 }));
-vi.mock("@portal/hooks/useLinkedAccountEmail", () => ({
+vi.mock("@app/portal/hooks/useAccountLinkOwner", () => ({
+  useAccountLinkOwner: () => state.isOwner,
+}));
+vi.mock("@app/portal/contexts/LinkContext", () => ({
+  useLink: () => ({ isLinked: state.status?.linked ?? false }),
+}));
+vi.mock("@app/portal/hooks/useLinkedAccountEmail", () => ({
   useLinkedAccountEmail: () => state.email,
 }));
-vi.mock("@portal/contexts/AccountLinkContext", () => ({
+vi.mock("@app/portal/contexts/AccountLinkContext", () => ({
+  useAccountLinkOptional: () => null,
   useAccountLinkContext: () => ({
     loginConfigured: true,
     status: state.status,
@@ -43,10 +45,10 @@ vi.mock("@portal/contexts/AccountLinkContext", () => ({
     refresh: state.refresh,
   }),
 }));
-vi.mock("@portal/contexts/UIContext", () => ({
+vi.mock("@app/portal/contexts/UIContext", () => ({
   useUI: () => ({ openLinkModal: state.openLinkModal }),
 }));
-vi.mock("@portal/api/link", () => ({
+vi.mock("@app/portal/api/link", () => ({
   fetchInstances: state.fetchInstances,
   revokeInstance: state.revokeInstance,
 }));
@@ -60,7 +62,8 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-import { AccountLinkPanel } from "@portal/components/account-link/AccountLinkPanel";
+import { SaasSessionRequiredError } from "@app/portal/auth/portalSaasSession";
+import { AccountLinkPanel } from "@app/portal/components/account-link/AccountLinkPanel";
 
 const instance = {
   instanceId: 42,
@@ -80,8 +83,6 @@ function mount() {
 
 describe("Self-hosted account connection", () => {
   beforeEach(() => {
-    state.owner = true;
-    state.loading = false;
     vi.stubEnv("VITE_SAAS_FRONTEND_URL", "https://cloud.example/app/");
     state.fetchInstances.mockReset().mockResolvedValue([instance]);
     state.revokeInstance.mockReset().mockResolvedValue(undefined);
@@ -90,49 +91,11 @@ describe("Self-hosted account connection", () => {
     state.unlink.mockReset();
     state.status = { linked: true, name: "Production" };
     state.statusError = null;
+    state.isOwner = true;
     state.email = "owner@example.com";
   });
 
   afterEach(() => vi.unstubAllEnvs());
-
-  it.each([false, true])(
-    "blocks direct access without fetching instances when linked=%s",
-    (linked) => {
-      state.owner = false;
-      state.status = { linked };
-      mount();
-      expect(screen.queryByRole("heading")).toBeNull();
-      expect(screen.queryByRole("button")).toBeNull();
-      expect(state.fetchInstances).not.toHaveBeenCalled();
-    },
-  );
-
-  it("removes the current owner's page after transfer and loads it for the successor", async () => {
-    const view = mount();
-    await waitFor(() => expect(state.fetchInstances).toHaveBeenCalledTimes(1));
-    state.owner = false;
-    view.rerender(
-      <MantineProvider>
-        <AccountLinkPanel />
-      </MantineProvider>,
-    );
-    expect(
-      screen.queryByRole("link", { name: "Manage on stirling.com" }),
-    ).toBeNull();
-    state.owner = true;
-    view.rerender(
-      <MantineProvider>
-        <AccountLinkPanel />
-      </MantineProvider>,
-    );
-    await waitFor(() => expect(state.fetchInstances).toHaveBeenCalledTimes(2));
-  });
-
-  it("waits for refreshed ownership before fetching cloud instances", () => {
-    state.loading = true;
-    mount();
-    expect(state.fetchInstances).not.toHaveBeenCalled();
-  });
 
   it("opens cloud management at the configured app path", async () => {
     await act(async () => {
@@ -321,4 +284,26 @@ describe("Self-hosted account connection", () => {
       screen.queryByRole("button", { name: "Connect your Stirling account" }),
     ).not.toBeInTheDocument();
   });
+
+  it("leaves session recovery to the shell instead of offering an ineffective data retry", async () => {
+    state.status = { linked: true, name: "Production" };
+    state.fetchInstances.mockRejectedValue(new SaasSessionRequiredError());
+    mount();
+    expect(
+      await screen.findByText(
+        "Connected instances will appear after you renew billing access.",
+      ),
+    ).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
+    expect(screen.queryByText("Couldn’t load connected instances")).toBeNull();
+  });
+});
+
+it("does not mount account management or fetch team instances for a non-owner", () => {
+  state.isOwner = false;
+  state.fetchInstances.mockClear();
+  mount();
+  expect(screen.queryByText("Account connection")).toBeNull();
+  expect(screen.queryByRole("button")).toBeNull();
+  expect(state.fetchInstances).not.toHaveBeenCalled();
 });

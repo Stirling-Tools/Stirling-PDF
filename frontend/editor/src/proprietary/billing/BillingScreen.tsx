@@ -12,6 +12,10 @@ import type { Wallet } from "@app/billing/types";
 import "@app/billing/billing-screen.css";
 
 export interface BillingScreenProps {
+  /** Host-specific occupied seats; null means unavailable, undefined uses the wallet. */
+  usersInUse?: number | null;
+  /** Host-authorized account actions beside the page title. */
+  headerAction?: ReactNode;
   /**
    * Null while loading, or when the host could not read one. A non-null wallet must be complete:
    * the sections dereference its fields without guards, so a hand-built partial object throws
@@ -19,6 +23,8 @@ export interface BillingScreenProps {
    */
   wallet: Wallet | null;
   loading?: boolean;
+  /** Keeps Plan and Usage visible when their data cannot currently be read. */
+  unavailable?: ReactNode;
   /** Self-hosted phrases its free tier differently. */
   selfHosted?: boolean;
   /** Local licence takes precedence over the cloud product names and user capacity. */
@@ -49,6 +55,8 @@ export interface BillingScreenProps {
   invoicesSection?: ReactNode;
   /** Null when the backend cannot compute it, which omits the row rather than showing a zero. */
   editorsDeployed?: number | null;
+  /** Overrides wallet analytics when supplied; null omits an unavailable activity count. */
+  pdfsProcessed?: number | null;
   /** The enterprise door. Omitted for a team already on an agreement. */
   onEnterpriseQuote?: () => void;
   /** Host-owned surfaces that are not sections of this card: modals, upsells, detail cards. */
@@ -80,8 +88,11 @@ function cycleDay(
  * <p>A chip exists only where its section does, so an omitted slot removes both.
  */
 export function BillingScreen({
+  usersInUse,
+  headerAction,
   wallet,
   loading = false,
+  unavailable,
   selfHosted = false,
   serverPlan,
   serverPlanAction,
@@ -95,6 +106,7 @@ export function BillingScreen({
   procurementSection,
   licenseSection,
   editorsDeployed,
+  pdfsProcessed,
   paymentSection,
   invoicesSection,
   onEnterpriseQuote,
@@ -111,6 +123,10 @@ export function BillingScreen({
   const enterpriseProcessor = serverPlan?.licenseType === "ENTERPRISE";
   const paying = Boolean(wallet?.processor?.active) && !enterpriseProcessor;
   const teamHeld = Boolean(wallet?.team?.held);
+  const processedCount =
+    pdfsProcessed === undefined
+      ? wallet?.docsProcessedThisPeriod
+      : pdfsProcessed;
 
   const chips = useMemo(() => {
     const out: Array<[string, string]> = [];
@@ -119,9 +135,10 @@ export function BillingScreen({
         "ub-procurement",
         t("portal.billing.chip.procurement", "Procurement"),
       ]);
-    if (wallet || serverPlan)
+    if (wallet || serverPlan || unavailable)
       out.push(["ub-plan", t("portal.billing.chip.plan", "Plan")]);
-    if (wallet) out.push(["ub-usage", t("portal.billing.chip.usage", "Usage")]);
+    if (wallet || unavailable)
+      out.push(["ub-usage", t("portal.billing.chip.usage", "Usage")]);
     if (wallet && paymentSection)
       out.push(["ub-pay", t("portal.billing.chip.payment", "Payment")]);
     if (wallet && invoicesSection)
@@ -135,6 +152,7 @@ export function BillingScreen({
   }, [
     wallet,
     serverPlan,
+    unavailable,
     procurementSection,
     licenseSection,
     paymentSection,
@@ -197,6 +215,11 @@ export function BillingScreen({
         chips: [
           t("portal.billing.identity.team.chipSso", "SSO"),
           t("portal.billing.identity.team.chipFleet", "Fleet control"),
+          t(
+            "portal.billing.identity.team.chipIncluded",
+            "{{allowance}} included credits monthly",
+            { allowance: wallet.freeAllowance.toLocaleString() },
+          ),
         ],
       };
     }
@@ -221,6 +244,11 @@ export function BillingScreen({
   }, [wallet, paying, teamHeld, serverPlan, t]);
 
   const creditUnits = (wallet?.spendUnitsThisPeriod ?? 0) + pendingUnits;
+  const occupiedSeats = serverPlan
+    ? serverPlan.usersInUse
+    : usersInUse === undefined
+      ? wallet?.team.usersInUse
+      : usersInUse;
   const showTeam = Boolean(
     wallet &&
     (wallet.team.held ||
@@ -238,15 +266,18 @@ export function BillingScreen({
   return (
     <div className="billing-page">
       <header className="billing-page__head">
-        <h1 className="billing-page__title">
-          {t("portal.usage.title", "Usage & Billing")}
-        </h1>
-        <p className="billing-page__subtitle">
-          {t(
-            "portal.usage.subtitle",
-            "Your plan, your usage, and every invoice.",
-          )}
-        </p>
+        <div>
+          <h1 className="billing-page__title">
+            {t("portal.usage.title", "Usage & Billing")}
+          </h1>
+          <p className="billing-page__subtitle">
+            {t(
+              "portal.usage.subtitle",
+              "Your plan, your usage, and every invoice.",
+            )}
+          </p>
+        </div>
+        {headerAction}
       </header>
 
       <div className="billing-page__body">
@@ -258,7 +289,7 @@ export function BillingScreen({
           </div>
         )}
 
-        {(procurementSection || licenseSection || identity) && (
+        {(procurementSection || licenseSection || identity || unavailable) && (
           <div className="billing-card">
             <nav
               className="billing-card__chips"
@@ -311,6 +342,7 @@ export function BillingScreen({
                   <div className="billing-meters">
                     {(showTeam || serverPlan) && (
                       <TeamPlanRow
+                        usersInUse={usersInUse}
                         wallet={wallet}
                         selfHosted={selfHosted}
                         serverPlan={serverPlan}
@@ -374,18 +406,19 @@ export function BillingScreen({
                         </div>
                       )}
 
-                      <KvRow
-                        label={t("portal.billing.cycle.pdfs", "PDFs processed")}
-                        value={wallet.docsProcessedThisPeriod.toLocaleString()}
-                      />
-                      {(serverPlan
-                        ? serverPlan.usersInUse != null
-                        : showTeam) && (
+                      {processedCount != null && (
+                        <KvRow
+                          label={t(
+                            "portal.billing.cycle.pdfs",
+                            "PDFs processed",
+                          )}
+                          value={processedCount.toLocaleString()}
+                        />
+                      )}
+                      {(serverPlan || showTeam) && occupiedSeats != null && (
                         <KvRow
                           label={t("portal.billing.cycle.users", "Users")}
-                          value={(
-                            serverPlan?.usersInUse ?? wallet.team.usersInUse
-                          ).toLocaleString()}
+                          value={occupiedSeats.toLocaleString()}
                         />
                       )}
                       {editorsDeployed != null && (
@@ -439,6 +472,29 @@ export function BillingScreen({
                     )}
                   </>
                 )}
+              </>
+            )}
+            {unavailable && !wallet && (
+              <>
+                {!identity && (
+                  <section id="ub-plan" className="billing-sec">
+                    <span className="billing-eyebrow">
+                      {t("portal.billing.chip.plan", "Plan")}
+                    </span>
+                    <p className="billing-id__sub">{unavailable}</p>
+                  </section>
+                )}
+                <section id="ub-usage" className="billing-sec">
+                  <span className="billing-eyebrow">
+                    {t("portal.billing.chip.usage", "Usage")}
+                  </span>
+                  <p className="billing-id__sub">
+                    {t(
+                      "portal.billing.dataUnavailable",
+                      "Usage figures are currently unavailable.",
+                    )}
+                  </p>
+                </section>
               </>
             )}
             {licenseSection && (

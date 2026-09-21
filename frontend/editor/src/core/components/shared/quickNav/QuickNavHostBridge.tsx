@@ -24,8 +24,11 @@ export interface QuickNavHostBridgeProps {
   onSelectTool?: (toolId: ToolId) => void;
   activeTool?: ToolId | null;
   onShowFileLibrary?: () => void;
+  onCreateProcessingFolder?: () => void;
   /** Merged over the reasons worked out here, for what only the app can see. */
   toolReasons?: QuickNavToolReasons;
+  /** Absent where there is no file workspace to open into, which drops the rail entry. */
+  onOpenFromComputer?: () => void;
 }
 
 /** Registers with the rail what only the app can see, and owns the notifications panel. */
@@ -37,8 +40,10 @@ export function QuickNavHostBridge({
   onSelectTool,
   activeTool = null,
   onShowFileLibrary,
+  onCreateProcessingFolder,
   onGoToDefaultState,
   toolReasons,
+  onOpenFromComputer,
 }: QuickNavHostBridgeProps) {
   useSyncQuickNavAccount();
   const notificationsAvailable = useNotificationsAvailable();
@@ -71,7 +76,9 @@ export function QuickNavHostBridge({
       selectTool: onSelectTool,
       setReaderMode: onSetReaderMode,
       showFileLibrary: onShowFileLibrary,
+      createProcessingFolder: onCreateProcessingFolder,
       goToDefaultState: onGoToDefaultState,
+      openFromComputer: onOpenFromComputer,
       toggleNotifications: () => setNotificationsOpen((open) => !open),
       onBrandFlourish: brandFlourish.trigger,
     },

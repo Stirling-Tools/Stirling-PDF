@@ -16,6 +16,8 @@ public record GateDecision(boolean allowed, Reason reason) {
         ENTITLED,
         /** Enterprise license permits processing with local-only usage metering. */
         ENTERPRISE_LICENSE,
+        /** A Server licence includes direct PDF tool API calls without consuming credits. */
+        SERVER_LICENSE,
         FREE_TIER,
         /** Entitlement source unreachable — fail open, allow. */
         FAIL_OPEN,

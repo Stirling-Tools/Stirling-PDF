@@ -20,7 +20,9 @@ vi.mock("@app/services/heuristic/heuristicClassification", () => ({
 vi.mock("@app/services/automationMeter", () => ({
   meterAutomationRun: (...args: unknown[]) => meterAutomationRun(...args),
 }));
+import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 import {
+  HEURISTIC_BUDGET_MS,
   mergeOutcomes,
   pickRecentPdfs,
   runClassificationDemoSweep,
@@ -96,6 +98,8 @@ describe("runClassificationDemoSweep", () => {
         // open file, so nothing is selected and the user's workspace is left alone.
         skipWorkspaceDispatch: true,
         selectFiles: false,
+        // Already parsed once by the heuristic; no second parse, no File kept in memory.
+        skipMetadataHydration: true,
       }),
     );
     expect(outcome.processed).toBe(2);
@@ -192,6 +196,82 @@ describe("runClassificationDemoSweep", () => {
     // The first document was swept; the second was never started, so it stays eligible.
     expect(outcome.sweptPaths).toEqual(["/downloads/a.pdf"]);
     expect(outcome.remaining).toBe(1);
+  });
+
+  test("reports how far the folder listing has got, so the view has something true to say", async () => {
+    listDirectory.mockImplementation(
+      async (
+        _dir: string,
+        options?: { onProgress?: (c: number, t: number) => void },
+      ) => {
+        options?.onProgress?.(32, 70);
+        options?.onProgress?.(64, 70);
+        return { files: [entry("a.pdf", 1)], directories: [] };
+      },
+    );
+    const d = deps();
+    await runClassificationDemoSweep("/downloads", d);
+
+    expect(d.onProgress).toHaveBeenCalledWith(
+      expect.objectContaining({
+        phase: "gathering",
+        total: 0,
+        listing: { checked: 32, total: 70 },
+      }),
+    );
+    expect(d.onProgress).toHaveBeenCalledWith(
+      expect.objectContaining({ listing: { checked: 64, total: 70 } }),
+    );
+  });
+
+  test("gives each document a time budget, so one cannot hold the sweep", async () => {
+    const d = deps();
+    await runClassificationDemoSweep("/downloads", d);
+    expect(classifyFileHeuristically).toHaveBeenCalledWith(expect.any(File), {
+      budgetMs: HEURISTIC_BUDGET_MS,
+    });
+  });
+
+  test("retires a document over the parse limit without reading it", async () => {
+    listDirectory.mockResolvedValue({
+      files: [
+        { ...entry("huge.pdf", 9), sizeBytes: LARGE_PDF_PARSE_LIMIT },
+        entry("small.pdf", 1),
+      ],
+      directories: [],
+    });
+    const outcome = await runClassificationDemoSweep("/downloads", deps());
+
+    // Never copied across the IPC bridge, never classified, but not offered again.
+    expect(readDiskFile).toHaveBeenCalledTimes(1);
+    expect(readDiskFile).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "small.pdf" }),
+    );
+    expect(outcome.processed).toBe(1);
+    expect(outcome.sweptPaths).toEqual([
+      "/downloads/huge.pdf",
+      "/downloads/small.pdf",
+    ]);
+  });
+
+  test("reads the next document while the current one is being classified", async () => {
+    let finishFirst!: (verdict: unknown) => void;
+    classifyFileHeuristically.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finishFirst = resolve;
+      }),
+    );
+    const run = runClassificationDemoSweep("/downloads", deps());
+
+    // The first classification is still pending, and the second read has started.
+    await vi.waitFor(() => expect(readDiskFile).toHaveBeenCalledTimes(2));
+    expect(classifyFileHeuristically).toHaveBeenCalledTimes(1);
+
+    finishFirst({ labels: ["invoice"], confidence: "low", score: 10 });
+    const outcome = await run;
+    expect(outcome.processed).toBe(2);
+    // Read-ahead never over-reads: two PDFs, two reads.
+    expect(readDiskFile).toHaveBeenCalledTimes(2);
   });
 
   test("stops between files once cancelled", async () => {

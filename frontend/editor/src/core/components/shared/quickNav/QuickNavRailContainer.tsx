@@ -10,6 +10,7 @@ import {
 } from "@app/components/shared/quickNav/QuickNavRailBase";
 import { QuickNavRailAccount } from "@app/components/shared/quickNav/QuickNavRailAccount";
 import { QuickNavRailNotifications } from "@app/components/shared/quickNav/QuickNavRailNotifications";
+import { QuickNavRailFooterExtensions } from "@app/components/shared/quickNav/QuickNavRailFooterExtensions";
 import "@app/components/shared/quickNav/QuickNavRailContainer.css";
 
 export type {
@@ -59,6 +60,7 @@ export function QuickNavRailContainer({
           footer={
             // Always rendered: the bell lives here too, so gating the footer hides it.
             <div className="quick-nav-rail-footer">
+              <QuickNavRailFooterExtensions />
               <QuickNavRailNotifications
                 onToggle={onToggleNotifications}
                 open={notificationsOpen}

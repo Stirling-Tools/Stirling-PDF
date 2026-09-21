@@ -38,7 +38,7 @@ public class AccountLinkProperties {
      * Units granted each month while unlinked. Matches the SaaS default policy, so linking raises
      * the allowance rather than introducing one. 0 means billable work needs a link.
      */
-    private long freeTierUnits = 500;
+    private long freeTierUnits = 1000;
 
     /** Phase 2 usage metering + daily sync. */
     private final Metering metering = new Metering();
@@ -60,7 +60,8 @@ public class AccountLinkProperties {
         private int syncIntervalHours = 24;
 
         /**
-         * Block billable work after this many days with no successful sync (fail-open → closed).
+         * Suspend cloud-backed Team features and processing after this many days without confirmed
+         * entitlement.
          */
         private int graceDays = 3;
 

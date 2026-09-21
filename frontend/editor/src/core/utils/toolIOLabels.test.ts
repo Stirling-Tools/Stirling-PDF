@@ -18,7 +18,7 @@ function toolFormatLabels(): Record<string, string> {
       const toml = readFileSync(
         resolve(current, "public/locales/en-US/translation.toml"),
         "utf-8",
-      );
+      ).replace(/\r\n/g, "\n");
       const section = toml.split("\n[toolFormat]\n")[1]?.split("\n[")[0] ?? "";
       return Object.fromEntries(
         section

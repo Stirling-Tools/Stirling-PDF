@@ -38,7 +38,16 @@ public class AccountLinkService {
     }
 
     /** Status of this instance's link, for the portal's "Account link" card. */
-    public record LinkStatus(boolean linked, String deviceId, Long teamId, String linkedAt) {}
+    public record LinkStatus(
+            boolean linked,
+            String deviceId,
+            Long teamId,
+            String linkedAt,
+            EntitlementCache.ConnectionStatus connection) {
+        public LinkStatus(boolean linked, String deviceId, Long teamId, String linkedAt) {
+            this(linked, deviceId, teamId, linkedAt, null);
+        }
+    }
 
     /**
      * Unlinks this instance — best-effort tells SaaS to revoke first (so the row gets {@code
@@ -66,17 +75,23 @@ public class AccountLinkService {
         log.info("Account-link: instance unlinked");
     }
 
+    /** Forces a cloud check for an administrator retrying a restored connection. */
+    public LinkStatus recheck() {
+        entitlementCache.invalidate();
+        return status();
+    }
+
     public LinkStatus status() {
         Optional<DeviceCredential> cred = credentialStore.get();
+        if (cred.isPresent()) entitlementCache.current();
         return cred.map(
                         c ->
                                 new LinkStatus(
                                         true,
                                         c.getDeviceId(),
                                         c.getTeamId(),
-                                        c.getLinkedAt() != null
-                                                ? c.getLinkedAt().toString()
-                                                : null))
+                                        c.getLinkedAt() != null ? c.getLinkedAt().toString() : null,
+                                        entitlementCache.connectionStatus()))
                 .orElseGet(() -> new LinkStatus(false, null, null, null));
     }
 }

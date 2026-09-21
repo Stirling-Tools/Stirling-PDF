@@ -192,18 +192,19 @@ public class PolicyController {
             summary = "Get pipeline run status",
             description = "Returns the current status, step cursor, and output files of a run.")
     public ResponseEntity<PolicyRunView> status(@PathVariable String runId) {
+        if (!ownedByCurrentUser(runId)) {
+            return ResponseEntity.notFound().build();
+        }
         PolicyRun run = runRegistry.get(runId);
         if (run != null) {
             return ResponseEntity.ok(PolicyRunView.of(run));
         }
         // Not local: read the run's shared projection so any node can serve its status.
-        if (ownedByCurrentUser(runId)) {
-            Optional<JobStoreEntry> entry = jobStore.get(runId);
-            if (entry.isPresent()
-                    && entry.get().resultMeta() != null
-                    && entry.get().resultMeta().containsKey("policyId")) {
-                return ResponseEntity.ok(PolicyRunView.ofEntry(entry.get()));
-            }
+        Optional<JobStoreEntry> entry = jobStore.get(runId);
+        if (entry.isPresent()
+                && entry.get().resultMeta() != null
+                && entry.get().resultMeta().containsKey("policyId")) {
+            return ResponseEntity.ok(PolicyRunView.ofEntry(entry.get()));
         }
         return ResponseEntity.notFound().build();
     }
@@ -794,10 +795,14 @@ public class PolicyController {
      * Only for a single-document run: an incident holds one file reference, so naming one of
      * several would attribute the failure to whichever bound first. Counted off resolved inputs,
      * not parts.
+     *
+     * <p>Refused for several, not for none. An empty upload resolves to no input at all, and
+     * dropping the reference there filed its failure against no document, which is the one thing
+     * the bell will not show: a caller that named one file named it whether or not it had bytes.
      */
     private static String documentReferenceFor(PolicyRunFiles files, PolicyInputs inputs) {
         String fileId = files.getFileId();
-        if (fileId == null || fileId.isBlank() || inputs.primary().size() != 1) {
+        if (fileId == null || fileId.isBlank() || inputs.primary().size() > 1) {
             return null;
         }
         return fileId;

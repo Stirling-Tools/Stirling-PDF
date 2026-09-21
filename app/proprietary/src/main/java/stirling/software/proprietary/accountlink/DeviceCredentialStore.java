@@ -1,11 +1,13 @@
 package stirling.software.proprietary.accountlink;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -51,7 +53,15 @@ public class DeviceCredentialStore {
         cred.setDeviceSecret(deviceSecret);
         cred.setTeamId(teamId);
         cred.setLinkedAt(LocalDateTime.now());
+        cred.setLastEntitlementSuccessAt(null);
+        cred.setEntitlementRevoked(false);
         repo.save(cred);
+    }
+
+    /** Commits successful contact independently of the caller's work or transaction rollback. */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void recordEntitlementContact(String deviceId, Instant at, boolean revoked) {
+        repo.recordEntitlementContact(deviceId, at, revoked);
     }
 
     /** Unlinks this instance locally (idempotent). */

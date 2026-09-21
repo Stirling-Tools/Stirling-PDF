@@ -92,7 +92,7 @@ class PolicyAutomationBillingDbTest {
         interceptor =
                 new InstanceEntitlementInterceptor(
                         gate, entitlementCache, meterProvider, freeTierUsageService, tempFiles);
-        when(gate.evaluate(anyBoolean()))
+        when(gate.evaluate(anyBoolean(), anyBoolean()))
                 .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
         when(meterProvider.getIfAvailable())
                 .thenReturn(
@@ -153,7 +153,38 @@ class PolicyAutomationBillingDbTest {
         assertThat(stepCount("run:0")).isEqualTo(2);
     }
 
+    @Test
+    void sharedSupportingFileKeepsDocumentsSeparateAndContributesUnits() throws IOException {
+        execute(
+                2,
+                20,
+                List.of(
+                        new PipelineStep(ROTATE, Map.of(), Map.of("stampImage", "logo")),
+                        new PipelineStep(ROTATE, Map.of())),
+                Map.of("logo", List.of(file("logo.bin", new byte[2050]))));
+
+        assertThat(totalUnits()).isEqualTo(8);
+        assertThat(signatures.count()).isEqualTo(2);
+        assertThat(stepCount("run:0")).isEqualTo(2);
+        assertThat(stepCount("run:1")).isEqualTo(2);
+    }
+
     private PolicyExecutionResult execute(int inputCount, int stepLimit, String... operations)
+            throws IOException {
+        return execute(
+                inputCount,
+                stepLimit,
+                Arrays.stream(operations)
+                        .map(operation -> new PipelineStep(operation, Map.of()))
+                        .toList(),
+                Map.of());
+    }
+
+    private PolicyExecutionResult execute(
+            int inputCount,
+            int stepLimit,
+            List<PipelineStep> steps,
+            Map<String, List<Resource>> supportingFiles)
             throws IOException {
         when(entitlementCache.current())
                 .thenReturn(
@@ -168,24 +199,21 @@ class PolicyAutomationBillingDbTest {
                                         PERIOD,
                                         PERIOD.plusMonths(1),
                                         null,
-                                        stepLimit)));
+                                        stepLimit,
+                                        0L)));
         List<Resource> inputs =
                 IntStream.range(0, inputCount)
                         .mapToObj(
                                 index -> file("input-" + index + ".bin", new byte[] {(byte) index}))
                         .toList();
-        PipelineDefinition definition =
-                new PipelineDefinition(
-                        "test",
-                        Arrays.stream(operations)
-                                .map(operation -> new PipelineStep(operation, Map.of()))
-                                .toList(),
-                        OutputSpec.inline());
+        PipelineDefinition definition = new PipelineDefinition("test", steps, OutputSpec.inline());
         PolicyExecutionResult result;
         try (AutomationRunContext.Scope run = AutomationRunContext.open("run")) {
             result =
                     executor.execute(
-                            definition, PolicyInputs.of(inputs), PolicyProgressListener.NOOP);
+                            definition,
+                            new PolicyInputs(inputs, supportingFiles),
+                            PolicyProgressListener.NOOP);
             assertThat(AutomationRunContext.currentDocument()).isNull();
         }
         return result;
@@ -201,15 +229,18 @@ class PolicyAutomationBillingDbTest {
         if (documentId != null) {
             request.addHeader(AutomationRunContext.DOCUMENT_ID_HEADER, documentId);
         }
-        for (Object input : body.get("fileInput")) {
-            Resource resource = (Resource) input;
-            try (var stream = resource.getInputStream()) {
-                request.addFile(
-                        new MockMultipartFile(
-                                "fileInput",
-                                resource.getFilename(),
-                                "application/octet-stream",
-                                stream));
+        for (var field : body.entrySet()) {
+            for (Object input : field.getValue()) {
+                if (input instanceof Resource resource) {
+                    try (var stream = resource.getInputStream()) {
+                        request.addFile(
+                                new MockMultipartFile(
+                                        field.getKey(),
+                                        resource.getFilename(),
+                                        "application/octet-stream",
+                                        stream));
+                    }
+                }
             }
         }
         MockHttpServletResponse response = new MockHttpServletResponse();

@@ -383,7 +383,8 @@ public class AccountLinkClient {
                 parseDateTime(root, "periodStart"),
                 parseDateTime(root, "periodEnd"),
                 licensedUsers,
-                root.path("automationStepLimit").asInt(0));
+                root.path("automationStepLimit").asInt(0),
+                root.path("prepaidRemainingUnits").asLong(0));
     }
 
     /** Parses the nested unit-calc policy; null if absent or any knob is invalid (e.g. zero). */

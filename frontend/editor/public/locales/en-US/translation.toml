@@ -1268,14 +1268,6 @@ description = "Languages that users can select from (leave empty to enable all l
 label = "Available Languages"
 placeholder = "Select languages"
 
-[admin.settings.general.logoStyle]
-classic = "Classic"
-classicAlt = "Classic logo"
-description = "Set the default logo style for all users on this server. Users can override this setting in their personal preferences."
-label = "Logo Style"
-modern = "Modern"
-modernAlt = "Modern logo"
-
 [admin.settings.general.showUpdate]
 description = "Display notifications when a new version is available"
 label = "Show Update Notifications"
@@ -1884,6 +1876,7 @@ comment = "Comment"
 comments = "Comments"
 contents = "Text"
 delete = "Delete"
+deleted = "Annotation deleted"
 drawing = "Drawing"
 editSelectDescription = "Click an existing annotation to edit its color, opacity, text, or size."
 editText = "Edit"
@@ -1925,10 +1918,11 @@ textAlignment = "Text Alignment"
 textMarkup = "Text Markup"
 title = "Annotate"
 underline = "Underline"
+undoDelete = "Undo"
 width = "Width"
 
 [app]
-description = "The Free Adobe Acrobat alternative (10M+ Downloads)"
+description = "A free, private PDF editor you can run on any infrastructure."
 
 [appBanner]
 dismiss = "Dismiss"
@@ -3412,6 +3406,9 @@ will = "Will"
 work-instruction = "Work instruction"
 work-order = "Work order"
 
+[classificationDemo]
+folderName = "Downloads"
+
 [classificationDemo.buttons]
 done = "Done"
 notNow = "Not now"
@@ -3430,6 +3427,7 @@ cta = "Make Stirling my default"
 title = "Open every PDF in Stirling"
 
 [classificationDemo.followUp]
+background = "This runs in the background. The ring on the left shows progress."
 batchCta = "Process another {{count}}"
 free = "They are all covered by your remaining free allowance."
 partial = "{{count}} of them are covered by your remaining free allowance."
@@ -3463,6 +3461,20 @@ heading = "Your Downloads, sorted"
 summary = "Stirling read {{documents}} and sorted them into {{types}}."
 typeCount_one = "{{count}} type"
 typeCount_other = "{{count}} types"
+
+[classificationDemo.ring]
+done = "{{folder}} classified"
+doneDetail = "{{count}} PDFs sorted by type"
+progress = "{{done}} of {{total}} PDFs ({{percent}}%)"
+running = "Classifying {{folder}}"
+
+[classificationDemo.status]
+checked = "Checked {{checked}} of {{total}} files..."
+checking = "Checking each file's name and date..."
+connecting = "Connecting your Downloads folder..."
+library = "Adding it to your file library..."
+listing = "Listing the files in Downloads..."
+picking = "Looking for the {{count}} most recent PDFs..."
 
 [cloudBadge]
 tooltip = "This operation will use your cloud credits"
@@ -3853,6 +3865,13 @@ title = "Connect a server"
 [connect.notFound]
 body = "This connection request is not valid. It may have expired, or already been used. Start another one from your server."
 title = "Request not valid"
+
+[connect.renewal]
+approve = "Renew sign-in"
+failed = "Your sign-in could not be renewed. Try again, or dismiss this page and start again from your server."
+lead = "This server is already linked to your account. Renew your sign-in to return to billing and usage on your server."
+title = "Renew your server sign-in"
+wrongAccount = "This account cannot renew this server's sign-in. Switch to the account originally used to link the server. That account must still own the linked team."
 
 [convert]
 autoRotate = "Auto Rotate"
@@ -4473,7 +4492,6 @@ dropToAdd = "Drop files to add"
 duplicateFailed = "Could not duplicate file"
 expand = "Expand sidebar"
 googleDrive = "Google Drive"
-googleDriveDisabled = "Google Drive is not configured"
 library = "PDF Library"
 myFiles = "File library"
 noFiles = "No files yet"
@@ -4564,6 +4582,7 @@ folder = "Folder"
 folderItems_one = "{{count}} item"
 folderItems_other = "{{count}} items"
 folderMenu = "Folder actions"
+folderSettings = "Folder settings"
 inPath = "in {{path}}"
 inWorkspace = "Open"
 inWorkspaceAria = "Already in workspace"
@@ -4586,7 +4605,7 @@ offlineNoFolderEdits = "Server folder sync unavailable - folder changes are disa
 open = "Open"
 openVersionInWorkspace = "Open in workspace"
 originFilter = "Filter by source"
-refresh = "Refresh from server"
+refresh = "Refresh"
 remove = "Delete"
 removeLocalFolder = "Unmount from Stirling"
 removeVersion = "Remove this version"
@@ -4597,7 +4616,6 @@ save = "Save"
 saveToServer = "Save to server"
 saveToServerDisabledHint = "Saving to the server isn't enabled on this server. Ask your admin to enable it."
 selectAll = "Select all"
-selectAllHint = "Click to select all. Tip: hold Ctrl (or Cmd) to add files one at a time, Shift to select a range."
 selectedCount = "{{count}} selected"
 selectFile = "Select file {{name}}"
 serverFolderNeedsConnection = "Sign in to Stirling Cloud or connect a self-hosted server to use server folders."
@@ -4624,6 +4642,8 @@ viewVersionHistory = "Version journey ({{count}})"
 
 [filesPage.appearance]
 colour = "Color"
+done = "Done"
+edit = "Appearance..."
 icon = "Icon"
 title = "Appearance"
 useColour = "Use color {{c}}"
@@ -4632,6 +4652,7 @@ useColour = "Use color {{c}}"
 modified = "Modified"
 name = "Name"
 size = "Size"
+status = "Status"
 type = "Type"
 
 [filesPage.deleteScope]
@@ -4785,6 +4806,7 @@ sharedHint = "Shared with you via link"
 
 [filesPage.processing]
 active = "Processing folder"
+blockedNeedsConnection = "Sign in to Stirling Cloud or connect a self-hosted server to process folders."
 edit = "Edit processing..."
 nothingToRestore = "No originals to restore - these files are already their originals."
 paused = "Processing paused"
@@ -4805,9 +4827,6 @@ sweep = "Retry failed files"
 [filesPage.processingSetup]
 back = "Back"
 cancel = "Cancel"
-lead = "Anything added to this folder runs these steps, in place - each file becomes its processed version."
-start = "Start processing"
-title = "Process '{{name}}'"
 
 [filesPage.search]
 clear = "Clear filter"
@@ -4830,13 +4849,6 @@ server = "Server error during folder sync."
 
 [filesPage.tabName]
 local = "Local"
-
-[filesPage.tabs]
-all = "All"
-ariaLabel = "File views"
-recent = "Recent"
-shared = "Shared with me"
-sharedByMe = "Shared by me"
 
 [filesPage.treeMenu]
 actions = "Folder actions for {{name}}"
@@ -5689,7 +5701,6 @@ unexpectedError = "Unexpected error: {{message}}"
 updatePassword = "Update password"
 useMagicLink = "Use magic link instead"
 username = "Username"
-youAreLoggedIn = "You are logged in!"
 
 [margin]
 large = "Large"
@@ -6438,7 +6449,7 @@ noKey = "VITE_STRIPE_PUBLISHABLE_KEY is unset. Real iframe mounts here once conf
 title = "Stripe Embedded Checkout (mock mode)"
 
 [payg.confirm]
-body = "Your team can now run automation, AI, and API operations beyond your 500 free PDFs."
+bodyWithAllowance = "Your team can now run automation, AI, and API operations beyond your {{limit}} free PDFs."
 capValue = "{{symbol}}{{amount}} / month"
 noCap = "No cap"
 note = "You can change your cap, cancel, or open the Stripe customer portal any time from this page."
@@ -6465,7 +6476,7 @@ benefit3Body = "call any Stirling endpoint programmatically"
 benefit3Title = "API access"
 button = "Turn on Processor →"
 reassurance = "No minimum · Set a $0 cap to test · Cancel anytime"
-subtitle = "Keep going past your 500 free PDFs with automation, AI, and the API. Set a monthly ceiling, so you stay in control."
+subtitleWithAllowance = "Keep going past your {{limit}} free PDFs with automation, AI, and the API. Set a monthly ceiling, so you stay in control."
 title = "Turn on the Processor plan"
 
 [payg.free.editor]
@@ -6543,17 +6554,16 @@ leader = "Team owner"
 member = "Member"
 
 [payg.signupRequired]
-body = "Stirling PDF gives every signed-up account 500 free operations a month, enough to keep most workflows humming without paying a cent. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing."
-cancel = "Not now"
-cta = "Sign up free"
-subtext = "Creating an account is free and takes a few seconds. No credit card required."
-title = "Sign up to use {{category}}"
-
-[payg.signupRequired.category]
-ai = "AI features"
-api = "this tool"
-automation = "automations"
-default = "this feature"
+aiPromo = "Create, edit and ask about PDFs with AI"
+apiPromo = "Connect your apps and AI assistants"
+automationPromo = "Automate repetitive PDF tasks"
+createAccount = "Create free account"
+editorLabel = "PDF Editor"
+login = "Log in"
+manualToolsPromo = "Unlimited free manual PDF tools"
+processorLabel = "PDF Processor"
+processorTitle = "Create an account to unlock the best of Stirling"
+readerLabel = "PDF Reader"
 
 [payg.spendCapMeter]
 barAria = "Spend against cap"
@@ -6604,7 +6614,7 @@ apiBody = "programmatic access to any Stirling endpoint"
 apiTitle = "API calls"
 automationBody = "chained tools or scheduled runs that don't need clicks"
 automationTitle = "Automation pipelines"
-footnote = "Manual tools (viewing, editing, merging, splitting, watermarking, compressing, manual OCR) are always free, even past 500. The distinction is the type of work, not where you click."
+footnoteUnlimited = "Manual tools (viewing, editing, merging, splitting, watermarking, compressing, manual OCR) are always free, even after your included credits are used. The distinction is the type of work, not where you click."
 title = "What we count toward billing"
 
 [payg.upgrade.promise]
@@ -6643,6 +6653,7 @@ licenseKey = "Your License Key"
 licensePollingError = "Payment successful but we couldn't retrieve your license key automatically. Please check your email or contact support with your payment confirmation."
 licenseRetrievalError = "Payment successful but license retrieval failed. You will receive your license key via email. Please contact support if you don't receive it within 10 minutes."
 licenseSaveError = "Failed to save license key. Please contact support with your license key to complete activation."
+manageSubscription = "Manage subscription"
 monthly = "Monthly"
 paymentCanceled = "Payment was canceled. No charges were made."
 perMonth = "/month"
@@ -6653,6 +6664,10 @@ success = "Payment Successful!"
 successMessage = "Your subscription has been activated successfully. You will receive a confirmation email shortly."
 syncError = "Payment successful but license sync failed. Your license will be updated shortly. Please contact support if issues persist."
 syncingLicense = "Syncing your upgraded license..."
+teamActivated = "Your Team capacity is active"
+teamActivating = "Confirming your Team capacity..."
+teamPending = "Your Team purchase is still processing. Refresh this page shortly."
+teamProcessing = "Team purchase processing"
 upgradeComplete = "Upgrade Complete"
 upgradeCompleteMessage = "Your subscription has been upgraded successfully. Your existing license key has been updated."
 upgradeSuccess = "Payment successful! Your subscription has been upgraded. The license has been updated on your server. You will receive a confirmation email shortly."
@@ -6664,6 +6679,7 @@ currently = "Currently up to {{users}} users"
 title = "Add capacity"
 
 [payment.capacityStage]
+adjustmentNote = "Stripe will show the exact charge, any prorations and your next billing date before you confirm. Your saved payment method will be used if available."
 continue = "Continue to payment"
 customHint = "Rounded up to the next block of {{users}}."
 customLabel = "Number of users"
@@ -6672,10 +6688,12 @@ enterpriseQuote = "Get an enterprise quote"
 lineItem = "Team · {{price}}{{period}} per {{block}} users"
 minimumForCurrentUsers = "You have {{users}} users, so the plan must cover at least {{minimum}}."
 modalTitle = "Upgrade to {{planName}}"
+newPlanTotal = "New plan total"
 other = "Other"
 perMonth = "/mo"
 perYear = "/yr"
 renewalNote = "Renews at {{total}}{{period}}. Cancel any time in Usage & Billing."
+reviewChange = "Review change in Stripe"
 subheading = "Covers everyone you invite, in blocks of {{users}} users."
 subheadingAdd = "Your plan covers {{current}} users today. Choose the new total."
 userDelta = "+{{users}} users"
@@ -6687,7 +6705,6 @@ continue = "Continue"
 description = "We'll use this to send your license key and receipts."
 emailLabel = "Email Address"
 emailPlaceholder = "your@email.com"
-modalTitle = "Get Started - {{planName}}"
 
 [payment.paymentStage]
 modalTitle = "Complete Payment - {{planName}}"
@@ -7273,6 +7290,20 @@ partialOutputsUnavailable = "Some policy outputs are no longer available to down
 runNotFound = "The enforcement run could no longer be found."
 timedOut = "Enforcement timed out before the run could finish."
 
+[policies.editorPanel]
+collapse = "Hide pipelines"
+empty = "Nothing runs on import or export yet"
+expand = "Show pipelines"
+openProcessor = "Open the PDF Processor"
+rowFailed = "{{label}} - last run failed"
+rowIdle = "{{label}} runs automatically"
+rowRunning = "{{label}} is running now"
+runsToday_one = "{{count}} run today"
+runsToday_other = "{{count}} runs today"
+title = "PDF Processor"
+triggerExport = "Runs on export"
+triggerImport = "Runs on import"
+
 [policies.enforcement]
 applying = "Applying {{names}}"
 applyingProgress = "Applying {{names}} ({{done}} of {{total}})"
@@ -7310,7 +7341,8 @@ badgeRan = "{{name}} policy ran on this file"
 badgeRunning = "{{name}} running..."
 blockingAction = "{{action}} blocked while enforcing policy, please wait..."
 dismiss = "Dismiss overlay"
-enforcingTitle = "Enforcing policy..."
+enforcingPipelineTitle = "Enforcing pipeline..."
+enforcingPolicyTitle = "Enforcing policy..."
 exportBlocked = "A required policy failed. The export was cancelled. Try exporting again."
 recoveryBody = "We couldn't apply a required policy to these files. Try again, or close the affected files to continue working."
 recoveryClose_one = "Close file"
@@ -7368,7 +7400,7 @@ start = "Connect Stirling account"
 step = "Step {{current}} of {{total}}"
 
 [portal.accountLink.connect.benefits]
-creditsDetail = "500 free per month"
+creditsDetailMonthly = "Free monthly allowance"
 creditsLabel = "Credits"
 processorDetail = "Pipelines, policies, sources and audit"
 processorLabel = "Processor"
@@ -7411,9 +7443,18 @@ switchOnProcessor = "Switch on the Processor"
 title = "Connected"
 
 [portal.accountLink.connect.handoff]
-going = "Taking you to stirling.com"
+opening = "Opening Stirling sign-in..."
 reauthLede = "Your Stirling session expired. Signing in again keeps usage and billing visible. This server stays connected either way."
 title = "Connecting"
+
+[portal.accountLink.connectionNotice]
+expiredBody = "This server has not reached Stirling Cloud within its offline allowance. Cloud-backed Team features and Processor work are paused. Existing data and installed licence rights are preserved. Access returns automatically after a successful connection confirms your plan."
+expiredTitle = "Cloud access paused"
+offlineBody = "Your last confirmed plan remains available until {{deadline}}. Restore this server’s connection before then to avoid pausing cloud-backed features and processing."
+offlineTitle = "Stirling Cloud is unreachable"
+retry = "Check connection"
+revokedBody = "Stirling Cloud rejected this account connection. Reconnect the account in Settings to restore eligible cloud-backed features."
+revokedTitle = "Account connection revoked"
 
 [portal.accountLink.gate]
 retry = "Try again"
@@ -7428,12 +7469,13 @@ otherTitle = "No other connected instances"
 title = "No connected instances"
 
 [portal.accountLink.modal]
+callbackMismatch = "This server's configured frontend address does not match the address you opened. Open the server at its configured address, or update Frontend URL in General settings, then try again."
 cancel = "Cancel"
 continueReauth = "Sign in again"
 exhaustedTitle = "Add more monthly credits"
+identity = "Stirling account"
 linkTitle = "Connect your Stirling account"
 noAuthorizeUrl = "Stirling did not return somewhere to continue. Try again in a moment."
-reauthTitle = "Sign in again"
 startFailed = "Could not reach Stirling to start the connection. Check this server's outbound network access, then try again."
 
 [portal.accountLink.modal.loginNotConfigured]
@@ -7449,6 +7491,7 @@ manageCloud = "Manage on stirling.com"
 otherInstancesSub = "Other self-hosted servers connected to the same team in Stirling Cloud."
 otherInstancesTitle = "Other connected instances"
 revokeError = "Couldn't revoke instance"
+sessionRequired = "Connected instances will appear after you renew billing access."
 sub = "Manage this server’s connection to your Stirling Cloud account."
 
 [portal.accountLink.panel.loadError]
@@ -7456,11 +7499,20 @@ forbidden = "Only the team owner can manage connected instances."
 generic = "Your connections could not be checked. Try again."
 title = "Couldn’t load connected instances"
 
-[portal.accountLink.rail]
-cta = "Connect"
-later = "Not now"
-sub = "Adds monthly credits and room for more users. Everything on this server already works without one."
-title = "Connect your Stirling account"
+[portal.accountLink.renewal]
+dataUnavailable = "Your plan and usage will appear after you renew billing access. This server stays connected, and local document processing remains available."
+expired = "This sign-in request expired. Try again to renew billing access; your server is still connected."
+expiredTitle = "Sign-in request expired"
+incomplete = "This server is still connected, but we could not restore billing access in this browser. Try signing in again."
+malformed = "We could not verify this sign-in response. Start again from Usage & billing; your server is still connected."
+malformedTitle = "Could not verify sign-in"
+rejected = "This sign-in request was declined or has already been used. Try again to renew billing access."
+rejectedTitle = "Sign-in not completed"
+retry = "Stirling could not finish renewing billing access. Try again in a moment; your server is still connected."
+retryTitle = "Billing access not restored"
+success = "Your billing access has been renewed. This server is still connected to the same Stirling account."
+title = "Renew billing access"
+working = "Restoring billing access."
 
 [portal.accountLink.state]
 free = "Editor plan"
@@ -7482,6 +7534,9 @@ typing = "Typing"
 [portal.auth]
 loading = "Loading"
 redirectingToEditor = "Redirecting to the editor..."
+
+[portal.billing]
+dataUnavailable = "Usage figures are currently unavailable."
 
 [portal.billing.activation]
 maybeLater = "Maybe later"
@@ -7578,6 +7633,7 @@ subNoRate = "Team base plus metered processing"
 
 [portal.billing.identity.team]
 chipFleet = "Fleet control"
+chipIncluded = "{{allowance}} included credits monthly"
 chipSso = "SSO"
 name = "Team"
 sub = "Up to {{users}} users"
@@ -7604,11 +7660,10 @@ view = "View"
 billedTo = "Billed to"
 card = "{{brand}} ending {{last4}}"
 cardWithExpiry = "{{brand}} ending {{last4}} · expires {{month}} / {{year}}"
+dateUnavailable = "Billing date not available yet"
 invoicesTo = "Invoices go to"
 method = "Payment method"
 nextInvoice = "Next invoice"
-nextInvoiceNote = "from this cycle's pace"
-nextInvoiceValue = "{{date}} · {{amount}}"
 noCard = "No card on file"
 update = "Update"
 
@@ -7731,13 +7786,15 @@ low = "Running low"
 
 [portal.billing.processor]
 activate = "Switch on the Processor"
-capTooltip = "Pauses PDF processing at your spend limit."
 factCapped = "{{pct}}% of {{cap}}"
 factFree = "{{used}} of {{allowance}} used"
 factNoCap = "no limit"
 included = "Included in your license"
-midFree = "{{rate}} per credit · {{allowance}} free every month"
-midFreeNoRate = "{{allowance}} free every month"
+includedCredits = "Included credits"
+includedRenewal = "{{summary}} · Renews {{date}}"
+meteredCapTooltip = "Pauses metered processing at your spend limit."
+midIncluded = "{{rate}} per credit · {{allowance}} included every month"
+midIncludedNoRate = "{{allowance}} included every month"
 midMetered = "{{spend}} metered this cycle"
 midMeteredUnknown = "Metered this cycle"
 raiseLimit = "Raise limit"
@@ -8440,9 +8497,37 @@ title = "Compliance standard not met"
 description = "Your file is damaged, so the run could not read it."
 title = "Damaged document"
 
+[portal.failures.kind.inputEmpty]
+description = "Your file has no content in it, so there was nothing for the run to work on."
+title = "Empty file"
+
 [portal.failures.kind.inputPasswordProtected]
 description = "Your file is password protected, so the run could not read it."
 title = "Password-protected document"
+
+[portal.failures.kind.inputUnavailable]
+description = "The file behind this run could not be reached, so it was never processed."
+title = "File unavailable"
+
+[portal.failures.kind.inputUnreadable]
+description = "Your file could not be opened, so the run could not read it."
+title = "Unreadable file"
+
+[portal.failures.kind.inputUnrepairable]
+description = "Your file is damaged beyond what the repair tools can fix."
+title = "File could not be repaired"
+
+[portal.failures.kind.inputWrongType]
+description = "Your file is not a format this step can open, so the run could not read it."
+title = "Wrong file type"
+
+[portal.failures.kind.stepCannotRenderPage]
+description = "A page in your file could not be drawn, so the run could not finish."
+title = "Page could not be rendered"
+
+[portal.failures.kind.toolNotInstalled]
+description = "This server is missing software the step needs, so the run could not start it."
+title = "Software not installed"
 
 [portal.failures.kind.unknown]
 description = "Something went wrong that Stirling does not recognise yet."
@@ -9114,6 +9199,7 @@ editor-upload = "Every upload"
 folder-watch = "Folder watch"
 manual = "Manual"
 schedule = "Scheduled"
+storage-folder-watch = "New files in storage folder"
 
 [portal.pipelines.type]
 pipeline = "Pipeline"
@@ -10062,9 +10148,7 @@ loadError = "Couldn't read this server's credit usage. Try again in a moment."
 loadErrorTitle = "Couldn't load credit usage"
 
 [portal.usage.sessionExpired]
-action = "Sign in again"
 body = "Your Stirling account session has expired. Sign in again to view billing — your instance stays linked."
-title = "Session expired"
 
 [portal.users]
 title = "Users"
@@ -10126,15 +10210,13 @@ explain_other = "Stirling can classify the {{count}} PDFs already in your Downlo
 failed = "Could not set that up. Your files have not been changed."
 finished_one = "Classified {{count}} file and opened {{opened}} of them here, ready to work on."
 finished_other = "Classified {{count}} files and opened {{opened}} of them here, ready to work on."
-keepsOriginals = "Files are processed in place - and each original is kept, so you can restore it any time."
 nothingNew_one = "Nothing new to process - this {{count}} file has already been through."
 nothingNew_other = "Nothing new to process - these {{count}} files have already been through."
+notModified = "Your files in Downloads are not changed - Stirling reads them and opens them here."
 notNow = "Not now"
 progressCounts = "of {{total}} processed"
 someFailed_one = "{{count}} could not be processed and was left untouched."
 someFailed_other = "{{count}} could not be processed and were left untouched."
-stillParked_one = "{{count}} file failed earlier and was not retried - fix the cause, then run again."
-stillParked_other = "{{count}} files failed earlier and were not retried - fix the cause, then run again."
 stillRunning = "Some files are still being processed in the background."
 title = "Organize your Downloads?"
 trigger_one = "Process {{count}} PDF in Downloads"
@@ -10142,6 +10224,57 @@ trigger_other = "Process {{count}} PDFs in Downloads"
 typesFound_one = "{{count}} document type found"
 typesFound_other = "{{count}} document types found"
 working = "Processing ..."
+
+[processingFolders.setup]
+addFolder = "Add folder"
+advancedSteps = "This folder uses a processing setup this wizard cannot edit. Its saved steps have not been changed."
+change = "Change"
+changeLocation = "Change folder location"
+chooseFolder = "Which folder should we process?"
+chooseParent = "Choose where to create the folder"
+chooseProcessing = "Choose processing"
+computer = "On this computer"
+computerDescription = "Click to choose a folder from your computer."
+computerHeading = "Process your own folder"
+createIn = "Create in"
+downloadsAction = "Try processing your downloads folder"
+dropDescription = "or click to choose one from your computer."
+dropError = "Drop a single folder here, or click to choose one."
+dropHeading = "Drop a folder here"
+editFolder = "Edit {{name}}"
+editTitle = "Edit folder processing"
+enable = "Enable processing"
+existingTitle = "Set up folder processing"
+folder = "Folder"
+folderChoice = "Use an existing folder or create one"
+folderName = "Folder name"
+fromComputer = "From computer..."
+invalidName = "Enter a folder name without path separators."
+location = "Folder location"
+namePlaceholder = "e.g. Invoices"
+newFolder = "New folder"
+noFolders = "No folders here."
+noMatchingFolders = "No matching folders."
+openFolder = "Open {{name}}"
+portalOnlyPreset = "Configure this preset in the portal."
+presetInfo = "About {{name}}"
+presetsLabel = "Processing presets"
+processing = "Processing"
+progress = "Setup progress"
+replaceWarning = "\"{{name}}\" already has processing. Saving will replace its current processing settings."
+retry = "Try again"
+review = "Review"
+saveChanges = "Save changes"
+saveFolder = "Save folder"
+searchFolders = "Search folders..."
+searchLocations = "Search locations..."
+selectFolder = "Select a folder"
+server = "Server storage"
+serverAction = "Or add a new folder to your server"
+settings = "Adjust settings"
+title = "Set up folder processing"
+useExisting = "Use existing folder"
+viewLabels = "View classification labels"
 
 [processingFolders.wall]
 done = "Done"
@@ -10370,6 +10503,19 @@ reader = "Reader"
 
 [read]
 tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
+
+[reader.rail]
+addDocument = "Add file"
+bookmarks = "Bookmarks"
+close = "Close document"
+comment = "Comments"
+label = "Reading tools"
+readAloud = "Read aloud"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+search = "Find in document"
+switchDocument = "Switch document"
+thumbnails = "Pages"
 
 [redact]
 submit = "Redact"
@@ -12024,8 +12170,6 @@ ZIP = "a ZIP archive"
 [toolPanel]
 alpha = "Alpha"
 backToAllTools = "Back to all tools"
-collapse = "Collapse panel"
-expand = "Expand panel"
 goBack = "Go back"
 pdfTools = "PDF Tools"
 placeholder = "Choose a tool to get started"
@@ -12465,6 +12609,7 @@ validUntrusted = "Valid, signer not verified"
 cannotPreviewFile = "Cannot Preview File"
 copyText = "Copy"
 disableColorFilter = "Disable Color Filter"
+documentUpdated = "Document updated"
 dualPageView = "Dual Page View"
 enableDarkFilter = "Enable Dark Filter"
 enableSepiaFilter = "Enable Sepia Filter"
@@ -12509,6 +12654,7 @@ bookmarkTitle = "Bookmark title"
 bookmarkTitleRequired = "Bookmark title is required"
 closeSidebar = "Close bookmarks sidebar"
 collapseAll = "Collapse all bookmarks"
+editorOnly = "This document's bookmarks can only be edited in the editor."
 empty = "No bookmarks in this document"
 expandAll = "Expand all bookmarks"
 searchPlaceholder = "Search bookmarks"

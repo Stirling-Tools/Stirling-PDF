@@ -20,8 +20,8 @@ export type { SettingsNav };
  * processor access, audit) — so the narrower section is dropped rather than
  * shown twice, and its key aliases across.
  *
- * Billing and cloud account connections belong to the org owner. Other admins
- * retain server configuration and operational usage analytics.
+ * Admins manage encryption; only the organization owner manages billing and
+ * the Stirling account connection. Portal access alone grants neither.
  */
 export function useSettingsNav(onLeave: () => void): SettingsNav {
   const { t } = useTranslation();

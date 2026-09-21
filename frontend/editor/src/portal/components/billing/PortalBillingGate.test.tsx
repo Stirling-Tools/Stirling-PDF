@@ -1,4 +1,4 @@
-vi.mock("@portal/hooks/useServerPlan", () => ({
+vi.mock("@app/portal/hooks/useServerPlan", () => ({
   useServerPlan: () => ({ serverPlan: undefined, loading: false }),
 }));
 
@@ -53,41 +53,48 @@ vi.mock("@app/services/licenseService", () => ({
 }));
 vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
 
-vi.mock("@portal/hooks/useConnectGate", () => ({
+vi.mock("@app/portal/hooks/useConnectGate", () => ({
   useConnectGate: () => ({ ...gate, connect, guard: (f: unknown) => f }),
 }));
-vi.mock("@portal/contexts/LinkContext", () => ({
+vi.mock("@app/portal/contexts/LinkContext", () => ({
   useApplyLinkFacts: () => applyLinkFacts,
   useLinkOptional: () => ({ isLinked: link.is }),
 }));
-vi.mock("@portal/contexts/UIContext", () => ({
+vi.mock("@app/portal/contexts/UIContext", () => ({
   useUI: () => ({ openLinkModal: vi.fn() }),
 }));
-vi.mock("@portal/hooks/usePortalAdmin", () => ({
-  usePortalAdmin: () => admin.is,
+vi.mock("@app/portal/hooks/useAccountLinkOwner", () => ({
+  useAccountLinkOwner: () => admin.is && owner.is && !owner.loading,
 }));
-vi.mock("@portal/views/Usage", () => ({
+vi.mock("@app/portal/views/Usage", () => ({
   Usage: ({
     onWalletLoaded,
     renderLicenseSection,
+    sessionRecovery,
   }: {
     onWalletLoaded?: (w: unknown) => void;
+    sessionRecovery?: ReactNode;
     renderLicenseSection?: (onSaved: () => void) => ReactNode;
   }) => {
     onWalletLoaded?.({ status: "free" });
     return (
-      <div data-testid="usage">{renderLicenseSection?.(onLicenseSaved)}</div>
+      <div
+        data-testid="usage"
+        data-session-recovery-in-shell={Boolean(sessionRecovery)}
+      >
+        {renderLicenseSection?.(onLicenseSaved)}
+      </div>
     );
   },
 }));
 
-vi.mock("@portal/components/billing/FreeTierPlanView", () => ({
+vi.mock("@app/portal/components/billing/FreeTierPlanView", () => ({
   FreeTierPlanView: ({ licenseSection }: { licenseSection?: ReactNode }) => (
     <div data-testid="free-tier">{licenseSection}</div>
   ),
 }));
 
-import { BillingSettingsSection } from "@portal/components/settings/BillingSettingsSection";
+import { BillingSettingsSection } from "@app/portal/components/settings/BillingSettingsSection";
 
 function Location() {
   const location = useLocation();
@@ -195,6 +202,10 @@ describe("PortalBillingGate — self-hosted", () => {
     link.is = true;
     renderGate();
     expect(screen.getByTestId("usage")).toBeInTheDocument();
+    expect(screen.getByTestId("usage")).toHaveAttribute(
+      "data-session-recovery-in-shell",
+      "true",
+    );
     expect(screen.queryByTestId("free-tier")).toBeNull();
     expect(applyLinkFacts).toHaveBeenCalledWith(true, false);
   });
