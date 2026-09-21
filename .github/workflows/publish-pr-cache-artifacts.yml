@@ -33,7 +33,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: Ludy87/cache-the-planet
-          ref: v1.8.0
+          ref: v1.9.0
           path: cache-the-planet
           persist-credentials: false
 
@@ -125,7 +125,6 @@ jobs:
           CACHE_SFTP_HOST: ${{ secrets.CACHE_SFTP_HOST }}
           CACHE_SFTP_PORT: ${{ secrets.CACHE_SFTP_PORT || '22' }}
           CACHE_SFTP_USERNAME: ${{ secrets.CACHE_SFTP_USERNAME }}
-          CACHE_SFTP_PRIVATE_KEY: ${{ secrets.CACHE_SFTP_PRIVATE_KEY }}
           CACHE_SFTP_PASSWORD: ${{ secrets.CACHE_SFTP_PASSWORD }}
           CACHE_SFTP_BASE_PATH: ${{ secrets.CACHE_SFTP_BASE_PATH || '/files/cache-the-planet' }}
         working-directory: cache-the-planet
