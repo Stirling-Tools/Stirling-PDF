@@ -48,7 +48,7 @@ import {
 import type { FileId } from "@app/types/file";
 import { folderKind, type FolderId } from "@app/types/folder";
 import { getFolderChain } from "@app/utils/folderPath";
-import { getDropzoneFiles } from "@app/utils/getDropzoneFiles";
+import { useDropzoneFiles } from "@app/hooks/useDropzoneFiles";
 import {
   Z_INDEX_FILE_MANAGER_MODAL,
   Z_INDEX_OVER_FILE_MANAGER_MODAL,
@@ -278,7 +278,7 @@ export function LibraryFilePicker({
     lastSelected.current = key;
   };
 
-  const disabledReason = (entry: FilesPageEntry) => {
+  const eligibilityReason = (entry: FilesPageEntry) => {
     const item = itemForEntry(entry);
     if (!item) return undefined;
     if (entry.diskState === "processing")
@@ -292,6 +292,14 @@ export function LibraryFilePicker({
         "filePicker.unsupported",
         "This file type isn't supported by the selected tool.",
       );
+    return undefined;
+  };
+
+  const disabledReason = (entry: FilesPageEntry) => {
+    const reason = eligibilityReason(entry);
+    if (reason) return reason;
+    const item = itemForEntry(entry);
+    if (!item) return undefined;
     if (busy) return t("filePicker.adding", "Adding files…");
     if (
       maxSelectable !== null &&
@@ -310,6 +318,10 @@ export function LibraryFilePicker({
       ? cause.message
       : t("filePicker.error", "Could not add these files. Please try again.");
   const reportError = (cause: unknown) => setError(errorMessage(cause));
+  const getDropzoneFiles = useDropzoneFiles((cause) => {
+    setDragging(false);
+    reportError(cause);
+  });
   const run = async (operation: () => Promise<void>) => {
     if (busyRef.current) return;
     busyRef.current = true;
@@ -389,6 +401,7 @@ export function LibraryFilePicker({
     if (!eligible.length) return;
     busyRef.current = true;
     closeFilesModal();
+    const errors: string[] = [];
     try {
       const stored: StirlingFileStub[] = [];
       const incoming: File[] = [];
@@ -403,25 +416,37 @@ export function LibraryFilePicker({
             );
           incoming.push(item.file);
         } else {
-          const file = await readDiskFile(item.entry);
-          if (!file)
-            throw new Error(
+          try {
+            const file = await readDiskFile(item.entry);
+            if (!file) throw new Error("File unavailable");
+            pendingFilePathMappings.set(createQuickKey(file), item.entry.path);
+            incoming.push(file);
+          } catch (cause) {
+            console.error(
+              "Could not read selected disk file",
+              item.entry.path,
+              cause,
+            );
+            errors.push(
               t(
                 "filePicker.fileUnavailable",
                 "{{name}} is no longer available.",
                 { name: item.entry.name },
               ),
             );
-          pendingFilePathMappings.set(createQuickKey(file), item.entry.path);
-          incoming.push(file);
+          }
         }
       }
-      await onRecentFileSelect(stored, incoming);
+      if (stored.length || incoming.length)
+        await onRecentFileSelect(stored, incoming);
     } catch (cause) {
+      errors.push(errorMessage(cause));
+    }
+    if (errors.length) {
       alert({
         alertType: "error",
         title: t("filePicker.errorTitle", "Couldn't add files"),
-        body: errorMessage(cause),
+        body: errors.join("\n"),
         expandable: false,
         durationMs: 5000,
       });
@@ -633,15 +658,7 @@ export function LibraryFilePicker({
           disabled={busy}
           activateOnClick={false}
           useFsAccessApi={false}
-          getFilesFromEvent={async (event) => {
-            try {
-              return await getDropzoneFiles(event);
-            } catch (cause) {
-              setDragging(false);
-              reportError(cause);
-              return [];
-            }
-          }}
+          getFilesFromEvent={getDropzoneFiles}
           onDrop={(files) => {
             setDragging(false);
             stageFiles(files);
@@ -740,6 +757,8 @@ export function LibraryFilePicker({
                   })
                 }
                 picker={{
+                  isEligible: (entry) => !eligibilityReason(entry),
+                  selectionDisabled: busy,
                   disabledReason,
                   selectedDiskPaths,
                   onSelectDiskFile: (entry, shift) =>

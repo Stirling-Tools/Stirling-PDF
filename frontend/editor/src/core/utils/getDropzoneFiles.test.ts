@@ -8,6 +8,80 @@ function dropEvent(items: object[], files: File[] = []) {
 }
 
 describe("getDropzoneFiles", () => {
+  it("keeps readable siblings when a dropped item throws before the data store closes", async () => {
+    const file = new File(["PDF"], "Readable.pdf");
+    const getAsFile = vi.fn(() => file);
+    const onError = vi.fn();
+    const result = getDropzoneFiles(
+      dropEvent([
+        {
+          kind: "file",
+          getAsFile: () => {
+            throw new Error("Access denied");
+          },
+        },
+        { kind: "file", getAsFile },
+        { kind: "file", getAsFile: () => null },
+      ]),
+      onError,
+    );
+    expect(getAsFile).toHaveBeenCalledOnce();
+    getAsFile.mockImplementation(() => {
+      throw new Error("Drop ended");
+    });
+    await expect(result).resolves.toEqual([file]);
+    expect(onError).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        message: "Access denied\nCould not read a dropped file.",
+      }),
+    );
+  });
+
+  it("keeps files from later directory batches when an earlier child is unreadable", async () => {
+    const first = new File(["first"], "First.pdf");
+    const last = new File(["last"], "Last.pdf");
+    const readable = (file: File) => ({
+      isFile: true,
+      file: (resolve: (file: File) => void) => resolve(file),
+    });
+    const batches = [
+      [
+        readable(first),
+        {
+          isFile: true,
+          name: "Missing.pdf",
+          file: (_resolve: unknown, reject: (error: Error) => void) =>
+            reject(new Error("Deleted")),
+        },
+      ],
+      [readable(last)],
+      [],
+    ];
+    const root = {
+      isDirectory: true,
+      createReader: () => ({
+        readEntries: (resolve: (entries: object[]) => void) =>
+          resolve(batches.shift() ?? []),
+      }),
+    };
+    const onError = vi.fn();
+    await expect(
+      getDropzoneFiles(
+        dropEvent([{ kind: "file", webkitGetAsEntry: () => root }]),
+        onError,
+      ),
+    ).resolves.toEqual([first, last]);
+    expect(onError).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ message: "Missing.pdf: Deleted" }),
+    );
+  });
+
+  it("rejects an unreadable drop when the caller has no error reporter", async () => {
+    await expect(
+      getDropzoneFiles(dropEvent([{ kind: "file", getAsFile: () => null }])),
+    ).rejects.toThrow("Could not read a dropped file.");
+  });
+
   it("captures every file while the drop event can still read the data store", async () => {
     const files = [new File(["a"], "a.pdf"), new File(["b"], "b.pdf")];
     const items = files.map((file) => ({

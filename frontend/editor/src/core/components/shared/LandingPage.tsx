@@ -7,11 +7,12 @@ import MobileUploadModal from "@app/components/shared/MobileUploadModal";
 import { openFilesFromDisk } from "@app/services/openFilesFromDisk";
 import { Logo } from "@app/ui/Logo";
 import { LandingActions } from "@app/components/shared/LandingActions";
-import { getDropzoneFiles } from "@app/utils/getDropzoneFiles";
+import { useDropzoneFiles } from "@app/hooks/useDropzoneFiles";
 import "@app/components/shared/LandingPage.css";
 
 const LandingPage = () => {
   const { addFiles } = useFileHandler();
+  const getDropzoneFiles = useDropzoneFiles();
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const terminology = useFileActionTerminology();
   const [mobileUploadModalOpen, setMobileUploadModalOpen] = useState(false);

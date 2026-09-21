@@ -5,6 +5,7 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useFileActions } from "@app/contexts/FileContext";
 import { useFileContext } from "@app/contexts/file/fileHooks";
@@ -42,7 +43,7 @@ interface FilesModalContextType {
   closeFilesModal: () => void;
   maxSelectable: number | null;
   onFileUpload: (files: File[]) => Promise<void>;
-  /** Imports a confirmed selection after the picker closes; rejects on failure without changing modal state. */
+  /** Imports readable selections after the picker closes, then rejects with unavailable filenames; modal state is untouched. */
   onRecentFileSelect: (
     stirlingFileStubs: StirlingFileStub[],
     uploads?: File[],
@@ -60,6 +61,7 @@ export const FilesModalContext = createContext<FilesModalContextType | null>(
 export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const { t } = useTranslation();
   const { addFiles } = useFileHandler();
   const { actions } = useFileActions();
   const fileCtx = useFileContext();
@@ -251,9 +253,28 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const handleRecentFileSelect = useCallback(
     async (stirlingFileStubs: StirlingFileStub[], uploads: File[] = []) => {
+      const failedNames: string[] = [];
+      const reportUnavailable = () => {
+        if (failedNames.length)
+          throw new Error(
+            t("filePicker.filesUnavailable", "Could not add: {{names}}", {
+              names: failedNames.join(", "),
+            }),
+          );
+      };
       if (customHandler) {
-        const loadedFiles = await loadFiles(stirlingFileStubs);
-        await customHandler([...loadedFiles, ...uploads], insertAfterPage);
+        const loadedFiles: File[] = [];
+        for (const stub of stirlingFileStubs) {
+          try {
+            loadedFiles.push(...(await loadFiles([stub])));
+          } catch (cause) {
+            console.error("Could not load selected file", stub.name, cause);
+            failedNames.push(stub.name);
+          }
+        }
+        const files = [...loadedFiles, ...uploads];
+        if (files.length) await customHandler(files, insertAfterPage);
+        reportUnavailable();
         return;
       }
       if (uploads.length > 0) await addFiles(uploads);
@@ -261,27 +282,33 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
       const localStubs: StirlingFileStub[] = [];
       const requestedIds: FileId[] = [];
       for (const stub of stirlingFileStubs) {
-        const remote = await downloadRemoteFile(stub);
-        if (!remote) {
-          localStubs.push(stub);
-          requestedIds.push(stub.id);
-          continue;
+        try {
+          const remote = await downloadRemoteFile(stub);
+          if (!remote) {
+            localStubs.push(stub);
+            requestedIds.push(stub.id);
+            continue;
+          }
+          const importedIds = await importBundleToWorkbench(
+            remote.blob,
+            remote.filename,
+            remote.contentType,
+            stub.remoteStorageId,
+            stub.remoteStorageUpdatedAt,
+            stub.remoteOwnerUsername,
+            stub.remoteOwnedByCurrentUser,
+            stub.remoteShareToken ? true : stub.remoteSharedViaLink,
+            stub.remoteShareToken,
+          );
+          requestedIds.push(...importedIds);
+        } catch (cause) {
+          console.error("Could not import selected file", stub.name, cause);
+          failedNames.push(stub.name);
         }
-        const importedIds = await importBundleToWorkbench(
-          remote.blob,
-          remote.filename,
-          remote.contentType,
-          stub.remoteStorageId,
-          stub.remoteStorageUpdatedAt,
-          stub.remoteOwnerUsername,
-          stub.remoteOwnedByCurrentUser,
-          stub.remoteShareToken ? true : stub.remoteSharedViaLink,
-          stub.remoteShareToken,
-        );
-        requestedIds.push(...importedIds);
       }
 
-      await actions.addStirlingFileStubs(localStubs, { selectFiles: false });
+      if (localStubs.length)
+        await actions.addStirlingFileStubs(localStubs, { selectFiles: false });
       // Adding an input must preserve a tool's existing selection.
       const uploadedIds = uploads
         .map((file) => fileCtx.findFileId(file))
@@ -295,10 +322,11 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
         ),
       );
 
-      if (!isMultiTool) {
-        const totalAdded = stirlingFileStubs.length + uploads.length;
+      const totalAdded = requestedIds.length + uploads.length;
+      if (!isMultiTool && totalAdded > 0) {
         navActions.setWorkbench(totalAdded === 1 ? "viewer" : "fileEditor");
       }
+      reportUnavailable();
     },
     [
       addFiles,
@@ -311,6 +339,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
       importBundleToWorkbench,
       navActions,
       isMultiTool,
+      t,
     ],
   );
 

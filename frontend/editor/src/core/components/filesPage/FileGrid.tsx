@@ -69,6 +69,9 @@ export interface FilesPageEntry {
 
 /** Picker mode hides library mutations; opening a file confirms its selection. */
 export interface FileGridPicker {
+  /** Format and processing eligibility only; capacity and busy state must not change the selection count. */
+  isEligible: (entry: FilesPageEntry) => boolean;
+  selectionDisabled: boolean;
   disabledReason: (entry: FilesPageEntry) => string | undefined;
   selectedDiskPaths: ReadonlySet<string>;
   onSelectDiskFile: (entry: DiskFileEntry, shift: boolean) => void;
@@ -144,7 +147,10 @@ interface FileGridProps {
   onActionError?: (message: string) => void;
 }
 
-/** Stable callbacks let memoized rows skip unrelated selection changes; refs supply current props. */
+/**
+ * Stable callbacks read current props through refs so selection changes do not rerender every row.
+ * Keep selection-aware actions here: passing the selection Set to each row defeats React.memo.
+ */
 interface FileGridActions {
   selectFile: (id: FileId, shiftKey: boolean, ctrlKey: boolean) => void;
   openFolder: (id: FolderId) => void;
@@ -1263,6 +1269,7 @@ const FileCard = React.memo(function FileCard({
   );
 });
 
+/** Grid rows must own cells: wrap checkboxes, sort controls and menus in gridcell/columnheader elements. */
 function ListView({
   picker,
   entries,
@@ -1285,8 +1292,9 @@ function ListView({
 }: FileGridLayoutProps & { emptyState?: React.ReactNode }) {
   const { t } = useTranslation();
 
+  // Reaching a pick limit leaves the header mixed while other eligible files remain unselected.
   const selectableEntries = entries.filter(
-    (entry) => !picker?.disabledReason(entry),
+    (entry) => !picker || picker.isEligible(entry),
   );
   const visibleFileIds = selectableEntries.flatMap((entry) =>
     entry.file ? [entry.file.id] : [],
@@ -1338,7 +1346,10 @@ function ListView({
             <Checkbox
               checked={allSelected}
               indeterminate={someSelected}
-              onChange={() => {
+              disabled={picker?.selectionDisabled}
+              onChange={(event) => {
+                // A click clears the native mixed state even when the pick limit prevents a selection change.
+                event.currentTarget.indeterminate = someSelected;
                 if (picker) {
                   const next = new Set(selectedFileIds);
                   for (const id of visibleFileIds) {

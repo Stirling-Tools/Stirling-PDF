@@ -1,5 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { allowConsole } from "@app/tests/failOnConsole";
 import {
   FilesModalProvider,
   useFilesModalContext,
@@ -8,6 +9,16 @@ import {
   createNewStirlingFileStub,
   type StirlingFileStub,
 } from "@app/types/fileContext";
+
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, fallback: string, values?: Record<string, string>) =>
+      (fallback ?? key).replace(
+        /\{\{(\w+)\}\}/g,
+        (_, name: string) => values?.[name] ?? "",
+      ),
+  }),
+}));
 
 const state = vi.hoisted(() => ({
   addFiles: vi.fn().mockResolvedValue(undefined),
@@ -48,6 +59,78 @@ vi.mock("@app/services/apiClient", () => ({ default: { get: state.apiGet } }));
 beforeEach(() => vi.clearAllMocks());
 
 describe("file picker caller contract", () => {
+  it("inserts readable files when a share is revoked and another local blob is missing", async () => {
+    allowConsole.error(/Could not load selected file/);
+    const first = new File(["first"], "First.pdf");
+    const last = new File(["last"], "Last.pdf");
+    const stubs = [first, new File([], "Missing.pdf"), last].map((file) =>
+      createNewStirlingFileStub(file),
+    );
+    const shared = {
+      ...createNewStirlingFileStub(new File([], "Revoked.pdf")),
+      remoteShareToken: "revoked",
+    };
+    const upload = new File(["upload"], "Upload.pdf");
+    state.getStirlingFile.mockImplementation(async (id) =>
+      id === stubs[0].id ? first : id === stubs[2].id ? last : null,
+    );
+    state.apiGet.mockRejectedValueOnce(new Error("Share revoked"));
+    const handler = vi.fn();
+    const { result } = renderHook(useFilesModalContext, {
+      wrapper: FilesModalProvider,
+    });
+    act(() =>
+      result.current.openFilesModal({
+        customHandler: handler,
+        insertAfterPage: 3,
+      }),
+    );
+
+    await act(async () => {
+      result.current.closeFilesModal();
+      await expect(
+        result.current.onRecentFileSelect(
+          [stubs[0], shared, ...stubs.slice(1)],
+          [upload],
+        ),
+      ).rejects.toThrow(/Revoked.pdf[\s\S]*Missing.pdf/);
+    });
+
+    expect(handler).toHaveBeenCalledExactlyOnceWith([first, last, upload], 3);
+    expect(result.current.isFilesModalOpen).toBe(false);
+    expect(state.setWorkbench).not.toHaveBeenCalled();
+  });
+
+  it("still opens local selections after a remote download fails", async () => {
+    allowConsole.error(/Could not import selected file/);
+    const locals = ["First.pdf", "Last.pdf"].map((name) =>
+      createNewStirlingFileStub(new File([], name)),
+    );
+    const shared = {
+      ...createNewStirlingFileStub(new File([], "Revoked.pdf")),
+      remoteShareToken: "revoked",
+    };
+    state.apiGet.mockRejectedValueOnce(new Error("Share revoked"));
+    const { result } = renderHook(useFilesModalContext, {
+      wrapper: FilesModalProvider,
+    });
+
+    await act(async () => {
+      await expect(
+        result.current.onRecentFileSelect([locals[0], shared, locals[1]]),
+      ).rejects.toThrow("Revoked.pdf");
+    });
+
+    expect(state.addStirlingFileStubs).toHaveBeenCalledWith(locals, {
+      selectFiles: false,
+    });
+    expect(state.setSelectedFiles).toHaveBeenCalledWith([
+      "already-open",
+      ...locals.map((stub) => stub.id),
+    ]);
+    expect(state.setWorkbench).toHaveBeenCalledWith("fileEditor");
+  });
+
   it("preserves selection order when loading mixed sources", async () => {
     const local = new File(["local"], "Local.pdf");
     state.getStirlingFile.mockResolvedValue(local);
@@ -244,6 +327,7 @@ describe("file picker caller contract", () => {
   });
 
   it("rejects without calling the insertion handler or reopening the picker if a selected file disappears", async () => {
+    allowConsole.error(/Could not load selected file/);
     state.getStirlingFile.mockResolvedValue(null);
     const handler = vi.fn();
     const stub = createNewStirlingFileStub(new File(["local"], "Missing.pdf"));

@@ -20,6 +20,7 @@ import { alert } from "@app/components/toast";
 import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
+import { useDropzoneFiles } from "@app/hooks/useDropzoneFiles";
 import type { FileItemPolicyRef } from "@app/components/shared/PolicyBadges";
 
 const EMPTY_POLICIES: FileItemPolicyRef[] = [];
@@ -98,6 +99,7 @@ const FileEditor = ({
     return !toolMode || rawMax == null || rawMax < 0 ? Infinity : rawMax;
   }, [selectedTool?.maxFiles, toolMode]);
 
+  const getDropzoneFiles = useDropzoneFiles();
   const [showFilePickerModal, setShowFilePickerModal] = useState(false);
 
   const handleFileUpload = useCallback(
@@ -317,6 +319,8 @@ const FileEditor = ({
   return (
     <Dropzone
       onDrop={handleFileUpload}
+      useFsAccessApi={false}
+      getFilesFromEvent={getDropzoneFiles}
       multiple={true}
       maxSize={2 * 1024 * 1024 * 1024}
       style={{

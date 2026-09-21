@@ -13,6 +13,7 @@ import { LibraryFilePicker } from "@app/components/filesPage/LibraryFilePicker";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { FolderRecord } from "@app/types/folder";
 import type { DiskFileEntry } from "@app/services/localFolderContents";
+import { allowConsole } from "@app/tests/failOnConsole";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -370,6 +371,67 @@ describe("library file picker", () => {
     expect(state.selected).not.toHaveBeenCalled();
   });
 
+  it("stages readable files from a partial drop and names the failure", async () => {
+    const user = userEvent.setup();
+    const view = show();
+    const file = new File(["PDF"], "Dropped.pdf");
+    fireEvent.drop(view.container.querySelector(".library-picker-dropzone")!, {
+      dataTransfer: {
+        items: [
+          { kind: "file", getAsFile: () => null },
+          { kind: "file", getAsFile: () => file },
+        ],
+        types: ["Files"],
+      },
+    });
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Could not read a dropped file.",
+    );
+    expect(await screen.findByText("Dropped.pdf")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Add 1 files" }));
+    expect(state.selected).toHaveBeenCalledExactlyOnceWith([], [file]);
+  });
+
+  it("keeps stored selections and readable disk files when another disk file disappears", async () => {
+    allowConsole.error(/Could not read selected disk file/);
+    state.folders = [
+      folder("mount", "Documents", {
+        kind: "local",
+        directory: "C:/Documents",
+      }),
+    ];
+    state.diskFiles = ["Missing.pdf", "Readable.pdf"].map((name) => ({
+      path: `C:/Documents/${name}`,
+      name,
+      sizeBytes: 100,
+      lastModified: 1,
+    }));
+    const readable = new File(["PDF"], "Readable.pdf");
+    state.readDiskFile.mockImplementation(async (entry: DiskFileEntry) =>
+      entry.name === "Missing.pdf" ? null : readable,
+    );
+    const user = userEvent.setup();
+    show();
+    await user.click(screen.getByText("One.pdf"));
+    await user.click(
+      screen.getByRole("button", { name: "Stirling library", pressed: false }),
+    );
+    await user.click(screen.getByText("Documents"));
+    await user.click(await screen.findByText("Missing.pdf"));
+    await user.click(screen.getByText("Readable.pdf"));
+    await user.click(screen.getByRole("button", { name: "Add 3 files" }));
+    await waitFor(() =>
+      expect(state.selected).toHaveBeenCalledExactlyOnceWith(
+        [state.files[0]],
+        [readable],
+      ),
+    );
+    expect(state.close).toHaveBeenCalledOnce();
+    expect(state.alert).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ body: "Missing.pdf is no longer available." }),
+    );
+  });
+
   it("stages dropped files when the browser denies file-system handle access", async () => {
     vi.stubGlobal("isSecureContext", true);
     try {
@@ -492,6 +554,38 @@ describe("library file picker", () => {
     );
     expect(state.moveFolder).not.toHaveBeenCalled();
     expect(screen.queryByLabelText("File actions")).not.toBeInTheDocument();
+  });
+
+  it("keeps the header partially selected when the selection limit leaves eligible files unselected", async () => {
+    state.maxSelectable = 2;
+    state.files = Array.from({ length: 10 }, (_, i) =>
+      file(`file-${i}`, `File ${i}.pdf`),
+    );
+    const user = userEvent.setup();
+    show(["pdf"]);
+
+    await user.click(screen.getByText("File 0.pdf"));
+    await user.click(screen.getByText("File 1.pdf"));
+
+    const header = screen.getByRole("checkbox", { name: "Select all" });
+    expect(header).toBePartiallyChecked();
+    expect(header).not.toBeChecked();
+    expect(screen.getByRole("button", { name: "Add 2 files" })).toBeEnabled();
+    await user.click(header);
+    expect(header).toBePartiallyChecked();
+    await user.click(screen.getByRole("button", { name: "Add 2 files" }));
+    expect(state.selected).toHaveBeenCalledWith(state.files.slice(0, 2), []);
+  });
+
+  it("counts only format-eligible files for a fully selected header", async () => {
+    state.files.push(file("text", "Notes.txt"));
+    const user = userEvent.setup();
+    show(["pdf"]);
+    await user.click(screen.getByRole("checkbox", { name: "Select all" }));
+    expect(
+      screen.getByRole("checkbox", { name: "Clear selection" }),
+    ).toBeChecked();
+    expect(screen.getByRole("button", { name: "Add 2 files" })).toBeEnabled();
   });
 
   it("enforces type restrictions and the selection limit when selecting all", async () => {
