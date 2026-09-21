@@ -4525,6 +4525,7 @@ breadcrumbsOverflow = "Show parent folders"
 bulkActions = "Actions"
 cancel = "Cancel"
 classification = "Classification"
+clearSelection = "Clear selection"
 closeDetails = "Close details"
 create = "Create"
 cycleBlocked = "Can't move a folder into one of its own subfolders."
@@ -4564,6 +4565,7 @@ folder = "Folder"
 folderItems_one = "{{count}} item"
 folderItems_other = "{{count}} items"
 folderMenu = "Folder actions"
+folderSettings = "Folder settings"
 inPath = "in {{path}}"
 inWorkspace = "Open"
 inWorkspaceAria = "Already in workspace"
@@ -4586,7 +4588,7 @@ offlineNoFolderEdits = "Server folder sync unavailable - folder changes are disa
 open = "Open"
 openVersionInWorkspace = "Open in workspace"
 originFilter = "Filter by source"
-refresh = "Refresh from server"
+refresh = "Refresh"
 remove = "Delete"
 removeLocalFolder = "Unmount from Stirling"
 removeVersion = "Remove this version"
@@ -4597,7 +4599,6 @@ save = "Save"
 saveToServer = "Save to server"
 saveToServerDisabledHint = "Saving to the server isn't enabled on this server. Ask your admin to enable it."
 selectAll = "Select all"
-selectAllHint = "Click to select all. Tip: hold Ctrl (or Cmd) to add files one at a time, Shift to select a range."
 selectedCount = "{{count}} selected"
 selectFile = "Select file {{name}}"
 serverFolderNeedsConnection = "Sign in to Stirling Cloud or connect a self-hosted server to use server folders."
@@ -4624,6 +4625,8 @@ viewVersionHistory = "Version journey ({{count}})"
 
 [filesPage.appearance]
 colour = "Color"
+done = "Done"
+edit = "Appearance..."
 icon = "Icon"
 title = "Appearance"
 useColour = "Use color {{c}}"
@@ -4632,6 +4635,7 @@ useColour = "Use color {{c}}"
 modified = "Modified"
 name = "Name"
 size = "Size"
+status = "Status"
 type = "Type"
 
 [filesPage.deleteScope]
@@ -4828,13 +4832,6 @@ server = "Server error during folder sync."
 
 [filesPage.tabName]
 local = "Local"
-
-[filesPage.tabs]
-all = "All"
-ariaLabel = "File views"
-recent = "Recent"
-shared = "Shared with me"
-sharedByMe = "Shared by me"
 
 [filesPage.treeMenu]
 actions = "Folder actions for {{name}}"
@@ -8961,7 +8958,7 @@ undeclared-operation = "Can't check what this step accepts"
 [portal.pipelines.builder.icon]
 label = "Change icon"
 
-[portal.pipelines.builder.ragIngest]
+[portal.pipelines.builder.ingest]
 chunkSize = "Chunk size"
 chunkSizeHint = "Characters per chunk. Smaller chunks retrieve more precisely; larger ones keep more context together."
 destinationNeedsChunks = "This RAG database destination needs a final RAG step that exports chunks only."
@@ -8974,16 +8971,12 @@ includeOriginal = "Include the input PDF"
 includeOriginalHint = "Deliver the PDF alongside exported text. This does not change whether the source keeps its original."
 index = "Index into the knowledge base"
 indexHint = "Embeds the document so it can be searched and asked about. Needs the AI engine."
-mode = "Parse quality"
-modeAuto = "Automatic"
-modeBasic = "Text layer only"
-modeHint = "Automatic uses the best tier available on this deployment."
 nothingToDo = "Turn on at least one of indexing or an export, or this step has nothing to do and the run will fail."
 overlap = "Overlap"
 overlapHint = "Characters repeated between neighbouring chunks, so a sentence split across two is still findable."
 overlapTooBig = "Overlap must be smaller than the chunk size ({{chunkSize}})."
 prepareDestination = "Prepare chunks for this destination"
-unavailable = "RAG preparation needs an enabled, reachable AI engine, including when the destination database generates embeddings."
+unavailable = "AI ingestion needs the AI engine and DocParse turned on, including when the destination database generates embeddings."
 
 [portal.pipelines.builder.routing]
 addRule = "Add a route"
@@ -9130,6 +9123,7 @@ editor-upload = "Every upload"
 folder-watch = "Folder watch"
 manual = "Manual"
 schedule = "Scheduled"
+storage-folder-watch = "New files in storage folder"
 
 [portal.pipelines.type]
 pipeline = "Pipeline"
@@ -9255,9 +9249,9 @@ autoRedact = "Redact PII"
 classifyAndLabel = "Classify"
 compressPdf = "Compress"
 flatten = "Flatten"
+ingest = "Prepare for knowledge search"
 ocrPdf = "OCR"
 pdfa = "Convert to PDF/A"
-ragIngest = "Prepare documents for RAG"
 sanitizePdf = "Remove JavaScript"
 validateCompliance = "Validate compliance"
 
@@ -9479,6 +9473,10 @@ label = "Reduce file size"
 desc = "Merges form fields and annotations into the page so they can't be edited."
 label = "Flatten the document"
 
+[portal.policies.wizard.capability.ingest]
+desc = "Prepare searchable chunks for the built-in knowledge base, a connected vector database, or a corpus export."
+label = "Prepare for knowledge search"
+
 [portal.policies.wizard.capability.ocr]
 desc = "Runs OCR so scanned pages become selectable, searchable text."
 label = "Make text searchable"
@@ -9486,10 +9484,6 @@ label = "Make text searchable"
 [portal.policies.wizard.capability.pdfa]
 desc = "Rewrites the document in the ISO archival format, embedding its fonts and colour profiles so it still renders the same years from now. Invalidates digital signatures."
 label = "Convert to PDF/A for archiving"
-
-[portal.policies.wizard.capability.ragIngest]
-desc = "Prepare searchable chunks for the built-in knowledge base, a connected RAG database, or a corpus export."
-label = "Prepare for knowledge search"
 
 [portal.policies.wizard.capability.redact]
 desc = "Finds and blacks out sensitive details — like Social Security and card numbers — so they can't be read."

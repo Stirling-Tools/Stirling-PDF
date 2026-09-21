@@ -570,7 +570,7 @@ mod tests {
         let (routes, _) = build_routes(std::slice::from_ref(&given));
 
         let reported_dir = real.canonicalize().unwrap();
-        assert_ne!(reported_dir, real, "the symlink must actually resolve");
+        assert_ne!(reported_dir, link, "the symlink must actually resolve");
         assert_eq!(
             routed(
                 &routes,

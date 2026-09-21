@@ -16,9 +16,9 @@ import { ocrOperationConfig } from "@app/hooks/tools/ocr/useOCROperation";
 import { flattenOperationConfig } from "@app/hooks/tools/flatten/useFlattenOperation";
 import { compressOperationConfig } from "@app/hooks/tools/compress/useCompressOperation";
 import {
-  RAG_INGEST_ENDPOINT,
-  ragIngestOperationConfig,
-} from "@app/policies/ragIngestOperation";
+  INGEST_ENDPOINT,
+  ingestOperationConfig,
+} from "@app/policies/ingestOperation";
 import { pdfaOperationConfig } from "@app/policies/pdfaOperation";
 import type { ToolEndpoint } from "@app/types/toolApiTypes";
 import type { WirePipelineStep } from "@app/policies/types";
@@ -149,10 +149,7 @@ export const POLICY_OPERATIONS = {
     complianceCheckOperationConfig,
   ),
   classify: describeAiToolOperation("/api/v1/ai/tools/classify-and-label"),
-  ragIngest: describeToolOperation(
-    RAG_INGEST_ENDPOINT,
-    ragIngestOperationConfig,
-  ),
+  ingest: describeToolOperation(INGEST_ENDPOINT, ingestOperationConfig),
   purviewApplyLabel: describeIntegrationOperation(
     "/api/v1/integration/purview-apply-label",
     {

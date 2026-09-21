@@ -1,8 +1,7 @@
-"""DocParse ingestion routes: capabilities and rag-ingest.
+"""DocParse ingestion route.
 
-The basic tier chunks caller-extracted page text. Requests forcing the
-advanced (layout) tier return 501 with a machine-readable ``addonRequired``
-detail until the docparse addon ships; Java maps that onto its own error.
+Java converts the PDF to page-attributed Markdown blocks with its layout-aware
+converter; the engine packs those into chunks, embeds and indexes them.
 """
 
 from __future__ import annotations
@@ -14,14 +13,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from stirling.api.dependencies import get_document_service, require_user_id
 from stirling.config import AppSettings, load_settings
-from stirling.contracts.docparse import (
-    DocChunk,
-    DocparseCapabilities,
-    DocparseMode,
-    RagIngestRequest,
-    RagIngestResponse,
-)
-from stirling.docparse import basic_chunks, probe_capabilities
+from stirling.contracts.docparse import DocChunk, IngestRequest, IngestResponse
+from stirling.docparse.chunking import pack_blocks, page_texts
 from stirling.documents import DocumentService
 from stirling.documents.service import CONTENT_TYPE_METADATA_KEY, DOCPARSE_CHUNK_CONTENT_TYPE
 from stirling.models import OwnerId, PrincipalId, UserId
@@ -30,23 +23,9 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/docparse", tags=["docparse"])
 
-_ADDON_REQUIRED_DETAIL = {
-    "addonRequired": "docparse",
-    "message": "The docparse addon (Docling) is not installed on the engine. "
-    "The advanced tier is unavailable; use mode=basic or mode=auto.",
-}
-
 
 def _settings() -> AppSettings:
     return load_settings()
-
-
-@router.get("/capabilities", response_model=DocparseCapabilities)
-async def capabilities(
-    documents: Annotated[DocumentService, Depends(get_document_service)], refresh: bool = False
-) -> DocparseCapabilities:
-    result = probe_capabilities(_settings().docparse_home, refresh=refresh)
-    return result.model_copy(update={"indexing_configured": documents.embedder.configured})
 
 
 def _chunk_metadata(chunk: DocChunk) -> dict[str, str]:
@@ -60,26 +39,22 @@ def _chunk_metadata(chunk: DocChunk) -> dict[str, str]:
     return meta
 
 
-@router.post("/rag-ingest", response_model=RagIngestResponse)
-async def rag_ingest(
-    request: RagIngestRequest,
+@router.post("/ingest", response_model=IngestResponse)
+async def ingest(
+    request: IngestRequest,
     documents: Annotated[DocumentService, Depends(get_document_service)],
     user_id: Annotated[UserId, Depends(require_user_id)],
-) -> RagIngestResponse:
-    """Chunk the document, then embed and index into the document store.
+) -> IngestResponse:
+    """Pack the caller's Markdown blocks into chunks, then embed and index them.
     Re-ingesting a documentId replaces its stored content (never duplicates).
-    ``index=False`` skips the store; ``includeMarkdown``/``includeChunks``
-    echo the content back for corpus export."""
+    ``index=False`` skips the store; ``includeChunks`` returns the chunks."""
     settings = _settings()
     chunk_size = request.chunk_size if request.chunk_size is not None else settings.rag_chunk_size
     overlap = request.overlap if request.overlap is not None else settings.rag_chunk_overlap
 
-    if request.mode is DocparseMode.ADVANCED:
-        raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail=_ADDON_REQUIRED_DETAIL)
-    if not request.pages:
-        # The caller extracts the text layer, so an empty payload means the document
-        # has none - a scanned scan, not a missing addon. Naming the addon here sent
-        # people to install something that would not have helped.
+    if not request.blocks:
+        # The caller converts the text layer, so an empty payload means the document
+        # has none - a scan, not a conversion failure.
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="no extractable text: the document has no text layer, so OCR it before ingesting",
@@ -91,14 +66,13 @@ async def rag_ingest(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"overlap ({overlap}) must be smaller than chunkSize ({chunk_size})",
         )
-    if not request.index and not request.include_markdown and not request.include_chunks:
+    if not request.index and not request.include_chunks:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="nothing to do: enable index, includeMarkdown, or includeChunks",
+            detail="nothing to do: enable index or includeChunks",
         )
 
-    chunked = basic_chunks(request.pages, chunk_size, overlap)
-    page_count = max(p.page_number for p in request.pages)
+    chunks = pack_blocks(request.blocks, chunk_size, overlap)
 
     chunks_indexed = 0
     if request.index:
@@ -108,26 +82,17 @@ async def rag_ingest(
         read_principals = request.read_principals or [PrincipalId(owner_id)]
         chunks_indexed = await documents.ingest_prepared(
             collection=request.document_id,
-            chunks=[(chunk.text, _chunk_metadata(chunk)) for chunk in chunked.chunks],
+            chunks=[(chunk.text, _chunk_metadata(chunk)) for chunk in chunks],
             source=request.source,
             owner_id=owner_id,
             read_principals=read_principals,
             expires_at=request.expires_at,
-            pages=request.pages,
+            pages=page_texts(request.blocks),
         )
 
-    markdown = None
-    if request.include_markdown:
-        markdown = "\n\n".join(p.text for p in request.pages if p.text.strip())
-
-    logger.info(
-        "docparse: rag-ingested %s: %d chunks indexed, %d pages", request.document_id, chunks_indexed, page_count
-    )
-    return RagIngestResponse(
-        mode=chunked.mode,
+    logger.info("docparse: ingested %s: %d chunks indexed", request.document_id, chunks_indexed)
+    return IngestResponse(
         document_id=request.document_id,
         chunks_indexed=chunks_indexed,
-        pages=page_count,
-        markdown=markdown,
-        chunks=chunked.chunks if request.include_chunks else None,
+        chunks=chunks if request.include_chunks else None,
     )

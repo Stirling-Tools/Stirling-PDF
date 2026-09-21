@@ -59,7 +59,7 @@ public class VectorDbOutputSink implements PolicyOutputSink {
         }
         PipelineStep last = steps.getLast();
         Map<String, Object> params = last.parameters();
-        if (!"/api/v1/docparse/rag-ingest".equals(last.operation())
+        if (!"/api/v1/docparse/ingest".equals(last.operation())
                 || !"true".equals(String.valueOf(params.get("exportChunksJsonl")))
                 || !"false".equals(String.valueOf(params.get("includeOriginal")))
                 || "true".equals(String.valueOf(params.get("exportMarkdown")))) {

@@ -140,7 +140,7 @@ class PolicyValidatorTest {
                 "owner",
                 true,
                 List.of(),
-                List.of(new PipelineStep("/api/v1/docparse/rag-ingest", params, Map.of())),
+                List.of(new PipelineStep("/api/v1/docparse/ingest", params, Map.of())),
                 OutputSpec.inline(),
                 List.of(),
                 null,

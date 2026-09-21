@@ -1,15 +1,12 @@
 from __future__ import annotations
 
-from openai import OpenAIError
 from pydantic_ai import Embedder
-from pydantic_ai.embeddings import infer_embedding_model
 from pydantic_ai.embeddings.openai import OpenAIEmbeddingModel
-from pydantic_ai.exceptions import UserError
 from pydantic_ai.providers.openai import OpenAIProvider
 
 from stirling.documents.chunker import chunk_text
 from stirling.documents.store import Document
-from stirling.documents.voyage import VoyageEmbeddingModel, build_voyage_model
+from stirling.documents.voyage import build_voyage_model
 
 # Keep each upstream embed request under every major provider's per-call limit while
 # still batching large enough that a book-sized document ingests in a reasonable number
@@ -66,15 +63,6 @@ class EmbeddingService:
         self._chunk_size = chunk_size
         self._chunk_overlap = chunk_overlap
         self._embed_batch_size = embed_batch_size
-
-    @property
-    def configured(self) -> bool:
-        """Check local provider configuration without embedding or writing documents."""
-        try:
-            model = infer_embedding_model(self._embedder.model)
-        except (ValueError, ImportError, UserError, OpenAIError):
-            return False
-        return model.configured if isinstance(model, VoyageEmbeddingModel) else True
 
     async def embed_query(self, text: str) -> list[float]:
         """Embed a search query, optimised for retrieval."""
