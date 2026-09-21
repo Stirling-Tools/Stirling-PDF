@@ -159,6 +159,7 @@ export function resetPdfiumModule(): void {
   _module = null;
   _initPromise = null;
   _docFileAccess.clear();
+  _docHeapCopies.clear();
 }
 
 interface FileAccess {
@@ -168,6 +169,9 @@ interface FileAccess {
   bytes: Uint8Array;
 }
 const _docFileAccess = new Map<number, FileAccess>();
+
+/** Heap copies made when the runtime cannot host a file-access callback. */
+const _docHeapCopies = new Map<number, number>();
 
 // FPDF_FILEACCESS: unsigned long m_FileLen, get_block m_GetBlock, void* m_Param.
 const FILE_ACCESS_BYTES = 12;
@@ -336,9 +340,10 @@ export class PdfiumOpenError extends Error {
 }
 
 /**
- * One open document shared by every scan of the same bytes. Each reopen copies
- * the file into the WASM heap again and leaves PDFium caches behind, growing
- * the heap high-water per scan. Password opens are never shared.
+ * One open document shared by every scan of the same bytes. Each reopen parses
+ * the file again through the file-access callback and leaves PDFium caches
+ * behind, growing the heap high-water per scan. Password opens are never
+ * shared.
  *
  * A document released while scans still hold it is closed by the last reader:
  * `releaseSharedDocument()` only arms `sharedReleasePending` when refs are
@@ -364,6 +369,18 @@ function openWithFileAccess(
   bytes: Uint8Array,
   password?: string,
 ): number {
+  const runtime = m.pdfium as typeof m.pdfium & ExtendedPdfiumRuntime;
+  // The callback needs the runtime's function-table helpers. Builds without
+  // them (or with an older export shape) fall back to one heap copy instead of
+  // failing every open; pdfiumBitmapUtils guards the same helpers the same way.
+  if (
+    typeof runtime.addFunction !== "function" ||
+    typeof runtime.removeFunction !== "function" ||
+    typeof runtime.setValue !== "function"
+  ) {
+    return openWithHeapCopy(m, bytes, password);
+  }
+
   const accessPtr = m.pdfium.wasmExports.malloc(FILE_ACCESS_BYTES);
   const getBlockPtr = m.pdfium.addFunction(
     (_param: number, position: number, bufferPtr: number, size: number) => {
@@ -399,11 +416,37 @@ function closeDocumentNow(m: WrappedPdfiumModule, docPtr: number): void {
     m.pdfium.wasmExports.free(access.accessPtr);
     _docFileAccess.delete(docPtr);
   }
+  const heapCopy = _docHeapCopies.get(docPtr);
+  if (heapCopy) {
+    m.pdfium.wasmExports.free(heapCopy);
+    _docHeapCopies.delete(docPtr);
+  }
 }
 
 /**
- * Load a PDF into PDFium memory and return the document pointer.
- * Caller MUST call `closeRawDocument(docPtr)` when finished.
+ * The pre-callback path: one copy of the bytes in the WASM heap, freed by
+ * closeDocumentNow. Kept for runtimes without the function-table helpers.
+ */
+function openWithHeapCopy(
+  m: WrappedPdfiumModule,
+  bytes: Uint8Array,
+  password?: string,
+): number {
+  const ptr = m.pdfium.wasmExports.malloc(bytes.length);
+  (m.pdfium as typeof m.pdfium & ExtendedPdfiumRuntime).HEAPU8.set(bytes, ptr);
+  const docPtr = m.FPDF_LoadMemDocument(ptr, bytes.length, password ?? "");
+  if (!docPtr) {
+    m.pdfium.wasmExports.free(ptr);
+    throw new PdfiumOpenError(m.FPDF_GetLastError());
+  }
+  _docHeapCopies.set(docPtr, ptr);
+  return docPtr;
+}
+
+/**
+ * Open a PDF in PDFium and return the document pointer. The bytes stay in JS
+ * and PDFium reads them through the file-access callback; the caller MUST call
+ * `closeRawDocument(docPtr)` when finished.
  */
 export async function openRawDocument(
   data: ArrayBuffer | Uint8Array,
