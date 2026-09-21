@@ -11,8 +11,9 @@ import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.Policy;
 
 /**
- * Run a smart folder's document again, unchanged; the client has no way to address the file. The
- * parked failure is the gate: a row with none is already handled, and refusing loses no work.
+ * The server's half of {@link FailureActionId#OPEN_IN_TOOL}: run a smart folder's document again,
+ * unchanged; the client has no way to address the file. The parked failure is the gate: a row with
+ * none is already handled, and refusing loses no work.
  */
 @Component
 @RequiredArgsConstructor
@@ -25,7 +26,7 @@ public class RetryInFolderAction implements FailureAction {
 
     @Override
     public FailureActionId id() {
-        return FailureActionId.RETRY_IN_FOLDER;
+        return FailureActionId.OPEN_IN_TOOL;
     }
 
     @Override

@@ -1,4 +1,4 @@
-package stirling.software.proprietary.notification;
+package stirling.software.proprietary.failure;
 
 import stirling.software.proprietary.policy.model.Policy;
 

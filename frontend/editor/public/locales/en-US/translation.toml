@@ -8397,7 +8397,6 @@ decrypt = "Unlock"
 dismiss = "Dismiss"
 openInTool = "Retry"
 repair = "Repair"
-retryInFolder = "Try again"
 viewFile = "View file"
 viewInProcessor = "View in processor"
 

@@ -9,7 +9,6 @@ import lombok.Getter;
  */
 @Getter
 public enum FailureActionId {
-
     /**
      * Kept in the vocabulary for as long as any persisted row is {@code ACKNOWLEDGED}: such rows
      * must stay readable and closable whether or not any kind currently offers this.
@@ -18,8 +17,12 @@ public enum FailureActionId {
 
     DISMISS(Execution.SERVER, "Dismiss"),
 
-    /** Opens the failed tool with its document, rather than running it again unattended. */
-    OPEN_IN_TOOL(Execution.CLIENT, "Retry"),
+    /**
+     * Runs the failed step again. A browser holding the document opens the tool with it loaded, so
+     * the user sees the settings first; a smart folder's document is re-run by the server, which is
+     * the only side that can reach it.
+     */
+    OPEN_IN_TOOL(Execution.EITHER, "Retry"),
 
     /** Unlocks the document with a password the owner supplies, then re-runs. */
     DECRYPT(Execution.EITHER, "Unlock"),
@@ -30,13 +33,7 @@ public enum FailureActionId {
     /** Open the document behind the incident, in whichever client can resolve its id. */
     VIEW_FILE(Execution.CLIENT, "View file"),
 
-    VIEW_IN_PROCESSOR(Execution.CLIENT, "View in processor"),
-
-    /**
-     * Run a smart folder's document again, server-side; the handler re-checks the owner. Not {@link
-     * #OPEN_IN_TOOL}, which deliberately does not re-run, and a folder has no tool.
-     */
-    RETRY_IN_FOLDER(Execution.SERVER, "Try again");
+    VIEW_IN_PROCESSOR(Execution.CLIENT, "View in processor");
 
     /** Dispatch refuses an id that does not run on the server, so this is enforced. */
     public enum Execution {
@@ -50,8 +47,8 @@ public enum FailureActionId {
         CLIENT,
 
         /**
-         * Per row, not declared here: a reader holding the file fixes it themselves; a document
-         * only the server can reach is fixed there. See {@link #executionFor(boolean)}.
+         * Per row, not declared here: a reader holding the file acts on it themselves; a document
+         * only the server can reach is acted on there. See {@link #executionFor(boolean)}.
          */
         EITHER
     }

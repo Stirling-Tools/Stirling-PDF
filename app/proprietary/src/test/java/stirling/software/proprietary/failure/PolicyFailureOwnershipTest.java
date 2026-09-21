@@ -97,7 +97,8 @@ class PolicyFailureOwnershipTest {
                                 List.of(new AcknowledgeAction(store), new DismissAction(store))),
                         authority,
                         userService,
-                        props);
+                        props,
+                        policyStore);
 
         PolicyFailureRecorder recorder =
                 new PolicyFailureRecorder(
@@ -266,7 +267,7 @@ class PolicyFailureOwnershipTest {
             assertThat(service.ownershipOf(theirs)).isEqualTo(Ownership.THEIRS);
             assertThat(offeredTo(theirs))
                     .contains(FailureActionId.VIEW_IN_PROCESSOR, FailureActionId.DISMISS)
-                    .doesNotContain(FailureActionId.VIEW_FILE, FailureActionId.RETRY_IN_FOLDER);
+                    .doesNotContain(FailureActionId.VIEW_FILE, FailureActionId.OPEN_IN_TOOL);
         }
 
         @Test

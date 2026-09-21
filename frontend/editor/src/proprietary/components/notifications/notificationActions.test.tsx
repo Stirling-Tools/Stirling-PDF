@@ -597,7 +597,7 @@ describe("retrying an attended policy run", () => {
   });
 });
 
-describe("RETRY_IN_FOLDER", () => {
+describe("OPEN_IN_TOOL for a smart folder's document", () => {
   const inFolder = () => ({
     notification: notification({
       kindId: "UNKNOWN",
@@ -610,26 +610,20 @@ describe("RETRY_IN_FOLDER", () => {
     retryPayload: null,
   });
 
-  it("is wired, because the server offers it to the bell", () => {
-    // The gap this test exists for: the server can offer an action the bell then drops on the
-    // floor, because an id with no spec here is skipped rather than rendered.
-    expect(registry().RETRY_IN_FOLDER).toBeDefined();
+  it("is offered even though this browser holds nothing to open", () => {
+    // The gap this test exists for: the same id opens a tool for a browser-held file, and would
+    // be dropped for a folder's document if only that half were wired.
+    expect(registry().OPEN_IN_TOOL?.available(inFolder())).toBe(true);
   });
 
-  it("is offered for a smart folder's row and nothing else", () => {
-    expect(registry().RETRY_IN_FOLDER?.available(inFolder())).toBe(true);
-    expect(
-      registry().RETRY_IN_FOLDER?.available(context({ kindId: "UNKNOWN" })),
-    ).toBe(false);
-  });
-
-  it("asks the server by the row's own prefixed id", async () => {
+  it("asks the server by the row's own prefixed id, under the one shared id", async () => {
     // The bell never holds a raw row id, so dispatching by anything else would 400.
-    await registry().RETRY_IN_FOLDER?.run(inFolder());
+    await registry().OPEN_IN_TOOL?.run(inFolder());
 
+    // No password: a retry asks nothing of the person pressing it.
     expect(dispatchNotificationAction).toHaveBeenCalledWith(
       "failure:evt-1",
-      "RETRY_IN_FOLDER",
+      "OPEN_IN_TOOL",
       undefined,
     );
   });
@@ -639,7 +633,7 @@ describe("RETRY_IN_FOLDER", () => {
       "No smart folder to run this document in",
     );
 
-    const outcome = await registry().RETRY_IN_FOLDER?.run(inFolder());
+    const outcome = await registry().OPEN_IN_TOOL?.run(inFolder());
 
     expect(outcome).toEqual({
       ok: false,

@@ -283,16 +283,30 @@ export function useNotificationActions(): ClientActionRegistry {
       ]),
     );
 
-    return {
-      OPEN_IN_TOOL: openInTool,
-      ...fixes,
-      RETRY_IN_FOLDER: askTheServer(
-        "RETRY_IN_FOLDER",
-        t(
-          "notifications.retryInFolderFailed",
-          "That document could not be run again just now.",
-        ),
+    // One id, run by whichever side holds the document: the server resolves it per row, and this
+    // picks the half that can act. Not a fix(): a retry asks nothing of the person pressing it.
+    const rerunInFolder = askTheServer(
+      "OPEN_IN_TOOL",
+      t(
+        "notifications.retryInFolderFailed",
+        "That document could not be run again just now.",
       ),
+    );
+    const retry: ClientActionSpec = {
+      available: (context) =>
+        heldByServer(context)
+          ? rerunInFolder.available(context)
+          : openInTool.available(context),
+      closesPanel: openInTool.closesPanel,
+      run: (context) =>
+        heldByServer(context)
+          ? rerunInFolder.run(context)
+          : openInTool.run(context),
+    };
+
+    return {
+      OPEN_IN_TOOL: retry,
+      ...fixes,
       VIEW_FILE: viewFile,
       VIEW_IN_PROCESSOR: viewInProcessor,
     };

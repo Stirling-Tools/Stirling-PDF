@@ -23,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
+import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
  * Tests for {@link FileRunEventService}: team scoping, the declaration guard, transition legality,
@@ -36,6 +37,7 @@ class FileRunEventServiceTest {
 
     @Mock private PolicyManagementAuthority authority;
     @Mock private UserServiceInterface userService;
+    @Mock private PolicyStore policyStore;
 
     private FileRunEventStore store;
     private FileRunEventService service;
@@ -51,12 +53,14 @@ class FileRunEventServiceTest {
                         List.of(
                                 new AcknowledgeAction(store),
                                 new DismissAction(store),
-                                new NoopFolderAction(FailureActionId.RETRY_IN_FOLDER),
+                                new NoopFolderAction(FailureActionId.OPEN_IN_TOOL),
                                 new NoopFolderAction(FailureActionId.REPAIR),
                                 new NoopFolderAction(FailureActionId.DECRYPT)));
         registry.verifyEveryDeclaredActionHasAHandler();
 
-        service = new FileRunEventService(store, registry, authority, userService, props);
+        service =
+                new FileRunEventService(
+                        store, registry, authority, userService, props, policyStore);
 
         lenient().when(authority.currentUserTeamId()).thenReturn(TEAM);
         lenient().when(userService.getCurrentUsername()).thenReturn(ACTOR);
@@ -407,7 +411,8 @@ class FileRunEventServiceTest {
                             new FailureActionRegistry(List.of(new AcknowledgeAction(store))),
                             authority,
                             userService,
-                            props);
+                            props,
+                            policyStore);
 
             assertThatThrownBy(() -> missingHandler.dispatch(event.id(), "DISMISS", Map.of()))
                     .isInstanceOf(FailureActionException.class)
@@ -609,7 +614,8 @@ class FileRunEventServiceTest {
                             new FailureActionRegistry(List.of(new DismissAction(store))),
                             authority,
                             userService,
-                            props);
+                            props,
+                            policyStore);
             FileRunEvent event = givenHitBy(null, FailureKind.INPUT_PASSWORD_PROTECTED, null, "f1");
 
             assertThat(unsecured.availableActions(event))
@@ -766,7 +772,8 @@ class FileRunEventServiceTest {
                     new FailureActionRegistry(
                             List.of(new AcknowledgeAction(store), new DismissAction(store)));
             FileRunEventService unsecured =
-                    new FileRunEventService(store, registry, authority, userService, props);
+                    new FileRunEventService(
+                            store, registry, authority, userService, props, policyStore);
 
             given(FailureKind.UNKNOWN, null, "unteamed");
             given(FailureKind.UNKNOWN, TEAM, "teamed");
@@ -811,7 +818,7 @@ class FileRunEventServiceTest {
                             List.of(
                                     new AcknowledgeAction(store),
                                     new DismissAction(store),
-                                    new NoopFolderAction(FailureActionId.RETRY_IN_FOLDER),
+                                    new NoopFolderAction(FailureActionId.OPEN_IN_TOOL),
                                     new NoopFolderAction(FailureActionId.REPAIR),
                                     new NoopFolderAction(FailureActionId.DECRYPT)));
 
@@ -832,7 +839,7 @@ class FileRunEventServiceTest {
                             List.of(
                                     new AcknowledgeAction(store),
                                     new DismissAction(store),
-                                    new NoopFolderAction(FailureActionId.RETRY_IN_FOLDER),
+                                    new NoopFolderAction(FailureActionId.OPEN_IN_TOOL),
                                     new NoopFolderAction(FailureActionId.REPAIR),
                                     new NoopFolderAction(FailureActionId.DECRYPT)));
 

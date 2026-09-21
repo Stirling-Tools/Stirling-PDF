@@ -26,6 +26,9 @@ import org.springframework.context.annotation.Bean;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
+import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.store.PolicyStore;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -460,7 +463,7 @@ class FileRunEventHttpIntegrationTest {
          */
         @Bean
         FailureAction retryInFolderAction() {
-            return new NoopFolderAction(FailureActionId.RETRY_IN_FOLDER);
+            return new NoopFolderAction(FailureActionId.OPEN_IN_TOOL);
         }
 
         @Bean
@@ -471,6 +474,25 @@ class FileRunEventHttpIntegrationTest {
         @Bean
         FailureAction decryptAction() {
             return new NoopFolderAction(FailureActionId.DECRYPT);
+        }
+
+        /** Every source-fed row in these tests came from a smart folder. */
+        @Bean
+        PolicyStore policyStore() {
+            PolicyStore store = org.mockito.Mockito.mock(PolicyStore.class);
+            Policy folder =
+                    new Policy(
+                                    "p-1",
+                                    "Payroll",
+                                    ACTOR,
+                                    true,
+                                    List.of(),
+                                    List.of(),
+                                    OutputSpec.inline())
+                            .withSurface(Policy.SURFACE_PROCESSING_FOLDER);
+            org.mockito.Mockito.when(store.get(org.mockito.ArgumentMatchers.anyString()))
+                    .thenReturn(java.util.Optional.of(folder));
+            return store;
         }
 
         @Bean
@@ -503,8 +525,9 @@ class FileRunEventHttpIntegrationTest {
                 FailureActionRegistry registry,
                 PolicyManagementAuthority authority,
                 UserServiceInterface users,
-                ApplicationProperties props) {
-            return new FileRunEventService(store, registry, authority, users, props);
+                ApplicationProperties props,
+                PolicyStore policyStore) {
+            return new FileRunEventService(store, registry, authority, users, props, policyStore);
         }
 
         @Bean

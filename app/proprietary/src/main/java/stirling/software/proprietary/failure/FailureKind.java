@@ -4,11 +4,9 @@ import static stirling.software.proprietary.failure.FailureActionId.DECRYPT;
 import static stirling.software.proprietary.failure.FailureActionId.DISMISS;
 import static stirling.software.proprietary.failure.FailureActionId.OPEN_IN_TOOL;
 import static stirling.software.proprietary.failure.FailureActionId.REPAIR;
-import static stirling.software.proprietary.failure.FailureActionId.RETRY_IN_FOLDER;
 import static stirling.software.proprietary.failure.FailureActionId.VIEW_FILE;
 import static stirling.software.proprietary.failure.FailureActionId.VIEW_IN_PROCESSOR;
 import static stirling.software.proprietary.failure.FailureActionSlot.OVERFLOW;
-import static stirling.software.proprietary.failure.FailureActionSlot.RESOLUTION;
 import static stirling.software.proprietary.failure.FailureActionSlot.SECONDARY;
 import static stirling.software.proprietary.failure.FailureAudience.ANYONE_WHO_SEES;
 import static stirling.software.proprietary.failure.FailureAudience.OWNER;
@@ -286,11 +284,10 @@ public enum FailureKind {
             FailureScope.RUN,
             noErrorCodes(),
             fallback("This run failed for a reason Stirling does not yet recognise."),
-            // No known fix to declare, so a plain retry leads: these are often one-offs. The
-            // server-side twin is for a document only the server can reach; it is dropped for any
-            // row that is not a smart folder's, so the two never appear together.
-            global(OPEN_IN_TOOL, OWNER, SECONDARY),
-            global(RETRY_IN_FOLDER, OWNER, RESOLUTION),
+            // No known fix to declare, so a plain retry leads: these are often one-offs. One id
+            // wherever the document is: a browser holding it opens the tool, and a smart folder's
+            // document is run again by the server.
+            resolution(OPEN_IN_TOOL, OWNER),
             global(VIEW_FILE, OWNER, SECONDARY),
             global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW));
