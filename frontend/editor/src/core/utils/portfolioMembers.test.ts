@@ -52,14 +52,15 @@ describe("readPortfolioMembers", () => {
     expect(await readPortfolioMembers(file)).toBeNull();
   });
 
-  it("does not keep a non-portfolio's parsed bytes cached", async () => {
+  it("does not keep a non-portfolio's parsed document cached", async () => {
     const file = await buildPdf({ collection: false });
     await readPortfolioMembers(file);
 
-    const arrayBuffer = vi.spyOn(file, "arrayBuffer");
+    const load = vi.spyOn(PDFDocument, "load");
     await readPortfolioMemberBytes(file, "anything");
 
-    expect(arrayBuffer).toHaveBeenCalled();
+    expect(load).toHaveBeenCalled();
+    load.mockRestore();
   });
 
   it("keeps a portfolio cached so reading a member does not reparse it", async () => {
@@ -69,10 +70,11 @@ describe("readPortfolioMembers", () => {
     });
     await readPortfolioMembers(file);
 
-    const arrayBuffer = vi.spyOn(file, "arrayBuffer");
+    const load = vi.spyOn(PDFDocument, "load");
     const bytes = await readPortfolioMemberBytes(file, "note.txt");
 
     expect(new TextDecoder().decode(bytes ?? new Uint8Array())).toBe("hello");
-    expect(arrayBuffer).not.toHaveBeenCalled();
+    expect(load).not.toHaveBeenCalled();
+    load.mockRestore();
   });
 });
