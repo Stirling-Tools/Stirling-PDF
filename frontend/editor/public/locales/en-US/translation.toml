@@ -9240,9 +9240,9 @@ autoRedact = "Redact PII"
 classifyAndLabel = "Classify"
 compressPdf = "Compress"
 flatten = "Flatten"
+ingest = "Prepare for knowledge search"
 ocrPdf = "OCR"
 pdfa = "Convert to PDF/A"
-ingest = "Prepare for knowledge search"
 sanitizePdf = "Remove JavaScript"
 validateCompliance = "Validate compliance"
 
@@ -9464,6 +9464,10 @@ label = "Reduce file size"
 desc = "Merges form fields and annotations into the page so they can't be edited."
 label = "Flatten the document"
 
+[portal.policies.wizard.capability.ingest]
+desc = "Prepare searchable chunks for the built-in knowledge base, a connected vector database, or a corpus export."
+label = "Prepare for knowledge search"
+
 [portal.policies.wizard.capability.ocr]
 desc = "Runs OCR so scanned pages become selectable, searchable text."
 label = "Make text searchable"
@@ -9471,10 +9475,6 @@ label = "Make text searchable"
 [portal.policies.wizard.capability.pdfa]
 desc = "Rewrites the document in the ISO archival format, embedding its fonts and colour profiles so it still renders the same years from now. Invalidates digital signatures."
 label = "Convert to PDF/A for archiving"
-
-[portal.policies.wizard.capability.ingest]
-desc = "Prepare searchable chunks for the built-in knowledge base, a connected vector database, or a corpus export."
-label = "Prepare for knowledge search"
 
 [portal.policies.wizard.capability.redact]
 desc = "Finds and blacks out sensitive details — like Social Security and card numbers — so they can't be read."
