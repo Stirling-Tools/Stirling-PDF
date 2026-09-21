@@ -9,7 +9,7 @@ import {
 } from "react";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "@app/auth/UseSession";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
@@ -23,7 +23,6 @@ import { FileDocIcon } from "@app/components/shared/FileDocIcon";
 import { getFileDocVariant } from "@app/components/shared/filePreview/getFileTypeIcon";
 import { detectFileExtension } from "@app/utils/fileUtils";
 import { openExternalUrl } from "@app/utils/safeNavigation";
-import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import {
   rankByFuzzy,
   idToWords,
@@ -508,19 +507,6 @@ export function useSuperSearch(
   const trimmed = query.trim();
   const { stubs, loadingFiles } = useMyFilesStubs(active);
   const { scopeEnabled } = useSearchScopeFilter(options);
-  const { pathname } = useLocation();
-
-  // Workbench-bound selections must leave the file manager through the router.
-  // Tool/file selection pins its URL via raw history.pushState, which the
-  // router never observes — so on /files the route keeps re-asserting the
-  // "myFiles" workbench and the selection appears to do nothing. Exit to the
-  // editor's home path: on processor-shipping builds "/" is a role router,
-  // not the editor.
-  const leaveFileManager = useCallback(() => {
-    if (pathname.startsWith("/files")) {
-      navigate(EDITOR_BASENAME);
-    }
-  }, [pathname, navigate]);
 
   // --- Actions -----------------------------------------------------------
   const openFile = useCallback(
@@ -529,14 +515,14 @@ export function useSuperSearch(
         // The file already lives in storage — load it as a stub so its id and
         // metadata are preserved (addFiles would persist a duplicate record).
         await fileActions.addStirlingFileStubs([stub], { selectFiles: true });
+        // Leaving the library is the view changing; HomePage takes the path with it.
         navActions.setWorkbench("viewer");
         viewerRef.current?.setActiveFileId?.(stub.id);
-        leaveFileManager();
       } catch (err) {
         console.error("[SuperSearch] Failed to open file:", stub.name, err);
       }
     },
-    [fileActions, navActions, leaveFileManager],
+    [fileActions, navActions],
   );
 
   const openTool = useCallback(
@@ -560,15 +546,8 @@ export function useSuperSearch(
       } else {
         handleToolSelectForced(id);
       }
-      leaveFileManager();
     },
-    [
-      handleToolSelect,
-      handleToolSelectForced,
-      toolAvailability,
-      toolRegistry,
-      leaveFileManager,
-    ],
+    [handleToolSelect, handleToolSelectForced, toolAvailability, toolRegistry],
   );
 
   const openSettings = useCallback(

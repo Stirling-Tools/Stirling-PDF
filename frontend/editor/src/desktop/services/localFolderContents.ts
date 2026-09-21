@@ -16,8 +16,9 @@ import type {
   DiskDirEntry,
   DiskFileEntry,
   DiskListing,
+  ListDirectoryOptions,
 } from "@core/services/localFolderContents";
-export type { DiskDirEntry, DiskFileEntry, DiskListing };
+export type { DiskDirEntry, DiskFileEntry, DiskListing, ListDirectoryOptions };
 
 /**
  * Containment: these reads and writes run under a filesystem-wide Tauri capability, but
@@ -56,6 +57,7 @@ export const canListDirectory = isTauri();
 
 export async function listDirectory(
   directory: string,
+  options: ListDirectoryOptions = {},
 ): Promise<DiskListing | null> {
   if (!canListDirectory) return null;
   const dirEntries = await readDir(directory);
@@ -94,6 +96,10 @@ export async function listDirectory(
     for (const entry of stats) {
       if (entry) files.push(entry);
     }
+    options.onProgress?.(
+      Math.min(i + STAT_BATCH, candidates.length),
+      candidates.length,
+    );
   }
   files.sort((a, b) => b.lastModified - a.lastModified);
   return { files, directories };

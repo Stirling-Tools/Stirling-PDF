@@ -12,6 +12,7 @@ export type {
 } from "@cloud/hooks/useWallet";
 
 /** Local and self-hosted backends do not provide cloud billing. */
-export function useWallet() {
-  return useCloudWallet(useSaaSMode());
+export function useWallet(enabled = true) {
+  const saasMode = useSaaSMode();
+  return useCloudWallet(enabled && saasMode);
 }

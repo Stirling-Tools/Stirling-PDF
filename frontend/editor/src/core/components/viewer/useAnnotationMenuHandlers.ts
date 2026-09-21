@@ -76,7 +76,6 @@ interface UseAnnotationMenuHandlersParams {
 
 export interface AnnotationMenuState {
   annotationType: AnnotationType;
-  menuWidth: number;
   obj: AnnotationObject | undefined;
   annotationId: string | undefined;
   firstLinkTarget: FirstLinkTarget | null;
@@ -194,23 +193,6 @@ export function useAnnotationMenuHandlers({
     if (type === PdfAnnotationSubtype.STAMP) return "stamp";
     return "unknown";
   }, [annotation]);
-
-  const menuWidth = useMemo((): number => {
-    switch (annotationType) {
-      case "stamp":
-        return 80;
-      case "inkHighlighter":
-      case "comment":
-      case "textMarkup":
-      case "text":
-      case "note":
-        return 280;
-      case "shape":
-        return 200;
-      default:
-        return 260;
-    }
-  }, [annotationType]);
 
   const hasCommentContent = (obj?.contents ?? "").trim().length > 0;
   const isInSidebar =
@@ -456,7 +438,6 @@ export function useAnnotationMenuHandlers({
 
   return {
     annotationType,
-    menuWidth,
     obj,
     annotationId,
     firstLinkTarget,
