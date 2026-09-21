@@ -136,7 +136,7 @@ describe("desktop apiClientSetup - 403 handling", () => {
     expect(alert).not.toHaveBeenCalled();
   });
 
-  test("a 403 from the local backend still surfaces", async () => {
+  test("leaves permission toasts to the HTTP error handler", async () => {
     const { client, handlers } = makeMockClient();
     setupApiInterceptors(client as unknown as AxiosInstance);
 
@@ -145,7 +145,7 @@ describe("desktop apiClientSetup - 403 handling", () => {
       config: { url: "/api/v1/general/merge-pdfs" },
     });
 
-    expect(alert).toHaveBeenCalledTimes(1);
+    expect(alert).not.toHaveBeenCalled();
   });
 });
 
