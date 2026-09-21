@@ -3,7 +3,16 @@
 // and re-fetches pdfium.wasm even when the main thread holds a compiled module
 // (embedpdf/embed-pdf-viewer#105). Version-anchored and fail-loud; delete once
 // the engine ships transfers and module handoff.
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { spawnSync } from "node:child_process";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -16,6 +25,7 @@ const enginesDir = path.resolve(
 );
 const packageJsonPath = path.join(enginesDir, "package.json");
 const target = path.join(enginesDir, "dist/lib/pdfium/web/worker-engine.js");
+const distDir = path.join(enginesDir, "dist");
 
 if (!existsSync(target) || !existsSync(packageJsonPath)) {
   console.error(
@@ -36,6 +46,19 @@ if (installedVersion !== EXPECTED_VERSION) {
 }
 
 let source = readFileSync(target, "utf8");
+
+// The orchestrator class lives in a hashed chunk; the probe method goes there.
+const engineChunkFile = readdirSync(distDir).find((name) =>
+  /^pdf-engine-.*\.js$/.test(name),
+);
+if (!engineChunkFile) {
+  console.error(
+    "[patch-embedpdf-engines] orchestrator chunk (pdf-engine-*.js) not found",
+  );
+  process.exit(1);
+}
+const engineChunkPath = path.join(distDir, engineChunkFile);
+let engineChunkSource = readFileSync(engineChunkPath, "utf8");
 
 // Text inside the embedded worker bundle is stored with `\n` escape sequences, so
 // patterns that span lines use a literal backslash-n. Patterns outside it use real
@@ -197,11 +220,36 @@ export {
     replace: [
       "const __stirlingDocAccess = new Map();",
       "function __stirlingReleaseFileAccess(pdfiumModule, filePtr) {",
-      "  const getBlockPtr = __stirlingDocAccess.get(filePtr);",
-      "  if (getBlockPtr) {",
-      "    pdfiumModule.pdfium.removeFunction(getBlockPtr);",
+      "  const access = __stirlingDocAccess.get(filePtr);",
+      "  if (access) {",
+      "    pdfiumModule.pdfium.removeFunction(access.getBlockPtr);",
       "    __stirlingDocAccess.delete(filePtr);",
       "  }",
+      "}",
+      "function __stirlingHasLayers(content) {",
+      "  // The catalog that names optional content is reached from the trailer, so",
+      "  // the head and tail windows cover uncompressed catalogs and object streams.",
+      "  const HEAD = 1048576;",
+      "  const TAIL = 4194304;",
+      "  const CHUNK = 65536;",
+      '  const decoder = new TextDecoder("latin1");',
+      '  const isBlob = typeof Blob !== "undefined" && content instanceof Blob;',
+      "  const length = isBlob ? content.size : content.byteLength;",
+      "  const reader = isBlob ? new FileReaderSync() : null;",
+      "  const windows = length <= HEAD + TAIL ? [[0, length]] : [[0, HEAD], [length - TAIL, length]];",
+      "  for (const [start, end] of windows) {",
+      '    let carry = "";',
+      "    for (let at = start; at < end; at += CHUNK) {",
+      "      const stop = Math.min(at + CHUNK, end);",
+      "      const bytes = reader",
+      "        ? new Uint8Array(reader.readAsArrayBuffer(content.slice(at, stop)))",
+      "        : new Uint8Array(content, at, stop - at);",
+      "      const text = carry + decoder.decode(bytes);",
+      "      if (/\\\\/OCProperties(?![A-Za-z0-9])/.test(text)) return true;",
+      "      carry = text.slice(-16);",
+      "    }",
+      "  }",
+      "  return false;",
       "}",
       "const WasmPointer = (ptr) => ptr;",
     ].join("\\n"),
@@ -257,7 +305,7 @@ export {
       '      runtime.setValue(filePtr, length, "i32");',
       '      runtime.setValue(filePtr + 4, getBlockPtr, "i32");',
       '      runtime.setValue(filePtr + 8, 0, "i32");',
-      "      __stirlingDocAccess.set(filePtr, getBlockPtr);",
+      "      __stirlingDocAccess.set(filePtr, { getBlockPtr, content: file.content });",
       "      globalThis.__stirlingWorkerDocBytes = 0;",
       '      docPtr = this.pdfiumModule.FPDF_LoadCustomDocument(filePtr, (options == null ? void 0 : options.password) ?? "");',
       "    } else {",
@@ -268,6 +316,35 @@ export {
       '      docPtr = this.pdfiumModule.FPDF_LoadMemDocument(filePtr, length, (options == null ? void 0 : options.password) ?? "");',
       "    }",
     ].join("\\n"),
+  },
+  {
+    label: "worker: answer the form and layer probes",
+    find: '\\n  openDocumentBuffer(file, options) {\\n    this.logger.debug(LOG_SOURCE$1, LOG_CATEGORY$1, "openDocumentBuffer", file, options);',
+    replace: [
+      "",
+      "  getDocumentProbe(id) {",
+      "    const ctx = this.cache.docs.get(id);",
+      "    if (!ctx) {",
+      "      throw new Error(`Document ${id} is not open`);",
+      "    }",
+      "    const access = __stirlingDocAccess.get(ctx.filePtr);",
+      "    const formType = this.pdfiumModule.FPDF_GetFormType(ctx.docPtr);",
+      "    return {",
+      "      formType,",
+      "      attachmentCount: this.pdfiumModule.FPDFDoc_GetAttachmentCount(ctx.docPtr),",
+      "      hasLayers: access && access.content ? __stirlingHasLayers(access.content) : null",
+      "    };",
+      "  }",
+      "",
+      "  openDocumentBuffer(file, options) {",
+      '    this.logger.debug(LOG_SOURCE$1, LOG_CATEGORY$1, "openDocumentBuffer", file, options);',
+    ].join("\\n"),
+  },
+  {
+    label: "engine: send the document probe to the worker",
+    find: '  getDocPermissions(doc) {\n    return this.send("getDocPermissions", [doc]);\n  }',
+    replace:
+      '  getDocumentProbe(id) {\n    return this.send("getDocumentProbe", [id]);\n  }\n  getDocPermissions(doc) {\n    return this.send("getDocPermissions", [doc]);\n  }',
   },
   {
     label: "worker: release file access when the open fails",
@@ -289,10 +366,34 @@ export {
   },
 ];
 
+// The orchestrator class enqueues to the worker queue; the probe goes there too.
+const chunkReplacements = [
+  {
+    label: "engine chunk: expose the document probe",
+    find: "  openDocumentBuffer(file, options) {\n    return this.workerQueue.enqueue(",
+    replace: [
+      "  getDocumentProbe(id) {",
+      "    return this.workerQueue.enqueue(",
+      "      {",
+      "        execute: () => this.executor.getDocumentProbe(id),",
+      '        meta: { docId: id, operation: "getDocumentProbe" }',
+      "      },",
+      "      { priority: Priority.LOW }",
+      "    );",
+      "  }",
+      "  openDocumentBuffer(file, options) {",
+      "    return this.workerQueue.enqueue(",
+    ].join("\n"),
+  },
+];
+
 if (checkOnly) {
-  const missing = replacements.filter(
-    ({ replace }) => !source.includes(replace),
-  );
+  const missing = [
+    ...replacements.filter(({ replace }) => !source.includes(replace)),
+    ...chunkReplacements.filter(
+      ({ replace }) => !engineChunkSource.includes(replace),
+    ),
+  ];
   if (missing.length > 0) {
     console.error(
       `[patch-embedpdf-engines] check failed: ${missing.length} patch(es) missing: ` +
@@ -323,7 +424,58 @@ for (const { label, find, replace } of replacements) {
   source = source.replace(find, () => replace);
 }
 
+const workerBlob = source.match(/new Blob\(\['((?:[^'\\]|\\.)*)'\]/);
+if (!workerBlob) {
+  console.error(
+    "[patch-embedpdf-engines] worker blob literal not found; cannot verify the patched worker source",
+  );
+  process.exit(1);
+}
+const unescapeWorker = (raw) => {
+  let out = "";
+  for (let i = 0; i < raw.length; i += 1) {
+    if (raw[i] !== "\\") {
+      out += raw[i];
+      continue;
+    }
+    const next = raw[i + 1];
+    out +=
+      next === "n" ? "\n" : next === "t" ? "\t" : next === "r" ? "\r" : next;
+    i += 1;
+  }
+  return out;
+};
+// Parse-only check through a temp module: the anchors cannot see an eaten
+// backslash, and the worker uses import.meta, so new Function cannot parse it.
+const checkDir = mkdtempSync(path.join(tmpdir(), "stirling-worker-check-"));
+const checkPath = path.join(checkDir, "worker.mjs");
+writeFileSync(checkPath, unescapeWorker(workerBlob[1]));
+const parsed = spawnSync(process.execPath, ["--check", checkPath], {
+  encoding: "utf8",
+});
+rmSync(checkDir, { recursive: true, force: true });
+if (parsed.status !== 0) {
+  const reason = (parsed.stderr || "unknown parse error").split("\n")[0];
+  console.error(
+    `[patch-embedpdf-engines] patched worker source does not parse: ${reason}`,
+  );
+  process.exit(1);
+}
+
 writeFileSync(target, source);
+
+for (const { label, find, replace } of chunkReplacements) {
+  if (engineChunkSource.includes(replace)) continue;
+  if (!engineChunkSource.includes(find)) {
+    console.error(
+      `[patch-embedpdf-engines] anchor not found for "${label}" in ${engineChunkFile}. ` +
+        "The patch must be re-verified against this version.",
+    );
+    process.exit(1);
+  }
+  engineChunkSource = engineChunkSource.replace(find, () => replace);
+}
+writeFileSync(engineChunkPath, engineChunkSource);
 
 console.log(
   `[patch-embedpdf-engines] applied local patches to @embedpdf/engines@${installedVersion}`,
