@@ -57,7 +57,9 @@ jobs:
     name: Prime shared Gradle cache
     needs: hash_pr
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 5
+    permissions:
+      contents: write
     env:
       GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java${{ needs.hash_pr.outputs.java_version }}
     steps:
