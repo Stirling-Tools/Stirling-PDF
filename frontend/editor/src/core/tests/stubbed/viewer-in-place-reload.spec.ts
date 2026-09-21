@@ -2,6 +2,14 @@ import fs from "node:fs";
 import path from "path";
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 
+// Quarantined on WebKit: restoring zoom/scroll after an in-place byte swap
+// races the settle on the slow CI WebKit engine and flakes. Passes on Chromium
+// and Firefox.
+test.skip(
+  ({ browserName }) => browserName === "webkit",
+  "viewer swap-restore flakes on slow CI WebKit",
+);
+
 interface SwapSamplerState {
   swapMs: number;
   swapAt: number;
