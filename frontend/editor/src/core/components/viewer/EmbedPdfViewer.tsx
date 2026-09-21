@@ -86,9 +86,8 @@ export interface EmbedPdfViewerProps {
 const documentCacheKey = (file: StirlingFile): string =>
   `${file.fileId}|${file.quickKey}`;
 
-// Slow engines can take seconds to report the replacement's page count and
-// land the carried zoom; the hide lasts until then, not for a fixed flash.
-const SWAP_REVEAL_DEADLINE_MS = 5_000;
+// The hide and the position re-apply both run until the carried zoom lands
+const SWAP_REVEAL_DEADLINE_MS = 20_000;
 // Re-checks how often the hide decides whether the carried zoom has landed.
 const SWAP_REVEAL_HIDE_RECHECK_MS = 250;
 
@@ -493,10 +492,20 @@ const EmbedPdfViewerContent = ({
         cancelAnimationFrame(pendingScrollReassertTimerRef.current);
       }
       const useFraction = options?.useFraction ?? false;
-      const holdUntil = performance.now() + 1_500;
+      // Hold the reading position through the whole settle
+      const deadline = performance.now() + SWAP_REVEAL_DEADLINE_MS;
+      let settledAt: number | null =
+        pendingZoomRestoreRef.current === null ? performance.now() : null;
       const reassert = () => {
         if (!pendingScrollPositionRef.current) return;
-        if (performance.now() >= holdUntil) {
+        const now = performance.now();
+        if (settledAt === null && pendingZoomRestoreRef.current === null) {
+          settledAt = now;
+        }
+        if (
+          (settledAt !== null && now - settledAt >= 1_500) ||
+          now >= deadline
+        ) {
           clearPendingScrollRestore();
           return;
         }
