@@ -46,6 +46,11 @@ let _cachedSource: File | Blob | null = null;
 let _cachedFields: ResolvedSignatureField[] = [];
 let _cachePromise: Promise<ResolvedSignatureField[]> | null = null;
 
+/**
+ * Signature fields for one source, cached by source identity. The form probe
+ * answers before any bytes are read, and the signature scan runs once behind a
+ * single shared promise.
+ */
 async function resolveFields(
   source: File | Blob,
 ): Promise<ResolvedSignatureField[]> {
