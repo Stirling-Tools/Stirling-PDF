@@ -1597,7 +1597,7 @@
 .processor-prepay__choices button[aria-pressed="true"] {
   border-color: var(--c-primary);
   background: var(--c-primary-subtle);
-  color: var(--c-accent-fg);
+  color: var(--c-accent-text);
 }
 .processor-prepay__custom {
   display: flex;

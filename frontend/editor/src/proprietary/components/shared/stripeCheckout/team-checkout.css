@@ -14,7 +14,7 @@
 }
 .team-capacity__pill[aria-pressed="true"] {
   border-color: var(--c-primary);
-  color: var(--c-accent-fg);
+  color: var(--c-accent-text);
   background: var(--c-primary-subtle);
 }
 
