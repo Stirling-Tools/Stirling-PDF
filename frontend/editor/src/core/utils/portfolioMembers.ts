@@ -167,7 +167,7 @@ const streamOf = (
 export async function readPortfolioMembers(
   file: File,
 ): Promise<PdfAttachmentObject[] | null> {
-  const key = documentFileKey(file);
+  const key = await documentFileKey(file);
   // `has` first: a cached null (not a portfolio) is an answer, not a miss.
   const remembered = answers.has(file)
     ? answers.get(file)
