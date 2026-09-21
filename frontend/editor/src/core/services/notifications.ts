@@ -72,6 +72,7 @@ export async function fetchNotifications(
   try {
     const response = await apiClient.get<NotificationsResponse>(
       `${NOTIFICATIONS_PATH}?limit=${limit}`,
+      { suppressErrorToast: true },
     );
     return {
       notifications: response?.data?.notifications ?? [],
@@ -90,6 +91,8 @@ export async function reportNotificationResolved(
   try {
     await apiClient.post(
       `${NOTIFICATIONS_PATH}/${encodeURIComponent(notificationId)}/resolved`,
+      undefined,
+      { suppressErrorToast: true },
     );
     return true;
   } catch {
