@@ -1,6 +1,7 @@
 package stirling.software.proprietary.policy.engine;
 
 import java.io.IOException;
+import java.nio.file.FileSystemException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -273,13 +274,17 @@ public class PolicyRunner {
                     e.getMessage());
             // Told, not just logged: an unreadable folder processes nothing at all, and its owner
             // would otherwise see a folder that has quietly stopped working.
+            // The reason without the path: the message leads with the folder's disk location, and
+            // this detail reaches the whole team's reviewers; the log above keeps the full text.
             failureRecorder.recordRunFailureAs(
                     FailureKind.SOURCE_UNREADABLE,
                     null,
                     policy.id(),
                     storedSource.id(),
                     policy.owner(),
-                    e.getMessage());
+                    e instanceof FileSystemException fs && fs.getReason() != null
+                            ? fs.getReason()
+                            : "The folder could not be listed");
             context.vetoCleanup();
             return List.of();
         }

@@ -17,6 +17,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.nio.file.NoSuchFileException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,6 +38,7 @@ import org.springframework.core.io.ByteArrayResource;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
+import stirling.software.proprietary.failure.FailureKind;
 import stirling.software.proprietary.failure.PolicyFailureRecorder;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
@@ -103,6 +105,46 @@ class PolicyRunnerTest {
         when(databaseLicenseGuard.requiresActivation()).thenReturn(true);
         runner.run(policy(List.of(InputSpec.folder("/in"))));
         verifyNoInteractions(folderSource, policyEngine, processedLedger);
+    }
+
+    @Test
+    void anUnreadableFolderIsRecordedForItsOwnerWithoutItsPath() throws Exception {
+        // The detail is read by the whole team's reviewers, not only the folder's owner, and a
+        // filesystem exception's message leads with the folder's location on the operator's disk.
+        PolicyFailureRecorder recorder = mock(PolicyFailureRecorder.class);
+        PolicyRunner recording =
+                new PolicyRunner(
+                        policyEngine,
+                        List.of(folderSource),
+                        sourceStore,
+                        docCounter,
+                        processedLedger,
+                        new ApplicationProperties(),
+                        reachableOwners(),
+                        databaseLicenseGuard,
+                        recorder,
+                        eventPublisher);
+        InputSpec spec = InputSpec.folder("/Users/carol/Payroll");
+        Policy policy = policy(List.of(spec));
+        when(folderSource.supports(spec)).thenReturn(true);
+        when(folderSource.resolve(eq(spec), any()))
+                .thenThrow(
+                        new NoSuchFileException(
+                                "/Users/carol/Payroll", null, "input directory does not exist"));
+
+        recording.run(policy);
+
+        ArgumentCaptor<String> detail = ArgumentCaptor.forClass(String.class);
+        verify(recorder)
+                .recordRunFailureAs(
+                        eq(FailureKind.SOURCE_UNREADABLE),
+                        any(),
+                        eq("p1"),
+                        any(),
+                        eq("owner"),
+                        detail.capture());
+        assertEquals("input directory does not exist", detail.getValue());
+        assertFalse(detail.getValue().contains("/Users/carol"));
     }
 
     @Test
