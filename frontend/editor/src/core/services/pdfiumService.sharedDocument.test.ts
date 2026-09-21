@@ -21,7 +21,7 @@ const pdfium = vi.hoisted(() => {
     state.allocationOrder = [];
     const module = {
       PDFiumExt_Init: vi.fn(),
-      FPDF_LoadMemDocument: vi.fn(() => ++state.nextDocPtr),
+      FPDF_LoadCustomDocument: vi.fn(() => ++state.nextDocPtr),
       FPDF_CloseDocument: vi.fn((p: number) => state.closeCalls.push(p)),
       FPDF_GetLastError: vi.fn(() => 0),
       pdfium: {
@@ -36,6 +36,9 @@ const pdfium = vi.hoisted(() => {
           }),
         },
         HEAPU8: heap,
+        addFunction: vi.fn(() => ++state.nextDataPtr),
+        removeFunction: vi.fn(),
+        setValue: vi.fn(),
       },
     };
     state.module = module;
