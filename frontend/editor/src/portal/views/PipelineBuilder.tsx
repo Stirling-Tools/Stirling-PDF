@@ -808,9 +808,7 @@ export function PipelineBuilder() {
   if (!isEditorInput && !destinationReady)
     blockers.push(t("portal.pipelines.builder.blocker.destination"));
   if (!vectorReady)
-    blockers.push(
-      t("portal.pipelines.builder.ingest.destinationNeedsChunks"),
-    );
+    blockers.push(t("portal.pipelines.builder.ingest.destinationNeedsChunks"));
   if (!routingValid)
     blockers.push(
       t(
