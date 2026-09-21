@@ -3,6 +3,7 @@ import {
   documentFileKey,
   getDocumentBytes,
 } from "@app/services/documentBytesCache";
+import { runEngineDocumentProbe } from "@app/services/documentProbeEngine";
 
 export interface LayerInfo {
   id: string;
@@ -21,6 +22,37 @@ const layerAnswers = new WeakMap<Blob, Promise<boolean>>();
 const layerAnswersByFileKey = new Map<string, Promise<boolean>>();
 const LAYER_CACHE_LIMIT = 64;
 
+function rememberLayerAnswer(
+  file: Blob,
+  key: string | null,
+  answer: Promise<boolean>,
+): void {
+  layerAnswers.set(file, answer);
+  if (!key) return;
+  layerAnswersByFileKey.delete(key);
+  layerAnswersByFileKey.set(key, answer);
+  while (layerAnswersByFileKey.size > LAYER_CACHE_LIMIT) {
+    const oldest = layerAnswersByFileKey.keys().next().value;
+    if (oldest === undefined) break;
+    layerAnswersByFileKey.delete(oldest);
+  }
+}
+
+/**
+ * Records an answer learned without reading the bytes, e.g. from the engine
+ * worker's probe of the open document.
+ */
+export async function rememberDocumentHasLayers(
+  file: Blob,
+  answer: boolean,
+): Promise<void> {
+  rememberLayerAnswer(
+    file,
+    await documentFileKey(file),
+    Promise.resolve(answer),
+  );
+}
+
 /**
  * True when the catalog carries optional content. Building the layer list costs
  * a pdfjs parse of the whole document, so the sidebar gates its button on this
@@ -32,9 +64,25 @@ export async function documentHasLayers(
 ): Promise<boolean> {
   const byIdentity = layerAnswers.get(file);
   if (byIdentity) return byIdentity;
+  const pending = resolveDocumentHasLayers(file, bytes);
+  layerAnswers.set(file, pending);
+  return pending;
+}
+
+async function resolveDocumentHasLayers(
+  file: Blob,
+  bytes?: ArrayBuffer,
+): Promise<boolean> {
   const key = await documentFileKey(file);
   const cached = key ? layerAnswersByFileKey.get(key) : undefined;
   if (cached) return cached;
+
+  const probe = await runEngineDocumentProbe(file);
+  if (probe && probe.hasLayers !== null) {
+    const answer = Promise.resolve(probe.hasLayers);
+    rememberLayerAnswer(file, key, answer);
+    return answer;
+  }
 
   const answer = (async () => {
     const [{ PDFDocument, PDFName }, buffer] = await Promise.all([
@@ -54,16 +102,7 @@ export async function documentHasLayers(
     return false;
   });
 
-  layerAnswers.set(file, answer);
-  if (key) {
-    layerAnswersByFileKey.delete(key);
-    layerAnswersByFileKey.set(key, answer);
-    while (layerAnswersByFileKey.size > LAYER_CACHE_LIMIT) {
-      const oldest = layerAnswersByFileKey.keys().next().value;
-      if (oldest === undefined) break;
-      layerAnswersByFileKey.delete(oldest);
-    }
-  }
+  rememberLayerAnswer(file, key, answer);
   return answer;
 }
 

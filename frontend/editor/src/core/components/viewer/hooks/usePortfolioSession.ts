@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { PdfAttachmentObject } from "@embedpdf/models";
 
 import { readPortfolioMembers } from "@app/utils/portfolioMembers";
+import { runEngineDocumentProbe } from "@app/services/documentProbeEngine";
 import { isPdfFile } from "@app/utils/fileUtils";
 
 // Keeps a portfolio pinned while its members are read, so the panel outlives
@@ -47,7 +48,16 @@ export function usePortfolioSession(activeFile: File | null) {
     }
 
     let cancelled = false;
-    void readPortfolioMembers(activeFile).then((members) => {
+    void (async () => {
+      // A portfolio always has attachments, so a worker answer of zero skips the
+      // full parse; any other answer reads the members as before.
+      const probe = await runEngineDocumentProbe(activeFile);
+      if (cancelled) return;
+      if (probe && probe.attachmentCount === 0) {
+        if (session) endSession();
+        return;
+      }
+      const members = await readPortfolioMembers(activeFile);
       if (cancelled) return;
       if (members) {
         setSession({ file: activeFile, members });
@@ -55,7 +65,7 @@ export function usePortfolioSession(activeFile: File | null) {
       } else if (session) {
         endSession();
       }
-    });
+    })();
 
     return () => {
       cancelled = true;

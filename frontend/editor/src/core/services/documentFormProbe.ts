@@ -5,6 +5,7 @@ import {
 } from "@app/services/documentBytesCache";
 import { runPdfiumScan } from "@app/services/pdfiumScanQueue";
 import { readRawFormType } from "@app/services/pdfiumService";
+import { runEngineDocumentProbe } from "@app/services/documentProbeEngine";
 import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 
 /**
@@ -45,6 +46,34 @@ const answers = new WeakMap<Blob, Promise<boolean>>();
 const answersByFileKey = new Map<string, Promise<boolean>>();
 const ANSWER_CACHE_LIMIT = 64;
 
+function remember(
+  source: Blob,
+  key: string | null,
+  answer: Promise<boolean>,
+): void {
+  answers.set(source, answer);
+  if (!key) return;
+  answersByFileKey.delete(key);
+  answersByFileKey.set(key, answer);
+  while (answersByFileKey.size > ANSWER_CACHE_LIMIT) {
+    const oldest = answersByFileKey.keys().next().value;
+    if (oldest === undefined) break;
+    answersByFileKey.delete(oldest);
+  }
+}
+
+/**
+ * Records an answer learned without reading the bytes, e.g. from the engine
+ * worker's probe of the open document, so the overlays never read a form-less
+ * file back.
+ */
+export async function rememberDocumentFormAnswer(
+  source: Blob,
+  answer: boolean,
+): Promise<void> {
+  remember(source, await documentFileKey(source), Promise.resolve(answer));
+}
+
 /**
  * The per-document answer, shared by the viewer's drop path and the form
  * overlays. Callers that already hold the buffer (the drop path probes before
@@ -58,9 +87,28 @@ export async function documentHasFormFieldsFor(
 ): Promise<boolean> {
   const byIdentity = answers.get(source);
   if (byIdentity) return byIdentity;
+  const pending = resolveDocumentHasFormFields(source, bytes);
+  answers.set(source, pending);
+  return pending;
+}
+
+async function resolveDocumentHasFormFields(
+  source: Blob,
+  bytes?: ArrayBuffer,
+): Promise<boolean> {
   const key = await documentFileKey(source);
   const cached = key ? answersByFileKey.get(key) : undefined;
   if (cached) return cached;
+
+  // The open engine document already knows its form type; the probe answers it
+  // without reading the file. hasLayers stays null when the worker had no
+  // content access, but formType is valid whenever the probe resolved.
+  const probe = await runEngineDocumentProbe(source);
+  if (probe) {
+    const answer = Promise.resolve(probe.formType !== 0);
+    remember(source, key, answer);
+    return answer;
+  }
 
   const answer = bytes
     ? documentHasFormFields(bytes, source.size)
@@ -73,15 +121,6 @@ export async function documentHasFormFieldsFor(
           if (key) answersByFileKey.delete(key);
           throw error;
         });
-  answers.set(source, answer);
-  if (key) {
-    answersByFileKey.delete(key);
-    answersByFileKey.set(key, answer);
-    while (answersByFileKey.size > ANSWER_CACHE_LIMIT) {
-      const oldest = answersByFileKey.keys().next().value;
-      if (oldest === undefined) break;
-      answersByFileKey.delete(oldest);
-    }
-  }
+  remember(source, key, answer);
   return answer;
 }
