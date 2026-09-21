@@ -4,9 +4,15 @@ import tsconfigPaths from "vite-tsconfig-paths";
 // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
 import { iconSvgr } from "./scripts/icons/svgrOptions.mts";
 
-// Projects do NOT inherit the root test.testTimeout, so every project silently
-// ran at vitest's 5s default. Spread this into each one instead.
-const TIMEOUTS = { testTimeout: 10000, hookTimeout: 10000 };
+// Projects do NOT inherit the root test options, so every project silently ran
+// at vitest's 5s default and printed all app stdout. Spread these into each one.
+const TEST_DEFAULTS = {
+  testTimeout: 10000,
+  hookTimeout: 10000,
+  onConsoleLog(_log: string, type: "stdout" | "stderr") {
+    if (type === "stdout" && !process.env.VITEST_CONSOLE) return false;
+  },
+};
 
 export default defineConfig({
   test: {
@@ -19,7 +25,7 @@ export default defineConfig({
       "src/**/*.spec.ts", // Exclude Playwright E2E tests
       "src/tests/test-fixtures/**",
     ],
-    ...TIMEOUTS,
+    ...TEST_DEFAULTS,
     coverage: {
       reporter: ["text", "json", "html"],
       exclude: [
@@ -36,7 +42,7 @@ export default defineConfig({
       {
         test: {
           name: "core",
-          ...TIMEOUTS,
+          ...TEST_DEFAULTS,
           include: ["src/core/**/*.test.{ts,tsx}"],
           environment: "jsdom",
           globals: true,
@@ -56,7 +62,7 @@ export default defineConfig({
       {
         test: {
           name: "portal",
-          ...TIMEOUTS,
+          ...TEST_DEFAULTS,
           include: ["src/portal/**/*.test.{ts,tsx}"],
           environment: "jsdom",
           globals: true,
@@ -78,7 +84,7 @@ export default defineConfig({
       {
         test: {
           name: "proprietary",
-          ...TIMEOUTS,
+          ...TEST_DEFAULTS,
           include: ["src/proprietary/**/*.test.{ts,tsx}"],
           environment: "jsdom",
           globals: true,
@@ -98,7 +104,7 @@ export default defineConfig({
       {
         test: {
           name: "desktop",
-          ...TIMEOUTS,
+          ...TEST_DEFAULTS,
           include: ["src/desktop/**/*.test.{ts,tsx}"],
           environment: "jsdom",
           globals: true,
@@ -118,7 +124,7 @@ export default defineConfig({
       {
         test: {
           name: "saas",
-          ...TIMEOUTS,
+          ...TEST_DEFAULTS,
           // src/saas = editor-saas layer; src/portal-saas = the portal's saas
           // overrides (sibling to src/portal). Both build under the saas flavor,
           // so both resolve @portal via the saas cascade (tsconfig.saas.vite.json).
