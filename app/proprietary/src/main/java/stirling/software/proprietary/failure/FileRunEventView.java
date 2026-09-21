@@ -42,25 +42,36 @@ public record FileRunEventView(
         BROWSER,
         /** A folder the server watches. Only the server can reach it, and only for its owner. */
         SMART_FOLDER,
-        /** The row is about no document, or one nothing here can address. */
+        /**
+         * The row is about no document, or one nothing here can reach: a policy fed from a bucket
+         * or a webhook names a file no browser holds and no folder action can address.
+         */
         NONE;
 
         /**
-         * A row with no source was reported by a client, which is the only producer whose file ids
-         * that client can resolve. Everything else was fed by a source the server owns.
+         * Gated on the source, decided by what produced it. A source's reference is a location on
+         * the server, so a source-fed row is never {@code BROWSER}, even once the policy that fed
+         * it is gone and its kind reads as nothing. Among source-fed rows only a smart folder's is
+         * reachable: a bucket-fed policy has a source too, and calling its document a smart
+         * folder's offered a retry that could only ever be refused.
          */
-        public static DocumentLocation of(FileRunEvent event) {
+        public static DocumentLocation of(FileRunEvent event, SourceKind source) {
             if (event.fileId() == null || event.fileId().isBlank()) {
                 return NONE;
             }
-            return event.sourceId() == null || event.sourceId().isBlank() ? BROWSER : SMART_FOLDER;
+            if (event.sourceId() == null || event.sourceId().isBlank()) {
+                return BROWSER;
+            }
+            return source == SourceKind.SMART_FOLDER ? SMART_FOLDER : NONE;
         }
     }
 
     public static FileRunEventView of(
-            FileRunEvent event, List<FileRunEventService.AvailableAction> actions) {
+            FileRunEvent event,
+            SourceKind source,
+            List<FileRunEventService.AvailableAction> actions) {
         FailureKind kind = event.kind();
-        DocumentLocation location = DocumentLocation.of(event);
+        DocumentLocation location = DocumentLocation.of(event, source);
         return new FileRunEventView(
                 event.id(),
                 kind.getId(),
@@ -107,7 +118,7 @@ public record FileRunEventView(
                     action.id().name(),
                     action.labelKey(),
                     action.id().getDefaultLabel(),
-                    action.id().getExecution(),
+                    action.execution(),
                     action.slot(),
                     action.enabled(),
                     action.disabledReasonKey());

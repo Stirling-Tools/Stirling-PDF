@@ -240,18 +240,11 @@ class FailureKindTest {
 
         @Test
         void offersARetryToItsOwnerAndTheRunToWhoeverReviews() {
-            // No known fix, so no client resolution; a retry is still worth offering for a one-off.
-            // The server-side twin is the same offer for a document only the server can reach, and
-            // FileRunEventService drops it for any row that is not a smart folder's, so an owner
-            // is never shown both.
+            // No known fix, so the retry is the resolution: these are often one-offs. One offer
+            // wherever the document is; FileRunEventService says per row which side runs it.
             assertThat(FailureKind.UNKNOWN.getOfferedActions())
                     .containsExactly(
-                            offered(FailureActionId.OPEN_IN_TOOL, OWNER, SECONDARY, "openInTool"),
-                            offered(
-                                    FailureActionId.RETRY_IN_FOLDER,
-                                    OWNER,
-                                    RESOLUTION,
-                                    "retryInFolder"),
+                            offered(FailureActionId.OPEN_IN_TOOL, OWNER, RESOLUTION, "openInTool"),
                             offered(FailureActionId.VIEW_FILE, OWNER, SECONDARY, "viewFile"),
                             offered(
                                     FailureActionId.VIEW_IN_PROCESSOR,
@@ -476,17 +469,16 @@ class FailureKindTest {
         }
 
         @Test
-        void unknownsOnlyResolutionIsOneTheServerRunsForASmartFolder() {
+        void unknownsOnlyResolutionIsThePlainRetry() {
             // The exception to the rule above, and the reason it is worth stating: an unrecognised
-            // failure may well be a one-off, and a smart folder's document is one the server can
-            // run again itself. The kinds that also lead with a retry offer it as an action, not a
-            // resolution, because for them it is a guess rather than the fix.
+            // failure may well be a one-off. The kinds that also lead with a retry offer it as an
+            // action, not a resolution, because for them it is a guess rather than the fix.
             assertThat(
                             FailureKind.UNKNOWN.getOfferedActions().stream()
                                     .filter(offer -> offer.slot() == RESOLUTION)
                                     .map(FailureKind.OfferedAction::id)
                                     .toList())
-                    .containsExactly(FailureActionId.RETRY_IN_FOLDER);
+                    .containsExactly(FailureActionId.OPEN_IN_TOOL);
         }
 
         @Test

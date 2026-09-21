@@ -25,6 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
+import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
  * Tests for {@link FileRunEventController}: the wire shape, the status mapping for each refusal
@@ -37,6 +38,7 @@ class FileRunEventControllerTest {
 
     @Mock private PolicyManagementAuthority authority;
     @Mock private UserServiceInterface userService;
+    @Mock private PolicyStore policyStore;
 
     private FileRunEventStore store;
     private FileRunEventController controller;
@@ -51,7 +53,8 @@ class FileRunEventControllerTest {
                         List.of(new AcknowledgeAction(store), new DismissAction(store)));
         controller =
                 new FileRunEventController(
-                        new FileRunEventService(store, registry, authority, userService, props));
+                        new FileRunEventService(
+                                store, registry, authority, userService, props, policyStore));
 
         lenient().when(authority.canEditPolicies()).thenReturn(true);
         lenient().when(authority.currentUserTeamId()).thenReturn(TEAM);
@@ -435,7 +438,8 @@ class FileRunEventControllerTest {
                                                     new DismissAction(store))),
                                     authority,
                                     userService,
-                                    unsecured));
+                                    unsecured,
+                                    policyStore));
 
             assertThatCode(() -> noLogin.list(null, false, null, null)).doesNotThrowAnyException();
             // Not merely permitted: the role is never consulted at all, which is what makes the
@@ -480,7 +484,8 @@ class FileRunEventControllerTest {
                                                     new DismissAction(store))),
                                     authority,
                                     userService,
-                                    unsecured));
+                                    unsecured,
+                                    policyStore));
             given(FailureKind.UNKNOWN, null, "unteamed");
             given(FailureKind.UNKNOWN, TEAM, "teamed");
 

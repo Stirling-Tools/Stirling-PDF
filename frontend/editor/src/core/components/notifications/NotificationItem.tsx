@@ -66,6 +66,8 @@ function noteFor(
           "notifications.inSmartFolder",
           "This document is in a smart folder, so it is handled on the server rather than here.",
         );
+  // A source that could not be read names no document by design, so there is none to miss.
+  if (!notification.fileId && notification.sourceKind !== "EDITOR") return null;
   if (!notification.fileId)
     return t(
       "notifications.noDocumentLinked",

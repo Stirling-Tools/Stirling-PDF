@@ -9,12 +9,13 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.proprietary.failure.FailureActionId;
+import stirling.software.proprietary.failure.FailureScope;
 import stirling.software.proprietary.failure.FileRunEvent;
 import stirling.software.proprietary.failure.FileRunEventService;
 import stirling.software.proprietary.failure.FileRunEventView;
 import stirling.software.proprietary.failure.Ownership;
+import stirling.software.proprietary.failure.SourceKind;
 import stirling.software.proprietary.policy.ledger.StorageFileIdentities;
-import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.repository.StoredFileRepository;
 
@@ -27,12 +28,12 @@ import stirling.software.proprietary.storage.repository.StoredFileRepository;
 public class NotificationService {
 
     private final FileRunEventService fileRunEvents;
-    private final PolicyStore policyStore;
     private final StoredFileRepository storedFiles;
 
     /**
-     * Newest first, and only open failures about a document: one already dealt with is not news,
-     * and a row naming no file has nothing the bell can offer beyond saying so.
+     * Newest first, and only open failures with something to tell the reader: about a document, or
+     * about a source that could not be read at all. One already dealt with is not news, and a row
+     * naming no file has nothing the bell can offer beyond saying so.
      *
      * <p>Filtered on the named file rather than the kind's scope, because a RUN-scoped kind still
      * names one when the editor reported it: a failed tool run belongs here. Applied after the
@@ -44,7 +45,7 @@ public class NotificationService {
         // one policy and twenty rows.
         Map<String, SourceKind> kinds = new HashMap<>();
         return fileRunEvents.list(null, false, null, limit).stream()
-                .filter(event -> event.fileId() != null && !event.fileId().isBlank())
+                .filter(event -> namesADocument(event) || event.scope() == FailureScope.SOURCE)
                 .map(event -> fromFailure(event, kinds))
                 .toList();
     }
@@ -76,17 +77,8 @@ public class NotificationService {
                 .orElse(null);
     }
 
-    /**
-     * What produced the row. Read from the policy rather than stored on the row, so a folder that
-     * was converted to a policy (or the reverse) reads as what it is now.
-     */
-    private SourceKind sourceKindOf(FileRunEvent event, Map<String, SourceKind> cache) {
-        if (event.policyId() == null || event.policyId().isBlank()) {
-            return SourceKind.EDITOR;
-        }
-        return cache.computeIfAbsent(
-                event.policyId(),
-                policyId -> SourceKind.of(policyStore.get(policyId).orElse(null)));
+    private static boolean namesADocument(FileRunEvent event) {
+        return event.fileId() != null && !event.fileId().isBlank();
     }
 
     /** Whether the caller sees the whole team's incidents rather than only their own. */
@@ -134,7 +126,9 @@ public class NotificationService {
 
     /** Prefixes the row id on the way out, so it is never sent bare. */
     private NotificationView fromFailure(FileRunEvent event, Map<String, SourceKind> kinds) {
-        FileRunEventView.DocumentLocation location = FileRunEventView.DocumentLocation.of(event);
+        SourceKind source = fileRunEvents.sourceKindOf(event, kinds);
+        FileRunEventView.DocumentLocation location =
+                FileRunEventView.DocumentLocation.of(event, source);
         boolean resolvableHere = location == FileRunEventView.DocumentLocation.BROWSER;
         Ownership ownership = fileRunEvents.ownershipOf(event);
         return new NotificationView(
@@ -153,26 +147,25 @@ public class NotificationService {
                 resolvableHere ? event.fileId() : null,
                 resolvableHere ? null : documentNameFor(event, ownership),
                 location,
-                sourceKindOf(event, kinds),
+                source,
                 event.sourceId(),
                 event.policyId(),
                 event.occurrences(),
                 event.createdAt(),
                 event.lastSeenAt(),
-                bellActions(event));
+                bellActions(event, source));
     }
 
     /**
-     * What the bell may offer. A disposition such as Dismiss belongs to the review surface, and a
-     * server action is kept out for the same reason — except the one that re-runs a document only
-     * the server can reach, which is the sole fix available to the reader of a smart-folder row.
+     * What the bell may offer: every fix, including the ones the server carries out, but not a
+     * disposition, which is the review surface's to apply. A new disposition belongs in this list.
      */
-    private List<FileRunEventView.ActionView> bellActions(FileRunEvent event) {
-        return fileRunEvents.availableActions(event).stream()
+    private List<FileRunEventView.ActionView> bellActions(FileRunEvent event, SourceKind source) {
+        return fileRunEvents.availableActions(event, source).stream()
                 .filter(
                         action ->
-                                !action.id().runsOnServer()
-                                        || action.id() == FailureActionId.RETRY_IN_FOLDER)
+                                action.id() != FailureActionId.DISMISS
+                                        && action.id() != FailureActionId.ACKNOWLEDGE)
                 .map(FileRunEventView.ActionView::of)
                 .toList();
     }

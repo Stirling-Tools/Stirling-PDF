@@ -20,8 +20,9 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.proprietary.failure.FailureActionException;
 
 /**
- * Open to any authenticated user: each source scopes its own rows. Every action runs on the
- * client's own device, so the only write is it reporting a fix.
+ * Open to any authenticated user: each source scopes its own rows. An action runs wherever the
+ * document is, the client's device for a file it holds and the server for a smart folder's, so the
+ * writes here are a client reporting a fix and a server-run action.
  */
 @RestController
 @RequestMapping("/api/v1/notifications")

@@ -201,8 +201,9 @@ class RetryInFolderActionTest {
     }
 
     @Test
-    void isDispatchableSoTheRegistryRequiresAHandlerForIt() {
-        assertThat(action.id().runsOnServer()).isTrue();
-        assertThat(action.id()).isEqualTo(FailureActionId.RETRY_IN_FOLDER);
+    void isTheServerHalfOfTheRetryTheBellOffers() {
+        assertThat(action.id()).isEqualTo(FailureActionId.OPEN_IN_TOOL);
+        assertThat(action.id().canRunOnServer()).isTrue();
+        assertThat(action.id().executionFor(true)).isEqualTo(FailureActionId.Execution.SERVER);
     }
 }

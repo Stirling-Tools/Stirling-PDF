@@ -212,27 +212,46 @@ export function useNotificationActions(): ClientActionRegistry {
       run: () => navigate(REVIEW_DESTINATION),
     };
 
-    // The only action here the server performs. The document is in a folder this browser cannot
-    // reach, so all the client does is ask, and the row names which file it is about.
-    const retryInFolder: ClientActionSpec = {
-      available: (context) =>
-        context.notification.documentLocation === "SMART_FOLDER",
+    const heldByServer = (context: NotificationActionContext) =>
+      context.notification.documentLocation === "SMART_FOLDER";
+
+    // What the server does on this browser's behalf: the document is in a folder this browser
+    // cannot reach, so all the client does is ask, and the row names which file it is about.
+    const askTheServer = (
+      actionId: string,
+      whenItFails: string,
+    ): ClientActionSpec => ({
+      available: heldByServer,
       run: async (context): Promise<ClientActionOutcome | void> => {
         const refusal = await dispatchNotificationAction(
           context.notification.id,
-          "RETRY_IN_FOLDER",
+          actionId,
         );
         if (refusal === null) return;
-        return {
-          ok: false,
-          message:
-            refusal ||
-            t(
-              "notifications.retryInFolderFailed",
-              "That document could not be run again just now.",
-            ),
-        };
+        // The server's own words where it gave any: only it knows why the folder refused.
+        return { ok: false, message: refusal || whenItFails };
       },
+    });
+
+    // One id, run by whichever side holds the document: the server resolves it per row, and this
+    // picks the half that can act.
+    const rerunInFolder = askTheServer(
+      "OPEN_IN_TOOL",
+      t(
+        "notifications.retryInFolderFailed",
+        "That document could not be run again just now.",
+      ),
+    );
+    const retry: ClientActionSpec = {
+      available: (context) =>
+        heldByServer(context)
+          ? rerunInFolder.available(context)
+          : openInTool.available(context),
+      closesPanel: openInTool.closesPanel,
+      run: (context) =>
+        heldByServer(context)
+          ? rerunInFolder.run(context)
+          : openInTool.run(context),
     };
 
     const resolutions = Object.fromEntries(
@@ -243,9 +262,8 @@ export function useNotificationActions(): ClientActionRegistry {
     );
 
     return {
-      OPEN_IN_TOOL: openInTool,
+      OPEN_IN_TOOL: retry,
       ...resolutions,
-      RETRY_IN_FOLDER: retryInFolder,
       VIEW_FILE: viewFile,
       VIEW_IN_PROCESSOR: viewInProcessor,
     };

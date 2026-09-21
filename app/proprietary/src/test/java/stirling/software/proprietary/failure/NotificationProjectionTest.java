@@ -1,11 +1,14 @@
 package stirling.software.proprietary.failure;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -23,6 +26,8 @@ import stirling.software.proprietary.notification.NotificationService;
 import stirling.software.proprietary.notification.NotificationSource;
 import stirling.software.proprietary.notification.NotificationView;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
+import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.model.StoredFile;
@@ -60,14 +65,27 @@ class NotificationProjectionTest {
                                 List.of(new AcknowledgeAction(store), new DismissAction(store))),
                         authority,
                         userService,
-                        props);
-        controller =
-                new NotificationController(
-                        new NotificationService(failures, policyStore, storedFiles));
+                        props,
+                        policyStore);
+        controller = new NotificationController(new NotificationService(failures, storedFiles));
 
         lenient().when(authority.currentUserTeamId()).thenReturn(TEAM);
         lenient().when(authority.canEditPolicies()).thenReturn(true);
         lenient().when(userService.getCurrentUsername()).thenReturn(ACTOR);
+        // Every source-fed row here came from a smart folder unless a test says otherwise.
+        lenient().when(policyStore.get(anyString())).thenReturn(Optional.of(smartFolder()));
+    }
+
+    private static Policy smartFolder() {
+        return new Policy(
+                        "policy-1",
+                        "Payroll",
+                        ACTOR,
+                        true,
+                        List.of(),
+                        List.of(),
+                        OutputSpec.inline())
+                .withSurface(Policy.SURFACE_PROCESSING_FOLDER);
     }
 
     private FileRunEvent given(FailureKind kind, String actor, String fileId) {
@@ -112,7 +130,10 @@ class NotificationProjectionTest {
             // The queue's own offers minus the server's: a bell offering different ones would lie.
             assertThat(notification.actions())
                     .containsExactlyElementsOf(
-                            FileRunEventView.of(mine, failures.availableActions(mine))
+                            FileRunEventView.of(
+                                            mine,
+                                            SourceKind.EDITOR,
+                                            failures.availableActions(mine))
                                     .actions()
                                     .stream()
                                     .filter(
@@ -181,6 +202,64 @@ class NotificationProjectionTest {
             assertThat(notification.documentLocation())
                     .isEqualTo(FileRunEventView.DocumentLocation.SMART_FOLDER);
             assertThat(notification.fileId()).isNull();
+        }
+
+        @Test
+        void aBucketFedPolicyRowIsNotCalledASmartFoldersAndOffersNoFolderRetry() {
+            // The same source-fed shape from an S3 or webhook policy. Calling it a smart folder's
+            // told the owner so, and offered a retry the folder handler could only refuse.
+            lenient()
+                    .when(policyStore.get(anyString()))
+                    .thenReturn(Optional.of(smartFolder().withSurface(Policy.SURFACE_POLICY)));
+            FileRunEvent row =
+                    store.record(
+                            RecordFailure.forRun(
+                                    FailureKind.UNKNOWN,
+                                    TEAM,
+                                    ACTOR,
+                                    "policy-1",
+                                    "run-1",
+                                    "source-s3",
+                                    "s3://bucket/march.pdf",
+                                    "boom"));
+
+            NotificationView notification = controller.list(null).notifications().getFirst();
+
+            assertThat(notification.sourceKind()).isEqualTo(SourceKind.POLICY);
+            assertThat(notification.documentLocation())
+                    .isEqualTo(FileRunEventView.DocumentLocation.NONE);
+            // The retry is the browser's here, which holds nothing to run it on, so the bell hides
+            // it; and the server will not run it either.
+            assertThat(notification.actions())
+                    .filteredOn(action -> action.id().equals("OPEN_IN_TOOL"))
+                    .extracting(FileRunEventView.ActionView::execution)
+                    .containsExactly(FailureActionId.Execution.CLIENT);
+            assertThatThrownBy(() -> failures.dispatch(row.id(), "OPEN_IN_TOOL", Map.of()))
+                    .isInstanceOf(FailureActionException.class);
+        }
+
+        @Test
+        void aSourceFedRowWhosePolicyIsGoneStaysWithheldRatherThanReadingAsTheBrowsers() {
+            // The lookup that tells a folder from a bucket can come back empty once the policy is
+            // deleted. That must not turn the row into a browser's, or the path behind it leaks.
+            lenient().when(policyStore.get(anyString())).thenReturn(Optional.empty());
+            store.record(
+                    RecordFailure.forRun(
+                            FailureKind.INPUT_PASSWORD_PROTECTED,
+                            TEAM,
+                            null,
+                            "policy-gone",
+                            "run-1",
+                            "source-7",
+                            "/Users/someone/Documents/Payroll/march.pdf",
+                            "boom"));
+
+            NotificationView notification = controller.list(null).notifications().getFirst();
+
+            assertThat(notification.documentLocation())
+                    .isEqualTo(FileRunEventView.DocumentLocation.NONE);
+            assertThat(notification.fileId()).isNull();
+            assertThat(notification.toString()).doesNotContain("Payroll", "march.pdf");
         }
 
         @Test

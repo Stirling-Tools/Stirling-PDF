@@ -8,6 +8,7 @@ import stirling.software.proprietary.failure.FailureSeverity;
 import stirling.software.proprietary.failure.FileRunEventStatus;
 import stirling.software.proprietary.failure.FileRunEventView;
 import stirling.software.proprietary.failure.Ownership;
+import stirling.software.proprietary.failure.SourceKind;
 
 /**
  * A source's row flattened to what a bell renders. {@code fileId} is an opaque reference the
@@ -32,7 +33,9 @@ public record NotificationView(
          */
         String documentName,
         FileRunEventView.DocumentLocation documentLocation,
-        /** What fed the run, for a row the reader did not cause. Null for an editor report. */
+        /**
+         * What fed the run, for a row the reader did not cause; {@code EDITOR} for one they did.
+         */
         SourceKind sourceKind,
         String sourceId,
         String policyId,

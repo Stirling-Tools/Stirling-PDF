@@ -23,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
+import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
  * Tests for {@link FileRunEventService}: team scoping, the declaration guard, transition legality,
@@ -36,6 +37,7 @@ class FileRunEventServiceTest {
 
     @Mock private PolicyManagementAuthority authority;
     @Mock private UserServiceInterface userService;
+    @Mock private PolicyStore policyStore;
 
     private FileRunEventStore store;
     private FileRunEventService service;
@@ -51,10 +53,12 @@ class FileRunEventServiceTest {
                         List.of(
                                 new AcknowledgeAction(store),
                                 new DismissAction(store),
-                                new NoopRetryInFolderAction()));
+                                new NoopFolderAction(FailureActionId.OPEN_IN_TOOL)));
         registry.verifyEveryDeclaredActionHasAHandler();
 
-        service = new FileRunEventService(store, registry, authority, userService, props);
+        service =
+                new FileRunEventService(
+                        store, registry, authority, userService, props, policyStore);
 
         lenient().when(authority.currentUserTeamId()).thenReturn(TEAM);
         lenient().when(userService.getCurrentUsername()).thenReturn(ACTOR);
@@ -370,7 +374,7 @@ class FileRunEventServiceTest {
             for (FailureKind kind : FailureKind.values()) {
                 FileRunEvent event = given(kind, TEAM, "f-" + kind.getId());
                 for (FailureActionId action : kind.getActions()) {
-                    if (action.runsOnServer()) {
+                    if (action.executionFor(false) == FailureActionId.Execution.SERVER) {
                         continue;
                     }
                     assertThatThrownBy(() -> service.dispatch(event.id(), action.name(), Map.of()))
@@ -403,7 +407,8 @@ class FileRunEventServiceTest {
                             new FailureActionRegistry(List.of(new AcknowledgeAction(store))),
                             authority,
                             userService,
-                            props);
+                            props,
+                            policyStore);
 
             assertThatThrownBy(() -> missingHandler.dispatch(event.id(), "DISMISS", Map.of()))
                     .isInstanceOf(FailureActionException.class)
@@ -605,7 +610,8 @@ class FileRunEventServiceTest {
                             new FailureActionRegistry(List.of(new DismissAction(store))),
                             authority,
                             userService,
-                            props);
+                            props,
+                            policyStore);
             FileRunEvent event = givenHitBy(null, FailureKind.INPUT_PASSWORD_PROTECTED, null, "f1");
 
             assertThat(unsecured.availableActions(event))
@@ -762,7 +768,8 @@ class FileRunEventServiceTest {
                     new FailureActionRegistry(
                             List.of(new AcknowledgeAction(store), new DismissAction(store)));
             FileRunEventService unsecured =
-                    new FileRunEventService(store, registry, authority, userService, props);
+                    new FileRunEventService(
+                            store, registry, authority, userService, props, policyStore);
 
             given(FailureKind.UNKNOWN, null, "unteamed");
             given(FailureKind.UNKNOWN, TEAM, "teamed");
@@ -807,13 +814,14 @@ class FileRunEventServiceTest {
                             List.of(
                                     new AcknowledgeAction(store),
                                     new DismissAction(store),
-                                    new NoopRetryInFolderAction()));
+                                    new NoopFolderAction(FailureActionId.OPEN_IN_TOOL)));
 
             complete.verifyEveryDeclaredActionHasAHandler();
 
             for (FailureActionId id : FailureActionId.values()) {
-                // Only server actions need a handler, which is why the boot check ignores the rest.
-                assertThat(complete.find(id).isPresent()).isEqualTo(id.runsOnServer());
+                // Only what the server can run needs a handler, which is why the boot check
+                // ignores the rest.
+                assertThat(complete.find(id).isPresent()).isEqualTo(id.canRunOnServer());
             }
         }
 
@@ -825,7 +833,7 @@ class FileRunEventServiceTest {
                             List.of(
                                     new AcknowledgeAction(store),
                                     new DismissAction(store),
-                                    new NoopRetryInFolderAction()));
+                                    new NoopFolderAction(FailureActionId.OPEN_IN_TOOL)));
 
             assertThatCode(serverOnly::verifyEveryDeclaredActionHasAHandler)
                     .doesNotThrowAnyException();

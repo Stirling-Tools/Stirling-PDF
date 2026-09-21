@@ -14,8 +14,8 @@ import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
- * Run a smart folder's document again. The client cannot: it never had the file, and the only
- * reference to it is a path on the server.
+ * The server's half of {@link FailureActionId#OPEN_IN_TOOL}: run a smart folder's document again.
+ * The client cannot: it never had the file, and the only reference to it is a path on the server.
  *
  * <p>Authorisation is re-derived here rather than inherited from the read that offered the button.
  * Reading an incident and processing the document behind it are different powers: a team leader
@@ -37,7 +37,7 @@ public class RetryInFolderAction implements FailureAction {
 
     @Override
     public FailureActionId id() {
-        return FailureActionId.RETRY_IN_FOLDER;
+        return FailureActionId.OPEN_IN_TOOL;
     }
 
     @Override

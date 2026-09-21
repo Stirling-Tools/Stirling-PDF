@@ -55,10 +55,9 @@ class NotificationResolveTest {
                                 List.of(new AcknowledgeAction(store), new DismissAction(store))),
                         authority,
                         userService,
-                        props);
-        controller =
-                new NotificationController(
-                        new NotificationService(failures, policyStore, storedFiles));
+                        props,
+                        policyStore);
+        controller = new NotificationController(new NotificationService(failures, storedFiles));
 
         lenient().when(authority.currentUserTeamId()).thenReturn(TEAM);
         lenient().when(authority.canEditPolicies()).thenReturn(true);

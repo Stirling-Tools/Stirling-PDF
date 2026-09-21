@@ -3,6 +3,7 @@ package stirling.software.proprietary.failure;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
+import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
  * Reads and acts on the incidents the calling user is allowed to see, which is where that decision
@@ -46,6 +48,7 @@ public class FileRunEventService {
     private final PolicyManagementAuthority policyManagementAuthority;
     private final UserServiceInterface userService;
     private final ApplicationProperties applicationProperties;
+    private final PolicyStore policyStore;
 
     /**
      * Record a failure a user hit in the editor. One incident per named file, so each document
@@ -153,10 +156,14 @@ public class FileRunEventService {
                     "Kind " + event.kind().getId() + " does not offer action " + resolvedId);
         }
         // Without this a client could post VIEW_FILE and be answered as though something happened.
-        if (!resolvedId.runsOnServer()) {
+        // Resolved against this row: a retry of a document the browser holds is refused, not run.
+        boolean inSmartFolder =
+                FileRunEventView.DocumentLocation.of(event, sourceKindOf(event))
+                        == FileRunEventView.DocumentLocation.SMART_FOLDER;
+        if (resolvedId.executionFor(inSmartFolder) != FailureActionId.Execution.SERVER) {
             throw new FailureActionException(
                     FailureActionException.Reason.ACTION_NOT_DISPATCHABLE,
-                    "Action " + resolvedId + " is run by the client, not the server");
+                    "Action " + resolvedId + " is run by the client for this document");
         }
         if (event.status().terminal()) {
             throw new FailureActionException(
@@ -217,6 +224,11 @@ public class FileRunEventService {
      * their audience is dropped, not disabled: greyed out would read as a permission problem.
      */
     public List<AvailableAction> availableActions(FileRunEvent event) {
+        return availableActions(event, sourceKindOf(event));
+    }
+
+    /** As {@link #availableActions(FileRunEvent)}, with the source already looked up. */
+    public List<AvailableAction> availableActions(FileRunEvent event, SourceKind source) {
         Ownership ownership = ownershipOf(event);
         boolean reviewsTeam = reviewsTeam();
         boolean closed = event.status().terminal();
@@ -227,24 +239,46 @@ public class FileRunEventService {
         // identified in the first place.
         boolean documentless = event.fileId() == null || event.fileId().isBlank();
         boolean inSmartFolder =
-                FileRunEventView.DocumentLocation.of(event)
+                FileRunEventView.DocumentLocation.of(event, source)
                         == FileRunEventView.DocumentLocation.SMART_FOLDER;
         return event.kind().getOfferedActions().stream()
                 .filter(offer -> offeredTo(offer.audience(), ownership, reviewsTeam))
-                .filter(offer -> offer.id() != FailureActionId.RETRY_IN_FOLDER || inSmartFolder)
-                .map(offer -> availability(offer, closed, unattended, documentless))
+                .map(offer -> availability(offer, inSmartFolder, closed, unattended, documentless))
                 .toList();
+    }
+
+    /**
+     * What produced the row, read from its policy rather than stored on it, so a folder converted
+     * to a policy (or the reverse) reads as what it is now. {@code cache} spares a list one lookup
+     * per row: a folder that fails a whole batch is one policy and twenty rows.
+     */
+    public SourceKind sourceKindOf(FileRunEvent event, Map<String, SourceKind> cache) {
+        if (event.policyId() == null || event.policyId().isBlank()) {
+            return SourceKind.EDITOR;
+        }
+        return cache.computeIfAbsent(
+                event.policyId(), id -> SourceKind.of(policyStore.get(id).orElse(null)));
+    }
+
+    public SourceKind sourceKindOf(FileRunEvent event) {
+        return sourceKindOf(event, new HashMap<>());
     }
 
     /** Enabled is derived from the reason, so a disabled button always has one to show. */
     private static AvailableAction availability(
             FailureKind.OfferedAction offer,
+            boolean inSmartFolder,
             boolean closed,
             boolean unattended,
             boolean documentless) {
         String reason = disabledReasonFor(offer.audience(), closed, unattended, documentless);
         return new AvailableAction(
-                offer.id(), offer.labelKey(), offer.slot(), reason == null, reason);
+                offer.id(),
+                offer.labelKey(),
+                offer.id().executionFor(inSmartFolder),
+                offer.slot(),
+                reason == null,
+                reason);
     }
 
     /** Closed wins over everything, then the owner-only reasons, most specific first. */
@@ -371,10 +405,14 @@ public class FileRunEventService {
         return applicationProperties.getSecurity().isEnableLogin();
     }
 
-    /** One action offered to one caller, availability resolved. */
+    /**
+     * One offer resolved for one caller and document. {@code execution} says where this row's copy
+     * runs, which for a retry follows the document; the client is told, not left to infer.
+     */
     public record AvailableAction(
             FailureActionId id,
             String labelKey,
+            FailureActionId.Execution execution,
             FailureActionSlot slot,
             boolean enabled,
             String disabledReasonKey) {}

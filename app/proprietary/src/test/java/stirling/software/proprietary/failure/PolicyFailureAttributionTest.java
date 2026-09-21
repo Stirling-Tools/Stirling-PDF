@@ -105,7 +105,8 @@ class PolicyFailureAttributionTest {
                                 List.of(new AcknowledgeAction(store), new DismissAction(store))),
                         authority,
                         userService,
-                        props);
+                        props,
+                        policyStore);
 
         PolicyFailureRecorder recorder =
                 new PolicyFailureRecorder(
