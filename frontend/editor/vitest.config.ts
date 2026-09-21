@@ -9,6 +9,9 @@ import { iconSvgr } from "./scripts/icons/svgrOptions.mts";
 const TEST_DEFAULTS = {
   testTimeout: 10000,
   hookTimeout: 10000,
+  // Threads spawn faster for local speed; CI keeps forks so a cross-file global
+  // leak can't bleed between files in a shared process.
+  pool: process.env.CI ? "forks" : "threads",
   onConsoleLog(_log: string, type: "stdout" | "stderr") {
     if (type === "stdout" && !process.env.VITEST_CONSOLE) return false;
   },
