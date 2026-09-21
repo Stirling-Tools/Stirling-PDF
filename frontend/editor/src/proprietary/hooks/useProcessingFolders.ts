@@ -202,9 +202,13 @@ export function useProcessingFolders(): ProcessingFoldersApi {
         });
         // Resume sweeps behind the response; pull a mount's on-disk results into the workbench.
         if (folderKind(folder) === "local") {
-          void deliverSweepResults(paused.id, null, addFiles, {
-            excludeRunIds: baseline,
-          });
+          void deliverSweepResults(
+            paused.id,
+            null,
+            addFiles,
+            { folderId: folder.id },
+            { excludeRunIds: baseline },
+          );
         }
         await load(true);
         return;
@@ -220,7 +224,9 @@ export function useProcessingFolders(): ProcessingFoldersApi {
           });
           // The sweep runs behind the create response — no run count to wait on; pull
           // the on-disk results into the workbench as they settle.
-          void deliverSweepResults(saved.id, null, addFiles);
+          void deliverSweepResults(saved.id, null, addFiles, {
+            folderId: folder.id,
+          });
           break;
         }
         case "virtual":
@@ -318,9 +324,13 @@ export function useProcessingFolders(): ProcessingFoldersApi {
       // A mount's results land on disk where nothing shows them; a storage folder's
       // replace in place, already visible.
       if (folderKind(folder) === "local" && outcome.runIds.length > 0) {
-        void deliverSweepResults(existing.id, outcome.runIds.length, addFiles, {
-          includeRunIds: new Set(outcome.runIds),
-        });
+        void deliverSweepResults(
+          existing.id,
+          outcome.runIds.length,
+          addFiles,
+          { folderId: folder.id },
+          { includeRunIds: new Set(outcome.runIds) },
+        );
       }
     },
     [recordFor, addFiles],
