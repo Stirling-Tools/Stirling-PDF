@@ -75,17 +75,27 @@ function activeExportPolicies(): ExportPolicy[] {
       // Same team-wide run order the upload path uses: enforcement is not commutative (a watermark
       // then a flatten is not a flatten then a watermark), so both paths must agree on the sequence.
       .sort(([, a], [, b]) => (a.order ?? 0) - (b.order ?? 0))
-      .map(([id, s]) => ({
-        policyKey: id,
-        backendId: s.backendId as string,
-        externalOutput: s.externalOutput,
-        firstOperation: s.firstOperation,
-        // A builder pipeline has no built-in category, so it labels by its own name.
-        label: labels.get(id) ?? s.name ?? "Policy",
-        outputMode: s.outputMode === "new_file" ? "new_file" : "new_version",
-        required: s.required === true,
-        accent: `var(--color-${ROW_ACCENT[id] ?? "blue"})`,
-      }))
+      .map(([id, s]) => {
+        const required = s.required === true;
+        return {
+          policyKey: id,
+          backendId: s.backendId as string,
+          externalOutput: s.externalOutput,
+          firstOperation: s.firstOperation,
+          // A builder pipeline has no built-in category, so it labels by its own name.
+          label:
+            labels.get(id) ??
+            s.name ??
+            i18n.t(
+              required
+                ? "portal.pipelines.type.policy"
+                : "portal.pipelines.type.pipeline",
+            ),
+          outputMode: s.outputMode === "new_file" ? "new_file" : "new_version",
+          required,
+          accent: `var(--color-${ROW_ACCENT[id] ?? "blue"})`,
+        };
+      })
   );
 }
 

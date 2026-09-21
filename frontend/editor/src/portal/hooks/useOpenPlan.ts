@@ -1,5 +1,6 @@
+import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
 import { useCallback } from "react";
-import { useUI } from "@portal/contexts/UIContext";
+import { useUI } from "@app/portal/contexts/UIContext";
 
 /**
  * Self-hosted processor: settings carries no cloud Plan section, so the
@@ -8,5 +9,7 @@ import { useUI } from "@portal/contexts/UIContext";
  */
 export function useOpenPlan(): (() => void) | null {
   const { openSettings } = useUI();
-  return useCallback(() => openSettings("billing"), [openSettings]);
+  const isOwner = useAccountLinkOwner();
+  const open = useCallback(() => openSettings("billing"), [openSettings]);
+  return isOwner ? open : null;
 }

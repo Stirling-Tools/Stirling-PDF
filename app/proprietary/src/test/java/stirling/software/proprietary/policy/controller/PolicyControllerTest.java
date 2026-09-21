@@ -978,6 +978,22 @@ class PolicyControllerTest {
         }
 
         @Test
+        @DisplayName("keeps the reference when the one document sent was empty")
+        void keepsTheReferenceForAnEmptyUpload() throws Exception {
+            // An empty part resolves to no input at all, so this once fell to the several-documents
+            // guard and filed the failure against no document. The bell lists only rows naming one,
+            // so the row a reader could see least of became the row they were not shown.
+            PolicyRunFiles files = new PolicyRunFiles();
+            files.setFileId("editor-file-1");
+            files.setFileInput(
+                    List.of(
+                            new MockMultipartFile(
+                                    "fileInput", "empty.pdf", "application/pdf", new byte[0])));
+
+            assertThat(documentReferenceOf(files)).isEqualTo("editor-file-1");
+        }
+
+        @Test
         @DisplayName("records nothing when the caller sent no id")
         void toleratesACallerThatSendsNoReference() throws Exception {
             assertThat(documentReferenceOf(filesWith(null, 1))).isNull();
