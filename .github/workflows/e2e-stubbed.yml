@@ -29,20 +29,25 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # webkit and firefox are the slow engines and get four shards;
-          # chromium gets three. `artifact` is the label made safe for an
+          # webkit and firefox are the slow engines and get five shards;
+          # chromium gets four. Shards split by test count, and the viewer
+          # specs cluster, so the slowest shard still runs a few minutes
+          # longer than the rest. `artifact` is the label made safe for an
           # artifact name.
-          - { label: "chromium 1/3", artifact: chromium-1of3, browser: chromium, project: stubbed, shard: 1, shards: 3 }
-          - { label: "chromium 2/3", artifact: chromium-2of3, browser: chromium, project: stubbed, shard: 2, shards: 3 }
-          - { label: "chromium 3/3", artifact: chromium-3of3, browser: chromium, project: stubbed, shard: 3, shards: 3 }
-          - { label: "firefox 1/4", artifact: firefox-1of4, browser: firefox, project: stubbed-firefox, shard: 1, shards: 4 }
-          - { label: "firefox 2/4", artifact: firefox-2of4, browser: firefox, project: stubbed-firefox, shard: 2, shards: 4 }
-          - { label: "firefox 3/4", artifact: firefox-3of4, browser: firefox, project: stubbed-firefox, shard: 3, shards: 4 }
-          - { label: "firefox 4/4", artifact: firefox-4of4, browser: firefox, project: stubbed-firefox, shard: 4, shards: 4 }
-          - { label: "webkit 1/4", artifact: webkit-1of4, browser: webkit, project: stubbed-webkit, shard: 1, shards: 4 }
-          - { label: "webkit 2/4", artifact: webkit-2of4, browser: webkit, project: stubbed-webkit, shard: 2, shards: 4 }
-          - { label: "webkit 3/4", artifact: webkit-3of4, browser: webkit, project: stubbed-webkit, shard: 3, shards: 4 }
-          - { label: "webkit 4/4", artifact: webkit-4of4, browser: webkit, project: stubbed-webkit, shard: 4, shards: 4 }
+          - { label: "chromium 1/4", artifact: chromium-1of4, browser: chromium, project: stubbed, shard: 1, shards: 4 }
+          - { label: "chromium 2/4", artifact: chromium-2of4, browser: chromium, project: stubbed, shard: 2, shards: 4 }
+          - { label: "chromium 3/4", artifact: chromium-3of4, browser: chromium, project: stubbed, shard: 3, shards: 4 }
+          - { label: "chromium 4/4", artifact: chromium-4of4, browser: chromium, project: stubbed, shard: 4, shards: 4 }
+          - { label: "firefox 1/5", artifact: firefox-1of5, browser: firefox, project: stubbed-firefox, shard: 1, shards: 5 }
+          - { label: "firefox 2/5", artifact: firefox-2of5, browser: firefox, project: stubbed-firefox, shard: 2, shards: 5 }
+          - { label: "firefox 3/5", artifact: firefox-3of5, browser: firefox, project: stubbed-firefox, shard: 3, shards: 5 }
+          - { label: "firefox 4/5", artifact: firefox-4of5, browser: firefox, project: stubbed-firefox, shard: 4, shards: 5 }
+          - { label: "firefox 5/5", artifact: firefox-5of5, browser: firefox, project: stubbed-firefox, shard: 5, shards: 5 }
+          - { label: "webkit 1/5", artifact: webkit-1of5, browser: webkit, project: stubbed-webkit, shard: 1, shards: 5 }
+          - { label: "webkit 2/5", artifact: webkit-2of5, browser: webkit, project: stubbed-webkit, shard: 2, shards: 5 }
+          - { label: "webkit 3/5", artifact: webkit-3of5, browser: webkit, project: stubbed-webkit, shard: 3, shards: 5 }
+          - { label: "webkit 4/5", artifact: webkit-4of5, browser: webkit, project: stubbed-webkit, shard: 4, shards: 5 }
+          - { label: "webkit 5/5", artifact: webkit-5of5, browser: webkit, project: stubbed-webkit, shard: 5, shards: 5 }
           # The disk-link suite exercises a seam chosen at build time, so it
           # needs a desktop-mode bundle of its own. Chromium only: it is not
           # testing engine behaviour.
