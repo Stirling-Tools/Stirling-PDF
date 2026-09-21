@@ -150,7 +150,7 @@ public class InstanceAiController {
 
         // Bill only work that succeeded, and only once the engine has actually done it.
         if (reply.status() < 400) {
-            usageService.recordCall(token.getTeamId(), token.getInstanceId(), enginePath);
+            recordCallQuietly(token, enginePath);
         }
         return ResponseEntity.status(reply.status())
                 .contentType(MediaType.APPLICATION_JSON)
@@ -173,7 +173,7 @@ public class InstanceAiController {
                 gateway.forwardStreaming(
                         method, enginePath, body, token.getInstanceId(), instanceUserId);
         if (reply.status() < 400) {
-            usageService.recordCall(token.getTeamId(), token.getInstanceId(), enginePath);
+            recordCallQuietly(token, enginePath);
         }
         StreamingResponseBody stream =
                 out -> {
@@ -185,6 +185,23 @@ public class InstanceAiController {
         return ResponseEntity.status(reply.status())
                 .contentType(MediaType.APPLICATION_NDJSON)
                 .body(stream);
+    }
+
+    /**
+     * Meter a completed call, but never let a metering fault reach the instance. The engine has
+     * already done the work and the instance is holding its answer; a dropped usage row is a
+     * billing figure to reconcile later, not a reason to report success as a 500.
+     */
+    private void recordCallQuietly(LinkedInstanceAuthenticationToken token, String enginePath) {
+        try {
+            usageService.recordCall(token.getTeamId(), token.getInstanceId(), enginePath);
+        } catch (RuntimeException e) {
+            log.warn(
+                    "Cloud AI usage not recorded for instance {} on {}",
+                    token.getInstanceId(),
+                    enginePath,
+                    e);
+        }
     }
 
     /** Strips this controller's own prefix, leaving the engine path the instance asked for. */

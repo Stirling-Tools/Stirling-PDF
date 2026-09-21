@@ -1,6 +1,9 @@
 package stirling.software.saas.accountlink;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 
@@ -87,6 +90,20 @@ class InstanceAiSharingTest {
 
     @Test
     void sharingOnForwardsAsBefore() throws Exception {
+        ResponseEntity<?> reply = controller(true).get(capabilitiesRequest(), instance(), "user-1");
+
+        assertThat(reply.getStatusCode().value()).isEqualTo(200);
+        assertThat(engineCalls.get()).isEqualTo(1);
+    }
+
+    @Test
+    void aMeteringFailureDoesNotFailWorkTheEngineAlreadyDid() throws Exception {
+        // Billing runs after the engine has answered; if the usage store is down, the instance is
+        // already holding its result. Turning that into a 500 would fail work that succeeded.
+        doThrow(new RuntimeException("usage store unavailable"))
+                .when(usageService)
+                .recordCall(anyLong(), anyLong(), anyString());
+
         ResponseEntity<?> reply = controller(true).get(capabilitiesRequest(), instance(), "user-1");
 
         assertThat(reply.getStatusCode().value()).isEqualTo(200);

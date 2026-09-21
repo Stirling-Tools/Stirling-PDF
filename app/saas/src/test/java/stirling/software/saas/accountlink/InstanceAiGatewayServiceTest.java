@@ -9,6 +9,11 @@ import static org.mockito.Mockito.when;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Flow;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +21,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.web.server.ResponseStatusException;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import stirling.software.saas.accountlink.InstanceAiGatewayService.EngineReply;
 
@@ -147,5 +155,90 @@ class InstanceAiGatewayServiceTest {
         // Its NDJSON progress frames are the only response worth not buffering.
         assertThat(InstanceAiGatewayService.isStreaming("/api/v1/orchestrator")).isTrue();
         assertThat(InstanceAiGatewayService.isStreaming("/api/v1/pdf/questions")).isFalse();
+    }
+
+    @Test
+    void aDocumentUploadIsReownedToTheInstanceRegardlessOfWhatItAsksFor() throws Exception {
+        // The engine keys tenancy off the body's owner, not X-User-Id, so an instance that names
+        // another tenant here would otherwise write - and, since ingest replaces by owner, purge -
+        // that tenant's corpus. Both the camelCase and snake_case spellings the engine accepts are
+        // in the attempt; both must lose.
+        String forged =
+                "{\"documentId\":\"d1\",\"ownerId\":\"instance:9:victim\","
+                        + "\"read_principals\":[\"instance:9:victim\"],\"pageText\":\"hi\"}";
+
+        gateway.forward("POST", "/api/v1/documents", forged, 7L, "alice");
+
+        JsonNode body = MAPPER.readTree(bodyOf(sent.getValue()));
+        assertThat(body.get("ownerId").asText()).isEqualTo("instance:7:alice");
+        assertThat(body.get("readPrincipals")).hasSize(1);
+        assertThat(body.get("readPrincipals").get(0).asText()).isEqualTo("instance:7:alice");
+        // The snake_case attempt does not survive alongside the stamped camelCase field.
+        assertThat(body.has("owner_id")).isFalse();
+        assertThat(body.has("read_principals")).isFalse();
+        // The rest of the payload is left as the instance sent it.
+        assertThat(body.get("documentId").asText()).isEqualTo("d1");
+        assertThat(body.get("pageText").asText()).isEqualTo("hi");
+    }
+
+    @Test
+    void aNonUploadPostIsForwardedWithItsBodyUntouched() throws Exception {
+        // Only the ingest path names an owner in its body; reasoning routes must pass through
+        // as-is.
+        String question = "{\"documentId\":\"d1\",\"question\":\"what changed?\"}";
+
+        gateway.forward("POST", "/api/v1/pdf/questions", question, 7L, "alice");
+
+        assertThat(bodyOf(sent.getValue())).isEqualTo(question);
+    }
+
+    @Test
+    void anEmptyUploadBodyStillCarriesTheInstanceOwner() throws Exception {
+        gateway.forward("POST", "/api/v1/documents", null, 7L, "alice");
+
+        JsonNode body = MAPPER.readTree(bodyOf(sent.getValue()));
+        assertThat(body.get("ownerId").asText()).isEqualTo("instance:7:alice");
+        assertThat(body.get("readPrincipals").get(0).asText()).isEqualTo("instance:7:alice");
+    }
+
+    @Test
+    void aMalformedUploadBodyIsRefusedRatherThanForwarded() {
+        assertThatThrownBy(
+                        () -> gateway.forward("POST", "/api/v1/documents", "not json", 7L, "alice"))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("400");
+    }
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
+    /** Drains a captured request's body publisher, which {@code ofString} emits synchronously. */
+    private static String bodyOf(HttpRequest request) throws InterruptedException {
+        Flow.Publisher<ByteBuffer> publisher = request.bodyPublisher().orElseThrow();
+        StringBuilder out = new StringBuilder();
+        CountDownLatch done = new CountDownLatch(1);
+        publisher.subscribe(
+                new Flow.Subscriber<>() {
+                    @Override
+                    public void onSubscribe(Flow.Subscription subscription) {
+                        subscription.request(Long.MAX_VALUE);
+                    }
+
+                    @Override
+                    public void onNext(ByteBuffer item) {
+                        out.append(StandardCharsets.UTF_8.decode(item));
+                    }
+
+                    @Override
+                    public void onError(Throwable throwable) {
+                        done.countDown();
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        done.countDown();
+                    }
+                });
+        done.await(5, TimeUnit.SECONDS);
+        return out.toString();
     }
 }

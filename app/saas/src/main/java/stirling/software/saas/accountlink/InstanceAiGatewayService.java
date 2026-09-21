@@ -6,6 +6,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,11 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -71,6 +77,8 @@ public class InstanceAiGatewayService {
      */
     private static final Set<String> LONG_RUNNING_PATHS =
             Set.of("/api/v1/documents", "/api/v1/orchestrator");
+
+    private static final ObjectMapper JSON = new ObjectMapper();
 
     private final HttpClient httpClient;
     private final String engineBaseUrl;
@@ -153,6 +161,29 @@ public class InstanceAiGatewayService {
         return "/api/v1/documents".equals(path);
     }
 
+    /**
+     * Force the credential-derived owner onto a document-ingest body. The engine keys its document
+     * store on the body's owner and read-principals and never reads {@code X-User-Id}, so the body
+     * is the one place a linked instance could otherwise name another tenant's namespace and, since
+     * ingest replaces by owner, delete or overwrite that tenant's corpus. Any caller-supplied owner
+     * or principal field is dropped first (both the camelCase and snake_case spellings the engine
+     * accepts) and replaced with {@code owner}, so an instance can only ever write under its own
+     * {@code instance:<id>:<user>}.
+     */
+    static String stampOwner(String body, String owner) {
+        try {
+            JsonNode parsed = JSON.readTree(body == null || body.isBlank() ? "{}" : body);
+            ObjectNode node = parsed.isObject() ? (ObjectNode) parsed : JSON.createObjectNode();
+            node.remove(List.of("ownerId", "owner_id", "readPrincipals", "read_principals"));
+            node.put("ownerId", owner);
+            node.set("readPrincipals", JSON.createArrayNode().add(owner));
+            return JSON.writeValueAsString(node);
+        } catch (JsonProcessingException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Malformed document ingest body");
+        }
+    }
+
     public EngineReply forward(
             String method, String path, String body, Long instanceId, String instanceUserId)
             throws IOException, InterruptedException {
@@ -185,8 +216,15 @@ public class InstanceAiGatewayService {
             builder.header("X-Engine-Auth", engineSharedSecret);
         }
         if ("POST".equals(method)) {
+            // A document upload names its own owner in the body, and the engine keys tenancy off
+            // that, not off X-User-Id. Left alone the instance could write - and, since ingest
+            // replaces by owner, purge - another tenant's corpus, so overwrite it here.
+            String outgoing =
+                    isDocumentUpload(path)
+                            ? stampOwner(body, namespacedOwner(instanceId, instanceUserId))
+                            : (body == null ? "{}" : body);
             builder.header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(body == null ? "{}" : body));
+                    .POST(HttpRequest.BodyPublishers.ofString(outgoing));
         } else if ("DELETE".equals(method)) {
             // The logout-time RAG purge is a DELETE; without this it would 405 at the gateway and
             // the documents would quietly stay.
