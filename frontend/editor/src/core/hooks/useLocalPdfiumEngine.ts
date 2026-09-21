@@ -1,9 +1,9 @@
 /**
- * Viewer engine lifecycle. Mirrors `usePdfiumEngine` from
- * `@embedpdf/engines/react`, but hands over the module `wasmPrecompiler` already
- * compiled so the worker does not fetch and compile pdfium.wasm again. The
- * patched engine consumes it and falls back to the URL where a module cannot be
- * structured-cloned (older WebKit).
+ * Viewer engine lifecycle. `usePdfiumEngine` from `@embedpdf/engines/react` does
+ * not forward a precompiled module option, so this twin exists to hand the worker
+ * the module `wasmPrecompiler` already compiled instead of fetching and
+ * recompiling pdfium.wasm; the patched engine falls back to the URL when the
+ * module cannot be cloned across.
  */
 import { useEffect, useRef, useState } from "react";
 import { ignore, type Logger, type PdfEngine } from "@embedpdf/models";
@@ -16,6 +16,10 @@ import {
   pdfiumWasmModulePromise,
   startEagerWasmCompilation,
 } from "@app/services/wasmPrecompiler";
+
+/** Past this wait the worker fetches the wasm URL itself; a pending compile
+ *  (offline deployment, test harness) must not block engine creation. */
+const PRECOMPILED_WAIT_MS = 3000;
 
 interface LocalPdfiumEngineOptions {
   wasmUrl: string;
@@ -40,12 +44,11 @@ export function useLocalPdfiumEngine({
     (async () => {
       try {
         startEagerWasmCompilation();
-        // Never block engine creation on a compile that a test harness or an
-        // offline deployment may leave pending; the worker fetches the URL itself
-        // when no module is handed over.
         const precompiled = await Promise.race([
           pdfiumWasmModulePromise,
-          new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000)),
+          new Promise<null>((resolve) =>
+            setTimeout(() => resolve(null), PRECOMPILED_WAIT_MS),
+          ),
         ]);
         const options: CreatePdfiumEngineOptions & {
           wasmModule?: WebAssembly.Module;
