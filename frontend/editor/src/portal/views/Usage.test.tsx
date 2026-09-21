@@ -103,12 +103,17 @@ vi.mock("@app/portal/api/fleetStats", () => ({
 vi.mock("@app/portal/api/users", () => ({
   fetchAdminEmail: () => Promise.resolve(null),
 }));
+const checkout = { openCheckout: vi.fn() };
+let checkoutEnabled = false;
 vi.mock("@app/contexts/CheckoutContext", () => ({
-  useCheckoutOptional: () => null,
+  useCheckoutOptional: () => (checkoutEnabled ? checkout : null),
 }));
 vi.mock("@app/portal/api/billing", () => ({
   fetchWallet: () => fetchWallet(),
   refreshWalletCache: () => refreshWalletCache(),
+  fetchPaymentMethod: () => Promise.resolve(null),
+  fetchBillingDetails: () => Promise.resolve(null),
+  fetchInvoices: () => Promise.resolve([]),
 }));
 const fetchLocalUsage = vi.fn().mockResolvedValue(null);
 vi.mock("@app/portal/api/link", () => ({
@@ -175,6 +180,8 @@ describe("Usage — link-free wallet renderer", () => {
   });
 
   beforeEach(() => {
+    checkoutEnabled = false;
+    checkout.openCheckout.mockReset();
     resetPortalSaasSessionState();
     bundleFlow.status = "none";
     bundleFlow.refresh.mockReset();
@@ -187,6 +194,75 @@ describe("Usage — link-free wallet renderer", () => {
     procurement.onExploreEnterprise.mockReset();
     procurement.onStartTrial.mockReset();
     procurement.setOpen.mockReset();
+  });
+
+  it("opens Team once for an over-capacity server and includes the actual allowance", async () => {
+    checkoutEnabled = true;
+    fetchWallet.mockResolvedValue({ ...walletOf("free"), role: "leader" });
+    renderUsage(
+      <Usage localUsersInUse={7} localUserLimit={5} />,
+      "/settings/billing?upgrade=team",
+    );
+    await waitFor(() => expect(checkout.openCheckout).toHaveBeenCalledTimes(1));
+    expect(checkout.openCheckout).toHaveBeenCalledWith(
+      "server",
+      expect.objectContaining({
+        combinedChoose: true,
+        minimumSeats: 7,
+        capacityNotice: { users: 7, limit: 5 },
+      }),
+    );
+    expect(screen.getByTestId("location")).toHaveTextContent(
+      "/settings/billing",
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("location")).not.toHaveTextContent("upgrade="),
+    );
+  });
+
+  it.each([
+    ["within allowance", 4, 5, false, "leader"],
+    ["grandfathered allowance", 7, 10, false, "leader"],
+    ["unknown or uncapped limit", 7, null, false, "leader"],
+    ["active Team", 7, 5, true, "leader"],
+    ["member", 7, 5, false, "member"],
+  ] as const)(
+    "does not prompt a server with %s",
+    async (_label, users, limit, held, role) => {
+      checkoutEnabled = true;
+      fetchWallet.mockResolvedValue({
+        ...walletOf("free"),
+        role,
+        team: { held, licensedUsers: 100 },
+      });
+      renderUsage(
+        <Usage localUsersInUse={users} localUserLimit={limit} />,
+        "/settings/billing?upgrade=team",
+      );
+      await waitFor(() =>
+        expect(screen.getByTestId("location")).not.toHaveTextContent(
+          "upgrade=",
+        ),
+      );
+      expect(checkout.openCheckout).not.toHaveBeenCalled();
+    },
+  );
+
+  it("does not prompt holders of an installed Server license", async () => {
+    checkoutEnabled = true;
+    fetchWallet.mockResolvedValue({ ...walletOf("free"), role: "leader" });
+    renderUsage(
+      <Usage
+        localUsersInUse={7}
+        localUserLimit={5}
+        serverPlan={{ licenseType: "SERVER", maxUsers: 0, usersInUse: 7 }}
+      />,
+      "/settings/billing?upgrade=team",
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("location")).not.toHaveTextContent("upgrade="),
+    );
+    expect(checkout.openCheckout).not.toHaveBeenCalled();
   });
 
   it("loads the wallet on mount and reports it via onWalletLoaded (no link gate)", async () => {

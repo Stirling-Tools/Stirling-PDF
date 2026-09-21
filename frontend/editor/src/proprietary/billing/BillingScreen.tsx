@@ -265,7 +265,7 @@ export function BillingScreen({
 
   return (
     <div className="billing-page">
-      <header className="billing-page__head">
+      <div className="billing-page__head">
         <div>
           <h1 className="billing-page__title">
             {t("portal.usage.title", "Usage & Billing")}
@@ -278,7 +278,7 @@ export function BillingScreen({
           </p>
         </div>
         {headerAction}
-      </header>
+      </div>
 
       <div className="billing-page__body">
         <div className="billing-page__notices">{notices}</div>

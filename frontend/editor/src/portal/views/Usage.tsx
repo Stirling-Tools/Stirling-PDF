@@ -1,3 +1,4 @@
+import { TeamSubscriptionChange } from "@app/billing/TeamSubscriptionChange";
 import type { ServerPlan } from "@app/billing/serverPlan";
 import {
   useCallback,
@@ -44,6 +45,7 @@ import "@app/portal/components/billing/billing.css";
 export interface UsageProps {
   /** Local occupied seats for self-hosted; undefined keeps the SaaS membership count. */
   localUsersInUse?: number | null;
+  localUserLimit?: number | null;
   serverPlan?: ServerPlan;
   serverPlanAction?: ReactNode;
   /**
@@ -69,6 +71,7 @@ export interface UsageProps {
  */
 export function Usage({
   localUsersInUse,
+  localUserLimit,
   serverPlan,
   serverPlanAction,
   onWalletLoaded,
@@ -85,6 +88,9 @@ export function Usage({
     isPending: walletPending,
     error: walletError,
     refetch: refetchWallet,
+    // Moves on every successful read, which is what the renewal notice wants as
+    // its cue to re-read: the same triggers the page's old refresh counter had.
+    dataUpdatedAt: walletReadAt,
   } = useQuery(walletOptions);
   const refresh = useCallback(() => {
     void refetchWallet();
@@ -248,9 +254,64 @@ export function Usage({
       combinedChoose: true,
       currentLimit: heldLimit,
       minimumSeats: usersInUse ?? undefined,
+      capacityNotice:
+        !serverPlan &&
+        !wallet?.team?.held &&
+        localUsersInUse != null &&
+        localUserLimit != null &&
+        localUsersInUse > localUserLimit
+          ? { users: localUsersInUse, limit: localUserLimit }
+          : undefined,
       onSuccess: refresh,
     });
-  }, [checkout, heldLimit, usersInUse]);
+  }, [
+    checkout,
+    refresh,
+    heldLimit,
+    usersInUse,
+    serverPlan,
+    wallet?.team?.held,
+    localUsersInUse,
+    localUserLimit,
+  ]);
+
+  const handledTeamRequest = useRef(false);
+  useEffect(() => {
+    if (searchParams.get("upgrade") !== "team") {
+      handledTeamRequest.current = false;
+      return;
+    }
+    if (
+      handledTeamRequest.current ||
+      !wallet ||
+      !checkout ||
+      (hasLocalInstance && localUsersInUse == null)
+    )
+      return;
+    handledTeamRequest.current = true;
+    const next = new URLSearchParams(searchParams);
+    next.delete("upgrade");
+    setSearchParams(next, { replace: true });
+    if (
+      wallet.role === "leader" &&
+      !wallet.team?.held &&
+      !serverPlan &&
+      localUsersInUse != null &&
+      localUserLimit != null &&
+      localUsersInUse > localUserLimit
+    )
+      addCapacity();
+  }, [
+    searchParams,
+    setSearchParams,
+    wallet,
+    checkout,
+    localUsersInUse,
+    localUserLimit,
+    serverPlan,
+    addCapacity,
+    hasLocalInstance,
+  ]);
 
   const confirmSubscription = useCallback(async (): Promise<boolean> => {
     // Stripe's onComplete fires before the subscription webhook lands, so poll the
@@ -318,6 +379,9 @@ export function Usage({
       pendingUnits={localUsage?.totalUnsyncedUnits ?? 0}
       notices={
         <>
+          {wallet?.team?.held && wallet.role === "leader" && (
+            <TeamSubscriptionChange refreshKey={walletReadAt} />
+          )}
           {procurement.loadError && (
             <Banner
               tone="danger"
