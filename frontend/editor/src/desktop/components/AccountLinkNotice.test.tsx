@@ -42,7 +42,8 @@ vi.mock("@app/services/connectionModeService", () => ({
 vi.mock("@app/services/specialErrorToasts", () => ({
   showSpecialErrorToast: vi.fn().mockReturnValue(false),
 }));
-vi.mock("react-i18next", () => ({
+vi.mock("react-i18next", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("react-i18next")>()),
   useTranslation: () => ({
     t: (key: string, fallback?: string) => fallback ?? key,
   }),
