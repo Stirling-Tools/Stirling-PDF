@@ -276,8 +276,10 @@ jobs:
           context: .
           file: ./docker/embedded/Dockerfile
           push: true
+          # Read the cache the main-branch publish writes, never write it back:
+          # the build stage changes on every push, so the export bought nothing
+          # and its blobs crowded the nightly Rust caches out of the 10 GB store.
           cache-from: type=gha,scope=stirling-pdf-latest
-          cache-to: type=gha,mode=max,scope=stirling-pdf-latest
           tags: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:v2-${{ steps.commit-hash.outputs.app_short }}
           build-args: |
             VERSION_TAG=v2-alpha
