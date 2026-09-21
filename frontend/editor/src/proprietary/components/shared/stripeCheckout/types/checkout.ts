@@ -9,6 +9,8 @@ export interface StripeCheckoutProps {
   combinedChoose?: boolean;
   /** Users the current plan covers, or null when there is none. Drives the add-capacity face. */
   currentLimit?: number | null;
+  /** Present only for a self-hosted server above its actual allowance. */
+  capacityNotice?: { users: number; limit: number };
   opened: boolean;
   onClose: () => void;
   planGroup: PlanTierGroup;
