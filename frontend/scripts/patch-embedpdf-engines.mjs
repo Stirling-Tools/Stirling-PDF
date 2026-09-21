@@ -48,6 +48,10 @@ const patchedSnippets = [
   "URL.revokeObjectURL(__stirlingUrl)",
   "__stirlingScratchBitmap",
   "bitmap kept for reuse",
+  "__stirlingDocAccess",
+  "__stirlingReleaseFileAccess",
+  "FPDF_LoadCustomDocument",
+  "__stirlingWorkerHeapBytes",
 ];
 
 if (checkOnly) {
@@ -215,6 +219,64 @@ export {
     label: "worker: return the render bitmap to the pool",
     find: /this\.memoryManager\.free\(heapPtr\);/g,
     replace: "/* bitmap kept for reuse by __stirlingScratchBitmap */",
+  },
+  {
+    // The worker copied every document into the WASM heap, a second full copy
+    // on top of the cloned buffer it already owns. FPDF_FILEACCESS lets PDFium
+    // read 64 KB blocks from that buffer instead, so the heap holds metadata
+    // plus the blocks a render actually touches.
+    label: "worker: file-access helpers",
+    find: "const WasmPointer = (ptr) => ptr;",
+    replace: [
+      "const __stirlingDocAccess = new Map();",
+      "function __stirlingReleaseFileAccess(pdfiumModule, filePtr) {",
+      "  const getBlockPtr = __stirlingDocAccess.get(filePtr);",
+      "  if (getBlockPtr) {",
+      "    pdfiumModule.pdfium.removeFunction(getBlockPtr);",
+      "    __stirlingDocAccess.delete(filePtr);",
+      "  }",
+      "}",
+      "const WasmPointer = (ptr) => ptr;",
+    ].join("\\n"),
+  },
+  {
+    label: "worker: serve the document from the JS bytes",
+    find: 'const array = new Uint8Array(file.content);\\n    const length = array.length;\\n    const filePtr = this.memoryManager.malloc(length);\\n    this.pdfiumModule.pdfium.HEAPU8.set(array, filePtr);\\n    const docPtr = this.pdfiumModule.FPDF_LoadMemDocument(filePtr, length, (options == null ? void 0 : options.password) ?? "");',
+    replace: [
+      "const array = new Uint8Array(file.content);",
+      "    const length = array.length;",
+      "    const filePtr = this.memoryManager.malloc(12);",
+      "    const getBlockPtr = this.pdfiumModule.pdfium.addFunction((param, position, bufferPtr, size) => {",
+      "      const end = position + size;",
+      "      if (position < 0 || end > length) return 0;",
+      "      this.pdfiumModule.pdfium.HEAPU8.set(array.subarray(position, end), bufferPtr);",
+      "      return 1;",
+      '    }, "iiiii");',
+      '    this.pdfiumModule.pdfium.setValue(filePtr, length, "i32");',
+      '    this.pdfiumModule.pdfium.setValue(filePtr + 4, getBlockPtr, "i32");',
+      '    this.pdfiumModule.pdfium.setValue(filePtr + 8, 0, "i32");',
+      "    __stirlingDocAccess.set(filePtr, getBlockPtr);",
+      "    globalThis.__stirlingWorkerHeapBytes = () => this.pdfiumModule.pdfium.wasmExports.memory.buffer.byteLength;",
+      '    const docPtr = this.pdfiumModule.FPDF_LoadCustomDocument(filePtr, (options == null ? void 0 : options.password) ?? "");',
+    ].join("\\n"),
+  },
+  {
+    label: "worker: release file access when the open fails",
+    find: "this.logger.error(LOG_SOURCE$1, LOG_CATEGORY$1, `FPDF_LoadMemDocument failed with ${lastError}`);\\n      this.memoryManager.free(filePtr);",
+    replace:
+      "this.logger.error(LOG_SOURCE$1, LOG_CATEGORY$1, `FPDF_LoadMemDocument failed with ${lastError}`);\\n      __stirlingReleaseFileAccess(this.pdfiumModule, filePtr);\\n      this.memoryManager.free(filePtr);",
+  },
+  {
+    label: "worker: release file access when the page probe fails",
+    find: "this.pdfiumModule.FPDF_CloseDocument(docPtr);\\n        this.memoryManager.free(filePtr);",
+    replace:
+      "this.pdfiumModule.FPDF_CloseDocument(docPtr);\\n        __stirlingReleaseFileAccess(this.pdfiumModule, filePtr);\\n        this.memoryManager.free(filePtr);",
+  },
+  {
+    label: "worker: release file access on dispose",
+    find: "this.pageCache.pdf.FPDF_CloseDocument(this.docPtr);\\n    this.memoryManager.free(WasmPointer(this.filePtr));",
+    replace:
+      "this.pageCache.pdf.FPDF_CloseDocument(this.docPtr);\\n    __stirlingReleaseFileAccess(this.pageCache.pdf, this.filePtr);\\n    this.memoryManager.free(WasmPointer(this.filePtr));",
   },
 ];
 
