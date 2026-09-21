@@ -165,6 +165,7 @@ import LayoutGrid from "lucide-static/icons/layout-grid.svg?react";
 import Leaf from "lucide-static/icons/leaf.svg?react";
 import Library from "lucide-static/icons/library.svg?react";
 import Lightbulb from "lucide-static/icons/lightbulb.svg?react";
+import LineSquiggle from "lucide-static/icons/line-squiggle.svg?react";
 import Link from "lucide-static/icons/link.svg?react";
 import List from "lucide-static/icons/list.svg?react";
 import ListChecks from "lucide-static/icons/list-checks.svg?react";
@@ -556,6 +557,7 @@ export const ICONS = {
   leaf: { Component: Leaf, kind: "lucide" },
   library: { Component: Library, kind: "lucide" },
   lightbulb: { Component: Lightbulb, kind: "lucide" },
+  "line-squiggle": { Component: LineSquiggle, kind: "lucide" },
   link: { Component: Link, kind: "lucide" },
   list: { Component: List, kind: "lucide" },
   "list-checks": { Component: ListChecks, kind: "lucide" },
