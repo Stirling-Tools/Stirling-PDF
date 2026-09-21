@@ -1,3 +1,4 @@
+import { TeamSubscriptionChange } from "@app/billing/TeamSubscriptionChange";
 import type { ServerPlan } from "@app/billing/serverPlan";
 import {
   useCallback,
@@ -386,6 +387,9 @@ export function Usage({
       pendingUnits={localUsage?.totalUnsyncedUnits ?? 0}
       notices={
         <>
+          {wallet?.team?.held && wallet.role === "leader" && (
+            <TeamSubscriptionChange refreshKey={refreshKey} />
+          )}
           {procurement.loadError && (
             <Banner
               tone="danger"
