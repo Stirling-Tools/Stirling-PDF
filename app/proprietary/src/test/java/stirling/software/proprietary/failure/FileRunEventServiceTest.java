@@ -51,7 +51,9 @@ class FileRunEventServiceTest {
                         List.of(
                                 new AcknowledgeAction(store),
                                 new DismissAction(store),
-                                new NoopRetryInFolderAction()));
+                                new NoopFolderAction(FailureActionId.RETRY_IN_FOLDER),
+                                new NoopFolderAction(FailureActionId.REPAIR),
+                                new NoopFolderAction(FailureActionId.DECRYPT)));
         registry.verifyEveryDeclaredActionHasAHandler();
 
         service = new FileRunEventService(store, registry, authority, userService, props);
@@ -367,10 +369,12 @@ class FileRunEventServiceTest {
         @Test
         void everyClientActionIsRefusedWhicheverKindDeclaresIt() {
             // Over the whole vocabulary, so a client action added later cannot arrive dispatchable.
+            // These rows name no source, so a fix the server runs for a folder is the client's
+            // here.
             for (FailureKind kind : FailureKind.values()) {
                 FileRunEvent event = given(kind, TEAM, "f-" + kind.getId());
                 for (FailureActionId action : kind.getActions()) {
-                    if (action.runsOnServer()) {
+                    if (action.executionFor(false) == FailureActionId.Execution.SERVER) {
                         continue;
                     }
                     assertThatThrownBy(() -> service.dispatch(event.id(), action.name(), Map.of()))
@@ -807,13 +811,16 @@ class FileRunEventServiceTest {
                             List.of(
                                     new AcknowledgeAction(store),
                                     new DismissAction(store),
-                                    new NoopRetryInFolderAction()));
+                                    new NoopFolderAction(FailureActionId.RETRY_IN_FOLDER),
+                                    new NoopFolderAction(FailureActionId.REPAIR),
+                                    new NoopFolderAction(FailureActionId.DECRYPT)));
 
             complete.verifyEveryDeclaredActionHasAHandler();
 
             for (FailureActionId id : FailureActionId.values()) {
-                // Only server actions need a handler, which is why the boot check ignores the rest.
-                assertThat(complete.find(id).isPresent()).isEqualTo(id.runsOnServer());
+                // Only what the server can run needs a handler, which is why the boot check
+                // ignores the rest.
+                assertThat(complete.find(id).isPresent()).isEqualTo(id.canRunOnServer());
             }
         }
 
@@ -825,7 +832,9 @@ class FileRunEventServiceTest {
                             List.of(
                                     new AcknowledgeAction(store),
                                     new DismissAction(store),
-                                    new NoopRetryInFolderAction()));
+                                    new NoopFolderAction(FailureActionId.RETRY_IN_FOLDER),
+                                    new NoopFolderAction(FailureActionId.REPAIR),
+                                    new NoopFolderAction(FailureActionId.DECRYPT)));
 
             assertThatCode(serverOnly::verifyEveryDeclaredActionHasAHandler)
                     .doesNotThrowAnyException();

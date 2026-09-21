@@ -115,21 +115,53 @@ export async function reportNotificationResolved(
  * Run one of a row's server-side actions. Unlike a resolve, the reader pressed a button and is
  * owed an answer, so a refusal is reported rather than swallowed.
  *
+ * @param inputs what the action needs from the presser, such as a document's password. Sent as the
+ *   request body, so it is never put in the URL, and never held here after the call.
  * @returns null when it worked, or the server's reason for refusing.
  */
 export async function dispatchNotificationAction(
   notificationId: string,
   actionId: string,
+  inputs?: Record<string, string>,
 ): Promise<string | null> {
   try {
     await apiClient.post(
       `${NOTIFICATIONS_PATH}/${encodeURIComponent(notificationId)}/actions/${encodeURIComponent(actionId)}`,
+      inputs,
     );
     return null;
   } catch (error) {
-    const detail = (
-      error as { response?: { data?: { detail?: string; title?: string } } }
-    )?.response?.data;
-    return detail?.detail ?? detail?.title ?? "";
+    return refusalReason(error) ?? "";
+  }
+}
+
+/** A Problem Details body, in the two shapes the platforms' clients deliver one in. */
+interface ProblemBody {
+  detail?: string;
+  title?: string;
+}
+
+/**
+ * What the server refused for. Desktop hands the body back as text and web as parsed JSON; reading
+ * only the parsed shape swapped every desktop refusal for the caller's generic fallback.
+ */
+function refusalReason(error: unknown): string | null {
+  const data = (error as { response?: { data?: unknown } })?.response?.data;
+  const body =
+    typeof data === "string"
+      ? parseProblem(data)
+      : (data as ProblemBody | undefined);
+  return body?.detail ?? body?.title ?? null;
+}
+
+/** Null for a body that is not a Problem Details document: a proxy's HTML, or nothing at all. */
+function parseProblem(body: string): ProblemBody | null {
+  try {
+    const parsed: unknown = JSON.parse(body);
+    return typeof parsed === "object" && parsed !== null
+      ? (parsed as ProblemBody)
+      : null;
+  } catch {
+    return null;
   }
 }

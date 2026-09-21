@@ -153,10 +153,12 @@ public class FileRunEventService {
                     "Kind " + event.kind().getId() + " does not offer action " + resolvedId);
         }
         // Without this a client could post VIEW_FILE and be answered as though something happened.
-        if (!resolvedId.runsOnServer()) {
+        // Resolved against this row: REPAIR for a document the browser holds is refused, not run
+        // here.
+        if (resolvedId.executionFor(inSmartFolder(event)) != FailureActionId.Execution.SERVER) {
             throw new FailureActionException(
                     FailureActionException.Reason.ACTION_NOT_DISPATCHABLE,
-                    "Action " + resolvedId + " is run by the client, not the server");
+                    "Action " + resolvedId + " is run by the client for this document");
         }
         if (event.status().terminal()) {
             throw new FailureActionException(
@@ -226,25 +228,35 @@ public class FileRunEventService {
         // Answered here, or the client reports "not on this device" about a document the row never
         // identified in the first place.
         boolean documentless = event.fileId() == null || event.fileId().isBlank();
-        boolean inSmartFolder =
-                FileRunEventView.DocumentLocation.of(event)
-                        == FileRunEventView.DocumentLocation.SMART_FOLDER;
+        boolean inSmartFolder = inSmartFolder(event);
         return event.kind().getOfferedActions().stream()
                 .filter(offer -> offeredTo(offer.audience(), ownership, reviewsTeam))
                 .filter(offer -> offer.id() != FailureActionId.RETRY_IN_FOLDER || inSmartFolder)
-                .map(offer -> availability(offer, closed, unattended, documentless))
+                .map(offer -> availability(offer, inSmartFolder, closed, unattended, documentless))
                 .toList();
+    }
+
+    /** Whether only the server can reach the document this row is about. */
+    private static boolean inSmartFolder(FileRunEvent event) {
+        return FileRunEventView.DocumentLocation.of(event)
+                == FileRunEventView.DocumentLocation.SMART_FOLDER;
     }
 
     /** Enabled is derived from the reason, so a disabled button always has one to show. */
     private static AvailableAction availability(
             FailureKind.OfferedAction offer,
+            boolean inSmartFolder,
             boolean closed,
             boolean unattended,
             boolean documentless) {
         String reason = disabledReasonFor(offer.audience(), closed, unattended, documentless);
         return new AvailableAction(
-                offer.id(), offer.labelKey(), offer.slot(), reason == null, reason);
+                offer.id(),
+                offer.labelKey(),
+                offer.id().executionFor(inSmartFolder),
+                offer.slot(),
+                reason == null,
+                reason);
     }
 
     /** Closed wins over everything, then the owner-only reasons, most specific first. */
@@ -372,9 +384,14 @@ public class FileRunEventService {
     }
 
     /** One action offered to one caller, availability resolved. */
+    /**
+     * One offer resolved for one caller and document. {@code execution} says where this row's copy
+     * runs, which for a fix follows the document; the client is told, not left to infer.
+     */
     public record AvailableAction(
             FailureActionId id,
             String labelKey,
+            FailureActionId.Execution execution,
             FailureActionSlot slot,
             boolean enabled,
             String disabledReasonKey) {}

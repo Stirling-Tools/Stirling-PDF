@@ -3,6 +3,10 @@ package stirling.software.proprietary.notification;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -43,10 +47,31 @@ public class NotificationService {
         // One lookup per distinct policy rather than per row: a folder that fails a whole batch is
         // one policy and twenty rows.
         Map<String, SourceKind> kinds = new HashMap<>();
-        return fileRunEvents.list(null, false, null, limit).stream()
-                .filter(event -> event.fileId() != null && !event.fileId().isBlank())
-                .map(event -> fromFailure(event, kinds))
-                .toList();
+        List<FileRunEvent> events =
+                fileRunEvents.list(null, false, null, limit).stream()
+                        .filter(event -> event.fileId() != null && !event.fileId().isBlank())
+                        .toList();
+        Map<Long, StoredFile> named = namedDocumentsIn(events);
+        return events.stream().map(event -> fromFailure(event, kinds, named)).toList();
+    }
+
+    /**
+     * The stored rows this page might name, read in one query rather than one per polled row. Only
+     * rows the reader raised are fetched: {@link #documentNameFor} answers for no others.
+     */
+    private Map<Long, StoredFile> namedDocumentsIn(List<FileRunEvent> events) {
+        Set<Long> ids =
+                events.stream()
+                        .filter(event -> fileRunEvents.ownershipOf(event) == Ownership.MINE)
+                        .map(event -> StorageFileIdentities.storedFileIdOf(event.fileId()))
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toSet());
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        Map<Long, StoredFile> byId = new HashMap<>();
+        storedFiles.findAllById(ids).forEach(file -> byId.put(file.getId(), file));
+        return byId;
     }
 
     /**
@@ -58,7 +83,8 @@ public class NotificationService {
      * stored row's id, so the name comes from the row. A disk folder's identity is a path, and
      * returning the last segment of it would be the same disclosure by another route.
      */
-    private String documentNameFor(FileRunEvent event, Ownership ownership) {
+    private String documentNameFor(
+            FileRunEvent event, Ownership ownership, Map<Long, StoredFile> named) {
         if (ownership != Ownership.MINE || event.actor() == null) {
             return null;
         }
@@ -66,8 +92,7 @@ public class NotificationService {
         if (storedFileId == null) {
             return null;
         }
-        return storedFiles
-                .findById(storedFileId)
+        return Optional.ofNullable(named.get(storedFileId))
                 // Belt and braces over the ownership above: that says the reader raised the row,
                 // this says the document is theirs. A row can outlive the file it named.
                 .filter(file -> file.getOwner() != null)
@@ -102,7 +127,7 @@ public class NotificationService {
     public NotificationView resolve(String notificationId) {
         NotificationSource.QualifiedId qualified = qualify(notificationId);
         return switch (qualified.source()) {
-            case FAILURE -> fromFailure(fileRunEvents.resolve(qualified.rowId()), new HashMap<>());
+            case FAILURE -> fromFailure(fileRunEvents.resolve(qualified.rowId()));
         };
     }
 
@@ -113,13 +138,12 @@ public class NotificationService {
      * <p>Nothing is decided here: the producing service re-checks that the caller may see the row
      * and that its kind declares the action, and each action authorises its own effects.
      */
-    public NotificationView act(String notificationId, String actionId) {
+    public NotificationView act(
+            String notificationId, String actionId, Map<String, String> inputs) {
         NotificationSource.QualifiedId qualified = qualify(notificationId);
         return switch (qualified.source()) {
             case FAILURE ->
-                    fromFailure(
-                            fileRunEvents.dispatch(qualified.rowId(), actionId, Map.of()),
-                            new HashMap<>());
+                    fromFailure(fileRunEvents.dispatch(qualified.rowId(), actionId, inputs));
         };
     }
 
@@ -132,8 +156,14 @@ public class NotificationService {
                                         "Not a notification id: " + notificationId));
     }
 
+    /** One row on its own, where a batch would be the same query it already makes. */
+    private NotificationView fromFailure(FileRunEvent event) {
+        return fromFailure(event, new HashMap<>(), namedDocumentsIn(List.of(event)));
+    }
+
     /** Prefixes the row id on the way out, so it is never sent bare. */
-    private NotificationView fromFailure(FileRunEvent event, Map<String, SourceKind> kinds) {
+    private NotificationView fromFailure(
+            FileRunEvent event, Map<String, SourceKind> kinds, Map<Long, StoredFile> named) {
         FileRunEventView.DocumentLocation location = FileRunEventView.DocumentLocation.of(event);
         boolean resolvableHere = location == FileRunEventView.DocumentLocation.BROWSER;
         Ownership ownership = fileRunEvents.ownershipOf(event);
@@ -151,7 +181,7 @@ public class NotificationService {
                 // Only an id this reader's own client minted. A source's reference is a location on
                 // the server's disk, and no client has anything to match it against.
                 resolvableHere ? event.fileId() : null,
-                resolvableHere ? null : documentNameFor(event, ownership),
+                resolvableHere ? null : documentNameFor(event, ownership, named),
                 location,
                 sourceKindOf(event, kinds),
                 event.sourceId(),
@@ -163,16 +193,15 @@ public class NotificationService {
     }
 
     /**
-     * What the bell may offer. A disposition such as Dismiss belongs to the review surface, and a
-     * server action is kept out for the same reason — except the one that re-runs a document only
-     * the server can reach, which is the sole fix available to the reader of a smart-folder row.
+     * What the bell may offer: every fix, including the ones the server carries out, but not a
+     * disposition, which is the review surface's to apply. A new disposition belongs in this list.
      */
     private List<FileRunEventView.ActionView> bellActions(FileRunEvent event) {
         return fileRunEvents.availableActions(event).stream()
                 .filter(
                         action ->
-                                !action.id().runsOnServer()
-                                        || action.id() == FailureActionId.RETRY_IN_FOLDER)
+                                action.id() != FailureActionId.DISMISS
+                                        && action.id() != FailureActionId.ACKNOWLEDGE)
                 .map(FileRunEventView.ActionView::of)
                 .toList();
     }

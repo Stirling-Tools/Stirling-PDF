@@ -127,6 +127,45 @@ public class FolderOutputSink implements PolicyOutputSink {
     }
 
     /**
+     * Replace a watched file with content the caller has already authorised the path for. No ledger
+     * row, unlike {@link #deliver}: this is a new input version the sweep must claim.
+     */
+    public void replaceInPlace(Path file, Resource fixed) throws IOException {
+        Path dir = file.getParent();
+        Path tmpDir = stirlingDir(dir).resolve("tmp");
+        Files.createDirectories(tmpDir);
+        Path staged = tmpDir.resolve(UUID.randomUUID().toString());
+        try {
+            stage(fixed, staged, false);
+            // Archived first, so a failure to move the fix into place still leaves the original
+            // recoverable rather than destroyed.
+            Path archived = archiveOriginal(dir, file);
+            try {
+                Files.move(
+                        staged,
+                        file,
+                        StandardCopyOption.ATOMIC_MOVE,
+                        StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException | RuntimeException failed) {
+                if (archived != null) {
+                    try {
+                        Files.move(archived, file, StandardCopyOption.ATOMIC_MOVE);
+                    } catch (IOException lost) {
+                        log.warn(
+                                "Fixing {} failed and its original could not be put back: {}",
+                                file,
+                                lost.getMessage());
+                    }
+                }
+                throw failed;
+            }
+        } finally {
+            Files.deleteIfExists(staged);
+        }
+        log.debug("Replaced {} with a fixed version; the original is under .stirling", file);
+    }
+
+    /**
      * Stream the output to its staging path. For a recorded delivery (stored policy) the content
      * hash is digested in the same pass, so the ledger gets both version tiers without re-reading a
      * possibly huge output; ad-hoc runs record nothing and skip the digest entirely.

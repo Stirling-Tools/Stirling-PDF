@@ -6,7 +6,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -191,8 +191,9 @@ class NotificationProjectionTest {
             owner.setUsername(ACTOR);
             StoredFile file = new StoredFile();
             file.setOwner(owner);
+            file.setId(42L);
             file.setOriginalFilename("march.pdf");
-            when(storedFiles.findById(42L)).thenReturn(Optional.of(file));
+            when(storedFiles.findAllById(Set.of(42L))).thenReturn(List.of(file));
             store.record(
                     RecordFailure.forRun(
                             FailureKind.UNKNOWN,
@@ -235,8 +236,9 @@ class NotificationProjectionTest {
             someoneElse.setUsername("someone.else@example.com");
             StoredFile file = new StoredFile();
             file.setOwner(someoneElse);
+            file.setId(42L);
             file.setOriginalFilename("payroll.pdf");
-            when(storedFiles.findById(42L)).thenReturn(Optional.of(file));
+            when(storedFiles.findAllById(Set.of(42L))).thenReturn(List.of(file));
             store.record(
                     RecordFailure.forRun(
                             FailureKind.UNKNOWN,

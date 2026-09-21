@@ -28,6 +28,7 @@ import {
   retryTargetOf,
   toolOf,
   unavailable,
+  type ResolutionActionId,
 } from "@app/components/notifications/resolutions";
 import {
   type ClientActionOutcome,
@@ -212,40 +213,86 @@ export function useNotificationActions(): ClientActionRegistry {
       run: () => navigate(REVIEW_DESTINATION),
     };
 
-    // The only action here the server performs. The document is in a folder this browser cannot
-    // reach, so all the client does is ask, and the row names which file it is about.
-    const retryInFolder: ClientActionSpec = {
-      available: (context) =>
-        context.notification.documentLocation === "SMART_FOLDER",
-      run: async (context): Promise<ClientActionOutcome | void> => {
+    const heldByServer = (context: NotificationActionContext) =>
+      context.notification.documentLocation === "SMART_FOLDER";
+
+    // What the server does on this browser's behalf: the document is in a folder this browser
+    // cannot reach, so all the client does is ask, and the row names which file it is about.
+    const askTheServer = (
+      actionId: string,
+      whenItFails: string,
+    ): ClientActionSpec => ({
+      available: heldByServer,
+      run: async (context, password): Promise<ClientActionOutcome | void> => {
         const refusal = await dispatchNotificationAction(
           context.notification.id,
-          "RETRY_IN_FOLDER",
+          actionId,
+          password === undefined ? undefined : { password },
         );
         if (refusal === null) return;
-        return {
-          ok: false,
-          message:
-            refusal ||
-            t(
-              "notifications.retryInFolderFailed",
-              "That document could not be run again just now.",
-            ),
-        };
+        // The server's own words where it gave any: only it knows whether the password was
+        // wrong, the document beyond repair, or the folder no longer writable.
+        return { ok: false, message: refusal || whenItFails };
       },
+    });
+
+    /**
+     * One fix, carried out wherever the document is: the server resolves the same action id to the
+     * side that can reach it, so the row renders one button and this picks the half that can act.
+     */
+    const fix = (
+      resolution: (typeof RESOLUTIONS)[number],
+      whenTheServerFails: string,
+    ): ClientActionSpec => {
+      const here = resolutionSpec(resolution, { t, fileContext, fileStore });
+      const there = askTheServer(resolution.actionId, whenTheServerFails);
+      return {
+        available: (context) =>
+          heldByServer(context)
+            ? there.available(context)
+            : here.available(context),
+        // Static, so it must hold for both halves; it does, because what a fix needs from the
+        // person asking for it does not depend on which machine carries it out.
+        needsPassword: resolution.needsPassword,
+        // The server half opens nothing to get out of the way, but the row it was about is gone
+        // either way, so the panel behind the prompt is stale in both.
+        closesPanel: here.closesPanel,
+        run: (context, password) =>
+          heldByServer(context)
+            ? there.run(context, password)
+            : here.run(context, password),
+      };
     };
 
-    const resolutions = Object.fromEntries(
+    /** What to say when the server's half fails without a reason of its own. */
+    const serverFixFailed: Record<ResolutionActionId, string> = {
+      REPAIR: t(
+        "notifications.repairInFolderFailed",
+        "That document could not be repaired just now.",
+      ),
+      DECRYPT: t(
+        "notifications.decryptInFolderFailed",
+        "That document could not be unlocked just now.",
+      ),
+    };
+
+    const fixes = Object.fromEntries(
       RESOLUTIONS.map((resolution) => [
         resolution.actionId,
-        resolutionSpec(resolution, { t, fileContext, fileStore }),
+        fix(resolution, serverFixFailed[resolution.actionId]),
       ]),
     );
 
     return {
       OPEN_IN_TOOL: openInTool,
-      ...resolutions,
-      RETRY_IN_FOLDER: retryInFolder,
+      ...fixes,
+      RETRY_IN_FOLDER: askTheServer(
+        "RETRY_IN_FOLDER",
+        t(
+          "notifications.retryInFolderFailed",
+          "That document could not be run again just now.",
+        ),
+      ),
       VIEW_FILE: viewFile,
       VIEW_IN_PROCESSOR: viewInProcessor,
     };

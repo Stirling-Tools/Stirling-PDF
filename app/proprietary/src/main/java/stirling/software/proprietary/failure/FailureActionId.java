@@ -21,11 +21,11 @@ public enum FailureActionId {
     /** Opens the failed tool with its document, rather than running it again unattended. */
     OPEN_IN_TOOL(Execution.CLIENT, "Retry"),
 
-    /** Unlocks the document with a password the owner supplies. */
-    DECRYPT(Execution.CLIENT, "Unlock"),
+    /** Unlocks the document with a password the owner supplies, then re-runs. */
+    DECRYPT(Execution.EITHER, "Unlock"),
 
-    /** Repairs the document in the owner's client, then re-runs. */
-    REPAIR(Execution.CLIENT, "Repair"),
+    /** Repairs the document, then re-runs. */
+    REPAIR(Execution.EITHER, "Repair"),
 
     /** Open the document behind the incident, in whichever client can resolve its id. */
     VIEW_FILE(Execution.CLIENT, "View file"),
@@ -33,13 +33,12 @@ public enum FailureActionId {
     VIEW_IN_PROCESSOR(Execution.CLIENT, "View in processor"),
 
     /**
-     * Run a smart folder's document again, on the server: the client has neither the file nor a way
-     * to address it. Offered to the folder's owner alone, and its handler re-checks that rather
-     * than trusting the offer.
+     * Run a smart folder's document again, server-side; the handler re-checks the owner. Not {@link
+     * #OPEN_IN_TOOL}, which deliberately does not re-run, and a folder has no tool.
      */
     RETRY_IN_FOLDER(Execution.SERVER, "Try again");
 
-    /** Dispatch refuses a {@code CLIENT} id, so this is enforced rather than merely documented. */
+    /** Dispatch refuses an id that does not run on the server, so this is enforced. */
     public enum Execution {
 
         /** {@link FailureActionRegistry} requires a {@link FailureAction} bean for these. */
@@ -48,7 +47,13 @@ public enum FailureActionId {
         /**
          * Declared and rendered, never dispatched: the server has neither the file nor the tool.
          */
-        CLIENT
+        CLIENT,
+
+        /**
+         * Per row, not declared here: a reader holding the file fixes it themselves; a document
+         * only the server can reach is fixed there. See {@link #executionFor(boolean)}.
+         */
+        EITHER
     }
 
     private final Execution execution;
@@ -61,8 +66,19 @@ public enum FailureActionId {
         this.defaultLabel = defaultLabel;
     }
 
-    /** Also whether it can be dispatched. */
-    public boolean runsOnServer() {
-        return execution == Execution.SERVER;
+    /**
+     * Where this action runs for a document in the given place, which is what the client is told
+     * and what dispatch is checked against. Only {@link Execution#EITHER} depends on the argument.
+     */
+    public Execution executionFor(boolean inSmartFolder) {
+        if (execution != Execution.EITHER) {
+            return execution;
+        }
+        return inSmartFolder ? Execution.SERVER : Execution.CLIENT;
+    }
+
+    /** Whether a handler bean must exist: true for anything that can ever be dispatched. */
+    public boolean canRunOnServer() {
+        return execution != Execution.CLIENT;
     }
 }

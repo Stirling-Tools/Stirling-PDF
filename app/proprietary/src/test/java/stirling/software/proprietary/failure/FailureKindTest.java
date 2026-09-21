@@ -145,7 +145,8 @@ class FailureKindTest {
         @ParameterizedTest
         @EnumSource(FailureKind.class)
         void declaresAtMostOneResolution(FailureKind kind) {
-            // Two things that both claim to fix it is a sign of two kinds wearing one id.
+            // Two things that both claim to fix it is a sign of two kinds wearing one id. A fix
+            // that runs in either place is still one offer: where it runs is resolved per row.
             assertThat(
                             kind.getOfferedActions().stream()
                                     .filter(offer -> offer.slot() == FailureActionSlot.RESOLUTION)
@@ -390,6 +391,21 @@ class FailureKindTest {
                                     "viewInProcessor"),
                             offered(FailureActionId.OPEN_IN_TOOL, OWNER, OVERFLOW, "openInTool"),
                             offered(FailureActionId.DISMISS, ANYONE_WHO_SEES, OVERFLOW, "dismiss"));
+        }
+
+        @Test
+        void everyFixCanBeRunForADocumentOnlyTheServerCanReach() {
+            // Before this a smart folder's row offered only Dismiss: every declared fix needed a
+            // local file. A CLIENT-only fix would silently reopen that.
+            for (FailureKind kind : FailureKind.values()) {
+                assertThat(
+                                kind.getOfferedActions().stream()
+                                        .filter(offer -> offer.slot() == RESOLUTION)
+                                        .map(FailureKind.OfferedAction::id)
+                                        .toList())
+                        .as("%s declares a fix that could not run for a watched folder", kind)
+                        .allMatch(FailureActionId::canRunOnServer);
+            }
         }
 
         @Test

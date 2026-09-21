@@ -107,7 +107,7 @@ public record FileRunEventView(
                     action.id().name(),
                     action.labelKey(),
                     action.id().getDefaultLabel(),
-                    action.id().getExecution(),
+                    action.execution(),
                     action.slot(),
                     action.enabled(),
                     action.disabledReasonKey());
