@@ -29,6 +29,7 @@ import {
   type StorageEncryptionStatus,
 } from "@portal/api/storageEncryption";
 import { qk } from "@portal/queries/keys";
+import { useFoldPoll } from "@app/query/useFoldPoll";
 import { InfoHint } from "@portal/components/InfoHint";
 import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
 import { EncryptionKeyTable } from "@portal/components/infrastructure/EncryptionKeyTable";
@@ -121,23 +122,21 @@ export function EncryptionPanel({
     queryFn: fetchMigrationStatus,
     enabled: migration?.state === "RUNNING",
     refetchInterval: MIGRATION_POLL_MS,
+    // Not kept past the panel: a finished run left in the cache is served to the
+    // next mount ahead of its first read, and folding it reports a run that has
+    // only just started as already done.
+    gcTime: 0,
     // A failed read is transient; the next tick retries and the progress on
     // screen stands, so a retry here would only double the request.
     retry: false,
   });
 
-  // Keyed on when the read landed, not on the rows: an unchanged run keeps its
-  // object identity under structural sharing, and the finish check must see
-  // every poll.
-  const foldedRef = useRef(0);
-  useEffect(() => {
-    if (!polled || foldedRef.current === dataUpdatedAt) return;
-    foldedRef.current = dataUpdatedAt;
-    setMigration(polled);
+  useFoldPoll(polled, dataUpdatedAt, (run) => {
+    setMigration(run);
     // The run has just changed the encrypted/plaintext split, so re-read
     // status: without this the coverage card keeps its pre-run counts.
-    if (polled.state !== "RUNNING") void load();
-  }, [polled, dataUpdatedAt, load]);
+    if (run.state !== "RUNNING") void load();
+  });
 
   const runKeyAction = async (
     key: EncryptionKeyInfo,

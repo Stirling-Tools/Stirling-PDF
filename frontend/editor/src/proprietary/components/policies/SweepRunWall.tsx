@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useLabelName } from "@app/data/labelDisplay";
 import { qk } from "@app/query/keys";
+import { useFoldPoll } from "@app/query/useFoldPoll";
 import {
   fetchProcessingFolderRuns,
   type ProcessingFolderRun,
@@ -142,30 +143,22 @@ function FolderSweepWallFor({ policyId }: { policyId: string }) {
     refetchInterval: POLL_MS,
   });
 
-  // Keyed on when the poll landed, not on the rows: an unchanged feed keeps its
-  // array identity under structural sharing, and the stand-down counts polls
-  // rather than changes. The cost is a render per poll while a sweep is on
-  // screen, which is what the old interval cost too.
-  const foldedRef = useRef(0);
-  useEffect(() => {
-    if (!dataUpdatedAt || foldedRef.current === dataUpdatedAt || !runs) return;
-    foldedRef.current = dataUpdatedAt;
-    const live = runs.some((run) => !TERMINAL.includes(run.status));
+  useFoldPoll(runs, dataUpdatedAt, (feed) => {
+    const live = feed.some((run) => !TERMINAL.includes(run.status));
     setAnyRunning(live);
     if (live) {
       wokeRef.current = true;
       idleRef.current = 0;
       setVisible(true);
     }
-    if (wokeRef.current) {
-      setCards((prev) => mergeRunsIntoCards(prev, runs));
-      if (!live && ++idleRef.current >= IDLE_POLLS) {
-        wokeRef.current = false;
-        setVisible(false);
-        setCards([]);
-      }
+    if (!wokeRef.current) return;
+    setCards((prev) => mergeRunsIntoCards(prev, feed));
+    if (!live && ++idleRef.current >= IDLE_POLLS) {
+      wokeRef.current = false;
+      setVisible(false);
+      setCards([]);
     }
-  }, [dataUpdatedAt, runs]);
+  });
 
   if (!visible || cards.length === 0) return null;
   const settled = cards.filter(

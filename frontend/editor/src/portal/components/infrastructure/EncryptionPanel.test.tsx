@@ -70,10 +70,11 @@ function migrationStatus(
 }
 
 /** The app's own defaults, so a test can't pass on a library default the app overrides. */
-function mount(ui: ReactNode) {
-  const client = new QueryClient({
-    defaultOptions: { queries: baseQueryOptions },
-  });
+function appClient() {
+  return new QueryClient({ defaultOptions: { queries: baseQueryOptions } });
+}
+
+function mount(ui: ReactNode, client: QueryClient = appClient()) {
   return render(
     <QueryClientProvider client={client}>
       <MantineProvider>{ui}</MantineProvider>

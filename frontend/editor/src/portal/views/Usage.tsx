@@ -29,6 +29,7 @@ import { PaymentSection } from "@portal/components/billing/PaymentSection";
 import { InvoicesSection } from "@portal/components/billing/InvoicesSection";
 import { useFleetStats } from "@portal/queries/infrastructure";
 import { qk } from "@portal/queries/keys";
+import { walletQuery, WALLET_POLL_MS } from "@portal/queries/wallet";
 import { useCheckoutOptional } from "@app/contexts/CheckoutContext";
 import { SubscribedPlanView } from "@portal/components/billing/SubscribedPlanView";
 import {
@@ -70,9 +71,6 @@ export interface UsageProps {
  * re-reads it. Only the {@code extras} sections still branch on {@code wallet.status} — the two
  * products render from their own holdings, which that axis cannot express.
  */
-/** How often the page re-reads the wallet while it is open and the tab is visible. */
-const WALLET_POLL_MS = 30_000;
-
 export function Usage({
   localUsersInUse,
   serverPlan,
@@ -83,28 +81,19 @@ export function Usage({
 }: UsageProps = {}) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const walletKey = qk.wallet(true);
+  // The gate renders this page only for a linked instance.
+  const walletOptions = walletQuery(true);
+  const walletKey = walletOptions.queryKey!;
   const {
     data: wallet = null,
     isPending: walletPending,
     error: walletError,
     refetch: refetchWallet,
-  } = useQuery({
-    queryKey: walletKey,
-    queryFn: fetchWallet,
-    // A live meter, so it re-reads on a schedule and again on coming back to the
-    // tab. staleTime is what makes the second cheap: this page used to reload in
-    // full on every window focus event, which fires for an alt-tab or a dialog
-    // closing, not just a real return.
-    refetchInterval: WALLET_POLL_MS,
-    refetchOnWindowFocus: true,
-    staleTime: WALLET_POLL_MS,
-    // A failure is surfaced to the operator, and the next tick retries.
-    retry: false,
-  });
+  } = useQuery(walletOptions);
   const refresh = useCallback(() => {
     void refetchWallet();
-  }, [refetchWallet]);
+    void queryClient.invalidateQueries({ queryKey: qk.localUsage() });
+  }, [refetchWallet, queryClient]);
   const procurement = useProcurement();
   const { trialSetupRequested, clearTrialSetupRequest } = useUI();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -158,6 +147,7 @@ export function Usage({
     queryFn: () => fetchLocalUsage().catch(() => null),
     enabled: hasLocalInstance,
     refetchInterval: WALLET_POLL_MS,
+    refetchOnWindowFocus: true,
     staleTime: WALLET_POLL_MS,
     retry: false,
   });

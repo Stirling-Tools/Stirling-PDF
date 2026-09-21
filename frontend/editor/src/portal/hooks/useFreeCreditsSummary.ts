@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLink } from "@portal/contexts/LinkContext";
-import { fetchWallet } from "@portal/api/billing";
-import { qk } from "@portal/queries/keys";
+import { walletQuery } from "@portal/queries/wallet";
 import {
   readCachedCredits,
   writeCachedCredits,
@@ -31,13 +30,10 @@ import { type NavFooterCredits } from "@app/components/shared/navFooter/NavFoote
  */
 export function useFreeCreditsSummary(): NavFooterCredits | null {
   const { isLinked } = useLink();
-  // Shared query key, so the footer rides the same cached snapshot as any other
-  // wallet reader rather than adding a fetch per mount.
-  const { data: wallet } = useQuery({
-    queryKey: qk.wallet(isLinked),
-    queryFn: fetchWallet,
-    enabled: isLinked,
-  });
+  // Shared definition, not just a shared key: per-observer options are resolved
+  // per-observer, so differing retry or interval settings here would make the
+  // behaviour depend on which reader happened to fetch.
+  const { data: wallet } = useQuery(walletQuery(isLinked));
   // Shared with the editor's seam, so crossing between the two apps shows the
   // figures the other one last saw rather than re-fetching into an empty row.
   const [seed] = useState(readCachedCredits);

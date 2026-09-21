@@ -138,7 +138,10 @@ export function useWallet(enabled = true): UseWalletResult {
     // re-read; a hidden tab pauses either way.
     refetchInterval: devPreview ? false : WALLET_POLL_MS,
     refetchOnWindowFocus: !devPreview,
-    staleTime: WALLET_POLL_MS,
+    // Deliberately not stale-timed: the key carries no team, and leaving a team
+    // changes which one the endpoint answers for without reloading the page. A
+    // mount and a tab return therefore always re-read, as they did before.
+    staleTime: 0,
     // A failure self-heals on the next tick, so a retry only doubles the wait.
     retry: false,
   });
