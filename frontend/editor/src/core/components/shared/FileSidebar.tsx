@@ -805,8 +805,24 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const openNativeFilePicker = useCallback(() => {
       void openFilesFromDisk({
         onFallbackOpen: () => nativeFileInputRef.current?.click(),
-      }).then(ingestFiles);
-    }, [ingestFiles]);
+      })
+        .then(ingestFiles)
+        .catch((err) => {
+          console.error("[FileSidebar] Native file pick failed", err);
+          alert({
+            alertType: "error",
+            title: t("fileSidebar.uploadFailedTitle", "Upload failed"),
+            body:
+              err instanceof Error
+                ? err.message
+                : t(
+                    "fileSidebar.uploadFailedBody",
+                    "Could not add the selected files.",
+                  ),
+            isPersistentPopup: false,
+          });
+        });
+    }, [ingestFiles, t]);
 
     useEffect(() => {
       if (!onRegisterOpenFromComputer) return;

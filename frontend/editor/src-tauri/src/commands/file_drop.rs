@@ -1,10 +1,11 @@
 use serde::Deserialize;
 use std::sync::Mutex;
 
-// The macOS drag pasteboard only holds the dragged file URLs while the drag
-// session is live. The drop's resolve command is async IPC, so it runs a run
-// loop turn after the session has ended and the pasteboard reads empty; the
-// snapshot, taken from JS during dragover, is what the drop then matches against.
+// Real filesystem paths of the most recent OS file drop, recorded natively by the
+// performDragOperation: swizzle (see macos_capture) before WebKit fires the DOM
+// drop. resolve_dropped_file_paths consumes them to link the matching DOM files;
+// the async resolve can't read the drag pasteboard itself, as the drag session has
+// ended by the time it runs.
 static DRAG_SNAPSHOT: Mutex<Vec<std::path::PathBuf>> = Mutex::new(Vec::new());
 
 fn snapshot() -> std::sync::MutexGuard<'static, Vec<std::path::PathBuf>> {
@@ -56,7 +57,9 @@ fn matching_paths(files: &[DroppedFile], paths: Vec<std::path::PathBuf>) -> Vec<
 /// save target.
 #[tauri::command]
 pub fn resolve_dropped_file_paths(files: Vec<DroppedFile>) -> Vec<Option<String>> {
-    matching_paths(&files, snapshot().clone())
+    // Consume the snapshot: a later drop that captures no paths must not reuse a
+    // stale one, and a second window must not resolve against this drop's paths.
+    matching_paths(&files, std::mem::take(&mut *snapshot()))
 }
 
 /// Starts capturing OS file-drop paths for this webview so resolve_dropped_file_paths
@@ -138,10 +141,9 @@ mod macos_capture {
         sender: *mut AnyObject,
     ) -> Bool {
         if let Some(info) = (sender as *const ProtocolObject<dyn NSDraggingInfo>).as_ref() {
-            let paths = dragged_filenames(info);
-            if !paths.is_empty() {
-                *snapshot() = paths;
-            }
+            // Always replace, so a path-less drag (e.g. an in-page reorder) clears
+            // any prior paths instead of leaving them for the next resolve.
+            *snapshot() = dragged_filenames(info);
         }
         // Set before the swizzle is installed, so it is never null when reached.
         let original: unsafe extern "C-unwind" fn(*mut AnyObject, Sel, *mut AnyObject) -> Bool =

@@ -4493,6 +4493,8 @@ openFromComputer = "Open from computer"
 openSettings = "Open settings"
 other = "Other"
 recent = "Recent"
+uploadFailedBody = "Could not add the selected files."
+uploadFailedTitle = "Upload failed"
 viewAll = "View all {{count}} files"
 
 [fileSidebar.fileItem]
