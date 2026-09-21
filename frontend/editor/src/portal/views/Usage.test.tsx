@@ -1,14 +1,20 @@
-vi.mock("@portal/queries/infrastructure", () => ({
+vi.mock("@app/portal/queries/infrastructure", () => ({
   useFleetStats: () => ({ data: null, loading: false, error: null }),
 }));
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import type { ReactElement } from "react";
 import { StrictMode } from "react";
 import { MemoryRouter, useLocation } from "react-router-dom";
-import { UIProvider } from "@portal/contexts/UIContext";
-import type { ProcurementSnapshot } from "@portal/api/procurement";
+import { UIProvider } from "@app/portal/contexts/UIContext";
+import type { ProcurementSnapshot } from "@app/portal/api/procurement";
 
 // Usage renders Mantine-backed @app/ui components (e.g. the "Manage Payment"
 // Button in the subscribed header), which need a MantineProvider in the tree.
@@ -48,7 +54,7 @@ vi.mock("react-i18next", () => ({
 const fetchWallet = vi.fn();
 const refreshWalletCache = vi.fn();
 const bundleFlow = { status: "none", refresh: vi.fn() };
-vi.mock("@portal/hooks/useBundleFlowState", () => ({
+vi.mock("@app/portal/hooks/useBundleFlowState", () => ({
   useBundleFlowState: () => bundleFlow,
 }));
 const procurement = {
@@ -64,42 +70,42 @@ const procurement = {
   onStartTrial: vi.fn(),
   setOpen: vi.fn(),
 };
-vi.mock("@portal/components/procurement/useProcurement", () => ({
+vi.mock("@app/portal/components/procurement/useProcurement", () => ({
   useProcurement: () => procurement,
 }));
-vi.mock("@portal/components/procurement/ProcurementBanner", () => ({
+vi.mock("@app/portal/components/procurement/ProcurementBanner", () => ({
   ControlledDealStatusHero: ({ readOnly }: { readOnly: boolean }) => (
     <div data-testid="procurement-summary">
       {readOnly ? "Read-only deal" : "Enterprise deal"}
     </div>
   ),
 }));
-vi.mock("@portal/components/procurement/ProcurementFlow", () => ({
+vi.mock("@app/portal/components/procurement/ProcurementFlow", () => ({
   ProcurementFlow: () => <div data-testid="procurement-flow" />,
 }));
-vi.mock("@portal/api/fleetStats", () => ({
+vi.mock("@app/portal/api/fleetStats", () => ({
   fetchFleetStats: () => Promise.resolve(null),
 }));
-vi.mock("@portal/api/users", () => ({
+vi.mock("@app/portal/api/users", () => ({
   fetchAdminEmail: () => Promise.resolve(null),
 }));
 vi.mock("@app/contexts/CheckoutContext", () => ({
   useCheckoutOptional: () => null,
 }));
-vi.mock("@portal/api/billing", () => ({
+vi.mock("@app/portal/api/billing", () => ({
   fetchWallet: () => fetchWallet(),
   refreshWalletCache: () => refreshWalletCache(),
 }));
 const fetchLocalUsage = vi.fn().mockResolvedValue(null);
-vi.mock("@portal/api/link", () => ({
+vi.mock("@app/portal/api/link", () => ({
   fetchLocalUsage: () => fetchLocalUsage(),
   triggerLocalSync: () => Promise.resolve(),
 }));
-vi.mock("@portal/hooks/useStripePortal", () => ({
+vi.mock("@app/portal/hooks/useStripePortal", () => ({
   useStripePortal: () => ({ opening: false, open: vi.fn(), error: null }),
 }));
 // Stub the plan views so the test doesn't depend on the full wallet shape.
-vi.mock("@portal/components/billing/FreePlanView", () => ({
+vi.mock("@app/portal/components/billing/FreePlanView", () => ({
   FreePlanView: ({
     step,
     onActivationClosed,
@@ -114,11 +120,24 @@ vi.mock("@portal/components/billing/FreePlanView", () => ({
       </div>
     ) : null,
 }));
-vi.mock("@portal/components/billing/SubscribedPlanView", () => ({
+vi.mock("@app/portal/components/billing/SubscribedPlanView", () => ({
   SubscribedPlanView: () => null,
 }));
 
-import { Usage } from "@portal/views/Usage";
+import { Usage } from "@app/portal/views/Usage";
+import {
+  portalSaasSessionRestored,
+  withPortalSaasSession,
+  SaasSessionRequiredError,
+  resetPortalSaasSessionState,
+} from "@app/portal/auth/portalSaasSession";
+
+vi.mock("@app/auth/supabase/supabaseClient", () => ({
+  getSupabaseClient: () => null,
+}));
+vi.mock("@app/portal/auth/saasSupabase", () => ({
+  ensureSaasSupabase: vi.fn(),
+}));
 import { BillingScreen } from "@app/billing/BillingScreen";
 import { freeWallet } from "@app/billing/walletFixtures";
 
@@ -142,6 +161,7 @@ describe("Usage — link-free wallet renderer", () => {
   });
 
   beforeEach(() => {
+    resetPortalSaasSessionState();
     bundleFlow.status = "none";
     bundleFlow.refresh.mockReset();
     fetchWallet.mockReset();
@@ -159,7 +179,12 @@ describe("Usage — link-free wallet renderer", () => {
     fetchWallet.mockResolvedValue(walletOf("free"));
     const onWalletLoaded = vi.fn();
 
-    renderUsage(<Usage onWalletLoaded={onWalletLoaded} />);
+    renderUsage(
+      <Usage
+        onWalletLoaded={onWalletLoaded}
+        sessionRecovery={<span>Renew billing access</span>}
+      />,
+    );
 
     // Renders immediately (no link prompt / login) and loads unconditionally.
     expect(screen.getByText("Usage & Billing")).toBeInTheDocument();
@@ -367,6 +392,91 @@ describe("Usage — link-free wallet renderer", () => {
     expect(
       screen.queryByRole("button", { name: "Plan" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("hides stale purchase controls when the billing session becomes unavailable", async () => {
+    fetchWallet.mockResolvedValue({ ...walletOf("free"), role: "leader" });
+    renderUsage(<Usage sessionRecovery={<span>Renew billing access</span>} />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Switch on the Processor" }),
+    );
+    expect(screen.getByTestId("activation-step")).toBeInTheDocument();
+    await act(async () => {
+      await withPortalSaasSession(
+        async () => 401,
+        (status) => status === 401,
+      ).catch(() => {});
+    });
+    expect(screen.queryByTestId("activation-step")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Switch on the Processor" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Plan" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Usage" })).toBeInTheDocument();
+  });
+
+  it("shows one recovery notice without a separate expired-session banner", async () => {
+    fetchWallet.mockRejectedValue(new SaasSessionRequiredError());
+    await act(async () => {
+      renderUsage(
+        <Usage sessionRecovery={<span>Renew billing access</span>} />,
+      );
+    });
+    expect(screen.getAllByText("Renew billing access")).toHaveLength(1);
+    expect(screen.getByText(/Your plan and usage will appear/)).toBeVisible();
+    expect(screen.queryByText("Session expired")).not.toBeInTheDocument();
+  });
+
+  it("reloads billing after SDK recovery from another tab", async () => {
+    await expect(
+      withPortalSaasSession(
+        async () => 401,
+        (status) => status === 401,
+      ),
+    ).rejects.toBeInstanceOf(SaasSessionRequiredError);
+    fetchWallet
+      .mockRejectedValueOnce(new SaasSessionRequiredError())
+      .mockRejectedValueOnce(new SaasSessionRequiredError())
+      .mockResolvedValue(walletOf("free"));
+    const onWalletLoaded = vi.fn();
+    renderUsage(
+      <Usage
+        onWalletLoaded={onWalletLoaded}
+        sessionRecovery={<span>Renew billing access</span>}
+      />,
+    );
+    await screen.findByText(/Your plan and usage will appear/);
+    act(() =>
+      window.dispatchEvent(new Event("stirling-saas-session-restored")),
+    );
+    await waitFor(() =>
+      expect(onWalletLoaded).toHaveBeenCalledWith(walletOf("free")),
+    );
+    expect(screen.queryByText(/Your plan and usage will appear/)).toBeNull();
+    expect(screen.getByText("This cycle")).toBeVisible();
+    expect(fetchWallet).toHaveBeenCalledTimes(3);
+  });
+
+  it("reloads billing and clears the expired-session view after renewal", async () => {
+    fetchWallet
+      .mockRejectedValueOnce(new SaasSessionRequiredError())
+      .mockRejectedValueOnce(new SaasSessionRequiredError())
+      .mockResolvedValue(walletOf("free"));
+    const onWalletLoaded = vi.fn();
+    renderUsage(
+      <Usage
+        onWalletLoaded={onWalletLoaded}
+        sessionRecovery={<span>Renew billing access</span>}
+      />,
+    );
+    await screen.findByText(/Your plan and usage will appear/);
+    act(() => portalSaasSessionRestored());
+    await waitFor(() =>
+      expect(onWalletLoaded).toHaveBeenCalledWith(walletOf("free")),
+    );
+    expect(screen.queryByText(/Your plan and usage will appear/)).toBeNull();
+    expect(screen.getByText("This cycle")).toBeVisible();
+    expect(fetchWallet).toHaveBeenCalledTimes(3);
   });
 });
 
