@@ -76,10 +76,10 @@ export function documentHasLayers(
   file: Blob,
   bytes?: ArrayBuffer,
 ): Promise<boolean> {
-  const key = documentFileKey(file);
-  const cached =
-    layerAnswers.get(file) ??
-    (key ? layerAnswersByFileKey.get(key) : undefined);
+  const byIdentity = layerAnswers.get(file);
+  if (byIdentity) return byIdentity;
+  const key = await documentFileKey(file);
+  const cached = key ? layerAnswersByFileKey.get(key) : undefined;
   if (cached) return cached;
 
   const answer = (async () => {
