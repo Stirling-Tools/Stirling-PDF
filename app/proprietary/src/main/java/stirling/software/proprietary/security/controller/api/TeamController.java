@@ -110,10 +110,10 @@ public class TeamController {
 
         Team team = teamOpt.get();
 
-        // Prevent deleting the Internal team
-        if (team.getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
+        if (TeamService.INTERNAL_TEAM_NAME.equals(team.getName())
+                || TeamService.DEFAULT_TEAM_NAME.equals(team.getName())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "Cannot delete Internal team."));
+                    .body(Map.of("error", "Cannot delete " + team.getName() + " team."));
         }
 
         long memberCount = userRepository.countByTeam(team);

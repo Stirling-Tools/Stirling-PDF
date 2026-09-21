@@ -227,6 +227,16 @@ class TauriHttpClient {
             delete headers[key];
           }
         }
+      } else if (finalConfig.data instanceof URLSearchParams) {
+        body = finalConfig.data.toString();
+        if (
+          !Object.keys(headers).some(
+            (key) => key.toLowerCase() === "content-type",
+          )
+        ) {
+          headers["Content-Type"] =
+            "application/x-www-form-urlencoded;charset=UTF-8";
+        }
       } else if (typeof finalConfig.data === "object") {
         // Serialize as JSON
         body = JSON.stringify(finalConfig.data);
