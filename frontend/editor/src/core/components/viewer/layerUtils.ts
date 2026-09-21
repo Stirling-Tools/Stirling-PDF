@@ -68,6 +68,27 @@ export async function documentHasLayers(
 }
 
 /**
+ * True when the catalog carries optional content. Building the layer list costs
+ * a pdfjs parse of the whole document, so the sidebar gates its button on this
+ * cheap catalog probe and reads the list only when the panel opens.
+ */
+export async function documentHasLayers(file: Blob): Promise<boolean> {
+  try {
+    const [{ PDFDocument, PDFName }, bytes] = await Promise.all([
+      import("@cantoo/pdf-lib"),
+      getDocumentBytes(file),
+    ]);
+    const doc = await PDFDocument.load(bytes, {
+      ignoreEncryption: true,
+      updateMetadata: false,
+    });
+    return doc.catalog.get(PDFName.of("OCProperties")) !== undefined;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Reads OCG layer info from a PDF file using pdfjs-dist.
  * Returns a flat list of all OCG groups with their names and default visibility.
  */
