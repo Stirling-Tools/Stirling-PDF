@@ -68,6 +68,7 @@ jobs:
       deployment: false
     if: ${{ vars.CI_PROFILE != 'lite' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
@@ -123,6 +124,7 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.determine-matrix.outputs.matrix) }}
     runs-on: ${{ matrix.platform }}
+    timeout-minutes: 90
     env:
       TAURI_BUNDLER_DMG_IGNORE_CI: "true"
       SM_API_KEY: ${{ secrets.SM_API_KEY }}
@@ -697,6 +699,7 @@ jobs:
   pr-comment:
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     # Fork and Dependabot pull_request runs receive a read-only GITHUB_TOKEN,
     # so the API cannot create or update PR comments there. The artifacts are
     # still uploaded and remain available from the Actions run page.
@@ -798,6 +801,7 @@ jobs:
   report:
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     if: always()
     steps:
       - name: Harden the runner (Audit all outbound calls)

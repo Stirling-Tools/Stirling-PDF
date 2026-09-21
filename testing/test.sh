@@ -722,25 +722,22 @@ main() {
        should_run_test "Webpage-Accessibility-lite" || \
        should_run_test "Stirling-PDF-Ultra-Lite-Version-Check"; then
 
-        gha_group "Build: Ultra-Lite (Gradle + Docker)"
+        gha_group "Build: Ultra-Lite image"
+        # No host Gradle build here: the Dockerfile compiles the backend and
+        # frontend in its build stage, .dockerignore keeps host build output
+        # out of the context, and the unit tests run in the backend matrix.
         export DISABLE_ADDITIONAL_FEATURES=true
-        if ! ./gradlew clean build -PnoSpotless; then
-            echo "Gradle build failed with security disabled, exiting script."
-            failed_tests+=("Build-Ultra-Lite-Gradle")
-            capture_build_failure "Build-Ultra-Lite-Gradle"
-            gha_endgroup
-            exit 1
-        fi
-
-        # Get expected version after the build to ensure version.properties is created
         echo "Getting expected version from Gradle..."
         EXPECTED_VERSION=$(get_expected_version)
         echo "Expected version: $EXPECTED_VERSION"
 
         # Build Ultra-Lite image with embedded frontend (matching docker-compose-latest-ultra-lite.yml)
         echo "Building ultra-lite image for tests that require it..."
+        # Read the cache the main-branch image publish writes, never write it
+        # back: exporting the build stage (mode=max) took 6-8 minutes per image
+        # here and the entries were evicted before the next PR could read them.
         if [ -n "${ACTIONS_RUNTIME_TOKEN}" ] && { [ -n "${ACTIONS_RESULTS_URL}" ] || [ -n "${ACTIONS_CACHE_URL}" ]; }; then
-            DOCKER_CACHE_ARGS_ULTRA_LITE="--cache-from type=gha,scope=stirling-pdf-ultra-lite --cache-to type=gha,mode=max,scope=stirling-pdf-ultra-lite"
+            DOCKER_CACHE_ARGS_ULTRA_LITE="--cache-from type=gha,scope=stirling-pdf-ultra-lite"
         else
             DOCKER_CACHE_ARGS_ULTRA_LITE=""
         fi
@@ -809,16 +806,8 @@ main() {
        should_run_test "Disabled-Endpoints" || \
        should_run_test "Stirling-PDF-Fat-Disable-Endpoints-Version-Check"; then
 
-        gha_group "Build: Fat + Security (Gradle + Docker)"
+        gha_group "Build: Fat + Security image"
         export DISABLE_ADDITIONAL_FEATURES=false
-        if ! ./gradlew clean build -PnoSpotless; then
-            echo "Gradle build failed with security enabled, exiting script."
-            failed_tests+=("Build-Fat-Gradle")
-            capture_build_failure "Build-Fat-Gradle"
-            gha_endgroup
-            exit 1
-        fi
-
         echo "Getting expected version from Gradle (security enabled)..."
         EXPECTED_VERSION=$(get_expected_version)
         echo "Expected version with security enabled: $EXPECTED_VERSION"
@@ -826,7 +815,7 @@ main() {
         # Build Fat (Security) image with embedded frontend (matching all 'fat' compose files)
         echo "Building fat image for tests that require it..."
         if [ -n "${ACTIONS_RUNTIME_TOKEN}" ] && { [ -n "${ACTIONS_RESULTS_URL}" ] || [ -n "${ACTIONS_CACHE_URL}" ]; }; then
-            DOCKER_CACHE_ARGS_FAT="--cache-from type=gha,scope=stirling-pdf-fat --cache-to type=gha,mode=max,scope=stirling-pdf-fat"
+            DOCKER_CACHE_ARGS_FAT="--cache-from type=gha,scope=stirling-pdf-fat"
         else
             DOCKER_CACHE_ARGS_FAT=""
         fi
