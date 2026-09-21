@@ -34,9 +34,9 @@ export function TitleBarChrome({ children }: { children: ReactNode }) {
     <TitleBarStripContext.Provider value={value}>
       <div className={styles.column}>
         <TitleBarStrip>
-          <div ref={setViews} className={styles.slot} />
+          <div ref={setViews} className={styles.viewsSlot} />
           <div ref={setSearch} className={styles.searchSlot} />
-          <div ref={setGlobals} className={styles.slot} />
+          <div ref={setGlobals} className={styles.globalsSlot} />
         </TitleBarStrip>
         {children}
       </div>

@@ -20,15 +20,21 @@
 
 /* The desktop title-bar row. Normal flow (first row of the frame column), so it
    reserves its own height for the whole app and nothing below it can reach the
-   window-controls corner. */
+   window-controls corner.
+
+   Three columns: search sits in the fixed centre column, centred on the strip;
+   the view switcher and global actions hug it from the equal side columns, so
+   the empty space (and the OS controls) fall on the outer edges rather than
+   between the clusters. */
 .strip {
   position: relative;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr minmax(0, 24rem) 1fr;
   align-items: center;
-  gap: 8px;
+  column-gap: 8px;
   flex-shrink: 0;
   height: var(--titlebar-h, 2.5rem);
-  padding: 0 8px;
+  padding-inline: 8px;
   background: var(--c-surface);
   border-bottom: 1px solid var(--c-border-subtle);
   user-select: none;
@@ -36,26 +42,31 @@
   z-index: 60;
 }
 
-/* macOS draws the traffic lights top-left over our content (overlay title bar);
-   reserve that space. Physical left, not inline-start: macOS ignores text
-   direction. */
+/* The OS controls live in the reserved corners: macOS traffic lights top-left
+   (drawn by the OS over the overlay title bar), Windows controls top-right.
+   Reserve the SAME width on both sides so the centre column stays on the true
+   window midpoint whichever corner an OS actually uses. */
 .strip[data-os="macos"] {
-  padding-left: 4.75rem;
+  padding-inline: 4.75rem;
 }
-
-/* Windows controls occupy the top-right; reserve it physically so the centre
-   content clears them in every text direction. */
 .strip[data-os="windows"] {
-  padding-right: 8.625rem; /* three 46px controls */
+  padding-inline: 8.625rem; /* three 46px controls */
 }
 
-/* Portal targets for the WorkbenchBar's view switcher (left) and global actions
-   (right). Both hug their content; the search slot between them takes the slack. */
-.slot {
+/* Portal targets: the view switcher hugs the search from the left column, the
+   global actions from the right; search fills the centre column. */
+.viewsSlot {
+  justify-self: end;
   display: flex;
   align-items: center;
   min-width: 0;
-  flex-shrink: 0;
+}
+
+.globalsSlot {
+  justify-self: start;
+  display: flex;
+  align-items: center;
+  min-width: 0;
 }
 
 .searchSlot {
@@ -63,7 +74,6 @@
   align-items: center;
   justify-content: center;
   min-width: 0;
-  flex: 1 1 auto;
 }
 
 .controls {
