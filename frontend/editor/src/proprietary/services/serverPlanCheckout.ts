@@ -107,22 +107,53 @@ export async function createServerPlanCheckoutSession(
   return { clientSecret, url, sessionId: data?.sessionId ?? null };
 }
 
-/** Returns confirmed purchased seats, or null while fulfilment is pending. */
+export interface PendingTeamChange {
+  scheduleId: string;
+  quantity: number;
+  effectiveAt: number;
+  interval: string | null;
+}
+
+/** Reads or cancels a future Team change; the Edge function verifies the billing leader. */
+export async function teamSubscriptionChange(
+  action: "status" | "cancel",
+  scheduleId?: string,
+): Promise<{
+  pending: PendingTeamChange | null;
+  unsupportedSchedule?: boolean;
+}> {
+  if (!supabase) throw new Error("Checkout is not configured");
+  const token = await getAccessToken();
+  if (!token) throw new Error("Sign in to manage your Team plan");
+  const { data, error } = await supabase.functions.invoke(
+    "team-subscription-change",
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      body: { action, scheduleId },
+    },
+  );
+  if (error || data?.error) throw new Error(data?.error || error?.message);
+  return data;
+}
+
+/** Returns confirmed purchased seats, a future change, or null while fulfilment is pending. */
 export async function verifyTeamCheckout(
   sessionId: string,
   quantity: number,
-): Promise<number | null> {
+): Promise<number | PendingTeamChange | null> {
   if (!supabase) throw new Error("Checkout is not configured");
   const token = await getAccessToken();
   if (!token) throw new Error("Sign in to verify the Team purchase");
   const { data, error } = await supabase.functions.invoke<{
     ready: boolean;
     licensedUsers?: number;
+    scheduled?: PendingTeamChange;
   }>("complete-team-checkout", {
     headers: { Authorization: `Bearer ${token}` },
     body: { session_id: sessionId, quantity },
   });
   if (error) throw error;
+  if (data?.scheduled) return data.scheduled;
   const users = data?.licensedUsers;
   return data?.ready &&
     typeof users === "number" &&

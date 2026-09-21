@@ -80,6 +80,7 @@ public class ApplicationProperties {
     private PdfEditor pdfEditor = new PdfEditor();
     private AiEngine aiEngine = new AiEngine();
     private FormDetection formDetection = new FormDetection();
+    private Docparse docparse = new Docparse();
     private Mcp mcp = new Mcp();
     private InternalApi internalApi = new InternalApi();
     private Cluster cluster = new Cluster();
@@ -511,6 +512,17 @@ public class ApplicationProperties {
          * place rather than copied. Blank disables seeding.
          */
         private String preinstalledModelDir = "";
+    }
+
+    /**
+     * DocParse settings (top-level {@code docparse.*}): document understanding for ingestion
+     * pipelines.
+     */
+    @Data
+    public static class Docparse {
+
+        /** Master switch; hides the DocParse endpoints when false. */
+        private boolean enabled = true;
     }
 
     /**
