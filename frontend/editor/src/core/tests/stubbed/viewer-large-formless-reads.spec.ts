@@ -35,15 +35,19 @@ function buildFormlessPdf(targetBytes: number): Buffer {
     };
 
     push("%PDF-1.7\n");
-    offsets[1] = push(object(1, "<</Type/Catalog/Pages 2 0 R>>"));
-    offsets[2] = push(object(2, "<</Type/Pages/Kids[3 0 R]/Count 1>>"));
-    offsets[3] = push(
+    offsets[1] = offset;
+    push(object(1, "<</Type/Catalog/Pages 2 0 R>>"));
+    offsets[2] = offset;
+    push(object(2, "<</Type/Pages/Kids[3 0 R]/Count 1>>"));
+    offsets[3] = offset;
+    push(
       object(
         3,
         "<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Contents 4 0 R/Resources<<>>>>",
       ),
     );
-    offsets[4] = push(`4 0 obj\n<</Length ${padding}>>\nstream\n`);
+    offsets[4] = offset;
+    push(`4 0 obj\n<</Length ${padding}>>\nstream\n`);
     const fullLines = Math.floor(padding / line.length);
     const remainder = padding - fullLines * line.length;
     push(Buffer.alloc(fullLines * line.length, line));
