@@ -42,7 +42,9 @@ What the patches change:
   renders/allocs/reuses/bytes), and documents open through `FPDF_FILEACCESS`
   (`FPDF_LoadCustomDocument`) so PDFium reads 64 KB blocks from the cloned
   `ArrayBuffer` instead of copying the file into the WASM heap
-  (`__stirlingWorkerHeapBytes()` reports the worker heap for probes).
+  (`__stirlingWorkerHeapBytes()` reports the worker heap and
+  `__stirlingWorkerDocBytes` the document bytes the worker materialized, which
+  is 0 while it streams a Blob).
 - **Plugins**: batched interaction-manager dispatch and cancellation of stale
   tile renders.
 
