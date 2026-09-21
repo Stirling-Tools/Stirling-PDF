@@ -1,8 +1,7 @@
 #!/usr/bin/env node
-// Verifies the local @embedpdf patches, applies them when missing, verifies
-// again. Also runs from the Vite build: installs that skip lifecycle scripts
-// (`npm ci --ignore-scripts`, packagers) must patch or fail loudly instead of
-// shipping an unpatched engine.
+// Applies and verifies the local @embedpdf patches. Runs from postinstall and
+// from the Vite build, so installs that skip lifecycle scripts still patch or
+// fail loudly instead of shipping an unpatched engine.
 import { readdirSync, rmSync } from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
@@ -20,7 +19,7 @@ function run(script, args = []) {
   );
 }
 
-export function ensureEmbedpdfPatches() {
+function ensureEmbedpdfPatches() {
   let applied = false;
   for (const script of scripts) {
     if (run(script, ["--check"])) continue;

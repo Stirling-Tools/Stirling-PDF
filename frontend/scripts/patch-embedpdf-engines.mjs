@@ -1,9 +1,8 @@
 #!/usr/bin/env node
-// Local patch for the pinned @embedpdf/engines: the worker copies every rendered
-// bitmap across the boundary and re-fetches + recompiles pdfium.wasm even when
-// the main thread holds a compiled WebAssembly.Module. Upstream accepts no
-// patches while 3.0 is prepared, so both gaps are closed here by version anchor.
-// Delete once the engine provides transfers and module handoff natively.
+// Local patch for the pinned @embedpdf/engines: the worker copies render bitmaps
+// and re-fetches pdfium.wasm even when the main thread holds a compiled module
+// (embedpdf/embed-pdf-viewer#105). Version-anchored and fail-loud; delete once
+// the engine ships transfers and module handoff.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -20,7 +19,7 @@ const target = path.join(enginesDir, "dist/lib/pdfium/web/worker-engine.js");
 
 if (!existsSync(target) || !existsSync(packageJsonPath)) {
   console.error(
-    "[patch-embedpdf-engines] @embedpdf/engines is not installed; skipping",
+    "[patch-embedpdf-engines] @embedpdf/engines is not installed; cannot verify the local patches",
   );
   process.exit(checkOnly ? 1 : 0);
 }
@@ -37,41 +36,6 @@ if (installedVersion !== EXPECTED_VERSION) {
 }
 
 let source = readFileSync(target, "utf8");
-const patchedSnippets = [
-  "(wasmUrl || event.data.wasmModule)",
-  "let wasmBinary = event.data.wasmModule;",
-  "new WebAssembly.Instance(wasmBinary, imports)",
-  "imageData.byteOffset === 0",
-  "wasmModule: precompiledWasmModule",
-  "delete wasmInitMessage.wasmModule",
-  "__stirlingCreatedUrls",
-  "URL.revokeObjectURL(__stirlingUrl)",
-  "__stirlingScratchBitmap",
-  "bitmap kept for reuse",
-  "__stirlingDocAccess",
-  "__stirlingReleaseFileAccess",
-  "FPDF_LoadCustomDocument",
-  "__stirlingWorkerHeapBytes",
-  "__stirlingWorkerDocBytes",
-  'typeof runtime.addFunction === "function"',
-];
-
-if (checkOnly) {
-  const missing = patchedSnippets.filter(
-    (snippet) => !source.includes(snippet),
-  );
-  if (missing.length > 0) {
-    console.error(
-      `[patch-embedpdf-engines] check failed: ${missing.length} patched snippet(s) missing. ` +
-        "Run `npm install` (or `npm run postinstall`) to apply the local engine patch.",
-    );
-    process.exit(1);
-  }
-  console.log(
-    `[patch-embedpdf-engines] check passed for @embedpdf/engines@${installedVersion}`,
-  );
-  process.exit(0);
-}
 
 // Text inside the embedded worker bundle is stored with `\n` escape sequences, so
 // patterns that span lines use a literal backslash-n. Patterns outside it use real
@@ -98,7 +62,7 @@ const replacements = [
     label: "worker: transfer whole-buffer render results",
     find: 'respond(response) {\\n    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, "Sending response:", response.type);\\n    self.postMessage(response);\\n  }',
     replace:
-      'respond(response) {\\n    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, "Sending response:", response.type);\\n    const imagePayload = response && response.data;\\n    const imageData = imagePayload && imagePayload.data;\\n    if (imageData && typeof imagePayload.width === "number" && typeof imagePayload.height === "number" && imageData.byteLength >= 65536) {\\n      const imageBuffer = imageData.buffer;\\n      if (imageBuffer instanceof ArrayBuffer && imageData.byteOffset === 0 && imageData.byteLength === imageBuffer.byteLength) {\\n        self.postMessage(response, [imageBuffer]);\\n        return;\\n      }\\n    }\\n    self.postMessage(response);\\n  }',
+      'respond(response) {\\n    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, "Sending response:", response.type);\\n    const imagePayload = response && response.data;\\n    const imageData = imagePayload && imagePayload.data;\\n    // Below 64 KB a transfer costs more than the copy it avoids; tile renders that matter are MB scale.\\n    if (imageData && typeof imagePayload.width === "number" && typeof imagePayload.height === "number" && imageData.byteLength >= 65536) {\\n      const imageBuffer = imageData.buffer;\\n      if (imageBuffer instanceof ArrayBuffer && imageData.byteOffset === 0 && imageData.byteLength === imageBuffer.byteLength) {\\n        self.postMessage(response, [imageBuffer]);\\n        return;\\n      }\\n    }\\n    self.postMessage(response);\\n  }',
   },
   {
     label: "engine: read wasmModule option",
@@ -122,8 +86,8 @@ const replacements = [
       logger: options.logger ? serializeLogger(options.logger) : void 0,
       fontFallback: options.fontFallback
     };
-    // WebAssembly.Module is structured-cloneable in Chromium/Firefox but not
-    // WebKit; when cloning fails the worker fetches the URL itself.
+    // Cloning a module can throw DataCloneError (W3C wasm-web-api agent-cluster
+    // restriction); the worker then fetches the URL itself.
     if (options.wasmModule) wasmInitMessage.wasmModule = options.wasmModule;
     try {
       this.worker.postMessage(wasmInitMessage);
@@ -167,11 +131,7 @@ export {
   // macrotask so the platform has resolved them.
   setTimeout(() => {
     for (const __stirlingUrl of __stirlingCreatedUrls) {
-      try {
-        URL.revokeObjectURL(__stirlingUrl);
-      } catch {
-        /* already revoked */
-      }
+      URL.revokeObjectURL(__stirlingUrl);
     }
   }, 0);
   return __stirlingEngine;
@@ -251,44 +211,44 @@ export {
       "    const reader = isBlob ? new FileReaderSync() : null;",
       "    const blockCache = isBlob ? new Map() : null;",
       "    const CACHE_MAX = 32;",
-      "    const BLOCK_SIZE = 65536;",
+      "    const BLOCK_SIZE = 65536; // 64 KB blocks cap the cache at 2 MB: a page object graph stays resident without pinning the file",
       "    const runtime = this.pdfiumModule.pdfium;",
       "    let filePtr;",
       "    let docPtr;",
       "    globalThis.__stirlingWorkerHeapBytes = () => this.pdfiumModule.pdfium.wasmExports.memory.buffer.byteLength;",
       '    if (typeof runtime.addFunction === "function" && typeof runtime.removeFunction === "function" && typeof runtime.setValue === "function") {',
       "      filePtr = this.memoryManager.malloc(12);",
-      "      const getBlockPtr = runtime.addFunction((param, position, bufferPtr, size) => {",
-      "      const end = position + size;",
-      "      if (position < 0 || end > length) return 0;",
-      "      if (isBlob) {",
-      "        if (size <= BLOCK_SIZE) {",
-      "          const blockIndex = Math.floor(position / BLOCK_SIZE);",
-      "          const blockStart = blockIndex * BLOCK_SIZE;",
-      "          let cached = blockCache.get(blockIndex);",
-      "          if (!cached) {",
-      "            const blockEnd = Math.min(blockStart + BLOCK_SIZE, length);",
-      "            const chunk = reader.readAsArrayBuffer(file.content.slice(blockStart, blockEnd));",
-      "            cached = new Uint8Array(chunk);",
-      "            if (blockCache.size >= CACHE_MAX) {",
-      "              const firstKey = blockCache.keys().next().value;",
-      "              blockCache.delete(firstKey);",
+      "        const getBlockPtr = runtime.addFunction((param, position, bufferPtr, size) => {",
+      "        const end = position + size;",
+      "        if (position < 0 || end > length) return 0;",
+      "        if (isBlob) {",
+      "          if (size <= BLOCK_SIZE) {",
+      "            const blockIndex = Math.floor(position / BLOCK_SIZE);",
+      "            const blockStart = blockIndex * BLOCK_SIZE;",
+      "            let cached = blockCache.get(blockIndex);",
+      "            if (!cached) {",
+      "              const blockEnd = Math.min(blockStart + BLOCK_SIZE, length);",
+      "              const chunk = reader.readAsArrayBuffer(file.content.slice(blockStart, blockEnd));",
+      "              cached = new Uint8Array(chunk);",
+      "              if (blockCache.size >= CACHE_MAX) {",
+      "                const firstKey = blockCache.keys().next().value;",
+      "                blockCache.delete(firstKey);",
+      "              }",
+      "              blockCache.set(blockIndex, cached);",
       "            }",
-      "            blockCache.set(blockIndex, cached);",
+      "            const offsetInBlock = position - blockStart;",
+      "            if (offsetInBlock + size <= cached.length) {",
+      "              this.pdfiumModule.pdfium.HEAPU8.set(cached.subarray(offsetInBlock, offsetInBlock + size), bufferPtr);",
+      "              return 1;",
+      "            }",
       "          }",
-      "          const offsetInBlock = position - blockStart;",
-      "          if (offsetInBlock + size <= cached.length) {",
-      "            this.pdfiumModule.pdfium.HEAPU8.set(cached.subarray(offsetInBlock, offsetInBlock + size), bufferPtr);",
-      "            return 1;",
-      "          }",
+      "          const directChunk = reader.readAsArrayBuffer(file.content.slice(position, end));",
+      "          this.pdfiumModule.pdfium.HEAPU8.set(new Uint8Array(directChunk), bufferPtr);",
+      "        } else {",
+      "          this.pdfiumModule.pdfium.HEAPU8.set(array.subarray(position, end), bufferPtr);",
       "        }",
-      "        const directChunk = reader.readAsArrayBuffer(file.content.slice(position, end));",
-      "        this.pdfiumModule.pdfium.HEAPU8.set(new Uint8Array(directChunk), bufferPtr);",
-      "      } else {",
-      "        this.pdfiumModule.pdfium.HEAPU8.set(array.subarray(position, end), bufferPtr);",
-      "      }",
-      "      return 1;",
-      '    }, "iiiii");',
+      "        return 1;",
+      '      }, "iiiii"); // int return plus param/position/bufferPtr/size, the FPDF_FILEACCESS GetBlock shape',
       '      runtime.setValue(filePtr, length, "i32");',
       '      runtime.setValue(filePtr + 4, getBlockPtr, "i32");',
       '      runtime.setValue(filePtr + 8, 0, "i32");',
@@ -323,6 +283,24 @@ export {
       "this.pageCache.pdf.FPDF_CloseDocument(this.docPtr);\\n    __stirlingReleaseFileAccess(this.pageCache.pdf, this.filePtr);\\n    this.memoryManager.free(WasmPointer(this.filePtr));",
   },
 ];
+
+if (checkOnly) {
+  const missing = replacements.filter(
+    ({ replace }) => !source.includes(replace),
+  );
+  if (missing.length > 0) {
+    console.error(
+      `[patch-embedpdf-engines] check failed: ${missing.length} patch(es) missing: ` +
+        `${missing.map(({ label }) => label).join(", ")}. ` +
+        "Run `npm install` (or `npm run postinstall`) to apply the local engine patch.",
+    );
+    process.exit(1);
+  }
+  console.log(
+    `[patch-embedpdf-engines] check passed for @embedpdf/engines@${installedVersion}`,
+  );
+  process.exit(0);
+}
 
 for (const { label, find, replace } of replacements) {
   if (source.includes(replace)) {

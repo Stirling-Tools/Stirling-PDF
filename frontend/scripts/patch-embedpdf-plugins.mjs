@@ -1,12 +1,10 @@
 #!/usr/bin/env node
-// Local patches for the pinned @embedpdf plugins:
-// 1. interaction-manager emits onHandlerChange per registered handler and every
-//    mounted scope re-resolves its handlers on each emit; a page jump in a large
-//    document re-resolves hundreds of times (22.8% of jump busy samples).
-// 2. search dispatches appendSearchResults per page from engine progress; a
-//    500-page query costs ~500 subscriber recomputes (400 ms of long tasks).
-// Emits batch into one microtask, keeping the contract that listeners run before
-// the next task. Delete once the plugins batch these notifications natively.
+// Local patches for the pinned @embedpdf plugins: interaction-manager emits
+// onHandlerChange per handler registration and search dispatches per result
+// page, so a jump or query in a large document re-resolves handlers and
+// subscribers hundreds of times. Both batch into one microtask, which keeps the
+// contract that listeners run before the next task. Delete once the plugins
+// batch natively.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -25,7 +23,7 @@ function loadPackage(name, relTarget = "dist/index.js") {
   const target = path.join(dir, relTarget);
   if (!existsSync(target) || !existsSync(packageJsonPath)) {
     console.error(
-      `[patch-embedpdf-plugins] ${name} is not installed; skipping`,
+      `[patch-embedpdf-plugins] ${name} is not installed; cannot verify the local patches`,
     );
     process.exit(checkOnly ? 1 : 0);
   }
@@ -51,6 +49,7 @@ function fail(name, label) {
 }
 
 // --- interaction-manager: batch onHandlerChange emits -----------------------
+const EMIT_SITES = 6;
 const emitSnippet = "this.onHandlerChange$.emit({ ...this.state });";
 const callSnippet = "this.__stirlingScheduleHandlerChange();";
 const emitHelperSnippet = `__stirlingScheduleHandlerChange() {
@@ -65,7 +64,9 @@ const emitHelperSnippet = `__stirlingScheduleHandlerChange() {
 function checkInteractionManager(pkg) {
   const rawEmits = pkg.source.split(emitSnippet).length - 1;
   const callSites = pkg.source.split(callSnippet).length - 1;
-  return pkg.source.includes(MARKER) && rawEmits === 1 && callSites === 6;
+  return (
+    pkg.source.includes(MARKER) && rawEmits === 1 && callSites === EMIT_SITES
+  );
 }
 
 function applyInteractionManager(pkg) {
@@ -78,9 +79,9 @@ function applyInteractionManager(pkg) {
   }) {`;
   if (!pkg.source.includes(registerAnchor)) fail(pkg.name, "registerHandlers");
   const occurrences = pkg.source.split(emitSnippet).length - 1;
-  if (occurrences !== 6) {
+  if (occurrences !== EMIT_SITES) {
     console.error(
-      `[patch-embedpdf-plugins] expected 6 emit sites, found ${occurrences}; re-verify against the installed version.`,
+      `[patch-embedpdf-plugins] expected ${EMIT_SITES} emit sites, found ${occurrences}; re-verify against the installed version.`,
     );
     process.exit(1);
   }
