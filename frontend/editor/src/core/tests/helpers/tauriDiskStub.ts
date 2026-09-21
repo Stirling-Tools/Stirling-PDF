@@ -272,10 +272,7 @@ export async function seedFiles(page: Page, files: SeedFile[]) {
 
 export async function dismissModals(page: Page) {
   for (let i = 0; i < 8; i++) {
-    // Dialog-scoped first, and deliberately not by aria-label: the welcome
-    // carousel's close button carries none, so an attribute match lands on the
-    // window chrome's Close - which is earlier in the DOM and does nothing -
-    // and the carousel's overlay then eats every click that follows.
+    // Scope to the modal: the window chrome also has a Close control but cannot dismiss overlays.
     const inDialog = page
       .getByRole("dialog")
       .getByRole("button", { name: "Close" })
@@ -288,14 +285,12 @@ export async function dismissModals(page: Page) {
     await close.click({ timeout: 2000 }).catch(() => {});
     await page.waitForTimeout(250);
   }
-  // Deliberately no Escape here: it backs the file manager out to the editor,
-  // which silently moved every later scenario off the file list.
+  // Escape leaves the library, so dismiss overlays with their own controls.
   await page.waitForTimeout(300);
 }
 
 export async function openCard(page: Page, name: string) {
-  // Scope to the grid card: a bare text match also hits the library rail on the
-  // left, which navigates without loading the file into the workbench.
+  // Sidebar matches navigate without opening the file; target the grid card.
   const card = page
     .locator(".files-page-card", { hasText: name.replace(/\.pdf$/, "") })
     .first();
@@ -307,8 +302,7 @@ export async function openCard(page: Page, name: string) {
     .getByRole("button", { name: /Open Files/i })
     .waitFor({ state: "detached", timeout: 15_000 })
     .catch(() => {});
-  // And for the document itself to render - a re-read from disk re-parses the
-  // file, so the viewer sits on "Loading tool…" well after the toast has fired.
+  // Disk reads reparse the document; wait for rendering as well as the route change.
   await page
     .getByText(/Loading tool/i)
     .waitFor({ state: "detached", timeout: 20_000 })

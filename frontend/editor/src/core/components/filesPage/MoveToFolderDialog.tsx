@@ -70,7 +70,6 @@ export function MoveToFolderDialog({
       );
     }
 
-    // Pre-order DFS; truncates past MAX_TREE_DEPTH to prevent stack overflow.
     const MAX_TREE_DEPTH = 50;
     const order: FolderRecord[] = [];
     const depths = new Map<FolderId, number>();

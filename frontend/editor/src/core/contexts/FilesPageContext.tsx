@@ -171,8 +171,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const { config: appConfig } = useAppConfig();
   const { isAnonymous } = useAuth();
 
-  // Refs inside, so refresh isn't recreated (and re-run) every time the
-  // workbench changes - it only needs whichever files are open when it runs.
+  // Refs keep workspace changes from restarting library refreshes.
   const { openFileIdsRef, onOpenFilesDetached } = useDiskLinkReconcile();
 
   const [allFiles, setAllFiles] = useState<StirlingFileStub[]>([]);
@@ -180,7 +179,6 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   // Only the newest refresh may publish results or clear loading.
   const refreshGenRef = useRef(0);
 
-  // Narrow dep so refresh isn't recreated on every folders field change.
   const setFoldersError = folders.setError;
   const storageEnabled = appConfig?.storageEnabled === true;
   const shareLinksEnabled = appConfig?.storageShareLinksEnabled === true;
@@ -193,10 +191,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
     try {
       const localStubs = await fileStorage.getAllStirlingFileStubs();
       if (gen !== refreshGenRef.current) return;
-      // A file the user deleted outside the app must not be offered here, so
-      // reconcile before anything is rendered. Leaves only: every version behind
-      // them shares a source, and checking all of them multiplies the work by
-      // the length of the history.
+      // Reconcile disk deletions before displaying leaves; checking every version repeats the same IO.
       const localLeaf = await pruneMissingRecentFiles(
         localStubs.filter((s) => s.isLeaf !== false),
         {
@@ -307,7 +302,6 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const submitFolderName = useCallback(
     async (name: string) => {
       if (folderNameDialog.mode === "new") {
-        // Chosen before the dialog opened, and only used at the root.
         const created = await folders.createFolder(
           name,
           folderNameDialog.parentId ?? folders.currentFolderId,
@@ -348,8 +342,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const moveFilesTo = useCallback(
     async (fileIds: FileId[], folderId: FolderId | null) => {
       if (fileIds.length === 0) return;
-      // fileMap is a render-time snapshot, so a file created moments ago is not in
-      // it yet. Storage is the truth, and falling back keeps it in the move.
+      // Newly imported files may not be in the render snapshot yet; read them from storage.
       const fetched = await Promise.all(
         fileIds.map(
           (id) => fileMap.get(id) ?? fileStorage.getStirlingFileStub(id),
@@ -357,7 +350,6 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       );
       const stubs = fetched.filter((s): s is StirlingFileStub => Boolean(s));
       const localOnly = stubs.filter((s) => s.remoteStorageId == null);
-      // Cloud list is mutated below with newly-promoted local files.
       const cloudFiles = stubs.filter((s) => s.remoteStorageId != null);
 
       const targetFolder =
@@ -365,8 +357,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       const targetKind = targetFolder ? folderKind(targetFolder) : null;
 
       if (targetKind === "local") {
-        // In a mount means on the disk: write each file into the directory, then retire
-        // the app-side copy once the bytes verifiably landed.
+        // Retire app-side copies only after their bytes have been written into the mounted directory.
         const { written, failedCount } = await writeIntoMount(
           targetFolder?.directory,
           localOnly.map((stub) => ({
@@ -452,7 +443,6 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
                 remoteSharedViaLink: false,
               });
             }
-            // Promoted file joins the bulk-move round.
             cloudFiles.push({
               ...stub,
               remoteStorageId: remoteId,
@@ -506,9 +496,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // Local files moving to the root DO need a write when they are leaving a folder —
-      // their membership is a browser-side folderId that nothing above has touched (the
-      // upload branch only runs for a non-null target).
+      // Root moves still need to clear local folderId; the server-upload branch does not run here.
       if (folderId === null && localOnly.length > 0) {
         const leaving = localOnly
           .filter((s) => (s.folderId ?? null) !== null)
@@ -524,7 +512,6 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
 
   const moveFolderTo = useCallback(
     async (folderId: FolderId, newParentId: FolderId | null) => {
-      // Client-side cycle guard.
       if (newParentId !== null && folders.isDescendant(newParentId, folderId)) {
         folders.setError(
           t(
@@ -534,9 +521,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
         );
         return;
       }
-      // A subtree is one kind throughout (each kind has its own system of
-      // record), so a cross-kind drop is refused here as a message rather
-      // than surfacing as a thrown error from the context.
+      // Each folder kind has its own storage authority, so moves cannot cross kinds.
       if (newParentId !== null) {
         const source = folders.foldersById.get(folderId);
         const target = folders.foldersById.get(newParentId);
@@ -555,13 +540,11 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
     [folders, t],
   );
 
-  // Delete dialog state. removeFiles only queues + opens when a cloud copy is
-  // involved; local-only deletes skip the dialog and run immediately.
+  // Local-only deletion is immediate; server copies require a scope choice.
   const [deleteDialogFileIds, setDeleteDialogFileIds] = useState<FileId[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  // The actual deletion for a chosen scope. Shared by the direct (local-only)
-  // path and the dialog's confirm.
+  // Shared by immediate local deletion and confirmed server-copy deletion.
   const performDelete = useCallback(
     async (fileIds: FileId[], scope: DeleteScope) => {
       const stubs = fileIds
@@ -599,7 +582,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // Local delete - skip ephemeral server-/shared- stubs (no IDB row).
+      // Server/shared placeholders have no IndexedDB row to delete.
       if (scope === "device" || scope === "everywhere") {
         const localIds = stubs
           .filter((s) => {
@@ -708,9 +691,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const promptDeleteFolder = useCallback(
     (folder: FolderRecord) => {
       if (folderKind(folder) === "local") {
-        // Removing a mount destroys nothing — the record goes, the directory and every
-        // file in it stay — so there is nothing to warn about and the delete dialog's
-        // "what about the files?" question would be a scary lie.
+        // Unmounting only removes the mapping; the directory and its files remain on disk.
         void folders.deleteFolder(folder.id).catch((err) => {
           folders.setError(
             err instanceof Error
@@ -746,7 +727,6 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
     [fileActions, filesInSubtree, folders, refresh],
   );
 
-  // Memoise to avoid re-rendering every FileCard on unrelated state churn.
   const value = useMemo<FilesPageContextValue>(
     () => ({
       allFiles,

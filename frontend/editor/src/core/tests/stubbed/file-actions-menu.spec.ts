@@ -3,11 +3,7 @@ import type { Page } from "@playwright/test";
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import { openRecents, uploadFiles } from "@app/tests/helpers/ui-helpers";
 
-// Reads the library as cards, so it asks for the grid.
 test.use({ filesViewMode: "grid" });
-
-// Per-file actions live behind a kebab on two surfaces - the file sidebar and
-// the Recents grid. They must offer the same file actions on both.
 
 const SAMPLE = path.join(import.meta.dirname, "../test-fixtures/sample.pdf");
 
@@ -101,12 +97,10 @@ test("a duplicate inherits the original's classification", async ({ page }) => {
   await openKebab(page);
   await page.getByRole("menuitem", { name: "Duplicate" }).click();
 
-  // The copy carries the label straight away - its row shows the label chip...
   const copy = rows(page)
     .filter({ hasText: "classified_invoice (copy).pdf" })
     .first();
   await expect(copy).toContainText("Invoice", { timeout: 5_000 });
-  // ...and it counts towards the same category group.
   await expect(financial.locator(".file-sidebar-group-count")).toHaveText("2");
 });
 

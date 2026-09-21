@@ -97,13 +97,11 @@ export default function FileManagerView() {
 
   const { sharingEnabled } = useSharingEnabled();
 
-  // ≤800px hosts the details panel in a button-triggered Drawer.
   const isCompactDetailsViewport = useMediaQuery("(max-width: 800px)") ?? false;
 
   const useFullScreenDrawer = useMediaQuery("(max-width: 640px)") ?? false;
   const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false);
-  // Save-to-server modal target. Bulk button uses local-only selection;
-  // per-file kebab uses [file]. Targets root; folder placement is via drop.
+  // Uploads go to the server root; moving into a folder is a separate action.
   const [saveToServerTarget, setSaveToServerTarget] = useState<
     StirlingFileStub[] | null
   >(null);
@@ -194,7 +192,6 @@ export default function FileManagerView() {
   const foldersById = folders.foldersById;
   const currentFolderId = folders.currentFolderId;
 
-  // Apply deep links and history navigation after the folder map loads.
   useEffect(() => {
     const match = location.pathname.match(/^\/files\/([^/]+)/);
     const param = match?.[1] ?? null;

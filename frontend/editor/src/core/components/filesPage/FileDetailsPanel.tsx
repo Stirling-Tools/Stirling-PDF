@@ -72,8 +72,7 @@ export function FileDetailsPanel({
 
   const [downloading, setDownloading] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
-  // Metadata (size/type/dates) is collapsed by default so the panel stays
-  // short and the action buttons keep their pinned footer in view.
+  // Collapsed metadata leaves room for the preview and footer actions.
   const [fieldsOpen, setFieldsOpen] = useState(false);
   const [versionsOpen, setVersionsOpen] = useState(false);
   // Stored label IDs need the display-name seam for localization.
@@ -318,14 +317,6 @@ export function FileDetailsPanel({
                 )}
               </>
             )}
-            {/* Version journey. Each tool run writes a new StirlingFile
-                with the same `originalFileId` and an incremented
-                `versionNumber`, so the chain reconstructs the edit
-                timeline. The previous file manager exposed this and the
-                refactored one had silently dropped it; this revival also
-                shows WHICH tool was added at each step (the delta from
-                the prior version) so the user can read the journey
-                top-to-bottom. Long chains (> 6) collapse the middle. */}
             {versionChain.length > 1 &&
               (compactVersions && onOpenVersionHistory ? (
                 <Button

@@ -19,15 +19,9 @@ import { Button } from "@app/ui/Button";
 interface FolderMenuProps {
   folder: FolderRecord;
   processing: ProcessingFolderState | undefined;
-  /**
-   * A folder whose engine picks up arrivals on its own, where an explicit
-   * "retry failed" has nothing to act on.
-   */
+  /** Arrival-driven engine with no explicit retry-failed action. */
   continuous: boolean;
-  /**
-   * A mounted disk directory. The disk owns its name, colour and existence, so
-   * the rename, appearance and delete entries do not apply to it.
-   */
+  /** Disk-owned folders cannot be renamed, recoloured or deleted here. */
   isMount: boolean;
   /** Mount roots can be unmounted; a subdirectory below one cannot. */
   canUnmount: boolean;
@@ -57,11 +51,7 @@ interface FolderMenuProps {
   triggerRef?: React.Ref<HTMLButtonElement>;
 }
 
-/**
- * Everything that acts on one folder, behind a single trigger. The folder you
- * are inside and every folder in a row open this same menu; only the trigger
- * and the Open entry differ.
- */
+/** Shared folder actions for the current folder and folder rows. */
 export function FolderMenu({
   folder,
   processing,

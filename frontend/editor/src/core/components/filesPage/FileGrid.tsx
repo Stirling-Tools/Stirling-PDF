@@ -87,7 +87,6 @@ interface FileGridProps {
 
   onSetSelection?: (ids: Set<FileId>) => void;
   onOpenFolder: (id: FolderId) => void;
-  /** "Add to workspace". */
   onOpenFile: (file: StirlingFileStub) => void;
   onOpenDiskFile?: (entry: DiskFileEntry) => void;
 
@@ -1869,9 +1868,7 @@ const FileRow = React.memo(function FileRow({
 
 export { ROOT_FOLDER_ID };
 
-/**
- * Disk entries stay on disk until opened; picker selection only records their paths.
- */
+/** Selecting a disk entry records its path; bytes are read only when opened. */
 const DiskFileCard = React.memo(function DiskFileCard({
   selectionOnly,
   isSelected,

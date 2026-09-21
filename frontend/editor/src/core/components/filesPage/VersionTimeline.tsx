@@ -10,7 +10,6 @@ import { StirlingFileStub } from "@app/types/fileContext";
 import { formatFileSize, getFileDate } from "@app/utils/fileUtils";
 import { downloadFileFromStorage } from "@app/utils/downloadUtils";
 
-/** Small label/value row with crisp flex alignment and colon separation. */
 export function DetailField({
   label,
   value,
@@ -48,7 +47,6 @@ export function DetailField({
   );
 }
 
-/** Tool that produced `version` from `prior`; null for v1. */
 function deltaToolFor(
   version: StirlingFileStub,
   prior: StirlingFileStub | null,
@@ -59,7 +57,6 @@ function deltaToolFor(
   return curr[priorLen] ?? null;
 }
 
-/** The operation's own label when it has one, else its translated tool name. */
 function ToolLabel({ operation }: { operation: ToolOperation }) {
   const { t } = useTranslation();
   return <span>{toolOperationLabel(operation, t)}</span>;
@@ -67,16 +64,13 @@ function ToolLabel({ operation }: { operation: ToolOperation }) {
 
 export interface VersionTimelineProps {
   onPickVersion?: (file: StirlingFileStub) => void;
-  /** Chain sorted oldest-first. */
   chain: StirlingFileStub[];
-  /** Currently selected version. */
   currentId: FileId;
   onAddToWorkspace?: (fileIds: FileId[]) => void;
   onRemove?: (fileIds: FileId[]) => void;
   hideHeader?: boolean;
 }
 
-/** Clean, spacious version timeline with minimal clutter. */
 export function VersionTimeline({
   onPickVersion,
   chain,
@@ -88,7 +82,6 @@ export function VersionTimeline({
   const { t } = useTranslation();
   const [showAllCollapsed, setShowAllCollapsed] = useState(false);
 
-  // Newest-first ordering.
   const ordered = useMemo(
     () =>
       [...chain].sort(
@@ -97,7 +90,6 @@ export function VersionTimeline({
     [chain],
   );
 
-  // Index by versionNumber for prior-version lookup.
   const byVersionNumber = useMemo(() => {
     const map = new Map<number, StirlingFileStub>();
     for (const v of chain) {
@@ -106,7 +98,6 @@ export function VersionTimeline({
     return map;
   }, [chain]);
 
-  // Collapse middle when long: 3 newest + ellipsis + 2 oldest.
   const COLLAPSE_THRESHOLD = 6;
   const collapsible = ordered.length > COLLAPSE_THRESHOLD;
   type Row =
@@ -201,7 +192,6 @@ export function VersionTimeline({
                 )}
               </div>
               <div className="files-page-details-version-timeline-body">
-                {/* Header row: Version Badge, Action Title + Menu */}
                 <div
                   style={{
                     display: "flex",
@@ -308,7 +298,6 @@ export function VersionTimeline({
                   )}
                 </div>
 
-                {/* Quiet Meta Line: File Size · Date */}
                 <Text size="xs" c="dimmed" style={{ marginTop: "0.15rem" }}>
                   {formatFileSize(v.size)}
                   {v.lastModified && (
@@ -316,7 +305,6 @@ export function VersionTimeline({
                   )}
                 </Text>
 
-                {/* Show filename ONLY if original upload or if name changed */}
                 {(isOriginal || nameChanged) && (
                   <Text
                     size="xs"
