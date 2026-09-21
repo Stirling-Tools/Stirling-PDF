@@ -9,6 +9,7 @@ import {
   FormFillProvider,
   useFormFill,
 } from "@app/tools/formFill/FormFillContext";
+import { PdfBoxFormProvider } from "@app/tools/formFill/providers/PdfBoxFormProvider";
 import type { FieldEditResult, FormField } from "@app/tools/formFill/types";
 import { allowConsole } from "@app/tests/failOnConsole";
 
@@ -27,6 +28,7 @@ vi.mock("@app/tools/formFill/formApi", () => ({
 // Defined inside each factory: vi.mock is hoisted above any module-level binding.
 vi.mock("@app/tools/formFill/providers/PdfBoxFormProvider", () => ({
   PdfBoxFormProvider: class {
+    readonly name = "pdfbox";
     fetchFields(file: File | Blob, options?: { pageIndices?: number[] }) {
       return fetchFields(file, options);
     }
@@ -37,6 +39,7 @@ vi.mock("@app/tools/formFill/providers/PdfBoxFormProvider", () => ({
 }));
 vi.mock("@app/tools/formFill/providers/PdfiumFormProvider", () => ({
   PdfiumFormProvider: class {
+    readonly name = "pdflib";
     fetchFields(file: File | Blob, options?: { pageIndices?: number[] }) {
       return fetchFields(file, options);
     }
@@ -51,6 +54,12 @@ vi.mock("@app/services/pdfiumService", () => ({
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <FormFillProvider>{children}</FormFillProvider>
+);
+
+const pdfboxWrapper = ({ children }: { children: React.ReactNode }) => (
+  <FormFillProvider provider={new PdfBoxFormProvider()}>
+    {children}
+  </FormFillProvider>
 );
 
 const blob = () => new Blob(["%PDF-1.4"], { type: "application/pdf" });
@@ -354,7 +363,20 @@ describe("FormFillContext per-page loading", () => {
   });
 
   const pageField = (name: string, pageIndex: number): FormField[] => [
-    { name, widgets: [{ pageIndex, x: 1, y: 2 }] },
+    {
+      name,
+      label: name,
+      type: "text",
+      value: "",
+      options: null,
+      displayOptions: null,
+      required: false,
+      readOnly: false,
+      multiSelect: false,
+      multiline: false,
+      tooltip: null,
+      widgets: [{ pageIndex, x: 1, y: 2, width: 10, height: 10 }],
+    },
   ];
 
   it("merges on-demand page fields without dropping page 0", async () => {
@@ -374,14 +396,141 @@ describe("FormFillContext per-page loading", () => {
     ]);
   });
 
+  it("does not page-fetch when the provider answers with the whole document", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), {
+      wrapper: pdfboxWrapper,
+    });
+    fetchFields.mockResolvedValueOnce(pageField("first", 0));
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+    expect(fetchFields).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      await hook.current.ensurePageFields?.(3);
+    });
+    // pdfbox returns everything in one response, so a page request would be a
+    // second full backend fetch.
+    expect(fetchFields).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps loaded fields when a save-time full load fails, and retries", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    fetchFields.mockResolvedValueOnce(pageField("first", 0));
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+
+    fetchFields.mockRejectedValueOnce(new Error("offline"));
+    await act(async () => {
+      await hook.current.ensureAllFields?.();
+    });
+    expect(hook.current.state.fields.map((f) => f.name)).toEqual(["first"]);
+
+    fetchFields.mockResolvedValueOnce([
+      ...pageField("first", 0),
+      ...pageField("second", 2),
+    ]);
+    await act(async () => {
+      await hook.current.ensureAllFields?.();
+    });
+    expect(hook.current.state.fields.map((f) => f.name).sort()).toEqual([
+      "first",
+      "second",
+    ]);
+  });
+
+  it("waits for the initial fetch before loading a page", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    let resolveInitial!: (fields: FormField[]) => void;
+    fetchFields.mockReturnValueOnce(
+      new Promise<FormField[]>((resolve) => {
+        resolveInitial = resolve;
+      }),
+    );
+    let initial!: Promise<void>;
+    act(() => {
+      initial = hook.current.fetchFields(blob(), "file-A");
+    });
+    fetchFields.mockResolvedValueOnce(pageField("third", 3));
+    let page!: Promise<void>;
+    act(() => {
+      page = hook.current.ensurePageFields?.(3) ?? Promise.resolve();
+    });
+    expect(fetchFields).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      resolveInitial(pageField("first", 0));
+      await initial;
+      await page;
+    });
+    expect(fetchFields).toHaveBeenCalledTimes(2);
+    expect(fetchFields.mock.calls[1][1]).toEqual({ pageIndices: [3] });
+    expect(hook.current.state.fields.map((f) => f.name).sort()).toEqual([
+      "first",
+      "third",
+    ]);
+  });
+
+  it("initialises values for a field that arrives with its page", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    fetchFields.mockResolvedValueOnce(pageField("first", 0));
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+    fetchFields.mockResolvedValueOnce([
+      { ...pageField("prefilled", 4)[0], value: "hello" },
+    ]);
+    await act(async () => {
+      await hook.current.ensurePageFields?.(4);
+    });
+
+    expect(hook.current.getValue("prefilled")).toBe("hello");
+  });
+
+  it("keeps same-origin widgets apart and orders them by page", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    fetchFields.mockResolvedValueOnce([
+      {
+        ...pageField("group", 0)[0],
+        widgets: [{ pageIndex: 0, x: 1, y: 2, width: 10, height: 10 }],
+      },
+    ]);
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+    fetchFields.mockResolvedValueOnce([
+      {
+        ...pageField("group", 5)[0],
+        widgets: [{ pageIndex: 5, x: 1, y: 2, width: 20, height: 20 }],
+      },
+    ]);
+    await act(async () => {
+      await hook.current.ensurePageFields?.(5);
+    });
+    fetchFields.mockResolvedValueOnce([
+      {
+        ...pageField("group", 2)[0],
+        widgets: [{ pageIndex: 2, x: 1, y: 2, width: 20, height: 20 }],
+      },
+    ]);
+    await act(async () => {
+      await hook.current.ensurePageFields?.(2);
+    });
+
+    const widgets = hook.current.state.fields[0].widgets ?? [];
+    expect(widgets).toHaveLength(3);
+    expect(widgets.map((w) => w.pageIndex)).toEqual([0, 2, 5]);
+  });
+
   it("discards a per-page load that resolves after a file switch", async () => {
     const { result: hook } = renderHook(() => useFormFill(), { wrapper });
     await act(async () => {
       await hook.current.fetchFields(blob(), "file-A");
     });
-    let resolveSlow!: (v: never[]) => void;
+    let resolveSlow!: (v: FormField[]) => void;
     fetchFields.mockReturnValueOnce(
-      new Promise<never[]>((resolve) => {
+      new Promise<FormField[]>((resolve) => {
         resolveSlow = resolve;
       }),
     );
