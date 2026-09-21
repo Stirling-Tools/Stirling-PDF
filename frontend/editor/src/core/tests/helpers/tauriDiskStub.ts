@@ -317,7 +317,7 @@ export async function openCard(page: Page, name: string) {
 }
 
 export async function gotoFiles(page: Page) {
-  await page.goto("/files");
+  await page.goto("/files?view=recent");
   await page.waitForLoadState("networkidle");
   await page.waitForTimeout(800);
 }
