@@ -10,6 +10,7 @@ import {
   decodePDFRawStream,
 } from "@cantoo/pdf-lib";
 import type { PdfAttachmentObject } from "@embedpdf/models";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
 
 // Reads a portfolio's members from the file's own bytes. The viewer's attachment
 // capability only covers the open document, which stops being the portfolio.
@@ -86,7 +87,7 @@ const collectSpecs = (
 
 const load = async (file: File): Promise<LoadedPortfolio | null> => {
   try {
-    const doc = await PDFDocument.load(await file.arrayBuffer(), {
+    const doc = await PDFDocument.load(await getDocumentBytes(file), {
       ignoreEncryption: true,
       throwOnInvalidObject: false,
       updateMetadata: false,
