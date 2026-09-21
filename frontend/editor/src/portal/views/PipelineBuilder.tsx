@@ -1568,7 +1568,7 @@ export function PipelineBuilder() {
                         ? undefined
                         : chosenDestination && !vectorReady
                           ? t(
-                              "portal.pipelines.builder.ragIngest.destinationNeedsChunks",
+                              "portal.pipelines.builder.ingest.destinationNeedsChunks",
                             )
                           : t("portal.pipelines.builder.needsDestination"),
                     }
