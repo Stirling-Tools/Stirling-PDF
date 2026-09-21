@@ -210,6 +210,27 @@ public class PolicyValidator {
         return toolChainValidator.validate(chain, sourceFormat);
     }
 
+    /** Corpus files must be delivered to a destination, never imported into the editor. */
+    public void validateEditorOutput(Policy policy) {
+        if (!policy.editor().allowed()
+                || !policy.outputIds().isEmpty()
+                || !"inline".equals(policy.output().type())) {
+            return;
+        }
+        for (PipelineStep step : policy.steps()) {
+            if (!"/api/v1/docparse/ingest".equals(step.operation())) {
+                continue;
+            }
+            Map<String, Object> params = step.parameters();
+            if (Boolean.parseBoolean(String.valueOf(params.get("exportChunksJsonl")))
+                    || Boolean.parseBoolean(String.valueOf(params.get("exportMarkdown")))
+                    || "false".equalsIgnoreCase(String.valueOf(params.get("includeOriginal")))) {
+                throw new IllegalArgumentException(
+                        "Choose a file or database destination for chunk and Markdown exports. These files cannot be returned to the editor.");
+            }
+        }
+    }
+
     /**
      * Validate each step against every registered {@link PipelineStepValidator}. Must be called on
      * a request thread (caller's principal present) for the same reason as {@link
