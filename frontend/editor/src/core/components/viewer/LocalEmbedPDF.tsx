@@ -11,6 +11,7 @@ import { createPluginRegistration, type PluginRegistry } from "@embedpdf/core";
 import type { InitialDocumentOptions } from "@embedpdf/plugin-document-manager";
 import { EmbedPDF, useDocumentState } from "@embedpdf/core/react";
 import { useLocalPdfiumEngine } from "@app/hooks/useLocalPdfiumEngine";
+import { toEngineDocumentBuffer } from "@app/utils/engineDocumentSource";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 
@@ -533,7 +534,7 @@ export function LocalEmbedPDF({
             {
               // The engine patch accepts a Blob here and streams it, so the
               // worker holds a handle plus its block cache, not the document.
-              buffer: initialSourceRef.current as unknown as ArrayBuffer,
+              buffer: toEngineDocumentBuffer(initialSourceRef.current),
               name: initialDocument.name,
             },
           ]

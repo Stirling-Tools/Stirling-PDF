@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useDocumentManagerCapability } from "@embedpdf/plugin-document-manager/react";
+import { toEngineDocumentBuffer } from "@app/utils/engineDocumentSource";
 
 interface PendingDocument {
   /** Blob sources stream in the worker; ArrayBuffer sources (URL documents)
@@ -33,7 +34,7 @@ export function DocumentSwapBridge({
 
     void documentManager
       .openDocumentBuffer({
-        buffer: pending.source as unknown as ArrayBuffer,
+        buffer: toEngineDocumentBuffer(pending.source),
         name: pending.name,
         autoActivate: false,
       })
