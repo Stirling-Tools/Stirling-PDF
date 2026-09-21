@@ -187,8 +187,7 @@ class VectorDbOutputSinkTest {
                         "/api/v1/docparse/ingest",
                         Map.of("includeOriginal", false, "exportChunksJsonl", true));
         sink.validatePipeline(output, List.of(valid));
-        var mixed =
-                new PipelineStep("/api/v1/docparse/ingest", Map.of("exportChunksJsonl", true));
+        var mixed = new PipelineStep("/api/v1/docparse/ingest", Map.of("exportChunksJsonl", true));
         assertThrows(
                 IllegalArgumentException.class,
                 () -> sink.validatePipeline(output, List.of(mixed)));
