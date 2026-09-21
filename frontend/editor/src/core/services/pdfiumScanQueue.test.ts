@@ -21,13 +21,23 @@ describe("pdfiumScanQueue", () => {
 
   it("runs the next scan after a failure and surfaces the failure to its caller", async () => {
     const order: string[] = [];
-    const failing = runPdfiumScan(async () => {
-      order.push("a");
-      throw new Error("boom");
-    });
+    let rejectFirst!: (reason?: unknown) => void;
+    const failing = runPdfiumScan(
+      () =>
+        new Promise<void>((_resolve, reject) => {
+          rejectFirst = reject;
+          order.push("a");
+        }),
+    );
     const next = runPdfiumScan(async () => {
       order.push("b");
     });
+
+    // Flush every pending microtask: a queue that starts the next scan before
+    // the failing one settles would have pushed "b" by now.
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    expect(order).toEqual(["a"]);
+    rejectFirst(new Error("boom"));
 
     await expect(failing).rejects.toThrow("boom");
     await next;
