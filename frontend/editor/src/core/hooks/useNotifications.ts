@@ -83,11 +83,16 @@ export function isResolvableHere(notification: AppNotification): boolean {
 }
 
 /**
- * Rows the server keeps addressable on the reader's behalf. Nothing here can be fixed in this
- * browser, so they are shown for what they say rather than what they offer.
+ * Rows the server keeps on the reader's behalf: a smart folder's documents, and the folder itself
+ * when it could not be read, which names no document and so has no location to speak of. Nothing
+ * here can be fixed in this browser, so they are shown for what they say rather than what they
+ * offer.
  */
 function isHeldByServer(notification: AppNotification): boolean {
-  return notification.documentLocation === "SMART_FOLDER";
+  return (
+    notification.documentLocation === "SMART_FOLDER" ||
+    notification.sourceKind === "SMART_FOLDER"
+  );
 }
 
 interface NotificationsSnapshot {

@@ -227,7 +227,7 @@ class NotificationProjectionTest {
 
             assertThat(notification.sourceKind()).isEqualTo(SourceKind.POLICY);
             assertThat(notification.documentLocation())
-                    .isEqualTo(FileRunEventView.DocumentLocation.NONE);
+                    .isEqualTo(FileRunEventView.DocumentLocation.UNREACHABLE);
             // The retry is the browser's here, which holds nothing to run it on, so the bell hides
             // it; and the server will not run it either.
             assertThat(notification.actions())
@@ -257,7 +257,7 @@ class NotificationProjectionTest {
             NotificationView notification = controller.list(null).notifications().getFirst();
 
             assertThat(notification.documentLocation())
-                    .isEqualTo(FileRunEventView.DocumentLocation.NONE);
+                    .isEqualTo(FileRunEventView.DocumentLocation.UNREACHABLE);
             assertThat(notification.fileId()).isNull();
             assertThat(notification.toString()).doesNotContain("Payroll", "march.pdf");
         }

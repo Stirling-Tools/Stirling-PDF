@@ -19,7 +19,7 @@ export type NotificationActionSlot = "RESOLUTION" | "SECONDARY" | "OVERFLOW";
  * Where the document behind a row is. The server decides: this browser cannot tell a file id it
  * minted from a reference held on a server it has never seen.
  */
-export type DocumentLocation = "BROWSER" | "SMART_FOLDER" | "NONE";
+export type DocumentLocation = "BROWSER" | "SMART_FOLDER" | "UNREACHABLE";
 
 /** What produced a row, so it can name the smart folder rather than just failing silently. */
 export type SourceKind = "SMART_FOLDER" | "POLICY" | "EDITOR";

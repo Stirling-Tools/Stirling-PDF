@@ -579,6 +579,33 @@ class FileRunEventServiceTest {
         }
 
         @Test
+        void aRowAboutTheSourceItselfKeepsItsOwnerActionUsableThoughItNamesNoDocument() {
+            // The folder is the subject, and the one thing offered its owner opens the processor,
+            // which needs no document. Greying it out for "no document linked" answers a question
+            // nobody asked about this row.
+            FileRunEvent folder =
+                    store.record(
+                            RecordFailure.forRun(
+                                    FailureKind.SOURCE_UNREADABLE,
+                                    TEAM,
+                                    ACTOR,
+                                    "policy-1",
+                                    "run-1",
+                                    "src-downloads",
+                                    null,
+                                    "Permission denied"));
+
+            assertThat(service.availableActions(folder))
+                    .filteredOn(action -> action.id() == FailureActionId.VIEW_IN_PROCESSOR)
+                    .singleElement()
+                    .satisfies(
+                            action -> {
+                                assertThat(action.enabled()).isTrue();
+                                assertThat(action.disabledReasonKey()).isNull();
+                            });
+        }
+
+        @Test
         void aRowThatNamesADocumentKeepsItsOwnerActionsUsable() {
             FileRunEvent withDocument =
                     givenHitBy(ACTOR, FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
