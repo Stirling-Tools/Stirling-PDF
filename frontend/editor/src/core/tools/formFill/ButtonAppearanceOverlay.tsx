@@ -27,6 +27,10 @@ interface ButtonAppearanceOverlayProps {
 let _cachedSource: File | Blob | null = null;
 let _cachePromise: Promise<SignatureFieldAppearance[]> | null = null;
 
+/**
+ * Button widget appearances for one source, cached by source identity. The form
+ * probe answers before any bytes are read.
+ */
 async function resolveButtonAppearances(
   source: File | Blob,
 ): Promise<SignatureFieldAppearance[]> {
