@@ -26,14 +26,14 @@ const LAYER_CACHE_LIMIT = 64;
  * a pdfjs parse of the whole document, so the sidebar gates its button on this
  * cheap catalog probe and reads the list only when the panel opens.
  */
-export function documentHasLayers(
+export async function documentHasLayers(
   file: Blob,
   bytes?: ArrayBuffer,
 ): Promise<boolean> {
-  const key = documentFileKey(file);
-  const cached =
-    layerAnswers.get(file) ??
-    (key ? layerAnswersByFileKey.get(key) : undefined);
+  const byIdentity = layerAnswers.get(file);
+  if (byIdentity) return byIdentity;
+  const key = await documentFileKey(file);
+  const cached = key ? layerAnswersByFileKey.get(key) : undefined;
   if (cached) return cached;
 
   const answer = (async () => {
