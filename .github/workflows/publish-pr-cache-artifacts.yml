@@ -127,7 +127,7 @@ jobs:
           CACHE_SFTP_USERNAME: ${{ secrets.CACHE_SFTP_USERNAME }}
           CACHE_SFTP_PRIVATE_KEY: ${{ secrets.CACHE_SFTP_PRIVATE_KEY }}
           CACHE_SFTP_PASSWORD: ${{ secrets.CACHE_SFTP_PASSWORD }}
-          CACHE_SFTP_BASE_PATH: ${{ secrets.CACHE_SFTP_BASE_PATH || '/cache-the-planet' }}
+          CACHE_SFTP_BASE_PATH: ${{ secrets.CACHE_SFTP_BASE_PATH || '/files/cache-the-planet' }}
         working-directory: cache-the-planet
         run: node "$GITHUB_WORKSPACE/.github/scripts/publish-pr-cache-artifacts.js"
 

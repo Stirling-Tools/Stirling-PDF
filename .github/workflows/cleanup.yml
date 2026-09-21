@@ -60,7 +60,7 @@ jobs:
           SFTP_USERNAME: ${{ secrets.CACHE_SFTP_USERNAME }}
           SFTP_PRIVATE_KEY: ${{ secrets.CACHE_SFTP_PRIVATE_KEY }}
           SFTP_PASSWORD: ${{ secrets.CACHE_SFTP_PASSWORD }}
-          SFTP_BASE_PATH: ${{ secrets.CACHE_SFTP_BASE_PATH || '/cache-the-planet' }}
+          SFTP_BASE_PATH: ${{ secrets.CACHE_SFTP_BASE_PATH || '/files/cache-the-planet' }}
         with:
           repository: Stirling-Tools/Stirling-PDF
           token: ${{ steps.setup-bot.outputs.token }}
