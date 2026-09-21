@@ -37,6 +37,8 @@ interface ExtendedRequestConfig extends InternalAxiosRequestConfig {
   operationName?: string;
   skipBackendReadyCheck?: boolean;
   skipAuthRedirect?: boolean;
+  /** Caller reports its own failures; the shared error toasts stay quiet. */
+  suppressErrorToast?: boolean;
   _retry?: boolean;
   _isSaaSRequest?: boolean;
 }
@@ -60,6 +62,7 @@ export function setupApiInterceptors(client: AxiosInstance): void {
       // IMPORTANT: Check backend readiness BEFORE modifying URL
       // Pattern matching in shouldSkipBackendReadyCheck() needs original relative URL
       const originalUrl = extendedConfig.url;
+
       const skipCheck = extendedConfig.skipBackendReadyCheck === true;
       const skipForSaaSBackend =
         await operationRouter.shouldSkipBackendReadyCheck(originalUrl);
@@ -265,19 +268,6 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         window.dispatchEvent(
           new CustomEvent(OPEN_SIGN_IN_EVENT, { detail: { locked: false } }),
         );
-      }
-
-      // Handle 403 Forbidden - unauthorized access
-      if (error.response?.status === 403) {
-        alert({
-          alertType: "error",
-          title: i18n.t("auth.accessDenied", "Access Denied"),
-          body: i18n.t(
-            "auth.insufficientPermissions",
-            "You do not have permission to perform this action.",
-          ),
-          isPersistentPopup: false,
-        });
       }
 
       return Promise.reject(error);

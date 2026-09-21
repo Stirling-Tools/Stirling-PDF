@@ -102,13 +102,14 @@ export function buildPortalSettingsSections(
   if (includeAccountLink && AccountLinkSection) {
     workspace.push({
       key: "account-link",
-      label: t("portal.settings.sections.account-link", "Account link"),
+      label: t("portal.settings.sections.account-link", "Account connection"),
       description: t(
         "portal.accountLink.panel.sub",
-        "Link this self-hosted org to its Stirling account so unattended processing bills against your org wallet.",
+        "Manage this server’s connection to your Stirling Cloud account.",
       ),
       icon: "link-rounded",
       component: <AccountLinkSection />,
+      fullBleed: true,
     });
   }
   const groups: ConfigNavSection[] = [
@@ -192,6 +193,8 @@ export const PORTAL_SUPERSEDED_SECTION_KEYS: readonly NavKey[] = [
   // the superset, so it replaces rather than duplicates it.
   "users",
   "api-keys",
+  "plan",
+  "adminPlan",
 ];
 
 /** Where a superseded section's bookmarks and search results now land. */
@@ -199,6 +202,8 @@ export const PORTAL_SECTION_ALIASES: Partial<Record<string, NavKey>> = {
   people: "users",
   teams: "users",
   infrastructure: "api-keys",
+  plan: "billing",
+  adminPlan: "billing",
   // The processor links to a build-neutral "audit"; self-hosted's is the admin one.
   audit: "adminAudit",
 };

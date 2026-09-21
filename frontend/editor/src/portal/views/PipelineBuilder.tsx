@@ -1,3 +1,9 @@
+import { requiresClassification } from "@app/data/classificationConditions";
+import { isConditionComplete } from "@app/conditions/validation";
+import {
+  isIngestStep,
+  ingestStepConfigured,
+} from "@portal/components/pipelines/docparseStep";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -66,6 +72,8 @@ import {
 } from "@portal/api/pipelineAssets";
 import { clearProcessedHistory } from "@portal/api/policies";
 import { DestinationPicker } from "@portal/components/pipelines/DestinationPicker";
+import { RoutingSection } from "@portal/components/policies/RoutingRules";
+import type { WireRoutingRule } from "@app/policies/types";
 import { availableOutputModes } from "@portal/components/pipelines/outputModes";
 import { type SourceView } from "@portal/api/sources";
 import { useSources } from "@portal/queries/sources";
@@ -73,6 +81,7 @@ import { useCanManagePolicies } from "@portal/queries/policyPermissions";
 import { SourceModal } from "@portal/components/sources/SourceModal";
 import { EDITOR_SOURCE_TYPE } from "@portal/components/sources/sourceTypes";
 import { useAsync } from "@portal/hooks/useAsync";
+import { useAiEngineEnabled } from "@portal/hooks/useAiEngineEnabled";
 import { useQueryClient } from "@tanstack/react-query";
 import { qk } from "@portal/queries/keys";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
@@ -174,6 +183,23 @@ function buildTriggerFor(input: WorkingInput): TriggerConfig | null {
   return { type: input.triggerType, options: {} };
 }
 
+/**
+ * Routing reads the verdict this step writes, so a rule is only offered once the pipeline has one.
+ * Mirrors ClassificationStepPlanner.CLASSIFY_ENDPOINT.
+ */
+const CLASSIFY_OPERATION = "/api/v1/ai/tools/classify-and-label";
+
+function isClassifyStep(step: WorkingToolStep): boolean {
+  return step.operation === CLASSIFY_OPERATION;
+}
+
+function isClassifyTool(tool: ExecutableTool): boolean {
+  return (
+    tool.endpoint === CLASSIFY_OPERATION ||
+    tool.endpoints?.includes(CLASSIFY_OPERATION) === true
+  );
+}
+
 /** Whether a source can be written to, i.e. offered as a pipeline destination. */
 function isWritableSource(source: SourceView): boolean {
   return (availableOutputModes() as string[]).includes(source.type);
@@ -206,6 +232,10 @@ export function PipelineBuilder() {
   // runs in the background so run/pause/delete act on the last-saved version.
   const handoff = location.state as { draft?: Policy } | null;
   const seedDraft = handoff?.draft ?? null;
+  const {
+    classificationEnabled: aiClassificationEnabled,
+    loading: aiAvailabilityLoading,
+  } = useAiEngineEnabled();
   const { allTools } = useToolRegistry();
   const executableTools = useMemo(
     () => getExecutableTools(allTools),
@@ -277,6 +307,7 @@ export function PipelineBuilder() {
   const [testRun, setTestRun] = useState<PolicyRunView | null>(null);
   const [testing, setTesting] = useState(false);
   const [outputIds, setOutputIds] = useState<string[]>([]);
+  const [routingRules, setRoutingRules] = useState<WireRoutingRule[]>([]);
   // A policy (blocking on failure) vs an ordinary pipeline (see Policy.required). Only meaningful for
   // an editor-sourced pipeline, so the toggle is shown only then and reset off otherwise (see save).
   const [required, setRequired] = useState(false);
@@ -413,6 +444,7 @@ export function PipelineBuilder() {
       (policy?.steps ?? []).map((step) => deserializeToolStep(step, allTools)),
     );
     setOutputIds(seedsEditor ? [] : (policy?.outputIds ?? []));
+    setRoutingRules(seedsEditor ? [] : (policy?.routingRules ?? []));
     setSeeded(true);
   }, [
     isEdit,
@@ -551,9 +583,14 @@ export function PipelineBuilder() {
   function updateStepParams(index: number, update: ParamsUpdate) {
     setSteps((current) =>
       current.map((step, i) => {
-        // Integration steps are deliberately toolId-less, so they must be editable too; only a
-        // genuinely unrecognised step has no editor to send changes from.
-        if (i !== index || (step.toolId === null && !isIntegrationStep(step)))
+        // Integration and DocParse steps are deliberately toolId-less, so they must be editable
+        // too; only a genuinely unrecognised step has no editor to send changes from.
+        if (
+          i !== index ||
+          (step.toolId === null &&
+            !isIntegrationStep(step) &&
+            !isIngestStep(step))
+        )
           return step;
         // Resolve the update against the CURRENT step params, so a settings UI firing several
         // single-field changes in one tick (convert's source-format change resets target + options)
@@ -589,6 +626,7 @@ export function PipelineBuilder() {
     if (op) return t(op.labelKey);
     if (isIntegrationStep(step))
       return t("portal.pipelines.builder.sendToSystem");
+    if (isIngestStep(step)) return t("portal.policies.endpoints.ingest");
     const entry = step.toolId ? allTools[step.toolId] : undefined;
     return entry?.name ?? humanizeOperation(step.operation);
   }
@@ -615,6 +653,7 @@ export function PipelineBuilder() {
     .filter(
       (step) =>
         !integrationStepConfigured(step) ||
+        !ingestStepConfigured(step, isEditorInput) ||
         stepNeedsConfiguring(step, allTools),
     )
     .map(stepLabel);
@@ -721,6 +760,7 @@ export function PipelineBuilder() {
     outputType,
     outputOptions,
     outputIds: [...outputIds].sort(),
+    routingRules,
   });
   const baseline = useRef<string | null>(null);
   useEffect(() => {
@@ -751,6 +791,17 @@ export function PipelineBuilder() {
   const inputValid = sourceChosen && scheduleValid;
   // Nor a destination: an editor pipeline's results land back in the workspace the file came from.
   const outputValid = isEditorInput || outputIds.length === 1;
+  const classifies = steps.some(isClassifyStep);
+  // Mirrors PolicyValidator.validateRoutingRules: a rule with nothing to match on, or nowhere to
+  // send, would be rejected on save - so it is named here rather than surfaced as a server error.
+  const routingValid = routingRules.every(
+    (rule) => isConditionComplete(rule.condition) && rule.outputId !== "",
+  );
+  // Rules outliving the step that feeds them: the classify step was removed after they were set.
+  // Every document would fall through to the fallback, so this is named rather than left to run.
+  const routingHasVerdict = routingRules.every(
+    (rule) => !requiresClassification(rule.condition) || classifies,
+  );
 
   // The single source of truth for "can this be committed": every reason it can't be, in the order
   // they appear down the form, so a disabled Create / Save button can say exactly what is still owed.
@@ -765,6 +816,27 @@ export function PipelineBuilder() {
     blockers.push(t("portal.pipelines.builder.blocker.schedule"));
   if (!outputValid)
     blockers.push(t("portal.pipelines.builder.blocker.destination"));
+  if (!routingValid)
+    blockers.push(
+      t(
+        "portal.pipelines.builder.blocker.routing",
+        "Give every route document types and a destination",
+      ),
+    );
+  if (!routingHasVerdict)
+    blockers.push(
+      t(
+        "portal.pipelines.builder.blocker.routingNeedsClassify",
+        "Add a Classify step, or turn off routing by document type",
+      ),
+    );
+  if (classifies && !aiAvailabilityLoading && !aiClassificationEnabled)
+    blockers.push(
+      t(
+        "portal.pipelines.builder.blocker.aiClassification",
+        "Enable AI classification in Settings, or remove the Classify step",
+      ),
+    );
   if (hasUnconfiguredSteps)
     blockers.push(
       t("portal.pipelines.builder.blocker.setup", {
@@ -880,6 +952,7 @@ export function PipelineBuilder() {
         // An editor pipeline delivers back into the workspace. A stored destination would send the
         // run to a folder or bucket instead, leaving the editor's copy untouched.
         outputIds: isEditorInput ? [] : outputIds,
+        routingRules: isEditorInput ? [] : routingRules,
       };
       await savePipeline(policy);
       await invalidatePipelines();
@@ -1121,7 +1194,7 @@ export function PipelineBuilder() {
     }
   }
 
-  if (isEdit && !seeded) {
+  if (aiAvailabilityLoading || (isEdit && !seeded)) {
     return (
       <div className="portal-builder__loading">
         <Spinner />
@@ -1176,6 +1249,9 @@ export function PipelineBuilder() {
   function stepDetail(step: WorkingToolStep): string | undefined {
     if (step.support === "unsupported")
       return t("portal.pipelines.builder.usesDefaults");
+    // Integration and DocParse steps are toolId-less by design and carry their own settings UI,
+    // so "unknown" here means "not a registry tool", not "we cannot drive this".
+    if (isIntegrationStep(step) || isIngestStep(step)) return undefined;
     if (step.support === "unknown")
       return t("portal.pipelines.builder.unknownStep");
     return undefined;
@@ -1209,6 +1285,7 @@ export function PipelineBuilder() {
       inputs: [{ sourceId: input.sourceId, trigger: buildTriggerFor(input) }],
       steps: steps.map((step) => serializeToolStep(step, allTools)),
       outputIds,
+      routingRules,
     },
     null,
     2,
@@ -1306,19 +1383,38 @@ export function PipelineBuilder() {
 
     if (selected === "output") {
       return (
-        <DestinationPicker
-          sources={writableSources}
-          value={outputIds}
-          onChange={setOutputIds}
-          onCreateNew={() => createSourceFor("output")}
-          onEdit={(sourceId) => setSourceModal({ open: true, sourceId })}
-        />
+        <>
+          <RoutingSection
+            rules={routingRules}
+            onChange={setRoutingRules}
+            destinations={writableSources}
+            onCreateDestination={() => createSourceFor("output")}
+            canClassify={classifies}
+            aiClassificationEnabled={aiClassificationEnabled}
+          />
+          <DestinationPicker
+            label={
+              routingRules.length > 0
+                ? t(
+                    "portal.pipelines.builder.routing.fallback",
+                    "Everything else goes to",
+                  )
+                : undefined
+            }
+            sources={writableSources}
+            value={outputIds}
+            onChange={setOutputIds}
+            onCreateNew={() => createSourceFor("output")}
+            onEdit={(sourceId) => setSourceModal({ open: true, sourceId })}
+          />
+        </>
       );
     }
 
     if (selectedStep) {
       return (
         <PipelineStepSettings
+          editorInput={isEditorInput}
           step={selectedStep}
           registry={allTools}
           onChange={(params) => updateStepParams(chosenSteps[0], params)}
@@ -1444,6 +1540,14 @@ export function PipelineBuilder() {
                       label:
                         chosenDestination?.name ??
                         t("portal.pipelines.builder.chooseDestination"),
+                      // With routing on, the destination on the node is only the fallback, so the
+                      // node says how many routes come first rather than implying one endpoint.
+                      detail:
+                        routingRules.length > 0
+                          ? t("portal.pipelines.builder.routing.nodeSummary", {
+                              count: routingRules.length,
+                            })
+                          : undefined,
                       warning: outputValid
                         ? undefined
                         : t("portal.pipelines.builder.needsDestination"),
@@ -1513,6 +1617,14 @@ export function PipelineBuilder() {
           operations={STEP_OPERATIONS}
           onPickOperation={addOperationStep}
           precedingOutput={precedingOutput}
+          unavailableReason={(tool) =>
+            isClassifyTool(tool) && !aiClassificationEnabled
+              ? t(
+                  "portal.pipelines.builder.routing.aiToolDisabled",
+                  "Unavailable until AI classification is enabled in Settings",
+                )
+              : undefined
+          }
           onClose={() => setPickerAt(null)}
         />
       </Modal>

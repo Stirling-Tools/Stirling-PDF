@@ -5,7 +5,7 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 import { Button, type ButtonAccent } from "@app/ui/Button";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
+import { Z_INDEX_ONBOARDING_CARD } from "@app/styles/zIndex";
 import stirlingMark from "@app/assets/brand/modern-logo/logo512.png";
 import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
 
@@ -25,17 +25,27 @@ export interface ShellButton {
 
 export interface OnboardingSlideShellProps {
   opened?: boolean;
-  /** Hero art node — use {@link ShellHero} to render the app mark or a glyph. */
-  hero: ReactNode;
+  /** Hero art — see {@link ShellHero}. Omit for a slide whose body is a form: the
+   *  panel is a fixed block of height that would otherwise show nothing. */
+  hero?: ReactNode;
   slideKey: string;
-  title: ReactNode;
+  /** Omit when the body draws its own heading, so the card does not state it twice. */
+  title?: ReactNode;
   body: ReactNode;
   stepIndex: number;
   stepCount: number;
   buttons: ShellButton[];
   onAction: (action: string) => void;
   onClose: () => void;
+  /** Escape closes the card. Turn off for a flow the user has to move through. */
   allowDismiss?: boolean;
+  /** "close" dismisses; "forward" advances, for a flow with no way out. Both call
+   *  {@link onClose}; forward is drawn even when `allowDismiss` is false. */
+  headerControl?: "close" | "forward";
+  /** Standalone prompts supply their own dialog name instead of "Onboarding". */
+  ariaLabel?: string;
+  /** Prompts opened over a fullscreen editor must sit above that surface. */
+  zIndex?: number;
 }
 
 /**
@@ -75,6 +85,9 @@ export default function OnboardingSlideShell({
   onAction,
   onClose,
   allowDismiss = true,
+  headerControl = "close",
+  ariaLabel,
+  zIndex = Z_INDEX_ONBOARDING_CARD,
 }: OnboardingSlideShellProps) {
   const { t } = useTranslation();
   const showProgress = stepCount > 1;
@@ -112,7 +125,7 @@ export default function OnboardingSlideShell({
       centered
       size="lg"
       radius={20}
-      zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
+      zIndex={zIndex}
       styles={{
         body: { padding: 0, maxHeight: "90vh", overflow: "hidden" },
         content: {
@@ -126,7 +139,7 @@ export default function OnboardingSlideShell({
       <Modal.Overlay />
       <Modal.Content
         radius={20}
-        aria-label={t("onboarding.dialogLabel", "Onboarding")}
+        aria-label={ariaLabel ?? t("onboarding.dialogLabel", "Onboarding")}
       >
         <Modal.Body>
           <div className={styles.card}>
@@ -149,19 +162,33 @@ export default function OnboardingSlideShell({
                     })}
                   </span>
                 )}
-                {allowDismiss && (
+                {(allowDismiss || headerControl === "forward") && (
                   <ActionIcon
                     onClick={onClose}
                     variant="tertiary"
                     accent="neutral"
                     size="md"
-                    aria-label={t("common.close", "Close")}
+                    aria-label={
+                      headerControl === "forward"
+                        ? t("onboarding.buttons.continue", "Continue")
+                        : t("common.close", "Close")
+                    }
                   >
-                    <LocalIcon
-                      icon="close-rounded"
-                      width="1.1rem"
-                      height="1.1rem"
-                    />
+                    {/* Two literals, not a computed `icon`: the icon-set generator
+                        scans for `icon="…"`, so a dynamic one ships blank. */}
+                    {headerControl === "forward" ? (
+                      <LocalIcon
+                        icon="arrow-right-alt-rounded"
+                        width="1.1rem"
+                        height="1.1rem"
+                      />
+                    ) : (
+                      <LocalIcon
+                        icon="close-rounded"
+                        width="1.1rem"
+                        height="1.1rem"
+                      />
+                    )}
                   </ActionIcon>
                 )}
               </div>
@@ -197,15 +224,19 @@ export default function OnboardingSlideShell({
             <div className={styles.divider} />
 
             <div className={styles.content}>
-              <div className={styles.heroPanel}>
-                <div className={styles.heroArt} key={`hero-${slideKey}`}>
-                  {hero}
+              {hero && (
+                <div className={styles.heroPanel}>
+                  <div className={styles.heroArt} key={`hero-${slideKey}`}>
+                    {hero}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              <div key={`title-${slideKey}`} className={styles.titleNew}>
-                {title}
-              </div>
+              {title && (
+                <div key={`title-${slideKey}`} className={styles.titleNew}>
+                  {title}
+                </div>
+              )}
 
               <div key={`body-${slideKey}`} className={styles.bodyNew}>
                 {body}

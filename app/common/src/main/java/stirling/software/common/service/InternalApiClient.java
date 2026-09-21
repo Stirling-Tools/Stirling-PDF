@@ -53,7 +53,7 @@ public class InternalApiClient {
     // ApiConnectionResolver.
     private static final Pattern ALLOWED_ENDPOINT_PATH =
             Pattern.compile(
-                    "^/api/v1/(general|misc|security|convert|filter|integration)(/[A-Za-z0-9_-]+)+$"
+                    "^/api/v1/(general|misc|security|convert|filter|integration|docparse)(/[A-Za-z0-9_-]+)+$"
                             + "|^/api/v1/ai/tools(/[A-Za-z0-9_-]+)+$");
 
     /**
@@ -135,6 +135,12 @@ public class InternalApiClient {
         String runId = AutomationRunContext.current();
         if (runId != null && !runId.isEmpty()) {
             headers.add(AutomationRunContext.RUN_ID_HEADER, runId);
+        }
+        // Each source document gets its own charge grouping and step allowance on a linked
+        // instance. SaaS groups by lineage instead.
+        String documentId = AutomationRunContext.currentDocument();
+        if (documentId != null && !documentId.isEmpty()) {
+            headers.add(AutomationRunContext.DOCUMENT_ID_HEADER, documentId);
         }
 
         // Forward the parent policy name (set in MDC by the policy runner) so the audited sub-step

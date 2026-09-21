@@ -16,8 +16,10 @@ import type {
   DiskDirEntry,
   DiskFileEntry,
   DiskListing,
+  ListDirectoryOptions,
 } from "@core/services/localFolderContents";
-export type { DiskDirEntry, DiskFileEntry, DiskListing };
+import { pendingFilePathMappings } from "@app/services/pendingFilePathMappings";
+export type { DiskDirEntry, DiskFileEntry, DiskListing, ListDirectoryOptions };
 
 /**
  * Containment: these reads and writes run under a filesystem-wide Tauri capability, but
@@ -56,6 +58,7 @@ export const canListDirectory = isTauri();
 
 export async function listDirectory(
   directory: string,
+  options: ListDirectoryOptions = {},
 ): Promise<DiskListing | null> {
   if (!canListDirectory) return null;
   const dirEntries = await readDir(directory);
@@ -94,6 +97,10 @@ export async function listDirectory(
     for (const entry of stats) {
       if (entry) files.push(entry);
     }
+    options.onProgress?.(
+      Math.min(i + STAT_BATCH, candidates.length),
+      candidates.length,
+    );
   }
   files.sort((a, b) => b.lastModified - a.lastModified);
   return { files, directories };
@@ -134,10 +141,12 @@ export async function readDiskFile(entry: DiskFileEntry): Promise<File | null> {
   if (!canListDirectory) return null;
   if (!(await isWithinMount(entry.path))) return null;
   const bytes = await readFile(entry.path);
-  return new File([new Uint8Array(bytes)], entry.name, {
+  const file = new File([new Uint8Array(bytes)], entry.name, {
     type: mimeForName(entry.name),
     lastModified: entry.lastModified || undefined,
   });
+  pendingFilePathMappings.set(file, entry.path);
+  return file;
 }
 
 /** How many "(n)" suffixes to try before conceding the directory is hostile. */

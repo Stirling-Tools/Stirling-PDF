@@ -393,12 +393,14 @@ class FormDetectionModelManagerTest {
 
     @Test
     void gatesTheToolWhileASwitchIsDownloading(@TempDir Path dir) throws Exception {
-        CountDownLatch gate = new CountDownLatch(1);
+        CountDownLatch downloadStarted = new CountDownLatch(1);
+        CountDownLatch releaseDownload = new CountDownLatch(1);
         server.createContext(
                 "/switch.onnx",
                 ex -> {
+                    downloadStarted.countDown();
                     try {
-                        gate.await(5, TimeUnit.SECONDS);
+                        releaseDownload.await();
                     } catch (InterruptedException ignored) {
                         Thread.currentThread().interrupt();
                     }
@@ -406,9 +408,9 @@ class FormDetectionModelManagerTest {
                     ex.getResponseBody().write(modelBytes);
                     ex.close();
                 });
-        Files.write(dir.resolve("test-model.onnx"), modelBytes);
+        Files.write(dir.resolve("active-model.onnx"), modelBytes);
         ApplicationProperties props = new ApplicationProperties();
-        props.getFormDetection().setActiveModelId("test-model");
+        props.getFormDetection().setActiveModelId("active-model");
         EndpointConfiguration ep = Mockito.mock(EndpointConfiguration.class);
         FormDetectionModelManager m =
                 manager(dir, entry(ALLOWED_URL + "/switch.onnx", modelSha), ep, props);
@@ -417,10 +419,14 @@ class FormDetectionModelManagerTest {
 
         m.startInstall("test-model");
 
-        assertFalse(m.isReady(), "a download is not something the tool can serve from");
-        Mockito.verify(ep).disableEndpoint("form-detection", DisableReason.DEPENDENCY);
+        try {
+            assertTrue(downloadStarted.await(5, TimeUnit.SECONDS), "download did not start");
+            assertFalse(m.isReady(), "a download is not something the tool can serve from");
+            Mockito.verify(ep).disableEndpoint("form-detection", DisableReason.DEPENDENCY);
+        } finally {
+            releaseDownload.countDown();
+        }
 
-        gate.countDown();
-        awaitState(m, "ready", 5000);
+        awaitState(m, "ready", 10000);
     }
 }

@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -47,9 +48,8 @@ public class UserLicenseSettingsService {
 
     /**
      * Users an installation gets before it has to buy capacity. The one free-allowance number in
-     * Java: the saas seat reader floors on it, and {@code
-     * pricing_policy.server_free_user_allowance} is seeded to match so the two editions quote the
-     * same figure.
+     * Java: the saas seat reader floors on it, the cloud wallet reports it, and {@code
+     * pricing_policy.server_free_user_allowance} is seeded to match.
      */
     public static final int DEFAULT_USER_LIMIT = 5;
 
@@ -163,13 +163,18 @@ public class UserLicenseSettingsService {
     /**
      * Updates the license max users from the application properties. This should be called when the
      * license is validated.
+     *
+     * <p>Keyed on the licence <i>key</i>'s tier, not on the effective one: {@code premium.maxUsers}
+     * is a figure only a licence carries, and a Team plan bought in the cloud leaves it unset.
+     * Reading the effective tier would store 0 for such an instance, which {@link
+     * #calculateMaxAllowedUsers()} reads as "SERVER licence, unlimited users".
      */
     @Transactional
     public void updateLicenseMaxUsers() {
         UserLicenseSettings settings = getOrCreateSettings();
 
         int licenseMaxUsers = 0;
-        if (hasPaidLicense()) {
+        if (hasLicenseKeyPaidTier()) {
             licenseMaxUsers = applicationProperties.getPremium().getMaxUsers();
         }
 
@@ -318,6 +323,11 @@ public class UserLicenseSettingsService {
      * <p>IMPORTANT: Paid licenses REPLACE the limit, they don't add to grandfathering. A linked
      * team's allowance does not: linking is monotonic, so it can only raise the ceiling.
      *
+     * <p>The branch is chosen by whether a licence <i>key</i> is installed, never by the effective
+     * tier. A Team plan bought in the cloud promotes the effective tier to SERVER without carrying
+     * a {@code premium.maxUsers}, so branching on the effective tier would read the stored 0 as
+     * "SERVER licence, unlimited" and hand a customer who bought 100 users no limit at all.
+     *
      * @return Maximum number of users allowed (Integer.MAX_VALUE for unlimited)
      */
     public int calculateMaxAllowedUsers() {
@@ -335,7 +345,7 @@ public class UserLicenseSettingsService {
         // all, so in the end state only Enterprise holds one, and Enterprise should outrank SaaS:
         // it is contracted and has to keep working offline. Until then a legacy licence keeps
         // whatever it granted, and a customer worse off under it can simply remove it.
-        if (!hasPaidLicense()) {
+        if (!hasLicenseKeyPaidTier()) {
             Integer fromSaas = linkedTeamAllowance();
             if (fromSaas != null) {
                 // Floored at the grandfathered limit, so linking can only raise the ceiling.
@@ -369,23 +379,77 @@ public class UserLicenseSettingsService {
         return licenseMaxUsers;
     }
 
-    /**
-     * Users this instance's linked team is entitled to, or null when SaaS is not the authority
-     * here.
-     *
-     * <p>Only consulted when no licence is installed. Null covers three indistinguishable cases
-     * that all fall through to the grandfathered limit: the instance is not linked, SaaS has never
-     * answered, or it answered with no user limit — which is also what an older SaaS sends.
-     *
-     * <p>When SaaS is merely unreachable, {@link EntitlementCache} keeps serving the freshest
-     * snapshot it has, so a linked instance holds its last known allowance rather than losing it.
-     */
+    /** Paid capacity for the current linked device, retaining its last allowance while offline. */
     private Integer linkedTeamAllowance() {
+        return refreshLinkedTeamUsers();
+    }
+
+    /** Only a previously purchased Team grant permits infrastructure to boot in recovery mode. */
+    public boolean isTeamOfflineExpired() {
         EntitlementCache cache = entitlementCache.getIfAvailable();
-        if (cache == null) {
-            return null;
+        if (cache == null) return false;
+        cache.current();
+        var settings = getOrCreateSettings();
+        return cache.isGraceExpired()
+                && settings.getLinkedTeamUsers() != null
+                && settings.getLinkedTeamUsers() > 0
+                && Objects.equals(cache.linkedDeviceId(), settings.getLinkedTeamDeviceId());
+    }
+
+    /**
+     * Drops the cached entitlement so the next read goes to SaaS. For a caller with reason to
+     * believe the plan just changed; the ordinary path waits out the cache's own TTL.
+     */
+    public void forgetEntitlement() {
+        EntitlementCache cache = entitlementCache.getIfAvailable();
+        if (cache != null) {
+            cache.invalidate();
         }
-        return cache.current().map(InstanceEntitlement::licensedUsers).orElse(null);
+    }
+
+    private Optional<InstanceEntitlement> currentEntitlement() {
+        EntitlementCache cache = entitlementCache.getIfAvailable();
+        return cache == null ? Optional.empty() : cache.current();
+    }
+
+    /**
+     * Records the linked team's purchased user allowance on the licence row and returns it, or
+     * returns the stored value when SaaS has said nothing.
+     *
+     * <p>Called from the licence sync, which is what makes the stored value SaaS-derived rather
+     * than a local claim: a plan that lapses comes back as no allowance and clears the column. An
+     * unreachable SaaS preserves the allowance only for the same linked device. Unlinking or
+     * replacing that identity clears it; a new link must obtain its own entitlement.
+     *
+     * <p>Not transactional: asking the cache can mean an HTTP round trip to SaaS, and there is no
+     * invariant here worth holding a database connection across one. The single conditional write
+     * carries its own transaction.
+     *
+     * @return users the linked team has bought, or null when it has bought none
+     */
+    public Integer refreshLinkedTeamUsers() {
+        UserLicenseSettings settings = getOrCreateSettings();
+        EntitlementCache cache = entitlementCache.getIfAvailable();
+        String deviceId = cache == null ? null : cache.linkedDeviceId();
+        if (!Objects.equals(deviceId, settings.getLinkedTeamDeviceId())
+                || (deviceId == null && settings.getLinkedTeamUsers() != null)) {
+            settings.setLinkedTeamUsers(null);
+            settings.setLinkedTeamDeviceId(deviceId);
+            settingsRepository.save(settings);
+        }
+        if (deviceId == null) return null;
+        Optional<InstanceEntitlement> answer = currentEntitlement();
+        if (cache.isGraceExpired()) return null;
+        if (answer.isEmpty()) {
+            return settings.getLinkedTeamUsers();
+        }
+        Integer purchased = answer.get().licensedUsers();
+        if (!Objects.equals(settings.getLinkedTeamUsers(), purchased)) {
+            settings.setLinkedTeamUsers(purchased);
+            settingsRepository.save(settings);
+            log.info("Linked team user allowance is now {}", purchased);
+        }
+        return purchased;
     }
 
     /**
@@ -611,17 +675,34 @@ public class UserLicenseSettingsService {
         }
     }
 
-    private boolean hasPaidLicense() {
+    /** Whether the effective tier includes Server features. */
+    public boolean hasPaidLicense() {
         LicenseKeyChecker checker = licenseKeyChecker.getIfAvailable();
         if (checker == null) {
             return false;
         }
 
-        License license = checker.getPremiumLicenseEnabledResult();
+        License license = checker.premiumTier();
         boolean hasPaid = (license == License.SERVER || license == License.ENTERPRISE);
         log.info("License check result: type={}, requiresPaid=true, hasPaid={}", license, hasPaid);
 
         return hasPaid;
+    }
+
+    /**
+     * Whether an installed licence key alone grants a paid tier.
+     *
+     * <p>The seat arithmetic needs this rather than {@link #hasPaidLicense()}: the effective tier
+     * is also SERVER when the promotion comes from a cloud Team plan, and that plan states its
+     * capacity in the entitlement, not in {@code premium.maxUsers}.
+     */
+    private boolean hasLicenseKeyPaidTier() {
+        LicenseKeyChecker checker = licenseKeyChecker.getIfAvailable();
+        if (checker == null) {
+            return false;
+        }
+        License license = checker.getLicenseKeyResult();
+        return license == License.SERVER || license == License.ENTERPRISE;
     }
 
     /**
@@ -636,7 +717,7 @@ public class UserLicenseSettingsService {
             return false;
         }
 
-        License license = checker.getPremiumLicenseEnabledResult();
+        License license = checker.premiumTier();
         log.info(
                 "License check result: type={}, requiresEnterprise=true, hasEnterprise={}",
                 license,

@@ -2,8 +2,7 @@ import { useState } from "react";
 import { Badge, Collapse, Group, Stack, Text, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { Icon } from "@app/ui/Icon";
 import {
   Section,
   SectionLabel,
@@ -134,9 +133,9 @@ function FontsSection({ pages }: { pages: PageSnapshot[] }) {
         data-testid="pdf-editor-fonts-toggle"
         rightSection={
           expanded ? (
-            <ExpandMoreIcon fontSize="small" />
+            <Icon name="chevron-down" size={20} />
           ) : (
-            <ChevronRightIcon fontSize="small" />
+            <Icon name="chevron-right" size={20} />
           )
         }
       >

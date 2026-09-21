@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -21,20 +22,24 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.ByteArrayResource;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
-import stirling.software.proprietary.policy.input.InputSource;
+import stirling.software.proprietary.policy.input.FolderInputSource;
 import stirling.software.proprietary.policy.input.ResolveContext;
 import stirling.software.proprietary.policy.input.ResolvedInput;
 import stirling.software.proprietary.policy.ledger.InProcessProcessedLedger;
@@ -62,7 +67,13 @@ import stirling.software.proprietary.policy.source.SourceStore;
 class PolicyRunnerTest {
 
     @Mock private PolicyEngine policyEngine;
-    @Mock private InputSource folderSource;
+    @Mock private ApplicationEventPublisher eventPublisher;
+
+    @Mock
+    private stirling.software.proprietary.security.configuration.ee.DatabaseLicenseGuard
+            databaseLicenseGuard;
+
+    @Mock private FolderInputSource folderSource;
     @Mock private ProcessedLedger processedLedger;
 
     private final SourceStore sourceStore = new InProcessSourceStore();
@@ -70,7 +81,8 @@ class PolicyRunnerTest {
     private PolicyRunner runner;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws IOException {
+        lenient().when(folderSource.resolve(any(Source.class), any(), any())).thenCallRealMethod();
         runner =
                 new PolicyRunner(
                         policyEngine,
@@ -79,7 +91,16 @@ class PolicyRunnerTest {
                         docCounter,
                         processedLedger,
                         new ApplicationProperties(),
-                        reachableOwners());
+                        reachableOwners(),
+                        databaseLicenseGuard,
+                        eventPublisher);
+    }
+
+    @Test
+    void unlicensedDatabaseDoesNotClaimOrProcessSourceFiles() {
+        when(databaseLicenseGuard.requiresActivation()).thenReturn(true);
+        runner.run(policy(List.of(InputSpec.folder("/in"))));
+        verifyNoInteractions(folderSource, policyEngine, processedLedger);
     }
 
     @Test
@@ -109,7 +130,11 @@ class PolicyRunnerTest {
                         new InProcessSourceDocCounter(),
                         ledger,
                         new ApplicationProperties(),
-                        reachableOwners());
+                        reachableOwners(),
+                        org.mockito.Mockito.mock(
+                                stirling.software.proprietary.security.configuration.ee
+                                        .DatabaseLicenseGuard.class),
+                        eventPublisher);
         InputSpec spec = InputSpec.folder("/in");
         Policy policy = policy(List.of(spec));
         // One file already processed at its current version, one parked by a failed run.
@@ -176,6 +201,117 @@ class PolicyRunnerTest {
     }
 
     @Test
+    void theBatchNotificationWaitsForEverySettlementHook() throws Exception {
+        InputSpec spec = InputSpec.folder("/in");
+        Policy policy = policy(List.of(spec));
+        AtomicInteger settled = new AtomicInteger();
+        AtomicInteger settledAtNotification = new AtomicInteger();
+        ResolvedInput unit =
+                new ResolvedInput(
+                        PolicyInputs.of(List.of()), null, success -> settled.incrementAndGet());
+        when(folderSource.supports(spec)).thenReturn(true);
+        when(folderSource.resolve(eq(spec), any())).thenReturn(List.of(unit, unit));
+        CompletableFuture<PolicyRun> first = new CompletableFuture<>();
+        CompletableFuture<PolicyRun> second = new CompletableFuture<>();
+        when(policyEngine.runPolicy(any(), any(), any(), any(), any(), any()))
+                .thenReturn(new PolicyRunHandle("r1", first), new PolicyRunHandle("r2", second));
+        doAnswer(
+                        invocation -> {
+                            settledAtNotification.set(settled.get());
+                            return null;
+                        })
+                .when(eventPublisher)
+                .publishEvent(any(SourceBatchSettledEvent.class));
+        runner.run(policy);
+        PolicyRun run = mock(PolicyRun.class);
+        when(run.getStatus()).thenReturn(PolicyRunStatus.COMPLETED);
+
+        first.complete(run);
+        verifyNoInteractions(eventPublisher);
+        second.complete(run);
+
+        assertEquals(2, settledAtNotification.get());
+        verify(eventPublisher)
+                .publishEvent(
+                        new SourceBatchSettledEvent(
+                                policy.id(), policy.inputs().getFirst().sourceId()));
+    }
+
+    @ParameterizedTest
+    @EnumSource(
+            value = PolicyRunStatus.class,
+            names = {"COMPLETED", "FAILED"})
+    void exceptionalRunsDoNotSuppressBatchProgress(PolicyRunStatus status) throws Exception {
+        InputSpec spec = InputSpec.folder("/in");
+        Policy policy = policy(List.of(spec));
+        AtomicInteger settled = new AtomicInteger();
+        ResolvedInput unit =
+                new ResolvedInput(
+                        PolicyInputs.of(List.of()), null, success -> settled.incrementAndGet());
+        when(folderSource.supports(spec)).thenReturn(true);
+        when(folderSource.resolve(eq(spec), any())).thenReturn(List.of(unit, unit, unit));
+        CompletableFuture<PolicyRun> first = new CompletableFuture<>();
+        CompletableFuture<PolicyRun> second = new CompletableFuture<>();
+        CompletableFuture<PolicyRun> third = new CompletableFuture<>();
+        when(policyEngine.runPolicy(any(), any(), any(), any(), any(), any()))
+                .thenReturn(
+                        new PolicyRunHandle("r1", first),
+                        new PolicyRunHandle("r2", second),
+                        new PolicyRunHandle("r3", third));
+        runner.run(policy);
+        PolicyRun run = mock(PolicyRun.class);
+        when(run.getStatus()).thenReturn(status);
+
+        first.completeExceptionally(new IllegalStateException("first run interrupted"));
+        verifyNoInteractions(eventPublisher);
+        second.complete(run);
+        verifyNoInteractions(eventPublisher);
+        third.completeExceptionally(new IllegalStateException("last run interrupted"));
+
+        assertEquals(3, settled.get());
+        verify(eventPublisher)
+                .publishEvent(
+                        new SourceBatchSettledEvent(
+                                policy.id(), policy.inputs().getFirst().sourceId()));
+    }
+
+    @ParameterizedTest
+    @EnumSource(
+            value = PolicyRunStatus.class,
+            names = {"COMPLETED", "FAILED"})
+    void aThrowingSettlementHookDoesNotSuppressOtherBatchProgress(PolicyRunStatus status)
+            throws Exception {
+        InputSpec spec = InputSpec.folder("/in");
+        Policy policy = policy(List.of(spec));
+        ResolvedInput unsettled =
+                new ResolvedInput(
+                        PolicyInputs.of(List.of()),
+                        null,
+                        success -> {
+                            throw new IllegalStateException("ledger unavailable");
+                        });
+        when(folderSource.supports(spec)).thenReturn(true);
+        when(folderSource.resolve(eq(spec), any()))
+                .thenReturn(List.of(ResolvedInput.of(PolicyInputs.of(List.of())), unsettled));
+        CompletableFuture<PolicyRun> first = new CompletableFuture<>();
+        CompletableFuture<PolicyRun> second = new CompletableFuture<>();
+        when(policyEngine.runPolicy(any(), any(), any(), any(), any(), any()))
+                .thenReturn(new PolicyRunHandle("r1", first), new PolicyRunHandle("r2", second));
+        runner.run(policy);
+        PolicyRun run = mock(PolicyRun.class);
+        when(run.getStatus()).thenReturn(status);
+
+        first.complete(run);
+        verifyNoInteractions(eventPublisher);
+        second.complete(run);
+
+        verify(eventPublisher)
+                .publishEvent(
+                        new SourceBatchSettledEvent(
+                                policy.id(), policy.inputs().getFirst().sourceId()));
+    }
+
+    @Test
     void reportsFailureToTheCompletionHookWhenTheRunDoesNotComplete() throws Exception {
         InputSpec spec = InputSpec.folder("/in");
         Policy policy = policy(List.of(spec));
@@ -191,6 +327,7 @@ class PolicyRunnerTest {
         completion.completeExceptionally(new RuntimeException("boom"));
 
         assertFalse(outcome.get());
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test
@@ -345,7 +482,13 @@ class PolicyRunnerTest {
         runner.run(policy);
 
         verify(policyEngine)
-                .runPolicy(eq(policy), any(), any(), eq(sourceId), eq("/in/doc.pdf"), any());
+                .runPolicy(
+                        eq(policy),
+                        any(),
+                        any(),
+                        eq(sourceStore.get(sourceId).orElseThrow()),
+                        eq("/in/doc.pdf"),
+                        any());
     }
 
     @Test
@@ -376,6 +519,40 @@ class PolicyRunnerTest {
     }
 
     @Test
+    void sourcesWithoutReachableOwnersAreNotClaimedOrPruned() {
+        ApplicationProperties loginOn = new ApplicationProperties();
+        loginOn.getSecurity().setEnableLogin(true);
+        PolicyRunner enforced =
+                new PolicyRunner(
+                        policyEngine,
+                        List.of(folderSource),
+                        sourceStore,
+                        docCounter,
+                        processedLedger,
+                        loginOn,
+                        guardOver(loginOn, noUsers()),
+                        org.mockito.Mockito.mock(
+                                stirling.software.proprietary.security.configuration.ee
+                                        .DatabaseLicenseGuard.class),
+                        eventPublisher);
+        for (String owner : new String[] {null, "", "deleted-user"}) {
+            Source source =
+                    sourceStore.save(
+                            new Source(
+                                    null,
+                                    "Input",
+                                    "folder",
+                                    Map.of("directory", "/in"),
+                                    true,
+                                    owner,
+                                    null));
+            SweepOutcome outcome = enforced.run(policyReferencing(List.of(source.id())));
+            assertTrue(outcome.runIds().isEmpty());
+        }
+        verifyNoInteractions(folderSource, policyEngine, processedLedger);
+    }
+
+    @Test
     void anOwnerlessProcessingFolderIsNotSweptUnderLogin() {
         // Created while login was disabled, so stamped with no owner; enabling login strands it
         // where no user can list, pause, revert, or delete it. Sweeping it anyway would keep
@@ -402,7 +579,11 @@ class PolicyRunnerTest {
                         docCounter,
                         processedLedger,
                         loginOn,
-                        guardOver(loginOn, noUsers()));
+                        guardOver(loginOn, noUsers()),
+                        org.mockito.Mockito.mock(
+                                stirling.software.proprietary.security.configuration.ee
+                                        .DatabaseLicenseGuard.class),
+                        eventPublisher);
 
         SweepOutcome outcome = enforced.run(stranded.withSurface(Policy.SURFACE_PROCESSING_FOLDER));
 
@@ -468,8 +649,12 @@ class PolicyRunnerTest {
         assertFalse(runner.awaitQuiesce("p1", java.time.Duration.ofMillis(50)));
     }
 
-    @Test
-    void aQueueFullRejectionReleasesTheClaimForTheNextSweep() throws Exception {
+    @ParameterizedTest
+    @EnumSource(
+            value = PolicyRunStatus.class,
+            names = {"FAILED", "CANCELLED"})
+    void unstartedRunsReleaseTheirClaimsWithoutRequestingAnotherBatch(PolicyRunStatus status)
+            throws Exception {
         InputSpec spec = InputSpec.folder("/in");
         Policy policy = policy(List.of(spec));
         java.util.concurrent.atomic.AtomicBoolean outcome =
@@ -484,12 +669,14 @@ class PolicyRunnerTest {
         runner.run(policy);
 
         PolicyRun run = mock(PolicyRun.class);
-        when(run.getStatus()).thenReturn(PolicyRunStatus.FAILED);
-        when(run.getErrorCode()).thenReturn("POLICY_QUEUE_FULL");
+        when(run.getStatus()).thenReturn(status);
+        if (status == PolicyRunStatus.FAILED) {
+            when(run.getErrorCode()).thenReturn(PolicyEngine.QUEUE_FULL_CODE);
+        }
         completion.complete(run);
 
-        // Nothing was attempted on the file: the claim is dropped, not parked failed.
         assertFalse(outcome.get());
         verify(processedLedger).forget("p1", "/in/doc.pdf");
+        verifyNoInteractions(eventPublisher);
     }
 }

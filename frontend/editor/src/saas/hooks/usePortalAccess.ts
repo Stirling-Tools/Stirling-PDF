@@ -37,19 +37,20 @@ async function fetchPortalAccess(): Promise<boolean> {
  * instead of appearing a request later. Guests skip the request entirely.
  */
 export function usePortalAccessState(): PortalAccessState {
-  const { user } = useAuth();
+  const { user, loading, isAnonymous } = useAuth();
   const userId = user?.id ?? null;
+  const canQuery = !loading && userId !== null && !isAnonymous;
   // The query cache is per-tree and per-load, so it can't help a cold start or
   // the hop into the processor, which mounts its own client. Seed from the last
   // answer this browser saw so the switcher and the footer's "Open ..." row are
   // there at first paint. Marked ancient so it still revalidates immediately.
   const [seed] = useState(readCachedOtherApp);
 
-  const { data, isSuccess, isFetched } = useQuery({
+  const { data, isSuccess, isFetched, isFetching } = useQuery({
     queryKey: qk.portalAccess(userId),
     queryFn: fetchPortalAccess,
     // Signed out: nothing to ask, and any previous answer is void.
-    enabled: userId !== null,
+    enabled: canQuery,
     // Backend unreachable or guest (401) means no access now; a later refetch
     // asks again rather than trusting the failure.
     retry: false,
@@ -60,15 +61,15 @@ export function usePortalAccessState(): PortalAccessState {
   useEffect(() => {
     // Only a real answer is recorded — a failed probe is not one, so the next
     // mount trusts the last backend response rather than a network blip.
-    if (isSuccess && data !== undefined) writeCachedOtherApp(data);
-  }, [isSuccess, data]);
+    if (canQuery && isSuccess && data !== undefined) writeCachedOtherApp(data);
+  }, [canQuery, isSuccess, data]);
 
   // A signed-out user has nothing to look up, so that answer is settled at
   // once. Otherwise the seeded value is a guess until the probe comes back -
   // callers that hide UI on "no access" must not act on the guess.
   return {
-    granted: data === true,
-    settled: userId === null || isFetched,
+    granted: canQuery && data === true,
+    settled: !loading && (!canQuery || (isFetched && !isFetching)),
   };
 }
 

@@ -36,6 +36,7 @@ import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
 import stirling.software.saas.model.SaasTeamExtensions;
 import stirling.software.saas.payg.api.WalletSnapshotResponse.ActivityRow;
 import stirling.software.saas.payg.api.WalletSnapshotResponse.CategoryBreakdown;
@@ -98,7 +99,7 @@ public class PaygWalletController {
      * membership — shouldn't happen post-migration). Teams always get the live {@code
      * pricing_policy.free_tier_units} grant via {@link TeamBillingService}.
      */
-    private static final int FREE_TIER_LIMIT_UNITS_FALLBACK = 500;
+    private static final int FREE_TIER_LIMIT_UNITS_FALLBACK = 1000;
 
     private static final DateTimeFormatter ISO_DATE = DateTimeFormatter.ISO_LOCAL_DATE;
 
@@ -154,12 +155,17 @@ public class PaygWalletController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
+        if (AuthenticationUtils.isAnonymous(auth)
+                || "ANONYMOUS".equalsIgnoreCase(user.getAuthenticationType())) {
+            return ResponseEntity.ok(emptySnapshot(0));
+        }
+
         Optional<Long> resolvedTeam = userTeamResolver.teamId(user);
         if (resolvedTeam.isEmpty()) {
             // Authenticated user without a team — shouldn't happen post-migration, but we don't
             // want to 500. Return a free-tier-shaped empty snapshot so the FE renders the gated UI
             // rather than blowing up on a null body.
-            return ResponseEntity.ok(emptySnapshot());
+            return ResponseEntity.ok(emptySnapshot(FREE_TIER_LIMIT_UNITS_FALLBACK));
         }
         Long teamId = resolvedTeam.get();
         boolean isLeader = userTeamResolver.isLeader(user);
@@ -232,6 +238,7 @@ public class PaygWalletController {
                         limit,
                         clampToInt(billing.freeGrantUnits()),
                         clampToInt(billing.freeRemainingUnits()),
+                        UserLicenseSettingsService.DEFAULT_USER_LIMIT,
                         billing.perDocMinor(),
                         billing.currency(),
                         estimatedBill,
@@ -250,7 +257,13 @@ public class PaygWalletController {
                         prepaidTotal,
                         prepaidExpiresAt,
                         billingMode,
-                        bundleRatePerCreditMinor);
+                        bundleRatePerCreditMinor,
+                        billing.includedPeriodStart() == null
+                                ? null
+                                : billing.includedPeriodStart().toLocalDate().toString(),
+                        billing.includedPeriodEnd() == null
+                                ? null
+                                : billing.includedPeriodEnd().toLocalDate().toString());
         return ResponseEntity.ok(body);
     }
 
@@ -495,7 +508,7 @@ public class PaygWalletController {
         return (int) v;
     }
 
-    private WalletSnapshotResponse emptySnapshot() {
+    private WalletSnapshotResponse emptySnapshot(int allowance) {
         LocalDateTime[] window = currentMonthWindow();
         return new WalletSnapshotResponse(
                 null, // teamId — unknown when the caller has no team membership
@@ -506,9 +519,10 @@ public class PaygWalletController {
                 ISO_DATE.format(window[0].toLocalDate()),
                 ISO_DATE.format(window[1].toLocalDate()),
                 0,
-                FREE_TIER_LIMIT_UNITS_FALLBACK,
-                FREE_TIER_LIMIT_UNITS_FALLBACK,
-                FREE_TIER_LIMIT_UNITS_FALLBACK,
+                allowance,
+                allowance,
+                allowance,
+                UserLicenseSettingsService.DEFAULT_USER_LIMIT,
                 null,
                 null,
                 null,
@@ -527,6 +541,8 @@ public class PaygWalletController {
                 0L,
                 null,
                 BILLING_MODE_PAYG,
+                null,
+                null,
                 null);
     }
 }

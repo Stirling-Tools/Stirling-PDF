@@ -1,6 +1,12 @@
+vi.mock("@app/portal/hooks/useServerPlan", () => ({
+  useServerPlan: () => ({ serverPlan: undefined, loading: false }),
+}));
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter, useLocation } from "react-router-dom";
+import type { ReactNode } from "react";
+import { MantineProvider } from "@mantine/core";
 
 /**
  * Which usage page this instance has one of. The unlinked half must not go anywhere near the
@@ -14,37 +20,95 @@ const link = { is: false };
 const connect = vi.fn();
 const applyLinkFacts = vi.fn();
 
-vi.mock("@portal/hooks/useConnectGate", () => ({
+const config = { isAdmin: false, enableLogin: true };
+const license = {
+  licenseInfo: {
+    licenseKey: "test-existing-license" as string | null,
+    licenseType: "ENTERPRISE",
+  },
+  loading: false,
+  error: null as string | null,
+  refetchLicense: vi.fn(),
+};
+const saveLicenseKey = vi.fn();
+const saveLicenseFile = vi.fn();
+const onLicenseSaved = vi.fn();
+
+vi.mock("@app/contexts/AppConfigContext", () => ({
+  useAppConfig: () => ({ config }),
+}));
+vi.mock("@app/contexts/LicenseContext", () => ({ useLicense: () => license }));
+vi.mock("@app/services/licenseService", () => ({
+  default: {
+    saveLicenseKey: (...args: unknown[]) => saveLicenseKey(...args),
+    saveLicenseFile: (...args: unknown[]) => saveLicenseFile(...args),
+  },
+}));
+vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
+
+vi.mock("@app/portal/hooks/useConnectGate", () => ({
   useConnectGate: () => ({ ...gate, connect, guard: (f: unknown) => f }),
 }));
-vi.mock("@portal/contexts/LinkContext", () => ({
+vi.mock("@app/portal/contexts/LinkContext", () => ({
   useApplyLinkFacts: () => applyLinkFacts,
   useLinkOptional: () => ({ isLinked: link.is }),
 }));
-vi.mock("@portal/contexts/UIContext", () => ({
+vi.mock("@app/portal/contexts/UIContext", () => ({
   useUI: () => ({ openLinkModal: vi.fn() }),
 }));
-vi.mock("@portal/hooks/usePortalAdmin", () => ({
-  usePortalAdmin: () => admin.is,
+vi.mock("@app/portal/hooks/useAccountLinkOwner", () => ({
+  useAccountLinkOwner: () => admin.is,
 }));
-vi.mock("@portal/views/Usage", () => ({
-  Usage: ({ onWalletLoaded }: { onWalletLoaded?: (w: unknown) => void }) => {
+vi.mock("@app/portal/views/Usage", () => ({
+  Usage: ({
+    onWalletLoaded,
+    renderLicenseSection,
+    sessionRecovery,
+  }: {
+    onWalletLoaded?: (w: unknown) => void;
+    sessionRecovery?: ReactNode;
+    renderLicenseSection?: (onSaved: () => void) => ReactNode;
+  }) => {
     onWalletLoaded?.({ status: "free" });
-    return <div data-testid="usage" />;
+    return (
+      <div
+        data-testid="usage"
+        data-session-recovery-in-shell={Boolean(sessionRecovery)}
+      >
+        {renderLicenseSection?.(onLicenseSaved)}
+      </div>
+    );
   },
 }));
-vi.mock("@portal/components/billing/FreeTierPlanView", () => ({
-  FreeTierPlanView: () => <div data-testid="free-tier" />,
+
+vi.mock("@app/portal/components/billing/FreeTierPlanView", () => ({
+  FreeTierPlanView: ({ licenseSection }: { licenseSection?: ReactNode }) => (
+    <div data-testid="free-tier">{licenseSection}</div>
+  ),
 }));
 
-import { PortalBillingGate } from "@portal/components/billing/PortalBillingGate";
+import { BillingSettingsSection } from "@app/portal/components/settings/BillingSettingsSection";
 
-const renderGate = () =>
-  render(
-    <MemoryRouter initialEntries={["/processor/usage"]}>
-      <PortalBillingGate />
-    </MemoryRouter>,
+function Location() {
+  const location = useLocation();
+  return (
+    <output data-testid="location">
+      {location.pathname}
+      {location.search}
+    </output>
   );
+}
+function GateTree({ entry = "/settings/billing" }: { entry?: string }) {
+  return (
+    <MantineProvider>
+      <MemoryRouter initialEntries={[entry]}>
+        <Location />
+        <BillingSettingsSection />
+      </MemoryRouter>
+    </MantineProvider>
+  );
+}
+const renderGate = () => render(<GateTree />);
 
 describe("PortalBillingGate — self-hosted", () => {
   beforeEach(() => {
@@ -54,6 +118,15 @@ describe("PortalBillingGate — self-hosted", () => {
     applyLinkFacts.mockReset();
     gate.gated = false;
     gate.loading = false;
+    config.isAdmin = false;
+    config.enableLogin = true;
+    license.licenseInfo.licenseKey = "test-existing-license";
+    license.loading = false;
+    license.error = null;
+    license.refetchLicense.mockReset().mockResolvedValue(undefined);
+    saveLicenseKey.mockReset().mockResolvedValue({ success: true });
+    saveLicenseFile.mockReset().mockResolvedValue({ success: true });
+    onLicenseSaved.mockReset();
   });
 
   it("shows the instance's own meter when there is no account, rather than a bounce", () => {
@@ -87,6 +160,10 @@ describe("PortalBillingGate — self-hosted", () => {
     link.is = true;
     renderGate();
     expect(screen.getByTestId("usage")).toBeInTheDocument();
+    expect(screen.getByTestId("usage")).toHaveAttribute(
+      "data-session-recovery-in-shell",
+      "true",
+    );
     expect(screen.queryByTestId("free-tier")).toBeNull();
     expect(applyLinkFacts).toHaveBeenCalledWith(true, false);
   });
@@ -111,4 +188,178 @@ describe("PortalBillingGate — self-hosted", () => {
     expect(screen.queryByTestId("usage")).not.toBeInTheDocument();
     expect(applyLinkFacts).not.toHaveBeenCalled();
   });
+  it.each([null, "", "00000000-0000-0000-0000-000000000000"])(
+    "treats %s as empty and discards an unsaved edit on close",
+    (key) => {
+      config.isAdmin = true;
+      link.is = true;
+      license.licenseInfo.licenseKey = key;
+      renderGate();
+      expect(screen.getByText("No license installed")).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: "View" }),
+      ).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "Add" }));
+      expect(screen.queryByText("Active License")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("⚠️ Warning: Existing License Detected"),
+      ).not.toBeInTheDocument();
+      const input = screen.getByLabelText("License Key", {
+        selector: 'input[type="password"]',
+      });
+      fireEvent.change(input, { target: { value: "unsaved" } });
+      fireEvent.click(screen.getByRole("button", { name: "Close" }));
+      expect(saveLicenseKey).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByRole("button", { name: "Add" }));
+      expect(
+        screen.getByLabelText("License Key", {
+          selector: 'input[type="password"]',
+        }),
+      ).toHaveValue("");
+    },
+  );
+
+  it("reveals an installed key only when View is opened", () => {
+    config.isAdmin = true;
+    link.is = true;
+    renderGate();
+    expect(screen.queryByText("test-existing-license")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "View" }));
+    expect(screen.getByText("test-existing-license")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    expect(screen.queryByText("test-existing-license")).not.toBeInTheDocument();
+  });
+
+  it("shows a certificate filename and exposes its full source in View", () => {
+    config.isAdmin = true;
+    link.is = true;
+    license.licenseInfo.licenseKey = "file:/licenses/enterprise.lic";
+    renderGate();
+    expect(screen.getByText("enterprise.lic")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "View" }));
+    expect(screen.getByText("/licenses/enterprise.lic")).toBeInTheDocument();
+  });
+
+  it("reuses the license-key save flow and refreshes billing after activation", async () => {
+    config.isAdmin = true;
+    link.is = true;
+    renderGate();
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Update",
+      }),
+    );
+    expect(screen.getByText("Active License")).toBeInTheDocument();
+    expect(
+      screen.getByText("⚠️ Warning: Existing License Detected"),
+    ).toBeInTheDocument();
+    fireEvent.change(
+      screen.getByLabelText("License Key", {
+        selector: 'input[type="password"]',
+      }),
+      {
+        target: { value: " new-test-license " },
+      },
+    );
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Save Changes" }),
+    );
+    await waitFor(() => expect(onLicenseSaved).toHaveBeenCalledTimes(1));
+    expect(saveLicenseKey).toHaveBeenCalledWith("new-test-license");
+    expect(license.refetchLicense).toHaveBeenCalledTimes(1);
+    expect(saveLicenseFile).not.toHaveBeenCalled();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("reuses certificate upload instead of sending it as a license string", async () => {
+    config.isAdmin = true;
+    link.is = true;
+    renderGate();
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Update",
+      }),
+    );
+    fireEvent.click(
+      await screen.findByRole("radio", { name: "Certificate File" }),
+    );
+    const file = new File(["test-certificate"], "license.lic");
+    fireEvent.change(document.querySelector('input[type="file"]')!, {
+      target: { files: [file] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+    await waitFor(() => expect(onLicenseSaved).toHaveBeenCalledTimes(1));
+    expect(saveLicenseFile).toHaveBeenCalledWith(file);
+    expect(saveLicenseKey).not.toHaveBeenCalled();
+  });
+
+  it("does not refresh billing when license activation fails", async () => {
+    config.isAdmin = true;
+    link.is = true;
+    saveLicenseKey.mockResolvedValue({
+      success: false,
+      error: "Invalid license",
+    });
+    renderGate();
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Update",
+      }),
+    );
+    fireEvent.change(
+      screen.getByLabelText("License Key", {
+        selector: 'input[type="password"]',
+      }),
+      {
+        target: { value: "invalid" },
+      },
+    );
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Save Changes" }),
+    );
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "Save Changes" }),
+      ).not.toBeDisabled(),
+    );
+    expect(license.refetchLicense).not.toHaveBeenCalled();
+    expect(onLicenseSaved).not.toHaveBeenCalled();
+  });
+
+  it("offers a retry without exposing the form when the current license cannot load", () => {
+    config.isAdmin = true;
+    link.is = true;
+    license.error = "License unavailable";
+    renderGate();
+    expect(screen.getByText("License unavailable")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", {
+        name: "Update",
+      }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(license.refetchLicense).toHaveBeenCalledTimes(1);
+  });
+  it("keeps local license management available without linking", () => {
+    renderGate();
+    expect(screen.getByRole("button", { name: "View" })).toBeInTheDocument();
+    expect(applyLinkFacts).not.toHaveBeenCalled();
+  });
+
+  it.each(["procurement=start", "upgrade=team"])(
+    "prompts once for %s and preserves it when linking completes",
+    (intent) => {
+      gate.gated = true;
+      const entry = `/settings/billing?${intent}`;
+      const view = render(<GateTree entry={entry} />);
+      expect(connect).toHaveBeenCalledTimes(1);
+      view.rerender(<GateTree entry={entry} />);
+      expect(connect).toHaveBeenCalledTimes(1);
+      link.is = true;
+      gate.gated = false;
+      view.rerender(<GateTree entry={entry} />);
+      expect(screen.getByTestId("usage")).toBeInTheDocument();
+      expect(screen.getByTestId("location")).toHaveTextContent(entry);
+    },
+  );
 });

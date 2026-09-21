@@ -180,6 +180,13 @@ export interface ViewerContextType {
     callback: (rotation: number) => void,
   ) => () => void;
 
+  // True while a carried zoom lands after a swap; zoom percent updates in that
+  // window are intermediate and must not reach the toolbar.
+  zoomRestorePendingRef: React.MutableRefObject<boolean>;
+  /** Bumped when the carried zoom settles so bridges can re-publish the state. */
+  zoomRestoreSettledTick: number;
+  notifyZoomRestoreSettled: () => void;
+
   // Internal - for bridges to trigger immediate updates
   triggerImmediateScrollUpdate: (
     currentPage: number,
@@ -596,6 +603,12 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     [printWithPolicy],
   );
 
+  const zoomRestorePendingRef = useRef(false);
+  const [zoomRestoreSettledTick, setZoomRestoreSettledTick] = useState(0);
+  const notifyZoomRestoreSettled = useCallback(() => {
+    setZoomRestoreSettledTick((tick) => tick + 1);
+  }, []);
+
   const value: ViewerContextType = {
     // UI state
     isThumbnailSidebarVisible,
@@ -657,6 +670,9 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     triggerImmediateScrollUpdate,
     triggerImmediateZoomUpdate,
     triggerImmediateSpreadUpdate,
+    zoomRestorePendingRef,
+    zoomRestoreSettledTick,
+    notifyZoomRestoreSettled,
     triggerImmediatePanUpdate,
     triggerImmediateRotationUpdate,
 

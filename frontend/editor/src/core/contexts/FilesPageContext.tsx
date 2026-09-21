@@ -10,6 +10,7 @@ import React, {
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 import { FileId } from "@app/types/file";
 import { StirlingFileStub } from "@app/types/fileContext";
@@ -25,6 +26,7 @@ import { writeIntoMount } from "@app/services/mountWrites";
 import { folderSyncService } from "@app/services/folderSyncService";
 import { uploadHistoryChain } from "@app/services/serverStorageUpload";
 import { reconcileServerFiles } from "@app/services/fileSyncService";
+import { pruneMissingRecentFiles } from "@app/services/pruneMissingRecentFiles";
 import {
   deleteServerFile,
   type DeleteScope,
@@ -34,6 +36,7 @@ import {
   useIndexedDBRevision,
 } from "@app/contexts/IndexedDBContext";
 import { useFileActions } from "@app/contexts/file/fileHooks";
+import { useDiskLinkReconcile } from "@app/hooks/useDiskLinkReconcile";
 import { useFolders } from "@app/contexts/FolderContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useAuth } from "@app/auth/UseSession";
@@ -72,6 +75,23 @@ export interface MoveDialogState {
   initial: FolderId | null;
 }
 
+const VIEW_MODE_STORAGE_KEY = "stirling.filesPageViewMode";
+
+/**
+ * The list is the default: it shows more files per screen and carries the columns the
+ * grid has no room for. The grid is one click away, and the choice is the user's from
+ * then on.
+ */
+function readPersistedViewMode(): FilesPageViewMode {
+  try {
+    const stored = localStorage.getItem(VIEW_MODE_STORAGE_KEY);
+    if (stored === "grid" || stored === "list") return stored;
+  } catch {
+    // Private mode, or storage denied: the default stands.
+  }
+  return "list";
+}
+
 interface FilesPageContextValue {
   // Cached files (leaf-only)
   allFiles: StirlingFileStub[];
@@ -79,6 +99,10 @@ interface FilesPageContextValue {
   fileCountsByFolder: Map<FolderId | null, number>;
   loading: boolean;
   refresh: () => Promise<void>;
+  /** Bumped to re-read a mounted directory, which is listed from disk rather than
+   *  from storage and so has nothing to react to when its contents change. */
+  diskRevision: number;
+  bumpDiskRevision: () => void;
 
   // Selection
   selectedFileIds: Set<FileId>;
@@ -150,12 +174,17 @@ const FilesPageContext = createContext<FilesPageContextValue | null>(null);
 
 export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const indexedDB = useIndexedDB();
   const indexedDBRevision = useIndexedDBRevision();
   const folders = useFolders();
   const { actions: fileActions } = useFileActions();
   const { config: appConfig } = useAppConfig();
   const { isAnonymous } = useAuth();
+
+  // Refs inside, so refresh isn't recreated (and re-run) every time the
+  // workbench changes - it only needs whichever files are open when it runs.
+  const { openFileIdsRef, onOpenFilesDetached } = useDiskLinkReconcile();
 
   const [allFiles, setAllFiles] = useState<StirlingFileStub[]>([]);
   const [loading, setLoading] = useState(true);
@@ -169,6 +198,9 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const setFoldersError = folders.setError;
   const storageEnabled = appConfig?.storageEnabled === true;
   const shareLinksEnabled = appConfig?.storageShareLinksEnabled === true;
+  const [diskRevision, setDiskRevision] = useState(0);
+  const bumpDiskRevision = useCallback(() => setDiskRevision((n) => n + 1), []);
+
   const refresh = useCallback(async () => {
     const gen = ++refreshGenRef.current;
     setLoading(true);
@@ -176,7 +208,18 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       const localStubs = await fileStorage.getAllStirlingFileStubs();
       // Bail if a newer refresh started while IDB was reading.
       if (gen !== refreshGenRef.current) return;
-      const localLeaf = localStubs.filter((s) => s.isLeaf !== false);
+      // A file the user deleted outside the app must not be offered here, so
+      // reconcile before anything is rendered. Leaves only: every version behind
+      // them shares a source, and checking all of them multiplies the work by
+      // the length of the history.
+      const localLeaf = await pruneMissingRecentFiles(
+        localStubs.filter((s) => s.isLeaf !== false),
+        {
+          openFileIds: new Set(openFileIdsRef.current),
+          onOpenFilesDetached,
+        },
+      );
+      if (gen !== refreshGenRef.current) return;
       // Render the cache immediately while the server fetch is in flight.
       setAllFiles(localLeaf);
       const merged = await reconcileServerFiles(localLeaf, {
@@ -198,7 +241,14 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       // Only the latest refresh should clear the loading state.
       if (gen === refreshGenRef.current) setLoading(false);
     }
-  }, [setFoldersError, storageEnabled, shareLinksEnabled, isAnonymous]);
+  }, [
+    setFoldersError,
+    storageEnabled,
+    shareLinksEnabled,
+    isAnonymous,
+    openFileIdsRef,
+    onOpenFilesDetached,
+  ]);
 
   useEffect(() => {
     void refresh();
@@ -233,7 +283,17 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   }, [folders.currentFolderId, clearSelection]);
 
   // View + sort + search + filters ----------------------------------------
-  const [viewMode, setViewMode] = useState<FilesPageViewMode>("grid");
+  const [viewMode, setViewModeState] = useState<FilesPageViewMode>(
+    readPersistedViewMode,
+  );
+  const setViewMode = useCallback((mode: FilesPageViewMode) => {
+    setViewModeState(mode);
+    try {
+      localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
+    } catch {
+      // A browser that refuses storage still gets the choice for this session.
+    }
+  }, []);
   const [sortMode, setSortMode] = useState<FilesPageSortMode>("modified-desc");
   const [search, setSearch] = useState("");
   const [originFilter, setOriginFilter] =
@@ -267,11 +327,12 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
     async (name: string) => {
       if (folderNameDialog.mode === "new") {
         // Chosen before the dialog opened, and only used at the root.
-        await folders.createFolder(
+        const created = await folders.createFolder(
           name,
           folderNameDialog.parentId ?? folders.currentFolderId,
           folderNameDialog.kind,
         );
+        navigate(`/files/${created.id}`);
       } else if (
         folderNameDialog.mode === "rename" &&
         folderNameDialog.folder
@@ -279,7 +340,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
         await folders.renameFolder(folderNameDialog.folder.id, name);
       }
     },
-    [folderNameDialog, folders],
+    [folderNameDialog, folders, navigate],
   );
 
   // Dialog: move ------------------------------------------------------------
@@ -711,6 +772,8 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       fileCountsByFolder,
       loading,
       refresh,
+      diskRevision,
+      bumpDiskRevision,
       selectedFileIds,
       setSelectedFileIds,
       clearSelection,
@@ -753,6 +816,8 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       fileCountsByFolder,
       loading,
       refresh,
+      diskRevision,
+      bumpDiskRevision,
       selectedFileIds,
       clearSelection,
       viewMode,
