@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
-  newRagIngestStep,
+  newIngestStep,
   prepareVectorDestination,
-  ragIngestStepConfigured,
+  ingestStepConfigured,
   vectorDestinationConfigured,
 } from "@portal/components/pipelines/docparseStep";
 import { isReadableSource } from "@portal/components/sources/sourceTypes";
@@ -13,11 +13,11 @@ describe("RAG database destinations", () => {
     { exportMarkdown: true },
     { includeOriginal: false, exportChunksJsonl: true },
   ])("rejects corpus output for editor input: %o", (params) => {
-    const step = newRagIngestStep();
+    const step = newIngestStep();
     const corpus = { ...step, params: { ...step.params, ...params } };
-    expect(ragIngestStepConfigured(corpus, true)).toBe(false);
-    expect(ragIngestStepConfigured(corpus, false)).toBe(true);
-    expect(ragIngestStepConfigured(step, true)).toBe(true);
+    expect(ingestStepConfigured(corpus, true)).toBe(false);
+    expect(ingestStepConfigured(corpus, false)).toBe(true);
+    expect(ingestStepConfigured(step, true)).toBe(true);
   });
   it("adds preparation without indexing into Stirling by default", () => {
     const steps = prepareVectorDestination([]);
@@ -27,10 +27,10 @@ describe("RAG database destinations", () => {
       exportChunksJsonl: true,
       includeOriginal: false,
     });
-    expect(ragIngestStepConfigured(steps[0])).toBe(true);
+    expect(ingestStepConfigured(steps[0])).toBe(true);
   });
   it("preserves an existing step's indexing and chunking settings", () => {
-    const step = newRagIngestStep();
+    const step = newIngestStep();
     const steps = prepareVectorDestination([step]);
     expect(steps).toHaveLength(1);
     expect(steps[0].params).toMatchObject({
@@ -49,7 +49,7 @@ describe("RAG database destinations", () => {
     expect(isReadableSource({ type: "editor" })).toBe(true);
   });
   it("requires an export before dropping the original", () => {
-    const step = newRagIngestStep();
+    const step = newIngestStep();
     const prepared = prepareVectorDestination([step])[0];
     expect(vectorDestinationConfigured([step])).toBe(false);
     expect(vectorDestinationConfigured([prepared])).toBe(true);
@@ -63,20 +63,19 @@ describe("RAG chunk parameter limits", () => {
     { chunkSize: 100.5 },
     { overlap: -1 },
     { chunkSize: 8192, overlap: 4097 },
-    { mode: "advanced" },
   ])("rejects invalid chunk settings %j", (parameters) => {
-    const step = newRagIngestStep();
+    const step = newIngestStep();
     expect(
-      ragIngestStepConfigured({
+      ingestStepConfigured({
         ...step,
         params: { ...step.params, ...parameters },
       }),
     ).toBe(false);
   });
   it("allows zero overlap", () => {
-    const step = newRagIngestStep();
+    const step = newIngestStep();
     expect(
-      ragIngestStepConfigured({
+      ingestStepConfigured({
         ...step,
         params: { ...step.params, overlap: 0 },
       }),

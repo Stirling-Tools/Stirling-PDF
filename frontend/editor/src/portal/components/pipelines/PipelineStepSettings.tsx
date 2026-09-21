@@ -16,10 +16,10 @@ import {
 import { PolicyExternalApiConfig } from "@portal/components/policies/PolicyExternalApiConfig";
 import { isIntegrationStep } from "@portal/components/pipelines/integrationStep";
 import {
-  isRagIngestStep,
-  type RagIngestStepParams,
+  isIngestStep,
+  type IngestStepParams,
 } from "@portal/components/pipelines/docparseStep";
-import { RagIngestStepConfig } from "@portal/components/pipelines/RagIngestStepConfig";
+import { IngestStepConfig } from "@portal/components/pipelines/IngestStepConfig";
 import type { ExternalApiStepParams } from "@portal/components/policies/stepOperations";
 import "@portal/components/pipelines/PipelineStepSettings.css";
 
@@ -101,11 +101,11 @@ export function PipelineStepSettings({
 
   // Same reasoning as the integration branch below: a DocParse step has no registry entry, so
   // its settings come from its own component rather than a tool's.
-  if (isRagIngestStep(step)) {
+  if (isIngestStep(step)) {
     return (
-      <RagIngestStepConfig
+      <IngestStepConfig
         editorInput={editorInput}
-        parameters={step.params as unknown as RagIngestStepParams}
+        parameters={step.params as unknown as IngestStepParams}
         onChange={(params) => onChange(params as never)}
       />
     );

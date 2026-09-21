@@ -158,7 +158,8 @@ class StorageFolderAuthorizationTest {
                         new InProcessProcessedLedger(),
                         properties,
                         policies,
-                        mock(DatabaseLicenseGuard.class));
+                        mock(DatabaseLicenseGuard.class),
+                        mock(org.springframework.context.ApplicationEventPublisher.class));
     }
 
     @Test

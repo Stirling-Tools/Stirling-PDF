@@ -1,5 +1,9 @@
 version: '3'
 
+vars:
+  RUFF_THREADS: '{{if .STIRLING_CHECK_JOBS}}RAYON_NUM_THREADS={{.STIRLING_CHECK_JOBS}} {{end}}'
+  PYRIGHT_THREADS: '{{if .STIRLING_CHECK_JOBS}} --threads={{.STIRLING_CHECK_JOBS}}{{end}}'
+
 tasks:
   install:
     desc: "Install engine runtime and development dependencies"
@@ -78,7 +82,7 @@ tasks:
     desc: "Run linting"
     deps: [install]
     cmds:
-      - uv run --locked --group engine --group engine-dev ruff check .
+      - '{{.RUFF_THREADS}}uv run --locked --group engine --group engine-dev ruff check .'
 
   lint:fix:
     desc: "Auto-fix lint issues"
@@ -96,13 +100,13 @@ tasks:
     desc: "Check code formatting"
     deps: [install]
     cmds:
-      - uv run --locked --group engine --group engine-dev ruff format . --diff
+      - '{{.RUFF_THREADS}}uv run --locked --group engine --group engine-dev ruff format . --diff'
 
   typecheck:
     desc: "Run type checking"
     deps: [install]
     cmds:
-      - uv run --locked --group engine --group engine-dev pyright . --warnings
+      - 'uv run --locked --group engine --group engine-dev pyright . --warnings{{.PYRIGHT_THREADS}}'
 
   test:
     desc: "Run tests"

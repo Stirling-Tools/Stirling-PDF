@@ -1,8 +1,8 @@
 import { requiresClassification } from "@app/data/classificationConditions";
 import { isConditionComplete } from "@app/conditions/validation";
 import {
-  isRagIngestStep,
-  ragIngestStepConfigured,
+  isIngestStep,
+  ingestStepConfigured,
   vectorDestinationConfigured,
   prepareVectorDestination,
 } from "@portal/components/pipelines/docparseStep";
@@ -572,7 +572,7 @@ export function PipelineBuilder() {
           i !== index ||
           (step.toolId === null &&
             !isIntegrationStep(step) &&
-            !isRagIngestStep(step))
+            !isIngestStep(step))
         )
           return step;
         // Resolve the update against the CURRENT step params, so a settings UI firing several
@@ -609,7 +609,7 @@ export function PipelineBuilder() {
     if (op) return t(op.labelKey);
     if (isIntegrationStep(step))
       return t("portal.pipelines.builder.sendToSystem");
-    if (isRagIngestStep(step)) return t("portal.policies.endpoints.ragIngest");
+    if (isIngestStep(step)) return t("portal.policies.endpoints.ingest");
     const entry = step.toolId ? allTools[step.toolId] : undefined;
     return entry?.name ?? humanizeOperation(step.operation);
   }
@@ -636,7 +636,7 @@ export function PipelineBuilder() {
     .filter(
       (step) =>
         !integrationStepConfigured(step) ||
-        !ragIngestStepConfigured(step, isEditorInput) ||
+        !ingestStepConfigured(step, isEditorInput) ||
         stepNeedsConfiguring(step, allTools),
     )
     .map(stepLabel);
@@ -809,7 +809,7 @@ export function PipelineBuilder() {
     blockers.push(t("portal.pipelines.builder.blocker.destination"));
   if (!vectorReady)
     blockers.push(
-      t("portal.pipelines.builder.ragIngest.destinationNeedsChunks"),
+      t("portal.pipelines.builder.ingest.destinationNeedsChunks"),
     );
   if (!routingValid)
     blockers.push(
@@ -1246,7 +1246,7 @@ export function PipelineBuilder() {
       return t("portal.pipelines.builder.usesDefaults");
     // Integration and DocParse steps are toolId-less by design and carry their own settings UI,
     // so "unknown" here means "not a registry tool", not "we cannot drive this".
-    if (isIntegrationStep(step) || isRagIngestStep(step)) return undefined;
+    if (isIntegrationStep(step) || isIngestStep(step)) return undefined;
     if (step.support === "unknown")
       return t("portal.pipelines.builder.unknownStep");
     return undefined;
@@ -1405,13 +1405,13 @@ export function PipelineBuilder() {
           {vectorOutput && !vectorReady && (
             <>
               <p className="portal-builder__muted">
-                {t("portal.pipelines.builder.ragIngest.destinationNeedsChunks")}
+                {t("portal.pipelines.builder.ingest.destinationNeedsChunks")}
               </p>
               <Button
                 size="sm"
                 onClick={() => setSteps(prepareVectorDestination(steps))}
               >
-                {t("portal.pipelines.builder.ragIngest.prepareDestination")}
+                {t("portal.pipelines.builder.ingest.prepareDestination")}
               </Button>
             </>
           )}

@@ -1,0 +1,393 @@
+{
+  "version": 2,
+  "language": "id",
+  "labels": [
+    {
+      "id": "invoice",
+      "phrases": [
+        { "text": "tagihan", "weight": 24, "where": "title" },
+        { "text": "pajak pertambahan nilai", "weight": 8 }
+      ]
+    },
+    {
+      "id": "receipt",
+      "phrases": [{ "text": "struk", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "packing-slip",
+      "phrases": [{ "text": "struk", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "bank-statement",
+      "phrases": [{ "text": "rekening koran", "weight": 24, "where": "title" }]
+    },
+    {
+      "id": "payslip",
+      "phrases": [{ "text": "slip gaji", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "expense-report",
+      "phrases": [{ "text": "beban", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "financial-statement",
+      "phrases": [
+        { "text": "laporan keuangan", "weight": 20, "where": "title" },
+        { "text": "neraca", "weight": 12 }
+      ]
+    },
+    {
+      "id": "contract",
+      "phrases": [{ "text": "kontrak", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "employment-contract",
+      "phrases": [{ "text": "kontrak kerja", "weight": 24, "where": "title" }]
+    },
+    {
+      "id": "lease-agreement",
+      "phrases": [{ "text": "kosbas", "weight": 8 }]
+    },
+    {
+      "id": "nda",
+      "phrases": [
+        { "text": "perjanjian kerahasiaan", "weight": 24, "where": "title" }
+      ]
+    },
+    {
+      "id": "terms-and-conditions",
+      "phrases": [
+        { "text": "ketentuan layanan", "weight": 22, "where": "title" }
+      ]
+    },
+    {
+      "id": "privacy-policy",
+      "phrases": [
+        { "text": "kebijakan privasi", "weight": 24, "where": "title" },
+        { "text": "regulasi umum perlindungan data", "weight": 10 }
+      ]
+    },
+    {
+      "id": "will",
+      "phrases": [{ "text": "surat wasiat", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "deed",
+      "phrases": [{ "text": "akta", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "mortgage-document",
+      "phrases": [
+        { "text": "kredit pemilikan rumah", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "insurance-policy",
+      "phrases": [{ "text": "polis asuransi", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "cover-letter",
+      "phrases": [{ "text": "surat lamaran", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "job-description",
+      "phrases": [{ "text": "uraian jabatan", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "certificate",
+      "phrases": [
+        { "text": "ijazah", "weight": 16, "where": "title" },
+        { "text": "diploma", "weight": 16, "where": "title" }
+      ]
+    },
+    {
+      "id": "transcript",
+      "phrases": [
+        { "text": "transkrip akademik", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "thesis",
+      "phrases": [{ "text": "tesis", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "research-paper",
+      "phrases": [{ "text": "penerbitan akademik", "weight": 10 }]
+    },
+    {
+      "id": "patent",
+      "phrases": [{ "text": "paten", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "prescription",
+      "phrases": [
+        { "text": "resep dokter", "weight": 20, "where": "title" },
+        { "text": "farmasi", "weight": 10 }
+      ]
+    },
+    {
+      "id": "medical-report",
+      "phrases": [
+        { "text": "rekam medis", "weight": 18, "where": "title" },
+        { "text": "diagnosis", "weight": 10 }
+      ]
+    },
+    {
+      "id": "immunization-record",
+      "phrases": [{ "text": "vaksinasi", "weight": 12 }]
+    },
+    {
+      "id": "questionnaire",
+      "phrases": [{ "text": "angket", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "user-guide",
+      "phrases": [
+        { "text": "panduan pengguna", "weight": 22, "where": "title" }
+      ]
+    },
+    {
+      "id": "safety-data-sheet",
+      "phrases": [
+        {
+          "text": "lembar data keselamatan bahan",
+          "weight": 24,
+          "where": "title"
+        }
+      ]
+    },
+    {
+      "id": "technical-drawing",
+      "phrases": [{ "text": "gambar teknik", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "press-release",
+      "phrases": [{ "text": "siaran pers", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "newsletter",
+      "phrases": [{ "text": "nawala", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "brochure",
+      "phrases": [{ "text": "brosur", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "business-plan",
+      "phrases": [{ "text": "rencana bisnis", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "white-paper",
+      "phrases": [{ "text": "buku putih", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "meeting-minutes",
+      "phrases": [{ "text": "notula", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "memo",
+      "phrases": [{ "text": "memorandum", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "invitation",
+      "phrases": [{ "text": "kartu undangan", "weight": 14, "where": "title" }]
+    },
+    {
+      "id": "waybill",
+      "phrases": [
+        { "text": "nota pengiriman muatan", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "customs-declaration",
+      "phrases": [
+        { "text": "deklarasi pabean", "weight": 22, "where": "title" }
+      ]
+    },
+    {
+      "id": "visa-document",
+      "phrases": [{ "text": "visa", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "utility-bill",
+      "phrases": [{ "text": "meteran listrik", "weight": 12 }]
+    },
+    {
+      "id": "recipe",
+      "phrases": [{ "text": "resep masakan", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "presentation",
+      "phrases": [{ "text": "presentasi", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "report",
+      "phrases": [{ "text": "laporan", "weight": 8, "where": "title" }]
+    },
+    {
+      "id": "letter",
+      "phrases": [{ "text": "surat", "weight": 8, "where": "title" }]
+    },
+    {
+      "id": "form",
+      "phrases": [{ "text": "formulir", "weight": 10, "where": "title" }]
+    },
+    {
+      "id": "license",
+      "phrases": [{ "text": "lisensi", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "legal-notice",
+      "phrases": [{ "text": "somasi", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "audit-report",
+      "phrases": [{ "text": "audit", "weight": 12 }]
+    },
+    {
+      "id": "inspection-report",
+      "phrases": [{ "text": "inspeksi", "weight": 10 }]
+    },
+    {
+      "id": "property-listing",
+      "phrases": [{ "text": "lahan yasan", "weight": 8 }]
+    },
+    {
+      "id": "grant-agreement",
+      "phrases": [{ "text": "dana hibah", "weight": 12 }]
+    },
+    {
+      "id": "subscription-confirmation",
+      "phrases": [{ "text": "model bisnis berlangganan", "weight": 10 }]
+    },
+    {
+      "id": "donation-receipt",
+      "phrases": [{ "text": "sumbangan", "weight": 10 }]
+    },
+    {
+      "id": "email-thread",
+      "phrases": [{ "text": "surel", "weight": 8 }]
+    },
+    {
+      "id": "book-ebook",
+      "phrases": [{ "text": "daftar isi", "weight": 6 }]
+    },
+    {
+      "id": "magazine-article",
+      "phrases": [{ "text": "majalah", "weight": 10 }]
+    },
+    {
+      "id": "course-syllabus",
+      "phrases": [{ "text": "silabus", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "lesson-plan",
+      "phrases": [
+        {
+          "text": "rencana pelaksanaan pembelajaran",
+          "weight": 20,
+          "where": "title"
+        }
+      ]
+    },
+    {
+      "id": "offer-letter",
+      "phrases": [{ "text": "perekrutan", "weight": 8 }]
+    },
+    {
+      "id": "subpoena",
+      "phrases": [
+        { "text": "perintah yang memaksa", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "discharge-summary",
+      "phrases": [{ "text": "rawat inap", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "lab-report",
+      "phrases": [{ "text": "laboratorium klinik", "weight": 12 }]
+    },
+    {
+      "id": "insurance-claim",
+      "phrases": [{ "text": "asuransi", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "regulatory-filing",
+      "phrases": [{ "text": "kepatuhan terhadap peraturan", "weight": 10 }]
+    },
+    {
+      "id": "quality-report",
+      "phrases": [{ "text": "pengendalian mutu", "weight": 10 }]
+    },
+    {
+      "id": "test-report",
+      "phrases": [{ "text": "kalibrasi", "weight": 12 }]
+    },
+    {
+      "id": "safety-procedure",
+      "phrases": [{ "text": "kesehatan dan keselamatan kerja", "weight": 10 }]
+    },
+    {
+      "id": "api-documentation",
+      "phrases": [{ "text": "antarmuka pemrograman aplikasi", "weight": 8 }]
+    },
+    {
+      "id": "license-agreement",
+      "phrases": [{ "text": "eula", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "sales-proposal",
+      "phrases": [{ "text": "usulan bisnis", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "budget",
+      "phrases": [{ "text": "anggaran", "weight": 14, "where": "title" }]
+    },
+    {
+      "id": "statement-of-account",
+      "phrases": [{ "text": "rekening koran", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "return-authorization",
+      "phrases": [
+        { "text": "pengembalian produk", "weight": 16, "where": "title" }
+      ]
+    },
+    {
+      "id": "case-study",
+      "phrases": [{ "text": "studi kasus", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "board-report",
+      "phrases": [{ "text": "dewan direksi", "weight": 10 }]
+    },
+    {
+      "id": "investment-summary",
+      "phrases": [{ "text": "investasi", "weight": 8 }]
+    },
+    {
+      "id": "appraisal-report",
+      "phrases": [
+        { "text": "penilaian real estat", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "benefits-summary",
+      "phrases": [{ "text": "tunjangan karyawan", "weight": 14 }]
+    },
+    {
+      "id": "grade-report",
+      "phrases": [{ "text": "buku rapor", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "assignment-brief",
+      "phrases": [{ "text": "pekerjaan rumah", "weight": 12 }]
+    }
+  ],
+  "patterns": {
+    "toc": [{ "pattern": "daftar\\ isi" }],
+    "references": [{ "pattern": "daftar\\ pustaka" }],
+    "signature": [{ "pattern": "tanda\\ tangan" }]
+  }
+}
