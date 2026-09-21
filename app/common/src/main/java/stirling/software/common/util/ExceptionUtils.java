@@ -683,6 +683,16 @@ public class ExceptionUtils {
         return new FileReadException(message, ErrorCode.FILE_NOT_FOUND.getCode());
     }
 
+    public static FileReadException createFileNotFoundException(String fileId, Throwable cause) {
+        requireNonNull(fileId, "fileId");
+        String message =
+                getMessage(
+                        ErrorCode.FILE_NOT_FOUND.getMessageKey(),
+                        ErrorCode.FILE_NOT_FOUND.getDefaultMessage(),
+                        fileId);
+        return new FileReadException(message, cause, ErrorCode.FILE_NOT_FOUND.getCode());
+    }
+
     // Unchecked where they were IOExceptions: a caller's bad settings are a 400, not a server
     // fault, and each is thrown before any I/O a catch could be guarding.
     public static StepConfigurationException createOcrLanguageRequiredException() {
@@ -764,6 +774,16 @@ public class ExceptionUtils {
     public static FfmpegRequiredException createFfmpegRequiredException() {
         String message = getMessage(ErrorCode.FFMPEG_REQUIRED);
         return new FfmpegRequiredException(message, ErrorCode.FFMPEG_REQUIRED.getCode());
+    }
+
+    public static ToolRequiredException createGhostscriptRequiredException(String operation) {
+        requireNonNull(operation, "operation");
+        String message =
+                getMessage(
+                        ErrorCode.GHOSTSCRIPT_REQUIRED.getMessageKey(),
+                        ErrorCode.GHOSTSCRIPT_REQUIRED.getDefaultMessage(),
+                        operation);
+        return new ToolRequiredException(message, ErrorCode.GHOSTSCRIPT_REQUIRED.getCode());
     }
 
     public static ToolRequiredException createPythonRequiredForWebpException() {
@@ -978,8 +998,12 @@ public class ExceptionUtils {
 
     // Checked where it was a RuntimeException: every thrower already declares throws Exception.
     public static ToolFailedException createPdfaConversionFailedException() {
+        return createPdfaConversionFailedException(null);
+    }
+
+    public static ToolFailedException createPdfaConversionFailedException(Throwable cause) {
         String message = getMessage(ErrorCode.PDFA_CONVERSION_FAILED);
-        return new ToolFailedException(message, null, ErrorCode.PDFA_CONVERSION_FAILED.getCode());
+        return new ToolFailedException(message, cause, ErrorCode.PDFA_CONVERSION_FAILED.getCode());
     }
 
     public static StepConfigurationException createInvalidArgumentException(
@@ -1268,6 +1292,10 @@ public class ExceptionUtils {
                 "E063",
                 "error.ffmpegRequired",
                 "FFmpeg must be installed to convert PDFs to video. Install FFmpeg and ensure it is available on the system PATH."),
+        GHOSTSCRIPT_REQUIRED(
+                "E064",
+                "error.ghostscriptRequired",
+                "Ghostscript must be installed for {0}. Install Ghostscript and ensure it is available on the system PATH."),
 
         // Validation errors
         INVALID_ARGUMENT("E070", "error.invalidArgument", "Invalid argument ''{0}'': {1}"),
@@ -1402,6 +1430,10 @@ public class ExceptionUtils {
     public static class FileReadException extends BaseAppException {
         public FileReadException(String message, String errorCode) {
             super(message, null, errorCode);
+        }
+
+        public FileReadException(String message, Throwable cause, String errorCode) {
+            super(message, cause, errorCode);
         }
     }
 

@@ -51,6 +51,10 @@ class ExceptionUtilsCodedFactoriesTest {
                         ExceptionUtils::createPythonRequiredForWebpException,
                         IOException.class),
                 coded(
+                        "E064",
+                        () -> ExceptionUtils.createGhostscriptRequiredException("PDF/X"),
+                        IOException.class),
+                coded(
                         "E040",
                         ExceptionUtils::createOcrLanguageRequiredException,
                         IllegalArgumentException.class),

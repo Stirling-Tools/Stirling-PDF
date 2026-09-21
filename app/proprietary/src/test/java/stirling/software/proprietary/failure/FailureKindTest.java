@@ -462,6 +462,7 @@ class FailureKindTest {
                             FailureKind.STEP_CANNOT_RENDER_PAGE,
                             FailureKind.STEP_TOOL_FAILED,
                             FailureKind.STEP_INTERRUPTED,
+                            FailureKind.STEP_PAGE_TOO_LARGE,
                             FailureKind.STEP_MISCONFIGURED,
                             FailureKind.UNKNOWN);
         }

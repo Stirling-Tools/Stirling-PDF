@@ -96,7 +96,7 @@ class ClaimedErrorCodesAreEmittableTest {
         Object[] args = new Object[types.length];
         for (int i = 0; i < types.length; i++) {
             args[i] = defaultFor(types[i]);
-            if (args[i] == null && types[i] != Object[].class) {
+            if (args[i] == null) {
                 return null;
             }
         }

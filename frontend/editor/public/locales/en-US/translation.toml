@@ -8469,6 +8469,10 @@ title = "Step was interrupted"
 description = "This step's settings are not valid, so it could not run on any file. Edit the step to fix them."
 title = "Step settings are invalid"
 
+[portal.failures.kind.stepPageTooLarge]
+description = "A page in your file could not be rendered at the requested resolution. Lower the DPI in the step, or split the file."
+title = "Page too large to render"
+
 [portal.failures.kind.stepToolFailed]
 description = "A tool this step relies on could not process your file."
 title = "Tool could not process the file"

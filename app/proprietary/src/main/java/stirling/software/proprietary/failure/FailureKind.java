@@ -168,7 +168,7 @@ public enum FailureKind {
             FailureScope.SERVER,
             // E080 (MD5 unavailable) is deliberately not claimed: its one thrower has no throws
             // clause and its caller swallows it for a fallback hash, so it cannot reach a run.
-            errorCodes("E042", "E062", "E063"),
+            errorCodes("E042", "E062", "E063", "E064"),
             fallback("This server is missing software the step needs, so it could not be run."),
             // Nothing for an owner to press: their document is fine, and a retry fails the same
             // way until someone installs the binary.
@@ -225,16 +225,32 @@ public enum FailureKind {
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
 
     /**
+     * A page ran the renderer out of memory at the requested resolution. The page's size and the
+     * step's DPI decide it together, so one oversized page fails while its neighbours succeed.
+     */
+    STEP_PAGE_TOO_LARGE(
+            FailureStage.INTERNAL,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_CONFIG_FIX,
+            FailureScope.FILE,
+            errorCodes("E081"),
+            fallback(
+                    "A page in this document was too large to render at the requested resolution."),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /**
      * The step's settings, not the document, were refused: no OCR language, an unparseable page
-     * size, a DPI the server cannot render at. Scoped to the policy, since every document it
-     * reaches fails identically until the step is edited, and one incident says that best.
+     * size. Scoped to the policy, since every document it reaches fails identically until the step
+     * is edited, and one incident says that best.
      */
     STEP_MISCONFIGURED(
             FailureStage.INTERNAL,
             FailureSeverity.ERROR,
             FailureRemedy.NEEDS_CONFIG_FIX,
             FailureScope.POLICY,
-            errorCodes("E040", "E041", "E043", "E050", "E070", "E072", "E081"),
+            errorCodes("E040", "E041", "E043", "E050", "E070", "E072"),
             fallback("This step's settings are not valid, so it could not run."),
             // Nothing for an owner to press: their document is fine, and only whoever can edit the
             // policy can change the settings.
