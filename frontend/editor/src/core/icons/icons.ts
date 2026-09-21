@@ -165,6 +165,7 @@ import LayoutGrid from "lucide-static/icons/layout-grid.svg?react";
 import Leaf from "lucide-static/icons/leaf.svg?react";
 import Library from "lucide-static/icons/library.svg?react";
 import Lightbulb from "lucide-static/icons/lightbulb.svg?react";
+import LineSquiggle from "lucide-static/icons/line-squiggle.svg?react";
 import Link from "lucide-static/icons/link.svg?react";
 import List from "lucide-static/icons/list.svg?react";
 import ListChecks from "lucide-static/icons/list-checks.svg?react";
@@ -205,7 +206,6 @@ import Palette from "lucide-static/icons/palette.svg?react";
 import Paperclip from "lucide-static/icons/paperclip.svg?react";
 import PartyPopper from "lucide-static/icons/party-popper.svg?react";
 import Pause from "lucide-static/icons/pause.svg?react";
-import PenLine from "lucide-static/icons/pen-line.svg?react";
 import PenTool from "lucide-static/icons/pen-tool.svg?react";
 import Pencil from "lucide-static/icons/pencil.svg?react";
 import PencilRuler from "lucide-static/icons/pencil-ruler.svg?react";
@@ -345,6 +345,7 @@ import FilePdf from "@app/icons/svg/stirling/file-pdf.svg?react";
 import Ftp from "@app/icons/svg/stirling/ftp.svg?react";
 import LineWeight from "@app/icons/svg/stirling/line-weight.svg?react";
 import MoveItemDown from "@app/icons/svg/stirling/move-item-down.svg?react";
+import Polyline from "@app/icons/svg/stirling/polyline.svg?react";
 import RadioChecked from "@app/icons/svg/stirling/radio-checked.svg?react";
 import RemoveSelection from "@app/icons/svg/stirling/remove-selection.svg?react";
 import SelectAll from "@app/icons/svg/stirling/select-all.svg?react";
@@ -556,6 +557,7 @@ export const ICONS = {
   leaf: { Component: Leaf, kind: "lucide" },
   library: { Component: Library, kind: "lucide" },
   lightbulb: { Component: Lightbulb, kind: "lucide" },
+  "line-squiggle": { Component: LineSquiggle, kind: "lucide" },
   link: { Component: Link, kind: "lucide" },
   list: { Component: List, kind: "lucide" },
   "list-checks": { Component: ListChecks, kind: "lucide" },
@@ -596,7 +598,6 @@ export const ICONS = {
   paperclip: { Component: Paperclip, kind: "lucide" },
   "party-popper": { Component: PartyPopper, kind: "lucide" },
   pause: { Component: Pause, kind: "lucide" },
-  "pen-line": { Component: PenLine, kind: "lucide" },
   "pen-tool": { Component: PenTool, kind: "lucide" },
   pencil: { Component: Pencil, kind: "lucide" },
   "pencil-ruler": { Component: PencilRuler, kind: "lucide" },
@@ -735,6 +736,7 @@ export const ICONS = {
   ftp: { Component: Ftp, kind: "stirling" },
   "line-weight": { Component: LineWeight, kind: "stirling" },
   "move-item-down": { Component: MoveItemDown, kind: "stirling" },
+  polyline: { Component: Polyline, kind: "stirling" },
   "radio-checked": { Component: RadioChecked, kind: "stirling" },
   "remove-selection": { Component: RemoveSelection, kind: "stirling" },
   "select-all": { Component: SelectAll, kind: "stirling" },

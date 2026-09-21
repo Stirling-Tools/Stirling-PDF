@@ -1,3 +1,4 @@
+import { TeamSubscriptionChange } from "@app/billing/TeamSubscriptionChange";
 import type { ServerPlan } from "@app/billing/serverPlan";
 import {
   useCallback,
@@ -10,37 +11,41 @@ import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { Banner, Button } from "@app/ui";
 import { BillingScreen } from "@app/billing";
-import { useUI } from "@portal/contexts/UIContext";
-import { useProcurement } from "@portal/components/procurement/useProcurement";
-import { ControlledDealStatusHero } from "@portal/components/procurement/ProcurementBanner";
-import { ProcurementFlow } from "@portal/components/procurement/ProcurementFlow";
+import { useUI } from "@app/portal/contexts/UIContext";
+import { useProcurement } from "@app/portal/components/procurement/useProcurement";
+import { ControlledDealStatusHero } from "@app/portal/components/procurement/ProcurementBanner";
+import { ProcurementFlow } from "@app/portal/components/procurement/ProcurementFlow";
 import {
   fetchWallet,
   refreshWalletCache,
   type Wallet,
-} from "@portal/api/billing";
+} from "@app/portal/api/billing";
 import {
   fetchLocalUsage,
   triggerLocalSync,
   type LocalUsage,
-} from "@portal/api/link";
-import { useStripePortal } from "@portal/hooks/useStripePortal";
-import { useBundleFlowState } from "@portal/hooks/useBundleFlowState";
-import { FreePlanView } from "@portal/components/billing/FreePlanView";
-import { PaymentSection } from "@portal/components/billing/PaymentSection";
-import { InvoicesSection } from "@portal/components/billing/InvoicesSection";
-import { useFleetStats } from "@portal/queries/infrastructure";
+} from "@app/portal/api/link";
+import { useStripePortal } from "@app/portal/hooks/useStripePortal";
+import { usePortalSaasSession } from "@app/portal/hooks/usePortalSaasSession";
+import { FreePlanView } from "@app/portal/components/billing/FreePlanView";
+import { PaymentSection } from "@app/portal/components/billing/PaymentSection";
+import { InvoicesSection } from "@app/portal/components/billing/InvoicesSection";
+import { useFleetStats } from "@app/portal/queries/infrastructure";
+import { useBundleFlowState } from "@app/portal/hooks/useBundleFlowState";
 import { useCheckoutOptional } from "@app/contexts/CheckoutContext";
-import { SubscribedPlanView } from "@portal/components/billing/SubscribedPlanView";
+import { SubscribedPlanView } from "@app/portal/components/billing/SubscribedPlanView";
 import {
   HttpError,
-  SaasNotLinkedError,
+  SaasSessionRequiredError,
   SaasUnconfiguredError,
-} from "@portal/api/http";
-import "@portal/views/Usage.css";
-import "@portal/components/billing/billing.css";
+} from "@app/portal/api/http";
+import "@app/portal/views/Usage.css";
+import "@app/portal/components/billing/billing.css";
 
 export interface UsageProps {
+  /** Local occupied seats for self-hosted; undefined keeps the SaaS membership count. */
+  localUsersInUse?: number | null;
+  localUserLimit?: number | null;
   serverPlan?: ServerPlan;
   serverPlanAction?: ReactNode;
   /**
@@ -49,13 +54,8 @@ export interface UsageProps {
    * self-hosted maps it onto the link/tier dimension; SaaS ignores it.
    */
   onWalletLoaded?: (wallet: Wallet) => void;
-  /**
-   * Invoked when the SaaS session has lapsed and the user chooses to re-sign-in.
-   * When omitted, the "session expired" notice shows without a sign-in action.
-   * Self-hosted wires this to its re-auth flow; SaaS leaves it unset (its session
-   * is owned by the app, so this path never triggers).
-   */
-  onReauth?: () => void;
+  /** Self-hosted supplies its owner-only renewal notice; hosted authentication belongs to the app. */
+  sessionRecovery?: ReactNode;
   /** Only the self-hosted host supplies local license management; notify after activation. */
   renderLicenseSection?: (onSaved: () => void) => ReactNode;
 }
@@ -70,14 +70,20 @@ export interface UsageProps {
  * products render from their own holdings, which that axis cannot express.
  */
 export function Usage({
+  localUsersInUse,
+  localUserLimit,
   serverPlan,
   serverPlanAction,
   onWalletLoaded,
-  onReauth,
+  sessionRecovery,
   renderLicenseSection,
 }: UsageProps = {}) {
   const { t } = useTranslation();
-  const [wallet, setWallet] = useState<Wallet | null>(null);
+  const { revision: sessionRevision, required } = usePortalSaasSession();
+  const [loadedWallet, setWallet] = useState<Wallet | null>(null);
+  const [sessionExpired, setSessionExpired] = useState(false);
+  const needsRenewal = Boolean(sessionRecovery) && (sessionExpired || required);
+  const wallet = needsRenewal ? null : loadedWallet;
   const procurement = useProcurement();
   const { trialSetupRequested, clearTrialSetupRequest } = useUI();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -125,11 +131,10 @@ export function Usage({
   ]);
   // Locally-accrued usage SaaS hasn't billed yet; added to the synced figure so
   // "current usage" reflects work since the last daily sync. Best-effort.
+  const hasLocalInstance = localUsersInUse !== undefined;
   const [localUsage, setLocalUsage] = useState<LocalUsage | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // The SaaS session has lapsed and needs a re-sign-in (self-hosted only).
-  const [sessionExpired, setSessionExpired] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const previousDeal = useRef(procurement.data);
   useEffect(() => {
@@ -175,13 +180,14 @@ export function Usage({
     setSessionExpired(false);
     // Independent of the wallet load — a local-usage failure must not break the
     // page; it just means no unsynced delta is shown.
-    fetchLocalUsage()
-      .then((u) => {
-        if (!cancelled) setLocalUsage(u);
-      })
-      .catch(() => {
-        if (!cancelled) setLocalUsage(null);
-      });
+    if (hasLocalInstance)
+      fetchLocalUsage()
+        .then((u) => {
+          if (!cancelled) setLocalUsage(u);
+        })
+        .catch(() => {
+          if (!cancelled) setLocalUsage(null);
+        });
     fetchWallet()
       .then((w) => {
         if (cancelled) return;
@@ -190,7 +196,7 @@ export function Usage({
       })
       .catch((e) => {
         if (cancelled) return;
-        if (e instanceof SaasNotLinkedError) {
+        if (e instanceof SaasSessionRequiredError) {
           // The attended SaaS session expired — offer a re-sign-in.
           setSessionExpired(true);
         } else if (e instanceof SaasUnconfiguredError) {
@@ -216,9 +222,30 @@ export function Usage({
     return () => {
       cancelled = true;
     };
-  }, [refreshKey, onWalletLoaded, t]);
+  }, [refreshKey, onWalletLoaded, t, sessionRevision, hasLocalInstance]);
 
   const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
+  useEffect(() => {
+    const refreshVisible = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
+    window.addEventListener("focus", refreshVisible);
+    const interval = window.setInterval(refreshVisible, 30_000);
+    return () => {
+      window.removeEventListener("focus", refreshVisible);
+      window.clearInterval(interval);
+    };
+  }, [refresh]);
+  useEffect(() => {
+    const onBillingUpdated = () => {
+      void refreshWalletCache()
+        .catch(() => {})
+        .finally(refresh);
+    };
+    window.addEventListener("stirling:billing-updated", onBillingUpdated);
+    return () =>
+      window.removeEventListener("stirling:billing-updated", onBillingUpdated);
+  }, [refresh]);
   const refreshAfterLicense = useCallback(() => {
     void refreshWalletCache()
       .catch(() => {})
@@ -232,17 +259,72 @@ export function Usage({
   // Optional on purpose: a build that mounts no provider must lose the door, not the page.
   const checkout = useCheckoutOptional();
   const heldLimit = wallet?.team?.held ? wallet.team.licensedUsers : null;
-  const usersInUse = wallet?.team?.usersInUse;
+  const usersInUse =
+    localUsersInUse === undefined ? wallet?.team?.usersInUse : localUsersInUse;
   const addCapacity = useCallback(() => {
     // No email: the only one this instance holds is its local admin record, which is a Spring
     // username and not an address the buyer owns. The checkout asks for one instead.
     void checkout?.openCheckout("server", {
       combinedChoose: true,
       currentLimit: heldLimit,
-      minimumSeats: usersInUse,
+      minimumSeats: usersInUse ?? undefined,
+      capacityNotice:
+        !serverPlan &&
+        !wallet?.team?.held &&
+        localUsersInUse != null &&
+        localUserLimit != null &&
+        localUsersInUse > localUserLimit
+          ? { users: localUsersInUse, limit: localUserLimit }
+          : undefined,
       onSuccess: () => setRefreshKey((k) => k + 1),
     });
-  }, [checkout, heldLimit, usersInUse]);
+  }, [
+    checkout,
+    heldLimit,
+    usersInUse,
+    serverPlan,
+    wallet?.team?.held,
+    localUsersInUse,
+    localUserLimit,
+  ]);
+
+  const handledTeamRequest = useRef(false);
+  useEffect(() => {
+    if (searchParams.get("upgrade") !== "team") {
+      handledTeamRequest.current = false;
+      return;
+    }
+    if (
+      handledTeamRequest.current ||
+      !wallet ||
+      !checkout ||
+      (hasLocalInstance && localUsersInUse == null)
+    )
+      return;
+    handledTeamRequest.current = true;
+    const next = new URLSearchParams(searchParams);
+    next.delete("upgrade");
+    setSearchParams(next, { replace: true });
+    if (
+      wallet.role === "leader" &&
+      !wallet.team?.held &&
+      !serverPlan &&
+      localUsersInUse != null &&
+      localUserLimit != null &&
+      localUsersInUse > localUserLimit
+    )
+      addCapacity();
+  }, [
+    searchParams,
+    setSearchParams,
+    wallet,
+    checkout,
+    localUsersInUse,
+    localUserLimit,
+    serverPlan,
+    addCapacity,
+    hasLocalInstance,
+  ]);
 
   const confirmSubscription = useCallback(async (): Promise<boolean> => {
     // Stripe's onComplete fires before the subscription webhook lands, so poll the
@@ -263,7 +345,7 @@ export function Usage({
           // Nudge the local instance to refresh its gate now so billable work
           // unblocks immediately rather than on its next poll. Fire-and-forget;
           // a no-op on SaaS (no local instance to sync).
-          triggerLocalSync().catch(() => {});
+          if (hasLocalInstance) triggerLocalSync().catch(() => {});
           return true;
         }
       } catch {
@@ -276,20 +358,44 @@ export function Usage({
     // shows its "almost there" notice rather than the page silently self-healing.
     setRefreshKey((k) => k + 1);
     return false;
-  }, [onWalletLoaded]);
+  }, [onWalletLoaded, hasLocalInstance]);
 
   const enterpriseProcessor = serverPlan?.licenseType === "ENTERPRISE";
   const paying = Boolean(wallet?.processor?.active || wallet?.team?.held);
 
   return (
     <BillingScreen
+      usersInUse={localUsersInUse}
+      headerAction={
+        !needsRenewal && paying && wallet?.role === "leader" ? (
+          <Button
+            fat
+            variant="secondary"
+            onClick={portal.open}
+            disabled={portal.opening}
+          >
+            {t("payment.manageSubscription", "Manage subscription")}
+          </Button>
+        ) : undefined
+      }
       wallet={wallet}
+      unavailable={
+        needsRenewal
+          ? t(
+              "portal.accountLink.renewal.dataUnavailable",
+              "Your plan and usage will appear after you renew billing access. This server stays connected, and local document processing remains available.",
+            )
+          : undefined
+      }
       serverPlan={serverPlan}
       serverPlanAction={serverPlanAction}
       loading={loading}
       pendingUnits={localUsage?.totalUnsyncedUnits ?? 0}
       notices={
         <>
+          {wallet?.team?.held && wallet.role === "leader" && (
+            <TeamSubscriptionChange refreshKey={refreshKey} />
+          )}
           {procurement.loadError && (
             <Banner
               tone="danger"
@@ -312,24 +418,7 @@ export function Usage({
               {procurement.error}
             </Banner>
           )}
-          {sessionExpired && (
-            <Banner
-              tone="warning"
-              title={t("portal.usage.sessionExpired.title", "Session expired")}
-              action={
-                onReauth ? (
-                  <Button size="sm" onClick={onReauth}>
-                    {t("portal.usage.sessionExpired.action", "Sign in again")}
-                  </Button>
-                ) : undefined
-              }
-            >
-              {t(
-                "portal.usage.sessionExpired.body",
-                "Your Stirling account session has expired. Sign in again to view billing — your instance stays linked.",
-              )}
-            </Banner>
-          )}
+          {sessionRecovery}
 
           {error && (
             <Banner
@@ -354,6 +443,7 @@ export function Usage({
         </>
       }
       editorsDeployed={editorsDeployed}
+      pdfsProcessed={fleetStats?.pdfsProcessed ?? null}
       licenseSection={renderLicenseSection?.(refreshAfterLicense)}
       onAddCapacity={
         checkout && wallet?.role === "leader" ? addCapacity : undefined
@@ -404,7 +494,7 @@ export function Usage({
           <PaymentSection
             pendingUnits={localUsage?.totalUnsyncedUnits ?? 0}
             wallet={wallet}
-            onManage={portal.open}
+            onManage={wallet.role === "leader" ? portal.open : undefined}
             managing={portal.opening}
           />
         ) : undefined

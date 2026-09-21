@@ -22,6 +22,8 @@ import {
   VersionTimeline,
   DetailField,
 } from "@app/components/filesPage/VersionTimeline";
+import { FileDetailsActions } from "@app/components/filesPage/FileDetailsActions";
+import "@app/components/filesPage/FilesPage.css";
 
 interface FileDetailsPanelProps {
   selectedFileIds: FileId[];
@@ -393,98 +395,21 @@ export function FileDetailsPanel({
         )}
       </div>
 
-      <div className="files-page-details-actions">
-        <Button
-          leftSection={<Icon name="external-link" size={20} />}
-          onClick={() => onAddToWorkspace(selectedFileIds)}
-        >
-          {files.length === 1
-            ? t("filesPage.addToWorkspace", "Add to workspace")
-            : t("filesPage.addToWorkspaceCount", "Add {{count}} to workspace", {
-                count: files.length,
-              })}
-        </Button>
-        <Button
-          leftSection={<Icon name="download" size={20} />}
-          variant="secondary"
-          onClick={handleDownload}
-          loading={downloading}
-        >
-          {single
-            ? t("filesPage.download", "Download")
-            : t("filesPage.downloadAll", "Download all")}
-        </Button>
-        {/* Share is single-file only. When sharing is disabled in
-              server config (storage.sharing.enabled=false) we still
-              render the button - disabled with an explanatory tooltip -
-              so users discover the feature exists and know how to
-              enable it, rather than wondering why "share" is missing
-              from the action stack on their build. */}
-        {single && (
-          <Tooltip
-            label={t(
-              "filesPage.shareDisabledHint",
-              "File sharing isn't enabled on this server. Ask your admin to enable it.",
-            )}
-            disabled={sharingEnabled}
-            withinPortal
-            multiline
-            w={260}
-          >
-            <Button
-              leftSection={<Icon name="link" size={20} />}
-              variant="secondary"
-              disabled={!sharingEnabled}
-              onClick={() => setShareModalOpen(true)}
-              style={{
-                // Keep tooltip hoverable while button is disabled.
-                pointerEvents: sharingEnabled ? undefined : "auto",
-              }}
-            >
-              {t("filesPage.shareManage", "Manage sharing")}
-            </Button>
-          </Tooltip>
-        )}
-        <Button
-          leftSection={<Icon name="folder-input" size={20} />}
-          variant="secondary"
-          onClick={() => onMove(selectedFileIds)}
-        >
-          {t("filesPage.moveTo", "Move to…")}
-        </Button>
-        {/* Save to server; shown when any selected file is local-only. When
-              storage is off it stays visible but disabled with a tooltip (same
-              treatment as Manage sharing above). */}
-        {onSaveToServer && localOnlyFiles.length > 0 && (
-          <Tooltip
-            label={saveToServerDisabledReason}
-            disabled={!saveToServerDisabledReason}
-            withinPortal
-            multiline
-            w={260}
-          >
-            <Button
-              leftSection={<Icon name="cloud-upload" size={20} />}
-              variant="secondary"
-              disabled={Boolean(saveToServerDisabledReason)}
-              onClick={() => onSaveToServer(localOnlyFiles)}
-              style={{
-                // Keep tooltip hoverable while button is disabled.
-                pointerEvents: saveToServerDisabledReason ? "auto" : undefined,
-              }}
-            >
-              {t("filesPage.saveToServer", "Save to server")}
-            </Button>
-          </Tooltip>
-        )}
-        <Button
-          leftSection={<Icon name="trash" size={20} />}
-          accent="danger"
-          onClick={() => onRemove(selectedFileIds)}
-        >
-          {t("filesPage.remove", "Delete")}
-        </Button>
-      </div>
+      <FileDetailsActions
+        selectedFileIds={selectedFileIds}
+        single={single}
+        fileCount={files.length}
+        localOnlyFiles={localOnlyFiles}
+        sharingEnabled={sharingEnabled}
+        downloading={downloading}
+        onDownload={handleDownload}
+        onAddToWorkspace={onAddToWorkspace}
+        onMove={onMove}
+        onRemove={onRemove}
+        onSaveToServer={onSaveToServer}
+        saveToServerDisabledReason={saveToServerDisabledReason}
+        onShare={() => setShareModalOpen(true)}
+      />
       {/* Single panel-level mount; gated on sharingEnabled. */}
       {single && sharingEnabled && (
         <ShareManagementModal

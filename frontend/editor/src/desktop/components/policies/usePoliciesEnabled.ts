@@ -1,5 +1,5 @@
-import { useConfirmedSaaSMode } from "@app/hooks/useConfirmedSaaSMode";
+import { useConnectedServer } from "@app/hooks/useConnectedServer";
 
 export function usePoliciesEnabled(): boolean {
-  return useConfirmedSaaSMode();
+  return useConnectedServer();
 }

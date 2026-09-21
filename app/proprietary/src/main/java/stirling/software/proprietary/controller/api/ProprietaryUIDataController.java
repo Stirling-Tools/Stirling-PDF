@@ -231,7 +231,7 @@ public class ProprietaryUIDataController {
 
         SAML2 saml2 = securityProps.getSaml2();
         // Only add SAML2 providers if loginMethod allows it
-        if (securityProps.isSaml2Active() && applicationProperties.getPremium().isEnabled()) {
+        if (securityProps.isSaml2Active() && licenseSettingsService.hasPaidLicense()) {
             String samlIdp = saml2.getProvider();
             String saml2AuthenticationPath = "/saml2/authenticate/" + saml2.getRegistrationId();
 
@@ -351,7 +351,7 @@ public class ProprietaryUIDataController {
         long availableSlots = licenseSettingsService.getAvailableUserSlots();
         int grandfatheredCount = licenseSettingsService.getDisplayGrandfatheredCount();
         int licenseMaxUsers = licenseSettingsService.getSettings().getLicenseMaxUsers();
-        boolean premiumEnabled = applicationProperties.getPremium().isEnabled();
+        boolean premiumEnabled = licenseSettingsService.hasPaidLicense();
         long pendingInvites = inviteTokenRepository.countActiveInvites(LocalDateTime.now());
 
         // Resolve portal access for the whole roster. The teamLead display flag counts a

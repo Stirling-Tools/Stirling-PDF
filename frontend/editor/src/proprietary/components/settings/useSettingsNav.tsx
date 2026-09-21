@@ -22,16 +22,16 @@ export type { SettingsNav };
  * processor access, audit) — so the narrower section is dropped rather than
  * shown twice, and its key aliases across.
  *
- * Encryption at rest, what the deployment spends, and the link to the Stirling
- * account are all operator concerns, so they are offered to admins only;
- * portal access alone is not enough to reach them.
+ * Admins manage encryption; only the organization owner manages billing and
+ * the Stirling account connection. Portal access alone grants neither.
  */
 export function useSettingsNav(onLeave: () => void): SettingsNav {
   const { t } = useTranslation();
   const base = useCoreSettingsNav(onLeave);
   const { granted: portalAccess, settled: accessSettled } =
     usePortalAccessState();
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
+  const isOwner = isAdmin && user?.orgOwner === true;
   // Answers to the same admin flag the rest of the nav is built from, not the
   // session's - the two disagree while /me is still in flight.
   const { config } = useAppConfig();
@@ -46,10 +46,10 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
         includeRoster: rosterAvailable && (navAdmin || portalAccess),
         includeApiKeys: portalAccess,
         includeEncryption: portalAccess && isAdmin,
-        includeBilling: portalAccess && isAdmin,
-        includeAccountLink: portalAccess && isAdmin,
+        includeBilling: portalAccess && isOwner,
+        includeAccountLink: portalAccess && isOwner,
       }),
-    [portalAccess, isAdmin, navAdmin, rosterAvailable, t],
+    [portalAccess, isAdmin, isOwner, navAdmin, rosterAvailable, t],
   );
 
   const sections = useMemo(

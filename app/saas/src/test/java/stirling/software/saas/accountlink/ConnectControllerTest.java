@@ -4,13 +4,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -126,7 +132,14 @@ class ConnectControllerTest {
 
         // createReauth is the credentialled path; a first link must not reach it.
         org.mockito.Mockito.verify(service, org.mockito.Mockito.never())
-                .createReauth(anyString(), anyString(), anyString(), anyString(), any(), isNull());
+                .createReauth(
+                        anyString(),
+                        anyString(),
+                        anyString(),
+                        anyString(),
+                        any(),
+                        isNull(),
+                        isNull());
     }
 
     @Test
@@ -158,17 +171,90 @@ class ConnectControllerTest {
     }
 
     @Test
-    void reauthLookupAllowsMembersToApproveButNotDeny() {
+    void reauthLookupAllowsOnlyTheLinkedOwnerToRenew() {
         pendingRequest(ConnectRequest.Mode.REAUTH);
-        when(leaderTeams.resolve(auth))
-                .thenReturn(new LeaderTeam(null, null, HttpStatus.FORBIDDEN));
-        when(leaderTeams.resolveMember(auth)).thenReturn(new LeaderTeam(1L, 2L, null));
+        when(leaderTeams.resolve(auth)).thenReturn(new LeaderTeam(1L, 2L, null));
 
         var body = controller.view("req-1", auth).getBody();
 
         assertThat(body).isNotNull();
         assertThat(body.canApprove()).isTrue();
         assertThat(body.canDeny()).isFalse();
+    }
+
+    @ParameterizedTest
+    @CsvSource({"1,3", "99,2", "99,3"})
+    void reauthLookupOffersNoActionsToAnotherAccountOrTeam(Long teamId, Long userId) {
+        pendingRequest(ConnectRequest.Mode.REAUTH);
+        when(leaderTeams.resolve(auth)).thenReturn(new LeaderTeam(teamId, userId, null));
+
+        var body = controller.view("req-1", auth).getBody();
+
+        assertThat(body).isNotNull();
+        assertThat(body.canApprove()).isFalse();
+        assertThat(body.canDeny()).isFalse();
+    }
+
+    @Test
+    void reauthRequiresTheLinkedAccountToStillOwnItsTeam() {
+        pendingRequest(ConnectRequest.Mode.REAUTH);
+        when(leaderTeams.resolve(auth))
+                .thenReturn(new LeaderTeam(null, null, HttpStatus.FORBIDDEN));
+
+        var body = controller.view("req-1", auth).getBody();
+        assertThat(body).isNotNull();
+        assertThat(body.canApprove()).isFalse();
+        assertThat(body.canDeny()).isFalse();
+        assertThat(controller.approve("req-1", auth).getStatusCode())
+                .isEqualTo(HttpStatus.FORBIDDEN);
+        verify(service, never()).approve(anyString(), any(), any());
+    }
+
+    @Test
+    void reauthCreationUsesTheAuthenticatedInstancesOriginalAccount() {
+        LinkedInstance instance = new LinkedInstance();
+        instance.setTeamId(1L);
+        instance.setCreatedByUserId(2L);
+        when(accountLinkService.resolveActiveInstance("device", "secret"))
+                .thenReturn(Optional.of(instance));
+        when(service.createReauth("prod-1", BODY.callbackUrl(), "n", "s", "127.0.0.1", 1L, 2L))
+                .thenReturn(ConnectRequestService.CreateResult.ok("req-1", 1800));
+        MockHttpServletRequest request = request("https", "api.example.com", 443);
+        request.addHeader(ConnectController.HEADER_DEVICE_ID, "device");
+        request.addHeader(ConnectController.HEADER_DEVICE_SECRET, "secret");
+
+        assertThat(controller.request(BODY, request).getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        verify(service).createReauth("prod-1", BODY.callbackUrl(), "n", "s", "127.0.0.1", 1L, 2L);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"1,3", "99,2", "99,3"})
+    void directRenewalPostsCannotApproveOrDenyForAnotherAccount(Long teamId, Long userId) {
+        ConnectRequestRepository repo = mock(ConnectRequestRepository.class);
+        ConnectRequest row = new ConnectRequest();
+        row.setRequestId("req-1");
+        row.setMode(ConnectRequest.Mode.REAUTH);
+        row.setTeamId(1L);
+        row.setApprovedByUserId(2L);
+        row.setCallbackOrigin("https://pdf.example.com");
+        row.setExpiresAt(LocalDateTime.now().plusMinutes(10));
+        when(repo.findByRequestId("req-1")).thenReturn(Optional.of(row));
+        when(repo.findByRequestIdForUpdate("req-1")).thenReturn(Optional.of(row));
+        when(leaderTeams.resolve(auth)).thenReturn(new LeaderTeam(teamId, userId, null));
+        ConnectController realController =
+                new ConnectController(
+                        new ConnectRequestService(repo, accountLinkService),
+                        leaderTeams,
+                        accountLinkService,
+                        applicationProperties);
+
+        var approval = realController.approve("req-1", auth);
+        assertThat(approval.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(approval.getBody()).isEqualTo(java.util.Map.of("error", "WRONG_ACCOUNT"));
+        assertThat(realController.deny("req-1", auth).getStatusCode())
+                .isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(row.getStatus()).isEqualTo(ConnectRequest.Status.PENDING);
+        verify(repo, never()).save(any());
     }
 
     private void pendingRequest(ConnectRequest.Mode mode) {
@@ -181,6 +267,8 @@ class ConnectControllerTest {
                                         "https://pdf.example.com",
                                         false,
                                         mode,
-                                        ConnectRequest.Status.PENDING)));
+                                        ConnectRequest.Status.PENDING,
+                                        1L,
+                                        2L)));
     }
 }
