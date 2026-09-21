@@ -1,4 +1,5 @@
 import type { PDFObject } from "@cantoo/pdf-lib";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
 
 export interface LayerInfo {
   id: string;
@@ -11,6 +12,27 @@ export interface LayerInfo {
 interface OcGroup {
   name?: string;
   visible?: boolean;
+}
+
+/**
+ * True when the catalog carries optional content. Building the layer list costs
+ * a pdfjs parse of the whole document, so the sidebar gates its button on this
+ * cheap catalog probe and reads the list only when the panel opens.
+ */
+export async function documentHasLayers(file: Blob): Promise<boolean> {
+  try {
+    const [{ PDFDocument, PDFName }, bytes] = await Promise.all([
+      import("@cantoo/pdf-lib"),
+      getDocumentBytes(file),
+    ]);
+    const doc = await PDFDocument.load(bytes, {
+      ignoreEncryption: true,
+      updateMetadata: false,
+    });
+    return doc.catalog.get(PDFName.of("OCProperties")) !== undefined;
+  } catch {
+    return false;
+  }
 }
 
 /**
