@@ -29,10 +29,6 @@
   flex: 1;
 }
 
-.files-page-view-tabs > .sui-btn[aria-pressed="true"] {
-  background: var(--c-active);
-}
-
 @media (max-width: 768px) {
   .files-page-navigation {
     padding-inline: 0.75rem;

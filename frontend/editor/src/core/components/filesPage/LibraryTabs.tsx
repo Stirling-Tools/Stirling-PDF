@@ -42,7 +42,7 @@ export function LibraryTabs({
         {tabs.map((tab) => (
           <Fragment key={tab.id}>
             <Button
-              variant="tertiary"
+              variant={currentTab === tab.id ? "primary" : "tertiary"}
               shape="pill"
               size="sm"
               aria-pressed={currentTab === tab.id}
