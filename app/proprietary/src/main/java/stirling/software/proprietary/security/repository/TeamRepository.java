@@ -15,10 +15,8 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
     @Query("SELECT t FROM Team t WHERE t.id = :id")
     Optional<Team> lockById(@org.springframework.data.repository.query.Param("id") Long id);
 
-    Optional<Team> findByName(String name);
-
     // teams.name is not unique, so peers cold-booting a shared DB can commit two "Default" rows.
-    // Converging on the lowest id keeps every node agreeing instead of throwing NonUniqueResult.
+    // A derived Optional finder would then throw on every call; lowest id keeps all nodes agreeing.
     Optional<Team> findFirstByNameOrderByIdAsc(String name);
 
     @Query(

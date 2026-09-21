@@ -24,6 +24,7 @@ import {
 import {
   CategoryTicker,
   FollowUpPanel,
+  ProcessingCounts,
   ProcessingHero,
   useProcessingLabel,
 } from "@app/components/onboarding/classificationDemo/classificationDemoSlides";
@@ -218,16 +219,7 @@ export function ClassificationDemoWorkbenchView({
   return shell(
     <div className={styles.viewColumn}>
       <ProcessingHero label={processingLabel} />
-      <p className={styles.counts}>
-        <span className={styles.countsNumber}>{trick.progress.processed}</span>
-        {t(
-          "classificationDemo.processing.counts",
-          "of {{total}} PDFs processed",
-          {
-            total: trick.progress.total,
-          },
-        )}
-      </p>
+      <ProcessingCounts progress={trick.progress} />
       <CategoryTicker groups={trick.progress.groups} />
       <div className={styles.viewActions}>
         <Button variant="quiet" accent="neutral" onClick={dismiss}>

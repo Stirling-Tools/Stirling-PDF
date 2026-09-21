@@ -12,8 +12,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Cluster;
@@ -351,19 +349,6 @@ class ClusterConfigValidationTest {
             assertTrue(
                     ex.getMessage().contains(expected),
                     "message must contain '" + expected + "'; got: " + ex.getMessage());
-        }
-    }
-
-    /** AutomaticallyGenerated.key/.UUID feed metadata encryption and licence seat HMACs. */
-
-    /** A missing shared key must never refuse the context, however the app is wired. */
-
-    /** Defaults-only bean: the production class loads YAML in {@code @PostConstruct}. */
-    @Configuration
-    static class TestAppPropertiesConfig {
-        @Bean
-        ApplicationProperties applicationProperties() {
-            return new ApplicationProperties();
         }
     }
 

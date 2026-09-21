@@ -1,4 +1,4 @@
-import { describe, expect, test, vi, beforeEach } from "vitest";
+import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
 
 // Regression: a caller-set "Content-Type: multipart/form-data" (no boundary) on a
 // FormData POST must NOT reach the server, or Jetty rejects it with
@@ -24,6 +24,45 @@ function lastFetchHeaders(): Record<string, string> {
   const opts = fetchMock.mock.calls[0]?.[1] ?? {};
   return (opts.headers ?? {}) as Record<string, string>;
 }
+
+describe("tauriHttpClient — native request origin", () => {
+  beforeEach(() => {
+    fetchMock.mockReset();
+    fetchMock.mockResolvedValue(okJson());
+  });
+
+  afterEach(() => vi.unstubAllEnvs());
+
+  test.each([true, false])(
+    "preserves auth and overrides Origin only in dev (DEV=%s)",
+    async (dev) => {
+      vi.stubEnv("DEV", dev);
+
+      const client = create({
+        baseURL: "https://api.test",
+        headers: { "X-Browser-Id": "desktop-test" },
+      });
+
+      await client.get("/api/v1/policies", {
+        headers: { Authorization: "Bearer test-token" },
+        withCredentials: true,
+      });
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "https://api.test/api/v1/policies",
+        expect.objectContaining({
+          method: "GET",
+          credentials: "include",
+          headers: {
+            ...(dev ? { Origin: "tauri://localhost" } : {}),
+            "X-Browser-Id": "desktop-test",
+            Authorization: "Bearer test-token",
+          },
+        }),
+      );
+    },
+  );
+});
 
 describe("tauriHttpClient — Content-Type handling", () => {
   beforeEach(() => {

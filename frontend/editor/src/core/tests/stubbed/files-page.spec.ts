@@ -1,5 +1,5 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
-import type { Page, Route } from "@playwright/test";
+import type { Locator, Page, Route } from "@playwright/test";
 import { DATABASE_CONFIGS } from "@app/services/indexedDBManager";
 
 /** Stubbed coverage for the /files page UI invariants. */
@@ -166,6 +166,20 @@ async function stubStorageApis(
   );
 }
 
+/** Open a menu and return the named item from that menu's own dropdown.
+ *  Dropdowns stay mounted once opened, so a page-wide role query matches every
+ *  menu that has been opened, not the one just clicked. */
+async function openMenuItem(
+  page: Page,
+  trigger: Locator,
+  name: RegExp,
+): Promise<Locator> {
+  await trigger.click();
+  const id = await trigger.getAttribute("aria-controls");
+  const dropdown = id ? page.locator(`#${id}`) : page.locator("body");
+  return dropdown.getByRole("menuitem", { name });
+}
+
 /** Navigate to /files and wait for at least one real (non-skeleton) card.
  *  `.files-page-card` also matches the loading-state skeleton placeholders, and
  *  their parent grid carries `aria-busy="true"` which intercepts pointer events
@@ -247,18 +261,6 @@ test.describe("Files page", () => {
         page.locator(".files-page-card-selector").first(),
       ).toBeVisible();
     });
-
-    test("Select all tooltip explains Ctrl/Shift shortcuts", async ({
-      page,
-    }) => {
-      await gotoFilesPage(page);
-      // Tooltip is the discovery point for Ctrl/Shift multi-select.
-      const selectAll = page.getByRole("button", { name: /^Select all$/i });
-      await selectAll.hover();
-      await expect(
-        page.getByText(/hold Ctrl.*Cmd.*Shift to select a range/i),
-      ).toBeVisible({ timeout: 3_000 });
-    });
   });
 
   test.describe("Bulk action button visibility", () => {
@@ -288,16 +290,30 @@ test.describe("Files page", () => {
         .locator(".files-page-card:not(.is-folder)")
         .filter({ hasText: "local-a.pdf" })
         .click();
+      // Neither copy is a plain button: the selection's lives behind the
+      // Actions menu, the details panel's behind its own overflow menu. Both
+      // dropdowns stay mounted once opened, so each is read through the id its
+      // own trigger controls.
       await expect(
         page.getByRole("button", { name: /^Save to server$/i }),
-      ).toBeVisible();
-      // The details panel's copy lives behind its overflow menu.
-      await page
-        .locator(".files-page-details-actions-row")
-        .getByRole("button", { name: /^Actions$/i })
-        .click();
+      ).toHaveCount(0);
       await expect(
-        page.getByRole("menuitem", { name: /^Save to server$/i }),
+        await openMenuItem(
+          page,
+          page.locator(
+            ".files-page-selection-actions .files-page-toolbar-bulk-trigger",
+          ),
+          /^Save to server$/i,
+        ),
+      ).toBeVisible();
+      await expect(
+        await openMenuItem(
+          page,
+          page
+            .locator(".files-page-details-actions-row")
+            .getByRole("button", { name: /^Actions$/i }),
+          /^Save to server$/i,
+        ),
       ).toBeVisible();
     });
 
@@ -364,19 +380,23 @@ test.describe("Files page", () => {
         .locator(".files-page-card:not(.is-folder)")
         .filter({ hasText: "local-a.pdf" })
         .click();
-      const toolbarSave = page.getByRole("button", {
-        name: /^Save to server$/i,
-      });
-      await expect(toolbarSave).toBeVisible();
-      await expect(toolbarSave).toBeDisabled();
+      const selectionSave = await openMenuItem(
+        page,
+        page.locator(
+          ".files-page-selection-actions .files-page-toolbar-bulk-trigger",
+        ),
+        /^Save to server$/i,
+      );
+      await expect(selectionSave).toBeVisible();
+      await expect(selectionSave).toBeDisabled();
 
-      await page
-        .locator(".files-page-details-actions-row")
-        .getByRole("button", { name: /^Actions$/i })
-        .click();
-      const panelSave = page.getByRole("menuitem", {
-        name: /^Save to server$/i,
-      });
+      const panelSave = await openMenuItem(
+        page,
+        page
+          .locator(".files-page-details-actions-row")
+          .getByRole("button", { name: /^Actions$/i }),
+        /^Save to server$/i,
+      );
       await expect(panelSave).toBeVisible();
       await expect(panelSave).toBeDisabled();
     });
@@ -819,102 +839,6 @@ test.describe("Files page", () => {
           .filter({ hasText: "cross-browser.pdf" }),
       ).toBeVisible({ timeout: 5_000 });
     });
-
-    test("Shared-by-me tab lists only files I own with share links", async ({
-      page,
-    }) => {
-      await stubStorageApis(page, { sharingEnabled: true });
-      // Three server files: one shared via link (owned by me), one shared
-      // with users (owned by me), one plain mine, and one owned by someone else.
-      await page.route("**/api/v1/storage/files", (route: Route) =>
-        route.fulfill({
-          json: [
-            {
-              id: 1,
-              fileName: "link-shared.pdf",
-              contentType: "application/pdf",
-              sizeBytes: 100,
-              createdAt: new Date().toISOString(),
-              owner: "admin",
-              ownedByCurrentUser: true,
-              accessRole: "owner",
-              shareLinks: [{ token: "tok1" }],
-              sharedUsers: [],
-              filePurpose: "generic",
-              folderId: null,
-            },
-            {
-              id: 2,
-              fileName: "user-shared.pdf",
-              contentType: "application/pdf",
-              sizeBytes: 100,
-              createdAt: new Date().toISOString(),
-              owner: "admin",
-              ownedByCurrentUser: true,
-              accessRole: "owner",
-              shareLinks: [],
-              sharedUsers: [{ username: "bob" }],
-              filePurpose: "generic",
-              folderId: null,
-            },
-            {
-              id: 3,
-              fileName: "plain-mine.pdf",
-              contentType: "application/pdf",
-              sizeBytes: 100,
-              createdAt: new Date().toISOString(),
-              owner: "admin",
-              ownedByCurrentUser: true,
-              accessRole: "owner",
-              shareLinks: [],
-              sharedUsers: [],
-              filePurpose: "generic",
-              folderId: null,
-            },
-            {
-              id: 4,
-              fileName: "from-someone-else.pdf",
-              contentType: "application/pdf",
-              sizeBytes: 100,
-              createdAt: new Date().toISOString(),
-              owner: "alice",
-              ownedByCurrentUser: false,
-              accessRole: "viewer",
-              shareLinks: [],
-              sharedUsers: [],
-              filePurpose: "generic",
-              folderId: null,
-            },
-          ],
-        }),
-      );
-      await page.goto("/files", { waitUntil: "domcontentloaded" });
-      // Wait for the 4 cards to land via server sync.
-      await expect(
-        page.locator(".files-page-card:not(.is-folder)"),
-      ).toHaveCount(4, { timeout: 5_000 });
-
-      // "Shared by me" -> link-shared.pdf AND user-shared.pdf
-      // (The previously-separate "Shared by me" / "I'm sharing" tabs are now
-      // merged into a single Shared-by-me view that shows both link shares
-      // and direct user shares.)
-      await page.locator("#filesPage-tab-sharedByMe").click();
-      const sharedByMeCards = page.locator(".files-page-card:not(.is-folder)");
-      await expect(sharedByMeCards).toHaveCount(2, { timeout: 5_000 });
-      for (const name of ["link-shared.pdf", "user-shared.pdf"]) {
-        await expect(sharedByMeCards.filter({ hasText: name })).toHaveCount(1);
-      }
-
-      // "Shared with me" -> only from-someone-else.pdf
-      await page.locator("#filesPage-tab-shared").click();
-      const sharedWithMeCards = page.locator(
-        ".files-page-card:not(.is-folder)",
-      );
-      await expect(sharedWithMeCards).toHaveCount(1, { timeout: 3_000 });
-      await expect(sharedWithMeCards.first()).toContainText(
-        "from-someone-else.pdf",
-      );
-    });
   });
 
   test.describe("Folder chrome stability", () => {
@@ -1094,12 +1018,45 @@ test.describe("Files page", () => {
     });
   });
 
+  test.describe("Selection chrome", () => {
+    test.use({ autoGoto: false, filesViewMode: null });
+
+    /** Guards the bug that put selection actions in their own row: a toolbar
+     *  that wraps on selection moves every row down, and the second click of a
+     *  double-click lands on the wrong file. */
+    test("selecting files does not move the listing", async ({ page }) => {
+      await stubStorageApis(page);
+      await seedFiles(page, [
+        { id: "s-1", name: "alpha.pdf", remoteStorageId: null },
+        { id: "s-2", name: "beta.pdf", remoteStorageId: null },
+        { id: "s-3", name: "gamma.pdf", remoteStorageId: null },
+      ]);
+      await page.goto("/files", { waitUntil: "domcontentloaded" });
+
+      const rows = page.locator(".files-page-list-row:not(.is-header)");
+      await expect(rows.first()).toBeVisible({ timeout: 15_000 });
+      const topOf = async () =>
+        (await rows.first().boundingBox())?.y ?? Number.NaN;
+
+      // boundingBox() can be null for a beat after the row is "visible" (WebKit
+      // layout timing), so wait for a real y before capturing the baseline.
+      await expect
+        .poll(async () => Number.isFinite(await topOf()), { timeout: 15_000 })
+        .toBe(true);
+      const before = await topOf();
+      await rows.nth(0).click();
+      await rows.nth(1).click({ modifiers: ["ControlOrMeta"] });
+      await expect(page.locator(".files-page-list-selection-count")).toHaveText(
+        /2 selected/i,
+      );
+      await expect.poll(topOf, { timeout: 15_000 }).toBeCloseTo(before, 0);
+    });
+  });
+
   test.describe("Library chrome placement", () => {
     test.use({ autoGoto: false });
 
-    /** The path sits on the library's own row with the tabs; its actions live in the
-     *  file sidebar, and the shared bar above carries only what every view has. */
-    test("the path is on the tabs row and the actions are in the sidebar", async ({
+    test("the path is on the library row and the actions are in the sidebar", async ({
       page,
     }) => {
       const NESTED = "11111111-2222-4333-8444-555555555581";

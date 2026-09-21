@@ -36,20 +36,22 @@ describe("low-confidence-classification.pdf fixture", () => {
     allZone: EXTRACTED,
   };
 
-  it("is English, so it is not rejected before scoring", () => {
-    expect(classifyHeuristic(doc).isEnglish).toBe(true);
+  it("is read as English, so the English pack scores it", async () => {
+    const r = await classifyHeuristic(doc);
+    expect(r.language).toBe("en");
+    expect(r.packs).toEqual(["en"]);
   });
 
-  it("emits labels but is not trusted, so it must escalate", () => {
-    const r = classifyHeuristic(doc);
+  it("emits labels but is not trusted, so it must escalate", async () => {
+    const r = await classifyHeuristic(doc);
     expect(r.labels.length).toBeGreaterThan(0);
     expect(r.confidence).not.toBe("high");
   });
 
-  it("stays unsure because two document types score within the medium margin", () => {
+  it("stays unsure because two document types score within the medium margin", async () => {
     // The margin is what holds this document at "low": "medium" needs >= 8 and "high" >= 15,
     // so a near-tie can't be promoted however high the raw scores go.
-    const r = classifyHeuristic(doc, { explain: true });
+    const r = await classifyHeuristic(doc, { explain: true });
     const [first, second] = r.explain?.candidates ?? [];
     expect(first).toBeDefined();
     expect(second).toBeDefined();
