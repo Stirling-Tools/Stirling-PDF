@@ -120,20 +120,25 @@ const replacements = [
 export {
   createPdfiumEngine
 };`,
-    replace: `  const __stirlingEngine = new PdfEngine(remoteExecutor, {
-    imageConverter: createHybridImageConverter(encoderPool),
-    logger
-  });
-  URL.createObjectURL = __stirlingCreateObjectURL;
-  // The worker scripts are Blob URLs and this build never revokes them, so
-  // every engine (re)creation leaked one object URL per worker. All workers
-  // have been constructed synchronously by now; release the URLs on a
-  // macrotask so the platform has resolved them.
-  setTimeout(() => {
+    replace: `  let __stirlingEngine;
+  try {
+    __stirlingEngine = new PdfEngine(remoteExecutor, {
+      imageConverter: createHybridImageConverter(encoderPool),
+      logger
+    });
+  } finally {
+    URL.createObjectURL = __stirlingCreateObjectURL;
+  }
+  // Worker scripts are Blob URLs this build never revokes (embedpdf/embed-pdf-viewer#628),
+  // so every engine (re)creation leaked one per worker. Revoke once the worker has
+  // answered: revoking before it loads its script breaks the worker.
+  const __stirlingRevokeWorkerUrls = () => {
     for (const __stirlingUrl of __stirlingCreatedUrls) {
       URL.revokeObjectURL(__stirlingUrl);
     }
-  }, 0);
+    __stirlingCreatedUrls.length = 0;
+  };
+  worker.addEventListener("message", __stirlingRevokeWorkerUrls, { once: true });
   return __stirlingEngine;
 }
 export {
