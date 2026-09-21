@@ -109,7 +109,7 @@ export const BookmarkSidebar = ({
     toggleBookmarkSidebar,
   } = useViewer();
   const { t } = useTranslation();
-  const { handleToolSelectForced } = useToolWorkflow();
+  const { handleToolSelectForced, readerMode } = useToolWorkflow();
   const { selectors, actions: fileActions } = useFileContext();
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [searchTerm, setSearchTerm] = useState("");
@@ -334,9 +334,24 @@ export const BookmarkSidebar = ({
   // Fallback: open the full Edit Table of Contents tool when inline add is
   // not viable (e.g. the active file is a preview / unmanaged file we
   // cannot consume + replace via FileContext).
+  //
+  // Reading has no tool panel to open it in, and taking the reader to the editor
+  // to add a bookmark is the jump this surface exists to avoid: there the inline
+  // form is the whole offer, and the cases it cannot serve say so instead.
+  const canFallbackToTool = !readerMode;
   const handleFallbackToTool = useCallback(() => {
+    if (readerMode) {
+      setAddBookmarkError(
+        t(
+          "viewer.bookmarks.editorOnly",
+          "This document's bookmarks can only be edited in the editor.",
+        ),
+      );
+      setIsAddingBookmark(false);
+      return;
+    }
     handleToolSelectForced("editTableOfContents");
-  }, [handleToolSelectForced]);
+  }, [handleToolSelectForced, readerMode, t]);
 
   const handleSubmitAddBookmark = useCallback(async () => {
     const title = newBookmarkTitle.trim();
@@ -864,7 +879,7 @@ export const BookmarkSidebar = ({
           </Text>
         </div>
       )}
-      {bookmarkSupport && documentCacheKey && (
+      {bookmarkSupport && documentCacheKey && canFallbackToTool && (
         <Box
           px="sm"
           py="xs"

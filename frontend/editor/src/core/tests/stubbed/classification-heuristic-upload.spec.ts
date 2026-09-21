@@ -75,18 +75,26 @@ test("a 10-file upload wave classifies every file into its group", async ({
     ].map((f) => path.join(FIXTURES, f)),
   );
 
-  // Each group header is a collapsible button whose name carries the member count.
-  // Classification runs a few files per idle pass; wait for the full drain.
+  // Group headers are collapsible buttons whose name carries the live member
+  // count. Classification drains a few files per idle pass, and until a file's
+  // verdict lands it is unclassified and counted under Other (see
+  // fileSidebarGroupingLogic). Every count therefore climbs to a final value, so
+  // the assertions must read the settled state, not a mid-drain snapshot.
   const header = (name: string, count: number) =>
     page.getByRole("button", { name: `${name} ${count}`, exact: true });
-  await expect(header("Financial", 3)).toBeVisible({ timeout: 90_000 });
-  await expect(header("HR", 3)).toBeVisible({ timeout: 30_000 });
-  await expect(header("Legal", 2)).toBeVisible({ timeout: 30_000 });
 
-  // The regression: nothing classifiable may be stranded in Other - only the
-  // genuinely unlabellable pair (generic prose + non-English) belongs there.
-  await expect(header("Other", 2)).toBeVisible({ timeout: 30_000 });
-  // The filename can render in several places (Recent, group, viewer); any hit proves presence.
+  // Other falls to its one terminal member (generic_notes.pdf) only after every
+  // other file has classified out of it: the drain-complete signal to wait on.
+  await expect(header("Other", 1)).toBeVisible({ timeout: 150_000 });
+
+  // Settled distribution. spanish_contrato.pdf is a Spanish lease agreement the
+  // Spanish rules label as Legal, so nothing classifiable is stranded in Other -
+  // only genuinely unlabellable generic prose belongs there.
+  await expect(header("Financial", 3)).toBeVisible();
+  await expect(header("HR", 3)).toBeVisible();
+  await expect(header("Legal", 3)).toBeVisible();
+
+  // A filename can render in Recent, its group, or the viewer; any hit proves presence.
   await expect(page.getByText("generic_notes.pdf").first()).toBeVisible();
   await expect(page.getByText("spanish_contrato.pdf").first()).toBeVisible();
 });

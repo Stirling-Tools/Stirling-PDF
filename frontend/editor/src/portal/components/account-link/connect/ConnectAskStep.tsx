@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { Banner } from "@app/ui";
-import { isSaasSupabaseConfigured } from "@portal/auth/saasSupabase";
-import { ConnectBenefitsSlide } from "@portal/components/account-link/connect/ConnectBenefitsSlide";
-import "@portal/components/account-link/connect/connect.css";
+import { isSaasSupabaseConfigured } from "@app/portal/auth/saasSupabase";
+import { ConnectBenefitsSlide } from "@app/portal/components/account-link/connect/ConnectBenefitsSlide";
+import "@app/portal/components/account-link/connect/connect.css";
 
 interface Props {
   /** Re-auth says why it is being asked; a first link is pitched instead. */
@@ -44,7 +44,7 @@ export function ConnectAskStep({ reauth, exhausted = false, error }: Props) {
 
       {!isSaasSupabaseConfigured && (
         <Banner
-          tone="warning"
+          tone="neutral"
           title={t(
             "portal.accountLink.modal.loginNotConfigured.title",
             "Stirling connection not configured",

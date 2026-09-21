@@ -112,7 +112,9 @@ class PaygWalletControllerTest {
                 null,
                 null,
                 null,
-                null);
+                null,
+                start,
+                start.plusMonths(1));
     }
 
     /**
@@ -133,7 +135,9 @@ class PaygWalletControllerTest {
                 BigDecimal.valueOf(2),
                 "usd",
                 capMoneyMinor,
-                monthlyCapDocUnits);
+                monthlyCapDocUnits,
+                start,
+                start.plusMonths(1));
     }
 
     private void stubEmptyLedgerReads(long teamId) {
@@ -442,6 +446,8 @@ class PaygWalletControllerTest {
 
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(resp.getBody().status()).isEqualTo("free");
+        assertThat(resp.getBody().freeAllowance()).isEqualTo(1000);
+        assertThat(resp.getBody().freeRemaining()).isEqualTo(1000);
         assertThat(resp.getBody().members()).isEmpty();
         // Entitlement service must not be queried for a teamless user (avoids null-key NPE).
         verifyNoInteractions(entitlementService);
@@ -619,6 +625,30 @@ class PaygWalletControllerTest {
     // -----------------------------------------------------------------------------------------
     // Fixtures
     // -----------------------------------------------------------------------------------------
+
+    @Test
+    void supabaseGuestHasNoProcessorAllowanceEvenWithLegacyTeam() {
+        UUID id = UUID.randomUUID();
+        User user = userWithId(12L, id);
+        user.setTeam(teamWithId(77L));
+        when(userRepository.findBySupabaseId(id)).thenReturn(Optional.of(user));
+        Jwt jwt =
+                Jwt.withTokenValue("guest")
+                        .header("alg", "RS256")
+                        .claim("sub", id.toString())
+                        .claim("is_anonymous", true)
+                        .build();
+        Authentication auth =
+                new EnhancedJwtAuthenticationToken(jwt, List.of(), "anon_" + id, id.toString());
+
+        WalletSnapshotResponse body = controller.getWallet(auth).getBody();
+
+        assertThat(body.freeAllowance()).isZero();
+        assertThat(body.freeRemaining()).isZero();
+        assertThat(body.billableLimit()).isZero();
+        assertThat(body.teamId()).isNull();
+        org.mockito.Mockito.verifyNoInteractions(billingService, entitlementService, memberRepo);
+    }
 
     private static User userWithId(Long id, UUID supabaseId) {
         User u = new User();

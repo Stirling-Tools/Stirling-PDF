@@ -13,10 +13,16 @@ import { HttpError } from "@portal/api/http";
 import { Integrations } from "@portal/views/Integrations";
 import type { IntegrationConfig } from "@portal/api/integrations";
 
-// env="test" drops Mantine's transitions; otherwise a pending one fires after the environment
-// is torn down and vitest reports "window is not defined" against whichever file ran last.
+vi.mock("@mantine/hooks", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@mantine/hooks")>()),
+  useReducedMotion: () => true,
+}));
+
+// Reduced motion also stops transition timers, which env="test" alone still schedules.
 const TestProvider = ({ children }: { children: React.ReactNode }) => (
-  <MantineProvider env="test">{children}</MantineProvider>
+  <MantineProvider env="test" theme={{ respectReducedMotion: true }}>
+    {children}
+  </MantineProvider>
 );
 
 const render = (ui: Parameters<typeof baseRender>[0]) =>

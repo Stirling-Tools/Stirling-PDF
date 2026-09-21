@@ -3,6 +3,7 @@ use tauri::{AppHandle, Emitter, Manager, RunEvent, WindowEvent};
 mod utils;
 pub mod commands;
 mod state;
+mod directory_drop;
 
 use commands::{
     add_opened_file,
@@ -118,6 +119,7 @@ pub fn run() {
         .build()
     )
     .plugin(tauri_plugin_opener::init())
+    .plugin(directory_drop::init())
     .plugin(tauri_plugin_shell::init())
     .plugin(tauri_plugin_fs::init())
     .plugin(tauri_plugin_dialog::init())
@@ -214,6 +216,8 @@ pub fn run() {
       start_backend,
       get_backend_port,
       get_opened_files,
+      commands::file_drop::resolve_dropped_file_paths,
+      commands::file_drop::install_drag_capture,
       pop_opened_files,
       clear_opened_files,
       file_disk_state,

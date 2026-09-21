@@ -235,7 +235,7 @@ What goes where:
 
 Rule of thumb — **move, don't copy**: share via `cloud/`, override by shadowing the same `@app/*` path in a leaf (`saas/` or `desktop/`).
 
-**Cloud feature flags on desktop.** The local `AppConfigContext` reads `/api/v1/config/app-config` from the LOCAL bundled backend, so cloud-only flags (`aiEngineEnabled`, `premiumEnabled`, …) are never seen on desktop. To read the cloud's view, use `useSaasAppConfig()` (`desktop/hooks/useSaasAppConfig.ts`, backed by the general `saasAppConfigService` — SaaS-mode-only, public endpoint, native HTTP, 5-min cache). It returns `null` outside SaaS mode, so cloud features stay off in local/self-hosted and the server keeps the on/off switch (no desktop release needed to flip a flag). Gate a feature behind a per-platform seam — e.g. `useAiEngineEnabled()` (core reads `useAppConfig()`, desktop reads `useSaasAppConfig()`) — rather than hardcoding the flag on.
+**Cloud feature flags on desktop.** The local `AppConfigContext` reads `/api/v1/config/app-config` from the LOCAL bundled backend, so cloud-only flags (`aiEngineEnabled`, `premiumEnabled`, …) are never seen on desktop. To read the cloud's view, use `useSaasAppConfig()` (`desktop/hooks/useSaasAppConfig.ts`, backed by the general `saasAppConfigService` — SaaS-mode-only, public endpoint, native HTTP, 5-min cache). It returns `null` outside SaaS mode, so cloud features stay off in local mode and the server keeps the on/off switch (no desktop release needed to flip a flag). In self-hosted mode the connected server's own `AppConfigContext` is the authority instead. Gate a feature behind a per-platform seam - e.g. `useAiEngineEnabled()` (core reads `useAppConfig()`, desktop reads `useAppConfig()` when signed in to a self-hosted server and `useSaasAppConfig()` otherwise) - rather than hardcoding the flag on.
 
 #### Component Override Pattern (Stub/Shadow)
 Use this pattern for desktop-specific or proprietary-specific features WITHOUT runtime checks or conditionals.
@@ -529,7 +529,7 @@ The frontend is organized with a clear separation of concerns:
 
 ## Stack reality check (don't trust LLM training data) <!-- bleeding-edge-stack-note -->
 
-This codebase is on bleeding-edge versions of its core JVM stack: **Spring Boot 4.0.6**,
+This codebase is on bleeding-edge versions of its core JVM stack: **Spring Boot 4.1.1**,
 **Jackson 3 (`tools.jackson`)**, **JDK 21/25 source/target with JDK 25 toolchain**.
 All three are *post*-2024 releases and your training corpus is overwhelmingly Spring Boot 2/3 and
 Jackson 2 patterns — those patterns will compile, run differently, or hallucinate APIs that no

@@ -27,6 +27,7 @@ import stirling.software.common.service.AutomationRunContext;
 import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.service.InternalApiTimeoutException;
 import stirling.software.common.service.ToolMetadataService;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.ZipExtractionUtils;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
@@ -447,16 +448,11 @@ public class PolicyExecutor {
         }
         for (Resource file : files) {
             if (!matchesType(file, accepted)) {
-                // Reports the extension rather than the filename, since this message becomes the
-                // run's error and is persisted on the failure record.
-                throw new IOException(
-                        "Step "
-                                + operation
-                                + " accepts "
-                                + accepted
-                                + " but received a '"
-                                + extensionOf(file)
-                                + "' file");
+                // Coded rather than a bare IOException: this check runs before the step, so the
+                // reader that would have reported the type is never reached and this is the only
+                // place that knows the failure is a type mismatch at all.
+                throw ExceptionUtils.createStepInputTypeException(
+                        operation, accepted, extensionOf(file));
             }
         }
     }

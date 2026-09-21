@@ -9,7 +9,11 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 import { Button } from "@app/ui/Button";
 import { BrandMark } from "@app/components/shared/BrandMark";
 import { readCachedCredits } from "@app/services/navFooterCache";
-import { claimRun } from "@app/components/onboarding/classificationDemo/classificationDemoSession";
+import {
+  claimRun,
+  sweptPaths,
+} from "@app/components/onboarding/classificationDemo/classificationDemoSession";
+import { startBackgroundClassification } from "@app/components/onboarding/classificationDemo/backgroundClassification";
 import { useClassificationDemo } from "@app/components/onboarding/classificationDemo/useClassificationDemo";
 import type { ClassificationDemoViewData } from "@app/components/onboarding/classificationDemo/classificationDemoShared";
 import {
@@ -20,6 +24,7 @@ import {
 import {
   CategoryTicker,
   FollowUpPanel,
+  ProcessingCounts,
   ProcessingHero,
   useProcessingLabel,
 } from "@app/components/onboarding/classificationDemo/classificationDemoSlides";
@@ -76,6 +81,21 @@ export function ClassificationDemoWorkbenchView({
   // Safe from any state: cancel is a no-op unless a sweep is actually running.
   const dismiss = () => {
     trick.cancel();
+    leave();
+  };
+
+  // The rest runs behind the rail's ring rather than on the canvas, so the user gets the
+  // app back at once. Swept paths are copied before the session store clears them.
+  const continueInBackground = () => {
+    if (!trick.directory || !trick.outcome) return;
+    startBackgroundClassification({
+      directory: trick.directory,
+      folderName: t("classificationDemo.folderName", "Downloads"),
+      limit: batchSize,
+      exclude: sweptPaths(),
+      alreadyProcessed: trick.outcome.processed,
+      total: trick.outcome.pdfsInFolder,
+    });
     leave();
   };
 
@@ -177,7 +197,7 @@ export function ClassificationDemoWorkbenchView({
                 : t("classificationDemo.buttons.done", "Done")}
             </Button>
             {canContinue && (
-              <Button onClick={() => trick.start(batchSize)}>
+              <Button onClick={continueInBackground}>
                 {batchSize < remaining
                   ? t(
                       "classificationDemo.followUp.batchCta",
@@ -199,16 +219,7 @@ export function ClassificationDemoWorkbenchView({
   return shell(
     <div className={styles.viewColumn}>
       <ProcessingHero label={processingLabel} />
-      <p className={styles.counts}>
-        <span className={styles.countsNumber}>{trick.progress.processed}</span>
-        {t(
-          "classificationDemo.processing.counts",
-          "of {{total}} PDFs processed",
-          {
-            total: trick.progress.total,
-          },
-        )}
-      </p>
+      <ProcessingCounts progress={trick.progress} />
       <CategoryTicker groups={trick.progress.groups} />
       <div className={styles.viewActions}>
         <Button variant="quiet" accent="neutral" onClick={dismiss}>
