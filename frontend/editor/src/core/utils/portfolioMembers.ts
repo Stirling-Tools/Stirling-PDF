@@ -10,7 +10,10 @@ import {
   decodePDFRawStream,
 } from "@cantoo/pdf-lib";
 import type { PdfAttachmentObject } from "@embedpdf/models";
-import { getDocumentBytes } from "@app/services/documentBytesCache";
+import {
+  documentFileKey,
+  getDocumentBytes,
+} from "@app/services/documentBytesCache";
 
 // Reads a portfolio's members from the file's own bytes. The viewer's attachment
 // capability only covers the open document, which stops being the portfolio.
@@ -44,6 +47,8 @@ let cache: { file: File; loaded: Promise<LoadedPortfolio | null> } | null =
 // Every file switch asks whether the document is a portfolio, and most aren't.
 // Remembering the answer avoids reparsing; no document bytes are held.
 const answers = new WeakMap<File, PdfAttachmentObject[] | null>();
+const answersByFileKey = new Map<string, PdfAttachmentObject[] | null>();
+const PORTFOLIO_CACHE_LIMIT = 64;
 
 const decodeText = (value: unknown): string | null => {
   if (
@@ -146,7 +151,9 @@ const streamOf = (
 export async function readPortfolioMembers(
   file: File,
 ): Promise<PdfAttachmentObject[] | null> {
-  const remembered = answers.get(file);
+  const key = documentFileKey(file);
+  const remembered =
+    answers.get(file) ?? (key ? answersByFileKey.get(key) : undefined);
   if (remembered !== undefined) return remembered;
 
   const loaded = await open(file);
@@ -155,6 +162,15 @@ export async function readPortfolioMembers(
     // than pin them until the next file is opened.
     if (cache?.file === file) cache = null;
     answers.set(file, null);
+    if (key) {
+      answersByFileKey.delete(key);
+      answersByFileKey.set(key, null);
+      while (answersByFileKey.size > PORTFOLIO_CACHE_LIMIT) {
+        const oldest = answersByFileKey.keys().next().value;
+        if (oldest === undefined) break;
+        answersByFileKey.delete(oldest);
+      }
+    }
     return null;
   }
 
@@ -175,6 +191,15 @@ export async function readPortfolioMembers(
   }
   members.sort((a, b) => a.name.localeCompare(b.name));
   answers.set(file, members);
+  if (key) {
+    answersByFileKey.delete(key);
+    answersByFileKey.set(key, members);
+    while (answersByFileKey.size > PORTFOLIO_CACHE_LIMIT) {
+      const oldest = answersByFileKey.keys().next().value;
+      if (oldest === undefined) break;
+      answersByFileKey.delete(oldest);
+    }
+  }
   return members;
 }
 
