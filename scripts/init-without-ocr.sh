@@ -362,6 +362,29 @@ start_unoserver_instance() {
   LAST_UNOSERVER_PID=$!
 }
 
+# Stop an unoserver instance and its soffice children. Child PIDs are captured
+# before signalling the parent so the PPID relationship is still visible; the
+# saved PIDs get SIGKILL after the grace period because the parent may already
+# have exited and reparented them.
+stop_unoserver_instance() {
+  local pid=${1:-}
+  if [ -z "$pid" ] || ! kill -0 "$pid" 2>/dev/null; then
+    return 0
+  fi
+  log "Stopping unoserver pid ${pid}"
+  local child_pids
+  child_pids=$(pgrep -P "$pid" 2>/dev/null || true)
+  pkill -TERM -P "$pid" 2>/dev/null || true
+  kill -TERM "$pid" 2>/dev/null || true
+  sleep 3
+  if [ -n "$child_pids" ]; then
+    # The expansion carries several PIDs on purpose.
+    # shellcheck disable=SC2086
+    kill -KILL $child_pids 2>/dev/null || true
+  fi
+  kill -KILL "$pid" 2>/dev/null || true
+}
+
 start_unoserver_watchdog() {
   local interval=${UNO_SERVER_HEALTH_INTERVAL:-30}
   case "$interval" in
@@ -371,9 +394,9 @@ start_unoserver_watchdog() {
     while true; do
       local i=0
       while [ "$i" -lt "${#UNOSERVER_PIDS[@]}" ]; do
-        local pid=${UNOSERVER_PIDS[$i]}
-        local port=${UNOSERVER_PORTS[$i]}
-        local uno_port=${UNOSERVER_UNO_PORTS[$i]}
+        local pid=${UNOSERVER_PIDS[i]}
+        local port=${UNOSERVER_PORTS[i]}
+        local uno_port=${UNOSERVER_UNO_PORTS[i]}
         local needs_restart=false
 
         # Check PID and Health
@@ -386,24 +409,9 @@ start_unoserver_watchdog() {
 
         if [ "$needs_restart" = true ]; then
           log "Restarting unoserver on 127.0.0.1:${port} (uno-port ${uno_port})"
-          # Kill the old process and its children (soffice) if it exists.
-          # Capture child PIDs first, then send TERM to children before parent
-          # so the PPID relationship is still visible. After sleep, use the
-          # saved PIDs for SIGKILL since the parent may have already exited
-          # and children would be reparented to init.
-          if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
-            local child_pids
-            child_pids=$(pgrep -P "$pid" 2>/dev/null || true)
-            pkill -TERM -P "$pid" 2>/dev/null || true
-            kill -TERM "$pid" 2>/dev/null || true
-            sleep 3
-            if [ -n "$child_pids" ]; then
-              kill -KILL $child_pids 2>/dev/null || true
-            fi
-            kill -KILL "$pid" 2>/dev/null || true
-          fi
+          stop_unoserver_instance "$pid"
           start_unoserver_instance "$port" "$uno_port"
-          UNOSERVER_PIDS[$i]=$LAST_UNOSERVER_PID
+          UNOSERVER_PIDS[i]=$LAST_UNOSERVER_PID
         fi
         i=$((i + 1))
       done
@@ -531,25 +539,11 @@ start_unoserver_pool_now() {
   UNO_POOL_RUNNING=true
 }
 
-# Stop all unoserver instances and Xvfb to reclaim memory.
+# Stop all unoserver instances and Xvfb to reclaim memory. Runs even when the
+# pool flag was never set, so a partially started pool still gets cleaned.
 stop_unoserver_pool_now() {
-  if [ "$UNO_POOL_RUNNING" = false ]; then
-    return 0
-  fi
-  log "Stopping unoserver pool (idle timeout)"
-
   for pid in "${UNOSERVER_PIDS[@]:-}"; do
-    if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
-      local child_pids
-      child_pids=$(pgrep -P "$pid" 2>/dev/null || true)
-      pkill -TERM -P "$pid" 2>/dev/null || true
-      kill -TERM "$pid" 2>/dev/null || true
-      sleep 2
-      if [ -n "$child_pids" ]; then
-        kill -KILL $child_pids 2>/dev/null || true
-      fi
-      kill -KILL "$pid" 2>/dev/null || true
-    fi
+    stop_unoserver_instance "$pid"
   done
 
   stop_xvfb
@@ -557,8 +551,10 @@ stop_unoserver_pool_now() {
   UNOSERVER_PIDS=()
   UNOSERVER_PORTS=()
   UNOSERVER_UNO_PORTS=()
+  if [ "$UNO_POOL_RUNNING" = true ]; then
+    log "unoserver pool stopped, memory reclaimed"
+  fi
   UNO_POOL_RUNNING=false
-  log "unoserver pool stopped, memory reclaimed"
 }
 
 # Demand manager: background loop that watches for conversion demand and manages idle timeout.
@@ -568,6 +564,15 @@ start_unoserver_demand_manager() {
     ''|*[!0-9]*) idle_timeout=120 ;;
   esac
   local check_interval=5
+
+  # This loop runs in a background subshell, so the parent's cleanup cannot see
+  # its UNOSERVER_PIDS or XVFB_PID; clean the tree up from here.
+  manager_cleanup() {
+    trap - TERM INT EXIT
+    stop_unoserver_pool_now
+  }
+  trap 'manager_cleanup; exit 0' TERM INT
+  trap manager_cleanup EXIT
 
   log "unoserver demand manager started (idle_timeout=${idle_timeout}s)"
 
@@ -603,18 +608,19 @@ start_unoserver_demand_manager() {
     if [ "$UNO_POOL_RUNNING" = true ]; then
       local i=0
       while [ "$i" -lt "${#UNOSERVER_PIDS[@]}" ]; do
-        local pid=${UNOSERVER_PIDS[$i]}
-        local port=${UNOSERVER_PORTS[$i]}
-        local uno_port=${UNOSERVER_UNO_PORTS[$i]}
+        local pid=${UNOSERVER_PIDS[i]}
+        local port=${UNOSERVER_PORTS[i]}
+        local uno_port=${UNOSERVER_UNO_PORTS[i]}
 
         if [ -z "$pid" ] || ! kill -0 "$pid" 2>/dev/null; then
           log "unoserver PID ${pid} died for port ${port}, restarting"
           start_unoserver_instance "$port" "$uno_port"
-          UNOSERVER_PIDS[$i]=$LAST_UNOSERVER_PID
+          UNOSERVER_PIDS[i]=$LAST_UNOSERVER_PID
         elif ! check_unoserver_port_ready "$port" "silent"; then
           log "unoserver port ${port} unhealthy, restarting"
+          stop_unoserver_instance "$pid"
           start_unoserver_instance "$port" "$uno_port"
-          UNOSERVER_PIDS[$i]=$LAST_UNOSERVER_PID
+          UNOSERVER_PIDS[i]=$LAST_UNOSERVER_PID
         fi
         i=$((i + 1))
       done
