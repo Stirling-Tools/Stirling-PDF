@@ -85,10 +85,16 @@ jobs:
         if: inputs.docker-base-changed != 'true'
         uses: crazy-max/ghaction-github-runtime@04d248b84655b509d8c44dc1d6f990c879747487 # v4.0.0
 
+      # --fail so a gateway error page is never saved as the binary (a 504 once
+      # left bash trying to execute HTML at `docker-compose up`), and retries
+      # for the transient 5xx the runners see from GitHub releases.
       - name: Install Docker Compose
         run: |
-          sudo curl -SL "https://github.com/docker/compose/releases/download/v5.4.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo curl --fail --location --retry 5 --retry-delay 3 --retry-all-errors \
+            "https://github.com/docker/compose/releases/download/v5.4.0/docker-compose-$(uname -s)-$(uname -m)" \
+            -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose version
 
       - name: Install uv
         if: matrix.cucumber
