@@ -78,6 +78,15 @@ export function LayerSidebar({
         setVisibility({});
         loadedKeyRef.current = null;
         userChangedRef.current = false;
+      } else if (loadedKeyRef.current !== documentCacheKey) {
+        // The document changed while the panel was closed; drop the previous
+        // document's list so an early open cannot render or apply it.
+        setStatus("idle");
+        setLayers([]);
+        setVisibility({});
+        setLoadError(null);
+        loadedKeyRef.current = null;
+        userChangedRef.current = false;
       }
       return;
     }
