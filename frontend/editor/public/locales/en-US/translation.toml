@@ -4676,6 +4676,7 @@ processingHint = "Processing - available when it finishes"
 retry = "Retry"
 retryHint = "Run this file again"
 waiting = "Queued"
+waitingHint = "Queued for processing - available when its folder has run it"
 
 [filesPage.empty]
 hint = "Drop PDFs anywhere on this page to upload, or use the New folder button to organize your files."

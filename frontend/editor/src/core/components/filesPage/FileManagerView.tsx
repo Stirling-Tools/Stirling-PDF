@@ -130,7 +130,8 @@ export default function FileManagerView() {
     useState<StirlingFileStub | null>(null);
   const folders = useFolders();
   const { actions: fileActions } = useFileActions();
-  const { fileIds: activeWorkspaceFileIds } = useAllFiles();
+  const { fileIds: activeWorkspaceFileIds, fileStubs: activeWorkspaceFiles } =
+    useAllFiles();
   const activeWorkspaceFileIdSet = useMemo(
     () => new Set(activeWorkspaceFileIds.map((id) => id as string)),
     [activeWorkspaceFileIds],
@@ -596,8 +597,11 @@ export default function FileManagerView() {
     }
     let cancelled = false;
     const tick = async () => {
-      const files = await listFiles(processingRecordId).catch(() => []);
-      if (!cancelled) {
+      // Null is a failed request, not an empty folder. Replacing the map with nothing would
+      // drop every file to an unknown state, which reads as locked, so a blip would take the
+      // whole folder offline until a poll got through.
+      const files = await listFiles(processingRecordId).catch(() => null);
+      if (!cancelled && files) {
         setFileStates(new Map(files.map((f) => [f.name, f.state])));
         setRevertables(
           new Set(files.filter((f) => f.hasOriginal).map((f) => f.name)),
@@ -625,6 +629,60 @@ export default function FileManagerView() {
   const [diskStateFilter, setDiskStateFilter] = useState<DiskFileState | "all">(
     "all",
   );
+  const processingLockedFor = useCallback(
+    (key: string): boolean => {
+      if (!processingView) return false;
+      const state = fileStates.get(key);
+      return state !== "done" && state !== "failed";
+    },
+    [processingView, fileStates],
+  );
+
+  const processingLockedFileIds = useMemo(
+    () =>
+      new Set(
+        allFiles
+          .filter(
+            (file) =>
+              (file.folderId ?? null) === (currentFolderId ?? null) &&
+              processingLockedFor(file.name),
+          )
+          .map((file) => file.id),
+      ),
+    [allFiles, currentFolderId, processingLockedFor],
+  );
+
+  const processingLockedDiskQuickKeys = useMemo(
+    () =>
+      new Set(
+        diskEntries
+          .filter((file) => processingLockedFor(file.name))
+          .map((file) => `${file.name}|${file.sizeBytes}|${file.lastModified}`),
+      ),
+    [diskEntries, processingLockedFor],
+  );
+
+  useEffect(() => {
+    const openLockedFileIds = activeWorkspaceFiles
+      .filter(
+        (file) =>
+          processingLockedFileIds.has(file.id) ||
+          processingLockedDiskQuickKeys.has(
+            file.quickKey ??
+              `${file.name}|${file.size}|${file.lastModified ?? 0}`,
+          ),
+      )
+      .map((file) => file.id);
+    if (openLockedFileIds.length > 0) {
+      void fileActions.removeFiles(openLockedFileIds, false);
+    }
+  }, [
+    activeWorkspaceFiles,
+    fileActions,
+    processingLockedDiskQuickKeys,
+    processingLockedFileIds,
+  ]);
+
   const diskStateFor = useCallback(
     (name: string): DiskFileState | undefined => fileStates.get(name),
     [fileStates],
@@ -784,6 +842,8 @@ export default function FileManagerView() {
             kind: "diskFile",
             disk,
             diskState: outputDirectory ? diskStateFor(disk.name) : undefined,
+            processingLocked:
+              Boolean(outputDirectory) && processingLockedFor(disk.name),
             hasOriginal: outputDirectory
               ? revertables.has(disk.name)
               : undefined,
@@ -817,7 +877,12 @@ export default function FileManagerView() {
         .map<FilesPageEntry>((file) => ({
           kind: "file",
           file,
-          diskState: processingView ? diskStateFor(file.name) : undefined,
+          diskState:
+            processingView &&
+            (file.folderId ?? null) === (currentFolderId ?? null)
+              ? diskStateFor(file.name)
+              : undefined,
+          processingLocked: processingLockedFileIds.has(file.id),
           parentPath:
             inSearch && (file.folderId ?? null) !== (currentFolderId ?? null)
               ? pathForFolderId(file.folderId ?? null) || undefined
@@ -840,6 +905,7 @@ export default function FileManagerView() {
     diskEntries,
     outputDirectory,
     processingView,
+    processingLockedFileIds,
     diskStateFor,
     revertables,
     diskStateFilter,
@@ -1037,8 +1103,11 @@ export default function FileManagerView() {
   );
 
   const handleAddToWorkspace = useCallback(
-    (fileIds: FileId[]) => openFilesInWorkbench(fileIds),
-    [openFilesInWorkbench],
+    (fileIds: FileId[]) => {
+      const openable = fileIds.filter((id) => !processingLockedFileIds.has(id));
+      return openable.length > 0 ? openFilesInWorkbench(openable) : undefined;
+    },
+    [openFilesInWorkbench, processingLockedFileIds],
   );
 
   const handleOpenFile = useCallback(
