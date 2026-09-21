@@ -3,7 +3,7 @@ import {
   documentFileKey,
   getDocumentBytes,
 } from "@app/services/documentBytesCache";
-import { runEngineDocumentProbe } from "@app/services/documentProbeEngine";
+import { runEngineDocumentLayerVerdict } from "@app/services/documentProbeEngine";
 
 export interface LayerInfo {
   id: string;
@@ -77,9 +77,12 @@ async function resolveDocumentHasLayers(
   const cached = key ? layerAnswersByFileKey.get(key) : undefined;
   if (cached) return cached;
 
-  const probe = await runEngineDocumentProbe(file);
-  if (probe && probe.hasLayers !== null) {
-    const answer = Promise.resolve(probe.hasLayers);
+  // The worker decides only plaintext files exactly and reports null when
+  // object streams could hide the catalog, so the parse below stays the
+  // fallback rather than trusting an incomplete scan.
+  const verdict = await runEngineDocumentLayerVerdict(file);
+  if (verdict !== null) {
+    const answer = Promise.resolve(verdict);
     rememberLayerAnswer(file, key, answer);
     return answer;
   }

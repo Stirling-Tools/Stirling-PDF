@@ -2,6 +2,10 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { PDFDocument, PDFName, PDFString } from "@cantoo/pdf-lib";
 import { documentHasLayers } from "@app/components/viewer/layerUtils";
 import * as documentBytesCache from "@app/services/documentBytesCache";
+import {
+  registerEngineDocumentProbe,
+  resolveEngineDocumentOpen,
+} from "@app/services/documentProbeEngine";
 
 const buildPdfWithLayers = async (hasLayers: boolean): Promise<File> => {
   const doc = await PDFDocument.create();
@@ -68,5 +72,31 @@ describe("documentHasLayers", () => {
 
     expect(result).toBe(true);
     expect(spy).not.toHaveBeenCalled();
+  });
+
+  it("takes an exact worker verdict without reading the document", async () => {
+    const file = await buildPdfWithLayers(true);
+    registerEngineDocumentProbe(
+      file,
+      async () => ({ formType: 0, attachmentCount: 0 }),
+      async () => false,
+    );
+    resolveEngineDocumentOpen(file, "doc-layers");
+    const spy = vi.spyOn(documentBytesCache, "getDocumentBytes");
+
+    expect(await documentHasLayers(file)).toBe(false);
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it("parses the document when the worker cannot decide", async () => {
+    const file = await buildPdfWithLayers(true);
+    registerEngineDocumentProbe(
+      file,
+      async () => ({ formType: 0, attachmentCount: 0 }),
+      async () => null,
+    );
+    resolveEngineDocumentOpen(file, "doc-unknown");
+
+    expect(await documentHasLayers(file)).toBe(true);
   });
 });

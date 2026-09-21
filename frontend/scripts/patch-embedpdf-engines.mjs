@@ -47,6 +47,15 @@ if (installedVersion !== EXPECTED_VERSION) {
 
 let source = readFileSync(target, "utf8");
 
+/** A tree patched by an older script revision cannot be re-patched in place, and
+ *  `npm install` will not refresh an already satisfied dependency. */
+function staleTreeHint(current) {
+  return current.includes(MARKER)
+    ? "This tree was patched by an older revision of this script; delete " +
+        "node_modules/@embedpdf/engines and run `npm install` again. "
+    : "";
+}
+
 // The orchestrator class lives in a hashed chunk; the probe method goes there.
 const engineChunkFile = readdirSync(distDir).find((name) =>
   /^pdf-engine-.*\.js$/.test(name),
@@ -101,7 +110,7 @@ const replacements = [
   },
   {
     label: "engine: post wasmModule with clone fallback",
-    find: /( {4}this\.worker\.postMessage\({\n {6}id: _RemoteExecutor\.READY_TASK_ID,\n {6}type: "wasmInit",\n {6}wasmUrl: options\.wasmUrl,\n {6}logger: options\.logger \? serializeLogger\(options\.logger\) : void 0,\n {6}fontFallback: options\.fontFallback\n {4}}\);| {4}const wasmInitMessage = {\n {6}id: _RemoteExecutor\.READY_TASK_ID,\n {6}type: "wasmInit",\n {6}wasmUrl: options\.wasmUrl,\n {6}logger: options\.logger \? serializeLogger\(options\.logger\) : void 0,\n {6}fontFallback: options\.fontFallback\n {4}};\n{4}\/\/ WebAssembly\.Module is structured-cloneable in Chromium\/Firefox but not\n {4}\/\/ WebKit; when cloning fails the worker fetches the URL itself\.\n {4}if \(options\.wasmModule\) wasmInitMessage\.wasmModule = options\.wasmModule;\n {4}try {\n {6}this\.worker\.postMessage\(wasmInitMessage\);\n {4}} catch \(cloneError\) {\n {6}if \(!wasmInitMessage\.wasmModule\) throw cloneError;\n {6}delete wasmInitMessage\.wasmModule;\n {6}this\.worker\.postMessage\(wasmInitMessage\);\n {4}})/,
+    find: / {4}this\.worker\.postMessage\({\n {6}id: _RemoteExecutor\.READY_TASK_ID,\n {6}type: "wasmInit",\n {6}wasmUrl: options\.wasmUrl,\n {6}logger: options\.logger \? serializeLogger\(options\.logger\) : void 0,\n {6}fontFallback: options\.fontFallback\n {4}}\);/,
     replace: `    const wasmInitMessage = {
       id: _RemoteExecutor.READY_TASK_ID,
       type: "wasmInit",
@@ -226,28 +235,78 @@ export {
       "    __stirlingDocAccess.delete(filePtr);",
       "  }",
       "}",
-      "function __stirlingHasLayers(content) {",
-      "  // The catalog that names optional content is reached from the trailer, so",
-      "  // the head and tail windows cover uncompressed catalogs and object streams.",
-      "  const HEAD = 1048576;",
-      "  const TAIL = 4194304;",
+      "const __STIRLING_LAYER_SCAN_BYTES = 104857600;",
+      "const __STIRLING_LAYER_INFLATE_BUDGET = 8388608;",
+      "async function __stirlingInflate(bytes) {",
+      '  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate"));',
+      "  return new Uint8Array(await new Response(stream).arrayBuffer());",
+      "}",
+      "async function __stirlingLayerVerdict(content, isBlob, length) {",
+      "  // The catalog can sit anywhere and object streams hide it, so the whole",
+      "  // file is scanned and every object stream is inflated before answering.",
+      "  // Undecodable streams report null and the caller parses the document.",
       "  const CHUNK = 65536;",
-      '  const decoder = new TextDecoder("latin1");',
-      '  const isBlob = typeof Blob !== "undefined" && content instanceof Blob;',
-      "  const length = isBlob ? content.size : content.byteLength;",
+      "  const YIELD_EVERY = 16;",
       "  const reader = isBlob ? new FileReaderSync() : null;",
-      "  const windows = length <= HEAD + TAIL ? [[0, length]] : [[0, HEAD], [length - TAIL, length]];",
-      "  for (const [start, end] of windows) {",
-      '    let carry = "";',
-      "    for (let at = start; at < end; at += CHUNK) {",
-      "      const stop = Math.min(at + CHUNK, end);",
-      "      const bytes = reader",
-      "        ? new Uint8Array(reader.readAsArrayBuffer(content.slice(at, stop)))",
-      "        : new Uint8Array(content, at, stop - at);",
-      "      const text = carry + decoder.decode(bytes);",
-      "      if (/\\\\/OCProperties(?![A-Za-z0-9])/.test(text)) return true;",
-      "      carry = text.slice(-16);",
+      '  const decoder = new TextDecoder("latin1");',
+      "  const readAt = (from, to) =>",
+      "    reader",
+      "      ? new Uint8Array(reader.readAsArrayBuffer(content.slice(from, to)))",
+      "      : new Uint8Array(content, from, to - from);",
+      '  let carry = "";',
+      "  const objectStreams = [];",
+      "  for (let at = 0; at < length; at += CHUNK) {",
+      "    const stop = Math.min(at + CHUNK, length);",
+      "    const text = carry + decoder.decode(readAt(at, stop));",
+      '    if (text.includes("/OCProperties")) return true;',
+      '    if (text.includes("/Encrypt")) return null;',
+      "    let from = 0;",
+      "    while (true) {",
+      '      const hit = text.indexOf("/ObjStm", from);',
+      "      if (hit === -1) break;",
+      "      objectStreams.push(at + hit - carry.length);",
+      "      from = hit + 7;",
       "    }",
+      "    carry = text.slice(-16);",
+      "    if ((at / CHUNK) % YIELD_EVERY === YIELD_EVERY - 1) {",
+      "      // Let queued render messages run between chunks.",
+      "      await new Promise((resolve) => setTimeout(resolve, 0));",
+      "    }",
+      "  }",
+      "  if (objectStreams.length === 0) return false;",
+      "  let inflatedBytes = 0;",
+      "  for (const position of objectStreams) {",
+      "    const windowStart = Math.max(0, position - 1024);",
+      "    const windowEnd = Math.min(position + 4096, length);",
+      "    const window = decoder.decode(readAt(windowStart, windowEnd));",
+      "    const local = position - windowStart;",
+      "    const streamMatch = /stream(\\\\r\\\\n|\\\\r|\\\\n)/.exec(window.slice(local));",
+      "    if (!streamMatch) return null;",
+      "    const dictEnd = local + streamMatch.index;",
+      "    const dict = window.slice(local, dictEnd);",
+      "    const lengths = [...dict.matchAll(/\\\\/Length\\\\s+(\\\\d+)/g)];",
+      "    if (lengths.length === 0) return null;",
+      "    const dataStart = windowStart + dictEnd + streamMatch[0].length;",
+      "    const dataEnd = dataStart + Number(lengths[lengths.length - 1][1]);",
+      "    if (dataEnd > length) return null;",
+      "    const raw = readAt(dataStart, dataEnd);",
+      "    const filterMatch = /\\\\/Filter\\\\s*(\\\\[[^\\\\]]*\\\\]|\\\\/[A-Za-z0-9]+)/.exec(dict);",
+      '    const filter = filterMatch ? filterMatch[1] : "";',
+      "    let decoded;",
+      "    if (!filter) {",
+      "      decoded = raw;",
+      '    } else if (filter.includes("FlateDecode")) {',
+      "      try {",
+      "        decoded = await __stirlingInflate(raw);",
+      "      } catch {",
+      "        return null;",
+      "      }",
+      "    } else {",
+      "      return null;",
+      "    }",
+      "    inflatedBytes += decoded.length;",
+      "    if (inflatedBytes > __STIRLING_LAYER_INFLATE_BUDGET) return null;",
+      '    if (decoder.decode(decoded).includes("/OCProperties")) return true;',
       "  }",
       "  return false;",
       "}",
@@ -327,13 +386,30 @@ export {
       "    if (!ctx) {",
       "      throw new Error(`Document ${id} is not open`);",
       "    }",
-      "    const access = __stirlingDocAccess.get(ctx.filePtr);",
-      "    const formType = this.pdfiumModule.FPDF_GetFormType(ctx.docPtr);",
       "    return {",
-      "      formType,",
-      "      attachmentCount: this.pdfiumModule.FPDFDoc_GetAttachmentCount(ctx.docPtr),",
-      "      hasLayers: access && access.content ? __stirlingHasLayers(access.content) : null",
+      "      formType: this.pdfiumModule.FPDF_GetFormType(ctx.docPtr),",
+      "      attachmentCount: this.pdfiumModule.FPDFDoc_GetAttachmentCount(ctx.docPtr)",
       "    };",
+      "  }",
+      "",
+      "  getDocumentLayerVerdict(id) {",
+      "    const ctx = this.cache.docs.get(id);",
+      "    if (!ctx) {",
+      "      throw new Error(`Document ${id} is not open`);",
+      "    }",
+      "    const access = __stirlingDocAccess.get(ctx.filePtr);",
+      "    const content = access && access.content;",
+      "    if (!content) return PdfTaskHelper.resolve(null);",
+      '    const isBlob = typeof Blob !== "undefined" && content instanceof Blob;',
+      "    const length = isBlob ? content.size : content.byteLength;",
+      "    // Small documents are cheap to parse exactly, so only large ones pay for a scan.",
+      "    if (length < __STIRLING_LAYER_SCAN_BYTES) return PdfTaskHelper.resolve(null);",
+      "    const task = PdfTaskHelper.create();",
+      "    void __stirlingLayerVerdict(content, isBlob, length).then(",
+      "      (verdict) => task.resolve(verdict),",
+      "      (error) => task.reject({ code: PdfErrorCode.Unknown, message: String(error) })",
+      "    );",
+      "    return task;",
       "  }",
       "",
       "  openDocumentBuffer(file, options) {",
@@ -344,7 +420,7 @@ export {
     label: "engine: send the document probe to the worker",
     find: '  getDocPermissions(doc) {\n    return this.send("getDocPermissions", [doc]);\n  }',
     replace:
-      '  getDocumentProbe(id) {\n    return this.send("getDocumentProbe", [id]);\n  }\n  getDocPermissions(doc) {\n    return this.send("getDocPermissions", [doc]);\n  }',
+      '  getDocumentProbe(id) {\n    return this.send("getDocumentProbe", [id]);\n  }\n  getDocumentLayerVerdict(id) {\n    return this.send("getDocumentLayerVerdict", [id]);\n  }\n  getDocPermissions(doc) {\n    return this.send("getDocPermissions", [doc]);\n  }',
   },
   {
     label: "worker: release file access when the open fails",
@@ -381,6 +457,15 @@ const chunkReplacements = [
       "      { priority: Priority.LOW }",
       "    );",
       "  }",
+      "  getDocumentLayerVerdict(id) {",
+      "    return this.workerQueue.enqueue(",
+      "      {",
+      "        execute: () => this.executor.getDocumentLayerVerdict(id),",
+      '        meta: { docId: id, operation: "getDocumentLayerVerdict" }',
+      "      },",
+      "      { priority: Priority.LOW }",
+      "    );",
+      "  }",
       "  openDocumentBuffer(file, options) {",
       "    return this.workerQueue.enqueue(",
     ].join("\n"),
@@ -398,6 +483,7 @@ if (checkOnly) {
     console.error(
       `[patch-embedpdf-engines] check failed: ${missing.length} patch(es) missing: ` +
         `${missing.map(({ label }) => label).join(", ")}. ` +
+        staleTreeHint(source) +
         "Run `npm install` (or `npm run postinstall`) to apply the local engine patch.",
     );
     process.exit(1);
@@ -417,6 +503,7 @@ for (const { label, find, replace } of replacements) {
   if (!match) {
     console.error(
       `[patch-embedpdf-engines] anchor not found for "${label}" in @embedpdf/engines@${installedVersion}. ` +
+        staleTreeHint(source) +
         "The patch must be re-verified against this version.",
     );
     process.exit(1);
@@ -455,7 +542,10 @@ const parsed = spawnSync(process.execPath, ["--check", checkPath], {
 });
 rmSync(checkDir, { recursive: true, force: true });
 if (parsed.status !== 0) {
-  const reason = (parsed.stderr || "unknown parse error").split("\n")[0];
+  const reason = (parsed.stderr || "unknown parse error")
+    .split("\n")
+    .slice(0, 4)
+    .join(" ");
   console.error(
     `[patch-embedpdf-engines] patched worker source does not parse: ${reason}`,
   );

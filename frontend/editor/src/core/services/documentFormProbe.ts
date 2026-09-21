@@ -101,8 +101,7 @@ async function resolveDocumentHasFormFields(
   if (cached) return cached;
 
   // The open engine document already knows its form type; the probe answers it
-  // without reading the file. hasLayers stays null when the worker had no
-  // content access, but formType is valid whenever the probe resolved.
+  // without reading the file.
   const probe = await runEngineDocumentProbe(source);
   if (probe) {
     const answer = Promise.resolve(probe.formType !== 0);

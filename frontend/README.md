@@ -25,11 +25,13 @@ once and lints with the same config.
 
 `@embedpdf/engines` and the `@embedpdf` plugins are pinned and patched locally
 while upstream prepares 3.0. `scripts/ensure-embedpdf-patches.mjs` applies the
-patches from `postinstall` and from the Vite build, so `node_modules` is patched
-after any install (including `--ignore-scripts`) and a build cannot ship an
-unpatched engine. `task frontend:check` (and `npm run check:embedpdf-patch`) verifies that every
-patched anchor is present; the scripts are version-anchored and fail loudly on a
-version bump instead of silently skipping a patch.
+patches from `postinstall`, so a normal install leaves `node_modules` patched.
+The Vite build runs the same script first, so an install that skipped lifecycle
+scripts (`npm ci --ignore-scripts`, packagers) patches or fails loudly instead of
+shipping an unpatched engine. `task frontend:check` (and
+`npm run check:embedpdf-patch`) verifies that every patched anchor is present;
+the scripts are version-anchored and fail loudly on a version bump instead of
+silently skipping a patch.
 
 What the patches change:
 
