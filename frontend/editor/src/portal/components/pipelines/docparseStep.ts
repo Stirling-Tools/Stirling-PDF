@@ -59,8 +59,8 @@ export function ingestStepConfigured(
 /** Vector destinations consume only the final step's chunks export. */
 export function vectorDestinationConfigured(steps: WorkingToolStep[]): boolean {
   const last = steps.at(-1);
-  if (!last || !isRagIngestStep(last)) return false;
-  const params = last.params as RagIngestStepParams;
+  if (!last || !isIngestStep(last)) return false;
+  const params = last.params as IngestStepParams;
   return (
     params.exportChunksJsonl === true &&
     params.includeOriginal === false &&
@@ -72,9 +72,9 @@ export function prepareVectorDestination(
   steps: WorkingToolStep[],
 ): WorkingToolStep[] {
   const last = steps.at(-1);
-  const existing = last && isRagIngestStep(last);
-  const step = existing ? last : newRagIngestStep();
-  const params = step.params as RagIngestStepParams;
+  const existing = last && isIngestStep(last);
+  const step = existing ? last : newIngestStep();
+  const params = step.params as IngestStepParams;
   return [
     ...(existing ? steps.slice(0, -1) : steps),
     {
