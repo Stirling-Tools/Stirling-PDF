@@ -1622,7 +1622,7 @@
   border-top: 1px solid var(--c-border-subtle);
 }
 .processor-prepay__receipt .processor-prepay__saving {
-  color: var(--c-success);
+  color: color-mix(in srgb, var(--c-success) 65%, var(--c-text));
 }
 .processor-prepay__after {
   border: 1px solid var(--c-border);
