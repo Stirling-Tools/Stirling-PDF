@@ -1,5 +1,8 @@
 import type { PDFObject } from "@cantoo/pdf-lib";
-import { getDocumentBytes } from "@app/services/documentBytesCache";
+import {
+  documentFileKey,
+  getDocumentBytes,
+} from "@app/services/documentBytesCache";
 
 export interface LayerInfo {
   id: string;
@@ -14,25 +17,52 @@ interface OcGroup {
   visible?: boolean;
 }
 
+const layerAnswers = new WeakMap<Blob, Promise<boolean>>();
+const layerAnswersByFileKey = new Map<string, Promise<boolean>>();
+const LAYER_CACHE_LIMIT = 64;
+
 /**
  * True when the catalog carries optional content. Building the layer list costs
  * a pdfjs parse of the whole document, so the sidebar gates its button on this
  * cheap catalog probe and reads the list only when the panel opens.
  */
-export async function documentHasLayers(file: Blob): Promise<boolean> {
-  try {
-    const [{ PDFDocument, PDFName }, bytes] = await Promise.all([
-      import("@cantoo/pdf-lib"),
-      getDocumentBytes(file),
-    ]);
-    const doc = await PDFDocument.load(bytes, {
-      ignoreEncryption: true,
-      updateMetadata: false,
-    });
-    return doc.catalog.get(PDFName.of("OCProperties")) !== undefined;
-  } catch {
-    return false;
+export function documentHasLayers(
+  file: Blob,
+  bytes?: ArrayBuffer,
+): Promise<boolean> {
+  const key = documentFileKey(file);
+  const cached =
+    layerAnswers.get(file) ??
+    (key ? layerAnswersByFileKey.get(key) : undefined);
+  if (cached) return cached;
+
+  const answer = (async () => {
+    try {
+      const [{ PDFDocument, PDFName }, buffer] = await Promise.all([
+        import("@cantoo/pdf-lib"),
+        bytes ? Promise.resolve(bytes) : getDocumentBytes(file),
+      ]);
+      const doc = await PDFDocument.load(buffer, {
+        ignoreEncryption: true,
+        updateMetadata: false,
+      });
+      return doc.catalog.get(PDFName.of("OCProperties")) !== undefined;
+    } catch {
+      return false;
+    }
+  })();
+
+  layerAnswers.set(file, answer);
+  if (key) {
+    layerAnswersByFileKey.delete(key);
+    layerAnswersByFileKey.set(key, answer);
+    while (layerAnswersByFileKey.size > LAYER_CACHE_LIMIT) {
+      const oldest = layerAnswersByFileKey.keys().next().value;
+      if (oldest === undefined) break;
+      layerAnswersByFileKey.delete(oldest);
+    }
   }
+  return answer;
 }
 
 /**
@@ -50,41 +80,58 @@ export async function readPdfLayers(file: Blob): Promise<LayerInfo[]> {
     ).toString();
   }
 
-  const arrayBuffer = await file.arrayBuffer();
-  const loadingTask = getDocument({ data: arrayBuffer, verbosity: 0 });
-  const pdfDoc = await loadingTask.promise;
+  const hasCreateObjectURL =
+    typeof URL !== "undefined" && typeof URL.createObjectURL === "function";
+  const blobUrl = hasCreateObjectURL ? URL.createObjectURL(file) : null;
+  const loadingTask = blobUrl
+    ? getDocument({ url: blobUrl, verbosity: 0 })
+    : getDocument({
+        data: new Uint8Array(await file.arrayBuffer()),
+        verbosity: 0,
+      });
 
   try {
-    const ocConfig = await pdfDoc.getOptionalContentConfig();
-
-    if (!ocConfig) return [];
-
-    const groups: Record<string, OcGroup> = {};
-    for (const [id, group] of ocConfig) {
-      groups[id] = group;
-    }
-    if (Object.keys(groups).length === 0) return [];
-
-    // Use getOrder() for hierarchical display
-    let order: unknown[] | null = null;
+    const pdfDoc = await loadingTask.promise;
     try {
-      order = ocConfig.getOrder?.() ?? null;
-    } catch {
-      // getOrder not available
-    }
+      const ocConfig = await pdfDoc.getOptionalContentConfig();
 
-    if (order && Array.isArray(order) && order.length > 0) {
-      return buildLayerTree(order, groups);
-    }
+      if (!ocConfig) return [];
 
-    // Fallback: flat list in enumeration order
-    return Object.entries(groups).map(([id, group]) => ({
-      id,
-      name: group.name ?? id,
-      visible: group.visible ?? true,
-    }));
+      const groups: Record<string, OcGroup> = {};
+      for (const [id, group] of ocConfig) {
+        groups[id] = group;
+      }
+      if (Object.keys(groups).length === 0) return [];
+
+      // Use getOrder() for hierarchical display
+      let order: unknown[] | null = null;
+      try {
+        order = ocConfig.getOrder?.() ?? null;
+      } catch {
+        // getOrder not available
+      }
+
+      if (order && Array.isArray(order) && order.length > 0) {
+        return buildLayerTree(order, groups);
+      }
+
+      // Fallback: flat list in enumeration order
+      return Object.entries(groups).map(([id, group]) => ({
+        id,
+        name: group.name ?? id,
+        visible: group.visible ?? true,
+      }));
+    } finally {
+      await pdfDoc.destroy();
+    }
   } finally {
-    await pdfDoc.destroy();
+    if (blobUrl) {
+      try {
+        URL.revokeObjectURL(blobUrl);
+      } catch {
+        // ignore
+      }
+    }
   }
 }
 
