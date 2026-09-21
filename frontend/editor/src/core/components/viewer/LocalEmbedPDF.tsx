@@ -90,6 +90,7 @@ import { PrintAPIBridge } from "@app/components/viewer/PrintAPIBridge";
 import { isPdfFile } from "@app/utils/fileUtils";
 import { getDocumentBytes } from "@app/services/documentBytesCache";
 import { documentHasFormFieldsFor } from "@app/services/documentFormProbe";
+import { documentHasLayers } from "@app/components/viewer/layerUtils";
 import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 import { useTranslation } from "react-i18next";
 import { LinkLayer } from "@app/components/viewer/LinkLayer";
@@ -521,15 +522,13 @@ export function LocalEmbedPDF({
 
   // Create plugins configuration
   const plugins = useMemo(() => {
-    const initialSource =
-      initialDocument && initialBufferRef.current
-        ? { buffer: initialBufferRef.current, name: initialDocument.name }
-        : urlPluginsSource;
-    if (!initialSource) return [];
+    if (!initialDocument && !urlPluginsSource) return [];
     const initialDocuments: InitialDocumentOptions[] =
-      "buffer" in initialSource
-        ? [{ buffer: initialSource.buffer, name: initialSource.name }]
-        : [{ url: initialSource.url, name: initialSource.name }];
+      initialDocument && initialBufferRef.current
+        ? [{ buffer: initialBufferRef.current, name: initialDocument.name }]
+        : urlPluginsSource
+          ? [{ url: urlPluginsSource.url, name: urlPluginsSource.name }]
+          : [];
     if (initialBufferRef.current) {
       // React may run this memo more than once for the same buffer (StrictMode
       // double render), and each run builds a fresh config array; keep them all
@@ -627,7 +626,7 @@ export function LocalEmbedPDF({
 
       createPluginRegistration(PrintPluginPackage),
     ];
-  }, [initialDocument, urlPluginsSource, enableAnnotations]);
+  }, [initialDocument, urlPluginsSource, enableAnnotations, enableFormFill]);
 
   const fontFallbackConfig = useMemo(() => getLocalFontFallbackConfig(), []);
 
@@ -769,7 +768,11 @@ export function LocalEmbedPDF({
               const buf = initialBufferRef.current;
               if (!file || !buf) return;
               if ((file as Blob).size < LARGE_PDF_PARSE_LIMIT) return;
-              if (await documentHasFormFieldsFor(file as Blob, buf)) return;
+              const [hasForms, hasLayers] = await Promise.all([
+                documentHasFormFieldsFor(file as Blob, buf),
+                documentHasLayers(file as Blob, buf),
+              ]);
+              if (hasForms || hasLayers) return;
               // A replacement may have landed while the probe ran.
               if (initialBufferRef.current !== buf) return;
               initialBufferRef.current = null;
