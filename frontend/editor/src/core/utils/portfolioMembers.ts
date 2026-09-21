@@ -110,6 +110,22 @@ const load = async (file: File): Promise<LoadedPortfolio | null> => {
   }
 };
 
+const remember = (
+  file: File,
+  key: string | null,
+  value: PdfAttachmentObject[] | null,
+): void => {
+  answers.set(file, value);
+  if (!key) return;
+  answersByFileKey.delete(key);
+  answersByFileKey.set(key, value);
+  while (answersByFileKey.size > PORTFOLIO_CACHE_LIMIT) {
+    const oldest = answersByFileKey.keys().next().value;
+    if (oldest === undefined) break;
+    answersByFileKey.delete(oldest);
+  }
+};
+
 const open = (file: File): Promise<LoadedPortfolio | null> => {
   if (cache?.file !== file) {
     cache = { file, loaded: load(file) };
@@ -152,25 +168,26 @@ export async function readPortfolioMembers(
   file: File,
 ): Promise<PdfAttachmentObject[] | null> {
   const key = documentFileKey(file);
-  const remembered =
-    answers.get(file) ?? (key ? answersByFileKey.get(key) : undefined);
+  // `has` first: a cached null (not a portfolio) is an answer, not a miss.
+  const remembered = answers.has(file)
+    ? answers.get(file)
+    : key
+      ? answersByFileKey.get(key)
+      : undefined;
   if (remembered !== undefined) return remembered;
 
   const loaded = await open(file);
-  if (!loaded || !loaded.isPortfolio) {
+  if (!loaded) {
+    // A failed read or parse is retryable; it must not be remembered as
+    // "not a portfolio", or the file would never be probed again.
+    if (cache?.file === file) cache = null;
+    return null;
+  }
+  if (!loaded.isPortfolio) {
     // Nothing will ask for this document's bytes again, so drop them rather
     // than pin them until the next file is opened.
     if (cache?.file === file) cache = null;
-    answers.set(file, null);
-    if (key) {
-      answersByFileKey.delete(key);
-      answersByFileKey.set(key, null);
-      while (answersByFileKey.size > PORTFOLIO_CACHE_LIMIT) {
-        const oldest = answersByFileKey.keys().next().value;
-        if (oldest === undefined) break;
-        answersByFileKey.delete(oldest);
-      }
-    }
+    remember(file, key, null);
     return null;
   }
 
@@ -190,16 +207,7 @@ export async function readPortfolioMembers(
     });
   }
   members.sort((a, b) => a.name.localeCompare(b.name));
-  answers.set(file, members);
-  if (key) {
-    answersByFileKey.delete(key);
-    answersByFileKey.set(key, members);
-    while (answersByFileKey.size > PORTFOLIO_CACHE_LIMIT) {
-      const oldest = answersByFileKey.keys().next().value;
-      if (oldest === undefined) break;
-      answersByFileKey.delete(oldest);
-    }
-  }
+  remember(file, key, members);
   return members;
 }
 
