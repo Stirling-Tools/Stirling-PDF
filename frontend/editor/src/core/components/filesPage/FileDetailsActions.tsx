@@ -61,7 +61,6 @@ export function FileDetailsActions({
     <div className="files-page-details-actions">
       <div className="files-page-details-actions-row">
         <Button
-          fat
           style={{ flex: 1 }}
           leftSection={<Icon name="external-link" size={ICON_SIZE} />}
           onClick={() => onAddToWorkspace(selectedFileIds)}
