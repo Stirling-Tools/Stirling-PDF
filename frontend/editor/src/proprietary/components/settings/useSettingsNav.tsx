@@ -20,27 +20,27 @@ export type { SettingsNav };
  * processor access, audit) — so the narrower section is dropped rather than
  * shown twice, and its key aliases across.
  *
- * Encryption at rest, what the deployment spends, and the link to the Stirling
- * account are all operator concerns, so they are offered to admins only;
- * portal access alone is not enough to reach them.
+ * Admins manage encryption; only the organization owner manages billing and
+ * the Stirling account connection. Portal access alone grants neither.
  */
 export function useSettingsNav(onLeave: () => void): SettingsNav {
   const { t } = useTranslation();
   const base = useCoreSettingsNav(onLeave);
   const { granted: portalAccess, settled: accessSettled } =
     usePortalAccessState();
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
+  const isOwner = isAdmin && user?.orgOwner === true;
 
   const portalSections = useMemo(
     () =>
       portalAccess
         ? buildPortalSettingsSections(t, {
             includeEncryption: isAdmin,
-            includeBilling: isAdmin,
-            includeAccountLink: isAdmin,
+            includeBilling: isOwner,
+            includeAccountLink: isOwner,
           })
         : [],
-    [portalAccess, isAdmin, t],
+    [portalAccess, isAdmin, isOwner, t],
   );
 
   const sections = useMemo(

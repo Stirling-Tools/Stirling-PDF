@@ -106,6 +106,12 @@ export function loadPolicies(): PoliciesByKey {
   return out;
 }
 
+/** Whether the stored entry for this key is an enforced policy (blocking) rather
+ *  than an ordinary pipeline. Unknown keys are treated as pipelines. */
+export function isEnforcedPolicy(policyKey: string | undefined): boolean {
+  return policyKey != null && loadPolicies()[policyKey]?.required === true;
+}
+
 function persist(state: PoliciesByKey): void {
   try {
     if (typeof localStorage !== "undefined") {

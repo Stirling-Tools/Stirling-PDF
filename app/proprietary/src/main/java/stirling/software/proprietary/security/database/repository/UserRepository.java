@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -61,6 +62,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query(
             "SELECT u FROM User u JOIN FETCH u.authorities JOIN FETCH u.team WHERE u.team.id = :teamId")
     List<User> findAllByTeamId(@Param("teamId") Long teamId);
+
+    /** Usernames alone, ordered and limited by the database, for callers that need no entities. */
+    @Query(
+            "SELECT u.username FROM User u WHERE u.team.id IN :teamIds AND u.username IS NOT NULL"
+                    + " ORDER BY u.username")
+    List<String> findUsernamesByTeamIds(
+            @Param("teamIds") Collection<Long> teamIds, Pageable pageable);
 
     long countByTeam(Team team);
 
