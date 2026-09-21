@@ -62,8 +62,10 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+      # Every leg needs this, the disk-link one included: the OG prerender
+      # plugin in vite.config.ts reads dist/index.html whatever --outDir the
+      # desktop build was given.
       - name: Build frontend (production bundle for vite preview)
-        if: matrix.suite != 'desktop'
         env:
           VITE_BUILD_FOR_PREVIEW: "1"
         run: task frontend:build
