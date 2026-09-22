@@ -394,8 +394,8 @@ export function LocalEmbedPDF({
   // The engine streams from the Blob handle: the local engine patch reads 64 KB
   // blocks through FileReaderSync, so the worker never holds a second copy.
   const initialSourceRef = useRef<Blob | null>(null);
-  // Kept so the large-document release can empty the arrays in place: rebuilding
-  // the plugin list would re-trigger a document open.
+  // Kept so the plugin list can be emptied in place when the viewer clears:
+  // rebuilding the plugin list would re-trigger a document open.
   const initialDocsArraysRef = useRef<InitialDocumentOptions[][]>([]);
 
   // The plugin keeps listeners for the registry's whole life and these share
