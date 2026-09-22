@@ -17,8 +17,8 @@ it.each([
     invoke.mockResolvedValue({
       data: {
         prices: {
-          "selfhosted:server:monthly": { unit_amount: amount, currency },
-          "selfhosted:server:yearly": { unit_amount: amount * 10, currency },
+          "selfhosted:team:monthly": { unit_amount: amount, currency },
+          "selfhosted:team:yearly": { unit_amount: amount * 10, currency },
         },
         missing: [],
       },
@@ -36,7 +36,7 @@ it.each([
       "gbp",
     );
     expect(
-      result.plans.find((p) => p.id === "selfhosted:server:monthly"),
+      result.plans.find((p) => p.id === "selfhosted:team:monthly"),
     ).toMatchObject({ currency: symbol, price: expected });
   },
 );

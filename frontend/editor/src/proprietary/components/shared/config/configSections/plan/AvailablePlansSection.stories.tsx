@@ -20,7 +20,7 @@ const PLANS: PlanTier[] = [
     lookupKey: "free",
   },
   {
-    id: "selfhosted:server:monthly",
+    id: "selfhosted:team:monthly",
     name: "Server",
     price: 29,
     currency: "$",
@@ -28,7 +28,7 @@ const PLANS: PlanTier[] = [
     popular: true,
     features: FEATURES,
     highlights: ["Everything in Free", "Team workspaces", "Priority support"],
-    lookupKey: "selfhosted:server:monthly",
+    lookupKey: "selfhosted:team:monthly",
   },
   {
     id: "selfhosted:enterprise:monthly",

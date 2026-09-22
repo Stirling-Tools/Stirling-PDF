@@ -50,7 +50,7 @@ export interface OutputSpec {
 }
 
 /** Source types that can be written to (used as a pipeline's output destination). */
-export type PipelineOutputMode = "folder" | "s3";
+export type PipelineOutputMode = "folder" | "s3" | "vectordb";
 
 /**
  * The stored policy record: the create/update body (`id` blank on create) and what

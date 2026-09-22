@@ -10,6 +10,7 @@
  * download. Each policy selects files using its first step's accepted inputs.
  */
 
+import { dispatchPolicyFile } from "@app/services/policyDispatch";
 import { loadPolicies } from "@app/services/policyStorage";
 import { assertFilesNotBlocked } from "@app/services/policyFileGuard";
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
@@ -27,6 +28,7 @@ import type { PolicyState } from "@app/types/policies";
 import {
   recordRunStart,
   isDispatched,
+  markDispatched,
 } from "@app/components/policies/policyRunStore";
 import {
   runQueued,
@@ -48,6 +50,7 @@ interface ExportPolicy extends Pick<PolicyState, "firstOperation"> {
   backendId: string;
   label: string;
   outputMode: "new_file" | "new_version";
+  externalOutput?: boolean;
   required: boolean;
   /** The policy's accent as a CSS colour, for the toast glow. */
   accent: string;
@@ -58,6 +61,7 @@ interface PolicyRunResult {
   runId: string;
   target: PolicyExecutionTarget;
   outputs: { fileId: string; fileName: string }[];
+  externalOutput?: boolean;
 }
 
 /** Configured, active policies set to enforce on export (read from the cache). */
@@ -76,6 +80,7 @@ function activeExportPolicies(): ExportPolicy[] {
         return {
           policyKey: id,
           backendId: s.backendId as string,
+          externalOutput: s.externalOutput,
           firstOperation: s.firstOperation,
           // A builder pipeline has no built-in category, so it labels by its own name.
           label:
@@ -111,6 +116,14 @@ async function runToCompletion(
       continue; // transient — keep polling within the cap.
     }
     if (view.status === "COMPLETED") {
+      if (view.externalOutput)
+        return {
+          file,
+          runId,
+          target,
+          outputs: view.outputs ?? [],
+          externalOutput: true,
+        };
       const out = view.outputs?.[0];
       if (!out) throw new Error("policy produced no output");
       const blob = await downloadPolicyOutput(out.fileId, target);
@@ -160,7 +173,25 @@ export async function enforceExportPolicies(
   trigger: EnforcementTrigger = "export",
 ): Promise<File[]> {
   assertFilesNotBlocked(fileIds);
-  const active = activeExportPolicies();
+  const policies = activeExportPolicies();
+  const active = policies.filter((policy) => !policy.externalOutput);
+  const external = policies.filter((policy) => policy.externalOutput);
+  for (const [i, file] of files.entries()) {
+    const fileId = fileIds?.[i];
+    for (const policy of external) {
+      if (!policyAcceptsFile(policy, file)) continue;
+      if (fileId && isDispatched(policy.policyKey, fileId)) continue;
+      if (fileId) markDispatched(policy.policyKey, fileId);
+      void dispatchPolicyFile(
+        policy.policyKey,
+        policy.backendId,
+        file,
+        fileId,
+        false,
+        true,
+      );
+    }
+  }
   if (!active.length || files.length === 0) return files;
 
   // Policies that haven't already enforced this exact file version. Enforcing
@@ -262,6 +293,7 @@ export async function enforceExportPolicies(
             target: versionRun.target,
             status: "COMPLETED",
             outputs: versionRun.outputs,
+            externalOutput: versionRun.externalOutput,
             error: null,
             startedAt: Date.now(),
           });
