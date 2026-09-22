@@ -51,7 +51,7 @@ jobs:
           HASH="$FILES_HASH"
           echo "files_hash=$HASH" >> "$GITHUB_OUTPUT"
           echo "java_version=${{ env.JAVA_VERSION }}" >> "$GITHUB_OUTPUT"
-          echo "cache_key=gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-$HASH }}" >> "$GITHUB_OUTPUT"
+          echo "cache_key=gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-$HASH" >> "$GITHUB_OUTPUT"
 
   gradle-cache-prime:
     environment:
