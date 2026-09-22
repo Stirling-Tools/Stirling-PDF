@@ -215,6 +215,11 @@ export class AuthService {
     };
   }
 
+  /** Synchronous session state for caches that must disappear immediately on sign-out. */
+  getAuthStatus(): AuthStatus {
+    return this.authStatus;
+  }
+
   isSelfHostedDeepLinkFlowActive(): boolean {
     return this.selfHostedDeepLinkFlowActive;
   }

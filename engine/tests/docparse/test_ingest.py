@@ -35,6 +35,7 @@ class StubDocumentService:
 
     def __init__(self) -> None:
         self.calls: list[dict[str, Any]] = []
+        self.embedder = StubEmbedder()
 
     async def ingest_prepared(
         self,
@@ -65,6 +66,7 @@ class StubEmbedder:
 
     def __init__(self, dim: int = 8) -> None:
         self._dim = dim
+        self.configured = True
 
     async def embed_query(self, text: str) -> list[float]:
         h = hash(text) % 1000
@@ -86,6 +88,16 @@ def client(stub_service: StubDocumentService) -> Iterator[TestClient]:
         yield TestClient(app)
     finally:
         app.dependency_overrides.pop(get_document_service, None)
+
+
+@pytest.mark.parametrize("configured", [True, False])
+def test_capabilities_reports_live_embedding_readiness(
+    client: TestClient, stub_service: StubDocumentService, configured: bool
+) -> None:
+    stub_service.embedder.configured = configured
+    response = client.get("/api/v1/docparse/capabilities", headers=HEADERS)
+    assert response.status_code == 200
+    assert response.json() == {"indexingConfigured": configured}
 
 
 def test_ingest_indexes_chunks_with_metadata(client: TestClient, stub_service: StubDocumentService) -> None:

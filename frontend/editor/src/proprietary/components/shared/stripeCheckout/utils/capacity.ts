@@ -1,7 +1,7 @@
 /**
  * Team-plan capacity: the plan is sold in blocks of users.
  *
- * A block is what Stripe charges for (one unit of `selfhosted:server:*`), but nothing
+ * A block is what Stripe charges for (one unit of `selfhosted:team:*`), but nothing
  * customer-facing says so: the buyer picks a number of users and the line item prices it per block.
  * Only `server_quantity` on the checkout request speaks in blocks, because that is what the
  * subscription line item counts.
