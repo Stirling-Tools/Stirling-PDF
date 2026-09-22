@@ -1,16 +1,15 @@
 const DEV = process.env.NODE_ENV === "development";
 
-// posthog-js loads on demand: these fire-and-forget callers run on the upload
-// and tool paths, and the module is ~230 KB most sessions never send with.
+// posthog-js is ~230 KB most sessions never send with. usePosthogTracking owns
+// loading and configuring it; capture only uses the client that hook publishes,
+// so nothing downloads the module while analytics is off.
 type Posthog = typeof import("posthog-js").default;
 
-let posthogPromise: Promise<Posthog | null> | null = null;
+let activePosthog: Posthog | null = null;
 
-function loadPosthog(): Promise<Posthog | null> {
-  posthogPromise ??= import("posthog-js")
-    .then((mod) => mod.default)
-    .catch(() => null);
-  return posthogPromise;
+/** Publishes the configured client, or null while analytics is disabled. */
+export function setActivePosthog(posthog: Posthog | null): void {
+  activePosthog = posthog;
 }
 
 function canCapture(posthog: Posthog): boolean {
@@ -31,15 +30,13 @@ function capture(
   event: string,
   props: Record<string, unknown>,
 ): void {
-  void (async () => {
-    try {
-      const posthog = await loadPosthog();
-      if (!posthog || !canCapture(posthog)) return;
-      posthog.capture(event, props);
-    } catch (error) {
-      if (DEV) console.warn(`[analytics] ${tool} failed`, error);
-    }
-  })();
+  const posthog = activePosthog;
+  if (!posthog || !canCapture(posthog)) return;
+  try {
+    posthog.capture(event, props);
+  } catch (error) {
+    if (DEV) console.warn(`[analytics] ${tool} failed`, error);
+  }
 }
 
 export function trackPdfUploaded(files: File[]): void {

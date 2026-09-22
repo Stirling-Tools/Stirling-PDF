@@ -1,9 +1,10 @@
 import { useEffect } from "react";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { setActivePosthog } from "@app/services/analytics";
 
 // posthog-js is ~230 KB and only matters when analytics is on, so it loads on
-// demand instead of riding the startup chunk. The module is cached across
-// mounts; `activePosthog` records that it has been loaded this session.
+// demand instead of riding the startup chunk. This hook owns that load and
+// publishes the client to analytics.ts; capture never loads the module itself.
 type Posthog = typeof import("posthog-js").default;
 
 let posthogPromise: Promise<Posthog> | null = null;
@@ -61,11 +62,13 @@ export function usePosthogTracking(): void {
 
     if (!posthogEnabled) {
       // Nothing loaded means nothing to opt out of; loading the module to do
-      // so would defeat the deferral.
+      // so would defeat the deferral. An already-loaded client is opted out so
+      // its own autocapture stops too, not just our capture() calls.
       if (activePosthog) {
         activePosthog.opt_out_capturing();
         activePosthog.set_config({ persistence: "memory" });
       }
+      setActivePosthog(null);
       return;
     }
 
@@ -81,6 +84,7 @@ export function usePosthogTracking(): void {
       const posthog = await loadPosthog();
       if (cancelled) return;
       activePosthog = posthog;
+      setActivePosthog(posthog);
 
       initializePosthog(posthog, credentials.key, credentials.host);
       applyPosthogConsent(posthog);

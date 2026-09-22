@@ -8,8 +8,10 @@ import {
 } from "react";
 import {
   Box,
+  Center,
   Divider,
   Group,
+  Loader,
   Modal,
   ScrollArea,
   Stack,
@@ -179,30 +181,38 @@ export default function LoginAgreementModal({
       zIndex={Z_INDEX_SIGN_IN_MODAL}
     >
       <Stack>
-        <ScrollArea.Autosize mah="50vh" type="auto">
-          <Box px="xs">
-            <Suspense fallback={null}>
+        {/* The controls share the boundary: acceptance must not be reachable
+            before the agreement text itself has loaded. */}
+        <Suspense
+          fallback={
+            <Center mih="8rem">
+              <Loader size="sm" />
+            </Center>
+          }
+        >
+          <ScrollArea.Autosize mah="50vh" type="auto">
+            <Box px="xs">
               <LoginAgreementBody content={content} />
-            </Suspense>
-          </Box>
-        </ScrollArea.Autosize>
-        <Divider />
-        <Group justify="space-between" gap="sm" align="center" wrap="wrap">
-          <Text size="xs" c="dimmed" style={{ flex: 1, minWidth: 0 }}>
-            {t(
-              "loginAgreementProvider",
-              "This notice is provided by your administrator, not Stirling PDF Inc.",
-            )}
-          </Text>
-          <Group gap="sm" wrap="nowrap">
-            <Button variant="secondary" onClick={handleDecline}>
-              {t("loginAgreementDecline", "Decline")}
-            </Button>
-            <Button variant="primary" onClick={handleAccept}>
-              {t("loginAgreementAccept", "Accept")}
-            </Button>
+            </Box>
+          </ScrollArea.Autosize>
+          <Divider />
+          <Group justify="space-between" gap="sm" align="center" wrap="wrap">
+            <Text size="xs" c="dimmed" style={{ flex: 1, minWidth: 0 }}>
+              {t(
+                "loginAgreementProvider",
+                "This notice is provided by your administrator, not Stirling PDF Inc.",
+              )}
+            </Text>
+            <Group gap="sm" wrap="nowrap">
+              <Button variant="secondary" onClick={handleDecline}>
+                {t("loginAgreementDecline", "Decline")}
+              </Button>
+              <Button variant="primary" onClick={handleAccept}>
+                {t("loginAgreementAccept", "Accept")}
+              </Button>
+            </Group>
           </Group>
-        </Group>
+        </Suspense>
       </Stack>
     </Modal>
   );
