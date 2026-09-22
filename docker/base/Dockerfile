@@ -375,6 +375,10 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 COPY security/soffice_no_network.c /tmp/soffice_no_network.c
 RUN gcc -shared -fPIC -O2 -Wall -Werror -o /soffice_no_network.so /tmp/soffice_no_network.c -ldl && \
     test -s /soffice_no_network.so
+COPY security/guard_selftest.c /tmp/guard_selftest.c
+RUN gcc -O2 -Wall -Werror -o /tmp/guard_selftest /tmp/guard_selftest.c && \
+    ! /tmp/guard_selftest > /dev/null && \
+    LD_PRELOAD=/soffice_no_network.so /tmp/guard_selftest
 
 
 # Final runtime image - the actual base image
