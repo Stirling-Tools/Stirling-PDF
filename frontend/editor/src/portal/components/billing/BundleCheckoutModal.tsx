@@ -25,7 +25,10 @@ import {
 } from "@app/billing";
 import type { Wallet } from "@app/portal/api/billing";
 import { stripeMinorUnitScale } from "@app/utils/stripeCurrency";
-import { getPreferredCurrency } from "@app/utils/currencyDetection";
+import {
+  getPreferredCurrency,
+  setCachedCurrency,
+} from "@app/utils/currencyDetection";
 import {
   acceptBundleStripeQuote,
   cancelBundleQuote,
@@ -441,6 +444,7 @@ export function BundleCheckoutModal({
       const next = await fetchBundlePricing(teamId, selected);
       if (request !== pricingRequest.current) return;
       setPricing(next);
+      setCachedCurrency(next.currency);
       setPersistedPriceMinor(null);
       setPersistedCurrency(null);
       setPersistedSubtotal(null);

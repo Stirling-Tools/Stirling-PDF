@@ -132,6 +132,36 @@ describe("annual credit purchases", () => {
     },
   );
 
+  it("remembers a manual currency selection ahead of browser detection", async () => {
+    vi.spyOn(navigator, "languages", "get").mockReturnValue(["en-GB"]);
+    api.fetchBundlePricing.mockImplementation(
+      async (_teamId: number, currency = "usd") => ({
+        currency,
+        unitAmountMinor: 1,
+        currencyLocked: false,
+        availableCurrencies: ["usd", "gbp"],
+      }),
+    );
+    const view = showCheckout();
+    expect(
+      await screen.findByRole("textbox", { name: "Quote currency" }),
+    ).toHaveValue("GBP");
+    fireEvent.click(screen.getByRole("textbox", { name: "Quote currency" }));
+    fireEvent.click(await screen.findByRole("option", { name: "USD" }));
+    await waitFor(() =>
+      expect(
+        screen.getByRole("textbox", { name: "Quote currency" }),
+      ).toHaveValue("USD"),
+    );
+    view.unmount();
+    api.fetchBundlePricing.mockClear();
+    showCheckout();
+    expect(
+      await screen.findByRole("textbox", { name: "Quote currency" }),
+    ).toHaveValue("USD");
+    expect(api.fetchBundlePricing).toHaveBeenCalledTimes(1);
+  });
+
   it("quotes the chosen credit pool independently of Team seats, without accepting it", async () => {
     showCheckout();
     fireEvent.click(await screen.findByRole("button", { name: "$24,000" }));
