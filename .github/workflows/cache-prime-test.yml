@@ -97,6 +97,17 @@ jobs:
             .cache/gradle-java${{ env.JAVA_VERSION }}/wrapper
           strict: false
 
+      - name: Display cache information
+        env:
+          CACHE_IS_FORK: ${{ steps.cache.outputs.is-fork }}
+          CACHE_READ_ONLY: ${{ steps.cache.outputs.read-only }}
+          CACHE_HIT: ${{ steps.cache.outputs.cache-hit }}
+        shell: bash
+        run: |
+          echo "Fork: $CACHE_IS_FORK"
+          echo "Read-only: $CACHE_READ_ONLY"
+          echo "Cache Hit: $CACHE_HIT"
+
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: ./.github/actions/java
         with:
@@ -109,14 +120,3 @@ jobs:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
-
-      - name: Display cache information
-        env:
-          CACHE_IS_FORK: ${{ steps.cache.outputs.is-fork }}
-          CACHE_READ_ONLY: ${{ steps.cache.outputs.read-only }}
-          CACHE_HIT: ${{ steps.cache.outputs.cache-hit }}
-        shell: bash
-        run: |
-          echo "Fork: $CACHE_IS_FORK"
-          echo "Read-only: $CACHE_READ_ONLY"
-          echo "Cache Hit: $CACHE_HIT"
