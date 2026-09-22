@@ -67,11 +67,14 @@ export function PdfViewerToolbar({
         setPageInput(currentPage);
       },
     );
-    setPageInput(scrollState.currentPage);
     return () => {
       unregister?.();
     };
-  }, [registerImmediateScrollUpdate, scrollState.currentPage]);
+  }, [registerImmediateScrollUpdate]);
+
+  useEffect(() => {
+    setPageInput(scrollState.currentPage);
+  }, [scrollState.currentPage]);
 
   // A carried zoom's fit pass is intermediate, so the readout holds until its
   // settled tick re-syncs from the live state.
@@ -80,28 +83,29 @@ export function PdfViewerToolbar({
       if (zoomRestorePendingRef.current) return;
       setDisplayZoomPercent(percent);
     });
-    if (!zoomRestorePendingRef.current) {
-      setDisplayZoomPercent(zoomState.zoomPercent || 100);
-    }
     return () => {
       unregister?.();
     };
-  }, [
-    registerImmediateZoomUpdate,
-    zoomState.zoomPercent,
-    zoomRestorePendingRef,
-    zoomRestoreSettledTick,
-  ]);
+  }, [registerImmediateZoomUpdate, zoomRestorePendingRef]);
+
+  useEffect(() => {
+    if (!zoomRestorePendingRef.current) {
+      setDisplayZoomPercent(zoomState.zoomPercent || 100);
+    }
+  }, [zoomState.zoomPercent, zoomRestorePendingRef, zoomRestoreSettledTick]);
 
   useEffect(() => {
     const unregister = registerImmediateSpreadUpdate((_mode, isDual) => {
       setIsDualPageActive(isDual);
     });
-    setIsDualPageActive(spreadState.isDualPage);
     return () => {
       unregister?.();
     };
-  }, [registerImmediateSpreadUpdate, spreadState.isDualPage]);
+  }, [registerImmediateSpreadUpdate]);
+
+  useEffect(() => {
+    setIsDualPageActive(spreadState.isDualPage);
+  }, [spreadState.isDualPage]);
 
   const handleZoomOut = () => {
     zoomActions.zoomOut();
