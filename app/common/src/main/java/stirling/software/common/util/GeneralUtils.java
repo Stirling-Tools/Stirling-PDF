@@ -665,14 +665,14 @@ public class GeneralUtils {
                 for (int i = 0; i < totalPages; i++) {
                     result.add(i + offset);
                 }
-            } else if (page.contains(",")) {
+            } else if (trimmedPage.contains(",")) {
                 // Split the string into parts, could be single pages or ranges
-                String[] parts = page.split(",");
+                String[] parts = trimmedPage.split(",");
                 for (String part : parts) {
                     result.addAll(handlePart(part, totalPages, offset));
                 }
             } else {
-                result.addAll(handlePart(page, totalPages, offset));
+                result.addAll(handlePart(trimmedPage, totalPages, offset));
             }
             if (result.size() > maxSize) {
                 throw new IllegalArgumentException(
