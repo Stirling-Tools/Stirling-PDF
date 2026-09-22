@@ -12,6 +12,10 @@ function isPdfWorkerOrPdfJsRequest(url: string): boolean {
 }
 
 test.describe("Viewer PDF.js worker elimination & performance verification", () => {
+  // The base fixture auto-navigates before the test body runs; without this
+  // the request listener below misses the initial navigation it must observe.
+  test.use({ autoGoto: false });
+
   // The perf win is bundle leanness: no static pdf.js import may ride the
   // initial bundle. pdf.js still loads on demand for features that need a
   // real parser (layer sidebar), which the layers test below covers.
