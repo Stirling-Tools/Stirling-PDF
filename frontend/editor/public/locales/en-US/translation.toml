@@ -4642,10 +4642,11 @@ done = "Ready"
 doneHint = "Processed - opens the result"
 failed = "Failed"
 processing = "Processing"
-processingHint = "Processing - available when it finishes"
+processingHint = "This file will be available when processing is complete"
 retry = "Retry"
 retryHint = "Run this file again"
 waiting = "Queued"
+waitingHint = "This file is queued and will be available when processing is complete"
 
 [filesPage.empty]
 hint = "Drop PDFs anywhere on this page to upload, or use the New folder button to organize your files."
@@ -4693,6 +4694,7 @@ moveFolderFailed = "Could not move folder."
 moveFolderFailedDetail = "Could not move folder: {{message}}"
 openDiskFileFailed = "Could not open {{name}}."
 openDiskFileFailedDetail = "Could not open {{name}}: {{message}}"
+processingStatusUnavailable = "Could not refresh processing status. File locks have been released until the connection recovers."
 readFolderFailed = "Could not read the folder."
 readFolderFailedDetail = "Could not read the folder: {{message}}"
 removeFilesFailed = "Could not remove files."
@@ -5601,6 +5603,26 @@ uploadFromComputer = "Browse files"
 
 [language]
 direction = "ltr"
+
+[legacyBilling]
+currentTeamAllowance = "Current allowance for your legacy team"
+loadError = "We couldn't check your existing subscription. Try again before purchasing another plan."
+loading = "Checking your subscription..."
+portalError = "We couldn't open Stripe billing. Please try again."
+pro = "Pro (legacy)"
+retry = "Try again"
+team = "Team (legacy)"
+teamUsers = "Your team: {{used}} of {{limit}} users"
+unlimitedUsers = "Your team: unlimited users ({{used}} in use)"
+usersUnavailable = "We couldn't confirm your team's user allowance. Contact support to check your legacy plan."
+
+[legacyBilling.status]
+active = "Active"
+incomplete = "Payment pending"
+past_due = "Payment overdue"
+paused = "Paused"
+trialing = "Trial"
+unpaid = "Unpaid"
 
 [legal]
 accessibility = "Accessibility"

@@ -35,4 +35,7 @@ export const qk = {
   toolRecommendations: (context: string, limit: number, completions: number) =>
     ["editor", "toolRecommendations", context, limit, completions] as const,
   users: () => ["editor", "users"] as const,
+  /** Historical billing belongs to the account, independently of its current team. */
+  legacySubscriptions: (userId: string | null) =>
+    ["editor", "legacySubscriptions", userId] as const,
 } as const;

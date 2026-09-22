@@ -113,8 +113,10 @@ export default function FileManagerView() {
   const [versionHistoryFile, setVersionHistoryFile] =
     useState<StirlingFileStub | null>(null);
   const folders = useFolders();
+  const setFolderError = folders.setError;
   const { actions: fileActions } = useFileActions();
-  const { fileIds: activeWorkspaceFileIds } = useAllFiles();
+  const { fileIds: activeWorkspaceFileIds, fileStubs: activeWorkspaceFiles } =
+    useAllFiles();
   const activeWorkspaceFileIdSet = useMemo(
     () => new Set(activeWorkspaceFileIds.map((id) => id as string)),
     [activeWorkspaceFileIds],
@@ -312,10 +314,22 @@ export default function FileManagerView() {
     processingRecordId && (outputDirectory || !currentLocalDirectory),
   );
   const { retryFile, revertFile } = processingApi;
-  const { fileStates, revertables, patchProcessingFile } = useFolderFileStates(
-    processingRecordId,
-    processingView,
-  );
+  const {
+    fileStates,
+    revertables,
+    patchProcessingFile,
+    processingLockedFor,
+    processingStatesUnavailable,
+  } = useFolderFileStates(processingRecordId, processingView);
+  useEffect(() => {
+    if (!processingStatesUnavailable) return;
+    setFolderError(
+      t(
+        "filesPage.error.processingStatusUnavailable",
+        "Could not refresh processing status. File locks have been released until the connection recovers.",
+      ),
+    );
+  }, [processingStatesUnavailable, setFolderError, t]);
 
   const [processingSetupFolder, setProcessingSetupFolder] =
     useState<FolderRecord | null>(null);
@@ -330,6 +344,52 @@ export default function FileManagerView() {
   const [diskStateFilter, setDiskStateFilter] = useState<DiskFileState | "all">(
     "all",
   );
+  const processingLockedFileIds = useMemo(
+    () =>
+      new Set(
+        allFiles
+          .filter(
+            (file) =>
+              (file.folderId ?? null) === (currentFolderId ?? null) &&
+              processingLockedFor(file.name),
+          )
+          .map((file) => file.id),
+      ),
+    [allFiles, currentFolderId, processingLockedFor],
+  );
+
+  const processingLockedDiskQuickKeys = useMemo(
+    () =>
+      new Set(
+        diskEntries
+          .filter((file) => processingLockedFor(file.name))
+          .map((file) => `${file.name}|${file.sizeBytes}|${file.lastModified}`),
+      ),
+    [diskEntries, processingLockedFor],
+  );
+
+  useEffect(() => {
+    const openLockedFileIds = activeWorkspaceFiles
+      .filter(
+        (file) =>
+          !file.isDirty &&
+          (processingLockedFileIds.has(file.id) ||
+            processingLockedDiskQuickKeys.has(
+              file.quickKey ??
+                `${file.name}|${file.size}|${file.lastModified ?? 0}`,
+            )),
+      )
+      .map((file) => file.id);
+    if (openLockedFileIds.length > 0) {
+      void fileActions.removeFiles(openLockedFileIds, false);
+    }
+  }, [
+    activeWorkspaceFiles,
+    fileActions,
+    processingLockedDiskQuickKeys,
+    processingLockedFileIds,
+  ]);
+
   const diskStateFor = useCallback(
     (name: string): DiskFileState | undefined => fileStates.get(name),
     [fileStates],
@@ -461,10 +521,16 @@ export default function FileManagerView() {
           const name = entry.disk?.name ?? entry.file?.name;
           const stateVisible = entry.disk
             ? Boolean(outputDirectory)
-            : processingView;
+            : processingView &&
+              (entry.file?.folderId ?? null) === (currentFolderId ?? null);
           return {
             ...entry,
             diskState: name && stateVisible ? diskStateFor(name) : undefined,
+            processingLocked: entry.disk
+              ? Boolean(outputDirectory) && processingLockedFor(entry.disk.name)
+              : Boolean(
+                  entry.file && processingLockedFileIds.has(entry.file.id),
+                ),
             hasOriginal:
               entry.disk && outputDirectory
                 ? revertables.has(entry.disk.name)
@@ -491,6 +557,8 @@ export default function FileManagerView() {
       diskEntries,
       outputDirectory,
       processingView,
+      processingLockedFor,
+      processingLockedFileIds,
       diskStateFor,
       revertables,
       diskStateFilter,
@@ -632,8 +700,11 @@ export default function FileManagerView() {
   );
 
   const handleAddToWorkspace = useCallback(
-    (fileIds: FileId[]) => openFilesInWorkbench(fileIds),
-    [openFilesInWorkbench],
+    (fileIds: FileId[]) => {
+      const openable = fileIds.filter((id) => !processingLockedFileIds.has(id));
+      return openable.length > 0 ? openFilesInWorkbench(openable) : undefined;
+    },
+    [openFilesInWorkbench, processingLockedFileIds],
   );
 
   const handleOpenFile = useCallback(

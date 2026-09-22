@@ -21,6 +21,21 @@ import {
   setTabHidden,
 } from "@app/tests/utils/tabVisibility";
 import type { ProcurementSnapshot } from "@app/portal/api/procurement";
+import type { LegacyBillingState } from "@app/types/legacyBilling";
+import { formatPeriodDate } from "@app/billing";
+
+const legacyBilling: LegacyBillingState = {
+  subscriptions: [],
+  loading: false,
+  loadError: false,
+  opening: false,
+  portalError: false,
+  refresh: vi.fn(),
+  openPortal: vi.fn(),
+};
+vi.mock("@app/hooks/useLegacySubscriptions", () => ({
+  useLegacySubscriptions: () => legacyBilling,
+}));
 
 // Usage renders Mantine-backed @app/ui components (e.g. the "Manage Payment"
 // Button in the subscribed header), which need a MantineProvider in the tree.
@@ -56,7 +71,14 @@ const renderUsage = (ui: ReactElement, entry = "/settings/billing") =>
     </StrictMode>,
   );
 
-const translate = (key: string, def?: string) => def ?? key;
+const translate = (
+  key: string,
+  def?: string,
+  values?: Record<string, unknown>,
+) =>
+  (def ?? key).replace(/\{\{(\w+)\}\}/g, (match, name) =>
+    values?.[name] == null ? match : String(values[name]),
+  );
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -180,6 +202,11 @@ describe("Usage — link-free wallet renderer", () => {
   });
 
   beforeEach(() => {
+    legacyBilling.subscriptions = [];
+    legacyBilling.loading = false;
+    legacyBilling.loadError = false;
+    legacyBilling.portalError = false;
+    vi.mocked(legacyBilling.openPortal).mockClear();
     checkoutEnabled = false;
     checkout.openCheckout.mockReset();
     resetPortalSaasSessionState();
@@ -281,6 +308,214 @@ describe("Usage — link-free wallet renderer", () => {
     await waitFor(() =>
       expect(onWalletLoaded).toHaveBeenCalledWith(walletOf("free")),
     );
+  });
+
+  it.each(["pro", "team"] as const)(
+    "shows the legacy %s owner's plan and billing even when their current team role is member",
+    async (plan) => {
+      legacyBilling.subscriptions = [
+        {
+          id: "sub_old",
+          plan,
+          status: "active",
+          currentPeriodEnd: "2026-10-12T00:00:00Z",
+          teamId: null,
+          teamAllowance: null,
+        },
+      ];
+      fetchWallet.mockResolvedValue(walletOf("free"));
+      renderUsage(<Usage />);
+      await screen.findByText(
+        plan === "pro" ? "Pro (legacy)" : "Team (legacy)",
+      );
+      await screen.findByText(formatPeriodDate("2026-10-12", { year: true }));
+      expect(
+        screen.getByText("Next invoice").closest("section"),
+      ).toHaveAttribute("id", "ub-pay");
+      expect(
+        screen.queryByText("Free", { exact: true }),
+      ).not.toBeInTheDocument();
+      fireEvent.click(
+        screen.getByRole("button", { name: "Manage subscription" }),
+      );
+      expect(
+        screen.getAllByRole("button", { name: "Manage subscription" }),
+      ).toHaveLength(1);
+      expect(
+        screen
+          .getByRole("button", { name: "Manage subscription" })
+          .closest(".billing-page__head"),
+      ).not.toBeNull();
+      expect(legacyBilling.openPortal).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it("keeps legacy billing available when the wallet cannot load", async () => {
+    legacyBilling.subscriptions = [
+      {
+        id: "sub_old",
+        plan: "pro",
+        status: "past_due",
+        currentPeriodEnd: null,
+        teamId: null,
+        teamAllowance: null,
+      },
+    ];
+    fetchWallet.mockRejectedValue(new Error("Wallet unavailable"));
+    renderUsage(<Usage />);
+    await screen.findByText("Wallet unavailable");
+    expect(screen.getByText("Payment overdue")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Manage subscription" }),
+    ).toBeEnabled();
+  });
+
+  it.each(["loading", "loadError"] as const)(
+    "does not label the owner Free when the legacy lookup is %s",
+    async (state) => {
+      legacyBilling[state] = true;
+      fetchWallet.mockResolvedValue(walletOf("free"));
+      const loaded = vi.fn();
+      renderUsage(<Usage onWalletLoaded={loaded} />);
+      await waitFor(() => expect(loaded).toHaveBeenCalled());
+      expect(
+        screen.queryByText("Free", { exact: true }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", {
+          name: "Manage subscription",
+        }),
+      ).not.toBeInTheDocument();
+    },
+  );
+
+  it("shows a current Processor holding alongside the legacy subscription", async () => {
+    legacyBilling.subscriptions = [
+      {
+        id: "sub_old",
+        plan: "team",
+        status: "active",
+        currentPeriodEnd: null,
+        teamId: null,
+        teamAllowance: null,
+      },
+    ];
+    fetchWallet.mockResolvedValue({
+      ...walletOf("subscribed"),
+      processor: { active: true },
+    });
+    renderUsage(<Usage />);
+    await screen.findByText("Processor", { selector: ".billing-id__name" });
+    expect(
+      screen.getByText("Team (legacy)", { selector: ".billing-id__name" }),
+    ).toBeInTheDocument();
+  });
+
+  it.each([
+    [1, 5, "1 of 5 users"],
+    [1, 8, "1 of 8 users"],
+    [12, 5, "1 of 12 users"],
+    [null, 5, "1 · Unlimited"],
+  ] as const)(
+    "preserves the included allowance or greater legacy Pro capacity (%s seats, %s included)",
+    async (maxUsers, freeUserAllowance, expectedFact) => {
+      legacyBilling.subscriptions = [
+        {
+          id: "sub_pro",
+          plan: "pro",
+          status: "active",
+          currentPeriodEnd: null,
+          teamId: 42,
+          teamAllowance: { teamId: 42, maxUsers, usersInUse: 1 },
+        },
+      ];
+      fetchWallet.mockResolvedValue({
+        ...walletOf("free"),
+        teamId: 42,
+        freeUserAllowance,
+      });
+      renderUsage(<Usage />);
+      await screen.findByText(expectedFact);
+      expect(screen.queryByText("1 of 1 users")).not.toBeInTheDocument();
+      expect(screen.getByText("Pro (legacy)")).toBeInTheDocument();
+    },
+  );
+
+  it.each([12, null])(
+    "uses the legacy team's recorded capacity (%s) instead of the free or new Team offer",
+    async (maxUsers) => {
+      legacyBilling.subscriptions = [
+        {
+          id: "sub_old",
+          plan: "team",
+          status: "active",
+          currentPeriodEnd: null,
+          teamId: 42,
+          teamAllowance: { teamId: 42, maxUsers, usersInUse: 3 },
+        },
+      ];
+      fetchWallet.mockResolvedValue({
+        ...walletOf("free"),
+        teamId: 42,
+        freeUserAllowance: 5,
+      });
+      renderUsage(<Usage />);
+      await screen.findByText("Current allowance for your legacy team");
+      expect(
+        screen.queryByText("The Team plan covers 100 users"),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByText("1 of 5 users")).not.toBeInTheDocument();
+      expect(screen.queryByText("Add capacity")).not.toBeInTheDocument();
+      expect(
+        screen.getAllByText(
+          maxUsers == null ? "3 · Unlimited" : "3 of 12 users",
+        ).length,
+      ).toBeGreaterThan(0);
+    },
+  );
+
+  it("does not apply the legacy team's capacity to an unrelated wallet", async () => {
+    legacyBilling.subscriptions = [
+      {
+        id: "sub_old",
+        plan: "team",
+        status: "active",
+        currentPeriodEnd: null,
+        teamId: 99,
+        teamAllowance: { teamId: 99, maxUsers: null, usersInUse: 3 },
+      },
+    ];
+    fetchWallet.mockResolvedValue({
+      ...walletOf("free"),
+      teamId: 42,
+      freeUserAllowance: 5,
+    });
+    renderUsage(<Usage />);
+    await screen.findByText("1 of 5 users");
+    expect(
+      screen.queryByText("Current allowance for your legacy team"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("flags missing legacy team capacity without inventing an entitlement", async () => {
+    legacyBilling.subscriptions = [
+      {
+        id: "sub_old",
+        plan: "team",
+        status: "active",
+        currentPeriodEnd: null,
+        teamId: null,
+        teamAllowance: null,
+      },
+    ];
+    fetchWallet.mockResolvedValue(walletOf("free"));
+    renderUsage(<Usage />);
+    await screen.findByText(
+      "We couldn't confirm your team's user allowance. Contact support to check your legacy plan.",
+    );
+    expect(
+      screen.getByRole("button", { name: "Manage subscription" }),
+    ).toBeEnabled();
   });
 
   it("works with no callbacks (SaaS passes none)", async () => {

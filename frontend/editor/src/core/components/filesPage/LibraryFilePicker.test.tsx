@@ -15,6 +15,7 @@ import { LibraryFilePicker } from "@app/components/filesPage/LibraryFilePicker";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { FolderRecord } from "@app/types/folder";
 import type { DiskFileEntry } from "@app/services/localFolderContents";
+import type { ProcessingFolderState } from "@app/hooks/useProcessingFolders";
 import { allowConsole } from "@app/tests/failOnConsole";
 
 vi.mock("react-i18next", () => ({
@@ -54,6 +55,8 @@ const state = vi.hoisted(() => ({
   storageEnabled: false,
   driveError: null as string | null,
   clearDriveError: vi.fn(),
+  processingRecord: undefined as ProcessingFolderState | undefined,
+  listProcessingFiles: vi.fn(),
 }));
 
 vi.mock("@app/contexts/FilesPageContext", async (importOriginal) => ({
@@ -107,7 +110,10 @@ vi.mock("@app/hooks/usePolicyFileBadges", () => ({
   usePolicyFileBadges: () => new Map(),
 }));
 vi.mock("@app/hooks/useProcessingFolders", () => ({
-  useProcessingFolders: () => ({ stateFor: () => undefined }),
+  useProcessingFolders: () => ({
+    stateFor: () => state.processingRecord,
+    listFiles: state.listProcessingFiles,
+  }),
 }));
 vi.mock("@app/hooks/useServerProcessingBlock", () => ({
   useServerProcessingBlock: () => null,
@@ -187,6 +193,8 @@ beforeEach(() => {
   state.viewMode = "list";
   state.storageEnabled = false;
   state.driveError = null;
+  state.processingRecord = undefined;
+  state.listProcessingFiles.mockResolvedValue([]);
   state.clearDriveError.mockImplementation(() => {
     state.driveError = null;
   });
@@ -200,6 +208,46 @@ beforeEach(() => {
 });
 
 describe("library file picker", () => {
+  it.each(["list", "grid"] as const)(
+    "keeps queued files out of selection in %s view while completed files remain available",
+    async (viewMode) => {
+      state.viewMode = viewMode;
+      state.folders = [folder("processing", "Processing", { kind: "server" })];
+      const queued = {
+        ...file("queued", "Queued.pdf", "processing"),
+        remoteStorageId: 1,
+      };
+      const done = {
+        ...file("done", "Done.pdf", "processing"),
+        remoteStorageId: 2,
+      };
+      state.files = [queued, done];
+      state.processingRecord = { id: "processing-record", enabled: true };
+      state.listProcessingFiles.mockResolvedValue([
+        { name: queued.name, state: "waiting" },
+        { name: done.name, state: "done" },
+      ]);
+      const user = userEvent.setup();
+      show();
+      await user.click(
+        screen.getByRole("button", { name: "Stirling library" }),
+      );
+      await user.click(screen.getByText("Processing"));
+      await waitFor(() => expect(state.listProcessingFiles).toHaveBeenCalled());
+      const queuedItem = screen
+        .getByText(queued.name)
+        .closest('[role="row"], [role="listitem"]')!;
+      await waitFor(() =>
+        expect(queuedItem).toHaveAttribute("aria-disabled", "true"),
+      );
+      await user.dblClick(screen.getByText(queued.name));
+      expect(state.selected).not.toHaveBeenCalled();
+      await user.click(screen.getByText(done.name));
+      await user.click(screen.getByRole("button", { name: "Add 1 files" }));
+      expect(state.selected).toHaveBeenCalledExactlyOnceWith([done], []);
+    },
+  );
+
   it.each(["list", "grid"] as const)(
     "sorts Recents by date added and displays that date in %s view",
     async (viewMode) => {

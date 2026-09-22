@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert, Drawer, Text } from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
@@ -140,10 +140,17 @@ export function LibraryFilePicker({
   const processingRecord = currentFolder
     ? processing.stateFor(currentFolder)
     : undefined;
-  const { fileStates } = useFolderFileStates(
-    processingRecord?.id,
-    Boolean(processingRecord),
-  );
+  const { fileStates, processingLockedFor, processingStatesUnavailable } =
+    useFolderFileStates(processingRecord?.id, Boolean(processingRecord));
+  useEffect(() => {
+    if (!processingStatesUnavailable) return;
+    setError(
+      t(
+        "filesPage.error.processingStatusUnavailable",
+        "Could not refresh processing status. File locks have been released until the connection recovers.",
+      ),
+    );
+  }, [processingStatesUnavailable, t]);
   const uploadStubs = useMemo(
     () => Array.from(uploads.values(), (item) => item.stub),
     [uploads],
@@ -205,10 +212,18 @@ export function LibraryFilePicker({
         originFilter,
         typeFilter,
         diskEntries: directory ? diskEntries : undefined,
-      }).map((entry) => ({
-        ...entry,
-        diskState: fileStates.get(entry.disk?.name ?? entry.file?.name ?? ""),
-      })),
+      }).map((entry) => {
+        const name = entry.disk?.name ?? entry.file?.name;
+        const inCurrentFolder =
+          Boolean(entry.disk) || entry.file?.folderId === currentFolderId;
+        return {
+          ...entry,
+          diskState: inCurrentFolder && name ? fileStates.get(name) : undefined,
+          processingLocked: Boolean(
+            inCurrentFolder && name && processingLockedFor(name),
+          ),
+        };
+      }),
     ],
     [
       uploads,
@@ -224,6 +239,7 @@ export function LibraryFilePicker({
       directory,
       diskEntries,
       fileStates,
+      processingLockedFor,
     ],
   );
 
@@ -254,12 +270,12 @@ export function LibraryFilePicker({
       const candidate = itemForEntry(entry);
       return candidate && pickerKey(candidate) === key;
     });
-    if (visible?.diskState === "processing") return;
+    if (visible?.processingLocked) return;
     const anchor = lastSelected.current;
     setSelection((previous) => {
       if (shift && anchor) {
         const candidates = entries
-          .filter((entry) => entry.diskState !== "processing")
+          .filter((entry) => !entry.processingLocked)
           .flatMap((entry) => {
             const candidate = itemForEntry(entry);
             return candidate ? [candidate] : [];
@@ -293,11 +309,16 @@ export function LibraryFilePicker({
       return t("filePicker.chooseDestination", "Choose a folder, or add here.");
     const item = itemForEntry(entry);
     if (!item) return undefined;
-    if (entry.diskState === "processing")
-      return t(
-        "filesPage.diskState.processingHint",
-        "Processing - available when it finishes",
-      );
+    if (entry.processingLocked)
+      return entry.diskState === "processing"
+        ? t(
+            "filesPage.diskState.processingHint",
+            "Processing - available when it finishes",
+          )
+        : t(
+            "filesPage.diskState.waitingHint",
+            "Queued for processing - available when its folder has run it",
+          );
     const name = item.kind === "disk" ? item.entry.name : item.stub.name;
     if (!supportsPickerFile(name, supportedFormats))
       return t(
