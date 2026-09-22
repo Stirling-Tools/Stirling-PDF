@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook, waitFor } from "@testing-library/react";
+import {
+  resetTabVisibility,
+  setTabHidden,
+} from "@app/tests/utils/tabVisibility";
 import type {
   AppNotification,
   FetchedNotifications,
@@ -238,6 +242,33 @@ describe("useNotifications", () => {
     const { result } = renderHook(() => useNotifications());
 
     await waitFor(() => expect(result.current.notifications).toHaveLength(2));
+  });
+
+  it("stops reading while the tab is hidden, and catches up on return", async () => {
+    vi.useFakeTimers();
+    try {
+      const bell = renderHook(() => useNotifications());
+      await act(async () => {});
+      const onMount = fetchNotifications.mock.calls.length;
+
+      setTabHidden(true);
+      await act(async () => {
+        vi.advanceTimersByTime(30_000 * 10);
+      });
+      expect(fetchNotifications).toHaveBeenCalledTimes(onMount);
+
+      // Back to the tab: the bell may be ten minutes stale, so it re-reads at once
+      // rather than waiting out another interval.
+      await act(async () => {
+        setTabHidden(false);
+        await Promise.resolve();
+      });
+      expect(fetchNotifications).toHaveBeenCalledTimes(onMount + 1);
+      bell.unmount();
+    } finally {
+      resetTabVisibility();
+      vi.useRealTimers();
+    }
   });
 
   it("polls on one timer and stops it when the last bell unmounts", async () => {

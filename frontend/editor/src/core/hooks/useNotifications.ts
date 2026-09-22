@@ -227,12 +227,28 @@ function loadFresh(): void {
   });
 }
 
+/**
+ * The bell sits in the quick-nav rail, which renders above AppProviders and so
+ * above the query client - hence this store rather than a query. The one thing
+ * the client would give for free has to be spelled out: a backgrounded tab
+ * otherwise reads every 30s for the whole session, on every page.
+ */
+function pollIfWatching(): void {
+  if (document.visibilityState === "visible") void load();
+}
+
 function startPolling(): void {
   cycle += 1;
   // Nothing counts as read until a read names the viewer, which errs towards showing failures.
   snapshot = NOTHING_LOADED;
-  pollTimer = window.setInterval(() => void load(), POLL_INTERVAL_MS);
+  pollTimer = window.setInterval(pollIfWatching, POLL_INTERVAL_MS);
+  document.addEventListener("visibilitychange", onVisibilityChange);
   void load();
+}
+
+/** Coming back to a stale bell is the case people notice, so catch up on return. */
+function onVisibilityChange(): void {
+  if (document.visibilityState === "visible") void load();
 }
 
 function stopPolling(): void {
@@ -240,6 +256,7 @@ function stopPolling(): void {
     window.clearInterval(pollTimer);
     pollTimer = null;
   }
+  document.removeEventListener("visibilitychange", onVisibilityChange);
   // Drop anything in flight: its cycle has nobody watching it.
   cycle += 1;
   inFlight = null;
