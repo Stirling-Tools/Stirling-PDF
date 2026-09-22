@@ -48,11 +48,24 @@ export interface RetryPayload {
 export const KIND_ERROR_CODES: Record<string, readonly string[]> = {
   INPUT_PASSWORD_PROTECTED: ["E004"],
   INPUT_CORRUPTED: ["E001", "E002", "E003"],
+  INPUT_UNREPAIRABLE: ["E076"],
   COMPLIANCE_NOT_MET: ["E074"],
+  INPUT_WRONG_TYPE: ["E006", "E014", "E018", "E061", "E075"],
+  INPUT_UNREADABLE: ["E010", "E015", "E021", "E034"],
+  INPUT_EMPTY: ["E005", "E012", "E016", "E020", "E032"],
+  INPUT_UNAVAILABLE: ["E030", "E033"],
+  TOOL_NOT_INSTALLED: ["E042", "E062", "E063", "E080"],
+  STEP_CANNOT_RENDER_PAGE: ["E054"],
 };
 
 /** Every code any kind claims, so an unclaimed one can be recognised as belonging to UNKNOWN. */
 const CLAIMED_CODES = new Set(Object.values(KIND_ERROR_CODES).flat());
+
+/** Whether `kindId` is the kind `errorCode` belongs to, so a caller can spot a changed verdict. */
+export function kindClaims(kindId: string, errorCode: string): boolean {
+  const claimed = KIND_ERROR_CODES[kindId];
+  return claimed ? claimed.includes(errorCode) : !CLAIMED_CODES.has(errorCode);
+}
 
 /** Whether the one stash a file carries is the failure this row describes. */
 export function stashMatchesKind(
@@ -188,6 +201,8 @@ export interface RetryOutcome {
   ok: boolean;
   reason?: RetryFailure;
   message?: string | null;
+  /** The server's code for the refusal, so a caller can tell a permanent one from a retryable. */
+  errorCode?: string | null;
   files?: RetryOutputFile[];
 }
 
@@ -246,6 +261,8 @@ export interface RepairOutcome {
   ok: boolean;
   reason?: RetryFailure;
   message?: string | null;
+  /** The server's code for the refusal, so a caller can tell a permanent one from a retryable. */
+  errorCode?: string | null;
   repaired?: RepairedDocument[];
 }
 
@@ -267,7 +284,12 @@ export async function repairDocuments(
   for (const fileId of usable) {
     const outcome = await postDocuments(REPAIR_ENDPOINT, {}, [fileId], null);
     if (!outcome.ok) {
-      return { ok: false, reason: outcome.reason, message: outcome.message };
+      return {
+        ok: false,
+        reason: outcome.reason,
+        message: outcome.message,
+        errorCode: outcome.errorCode,
+      };
     }
     const file = outcome.files?.[0];
     if (!file) return { ok: false, reason: "notRetryable", message: null };
@@ -334,7 +356,8 @@ async function postFiles(
       ),
     };
   } catch (error) {
-    return { ok: false, reason: "serverMessage", message: messageOf(error) };
+    const said = await serverFailureOf(error);
+    return { ok: false, reason: "serverMessage", ...said };
   }
 }
 
@@ -446,13 +469,60 @@ function prunedBelow(value: unknown, depth: number): unknown {
   return kept;
 }
 
-/** What the server said, or null when it said nothing usable. Never carries the password. */
-function messageOf(error: unknown): string | null {
-  const response = (error as { response?: { data?: unknown } })?.response?.data;
-  if (typeof response === "string" && response.trim() !== "") return response;
+/**
+ * What the server said and why, or nulls when it said nothing usable. Never carries the password.
+ * These calls ask for a blob, so an error body arrives as one and has to be read to be understood.
+ */
+async function serverFailureOf(
+  error: unknown,
+): Promise<{ message: string | null; errorCode: string | null }> {
+  const body = (error as { response?: { data?: unknown } })?.response?.data;
+
+  const text = body instanceof Blob ? await textOf(body) : body;
+  if (typeof text === "string" && text.trim() !== "") {
+    return { message: detailOf(text) ?? text, errorCode: errorCodeOf(text) };
+  }
 
   const message = (error as { message?: unknown })?.message;
-  return typeof message === "string" && message.trim() !== "" ? message : null;
+  return {
+    message:
+      typeof message === "string" && message.trim() !== "" ? message : null,
+    errorCode: null,
+  };
+}
+
+/** Via FileReader, which jsdom implements and `Blob.text` it does not. Null rather than throwing. */
+function textOf(blob: Blob): Promise<string | null> {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => resolve(null);
+    reader.readAsText(blob);
+  });
+}
+
+/**
+ * What a JSON error body says, or null when the text is not one. Two shapes reach here: Problem
+ * Details from a handler, and `{"error": ...}` from a job that failed.
+ */
+function detailOf(text: string): string | null {
+  try {
+    const body = JSON.parse(text) as { detail?: unknown; error?: unknown };
+    const said = typeof body.detail === "string" ? body.detail : body.error;
+    return typeof said === "string" && said.trim() !== "" ? said : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The error code a JSON body carries, for a caller deciding what the row may still offer. */
+function errorCodeOf(text: string): string | null {
+  try {
+    const code = (JSON.parse(text) as { errorCode?: unknown }).errorCode;
+    return typeof code === "string" && code.trim() !== "" ? code : null;
+  } catch {
+    return null;
+  }
 }
 
 async function writeRecords(records: StoredRetryRecord[]): Promise<void> {

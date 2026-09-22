@@ -48,6 +48,8 @@ export interface CheckoutOptions {
   /** Users the current plan covers. Its presence is what makes this "add capacity", not a first
    * upgrade, so the capacity step states the delta. */
   currentLimit?: number | null;
+  /** Present only for a self-hosted server above its actual allowance. */
+  capacityNotice?: { users: number; limit: number };
 }
 
 interface CheckoutContextValue {
@@ -146,12 +148,22 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
           window.dispatchEvent(new Event("stirling:billing-updated"));
           alert({
             alertType: result.success ? "success" : "warning",
-            title: result.success
-              ? t("payment.teamActivated", "Your Team capacity is active")
-              : t(
-                  "payment.teamPending",
-                  "Your Team purchase is still processing. Refresh this page shortly.",
-                ),
+            title: result.scheduledAt
+              ? t(
+                  "payment.teamScheduled",
+                  "Your Team change is scheduled for {{date}}. Your current capacity stays active until then.",
+                  {
+                    date: new Date(
+                      result.scheduledAt * 1000,
+                    ).toLocaleDateString(),
+                  },
+                )
+              : result.success
+                ? t("payment.teamActivated", "Your Team capacity is active")
+                : t(
+                    "payment.teamPending",
+                    "Your Team purchase is still processing. Refresh this page shortly.",
+                  ),
           });
           return;
         }
@@ -482,6 +494,7 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
             minimumSeats={minimumSeats}
             combinedChoose={currentOptions.combinedChoose}
             currentLimit={currentOptions.currentLimit ?? null}
+            capacityNotice={currentOptions.capacityNotice}
             onSuccess={handlePaymentSuccess}
             onError={handlePaymentError}
             onLicenseActivated={handleLicenseActivated}
