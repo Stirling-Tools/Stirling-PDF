@@ -88,6 +88,25 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.SERVICE_UNAVAILABLE, resp.getStatusCode());
     }
 
+    @Test
+    void handleToolRequired_returns_503_with_its_code() {
+        ToolRequiredException ex = new ToolRequiredException("no tesseract", "E042");
+        ResponseEntity<ProblemDetail> resp = handler.handleToolRequired(ex, request);
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, resp.getStatusCode());
+        assertEquals("E042", resp.getBody().getProperties().get("errorCode"));
+    }
+
+    @Test
+    void handleRuntimeException_unwraps_a_wrapped_tool_required_to_503() {
+        // AutoJobAspect wraps checked exceptions from a job in RuntimeException; the code and
+        // status must survive that, or a folder run's failure classifies as unrecognised.
+        RuntimeException wrapped =
+                new RuntimeException(new ToolRequiredException("no tesseract", "E042"));
+        ResponseEntity<ProblemDetail> resp = handler.handleRuntimeException(wrapped, request);
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, resp.getStatusCode());
+        assertEquals("E042", resp.getBody().getProperties().get("errorCode"));
+    }
+
     // ---- PDF and DPI exceptions ----
 
     @Test

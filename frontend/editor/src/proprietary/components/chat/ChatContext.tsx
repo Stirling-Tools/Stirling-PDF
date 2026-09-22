@@ -429,7 +429,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       // AI result files live on the backend that ran the workflow (the connected
       // server on desktop), so fetch from the AI base, not the local backend.
       const response = await apiClient.get<Blob>(
-        `${getAiBaseUrl()}/api/v1/general/files/${descriptor.fileId}`,
+        `${await getAiBaseUrl()}/api/v1/general/files/${descriptor.fileId}`,
         { responseType: "blob" },
       );
       return new File([response.data], descriptor.fileName, {
@@ -566,7 +566,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           formData.append(`conversationHistory[${i}].content`, message.content);
         });
         const response = await fetch(
-          `${getAiBaseUrl()}/api/v1/ai/orchestrate/stream`,
+          `${await getAiBaseUrl()}/api/v1/ai/orchestrate/stream`,
           {
             method: "POST",
             body: formData,

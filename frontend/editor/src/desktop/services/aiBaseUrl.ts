@@ -1,7 +1,6 @@
-import { connectedServerBaseUrl } from "@app/services/connectedServerBaseUrl";
+import { operationRouter } from "@app/services/operationRouter";
 
-/** Desktop: the AI engine lives on the connected server, never on the bundled backend. Absolute
- *  because one consumer is a raw fetch, where a relative path would hit the webview origin. */
-export function getAiBaseUrl(): string {
-  return connectedServerBaseUrl();
+/** AI streams and their outputs belong to the authenticated, connected server. */
+export async function getAiBaseUrl(): Promise<string> {
+  return operationRouter.getConnectedServerBaseUrl();
 }

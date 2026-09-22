@@ -2243,6 +2243,7 @@ title = "Suggested"
 finish = "Finish"
 run = "Run Automation"
 running = "Running Automation..."
+signInToRun = "Sign in to run automations."
 steps_one = "{{count}} step"
 steps_other = "{{count}} steps"
 unnamed = "Unnamed Automation"
@@ -3428,10 +3429,8 @@ title = "Open every PDF in Stirling"
 
 [classificationDemo.followUp]
 background = "This runs in the background. The ring on the left shows progress."
-batchCta = "Process another {{count}}"
-free = "They are all covered by your remaining free allowance."
-partial = "{{count}} of them are covered by your remaining free allowance."
 restCta = "Process the rest"
+serverCredits = "Your connected server manages credits for processing these files."
 title = "Want to keep going? You have {{count}} more PDFs in your Downloads folder."
 
 [classificationDemo.groups]
@@ -3440,7 +3439,7 @@ other = "Other"
 [classificationDemo.offer]
 body = "Classify and organise the {{count}} most recent PDFs in your Downloads folder by type."
 cta = "Process my Downloads folder"
-privacy = "Everything stays on this device and you can stop anytime."
+privacy = "Your PDFs stay on this device. Your connected server records processing usage."
 title = "See what Stirling can do with a whole folder"
 
 [classificationDemo.phase]
@@ -4609,6 +4608,7 @@ open = "Open"
 openVersionInWorkspace = "Open in workspace"
 originFilter = "Filter by source"
 refresh = "Refresh"
+refreshNeedsConnection = "Sign in to refresh from the server."
 remove = "Delete"
 removeLocalFolder = "Unmount from Stirling"
 removeVersion = "Remove this version"
@@ -5657,6 +5657,7 @@ terms = "Terms and Conditions"
 title = "3rd Party Licenses"
 
 [localMode]
+automationUnavailable = "Sign in to Stirling Cloud or a self-hosted server to use processing folders and pipelines."
 toolUnavailable = "This tool requires an account. Sign in to Stirling Cloud or connect to a self-hosted server to use it."
 
 [localMode.toolPicker]
@@ -8520,6 +8521,22 @@ title = "Wrong file type"
 description = "A page in your file could not be drawn, so the run could not finish."
 title = "Page could not be rendered"
 
+[portal.failures.kind.stepInterrupted]
+description = "This step was stopped before it finished, so your file was not processed. Running it again usually works."
+title = "Step was interrupted"
+
+[portal.failures.kind.stepMisconfigured]
+description = "This step's settings are not valid, so it could not run on any file. Edit the step to fix them."
+title = "Step settings are invalid"
+
+[portal.failures.kind.stepPageTooLarge]
+description = "A page in your file could not be rendered at the requested resolution. Lower the DPI in the step, or split the file."
+title = "Page too large to render"
+
+[portal.failures.kind.stepToolFailed]
+description = "A tool this step relies on could not process your file."
+title = "Tool could not process the file"
+
 [portal.failures.kind.toolNotInstalled]
 description = "This server is missing software the step needs, so the run could not start it."
 title = "Software not installed"
@@ -10294,6 +10311,7 @@ selectFolder = "Select a folder"
 server = "Server storage"
 serverAction = "Or add a new folder to your server"
 settings = "Adjust settings"
+signInRequired = "Sign in to set up folder processing"
 title = "Set up folder processing"
 useExisting = "Use existing folder"
 viewLabels = "View classification labels"
@@ -10522,6 +10540,7 @@ noProcessorAccess = "Ask an admin for processor access"
 notifications = "Notifications"
 processor = "Processor"
 reader = "Reader"
+signInToUse = "Sign in to use this"
 
 [read]
 tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"

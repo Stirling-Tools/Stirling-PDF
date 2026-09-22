@@ -23,6 +23,8 @@ import {
 import { folderKind, type FolderRecord } from "@app/types/folder";
 import { directoryKey } from "@app/services/localFolderStorage";
 import { extractErrorMessage } from "@app/utils/toolErrorHandler";
+import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
+import { useProcessingFolders as useInertProcessingFolders } from "@core/hooks/useProcessingFolders";
 // The core stub declares the contract this shadows; import it from @core
 // explicitly, since @app/hooks/useProcessingFolders resolves back to this file.
 import type {
@@ -69,6 +71,8 @@ const EMPTY: ProcessingFolder[] = [];
  */
 export function useProcessingFolders(): ProcessingFoldersApi {
   const queryClient = useQueryClient();
+  const enabled = usePoliciesEnabled();
+  const inert = useInertProcessingFolders();
   const { addFiles } = useFileHandler();
   const queryKey = qk.processingFolders();
 
@@ -79,6 +83,9 @@ export function useProcessingFolders(): ProcessingFoldersApi {
   } = useQuery({
     queryKey,
     queryFn: fetchProcessingFolders,
+    // Only the proprietary build reads folders, and only once policy enforcement is on:
+    // a signed-out or policies-off session has none to fetch.
+    enabled,
     // Storage or login off, or unauthenticated: the files page works without these,
     // so a failure reports itself rather than retrying into the same wall.
     retry: false,
@@ -310,25 +317,30 @@ export function useProcessingFolders(): ProcessingFoldersApi {
   );
 
   return useMemo(
-    () => ({
-      loading,
-      loadError: error,
-      stateFor,
-      recordFor: recordSummaryFor,
-      enabledFolderIds,
-      anyEnabled,
-      listActiveRuns,
-      listFiles,
-      retryFile,
-      revertFile,
-      revertAll,
-      enable,
-      disable,
-      remove,
-      sweep,
-      refresh: reload,
-    }),
+    () =>
+      enabled
+        ? {
+            loading,
+            loadError: error,
+            stateFor,
+            recordFor: recordSummaryFor,
+            enabledFolderIds,
+            anyEnabled,
+            listActiveRuns,
+            listFiles,
+            retryFile,
+            revertFile,
+            revertAll,
+            enable,
+            disable,
+            remove,
+            sweep,
+            refresh: reload,
+          }
+        : inert,
     [
+      enabled,
+      inert,
       loading,
       error,
       stateFor,

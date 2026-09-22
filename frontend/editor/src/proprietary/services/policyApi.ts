@@ -73,7 +73,7 @@ export async function downloadPolicyOutput(
   fileId: string,
   target: PolicyExecutionTarget,
 ): Promise<Blob> {
-  const base = getPolicyOutputBaseUrl(target);
+  const base = await getPolicyOutputBaseUrl(target);
   const res = await apiClient.get<Blob>(
     `${base}/api/v1/general/files/${encodeURIComponent(fileId)}`,
     {
