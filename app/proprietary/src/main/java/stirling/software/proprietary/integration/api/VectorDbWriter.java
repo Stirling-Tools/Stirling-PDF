@@ -39,7 +39,7 @@ public class VectorDbWriter {
             if (objectMapper.writeValueAsBytes(properties(target, documentId, chunk)).length
                     > MAX_CHUNK_BYTES) {
                 throw new IOException(
-                        "A chunk exceeds the 60000-byte indexing limit; reduce the RAG chunk size");
+                        "A chunk exceeds the 60000-byte indexing limit; reduce the ingestion chunk size");
             }
         }
         boolean weaviate = connection.vendor().equals("weaviate");

@@ -2,7 +2,7 @@ package stirling.software.proprietary.policy.output;
 
 import java.util.List;
 
-/** One line of a rag-ingest corpus export. */
+/** One line of a AI ingestion corpus export. */
 public record CorpusChunk(
         String documentId,
         int index,
