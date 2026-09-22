@@ -554,6 +554,43 @@ export default defineConfig(async ({ mode, command }) => {
                 return "vendor-embedpdf-core";
               }
               if (id.includes("@embedpdf")) return "vendor-embedpdf";
+              // The markdown pipeline (react-markdown + remark-gfm + micromark
+              // + mdast/hast) is heavy and the editor only needs it when a
+              // disclaimer, markdown document or chat message renders. Without
+              // its own chunk the portal's static import drags it into
+              // vendor-ui, which the editor preloads.
+              if (
+                id.includes("react-markdown") ||
+                id.includes("remark-") ||
+                id.includes("rehype-") ||
+                id.includes("micromark") ||
+                id.includes("mdast-") ||
+                id.includes("hast-") ||
+                id.includes("unist-") ||
+                id.includes("vfile") ||
+                id.includes("unified") ||
+                id.includes("parse-entities") ||
+                id.includes("character-entities") ||
+                id.includes("decode-named-character-reference") ||
+                id.includes("property-information") ||
+                id.includes("space-separated-tokens") ||
+                id.includes("comma-separated-tokens") ||
+                id.includes("trim-lines") ||
+                id.includes("html-url-attributes") ||
+                id.includes("style-to-") ||
+                id.includes("estree-util-") ||
+                id.includes("markdown-table") ||
+                id.includes("@ungap/structured-clone") ||
+                id.includes("devlop") ||
+                id.includes("longest-streak") ||
+                id.includes("ccount") ||
+                id.includes("zwitch") ||
+                id.includes("trough") ||
+                id.includes("bail") ||
+                id.includes("is-plain-obj")
+              ) {
+                return "vendor-markdown";
+              }
               // Splitting these out keeps icon changes from invalidating all of
               // vendor-ui.
               if (id.includes("@mui/icons-material")) return "vendor-mui-icons";
