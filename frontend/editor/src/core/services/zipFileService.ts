@@ -445,9 +445,10 @@ export class ZipFileService {
       if (skipAutoUnzip) {
         const zip = new JSZip();
         const zipContents = await zip.loadAsync(zipBlob);
-        const fileCount = Object.values(zipContents.files).filter(
-          (entry) => !entry.dir,
-        ).length;
+        let fileCount = 0;
+        for (const key in zipContents.files) {
+          if (!zipContents.files[key].dir) fileCount++;
+        }
         return { shouldExtract: true, fileCount };
       }
 
@@ -461,9 +462,10 @@ export class ZipFileService {
       const zipContents = await zip.loadAsync(zipBlob);
 
       // Count non-directory entries
-      const fileCount = Object.values(zipContents.files).filter(
-        (entry) => !entry.dir,
-      ).length;
+      let fileCount = 0;
+      for (const key in zipContents.files) {
+        if (!zipContents.files[key].dir) fileCount++;
+      }
 
       // Only extract if within limit
       return {
