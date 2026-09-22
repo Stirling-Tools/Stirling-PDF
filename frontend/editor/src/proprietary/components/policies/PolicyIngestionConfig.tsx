@@ -85,7 +85,7 @@ export function PolicyIngestionConfig({
         <p role="status">
           {t(
             "portal.policies.wizard.locations.checking",
-            "Checking ingestion availability…",
+            "Checking ingestion availability...",
           )}
         </p>
       ) : (

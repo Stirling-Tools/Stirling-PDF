@@ -69,7 +69,7 @@ async function mount(current = entry) {
   );
   await waitFor(() =>
     expect(
-      screen.queryByText("Checking ingestion availability…"),
+      screen.queryByText("Checking ingestion availability..."),
     ).not.toBeInTheDocument(),
   );
   await waitFor(() =>
