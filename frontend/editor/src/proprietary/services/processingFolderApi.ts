@@ -13,6 +13,7 @@ export const CLASSIFY_OPERATION = "/api/v1/ai/tools/classify-and-label";
 export interface ProcessingFolderStep {
   operation: string;
   parameters: Record<string, unknown>;
+  fileParameters?: Record<string, string>;
   assets?: Record<string, unknown>;
 }
 

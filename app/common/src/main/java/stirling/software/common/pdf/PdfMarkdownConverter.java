@@ -47,7 +47,7 @@ public class PdfMarkdownConverter {
             String md = e.value() instanceof TableBlock tb ? tb.render() : (String) e.value();
             blocks.add(new MarkdownBlock(md, e.pageStart(), e.pageEnd()));
         }
-        return MarkdownBlocks.withHeadingPaths(blocks);
+        return MarkdownBlocks.withHeadingPaths(MarkdownBlocks.normaliseHeadingLevels(blocks));
     }
 
     private List<Element> buildElements(PdfDocument doc) throws IOException {

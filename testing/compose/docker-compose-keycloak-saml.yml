@@ -81,7 +81,7 @@ services:
       # Enterprise License (required for SAML)
       PREMIUM_KEY: "${PREMIUM_KEY:-00000000-0000-0000-0000-000000000000}"
       PREMIUM_ENABLED: "true"
-      PREMIUM_PROFEATURES_SSOAUTOLOGIN: "${PREMIUM_PROFEATURES_SSOAUTOLOGIN:-false}"
+      SECURITY_SSOAUTOLOGIN: "${SECURITY_SSOAUTOLOGIN:-false}"
 
       # Storage + sharing (opt-in via start-saml-test.sh --with-storage)
       STORAGE_ENABLED: "${STORAGE_ENABLED:-false}"

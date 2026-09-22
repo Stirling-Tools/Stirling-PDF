@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Box, Text, Stack, SimpleGrid, Tooltip, Popover } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import { Icon } from "@app/ui/Icon";
 import { iconMap, iconOptions } from "@app/components/tools/automate/iconMap";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
@@ -20,8 +20,7 @@ export default function IconSelector({
   const { t } = useTranslation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const selectedIconComponent =
-    iconMap[value as keyof typeof iconMap] || iconMap.SettingsIcon;
+  const selectedIcon = iconMap[value] ?? iconMap.SettingsIcon;
 
   const handleIconSelect = (iconKey: string) => {
     onChange?.(iconKey);
@@ -66,12 +65,11 @@ export default function IconSelector({
               color: "var(--mantine-color-text)",
             }}
           >
-            {React.createElement(selectedIconComponent, {
-              style: { fontSize: iconSize },
-            })}
-            <KeyboardArrowDownIcon
+            <Icon name={selectedIcon} size={iconSize} />
+            <Icon
+              name="chevron-down"
+              size={iconSize * 0.8}
               style={{
-                fontSize: iconSize * 0.8,
                 position: "absolute",
                 right: "0.25rem",
                 top: "50%",
@@ -85,8 +83,7 @@ export default function IconSelector({
           <Stack gap="xs">
             <SimpleGrid cols={4} spacing="xs">
               {iconOptions.map((option) => {
-                const IconComponent =
-                  iconMap[option.value as keyof typeof iconMap];
+                const optionIcon = iconMap[option.value];
                 const isSelected = value === option.value;
 
                 return (
@@ -116,9 +113,10 @@ export default function IconSelector({
                         }
                       }}
                     >
-                      <IconComponent
+                      <Icon
+                        name={optionIcon}
+                        size={iconSize}
                         style={{
-                          fontSize: iconSize,
                           color: isSelected
                             ? "var(--mantine-color-gray-9)"
                             : "var(--mantine-color-gray-7)",

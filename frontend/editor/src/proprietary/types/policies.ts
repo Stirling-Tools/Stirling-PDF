@@ -64,6 +64,7 @@ export interface PolicyState {
   /** How a run's output is delivered: a separate new file, or a new version of
    *  the input file the policy ran on. Defaults to "new_version". */
   outputMode?: "new_file" | "new_version";
+  externalOutput?: boolean;
   /** Rename rule for the output. When empty (the default) the output keeps the
    *  input's filename; when set, it's applied as a prefix/suffix per the policy's
    *  name-position setting. */
