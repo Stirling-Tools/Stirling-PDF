@@ -11,6 +11,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
@@ -19,18 +21,27 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.servlet.config.annotation.CorsRegistration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.resource.HttpResource;
+import org.springframework.web.servlet.resource.ResourceResolverChain;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import stirling.software.common.model.ApplicationProperties;
 
@@ -236,6 +247,77 @@ class WebMvcConfigTest {
             config.addCorsMappings(registry);
 
             verify(registry).addMapping("/**");
+        }
+    }
+
+    @Nested
+    @DisplayName("PreferredEncodingResourceResolver")
+    class PreferredEncodingResourceResolverTest {
+
+        @TempDir Path tempDir;
+
+        private WebMvcConfig.PreferredEncodingResourceResolver resolver;
+
+        @BeforeEach
+        void setUp() throws Exception {
+            resolver = new WebMvcConfig.PreferredEncodingResourceResolver();
+            Files.writeString(tempDir.resolve("app.js"), "plain");
+            Files.writeString(tempDir.resolve("app.js.br"), "br");
+            Files.writeString(tempDir.resolve("app.js.gz"), "gz");
+        }
+
+        @Test
+        @DisplayName("prefers brotli when the client lists gzip first")
+        void prefersBrotli() {
+            assertThat(resolveCoding("gzip, deflate, br")).isEqualTo("br");
+        }
+
+        @Test
+        @DisplayName("keeps an explicit gzip preference")
+        void honorsExplicitGzipPreference() {
+            assertThat(resolveCoding("gzip;q=1.0, br;q=0.5")).isEqualTo("gzip");
+        }
+
+        @Test
+        @DisplayName("keeps an explicit brotli preference")
+        void honorsExplicitBrotliPreference() {
+            assertThat(resolveCoding("gzip;q=0.5, br;q=1.0")).isEqualTo("br");
+        }
+
+        @Test
+        @DisplayName("falls back to gzip when brotli is refused")
+        void refusesBrotli() {
+            assertThat(resolveCoding("gzip, br;q=0")).isEqualTo("gzip");
+        }
+
+        private String resolveCoding(String acceptEncoding) {
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.addHeader(HttpHeaders.ACCEPT_ENCODING, acceptEncoding);
+            Resource resource =
+                    resolver.resolveResource(
+                            request,
+                            "app.js",
+                            List.of(new FileSystemResource(tempDir)),
+                            new ResourceResolverChain() {
+                                @Override
+                                public Resource resolveResource(
+                                        HttpServletRequest r,
+                                        String path,
+                                        List<? extends Resource> locations) {
+                                    return new FileSystemResource(tempDir.resolve(path));
+                                }
+
+                                @Override
+                                public String resolveUrlPath(
+                                        String resourceUrlPath,
+                                        List<? extends Resource> locations) {
+                                    return resourceUrlPath;
+                                }
+                            });
+            assertThat(resource).isNotNull();
+            return ((HttpResource) resource)
+                    .getResponseHeaders()
+                    .getFirst(HttpHeaders.CONTENT_ENCODING);
         }
     }
 }

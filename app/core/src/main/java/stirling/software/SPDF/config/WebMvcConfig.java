@@ -8,12 +8,18 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.EncodedResourceResolver;
+import org.springframework.web.servlet.resource.ResourceResolverChain;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 
 import lombok.RequiredArgsConstructor;
 
@@ -53,7 +59,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addResourceLocations(staticPath, "classpath:/static/")
                 .setCacheControl(CacheControl.noStore())
                 .resourceChain(true)
-                .addResolver(new EncodedResourceResolver());
+                .addResolver(new PreferredEncodingResourceResolver());
 
         // 2. Vite fingerprinted assets (immutable)
         // These already have content hashes in filenames (e.g. index-ChAS4tCC.js)
@@ -61,7 +67,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addResourceLocations(staticPath + "assets/", "classpath:/static/assets/")
                 .setCacheControl(IMMUTABLE_ONE_YEAR)
                 .resourceChain(true)
-                .addResolver(new EncodedResourceResolver());
+                .addResolver(new PreferredEncodingResourceResolver());
 
         // 3. Media and fonts (immutable)
         registry.addResourceHandler("/images/**", "/fonts/**")
@@ -72,7 +78,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "classpath:/static/fonts/")
                 .setCacheControl(IMMUTABLE_ONE_YEAR)
                 .resourceChain(true)
-                .addResolver(new EncodedResourceResolver());
+                .addResolver(new PreferredEncodingResourceResolver());
 
         // 4. Branding and stable non-fingerprinted assets (1 day + SWR)
         // Use stale-while-revalidate to improve perceived performance.
@@ -127,7 +133,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                                 .cachePublic()
                                 .staleWhileRevalidate(Duration.ofDays(7)))
                 .resourceChain(true)
-                .addResolver(new EncodedResourceResolver());
+                .addResolver(new PreferredEncodingResourceResolver());
 
         // 5. Catch-all (SPA fallback)
         // Must check with server to ensure index.html is always fresh.
@@ -135,7 +141,88 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addResourceLocations(staticPath, "classpath:/static/")
                 .setCacheControl(NO_CACHE)
                 .resourceChain(true)
-                .addResolver(new EncodedResourceResolver());
+                .addResolver(new PreferredEncodingResourceResolver());
+    }
+
+    /**
+     * Serves precompressed variants in server preference order. The framework resolver walks the
+     * client's Accept-Encoding in the order the client sent it, and browsers list gzip before br,
+     * so the brotli siblings were never selected even though they are the smaller variant.
+     */
+    static final class PreferredEncodingResourceResolver extends EncodedResourceResolver {
+
+        PreferredEncodingResourceResolver() {
+            setContentCodings(List.of("br", "gzip"));
+        }
+
+        @Override
+        protected Resource resolveResourceInternal(
+                HttpServletRequest request,
+                String requestPath,
+                List<? extends Resource> locations,
+                ResourceResolverChain chain) {
+            return super.resolveResourceInternal(
+                    request == null ? null : new PreferredEncodingRequest(request),
+                    requestPath,
+                    locations,
+                    chain);
+        }
+    }
+
+    /**
+     * Presents Accept-Encoding with brotli moved ahead of gzip when the client accepts it, so the
+     * framework resolver returns the smaller variant. A client that asks for gzip more strongly
+     * than brotli keeps its own order, including a q=0 refusal of brotli.
+     */
+    static final class PreferredEncodingRequest extends HttpServletRequestWrapper {
+
+        PreferredEncodingRequest(HttpServletRequest request) {
+            super(request);
+        }
+
+        @Override
+        public String getHeader(String name) {
+            String value = super.getHeader(name);
+            if (value == null || !HttpHeaders.ACCEPT_ENCODING.equalsIgnoreCase(name)) {
+                return value;
+            }
+            List<String> tokens = new ArrayList<>(List.of(value.split(",")));
+            int brIndex = indexOfCoding(tokens, "br");
+            int gzipIndex = indexOfCoding(tokens, "gzip");
+            if (brIndex < 0 || gzipIndex < 0 || brIndex < gzipIndex) {
+                return value;
+            }
+            double brQuality = quality(tokens.get(brIndex));
+            if (brQuality <= 0 || quality(tokens.get(gzipIndex)) > brQuality) {
+                return value;
+            }
+            tokens.add(gzipIndex, tokens.remove(brIndex));
+            return String.join(",", tokens);
+        }
+
+        private static int indexOfCoding(List<String> tokens, String coding) {
+            for (int i = 0; i < tokens.size(); i++) {
+                String token = tokens.get(i).split(";", 2)[0].trim();
+                if (token.equalsIgnoreCase(coding)) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        private static double quality(String token) {
+            for (String parameter : token.split(";")) {
+                String trimmed = parameter.trim();
+                if (trimmed.regionMatches(true, 0, "q=", 0, 2)) {
+                    try {
+                        return Double.parseDouble(trimmed.substring(2).trim());
+                    } catch (NumberFormatException e) {
+                        return 1.0;
+                    }
+                }
+            }
+            return 1.0;
+        }
     }
 
     @Override
