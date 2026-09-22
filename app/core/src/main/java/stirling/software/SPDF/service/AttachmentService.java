@@ -438,13 +438,9 @@ public class AttachmentService implements AttachmentServiceInterface {
         // URL-decoded comparison so a client that sends %20 etc. still matches; malformed
         // percent-encodings are just not a match rather than a hard failure.
         try {
-            String decodedTarget =
-                    java.net.URLDecoder.decode(normTarget, java.nio.charset.StandardCharsets.UTF_8);
-            String decodedCandidate =
-                    java.net.URLDecoder.decode(
-                            candidateName, java.nio.charset.StandardCharsets.UTF_8);
-            String decodedKey =
-                    java.net.URLDecoder.decode(entryKey, java.nio.charset.StandardCharsets.UTF_8);
+            String decodedTarget = decodeAttachmentName(normTarget);
+            String decodedCandidate = decodeAttachmentName(candidateName);
+            String decodedKey = decodeAttachmentName(entryKey);
             if (decodedTarget.equalsIgnoreCase(decodedCandidate)
                     || decodedTarget.equalsIgnoreCase(decodedKey)) {
                 return true;
@@ -453,6 +449,16 @@ public class AttachmentService implements AttachmentServiceInterface {
             // not a match
         }
         return false;
+    }
+
+    /**
+     * Percent-decodes a client-supplied name while keeping literal '+' characters. URLDecoder alone
+     * form-decodes '+' to a space, which would make a request for "a b.txt" match an attachment
+     * named "a+b.txt".
+     */
+    private static String decodeAttachmentName(String name) {
+        return java.net.URLDecoder.decode(
+                name.replace("+", "%2B"), java.nio.charset.StandardCharsets.UTF_8);
     }
 
     private String sanitizeFilename(String candidate) {

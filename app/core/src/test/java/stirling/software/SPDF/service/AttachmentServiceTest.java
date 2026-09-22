@@ -403,6 +403,39 @@ class AttachmentServiceTest {
     }
 
     @Test
+    void extractSingleAttachment_DoesNotMatchSpaceAgainstPlus() throws IOException {
+        try (var document = new PDDocument()) {
+            attachmentService.addAttachment(
+                    document,
+                    List.of(
+                            new MockMultipartFile(
+                                    "file",
+                                    "a+b.txt",
+                                    MediaType.TEXT_PLAIN_VALUE,
+                                    "plus".getBytes())));
+            assertTrue(attachmentService.extractSingleAttachment(document, "a b.txt").isEmpty());
+        }
+    }
+
+    @Test
+    void extractSingleAttachment_MatchesPercentEncodedPlus() throws IOException {
+        try (var document = new PDDocument()) {
+            attachmentService.addAttachment(
+                    document,
+                    List.of(
+                            new MockMultipartFile(
+                                    "file",
+                                    "a+b.txt",
+                                    MediaType.TEXT_PLAIN_VALUE,
+                                    "plus".getBytes())));
+            Optional<byte[]> extracted =
+                    attachmentService.extractSingleAttachment(document, "a%2Bb.txt");
+            assertTrue(extracted.isPresent());
+            assertEquals("plus", new String(extracted.get()));
+        }
+    }
+
+    @Test
     void extractSingleAttachment_EmptyWhenFallbackMatchIsAmbiguous() throws IOException {
         try (var document = new PDDocument()) {
             attachmentService.addAttachment(
