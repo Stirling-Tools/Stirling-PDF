@@ -13418,3 +13418,23 @@ thumbnails = "Pages"
 [workbench.sessionRestore]
 none = "Your previous files are no longer stored on this device."
 partial = "Restored {{restored}} of {{total}} files. The rest are no longer stored on this device."
+
+[legacyBilling]
+currentTeamAllowance = "Current allowance for your legacy team"
+loadError = "We couldn't check your existing subscription. Try again before purchasing another plan."
+loading = "Checking your subscription..."
+portalError = "We couldn't open Stripe billing. Please try again."
+pro = "Pro (legacy)"
+retry = "Try again"
+team = "Team (legacy)"
+teamUsers = "Your team: {{used}} of {{limit}} users"
+unlimitedUsers = "Your team: unlimited users ({{used}} in use)"
+usersUnavailable = "We couldn't confirm your team's user allowance. Contact support to check your legacy plan."
+
+[legacyBilling.status]
+active = "Active"
+incomplete = "Payment pending"
+past_due = "Payment overdue"
+paused = "Paused"
+trialing = "Trial"
+unpaid = "Unpaid"
