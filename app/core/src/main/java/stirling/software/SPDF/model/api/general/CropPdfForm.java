@@ -29,6 +29,19 @@ public class CropPdfForm extends PDFWithPageNums {
                 oneBased);
     }
 
+    // The base model marks pageNumbers required, but this endpoint treats an
+    // omitted or blank value as "all" (see above): advertise it as optional so
+    // generated clients do not fail local validation for a legal request.
+    @Override
+    @Schema(
+            description =
+                    "Pages to crop (e.g. '1, 3, 5-8' or 'all'). Omit or leave blank for all pages.",
+            defaultValue = "all",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+    public String getPageNumbers() {
+        return super.getPageNumbers();
+    }
+
     @Schema(
             description = "The x-coordinate of the top-left corner of the crop area",
             type = "number")
