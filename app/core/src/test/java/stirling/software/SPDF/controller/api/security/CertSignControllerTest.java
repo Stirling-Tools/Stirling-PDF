@@ -8,14 +8,28 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Base64;
+import java.util.Date;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -144,6 +158,7 @@ class CertSignControllerTest {
             is.transferTo(baos);
             derCertBytes = baos.toByteArray();
         }
+        refreshCertificateFixtures();
 
         lenient()
                 .when(pdfDocumentFactory.load(any(MultipartFile.class)))
@@ -152,6 +167,57 @@ class CertSignControllerTest {
                             MultipartFile file = invocation.getArgument(0);
                             return Loader.loadPDF(file.getBytes());
                         });
+    }
+
+    private void refreshCertificateFixtures() throws Exception {
+        char[] password = "password".toCharArray();
+        KeyStore store = KeyStore.getInstance("PKCS12");
+        store.load(new ByteArrayInputStream(p12Bytes), password);
+        String alias = store.aliases().nextElement();
+        PrivateKey key = (PrivateKey) store.getKey(alias, password);
+        X509Certificate original = (X509Certificate) store.getCertificate(alias);
+        X500Name subject = new X500Name(original.getSubjectX500Principal().getName());
+        Instant now = Instant.now();
+        // Keep the original fixture key and formats, but make validity relative to this run.
+        X509Certificate certificate =
+                new JcaX509CertificateConverter()
+                        .getCertificate(
+                                new JcaX509v3CertificateBuilder(
+                                                subject,
+                                                original.getSerialNumber(),
+                                                Date.from(now.minus(1, ChronoUnit.DAYS)),
+                                                Date.from(now.plus(1, ChronoUnit.DAYS)),
+                                                subject,
+                                                original.getPublicKey())
+                                        .build(
+                                                new JcaContentSignerBuilder("SHA256withRSA")
+                                                        .build(key)));
+
+        p12Bytes = replaceCertificate(p12Bytes, "PKCS12", certificate);
+        pfxBytes = replaceCertificate(pfxBytes, "PKCS12", certificate);
+        jksBytes = replaceCertificate(jksBytes, "JKS", certificate);
+        derCertBytes = certificate.getEncoded();
+        pemCertBytes =
+                ("-----BEGIN CERTIFICATE-----\n"
+                                + Base64.getMimeEncoder(64, new byte[] {'\n'})
+                                        .encodeToString(derCertBytes)
+                                + "\n-----END CERTIFICATE-----\n")
+                        .getBytes(StandardCharsets.US_ASCII);
+        crtCertBytes = pemCertBytes;
+        cerCertBytes = pemCertBytes;
+    }
+
+    private static byte[] replaceCertificate(byte[] bytes, String type, X509Certificate certificate)
+            throws Exception {
+        char[] password = "password".toCharArray();
+        KeyStore store = KeyStore.getInstance(type);
+        store.load(new ByteArrayInputStream(bytes), password);
+        String alias = store.aliases().nextElement();
+        store.setKeyEntry(
+                alias, store.getKey(alias, password), password, new Certificate[] {certificate});
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        store.store(output, password);
+        return output.toByteArray();
     }
 
     @Test
