@@ -1,0 +1,117 @@
+.library-file-picker {
+  height: min(84dvh, 900px);
+}
+.library-picker-header,
+.library-picker-imports,
+.library-picker-controls,
+.library-picker-footer,
+.library-picker-footer-actions,
+.library-picker-selection,
+.library-picker-crumb {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.library-picker-header,
+.library-picker-footer {
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  flex-shrink: 0;
+}
+.library-picker-header h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.25rem;
+}
+.library-picker-imports {
+  padding: 0 1.25rem 1rem;
+  flex-wrap: wrap;
+}
+.library-picker-controls {
+  padding: 0.75rem 1.25rem;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.library-picker-controls .files-page-toolbar-actions {
+  flex-wrap: wrap;
+}
+.library-picker-crumb {
+  min-width: 0;
+}
+.library-picker-dropzone {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--c-bg);
+}
+.library-picker-dropzone .files-page-content {
+  height: 100%;
+}
+.library-file-picker .files-page-list-row {
+  grid-template-columns:
+    2.25rem minmax(17rem, 3fr) minmax(7.5rem, 1fr) minmax(4.5rem, 1fr)
+    minmax(9.5rem, 1.5fr) 2.5rem;
+  min-width: 47.5rem;
+}
+.library-picker-footer {
+  border-top: 1px solid var(--c-border-subtle);
+  background: var(--c-surface);
+}
+.library-picker-selection {
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.library-picker-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  min-height: 200px;
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--c-primary-subtle);
+  color: var(--c-text);
+  cursor: pointer;
+  padding: 2rem;
+}
+.library-picker-empty:hover {
+  background: var(--c-hover);
+}
+.library-picker-empty > svg {
+  color: var(--c-accent-fg);
+}
+.library-picker-empty > span {
+  color: var(--c-text-muted);
+}
+.library-file-picker [aria-disabled="true"] {
+  opacity: 0.5;
+}
+.library-file-picker .files-page-details {
+  width: 280px;
+  flex: 0 0 280px;
+}
+@media (max-width: 640px) {
+  .library-file-picker {
+    height: 100dvh;
+  }
+  .library-picker-header,
+  .library-picker-footer,
+  .library-picker-controls {
+    padding: 0.75rem;
+  }
+  .library-picker-imports {
+    padding-inline: 0.75rem;
+    gap: 0.25rem;
+  }
+  .library-picker-footer {
+    flex-wrap: wrap;
+  }
+  .library-picker-footer-actions {
+    margin-left: auto;
+  }
+}
