@@ -3,6 +3,8 @@ import { isConditionComplete } from "@app/conditions/validation";
 import {
   isIngestStep,
   ingestStepConfigured,
+  vectorDestinationConfigured,
+  prepareVectorDestination,
 } from "@portal/components/pipelines/docparseStep";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -78,6 +80,7 @@ import { availableOutputModes } from "@portal/components/pipelines/outputModes";
 import { type SourceView } from "@portal/api/sources";
 import { useSources } from "@portal/queries/sources";
 import { useCanManagePolicies } from "@portal/queries/policyPermissions";
+import { isReadableSource } from "@portal/components/sources/sourceTypes";
 import { SourceModal } from "@portal/components/sources/SourceModal";
 import { EDITOR_SOURCE_TYPE } from "@portal/components/sources/sourceTypes";
 import { useAsync } from "@portal/hooks/useAsync";
@@ -201,7 +204,7 @@ function isClassifyTool(tool: ExecutableTool): boolean {
 }
 
 /** Whether a source can be written to, i.e. offered as a pipeline destination. */
-function isWritableSource(source: SourceView): boolean {
+function isWritableSource(source: { type: string }): boolean {
   return (availableOutputModes() as string[]).includes(source.type);
 }
 
@@ -353,32 +356,10 @@ export function PipelineBuilder() {
   const [sourceModal, setSourceModal] = useState<{
     open: boolean;
     sourceId: string | null;
+    direction?: "input" | "output";
   }>({ open: false, sourceId: null });
-  // A source created from here is the one the pipeline was missing, so select it
-  // on arrival - as the input or the destination, whichever asked for it.
-  const autoSelectRef = useRef<"input" | "output" | null>(null);
-  const knownSourceIdsRef = useRef<Set<string>>(new Set());
-  useEffect(() => {
-    const target = autoSelectRef.current;
-    const known = knownSourceIdsRef.current;
-    knownSourceIdsRef.current = new Set(availableSources.map((s) => s.id));
-    if (!target) return;
-    const fresh = availableSources.find((s) => !known.has(s.id));
-    if (!fresh) return;
-    // One arrival answers the request, whatever type it turned out to be.
-    autoSelectRef.current = null;
-    if (target === "input") {
-      changeInputSource(fresh.id);
-    } else if (isWritableSource(fresh)) {
-      // A source of an unwritable type is left alone rather than becoming a
-      // destination the picker has no option for.
-      setOutputIds([fresh.id]);
-    }
-  }, [availableSources]);
-
   function createSourceFor(target: "input" | "output") {
-    autoSelectRef.current = target;
-    setSourceModal({ open: true, sourceId: null });
+    setSourceModal({ open: true, sourceId: null, direction: target });
   }
 
   const mounted = useRef(true);
@@ -464,10 +445,12 @@ export function PipelineBuilder() {
   const triggerFitsType = (trigger: TriggerInfo, type: string) =>
     !trigger.requiresSource || trigger.supportedSourceTypes.includes(type);
 
-  const sourceOptions = availableSources.map((source) => ({
-    value: source.id,
-    label: source.name,
-  }));
+  const sourceOptions = availableSources
+    .filter(isReadableSource)
+    .map((source) => ({
+      value: source.id,
+      label: source.name,
+    }));
 
   // Manual plus every trigger compatible with this row's source. Manual only until a source is set.
   function triggerOptionsFor(sourceId: string) {
@@ -782,15 +765,29 @@ export function PipelineBuilder() {
 
   // Each validity condition is defined exactly once here, then consumed both by the graph (which
   // flags each end) and by the blocker list below.
-  const sourceChosen = input.sourceId !== "";
+  const sourceChosen = availableSources.some(
+    (source) => source.id === input.sourceId && isReadableSource(source),
+  );
   // An editor pipeline has no trigger to schedule: it fires as each file passes through.
   const scheduleValid =
     isEditorInput ||
     input.triggerType !== "schedule" ||
     Number(input.scheduleCount) > 0;
   const inputValid = sourceChosen && scheduleValid;
-  // Nor a destination: an editor pipeline's results land back in the workspace the file came from.
-  const outputValid = isEditorInput || outputIds.length === 1;
+  const destinationIds = new Set([
+    ...outputIds,
+    ...routingRules.map((rule) => rule.outputId),
+  ]);
+  const vectorOutput = writableSources.some(
+    (source) => destinationIds.has(source.id) && source.type === "vectordb",
+  );
+  const vectorReady = !vectorOutput || vectorDestinationConfigured(steps);
+  const destinationReady =
+    outputIds.length === 1 &&
+    writableSources.some(
+      (source) => source.id === outputIds[0] && source.status !== "disabled",
+    );
+  const outputValid = isEditorInput || (destinationReady && vectorReady);
   const classifies = steps.some(isClassifyStep);
   // Mirrors PolicyValidator.validateRoutingRules: a rule with nothing to match on, or nowhere to
   // send, would be rejected on save - so it is named here rather than surfaced as a server error.
@@ -808,14 +805,14 @@ export function PipelineBuilder() {
   const blockers: string[] = [];
   if (name.trim() === "")
     blockers.push(t("portal.pipelines.builder.blocker.name"));
-  // An editor pipeline has the editor as its chosen source and needs no destination, so sourceChosen
-  // is already true and outputValid already passes for it - these checks simply never fire.
   if (!sourceChosen)
     blockers.push(t("portal.pipelines.builder.blocker.source"));
   else if (!scheduleValid)
     blockers.push(t("portal.pipelines.builder.blocker.schedule"));
-  if (!outputValid)
+  if (!isEditorInput && !destinationReady)
     blockers.push(t("portal.pipelines.builder.blocker.destination"));
+  if (!vectorReady)
+    blockers.push(t("portal.pipelines.builder.ingest.destinationNeedsChunks"));
   if (!routingValid)
     blockers.push(
       t(
@@ -1315,7 +1312,7 @@ export function PipelineBuilder() {
     if (selected === "input") {
       // Nothing to pick from yet: a dropdown of nothing helps no one, so offer only the way to make
       // the first source. The trigger has no meaning without a source either, so it waits too.
-      const hasSources = availableSources.length > 0;
+      const hasSources = sourceOptions.length > 0;
       return (
         <>
           {hasSources && (
@@ -1407,6 +1404,19 @@ export function PipelineBuilder() {
             onCreateNew={() => createSourceFor("output")}
             onEdit={(sourceId) => setSourceModal({ open: true, sourceId })}
           />
+          {vectorOutput && !vectorReady && (
+            <>
+              <p className="portal-builder__muted">
+                {t("portal.pipelines.builder.ingest.destinationNeedsChunks")}
+              </p>
+              <Button
+                size="sm"
+                onClick={() => setSteps(prepareVectorDestination(steps))}
+              >
+                {t("portal.pipelines.builder.ingest.prepareDestination")}
+              </Button>
+            </>
+          )}
         </>
       );
     }
@@ -1713,8 +1723,20 @@ export function PipelineBuilder() {
       </Modal>
 
       <SourceModal
+        direction={sourceModal.direction}
         open={sourceModal.open}
         sourceId={sourceModal.sourceId}
+        onCreated={(source) => {
+          if (!source.id) return;
+          if (sourceModal.direction === "input" && isReadableSource(source)) {
+            changeInputSource(source.id);
+          } else if (
+            sourceModal.direction === "output" &&
+            isWritableSource(source)
+          ) {
+            setOutputIds([source.id]);
+          }
+        }}
         onClose={() => setSourceModal({ open: false, sourceId: null })}
       />
     </div>
