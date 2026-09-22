@@ -344,16 +344,3 @@ jobs:
           fi
           echo ""
           echo "All required checks passed."
-
-  publish-pr-cache-artifacts:
-    needs: all-checks-passed
-    if: >-
-      always() &&
-      needs.all-checks-passed.result == 'success'
-    uses: ./.github/workflows/publish-pr-cache-artifacts.yml
-    permissions:
-      actions: write
-      contents: write
-    with:
-      called-from-build: true
-    secrets: inherit
