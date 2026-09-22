@@ -8,6 +8,7 @@ import {
 } from "react";
 import { navigateToSettings } from "@app/utils/settingsNavigation";
 import type { NavKey } from "@app/components/shared/config/types";
+import type { AccountLinkBlockContext } from "@app/services/accountLinkBlock";
 import type { ConnectOutcome } from "@app/portal/components/account-link/ConnectCallbackView";
 import { clearPendingConnect } from "@app/portal/auth/pendingConnect";
 
@@ -42,7 +43,11 @@ interface UIContextValue {
   /** The account-link login modal. A single top-level instance. */
   linkModalOpen: boolean;
   linkModalMode: LinkModalMode;
-  openLinkModal: (mode?: LinkModalMode) => void;
+  linkModalFailureContext?: AccountLinkBlockContext;
+  openLinkModal: (
+    mode?: LinkModalMode,
+    failureContext?: AccountLinkBlockContext,
+  ) => void;
   closeLinkModal: () => void;
   /**
    * A one-shot signal like {@link UIContextValue.trialSetupRequested}: the callback route and the
@@ -87,6 +92,8 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const [assistantOpen, setAssistantOpen] = useState(false);
   const linkModalActive = useRef(false);
   const [linkModalOpen, setLinkModalOpen] = useState(false);
+  const [linkModalFailureContext, setLinkModalFailureContext] =
+    useState<AccountLinkBlockContext>();
   const [trialSetupRequested, setTrialSetupRequested] = useState(false);
   const [linkModalMode, setLinkModalMode] = useState<LinkModalMode>("link");
   const [connectOutcome, setConnectOutcome] = useState<ConnectOutcome | null>(
@@ -121,10 +128,15 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
       linkModalOpen,
       linkModalMode,
-      openLinkModal: (mode: LinkModalMode = "link") => {
+      linkModalFailureContext,
+      openLinkModal: (
+        mode: LinkModalMode = "link",
+        failureContext?: AccountLinkBlockContext,
+      ) => {
         // Background failures must not replace a handoff or callback already in progress.
         if (linkModalActive.current) return;
         linkModalActive.current = true;
+        setLinkModalFailureContext(failureContext);
         setMobileNavOpen(false);
         setLinkModalMode(mode);
         setConnectOutcome(null);
@@ -146,6 +158,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
       },
       clearConnectOutcome: () => setConnectOutcome(null),
       closeLinkModal: () => {
+        setLinkModalFailureContext(undefined);
         linkModalActive.current = false;
         connectOutcome?.cancel?.();
         clearPendingConnect();
@@ -161,6 +174,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
       assistantOpen,
       linkModalOpen,
       linkModalMode,
+      linkModalFailureContext,
       trialSetupRequested,
       connectOutcome,
     ],

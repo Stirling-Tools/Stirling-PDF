@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { useRotate } from "@embedpdf/plugin-rotate/react";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
@@ -16,7 +16,12 @@ export function RotateAPIBridge() {
     return null;
   }
 
-  return <RotateAPIBridgeInner documentId={activeDocumentId} />;
+  return (
+    <RotateAPIBridgeInner
+      key={activeDocumentId}
+      documentId={activeDocumentId}
+    />
+  );
 }
 
 function RotateAPIBridgeInner({ documentId }: { documentId: string }) {
@@ -26,7 +31,7 @@ function RotateAPIBridgeInner({ documentId }: { documentId: string }) {
 
   // Keep rotate ref updated to avoid re-running effect when object reference changes
   const rotateRef = useRef(rotate);
-  useEffect(() => {
+  useLayoutEffect(() => {
     rotateRef.current = rotate;
   }, [rotate]);
 
@@ -42,7 +47,7 @@ function RotateAPIBridgeInner({ documentId }: { documentId: string }) {
     });
   }, [documentId, isRotateAvailable, triggerImmediateRotationUpdate]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const currentRotate = rotateRef.current;
     if (currentRotate) {
       const newState = {

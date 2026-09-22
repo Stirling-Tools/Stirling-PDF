@@ -79,8 +79,8 @@ const getCurrencySymbol = (currency: string): string => {
 
 // Self-hosted plan lookup keys
 const SELF_HOSTED_LOOKUP_KEYS = [
-  "selfhosted:server:monthly",
-  "selfhosted:server:yearly",
+  "selfhosted:team:monthly",
+  "selfhosted:team:yearly",
   "selfhosted:enterpriseseat:monthly",
   "selfhosted:enterpriseseat:yearly",
 ];
@@ -166,10 +166,10 @@ const licenseService = {
       // Build plan tiers
       const plans: PlanTier[] = [
         {
-          id: "selfhosted:server:monthly",
-          lookupKey: "selfhosted:server:monthly",
+          id: "selfhosted:team:monthly",
+          lookupKey: "selfhosted:team:monthly",
           name: "Team - Monthly",
-          price: getPriceInfo("selfhosted:server:monthly"),
+          price: getPriceInfo("selfhosted:team:monthly"),
           currency: currencySymbol,
           period: "/month",
           popular: false,
@@ -177,10 +177,10 @@ const licenseService = {
           highlights: planHighlights.SERVER_MONTHLY,
         },
         {
-          id: "selfhosted:server:yearly",
-          lookupKey: "selfhosted:server:yearly",
+          id: "selfhosted:team:yearly",
+          lookupKey: "selfhosted:team:yearly",
           name: "Team - Yearly",
-          price: getPriceInfo("selfhosted:server:yearly"),
+          price: getPriceInfo("selfhosted:team:yearly"),
           currency: currencySymbol,
           period: "/year",
           popular: true,
@@ -189,9 +189,9 @@ const licenseService = {
         },
         {
           id: "selfhosted:enterprise:monthly",
-          lookupKey: "selfhosted:server:monthly",
+          lookupKey: "selfhosted:team:monthly",
           name: "Enterprise - Monthly",
-          price: getPriceInfo("selfhosted:server:monthly"),
+          price: getPriceInfo("selfhosted:team:monthly"),
           seatPrice: getPriceInfo("selfhosted:enterpriseseat:monthly"),
           currency: currencySymbol,
           period: "/month",
@@ -202,9 +202,9 @@ const licenseService = {
         },
         {
           id: "selfhosted:enterprise:yearly",
-          lookupKey: "selfhosted:server:yearly",
+          lookupKey: "selfhosted:team:yearly",
           name: "Enterprise - Yearly",
-          price: getPriceInfo("selfhosted:server:yearly"),
+          price: getPriceInfo("selfhosted:team:yearly"),
           seatPrice: getPriceInfo("selfhosted:enterpriseseat:yearly"),
           currency: currencySymbol,
           period: "/year",
@@ -271,10 +271,10 @@ const licenseService = {
 
     // Server tier
     const serverMonthly = plans.find(
-      (p) => p.lookupKey === "selfhosted:server:monthly",
+      (p) => p.lookupKey === "selfhosted:team:monthly",
     );
     const serverYearly = plans.find(
-      (p) => p.lookupKey === "selfhosted:server:yearly",
+      (p) => p.lookupKey === "selfhosted:team:yearly",
     );
     if (serverMonthly || serverYearly) {
       groups.push({
