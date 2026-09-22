@@ -4,6 +4,10 @@ set -eu
 
 PORT="${UNOSERVER_PORT:-2003}"
 
+if [ "${UNOSERVER_UNIX_SOCKET:-false}" = true ]; then
+  timeout 2 socat -u OPEN:/dev/null UNIX-CONNECT:/run/unoserver/uno.sock
+fi
+
 if command -v unoping >/dev/null 2>&1; then
   unoping --host 127.0.0.1 --port "$PORT" >/dev/null 2>&1
   exit $?

@@ -1,0 +1,66 @@
+x-uno: &uno
+  image: stirling-unoserver-isolated:local
+  build:
+    context: ../../..
+    dockerfile: docker/unoserver/Dockerfile
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  restart: unless-stopped
+
+services:
+  stirling-pdf:
+    image: ${STIRLING_IMAGE:-stirlingtools/stirling-pdf:latest}
+    ports:
+      - "${STIRLING_PORT:-8080}:8080"
+    volumes:
+      - configs:/configs
+      - logs:/logs
+    environment:
+      SECURITY_ENABLELOGIN: "true"
+      PROCESS_EXECUTOR_AUTO_UNO_SERVER: "false"
+      PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_0_HOST: uno-bridge
+      PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_0_PORT: "2003"
+      PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_0_HOST_LOCATION: remote
+      PROCESS_EXECUTOR_SESSION_LIMIT_LIBRE_OFFICE_SESSION_LIMIT: "1"
+      # A failed remote conversion must never start local LibreOffice.
+      SYSTEM_CUSTOMPATHS_OPERATIONS_SOFFICE: /bin/false
+    networks: [default, office]
+    depends_on:
+      uno-bridge:
+        condition: service_healthy
+
+  uno-bridge:
+    <<: *uno
+    entrypoint:
+      - /usr/bin/socat
+      - TCP-LISTEN:2003,reuseaddr,fork
+      - UNIX-CONNECT:/run/unoserver/uno.sock
+    volumes:
+      - office-socket:/run/unoserver:ro
+    networks: [office]
+    depends_on:
+      office-worker:
+        condition: service_healthy
+
+  office-worker:
+    <<: *uno
+    network_mode: none
+    environment:
+      UNOSERVER_UNIX_SOCKET: "true"
+      UNOSERVER_RECYCLE_INTERVAL_SECONDS: "3600"
+    volumes:
+      - office-socket:/run/unoserver
+    tmpfs:
+      - /tmp:mode=1777
+      - /home/unoserver:uid=1001,gid=1001,mode=0700
+      - /var/lib/unoserver:uid=1001,gid=1001,mode=0700
+
+networks:
+  office:
+    internal: true
+
+volumes:
+  configs:
+  logs:
+  office-socket:

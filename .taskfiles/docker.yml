@@ -6,6 +6,11 @@ vars:
   ENGINE_DIR: docker/engine
 
 tasks:
+  check:office:
+    desc: "Check isolated office conversion and failure handling"
+    cmds:
+      - python testing/office-isolation/test_isolation.py {{.CLI_ARGS}}
+
   build:
     desc: "Build standard Docker image"
     cmds:

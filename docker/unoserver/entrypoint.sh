@@ -30,6 +30,9 @@ start_xvfb() {
 
 cleanup() {
   trap '' TERM INT EXIT
+  if [ -n "${SOCKET_PID:-}" ]; then
+    kill -TERM "$SOCKET_PID" 2>/dev/null || true
+  fi
   if [ -n "${UNOSERVER_PID:-}" ] && kill -0 "$UNOSERVER_PID" 2>/dev/null; then
     log "Stopping unoserver (pid $UNOSERVER_PID)"
     pkill -TERM -P "$UNOSERVER_PID" 2>/dev/null || true
@@ -98,6 +101,14 @@ recycle_supervisor() {
     log "unoserver restarted (pid ${UNOSERVER_PID})"
   done
 }
+
+if [ "${UNOSERVER_UNIX_SOCKET:-false}" = true ]; then
+  INTERFACE=127.0.0.1
+  # The named volume contains only this socket; requests carry document bytes.
+  rm -f /run/unoserver/uno.sock
+  socat UNIX-LISTEN:/run/unoserver/uno.sock,fork,mode=0600 "TCP:127.0.0.1:${PORT}" &
+  SOCKET_PID=$!
+fi
 
 start_xvfb
 start_unoserver

@@ -28,7 +28,7 @@ RUN set -eux; \
       libreoffice-writer-nogui libreoffice-calc-nogui \
       libreoffice-impress-nogui libreoffice-draw-nogui \
       libreoffice-base-nogui libreoffice-java-common \
-      xvfb x11-utils coreutils \
+      xvfb x11-utils coreutils socat \
       fonts-dejavu fonts-liberation fonts-liberation2 \
       fonts-crosextra-caladea fonts-crosextra-carlito \
       fonts-noto-core fonts-noto-mono fonts-noto-color-emoji \
@@ -83,8 +83,8 @@ ARG PUID=1001
 ARG PGID=1001
 RUN groupadd -g "${PGID}" unoserver && \
     useradd  -u "${PUID}" -g unoserver -m -d /home/unoserver -s /bin/bash unoserver && \
-    mkdir -p "${UNOSERVER_PROFILE_DIR}" && \
-    chown -R unoserver:unoserver "${UNOSERVER_PROFILE_DIR}" /home/unoserver
+    mkdir -p "${UNOSERVER_PROFILE_DIR}" /run/unoserver && \
+    chown -R unoserver:unoserver "${UNOSERVER_PROFILE_DIR}" /home/unoserver /run/unoserver
 
 COPY --chmod=0755 docker/unoserver/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY --chmod=0755 docker/unoserver/healthcheck.sh /usr/local/bin/healthcheck.sh

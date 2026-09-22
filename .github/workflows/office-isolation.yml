@@ -1,0 +1,31 @@
+name: Isolated LibreOffice
+
+on:
+  pull_request:
+    paths:
+      - docker/unoserver/**
+      - docker/embedded/compose/docker-compose-isolated-office.yml
+      - testing/office-isolation/**
+      - .taskfiles/docker.yml
+      - .github/workflows/office-isolation.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  isolation:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+        variant: [latest, latest-fat]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+      - name: Test real conversions and isolation
+        env:
+          APP_IMAGE: stirlingtools/stirling-pdf:${{ matrix.variant }}
+        run: task docker:check:office -- --app-image "$APP_IMAGE"
