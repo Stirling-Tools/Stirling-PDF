@@ -153,6 +153,8 @@ jobs:
                 SYSTEM_AIENGINE_ENABLED: \"true\"
                 SYSTEM_AIENGINE_URL: \"http://saas-engine:5001\"
                 APP_AI_SERVICEBASEURL: \"http://saas-engine:5001\"
+                STIRLING_CLOUD_AI_ENGINE_URL: \"http://saas-engine:5001\"
+                STIRLING_CLOUD_AI_SHARING_ENABLED: \"true\"
                 STIRLING_ENGINE_SHARED_SECRET: $(yaml "$ENGINE_SECRET")"
             AI_SERVICE="
 
