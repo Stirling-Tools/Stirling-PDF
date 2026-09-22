@@ -82,6 +82,21 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
 
   return useMemo(() => {
     const allTools: ToolRegistry = {
+      urlToPdf: {
+        icon: <LocalIcon icon="link-rounded" width="1.5rem" height="1.5rem" />,
+        name: t("home.urlToPdf.title", "URL to PDF"),
+        component: lazy(() => import("@app/tools/UrlToPdf")),
+        description: t(
+          "home.urlToPdf.desc",
+          "Convert a web page into a PDF document",
+        ),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.GENERAL,
+        endpoints: ["url-to-pdf"],
+        supportsAutomate: false,
+        automationSettings: null,
+        synonyms: getSynonyms(t, "urlToPdf"),
+      },
       // Proprietary tools (if any)
       ...proprietaryTools,
       // Prototype-only tools (empty in the main/core/proprietary/saas/desktop
