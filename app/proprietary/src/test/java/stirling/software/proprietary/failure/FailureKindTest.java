@@ -470,9 +470,8 @@ class FailureKindTest {
 
         @Test
         void unknownsOnlyResolutionIsThePlainRetry() {
-            // The exception to the rule above: an unrecognised failure may well be a one-off. The
-            // other kinds that lead with a retry offer it as an action, since for them it is a
-            // guess.
+            // The exception to the rule above: an unrecognised failure may well be a one-off.
+            // Other retry-first kinds offer it as an action, a guess rather than the fix.
             assertThat(
                             FailureKind.UNKNOWN.getOfferedActions().stream()
                                     .filter(offer -> offer.slot() == RESOLUTION)

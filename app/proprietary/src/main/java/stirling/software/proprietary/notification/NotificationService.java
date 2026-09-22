@@ -51,8 +51,7 @@ public class NotificationService {
 
     /**
      * What to call the document, derived per read and only for the row's own owner. Only a
-     * storage-backed folder can answer: a disk folder's identity is a path, which would disclose
-     * it.
+     * storage-backed folder can answer: a disk folder's identity is a path.
      */
     private String documentNameFor(FileRunEvent event, Ownership ownership) {
         if (ownership != Ownership.MINE || event.actor() == null) {
@@ -95,8 +94,7 @@ public class NotificationService {
 
     /**
      * Run one of the row's own server actions, addressed by prefixed id. Nothing is authorised
-     * here: the producing service re-checks the row and the action, and each action guards its own
-     * effects.
+     * here: the producing service re-checks the row and the action.
      */
     public NotificationView act(String notificationId, String actionId) {
         NotificationSource.QualifiedId qualified = qualify(notificationId);

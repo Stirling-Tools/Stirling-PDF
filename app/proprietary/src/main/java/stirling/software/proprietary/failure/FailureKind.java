@@ -177,8 +177,7 @@ public enum FailureKind {
 
     /**
      * A source could not be listed at all: a folder unplugged, renamed or locked down. Scoped to
-     * the source: a week-long outage is one incident. Recorded by the sweep, so it claims no error
-     * code.
+     * the source, so a week-long outage is one incident. Claims no error code.
      */
     SOURCE_UNREADABLE(
             FailureStage.INPUT,

@@ -43,9 +43,8 @@ class RecordFailurePrivacyTest {
 
     @Test
     void hasNoFileNameFieldAtAll() {
-        // Structural, not behavioural: if a name component is ever added back, this fails. Both
-        // spellings, and not NotificationView, whose documentName is derived per reader, not
-        // stored.
+        // Structural, not behavioural: if a name component is ever added back, this fails. Not
+        // NotificationView, whose documentName is derived per reader, never stored.
         assertThat(List.of(RecordFailure.class.getRecordComponents()))
                 .extracting(RecordComponent::getName)
                 .doesNotContain("fileName", "documentName");

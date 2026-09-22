@@ -7,8 +7,8 @@ import java.util.List;
  * copy, so the server can ship a new kind without a client release, and {@code actions} arrive
  * already resolved so the client needs no rules.
  *
- * <p>A source-fed row carries no {@code fileId}: the identity behind it is a path on the operator's
- * disk, and the client has nothing to resolve it against anyway. See {@link #documentLocation}.
+ * <p>No document name, and no {@code fileId} on a source-fed row, whose identity is a path on the
+ * operator's disk. See {@link #documentLocation}.
  */
 public record FileRunEventView(
         String id,
