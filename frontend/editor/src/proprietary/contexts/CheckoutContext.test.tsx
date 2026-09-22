@@ -48,16 +48,15 @@ vi.mock("@app/components/shared/stripeCheckout", () => ({
   StripeCheckout: () => <div role="dialog">Checkout</div>,
 }));
 
-vi.mock("@app/portal/billing/stripe", () => ({
-  fetchCheckoutPricing: mocks.pricing,
-}));
-
-function Buyer({ teamId }: { teamId?: number }) {
+function Buyer({ linked = false }: { linked?: boolean }) {
   const checkout = useCheckout();
   return (
     <button
       onClick={() =>
-        void checkout.openCheckout("server", teamId == null ? {} : { teamId })
+        void checkout.openCheckout(
+          "server",
+          linked ? { resolveCurrency: mocks.pricing } : {},
+        )
       }
     >
       Add capacity
@@ -83,7 +82,7 @@ it("opens on the first click using asynchronously fetched plans", async () => {
   );
   fireEvent.click(screen.getByRole("button", { name: "Add capacity" }));
   fireEvent.click(screen.getByRole("button", { name: "Add capacity" }));
-  expect(mocks.getPlans).toHaveBeenCalledTimes(1);
+  await waitFor(() => expect(mocks.getPlans).toHaveBeenCalledTimes(1));
   resolvePlans({ plans: [{ id: "server-monthly" }] });
   expect(await screen.findByRole("dialog")).toBeInTheDocument();
   expect(mocks.alert).not.toHaveBeenCalled();
@@ -117,12 +116,12 @@ it("resolves a linked customer's currency before fetching Team prices", async ()
   mocks.getPlans.mockResolvedValue({ plans: [{ id: "server-monthly" }] });
   render(
     <CheckoutProvider>
-      <Buyer teamId={42} />
+      <Buyer linked />
     </CheckoutProvider>,
   );
   fireEvent.click(screen.getByRole("button", { name: "Add capacity" }));
   expect(await screen.findByRole("dialog")).toBeInTheDocument();
-  expect(mocks.pricing).toHaveBeenCalledWith(42, "currency", "gbp");
+  expect(mocks.pricing).toHaveBeenCalledWith("gbp");
   expect(mocks.getPlans).toHaveBeenCalledWith(
     mocks.features,
     mocks.highlights,

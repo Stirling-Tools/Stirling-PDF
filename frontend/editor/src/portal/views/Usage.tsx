@@ -1,4 +1,5 @@
 import { TeamSubscriptionChange } from "@app/billing/TeamSubscriptionChange";
+import { fetchCheckoutPricing } from "@app/portal/billing/stripe";
 import type { ServerPlan } from "@app/billing/serverPlan";
 import { fleetUsersInUse } from "@app/billing/fleetSeats";
 import {
@@ -260,13 +261,18 @@ export function Usage({
       ? wallet?.team?.usersInUse
       : localUsersInUse;
   const addCapacity = useCallback(() => {
+    const teamId = wallet?.teamId;
     // No email: the only one this instance holds is its local admin record, which is a Spring
     // username and not an address the buyer owns. The checkout asks for one instead.
     void checkout?.openCheckout("server", {
       combinedChoose: true,
       currentLimit: heldLimit,
       minimumSeats: usersInUse ?? undefined,
-      teamId: wallet?.teamId ?? undefined,
+      resolveCurrency:
+        teamId != null
+          ? (preferredCurrency) =>
+              fetchCheckoutPricing(teamId, "currency", preferredCurrency)
+          : undefined,
       capacityNotice:
         !serverPlan &&
         !wallet?.team?.held &&

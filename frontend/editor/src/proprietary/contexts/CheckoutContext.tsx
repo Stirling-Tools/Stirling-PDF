@@ -33,15 +33,17 @@ import {
 import { useLicense } from "@app/contexts/LicenseContext";
 import { isSupabaseConfigured } from "@app/services/supabaseClient";
 import { getPreferredCurrency } from "@app/utils/currencyDetection";
-import { fetchCheckoutPricing } from "@app/portal/billing/stripe";
 import {
   usePlanFeatures,
   usePlanHighlights,
 } from "@app/constants/planConstants";
 
 export interface CheckoutOptions {
-  /** Linked team whose Stripe customer determines the billing currency. */
-  teamId?: number;
+  /** Resolves the linked customer's currency using the caller's billing session. */
+  resolveCurrency?: (preferredCurrency: string) => Promise<{
+    currency: string;
+    currencyLocked: boolean;
+  }>;
   minimumSeats?: number; // Override calculated seats for enterprise
   currency?: string; // Explicit display currency; checkout localization is handled by Stripe
   onSuccess?: (sessionId: string) => void; // Callback after successful payment
@@ -359,14 +361,7 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
 
         const preferredCurrency =
           options.currency || defaultCurrency || getPreferredCurrency();
-        const pricing =
-          options.teamId != null
-            ? await fetchCheckoutPricing(
-                options.teamId,
-                "currency",
-                preferredCurrency,
-              )
-            : null;
+        const pricing = await options.resolveCurrency?.(preferredCurrency);
         const currency = pricing?.currency ?? preferredCurrency;
         if (currency !== currentCurrency) {
           setCurrentCurrency(currency);
