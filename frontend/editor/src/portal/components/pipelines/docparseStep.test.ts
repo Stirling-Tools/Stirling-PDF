@@ -7,7 +7,7 @@ import {
 } from "@portal/components/pipelines/docparseStep";
 import { isReadableSource } from "@portal/components/sources/sourceTypes";
 
-describe("RAG database destinations", () => {
+describe("vector database destinations", () => {
   it.each([
     { exportChunksJsonl: true },
     { exportMarkdown: true },
@@ -56,7 +56,7 @@ describe("RAG database destinations", () => {
   });
 });
 
-describe("RAG chunk parameter limits", () => {
+describe("ingestion chunk parameter limits", () => {
   it.each([
     { chunkSize: 63 },
     { chunkSize: 32769 },
