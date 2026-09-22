@@ -250,7 +250,16 @@ public class MetadataController {
                             || "undefined".equalsIgnoreCase(trapped.trim())) {
                         normalizedTrapped = null;
                     } else {
-                        normalizedTrapped = info.getTrapped();
+                        // Only a spec value survives: PDFBox rejects anything
+                        // else at setTrapped time, so a non-standard value
+                        // already in the file must be dropped, not re-applied.
+                        String existing = info.getTrapped();
+                        normalizedTrapped =
+                                "True".equals(existing)
+                                                || "False".equals(existing)
+                                                || "Unknown".equals(existing)
+                                        ? existing
+                                        : null;
                     }
                     info.setTrapped(normalizedTrapped);
                 }

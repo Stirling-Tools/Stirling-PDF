@@ -131,6 +131,31 @@ class MetadataControllerTest {
     }
 
     @Test
+    void testMetadata_nonStandardExistingTrappedIsDroppedInsteadOfReapplied() throws Exception {
+        when(pdfDocumentFactory.load(any(MultipartFile.class), eq(true))).thenReturn(mockDocument);
+        when(mockDocument.getDocumentInformation()).thenReturn(mockInfo);
+        when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
+        // A file carrying a non-standard /Trapped name: re-applying it would
+        // make PDFBox throw inside setTrapped.
+        when(mockInfo.getTrapped()).thenReturn("Yes");
+
+        MetadataRequest request = new MetadataRequest();
+        request.setFileInput(mockFile);
+        request.setDeleteAll(false);
+        request.setTrapped("not-a-trapped-value");
+        request.setAllRequestParams(new HashMap<>());
+
+        try {
+            metadataController.metadata(request);
+        } catch (Exception _) {
+            // WebResponseUtils.pdfDocToWebResponse fails without a servlet response;
+            // the verify below covers the field-setting logic.
+        }
+
+        verify(mockInfo).setTrapped(null);
+    }
+
+    @Test
     void testMetadata_undefinedFieldsSetToNull() throws Exception {
         when(pdfDocumentFactory.load(any(MultipartFile.class), eq(true))).thenReturn(mockDocument);
         when(mockDocument.getDocumentInformation()).thenReturn(mockInfo);
