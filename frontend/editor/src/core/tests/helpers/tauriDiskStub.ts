@@ -69,9 +69,27 @@ export async function installTauri(page: Page) {
         return id;
       },
       unregisterListener() {},
-      async invoke(cmd: string, args: any = {}) {
+      async invoke(cmd: string, args: any = {}, options: any = {}) {
         w.__invoked.push(cmd);
         switch (cmd) {
+          case "plugin:dialog|open":
+            return w.__pickedPaths ?? null;
+          case "plugin:dialog|save":
+            throw new Error(
+              "Unexpected Save As: the imported file must keep its disk path",
+            );
+          case "resolve_dropped_file_paths":
+            return w.__droppedPaths ?? [];
+          case "plugin:fs|write_file": {
+            const path = decodeURIComponent(options.headers.path);
+            w.__writtenPaths = [...(w.__writtenPaths ?? []), path];
+            w.__disk[path] = {
+              bytes: Array.from(args),
+              modifiedMs: Date.now(),
+            };
+            w.__saveDisk();
+            return null;
+          }
           case "file_disk_state":
             return stat(args.path);
           case "plugin:fs|read_file": {
@@ -126,7 +144,11 @@ export async function installTauri(page: Page) {
 
           case "get_backend_port":
             return 8080;
-          case "pop_opened_files":
+          case "pop_opened_files": {
+            const paths = w.__openedPaths ?? [];
+            w.__openedPaths = [];
+            return paths;
+          }
           case "get_opened_files":
           case "pop_window_file_ids":
             return [];

@@ -179,3 +179,24 @@ it("does not price gross usage as paid usage", () => {
   expect(screen.getAllByText("$30.00")).toHaveLength(2);
   expect(screen.queryByText("$40.00")).not.toBeInTheDocument();
 });
+
+it("retains Plan and Usage while data is unavailable without inventing figures or purchase actions", () => {
+  render(
+    <BillingScreen
+      wallet={null}
+      unavailable="Renew access to read billing data."
+      licenseSection={<span>Local license</span>}
+    />,
+  );
+  expect(screen.getByRole("button", { name: "Plan" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Usage" })).toBeInTheDocument();
+  expect(
+    screen.getByText("Renew access to read billing data."),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByText("Usage figures are currently unavailable."),
+  ).toBeInTheDocument();
+  expect(screen.getByText("Local license")).toBeInTheDocument();
+  expect(screen.queryByText("The full PDF Editor.")).toBeNull();
+  expect(screen.queryByRole("button", { name: "Add capacity" })).toBeNull();
+});

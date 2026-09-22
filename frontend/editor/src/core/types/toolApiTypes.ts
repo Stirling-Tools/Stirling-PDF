@@ -579,6 +579,36 @@ export interface HTMLToPdfRequest {
    */
   zoom?: number;
 }
+export interface IngestApiRequest {
+  /**
+   * Target chunk size in characters (64-32768)
+   */
+  chunkSize?: number;
+  /**
+   * Stable identifier for the ingested document; re-ingesting the same id replaces its chunks. Defaults to a content hash of the uploaded bytes.
+   */
+  documentId?: string;
+  /**
+   * Also return the chunks as a JSONL file (one chunk per line with page span and heading breadcrumb), ready for external embedding or indexing
+   */
+  exportChunksJsonl?: boolean;
+  /**
+   * Also return the parsed document as a markdown file, for delivery to external systems (vector DBs, training corpora)
+   */
+  exportMarkdown?: boolean;
+  /**
+   * Include the input PDF alongside the requested corpus files
+   */
+  includeOriginal?: boolean;
+  /**
+   * Index the document into the built-in knowledge base
+   */
+  index?: boolean;
+  /**
+   * Overlap between adjacent chunks in characters (0-4096)
+   */
+  overlap?: number;
+}
 export interface IntegrationExternalApiCallRequest {
   bodyMode?: string;
   bodyTemplate?: string;
@@ -1558,6 +1588,7 @@ export type ToolEndpoint =
   | "/api/v1/convert/text-editor/pdf"
   | "/api/v1/convert/url/pdf"
   | "/api/v1/convert/vector/pdf"
+  | "/api/v1/docparse/ingest"
   | "/api/v1/filter/filter-contains-image"
   | "/api/v1/filter/filter-contains-text"
   | "/api/v1/filter/filter-file-size"
@@ -1668,6 +1699,7 @@ export interface ToolApiParams {
   "/api/v1/convert/text-editor/pdf": GeneralFile;
   "/api/v1/convert/url/pdf": UrlToPdfRequest;
   "/api/v1/convert/vector/pdf": PdfVectorExportRequest;
+  "/api/v1/docparse/ingest": IngestApiRequest;
   "/api/v1/filter/filter-contains-image": PDFWithPageNums;
   "/api/v1/filter/filter-contains-text": ContainsTextRequest;
   "/api/v1/filter/filter-file-size": FileSizeRequest;
@@ -1779,6 +1811,7 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/convert/text-editor/pdf",
   "/api/v1/convert/url/pdf",
   "/api/v1/convert/vector/pdf",
+  "/api/v1/docparse/ingest",
   "/api/v1/filter/filter-contains-image",
   "/api/v1/filter/filter-contains-text",
   "/api/v1/filter/filter-file-size",
