@@ -42,7 +42,7 @@ export const Default: Story = {
   args: {
     selectedFileIds: [singleFile.id],
     fileMap,
-    currentFolder: null,
+    foldersById: new Map(),
     onClose: () => {},
     onAddToWorkspace: () => {},
     onMove: () => {},
@@ -53,7 +53,8 @@ export const Default: Story = {
 export const InFolder: Story = {
   args: {
     ...Default.args,
-    currentFolder: folder,
+    foldersById: new Map([[folder.id, folder]]),
+    fileMap: new Map([[singleFile.id, { ...singleFile, folderId: folder.id }]]),
   },
 };
 
@@ -71,7 +72,7 @@ export const MultiSelect: Story = {
         [fileA.id, fileA],
         [fileB.id, fileB],
       ]),
-      currentFolder: null,
+      foldersById: new Map(),
       onClose: () => {},
       onAddToWorkspace: () => {},
       onMove: () => {},
