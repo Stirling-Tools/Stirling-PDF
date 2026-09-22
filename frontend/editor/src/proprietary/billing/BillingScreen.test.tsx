@@ -14,6 +14,97 @@ vi.mock("react-i18next", () => ({
 import { BillingScreen } from "@app/billing/BillingScreen";
 import { freeWallet, subscribedWallet } from "@app/billing/walletFixtures";
 
+it.each([4, 0])(
+  "keeps standalone users against the enforced allowance of %i",
+  (limit) => {
+    render(
+      <BillingScreen
+        wallet={{
+          ...freeWallet,
+          team: {
+            held: false,
+            licensedUsers: null,
+            usersInUse: 1,
+            fleet: false,
+          },
+        }}
+        usersInUse={5}
+        userLimit={limit}
+      />,
+    );
+    expect(screen.getByText(`5 of ${limit} users`)).toBeInTheDocument();
+    expect(
+      screen.getByText("Capacity available to this server"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("1 of 5 users")).not.toBeInTheDocument();
+  },
+);
+
+it("shows shared fleet usage and full purchased capacity despite a smaller local allowance", () => {
+  render(
+    <BillingScreen
+      wallet={{
+        ...freeWallet,
+        team: { held: true, licensedUsers: 100, usersInUse: 83, fleet: true },
+      }}
+      usersInUse={7}
+      userLimit={17}
+    />,
+  );
+  expect(screen.getByText("83 of 100 users")).toBeInTheDocument();
+  expect(screen.queryByText("7 of 100 users")).not.toBeInTheDocument();
+  expect(
+    screen.queryByText("Capacity available to this server"),
+  ).not.toBeInTheDocument();
+});
+
+it.each([null, 3, 5])(
+  "replaces a local report of %s with live users in the fleet total",
+  (reported) => {
+    render(
+      <BillingScreen
+        wallet={{
+          ...freeWallet,
+          team: {
+            held: true,
+            licensedUsers: 100,
+            usersInUse: (reported ?? 0) + 2,
+            fleet: true,
+            breakdown: {
+              cloudUsers: 0,
+              excludedOwners: 1,
+              deployments: [
+                {
+                  deviceId: "one",
+                  name: "Server One",
+                  users: reported,
+                  reportedAt: null,
+                },
+                {
+                  deviceId: "two",
+                  name: "Server Two",
+                  users: 2,
+                  reportedAt: null,
+                },
+              ],
+            },
+          },
+        }}
+        deviceId="one"
+        usersInUse={5}
+        userLimit={98}
+      />,
+    );
+    expect(screen.getByText("7 of 100 users")).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", { name: "Users: 7 of 100 users" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("7", { selector: ".billing-kv__value" }),
+    ).toBeInTheDocument();
+  },
+);
+
 /**
  * Units a linked instance has accrued that the cloud has not billed yet are real spend, and every
  * figure on this screen counts them. Two totals disagreeing by an undisclosed amount is the bug
@@ -178,4 +269,25 @@ it("does not price gross usage as paid usage", () => {
   );
   expect(screen.getAllByText("$30.00")).toHaveLength(2);
   expect(screen.queryByText("$40.00")).not.toBeInTheDocument();
+});
+
+it("retains Plan and Usage while data is unavailable without inventing figures or purchase actions", () => {
+  render(
+    <BillingScreen
+      wallet={null}
+      unavailable="Renew access to read billing data."
+      licenseSection={<span>Local license</span>}
+    />,
+  );
+  expect(screen.getByRole("button", { name: "Plan" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Usage" })).toBeInTheDocument();
+  expect(
+    screen.getByText("Renew access to read billing data."),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByText("Usage figures are currently unavailable."),
+  ).toBeInTheDocument();
+  expect(screen.getByText("Local license")).toBeInTheDocument();
+  expect(screen.queryByText("The full PDF Editor.")).toBeNull();
+  expect(screen.queryByRole("button", { name: "Add capacity" })).toBeNull();
 });

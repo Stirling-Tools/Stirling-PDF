@@ -2243,6 +2243,7 @@ title = "Suggested"
 finish = "Finish"
 run = "Run Automation"
 running = "Running Automation..."
+signInToRun = "Sign in to run automations."
 steps_one = "{{count}} step"
 steps_other = "{{count}} steps"
 unnamed = "Unnamed Automation"
@@ -3428,10 +3429,8 @@ title = "Open every PDF in Stirling"
 
 [classificationDemo.followUp]
 background = "This runs in the background. The ring on the left shows progress."
-batchCta = "Process another {{count}}"
-free = "They are all covered by your remaining free allowance."
-partial = "{{count}} of them are covered by your remaining free allowance."
 restCta = "Process the rest"
+serverCredits = "Your connected server manages credits for processing these files."
 title = "Want to keep going? You have {{count}} more PDFs in your Downloads folder."
 
 [classificationDemo.groups]
@@ -3440,7 +3439,7 @@ other = "Other"
 [classificationDemo.offer]
 body = "Classify and organise the {{count}} most recent PDFs in your Downloads folder by type."
 cta = "Process my Downloads folder"
-privacy = "Everything stays on this device and you can stop anytime."
+privacy = "Your PDFs stay on this device. Your connected server records processing usage."
 title = "See what Stirling can do with a whole folder"
 
 [classificationDemo.phase]
@@ -3491,6 +3490,7 @@ title = "Choose color"
 actions = "Actions"
 back = "Back"
 cancel = "Cancel"
+change = "Change"
 clearFilters = "Clear filters"
 close = "Close"
 codeSample = "Code sample"
@@ -3865,6 +3865,13 @@ title = "Connect a server"
 [connect.notFound]
 body = "This connection request is not valid. It may have expired, or already been used. Start another one from your server."
 title = "Request not valid"
+
+[connect.renewal]
+approve = "Renew sign-in"
+failed = "Your sign-in could not be renewed. Try again, or dismiss this page and start again from your server."
+lead = "This server is already linked to your account. Renew your sign-in to return to billing and usage on your server."
+title = "Renew your server sign-in"
+wrongAccount = "This account cannot renew this server's sign-in. Switch to the account originally used to link the server. That account must still own the linked team."
 
 [convert]
 autoRotate = "Auto Rotate"
@@ -4493,6 +4500,8 @@ openFromComputer = "Open from computer"
 openSettings = "Open settings"
 other = "Other"
 recent = "Recent"
+uploadFailedBody = "Could not add the selected files."
+uploadFailedTitle = "Upload failed"
 viewAll = "View all {{count}} files"
 
 [fileSidebar.fileItem]
@@ -4599,6 +4608,7 @@ open = "Open"
 openVersionInWorkspace = "Open in workspace"
 originFilter = "Filter by source"
 refresh = "Refresh"
+refreshNeedsConnection = "Sign in to refresh from the server."
 remove = "Delete"
 removeLocalFolder = "Unmount from Stirling"
 removeVersion = "Remove this version"
@@ -5647,6 +5657,7 @@ terms = "Terms and Conditions"
 title = "3rd Party Licenses"
 
 [localMode]
+automationUnavailable = "Sign in to Stirling Cloud or a self-hosted server to use processing folders and pipelines."
 toolUnavailable = "This tool requires an account. Sign in to Stirling Cloud or connect to a self-hosted server to use it."
 
 [localMode.toolPicker]
@@ -6595,6 +6606,8 @@ resetsTomorrow = "Resets tomorrow"
 thisPeriod = "This billing period"
 
 [payment]
+billingPeriod = "Billing period"
+cancelTeamChange = "Keep current plan"
 canCloseWindow = "You can now close this window."
 error = "Payment Error"
 generatingLicense = "Generating your license key..."
@@ -6610,17 +6623,22 @@ manageSubscription = "Manage subscription"
 monthly = "Monthly"
 paymentCanceled = "Payment was canceled. No charges were made."
 perMonth = "/month"
+perUserBlock = "per 100 users"
 preparing = "Preparing your checkout..."
 redirecting = "Redirecting to secure checkout..."
-stepOf = "Step {{n}} of {{total}}"
 success = "Payment Successful!"
 successMessage = "Your subscription has been activated successfully. You will receive a confirmation email shortly."
 syncError = "Payment successful but license sync failed. Your license will be updated shortly. Please contact support if issues persist."
 syncingLicense = "Syncing your upgraded license..."
 teamActivated = "Your Team capacity is active"
 teamActivating = "Confirming your Team capacity..."
+teamChangeCurrent = "Your current allowance remains available until then. Keep your current plan to cancel this change before making another adjustment."
+teamChangePending = "{{users}} users · {{period}} from {{date}}"
+teamChangeSupport = "Your Team subscription has a scheduled change that needs billing support to adjust."
+teamChangeUnavailable = "Scheduled Team changes could not be loaded. Refresh to try again."
 teamPending = "Your Team purchase is still processing. Refresh this page shortly."
 teamProcessing = "Team purchase processing"
+teamScheduled = "Your Team change is scheduled for {{date}}. Your current capacity stays active until then."
 upgradeComplete = "Upgrade Complete"
 upgradeCompleteMessage = "Your subscription has been upgraded successfully. Your existing license key has been updated."
 upgradeSuccess = "Payment successful! Your subscription has been upgraded. The license has been updated on your server. You will receive a confirmation email shortly."
@@ -6628,13 +6646,13 @@ upgradeTitle = "Upgrade to {{planName}}"
 yearly = "Yearly"
 
 [payment.addCapacity]
-currently = "Currently up to {{users}} users"
-title = "Add capacity"
+
+[payment.adjustTeam]
+title = "Adjust Team plan"
 
 [payment.capacityStage]
 adjustmentNote = "Stripe will show the exact charge, any prorations and your next billing date before you confirm. Your saved payment method will be used if available."
 continue = "Continue to payment"
-customHint = "Rounded up to the next block of {{users}}."
 customLabel = "Number of users"
 dueToday = "Due today"
 enterpriseQuote = "Get an enterprise quote"
@@ -6643,13 +6661,17 @@ minimumForCurrentUsers = "You have {{users}} users, so the plan must cover at le
 modalTitle = "Upgrade to {{planName}}"
 newPlanTotal = "New plan total"
 other = "Other"
+overCapacityBody = "{{users}} users are on this server; your current allowance is {{limit}}. Choose a Team plan below to cover everyone."
+overCapacityConsequence = "Existing accounts stay in place. Adding or inviting users is blocked until you add capacity or free up seats."
+overCapacityTitle = "Your server has more users than your plan covers"
 perMonth = "/mo"
 perYear = "/yr"
+reductionNote = "The lower capacity starts at your next renewal. Until then, you can use your current allowance. Existing users stay; new users are blocked if you are over capacity when the change takes effect."
 renewalNote = "Renews at {{total}}{{period}}. Cancel any time in Usage & Billing."
 reviewChange = "Review change in Stripe"
+roundsTo = "rounds to {{users}}"
 subheading = "Covers everyone you invite, in blocks of {{users}} users."
 subheadingAdd = "Your plan covers {{current}} users today. Choose the new total."
-userDelta = "+{{users}} users"
 usersLabel = "Users"
 userTotal = "{{users}} users"
 
@@ -7393,7 +7415,7 @@ switchOnProcessor = "Switch on the Processor"
 title = "Connected"
 
 [portal.accountLink.connect.handoff]
-going = "Taking you to stirling.com"
+opening = "Opening Stirling sign-in..."
 reauthLede = "Your Stirling session expired. Signing in again keeps usage and billing visible. This server stays connected either way."
 title = "Connecting"
 
@@ -7419,12 +7441,13 @@ otherTitle = "No other connected instances"
 title = "No connected instances"
 
 [portal.accountLink.modal]
+callbackMismatch = "This server's configured frontend address does not match the address you opened. Open the server at its configured address, or update Frontend URL in General settings, then try again."
 cancel = "Cancel"
 continueReauth = "Sign in again"
 exhaustedTitle = "Add more monthly credits"
+identity = "Stirling account"
 linkTitle = "Connect your Stirling account"
 noAuthorizeUrl = "Stirling did not return somewhere to continue. Try again in a moment."
-reauthTitle = "Sign in again"
 startFailed = "Could not reach Stirling to start the connection. Check this server's outbound network access, then try again."
 
 [portal.accountLink.modal.loginNotConfigured]
@@ -7440,6 +7463,7 @@ manageCloud = "Manage on stirling.com"
 otherInstancesSub = "Other self-hosted servers connected to the same team in Stirling Cloud."
 otherInstancesTitle = "Other connected instances"
 revokeError = "Couldn't revoke instance"
+sessionRequired = "Connected instances will appear after you renew billing access."
 sub = "Manage this server’s connection to your Stirling Cloud account."
 
 [portal.accountLink.panel.loadError]
@@ -7447,11 +7471,20 @@ forbidden = "Only the team owner can manage connected instances."
 generic = "Your connections could not be checked. Try again."
 title = "Couldn’t load connected instances"
 
-[portal.accountLink.rail]
-cta = "Connect"
-later = "Not now"
-sub = "Adds monthly credits and room for more users. Everything on this server already works without one."
-title = "Connect your Stirling account"
+[portal.accountLink.renewal]
+dataUnavailable = "Your plan and usage will appear after you renew billing access. This server stays connected, and local document processing remains available."
+expired = "This sign-in request expired. Try again to renew billing access; your server is still connected."
+expiredTitle = "Sign-in request expired"
+incomplete = "This server is still connected, but we could not restore billing access in this browser. Try signing in again."
+malformed = "We could not verify this sign-in response. Start again from Usage & billing; your server is still connected."
+malformedTitle = "Could not verify sign-in"
+rejected = "This sign-in request was declined or has already been used. Try again to renew billing access."
+rejectedTitle = "Sign-in not completed"
+retry = "Stirling could not finish renewing billing access. Try again in a moment; your server is still connected."
+retryTitle = "Billing access not restored"
+success = "Your billing access has been renewed. This server is still connected to the same Stirling account."
+title = "Renew billing access"
+working = "Restoring billing access."
 
 [portal.accountLink.state]
 free = "Editor plan"
@@ -7473,6 +7506,9 @@ typing = "Typing"
 [portal.auth]
 loading = "Loading"
 redirectingToEditor = "Redirecting to the editor..."
+
+[portal.billing]
+dataUnavailable = "Usage figures are currently unavailable."
 
 [portal.billing.activation]
 maybeLater = "Maybe later"
@@ -7498,13 +7534,8 @@ title = "Almost there"
 
 [portal.billing.checkout.cap]
 amountAria = "Monthly spend limit"
-back = "Back"
 continue = "Continue to payment"
 error = "Couldn't set your spend limit"
-finePrint = "Invoices post monthly. Cancel anytime."
-noLimit = "No limit"
-note = "You're never billed past your limit. Processing just pauses."
-perMonth = "/ mo"
 title = "Set your spend limit"
 
 [portal.billing.checkout.card]
@@ -7630,11 +7661,11 @@ topUp = "Top up"
 
 [portal.billing.prepaid.buy]
 back = "Back"
-calcTitle = "Calculate your annual payment"
 cancel = "Cancel"
 cancelPurchase = "Cancel purchase"
 close = "Close"
 continueToPayment = "Continue to payment"
+creditTitle = "Prepay the year"
 finalise = "Finalise"
 invoiceErrorTitle = "Couldn't generate the invoice"
 loadingTitle = "Loading your quote"
@@ -7642,34 +7673,12 @@ payTitle = "Pay for your year"
 step = "Step {{current}} of {{total}}"
 
 [portal.billing.prepaid.calc]
-change = "Change"
-deployRow = "Deployment"
-done = "Done"
-enterpriseHint = "This is enterprise scale. At this volume, enterprise rates beat any self-serve discount. Rate lock, terms, and a quote in minutes."
-governanceRow = "Governance"
-governanceValue = "{{label}} · {{count}} policies"
-handlesLabel = "Your Processor"
-handlesValue = "handles {{volume}} credits / mo"
-pipelinesLabel = "Pipelines"
-policiesMeta = "{{count}} policies"
-poolCaption = "One pool of {{credits}} credits for the year. Heavy months borrow from light ones."
-priceLabel = "Your year · 12 months for the price of 10"
 rateUnknown = "We'll show the exact price at checkout."
-savings = "You save {{amount}} · 2 months free."
-sizingRow = "Sizing"
-sizingValue = "{{label}} · {{desc}}"
-usersLabel = "Total users"
 
 [portal.billing.prepaid.consent]
 label = "I understand that when my prepaid capacity is used up or expires after 12 months, processing automatically continues at the standard metered pay-as-you-go rate (up to my spend limit) unless I cancel, and that I can cancel anytime from the billing portal."
 
 [portal.billing.prepaid.deploy]
-cloud = "Stirling Cloud"
-cloudDesc = "Managed by Stirling. Live in minutes."
-cloudValue = "Stirling Cloud · Managed"
-selfhost = "Self-hosted"
-selfhostDesc = "Runs on private infrastructure. Same rate."
-selfhostValue = "Self-hosted · Private infrastructure"
 
 [portal.billing.prepaid.offer]
 cta = "Review offer"
@@ -7687,33 +7696,14 @@ poNumber = "PO number (optional)"
 poNumberPlaceholder = "e.g. PO-2026-0142"
 
 [portal.billing.prepaid.pipelines]
-advanced = "Advanced"
-advancedDesc = "Pipelines drive most of your processing."
-none = "None"
-noneDesc = "Not running pipelines yet. Turn them on any time."
-standard = "Standard"
-standardDesc = "A few pipelines re-process arriving PDFs."
 
 [portal.billing.prepaid.posture]
-essentials = "Essentials"
-essentialsDesc = "Classification, the default, plus Sharing"
-governed = "Governed"
-governedDesc = "Adds Security and Routing"
-regulated = "Regulated"
-regulatedDesc = "Every category, incl. Compliance, Retention, Ingestion"
 
 [portal.billing.prepaid.review]
 download = "Download quote (PDF)"
 downloading = "Preparing…"
-share = "share for approval"
 
 [portal.billing.prepaid.size]
-compact = "Compact"
-compactDesc = "Files under 25 MB, no data charges"
-heavy = "Heavy"
-heavyDesc = "Scanned or image-heavy, routinely 50 MB+"
-standard = "Standard"
-standardDesc = "Mostly small, some scans past 25 MB"
 
 [portal.billing.prepaid.state]
 exhausted = "Used up"
@@ -7722,19 +7712,34 @@ low = "Running low"
 
 [portal.billing.processor]
 activate = "Switch on the Processor"
-factCapped = "{{pct}}% of {{cap}}"
 factFree = "{{used}} of {{allowance}} used"
 factNoCap = "no limit"
+freeRemaining = "Free credits remaining"
 included = "Included in your license"
-includedCredits = "Included credits"
 includedRenewal = "{{summary}} · Renews {{date}}"
 meteredCapTooltip = "Pauses metered processing at your spend limit."
 midIncluded = "{{rate}} per credit · {{allowance}} included every month"
 midIncludedNoRate = "{{allowance}} included every month"
 midMetered = "{{spend}} metered this cycle"
 midMeteredUnknown = "Metered this cycle"
+noSpendLimit = "No spend limit"
+paidUsed = "Paid metered usage"
+percentUsed = "{{pct}}%"
 raiseLimit = "Raise limit"
+remainingOf = "{{remaining}} of {{total}}"
 rowName = "Processor"
+spendAgainstLimit = "{{spend}} of {{cap}} metered this cycle"
+
+[portal.billing.seats]
+awaitingSync = "Waiting for its daily sync; not yet included in the fleet total."
+breakdown = "Where users are counted"
+cloud = "Stirling Cloud"
+deployment = "Linked server"
+lastReported = "Reported {{date}}"
+live = "Live user count"
+notReported = "Not yet reported"
+ownerExcluded = "The required cloud team owner does not use a seat."
+thisServer = "This server"
 
 [portal.billing.section]
 cycle = "This cycle"
@@ -7752,18 +7757,34 @@ seats = "{{seats}} licensed seats"
 server = "Server"
 unlimited = "Unlimited users"
 
+[portal.billing.simple]
+afterYear = "After the year"
+afterYearNote = "No automatic renewal. Further processing needs an active metered plan and stays within its spend limit."
+billingNote = "No standing fee. Credits bill monthly as used. Cancel any time in Usage & Billing."
+creditEstimate = "≈ {{credits}} credits"
+credits = "Credits"
+limit = "Spend limit · processing pauses here"
+limitIntro = "Cap what the Processor can bill each month."
+monthlyAmount = "{{amount}}/mo"
+prepayDiscount = "Prepay discount · 12 for 10"
+prepayIntro = "A year of processing at a discount."
+rate = "{{rate}} each · billed as used"
+ratePending = "Rate shown at checkout"
+setLimit = "Set a spend limit"
+yearSize = "Year size"
+yearValue = "A year of processing"
+
 [portal.billing.spendLimit]
 adjustLimit = "Adjust limit"
+buyCredits = "Buy credits"
 cancel = "Cancel"
 capControlNote = "Changes apply immediately — raise or lower the ceiling any time."
 capSuffix = "/ month"
-capSuffixWithDocs = "/ month · ≈ {{documents}} documents"
 displaySub = "You're only billed for what you process automatically — never past the ceiling."
 editTitle = "Set your monthly ceiling"
 eyebrow = "Spend limit"
-guardrailBody = "a hard ceiling; you're never billed past it. At the cap, metered processing pauses (unlimited PDF editing keeps working) until you raise it or the cycle resets. Nothing is lost."
-guardrailLabel = "Your guardrail:"
 noCap = "no cap"
+pauseNote = "Metered processing pauses at your limit. PDF editing remains available."
 pctUsed = "{{pct}}% used"
 remaining = "{{amount}} remaining"
 save = "Save limit"
@@ -7778,7 +7799,6 @@ body_other = "At {{rate}}/day you reach the cap in ~{{count}} days (~{{monthEnd}
 label = "Projected to exceed."
 
 [portal.billing.spendLimitModal]
-title = "Monthly spend limit"
 
 [portal.billing.subscribedPlan.capWarn]
 approachingBody = "Raise it now so automated processing never pauses."
@@ -7797,6 +7817,7 @@ factNoLimit = "{{users}} users"
 midFree = "The Team plan covers 100 users"
 midFreeSelfHosted = "The free tier covers your first users"
 midIncluded = "Included with your Team base"
+midLocalCapacity = "Capacity available to this server"
 midPrice = "$99/mo per 100 users"
 rowName = "Users"
 
@@ -8461,6 +8482,22 @@ title = "Wrong file type"
 description = "A page in your file could not be drawn, so the run could not finish."
 title = "Page could not be rendered"
 
+[portal.failures.kind.stepInterrupted]
+description = "This step was stopped before it finished, so your file was not processed. Running it again usually works."
+title = "Step was interrupted"
+
+[portal.failures.kind.stepMisconfigured]
+description = "This step's settings are not valid, so it could not run on any file. Edit the step to fix them."
+title = "Step settings are invalid"
+
+[portal.failures.kind.stepPageTooLarge]
+description = "A page in your file could not be rendered at the requested resolution. Lower the DPI in the step, or split the file."
+title = "Page too large to render"
+
+[portal.failures.kind.stepToolFailed]
+description = "A tool this step relies on could not process your file."
+title = "Tool could not process the file"
+
 [portal.failures.kind.toolNotInstalled]
 description = "This server is missing software the step needs, so the run could not start it."
 title = "Software not installed"
@@ -8990,6 +9027,24 @@ undeclared-operation = "Can't check what this step accepts"
 [portal.pipelines.builder.icon]
 label = "Change icon"
 
+[portal.pipelines.builder.ingest]
+chunkSize = "Chunk size"
+chunkSizeHint = "Characters per chunk. Smaller chunks retrieve more precisely; larger ones keep more context together."
+editorPdfOnly = "Editor policies return PDFs only. To export chunks or Markdown, choose a saved input source and a file destination."
+exportChunks = "Export chunks as JSONL"
+exportChunksHint = "One chunk per line with its page span, ready to load into another system."
+exportMarkdown = "Export markdown"
+exportMarkdownHint = "The document's text as one Markdown file."
+includeOriginal = "Include the input PDF"
+includeOriginalHint = "Deliver the PDF alongside exported text. This does not change whether the source keeps its original."
+index = "Index into the knowledge base"
+indexHint = "Embeds the document so it can be searched and asked about. Needs the AI engine."
+nothingToDo = "Turn on at least one of indexing or an export, or this step has nothing to do and the run will fail."
+overlap = "Overlap"
+overlapHint = "Characters repeated between neighbouring chunks, so a sentence split across two is still findable."
+overlapTooBig = "Overlap must be smaller than the chunk size ({{chunkSize}})."
+unavailable = "AI ingestion needs the AI engine and DocParse turned on, including when the destination database generates embeddings."
+
 [portal.pipelines.builder.routing]
 addRule = "Add a route"
 aiDisabled = "AI classification is not enabled. Enable it in Settings, or route on a document property instead."
@@ -9261,6 +9316,7 @@ autoRedact = "Redact PII"
 classifyAndLabel = "Classify"
 compressPdf = "Compress"
 flatten = "Flatten"
+ingest = "Prepare for knowledge search"
 ocrPdf = "OCR"
 pdfa = "Convert to PDF/A"
 sanitizePdf = "Remove JavaScript"
@@ -9483,6 +9539,10 @@ label = "Reduce file size"
 [portal.policies.wizard.capability.flatten]
 desc = "Merges form fields and annotations into the page so they can't be edited."
 label = "Flatten the document"
+
+[portal.policies.wizard.capability.ingest]
+desc = "Prepare searchable chunks for the built-in knowledge base, a connected vector database, or a corpus export."
+label = "Prepare for knowledge search"
 
 [portal.policies.wizard.capability.ocr]
 desc = "Runs OCR so scanned pages become selectable, searchable text."
@@ -10084,9 +10144,7 @@ loadError = "Couldn't read this server's credit usage. Try again in a moment."
 loadErrorTitle = "Couldn't load credit usage"
 
 [portal.usage.sessionExpired]
-action = "Sign in again"
 body = "Your Stirling account session has expired. Sign in again to view billing — your instance stays linked."
-title = "Session expired"
 
 [portal.users]
 title = "Users"
@@ -10210,6 +10268,7 @@ selectFolder = "Select a folder"
 server = "Server storage"
 serverAction = "Or add a new folder to your server"
 settings = "Adjust settings"
+signInRequired = "Sign in to set up folder processing"
 title = "Set up folder processing"
 useExisting = "Use existing folder"
 viewLabels = "View classification labels"
@@ -10438,6 +10497,7 @@ noProcessorAccess = "Ask an admin for processor access"
 notifications = "Notifications"
 processor = "Processor"
 reader = "Reader"
+signInToUse = "Sign in to use this"
 
 [read]
 tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
@@ -11023,6 +11083,8 @@ removeError = "Couldn’t remove the connection. Try again."
 renameError = "Couldn’t save the name. Try again."
 retry = "Try again"
 saveName = "Save name"
+seatsReported = "{{count}} Team seats · reported {{date}}. Offline deployments keep their seats until unlinked."
+seatsUnknown = "Waiting for this deployment to report its user count in the daily sync."
 subtitle = "Manage the self-hosted servers connected to your team."
 teamNote = "These instances share your team’s processing allowance."
 title = "Connected instances"

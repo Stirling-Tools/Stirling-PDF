@@ -1,8 +1,17 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Text, Stack, Group, Card, Progress, Loader } from "@mantine/core";
+import {
+  Text,
+  Stack,
+  Group,
+  Card,
+  Progress,
+  Loader,
+  Tooltip,
+} from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { Icon } from "@app/ui/Icon";
+import { useConnectedServer } from "@app/hooks/useConnectedServer";
 import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import { AutomationConfig, ExecutionStep } from "@app/types/automation";
@@ -36,6 +45,13 @@ export default function AutomationRun({
   const hasResults =
     (automateOperation?.files.length ?? 0) > 0 ||
     automateOperation?.downloadUrl !== null;
+
+  // Automations execute on the connected server. True on web (server-backed); on desktop
+  // it tracks the signed-in connection, so running waits until one exists.
+  const connectedServer = useConnectedServer();
+  const signInReason = connectedServer
+    ? null
+    : t("automate.sequence.signInToRun", "Sign in to run automations.");
 
   // Initialize execution steps from automation
   useEffect(() => {
@@ -227,18 +243,26 @@ export default function AutomationRun({
 
         {/* Action Buttons */}
         <Group justify="space-between" mt="xl">
-          <Button
-            leftSection={<Icon name="play" />}
-            onClick={executeAutomation}
-            disabled={
-              isExecuting || !selectedFiles || selectedFiles.length === 0
-            }
-            loading={isExecuting}
-          >
-            {isExecuting
-              ? t("automate.sequence.running", "Running Automation...")
-              : t("automate.sequence.run", "Run Automation")}
-          </Button>
+          <Tooltip label={signInReason} disabled={!signInReason} withArrow>
+            {/* Wrapper keeps the tooltip reachable while the button is disabled. */}
+            <span style={{ display: "inline-flex" }}>
+              <Button
+                leftSection={<Icon name="play" />}
+                onClick={executeAutomation}
+                disabled={
+                  isExecuting ||
+                  !selectedFiles ||
+                  selectedFiles.length === 0 ||
+                  Boolean(signInReason)
+                }
+                loading={isExecuting}
+              >
+                {isExecuting
+                  ? t("automate.sequence.running", "Running Automation...")
+                  : t("automate.sequence.run", "Run Automation")}
+              </Button>
+            </span>
+          </Tooltip>
 
           {hasResults && (
             <Button variant="secondary" onClick={onComplete}>

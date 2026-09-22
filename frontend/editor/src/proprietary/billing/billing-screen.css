@@ -243,6 +243,41 @@
   text-align: right;
 }
 
+.billing-meter-tooltip {
+  display: block;
+}
+
+.billing-breakdown {
+  display: grid;
+  gap: 0.625rem;
+  min-width: min(16rem, 70vw);
+}
+
+.billing-breakdown__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.billing-breakdown small {
+  color: var(--c-text-muted);
+}
+
+.billing-breakdown__bar {
+  display: block;
+  height: 0.375rem;
+  margin-top: 0.375rem;
+  overflow: hidden;
+  background: var(--c-surface-sunken);
+  border-radius: 0.25rem;
+}
+
+.billing-breakdown__fill {
+  display: block;
+  height: 100%;
+  background: var(--c-primary);
+}
+
 .billing-meter__door {
   flex-shrink: 0;
   width: 10.625rem;
