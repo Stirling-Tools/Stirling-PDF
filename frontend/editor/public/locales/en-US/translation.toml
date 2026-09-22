@@ -4261,8 +4261,6 @@ subtitle = "Import bookmarks, build hierarchies, and apply the outline without c
 description = "Select the Edit Table of Contents tool to load its workspace."
 title = "Open the tool to start editing"
 
-[emptyFilesState]
-
 [encryptedPdfUnlock]
 description = "This PDF is password protected. Enter the password so you can continue working with it."
 emptyResponse = "Password removal did not produce a file."
@@ -4579,6 +4577,7 @@ saveToServer = "Save to server"
 saveToServerDisabledHint = "Saving to the server isn't enabled on this server. Ask your admin to enable it."
 selectAll = "Select all"
 selectedCount = "{{count}} selected"
+selectedFile = "{{name}}, selected"
 selectFile = "Select file {{name}}"
 serverFolderNeedsConnection = "Sign in to Stirling Cloud or connect a self-hosted server to use server folders."
 shareDisabledHint = "File sharing isn't enabled on this server. Ask your admin to enable it."

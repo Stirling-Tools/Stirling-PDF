@@ -22,7 +22,11 @@ import {
   rowHeightPx,
 } from "@app/components/filesPage/useVirtualFileRows";
 import { StirlingFileStub } from "@app/types/fileContext";
-import { formatFileSize, getFileDate } from "@app/utils/fileUtils";
+import {
+  detectFileExtension,
+  formatFileSize,
+  getFileDate,
+} from "@app/utils/fileUtils";
 import {
   FILES_PAGE_DRAG_TYPE,
   parseFilesPageDragPayload,
@@ -53,7 +57,7 @@ import { OpenInNewWindowMenuItem } from "@app/components/filesPage/OpenInNewWind
 
 export type FilesPageViewMode = "grid" | "list";
 
-/** A disk file's place in its working folder's pipeline, when one is attached. */
+/** A file's place in its working folder's pipeline, when one is attached. */
 export type DiskFileState = "done" | "processing" | "failed" | "waiting";
 
 export interface FilesPageEntry {
@@ -148,8 +152,6 @@ interface FileGridProps {
   onEmptyUpload?: () => void;
   /** Reuse the host's folder control so header and empty-state destinations agree. */
   emptyNewFolderControl?: React.ReactNode;
-  /** Non-null disables the New folder CTA with this reason as tooltip. */
-  newFolderDisabledReason?: string | null;
   /** Report failures through the host; per-row context subscriptions defeat memoization. */
   onActionError?: (message: string) => void;
 }
@@ -517,6 +519,7 @@ function GridView({
     true,
   );
   return (
+    // Cards contain menus and checkboxes; retain list semantics and name selected cards explicitly.
     <div className="files-page-grid" role="list" ref={setContainer}>
       {padTop > 0 && (
         <div
@@ -1174,10 +1177,10 @@ const FileCard = React.memo(function FileCard({
       );
       e.dataTransfer.effectAllowed = "move";
     },
-    [actions, file.id, disabledReason],
+    [actions, file.id],
   );
 
-  const extension = file.name.split(".").pop()?.toUpperCase() ?? "";
+  const extension = detectFileExtension(file.name).toUpperCase();
   const isPdf = extension === "PDF";
   const resolvedThumbnail = useLazyThumbnail(
     file.id,
@@ -1200,6 +1203,13 @@ const FileCard = React.memo(function FileCard({
     <div
       ref={cardRef}
       role="listitem"
+      aria-label={
+        isSelected
+          ? t("filesPage.selectedFile", "{{name}}, selected", {
+              name: file.name,
+            })
+          : file.name
+      }
       tabIndex={0}
       draggable={!selectionOnly}
       aria-disabled={Boolean(disabledReason)}
@@ -1256,7 +1266,7 @@ const FileCard = React.memo(function FileCard({
             ) : (
               <Icon name="file" size={"2rem"} />
             )}
-            <span>{extension || "FILE"}</span>
+            <span>{extension || t("filesPage.file", "File")}</span>
           </div>
         )}
         <div className="files-page-card-origin">
@@ -1785,7 +1795,7 @@ const FileRow = React.memo(function FileRow({
   const kebabRef = useRef<HTMLButtonElement>(null);
   const fileSize = useMemo(() => formatFileSize(file.size), [file.size]);
   const fileDate = useMemo(() => getFileDate({ lastModified: date }), [date]);
-  const ext = (file.name.split(".").pop() ?? "").toUpperCase();
+  const ext = detectFileExtension(file.name).toUpperCase();
   const resolvedThumbnail = useLazyThumbnail(
     file.id,
     file.size,
@@ -1972,16 +1982,20 @@ const DiskFileCard = React.memo(function DiskFileCard({
   const { t } = useTranslation();
   const lockedHint = useLockedHint(state);
   const thumbnail = useDiskThumbnail(entry);
-  const extension = entry.name.includes(".")
-    ? entry.name.split(".").pop()!.toUpperCase()
-    : "";
+  const extension = detectFileExtension(entry.name).toUpperCase();
   const isPdf = extension === "PDF";
   return (
     <div
       className={`files-page-card${locked ? " is-locked" : ""}${isSelected ? " is-selected" : ""}`}
       role="listitem"
       tabIndex={0}
-      aria-selected={isSelected}
+      aria-label={
+        isSelected
+          ? t("filesPage.selectedFile", "{{name}}, selected", {
+              name: entry.name,
+            })
+          : entry.name
+      }
       aria-disabled={locked}
       onClick={(event) => {
         if (selectionOnly && !locked)
@@ -2023,7 +2037,7 @@ const DiskFileCard = React.memo(function DiskFileCard({
             ) : (
               <Icon name="file" size={"2rem"} />
             )}
-            <span>{extension || "FILE"}</span>
+            <span>{extension || t("filesPage.file", "File")}</span>
           </div>
         )}
         <div className="files-page-card-origin">
@@ -2123,9 +2137,7 @@ const DiskFileRow = React.memo(function DiskFileRow({
   const { t } = useTranslation();
   const lockedHint = useLockedHint(state);
   const thumbnail = useDiskThumbnail(entry);
-  const ext = entry.name.includes(".")
-    ? entry.name.split(".").pop()!.toUpperCase()
-    : "";
+  const ext = detectFileExtension(entry.name).toUpperCase();
   return (
     <div
       role="row"

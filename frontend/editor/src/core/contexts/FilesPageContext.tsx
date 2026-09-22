@@ -618,7 +618,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       // reconcile picks up the cloud deletions and strips stale remote pointers.
       await refresh();
     },
-    [fileMap, fileActions, folders, refresh, t],
+    [fileMap, fileActions, folders, refresh, setSelectedFileIds, t],
   );
 
   const removeFiles = useCallback(

@@ -723,6 +723,7 @@ export default function FileManagerView() {
   );
 
   const dropZoneRef = useRef<HTMLDivElement>(null);
+  const dropQueue = useRef<Promise<void>>(Promise.resolve());
   const onScrollCapture = useLibraryScrollPosition(
     dropZoneRef,
     `${currentTab}:${currentFolderId}:${viewMode}`,
@@ -758,9 +759,13 @@ export default function FileManagerView() {
       e.preventDefault();
       counter = 0;
       setIsDraggingExternal(false);
-      getDropzoneFiles(e)
-        .then((dropped) =>
-          handleNativeUpload(dropped.filter((item) => item instanceof File)),
+      // Capture drop entries while the event is live; import batches in order without losing later drops.
+      const files = getDropzoneFiles(e);
+      dropQueue.current = dropQueue.current
+        .then(async () =>
+          handleNativeUpload(
+            (await files).filter((item) => item instanceof File),
+          ),
         )
         .catch(reportUploadError);
     };
@@ -809,7 +814,7 @@ export default function FileManagerView() {
       ) {
         e.preventDefault();
         removeFiles(Array.from(selectedFileIds)).catch((err) =>
-          folders.setError(
+          setFolderError(
             err instanceof Error
               ? t("filesPage.error.removeFilesFailedDetail", {
                   message: err.message,
@@ -838,6 +843,8 @@ export default function FileManagerView() {
     removeFiles,
     setSelectedFileIds,
     focusSearch,
+    setFolderError,
+    t,
   ]);
 
   useEffect(() => {
@@ -959,8 +966,8 @@ export default function FileManagerView() {
 
   const totalCount = entries.length;
   const selectedFiles = useMemo(
-    () => Array.from(selectedFileIds),
-    [selectedFileIds],
+    () => Array.from(selectedFileIds).filter((id) => fileMap.has(id)),
+    [selectedFileIds, fileMap],
   );
   // On phones, selection actions and filters compete for width.
   const mobileSelection = isMobile && selectedFiles.length > 0;
