@@ -414,6 +414,11 @@ aiEngine:
     pdfComment: true # AI-authored PDF comments/annotations
     classify: true # Automatic document classification/labelling
 
+# DocParse: document understanding for ingestion pipelines (chunking + knowledge-base
+# indexing).
+docparse:
+  enabled: true # Master switch; hides the DocParse endpoints when false
+
 formDetection:
   enabled: true # Master on/off switch for the Auto Form Detection feature
   activeModelId: "" # Id of the installed Auto Form Detection model (set automatically after an admin installs one)
