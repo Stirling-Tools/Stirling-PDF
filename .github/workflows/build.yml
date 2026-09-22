@@ -76,7 +76,7 @@ jobs:
     needs: [files-changed, gradle-cache-prime]
     permissions:
       actions: read
-      contents: read
+      contents: write
       security-events: write
       pull-requests: write
     uses: ./.github/workflows/backend-build.yml
