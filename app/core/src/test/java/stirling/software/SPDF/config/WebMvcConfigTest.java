@@ -11,6 +11,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -262,35 +263,42 @@ class WebMvcConfigTest {
         void setUp() throws Exception {
             resolver = new WebMvcConfig.PreferredEncodingResourceResolver();
             Files.writeString(tempDir.resolve("app.js"), "plain");
-            Files.writeString(tempDir.resolve("app.js.br"), "br");
-            Files.writeString(tempDir.resolve("app.js.gz"), "gz");
         }
 
         @Test
         @DisplayName("prefers brotli when the client lists gzip first")
-        void prefersBrotli() {
-            assertThat(resolveCoding("gzip, deflate, br")).isEqualTo("br");
+        void prefersBrotli() throws IOException {
+            writeVariants();
+            assertThat(resolve("gzip, deflate, br")).isEqualTo("br");
         }
 
         @Test
-        @DisplayName("keeps an explicit gzip preference")
-        void honorsExplicitGzipPreference() {
-            assertThat(resolveCoding("gzip;q=1.0, br;q=0.5")).isEqualTo("gzip");
+        @DisplayName("serves gzip when brotli is not accepted")
+        void servesGzipWhenBrotliNotAccepted() throws IOException {
+            writeVariants();
+            assertThat(resolve("gzip, deflate")).isEqualTo("gzip");
         }
 
         @Test
-        @DisplayName("keeps an explicit brotli preference")
-        void honorsExplicitBrotliPreference() {
-            assertThat(resolveCoding("gzip;q=0.5, br;q=1.0")).isEqualTo("br");
+        @DisplayName("falls back to gzip when the brotli sibling is missing")
+        void fallsBackWhenBrotliSiblingMissing() throws IOException {
+            Files.writeString(tempDir.resolve("app.js.gz"), "gz");
+            assertThat(resolve("gzip, deflate, br")).isEqualTo("gzip");
         }
 
         @Test
-        @DisplayName("falls back to gzip when brotli is refused")
-        void refusesBrotli() {
-            assertThat(resolveCoding("gzip, br;q=0")).isEqualTo("gzip");
+        @DisplayName("serves the unencoded resource when no coding is accepted")
+        void servesPlainWhenNoCodingAccepted() {
+            assertThat(resolve("identity")).isNull();
         }
 
-        private String resolveCoding(String acceptEncoding) {
+        private void writeVariants() throws IOException {
+            Files.writeString(tempDir.resolve("app.js.br"), "br");
+            Files.writeString(tempDir.resolve("app.js.gz"), "gz");
+        }
+
+        /** Content-Encoding of the resolved resource, or null when it is unencoded. */
+        private String resolve(String acceptEncoding) {
             MockHttpServletRequest request = new MockHttpServletRequest();
             request.addHeader(HttpHeaders.ACCEPT_ENCODING, acceptEncoding);
             Resource resource =
@@ -315,9 +323,10 @@ class WebMvcConfigTest {
                                 }
                             });
             assertThat(resource).isNotNull();
-            return ((HttpResource) resource)
-                    .getResponseHeaders()
-                    .getFirst(HttpHeaders.CONTENT_ENCODING);
+            if (resource instanceof HttpResource httpResource) {
+                return httpResource.getResponseHeaders().getFirst(HttpHeaders.CONTENT_ENCODING);
+            }
+            return null;
         }
     }
 }

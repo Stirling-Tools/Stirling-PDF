@@ -3,7 +3,9 @@ package stirling.software.SPDF.config;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,10 +18,11 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.EncodedResourceResolver;
+import org.springframework.web.servlet.resource.HttpResource;
+import org.springframework.web.servlet.resource.ResourceResolver;
 import org.springframework.web.servlet.resource.ResourceResolverChain;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletRequestWrapper;
 
 import lombok.RequiredArgsConstructor;
 
@@ -145,83 +148,81 @@ public class WebMvcConfig implements WebMvcConfigurer {
     }
 
     /**
-     * Serves precompressed variants in server preference order. The framework resolver walks the
-     * client's Accept-Encoding in the order the client sent it, and browsers list gzip before br,
-     * so the brotli siblings were never selected even though they are the smaller variant.
+     * Serves the smallest precompressed variant the client accepts, in server preference order
+     * (brotli before gzip). The framework resolver walks the client's Accept-Encoding in the order
+     * sent, and browsers list gzip before br, so the brotli siblings were never selected (Spring
+     * Framework #37210). This applies the preference upstream is adopting in #37213 by asking a
+     * single-coding resolver per coding; remove it when the pinned Spring version carries the fix.
+     * Quality factors are ignored, matching the upstream behavior.
      */
-    static final class PreferredEncodingResourceResolver extends EncodedResourceResolver {
+    static final class PreferredEncodingResourceResolver implements ResourceResolver {
+
+        private record Coding(String name, EncodedResourceResolver resolver) {}
+
+        private final List<Coding> codings;
 
         PreferredEncodingResourceResolver() {
-            setContentCodings(List.of("br", "gzip"));
+            this.codings =
+                    Stream.of("br", "gzip")
+                            .map(
+                                    name -> {
+                                        EncodedResourceResolver resolver =
+                                                new EncodedResourceResolver();
+                                        resolver.setContentCodings(List.of(name));
+                                        return new Coding(name, resolver);
+                                    })
+                            .toList();
         }
 
         @Override
-        protected Resource resolveResourceInternal(
+        public Resource resolveResource(
                 HttpServletRequest request,
                 String requestPath,
                 List<? extends Resource> locations,
                 ResourceResolverChain chain) {
-            return super.resolveResourceInternal(
-                    request == null ? null : new PreferredEncodingRequest(request),
-                    requestPath,
-                    locations,
-                    chain);
-        }
-    }
-
-    /**
-     * Presents Accept-Encoding with brotli moved ahead of gzip when the client accepts it, so the
-     * framework resolver returns the smaller variant. A client that asks for gzip more strongly
-     * than brotli keeps its own order, including a q=0 refusal of brotli.
-     */
-    static final class PreferredEncodingRequest extends HttpServletRequestWrapper {
-
-        PreferredEncodingRequest(HttpServletRequest request) {
-            super(request);
-        }
-
-        @Override
-        public String getHeader(String name) {
-            String value = super.getHeader(name);
-            if (value == null || !HttpHeaders.ACCEPT_ENCODING.equalsIgnoreCase(name)) {
-                return value;
-            }
-            List<String> tokens = new ArrayList<>(List.of(value.split(",")));
-            int brIndex = indexOfCoding(tokens, "br");
-            int gzipIndex = indexOfCoding(tokens, "gzip");
-            if (brIndex < 0 || gzipIndex < 0 || brIndex < gzipIndex) {
-                return value;
-            }
-            double brQuality = quality(tokens.get(brIndex));
-            if (brQuality <= 0 || quality(tokens.get(gzipIndex)) > brQuality) {
-                return value;
-            }
-            tokens.add(gzipIndex, tokens.remove(brIndex));
-            return String.join(",", tokens);
-        }
-
-        private static int indexOfCoding(List<String> tokens, String coding) {
-            for (int i = 0; i < tokens.size(); i++) {
-                String token = tokens.get(i).split(";", 2)[0].trim();
-                if (token.equalsIgnoreCase(coding)) {
-                    return i;
-                }
-            }
-            return -1;
-        }
-
-        private static double quality(String token) {
-            for (String parameter : token.split(";")) {
-                String trimmed = parameter.trim();
-                if (trimmed.regionMatches(true, 0, "q=", 0, 2)) {
-                    try {
-                        return Double.parseDouble(trimmed.substring(2).trim());
-                    } catch (NumberFormatException e) {
-                        return 1.0;
+            if (request != null) {
+                for (Coding coding : this.codings) {
+                    if (!accepts(request, coding.name())) {
+                        continue;
+                    }
+                    Resource resolved =
+                            coding.resolver()
+                                    .resolveResource(request, requestPath, locations, chain);
+                    if (isEncodedWith(resolved, coding.name())) {
+                        return resolved;
                     }
                 }
             }
-            return 1.0;
+            return chain.resolveResource(request, requestPath, locations);
+        }
+
+        @Override
+        public String resolveUrlPath(
+                String resourcePath,
+                List<? extends Resource> locations,
+                ResourceResolverChain chain) {
+            return chain.resolveUrlPath(resourcePath, locations);
+        }
+
+        private static boolean accepts(HttpServletRequest request, String coding) {
+            String header = request.getHeader(HttpHeaders.ACCEPT_ENCODING);
+            if (header == null) {
+                return false;
+            }
+            for (String token : header.toLowerCase(Locale.ROOT).split(",")) {
+                if (token.split(";", 2)[0].trim().equals(coding)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static boolean isEncodedWith(Resource resource, String coding) {
+            return resource instanceof HttpResource httpResource
+                    && coding.equals(
+                            httpResource
+                                    .getResponseHeaders()
+                                    .getFirst(HttpHeaders.CONTENT_ENCODING));
         }
     }
 
