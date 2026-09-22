@@ -3,6 +3,7 @@ package stirling.software.common.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -628,6 +630,36 @@ class PdfMetadataServiceTest {
                         "PDF/X-1:2001", pdfx.getUnqualifiedTextPropertyValue("GTS_PDFXVersion"));
                 assertEquals("NewValue", pdfx.getUnqualifiedTextPropertyValue("NewCustom"));
                 assertEquals("OldValue", pdfx.getUnqualifiedTextPropertyValue("OldCustom"));
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("custom metadata key collisions")
+    class CustomKeyCollisionTests {
+        @Test
+        void collidingSanitizedKeysAreRejectedBeforeWriting() throws Exception {
+            PdfMetadataService service = nonProService(null);
+            try (PDDocument doc = new PDDocument()) {
+                doc.addPage(new PDPage());
+                Map<String, String> custom = new LinkedHashMap<>();
+                custom.put("1A", "first");
+                custom.put("_1A", "second");
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> service.synchronizeXmpMetadata(doc, custom));
+                // Rejected before any XMP mutation: no metadata stream created.
+                assertNull(doc.getDocumentCatalog().getMetadata());
+            }
+        }
+
+        @Test
+        void distinctSanitizedKeysAreWritten() throws Exception {
+            PdfMetadataService service = nonProService(null);
+            try (PDDocument doc = new PDDocument()) {
+                doc.addPage(new PDPage());
+                service.synchronizeXmpMetadata(doc, Map.of("KeyA", "first", "KeyB", "second"));
+                assertNotNull(doc.getDocumentCatalog().getMetadata());
             }
         }
     }

@@ -12,9 +12,11 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Calendar;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -41,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.PdfMetadata;
+import stirling.software.common.util.ExceptionUtils;
 
 @Slf4j
 @Service
@@ -326,6 +329,7 @@ public class PdfMetadataService {
         if (catalog == null) {
             return;
         }
+        validateCustomMetadataKeys(customMetadata);
         PDDocumentInformation info = document.getDocumentInformation();
         if (info == null) {
             info = new PDDocumentInformation();
@@ -514,6 +518,31 @@ public class PdfMetadataService {
         PDMetadata pdMetadata = new PDMetadata(document);
         pdMetadata.importXMPMetadata(baos.toByteArray());
         catalog.setMetadata(pdMetadata);
+    }
+
+    /**
+     * Rejects custom metadata whose keys sanitize to the same XML property name (e.g. 1A and _1A):
+     * the later write would silently overwrite the earlier one. Runs before any XMP mutation so a
+     * rejection leaves the document untouched.
+     */
+    private static void validateCustomMetadataKeys(Map<String, String> customMetadata) {
+        if (customMetadata == null) {
+            return;
+        }
+        Set<String> seen = new HashSet<>();
+        for (String rawKey : customMetadata.keySet()) {
+            if (rawKey == null || rawKey.trim().isEmpty()) {
+                continue;
+            }
+            String cleanKey = sanitizeXmlPropertyName(rawKey.trim());
+            if (!seen.add(cleanKey)) {
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.duplicateMetadataKey",
+                        "Custom metadata keys ''{0}'' and ''{1}'' map to the same property name",
+                        rawKey,
+                        cleanKey);
+            }
+        }
     }
 
     private static String sanitizeXmlPropertyName(String key) {
