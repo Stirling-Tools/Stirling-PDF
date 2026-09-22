@@ -130,7 +130,8 @@ public class VectorDbOutputSink implements PolicyOutputSink {
 
     private List<CorpusChunk> readCorpus(Resource resource) throws IOException {
         if (resource.getFilename() == null || !resource.getFilename().endsWith(".chunks.jsonl")) {
-            throw new IOException("Vector database destinations accept only ingestion chunk exports");
+            throw new IOException(
+                    "Vector database destinations accept only ingestion chunk exports");
         }
         if (resource.contentLength() > 32L * 1024 * 1024) {
             throw new IOException("Corpus exceeds the 32 MiB limit");
