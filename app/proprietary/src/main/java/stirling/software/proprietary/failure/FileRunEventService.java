@@ -140,10 +140,7 @@ public class FileRunEventService {
     public FileRunEvent dispatch(String eventId, String actionId, Map<String, String> inputs) {
         // Whoever can see it can close it: a leader for the whole team, everyone else for the
         // failures they caused. Someone who fixes their own problem should not have to ask a leader
-        // to clear the row.
-        //
-        // Audience decides what is offered, not what may be dispatched, so this scope is the whole
-        // gate. A server action aimed at OWNER alone would need its own guard here.
+        // to clear the row. What each may then do is narrowed by audience below.
         FileRunEvent event = requireVisible(eventId);
 
         FailureActionId resolvedId = parseActionId(actionId);
@@ -164,6 +161,14 @@ public class FileRunEventService {
             throw new FailureActionException(
                     FailureActionException.Reason.ACTION_NOT_DISPATCHABLE,
                     "Action " + resolvedId + " is run by the client for this document");
+        }
+        // Enforced here rather than left to each handler: reading a colleague's row is not a right
+        // to act on the document behind it, and an owner-scoped action added later would otherwise
+        // be dispatchable by any reviewer who can see the row.
+        if (!offeredToCaller(event, resolvedId)) {
+            throw new FailureActionException(
+                    FailureActionException.Reason.ACTION_NOT_THEIRS,
+                    "Action " + resolvedId + " belongs to the owner of this failure");
         }
         if (event.status().terminal()) {
             throw new FailureActionException(
@@ -265,6 +270,19 @@ public class FileRunEventService {
 
     public SourceKind sourceKindOf(FileRunEvent event) {
         return sourceKindOf(event, new HashMap<>());
+    }
+
+    /**
+     * Whether this caller is in the audience the kind declares for the action. Audience only: a
+     * disabled offer stays dispatchable, because its reasons are about the row's state rather than
+     * about who is asking.
+     */
+    private boolean offeredToCaller(FileRunEvent event, FailureActionId id) {
+        Ownership ownership = ownershipOf(event);
+        boolean reviewsTeam = reviewsTeam();
+        return event.kind().getOfferedActions().stream()
+                .filter(offer -> offer.id() == id)
+                .anyMatch(offer -> offeredTo(offer.audience(), ownership, reviewsTeam));
     }
 
     /** Enabled is derived from the reason, so a disabled button always has one to show. */

@@ -3,14 +3,17 @@ package stirling.software.proprietary.failure;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -23,6 +26,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
+import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
@@ -74,6 +79,38 @@ class FileRunEventServiceTest {
     }
 
     /** As {@link #given} but naming who the incident belongs to, which decides its ownership. */
+    /**
+     * A row from a smart folder the given person owns, which is where a server fix is reachable.
+     */
+    private FileRunEvent givenInAFolderOwnedBy(String owner) {
+        return givenInAFolderOwnedBy(owner, FailureKind.UNKNOWN);
+    }
+
+    private FileRunEvent givenInAFolderOwnedBy(String owner, FailureKind kind) {
+        when(policyStore.get(anyString()))
+                .thenReturn(
+                        Optional.of(
+                                new Policy(
+                                                "policy-1",
+                                                "Payroll",
+                                                owner,
+                                                true,
+                                                List.of(),
+                                                List.of(),
+                                                OutputSpec.inline())
+                                        .withSurface(Policy.SURFACE_PROCESSING_FOLDER)));
+        return store.record(
+                RecordFailure.forRun(
+                        kind,
+                        TEAM,
+                        owner,
+                        "policy-1",
+                        "run-" + kind.getId(),
+                        "src-downloads",
+                        "/folder/march.pdf",
+                        "boom"));
+    }
+
     private FileRunEvent givenHitBy(String actor, FailureKind kind, Long teamId, String fileId) {
         return store.record(
                 new RecordFailure(
@@ -432,6 +469,81 @@ class FileRunEventServiceTest {
                     .isInstanceOf(FailureActionException.class)
                     .extracting(e -> ((FailureActionException) e).getReason())
                     .isEqualTo(FailureActionException.Reason.ALREADY_CLOSED);
+        }
+    }
+
+    @Nested
+    @DisplayName("an owner's fix is refused to whoever merely reviews it")
+    class DispatchAudience {
+
+        @Test
+        void aReviewerCannotRunAnOwnersFixOnTheirColleaguesDocument() {
+            // The whole point of the check: a leader reads the team's rows, so without it the only
+            // thing between them and a colleague's document is the handler's own guard.
+            FileRunEvent theirs = givenInAFolderOwnedBy("colleague@example.com");
+
+            assertThatThrownBy(() -> service.dispatch(theirs.id(), "OPEN_IN_TOOL", Map.of()))
+                    .isInstanceOf(FailureActionException.class)
+                    .extracting(e -> ((FailureActionException) e).getReason())
+                    .isEqualTo(FailureActionException.Reason.ACTION_NOT_THEIRS);
+        }
+
+        @Test
+        void refusedBeforeTheHandlerIsAskedToDoAnything() {
+            // The registry's stand-in throws if reached, so this asserts the refusal is the
+            // service's rather than something the handler happened to catch.
+            FileRunEvent theirs = givenInAFolderOwnedBy("colleague@example.com");
+
+            assertThatThrownBy(() -> service.dispatch(theirs.id(), "OPEN_IN_TOOL", Map.of()))
+                    .isNotInstanceOf(UnsupportedOperationException.class);
+        }
+
+        @Test
+        void theOwnerOfTheFolderStillRunsIt() {
+            FileRunEvent mine = givenInAFolderOwnedBy(ACTOR);
+
+            // Reaches the registry's stand-in, which is as far as this test can follow it.
+            assertThatThrownBy(() -> service.dispatch(mine.id(), "OPEN_IN_TOOL", Map.of()))
+                    .isInstanceOf(UnsupportedOperationException.class);
+        }
+
+        @Test
+        void everyFixTheServerRunsForAnOwnerIsRefusedToWhoeverOnlyReviews() {
+            // The guard, rather than one case: a resolution added later is server-run for a folder
+            // document the moment its id says EITHER, and would be reachable by the whole team
+            // until someone remembered to write its own owner check.
+            List<FailureActionId> checked = new ArrayList<>();
+            for (FailureKind kind : FailureKind.values()) {
+                for (FailureKind.OfferedAction offer : kind.getOfferedActions()) {
+                    if (offer.audience() != FailureAudience.OWNER
+                            || offer.id().executionFor(true) != FailureActionId.Execution.SERVER) {
+                        continue;
+                    }
+                    FileRunEvent theirs = givenInAFolderOwnedBy("colleague@example.com", kind);
+                    checked.add(offer.id());
+
+                    assertThatThrownBy(
+                                    () ->
+                                            service.dispatch(
+                                                    theirs.id(), offer.id().name(), Map.of()))
+                            .as("%s offers %s", kind.getId(), offer.id())
+                            .isInstanceOf(FailureActionException.class)
+                            .extracting(e -> ((FailureActionException) e).getReason())
+                            .isEqualTo(FailureActionException.Reason.ACTION_NOT_THEIRS);
+                }
+            }
+            // The loop proving nothing would be the quiet way for this to stop guarding anything.
+            assertThat(checked).isNotEmpty();
+        }
+
+        @Test
+        void aReviewerCanStillDismissAColleaguesRow() {
+            // Dispositions are for anyone who sees the row; only an owner's fix is narrowed.
+            FileRunEvent theirs =
+                    givenHitBy("colleague@example.com", FailureKind.UNKNOWN, TEAM, "f1");
+
+            assertThat(service.dispatch(theirs.id(), "DISMISS", Map.of()).status())
+                    .isEqualTo(FileRunEventStatus.DISMISSED);
         }
     }
 
