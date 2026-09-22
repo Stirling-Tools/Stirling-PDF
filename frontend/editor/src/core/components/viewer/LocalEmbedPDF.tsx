@@ -350,6 +350,9 @@ export function LocalEmbedPDF({
   // Kept so the large-document release can empty the arrays in place: rebuilding
   // the plugin list would re-trigger a document open.
   const initialDocsArraysRef = useRef<InitialDocumentOptions[][]>([]);
+  // Blob URL that reopens the initial document if the registry is rebuilt after
+  // the large-buffer release; revoked when the file changes or the viewer unmounts.
+  const releasedDocumentUrlRef = useRef<string | null>(null);
 
   // The plugin keeps listeners for the registry's whole life and these share
   // the scope holding the document bytes; without the unsubscribe they pin it.
@@ -366,6 +369,18 @@ export function LocalEmbedPDF({
       documentOpenedUnsubscribeRef.current = null;
     },
     [],
+  );
+
+  // The released-document URL only exists to serve a registry rebuild; drop it
+  // when the file changes or the viewer unmounts.
+  useEffect(
+    () => () => {
+      if (releasedDocumentUrlRef.current) {
+        URL.revokeObjectURL(releasedDocumentUrlRef.current);
+        releasedDocumentUrlRef.current = null;
+      }
+    },
+    [fileStableKey],
   );
 
   // Keyed by fileStableKey to avoid recomputing on every FileContext re-render.
@@ -529,9 +544,16 @@ export function LocalEmbedPDF({
     const initialDocuments: InitialDocumentOptions[] =
       initialDocument && initialBufferRef.current
         ? [{ buffer: initialBufferRef.current, name: initialDocument.name }]
-        : urlPluginsSource
-          ? [{ url: urlPluginsSource.url, name: urlPluginsSource.name }]
-          : [];
+        : initialDocument && releasedDocumentUrlRef.current
+          ? [
+              {
+                url: releasedDocumentUrlRef.current,
+                name: initialDocument.name,
+              },
+            ]
+          : urlPluginsSource
+            ? [{ url: urlPluginsSource.url, name: urlPluginsSource.name }]
+            : [];
     if (initialBufferRef.current) {
       // React may run this memo more than once for the same buffer (StrictMode
       // double render), and each run builds a fresh config array; keep them all
@@ -771,13 +793,31 @@ export function LocalEmbedPDF({
               const buf = initialBufferRef.current;
               if (!file || !buf) return;
               if ((file as Blob).size < LARGE_PDF_PARSE_LIMIT) return;
-              const [hasForms, hasLayers] = await Promise.all([
-                documentHasFormFieldsFor(file as Blob, buf),
-                documentHasLayers(file as Blob, buf),
-              ]);
+              let hasForms: boolean;
+              let hasLayers: boolean;
+              try {
+                [hasForms, hasLayers] = await Promise.all([
+                  documentHasFormFieldsFor(file as Blob, buf),
+                  documentHasLayers(file as Blob, buf),
+                ]);
+              } catch (error) {
+                // A failed probe is not an answer: keep the buffer and the
+                // document sources so a later open can still probe and release.
+                console.error(
+                  "[LocalEmbedPDF] Failed to probe large document:",
+                  error,
+                );
+                return;
+              }
               if (hasForms || hasLayers) return;
               // A replacement may have landed while the probe ran.
               if (initialBufferRef.current !== buf) return;
+              // A registry rebuild (plugin flags changing) needs a source to
+              // reopen the document; the buffer is gone, so hand it a blob URL
+              // the engine reads lazily. No main-thread copy comes back.
+              if (!releasedDocumentUrlRef.current) {
+                releasedDocumentUrlRef.current = URL.createObjectURL(file);
+              }
               initialBufferRef.current = null;
               for (const docs of initialDocsArraysRef.current) {
                 docs.length = 0;
