@@ -1,4 +1,4 @@
-name: Prime Gradle Cache
+name: Cache Prime Test
 
 on:
   workflow_call:
@@ -8,58 +8,128 @@ on:
 permissions:
   contents: read
 
+env:
+  VERSION: 1
+  JAVA_VERSION: 25
+  FILES_TO_HASH: |
+    gradle/wrapper/gradle-wrapper.properties
+    gradle/libs.versions.toml
+    buildSrc/**
+    settings.gradle
+    build.gradle
+    app/**/build.gradle
+    gradle/**/*.gradle
+
 jobs:
-  gradle-cache-prime:
-    environment:
-      name: ci-unsigned
-      deployment: false
-    name: Prime shared Gradle cache
+  hash_pr:
+    name: Hash Gradle files
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      files_hash: ${{ steps.hash.outputs.files_hash }}
+      java_version: ${{ steps.hash.outputs.java_version }}
+      cache_key: ${{ steps.hash.outputs.cache_key }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
           egress-policy: audit
+
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Hash Gradle files
+        id: hash
+        env:
+          FILES_HASH: ${{ hashFiles(env.FILES_TO_HASH) }}
+        run: |
+          HASH="$FILES_HASH"
+          echo "files_hash=$HASH" >> "$GITHUB_OUTPUT"
+          echo "java_version=${{ env.JAVA_VERSION }}" >> "$GITHUB_OUTPUT"
+          echo "cache_key=gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-$HASH" >> "$GITHUB_OUTPUT"
+
+  gradle-cache-prime:
+    environment:
+      name: ci-unsigned
+      deployment: false
+    name: Prime shared Gradle cache
+    needs: hash_pr
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    env:
+      GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java${{ needs.hash_pr.outputs.java_version }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        with:
+          egress-policy: audit
+
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
 
-      - name: Calculate Gradle cache key
-        id: gradle-cache-key
+      - name: Restore Gradle cache sftp
+        id: cache
+        uses: Ludy87/cache-the-planet@816331595214ef3d3ae9d3d7ee95d67331ff1dc1
+        with:
+          manifest-branch: dev-cache
+          manifest-path: .github/cache-data
+          storage: sftp
+          sftp-host: ${{ secrets.CACHE_SFTP_HOST }}
+          sftp-port: ${{ secrets.CACHE_SFTP_PORT || '22' }}
+          sftp-username: ${{ secrets.CACHE_SFTP_USERNAME }}
+          sftp-password: ${{ secrets.CACHE_SFTP_PASSWORD }}
+          sftp-base-path: ${{ secrets.CACHE_SFTP_BASE_PATH || '/files/cache-the-planet' }}
+          cache-name: "gradle-java${{ env.JAVA_VERSION }}"
+          save-scope: shared
+          token: ${{ github.token }}
+          key: ${{ needs.hash_pr.outputs.cache_key }}
+          allow-shared-restore: true
+          path: |
+            .cache/gradle-java${{ env.JAVA_VERSION }}/caches
+            .cache/gradle-java${{ env.JAVA_VERSION }}/wrapper
+          strict: false
+
+      - name: Display cache information
+        env:
+          CACHE_IS_FORK: ${{ steps.cache.outputs.is-fork }}
+          CACHE_READ_ONLY: ${{ steps.cache.outputs.read-only }}
+          CACHE_HIT: ${{ steps.cache.outputs.cache-hit }}
+          CACHE_ERROR: ${{ steps.cache.outputs.error }}
         shell: bash
         run: |
-          echo "key=gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}" >> "$GITHUB_OUTPUT"
+          echo "Fork: $CACHE_IS_FORK"
+          echo "Read-only: $CACHE_READ_ONLY"
+          echo "Cache Hit: $CACHE_HIT"
+          echo "Cache Error: $CACHE_ERROR"
 
-      - name: Cache Gradle (lookup-only)
-        id: cache-gradle-restore
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Cache Gradle
+        if: ${{ steps.cache.outputs.error }}
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ steps.gradle-cache-key.outputs.key }}
-          lookup-only: true
+            .cache/gradle-java${{ env.JAVA_VERSION }}/caches
+            .cache/gradle-java${{ env.JAVA_VERSION }}/wrapper
+          key: ${{ needs.hash_pr.outputs.cache_key }}
 
-      - name: Set up JDK 25
-        if: steps.cache-gradle-restore.outputs.cache-hit != 'true'
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: ./.github/actions/java
         with:
-          java-version: "25"
+          java-version: ${{ env.JAVA_VERSION }}
 
       - name: Resolve backend dependencies
-        if: steps.cache-gradle-restore.outputs.cache-hit != 'true'
         run: ./gradlew :stirling-pdf:classes --no-daemon
         env:
           STIRLING_FLAVOR: saas
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
-
-      - name: Save cache Gradle User Home
-        if: steps.cache-gradle-restore.outputs.cache-hit != 'true'
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ steps.gradle-cache-key.outputs.key }}
