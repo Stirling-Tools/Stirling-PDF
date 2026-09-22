@@ -26,6 +26,12 @@ const on = (over: Partial<Wallet> = {}): Wallet => ({
   ...over,
 });
 
+/**
+ * Group a count the way the row does. The component leaves counts on the runtime locale (only
+ * money is pinned to en-US), so a literal "78,000" would fail wherever the separator differs.
+ */
+const n = (value: number) => value.toLocaleString();
+
 describe("ProcessorPlanRow", () => {
   it("shows remaining free credits and paid spend separately on focus", () => {
     render(
@@ -48,7 +54,7 @@ describe("ProcessorPlanRow", () => {
     expect(
       tooltip.getByRole("progressbar", { name: "Paid metered usage" }),
     ).toHaveAttribute("aria-valuenow", "25");
-    expect(tooltip.getByText("500 of 1,000")).toBeInTheDocument();
+    expect(tooltip.getByText(`${n(500)} of ${n(1000)}`)).toBeInTheDocument();
     expect(tooltip.getByText("$25.00 / $100")).toBeInTheDocument();
   });
   it("hides an absent included pool while retaining metered billing", () => {
@@ -88,7 +94,9 @@ describe("ProcessorPlanRow", () => {
     expect(
       screen.getByText("$0.00 of $0 metered this cycle"),
     ).toBeInTheDocument();
-    expect(screen.queryByText("300 of 2,500 used")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(`${n(300)} of ${n(2500)} used`),
+    ).not.toBeInTheDocument();
     expect(screen.getAllByText("Processor")).toHaveLength(1);
   });
   it("does not add a separate included-credit row while metering is on", () => {
@@ -103,7 +111,9 @@ describe("ProcessorPlanRow", () => {
       />,
     );
     expect(screen.queryByText("Included credits")).not.toBeInTheDocument();
-    expect(screen.queryByText("425 of 2,700 used")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(`${n(425)} of ${n(2700)} used`),
+    ).not.toBeInTheDocument();
     expect(screen.getAllByText("Processor")).toHaveLength(1);
   });
 
@@ -191,7 +201,7 @@ describe("ProcessorPlanRow", () => {
       />,
     );
 
-    expect(screen.getByText("78,000 left")).toBeInTheDocument();
+    expect(screen.getByText(`${n(78_000)} left`)).toBeInTheDocument();
     expect(
       screen.getByText(/Prepaid credits, drawn before metered billing/),
     ).toBeInTheDocument();
@@ -262,7 +272,7 @@ describe("ProcessorPlanRow", () => {
     ).toBeInTheDocument();
     fireEvent.focus(screen.getByRole("group", { name: "Processor" }));
     const tooltip = within(screen.getByRole("tooltip"));
-    expect(tooltip.getByText("0 of 120,000")).toBeInTheDocument();
+    expect(tooltip.getByText(`${n(0)} of ${n(120_000)}`)).toBeInTheDocument();
     expect(
       tooltip.getByText("Used up, metered billing has resumed"),
     ).toBeInTheDocument();
@@ -279,7 +289,7 @@ describe("ProcessorPlanRow", () => {
       />,
     );
 
-    expect(screen.getByText("40,000 left")).toBeInTheDocument();
+    expect(screen.getByText(`${n(40_000)} left`)).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Switch on the Processor" }),
     ).toBeInTheDocument();
