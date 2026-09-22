@@ -69,7 +69,7 @@ jobs:
     timeout-minutes: 30
     env:
       GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}
-      CACHE_COMPRESSION_LEVEL: 19
+      CACHE_COMPRESSION_LEVEL: 5
     permissions:
       contents: write
     strategy:
