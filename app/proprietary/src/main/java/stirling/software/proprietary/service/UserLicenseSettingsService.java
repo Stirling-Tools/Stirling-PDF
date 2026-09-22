@@ -185,14 +185,7 @@ public class UserLicenseSettingsService {
         }
     }
 
-    /**
-     * Grandfathers existing OAuth users on first run. This is a one-time migration that marks all
-     * existing OAuth/SAML users as grandfathered, preserving their SAML eligibility without a paid
-     * license. OAuth is available on every license.
-     *
-     * <p>New users created after this migration will NOT be grandfathered and will require a paid
-     * license to use SAML.
-     */
+    /** Marks existing users as grandfathered during the OAuth migration. */
     @Transactional
     public void grandfatherExistingOAuthUsers() {
         // Only grandfather users if this is a V1→V2 upgrade, not a fresh V2 install
@@ -214,9 +207,7 @@ public class UserLicenseSettingsService {
                 // We have OAuth users but none are grandfathered - this is first run after upgrade
                 int updated = userService.grandfatherAllOAuthUsers();
                 log.warn(
-                        "OAuth GRANDFATHERING: Marked {} existing OAuth/SAML users as grandfathered. "
-                                + "They will retain SAML eligibility even without a paid license. "
-                                + "OAuth is available on every license.",
+                        "OAuth GRANDFATHERING: Marked {} existing users as grandfathered.",
                         updated);
             }
 
