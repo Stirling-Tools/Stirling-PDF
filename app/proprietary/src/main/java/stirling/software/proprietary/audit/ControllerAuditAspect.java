@@ -230,6 +230,7 @@ public class ControllerAuditAspect {
 
                 String subject = AuditContext.subject(req);
                 String actor = subject != null ? subject : capturedPrincipal;
+                data.put("principal", actor);
                 String attempted = AuditContext.attemptedSubject(req);
                 if (attempted != null) {
                     data.put("attemptedUsername", attempted);

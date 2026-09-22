@@ -119,14 +119,16 @@ class AuditAspectTest {
 
         aspect.auditMethod(jp);
 
+        ArgumentCaptor<Map<String, Object>> dataCaptor = mapCaptor();
         verify(auditService)
                 .audit(
                         eq("alice@example.com"),
                         eq("WEB"),
                         any(),
                         eq(AuditEventType.USER_LOGIN),
-                        anyMap(),
+                        dataCaptor.capture(),
                         any(AuditLevel.class));
+        assertThat(dataCaptor.getValue()).containsEntry("principal", "alice@example.com");
     }
 
     private Map<String, Object> recordedData() {
@@ -160,7 +162,7 @@ class AuditAspectTest {
         lenient().when(auditService.captureCurrentOrigin()).thenReturn("WEB");
         lenient()
                 .when(auditService.createBaseAuditData(eq(jp), any(AuditLevel.class)))
-                .thenReturn(new HashMap<>());
+                .thenReturn(new HashMap<>(Map.of("principal", "anonymousUser")));
         lenient()
                 .when(
                         auditService.resolveEventType(
