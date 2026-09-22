@@ -33,7 +33,7 @@ public class DefaultClassificationPolicySeeder {
 
     static final String CATEGORY = "classification";
     private static final String CLASSIFY_ENDPOINT = "/api/v1/ai/tools/classify-and-label";
-    private static final String POLICY_NAME = "Classification Policy";
+    private static final String POLICY_NAME = "Classification";
 
     /**
      * Pre-existing seeds used this placeholder, which was never a user; see {@link #repairOwner}.
