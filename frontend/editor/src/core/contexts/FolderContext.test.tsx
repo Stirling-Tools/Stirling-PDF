@@ -498,6 +498,7 @@ describe("FolderContext disk subfolder resolution", () => {
   type DiskProbeApi = {
     resolveDiskFolder: (id: FolderId) => boolean;
     knows: (id: FolderId) => boolean;
+    folderCount: () => number;
   };
 
   let renders = 0;
@@ -509,6 +510,7 @@ describe("FolderContext disk subfolder resolution", () => {
       props.onReady({
         resolveDiskFolder: f.resolveDiskFolder,
         knows: (id) => f.foldersById.has(id),
+        folderCount: () => f.folders.length,
       });
     }, [f, props]);
     return <div data-testid="count">{f.folders.length}</div>;
@@ -525,9 +527,11 @@ describe("FolderContext disk subfolder resolution", () => {
         </FolderProvider>
       </MemoryRouter>,
     );
-    await waitFor(() =>
-      expect(screen.getByTestId("count").textContent).toBe("1"),
-    );
+    // Wait on the captured api, not the rendered count: resolveDiskFolder closes
+    // over the storedFolders of the render it came from, and the effect that
+    // publishes it commits after the DOM the count is read from. Waiting on the
+    // DOM hands the tests an api from the render before the mount loaded.
+    await waitFor(() => expect(apiRef.current?.folderCount() ?? 0).toBe(1));
     if (!apiRef.current) throw new Error("DiskProbe never reported ready");
     return apiRef as { current: DiskProbeApi };
   }
