@@ -139,7 +139,7 @@ jobs:
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
 
       - name: Save cache Gradle User Home
-        if: steps.cache-gradle-restore.outputs.cache-hit != 'true'
+        if: ${{ steps.cache-gradle-restore.outputs.cache-hit != 'true' && steps.cache.outputs.cache-hit != 'true' }}
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
