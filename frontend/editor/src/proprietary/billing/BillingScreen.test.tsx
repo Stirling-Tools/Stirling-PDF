@@ -14,6 +14,143 @@ vi.mock("react-i18next", () => ({
 import { BillingScreen } from "@app/billing/BillingScreen";
 import { freeWallet, subscribedWallet } from "@app/billing/walletFixtures";
 
+it.each(["free", "team", "processor", "SERVER", "ENTERPRISE"] as const)(
+  "includes OAuth SSO for the self-hosted %s plan",
+  (tier) => {
+    const wallet =
+      tier === "processor"
+        ? subscribedWallet
+        : {
+            ...freeWallet,
+            team: {
+              ...freeWallet.team,
+              held: tier === "team",
+              licensedUsers: tier === "team" ? 100 : null,
+            },
+          };
+    const serverPlan =
+      tier === "SERVER" || tier === "ENTERPRISE"
+        ? { licenseType: tier, maxUsers: 100, usersInUse: 3 }
+        : undefined;
+    render(
+      <BillingScreen wallet={wallet} serverPlan={serverPlan} selfHosted />,
+    );
+    expect(screen.getByText("SSO (OAuth2/OIDC)")).toBeInTheDocument();
+  },
+);
+
+it("does not advertise self-hosted identity providers on cloud billing", () => {
+  render(<BillingScreen wallet={freeWallet} />);
+  expect(screen.queryByText("SSO (OAuth2/OIDC)")).not.toBeInTheDocument();
+});
+
+it.each([true, false])(
+  "keeps legacy billing visible and shows OAuth only for self-hosted=%s",
+  (selfHosted) => {
+    render(
+      <BillingScreen
+        wallet={freeWallet}
+        legacyPlan={<div>Historical subscription</div>}
+        selfHosted={selfHosted}
+      />,
+    );
+    expect(screen.getByText("Historical subscription")).toBeInTheDocument();
+    expect(screen.queryByText("The full PDF Editor.")).not.toBeInTheDocument();
+    expect(screen.queryByText("SSO (OAuth2/OIDC)") !== null).toBe(selfHosted);
+  },
+);
+
+it.each([4, 0])(
+  "keeps standalone users against the enforced allowance of %i",
+  (limit) => {
+    render(
+      <BillingScreen
+        wallet={{
+          ...freeWallet,
+          team: {
+            held: false,
+            licensedUsers: null,
+            usersInUse: 1,
+            fleet: false,
+          },
+        }}
+        usersInUse={5}
+        userLimit={limit}
+      />,
+    );
+    expect(screen.getByText(`5 of ${limit} users`)).toBeInTheDocument();
+    expect(
+      screen.getByText("Capacity available to this server"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("1 of 5 users")).not.toBeInTheDocument();
+  },
+);
+
+it("shows shared fleet usage and full purchased capacity despite a smaller local allowance", () => {
+  render(
+    <BillingScreen
+      wallet={{
+        ...freeWallet,
+        team: { held: true, licensedUsers: 100, usersInUse: 83, fleet: true },
+      }}
+      usersInUse={7}
+      userLimit={17}
+    />,
+  );
+  expect(screen.getByText("83 of 100 users")).toBeInTheDocument();
+  expect(screen.queryByText("7 of 100 users")).not.toBeInTheDocument();
+  expect(
+    screen.queryByText("Capacity available to this server"),
+  ).not.toBeInTheDocument();
+});
+
+it.each([null, 3, 5])(
+  "replaces a local report of %s with live users in the fleet total",
+  (reported) => {
+    render(
+      <BillingScreen
+        wallet={{
+          ...freeWallet,
+          team: {
+            held: true,
+            licensedUsers: 100,
+            usersInUse: (reported ?? 0) + 2,
+            fleet: true,
+            breakdown: {
+              cloudUsers: 0,
+              excludedOwners: 1,
+              deployments: [
+                {
+                  deviceId: "one",
+                  name: "Server One",
+                  users: reported,
+                  reportedAt: null,
+                },
+                {
+                  deviceId: "two",
+                  name: "Server Two",
+                  users: 2,
+                  reportedAt: null,
+                },
+              ],
+            },
+          },
+        }}
+        deviceId="one"
+        usersInUse={5}
+        userLimit={98}
+      />,
+    );
+    expect(screen.getByText("7 of 100 users")).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", { name: "Users: 7 of 100 users" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("7", { selector: ".billing-kv__value" }),
+    ).toBeInTheDocument();
+  },
+);
+
 /**
  * Units a linked instance has accrued that the cloud has not billed yet are real spend, and every
  * figure on this screen counts them. Two totals disagreeing by an undisclosed amount is the bug

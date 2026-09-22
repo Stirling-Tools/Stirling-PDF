@@ -10,7 +10,7 @@ import { ToolIcon } from "@app/components/shared/ToolIcon";
 import { ToolPanelHeader } from "@app/components/shared/ToolPanelHeader";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { withViewTransition } from "@app/utils/viewTransition";
-import CloseIcon from "@mui/icons-material/Close";
+import { Icon } from "@app/ui/Icon";
 import { ToolId } from "@app/types/toolId";
 import type { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import {
@@ -151,7 +151,7 @@ export default function RightSidebar() {
                     }
                     className="tool-panel__expand-btn"
                   >
-                    <CloseIcon sx={{ fontSize: "1.1rem" }} />
+                    <Icon name="x" size={"1.1rem"} />
                   </ActionIcon>
                 </div>
               </div>
