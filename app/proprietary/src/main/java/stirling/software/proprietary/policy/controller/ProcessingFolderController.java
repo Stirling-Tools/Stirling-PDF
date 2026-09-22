@@ -916,11 +916,6 @@ public class ProcessingFolderController {
 
     private void requireAccessibleDestination(String outputId, List<PipelineStep> steps) {
         Source destination = accessibleDestination(outputId);
-        // Dispatch resolves the destination again on a worker thread with no caller to report to.
-        if (!destination.enabled()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "The output destination is disabled: " + outputId);
-        }
         // Validate on the request thread: connection checks need the caller's authentication.
         try {
             policyValidator.validateOutput(destination.toOutputSpec(), steps);
@@ -943,6 +938,11 @@ public class ProcessingFolderController {
         if (EditorSource.TYPE.equals(destination.type())) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "The editor can't be used as an output destination");
+        }
+        // Dispatch resolves the destination again on a worker thread with no caller to report to.
+        if (!destination.enabled()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "The output destination is disabled: " + outputId);
         }
         return destination;
     }

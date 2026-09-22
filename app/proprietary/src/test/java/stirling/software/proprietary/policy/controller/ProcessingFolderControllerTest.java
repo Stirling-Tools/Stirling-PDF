@@ -281,8 +281,9 @@ class ProcessingFolderControllerTest {
         verify(diskFolderSink, never()).validatePipeline(any(), any());
     }
 
-    @Test
-    void aDisabledDestinationIsRefusedWhileThereIsStillACallerToTellAboutIt() {
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void aDisabledDestinationIsRefusedWhileThereIsStillACallerToTellAboutIt(boolean routeOnly) {
         Source destination =
                 sourceStore.save(
                         new Source(
@@ -302,12 +303,21 @@ class ProcessingFolderControllerTest {
                         true,
                         baseline.steps(),
                         Map.of(),
-                        List.of(destination.id()),
-                        List.of());
+                        routeOnly ? List.of() : List.of(destination.id()),
+                        routeOnly
+                                ? List.of(
+                                        new RoutingRule(
+                                                new Condition.MatchesAny(
+                                                        new ConditionInput.DocumentField(
+                                                                "document.extension"),
+                                                        List.of("pdf")),
+                                                destination.id()))
+                                : List.of());
         assertThatThrownBy(() -> controller.save(paused))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("disabled");
         assertThat(policyStore.all()).isEmpty();
+        verify(diskFolderSink, never()).validatePipeline(any(), any());
     }
 
     @Test
