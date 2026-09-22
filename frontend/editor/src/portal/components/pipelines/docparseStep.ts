@@ -55,3 +55,37 @@ export function ingestStepConfigured(
     params.exportChunksJsonl === true;
   return doesSomething && hasFiles && ingestChunkingConfigured(params);
 }
+
+/** Vector destinations consume only the final step's chunks export. */
+export function vectorDestinationConfigured(steps: WorkingToolStep[]): boolean {
+  const last = steps.at(-1);
+  if (!last || !isIngestStep(last)) return false;
+  const params = last.params as IngestStepParams;
+  return (
+    params.exportChunksJsonl === true &&
+    params.includeOriginal === false &&
+    params.exportMarkdown !== true
+  );
+}
+
+export function prepareVectorDestination(
+  steps: WorkingToolStep[],
+): WorkingToolStep[] {
+  const last = steps.at(-1);
+  const existing = last && isIngestStep(last);
+  const step = existing ? last : newIngestStep();
+  const params = step.params as IngestStepParams;
+  return [
+    ...(existing ? steps.slice(0, -1) : steps),
+    {
+      ...step,
+      params: {
+        ...params,
+        index: existing ? params.index : false,
+        includeOriginal: false,
+        exportMarkdown: false,
+        exportChunksJsonl: true,
+      } as unknown as ErasedToolParams,
+    },
+  ];
+}

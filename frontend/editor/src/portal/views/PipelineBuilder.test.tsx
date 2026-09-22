@@ -11,7 +11,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { qk } from "@portal/queries/keys";
 import type { Policy, TriggerOutcome } from "@portal/api/pipelines";
-import type { SourceView } from "@portal/api/sources";
+import type { Source, SourceView } from "@portal/api/sources";
 import type { ToolRegistryCatalog } from "@app/contexts/ToolRegistryContext";
 import type { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import { PipelineBuilder } from "@portal/views/PipelineBuilder";
@@ -99,7 +99,7 @@ vi.mock("@portal/components/pipelines/DestinationPicker", () => ({
     onEdit: (sourceId: string) => void;
   }) => (
     <>
-      <button type="button" onClick={() => onChange(["src-1"])}>
+      <button type="button" onClick={() => onChange(["src-in"])}>
         {value.length > 0 ? `output:${value.join(",")}` : "pick output"}
       </button>
       <button type="button" onClick={onCreateNew}>
@@ -112,6 +112,8 @@ vi.mock("@portal/components/pipelines/DestinationPicker", () => ({
   ),
 }));
 
+let createdSource: Source;
+
 // The source modal has its own suite; stub it to the two things the builder
 // depends on - the record it was opened on, and the sources-cache invalidation
 // that follows a save (which is how a new source reaches the pickers).
@@ -119,9 +121,11 @@ vi.mock("@portal/components/sources/SourceModal", () => ({
   SourceModal: ({
     open,
     sourceId,
+    onCreated,
   }: {
     open: boolean;
     sourceId?: string | null;
+    onCreated?: (source: Source) => void;
   }) => {
     const queryClient = useQueryClient();
     if (!open) return null;
@@ -130,9 +134,10 @@ vi.mock("@portal/components/sources/SourceModal", () => ({
         <span>source-modal:{sourceId || "new"}</span>
         <button
           type="button"
-          onClick={() =>
-            void queryClient.invalidateQueries({ queryKey: qk.sources() })
-          }
+          onClick={async () => {
+            await queryClient.invalidateQueries({ queryKey: qk.sources() });
+            onCreated?.(createdSource);
+          }}
         >
           source saved
         </button>
@@ -321,6 +326,12 @@ const SOURCE: SourceView = {
   docs30d: 0,
 };
 
+const DESTINATION_SOURCE: SourceView = {
+  ...SOURCE,
+  id: "src-1",
+  name: "Archive",
+};
+
 function outcome(overrides: Partial<TriggerOutcome>): TriggerOutcome {
   return {
     runIds: [],
@@ -349,6 +360,13 @@ function renderBuilder(initial: string) {
 
 describe("PipelineBuilder", () => {
   beforeEach(() => {
+    createdSource = {
+      id: "src-new",
+      name: "Scanner drop",
+      type: "folder",
+      options: {},
+      enabled: true,
+    };
     fetchPipeline.mockReset();
     fetchTriggers.mockReset();
     savePipeline.mockReset();
@@ -612,7 +630,7 @@ describe("PipelineBuilder", () => {
         name: "Nightly compress",
         // The input pairs the chosen source with its trigger (manual by default).
         inputs: [{ sourceId: "src-in", trigger: null }],
-        outputIds: ["src-1"],
+        outputIds: ["src-in"],
         steps: [
           expect.objectContaining({ operation: "/api/v1/misc/compress-pdf" }),
         ],
@@ -710,7 +728,7 @@ describe("PipelineBuilder", () => {
     expect(savePipeline).toHaveBeenCalledWith(
       expect.objectContaining({
         inputs: [{ sourceId: "src-in", trigger: null }],
-        outputIds: ["src-1"],
+        outputIds: ["src-in"],
       }),
     );
   });
@@ -768,14 +786,30 @@ describe("PipelineBuilder", () => {
     );
   });
 
-  it("makes a destination created from the picker the pipeline's output", async () => {
+  it("selects the created destination even when another source arrives concurrently", async () => {
+    createdSource = {
+      ...createdSource,
+      name: "Vector database destination",
+      type: "vectordb",
+    };
     fetchSources
       .mockResolvedValueOnce({ kpis: [], sources: [SOURCE] })
       .mockResolvedValue({
         kpis: [],
         sources: [
           SOURCE,
-          { ...SOURCE, id: "src-new", name: "Archive bucket", type: "s3" },
+          {
+            ...SOURCE,
+            id: "src-unrelated",
+            name: "Concurrent folder",
+            type: "folder",
+          },
+          {
+            ...SOURCE,
+            id: "src-new",
+            name: "Vector database destination",
+            type: "vectordb",
+          },
         ],
       });
     renderBuilder("/processor/pipelines/new");
@@ -798,6 +832,7 @@ describe("PipelineBuilder", () => {
   });
 
   it("leaves a new source that cannot be written to out of the destination", async () => {
+    createdSource = { ...createdSource, id: "src-hook", type: "webhook" };
     // A webhook can be read from but not written to, so it must not be picked
     // as a destination the dropdown has no option for.
     fetchSources
@@ -836,7 +871,7 @@ describe("PipelineBuilder", () => {
     await pickDestination();
 
     fireEvent.click(screen.getByText("edit destination"));
-    expect(screen.getByText("source-modal:src-1")).toBeInTheDocument();
+    expect(screen.getByText("source-modal:src-in")).toBeInTheDocument();
   });
 
   it("saves an editor pipeline as its own flag, not as a wire input", async () => {
@@ -864,7 +899,43 @@ describe("PipelineBuilder", () => {
     expect(body.outputIds).toEqual([]);
   });
 
+  it("blocks a vector route with a file fallback until chunks are prepared", async () => {
+    fetchSources.mockResolvedValue({
+      kpis: [],
+      sources: [SOURCE, { ...DESTINATION_SOURCE, type: "vectordb" }],
+    });
+    fetchPipeline.mockResolvedValue({
+      ...POLICY,
+      inputs: [{ sourceId: "src-in", trigger: null }],
+      steps: [CLASSIFY_STEP],
+      outputIds: ["src-in"],
+      routingRules: [routingRule(["invoice"])],
+    });
+    renderBuilder("/processor/pipelines/plc-1");
+    fireEvent.click(
+      await screen.findByLabelText("portal.pipelines.builder.rename"),
+    );
+    fireEvent.change(
+      await screen.findByLabelText("portal.pipelines.composer.name"),
+      {
+        target: { value: "Renamed" },
+      },
+    );
+    await openOutput();
+    expect(
+      screen.getAllByText(
+        "portal.pipelines.builder.ingest.destinationNeedsChunks",
+      ).length,
+    ).toBeGreaterThan(0);
+    fireEvent.click(screen.getByText("portal.pipelines.composer.save"));
+    expect(savePipeline).not.toHaveBeenCalled();
+  });
+
   it("carries a saved pipeline's routes through an unrelated edit", async () => {
+    fetchSources.mockResolvedValue({
+      kpis: [],
+      sources: [SOURCE, DESTINATION_SOURCE],
+    });
     const routed = routingRule(["invoice"]);
     fetchPipeline.mockResolvedValue({
       ...POLICY,
@@ -892,6 +963,10 @@ describe("PipelineBuilder", () => {
   });
 
   it("refuses to save a route with no document types on it", async () => {
+    fetchSources.mockResolvedValue({
+      kpis: [],
+      sources: [SOURCE, DESTINATION_SOURCE],
+    });
     fetchPipeline.mockResolvedValue({
       ...POLICY,
       inputs: [{ sourceId: "src-in", trigger: null }],
@@ -916,6 +991,10 @@ describe("PipelineBuilder", () => {
   });
 
   it("refuses to save routes whose classify step has been removed", async () => {
+    fetchSources.mockResolvedValue({
+      kpis: [],
+      sources: [SOURCE, DESTINATION_SOURCE],
+    });
     fetchPipeline.mockResolvedValue({
       ...POLICY,
       inputs: [{ sourceId: "src-in", trigger: null }],
@@ -1112,7 +1191,7 @@ describe("PipelineBuilder", () => {
         },
       ],
       output: { type: "inline", options: {} },
-      outputIds: ["src-1"],
+      outputIds: ["src-in"],
     });
     renderBuilder("/processor/pipelines/plc-sign");
 
