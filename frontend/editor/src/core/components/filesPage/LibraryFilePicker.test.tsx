@@ -44,6 +44,7 @@ const state = vi.hoisted(() => ({
   close: vi.fn(),
   alert: vi.fn(),
   moveFolder: vi.fn(),
+  createFolder: vi.fn(),
   listDirectory: vi.fn(),
   readDiskFile: vi.fn(),
   extractAllFiles: vi.fn(),
@@ -74,6 +75,7 @@ vi.mock("@app/contexts/FolderContext", () => ({
     currentFolderId: "behind-the-modal",
     setCurrentFolderId: state.moveFolder,
     registerDiskSubfolders: state.registerDiskSubfolders,
+    createFolder: state.createFolder,
   }),
 }));
 vi.mock("@app/contexts/FilesModalContext", () => ({
@@ -153,12 +155,16 @@ const folder = (id: string, name: string, extra = {}) =>
     updatedAt: 0,
     ...extra,
   }) as FolderRecord;
-const show = (supportedFormats?: string[]) => {
+const show = (
+  supportedFormats?: string[],
+  destination?: Parameters<typeof LibraryFilePicker>[0]["destination"],
+) => {
   const client = createAppQueryClient();
   return render(
     <MantineProvider env="test">
       <LibraryFilePicker
         supportedFormats={supportedFormats}
+        destination={destination}
         onBusyChange={vi.fn()}
         onExternalPickerChange={vi.fn()}
       />
@@ -194,6 +200,128 @@ beforeEach(() => {
 });
 
 describe("library file picker", () => {
+  it.each(["list", "grid"] as const)(
+    "sorts Recents by date added and displays that date in %s view",
+    async (viewMode) => {
+      state.viewMode = viewMode;
+      const newlyAdded = {
+        ...file("new", "New.pdf"),
+        createdAt: Date.parse("2026-09-22T10:00:00Z"),
+        lastModified: Date.parse("2000-01-01T10:00:00Z"),
+        remoteStorageId: 1,
+      };
+      const olderUpload = {
+        ...file("old", "Old.pdf"),
+        createdAt: Date.parse("2026-09-01T10:00:00Z"),
+        lastModified: Date.parse("2026-09-20T10:00:00Z"),
+        remoteStorageId: 2,
+      };
+      state.files = [olderUpload, newlyAdded];
+      const user = userEvent.setup();
+      show();
+
+      const fileOrder = () =>
+        screen.getAllByText(/^(New|Old)\.pdf$/).map((node) => node.textContent);
+      expect(fileOrder()).toEqual(["New.pdf", "Old.pdf"]);
+      expect(
+        screen.getByText(new Date(newlyAdded.createdAt).toLocaleString()),
+      ).toBeVisible();
+      expect(
+        screen.queryByText(new Date(newlyAdded.lastModified).toLocaleString()),
+      ).not.toBeInTheDocument();
+      if (viewMode === "list")
+        expect(
+          screen.getByRole("columnheader", { name: /Added/ }),
+        ).toBeVisible();
+
+      await user.click(
+        screen.getByRole("button", { name: "Sort files: Recent first" }),
+      );
+      await user.click(screen.getByRole("menuitem", { name: "Oldest first" }));
+      expect(fileOrder()).toEqual(["Old.pdf", "New.pdf"]);
+
+      await user.click(
+        screen.getByRole("button", { name: "Stirling library", exact: true }),
+      );
+      expect(fileOrder()).toEqual(["Old.pdf", "New.pdf"]);
+      expect(
+        screen.getByText(new Date(newlyAdded.lastModified).toLocaleString()),
+      ).toBeVisible();
+      if (viewMode === "list")
+        expect(
+          screen.getByRole("columnheader", { name: /Modified/ }),
+        ).toBeVisible();
+    },
+  );
+
+  it("browses server destinations without selecting files or changing the page behind it", async () => {
+    const invoices = folder("invoices", "Invoices", { kind: "server" });
+    state.folders = [
+      invoices,
+      folder("browser", "Browser folder"),
+      folder("disk", "Disk folder", { kind: "local" }),
+    ];
+    state.files = [{ ...file("cloud", "Existing.zip"), remoteStorageId: 1 }];
+    const onConfirm = vi.fn();
+    const user = userEvent.setup();
+    show(undefined, { fileCount: 2, onClose: vi.fn(), onConfirm });
+
+    expect(
+      screen.queryByRole("button", { name: "Recents" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Browser folder")).not.toBeInTheDocument();
+    expect(screen.queryByText("Disk folder")).not.toBeInTheDocument();
+    expect(screen.getByText("Existing.zip")).toBeVisible();
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Unzip" }),
+    ).not.toBeInTheDocument();
+    await user.dblClick(screen.getByText("Existing.zip"));
+    expect(state.selected).not.toHaveBeenCalled();
+    await user.click(screen.getByText("Invoices"));
+    await user.click(screen.getByRole("button", { name: "Add here" }));
+    expect(onConfirm).toHaveBeenCalledExactlyOnceWith(invoices.id);
+    expect(state.moveFolder).not.toHaveBeenCalled();
+  });
+
+  it("accepts an empty server library root as the destination", async () => {
+    state.files = [];
+    const onConfirm = vi.fn();
+    show(undefined, { fileCount: 1, onClose: vi.fn(), onConfirm });
+    await userEvent.click(screen.getByRole("button", { name: "Add here" }));
+    expect(onConfirm).toHaveBeenCalledExactlyOnceWith(null);
+  });
+
+  it("creates a server folder and selects it without navigating the library page", async () => {
+    const created = folder("new", "New destination", { kind: "server" });
+    state.createFolder.mockImplementation(async () => {
+      state.folders = [created];
+      return created;
+    });
+    const onConfirm = vi.fn();
+    const user = userEvent.setup();
+    show(undefined, { fileCount: 1, onClose: vi.fn(), onConfirm });
+    await user.click(screen.getByRole("button", { name: "New folder" }));
+    await user.type(
+      screen.getByRole("textbox", { name: "Folder name" }),
+      created.name,
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Create", exact: true }),
+    );
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+    await user.click(screen.getByRole("button", { name: "Add here" }));
+    expect(state.createFolder).toHaveBeenCalledWith(
+      created.name,
+      null,
+      "server",
+    );
+    expect(onConfirm).toHaveBeenCalledExactlyOnceWith(created.id);
+    expect(state.moveFolder).not.toHaveBeenCalled();
+  });
+
   it("dismisses a Drive error without losing selected files", async () => {
     state.driveError = "Drive access denied";
     const user = userEvent.setup();

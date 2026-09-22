@@ -25,6 +25,7 @@ import {
 } from "@app/components/filesPage/FileGrid";
 import { LibraryToolbar } from "@app/components/filesPage/LibraryToolbar";
 import { LibraryTabs } from "@app/components/filesPage/LibraryTabs";
+import { FolderNameDialog } from "@app/components/filesPage/FolderNameDialog";
 import { useLibraryViewState } from "@app/components/filesPage/useLibraryViewState";
 import { useLibraryScrollPosition } from "@app/components/filesPage/useLibraryScrollPosition";
 import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
@@ -60,6 +61,12 @@ interface Props {
   supportedFormats?: string[];
   onBusyChange: (busy: boolean) => void;
   onExternalPickerChange: (open: boolean) => void;
+  /** Destination mode shows server storage; files provide context and cannot be selected. */
+  destination?: {
+    fileCount: number;
+    onClose: () => void;
+    onConfirm: (folderId: FolderId | null) => void;
+  };
 }
 
 /** Shares the library's data and browser; navigation and uncommitted selections belong to this modal. */
@@ -67,11 +74,13 @@ export function LibraryFilePicker({
   supportedFormats,
   onBusyChange,
   onExternalPickerChange,
+  destination,
 }: Props) {
   const { t } = useTranslation();
   const { closeFilesModal, onRecentFileSelect, maxSelectable, loadFiles } =
     useFilesModalContext();
   const library = useFilesPage();
+  const close = destination?.onClose ?? closeFilesModal;
   const folders = useFolders();
   const { fileIds: activeFileIds } = useAllFiles();
   const activeWorkspaceFileIds = useMemo(
@@ -96,7 +105,7 @@ export function LibraryFilePicker({
     setOriginFilter,
     typeFilter,
     setTypeFilter,
-  } = useLibraryViewState("recent");
+  } = useLibraryViewState(destination ? "all" : "recent");
   const browserRef = useRef<HTMLDivElement>(null);
   const [selection, setSelection] = useState<Map<string, PickerItem>>(
     () => new Map(),
@@ -111,6 +120,7 @@ export function LibraryFilePicker({
   const [showSelected, setShowSelected] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [creatingFolder, setCreatingFolder] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const lastSelected = useRef<string | null>(null);
   const currentFolder = currentFolderId
@@ -145,7 +155,7 @@ export function LibraryFilePicker({
     currentTab,
     search,
     sortMode,
-    originFilter,
+    originFilter: destination ? "cloud" : originFilter,
     typeFilter,
     diskEntries: directory ? diskEntries : undefined,
   });
@@ -238,7 +248,7 @@ export function LibraryFilePicker({
   );
 
   const selectItem = (item: PickerItem, shift = false) => {
-    if (busyRef.current) return;
+    if (busyRef.current || destination) return;
     const key = pickerKey(item);
     const visible = entries.find((entry) => {
       const candidate = itemForEntry(entry);
@@ -279,6 +289,8 @@ export function LibraryFilePicker({
   };
 
   const eligibilityReason = (entry: FilesPageEntry) => {
+    if (destination && entry.kind !== "folder")
+      return t("filePicker.chooseDestination", "Choose a folder, or add here.");
     const item = itemForEntry(entry);
     if (!item) return undefined;
     if (entry.diskState === "processing")
@@ -340,7 +352,7 @@ export function LibraryFilePicker({
   };
 
   const stageFiles = (files: File[]) => {
-    if (busyRef.current) return;
+    if (busyRef.current || destination) return;
     const uploadsByKey = new Map(
       Array.from(uploads.values(), (item) => [createQuickKey(item.file), item]),
     );
@@ -392,7 +404,7 @@ export function LibraryFilePicker({
   };
 
   const confirm = async (items = Array.from(selection.values())) => {
-    if (busyRef.current) return;
+    if (busyRef.current || destination) return;
     const eligible = Array.from(
       addPickerItems(
         new Map(),
@@ -522,75 +534,86 @@ export function LibraryFilePicker({
     >
       <header className="library-picker-header">
         <div>
-          <h2>{t("filePicker.title", "Add files")}</h2>
+          <h2>
+            {destination
+              ? t("filesPage.addToLibrary", "Add to Stirling library…")
+              : t("filePicker.title", "Add files")}
+          </h2>
           <Text size="sm" c="dimmed">
-            {t(
-              "filePicker.subtitle",
-              "Choose from your library or add something new.",
-            )}
+            {destination
+              ? t(
+                  "filePicker.chooseDestination",
+                  "Choose a folder, or add here.",
+                )
+              : t(
+                  "filePicker.subtitle",
+                  "Choose from your library or add something new.",
+                )}
           </Text>
         </div>
         <ActionIcon
           variant="tertiary"
           disabled={busy}
-          onClick={closeFilesModal}
+          onClick={close}
           aria-label={t("close", "Close")}
         >
           <Icon name="x" />
         </ActionIcon>
       </header>
-      <div className="library-picker-imports" data-tour="file-sources">
-        <Button
-          variant="tertiary"
-          disabled={busy}
-          leftSection={<Icon name="file-up" />}
-          onClick={() => void pickFromComputer()}
-        >
-          {t("filePicker.fromComputer", "From your computer")}
-        </Button>
-        {drive.isEnabled && (
+      {!destination && (
+        <div className="library-picker-imports" data-tour="file-sources">
           <Button
             variant="tertiary"
             disabled={busy}
-            loading={drive.isLoading}
-            leftSection={<Icon name="googledrive" />}
-            onClick={() => {
-              onExternalPickerChange(true);
-              void drive
-                .openPicker({ multiple: maxSelectable !== 1 })
-                .then(stageFiles)
-                .catch(reportError)
-                .finally(() => onExternalPickerChange(false));
+            leftSection={<Icon name="file-up" />}
+            onClick={() => void pickFromComputer()}
+          >
+            {t("filePicker.fromComputer", "From your computer")}
+          </Button>
+          {drive.isEnabled && (
+            <Button
+              variant="tertiary"
+              disabled={busy}
+              loading={drive.isLoading}
+              leftSection={<Icon name="googledrive" />}
+              onClick={() => {
+                onExternalPickerChange(true);
+                void drive
+                  .openPicker({ multiple: maxSelectable !== 1 })
+                  .then(stageFiles)
+                  .catch(reportError)
+                  .finally(() => onExternalPickerChange(false));
+              }}
+            >
+              Google Drive
+            </Button>
+          )}
+          {config?.enableMobileScanner && !isPhone && (
+            <Button
+              variant="tertiary"
+              disabled={busy}
+              leftSection={<Icon name="qr-code" />}
+              onClick={() => setMobileUploadOpen(true)}
+            >
+              {t("filePicker.fromPhone", "From your phone")}
+            </Button>
+          )}
+          <input
+            ref={fileInput}
+            type="file"
+            hidden
+            multiple={maxSelectable !== 1}
+            accept={supportedFormats
+              ?.map((format) => `.${format.replace(/^\./, "")}`)
+              .join(",")}
+            onChange={(event) => {
+              stageFiles(Array.from(event.target.files ?? []));
+              event.target.value = "";
             }}
-          >
-            Google Drive
-          </Button>
-        )}
-        {config?.enableMobileScanner && !isPhone && (
-          <Button
-            variant="tertiary"
-            disabled={busy}
-            leftSection={<Icon name="qr-code" />}
-            onClick={() => setMobileUploadOpen(true)}
-          >
-            {t("filePicker.fromPhone", "From your phone")}
-          </Button>
-        )}
-        <input
-          ref={fileInput}
-          type="file"
-          hidden
-          multiple={maxSelectable !== 1}
-          accept={supportedFormats
-            ?.map((format) => `.${format.replace(/^\./, "")}`)
-            .join(",")}
-          onChange={(event) => {
-            stageFiles(Array.from(event.target.files ?? []));
-            event.target.value = "";
-          }}
-        />
-      </div>
-      {(error || drive.error) && (
+          />
+        </div>
+      )}
+      {(error || (!destination && drive.error)) && (
         <Alert
           title={t("filePicker.errorTitle", "Couldn't add files")}
           withCloseButton
@@ -604,6 +627,7 @@ export function LibraryFilePicker({
         </Alert>
       )}
       <LibraryTabs
+        libraryOnly={Boolean(destination)}
         currentTab={currentTab}
         sharingEnabled={sharingEnabled}
         onOpenRoot={() => openFolder(null)}
@@ -635,8 +659,18 @@ export function LibraryFilePicker({
         }
       />
       <div className="library-picker-controls">
+        {destination && (
+          <Button
+            variant="tertiary"
+            leftSection={<Icon name="folder-plus" />}
+            onClick={() => setCreatingFolder(true)}
+          >
+            {t("filesPage.newFolder", "New folder")}
+          </Button>
+        )}
         <div className="files-page-toolbar-actions">
           <LibraryToolbar
+            hideFilters={Boolean(destination)}
             dropdownZIndex={Z_INDEX_OVER_FILE_MANAGER_MODAL}
             isMobile={compact}
             availableTypes={availableTypes}
@@ -657,6 +691,7 @@ export function LibraryFilePicker({
         <Dropzone
           className="library-picker-dropzone"
           disabled={busy}
+          activateOnDrag={!destination}
           activateOnClick={false}
           useFsAccessApi={false}
           getFilesFromEvent={getDropzoneFiles}
@@ -678,7 +713,8 @@ export function LibraryFilePicker({
           styles={{ inner: { pointerEvents: "all", height: "100%" } }}
         >
           <div className="files-page-content" data-tour="recent-files">
-            {!entries.length &&
+            {!destination &&
+            !entries.length &&
             !library.loading &&
             !diskLoading &&
             !search &&
@@ -758,6 +794,7 @@ export function LibraryFilePicker({
                   })
                 }
                 picker={{
+                  foldersOnly: Boolean(destination),
                   isEligible: (entry) => !eligibilityReason(entry),
                   selectionDisabled: busy,
                   disabledReason,
@@ -799,65 +836,97 @@ export function LibraryFilePicker({
         {detailsOpen && selectedFileIds.size > 0 && !compact && details}
       </div>
       <footer className="library-picker-footer">
-        <div className="library-picker-selection">
-          <Button
-            size="sm"
-            variant="tertiary"
-            onClick={() => setShowSelected((value) => !value)}
-            aria-pressed={showSelected}
-            disabled={!selection.size && !showSelected}
-          >
-            {maxSelectable
-              ? t(
-                  "filePicker.selectedLimit",
-                  "{{count}} of {{limit}} selected",
-                  { count: selection.size, limit: maxSelectable },
-                )
-              : t("filesPage.selectedCount", "{{count}} selected", {
-                  count: selection.size,
-                })}
-          </Button>
-          {selection.size > 0 && (
+        {destination ? (
+          <Text size="sm" c="dimmed">
+            {t("filesPage.selectedCount", "{{count}} selected", {
+              count: destination.fileCount,
+            })}
+          </Text>
+        ) : (
+          <div className="library-picker-selection">
             <Button
               size="sm"
               variant="tertiary"
-              disabled={busy}
-              onClick={() => setSelection(new Map())}
+              onClick={() => setShowSelected((value) => !value)}
+              aria-pressed={showSelected}
+              disabled={!selection.size && !showSelected}
             >
-              {t("filesPage.deselectAll", "Clear selection")}
+              {maxSelectable
+                ? t(
+                    "filePicker.selectedLimit",
+                    "{{count}} of {{limit}} selected",
+                    { count: selection.size, limit: maxSelectable },
+                  )
+                : t("filesPage.selectedCount", "{{count}} selected", {
+                    count: selection.size,
+                  })}
             </Button>
-          )}
-          {selectedFileIds.size > 0 && (
-            <ActionIcon
-              variant="tertiary"
-              onClick={() => setDetailsOpen((open) => !open)}
-              aria-label={t("filesPage.details", "Details")}
-            >
-              <Icon name="info" size={20} />
-            </ActionIcon>
-          )}
-        </div>
+            {selection.size > 0 && (
+              <Button
+                size="sm"
+                variant="tertiary"
+                disabled={busy}
+                onClick={() => setSelection(new Map())}
+              >
+                {t("filesPage.deselectAll", "Clear selection")}
+              </Button>
+            )}
+            {selectedFileIds.size > 0 && (
+              <ActionIcon
+                variant="tertiary"
+                onClick={() => setDetailsOpen((open) => !open)}
+                aria-label={t("filesPage.details", "Details")}
+              >
+                <Icon name="info" size={20} />
+              </ActionIcon>
+            )}
+          </div>
+        )}
         <div className="library-picker-footer-actions">
-          <Button
-            fat
-            variant="tertiary"
-            disabled={busy}
-            onClick={closeFilesModal}
-          >
+          <Button fat variant="tertiary" disabled={busy} onClick={close}>
             {t("cancel", "Cancel")}
           </Button>
-          <Button
-            fat
-            disabled={!selection.size}
-            loading={busy}
-            onClick={() => void confirm()}
-          >
-            {t("filePicker.add", "Add {{count}} files", {
-              count: selection.size,
-            })}
-          </Button>
+          {destination ? (
+            <Button
+              onClick={() => {
+                if (busyRef.current) return;
+                busyRef.current = true;
+                destination.onConfirm(currentFolderId);
+              }}
+            >
+              {t("filePicker.addHere", "Add here")}
+            </Button>
+          ) : (
+            <Button
+              fat
+              disabled={!selection.size}
+              loading={busy}
+              onClick={() => void confirm()}
+            >
+              {t("filePicker.add", "Add {{count}} files", {
+                count: selection.size,
+              })}
+            </Button>
+          )}
         </div>
       </footer>
+      {destination && (
+        <FolderNameDialog
+          opened={creatingFolder}
+          title={t("filesPage.newFolder", "New folder")}
+          submitLabel={t("filesPage.create", "Create")}
+          zIndex={Z_INDEX_OVER_FILE_MANAGER_MODAL}
+          onClose={() => setCreatingFolder(false)}
+          onSubmit={async (name) => {
+            const created = await folders.createFolder(
+              name,
+              currentFolderId,
+              "server",
+            );
+            openFolder(created.id);
+          }}
+        />
+      )}
       <Drawer
         opened={compact && detailsOpen && selectedFileIds.size > 0}
         onClose={() => setDetailsOpen(false)}

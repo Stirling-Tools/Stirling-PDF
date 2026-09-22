@@ -128,7 +128,12 @@ interface FilesPageContextValue {
   promptMoveFiles: (fileIds: FileId[]) => void;
   closeMoveDialog: () => void;
 
-  moveFilesTo: (fileIds: FileId[], folderId: FolderId | null) => Promise<void>;
+  /** uploadToRoot backs up local files even when the destination is the library root. */
+  moveFilesTo: (
+    fileIds: FileId[],
+    folderId: FolderId | null,
+    options?: { uploadToRoot?: boolean },
+  ) => Promise<void>;
   moveFolderTo: (
     folderId: FolderId,
     newParentId: FolderId | null,
@@ -340,7 +345,11 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
 
   /** Cloud files move server-first; local files auto-upload then move. */
   const moveFilesTo = useCallback(
-    async (fileIds: FileId[], folderId: FolderId | null) => {
+    async (
+      fileIds: FileId[],
+      folderId: FolderId | null,
+      options?: { uploadToRoot?: boolean },
+    ) => {
       if (fileIds.length === 0) return;
       // Newly imported files may not be in the render snapshot yet; read them from storage.
       const fetched = await Promise.all(
@@ -422,10 +431,14 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      if (folderId !== null && localOnly.length > 0) {
-        // Per-file uploadHistoryChain so each gets its own remoteStorageId.
-        try {
-          for (const stub of localOnly) {
+      const uploadErrors: string[] = [];
+      if (
+        (folderId !== null || options?.uploadToRoot) &&
+        localOnly.length > 0
+      ) {
+        // Independent files keep separate server records and can succeed independently.
+        for (const stub of localOnly) {
+          try {
             const rootId = (stub.originalFileId || stub.id) as FileId;
             const { remoteId, updatedAt, chain } =
               await uploadHistoryChain(rootId);
@@ -450,14 +463,11 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
               remoteOwnedByCurrentUser: true,
               remoteSharedViaLink: false,
             });
+          } catch (err) {
+            uploadErrors.push(
+              `${stub.name}: ${err instanceof Error ? err.message : String(err)}`,
+            );
           }
-        } catch (err) {
-          folders.setError(
-            err instanceof Error
-              ? `Could not save files to server: ${err.message}`
-              : "Could not save files to server.",
-          );
-          throw err;
         }
       }
 
@@ -471,13 +481,13 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
             folderId,
           );
           if (result.skippedFileIds.length > 0) {
-            folders.setError(
-              t(
-                "filesPage.moveSkippedRemote",
-                "{{count}} file(s) couldn't be moved on the server (no permission or already deleted).",
-                { count: result.skippedFileIds.length },
-              ),
+            const message = t(
+              "filesPage.moveSkippedRemote",
+              "{{count}} file(s) couldn't be moved on the server (no permission or already deleted).",
+              { count: result.skippedFileIds.length },
             );
+            folders.setError(message);
+            if (options?.uploadToRoot) uploadErrors.push(message);
           }
           const movedRemoteSet = new Set(result.movedFileIds);
           const idsToCacheMove = cloudFiles
@@ -496,8 +506,8 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // Root moves still need to clear local folderId; the server-upload branch does not run here.
-      if (folderId === null && localOnly.length > 0) {
+      // Moving a browser copy to root must not implicitly upload it.
+      if (folderId === null && !options?.uploadToRoot && localOnly.length > 0) {
         const leaving = localOnly
           .filter((s) => (s.folderId ?? null) !== null)
           .map((s) => s.id);
@@ -506,6 +516,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
         }
       }
       await refresh();
+      if (uploadErrors.length) throw new Error(uploadErrors.join("\n"));
     },
     [indexedDB, refresh, fileMap, folders, t, fileActions],
   );

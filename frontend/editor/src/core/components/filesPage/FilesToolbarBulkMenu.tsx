@@ -11,7 +11,7 @@ interface FilesToolbarBulkMenuProps {
   /** Set when storage is off - the item stays listed but disabled. */
   saveToServerDisabledReason?: string;
   onShowDetails?: () => void;
-  onMove: () => void;
+  onMove?: () => void;
   onRemove: () => void;
   onClearSelection: () => void;
 }
@@ -63,7 +63,7 @@ export function FilesToolbarBulkMenu({
             disabled={Boolean(saveToServerDisabledReason)}
             onClick={onSaveToServer}
           >
-            {t("filesPage.saveToServer", "Save to server")}
+            {t("filesPage.addToLibrary", "Add to Stirling library…")}
           </Menu.Item>
         )}
         {onShowDetails && (
@@ -74,12 +74,14 @@ export function FilesToolbarBulkMenu({
             {t("filesPage.showDetails", "Show details")}
           </Menu.Item>
         )}
-        <Menu.Item
-          leftSection={<Icon name="folder-input" size={"1.1rem"} />}
-          onClick={onMove}
-        >
-          {t("filesPage.moveTo", "Move to…")}
-        </Menu.Item>
+        {onMove && (
+          <Menu.Item
+            leftSection={<Icon name="folder-input" size={"1.1rem"} />}
+            onClick={onMove}
+          >
+            {t("filesPage.moveTo", "Move to…")}
+          </Menu.Item>
+        )}
         <Menu.Item
           leftSection={<Icon name="x" size={"1.1rem"} />}
           onClick={onClearSelection}

@@ -27,6 +27,7 @@ type Props = Pick<
   setViewMode: (value: FilesPageViewMode) => void;
   /** Popovers are portalled; modal hosts must place them above their overlay. */
   dropdownZIndex?: number;
+  hideFilters?: boolean;
 };
 
 export function LibraryToolbar({
@@ -43,73 +44,75 @@ export function LibraryToolbar({
   viewMode,
   setViewMode,
   dropdownZIndex,
+  hideFilters = false,
 }: Props) {
   const { t } = useTranslation();
   return (
     <>
-      {isMobile ? (
-        <FilesToolbarFilterMenu
-          zIndex={dropdownZIndex}
-          originFilter={originFilter}
-          onOriginChange={setOriginFilter}
-          availableTypes={availableTypes}
-          typeFilter={typeFilter}
-          onTypeChange={setTypeFilter}
-        />
-      ) : (
-        <>
-          <Select
-            comboboxProps={{ zIndex: dropdownZIndex }}
-            size="xs"
-            value={originFilter}
-            onChange={(value) =>
-              value && setOriginFilter(value as FilesPageOriginFilter)
-            }
-            data={[
-              {
-                value: "all",
-                label: t("filesPage.origin.all", "All sources"),
-              },
-              {
-                value: "local",
-                label: t("filesPage.origin.local", "Local"),
-              },
-              {
-                value: "cloud",
-                label: t("filesPage.origin.cloud", "Cloud"),
-              },
-              {
-                value: "shared-with-me",
-                label: t("filesPage.origin.shared", "Shared"),
-              },
-            ]}
-            style={{ width: 140 }}
-            aria-label={t("filesPage.originFilter", "Filter by source")}
+      {!hideFilters &&
+        (isMobile ? (
+          <FilesToolbarFilterMenu
+            zIndex={dropdownZIndex}
+            originFilter={originFilter}
+            onOriginChange={setOriginFilter}
+            availableTypes={availableTypes}
+            typeFilter={typeFilter}
+            onTypeChange={setTypeFilter}
           />
-          {(availableTypes.length > 1 || typeFilter.length > 0) && (
-            <MultiSelect
+        ) : (
+          <>
+            <Select
               comboboxProps={{ zIndex: dropdownZIndex }}
               size="xs"
-              value={typeFilter}
-              onChange={setTypeFilter}
-              data={availableTypes.map((ext) => ({
-                value: ext,
-                label: ext,
-              }))}
-              placeholder={
-                typeFilter.length === 0
-                  ? t("filesPage.typeFilter.allTypes", "All types")
-                  : undefined
+              value={originFilter}
+              onChange={(value) =>
+                value && setOriginFilter(value as FilesPageOriginFilter)
               }
-              clearable
-              hidePickedOptions
-              searchable={false}
-              style={{ width: 160 }}
-              aria-label={t("filesPage.typeFilter.label", "Filter by type")}
+              data={[
+                {
+                  value: "all",
+                  label: t("filesPage.origin.all", "All sources"),
+                },
+                {
+                  value: "local",
+                  label: t("filesPage.origin.local", "Local"),
+                },
+                {
+                  value: "cloud",
+                  label: t("filesPage.origin.cloud", "Cloud"),
+                },
+                {
+                  value: "shared-with-me",
+                  label: t("filesPage.origin.shared", "Shared"),
+                },
+              ]}
+              style={{ width: 140 }}
+              aria-label={t("filesPage.originFilter", "Filter by source")}
             />
-          )}
-        </>
-      )}
+            {(availableTypes.length > 1 || typeFilter.length > 0) && (
+              <MultiSelect
+                comboboxProps={{ zIndex: dropdownZIndex }}
+                size="xs"
+                value={typeFilter}
+                onChange={setTypeFilter}
+                data={availableTypes.map((ext) => ({
+                  value: ext,
+                  label: ext,
+                }))}
+                placeholder={
+                  typeFilter.length === 0
+                    ? t("filesPage.typeFilter.allTypes", "All types")
+                    : undefined
+                }
+                clearable
+                hidePickedOptions
+                searchable={false}
+                style={{ width: 160 }}
+                aria-label={t("filesPage.typeFilter.label", "Filter by type")}
+              />
+            )}
+          </>
+        ))}
       <FilenameSearch
         value={search}
         onChange={setSearch}

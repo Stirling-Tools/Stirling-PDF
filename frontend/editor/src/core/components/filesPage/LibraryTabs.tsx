@@ -11,6 +11,7 @@ export function LibraryTabs({
   rootDropHandlers,
   sharingEnabled,
   breadcrumbs,
+  libraryOnly = false,
 }: {
   currentTab: FilesPageTab;
   onChange: (tab: FilesPageTab) => void;
@@ -19,6 +20,7 @@ export function LibraryTabs({
   rootDropHandlers?: Pick<ButtonProps, "onDragOver" | "onDrop">;
   sharingEnabled: boolean;
   breadcrumbs?: ReactNode;
+  libraryOnly?: boolean;
 }) {
   const { t } = useTranslation();
   const tabs: { id: FilesPageTab; label: string }[] = [
@@ -39,25 +41,27 @@ export function LibraryTabs({
         className="files-page-view-tabs"
         aria-label={t("filePicker.sources", "File sources")}
       >
-        {tabs.map((tab) => (
-          <Fragment key={tab.id}>
-            <Button
-              variant={currentTab === tab.id ? "primary" : "tertiary"}
-              shape="pill"
-              size="sm"
-              aria-pressed={currentTab === tab.id}
-              onClick={() =>
-                tab.id === "all" && currentTab === "all"
-                  ? onOpenRoot()
-                  : onChange(tab.id)
-              }
-              {...(tab.id === "all" ? rootDropHandlers : undefined)}
-            >
-              {tab.label}
-            </Button>
-            {tab.id === "all" && currentTab === "all" && breadcrumbs}
-          </Fragment>
-        ))}
+        {tabs
+          .filter((tab) => !libraryOnly || tab.id === "all")
+          .map((tab) => (
+            <Fragment key={tab.id}>
+              <Button
+                variant={currentTab === tab.id ? "primary" : "tertiary"}
+                shape="pill"
+                size="sm"
+                aria-pressed={currentTab === tab.id}
+                onClick={() =>
+                  tab.id === "all" && currentTab === "all"
+                    ? onOpenRoot()
+                    : onChange(tab.id)
+                }
+                {...(tab.id === "all" ? rootDropHandlers : undefined)}
+              >
+                {tab.label}
+              </Button>
+              {tab.id === "all" && currentTab === "all" && breadcrumbs}
+            </Fragment>
+          ))}
       </nav>
     </div>
   );

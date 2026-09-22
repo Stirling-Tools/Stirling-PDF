@@ -59,7 +59,8 @@ import { useServerProcessingBlock } from "@app/hooks/useServerProcessingBlock";
 import { FolderSweepWall } from "@app/components/policies/SweepRunWall";
 import { RestoreOriginalsDialog } from "@app/components/filesPage/RestoreOriginalsDialog";
 import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
-import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerModal";
+import { AddToLibraryModal } from "@app/components/filesPage/AddToLibraryModal";
+import { isBrowserOnlyFile } from "@app/components/filesPage/fileOrigin";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { canPickDirectory } from "@app/services/directoryPicker";
 import { isDiskFolderId } from "@app/types/folder";
@@ -103,7 +104,6 @@ export default function FileManagerView() {
 
   const useFullScreenDrawer = useMediaQuery("(max-width: 640px)") ?? false;
   const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false);
-  // Saving existing files to the server targets its root, independent of the open folder.
   const [saveToServerTarget, setSaveToServerTarget] = useState<
     StirlingFileStub[] | null
   >(null);
@@ -893,6 +893,10 @@ export default function FileManagerView() {
         ),
     [selectedFiles, fileMap],
   );
+  const movableSelectedFiles = selectedFiles.filter((id) => {
+    const file = fileMap.get(id);
+    return file && !isBrowserOnlyFile(file);
+  });
 
   const processingBlock = useServerProcessingBlock();
 
@@ -1002,7 +1006,11 @@ export default function FileManagerView() {
             ? () => setMobileDetailsOpen(true)
             : undefined
         }
-        onMove={() => promptMoveFiles(selectedFiles)}
+        onMove={
+          movableSelectedFiles.length > 0
+            ? () => promptMoveFiles(movableSelectedFiles)
+            : undefined
+        }
         onRemove={() => handleRemoveFiles(selectedFiles)}
         onClearSelection={() => clearSelection()}
       />
@@ -1064,7 +1072,6 @@ export default function FileManagerView() {
 
           <div className="files-page-toolbar">
             <FilesToolbarCount
-              loading={loading}
               totalCount={totalCount}
               selectedCount={selectedFiles.length}
             />
@@ -1235,7 +1242,14 @@ export default function FileManagerView() {
                 );
               }}
               onRemoveFiles={handleRemoveFiles}
-              onPromptMoveFiles={promptMoveFiles}
+              onPromptMoveFiles={(ids) =>
+                promptMoveFiles(
+                  ids.filter((id) => {
+                    const file = fileMap.get(id);
+                    return file && !isBrowserOnlyFile(file);
+                  }),
+                )
+              }
               onSaveToServer={(file) => setSaveToServerTarget([file])}
               onVersionHistory={(file) => setVersionHistoryFile(file)}
               onDownloadFile={handleDownloadFile}
@@ -1441,13 +1455,10 @@ export default function FileManagerView() {
         onChanged={refresh}
       />
 
-      {/* Save-to-server modal; keyed on target so updates don't retarget. */}
-      <BulkUploadToServerModal
+      <AddToLibraryModal
         key={`save-${(saveToServerTarget ?? []).map((s) => s.id).join(",")}`}
-        opened={Boolean(saveToServerTarget && saveToServerTarget.length > 0)}
         onClose={() => setSaveToServerTarget(null)}
         files={saveToServerTarget ?? []}
-        onUploaded={refresh}
       />
     </div>
   );

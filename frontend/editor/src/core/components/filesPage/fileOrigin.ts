@@ -12,6 +12,11 @@ import type { FolderId, FolderRecord } from "@app/types/folder";
 
 export type FileOrigin = "local" | "cloud" | "shared-with-me";
 
+/** Browser-only files have neither a server copy nor a link to a file on disk. */
+export function isBrowserOnlyFile(file: StirlingFileStub): boolean {
+  return getFileOrigin(file) === "local" && !file.localFilePath;
+}
+
 export function getFileOrigin(file: StirlingFileStub): FileOrigin {
   if (file.remoteSharedViaLink || file.remoteOwnedByCurrentUser === false) {
     return "shared-with-me";

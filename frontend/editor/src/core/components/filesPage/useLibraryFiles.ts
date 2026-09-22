@@ -8,6 +8,7 @@ import type {
 import type { StirlingFileStub } from "@app/types/fileContext";
 import { FolderId, folderKind } from "@app/types/folder";
 import type { DiskFileEntry } from "@app/services/localFolderContents";
+import { libraryFileDate } from "@app/components/filesPage/libraryFileDate";
 import {
   getFileOrigin,
   isUnfiledLocalFile,
@@ -175,17 +176,21 @@ export function useLibraryFiles({
         case "name-desc":
           return b.name.localeCompare(a.name);
         case "modified-asc":
-          return (a.lastModified ?? 0) - (b.lastModified ?? 0);
+          return (
+            libraryFileDate(a, currentTab) - libraryFileDate(b, currentTab)
+          );
         case "size-desc":
           return (b.size ?? 0) - (a.size ?? 0);
         case "size-asc":
           return (a.size ?? 0) - (b.size ?? 0);
         case "modified-desc":
         default:
-          return (b.lastModified ?? 0) - (a.lastModified ?? 0);
+          return (
+            libraryFileDate(b, currentTab) - libraryFileDate(a, currentTab)
+          );
       }
     });
-  }, [filesInScope, search, sortMode, originFilter, typeFilter]);
+  }, [filesInScope, search, sortMode, originFilter, typeFilter, currentTab]);
 
   return { visibleFolders, visibleFiles, availableTypes };
 }

@@ -29,7 +29,11 @@ import {
   serialiseFilesPageDragPayload,
 } from "@app/components/filesPage/dragDrop";
 import { useDropTarget } from "@app/components/filesPage/useDropTarget";
-import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
+import {
+  getFileOrigin,
+  isBrowserOnlyFile,
+} from "@app/components/filesPage/fileOrigin";
+import { libraryFileDate } from "@app/components/filesPage/libraryFileDate";
 import { FileOriginBadge } from "@app/components/filesPage/FileOriginBadge";
 import { FolderProcessingTag } from "@app/components/filesPage/FolderProcessingTag";
 import { FolderOriginBadge } from "@app/components/filesPage/FolderOriginBadge";
@@ -69,6 +73,7 @@ export interface FilesPageEntry {
 
 /** Picker mode hides library mutations; opening a file confirms its selection. */
 export interface FileGridPicker {
+  foldersOnly?: boolean;
   /** Format and processing eligibility only; capacity and busy state must not change the selection count. */
   isEligible: (entry: FilesPageEntry) => boolean;
   selectionDisabled: boolean;
@@ -116,7 +121,7 @@ interface FileGridProps {
   ) => void;
   onRemoveFiles?: (fileIds: FileId[]) => void;
   onPromptMoveFiles?: (fileIds: FileId[]) => void;
-  /** Per-file Save to server; hidden when file already has remoteStorageId. */
+  /** Per-file library upload; hidden when file already has remoteStorageId. */
   onSaveToServer?: (file: StirlingFileStub) => void;
   /** Open the version-history modal for a file (only when it has >1 version). */
   onVersionHistory?: (file: StirlingFileStub) => void;
@@ -126,7 +131,7 @@ interface FileGridProps {
   onRenameFile?: (file: StirlingFileStub) => void;
 
   onDuplicateFile?: (file: StirlingFileStub) => void;
-  /** When set, the Save to server item renders disabled with this tooltip. */
+  /** When set, the library upload item renders disabled with this tooltip. */
   saveToServerDisabledReason?: string | null;
   /** When supplied the list-view column headers become sortable. */
   sortMode?: FilesPageSortMode;
@@ -489,6 +494,7 @@ type FileGridLayoutProps = FileGridProps & {
 
 function GridView({
   picker,
+  currentTab,
   entries,
   selectedFileIds,
   activeWorkspaceFileIds,
@@ -552,14 +558,19 @@ function GridView({
               key={`file-${entry.file.id}`}
               selectionOnly={Boolean(picker)}
               disabledReason={picker?.disabledReason(entry)}
+              folderPicker={picker?.foldersOnly}
               file={entry.file}
+              date={libraryFileDate(entry.file, currentTab)}
               parentPath={entry.parentPath}
               processingState={entry.diskState}
               isSelected={selectedFileIds.has(entry.file.id)}
               isInWorkspace={
                 activeWorkspaceFileIds?.has(entry.file.id) ?? false
               }
-              multiSelectActive={Boolean(picker) || selectedFileIds.size >= 2}
+              multiSelectActive={
+                !picker?.foldersOnly &&
+                (Boolean(picker) || selectedFileIds.size >= 2)
+              }
               downloadAvailable={Boolean(onDownloadFile)}
               renameAvailable={Boolean(onRenameFile)}
               duplicateAvailable={Boolean(onDuplicateFile)}
@@ -961,16 +972,18 @@ function FileActionsMenu({
           {t("filesPage.addToWorkspace", "Add to workspace")}
         </Menu.Item>
         <OpenInNewWindowMenuItem file={file} />
-        <Menu.Item
-          leftSection={<Icon name="folder-input" size={20} />}
-          onClick={(e) => {
-            e.stopPropagation();
-            actions.requestMoveFile(file.id);
-          }}
-          data-testid="file-menu-move-to"
-        >
-          {t("filesPage.moveTo", "Move to…")}
-        </Menu.Item>
+        {!isBrowserOnlyFile(file) && (
+          <Menu.Item
+            leftSection={<Icon name="folder-input" size={20} />}
+            onClick={(e) => {
+              e.stopPropagation();
+              actions.requestMoveFile(file.id);
+            }}
+            data-testid="file-menu-move-to"
+          >
+            {t("filesPage.moveTo", "Move to…")}
+          </Menu.Item>
+        )}
 
         {(downloadAvailable || renameAvailable || duplicateAvailable) && (
           <Menu.Divider />
@@ -1036,7 +1049,7 @@ function FileActionsMenu({
                   : undefined
               }
             >
-              {t("filesPage.saveToServer", "Save to server")}
+              {t("filesPage.addToLibrary", "Add to Stirling library…")}
             </Menu.Item>
           </Tooltip>
         )}
@@ -1069,6 +1082,8 @@ function FileActionsMenu({
 }
 
 interface FileCardProps {
+  date: number;
+  folderPicker?: boolean;
   selectionOnly?: boolean;
   disabledReason?: string;
   file: StirlingFileStub;
@@ -1094,6 +1109,8 @@ interface FileCardProps {
 }
 
 const FileCard = React.memo(function FileCard({
+  date,
+  folderPicker,
   selectionOnly,
   disabledReason,
   file,
@@ -1114,10 +1131,7 @@ const FileCard = React.memo(function FileCard({
   const { t } = useTranslation();
   const cardRef = useRef<HTMLDivElement>(null);
   const fileSize = useMemo(() => formatFileSize(file.size), [file.size]);
-  const fileDate = useMemo(
-    () => getFileDate({ lastModified: file.lastModified }),
-    [file.lastModified],
-  );
+  const fileDate = useMemo(() => getFileDate({ lastModified: date }), [date]);
 
   const onClick = useCallback(
     (e: React.MouseEvent) =>
@@ -1223,7 +1237,11 @@ const FileCard = React.memo(function FileCard({
           </div>
         )}
         <div className="files-page-card-origin">
-          <FileOriginBadge origin={getFileOrigin(file)} compact />
+          <FileOriginBadge
+            origin={getFileOrigin(file)}
+            onDisk={Boolean(file.localFilePath)}
+            compact
+          />
           <DiskLinkBadge file={file} compact />
         </div>
         <FileStateBadge
@@ -1252,18 +1270,20 @@ const FileCard = React.memo(function FileCard({
         </div>
       </div>
       <div className="files-page-card-actions">
-        <FileActionsMenu
-          selectionOnly={selectionOnly}
-          file={file}
-          triggerRef={kebabRef}
-          downloadAvailable={downloadAvailable}
-          renameAvailable={renameAvailable}
-          duplicateAvailable={duplicateAvailable}
-          saveToServerAvailable={saveToServerAvailable}
-          versionHistoryAvailable={versionHistoryAvailable}
-          saveToServerDisabledReason={saveToServerDisabledReason}
-          actions={actions}
-        />
+        {!folderPicker && (
+          <FileActionsMenu
+            selectionOnly={selectionOnly}
+            file={file}
+            triggerRef={kebabRef}
+            downloadAvailable={downloadAvailable}
+            renameAvailable={renameAvailable}
+            duplicateAvailable={duplicateAvailable}
+            saveToServerAvailable={saveToServerAvailable}
+            versionHistoryAvailable={versionHistoryAvailable}
+            saveToServerDisabledReason={saveToServerDisabledReason}
+            actions={actions}
+          />
+        )}
       </div>
     </div>
   );
@@ -1272,6 +1292,7 @@ const FileCard = React.memo(function FileCard({
 /** Grid rows must own cells: wrap checkboxes, sort controls and menus in gridcell/columnheader elements. */
 function ListView({
   picker,
+  currentTab,
   entries,
   selectedFileIds,
   activeWorkspaceFileIds,
@@ -1391,7 +1412,9 @@ function ListView({
         </span>
         <span role="columnheader">
           <span {...headerProps("modified-asc", "modified-desc")}>
-            {t("filesPage.column.modified", "Modified")}
+            {currentTab === "recent"
+              ? t("filesPage.column.added", "Added")
+              : t("filesPage.column.modified", "Modified")}
             {sortIndicator("modified-asc", "modified-desc")}
           </span>
         </span>
@@ -1449,14 +1472,19 @@ function ListView({
               key={`file-${entry.file.id}`}
               selectionOnly={Boolean(picker)}
               disabledReason={picker?.disabledReason(entry)}
+              folderPicker={picker?.foldersOnly}
               file={entry.file}
+              date={libraryFileDate(entry.file, currentTab)}
               parentPath={entry.parentPath}
               processingState={entry.diskState}
               isSelected={selectedFileIds.has(entry.file.id)}
               isInWorkspace={
                 activeWorkspaceFileIds?.has(entry.file.id) ?? false
               }
-              multiSelectActive={Boolean(picker) || selectedFileIds.size >= 2}
+              multiSelectActive={
+                !picker?.foldersOnly &&
+                (Boolean(picker) || selectedFileIds.size >= 2)
+              }
               downloadAvailable={Boolean(onDownloadFile)}
               renameAvailable={Boolean(onRenameFile)}
               duplicateAvailable={Boolean(onDuplicateFile)}
@@ -1678,6 +1706,8 @@ const FolderRow = React.memo(function FolderRow({
 });
 
 interface FileRowProps {
+  date: number;
+  folderPicker?: boolean;
   selectionOnly?: boolean;
   disabledReason?: string;
   file: StirlingFileStub;
@@ -1702,6 +1732,8 @@ interface FileRowProps {
 }
 
 const FileRow = React.memo(function FileRow({
+  date,
+  folderPicker,
   selectionOnly,
   disabledReason,
   file,
@@ -1722,10 +1754,7 @@ const FileRow = React.memo(function FileRow({
   const { t } = useTranslation();
   const kebabRef = useRef<HTMLButtonElement>(null);
   const fileSize = useMemo(() => formatFileSize(file.size), [file.size]);
-  const fileDate = useMemo(
-    () => getFileDate({ lastModified: file.lastModified }),
-    [file.lastModified],
-  );
+  const fileDate = useMemo(() => getFileDate({ lastModified: date }), [date]);
   const ext = (file.name.split(".").pop() ?? "").toUpperCase();
   const resolvedThumbnail = useLazyThumbnail(
     file.id,
@@ -1838,7 +1867,11 @@ const FileRow = React.memo(function FileRow({
             </span>
           )}
         </span>
-        <FileOriginBadge origin={getFileOrigin(file)} compact />
+        <FileOriginBadge
+          origin={getFileOrigin(file)}
+          onDisk={Boolean(file.localFilePath)}
+          compact
+        />
         <DiskLinkBadge file={file} compact />
         <PolicyBadgeRow policies={badges} />
         {isInWorkspace && (
@@ -1860,18 +1893,20 @@ const FileRow = React.memo(function FileRow({
         </span>
       )}
       <span role="gridcell">
-        <FileActionsMenu
-          selectionOnly={selectionOnly}
-          file={file}
-          triggerRef={kebabRef}
-          downloadAvailable={downloadAvailable}
-          renameAvailable={renameAvailable}
-          duplicateAvailable={duplicateAvailable}
-          saveToServerAvailable={saveToServerAvailable}
-          versionHistoryAvailable={versionHistoryAvailable}
-          saveToServerDisabledReason={saveToServerDisabledReason}
-          actions={actions}
-        />
+        {!folderPicker && (
+          <FileActionsMenu
+            selectionOnly={selectionOnly}
+            file={file}
+            triggerRef={kebabRef}
+            downloadAvailable={downloadAvailable}
+            renameAvailable={renameAvailable}
+            duplicateAvailable={duplicateAvailable}
+            saveToServerAvailable={saveToServerAvailable}
+            versionHistoryAvailable={versionHistoryAvailable}
+            saveToServerDisabledReason={saveToServerDisabledReason}
+            actions={actions}
+          />
+        )}
       </span>
     </div>
   );
@@ -1968,6 +2003,7 @@ const DiskFileCard = React.memo(function DiskFileCard({
         <div className="files-page-card-origin">
           <FileOriginBadge
             origin="local"
+            onDisk
             tooltip={t(
               "filesPage.origin.diskHint",
               "A file in the mounted folder on your disk",
@@ -2127,6 +2163,7 @@ const DiskFileRow = React.memo(function DiskFileRow({
         </span>
         <FileOriginBadge
           origin="local"
+          onDisk
           tooltip={t(
             "filesPage.origin.diskHint",
             "A file in the mounted folder on your disk",
