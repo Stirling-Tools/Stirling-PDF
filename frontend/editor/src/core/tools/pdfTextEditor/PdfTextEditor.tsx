@@ -36,7 +36,7 @@ import { PageStage } from "@app/tools/pdfTextEditor/components/PageStage";
 import { InsertImageCommand } from "@app/tools/pdfTextEditor/commands/InsertImageCommand";
 import { InsertTextCommand } from "@app/tools/pdfTextEditor/commands/InsertTextCommand";
 import { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
-import { jpegExifOrientation } from "@app/tools/pdfTextEditor/util/jpegOrientation";
+import { jpegExifOrientation } from "@app/utils/jpegOrientation";
 import { MergeRunsCommand } from "@app/tools/pdfTextEditor/commands/MergeRunsCommand";
 import { UngroupParagraphCommand } from "@app/tools/pdfTextEditor/commands/UngroupParagraphCommand";
 import { exportToBlob } from "@app/tools/pdfTextEditor/util/exportPdf";
