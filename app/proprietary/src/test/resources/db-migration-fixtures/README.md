@@ -55,16 +55,36 @@ against PostgreSQL 16. For each version named by the H2 fixtures, it boots the
 historical release on a disposable PostgreSQL database, then dumps and restores
 that database before starting the current JAR.
 
-The historical app creates the same core data as the H2 fixtures: admin and
-internal API users, the admin authority, Default/Internal teams, and license
-settings. The test also seeds a team named `Migration fixture <version>` so an
-empty replacement database cannot pass. It compares user IDs, usernames, team
-memberships, admin password hash/API key, authorities, and teams before and after
-the upgrade, and verifies admin login returns a JWT. Generated values can differ
-between H2 and PostgreSQL; each PostgreSQL upgrade must preserve its own values.
-Timestamps and license entitlements are excluded because startup may change them.
+The historical app creates the same core data as the H2 fixtures, then the test
+uses its authenticated APIs (including CSRF handling) to populate:
 
-Historical releases require a Server/Enterprise license for custom databases.
+* Two custom teams: Migration Finance and Migration Operations.
+* Three regular users across those teams, including one disabled account.
+* Nine user settings, including Unicode text.
+* Real audit events from creating teams/users, updating settings, and login activity.
+
+Seeding fails if any API call fails, any expected record is missing, or async
+audit writes do not persist events for the admin and every fixture user.
+Each fixture contains five users and four teams in total, including defaults.
+
+After upgrading, the test checks that enabled users can log in and the disabled
+user cannot. It compares user IDs, usernames, authentication types, enabled
+states, team memberships, password hashes/API keys, roles, teams, and settings.
+Every captured historical audit event must retain its ID, principal, type,
+timestamp, and JSON payload; additional events from the new app are allowed.
+
+Older PostgreSQL schemas can store audit payloads and settings as large-object
+references. The pre-upgrade snapshot reads their contents, while the upgraded
+snapshot expects current text/JSON storage. Keeping an OID number without
+converting its contents therefore fails the test.
+
+Generated values can differ between H2 and PostgreSQL; each PostgreSQL upgrade
+must preserve its own values. User timestamps and license entitlements are
+excluded because startup may change them. File storage, workflows, invites,
+and HTTP sessions are not seeded by this test.
+
+Historical releases require a license for custom databases and an Enterprise
+license to populate audit history.
 CI uses `PREMIUM_KEY_ENTERPRISE` from the `ci-unsigned` environment. Missing or
 invalid licenses fail the test, including any fallback to H2. Fork PRs run H2
 only and report the missing PostgreSQL coverage in the job summary.

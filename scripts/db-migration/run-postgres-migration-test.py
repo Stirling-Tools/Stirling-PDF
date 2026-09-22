@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Boot historical releases on PostgreSQL, seed data, then test the current JAR.
 
-Requires Docker, Java 25, and PREMIUM_KEY for licensed historical releases.
+Requires Docker, Java 25, and an Enterprise PREMIUM_KEY for audit fixtures.
 Only disposable containers created by this script are used. No external DB is touched.
 """
 
 import argparse
+import http.cookiejar
 import json
 import os
 from pathlib import Path
@@ -16,11 +17,23 @@ import subprocess
 import tempfile
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FIXTURES = REPO_ROOT / "app/proprietary/src/test/resources/db-migration-fixtures"
+FIXTURE_PASSWORD = "migration-test-password"
+FIXTURE_USERS = {
+    "migration_alice": "Migration Finance",
+    "migration_bob": "Migration Operations",
+    "migration_disabled": "Migration Finance",
+}
+FIXTURE_SETTINGS = {
+    "theme": "dark",
+    "language": "en-GB",
+    "migrationNote": "R\u00e9sum\u00e9 \u03a9 \u2014 preserved setting",
+}
 SCHEMA_ERRORS = re.compile(
     r"SchemaManagementException|GenerationTarget encountered exception|Flyway.*FAILED",
     re.IGNORECASE,
@@ -30,9 +43,10 @@ SCHEMA_ERRORS = re.compile(
 SNAPSHOT_SQL = """
 SELECT json_build_object(
   'users', (SELECT json_agg(row_to_json(u) ORDER BY u.user_id) FROM
-    (SELECT user_id, username, team_id FROM users) u),
-  'admin', (SELECT json_agg(row_to_json(u)) FROM
-    (SELECT user_id, password, api_key FROM users WHERE username = 'admin') u),
+    (SELECT user_id, username, team_id, enabled, authenticationtype FROM users) u),
+  'credentials', (SELECT json_agg(row_to_json(u) ORDER BY u.user_id) FROM
+    (SELECT user_id, username, password, api_key FROM users
+     WHERE username IN ('admin', 'migration_alice', 'migration_bob', 'migration_disabled')) u),
   'authorities', (SELECT json_agg(row_to_json(a) ORDER BY a.user_id, a.authority) FROM
     (SELECT user_id, authority FROM authorities) a),
   'teams', (SELECT json_agg(row_to_json(t) ORDER BY t.team_id) FROM
@@ -74,11 +88,166 @@ def free_port():
         return sock.getsockname()[1]
 
 
-def request(base_url, path, data=None):
-    payload = None if data is None else json.dumps(data).encode()
-    req = urllib.request.Request(base_url + path, data=payload, headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=5) as response:
-        return response.status, response.read()
+def request(base_url, path, data=None, *, token=None, form=False):
+    payload = None
+    headers = {"Content-Type": "application/x-www-form-urlencoded" if form else "application/json"}
+    if data is not None:
+        payload = (urllib.parse.urlencode(data) if form else json.dumps(data)).encode()
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    cookies = http.cookiejar.CookieJar()
+    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookies))
+    if token and data is not None:
+        # Historical releases require a CSRF cookie/header even with a JWT.
+        with opener.open(urllib.request.Request(base_url + "/api/v1/info/status", headers=headers), timeout=30):
+            pass
+        for cookie in cookies:
+            if cookie.name == "XSRF-TOKEN":
+                headers["X-XSRF-TOKEN"] = urllib.parse.unquote(cookie.value)
+    req = urllib.request.Request(base_url + path, data=payload, headers=headers)
+    try:
+        with opener.open(req, timeout=30) as response:
+            return response.status, response.read()
+    except urllib.error.HTTPError as exc:
+        return exc.code, exc.read()
+
+
+def api(base_url, path, data=None, **kwargs):
+    code, body = request(base_url, path, data, **kwargs)
+    if code != 200:
+        raise RuntimeError(f"{path} returned HTTP {code}: {body.decode(errors='replace')[:300]}")
+    return json.loads(body)
+
+
+def login(base_url, username, password):
+    response = api(base_url, "/api/v1/auth/login", {"username": username, "password": password})
+    token = response.get("session", {}).get("access_token")
+    if not token or response.get("user", {}).get("username") != username:
+        raise RuntimeError(f"Login did not authenticate {username}")
+    return token
+
+
+def settings_for(username):
+    return {**FIXTURE_SETTINGS, "migrationNote": f"{FIXTURE_SETTINGS['migrationNote']} ({username})"}
+
+
+def seed_data(base_url, container, admin_token):
+    for name in sorted(set(FIXTURE_USERS.values())):
+        api(base_url, "/api/v1/team/create", {"name": name}, token=admin_token, form=True)
+    team_ids = {
+        row["name"]: row["team_id"]
+        for row in json.loads(sql(container, "SELECT json_agg(t) FROM (SELECT team_id, name FROM teams) t;"))
+    }
+    for username, team in FIXTURE_USERS.items():
+        api(
+            base_url,
+            "/api/v1/user/admin/saveUser",
+            {
+                "username": username,
+                "password": FIXTURE_PASSWORD,
+                "role": "ROLE_USER",
+                "authType": "WEB",
+                "forceChange": "false",
+                "teamId": team_ids[team],
+            },
+            token=admin_token,
+            form=True,
+        )
+        token = login(base_url, username, FIXTURE_PASSWORD)
+        api(base_url, "/api/v1/user/updateUserSettings", settings_for(username), token=token)
+        log(f"Seeded {username}: {team}, ROLE_USER, and {len(FIXTURE_SETTINGS)} settings")
+    api(
+        base_url,
+        "/api/v1/user/admin/changeUserEnabled/migration_disabled",
+        {"enabled": "false"},
+        token=admin_token,
+        form=True,
+    )
+    # Audit writes are asynchronous and fail open in historical releases. An
+    # HTTP success alone must not let an empty audit table pass as a fixture.
+    for _ in range(30):
+        principals = json.loads(
+            sql(container, "SELECT coalesce(json_agg(DISTINCT principal), '[]') FROM audit_events;")
+        )
+        if {"admin", *FIXTURE_USERS} <= set(principals):
+            return
+        time.sleep(1)
+    raise RuntimeError("Historical release did not persist audit events for every seeded user and admin")
+
+
+def snapshot(container, *, legacy=False, audit_ids=None):
+    result = json.loads(sql(container, SNAPSHOT_SQL))
+    settings_value = "s.setting_value"
+    if legacy:
+        # @Lob on historical user_settings stores a large-object reference even
+        # though the column is declared text. Only decode it before the upgrade:
+        # current releases must expose the actual text, not an orphaned OID.
+        settings_value = """CASE WHEN s.setting_value ~ '^[0-9]+$' AND EXISTS
+          (SELECT 1 FROM pg_largeobject_metadata WHERE oid::text = s.setting_value)
+          THEN convert_from(lo_get(s.setting_value::oid), 'UTF8') ELSE s.setting_value END"""
+    result["settings"] = json.loads(
+        sql(
+            container,
+            f"""
+        SELECT coalesce(json_agg(row_to_json(s) ORDER BY s.username, s.setting_key), '[]') FROM
+        (SELECT u.username, s.setting_key, {settings_value} AS setting_value
+         FROM user_settings s JOIN users u ON u.user_id = s.user_id
+         WHERE u.username IN ('migration_alice', 'migration_bob', 'migration_disabled')
+           AND s.setting_key IN ('theme', 'language', 'migrationNote')) s;
+    """,
+        )
+    )
+    data = "data"
+    if (
+        legacy
+        and sql(
+            container,
+            "SELECT udt_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'audit_events' AND column_name = 'data';",
+        )
+        == "oid"
+    ):
+        data = "convert_from(lo_get(data::oid), 'UTF8')"
+    condition = "principal IN ('admin', 'migration_alice', 'migration_bob', 'migration_disabled')"
+    if audit_ids is not None:
+        condition = "id IN (" + ",".join(str(int(event_id)) for event_id in audit_ids) + ")"
+    result["audit"] = json.loads(
+        sql(
+            container,
+            f"""
+        SELECT coalesce(json_agg(row_to_json(a) ORDER BY a.id), '[]') FROM
+        (SELECT id, principal, type, timestamp, {data} AS data FROM audit_events WHERE {condition}) a;
+    """,
+        )
+    )
+    for event in result["audit"]:
+        event["data"] = json.loads(event["data"])
+    return result
+
+
+def validate_fixture(result):
+    users = {user["username"]: user for user in result["users"] or []}
+    teams = {team["team_id"]: team["name"] for team in result["teams"] or []}
+    if not {"admin", "STIRLING-PDF-BACKEND-API-USER", *FIXTURE_USERS} <= users.keys():
+        raise RuntimeError("Missing users from the fixture")
+    if not {"Default", "Internal", *FIXTURE_USERS.values()} <= set(teams.values()):
+        raise RuntimeError("Missing default or custom teams")
+    for username, team in FIXTURE_USERS.items():
+        user = users[username]
+        if teams.get(user["team_id"]) != team or user["enabled"] != (username != "migration_disabled"):
+            raise RuntimeError(f"Incorrect team or enabled state for {username}")
+        if {"user_id": user["user_id"], "authority": "ROLE_USER"} not in result["authorities"]:
+            raise RuntimeError(f"Missing role for {username}")
+        settings = {s["setting_key"]: s["setting_value"] for s in result["settings"] if s["username"] == username}
+        if settings != settings_for(username):
+            raise RuntimeError(f"User settings were not preserved for {username}")
+    if {"user_id": users["admin"]["user_id"], "authority": "ROLE_ADMIN"} not in result["authorities"]:
+        raise RuntimeError("Missing admin authority")
+    if len(result["credentials"]) != 4 or any(not user["password"] for user in result["credentials"]):
+        raise RuntimeError("Missing fixture credentials")
+    if not {"admin", *FIXTURE_USERS} <= {event["principal"] for event in result["audit"]}:
+        raise RuntimeError("Missing audit history for fixture users")
+    if any(not isinstance(event["data"], dict) or not event["data"] for event in result["audit"]):
+        raise RuntimeError("Audit history is missing its JSON payloads")
 
 
 def stop_app(process):
@@ -92,7 +261,7 @@ def stop_app(process):
         process.wait(timeout=10)
 
 
-def boot_and_check(jar, workdir, db_port, timeout, container, seed_version=None):
+def boot_and_check(jar, workdir, db_port, timeout, container, seed_version=None, audit_ids=None):
     workdir.mkdir(parents=True)
     port = free_port()
     base_url = f"http://127.0.0.1:{port}"
@@ -100,6 +269,9 @@ def boot_and_check(jar, workdir, db_port, timeout, container, seed_version=None)
     env.update(
         {
             "PREMIUM_ENABLED": "true",
+            "PREMIUM_ENTERPRISEFEATURES_AUDIT_ENABLED": "true",
+            "PREMIUM_ENTERPRISEFEATURES_AUDIT_LEVEL": "2",
+            "PREMIUM_ENTERPRISEFEATURES_AUDIT_RETENTIONDAYS": "0",
             "SECURITY_ENABLELOGIN": "true",
             "SECURITY_INITIALLOGIN_USERNAME": "admin",
             "SECURITY_INITIALLOGIN_PASSWORD": "stirling",
@@ -165,38 +337,26 @@ def boot_and_check(jar, workdir, db_port, timeout, container, seed_version=None)
                 < 1
             ):
                 raise RuntimeError("No app connection to the test PostgreSQL database")
-            code, body = request(
-                base_url,
-                "/api/v1/auth/login",
-                {"username": "admin", "password": "stirling"},
-            )
-            if code != 200 or not json.loads(body).get("session", {}).get("access_token"):
-                raise RuntimeError("Admin login did not return a JWT")
-
+            admin_token = login(base_url, "admin", "stirling")
             if seed_version is not None:
-                # Versions are validated before interpolation. Seed a persistent
-                # marker which the current app cannot recreate during startup.
-                sql(
-                    container,
-                    f"""
-                    INSERT INTO teams (name) VALUES ('Migration fixture {seed_version}');
-                """,
-                )
-            snapshot = json.loads(sql(container, SNAPSHOT_SQL))
-            usernames = {user["username"] for user in snapshot["users"] or []}
-            teams = {team["name"] for team in snapshot["teams"] or []}
-            if not {"admin", "STIRLING-PDF-BACKEND-API-USER"} <= usernames:
-                raise RuntimeError("Missing users from the historical fixture")
-            if not {"Default", "Internal"} <= teams or not any(name.startswith("Migration fixture ") for name in teams):
-                raise RuntimeError("Missing default teams or the seeded fixture team")
-            if not snapshot["admin"] or not snapshot["admin"][0]["password"]:
-                raise RuntimeError("Missing admin credentials")
-            admin_id = snapshot["admin"][0]["user_id"]
-            if {"user_id": admin_id, "authority": "ROLE_ADMIN"} not in (snapshot["authorities"] or []):
-                raise RuntimeError("Missing admin authority")
+                seed_data(base_url, container, admin_token)
+            for username in FIXTURE_USERS:
+                if username == "migration_disabled":
+                    code, _ = request(
+                        base_url, "/api/v1/auth/login", {"username": username, "password": FIXTURE_PASSWORD}
+                    )
+                    if code not in (401, 403):
+                        raise RuntimeError("Disabled user was not denied login")
+                else:
+                    login(base_url, username, FIXTURE_PASSWORD)
+            result = snapshot(container, legacy=seed_version is not None, audit_ids=audit_ids)
             if int(sql(container, "SELECT count(*) FROM user_license_settings;")) != 1:
                 raise RuntimeError("Missing license settings singleton")
-            return snapshot
+            log(
+                f"Read {len(result['users'])} users, {len(result['teams'])} teams, "
+                f"{len(result['settings'])} settings, and {len(result['audit'])} audit events"
+            )
+            return result
     finally:
         stop_app(process)
 
@@ -251,6 +411,7 @@ def test_version(version, old_jar, current_jar, workdir, image, timeout):
 
         log(f"{version}: creating native PostgreSQL schema and fixture data")
         before = boot_and_check(old_jar, workdir / "historical", db_port, timeout, container, version)
+        validate_fixture(before)
         # Keep a real PostgreSQL dump for reproducing failures / inspecting the
         # pre-upgrade schema. Restore it into a clean database before upgrading.
         dump = run(
@@ -269,15 +430,18 @@ def test_version(version, old_jar, current_jar, workdir, image, timeout):
         run("docker", "exec", container, "dropdb", "-U", "migration", "stirling")
         run("docker", "exec", container, "createdb", "-U", "migration", "stirling")
         sql(container, dump)
-        if json.loads(sql(container, SNAPSHOT_SQL)) != before:
+        audit_ids = [event["id"] for event in before["audit"]]
+        if snapshot(container, legacy=True, audit_ids=audit_ids) != before:
             raise RuntimeError("Restoring the PostgreSQL fixture changed its data")
 
         log(f"{version}: upgrading restored fixture with {current_jar.name}")
-        after = boot_and_check(current_jar, workdir / "upgraded", db_port, timeout, container)
+        # Startup and verification logins may append audit events. Compare all
+        # original IDs so new activity cannot hide deleted or changed history.
+        after = boot_and_check(current_jar, workdir / "upgraded", db_port, timeout, container, audit_ids=audit_ids)
         if before != after:
             changed = [key for key in before if before[key] != after[key]]
             raise RuntimeError(f"Upgrade changed fixture data: {', '.join(changed)}")
-        log(f"PASS {version}: PostgreSQL upgrade, admin login, and data preservation")
+        log(f"PASS {version}: PostgreSQL upgrade, user logins, settings, and audit preservation")
     finally:
         if container:
             try:
@@ -302,7 +466,7 @@ def main():
     parser.add_argument("--startup-timeout", type=int, default=300)
     args = parser.parse_args()
     if not os.environ.get("PREMIUM_KEY"):
-        parser.error("PREMIUM_KEY is required: historical releases need a Server/Enterprise license for PostgreSQL")
+        parser.error("PREMIUM_KEY is required: historical releases need an Enterprise license for audit fixtures")
     if not args.jar.is_file():
         parser.error(f"Current JAR does not exist: {args.jar}")
     versions = args.versions or sorted(
