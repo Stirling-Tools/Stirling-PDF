@@ -290,14 +290,34 @@ class ProcessExecutorGapTest {
         }
 
         @Test
-        @DisplayName("blank host falls back to 127.0.0.1 and non-positive port falls back to 2003")
+        @DisplayName("blank host falls back to loopback, which forces byte transport")
         void appliesHostAndPortFallbacks() throws Exception {
             List<String> command = List.of("unoconvert", "in.docx");
             ApplicationProperties.ProcessExecutor.UnoServerEndpoint ep =
                     endpoint("   ", 0, "auto", "http");
             List<String> result = invokeApplyUnoServerEndpoint(qpdfExecutor(), command, ep);
             assertEquals(
-                    List.of("unoconvert", "--host", "127.0.0.1", "--port", "2003", "in.docx"),
+                    List.of(
+                            "unoconvert",
+                            "--host",
+                            "127.0.0.1",
+                            "--port",
+                            "2003",
+                            "--host-location",
+                            "remote",
+                            "in.docx"),
+                    result);
+        }
+
+        @Test
+        @DisplayName("auto host-location on a non-loopback host stays auto")
+        void autoHostLocationRemainsForRemoteHost() throws Exception {
+            List<String> command = List.of("unoconvert", "in.docx");
+            ApplicationProperties.ProcessExecutor.UnoServerEndpoint ep =
+                    endpoint("uno.internal", 2003, "auto", "http");
+            List<String> result = invokeApplyUnoServerEndpoint(qpdfExecutor(), command, ep);
+            assertEquals(
+                    List.of("unoconvert", "--host", "uno.internal", "--port", "2003", "in.docx"),
                     result);
         }
 

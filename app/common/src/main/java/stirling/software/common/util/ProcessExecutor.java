@@ -197,11 +197,38 @@ public class ProcessExecutor {
 
     public ProcessExecutorResult runCommandWithOutputHandling(
             List<String> command, File workingDirectory) throws IOException, InterruptedException {
+        RunOutcome outcome = new RunOutcome();
+        try {
+            return runOnce(command, workingDirectory, outcome);
+        } catch (IOException e) {
+            // A fresh profile makes soffice relaunch under the IPC pipe it could not unlink; the
+            // pipe is cleared and the profile initialised now, so one more run does not relaunch.
+            // freshProfile is this job's own state, not the shared /tmp sweep, so parallel jobs
+            // garbage-collecting each other's dead pipes never trigger a spurious retry here.
+            if (!outcome.freshProfile || !outcome.stalePipeRemoved || outcome.timedOut) {
+                throw e;
+            }
+            log.info("Retrying LibreOffice after clearing its leftover IPC pipe");
+            return runOnce(command, workingDirectory, new RunOutcome());
+        }
+    }
+
+    private static final class RunOutcome {
+        boolean freshProfile;
+        boolean stalePipeRemoved;
+        boolean timedOut;
+    }
+
+    private ProcessExecutorResult runOnce(
+            List<String> command, File workingDirectory, RunOutcome outcome)
+            throws IOException, InterruptedException {
         String messages = "";
         int exitCode = 1;
         UnoServerPool.UnoServerLease unoLease = null;
         boolean useSemaphore = true;
         List<String> commandToRun = command;
+        Set<Path> ipcPipesBefore = null;
+        LibreOfficeSandboxPolicy.JobPolicy jobPolicy = null;
         if (shouldUseUnoServerPool(command)) {
             try {
                 unoLease = unoServerPool.acquireEndpoint(timeoutDuration, TimeUnit.MINUTES);
@@ -223,6 +250,19 @@ public class ProcessExecutor {
             validateCommand(commandToRun);
             log.info("Running command: {}", String.join(" ", commandToRun));
             ProcessBuilder processBuilder = new ProcessBuilder(commandToRun);
+            scrubEnvironment(processBuilder);
+            if (processType == Processes.LIBRE_OFFICE) {
+                jobPolicy = LibreOfficeSandboxPolicy.forCommand(commandToRun).orElse(null);
+                if (jobPolicy != null) {
+                    processBuilder.environment().putAll(jobPolicy.env());
+                    LibreOfficeSandboxPolicy.seedProfile(jobPolicy.profile());
+                    outcome.freshProfile =
+                            LibreOfficeSandboxPolicy.isProfileUninitialised(jobPolicy.profile());
+                    ipcPipesBefore =
+                            LibreOfficeSandboxPolicy.snapshotIpcPipes(
+                                    Path.of(LibreOfficeSandboxPolicy.IPC_PIPE_DIR));
+                }
+            }
 
             // Use the working directory if it's set
             if (workingDirectory != null) {
@@ -297,6 +337,7 @@ public class ProcessExecutor {
                 // Interrupt the reader threads
                 errorReaderThread.interrupt();
                 outputReaderThread.interrupt();
+                outcome.timedOut = true;
                 throw new IOException("Process timeout exceeded.");
             }
             exitCode = process.exitValue();
@@ -348,6 +389,15 @@ public class ProcessExecutor {
                 }
             }
         } finally {
+            if (ipcPipesBefore != null) {
+                outcome.stalePipeRemoved =
+                        LibreOfficeSandboxPolicy.removeLeftoverIpcPipes(
+                                Path.of(LibreOfficeSandboxPolicy.IPC_PIPE_DIR), ipcPipesBefore);
+                if (exitCode == 0) {
+                    Path profile = jobPolicy.profile();
+                    LibreOfficeSandboxPolicy.rememberProfile(profile, profile.getParent());
+                }
+            }
             if (useSemaphore) {
                 semaphore.release();
             }
@@ -356,6 +406,71 @@ public class ProcessExecutor {
             }
         }
         return new ProcessExecutorResult(exitCode, messages);
+    }
+
+    private static final Set<String> LIBRE_OFFICE_ENV_ALLOWLIST =
+            Set.of(
+                    "HOME",
+                    "USER",
+                    "LOGNAME",
+                    "PATH",
+                    "SHELL",
+                    "PWD",
+                    "TMPDIR",
+                    "TMP",
+                    "LANG",
+                    "LANGUAGE",
+                    "TZ",
+                    "TERM",
+                    "HOSTNAME",
+                    "DISPLAY",
+                    "XDG_RUNTIME_DIR",
+                    "XDG_CACHE_HOME",
+                    "XDG_CONFIG_HOME",
+                    "XDG_DATA_HOME",
+                    "LD_LIBRARY_PATH",
+                    "JAVA_HOME",
+                    "FONTCONFIG_PATH",
+                    "FONTCONFIG_FILE",
+                    "DBUS_SESSION_BUS_ADDRESS",
+                    "MALLOC_ARENA_MAX",
+                    "PYTHONIOENCODING",
+                    "PYTHONUNBUFFERED");
+
+    private static final List<String> LIBRE_OFFICE_ENV_ALLOWED_PREFIXES =
+            List.of("LC_", "SAL_", "OOO_", "UNO_", "URE_", "OFFICE_", "STIRLING_LO_");
+
+    private static boolean isLoopbackHost(String host) {
+        if (host == null) {
+            return false;
+        }
+        String normalized = host.trim().toLowerCase(java.util.Locale.ROOT);
+        return "127.0.0.1".equals(normalized)
+                || "localhost".equals(normalized)
+                || "::1".equals(normalized)
+                || "[::1]".equals(normalized);
+    }
+
+    private void scrubEnvironment(ProcessBuilder processBuilder) {
+        if (processType != Processes.LIBRE_OFFICE) {
+            return;
+        }
+        processBuilder.environment().keySet().removeIf(name -> !isLibreOfficeEnvAllowed(name));
+    }
+
+    private static boolean isLibreOfficeEnvAllowed(String name) {
+        if (name == null) {
+            return false;
+        }
+        if (LIBRE_OFFICE_ENV_ALLOWLIST.contains(name)) {
+            return true;
+        }
+        for (String prefix : LIBRE_OFFICE_ENV_ALLOWED_PREFIXES) {
+            if (name.startsWith(prefix)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean shouldUseUnoServerPool(List<String> command) {
@@ -415,8 +530,10 @@ public class ProcessExecutor {
         }
 
         // Normalize and validate hostLocation (only auto|local|remote allowed)
-        if (hostLocation == null) {
-            hostLocation = "auto";
+        if (hostLocation == null
+                || hostLocation.isBlank()
+                || "auto".equalsIgnoreCase(hostLocation)) {
+            hostLocation = isLoopbackHost(host) ? "remote" : "auto";
         } else {
             hostLocation = hostLocation.trim().toLowerCase(java.util.Locale.ROOT);
             if (!Set.of("auto", "local", "remote").contains(hostLocation)) {

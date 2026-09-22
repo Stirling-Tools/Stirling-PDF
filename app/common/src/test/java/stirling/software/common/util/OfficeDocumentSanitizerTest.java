@@ -69,7 +69,9 @@ class OfficeDocumentSanitizerTest {
     void setUp() {
         applicationProperties = new ApplicationProperties();
         ssrfProtectionService = mock(SsrfProtectionService.class);
-        sanitizer = new OfficeDocumentSanitizer(ssrfProtectionService, applicationProperties);
+        sanitizer =
+                new OfficeDocumentSanitizer(
+                        ssrfProtectionService, applicationProperties, new RtfSanitizer());
     }
 
     @Test
@@ -321,7 +323,7 @@ class OfficeDocumentSanitizerTest {
     }
 
     @Test
-    void sanitize_relativeOdfPathsArePreserved() throws IOException {
+    void sanitize_packageEscapingPathsAreStripped() throws IOException {
         String content =
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
                         + "<office:document-content"
@@ -329,6 +331,8 @@ class OfficeDocumentSanitizerTest {
                         + " xmlns:draw=\"urn:oasis:names:tc:opendocument:xmlns:drawing:1.0\""
                         + " xmlns:xlink=\"http://www.w3.org/1999/xlink\">"
                         + "<draw:image xlink:href=\"../Pictures/image1.png\"/>"
+                        + "<draw:image xlink:href=\"/configs/settings.yml\"/>"
+                        + "<draw:image xlink:href=\"Pictures/inside.png\"/>"
                         + "<draw:image xlink:href=\"#anchor\"/>"
                         + "</office:document-content>";
         Map<String, byte[]> entries = new LinkedHashMap<>();
@@ -339,8 +343,11 @@ class OfficeDocumentSanitizerTest {
 
         Map<String, byte[]> result = unzip(cleaned);
         String out = new String(result.get("content.xml"), StandardCharsets.UTF_8);
-        assertTrue(out.contains("../Pictures/image1.png"));
-        assertTrue(out.contains("#anchor"));
+        assertFalse(
+                out.contains("../Pictures/image1.png"), "Package-escaping href must be stripped");
+        assertFalse(out.contains("/configs/settings.yml"), "Absolute local href must be stripped");
+        assertTrue(out.contains("Pictures/inside.png"), "Package-internal href must be preserved");
+        assertTrue(out.contains("#anchor"), "Anchors must be preserved");
     }
 
     private static byte[] zip(Map<String, byte[]> entries) throws IOException {

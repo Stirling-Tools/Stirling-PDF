@@ -203,6 +203,94 @@ run_as_runtime_user() {
   fi
 }
 
+OFFICE_USER="${STIRLING_OFFICE_USER:-stirlingofficeuser}"
+OFFICE_SANDBOX_HOME="/var/lib/libreoffice-sandbox"
+OFFICE_USER_AVAILABLE=false
+# LibreOffice's own temp and XDG dirs. The inherited TMPDIR/SAL_TMP/XDG_RUNTIME_DIR point into
+# the runtime user's shared dirs, which the office user cannot write (every store then fails
+# with Io Write 16) and which the sandbox no longer grants. Set by prepare_office_dirs.
+OFFICE_TMP=""
+OFFICE_XDG=""
+
+resolve_office_user() {
+  if ! id -u "$OFFICE_USER" >/dev/null 2>&1; then
+    log "Office sandbox user ${OFFICE_USER} not present; LibreOffice will share the runtime user"
+    return
+  fi
+  if [ "$(id -u "$OFFICE_USER")" = "$(id -u "$RUNTIME_USER" 2>/dev/null || echo -1)" ]; then
+    log "WARNING: ${OFFICE_USER} and ${RUNTIME_USER} resolve to the same uid; LibreOffice privilege separation is disabled. Choose a PUID other than $(id -u "$OFFICE_USER")."
+    return
+  fi
+  if [ "$CURRENT_UID" -ne 0 ] || ! command_exists setpriv; then
+    log "Cannot switch to ${OFFICE_USER} (not root or setpriv missing); LibreOffice will share the runtime user"
+    return
+  fi
+  OFFICE_USER_AVAILABLE=true
+}
+
+run_as_office_user() {
+  if [ "$OFFICE_USER_AVAILABLE" != true ]; then
+    run_as_runtime_user env \
+      TMPDIR="$OFFICE_TMP" TMP="$OFFICE_TMP" TEMP="$OFFICE_TMP" SAL_TMP="$OFFICE_TMP" \
+      XDG_RUNTIME_DIR="$OFFICE_XDG" \
+      "$@"
+    return
+  fi
+  env HOME="$OFFICE_SANDBOX_HOME" \
+      USER="$OFFICE_USER" \
+      LOGNAME="$OFFICE_USER" \
+      TMPDIR="$OFFICE_TMP" \
+      TMP="$OFFICE_TMP" \
+      TEMP="$OFFICE_TMP" \
+      SAL_TMP="$OFFICE_TMP" \
+      XDG_RUNTIME_DIR="$OFFICE_XDG" \
+    setpriv --reuid="$OFFICE_USER" --regid="$(id -gn "$OFFICE_USER")" --init-groups -- "$@"
+}
+
+# The sandbox grants /tmp as socket-only, so LibreOffice can bind its IPC pipes there but
+# cannot unlink them. A pipe left by a killed instance would make the restart's bind fail;
+# a pipe file with no bound socket in /proc/net/unix is stale and safe to remove.
+clear_stale_office_pipes() {
+  local pipe
+  for pipe in /tmp/OSL_PIPE_*; do
+    [ -S "$pipe" ] || continue
+    if ! grep -qF " $pipe" /proc/net/unix 2>/dev/null; then
+      rm -f "$pipe" 2>/dev/null || true
+    fi
+  done
+}
+
+# Read-only paths come from lo-sandbox's built-in default unless STIRLING_LO_ALLOW_RO is set.
+# Java narrows RW/SOCK further per job for the soffice commands it runs itself.
+export_office_sandbox_policy() {
+  local profile_root=$1
+  local rw="/dev:${profile_root}:${OFFICE_TMP}:${OFFICE_XDG}"
+  [ "$OFFICE_USER_AVAILABLE" = true ] && rw="${rw}:${OFFICE_SANDBOX_HOME}"
+  export STIRLING_LO_SANDBOX="${STIRLING_LO_SANDBOX:-enforce}"
+  export STIRLING_LO_ALLOW_RW="${STIRLING_LO_ALLOW_RW:-${rw}}"
+  export STIRLING_LO_ALLOW_SOCK="${STIRLING_LO_ALLOW_SOCK:-/tmp}"
+  log "LibreOffice sandbox mode=${STIRLING_LO_SANDBOX} user=$([ "$OFFICE_USER_AVAILABLE" = true ] && echo "$OFFICE_USER" || echo "$RUNTIME_USER")"
+  check_office_sandbox
+}
+
+# enforce mode degrades silently to a stderr line per launch when the kernel lacks Landlock
+# or seccomp (old kernels, gVisor, QEMU user emulation); report it once, loudly, at startup.
+check_office_sandbox() {
+  local soffice out rc
+  soffice="$(command -v soffice || true)"
+  [ -n "$soffice" ] && [ -x /usr/local/lib/stirling/lo-sandbox ] || return 0
+  [ "$STIRLING_LO_SANDBOX" = off ] && { log "WARNING: LibreOffice sandbox disabled (STIRLING_LO_SANDBOX=off)"; return 0; }
+  rc=0
+  out="$(STIRLING_LO_REAL=/bin/true "$soffice" --headless 2>&1)" || rc=$?
+  if [ "$rc" -eq 125 ]; then
+    log "ERROR: LibreOffice sandbox required but unavailable; office conversions will fail: ${out}"
+  elif printf '%s' "$out" | grep -q 'unavailable'; then
+    log "WARNING: LibreOffice sandbox is only partially active on this kernel: $(printf '%s' "$out" | tr '\n' ' '). Set STIRLING_LO_SANDBOX=required to refuse to run LibreOffice unconfined."
+  else
+    log "LibreOffice sandbox active (Landlock + seccomp)"
+  fi
+}
+
 run_as_runtime_user_with_timeout() {
   local secs=$1; shift
   if command_exists timeout; then
@@ -281,9 +369,16 @@ start_unoserver_instance() {
   conversion_timeout="$(get_unoserver_conversion_timeout_seconds)"
   # Per-instance profile dir avoids LibreOffice lock-file contention.
   local profile_dir="${LIBREOFFICE_PROFILE}/instance_${port}"
-  run_as_runtime_user mkdir -p "$profile_dir"
+  run_as_office_user mkdir -p "$profile_dir"
+  # The watchdog only signals unoserver's direct children, so a soffice.bin reparented to init
+  # can outlive a restart and keep the instance's pipe bound; the new instance then cannot start.
+  local leftover="-env:UserInstallation=file://${profile_dir}"
+  if pkill -KILL -f -- "$leftover" 2>/dev/null; then
+    for _ in 1 2 3 4 5; do pgrep -f -- "$leftover" >/dev/null 2>&1 || break; sleep 1; done
+  fi
+  clear_stale_office_pipes
   # --user-installation is a plain path; unoserver 3.6 crashes if pre-wrapped as file://.
-  run_as_runtime_user "$UNOSERVER_BIN" \
+  run_as_office_user "$UNOSERVER_BIN" \
     --interface 127.0.0.1 \
     --port "$port" \
     --uno-port "$uno_port" \
@@ -899,7 +994,7 @@ CHOWN_OK=true
 for p in "${CHOWN_PATHS[@]}"; do
   if [ -e "$p" ]; then
     chown -R "stirlingpdfuser:stirlingpdfgroup" "$p" 2>/dev/null || CHOWN_OK=false
-    chmod -R 755 "$p" 2>/dev/null || true
+    find "$p" -type d -exec chmod 755 {} + 2>/dev/null || true
   fi
 done
 
@@ -915,6 +1010,16 @@ for dir in "${CRITICAL_DIRS[@]}"; do
         || chmod -R a+rwX "$dir" 2>/dev/null \
         || log "ERROR: Could not grant ${RUNTIME_USER} write access to $dir. Check your volume mount permissions (e.g. set PUID/PGID or fix host directory ownership)."
     fi
+  fi
+done
+
+# ---------- Private work areas ----------
+STIRLING_FILE_STORE="${STIRLING_TEMPDIR:-/tmp/stirling-files}"
+for private_dir in /tmp/stirling-pdf "$STIRLING_FILE_STORE"; do
+  mkdir -p "$private_dir" 2>/dev/null || true
+  if [ -d "$private_dir" ]; then
+    chown "stirlingpdfuser:stirlingpdfgroup" "$private_dir" 2>/dev/null || true
+    chmod 700 "$private_dir" 2>/dev/null || true
   fi
 done
 
@@ -938,8 +1043,22 @@ UNOSERVER_BIN="$(command -v unoserver || true)"
 UNOCONVERT_BIN="$(command -v unoconvert || true)"
 UNOPING_BIN="$(command -v unoping || true)"
 if [ -n "$UNOSERVER_BIN" ] && [ -n "$UNOCONVERT_BIN" ]; then
-  LIBREOFFICE_PROFILE="${HOME:-/home/${RUNTIME_USER}}/.libreoffice_uno_${RUID}"
-  run_as_runtime_user mkdir -p "$LIBREOFFICE_PROFILE"
+  resolve_office_user
+  if [ "$OFFICE_USER_AVAILABLE" = true ]; then
+    LIBREOFFICE_PROFILE="${OFFICE_SANDBOX_HOME}/profiles"
+    OFFICE_TMP="${OFFICE_SANDBOX_HOME}/tmp"
+    OFFICE_XDG="${OFFICE_SANDBOX_HOME}/xdg"
+    mkdir -p "$LIBREOFFICE_PROFILE" "$OFFICE_TMP" "$OFFICE_XDG"
+    chown -R "$OFFICE_USER:$(id -gn "$OFFICE_USER")" "$OFFICE_SANDBOX_HOME" 2>/dev/null || true
+    chmod 700 "$OFFICE_SANDBOX_HOME" "$OFFICE_TMP" "$OFFICE_XDG" 2>/dev/null || true
+  else
+    LIBREOFFICE_PROFILE="${HOME:-/home/${RUNTIME_USER}}/.libreoffice_uno_${RUID}"
+    OFFICE_TMP="${LIBREOFFICE_PROFILE}/tmp"
+    OFFICE_XDG="${LIBREOFFICE_PROFILE}/xdg"
+    run_as_runtime_user mkdir -p "$LIBREOFFICE_PROFILE" "$OFFICE_TMP" "$OFFICE_XDG"
+    run_as_runtime_user chmod 700 "$OFFICE_TMP" "$OFFICE_XDG" 2>/dev/null || true
+  fi
+  export_office_sandbox_policy "$LIBREOFFICE_PROFILE"
   start_unoserver_pool
   log "unoserver pool started (Profile: $LIBREOFFICE_PROFILE), Java starting in parallel"
 else

@@ -37,6 +37,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CustomHtmlSanitizer;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.OfficeDocumentFamily;
 import stirling.software.common.util.OfficeDocumentSanitizer;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
@@ -87,17 +88,16 @@ public class ConvertOfficeController {
         Path inputPath = workDir.resolve(baseName + "." + extensionLower);
         Path outputPath = workDir.resolve(baseName + ".pdf");
 
-        // Sanitize input before LibreOffice sees it so embedded URLs can't trigger SSRF.
-        if ("html".equals(extensionLower) || "htm".equals(extensionLower)) {
-            String htmlContent = new String(inputFile.getBytes(), StandardCharsets.UTF_8);
-            String sanitizedHtml = customHtmlSanitizer.sanitize(htmlContent);
+        byte[] rawBytes = inputFile.getBytes();
+        OfficeDocumentFamily family = OfficeDocumentFamily.detect(rawBytes);
+        if (family == OfficeDocumentFamily.HTML
+                || "html".equals(extensionLower)
+                || "htm".equals(extensionLower)) {
+            String sanitizedHtml =
+                    customHtmlSanitizer.sanitize(new String(rawBytes, StandardCharsets.UTF_8));
             Files.writeString(inputPath, sanitizedHtml, StandardCharsets.UTF_8);
-        } else if (officeDocumentSanitizer.isSanitizableExtension(extensionLower)) {
-            byte[] sanitized =
-                    officeDocumentSanitizer.sanitize(inputFile.getBytes(), extensionLower);
-            Files.write(inputPath, sanitized);
         } else {
-            Files.copy(inputFile.getInputStream(), inputPath, StandardCopyOption.REPLACE_EXISTING);
+            Files.write(inputPath, officeDocumentSanitizer.sanitize(rawBytes, extensionLower));
         }
 
         Path libreOfficeProfile = null;
@@ -218,8 +218,6 @@ public class ConvertOfficeController {
     public ResponseEntity<Resource> processFileToPDF(@ModelAttribute GeneralFile generalFile)
             throws Exception {
         MultipartFile inputFile = generalFile.getFileInput();
-        // unused but can start server instance if startup time is to long
-        // LibreOfficeListener.getInstance().start();
         File file = null;
         TempFile tempOut = null;
         try {

@@ -339,6 +339,7 @@ public class RuntimePathConfig {
                     new ApplicationProperties.ProcessExecutor.UnoServerEndpoint();
             endpoint.setHost("127.0.0.1");
             endpoint.setPort(basePort + (i * 2));
+            endpoint.setHostLocation("remote");
             endpoints.add(endpoint);
         }
         return endpoints;
