@@ -8,7 +8,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, FormField, Input, Select } from "@app/ui";
 import type { PolicySetupConfigProps } from "@app/components/policies/PolicySetupWizard";
-import { ragChunkingConfigured } from "@app/policies/ragIngestOperation";
+import { ingestChunkingConfigured } from "@app/policies/ingestOperation";
 import { policyStepFromWire, policyStepToWire } from "@app/policies/operations";
 import { fetchSources, fetchSource, type Source } from "@portal/api/sources";
 import { fetchTriggers } from "@portal/api/pipelines";
@@ -61,10 +61,10 @@ export function PolicySetupConnections({
   });
   const rag = result.steps
     .map(policyStepFromWire)
-    .find((step) => step?.toolId === "ragIngest");
+    .find((step) => step?.toolId === "ingest");
   const capabilities = useQuery({
     queryKey: ["policy-setup-docparse"],
-    queryFn: () => fetchDocparseCapabilities(true),
+    queryFn: () => fetchDocparseCapabilities(),
     enabled: Boolean(rag),
     staleTime: 0,
     retry: false,
@@ -163,10 +163,9 @@ export function PolicySetupConnections({
       Number(workingInput.scheduleCount) > 0);
   const chunkingReady =
     !rag ||
-    ragChunkingConfigured({
+    ingestChunkingConfigured({
       chunkSize: Number(ragParameters?.chunkSize),
       overlap: Number(ragParameters?.overlap),
-      mode: ragParameters?.mode,
     });
   const valid =
     inputReady &&
@@ -205,7 +204,7 @@ export function PolicySetupConnections({
     });
   }
 
-  function updateChunk(key: "chunkSize" | "overlap" | "mode", value: string) {
+  function updateChunk(key: "chunkSize" | "overlap", value: string) {
     if (!rag) return;
     setChunkDraft({ ...chunkDraft, [key]: value });
     onChange({

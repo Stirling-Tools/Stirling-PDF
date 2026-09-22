@@ -61,6 +61,7 @@ import stirling.software.proprietary.policy.source.SourceAccessGuard;
 import stirling.software.proprietary.policy.store.InProcessPolicyStore;
 import stirling.software.proprietary.policy.trigger.PolicyTrigger;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
+import stirling.software.proprietary.policy.trigger.StorageFolderTrigger;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.storage.model.Folder;
@@ -166,7 +167,10 @@ class ProcessingFolderControllerTest {
         lenient().when(diskFolderSink.supports(any())).thenReturn(true);
         PolicyValidator validator =
                 new PolicyValidator(
-                        List.of(folderWatchTrigger),
+                        List.of(
+                                folderWatchTrigger,
+                                new StorageFolderTrigger(
+                                        policyStore, sourceStore, policyRunner, properties)),
                         List.of(
                                 new StorageFolderInputSource(
                                         storedFileRepository,
@@ -472,6 +476,37 @@ class ProcessingFolderControllerTest {
                 .doesNotContainValue(foreign);
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"exportChunksJsonl", "exportMarkdown"})
+    void corpusExportsPreserveOriginalsInStorageAndOnDisk(String exportFlag) {
+        var steps =
+                List.of(
+                        new PipelineStep(
+                                "/api/v1/docparse/ingest",
+                                Map.of("index", false, exportFlag, true),
+                                Map.of()));
+        var stored =
+                controller
+                        .save(
+                                new ProcessingFolderController.SaveProcessingFolderRequest(
+                                        null,
+                                        FOLDER_ID.toString(),
+                                        null,
+                                        true,
+                                        steps,
+                                        Map.of("mode", "new_version")))
+                        .getBody();
+        assertThat(stored.output()).containsEntry("mode", "new_file");
+
+        var disk =
+                controller
+                        .save(
+                                new ProcessingFolderController.SaveProcessingFolderRequest(
+                                        null, null, tempDir.toString(), true, steps, Map.of()))
+                        .getBody();
+        assertThat(disk.output()).containsEntry("replace", false);
+    }
+
     @Test
     void aCreateOverAnExistingPlaceAdoptsItWithoutReconfiguring() {
         var first = controller.save(request(null, "new_version")).getBody();
@@ -579,10 +614,11 @@ class ProcessingFolderControllerTest {
     }
 
     @Test
-    void aStorageFolderStaysManualUntilTheArrivalTriggerExists() {
+    void aStorageFolderAutomaticallyProcessesArrivals() {
         var view = controller.save(request(null, "new_version")).getBody();
 
-        assertThat(policyStore.get(view.id()).orElseThrow().inputs().get(0).trigger()).isNull();
+        assertThat(policyStore.get(view.id()).orElseThrow().inputs().get(0).trigger().type())
+                .isEqualTo("storage-folder-watch");
     }
 
     @Test

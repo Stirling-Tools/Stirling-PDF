@@ -322,9 +322,8 @@ jobs:
                 # Off so preview traffic never accrues against a real wallet or trips its cap. The
                 # 402 gate is separate and stays on, so gating is still testable here.
                 STIRLING_BILLING_ACCOUNT_LINK_METERING_ENABLED: "false"
-                # Stated rather than inferred from the request: the callback has to come back to the
-                # preview hostname, not to the container's own :8080 behind this proxy.
-                SYSTEM_FRONTENDURL: "https://${V2_PORT}.ssl.stirlingpdf.cloud"
+                # Browser connection state belongs to the origin advertised in the preview link.
+                SYSTEM_FRONTENDURL: "http://${NEW_VPS_HOST}:${V2_PORT}"
                 SECURITY_ENABLELOGIN: "true"
                 SECURITY_INITIALLOGIN_USERNAME: "${TEST_LOGIN_USERNAME}"
                 SECURITY_INITIALLOGIN_PASSWORD: "${TEST_LOGIN_PASSWORD}"

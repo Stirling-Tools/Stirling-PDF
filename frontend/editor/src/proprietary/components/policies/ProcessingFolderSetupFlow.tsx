@@ -165,7 +165,7 @@ export function ProcessingFolderSetupFlow({
       aiEngineEnabled={aiEngineEnabled}
       catalogue={presets.catalogue}
       // No vectordb: routing emits at most a classify step, never the chunks-only
-      // rag-ingest final step a vector database destination requires.
+      // ingest final step a vector database destination requires.
       destinations={routingDestinations(
         sources.data,
         outputModes.filter((mode) => mode !== "vectordb"),

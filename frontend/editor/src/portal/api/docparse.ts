@@ -2,17 +2,13 @@ import { apiClient } from "@portal/api/http";
 
 export interface DocparseCapabilities {
   enabled: boolean;
-  mode: string;
-  advancedInstalled: boolean;
   engineReachable: boolean;
-  indexingConfigured?: boolean | null;
-  doclingVersion: string | null;
+  indexingConfigured: boolean;
 }
 
-export function fetchDocparseCapabilities(
-  refresh = false,
-): Promise<DocparseCapabilities> {
+/** Probe current ingestion readiness before saving a guided policy. */
+export function fetchDocparseCapabilities(): Promise<DocparseCapabilities> {
   return apiClient.local.json<DocparseCapabilities>(
-    `/api/v1/docparse/capabilities${refresh ? "?refresh=true" : ""}`,
+    "/api/v1/docparse/capabilities",
   );
 }

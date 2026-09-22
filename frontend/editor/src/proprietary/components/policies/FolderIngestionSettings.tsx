@@ -8,7 +8,7 @@ import {
   PolicyRagConfig,
   type RagDestination,
 } from "@app/components/policies/PolicyRagConfig";
-import { ragChunkingConfigured } from "@app/policies/ragIngestOperation";
+import { ingestChunkingConfigured } from "@app/policies/ingestOperation";
 import { policyStepFromWire } from "@app/policies/operations";
 
 /** Folder ingestion settings for surfaces without Processor connection management. */
@@ -21,7 +21,7 @@ export function FolderIngestionSettings({
   const { t } = useTranslation();
   const rag = result.steps
     .map(policyStepFromWire)
-    .find((step) => step?.toolId === "ragIngest");
+    .find((step) => step?.toolId === "ingest");
   const [draft, setDraft] = useState<Record<string, string>>({});
   const parameters = rag ? { ...rag.params, ...draft } : null;
   const target: RagDestination = result.outputIds?.length
@@ -37,7 +37,7 @@ export function FolderIngestionSettings({
           enabled: boolean;
           engineReachable: boolean;
           indexingConfigured?: boolean;
-        }>("/api/v1/docparse/capabilities?refresh=true")
+        }>("/api/v1/docparse/capabilities")
       ).data,
     enabled: Boolean(rag),
     retry: false,
@@ -49,10 +49,9 @@ export function FolderIngestionSettings({
   const indexingReady = capabilities.data?.indexingConfigured === true;
   const chunkingReady =
     !rag ||
-    ragChunkingConfigured({
+    ingestChunkingConfigured({
       chunkSize: Number(parameters?.chunkSize),
       overlap: Number(parameters?.overlap),
-      mode: parameters?.mode,
     });
   const valid =
     (!rag && target !== "external") ||
@@ -70,7 +69,7 @@ export function FolderIngestionSettings({
           }
         : {}),
       steps: result.steps.map((step) =>
-        step.operation === "/api/v1/docparse/rag-ingest"
+        step.operation === "/api/v1/docparse/ingest"
           ? { ...step, parameters: { ...step.parameters, ...patch } }
           : step,
       ),
@@ -168,7 +167,6 @@ export function FolderIngestionSettings({
               patchRag({
                 chunkSize: Number(next.chunkSize),
                 overlap: Number(next.overlap),
-                mode: next.mode,
               });
             }}
           >

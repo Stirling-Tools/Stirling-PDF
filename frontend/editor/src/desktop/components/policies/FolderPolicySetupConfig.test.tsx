@@ -68,7 +68,7 @@ vi.mock("@app/components/policies/PolicyRagConfig", () => ({
   ),
 }));
 function mount(
-  steps = [policyStepToWire(policyStep("ragIngest"))],
+  steps = [policyStepToWire(policyStep("ingest"))],
   outputIds: string[] = [],
 ) {
   const onChange = vi.fn();

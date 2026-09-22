@@ -194,6 +194,13 @@ const CAPABILITY_META: Record<
     descKey: "portal.policies.wizard.capability.watermark.desc",
     descEn: "Stamps a visible mark (e.g. “Confidential”) across every page.",
   },
+  ingest: {
+    labelKey: "portal.policies.wizard.capability.ingest.label",
+    labelEn: "Prepare for knowledge search",
+    descKey: "portal.policies.wizard.capability.ingest.desc",
+    descEn:
+      "Prepare searchable chunks for the built-in knowledge base, a connected RAG database, or a corpus export.",
+  },
   ocr: {
     labelKey: "portal.policies.wizard.capability.ocr.label",
     labelEn: "Make text searchable",
@@ -233,13 +240,6 @@ const CAPABILITY_META: Record<
     descKey: "portal.policies.wizard.capability.classify.desc",
     descEn:
       "Identifies the document's type from your team's labels and tags it, so it files and searches by category.",
-  },
-  ragIngest: {
-    labelKey: "portal.policies.wizard.capability.ragIngest.label",
-    labelEn: "Prepare for knowledge search",
-    descKey: "portal.policies.wizard.capability.ragIngest.desc",
-    descEn:
-      "Prepare searchable chunks for the built-in knowledge base, a connected RAG database, or a corpus export.",
   },
   purviewApplyLabel: {
     labelKey: "portal.policies.wizard.capability.purviewApplyLabel.label",

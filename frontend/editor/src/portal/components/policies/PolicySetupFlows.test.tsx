@@ -245,7 +245,7 @@ describe("guided ingestion flows", () => {
           },
           steps: [
             {
-              operation: "/api/v1/docparse/rag-ingest",
+              operation: "/api/v1/docparse/ingest",
               parameters: { index: true, [flag]: true },
             },
           ],
@@ -382,7 +382,7 @@ describe("guided ingestion flows", () => {
     await select("Input source", "Files opened in the editor");
     fireEvent.click(screen.getByRole("button", { name: "Chunk settings" }));
     const overlap = screen.getByRole("spinbutton", {
-      name: "portal.pipelines.builder.ragIngest.overlap",
+      name: "portal.pipelines.builder.ingest.overlap",
     });
     fireEvent.change(overlap, { target: { value: "1024" } });
     expect(overlap).toHaveValue(1024);
@@ -437,7 +437,7 @@ describe("guided ingestion flows", () => {
         },
         steps: [
           {
-            operation: "/api/v1/docparse/rag-ingest",
+            operation: "/api/v1/docparse/ingest",
             parameters: {
               index: false,
               includeOriginal: false,

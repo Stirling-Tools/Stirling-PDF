@@ -7,10 +7,10 @@ import { getSettingsUrl } from "@app/utils/settingsNavigation";
 export type RagDestination = "builtin" | "external" | "export";
 
 interface Props {
-  parameters: PolicyParams<"ragIngest">;
+  parameters: PolicyParams<"ingest">;
   target: RagDestination;
   onTargetChange: (target: RagDestination) => void;
-  onChange: (key: "chunkSize" | "overlap" | "mode", value: string) => void;
+  onChange: (key: "chunkSize" | "overlap", value: string) => void;
   engineReady: boolean;
   indexingReady: boolean;
   chunkingReady: boolean;
@@ -128,7 +128,7 @@ export function PolicyRagConfig({
         )}
       >
         <div className="portal-policies__capability-settings">
-          <FormField label={t("portal.pipelines.builder.ragIngest.chunkSize")}>
+          <FormField label={t("portal.pipelines.builder.ingest.chunkSize")}>
             <Input
               type="number"
               min={64}
@@ -137,7 +137,7 @@ export function PolicyRagConfig({
               onChange={(event) => onChange("chunkSize", event.target.value)}
             />
           </FormField>
-          <FormField label={t("portal.pipelines.builder.ragIngest.overlap")}>
+          <FormField label={t("portal.pipelines.builder.ingest.overlap")}>
             <Input
               type="number"
               min={0}
@@ -146,28 +146,12 @@ export function PolicyRagConfig({
               onChange={(event) => onChange("overlap", event.target.value)}
             />
           </FormField>
-          <FormField label={t("portal.pipelines.builder.ragIngest.mode")}>
-            <Select
-              value={parameters.mode}
-              onChange={(value) => value && onChange("mode", value)}
-              options={[
-                {
-                  value: "auto",
-                  label: t("portal.pipelines.builder.ragIngest.modeAuto"),
-                },
-                {
-                  value: "basic",
-                  label: t("portal.pipelines.builder.ragIngest.modeBasic"),
-                },
-              ]}
-            />
-          </FormField>
           {!chunkingReady && (
             <Banner
               tone="warning"
               description={t(
                 "portal.policies.wizard.locations.invalidChunks",
-                "Choose a chunk size from 64 to 32768 and an overlap from 0 to 4096 smaller than the chunk size. Use basic or automatic parsing.",
+                "Choose a chunk size from 64 to 32768 and an overlap from 0 to 4096 smaller than the chunk size.",
               )}
             />
           )}

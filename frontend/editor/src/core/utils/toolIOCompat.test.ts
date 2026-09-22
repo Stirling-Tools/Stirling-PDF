@@ -145,7 +145,7 @@ describe("RAG pipeline contract", () => {
     const steps = [
       { operation: "/api/v1/misc/ocr-pdf", parameters: { sidecar: false } },
       {
-        operation: "/api/v1/docparse/rag-ingest",
+        operation: "/api/v1/docparse/ingest",
         parameters: {
           includeOriginal: false,
           exportChunksJsonl: true,
@@ -160,7 +160,7 @@ describe("RAG pipeline contract", () => {
   it("rejects a PDF operation after a chunks-only export", () => {
     const diagnostics = validateToolChain([
       {
-        operation: "/api/v1/docparse/rag-ingest",
+        operation: "/api/v1/docparse/ingest",
         parameters: { includeOriginal: false, exportChunksJsonl: true },
       },
       { operation: "/api/v1/misc/compress-pdf", parameters: {} },

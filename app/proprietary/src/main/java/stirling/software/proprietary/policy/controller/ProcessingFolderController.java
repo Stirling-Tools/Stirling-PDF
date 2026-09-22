@@ -42,6 +42,7 @@ import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.PolicyValidator;
 import stirling.software.proprietary.policy.engine.SweepKind;
 import stirling.software.proprietary.policy.engine.SweepOutcome;
+import stirling.software.proprietary.policy.input.StorageFolderInputSource;
 import stirling.software.proprietary.policy.ledger.ClaimState;
 import stirling.software.proprietary.policy.ledger.FolderIdentities;
 import stirling.software.proprietary.policy.ledger.ProcessedFileStatus;
@@ -88,7 +89,7 @@ public class ProcessingFolderController {
     public static final String SURFACE = Policy.SURFACE_PROCESSING_FOLDER;
 
     /** The paired source's type; the policies/pipelines surfaces hide sources of this type too. */
-    public static final String SOURCE_TYPE = "storage-folder";
+    public static final String SOURCE_TYPE = StorageFolderInputSource.TYPE;
 
     static final String DISK_SOURCE_TYPE = FolderAccessGuard.FOLDER_TYPE;
 
@@ -279,14 +280,14 @@ public class ProcessingFolderController {
                                 request.enabled() == null || request.enabled(),
                                 false,
                                 "",
-                                // Disk directories watch, so arrivals process on their
-                                // own; storage-backed folders stay manual for now.
                                 List.of(
                                         new PipelineInput(
                                                 source.id(),
                                                 onDisk
                                                         ? new TriggerConfig(WATCH_TRIGGER, Map.of())
-                                                        : null)),
+                                                        : new TriggerConfig(
+                                                                TriggerConfig.STORAGE_FOLDER_WATCH,
+                                                                Map.of()))),
                                 steps,
                                 outputSpecFor(request, folder),
                                 outputIds,
@@ -890,7 +891,7 @@ public class ProcessingFolderController {
     private static boolean exportsCorpus(SaveProcessingFolderRequest request) {
         if (request.steps() == null || request.steps().isEmpty()) return false;
         PipelineStep last = request.steps().getLast();
-        return "/api/v1/docparse/rag-ingest".equals(last.operation())
+        return "/api/v1/docparse/ingest".equals(last.operation())
                 && ("true".equals(String.valueOf(last.parameters().get("exportChunksJsonl")))
                         || "true".equals(String.valueOf(last.parameters().get("exportMarkdown"))));
     }

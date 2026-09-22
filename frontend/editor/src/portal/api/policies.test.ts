@@ -188,7 +188,7 @@ it("round-trips source bindings, schedule, paused state and database target", ()
     steps: [
       policyStepToWire(policyStep("ocr", { languages: ["eng"] })),
       policyStepToWire(
-        policyStep("ragIngest", {
+        policyStep("ingest", {
           index: "false",
           includeOriginal: "false",
           exportChunksJsonl: "true",

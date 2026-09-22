@@ -212,12 +212,12 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
     ],
     scopeLabel: "portal.policies.config.scopeAll",
     // OCR then ingest. Flatten is deliberately absent: a full flatten rasterises every
-    // page, which destroys the text layer OCR just added and leaves rag-ingest with
+    // page, which destroys the text layer OCR just added and leaves ingest with
     // nothing to extract. OCR is seeded with a language because it validates on having
     // one, and a template that cannot be saved without opening a step is not a template.
     defaultOperations: [
       policyStep("ocr", { languages: ["eng"] }),
-      policyStep("ragIngest"),
+      policyStep("ingest"),
     ],
     fields: [],
     needsSource: true,
