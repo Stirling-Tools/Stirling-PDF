@@ -1,13 +1,6 @@
-/* LD_PRELOAD connect() interposer for LibreOffice/unoserver: refuses every
- * destination that is not loopback, so a hostile document cannot make the
- * converter fetch (SSRF). Loopback stays open for the UNO bridge and CUPS.
- *
- * Reaches only calls that bind to the dynamic "connect" symbol. glibc's stub
- * resolver goes through its own internal __connect, so DNS is NOT stopped, and
- * neither are syscall(SYS_connect), unconnected sendto(), raw sockets, static
- * binaries, or a child that drops LD_PRELOAD. This narrows the reachable
- * surface; the network namespace is what actually contains it.
- */
+/* Blocks non-loopback dynamic connect() calls; loopback remains available for UNO and CUPS.
+ * DNS, direct syscalls, sendto(), raw sockets and processes without the shim can bypass it.
+ * This reduces exposure; use network isolation for containment. */
 #define _GNU_SOURCE
 #include <dlfcn.h>
 #include <errno.h>

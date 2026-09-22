@@ -28,11 +28,7 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 
-/**
- * Covers the LD_PRELOAD egress guard applied to locally launched LibreOffice: which environments
- * resolve it, which commands it recognises as the engine, and the fact that every fail-open path is
- * audible rather than silent.
- */
+/** Checks guard resolution, engine selection and warnings when protection is unavailable. */
 class ProcessExecutorOfficeNetworkGuardTest {
 
     private static final String GUARD_PATH = OfficeNetworkGuard.DEFAULT_LIBRARY_PATH;

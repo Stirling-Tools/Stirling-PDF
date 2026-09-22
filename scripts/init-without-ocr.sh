@@ -930,10 +930,8 @@ else
   log "Xvfb not installed; skipping virtual display setup"
 fi
 
-# ---------- LibreOffice egress guard ----------
-# LD_PRELOAD connect() guard (SSRF): refuses non-loopback connect(). It does not stop DNS or any
-# path that skips the dynamic symbol, so it narrows the reachable surface rather than isolating the
-# process. Default on; LIBREOFFICE_ALLOW_NETWORK=true opts out.
+# Blocks non-loopback connect(), but not DNS or calls bypassing the dynamic symbol.
+# Enabled by default; LIBREOFFICE_ALLOW_NETWORK=true opts out.
 OFFICE_GUARD_LIB="/usr/local/lib/stirling/soffice_no_network.so"
 OFFICE_LD_PRELOAD=""
 case "$(printf '%s' "${LIBREOFFICE_ALLOW_NETWORK:-false}" | tr '[:upper:]' '[:lower:]')" in

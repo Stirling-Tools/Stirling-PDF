@@ -60,11 +60,7 @@ public class ProcessExecutor {
     }
 
     /**
-     * Whether a {@link Processes#LIBRE_OFFICE} command is an office engine that must not be allowed
-     * out to the network. Fail-closed: the process type launches only the engine or the unoserver
-     * client, so everything that is not the client is treated as the engine - {@code
-     * system.customPaths.operations.soffice} takes any path, and {@code /usr/bin/libreoffice} is a
-     * symlink to the same wrapper as {@code /usr/bin/soffice}.
+     * Treats every LIBRE_OFFICE command except the UNO client as an engine, including custom paths.
      */
     static boolean shouldGuardOfficeCommand(List<String> command) {
         return executableBaseName(command) != null && !isUnoClientCommand(command);
@@ -557,14 +553,7 @@ public class ProcessExecutor {
     }
 
     /**
-     * Resolves, and then applies, the {@code LD_PRELOAD} shim that stops a locally launched
-     * LibreOffice engine opening non-loopback sockets.
-     *
-     * <p>Resolution is fail-open on purpose - a missing shim must not stop conversions - so every
-     * path that leaves the engine unguarded carries a reason and is logged rather than returning a
-     * bare null. Linux only: the shim interposes glibc {@code connect}, which macOS ignores for
-     * {@code LD_PRELOAD} entirely and which {@code DYLD_INSERT_LIBRARIES} would need a {@code
-     * __DATA,__interpose} section to reach.
+     * Loads a Linux connect() guard; missing libraries leave conversions unguarded and are logged.
      */
     static final class OfficeNetworkGuard {
 
@@ -639,11 +628,7 @@ public class ProcessExecutor {
             return unavailableReason;
         }
 
-        /**
-         * Preloads the shim for an office engine command, or warns once per executable that the
-         * engine is running without it. The unoserver client is left alone deliberately: remote-UNO
-         * mode is the client dialling out to another host, which the shim would block.
-         */
+        /** Guards engines or warns once per executable; leaves remote UNO clients unguarded. */
         void apply(ProcessBuilder processBuilder, List<String> command) {
             if (!shouldGuardOfficeCommand(command)) {
                 return;
