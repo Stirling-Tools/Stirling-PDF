@@ -86,6 +86,60 @@ public class UnoServerPoolTest {
     }
 
     @Test
+    void testWaitForEndpointProbesTheGivenEndpoint() throws Exception {
+        try (ServerSocket listener = new ServerSocket(0)) {
+            ApplicationProperties.ProcessExecutor.UnoServerEndpoint local =
+                    new ApplicationProperties.ProcessExecutor.UnoServerEndpoint();
+            local.setHost("127.0.0.1");
+            local.setPort(listener.getLocalPort());
+            local.setHostLocation("local");
+            UnoServerPool pool = new UnoServerPool(List.of(local));
+
+            assertTrue(
+                    pool.waitForEndpoint(local, 1, TimeUnit.SECONDS),
+                    "The leased endpoint reports ready");
+        }
+    }
+
+    @Test
+    void testWaitForEndpointHonorsTheDeadline() throws Exception {
+        int closedPort;
+        try (ServerSocket socket = new ServerSocket(0)) {
+            closedPort = socket.getLocalPort();
+        }
+        ApplicationProperties.ProcessExecutor.UnoServerEndpoint local =
+                new ApplicationProperties.ProcessExecutor.UnoServerEndpoint();
+        local.setHost("127.0.0.1");
+        local.setPort(closedPort);
+        local.setHostLocation("local");
+        UnoServerPool pool = new UnoServerPool(List.of(local));
+
+        long started = System.nanoTime();
+        assertFalse(pool.waitForEndpoint(local, 50, TimeUnit.MILLISECONDS));
+        long elapsedMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
+        assertTrue(
+                elapsedMillis < 200,
+                "A 50ms budget must clamp the sleep interval, took " + elapsedMillis + "ms");
+    }
+
+    @Test
+    void testWaitForEndpointClampsTheConnectTimeout() throws Exception {
+        ApplicationProperties.ProcessExecutor.UnoServerEndpoint unreachable =
+                new ApplicationProperties.ProcessExecutor.UnoServerEndpoint();
+        unreachable.setHost("192.0.2.1");
+        unreachable.setPort(2002);
+        unreachable.setHostLocation("local");
+        UnoServerPool pool = new UnoServerPool(List.of(unreachable));
+
+        long started = System.nanoTime();
+        assertFalse(pool.waitForEndpoint(unreachable, 50, TimeUnit.MILLISECONDS));
+        long elapsedMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
+        assertTrue(
+                elapsedMillis < 300,
+                "The connect probe must clamp to the 50ms budget, took " + elapsedMillis + "ms");
+    }
+
+    @Test
     void testSingleEndpointAcquireRelease() throws InterruptedException {
         List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints =
                 createEndpoints(1);

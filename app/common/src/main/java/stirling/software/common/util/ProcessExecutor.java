@@ -205,17 +205,13 @@ public class ProcessExecutor {
 
         boolean useUnoServerPool = shouldUseUnoServerPool(command);
 
-        // Signal the on-demand manager to start unoserver if needed.
-        // Must happen before acquiring the semaphore/lease so the manager has
-        // time to spin up soffice while we wait.
-        if (processType == Processes.LIBRE_OFFICE) {
-            signalUnoServerDemand();
-            if (useUnoServerPool) {
-                awaitUnoServerReady();
-            }
-        }
-
         if (useUnoServerPool) {
+            // Signal the on-demand manager to start unoserver if needed, then
+            // wait on the leased endpoint itself: probing every endpoint and
+            // leasing one afterwards could pick an endpoint that never became
+            // ready. A direct soffice command never signals: it does not call
+            // an endpoint, and its demand would wake a server nobody uses.
+            signalUnoServerDemand();
             try {
                 unoLease = unoServerPool.acquireEndpoint(timeoutDuration, TimeUnit.MINUTES);
             } catch (TimeoutException e) {
@@ -224,6 +220,12 @@ public class ProcessExecutor {
                                 + timeoutDuration
                                 + " minutes",
                         e);
+            }
+            if (!unoServerPool.waitForEndpoint(
+                    unoLease.getEndpoint(), UNO_SERVER_READY_WAIT_SECONDS, TimeUnit.SECONDS)) {
+                log.warn(
+                        "No local unoserver endpoint accepted connections within {}s; continuing",
+                        UNO_SERVER_READY_WAIT_SECONDS);
             }
             commandToRun = applyUnoServerEndpoint(command, unoLease.getEndpoint());
             useSemaphore = false;
@@ -241,7 +243,7 @@ public class ProcessExecutor {
             if (workingDirectory != null) {
                 processBuilder.directory(workingDirectory);
             }
-            if (processType == Processes.LIBRE_OFFICE) {
+            if (useUnoServerPool) {
                 signalUnoServerDemand();
             }
             Process process = processBuilder.start();
@@ -304,7 +306,7 @@ public class ProcessExecutor {
             outputReaderThread.start();
 
             Thread unoHeartbeat = null;
-            if (processType == Processes.LIBRE_OFFICE) {
+            if (useUnoServerPool) {
                 unoHeartbeat =
                         Thread.ofVirtual()
                                 .unstarted(
@@ -323,11 +325,20 @@ public class ProcessExecutor {
                 unoHeartbeat.start();
             }
 
-            // Wait for the conversion process to complete
-            boolean finished = process.waitFor(timeoutDuration, TimeUnit.MINUTES);
-
-            if (unoHeartbeat != null) {
-                unoHeartbeat.interrupt();
+            // Wait for the conversion process to complete. The heartbeat must be
+            // stopped on every exit path, and a cancelled request must not leave
+            // the child alive still refreshing demand.
+            boolean finished;
+            try {
+                finished = process.waitFor(timeoutDuration, TimeUnit.MINUTES);
+            } catch (InterruptedException e) {
+                process.descendants().forEach(ProcessHandle::destroyForcibly);
+                process.destroyForcibly();
+                throw e;
+            } finally {
+                if (unoHeartbeat != null) {
+                    unoHeartbeat.interrupt();
+                }
             }
 
             if (!finished) {
@@ -584,27 +595,6 @@ public class ProcessExecutor {
      * soffice fallback quickly.
      */
     private static final long UNO_SERVER_READY_WAIT_SECONDS = 15;
-
-    /**
-     * Waits for a local unoserver endpoint to accept connections. Runs before the semaphore and the
-     * lease, so concurrent requests wait in parallel rather than behind one another, and a
-     * remote-only pool returns immediately because it has no local endpoint to wake.
-     */
-    private static void awaitUnoServerReady() {
-        if (unoServerPool == null) {
-            return;
-        }
-        try {
-            if (!unoServerPool.waitForLocalEndpoint(
-                    UNO_SERVER_READY_WAIT_SECONDS, TimeUnit.SECONDS)) {
-                log.warn(
-                        "No local unoserver endpoint accepted connections within {}s; continuing",
-                        UNO_SERVER_READY_WAIT_SECONDS);
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
 
     /**
      * Signal the on-demand unoserver manager that a conversion is needed. Writes the current epoch

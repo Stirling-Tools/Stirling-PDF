@@ -97,30 +97,79 @@ public class UnoServerPool {
         long deadline = System.nanoTime() + unit.toNanos(timeout);
         while (true) {
             for (ApplicationProperties.ProcessExecutor.UnoServerEndpoint endpoint : locals) {
-                if (canConnect(endpoint)) {
+                long remaining = deadline - System.nanoTime();
+                if (remaining <= 0) {
+                    return false;
+                }
+                if (canConnect(endpoint, remaining)) {
                     return true;
                 }
             }
-            if (System.nanoTime() >= deadline) {
+            long remaining = deadline - System.nanoTime();
+            if (remaining <= 0) {
                 return false;
             }
-            Thread.sleep(READY_PROBE_INTERVAL_MILLIS);
+            Thread.sleep(clampedSleepMillis(remaining));
         }
     }
 
+    /**
+     * Waits until the given endpoint accepts a TCP connection, or the timeout passes. Remote
+     * endpoints return true immediately. Callers that already hold a lease use this so the probe
+     * and the leased endpoint are the same one.
+     */
+    public boolean waitForEndpoint(
+            ApplicationProperties.ProcessExecutor.UnoServerEndpoint endpoint,
+            long timeout,
+            TimeUnit unit)
+            throws InterruptedException {
+        if (!isLocalEndpoint(endpoint)) {
+            return true;
+        }
+        long deadline = System.nanoTime() + unit.toNanos(timeout);
+        while (true) {
+            long remaining = deadline - System.nanoTime();
+            if (remaining <= 0) {
+                return false;
+            }
+            if (canConnect(endpoint, remaining)) {
+                return true;
+            }
+            remaining = deadline - System.nanoTime();
+            if (remaining <= 0) {
+                return false;
+            }
+            Thread.sleep(clampedSleepMillis(remaining));
+        }
+    }
+
+    /** Probe with the connect timeout clamped to the caller's remaining budget. */
     private static boolean canConnect(
-            ApplicationProperties.ProcessExecutor.UnoServerEndpoint endpoint) {
+            ApplicationProperties.ProcessExecutor.UnoServerEndpoint endpoint, long remainingNanos) {
         if (endpoint == null || endpoint.getHost() == null) {
             return false;
         }
+        int connectTimeoutMillis =
+                (int)
+                        Math.max(
+                                1,
+                                Math.min(
+                                        READY_PROBE_CONNECT_TIMEOUT_MILLIS,
+                                        TimeUnit.NANOSECONDS.toMillis(remainingNanos)));
         try (Socket socket = new Socket()) {
             socket.connect(
                     new InetSocketAddress(endpoint.getHost(), endpoint.getPort()),
-                    READY_PROBE_CONNECT_TIMEOUT_MILLIS);
+                    connectTimeoutMillis);
             return true;
         } catch (IOException e) {
             return false;
         }
+    }
+
+    private static long clampedSleepMillis(long remainingNanos) {
+        return Math.min(
+                READY_PROBE_INTERVAL_MILLIS,
+                Math.max(1, TimeUnit.NANOSECONDS.toMillis(remainingNanos)));
     }
 
     public UnoServerLease acquireEndpoint() throws InterruptedException {
