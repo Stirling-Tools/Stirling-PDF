@@ -149,7 +149,11 @@ function compressStaticCopyPlugin(): PluginOption {
 // origin serves the page (correct for self-hosted Docker). Indexing signals
 // (canonical, JSON-LD, sitemap) need VITE_OG_BASE_URL specifically - see below.
 // Logic lives in scripts/og-prerender.mjs so it can be unit-tested without a full build.
-function prerenderOgPlugin(isSaas: boolean): PluginOption {
+function prerenderOgPlugin(options: {
+  isSaas: boolean;
+  precompress: boolean;
+}): PluginOption {
+  const { isSaas, precompress } = options;
   // SaaS (stirling.com) prerenders the marketing cards from a dedicated
   // manifest; every other flavour uses the tool-registry manifest.
   const manifestFile = isSaas
@@ -268,7 +272,12 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
         }
       };
       await walkHtml(distDir);
-      await compressFiles(lateFiles, distDir);
+      // The HTML, sitemap and robots.txt written above skip the walk in the
+      // other plugin, so they are compressed here; desktop output is embedded
+      // in the Tauri binary, which compresses it itself.
+      if (precompress) {
+        await compressFiles(lateFiles, distDir);
+      }
     },
   };
 }
@@ -424,18 +433,26 @@ export default defineConfig(async ({ mode, command }) => {
       tsconfigPaths({
         projects: [tsconfigProject],
       }),
-      compression({
-        threshold: 1024,
-        exclude: [COMPRESSION_EXCLUDE_REGEX],
-        algorithms: [
-          defineAlgorithm("gzip", { level: 9 }),
-          defineAlgorithm("brotliCompress", {
-            params: {
-              [constants.BROTLI_PARAM_QUALITY]: 11,
-            },
-          }),
-        ],
-      }),
+      // Desktop/mobile output is embedded in the Tauri binary, which brotli-
+      // compresses every asset itself and never negotiates encodings, so the
+      // .br/.gz siblings would only add their full size (tens of MB) to the
+      // bundle. Web flavours keep both encodings for the HTTP server.
+      ...(effectiveMode === "desktop"
+        ? []
+        : [
+            compression({
+              threshold: 1024,
+              exclude: [COMPRESSION_EXCLUDE_REGEX],
+              algorithms: [
+                defineAlgorithm("gzip", { level: 9 }),
+                defineAlgorithm("brotliCompress", {
+                  params: {
+                    [constants.BROTLI_PARAM_QUALITY]: 11,
+                  },
+                }),
+              ],
+            }),
+          ]),
       // ANALYZE=true emits dist/stats.json; the visualizer is ESM-only, hence
       // the dynamic import.
       ...(process.env.ANALYZE === "true"
@@ -483,8 +500,11 @@ export default defineConfig(async ({ mode, command }) => {
           },
         ],
       }),
-      compressStaticCopyPlugin(),
-      prerenderOgPlugin(effectiveMode === "saas"),
+      ...(effectiveMode === "desktop" ? [] : [compressStaticCopyPlugin()]),
+      prerenderOgPlugin({
+        isSaas: effectiveMode === "saas",
+        precompress: effectiveMode !== "desktop",
+      }),
     ],
     // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`,
     // so without this `@app/*` resolves in the app and fails in a worker.
