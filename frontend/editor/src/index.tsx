@@ -24,16 +24,12 @@ import { startEagerWasmCompilation } from "@app/services/wasmPrecompiler";
 applyDevWorktreeLabel();
 
 if (typeof window !== "undefined") {
-  // Suppress browser-level page zoom on pinch gestures so only open documents zoom
-  window.addEventListener(
-    "wheel",
-    (event) => {
-      if (event.ctrlKey || event.metaKey) {
-        event.preventDefault();
-      }
-    },
-    { passive: false },
-  );
+  // Browser magnification outside the viewer must keep working: zoom gestures
+  // are handled per-surface (the viewer's gesture wrapper, the page editor's
+  // wheel hook), so no window-level suppression belongs here. The gesturestart
+  // guard below stays window-wide on purpose: Safari would otherwise magnify
+  // the page concurrently with the viewer's own pinch handling, and the
+  // gesture surface is not addressable from this entry module.
   window.addEventListener("gesturestart", (event) => event.preventDefault());
 
   const scheduleCompilation = () =>

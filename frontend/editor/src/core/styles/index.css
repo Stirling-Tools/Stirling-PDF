@@ -1,10 +1,4 @@
 html,
-body,
-#root {
-  touch-action: pan-x pan-y;
-}
-
-html,
 body {
   margin: 0;
   padding: 0;
