@@ -74,7 +74,8 @@ public class AttachmentController {
 
         validateAttachmentRequest(attachments);
 
-        String originalFileName = Filenames.toSimpleFileName(fileInput.getOriginalFilename());
+        String originalFileName =
+                Filenames.toSimpleFileName(sourceFileName(fileInput, request.getFileId()));
         if (originalFileName == null || originalFileName.isEmpty()) {
             originalFileName = "document";
         }
@@ -106,11 +107,21 @@ public class AttachmentController {
                 return WebResponseUtils.pdfDocToWebResponse(
                         document,
                         GeneralUtils.generateFilename(
-                                Filenames.toSimpleFileName(fileInput.getOriginalFilename()),
+                                Filenames.toSimpleFileName(
+                                        sourceFileName(fileInput, request.getFileId())),
                                 "_with_attachments.pdf"),
                         tempFileManager);
             }
         }
+    }
+
+    /**
+     * Output filename source for fileId-based requests, where no upload exists
+     * to name the result after. Mirrors the null-safe handling in
+     * extractAttachments.
+     */
+    private static String sourceFileName(MultipartFile fileInput, String fileId) {
+        return fileInput != null ? fileInput.getOriginalFilename() : fileId;
     }
 
     private void validateAttachmentRequest(List<MultipartFile> attachments) {
@@ -233,7 +244,8 @@ public class AttachmentController {
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
                     GeneralUtils.generateFilename(
-                            Filenames.toSimpleFileName(fileInput.getOriginalFilename()),
+                            Filenames.toSimpleFileName(
+                                    sourceFileName(fileInput, request.getFileId())),
                             "_attachment_renamed.pdf"),
                     tempFileManager);
         }
@@ -264,7 +276,8 @@ public class AttachmentController {
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
                     GeneralUtils.generateFilename(
-                            Filenames.toSimpleFileName(fileInput.getOriginalFilename()),
+                            Filenames.toSimpleFileName(
+                                    sourceFileName(fileInput, request.getFileId())),
                             "_attachment_deleted.pdf"),
                     tempFileManager);
         }
@@ -370,7 +383,8 @@ public class AttachmentController {
                 pdfAttachmentService.addAttachment(document, additions);
             }
 
-            String originalFileName = Filenames.toSimpleFileName(fileInput.getOriginalFilename());
+            String originalFileName =
+                    Filenames.toSimpleFileName(sourceFileName(fileInput, request.getFileId()));
             if (originalFileName == null || originalFileName.isEmpty()) {
                 originalFileName = "document";
             }
@@ -392,7 +406,8 @@ public class AttachmentController {
                 return WebResponseUtils.pdfDocToWebResponse(
                         document,
                         GeneralUtils.generateFilename(
-                                Filenames.toSimpleFileName(fileInput.getOriginalFilename()),
+                                Filenames.toSimpleFileName(
+                                        sourceFileName(fileInput, request.getFileId())),
                                 "_attachments_modified.pdf"),
                         tempFileManager);
             }
