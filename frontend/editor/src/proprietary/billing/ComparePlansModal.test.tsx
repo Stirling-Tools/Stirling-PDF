@@ -96,6 +96,27 @@ it("leaves the matrix closed once the procurement flow is away", () => {
   expect(screen.queryByText("Where it runs")).not.toBeInTheDocument();
 });
 
+/**
+ * A local Server licence sits in the Team column while its wallet is still free, so the grant the
+ * wallet reports is the free one and must not be quoted as what Team includes.
+ */
+it("does not quote a free grant as a Server licence's Team allowance", () => {
+  render(
+    <BillingScreen
+      wallet={{ ...freeWallet, freeAllowance: 1000 }}
+      serverPlan={{ licenseType: "SERVER", maxUsers: 100, usersInUse: 12 }}
+    />,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Compare plans" }));
+  expect(
+    screen.queryByText("1,000 a month, then metered"),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.getByText("A larger allowance, then metered"),
+  ).toBeInTheDocument();
+  expect(screen.getByText("1,000 credits a month")).toBeInTheDocument();
+});
+
 /** An Enterprise licence needs neither door, and the enterprise banner already gates itself. */
 it("sells nothing to an enterprise licence", () => {
   render(

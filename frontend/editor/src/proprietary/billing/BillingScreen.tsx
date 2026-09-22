@@ -77,11 +77,6 @@ export interface BillingScreenProps {
   extras?: ReactNode;
 }
 
-/** A count the matrix can quote, or null: a zero here means unread, not a real ceiling of none. */
-function quotable(n: number | null | undefined): number | null {
-  return n != null && n > 0 ? n : null;
-}
-
 /** Inclusive day index within the billing period, and the period's length, from real dates. */
 function cycleDay(
   start: string,
@@ -296,14 +291,21 @@ export function BillingScreen({
         ? "team"
         : "free";
 
-  // A held Team reports its included allowance through the same field the free tier uses for its
-  // grant, so that figure is offered only to the column it actually describes. The user ceiling is
-  // not overloaded the same way — it stays the free one whatever the team holds — so it always goes
-  // to the Free column.
-  const onTeam = currentPlan === "team";
-  const compareTeamAllowance = onTeam ? quotable(wallet?.freeAllowance) : null;
-  const compareFreeAllowance = onTeam ? null : quotable(wallet?.freeAllowance);
-  const compareFreeUsers = quotable(wallet?.freeUserAllowance);
+  /**
+   * {@code freeAllowance} is whatever grant the WALLET carries, so it describes the Team column
+   * only where the wallet itself is paying. A local Server licence puts the caller in the Team
+   * column while its wallet is still free, and quoting that free grant as Team's included
+   * allowance would overstate what the plan buys. The user ceiling is not overloaded this way —
+   * it stays the free one whatever is held — so it always describes the Free column.
+   */
+  const walletPays = Boolean(wallet) && (teamHeld || paying);
+  const compareTeamAllowance = walletPays
+    ? (wallet?.freeAllowance ?? null)
+    : null;
+  const compareFreeAllowance = walletPays
+    ? null
+    : (wallet?.freeAllowance ?? null);
+  const compareFreeUsers = wallet?.freeUserAllowance ?? null;
 
   const creditUnits = (wallet?.spendUnitsThisPeriod ?? 0) + pendingUnits;
   const occupiedSeats = serverPlan

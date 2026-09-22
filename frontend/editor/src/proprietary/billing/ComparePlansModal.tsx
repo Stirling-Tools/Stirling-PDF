@@ -87,15 +87,19 @@ export function ComparePlansModal({
     [t],
   );
 
-  const rows = useMemo<Row[]>(
-    () => [
+  const rows = useMemo<Row[]>(() => {
+    const users = quoted(freeUserLimit);
+    const freeCredits = quoted(freeAllowance);
+    const teamCredits = quoted(teamAllowance);
+
+    return [
       {
         key: "users",
         label: t("portal.billing.compare.rowUsers", "Users"),
         free:
-          quoted(freeUserLimit) != null
+          users != null
             ? t("portal.billing.compare.freeUsers", "Up to {{users}}", {
-                users: quoted(freeUserLimit),
+                users,
               })
             : t("portal.billing.compare.freeUsersUnknown", "A small team"),
         team: t("portal.billing.compare.teamUsers", "100 per block"),
@@ -119,32 +123,35 @@ export function ComparePlansModal({
           "portal.billing.compare.freeWhere",
           "Cloud, desktop or self-hosted",
         ),
-        team: t("portal.billing.compare.teamWhere", "Cloud or self-hosted"),
+        team: t(
+          "portal.billing.compare.teamWhere",
+          "Cloud, desktop or self-hosted",
+        ),
         enterprise: t(
           "portal.billing.compare.enterpriseWhere",
-          "Multi-node and air-gapped",
+          "Plus multi-node and air-gapped",
         ),
       },
       {
         key: "processing",
         label: t("portal.billing.compare.rowProcessing", "Processing"),
         free:
-          quoted(freeAllowance) != null
+          freeCredits != null
             ? t(
                 "portal.billing.compare.freeProcessing",
                 "{{allowance}} credits a month",
-                { allowance: quoted(freeAllowance) },
+                { allowance: freeCredits },
               )
             : t(
                 "portal.billing.compare.freeProcessingUnknown",
                 "A monthly credit allowance",
               ),
         team:
-          quoted(teamAllowance) != null
+          teamCredits != null
             ? t(
                 "portal.billing.compare.teamProcessing",
                 "{{allowance}} a month, then metered",
-                { allowance: quoted(teamAllowance) },
+                { allowance: teamCredits },
               )
             : t(
                 "portal.billing.compare.teamProcessingUnknown",
@@ -178,9 +185,8 @@ export function ComparePlansModal({
           "Uptime SLAs, deployment help",
         ),
       },
-    ],
-    [t, freeUserLimit, freeAllowance, teamAllowance],
-  );
+    ];
+  }, [t, freeUserLimit, freeAllowance, teamAllowance]);
 
   return (
     <Modal
