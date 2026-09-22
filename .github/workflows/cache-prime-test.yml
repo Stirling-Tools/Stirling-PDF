@@ -76,7 +76,7 @@ jobs:
 
       - name: Restore Gradle cache asset
         id: cache
-        uses: Ludy87/cache-the-planet@v1.9
+        uses: Ludy87/cache-the-planet@main
         with:
           manifest-branch: dev-cache
           manifest-path: .github/cache-data
@@ -107,6 +107,16 @@ jobs:
           echo "Fork: $CACHE_IS_FORK"
           echo "Read-only: $CACHE_READ_ONLY"
           echo "Cache Hit: $CACHE_HIT"
+
+      - name: Cache Gradle
+        if: ${{ steps.cache.outputs.}}
+        id: cache-gradle-restore
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            .cache/gradle-java${{ env.JAVA_VERSION }}/caches
+            .cache/gradle-java${{ env.JAVA_VERSION }}/wrapper
+          key: ${{ needs.hash_pr.outputs.files_hash }}
 
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: ./.github/actions/java
