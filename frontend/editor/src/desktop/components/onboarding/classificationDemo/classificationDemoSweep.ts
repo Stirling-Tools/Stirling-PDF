@@ -9,6 +9,10 @@ import {
 } from "@app/services/localFolderContents";
 import { classifyFileHeuristically } from "@app/services/heuristic/heuristicClassification";
 import { meterAutomationRun } from "@app/services/automationMeter";
+import {
+  getServerAutomationSession,
+  requireAutomationSession,
+} from "@app/services/serverAutomationSession";
 import type { StirlingFile } from "@app/types/fileContext";
 import type {
   HeuristicConfidence,
@@ -16,6 +20,7 @@ import type {
 } from "@app/services/heuristic/types";
 import { LABEL_FAMILIES } from "@app/data/classificationLabels";
 import { accentColor, accentCycleColor } from "@app/utils/accentColors";
+import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 
 /** Names this run in the billing audit trail, so onboarding's sweep is distinguishable
  *  from classification on upload. */
@@ -27,6 +32,10 @@ const CLASSIFY_STEP = "/api/v1/ai/tools/classify-and-label";
 
 /** How many PDFs one sweep covers. The rest of the folder waits for a follow-up batch. */
 export const CLASSIFICATION_DEMO_BATCH_SIZE = 50;
+
+/** Text-reading allowance per document, counted once it is open, so a cold pdf.js worker
+ *  is not charged. Opening has its own headroom, so a document's worst case is both. */
+export const HEURISTIC_BUDGET_MS = 1000;
 
 /** Roll-up id used for a document the heuristic could not place. */
 export const UNCLASSIFIED_GROUP_ID = "other";
@@ -60,6 +69,8 @@ export interface ClassificationDemoProgress {
   processed: number;
   /** Documents this sweep will cover; 0 until the folder has been read. */
   total: number;
+  /** While gathering: files in the folder looked at so far, of how many. */
+  listing?: { checked: number; total: number };
   /** Running tally, biggest group first — drives the ticker under the logo. */
   groups: ClassificationDemoGroupCount[];
 }
@@ -231,7 +242,9 @@ async function classifyAndAdd(
 ): Promise<string[] | null> {
   let verdict: HeuristicResult;
   try {
-    verdict = await classifyFileHeuristically(file);
+    verdict = await classifyFileHeuristically(file, {
+      budgetMs: HEURISTIC_BUDGET_MS,
+    });
   } catch {
     return null;
   }
@@ -269,6 +282,7 @@ export async function runClassificationDemoSweep(
     unclassifiedName?: string;
   } = {},
 ): Promise<ClassificationDemoOutcome> {
+  const session = await getServerAutomationSession();
   const limit = options.limit ?? CLASSIFICATION_DEMO_BATCH_SIZE;
   const exclude = options.exclude ?? new Set<string>();
   const unclassifiedName = options.unclassifiedName ?? "Other";
@@ -279,8 +293,18 @@ export async function runClassificationDemoSweep(
   const metered: { pages: number; bytes: number }[] = [];
   let processed = 0;
 
-  const report = (phase: ClassificationDemoPhase, total: number) =>
-    deps.onProgress({ phase, processed, total, groups: tally(counts) });
+  const report = (
+    phase: ClassificationDemoPhase,
+    total: number,
+    listing?: ClassificationDemoProgress["listing"],
+  ) =>
+    deps.onProgress({
+      phase,
+      processed,
+      total,
+      listing,
+      groups: tally(counts),
+    });
 
   report("reading", 0);
   // Reads and mounts are gated on the directory being mounted, so this comes first —
@@ -288,7 +312,10 @@ export async function runClassificationDemoSweep(
   await deps.mountFolder(directory, "Downloads");
 
   report("gathering", 0);
-  const listing = await listDirectory(directory);
+  const listing = await listDirectory(directory, {
+    onProgress: (checked, count) =>
+      report("gathering", 0, { checked, total: count }),
+  });
   const allPdfs = pickRecentPdfs(listing?.files ?? [], Number.MAX_SAFE_INTEGER);
   const eligible = allPdfs.filter((file) => !exclude.has(file.path));
   const batch = eligible.slice(0, limit);
@@ -296,8 +323,11 @@ export async function runClassificationDemoSweep(
 
   report("processing", total);
   const sweptPaths: string[] = [];
+  // Past the parse limit the thumbnail path refuses too, so the bytes would only be
+  // copied across the IPC bridge to be dropped: never read at all, which leaves `file`
+  // null below and retires the entry unclassified.
   const read = (index: number): Promise<File | null> =>
-    index < batch.length
+    index < batch.length && batch[index].sizeBytes < LARGE_PDF_PARSE_LIMIT
       ? readDiskFile(batch[index]).catch(() => null)
       : Promise.resolve(null);
   // The disk read is a webview-to-Rust round trip and the classification is pdf.js in a
@@ -305,6 +335,7 @@ export async function runClassificationDemoSweep(
   let pending = read(0);
   for (let index = 0; index < batch.length; index += 1) {
     if (deps.isCancelled?.()) break;
+    await requireAutomationSession(session.key);
     const entry = batch[index];
     // Recorded before the attempt, so a document that cannot be read is retired rather
     // than offered again by every follow-up batch for the rest of the flow.
@@ -328,11 +359,14 @@ export async function runClassificationDemoSweep(
   // One call for the batch rather than per document, matching how the upload path meters
   // a run: the sweep is one automation over many inputs.
   if (metered.length > 0) {
-    meterAutomationRun({
-      automationName: ONBOARDING_METER_NAME,
-      operations: [CLASSIFY_STEP],
-      inputs: metered,
-    });
+    meterAutomationRun(
+      {
+        automationName: ONBOARDING_METER_NAME,
+        operations: [CLASSIFY_STEP],
+        inputs: metered,
+      },
+      session,
+    );
   }
 
   report("finished", total);

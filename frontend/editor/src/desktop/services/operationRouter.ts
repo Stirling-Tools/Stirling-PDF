@@ -1,4 +1,5 @@
 import i18n from "@app/i18n";
+import { authService } from "@app/services/authService";
 import { connectionModeService } from "@app/services/connectionModeService";
 import { tauriBackendService } from "@app/services/tauriBackendService";
 import { endpointAvailabilityService } from "@app/services/endpointAvailabilityService";
@@ -21,25 +22,43 @@ export class OperationRouter {
     return OperationRouter.instance;
   }
 
-  /**
-   * Determines where an operation should execute
-   * @param _operation - The operation name (for future operation classification)
-   * @returns 'local' or 'remote'
-   */
-  async getExecutionTarget(_operation?: string): Promise<ExecutionTarget> {
+  private isServerAutomationEndpoint(endpoint = ""): boolean {
+    const path = endpoint.startsWith("http")
+      ? new URL(endpoint).pathname
+      : endpoint;
+    return /^\/api\/v1\/(policies|processing-folders|automation|pipeline)(?:[/?]|$)/.test(
+      path,
+    );
+  }
+
+  /** Resolves the authenticated server; automation must never fall back to the bundled backend. */
+  async getConnectedServerBaseUrl(): Promise<string> {
+    const mode = await connectionModeService.getCurrentMode();
+    await authService.awaitRefreshIfInProgress();
+    if (mode === "local" || !(await authService.isAuthenticated())) {
+      throw new Error(
+        i18n.t(
+          "localMode.automationUnavailable",
+          "Sign in to Stirling Cloud or a self-hosted server to use processing folders and pipelines.",
+        ),
+      );
+    }
+    const url =
+      mode === "saas"
+        ? STIRLING_SAAS_BACKEND_API_URL
+        : (await connectionModeService.getServerConfig())?.url;
+    if (!url) throw new Error("Server configuration not found");
+    return url.replace(/\/$/, "");
+  }
+
+  /** Standalone tools route by connection mode. Automation endpoints never reach here —
+   *  getBaseUrl resolves those via getConnectedServerBaseUrl before this is consulted. */
+  async getExecutionTarget(): Promise<ExecutionTarget> {
     const mode = await connectionModeService.getCurrentMode();
 
-    // Current implementation: simple mode-based routing
     if (mode === "saas" || mode === "local") {
       return "local";
     }
-
-    // In self-hosted mode, currently all operations go to remote
-    // Future enhancement: check if operation is "simple" and route to local if so
-    // Example future logic:
-    // if (mode === 'selfhosted' && operation && this.isSimpleOperation(operation)) {
-    //   return 'local';
-    // }
 
     return "remote";
   }
@@ -63,6 +82,7 @@ export class OperationRouter {
       /^\/api\/v1\/automation(?:[/?]|$)/, // Automate / classification meter - must bill via the cloud
       /^\/api\/v1\/ai\//, // AI engine (orchestrate, etc.) — runs in the cloud
       /^\/api\/v1\/processing-folders(?:[/?]|$)/, // Processing folders — proprietary controller
+      /^\/api\/v1\/storage(?:[/?]|$)/, // Server folders and their processed outputs
       /^\/api\/v1\/notifications(?:[/?]|$)/, // Failure notifications — proprietary controller
       // Add more cloud-only feature prefixes here as they land.
     ];
@@ -145,6 +165,9 @@ export class OperationRouter {
    * @returns Base URL for API calls
    */
   async getBaseUrl(operation?: string): Promise<string> {
+    if (this.isServerAutomationEndpoint(operation)) {
+      return this.getConnectedServerBaseUrl();
+    }
     const mode = await connectionModeService.getCurrentMode();
 
     // Local-only mode: route everything to local backend; open settings if tool unavailable
@@ -292,7 +315,7 @@ export class OperationRouter {
     }
 
     // Existing logic for local/remote routing
-    const target = await this.getExecutionTarget(operation);
+    const target = await this.getExecutionTarget();
 
     if (target === "local") {
       // Use dynamically assigned port from backend service
@@ -341,6 +364,8 @@ export class OperationRouter {
    * @returns Promise<boolean> - true if endpoint should skip backend readiness check
    */
   async shouldSkipBackendReadyCheck(endpoint?: string): Promise<boolean> {
+    if (this.isServerAutomationEndpoint(endpoint)) return true;
+    if (endpoint?.startsWith("http")) return true;
     // Team endpoints always skip (existing logic)
     if (this.isSaaSBackendEndpoint(endpoint)) {
       return true;

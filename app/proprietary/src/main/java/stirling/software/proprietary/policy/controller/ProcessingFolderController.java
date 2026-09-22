@@ -239,7 +239,7 @@ public class ProcessingFolderController {
                         : existing == null ? List.of() : existing.routingRules();
         Stream.concat(outputIds.stream(), routingRules.stream().map(RoutingRule::outputId))
                 .distinct()
-                .forEach(this::requireAccessibleDestination);
+                .forEach(outputId -> requireAccessibleDestination(outputId, request.steps()));
         String name = onDisk ? diskFolderName(request.directory()) : folder.getName();
 
         // Held for rollback: the source is written before the policy validates, and a rejected
@@ -887,7 +887,7 @@ public class ProcessingFolderController {
         return fileName == null ? path.toString() : fileName.toString();
     }
 
-    private void requireAccessibleDestination(String outputId) {
+    private void requireAccessibleDestination(String outputId, List<PipelineStep> steps) {
         Source destination =
                 sourceStore
                         .get(outputId)
@@ -904,7 +904,7 @@ public class ProcessingFolderController {
         }
         // Validate on the request thread: connection checks need the caller's authentication.
         try {
-            policyValidator.validateOutput(destination.toOutputSpec());
+            policyValidator.validateOutput(destination.toOutputSpec(), steps);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
