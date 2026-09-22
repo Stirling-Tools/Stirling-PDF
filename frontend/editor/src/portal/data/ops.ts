@@ -801,14 +801,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
     desc: "Edit the table of contents / bookmarks",
   },
   {
-    id: "scanner-effect",
-    label: "Scanner effect",
-    icon: "penTool",
-    kind: "modify",
-    category: "Page Formatting",
-    desc: "Apply a scanned-document visual effect",
-  },
-  {
     id: "invert-colors",
     label: "Invert colors",
     icon: "penTool",
