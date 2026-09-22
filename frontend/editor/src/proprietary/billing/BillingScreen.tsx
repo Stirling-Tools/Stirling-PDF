@@ -1,7 +1,11 @@
 import type { ReactNode } from "react";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Skeleton } from "@app/ui";
+import {
+  ComparePlansModal,
+  type ComparePlan,
+} from "@app/billing/ComparePlansModal";
 import { formatMinor } from "@app/billing/format";
 import { KvRow } from "@app/billing/KvRow";
 import { TeamPlanRow } from "@app/billing/TeamPlanRow";
@@ -73,6 +77,11 @@ export interface BillingScreenProps {
   extras?: ReactNode;
 }
 
+/** A count the matrix can quote, or null: a zero here means unread, not a real ceiling of none. */
+function quotable(n: number | null | undefined): number | null {
+  return n != null && n > 0 ? n : null;
+}
+
 /** Inclusive day index within the billing period, and the period's length, from real dates. */
 function cycleDay(
   start: string,
@@ -127,6 +136,7 @@ export function BillingScreen({
   extras,
 }: BillingScreenProps) {
   const { t } = useTranslation();
+  const [comparing, setComparing] = useState(false);
 
   const jump = useCallback((id: string) => {
     document
@@ -272,6 +282,27 @@ export function BillingScreen({
     t,
   ]);
 
+  /**
+   * The column the matrix marks as the caller's own. A Server licence sits in the Team column:
+   * it is the same hundred-user deal the cloud sells, bought locally instead.
+   */
+  const currentPlan: ComparePlan | null = serverPlan
+    ? serverPlan.licenseType === "ENTERPRISE"
+      ? "enterprise"
+      : "team"
+    : !wallet
+      ? null
+      : paying || teamHeld
+        ? "team"
+        : "free";
+
+  // A held Team reports its included allowance through the same field the free tier uses for its
+  // grant, so each figure is offered only to the column it actually describes.
+  const onTeam = currentPlan === "team";
+  const compareTeamAllowance = onTeam ? quotable(wallet?.freeAllowance) : null;
+  const compareFreeAllowance = onTeam ? null : quotable(wallet?.freeAllowance);
+  const compareFreeUsers = onTeam ? null : quotable(wallet?.freeUserAllowance);
+
   const creditUnits = (wallet?.spendUnitsThisPeriod ?? 0) + pendingUnits;
   const occupiedSeats = serverPlan
     ? serverPlan.usersInUse
@@ -355,9 +386,20 @@ export function BillingScreen({
             {(identity || legacyPlan) && (
               <>
                 <section id="ub-plan" className="billing-sec">
-                  <span className="billing-eyebrow">
-                    {t("portal.billing.section.plan", "Your plan")}
-                  </span>
+                  <div className="billing-eyebrow-row">
+                    <span className="billing-eyebrow">
+                      {t("portal.billing.section.plan", "Your plan")}
+                    </span>
+                    {identity && (
+                      <button
+                        type="button"
+                        className="billing-compare-open"
+                        onClick={() => setComparing(true)}
+                      >
+                        {t("portal.billing.compare.open", "Compare plans")}
+                      </button>
+                    )}
+                  </div>
                   {legacyPlan}
                   {identity && (
                     <div className="billing-id">
@@ -580,6 +622,31 @@ export function BillingScreen({
             </button>
           </div>
         )}
+
+        <ComparePlansModal
+          open={comparing}
+          onClose={() => setComparing(false)}
+          currentPlan={currentPlan}
+          freeUserLimit={compareFreeUsers}
+          freeAllowance={compareFreeAllowance}
+          teamAllowance={compareTeamAllowance}
+          onUpgradeTeam={
+            onAddCapacity && !onTeam
+              ? () => {
+                  setComparing(false);
+                  onAddCapacity();
+                }
+              : undefined
+          }
+          onExploreEnterprise={
+            onEnterpriseQuote
+              ? () => {
+                  setComparing(false);
+                  onEnterpriseQuote();
+                }
+              : undefined
+          }
+        />
 
         {extras}
       </div>
