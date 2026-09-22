@@ -656,9 +656,7 @@ public class UserService implements UserServiceInterface {
         if (settings == null) {
             return;
         }
-        // Resolve the cap before taking the lock. Only the count and the insert need serialising,
-        // and once a linked instance takes its capacity from SaaS this call can refresh that over
-        // the network -- a row lock must not be held across a round trip that may time out.
+        // Entitlement refresh may use the network; do it before taking the admission lock.
         int max = settings.calculateMaxAllowedUsers();
 
         // Serialise admission. The lock is held until saveUserCore's transaction commits, by which

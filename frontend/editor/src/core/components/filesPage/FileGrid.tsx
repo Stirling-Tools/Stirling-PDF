@@ -1963,6 +1963,7 @@ const DiskFileCard = React.memo(function DiskFileCard({
           </Menu.Target>
           <Menu.Dropdown>
             <Menu.Item
+              disabled={locked}
               leftSection={<Icon name="external-link" size={20} />}
               onClick={(e) => {
                 e.stopPropagation();
@@ -2087,6 +2088,7 @@ const DiskFileRow = React.memo(function DiskFileRow({
           </Menu.Target>
           <Menu.Dropdown>
             <Menu.Item
+              disabled={locked}
               leftSection={<Icon name="external-link" size={20} />}
               onClick={onOpen}
             >

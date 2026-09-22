@@ -60,7 +60,7 @@ export function ProcessorPlanRow({
   const rate = wallet.pricePerDocMinor;
 
   const includedCredits = (() => {
-    if (wallet.freeAllowance <= 0) return null;
+    if (wallet.processor.active || wallet.freeAllowance <= 0) return null;
     const used = Math.min(
       wallet.freeAllowance,
       Math.max(0, wallet.freeAllowance - wallet.freeRemaining + pendingUnits),
@@ -87,11 +87,7 @@ export function ProcessorPlanRow({
 
     return (
       <MeterRow
-        name={
-          wallet.processor.active
-            ? t("portal.billing.processor.includedCredits", "Included credits")
-            : name
-        }
+        name={name}
         mid={
           wallet.includedPeriodEnd
             ? t(
@@ -159,20 +155,30 @@ export function ProcessorPlanRow({
 
   const mid =
     spentMinor != null
-      ? t(
-          "portal.billing.processor.midMetered",
-          "{{spend}} metered this cycle",
-          {
-            spend: formatMinor(spentMinor, wallet.currency),
-          },
-        )
+      ? capped
+        ? t(
+            "portal.billing.processor.spendAgainstLimit",
+            "{{spend}} of {{cap}} metered this cycle",
+            {
+              spend: formatMinor(spentMinor, wallet.currency),
+              cap: formatMoneyMajor(wallet.capUsd as number, wallet.currency),
+            },
+          )
+        : t(
+            "portal.billing.processor.midMetered",
+            "{{spend}} metered this cycle",
+            {
+              spend: formatMinor(spentMinor, wallet.currency),
+            },
+          )
       : t("portal.billing.processor.midMeteredUnknown", "Metered this cycle");
 
   const fact = capped
-    ? t("portal.billing.processor.factCapped", "{{pct}}% of {{cap}}", {
-        pct: Math.round(pct).toLocaleString(),
-        cap: formatMoneyMajor(wallet.capUsd as number, wallet.currency),
-      })
+    ? spentMinor == null
+      ? "—"
+      : t("portal.billing.processor.percentUsed", "{{pct}}%", {
+          pct: Math.round(pct).toLocaleString(),
+        })
     : t("portal.billing.processor.factNoCap", "no limit");
 
   const door =
@@ -180,28 +186,108 @@ export function ProcessorPlanRow({
     (onGovern
       ? t("portal.billing.processor.raiseLimit", "Raise limit")
       : undefined);
+  const freeRemaining = Math.min(
+    wallet.freeAllowance,
+    Math.max(0, wallet.freeRemaining - pendingUnits),
+  );
+  const freePct =
+    wallet.freeAllowance > 0 ? (freeRemaining / wallet.freeAllowance) * 100 : 0;
+  const freeLabel = t(
+    "portal.billing.processor.freeRemaining",
+    "Free credits remaining",
+  );
+  const paidLabel = t(
+    "portal.billing.processor.paidUsed",
+    "Paid metered usage",
+  );
+  const details = (
+    <div className="billing-breakdown">
+      <div>
+        <div className="billing-breakdown__row">
+          <span>{freeLabel}</span>
+          <strong>
+            {t(
+              "portal.billing.processor.remainingOf",
+              "{{remaining}} of {{total}}",
+              {
+                remaining: freeRemaining.toLocaleString(),
+                total: wallet.freeAllowance.toLocaleString(),
+              },
+            )}
+          </strong>
+        </div>
+        <span
+          className="billing-breakdown__bar"
+          role="progressbar"
+          aria-label={freeLabel}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(freePct)}
+        >
+          <span
+            className="billing-breakdown__fill"
+            style={{ width: `${freePct}%` }}
+          />
+        </span>
+      </div>
+      <div>
+        <div className="billing-breakdown__row">
+          <span>{paidLabel}</span>
+          <strong>
+            {spentMinor == null
+              ? "—"
+              : formatMinor(spentMinor, wallet.currency)}
+            {capped
+              ? ` / ${formatMoneyMajor(wallet.capUsd as number, wallet.currency)}`
+              : ""}
+          </strong>
+        </div>
+        {capped ? (
+          <span
+            className="billing-breakdown__bar"
+            role="progressbar"
+            aria-label={paidLabel}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={
+              spentMinor == null
+                ? undefined
+                : Math.round(Math.min(100, Math.max(0, pct)))
+            }
+          >
+            <span
+              className="billing-breakdown__fill"
+              style={{ width: `${Math.min(100, Math.max(0, pct))}%` }}
+            />
+          </span>
+        ) : (
+          <small>
+            {t("portal.billing.processor.noSpendLimit", "No spend limit")}
+          </small>
+        )}
+      </div>
+    </div>
+  );
 
   return (
-    <>
-      {includedCredits}
-      <MeterRow
-        name={name}
-        mid={mid}
-        pct={pct}
-        tone={capped && pct >= 90 ? "warn" : "paid"}
-        showTrack={capped}
-        fact={fact}
-        door={onGovern ? door : undefined}
-        onDoor={onGovern}
-        midTitle={
-          capped
-            ? t(
-                "portal.billing.processor.meteredCapTooltip",
-                "Pauses metered processing at your spend limit.",
-              )
-            : undefined
-        }
-      />
-    </>
+    <MeterRow
+      name={name}
+      mid={mid}
+      details={details}
+      pct={pct}
+      tone={capped && pct >= 90 ? "warn" : "paid"}
+      showTrack={capped}
+      fact={fact}
+      door={onGovern ? door : undefined}
+      onDoor={onGovern}
+      midTitle={
+        capped
+          ? t(
+              "portal.billing.processor.meteredCapTooltip",
+              "Pauses metered processing at your spend limit.",
+            )
+          : undefined
+      }
+    />
   );
 }

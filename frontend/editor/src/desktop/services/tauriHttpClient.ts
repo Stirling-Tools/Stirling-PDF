@@ -31,6 +31,8 @@ export interface TauriHttpRequestConfig {
   withCredentials?: boolean;
   // Custom properties for desktop
   operationName?: string;
+  /** Pins background automation requests to the account and server that started them. */
+  automationSession?: string;
   skipBackendReadyCheck?: boolean;
   skipAuthRedirect?: boolean;
   // Axios compatibility properties (ignored by Tauri HTTP)
@@ -253,7 +255,11 @@ class TauriHttpClient {
         };
       } = {
         method,
-        headers,
+        // The dev webview has a Vite origin; cloud CORS accepts the packaged app origin.
+        // task desktop:dev alone enables the plugin feature needed to override Origin.
+        headers: import.meta.env.DEV
+          ? { Origin: "tauri://localhost", ...headers }
+          : headers,
         body,
         credentials,
         ...(finalConfig.signal ? { signal: finalConfig.signal } : {}),
