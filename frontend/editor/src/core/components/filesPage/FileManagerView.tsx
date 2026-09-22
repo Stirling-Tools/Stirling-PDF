@@ -6,26 +6,14 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
-import {
-  Drawer,
-  Menu,
-  MultiSelect,
-  Select,
-  TextInput,
-  Tooltip,
-} from "@mantine/core";
-import { qk } from "@app/query/keys";
+import { Drawer, Menu, Tooltip } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useMediaQuery } from "@mantine/hooks";
 import { FilesToolbarBulkMenu } from "@app/components/filesPage/FilesToolbarBulkMenu";
 import { FilesToolbarCount } from "@app/components/filesPage/FilesToolbarCount";
-import { FilesToolbarFilterMenu } from "@app/components/filesPage/FilesToolbarFilterMenu";
 import { FolderMenu } from "@app/components/filesPage/FolderMenu";
-import { FilesToolbarSortMenu } from "@app/components/filesPage/FilesToolbarSortMenu";
 import { NewFolderButton } from "@app/components/filesPage/NewFolderButton";
 import { useFileLibraryWorkbenchBarButtons } from "@app/components/filesPage/useFileLibraryWorkbenchBarButtons";
 
@@ -36,25 +24,24 @@ import { useOpenFolder } from "@app/components/filesPage/useOpenFolder";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
+import { useDropzoneFiles } from "@app/hooks/useDropzoneFiles";
 import { openFilesFromDisk } from "@app/services/openFilesFromDisk";
-import { useServerFolderBlock } from "@app/hooks/useServerFolderBlock";
 import {
   useNavigationActions,
   useNavigationGuard,
 } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
-import {
-  FILES_PAGE_VIEW_MODES,
-  FilesPageOriginFilter,
-  FilesPageSortMode,
-  useFilesPage,
-} from "@app/contexts/FilesPageContext";
-import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
+import { useFilesPage } from "@app/contexts/FilesPageContext";
+import { useLibraryFiles } from "@app/components/filesPage/useLibraryFiles";
+import { useFolderFileStates } from "@app/components/filesPage/useFolderFileStates";
+import { useDiskFolder } from "@app/components/filesPage/useDiskFolder";
+import { LibraryToolbar } from "@app/components/filesPage/LibraryToolbar";
+import { LibraryTabs } from "@app/components/filesPage/LibraryTabs";
+import { useLibraryScrollPosition } from "@app/components/filesPage/useLibraryScrollPosition";
 
 import { FileId } from "@app/types/file";
 import { StirlingFileStub } from "@app/types/fileContext";
 import {
-  FolderBreadcrumbEntry,
   FolderId,
   FolderRecord,
   ROOT_FOLDER_ID,
@@ -66,10 +53,7 @@ import {
   FilesPageEntry,
   type DiskFileState,
 } from "@app/components/filesPage/FileGrid";
-import {
-  useProcessingFolders,
-  type MountedFileState,
-} from "@app/hooks/useProcessingFolders";
+import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
 import { FolderProcessingSetup } from "@app/components/policies/FolderProcessingSetup";
 import { useServerProcessingBlock } from "@app/hooks/useServerProcessingBlock";
 import { useConnectedServer } from "@app/hooks/useConnectedServer";
@@ -77,27 +61,22 @@ import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled"
 import { FolderSweepWall } from "@app/components/policies/SweepRunWall";
 import { RestoreOriginalsDialog } from "@app/components/filesPage/RestoreOriginalsDialog";
 import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
-import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerModal";
+import { AddToLibraryModal } from "@app/components/filesPage/AddToLibraryModal";
+import { isBrowserOnlyFile } from "@app/components/filesPage/fileOrigin";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { canPickDirectory } from "@app/services/directoryPicker";
-import {
-  diskFolderId,
-  isDiskFolderId,
-  pickFolderColor,
-} from "@app/types/folder";
+import { isDiskFolderId } from "@app/types/folder";
 import { useNewFolderFlow } from "@app/hooks/useNewFolderFlow";
 import { useLibraryRefresh } from "@app/hooks/useLibraryRefresh";
-import { writeIntoMount } from "@app/services/mountWrites";
+import { useLibraryUpload } from "@app/components/filesPage/useLibraryUpload";
 import {
-  canListDirectory,
-  listDirectory,
   readDiskFile,
   type DiskFileEntry,
 } from "@app/services/localFolderContents";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { MoveToFolderDialog } from "@app/components/filesPage/MoveToFolderDialog";
 import { FolderNameDialog } from "@app/components/filesPage/FolderNameDialog";
-import { getFolderPath } from "@app/utils/folderPath";
+import { libraryEntries } from "@app/components/filesPage/libraryEntries";
 import { DeleteFolderDialog } from "@app/components/filesPage/DeleteFolderDialog";
 import { DeleteFilesDialog } from "@app/components/filesPage/DeleteFilesDialog";
 import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
@@ -119,24 +98,22 @@ export default function FileManagerView() {
   const navigate = useNavigate();
   const location = useLocation();
   const openFolder = useOpenFolder();
+  const folderDropHandlers = useFolderDropHandlers();
 
-  // Hide Shared tab when storageSharingEnabled is false.
   const { sharingEnabled } = useSharingEnabled();
 
-  // ≤800px hosts the details panel in a button-triggered Drawer.
   const isCompactDetailsViewport = useMediaQuery("(max-width: 800px)") ?? false;
-  // Phones get a full-screen drawer; tablets get a smaller one.
+
   const useFullScreenDrawer = useMediaQuery("(max-width: 640px)") ?? false;
   const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false);
-  // Save-to-server modal target. Bulk button uses local-only selection;
-  // per-file kebab uses [file]. Targets root; folder placement is via drop.
   const [saveToServerTarget, setSaveToServerTarget] = useState<
     StirlingFileStub[] | null
   >(null);
-  // Version-history modal target (opened from the card kebab).
+
   const [versionHistoryFile, setVersionHistoryFile] =
     useState<StirlingFileStub | null>(null);
   const folders = useFolders();
+  const setFolderError = folders.setError;
   const { actions: fileActions } = useFileActions();
   const { fileIds: activeWorkspaceFileIds, fileStubs: activeWorkspaceFiles } =
     useAllFiles();
@@ -147,16 +124,11 @@ export default function FileManagerView() {
   const { addFiles } = useFileHandler();
   const { config: appConfig } = useAppConfig();
   const isMobile = useIsMobile();
-  // Guests (anonymous sessions) have no server-side storage, so every cloud
-  // action is account-only. Rather than let the click fire a guaranteed 401
-  // (which surfaced as an error toast), we disable the control and explain why
-  // on hover - the same affordance the storage-disabled / wrong-tab gates use.
+  // Guests cannot use server storage; explain the disabled control before a request fails.
   const { isAnonymous } = useAuth();
   const signInRequiredReason = isAnonymous
     ? t("filesPage.signInRequired", "Sign in to use cloud storage.")
     : null;
-  // Refresh pulls from the server. True on web (server-backed); on desktop it tracks the
-  // signed-in connection, so the control falls inert with an explanation until connected.
   const connectedServer = useConnectedServer();
   const refreshDisabledReason =
     signInRequiredReason ??
@@ -166,10 +138,6 @@ export default function FileManagerView() {
           "filesPage.refreshNeedsConnection",
           "Sign in to refresh from the server.",
         ));
-  // Server storage gate; mirrors ConfigController's storageEnabled
-  // (enableLogin && storage.isEnabled). When off, Save-to-server stays
-  // visible but disabled with an explanatory tooltip (discoverability beats
-  // hiding - mirrors the New folder / Manage sharing gates in this view).
   const uploadEnabled = appConfig?.storageEnabled === true;
   const saveToServerDisabledReason: string | null =
     signInRequiredReason ??
@@ -226,7 +194,6 @@ export default function FileManagerView() {
     setFolderAppearance,
   } = filesPage;
 
-  // Resolve queued delete ids into stubs for the DeleteFilesDialog.
   const deleteDialogFiles = useMemo(
     () =>
       deleteDialogFileIds
@@ -240,8 +207,6 @@ export default function FileManagerView() {
   const foldersById = folders.foldersById;
   const currentFolderId = folders.currentFolderId;
 
-  // The path selects the folder - see useOpenFolder - and this applies it, on arrival,
-  // on a deep link, and on back/forward alike. Re-runs as the folder map fills in.
   useEffect(() => {
     const match = location.pathname.match(/^\/files\/([^/]+)/);
     const param = match?.[1] ?? null;
@@ -258,9 +223,7 @@ export default function FileManagerView() {
       setCurrentFolderId(param as FolderId);
       return;
     }
-    // Not known yet is not the same as not real: folders load asynchronously, and a
-    // mount's subdirectories arrive with the listing that finds them. Falling back to
-    // the root waits until the map can no longer turn up the folder named here.
+    // Wait for folder loading and mount discovery before rejecting an unknown folder ID.
     if (!folders.loading) {
       setCurrentFolderId(ROOT_FOLDER_ID);
     }
@@ -272,7 +235,6 @@ export default function FileManagerView() {
     folders.loading,
   ]);
 
-  // Bounce off any share-related tab when sharing isn't enabled.
   useEffect(() => {
     if (
       !sharingEnabled &&
@@ -281,185 +243,6 @@ export default function FileManagerView() {
       setCurrentTab("all");
     }
   }, [sharingEnabled, currentTab, setCurrentTab]);
-
-  // ─── visible items (current folder + sort + search) ─────────────────────
-
-  /** currentFolderId + all descendants. Includes `null` when at root. */
-  const subtreeFolderIds = useMemo(() => {
-    const set = new Set<FolderId | null>();
-    set.add(currentFolderId);
-    const childMap = new Map<FolderId | null, FolderId[]>();
-    for (const f of folders.folders) {
-      const list = childMap.get(f.parentFolderId) ?? [];
-      list.push(f.id);
-      childMap.set(f.parentFolderId, list);
-    }
-    // Iterative DFS to avoid stack overflow on deep chains.
-    const stack: (FolderId | null)[] = [currentFolderId];
-    while (stack.length > 0) {
-      const cur = stack.pop()!;
-      for (const childId of childMap.get(cur) ?? []) {
-        if (set.has(childId)) continue;
-        set.add(childId);
-        stack.push(childId);
-      }
-    }
-    return set;
-  }, [folders.folders, currentFolderId]);
-
-  const visibleFolders = useMemo(() => {
-    // Folders only appear in cloud-rooted tabs.
-    if (
-      currentTab === "recent" ||
-      currentTab === "shared" ||
-      currentTab === "sharedByMe"
-    ) {
-      return [];
-    }
-    const lc = search.toLowerCase();
-    const matched = folders.folders.filter((f) => {
-      // The Cloud tab is the server's view: browser folders and mounts aren't on it.
-      if (currentTab === "cloud" && folderKind(f) !== "server") return false;
-      // A folder answers to the source filter the way its files would: a server
-      // folder is cloud, a browser folder and a mount are both local.
-      if (originFilter !== "all") {
-        const folderOrigin = folderKind(f) === "server" ? "cloud" : "local";
-        if (folderOrigin !== originFilter) return false;
-      }
-      if (search) {
-        // Subtree-wide name match; exclude the current folder itself.
-        return (
-          f.id !== currentFolderId &&
-          subtreeFolderIds.has(f.parentFolderId) &&
-          f.name.toLowerCase().includes(lc)
-        );
-      }
-      // Direct children only.
-      return f.parentFolderId === currentFolderId;
-    });
-    return matched.sort((a, b) =>
-      a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
-    );
-  }, [
-    folders.folders,
-    currentFolderId,
-    search,
-    currentTab,
-    subtreeFolderIds,
-    originFilter,
-  ]);
-
-  // Files in current folder, pre-filter. Drives the type-filter dropdown.
-  const filesInCurrentFolder = useMemo(() => {
-    // Tab overrides folder navigation for Local/Recent/Shared.
-    switch (currentTab) {
-      case "cloud":
-        // Cloud bucket; search widens to subtree, else direct-folder match.
-        return allFiles.filter((f) => {
-          if (f.remoteStorageId == null) return false;
-          if (search) return subtreeFolderIds.has(f.folderId ?? null);
-          return (f.folderId ?? null) === (currentFolderId ?? null);
-        });
-      case "recent": {
-        // Last 50 modified across local + cloud, folder context ignored.
-        const sorted = [...allFiles].sort(
-          (a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0),
-        );
-        return sorted.slice(0, 50);
-      }
-      case "shared":
-        return allFiles.filter((f) => f.remoteOwnedByCurrentUser === false);
-      case "sharedByMe":
-        // Files I own that I've shared in any way - either with a public link
-        // or with a specific user. (Previously split across two visually
-        // identical tabs; merged here so the same idea lives in one place.)
-        return allFiles.filter(
-          (f) =>
-            f.remoteOwnedByCurrentUser !== false &&
-            (f.remoteHasShareLinks === true || f.remoteHasUserShares === true),
-        );
-      case "all":
-      default:
-        // Search widens to the subtree.
-        // Files with a dangling folderId (folder deleted, or stale local IDB
-        // row) fall back to root so they aren't permanently invisible.
-        return allFiles.filter((f) => {
-          const rawFolder = f.folderId ?? null;
-          const effectiveFolder =
-            rawFolder !== null && !foldersById.has(rawFolder)
-              ? null
-              : rawFolder;
-          if (search) return subtreeFolderIds.has(effectiveFolder);
-          return effectiveFolder === (currentFolderId ?? null);
-        });
-    }
-  }, [
-    allFiles,
-    currentFolderId,
-    currentTab,
-    search,
-    subtreeFolderIds,
-    foldersById,
-  ]);
-
-  const availableTypes = useMemo(() => {
-    const set = new Set<string>();
-    for (const f of filesInCurrentFolder) {
-      const ext = (f.name.split(".").pop() ?? "").toUpperCase();
-      if (ext) set.add(ext);
-    }
-    return Array.from(set).sort();
-  }, [filesInCurrentFolder]);
-
-  // Drop any active type filters that no longer appear in this folder
-  // (e.g. when the user navigates between folders).
-  useEffect(() => {
-    if (typeFilter.length === 0) return;
-    const stillValid = typeFilter.filter((t) => availableTypes.includes(t));
-    if (stillValid.length !== typeFilter.length) {
-      setTypeFilter(stillValid);
-    }
-  }, [availableTypes, typeFilter, setTypeFilter]);
-
-  const visibleFiles = useMemo(() => {
-    const filtered = filesInCurrentFolder
-      .filter((f) =>
-        search ? f.name.toLowerCase().includes(search.toLowerCase()) : true,
-      )
-      .filter((f) =>
-        originFilter === "all" ? true : getFileOrigin(f) === originFilter,
-      )
-      .filter((f) => {
-        if (typeFilter.length === 0) return true;
-        const ext = (f.name.split(".").pop() ?? "").toUpperCase();
-        return typeFilter.includes(ext);
-      });
-    const sorted = [...filtered];
-    sorted.sort((a, b) => {
-      switch (sortMode) {
-        case "name-asc":
-          return a.name.localeCompare(b.name);
-        case "name-desc":
-          return b.name.localeCompare(a.name);
-        case "modified-asc":
-          return (a.lastModified ?? 0) - (b.lastModified ?? 0);
-        case "size-desc":
-          return (b.size ?? 0) - (a.size ?? 0);
-        case "size-asc":
-          return (a.size ?? 0) - (b.size ?? 0);
-        case "modified-desc":
-        default:
-          return (b.lastModified ?? 0) - (a.lastModified ?? 0);
-      }
-    });
-    return sorted;
-  }, [filesInCurrentFolder, search, sortMode, originFilter, typeFilter]);
-
-  const pathForFolderId = useCallback(
-    (folderId: FolderId | null | undefined) =>
-      getFolderPath(folderId, foldersById),
-    [foldersById],
-  );
 
   const currentFolder = currentFolderId
     ? folders.foldersById.get(currentFolderId)
@@ -473,87 +256,24 @@ export default function FileManagerView() {
     folderKind(currentFolder) === "server" &&
     !folders.serverReachable,
   );
-  const { setError: setFolderError, registerDiskSubfolders } = folders;
-  const [diskEntries, setDiskEntries] = useState<DiskFileEntry[]>([]);
-  const [diskLoading, setDiskLoading] = useState(false);
-  // Bumped when this view writes into the directory, so the listing re-reads.
-  const { diskRevision, bumpDiskRevision } = filesPage;
-  useEffect(() => {
-    if (!currentLocalDirectory || !canListDirectory) {
-      // Same array when it is already empty: a refresh outside a mount re-runs this
-      // and a fresh one would re-render every reader of the listing for nothing.
-      setDiskEntries((prev) => (prev.length > 0 ? [] : prev));
-      // Leaving a mount mid-listing cancels the in-flight reset, so clear the
-      // flag here or the skeleton covers every folder for the rest of the session.
-      setDiskLoading(false);
-      return;
-    }
-    let cancelled = false;
-    // The directory is the disk's and anything can write to it, so poll while open and let
-    // outside changes appear on their own; only a changed listing re-renders.
-    const load = async (background: boolean) => {
-      if (!background) setDiskLoading(true);
-      try {
-        const listed = await listDirectory(currentLocalDirectory);
-        if (cancelled) return;
-        const files = listed?.files ?? [];
-        setDiskEntries((prev) =>
-          listingSignature(prev) === listingSignature(files) ? prev : files,
-        );
-        if (currentFolderId !== null) {
-          registerDiskSubfolders(
-            currentFolderId,
-            (listed?.directories ?? []).map((dir) => ({
-              id: diskFolderId(dir.path),
-              kind: "local" as const,
-              name: dir.name,
-              parentFolderId: currentFolderId,
-              directory: dir.path,
-              color: pickFolderColor(dir.name),
-              createdAt: 0,
-              updatedAt: 0,
-            })),
-          );
-        }
-      } catch (err) {
-        console.warn("[FileManagerView] disk listing failed", err);
-        // Background ticks stay quiet: a transient lock (a sync client holding
-        // the directory) would otherwise pop an error banner every few seconds.
-        if (!cancelled && !background) {
-          setDiskEntries([]);
-          setFolderError(
-            err instanceof Error
-              ? t("filesPage.error.readFolderFailedDetail", {
-                  message: err.message,
-                  defaultValue: `Could not read the folder: ${err.message}`,
-                })
-              : t(
-                  "filesPage.error.readFolderFailed",
-                  "Could not read the folder.",
-                ),
-          );
-        }
-      } finally {
-        if (!cancelled && !background) setDiskLoading(false);
-      }
-    };
-    void load(false);
-    const timer = setInterval(() => void load(true), 4000);
-    return () => {
-      cancelled = true;
-      clearInterval(timer);
-    };
-    // The stable setter, not the context: its identity changes on every folder
-    // mutation, including the setError above, so a failing listing would re-trigger.
-  }, [
+  const { diskRevision } = filesPage;
+  const { diskEntries, diskLoading } = useDiskFolder(
     currentLocalDirectory,
     currentFolderId,
-    registerDiskSubfolders,
-    setFolderError,
     diskRevision,
-    t,
-  ]);
+    folders.setError,
+  );
 
+  const { visibleFolders, visibleFiles, availableTypes } = useLibraryFiles({
+    allFiles,
+    currentFolderId,
+    currentTab,
+    search,
+    sortMode,
+    originFilter,
+    typeFilter,
+    diskEntries: currentLocalDirectory ? diskEntries : undefined,
+  });
   const openDiskFile = useCallback(
     async (entry: DiskFileEntry) => {
       try {
@@ -581,8 +301,6 @@ export default function FileManagerView() {
     [addFiles, navActions, navigate, folders, t],
   );
 
-  // A working folder lists its real contents; each file wears its pipeline state and a state
-  // filter narrows the listing. Files the pipeline never claims carry no state at all.
   const processingApi = useProcessingFolders();
   const processingEnabled = usePoliciesEnabled();
   const currentProcessing = currentFolder
@@ -592,68 +310,17 @@ export default function FileManagerView() {
     ? currentProcessing?.outputDirectory
     : undefined;
   const processingRecordId = currentProcessing?.id;
-  // The state layer applies inside any working folder: a mount's directory listing or a
-  // server folder's stored files, both joined to the same ledger behind listFiles.
   const processingView = Boolean(
     processingRecordId && (outputDirectory || !currentLocalDirectory),
   );
-  const { listFiles, retryFile, revertFile } = processingApi;
-  const queryClient = useQueryClient();
-  const processingFilesKey = qk.processingFolderFiles(processingRecordId ?? "");
-  // Per-file state from the backend's ledger: processing in place leaves no output folder to
-  // infer it from. Polled while the folder is open so badges follow the sweep live, and the
-  // poll stands down with the tab rather than asking every 3s into a background window.
+  const { retryFile, revertFile } = processingApi;
   const {
-    data: processingFiles,
-    dataUpdatedAt: processingFilesUpdatedAt,
-    errorUpdatedAt: processingFilesErrorAt,
-    status: processingFilesStatus,
-  } = useQuery({
-    queryKey: processingFilesKey,
-    queryFn: () => listFiles(processingRecordId!),
-    enabled: processingView && Boolean(processingRecordId),
-    refetchInterval: PROCESSING_FILES_POLL_MS,
-    retry: false,
-  });
-
-  const activeProcessingKey = processingView ? (processingRecordId ?? "") : "";
-  const [processingPollFailures, setProcessingPollFailures] = useState({
-    key: "",
-    count: 0,
-  });
-  const processingPollEvent = useRef({ key: "", updatedAt: 0 });
-  useEffect(() => {
-    const key = activeProcessingKey;
-    if (processingPollEvent.current.key !== key) {
-      processingPollEvent.current = { key, updatedAt: 0 };
-      setProcessingPollFailures({ key, count: 0 });
-    }
-    if (!key) return;
-
-    const updatedAt =
-      processingFilesStatus === "error"
-        ? processingFilesErrorAt
-        : processingFilesUpdatedAt;
-    if (!updatedAt || updatedAt <= processingPollEvent.current.updatedAt)
-      return;
-
-    processingPollEvent.current.updatedAt = updatedAt;
-    setProcessingPollFailures((failures) => ({
-      key,
-      count:
-        processingFilesStatus === "error"
-          ? (failures.key === key ? failures.count : 0) + 1
-          : 0,
-    }));
-  }, [
-    activeProcessingKey,
-    processingFilesErrorAt,
-    processingFilesStatus,
-    processingFilesUpdatedAt,
-  ]);
-  const processingStatesUnavailable =
-    processingPollFailures.key === activeProcessingKey &&
-    processingPollFailures.count >= PROCESSING_FILES_FAILURE_LIMIT;
+    fileStates,
+    revertables,
+    patchProcessingFile,
+    processingLockedFor,
+    processingStatesUnavailable,
+  } = useFolderFileStates(processingRecordId, processingView);
   useEffect(() => {
     if (!processingStatesUnavailable) return;
     setFolderError(
@@ -664,39 +331,9 @@ export default function FileManagerView() {
     );
   }, [processingStatesUnavailable, setFolderError, t]);
 
-  // Stable empties for a folder with no processing: a fresh Map/Set is never
-  // Object.is equal, so returning one would re-render every reader for nothing.
-  const fileStates = useMemo(
-    () =>
-      processingFiles
-        ? new Map(processingFiles.map((f) => [f.name, f.state]))
-        : EMPTY_FILE_STATES,
-    [processingFiles],
-  );
-  // Files whose pre-processing original is archived and can be restored.
-  const revertables = useMemo(
-    () =>
-      processingFiles
-        ? new Set(
-            processingFiles.filter((f) => f.hasOriginal).map((f) => f.name),
-          )
-        : EMPTY_REVERTABLES,
-    [processingFiles],
-  );
-  /** Shows a just-made change ahead of the next poll. */
-  const patchProcessingFile = useCallback(
-    (name: string, patch: Partial<MountedFileState>) =>
-      queryClient.setQueryData<MountedFileState[]>(
-        processingFilesKey,
-        (prev) =>
-          prev?.map((f) => (f.name === name ? { ...f, ...patch } : f)) ?? prev,
-      ),
-    [queryClient, processingFilesKey],
-  );
-
   const [processingSetupFolder, setProcessingSetupFolder] =
     useState<FolderRecord | null>(null);
-  // Restores wait on a confirmation, since they also pause the folder.
+  // Restoring originals also pauses the folder, so it requires confirmation.
   const [revertConfirmName, setRevertConfirmName] = useState<string | null>(
     null,
   );
@@ -707,15 +344,6 @@ export default function FileManagerView() {
   const [diskStateFilter, setDiskStateFilter] = useState<DiskFileState | "all">(
     "all",
   );
-  const processingLockedFor = useCallback(
-    (key: string): boolean => {
-      if (!processingView || processingStatesUnavailable) return false;
-      const state = fileStates.get(key);
-      return state !== "done" && state !== "failed";
-    },
-    [processingView, processingStatesUnavailable, fileStates],
-  );
-
   const processingLockedFileIds = useMemo(
     () =>
       new Set(
@@ -766,7 +394,7 @@ export default function FileManagerView() {
     (name: string): DiskFileState | undefined => fileStates.get(name),
     [fileStates],
   );
-  // Counts for the filter chips, from the same states the badges wear.
+
   const stateCounts = useMemo(() => {
     const counts: Record<DiskFileState, number> = {
       done: 0,
@@ -804,8 +432,6 @@ export default function FileManagerView() {
       if (!processingRecordId) return;
       void revertFile(processingRecordId, name)
         .then(() =>
-          // Reflect the restore ahead of the next poll; the original is gone, so
-          // the row stops offering one.
           patchProcessingFile(name, { state: "waiting", hasOriginal: false }),
         )
         .catch((err) =>
@@ -823,7 +449,7 @@ export default function FileManagerView() {
           ),
         );
     },
-    [processingRecordId, revertFile, folders, t],
+    [processingRecordId, revertFile, folders, t, patchProcessingFile],
   );
   const revertAllInFolder = useCallback(
     (folder: FolderRecord) => {
@@ -855,8 +481,7 @@ export default function FileManagerView() {
     },
     [processingApi, folders, t],
   );
-  // The open folder's own actions: everything its card kebab offers from the
-  // listing outside must be reachable from inside the folder too.
+
   const runFolderAction = useCallback(
     (action: (folder: FolderRecord) => Promise<void>, label: string) => {
       if (!currentFolder) return;
@@ -878,106 +503,68 @@ export default function FileManagerView() {
     [currentFolder, folders, t],
   );
 
-  const entries = useMemo<FilesPageEntry[]>(() => {
-    // When searching, items may come from anywhere in the subtree, so we
-    // expose a "parentPath" subtitle whenever the item's parent differs from
-    // currentFolderId. When no search is active, every item is in the
-    // current folder by definition and the subtitle is suppressed.
-    const inSearch = search.length > 0;
-    // Inside a mount the listing is the directory; storage rows don't apply.
-    if (currentLocalDirectory) {
-      const needle = search.toLowerCase();
-      const compare: Record<
-        string,
-        (a: DiskFileEntry, b: DiskFileEntry) => number
-      > = {
-        "name-asc": (a, b) => a.name.localeCompare(b.name),
-        "name-desc": (a, b) => b.name.localeCompare(a.name),
-        "size-asc": (a, b) => a.sizeBytes - b.sizeBytes,
-        "size-desc": (a, b) => b.sizeBytes - a.sizeBytes,
-        "modified-asc": (a, b) => a.lastModified - b.lastModified,
-        "modified-desc": (a, b) => b.lastModified - a.lastModified,
-      };
-      const toDiskEntries = (list: DiskFileEntry[]) =>
-        list
-          .filter((disk) => !needle || disk.name.toLowerCase().includes(needle))
-          .sort(compare[filesPage.sortMode] ?? compare["modified-desc"]!)
-          .map<FilesPageEntry>((disk) => ({
-            kind: "diskFile",
-            disk,
-            diskState: outputDirectory ? diskStateFor(disk.name) : undefined,
-            processingLocked:
-              Boolean(outputDirectory) && processingLockedFor(disk.name),
-            hasOriginal: outputDirectory
-              ? revertables.has(disk.name)
-              : undefined,
-          }))
-          .filter(
-            (entry) =>
-              diskStateFilter === "all" ||
-              entry.diskState === undefined ||
-              entry.diskState === diskStateFilter,
-          );
-      return [
-        ...visibleFolders.map<FilesPageEntry>((folder) => ({
-          kind: "folder",
-          folder,
-          folderFileCount: 0,
-        })),
-        ...toDiskEntries(diskEntries),
-      ];
-    }
-    return [
-      ...visibleFolders.map<FilesPageEntry>((folder) => ({
-        kind: "folder",
-        folder,
-        folderFileCount: filesPage.fileCountsByFolder.get(folder.id) ?? 0,
-        parentPath:
-          inSearch && folder.parentFolderId !== currentFolderId
-            ? pathForFolderId(folder.parentFolderId) || undefined
-            : undefined,
-      })),
-      ...visibleFiles
-        .map<FilesPageEntry>((file) => ({
-          kind: "file",
-          file,
-          diskState:
-            processingView &&
-            (file.folderId ?? null) === (currentFolderId ?? null)
-              ? diskStateFor(file.name)
-              : undefined,
-          processingLocked: processingLockedFileIds.has(file.id),
-          parentPath:
-            inSearch && (file.folderId ?? null) !== (currentFolderId ?? null)
-              ? pathForFolderId(file.folderId ?? null) || undefined
-              : undefined,
-        }))
+  const entries = useMemo<FilesPageEntry[]>(
+    () =>
+      libraryEntries({
+        visibleFolders,
+        visibleFiles,
+        currentFolderId,
+        foldersById,
+        fileCountsByFolder: filesPage.fileCountsByFolder,
+        search,
+        sortMode,
+        originFilter,
+        typeFilter,
+        diskEntries: currentLocalDirectory ? diskEntries : undefined,
+      })
+        .map((entry) => {
+          const name = entry.disk?.name ?? entry.file?.name;
+          const stateVisible = entry.disk
+            ? Boolean(outputDirectory)
+            : processingView &&
+              (entry.file?.folderId ?? null) === (currentFolderId ?? null);
+          return {
+            ...entry,
+            diskState: name && stateVisible ? diskStateFor(name) : undefined,
+            processingLocked: entry.disk
+              ? Boolean(outputDirectory) && processingLockedFor(entry.disk.name)
+              : Boolean(
+                  entry.file && processingLockedFileIds.has(entry.file.id),
+                ),
+            hasOriginal:
+              entry.disk && outputDirectory
+                ? revertables.has(entry.disk.name)
+                : undefined,
+          };
+        })
         .filter(
           (entry) =>
             diskStateFilter === "all" ||
             entry.diskState === undefined ||
             entry.diskState === diskStateFilter,
         ),
-    ];
-  }, [
-    visibleFolders,
-    visibleFiles,
-    filesPage.fileCountsByFolder,
-    search,
-    currentFolderId,
-    currentLocalDirectory,
-    diskEntries,
-    outputDirectory,
-    processingView,
-    processingLockedFileIds,
-    diskStateFor,
-    revertables,
-    diskStateFilter,
-    filesPage.sortMode,
-    pathForFolderId,
-  ]);
+    [
+      visibleFolders,
+      visibleFiles,
+      currentFolderId,
+      foldersById,
+      filesPage.fileCountsByFolder,
+      search,
+      sortMode,
+      originFilter,
+      typeFilter,
+      currentLocalDirectory,
+      diskEntries,
+      outputDirectory,
+      processingView,
+      processingLockedFor,
+      processingLockedFileIds,
+      diskStateFor,
+      revertables,
+      diskStateFilter,
+    ],
+  );
 
-  // ─── selection ──────────────────────────────────────────────────────────
   const lastClickedFileRef = useRef<FileId | null>(null);
   const handleSelectFile = useCallback(
     (fileId: FileId, shift: boolean, ctrl: boolean) => {
@@ -996,21 +583,11 @@ export default function FileManagerView() {
             return next;
           }
         }
-        // Once the user has 2+ files selected they're explicitly in
-        // multi-select mode (they checked a box, or shift-range'd, or
-        // ctrl-clicked) - in that mode plain clicks toggle add/remove
-        // instead of collapsing the whole selection back to one file.
-        // This is the Google Drive pattern: the "selection mode" sticks
-        // until the user explicitly exits via the X clear button or by
-        // clicking the empty background of the grid.
         const inMultiSelectMode = prev.size >= 2;
         if (ctrl || inMultiSelectMode) {
           if (next.has(fileId)) next.delete(fileId);
           else next.add(fileId);
         } else {
-          // 0 or 1 selected: plain click replaces (Finder/Explorer
-          // behaviour). Clicking the already-only-selected file
-          // deselects it, so single-file selection still toggles.
           const isSoleSelection = prev.size === 1 && prev.has(fileId);
           next.clear();
           if (!isSoleSelection) next.add(fileId);
@@ -1022,11 +599,8 @@ export default function FileManagerView() {
     [visibleFiles, setSelectedFileIds],
   );
 
-  // Background click on the content area clears the selection.
   const handleContentBackgroundClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      // Only react when the click target is the scroll container itself
-      // (not a card, row, or drop overlay).
       if (e.target === e.currentTarget) {
         clearSelection();
       }
@@ -1034,60 +608,11 @@ export default function FileManagerView() {
     [clearSelection],
   );
 
-  // ─── upload (drag-from-desktop or button) ───────────────────────────────
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDraggingExternal, setIsDraggingExternal] = useState(false);
 
-  const handleNativeUpload = useCallback(
-    async (files: File[]) => {
-      if (files.length === 0) return;
-      // skipWorkspaceDispatch: the user is in the file manager, not opening
-      // files for work. Persist to IDB so the file appears in the grid (via
-      // FilesPageContext's independent IDB scan) but DON'T pollute workspace
-      // state - otherwise the file pops up the next time the user navigates
-      // to /viewer or /tools, which reads as "auto-opened" and surprised
-      // people every time. The grid will repaint via refresh() below.
-      // Files uploaded while standing in a folder belong in that folder.
-      const target =
-        currentTab === "all" || currentTab === "cloud" ? currentFolderId : null;
-      const targetFolder = target ? folders.foldersById.get(target) : undefined;
-      if (targetFolder && folderKind(targetFolder) === "local") {
-        const { failedCount } = await writeIntoMount(
-          targetFolder.directory,
-          files.map((file) => ({ name: file.name, bytes: async () => file })),
-        );
-        if (failedCount > 0) {
-          folders.setError(
-            t("filesPage.moveIntoMountFailed", {
-              count: failedCount,
-              defaultValue:
-                "{{count}} file(s) could not be written into the folder.",
-            }),
-          );
-        }
-        bumpDiskRevision();
-        return;
-      }
-      // Everywhere else membership is set with the stub rather than by a move that
-      // could fail after. For a server folder it stays local until the save lands.
-      const added = await addFiles(files, {
-        selectFiles: false,
-        skipWorkspaceDispatch: true,
-        ...(target ? { folderId: target as string } : {}),
-      });
-      const fileIds = added.map((f) => f.fileId);
-      if (
-        target !== null &&
-        fileIds.length > 0 &&
-        targetFolder &&
-        folderKind(targetFolder) === "server"
-      ) {
-        await moveFilesTo(fileIds, target);
-      }
-      await refresh();
-    },
-    [addFiles, currentFolderId, currentTab, folders, moveFilesTo, refresh, t],
-  );
+  const handleNativeUpload = useLibraryUpload();
+  const getDropzoneFiles = useDropzoneFiles();
 
   const reportUploadError = useCallback(
     (err: unknown) =>
@@ -1112,7 +637,6 @@ export default function FileManagerView() {
     [handleNativeUpload, reportUploadError],
   );
 
-  // ─── add to workspace ───────────────────────────────────────────────────
   const openFilesInWorkbench = useCallback(
     async (fileIds: FileId[]) => {
       const stubs = fileIds
@@ -1123,9 +647,7 @@ export default function FileManagerView() {
       const proceed = async () => {
         clearFilesPageReturnRoute();
 
-        // Already in the workspace: nothing to fetch or add, so just go to it. Sending
-        // it through materialize and add again has no reason to succeed - the bytes
-        // are already spoken for.
+        // Open workspace files directly; their bytes need no further materialization.
         const alreadyOpen = stubs.filter((stub) =>
           activeWorkspaceFileIdSet.has(stub.id as string),
         );
@@ -1139,8 +661,7 @@ export default function FileManagerView() {
           updateStub: fileActions.updateStirlingFileStub,
         });
         if (materialized.length !== toOpen.length) {
-          // At least one server download failed; refresh so the grid
-          // reflects any successful ingests and the user can retry.
+          // Refresh successful imports even when another file fails.
           await refresh();
           return;
         }
@@ -1151,7 +672,6 @@ export default function FileManagerView() {
           });
         }
 
-        // Every file the user asked for, whether it arrived now or was already there.
         const opened = [...alreadyOpen, ...materialized];
         if (opened.length === 1) {
           setActiveFileId(opened[0].id);
@@ -1189,7 +709,6 @@ export default function FileManagerView() {
 
   const handleOpenFile = useCallback(
     (file: StirlingFileStub) => {
-      // Double-click commits to workspace.
       void handleAddToWorkspace([file.id]);
     },
     [handleAddToWorkspace],
@@ -1203,8 +722,14 @@ export default function FileManagerView() {
     [openFolder, clearSelection],
   );
 
-  // ─── full-page drag-and-drop for OS uploads ─────────────────────────────
   const dropZoneRef = useRef<HTMLDivElement>(null);
+  const dropQueue = useRef<Promise<void>>(Promise.resolve());
+  const onScrollCapture = useLibraryScrollPosition(
+    dropZoneRef,
+    `${currentTab}:${currentFolderId}:${viewMode}`,
+    loading || diskLoading,
+    entries.length,
+  );
   useEffect(() => {
     const node = dropZoneRef.current;
     if (!node) return;
@@ -1234,10 +759,15 @@ export default function FileManagerView() {
       e.preventDefault();
       counter = 0;
       setIsDraggingExternal(false);
-      const dropped = Array.from(e.dataTransfer?.files ?? []);
-      if (dropped.length > 0) {
-        handleNativeUpload(dropped).catch(reportUploadError);
-      }
+      // Capture drop entries while the event is live; import batches in order without losing later drops.
+      const files = getDropzoneFiles(e);
+      dropQueue.current = dropQueue.current
+        .then(async () =>
+          handleNativeUpload(
+            (await files).filter((item) => item instanceof File),
+          ),
+        )
+        .catch(reportUploadError);
     };
     node.addEventListener("dragenter", onEnter);
     node.addEventListener("dragover", onOver);
@@ -1249,17 +779,14 @@ export default function FileManagerView() {
       node.removeEventListener("dragleave", onLeave);
       node.removeEventListener("drop", onDrop);
     };
-  }, [handleNativeUpload, reportUploadError]);
+  }, [getDropzoneFiles, handleNativeUpload, reportUploadError]);
 
-  // ─── close / exit ───────────────────────────────────────────────────────
   const handleClose = useCallback(() => {
     // Drop the return-route hint so the workbench doesn't show a stale back.
     clearFilesPageReturnRoute();
     navigate(EDITOR_BASENAME);
   }, [navigate]);
 
-  // ─── keyboard shortcuts ─────────────────────────────────────────────────
-  // Focus the super-search input (stable id), used by the "/" shortcut.
   const focusSearch = useCallback(() => {
     (
       document.getElementById("super-search-input") as HTMLInputElement | null
@@ -1274,14 +801,12 @@ export default function FileManagerView() {
           active.tagName === "TEXTAREA" ||
           active.isContentEditable);
 
-      // Cmd/Ctrl + A - select every visible file in the current folder.
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "a" && !inInput) {
         e.preventDefault();
         setSelectedFileIds(new Set(visibleFiles.map((f) => f.id)));
         return;
       }
 
-      // Delete / Backspace - remove selected files.
       if (
         (e.key === "Delete" || e.key === "Backspace") &&
         !inInput &&
@@ -1289,7 +814,7 @@ export default function FileManagerView() {
       ) {
         e.preventDefault();
         removeFiles(Array.from(selectedFileIds)).catch((err) =>
-          folders.setError(
+          setFolderError(
             err instanceof Error
               ? t("filesPage.error.removeFilesFailedDetail", {
                   message: err.message,
@@ -1304,7 +829,6 @@ export default function FileManagerView() {
         return;
       }
 
-      // "/" focuses the search field.
       if (e.key === "/" && !inInput) {
         e.preventDefault();
         focusSearch();
@@ -1319,6 +843,8 @@ export default function FileManagerView() {
     removeFiles,
     setSelectedFileIds,
     focusSearch,
+    setFolderError,
+    t,
   ]);
 
   useEffect(() => {
@@ -1337,7 +863,7 @@ export default function FileManagerView() {
       for (const overlay of overlays) {
         if ((overlay as HTMLElement).offsetWidth > 0) return;
       }
-      // Esc-once cancels selection before closing the workbench.
+
       if (selectedFileIds.size > 0) {
         clearSelection();
         return;
@@ -1348,16 +874,12 @@ export default function FileManagerView() {
     return () => window.removeEventListener("keydown", onKey);
   }, [handleClose, selectedFileIds, clearSelection]);
 
-  // ─── remove via context wrapper (clears selection state too) ────────────
   const handleRemoveFiles = useCallback(
     async (fileIds: FileId[]) => {
       await removeFiles(fileIds);
     },
     [removeFiles],
   );
-
-  // ─── per-file kebab: download / rename / duplicate ───────────────────────
-  // Same actions the file sidebar's kebab offers, so both surfaces match.
 
   /** Cloud-only rows hold no bytes; pull them local before acting on them. */
   const localCopyOf = useCallback(
@@ -1442,20 +964,14 @@ export default function FileManagerView() {
     [renameTarget, localCopyOf, fileActions, refresh, t],
   );
 
-  // ─── derived UI bits ────────────────────────────────────────────────────
-  const currentFolderRecord = currentFolderId
-    ? (foldersById.get(currentFolderId) ?? null)
-    : null;
   const totalCount = entries.length;
   const selectedFiles = useMemo(
-    () => Array.from(selectedFileIds),
-    [selectedFileIds],
+    () => Array.from(selectedFileIds).filter((id) => fileMap.has(id)),
+    [selectedFileIds, fileMap],
   );
-  // A phone with files selected shows a contextual selection bar instead of the
-  // full toolbar - five bulk buttons plus filters cannot fit the width.
+  // On phones, selection actions and filters compete for width.
   const mobileSelection = isMobile && selectedFiles.length > 0;
 
-  // Local-only subset of selection; drives Save-to-server visibility.
   const localOnlySelectedStubs = useMemo(
     () =>
       selectedFiles
@@ -1466,62 +982,22 @@ export default function FileManagerView() {
         ),
     [selectedFiles, fileMap],
   );
+  const movableSelectedFiles = selectedFiles.filter((id) => {
+    const file = fileMap.get(id);
+    return file && !isBrowserOnlyFile(file);
+  });
 
-  // Per-destination availability for the New-folder menu; the reason renders as the
-  // disabled item's caption.
-  const serverFolderDisabledReason = useServerFolderBlock() ?? undefined;
-
-  // Why folder processing has no server to run on, or null. The controls that open
-  // the setup dialog carry it as their disabled reason.
   const processingBlock = useServerProcessingBlock();
 
-  const { addLocalFolder } = useNewFolderFlow();
+  const {
+    addLocalFolder,
+    createFolderHereBlockedReason: newFolderDisabledReason,
+    serverFolderBlock: serverFolderDisabledReason,
+  } = useNewFolderFlow();
 
-  // null = New folder actionable; string = disabled tooltip reason.
   const { refreshing, refresh: handleRefresh } = useLibraryRefresh();
 
-  const newFolderDisabledReason: string | null = useMemo(() => {
-    // Only All/Cloud render folders, so creating one elsewhere would look inert.
-    if (
-      currentTab === "recent" ||
-      currentTab === "shared" ||
-      currentTab === "sharedByMe"
-    ) {
-      return t(
-        "filesPage.newFolderTabUnavailable",
-        "Switch to All or Cloud to create folders.",
-      );
-    }
-    // A subfolder inherits kind server, so the blockers gate the button rather
-    // than letting the dialog open and fail at submit.
-    if (
-      currentFolder &&
-      folderKind(currentFolder) === "server" &&
-      serverFolderDisabledReason
-    ) {
-      return serverFolderDisabledReason;
-    }
-    // The web root creates on the server or not at all.
-    if (
-      folders.currentFolderId === null &&
-      !canPickDirectory &&
-      serverFolderDisabledReason
-    ) {
-      return serverFolderDisabledReason;
-    }
-    return null;
-  }, [
-    currentTab,
-    currentLocalDirectory,
-    currentFolder,
-    folders.currentFolderId,
-    serverFolderDisabledReason,
-    t,
-  ]);
-
-  // Stable identities, here and for the controls built below: the bar re-registers
-  // whenever what it was given changes, so a value rebuilt per render turns that into
-  // an endless register -> render -> register loop.
+  // The workbench bar re-registers changed values; stable identities prevent a render loop.
   const openFilePicker = useCallback(async () => {
     try {
       const files = await openFilesFromDisk({
@@ -1555,14 +1031,6 @@ export default function FileManagerView() {
       openNewFolderDialog,
     ],
   );
-  // Reads the trail from context, so it takes no props to change. Only the
-  // folder-rooted tabs have a trail to show: the rest list files by predicate.
-  const path = useMemo(
-    () =>
-      currentTab === "all" || currentTab === "cloud" ? <Breadcrumbs /> : null,
-    [currentTab],
-  );
-
   const libraryActions = useMemo(
     () => (
       <>
@@ -1605,15 +1073,12 @@ export default function FileManagerView() {
     ],
   );
 
-  // The file sidebar carries these on desktop. Mobile has no sidebar to put them
-  // in, so there they go in the bar - the only chrome its layout shows.
+  // Mobile has no sidebar, so its library actions live in the workbench bar.
   useFileLibraryWorkbenchBarButtons({
-    path: isMobile ? path : null,
+    path: null,
     actions: isMobile ? libraryActions : null,
   });
 
-  // One instance for whichever surface the view mode uses, so the two cannot
-  // drift apart.
   const bulkActionsMenu =
     selectedFiles.length > 0 ? (
       <FilesToolbarBulkMenu
@@ -1630,14 +1095,22 @@ export default function FileManagerView() {
             ? () => setMobileDetailsOpen(true)
             : undefined
         }
-        onMove={() => promptMoveFiles(selectedFiles)}
+        onMove={
+          movableSelectedFiles.length > 0
+            ? () => promptMoveFiles(movableSelectedFiles)
+            : undefined
+        }
         onRemove={() => handleRemoveFiles(selectedFiles)}
         onClearSelection={() => clearSelection()}
       />
     ) : null;
 
   return (
-    <div className="files-page" ref={dropZoneRef}>
+    <div
+      className="files-page"
+      ref={dropZoneRef}
+      onScrollCapture={onScrollCapture}
+    >
       <input
         ref={fileInputRef}
         type="file"
@@ -1675,27 +1148,27 @@ export default function FileManagerView() {
         </div>
       )}
 
-      {/* No offline banner: when the folder API is unreachable the user
-          still sees their cached local files (the IDB read survives), and
-          folder-mutation controls are individually disabled with their own
-          tooltips. Banner removed per UX feedback. */}
-
       <div className="files-page-body">
         <main className="files-page-main">
-          {/* The folder trail gets its own row above the toolbar. On mobile the
-              shared bar above carries it instead, so this row stays empty. */}
-          <div className="files-page-tabs-row">
-            {!isMobile && path && (
-              <div className="files-page-tabs-path">{path}</div>
-            )}
-          </div>
+          <LibraryTabs
+            currentTab={currentTab}
+            sharingEnabled={sharingEnabled}
+            onChange={setCurrentTab}
+            onOpenRoot={() => openFolder(ROOT_FOLDER_ID)}
+            rootDropHandlers={folderDropHandlers(ROOT_FOLDER_ID)}
+            breadcrumbs={<Breadcrumbs />}
+          />
 
           <div className="files-page-toolbar">
             <FilesToolbarCount
-              loading={loading}
               totalCount={totalCount}
               selectedCount={selectedFiles.length}
             />
+            {bulkActionsMenu && (
+              <div className="files-page-selection-actions">
+                {bulkActionsMenu}
+              </div>
+            )}
             {currentFolder && !mobileSelection && processingEnabled && (
               <div className="files-page-folder-actions">
                 <FolderMenu
@@ -1766,221 +1239,27 @@ export default function FileManagerView() {
             <div className="files-page-toolbar-actions">
               {!mobileSelection && (
                 <>
-                  {isMobile ? (
-                    /* Side by side these need ~480px and were truncating to
-                   stubs like "All sour"; collapsed they read in full. */
-                    <>
-                      <FilesToolbarFilterMenu
-                        originFilter={originFilter}
-                        onOriginChange={setOriginFilter}
-                        availableTypes={availableTypes}
-                        typeFilter={typeFilter}
-                        onTypeChange={setTypeFilter}
-                        search={search}
-                        onSearchChange={setSearch}
-                      />
-                      <FilesToolbarSortMenu
-                        value={sortMode}
-                        onChange={setSortMode}
-                      />
-                    </>
-                  ) : (
-                    <>
-                      <Select
-                        size="xs"
-                        value={originFilter}
-                        onChange={(value) =>
-                          value &&
-                          setOriginFilter(value as FilesPageOriginFilter)
-                        }
-                        data={[
-                          {
-                            value: "all",
-                            label: t("filesPage.origin.all", "All sources"),
-                          },
-                          {
-                            value: "local",
-                            label: t("filesPage.origin.local", "Local"),
-                          },
-                          {
-                            value: "cloud",
-                            label: t("filesPage.origin.cloud", "Cloud"),
-                          },
-                          {
-                            value: "shared-with-me",
-                            label: t("filesPage.origin.shared", "Shared"),
-                          },
-                        ]}
-                        style={{ width: 140 }}
-                        aria-label={t(
-                          "filesPage.originFilter",
-                          "Filter by source",
-                        )}
-                      />
-                      {availableTypes.length > 1 && (
-                        <MultiSelect
-                          size="xs"
-                          value={typeFilter}
-                          onChange={setTypeFilter}
-                          data={availableTypes.map((ext) => ({
-                            value: ext,
-                            label: ext,
-                          }))}
-                          placeholder={
-                            typeFilter.length === 0
-                              ? t("filesPage.typeFilter.allTypes", "All types")
-                              : undefined
-                          }
-                          clearable
-                          hidePickedOptions
-                          searchable={false}
-                          style={{ width: 160 }}
-                          aria-label={t(
-                            "filesPage.typeFilter.label",
-                            "Filter by type",
-                          )}
-                        />
-                      )}
-                      <TextInput
-                        size="xs"
-                        value={search}
-                        onChange={(e) => setSearch(e.currentTarget.value)}
-                        placeholder={t(
-                          "filesPage.search.placeholder",
-                          "Filter files…",
-                        )}
-                        leftSection={<Icon name="search" size={"1rem"} />}
-                        rightSection={
-                          search ? (
-                            <ActionIcon
-                              variant="tertiary"
-                              size="sm"
-                              onClick={() => setSearch("")}
-                              aria-label={t(
-                                "filesPage.search.clear",
-                                "Clear filter",
-                              )}
-                            >
-                              <Icon name="x" size={"0.9rem"} />
-                            </ActionIcon>
-                          ) : null
-                        }
-                        aria-label={t(
-                          "filesPage.search.label",
-                          "Filter files by name",
-                        )}
-                        style={{ width: 180 }}
-                      />
-                      <Select
-                        size="xs"
-                        value={sortMode}
-                        onChange={(value) =>
-                          value && setSortMode(value as FilesPageSortMode)
-                        }
-                        data={[
-                          {
-                            value: "modified-desc",
-                            label: t(
-                              "filesPage.sort.modifiedDesc",
-                              "Recent first",
-                            ),
-                          },
-                          {
-                            value: "modified-asc",
-                            label: t(
-                              "filesPage.sort.modifiedAsc",
-                              "Oldest first",
-                            ),
-                          },
-                          {
-                            value: "name-asc",
-                            label: t("filesPage.sort.nameAsc", "Name A→Z"),
-                          },
-                          {
-                            value: "name-desc",
-                            label: t("filesPage.sort.nameDesc", "Name Z→A"),
-                          },
-                          {
-                            value: "size-desc",
-                            label: t(
-                              "filesPage.sort.sizeDesc",
-                              "Largest first",
-                            ),
-                          },
-                          {
-                            value: "size-asc",
-                            label: t(
-                              "filesPage.sort.sizeAsc",
-                              "Smallest first",
-                            ),
-                          },
-                        ]}
-                        style={{ width: 160 }}
-                      />
-                    </>
-                  )}
-                  <span
-                    className="files-page-toolbar-divider"
-                    aria-hidden="true"
-                  />
-                  <SegmentedControl
-                    size="sm"
-                    value={viewMode}
-                    onChange={(v) => {
-                      // Mantine only emits values declared in `data[].value`, but
-                      // narrow defensively so a future third option can't silently
-                      // bypass the FilesPageViewMode contract. Derived from the
-                      // `as const` tuple so adding a mode anywhere in the code
-                      // base automatically widens the guard here.
-                      if (
-                        !(FILES_PAGE_VIEW_MODES as readonly string[]).includes(
-                          v,
-                        )
-                      )
-                        return;
-                      setViewMode(v);
-                    }}
-                    aria-label={t("filesPage.viewMode.label", "View mode")}
-                    options={[
-                      {
-                        value: "grid",
-                        label: (
-                          <span
-                            className="files-page-view-toggle-icon"
-                            title={t("filesPage.viewMode.grid", "Grid view")}
-                          >
-                            <Icon name="layout-grid" size={20} />
-                            <span className="files-page-sr-only">
-                              {t("filesPage.viewMode.grid", "Grid view")}
-                            </span>
-                          </span>
-                        ),
-                      },
-                      {
-                        value: "list",
-                        label: (
-                          <span
-                            className="files-page-view-toggle-icon"
-                            title={t("filesPage.viewMode.list", "List view")}
-                          >
-                            <Icon name="list" size={20} />
-                            <span className="files-page-sr-only">
-                              {t("filesPage.viewMode.list", "List view")}
-                            </span>
-                          </span>
-                        ),
-                      },
-                    ]}
+                  <LibraryToolbar
+                    isMobile={isMobile}
+                    availableTypes={availableTypes}
+                    originFilter={originFilter}
+                    setOriginFilter={setOriginFilter}
+                    typeFilter={typeFilter}
+                    setTypeFilter={setTypeFilter}
+                    search={search}
+                    setSearch={setSearch}
+                    sortMode={sortMode}
+                    setSortMode={setSortMode}
+                    viewMode={viewMode}
+                    setViewMode={setViewMode}
                   />
                 </>
               )}
             </div>
           </div>
 
-          {/* Always rendered: a row that only exists once something is selected
-              would push the listing down under the pointer mid-double-click. */}
-          <div className="files-page-above-table">
-            {processingView && (
+          {processingView && (
+            <div className="files-page-above-table">
               <div className="files-page-state-filters">
                 {(
                   ["all", "done", "processing", "failed", "waiting"] as const
@@ -2003,13 +1282,8 @@ export default function FileManagerView() {
                   </button>
                 ))}
               </div>
-            )}
-            {viewMode === "grid" && bulkActionsMenu && (
-              <div className="files-page-toolbar-actions files-page-selection-actions">
-                {bulkActionsMenu}
-              </div>
-            )}
-          </div>
+            </div>
+          )}
 
           <div
             className="files-page-content"
@@ -2026,9 +1300,6 @@ export default function FileManagerView() {
               selectedFileIds={selectedFileIds}
               activeWorkspaceFileIds={activeWorkspaceFileIdSet}
               viewMode={viewMode}
-              selectionActions={
-                viewMode === "list" ? bulkActionsMenu : undefined
-              }
               sortMode={sortMode}
               onChangeSortMode={setSortMode}
               onSelectFile={handleSelectFile}
@@ -2062,17 +1333,20 @@ export default function FileManagerView() {
                 );
               }}
               onRemoveFiles={handleRemoveFiles}
-              onPromptMoveFiles={promptMoveFiles}
+              onPromptMoveFiles={(ids) =>
+                promptMoveFiles(
+                  ids.filter((id) => {
+                    const file = fileMap.get(id);
+                    return file && !isBrowserOnlyFile(file);
+                  }),
+                )
+              }
               onSaveToServer={(file) => setSaveToServerTarget([file])}
               onVersionHistory={(file) => setVersionHistoryFile(file)}
               onDownloadFile={handleDownloadFile}
               onRenameFile={setRenameTarget}
               onDuplicateFile={handleDuplicateFile}
               saveToServerDisabledReason={saveToServerDisabledReason}
-              // Center-of-grid CTAs when the empty state shows - same
-              // handlers the corner header buttons use so behaviour
-              // (disabled tooltips, native file picker, dialog) is
-              // identical regardless of where the user clicks from.
               onEmptyUpload={openFilePicker}
               emptyNewFolderControl={
                 <NewFolderButton
@@ -2096,11 +1370,6 @@ export default function FileManagerView() {
                   {t("filesPage.dropOverlay", "Drop files to upload")}
                 </span>
                 <span className="files-page-drop-overlay-sub">
-                  {/* Behavior contract: per handleNativeUpload above, files
-                      dropped inside a folder on the All/Cloud views are
-                      placed into it — a mount takes them onto the disk
-                      itself. Other tabs land drops in Local, so the copy
-                      must match. */}
                   {(currentTab === "all" || currentTab === "cloud") &&
                   currentFolderId !== null
                     ? t(
@@ -2109,7 +1378,7 @@ export default function FileManagerView() {
                       )
                     : t(
                         "filesPage.dropOverlaySub",
-                        "Files land in Local. Organise them into folders any time.",
+                        "Files appear in Recents. Organize them into folders any time.",
                       )}
                 </span>
               </div>
@@ -2117,12 +1386,11 @@ export default function FileManagerView() {
           </div>
         </main>
 
-        {/* Inline aside on desktop. */}
         {selectedFiles.length > 0 && !isCompactDetailsViewport && (
           <FileDetailsPanel
             selectedFileIds={selectedFiles}
             fileMap={fileMap}
-            currentFolder={currentFolderRecord}
+            foldersById={foldersById}
             onClose={() => clearSelection()}
             onAddToWorkspace={handleAddToWorkspace}
             onMove={promptMoveFiles}
@@ -2152,7 +1420,6 @@ export default function FileManagerView() {
         />
       )}
 
-      {/* Drawer hosts the details panel on ≤800px viewports. */}
       {isCompactDetailsViewport && (
         <Drawer
           opened={mobileDetailsOpen && selectedFiles.length === 1}
@@ -2167,7 +1434,7 @@ export default function FileManagerView() {
             <FileDetailsPanel
               selectedFileIds={selectedFiles}
               fileMap={fileMap}
-              currentFolder={currentFolderRecord}
+              foldersById={foldersById}
               onClose={() => setMobileDetailsOpen(false)}
               onAddToWorkspace={handleAddToWorkspace}
               onMove={promptMoveFiles}
@@ -2190,8 +1457,7 @@ export default function FileManagerView() {
       <MoveToFolderDialog
         opened={moveDialog.open}
         onClose={closeMoveDialog}
-        // Files can go anywhere, but a folder moves only within its own kind and
-        // never into a mount - a directory's subfolders are the filesystem's.
+        // Folders stay within their storage kind; mounted directories cannot receive library subfolders.
         folders={folders.folders.filter((candidate) => {
           if (!moveDialog.folderId) return true;
           if (folderKind(candidate) === "local") return false;
@@ -2207,9 +1473,9 @@ export default function FileManagerView() {
             await moveFolderTo(moveDialog.folderId, target);
           }
         }}
-        // Inline-create folder; gated on serverReachable.
+
         onCreateFolder={
-          folders.serverReachable
+          serverFolderDisabledReason === null
             ? (name, parentFolderId) =>
                 folders.createFolder(name, parentFolderId)
             : undefined
@@ -2260,7 +1526,6 @@ export default function FileManagerView() {
         }}
       />
 
-      {/* Cloud-aware delete; offers local/cloud/both when a file lives in both. */}
       <DeleteFilesDialog
         opened={deleteDialogOpen}
         files={deleteDialogFiles}
@@ -2268,7 +1533,6 @@ export default function FileManagerView() {
         onConfirm={confirmRemoveFiles}
       />
 
-      {/* Rename (opened from the card kebab). */}
       <RenameFileDialog
         opened={Boolean(renameTarget)}
         fileName={renameTarget?.name ?? ""}
@@ -2276,7 +1540,6 @@ export default function FileManagerView() {
         onSubmit={handleConfirmRename}
       />
 
-      {/* Version journey in a modal (opened from the card kebab). */}
       <VersionHistoryModal
         opened={Boolean(versionHistoryFile)}
         onClose={() => setVersionHistoryFile(null)}
@@ -2284,42 +1547,19 @@ export default function FileManagerView() {
         onChanged={refresh}
       />
 
-      {/* Save-to-server modal; keyed on target so updates don't retarget. */}
-      <BulkUploadToServerModal
+      <AddToLibraryModal
         key={`save-${(saveToServerTarget ?? []).map((s) => s.id).join(",")}`}
-        opened={Boolean(saveToServerTarget && saveToServerTarget.length > 0)}
         onClose={() => setSaveToServerTarget(null)}
         files={saveToServerTarget ?? []}
-        onUploaded={refresh}
       />
     </div>
   );
 }
 
-/**
- * A cheap identity for a directory listing, so a background re-read only re-renders the
- * grid when something actually changed on disk.
- */
-/** How often a working folder's per-file states re-read while it is open. */
-const PROCESSING_FILES_POLL_MS = 3000;
-const PROCESSING_FILES_FAILURE_LIMIT = 3;
-const EMPTY_FILE_STATES: ReadonlyMap<string, DiskFileState> = new Map();
-const EMPTY_REVERTABLES: ReadonlySet<string> = new Set();
-
-function listingSignature(
-  files: { path: string; sizeBytes: number; lastModified: number }[],
-): string {
-  return files
-    .map((file) => `${file.path}|${file.sizeBytes}|${file.lastModified}`)
-    .join("\n");
-}
-
-function Breadcrumbs() {
+function useFolderDropHandlers() {
   const { t } = useTranslation();
   const folders = useFolders();
   const filesPage = useFilesPage();
-  const openFolder = useOpenFolder();
-  const trail = folders.breadcrumbs;
 
   const reportFailure = (err: unknown, detailKey: string, plainKey: string) => {
     folders.setError(
@@ -2332,8 +1572,7 @@ function Breadcrumbs() {
     );
   };
 
-  /** A crumb is a drop target for the folder it names. */
-  const dropHandlers = (target: FolderBreadcrumbEntry) => ({
+  return (folderId: FolderId | null) => ({
     onDragOver: (e: React.DragEvent) => {
       if (e.dataTransfer.types.includes(FILES_PAGE_DRAG_TYPE)) {
         e.preventDefault();
@@ -2345,9 +1584,7 @@ function Breadcrumbs() {
       const payload = parseFilesPageDragPayload(e.dataTransfer);
       if (!payload) return;
       if (payload.kind === "files") {
-        // Through moveFilesTo so the revision bumps and the grid refreshes, and a
-        // rejection reaches the banner rather than only the console.
-        void filesPage.moveFilesTo(payload.fileIds, target.id).catch((err) => {
+        void filesPage.moveFilesTo(payload.fileIds, folderId).catch((err) => {
           console.error("[breadcrumb] drop failed", err);
           reportFailure(
             err,
@@ -2356,26 +1593,31 @@ function Breadcrumbs() {
           );
         });
       } else if (payload.kind === "folder") {
-        // Through moveFolderTo so the client-side cycle guard fires before the
-        // server call: dropping an ancestor on a descendant crumb has its own
-        // message, not the generic banner.
-        void filesPage
-          .moveFolderTo(payload.folderId, target.id)
-          .catch((err) => {
-            console.error("[breadcrumb] folder drop failed", err);
-            reportFailure(
-              err,
-              "filesPage.error.moveFolderFailedDetail",
-              "filesPage.error.moveFolderFailed",
-            );
-          });
+        // Use the shared move action so ancestor drops report the cycle guard's reason.
+        void filesPage.moveFolderTo(payload.folderId, folderId).catch((err) => {
+          console.error("[breadcrumb] folder drop failed", err);
+          reportFailure(
+            err,
+            "filesPage.error.moveFolderFailedDetail",
+            "filesPage.error.moveFolderFailed",
+          );
+        });
       }
     },
   });
+}
 
-  // Two crumbs at most. Everything above them, the root included, moves into the
-  // overflow menu: a deep trail otherwise grows the bar it sits in, and the folder
-  // you are actually in is the one that scrolls out of sight.
+function Breadcrumbs() {
+  const { t } = useTranslation();
+  const folders = useFolders();
+  const openFolder = useOpenFolder();
+  const dropHandlers = useFolderDropHandlers();
+  const trail = folders.breadcrumbs.filter(
+    (entry) => entry.id !== ROOT_FOLDER_ID,
+  );
+  if (trail.length === 0) return null;
+
+  // Collapse ancestors so the current folder stays visible in deep paths.
   const VISIBLE = 2;
   const split = Math.max(0, trail.length - VISIBLE);
   const hidden = trail.slice(0, split);
@@ -2386,6 +1628,12 @@ function Breadcrumbs() {
       className="files-page-breadcrumbs"
       aria-label={t("filesPage.breadcrumbs", "Folder path")}
     >
+      <Icon
+        name="chevron-right"
+        size={20}
+        className="files-page-breadcrumb-sep"
+        aria-hidden="true"
+      />
       {hidden.length > 0 && (
         <>
           <Menu shadow="md" position="bottom-start" withinPortal>
@@ -2430,7 +1678,7 @@ function Breadcrumbs() {
               className={`files-page-breadcrumb${isLast ? " is-current" : ""}`}
               title={entry.name}
               onClick={() => openFolder(entry.id)}
-              {...dropHandlers(entry)}
+              {...dropHandlers(entry.id)}
             >
               {entry.name}
             </button>
