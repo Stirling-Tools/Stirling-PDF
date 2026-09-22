@@ -1,2 +1,2 @@
-requests>=2.32,<3
-pypdf>=6,<7
+requests>=2.33.0,<3
+pypdf>=6.16.1,<7
