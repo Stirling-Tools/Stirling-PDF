@@ -1,6 +1,7 @@
 package stirling.software.saas.accountlink;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -93,7 +94,7 @@ public class InstanceAiController {
 
     @GetMapping("/**")
     @PreAuthorize("hasRole('LINKED_INSTANCE')")
-    public ResponseEntity<?> get(
+    public ResponseEntity<StreamingResponseBody> get(
             HttpServletRequest request,
             Authentication auth,
             @RequestHeader(value = "X-User-Id", required = false) String instanceUserId)
@@ -103,7 +104,7 @@ public class InstanceAiController {
 
     @PostMapping("/**")
     @PreAuthorize("hasRole('LINKED_INSTANCE')")
-    public ResponseEntity<?> post(
+    public ResponseEntity<StreamingResponseBody> post(
             HttpServletRequest request,
             Authentication auth,
             @RequestHeader(value = "X-User-Id", required = false) String instanceUserId,
@@ -114,7 +115,7 @@ public class InstanceAiController {
 
     @DeleteMapping("/**")
     @PreAuthorize("hasRole('LINKED_INSTANCE')")
-    public ResponseEntity<?> delete(
+    public ResponseEntity<StreamingResponseBody> delete(
             HttpServletRequest request,
             Authentication auth,
             @RequestHeader(value = "X-User-Id", required = false) String instanceUserId)
@@ -122,7 +123,14 @@ public class InstanceAiController {
         return proxy("DELETE", request, auth, instanceUserId, null);
     }
 
-    private ResponseEntity<?> proxy(
+    /**
+     * Every branch answers with a {@link StreamingResponseBody}, buffered replies included. Spring
+     * picks the response writer from the method's declared type, not the object returned: behind a
+     * {@code ResponseEntity<?>} the orchestrator stream fell through to the message converters,
+     * which have nothing for a lambda and answered 500 after the engine had run and the call had
+     * been billed.
+     */
+    private ResponseEntity<StreamingResponseBody> proxy(
             String method,
             HttpServletRequest request,
             Authentication auth,
@@ -137,8 +145,10 @@ public class InstanceAiController {
         if (!sharingEnabled) {
             // Not a fault: this deployment simply does not lend its engine out. Said plainly so
             // the instance's own settings page can show it rather than reporting the cloud down.
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body("Stirling Cloud AI sharing is not enabled on this deployment.");
+            return text(
+                    HttpStatus.SERVICE_UNAVAILABLE.value(),
+                    MediaType.TEXT_PLAIN,
+                    "Stirling Cloud AI sharing is not enabled on this deployment.");
         }
 
         String enginePath = enginePathOf(request);
@@ -152,9 +162,14 @@ public class InstanceAiController {
         if (reply.status() < 400) {
             recordCallQuietly(token, enginePath);
         }
-        return ResponseEntity.status(reply.status())
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(reply.body());
+        return text(reply.status(), MediaType.APPLICATION_JSON, reply.body());
+    }
+
+    private static ResponseEntity<StreamingResponseBody> text(
+            int status, MediaType type, String body) {
+        byte[] bytes = (body == null ? "" : body).getBytes(StandardCharsets.UTF_8);
+        StreamingResponseBody stream = out -> out.write(bytes);
+        return ResponseEntity.status(status).contentType(type).body(stream);
     }
 
     /**
@@ -162,7 +177,7 @@ public class InstanceAiController {
      * after the body: the status is known before the first frame, and holding the charge until the
      * stream closes would lose it whenever a client disconnects mid-run.
      */
-    private ResponseEntity<?> streamed(
+    private ResponseEntity<StreamingResponseBody> streamed(
             String method,
             String enginePath,
             String body,
@@ -177,9 +192,15 @@ public class InstanceAiController {
         }
         StreamingResponseBody stream =
                 out -> {
+                    // Flushed per chunk: the frames are progress, and the container would
+                    // otherwise hold them until its buffer filled, which is no progress at all.
+                    byte[] buffer = new byte[8192];
                     try (var in = reply.body()) {
-                        in.transferTo(out);
-                        out.flush();
+                        int read;
+                        while ((read = in.read(buffer)) != -1) {
+                            out.write(buffer, 0, read);
+                            out.flush();
+                        }
                     }
                 };
         return ResponseEntity.status(reply.status())

@@ -7,9 +7,11 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.http.HttpClient;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.AfterEach;
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import com.sun.net.httpserver.HttpServer;
 
@@ -76,13 +79,22 @@ class InstanceAiSharingTest {
         return new LinkedInstanceAuthenticationToken(42L, 99L);
     }
 
+    /** Drains the streamed body the way Spring's writer would, so the text can be asserted on. */
+    private static String bodyText(ResponseEntity<StreamingResponseBody> reply) throws IOException {
+        ByteArrayOutputStream drained = new ByteArrayOutputStream();
+        if (reply.getBody() != null) {
+            reply.getBody().writeTo(drained);
+        }
+        return drained.toString(StandardCharsets.UTF_8);
+    }
+
     @Test
     void sharingOffRefusesBeforeTheEngineIsEverDialled() throws Exception {
-        ResponseEntity<?> reply =
+        ResponseEntity<StreamingResponseBody> reply =
                 controller(false).get(capabilitiesRequest(), instance(), "user-1");
 
         assertThat(reply.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
-        assertThat(String.valueOf(reply.getBody())).contains("sharing is not enabled");
+        assertThat(bodyText(reply)).contains("sharing is not enabled");
         // The point of gating here rather than at the engine: no cluster work, and no charge.
         assertThat(engineCalls.get()).isZero();
         verifyNoInteractions(usageService);

@@ -8,6 +8,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
@@ -26,6 +27,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
@@ -139,17 +141,22 @@ class CloudAiEndToEndTest {
                                             + "}");
                             return;
                         }
-                        ResponseEntity<?> reply =
+                        ResponseEntity<StreamingResponseBody> reply =
                                 switch (exchange.getRequestMethod()) {
                                     case "GET" -> controller.get(request, auth, userId);
                                     case "DELETE" -> controller.delete(request, auth, userId);
                                     default -> controller.post(request, auth, userId, "{}");
                                 };
-                        Object payload = reply.getBody();
+                        // The controller answers with a stream in every branch; drain it the way
+                        // Spring's streaming writer would.
+                        ByteArrayOutputStream drained = new ByteArrayOutputStream();
+                        if (reply.getBody() != null) {
+                            reply.getBody().writeTo(drained);
+                        }
                         respond(
                                 exchange,
                                 reply.getStatusCode().value(),
-                                payload instanceof String text ? text : "");
+                                drained.toString(StandardCharsets.UTF_8));
                     } catch (ResponseStatusException e) {
                         respond(exchange, e.getStatusCode().value(), "{\"detail\":\"refused\"}");
                     } catch (Exception e) {

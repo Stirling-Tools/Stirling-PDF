@@ -23,6 +23,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -125,6 +126,13 @@ public class EntitlementGuard implements HandlerInterceptor {
     public boolean preHandle(
             HttpServletRequest request, HttpServletResponse response, Object handler) {
         if (!(handler instanceof HandlerMethod hm)) {
+            return true;
+        }
+        // A streamed body completes through an ASYNC dispatch that the security filters skip
+        // (spring.security.filter.dispatcher-types), so the context here is empty and the checks
+        // below would read an authenticated caller as anonymous and write a 401 body into a
+        // response already sent. The REQUEST dispatch made the decision; this one only finishes it.
+        if (request.getDispatcherType() == DispatcherType.ASYNC) {
             return true;
         }
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
