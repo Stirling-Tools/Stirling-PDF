@@ -6,7 +6,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -105,9 +107,34 @@ class FileStorageControllerMoreTest {
             MultipartFile file = mock(MultipartFile.class);
             StoredFileResponse resp = StoredFileResponse.builder().id(2L).build();
             when(fileStorageService.requireAuthenticatedUser()).thenReturn(u);
-            when(fileStorageService.updateFileResponse(u, 5L, file, null, null)).thenReturn(resp);
+            when(fileStorageService.updateFileResponse(u, 5L, file, null, null, null))
+                    .thenReturn(resp);
 
-            assertThat(controller.updateFile(5L, file, null, null)).isSameAs(resp);
+            assertThat(controller.updateFile(5L, file, null, null, null)).isSameAs(resp);
+        }
+
+        @Test
+        void updateFile_parsesIfMatchHeader() {
+            User u = user();
+            MultipartFile file = mock(MultipartFile.class);
+            StoredFileResponse resp = StoredFileResponse.builder().id(2L).build();
+            when(fileStorageService.requireAuthenticatedUser()).thenReturn(u);
+            when(fileStorageService.updateFileResponse(u, 5L, file, null, null, 7L))
+                    .thenReturn(resp);
+
+            assertThat(controller.updateFile(5L, file, null, null, "\"7\"")).isSameAs(resp);
+        }
+
+        @Test
+        void updateFile_invalidIfMatchHeader_badRequest() {
+            User u = user();
+            MultipartFile file = mock(MultipartFile.class);
+            when(fileStorageService.requireAuthenticatedUser()).thenReturn(u);
+
+            assertThatThrownBy(() -> controller.updateFile(5L, file, null, null, "abc"))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                    .isEqualTo(400);
         }
 
         @Test
@@ -346,6 +373,102 @@ class FileStorageControllerMoreTest {
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             verify(fileStorageService).recordShareAccess(share, authentication, false);
             verify(fileStorageService).requireReadAccess(share);
+        }
+    }
+
+    @Nested
+    @DisplayName("updateShareLink")
+    class UpdateShareLink {
+
+        @Test
+        void accessDenied_authenticated_throwsForbidden() {
+            FileShare share = new FileShare();
+            share.setFile(storedFile());
+            Authentication authentication = auth(user());
+            MultipartFile file = mock(MultipartFile.class);
+            when(fileStorageService.getShareByToken("tok")).thenReturn(share);
+            when(fileStorageService.canAccessShareLink(share, authentication)).thenReturn(false);
+
+            assertThatThrownBy(
+                            () ->
+                                    controller.updateShareLink(
+                                            "tok", authentication, file, null, null, null))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                    .isEqualTo(403);
+            verify(fileStorageService, never())
+                    .updateShareLinkResponse(any(), any(), any(), any(), any(), any());
+        }
+
+        @Test
+        void accessDenied_anonymous_throwsUnauthorized() {
+            FileShare share = new FileShare();
+            share.setFile(storedFile());
+            MultipartFile file = mock(MultipartFile.class);
+            when(fileStorageService.getShareByToken("tok")).thenReturn(share);
+            when(fileStorageService.canAccessShareLink(share, null)).thenReturn(false);
+
+            assertThatThrownBy(
+                            () -> controller.updateShareLink("tok", null, file, null, null, null))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                    .isEqualTo(401);
+            verify(fileStorageService, never())
+                    .updateShareLinkResponse(any(), any(), any(), any(), any(), any());
+        }
+
+        @Test
+        void shareLinksDisabled_neverResolvesTheToken() {
+            MultipartFile file = mock(MultipartFile.class);
+            doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Share links are disabled"))
+                    .when(fileStorageService)
+                    .ensureShareLinksEnabled();
+
+            assertThatThrownBy(
+                            () -> controller.updateShareLink("tok", null, file, null, null, null))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                    .isEqualTo(403);
+            verify(fileStorageService, never()).getShareByToken(anyString());
+        }
+
+        @Test
+        void granted_delegatesWithParsedIfMatchVersion() {
+            FileShare share = new FileShare();
+            share.setFile(storedFile());
+            Authentication authentication = auth(user());
+            MultipartFile file = mock(MultipartFile.class);
+            MultipartFile history = mock(MultipartFile.class);
+            ShareLinkMetadataResponse resp =
+                    ShareLinkMetadataResponse.builder().shareToken("tok").version(8L).build();
+            when(fileStorageService.getShareByToken("tok")).thenReturn(share);
+            when(fileStorageService.canAccessShareLink(share, authentication)).thenReturn(true);
+            when(fileStorageService.updateShareLinkResponse(
+                            share, authentication, file, history, null, 7L))
+                    .thenReturn(resp);
+
+            assertThat(
+                            controller.updateShareLink(
+                                    "tok", authentication, file, history, null, "W/\"7\""))
+                    .isSameAs(resp);
+        }
+
+        @Test
+        void invalidIfMatchHeader_badRequest() {
+            FileShare share = new FileShare();
+            share.setFile(storedFile());
+            Authentication authentication = auth(user());
+            MultipartFile file = mock(MultipartFile.class);
+            when(fileStorageService.getShareByToken("tok")).thenReturn(share);
+            when(fileStorageService.canAccessShareLink(share, authentication)).thenReturn(true);
+
+            assertThatThrownBy(
+                            () ->
+                                    controller.updateShareLink(
+                                            "tok", authentication, file, null, null, "abc"))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                    .isEqualTo(400);
         }
     }
 
