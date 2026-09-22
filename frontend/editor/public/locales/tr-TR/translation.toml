@@ -2202,6 +2202,7 @@ running = "Otomasyon Çalıştırılıyor..."
 steps_one = "{{count}} adım"
 steps_other = "{{count}} adım"
 unnamed = "İsimsiz Otomasyon"
+signInToRun = "Sign in to run automations."
 
 [automation.suggested]
 emailPreparation = "E-posta Hazırlığı"
@@ -4119,6 +4120,7 @@ serverFolderNeedsConnection = "Sign in to Stirling Cloud or connect a self-hoste
 unmount = "Unmount"
 unmountFolderBody = "Unmount \"{{name}}\"? The folder and its files stay on your disk."
 unmountFolderTitle = "Unmount from Stirling?"
+refreshNeedsConnection = "Sign in to refresh from the server."
 
 [filesPage.appearance]
 colour = "Renk"
@@ -5135,6 +5137,7 @@ title = "3. Taraf Lisansları"
 
 [localMode]
 toolUnavailable = "Bu araç bir hesap gerektirir. Kullanmak için Stirling Cloud'da oturum açın veya kendi barındırılan bir sunucuya bağlanın."
+automationUnavailable = "Sign in to Stirling Cloud or a self-hosted server to use processing folders and pipelines."
 
 [localMode.toolPicker]
 message = "Tüm araçların kilidini açmak için oturum açın."
@@ -7219,11 +7222,9 @@ update = "Update"
 
 [portal.billing.processor]
 activate = "Switch on the Processor"
-factCapped = "{{pct}}% of {{cap}}"
 factFree = "{{used}} of {{allowance}} used"
 factNoCap = "no limit"
 included = "Included in your license"
-includedCredits = "Included credits"
 includedRenewal = "{{summary}} · Renews {{date}}"
 meteredCapTooltip = "Pauses metered processing at your spend limit."
 midIncluded = "{{rate}} per credit · {{allowance}} included every month"
@@ -7232,6 +7233,12 @@ midMetered = "{{spend}} metered this cycle"
 midMeteredUnknown = "Metered this cycle"
 raiseLimit = "Raise limit"
 rowName = "Processor"
+freeRemaining = "Free credits remaining"
+noSpendLimit = "No spend limit"
+paidUsed = "Paid metered usage"
+percentUsed = "{{pct}}%"
+remainingOf = "{{remaining}} of {{total}}"
+spendAgainstLimit = "{{spend}} of {{cap}} metered this cycle"
 
 [portal.billing.section]
 cycle = "This cycle"
@@ -7275,6 +7282,18 @@ midFreeSelfHosted = "The free tier covers your first users"
 midIncluded = "Included with your Team base"
 midPrice = "$99/mo per 100 users"
 rowName = "Users"
+midLocalCapacity = "Capacity available to this server"
+
+[portal.billing.seats]
+awaitingSync = "Waiting for its daily sync; not yet included in the fleet total."
+breakdown = "Where users are counted"
+cloud = "Stirling Cloud"
+deployment = "Linked server"
+lastReported = "Reported {{date}}"
+live = "Live user count"
+notReported = "Not yet reported"
+ownerExcluded = "The required cloud team owner does not use a seat."
+thisServer = "This server"
 
 [portal.components.billingUnit]
 approval = "onay"
@@ -7655,6 +7674,14 @@ baseUrlPlaceholder = "https://hooks.zapier.com/hooks/catch/..."
 description = "Bir ilkeden Zap veya Make senaryosunu tetikleyin."
 label = "Zapier ve Make"
 
+[portal.connections.types.vectordb]
+baseUrlPlaceholder = "https://your-database-host"
+description = "Index document chunks using Weaviate or Pinecone server-side embedding. Use the Weaviate server URL or Pinecone index host. Private endpoints require the operator to enable policies.allowPrivateApiEndpoints."
+label = "Vector database"
+pinecone = "Pinecone"
+vendor = "Database"
+weaviate = "Weaviate"
+
 [portal.docs]
 browse = "Dokümanlara göz at"
 viewSource = "Kaynağı GitHub'da görüntüle"
@@ -7925,6 +7952,22 @@ title = "Page could not be rendered"
 [portal.failures.kind.toolNotInstalled]
 description = "This server is missing software the step needs, so the run could not start it."
 title = "Software not installed"
+
+[portal.failures.kind.stepInterrupted]
+description = "This step was stopped before it finished, so your file was not processed. Running it again usually works."
+title = "Step was interrupted"
+
+[portal.failures.kind.stepMisconfigured]
+description = "This step's settings are not valid, so it could not run on any file. Edit the step to fix them."
+title = "Step settings are invalid"
+
+[portal.failures.kind.stepPageTooLarge]
+description = "A page in your file could not be rendered at the requested resolution. Lower the DPI in the step, or split the file."
+title = "Page too large to render"
+
+[portal.failures.kind.stepToolFailed]
+description = "A tool this step relies on could not process your file."
+title = "Tool could not process the file"
 
 [portal.failures.origin]
 pipeline = "Pipeline"
@@ -8429,7 +8472,6 @@ usesDefaults = "Varsayılan ayarlarla çalışır"
 viewDefinition = "View definition"
 editorDestination = "Editor"
 editorDestinationDetail = "Replaces the file you ran it on"
-editorDestinationHelp = "This pipeline runs on the files in your workspace, and its results replace the file it ran on. There is nowhere else to send them."
 runOn = "Runs on"
 runOnExport = "Every export"
 runOnTooltip = "Choose when this pipeline runs on your files: when you add them, or when you export them."
@@ -8477,6 +8519,8 @@ overlap = "Overlap"
 overlapHint = "Characters repeated between neighbouring chunks, so a sentence split across two is still findable."
 overlapTooBig = "Overlap must be smaller than the chunk size ({{chunkSize}})."
 unavailable = "AI ingestion needs the AI engine and DocParse turned on, including when the destination database generates embeddings."
+destinationNeedsChunks = "This vector database destination needs a final AI ingestion step that exports chunks only."
+prepareDestination = "Prepare chunks for this destination"
 
 [portal.pipelines.builder.routing]
 addRule = "Add a route"
@@ -9038,6 +9082,13 @@ sourceHeading = "Watch"
 [portal.policies.wizard.sources]
 connect = "Connect a source"
 
+[portal.policies.wizard.locations]
+delivery = "Delivery"
+editorOutput = "Processed PDFs return to the editor workspace."
+keepOriginal = "Keep originals and send to a destination"
+keepOriginalHelp = "A copy runs in the background. Your editor files stay unchanged; results are saved to the destination below."
+returnToEditor = "Return results to editor"
+
 [portal.processorFlow]
 footnote = "Sayılar son 24 saate aittir. Akış hızı temsili amaçlıdır."
 liveBadge = "Canlı"
@@ -9386,6 +9437,7 @@ createTitle = "Bir kaynak bağla"
 delete = "Sil"
 editTitle = "Kaynağı düzenle"
 save = "Değişiklikleri kaydet"
+chooseOutputHint = "Choose where processed documents go. Greyed-out connectors are on the way."
 
 [portal.sources.builder.folderAccess]
 description = "Klasör otomasyonları yalnızca bir yöneticinin izin verdiği klasörleri kullanabilir. Klasör Erişimi ayarları altında ekleyin, ardından tekrar deneyin."
@@ -9552,6 +9604,17 @@ secretWarning = "İmzalama secret'ını şimdi kopyalayın. Güvenliğiniz için
 title = "Webhook oluşturuldu"
 url = "Teslim URL'si"
 usage = "Her belgeyi binary content type (application/pdf veya application/octet-stream) ile ham request body olarak teslim URL'sine POST edin. Referans veren politikalar varışta otomatik olarak çalışır."
+
+[portal.sources.types.vectordb]
+collection = "Collection / index name"
+collectionHint = "Use an existing collection or index configured for server-side embedding."
+connection = "Database connection"
+description = "An output destination for prepared document chunks. The database generates embeddings; originals stay in your input source when track mode is selected."
+label = "Vector database"
+namespace = "Namespace / tenant"
+namespaceHint = "Optional Pinecone namespace or Weaviate tenant. Leave empty for the default namespace or a single-tenant collection."
+textField = "Text field"
+textFieldHint = "The field the database embeds, matching the collection schema or Pinecone field map."
 
 [portal.sources.wizard]
 name = "Ad"
@@ -10709,6 +10772,8 @@ teamNote = "These instances share your team’s processing allowance."
 title = "Connected instances"
 unknown = "Not available"
 yourTeam = "Your team"
+seatsReported = "{{count}} Team seats · reported {{date}}. Offline deployments keep their seats until unlinked."
+seatsUnknown = "Waiting for this deployment to report its user count in the daily sync."
 
 [settings.monitoring]
 title = "Monitoring"
@@ -13097,11 +13162,9 @@ title = "Open every PDF in Stirling"
 
 [classificationDemo.followUp]
 background = "This runs in the background. The ring on the left shows progress."
-batchCta = "Process another {{count}}"
-free = "They are all covered by your remaining free allowance."
-partial = "{{count}} of them are covered by your remaining free allowance."
 restCta = "Process the rest"
 title = "Want to keep going? You have {{count}} more PDFs in your Downloads folder."
+serverCredits = "Your connected server manages credits for processing these files."
 
 [classificationDemo.groups]
 other = "Other"
@@ -13318,6 +13381,7 @@ settings = "Adjust settings"
 title = "Set up folder processing"
 useExisting = "Use existing folder"
 viewLabels = "View classification labels"
+signInRequired = "Sign in to set up folder processing"
 
 [processingFolders.wall]
 done = "Done"
@@ -13336,6 +13400,7 @@ noProcessorAccess = "Ask an admin for processor access"
 notifications = "Notifications"
 processor = "Processor"
 reader = "Reader"
+signInToUse = "Sign in to use this"
 
 [reader.rail]
 addDocument = "Add file"
