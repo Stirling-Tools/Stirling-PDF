@@ -79,6 +79,7 @@ import ClipboardPlus from "lucide-static/icons/clipboard-plus.svg?react";
 import Clock from "lucide-static/icons/clock.svg?react";
 import Cloud from "lucide-static/icons/cloud.svg?react";
 import CloudCheck from "lucide-static/icons/cloud-check.svg?react";
+import CloudOff from "lucide-static/icons/cloud-off.svg?react";
 import CloudUpload from "lucide-static/icons/cloud-upload.svg?react";
 import Code from "lucide-static/icons/code.svg?react";
 import Cog from "lucide-static/icons/cog.svg?react";
@@ -483,6 +484,7 @@ export const ICONS = {
   clock: { Component: Clock, kind: "lucide" },
   cloud: { Component: Cloud, kind: "lucide" },
   "cloud-check": { Component: CloudCheck, kind: "lucide" },
+  "cloud-off": { Component: CloudOff, kind: "lucide" },
   "cloud-upload": { Component: CloudUpload, kind: "lucide" },
   code: { Component: Code, kind: "lucide" },
   cog: { Component: Cog, kind: "lucide" },

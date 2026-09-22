@@ -268,7 +268,6 @@ export function ProcessingFolderWizard({
               </li>
             ))}
           </ol>
-          {loading && <p role="status">{t("loading", "Loading...")}</p>}
           {unsupportedSteps && (
             <Banner
               tone="warning"
