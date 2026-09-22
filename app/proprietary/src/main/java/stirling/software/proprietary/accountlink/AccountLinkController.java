@@ -23,15 +23,15 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Same-origin account-link surface on the self-hosted instance (combined billing).
  *
- * <p>Admin-only class-wide: everything here is server-scoped, the free-tier meter included. A
- * non-admin learns of the wall from the {@code reason} on the 402, not from here.
+ * <p>Owner-only class-wide: everything here is server-scoped, the free-tier meter included. Other
+ * users learn of the wall from the {@code reason} on the 402, not from here.
  */
 @Slf4j
 @Hidden
 @RestController
 @RequestMapping("/api/v1/account-link")
 @Profile("!saas")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('ADMIN') and @orgOwnerService.isCurrentUser(authentication)")
 @ConditionalOnProperty(
         name = "stirling.billing.account-link.enabled",
         havingValue = "true",

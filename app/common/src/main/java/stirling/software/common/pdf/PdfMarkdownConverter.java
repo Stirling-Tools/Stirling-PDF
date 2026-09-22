@@ -15,9 +15,7 @@ import stirling.software.jpdfium.doc.ExtractedImage;
 import stirling.software.jpdfium.doc.PdfImageExtractor;
 import stirling.software.jpdfium.model.Rect;
 import stirling.software.jpdfium.text.PageText;
-import stirling.software.jpdfium.text.PdfTableExtractor;
 import stirling.software.jpdfium.text.PdfTextExtractor;
-import stirling.software.jpdfium.text.Table;
 import stirling.software.jpdfium.text.TextLine;
 import stirling.software.jpdfium.text.TextWord;
 
@@ -38,6 +36,21 @@ public class PdfMarkdownConverter {
     private static final float GLYPH_WIDTH = 7.5f;
 
     public String convert(PdfDocument doc) throws IOException {
+        return MarkdownBlocks.join(extractBlocks(doc));
+    }
+
+    /** Page-attributed Markdown elements in reading order; {@link #convert} is these joined. */
+    public List<MarkdownBlock> extractBlocks(PdfDocument doc) throws IOException {
+        List<Element> stitched = stitchTables(buildElements(doc));
+        List<MarkdownBlock> blocks = new ArrayList<>(stitched.size());
+        for (Element e : stitched) {
+            String md = e.value() instanceof TableBlock tb ? tb.render() : (String) e.value();
+            blocks.add(new MarkdownBlock(md, e.pageStart(), e.pageEnd()));
+        }
+        return MarkdownBlocks.withHeadingPaths(blocks);
+    }
+
+    private List<Element> buildElements(PdfDocument doc) throws IOException {
         List<PageText> allPageText = PdfTextExtractor.extractAll(doc);
         float medianSize = HeadingDetector.medianFontSize(allPageText);
         float medianHeight = HeadingDetector.medianLineHeight(allPageText);
@@ -46,7 +59,7 @@ public class PdfMarkdownConverter {
         // Elements are either rendered text (String) or a structured TableBlock. Tables stay
         // structured until after the page loop so a table split across a page break can be stitched
         // back together before rendering.
-        List<Object> output = new ArrayList<>();
+        List<Element> output = new ArrayList<>();
         // Header text of a table that ended the previous page, used to spot a continuation whose
         // header repeats at the top of the current page. Null when the previous page did not end in
         // a table.
@@ -60,7 +73,7 @@ public class PdfMarkdownConverter {
             // their host lines so paragraph assembly sees faithful, complete lines.
             List<Line> lines = stitchGlyphs(rawLines);
             if (lines.isEmpty()) {
-                emitImages(doc, pageIndex, output);
+                emitImages(doc, pageIndex, pageIndex + 1, output);
                 prevPageTrailingTableHeader = null;
                 continue;
             }
@@ -99,12 +112,14 @@ public class PdfMarkdownConverter {
                 }
             }
 
-            List<Object> pageItems = new ArrayList<>();
+            List<Element> pageItems = new ArrayList<>();
             if (twoColumn) {
                 for (List<Line> col : splitIntoColumns(lines)) {
                     List<String> paras = new ArrayList<>();
                     assembleParagraphs(col, medianSize, medianHeight, paras, tableRowTexts);
-                    pageItems.addAll(paras);
+                    for (String p : paras) {
+                        pageItems.add(new Element(p, pageIndex + 1, pageIndex + 1));
+                    }
                 }
             } else {
                 // Interleave tables with surrounding text by vertical position. Each block sits in
@@ -131,14 +146,16 @@ public class PdfMarkdownConverter {
                     List<String> paras = new ArrayList<>();
                     assembleParagraphs(
                             segments.get(s), medianSize, medianHeight, paras, tableRowTexts);
-                    pageItems.addAll(paras);
+                    for (String p : paras) {
+                        pageItems.add(new Element(p, pageIndex + 1, pageIndex + 1));
+                    }
                     if (s < blocks.size()) {
-                        pageItems.add(blocks.get(s));
+                        pageItems.add(new Element(blocks.get(s), pageIndex + 1, pageIndex + 1));
                     }
                 }
             }
 
-            emitImages(doc, pageIndex, pageItems);
+            emitImages(doc, pageIndex, pageIndex + 1, pageItems);
 
             if (pageItems.isEmpty()) {
                 continue;
@@ -149,13 +166,7 @@ public class PdfMarkdownConverter {
             prevPageTrailingTableHeader = trailingTableHeader(pageItems);
         }
 
-        // Stitch tables split across page breaks, then render every element to Markdown.
-        List<Object> stitched = stitchTables(output);
-        List<String> rendered = new ArrayList<>();
-        for (Object e : stitched) {
-            rendered.add(e instanceof TableBlock tb ? tb.render() : (String) e);
-        }
-        return String.join("\n\n", rendered);
+        return output;
     }
 
     // --- Glyph stitching ---------------------------------------------------
@@ -464,6 +475,11 @@ public class PdfMarkdownConverter {
             return buildTableFromRows(rows);
         }
     }
+
+    /**
+     * An element plus the 1-based pages it came from; pageEnd widens when a page break is joined.
+     */
+    private record Element(Object value, int pageStart, int pageEnd) {}
 
     /**
      * Detects table blocks on a page. Anchor rows (lines with table-like column gaps) are grouped
@@ -853,13 +869,13 @@ public class PdfMarkdownConverter {
 
     // --- Page-level emission helpers ---------------------------------------
 
-    private static void emitImages(PdfDocument doc, int pageIndex, List<Object> pageItems)
-            throws IOException {
+    private static void emitImages(
+            PdfDocument doc, int pageIndex, int pageNumber, List<Element> sink) throws IOException {
         try (PdfPage page = doc.page(pageIndex)) {
             List<ExtractedImage> images =
                     PdfImageExtractor.extract(page.rawDocHandle(), page.rawHandle(), pageIndex);
             for (ExtractedImage img : images) {
-                pageItems.add(describeImage(img));
+                sink.add(new Element(describeImage(img), pageNumber, pageNumber));
             }
         }
     }
@@ -896,7 +912,7 @@ public class PdfMarkdownConverter {
             parts.add(img.bitsPerPixel() + "bpp");
         }
 
-        StringBuilder sb = new StringBuilder("<image redacted");
+        StringBuilder sb = new StringBuilder(MarkdownBlocks.IMAGE_PLACEHOLDER);
         if (!parts.isEmpty()) {
             sb.append(": ").append(String.join(", ", parts));
         }
@@ -904,20 +920,24 @@ public class PdfMarkdownConverter {
         return sb.toString();
     }
 
-    private static void mergeAcrossPageBoundary(List<Object> output, List<Object> pageItems) {
+    private static void mergeAcrossPageBoundary(List<Element> output, List<Element> pageItems) {
         if (output.isEmpty() || pageItems.isEmpty()) {
             return;
         }
         // Only merge a sentence continuation between two text paragraphs, never into/out of a
         // table.
-        if (!(output.getLast() instanceof String last)
-                || !(pageItems.getFirst() instanceof String first)) {
+        if (!(output.getLast().value() instanceof String last)
+                || !(pageItems.getFirst().value() instanceof String first)) {
             return;
         }
         if (!first.isEmpty()
                 && Character.isLowerCase(first.charAt(0))
                 && !endsWithSentencePunctuation(last)) {
-            output.set(output.size() - 1, last + " " + first);
+            Element head = output.getLast();
+            Element tail = pageItems.getFirst();
+            output.set(
+                    output.size() - 1,
+                    new Element(last + " " + first, head.pageStart(), tail.pageEnd()));
             pageItems.remove(0);
         }
     }
@@ -927,12 +947,12 @@ public class PdfMarkdownConverter {
      * them — i.e. one ended a page and the next began the following page) are merged when their
      * column layouts match; a repeated header row on the continuation is dropped.
      */
-    private static List<Object> stitchTables(List<Object> elements) {
-        List<Object> out = new ArrayList<>();
-        for (Object e : elements) {
-            if (e instanceof TableBlock tb
+    private static List<Element> stitchTables(List<Element> elements) {
+        List<Element> out = new ArrayList<>();
+        for (Element e : elements) {
+            if (e.value() instanceof TableBlock tb
                     && !out.isEmpty()
-                    && out.getLast() instanceof TableBlock prev
+                    && out.getLast().value() instanceof TableBlock prev
                     && columnsMatch(flatten(prev.rows()), flatten(tb.rows()))) {
                 List<List<Line>> merged = new ArrayList<>(prev.rows());
                 List<List<Line>> tail = tb.rows();
@@ -942,7 +962,13 @@ public class PdfMarkdownConverter {
                     tail = tail.subList(1, tail.size());
                 }
                 merged.addAll(tail);
-                out.set(out.size() - 1, new TableBlock(merged, prev.top(), tb.bottom()));
+                Element prevEl = out.getLast();
+                out.set(
+                        out.size() - 1,
+                        new Element(
+                                new TableBlock(merged, prev.top(), tb.bottom()),
+                                prevEl.pageStart(),
+                                Math.max(prevEl.pageEnd(), e.pageEnd())));
             } else {
                 out.add(e);
             }
@@ -964,10 +990,10 @@ public class PdfMarkdownConverter {
      * Trailing image placeholders are skipped; any other text after a table means it did not run to
      * the page bottom and so is not a continuation candidate.
      */
-    private static String trailingTableHeader(List<Object> pageItems) {
+    private static String trailingTableHeader(List<Element> pageItems) {
         for (int i = pageItems.size() - 1; i >= 0; i--) {
-            Object e = pageItems.get(i);
-            if (e instanceof String s && s.strip().startsWith("<image redacted")) {
+            Object e = pageItems.get(i).value();
+            if (e instanceof String s && MarkdownBlocks.isImagePlaceholder(s)) {
                 continue;
             }
             if (e instanceof TableBlock tb && !tb.rows().isEmpty()) {
@@ -1025,19 +1051,5 @@ public class PdfMarkdownConverter {
         }
         char last = s.charAt(s.length() - 1);
         return last == '.' || last == '?' || last == '!' || last == ':';
-    }
-
-    // --- Methods used by other components / tests --------------------------
-
-    List<PageText> extractAllPageText(PdfDocument doc) throws IOException {
-        return PdfTextExtractor.extractAll(doc);
-    }
-
-    List<Table> extractTables(PdfDocument doc, int pageIndex) throws IOException {
-        return PdfTableExtractor.extract(doc, pageIndex);
-    }
-
-    List<String> renderTables(List<Table> tables) {
-        return tables.stream().map(TableRenderer::render).toList();
     }
 }

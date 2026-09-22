@@ -1,6 +1,10 @@
 import type { Stripe } from "@stripe/stripe-js";
-import { getSupabaseClient } from "@app/auth/supabase/supabaseClient";
-import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
+import {
+  getPortalSessionClient,
+  ensurePortalSessionClient,
+} from "@app/portal/auth/sessionClient";
+import { invokeSaasFunction } from "@app/portal/auth/saasFunctions";
+import { withPortalSaasSession } from "@app/portal/auth/portalSaasSession";
 
 /**
  * Stripe checkout + portal sessions, minted via the SaaS Supabase edge
@@ -67,15 +71,15 @@ async function invoke<T>(
   name: string,
   body: Record<string, unknown>,
 ): Promise<T> {
-  ensureSaasSupabase();
-  const supabase = getSupabaseClient();
+  ensurePortalSessionClient();
+  const supabase = getPortalSessionClient();
   if (!supabase) {
     throw new StripeFunctionError(
       "SaaS Supabase not configured — set VITE_SUPABASE_URL.",
       "unconfigured",
     );
   }
-  const { data, error } = await supabase.functions.invoke<T>(name, { body });
+  const { data, error } = await invokeSaasFunction<T>(name, { body });
   if (error) {
     throw new StripeFunctionError(
       error.message ?? `Edge function ${name} failed`,
@@ -88,16 +92,24 @@ async function invoke<T>(
 }
 
 /** Call a SECURITY DEFINER public.* RPC with the admin's JWT (same client as {@link invoke}). */
-async function rpc<T>(fn: string, args: Record<string, unknown>): Promise<T> {
-  ensureSaasSupabase();
-  const supabase = getSupabaseClient();
+async function rpc<T>(
+  fn: string,
+  args: Record<string, unknown>,
+  readOnly = false,
+): Promise<T> {
+  ensurePortalSessionClient();
+  const supabase = getPortalSessionClient();
   if (!supabase) {
     throw new StripeFunctionError(
       "SaaS Supabase not configured — set VITE_SUPABASE_URL.",
       "unconfigured",
     );
   }
-  const { data, error } = await supabase.rpc(fn, args);
+  const { data, error } = await withPortalSaasSession(
+    () => Promise.resolve(supabase.rpc(fn, args)),
+    (response) => response.status === 401,
+    readOnly,
+  );
   if (error) {
     throw new StripeFunctionError(
       error.message ?? `RPC ${fn} failed`,
@@ -110,7 +122,7 @@ async function rpc<T>(fn: string, args: Record<string, unknown>): Promise<T> {
 /** Inputs to {@link upsertBundleQuote} — the sized config + computed figures. */
 export interface BundleQuoteInput {
   teamId: number;
-  users: number;
+  users: number | null;
   posturePolicies: number;
   sizeMult: number;
   pipelineMult: number;
@@ -224,6 +236,7 @@ export async function getLatestBundleQuote(
   const rows = await rpc<LatestBundleQuoteRow[]>(
     "payg_get_latest_bundle_quote",
     { p_team_id: teamId },
+    true,
   );
   const row = rows?.[0];
   if (!row) return null;
@@ -462,17 +475,18 @@ export async function cancelBundleQuote(req: {
  * GET route (streams application/pdf). Returns a Blob the caller can object-URL for download.
  */
 export async function fetchBundleQuotePdf(quoteId: number): Promise<Blob> {
-  ensureSaasSupabase();
-  const supabase = getSupabaseClient();
+  ensurePortalSessionClient();
+  const supabase = getPortalSessionClient();
   if (!supabase) {
     throw new StripeFunctionError(
       "SaaS Supabase not configured — set VITE_SUPABASE_URL.",
       "unconfigured",
     );
   }
-  const { data, error } = await supabase.functions.invoke<Blob>(
+  const { data, error } = await invokeSaasFunction<Blob>(
     `create-payg-bundle-quote?quote_id=${quoteId}`,
     { method: "GET" },
+    true,
   );
   if (error) {
     throw new StripeFunctionError(error.message ?? "quote PDF fetch failed");
