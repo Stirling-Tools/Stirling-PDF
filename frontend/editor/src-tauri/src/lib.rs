@@ -159,6 +159,9 @@ pub fn run() {
       // and file-open handling below can target it.
       if let Err(err) = build_main_window(app.handle()) {
         add_log(format!("❌ Failed to build main window: {}", err));
+        // No fallback window exists, so abort startup rather than run headless
+        // (on frameless Windows a windowless app has no way to be closed).
+        return Err(err.into());
       }
 
       // Files passed on the command line at first launch load into the main

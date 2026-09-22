@@ -41,6 +41,9 @@ pub fn build_main_window(app: &AppHandle) -> Result<WebviewWindow, String> {
     let builder = WebviewWindowBuilder::new(app, MAIN_WINDOW_LABEL, WebviewUrl::App("/".into()))
         .title("Stirling PDF")
         .inner_size(1280.0, 800.0)
+        // Below this width the file manager collapses to its mobile layout, so
+        // keep the window above the breakpoint (matches the spawned windows).
+        .min_inner_size(1030.0, 600.0)
         .resizable(true)
         .disable_drag_drop_handler();
 
