@@ -1,5 +1,6 @@
 import { TeamSubscriptionChange } from "@app/billing/TeamSubscriptionChange";
 import type { ServerPlan } from "@app/billing/serverPlan";
+import { fleetUsersInUse } from "@app/billing/fleetSeats";
 import {
   useCallback,
   useEffect,
@@ -23,6 +24,7 @@ import {
   type Wallet,
 } from "@app/portal/api/billing";
 import { fetchLocalUsage, triggerLocalSync } from "@app/portal/api/link";
+import { useAccountLinkOptional } from "@app/portal/contexts/AccountLinkContext";
 import { usePortalSaasSession } from "@app/portal/hooks/usePortalSaasSession";
 import { useStripePortal } from "@app/portal/hooks/useStripePortal";
 import { useBundleFlowState } from "@app/portal/hooks/useBundleFlowState";
@@ -96,6 +98,7 @@ export function Usage({
     void refetchWallet();
     void queryClient.invalidateQueries({ queryKey: qk.localUsage() });
   }, [refetchWallet, queryClient]);
+  const accountLink = useAccountLinkOptional();
   const { revision: sessionRevision, required } = usePortalSaasSession();
   const sessionExpired = walletError instanceof SaasSessionRequiredError;
   const needsRenewal = Boolean(sessionRecovery) && (sessionExpired || required);
@@ -245,8 +248,15 @@ export function Usage({
   // Optional on purpose: a build that mounts no provider must lose the door, not the page.
   const checkout = useCheckoutOptional();
   const heldLimit = wallet?.team?.held ? wallet.team.licensedUsers : null;
-  const usersInUse =
-    localUsersInUse === undefined ? wallet?.team?.usersInUse : localUsersInUse;
+  const usersInUse = wallet?.team?.fleet
+    ? fleetUsersInUse(
+        wallet.team,
+        accountLink?.status?.deviceId,
+        localUsersInUse,
+      )
+    : localUsersInUse === undefined
+      ? wallet?.team?.usersInUse
+      : localUsersInUse;
   const addCapacity = useCallback(() => {
     // No email: the only one this instance holds is its local admin record, which is a Spring
     // username and not an address the buyer owns. The checkout asks for one instead.
@@ -352,6 +362,8 @@ export function Usage({
   return (
     <BillingScreen
       usersInUse={localUsersInUse}
+      userLimit={localUserLimit}
+      deviceId={accountLink?.status?.deviceId}
       headerAction={
         !needsRenewal && paying && wallet?.role === "leader" ? (
           <Button
