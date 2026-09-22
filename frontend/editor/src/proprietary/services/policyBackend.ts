@@ -53,6 +53,7 @@ export function decodedToState(
     owner: decoded.owner,
     sources: decoded.sources,
     runsOnEditor: decoded.runsOnEditor,
+    externalOutput: decoded.externalOutput,
     required: decoded.required,
     scopeTypes: decoded.scopeTypes,
     reviewerEmail: decoded.reviewerEmail,
