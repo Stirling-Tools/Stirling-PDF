@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.4
 # Standalone unoserver image for Stirling-PDF remote UNO mode.
 # Pinned to unoserver 3.7 to match Stirling-PDF's client (avoids wire mismatch).
 
@@ -28,7 +29,14 @@ static void expect(const char *name, int domain, int type,
                    const struct sockaddr *sa, socklen_t len, int want_refused) {
     int fd = socket(domain, type, 0);
     if (fd < 0) {
-        printf("FAIL %-22s socket: %s\n", name, strerror(errno));
+        int socket_error = errno;
+        if ((domain == AF_INET6 && socket_error == EAFNOSUPPORT) ||
+            (domain == AF_NETLINK &&
+             (socket_error == EAFNOSUPPORT || socket_error == EPERM))) {
+            printf("SKIP %-22s socket: %s\n", name, strerror(socket_error));
+            return;
+        }
+        printf("FAIL %-22s socket: %s\n", name, strerror(socket_error));
         mismatches++;
         return;
     }

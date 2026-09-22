@@ -41,7 +41,7 @@ class ProcessExecutorOfficeNetworkGuardTest {
         return values::get;
     }
 
-    private static final Predicate<Path> GUARD_PRESENT = path -> GUARD_PATH.equals(path.toString());
+    private static final Predicate<Path> GUARD_PRESENT = Path.of(GUARD_PATH)::equals;
     private static final Predicate<Path> NOTHING_PRESENT = path -> false;
 
     private static OfficeNetworkGuard activeGuard() {
@@ -116,7 +116,7 @@ class ProcessExecutorOfficeNetworkGuardTest {
                     OfficeNetworkGuard.resolve(
                             env("LIBREOFFICE_NETWORK_GUARD_LIB", "  /opt/custom/guard.so  "),
                             "Linux",
-                            path -> "/opt/custom/guard.so".equals(path.toString()));
+                            Path.of("/opt/custom/guard.so")::equals);
 
             assertThat(guard.getLibraryPath()).isEqualTo("/opt/custom/guard.so");
         }
