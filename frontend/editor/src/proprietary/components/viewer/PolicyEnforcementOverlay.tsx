@@ -7,6 +7,7 @@ import {
   type PolicyRunRecord,
 } from "@app/components/policies/policyRunStore";
 import { policyAccentVar } from "@app/components/policies/policyStatus";
+import { isEnforcedPolicy } from "@app/services/policyStorage";
 import { PolicyEnforcingOverlay } from "@app/components/shared/PolicyEnforcingOverlay";
 import "@app/components/shared/PolicyBadges.css";
 
@@ -42,7 +43,11 @@ export function PolicyEnforcementOverlay({ runs }: Props) {
     // per-file policy badges, larger) so the user can read the PDF.
     return (
       <Tooltip
-        label={t("policy.enforcingTitle", "Enforcing policy…")}
+        label={
+          isEnforcedPolicy(inFlight.policyKey)
+            ? t("policy.enforcingPolicyTitle", "Enforcing policy...")
+            : t("policy.enforcingPipelineTitle", "Enforcing pipeline...")
+        }
         position="left"
         withArrow
       >
