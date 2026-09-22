@@ -7387,19 +7387,25 @@ description = "Ask your server administrator to enable the connection to Stirlin
 title = "Account connection unavailable"
 
 [portal.accountLink.connect]
+adminRequired = "Ask your server administrator to open Usage & billing and link a Stirling account for more monthly credits. Manual PDF tools are still available."
+adminTitle = "Ask your server administrator"
 close = "Close"
-exhaustedLede = "This server has used its free credits for the month. They reset when the period rolls over. Connecting a Stirling account adds a further monthly allowance on top."
+copied = "Copied"
+copyAdminMessage = "Copy message for administrator"
+exhaustedLede = "This server has used its free credits for the month. Link a new or existing Stirling account to access your team’s monthly allowance."
 notNow = "Not now"
 start = "Connect Stirling account"
 step = "Step {{current}} of {{total}}"
 
 [portal.accountLink.connect.benefits]
-creditsDetailMonthly = "Free monthly allowance"
-creditsLabel = "Credits"
-processorDetail = "Pipelines, policies, sources and audit"
-processorLabel = "Processor"
-teamsDetail = "Free for up to 5 users"
-teamsLabel = "Teams"
+billingDetail = "Manage usage, billing and linked servers together"
+billingLabel = "One account"
+creditsDetail = "Access your team’s free monthly allowance"
+creditsLabel = "Monthly credits"
+processingDetail = "Buy more credits for API, AI and automation as you grow"
+processingLabel = "More processing"
+teamsDetail = "Add more users with a paid Team plan"
+teamsLabel = "Larger teams"
 
 [portal.accountLink.connect.callback]
 linkedNotSignedIn = "You are not signed in to Stirling in this browser, so usage and billing will ask you to sign in."
@@ -7450,6 +7456,15 @@ retry = "Check connection"
 revokedBody = "Stirling Cloud rejected this account connection. Reconnect the account in Settings to restore eligible cloud-backed features."
 revokedTitle = "Account connection revoked"
 
+[portal.accountLink.failure]
+automatic = "Pipeline “{{pipeline}}” stopped during an automatic run because this server is out of credits."
+export = "Pipeline “{{pipeline}}” stopped before download because this server is out of credits."
+manage = "Open pipeline settings"
+manual = "Pipeline “{{pipeline}}” stopped when you ran it because this server is out of credits."
+openFailed = "Open the Processor on your connected server to manage this pipeline."
+pipeline = "Pipeline"
+upload = "Pipeline “{{pipeline}}” stopped after upload because this server is out of credits."
+
 [portal.accountLink.gate]
 retry = "Try again"
 
@@ -7466,7 +7481,7 @@ title = "No connected instances"
 callbackMismatch = "This server's configured frontend address does not match the address you opened. Open the server at its configured address, or update Frontend URL in General settings, then try again."
 cancel = "Cancel"
 continueReauth = "Sign in again"
-exhaustedTitle = "Add more monthly credits"
+exhaustedTitle = "Keep your workflows running"
 identity = "Stirling account"
 linkTitle = "Connect your Stirling account"
 noAuthorizeUrl = "Stirling did not return somewhere to continue. Try again in a moment."
@@ -7477,6 +7492,9 @@ after = "so this server can finish the connection when you come back."
 and = "and"
 before = "Set"
 title = "Stirling connection not configured"
+
+[portal.accountLink.notice]
+openFailed = "Could not open your browser. Open Usage & billing on your connected server to link an account."
 
 [portal.accountLink.panel]
 instancesSub = "Self-hosted servers connected to the same team."
@@ -7492,6 +7510,27 @@ sub = "Manage this server’s connection to your Stirling Cloud account."
 forbidden = "Only the team owner can manage connected instances."
 generic = "Your connections could not be checked. Try again."
 title = "Couldn’t load connected instances"
+
+[portal.accountLink.pipelines]
+editorExport = "Editor · before download"
+editorUpload = "Editor · on upload"
+empty = "No active pipelines."
+loadFailed = "Could not load pipelines. Open pipeline settings to try again."
+loading = "Loading pipelines…"
+manual = "Manual runs"
+paused = "Paused"
+required = "Required policy · manage in pipeline settings"
+saveFailed = "Could not change this pipeline. Open pipeline settings to review it."
+title = "Active pipelines"
+triggered = "Triggered this prompt"
+viewAll = "View all pipelines"
+
+[portal.accountLink.rail]
+adminCta = "How to get more credits"
+adminSub = "Ask your server administrator to link a Stirling account for more credits. Manual PDF tools are still available."
+exhaustedCta = "Link account for more credits"
+exhaustedSub = "Link for monthly credits, shared billing and the option to grow with a Team plan."
+exhaustedTitle = "This server’s free credits are used up"
 
 [portal.accountLink.renewal]
 dataUnavailable = "Your plan and usage will appear after you renew billing access. This server stays connected, and local document processing remains available."
@@ -10187,11 +10226,15 @@ walletUnavailable = "Wallet unavailable: {{status}} {{statusText}}"
 
 [portal.usage.freeTier]
 adminOnly = "This server's monthly credits are shared by everyone on it, so only an administrator can see the figures. Everything you can run stays available."
+barAria = "Free credits remaining"
+capSuffix_one = "of {{allowance}} free credit left this month"
+capSuffix_other = "of {{allowance}} free credits left this month"
 connect = "Connect a Stirling account"
 connectBody = "Connecting adds a second monthly allowance, raises the users this server can have, and turns on the Processor."
 connectTitle = "This server has no Stirling account"
 loadError = "Couldn't read this server's credit usage. Try again in a moment."
 loadErrorTitle = "Couldn't load credit usage"
+resets = "Resets {{date}}"
 
 [portal.usage.sessionExpired]
 body = "Your Stirling account session has expired. Sign in again to view billing — your instance stays linked."
