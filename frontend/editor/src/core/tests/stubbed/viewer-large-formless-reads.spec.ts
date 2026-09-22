@@ -1,6 +1,7 @@
 // Regression for the large-document open: the engine worker answers the form
 // and layer probes from the open document, so a form-less document at or above
-// LARGE_PDF_PARSE_LIMIT is never read on the main thread, not even once.
+// LARGE_PDF_PARSE_LIMIT is never read on the main thread by the viewer. WebKit
+// still pays one storage read because it cannot store Blob values.
 //
 // The fixture is generated (just over the limit) because a 100 MB file cannot
 // be committed; the app only treats files above that threshold as large.
@@ -74,6 +75,7 @@ test.beforeAll(() => {
 
 test("a large form-less document opens without a main-thread read", async ({
   page,
+  browserName,
 }) => {
   test.setTimeout(300_000);
   await page.addInitScript(() => {
@@ -112,5 +114,8 @@ test("a large form-less document opens without a main-thread read", async ({
       ).__blobReads,
   );
   const fullReads = reads.filter((read) => read.size >= LIMIT);
-  expect(fullReads).toEqual([]);
+  // WebKit rejects Blob values in IndexedDB, so the persistence layer copies
+  // the bytes on the main thread once (fileStorage.copyBlobBytes). That read is
+  // storage, not the viewer: WebKit gets exactly one, the other engines none.
+  expect(fullReads).toHaveLength(browserName === "webkit" ? 1 : 0);
 });
