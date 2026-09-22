@@ -22,10 +22,10 @@ import { pendingFilePathMappings } from "@app/services/pendingFilePathMappings";
 export type { DiskDirEntry, DiskFileEntry, DiskListing, ListDirectoryOptions };
 
 /**
- * Containment: these reads and writes run under a filesystem-wide Tauri capability, but
- * the contract here is mounted directories only, so any path outside one is refused.
+ * Descendants need no separate mount record. Paths are compared lexically, so callers
+ * must supply paths without dot segments. Filesystem links are not resolved.
  */
-async function isWithinMount(path: string): Promise<boolean> {
+export async function isWithinMount(path: string): Promise<boolean> {
   const pathKey = directoryKey(path);
   const folders = await localFolderStorage.getAllFolders();
   return folders
