@@ -76,7 +76,7 @@ jobs:
 
       - name: Restore Gradle cache sftp
         id: cache
-        uses: Ludy87/cache-the-planet@1b5455c10c317c050984c8890179b0006e1af035
+        uses: Ludy87/cache-the-planet@816331595214ef3d3ae9d3d7ee95d67331ff1dc1
         with:
           manifest-branch: dev-cache
           manifest-path: .github/cache-data
