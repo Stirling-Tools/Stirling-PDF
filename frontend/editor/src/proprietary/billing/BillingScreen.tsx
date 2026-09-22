@@ -297,11 +297,13 @@ export function BillingScreen({
         : "free";
 
   // A held Team reports its included allowance through the same field the free tier uses for its
-  // grant, so each figure is offered only to the column it actually describes.
+  // grant, so that figure is offered only to the column it actually describes. The user ceiling is
+  // not overloaded the same way — it stays the free one whatever the team holds — so it always goes
+  // to the Free column.
   const onTeam = currentPlan === "team";
   const compareTeamAllowance = onTeam ? quotable(wallet?.freeAllowance) : null;
   const compareFreeAllowance = onTeam ? null : quotable(wallet?.freeAllowance);
-  const compareFreeUsers = onTeam ? null : quotable(wallet?.freeUserAllowance);
+  const compareFreeUsers = quotable(wallet?.freeUserAllowance);
 
   const creditUnits = (wallet?.spendUnitsThisPeriod ?? 0) + pendingUnits;
   const occupiedSeats = serverPlan
@@ -631,7 +633,7 @@ export function BillingScreen({
           freeAllowance={compareFreeAllowance}
           teamAllowance={compareTeamAllowance}
           onUpgradeTeam={
-            onAddCapacity && !onTeam
+            onAddCapacity && currentPlan === "free"
               ? () => {
                   setComparing(false);
                   onAddCapacity();
@@ -639,7 +641,7 @@ export function BillingScreen({
               : undefined
           }
           onExploreEnterprise={
-            onEnterpriseQuote
+            onEnterpriseQuote && currentPlan !== "enterprise"
               ? () => {
                   setComparing(false);
                   onEnterpriseQuote();

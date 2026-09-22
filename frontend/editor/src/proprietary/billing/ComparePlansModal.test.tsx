@@ -77,8 +77,11 @@ it("drops a door the host did not open", () => {
   expect(screen.queryByText("Explore Enterprise")).not.toBeInTheDocument();
 });
 
-it("closes before handing over to the procurement flow", () => {
-  const onClose = vi.fn();
+/**
+ * The close and the hand-off land in one commit, so the matrix never sits over the flow it
+ * started. They are not ordered within the handler, and nothing should depend on that.
+ */
+it("leaves the matrix closed once the procurement flow is away", () => {
   const onExploreEnterprise = vi.fn();
   render(
     <BillingScreen
@@ -87,10 +90,41 @@ it("closes before handing over to the procurement flow", () => {
     />,
   );
   fireEvent.click(screen.getByRole("button", { name: "Compare plans" }));
+  expect(screen.getByText("Where it runs")).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Explore Enterprise" }));
   expect(onExploreEnterprise).toHaveBeenCalledOnce();
   expect(screen.queryByText("Where it runs")).not.toBeInTheDocument();
-  expect(onClose).not.toHaveBeenCalled();
+});
+
+/** An Enterprise licence needs neither door, and the enterprise banner already gates itself. */
+it("sells nothing to an enterprise licence", () => {
+  render(
+    <BillingScreen
+      wallet={freeWallet}
+      serverPlan={{ licenseType: "ENTERPRISE", maxUsers: 0, usersInUse: 12 }}
+      onAddCapacity={() => {}}
+      onEnterpriseQuote={() => {}}
+    />,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Compare plans" }));
+  expect(screen.getByText("Where it runs")).toBeInTheDocument();
+  expect(screen.queryByText("Upgrade to Team")).not.toBeInTheDocument();
+  expect(screen.queryByText("Explore Enterprise")).not.toBeInTheDocument();
+});
+
+it("keeps the free user ceiling in the Free column for a team that holds Team", () => {
+  render(
+    <BillingScreen
+      wallet={{
+        ...freeWallet,
+        freeUserAllowance: 5,
+        team: { held: true, licensedUsers: 100, usersInUse: 6 },
+      }}
+    />,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Compare plans" }));
+  expect(screen.getByText("Up to 5")).toBeInTheDocument();
+  expect(screen.queryByText("A small team")).not.toBeInTheDocument();
 });
 
 it("offers no upgrade to a team that already holds one", () => {
