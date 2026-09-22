@@ -1538,7 +1538,12 @@ export async function extractPageTextItemsForReadAloudFromDoc(
       const bottom = m.pdfium.getValue(b, "double");
       const top = m.pdfium.getValue(t, "double");
 
-      if (Number.isFinite(left) && Number.isFinite(right)) {
+      if (
+        Number.isFinite(left) &&
+        Number.isFinite(right) &&
+        Number.isFinite(bottom) &&
+        Number.isFinite(top)
+      ) {
         currentChars.push(char);
         if (left < minLeft) minLeft = left;
         if (right > maxRight) maxRight = right;
