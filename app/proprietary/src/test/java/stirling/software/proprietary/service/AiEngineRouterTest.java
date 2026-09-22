@@ -72,7 +72,7 @@ class AiEngineRouterTest {
     }
 
     @Test
-    void cloudModeGoesToTheInstanceGatewayWithTheDeviceCredential() {
+    void cloudModeGoesToTheInstanceGatewayOnTheAccountLinkHostByDefault() {
         AiEngineRouter router =
                 new AiEngineRouter(
                         props(AiEngineMode.CLOUD),
@@ -83,8 +83,10 @@ class AiEngineRouterTest {
         AiEngineTarget target = router.resolve();
 
         assertThat(target.cloud()).isTrue();
+        // No API host configured: the credential was issued by the deployment this server linked
+        // to, so that is where it goes. A fixed default sent staging servers' credentials to prod.
         assertThat(target.urlFor("/api/v1/orchestrator"))
-                .isEqualTo("https://api.stirling.com/api/v1/instance/ai/api/v1/orchestrator");
+                .isEqualTo("https://stirling.com/app/api/v1/instance/ai/api/v1/orchestrator");
         // The engine shared secret is this server's, and means nothing to Stirling Cloud.
         assertThat(target.headers())
                 .containsOnly(

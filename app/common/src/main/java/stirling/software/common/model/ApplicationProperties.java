@@ -404,11 +404,14 @@ public class ApplicationProperties {
         private boolean cloudDocumentIndexing = false;
 
         /**
-         * Stirling Cloud's API host. Not in settings.yml: it is a deployment constant, and it must
-         * be the same deployment that issued this server's account-link credential, since that
-         * credential is what authenticates the call. Blank falls back to the account-link base URL.
+         * Stirling Cloud's API host. Blank, the default, follows the account-link base URL: the
+         * device credential that authenticates these calls was issued by the deployment this server
+         * linked to, so that is the only host it can be valid for, and a fixed default sent staging
+         * and preview servers' credentials to production. Set it only when the API answers on a
+         * different name from the link host, through the environment or custom_settings.yml; it is
+         * deliberately not in settings.yml, whose template merge drops keys it does not know.
          */
-        private String cloudBaseUrl = "https://api.stirling.com";
+        private String cloudBaseUrl = "";
 
         /** Where the reasoning runs. */
         public enum AiEngineMode {
