@@ -30,27 +30,45 @@ export function useActiveHeading(
   // and overwrites the slug the reader just asked for.
   const settleUntil = useRef(0);
 
-  const focus = useCallback((id: string) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    // Unfold first, or there is nothing to scroll to: the anchor is either a
-    // folded card's own toggle, or a control inside its hidden panel.
-    if (el.getAttribute("aria-expanded") === "false") {
-      el.click();
-    } else {
-      el.closest(".settings-card__panel[hidden]")
-        ?.parentElement?.querySelector<HTMLButtonElement>(
-          ".settings-card__toggle",
-        )
-        ?.click();
-    }
-    settleUntil.current = Date.now() + SETTLE_MS;
-    setActive(id);
-    writeHash(id);
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
-    el.classList.add("settings-focus-target");
-    window.setTimeout(() => el.classList.remove("settings-focus-target"), 1800);
-  }, []);
+  const focus = useCallback(
+    (id: string) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      // Unfold first, or there is nothing to scroll to: the anchor is either a
+      // folded card's own toggle, or a control inside its hidden panel.
+      if (el.getAttribute("aria-expanded") === "false") {
+        el.click();
+      } else {
+        el.closest(".settings-card__panel[hidden]")
+          ?.parentElement?.querySelector<HTMLButtonElement>(
+            ".settings-card__toggle",
+          )
+          ?.click();
+      }
+      settleUntil.current = Date.now() + SETTLE_MS;
+      setActive(id);
+      writeHash(id);
+      // Scroll the settings scroller itself, not scrollIntoView: that walks the
+      // whole ancestor chain and drags the app frame up under the title bar.
+      if (container) {
+        container.scrollTo({
+          top:
+            el.getBoundingClientRect().top -
+            container.getBoundingClientRect().top +
+            container.scrollTop,
+          behavior: "smooth",
+        });
+      } else {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      el.classList.add("settings-focus-target");
+      window.setTimeout(
+        () => el.classList.remove("settings-focus-target"),
+        1800,
+      );
+    },
+    [container],
+  );
 
   useEffect(() => {
     if (!container || headings.length === 0) {
