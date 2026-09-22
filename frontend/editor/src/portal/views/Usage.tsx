@@ -1,5 +1,6 @@
 import { TeamSubscriptionChange } from "@app/billing/TeamSubscriptionChange";
 import type { ServerPlan } from "@app/billing/serverPlan";
+import { fleetUsersInUse } from "@app/billing/fleetSeats";
 import {
   useCallback,
   useEffect,
@@ -25,6 +26,7 @@ import {
   triggerLocalSync,
   type LocalUsage,
 } from "@app/portal/api/link";
+import { useAccountLinkOptional } from "@app/portal/contexts/AccountLinkContext";
 import { useStripePortal } from "@app/portal/hooks/useStripePortal";
 import { usePortalSaasSession } from "@app/portal/hooks/usePortalSaasSession";
 import { FreePlanView } from "@app/portal/components/billing/FreePlanView";
@@ -79,6 +81,7 @@ export function Usage({
   renderLicenseSection,
 }: UsageProps = {}) {
   const { t } = useTranslation();
+  const accountLink = useAccountLinkOptional();
   const { revision: sessionRevision, required } = usePortalSaasSession();
   const [loadedWallet, setWallet] = useState<Wallet | null>(null);
   const [sessionExpired, setSessionExpired] = useState(false);
@@ -259,8 +262,15 @@ export function Usage({
   // Optional on purpose: a build that mounts no provider must lose the door, not the page.
   const checkout = useCheckoutOptional();
   const heldLimit = wallet?.team?.held ? wallet.team.licensedUsers : null;
-  const usersInUse =
-    localUsersInUse === undefined ? wallet?.team?.usersInUse : localUsersInUse;
+  const usersInUse = wallet?.team?.fleet
+    ? fleetUsersInUse(
+        wallet.team,
+        accountLink?.status?.deviceId,
+        localUsersInUse,
+      )
+    : localUsersInUse === undefined
+      ? wallet?.team?.usersInUse
+      : localUsersInUse;
   const addCapacity = useCallback(() => {
     // No email: the only one this instance holds is its local admin record, which is a Spring
     // username and not an address the buyer owns. The checkout asks for one instead.
@@ -366,6 +376,8 @@ export function Usage({
   return (
     <BillingScreen
       usersInUse={localUsersInUse}
+      userLimit={localUserLimit}
+      deviceId={accountLink?.status?.deviceId}
       headerAction={
         !needsRenewal && paying && wallet?.role === "leader" ? (
           <Button
