@@ -58,9 +58,13 @@ describe("deliverSweepResults - one live delivery per folder", () => {
     // A caller that needs progress (the wizard) must run its own loop rather than
     // join the callback-less one already running, which cannot fire its callbacks.
     const bare = deliverSweepResults("policy-1", 1, addFiles);
-    const withCallbacks = deliverSweepResults("policy-1", 1, addFiles, {
-      onProgress,
-    });
+    const withCallbacks = deliverSweepResults(
+      "policy-1",
+      1,
+      addFiles,
+      {},
+      { onProgress },
+    );
 
     expect(withCallbacks).not.toBe(bare);
     await Promise.all([bare, withCallbacks]);
@@ -78,9 +82,13 @@ describe("deliverSweepResults - one live delivery per folder", () => {
     // useProcessingFolders: enable() runs callback-less, sweep() always passes
     // includeRunIds - so the sweep runs its own loop over the same settled run.
     const fromEnable = deliverSweepResults("policy-1", null, addFiles);
-    const fromSweep = deliverSweepResults("policy-1", 1, addFiles, {
-      includeRunIds: new Set(["r1"]),
-    });
+    const fromSweep = deliverSweepResults(
+      "policy-1",
+      1,
+      addFiles,
+      {},
+      { includeRunIds: new Set(["r1"]) },
+    );
     await Promise.all([fromEnable, fromSweep]);
 
     expect(opened).toEqual(["r1.pdf"]);
@@ -91,7 +99,13 @@ describe("deliverSweepResults - one live delivery per folder", () => {
     const onSettled = vi.fn();
 
     const bare = deliverSweepResults("policy-1", 1, addFiles);
-    const watcher = deliverSweepResults("policy-1", 1, addFiles, { onSettled });
+    const watcher = deliverSweepResults(
+      "policy-1",
+      1,
+      addFiles,
+      {},
+      { onSettled },
+    );
     await Promise.all([bare, watcher]);
 
     // The wizard reads the result's classification labels off these files, so a
@@ -115,5 +129,18 @@ describe("deliverSweepResults - one live delivery per folder", () => {
     expect(b).not.toBe(a);
     await Promise.all([a, b]);
     expect(addFiles).toHaveBeenCalledTimes(2);
+  });
+
+  it("imports disk results into their mounted folder without selecting them", async () => {
+    const addFiles = vi.fn().mockResolvedValue(undefined);
+
+    await deliverSweepResults("policy-1", 1, addFiles, {
+      folderId: "mount-1",
+    });
+
+    expect(addFiles).toHaveBeenCalledWith([fileFor("r1.pdf")], {
+      selectFiles: false,
+      folderId: "mount-1",
+    });
   });
 });
