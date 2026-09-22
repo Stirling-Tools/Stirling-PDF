@@ -434,6 +434,11 @@ export function PipelineBuilder() {
     );
     setOutputIds(policy?.outputIds ?? []);
     setRoutingRules(policy?.routingRules ?? []);
+    setDestinationRequested(
+      seedsEditor &&
+        ((policy?.outputIds?.length ?? 0) > 0 ||
+          (policy?.routingRules?.length ?? 0) > 0),
+    );
     setSeeded(true);
   }, [
     isEdit,
@@ -777,8 +782,12 @@ export function PipelineBuilder() {
     input.triggerType !== "schedule" ||
     Number(input.scheduleCount) > 0;
   const inputValid = sourceChosen && scheduleValid;
+  const destinationIds = new Set([
+    ...outputIds,
+    ...routingRules.map((rule) => rule.outputId),
+  ]);
   const vectorOutput = writableSources.some(
-    (source) => source.id === outputIds[0] && source.type === "vectordb",
+    (source) => destinationIds.has(source.id) && source.type === "vectordb",
   );
   const vectorReady = !vectorOutput || vectorDestinationConfigured(steps);
   const destinationReady =
@@ -1377,7 +1386,10 @@ export function PipelineBuilder() {
               requiresDestination={requiresDestination}
               onChange={(external) => {
                 setDestinationRequested(external);
-                if (!external) setOutputIds([]);
+                if (!external) {
+                  setOutputIds([]);
+                  setRoutingRules([]);
+                }
               }}
             />
           )}

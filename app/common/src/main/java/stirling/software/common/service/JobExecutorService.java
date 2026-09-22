@@ -1,8 +1,11 @@
 package stirling.software.common.service;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -218,9 +221,16 @@ public class JobExecutorService {
                 return ResponseEntity.internalServerError()
                         .body(Map.of("error", "Job timed out after " + timeoutToUse + " ms"));
             } catch (RuntimeException e) {
+                Set<Throwable> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+                for (Throwable nested = e;
+                        nested != null && seen.add(nested);
+                        nested = nested.getCause()) {
+                    if (nested instanceof org.springframework.web.ErrorResponseException response) {
+                        throw response;
+                    }
+                }
                 Throwable cause = e.getCause();
-                if (e instanceof org.springframework.web.ErrorResponseException
-                        || e instanceof IllegalArgumentException
+                if (e instanceof IllegalArgumentException
                         || cause
                                 instanceof
                                 stirling.software.common.util.ExceptionUtils.BaseAppException
