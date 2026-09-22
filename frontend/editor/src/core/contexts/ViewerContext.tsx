@@ -261,6 +261,10 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   // activeFileIndex is derived from activeFileId so they can never desync.
   // ViewerProvider sits inside FileContextProvider so these hooks are valid here.
   const selectors = useFileSelectors();
+  const selectorsRef = useRef(selectors);
+  selectorsRef.current = selectors;
+  const tRef = useRef(t);
+  tRef.current = t;
   const fileIds = useFileSelector((s) => s.files.ids);
 
   // Clear activeFileId when its file is removed from the workbench.
@@ -274,14 +278,11 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   }, [activeFileId, fileIds]);
 
   const activeFileIndex = useFileIndex(activeFileId);
-  const setActiveFileIndex = useCallback(
-    (index: number) => {
-      const files = selectors.getFiles();
-      const file = files[index];
-      if (file && isStirlingFile(file)) setActiveFileId(file.fileId);
-    },
-    [selectors],
-  );
+  const setActiveFileIndex = useCallback((index: number) => {
+    const files = selectorsRef.current.getFiles();
+    const file = files[index];
+    if (file && isStirlingFile(file)) setActiveFileId(file.fileId);
+  }, []);
   const [pdfRenderMode, setPdfRenderModeState] = useState<PdfRenderMode>(() =>
     preferencesService.getPreference("pdfRenderMode"),
   );
@@ -371,29 +372,29 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     [],
   );
 
-  const toggleThumbnailSidebar = () => {
+  const toggleThumbnailSidebar = useCallback(() => {
     setIsThumbnailSidebarVisible((prev) => !prev);
-  };
+  }, []);
 
-  const toggleBookmarkSidebar = () => {
+  const toggleBookmarkSidebar = useCallback(() => {
     setIsBookmarkSidebarVisible((prev) => !prev);
-  };
+  }, []);
 
-  const toggleAttachmentSidebar = () => {
+  const toggleAttachmentSidebar = useCallback(() => {
     setIsAttachmentSidebarVisible((prev) => !prev);
-  };
+  }, []);
 
-  const toggleLayerSidebar = () => {
+  const toggleLayerSidebar = useCallback(() => {
     setIsLayerSidebarVisible((prev) => !prev);
-  };
+  }, []);
 
-  const setCommentsSidebarVisible = (visible: boolean) => {
+  const setCommentsSidebarVisible = useCallback((visible: boolean) => {
     setIsCommentsSidebarVisible(visible);
-  };
+  }, []);
 
-  const toggleCommentsSidebar = () => {
+  const toggleCommentsSidebar = useCallback(() => {
     setIsCommentsSidebarVisible((prev) => !prev);
-  };
+  }, []);
 
   const requestCommentFocus = useCallback(
     (
@@ -417,19 +418,22 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     setHighlightCommentRequest(null);
   }, []);
 
-  const searchInterfaceActions = {
-    open: () => setSearchInterfaceVisible(true),
-    close: () => setSearchInterfaceVisible(false),
-    toggle: () => setSearchInterfaceVisible((prev) => !prev),
-  };
+  const searchInterfaceActions = useMemo(
+    () => ({
+      open: () => setSearchInterfaceVisible(true),
+      close: () => setSearchInterfaceVisible(false),
+      toggle: () => setSearchInterfaceVisible((prev) => !prev),
+    }),
+    [],
+  );
 
-  const toggleAnnotationsVisibility = () => {
+  const toggleAnnotationsVisibility = useCallback(() => {
     setIsAnnotationsVisible((prev) => !prev);
-  };
+  }, []);
 
-  const setAnnotationMode = (enabled: boolean) => {
+  const setAnnotationMode = useCallback((enabled: boolean) => {
     setIsAnnotationModeState(enabled);
-  };
+  }, []);
 
   const cyclePdfRenderMode = useCallback(() => {
     setPdfRenderModeState((prev) => {
@@ -441,54 +445,54 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   }, []);
 
   // State getters - read from bridge refs
-  const getScrollState = (): ScrollState => {
+  const getScrollState = useCallback((): ScrollState => {
     return (
       bridgeRefs.current.scroll?.state || { currentPage: 1, totalPages: 0 }
     );
-  };
+  }, []);
 
-  const getZoomState = (): ZoomState => {
+  const getZoomState = useCallback((): ZoomState => {
     return (
       bridgeRefs.current.zoom?.state || { currentZoom: 1.4, zoomPercent: 140 }
     );
-  };
+  }, []);
 
-  const getPanState = (): PanState => {
+  const getPanState = useCallback((): PanState => {
     return bridgeRefs.current.pan?.state || { isPanning: false };
-  };
+  }, []);
 
-  const getSelectionState = (): SelectionState => {
+  const getSelectionState = useCallback((): SelectionState => {
     return bridgeRefs.current.selection?.state || { hasSelection: false };
-  };
+  }, []);
 
-  const getSpreadState = (): SpreadState => {
+  const getSpreadState = useCallback((): SpreadState => {
     return (
       bridgeRefs.current.spread?.state || {
         spreadMode: SpreadMode.None,
         isDualPage: false,
       }
     );
-  };
+  }, []);
 
-  const getRotationState = (): RotationState => {
+  const getRotationState = useCallback((): RotationState => {
     return bridgeRefs.current.rotation?.state || { rotation: 0 };
-  };
+  }, []);
 
-  const getSearchState = (): SearchState => {
+  const getSearchState = useCallback((): SearchState => {
     return (
       bridgeRefs.current.search?.state || { results: null, activeIndex: 0 }
     );
-  };
+  }, []);
 
-  const getThumbnailAPI = () => {
+  const getThumbnailAPI = useCallback(() => {
     return bridgeRefs.current.thumbnail?.api || null;
-  };
+  }, []);
 
-  const getExportState = (): ExportState => {
+  const getExportState = useCallback((): ExportState => {
     return bridgeRefs.current.export?.state || { canExport: false };
-  };
+  }, []);
 
-  const getBookmarkState = (): BookmarkState => {
+  const getBookmarkState = useCallback((): BookmarkState => {
     return (
       bridgeRefs.current.bookmark?.state || {
         bookmarks: null,
@@ -496,11 +500,14 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
         error: null,
       }
     );
-  };
+  }, []);
 
-  const hasBookmarkSupport = () => Boolean(bridgeRefs.current.bookmark);
+  const hasBookmarkSupport = useCallback(
+    () => Boolean(bridgeRefs.current.bookmark),
+    [],
+  );
 
-  const getAttachmentState = (): AttachmentState => {
+  const getAttachmentState = useCallback((): AttachmentState => {
     return (
       bridgeRefs.current.attachment?.state || {
         attachments: null,
@@ -508,11 +515,14 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
         error: null,
       }
     );
-  };
+  }, []);
 
-  const hasAttachmentSupport = () => Boolean(bridgeRefs.current.attachment);
+  const hasAttachmentSupport = useCallback(
+    () => Boolean(bridgeRefs.current.attachment),
+    [],
+  );
 
-  const getDocumentPermissions = (): DocumentPermissionsState => {
+  const getDocumentPermissions = useCallback((): DocumentPermissionsState => {
     return (
       bridgeRefs.current.permissions?.state || {
         isEncrypted: false,
@@ -528,9 +538,9 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
         canPrintHighQuality: true,
       }
     );
-  };
+  }, []);
 
-  const hasPermission = (flag: PdfPermissionFlag): boolean => {
+  const hasPermission = useCallback((flag: PdfPermissionFlag): boolean => {
     const api = bridgeRefs.current.permissions?.api;
     if (api?.hasPermission) {
       return api.hasPermission(flag);
@@ -542,27 +552,19 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
       );
     }
     return true;
-  };
+  }, []);
 
   // Action handlers - call APIs directly
-  const {
-    scrollActions,
-    zoomActions,
-    panActions,
-    selectionActions,
-    spreadActions,
-    rotationActions,
-    searchActions,
-    exportActions,
-    bookmarkActions,
-    attachmentActions,
-    printActions,
-  } = createViewerActions({
-    registry: bridgeRefs,
-    getScrollState,
-    getZoomState,
-    triggerImmediateZoomUpdate,
-  });
+  const actionsBundle = useMemo(
+    () =>
+      createViewerActions({
+        registry: bridgeRefs,
+        getScrollState,
+        getZoomState,
+        triggerImmediateZoomUpdate,
+      }),
+    [getScrollState, getZoomState, triggerImmediateZoomUpdate],
+  );
 
   // Printing is an exit path, so a "run on export" policy must enforce here too.
   // Enforce the current file through the same path export uses: when a policy
@@ -574,10 +576,10 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   // runs straight away.
   const printWithPolicy = useCallback(async () => {
     const file = activeFileId
-      ? selectors.getFiles([activeFileId as FileId])[0]
+      ? selectorsRef.current.getFiles([activeFileId as FileId])[0]
       : undefined;
     if (!activeFileId || !file) {
-      printActions.print();
+      actionsBundle.printActions.print();
       return;
     }
     const [enforced] = await enforceExportPolicies(
@@ -588,15 +590,15 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     // Original file back means no policy rewrote it (no active policy, already
     // enforced, or graceful failure fallback) — nothing new to review, print it.
     if (!enforced || enforced === file) {
-      printActions.print();
+      actionsBundle.printActions.print();
       return;
     }
     alert({
       alertType: "warning",
-      title: t("policies.enforcement.printPolicyAppliedTitle"),
-      body: t("policies.enforcement.printPolicyAppliedBody"),
+      title: tRef.current("policies.enforcement.printPolicyAppliedTitle"),
+      body: tRef.current("policies.enforcement.printPolicyAppliedBody"),
     });
-  }, [activeFileId, selectors, printActions]);
+  }, [activeFileId, actionsBundle.printActions]);
 
   const enforcedPrintActions = useMemo<PrintActions>(
     () => ({ print: printWithPolicy }),
@@ -609,97 +611,159 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     setZoomRestoreSettledTick((tick) => tick + 1);
   }, []);
 
-  const value: ViewerContextType = {
-    // UI state
-    isThumbnailSidebarVisible,
-    toggleThumbnailSidebar,
-    isBookmarkSidebarVisible,
-    toggleBookmarkSidebar,
-    isAttachmentSidebarVisible,
-    toggleAttachmentSidebar,
-    isLayerSidebarVisible,
-    toggleLayerSidebar,
-    hasLayers,
-    setHasLayers,
-    isCommentsSidebarVisible,
-    setCommentsSidebarVisible,
-    toggleCommentsSidebar,
-    highlightCommentRequest,
-    requestCommentFocus,
-    clearHighlightCommentRequest,
+  const value = useMemo<ViewerContextType>(
+    () => ({
+      // UI state
+      isThumbnailSidebarVisible,
+      toggleThumbnailSidebar,
+      isBookmarkSidebarVisible,
+      toggleBookmarkSidebar,
+      isAttachmentSidebarVisible,
+      toggleAttachmentSidebar,
+      isLayerSidebarVisible,
+      toggleLayerSidebar,
+      hasLayers,
+      setHasLayers,
+      isCommentsSidebarVisible,
+      setCommentsSidebarVisible,
+      toggleCommentsSidebar,
+      highlightCommentRequest,
+      requestCommentFocus,
+      clearHighlightCommentRequest,
 
-    // Search interface
-    isSearchInterfaceVisible,
-    searchInterfaceActions,
+      // Search interface
+      isSearchInterfaceVisible,
+      searchInterfaceActions,
 
-    // Annotation controls
-    isAnnotationsVisible,
-    toggleAnnotationsVisibility,
-    isAnnotationMode,
-    setAnnotationMode,
+      // Annotation controls
+      isAnnotationsVisible,
+      toggleAnnotationsVisibility,
+      isAnnotationMode,
+      setAnnotationMode,
 
-    // Active file tracking
-    activeFileId,
-    setActiveFileId,
-    activeFileIndex,
-    setActiveFileIndex,
+      // Active file tracking
+      activeFileId,
+      setActiveFileId,
+      activeFileIndex,
+      setActiveFileIndex,
 
-    // State getters
-    getScrollState,
-    getZoomState,
-    getPanState,
-    getSelectionState,
-    getSpreadState,
-    getRotationState,
-    getSearchState,
-    getThumbnailAPI,
-    getExportState,
-    getBookmarkState,
-    hasBookmarkSupport,
-    getAttachmentState,
-    hasAttachmentSupport,
-    getDocumentPermissions,
-    hasPermission,
+      // State getters
+      getScrollState,
+      getZoomState,
+      getPanState,
+      getSelectionState,
+      getSpreadState,
+      getRotationState,
+      getSearchState,
+      getThumbnailAPI,
+      getExportState,
+      getBookmarkState,
+      hasBookmarkSupport,
+      getAttachmentState,
+      hasAttachmentSupport,
+      getDocumentPermissions,
+      hasPermission,
 
-    // Immediate updates
-    registerImmediateZoomUpdate,
-    registerImmediateScrollUpdate,
-    registerImmediateSpreadUpdate,
-    registerImmediatePanUpdate,
-    registerImmediateRotationUpdate,
-    triggerImmediateScrollUpdate,
-    triggerImmediateZoomUpdate,
-    triggerImmediateSpreadUpdate,
-    zoomRestorePendingRef,
-    zoomRestoreSettledTick,
-    notifyZoomRestoreSettled,
-    triggerImmediatePanUpdate,
-    triggerImmediateRotationUpdate,
+      // Immediate updates
+      registerImmediateZoomUpdate,
+      registerImmediateScrollUpdate,
+      registerImmediateSpreadUpdate,
+      registerImmediatePanUpdate,
+      registerImmediateRotationUpdate,
+      triggerImmediateScrollUpdate,
+      triggerImmediateZoomUpdate,
+      triggerImmediateSpreadUpdate,
+      zoomRestorePendingRef,
+      zoomRestoreSettledTick,
+      notifyZoomRestoreSettled,
+      triggerImmediatePanUpdate,
+      triggerImmediateRotationUpdate,
 
-    // Actions
-    scrollActions,
-    zoomActions,
-    panActions,
-    selectionActions,
-    spreadActions,
-    rotationActions,
-    searchActions,
-    exportActions,
-    bookmarkActions,
-    attachmentActions,
-    printActions: enforcedPrintActions,
+      // Actions
+      scrollActions: actionsBundle.scrollActions,
+      zoomActions: actionsBundle.zoomActions,
+      panActions: actionsBundle.panActions,
+      selectionActions: actionsBundle.selectionActions,
+      spreadActions: actionsBundle.spreadActions,
+      rotationActions: actionsBundle.rotationActions,
+      searchActions: actionsBundle.searchActions,
+      exportActions: actionsBundle.exportActions,
+      bookmarkActions: actionsBundle.bookmarkActions,
+      attachmentActions: actionsBundle.attachmentActions,
+      printActions: enforcedPrintActions,
 
-    // Bridge registration
-    registerBridge,
+      // Bridge registration
+      registerBridge,
 
-    // Apply changes
-    applyChanges,
-    setApplyChanges,
+      // Apply changes
+      applyChanges,
+      setApplyChanges,
 
-    // PDF page rendering mode
-    pdfRenderMode,
-    cyclePdfRenderMode,
-  };
+      // PDF page rendering mode
+      pdfRenderMode,
+      cyclePdfRenderMode,
+    }),
+    [
+      isThumbnailSidebarVisible,
+      toggleThumbnailSidebar,
+      isBookmarkSidebarVisible,
+      toggleBookmarkSidebar,
+      isAttachmentSidebarVisible,
+      toggleAttachmentSidebar,
+      isLayerSidebarVisible,
+      toggleLayerSidebar,
+      hasLayers,
+      isCommentsSidebarVisible,
+      setCommentsSidebarVisible,
+      toggleCommentsSidebar,
+      highlightCommentRequest,
+      requestCommentFocus,
+      clearHighlightCommentRequest,
+      isSearchInterfaceVisible,
+      searchInterfaceActions,
+      isAnnotationsVisible,
+      toggleAnnotationsVisibility,
+      isAnnotationMode,
+      setAnnotationMode,
+      activeFileId,
+      activeFileIndex,
+      setActiveFileIndex,
+      getScrollState,
+      getZoomState,
+      getPanState,
+      getSelectionState,
+      getSpreadState,
+      getRotationState,
+      getSearchState,
+      getThumbnailAPI,
+      getExportState,
+      getBookmarkState,
+      hasBookmarkSupport,
+      getAttachmentState,
+      hasAttachmentSupport,
+      getDocumentPermissions,
+      hasPermission,
+      registerImmediateZoomUpdate,
+      registerImmediateScrollUpdate,
+      registerImmediateSpreadUpdate,
+      registerImmediatePanUpdate,
+      registerImmediateRotationUpdate,
+      triggerImmediateScrollUpdate,
+      triggerImmediateZoomUpdate,
+      triggerImmediateSpreadUpdate,
+      zoomRestoreSettledTick,
+      notifyZoomRestoreSettled,
+      triggerImmediatePanUpdate,
+      triggerImmediateRotationUpdate,
+      actionsBundle,
+      enforcedPrintActions,
+      registerBridge,
+      applyChanges,
+      setApplyChanges,
+      pdfRenderMode,
+      cyclePdfRenderMode,
+    ],
+  );
 
   return (
     <ViewerContext.Provider value={value}>{children}</ViewerContext.Provider>
