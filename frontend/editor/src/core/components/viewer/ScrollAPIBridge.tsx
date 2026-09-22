@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { useScroll } from "@embedpdf/plugin-scroll/react";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
@@ -16,7 +16,12 @@ export function ScrollAPIBridge() {
     return null;
   }
 
-  return <ScrollAPIBridgeInner documentId={activeDocumentId} />;
+  return (
+    <ScrollAPIBridgeInner
+      key={activeDocumentId}
+      documentId={activeDocumentId}
+    />
+  );
 }
 
 function ScrollAPIBridgeInner({ documentId }: { documentId: string }) {
@@ -25,7 +30,7 @@ function ScrollAPIBridgeInner({ documentId }: { documentId: string }) {
 
   // Keep scroll ref updated to avoid re-running effect when object reference changes
   const scrollRef = useRef(scroll);
-  useEffect(() => {
+  useLayoutEffect(() => {
     scrollRef.current = scroll;
   }, [scroll]);
 
@@ -33,7 +38,7 @@ function ScrollAPIBridgeInner({ documentId }: { documentId: string }) {
   const currentPage = scrollState?.currentPage;
   const totalPages = scrollState?.totalPages;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const currentScroll = scrollRef.current;
     if (
       currentScroll &&

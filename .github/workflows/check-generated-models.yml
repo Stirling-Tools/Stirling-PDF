@@ -23,6 +23,7 @@ permissions:
 jobs:
   generated-models:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
       pull-requests: write
