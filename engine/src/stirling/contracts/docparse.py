@@ -15,6 +15,10 @@ from pydantic import Field
 from stirling.models import ApiModel, FileId, OwnerId, PrincipalId
 
 
+class DocparseCapabilities(ApiModel):
+    indexing_configured: bool
+
+
 class MarkdownBlock(ApiModel):
     """One rendered Markdown element and the 1-based pages it came from.
 

@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from stirling.api.dependencies import get_document_service, require_user_id
 from stirling.config import AppSettings, load_settings
-from stirling.contracts.docparse import DocChunk, IngestRequest, IngestResponse
+from stirling.contracts.docparse import DocChunk, DocparseCapabilities, IngestRequest, IngestResponse
 from stirling.docparse.chunking import pack_blocks, page_texts
 from stirling.documents import DocumentService
 from stirling.documents.service import CONTENT_TYPE_METADATA_KEY, DOCPARSE_CHUNK_CONTENT_TYPE
@@ -26,6 +26,12 @@ router = APIRouter(prefix="/api/v1/docparse", tags=["docparse"])
 
 def _settings() -> AppSettings:
     return load_settings()
+
+
+@router.get("/capabilities", response_model=DocparseCapabilities)
+async def capabilities(documents: Annotated[DocumentService, Depends(get_document_service)]) -> DocparseCapabilities:
+    """Report live embedding readiness for guided ingestion setup."""
+    return DocparseCapabilities(indexing_configured=documents.embedder.configured)
 
 
 def _chunk_metadata(chunk: DocChunk) -> dict[str, str]:
