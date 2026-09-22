@@ -86,6 +86,11 @@
       "title": "PDF Converter - Stirling PDF",
       "description": "Convert files to and from PDF format"
     },
+    "urlToPdf": {
+      "image": "/og_images/home.png",
+      "title": "URL to PDF - Stirling PDF",
+      "description": "Convert a web page into a PDF document"
+    },
     "ocr": {
       "image": "/og_images/ocr.png",
       "title": "OCR PDF - Stirling PDF",
@@ -799,6 +804,7 @@
     "/split": "split",
     "/merge": "merge",
     "/convert": "convert",
+    "/url-to-pdf": "urlToPdf",
     "/ocr": "ocr",
     "/add-image": "addImage",
     "/rotate": "rotate",
@@ -1304,6 +1310,10 @@
     {
       "path": "/unlock-pdf-forms",
       "label": "Unlock PDF Forms"
+    },
+    {
+      "path": "/url-to-pdf",
+      "label": "URL to PDF"
     },
     {
       "path": "/validate-signature",

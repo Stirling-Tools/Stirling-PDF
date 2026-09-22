@@ -83,7 +83,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
   return useMemo(() => {
     const allTools: ToolRegistry = {
       urlToPdf: {
-        icon: <LocalIcon icon="link-rounded" width="1.5rem" height="1.5rem" />,
+        icon: <Icon name="link" size="1.5rem" />,
         name: t("home.urlToPdf.title", "URL to PDF"),
         component: lazy(() => import("@app/tools/UrlToPdf")),
         description: t(
