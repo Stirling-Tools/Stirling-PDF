@@ -330,6 +330,7 @@ public class UserController {
                     .body(Map.of("error", "incorrectPassword", "message", "Incorrect password"));
         }
         userService.changePassword(user, newPassword);
+        userService.clearInvitePending(user);
         // Logout using Spring's utility
         new SecurityContextLogoutHandler().logout(request, response, null);
         return ResponseEntity.ok(

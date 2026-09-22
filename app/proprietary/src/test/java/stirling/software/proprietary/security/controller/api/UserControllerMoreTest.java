@@ -136,6 +136,7 @@ class UserControllerMoreTest {
         @DisplayName("changes the password and logs the user out")
         void success() throws Exception {
             User u = user("me");
+            markInvitePending(u);
             when(userService.findByUsernameIgnoreCase("me")).thenReturn(Optional.of(u));
             when(userService.isPasswordCorrect(u, "old")).thenReturn(true);
 
@@ -147,7 +148,9 @@ class UserControllerMoreTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message").value("credsUpdated"));
 
-            verify(userService).changePassword(u, "new");
+            var order = inOrder(userService);
+            order.verify(userService).changePassword(u, "new");
+            order.verify(userService).clearInvitePending(u);
         }
     }
 

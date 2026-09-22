@@ -175,7 +175,12 @@ export function UsersDirectory({
           onClick: () => onUnlock(m),
         });
       }
-      if (capabilities.resendInvite && emailInvitesEnabled && m.invitePending) {
+      if (
+        capabilities.resendInvite &&
+        emailInvitesEnabled &&
+        m.invitePending &&
+        m.status !== "suspended"
+      ) {
         items.push({
           label: t("users.action.resendInvite", "Resend invite"),
           disabled: m.isSelf,

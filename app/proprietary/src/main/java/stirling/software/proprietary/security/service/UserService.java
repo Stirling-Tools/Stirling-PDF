@@ -461,7 +461,7 @@ public class UserService implements UserServiceInterface {
             return;
         }
         userRepository.deleteSettingsByUserIdAndKeys(user.getId(), List.of(INVITE_PENDING_KEY));
-        databaseService.exportDatabase();
+        exportAfterCommit();
     }
 
     /** Whether one user's {@code user_settings} rows carry a live invite marker. */

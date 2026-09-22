@@ -210,6 +210,7 @@ export function InviteMemberModal({
     setSending(true);
     try {
       let processorApplied = true;
+      const notices: string[] = [];
       if (mode === "email") {
         if (!emailValid) return;
         const result = await usersBackend.inviteMember(
@@ -223,8 +224,8 @@ export function InviteMemberModal({
         }
         // The account exists but its mail never left, or some addresses in the batch
         // failed: closing quietly would hide either.
-        const notice = result.warning ?? result.errors;
-        if (notice) onNotice?.(notice);
+        if (result.warning) notices.push(result.warning);
+        if (result.errors) notices.push(result.errors);
         if (processor)
           processorApplied = await grantProcessor(
             (m) => m.email === email.trim() || m.username === email.trim(),
@@ -246,12 +247,13 @@ export function InviteMemberModal({
           ).catch(() => false);
       }
       if (processor && !processorApplied)
-        onNotice?.(
+        notices.push(
           t(
             "users.invite.processorDeferred",
             "Invite sent, but Processor access couldn't be granted yet - set it from the roster once they've joined.",
           ),
         );
+      if (notices.length) onNotice?.(notices.join(" "));
       onInvited?.();
       close();
     } catch (e) {

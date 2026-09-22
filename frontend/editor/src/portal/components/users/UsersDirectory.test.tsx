@@ -147,6 +147,16 @@ describe("UsersDirectory - never-used invites", () => {
     await screen.findByText("Remove from team");
     expect(screen.queryByText("Resend invite")).not.toBeInTheDocument();
   });
+
+  it("hides resend for a suspended invite", async () => {
+    renderDirectory(selfHostedCaps, TEAMS, [
+      { ...INVITED, status: "suspended" },
+    ]);
+    expect(screen.queryByText("Invited")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Actions for Priya" }));
+    await screen.findByText("Remove from org");
+    expect(screen.queryByText("Resend invite")).not.toBeInTheDocument();
+  });
 });
 
 describe("flavor capabilities — invitations + remove scope", () => {

@@ -439,7 +439,8 @@ class UserServiceTest {
     @ParameterizedTest
     @CsvSource({
         "username, true", "password, true", "role, true", "enabled, true",
-        "username, false", "password, false", "role, false", "enabled, false"
+        "username, false", "password, false", "role, false", "enabled, false",
+        "invite, true", "invite, false"
     })
     void userMutationExportsOnlyAfterSuccessfulCommit(String mutation, boolean commit)
             throws Exception {
@@ -457,6 +458,12 @@ class UserServiceTest {
                     userService.changeRole(user, Role.ADMIN.getRoleId());
                 }
                 case "enabled" -> userService.changeUserEnabled(user, false);
+                case "invite" -> {
+                    userService.clearInvitePending(user);
+                    verify(userRepository)
+                            .deleteSettingsByUserIdAndKeys(
+                                    user.getId(), List.of(UserService.INVITE_PENDING_KEY));
+                }
                 default -> throw new IllegalArgumentException(mutation);
             }
             verify(databaseService, never()).exportDatabase();
