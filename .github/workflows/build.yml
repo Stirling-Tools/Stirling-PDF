@@ -62,11 +62,19 @@ jobs:
           filters: .github/config/.files.yaml
 
   gradle-cache-prime:
-    if: ${{ !cancelled() && needs.files-changed.outputs.backend == 'true' }}
+    if: ${{ !cancelled() && needs.files-changed.outputs.backend == 'true' && false }}
     needs: [files-changed]
     permissions:
       contents: write
     uses: ./.github/workflows/gradle-cache-prime.yml
+    secrets: inherit
+
+  cache-prime-test:
+    if: ${{ !cancelled() && needs.gradle-cache-prime.result == 'success' || needs.gradle-cache-prime.result == 'skipped' }}
+    needs: [gradle-cache-prime]
+    permissions:
+      contents: write
+    uses: ./.github/workflows/cache-prime-test.yml
     secrets: inherit
 
   build:
