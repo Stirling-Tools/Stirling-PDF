@@ -130,60 +130,60 @@ jobs:
         working-directory: cache-the-planet
         run: node "$GITHUB_WORKSPACE/.github/scripts/publish-pr-cache-artifacts.js"
 
-      # - name: Delete published PR cache artifacts
-      #   if: ${{ steps.pr.outputs.number != '' }}
-      #   env:
-      #     GITHUB_TOKEN: ${{ github.token }}
-      #     ARTIFACT_RUN_ID: ${{ github.run_id }}
-      #     PR_NUMBER: ${{ steps.pr.outputs.number }}
-      #     GITHUB_REPOSITORY: ${{ github.repository }}
-      #   run: |
-      #     node <<'NODE'
-      #     const repository = process.env.GITHUB_REPOSITORY;
-      #     const runId = process.env.ARTIFACT_RUN_ID;
-      #     const prNumber = process.env.PR_NUMBER;
-      #     const token = process.env.GITHUB_TOKEN;
-      #     const api = `https://api.github.com/repos/${repository}`;
-      #     const headers = {
-      #       Accept: "application/vnd.github+json",
-      #       Authorization: `Bearer ${token}`,
-      #       "X-GitHub-Api-Version": "2022-11-28",
-      #     };
-      #     const prefix = `cache-the-planet-pr-${prNumber}-`;
-      #     const namePattern = new RegExp(
-      #       `^cache-the-planet-pr-${prNumber}-[A-Za-z0-9_-]{1,32}-[0-9a-f]{8,128}-v[1-9]\\d*$`,
-      #       "i",
-      #     );
+      - name: Delete published PR cache artifacts
+        if: ${{ steps.pr.outputs.number != '' }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ARTIFACT_RUN_ID: ${{ github.run_id }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          node <<'NODE'
+          const repository = process.env.GITHUB_REPOSITORY;
+          const runId = process.env.ARTIFACT_RUN_ID;
+          const prNumber = process.env.PR_NUMBER;
+          const token = process.env.GITHUB_TOKEN;
+          const api = `https://api.github.com/repos/${repository}`;
+          const headers = {
+            Accept: "application/vnd.github+json",
+            Authorization: `Bearer ${token}`,
+            "X-GitHub-Api-Version": "2022-11-28",
+          };
+          const prefix = `cache-the-planet-pr-${prNumber}-`;
+          const namePattern = new RegExp(
+            `^cache-the-planet-pr-${prNumber}-[A-Za-z0-9_-]{1,32}-[0-9a-f]{8,128}-v[1-9]\\d*$`,
+            "i",
+          );
 
-      #     async function request(url, options = {}) {
-      #       const response = await fetch(url, { ...options, headers });
-      #       if (!response.ok) {
-      #         throw new Error(`${options.method || "GET"} ${url} failed: ${response.status}`);
-      #       }
-      #       return response.status === 204 ? null : response.json();
-      #     }
+          async function request(url, options = {}) {
+            const response = await fetch(url, { ...options, headers });
+            if (!response.ok) {
+              throw new Error(`${options.method || "GET"} ${url} failed: ${response.status}`);
+            }
+            return response.status === 204 ? null : response.json();
+          }
 
-      #     (async () => {
-      #       const data = await request(
-      #         `${api}/actions/runs/${encodeURIComponent(runId)}/artifacts?per_page=100`,
-      #       );
-      #       const artifacts = (data.artifacts || []).filter(
-      #         (artifact) =>
-      #           !artifact.expired &&
-      #           typeof artifact.id === "number" &&
-      #           typeof artifact.name === "string" &&
-      #           artifact.name.startsWith(prefix) &&
-      #           namePattern.test(artifact.name),
-      #       );
-      #       for (const artifact of artifacts) {
-      #         await request(`${api}/actions/artifacts/${artifact.id}`, {
-      #           method: "DELETE",
-      #         });
-      #         console.log(`Deleted source artifact ${artifact.name}`);
-      #       }
-      #       console.log(`Deleted ${artifacts.length} published PR cache artifact(s).`);
-      #     })().catch((error) => {
-      #       console.error(error.message);
-      #       process.exitCode = 1;
-      #     });
-      #     NODE
+          (async () => {
+            const data = await request(
+              `${api}/actions/runs/${encodeURIComponent(runId)}/artifacts?per_page=100`,
+            );
+            const artifacts = (data.artifacts || []).filter(
+              (artifact) =>
+                !artifact.expired &&
+                typeof artifact.id === "number" &&
+                typeof artifact.name === "string" &&
+                artifact.name.startsWith(prefix) &&
+                namePattern.test(artifact.name),
+            );
+            for (const artifact of artifacts) {
+              await request(`${api}/actions/artifacts/${artifact.id}`, {
+                method: "DELETE",
+              });
+              console.log(`Deleted source artifact ${artifact.name}`);
+            }
+            console.log(`Deleted ${artifacts.length} published PR cache artifact(s).`);
+          })().catch((error) => {
+            console.error(error.message);
+            process.exitCode = 1;
+          });
+          NODE
