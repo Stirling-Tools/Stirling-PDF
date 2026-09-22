@@ -13,8 +13,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Stream;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -23,6 +31,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import stirling.software.common.pdf.MarkdownBlock;
+import stirling.software.common.pdf.MarkdownBlocks;
 import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.text.TextChar;
 import stirling.software.jpdfium.text.TextLine;
@@ -158,20 +168,6 @@ class AdvancedPdfMarkdownConverterTest {
         assertEquals("Don’t know", WordGeometry.rejoinContractions("Don ’ t know"));
         // An opening quote has real space around it and must keep it.
         assertEquals("he said ' hello", WordGeometry.rejoinContractions("he said ' hello"));
-    }
-
-    @Test
-    void headingLevelsAreRebasedOnTheStrongestHeadingPresent() {
-        // A document whose headings are body-size and bold scores every one of them level 3;
-        // relative to each other they are its top level, so they must render as level 1.
-        assertEquals("# CONTENTS\n", MarkdownText.normaliseHeadingLevels("### CONTENTS\n"));
-        // A real two-level document keeps two levels, with no gap between them.
-        assertEquals(
-                "# Title\n\ntext\n\n## Section\n",
-                MarkdownText.normaliseHeadingLevels("# Title\n\ntext\n\n### Section\n"));
-        // Already rooted at level 1 with no gaps: left alone.
-        String unchanged = "# Title\n\n## Section\n";
-        assertEquals(unchanged, MarkdownText.normaliseHeadingLevels(unchanged));
     }
 
     /** A line of Han text has no spaces, so the word-count heading guard cannot measure it. */
@@ -367,7 +363,152 @@ class AdvancedPdfMarkdownConverterTest {
                 "a rule flood should disable ruled-table detection, not scan it");
     }
 
-    private void assertConversionMatchesGolden(String pdfName, String mdName) throws IOException {
+    /**
+     * The block list carries the pages a reader would cite, so it must survive a page break: this
+     * fixture's third table runs off page 2 and is stitched back together on page 3.
+     */
+    @Test
+    void blocksCarryPagesAndAStitchedTableSpansThePageBreak() throws IOException {
+        Path pdfPath = copyFixture("many-tables-test_stress.pdf");
+
+        List<MarkdownBlock> blocks;
+        int pageCount;
+        try (PdfDocument doc = PdfDocument.open(pdfPath)) {
+            pageCount = doc.pageCount();
+            blocks = new AdvancedPdfMarkdownConverter().extractBlocks(doc);
+        }
+
+        assertFalse(blocks.isEmpty(), "the fixture has text on every page");
+        Set<Integer> covered = new TreeSet<>();
+        int previousStart = 0;
+        for (MarkdownBlock block : blocks) {
+            assertTrue(block.pageStart() >= 1, "page numbers are 1-based: " + block.pageStart());
+            assertTrue(block.pageEnd() >= block.pageStart(), "pageEnd cannot precede pageStart");
+            assertTrue(block.pageEnd() <= pageCount, "pageEnd cannot exceed the document");
+            assertTrue(block.pageStart() >= previousStart, "blocks come out in reading order");
+            previousStart = block.pageStart();
+            for (int p = block.pageStart(); p <= block.pageEnd(); p++) {
+                covered.add(p);
+            }
+        }
+        assertEquals(pageCount, covered.size(), "every page of the fixture contributes a block");
+
+        List<MarkdownBlock> spanning =
+                blocks.stream().filter(b -> b.pageEnd() > b.pageStart()).toList();
+        assertEquals(1, spanning.size(), "only the stitched table spans a page break");
+        MarkdownBlock stitched = spanning.getFirst();
+        assertEquals(2, stitched.pageStart());
+        assertEquals(3, stitched.pageEnd());
+        assertTrue(stitched.markdown().startsWith("|"), "the stitched block is the GFM table");
+    }
+
+    @Test
+    void headingPathsFollowTheHeadingStack() throws IOException {
+        Path pdfPath = copyFixture("many-tables-test_stress.pdf");
+
+        List<MarkdownBlock> blocks;
+        try (PdfDocument doc = PdfDocument.open(pdfPath)) {
+            blocks = new AdvancedPdfMarkdownConverter().extractBlocks(doc);
+        }
+
+        int subIndex = indexOfMarkdown(blocks, "## Section 3 Heading");
+        assertEquals(
+                List.of("Section 2 Heading", "Section 3 Heading"),
+                blocks.get(subIndex).headingPath(),
+                "a heading includes itself under its parent");
+        assertEquals(
+                blocks.get(subIndex).headingPath(),
+                blocks.get(subIndex + 1).headingPath(),
+                "the block under a heading inherits its chain");
+
+        int topIndex = indexOfMarkdown(blocks, "# Section 5 Heading");
+        assertEquals(
+                List.of("Section 5 Heading"),
+                blocks.get(topIndex).headingPath(),
+                "a top-level heading pops everything below it");
+    }
+
+    /**
+     * Heading and body are both 12pt here, so the detector cannot have scored a heading level 1 on
+     * size: bold body-size headings score level 3, and only the document-wide rebase makes them 1.
+     */
+    @Test
+    void headingLevelsAreRebasedBeforeBlocksAreHandedOut() throws IOException {
+        Path pdfPath = boldBodySizeHeadingsPdf();
+
+        List<MarkdownBlock> blocks;
+        try (PdfDocument doc = PdfDocument.open(pdfPath)) {
+            blocks = new AdvancedPdfMarkdownConverter().extractBlocks(doc);
+        }
+
+        List<String> headings =
+                blocks.stream()
+                        .map(MarkdownBlock::markdown)
+                        .filter(md -> MarkdownBlocks.headingLevel(md) > 0)
+                        .toList();
+        assertEquals(List.of("# Overview", "# Retention"), headings);
+        assertEquals(
+                List.of("Overview"),
+                blocks.get(1).headingPath(),
+                "heading paths are derived after the rebase");
+    }
+
+    private static final List<String> OVERVIEW_BODY =
+            List.of(
+                    "The widget service records every request it receives.",
+                    "Each record keeps the caller, the outcome and the time taken.");
+
+    private static final List<String> RETENTION_BODY =
+            List.of(
+                    "Records are kept for ninety days and then deleted.",
+                    "A deletion is itself recorded so the audit trail stays whole.");
+
+    /** Two sections whose headings are set in the body size, bold, each on its own block. */
+    private Path boldBodySizeHeadingsPdf() throws IOException {
+        Path pdfPath = tmp.resolve("bold-body-size-headings.pdf");
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.LETTER);
+            doc.addPage(page);
+            PDType1Font body = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+            PDType1Font bold = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
+            try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
+                // The extra leading is what makes each heading isolated enough to be detected.
+                float y = writeLine(cs, bold, "Overview", 720f) - 24f;
+                for (String line : OVERVIEW_BODY) {
+                    y = writeLine(cs, body, line, y);
+                }
+                y = writeLine(cs, bold, "Retention", y - 30f) - 24f;
+                for (String line : RETENTION_BODY) {
+                    y = writeLine(cs, body, line, y);
+                }
+            }
+            doc.save(pdfPath.toFile());
+        }
+        return pdfPath;
+    }
+
+    /** Writes one 12pt line at the left margin and returns the next baseline. */
+    private static float writeLine(PDPageContentStream cs, PDType1Font font, String text, float y)
+            throws IOException {
+        cs.beginText();
+        cs.setFont(font, 12f);
+        cs.newLineAtOffset(72f, y);
+        cs.showText(text);
+        cs.endText();
+        return y - 15f;
+    }
+
+    private static int indexOfMarkdown(List<MarkdownBlock> blocks, String markdown) {
+        for (int i = 0; i < blocks.size(); i++) {
+            if (blocks.get(i).markdown().equals(markdown)) {
+                return i;
+            }
+        }
+        fail("No block rendered as '" + markdown + "'");
+        return -1;
+    }
+
+    private Path copyFixture(String pdfName) throws IOException {
         Path pdfPath = tmp.resolve(pdfName);
         try (InputStream in =
                 getClass().getResourceAsStream("/pdf-ingestion-fixtures/" + pdfName)) {
@@ -376,6 +517,11 @@ class AdvancedPdfMarkdownConverterTest {
             }
             Files.copy(in, pdfPath);
         }
+        return pdfPath;
+    }
+
+    private void assertConversionMatchesGolden(String pdfName, String mdName) throws IOException {
+        Path pdfPath = copyFixture(pdfName);
 
         String actual;
         try (PdfDocument doc = PdfDocument.open(pdfPath)) {
