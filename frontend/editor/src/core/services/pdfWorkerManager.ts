@@ -11,6 +11,14 @@ import {
   PDFDocumentProxy,
 } from "pdfjs-dist/legacy/build/pdf.mjs";
 
+/** A document did not open inside the caller's `openTimeoutMs`. */
+export class PdfOpenTimeout extends Error {
+  constructor(timeoutMs: number) {
+    super(`PDF did not open within ${timeoutMs}ms`);
+    this.name = "PdfOpenTimeout";
+  }
+}
+
 class PDFWorkerManager {
   private static instance: PDFWorkerManager;
   private activeDocuments = new Set<PDFDocumentProxy>();
@@ -56,6 +64,11 @@ class PDFWorkerManager {
       stopAtErrors?: boolean;
       verbosity?: number;
       signal?: { cancelled: boolean };
+      /** Reject with {@link PdfOpenTimeout} if the document has not opened by then,
+       *  destroying the loading task. A worker that dies mid-parse never settles its
+       *  promise, so without this its task and the file's bytes are held for the life
+       *  of the page. */
+      openTimeoutMs?: number;
     } = {},
   ): Promise<PDFDocumentProxy> {
     // Wait if we've hit the worker limit
@@ -97,8 +110,22 @@ class PDFWorkerManager {
           },
     );
 
+    const openTimeoutMs = options.openTimeoutMs;
+    let timer: ReturnType<typeof setTimeout> | null = null;
     try {
-      const pdf = await loadingTask.promise;
+      const opened =
+        openTimeoutMs === undefined
+          ? loadingTask.promise
+          : Promise.race([
+              loadingTask.promise,
+              new Promise<never>((_, reject) => {
+                timer = setTimeout(
+                  () => reject(new PdfOpenTimeout(openTimeoutMs)),
+                  openTimeoutMs,
+                );
+              }),
+            ]);
+      const pdf = await opened;
       this.activeDocuments.add(pdf);
       this.workerCount++;
 
@@ -113,6 +140,8 @@ class PDFWorkerManager {
         }
       }
       throw error;
+    } finally {
+      if (timer !== null) clearTimeout(timer);
     }
   }
 
