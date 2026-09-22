@@ -58,7 +58,7 @@ jobs:
     name: Prime shared Gradle cache
     needs: hash_pr
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     permissions:
       contents: write
     env:
@@ -77,7 +77,7 @@ jobs:
 
       - name: Restore Gradle cache sftp
         id: cache
-        uses: Ludy87/cache-the-planet@0b9d42807720992a5869b51cf394762c89d118e7
+        uses: Ludy87/cache-the-planet@62a8d98a23e7ab9c31c636d18407d953ccd5bc04
         with:
           manifest-branch: dev-cache
           manifest-path: .github/cache-data
