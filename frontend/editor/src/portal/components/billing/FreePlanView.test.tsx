@@ -9,6 +9,7 @@ import type { LatestBundleQuote } from "@portal/billing/stripe";
 
 const api = vi.hoisted(() => ({
   fetchBundlePricing: vi.fn(),
+  fetchCheckoutPricing: vi.fn(),
   getLatestBundleQuote: vi.fn(),
   cancelBundleQuote: vi.fn(),
   createBundleStripeQuote: vi.fn(),
@@ -23,7 +24,10 @@ vi.mock("@portal/billing/stripe", async (importOriginal) => ({
 }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (key: string, fallback?: string) => fallback ?? key,
+    t: (key: string, fallback?: string, values?: Record<string, unknown>) =>
+      (fallback ?? key).replace(/{{(.*?)}}/g, (_, name: string) =>
+        String(values?.[name] ?? ""),
+      ),
   }),
 }));
 
@@ -57,6 +61,11 @@ beforeEach(() => {
   HTMLElement.prototype.scrollIntoView = vi.fn();
   sessionStorage.clear();
   api.getLatestBundleQuote.mockResolvedValue(savedQuote);
+  api.fetchCheckoutPricing.mockResolvedValue({
+    currency: "usd",
+    currencyLocked: false,
+    unitAmountMinor: 1,
+  });
   api.fetchBundlePricing.mockResolvedValue({
     currency: "usd",
     unitAmountMinor: 1,
@@ -64,11 +73,16 @@ beforeEach(() => {
 });
 
 describe("Processor activation navigation", () => {
-  it("keeps the wallet currency beyond USD, EUR and GBP", async () => {
+  it("uses the customer currency instead of the wallet display default", async () => {
+    api.fetchCheckoutPricing.mockResolvedValue({
+      currency: "cad",
+      currencyLocked: true,
+      unitAmountMinor: 1.5,
+    });
     render(
       <MantineProvider env="test">
         <FreePlanView
-          wallet={{ ...freeWallet, currency: "cad" }}
+          wallet={{ ...freeWallet, currency: "usd" }}
           step="payg"
           onStepChange={vi.fn()}
         />
@@ -87,7 +101,7 @@ describe("Processor activation navigation", () => {
       </MantineProvider>,
     );
     fireEvent.click(await screen.findByRole("button", { name: "Back" }));
-    fireEvent.click(screen.getByRole("button", { name: "Change" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Change" }));
     const limit = screen.getByRole("textbox", { name: "Monthly spend limit" });
     fireEvent.change(limit, { target: { value: "250" } });
     expect(limit).toHaveValue("$250");
@@ -260,4 +274,43 @@ describe("Processor activation navigation", () => {
     expect(api.createBundleStripeQuote).not.toHaveBeenCalled();
     expect(api.upsertBundleQuote).not.toHaveBeenCalled();
   });
+});
+
+it("blocks payment when the Processor price cannot be resolved", async () => {
+  api.fetchCheckoutPricing.mockRejectedValue(new Error("Pricing unavailable"));
+  render(
+    <MantineProvider env="test">
+      <FreePlanView wallet={freeWallet} step="payg" onStepChange={vi.fn()} />
+    </MantineProvider>,
+  );
+  expect(await screen.findByText("Pricing unavailable")).toBeInTheDocument();
+  expect(
+    screen.getByRole("button", { name: "Continue to payment" }),
+  ).toBeDisabled();
+  expect(api.createCheckoutSession).not.toHaveBeenCalled();
+});
+it("uses the resolved Processor rate and refreshes currency when reopened", async () => {
+  api.fetchCheckoutPricing.mockResolvedValue({
+    currency: "gbp",
+    currencyLocked: false,
+    unitAmountMinor: 2,
+  });
+  const view = (step: "payg" | null) => (
+    <MantineProvider env="test">
+      <FreePlanView wallet={freeWallet} step={step} onStepChange={vi.fn()} />
+    </MantineProvider>
+  );
+  const { rerender } = render(view("payg"));
+  expect(
+    await screen.findByText("£0.02 each · billed as used"),
+  ).toBeInTheDocument();
+  rerender(view(null));
+  api.fetchCheckoutPricing.mockResolvedValue({
+    currency: "aud",
+    currencyLocked: true,
+    unitAmountMinor: 3,
+  });
+  rerender(view("payg"));
+  expect(await screen.findByText(/0.03 each/)).toBeInTheDocument();
+  expect(api.fetchCheckoutPricing).toHaveBeenCalledTimes(2);
 });

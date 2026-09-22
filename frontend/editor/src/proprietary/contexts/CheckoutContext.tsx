@@ -33,12 +33,15 @@ import {
 import { useLicense } from "@app/contexts/LicenseContext";
 import { isSupabaseConfigured } from "@app/services/supabaseClient";
 import { getPreferredCurrency } from "@app/utils/currencyDetection";
+import { fetchCheckoutPricing } from "@app/portal/billing/stripe";
 import {
   usePlanFeatures,
   usePlanHighlights,
 } from "@app/constants/planConstants";
 
 export interface CheckoutOptions {
+  /** Linked team whose Stripe customer determines the billing currency. */
+  teamId?: number;
   minimumSeats?: number; // Override calculated seats for enterprise
   currency?: string; // Explicit display currency; checkout localization is handled by Stripe
   onSuccess?: (sessionId: string) => void; // Callback after successful payment
@@ -100,12 +103,18 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
 
   // Lazy fetch plans only when needed
   const fetchPlansIfNeeded = useCallback(
-    async (currency: string) => {
+    async (
+      currency: string,
+      currencyLocked = false,
+      tier?: "server" | "enterprise",
+    ) => {
       try {
         const response = await licenseService.getPlans(
           planFeatures,
           planHighlights,
           currency,
+          currencyLocked,
+          tier,
         );
         setPlans(response.plans);
         setPlansLoaded(true);
@@ -348,17 +357,26 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
           );
         }
 
-        // Update currency if provided
-        const currency = options.currency || currentCurrency;
+        const preferredCurrency =
+          options.currency || defaultCurrency || getPreferredCurrency();
+        const pricing =
+          options.teamId != null
+            ? await fetchCheckoutPricing(
+                options.teamId,
+                "currency",
+                preferredCurrency,
+              )
+            : null;
+        const currency = pricing?.currency ?? preferredCurrency;
         if (currency !== currentCurrency) {
           setCurrentCurrency(currency);
         }
 
-        // Fetch plans if not already loaded
-        const availablePlans =
-          !plansLoaded || currency !== currentCurrency
-            ? await fetchPlansIfNeeded(currency)
-            : plans;
+        const availablePlans = await fetchPlansIfNeeded(
+          currency,
+          pricing?.currencyLocked,
+          tier,
+        );
 
         // Fetch license info and user data for seat calculations
         let licenseInfo: LicenseInfo | null = null;
@@ -428,7 +446,7 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
         setIsLoading(false);
       }
     },
-    [currentCurrency, plans, plansLoaded, fetchPlansIfNeeded],
+    [currentCurrency, defaultCurrency, fetchPlansIfNeeded],
   );
 
   const closeCheckout = useCallback(() => {

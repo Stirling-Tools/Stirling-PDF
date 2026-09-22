@@ -99,6 +99,8 @@ const licenseService = {
     planFeatures: PlanFeaturesMap,
     planHighlights: PlanHighlightsMap,
     currency: string = "usd",
+    currencyLocked = false,
+    tier?: "server" | "enterprise",
   ): Promise<PlansResponse> {
     try {
       // Check if Supabase is configured
@@ -121,7 +123,12 @@ const licenseService = {
         missing: string[];
       }>("stripe-price-lookup", {
         body: {
-          lookup_keys: SELF_HOSTED_LOOKUP_KEYS,
+          lookup_keys:
+            tier === "server"
+              ? SELF_HOSTED_LOOKUP_KEYS.filter((key) =>
+                  key.startsWith("selfhosted:team:"),
+                )
+              : SELF_HOSTED_LOOKUP_KEYS,
           currency,
         },
       });
@@ -150,6 +157,11 @@ const licenseService = {
         { unit_amount: number; currency: string }
       >();
       for (const [lookupKey, priceData] of Object.entries(data.prices)) {
+        if (currencyLocked && priceData.currency !== currency) {
+          throw new Error(
+            `The plan is not configured for ${currency.toUpperCase()}.`,
+          );
+        }
         priceMap.set(lookupKey, {
           unit_amount: priceData.unit_amount,
           currency: priceData.currency,

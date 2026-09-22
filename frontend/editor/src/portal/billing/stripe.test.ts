@@ -27,6 +27,7 @@ import {
   createPortalSession,
   fetchBundleQuotePdf,
   fetchBundlePricing,
+  fetchCheckoutPricing,
   finalizeBundleInvoice,
   getLatestBundleQuote,
   StripeFunctionError,
@@ -511,5 +512,65 @@ it("shows Stripe's error details when a quote request fails", async () => {
   ).rejects.toMatchObject({
     code: "quote_creation_failed",
     message: "Currency mismatch",
+  });
+});
+
+describe("checkout pricing preview", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    vi.stubGlobal("navigator", { languages: ["en-GB"] });
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    localStorage.clear();
+  });
+  it.each([
+    [null, "gbp"],
+    ["aud", "aud"],
+  ])(
+    "uses browser detection unless a manual preference exists (%s)",
+    async (manual, expected) => {
+      if (manual) localStorage.setItem("explicitPricingCurrency", manual);
+      invoke.mockResolvedValue({
+        data: {
+          success: true,
+          currency: expected,
+          currency_locked: false,
+          unit_amount_minor: 2,
+        },
+        error: null,
+      });
+      expect(await fetchCheckoutPricing(42, "processor")).toEqual({
+        currency: expected,
+        currencyLocked: false,
+        unitAmountMinor: 2,
+      });
+      expect(invoke).toHaveBeenCalledWith(
+        "create-checkout-session",
+        expect.objectContaining({
+          body: { team_id: 42, preview: "processor", currency: expected },
+        }),
+      );
+    },
+  );
+  it("accepts the customer's confirmed currency over browser and manual preference", async () => {
+    localStorage.setItem("explicitPricingCurrency", "aud");
+    invoke.mockResolvedValue({
+      data: { success: true, currency: "usd", currency_locked: true },
+      error: null,
+    });
+    expect(await fetchCheckoutPricing(42, "currency")).toMatchObject({
+      currency: "usd",
+      currencyLocked: true,
+    });
+  });
+  it("rejects a malformed rate instead of substituting the USD wallet rate", async () => {
+    invoke.mockResolvedValue({
+      data: { success: true, currency: "gbp", currency_locked: false },
+      error: null,
+    });
+    await expect(fetchCheckoutPricing(42, "processor")).rejects.toThrow(
+      "Couldn't load checkout pricing",
+    );
   });
 });

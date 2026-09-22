@@ -40,3 +40,38 @@ it.each([
     ).toMatchObject({ currency: symbol, price: expected });
   },
 );
+
+it("looks up only Team prices so Enterprise currency support cannot force a USD fallback", async () => {
+  invoke.mockResolvedValue({
+    data: {
+      prices: {
+        "selfhosted:team:monthly": { unit_amount: 15000, currency: "aud" },
+        "selfhosted:team:yearly": { unit_amount: 150000, currency: "aud" },
+      },
+      missing: [],
+    },
+    error: null,
+  });
+  const result = await licenseService.getPlans(
+    { FREE: [], SERVER: [], ENTERPRISE: [] },
+    {
+      FREE: [],
+      SERVER_MONTHLY: [],
+      SERVER_YEARLY: [],
+      ENTERPRISE_MONTHLY: [],
+      ENTERPRISE_YEARLY: [],
+    },
+    "aud",
+    true,
+    "server",
+  );
+  expect(invoke).toHaveBeenLastCalledWith("stripe-price-lookup", {
+    body: {
+      lookup_keys: ["selfhosted:team:monthly", "selfhosted:team:yearly"],
+      currency: "aud",
+    },
+  });
+  expect(
+    result.plans.find((p) => p.id === "selfhosted:team:monthly"),
+  ).toMatchObject({ currency: "AUD", price: 150 });
+});

@@ -5,6 +5,7 @@ import {
 } from "@app/portal/auth/sessionClient";
 import { invokeSaasFunction } from "@app/portal/auth/saasFunctions";
 import { withPortalSaasSession } from "@app/portal/auth/portalSaasSession";
+import { getPreferredCurrency } from "@app/utils/currencyDetection";
 
 /**
  * Stripe checkout + portal sessions, minted via the SaaS Supabase edge
@@ -26,6 +27,45 @@ export class StripeFunctionError extends Error {
 
 /** Lower-case ISO currency; Stripe determines availability for the customer and price. */
 export type SaasCurrency = string;
+
+export interface CheckoutPricing {
+  currency: string;
+  currencyLocked: boolean;
+  unitAmountMinor?: number;
+}
+
+/** Resolves customer currency before preferences; Processor rates come from its pricing policy. */
+export async function fetchCheckoutPricing(
+  teamId: number,
+  preview: "currency" | "processor",
+  currency = getPreferredCurrency(),
+): Promise<CheckoutPricing> {
+  const result = await invoke<{
+    success: boolean;
+    currency: string;
+    currency_locked: boolean;
+    unit_amount_minor?: number;
+    error?: string;
+  }>("create-checkout-session", { team_id: teamId, preview, currency }, true);
+  if (
+    !result.success ||
+    !/^[a-z]{3}$/.test(result.currency) ||
+    typeof result.currency_locked !== "boolean" ||
+    (preview === "processor" &&
+      (typeof result.unit_amount_minor !== "number" ||
+        !Number.isFinite(result.unit_amount_minor) ||
+        result.unit_amount_minor < 0))
+  ) {
+    throw new StripeFunctionError(
+      result.error ?? "Couldn't load checkout pricing.",
+    );
+  }
+  return {
+    currency: result.currency,
+    currencyLocked: result.currency_locked,
+    unitAmountMinor: result.unit_amount_minor,
+  };
+}
 
 interface CheckoutSessionRequest {
   teamId: number;
@@ -70,6 +110,7 @@ interface PortalResponse {
 async function invoke<T>(
   name: string,
   body: Record<string, unknown>,
+  readOnly = false,
 ): Promise<T> {
   ensurePortalSessionClient();
   const supabase = getPortalSessionClient();
@@ -79,7 +120,7 @@ async function invoke<T>(
       "unconfigured",
     );
   }
-  const { data, error } = await invokeSaasFunction<T>(name, { body });
+  const { data, error } = await invokeSaasFunction<T>(name, { body }, readOnly);
   if (error) {
     let message = error.message ?? `Edge function ${name} failed`;
     let code: string | undefined;

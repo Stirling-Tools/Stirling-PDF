@@ -266,7 +266,7 @@ export function Usage({
       combinedChoose: true,
       currentLimit: heldLimit,
       minimumSeats: usersInUse ?? undefined,
-      currency: wallet?.currency ?? undefined,
+      teamId: wallet?.teamId ?? undefined,
       capacityNotice:
         !serverPlan &&
         !wallet?.team?.held &&
@@ -284,7 +284,7 @@ export function Usage({
     usersInUse,
     serverPlan,
     wallet?.team?.held,
-    wallet?.currency,
+    wallet?.teamId,
     localUsersInUse,
     localUserLimit,
   ]);

@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner } from "@app/ui";
 import type { Wallet } from "@portal/api/billing";
-import type { SaasCurrency } from "@portal/billing/stripe";
 import { StripeCheckoutModal } from "@portal/components/billing/StripeCheckoutModal";
 import { BundleCheckoutModal } from "@portal/components/billing/BundleCheckoutModal";
 import { PrepaidCapacityCard } from "@portal/components/billing/PrepaidCapacityCard";
@@ -43,7 +42,6 @@ export function FreePlanView({
   const [missingTeam, setMissingTeam] = useState<string | null>(null);
 
   const isLeader = wallet.role === "leader";
-  const currency: SaasCurrency = wallet.currency ?? "usd";
 
   function requireTeam(): boolean {
     if (wallet.teamId == null) {
@@ -100,8 +98,6 @@ export function FreePlanView({
           onClose={closeModals}
           onPrepay={() => setStep("prepay")}
           teamId={wallet.teamId}
-          currency={currency}
-          pricePerDocMinor={wallet.pricePerDocMinor}
           initialCapUsd={wallet.capUsd}
           onComplete={() => onSubscribed?.() ?? Promise.resolve(false)}
         />
