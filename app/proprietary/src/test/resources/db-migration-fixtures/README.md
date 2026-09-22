@@ -48,6 +48,45 @@ compatible with an existing user database. Common causes:
 * Changing a column type in an incompatible way.
 * Dropping or renaming a foreign-key target.
 
+## PostgreSQL upgrade coverage
+
+The same CI workflow also runs `scripts/db-migration/run-postgres-migration-test.py`
+against PostgreSQL 16. For each version named by the H2 fixtures, it boots the
+historical release on a disposable PostgreSQL database, then dumps and restores
+that database before starting the current JAR.
+
+The historical app creates the same core data as the H2 fixtures: admin and
+internal API users, the admin authority, Default/Internal teams, and license
+settings. The test also seeds a team named `Migration fixture <version>` so an
+empty replacement database cannot pass. It compares user IDs, usernames, team
+memberships, admin password hash/API key, authorities, and teams before and after
+the upgrade, and verifies admin login returns a JWT. Generated values can differ
+between H2 and PostgreSQL; each PostgreSQL upgrade must preserve its own values.
+Timestamps and license entitlements are excluded because startup may change them.
+
+Historical releases require a Server/Enterprise license for custom databases.
+CI uses `PREMIUM_KEY_ENTERPRISE` from the `ci-unsigned` environment. Missing or
+invalid licenses fail the test, including any fallback to H2. Fork PRs run H2
+only and report the missing PostgreSQL coverage in the job summary.
+
+To run locally, install Docker, Python 3.10+, and Java 25; set `PREMIUM_KEY` to a
+valid test license or an absolute `file:` license reference; then run:
+
+```bash
+python scripts/db-migration/run-postgres-migration-test.py \
+  --jar /absolute/path/to/current-stirling-pdf.jar \
+  --work-dir /absolute/path/to/new-migration-results
+```
+
+Use a fresh work directory per run. `--versions v2.0.0` narrows the releases;
+`--release-jar-dir /path/to/jars` reuses files named `stirling-pdf-v2.0.0.jar`.
+`--postgres-image postgres:16` and `--startup-timeout 300` can be overridden.
+
+Only containers created by the script are used and removed. SQL dumps and logs
+remain in the work directory; CI uploads only app/PostgreSQL logs on failure.
+This tests application schema upgrades on PostgreSQL 16, not PostgreSQL server
+major-version upgrades or every possible data/schema change.
+
 ## Regenerating fixtures
 
 There's no automated regenerator script - fixtures are rare to refresh and the
