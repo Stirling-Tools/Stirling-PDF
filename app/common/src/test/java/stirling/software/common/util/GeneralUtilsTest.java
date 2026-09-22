@@ -22,18 +22,17 @@ import stirling.software.common.configuration.InstallationPathConfig;
 
 public class GeneralUtilsTest {
 
-    // Regression guard for the SSO auto-login persistence bug: the admin UI writes camelCase
-    // proFeatures keys, so saveKeyToSettings must match (and persist) them against the camelCase
-    // settings.yml.template. A case mismatch makes YamlHelper.updateValue silently no-op.
     @Test
-    void saveKeyToSettings_persistsCamelCaseProFeatureKeys(@TempDir Path tempDir) throws Exception {
+    void saveKeyToSettings_persistsSecurityAndProFeatureKeys(@TempDir Path tempDir)
+            throws Exception {
         Path settings = tempDir.resolve("settings.yml");
         Files.writeString(
                 settings,
                 """
+                security:
+                  ssoAutoLogin: false
                 premium:
                   proFeatures:
-                    ssoAutoLogin: false
                     customMetadata:
                       author: username
                 """);
@@ -42,13 +41,12 @@ public class GeneralUtilsTest {
                 Mockito.mockStatic(InstallationPathConfig.class)) {
             mocked.when(InstallationPathConfig::getSettingsPath).thenReturn(settings.toString());
 
-            GeneralUtils.saveKeyToSettings("premium.proFeatures.ssoAutoLogin", true);
+            GeneralUtils.saveKeyToSettings("security.ssoAutoLogin", true);
             GeneralUtils.saveKeyToSettings("premium.proFeatures.customMetadata.author", "alice");
         }
 
         YamlHelper reloaded = new YamlHelper(settings);
-        assertEquals(
-                "true", reloaded.getValueByExactKeyPath("premium", "proFeatures", "ssoAutoLogin"));
+        assertEquals("true", reloaded.getValueByExactKeyPath("security", "ssoAutoLogin"));
         assertEquals(
                 "alice",
                 reloaded.getValueByExactKeyPath(

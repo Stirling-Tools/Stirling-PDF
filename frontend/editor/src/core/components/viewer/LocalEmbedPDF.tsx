@@ -351,16 +351,19 @@ export function LocalEmbedPDF({
   // the plugin list would re-trigger a document open.
   const initialDocsArraysRef = useRef<InitialDocumentOptions[][]>([]);
 
-  // The plugin keeps listeners for the registry's whole life and this one shares
-  // the scope holding the document bytes; without the unsubscribe it pins them.
+  // The plugin keeps listeners for the registry's whole life and these share
+  // the scope holding the document bytes; without the unsubscribe they pin it.
   const annotationUnsubscribeRef = useRef<(() => void) | null>(null);
+  const documentOpenedUnsubscribeRef = useRef<(() => void) | null>(null);
 
-  // The listener shares the scope holding the document bytes, so it must not
+  // The listeners share the scope holding the document bytes, so they must not
   // outlive the component.
   useEffect(
     () => () => {
       annotationUnsubscribeRef.current?.();
       annotationUnsubscribeRef.current = null;
+      documentOpenedUnsubscribeRef.current?.();
+      documentOpenedUnsubscribeRef.current = null;
     },
     [],
   );
@@ -792,10 +795,15 @@ export function LocalEmbedPDF({
                 if (docManagerApi.getActiveDocument?.()) {
                   void releaseLargeBuffer();
                 } else if (docManagerApi.onDocumentOpened) {
+                  documentOpenedUnsubscribeRef.current?.();
                   const unsub = docManagerApi.onDocumentOpened(() => {
                     unsub?.();
+                    if (documentOpenedUnsubscribeRef.current === unsub) {
+                      documentOpenedUnsubscribeRef.current = null;
+                    }
                     void releaseLargeBuffer();
                   });
+                  documentOpenedUnsubscribeRef.current = unsub;
                 } else {
                   void releaseLargeBuffer();
                 }

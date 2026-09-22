@@ -82,6 +82,35 @@ class DocParseServiceTest {
                         userService);
     }
 
+    @Test
+    void capabilitiesDistinguishesCorpusExportFromConfiguredIndexing() throws IOException {
+        properties.getDocparse().setEnabled(true);
+        properties.getAiEngine().setEnabled(true);
+        when(aiEngineClient.get("/api/v1/docparse/capabilities", null))
+                .thenReturn("{\"indexingConfigured\":false}", "{\"indexingConfigured\":true}");
+
+        assertEquals(new DocParseService.Capabilities(true, true, false), service.capabilities());
+        assertEquals(new DocParseService.Capabilities(true, true, true), service.capabilities());
+    }
+
+    @Test
+    void capabilitiesReportsAnUnreachableEngine() throws IOException {
+        properties.getDocparse().setEnabled(true);
+        properties.getAiEngine().setEnabled(true);
+        when(aiEngineClient.get("/api/v1/docparse/capabilities", null))
+                .thenThrow(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE));
+
+        assertEquals(new DocParseService.Capabilities(true, false, false), service.capabilities());
+    }
+
+    @Test
+    void capabilitiesDoesNotProbeWhenIngestionIsDisabled() {
+        properties.getDocparse().setEnabled(false);
+
+        assertEquals(new DocParseService.Capabilities(false, false, false), service.capabilities());
+        verifyNoInteractions(aiEngineClient);
+    }
+
     private static byte[] pdfBytes(int pages) throws IOException {
         try (PDDocument document = new PDDocument();
                 ByteArrayOutputStream out = new ByteArrayOutputStream()) {
