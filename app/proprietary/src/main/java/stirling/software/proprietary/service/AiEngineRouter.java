@@ -1,5 +1,6 @@
 package stirling.software.proprietary.service;
 
+import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -168,7 +169,8 @@ public class AiEngineRouter {
      * the status endpoint probes the host's own {@code /api/v1/info/status}, which sits outside the
      * gateway and needs no credential.
      *
-     * @return the base URL, or empty when none is configured
+     * @return the validated base URL, or empty when none is configured
+     * @throws ResponseStatusException when the configured URL cannot safely carry credentials
      */
     public String cloudHost() {
         return cloudBaseUrl();
@@ -182,10 +184,41 @@ public class AiEngineRouter {
         String configured =
                 trimTrailingSlashes(applicationProperties.getAiEngine().getCloudBaseUrl());
         if (!configured.isEmpty()) {
-            return configured;
+            return validateCloudBaseUrl(configured);
         }
         AccountLinkProperties linkProperties = accountLinkProperties.getIfAvailable();
-        return linkProperties == null ? "" : trimTrailingSlashes(linkProperties.getSaasBaseUrl());
+        return linkProperties == null
+                ? ""
+                : validateCloudBaseUrl(trimTrailingSlashes(linkProperties.getSaasBaseUrl()));
+    }
+
+    private static String validateCloudBaseUrl(String base) {
+        if (base.isEmpty()) {
+            return base;
+        }
+        try {
+            URI uri = URI.create(base);
+            String host = uri.getHost();
+            boolean loopback =
+                    "localhost".equalsIgnoreCase(host)
+                            || "127.0.0.1".equals(host)
+                            || "[::1]".equals(host);
+            if (host != null
+                    && uri.getRawUserInfo() == null
+                    && uri.getRawQuery() == null
+                    && uri.getRawFragment() == null
+                    && (uri.getPort() == -1 || (uri.getPort() > 0 && uri.getPort() <= 65535))
+                    && ("https".equalsIgnoreCase(uri.getScheme())
+                            || ("http".equalsIgnoreCase(uri.getScheme()) && loopback))) {
+                return base;
+            }
+        } catch (IllegalArgumentException ignored) {
+            // Report invalid syntax with the same configuration error as an unsafe transport.
+        }
+        throw new ResponseStatusException(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "Stirling Cloud AI requires a valid HTTPS base URL without user info, query or"
+                        + " fragment. HTTP is allowed only for localhost, 127.0.0.1 or [::1].");
     }
 
     private static String trimTrailingSlashes(String value) {

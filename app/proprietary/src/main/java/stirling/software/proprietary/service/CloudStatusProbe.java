@@ -7,6 +7,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
@@ -27,38 +28,50 @@ public class CloudStatusProbe {
     static final String STATUS_PATH = "/api/v1/info/status";
 
     private final HttpClient httpClient;
+    private final AiEngineRouter router;
 
-    public CloudStatusProbe() {
-        this(HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build());
+    @Autowired
+    public CloudStatusProbe(AiEngineRouter router) {
+        this(
+                HttpClient.newBuilder()
+                        .connectTimeout(Duration.ofSeconds(5))
+                        .followRedirects(HttpClient.Redirect.NEVER)
+                        .build(),
+                router);
     }
 
     /** Package-private: lets tests point at a stub host. */
-    CloudStatusProbe(HttpClient httpClient) {
+    CloudStatusProbe(HttpClient httpClient, AiEngineRouter router) {
         this.httpClient = httpClient;
+        this.router = router;
     }
 
     /**
-     * @param baseUrl the Stirling Cloud host, with no path
+     * Probes only the validated, administrator-configured cloud host. Callers cannot supply a
+     * destination, redirects are not followed, and the response body is discarded.
+     *
      * @return whether the host answered, never throwing - an outage is an answer, not a fault
      */
-    public boolean isUp(String baseUrl) {
-        if (baseUrl == null || baseUrl.isBlank()) {
-            return false;
-        }
+    public boolean isUp() {
         try {
+            String baseUrl = router.cloudHost();
+            if (baseUrl.isEmpty()) {
+                return false;
+            }
             HttpRequest request =
                     HttpRequest.newBuilder()
-                            .uri(URI.create(baseUrl.strip().replaceAll("/+$", "") + STATUS_PATH))
+                            .uri(URI.create(baseUrl + STATUS_PATH))
                             .timeout(Duration.ofSeconds(5))
                             .GET()
                             .build();
-            int code = httpClient.send(request, HttpResponse.BodyHandlers.ofString()).statusCode();
-            return code < 400;
+            int code =
+                    httpClient.send(request, HttpResponse.BodyHandlers.discarding()).statusCode();
+            return code >= 200 && code < 300;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return false;
         } catch (IOException | RuntimeException e) {
-            log.debug("Stirling Cloud status probe failed for {}", baseUrl, e);
+            log.debug("Stirling Cloud status probe failed", e);
             return false;
         }
     }

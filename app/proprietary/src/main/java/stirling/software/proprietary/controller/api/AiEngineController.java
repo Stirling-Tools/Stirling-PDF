@@ -145,7 +145,7 @@ public class AiEngineController {
         // below that would otherwise read as "unreachable" with no cause an admin can act on.
         boolean cloud = aiEngineRouter.isCloudMode();
         if (cloud) {
-            boolean cloudUp = cloudStatusProbe.isUp(aiEngineRouter.cloudHost());
+            boolean cloudUp = cloudStatusProbe.isUp();
             status.cloudUp(cloudUp);
             if (!cloudUp) {
                 return status.reachable(false)

@@ -33,7 +33,8 @@ public class InstanceAiUsageService {
 
     /** Paths that are bookkeeping rather than reasoning, and so cost nothing. */
     private static final java.util.Set<String> FREE_PATHS =
-            java.util.Set.of("/health", "/api/v1/agents/capabilities");
+            java.util.Set.of(
+                    "/health", "/api/v1/agents/capabilities", "/api/v1/documents/by-owner");
 
     private final JobChargeService chargeService;
     private final LinkedInstanceRepository linkedInstanceRepository;

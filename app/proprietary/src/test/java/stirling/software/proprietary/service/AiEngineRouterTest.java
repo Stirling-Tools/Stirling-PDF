@@ -8,6 +8,8 @@ import static org.mockito.Mockito.when;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -136,6 +138,66 @@ class AiEngineRouterTest {
         assertThat(router.cloudHost()).isEqualTo("https://api.stirling.com");
         assertThat(router.resolve().baseUrl())
                 .isEqualTo("https://api.stirling.com/api/v1/instance/ai");
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "http://api.stirling.com",
+                "http://localhost.attacker.example",
+                "http://127.0.0.1.attacker.example",
+                "http://localhost@attacker.example",
+                "http://[::ffff:127.0.0.1]",
+                "https:///missing-host",
+                "https:opaque",
+                "api.stirling.com",
+                "//api.stirling.com",
+                "ftp://api.stirling.com",
+                "https://user:password@api.stirling.com",
+                "https://api.stirling.com?redirect=elsewhere",
+                "https://api.stirling.com#fragment",
+                "https://api.stirling.com:65536",
+                "https://api.stirling.com:0",
+                "https://bad host"
+            })
+    void unsafeCloudUrlsAreRejectedForBothConfigurationSources(String baseUrl) {
+        ApplicationProperties cloud = props(AiEngineMode.CLOUD);
+        AiEngineRouter router =
+                new AiEngineRouter(
+                        cloud, providing(linkedStore()), providing(saasAt(baseUrl)), null);
+
+        cloud.getAiEngine().setCloudBaseUrl(baseUrl);
+        assertThatThrownBy(router::resolve)
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("503")
+                .hasMessageContaining("HTTPS");
+        assertThatThrownBy(router::cloudHost).isInstanceOf(ResponseStatusException.class);
+
+        cloud.getAiEngine().setCloudBaseUrl("");
+        assertThatThrownBy(router::resolve).isInstanceOf(ResponseStatusException.class);
+        assertThatThrownBy(router::cloudHost).isInstanceOf(ResponseStatusException.class);
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "https://api.stirling.com",
+                "https://custom.example/app",
+                "HTTPS://api.stirling.com:443",
+                "http://localhost:8081",
+                "http://LOCALHOST:8081",
+                "http://127.0.0.1:8081",
+                "http://[::1]:8081"
+            })
+    void secureCloudAndExactLoopbackUrlsCanCarryTheDeviceCredential(String baseUrl) {
+        ApplicationProperties cloud = props(AiEngineMode.CLOUD);
+        cloud.getAiEngine().setCloudBaseUrl(baseUrl);
+        AiEngineRouter router =
+                new AiEngineRouter(cloud, providing(linkedStore()), providing(null), null);
+
+        assertThat(router.resolve().baseUrl()).isEqualTo(baseUrl + "/api/v1/instance/ai");
+        assertThat(router.resolve().headers()).containsEntry("X-Device-Secret", "sec-1");
+        assertThat(router.cloudHost()).isEqualTo(baseUrl);
     }
 
     @Test
