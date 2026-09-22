@@ -100,16 +100,23 @@ class AttachmentServiceTest {
     }
 
     @Test
-    void addAttachmentToPDF_AttachmentInputStreamThrowsIOException() throws IOException {
+    void addAttachmentToPDF_AttachmentInputStreamThrowsIOException() {
         try (var document = new PDDocument()) {
             var attachments = List.of(mock(MultipartFile.class));
             var ioException = new IOException("Failed to read attachment stream");
             when(attachments.get(0).getOriginalFilename()).thenReturn("test.txt");
             when(attachments.get(0).getInputStream()).thenThrow(ioException);
             when(attachments.get(0).getSize()).thenReturn(10L);
-            PDDocument result = attachmentService.addAttachment(document, attachments);
-            assertNotNull(result);
-            assertNotNull(result.getDocumentCatalog().getNames());
+            // An unreadable staged file fails the batch: a partial save must
+            // never be returned as the operation result.
+            assertEquals(
+                    "Failed to read attachment stream",
+                    assertThrows(
+                                    IOException.class,
+                                    () -> attachmentService.addAttachment(document, attachments))
+                            .getMessage());
+        } catch (IOException e) {
+            fail("Test fixture should not throw", e);
         }
     }
 

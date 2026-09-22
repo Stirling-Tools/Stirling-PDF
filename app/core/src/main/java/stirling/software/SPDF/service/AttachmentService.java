@@ -81,43 +81,39 @@ public class AttachmentService implements AttachmentServiceInterface {
             throw e;
         }
 
-        attachments.forEach(
-                attachment -> {
-                    String filename = attachment.getOriginalFilename();
+        for (MultipartFile attachment : attachments) {
+            String filename = attachment.getOriginalFilename();
 
-                    try {
-                        PDEmbeddedFile embeddedFile =
-                                new PDEmbeddedFile(document, attachment.getInputStream());
-                        embeddedFile.setSize((int) attachment.getSize());
-                        // use java.time.Instant and convert to GregorianCalendar for PDFBox
-                        Instant now = Instant.now();
-                        GregorianCalendar nowCal =
-                                GregorianCalendar.from(
-                                        ZonedDateTime.ofInstant(now, ZoneId.systemDefault()));
-                        embeddedFile.setCreationDate(nowCal);
-                        embeddedFile.setModDate(nowCal);
-                        String contentType = attachment.getContentType();
-                        if (StringUtils.isNotBlank(contentType)) {
-                            embeddedFile.setSubtype(contentType);
-                        }
+            // A batch that cannot read one staged file must fail, not save the
+            // rest: callers return this document as the operation result.
+            PDEmbeddedFile embeddedFile =
+                    new PDEmbeddedFile(document, attachment.getInputStream());
+            embeddedFile.setSize((int) attachment.getSize());
+            // use java.time.Instant and convert to GregorianCalendar for PDFBox
+            Instant now = Instant.now();
+            GregorianCalendar nowCal =
+                    GregorianCalendar.from(
+                            ZonedDateTime.ofInstant(now, ZoneId.systemDefault()));
+            embeddedFile.setCreationDate(nowCal);
+            embeddedFile.setModDate(nowCal);
+            String contentType = attachment.getContentType();
+            if (StringUtils.isNotBlank(contentType)) {
+                embeddedFile.setSubtype(contentType);
+            }
 
-                        // Create attachments specification and associate embedded attachment with
-                        // file
-                        PDComplexFileSpecification fileSpecification =
-                                new PDComplexFileSpecification();
-                        fileSpecification.setFile(filename);
-                        fileSpecification.setFileUnicode(filename);
-                        fileSpecification.setFileDescription("Embedded attachment: " + filename);
-                        fileSpecification.setEmbeddedFile(embeddedFile);
-                        fileSpecification.setEmbeddedFileUnicode(embeddedFile);
+            // Create attachments specification and associate embedded attachment with
+            // file
+            PDComplexFileSpecification fileSpecification = new PDComplexFileSpecification();
+            fileSpecification.setFile(filename);
+            fileSpecification.setFileUnicode(filename);
+            fileSpecification.setFileDescription("Embedded attachment: " + filename);
+            fileSpecification.setEmbeddedFile(embeddedFile);
+            fileSpecification.setEmbeddedFileUnicode(embeddedFile);
 
-                        existingNames.put(filename, fileSpecification);
+            existingNames.put(filename, fileSpecification);
 
-                        log.info("Added attachment: {} ({} bytes)", filename, attachment.getSize());
-                    } catch (IOException e) {
-                        log.warn("Failed to create embedded file for attachment: {}", filename, e);
-                    }
-                });
+            log.info("Added attachment: {} ({} bytes)", filename, attachment.getSize());
+        }
 
         embeddedFilesTree.setNames(existingNames);
         setCatalogViewerPreferences(document, PageMode.USE_ATTACHMENTS);
