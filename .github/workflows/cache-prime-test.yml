@@ -30,6 +30,7 @@ jobs:
     outputs:
       files_hash: ${{ steps.hash.outputs.files_hash }}
       java_version: ${{ steps.hash.outputs.java_version }}
+      cache_key: ${{ steps.hash.outputs.cache_key }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
@@ -50,6 +51,8 @@ jobs:
           HASH="$FILES_HASH"
           echo "files_hash=$HASH" >> "$GITHUB_OUTPUT"
           echo "java_version=${{ env.JAVA_VERSION }}" >> "$GITHUB_OUTPUT"
+          echo "cache_key=gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-$HASH }}" >> "$GITHUB_OUTPUT"
+
   gradle-cache-prime:
     environment:
       name: ci-unsigned
@@ -111,13 +114,13 @@ jobs:
           echo "Cache Error: $CACHE_ERROR"
 
       - name: Cache Gradle
-        if: ${{ steps.cache.outputs.error}}
+        if: ${{ steps.cache.outputs.error }}
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             .cache/gradle-java${{ env.JAVA_VERSION }}/caches
             .cache/gradle-java${{ env.JAVA_VERSION }}/wrapper
-          key: ${{ needs.hash_pr.outputs.files_hash }}
+          key: ${{ needs.hash_pr.outputs.cache_key }}
 
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: ./.github/actions/java
