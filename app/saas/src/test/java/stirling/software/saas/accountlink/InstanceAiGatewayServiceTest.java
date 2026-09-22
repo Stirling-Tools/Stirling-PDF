@@ -89,6 +89,22 @@ class InstanceAiGatewayServiceTest {
     }
 
     @Test
+    void theQueryStringTravelsWithAnAllowedPath() throws Exception {
+        // The allowlist is decided on the path; what the instance asked for still has to arrive.
+        gateway.forward(
+                "POST",
+                "/api/v1/ai/math-auditor-agent/deliberate",
+                "tolerance=0.01",
+                "{}",
+                7L,
+                "admin");
+
+        assertThat(sent.getValue().uri().toString())
+                .isEqualTo(
+                        "http://cloud-engine:5001/api/v1/ai/math-auditor-agent/deliberate?tolerance=0.01");
+    }
+
+    @Test
     void theReplyIsPassedBackVerbatim() throws Exception {
         EngineReply reply = gateway.forward("GET", "/health", null, 7L, "admin");
 

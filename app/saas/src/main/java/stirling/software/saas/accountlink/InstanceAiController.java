@@ -152,11 +152,15 @@ public class InstanceAiController {
         }
 
         String enginePath = enginePathOf(request);
+        // The allowlist is decided on the path; the parameters still have to reach the engine,
+        // or a call like the math auditor's deliberate?tolerance= silently runs with defaults.
+        String query = request.getQueryString();
         if (InstanceAiGatewayService.isStreaming(enginePath)) {
-            return streamed(method, enginePath, body, token, instanceUserId);
+            return streamed(method, enginePath, query, body, token, instanceUserId);
         }
         EngineReply reply =
-                gateway.forward(method, enginePath, body, token.getInstanceId(), instanceUserId);
+                gateway.forward(
+                        method, enginePath, query, body, token.getInstanceId(), instanceUserId);
 
         // Bill only work that succeeded, and only once the engine has actually done it.
         if (reply.status() < 400) {
@@ -180,13 +184,14 @@ public class InstanceAiController {
     private ResponseEntity<StreamingResponseBody> streamed(
             String method,
             String enginePath,
+            String query,
             String body,
             LinkedInstanceAuthenticationToken token,
             String instanceUserId)
             throws IOException, InterruptedException {
         StreamedReply reply =
                 gateway.forwardStreaming(
-                        method, enginePath, body, token.getInstanceId(), instanceUserId);
+                        method, enginePath, query, body, token.getInstanceId(), instanceUserId);
         if (reply.status() < 400) {
             recordCallQuietly(token, enginePath);
         }

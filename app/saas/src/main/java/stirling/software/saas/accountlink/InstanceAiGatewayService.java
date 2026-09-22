@@ -187,9 +187,25 @@ public class InstanceAiGatewayService {
     public EngineReply forward(
             String method, String path, String body, Long instanceId, String instanceUserId)
             throws IOException, InterruptedException {
+        return forward(method, path, null, body, instanceId, instanceUserId);
+    }
+
+    /**
+     * @param query the raw query string the instance sent, or null. The allowlist is decided on the
+     *     path alone; the parameters ride along unchanged, because the engine still needs what was
+     *     asked for - the math auditor's tolerance travels this way.
+     */
+    public EngineReply forward(
+            String method,
+            String path,
+            String query,
+            String body,
+            Long instanceId,
+            String instanceUserId)
+            throws IOException, InterruptedException {
         HttpResponse<String> response =
                 httpClient.send(
-                        buildRequest(method, path, body, instanceId, instanceUserId),
+                        buildRequest(method, path, query, body, instanceId, instanceUserId),
                         HttpResponse.BodyHandlers.ofString());
         log.debug(
                 "Cloud AI gateway forwarded {} {} for instance {} -> {}",
@@ -201,14 +217,21 @@ public class InstanceAiGatewayService {
     }
 
     private HttpRequest buildRequest(
-            String method, String path, String body, Long instanceId, String instanceUserId) {
+            String method,
+            String path,
+            String query,
+            String body,
+            Long instanceId,
+            String instanceUserId) {
         if (!isAllowedPath(path)) {
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND, "Not an AI engine route this gateway forwards: " + path);
         }
+        String target =
+                engineBaseUrl + path + (query == null || query.isBlank() ? "" : "?" + query);
         HttpRequest.Builder builder =
                 HttpRequest.newBuilder()
-                        .uri(URI.create(engineBaseUrl + path))
+                        .uri(URI.create(target))
                         .timeout(Duration.ofSeconds(timeoutFor(path)))
                         .header("Accept", "application/json")
                         .header("X-User-Id", namespacedOwner(instanceId, instanceUserId));
@@ -252,7 +275,18 @@ public class InstanceAiGatewayService {
     public StreamedReply forwardStreaming(
             String method, String path, String body, Long instanceId, String instanceUserId)
             throws IOException, InterruptedException {
-        HttpRequest request = buildRequest(method, path, body, instanceId, instanceUserId);
+        return forwardStreaming(method, path, null, body, instanceId, instanceUserId);
+    }
+
+    public StreamedReply forwardStreaming(
+            String method,
+            String path,
+            String query,
+            String body,
+            Long instanceId,
+            String instanceUserId)
+            throws IOException, InterruptedException {
+        HttpRequest request = buildRequest(method, path, query, body, instanceId, instanceUserId);
         HttpResponse<java.io.InputStream> response =
                 httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
         return new StreamedReply(response.statusCode(), response.body());

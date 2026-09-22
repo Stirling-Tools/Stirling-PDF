@@ -60,7 +60,12 @@ class InstanceAiControllerDispatchTest {
     void theOrchestratorStreamReachesTheInstanceAsNdjson() throws Exception {
         String frames = "{\"event\":\"progress\"}\n{\"event\":\"result\"}\n";
         when(gateway.forwardStreaming(
-                        eq("POST"), eq("/api/v1/orchestrator"), anyString(), eq(42L), eq("alice")))
+                        eq("POST"),
+                        eq("/api/v1/orchestrator"),
+                        isNull(),
+                        anyString(),
+                        eq(42L),
+                        eq("alice")))
                 .thenReturn(
                         new StreamedReply(
                                 200,
@@ -86,7 +91,7 @@ class InstanceAiControllerDispatchTest {
 
     @Test
     void aBufferedReplyIsPassedThroughAsJson() throws Exception {
-        when(gateway.forward(eq("GET"), eq("/health"), isNull(), eq(42L), eq("alice")))
+        when(gateway.forward(eq("GET"), eq("/health"), isNull(), isNull(), eq(42L), eq("alice")))
                 .thenReturn(new EngineReply(200, "{\"status\":\"ok\"}"));
 
         MvcResult started =
@@ -105,7 +110,8 @@ class InstanceAiControllerDispatchTest {
 
     @Test
     void anEngineErrorKeepsItsStatusAndIsNotBilled() throws Exception {
-        when(gateway.forward(eq("POST"), eq("/api/v1/pdf/edit"), anyString(), eq(42L), any()))
+        when(gateway.forward(
+                        eq("POST"), eq("/api/v1/pdf/edit"), isNull(), anyString(), eq(42L), any()))
                 .thenReturn(new EngineReply(422, "{\"detail\":\"bad plan\"}"));
 
         MvcResult started =
@@ -122,6 +128,35 @@ class InstanceAiControllerDispatchTest {
                 .andExpect(content().json("{\"detail\":\"bad plan\"}"));
 
         verify(usageService, never()).recordCall(any(), any(), any());
+    }
+
+    @Test
+    void queryParametersReachTheEngineWithTheAllowedPath() throws Exception {
+        // The math auditor sends its tolerance as a query parameter; a gateway that matched the
+        // path and dropped the rest ran the engine with defaults and nobody noticed.
+        when(gateway.forward(
+                        eq("POST"),
+                        eq("/api/v1/ai/math-auditor-agent/deliberate"),
+                        eq("tolerance=0.01"),
+                        anyString(),
+                        eq(42L),
+                        any()))
+                .thenReturn(new EngineReply(200, "{\"verdict\":\"ok\"}"));
+
+        MvcResult started =
+                mvc.perform(
+                                post("/api/v1/instance/ai/api/v1/ai/math-auditor-agent/deliberate?tolerance=0.01")
+                                        .principal(instance())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content("{}"))
+                        .andExpect(request().asyncStarted())
+                        .andReturn();
+
+        mvc.perform(asyncDispatch(started))
+                .andExpect(status().isOk())
+                .andExpect(content().json("{\"verdict\":\"ok\"}"));
+
+        verify(usageService).recordCall(99L, 42L, "/api/v1/ai/math-auditor-agent/deliberate");
     }
 
     @Test
@@ -142,6 +177,6 @@ class InstanceAiControllerDispatchTest {
                         .andReturn();
 
         assertThat(done.getResponse().getContentAsString()).contains("sharing is not enabled");
-        verify(gateway, never()).forward(any(), any(), any(), any(), any());
+        verify(gateway, never()).forward(any(), any(), any(), any(), any(), any());
     }
 }
