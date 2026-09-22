@@ -4,6 +4,7 @@ import type { ServerPlan } from "@app/billing/serverPlan";
 import type { Wallet } from "@app/billing/types";
 import { SeatBreakdown } from "@app/billing/SeatBreakdown";
 import { fleetUsersInUse } from "@app/billing/fleetSeats";
+import type { LegacyTeamAllowance } from "@app/types/legacyBilling";
 
 /**
  * The Team product, as a row: users against the capacity the plan covers.
@@ -22,6 +23,7 @@ export function TeamPlanRow({
   usersInUse: occupiedSeats,
   userLimit,
   deviceId,
+  legacyAllowance,
 }: {
   wallet: Wallet | null;
   serverPlan?: ServerPlan;
@@ -34,6 +36,8 @@ export function TeamPlanRow({
   /** Used only for standalone servers; linked fleets show the full plan capacity. */
   userLimit?: number | null;
   deviceId?: string | null;
+  /** Applied only when the historical subscription belongs to the displayed wallet's team. */
+  legacyAllowance?: LegacyTeamAllowance;
 }) {
   const { t } = useTranslation();
   if (serverPlan) {
@@ -77,6 +81,31 @@ export function TeamPlanRow({
     );
   }
   if (!wallet) return null;
+  if (legacyAllowance && legacyAllowance.teamId === wallet.teamId) {
+    const { usersInUse, maxUsers } = legacyAllowance;
+    return (
+      <MeterRow
+        name={t("portal.billing.team.rowName", "Users")}
+        mid={t(
+          "legacyBilling.currentTeamAllowance",
+          "Current allowance for your legacy team",
+        )}
+        showTrack={maxUsers != null && maxUsers > 0}
+        pct={maxUsers ? (usersInUse / maxUsers) * 100 : 0}
+        tone="paid"
+        fact={
+          maxUsers == null
+            ? t("portal.users.seats.unlimited", "{{used}} · Unlimited", {
+                used: usersInUse,
+              })
+            : t("portal.billing.team.fact", "{{users}} of {{licensed}} users", {
+                users: usersInUse,
+                licensed: maxUsers,
+              })
+        }
+      />
+    );
+  }
   const { held, licensedUsers } = wallet.team;
   const usersInUse = wallet.team.fleet
     ? fleetUsersInUse(wallet.team, deviceId, occupiedSeats)

@@ -331,6 +331,7 @@ public class PolicyEngine {
                         fileIdentity,
                         triggeringUser,
                         fileOwner);
+        taskManager.putMetadata(runId, "externalOutput", String.valueOf(run.externalOutput()));
         registry.register(run);
         return run;
     }

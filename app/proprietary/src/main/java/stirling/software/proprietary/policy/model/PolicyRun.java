@@ -115,6 +115,13 @@ public class PolicyRun {
         return triggeringUser != null ? triggeringUser : fileOwner;
     }
 
+    /** True when results are sent elsewhere and must not replace the editor's input. */
+    public boolean externalOutput() {
+        return definition.outputs().stream().anyMatch(output -> !"inline".equals(output.type()))
+                || definition.routing().stream()
+                        .anyMatch(route -> !"inline".equals(route.destination().type()));
+    }
+
     public int stepCount() {
         return definition.steps().size();
     }
