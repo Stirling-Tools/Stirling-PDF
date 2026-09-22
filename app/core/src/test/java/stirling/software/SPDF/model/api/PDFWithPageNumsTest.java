@@ -75,10 +75,8 @@ class PDFWithPageNumsTest {
         pdfWithPageNums.setPageNumbers("invalid");
         when(mockDocument.getNumberOfPages()).thenReturn(10);
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> {
-                    pdfWithPageNums.getPageNumbersList(mockDocument, true);
-                });
+        List<Integer> result = pdfWithPageNums.getPageNumbersList(mockDocument, true);
+
+        assertTrue(result.isEmpty());
     }
 }

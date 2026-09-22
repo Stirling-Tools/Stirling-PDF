@@ -642,11 +642,7 @@ public class GeneralUtils {
         if (pages == null) {
             return List.of(1); // Default to first page if input is null
         }
-        try {
-            return parsePageList(pages.split(","), totalPages, oneBased);
-        } catch (NumberFormatException e) {
-            return List.of(1); // Default to first page if input is invalid
-        }
+        return parsePageList(pages.split(","), totalPages, oneBased);
     }
 
     public List<Integer> parsePageList(String[] pages, int totalPages) {
@@ -701,11 +697,7 @@ public class GeneralUtils {
         List<Integer> results = new ArrayList<>();
         DoubleEvaluator evaluator = new DoubleEvaluator();
 
-        // Validate the expression format
-        if (!RegexPatternUtils.getInstance()
-                .getMathExpressionPattern()
-                .matcher(expression.trim())
-                .matches()) {
+        if (!isMathExpression(expression)) {
             throw new IllegalArgumentException("Invalid expression format: " + expression);
         }
 
@@ -735,6 +727,10 @@ public class GeneralUtils {
         }
 
         return results;
+    }
+
+    private boolean isMathExpression(String expression) {
+        return patternCache.getMathExpressionPattern().matcher(expression.trim()).matches();
     }
 
     private String sanitizeNFunction(String expression, int nValue) {
@@ -802,8 +798,10 @@ public class GeneralUtils {
     private List<Integer> handlePart(String part, int totalPages, int offset) {
         List<Integer> partResult = new ArrayList<>();
 
-        // First check for n-syntax because it should not be processed as a range
-        if (part.contains("n")) {
+        // First check for n-syntax because it should not be processed as a range. A token that
+        // only contains an "n" ("no", "and") must not reach evaluateNFunc, which throws and would
+        // fail the whole list; it falls through and is dropped like any other bad token.
+        if (part.contains("n") && isMathExpression(part)) {
             partResult = evaluateNFunc(part, totalPages);
             // Adjust the results according to the offset
             for (int i = 0; i < partResult.size(); i++) {
@@ -812,7 +810,8 @@ public class GeneralUtils {
             }
         } else if (part.contains("-")) {
             // Process ranges only if it's not n-syntax
-            String[] rangeParts = part.split("-");
+            // Limit -1 keeps empty parts, so a bare "-" is an invalid range, not an empty array.
+            String[] rangeParts = part.split("-", -1);
             try {
                 int start = Integer.parseInt(rangeParts[0]);
                 int end =
