@@ -78,7 +78,7 @@ jobs:
 
       - name: Get Cache
         shell: bash
-        run: ls -la GRADLE_USER_HOME
+        run: ls -la ${{ env.GRADLE_USER_HOME }}
 
       - name: Restore Gradle cache sftp
         id: cache
