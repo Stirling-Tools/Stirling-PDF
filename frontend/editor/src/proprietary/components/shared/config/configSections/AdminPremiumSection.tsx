@@ -122,7 +122,7 @@ export default function AdminPremiumSection() {
               <Text size="sm" component="span">
                 <Trans
                   i18nKey="admin.settings.premium.movedFeatures.ssoAutoLogin"
-                  defaults="<0>SSO Auto Login</0> (all plans) - Security"
+                  defaults="<0>SSO Auto Login</0> - Security"
                   components={[<strong />]}
                 />
               </Text>

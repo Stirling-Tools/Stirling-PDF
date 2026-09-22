@@ -1005,7 +1005,6 @@ description = "The SAML2 registration identifier"
 label = "Registration ID"
 
 [admin.settings.connections.ssoAutoLogin]
-availability = "OAuth2/OIDC SSO is available on every plan. User limits still apply. SAML requires Enterprise."
 description = "Automatically redirect to SSO login when authentication is required"
 enable = "Enable SSO Auto Login"
 label = "SSO Auto Login"
@@ -1495,7 +1494,7 @@ auditLogging = "<0>Audit Logging</0> (ENTERPRISE) - Security"
 customMetadata = "<0>Custom Metadata</0> (PRO) - General"
 databaseConfiguration = "<0>Database Configuration</0> (ENTERPRISE) - Database"
 message = "Configure authentication and licensed features in their respective sections:"
-ssoAutoLogin = "<0>SSO Auto Login</0> (all plans) - Security"
+ssoAutoLogin = "<0>SSO Auto Login</0> - Security"
 title = "Feature Settings"
 
 [admin.settings.privacy]
