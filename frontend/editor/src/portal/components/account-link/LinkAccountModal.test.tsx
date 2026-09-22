@@ -16,6 +16,23 @@ const { startConnect, startReauth, fetchWallet, EMAIL } = vi.hoisted(() => ({
   EMAIL: "admin@acme.example",
 }));
 
+vi.mock("@portal/hooks/useFreeTierBalance", () => ({
+  useFreeTierBalance: () => ({
+    data: {
+      grantUnits: 500,
+      remainingUnits: 0,
+      periodEnd: "2026-10-01T00:00:00",
+    },
+  }),
+}));
+vi.mock("@app/ui", async () => ({
+  ...(await import("@app/ui/Button")),
+  ...(await import("@app/ui/Banner")),
+  ...(await import("@app/ui/Modal")),
+  ...(await import("@app/ui/Skeleton")),
+  ...(await import("@app/ui/Spinner")),
+}));
+
 vi.mock("@app/portal/api/link", () => ({ startConnect, startReauth }));
 vi.mock("@app/portal/api/billing", () => ({ fetchWallet }));
 vi.mock("@app/portal/auth/saasSupabase", () => ({
@@ -32,6 +49,10 @@ vi.mock("@app/portal/auth/saasSupabase", () => ({
   }),
 }));
 
+import {
+  clearAccountLinkBlock,
+  reportFreeTierExhausted,
+} from "@app/services/accountLinkBlock";
 import {
   LinkAccountModal,
   LinkAccountModalHost,
@@ -67,7 +88,7 @@ vi.mock("@app/constants/app", async (importOriginal) => ({
   withBasePath: (path: string) => `${deployment.basePath}${path}`,
 }));
 
-const BENEFITS = "Pipelines, policies, sources and audit";
+const BENEFITS = "Add more users with a paid Team plan";
 const GHOST = /Opening Stirling sign-in/;
 const CONNECT = /Connect Stirling account/;
 
@@ -105,6 +126,31 @@ function filledSteps(): number {
 describe("LinkAccountModal", () => {
   let assign: ReturnType<typeof vi.fn>;
 
+  it("omits pipeline controls for a banner prompt even after a pipeline failure", () => {
+    clearAccountLinkBlock();
+    reportFreeTierExhausted({
+      pipelineId: "rotate",
+      trigger: "upload",
+    });
+    renderModal("exhausted");
+    expect(screen.getByRole("dialog")).toBeTruthy();
+    expect(screen.queryByText("Active pipelines")).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Open pipeline settings" }),
+    ).toBeNull();
+    clearAccountLinkBlock();
+  });
+
+  it("returns keyboard focus to the trigger when the dialog unmounts", () => {
+    const trigger = document.createElement("button");
+    document.body.append(trigger);
+    trigger.focus();
+    const view = renderModal("exhausted");
+    view.unmount();
+    expect(document.activeElement).toBe(trigger);
+    trigger.remove();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     ownership.isAdmin = true;
@@ -131,6 +177,7 @@ describe("LinkAccountModal", () => {
       value: {
         origin: "http://localhost:5173",
         hostname: "localhost",
+        pathname: "/processor/pipelines",
         href: "http://localhost:5173/app",
         search: "",
         assign,
@@ -521,5 +568,35 @@ describe("LinkAccountModal", () => {
       ).toBeTruthy();
       expect(screen.queryByRole("button", { name: /Try again/ })).toBeNull();
     });
+  });
+
+  it("leads with credits and explains which benefits need a paid plan", async () => {
+    renderModal("exhausted");
+    expect(screen.getByText("Keep your workflows running")).toBeTruthy();
+    expect(screen.getByText(BENEFITS)).toBeTruthy();
+    expect(screen.queryByText(/Linking does not start a paid plan/)).toBeNull();
+    expect(
+      screen.queryByText(/Manual PDF tools are still available/),
+    ).toBeNull();
+    expect(screen.queryByText("500 free per month")).toBeNull();
+    expect(filledSteps()).toBe(0);
+    click("Link account for more credits");
+    await waitFor(() => expect(assign).toHaveBeenCalledWith(AUTHORIZE));
+  });
+
+  it.each([
+    { isAdmin: false, orgOwner: false },
+    { isAdmin: true, orgOwner: false },
+  ])("offers non-owners guidance without a handshake: %j", (roles) => {
+    Object.assign(ownership, roles);
+    renderModal("exhausted");
+    expect(screen.getByText(/open Usage & billing/)).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Copy message for administrator" }),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole("button", { name: "Link account for more credits" }),
+    ).toBeNull();
+    expect(startConnect).not.toHaveBeenCalled();
   });
 });

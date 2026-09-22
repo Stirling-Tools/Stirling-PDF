@@ -4,11 +4,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 /** Rows above and below the viewport kept mounted, so a fast scroll stays filled. */
 const OVERSCAN = 3;
 
-/**
- * How many columns the grid is actually laying out. Read off the computed style
- * rather than recomputed from a breakpoint, so `auto-fill` stays the one place the
- * column count is decided.
- */
+/** Read CSS auto-fill columns so virtualisation uses the grid's actual layout. */
 function useColumnCount(el: HTMLElement | null): number {
   const [columns, setColumns] = useState(1);
   useEffect(() => {
@@ -27,11 +23,13 @@ function useColumnCount(el: HTMLElement | null): number {
   return columns;
 }
 
-/** The scrolling ancestor the virtualiser measures against. */
+/** Lists scroll themselves; the card grid scrolls within its content pane. */
 function useScrollParent(el: HTMLElement | null): HTMLElement | null {
   const [parent, setParent] = useState<HTMLElement | null>(null);
   useEffect(() => {
-    setParent(el?.closest<HTMLElement>(".files-page-content") ?? null);
+    setParent(
+      el?.closest<HTMLElement>(".files-page-list, .files-page-content") ?? null,
+    );
   }, [el]);
   return parent;
 }
@@ -43,18 +41,12 @@ interface VirtualFileRows {
   padTop: number;
   padBottom: number;
   columns: number;
-  /** Ref for the element the rows live in. */
   setContainer: (el: HTMLDivElement | null) => void;
 }
 
 /**
- * Renders a window of a long file list instead of all of it, as a slice plus a
- * spacer at each end. Spacers rather than absolute positioning so the grid keeps
- * its own `auto-fill` layout and the list its own row flow.
- *
- * Stands down - every item rendered, no spacers - until there is a scrolling
- * ancestor with a measured height. That covers a short list, the first paint
- * before layout, and any environment without real geometry.
+ * Virtualises with flow spacers so CSS auto-fill still owns the grid layout.
+ * Renders all entries until the scrolling ancestor has a measured height.
  */
 export function useVirtualFileRows(
   itemCount: number,
@@ -102,9 +94,7 @@ export function useVirtualFileRows(
   };
 }
 
-// Read once. The root font size is a layout read, and this is called on every render
-// of a list whose whole point is not doing needless work. A root restyled mid-session
-// keeps the first answer, which only shifts an estimate.
+// Cache the layout read; a later root font-size change affects only the height estimate.
 let rootFontSizePx = 0;
 
 /** Card and row heights including their gap, matching contain-intrinsic-size. */

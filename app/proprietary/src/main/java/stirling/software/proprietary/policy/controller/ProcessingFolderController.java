@@ -237,9 +237,14 @@ public class ProcessingFolderController {
                 request.routingRules() != null
                         ? request.routingRules()
                         : existing == null ? List.of() : existing.routingRules();
+        List<PipelineStep> steps = request.steps() == null ? List.of() : request.steps();
+        if (steps.stream().anyMatch(Objects::isNull)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Pipeline steps must not be null");
+        }
         Stream.concat(outputIds.stream(), routingRules.stream().map(RoutingRule::outputId))
                 .distinct()
-                .forEach(this::requireAccessibleDestination);
+                .forEach(outputId -> requireAccessibleDestination(outputId, steps));
         String name = onDisk ? diskFolderName(request.directory()) : folder.getName();
 
         // Held for rollback: the source is written before the policy validates, and a rejected
@@ -280,7 +285,7 @@ public class ProcessingFolderController {
                                                         : new TriggerConfig(
                                                                 TriggerConfig.STORAGE_FOLDER_WATCH,
                                                                 Map.of()))),
-                                request.steps() == null ? List.of() : request.steps(),
+                                steps,
                                 outputSpecFor(request, folder),
                                 outputIds,
                                 policyAccessGuard.teamForNewPolicy(),
@@ -880,6 +885,14 @@ public class ProcessingFolderController {
                 DISK_SWEEP_LIMIT);
     }
 
+    private static boolean exportsCorpus(SaveProcessingFolderRequest request) {
+        if (request.steps() == null || request.steps().isEmpty()) return false;
+        PipelineStep last = request.steps().getLast();
+        return "/api/v1/docparse/ingest".equals(last.operation())
+                && ("true".equals(String.valueOf(last.parameters().get("exportChunksJsonl")))
+                        || "true".equals(String.valueOf(last.parameters().get("exportMarkdown"))));
+    }
+
     /** The trailing path segment ("Downloads"), or the raw path when it has none. */
     private static String diskFolderName(String directory) {
         Path path = Path.of(directory.trim());
@@ -887,7 +900,17 @@ public class ProcessingFolderController {
         return fileName == null ? path.toString() : fileName.toString();
     }
 
-    private void requireAccessibleDestination(String outputId) {
+    private void requireAccessibleDestination(String outputId, List<PipelineStep> steps) {
+        Source destination = accessibleDestination(outputId);
+        // Validate on the request thread: connection checks need the caller's authentication.
+        try {
+            policyValidator.validateOutput(destination.toOutputSpec(), steps);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+    }
+
+    private Source accessibleDestination(String outputId) {
         Source destination =
                 sourceStore
                         .get(outputId)
@@ -902,32 +925,28 @@ public class ProcessingFolderController {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "The editor can't be used as an output destination");
         }
-        // Validate on the request thread: connection checks need the caller's authentication.
-        try {
-            policyValidator.validateOutput(destination.toOutputSpec());
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        // Dispatch resolves the destination again on a worker thread with no caller to report to.
+        if (!destination.enabled()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "The output destination is disabled: " + outputId);
         }
+        return destination;
     }
 
-    /**
-     * Both kinds process in place — the folder's contents become their processed selves. The sink
-     * records each replacement in the ledger at the result's version and the input settles its
-     * claim the same way, so a sweep never mistakes the folder's own output for new work. Disk
-     * output is what works on an install with no accounts and no file storage.
-     */
+    /** Corpus exports preserve originals; ordinary PDF processing replaces them. */
     private OutputSpec outputSpecFor(SaveProcessingFolderRequest request, Folder folder) {
         Map<String, Object> options =
                 new HashMap<>(request.output() == null ? Map.of() : request.output());
         if (folder != null) {
+            if (exportsCorpus(request)) options.put("mode", "new_file");
             // Force the output to the caller-owned source folder: the storage sink only checks a
             // folderId exists, not that the caller owns it, so honouring a request-supplied one
-            // would write output into another tenant's folder. Processing is in place anyway.
+            // would write output into another tenant's folder. Results remain in this folder.
             options.put("folderId", folder.getId().toString());
             return new OutputSpec("storage", options);
         }
         options.put("directory", request.directory().trim());
-        options.put("replace", true);
+        options.put("replace", !exportsCorpus(request));
         return new OutputSpec("folder", options);
     }
 

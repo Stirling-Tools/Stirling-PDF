@@ -1,8 +1,8 @@
 {
-  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "$schema": "../../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Stirling PDF",
   "mainBinaryName": "Stirling-PDF",
-  "version": "2.14.3",
+  "version": "3.0.0",
   "identifier": "stirling.pdf.dev",
   "build": {
     "frontendDist": "../dist",
@@ -11,17 +11,7 @@
     "beforeBuildCommand": "npx vite build --mode desktop"
   },
   "app": {
-    "windows": [
-      {
-        "title": "Stirling PDF",
-        "width": 1280,
-        "height": 800,
-        "resizable": true,
-        "fullscreen": false,
-        "dragDropEnabled": false,
-        "additionalBrowserArgs": "--enable-features=CertVerifierBuiltinFeature"
-      }
-    ]
+    "windows": []
   },
   "bundle": {
     "active": true,
