@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { containsEncryptMarker } from "@app/utils/thumbnailUtils";
 import {
   PdfiumOpenError,
@@ -78,5 +78,86 @@ describe("encrypted-PDF identification contract", () => {
     expect(new PdfiumOpenError(FPDF_ERR_PASSWORD).message).not.toContain(
       `error ${FPDF_ERR_PASSWORD}`,
     );
+  });
+});
+
+/**
+ * Image thumbnails decode at tooltip size (shrink-on-load) instead of
+ * full-res-then-downscale. jsdom has no createImageBitmap, so the fast path
+ * is exercised with a stub; the fallback path uses the real FileReader.
+ */
+describe("generateThumbnailForFile — images", () => {
+  const pngBytes = new Uint8Array([
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+  ]);
+
+  function stubBitmapPipeline() {
+    const closed: string[] = [];
+    const draws: Array<[number, number]> = [];
+    const bitmap = {
+      width: 320,
+      height: 240,
+      close: () => void closed.push("closed"),
+    };
+    const calls: Array<Record<string, unknown>> = [];
+    (globalThis as Record<string, unknown>).createImageBitmap = async (
+      _blob: Blob,
+      options?: ImageBitmapOptions,
+    ) => {
+      calls.push({ ...(options as object) });
+      return bitmap;
+    };
+    const realCreateElement = document.createElement.bind(document);
+    type CreateElement = (tagName: string, ...rest: unknown[]) => HTMLElement;
+    vi.spyOn(document, "createElement").mockImplementation(((
+      tagName: string,
+      ...rest: unknown[]
+    ) => {
+      if (tagName !== "canvas") {
+        return (realCreateElement as CreateElement)(tagName, ...rest);
+      }
+      return {
+        width: 0,
+        height: 0,
+        getContext: () => ({
+          fillStyle: "",
+          fillRect: () => {},
+          drawImage: (img: unknown, x: number, y: number) => {
+            draws.push([x, y]);
+            expect(img).toBe(bitmap);
+          },
+        }),
+        toDataURL: (type?: string) => {
+          expect(type).toBe("image/jpeg");
+          return "data:image/jpeg;base64,stub";
+        },
+      };
+    }) as typeof document.createElement);
+    return { bitmap, closed, draws, calls };
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    delete (globalThis as Record<string, unknown>).createImageBitmap;
+  });
+
+  it("decodes at thumbnail width and closes the bitmap", async () => {
+    const { generateThumbnailForFile } =
+      await import("@app/utils/thumbnailUtils");
+    const { closed, draws, calls } = stubBitmapPipeline();
+    const file = new File([pngBytes], "photo.png", { type: "image/png" });
+    const thumb = await generateThumbnailForFile(file);
+    expect(thumb).toBe("data:image/jpeg;base64,stub");
+    expect(calls[0].resizeWidth).toBe(320);
+    expect(draws).toEqual([[0, 0]]);
+    expect(closed).toEqual(["closed"]);
+  });
+
+  it("falls back to the data URL when decode-at-size is unavailable", async () => {
+    const { generateThumbnailForFile } =
+      await import("@app/utils/thumbnailUtils");
+    const file = new File([pngBytes], "photo.png", { type: "image/png" });
+    const thumb = await generateThumbnailForFile(file);
+    expect(thumb.startsWith("data:image/png;base64,")).toBe(true);
   });
 });
