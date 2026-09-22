@@ -1,8 +1,19 @@
-import posthog from "posthog-js";
-
 const DEV = process.env.NODE_ENV === "development";
 
-function canCapture(): boolean {
+// posthog-js loads on demand: these fire-and-forget callers run on the upload
+// and tool paths, and the module is ~230 KB most sessions never send with.
+type Posthog = typeof import("posthog-js").default;
+
+let posthogPromise: Promise<Posthog | null> | null = null;
+
+function loadPosthog(): Promise<Posthog | null> {
+  posthogPromise ??= import("posthog-js")
+    .then((mod) => mod.default)
+    .catch(() => null);
+  return posthogPromise;
+}
+
+function canCapture(posthog: Posthog): boolean {
   if (typeof window === "undefined") return false;
   const ph = posthog as unknown as {
     __loaded?: boolean;
@@ -15,26 +26,33 @@ function canCapture(): boolean {
   );
 }
 
-export function trackPdfUploaded(files: File[]): void {
-  try {
-    if (!canCapture() || !files) return;
-    for (let i = 0; i < files.length; i++) {
-      posthog.capture("editor_pdf_uploaded", { source: "editor" });
+function capture(
+  tool: string,
+  event: string,
+  props: Record<string, unknown>,
+): void {
+  void (async () => {
+    try {
+      const posthog = await loadPosthog();
+      if (!posthog || !canCapture(posthog)) return;
+      posthog.capture(event, props);
+    } catch (error) {
+      if (DEV) console.warn(`[analytics] ${tool} failed`, error);
     }
-  } catch (error) {
-    if (DEV) console.warn("[analytics] trackPdfUploaded failed", error);
+  })();
+}
+
+export function trackPdfUploaded(files: File[]): void {
+  if (!files) return;
+  for (let i = 0; i < files.length; i++) {
+    capture("trackPdfUploaded", "editor_pdf_uploaded", { source: "editor" });
   }
 }
 
 export function trackEditorOperation(toolId: string, fileCount: number): void {
-  try {
-    if (!canCapture()) return;
-    posthog.capture("editor_operation", {
-      source: "editor",
-      tool: toolId,
-      file_count: fileCount,
-    });
-  } catch (error) {
-    if (DEV) console.warn("[analytics] trackEditorOperation failed", error);
-  }
+  capture("trackEditorOperation", "editor_operation", {
+    source: "editor",
+    tool: toolId,
+    file_count: fileCount,
+  });
 }
