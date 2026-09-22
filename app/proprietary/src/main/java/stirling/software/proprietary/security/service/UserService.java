@@ -48,6 +48,8 @@ import stirling.software.proprietary.access.repository.ResourceGrantRepository;
 import stirling.software.proprietary.integration.model.IntegrationConfig;
 import stirling.software.proprietary.integration.repository.IntegrationConfigRepository;
 import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.repository.ToolChainStatRepository;
+import stirling.software.proprietary.repository.ToolUsageStatRepository;
 import stirling.software.proprietary.security.database.repository.AuthorityRepository;
 import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
 import stirling.software.proprietary.security.database.repository.UserRepository;
@@ -102,6 +104,8 @@ public class UserService implements UserServiceInterface {
     private final IntegrationConfigRepository integrationConfigRepository;
     private final TeamMembershipService teamMembershipService;
     private final ApiKeyAuthenticationService apiKeyAuthenticationService;
+    private final ToolUsageStatRepository toolUsageStatRepository;
+    private final ToolChainStatRepository toolChainStatRepository;
 
     // ObjectProvider breaks the cycle: UserLicenseSettingsService injects this service to count
     // users, and saveUserCore needs it back to enforce the limit. Same pattern that service already
@@ -276,6 +280,10 @@ public class UserService implements UserServiceInterface {
     private void deleteUserRelatedData(User user) {
         log.info("Deleting all associated data for user: {}", user.getUsername());
 
+        // Tool usage keys on the username, so a recreated name would inherit it
+        toolUsageStatRepository.deleteByPrincipal(user.getUsername());
+        toolChainStatRepository.deleteByPrincipal(user.getUsername());
+
         // Drop ACL grants held by this user and detach grants they issued
         resourceGrantRepository.deleteByPrincipalTypeAndPrincipalId(
                 PrincipalType.USER, user.getId());
@@ -415,9 +423,16 @@ public class UserService implements UserServiceInterface {
         if (!isUsernameValid(newUsername)) {
             throw new IllegalArgumentException(getInvalidUsernameMessage());
         }
+        String previousUsername = user.getUsername();
         orgOwnerService.renamed(user.getId(), newUsername);
         user.setUsername(newUsername);
         userRepository.save(user);
+        if (previousUsername != null && !previousUsername.equals(newUsername)) {
+            // Tool usage keys on the username, so the old name's rows would be inherited by
+            // whoever is given that name next.
+            toolUsageStatRepository.deleteByPrincipal(previousUsername);
+            toolChainStatRepository.deleteByPrincipal(previousUsername);
+        }
         exportAfterCommit();
     }
 
@@ -496,11 +511,11 @@ public class UserService implements UserServiceInterface {
      */
     private Team getDefaultTeam() {
         return teamRepository
-                .findByName("Default")
+                .findFirstByNameOrderByIdAsc(TeamService.DEFAULT_TEAM_NAME)
                 .orElseGet(
                         () -> {
                             Team team = new Team();
-                            team.setName("Default");
+                            team.setName(TeamService.DEFAULT_TEAM_NAME);
                             return teamRepository.save(team);
                         });
     }
@@ -641,9 +656,7 @@ public class UserService implements UserServiceInterface {
         if (settings == null) {
             return;
         }
-        // Resolve the cap before taking the lock. Only the count and the insert need serialising,
-        // and once a linked instance takes its capacity from SaaS this call can refresh that over
-        // the network -- a row lock must not be held across a round trip that may time out.
+        // Entitlement refresh may use the network; do it before taking the admission lock.
         int max = settings.calculateMaxAllowedUsers();
 
         // Serialise admission. The lock is held until saveUserCore's transaction commits, by which
