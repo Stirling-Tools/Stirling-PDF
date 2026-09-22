@@ -4968,11 +4968,6 @@ desc = "Remove read-only property of form fields in a PDF document."
 tags = "unlock,enable,edit,unlock forms,enable forms,editable forms,remove read only,make editable,unlock fields,enable editing,form fields,fillable,unprotect forms"
 title = "Unlock PDF Forms"
 
-[home.urlToPdf]
-desc = "Convert a web page into a PDF document"
-tags = "url,website,web page,link,convert,html"
-title = "URL to PDF"
-
 [home.validateSignature]
 desc = "Verify digital signatures and certificates in PDF documents"
 tags = "validate,verify,certificate,validate signature,verify signature,check signature,digital signature,certificate verification,signature validation,authentic,trust,signed,verify certificate"
@@ -11122,11 +11117,6 @@ upgradeButton = "Upgrade Now"
 [URLToPDF]
 tags = "web-capture,save-page,web-to-doc,archive"
 title = "URL To PDF"
-
-[urlToPdf]
-results = "Converted PDF"
-submit = "Convert to PDF"
-urlLabel = "Web page URL"
 
 [usage]
 aboutUsageAnalytics = "About Usage Analytics"

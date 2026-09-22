@@ -103,14 +103,16 @@ export function useEndpointEnabled(endpoint: string): {
 
   return {
     enabled: requiresExplicitEnablement
-      ? (error ? false : (data ?? null))
+      ? error
+        ? false
+        : (data ?? null)
       : endpoint
         ? (data ?? true)
         : null,
-    // Optimistic by design for most endpoints: the desktop check never blocks
-    // the UI. url-to-pdf is the deliberate exception — it stays hidden until
-    // the backend confirms it, so its real pending/error state is surfaced.
-    loading: requiresExplicitEnablement && Boolean(endpoint) && ready && isPending,
+    // Optimistic by design for most endpoints, but url-to-pdf is the
+    // deliberate exception - it stays hidden until the backend confirms it.
+    loading:
+      requiresExplicitEnablement && Boolean(endpoint) && ready && isPending,
     error: requiresExplicitEnablement && error ? getErrorMessage(error) : null,
     refetch: useCallback(async () => {
       await refetch();
