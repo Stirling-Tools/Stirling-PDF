@@ -149,9 +149,13 @@ export function ProcessingFolderSetupFlow({
     });
     void processing.refresh();
     if (onDisk)
-      void deliverSweepResults(saved.id, null, addFiles, {
-        excludeRunIds: baseline,
-      });
+      void deliverSweepResults(
+        saved.id,
+        null,
+        addFiles,
+        { folderId: selected.id },
+        { excludeRunIds: baseline },
+      );
     onClose();
     if (!folder) navigate(`/files/${selected.id}`);
   }
