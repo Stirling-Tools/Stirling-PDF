@@ -91,6 +91,8 @@ class SaasOwnershipHandoverServiceTest {
                                 null,
                                 "usd",
                                 null,
+                                null,
+                                null,
                                 null));
     }
 
