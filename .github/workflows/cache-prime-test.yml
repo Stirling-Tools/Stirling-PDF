@@ -74,15 +74,6 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Setup GitHub App Bot
-        if: (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false)) && github.actor != 'dependabot[bot]'
-        id: setup-bot
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        with:
-          client-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-        continue-on-error: true
-
       - name: Restore Gradle cache asset
         id: cache
         uses: Ludy87/cache-the-planet@v1.9
@@ -97,7 +88,7 @@ jobs:
           sftp-base-path: ${{ secrets.CACHE_SFTP_BASE_PATH || '/files/cache-the-planet' }}
           cache-name: "gradle-java${{ env.JAVA_VERSION }}"
           save-scope: shared
-          token: ${{ steps.setup-bot.outputs.token || github.token }}
+          token: ${{ github.token }}
           key: ${{ needs.hash_pr.outputs.files_hash }}
           allow-shared-restore: true
           path: |
@@ -128,15 +119,3 @@ jobs:
           echo "Fork: $CACHE_IS_FORK"
           echo "Read-only: $CACHE_READ_ONLY"
           echo "Cache Hit: $CACHE_HIT"
-
-      # - name: Upload Gradle cache artifact for trusted publisher
-      #   if: ${{ steps.cache.outputs.cache-hit == 'false' && github.event_name == 'pull_request' && success() }}
-      #   uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-      #   with:
-      #     name: cache-the-planet-pr-${{ github.event.pull_request.number }}-gradle-java${{ env.JAVA_VERSION }}-${{ needs.hash_pr.outputs.files_hash }}-v${{ env.VERSION }}
-      #     path: |
-      #       .cache/gradle-java${{ env.JAVA_VERSION }}/caches
-      #       .cache/gradle-java${{ env.JAVA_VERSION }}/wrapper
-      #     include-hidden-files: true
-      #     if-no-files-found: warn
-      #     retention-days: 1
