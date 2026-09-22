@@ -76,7 +76,7 @@ jobs:
 
       - name: Restore Gradle cache asset
         id: cache
-        uses: Ludy87/cache-the-planet@main
+        uses: Ludy87/cache-the-planet@1b5455c10c317c050984c8890179b0006e1af035
         with:
           manifest-branch: dev-cache
           manifest-path: .github/cache-data
