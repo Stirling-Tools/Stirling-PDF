@@ -20,9 +20,6 @@ import {
   type RawDoc,
 } from "../src/core/docs/manifest/transform.ts";
 
-// oxlint-disable-next-line no-restricted-imports
-import { applyOAuthLicensing } from "../src/core/docs/manifest/licensing.ts";
-
 const REPO = process.env.DOCS_REPO ?? "Stirling-Tools/Stirling-Tools.github.io";
 const REF = process.env.DOCS_REF ?? "main";
 const ROOT = process.env.DOCS_ROOT ?? "docs";
@@ -143,8 +140,6 @@ async function main(): Promise<void> {
     root: ROOT,
     siteBaseUrl: SITE,
   });
-
-  applyOAuthLicensing(manifest);
 
   mkdirSync(dirname(OUT), { recursive: true });
   writeFileSync(OUT, JSON.stringify(manifest, null, 2) + "\n", "utf8");
