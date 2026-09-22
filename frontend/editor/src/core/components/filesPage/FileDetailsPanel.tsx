@@ -36,12 +36,11 @@ interface FileDetailsPanelProps {
   onAddToWorkspace?: (fileIds: FileId[]) => void;
   onMove?: (fileIds: FileId[]) => void;
   onRemove?: (fileIds: FileId[]) => void;
-  /** Save to server; only shown when at least one selected file is local-only. */
+  /** Receives selected files without a server copy; omitting it hides Add to library. */
   onSaveToServer?: (files: StirlingFileStub[]) => void;
-  /** When set, Save to server renders disabled with this tooltip (storage off). */
+  /** Keeps Add to library visible but disabled, with this explanation as a tooltip. */
   saveToServerDisabledReason?: string | null;
-  /** On small screens, show a compact "Version journey" button instead of the
-   *  full inline timeline (which opens onOpenVersionHistory). */
+  /** Replaces the inline version timeline with a button that invokes onOpenVersionHistory. */
   compactVersions?: boolean;
   onOpenVersionHistory?: () => void;
 }
@@ -75,10 +74,10 @@ export function FileDetailsPanel({
   // Collapsed metadata leaves room for the preview and footer actions.
   const [fieldsOpen, setFieldsOpen] = useState(false);
   const [versionsOpen, setVersionsOpen] = useState(false);
-  // Stored label IDs need the display-name seam for localization.
   const [classification, setClassification] = useState<string[] | null>(null);
   const [classificationOpen, setClassificationOpen] = useState(false);
   const classificationEnabled = useClassificationEnabled();
+  // Stored classification values are IDs; display names depend on the active locale.
   const labelName = useLabelName();
   const [versionChain, setVersionChain] = useState<StirlingFileStub[]>([]);
   const singleFileForChain = files.length === 1 ? files[0] : null;
@@ -104,7 +103,6 @@ export function FileDetailsPanel({
     };
   }, [singleFileForChain]);
 
-  // PDFs may carry labels even when classification is disabled for this build.
   useEffect(() => {
     setClassification(null);
     if (!classificationEnabled) return;

@@ -15,7 +15,6 @@ interface FilesToolbarFilterMenuProps {
   zIndex?: number;
 }
 
-/** The trigger indicates active source and type filters while the popover is closed. */
 export function FilesToolbarFilterMenu({
   originFilter,
   onOriginChange,

@@ -891,8 +891,7 @@ export default function FileManagerView() {
     () => Array.from(selectedFileIds),
     [selectedFileIds],
   );
-  // A phone with files selected shows a contextual selection bar instead of the
-  // full toolbar - five bulk buttons plus filters cannot fit the width.
+  // On phones, selection actions and filters compete for width.
   const mobileSelection = isMobile && selectedFiles.length > 0;
 
   const localOnlySelectedStubs = useMemo(
@@ -1380,8 +1379,7 @@ export default function FileManagerView() {
       <MoveToFolderDialog
         opened={moveDialog.open}
         onClose={closeMoveDialog}
-        // Files can go anywhere, but a folder moves only within its own kind and
-        // never into a mount - a directory's subfolders are the filesystem's.
+        // Folders stay within their storage kind; mounted directories cannot receive library subfolders.
         folders={folders.folders.filter((candidate) => {
           if (!moveDialog.folderId) return true;
           if (folderKind(candidate) === "local") return false;

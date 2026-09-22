@@ -11,7 +11,6 @@ interface FilesToolbarSortMenuProps {
   zIndex?: number;
 }
 
-/** The trigger exposes the current sort order to assistive technology. */
 export function FilesToolbarSortMenu({
   value,
   onChange,

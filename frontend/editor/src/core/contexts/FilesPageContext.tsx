@@ -128,7 +128,11 @@ interface FilesPageContextValue {
   promptMoveFiles: (fileIds: FileId[]) => void;
   closeMoveDialog: () => void;
 
-  /** uploadToRoot backs up local files even when the destination is the library root. */
+  /**
+   * Server folders upload local files; moving to root uploads only with uploadToRoot.
+   * Can reject after partial completion; successful uploads and moves are not rolled back.
+   * Mounted and browser-only destinations report skipped files through FolderContext.
+   */
   moveFilesTo: (
     fileIds: FileId[],
     folderId: FolderId | null,
@@ -343,7 +347,6 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
     setMoveDialog((m) => ({ ...m, open: false }));
   }, []);
 
-  /** Cloud files move server-first; local files auto-upload then move. */
   const moveFilesTo = useCallback(
     async (
       fileIds: FileId[],
@@ -382,7 +385,6 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
           const orphans = await fileStorage.orphanedAncestorIds(movedIds);
           await fileActions.removeFiles([...movedIds, ...orphans], true);
         }
-        // One error slot, two possible failures: report both.
         const notices: string[] = [];
         if (failedCount > 0) {
           notices.push(

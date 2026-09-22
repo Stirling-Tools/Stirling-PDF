@@ -6,9 +6,9 @@ import { Button } from "@app/ui/Button";
 interface FilesToolbarBulkMenuProps {
   selectedCount: number;
   onAddToWorkspace: () => void;
-  /** Local-only files in the selection; omit when there are none to upload. */
+  /** Omit when the selection has no files to upload. */
   onSaveToServer?: () => void;
-  /** Set when storage is off - the item stays listed but disabled. */
+  /** Keeps Add to library visible but disabled. */
   saveToServerDisabledReason?: string;
   onShowDetails?: () => void;
   onMove?: () => void;
@@ -16,7 +16,6 @@ interface FilesToolbarBulkMenuProps {
   onClearSelection: () => void;
 }
 
-/** Keeps selection actions labelled even when the toolbar is narrow. */
 export function FilesToolbarBulkMenu({
   selectedCount,
   onAddToWorkspace,

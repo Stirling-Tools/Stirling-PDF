@@ -21,7 +21,7 @@ export interface FileDetailsActionsProps {
   onMove: (fileIds: FileId[]) => void;
   onRemove: (fileIds: FileId[]) => void;
   onSaveToServer?: (files: StirlingFileStub[]) => void;
-  /** When set, Add to library renders disabled with this tooltip (storage off). */
+  /** Keeps Add to library visible but disabled, with this explanation as a tooltip. */
   saveToServerDisabledReason?: string | null;
   onShare: () => void;
 }
@@ -92,9 +92,7 @@ export function FileDetailsActions({
             </ActionIcon>
           </Menu.Target>
           <Menu.Dropdown>
-            {/* Share is single-file only. When sharing is disabled in server
-                config (storage.sharing.enabled=false) the item stays listed but
-                disabled, so the feature is discoverable rather than absent. */}
+            {/* Keep sharing discoverable when server settings disable it. */}
             {single && (
               <Tooltip
                 label={t(

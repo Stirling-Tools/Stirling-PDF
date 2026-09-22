@@ -42,8 +42,9 @@ interface FilesModalContextType {
   openFilesModal: (options?: FilesModalOptions) => void;
   closeFilesModal: () => void;
   maxSelectable: number | null;
+  /** Closes the picker before ingestion; rejects on import failure. */
   onFileUpload: (files: File[]) => Promise<void>;
-  /** Imports readable selections after the picker closes, then rejects with unavailable filenames; modal state is untouched. */
+  /** Imports readable selections before rejecting with unavailable filenames; leaves modal state unchanged. */
   onRecentFileSelect: (
     stirlingFileStubs: StirlingFileStub[],
     uploads?: File[],

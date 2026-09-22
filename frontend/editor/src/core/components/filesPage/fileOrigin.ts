@@ -1,12 +1,3 @@
-/**
- * Classifies where a stored file lives. The UI uses this to badge each file
- * (Local vs Cloud) and to drive the origin filter chip.
- *
- * - "local" - only in the browser's IndexedDB
- * - "cloud" - also exists on the server (uploaded), still owned by the user
- * - "shared-with-me" - opened from a share link / not owned by current user
- */
-
 import { StirlingFileStub } from "@app/types/fileContext";
 import type { FolderId, FolderRecord } from "@app/types/folder";
 
@@ -17,6 +8,7 @@ export function isBrowserOnlyFile(file: StirlingFileStub): boolean {
   return getFileOrigin(file) === "local" && !file.localFilePath;
 }
 
+/** Local includes browser and disk copies without server storage; shared access takes precedence. */
 export function getFileOrigin(file: StirlingFileStub): FileOrigin {
   if (file.remoteSharedViaLink || file.remoteOwnedByCurrentUser === false) {
     return "shared-with-me";
@@ -27,7 +19,7 @@ export function getFileOrigin(file: StirlingFileStub): FileOrigin {
   return "local";
 }
 
-/** Unfiled browser copies appear in Recents until assigned to a library folder. */
+/** Local files without a known folder are hidden from Stirling library but remain in Recents. */
 export function isUnfiledLocalFile(
   file: StirlingFileStub,
   foldersById: ReadonlyMap<FolderId, FolderRecord>,

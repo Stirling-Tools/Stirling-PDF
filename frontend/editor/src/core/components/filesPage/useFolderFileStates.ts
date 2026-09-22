@@ -11,7 +11,7 @@ const PROCESSING_FILES_POLL_MS = 3000;
 const EMPTY_FILE_STATES: ReadonlyMap<string, DiskFileState> = new Map();
 const EMPTY_REVERTABLES: ReadonlySet<string> = new Set();
 
-/** Shares processing states between library views; polling pauses while the tab is hidden. */
+/** Shares processing states between library views; polling pauses while the browser tab is hidden. */
 export function useFolderFileStates(
   processingRecordId: string | undefined,
   enabled: boolean,
@@ -21,7 +21,7 @@ export function useFolderFileStates(
   const processingFilesKey = qk.processingFolderFiles(processingRecordId ?? "");
   const { data: processingFiles } = useQuery({
     queryKey: processingFilesKey,
-    // A failed read clears the ambient badges; the next poll retries.
+    // Clear stale processing badges after a failed read; retry on the next poll.
     queryFn: () => listFiles(processingRecordId!).catch(() => []),
     enabled: enabled && Boolean(processingRecordId),
     refetchInterval: PROCESSING_FILES_POLL_MS,
