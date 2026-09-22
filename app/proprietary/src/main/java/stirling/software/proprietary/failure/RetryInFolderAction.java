@@ -14,8 +14,8 @@ import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
- * Server's half of {@link FailureActionId#OPEN_IN_TOOL}: reruns a smart folder's document.
- * Authorised against the caller, never the row's actor: a leader reads rows they may not process.
+ * Server's half of {@link FailureActionId#OPEN_IN_TOOL}: reruns a smart folder's document. {@link
+ * PolicyAccessGuard#canAccess} on the caller, not the row's actor, is the whole check.
  */
 @Slf4j
 @Component
