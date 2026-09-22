@@ -74,7 +74,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Restore Gradle cache asset
+      - name: Restore Gradle cache sftp
         id: cache
         uses: Ludy87/cache-the-planet@1b5455c10c317c050984c8890179b0006e1af035
         with:
