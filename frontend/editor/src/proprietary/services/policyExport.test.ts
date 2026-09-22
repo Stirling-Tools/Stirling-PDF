@@ -13,6 +13,10 @@ const runStoredPolicy = vi.fn(
     "run-1",
 );
 const output = { name: "doc.pdf", type: "application/pdf" };
+let serverExternalOutput = false;
+const downloadPolicyOutput = vi.fn(
+  async () => new Blob([], { type: output.type }),
+);
 vi.mock("@app/services/policyApi", () => ({
   runStoredPolicy: (...args: Parameters<typeof runStoredPolicy>) =>
     runStoredPolicy(...args),
@@ -20,15 +24,17 @@ vi.mock("@app/services/policyApi", () => ({
   // the per-file policy loop after the first policy and hide the order under test.
   getPolicyRun: async () => ({
     status: "COMPLETED",
+    externalOutput: serverExternalOutput,
     outputs: [{ fileId: "out-1", fileName: output.name }],
   }),
-  downloadPolicyOutput: async () => new Blob([], { type: output.type }),
+  downloadPolicyOutput: () => downloadPolicyOutput(),
   resolvePolicyRunTarget: () => "local",
 }));
 
 vi.mock("@app/components/policies/policyRunStore", () => ({
   recordRunStart: vi.fn(),
   isDispatched: () => false,
+  markDispatched: vi.fn(),
   getPolicyRunOutcomes: () => ({}),
 }));
 // Run the queued task inline: the queue's own behaviour is not under test here.
@@ -43,7 +49,13 @@ vi.mock("@app/components/toast", () => ({
 }));
 vi.mock("@app/i18n", () => ({ default: { t: (key: string) => key } }));
 
+const dispatchPolicyFile = vi.hoisted(() =>
+  vi.fn(() => new Promise<void>(() => {})),
+);
+vi.mock("@app/services/policyDispatch", () => ({ dispatchPolicyFile }));
 const { enforceExportPolicies } = await import("@app/services/policyExport");
+const { recordRunStart } =
+  await import("@app/components/policies/policyRunStore");
 
 /** An active export-time policy as the local store holds it. */
 const exportPolicy = (over: Partial<PolicyState>): PolicyState =>
@@ -74,6 +86,9 @@ describe("export-time policy selection", () => {
     updateToast.mockClear();
     output.name = "doc.pdf";
     output.type = "application/pdf";
+    serverExternalOutput = false;
+    downloadPolicyOutput.mockClear();
+    vi.mocked(recordRunStart).mockClear();
   });
   afterEach(() => vi.useRealTimers());
 
@@ -99,6 +114,26 @@ describe("export-time policy selection", () => {
       expect.objectContaining({
         alertType: "warning",
         title: "policies.enforcement.failureTitle",
+      }),
+    );
+  });
+
+  it("records server-reported external delivery when cached metadata says internal", async () => {
+    loadPolicies.mockReturnValue({
+      ingestion: exportPolicy({ runsOnEditor: true, externalOutput: false }),
+    });
+    serverExternalOutput = true;
+    const file = pdf();
+    const pending = enforceExportPolicies([file], ["file-1"]);
+    await vi.runAllTimersAsync();
+    const result = await pending;
+    expect(result[0].size).toBe(file.size);
+    expect(downloadPolicyOutput).not.toHaveBeenCalled();
+    expect(recordRunStart).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fileId: "file-1",
+        status: "COMPLETED",
+        externalOutput: true,
       }),
     );
   });
@@ -223,6 +258,26 @@ describe("export-time policy selection", () => {
     await expect(enforceExportPolicies([input], ["file-1"])).resolves.toEqual([
       input,
     ]);
+  });
+
+  it("returns the exact original immediately while an external export submission is pending", async () => {
+    loadPolicies.mockReturnValue({
+      ingestion: exportPolicy({ runsOnEditor: true, externalOutput: true }),
+    });
+    const file = pdf();
+    const files = [file];
+    const result = await enforceExportPolicies(files, ["file-1"]);
+    expect(result).toBe(files);
+    expect(result[0]).toBe(file);
+    expect(dispatchPolicyFile).toHaveBeenCalledWith(
+      "ingestion",
+      "backend-1",
+      file,
+      "file-1",
+      false,
+      true,
+    );
+    expect(runStoredPolicy).not.toHaveBeenCalled();
   });
 
   it("enforces an editor pipeline set to run on export", async () => {

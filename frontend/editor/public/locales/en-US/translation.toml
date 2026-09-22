@@ -5644,6 +5644,26 @@ uploadFromComputer = "Browse files"
 [language]
 direction = "ltr"
 
+[legacyBilling]
+currentTeamAllowance = "Current allowance for your legacy team"
+loadError = "We couldn't check your existing subscription. Try again before purchasing another plan."
+loading = "Checking your subscription..."
+portalError = "We couldn't open Stripe billing. Please try again."
+pro = "Pro (legacy)"
+retry = "Try again"
+team = "Team (legacy)"
+teamUsers = "Your team: {{used}} of {{limit}} users"
+unlimitedUsers = "Your team: unlimited users ({{used}} in use)"
+usersUnavailable = "We couldn't confirm your team's user allowance. Contact support to check your legacy plan."
+
+[legacyBilling.status]
+active = "Active"
+incomplete = "Payment pending"
+past_due = "Payment overdue"
+paused = "Paused"
+trialing = "Trial"
+unpaid = "Unpaid"
+
 [legal]
 accessibility = "Accessibility"
 cookie = "Cookie Policy"
@@ -8229,6 +8249,14 @@ baseUrlPlaceholder = "https://your-org.webhook.office.com/webhookb2/..."
 description = "Post a message to a Teams channel when a policy runs."
 label = "Microsoft Teams"
 
+[portal.connections.types.vectordb]
+baseUrlPlaceholder = "https://your-database-host"
+description = "Index document chunks using Weaviate or Pinecone server-side embedding. Use the Weaviate server URL or Pinecone index host. Private endpoints require the operator to enable policies.allowPrivateApiEndpoints."
+label = "Vector database"
+pinecone = "Pinecone"
+vendor = "Database"
+weaviate = "Weaviate"
+
 [portal.connections.types.webhook]
 baseUrlPlaceholder = "https://example.com/hooks/documents"
 description = "Post each document, or just the details, to a URL you choose."
@@ -9013,7 +9041,6 @@ chooseSource = "Choose a source"
 discard = "Discard changes"
 editorDestination = "Editor"
 editorDestinationDetail = "Replaces the file you ran it on"
-editorDestinationHelp = "This pipeline runs on the files in your workspace, and its results replace the file it ran on. There is nowhere else to send them."
 inputs = "Input"
 inputSource = "Input source"
 inputTrigger = "Trigger"
@@ -9069,7 +9096,8 @@ label = "Change icon"
 [portal.pipelines.builder.ingest]
 chunkSize = "Chunk size"
 chunkSizeHint = "Characters per chunk. Smaller chunks retrieve more precisely; larger ones keep more context together."
-editorPdfOnly = "Editor policies return PDFs only. To export chunks or Markdown, choose a saved input source and a file destination."
+destinationNeedsChunks = "This vector database destination needs a final AI ingestion step that exports chunks only."
+editorPdfOnly = "Only PDFs can return to the editor. To export chunks or Markdown, choose Keep originals and send to a destination under Output."
 exportChunks = "Export chunks as JSONL"
 exportChunksHint = "One chunk per line with its page span, ready to load into another system."
 exportMarkdown = "Export markdown"
@@ -9082,6 +9110,7 @@ nothingToDo = "Turn on at least one of indexing or an export, or this step has n
 overlap = "Overlap"
 overlapHint = "Characters repeated between neighbouring chunks, so a sentence split across two is still findable."
 overlapTooBig = "Overlap must be smaller than the chunk size ({{chunkSize}})."
+prepareDestination = "Prepare chunks for this destination"
 unavailable = "AI ingestion needs the AI engine and DocParse turned on, including when the destination database generates embeddings."
 
 [portal.pipelines.builder.routing]
@@ -9615,6 +9644,13 @@ labelsHeading = "Classification labels"
 noTools = "Enable at least one action."
 saveFailed = "Couldn't save the pipeline. Please try again."
 
+[portal.policies.wizard.locations]
+delivery = "Delivery"
+editorOutput = "Processed PDFs return to the editor workspace."
+keepOriginal = "Keep originals and send to a destination"
+keepOriginalHelp = "A copy runs in the background. Your editor files stay unchanged; results are saved to the destination below."
+returnToEditor = "Return results to editor"
+
 [portal.policies.wizard.routing]
 chooseDestination = "Choose a destination"
 chooseSource = "Choose what to watch"
@@ -9983,6 +10019,7 @@ backToSource = "Back to source setup"
 backToTypes = "All source types"
 cancel = "Cancel"
 chooseHint = "Choose where documents come from. Greyed-out connectors are on the way."
+chooseOutputHint = "Choose where processed documents go. Greyed-out connectors are on the way."
 comingSoon = "Coming soon"
 comingSoonHeading = "Coming soon"
 create = "Create source"
@@ -10137,6 +10174,17 @@ label = "SharePoint"
 
 [portal.sources.types.unknown]
 label = "Source"
+
+[portal.sources.types.vectordb]
+collection = "Collection / index name"
+collectionHint = "Use an existing collection or index configured for server-side embedding."
+connection = "Database connection"
+description = "An output destination for prepared document chunks. The database generates embeddings; originals stay in your input source when track mode is selected."
+label = "Vector database"
+namespace = "Namespace / tenant"
+namespaceHint = "Optional Pinecone namespace or Weaviate tenant. Leave empty for the default namespace or a single-tenant collection."
+textField = "Text field"
+textFieldHint = "The field the database embeds, matching the collection schema or Pinecone field map."
 
 [portal.sources.types.webhook]
 createNote = "A delivery URL and signing secret are generated when you create this webhook. Senders POST documents to that URL and the referencing policies run on arrival."
