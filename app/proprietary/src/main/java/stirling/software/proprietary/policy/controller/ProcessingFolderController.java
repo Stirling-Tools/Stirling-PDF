@@ -238,6 +238,10 @@ public class ProcessingFolderController {
                         ? request.routingRules()
                         : existing == null ? List.of() : existing.routingRules();
         List<PipelineStep> steps = request.steps() == null ? List.of() : request.steps();
+        if (steps.stream().anyMatch(Objects::isNull)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Pipeline steps must not be null");
+        }
         // Only the folder's own destination receives the pipeline's output, so only its sink gets
         // to vet the steps; a routed document arrives on its own, as PolicyValidator assumes.
         outputIds.stream()

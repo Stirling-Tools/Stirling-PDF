@@ -487,6 +487,29 @@ class ProcessingFolderControllerTest {
     }
 
     @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void aNullFinalStepIsRejectedBeforeCreatingTheFolderPair(boolean onDisk) {
+        var malformed =
+                new ProcessingFolderController.SaveProcessingFolderRequest(
+                        null,
+                        onDisk ? null : FOLDER_ID.toString(),
+                        onDisk ? tempDir.toString() : null,
+                        true,
+                        Stream.of((PipelineStep) null).toList(),
+                        Map.of());
+
+        assertThatThrownBy(() -> controller.save(malformed))
+                .isInstanceOfSatisfying(
+                        ResponseStatusException.class,
+                        error ->
+                                assertThat(error.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST))
+                .hasMessageContaining("Pipeline steps must not be null");
+        assertThat(policyStore.all()).isEmpty();
+        assertThat(sourceStore.all()).isEmpty();
+        verifyNoInteractions(policyRunner);
+    }
+
+    @ParameterizedTest
     @ValueSource(strings = {"exportChunksJsonl", "exportMarkdown"})
     void corpusExportsPreserveOriginalsInStorageAndOnDisk(String exportFlag) {
         var steps =
