@@ -22,6 +22,7 @@ import {
 } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
+import { openFilesFromDisk } from "@app/services/openFilesFromDisk";
 import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
 import { useFreeCreditsSummary } from "@app/hooks/useFreeCreditsSummary";
 import { useOpenPlan } from "@app/hooks/useOpenPlan";
@@ -752,11 +753,33 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       [ingestFiles],
     );
 
+    const openNativeFilePicker = useCallback(() => {
+      void openFilesFromDisk({
+        onFallbackOpen: () => nativeFileInputRef.current?.click(),
+      })
+        .then(ingestFiles)
+        .catch((err) => {
+          console.error("[FileSidebar] Native file pick failed", err);
+          alert({
+            alertType: "error",
+            title: t("fileSidebar.uploadFailedTitle", "Upload failed"),
+            body:
+              err instanceof Error
+                ? err.message
+                : t(
+                    "fileSidebar.uploadFailedBody",
+                    "Could not add the selected files.",
+                  ),
+            isPersistentPopup: false,
+          });
+        });
+    }, [ingestFiles, t]);
+
     useEffect(() => {
       if (!onRegisterOpenFromComputer) return;
-      onRegisterOpenFromComputer(() => nativeFileInputRef.current?.click());
+      onRegisterOpenFromComputer(openNativeFilePicker);
       return () => onRegisterOpenFromComputer(null);
-    }, [onRegisterOpenFromComputer]);
+    }, [onRegisterOpenFromComputer, openNativeFilePicker]);
 
     // Internal folder drags have their own payloads and must bypass file ingestion.
     const [isFileDragOver, setIsFileDragOver] = useState(false);
@@ -900,7 +923,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             {
               icon: <Icon name="plus" />,
               label: t("fileSidebar.addFiles", "Add files"),
-              onClick: () => nativeFileInputRef.current?.click(),
+              onClick: openNativeFilePicker,
               testId: "pdf-library-add-files",
             },
             ...(isGoogleDriveEnabled
@@ -939,7 +962,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           variant="quiet"
           className="file-sidebar-section-btn file-sidebar-section-btn-add"
           data-testid="pdf-library-add-files"
-          onClick={() => nativeFileInputRef.current?.click()}
+          onClick={openNativeFilePicker}
           title={t("fileSidebar.addFiles", "Add files")}
           aria-label={t("fileSidebar.addFiles", "Add files")}
         >

@@ -347,11 +347,14 @@ export function LibraryFilePicker({
     const newItems = files.map((file) => {
       const key = createQuickKey(file);
       const existing = uploadsByKey.get(key);
-      const localFilePath = pendingFilePathMappings.get(key);
-      pendingFilePathMappings.delete(key);
-      if (existing) return existing;
+      if (existing) {
+        if (existing.file !== file) pendingFilePathMappings.delete(file);
+        return existing;
+      }
+      // Deferred native paths stay attached to the File until editor ingestion.
+      const localFilePath = pendingFilePathMappings.get(file);
       const stub = createNewStirlingFileStub(file);
-      stub.localFilePath = localFilePath;
+      if (typeof localFilePath === "string") stub.localFilePath = localFilePath;
       const item = { kind: "upload" as const, file, stub };
       uploadsByKey.set(key, item);
       return item;
@@ -409,17 +412,12 @@ export function LibraryFilePicker({
         if (item.kind === "stored")
           stored.push(library.fileMap.get(item.stub.id) ?? item.stub);
         else if (item.kind === "upload") {
-          if (item.stub.localFilePath)
-            pendingFilePathMappings.set(
-              createQuickKey(item.file),
-              item.stub.localFilePath,
-            );
           incoming.push(item.file);
         } else {
           try {
             const file = await readDiskFile(item.entry);
             if (!file) throw new Error("File unavailable");
-            pendingFilePathMappings.set(createQuickKey(file), item.entry.path);
+            pendingFilePathMappings.set(file, item.entry.path);
             incoming.push(file);
           } catch (cause) {
             console.error(

@@ -1,42 +1,61 @@
-import { useEffect, useState } from "react";
+import { useCallback, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { DiskFileState } from "@app/components/filesPage/FileGrid";
-import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
+import {
+  useProcessingFolders,
+  type MountedFileState,
+} from "@app/hooks/useProcessingFolders";
+import { qk } from "@app/query/keys";
 
-/** Polls the open processing folder; cancels stale replies when the folder changes. */
+const PROCESSING_FILES_POLL_MS = 3000;
+const EMPTY_FILE_STATES: ReadonlyMap<string, DiskFileState> = new Map();
+const EMPTY_REVERTABLES: ReadonlySet<string> = new Set();
+
+/** Shares processing states between library views; polling pauses while the tab is hidden. */
 export function useFolderFileStates(
   processingRecordId: string | undefined,
   enabled: boolean,
 ) {
   const { listFiles } = useProcessingFolders();
-  const [fileStates, setFileStates] = useState<Map<string, DiskFileState>>(
-    new Map(),
-  );
-  const [revertables, setRevertables] = useState<ReadonlySet<string>>(
-    new Set(),
-  );
-  useEffect(() => {
-    if (!enabled || !processingRecordId) {
-      setFileStates((prev) => (prev.size === 0 ? prev : new Map()));
-      setRevertables((prev) => (prev.size === 0 ? prev : new Set()));
-      return;
-    }
-    let cancelled = false;
-    const tick = async () => {
-      const files = await listFiles(processingRecordId).catch(() => []);
-      if (!cancelled) {
-        setFileStates(new Map(files.map((f) => [f.name, f.state])));
-        setRevertables(
-          new Set(files.filter((f) => f.hasOriginal).map((f) => f.name)),
-        );
-      }
-    };
-    void tick();
-    const timer = setInterval(() => void tick(), 3000);
-    return () => {
-      cancelled = true;
-      clearInterval(timer);
-    };
-  }, [enabled, processingRecordId, listFiles]);
+  const queryClient = useQueryClient();
+  const processingFilesKey = qk.processingFolderFiles(processingRecordId ?? "");
+  const { data: processingFiles } = useQuery({
+    queryKey: processingFilesKey,
+    // A failed read clears the ambient badges; the next poll retries.
+    queryFn: () => listFiles(processingRecordId!).catch(() => []),
+    enabled: enabled && Boolean(processingRecordId),
+    refetchInterval: PROCESSING_FILES_POLL_MS,
+  });
 
-  return { fileStates, setFileStates, revertables, setRevertables };
+  const fileStates = useMemo(
+    () =>
+      processingFiles
+        ? new Map(processingFiles.map((file) => [file.name, file.state]))
+        : EMPTY_FILE_STATES,
+    [processingFiles],
+  );
+  const revertables = useMemo(
+    () =>
+      processingFiles
+        ? new Set(
+            processingFiles
+              .filter((file) => file.hasOriginal)
+              .map((file) => file.name),
+          )
+        : EMPTY_REVERTABLES,
+    [processingFiles],
+  );
+  const patchProcessingFile = useCallback(
+    (name: string, patch: Partial<MountedFileState>) =>
+      queryClient.setQueryData<MountedFileState[]>(
+        processingFilesKey,
+        (previous) =>
+          previous?.map((file) =>
+            file.name === name ? { ...file, ...patch } : file,
+          ),
+      ),
+    [queryClient, processingFilesKey],
+  );
+
+  return { fileStates, revertables, patchProcessingFile };
 }

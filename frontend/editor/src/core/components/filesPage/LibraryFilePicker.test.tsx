@@ -9,6 +9,8 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { createAppQueryClient } from "@app/query/queryClient";
 import { LibraryFilePicker } from "@app/components/filesPage/LibraryFilePicker";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { FolderRecord } from "@app/types/folder";
@@ -151,8 +153,9 @@ const folder = (id: string, name: string, extra = {}) =>
     updatedAt: 0,
     ...extra,
   }) as FolderRecord;
-const show = (supportedFormats?: string[]) =>
-  render(
+const show = (supportedFormats?: string[]) => {
+  const client = createAppQueryClient();
+  return render(
     <MantineProvider env="test">
       <LibraryFilePicker
         supportedFormats={supportedFormats}
@@ -160,7 +163,13 @@ const show = (supportedFormats?: string[]) =>
         onExternalPickerChange={vi.fn()}
       />
     </MantineProvider>,
+    {
+      wrapper: ({ children }) => (
+        <QueryClientProvider client={client}>{children}</QueryClientProvider>
+      ),
+    },
   );
+};
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -682,14 +691,30 @@ describe("library file picker", () => {
     fireEvent.change(input, { target: { files: [upload, duplicate] } });
     const { pendingFilePathMappings } =
       await import("@app/services/pendingFilePathMappings");
-    const key = `${duplicate.name}|${duplicate.size}|${duplicate.lastModified}`;
-    pendingFilePathMappings.set(key, "C:/Documents/Duplicate.pdf");
+    pendingFilePathMappings.set(duplicate, "C:/Documents/Duplicate.pdf");
     fireEvent.change(input, { target: { files: [duplicate] } });
 
-    expect(pendingFilePathMappings.has(key)).toBe(false);
+    expect(pendingFilePathMappings.has(duplicate)).toBe(false);
     expect(screen.getAllByText("Duplicate.pdf")).toHaveLength(1);
     await user.click(screen.getByRole("button", { name: "Add 1 files" }));
     expect(state.selected).toHaveBeenCalledExactlyOnceWith([], [upload]);
+  });
+
+  it("preserves a pending native path when staged files reach the editor", async () => {
+    const user = userEvent.setup();
+    const view = show();
+    const upload = new File(["PDF"], "Native.pdf");
+    const { pendingFilePathMappings } =
+      await import("@app/services/pendingFilePathMappings");
+    const path = Promise.resolve("C:/Documents/Native.pdf");
+    pendingFilePathMappings.set(upload, path);
+    const input = view.container.querySelector('input[type="file"]')!;
+    fireEvent.change(input, { target: { files: [upload] } });
+    fireEvent.change(input, { target: { files: [upload] } });
+
+    await user.click(screen.getByRole("button", { name: "Add 1 files" }));
+    expect(state.selected).toHaveBeenCalledExactlyOnceWith([], [upload]);
+    expect(pendingFilePathMappings.get(upload)).toBe(path);
   });
 
   it("clears native selections from multiple folders in the selected-only view", async () => {
@@ -767,9 +792,8 @@ describe("library file picker", () => {
     expect(state.readDiskFile).toHaveBeenCalledWith(state.diskFiles[0]);
     const { pendingFilePathMappings } =
       await import("@app/services/pendingFilePathMappings");
-    expect([...pendingFilePathMappings.values()]).toContain(
-      "C:/Documents/Disk.pdf",
-    );
+    const imported = state.selected.mock.calls[0][1][0];
+    expect(pendingFilePathMappings.get(imported)).toBe("C:/Documents/Disk.pdf");
   });
 
   it("keeps more than 50 files accessible in Recent and filters older files", async () => {

@@ -25,6 +25,7 @@ import { useFileActions } from "@app/contexts/file/fileHooks";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useDropzoneFiles } from "@app/hooks/useDropzoneFiles";
+import { openFilesFromDisk } from "@app/services/openFilesFromDisk";
 import {
   useNavigationActions,
   useNavigationGuard,
@@ -299,8 +300,10 @@ export default function FileManagerView() {
     processingRecordId && (outputDirectory || !currentLocalDirectory),
   );
   const { retryFile, revertFile } = processingApi;
-  const { fileStates, setFileStates, revertables, setRevertables } =
-    useFolderFileStates(processingRecordId, processingView);
+  const { fileStates, revertables, patchProcessingFile } = useFolderFileStates(
+    processingRecordId,
+    processingView,
+  );
 
   const [processingSetupFolder, setProcessingSetupFolder] =
     useState<FolderRecord | null>(null);
@@ -334,13 +337,7 @@ export default function FileManagerView() {
     (name: string) => {
       if (!processingRecordId) return;
       void retryFile(processingRecordId, name)
-        .then(() =>
-          setFileStates((prev) => {
-            const next = new Map(prev);
-            next.set(name, "processing");
-            return next;
-          }),
-        )
+        .then(() => patchProcessingFile(name, { state: "processing" }))
         .catch((err) =>
           folders.setError(
             err instanceof Error
@@ -356,24 +353,15 @@ export default function FileManagerView() {
           ),
         );
     },
-    [processingRecordId, retryFile, folders, t],
+    [processingRecordId, retryFile, folders, t, patchProcessingFile],
   );
   const revertFolderFile = useCallback(
     (name: string) => {
       if (!processingRecordId) return;
       void revertFile(processingRecordId, name)
-        .then(() => {
-          setFileStates((prev) => {
-            const next = new Map(prev);
-            next.set(name, "waiting");
-            return next;
-          });
-          setRevertables((prev) => {
-            const next = new Set(prev);
-            next.delete(name);
-            return next;
-          });
-        })
+        .then(() =>
+          patchProcessingFile(name, { state: "waiting", hasOriginal: false }),
+        )
         .catch((err) =>
           folders.setError(
             err instanceof Error
@@ -389,7 +377,7 @@ export default function FileManagerView() {
           ),
         );
     },
-    [processingRecordId, revertFile, folders, t],
+    [processingRecordId, revertFile, folders, t, patchProcessingFile],
   );
   const revertAllInFolder = useCallback(
     (folder: FolderRecord) => {
@@ -546,14 +534,27 @@ export default function FileManagerView() {
   const handleNativeUpload = useLibraryUpload();
   const getDropzoneFiles = useDropzoneFiles();
 
+  const reportUploadError = useCallback(
+    (err: unknown) =>
+      folders.setError(
+        err instanceof Error
+          ? t("filesPage.error.uploadFilesFailedDetail", {
+              message: err.message,
+              defaultValue: `Could not upload files: ${err.message}`,
+            })
+          : t("filesPage.error.uploadFilesFailed", "Could not upload files."),
+      ),
+    [folders, t],
+  );
+
   const onFileInputChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const list = Array.from(e.target.files ?? []);
       e.target.value = "";
       if (list.length === 0) return;
-      await handleNativeUpload(list);
+      await handleNativeUpload(list).catch(reportUploadError);
     },
-    [handleNativeUpload],
+    [handleNativeUpload, reportUploadError],
   );
 
   const openFilesInWorkbench = useCallback(
@@ -678,19 +679,7 @@ export default function FileManagerView() {
         .then((dropped) =>
           handleNativeUpload(dropped.filter((item) => item instanceof File)),
         )
-        .catch((err) =>
-          folders.setError(
-            err instanceof Error
-              ? t("filesPage.error.uploadFilesFailedDetail", {
-                  message: err.message,
-                  defaultValue: `Could not upload files: ${err.message}`,
-                })
-              : t(
-                  "filesPage.error.uploadFilesFailed",
-                  "Could not upload files.",
-                ),
-          ),
-        );
+        .catch(reportUploadError);
     };
     node.addEventListener("dragenter", onEnter);
     node.addEventListener("dragover", onOver);
@@ -702,7 +691,7 @@ export default function FileManagerView() {
       node.removeEventListener("dragleave", onLeave);
       node.removeEventListener("drop", onDrop);
     };
-  }, [getDropzoneFiles, handleNativeUpload, folders, t]);
+  }, [getDropzoneFiles, handleNativeUpload, reportUploadError]);
 
   const handleClose = useCallback(() => {
     // Drop the return-route hint so the workbench doesn't show a stale back.
@@ -916,7 +905,16 @@ export default function FileManagerView() {
   const { refreshing, refresh: handleRefresh } = useLibraryRefresh();
 
   // The workbench bar re-registers changed values; stable identities prevent a render loop.
-  const openFilePicker = useCallback(() => fileInputRef.current?.click(), []);
+  const openFilePicker = useCallback(async () => {
+    try {
+      const files = await openFilesFromDisk({
+        onFallbackOpen: () => fileInputRef.current?.click(),
+      });
+      await handleNativeUpload(files);
+    } catch (err) {
+      reportUploadError(err);
+    }
+  }, [handleNativeUpload, reportUploadError]);
 
   const newFolderControl = useMemo(
     () => (
@@ -1244,8 +1242,7 @@ export default function FileManagerView() {
               onRenameFile={setRenameTarget}
               onDuplicateFile={handleDuplicateFile}
               saveToServerDisabledReason={saveToServerDisabledReason}
-
-              onEmptyUpload={() => fileInputRef.current?.click()}
+              onEmptyUpload={openFilePicker}
               emptyNewFolderControl={
                 <NewFolderButton
                   label={t("filesPage.newFolder", "New folder")}
