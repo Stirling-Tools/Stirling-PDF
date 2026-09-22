@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
@@ -244,7 +245,7 @@ class ProcessingFolderControllerTest {
     }
 
     @Test
-    void aRoutedDestinationIsNotHeldToWhatTheFoldersOwnPipelineDelivers() {
+    void aRoutedDestinationValidatesTheFoldersPipelineOutput() {
         Source routed =
                 sourceStore.save(
                         new Source(
@@ -277,8 +278,8 @@ class ProcessingFolderControllerTest {
                                         routes))
                         .getBody();
         assertThat(created.routingRules()).isEqualTo(routes);
-        // Only the folder's own output reaches the sink's pipeline check.
-        verify(diskFolderSink, never()).validatePipeline(any(), any());
+        verify(diskFolderSink, atLeastOnce())
+                .validatePipeline(routed.toOutputSpec(), baseline.steps());
     }
 
     @ParameterizedTest
@@ -458,6 +459,41 @@ class ProcessingFolderControllerTest {
         assertThat(source.type()).isEqualTo("storage-folder");
         assertThat(source.options()).containsEntry("folderId", FOLDER_ID.toString());
         verify(policyRunner, timeout(2000)).run(stored, SweepKind.USER);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void rejectsIncompatibleFallbackAndRoutingDestinationsBeforeSaving(boolean routed) {
+        Source destination =
+                sourceStore.save(
+                        new Source(null, "Vectors", "vectordb", Map.of(), true, "reece", 3L));
+        var baseline = request(null, "new_version");
+        doThrow(new IllegalArgumentException("chunks required"))
+                .when(diskFolderSink)
+                .validatePipeline(destination.toOutputSpec(), baseline.steps());
+        var routes =
+                List.of(
+                        new RoutingRule(
+                                new Condition.MatchesAny(
+                                        new ConditionInput.DocumentField("classification.labels"),
+                                        List.of("invoice")),
+                                destination.id()));
+        var request =
+                new ProcessingFolderController.SaveProcessingFolderRequest(
+                        null,
+                        FOLDER_ID.toString(),
+                        null,
+                        true,
+                        baseline.steps(),
+                        Map.of(),
+                        routed ? List.of() : List.of(destination.id()),
+                        routed ? routes : List.of());
+
+        assertThatThrownBy(() -> controller.save(request))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("chunks required");
+        assertThat(policyStore.all()).isEmpty();
+        assertThat(sourceStore.all()).hasSize(1);
     }
 
     @Test

@@ -242,16 +242,9 @@ public class ProcessingFolderController {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Pipeline steps must not be null");
         }
-        // Only the folder's own destination receives the pipeline's output, so only its sink gets
-        // to vet the steps; a routed document arrives on its own, as PolicyValidator assumes.
-        outputIds.stream()
+        Stream.concat(outputIds.stream(), routingRules.stream().map(RoutingRule::outputId))
                 .distinct()
                 .forEach(outputId -> requireAccessibleDestination(outputId, steps));
-        routingRules.stream()
-                .map(RoutingRule::outputId)
-                .distinct()
-                .filter(outputId -> !outputIds.contains(outputId))
-                .forEach(this::requireAccessibleDestination);
         String name = onDisk ? diskFolderName(request.directory()) : folder.getName();
 
         // Held for rollback: the source is written before the policy validates, and a rejected
@@ -905,17 +898,6 @@ public class ProcessingFolderController {
         Path path = Path.of(directory.trim());
         Path fileName = path.getFileName();
         return fileName == null ? path.toString() : fileName.toString();
-    }
-
-    /** A routing destination takes documents the rules divert, never the folder's own output. */
-    private void requireAccessibleDestination(String outputId) {
-        Source destination = accessibleDestination(outputId);
-        // Validate on the request thread: connection checks need the caller's authentication.
-        try {
-            policyValidator.validateOutput(destination.toOutputSpec());
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-        }
     }
 
     private void requireAccessibleDestination(String outputId, List<PipelineStep> steps) {

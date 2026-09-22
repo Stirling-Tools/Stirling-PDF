@@ -293,6 +293,7 @@ export async function enforceExportPolicies(
             target: versionRun.target,
             status: "COMPLETED",
             outputs: versionRun.outputs,
+            externalOutput: versionRun.externalOutput,
             error: null,
             startedAt: Date.now(),
           });

@@ -35,6 +35,35 @@ class PolicyRunTest {
     }
 
     @Test
+    void routedExternalDeliveryIsCapturedEvenWithAnInlineFallback() {
+        var condition =
+                new stirling.software.proprietary.document.conditions.Condition.MatchesAny(
+                        new stirling.software.proprietary.document.conditions.ConditionInput
+                                .DocumentField("document.extension"),
+                        List.of("pdf"));
+        for (OutputSpec destination : List.of(OutputSpec.inline(), OutputSpec.folder("/out"))) {
+            PolicyRun routed =
+                    new PolicyRun(
+                            "run",
+                            "policy",
+                            new PipelineDefinition(
+                                    "route",
+                                    List.of(),
+                                    List.of(OutputSpec.inline()),
+                                    List.of(
+                                            new RoutedDestination(
+                                                    new RoutingRule(condition, "destination"),
+                                                    destination))),
+                            null,
+                            null,
+                            null);
+            assertEquals(
+                    !"inline".equals(destination.type()),
+                    PolicyRunView.of(routed).externalOutput());
+        }
+    }
+
+    @Test
     void sharedJobProjectionPreservesExternalDelivery() {
         var entry =
                 new stirling.software.common.cluster.JobStoreEntry(

@@ -132,7 +132,7 @@ public class PolicyValidator {
                                             new IllegalArgumentException(
                                                     "unknown routing destination: "
                                                             + rule.outputId()));
-            validateOutput(destination.toOutputSpec());
+            validateOutput(destination.toOutputSpec(), policy.steps());
         }
     }
 

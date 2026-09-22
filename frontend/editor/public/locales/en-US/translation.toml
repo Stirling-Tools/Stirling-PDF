@@ -9188,7 +9188,6 @@ desc = "Strip hidden data, convert to PDF/A for archiving, and validate every do
 label = "Compliance"
 
 [portal.policies.categories.ingestion]
-desc = "Read documents, prepare searchable chunks, and deliver them to a knowledge base or export destination."
 description = "Read documents, prepare searchable chunks, and deliver them to a knowledge base or export destination."
 label = "Ingestion"
 

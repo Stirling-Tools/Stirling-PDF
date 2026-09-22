@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -37,6 +36,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.pdf.MarkdownBlock;
 import stirling.software.common.pdf.MarkdownBlocks;
 import stirling.software.common.pdf.PdfMarkdownExtractor;
+import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.model.api.docparse.IngestApiRequest;
 import stirling.software.proprietary.model.docparse.IngestOutcome;
@@ -60,6 +60,7 @@ class DocParseServiceTest {
     @Mock private PdfMarkdownExtractor markdownExtractor;
     @Mock private TempFileManager tempFileManager;
     @Mock private FileIdStrategy fileIdStrategy;
+    @Mock private UserServiceInterface userService;
 
     @TempDir Path tmp;
 
@@ -78,7 +79,7 @@ class DocParseServiceTest {
                         properties,
                         jsonMapper,
                         fileIdStrategy,
-                        null);
+                        userService);
     }
 
     @Test
@@ -154,9 +155,10 @@ class DocParseServiceTest {
     private JsonNode ingestAndCaptureRequest(
             String documentId, boolean index, boolean markdown, boolean chunks) throws IOException {
         stubConversion(BLOCKS);
+        when(userService.getCurrentUsername()).thenReturn("alice");
         ArgumentCaptor<String> body = ArgumentCaptor.forClass(String.class);
         when(aiEngineClient.postLongRunning(
-                        eq("/api/v1/docparse/ingest"), body.capture(), isNull()))
+                        eq("/api/v1/docparse/ingest"), body.capture(), eq("alice")))
                 .thenReturn(ENGINE_RESPONSE);
 
         IngestOutcome outcome = ingest(documentId, index, markdown, chunks);
@@ -169,6 +171,7 @@ class DocParseServiceTest {
         JsonNode request = ingestAndCaptureRequest("doc-1", true, false, false);
 
         assertEquals("doc-1", request.get("documentId").asString());
+        assertEquals("alice", request.get("ownerId").asString());
         assertEquals("invoice.pdf", request.get("source").asString());
         assertEquals(2, request.get("blocks").size());
         JsonNode heading = request.get("blocks").get(0);
@@ -222,6 +225,19 @@ class DocParseServiceTest {
 
         assertEquals(0, outcome.chunksIndexed());
         assertNull(outcome.chunks());
+        verifyNoInteractions(aiEngineClient);
+    }
+
+    @Test
+    void anonymousIndexAndChunkExportAreRejectedBeforeEngineDispatch() throws IOException {
+        stubConversion(BLOCKS);
+        for (boolean index : List.of(true, false)) {
+            ResponseStatusException error =
+                    assertThrows(
+                            ResponseStatusException.class,
+                            () -> ingest("doc-1", index, false, !index));
+            assertEquals(HttpStatus.UNAUTHORIZED, error.getStatusCode());
+        }
         verifyNoInteractions(aiEngineClient);
     }
 

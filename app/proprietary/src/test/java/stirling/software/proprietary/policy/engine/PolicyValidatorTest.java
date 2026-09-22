@@ -418,6 +418,22 @@ class PolicyValidatorTest {
     }
 
     @Test
+    void rejectsRoutingWhenTheDestinationCannotAcceptThePipelineOutput() {
+        when(outputSink.supports(any())).thenReturn(true);
+        String destinationId = folderSourceId();
+        Policy policy = routingPolicy(rule("classification.labels", "invoice", destinationId));
+        doThrow(new IllegalArgumentException("chunks required"))
+                .when(outputSink)
+                .validatePipeline(
+                        sourceStore.get(destinationId).orElseThrow().toOutputSpec(),
+                        policy.steps());
+
+        IllegalArgumentException error =
+                assertThrows(IllegalArgumentException.class, () -> validator.validate(policy));
+        assertTrue(error.getMessage().contains("chunks required"));
+    }
+
+    @Test
     void rejectsARoutingRuleWithNoField() {
         Policy policy = routingPolicy(rule(" ", "invoice", folderSourceId()));
 

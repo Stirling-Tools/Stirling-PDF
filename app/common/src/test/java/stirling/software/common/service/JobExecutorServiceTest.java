@@ -165,6 +165,26 @@ class JobExecutorServiceTest {
                                         })));
     }
 
+    @ParameterizedTest
+    @EnumSource(
+            value = HttpStatus.class,
+            names = {"UNAUTHORIZED", "UNPROCESSABLE_ENTITY", "SERVICE_UNAVAILABLE"})
+    void shouldPreserveWrappedHttpErrorsFromSyncJobs(HttpStatus status) {
+        var error =
+                new org.springframework.web.server.ResponseStatusException(
+                        status, "Cannot prepare document");
+        assertSame(
+                error,
+                assertThrows(
+                        org.springframework.web.server.ResponseStatusException.class,
+                        () ->
+                                jobExecutorService.runJobGeneric(
+                                        false,
+                                        () -> {
+                                            throw new RuntimeException(new RuntimeException(error));
+                                        })));
+    }
+
     @Test
     void shouldQueueJobWhenResourcesLimited() throws Exception {
         // Given

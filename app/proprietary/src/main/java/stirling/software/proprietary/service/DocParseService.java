@@ -170,6 +170,10 @@ public class DocParseService {
         // Chunking lives in the engine, so an export-markdown-only run needs no round trip at all.
         if (index || includeChunks) {
             String callerId = currentUserId();
+            if (callerId == null || callerId.isBlank()) {
+                throw new ResponseStatusException(
+                        HttpStatus.UNAUTHORIZED, "Sign in to index documents or export chunks");
+            }
             // Null expiresAt = persistent until explicit delete; ingest here is a deliberate
             // knowledge-base action, unlike the TTL'd auto-ingest in AiWorkflowService.
             IngestRequest request =
@@ -177,9 +181,7 @@ public class DocParseService {
                             docId,
                             fileName(file),
                             callerId,
-                            // Engine forbids an empty list here (min_length=1); null means
-                            // "default to the owner" on the engine side.
-                            callerId == null ? null : List.of(callerId),
+                            List.of(callerId),
                             null,
                             blocks,
                             size,
