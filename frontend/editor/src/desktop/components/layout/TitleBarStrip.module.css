@@ -1,8 +1,4 @@
-/* Frame column: the strip on top, then the rail + app below it. The frame gets
-   an EXPLICIT height (not flex-grow): WebKit (macOS WKWebView) won't resolve the
-   `height: 100%` chain inside .app-frame against a flex-determined height, which
-   collapsed the whole app to a blank canvas. calc keeps it definite. Scoped here
-   so web keeps the core .app-frame at its own full height. */
+/* Frame column: the strip on top, then the rail + app below it. */
 .column {
   --titlebar-h: 2.5rem;
   /* Inherited down to AppLayout, which sizes itself to the space under the strip
@@ -11,11 +7,19 @@
   display: flex;
   flex-direction: column;
   height: 100dvh;
+  /* The frame fills exactly the strip + app; never a scroll container that a
+     stray scrollIntoView could shift the whole app inside. */
+  overflow: hidden;
 }
+/* Fill the space under the strip via flex, tied to the strip's real row - not a
+   fixed calc(100dvh - strip), which slides up leaving a strip-sized gap at the
+   bottom if it ever disagrees with the strip's actual height (a reflow, a stray
+   scroll). AppLayout still renders because it self-sizes with a real length, not
+   a height:100% that WebKit won't resolve against a flex-sized ancestor. */
 .column > :global(.app-frame) {
-  flex: 0 0 auto;
+  flex: 1 1 0;
   min-height: 0;
-  height: calc(100dvh - var(--titlebar-h));
+  height: auto;
 }
 
 /* The desktop title-bar row. Normal flow (first row of the frame column), so it
