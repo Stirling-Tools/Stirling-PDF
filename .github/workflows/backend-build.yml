@@ -18,13 +18,57 @@ permissions:
   security-events: write
   pull-requests: write
 
+env:
+  VERSION: 1
+  JAVA_VERSION: 25
+  FILES_TO_HASH: |
+    gradle/wrapper/gradle-wrapper.properties
+    gradle/libs.versions.toml
+    buildSrc/**
+    settings.gradle
+    build.gradle
+    app/**/build.gradle
+    gradle/**/*.gradle
+
 jobs:
+  hash_pr:
+    name: Hash Gradle files
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    outputs:
+      java_version: ${{ steps.hash.outputs.java_version }}
+      cache_key: ${{ steps.hash.outputs.cache_key }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        with:
+          egress-policy: audit
+
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Hash Gradle files
+        id: hash
+        env:
+          FILES_HASH: ${{ hashFiles(env.FILES_TO_HASH) }}
+        run: |
+          HASH="$FILES_HASH"
+          echo "java_version=${{ env.JAVA_VERSION }}" >> "$GITHUB_OUTPUT"
+          echo "cache_key=gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-${{ env.JAVA_VERSION }}-$HASH" >> "$GITHUB_OUTPUT"
   build:
     environment:
       name: ci-unsigned
       deployment: false
     runs-on: ubuntu-latest
+    needs: [hash_pr]
     timeout-minutes: 30
+    env:
+      GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java${{ needs.hash_pr.outputs.java_version }}
     strategy:
       fail-fast: false
       matrix:
@@ -35,16 +79,40 @@ jobs:
         uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
           egress-policy: audit
+
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
+      - name: Restore Gradle cache sftp
+        id: cache
+        uses: Ludy87/cache-the-planet@0b9d42807720992a5869b51cf394762c89d118e7
+        with:
+          manifest-branch: dev-cache
+          manifest-path: .github/cache-data
+          storage: sftp
+          sftp-host: ${{ secrets.CACHE_SFTP_HOST }}
+          sftp-port: ${{ secrets.CACHE_SFTP_PORT || '22' }}
+          sftp-username: ${{ secrets.CACHE_SFTP_USERNAME }}
+          sftp-password: ${{ secrets.CACHE_SFTP_PASSWORD }}
+          sftp-base-path: ${{ secrets.CACHE_SFTP_BASE_PATH || '/files/cache-the-planet' }}
+          cache-name: "gradle-java${{ env.JAVA_VERSION }}"
+          save-scope: shared
+          token: ${{ github.token }}
+          key: ${{ matrix.flavor}}${{ needs.hash_pr.outputs.cache_key }}
+          allow-shared-restore: true
+          path: |
+            .cache/gradle-java${{ env.JAVA_VERSION }}/caches
+            .cache/gradle-java${{ env.JAVA_VERSION }}/wrapper
+          strict: false
+
       - name: Restore cache Gradle User Home
+        if: ${{ steps.cache.outputs.error }}
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-${{ matrix.jdk-version }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+            .cache/gradle-java${{ env.JAVA_VERSION }}/caches
+            .cache/gradle-java${{ env.JAVA_VERSION }}/wrapper
+          key: ${{ matrix.flavor}}${{ needs.hash_pr.outputs.cache_key }}
 
       - name: Set up JDK ${{ matrix.jdk-version }}
         uses: ./.github/actions/java
@@ -53,6 +121,7 @@ jobs:
 
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+
       - name: Check Java formatting (Spotless)
         # Runs once per matrix combination - pick the cheapest leg
         # (core - no proprietary, no saas) so we don't wait for the

@@ -48,9 +48,8 @@ jobs:
           FILES_HASH: ${{ hashFiles(env.FILES_TO_HASH) }}
         run: |
           HASH="$FILES_HASH"
-          echo "files_hash=$HASH" >> "$GITHUB_OUTPUT"
           echo "java_version=${{ env.JAVA_VERSION }}" >> "$GITHUB_OUTPUT"
-          echo "cache_key=gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-$HASH" >> "$GITHUB_OUTPUT"
+          echo "cache_key=gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-${{ env.JAVA_VERSION }}-$HASH" >> "$GITHUB_OUTPUT"
 
   gradle-cache-prime:
     environment:
@@ -73,7 +72,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          # fetch-depth: 0
           persist-credentials: false
 
       - name: Restore Gradle cache sftp
@@ -94,12 +92,9 @@ jobs:
           key: ${{ needs.hash_pr.outputs.cache_key }}
           allow-shared-restore: true
           path: |
-            .cache/gradle-java${{ env.JAVA_VERSION }}
+            .cache/gradle-java${{ env.JAVA_VERSION }}/caches
+            .cache/gradle-java${{ env.JAVA_VERSION }}/wrapper
           strict: false
-
-      - name: Get Cache
-        shell: bash
-        run: ls -la ${{ env.GRADLE_USER_HOME }}
 
       - name: Display cache information
         env:
@@ -134,15 +129,6 @@ jobs:
       - name: Resolve backend dependencies
         if: ${{ steps.cache-gradle-restore.outputs.cache-hit != 'true' && steps.cache.outputs.cache-hit != 'true' }}
         run: ./gradlew :stirling-pdf:classes --no-daemon
-        env:
-          STIRLING_FLAVOR: saas
-          MAVEN_USER: ${{ secrets.MAVEN_USER }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
-
-      - name: Resolve backend dependencies
-        if: ${{ steps.cache-gradle-restore.outputs.cache-hit || steps.cache.outputs.cache-hit }}
-        run: ./gradlew --offline :stirling-pdf:classes --no-daemon
         env:
           STIRLING_FLAVOR: saas
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
