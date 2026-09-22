@@ -76,6 +76,10 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Get Cache
+        shell: bash
+        run: ls -la GRADLE_USER_HOME
+
       - name: Restore Gradle cache sftp
         id: cache
         uses: Ludy87/cache-the-planet@816331595214ef3d3ae9d3d7ee95d67331ff1dc1
@@ -94,8 +98,7 @@ jobs:
           key: ${{ needs.hash_pr.outputs.cache_key }}
           allow-shared-restore: true
           path: |
-            .cache/gradle-java${{ env.JAVA_VERSION }}/caches
-            .cache/gradle-java${{ env.JAVA_VERSION }}/wrapper
+            .cache/gradle-java${{ env.JAVA_VERSION }}
           strict: false
 
       - name: Display cache information
