@@ -241,7 +241,7 @@ describe("library file picker", () => {
       expect(fileOrder()).toEqual(["Old.pdf", "New.pdf"]);
 
       await user.click(
-        screen.getByRole("button", { name: "Stirling library", exact: true }),
+        screen.getByRole("button", { name: "Stirling library" }),
       );
       expect(fileOrder()).toEqual(["Old.pdf", "New.pdf"]);
       expect(
@@ -306,9 +306,7 @@ describe("library file picker", () => {
       screen.getByRole("textbox", { name: "Folder name" }),
       created.name,
     );
-    await user.click(
-      screen.getByRole("button", { name: "Create", exact: true }),
-    );
+    await user.click(screen.getByRole("button", { name: "Create" }));
     await waitFor(() =>
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
     );

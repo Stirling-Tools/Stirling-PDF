@@ -115,7 +115,7 @@ async function openCardKebab(page: Page): Promise<void> {
   await expect(page.getByRole("menu")).toBeVisible();
 }
 
-test("Recents offers the same file actions as the sidebar", async ({
+test("Recents offers file actions and adds browser files to the library", async ({
   page,
 }) => {
   await openCardKebab(page);
@@ -124,7 +124,10 @@ test("Recents offers the same file actions as the sidebar", async ({
   await expect(
     menu.getByRole("menuitem", { name: "Add to workspace" }),
   ).toBeVisible();
-  await expect(menu.getByRole("menuitem", { name: "Move to…" })).toBeVisible();
+  await expect(
+    menu.getByRole("menuitem", { name: /Add to Stirling library/ }),
+  ).toBeVisible();
+  await expect(menu.getByRole("menuitem", { name: "Move to…" })).toHaveCount(0);
   await expect(menu.getByRole("menuitem", { name: "Download" })).toBeVisible();
   await expect(menu.getByRole("menuitem", { name: "Rename" })).toBeVisible();
   await expect(menu.getByRole("menuitem", { name: "Duplicate" })).toBeVisible();

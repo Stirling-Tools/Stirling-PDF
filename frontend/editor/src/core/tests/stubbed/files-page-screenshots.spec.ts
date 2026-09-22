@@ -183,7 +183,7 @@ test.describe("Files page screenshots", () => {
     await page.screenshot({ path: shotPath("03_subtoolbar_with_files") });
   });
 
-  test("04_kebab_save_to_server_local", async ({ page }) => {
+  test("04_kebab_add_to_library_local", async ({ page }) => {
     await stubStorageApis(page);
     await seedFiles(page, [
       { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
@@ -199,13 +199,13 @@ test.describe("Files page screenshots", () => {
       .filter({ hasText: "alpha.pdf" });
     await card.getByRole("button", { name: /File actions/i }).click();
     await expect(
-      page.getByRole("menuitem", { name: /^Save to server$/i }),
+      page.getByRole("menuitem", { name: /^Add to Stirling library/i }),
     ).toBeVisible();
     await settle(page);
-    await page.screenshot({ path: shotPath("04_kebab_save_to_server_local") });
+    await page.screenshot({ path: shotPath("04_kebab_add_to_library_local") });
   });
 
-  test("05_kebab_no_save_to_server_cloud", async ({ page }) => {
+  test("05_kebab_no_add_to_library_cloud", async ({ page }) => {
     await stubStorageApis(page);
     await seedFiles(page, [
       { id: "cloud-c", name: "cloud-c.pdf", remoteStorageId: 1001 },
@@ -222,11 +222,11 @@ test.describe("Files page screenshots", () => {
     await card.getByRole("button", { name: /File actions/i }).click();
     await settle(page);
     await page.screenshot({
-      path: shotPath("05_kebab_no_save_to_server_cloud"),
+      path: shotPath("05_kebab_no_add_to_library_cloud"),
     });
   });
 
-  test("06_details_panel_save_to_server", async ({ page }) => {
+  test("06_details_panel_add_to_library", async ({ page }) => {
     await stubStorageApis(page);
     await seedFiles(page, [
       { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
@@ -244,14 +244,14 @@ test.describe("Files page screenshots", () => {
     await expect(page.locator(".files-page-details")).toBeVisible();
     await settle(page);
     await page.screenshot({
-      path: shotPath("06_details_panel_save_to_server"),
+      path: shotPath("06_details_panel_add_to_library"),
     });
   });
 
   test("07_move_dialog_collapsed", async ({ page }) => {
     await stubStorageApis(page);
     await seedFiles(page, [
-      { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
+      { id: "alpha", name: "alpha.pdf", remoteStorageId: 1001 },
     ]);
     await page.goto("/files?view=recent", { waitUntil: "domcontentloaded" });
     await expect(
@@ -274,7 +274,7 @@ test.describe("Files page screenshots", () => {
   test("08_move_dialog_create_folder_expanded", async ({ page }) => {
     await stubStorageApis(page);
     await seedFiles(page, [
-      { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
+      { id: "alpha", name: "alpha.pdf", remoteStorageId: 1001 },
     ]);
     await page.goto("/files?view=recent", { waitUntil: "domcontentloaded" });
     await expect(
@@ -320,7 +320,7 @@ test.describe("Files page screenshots", () => {
   test("08b_move_dialog_after_create_folder", async ({ page }) => {
     await stubStorageApis(page);
     await seedFiles(page, [
-      { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
+      { id: "alpha", name: "alpha.pdf", remoteStorageId: 1001 },
     ]);
     await page.route(
       "**/api/v1/storage/folders",
@@ -409,7 +409,7 @@ test.describe("Files page screenshots", () => {
     await enableDarkMode(page);
     await stubStorageApis(page);
     await seedFiles(page, [
-      { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
+      { id: "alpha", name: "alpha.pdf", remoteStorageId: 1001 },
     ]);
     await page.goto("/files?view=recent", { waitUntil: "domcontentloaded" });
     await expect(
@@ -479,7 +479,7 @@ test.describe("Files page screenshots", () => {
     await enableRtl(page);
     await stubStorageApis(page);
     await seedFiles(page, [
-      { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
+      { id: "alpha", name: "alpha.pdf", remoteStorageId: 1001 },
     ]);
     await page.goto("/files?view=recent", { waitUntil: "domcontentloaded" });
     await expect(
@@ -501,7 +501,7 @@ test.describe("Files page screenshots", () => {
     });
   });
 
-  test("18_rtl_details_panel_save_to_server", async ({ page }) => {
+  test("18_rtl_details_panel_add_to_library", async ({ page }) => {
     await enableRtl(page);
     await stubStorageApis(page);
     await seedFiles(page, [
@@ -520,11 +520,11 @@ test.describe("Files page screenshots", () => {
     await expect(page.locator(".files-page-details")).toBeVisible();
     await settle(page);
     await page.screenshot({
-      path: shotPath("18_rtl_details_panel_save_to_server"),
+      path: shotPath("18_rtl_details_panel_add_to_library"),
     });
   });
 
-  test("14_dark_details_panel_save_to_server", async ({ page }) => {
+  test("14_dark_details_panel_add_to_library", async ({ page }) => {
     await enableDarkMode(page);
     await stubStorageApis(page);
     await seedFiles(page, [
@@ -543,7 +543,7 @@ test.describe("Files page screenshots", () => {
     await expect(page.locator(".files-page-details")).toBeVisible();
     await settle(page);
     await page.screenshot({
-      path: shotPath("14_dark_details_panel_save_to_server"),
+      path: shotPath("14_dark_details_panel_add_to_library"),
     });
   });
 

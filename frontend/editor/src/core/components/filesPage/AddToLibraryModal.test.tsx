@@ -32,8 +32,12 @@ describe("library destination confirmation", () => {
   });
 
   it("closes immediately while the upload continues, then dismisses progress", async () => {
-    const upload = Promise.withResolvers<void>();
-    state.move.mockReturnValue(upload.promise);
+    let finishUpload!: () => void;
+    state.move.mockReturnValue(
+      new Promise<void>((resolve) => {
+        finishUpload = resolve;
+      }),
+    );
     const close = vi.fn();
     render(
       <MantineProvider>
@@ -52,7 +56,7 @@ describe("library destination confirmation", () => {
       state.move.mock.invocationCallOrder[0],
     );
     expect(state.dismiss).not.toHaveBeenCalled();
-    await act(async () => upload.resolve());
+    await act(async () => finishUpload());
     await waitFor(() => expect(state.dismiss).toHaveBeenCalledWith("progress"));
     expect(state.alert).toHaveBeenLastCalledWith(
       expect.objectContaining({ alertType: "success" }),

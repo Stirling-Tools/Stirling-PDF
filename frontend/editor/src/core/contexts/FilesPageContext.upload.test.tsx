@@ -64,13 +64,16 @@ vi.mock("@app/auth/UseSession", () => ({
   useAuth: () => ({ isAnonymous: false }),
 }));
 
-const stub = (id: string) =>
-  ({
-    id: id as FileId,
-    originalFileId: id as FileId,
-    name: `${id}.pdf`,
-    isLeaf: true,
-  }) as StirlingFileStub;
+const stub = (id: string): StirlingFileStub => ({
+  id: id as FileId,
+  originalFileId: id as FileId,
+  name: `${id}.pdf`,
+  isLeaf: true,
+  versionNumber: 1,
+  type: "application/pdf",
+  size: 1024,
+  lastModified: 123,
+});
 const show = () =>
   renderHook(() => useFilesPage(), {
     wrapper: ({ children }) => (

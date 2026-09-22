@@ -276,14 +276,16 @@ test.describe("Files page", () => {
     });
     test.use({ autoGoto: false });
 
-    test("Save to server hidden when nothing selected", async ({ page }) => {
+    test("Add to Stirling library hidden when nothing selected", async ({
+      page,
+    }) => {
       await gotoFilesPage(page);
       await expect(
-        page.getByRole("button", { name: /^Save to server$/i }),
+        page.locator(".files-page-toolbar-bulk-trigger"),
       ).toHaveCount(0);
     });
 
-    test("Save to server visible when local file selected", async ({
+    test("Add to Stirling library visible when local file selected", async ({
       page,
     }) => {
       await gotoFilesPage(page);
@@ -297,7 +299,7 @@ test.describe("Files page", () => {
       // dropdowns stay mounted once opened, so each is read through the id its
       // own trigger controls.
       await expect(
-        page.getByRole("button", { name: /^Save to server$/i }),
+        page.getByRole("button", { name: /^Add to Stirling library/i }),
       ).toHaveCount(0);
       await expect(
         await openMenuItem(
@@ -305,7 +307,7 @@ test.describe("Files page", () => {
           page.locator(
             ".files-page-selection-actions .files-page-toolbar-bulk-trigger",
           ),
-          /^Save to server$/i,
+          /^Add to Stirling library/i,
         ),
       ).toBeVisible();
       await expect(
@@ -314,12 +316,12 @@ test.describe("Files page", () => {
           page
             .locator(".files-page-details-actions-row")
             .getByRole("button", { name: /^Actions$/i }),
-          /^Save to server$/i,
+          /^Add to Stirling library/i,
         ),
       ).toBeVisible();
     });
 
-    test("Save to server hidden when ONLY cloud files selected", async ({
+    test("Add to Stirling library hidden when ONLY cloud files selected", async ({
       page,
     }) => {
       await gotoFilesPage(page);
@@ -329,11 +331,26 @@ test.describe("Files page", () => {
         .filter({ hasText: "cloud-a.pdf" })
         .click();
       await expect(
-        page.getByRole("button", { name: /^Save to server$/i }),
+        await openMenuItem(
+          page,
+          page.locator(
+            ".files-page-selection-actions .files-page-toolbar-bulk-trigger",
+          ),
+          /^Add to Stirling library/i,
+        ),
+      ).toHaveCount(0);
+      await expect(
+        await openMenuItem(
+          page,
+          page
+            .locator(".files-page-details-actions-row")
+            .getByRole("button", { name: /^Actions$/i }),
+          /^Add to Stirling library/i,
+        ),
       ).toHaveCount(0);
     });
 
-    test("Per-file kebab has Save to server item for local file", async ({
+    test("Per-file kebab has Add to Stirling library item for local file", async ({
       page,
     }) => {
       await gotoFilesPage(page);
@@ -343,30 +360,27 @@ test.describe("Files page", () => {
         .filter({ hasText: "local-a.pdf" });
       await localCard.getByRole("button", { name: /File actions/i }).click();
       await expect(
-        page.getByRole("menuitem", { name: /^Save to server$/i }),
+        page.getByRole("menuitem", { name: /^Add to Stirling library/i }),
       ).toBeVisible();
     });
 
-    test("Per-file kebab hides Save to server for cloud file", async ({
+    test("Per-file kebab hides Add to Stirling library for cloud file", async ({
       page,
     }) => {
       await gotoFilesPage(page);
-      // Cloud file kebab omits Save to server.
       const cloudCard = page
         .locator(".files-page-card:not(.is-folder)")
         .filter({ hasText: "cloud-a.pdf" });
       await cloudCard.getByRole("button", { name: /File actions/i }).click();
       await expect(
-        page.getByRole("menuitem", { name: /^Save to server$/i }),
+        page.getByRole("menuitem", { name: /^Add to Stirling library/i }),
       ).toHaveCount(0);
     });
   });
 
-  test.describe("Save to server gating (storage disabled)", () => {
+  test.describe("Add to Stirling library gating (storage disabled)", () => {
     test.beforeEach(async ({ page }) => {
-      // storageEnabled:false -> Save-to-server stays visible for local-only
-      // files but is disabled (with an explanatory tooltip), not hidden, so
-      // users discover the feature and know to ask their admin.
+      // Keep the disabled action discoverable so users know to ask their admin.
       await stubStorageApis(page, { storageEnabled: false });
       await seedFiles(page, [
         { id: "local-a", name: "local-a.pdf", remoteStorageId: null },
@@ -374,7 +388,7 @@ test.describe("Files page", () => {
     });
     test.use({ autoGoto: false });
 
-    test("bulk Save to server is disabled (not hidden) when storage off", async ({
+    test("bulk Add to Stirling library is disabled (not hidden) when storage off", async ({
       page,
     }) => {
       await gotoFilesPage(page);
@@ -387,7 +401,7 @@ test.describe("Files page", () => {
         page.locator(
           ".files-page-selection-actions .files-page-toolbar-bulk-trigger",
         ),
-        /^Save to server$/i,
+        /^Add to Stirling library/i,
       );
       await expect(selectionSave).toBeVisible();
       await expect(selectionSave).toBeDisabled();
@@ -397,13 +411,13 @@ test.describe("Files page", () => {
         page
           .locator(".files-page-details-actions-row")
           .getByRole("button", { name: /^Actions$/i }),
-        /^Save to server$/i,
+        /^Add to Stirling library/i,
       );
       await expect(panelSave).toBeVisible();
       await expect(panelSave).toBeDisabled();
     });
 
-    test("per-file kebab Save to server is disabled (not hidden) when storage off", async ({
+    test("per-file kebab Add to Stirling library is disabled (not hidden) when storage off", async ({
       page,
     }) => {
       await gotoFilesPage(page);
@@ -411,7 +425,9 @@ test.describe("Files page", () => {
         .locator(".files-page-card:not(.is-folder)")
         .filter({ hasText: "local-a.pdf" });
       await localCard.getByRole("button", { name: /File actions/i }).click();
-      const item = page.getByRole("menuitem", { name: /^Save to server$/i });
+      const item = page.getByRole("menuitem", {
+        name: /^Add to Stirling library/i,
+      });
       await expect(item).toBeVisible();
       await expect(item).toBeDisabled();
     });
@@ -726,6 +742,139 @@ test.describe("Files page", () => {
     });
   });
 
+  test.describe("Add to Stirling library", () => {
+    test.use({ autoGoto: false, seedJwt: true });
+
+    for (const destination of ["root", "new folder"] as const) {
+      test(`uploads to ${destination} after dismissing the picker and keeps Recents open`, async ({
+        page,
+      }) => {
+        await stubStorageApis(page);
+        await seedFiles(page, [
+          { id: "to-add", name: "to-add.pdf", remoteStorageId: null },
+        ]);
+        const folder = {
+          id: "11111111-1111-4111-8111-111111111111",
+          name: "Reports",
+          parentFolderId: null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        let createdFolder = false;
+        await page.route("**/api/v1/storage/folders", async (route) => {
+          if (route.request().method() === "POST") {
+            expect(route.request().postDataJSON()).toMatchObject({
+              name: folder.name,
+              parentFolderId: null,
+            });
+            createdFolder = true;
+            await route.fulfill({ json: folder });
+          } else {
+            await route.fulfill({ json: createdFolder ? [folder] : [] });
+          }
+        });
+        const storedFile = {
+          id: 1001,
+          fileName: "to-add.pdf",
+          contentType: "application/pdf",
+          sizeBytes: 1024,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          owner: "testuser",
+          ownedByCurrentUser: true,
+          accessRole: "owner",
+          shareLinks: [],
+          filePurpose: "generic",
+          folderId: destination === "root" ? null : folder.id,
+        };
+        let finishUpload!: () => void;
+        const uploadGate = new Promise<void>((resolve) => {
+          finishUpload = resolve;
+        });
+        let uploaded = false;
+        await page.route("**/api/v1/storage/files", async (route) => {
+          if (route.request().method() === "POST") {
+            await uploadGate;
+            uploaded = true;
+            await route.fulfill({ json: storedFile });
+          } else {
+            await route.fulfill({ json: uploaded ? [storedFile] : [] });
+          }
+        });
+        await page.route("**/api/v1/storage/files/folder", (route) =>
+          route.fulfill({
+            json: { movedFileIds: [storedFile.id], skippedFileIds: [] },
+          }),
+        );
+
+        await gotoFilesPage(page);
+        const card = page
+          .locator(".files-page-card:not(.is-folder)")
+          .filter({ hasText: "to-add.pdf" });
+        await card.getByRole("button", { name: /File actions/i }).click();
+        await expect(
+          page.getByRole("menuitem", { name: /Move to/i }),
+        ).toHaveCount(0);
+        await page
+          .getByRole("menuitem", { name: /Add to Stirling library/i })
+          .click();
+        const picker = page.getByRole("dialog").filter({
+          has: page.getByRole("button", { name: "Add here", exact: true }),
+        });
+        await expect(picker).toBeVisible();
+        if (destination === "new folder") {
+          await picker
+            .getByRole("button", { name: "New folder", exact: true })
+            .click();
+          const createDialog = page.getByRole("dialog", {
+            name: "New folder",
+            exact: true,
+          });
+          await createDialog
+            .getByRole("textbox", { name: "Folder name" })
+            .fill(folder.name);
+          await createDialog
+            .getByRole("button", { name: "Create", exact: true })
+            .click();
+          await expect(createDialog).toBeHidden();
+          await expect(
+            picker.getByRole("button", { name: folder.name, exact: true }),
+          ).toBeVisible();
+        }
+
+        const uploadRequest = page.waitForRequest(
+          (request) =>
+            request.url().endsWith("/api/v1/storage/files") &&
+            request.method() === "POST",
+        );
+        const placement = page.waitForRequest("**/api/v1/storage/files/folder");
+        try {
+          await picker
+            .getByRole("button", { name: "Add here", exact: true })
+            .click();
+          await uploadRequest;
+          await expect(picker).toBeHidden();
+          expect(uploaded).toBe(false);
+          await expect(page).toHaveURL(/\/files\?view=recent$/);
+        } finally {
+          finishUpload();
+        }
+        expect((await placement).postDataJSON()).toEqual({
+          folderId: storedFile.folderId,
+          fileIds: [storedFile.id],
+        });
+        await card.getByRole("button", { name: /File actions/i }).click();
+        await expect(
+          page.getByRole("menuitem", { name: /Move to/i }),
+        ).toBeVisible();
+        await expect(
+          page.getByRole("menuitem", { name: /Add to Stirling library/i }),
+        ).toHaveCount(0);
+        await expect(page).toHaveURL(/\/files\?view=recent$/);
+      });
+    }
+  });
+
   test.describe("Move dialog inline create-folder", () => {
     // The inline create-folder affordance is gated on `serverReachable`, which
     // only flips true once a confirmed, non-anonymous user triggers the folder
@@ -735,7 +884,7 @@ test.describe("Files page", () => {
     test("Move dialog shows Create new folder affordance", async ({ page }) => {
       await stubStorageApis(page);
       await seedFiles(page, [
-        { id: "to-move", name: "to-move.pdf", remoteStorageId: null },
+        { id: "to-move", name: "to-move.pdf", remoteStorageId: 1001 },
       ]);
       await gotoFilesPage(page);
       // Open the move dialog via the per-file kebab.
@@ -907,7 +1056,9 @@ test.describe("Files page", () => {
         page
           .locator(".files-page-card:not(.is-folder)")
           .filter({ hasText: "cross-browser.pdf" }),
-      ).toBeVisible({ timeout: 5_000 });
+      ).toBeVisible({
+        timeout: 5_000,
+      });
     });
   });
 
