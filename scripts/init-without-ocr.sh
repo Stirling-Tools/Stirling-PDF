@@ -184,10 +184,7 @@ UNOSERVER_UNO_PORTS=()
 CURRENT_USER="$(id -un)"
 CURRENT_UID="$(id -u)"
 
-# setpriv when root must drop, none when the current user already is the target, root when the
-# drop is impossible. Decided once by resolve_privilege_mode() ahead of the first caller: a
-# per-call decision would announce a failed drop from whichever caller ran first, and callers
-# such as the write probe below discard stderr.
+# Resolve privileges once before callers that suppress stderr, so failed drops are logged.
 PRIVILEGE_MODE=""
 
 run_as_runtime_user() {
