@@ -905,7 +905,7 @@ export const CREATABLE_CONNECTION_TYPES: CreatableConnectionType[] = [
     category: "storage",
     labelKey: `${PREFIX}.vectordb.label`,
     descriptionKey: `${PREFIX}.vectordb.description`,
-    searchTerms: ["rag", "vector", "weaviate", "pinecone", "knowledge"],
+    searchTerms: ["ingestion", "vector", "weaviate", "pinecone", "knowledge"],
     fields: [
       {
         key: "vendor",

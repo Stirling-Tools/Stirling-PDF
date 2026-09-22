@@ -5,9 +5,9 @@ import { Button, FormField, Input } from "@app/ui";
 import apiClient from "@app/services/apiClient";
 import type { PolicySetupConfigProps } from "@app/components/policies/PolicySetupWizard";
 import {
-  PolicyRagConfig,
-  type RagDestination,
-} from "@app/components/policies/PolicyRagConfig";
+  PolicyIngestionConfig,
+  type IngestionDestination,
+} from "@app/components/policies/PolicyIngestionConfig";
 import { ingestChunkingConfigured } from "@app/policies/ingestOperation";
 import { policyStepFromWire } from "@app/policies/operations";
 
@@ -19,14 +19,14 @@ export function FolderIngestionSettings({
   folderName,
 }: PolicySetupConfigProps & { folderName: string }) {
   const { t } = useTranslation();
-  const rag = result.steps
+  const ingestion = result.steps
     .map(policyStepFromWire)
     .find((step) => step?.toolId === "ingest");
   const [draft, setDraft] = useState<Record<string, string>>({});
-  const parameters = rag ? { ...rag.params, ...draft } : null;
-  const target: RagDestination = result.outputIds?.length
+  const parameters = ingestion ? { ...ingestion.params, ...draft } : null;
+  const target: IngestionDestination = result.outputIds?.length
     ? "external"
-    : rag?.params.index === "false"
+    : ingestion?.params.index === "false"
       ? "export"
       : "builtin";
   const capabilities = useQuery({
@@ -39,7 +39,7 @@ export function FolderIngestionSettings({
           indexingConfigured?: boolean;
         }>("/api/v1/docparse/capabilities")
       ).data,
-    enabled: Boolean(rag),
+    enabled: Boolean(ingestion),
     retry: false,
     staleTime: 0,
   });
@@ -48,20 +48,23 @@ export function FolderIngestionSettings({
   );
   const indexingReady = capabilities.data?.indexingConfigured === true;
   const chunkingReady =
-    !rag ||
+    !ingestion ||
     ingestChunkingConfigured({
       chunkSize: Number(parameters?.chunkSize),
       overlap: Number(parameters?.overlap),
     });
   const valid =
-    (!rag && target !== "external") ||
-    (Boolean(rag) &&
+    (!ingestion && target !== "external") ||
+    (Boolean(ingestion) &&
       engineReady &&
       !capabilities.isFetching &&
       chunkingReady &&
-      (rag?.params.index === "false" || indexingReady));
+      (ingestion?.params.index === "false" || indexingReady));
   useEffect(() => onValidityChange(valid), [valid, onValidityChange]);
-  function patchRag(patch: Record<string, unknown>, next?: RagDestination) {
+  function patchIngestion(
+    patch: Record<string, unknown>,
+    next?: IngestionDestination,
+  ) {
     onChange({
       ...(next
         ? {
@@ -92,7 +95,7 @@ export function FolderIngestionSettings({
             inputSize="sm"
             value={t(
               "portal.policies.wizard.locations.savedDatabase",
-              "Saved RAG database",
+              "Saved vector database",
             )}
             readOnly
           />
@@ -129,7 +132,7 @@ export function FolderIngestionSettings({
       <p className="portal-policies__wizard-desc">
         {t(
           "portal.policies.wizard.locations.folder",
-          "Input: {{name}}. Originals are retained when delivering to a RAG database.",
+          "Input: {{name}}. Originals are retained when delivering to a vector database.",
           { name: folderName },
         )}
       </p>
@@ -140,8 +143,8 @@ export function FolderIngestionSettings({
         <h3 className="portal-policies__wizard-heading">
           {t("portal.policies.wizard.locations.output", "Output")}
         </h3>
-        {rag && parameters ? (
-          <PolicyRagConfig
+        {ingestion && parameters ? (
+          <PolicyIngestionConfig
             parameters={parameters}
             target={target}
             allowExternal={false}
@@ -151,7 +154,7 @@ export function FolderIngestionSettings({
             checking={capabilities.isFetching}
             recheck={() => void capabilities.refetch()}
             onTargetChange={(next) =>
-              patchRag(
+              patchIngestion(
                 {
                   index: next === "builtin",
                   includeOriginal: true,
@@ -164,14 +167,14 @@ export function FolderIngestionSettings({
             onChange={(key, value) => {
               const next = { ...parameters, [key]: value };
               setDraft({ ...draft, [key]: value });
-              patchRag({
+              patchIngestion({
                 chunkSize: Number(next.chunkSize),
                 overlap: Number(next.overlap),
               });
             }}
           >
             {outputDestination}
-          </PolicyRagConfig>
+          </PolicyIngestionConfig>
         ) : (
           outputDestination
         )}

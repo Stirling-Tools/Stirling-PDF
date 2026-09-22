@@ -199,7 +199,7 @@ const CAPABILITY_META: Record<
     labelEn: "Prepare for knowledge search",
     descKey: "portal.policies.wizard.capability.ingest.desc",
     descEn:
-      "Prepare searchable chunks for the built-in knowledge base, a connected RAG database, or a corpus export.",
+      "Prepare searchable chunks for the built-in knowledge base, a connected vector database, or a corpus export.",
   },
   ocr: {
     labelKey: "portal.policies.wizard.capability.ocr.label",

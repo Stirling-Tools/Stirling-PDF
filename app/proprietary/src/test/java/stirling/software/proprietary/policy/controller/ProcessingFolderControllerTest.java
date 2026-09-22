@@ -225,7 +225,7 @@ class ProcessingFolderControllerTest {
                                 3L));
         var baseline = request(null, "new_version");
         // Stubbed on the request's own steps: the sink has to see them, not an empty list.
-        doThrow(new IllegalArgumentException("requires a final RAG preparation step"))
+        doThrow(new IllegalArgumentException("requires a final AI ingestion step"))
                 .when(diskFolderSink)
                 .validatePipeline(any(), eq(baseline.steps()));
         var unsupported =
@@ -240,7 +240,7 @@ class ProcessingFolderControllerTest {
                         List.of());
         assertThatThrownBy(() -> controller.save(unsupported))
                 .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("RAG preparation step");
+                .hasMessageContaining("AI ingestion step");
         assertThat(policyStore.all()).isEmpty();
     }
 

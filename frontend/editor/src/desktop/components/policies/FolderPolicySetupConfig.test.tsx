@@ -46,8 +46,8 @@ vi.mock("@app/ui", () => ({
     onClick: () => void;
   }) => <button onClick={onClick}>{children}</button>,
 }));
-vi.mock("@app/components/policies/PolicyRagConfig", () => ({
-  PolicyRagConfig: ({
+vi.mock("@app/components/policies/PolicyIngestionConfig", () => ({
+  PolicyIngestionConfig: ({
     onTargetChange,
     allowExternal,
     children,

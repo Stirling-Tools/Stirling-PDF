@@ -4,12 +4,12 @@ import { Banner, Button, Collapsible, FormField, Input, Select } from "@app/ui";
 import type { PolicyParams } from "@app/policies/operations";
 import { getSettingsUrl } from "@app/utils/settingsNavigation";
 
-export type RagDestination = "builtin" | "external" | "export";
+export type IngestionDestination = "builtin" | "external" | "export";
 
 interface Props {
   parameters: PolicyParams<"ingest">;
-  target: RagDestination;
-  onTargetChange: (target: RagDestination) => void;
+  target: IngestionDestination;
+  onTargetChange: (target: IngestionDestination) => void;
   onChange: (key: "chunkSize" | "overlap", value: string) => void;
   engineReady: boolean;
   indexingReady: boolean;
@@ -21,7 +21,7 @@ interface Props {
 }
 
 /** Guided ingestion choices, including setup recovery and chunk parameters. */
-export function PolicyRagConfig({
+export function PolicyIngestionConfig({
   parameters,
   target,
   onTargetChange,
@@ -44,7 +44,9 @@ export function PolicyRagConfig({
         <Select
           inputSize="sm"
           value={target}
-          onChange={(value) => value && onTargetChange(value as RagDestination)}
+          onChange={(value) =>
+            value && onTargetChange(value as IngestionDestination)
+          }
           options={[
             {
               value: "builtin",
@@ -57,7 +59,7 @@ export function PolicyRagConfig({
               value: "external",
               label: t(
                 "portal.policies.wizard.locations.external",
-                "Connected RAG database",
+                "Connected vector database",
               ),
             },
             {
@@ -98,7 +100,7 @@ export function PolicyRagConfig({
                   )
                 : t(
                     "portal.policies.wizard.locations.indexingUnavailable",
-                    "The built-in knowledge base needs an embedding provider. Configure one in AI settings, connect a RAG database, or export chunks without a database.",
+                    "The built-in knowledge base needs an embedding provider. Configure one in AI settings, connect a vector database, or export chunks without a database.",
                   )
             }
           />

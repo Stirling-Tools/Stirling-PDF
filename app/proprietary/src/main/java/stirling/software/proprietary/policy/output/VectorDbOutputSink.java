@@ -55,7 +55,7 @@ public class VectorDbOutputSink implements PolicyOutputSink {
     public void validatePipeline(OutputSpec spec, List<PipelineStep> steps) {
         if (steps.isEmpty()) {
             throw new IllegalArgumentException(
-                    "A vector database destination requires a final RAG preparation step");
+                    "A vector database destination requires a final AI ingestion step");
         }
         PipelineStep last = steps.getLast();
         Map<String, Object> params = last.parameters();
@@ -64,7 +64,7 @@ public class VectorDbOutputSink implements PolicyOutputSink {
                 || !"false".equals(String.valueOf(params.get("includeOriginal")))
                 || "true".equals(String.valueOf(params.get("exportMarkdown")))) {
             throw new IllegalArgumentException(
-                    "The final RAG step must export chunks only, with the original PDF and Markdown excluded");
+                    "The final AI ingestion step must export chunks only, with the original PDF and Markdown excluded");
         }
     }
 
@@ -130,7 +130,7 @@ public class VectorDbOutputSink implements PolicyOutputSink {
 
     private List<CorpusChunk> readCorpus(Resource resource) throws IOException {
         if (resource.getFilename() == null || !resource.getFilename().endsWith(".chunks.jsonl")) {
-            throw new IOException("Vector database destinations accept only RAG chunks exports");
+            throw new IOException("Vector database destinations accept only ingestion chunk exports");
         }
         if (resource.contentLength() > 32L * 1024 * 1024) {
             throw new IOException("Corpus exceeds the 32 MiB limit");
@@ -154,7 +154,7 @@ public class VectorDbOutputSink implements PolicyOutputSink {
                     throw new IOException("Corpus exceeds the 10000 chunk limit");
             }
         }
-        if (chunks.isEmpty()) throw new IOException("RAG preparation produced no chunks to index");
+        if (chunks.isEmpty()) throw new IOException("AI ingestion produced no chunks to index");
         return chunks;
     }
 }

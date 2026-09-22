@@ -1,8 +1,8 @@
 import { EditorDeliverySelect } from "@portal/components/pipelines/EditorDeliverySelect";
 import {
-  PolicyRagConfig,
-  type RagDestination,
-} from "@app/components/policies/PolicyRagConfig";
+  PolicyIngestionConfig,
+  type IngestionDestination,
+} from "@app/components/policies/PolicyIngestionConfig";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -59,18 +59,20 @@ export function PolicySetupConnections({
     queryFn: fetchTriggers,
     enabled: !folderName,
   });
-  const rag = result.steps
+  const ingestion = result.steps
     .map(policyStepFromWire)
     .find((step) => step?.toolId === "ingest");
   const capabilities = useQuery({
     queryKey: ["policy-setup-docparse"],
     queryFn: () => fetchDocparseCapabilities(),
-    enabled: Boolean(rag),
+    enabled: Boolean(ingestion),
     staleTime: 0,
     retry: false,
   });
   const [chunkDraft, setChunkDraft] = useState<Record<string, string>>({});
-  const ragParameters = rag ? { ...rag.params, ...chunkDraft } : null;
+  const ingestionParameters = ingestion
+    ? { ...ingestion.params, ...chunkDraft }
+    : null;
   const input = result.inputs?.[0];
   const selectedInput = useQuery({
     queryKey: ["policy-setup-source", input?.sourceId],
@@ -81,24 +83,24 @@ export function PolicySetupConnections({
   const destination = allSources.find(
     (source) => source.id === result.outputIds?.[0],
   );
-  const [targetDraft, setTargetDraft] = useState<RagDestination>();
+  const [targetDraft, setTargetDraft] = useState<IngestionDestination>();
   const [destinationRequested, setDestinationRequested] = useState(false);
-  const target: RagDestination =
+  const target: IngestionDestination =
     targetDraft ??
     (destination?.type === "vectordb" ||
     (folderName && Boolean(result.outputIds?.length))
       ? "external"
-      : rag?.params.index === "false"
+      : ingestion?.params.index === "false"
         ? "export"
         : "builtin");
-  const external = Boolean(rag) && target === "external";
+  const external = Boolean(ingestion) && target === "external";
   const editor = !folderName && result.runsOnEditor;
   const requiresDestination =
-    Boolean(rag) &&
+    Boolean(ingestion) &&
     (target !== "builtin" ||
-      rag?.params.exportChunksJsonl === "true" ||
-      rag?.params.exportMarkdown === "true" ||
-      rag?.params.includeOriginal === "false");
+      ingestion?.params.exportChunksJsonl === "true" ||
+      ingestion?.params.exportMarkdown === "true" ||
+      ingestion?.params.includeOriginal === "false");
   const externalEditorOutput =
     editor &&
     (requiresDestination ||
@@ -162,37 +164,37 @@ export function PolicySetupConnections({
     (Number.isInteger(Number(workingInput.scheduleCount)) &&
       Number(workingInput.scheduleCount) > 0);
   const chunkingReady =
-    !rag ||
+    !ingestion ||
     ingestChunkingConfigured({
-      chunkSize: Number(ragParameters?.chunkSize),
-      overlap: Number(ragParameters?.overlap),
+      chunkSize: Number(ingestionParameters?.chunkSize),
+      overlap: Number(ingestionParameters?.overlap),
     });
   const valid =
     inputReady &&
     scheduleReady &&
     outputReady &&
     chunkingReady &&
-    (!rag ||
+    (!ingestion ||
       Boolean(
         engineReady &&
         !capabilities.isFetching &&
-        (rag.params.index === "false" || indexingReady),
+        (ingestion.params.index === "false" || indexingReady),
       ));
   useEffect(() => onValidityChange(valid), [valid, onValidityChange]);
 
-  function changeTarget(next: RagDestination) {
-    if (!rag) return;
+  function changeTarget(next: IngestionDestination) {
+    if (!ingestion) return;
     setChunkDraft({});
     setTargetDraft(next);
     onChange({
       outputIds:
         next === "external" || target === "external" ? [] : result.outputIds,
       steps: result.steps.map((wire) =>
-        wire.operation === policyStepToWire(rag).operation
+        wire.operation === policyStepToWire(ingestion).operation
           ? policyStepToWire({
-              ...rag,
+              ...ingestion,
               params: {
-                ...rag.params,
+                ...ingestion.params,
                 index: String(next === "builtin"),
                 includeOriginal: String(next !== "external"),
                 exportMarkdown: "false",
@@ -205,14 +207,14 @@ export function PolicySetupConnections({
   }
 
   function updateChunk(key: "chunkSize" | "overlap", value: string) {
-    if (!rag) return;
+    if (!ingestion) return;
     setChunkDraft({ ...chunkDraft, [key]: value });
     onChange({
       steps: result.steps.map((wire) =>
-        wire.operation === policyStepToWire(rag).operation
+        wire.operation === policyStepToWire(ingestion).operation
           ? policyStepToWire({
-              ...rag,
-              params: { ...rag.params, ...chunkDraft, [key]: value },
+              ...ingestion,
+              params: { ...ingestion.params, ...chunkDraft, [key]: value },
             })
           : wire,
       ),
@@ -270,7 +272,7 @@ export function PolicySetupConnections({
               tone="info"
               description={t(
                 "portal.policies.wizard.locations.noDatabase",
-                "No RAG database destination is set up. Connect a source below, then choose or create its database connection and collection.",
+                "No vector database destination is set up. Connect a source below, then choose or create its database connection and collection.",
               )}
             />
           )}
@@ -342,7 +344,7 @@ export function PolicySetupConnections({
           <p className="portal-policies__wizard-desc">
             {t(
               "portal.policies.wizard.locations.folder",
-              "Input: {{name}}. Originals are retained when delivering to a RAG database.",
+              "Input: {{name}}. Originals are retained when delivering to a vector database.",
               { name: folderName },
             )}
           </p>
@@ -469,9 +471,9 @@ export function PolicySetupConnections({
         <h3 className="portal-policies__wizard-heading">
           {t("portal.policies.wizard.locations.output", "Output")}
         </h3>
-        {rag ? (
-          <PolicyRagConfig
-            parameters={{ ...rag.params, ...chunkDraft }}
+        {ingestion ? (
+          <PolicyIngestionConfig
+            parameters={{ ...ingestion.params, ...chunkDraft }}
             target={target}
             onTargetChange={changeTarget}
             onChange={updateChunk}
@@ -482,7 +484,7 @@ export function PolicySetupConnections({
             recheck={() => void capabilities.refetch()}
           >
             {outputDestination}
-          </PolicyRagConfig>
+          </PolicyIngestionConfig>
         ) : (
           outputDestination
         )}

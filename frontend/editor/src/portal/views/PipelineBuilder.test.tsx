@@ -792,7 +792,7 @@ describe("PipelineBuilder", () => {
   it("selects the created destination even when another source arrives concurrently", async () => {
     createdSource = {
       ...createdSource,
-      name: "RAG destination",
+      name: "Vector database destination",
       type: "vectordb",
     };
     fetchSources
@@ -810,7 +810,7 @@ describe("PipelineBuilder", () => {
           {
             ...SOURCE,
             id: "src-new",
-            name: "RAG destination",
+            name: "Vector database destination",
             type: "vectordb",
           },
         ],

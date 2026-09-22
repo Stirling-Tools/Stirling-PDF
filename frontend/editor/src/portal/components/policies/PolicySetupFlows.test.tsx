@@ -140,7 +140,7 @@ describe("guided ingestion flows", () => {
 
   it.each([
     ["Export chunks without a database", "folder"],
-    ["Connected RAG database", "vectordb"],
+    ["Connected vector database", "vectordb"],
   ])(
     "keeps editor input and requires a destination for %s",
     async (output, type) => {
@@ -288,7 +288,7 @@ describe("guided ingestion flows", () => {
     const { save } = await mount();
     await waitFor(() => expect(api.sources).toHaveBeenCalled());
     await select("Input source", "Incoming PDFs");
-    await select("Output type", "Connected RAG database");
+    await select("Output type", "Connected vector database");
     await select("portal.pipelines.composer.output", "Research database");
     await waitFor(() =>
       expect(screen.getByRole("button", { name: enable })).toBeEnabled(),
@@ -455,7 +455,7 @@ describe("guided ingestion flows", () => {
     };
     const { save, customise } = await mount(current);
     expect(screen.getByRole("textbox", { name: "Output type" })).toHaveValue(
-      "Connected RAG database",
+      "Connected vector database",
     );
     expect(
       screen.queryByRole("switch", { name: "portal.pipelines.enforce.label" }),
