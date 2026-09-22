@@ -25,10 +25,10 @@ public enum FailureActionId {
     OPEN_IN_TOOL(Execution.EITHER, "Retry"),
 
     /** Unlocks the document with a password the owner supplies, then re-runs. */
-    DECRYPT(Execution.CLIENT, "Unlock"),
+    DECRYPT(Execution.EITHER, "Unlock"),
 
     /** Repairs the document, then re-runs. */
-    REPAIR(Execution.CLIENT, "Repair"),
+    REPAIR(Execution.EITHER, "Repair"),
 
     /** Open the document behind the incident, in whichever client can resolve its id. */
     VIEW_FILE(Execution.CLIENT, "View file"),

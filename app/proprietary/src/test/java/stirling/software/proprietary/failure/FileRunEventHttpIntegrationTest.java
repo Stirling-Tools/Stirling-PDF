@@ -458,13 +458,22 @@ class FileRunEventHttpIntegrationTest {
         }
 
         /**
-         * A stand-in, so the registry's completeness check passes without dragging a ledger and a
-         * runner into an HTTP-layer test. What it does is covered by {@code
-         * RetryInFolderActionTest}.
+         * Stand-ins: the registry's completeness check passes without a policy store, ledger or
+         * runner in an HTTP-layer test. The real handlers have their own tests.
          */
         @Bean
         FailureAction retryInFolderAction() {
             return new NoopFolderAction(FailureActionId.OPEN_IN_TOOL);
+        }
+
+        @Bean
+        FailureAction repairAction() {
+            return new NoopFolderAction(FailureActionId.REPAIR);
+        }
+
+        @Bean
+        FailureAction decryptAction() {
+            return new NoopFolderAction(FailureActionId.DECRYPT);
         }
 
         /** Every source-fed row in these tests came from a smart folder. */

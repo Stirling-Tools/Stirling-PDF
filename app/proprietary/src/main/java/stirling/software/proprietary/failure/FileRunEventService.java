@@ -153,7 +153,7 @@ public class FileRunEventService {
                     "Kind " + event.kind().getId() + " does not offer action " + resolvedId);
         }
         // Without this a client could post VIEW_FILE and be answered as though something happened.
-        // Resolved against this row: a retry of a document the browser holds is refused, not run.
+        // Resolved against this row: a fix for a document the browser holds is refused, not run.
         boolean inSmartFolder =
                 FileRunEventView.DocumentLocation.of(event, sourceKindOf(event))
                         == FileRunEventView.DocumentLocation.SMART_FOLDER;
@@ -428,7 +428,7 @@ public class FileRunEventService {
 
     /**
      * One offer resolved for one caller and document. {@code execution} says where this row's copy
-     * runs, which for a retry follows the document; the client is told, not left to infer.
+     * runs, which for a fix follows the document; the client is told, not left to infer.
      */
     public record AvailableAction(
             FailureActionId id,

@@ -620,9 +620,11 @@ describe("OPEN_IN_TOOL for a smart folder's document", () => {
     // The bell never holds a raw row id, so dispatching by anything else would 400.
     await registry().OPEN_IN_TOOL?.run(inFolder());
 
+    // No password: a retry asks nothing of the person pressing it.
     expect(dispatchNotificationAction).toHaveBeenCalledWith(
       "failure:evt-1",
       "OPEN_IN_TOOL",
+      undefined,
     );
   });
 
@@ -636,6 +638,83 @@ describe("OPEN_IN_TOOL for a smart folder's document", () => {
     expect(outcome).toEqual({
       ok: false,
       message: "No smart folder to run this document in",
+    });
+  });
+});
+
+describe("the fixes the server runs on a smart folder's document", () => {
+  const inFolder = (kindId: string) => ({
+    notification: notification({
+      kindId,
+      documentLocation: "SMART_FOLDER" as const,
+      sourceKind: "SMART_FOLDER" as const,
+      sourceId: "src-downloads",
+      fileId: null,
+    }),
+    hasLocalFile: false,
+    retryPayload: null,
+  });
+  it("offers one fix on both, wherever the document is", () => {
+    // Before this a smart folder's row offered nothing but Dismiss: REPAIR and DECRYPT needed a local
+    // file. One id still, so the row renders one button and the server picks which side runs it.
+    expect(registry().REPAIR?.available(inFolder("INPUT_CORRUPTED"))).toBe(
+      true,
+    );
+    expect(
+      registry().REPAIR?.available(context({ kindId: "INPUT_CORRUPTED" })),
+    ).toBe(true);
+  });
+
+  it("keeps a document this browser holds a client-side fix", async () => {
+    // The half that runs follows the document. Asking the server to repair a file it cannot
+    // reach would have it work on whatever the row's identity happens to name.
+    await registry().REPAIR?.run(context({ kindId: "INPUT_CORRUPTED" }));
+
+    expect(dispatchNotificationAction).not.toHaveBeenCalled();
+  });
+
+  it("repairs without asking for anything, the document being all it needs", async () => {
+    expect(registry().REPAIR?.needsPassword).toBeFalsy();
+
+    await registry().REPAIR?.run(inFolder("INPUT_CORRUPTED"));
+
+    expect(dispatchNotificationAction).toHaveBeenCalledWith(
+      "failure:evt-1",
+      "REPAIR",
+      undefined,
+    );
+  });
+
+  it("collects the password and sends it in the body", async () => {
+    // In the body rather than the path: a password does not belong in a URL, where it would be
+    // logged by every proxy on the way.
+    expect(registry().DECRYPT?.needsPassword).toBe(true);
+
+    await registry().DECRYPT?.run(
+      inFolder("INPUT_PASSWORD_PROTECTED"),
+      "hunter2",
+    );
+
+    expect(dispatchNotificationAction).toHaveBeenCalledWith(
+      "failure:evt-1",
+      "DECRYPT",
+      { password: "hunter2" },
+    );
+  });
+
+  it("reports the server's refusal, which is what says the password was wrong", async () => {
+    dispatchNotificationAction.mockResolvedValue(
+      "That password did not open this document.",
+    );
+
+    const outcome = await registry().DECRYPT?.run(
+      inFolder("INPUT_PASSWORD_PROTECTED"),
+      "wrong",
+    );
+
+    expect(outcome).toEqual({
+      ok: false,
+      message: "That password did not open this document.",
     });
   });
 });

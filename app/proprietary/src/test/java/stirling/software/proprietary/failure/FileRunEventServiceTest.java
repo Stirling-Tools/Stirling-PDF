@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +58,9 @@ class FileRunEventServiceTest {
                         List.of(
                                 new AcknowledgeAction(store),
                                 new DismissAction(store),
-                                new NoopFolderAction(FailureActionId.OPEN_IN_TOOL)));
+                                new NoopFolderAction(FailureActionId.OPEN_IN_TOOL),
+                                new NoopFolderAction(FailureActionId.REPAIR),
+                                new NoopFolderAction(FailureActionId.DECRYPT)));
         registry.verifyEveryDeclaredActionHasAHandler();
 
         service =
@@ -80,6 +83,10 @@ class FileRunEventServiceTest {
      * A row from a smart folder the given person owns, which is where a server fix is reachable.
      */
     private FileRunEvent givenInAFolderOwnedBy(String owner) {
+        return givenInAFolderOwnedBy(owner, FailureKind.UNKNOWN);
+    }
+
+    private FileRunEvent givenInAFolderOwnedBy(String owner, FailureKind kind) {
         when(policyStore.get(anyString()))
                 .thenReturn(
                         Optional.of(
@@ -94,11 +101,11 @@ class FileRunEventServiceTest {
                                         .withSurface(Policy.SURFACE_PROCESSING_FOLDER)));
         return store.record(
                 RecordFailure.forRun(
-                        FailureKind.UNKNOWN,
+                        kind,
                         TEAM,
                         owner,
                         "policy-1",
-                        "run-1",
+                        "run-" + kind.getId(),
                         "src-downloads",
                         "/folder/march.pdf",
                         "boom"));
@@ -403,6 +410,8 @@ class FileRunEventServiceTest {
         @Test
         void everyClientActionIsRefusedWhicheverKindDeclaresIt() {
             // Over the whole vocabulary, so a client action added later cannot arrive dispatchable.
+            // These rows name no source, so a fix the server runs for a folder is the client's
+            // here.
             for (FailureKind kind : FailureKind.values()) {
                 FileRunEvent event = given(kind, TEAM, "f-" + kind.getId());
                 for (FailureActionId action : kind.getActions()) {
@@ -496,6 +505,35 @@ class FileRunEventServiceTest {
             // Reaches the registry's stand-in, which is as far as this test can follow it.
             assertThatThrownBy(() -> service.dispatch(mine.id(), "OPEN_IN_TOOL", Map.of()))
                     .isInstanceOf(UnsupportedOperationException.class);
+        }
+
+        @Test
+        void everyFixTheServerRunsForAnOwnerIsRefusedToWhoeverOnlyReviews() {
+            // The guard, rather than one case: a resolution added later is server-run for a folder
+            // document the moment its id says EITHER, and would be reachable by the whole team
+            // until someone remembered to write its own owner check.
+            List<FailureActionId> checked = new ArrayList<>();
+            for (FailureKind kind : FailureKind.values()) {
+                for (FailureKind.OfferedAction offer : kind.getOfferedActions()) {
+                    if (offer.audience() != FailureAudience.OWNER
+                            || offer.id().executionFor(true) != FailureActionId.Execution.SERVER) {
+                        continue;
+                    }
+                    FileRunEvent theirs = givenInAFolderOwnedBy("colleague@example.com", kind);
+                    checked.add(offer.id());
+
+                    assertThatThrownBy(
+                                    () ->
+                                            service.dispatch(
+                                                    theirs.id(), offer.id().name(), Map.of()))
+                            .as("%s offers %s", kind.getId(), offer.id())
+                            .isInstanceOf(FailureActionException.class)
+                            .extracting(e -> ((FailureActionException) e).getReason())
+                            .isEqualTo(FailureActionException.Reason.ACTION_NOT_THEIRS);
+                }
+            }
+            // The loop proving nothing would be the quiet way for this to stop guarding anything.
+            assertThat(checked).isNotEmpty();
         }
 
         @Test
@@ -919,7 +957,9 @@ class FileRunEventServiceTest {
                             List.of(
                                     new AcknowledgeAction(store),
                                     new DismissAction(store),
-                                    new NoopFolderAction(FailureActionId.OPEN_IN_TOOL)));
+                                    new NoopFolderAction(FailureActionId.OPEN_IN_TOOL),
+                                    new NoopFolderAction(FailureActionId.REPAIR),
+                                    new NoopFolderAction(FailureActionId.DECRYPT)));
 
             complete.verifyEveryDeclaredActionHasAHandler();
 
@@ -938,7 +978,9 @@ class FileRunEventServiceTest {
                             List.of(
                                     new AcknowledgeAction(store),
                                     new DismissAction(store),
-                                    new NoopFolderAction(FailureActionId.OPEN_IN_TOOL)));
+                                    new NoopFolderAction(FailureActionId.OPEN_IN_TOOL),
+                                    new NoopFolderAction(FailureActionId.REPAIR),
+                                    new NoopFolderAction(FailureActionId.DECRYPT)));
 
             assertThatCode(serverOnly::verifyEveryDeclaredActionHasAHandler)
                     .doesNotThrowAnyException();

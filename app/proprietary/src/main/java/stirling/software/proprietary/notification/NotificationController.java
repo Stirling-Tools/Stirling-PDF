@@ -1,11 +1,13 @@
 package stirling.software.proprietary.notification;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,9 +22,8 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.proprietary.failure.FailureActionException;
 
 /**
- * Open to any authenticated user: each source scopes its own rows. An action runs wherever the
- * document is, the client's device for a file it holds and the server for a smart folder's, so the
- * writes here are a client reporting a fix and a server-run action.
+ * Open to any authenticated user: each source scopes its own rows. The few server-run actions
+ * re-derive authorisation from the caller: reading a row is not a right to act on its document.
  */
 @RestController
 @RequestMapping("/api/v1/notifications")
@@ -77,11 +78,16 @@ public class NotificationController {
             description =
                     "Takes the prefixed notification id, not the producing row's id. Only actions"
                             + " the row already offers this caller can be run; the producing"
-                            + " service re-checks that, and the action authorises its own effects.")
+                            + " service re-checks that, and the action authorises its own effects."
+                            + " The optional body carries whatever the action needs from the"
+                            + " presser, such as a document's password, which is used once and not"
+                            + " stored.")
     public NotificationView act(
-            @PathVariable String notificationId, @PathVariable String actionId) {
+            @PathVariable String notificationId,
+            @PathVariable String actionId,
+            @RequestBody(required = false) Map<String, String> inputs) {
         try {
-            return notifications.act(notificationId, actionId);
+            return notifications.act(notificationId, actionId, inputs == null ? Map.of() : inputs);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
         } catch (FailureActionException e) {

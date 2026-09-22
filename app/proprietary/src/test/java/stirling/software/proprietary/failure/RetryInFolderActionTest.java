@@ -20,11 +20,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import stirling.software.common.service.InternalApiClient;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
+import stirling.software.proprietary.policy.input.FolderDocuments;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.output.FolderOutputSink;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
@@ -40,7 +43,11 @@ class RetryInFolderActionTest {
     private static final String IDENTITY = "/Users/carol/Downloads/invoice.pdf";
 
     @Mock private PolicyStore policyStore;
+    @Mock private PolicyFailureRecorder failureRecorder;
     @Mock private PolicyAccessGuard policyAccessGuard;
+    @Mock private FolderDocuments folderDocuments;
+    @Mock private InternalApiClient internalApi;
+    @Mock private FolderOutputSink folderOutputSink;
     @Mock private ProcessedLedger processedLedger;
     @Mock private PolicyRunner policyRunner;
     @Mock private FileRunEventStore store;
@@ -49,9 +56,20 @@ class RetryInFolderActionTest {
 
     @BeforeEach
     void setUp() {
-        action =
-                new RetryInFolderAction(
-                        policyStore, policyAccessGuard, processedLedger, policyRunner, store);
+        // The real collaborator, not a mock: whose folder it is is the thing under test here, and
+        // stubbing that away would leave these assertions about nothing.
+        FolderDocumentFix fix =
+                new FolderDocumentFix(
+                        policyStore,
+                        failureRecorder,
+                        policyAccessGuard,
+                        folderDocuments,
+                        internalApi,
+                        folderOutputSink,
+                        processedLedger,
+                        policyRunner,
+                        store);
+        action = new RetryInFolderAction(fix, processedLedger, policyRunner, store);
     }
 
     private static Policy folder(String surface) {

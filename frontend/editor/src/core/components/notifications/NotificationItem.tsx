@@ -53,19 +53,15 @@ function noteFor(
     });
   if (notification.ownership !== "MINE" || documentState.hasLocalFile)
     return null;
-  // Said before the missing-document cases: this one is not missing, it is somewhere this browser
-  // was never going to reach.
+  // Before the missing-document cases: this document is not missing, and a smart folder's row has
+  // no fileId, so falling through would call it unlinked. Named when the owner may know the name.
   if (notification.documentLocation === "SMART_FOLDER")
     return notification.documentName
       ? t("notifications.inSmartFolderNamed", {
-          defaultValue:
-            "{{name}} is in a smart folder, so it is handled on the server rather than here.",
+          defaultValue: "{{name}}, in your smart folder.",
           name: notification.documentName,
         })
-      : t(
-          "notifications.inSmartFolder",
-          "This document is in a smart folder, so it is handled on the server rather than here.",
-        );
+      : null;
   // A source that could not be read names no document by design, so there is none to miss.
   if (!notification.fileId && notification.sourceKind !== "EDITOR") return null;
   if (!notification.fileId)

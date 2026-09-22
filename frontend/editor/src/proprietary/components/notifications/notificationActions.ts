@@ -28,6 +28,7 @@ import {
   retryTargetOf,
   toolOf,
   unavailable,
+  type ResolutionActionId,
 } from "@app/components/notifications/resolutions";
 import {
   type ClientActionOutcome,
@@ -222,19 +223,68 @@ export function useNotificationActions(): ClientActionRegistry {
       whenItFails: string,
     ): ClientActionSpec => ({
       available: heldByServer,
-      run: async (context): Promise<ClientActionOutcome | void> => {
+      run: async (context, password): Promise<ClientActionOutcome | void> => {
         const refusal = await dispatchNotificationAction(
           context.notification.id,
           actionId,
+          password === undefined ? undefined : { password },
         );
         if (refusal === null) return;
-        // The server's own words where it gave any: only it knows why the folder refused.
+        // The server's own words where it gave any: only it knows whether the password was
+        // wrong, the document beyond repair, or the folder no longer writable.
         return { ok: false, message: refusal || whenItFails };
       },
     });
 
+    /**
+     * One fix, carried out wherever the document is: the server resolves the same action id to the
+     * side that can reach it, so the row renders one button and this picks the half that can act.
+     */
+    const fix = (
+      resolution: (typeof RESOLUTIONS)[number],
+      whenTheServerFails: string,
+    ): ClientActionSpec => {
+      const here = resolutionSpec(resolution, { t, fileContext, fileStore });
+      const there = askTheServer(resolution.actionId, whenTheServerFails);
+      return {
+        available: (context) =>
+          heldByServer(context)
+            ? there.available(context)
+            : here.available(context),
+        // Static, so it must hold for both halves; it does, because what a fix needs from the
+        // person asking for it does not depend on which machine carries it out.
+        needsPassword: resolution.needsPassword,
+        // The server half opens nothing to get out of the way, but the row it was about is gone
+        // either way, so the panel behind the prompt is stale in both.
+        closesPanel: here.closesPanel,
+        run: (context, password) =>
+          heldByServer(context)
+            ? there.run(context, password)
+            : here.run(context, password),
+      };
+    };
+
+    /** What to say when the server's half fails without a reason of its own. */
+    const serverFixFailed: Record<ResolutionActionId, string> = {
+      REPAIR: t(
+        "notifications.repairInFolderFailed",
+        "That document could not be repaired just now.",
+      ),
+      DECRYPT: t(
+        "notifications.decryptInFolderFailed",
+        "That document could not be unlocked just now.",
+      ),
+    };
+
+    const fixes = Object.fromEntries(
+      RESOLUTIONS.map((resolution) => [
+        resolution.actionId,
+        fix(resolution, serverFixFailed[resolution.actionId]),
+      ]),
+    );
+
     // One id, run by whichever side holds the document: the server resolves it per row, and this
-    // picks the half that can act.
+    // picks the half that can act. Not a fix(): a retry asks nothing of the person pressing it.
     const rerunInFolder = askTheServer(
       "OPEN_IN_TOOL",
       t(
@@ -254,16 +304,9 @@ export function useNotificationActions(): ClientActionRegistry {
           : openInTool.run(context),
     };
 
-    const resolutions = Object.fromEntries(
-      RESOLUTIONS.map((resolution) => [
-        resolution.actionId,
-        resolutionSpec(resolution, { t, fileContext, fileStore }),
-      ]),
-    );
-
     return {
       OPEN_IN_TOOL: retry,
-      ...resolutions,
+      ...fixes,
       VIEW_FILE: viewFile,
       VIEW_IN_PROCESSOR: viewInProcessor,
     };

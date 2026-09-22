@@ -493,10 +493,9 @@ describe("NotificationBell", () => {
     ).toBeTruthy();
   });
 
-  it("says where a server-held document is rather than that it is missing", async () => {
-    // Never on any device, so never probed, and an absent lookup is not an absent document. Saying
-    // "not on this device" would read as something having gone wrong with a folder working exactly
-    // as configured.
+  it("does not call a server-held document missing", async () => {
+    // Never on any device, so never probed, and an absent lookup is not an absent document. A smart
+    // folder's row has no fileId, so the unlinked-document line would fire if this fell through.
     h.hasLocalFile = false;
     fetchNotifications.mockResolvedValue([
       notification("a", "Password-protected document", {
@@ -511,12 +510,33 @@ describe("NotificationBell", () => {
     await openPanel();
 
     expect(await screen.findByText("Password-protected document")).toBeTruthy();
-    expect(screen.getByText(/is in a smart folder/)).toBeTruthy();
     expect(
       screen.queryByText(
-        /not on this device|not linked to a specific document/,
+        /not on this device|not linked to a specific document|smart folder/,
       ),
     ).toBeNull();
+  });
+
+  it("names the owner's document when the folder can, and says nothing else about it", async () => {
+    // The one place the filename appears. Where the work runs is not the reader's concern.
+    h.hasLocalFile = false;
+    fetchNotifications.mockResolvedValue([
+      notification("a", "Password-protected document", {
+        origin: "POLICY",
+        sourceId: "src-downloads",
+        sourceKind: "SMART_FOLDER",
+        documentLocation: "SMART_FOLDER",
+        fileId: null,
+        documentName: "march.pdf",
+      }),
+    ]);
+    render(<NotificationBell />);
+    await openPanel();
+
+    expect(
+      await screen.findByText("march.pdf, in your smart folder."),
+    ).toBeTruthy();
+    expect(screen.queryByText(/handled on the server/)).toBeNull();
   });
 
   it("renders no button for an action the server would refuse, and says why in words", async () => {

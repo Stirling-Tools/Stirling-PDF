@@ -55,6 +55,21 @@ public class PolicyFailureRecorder {
         record(kind, runId, policyId, sourceId, null, actor, detail);
     }
 
+    /**
+     * Record a verdict about an existing incident's document, on the same run, source and identity.
+     * For a fix tried and definitively refused; the caller closes the old row once this one exists.
+     */
+    public void recordDocumentFailureAs(FailureKind kind, FileRunEvent event, String detail) {
+        record(
+                kind,
+                event.runId(),
+                event.policyId(),
+                event.sourceId(),
+                event.fileId(),
+                event.actor(),
+                detail);
+    }
+
     private void record(
             FailureKind kind,
             String runId,

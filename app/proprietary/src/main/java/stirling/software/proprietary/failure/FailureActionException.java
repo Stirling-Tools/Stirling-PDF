@@ -32,7 +32,13 @@ public class FailureActionException extends RuntimeException {
         ACTION_NOT_THEIRS,
 
         /** The event is already closed, so no further transition is possible. */
-        ALREADY_CLOSED
+        ALREADY_CLOSED,
+
+        /**
+         * The action was allowed to run and could not do its job: a repair the document defeated, a
+         * password that did not open it, a folder that could not be written back to.
+         */
+        FIX_FAILED
     }
 
     private final Reason reason;
@@ -58,6 +64,8 @@ public class FailureActionException extends RuntimeException {
             // Not a 404: the caller may legitimately read the row, they just may not do this.
             case ACTION_NOT_THEIRS -> HttpStatus.FORBIDDEN;
             case ALREADY_CLOSED -> HttpStatus.CONFLICT;
+            // The request was well-formed and permitted; the document is what refused.
+            case FIX_FAILED -> HttpStatus.UNPROCESSABLE_ENTITY;
         };
     }
 }

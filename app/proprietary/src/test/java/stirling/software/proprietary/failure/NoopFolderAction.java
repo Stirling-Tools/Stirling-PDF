@@ -4,9 +4,10 @@ import java.util.Map;
 
 /**
  * Satisfies the registry's "every declared action has a handler" check for tests about something
- * else. The real handler needs a policy store, a ledger and a runner, and has its own tests.
+ * else. The real handlers need a store, ledger, runner and API client, and have their own tests.
  */
 final class NoopFolderAction implements FailureAction {
+
     private final FailureActionId id;
 
     NoopFolderAction(FailureActionId id) {
