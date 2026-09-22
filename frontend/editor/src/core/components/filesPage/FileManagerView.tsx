@@ -6,6 +6,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -16,6 +17,7 @@ import {
   TextInput,
   Tooltip,
 } from "@mantine/core";
+import { qk } from "@app/query/keys";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useMediaQuery } from "@mantine/hooks";
@@ -64,9 +66,14 @@ import {
   FilesPageEntry,
   type DiskFileState,
 } from "@app/components/filesPage/FileGrid";
-import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
+import {
+  useProcessingFolders,
+  type MountedFileState,
+} from "@app/hooks/useProcessingFolders";
 import { FolderProcessingSetup } from "@app/components/policies/FolderProcessingSetup";
 import { useServerProcessingBlock } from "@app/hooks/useServerProcessingBlock";
+import { useConnectedServer } from "@app/hooks/useConnectedServer";
+import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
 import { FolderSweepWall } from "@app/components/policies/SweepRunWall";
 import { RestoreOriginalsDialog } from "@app/components/filesPage/RestoreOriginalsDialog";
 import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
@@ -147,6 +154,17 @@ export default function FileManagerView() {
   const signInRequiredReason = isAnonymous
     ? t("filesPage.signInRequired", "Sign in to use cloud storage.")
     : null;
+  // Refresh pulls from the server. True on web (server-backed); on desktop it tracks the
+  // signed-in connection, so the control falls inert with an explanation until connected.
+  const connectedServer = useConnectedServer();
+  const refreshDisabledReason =
+    signInRequiredReason ??
+    (connectedServer
+      ? null
+      : t(
+          "filesPage.refreshNeedsConnection",
+          "Sign in to refresh from the server.",
+        ));
   // Server storage gate; mirrors ConfigController's storageEnabled
   // (enableLogin && storage.isEnabled). When off, Save-to-server stays
   // visible but disabled with an explanatory tooltip (discoverability beats
@@ -565,21 +583,13 @@ export default function FileManagerView() {
   // A working folder lists its real contents; each file wears its pipeline state and a state
   // filter narrows the listing. Files the pipeline never claims carry no state at all.
   const processingApi = useProcessingFolders();
+  const processingEnabled = usePoliciesEnabled();
   const currentProcessing = currentFolder
     ? processingApi.stateFor(currentFolder)
     : undefined;
   const outputDirectory = currentLocalDirectory
     ? currentProcessing?.outputDirectory
     : undefined;
-  // Per-file state from the backend's ledger: processing in place leaves no output folder to
-  // infer it from. Polled while the folder is open so badges follow the sweep live.
-  const [fileStates, setFileStates] = useState<Map<string, DiskFileState>>(
-    new Map(),
-  );
-  // Files whose pre-processing original is archived and can be restored.
-  const [revertables, setRevertables] = useState<ReadonlySet<string>>(
-    new Set(),
-  );
   const processingRecordId = currentProcessing?.id;
   // The state layer applies inside any working folder: a mount's directory listing or a
   // server folder's stored files, both joined to the same ledger behind listFiles.
@@ -587,31 +597,49 @@ export default function FileManagerView() {
     processingRecordId && (outputDirectory || !currentLocalDirectory),
   );
   const { listFiles, retryFile, revertFile } = processingApi;
-  useEffect(() => {
-    if (!processingView || !processingRecordId) {
-      // Keep the empty value when it is already empty: a fresh Map/Set is never Object.is equal,
-      // so setting one unconditionally re-renders, on every render of a folder with no processing.
-      setFileStates((prev) => (prev.size === 0 ? prev : new Map()));
-      setRevertables((prev) => (prev.size === 0 ? prev : new Set()));
-      return;
-    }
-    let cancelled = false;
-    const tick = async () => {
-      const files = await listFiles(processingRecordId).catch(() => []);
-      if (!cancelled) {
-        setFileStates(new Map(files.map((f) => [f.name, f.state])));
-        setRevertables(
-          new Set(files.filter((f) => f.hasOriginal).map((f) => f.name)),
-        );
-      }
-    };
-    void tick();
-    const timer = setInterval(() => void tick(), 3000);
-    return () => {
-      cancelled = true;
-      clearInterval(timer);
-    };
-  }, [processingView, processingRecordId, listFiles]);
+  const queryClient = useQueryClient();
+  const processingFilesKey = qk.processingFolderFiles(processingRecordId ?? "");
+  // Per-file state from the backend's ledger: processing in place leaves no output folder to
+  // infer it from. Polled while the folder is open so badges follow the sweep live, and the
+  // poll stands down with the tab rather than asking every 3s into a background window.
+  const { data: processingFiles } = useQuery({
+    queryKey: processingFilesKey,
+    // A failed read reports no states rather than an error: the badges are ambient
+    // and the next tick retries.
+    queryFn: () => listFiles(processingRecordId!).catch(() => []),
+    enabled: processingView && Boolean(processingRecordId),
+    refetchInterval: PROCESSING_FILES_POLL_MS,
+  });
+
+  // Stable empties for a folder with no processing: a fresh Map/Set is never
+  // Object.is equal, so returning one would re-render every reader for nothing.
+  const fileStates = useMemo(
+    () =>
+      processingFiles
+        ? new Map(processingFiles.map((f) => [f.name, f.state]))
+        : EMPTY_FILE_STATES,
+    [processingFiles],
+  );
+  // Files whose pre-processing original is archived and can be restored.
+  const revertables = useMemo(
+    () =>
+      processingFiles
+        ? new Set(
+            processingFiles.filter((f) => f.hasOriginal).map((f) => f.name),
+          )
+        : EMPTY_REVERTABLES,
+    [processingFiles],
+  );
+  /** Shows a just-made change ahead of the next poll. */
+  const patchProcessingFile = useCallback(
+    (name: string, patch: Partial<MountedFileState>) =>
+      queryClient.setQueryData<MountedFileState[]>(
+        processingFilesKey,
+        (prev) =>
+          prev?.map((f) => (f.name === name ? { ...f, ...patch } : f)) ?? prev,
+      ),
+    [queryClient, processingFilesKey],
+  );
 
   const [processingSetupFolder, setProcessingSetupFolder] =
     useState<FolderRecord | null>(null);
@@ -645,14 +673,7 @@ export default function FileManagerView() {
     (name: string) => {
       if (!processingRecordId) return;
       void retryFile(processingRecordId, name)
-        .then(() =>
-          // Show the retry took, ahead of the next poll.
-          setFileStates((prev) => {
-            const next = new Map(prev);
-            next.set(name, "processing");
-            return next;
-          }),
-        )
+        .then(() => patchProcessingFile(name, { state: "processing" }))
         .catch((err) =>
           folders.setError(
             err instanceof Error
@@ -668,25 +689,17 @@ export default function FileManagerView() {
           ),
         );
     },
-    [processingRecordId, retryFile, folders, t],
+    [processingRecordId, retryFile, folders, t, patchProcessingFile],
   );
   const revertFolderFile = useCallback(
     (name: string) => {
       if (!processingRecordId) return;
       void revertFile(processingRecordId, name)
-        .then(() => {
-          // Reflect the restore ahead of the next poll.
-          setFileStates((prev) => {
-            const next = new Map(prev);
-            next.set(name, "waiting");
-            return next;
-          });
-          setRevertables((prev) => {
-            const next = new Set(prev);
-            next.delete(name);
-            return next;
-          });
-        })
+        .then(() =>
+          // Reflect the restore ahead of the next poll; the original is gone, so
+          // the row stops offering one.
+          patchProcessingFile(name, { state: "waiting", hasOriginal: false }),
+        )
         .catch((err) =>
           folders.setError(
             err instanceof Error
@@ -1435,14 +1448,14 @@ export default function FileManagerView() {
     () => (
       <>
         <Tooltip
-          label={signInRequiredReason ?? t("filesPage.refresh", "Refresh")}
+          label={refreshDisabledReason ?? t("filesPage.refresh", "Refresh")}
           withinPortal
         >
           <ActionIcon
             variant="tertiary"
             size="sm"
             loading={refreshing}
-            disabled={refreshing || Boolean(signInRequiredReason)}
+            disabled={refreshing || Boolean(refreshDisabledReason)}
             aria-busy={refreshing}
             aria-label={t("filesPage.refresh", "Refresh")}
             onClick={handleRefresh}
@@ -1465,7 +1478,7 @@ export default function FileManagerView() {
     ),
     [
       t,
-      signInRequiredReason,
+      refreshDisabledReason,
       refreshing,
       handleRefresh,
       newFolderControl,
@@ -1564,7 +1577,7 @@ export default function FileManagerView() {
               totalCount={totalCount}
               selectedCount={selectedFiles.length}
             />
-            {currentFolder && !mobileSelection && (
+            {currentFolder && !mobileSelection && processingEnabled && (
               <div className="files-page-folder-actions">
                 <FolderMenu
                   folder={currentFolder}
@@ -1902,7 +1915,9 @@ export default function FileManagerView() {
               onSelectFile={handleSelectFile}
               onSetSelection={setSelectedFileIds}
               onOpenFolder={handleOpenFolder}
-              onStartProcessing={setProcessingSetupFolder}
+              onStartProcessing={
+                processingEnabled ? setProcessingSetupFolder : undefined
+              }
               onOpenDiskFile={(entry) => void openDiskFile(entry)}
               onRetryFile={retryDiskFile}
               onRevertFile={setRevertConfirmName}
@@ -2011,10 +2026,12 @@ export default function FileManagerView() {
           if (revertAllTarget) revertAllInFolder(revertAllTarget);
         }}
       />
-      <FolderProcessingSetup
-        folder={processingBlock ? null : processingSetupFolder}
-        onClose={() => setProcessingSetupFolder(null)}
-      />
+      {processingEnabled && (
+        <FolderProcessingSetup
+          folder={processingBlock ? null : processingSetupFolder}
+          onClose={() => setProcessingSetupFolder(null)}
+        />
+      )}
 
       {/* Drawer hosts the details panel on ≤800px viewports. */}
       {isCompactDetailsViewport && (
@@ -2164,6 +2181,11 @@ export default function FileManagerView() {
  * A cheap identity for a directory listing, so a background re-read only re-renders the
  * grid when something actually changed on disk.
  */
+/** How often a working folder's per-file states re-read while it is open. */
+const PROCESSING_FILES_POLL_MS = 3000;
+const EMPTY_FILE_STATES: ReadonlyMap<string, DiskFileState> = new Map();
+const EMPTY_REVERTABLES: ReadonlySet<string> = new Set();
+
 function listingSignature(
   files: { path: string; sizeBytes: number; lastModified: number }[],
 ): string {
