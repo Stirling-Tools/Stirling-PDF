@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Box, ScrollArea, Text } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
+import { Skeleton } from "@app/ui/Skeleton";
 import { useTranslation } from "react-i18next";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
@@ -66,6 +67,11 @@ export function ThumbnailSidebar({
     };
   }, []);
 
+  const currentPageRef = useRef(scrollState.currentPage - 1);
+  useEffect(() => {
+    currentPageRef.current = scrollState.currentPage - 1;
+  }, [scrollState.currentPage]);
+
   // Generate thumbnails when sidebar becomes visible
   useEffect(() => {
     if (!visible || scrollState.totalPages === 0) return;
@@ -74,30 +80,29 @@ export function ThumbnailSidebar({
     let isCancelled = false;
 
     const generateThumbnails = async () => {
-      const allPages = Array.from(
-        { length: scrollState.totalPages },
-        (_, i) => i,
-      );
-      const currentPage = scrollState.currentPage - 1;
+      const queue = Array.from({ length: scrollState.totalPages }, (_, i) => i);
 
-      // Group pages by priority:
-      // 1. Current page
-      // 2. Visible neighbors (current +/- 3)
-      // 3. Everything else
-      const prioritized = [
-        ...allPages.filter((i) => i === currentPage),
-        ...allPages.filter(
-          (i) => i !== currentPage && Math.abs(i - currentPage) <= 3,
-        ),
-        ...allPages.filter((i) => Math.abs(i - currentPage) > 3),
-      ];
+      const getNextPageIndex = () => {
+        if (queue.length === 0) return null;
+        const current = currentPageRef.current;
+        let bestIdx = 0;
+        let bestDist = Math.abs(queue[0] - current);
+        for (let i = 1; i < queue.length; i++) {
+          const dist = Math.abs(queue[i] - current);
+          if (dist < bestDist) {
+            bestDist = dist;
+            bestIdx = i;
+          }
+        }
+        return queue.splice(bestIdx, 1)[0];
+      };
 
       const CONCURRENCY_LIMIT = 3;
-      const queue = [...prioritized];
 
       const processNext = async () => {
-        if (queue.length === 0 || isCancelled) return;
-        const pageIndex = queue.shift()!;
+        if (isCancelled) return;
+        const pageIndex = getNextPageIndex();
+        if (pageIndex === null) return;
 
         if (thumbnailsRef.current[pageIndex]) {
           await processNext();
@@ -108,7 +113,6 @@ export function ThumbnailSidebar({
           const thumbTask = thumbnailAPI.renderThumb(pageIndex, 1.0);
           const thumbBlob = await thumbTask.toPromise();
           if (isCancelled) {
-            // If cancelled during generation, revoke the new URL
             return;
           }
           const thumbUrl = URL.createObjectURL(thumbBlob);
@@ -146,7 +150,7 @@ export function ThumbnailSidebar({
     return () => {
       isCancelled = true;
     };
-  }, [visible, scrollState.totalPages, thumbnailAPI, scrollState.currentPage]);
+  }, [visible, scrollState.totalPages, thumbnailAPI]);
 
   const handlePageClick = (pageIndex: number) => {
     const pageNumber = pageIndex + 1; // Convert to 1-based
@@ -233,6 +237,8 @@ export function ThumbnailSidebar({
                         flexDirection: "column",
                         alignItems: "center",
                         gap: "8px",
+                        contentVisibility: "auto",
+                        containIntrinsicSize: "11.5rem 15rem",
                       }}
                       onMouseEnter={(e) => {
                         if (scrollState.currentPage !== pageIndex + 1) {
@@ -280,22 +286,12 @@ export function ThumbnailSidebar({
                           Failed
                         </div>
                       ) : (
-                        <div
-                          style={{
-                            width: "11.5rem",
-                            height: "15rem",
-                            backgroundColor: "var(--c-surface-sunken)",
-                            border: "1px solid var(--c-border-subtle)",
-                            borderRadius: "4px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            color: "var(--c-text-subtle)",
-                            fontSize: "12px",
-                          }}
-                        >
-                          Loading...
-                        </div>
+                        <Skeleton
+                          shape="rect"
+                          width="11.5rem"
+                          height="15rem"
+                          className="thumbnail-sidebar-skeleton"
+                        />
                       )}
 
                       {/* Page Number */}
