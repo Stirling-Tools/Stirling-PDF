@@ -20,7 +20,8 @@ public record Policy(
         EditorConfig editor,
         /** The owning product surface; {@link #SURFACE_POLICY} unless stamped otherwise. */
         String surface,
-        List<RoutingRule> routingRules) {
+        List<RoutingRule> routingRules,
+        String origin) {
 
     public Policy {
         icon = icon == null ? "" : icon;
@@ -39,37 +40,61 @@ public record Policy(
     /** The record is a processing-folder pair, served only by its own route. */
     public static final String SURFACE_PROCESSING_FOLDER = "processing-folder";
 
-    /**
-     * Without the {@code required} flag, {@code icon}, or editor participation: defaults to an
-     * ordinary (non-blocking) pipeline, no icon, and a swept/on-demand policy. Kept for the many
-     * callers and tests written before those fields; the frontend and stores that care use the full
-     * constructor.
-     */
+    /** Converted from a legacy watched-folder JSON config that predates the policy engine. */
+    public static final String ORIGIN_MIGRATED = "migrated";
+
+    /** Without a provenance marker: an ordinary policy created through the UI or a seeder. */
     public Policy(
             String id,
             String name,
             String owner,
             boolean enabled,
+            boolean required,
+            String icon,
             List<PipelineInput> inputs,
             List<PipelineStep> steps,
             OutputSpec output,
             List<String> outputIds,
-            Long teamId) {
+            Long teamId,
+            EditorConfig editor,
+            String surface) {
+        this(
+                id, name, owner, enabled, required, icon, inputs, steps, output, outputIds, teamId,
+                editor, surface, List.of(), null);
+    }
+
+    /** Without a provenance marker: an ordinary policy created through the UI or a seeder. */
+    public Policy(
+            String id,
+            String name,
+            String owner,
+            boolean enabled,
+            boolean required,
+            String icon,
+            List<PipelineInput> inputs,
+            List<PipelineStep> steps,
+            OutputSpec output,
+            List<String> outputIds,
+            Long teamId,
+            EditorConfig editor,
+            String surface,
+            List<RoutingRule> routingRules) {
         this(
                 id,
                 name,
                 owner,
                 enabled,
-                false,
-                "",
+                required,
+                icon,
                 inputs,
                 steps,
                 output,
                 outputIds,
                 teamId,
-                null,
-                SURFACE_POLICY,
-                List.of());
+                editor,
+                surface,
+                routingRules,
+                null);
     }
 
     /**
@@ -101,8 +126,39 @@ public record Policy(
                 outputIds,
                 teamId,
                 editor,
-                SURFACE_POLICY,
-                List.of());
+                SURFACE_POLICY);
+    }
+
+    /**
+     * Without the {@code required} flag, {@code icon}, editor participation or a provenance marker:
+     * defaults to not org-required, no icon, and a swept/on-demand policy. Kept for the many
+     * callers and tests written before those fields; the frontend and stores that care use the full
+     * constructor.
+     */
+    public Policy(
+            String id,
+            String name,
+            String owner,
+            boolean enabled,
+            List<PipelineInput> inputs,
+            List<PipelineStep> steps,
+            OutputSpec output,
+            List<String> outputIds,
+            Long teamId) {
+        this(
+                id,
+                name,
+                owner,
+                enabled,
+                false,
+                "",
+                inputs,
+                steps,
+                output,
+                outputIds,
+                teamId,
+                null,
+                SURFACE_POLICY);
     }
 
     /**
@@ -176,7 +232,8 @@ public record Policy(
                 teamId,
                 editor,
                 surface,
-                routingRules);
+                routingRules,
+                origin);
     }
 
     /** A copy under a different owner (e.g. moving a seed off a placeholder name). */
@@ -195,7 +252,8 @@ public record Policy(
                 teamId,
                 editor,
                 surface,
-                routingRules);
+                routingRules,
+                origin);
     }
 
     /** A copy referencing the given saved output destinations. */
@@ -214,7 +272,8 @@ public record Policy(
                 teamId,
                 editor,
                 surface,
-                routingRules);
+                routingRules,
+                origin);
     }
 
     public Policy withEnabled(boolean newEnabled) {
@@ -232,7 +291,8 @@ public record Policy(
                 teamId,
                 editor,
                 surface,
-                routingRules);
+                routingRules,
+                origin);
     }
 
     public Policy withSteps(List<PipelineStep> newSteps) {
@@ -250,7 +310,8 @@ public record Policy(
                 teamId,
                 editor,
                 surface,
-                routingRules);
+                routingRules,
+                origin);
     }
 
     /**
@@ -279,7 +340,28 @@ public record Policy(
                 teamId,
                 editor,
                 newSurface,
-                routingRules);
+                routingRules,
+                origin);
+    }
+
+    /** Provenance is stamped server-side; a caller cannot label its own creation as migrated. */
+    public Policy withOrigin(String newOrigin) {
+        return new Policy(
+                id,
+                name,
+                owner,
+                enabled,
+                required,
+                icon,
+                inputs,
+                steps,
+                output,
+                outputIds,
+                teamId,
+                editor,
+                surface,
+                routingRules,
+                newOrigin);
     }
 
     /**

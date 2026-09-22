@@ -23,7 +23,10 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.io.Resource;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -35,6 +38,7 @@ import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.service.ApiDocService;
 import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.service.MigratedWatchedFolders;
 import stirling.software.common.service.PostHogService;
 import stirling.software.common.service.ToolMetadataService;
 import stirling.software.common.util.FileReadinessChecker;
@@ -59,12 +63,15 @@ public class PipelineDirectoryProcessor {
     private final PipelineProcessor processor;
     private final PostHogService postHogService;
     private final FileReadinessChecker fileReadinessChecker;
+    private final ObjectProvider<MigratedWatchedFolders> migratedWatchedFolders;
     private final List<String> watchedFoldersDirs;
     private final String finishedFoldersDir;
 
     // Track processed directories in current scan to prevent duplicates
     private final ThreadLocal<java.util.Set<Path>> processedDirsInScan =
             ThreadLocal.withInitial(java.util.HashSet::new);
+
+    private volatile boolean applicationReady;
 
     public PipelineDirectoryProcessor(
             ObjectMapper objectMapper,
@@ -73,6 +80,7 @@ public class PipelineDirectoryProcessor {
             PipelineProcessor processor,
             PostHogService postHogService,
             FileReadinessChecker fileReadinessChecker,
+            ObjectProvider<MigratedWatchedFolders> migratedWatchedFolders,
             RuntimePathConfig runtimePathConfig) {
         this.objectMapper = objectMapper;
         this.apiDocService = apiDocService;
@@ -80,12 +88,24 @@ public class PipelineDirectoryProcessor {
         this.processor = processor;
         this.postHogService = postHogService;
         this.fileReadinessChecker = fileReadinessChecker;
+        this.migratedWatchedFolders = migratedWatchedFolders;
         this.watchedFoldersDirs = runtimePathConfig.getPipelineWatchedFoldersPaths();
         this.finishedFoldersDir = runtimePathConfig.getPipelineFinishedFoldersPath();
     }
 
+    // Ordered listeners run first, so conversions are recorded before this flips; otherwise the
+    // first scan can claim a file out of a folder about to become policy-managed.
+    @EventListener(ApplicationReadyEvent.class)
+    public void onApplicationReady() {
+        applicationReady = true;
+    }
+
     @Scheduled(fixedRate = 60000)
     public void scanFolders() {
+        if (!applicationReady) {
+            log.debug("Skipping watched-folder scan until startup has finished");
+            return;
+        }
         // Clear the processed directories set for this scan cycle
         processedDirsInScan.get().clear();
 
@@ -135,6 +155,10 @@ public class PipelineDirectoryProcessor {
                                         dir.getFileName() != null
                                                 ? dir.getFileName().toString()
                                                 : "";
+                                // Hidden dirs are Stirling's own state, never a pipeline folder.
+                                if (!dir.equals(watchedFolderPath) && dirName.startsWith(".")) {
+                                    return FileVisitResult.SKIP_SUBTREE;
+                                }
                                 // Skip root directory and "processing" subdirectories
                                 if (!dir.equals(watchedFolderPath)
                                         && !"processing".equals(dirName)) {
@@ -170,6 +194,13 @@ public class PipelineDirectoryProcessor {
         java.util.Set<Path> processedDirs = processedDirsInScan.get();
         if (!processedDirs.add(normalizedDir)) {
             log.debug("Directory already processed in this scan cycle: {}", normalizedDir);
+            return;
+        }
+
+        // A converted folder is driven by the policy engine; scanning it here double-processes.
+        MigratedWatchedFolders migrated = migratedWatchedFolders.getIfAvailable();
+        if (migrated != null && migrated.isMigrated(normalizedDir)) {
+            log.debug("Directory {} is managed by a policy; skipping legacy scan", normalizedDir);
             return;
         }
 

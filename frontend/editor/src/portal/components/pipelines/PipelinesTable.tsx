@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  type CellLabel,
   column,
   DataTable,
   type DataTableColumn,
@@ -22,6 +23,9 @@ interface PipelinesTableProps {
 
 export function PipelinesTable({ pipelines, onRowClick }: PipelinesTableProps) {
   const { t } = useTranslation();
+  // No converted pipeline means no Origin column at all, rather than a header
+  // over a column of empty cells.
+  const hasMigrated = pipelines.some((p) => p.origin === "migrated");
   const columns = useMemo<DataTableColumn<PipelineView>[]>(
     () => [
       column.entity({
@@ -31,6 +35,32 @@ export function PipelinesTable({ pipelines, onRowClick }: PipelinesTableProps) {
         icon: (p) => pipelineIcon(p.icon, "1.25rem"),
         primary: (p) => p.name,
       }),
+      ...(hasMigrated
+        ? [
+            // Marks a pipeline converted from a legacy config, so it isn't
+            // taken for the team's own work.
+            column.labels<PipelineView>({
+              key: "origin",
+              header: t("portal.pipelines.table.origin", "Origin"),
+              get: (p) => {
+                const out: CellLabel[] = [];
+                if (p.origin === "migrated") {
+                  out.push({
+                    label: t("portal.pipelines.origin.migrated.label", {
+                      defaultValue: "Migrated",
+                    }),
+                    accent: "brand",
+                    title: t("portal.pipelines.origin.migrated.hint", {
+                      defaultValue:
+                        "Converted from a watched-folder JSON config. The original file was archived beside the folder.",
+                    }),
+                  });
+                }
+                return out;
+              },
+            }),
+          ]
+        : []),
       column.text({
         key: "type",
         header: t("portal.pipelines.table.type", "Type"),
@@ -71,7 +101,7 @@ export function PipelinesTable({ pipelines, onRowClick }: PipelinesTableProps) {
         get: (p) => p.sources.length,
       }),
     ],
-    [t],
+    [t, hasMigrated],
   );
 
   return (
