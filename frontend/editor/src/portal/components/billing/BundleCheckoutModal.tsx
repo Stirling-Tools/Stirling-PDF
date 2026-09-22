@@ -24,6 +24,7 @@ import {
   currencySymbol,
 } from "@app/billing";
 import type { Wallet } from "@app/portal/api/billing";
+import { stripeMinorUnitScale } from "@app/utils/stripeCurrency";
 import {
   acceptBundleStripeQuote,
   cancelBundleQuote,
@@ -1003,7 +1004,9 @@ function CalculatorStep({
 }) {
   const { t } = useTranslation();
   const presets = [12_000, 24_000, 48_000];
-  const yearValue = rate && rate > 0 ? Math.round(credits * rate) / 100 : null;
+  const minorUnitScale = stripeMinorUnitScale(selectionCurrency);
+  const yearValue =
+    rate && rate > 0 ? Math.round(credits * rate) / minorUnitScale : null;
   const [custom, setCustom] = useState(
     yearValue == null || !presets.includes(yearValue),
   );
@@ -1013,7 +1016,7 @@ function CalculatorStep({
     const amount = Number(value);
     onCreditsChange(
       rate && rate > 0 && Number.isFinite(amount) && amount > 0
-        ? Math.round((amount * 100) / rate)
+        ? Math.round((amount * minorUnitScale) / rate)
         : 0,
     );
   };
@@ -1100,7 +1103,7 @@ function CalculatorStep({
               hideControls
               clampBehavior="none"
               prefix={currencySymbol(selectionCurrency)}
-              decimalScale={2}
+              decimalScale={Math.log10(minorUnitScale)}
               allowNegative={false}
               aria-label={t("portal.billing.simple.yearSize", "Year size")}
             />

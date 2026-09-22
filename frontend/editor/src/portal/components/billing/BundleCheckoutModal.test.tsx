@@ -135,6 +135,66 @@ describe("annual credit purchases", () => {
     );
   });
 
+  it.each([
+    {
+      currency: "jpy",
+      initialAmount: "JPY 1200000",
+      total: "JPY 10,000",
+      customAmount: "12345",
+      poolCredits: 12_345,
+      priceMinor: 10_287,
+    },
+    {
+      currency: "kwd",
+      initialAmount: "KWD 1200",
+      total: "KWD 10,000.000",
+      customAmount: "12345.678",
+      poolCredits: 12_345_678,
+      priceMinor: 10_288_065,
+    },
+  ])(
+    "uses $currency units for preset and custom spend amounts",
+    async ({
+      currency,
+      initialAmount,
+      total,
+      customAmount,
+      poolCredits,
+      priceMinor,
+    }) => {
+      api.fetchBundlePricing.mockResolvedValue({
+        currency,
+        unitAmountMinor: 1,
+        currencyLocked: true,
+        availableCurrencies: [currency],
+      });
+      showCheckout();
+      expect(
+        await screen.findByRole("textbox", { name: "Year size" }),
+      ).toHaveValue(initialAmount);
+      fireEvent.click(
+        screen.getByRole("button", {
+          name: `${currency.toUpperCase()} 12,000`,
+        }),
+      );
+      expect(screen.getByText(total)).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "Other" }));
+      fireEvent.change(screen.getByRole("textbox", { name: "Year size" }), {
+        target: { value: customAmount },
+      });
+      expect(screen.getByRole("textbox", { name: "Year size" })).toHaveValue(
+        `${currency.toUpperCase()} ${customAmount}`,
+      );
+      fireEvent.click(
+        screen.getByRole("button", { name: "Continue to payment" }),
+      );
+      await screen.findByText("Pay for your year");
+      expect(api.upsertBundleQuote).toHaveBeenCalledWith(
+        expect.objectContaining({ currency, poolCredits, priceMinor }),
+      );
+    },
+  );
+
   it("refreshes the custom spend amount when the quote currency changes", async () => {
     api.fetchBundlePricing.mockResolvedValue({
       currency: "usd",
