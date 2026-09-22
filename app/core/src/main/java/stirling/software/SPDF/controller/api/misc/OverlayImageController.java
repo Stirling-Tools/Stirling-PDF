@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api.misc;
 
 import java.io.IOException;
 
+import org.apache.batik.bridge.BridgeException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -11,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
+import org.xml.sax.SAXException;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -65,7 +67,14 @@ public class OverlayImageController {
 
         boolean isSvg = SvgOverlayUtil.isSvgImage(imageBytes);
         if (isSvg) {
-            imageBytes = svgSanitizer.sanitize(imageBytes);
+            try {
+                imageBytes = svgSanitizer.sanitize(imageBytes);
+            } catch (IOException e) {
+                if (e.getCause() instanceof SAXException) {
+                    throw new IllegalArgumentException("The image contains invalid SVG.", e);
+                }
+                throw e;
+            }
         }
 
         try (PDDocument document = pdfDocumentFactory.load(pdfBytes)) {
@@ -74,7 +83,15 @@ public class OverlayImageController {
                 PDPage page = document.getPage(i);
 
                 if (isSvg) {
-                    SvgOverlayUtil.overlaySvgOnPage(document, page, imageBytes, x, y);
+                    try {
+                        SvgOverlayUtil.overlaySvgOnPage(document, page, imageBytes, x, y);
+                    } catch (IOException e) {
+                        if (e.getCause() instanceof BridgeException) {
+                            throw new IllegalArgumentException(
+                                    "The image contains invalid SVG.", e);
+                        }
+                        throw e;
+                    }
                 } else {
                     try (PDPageContentStream contentStream =
                             new PDPageContentStream(

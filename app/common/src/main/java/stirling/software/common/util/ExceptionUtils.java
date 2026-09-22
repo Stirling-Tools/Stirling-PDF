@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -1086,8 +1087,10 @@ public class ExceptionUtils {
     public static IOException handlePdfException(IOException e, String context) {
         requireNonNull(e, "exception");
 
-        // Most specific first: corruption's patterns cover almost anything PDFBox gives up on,
-        // so testing it earlier reported every document that would not decrypt as damaged.
+        if (e instanceof BaseAppException) {
+            return e;
+        }
+
         if (isPasswordError(e)) {
             return createPdfPasswordException(context, e);
         }
@@ -1489,11 +1492,19 @@ public class ExceptionUtils {
     /**
      * Check if an exception indicates a PDF encryption/decryption error.
      *
+     * <p>For failures outside a known PDF operation, first require {@link
+     * PdfErrorUtils#hasPdfContext(Throwable)}; crypto messages alone do not identify the format.
+     *
      * @param e the exception to check
      * @return true if it's an encryption error, false otherwise
      */
     public static boolean isEncryptionError(Throwable e) {
-        return anyCauseMatches(e, ExceptionUtils::isEncryptionMessage);
+        return anyCauseMatches(
+                e,
+                cause ->
+                        cause instanceof PdfEncryptionException
+                                || (cause.getMessage() != null
+                                        && isEncryptionMessage(cause.getMessage())));
     }
 
     private static boolean isEncryptionMessage(String message) {
@@ -1507,11 +1518,23 @@ public class ExceptionUtils {
      * Check if an exception indicates a PDF password error. The whole cause chain is inspected, so
      * a wrapper carrying a fixed message does not hide the underlying reason.
      *
+     * <p>For failures outside a known PDF operation, first require {@link
+     * PdfErrorUtils#hasPdfContext(Throwable)}; password messages alone do not identify the format.
+     *
      * @param e the exception to check
      * @return true if it's a password error, false otherwise
      */
     public static boolean isPasswordError(Throwable e) {
-        return anyCauseMatches(e, ExceptionUtils::isPasswordMessage);
+        return anyCauseMatches(
+                e,
+                cause ->
+                        cause instanceof PdfPasswordException
+                                || cause instanceof InvalidPasswordException
+                                || cause
+                                        instanceof
+                                        stirling.software.jpdfium.exception.PdfPasswordException
+                                || (cause.getMessage() != null
+                                        && isPasswordMessage(cause.getMessage())));
     }
 
     private static boolean isPasswordMessage(String message) {
@@ -1525,11 +1548,10 @@ public class ExceptionUtils {
     /** Bounds the cause walk so a self-referencing or cyclic chain cannot spin. */
     private static final int MAX_CAUSE_DEPTH = 10;
 
-    private static boolean anyCauseMatches(Throwable throwable, Predicate<String> matcher) {
+    private static boolean anyCauseMatches(Throwable throwable, Predicate<Throwable> matcher) {
         Throwable current = throwable;
         for (int depth = 0; current != null && depth < MAX_CAUSE_DEPTH; depth++) {
-            String message = current.getMessage();
-            if (message != null && matcher.test(message)) {
+            if (matcher.test(current)) {
                 return true;
             }
             if (current.getCause() == current) {

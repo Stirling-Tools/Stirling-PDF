@@ -14,6 +14,8 @@ import java.util.Locale;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.MessageSource;
@@ -44,6 +46,95 @@ class GlobalExceptionHandlerTest {
     @Mock private HttpServletResponse response;
 
     private GlobalExceptionHandler handler;
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "database connection damaged",
+                "Corrupted database",
+                "authentication service: password is incorrect",
+                "Failed to decrypt backup",
+                "javax.crypto.BadPaddingException: invalid backup key"
+            })
+    void unrelatedFailuresRemainServerErrors(String message) {
+        assertEquals(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                handler.handleRuntimeException(
+                                new RuntimeException("job failed", new RuntimeException(message)),
+                                request)
+                        .getStatusCode());
+        assertEquals(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                handler.handleIOException(
+                                new IOException("operation failed", new IOException(message)),
+                                request)
+                        .getStatusCode());
+    }
+
+    @Test
+    void genericIoDiagnosticsAreNotReturnedToClients() {
+        IOException failure = new IOException("/private/uploads/customer.pdf: permission denied");
+        ProblemDetail detail = handler.handleIOException(failure, request).getBody();
+        assertEquals("An error occurred while processing the file", detail.getDetail());
+        assertFalse(detail.toString().contains("customer.pdf"));
+    }
+
+    @Test
+    void wrappedNativePasswordErrorReturns400WithoutEngineDiagnostics() {
+        IOException failure =
+                new IOException(
+                        "JPDFium merge failed",
+                        new stirling.software.jpdfium.exception.PdfPasswordException(
+                                "/private/document.pdf"));
+        ResponseEntity<ProblemDetail> result = handler.handleIOException(failure, request);
+        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+        assertEquals(
+                ErrorCode.PDF_PASSWORD.getCode(),
+                result.getBody().getProperties().get("errorCode"));
+        assertFalse(result.getBody().getDetail().contains("/private/document.pdf"));
+    }
+
+    @Test
+    void wrappedNativeCorruptionReturns400() {
+        IOException failure =
+                new IOException(
+                        "JPDFium merge failed",
+                        new stirling.software.jpdfium.exception.PdfCorruptException(
+                                "engine details"));
+        ResponseEntity<ProblemDetail> result = handler.handleIOException(failure, request);
+        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+        assertEquals(
+                ErrorCode.PDF_CORRUPTED.getCode(),
+                result.getBody().getProperties().get("errorCode"));
+    }
+
+    @Test
+    void nativeEncryptionFailureUsesEncryptionCategory() {
+        RuntimeException failure =
+                new stirling.software.jpdfium.exception.JPDFiumException(
+                        "Failed to decrypt",
+                        new javax.crypto.BadPaddingException(
+                                "Given final block not properly padded"));
+        ResponseEntity<ProblemDetail> result = handler.handleRuntimeException(failure, request);
+        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+        assertEquals(
+                ErrorCode.PDF_ENCRYPTION.getCode(),
+                result.getBody().getProperties().get("errorCode"));
+    }
+
+    @Test
+    void wrappedPdfBoxEncryptionFailureUsesEncryptionCategory() {
+        IOException failure =
+                new IOException(
+                        "job failed",
+                        new IOException(
+                                "AES initialization vector not fully read: only 4 bytes read instead of 16"));
+        ResponseEntity<ProblemDetail> result = handler.handleIOException(failure, request);
+        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+        assertEquals(
+                ErrorCode.PDF_ENCRYPTION.getCode(),
+                result.getBody().getProperties().get("errorCode"));
+    }
 
     @BeforeEach
     void setUp() {

@@ -2,6 +2,7 @@ package stirling.software.common.util;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -16,6 +17,14 @@ import stirling.software.common.util.ExceptionUtils.PdfPasswordException;
  * it.
  */
 class ExceptionUtilsCauseChainTest {
+
+    @Test
+    void handlePdfException_preservesTypedFailureAndInputContext() {
+        PdfPasswordException failure =
+                ExceptionUtils.createPdfPasswordException(
+                        "file 2", new IOException("password is incorrect"));
+        assertSame(failure, ExceptionUtils.handlePdfException(failure, "/api/merge-pdfs"));
+    }
 
     @Test
     void isPasswordError_recognisesJpdfiumWording() {

@@ -1183,21 +1183,27 @@ public class GlobalExceptionHandler {
             } else {
                 return handleValidation(valEx, request);
             }
-        } else if (cause instanceof IOException) {
-            // Unwrap and handle IOException (may contain PDF-specific errors)
-            return handleIOException((IOException) cause, request);
-        } else if (cause instanceof IllegalArgumentException) {
-            // Unwrap and handle IllegalArgumentException (business logic validation errors)
-            return handleIllegalArgument((IllegalArgumentException) cause, request);
         }
 
         // Engine-level PDF failures (jpdfium's unchecked family) are not typed exceptions of ours,
         // so classify them here rather than reporting a locked or damaged file as a server fault.
-        if (ExceptionUtils.isPasswordError(ex)) {
-            return dispatchBaseApp(ExceptionUtils.createPdfPasswordException(ex), request);
+        if (PdfErrorUtils.hasPdfContext(ex)) {
+            if (ExceptionUtils.isPasswordError(ex)) {
+                return dispatchBaseApp(ExceptionUtils.createPdfPasswordException(ex), request);
+            }
+            if (ExceptionUtils.isEncryptionError(ex)) {
+                return dispatchBaseApp(ExceptionUtils.createPdfEncryptionException(ex), request);
+            }
+            if (PdfErrorUtils.isCorruptedPdfError(ex)) {
+                return dispatchBaseApp(
+                        ExceptionUtils.createPdfCorruptedException(null, ex), request);
+            }
         }
-        if (PdfErrorUtils.isCorruptedPdfError(ex)) {
-            return dispatchBaseApp(ExceptionUtils.createPdfCorruptedException(null, ex), request);
+
+        if (cause instanceof IOException ioEx) {
+            return handleIOException(ioEx, request);
+        } else if (cause instanceof IllegalArgumentException argumentEx) {
+            return handleIllegalArgument(argumentEx, request);
         }
 
         // Not a wrapped exception - treat as unexpected error
@@ -1271,7 +1277,9 @@ public class GlobalExceptionHandler {
 
         // Check if this is a PDF-specific error and wrap it appropriately
         IOException processedException =
-                ExceptionUtils.handlePdfException(ex, request.getRequestURI());
+                PdfErrorUtils.hasPdfContext(ex)
+                        ? ExceptionUtils.handlePdfException(ex, request.getRequestURI())
+                        : ex;
 
         if (processedException instanceof BaseAppException appEx) {
             return dispatchBaseApp(appEx, request);
@@ -1310,9 +1318,6 @@ public class GlobalExceptionHandler {
         String message =
                 getLocalizedMessage(
                         "error.ioError.detail", "An error occurred while processing the file");
-        if (ex.getMessage() != null && !ex.getMessage().isBlank()) {
-            message = ex.getMessage();
-        }
 
         String title = getLocalizedMessage("error.ioError.title", ErrorTitles.IO_ERROR_DEFAULT);
 

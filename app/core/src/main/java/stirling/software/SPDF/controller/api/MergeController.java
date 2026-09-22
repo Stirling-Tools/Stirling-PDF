@@ -8,7 +8,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
@@ -262,6 +264,10 @@ public class MergeController {
         if (files == null) {
             files = new MultipartFile[0];
         }
+        Map<MultipartFile, Integer> inputPositions = new IdentityHashMap<>();
+        for (int index = 0; index < files.length; index++) {
+            inputPositions.putIfAbsent(files[index], index + 1);
+        }
 
         if (fileOrder != null && !fileOrder.isBlank()) {
             log.info("Reordering files based on fileOrder parameter");
@@ -288,15 +294,19 @@ public class MergeController {
                 } catch (Exception e) {
                     ExceptionUtils.logException("PDF pre-validate", e);
                     if (ExceptionUtils.isPasswordError(e)) {
-                        lockedNames.add(describeInput(multipartFile, index));
+                        lockedNames.add("file " + inputPositions.get(multipartFile));
                         if (lockedCause == null) {
                             lockedCause = e;
                         }
-                    } else {
-                        unreadableNames.add(describeInput(multipartFile, index));
+                    } else if (ExceptionUtils.isEncryptionError(e)) {
+                        throw ExceptionUtils.createPdfEncryptionException(e);
+                    } else if (PdfErrorUtils.isCorruptedPdfError(e)) {
+                        unreadableNames.add("file " + inputPositions.get(multipartFile));
                         if (unreadableCause == null) {
                             unreadableCause = e;
                         }
+                    } else {
+                        throw e;
                     }
                 }
             }
@@ -399,11 +409,6 @@ public class MergeController {
         return WebResponseUtils.pdfFileToWebResponse(outputTempFile, mergedFileName);
     }
 
-    private static String describeInput(MultipartFile file, int index) {
-        String name = file != null ? file.getOriginalFilename() : null;
-        return name != null && !name.isBlank() ? name : "file " + (index + 1);
-    }
-
     private int[] mergeWithJpdfium(
             List<Path> inputPaths, MultipartFile[] files, boolean generateToc, Path outputPath)
             throws IOException {
@@ -443,7 +448,7 @@ public class MergeController {
                 }
             }
         } catch (RuntimeException e) {
-            throw new IOException("JPDFium merge failed: " + e.getMessage(), e);
+            throw new IOException("JPDFium merge failed", e);
         } finally {
             for (PdfDocument doc : docs) {
                 try {
