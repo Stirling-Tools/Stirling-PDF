@@ -6,9 +6,8 @@ import {
   normalizePaygError,
   handlePaygError,
 } from "@app/services/paygErrorInterceptor";
-import { stripBasePath, withBasePath } from "@app/constants/app";
+import { redirectToLogin } from "@app/auth/redirectToLogin";
 import { getBrowserId } from "@app/utils/browserIdentifier";
-import { isSafePostLoginRedirect } from "@app/services/postLoginRedirect";
 
 // Helper: decode base64url JWT payload safely
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
@@ -113,21 +112,6 @@ function refreshSessionOnce(): ReturnType<typeof supabase.auth.refreshSession> {
     });
   }
   return inFlightRefresh;
-}
-
-// Hard-redirect to /login, carrying where the user was so the login screen can
-// return them there instead of falling through to the default landing (which
-// sends opted-in users to the processor - the "refresh /editor bounces me to the
-// processor" bug). Router-relative, matching what Login reads via `?next=`.
-function redirectToLogin(): void {
-  const loginPath = withBasePath("/login");
-  // Already on the login page: another redirect would just loop.
-  if (window.location.pathname === loginPath) return;
-  const returnPath =
-    stripBasePath(window.location.pathname) + window.location.search;
-  window.location.href = isSafePostLoginRedirect(returnPath)
-    ? `${loginPath}?next=${encodeURIComponent(returnPath)}`
-    : loginPath;
 }
 
 // Response interceptor for handling token refresh

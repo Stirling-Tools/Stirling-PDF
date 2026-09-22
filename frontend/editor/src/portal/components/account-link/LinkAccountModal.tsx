@@ -1,17 +1,18 @@
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
-import { FlowModal } from "@portal/components/shared/FlowModal";
-import { StepModalHeader } from "@portal/components/shared/StepModalHeader";
-import { ConnectAskStep } from "@portal/components/account-link/connect/ConnectAskStep";
-import { ConnectHandoffGhost } from "@portal/components/account-link/connect/ConnectHandoffGhost";
+import { FlowModal } from "@app/portal/components/shared/FlowModal";
+import { StepModalHeader } from "@app/portal/components/shared/StepModalHeader";
+import { ConnectAskStep } from "@app/portal/components/account-link/connect/ConnectAskStep";
+import { ConnectHandoffGhost } from "@app/portal/components/account-link/connect/ConnectHandoffGhost";
 import {
   ConnectCallbackView,
   isRetryableOutcome,
   type ConnectOutcome,
-} from "@portal/components/account-link/ConnectCallbackView";
-import { useConnectHandoff } from "@portal/hooks/useConnectHandoff";
-import type { LinkModalMode } from "@portal/contexts/UIContext";
-import "@portal/views/ConnectCallback.css";
+} from "@app/portal/components/account-link/ConnectCallbackView";
+import { useConnectHandoff } from "@app/portal/hooks/useConnectHandoff";
+import { useUI, type LinkModalMode } from "@app/portal/contexts/UIContext";
+import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
+import "@app/portal/views/ConnectCallback.css";
 
 /**
  * Ordered, so a step's position in this list is its number and the list's length is the total.
@@ -30,6 +31,22 @@ interface Props {
   outcome?: ConnectOutcome | null;
 }
 
+/** Unmounting on close discards an interrupted handoff before the next attempt. */
+export function LinkAccountModalHost() {
+  const { linkModalOpen, linkModalMode, closeLinkModal, connectOutcome } =
+    useUI();
+  const isOwner = useAccountLinkOwner();
+  if (!isOwner || !linkModalOpen) return null;
+  return (
+    <LinkAccountModal
+      open
+      mode={linkModalMode}
+      onClose={closeLinkModal}
+      outcome={connectOutcome}
+    />
+  );
+}
+
 /**
  * The progress bar spans the redirect on purpose: the admin leaves on the hand-off and returns on
  * the outcome step of the dialog they left, rather than being greeted by a different one.
@@ -41,14 +58,16 @@ export function LinkAccountModal({
   outcome = null,
 }: Props) {
   const { t } = useTranslation();
-  const reauth = mode === "reauth";
+  const reauth =
+    mode === "reauth" ||
+    (outcome?.state === "linked" && !outcome.sessionRestored);
   const exhausted = mode === "exhausted";
   const handoff = useConnectHandoff(reauth);
 
   // Busy outranks a stale outcome, or a retry sits on the old result until the browser leaves.
   let step: StepId = "ask";
   if (handoff.busy) step = "handoff";
-  else if (outcome) step = "outcome";
+  else if (outcome && !handoff.error) step = "outcome";
 
   const title = stepTitle();
   const current = STEP_ORDER.indexOf(step) + 1;
@@ -62,7 +81,10 @@ export function LinkAccountModal({
         stepLabel: t(
           "portal.accountLink.connect.step",
           "Step {{current}} of {{total}}",
-          { current, total: STEP_ORDER.length },
+          {
+            current,
+            total: STEP_ORDER.length,
+          },
         ),
       };
 
@@ -74,7 +96,7 @@ export function LinkAccountModal({
       footer={stepFooter()}
     >
       <StepModalHeader
-        brand
+        brand={t("portal.accountLink.modal.identity", "Stirling account")}
         title={title}
         {...stepChrome}
         closeLabel={t("portal.accountLink.connect.close", "Close")}
@@ -86,7 +108,7 @@ export function LinkAccountModal({
 
   function stepTitle(): string {
     if (reauth) {
-      return t("portal.accountLink.modal.reauthTitle", "Sign in again");
+      return t("portal.accountLink.renewal.title", "Renew billing access");
     }
     if (step === "ask") {
       return exhausted
@@ -123,6 +145,7 @@ export function LinkAccountModal({
       case "outcome":
         return outcome ? (
           <ConnectCallbackView
+            mode={reauth ? "reauth" : "link"}
             state={outcome.state}
             sessionRestored={outcome.sessionRestored}
             onDone={onClose}
@@ -193,6 +216,15 @@ export function LinkAccountModal({
         <>
           {closeButton()}
           {retryButton(outcome.reclaim)}
+        </>
+      );
+    }
+
+    if (outcome?.state === "linked" && !outcome.sessionRestored) {
+      return (
+        <>
+          {closeButton()}
+          {retryButton(handoff.begin)}
         </>
       );
     }

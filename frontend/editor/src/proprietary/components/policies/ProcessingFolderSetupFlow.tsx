@@ -12,10 +12,7 @@ import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useServerFolderBlock } from "@app/hooks/useServerFolderBlock";
 import { useAiEngineEnabled } from "@app/hooks/useAiEngineEnabled";
 import { useDownloadsProcessing } from "@app/hooks/useDownloadsProcessing";
-import {
-  useProcessingFolders,
-  refreshProcessingFolders,
-} from "@app/hooks/useProcessingFolders";
+import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
 import { canPickDirectory, pickDirectory } from "@app/services/directoryPicker";
 import { saveProcessingFolder } from "@app/services/processingFolderApi";
 import {
@@ -150,7 +147,7 @@ export function ProcessingFolderSetupFlow({
         parameters: step.parameters ?? {},
       })),
     });
-    void refreshProcessingFolders();
+    void processing.refresh();
     if (onDisk)
       void deliverSweepResults(saved.id, null, addFiles, {
         excludeRunIds: baseline,
@@ -175,7 +172,7 @@ export function ProcessingFolderSetupFlow({
       loading={folders.loading || processing.loading || presets.loading}
       loadError={processing.loadError ?? presets.error}
       onRetry={() => {
-        void refreshProcessingFolders();
+        void processing.refresh();
         setReload((current) => current + 1);
       }}
       canPickDirectory={canPickDirectory}
