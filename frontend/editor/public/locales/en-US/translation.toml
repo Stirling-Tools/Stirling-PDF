@@ -5486,11 +5486,6 @@ desc = "Change the size/scale of a page and/or its contents."
 tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
 title = "Adjust page size/scale"
 
-[home.scannerEffect]
-desc = "Create a PDF that looks like it was scanned"
-tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
-title = "Scanner Effect"
-
 [home.scannerImageSplit]
 desc = "Detect and split scanned photos into separate pages"
 tags = "detect,split,photos,auto detect,detect photos,split photos,separate photos,split scanned images,multiple photos,auto split,photo detection,image detection,scan separation"
