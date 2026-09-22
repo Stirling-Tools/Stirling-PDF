@@ -1,5 +1,5 @@
 {
-  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "$schema": "../../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Stirling PDF",
   "mainBinaryName": "Stirling-PDF",
   "version": "3.0.0",
