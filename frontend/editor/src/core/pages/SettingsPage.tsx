@@ -19,6 +19,7 @@ import { SettingsNavChevron } from "@app/components/shared/config/SettingsNavChe
 import { useSettingsNav } from "@app/components/settings/useSettingsNav";
 import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
 import { useEditorSearchScopes } from "@app/hooks/useSuperSearch";
+import { useTitleBarStrip } from "@app/contexts/TitleBarStripContext";
 import type { NavKey } from "@app/components/shared/config/types";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { useLicenseAlert } from "@app/hooks/useLicenseAlert";
@@ -54,6 +55,8 @@ const SettingsPageInner: React.FC = () => {
   // The same bar as the editor and the processor, so search is one thing
   // everywhere; settings results deep-link straight back into this page.
   const searchScopes = useEditorSearchScopes();
+  // A title-bar strip already hosts the one Super Search; don't add a second here.
+  const strip = useTitleBarStrip();
   const [mobilePane, setMobilePane] = useState<"nav" | "content">(() =>
     sectionFromPath(window.location.pathname) ? "content" : "nav",
   );
@@ -329,13 +332,15 @@ const SettingsPageInner: React.FC = () => {
           isMobile && mobilePane !== "content" ? { display: "none" } : undefined
         }
       >
-        <div className="settings-page__search-bar">
-          <SuperSearch
-            inputId="settings-search-input"
-            scopes={searchScopes}
-            dropdownClassName="settings-search-dropdown"
-          />
-        </div>
+        {!strip.enabled && (
+          <div className="settings-page__search-bar">
+            <SuperSearch
+              inputId="settings-search-input"
+              scopes={searchScopes}
+              dropdownClassName="settings-search-dropdown"
+            />
+          </div>
+        )}
         <div className="modal-content-scroll" ref={setContentRef}>
           {isMobile && (
             <div className="settings-page__mobile-bar modal-header">

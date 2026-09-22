@@ -140,7 +140,6 @@ export async function fetchConnectionsSettings(): Promise<
   );
   const mailData = mailResponse.data || {};
 
-  // Fetch premium settings for SSO Auto Login
   const premiumResponse = await apiClient.get(
     "/api/v1/admin/settings/section/premium",
   );
@@ -165,7 +164,7 @@ export async function fetchConnectionsSettings(): Promise<
     saml2: securityData.saml2 || {},
     mail: mailData || {},
     telegram: telegramData || {},
-    ssoAutoLogin: premiumData.proFeatures?.ssoAutoLogin || false,
+    ssoAutoLogin: securityData.ssoAutoLogin || false,
     enableMobileScanner: systemData.enableMobileScanner || false,
     mobileScannerConvertToPdf:
       systemData.mobileScannerSettings?.convertToPdf !== false,
@@ -195,8 +194,8 @@ export async function fetchConnectionsSettings(): Promise<
   if (telegramData._pending) {
     pendingBlock.telegram = telegramData._pending;
   }
-  if (premiumData._pending?.proFeatures?.ssoAutoLogin !== undefined) {
-    pendingBlock.ssoAutoLogin = premiumData._pending.proFeatures.ssoAutoLogin;
+  if (securityData._pending?.ssoAutoLogin !== undefined) {
+    pendingBlock.ssoAutoLogin = securityData._pending.ssoAutoLogin;
   }
   if (systemData._pending?.enableMobileScanner !== undefined) {
     pendingBlock.enableMobileScanner = systemData._pending.enableMobileScanner;
@@ -297,8 +296,7 @@ export function saveConnectionsSettings(
   }
 
   if (currentSettings?.ssoAutoLogin !== undefined) {
-    deltaSettings["premium.proFeatures.ssoAutoLogin"] =
-      currentSettings.ssoAutoLogin;
+    deltaSettings["security.ssoAutoLogin"] = currentSettings.ssoAutoLogin;
   }
 
   if (currentSettings?.enableMobileScanner !== undefined) {
