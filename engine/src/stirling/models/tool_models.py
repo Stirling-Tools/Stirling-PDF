@@ -1297,8 +1297,13 @@ class RemoveBlanksParams(ApiModel):
 
 class RemoveCertSignParams(ApiModel):
     """
-    This endpoint accepts a PDF file and returns the PDF file without the digital signature. Input:PDF Output:PDF Type:SISO
+    This endpoint accepts a PDF file and returns the PDF file without the digital signature, optionally removing its visible appearance as well. Input:PDF Output:PDF Type:SISO
     """
+
+    remove_visible_signature: bool = Field(
+        False,
+        description="Also remove the visible appearance of certificate signature fields. Does not remove signatures embedded in page content or scanned images.",
+    )
 
 
 class RemoveImagePdfParams(ApiModel):

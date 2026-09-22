@@ -137,15 +137,15 @@ describe("Remove Certificate Sign", () => {
     (removeVisibleSignature) => {
       const parameters = { removeVisibleSignature };
       expect(
-        removeCertificateSignOperationConfig.fromApiParams(
-          removeCertificateSignOperationConfig.toApiParams(parameters),
+        removeCertificateSignOperationConfig.fromApiParams!(
+          removeCertificateSignOperationConfig.toApiParams!(parameters),
         ),
       ).toEqual(parameters);
     },
   );
 
   it("defaults older saved API parameters to keeping the visible signature", () => {
-    expect(removeCertificateSignOperationConfig.fromApiParams({})).toEqual({
+    expect(removeCertificateSignOperationConfig.fromApiParams!({})).toEqual({
       removeVisibleSignature: false,
     });
   });

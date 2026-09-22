@@ -2,7 +2,9 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import RemoveCertificateSignSettings from "@app/components/tools/removeCertificateSign/RemoveCertificateSignSettings";
 import { RemoveCertificateSignParameters } from "@app/hooks/tools/removeCertificateSign/useRemoveCertificateSignParameters";
 
-const baseParameters: RemoveCertificateSignParameters = {};
+const baseParameters: RemoveCertificateSignParameters = {
+  removeVisibleSignature: false,
+};
 
 const meta = {
   title: "Tools/RemoveCertificateSign/RemoveCertificateSignSettings",
