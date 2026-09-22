@@ -1,4 +1,4 @@
-import JSZip from "jszip";
+import type JSZipClass from "jszip";
 
 import { fileStorage } from "@app/services/fileStorage";
 import type { FileId, ToolOperation } from "@app/types/file";
@@ -32,6 +32,15 @@ function sanitizeFilename(name: string): string {
   return trimmed.replace(/[\\/:*?"<>|]/g, "_");
 }
 
+// JSZip loads on demand: share bundles are built or read only when a user
+// shares or opens one, and the module is ~140 KB.
+let jsZipPromise: Promise<typeof JSZipClass> | null = null;
+
+function loadJSZip(): Promise<typeof JSZipClass> {
+  jsZipPromise ??= import("jszip").then((mod) => mod.default);
+  return jsZipPromise;
+}
+
 export async function buildHistoryBundle(
   originalFileIds: FileId[] | FileId,
 ): Promise<{
@@ -55,6 +64,7 @@ export async function buildHistoryBundle(
     allStubs.push({ rootId, stubs });
   }
 
+  const JSZip = await loadJSZip();
   const zip = new JSZip();
   const entries: ShareBundleEntry[] = [];
 
@@ -120,6 +130,7 @@ export async function buildSharePackage(stubs: StirlingFileStub[]): Promise<{
     throw new Error("No files provided for sharing.");
   }
 
+  const JSZip = await loadJSZip();
   const zip = new JSZip();
   const entries: ShareBundleEntry[] = [];
 
