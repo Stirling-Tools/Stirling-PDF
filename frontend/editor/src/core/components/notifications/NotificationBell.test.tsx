@@ -494,9 +494,8 @@ describe("NotificationBell", () => {
   });
 
   it("says where a server-held document is rather than that it is missing", async () => {
-    // Never on any device, so never probed, and an absent lookup is not an absent document. Saying
-    // "not on this device" would read as something having gone wrong with a folder working exactly
-    // as configured.
+    // Never on any device, so never probed, and an absent lookup is not an absent document. "Not on
+    // this device" would read as a fault in a folder working exactly as configured.
     h.hasLocalFile = false;
     fetchNotifications.mockResolvedValue([
       notification("a", "Password-protected document", {

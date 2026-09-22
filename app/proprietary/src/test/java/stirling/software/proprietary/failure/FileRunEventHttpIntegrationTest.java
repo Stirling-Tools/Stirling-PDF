@@ -459,8 +459,7 @@ class FileRunEventHttpIntegrationTest {
 
         /**
          * A stand-in, so the registry's completeness check passes without dragging a ledger and a
-         * runner into an HTTP-layer test. What it does is covered by {@code
-         * RetryInFolderActionTest}.
+         * runner into an HTTP-layer test. Covered by {@code RetryInFolderActionTest}.
          */
         @Bean
         FailureAction retryInFolderAction() {

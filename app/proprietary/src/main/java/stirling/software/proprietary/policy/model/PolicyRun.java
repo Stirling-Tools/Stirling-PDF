@@ -30,19 +30,14 @@ public class PolicyRun {
     private final PipelineDefinition definition;
 
     /**
-     * The source's reference to the document this run is about; null for an ad-hoc run or a source
-     * that names no document.
-     *
-     * <p>Server-side only. A folder source builds it from the file's canonical path, so it names a
-     * location on the operator's disk and must never reach a response.
+     * The source's reference to the document this run is about, or null when there is none. A
+     * folder source builds it from the canonical path, so it must never reach a response.
      */
     private final String fileIdentity;
 
     /**
      * Whose document this run is about: the source's owner for a source-fed run, the triggering
-     * user otherwise. Distinct from {@link #triggeringUser}, which is null when nothing attended
-     * the run, and from the billing principal. A failure is filed under this person when nobody
-     * attended, so a smart folder's owner is told their own folder stopped working.
+     * user otherwise. A failure is filed under this person when nobody attended the run.
      */
     private final String fileOwner;
 

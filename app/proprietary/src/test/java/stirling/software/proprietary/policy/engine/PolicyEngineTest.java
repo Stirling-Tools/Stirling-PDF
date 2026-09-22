@@ -495,10 +495,8 @@ class PolicyEngineTest {
     @Test
     void anUnattendedFailureIsFiledUnderTheDocumentsOwnerWhileStillBillingThePolicysOwner()
             throws Exception {
-        // The identities are deliberately different, and this pins both at once: usage is charged
-        // to the policy's owner (MDC audit principal on the worker), and the failure is filed under
-        // whoever owns the document. Filed under nobody it reached only a team leader, so the
-        // person whose smart folder had stopped working was the one person not told.
+        // Two identities on purpose, pinned at once: usage is charged to the policy's owner (MDC
+        // audit principal on the worker), the failure filed under whoever owns the document.
         when(toolMetadataService.isMultiInput(ROTATE)).thenReturn(false);
         String[] principalAtDispatch = {"<none>"};
         when(internalApiClient.post(eq(ROTATE), any()))

@@ -511,14 +511,8 @@ public class PolicyEngine {
      * Record why a run failed. Called after the run's own state transition and task-manager update,
      * so a recording problem cannot change the outcome the caller observes.
      *
-     * <p>The actor is the run's own, not the MDC audit principal: that carries the BILLING
-     * identity, which for a stored policy is always its owner. Reading it here filed every failure
-     * under the owner — hiding an attended failure from the member who caused it and holds the
-     * document, and leaving an unattended sweep's failure looking attended.
-     *
-     * <p>An unattended run falls back to the document's owner rather than to nobody, so a smart
-     * folder's failures reach whoever owns the folder. Filed under no actor they reached only a
-     * team leader, and the person watching the folder was told nothing.
+     * <p>The actor is the run's own, not the MDC audit principal, which carries the billing
+     * identity: for a stored policy always its owner. Unattended, it falls back to the document's.
      */
     private void recordFailure(PolicyRun run, String message, Throwable cause) {
         failureRecorder.recordRunFailure(

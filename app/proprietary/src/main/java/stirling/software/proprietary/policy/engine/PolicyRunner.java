@@ -272,10 +272,8 @@ public class PolicyRunner {
                     spec.type(),
                     policy.id(),
                     e.getMessage());
-            // Told, not just logged: an unreadable folder processes nothing at all, and its owner
-            // would otherwise see a folder that has quietly stopped working.
-            // The reason without the path: the message leads with the folder's disk location, and
-            // this detail reaches the whole team's reviewers; the log above keeps the full text.
+            // Recorded, not just logged: its owner would otherwise never hear that the folder
+            // stopped working. The reason without the path: reviewers across the team read this.
             failureRecorder.recordRunFailureAs(
                     FailureKind.SOURCE_UNREADABLE,
                     null,

@@ -3,9 +3,8 @@ package stirling.software.proprietary.failure;
 import stirling.software.proprietary.policy.model.Policy;
 
 /**
- * What produced a notification, so a row can say where the work came from. A reader who never
- * pressed anything is owed that much: "your smart folder could not read this" rather than a failure
- * with no story.
+ * What produced a notification, so a row a reader never asked for can say where the work came from
+ * rather than reading as a failure with no story.
  */
 public enum SourceKind {
 

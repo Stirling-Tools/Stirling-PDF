@@ -11,9 +11,8 @@ import stirling.software.proprietary.failure.Ownership;
 import stirling.software.proprietary.failure.SourceKind;
 
 /**
- * A source's row flattened to what a bell renders. {@code fileId} is an opaque reference the
- * reader's own client minted, and is present only when {@code documentLocation} is {@code BROWSER}.
- * A document the server holds is never addressable, and is named only for the row's own owner.
+ * A source's row flattened to what a bell renders. {@code fileId} is present only when {@code
+ * documentLocation} is {@code BROWSER}; a document the server holds is named only for its owner.
  */
 public record NotificationView(
         String id,

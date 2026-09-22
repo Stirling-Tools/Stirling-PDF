@@ -182,9 +182,7 @@ class NotificationProjectionTest {
         @Test
         void withholdsTheReferenceBehindASourceFedRow() {
             // A folder source builds its identity from the file's canonical path, so sending the
-            // reference would hand every reader a location on the operator's disk. The client has
-            // nothing to resolve it against either, so the row says what kind of failure it is and
-            // nothing about which document.
+            // reference would hand every reader a location on the operator's disk.
             store.record(
                     RecordFailure.forRun(
                             FailureKind.INPUT_PASSWORD_PROTECTED,

@@ -28,10 +28,8 @@ import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
- * Tests for {@link RetryInFolderAction}, which is the one action that makes the server open and
- * process a file on behalf of a caller. Mostly about who may press it: reading an incident and
- * running the document behind it are different powers, and a team leader has the first over rows
- * they do not own.
+ * Tests for {@link RetryInFolderAction}, the one action that makes the server process a file for a
+ * caller. Mostly about who may press it: a team leader reads rows they may not run.
  */
 @ExtendWith(MockitoExtension.class)
 class RetryInFolderActionTest {

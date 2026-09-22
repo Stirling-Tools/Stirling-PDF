@@ -139,8 +139,7 @@ public class FileRunEventService {
      */
     public FileRunEvent dispatch(String eventId, String actionId, Map<String, String> inputs) {
         // Whoever can see it can close it: a leader for the whole team, everyone else for the
-        // failures they caused. Someone who fixes their own problem should not have to ask a leader
-        // to clear the row. What each may then do is narrowed by audience below.
+        // failures they caused. What each may then do is narrowed by audience below.
         FileRunEvent event = requireVisible(eventId);
 
         FailureActionId resolvedId = parseActionId(actionId);
@@ -162,9 +161,8 @@ public class FileRunEventService {
                     FailureActionException.Reason.ACTION_NOT_DISPATCHABLE,
                     "Action " + resolvedId + " is run by the client for this document");
         }
-        // Enforced here rather than left to each handler: reading a colleague's row is not a right
-        // to act on the document behind it, and an owner-scoped action added later would otherwise
-        // be dispatchable by any reviewer who can see the row.
+        // Enforced here rather than per handler: reading a colleague's row is not a right to act
+        // on the document behind it, and a handler that forgets to check is not the last line.
         if (!offeredToCaller(event, resolvedId)) {
             throw new FailureActionException(
                     FailureActionException.Reason.ACTION_NOT_THEIRS,
@@ -241,8 +239,7 @@ public class FileRunEventService {
         // operator owns everything they can see.
         boolean unattended = enforced() && ownership == Ownership.UNOWNED;
         // Answered here, or the client reports "not on this device" about a document the row never
-        // identified in the first place. A source-scoped row names none by design: the folder is
-        // the subject, so nothing about it is missing.
+        // named. A source-scoped row names none by design: the folder is the subject.
         boolean documentless =
                 (event.fileId() == null || event.fileId().isBlank())
                         && event.scope() != FailureScope.SOURCE;
@@ -256,9 +253,8 @@ public class FileRunEventService {
     }
 
     /**
-     * What produced the row, read from its policy rather than stored on it, so a folder converted
-     * to a policy (or the reverse) reads as what it is now. {@code cache} spares a list one lookup
-     * per row: a folder that fails a whole batch is one policy and twenty rows.
+     * What produced the row, read from its policy rather than stored on it, so a converted folder
+     * reads as what it is now. {@code cache} spares a list one lookup per row.
      */
     public SourceKind sourceKindOf(FileRunEvent event, Map<String, SourceKind> cache) {
         if (event.policyId() == null || event.policyId().isBlank()) {
@@ -274,8 +270,7 @@ public class FileRunEventService {
 
     /**
      * Whether this caller is in the audience the kind declares for the action. Audience only: a
-     * disabled offer stays dispatchable, because its reasons are about the row's state rather than
-     * about who is asking.
+     * disabled offer stays dispatchable, since its reasons are about the row, not the caller.
      */
     private boolean offeredToCaller(FileRunEvent event, FailureActionId id) {
         Ownership ownership = ownershipOf(event);
@@ -427,8 +422,8 @@ public class FileRunEventService {
     }
 
     /**
-     * One offer resolved for one caller and document. {@code execution} says where this row's copy
-     * runs, which for a retry follows the document; the client is told, not left to infer.
+     * One offer resolved for one caller and document. {@code execution} says which side runs this
+     * row's copy, which for a retry follows the document.
      */
     public record AvailableAction(
             FailureActionId id,

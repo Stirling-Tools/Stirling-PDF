@@ -14,15 +14,8 @@ import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
- * The server's half of {@link FailureActionId#OPEN_IN_TOOL}: run a smart folder's document again.
- * The client cannot: it never had the file, and the only reference to it is a path on the server.
- *
- * <p>Authorisation is re-derived here rather than inherited from the read that offered the button.
- * Reading an incident and processing the document behind it are different powers: a team leader
- * reads their whole team's rows, and dispatching this on someone else's row would make the server
- * open, run and rewrite a file in a folder belonging to another user. {@link
- * PolicyAccessGuard#canAccess} narrows a processing-folder policy to its owner, so it is the whole
- * check — and it runs against the caller, never against the row's actor.
+ * Server's half of {@link FailureActionId#OPEN_IN_TOOL}: reruns a smart folder's document.
+ * Authorised against the caller, never the row's actor: a leader reads rows they may not process.
  */
 @Slf4j
 @Component

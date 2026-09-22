@@ -31,9 +31,8 @@ public class NotificationService {
     private final StoredFileRepository storedFiles;
 
     /**
-     * Newest first, and only open failures with something to tell the reader: about a document, or
-     * about a source that could not be read at all. One already dealt with is not news, and a row
-     * naming no file has nothing the bell can offer beyond saying so.
+     * Newest first, and only open failures that name a document or a source that could not be read:
+     * one already dealt with is not news, and a row naming neither has nothing to offer.
      *
      * <p>Filtered on the named file rather than the kind's scope, because a RUN-scoped kind still
      * names one when the editor reported it: a failed tool run belongs here. Applied after the
@@ -51,13 +50,9 @@ public class NotificationService {
     }
 
     /**
-     * What to call the document, for the one reader entitled to know: the person the row belongs
-     * to, looking at a file they own.
-     *
-     * <p>Derived, never stored, and never sent to anyone else — a colleague's filename is not a
-     * team leader's to read. Only a storage-backed folder can answer at all: its identity is the
-     * stored row's id, so the name comes from the row. A disk folder's identity is a path, and
-     * returning the last segment of it would be the same disclosure by another route.
+     * What to call the document, derived per read and only for the row's own owner. Only a
+     * storage-backed folder can answer: a disk folder's identity is a path, which would disclose
+     * it.
      */
     private String documentNameFor(FileRunEvent event, Ownership ownership) {
         if (ownership != Ownership.MINE || event.actor() == null) {
@@ -99,11 +94,9 @@ public class NotificationService {
     }
 
     /**
-     * Run one of the row's own server actions, addressed the way the bell holds it. The prefix is
-     * the whole reason this exists rather than the bell calling the failure endpoint directly.
-     *
-     * <p>Nothing is decided here: the producing service re-checks that the caller may see the row
-     * and that its kind declares the action, and each action authorises its own effects.
+     * Run one of the row's own server actions, addressed by prefixed id. Nothing is authorised
+     * here: the producing service re-checks the row and the action, and each action guards its own
+     * effects.
      */
     public NotificationView act(String notificationId, String actionId) {
         NotificationSource.QualifiedId qualified = qualify(notificationId);

@@ -249,9 +249,8 @@ class PolicyFailureOwnershipTest {
 
         @Test
         void theRowBelongsToWhoeverOwnsTheSourceRatherThanToNobody() throws Exception {
-            // Nobody attended it, but the documents are still somebody's: the source's owner is
-            // the person watching that folder. Filed under no actor it reached a team leader and
-            // nobody else, so the one person who could act on it was the one not told.
+            // Nobody attended it, but the documents are still somebody's. Filed under no actor the
+            // row reached a team leader and nobody else, never the person watching the folder.
             runAndFail(null, "src-watched-folder", "file-hash-1");
 
             assertThat(service.ownershipOf(asMember("carol"))).isEqualTo(Ownership.MINE);

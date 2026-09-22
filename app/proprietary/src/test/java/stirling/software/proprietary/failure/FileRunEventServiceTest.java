@@ -659,8 +659,7 @@ class FileRunEventServiceTest {
         @Test
         void aRowAboutTheSourceItselfKeepsItsOwnerActionUsableThoughItNamesNoDocument() {
             // The folder is the subject, and the one thing offered its owner opens the processor,
-            // which needs no document. Greying it out for "no document linked" answers a question
-            // nobody asked about this row.
+            // which needs no document. Greying it out would answer a question nobody asked.
             FileRunEvent folder =
                     store.record(
                             RecordFailure.forRun(

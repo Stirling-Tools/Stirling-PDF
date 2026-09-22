@@ -173,9 +173,8 @@ describe("useNotifications", () => {
   });
 
   it("shows a member the rows a smart folder produced, which reach nobody else", async () => {
-    // Their own folder, their own documents: hidden, the person who set it up is told nothing at
-    // all when it stops working. There is nothing to look up either, so storage is never asked -
-    // an answer for a server-side reference would be a collision, not the document.
+    // Their own folder, their own documents: hidden, the person who set it up hears nothing when it
+    // stops working. Storage is never asked either: a hit on a server-side reference is a collision.
     hasLocalFile.mockResolvedValue(true);
     fetchNotifications.mockResolvedValue(
       feed(

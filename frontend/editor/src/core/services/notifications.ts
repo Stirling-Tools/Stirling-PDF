@@ -54,7 +54,6 @@ export interface AppNotification {
   /** What to call a document this browser does not hold. The owner's own files only. */
   documentName: string | null;
   documentLocation: DocumentLocation;
-  /** What produced the row, so it can say where the work came from. */
   sourceKind: SourceKind;
   /** Which folder, bucket or webhook fed the run, and null for an attended one. */
   sourceId: string | null;
@@ -115,10 +114,8 @@ export async function reportNotificationResolved(
 }
 
 /**
- * Run one of a row's server-side actions. Unlike a resolve, the reader pressed a button and is
- * owed an answer, so a refusal is reported rather than swallowed.
- *
- * @returns null when it worked, or the server's reason for refusing.
+ * Run one of a row's server-side actions. The reader pressed a button and is owed an answer, so a
+ * refusal is reported rather than swallowed: null when it worked, the server's reason when not.
  */
 export async function dispatchNotificationAction(
   notificationId: string,

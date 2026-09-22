@@ -18,9 +18,8 @@ public enum FailureActionId {
     DISMISS(Execution.SERVER, "Dismiss"),
 
     /**
-     * Runs the failed step again. A browser holding the document opens the tool with it loaded, so
-     * the user sees the settings first; a smart folder's document is re-run by the server, which is
-     * the only side that can reach it.
+     * Runs the failed step again. A browser holding the document opens the tool with it loaded; a
+     * smart folder's document is re-run by the server, the only side that can reach it.
      */
     OPEN_IN_TOOL(Execution.EITHER, "Retry"),
 
