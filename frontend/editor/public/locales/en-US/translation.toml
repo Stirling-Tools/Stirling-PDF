@@ -1494,7 +1494,6 @@ auditLogging = "<0>Audit Logging</0> (ENTERPRISE) - Security"
 customMetadata = "<0>Custom Metadata</0> (PRO) - General"
 databaseConfiguration = "<0>Database Configuration</0> (ENTERPRISE) - Database"
 message = "Configure authentication and licensed features in their respective sections:"
-ssoAutoLogin = "<0>SSO Auto Login</0> - Security"
 title = "Feature Settings"
 
 [admin.settings.privacy]

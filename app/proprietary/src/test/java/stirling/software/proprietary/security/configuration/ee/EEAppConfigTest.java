@@ -13,7 +13,7 @@ class EEAppConfigTest {
     @Test
     void ssoAutoLogin_disabled_returnsFalse_andDoesNotConsultLicense() {
         ApplicationProperties props = new ApplicationProperties();
-        props.getPremium().getProFeatures().setSsoAutoLogin(false);
+        props.getSecurity().setSsoAutoLogin(false);
         LicenseKeyChecker checker = mock(LicenseKeyChecker.class);
 
         EEAppConfig cfg = new EEAppConfig(props, checker);
@@ -25,7 +25,7 @@ class EEAppConfigTest {
     @Test
     void ssoAutoLogin_enabled_returnsTrue_withoutConsultingLicense() {
         ApplicationProperties props = new ApplicationProperties();
-        props.getPremium().getProFeatures().setSsoAutoLogin(true);
+        props.getSecurity().setSsoAutoLogin(true);
         LicenseKeyChecker checker = mock(LicenseKeyChecker.class);
 
         EEAppConfig cfg = new EEAppConfig(props, checker);

@@ -121,15 +121,6 @@ export default function AdminPremiumSection() {
             <List.Item>
               <Text size="sm" component="span">
                 <Trans
-                  i18nKey="admin.settings.premium.movedFeatures.ssoAutoLogin"
-                  defaults="<0>SSO Auto Login</0> - Security"
-                  components={[<strong />]}
-                />
-              </Text>
-            </List.Item>
-            <List.Item>
-              <Text size="sm" component="span">
-                <Trans
                   i18nKey="admin.settings.premium.movedFeatures.customMetadata"
                   defaults="<0>Custom Metadata</0> (PRO) - General"
                   components={[<strong />]}
