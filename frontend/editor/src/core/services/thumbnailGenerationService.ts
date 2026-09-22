@@ -8,6 +8,7 @@ import {
   closeRawDocument,
 } from "@app/services/pdfiumService";
 import { renderPdfiumPageDataUrl } from "@app/utils/pdfiumPageRender";
+import { yieldToMain } from "@app/utils/taskYield";
 
 export interface ThumbnailResult {
   pageNumber: number;
@@ -215,7 +216,7 @@ export class ThumbnailGenerationService {
       }
 
       // Yield control to prevent UI blocking
-      await new Promise((resolve) => setTimeout(resolve, 1));
+      await yieldToMain();
     }
 
     // Release reference to PDF document (don't destroy - keep in cache)
@@ -233,6 +234,8 @@ export class ThumbnailGenerationService {
     const cached = this.thumbnailCache.get(pageId);
     if (cached) {
       cached.lastUsed = Date.now();
+      this.thumbnailCache.delete(pageId);
+      this.thumbnailCache.set(pageId, cached);
       return cached.thumbnail;
     }
     return null;
@@ -249,6 +252,14 @@ export class ThumbnailGenerationService {
       this.evictLeastRecentlyUsed();
     }
 
+    if (this.thumbnailCache.has(pageId)) {
+      const existing = this.thumbnailCache.get(pageId);
+      if (existing) {
+        this.currentCacheSize -= existing.sizeBytes;
+      }
+      this.thumbnailCache.delete(pageId);
+    }
+
     this.thumbnailCache.set(pageId, {
       thumbnail,
       lastUsed: Date.now(),
@@ -259,19 +270,13 @@ export class ThumbnailGenerationService {
   }
 
   private evictLeastRecentlyUsed(): void {
-    let oldestEntry: [string, CachedThumbnail] | null = null;
-    let oldestTime = Date.now();
-
-    for (const [key, value] of this.thumbnailCache.entries()) {
-      if (value.lastUsed < oldestTime) {
-        oldestTime = value.lastUsed;
-        oldestEntry = [key, value];
+    const oldestKey = this.thumbnailCache.keys().next().value;
+    if (oldestKey !== undefined) {
+      const entry = this.thumbnailCache.get(oldestKey);
+      this.thumbnailCache.delete(oldestKey);
+      if (entry) {
+        this.currentCacheSize -= entry.sizeBytes;
       }
-    }
-
-    if (oldestEntry) {
-      this.thumbnailCache.delete(oldestEntry[0]);
-      this.currentCacheSize -= oldestEntry[1].sizeBytes;
     }
   }
 
