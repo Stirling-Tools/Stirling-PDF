@@ -13,12 +13,44 @@ class PdfErrorUtilsTest {
     @ParameterizedTest
     @ValueSource(
             strings = {
+                "database connection damaged",
+                "Corrupted database",
+                "Failed to decrypt backup",
+                "authentication service: password is incorrect"
+            })
+    void unrelatedFailuresHaveNoPdfContext(String message) {
+        IOException failure = new IOException("job failed", new IOException(message));
+        assertFalse(PdfErrorUtils.hasPdfContext(failure));
+        assertFalse(PdfErrorUtils.isCorruptedPdfError(failure));
+    }
+
+    @Test
+    void pdfContextRecognizesTypedCauseWithoutMessage() {
+        assertTrue(
+                PdfErrorUtils.hasPdfContext(
+                        new IOException(
+                                "job failed",
+                                org.mockito.Mockito.mock(
+                                        org.apache.pdfbox.pdmodel.encryption
+                                                .InvalidPasswordException.class))));
+    }
+
+    @Test
+    void pdfContextHandlesNullAndCycles() {
+        assertFalse(PdfErrorUtils.hasPdfContext(null));
+        IOException first = new IOException("first");
+        IOException second = new IOException("second", first);
+        first.initCause(second);
+        assertFalse(PdfErrorUtils.hasPdfContext(first));
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
                 "Missing root object specification",
                 "Header doesn't contain versioninfo",
                 "Expected trailer",
                 "Invalid PDF",
-                "Corrupted",
-                "damaged",
                 "Unknown dir object",
                 "Can't dereference COSObject",
                 "parseCOSString string should start with",
@@ -49,8 +81,7 @@ class PdfErrorUtilsTest {
     @ValueSource(
             strings = {
                 "Missing root object specification in the file",
-                "Header doesn't contain versioninfo xyz",
-                "Some prefix Corrupted suffix"
+                "Header doesn't contain versioninfo xyz"
             })
     void isCorruptedPdfError_ioException_messagesContainingIndicators_returnsTrue(String message) {
         IOException e = new IOException(message);

@@ -60,6 +60,50 @@ class OverlayImageControllerTest {
     private MockMultipartFile pdfFile;
     private MockMultipartFile imageFile;
 
+    @Test
+    void malformedSvgIsAValidationError() throws Exception {
+        SvgSanitizer sanitizer =
+                new SvgSanitizer(
+                        mock(stirling.software.common.service.SsrfProtectionService.class),
+                        new stirling.software.common.model.ApplicationProperties());
+        OverlayImageController realSanitizerController =
+                new OverlayImageController(pdfDocumentFactory, tempFileManager, sanitizer);
+        OverlayImageRequest request = new OverlayImageRequest();
+        request.setFileInput(pdfFile);
+        request.setImageFile(
+                new MockMultipartFile(
+                        "imageFile",
+                        "bad.svg",
+                        "image/svg+xml",
+                        "<svg xmlns=\"http://www.w3.org/2000/svg\"><rect></svg>".getBytes()));
+
+        IllegalArgumentException failure =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> realSanitizerController.overlayImage(request));
+        assertEquals("The image contains invalid SVG.", failure.getMessage());
+        verifyNoInteractions(pdfDocumentFactory);
+    }
+
+    @Test
+    void invalidSvgAttributesAreAValidationError() throws Exception {
+        byte[] svg =
+                "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"100\"><rect width=\"invalid\" height=\"10\"/></svg>"
+                        .getBytes();
+        OverlayImageRequest request = new OverlayImageRequest();
+        request.setFileInput(pdfFile);
+        request.setImageFile(new MockMultipartFile("imageFile", "bad.svg", "image/svg+xml", svg));
+        when(svgSanitizer.sanitize(svg)).thenReturn(svg);
+        PDDocument document = new PDDocument();
+        document.addPage(new PDPage());
+        when(pdfDocumentFactory.load(any(byte[].class))).thenReturn(document);
+
+        IllegalArgumentException failure =
+                assertThrows(
+                        IllegalArgumentException.class, () -> controller.overlayImage(request));
+        assertEquals("The image contains invalid SVG.", failure.getMessage());
+    }
+
     @BeforeEach
     void setUp() throws IOException {
         lenient()
