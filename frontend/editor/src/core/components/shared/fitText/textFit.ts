@@ -46,8 +46,10 @@ export function adjustFontSizeToFit(
   const stepPx = Math.max(0.5, baseFontPx * stepScale);
 
   const fit = () => {
-    // Reset to largest before measuring
-    element.style.fontSize = `${baseFontPx}px`;
+    const baseFontStr = `${baseFontPx}px`;
+    if (element.style.fontSize !== baseFontStr) {
+      element.style.fontSize = baseFontStr;
+    }
 
     // Calculate target height threshold for line limit
     let maxHeight = Number.POSITIVE_INFINITY;
@@ -57,32 +59,66 @@ export function adjustFontSizeToFit(
       maxHeight = lineHeight * maxLines + 0.1; // small epsilon
     }
 
-    let current = baseFontPx;
-    // Guard against excessive loops
-    let iterations = 0;
-    while (iterations < 200) {
+    const checkFits = () => {
       const fitsWidth = element.scrollWidth <= element.clientWidth + 1; // tolerance
       const fitsHeight = element.scrollHeight <= maxHeight + 1;
-      const fits = fitsWidth && fitsHeight;
-      if (fits || current <= minFontPx) break;
-      current = Math.max(minFontPx, current - stepPx);
-      element.style.fontSize = `${current}px`;
-      iterations += 1;
+      return fitsWidth && fitsHeight;
+    };
+
+    // Fast path: text already fits at base font size
+    if (checkFits()) return;
+
+    // Fast path: if even minFontPx does not fit, clamp to minFontPx
+    const minFontStr = `${minFontPx}px`;
+    element.style.fontSize = minFontStr;
+    if (!checkFits()) return;
+
+    // Binary search between minFontPx and baseFontPx for optimal fit
+    let low = minFontPx;
+    let high = baseFontPx;
+    let best = minFontPx;
+
+    while (high - low > stepPx) {
+      const mid = Math.round(((low + high) / 2) * 10) / 10;
+      element.style.fontSize = `${mid}px`;
+      if (checkFits()) {
+        best = mid;
+        low = mid;
+      } else {
+        high = mid;
+      }
+    }
+
+    const bestStr = `${best}px`;
+    if (element.style.fontSize !== bestStr) {
+      element.style.fontSize = bestStr;
     }
   };
 
-  // Defer to next frame to ensure layout is ready
-  const raf = requestAnimationFrame(fit);
+  let rafId: number | null = null;
+  const scheduleFit = () => {
+    if (rafId === null) {
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        fit();
+      });
+    }
+  };
 
-  const ro = new ResizeObserver(() => fit());
+  scheduleFit();
+
+  const ro = new ResizeObserver(scheduleFit);
   ro.observe(element);
   if (element.parentElement) ro.observe(element.parentElement);
 
-  const mo = new MutationObserver(() => fit());
+  const mo = new MutationObserver(scheduleFit);
   mo.observe(element, { characterData: true, childList: true, subtree: true });
 
   return () => {
-    cancelAnimationFrame(raf);
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
     try {
       ro.disconnect();
     } catch {
