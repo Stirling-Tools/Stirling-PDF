@@ -44,6 +44,22 @@ it("does not advertise self-hosted identity providers on cloud billing", () => {
   expect(screen.queryByText("SSO (OAuth2/OIDC)")).not.toBeInTheDocument();
 });
 
+it.each([true, false])(
+  "keeps legacy billing visible and shows OAuth only for self-hosted=%s",
+  (selfHosted) => {
+    render(
+      <BillingScreen
+        wallet={freeWallet}
+        legacyPlan={<div>Historical subscription</div>}
+        selfHosted={selfHosted}
+      />,
+    );
+    expect(screen.getByText("Historical subscription")).toBeInTheDocument();
+    expect(screen.queryByText("The full PDF Editor.")).not.toBeInTheDocument();
+    expect(screen.queryByText("SSO (OAuth2/OIDC)") !== null).toBe(selfHosted);
+  },
+);
+
 it.each([4, 0])(
   "keeps standalone users against the enforced allowance of %i",
   (limit) => {

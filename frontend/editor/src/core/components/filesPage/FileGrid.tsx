@@ -60,8 +60,10 @@ export interface FilesPageEntry {
   file?: StirlingFileStub;
   /** A file read straight off a mounted directory (kind "diskFile"). */
   disk?: DiskFileEntry;
-  /** The disk file's processing state; absent on a folder with no pipeline. */
+  /** The file's processing state; absent on a folder with no pipeline. */
   diskState?: DiskFileState;
+  /** Whether opening this file must wait for its processing-folder run. */
+  processingLocked?: boolean;
   hasOriginal?: boolean;
   /** Parent breadcrumb path for search results outside the current folder. */
   parentPath?: string;
@@ -540,6 +542,7 @@ function GridView({
               key={`disk-${entry.disk.path}`}
               entry={entry.disk}
               state={entry.diskState}
+              locked={entry.processingLocked ?? false}
               hasOriginal={entry.hasOriginal}
               actions={actions}
             />
@@ -552,6 +555,7 @@ function GridView({
               file={entry.file}
               parentPath={entry.parentPath}
               processingState={entry.diskState}
+              locked={entry.processingLocked ?? false}
               isSelected={selectedFileIds.has(entry.file.id)}
               isInWorkspace={
                 activeWorkspaceFileIds?.has(entry.file.id) ?? false
@@ -811,6 +815,20 @@ function ProcessingFolderStats({
   );
 }
 
+/** Why the file cannot be opened: being replaced now, or waiting its turn to be. */
+function useLockedHint(state?: DiskFileState): string {
+  const { t } = useTranslation();
+  return state === "processing"
+    ? t(
+        "filesPage.diskState.processingHint",
+        "Processing - available when it finishes",
+      )
+    : t(
+        "filesPage.diskState.waitingHint",
+        "Queued for processing - available when its folder has run it",
+      );
+}
+
 /** A file's pipeline state chip; a failed state adds an inline retry. */
 function FileStateBadge({
   state,
@@ -881,6 +899,7 @@ const NO_BADGES: FileItemPolicyRef[] = [];
 interface FileActionsMenuProps {
   file: StirlingFileStub;
   triggerRef: React.RefObject<HTMLButtonElement | null>;
+  locked?: boolean;
   /** Download / rename / duplicate menu items offered. */
   downloadAvailable: boolean;
   renameAvailable: boolean;
@@ -897,6 +916,7 @@ interface FileActionsMenuProps {
 function FileActionsMenu({
   file,
   triggerRef,
+  locked = false,
   downloadAvailable,
   renameAvailable,
   duplicateAvailable,
@@ -928,15 +948,16 @@ function FileActionsMenu({
       </Menu.Target>
       <Menu.Dropdown>
         <Menu.Item
+          disabled={locked}
           leftSection={<Icon name="external-link" size={20} />}
           onClick={(e) => {
             e.stopPropagation();
-            actions.openFile(file);
+            if (!locked) actions.openFile(file);
           }}
         >
           {t("filesPage.addToWorkspace", "Add to workspace")}
         </Menu.Item>
-        <OpenInNewWindowMenuItem file={file} />
+        <OpenInNewWindowMenuItem file={file} disabled={locked} />
         <Menu.Item
           leftSection={<Icon name="folder-input" size={20} />}
           onClick={(e) => {
@@ -1065,6 +1086,8 @@ interface FileCardProps {
   saveToServerDisabledReason?: string | null;
   badges: FileItemPolicyRef[];
   processingState?: DiskFileState;
+  /** The folder still owes this file a run; see FilesPageEntry.processingLocked. */
+  locked?: boolean;
   actions: FileGridActions;
 }
 
@@ -1082,9 +1105,11 @@ const FileCard = React.memo(function FileCard({
   saveToServerDisabledReason,
   badges,
   processingState,
+  locked = false,
   actions,
 }: FileCardProps) {
   const { t } = useTranslation();
+  const lockedHint = useLockedHint(processingState);
   const cardRef = useRef<HTMLDivElement>(null);
   const fileSize = useMemo(() => formatFileSize(file.size), [file.size]);
   const fileDate = useMemo(
@@ -1097,10 +1122,9 @@ const FileCard = React.memo(function FileCard({
       actions.selectFile(file.id, e.shiftKey, e.metaKey || e.ctrlKey),
     [actions, file.id],
   );
-  const onDoubleClick = useCallback(
-    () => actions.openFile(file),
-    [actions, file],
-  );
+  const onDoubleClick = useCallback(() => {
+    if (!locked) actions.openFile(file);
+  }, [locked, actions, file]);
 
   const handleDragStart = useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
@@ -1145,7 +1169,8 @@ const FileCard = React.memo(function FileCard({
       onKeyDown={(e) => {
         if (e.key === "Enter") onDoubleClick();
       }}
-      className={`files-page-card${isSelected ? " is-selected" : ""}${isInWorkspace ? " is-in-workspace" : ""}`}
+      className={`files-page-card${isSelected ? " is-selected" : ""}${isInWorkspace ? " is-in-workspace" : ""}${locked ? " is-locked" : ""}`}
+      title={locked ? lockedHint : undefined}
     >
       {isInWorkspace && (
         <span
@@ -1224,6 +1249,7 @@ const FileCard = React.memo(function FileCard({
         <FileActionsMenu
           file={file}
           triggerRef={kebabRef}
+          locked={locked}
           downloadAvailable={downloadAvailable}
           renameAvailable={renameAvailable}
           duplicateAvailable={duplicateAvailable}
@@ -1401,6 +1427,7 @@ function ListView({
               key={`disk-${entry.disk.path}`}
               entry={entry.disk}
               state={entry.diskState}
+              locked={entry.processingLocked ?? false}
               hasOriginal={entry.hasOriginal}
               actions={actions}
             />
@@ -1413,6 +1440,7 @@ function ListView({
               file={entry.file}
               parentPath={entry.parentPath}
               processingState={entry.diskState}
+              locked={entry.processingLocked ?? false}
               isSelected={selectedFileIds.has(entry.file.id)}
               isInWorkspace={
                 activeWorkspaceFileIds?.has(entry.file.id) ?? false
@@ -1660,6 +1688,8 @@ interface FileRowProps {
   saveToServerDisabledReason?: string | null;
   badges: FileItemPolicyRef[];
   processingState?: DiskFileState;
+  /** The folder still owes this file a run; see FilesPageEntry.processingLocked. */
+  locked?: boolean;
   actions: FileGridActions;
 }
 
@@ -1677,9 +1707,11 @@ const FileRow = React.memo(function FileRow({
   saveToServerDisabledReason,
   badges,
   processingState,
+  locked = false,
   actions,
 }: FileRowProps) {
   const { t } = useTranslation();
+  const lockedHint = useLockedHint(processingState);
   const kebabRef = useRef<HTMLButtonElement>(null);
   const fileSize = useMemo(() => formatFileSize(file.size), [file.size]);
   const fileDate = useMemo(
@@ -1694,7 +1726,9 @@ const FileRow = React.memo(function FileRow({
   );
   const onClick = (e: React.MouseEvent) =>
     actions.selectFile(file.id, e.shiftKey, e.metaKey || e.ctrlKey);
-  const onOpen = () => actions.openFile(file);
+  const onOpen = () => {
+    if (!locked) actions.openFile(file);
+  };
   return (
     <div
       role="row"
@@ -1718,7 +1752,8 @@ const FileRow = React.memo(function FileRow({
       onKeyDown={(e) => {
         if (e.key === "Enter") onOpen();
       }}
-      className={`files-page-list-row${isSelected ? " is-selected" : ""}${isInWorkspace ? " is-in-workspace" : ""}`}
+      className={`files-page-list-row${isSelected ? " is-selected" : ""}${isInWorkspace ? " is-in-workspace" : ""}${locked ? " is-locked" : ""}`}
+      title={locked ? lockedHint : undefined}
     >
       {/* Each direct child is a gridcell: a role="row" may only own cells, so the
           checkbox and the actions menu have to sit inside one.
@@ -1821,6 +1856,7 @@ const FileRow = React.memo(function FileRow({
         <FileActionsMenu
           file={file}
           triggerRef={kebabRef}
+          locked={locked}
           downloadAvailable={downloadAvailable}
           renameAvailable={renameAvailable}
           duplicateAvailable={duplicateAvailable}
@@ -1844,21 +1880,22 @@ export { ROOT_FOLDER_ID };
 const DiskFileCard = React.memo(function DiskFileCard({
   entry,
   state,
+  locked = false,
   hasOriginal,
   actions,
 }: {
   entry: DiskFileEntry;
   state?: DiskFileState;
+  /** The folder still owes this file a run; see FilesPageEntry.processingLocked. */
+  locked?: boolean;
   hasOriginal?: boolean;
   actions: FileGridActions;
 }) {
-  // A file mid-processing is locked: its bytes are about to be replaced, so opening
-  // it would show a result that is not there yet.
-  const locked = state === "processing";
   const onOpen = () => {
     if (!locked) actions.openDiskFile(entry);
   };
   const { t } = useTranslation();
+  const lockedHint = useLockedHint(state);
   const thumbnail = useDiskThumbnail(entry);
   const extension = entry.name.includes(".")
     ? entry.name.split(".").pop()!.toUpperCase()
@@ -1873,14 +1910,7 @@ const DiskFileCard = React.memo(function DiskFileCard({
       onKeyDown={(e) => {
         if (e.key === "Enter") onOpen();
       }}
-      title={
-        locked
-          ? t(
-              "filesPage.diskState.processingHint",
-              "Processing - available when it finishes",
-            )
-          : entry.path
-      }
+      title={locked ? lockedHint : entry.path}
     >
       <div className="files-page-card-thumb">
         {thumbnail ? (
@@ -1933,6 +1963,7 @@ const DiskFileCard = React.memo(function DiskFileCard({
           </Menu.Target>
           <Menu.Dropdown>
             <Menu.Item
+              disabled={locked}
               leftSection={<Icon name="external-link" size={20} />}
               onClick={(e) => {
                 e.stopPropagation();
@@ -1963,21 +1994,22 @@ const DiskFileCard = React.memo(function DiskFileCard({
 const DiskFileRow = React.memo(function DiskFileRow({
   entry,
   state,
+  locked = false,
   hasOriginal,
   actions,
 }: {
   entry: DiskFileEntry;
   state?: DiskFileState;
+  /** The folder still owes this file a run; see FilesPageEntry.processingLocked. */
+  locked?: boolean;
   hasOriginal?: boolean;
   actions: FileGridActions;
 }) {
-  // A file mid-processing is locked: its bytes are about to be replaced, so opening
-  // it would show a result that is not there yet.
-  const locked = state === "processing";
   const onOpen = () => {
     if (!locked) actions.openDiskFile(entry);
   };
   const { t } = useTranslation();
+  const lockedHint = useLockedHint(state);
   const thumbnail = useDiskThumbnail(entry);
   const ext = entry.name.includes(".")
     ? entry.name.split(".").pop()!.toUpperCase()
@@ -1991,7 +2023,7 @@ const DiskFileRow = React.memo(function DiskFileRow({
       onKeyDown={(e) => {
         if (e.key === "Enter") onOpen();
       }}
-      title={entry.path}
+      title={locked ? lockedHint : entry.path}
     >
       <span aria-hidden="true" />
       <span
@@ -2056,6 +2088,7 @@ const DiskFileRow = React.memo(function DiskFileRow({
           </Menu.Target>
           <Menu.Dropdown>
             <Menu.Item
+              disabled={locked}
               leftSection={<Icon name="external-link" size={20} />}
               onClick={onOpen}
             >

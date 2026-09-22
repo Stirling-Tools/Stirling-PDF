@@ -23,6 +23,8 @@ import {
 import { folderKind, type FolderRecord } from "@app/types/folder";
 import { directoryKey } from "@app/services/localFolderStorage";
 import { extractErrorMessage } from "@app/utils/toolErrorHandler";
+import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
+import { useProcessingFolders as useInertProcessingFolders } from "@core/hooks/useProcessingFolders";
 // The core stub declares the contract this shadows; import it from @core
 // explicitly, since @app/hooks/useProcessingFolders resolves back to this file.
 import type {
@@ -69,6 +71,8 @@ const EMPTY: ProcessingFolder[] = [];
  */
 export function useProcessingFolders(): ProcessingFoldersApi {
   const queryClient = useQueryClient();
+  const enabled = usePoliciesEnabled();
+  const inert = useInertProcessingFolders();
   const { addFiles } = useFileHandler();
   const queryKey = qk.processingFolders();
 
@@ -79,6 +83,9 @@ export function useProcessingFolders(): ProcessingFoldersApi {
   } = useQuery({
     queryKey,
     queryFn: fetchProcessingFolders,
+    // Only the proprietary build reads folders, and only once policy enforcement is on:
+    // a signed-out or policies-off session has none to fetch.
+    enabled,
     // Storage or login off, or unauthenticated: the files page works without these,
     // so a failure reports itself rather than retrying into the same wall.
     retry: false,
@@ -182,9 +189,13 @@ export function useProcessingFolders(): ProcessingFoldersApi {
         });
         // Resume sweeps behind the response; pull a mount's on-disk results into the workbench.
         if (folderKind(folder) === "local") {
-          void deliverSweepResults(paused.id, null, addFiles, {
-            excludeRunIds: baseline,
-          });
+          void deliverSweepResults(
+            paused.id,
+            null,
+            addFiles,
+            { folderId: folder.id },
+            { excludeRunIds: baseline },
+          );
         }
         await reload();
         return;
@@ -200,7 +211,9 @@ export function useProcessingFolders(): ProcessingFoldersApi {
           });
           // The sweep runs behind the create response — no run count to wait on; pull
           // the on-disk results into the workbench as they settle.
-          void deliverSweepResults(saved.id, null, addFiles);
+          void deliverSweepResults(saved.id, null, addFiles, {
+            folderId: folder.id,
+          });
           break;
         }
         case "virtual":
@@ -301,34 +314,43 @@ export function useProcessingFolders(): ProcessingFoldersApi {
       // A mount's results land on disk where nothing shows them; a storage folder's
       // replace in place, already visible.
       if (folderKind(folder) === "local" && outcome.runIds.length > 0) {
-        void deliverSweepResults(existing.id, outcome.runIds.length, addFiles, {
-          includeRunIds: new Set(outcome.runIds),
-        });
+        void deliverSweepResults(
+          existing.id,
+          outcome.runIds.length,
+          addFiles,
+          { folderId: folder.id },
+          { includeRunIds: new Set(outcome.runIds) },
+        );
       }
     },
     [recordFor, addFiles],
   );
 
   return useMemo(
-    () => ({
-      loading,
-      loadError: error,
-      stateFor,
-      recordFor: recordSummaryFor,
-      enabledFolderIds,
-      anyEnabled,
-      listActiveRuns,
-      listFiles,
-      retryFile,
-      revertFile,
-      revertAll,
-      enable,
-      disable,
-      remove,
-      sweep,
-      refresh: reload,
-    }),
+    () =>
+      enabled
+        ? {
+            loading,
+            loadError: error,
+            stateFor,
+            recordFor: recordSummaryFor,
+            enabledFolderIds,
+            anyEnabled,
+            listActiveRuns,
+            listFiles,
+            retryFile,
+            revertFile,
+            revertAll,
+            enable,
+            disable,
+            remove,
+            sweep,
+            refresh: reload,
+          }
+        : inert,
     [
+      enabled,
+      inert,
       loading,
       error,
       stateFor,

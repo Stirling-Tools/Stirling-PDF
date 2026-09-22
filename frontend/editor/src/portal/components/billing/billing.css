@@ -1,3 +1,5 @@
+@import "../../../proprietary/billing/MeterBar.css";
+
 /* Portal billing page — paired with views/Usage.tsx (.portal-billing root). */
 
 .portal-billing__stack {
@@ -208,45 +210,6 @@
    lands these can be deduped via a shared stylesheet. */
 /* Flat by default — the meter sits directly on its card, no inner panel box
    (shared by the free trial meter and the subscribed spend meter). */
-.paygf-meter {
-  margin-top: 0.6rem;
-}
-.paygf-meter__top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-.paygf-meter__figure {
-  display: flex;
-  align-items: baseline;
-  gap: 7px;
-}
-.paygf-meter__num {
-  font-size: 1.7rem;
-  font-weight: 750;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  color: var(--c-text);
-  font-variant-numeric: tabular-nums;
-}
-.paygf-meter__cap {
-  font-size: 0.85rem;
-  color: var(--c-text-subtle);
-  font-variant-numeric: tabular-nums;
-}
-.paygf-meter .payg-bar {
-  margin-top: 11px;
-}
-.paygf-meter__meta {
-  margin-top: 10px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 10px;
-  font-size: 0.78rem;
-  color: var(--c-text-muted);
-}
 
 /* Status chip (Healthy / Approaching / Cap reached). Solid hex colours
    intentionally — the chip palette is semantic, not theme-bound. */
@@ -291,28 +254,6 @@
 }
 
 /* Segmented usage bar */
-.payg-bar {
-  margin-top: 18px;
-  height: 10px;
-  border-radius: 999px;
-  background: var(--color-bg-subtle, var(--c-surface-sunken));
-  overflow: hidden;
-  position: relative;
-}
-.payg-bar__fill {
-  height: 100%;
-  border-radius: 999px;
-  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.payg-bar__fill[data-state="FULL"] {
-  background: var(--c-primary);
-}
-.payg-bar__fill[data-state="WARNED"] {
-  background: var(--color-amber);
-}
-.payg-bar__fill[data-state="DEGRADED"] {
-  background: var(--color-red);
-}
 
 /* ── Plan card (free state) ─────────────────────────────────────────────── */
 .portal-billing__plan-card {

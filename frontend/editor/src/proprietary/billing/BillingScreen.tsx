@@ -10,6 +10,7 @@ import { estimatedBillWithPending } from "@app/billing/pendingUsage";
 import { fleetUsersInUse } from "@app/billing/fleetSeats";
 import type { ServerPlan } from "@app/billing/serverPlan";
 import type { Wallet } from "@app/billing/types";
+import type { LegacyTeamAllowance } from "@app/types/legacyBilling";
 import "@app/billing/billing-screen.css";
 
 export interface BillingScreenProps {
@@ -21,6 +22,10 @@ export interface BillingScreenProps {
   deviceId?: string | null;
   /** Host-authorized account actions beside the page title. */
   headerAction?: ReactNode;
+  /** Account-owned historical subscriptions, independent of current wallet products. */
+  legacyPlan?: ReactNode;
+  /** Raw legacy capacity retains historical unlimited limits that wallet products omit. */
+  legacyTeamAllowance?: LegacyTeamAllowance;
   /**
    * Null while loading, or when the host could not read one. A non-null wallet must be complete:
    * the sections dereference its fields without guards, so a hand-built partial object throws
@@ -97,6 +102,8 @@ export function BillingScreen({
   userLimit,
   deviceId,
   headerAction,
+  legacyPlan,
+  legacyTeamAllowance,
   wallet,
   loading = false,
   unavailable,
@@ -142,7 +149,7 @@ export function BillingScreen({
         "ub-procurement",
         t("portal.billing.chip.procurement", "Procurement"),
       ]);
-    if (wallet || serverPlan || unavailable)
+    if (wallet || serverPlan || legacyPlan || unavailable)
       out.push(["ub-plan", t("portal.billing.chip.plan", "Plan")]);
     if (wallet || unavailable)
       out.push(["ub-usage", t("portal.billing.chip.usage", "Usage")]);
@@ -159,6 +166,7 @@ export function BillingScreen({
   }, [
     wallet,
     serverPlan,
+    legacyPlan,
     unavailable,
     procurementSection,
     licenseSection,
@@ -210,7 +218,10 @@ export function BillingScreen({
         ],
       };
     }
-    if (teamHeld) {
+    if (
+      teamHeld &&
+      (!legacyTeamAllowance || legacyTeamAllowance.teamId !== wallet.teamId)
+    ) {
       return {
         name: t("portal.billing.identity.team.name", "Team"),
         sub:
@@ -231,6 +242,7 @@ export function BillingScreen({
         ],
       };
     }
+    if (legacyPlan) return null;
     return {
       name: t("portal.billing.identity.free.name", "Free"),
       sub: t("portal.billing.identity.free.sub", "The full PDF Editor."),
@@ -249,7 +261,15 @@ export function BillingScreen({
         ),
       ],
     };
-  }, [wallet, paying, teamHeld, serverPlan, t]);
+  }, [
+    wallet,
+    paying,
+    teamHeld,
+    serverPlan,
+    legacyPlan,
+    legacyTeamAllowance,
+    t,
+  ]);
 
   const creditUnits = (wallet?.spendUnitsThisPeriod ?? 0) + pendingUnits;
   const occupiedSeats = serverPlan
@@ -299,7 +319,11 @@ export function BillingScreen({
           </div>
         )}
 
-        {(procurementSection || licenseSection || identity || unavailable) && (
+        {(procurementSection ||
+          licenseSection ||
+          identity ||
+          legacyPlan ||
+          unavailable) && (
           <div className="billing-card">
             <nav
               className="billing-card__chips"
@@ -327,39 +351,45 @@ export function BillingScreen({
               </section>
             )}
 
-            {identity && (
+            {(identity || legacyPlan) && (
               <>
                 <section id="ub-plan" className="billing-sec">
                   <span className="billing-eyebrow">
                     {t("portal.billing.section.plan", "Your plan")}
                   </span>
-                  <div className="billing-id">
-                    <span className="billing-id__name">{identity.name}</span>
-                    <span className="billing-id__sub">{identity.sub}</span>
-                    {serverPlanAction && (
-                      <div className="billing-id__action">
-                        {serverPlanAction}
-                      </div>
-                    )}
-                  </div>
-                  <div className="billing-id__chips">
-                    {selfHosted && (
-                      <span className="billing-id__chip">
-                        {t(
-                          "portal.billing.identity.oauthSso",
-                          "SSO (OAuth2/OIDC)",
-                        )}
-                      </span>
-                    )}
-                    {identity.chips.map((c) => (
-                      <span key={c} className="billing-id__chip">
-                        {c}
-                      </span>
-                    ))}
-                  </div>
+                  {legacyPlan}
+                  {identity && (
+                    <div className="billing-id">
+                      <span className="billing-id__name">{identity.name}</span>
+                      <span className="billing-id__sub">{identity.sub}</span>
+                      {serverPlanAction && (
+                        <div className="billing-id__action">
+                          {serverPlanAction}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {(identity || selfHosted) && (
+                    <div className="billing-id__chips">
+                      {selfHosted && (
+                        <span className="billing-id__chip">
+                          {t(
+                            "portal.billing.identity.oauthSso",
+                            "SSO (OAuth2/OIDC)",
+                          )}
+                        </span>
+                      )}
+                      {identity?.chips.map((c) => (
+                        <span key={c} className="billing-id__chip">
+                          {c}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   <div className="billing-meters">
                     {(showTeam || serverPlan) && (
                       <TeamPlanRow
+                        legacyAllowance={legacyTeamAllowance}
                         usersInUse={usersInUse}
                         userLimit={userLimit}
                         deviceId={deviceId}
