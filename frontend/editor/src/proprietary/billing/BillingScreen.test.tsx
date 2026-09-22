@@ -14,6 +14,36 @@ vi.mock("react-i18next", () => ({
 import { BillingScreen } from "@app/billing/BillingScreen";
 import { freeWallet, subscribedWallet } from "@app/billing/walletFixtures";
 
+it.each(["free", "team", "processor", "SERVER", "ENTERPRISE"] as const)(
+  "includes OAuth SSO for the self-hosted %s plan",
+  (tier) => {
+    const wallet =
+      tier === "processor"
+        ? subscribedWallet
+        : {
+            ...freeWallet,
+            team: {
+              ...freeWallet.team,
+              held: tier === "team",
+              licensedUsers: tier === "team" ? 100 : null,
+            },
+          };
+    const serverPlan =
+      tier === "SERVER" || tier === "ENTERPRISE"
+        ? { licenseType: tier, maxUsers: 100, usersInUse: 3 }
+        : undefined;
+    render(
+      <BillingScreen wallet={wallet} serverPlan={serverPlan} selfHosted />,
+    );
+    expect(screen.getByText("SSO (OAuth2/OIDC)")).toBeInTheDocument();
+  },
+);
+
+it("does not advertise self-hosted identity providers on cloud billing", () => {
+  render(<BillingScreen wallet={freeWallet} />);
+  expect(screen.queryByText("SSO (OAuth2/OIDC)")).not.toBeInTheDocument();
+});
+
 it.each([4, 0])(
   "keeps standalone users against the enforced allowance of %i",
   (limit) => {

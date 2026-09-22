@@ -12,12 +12,22 @@ const freePlanGroup: PlanTierGroup = {
     currency: "$",
     period: "month",
     features: [],
-    highlights: ["Basic PDF tools", "Community support"],
+    highlights: [
+      "Basic PDF tools",
+      "Up to 5 users",
+      "SSO (OAuth2/OIDC)",
+      "Community support",
+    ],
     lookupKey: "selfhosted:free",
   },
   yearly: null,
   features: [],
-  highlights: ["Basic PDF tools", "Community support"],
+  highlights: [
+    "Basic PDF tools",
+    "Up to 5 users",
+    "SSO (OAuth2/OIDC)",
+    "Community support",
+  ],
   popular: false,
 };
 
@@ -31,7 +41,7 @@ const serverPlanGroup: PlanTierGroup = {
     currency: "$",
     period: "month",
     features: [],
-    highlights: ["Unlimited users", "Priority support", "SSO"],
+    highlights: ["100 users included", "Priority support", "SSO (OAuth2/OIDC)"],
     lookupKey: "selfhosted:server:monthly",
   },
   yearly: {
@@ -41,11 +51,11 @@ const serverPlanGroup: PlanTierGroup = {
     currency: "$",
     period: "year",
     features: [],
-    highlights: ["Unlimited users", "Priority support", "SSO"],
+    highlights: ["100 users included", "Priority support", "SSO (OAuth2/OIDC)"],
     lookupKey: "selfhosted:server:yearly",
   },
   features: [],
-  highlights: ["Unlimited users", "Priority support", "SSO"],
+  highlights: ["100 users included", "Priority support", "SSO (OAuth2/OIDC)"],
   popular: true,
 };
 

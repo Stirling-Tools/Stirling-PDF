@@ -107,20 +107,24 @@ export default function AdminPremiumSection() {
           color="blue"
           title={t(
             "admin.settings.premium.movedFeatures.title",
-            "Premium Features Distributed",
+            "Feature Settings",
           )}
           icon={<LocalIcon icon="info-rounded" width="1rem" height="1rem" />}
         >
           <Text size="sm">
             {t(
               "admin.settings.premium.movedFeatures.message",
-              "Premium and Enterprise features are now organized in their respective sections:",
+              "Configure authentication and licensed features in their respective sections:",
             )}
           </Text>
           <List mt="xs" size="sm">
             <List.Item>
               <Text size="sm" component="span">
-                <strong>SSO Auto Login</strong> (PRO) - Connections
+                <Trans
+                  i18nKey="admin.settings.premium.movedFeatures.ssoAutoLogin"
+                  defaults="<0>SSO Auto Login</0> (all plans) - Security"
+                  components={[<strong />]}
+                />
               </Text>
             </List.Item>
             <List.Item>

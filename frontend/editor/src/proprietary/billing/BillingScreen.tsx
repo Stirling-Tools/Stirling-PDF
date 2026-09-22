@@ -220,7 +220,6 @@ export function BillingScreen({
               })
             : t("portal.billing.identity.team.subNoLimit", "No user limit"),
         chips: [
-          t("portal.billing.identity.team.chipSso", "SSO"),
           t("portal.billing.identity.team.chipFleet", "Fleet control"),
           t(
             "portal.billing.identity.team.chipIncluded",
@@ -344,6 +343,14 @@ export function BillingScreen({
                     )}
                   </div>
                   <div className="billing-id__chips">
+                    {selfHosted && (
+                      <span className="billing-id__chip">
+                        {t(
+                          "portal.billing.identity.oauthSso",
+                          "SSO (OAuth2/OIDC)",
+                        )}
+                      </span>
+                    )}
                     {identity.chips.map((c) => (
                       <span key={c} className="billing-id__chip">
                         {c}
