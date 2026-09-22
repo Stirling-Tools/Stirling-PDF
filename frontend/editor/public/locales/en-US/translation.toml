@@ -2243,6 +2243,7 @@ title = "Suggested"
 finish = "Finish"
 run = "Run Automation"
 running = "Running Automation..."
+signInToRun = "Sign in to run automations."
 steps_one = "{{count}} step"
 steps_other = "{{count}} steps"
 unnamed = "Unnamed Automation"
@@ -3428,10 +3429,8 @@ title = "Open every PDF in Stirling"
 
 [classificationDemo.followUp]
 background = "This runs in the background. The ring on the left shows progress."
-batchCta = "Process another {{count}}"
-free = "They are all covered by your remaining free allowance."
-partial = "{{count}} of them are covered by your remaining free allowance."
 restCta = "Process the rest"
+serverCredits = "Your connected server manages credits for processing these files."
 title = "Want to keep going? You have {{count}} more PDFs in your Downloads folder."
 
 [classificationDemo.groups]
@@ -3440,7 +3439,7 @@ other = "Other"
 [classificationDemo.offer]
 body = "Classify and organise the {{count}} most recent PDFs in your Downloads folder by type."
 cta = "Process my Downloads folder"
-privacy = "Everything stays on this device and you can stop anytime."
+privacy = "Your PDFs stay on this device. Your connected server records processing usage."
 title = "See what Stirling can do with a whole folder"
 
 [classificationDemo.phase]
@@ -4609,6 +4608,7 @@ open = "Open"
 openVersionInWorkspace = "Open in workspace"
 originFilter = "Filter by source"
 refresh = "Refresh"
+refreshNeedsConnection = "Sign in to refresh from the server."
 remove = "Delete"
 removeLocalFolder = "Unmount from Stirling"
 removeVersion = "Remove this version"
@@ -5657,6 +5657,7 @@ terms = "Terms and Conditions"
 title = "3rd Party Licenses"
 
 [localMode]
+automationUnavailable = "Sign in to Stirling Cloud or a self-hosted server to use processing folders and pipelines."
 toolUnavailable = "This tool requires an account. Sign in to Stirling Cloud or connect to a self-hosted server to use it."
 
 [localMode.toolPicker]
@@ -7711,19 +7712,34 @@ low = "Running low"
 
 [portal.billing.processor]
 activate = "Switch on the Processor"
-factCapped = "{{pct}}% of {{cap}}"
 factFree = "{{used}} of {{allowance}} used"
 factNoCap = "no limit"
+freeRemaining = "Free credits remaining"
 included = "Included in your license"
-includedCredits = "Included credits"
 includedRenewal = "{{summary}} · Renews {{date}}"
 meteredCapTooltip = "Pauses metered processing at your spend limit."
 midIncluded = "{{rate}} per credit · {{allowance}} included every month"
 midIncludedNoRate = "{{allowance}} included every month"
 midMetered = "{{spend}} metered this cycle"
 midMeteredUnknown = "Metered this cycle"
+noSpendLimit = "No spend limit"
+paidUsed = "Paid metered usage"
+percentUsed = "{{pct}}%"
 raiseLimit = "Raise limit"
+remainingOf = "{{remaining}} of {{total}}"
 rowName = "Processor"
+spendAgainstLimit = "{{spend}} of {{cap}} metered this cycle"
+
+[portal.billing.seats]
+awaitingSync = "Waiting for its daily sync; not yet included in the fleet total."
+breakdown = "Where users are counted"
+cloud = "Stirling Cloud"
+deployment = "Linked server"
+lastReported = "Reported {{date}}"
+live = "Live user count"
+notReported = "Not yet reported"
+ownerExcluded = "The required cloud team owner does not use a seat."
+thisServer = "This server"
 
 [portal.billing.section]
 cycle = "This cycle"
@@ -7801,6 +7817,7 @@ factNoLimit = "{{users}} users"
 midFree = "The Team plan covers 100 users"
 midFreeSelfHosted = "The free tier covers your first users"
 midIncluded = "Included with your Team base"
+midLocalCapacity = "Capacity available to this server"
 midPrice = "$99/mo per 100 users"
 rowName = "Users"
 
@@ -8173,6 +8190,14 @@ baseUrlPlaceholder = "https://your-org.webhook.office.com/webhookb2/..."
 description = "Post a message to a Teams channel when a policy runs."
 label = "Microsoft Teams"
 
+[portal.connections.types.vectordb]
+baseUrlPlaceholder = "https://your-database-host"
+description = "Index document chunks using Weaviate or Pinecone server-side embedding. Use the Weaviate server URL or Pinecone index host. Private endpoints require the operator to enable policies.allowPrivateApiEndpoints."
+label = "Vector database"
+pinecone = "Pinecone"
+vendor = "Database"
+weaviate = "Weaviate"
+
 [portal.connections.types.webhook]
 baseUrlPlaceholder = "https://example.com/hooks/documents"
 description = "Post each document, or just the details, to a URL you choose."
@@ -8464,6 +8489,22 @@ title = "Wrong file type"
 [portal.failures.kind.stepCannotRenderPage]
 description = "A page in your file could not be drawn, so the run could not finish."
 title = "Page could not be rendered"
+
+[portal.failures.kind.stepInterrupted]
+description = "This step was stopped before it finished, so your file was not processed. Running it again usually works."
+title = "Step was interrupted"
+
+[portal.failures.kind.stepMisconfigured]
+description = "This step's settings are not valid, so it could not run on any file. Edit the step to fix them."
+title = "Step settings are invalid"
+
+[portal.failures.kind.stepPageTooLarge]
+description = "A page in your file could not be rendered at the requested resolution. Lower the DPI in the step, or split the file."
+title = "Page too large to render"
+
+[portal.failures.kind.stepToolFailed]
+description = "A tool this step relies on could not process your file."
+title = "Tool could not process the file"
 
 [portal.failures.kind.toolNotInstalled]
 description = "This server is missing software the step needs, so the run could not start it."
@@ -8941,7 +8982,6 @@ chooseSource = "Choose a source"
 discard = "Discard changes"
 editorDestination = "Editor"
 editorDestinationDetail = "Replaces the file you ran it on"
-editorDestinationHelp = "This pipeline runs on the files in your workspace, and its results replace the file it ran on. There is nowhere else to send them."
 inputs = "Input"
 inputSource = "Input source"
 inputTrigger = "Trigger"
@@ -8997,7 +9037,8 @@ label = "Change icon"
 [portal.pipelines.builder.ingest]
 chunkSize = "Chunk size"
 chunkSizeHint = "Characters per chunk. Smaller chunks retrieve more precisely; larger ones keep more context together."
-editorPdfOnly = "Editor policies return PDFs only. To export chunks or Markdown, choose a saved input source and a file destination."
+destinationNeedsChunks = "This vector database destination needs a final AI ingestion step that exports chunks only."
+editorPdfOnly = "Only PDFs can return to the editor. To export chunks or Markdown, choose Keep originals and send to a destination under Output."
 exportChunks = "Export chunks as JSONL"
 exportChunksHint = "One chunk per line with its page span, ready to load into another system."
 exportMarkdown = "Export markdown"
@@ -9010,6 +9051,7 @@ nothingToDo = "Turn on at least one of indexing or an export, or this step has n
 overlap = "Overlap"
 overlapHint = "Characters repeated between neighbouring chunks, so a sentence split across two is still findable."
 overlapTooBig = "Overlap must be smaller than the chunk size ({{chunkSize}})."
+prepareDestination = "Prepare chunks for this destination"
 unavailable = "AI ingestion needs the AI engine and DocParse turned on, including when the destination database generates embeddings."
 
 [portal.pipelines.builder.routing]
@@ -9543,6 +9585,13 @@ labelsHeading = "Classification labels"
 noTools = "Enable at least one action."
 saveFailed = "Couldn't save the pipeline. Please try again."
 
+[portal.policies.wizard.locations]
+delivery = "Delivery"
+editorOutput = "Processed PDFs return to the editor workspace."
+keepOriginal = "Keep originals and send to a destination"
+keepOriginalHelp = "A copy runs in the background. Your editor files stay unchanged; results are saved to the destination below."
+returnToEditor = "Return results to editor"
+
 [portal.policies.wizard.routing]
 chooseDestination = "Choose a destination"
 chooseSource = "Choose what to watch"
@@ -9911,6 +9960,7 @@ backToSource = "Back to source setup"
 backToTypes = "All source types"
 cancel = "Cancel"
 chooseHint = "Choose where documents come from. Greyed-out connectors are on the way."
+chooseOutputHint = "Choose where processed documents go. Greyed-out connectors are on the way."
 comingSoon = "Coming soon"
 comingSoonHeading = "Coming soon"
 create = "Create source"
@@ -10065,6 +10115,17 @@ label = "SharePoint"
 
 [portal.sources.types.unknown]
 label = "Source"
+
+[portal.sources.types.vectordb]
+collection = "Collection / index name"
+collectionHint = "Use an existing collection or index configured for server-side embedding."
+connection = "Database connection"
+description = "An output destination for prepared document chunks. The database generates embeddings; originals stay in your input source when track mode is selected."
+label = "Vector database"
+namespace = "Namespace / tenant"
+namespaceHint = "Optional Pinecone namespace or Weaviate tenant. Leave empty for the default namespace or a single-tenant collection."
+textField = "Text field"
+textFieldHint = "The field the database embeds, matching the collection schema or Pinecone field map."
 
 [portal.sources.types.webhook]
 createNote = "A delivery URL and signing secret are generated when you create this webhook. Senders POST documents to that URL and the referencing policies run on arrival."
@@ -10235,6 +10296,7 @@ selectFolder = "Select a folder"
 server = "Server storage"
 serverAction = "Or add a new folder to your server"
 settings = "Adjust settings"
+signInRequired = "Sign in to set up folder processing"
 title = "Set up folder processing"
 useExisting = "Use existing folder"
 viewLabels = "View classification labels"
@@ -10463,6 +10525,7 @@ noProcessorAccess = "Ask an admin for processor access"
 notifications = "Notifications"
 processor = "Processor"
 reader = "Reader"
+signInToUse = "Sign in to use this"
 
 [read]
 tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
@@ -11048,6 +11111,8 @@ removeError = "Couldn’t remove the connection. Try again."
 renameError = "Couldn’t save the name. Try again."
 retry = "Try again"
 saveName = "Save name"
+seatsReported = "{{count}} Team seats · reported {{date}}. Offline deployments keep their seats until unlinked."
+seatsUnknown = "Waiting for this deployment to report its user count in the daily sync."
 subtitle = "Manage the self-hosted servers connected to your team."
 teamNote = "These instances share your team’s processing allowance."
 title = "Connected instances"

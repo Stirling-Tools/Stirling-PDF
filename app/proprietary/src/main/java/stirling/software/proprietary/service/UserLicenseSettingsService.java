@@ -308,27 +308,8 @@ public class UserLicenseSettingsService {
     }
 
     /**
-     * Calculates the maximum allowed users based on grandfathering rules.
-     *
-     * <p>Logic:
-     *
-     * <ul>
-     *   <li>Grandfathered limit = max(5, existing user count at V1→V2 migration)
-     *   <li>No license, not linked: Uses grandfathered limit only
-     *   <li>No license, linked: max(grandfathered limit, the linked team's allowance)
-     *   <li>SERVER license (maxUsers=0): Unlimited users (Integer.MAX_VALUE)
-     *   <li>ENTERPRISE license (maxUsers>0): License seats only (NO grandfathering added)
-     * </ul>
-     *
-     * <p>IMPORTANT: Paid licenses REPLACE the limit, they don't add to grandfathering. A linked
-     * team's allowance does not: linking is monotonic, so it can only raise the ceiling.
-     *
-     * <p>The branch is chosen by whether a licence <i>key</i> is installed, never by the effective
-     * tier. A Team plan bought in the cloud promotes the effective tier to SERVER without carrying
-     * a {@code premium.maxUsers}, so branching on the effective tier would read the stored 0 as
-     * "SERVER licence, unlimited" and hand a customer who bought 100 users no limit at all.
-     *
-     * @return Maximum number of users allowed (Integer.MAX_VALUE for unlimited)
+     * Installed licenses keep their own capacity. Linked deployments use the fleet allowance while
+     * the existing offline grace is valid, then fall back to their grandfathered free limit.
      */
     public int calculateMaxAllowedUsers() {
         validateSettingsIntegrity();
@@ -347,6 +328,12 @@ public class UserLicenseSettingsService {
         // whatever it granted, and a customer worse off under it can simply remove it.
         if (!hasLicenseKeyPaidTier()) {
             Integer fromSaas = linkedTeamAllowance();
+            EntitlementCache cache = entitlementCache.getIfAvailable();
+            Integer fleetLimit = cache == null ? null : cache.fleetUserLimit();
+            if (fleetLimit != null
+                    && cache != null
+                    && !cache.isGraceExpired()
+                    && cache.linkedDeviceId() != null) return fleetLimit;
             if (fromSaas != null) {
                 // Floored at the grandfathered limit, so linking can only raise the ceiling.
                 // Otherwise a solo cloud account, whose team the instance binds to before any
@@ -696,7 +683,8 @@ public class UserLicenseSettingsService {
      * is also SERVER when the promotion comes from a cloud Team plan, and that plan states its
      * capacity in the entitlement, not in {@code premium.maxUsers}.
      */
-    private boolean hasLicenseKeyPaidTier() {
+    /** Whether installed license capacity is independent of the linked Team subscription. */
+    public boolean hasLicenseKeyPaidTier() {
         LicenseKeyChecker checker = licenseKeyChecker.getIfAvailable();
         if (checker == null) {
             return false;
