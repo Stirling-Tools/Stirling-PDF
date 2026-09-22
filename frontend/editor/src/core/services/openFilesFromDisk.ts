@@ -1,4 +1,7 @@
-import { openFileDialog } from "@app/services/fileDialogService";
+import {
+  hasNativeFileDialog,
+  openFileDialog,
+} from "@app/services/fileDialogService";
 import { pendingFilePathMappings } from "@app/services/pendingFilePathMappings";
 import { getDocumentFileDialogFilter } from "@app/utils/fileDialogUtils";
 
@@ -20,12 +23,12 @@ export async function openFilesFromDisk(
   });
 
   if (filesWithPaths.length > 0) {
-    for (const { quickKey, path } of filesWithPaths) {
-      pendingFilePathMappings.set(quickKey, path);
+    for (const { file, path } of filesWithPaths) {
+      pendingFilePathMappings.set(file, path);
     }
     return filesWithPaths.map((entry) => entry.file);
   }
 
-  options.onFallbackOpen?.();
+  if (!hasNativeFileDialog) options.onFallbackOpen?.();
   return [];
 }

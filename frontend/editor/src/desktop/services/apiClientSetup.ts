@@ -270,23 +270,6 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         );
       }
 
-      // Handle 403 Forbidden - unauthorized access. Skipped only where the caller opted
-      // out per request: a fire-and-forget refusal is a normal answer, not news.
-      if (
-        error.response?.status === 403 &&
-        !originalRequest.suppressErrorToast
-      ) {
-        alert({
-          alertType: "error",
-          title: i18n.t("auth.accessDenied", "Access Denied"),
-          body: i18n.t(
-            "auth.insufficientPermissions",
-            "You do not have permission to perform this action.",
-          ),
-          isPersistentPopup: false,
-        });
-      }
-
       return Promise.reject(error);
     },
   );

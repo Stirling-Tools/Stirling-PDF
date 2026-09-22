@@ -38,18 +38,10 @@
   text-align: right;
 }
 
-/* ── Step 2: the ghost ──────────────────────────────────────────────────── */
-
 .portal-connect__ghost {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 0.75rem;
-}
-
-.portal-connect__ghost-bars {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
 }
 
 /* ── Step 3 ─────────────────────────────────────────────────────────────── */
