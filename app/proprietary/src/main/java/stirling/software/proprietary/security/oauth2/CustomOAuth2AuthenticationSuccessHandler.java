@@ -68,7 +68,6 @@ public class CustomOAuth2AuthenticationSuccessHandler
 
         boolean userExists = userService.usernameExistsIgnoreCase(username);
 
-        // OAuth is available on every license; new accounts still consume a user slot.
         if (!userExists && licenseSettingsService.wouldExceedLimit(1)) {
             response.sendRedirect(request.getContextPath() + "/logout?maxUsersReached=true");
             return;

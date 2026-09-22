@@ -142,7 +142,6 @@ class CustomOAuth2AuthenticationSuccessHandlerTest {
             settings.setGrandfatheredUserCount(5);
             settings.setLicenseMaxUsers(license == License.ENTERPRISE ? 10 : 0);
             when(repository.findSettings()).thenReturn(Optional.of(settings));
-            // Initialise the signed free-tier limit before simulating the current user count.
             licenseSettingsService.validateSettingsIntegrity();
             when(userService.getTotalUsersCount()).thenReturn(userCount);
             when(checkerProvider.getIfAvailable()).thenReturn(checker);

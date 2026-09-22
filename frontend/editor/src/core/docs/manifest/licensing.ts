@@ -1,7 +1,5 @@
 import type { DocsManifest } from "@app/docs/manifest/transform";
 
-// The docs repository releases independently. Keep its older OAuth tier claims
-// from overriding the licensing shipped by this application during docs sync.
 const corrections: Record<string, readonly (readonly [string, string])[]> = {
   "configuration/configuration": [
     [
@@ -80,7 +78,6 @@ const corrections: Record<string, readonly (readonly [string, string])[]> = {
   ],
 };
 
-/** Updates obsolete OAuth licensing claims in-place; safe to reapply to a corrected manifest. */
 export function applyOAuthLicensing(manifest: DocsManifest): void {
   for (const [id, replacements] of Object.entries(corrections)) {
     const doc = manifest.docs[id];
