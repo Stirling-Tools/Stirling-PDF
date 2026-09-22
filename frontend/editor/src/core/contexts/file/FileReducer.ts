@@ -266,6 +266,13 @@ export function fileContextReducer(
 
     case "SET_SELECTED_FILES": {
       const { fileIds } = action.payload;
+      const current = state.ui.selectedFileIds;
+      if (
+        current.length === fileIds.length &&
+        current.every((id, i) => id === fileIds[i])
+      ) {
+        return state;
+      }
       return {
         ...state,
         ui: {
@@ -277,6 +284,13 @@ export function fileContextReducer(
 
     case "SET_SELECTED_PAGES": {
       const { pageNumbers } = action.payload;
+      const current = state.ui.selectedPageNumbers;
+      if (
+        current.length === pageNumbers.length &&
+        current.every((p, i) => p === pageNumbers[i])
+      ) {
+        return state;
+      }
       return {
         ...state,
         ui: {
@@ -287,6 +301,12 @@ export function fileContextReducer(
     }
 
     case "CLEAR_SELECTIONS": {
+      if (
+        state.ui.selectedFileIds.length === 0 &&
+        state.ui.selectedPageNumbers.length === 0
+      ) {
+        return state;
+      }
       return {
         ...state,
         ui: {
@@ -299,6 +319,12 @@ export function fileContextReducer(
 
     case "SET_PROCESSING": {
       const { isProcessing, progress } = action.payload;
+      if (
+        state.ui.isProcessing === isProcessing &&
+        state.ui.processingProgress === progress
+      ) {
+        return state;
+      }
       return {
         ...state,
         ui: {
@@ -310,6 +336,9 @@ export function fileContextReducer(
     }
 
     case "SET_UNSAVED_CHANGES": {
+      if (state.ui.hasUnsavedChanges === action.payload.hasChanges) {
+        return state;
+      }
       return {
         ...state,
         ui: {
@@ -330,6 +359,7 @@ export function fileContextReducer(
 
     case "CLEAR_FILE_ERROR": {
       const { fileId } = action.payload;
+      if (!state.ui.errorFileIds.includes(fileId)) return state;
       return {
         ...state,
         ui: {
@@ -340,6 +370,7 @@ export function fileContextReducer(
     }
 
     case "CLEAR_ALL_FILE_ERRORS": {
+      if (state.ui.errorFileIds.length === 0) return state;
       return {
         ...state,
         ui: { ...state.ui, errorFileIds: [] },
@@ -348,6 +379,7 @@ export function fileContextReducer(
 
     case "PIN_FILE": {
       const { fileId } = action.payload;
+      if (state.pinnedFiles.has(fileId)) return state;
       const newPinnedFiles = new Set(state.pinnedFiles);
       newPinnedFiles.add(fileId);
 
@@ -359,6 +391,7 @@ export function fileContextReducer(
 
     case "UNPIN_FILE": {
       const { fileId } = action.payload;
+      if (!state.pinnedFiles.has(fileId)) return state;
       const newPinnedFiles = new Set(state.pinnedFiles);
       newPinnedFiles.delete(fileId);
 

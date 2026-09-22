@@ -340,3 +340,63 @@ describe("fileContextReducer — REMOVE_FILES", () => {
     expect(next.ui.selectedFileIds).toEqual([]);
   });
 });
+
+describe("fileContextReducer — identity preservation on no-op UI actions", () => {
+  it("preserves state identity when SET_SELECTED_FILES receives identical ids", () => {
+    const state: FileContextState = {
+      ...initialFileContextState,
+      ui: { ...initialFileContextState.ui, selectedFileIds: ["a" as FileId, "b" as FileId] },
+    };
+    const next = fileContextReducer(state, {
+      type: "SET_SELECTED_FILES",
+      payload: { fileIds: ["a" as FileId, "b" as FileId] },
+    });
+    expect(next).toBe(state);
+  });
+
+  it("preserves state identity when SET_SELECTED_PAGES receives identical page numbers", () => {
+    const state: FileContextState = {
+      ...initialFileContextState,
+      ui: { ...initialFileContextState.ui, selectedPageNumbers: [1, 2, 3] },
+    };
+    const next = fileContextReducer(state, {
+      type: "SET_SELECTED_PAGES",
+      payload: { pageNumbers: [1, 2, 3] },
+    });
+    expect(next).toBe(state);
+  });
+
+  it("preserves state identity when CLEAR_SELECTIONS is called on already empty selections", () => {
+    const state = initialFileContextState;
+    const next = fileContextReducer(state, { type: "CLEAR_SELECTIONS" });
+    expect(next).toBe(state);
+  });
+
+  it("preserves state identity when PIN_FILE receives an already pinned file", () => {
+    const state: FileContextState = {
+      ...initialFileContextState,
+      pinnedFiles: new Set(["a" as FileId]),
+    };
+    const next = fileContextReducer(state, {
+      type: "PIN_FILE",
+      payload: { fileId: "a" as FileId },
+    });
+    expect(next).toBe(state);
+  });
+
+  it("preserves state identity when UNPIN_FILE receives an unpinned file", () => {
+    const state = initialFileContextState;
+    const next = fileContextReducer(state, {
+      type: "UNPIN_FILE",
+      payload: { fileId: "a" as FileId },
+    });
+    expect(next).toBe(state);
+  });
+
+  it("preserves state identity when CLEAR_ALL_FILE_ERRORS is called with no errors", () => {
+    const state = initialFileContextState;
+    const next = fileContextReducer(state, { type: "CLEAR_ALL_FILE_ERRORS" });
+    expect(next).toBe(state);
+  });
+});
+

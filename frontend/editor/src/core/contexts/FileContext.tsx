@@ -274,14 +274,23 @@ function FileContextInner({
     dispatch({ type: "SET_UNSAVED_CHANGES", payload: { hasChanges } });
   }, []);
 
-  const selectFiles = (stirlingFiles: StirlingFile[]) => {
+  const selectFiles = useCallback((stirlingFiles: StirlingFile[]) => {
     const currentSelection = stateRef.current.ui.selectedFileIds;
-    const newFileIds = stirlingFiles.map((stirlingFile) => stirlingFile.fileId);
-    dispatch({
-      type: "SET_SELECTED_FILES",
-      payload: { fileIds: [...currentSelection, ...newFileIds] },
-    });
-  };
+    const combined = new Set(currentSelection);
+    let changed = false;
+    for (const sf of stirlingFiles) {
+      if (!combined.has(sf.fileId)) {
+        combined.add(sf.fileId);
+        changed = true;
+      }
+    }
+    if (changed) {
+      dispatch({
+        type: "SET_SELECTED_FILES",
+        payload: { fileIds: Array.from(combined) },
+      });
+    }
+  }, []);
 
   // File operations using unified addFiles helper with persistence
   const addRawFiles = useCallback(
