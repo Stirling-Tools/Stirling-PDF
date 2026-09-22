@@ -95,7 +95,7 @@ jobs:
           path: |
             .cache/gradle-java${{ env.JAVA_VERSION }}/caches
             .cache/gradle-java${{ env.JAVA_VERSION }}/wrapper
-          strict: true
+          strict: false
 
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: ./.github/actions/java
