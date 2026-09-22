@@ -7,9 +7,11 @@
   display: flex;
   flex-direction: column;
   height: 100dvh;
-  /* The frame fills exactly the strip + app; never a scroll container that a
-     stray scrollIntoView could shift the whole app inside. */
-  overflow: hidden;
+  /* clip, not hidden: a hidden box is still programmatically scrollable, so a
+     scrollIntoView on a deep element (settings/docs/admin anchors) could shift
+     the whole app inside the frame. clip forbids that; inner scrollers still
+     scroll. */
+  overflow: clip;
 }
 /* Fill the space under the strip via flex, tied to the strip's real row - not a
    fixed calc(100dvh - strip), which slides up leaving a strip-sized gap at the
@@ -20,6 +22,9 @@
   flex: 1 1 0;
   min-height: 0;
   height: auto;
+  /* Non-scrollable (see .column): the frame must never be the thing a
+     scrollIntoView drags; legitimate inner scrollers keep their own overflow. */
+  overflow: clip;
 }
 
 /* The desktop title-bar row. Normal flow (first row of the frame column), so it
