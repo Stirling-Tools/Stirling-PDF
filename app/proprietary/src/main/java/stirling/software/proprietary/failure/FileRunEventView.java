@@ -5,8 +5,10 @@ import java.util.List;
 /**
  * Wire shape of one incident. Carries i18n keys plus {@code defaultTitle} rather than rendered
  * copy, so the server can ship a new kind without a client release, and {@code actions} arrive
- * already resolved so the client needs no rules. No document name: {@code fileId} is an opaque
- * reference.
+ * already resolved so the client needs no rules.
+ *
+ * <p>A source-fed row carries no {@code fileId}: the identity behind it is a path on the operator's
+ * disk, and the client has nothing to resolve it against anyway. See {@link #documentLocation}.
  */
 public record FileRunEventView(
         String id,
@@ -24,6 +26,8 @@ public record FileRunEventView(
         String runId,
         String sourceId,
         String fileId,
+        /** Where the document is, so the client stops inferring it from {@code sourceId}. */
+        DocumentLocation documentLocation,
         String actor,
         int occurrences,
         FileRunEventStatus status,
@@ -32,9 +36,42 @@ public record FileRunEventView(
         long createdAt,
         long lastSeenAt) {
 
+    /** Where the document behind an incident lives, which decides what can be offered for it. */
+    public enum DocumentLocation {
+        /** The reader's own browser minted the id, so client-side fixes can find it. */
+        BROWSER,
+        /** A folder the server watches. Only the server can reach it, and only for its owner. */
+        SMART_FOLDER,
+        /**
+         * Nothing here can act on the document: the row names none, or a policy fed from a bucket
+         * or a webhook named a file no browser holds and no folder action can address.
+         */
+        UNREACHABLE;
+
+        /**
+         * Gated on the source, decided by what produced it. A source's reference is a location on
+         * the server, so a source-fed row is never {@code BROWSER}, even once the policy that fed
+         * it is gone and its kind reads as nothing. Among source-fed rows only a smart folder's is
+         * reachable: a bucket-fed policy has a source too, and calling its document a smart
+         * folder's offered a retry that could only ever be refused.
+         */
+        public static DocumentLocation of(FileRunEvent event, SourceKind source) {
+            if (event.fileId() == null || event.fileId().isBlank()) {
+                return UNREACHABLE;
+            }
+            if (event.sourceId() == null || event.sourceId().isBlank()) {
+                return BROWSER;
+            }
+            return source == SourceKind.SMART_FOLDER ? SMART_FOLDER : UNREACHABLE;
+        }
+    }
+
     public static FileRunEventView of(
-            FileRunEvent event, List<FileRunEventService.AvailableAction> actions) {
+            FileRunEvent event,
+            SourceKind source,
+            List<FileRunEventService.AvailableAction> actions) {
         FailureKind kind = event.kind();
+        DocumentLocation location = DocumentLocation.of(event, source);
         return new FileRunEventView(
                 event.id(),
                 kind.getId(),
@@ -50,7 +87,10 @@ public record FileRunEventView(
                 event.policyId(),
                 event.runId(),
                 event.sourceId(),
-                event.fileId(),
+                // Withheld for anything the client cannot resolve, so a disk path never leaves the
+                // server even to a reader entitled to the row.
+                location == DocumentLocation.BROWSER ? event.fileId() : null,
+                location,
                 event.actor(),
                 event.occurrences(),
                 event.status(),
@@ -78,7 +118,7 @@ public record FileRunEventView(
                     action.id().name(),
                     action.labelKey(),
                     action.id().getDefaultLabel(),
-                    action.id().getExecution(),
+                    action.execution(),
                     action.slot(),
                     action.enabled(),
                     action.disabledReasonKey());

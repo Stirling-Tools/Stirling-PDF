@@ -66,6 +66,9 @@ function notification(
     defaultTitle: id,
     detail: "boom",
     fileId: "f-1",
+    documentName: null,
+    documentLocation: "BROWSER",
+    sourceKind: "EDITOR",
     sourceId: null,
     policyId: null,
     occurrences: 1,
@@ -125,7 +128,9 @@ describe("useNotifications", () => {
         notification("unattended", {
           origin: "POLICY",
           sourceId: "src-s3-invoices",
-          fileId: "hashed-identity",
+          sourceKind: "SMART_FOLDER",
+          documentLocation: "SMART_FOLDER",
+          fileId: null,
         }),
       ]),
     );
@@ -167,15 +172,19 @@ describe("useNotifications", () => {
     expect(result.current.unreadCount).toBe(1);
   });
 
-  it("hides a member's unattended row even when its id happens to be stored here", async () => {
-    // Storage answering for a source-fed row's hash is a collision, not the document.
+  it("shows a member the rows a smart folder produced, which reach nobody else", async () => {
+    // Their own folder, their own documents: hidden, the person who set it up is told nothing at
+    // all when it stops working. There is nothing to look up either, so storage is never asked -
+    // an answer for a server-side reference would be a collision, not the document.
     hasLocalFile.mockResolvedValue(true);
     fetchNotifications.mockResolvedValue(
       feed(
         [
-          notification("unattended", {
-            sourceId: "src-s3-invoices",
-            fileId: "collides-with-a-local-id",
+          notification("smart-folder", {
+            sourceId: "src-downloads",
+            sourceKind: "SMART_FOLDER",
+            documentLocation: "SMART_FOLDER",
+            fileId: null,
           }),
         ],
         false,
@@ -184,8 +193,35 @@ describe("useNotifications", () => {
 
     const { result } = renderHook(() => useNotifications());
 
-    await waitFor(() => expect(fetchNotifications).toHaveBeenCalled());
-    expect(result.current.notifications).toHaveLength(0);
+    await waitFor(() => expect(result.current.notifications).toHaveLength(1));
+    expect(result.current.notifications[0].id).toBe("smart-folder");
+    expect(hasLocalFile).not.toHaveBeenCalled();
+  });
+
+  it("shows a member the row about their folder itself, which names no document at all", async () => {
+    // An unreadable folder processes nothing, so there is no document row to carry the news. The
+    // row is about the folder, and its owner is the one person it was recorded for.
+    fetchNotifications.mockResolvedValue(
+      feed(
+        [
+          notification("folder-unreadable", {
+            kindId: "SOURCE_UNREADABLE",
+            origin: "POLICY",
+            sourceId: "src-downloads",
+            sourceKind: "SMART_FOLDER",
+            documentLocation: "UNREACHABLE",
+            fileId: null,
+          }),
+        ],
+        false,
+      ),
+    );
+
+    const { result } = renderHook(() => useNotifications());
+
+    await waitFor(() => expect(result.current.notifications).toHaveLength(1));
+    expect(result.current.notifications[0].id).toBe("folder-unreadable");
+    expect(hasLocalFile).not.toHaveBeenCalled();
   });
 
   it("shows a reviewer both rows, document here or not", async () => {

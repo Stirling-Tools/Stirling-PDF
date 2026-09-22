@@ -26,6 +26,9 @@ import org.springframework.context.annotation.Bean;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
+import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.store.PolicyStore;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -75,6 +78,23 @@ class FileRunEventHttpIntegrationTest {
                 .id();
     }
 
+    /** As {@link #seed}, for a row a source fed rather than a client. */
+    private String seedFromSource(FailureKind kind, String sourceId, String identity) {
+        FileRunEventStore store = new FileRunEventStore(repository);
+        return store.record(
+                        new RecordFailure(
+                                kind,
+                                FailureOrigin.POLICY,
+                                TEAM,
+                                "author@example.com",
+                                "policy-1",
+                                "run-1",
+                                sourceId,
+                                identity,
+                                "boom"))
+                .id();
+    }
+
     private HttpResponse<String> get(String path) throws Exception {
         return http.send(
                 HttpRequest.newBuilder(URI.create("http://localhost:" + port + path)).GET().build(),
@@ -95,6 +115,23 @@ class FileRunEventHttpIntegrationTest {
     @Nested
     @DisplayName("the read path")
     class ReadPath {
+
+        @Test
+        void serialisesASourceFedRowWithoutThePathBehindIt() throws Exception {
+            // The portal is the second surface that renders these rows, and it maps them itself,
+            // so the withholding is asserted here too rather than only on the bell's projection.
+            seedFromSource(
+                    FailureKind.UNKNOWN,
+                    "src-downloads",
+                    "/Users/someone/Documents/Payroll/march.pdf");
+
+            HttpResponse<String> response = get("/api/v1/file-run-events");
+
+            JsonNode row = mapper.readTree(response.body()).get("events").get(0);
+            assertThat(row.get("documentLocation").asString()).isEqualTo("SMART_FOLDER");
+            assertThat(row.get("fileId").isNull()).isTrue();
+            assertThat(response.body()).doesNotContain("/Users/someone", "march.pdf");
+        }
 
         @Test
         void serialisesAnEventWithItsFacetsCopyKeysAndResolvedActions() throws Exception {
@@ -420,6 +457,35 @@ class FileRunEventHttpIntegrationTest {
             return new DismissAction(store);
         }
 
+        /**
+         * A stand-in, so the registry's completeness check passes without dragging a ledger and a
+         * runner into an HTTP-layer test. What it does is covered by {@code
+         * RetryInFolderActionTest}.
+         */
+        @Bean
+        FailureAction retryInFolderAction() {
+            return new NoopFolderAction(FailureActionId.OPEN_IN_TOOL);
+        }
+
+        /** Every source-fed row in these tests came from a smart folder. */
+        @Bean
+        PolicyStore policyStore() {
+            PolicyStore store = org.mockito.Mockito.mock(PolicyStore.class);
+            Policy folder =
+                    new Policy(
+                                    "p-1",
+                                    "Payroll",
+                                    ACTOR,
+                                    true,
+                                    List.of(),
+                                    List.of(),
+                                    OutputSpec.inline())
+                            .withSurface(Policy.SURFACE_PROCESSING_FOLDER);
+            org.mockito.Mockito.when(store.get(org.mockito.ArgumentMatchers.anyString()))
+                    .thenReturn(java.util.Optional.of(folder));
+            return store;
+        }
+
         @Bean
         ApplicationProperties applicationProperties() {
             ApplicationProperties props = new ApplicationProperties();
@@ -450,8 +516,9 @@ class FileRunEventHttpIntegrationTest {
                 FailureActionRegistry registry,
                 PolicyManagementAuthority authority,
                 UserServiceInterface users,
-                ApplicationProperties props) {
-            return new FileRunEventService(store, registry, authority, users, props);
+                ApplicationProperties props,
+                PolicyStore policyStore) {
+            return new FileRunEventService(store, registry, authority, users, props, policyStore);
         }
 
         @Bean

@@ -16,7 +16,13 @@ class PolicyRunTest {
 
     private static PolicyRun run() {
         return new PolicyRun(
-                "run-1", "p1", new PipelineDefinition("t", List.of(), List.of()), null, null, null);
+                "run-1",
+                "p1",
+                new PipelineDefinition("t", List.of(), List.of()),
+                null,
+                null,
+                null,
+                null);
     }
 
     @Test

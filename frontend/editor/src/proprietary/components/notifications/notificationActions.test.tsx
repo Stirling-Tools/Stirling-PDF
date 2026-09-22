@@ -37,12 +37,15 @@ vi.mock("@app/services/notificationPolicyRetry", () => ({
 }));
 
 const reportNotificationResolved = vi.fn();
+const dispatchNotificationAction = vi.fn();
 vi.mock("@app/services/notifications", async () => ({
   ...(await vi.importActual<typeof import("@app/services/notifications")>(
     "@app/services/notifications",
   )),
   reportNotificationResolved: (...args: unknown[]) =>
     reportNotificationResolved(...args),
+  dispatchNotificationAction: (...args: unknown[]) =>
+    dispatchNotificationAction(...args),
 }));
 
 const navigate = vi.fn();
@@ -160,6 +163,7 @@ beforeEach(() => {
   // The adopted document's own id, not the reference the failure was filed against.
   addFiles.mockReset().mockResolvedValue([{ fileId: "f-unlocked" }]);
   reportNotificationResolved.mockReset().mockResolvedValue(true);
+  dispatchNotificationAction.mockReset().mockResolvedValue(null);
   retryWithPassword.mockReset().mockResolvedValue({ ok: true, files: [] });
   // The unlock succeeds by default: most cases below are about what happens afterwards.
   unlockLocalDocument.mockReset().mockResolvedValue({
@@ -590,5 +594,48 @@ describe("retrying an attended policy run", () => {
         "The policy re-run started, but its result cannot be delivered here, so this failure stays open.",
     });
     expect(reportNotificationResolved).not.toHaveBeenCalled();
+  });
+});
+
+describe("OPEN_IN_TOOL for a smart folder's document", () => {
+  const inFolder = () => ({
+    notification: notification({
+      kindId: "UNKNOWN",
+      documentLocation: "SMART_FOLDER" as const,
+      sourceKind: "SMART_FOLDER" as const,
+      sourceId: "src-downloads",
+      fileId: null,
+    }),
+    hasLocalFile: false,
+    retryPayload: null,
+  });
+
+  it("is offered even though this browser holds nothing to open", () => {
+    // The gap this test exists for: the same id opens a tool for a browser-held file, and would
+    // be dropped for a folder's document if only that half were wired.
+    expect(registry().OPEN_IN_TOOL?.available(inFolder())).toBe(true);
+  });
+
+  it("asks the server by the row's own prefixed id, under the one shared id", async () => {
+    // The bell never holds a raw row id, so dispatching by anything else would 400.
+    await registry().OPEN_IN_TOOL?.run(inFolder());
+
+    expect(dispatchNotificationAction).toHaveBeenCalledWith(
+      "failure:evt-1",
+      "OPEN_IN_TOOL",
+    );
+  });
+
+  it("reports the server's refusal rather than claiming it worked", async () => {
+    dispatchNotificationAction.mockResolvedValue(
+      "No smart folder to run this document in",
+    );
+
+    const outcome = await registry().OPEN_IN_TOOL?.run(inFolder());
+
+    expect(outcome).toEqual({
+      ok: false,
+      message: "No smart folder to run this document in",
+    });
   });
 });

@@ -1,6 +1,7 @@
 package stirling.software.proprietary.policy.engine;
 
 import java.io.IOException;
+import java.nio.file.FileSystemException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.failure.FailureKind;
+import stirling.software.proprietary.failure.PolicyFailureRecorder;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.input.ResolvedInput;
@@ -52,6 +55,7 @@ public class PolicyRunner {
     private final ApplicationProperties applicationProperties;
     private final PolicyAccessGuard policyAccessGuard;
     private final DatabaseLicenseGuard databaseLicenseGuard;
+    private final PolicyFailureRecorder failureRecorder;
     private final ApplicationEventPublisher eventPublisher;
 
     /**
@@ -268,6 +272,19 @@ public class PolicyRunner {
                     spec.type(),
                     policy.id(),
                     e.getMessage());
+            // Told, not just logged: an unreadable folder processes nothing at all, and its owner
+            // would otherwise see a folder that has quietly stopped working.
+            // The reason without the path: the message leads with the folder's disk location, and
+            // this detail reaches the whole team's reviewers; the log above keeps the full text.
+            failureRecorder.recordRunFailureAs(
+                    FailureKind.SOURCE_UNREADABLE,
+                    null,
+                    policy.id(),
+                    storedSource.id(),
+                    policy.owner(),
+                    e instanceof FileSystemException fs && fs.getReason() != null
+                            ? fs.getReason()
+                            : "The folder could not be listed");
             context.vetoCleanup();
             return List.of();
         }

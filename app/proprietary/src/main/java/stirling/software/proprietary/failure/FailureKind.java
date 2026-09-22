@@ -176,6 +176,26 @@ public enum FailureKind {
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
 
     /**
+     * A source could not be listed at all: a watched folder that was unplugged, renamed or had its
+     * permissions changed. Scoped to the source, so a folder that has been gone a week is one
+     * incident rather than one per sweep.
+     *
+     * <p>Claims no error code: nothing throws a coded exception here. The sweep records it
+     * directly, which is why it is reached without the classifier.
+     */
+    SOURCE_UNREADABLE(
+            FailureStage.INPUT,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_CONFIG_FIX,
+            FailureScope.SOURCE,
+            noErrorCodes(),
+            fallback("This folder could not be read, so nothing in it was processed."),
+            // No document to view: the sweep never got as far as one. Fixing it means fixing the
+            // folder, which happens outside Stirling.
+            global(VIEW_IN_PROCESSOR, OWNER, SECONDARY),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /**
      * Ghostscript reached a page it could not draw, which its output names. Only that recognised
      * failure belongs here; the bucket Ghostscript output falls into otherwise is STEP_TOOL_FAILED.
      */
@@ -264,8 +284,10 @@ public enum FailureKind {
             FailureScope.RUN,
             noErrorCodes(),
             fallback("This run failed for a reason Stirling does not yet recognise."),
-            // No known fix to declare, so a plain retry leads: these are often one-offs.
-            global(OPEN_IN_TOOL, OWNER, SECONDARY),
+            // No known fix to declare, so a plain retry leads: these are often one-offs. One id
+            // wherever the document is: a browser holding it opens the tool, and a smart folder's
+            // document is run again by the server.
+            resolution(OPEN_IN_TOOL, OWNER),
             global(VIEW_FILE, OWNER, SECONDARY),
             global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW));

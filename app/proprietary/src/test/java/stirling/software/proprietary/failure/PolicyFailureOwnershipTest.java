@@ -97,7 +97,8 @@ class PolicyFailureOwnershipTest {
                                 List.of(new AcknowledgeAction(store), new DismissAction(store))),
                         authority,
                         userService,
-                        props);
+                        props,
+                        policyStore);
 
         PolicyFailureRecorder recorder =
                 new PolicyFailureRecorder(
@@ -247,22 +248,26 @@ class PolicyFailureOwnershipTest {
     class UnattendedSweep {
 
         @Test
-        void theRowIsOwnedByNobodySoTheReviewerInheritsTheOwnerActions() throws Exception {
+        void theRowBelongsToWhoeverOwnsTheSourceRatherThanToNobody() throws Exception {
+            // Nobody attended it, but the documents are still somebody's: the source's owner is
+            // the person watching that folder. Filed under no actor it reached a team leader and
+            // nobody else, so the one person who could act on it was the one not told.
             runAndFail(null, "src-watched-folder", "file-hash-1");
 
-            FileRunEvent unattended = asReviewer("alice");
-            assertThat(service.ownershipOf(unattended)).isEqualTo(Ownership.UNOWNED);
-            // No browser holds this document, so the offer is stated and disabled, not dropped.
-            assertThat(offeredTo(unattended)).contains(FailureActionId.VIEW_FILE);
-            assertThat(service.availableActions(unattended))
-                    .filteredOn(action -> action.id() == FailureActionId.VIEW_FILE)
-                    .singleElement()
-                    .satisfies(
-                            action -> {
-                                assertThat(action.enabled()).isFalse();
-                                assertThat(action.disabledReasonKey())
-                                        .isEqualTo("portal.failures.disabled.unattended");
-                            });
+            assertThat(service.ownershipOf(asMember("carol"))).isEqualTo(Ownership.MINE);
+        }
+
+        @Test
+        void aReviewerWhoIsNotItsOwnerGetsTheReviewersActionsOnly() throws Exception {
+            // The owner actions follow the owner. That is what keeps a leader from being offered
+            // the button that runs a file in a folder belonging to someone else.
+            runAndFail(null, "src-watched-folder", "file-hash-1");
+
+            FileRunEvent theirs = asReviewer("alice");
+            assertThat(service.ownershipOf(theirs)).isEqualTo(Ownership.THEIRS);
+            assertThat(offeredTo(theirs))
+                    .contains(FailureActionId.VIEW_IN_PROCESSOR, FailureActionId.DISMISS)
+                    .doesNotContain(FailureActionId.VIEW_FILE, FailureActionId.OPEN_IN_TOOL);
         }
 
         @Test
