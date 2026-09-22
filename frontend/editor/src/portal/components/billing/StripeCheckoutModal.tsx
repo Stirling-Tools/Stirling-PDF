@@ -2,11 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, Modal, Skeleton, Spinner } from "@app/ui";
 import {
-  currencySymbol,
-  docCapForMoney,
-  formatMinor,
-} from "@app/billing/format";
-import {
   EmbeddedCheckout,
   EmbeddedCheckoutProvider,
 } from "@stripe/react-stripe-js";
@@ -18,18 +13,18 @@ import {
   type SaasCurrency,
 } from "@portal/billing/stripe";
 import { CardPlaceholder } from "@portal/components/billing/CardPlaceholder";
+import { ProcessorSpendFields } from "@portal/components/billing/ProcessorSpendFields";
 import { PrepayModalHeader } from "@portal/components/billing/PrepayModalHeader";
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  /** Return from the spend limit to the host's payment choices. */
-  onBack?: () => void;
+  onPrepay?: () => void;
   /** Caller's resolved team id. The edge function needs it to scope checkout. */
   teamId: number;
   /** Currency of the wallet amounts; Stripe resolves the payment currency. */
   currency: SaasCurrency;
-  /** Per-document rate in minor units, for the cap→PDF estimate on step 1. */
+  /** Per-credit rate in minor currency units. */
   pricePerDocMinor?: number | null;
   /** Cap to seed the spend-limit step with; defaults to $100/mo. */
   initialCapUsd?: number | null;
@@ -44,8 +39,7 @@ interface Props {
   onComplete: () => Promise<boolean>;
 }
 
-/** Preset monthly caps offered on the spend-limit step (major currency units). */
-const CAP_PRESETS = [50, 100, 250, 1000] as const;
+/** Default monthly cap in major currency units. */
 const DEFAULT_CAP_USD = 100;
 
 /**
@@ -108,125 +102,10 @@ function CheckoutActivationSlow({ onClose }: { onClose: () => void }) {
   );
 }
 
-/**
- * Spend-limit picker for step 1: a primary editable amount ({@code $ 100 / mo}) with quick-pick chips
- * below. The amount field is the main entry — always visible, defaulted, and typeable — and clicking a
- * chip (or "No cap") just writes into it. Controlled via {@code capUsd}/{@code onChange}
- * (null = no cap, a number = a monthly ceiling).
- */
-function SpendLimitPicker({
-  capUsd,
-  onChange,
-  currency,
-  pricePerDocMinor,
-  presets,
-  disabled,
-}: {
-  capUsd: number | null;
-  onChange: (v: number | null) => void;
-  currency: SaasCurrency;
-  pricePerDocMinor?: number | null;
-  presets: readonly number[];
-  disabled?: boolean;
-}) {
-  const { t } = useTranslation();
-  const sym = currencySymbol(currency);
-  const isNoCap = capUsd === null;
-  // Local mirror so partial typing isn't clobbered by the controlled value; resync when not focused
-  // (e.g. a chip sets the amount, or an initial cap loads in).
-  const [text, setText] = useState(capUsd != null ? String(capUsd) : "");
-  const [focused, setFocused] = useState(false);
-  useEffect(() => {
-    if (!focused) setText(capUsd != null ? String(capUsd) : "");
-  }, [capUsd, focused]);
-
-  const docs = docCapForMoney(capUsd, pricePerDocMinor);
-
-  const onInput = (raw: string) => {
-    const cleaned = raw.replace(/[^0-9]/g, "");
-    setText(cleaned);
-    // Empty maps to 0 — the "nothing entered yet" sentinel (distinct from the explicit null "No limit").
-    // The parent treats 0 as incomplete and blocks Continue, so a cleared field can't become a $0 cap.
-    onChange(cleaned === "" ? 0 : parseInt(cleaned, 10));
-  };
-
-  return (
-    <div className="portal-billing__caplimit">
-      <div
-        className="portal-billing__caplimit-field"
-        data-nocap={isNoCap ? "true" : "false"}
-      >
-        <span className="portal-billing__caplimit-sym">{sym}</span>
-        <input
-          className="portal-billing__caplimit-input"
-          inputMode="numeric"
-          value={isNoCap ? "" : text}
-          placeholder={
-            isNoCap ? t("portal.billing.checkout.cap.noLimit", "No limit") : ""
-          }
-          aria-label={t(
-            "portal.billing.checkout.cap.amountAria",
-            "Monthly spend limit",
-          )}
-          onChange={(e) => onInput(e.target.value)}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          disabled={disabled}
-        />
-        <span className="portal-billing__caplimit-suffix">
-          {t("portal.billing.checkout.cap.perMonth", "/ mo")}
-        </span>
-      </div>
-
-      <div className="portal-billing__caplimit-chips">
-        {presets.map((p) => (
-          <Button
-            key={p}
-            type="button"
-            variant="quiet"
-            className="portal-billing__caplimit-chip"
-            data-selected={capUsd === p ? "true" : "false"}
-            onClick={() => onChange(p)}
-            disabled={disabled}
-          >
-            {sym}
-            {p.toLocaleString()}
-          </Button>
-        ))}
-        <Button
-          type="button"
-          variant="quiet"
-          className="portal-billing__caplimit-chip"
-          data-selected={isNoCap ? "true" : "false"}
-          onClick={() => onChange(null)}
-          disabled={disabled}
-        >
-          {t("payg.cap.noCapLabel", "No cap")}
-        </Button>
-      </div>
-
-      {docs != null && (
-        <div className="portal-billing__caplimit-estimate">
-          <span className="portal-billing__caplimit-estimate-main">
-            {t("payg.cap.docsEstimate", "≈ {{docs}} credits / month", {
-              docs: docs.toLocaleString(),
-            })}
-          </span>
-          <span className="portal-billing__caplimit-estimate-sub">
-            {t("payg.cap.docsRate", "at {{rate}} / credit", {
-              rate: formatMinor(pricePerDocMinor ?? 0, currency),
-            })}
-          </span>
-        </div>
-      )}
-    </div>
-  );
-}
-
 export function StripeCheckoutModal({
   open,
   onClose,
-  onBack,
+  onPrepay,
   teamId,
   currency,
   pricePerDocMinor,
@@ -245,7 +124,7 @@ export function StripeCheckoutModal({
     "cap" | "checkout" | "finalizing" | "activationSlow"
   >("cap");
   const [capUsd, setCapUsd] = useState<number | null>(
-    initialCapUsd ?? DEFAULT_CAP_USD,
+    initialCapUsd === undefined ? DEFAULT_CAP_USD : initialCapUsd,
   );
   const [capBusy, setCapBusy] = useState(false);
   const [capError, setCapError] = useState<string | null>(null);
@@ -266,7 +145,6 @@ export function StripeCheckoutModal({
       setClientSecret(null);
       setError(null);
       setLoading(true);
-      setCapUsd(initialCapUsd ?? DEFAULT_CAP_USD);
       setCapBusy(false);
       setCapError(null);
     }
@@ -368,7 +246,7 @@ export function StripeCheckoutModal({
 
   // Valid to continue when a positive cap is set OR "No limit" (null) was explicitly picked. A cleared
   // field maps to 0 (incomplete) — block Continue rather than let it become an accidental $0 ceiling.
-  const capValid = capUsd === null || capUsd > 0;
+  const capValid = capUsd === null || (Number.isFinite(capUsd) && capUsd > 0);
 
   // The chosen cap, formatted for the payment-step recap (null = "No cap" was picked on step 1).
   const capLabel =
@@ -384,6 +262,19 @@ export function StripeCheckoutModal({
     <Modal
       open={open}
       onClose={handleClose}
+      title={
+        phase === "cap"
+          ? t("portal.billing.simple.setLimit", "Set a spend limit")
+          : undefined
+      }
+      subtitle={
+        phase === "cap"
+          ? t(
+              "portal.billing.simple.limitIntro",
+              "Cap what the Processor can bill each month.",
+            )
+          : undefined
+      }
       /* Only the Stripe checkout step needs the room; every other step stays narrow. The checkout
          step also gets a wider-than-xl cap so the embedded Stripe iframe clears its ~1000px
          two-column threshold (below it, Stripe falls back to the single-column "portrait" layout). */
@@ -393,7 +284,9 @@ export function StripeCheckoutModal({
         phase === "cap" || phase === "checkout"
           ? "portal-billing__checkout-modal--framed"
           : "",
-        phase === "checkout" ? "portal-billing__checkout-modal--wide" : "",
+        phase === "checkout"
+          ? "portal-billing__checkout-modal--wide"
+          : "processor-checkout--simple",
       ]
         .filter(Boolean)
         .join(" ")}
@@ -408,34 +301,18 @@ export function StripeCheckoutModal({
 
       {phase === "cap" && (
         <div className="portal-billing__checkout-cap">
-          <PrepayModalHeader
-            step={2}
-            total={3}
-            title={t(
-              "portal.billing.checkout.cap.title",
-              "Set your spend limit",
-            )}
-            onClose={handleClose}
-          />
           <div className="portal-billing__checkout-scroll">
-            <SpendLimitPicker
-              capUsd={capUsd}
+            <ProcessorSpendFields
+              value={capUsd}
               onChange={setCapUsd}
-              pricePerDocMinor={pricePerDocMinor}
               currency={currency}
-              presets={CAP_PRESETS}
+              rate={pricePerDocMinor ?? null}
               disabled={capBusy}
             />
             <p className="portal-billing__checkout-finePrint">
               {t(
-                "portal.billing.checkout.cap.note",
-                "You're never billed past your limit. Processing just pauses.",
-              )}
-            </p>
-            <p className="portal-billing__checkout-finePrint">
-              {t(
-                "portal.billing.checkout.cap.finePrint",
-                "Invoices post monthly. Cancel anytime.",
+                "portal.billing.simple.billingNote",
+                "No standing fee. Credits bill monthly as used. Cancel any time in Usage & Billing.",
               )}
             </p>
             {capError && (
@@ -451,11 +328,11 @@ export function StripeCheckoutModal({
             )}
             <div className="portal-billing__checkout-cap-actions">
               <Button
-                variant="quiet"
-                onClick={onBack ?? onClose}
+                variant="secondary"
+                onClick={onPrepay ?? onClose}
                 disabled={capBusy}
               >
-                {t("portal.billing.checkout.cap.back", "Back")}
+                {t("portal.billing.spendLimit.buyCredits", "Buy credits")}
               </Button>
               <Button
                 loading={capBusy}
@@ -476,8 +353,8 @@ export function StripeCheckoutModal({
       {phase === "checkout" && (
         <div className="portal-billing__checkout-pay">
           <PrepayModalHeader
-            step={3}
-            total={3}
+            step={2}
+            total={2}
             title={t("portal.billing.checkout.title", "Add a payment method")}
             onClose={handleClose}
           />

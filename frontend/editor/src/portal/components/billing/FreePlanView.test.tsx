@@ -74,12 +74,10 @@ describe("Processor activation navigation", () => {
         />
       </MantineProvider>,
     );
-    expect(
-      await screen.findByRole("button", { name: "CAD 100" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "$100" }),
-    ).not.toBeInTheDocument();
+    fireEvent.click(await screen.findByRole("button", { name: "Change" }));
+    const limit = screen.getByRole("textbox", { name: "Monthly spend limit" });
+    fireEvent.change(limit, { target: { value: "100" } });
+    expect(limit).toHaveValue("CAD 100");
   });
 
   it("returns from a saved quote to monthly limit selection without cancelling or purchasing", async () => {
@@ -89,10 +87,10 @@ describe("Processor activation navigation", () => {
       </MantineProvider>,
     );
     fireEvent.click(await screen.findByRole("button", { name: "Back" }));
-    fireEvent.click(screen.getByRole("button", { name: "Pay as you go" }));
+    fireEvent.click(screen.getByRole("button", { name: "Change" }));
     const limit = screen.getByRole("textbox", { name: "Monthly spend limit" });
     fireEvent.change(limit, { target: { value: "250" } });
-    expect(limit).toHaveValue("250");
+    expect(limit).toHaveValue("$250");
     expect(api.cancelBundleQuote).not.toHaveBeenCalled();
     expect(api.acceptBundleStripeQuote).not.toHaveBeenCalled();
     expect(api.createCheckoutSession).not.toHaveBeenCalled();
@@ -105,12 +103,8 @@ describe("Processor activation navigation", () => {
       </MantineProvider>,
     );
     fireEvent.click(await screen.findByRole("button", { name: "Back" }));
-    fireEvent.click(screen.getByRole("button", { name: "Pay as you go" }));
-    fireEvent.click(screen.getByRole("button", { name: "Back" }));
-    fireEvent.click(screen.getByRole("button", { name: "Prepay a year" }));
-    expect(
-      await screen.findByText("Calculate your annual payment"),
-    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Buy credits" }));
+    expect(await screen.findByText("Prepay the year")).toBeInTheDocument();
     expect(api.getLatestBundleQuote).toHaveBeenCalledTimes(2);
     expect(api.cancelBundleQuote).not.toHaveBeenCalled();
     expect(api.createBundleStripeQuote).not.toHaveBeenCalled();

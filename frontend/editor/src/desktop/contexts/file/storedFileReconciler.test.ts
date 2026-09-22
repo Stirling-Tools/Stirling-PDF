@@ -28,6 +28,7 @@ import {
 } from "@app/contexts/file/storedFileReconciler";
 
 const PATH = "C:/docs/report.pdf";
+let file: File;
 
 const stub = (over: Partial<StirlingFileStub> = {}): StirlingFileStub =>
   ({
@@ -43,7 +44,7 @@ const stub = (over: Partial<StirlingFileStub> = {}): StirlingFileStub =>
 
 beforeEach(() => {
   vi.clearAllMocks();
-  pendingFilePathMappings.clear();
+  file = new File(["pdf"], "report.pdf", { lastModified: 5000 });
   getDiskFileState.mockResolvedValue({
     availability: "present",
     size: 100,
@@ -99,29 +100,29 @@ describe("inheritedSourceLink", () => {
 
 describe("sourceLinkForNewFile", () => {
   it("links a file the open dialog registered, and baselines it", async () => {
-    pendingFilePathMappings.set("k", PATH);
-    await expect(sourceLinkForNewFile("k")).resolves.toEqual({
+    pendingFilePathMappings.set(file, PATH);
+    await expect(sourceLinkForNewFile(file)).resolves.toEqual({
       localFilePath: PATH,
       diskSyncedSize: 100,
       diskSyncedModifiedMs: 5000,
     });
-    // Consumed: a later file sharing the quickKey is not the same file.
-    expect(pendingFilePathMappings.has("k")).toBe(false);
+    const copy = new File(["pdf"], "report.pdf", { lastModified: 5000 });
+    await expect(sourceLinkForNewFile(copy)).resolves.toEqual({});
   });
 
   it("links without a baseline when disk cannot be read right now", async () => {
-    pendingFilePathMappings.set("k", PATH);
+    pendingFilePathMappings.set(file, PATH);
     getDiskFileState.mockResolvedValue({
       availability: "unavailable",
       reason: "permission",
     });
-    await expect(sourceLinkForNewFile("k")).resolves.toEqual({
+    await expect(sourceLinkForNewFile(file)).resolves.toEqual({
       localFilePath: PATH,
     });
   });
 
   it("leaves a file that came from nowhere unlinked", async () => {
-    await expect(sourceLinkForNewFile("unknown")).resolves.toEqual({});
+    await expect(sourceLinkForNewFile(file)).resolves.toEqual({});
     expect(getDiskFileState).not.toHaveBeenCalled();
   });
 });

@@ -5,6 +5,7 @@ import { WindowTitleBar } from "@app/components/WindowTitleBar";
 import { DesktopQueryCacheReset } from "@app/components/DesktopQueryCacheReset";
 import { DesktopBannerInitializer } from "@app/components/DesktopBannerInitializer";
 import { SaveShortcutListener } from "@app/components/SaveShortcutListener";
+import { LocalProcessingFolders } from "@app/components/LocalProcessingFolders";
 import { DiskConflictHost } from "@app/components/shared/DiskConflictHost";
 import { DesktopOnboardingModal } from "@app/components/DesktopOnboardingModal";
 import { DesktopSaasOnboardingBootstrap } from "@app/components/DesktopSaasOnboardingBootstrap";
@@ -65,6 +66,10 @@ export function AppProviders({ children }: { children: ReactNode }) {
   // tree to remount without a full page reload (avoids Windows WebView2 freeze on window.location.reload()).
   const [appKey, setAppKey] = useState(0);
   const hasLoadedInitialMode = useRef(false);
+  // The mode the current appKey reflects. A same-mode notify (e.g. "continue without
+  // signing in" re-selecting local while already local) must not remount the provider
+  // tree - that resets DesktopOnboardingModal mid-flow and re-shows the welcome slide.
+  const lastAppliedMode = useRef<"saas" | "selfhosted" | "local" | null>(null);
 
   // Files dropped outside a dropzone must never navigate the webview to the
   // file (Linux WebKit renders the PDF fullscreen and orphans the app UI).
@@ -84,6 +89,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
   useEffect(() => {
     void connectionModeService.getCurrentMode().then((mode) => {
       setConnectionMode(mode);
+      lastAppliedMode.current = mode;
       hasLoadedInitialMode.current = true;
     });
 
@@ -96,7 +102,15 @@ export function AppProviders({ children }: { children: ReactNode }) {
       // SaaS providers and remounting mid-wizard resets authChecked, navigating away.
       // Switching FROM selfhosted TO saas DOES trigger a remount (mode !== 'selfhosted')
       // which is intentional — the SaaS provider tree needs fresh state after login.
-      if (hasLoadedInitialMode.current && config.mode !== "selfhosted") {
+      // Only on a real transition: a same-mode notify has nothing to reset, and
+      // remounting would tear down an in-flight modal (e.g. onboarding sign-in).
+      const modeChanged = lastAppliedMode.current !== config.mode;
+      lastAppliedMode.current = config.mode;
+      if (
+        hasLoadedInitialMode.current &&
+        modeChanged &&
+        config.mode !== "selfhosted"
+      ) {
         setAppKey((k) => k + 1);
       }
     });
@@ -363,6 +377,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
           <DesktopConfigSync />
           <DesktopBannerInitializer />
           <SaveShortcutListener />
+          <LocalProcessingFolders />
           <DiskConflictHost />
           {children}
           {/* Desktop onboarding modal: welcome slide → sign-in slide, shown once on first launch */}

@@ -4,7 +4,6 @@ import { Banner } from "@app/ui";
 import type { Wallet } from "@portal/api/billing";
 import type { SaasCurrency } from "@portal/billing/stripe";
 import { StripeCheckoutModal } from "@portal/components/billing/StripeCheckoutModal";
-import { ActivationChoiceModal } from "@portal/components/billing/ActivationChoiceModal";
 import { BundleCheckoutModal } from "@portal/components/billing/BundleCheckoutModal";
 import { PrepaidCapacityCard } from "@portal/components/billing/PrepaidCapacityCard";
 
@@ -36,8 +35,6 @@ export function FreePlanView({
   onActivationClosed,
 }: Props) {
   const { t } = useTranslation();
-  // Activation fork (demo D97): choose → the metered checkout (payg) or the
-  // discounted bundle (prepay). Exactly one is open at a time.
   const [ownStep, setOwnStep] = useState<"choose" | "payg" | "prepay" | null>(
     null,
   );
@@ -97,18 +94,11 @@ export function FreePlanView({
           {missingTeam}
         </Banner>
       )}
-      <ActivationChoiceModal
-        open={step === "choose"}
-        onClose={closeModals}
-        onChoosePayg={() => setStep("payg")}
-        onChoosePrepay={() => setStep("prepay")}
-      />
-
       {wallet.teamId != null && (
         <StripeCheckoutModal
-          open={step === "payg"}
+          open={step === "payg" || step === "choose"}
           onClose={closeModals}
-          onBack={() => setStep("choose")}
+          onPrepay={() => setStep("prepay")}
           teamId={wallet.teamId}
           currency={currency}
           pricePerDocMinor={wallet.pricePerDocMinor}
@@ -127,7 +117,7 @@ export function FreePlanView({
         <BundleCheckoutModal
           open={step === "prepay"}
           onClose={closeModals}
-          onBack={() => setStep("choose")}
+          onBack={() => setStep("payg")}
           wallet={wallet}
           onComplete={() => {
             closeModals();
