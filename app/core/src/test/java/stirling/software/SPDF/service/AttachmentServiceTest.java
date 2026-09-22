@@ -375,8 +375,7 @@ class AttachmentServiceTest {
                                     "b/report.pdf",
                                     MediaType.APPLICATION_PDF_VALUE,
                                     "b".getBytes())));
-            assertTrue(
-                    attachmentService.extractSingleAttachment(document, "report.pdf").isEmpty());
+            assertTrue(attachmentService.extractSingleAttachment(document, "report.pdf").isEmpty());
         }
     }
 

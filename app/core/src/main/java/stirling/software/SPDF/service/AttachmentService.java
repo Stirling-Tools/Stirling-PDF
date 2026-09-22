@@ -379,16 +379,14 @@ public class AttachmentService implements AttachmentServiceInterface {
             return false;
         }
         String normTarget = targetName.trim();
-        return normTarget.equalsIgnoreCase(candidateName)
-                || normTarget.equalsIgnoreCase(entryKey);
+        return normTarget.equalsIgnoreCase(candidateName) || normTarget.equalsIgnoreCase(entryKey);
     }
 
     /**
-     * Entry whose name matches the target, preferring an exact candidate/key
-     * match so a simplified name can never shadow a later exact one
-     * (dir/report.pdf must not win over report.pdf). Falls back to simplified
-     * and decoded matching only when nothing matches exactly, and only when
-     * that fallback is unambiguous.
+     * Entry whose name matches the target, preferring an exact candidate/key match so a simplified
+     * name can never shadow a later exact one (dir/report.pdf must not win over report.pdf). Falls
+     * back to simplified and decoded matching only when nothing matches exactly, and only when that
+     * fallback is unambiguous.
      */
     private Optional<Map.Entry<String, PDComplexFileSpecification>> findAttachmentEntry(
             Map<String, PDComplexFileSpecification> embeddedFiles, String targetName) {
