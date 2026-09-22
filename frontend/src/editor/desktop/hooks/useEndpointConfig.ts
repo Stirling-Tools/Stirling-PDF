@@ -7,6 +7,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { isAxiosError } from "axios";
 import { tauriBackendService } from "@editor/services/tauriBackendService";
 import { selfHostedServerMonitor } from "@editor/services/selfHostedServerMonitor";
 import { isBackendNotReadyError } from "@editor/constants/backendErrors";
@@ -28,6 +29,15 @@ interface EndpointConfig {
 
 const RETRY_DELAY_MS = 2500;
 const OPTIMISTIC: EndpointAvailabilityDetails = { enabled: true, reason: null };
+
+function getErrorMessage(error: unknown): string {
+  if (isAxiosError(error)) {
+    const data = error.response?.data as { message?: string } | undefined;
+    if (typeof data?.message === "string") return data.message;
+    return error.message || "Unknown error occurred";
+  }
+  return error instanceof Error ? error.message : "Unknown error occurred";
+}
 
 // Booleans, not the monitors' state objects — those are reassigned every poll,
 // which would defeat useSyncExternalStore's identity check.
@@ -73,8 +83,11 @@ export function useEndpointEnabled(endpoint: string): {
   const localOnly = useLocalProcessingOnly();
   const { ready, backendOnline, offline } = useBackendReadiness(localOnly);
   const queryKey = [...qk.endpointEnabled(endpoint), localOnly];
+  // Opt-in and security-sensitive: unlike other endpoints, this one must not
+  // be assumed enabled while unresolved or fall back to SaaS optimism.
+  const requiresExplicitEnablement = endpoint === "url-to-pdf";
 
-  const { data, refetch } = useQuery({
+  const { data, error, isPending, refetch } = useQuery({
     queryKey,
     queryFn: () => resolveEndpointEnabled(endpoint),
     enabled: Boolean(endpoint) && ready,
@@ -94,11 +107,16 @@ export function useEndpointEnabled(endpoint: string): {
   }, [readinessMark]);
 
   return {
-    enabled: endpoint
-      ? (data ?? (!localOnly || !isOffDeviceEndpointName(endpoint)))
-      : null,
-    loading: false,
-    error: null,
+    enabled: requiresExplicitEnablement
+      ? (error ? false : (data ?? null))
+      : endpoint
+        ? (data ?? (!localOnly || !isOffDeviceEndpointName(endpoint)))
+        : null,
+    // Optimistic by design for most endpoints: the desktop check never blocks
+    // the UI. url-to-pdf is the deliberate exception — it stays hidden until
+    // the backend confirms it, so its real pending/error state is surfaced.
+    loading: requiresExplicitEnablement && Boolean(endpoint) && ready && isPending,
+    error: requiresExplicitEnablement && error ? getErrorMessage(error) : null,
     refetch: useCallback(async () => {
       await refetch();
     }, [refetch]),

@@ -252,7 +252,9 @@ export const useToolOperation = <TParams>(
         return;
       }
       // Validation
-      if (selectedFiles.length === 0) {
+      const requiresFiles =
+        config.toolType !== ToolType.custom || config.requiresFiles !== false;
+      if (requiresFiles && selectedFiles.length === 0) {
         actions.setError(t("noFileSelected", "No file loaded"));
         return;
       }
@@ -279,7 +281,7 @@ export const useToolOperation = <TParams>(
       const validFiles: StirlingFile[] = compatibleFiles.filter(
         (file) => file.size > 0,
       );
-      if (validFiles.length === 0) {
+      if (requiresFiles && validFiles.length === 0) {
         actions.setError(t("noValidFiles", "No valid files to process"));
         return;
       }

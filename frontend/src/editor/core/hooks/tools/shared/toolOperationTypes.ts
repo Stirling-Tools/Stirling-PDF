@@ -209,6 +209,9 @@ export interface CustomToolOperationConfig<
   /** This tool has custom behaviour. */
   toolType: ToolType.custom;
 
+  /** Allow generators such as URL to PDF to run without uploaded files. */
+  requiresFiles?: boolean;
+
   buildFormData?: undefined;
 
   /**
