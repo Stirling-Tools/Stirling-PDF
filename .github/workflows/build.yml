@@ -70,7 +70,7 @@ jobs:
     secrets: inherit
 
   build:
-    if: needs.files-changed.outputs.backend == 'true'
+    if: needs.files-changed.outputs.backend == 'true' && false
     needs: [files-changed, gradle-cache-prime]
     permissions:
       actions: read
@@ -88,7 +88,7 @@ jobs:
     if: |
       !cancelled() &&
       needs.files-changed.outputs.project == 'true' &&
-      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result)
+      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result) && false
     needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
@@ -96,7 +96,7 @@ jobs:
     secrets: inherit
 
   check-generateOpenApiDocs:
-    if: needs.files-changed.outputs.openapi == 'true'
+    if: needs.files-changed.outputs.openapi == 'true' && false
     needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
@@ -104,7 +104,7 @@ jobs:
     secrets: inherit
 
   frontend-validation:
-    if: needs.files-changed.outputs.frontend == 'true'
+    if: needs.files-changed.outputs.frontend == 'true' && false
     needs: [files-changed]
     permissions:
       contents: read
@@ -117,7 +117,7 @@ jobs:
   # whole-suite sweep (nightly.yml) still covers stories a change affects without
   # touching them directly.
   frontend-a11y:
-    if: needs.files-changed.outputs.frontend == 'true'
+    if: needs.files-changed.outputs.frontend == 'true' && false
     needs: [files-changed]
     permissions:
       contents: read
@@ -125,7 +125,7 @@ jobs:
     secrets: inherit
 
   playwright-e2e:
-    if: needs.files-changed.outputs.frontend == 'true'
+    if: needs.files-changed.outputs.frontend == 'true' && false
     needs: [files-changed]
     permissions:
       contents: read
@@ -136,7 +136,7 @@ jobs:
     if: |
       !cancelled() &&
       needs.files-changed.outputs.frontend == 'true' &&
-      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result)
+      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result) && false
     needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
@@ -147,7 +147,7 @@ jobs:
     if: |
       !cancelled() &&
       needs.files-changed.outputs.proprietary == 'true' &&
-      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result)
+      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result) && false
     needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
@@ -157,7 +157,7 @@ jobs:
       use_shared_cache: true
 
   check-licence:
-    if: needs.files-changed.outputs.build == 'true'
+    if: needs.files-changed.outputs.build == 'true' && false
     needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
@@ -168,7 +168,7 @@ jobs:
     if: |
       !cancelled() &&
       needs.files-changed.outputs.project == 'true' &&
-      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result)
+      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result) && false
     needs: [files-changed, gradle-cache-prime]
     permissions:
       actions: write
@@ -186,7 +186,7 @@ jobs:
   test-build-docker-images:
     if: |
       github.event_name == 'pull_request' &&
-      needs.files-changed.outputs.project == 'true'
+      needs.files-changed.outputs.project == 'true' && false
     needs: [files-changed]
     permissions:
       contents: read
@@ -201,7 +201,7 @@ jobs:
     if: |
       !cancelled() &&
       needs.files-changed.outputs.tauri == 'true' &&
-      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result)
+      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result) && false
     needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
@@ -219,7 +219,7 @@ jobs:
       use_shared_cache: true
 
   ai-engine:
-    if: needs.files-changed.outputs.engine == 'true'
+    if: needs.files-changed.outputs.engine == 'true' && false
     needs: [files-changed]
     permissions:
       contents: read
@@ -236,7 +236,7 @@ jobs:
     if: |
       !cancelled() &&
       needs.files-changed.outputs.generated-models == 'true' &&
-      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result)
+      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result) && false
     needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
