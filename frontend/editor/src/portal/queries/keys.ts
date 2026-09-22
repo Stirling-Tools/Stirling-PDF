@@ -22,6 +22,8 @@ export const qk = {
   encryptionMigration: () => ["portal", "encryptionMigration"] as const,
   /** Usage accrued on this instance since the last sync; self-hosted only. */
   localUsage: () => ["portal", "localUsage"] as const,
+  /** The push of that usage to SaaS, held as a query so opening the page runs it once. */
+  localSync: () => ["portal", "localSync"] as const,
   // Keyed on scope: the open queue and the closed one are different reads.
   fileRunEvents: (scope: FileRunEventScope) =>
     ["portal", "fileRunEvents", scope] as const,
