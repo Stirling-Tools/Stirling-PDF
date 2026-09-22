@@ -153,8 +153,15 @@ export async function extractSingleAttachment(
     const fileEntries = Object.keys(zip.files).filter((k) => !zip.files[k].dir);
     let matchedKey = fileEntries.find((k) => k === cleanFilename);
     if (!matchedKey) {
-      const norm = (s: string) =>
-        decodeURIComponent(s).toLowerCase().replace(/\\/g, "/");
+      // Invalid percent escapes throw instead of comparing: fall back to the
+      // raw string so one odd entry cannot fail the whole extraction.
+      const norm = (s: string) => {
+        try {
+          return decodeURIComponent(s).toLowerCase().replace(/\\/g, "/");
+        } catch {
+          return s.toLowerCase().replace(/\\/g, "/");
+        }
+      };
       const targetNorm = norm(cleanFilename);
       const targetBase = targetNorm.split("/").pop() || targetNorm;
       matchedKey = fileEntries.find((k) => {
