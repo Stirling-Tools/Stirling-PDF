@@ -190,7 +190,7 @@ class ControllerAuditAspectTest {
                 when(auditService.captureCurrentPrincipal()).thenReturn("anonymousUser");
                 when(auditService.captureCurrentOrigin()).thenReturn("WEB");
                 when(auditService.createBaseAuditData(eq(jp), any(AuditLevel.class)))
-                        .thenReturn(new HashMap<>());
+                        .thenReturn(new HashMap<>(Map.of("principal", "anonymousUser")));
                 when(auditService.resolveEventType(
                                 any(Method.class), any(Class.class), any(), eq("POST"), isNull()))
                         .thenReturn(AuditEventType.USER_LOGIN);
@@ -198,14 +198,16 @@ class ControllerAuditAspectTest {
 
                 aspect.auditPostMethod(jp);
 
+                ArgumentCaptor<Map<String, Object>> dataCaptor = mapCaptor();
                 verify(auditService)
                         .audit(
                                 eq("qa-member-delta"),
                                 eq("WEB"),
                                 any(),
                                 eq(AuditEventType.USER_LOGIN),
-                                anyMap(),
+                                dataCaptor.capture(),
                                 any(AuditLevel.class));
+                assertThat(dataCaptor.getValue()).containsEntry("principal", "qa-member-delta");
             } finally {
                 RequestContextHolder.resetRequestAttributes();
             }

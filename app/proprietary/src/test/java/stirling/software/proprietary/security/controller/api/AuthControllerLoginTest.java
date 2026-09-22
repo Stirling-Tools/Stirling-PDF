@@ -206,6 +206,23 @@ class AuthControllerLoginTest {
     }
 
     @Test
+    void emptyPasswordStillRecordsAttemptedUsername() throws Exception {
+        UsernameAndPassMfa payload = buildPayload(null);
+        payload.setPassword("");
+        MvcResult result =
+                mockMvc.perform(
+                                post("/api/v1/auth/login")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(payload)))
+                        .andExpect(status().isBadRequest())
+                        .andReturn();
+        assertThat(AuditContext.attemptedSubject(result.getRequest()))
+                .isEqualTo("user@example.com");
+        assertThat(AuditContext.subject(result.getRequest())).isNull();
+        verify(userDetailsService, never()).loadUserByUsername(any());
+    }
+
+    @Test
     void successfulLoginRecordsTheAuditActor() throws Exception {
         UsernameAndPassMfa payload = buildPayload(null);
         User user = buildUser();

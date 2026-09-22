@@ -7,7 +7,13 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Function;
 
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -31,6 +37,8 @@ public class PortalInfraAuditService {
     /** Rows returned to the tab after filtering. */
     private static final int RETURN_LIMIT = 40;
 
+    private static final int SUMMARY_BATCH_SIZE = 400;
+
     private static final Duration SUMMARY_WINDOW = Duration.ofHours(24);
 
     private static final DateTimeFormatter TS_FORMAT =
@@ -39,52 +47,68 @@ public class PortalInfraAuditService {
     private final PortalAuditReadService auditReadService;
     private final ObjectMapper objectMapper;
 
-    /** Whole-server view (admins). */
+    /** Whole-server view with full 24-hour counts, cached for the portal polling interval. */
+    @Cacheable(value = PortalAuditReadService.CACHE_NAME, key = "'infra:server'")
     public InfraAuditLogResponse serverAuditLog() {
-        return buildFromEvents(auditReadService.serverEvents(), true);
+        Instant until = Instant.now();
+        Instant since = until.minus(SUMMARY_WINDOW);
+        return buildFromEvents(
+                auditReadService.serverEvents(),
+                true,
+                summarize(page -> auditReadService.serverEventsBetween(since, until, page)));
     }
 
     /** Team-scoped view: only events by the given principals; empty yields an empty log. */
+    @Cacheable(value = PortalAuditReadService.CACHE_NAME, key = "'infra:' + #cacheKey")
     public InfraAuditLogResponse scopedAuditLog(String cacheKey, List<String> principals) {
-        return buildFromEvents(auditReadService.scopedEvents(cacheKey, principals), false);
+        Instant until = Instant.now();
+        Instant since = until.minus(SUMMARY_WINDOW);
+        return buildFromEvents(
+                auditReadService.scopedEvents(cacheKey, principals),
+                false,
+                summarize(
+                        page ->
+                                auditReadService.scopedEventsBetween(
+                                        principals, since, until, page)));
     }
 
     private InfraAuditLogResponse buildFromEvents(
-            List<PortalAuditEventRow> recent, boolean fullServer) {
-        List<PortalAuditEventRow> relevant =
-                recent.stream().filter(e -> isInfraRelevant(e.type())).toList();
-
+            List<PortalAuditEventRow> recent, boolean fullServer, InfraAuditSummary summary) {
         List<InfraAuditEventDto> events =
-                relevant.stream().limit(RETURN_LIMIT).map(this::toDto).toList();
-
-        Instant since = Instant.now().minus(SUMMARY_WINDOW);
-        List<InfraAuditEventDto> counted =
-                relevant.stream()
-                        .filter(e -> e.timestamp() != null && e.timestamp().isAfter(since))
+                recent.stream()
+                        .filter(e -> isInfraRelevant(e.type()))
+                        .limit(RETURN_LIMIT)
                         .map(this::toDto)
                         .toList();
-
-        int policy = (int) counted.stream().filter(e -> "policy".equals(e.getCategory())).count();
-        int processing =
-                (int) counted.stream().filter(e -> "processing".equals(e.getCategory())).count();
-        int elevation =
-                (int) counted.stream().filter(e -> "elevation".equals(e.getCategory())).count();
-        int config = (int) counted.stream().filter(e -> "config".equals(e.getCategory())).count();
-
-        InfraAuditSummary summary =
-                InfraAuditSummary.builder()
-                        .totalEvents(counted.size())
-                        .policy(policy)
-                        .processing(processing)
-                        .elevation(elevation)
-                        .config(config)
-                        .build();
-
         return InfraAuditLogResponse.builder()
                 .summary(summary)
                 .events(events)
                 .fullServer(fullServer)
                 .build();
+    }
+
+    private InfraAuditSummary summarize(Function<Pageable, Slice<PortalAuditEventRow>> loader) {
+        InfraAuditSummary summary = new InfraAuditSummary();
+        Pageable page =
+                PageRequest.of(
+                        0, SUMMARY_BATCH_SIZE, Sort.by(Sort.Direction.DESC, "timestamp", "id"));
+        Slice<PortalAuditEventRow> batch;
+        do {
+            batch = loader.apply(page);
+            for (PortalAuditEventRow event : batch) {
+                summary.setTotalEvents(summary.getTotalEvents() + 1);
+                Map<String, Object> data = parseData(event);
+                switch (categoryFor(event, data)) {
+                    case "policy" -> summary.setPolicy(summary.getPolicy() + 1);
+                    case "processing" -> summary.setProcessing(summary.getProcessing() + 1);
+                    case "elevation" -> summary.setElevation(summary.getElevation() + 1);
+                    case "config" -> summary.setConfig(summary.getConfig() + 1);
+                    default -> {}
+                }
+            }
+            page = batch.nextPageable();
+        } while (batch.hasNext());
+        return summary;
     }
 
     /** UI_DATA and HTTP_REQUEST are read/polling noise - excluded from the infrastructure view. */
@@ -103,7 +127,7 @@ public class PortalInfraAuditService {
         boolean policyDispatch = isPolicyRunPath(path) && !automation;
         // A dispatch is its own "policy" category so the UI badges it as a policy run, not a
         // generic processing op; its internal steps keep their real tool category.
-        String category = policyDispatch ? "policy" : categoryFor(event.type(), path);
+        String category = categoryFor(event, data);
 
         return InfraAuditEventDto.builder()
                 .id(String.valueOf(event.id()))
@@ -115,6 +139,13 @@ public class PortalInfraAuditService {
                 .status(statusFor(event.type(), category, data))
                 .latencyMs(asLong(data.get("latencyMs")))
                 .build();
+    }
+
+    private static String categoryFor(PortalAuditEventRow event, Map<String, Object> data) {
+        String path = asString(data.get("path"));
+        return isPolicyRunPath(path) && !isAutomation(data)
+                ? "policy"
+                : categoryFor(event.type(), path);
     }
 
     private static boolean isAutomation(Map<String, Object> data) {

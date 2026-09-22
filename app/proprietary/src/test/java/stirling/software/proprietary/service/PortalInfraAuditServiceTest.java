@@ -1,6 +1,10 @@
 package stirling.software.proprietary.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.Duration;
@@ -13,6 +17,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.SliceImpl;
 
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.PortalAuditEventRow;
@@ -34,6 +40,27 @@ class PortalInfraAuditServiceTest {
     @BeforeEach
     void setUp() {
         service = new PortalInfraAuditService(auditReadService, JsonMapper.builder().build());
+        org.mockito.Mockito.lenient()
+                .when(auditReadService.serverEventsBetween(any(), any(), any()))
+                .thenAnswer(
+                        invocation -> {
+                            Instant since = invocation.getArgument(0);
+                            Instant until = invocation.getArgument(1);
+                            Pageable page = invocation.getArgument(2);
+                            List<PortalAuditEventRow> rows =
+                                    auditReadService.serverEvents().stream()
+                                            .filter(
+                                                    e ->
+                                                            e.timestamp() != null
+                                                                    && !e.timestamp()
+                                                                            .isBefore(since)
+                                                                    && !e.timestamp()
+                                                                            .isAfter(until))
+                                            .toList();
+                            int from = (int) page.getOffset();
+                            int to = Math.min(from + page.getPageSize(), rows.size());
+                            return new SliceImpl<>(rows.subList(from, to), page, to < rows.size());
+                        });
     }
 
     private static final Instant NOW = Instant.now();
@@ -202,5 +229,43 @@ class PortalInfraAuditServiceTest {
         assertThat(resp.getEvents()).hasSize(3);
         assertThat(resp.getSummary().getTotalEvents()).isEqualTo(1);
         assertThat(resp.getSummary().getProcessing()).isEqualTo(1);
+    }
+
+    @Test
+    void summaryIncludesBatchesBeyondTheRecentScanLimit() {
+        List<PortalAuditEventRow> rows = new ArrayList<>();
+        for (int i = 0; i < 450; i++) {
+            rows.add(row(i, "{\"path\":\"/api/v1/misc/compress-pdf\"}"));
+        }
+        when(auditReadService.serverEvents()).thenReturn(rows.subList(0, 400));
+        org.mockito.Mockito.doAnswer(
+                        invocation -> {
+                            Pageable page = invocation.getArgument(2);
+                            int from = (int) page.getOffset();
+                            int to = Math.min(from + page.getPageSize(), rows.size());
+                            return new SliceImpl<>(rows.subList(from, to), page, to < rows.size());
+                        })
+                .when(auditReadService)
+                .serverEventsBetween(any(), any(), any());
+
+        var response = service.serverAuditLog();
+
+        assertThat(response.getEvents()).hasSize(40);
+        assertThat(response.getSummary().getTotalEvents()).isEqualTo(450);
+        assertThat(response.getSummary().getProcessing()).isEqualTo(450);
+    }
+
+    @Test
+    void scopedSummaryNeverUsesTheServerScan() {
+        List<String> principals = List.of("member@example.com");
+        when(auditReadService.scopedEvents("team:1", principals)).thenReturn(List.of());
+        when(auditReadService.scopedEventsBetween(eq(principals), any(), any(), any()))
+                .thenReturn(new SliceImpl<>(List.of(row(1, "{}"))));
+
+        var response = service.scopedAuditLog("team:1", principals);
+
+        assertThat(response.isFullServer()).isFalse();
+        assertThat(response.getSummary().getTotalEvents()).isEqualTo(1);
+        verify(auditReadService, never()).serverEventsBetween(any(), any(), any());
     }
 }

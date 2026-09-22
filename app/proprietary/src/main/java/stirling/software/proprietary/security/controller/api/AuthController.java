@@ -103,6 +103,9 @@ public class AuthController {
                         .body(Map.of("error", "Username is required"));
             }
 
+            String username = request.getUsername().trim();
+            AuditContext.setAttemptedSubject(httpRequest, username);
+
             if (request.getPassword() == null || request.getPassword().isEmpty()) {
                 log.warn(
                         "Login attempt with null or empty password for user: {}",
@@ -111,8 +114,6 @@ public class AuthController {
                         .body(Map.of("error", "Password is required"));
             }
 
-            String username = request.getUsername().trim();
-            AuditContext.setAttemptedSubject(httpRequest, username);
             String ip = httpRequest.getRemoteAddr();
 
             // Check if account is blocked due to too many failed attempts
