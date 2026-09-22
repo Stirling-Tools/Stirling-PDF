@@ -87,7 +87,7 @@ jobs:
         id: cache
         uses: Ludy87/cache-the-planet@v1.9
         with:
-          manifest-branch: dev-cache
+          manifest-branch: main
           manifest-path: .github/cache-data
           storage: sftp
           sftp-host: ${{ secrets.CACHE_SFTP_HOST }}
