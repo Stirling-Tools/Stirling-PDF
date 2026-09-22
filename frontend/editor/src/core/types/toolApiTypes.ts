@@ -542,7 +542,10 @@ export interface ExtractImageScansRequest {
   tolerance?: number;
 }
 export interface ExtractSingleAttachmentRequest {
-  attachmentName?: string;
+  /**
+   * Name of the embedded attachment to extract
+   */
+  attachmentName: string;
 }
 export interface FileSizeRequest {
   /**

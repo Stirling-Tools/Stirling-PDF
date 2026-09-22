@@ -640,7 +640,7 @@ class ExtractSingleAttachmentParams(ApiModel):
     This endpoint extracts a single embedded attachment from a PDF by name. Input:PDF Output:ANY Type:SISO
     """
 
-    attachment_name: str | None = None
+    attachment_name: str = Field(..., description="Name of the embedded attachment to extract")
 
 
 class FileToPdfParams(ApiModel):
