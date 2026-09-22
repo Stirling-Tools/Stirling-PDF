@@ -26,28 +26,14 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.util.OfficeDocumentSanitizer;
 
-/**
- * The format a staged upload declares about itself, read from its own bytes so {@link
- * OfficeImportFilters} can pick between the candidate filters its extension allows.
- *
- * <p>Every fact is read at most once and only when a candidate asks for it, so an extension with a
- * single unconditional candidate never touches the file. Every read is best-effort: anything a
- * hostile file can do to a reader - a compound-file header describing sectors that do not exist,
- * XML that stops mid-element - yields "this fact is unknown", which fails the candidate rather than
- * the request.
- *
- * <p>Not thread-safe, and scoped to one staged file for one request.
- */
+/** Caches per-upload declarations lazily; unreadable facts remain unknown. Not thread-safe. */
 @Slf4j
 class OfficeFormatDeclaration {
 
     private static final String OFFICE_NS = "urn:oasis:names:tc:opendocument:xmlns:office:1.0";
 
     /**
-     * How much of an XML document may be read looking for its root element. The reader stops at
-     * that element, so this bounds only what a document can put in front of it - comments,
-     * whitespace, processing instructions - which is nothing in a real one and unbounded in a
-     * hostile one.
+     * Bounds the XML prolog scan so hostile whitespace or comments cannot require unlimited reads.
      */
     private static final int XML_PROLOG_LIMIT = 4 * 1024 * 1024;
 
@@ -101,9 +87,7 @@ class OfficeFormatDeclaration {
     }
 
     /**
-     * The wIdent at the head of the {@code WordDocument} stream, MS-DOC 2.5.1, or null when there
-     * is no such stream. This, not the nFib beside it, is what selects the Word importer: a sweep
-     * of every nFib against each of the three accepted wIdent values changed nothing.
+     * Reads MS-DOC wIdent to select the Word importer; nFib does not distinguish these candidates.
      */
     Integer wordDocumentWIdent() {
         readCompoundFile();
@@ -202,14 +186,7 @@ class OfficeFormatDeclaration {
     }
 
     /**
-     * Reads the declaration with DTD processing off, so a document whose declaration is only
-     * reachable through an entity is unreadable rather than read one way here and another by
-     * LibreOffice. That also keeps XXE and expansion attacks out of a reader that runs on every
-     * upload of a declaring type.
-     *
-     * <p>Streamed rather than read into a buffer first, so what the reader touches is what it needs
-     * to reach the root element and not a fixed prefix: a document whose root element sat past the
-     * end of that prefix was a parse error, and so a rejected upload, however small the file was.
+     * Streams to the XML root with DTD processing disabled to prevent XXE and parser disagreement.
      */
     private void readXmlProlog() {
         if (xmlPrologRead) {

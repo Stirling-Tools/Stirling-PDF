@@ -11,18 +11,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.SsrfProtectionService;
 
-/**
- * Pins the CSS closure that keeps LibreOffice and WeasyPrint from fetching what a page's styles
- * name. It is a property of the policy this application builds, not of any code here: {@code
- * Sanitizers.STYLES} drops a declaration carrying a {@code url(...)} because nothing calls {@code
- * allowUrlsInStyles}, and {@code style}/{@code link}/{@code base} are not allowed elements. A
- * dependency bump, or a well-meant "route CSS urls through the SSRF service", silently reopens
- * every route below, and nothing else in the suite would notice.
- *
- * <p>SSRF checking is switched OFF here on purpose. With it on, a payload can pass because the host
- * was refused rather than because the CSS was dropped, and the test would keep passing after the
- * closure was lost.
- */
+/** Checks CSS fetch prevention with SSRF checks off, so host rejection cannot mask unsafe CSS. */
 @DisplayName("CustomHtmlSanitizer css reference closure")
 class CustomHtmlSanitizerCssTest {
 

@@ -27,36 +27,7 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-/**
- * Proves every distinct import filter name in {@link OfficeImportFilters} is one the installed
- * LibreOffice actually resolves.
- *
- * <p>Nothing else can prove it. An {@code --infilter} name LibreOffice cannot resolve is ignored
- * silently: the conversion falls back to content autodetection, exits 0 and writes a good PDF, so a
- * typo turns the forced-filter control off for that extension while every conversion test stays
- * green.
- *
- * <p>A non-zero exit is not the criterion either, and assuming it would be wrong in both
- * directions: {@code MS Excel 2003 XML Orcus} resolves and still exits 0 on a Writer document,
- * returning a blank Calc page, while the OOXML names and {@code Rich Text Format} legitimately
- * accept an OOXML zip. What separates a resolved name from an ignored one is that it produces a
- * <em>different outcome from a deliberately unresolvable name on the same fixture</em>: an ignored
- * name produces exactly the autodetected result, which is what the control measures.
- *
- * <p>Two counter-fixtures, because on a document of a filter's own family a resolved name and an
- * ignored one agree by construction - {@code MS Word 97} forced on a Word 97 binary is the
- * autodetected conversion, byte for byte. A name has to differ on one of them, not on both: the
- * Word 97 binary separates every name but the two Word filters that read it, which the PNG then
- * separates.
- *
- * <p>One LibreOffice launch per name, plus a few for the fixtures and the controls, so it is opt-in
- * rather than part of every run:
- *
- * <pre>{@code
- * STIRLING_TEST_OFFICE_FILTER_SWEEP=true ./gradlew :stirling-pdf:test \
- *     --tests '*OfficeImportFilterNameSweepTest'
- * }</pre>
- */
+/** Opt-in comparison with invalid-name controls; successful conversion alone proves nothing. */
 @EnabledIfEnvironmentVariable(
         named = "STIRLING_TEST_OFFICE_FILTER_SWEEP",
         matches = "(?i)true|1|yes",
@@ -90,11 +61,7 @@ class OfficeImportFilterNameSweepTest {
     private static Path profile;
     private static List<CounterFixture> counterFixtures;
 
-    /**
-     * Skipping is left to the test method rather than aborted here, so a machine without
-     * LibreOffice reports one skip per name rather than an empty class, which a {@code --tests}
-     * filter reports as a build failure instead.
-     */
+    /** Skip per test without LibreOffice; empty classes fail Gradle test selection. */
     @BeforeAll
     static void buildCounterFixtures() throws Exception {
         if (!OfficeConversionMatrixTest.sofficeAvailable()) {
@@ -149,12 +116,7 @@ class OfficeImportFilterNameSweepTest {
                 importFilter, UNRESOLVABLE_FILTER, String.join(", ", measured));
     }
 
-    /**
-     * Measures what an ignored filter name does to these bytes, and refuses to hand back a fixture
-     * that cannot support the comparison: one that does not convert at all leaves every name
-     * looking resolved, and an {@code UNRESOLVABLE_FILTER} that some registry does resolve is no
-     * longer a control.
-     */
+    /** Requires a convertible fixture and an unresolved control filter for a valid comparison. */
     private static CounterFixture counterFixture(String extension, byte[] bytes) throws Exception {
         Outcome autodetected = convert(extension, bytes, null);
         if (autodetected.exitCode() != 0 || autodetected.pdfSize() < 0) {

@@ -6,64 +6,28 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * The accepted upload extensions, each mapped to the ordered LibreOffice import filters it may be
- * read with and the sanitizer each of those needs.
- *
- * <p>This table is the security boundary of the office convert endpoint. An extension absent from
- * it never reaches LibreOffice. A present one is imported as one of the types named here rather
- * than as whatever LibreOffice's own content detection concludes: type confusion is the SSRF
- * vector, because bytes that merely look like markup are otherwise read with the Writer/Web
- * importer, which fetches what they reference whatever extension they arrived under.
- *
- * <p>Filter names are LibreOffice's own, from the {@code Filters} node of its type-detection
- * registry; {@code soffice --infilter=} and {@code unoconvert --input-filter} resolve exactly
- * these. A name neither can resolve is ignored silently and the conversion falls back to
- * autodetection with a zero exit, so a typo here turns the control off for that extension without
- * failing anything: check a new name against the installed registry, never against a green test.
- *
- * <p>Where an extension names several formats, the candidates are tried in order and the first
- * whose declaration the file satisfies is <em>forced</em>. The choice is confined to this table, so
- * an attacker who controls the declaration can only pick another filter they could already have
- * reached by renaming the file, and none of these lists holds a markup importer. Nothing falls back
- * to autodetection: an extension whose candidates all fail is refused.
- */
+/** Maps extensions to filters and sanitizers; verify names to avoid silent autodetection. */
 final class OfficeImportFilters {
 
     /**
-     * The sanitizer a candidate needs before LibreOffice sees the file. Every candidate names one,
-     * so a filter cannot be added without the question being answered, and {@link
-     * ConvertOfficeController} switches over this enum without a default, so a new kind does not
-     * compile until it is routed.
+     * Requires each filter to declare a sanitizer handled by the controller's exhaustive switch.
      */
     enum SanitizerKind {
-        /**
-         * Nothing to strip. Proven for these formats with a loopback listener: their importers
-         * resolve no reference in the file, and for the spreadsheet text formats LibreOffice's own
-         * link-formula gate is what stops {@code WEBSERVICE} and {@code DDE} dereferencing.
-         */
+        /** Passes bytes through; spreadsheet link formulas rely on LibreOffice's own fetch gate. */
         NONE,
         /** LibreOffice's HTML importer, which fetches what the markup references. */
         HTML,
         /**
-         * LibreOffice's Markdown importer, which resolves markdown image syntax and the raw HTML
-         * markdown embeds.
+         * Sanitizes Markdown images and embedded HTML, which LibreOffice resolves during import.
          */
         MARKDOWN,
         /** A ZIP package or a single XML document whose references can be walked and stripped. */
         OFFICE_XML,
-        /**
-         * A Word compound file, whose WW8 importer resolves {@code INCLUDEPICTURE} and the other
-         * field instructions in its {@code WordDocument} stream. RTF and OOXML carry the same
-         * fields through writerfilter, which does not resolve them.
-         */
+        /** Sanitizes Word binary fields resolved by WW8; RTF and OOXML use a different importer. */
         WORD_BINARY
     }
 
-    /**
-     * One way an extension may be read. {@code declares} is asked of the staged file's own bytes;
-     * {@code ALWAYS} is the single-candidate case, which decides without reading the file at all.
-     */
+    /** Matches staged bytes to a filter; ALWAYS selects without reading the file. */
     record Candidate(String importFilter, Declaration declares, SanitizerKind sanitizer) {}
 
     @FunctionalInterface
@@ -95,11 +59,7 @@ final class OfficeImportFilters {
 
     private static final Declaration ZIP_PACKAGE = OfficeFormatDeclaration::zipContainer;
 
-    /**
-     * The flavours of each flat-ODF media type, template and master and web included: one filter
-     * reads them all, verified against LibreOffice for every value listed here, and a flavour left
-     * out is a document the endpoint refuses that LibreOffice would have converted.
-     */
+    /** Includes flat-ODF template, master and web variants accepted by the same importer. */
     private static final Declaration FLAT_ODF_TEXT =
             odfMimeType(
                     "application/vnd.oasis.opendocument.text",
@@ -136,11 +96,7 @@ final class OfficeImportFilters {
         return CANDIDATES.getOrDefault(extensionLower, List.of());
     }
 
-    /**
-     * The first candidate the staged file's own declaration satisfies, or null when it satisfies
-     * none. The caller stages the file under {@code extensionLower} and forces the filter this
-     * returns, so the filter and the extension LibreOffice sees cannot diverge.
-     */
+    /** Returns the first match or null; force this filter and stage with the same extension. */
     static Candidate resolve(String extensionLower, Path staged) {
         List<Candidate> candidates = forExtension(extensionLower);
         if (candidates.size() == 1 && candidates.getFirst().declares() == ALWAYS) {
@@ -161,10 +117,7 @@ final class OfficeImportFilters {
     }
 
     /**
-     * The {@code <?mso-application?>} declaration together with the root element it belongs to. The
-     * processing instruction alone is not enough to choose between candidates: it sits in the
-     * prolog, where a document declaring a different root can carry it as well, and the two
-     * candidates would then be separated only by the order they happen to be listed in.
+     * Requires both the Office processing instruction and root element to avoid ambiguous matches.
      */
     private static Declaration msoDocument(String progId, String rootElement) {
         return file -> progId.equals(file.msoProgId()) && rootElement.equals(file.xmlRootElement());

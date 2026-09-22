@@ -21,23 +21,7 @@ import org.commonmark.renderer.markdown.MarkdownRenderer;
 
 import stirling.software.common.util.CustomHtmlSanitizer;
 
-/**
- * Removes from Markdown every reference LibreOffice's Markdown importer would dereference.
- *
- * <p>That importer converts Markdown to HTML and hands the result to the Writer/Web importer, so it
- * fetches from image syntax - inline, titled, angle-bracketed, and all three reference forms - and
- * from raw HTML embedded in the document, and it resolves {@code file:} and relative destinations
- * against the staging directory as readily as it resolves {@code http}. Forcing the import filter
- * buys nothing here: the forced filter is the fetcher.
- *
- * <p>The rewrite runs over a parsed document rather than the text, because a scan cannot tell an
- * image destination from the identical text inside a fenced code block or a code span, and those
- * have to survive verbatim. What is written back, though, is the original text with the offending
- * spans spliced out, not the document re-rendered: re-rendering rewrites the whole file in
- * commonmark's own dialect, which escapes what its parser does not model - {@code - [x] } becomes
- * {@code - \[x\] } and stops being a task list - and would damage documents that carry no reference
- * to strip at all.
- */
+/** Removes Markdown references by source span, preserving code blocks and original formatting. */
 final class MarkdownSanitizer {
 
     private static final List<Extension> EXTENSIONS = List.of(TablesExtension.create());
@@ -51,11 +35,7 @@ final class MarkdownSanitizer {
     private static final MarkdownRenderer RENDERER =
             MarkdownRenderer.builder().extensions(EXTENSIONS).build();
 
-    /**
-     * Inline HTML that carries no reference of its own. A tag outside this set is dropped rather
-     * than sanitized: inline HTML arrives one tag at a time, so handing {@code <b>} to an HTML
-     * sanitizer returns a balanced {@code <b></b>} and doubles the document's markup.
-     */
+    /** Keeps safe inline tags; sanitizing individual tags would add unwanted closing tags. */
     private static final Set<String> INERT_INLINE_TAGS =
             Set.of(
                     "b", "strong", "i", "em", "u", "s", "strike", "sub", "sup", "br", "code",
@@ -161,10 +141,8 @@ final class MarkdownSanitizer {
 
         @Override
         public void visit(LinkReferenceDefinition definition) {
-            // Deleted whatever it points at, and whatever this parser thinks uses it: a definition
-            // renders as nothing, so keeping one costs the document nothing, while leaving a
-            // remote destination in the file would be reachable by any reference LibreOffice's own
-            // parser resolves and this one did not.
+            // Drop remote definitions even if unused here: LibreOffice may resolve references
+            // differently.
             if (!embeddable(definition.getDestination()).equals(definition.getDestination())) {
                 rewritten.add(definition);
             }
@@ -194,10 +172,7 @@ final class MarkdownSanitizer {
         return scheme.startsWith("#") || scheme.startsWith("data:") ? destination : "";
     }
 
-    /**
-     * A destination the importer writes as a hyperlink. These are not dereferenced at import, but a
-     * relative or {@code file:} one would carry the staging path into the produced PDF.
-     */
+    /** Strips relative and file hyperlinks to avoid leaking staging paths into the PDF. */
     private static String navigable(String destination) {
         String scheme = scheme(destination);
         return scheme.startsWith("#")

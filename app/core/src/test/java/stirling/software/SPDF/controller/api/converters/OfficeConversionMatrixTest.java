@@ -66,19 +66,7 @@ import stirling.software.common.util.OfficeDocumentSanitizer;
 import stirling.software.common.util.TempFileManager;
 
 /**
- * Converts one genuine fixture per allowlisted extension through the real controller path - real
- * sanitizers, real LibreOffice, the forced import filter - and asserts the PDF that comes back is
- * readable and still carries the input's content. Exit codes are not evidence: LibreOffice returns
- * 0 for a blank page.
- *
- * <p>Every extension gets a built fixture; the types the cucumber suite already ships an example
- * for are converted from that file as well, since a built fixture is only ever what LibreOffice
- * writes when asked for that extension.
- *
- * <p>The conversion cases need a LibreOffice install and are skipped without one; {@link
- * #everyAllowlistedExtensionIsAccountedFor()} runs everywhere, so adding an extension to {@code
- * OfficeImportFilters} without a fixture or an entry in {@link #UNTESTABLE} fails the build even
- * where LibreOffice is absent.
+ * Checks real conversion content when LibreOffice is available; format coverage runs everywhere.
  */
 @DisplayName("office conversion matrix")
 class OfficeConversionMatrixTest {
@@ -86,30 +74,13 @@ class OfficeConversionMatrixTest {
     private static final String SENTINEL = "STIRLINGSENTINEL";
 
     /**
-     * Extensions accepted by the endpoint that this matrix cannot exercise, because no fixture for
-     * them can be produced here: LibreOffice imports them but has no export filter to write one,
-     * and they are proprietary or obsolete enough that no sample ships with it. Read the matrix as
-     * silent about these, never as evidence that they convert.
+     * Formats without buildable fixtures; inclusion here is not evidence of successful conversion.
      */
     private static final Set<String> UNTESTABLE =
             Set.of("vsd", "lwp", "sdw", "sdc", "sdd", "sda", "svm");
 
-    /**
-     * The extensions allowed to reach LibreOffice with nothing stripped. Two groups, and the
-     * difference matters when one of them is next touched.
-     *
-     * <p>Proven inert with a loopback listener: the spreadsheet text formats (a {@code WEBSERVICE}
-     * or {@code DDE} formula imports live and is then refused by LibreOffice's own link-formula
-     * gate, so this row is really a statement about that gate), {@code rtf} across 27 field, shape
-     * and OLE-moniker vectors, {@code eps}, and the raster and metafile formats, which are decoded
-     * to pixels with no reference-resolution step at all.
-     *
-     * <p>Unproven, and recorded as pass-through rather than as safe: {@code xls}, {@code xlt},
-     * {@code ppt}, and the legacy binaries. LibreOffice's own export filters discard the linked
-     * graphics and OLE objects a probe would need, so no fixture carrying a reference could be
-     * built for them. {@code doc} is not in this set for exactly that reason - a fixture could be
-     * built for it, and it fetched.
-     */
+    // Pass-through is verified for text spreadsheets, RTF, EPS and image formats.
+    // Legacy XLS/XLT/PPT and other binaries lack external-reference fixtures; safety is unproven.
     private static final Set<String> PASS_THROUGH =
             Set.copyOf(
                     List.of(
@@ -119,9 +90,7 @@ class OfficeConversionMatrixTest {
                             "ppm", "xbm", "xpm", "ras"));
 
     /**
-     * Export filters used to write a fixture for extensions whose forced import filter is
-     * import-only. Everything else is written with the very filter the controller forces on import,
-     * so a new allowlist entry gets a fixture without a second table to maintain.
+     * Uses export overrides for import-only filters; other fixtures use their forced import filter.
      */
     private static final Map<String, String> EXPORT_OVERRIDES =
             Map.ofEntries(
@@ -144,13 +113,7 @@ class OfficeConversionMatrixTest {
     private enum Expect {
         TEXT,
         IMAGE,
-        /**
-         * Only that a readable page came back. For the pre-97 Word candidates: LibreOffice has no
-         * Word 95 export filter, so the only fixture obtainable here is a Word 97 document with its
-         * {@code wIdent} rewritten, which the pre-97 reader loads and renders empty. That still
-         * exercises the whole path - the wrong candidate refuses these bytes outright - but it
-         * cannot carry text through.
-         */
+        /** Checks page readability only: synthetic pre-97 Word fixtures render without text. */
         PAGE
     }
 
@@ -245,11 +208,7 @@ class OfficeConversionMatrixTest {
                 text("pct"));
     }
 
-    /**
-     * The example files the cucumber suite ships, converted here as well as the built fixtures:
-     * these are what Word, LibreOffice and a hand-written page actually produce, where a built
-     * fixture is only ever what LibreOffice writes when asked for that extension.
-     */
+    /** Checks shipped Cucumber examples as well as fixtures generated by LibreOffice. */
     private record RepositoryFixture(String extension, String file, String expectedText) {
         @Override
         public String toString() {
@@ -272,14 +231,7 @@ class OfficeConversionMatrixTest {
                         "xml", "security_flat_external.xml", "flatODFsecurityfixture"));
     }
 
-    /**
-     * The StarOffice XML template extensions the allowlist deliberately omits, because LibreOffice
-     * 26.8 cannot open one at all: the same package converts under {@code mediaType} and fails
-     * under {@code templateMediaType}, which is the one a genuine template carries, with the filter
-     * forced and under plain autodetection alike. The Calc and Writer templates in the same family
-     * do load, so this is not LibreOffice dropping StarOffice templates wholesale. Pinned by {@link
-     * #starOfficeTemplatePackagesStillDoNotLoad} so the entries come back if that ever changes.
-     */
+    /** StarOffice Draw/Impress templates fail in LibreOffice 26.8; keep this regression check. */
     private record StarOfficeTemplate(
             String extension,
             String importFilter,
@@ -478,12 +430,7 @@ class OfficeConversionMatrixTest {
         }
     }
 
-    /**
-     * One way an extension with several candidate filters can legitimately arrive. {@code source}
-     * names the fixture builder; {@code expectedFilter} is the filter that candidate set must
-     * force, which is the half a conversion cannot check - LibreOffice ignores a filter name it
-     * cannot resolve and quietly autodetects instead.
-     */
+    /** Checks the chosen filter as well as conversion; unknown filter names silently autodetect. */
     private record CandidateCase(
             String extension,
             String source,
@@ -558,13 +505,7 @@ class OfficeConversionMatrixTest {
         }
     }
 
-    /**
-     * A file whose extension is allowlisted but whose bytes declare none of that extension's
-     * candidates. Refusing these before a converter is spawned is the only place they can be
-     * refused: LibreOffice exits 1 on most of them, but a Calc filter forced on eight bytes shaped
-     * like a workbook header exits 0 and writes a blank page, so its exit code is no backstop for a
-     * declaration read wrongly.
-     */
+    /** Rejects unmatched declarations before launch; LibreOffice may accept them as blank pages. */
     private record NoMatchCase(String extension, String source) {
         @Override
         public String toString() {
@@ -724,11 +665,7 @@ class OfficeConversionMatrixTest {
     }
 
     /**
-     * One way the linked-image field LibreOffice's WW8 importer dereferences can be written.
-     * LibreOffice exports it as {@code 0x13} {@code U+0020} {@code INCLUDEPICTURE}, and its reader
-     * requires neither that separator nor that keyword: the field type lives in the field tables,
-     * not in the instruction text, so every variant here is fetched by the importer, and a
-     * sanitizer that keys on the keyword blanks only the first.
+     * WW8 field tables determine fetching, so altered keywords and separators must also be tested.
      */
     private record WordFieldCase(String extension, String variant) {
         @Override
@@ -902,11 +839,7 @@ class OfficeConversionMatrixTest {
         return uris;
     }
 
-    /**
-     * Rewrites the exported field so it still names the same URL, in a form LibreOffice reads and a
-     * keyword scan does not: a separator other than the single space the exporter writes, or a
-     * keyword no list of fetching field names holds.
-     */
+    /** Varies field keywords or separators without changing the URL LibreOffice fetches. */
     private static byte[] withFieldWrittenAs(byte[] document, String variant) throws IOException {
         byte[] keyword = utf16Bytes("INCLUDEPICTURE");
         return patchWordDocumentStream(
@@ -1147,9 +1080,7 @@ class OfficeConversionMatrixTest {
     }
 
     /**
-     * A listener on loopback, so a test can assert what LibreOffice fetched rather than what a
-     * sanitizer left behind. It answers every request with a picture, which is what a document
-     * carrying a linked image would be served.
+     * Serves images on loopback to observe actual LibreOffice requests, not just sanitized bytes.
      */
     private static final class Listener implements AutoCloseable {
 
@@ -1333,12 +1264,7 @@ class OfficeConversionMatrixTest {
         };
     }
 
-    /**
-     * Rewrites the {@code wIdent} at the head of the {@code WordDocument} stream, MS-DOC 2.5.1,
-     * which is the whole of what selects a Word generation. Two bytes, in the compound file's
-     * mini-stream for a document this size, so it is read and written through POI rather than
-     * patched at a file offset.
-     */
+    /** Rewrites MS-DOC wIdent through POI because the WordDocument stream may use mini-sectors. */
     private static byte[] patchWIdent(byte[] document, int wIdent) throws IOException {
         Path file = Files.createTempFile("wident_", ".doc");
         try {
@@ -1362,11 +1288,7 @@ class OfficeConversionMatrixTest {
         }
     }
 
-    /**
-     * A BIFF4 worksheet as a bare record stream: BOF, two NUMBER records, EOF. Excel 4 wrote these
-     * without a compound file wrapper, and LibreOffice still reads one under the Excel 97 filter -
-     * the four BIFF filter names are aliases for a reader that sniffs the version itself.
-     */
+    /** Writes bare BIFF4 records; LibreOffice's BIFF aliases share a version-detecting reader. */
     private static byte[] flatBiff4() throws IOException {
         ByteArrayOutputStream sheet = new ByteArrayOutputStream();
         writeBiffRecord(sheet, 0x0409, shorts(0x0400, 0x0010, 0x0000));
@@ -1690,13 +1612,7 @@ class OfficeConversionMatrixTest {
     }
 
     /**
-     * A version 1 QuickTime picture: 512 bytes of application header, then the picture's own size
-     * and frame, the {@code 0x11 0x01} version opcode, a clip region, the text and rectangle the
-     * assertion looks for, and the {@code 0xFF} terminator. Written by hand because LibreOffice
-     * imports PICT and has no filter that writes one.
-     *
-     * <p>Like {@code wmf}, this draws as vector operators rather than an image XObject, so the
-     * conversion has to be asserted through the text it carries.
+     * Builds import-only PICT fixtures; assert vector text because no image XObject is produced.
      */
     private static byte[] macPict() throws IOException {
         byte[] text = SENTINEL.getBytes(StandardCharsets.US_ASCII);
@@ -1931,10 +1847,7 @@ class OfficeConversionMatrixTest {
                     + " xlink:href=\"https://example.com/docs\">the documentation</text:a>"
                     + " today.</text:p></office:text></office:body></office:document>";
 
-    /**
-     * A document with the shapes a field scan can trip over: a table, an embedded picture, and
-     * prose that names both a URL and every field keyword, none of it inside a field.
-     */
+    /** Includes ordinary tables, pictures, URLs and keywords to catch false field matches. */
     private static String writerRichSource() throws IOException {
         StringBuilder body = new StringBuilder("<text:p>" + SENTINEL + "</text:p>");
         body.append("<text:p>Prose naming INCLUDEPICTURE, INCLUDETEXT, LINK, DDE and IMPORT,")
