@@ -110,10 +110,85 @@ describe("generateThumbnailForFile — images", () => {
     type = "image/png",
   ): File {
     const file = new File([header], name, { type });
-    vi.spyOn(file, "slice").mockReturnValue({
-      arrayBuffer: async () => header.buffer,
-    } as unknown as Blob);
+    vi.spyOn(file, "slice").mockImplementation(
+      (start?: number, end?: number) => {
+        const part = header.slice(start ?? 0, end ?? header.length);
+        return { arrayBuffer: async () => part.buffer } as unknown as Blob;
+      },
+    );
     return file;
+  }
+
+  /** Minimal JPEG: optional EXIF orientation, optional padding before the SOF. */
+  function buildJpeg(
+    width: number,
+    height: number,
+    options: { orientation?: number; padding?: number } = {},
+  ): Uint8Array<ArrayBuffer> {
+    const parts: number[] = [0xff, 0xd8];
+    const pushSegment = (marker: number, payload: number[]) => {
+      const length = payload.length + 2;
+      parts.push(0xff, marker, (length >> 8) & 0xff, length & 0xff, ...payload);
+    };
+    if (options.orientation) {
+      pushSegment(0xe1, [
+        0x45,
+        0x78,
+        0x69,
+        0x66,
+        0x00,
+        0x00, // "Exif\0\0"
+        0x49,
+        0x49,
+        0x2a,
+        0x00,
+        0x08,
+        0x00,
+        0x00,
+        0x00, // TIFF header, IFD at 8
+        0x01,
+        0x00, // one entry
+        0x12,
+        0x01,
+        0x03,
+        0x00,
+        0x01,
+        0x00,
+        0x00,
+        0x00, // orientation tag
+        options.orientation,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00, // no next IFD
+      ]);
+    }
+    let padding = options.padding ?? 0;
+    while (padding > 0) {
+      const chunk = Math.min(padding, 0xffff - 2);
+      pushSegment(0xfe, new Array<number>(chunk).fill(0));
+      padding -= chunk;
+    }
+    parts.push(
+      0xff,
+      0xc0,
+      0x00,
+      0x0b,
+      0x08,
+      (height >> 8) & 0xff,
+      height & 0xff,
+      (width >> 8) & 0xff,
+      width & 0xff,
+      0x01,
+      0x01,
+      0x11,
+      0xff,
+      0xda,
+    );
+    return new Uint8Array(parts);
   }
 
   function stubBitmapPipeline() {
@@ -209,32 +284,38 @@ describe("generateThumbnailForFile — images", () => {
     const { generateThumbnailForFile } =
       await import("@app/utils/thumbnailUtils");
     const { calls } = stubBitmapPipeline();
-    const jpeg = new Uint8Array([
-      0xff,
-      0xd8, // SOI
-      0xff,
-      0xe0,
-      0x00,
-      0x04,
-      0x00,
-      0x00, // APP0, length 4
-      0xff,
-      0xc0,
-      0x00,
-      0x0b,
-      0x08,
-      0x01,
-      0x2c,
-      0x02,
-      0x58,
-      0x01,
-      0x01,
-      0x11,
-    ]);
-    const file = fileWithHeader(jpeg, "photo.jpg", "image/jpeg");
+    const file = fileWithHeader(buildJpeg(600, 300), "photo.jpg", "image/jpeg");
     await generateThumbnailForFile(file);
     expect(calls[0].resizeWidth).toBe(320);
     expect(calls[0].resizeHeight).toBe(160);
+  });
+
+  it("swaps axes for EXIF orientations that rotate the image", async () => {
+    const { generateThumbnailForFile } =
+      await import("@app/utils/thumbnailUtils");
+    const { calls } = stubBitmapPipeline();
+    const file = fileWithHeader(
+      buildJpeg(600, 300, { orientation: 6 }),
+      "photo.jpg",
+      "image/jpeg",
+    );
+    await generateThumbnailForFile(file);
+    expect(calls[0].resizeWidth).toBe(160);
+    expect(calls[0].resizeHeight).toBe(320);
+  });
+
+  it("finds a JPEG start-of-frame behind a large metadata segment", async () => {
+    const { generateThumbnailForFile } =
+      await import("@app/utils/thumbnailUtils");
+    const { calls } = stubBitmapPipeline();
+    const file = fileWithHeader(
+      buildJpeg(400, 300, { padding: 300 * 1024 }),
+      "photo.jpg",
+      "image/jpeg",
+    );
+    await generateThumbnailForFile(file);
+    expect(calls[0].resizeWidth).toBe(320);
+    expect(calls[0].resizeHeight).toBe(240);
   });
 
   it("falls back to the data URL when decode-at-size is unavailable", async () => {

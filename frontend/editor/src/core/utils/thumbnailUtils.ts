@@ -9,6 +9,7 @@ import {
   renderPdfiumPageDataUrl,
   readPdfiumPageMetadata,
 } from "@app/utils/pdfiumPageRender";
+import { jpegExifOrientation } from "@app/utils/jpegOrientation";
 
 export interface ThumbnailWithMetadata {
   thumbnail: string; // Always returns a thumbnail (placeholder if needed)
@@ -50,6 +51,10 @@ const IMAGE_THUMBNAIL_MAX_SIZE = 320;
 
 /** Bytes read from the head of an image to locate its intrinsic size. */
 const IMAGE_HEADER_PROBE_BYTES = 256 * 1024;
+
+/** Extra bytes read when a JPEG's start-of-frame marker sits behind a large
+ *  metadata segment; the first probe covers the common case. */
+const IMAGE_HEADER_PROBE_LIMIT = 4 * 1024 * 1024;
 
 /** Window at each end of the file searched for an /Encrypt entry. */
 const ENCRYPT_PROBE_BYTES = 64 * 1024;
@@ -319,40 +324,69 @@ async function readImageDimensions(
   }
 
   // JPEG: walk the segment list until a start-of-frame marker carries the size.
+  // A large EXIF/ICC segment can push that marker past the first probe, so the
+  // window doubles until it is found or the cap is reached.
   if (bytes.length >= 4 && bytes[0] === 0xff && bytes[1] === 0xd8) {
-    let offset = 2;
-    while (offset + 9 <= bytes.length) {
-      if (bytes[offset] !== 0xff) return null;
-      const marker = bytes[offset + 1];
-      if (marker === 0xff) {
-        offset += 1;
-        continue;
+    const limit = Math.min(file.size, IMAGE_HEADER_PROBE_LIMIT);
+    for (let end = bytes.length; ; end = Math.min(end * 2, limit)) {
+      const window =
+        end === bytes.length
+          ? bytes
+          : new Uint8Array(await file.slice(0, end).arrayBuffer());
+      const dimensions = readJpegDimensions(
+        window,
+        new DataView(window.buffer, window.byteOffset, window.byteLength),
+      );
+      if (dimensions) {
+        // EXIF orientations 5-8 rotate the image, so the bitmap
+        // createImageBitmap produces has the header's axes swapped.
+        const orientation = jpegExifOrientation(window);
+        return orientation >= 5 && orientation <= 8
+          ? { width: dimensions.height, height: dimensions.width }
+          : dimensions;
       }
-      // Standalone markers have no length field.
-      if (marker === 0x01 || (marker >= 0xd0 && marker <= 0xd8)) {
-        offset += 2;
-        continue;
-      }
-      if (marker === 0xd9) return null;
-      const length = view.getUint16(offset + 2);
-      if (length < 2) return null;
-      const isStartOfFrame =
-        marker >= 0xc0 &&
-        marker <= 0xcf &&
-        marker !== 0xc4 &&
-        marker !== 0xc8 &&
-        marker !== 0xcc;
-      if (isStartOfFrame) {
-        return {
-          height: view.getUint16(offset + 5),
-          width: view.getUint16(offset + 7),
-        };
-      }
-      offset += 2 + length;
+      if (end >= limit) return null;
     }
-    return null;
   }
 
+  return null;
+}
+
+/** Walk JPEG segments to the start-of-frame marker that carries the size. */
+function readJpegDimensions(
+  bytes: Uint8Array,
+  view: DataView,
+): { width: number; height: number } | null {
+  let offset = 2;
+  while (offset + 9 <= bytes.length) {
+    if (bytes[offset] !== 0xff) return null;
+    const marker = bytes[offset + 1];
+    if (marker === 0xff) {
+      offset += 1;
+      continue;
+    }
+    // Standalone markers have no length field.
+    if (marker === 0x01 || (marker >= 0xd0 && marker <= 0xd8)) {
+      offset += 2;
+      continue;
+    }
+    if (marker === 0xd9) return null;
+    const length = view.getUint16(offset + 2);
+    if (length < 2) return null;
+    const isStartOfFrame =
+      marker >= 0xc0 &&
+      marker <= 0xcf &&
+      marker !== 0xc4 &&
+      marker !== 0xc8 &&
+      marker !== 0xcc;
+    if (isStartOfFrame) {
+      return {
+        height: view.getUint16(offset + 5),
+        width: view.getUint16(offset + 7),
+      };
+    }
+    offset += 2 + length;
+  }
   return null;
 }
 
