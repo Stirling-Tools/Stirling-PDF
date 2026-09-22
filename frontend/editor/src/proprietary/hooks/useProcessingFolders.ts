@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
+import { useCallback, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   CLASSIFY_OPERATION,
   classificationDefaults,
@@ -14,6 +15,7 @@ import {
   type ProcessingFolder,
 } from "@app/services/processingFolderApi";
 import { useFileHandler } from "@app/hooks/useFileHandler";
+import { qk } from "@app/query/keys";
 import {
   currentRunIds,
   deliverSweepResults,
@@ -21,6 +23,8 @@ import {
 import { folderKind, type FolderRecord } from "@app/types/folder";
 import { directoryKey } from "@app/services/localFolderStorage";
 import { extractErrorMessage } from "@app/utils/toolErrorHandler";
+import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
+import { useProcessingFolders as useInertProcessingFolders } from "@core/hooks/useProcessingFolders";
 // The core stub declares the contract this shadows; import it from @core
 // explicitly, since @app/hooks/useProcessingFolders resolves back to this file.
 import type {
@@ -54,61 +58,44 @@ export interface ProcessingFoldersApi extends Omit<
   recordFor: (folder: FolderRecord) => ProcessingRecordSummary | undefined;
 }
 
-/** One shared list for every consumer: the files page calls this once per folder row, so
- *  per-instance state would mean a request per row and stale siblings after a mutation. */
-let folders: ProcessingFolder[] = [];
-let loaded = false;
-let loadError: string | null = null;
-let inFlight: Promise<void> | null = null;
-const listeners = new Set<() => void>();
-
-function subscribe(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
-
-/** Snapshot identity only changes when the list is replaced, so consumers re-render on real news. */
-function getSnapshot(): ProcessingFolder[] {
-  return folders;
-}
-
-/** Load the list, sharing one request across concurrent callers; `force` bypasses an
- *  in-flight read so a mutation observes its own effect. */
-function load(force = false): Promise<void> {
-  if (inFlight && !force) return inFlight;
-  const request = fetchProcessingFolders()
-    .then((next) => {
-      folders = next;
-      loadError = null;
-    })
-    .catch((error: unknown) => {
-      // Storage or login off, or unauthenticated: the files page works without these.
-      folders = [];
-      loadError = extractErrorMessage(error);
-    })
-    .finally(() => {
-      loaded = true;
-      if (inFlight === request) inFlight = null;
-      listeners.forEach((listener) => listener());
-    });
-  inFlight = request;
-  return request;
-}
+const EMPTY: ProcessingFolder[] = [];
 
 /**
  * Processing folders for the files page. Record identity is kind-shaped: a server folder
- * matches by storage folderId, a mount by the directory it mirrors. Every mutation reloads
+ * matches by storage folderId, a mount by the directory it mirrors. Every mutation invalidates
  * rather than patching locally, so the list reflects what the server composed.
+ *
+ * One cache entry for every consumer: the files page calls this once per folder row, so a
+ * per-instance read would mean a request per row. Invalidating rather than force-reloading
+ * also collapses writes issued together into a single refresh.
  */
 export function useProcessingFolders(): ProcessingFoldersApi {
-  const current = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
-  const loading = !loaded;
-  const error = loadError;
+  const queryClient = useQueryClient();
+  const enabled = usePoliciesEnabled();
+  const inert = useInertProcessingFolders();
   const { addFiles } = useFileHandler();
+  const queryKey = qk.processingFolders();
 
-  useEffect(() => {
-    void load();
-  }, []);
+  const {
+    data: current = EMPTY,
+    isPending: loading,
+    error: loadFailure,
+  } = useQuery({
+    queryKey,
+    queryFn: fetchProcessingFolders,
+    // Only the proprietary build reads folders, and only once policy enforcement is on:
+    // a signed-out or policies-off session has none to fetch.
+    enabled,
+    // Storage or login off, or unauthenticated: the files page works without these,
+    // so a failure reports itself rather than retrying into the same wall.
+    retry: false,
+  });
+  const error = loadFailure ? extractErrorMessage(loadFailure) : null;
+
+  const reload = useCallback(
+    () => queryClient.invalidateQueries({ queryKey }),
+    [queryClient],
+  );
 
   const recordFor = useCallback(
     (folder: FolderRecord): ProcessingFolder | undefined => {
@@ -206,7 +193,7 @@ export function useProcessingFolders(): ProcessingFoldersApi {
             excludeRunIds: baseline,
           });
         }
-        await load(true);
+        await reload();
         return;
       }
       switch (folderKind(folder)) {
@@ -228,9 +215,9 @@ export function useProcessingFolders(): ProcessingFoldersApi {
         default:
           await saveProcessingFolder(classificationDefaults(folder.id));
       }
-      await load(true);
+      await reload();
     },
-    [recordFor, addFiles],
+    [recordFor, addFiles, reload],
   );
 
   // Pause, never delete: the kept history means resuming picks up only what is new.
@@ -246,9 +233,9 @@ export function useProcessingFolders(): ProcessingFoldersApi {
         steps: existing.steps,
         output: existing.output,
       });
-      await load(true);
+      await reload();
     },
-    [recordFor],
+    [recordFor, reload],
   );
 
   const remove = useCallback(
@@ -256,9 +243,9 @@ export function useProcessingFolders(): ProcessingFoldersApi {
       const existing = recordFor(folder);
       if (!existing) return;
       await deleteProcessingFolder(existing.id);
-      await load(true);
+      await reload();
     },
-    [recordFor],
+    [recordFor, reload],
   );
 
   const listActiveRuns = useCallback(
@@ -292,11 +279,14 @@ export function useProcessingFolders(): ProcessingFoldersApi {
     [],
   );
 
-  const revertFile = useCallback(async (recordId: string, name: string) => {
-    await revertMountedFile(recordId, name);
-    // Revert pauses the folder server-side; reload so the pause shows at once.
-    await load(true);
-  }, []);
+  const revertFile = useCallback(
+    async (recordId: string, name: string) => {
+      await revertMountedFile(recordId, name);
+      // Revert pauses the folder server-side; reload so the pause shows at once.
+      await reload();
+    },
+    [reload],
+  );
 
   const revertAll = useCallback(
     async (folder: FolderRecord) => {
@@ -304,7 +294,7 @@ export function useProcessingFolders(): ProcessingFoldersApi {
       if (!existing) return undefined;
       const outcome = await revertAllMountedFiles(existing.id);
       // Revert pauses the folder server-side; reload so the pause shows at once.
-      await load(true);
+      await reload();
       return outcome;
     },
     [recordFor],
@@ -327,24 +317,30 @@ export function useProcessingFolders(): ProcessingFoldersApi {
   );
 
   return useMemo(
-    () => ({
-      loading,
-      loadError: error,
-      stateFor,
-      recordFor: recordSummaryFor,
-      enabledFolderIds,
-      anyEnabled,
-      listActiveRuns,
-      listFiles,
-      retryFile,
-      revertFile,
-      revertAll,
-      enable,
-      disable,
-      remove,
-      sweep,
-    }),
+    () =>
+      enabled
+        ? {
+            loading,
+            loadError: error,
+            stateFor,
+            recordFor: recordSummaryFor,
+            enabledFolderIds,
+            anyEnabled,
+            listActiveRuns,
+            listFiles,
+            retryFile,
+            revertFile,
+            revertAll,
+            enable,
+            disable,
+            remove,
+            sweep,
+            refresh: reload,
+          }
+        : inert,
     [
+      enabled,
+      inert,
       loading,
       error,
       stateFor,
@@ -360,11 +356,7 @@ export function useProcessingFolders(): ProcessingFoldersApi {
       disable,
       remove,
       sweep,
+      reload,
     ],
   );
-}
-
-/** Reload the shared list — for a caller that created a folder outside these actions. */
-export function refreshProcessingFolders(): Promise<void> {
-  return load(true);
 }
