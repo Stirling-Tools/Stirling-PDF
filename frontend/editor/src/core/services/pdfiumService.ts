@@ -1411,18 +1411,48 @@ export function readAloudViewportTransform(
 /**
  * Visual reading order for extracted words: top-to-bottom with a same-line
  * threshold, then left-to-right. PDF content order is not a reliable reading
- * order for multi-column layouts.
+ * order for multi-column layouts. Corners go through each item's
+ * viewportTransform (which folds in /Rotate), so a rotated page still reads
+ * from its visual top; without one the PDF-space value stands in.
  */
 export function sortReadAloudItems(
   items: ReadAloudTextItem[],
 ): ReadAloudTextItem[] {
   const SAME_LINE_PX = 5;
-  const topOf = (item: ReadAloudTextItem) =>
-    (item.transform[5] ?? 0) + item.height;
+  const visualTopLeft = (
+    item: ReadAloudTextItem,
+  ): { top: number; left: number } => {
+    const t = item.viewportTransform;
+    if (!t) {
+      return {
+        top: -((item.transform[5] ?? 0) + item.height),
+        left: item.transform[4] ?? 0,
+      };
+    }
+    const [a = 1, b = 0, c = 0, d = 1, e = 0, f = 0] = t;
+    const x0 = item.transform[4] ?? 0;
+    const y0 = item.transform[5] ?? 0;
+    let top = Number.POSITIVE_INFINITY;
+    let left = Number.POSITIVE_INFINITY;
+    for (const [x, y] of [
+      [x0, y0],
+      [x0 + item.width, y0],
+      [x0, y0 + item.height],
+      [x0 + item.width, y0 + item.height],
+    ] as Array<[number, number]>) {
+      const vx = a * x + c * y + e;
+      const vy = b * x + d * y + f;
+      if (vy < top) top = vy;
+      if (vx < left) left = vx;
+    }
+    return { top, left };
+  };
   return [...items].sort((a, b) => {
-    const vertical = topOf(b) - topOf(a);
+    const pa = visualTopLeft(a);
+    const pb = visualTopLeft(b);
+    const vertical = pa.top - pb.top;
     if (Math.abs(vertical) > SAME_LINE_PX) return vertical;
-    return (a.transform[4] ?? 0) - (b.transform[4] ?? 0);
+    return pa.left - pb.left;
   });
 }
 
