@@ -41,8 +41,14 @@ function showCheckout() {
 }
 
 describe("annual credit purchases", () => {
+  let restoreLanguages: () => void;
   beforeEach(() => {
     vi.clearAllMocks();
+    const languages = vi
+      .spyOn(navigator, "languages", "get")
+      .mockReturnValue(["en-US"]);
+    restoreLanguages = () => languages.mockRestore();
+    localStorage.clear();
     HTMLElement.prototype.scrollIntoView = vi.fn();
     sessionStorage.clear();
     api.getLatestBundleQuote.mockResolvedValue(null);
@@ -66,7 +72,65 @@ describe("annual credit purchases", () => {
       stripeQuoteNumber: "Q-7",
     });
   });
-  afterEach(cleanup);
+  afterEach(() => {
+    cleanup();
+    restoreLanguages();
+  });
+
+  it.each([
+    {
+      locked: false,
+      currencies: ["usd", "gbp"],
+      saved: false,
+      expected: "GBP",
+    },
+    { locked: true, currencies: ["usd"], saved: false, expected: "USD" },
+    { locked: false, currencies: ["usd"], saved: false, expected: "USD" },
+    { locked: false, currencies: ["usd", "gbp"], saved: true, expected: "USD" },
+  ])(
+    "defaults UK browsers to $expected (locked=$locked, saved=$saved, available=$currencies)",
+    async ({ locked, currencies, saved, expected }) => {
+      vi.spyOn(navigator, "languages", "get").mockReturnValue(["en-GB"]);
+      api.fetchBundlePricing.mockImplementation(
+        async (_teamId: number, currency = "usd") => ({
+          currency,
+          unitAmountMinor: 1,
+          currencyLocked: locked,
+          availableCurrencies: currencies,
+        }),
+      );
+      if (saved) {
+        api.getLatestBundleQuote.mockResolvedValue({
+          quoteId: 7,
+          users: null,
+          posturePolicies: 1,
+          sizeMult: 1,
+          pipelineMult: 1,
+          poolCredits: 1_200_000,
+          priceMinor: 1_000_000,
+          currency: "usd",
+          consentedAt: null,
+          stripeQuoteId: "qt_saved",
+          stripeQuoteNumber: "Q-7",
+          stripeRef: null,
+          validUntil: "2027-01-01",
+        } satisfies LatestBundleQuote);
+      }
+      showCheckout();
+      expect(
+        await screen.findByRole("textbox", { name: "Quote currency" }),
+      ).toHaveValue(expected);
+      expect(
+        screen.getByText(expected === "GBP" ? "£10,000.00" : "$10,000.00"),
+      ).toBeInTheDocument();
+      expect(api.fetchBundlePricing).toHaveBeenCalledTimes(
+        expected === "GBP" ? 2 : 1,
+      );
+      if (expected === "GBP") {
+        expect(api.fetchBundlePricing).toHaveBeenLastCalledWith(42, "gbp");
+      }
+    },
+  );
 
   it("quotes the chosen credit pool independently of Team seats, without accepting it", async () => {
     showCheckout();

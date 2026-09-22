@@ -25,6 +25,7 @@ import {
 } from "@app/billing";
 import type { Wallet } from "@app/portal/api/billing";
 import { stripeMinorUnitScale } from "@app/utils/stripeCurrency";
+import { getPreferredCurrency } from "@app/utils/currencyDetection";
 import {
   acceptBundleStripeQuote,
   cancelBundleQuote,
@@ -327,14 +328,14 @@ export function BundleCheckoutModal({
         quoteResult.status === "fulfilled" ? quoteResult.value : null;
       let resolvedPricing =
         pricingResult.status === "fulfilled" ? pricingResult.value : null;
+      const preferredCurrency = latest?.currency ?? getPreferredCurrency();
       if (
-        latest?.currency &&
         resolvedPricing?.currencyLocked === false &&
-        latest.currency !== resolvedPricing.currency &&
-        resolvedPricing.availableCurrencies.includes(latest.currency)
+        preferredCurrency !== resolvedPricing.currency &&
+        resolvedPricing.availableCurrencies.includes(preferredCurrency)
       ) {
         try {
-          resolvedPricing = await fetchBundlePricing(teamId, latest.currency);
+          resolvedPricing = await fetchBundlePricing(teamId, preferredCurrency);
         } catch (error) {
           resolvedPricing = null;
           if (!cancelled)
