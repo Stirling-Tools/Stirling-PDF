@@ -28,7 +28,6 @@ jobs:
     permissions:
       contents: read
     outputs:
-      files_hash: ${{ steps.hash.outputs.files_hash }}
       java_version: ${{ steps.hash.outputs.java_version }}
       cache_key: ${{ steps.hash.outputs.cache_key }}
     steps:
@@ -132,6 +131,15 @@ jobs:
       - name: Resolve backend dependencies
         if: ${{ steps.cache-gradle-restore.outputs.cache-hit != 'true' && steps.cache.outputs.cache-hit != 'true' }}
         run: ./gradlew :stirling-pdf:classes --no-daemon
+        env:
+          STIRLING_FLAVOR: saas
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
+
+      - name: Resolve backend dependencies
+        if: ${{ steps.cache-gradle-restore.outputs.cache-hit || steps.cache.outputs.cache-hit }}
+        run: ./gradlew --offline :stirling-pdf:classes --no-daemon
         env:
           STIRLING_FLAVOR: saas
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
