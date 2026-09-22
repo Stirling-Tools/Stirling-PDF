@@ -114,12 +114,13 @@ export function IngestStepConfig({
       </FormField>
       <FormField
         label={t("portal.pipelines.builder.ingest.overlap")}
-        helperText={
+        helperText={t("portal.pipelines.builder.ingest.overlapHint")}
+        error={
           overlapTooBig
             ? t("portal.pipelines.builder.ingest.overlapTooBig", {
                 chunkSize,
               })
-            : t("portal.pipelines.builder.ingest.overlapHint")
+            : undefined
         }
       >
         <Input
@@ -127,6 +128,7 @@ export function IngestStepConfig({
           inputSize="sm"
           min={0}
           max={4096}
+          invalid={overlapTooBig}
           step={16}
           value={parameters.overlap ?? ""}
           onChange={(e) => setNumber("overlap", e.target.value)}

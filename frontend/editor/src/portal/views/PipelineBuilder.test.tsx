@@ -899,6 +899,38 @@ describe("PipelineBuilder", () => {
     expect(body.outputIds).toEqual([]);
   });
 
+  it("blocks a vector route with a file fallback until chunks are prepared", async () => {
+    fetchSources.mockResolvedValue({
+      kpis: [],
+      sources: [SOURCE, { ...DESTINATION_SOURCE, type: "vectordb" }],
+    });
+    fetchPipeline.mockResolvedValue({
+      ...POLICY,
+      inputs: [{ sourceId: "src-in", trigger: null }],
+      steps: [CLASSIFY_STEP],
+      outputIds: ["src-in"],
+      routingRules: [routingRule(["invoice"])],
+    });
+    renderBuilder("/processor/pipelines/plc-1");
+    fireEvent.click(
+      await screen.findByLabelText("portal.pipelines.builder.rename"),
+    );
+    fireEvent.change(
+      await screen.findByLabelText("portal.pipelines.composer.name"),
+      {
+        target: { value: "Renamed" },
+      },
+    );
+    await openOutput();
+    expect(
+      screen.getAllByText(
+        "portal.pipelines.builder.ingest.destinationNeedsChunks",
+      ).length,
+    ).toBeGreaterThan(0);
+    fireEvent.click(screen.getByText("portal.pipelines.composer.save"));
+    expect(savePipeline).not.toHaveBeenCalled();
+  });
+
   it("carries a saved pipeline's routes through an unrelated edit", async () => {
     fetchSources.mockResolvedValue({
       kpis: [],

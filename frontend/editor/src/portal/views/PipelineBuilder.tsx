@@ -774,8 +774,12 @@ export function PipelineBuilder() {
     input.triggerType !== "schedule" ||
     Number(input.scheduleCount) > 0;
   const inputValid = sourceChosen && scheduleValid;
+  const destinationIds = new Set([
+    ...outputIds,
+    ...routingRules.map((rule) => rule.outputId),
+  ]);
   const vectorOutput = writableSources.some(
-    (source) => source.id === outputIds[0] && source.type === "vectordb",
+    (source) => destinationIds.has(source.id) && source.type === "vectordb",
   );
   const vectorReady = !vectorOutput || vectorDestinationConfigured(steps);
   const destinationReady =
