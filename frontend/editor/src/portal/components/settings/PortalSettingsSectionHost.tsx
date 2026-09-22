@@ -1,10 +1,10 @@
 import { type ReactNode } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { getPortalQueryClient } from "@portal/queryClient";
-import { PortalSettingsProviders } from "@portal/components/settings/PortalSettingsProviders";
-import { ErrorBoundary } from "@portal/components/ErrorBoundary";
-import "@portal/theme/base.css";
-import "@portal/components/settings/PortalSettingsSectionHost.css";
+import { getPortalQueryClient } from "@app/portal/queryClient";
+import { PortalSettingsProviders } from "@app/portal/components/settings/PortalSettingsProviders";
+import { ErrorBoundary } from "@app/portal/components/ErrorBoundary";
+import "@app/portal/theme/base.css";
+import "@app/portal/components/settings/PortalSettingsSectionHost.css";
 
 /**
  * Runs a portal-authored view inside the settings page. Those views are written
