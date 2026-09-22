@@ -98,8 +98,6 @@ export function Pipelines() {
   const connectSource = () =>
     navigate(`${toPortalPath(VIEW_PATHS.sources)}/new`);
 
-  // Open a suggested template in the simple wizard (a fresh policy). AI-gated templates stay closed
-  // until the engine is confirmed on, so a click during the app-config load can't open a disabled one.
   const openTemplate = useCallback(
     (entry: CatalogueEntry) => {
       if (entry.category.comingSoon) return;
@@ -149,12 +147,10 @@ export function Pipelines() {
       icon: stored?.icon,
       enabled: stored ? stored.status !== "paused" : wire.enabled,
       required: wire.required,
-      inputs: [],
+      inputs: wire.inputs ?? [],
       steps: wire.steps,
       output: { type: wire.output.type, options: wire.output.options },
-      outputIds: [],
-      // A wizard policy only ever runs on the editor, so hand its editor participation to the
-      // builder rather than letting it default to disabled.
+      outputIds: wire.outputIds ?? [],
       editor: wire.editor,
     };
     return draft;
@@ -172,6 +168,7 @@ export function Pipelines() {
       refetch();
     } catch (e) {
       setPageError(errorMessage(e));
+      throw e;
     }
   }
 

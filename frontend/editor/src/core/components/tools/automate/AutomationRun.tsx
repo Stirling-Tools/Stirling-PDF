@@ -10,9 +10,8 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
+import { Icon } from "@app/ui/Icon";
 import { useConnectedServer } from "@app/hooks/useConnectedServer";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import CheckIcon from "@mui/icons-material/Check";
 import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import { AutomationConfig, ExecutionStep } from "@app/types/automation";
@@ -159,7 +158,7 @@ export default function AutomationRun({
   const getStepIcon = (step: ExecutionStep) => {
     switch (step.status) {
       case EXECUTION_STATUS.COMPLETED:
-        return <CheckIcon style={{ fontSize: 16, color: "green" }} />;
+        return <Icon name="check" size={16} style={{ color: "green" }} />;
       case EXECUTION_STATUS.ERROR:
         return <span style={{ fontSize: 16, color: "red" }}>✕</span>;
       case EXECUTION_STATUS.RUNNING:
@@ -248,7 +247,7 @@ export default function AutomationRun({
             {/* Wrapper keeps the tooltip reachable while the button is disabled. */}
             <span style={{ display: "inline-flex" }}>
               <Button
-                leftSection={<PlayArrowIcon />}
+                leftSection={<Icon name="play" />}
                 onClick={executeAutomation}
                 disabled={
                   isExecuting ||
