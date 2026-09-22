@@ -182,9 +182,7 @@ public class AiEngineClient {
 
         int status = response.statusCode();
         if (status >= 400) {
-            throw new ResponseStatusException(
-                    HttpStatus.valueOf(status >= 500 ? 502 : status),
-                    "AI engine returned error: " + status);
+            throw failureFor(status, null);
         }
 
         try (Stream<String> lines = response.body()) {
@@ -293,14 +291,44 @@ public class AiEngineClient {
 
     private void checkResponseStatus(HttpResponse<String> response) {
         int status = response.statusCode();
+        if (status >= 400) {
+            throw failureFor(status, response.body());
+        }
+    }
+
+    /**
+     * An upstream status is kept only when it says something true about this request. A 401 or 403
+     * from the engine, or from Stirling Cloud in front of it, is about this server's credentials,
+     * not the browser's: relayed as-is, the frontend reads it as its own session expiring and
+     * reloads the page mid-flow.
+     */
+    private static ResponseStatusException failureFor(int status, String body) {
+        if (status == 401 || status == 403) {
+            return new EngineRejectedCredentials(status);
+        }
         if (status >= 500) {
-            throw new ResponseStatusException(
+            return new ResponseStatusException(
                     HttpStatus.BAD_GATEWAY, "AI engine returned error: " + status);
         }
-        if (status >= 400) {
-            throw new ResponseStatusException(
-                    HttpStatus.valueOf(status),
-                    "AI engine returned client error: " + response.body());
+        String detail = body == null || body.isBlank() ? "" : ": " + body;
+        return new ResponseStatusException(
+                HttpStatus.valueOf(status),
+                "AI engine returned client error (HTTP " + status + ")" + detail);
+    }
+
+    /** The engine, or the cloud gateway in front of it, refused this server's own credentials. */
+    public static final class EngineRejectedCredentials extends ResponseStatusException {
+        private final int upstreamStatus;
+
+        EngineRejectedCredentials(int upstreamStatus) {
+            super(
+                    HttpStatus.BAD_GATEWAY,
+                    "AI engine rejected this server's credentials (HTTP " + upstreamStatus + ")");
+            this.upstreamStatus = upstreamStatus;
+        }
+
+        public int upstreamStatus() {
+            return upstreamStatus;
         }
     }
 }

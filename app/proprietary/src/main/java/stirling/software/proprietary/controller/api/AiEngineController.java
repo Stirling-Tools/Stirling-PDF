@@ -211,13 +211,15 @@ public class AiEngineController {
         try {
             aiEngineClient.get("/api/v1/agents/capabilities", userId);
             return true;
+        } catch (AiEngineClient.EngineRejectedCredentials e) {
+            status.error(
+                    aiEngineRouter.isCloudMode()
+                            ? "Stirling Cloud rejected this server's link credential."
+                            : "The engine rejected this server's shared secret.");
+            return false;
         } catch (ResponseStatusException e) {
             int code = e.getStatusCode().value();
             String reason = e.getReason();
-            if (code == HttpStatus.UNAUTHORIZED.value()) {
-                status.error("The engine rejected this server's shared secret.");
-                return false;
-            }
             // The client collapses every engine 5xx to 502, so the engine's own fail-closed 503
             // ("auth required but no secret configured") only survives in the message.
             if (code == HttpStatus.BAD_GATEWAY.value()

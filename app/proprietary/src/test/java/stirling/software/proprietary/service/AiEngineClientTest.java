@@ -91,6 +91,38 @@ class AiEngineClientTest {
 
     @Test
     @SuppressWarnings("unchecked")
+    void anUpstreamUnauthorizedIsAboutOurCredentialsNotTheCallers() throws Exception {
+        // Relayed as a 401 the frontend treats it as its own session expiring and reloads.
+        HttpResponse<String> rejected = mock(HttpResponse.class);
+        when(rejected.statusCode()).thenReturn(401);
+        when(rejected.body()).thenReturn("");
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(rejected);
+
+        ResponseStatusException ex =
+                assertThrows(ResponseStatusException.class, () -> client.get("/x", null));
+
+        assertEquals(HttpStatus.BAD_GATEWAY, ex.getStatusCode());
+        assertEquals(401, ((AiEngineClient.EngineRejectedCredentials) ex).upstreamStatus());
+        assertEquals("AI engine rejected this server's credentials (HTTP 401)", ex.getReason());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void aClientErrorNamesItsStatusEvenWithAnEmptyBody() throws Exception {
+        HttpResponse<String> unprocessable = mock(HttpResponse.class);
+        when(unprocessable.statusCode()).thenReturn(422);
+        when(unprocessable.body()).thenReturn("");
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(unprocessable);
+
+        ResponseStatusException ex =
+                assertThrows(ResponseStatusException.class, () -> client.post("/x", "{}", null));
+
+        assertEquals(HttpStatus.UNPROCESSABLE_CONTENT, ex.getStatusCode());
+        assertEquals("AI engine returned client error (HTTP 422)", ex.getReason());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
     void allVerbsSendEngineAuthHeaderWhenSecretConfigured() throws Exception {
         // Regression for the engine shared-secret hardening: every verb that hits a non-public
         // engine route (post/delete/get) must present X-Engine-Auth, or the route 401s once the
