@@ -63,6 +63,7 @@ jobs:
       contents: write
     env:
       GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}
+      CACHE_COMPRESSION_LEVEL: 5
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
@@ -78,7 +79,6 @@ jobs:
         id: cache
         uses: Ludy87/cache-the-planet@62a8d98a23e7ab9c31c636d18407d953ccd5bc04
         with:
-          compression-level: "19"
           manifest-branch: dev-cache
           manifest-path: .github/cache-data
           storage: sftp
