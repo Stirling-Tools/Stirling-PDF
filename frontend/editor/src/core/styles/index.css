@@ -12,6 +12,12 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Give the mount node an explicit height so full-height layouts can size against
+   it with percentages. */
+#root {
+  height: 100%;
+}
+
 body {
   font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",

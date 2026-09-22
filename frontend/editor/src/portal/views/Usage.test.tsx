@@ -1,7 +1,7 @@
 vi.mock("@app/portal/queries/infrastructure", () => ({
   useFleetStats: () => ({ data: null, loading: false, error: null }),
 }));
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   act,
   fireEvent,
@@ -13,8 +13,29 @@ import { MantineProvider } from "@mantine/core";
 import type { ReactElement } from "react";
 import { StrictMode } from "react";
 import { MemoryRouter, useLocation } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { UIProvider } from "@app/portal/contexts/UIContext";
+import { baseQueryOptions } from "@app/query/queryClient";
+import {
+  resetTabVisibility,
+  setTabHidden,
+} from "@app/tests/utils/tabVisibility";
 import type { ProcurementSnapshot } from "@app/portal/api/procurement";
+import type { LegacyBillingState } from "@app/types/legacyBilling";
+import { formatPeriodDate } from "@app/billing";
+
+const legacyBilling: LegacyBillingState = {
+  subscriptions: [],
+  loading: false,
+  loadError: false,
+  opening: false,
+  portalError: false,
+  refresh: vi.fn(),
+  openPortal: vi.fn(),
+};
+vi.mock("@app/hooks/useLegacySubscriptions", () => ({
+  useLegacySubscriptions: () => legacyBilling,
+}));
 
 // Usage renders Mantine-backed @app/ui components (e.g. the "Manage Payment"
 // Button in the subscribed header), which need a MantineProvider in the tree.
@@ -28,21 +49,36 @@ function Location() {
   );
 }
 
+// The app's own query defaults, so a test can't pass on a library default the
+// app overrides - staleTime and refetchOnWindowFocus both govern this page.
 const renderUsage = (ui: ReactElement, entry = "/settings/billing") =>
   render(
     <StrictMode>
-      <MemoryRouter initialEntries={[entry]}>
-        <UIProvider>
-          <MantineProvider>
-            {ui}
-            <Location />
-          </MantineProvider>
-        </UIProvider>
-      </MemoryRouter>
+      <QueryClientProvider
+        client={
+          new QueryClient({ defaultOptions: { queries: baseQueryOptions } })
+        }
+      >
+        <MemoryRouter initialEntries={[entry]}>
+          <UIProvider>
+            <MantineProvider>
+              {ui}
+              <Location />
+            </MantineProvider>
+          </UIProvider>
+        </MemoryRouter>
+      </QueryClientProvider>
     </StrictMode>,
   );
 
-const translate = (key: string, def?: string) => def ?? key;
+const translate = (
+  key: string,
+  def?: string,
+  values?: Record<string, unknown>,
+) =>
+  (def ?? key).replace(/\{\{(\w+)\}\}/g, (match, name) =>
+    values?.[name] == null ? match : String(values[name]),
+  );
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -166,6 +202,11 @@ describe("Usage — link-free wallet renderer", () => {
   });
 
   beforeEach(() => {
+    legacyBilling.subscriptions = [];
+    legacyBilling.loading = false;
+    legacyBilling.loadError = false;
+    legacyBilling.portalError = false;
+    vi.mocked(legacyBilling.openPortal).mockClear();
     checkoutEnabled = false;
     checkout.openCheckout.mockReset();
     resetPortalSaasSessionState();
@@ -267,6 +308,214 @@ describe("Usage — link-free wallet renderer", () => {
     await waitFor(() =>
       expect(onWalletLoaded).toHaveBeenCalledWith(walletOf("free")),
     );
+  });
+
+  it.each(["pro", "team"] as const)(
+    "shows the legacy %s owner's plan and billing even when their current team role is member",
+    async (plan) => {
+      legacyBilling.subscriptions = [
+        {
+          id: "sub_old",
+          plan,
+          status: "active",
+          currentPeriodEnd: "2026-10-12T00:00:00Z",
+          teamId: null,
+          teamAllowance: null,
+        },
+      ];
+      fetchWallet.mockResolvedValue(walletOf("free"));
+      renderUsage(<Usage />);
+      await screen.findByText(
+        plan === "pro" ? "Pro (legacy)" : "Team (legacy)",
+      );
+      await screen.findByText(formatPeriodDate("2026-10-12", { year: true }));
+      expect(
+        screen.getByText("Next invoice").closest("section"),
+      ).toHaveAttribute("id", "ub-pay");
+      expect(
+        screen.queryByText("Free", { exact: true }),
+      ).not.toBeInTheDocument();
+      fireEvent.click(
+        screen.getByRole("button", { name: "Manage subscription" }),
+      );
+      expect(
+        screen.getAllByRole("button", { name: "Manage subscription" }),
+      ).toHaveLength(1);
+      expect(
+        screen
+          .getByRole("button", { name: "Manage subscription" })
+          .closest(".billing-page__head"),
+      ).not.toBeNull();
+      expect(legacyBilling.openPortal).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it("keeps legacy billing available when the wallet cannot load", async () => {
+    legacyBilling.subscriptions = [
+      {
+        id: "sub_old",
+        plan: "pro",
+        status: "past_due",
+        currentPeriodEnd: null,
+        teamId: null,
+        teamAllowance: null,
+      },
+    ];
+    fetchWallet.mockRejectedValue(new Error("Wallet unavailable"));
+    renderUsage(<Usage />);
+    await screen.findByText("Wallet unavailable");
+    expect(screen.getByText("Payment overdue")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Manage subscription" }),
+    ).toBeEnabled();
+  });
+
+  it.each(["loading", "loadError"] as const)(
+    "does not label the owner Free when the legacy lookup is %s",
+    async (state) => {
+      legacyBilling[state] = true;
+      fetchWallet.mockResolvedValue(walletOf("free"));
+      const loaded = vi.fn();
+      renderUsage(<Usage onWalletLoaded={loaded} />);
+      await waitFor(() => expect(loaded).toHaveBeenCalled());
+      expect(
+        screen.queryByText("Free", { exact: true }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", {
+          name: "Manage subscription",
+        }),
+      ).not.toBeInTheDocument();
+    },
+  );
+
+  it("shows a current Processor holding alongside the legacy subscription", async () => {
+    legacyBilling.subscriptions = [
+      {
+        id: "sub_old",
+        plan: "team",
+        status: "active",
+        currentPeriodEnd: null,
+        teamId: null,
+        teamAllowance: null,
+      },
+    ];
+    fetchWallet.mockResolvedValue({
+      ...walletOf("subscribed"),
+      processor: { active: true },
+    });
+    renderUsage(<Usage />);
+    await screen.findByText("Processor", { selector: ".billing-id__name" });
+    expect(
+      screen.getByText("Team (legacy)", { selector: ".billing-id__name" }),
+    ).toBeInTheDocument();
+  });
+
+  it.each([
+    [1, 5, "1 of 5 users"],
+    [1, 8, "1 of 8 users"],
+    [12, 5, "1 of 12 users"],
+    [null, 5, "1 · Unlimited"],
+  ] as const)(
+    "preserves the included allowance or greater legacy Pro capacity (%s seats, %s included)",
+    async (maxUsers, freeUserAllowance, expectedFact) => {
+      legacyBilling.subscriptions = [
+        {
+          id: "sub_pro",
+          plan: "pro",
+          status: "active",
+          currentPeriodEnd: null,
+          teamId: 42,
+          teamAllowance: { teamId: 42, maxUsers, usersInUse: 1 },
+        },
+      ];
+      fetchWallet.mockResolvedValue({
+        ...walletOf("free"),
+        teamId: 42,
+        freeUserAllowance,
+      });
+      renderUsage(<Usage />);
+      await screen.findByText(expectedFact);
+      expect(screen.queryByText("1 of 1 users")).not.toBeInTheDocument();
+      expect(screen.getByText("Pro (legacy)")).toBeInTheDocument();
+    },
+  );
+
+  it.each([12, null])(
+    "uses the legacy team's recorded capacity (%s) instead of the free or new Team offer",
+    async (maxUsers) => {
+      legacyBilling.subscriptions = [
+        {
+          id: "sub_old",
+          plan: "team",
+          status: "active",
+          currentPeriodEnd: null,
+          teamId: 42,
+          teamAllowance: { teamId: 42, maxUsers, usersInUse: 3 },
+        },
+      ];
+      fetchWallet.mockResolvedValue({
+        ...walletOf("free"),
+        teamId: 42,
+        freeUserAllowance: 5,
+      });
+      renderUsage(<Usage />);
+      await screen.findByText("Current allowance for your legacy team");
+      expect(
+        screen.queryByText("The Team plan covers 100 users"),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByText("1 of 5 users")).not.toBeInTheDocument();
+      expect(screen.queryByText("Add capacity")).not.toBeInTheDocument();
+      expect(
+        screen.getAllByText(
+          maxUsers == null ? "3 · Unlimited" : "3 of 12 users",
+        ).length,
+      ).toBeGreaterThan(0);
+    },
+  );
+
+  it("does not apply the legacy team's capacity to an unrelated wallet", async () => {
+    legacyBilling.subscriptions = [
+      {
+        id: "sub_old",
+        plan: "team",
+        status: "active",
+        currentPeriodEnd: null,
+        teamId: 99,
+        teamAllowance: { teamId: 99, maxUsers: null, usersInUse: 3 },
+      },
+    ];
+    fetchWallet.mockResolvedValue({
+      ...walletOf("free"),
+      teamId: 42,
+      freeUserAllowance: 5,
+    });
+    renderUsage(<Usage />);
+    await screen.findByText("1 of 5 users");
+    expect(
+      screen.queryByText("Current allowance for your legacy team"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("flags missing legacy team capacity without inventing an entitlement", async () => {
+    legacyBilling.subscriptions = [
+      {
+        id: "sub_old",
+        plan: "team",
+        status: "active",
+        currentPeriodEnd: null,
+        teamId: null,
+        teamAllowance: null,
+      },
+    ];
+    fetchWallet.mockResolvedValue(walletOf("free"));
+    renderUsage(<Usage />);
+    await screen.findByText(
+      "We couldn't confirm your team's user allowance. Contact support to check your legacy plan.",
+    );
+    expect(
+      screen.getByRole("button", { name: "Manage subscription" }),
+    ).toBeEnabled();
   });
 
   it("works with no callbacks (SaaS passes none)", async () => {
@@ -499,7 +748,9 @@ describe("Usage — link-free wallet renderer", () => {
       );
     });
     expect(screen.getAllByText("Renew billing access")).toHaveLength(1);
-    expect(screen.getByText(/Your plan and usage will appear/)).toBeVisible();
+    expect(
+      await screen.findByText(/Your plan and usage will appear/),
+    ).toBeVisible();
     expect(screen.queryByText("Session expired")).not.toBeInTheDocument();
   });
 
@@ -511,7 +762,6 @@ describe("Usage — link-free wallet renderer", () => {
       ),
     ).rejects.toBeInstanceOf(SaasSessionRequiredError);
     fetchWallet
-      .mockRejectedValueOnce(new SaasSessionRequiredError())
       .mockRejectedValueOnce(new SaasSessionRequiredError())
       .mockResolvedValue(walletOf("free"));
     const onWalletLoaded = vi.fn();
@@ -530,12 +780,11 @@ describe("Usage — link-free wallet renderer", () => {
     );
     expect(screen.queryByText(/Your plan and usage will appear/)).toBeNull();
     expect(screen.getByText("This cycle")).toBeVisible();
-    expect(fetchWallet).toHaveBeenCalledTimes(3);
+    expect(fetchWallet).toHaveBeenCalledTimes(2);
   });
 
   it("reloads billing and clears the expired-session view after renewal", async () => {
     fetchWallet
-      .mockRejectedValueOnce(new SaasSessionRequiredError())
       .mockRejectedValueOnce(new SaasSessionRequiredError())
       .mockResolvedValue(walletOf("free"));
     const onWalletLoaded = vi.fn();
@@ -552,7 +801,7 @@ describe("Usage — link-free wallet renderer", () => {
     );
     expect(screen.queryByText(/Your plan and usage will appear/)).toBeNull();
     expect(screen.getByText("This cycle")).toBeVisible();
-    expect(fetchWallet).toHaveBeenCalledTimes(3);
+    expect(fetchWallet).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -569,4 +818,122 @@ it("requests pending usage for a self-hosted instance", async () => {
   fetchLocalUsage.mockClear();
   renderUsage(<Usage localUsersInUse={null} />);
   await waitFor(() => expect(fetchLocalUsage).toHaveBeenCalled());
+});
+
+describe("Usage — refresh cost", () => {
+  const wallet = {
+    status: "free",
+    role: "member",
+    currency: "usd",
+    freeAllowance: 500,
+    freeRemaining: 500,
+    spendUnitsThisPeriod: 0,
+    docsProcessedThisPeriod: 0,
+    sizeMultiplierPdfsThisPeriod: 0,
+    estimatedBillMinor: 0,
+    pricePerDocMinor: 1,
+    billingPeriodStart: "2026-09-01T00:00:00",
+    billingPeriodEnd: "2026-10-01T00:00:00",
+    team: { held: false, licensedUsers: null, usersInUse: 1 },
+    processor: { active: false },
+  };
+
+  beforeEach(() => {
+    fetchWallet.mockReset().mockResolvedValue(wallet);
+    refreshWalletCache.mockReset().mockResolvedValue(undefined);
+    fetchLocalUsage.mockReset().mockResolvedValue(null);
+    bundleFlow.status = "none";
+    procurement.loading = false;
+    procurement.loadError = null;
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+  });
+
+  afterEach(() => {
+    resetTabVisibility();
+    vi.useRealTimers();
+  });
+
+  /** Settles the mount read before counting anything after it. */
+  async function mounted() {
+    await waitFor(() => expect(fetchWallet).toHaveBeenCalled());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    return fetchWallet.mock.calls.length;
+  }
+
+  it("does not re-read the wallet for every window focus", async () => {
+    renderUsage(<Usage />);
+    const base = await mounted();
+
+    // Alt-tab, closing a dialog, clicking back from another app: all fire this.
+    for (let i = 0; i < 5; i += 1) {
+      fireEvent.focus(window);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+    }
+
+    expect(fetchWallet).toHaveBeenCalledTimes(base);
+  });
+
+  it("re-reads on a schedule while the page is open", async () => {
+    renderUsage(<Usage />);
+    const base = await mounted();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(90_000);
+    });
+
+    expect(fetchWallet.mock.calls.length).toBeGreaterThan(base);
+  });
+
+  it("catches up on a tab return, but not for a return inside the fresh window", async () => {
+    renderUsage(<Usage />);
+    const base = await mounted();
+
+    // Straight back: the figures are seconds old, so the return costs nothing.
+    setTabHidden(true);
+    setTabHidden(false);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(fetchWallet).toHaveBeenCalledTimes(base);
+
+    // Back after long enough that they are stale, which is worth a read.
+    setTabHidden(true);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(120_000);
+    });
+    setTabHidden(false);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(fetchWallet.mock.calls.length).toBeGreaterThan(base);
+  });
+
+  it("stops reading while the tab is hidden", async () => {
+    renderUsage(<Usage />);
+    const base = await mounted();
+
+    setTabHidden(true);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300_000);
+    });
+
+    expect(fetchWallet).toHaveBeenCalledTimes(base);
+  });
+
+  it("keeps the figures on screen while it re-reads", async () => {
+    const view = renderUsage(<Usage />);
+    await mounted();
+    const shown = view.container.textContent;
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(60_000);
+    });
+
+    // A revalidation must not blank the page back to its loading state.
+    expect(view.container.textContent).toBe(shown);
+  });
 });

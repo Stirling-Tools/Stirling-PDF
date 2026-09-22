@@ -1,5 +1,4 @@
 import { lazy, Suspense, useCallback, useState } from "react";
-import { useTranslation } from "react-i18next";
 import type { ProcessingFolderCreation } from "@core/hooks/useProcessingFolderCreation";
 
 export type { ProcessingFolderCreation };
@@ -14,7 +13,6 @@ const Setup = lazy(async () => {
 
 /** The wizard stays inside the editor's file providers when opened from the outer navigation rail. */
 export function useProcessingFolderCreation(): ProcessingFolderCreation {
-  const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
   const open = useCallback(() => setOpened(true), []);
   const close = useCallback(() => setOpened(false), []);
@@ -22,9 +20,7 @@ export function useProcessingFolderCreation(): ProcessingFolderCreation {
   return {
     open,
     dialog: opened ? (
-      <Suspense
-        fallback={<span role="status">{t("loading", "Loading...")}</span>}
-      >
+      <Suspense fallback={null}>
         <Setup onClose={close} />
       </Suspense>
     ) : null,

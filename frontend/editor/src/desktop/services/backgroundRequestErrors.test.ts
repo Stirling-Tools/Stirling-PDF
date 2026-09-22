@@ -1,3 +1,4 @@
+import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { fetch } from "@tauri-apps/plugin-http";
@@ -92,7 +93,9 @@ describe("desktop background requests through the HTTP interceptors", () => {
     async (mode) => {
       vi.useFakeTimers({ shouldAdvanceTime: true });
       vi.mocked(connectionModeService.getCurrentMode).mockResolvedValue(mode);
-      const { result } = renderHook(() => useWallet());
+      const { result } = renderHook(() => useWallet(), {
+        wrapper: TestQueryProvider,
+      });
       await act(async () => {
         await vi.advanceTimersByTimeAsync(90_000);
       });
@@ -106,7 +109,9 @@ describe("desktop background requests through the HTTP interceptors", () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     allowConsole.warn(/\[useWallet\] fetch failed/);
     failRequest(500);
-    const { result } = renderHook(() => useWallet());
+    const { result } = renderHook(() => useWallet(), {
+      wrapper: TestQueryProvider,
+    });
     await waitFor(() => expect(result.current.error).not.toBeNull());
     const initialRequests = vi.mocked(fetch).mock.calls.length;
     for (let poll = 0; poll < 3; poll++) {

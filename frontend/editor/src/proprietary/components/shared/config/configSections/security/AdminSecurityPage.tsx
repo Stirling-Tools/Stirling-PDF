@@ -218,7 +218,6 @@ export default function AdminSecurityPage() {
             "admin.settings.connections.ssoAutoLogin.label",
             "SSO Auto Login",
           )}
-          badge={<TierBadge tier="PRO" />}
         >
           <SsoAutoLoginCard {...connectionsCard} />
         </SettingsCard>

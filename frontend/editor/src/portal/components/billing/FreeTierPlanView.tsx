@@ -1,6 +1,9 @@
 import type { ReactNode } from "react";
 import type { ServerPlan } from "@app/billing/serverPlan";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@app/auth";
+import { qk } from "@portal/queries/keys";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, Card } from "@app/ui";
 import { BillingScreen } from "@app/billing";
@@ -87,26 +90,31 @@ export function FreeTierPlanView({
   serverPlanAction?: ReactNode;
 }) {
   const { t } = useTranslation();
+  const { isAdmin } = useAuth();
   const { openLinkModal } = useUI();
-  // An outcome, not a rendered message: the effect must not depend on `t`, whose identity is
-  // not stable across renders.
-  const [load, setLoad] = useState<Load>({ state: "loading" });
+  const query = useQuery({
+    queryKey: qk.freeTier(),
+    queryFn: fetchFreeTier,
+    enabled: isAdmin,
+    refetchInterval: 60_000,
+    retry: false,
+  });
+  let load: Load = { state: "loading" };
+  if (!isAdmin) load = { state: "forbidden" };
+  else if (query.data) load = { state: "ready", balance: query.data };
+  else if (query.isError) {
+    const denied =
+      query.error instanceof HttpError &&
+      (query.error.status === 401 || query.error.status === 403);
+    load = { state: denied ? "forbidden" : "failed" };
+  }
   const [seats, setSeats] = useState<Seats | null>(null);
   const { data: fleetStats } = useFleetStats();
   const editorsDeployed = fleetStats?.editorsDeployed ?? null;
 
   useEffect(() => {
+    if (!isAdmin) return;
     let cancelled = false;
-    fetchFreeTier()
-      .then((balance) => {
-        if (!cancelled) setLoad({ state: "ready", balance });
-      })
-      .catch((e: unknown) => {
-        if (cancelled) return;
-        const denied =
-          e instanceof HttpError && (e.status === 401 || e.status === 403);
-        setLoad({ state: denied ? "forbidden" : "failed" });
-      });
     // User counts are best-effort: this page is the credit meter, and a row is dropped rather than
     // guessed at when its source cannot answer.
     usersBackend
@@ -120,10 +128,17 @@ export function FreeTierPlanView({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isAdmin]);
 
   const wallet =
     load.state === "ready" ? localWallet(load.balance, seats) : null;
+  const exhausted =
+    serverPlan?.licenseType !== "ENTERPRISE" &&
+    load.state === "ready" &&
+    load.balance.remainingUnits === 0;
+  const onLink = isAdmin
+    ? () => openLinkModal(exhausted ? "exhausted" : "link")
+    : undefined;
 
   return (
     <BillingScreen
@@ -135,8 +150,8 @@ export function FreeTierPlanView({
       serverPlanAction={serverPlanAction}
       editorsDeployed={editorsDeployed}
       pdfsProcessed={fleetStats?.pdfsProcessed ?? null}
-      onAddCapacity={() => openLinkModal()}
-      onActivateProcessor={() => openLinkModal()}
+      onAddCapacity={onLink}
+      onActivateProcessor={onLink}
       notices={
         <>
           <Banner
@@ -147,12 +162,19 @@ export function FreeTierPlanView({
               "This server has no Stirling account",
             )}
             action={
-              <Button size="sm" onClick={() => openLinkModal()}>
-                {t(
-                  "portal.usage.freeTier.connect",
-                  "Connect a Stirling account",
-                )}
-              </Button>
+              isAdmin ? (
+                <Button size="sm" onClick={onLink}>
+                  {exhausted
+                    ? t(
+                        "portal.accountLink.rail.exhaustedCta",
+                        "Link account for more credits",
+                      )
+                    : t(
+                        "portal.usage.freeTier.connect",
+                        "Connect a Stirling account",
+                      )}
+                </Button>
+              ) : undefined
             }
           >
             {serverPlan?.licenseType === "ENTERPRISE"

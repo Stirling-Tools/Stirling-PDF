@@ -62,6 +62,10 @@
       "allow": [{ "path": "**" }]
     },
     {
+      "identifier": "fs:allow-rename",
+      "allow": [{ "path": "**" }]
+    },
+    {
       "identifier": "fs:allow-remove",
       "allow": [{ "path": "**" }]
     },
