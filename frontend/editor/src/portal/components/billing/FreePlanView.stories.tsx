@@ -4,6 +4,7 @@ import { http, HttpResponse } from "msw";
 import { BillingScreen } from "@app/billing";
 import { FreePlanView } from "@portal/components/billing/FreePlanView";
 import { freeWallet } from "@app/billing/walletFixtures";
+import type { Wallet } from "@app/billing/types";
 import "@portal/components/billing/billing.css";
 
 const meta: Meta<typeof FreePlanView> = {
@@ -39,23 +40,41 @@ const meta: Meta<typeof FreePlanView> = {
 export default meta;
 type Story = StoryObj<typeof FreePlanView>;
 
-function ActivationPreview({ resume = false }: { resume?: boolean }) {
+function ActivationPreview({
+  resume = false,
+  wallet = freeWallet,
+}: {
+  resume?: boolean;
+  wallet?: Wallet;
+}) {
   const [step, setStep] = useState<"choose" | "prepay" | "payg" | null>(
     resume ? "prepay" : null,
   );
   return (
     <BillingScreen
-      wallet={freeWallet}
+      wallet={wallet}
       onActivateProcessor={() => setStep(resume ? "prepay" : "choose")}
       activateLabel={resume ? "View quote" : undefined}
       extras={
-        <FreePlanView wallet={freeWallet} step={step} onStepChange={setStep} />
+        <FreePlanView wallet={wallet} step={step} onStepChange={setStep} />
       }
     />
   );
 }
 
+/** A free team holding a live pool: it reads on the Processor row, not a card below. */
+const freeWithPool: Wallet = {
+  ...freeWallet,
+  billingMode: "prepaid",
+  prepaidUnitsRemaining: 78_000,
+  prepaidUnitsTotal: 120_000,
+  prepaidExpiresAt: "2027-03-01",
+};
+
 export const Leader: Story = { render: () => <ActivationPreview /> };
+export const PrepaidPool: Story = {
+  render: () => <ActivationPreview wallet={freeWithPool} />,
+};
 export const Member: Story = {
   args: { wallet: { ...freeWallet, role: "member" } },
 };

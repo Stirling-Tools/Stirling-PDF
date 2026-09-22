@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Icon } from "@app/ui/Icon";
+import { isBrowserOnlyFile } from "@app/components/filesPage/fileOrigin";
 import { FileId } from "@app/types/file";
 import { StirlingFileStub } from "@app/types/fileContext";
 
@@ -11,7 +12,7 @@ export interface FileDetailsActionsProps {
   /** The only selected file, or null for a multi-selection. */
   single: StirlingFileStub | null;
   fileCount: number;
-  /** Selected files with no server copy yet; empty hides Save to server. */
+  /** Selected files with no server copy yet; empty hides Add to library. */
   localOnlyFiles: StirlingFileStub[];
   sharingEnabled: boolean;
   downloading: boolean;
@@ -20,7 +21,7 @@ export interface FileDetailsActionsProps {
   onMove: (fileIds: FileId[]) => void;
   onRemove: (fileIds: FileId[]) => void;
   onSaveToServer?: (files: StirlingFileStub[]) => void;
-  /** When set, Save to server renders disabled with this tooltip (storage off). */
+  /** Keeps Add to library visible but disabled, with this explanation as a tooltip. */
   saveToServerDisabledReason?: string | null;
   onShare: () => void;
 }
@@ -28,10 +29,6 @@ export interface FileDetailsActionsProps {
 const ICON_SIZE = 20;
 const MENU_ICON_SIZE = "1.1rem";
 
-/**
- * The details panel's action row: one primary CTA, download, and everything
- * else behind an overflow menu.
- */
 export function FileDetailsActions({
   selectedFileIds,
   single,
@@ -59,6 +56,10 @@ export function FileDetailsActions({
     ? t("filesPage.download", "Download")
     : t("filesPage.downloadAll", "Download all");
   const showSaveToServer = Boolean(onSaveToServer) && localOnlyFiles.length > 0;
+  const browserOnlyIds = new Set(
+    localOnlyFiles.filter(isBrowserOnlyFile).map((file) => file.id),
+  );
+  const movableIds = selectedFileIds.filter((id) => !browserOnlyIds.has(id));
   const saveToServerDisabled = Boolean(saveToServerDisabledReason);
 
   return (
@@ -73,7 +74,7 @@ export function FileDetailsActions({
         </Button>
         <Tooltip label={downloadLabel} withinPortal>
           <ActionIcon
-            variant="secondary"
+            variant="tertiary"
             loading={downloading}
             onClick={onDownload}
             aria-label={downloadLabel}
@@ -84,16 +85,14 @@ export function FileDetailsActions({
         <Menu shadow="md" width={230} position="top-end" withinPortal>
           <Menu.Target>
             <ActionIcon
-              variant="secondary"
+              variant="tertiary"
               aria-label={t("filesPage.bulkActions", "Actions")}
             >
               <Icon name="ellipsis-vertical" size={ICON_SIZE} />
             </ActionIcon>
           </Menu.Target>
           <Menu.Dropdown>
-            {/* Share is single-file only. When sharing is disabled in server
-                config (storage.sharing.enabled=false) the item stays listed but
-                disabled, so the feature is discoverable rather than absent. */}
+            {/* Keep sharing discoverable when server settings disable it. */}
             {single && (
               <Tooltip
                 label={t(
@@ -114,12 +113,14 @@ export function FileDetailsActions({
                 </Menu.Item>
               </Tooltip>
             )}
-            <Menu.Item
-              leftSection={<Icon name="folder-input" size={MENU_ICON_SIZE} />}
-              onClick={() => onMove(selectedFileIds)}
-            >
-              {t("filesPage.moveTo", "Move to…")}
-            </Menu.Item>
+            {movableIds.length > 0 && (
+              <Menu.Item
+                leftSection={<Icon name="folder-input" size={MENU_ICON_SIZE} />}
+                onClick={() => onMove(movableIds)}
+              >
+                {t("filesPage.moveTo", "Move to…")}
+              </Menu.Item>
+            )}
             {showSaveToServer && (
               <Tooltip
                 label={saveToServerDisabledReason}
@@ -135,7 +136,7 @@ export function FileDetailsActions({
                   disabled={saveToServerDisabled}
                   onClick={() => onSaveToServer?.(localOnlyFiles)}
                 >
-                  {t("filesPage.saveToServer", "Save to server")}
+                  {t("filesPage.addToLibrary", "Add to Stirling library…")}
                 </Menu.Item>
               </Tooltip>
             )}

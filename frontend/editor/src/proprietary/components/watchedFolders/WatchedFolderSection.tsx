@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Box, Text, Stack } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import AddIcon from "@mui/icons-material/Add";
+import { Icon } from "@app/ui/Icon";
 import { useWatchedFolders } from "@app/hooks/useWatchedFolders";
 import { useFolderRunStatuses } from "@app/hooks/useFolderRunStatuses";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
@@ -140,8 +140,10 @@ export function WatchedFolderSection() {
             fullWidth
             justify="start"
             leftSection={
-              <AddIcon
-                style={{ fontSize: 14, color: "var(--mantine-color-gray-5)" }}
+              <Icon
+                name="plus"
+                size={14}
+                style={{ color: "var(--mantine-color-gray-5)" }}
               />
             }
             onClick={() => setCreateModalOpen(true)}

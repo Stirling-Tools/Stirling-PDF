@@ -23,7 +23,7 @@ import {
 } from "@app/services/serverPlanCheckout";
 
 const plan = {
-  lookupKey: "selfhosted:server:yearly",
+  lookupKey: "selfhosted:team:yearly",
   serverQuantity: 2,
   installationId: "inst-1",
   uiMode: "embedded",
@@ -87,7 +87,7 @@ describe("createServerPlanCheckoutSession", () => {
     expect(options.body).not.toHaveProperty("self_hosted");
     expect(options.body).not.toHaveProperty("email");
     expect(options.body).toMatchObject({
-      lookup_key: "selfhosted:server:yearly",
+      lookup_key: "selfhosted:team:yearly",
       server_quantity: 2,
       installation_id: "inst-1",
       ui_mode: "embedded",
