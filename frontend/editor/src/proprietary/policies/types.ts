@@ -78,9 +78,11 @@ export interface WireEditorConfig {
   runOn: "upload" | "export";
 }
 
+/** A saved input and its server-side trigger; null runs only on demand. */
 export interface WirePolicy {
   id: string;
   name: string;
+  icon?: string;
   owner?: string;
   enabled: boolean;
   /** A policy (blocking on failure) rather than an ordinary pipeline (see `Policy.required`). */
@@ -133,6 +135,7 @@ export interface PolicyRunView {
 export interface PolicyDecodedState {
   id: string;
   name: string;
+  icon?: string;
   enabled: boolean;
   /** A policy (blocking on failure) rather than an ordinary pipeline; first-class, not in options. */
   required: boolean;

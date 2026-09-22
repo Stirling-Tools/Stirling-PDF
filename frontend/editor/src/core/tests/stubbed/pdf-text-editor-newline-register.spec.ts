@@ -120,13 +120,16 @@ test.describe("PDF text editor - the overlay stays in register with the page", (
     await page.keyboard.type(LONG_LINE, { delay: 12 });
     await page.waitForTimeout(1500);
 
+    // The overlay paints a frame or two after the keystrokes settle (WebKit under
+    // load is the slow case). Poll for the painted blocks before reading the run:
+    // with no blocks the row assertion below is vacuous.
+    await expect
+      .poll(async () => (await register(page, runId))?.blocks ?? 0, {
+        timeout: 15_000,
+      })
+      .toBeGreaterThan(1);
     const reg = await register(page, runId);
     expect(reg, "run vanished").not.toBeNull();
-    // Guard: with no painted blocks the row assertion below is vacuous.
-    expect(
-      reg!.blocks,
-      "the run should be painted as line blocks, not plain text",
-    ).toBeGreaterThan(1);
     expect(
       reg!.blockWhiteSpace.every((w) => w === "pre"),
       `a painted block was allowed to wrap: ${reg!.blockWhiteSpace.join(", ")}`,
@@ -153,9 +156,15 @@ test.describe("PDF text editor - the overlay stays in register with the page", (
     await page.keyboard.type(LONG_LINE, { delay: 12 });
     await page.waitForTimeout(1500);
 
+    // The overlay paints a frame or two after the keystrokes settle, so poll for
+    // the painted blocks before reading the run.
+    await expect
+      .poll(async () => (await register(page, runId))?.blocks ?? 0, {
+        timeout: 15_000,
+      })
+      .toBeGreaterThan(1);
     const reg = await register(page, runId);
     expect(reg).not.toBeNull();
-    expect(reg!.blocks).toBeGreaterThan(1);
     // The register invariant: the page draws one row per model line, so the
     // overlay must show exactly that many. A block that wrapped added a row the
     // page has no counterpart for, and everything below it lost alignment.

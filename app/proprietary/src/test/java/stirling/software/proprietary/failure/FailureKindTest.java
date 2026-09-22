@@ -341,9 +341,64 @@ class FailureKindTest {
 
         @Test
         void byErrorCodeIsEmptyForACodeNoKindHasAdoptedYet() {
-            // E005 is PDF_NO_PAGES: a real error code, deliberately not yet a kind.
-            assertThat(FailureKind.byErrorCode("E005")).isEmpty();
+            // E031 is FILE_PROCESSING, the catch-all a step throws when it has nothing more
+            // specific to say. It stays unclaimed on purpose: UNKNOWN describes it accurately and
+            // leads with a retry, which is the right offer for a failure nobody can characterise.
+            assertThat(FailureKind.byErrorCode("E031")).isEmpty();
             assertThat(FailureKind.byErrorCode(null)).isEmpty();
+        }
+
+        @Test
+        void aCodeARetryCouldClearSaysSoRatherThanPermanent() {
+            // E053 is an outright interruption, and E051 is the bucket unrecognised Ghostscript
+            // output falls into, so both are rerunnable. Their kinds lead with the retry.
+            assertThat(FailureKind.byErrorCode("E053"))
+                    .hasValueSatisfying(
+                            kind ->
+                                    assertThat(kind.getRemedy())
+                                            .isEqualTo(FailureRemedy.TRANSIENT));
+            assertThat(FailureKind.byErrorCode("E051"))
+                    .hasValueSatisfying(
+                            kind ->
+                                    assertThat(kind.getActions())
+                                            .first()
+                                            .isEqualTo(FailureActionId.OPEN_IN_TOOL));
+        }
+
+        /**
+         * Codes no kind claims, each with the reason. Anything else the enum names must be claimed:
+         * a coded failure nobody claims lands in the bell as unrecognised.
+         */
+        private static final Map<String, String> UNCLAIMED_ON_PURPOSE =
+                Map.of(
+                        "E031",
+                                "the catch-all a step throws with nothing more specific to say;"
+                                        + " UNKNOWN describes it accurately",
+                        "E071",
+                                "a null argument is a programming error, not something an owner or"
+                                        + " reviewer can act on",
+                        "E080",
+                                "MD5 unavailable is swallowed by its one caller for a fallback hash,"
+                                        + " so it never reaches a run");
+
+        @Test
+        void everyErrorCodeIsClaimedOrLeftUnclaimedForAStatedReason() {
+            Set<String> claimed =
+                    Stream.of(FailureKind.values())
+                            .flatMap(kind -> kind.getErrorCodes().stream())
+                            .collect(Collectors.toSet());
+            List<String> unaccounted =
+                    Arrays.stream(ExceptionUtils.ErrorCode.values())
+                            .filter(code -> !claimed.contains(code.getCode()))
+                            .filter(code -> !UNCLAIMED_ON_PURPOSE.containsKey(code.getCode()))
+                            .map(code -> code.getCode() + " (" + code.name() + ")")
+                            .toList();
+            assertThat(unaccounted)
+                    .as("codes no kind claims; claim them, or list them with a reason")
+                    .isEmpty();
+            assertThat(UNCLAIMED_ON_PURPOSE.keySet())
+                    .as("a reason for a code some kind now claims is stale")
+                    .doesNotContainAnyElementsOf(claimed);
         }
     }
 
@@ -378,6 +433,64 @@ class FailureKindTest {
             assertThat(FailureKind.INPUT_CORRUPTED.getOfferedActions())
                     .contains(offered(FailureActionId.REPAIR, OWNER, RESOLUTION, "repair"))
                     .contains(offered(FailureActionId.OPEN_IN_TOOL, OWNER, OVERFLOW, "openInTool"));
+        }
+
+        @Test
+        void aKindWithNothingToOfferDeclaresNoResolutionRatherThanAWeakOne() {
+            // Zero resolutions is legal, so nothing else would notice one of these quietly
+            // gaining a button. Each is here because no action the client can run would change
+            // the outcome, or because the only one that might is a plain retry, which is an
+            // offer rather than a fix.
+            assertThat(
+                            Stream.of(FailureKind.values())
+                                    .filter(
+                                            kind ->
+                                                    kind.getOfferedActions().stream()
+                                                            .noneMatch(
+                                                                    offer ->
+                                                                            offer.slot()
+                                                                                    == RESOLUTION))
+                                    .toList())
+                    .containsExactlyInAnyOrder(
+                            FailureKind.COMPLIANCE_NOT_MET,
+                            FailureKind.INPUT_UNREPAIRABLE,
+                            FailureKind.INPUT_WRONG_TYPE,
+                            FailureKind.INPUT_UNREADABLE,
+                            FailureKind.INPUT_EMPTY,
+                            FailureKind.INPUT_UNAVAILABLE,
+                            FailureKind.TOOL_NOT_INSTALLED,
+                            FailureKind.STEP_CANNOT_RENDER_PAGE,
+                            FailureKind.STEP_TOOL_FAILED,
+                            FailureKind.STEP_INTERRUPTED,
+                            FailureKind.STEP_PAGE_TOO_LARGE,
+                            FailureKind.STEP_MISCONFIGURED,
+                            FailureKind.UNKNOWN);
+        }
+
+        @Test
+        void aMissingDocumentOffersNothingThatWouldOpenIt() {
+            assertThat(FailureKind.INPUT_UNAVAILABLE.getOfferedActions())
+                    .containsExactly(
+                            offered(
+                                    FailureActionId.VIEW_IN_PROCESSOR,
+                                    TEAM_REVIEWER,
+                                    OVERFLOW,
+                                    "viewInProcessor"),
+                            offered(FailureActionId.DISMISS, ANYONE_WHO_SEES, OVERFLOW, "dismiss"));
+        }
+
+        @Test
+        void aMissingBinaryIsARunnersProblemNotTheOwners() {
+            // No owner-facing offer at all: the document is fine and a retry fails identically
+            // until someone installs the binary, so the only useful reader is whoever triages.
+            assertThat(FailureKind.TOOL_NOT_INSTALLED.getOfferedActions())
+                    .containsExactly(
+                            offered(
+                                    FailureActionId.VIEW_IN_PROCESSOR,
+                                    TEAM_REVIEWER,
+                                    SECONDARY,
+                                    "viewInProcessor"),
+                            offered(FailureActionId.DISMISS, ANYONE_WHO_SEES, OVERFLOW, "dismiss"));
         }
 
         @Test

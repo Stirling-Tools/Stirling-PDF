@@ -8,7 +8,7 @@ const state = vi.hoisted(() => ({
   unsubscribe: vi.fn(),
   listener: null as ((event: string, session: EmailSession) => void) | null,
 }));
-vi.mock("@portal/auth/saasSupabase", () => ({
+vi.mock("@app/portal/auth/saasSupabase", () => ({
   ensureSaasSupabase: () =>
     state.configured
       ? {
@@ -27,10 +27,15 @@ vi.mock("@portal/auth/saasSupabase", () => ({
       : null,
 }));
 
-import { useLinkedAccountEmail } from "@portal/hooks/useLinkedAccountEmail";
+import { useLinkedAccountEmail } from "@app/portal/hooks/useLinkedAccountEmail";
+import {
+  portalSaasSessionRestored,
+  resetPortalSaasSessionState,
+} from "@app/portal/auth/portalSaasSession";
 
 describe("Current SaaS email", () => {
   beforeEach(() => {
+    resetPortalSaasSessionState();
     state.configured = true;
     state.listener = null;
     state.unsubscribe.mockReset();
@@ -68,6 +73,22 @@ describe("Current SaaS email", () => {
       finishRead({ data: { session: { user: { email: "old@example.com" } } } }),
     );
     expect(result.current).toBeNull();
+  });
+
+  it("rebinds after renewal and ignores the previous client's events", async () => {
+    const { result, unmount } = renderHook(useLinkedAccountEmail);
+    await waitFor(() => expect(result.current).toBe("owner@example.com"));
+    const previousListener = state.listener;
+    state.getSession.mockResolvedValue({
+      data: { session: { user: { email: "renewed@example.com" } } },
+    });
+    act(() => portalSaasSessionRestored());
+    await waitFor(() => expect(result.current).toBe("renewed@example.com"));
+    expect(state.unsubscribe).toHaveBeenCalledOnce();
+    act(() => previousListener?.("SIGNED_OUT", null));
+    expect(result.current).toBe("renewed@example.com");
+    unmount();
+    expect(state.unsubscribe).toHaveBeenCalledTimes(2);
   });
 
   it("leaves the email unavailable if the session read fails", async () => {

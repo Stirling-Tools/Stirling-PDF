@@ -3,10 +3,20 @@
   "compilerOptions": {
     "paths": {
       "@app/*": ["./src/proprietary/*", "./src/core/*"],
+      "@app/portal/*": [
+        "./src/proprietary/portal/*",
+        "./src/core/portal/*",
+        "./src/portal/*"
+      ],
       "@portal/*": ["./src/portal/*"],
       "@proprietary/*": ["./src/proprietary/*"],
       "@core/*": ["./src/core/*"]
     }
   },
-  "exclude": ["src/core/**/*.test.ts*", "src/core/**/*.spec.ts*", "src/desktop"]
+  "exclude": [
+    "src/core/**/*.test.ts*",
+    "src/core/**/*.spec.ts*",
+    "src/desktop",
+    "src/cloud"
+  ]
 }
