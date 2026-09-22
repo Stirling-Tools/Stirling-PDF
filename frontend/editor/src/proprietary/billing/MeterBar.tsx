@@ -1,3 +1,4 @@
+import "@app/billing/MeterBar.css";
 import type { ReactNode } from "react";
 import type { MeterState } from "@app/billing/format";
 import { StatusBadge, type StatusTone } from "@app/ui/StatusBadge";

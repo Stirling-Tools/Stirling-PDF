@@ -444,7 +444,8 @@ export default function WorkbenchBar({
           {
             value: "pageEditor" as WorkbenchType,
             label: t("workbenchBar.multiTool", "Multi-Tool"),
-            icon: <Icon name="layout-dashboard" size="1rem" />,
+            // The registry's multiTool glyph: one tool, one mark, wherever it is drawn.
+            icon: <Icon name="grid-2x2-plus" size="1rem" />,
           },
         ]
       : []),
