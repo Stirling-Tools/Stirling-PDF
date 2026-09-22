@@ -62,7 +62,7 @@ jobs:
     permissions:
       contents: write
     env:
-      GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java${{ needs.hash_pr.outputs.java_version }}
+      GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}
       CACHE_COMPRESSION_LEVEL: 19
     steps:
       - name: Harden the runner (Audit all outbound calls)
@@ -87,14 +87,14 @@ jobs:
           sftp-username: ${{ secrets.CACHE_SFTP_USERNAME }}
           sftp-password: ${{ secrets.CACHE_SFTP_PASSWORD }}
           sftp-base-path: ${{ secrets.CACHE_SFTP_BASE_PATH || '/files/cache-the-planet' }}
-          cache-name: "gradle-java${{ env.JAVA_VERSION }}"
+          cache-name: "gradle-java-${{ env.JAVA_VERSION }}"
           save-scope: shared
           token: ${{ github.token }}
           key: ${{ needs.hash_pr.outputs.cache_key }}
           allow-shared-restore: true
           path: |
-            .cache/gradle-java${{ env.JAVA_VERSION }}/caches
-            .cache/gradle-java${{ env.JAVA_VERSION }}/wrapper
+            .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
+            .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
           strict: false
 
       - name: Display cache information
@@ -116,8 +116,8 @@ jobs:
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
-            .cache/gradle-java${{ env.JAVA_VERSION }}/caches
-            .cache/gradle-java${{ env.JAVA_VERSION }}/wrapper
+            .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
+            .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
           key: ${{ needs.hash_pr.outputs.cache_key }}
           lookup-only: true
 
@@ -141,6 +141,6 @@ jobs:
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
-            .cache/gradle-java${{ env.JAVA_VERSION }}/caches
-            .cache/gradle-java${{ env.JAVA_VERSION }}/wrapper
+            .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
+            .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
           key: ${{ needs.hash_pr.outputs.cache_key }}
