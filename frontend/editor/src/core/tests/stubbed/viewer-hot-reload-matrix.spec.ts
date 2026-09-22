@@ -243,6 +243,57 @@ test("dual page view survives a save and a tool output", async ({
   await expect(page.getByText(/%$/).first()).toHaveText(zoomBefore ?? "");
 });
 
+for (const dualRotated of [false, true]) {
+  test(`a shorter replacement restores the last available page (${dualRotated ? "dual rotated" : "single"})`, async ({
+    page,
+  }) => {
+    await loadFixture(page, MULTIPAGE_PDF, 3);
+    await mockCompress(page, FORM_PDF);
+    await openCompressPanel(page);
+    if (dualRotated) {
+      await page
+        .getByRole("button", { name: "Dual Page View" })
+        .first()
+        .click();
+      await page.getByRole("button", { name: "Rotate Left" }).first().click();
+      await expect
+        .poll(async () => {
+          const box = await page.locator('[data-page-index="2"]').boundingBox();
+          return !!box && box.width > box.height;
+        })
+        .toBe(true);
+    }
+    const zoom = page.getByText(/%$/).first();
+    const initialZoom = await zoom.textContent();
+    await page.getByRole("button", { name: "Zoom In" }).first().click();
+    await expect(zoom).not.toHaveText(initialZoom ?? "");
+    await page.getByRole("button", { name: "Last Page" }).first().click();
+    const pageInput = page.locator(".pdf-viewer-toolbar").getByRole("textbox");
+    await expect(pageInput).toHaveValue("3");
+    await expect(page.locator('[data-page-index="2"]')).toBeInViewport();
+    const zoomBefore = await zoom.textContent();
+
+    await applyCompress(page);
+
+    await expect(page.locator("[data-page-index]")).toHaveCount(2);
+    await expect(zoom).toHaveText(zoomBefore ?? "");
+    await expect(page.locator('[data-page-index="1"]')).toBeInViewport();
+    if (dualRotated) {
+      await expect(
+        page.getByRole("button", { name: "Single Page View" }).first(),
+      ).toBeVisible();
+      await expect
+        .poll(async () => {
+          const box = await page.locator('[data-page-index="1"]').boundingBox();
+          return !!box && box.width > box.height;
+        })
+        .toBe(true);
+    } else {
+      await expect(pageInput).toHaveValue("2");
+    }
+  });
+}
+
 test("a tool output keeps the page width and zoom readout steady", async ({
   page,
 }) => {

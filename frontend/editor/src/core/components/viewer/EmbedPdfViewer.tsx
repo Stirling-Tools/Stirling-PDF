@@ -377,6 +377,23 @@ const EmbedPdfViewerContent = ({
     documentSwappedRef.current = false;
   }, []);
 
+  const resolvePendingScrollPage = useCallback(() => {
+    const pending = pendingScrollPositionRef.current;
+    if (!pending) return null;
+    // A clamped index can also exist in the outgoing document. Wait for its
+    // captured node to detach before resolving any replacement page.
+    if (pending.expectSwap && pending.element?.isConnected) return null;
+    const totalPages = getScrollState().totalPages;
+    if (totalPages < 1) return null;
+    const targetPage = Math.min(pending.page, totalPages);
+    const page = document.querySelector<HTMLElement>(
+      `[data-page-index="${targetPage - 1}"]`,
+    );
+    if (!page) return null;
+    pending.page = targetPage;
+    return page;
+  }, [getScrollState]);
+
   const applyScrollNow = useCallback(
     (useFraction: boolean): boolean => {
       const pending = pendingScrollPositionRef.current;
@@ -388,9 +405,7 @@ const EmbedPdfViewerContent = ({
         clearPendingScrollRestore();
         return false;
       }
-      const pageEl = document.querySelector<HTMLElement>(
-        `[data-page-index="${pending.page - 1}"]`,
-      );
+      const pageEl = resolvePendingScrollPage();
       // The scroller survives document swaps; walking ancestors on every frame
       // of the hold is what made it expensive.
       const scroller =
@@ -452,7 +467,7 @@ const EmbedPdfViewerContent = ({
       }
       return true;
     },
-    [revealSwappedDocument],
+    [revealSwappedDocument, resolvePendingScrollPage],
   );
 
   // Re-apply the captured position to the swapped document. Returns false until
@@ -462,23 +477,10 @@ const EmbedPdfViewerContent = ({
       const pending = pendingScrollPositionRef.current;
       if (!pending) return false;
 
-      const pageEl = document.querySelector<HTMLElement>(
-        `[data-page-index="${pending.page - 1}"]`,
-      );
-      // Activation precedes React's commit. Never restore against the outgoing
-      // pages or start the hold window while the replacement is still mounting.
-      if (pending.expectSwap && (!pageEl || pageEl === pending.element)) {
-        return false;
-      }
+      const pageEl = resolvePendingScrollPage();
+      if (!pageEl) return false;
       if (!pendingScrollSwappedRef.current) {
-        const replaced =
-          !!pageEl && (pending.element ? pageEl !== pending.element : true);
-        // Same-document restores apply straight away; a byte replacement waits
-        // for the swap bridge or the new page node.
         const sameDocument = !pending.expectSwap;
-        if (!replaced && !documentSwappedRef.current && !sameDocument) {
-          return false;
-        }
         if (!pending.scroller?.isConnected) {
           pending.scroller = findScrollableAncestor(pageEl);
         }
@@ -518,6 +520,7 @@ const EmbedPdfViewerContent = ({
       hideUntilSettled,
       attachScrollIntentListeners,
       revealSwappedDocument,
+      resolvePendingScrollPage,
     ],
   );
 
@@ -1441,11 +1444,8 @@ const EmbedPdfViewerContent = ({
   const replacementPagesMounted = useCallback(() => {
     const pending = pendingScrollPositionRef.current;
     if (!pending?.expectSwap) return true;
-    const page = document.querySelector<HTMLElement>(
-      `[data-page-index="${pending.page - 1}"]`,
-    );
-    return !!page && page !== pending.element;
-  }, []);
+    return resolvePendingScrollPage() !== null;
+  }, [resolvePendingScrollPage]);
   // Restore scroll position after file replacement or tool switch
   // Uses polling with retries to ensure the scroll succeeds
   useEffect(() => {
