@@ -12,6 +12,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -59,6 +60,12 @@ public class DocParseController {
     private final DocParseService docParseService;
     private final ObjectMapper objectMapper;
     private final TempFileManager tempFileManager;
+
+    @GetMapping("/capabilities")
+    @Operation(summary = "Current ingestion and indexing readiness for guided policy setup")
+    public DocParseService.Capabilities capabilities() {
+        return docParseService.capabilities();
+    }
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
