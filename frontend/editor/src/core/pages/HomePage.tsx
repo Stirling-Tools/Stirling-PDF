@@ -32,6 +32,7 @@ import { Icon } from "@app/ui/Icon";
 import RightSidebar from "@app/components/tools/RightSidebar";
 import { ReaderRail } from "@app/components/viewer/readerRail/ReaderRail";
 import { ReaderSuperSearch } from "@app/components/viewer/readerRail/ReaderSuperSearch";
+import { useTitleBarStrip } from "@app/contexts/TitleBarStripContext";
 import Workbench from "@app/components/layout/Workbench";
 import FileSidebar from "@app/components/shared/FileSidebar";
 import FileManager from "@app/components/FileManager";
@@ -129,6 +130,9 @@ export default function HomePage() {
 
   const navigate = useNavigate();
   const { config } = useAppConfig();
+  // When a title-bar strip owns Super Search, suppress the reader-mode float so
+  // only one SuperSearch instance is ever live.
+  const strip = useTitleBarStrip();
   const processingFolderCreation = useProcessingFolderCreation();
   const isMobile = useIsMobile();
   const isTouch = useIsTouch();
@@ -733,7 +737,7 @@ export default function HomePage() {
                 Both render together only while the panel is on its way out. */}
             {wingsMounted && !hideToolPanel && <RightSidebar />}
             {readerMode && <ReaderRail />}
-            {readerMode && <ReaderSuperSearch />}
+            {readerMode && !strip.enabled && <ReaderSuperSearch />}
           </Group>
         )}
         <FileManager selectedTool={selectedTool} />
