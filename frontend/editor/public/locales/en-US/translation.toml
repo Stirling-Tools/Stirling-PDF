@@ -7672,13 +7672,6 @@ unit = "PDFs"
 unitsPending_one = "{{units}} meter unit pending sync from linked instances"
 unitsPending_other = "{{units}} meter units pending sync from linked instances"
 
-[portal.billing.prepaid]
-capSuffix = "of {{total}} prepaid credits"
-expires = "Expires {{date}}"
-eyebrow = "Prepaid capacity"
-note = "Used before metered billing and outside your spend limit."
-topUp = "Top up"
-
 [portal.billing.prepaid.buy]
 back = "Back"
 cancel = "Cancel"
@@ -7701,8 +7694,6 @@ label = "I understand that when my prepaid capacity is used up or expires after 
 [portal.billing.prepaid.deploy]
 
 [portal.billing.prepaid.offer]
-cta = "Review offer"
-subtitle = "Prepay a year of PDF processing and get two months free, used before metered billing, outside your spend limit."
 title = "Get 12 months for the price of 10"
 
 [portal.billing.prepaid.pay]
@@ -7725,15 +7716,11 @@ downloading = "Preparing…"
 
 [portal.billing.prepaid.size]
 
-[portal.billing.prepaid.state]
-exhausted = "Used up"
-healthy = "Plenty left"
-low = "Running low"
-
 [portal.billing.processor]
 activate = "Switch on the Processor"
 factFree = "{{used}} of {{allowance}} used"
 factNoCap = "no limit"
+factPrepaid = "{{remaining}} left"
 freeRemaining = "Free credits remaining"
 included = "Included in your license"
 includedRenewal = "{{summary}} · Renews {{date}}"
@@ -7742,9 +7729,15 @@ midIncluded = "{{rate}} per credit · {{allowance}} included every month"
 midIncludedNoRate = "{{allowance}} included every month"
 midMetered = "{{spend}} metered this cycle"
 midMeteredUnknown = "Metered this cycle"
+midPrepaid = "Prepaid credits, drawn before metered billing"
+midPrepaidExpiry = "{{summary}} · Expires {{date}}"
 noSpendLimit = "No spend limit"
 paidUsed = "Paid metered usage"
 percentUsed = "{{pct}}%"
+prepaidExhausted = "Used up, metered billing has resumed"
+prepaidExpires = "Expires {{date}}"
+prepaidRemaining = "Prepaid credits remaining"
+prepaidTooltip = "Drawn before metered billing, and outside your spend limit."
 raiseLimit = "Raise limit"
 remainingOf = "{{remaining}} of {{total}}"
 rowName = "Processor"
