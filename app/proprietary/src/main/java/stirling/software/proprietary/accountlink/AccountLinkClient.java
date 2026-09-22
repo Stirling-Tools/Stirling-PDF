@@ -321,16 +321,40 @@ public class AccountLinkClient {
             long apiUnits,
             long aiUnits,
             long automationUnits) {
+        return reportUsage(
+                deviceId,
+                deviceSecret,
+                syncSeq,
+                periodStart,
+                apiUnits,
+                aiUnits,
+                automationUnits,
+                null);
+    }
+
+    /** A null period sends only deployment seats, without changing usage counters. */
+    public InstanceEntitlement reportUsage(
+            String deviceId,
+            String deviceSecret,
+            long syncSeq,
+            LocalDateTime periodStart,
+            long apiUnits,
+            long aiUnits,
+            long automationUnits,
+            Integer seatCount) {
         HttpResponse<String> response;
         try {
             ObjectNode root = mapper.createObjectNode();
             root.put("syncSeq", syncSeq);
             // Explicit ISO-8601 string so it round-trips regardless of the mapper's time config.
-            root.put("periodStart", periodStart.toString());
-            ObjectNode units = root.putObject("cumulativeUnits");
-            units.put("api", apiUnits);
-            units.put("ai", aiUnits);
-            units.put("automation", automationUnits);
+            if (seatCount != null) root.put("seatCount", seatCount);
+            if (periodStart != null) {
+                root.put("periodStart", periodStart.toString());
+                ObjectNode units = root.putObject("cumulativeUnits");
+                units.put("api", apiUnits);
+                units.put("ai", aiUnits);
+                units.put("automation", automationUnits);
+            }
             String body = mapper.writeValueAsString(root);
             HttpRequest request =
                     HttpRequest.newBuilder()
@@ -384,7 +408,10 @@ public class AccountLinkClient {
                 parseDateTime(root, "periodEnd"),
                 licensedUsers,
                 root.path("automationStepLimit").asInt(0),
-                root.path("prepaidRemainingUnits").asLong(0));
+                root.path("prepaidRemainingUnits").asLong(0),
+                root.hasNonNull("fleetUserLimit")
+                        ? Math.max(0, root.get("fleetUserLimit").asInt())
+                        : null);
     }
 
     /** Parses the nested unit-calc policy; null if absent or any knob is invalid (e.g. zero). */

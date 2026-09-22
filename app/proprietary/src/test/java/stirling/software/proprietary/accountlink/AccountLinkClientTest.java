@@ -361,4 +361,18 @@ class AccountLinkClientTest {
                 client.reportUsage(
                         "dev-1", "sec-1", 1L, LocalDateTime.of(2026, 6, 1, 0, 0), 1, 0, 0));
     }
+
+    @Test
+    void dailySeatHeartbeatParsesLocalAllowance() throws Exception {
+        var reply = response(200, "{\"state\":\"OK\",\"licensedUsers\":100,\"fleetUserLimit\":17}");
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(reply);
+        var result = client.reportUsage("dev-1", "sec-1", 0, null, 0, 0, 0, 7);
+        assertNotNull(result);
+        assertEquals(100, result.licensedUsers());
+        assertEquals(17, result.fleetUserLimit());
+        var request = ArgumentCaptor.forClass(HttpRequest.class);
+        org.mockito.Mockito.verify(httpClient)
+                .send(request.capture(), any(HttpResponse.BodyHandler.class));
+        assertEquals("/api/v1/instance/sync", request.getValue().uri().getPath());
+    }
 }

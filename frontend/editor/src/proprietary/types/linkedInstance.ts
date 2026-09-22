@@ -7,4 +7,6 @@ export interface LinkedInstanceRow {
   /** Last credential-authenticated contact with Stirling; not a heartbeat or online status. */
   lastSeenAt: string | null;
   revoked: boolean;
+  seatCount?: number | null;
+  seatsReportedAt?: string | null;
 }
