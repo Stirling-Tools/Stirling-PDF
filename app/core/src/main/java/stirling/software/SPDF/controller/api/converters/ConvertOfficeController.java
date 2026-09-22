@@ -225,14 +225,7 @@ public class ConvertOfficeController {
         }
     }
 
-    /**
-     * Rewrites the staged upload in place with the sanitizer the chosen candidate declares. Routing
-     * is by the candidate, never by a scan of the bytes deciding what they look like: the import
-     * filter is forced from the same candidate, so the type sanitized here is the type LibreOffice
-     * reads, and every defeat of this endpoint so far came from a scan reaching a different
-     * conclusion than LibreOffice did. A candidate with nothing to strip leaves the file as it was
-     * streamed, so a large binary upload is never held in the heap.
-     */
+    /** Sanitizes in place using the forced import candidate; pass-through uploads stay on disk. */
     private void sanitizeInPlace(Path inputPath, OfficeImportFilters.Candidate candidate)
             throws IOException {
         if (Files.size(inputPath) == 0L) {
@@ -274,13 +267,7 @@ public class ConvertOfficeController {
                 StandardCharsets.UTF_8);
     }
 
-    /**
-     * Reads a markup upload as text without ever refusing its bytes. A legacy-encoded page is one
-     * of the commonest things this endpoint is handed, and {@code Files.readString} reports
-     * malformed input rather than substituting, so it turns a Windows-1252 apostrophe into a 500.
-     * The fallback is Windows-1252 because that is what a browser and LibreOffice both assume for
-     * markup that declares nothing, and it decodes every byte, so this cannot throw.
-     */
+    /** Decodes markup with BOM/UTF-8 handling and a Windows-1252 fallback for legacy bytes. */
     private static String readMarkup(Path inputPath) throws IOException {
         byte[] bytes = Files.readAllBytes(inputPath);
         for (ByteOrderMark bom : BYTE_ORDER_MARKS) {

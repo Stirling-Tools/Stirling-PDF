@@ -442,10 +442,7 @@ class OfficeDocumentSanitizerTest {
                 "\f \f<html><img src=\"" + EXTERNAL_URL + "\"></html>"
             })
     void sanitize_markupThatIsNotWellFormedXmlNeedsTheHtmlSanitizer(String text) {
-        // Verified against LibreOffice: it imports anything that opens with a tag through the HTML
-        // filter and fetches what that markup references, whichever tag it opens with. Passing
-        // these through as plain text is what let a payload behind a leading comment, a processing
-        // instruction or a bare <table> reach the network.
+        // LibreOffice can import arbitrary leading markup as HTML and fetch its references.
         byte[] bytes = text.getBytes(StandardCharsets.UTF_8);
 
         assertThrows(
@@ -500,10 +497,7 @@ class OfficeDocumentSanitizerTest {
 
     @Test
     void sanitize_zipWithARepeatedEntryNameIsRejectedWithoutNamingIt() throws IOException {
-        // Readers disagree about which copy of a repeated name wins, so a package carrying one is
-        // refused rather than rewritten - and refused under the fixed message, because the name is
-        // attacker-chosen text that the ZipOutputStream complaint would otherwise put in the
-        // response body.
+        // Reject duplicate ZIP entries with a fixed message; readers disagree on which entry wins.
         byte[] duplicated = withARepeatedEntryName(ODF_CONTENT_EXTERNAL);
 
         IOException refused = assertThrows(IOException.class, () -> sanitizer.sanitize(duplicated));
@@ -514,9 +508,7 @@ class OfficeDocumentSanitizerTest {
     private static final String REPEATED_ENTRY_NAME = "duplicate7680-x.xml";
 
     /**
-     * A package declaring the same entry name twice. Written under two names of that same length
-     * and renamed afterwards, because {@link ZipOutputStream} refuses to write the archive this
-     * describes - which is the whole point of the test.
+     * Renames equal-length ZIP entries after writing because ZipOutputStream rejects duplicates.
      */
     private static byte[] withARepeatedEntryName(String content) throws IOException {
         Map<String, byte[]> entries = new LinkedHashMap<>();
@@ -710,10 +702,8 @@ class OfficeDocumentSanitizerTest {
 
     @Test
     void sanitize_zipWithPrependedBytesIsRejectedAtEveryTrailingLength() throws IOException {
-        // Verified against LibreOffice: it recovers the package from the local headers, so it opens
-        // the file at every one of these lengths, 200000 trailing bytes included. Detection that
-        // reads a fixed tail has a length that escapes it; detection from the local headers has
-        // none, so the sweep runs past any window a tail scan could use.
+        // LibreOffice recovers ZIPs from local headers even with large trailers; fixed tail scans
+        // miss them.
         Map<String, byte[]> entries = new LinkedHashMap<>();
         entries.put("content.xml", ODF_CONTENT_EXTERNAL.getBytes(StandardCharsets.UTF_8));
         byte[] odt = zip(entries);

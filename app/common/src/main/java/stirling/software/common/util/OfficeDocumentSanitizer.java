@@ -57,10 +57,7 @@ public class OfficeDocumentSanitizer {
     private static final String MAX_ELEMENT_DEPTH_PROPERTY =
             "http://www.oracle.com/xml/jaxp/properties/maxElementDepth";
 
-    // Secure processing defaults to 100, which real documents exceed: LibreOffice emits depth 109
-    // for 35 nested tables, and anything past the cap used to skip sanitization entirely.
-    // 512 clears the deepest document LibreOffice produces by ~3x and stays well inside the
-    // JAXP serializer's stack budget (it recurses per level, ~0.5KB of stack each).
+    // Allow deeply nested LibreOffice documents without exceeding the serializer's stack budget.
     private static final int MAX_ELEMENT_DEPTH = 512;
 
     private static final int ZIP_LOCAL_HEADER_FIELDS = 30;
@@ -107,11 +104,8 @@ public class OfficeDocumentSanitizer {
             log.debug("Office document sanitization disabled by configuration");
             return documentBytes;
         }
-        // Structure picks the walker, not the extension: a package and a single XML document are
-        // read differently and either can arrive under any of the declared types this is called
-        // for. Safe in a way the old HTML sniff was not, because the caller has already forced the
-        // import filter from the declared extension, so a wrong guess here changes what is
-        // stripped, never what LibreOffice reads.
+        // Choose the walker by structure; the caller separately forces the import filter from the
+        // extension.
         if (looksLikeZipContainer(documentBytes)) {
             return sanitizeZipContainer(documentBytes);
         }
@@ -130,10 +124,8 @@ public class OfficeDocumentSanitizer {
                                 new ByteArrayInputStream(documentBytes));
                 ZipOutputStream zipOut = new ZipOutputStream(out)) {
 
-            // Keeps the per-entry, total and entry-count caps a hostile archive would otherwise
-            // blow past; ZipBombException is an IOException, so it exits as a refusal below.
-            // Keeps the per-entry, total and entry-count caps a hostile archive would otherwise
-            // blow past; ZipBombException is an IOException, so it exits as a refusal below.
+            // Enforce ZIP entry, total-size and entry-count limits; limit violations reject the
+            // upload.
             ZipBombGuard.Budget budget = new ZipBombGuard.Budget();
             ZipEntry entry;
             while ((entry = zipIn.getNextEntry()) != null) {
@@ -161,10 +153,8 @@ public class OfficeDocumentSanitizer {
         } catch (UnsanitizableDocumentException e) {
             throw e;
         } catch (IOException e) {
-            // Whatever the ZIP machinery objects to is a property of an attacker-chosen archive,
-            // and its complaint names the entry: a repeated name, which readers disagree about,
-            // arrives here as ZipException("duplicate entry: …"). Refuse it under the fixed
-            // message rather than reflecting the name into the response.
+            // Reject malformed archives with a fixed message so attacker-chosen entry names cannot
+            // leak.
             log.warn("ZIP package could not be rewritten: {}", e.getMessage());
             throw new UnsanitizableDocumentException();
         }
@@ -176,12 +166,7 @@ public class OfficeDocumentSanitizer {
         return out.toByteArray();
     }
 
-    /**
-     * Raised for an upload this sanitizer cannot make safe, so the caller must refuse it rather
-     * than convert it. The message is fixed: it is copied into the response body, and the parts of
-     * these documents that a message would want to name - a ZIP entry name, a parser complaint -
-     * are attacker-chosen text.
-     */
+    /** Rejects unsafe uploads with a fixed message suitable for the response body. */
     public static class UnsanitizableDocumentException extends IOException {
         public UnsanitizableDocumentException() {
             super("Document could not be sanitized and was rejected");
@@ -192,13 +177,7 @@ public class OfficeDocumentSanitizer {
         }
     }
 
-    /**
-     * Raised for a document that begins with markup but is not well-formed XML. LibreOffice imports
-     * exactly that with its HTML filter and fetches what the markup references, whatever tag it
-     * starts with, so the caller must hand these bytes to an HTML sanitizer rather than convert
-     * them. Content that does not begin with markup never reaches this and is left alone, which is
-     * what keeps .txt/.csv uploads converting.
-     */
+    /** Requires HTML sanitization for malformed markup; non-markup text is left alone. */
     public static class HtmlMarkupException extends UnsanitizableDocumentException {
         public HtmlMarkupException() {
             super("Document is markup that is not well-formed XML; it needs an HTML sanitizer");
@@ -276,14 +255,7 @@ public class OfficeDocumentSanitizer {
     }
 
     /**
-     * Rewrites {@code <!DOCTYPE name PUBLIC/SYSTEM "..." [subset]>} to {@code <!DOCTYPE name
-     * [subset]>}, so the declarations the document's own markup references survive while the
-     * identifier that names a document off this machine does not. Null when there is no DOCTYPE, it
-     * is unterminated, or the bytes are not UTF-8-compatible.
-     *
-     * <p>Quote state is tracked alongside bracket depth because {@code >} and {@code ]} are legal
-     * inside a system literal or an entity value, and a scanner that stops at the first bare {@code
-     * >} truncates the declaration and leaves the tail of it sitting in the prolog.
+     * Drops external DOCTYPE IDs, preserving the subset; returns null if no rewrite is possible.
      */
     static byte[] stripExternalDoctypeIdentifier(byte[] xmlBytes) {
         String s = new String(xmlBytes, StandardCharsets.UTF_8);
@@ -345,18 +317,7 @@ public class OfficeDocumentSanitizer {
     }
 
     /**
-     * True when LibreOffice can read a ZIP package out of the stream. A package member is only
-     * reachable through its local file header, so the whole stream is searched for one: LibreOffice
-     * recovers a package from the local headers when the end-of-central-directory record does not
-     * describe the file, so prefixed bytes, appended junk of any length and a forged record all
-     * still open. Deciding from that record instead leaves every one of those as a way past
-     * sanitization.
-     *
-     * <p>A document whose head is a compound file header (.doc/.xls/.ppt) is excluded: LibreOffice
-     * reads that with a different filter, so an OOXML object embedded in one is never the
-     * document's own package.
-     *
-     * <p>Consumes the stream; the caller owns closing it.
+     * Detects recoverable ZIPs, excluding compound files; consumes but does not close the stream.
      */
     public static boolean looksLikeZipContainer(InputStream document) throws IOException {
         byte[] window = new byte[ZIP_SCAN_BUFFER_LENGTH];
@@ -394,13 +355,7 @@ public class OfficeDocumentSanitizer {
         }
     }
 
-    /**
-     * True when the head is a compound file header, checked field by field rather than by its magic
-     * alone. Verified against LibreOffice: these fields are what make it commit to the
-     * compound-file filter and stop looking for a package, so a header that satisfies them cannot
-     * also be a way to smuggle one in, while the magic on its own is eight bytes anyone can prepend
-     * to an archive.
-     */
+    /** Checks compound-file header fields; the magic bytes alone can prefix a malicious ZIP. */
     private static boolean isCompoundFile(byte[] head, int length) {
         if (length < COMPOUND_FILE_HEADER_LENGTH) {
             return false;
@@ -423,12 +378,7 @@ public class OfficeDocumentSanitizer {
     }
 
     /**
-     * True when a local file header starts at {@code i}. The signature alone turns up by chance
-     * inside binary documents, so the name is checked with it: it is never empty, never holds a
-     * control character, and is short, because LibreOffice finds the parts it needs (content.xml,
-     * word/document.xml) by those names. An attacker cannot weaken any of that and still have the
-     * package open, which is what the compression method and the central directory fail: forge
-     * either and LibreOffice recovers the package anyway.
+     * Checks ZIP signatures and plausible entry names; LibreOffice can recover a broken directory.
      */
     private static boolean isLocalFileHeaderAt(byte[] b, int i, int limit) {
         if (b[i] != 'P' || b[i + 1] != 'K' || b[i + 2] != 3 || b[i + 3] != 4) {
@@ -455,12 +405,7 @@ public class OfficeDocumentSanitizer {
         return (b[offset] & 0xFF) | ((b[offset + 1] & 0xFF) << 8);
     }
 
-    /**
-     * True when the bytes begin (past any BOM and whitespace) with a {@code <}. The whitespace set
-     * is LibreOffice's, not Java's: its markup importers skip a leading form feed (0x0C) and a
-     * leading NUL, so a set that did not would call the same bytes markup that LibreOffice does
-     * not.
-     */
+    /** Detects markup after BOMs and LibreOffice whitespace, including NUL and form feed. */
     public static boolean looksLikeXml(byte[] b) {
         int i = 0;
         int n = b.length;
@@ -628,13 +573,7 @@ public class OfficeDocumentSanitizer {
                 || lower.endsWith(":background");
     }
 
-    /**
-     * Flat XML: anything but a #fragment, a data: URI or a {@code wordml:} name points outside the
-     * document and is stripped. {@code wordml://Image1} is how MS Word 2003 XML addresses a picture
-     * it carries itself, in the {@code <w:binData w:name>} beside it, and it can resolve to nothing
-     * else - there is no {@code wordml} protocol handler to reach the network with. Stripping it
-     * cost every picture in every WordML upload.
-     */
+    /** Keeps fragments, data URIs and embedded WordML images; strips other flat-XML references. */
     private static boolean isOutsideDocumentRef(String url) {
         if (url == null) {
             return false;
@@ -693,15 +632,7 @@ public class OfficeDocumentSanitizer {
         return ssrfProtectionService.isUrlAllowed(url);
     }
 
-    /**
-     * Parses with every external-resolution route off. {@code afterDoctypeRewrite} is for the retry
-     * that follows {@link #stripExternalDoctypeIdentifier}: by then the declaration names no
-     * external identifier, so what it can still declare is entities, and those must be expanded -
-     * an unexpanded reference would be serialized with its declaration gone, and an expanded one
-     * puts the value where {@link #stripExternalHrefs} can see and strip it. Expansion stays
-     * bounded by {@code jdk.xml.entityExpansionLimit} under secure processing, and callers on this
-     * path serialize unconditionally, so no surviving declaration reaches LibreOffice.
-     */
+    /** Disables external resolution; rewritten DTDs allow bounded internal-entity expansion. */
     private Document parseSecurely(byte[] xmlBytes, boolean afterDoctypeRewrite)
             throws ParserConfigurationException, SAXException, IOException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();

@@ -15,26 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.util.OfficeDocumentSanitizer;
 
-/**
- * Blanks the field instructions LibreOffice's WW8 importer dereferences out of a Word compound
- * file's {@code WordDocument} stream.
- *
- * <p>{@code INCLUDEPICTURE "http://…"} in a {@code .doc} is fetched at import, proven with a
- * loopback listener; the same field expressed in RTF or OOXML is not, because writerfilter leaves
- * it unhandled. So a Word binary cannot be treated as an opaque pass-through the way {@code .rtf}
- * can.
- *
- * <p>What is fetched is decided by the field type in the WW8 field tables, which the instruction
- * text does not have to agree with: an instruction reading {@code MERGEFIELD} or {@code HYPERLINK}
- * is fetched all the same when the table says {@code INCLUDEPICTURE}. So the reference, not the
- * keyword, is what this blanks - an instruction carrying an external reference goes whatever it
- * calls itself, which costs a genuine {@code HYPERLINK} its target while leaving the display text
- * the field result holds.
- *
- * <p>The instruction is overwritten with spaces rather than removed, so every byte offset the FIB
- * records into this stream still lands where it did, and the field becomes one whose type the
- * importer does not recognise.
- */
+/** Blanks resolving Word field instructions while preserving offsets and field-result text. */
 @Slf4j
 final class WordBinarySanitizer {
 
@@ -45,11 +26,7 @@ final class WordBinarySanitizer {
     private static final int FIELD_SEPARATOR = 0x14;
     private static final int FIELD_END = 0x15;
 
-    /**
-     * Field instructions blanked on the keyword alone, so an argument naming no scheme - a bare
-     * relative path, which the importer resolves against the directory the upload is staged in -
-     * goes with them.
-     */
+    /** Blocks resolving keywords even for relative paths without a URI scheme. */
     private static final Set<String> RESOLVING_FIELDS =
             Set.of(
                     "INCLUDEPICTURE",
@@ -91,12 +68,7 @@ final class WordBinarySanitizer {
 
     private WordBinarySanitizer() {}
 
-    /**
-     * Rewrites {@code staged} in place, leaving it untouched when it declares no resolving field.
-     *
-     * @throws OfficeDocumentSanitizer.UnsanitizableDocumentException when the compound file cannot
-     *     be read or written, so an unreadable one is refused rather than converted unsanitized
-     */
+    /** Rewrites in place; compound-file I/O failures raise UnsanitizableDocumentException. */
     static void sanitizeInPlace(Path staged) throws IOException {
         try (POIFSFileSystem fileSystem = new POIFSFileSystem(staged.toFile(), false)) {
             DirectoryNode root = fileSystem.getRoot();
@@ -148,12 +120,7 @@ final class WordBinarySanitizer {
         return blanked;
     }
 
-    /**
-     * Where the instruction that begins at {@code fieldBegin} ends, or -1 when no field character
-     * closes it within {@link #MAX_INSTRUCTION_CHARS}. Unterminated means this is not a field: a
-     * stream holds the begin, separator and end characters at the positions its field tables
-     * record, and requiring all three keeps the rewrite off the binary that surrounds the text.
-     */
+    /** Finds the next separator or end marker within the scan limit, or returns -1. */
     private static int instructionEnd(byte[] stream, int fieldBegin, int characterWidth) {
         int limit = Math.min(stream.length, fieldBegin + MAX_INSTRUCTION_CHARS * characterWidth);
         for (int end = fieldBegin + characterWidth; end + characterWidth <= limit; ) {
