@@ -1,52 +1,11 @@
 package stirling.software.proprietary.pdf;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-/**
- * Markdown text utilities: escaping extracted text and rebasing the finished document's heading
- * levels.
- */
+/** Markdown text utilities for escaping extracted text so it is emitted literally. */
 final class MarkdownText {
 
     private MarkdownText() {}
-
-    /** A Markdown ATX heading at the start of a line, with its level in group 1. */
-    private static final Pattern ATX_HEADING = Pattern.compile("(?m)^(#{1,6}) (?=\\S)");
-
-    /**
-     * Rebases headings so the strongest is level 1 and no level is skipped: levels only mean
-     * anything against the other headings in the same document.
-     */
-    static String normaliseHeadingLevels(String markdown) {
-        Set<Integer> levels = new TreeSet<>();
-        Matcher m = ATX_HEADING.matcher(markdown);
-        while (m.find()) {
-            levels.add(m.group(1).length());
-        }
-        if (levels.isEmpty() || (levels.contains(1) && levels.size() == maxOf(levels))) {
-            return markdown;
-        }
-        Map<Integer, String> rebased = new HashMap<>();
-        int rank = 1;
-        for (int level : levels) {
-            rebased.put(level, "#".repeat(rank++));
-        }
-        return m.reset().replaceAll(r -> rebased.get(r.group(1).length()) + " ");
-    }
-
-    private static int maxOf(Set<Integer> levels) {
-        int max = 0;
-        for (int level : levels) {
-            max = Math.max(max, level);
-        }
-        return max;
-    }
 
     static int wordCount(String text) {
         return text.isBlank() ? 0 : text.strip().split("\\s+").length;
