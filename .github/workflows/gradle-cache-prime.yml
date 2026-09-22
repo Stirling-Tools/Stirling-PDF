@@ -73,7 +73,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          fetch-depth: 0
+          # fetch-depth: 0
           persist-credentials: false
 
       - name: Restore Gradle cache sftp
@@ -126,7 +126,7 @@ jobs:
           lookup-only: true
 
       - name: Set up JDK ${{ env.JAVA_VERSION }}
-        if: ${{ steps.cache-gradle-restore.outputs.cache-hit != 'true' && steps.cache.outputs.cache-hit != 'true' }}
+        # if: ${{ steps.cache-gradle-restore.outputs.cache-hit != 'true' && steps.cache.outputs.cache-hit != 'true' }}
         uses: ./.github/actions/java
         with:
           java-version: ${{ env.JAVA_VERSION }}
@@ -142,7 +142,7 @@ jobs:
 
       - name: Resolve backend dependencies
         if: ${{ steps.cache-gradle-restore.outputs.cache-hit || steps.cache.outputs.cache-hit }}
-        run: ./gradlew :stirling-pdf:classes --no-daemon
+        run: ./gradlew --offline :stirling-pdf:classes --no-daemon
         env:
           STIRLING_FLAVOR: saas
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
