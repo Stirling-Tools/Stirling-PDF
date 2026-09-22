@@ -175,38 +175,20 @@ def seed_data(base_url, container, admin_token):
     raise RuntimeError("Historical release did not persist audit events for every seeded user and admin")
 
 
-def snapshot(container, *, legacy=False, audit_ids=None):
+def snapshot(container, *, audit_ids=None):
     result = json.loads(sql(container, SNAPSHOT_SQL))
-    settings_value = "s.setting_value"
-    if legacy:
-        # @Lob on historical user_settings stores a large-object reference even
-        # though the column is declared text. Only decode it before the upgrade:
-        # current releases must expose the actual text, not an orphaned OID.
-        settings_value = """CASE WHEN s.setting_value ~ '^[0-9]+$' AND EXISTS
-          (SELECT 1 FROM pg_largeobject_metadata WHERE oid::text = s.setting_value)
-          THEN convert_from(lo_get(s.setting_value::oid), 'UTF8') ELSE s.setting_value END"""
     result["settings"] = json.loads(
         sql(
             container,
-            f"""
+            """
         SELECT coalesce(json_agg(row_to_json(s) ORDER BY s.username, s.setting_key), '[]') FROM
-        (SELECT u.username, s.setting_key, {settings_value} AS setting_value
+        (SELECT u.username, s.setting_key, s.setting_value
          FROM user_settings s JOIN users u ON u.user_id = s.user_id
          WHERE u.username IN ('migration_alice', 'migration_bob', 'migration_disabled')
            AND s.setting_key IN ('theme', 'language', 'migrationNote')) s;
     """,
         )
     )
-    data = "data"
-    if (
-        legacy
-        and sql(
-            container,
-            "SELECT udt_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'audit_events' AND column_name = 'data';",
-        )
-        == "oid"
-    ):
-        data = "convert_from(lo_get(data::oid), 'UTF8')"
     condition = "principal IN ('admin', 'migration_alice', 'migration_bob', 'migration_disabled')"
     if audit_ids is not None:
         condition = "id IN (" + ",".join(str(int(event_id)) for event_id in audit_ids) + ")"
@@ -215,7 +197,7 @@ def snapshot(container, *, legacy=False, audit_ids=None):
             container,
             f"""
         SELECT coalesce(json_agg(row_to_json(a) ORDER BY a.id), '[]') FROM
-        (SELECT id, principal, type, timestamp, {data} AS data FROM audit_events WHERE {condition}) a;
+        (SELECT id, principal, type, timestamp, data FROM audit_events WHERE {condition}) a;
     """,
         )
     )
@@ -349,7 +331,7 @@ def boot_and_check(jar, workdir, db_port, timeout, container, seed_version=None,
                         raise RuntimeError("Disabled user was not denied login")
                 else:
                     login(base_url, username, FIXTURE_PASSWORD)
-            result = snapshot(container, legacy=seed_version is not None, audit_ids=audit_ids)
+            result = snapshot(container, audit_ids=audit_ids)
             if int(sql(container, "SELECT count(*) FROM user_license_settings;")) != 1:
                 raise RuntimeError("Missing license settings singleton")
             log(
@@ -431,7 +413,7 @@ def test_version(version, old_jar, current_jar, workdir, image, timeout):
         run("docker", "exec", container, "createdb", "-U", "migration", "stirling")
         sql(container, dump)
         audit_ids = [event["id"] for event in before["audit"]]
-        if snapshot(container, legacy=True, audit_ids=audit_ids) != before:
+        if snapshot(container, audit_ids=audit_ids) != before:
             raise RuntimeError("Restoring the PostgreSQL fixture changed its data")
 
         log(f"{version}: upgrading restored fixture with {current_jar.name}")
@@ -461,7 +443,7 @@ def main():
     )
     parser.add_argument("--release-jar-dir", type=Path)
     parser.add_argument("--work-dir", type=Path)
-    parser.add_argument("--versions", nargs="+", help="Defaults to the versions of the H2 fixtures")
+    parser.add_argument("--versions", nargs="+", help="Defaults to H2 fixture versions from v2.5.0 onwards")
     parser.add_argument("--postgres-image", default="postgres:16")
     parser.add_argument("--startup-timeout", type=int, default=300)
     args = parser.parse_args()
@@ -473,7 +455,15 @@ def main():
         p.name.removeprefix("stirling-pdf-").removesuffix(".mv.db") for p in FIXTURES.glob("stirling-pdf-*.mv.db")
     )
     if not versions or any(not re.fullmatch(r"v\d+\.\d+\.\d+", version) for version in versions):
-        parser.error("Expected fixture versions such as v2.0.0")
+        parser.error("Expected fixture versions such as v2.5.0")
+    version_numbers = {version: tuple(map(int, version[1:].split("."))) for version in versions}
+    if args.versions and any(number < (2, 5, 0) for number in version_numbers.values()):
+        parser.error("PostgreSQL upgrade coverage starts at v2.5.0")
+    versions = sorted(
+        (version for version in versions if version_numbers[version] >= (2, 5, 0)), key=version_numbers.get
+    )
+    if not versions:
+        parser.error("No PostgreSQL fixtures at or after v2.5.0 were found")
     workdir = (args.work_dir or Path(tempfile.mkdtemp(prefix="stirling-mig-postgres-"))).resolve()
     release_dir = (args.release_jar_dir or workdir / "jars").resolve()
     log(f"Logs and pre-upgrade SQL fixtures: {workdir}")

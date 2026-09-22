@@ -1,6 +1,6 @@
 name: DB migration smoke test
 
-# Tests H2 fixtures and native PostgreSQL upgrades from the same past releases.
+# Tests all H2 fixtures and native PostgreSQL upgrades from v2.5.0 onwards.
 # Historical releases need PREMIUM_KEY_ENTERPRISE to connect to PostgreSQL.
 # Catches schema changes that would break existing user databases under
 # Hibernate's `ddl-auto=update` upgrade path.

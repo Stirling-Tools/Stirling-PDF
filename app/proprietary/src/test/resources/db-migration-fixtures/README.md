@@ -51,9 +51,9 @@ compatible with an existing user database. Common causes:
 ## PostgreSQL upgrade coverage
 
 The same CI workflow also runs `scripts/db-migration/run-postgres-migration-test.py`
-against PostgreSQL 16. For each version named by the H2 fixtures, it boots the
-historical release on a disposable PostgreSQL database, then dumps and restores
-that database before starting the current JAR.
+against PostgreSQL 16. For each version named by the H2 fixtures from v2.5.0
+onwards, it boots the historical release on a disposable PostgreSQL database,
+then dumps and restores that database before starting the current JAR.
 
 The historical app creates the same core data as the H2 fixtures, then the test
 uses its authenticated APIs (including CSRF handling) to populate:
@@ -73,16 +73,9 @@ states, team memberships, password hashes/API keys, roles, teams, and settings.
 Every captured historical audit event must retain its ID, principal, type,
 timestamp, and JSON payload; additional events from the new app are allowed.
 
-Older PostgreSQL schemas can store audit payloads and settings as large-object
-references. The pre-upgrade snapshot reads their contents, while the upgraded
-snapshot expects current text/JSON storage. Keeping an OID number without
-converting its contents therefore fails the test.
-
-Startup converts these legacy large objects in a transaction before Hibernate
-updates the schema. The migration uses the audit column's `oid` type as its
-legacy marker, so subsequent starts leave ordinary numeric settings alone.
-Missing large objects abort startup and roll back the conversion. This does
-not repair databases already upgraded to text containing unresolved references.
+Stirling-PDF v2.0.0 PostgreSQL coverage is deferred because its legacy large-object storage
+requires a separate migration fix. The PostgreSQL test rejects versions before
+v2.5.0; the existing H2 test still includes its v2.0.0 fixture.
 
 Generated values can differ between H2 and PostgreSQL; each PostgreSQL upgrade
 must preserve its own values. User timestamps and license entitlements are
@@ -104,8 +97,8 @@ python scripts/db-migration/run-postgres-migration-test.py \
   --work-dir /absolute/path/to/new-migration-results
 ```
 
-Use a fresh work directory per run. `--versions v2.0.0` narrows the releases;
-`--release-jar-dir /path/to/jars` reuses files named `stirling-pdf-v2.0.0.jar`.
+Use a fresh work directory per run. `--versions v2.5.0` narrows the releases;
+`--release-jar-dir /path/to/jars` reuses files named `stirling-pdf-v2.5.0.jar`.
 `--postgres-image postgres:16` and `--startup-timeout 300` can be overridden.
 
 Only containers created by the script are used and removed. SQL dumps and logs
