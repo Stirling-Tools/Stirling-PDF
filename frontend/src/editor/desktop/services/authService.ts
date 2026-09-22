@@ -67,8 +67,7 @@ export class AuthService {
    *  bounded. Long enough that a user still reading the prompt is not cut off mid-decision. */
   private static readonly KEYRING_TIMEOUT_MS = 20_000;
 
-  /** Axios waits forever by default. Kept under the bound above so a stalled refresh fails
-   *  through the normal error path, which clears credentials, rather than the outer race. */
+  /** Axios waits forever by default; leave time for failure handling before the outer bound. */
   private static readonly REFRESH_REQUEST_TIMEOUT_MS = 15_000;
   private selfHostedDeepLinkFlowActive = false;
 
@@ -801,12 +800,16 @@ export class AuthService {
   }
 
   /** Settle as a failed refresh rather than hanging; the caller then re-authenticates. */
-  private async boundedRefresh(refresh: Promise<boolean>): Promise<boolean> {
-    return this.bounded(refresh, () => {
+  private async boundedRefresh(
+    refresh: (signal: AbortSignal) => Promise<boolean>,
+  ): Promise<boolean> {
+    const controller = new AbortController();
+    return this.bounded(refresh(controller.signal), () => {
       console.warn(
         "[Desktop AuthService] Refresh timed out; treating the session as signed out",
       );
       this.refreshEpoch += 1;
+      controller.abort();
       this.setAuthStatus("unauthenticated", null);
       return false;
     });
@@ -887,7 +890,9 @@ export class AuthService {
       return this.refreshPromise;
     }
 
-    this.refreshPromise = this.boundedRefresh(this._doRefreshToken(serverUrl));
+    this.refreshPromise = this.boundedRefresh((signal) =>
+      this._doRefreshToken(serverUrl, signal),
+    );
     try {
       return await this.refreshPromise;
     } finally {
@@ -895,7 +900,10 @@ export class AuthService {
     }
   }
 
-  private async _doRefreshToken(serverUrl: string): Promise<boolean> {
+  private async _doRefreshToken(
+    serverUrl: string,
+    signal: AbortSignal,
+  ): Promise<boolean> {
     // A refresh that lost the boundedRefresh race must not write auth state: the UI is
     // already signed out, and a late logout() would clear the next session's credentials.
     const epoch = this.refreshEpoch;
@@ -904,6 +912,7 @@ export class AuthService {
       this.setAuthStatus("refreshing", this.userInfo);
 
       const currentToken = await this.getAuthToken();
+      if (epoch !== this.refreshEpoch) return false;
       if (!currentToken) {
         if (epoch === this.refreshEpoch) {
           this.setAuthStatus("unauthenticated", null);
@@ -920,6 +929,7 @@ export class AuthService {
           headers: {
             Authorization: `Bearer ${currentToken}`,
           },
+          signal,
         },
       );
 
@@ -934,7 +944,6 @@ export class AuthService {
         );
         if (epoch === this.refreshEpoch) {
           this.setAuthStatus("unauthenticated", null);
-          await this.logout();
         }
         return false;
       }
@@ -975,8 +984,8 @@ export class AuthService {
       return this.refreshPromise;
     }
 
-    this.refreshPromise = this.boundedRefresh(
-      this._doRefreshSupabaseToken(authServerUrl),
+    this.refreshPromise = this.boundedRefresh((signal) =>
+      this._doRefreshSupabaseToken(authServerUrl, signal),
     );
     try {
       return await this.refreshPromise;
@@ -987,6 +996,7 @@ export class AuthService {
 
   private async _doRefreshSupabaseToken(
     authServerUrl: string,
+    signal: AbortSignal,
   ): Promise<boolean> {
     const epoch = this.refreshEpoch;
     try {
@@ -995,6 +1005,7 @@ export class AuthService {
       this.setAuthStatus("refreshing", this.userInfo);
 
       const refreshToken = await this.getRefreshToken();
+      if (epoch !== this.refreshEpoch) return false;
       if (!refreshToken) {
         console.error("[Desktop AuthService] No refresh token available");
         if (epoch === this.refreshEpoch) {
@@ -1015,6 +1026,7 @@ export class AuthService {
             "Content-Type": "application/json",
           },
           timeout: AuthService.REFRESH_REQUEST_TIMEOUT_MS,
+          signal,
         },
       );
 
