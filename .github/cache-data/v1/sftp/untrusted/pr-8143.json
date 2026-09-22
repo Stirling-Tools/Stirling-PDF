@@ -35,10 +35,17 @@
       "source": "Stirling-Tools/Stirling-PDF",
       "created_by": "Ludy87",
       "size": 519299223
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8143/gradle-java-25-core/linux-x64/core-gradle-v1-Linux-X64-jdk-25-b9e318ff095247edf8998033df2863943000452eb21d1c600c8e1c03cfff2707/v1": {
+      "object": "sha256:74dcd501ea88c20ce27824939c34f55bbc0cee0f5b8034904631fe12dddd51f1",
+      "updated_at": "2026-09-22T21:01:16.503Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 520356938
     }
   },
   "monitoring": {
     "window_started_at": "2026-09-22T20:38:57.486Z",
-    "writes": 5
+    "writes": 6
   }
 }
