@@ -35,6 +35,7 @@ public class ToolKeyRegistry {
                     "split",
                     "merge",
                     "convert",
+                    "urlToPdf",
                     "ocr",
                     "addImage",
                     "rotate",
