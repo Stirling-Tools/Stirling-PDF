@@ -211,7 +211,6 @@ const EmbedPdfViewerContent = ({
   // Spread mode is per document, so a replacement opens single-page unless it
   // is carried over like the position.
   const pendingSpreadRestoreRef = useRef<SpreadMode | null>(null);
-  const spreadRestoreAttemptsRef = useRef(0);
   // The toolbar must not show the plugin's intermediate fit pass while a
   // carried zoom lands, so the bridge publishes nothing until this settles.
   const settleZoomRestore = useCallback(() => {
@@ -258,8 +257,7 @@ const EmbedPdfViewerContent = ({
   // Layout signature (page height + content height) of the last apply, so the
   // per-frame hold can skip when the page already sits at the target.
   const swapLayoutRef = useRef<string | null>(null);
-  // The swap bridge activates replacements, and React can reuse the page
-  // nodes, so node identity alone cannot tell that a new document is mounted.
+  // Activation and the replacement pages' React commit happen separately.
   const documentSwappedRef = useRef(false);
   const scrollIntentCleanupRef = useRef<(() => void) | null>(null);
 
@@ -323,7 +321,8 @@ const EmbedPdfViewerContent = ({
           // The carried zoom is the reason the scroller is hidden: a reveal
           // before it lands paints the wrong scale on the next frame.
           if (
-            pendingZoomRestoreRef.current !== null &&
+            (pendingZoomRestoreRef.current !== null ||
+              pendingSpreadRestoreRef.current !== null) &&
             performance.now() < swapRevealRef.current.deadline
           ) {
             arm();
@@ -378,6 +377,23 @@ const EmbedPdfViewerContent = ({
     documentSwappedRef.current = false;
   }, []);
 
+  const resolvePendingScrollPage = useCallback(() => {
+    const pending = pendingScrollPositionRef.current;
+    if (!pending) return null;
+    // A clamped index can also exist in the outgoing document. Wait for its
+    // captured node to detach before resolving any replacement page.
+    if (pending.expectSwap && pending.element?.isConnected) return null;
+    const totalPages = getScrollState().totalPages;
+    if (totalPages < 1) return null;
+    const targetPage = Math.min(pending.page, totalPages);
+    const page = document.querySelector<HTMLElement>(
+      `[data-page-index="${targetPage - 1}"]`,
+    );
+    if (!page) return null;
+    pending.page = targetPage;
+    return page;
+  }, [getScrollState]);
+
   const applyScrollNow = useCallback(
     (useFraction: boolean): boolean => {
       const pending = pendingScrollPositionRef.current;
@@ -389,9 +405,7 @@ const EmbedPdfViewerContent = ({
         clearPendingScrollRestore();
         return false;
       }
-      const pageEl = document.querySelector<HTMLElement>(
-        `[data-page-index="${pending.page - 1}"]`,
-      );
+      const pageEl = resolvePendingScrollPage();
       // The scroller survives document swaps; walking ancestors on every frame
       // of the hold is what made it expensive.
       const scroller =
@@ -410,7 +424,8 @@ const EmbedPdfViewerContent = ({
       // though it differs; a carried zoom keeps it unsettled until it lands.
       const geometrySettled =
         (!heightChanged || pending.fractionApplied) &&
-        pendingZoomRestoreRef.current === null;
+        pendingZoomRestoreRef.current === null &&
+        pendingSpreadRestoreRef.current === null;
 
       // Nothing moved since the last apply: no rect reads needed, but the
       // settled scale still has to reveal the content.
@@ -452,7 +467,7 @@ const EmbedPdfViewerContent = ({
       }
       return true;
     },
-    [revealSwappedDocument],
+    [revealSwappedDocument, resolvePendingScrollPage],
   );
 
   // Re-apply the captured position to the swapped document. Returns false until
@@ -462,18 +477,10 @@ const EmbedPdfViewerContent = ({
       const pending = pendingScrollPositionRef.current;
       if (!pending) return false;
 
-      const pageEl = document.querySelector<HTMLElement>(
-        `[data-page-index="${pending.page - 1}"]`,
-      );
+      const pageEl = resolvePendingScrollPage();
+      if (!pageEl) return false;
       if (!pendingScrollSwappedRef.current) {
-        const replaced =
-          !!pageEl && (pending.element ? pageEl !== pending.element : true);
-        // Same-document restores apply straight away; a byte replacement waits
-        // for the swap bridge or the new page node.
         const sameDocument = !pending.expectSwap;
-        if (!replaced && !documentSwappedRef.current && !sameDocument) {
-          return false;
-        }
         if (!pending.scroller?.isConnected) {
           pending.scroller = findScrollableAncestor(pageEl);
         }
@@ -513,6 +520,7 @@ const EmbedPdfViewerContent = ({
       hideUntilSettled,
       attachScrollIntentListeners,
       revealSwappedDocument,
+      resolvePendingScrollPage,
     ],
   );
 
@@ -1433,6 +1441,11 @@ const EmbedPdfViewerContent = ({
     getSpreadState,
     queueScrollRestore,
   ]);
+  const replacementPagesMounted = useCallback(() => {
+    const pending = pendingScrollPositionRef.current;
+    if (!pending?.expectSwap) return true;
+    return resolvePendingScrollPage() !== null;
+  }, [resolvePendingScrollPage]);
   // Restore scroll position after file replacement or tool switch
   // Uses polling with retries to ensure the scroll succeeds
   useEffect(() => {
@@ -1525,55 +1538,11 @@ const EmbedPdfViewerContent = ({
     clearPendingScrollRestore,
   ]);
 
-  // The swap bridge reports activation; reused page nodes need this layout-pass
-  // backstop to apply the position before paint.
+  // Activation precedes React's commit; restoration waits for the new page nodes.
   const handleDocumentSwapped = useCallback(() => {
     documentSwappedRef.current = true;
-    const zoomToRestore = pendingZoomRestoreRef.current;
-    if (zoomToRestore !== null) {
-      // The incoming document is still hidden, so a carried mode or level can
-      // land before anything is shown.
-      try {
-        const current = getZoomState();
-        const alreadyApplied =
-          current.level === zoomToRestore &&
-          (typeof zoomToRestore !== "number" ||
-            Math.abs((current.currentZoom ?? 0) - zoomToRestore) < 0.001);
-        if (!alreadyApplied) {
-          zoomActions.requestZoom(zoomToRestore);
-        }
-      } catch {
-        // Handled by retry effect
-      }
-    }
-    const spreadToRestore = pendingSpreadRestoreRef.current;
-    if (spreadToRestore !== null) {
-      try {
-        if (spreadActions.getSpreadMode() !== spreadToRestore) {
-          spreadActions.setSpreadMode(spreadToRestore);
-        }
-      } catch {
-        // Handled by retry effect
-      }
-    }
-    const rotationToRestore = pendingRotationRestoreRef.current;
-    if (rotationToRestore !== null && rotationToRestore !== 0) {
-      try {
-        if (rotationActions.getRotation() !== rotationToRestore) {
-          rotationActions.setRotation(rotationToRestore);
-        }
-      } catch {
-        // Handled by retry effect
-      }
-    }
-    if (pendingScrollRestoreRef.current === null) return;
-    if (!pendingScrollPositionRef.current) return;
-    if (pendingScrollSwappedRef.current) return;
-    applyPendingScrollPosition({
-      useFraction: pendingZoomRestoreRef.current !== null,
-    });
-  }, [applyPendingScrollPosition, zoomActions, spreadActions, rotationActions]);
-
+    setRestoreTick((tick) => tick + 1);
+  }, []);
   const handleDocumentSwapFailed = useCallback(() => {
     clearPendingScrollRestore();
   }, [clearPendingScrollRestore]);
@@ -1594,10 +1563,12 @@ const EmbedPdfViewerContent = ({
     if (pendingScrollRestoreRef.current === null) return;
     if (!pendingScrollPositionRef.current) return;
     if (pendingScrollSwappedRef.current) return;
+    if (!replacementPagesMounted()) return;
+    setRestoreTick((tick) => tick + 1);
     applyPendingScrollPosition({
       useFraction: pendingZoomRestoreRef.current !== null,
     });
-  }, [applyPendingScrollPosition]);
+  }, [applyPendingScrollPosition, replacementPagesMounted]);
 
   // Never leave the viewer hidden or holding a scroll if this unmounts mid-swap.
   useEffect(() => clearPendingScrollRestore, [clearPendingScrollRestore]);
@@ -1671,7 +1642,7 @@ const EmbedPdfViewerContent = ({
     const attemptRotation = () => {
       if (
         pendingScrollPositionRef.current?.expectSwap &&
-        !documentSwappedRef.current
+        (!documentSwappedRef.current || !replacementPagesMounted())
       ) {
         return;
       }
@@ -1719,7 +1690,13 @@ const EmbedPdfViewerContent = ({
     // Start attempting after initial delay
     const timer = setTimeout(attemptRotation, 150);
     return () => clearTimeout(timer);
-  }, [restoreTick, scrollState.totalPages, rotationActions, getScrollState]);
+  }, [
+    restoreTick,
+    scrollState.totalPages,
+    rotationActions,
+    getScrollState,
+    replacementPagesMounted,
+  ]);
 
   // A replacement starts single-page, so the spread lands before the reading
   // position settles or the pages reflow under it.
@@ -1727,19 +1704,31 @@ const EmbedPdfViewerContent = ({
     if (pendingSpreadRestoreRef.current === null) return;
 
     const modeToRestore = pendingSpreadRestoreRef.current;
-    const maxAttempts = 10;
-    const attemptInterval = 100;
+    const deadline = performance.now() + 30_000;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const retry = () => {
+      if (performance.now() < deadline) {
+        timer = setTimeout(attemptSpread, 100);
+      } else {
+        pendingSpreadRestoreRef.current = null;
+      }
+    };
 
     const attemptSpread = () => {
+      if (cancelled) return;
       if (
         pendingScrollPositionRef.current?.expectSwap &&
-        !documentSwappedRef.current
+        (!documentSwappedRef.current || !replacementPagesMounted())
       ) {
+        retry();
         return;
       }
       if (getScrollState().totalPages > 0) {
-        pendingSpreadRestoreRef.current = null;
-        if (spreadActions.getSpreadMode() !== modeToRestore) {
+        if (spreadActions.getSpreadMode() === modeToRestore) {
+          pendingSpreadRestoreRef.current = null;
+          return;
+        } else {
           spreadActions.setSpreadMode(modeToRestore);
           // The spread reflows the pages, so any held position has to be
           // recomputed against the new geometry.
@@ -1749,20 +1738,23 @@ const EmbedPdfViewerContent = ({
             applyPendingScrollPosition({ useFraction: true });
           }
         }
-        return;
       }
-      spreadRestoreAttemptsRef.current++;
-      if (spreadRestoreAttemptsRef.current < maxAttempts) {
-        setTimeout(attemptSpread, attemptInterval);
-      } else {
-        pendingSpreadRestoreRef.current = null;
-        spreadRestoreAttemptsRef.current = 0;
-      }
+      retry();
     };
 
-    const timer = setTimeout(attemptSpread, 150);
-    return () => clearTimeout(timer);
-  }, [restoreTick, scrollState.totalPages, spreadActions, getScrollState]);
+    timer = setTimeout(attemptSpread, 0);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [
+    restoreTick,
+    scrollState.totalPages,
+    spreadActions,
+    getScrollState,
+    replacementPagesMounted,
+    applyPendingScrollPosition,
+  ]);
 
   // Re-asserts the carried zoom until it sticks; the plugin's own fit pass can
   // override the first request and zoomRestorePendingRef keeps the UI quiet.
@@ -1789,7 +1781,7 @@ const EmbedPdfViewerContent = ({
       // A byte replacement must land before this document's zoom can apply.
       if (
         pendingScrollPositionRef.current?.expectSwap &&
-        !documentSwappedRef.current
+        (!documentSwappedRef.current || !replacementPagesMounted())
       ) {
         if (performance.now() < deadline) {
           setTimeout(attemptZoom, 100);
@@ -1840,6 +1832,7 @@ const EmbedPdfViewerContent = ({
     getZoomState,
     applyPendingScrollPosition,
     settleZoomRestore,
+    replacementPagesMounted,
   ]);
   // Register applyChanges with ViewerContext so tools can access it directly
   useEffect(() => {

@@ -38,13 +38,7 @@ export function ingestStepConfigured(
 ): boolean {
   if (!isIngestStep(step)) return true;
   const params = step.params as IngestStepParams;
-  if (
-    editorInput &&
-    (params.exportChunksJsonl === true ||
-      params.exportMarkdown === true ||
-      params.includeOriginal === false)
-  )
-    return false;
+  if (editorInput && ingestRequiresExternalDelivery(params)) return false;
   const doesSomething =
     params.index !== false ||
     params.exportMarkdown === true ||
@@ -88,4 +82,20 @@ export function prepareVectorDestination(
       } as unknown as ErasedToolParams,
     },
   ];
+}
+/** Corpus exports need a saved destination when the editor supplies the input. */
+export function needsCorpusDestination(steps: WorkingToolStep[]): boolean {
+  return steps.some((step) => {
+    if (!isIngestStep(step)) return false;
+    const params = step.params as IngestStepParams;
+    return ingestRequiresExternalDelivery(params);
+  });
+}
+
+function ingestRequiresExternalDelivery(params: IngestStepParams): boolean {
+  return (
+    params.exportChunksJsonl === true ||
+    params.exportMarkdown === true ||
+    params.includeOriginal === false
+  );
 }
