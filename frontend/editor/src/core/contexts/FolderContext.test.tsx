@@ -525,9 +525,10 @@ describe("FolderContext disk subfolder resolution", () => {
         </FolderProvider>
       </MemoryRouter>,
     );
-    await waitFor(() =>
-      expect(screen.getByTestId("count").textContent).toBe("1"),
-    );
+    await waitFor(() => {
+      expect(screen.getByTestId("count").textContent).toBe("1");
+      expect(apiRef.current?.knows(mountRecord().id)).toBe(true);
+    });
     if (!apiRef.current) throw new Error("DiskProbe never reported ready");
     return apiRef as { current: DiskProbeApi };
   }

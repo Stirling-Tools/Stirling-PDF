@@ -35,6 +35,8 @@ export type ParamsUpdate =
 
 interface PipelineStepSettingsProps {
   step: WorkingToolStep;
+  /** The step's 1-based place in the chain, so cross-step variables offer only earlier steps. */
+  stepPosition?: number;
   editorInput?: boolean;
   registry: Partial<ToolRegistry>;
   onChange: (update: ParamsUpdate) => void;
@@ -90,6 +92,7 @@ function storedFileChips(
 export function PipelineStepSettings({
   editorInput = false,
   step,
+  stepPosition,
   registry,
   onChange,
   assetNames,
@@ -117,6 +120,7 @@ export function PipelineStepSettings({
     return (
       <PolicyExternalApiConfig
         parameters={step.params as unknown as ExternalApiStepParams}
+        stepPosition={stepPosition}
         onChange={(params) => onChange(params as never)}
       />
     );
