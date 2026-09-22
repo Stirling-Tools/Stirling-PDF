@@ -1,7 +1,6 @@
 import { Stack, TextInput } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 import { useTranslation } from "react-i18next";
-import PageSelectionSyntaxHint from "@app/components/shared/PageSelectionSyntaxHint";
 import { validatePageNumbers } from "@app/utils/pageSelection";
 
 interface CropPageSelectionProps {
@@ -43,7 +42,6 @@ const CropPageSelection = ({
         autoComplete="off"
         disabled={disabled}
       />
-      <PageSelectionSyntaxHint input={value} variant="compact" />
     </Stack>
   );
 };
