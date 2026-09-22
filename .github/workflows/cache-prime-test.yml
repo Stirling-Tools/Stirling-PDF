@@ -85,15 +85,16 @@ jobs:
           manifest-path: .github/cache-data
           storage: sftp
           sftp-host: ${{ secrets.CACHE_SFTP_HOST }}
-          # sftp-port: ${{ secrets.CACHE_SFTP_PORT || '22' }}
-          sftp-port: '22'
+          sftp-port: ${{ secrets.CACHE_SFTP_PORT || '22' }}
+          # sftp-port: '22'
           sftp-username: ${{ secrets.CACHE_SFTP_USERNAME }}
           sftp-password: ${{ secrets.CACHE_SFTP_PASSWORD }}
           sftp-base-path: ${{ secrets.CACHE_SFTP_BASE_PATH || '/files/cache-the-planet' }}
           cache-name: "gradle-java${{ env.JAVA_VERSION }}"
           save-scope: shared
           token: ${{ github.token }}
-          key: ${{ needs.hash_pr.outputs.files_hash }}
+          # key: ${{ needs.hash_pr.outputs.files_hash }}
+          key: ${{ needs.hash_pr.outputs.cache_key }}
           allow-shared-restore: true
           path: |
             .cache/gradle-java${{ env.JAVA_VERSION }}/caches
