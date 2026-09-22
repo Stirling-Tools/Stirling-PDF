@@ -76,10 +76,6 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Get Cache
-        shell: bash
-        run: ls -la ${{ env.GRADLE_USER_HOME }}
-
       - name: Restore Gradle cache sftp
         id: cache
         uses: Ludy87/cache-the-planet@816331595214ef3d3ae9d3d7ee95d67331ff1dc1
@@ -100,6 +96,10 @@ jobs:
           path: |
             .cache/gradle-java${{ env.JAVA_VERSION }}
           strict: false
+
+      - name: Get Cache
+        shell: bash
+        run: ls -la ${{ env.GRADLE_USER_HOME }}
 
       - name: Display cache information
         env:
