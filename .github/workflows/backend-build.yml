@@ -70,6 +70,8 @@ jobs:
     env:
       GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java${{ needs.hash_pr.outputs.java_version }}
       CACHE_COMPRESSION_LEVEL: 19
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
