@@ -91,6 +91,31 @@ describe("generateThumbnailForFile — images", () => {
     0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
   ]);
 
+  /** A PNG header carrying IHDR dimensions, as the size probe reads them. */
+  function pngHeader(width: number, height: number): Uint8Array<ArrayBuffer> {
+    const bytes = new Uint8Array(24);
+    bytes.set(pngBytes, 0);
+    const view = new DataView(bytes.buffer);
+    view.setUint32(8, 13);
+    bytes.set([0x49, 0x48, 0x44, 0x52], 12);
+    view.setUint32(16, width);
+    view.setUint32(20, height);
+    return bytes;
+  }
+
+  /** jsdom's Blob polyfill returns fixed bytes, so serve the header directly. */
+  function fileWithHeader(
+    header: Uint8Array<ArrayBuffer>,
+    name = "photo.png",
+    type = "image/png",
+  ): File {
+    const file = new File([header], name, { type });
+    vi.spyOn(file, "slice").mockReturnValue({
+      arrayBuffer: async () => header.buffer,
+    } as unknown as Blob);
+    return file;
+  }
+
   function stubBitmapPipeline() {
     const closed: string[] = [];
     const draws: Array<[number, number]> = [];
@@ -149,8 +174,67 @@ describe("generateThumbnailForFile — images", () => {
     const thumb = await generateThumbnailForFile(file);
     expect(thumb).toBe("data:image/jpeg;base64,stub");
     expect(calls[0].resizeWidth).toBe(320);
+    expect(calls[0].resizeHeight).toBeUndefined();
     expect(draws).toEqual([[0, 0]]);
     expect(closed).toEqual(["closed"]);
+  });
+
+  it("passes both dimensions when the header gives the source size", async () => {
+    const { generateThumbnailForFile } =
+      await import("@app/utils/thumbnailUtils");
+    const { closed, calls } = stubBitmapPipeline();
+    const file = fileWithHeader(pngHeader(400, 300));
+    const thumb = await generateThumbnailForFile(file);
+    expect(thumb).toBe("data:image/jpeg;base64,stub");
+    expect(calls[0]).toEqual({
+      resizeWidth: 320,
+      resizeHeight: 240,
+      resizeQuality: "high",
+      imageOrientation: "from-image",
+    });
+    expect(closed).toEqual(["closed"]);
+  });
+
+  it("bounds the resize request for extreme-aspect images", async () => {
+    const { generateThumbnailForFile } =
+      await import("@app/utils/thumbnailUtils");
+    const { calls } = stubBitmapPipeline();
+    const file = fileWithHeader(pngHeader(1, 100000));
+    await generateThumbnailForFile(file);
+    expect(calls[0].resizeWidth).toBe(1);
+    expect(calls[0].resizeHeight).toBe(320);
+  });
+
+  it("reads JPEG dimensions from the start-of-frame marker", async () => {
+    const { generateThumbnailForFile } =
+      await import("@app/utils/thumbnailUtils");
+    const { calls } = stubBitmapPipeline();
+    const jpeg = new Uint8Array([
+      0xff,
+      0xd8, // SOI
+      0xff,
+      0xe0,
+      0x00,
+      0x04,
+      0x00,
+      0x00, // APP0, length 4
+      0xff,
+      0xc0,
+      0x00,
+      0x0b,
+      0x08,
+      0x01,
+      0x2c,
+      0x02,
+      0x58,
+      0x01,
+      0x01,
+      0x11,
+    ]);
+    const file = fileWithHeader(jpeg, "photo.jpg", "image/jpeg");
+    await generateThumbnailForFile(file);
+    expect(calls[0].resizeWidth).toBe(320);
+    expect(calls[0].resizeHeight).toBe(160);
   });
 
   it("falls back to the data URL when decode-at-size is unavailable", async () => {

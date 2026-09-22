@@ -44,9 +44,12 @@ export const LARGE_PDF_PARSE_LIMIT = 100 * 1024 * 1024;
  * prefix is often enough to render a thumbnail without reading the file. */
 const LINEARIZED_PREFIX_BYTES = 2 * 1024 * 1024;
 
-/** Image thumbnails decode at this width (aspect preserved); the hover
- * preview renders at 150 CSS px, so this covers 2x displays. */
-const IMAGE_THUMBNAIL_WIDTH = 320;
+/** Longest side of an image thumbnail, in pixels (aspect preserved); the
+ * hover preview renders at 150 CSS px, so this covers 2x displays. */
+const IMAGE_THUMBNAIL_MAX_SIZE = 320;
+
+/** Bytes read from the head of an image to locate its intrinsic size. */
+const IMAGE_HEADER_PROBE_BYTES = 256 * 1024;
 
 /** Window at each end of the file searched for an /Encrypt entry. */
 const ENCRYPT_PROBE_BYTES = 64 * 1024;
@@ -229,6 +232,144 @@ async function generatePDFThumbnail(
 }
 
 /**
+ * Read intrinsic pixel dimensions from an image header without decoding it.
+ * Returns null for formats the probe does not recognise, so the caller keeps
+ * the width-only resize request instead of failing.
+ */
+async function readImageDimensions(
+  file: File,
+): Promise<{ width: number; height: number } | null> {
+  let bytes: Uint8Array;
+  try {
+    bytes = new Uint8Array(
+      await file.slice(0, IMAGE_HEADER_PROBE_BYTES).arrayBuffer(),
+    );
+  } catch {
+    return null;
+  }
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+
+  // PNG: IHDR is the first chunk; big-endian width/height at offsets 16/20.
+  if (
+    bytes.length >= 24 &&
+    bytes[0] === 0x89 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x4e &&
+    bytes[3] === 0x47
+  ) {
+    return { width: view.getUint32(16), height: view.getUint32(20) };
+  }
+
+  // GIF: logical screen descriptor; little-endian width/height at offsets 6/8.
+  if (
+    bytes.length >= 10 &&
+    bytes[0] === 0x47 &&
+    bytes[1] === 0x49 &&
+    bytes[2] === 0x46
+  ) {
+    return { width: view.getUint16(6, true), height: view.getUint16(8, true) };
+  }
+
+  // BMP: BITMAPINFOHEADER; signed little-endian at 18/22, negative = top-down.
+  if (bytes.length >= 26 && bytes[0] === 0x42 && bytes[1] === 0x4d) {
+    return {
+      width: Math.abs(view.getInt32(18, true)),
+      height: Math.abs(view.getInt32(22, true)),
+    };
+  }
+
+  // WebP: RIFF container, the chunk id at offset 12 identifies the encoding.
+  if (
+    bytes.length >= 30 &&
+    bytes[0] === 0x52 &&
+    bytes[1] === 0x49 &&
+    bytes[2] === 0x46 &&
+    bytes[3] === 0x46 &&
+    bytes[8] === 0x57 &&
+    bytes[9] === 0x45 &&
+    bytes[10] === 0x42 &&
+    bytes[11] === 0x50
+  ) {
+    const chunk = String.fromCharCode(
+      bytes[12],
+      bytes[13],
+      bytes[14],
+      bytes[15],
+    );
+    if (chunk === "VP8X") {
+      return {
+        width: 1 + (bytes[24] | (bytes[25] << 8) | (bytes[26] << 16)),
+        height: 1 + (bytes[27] | (bytes[28] << 8) | (bytes[29] << 16)),
+      };
+    }
+    if (chunk === "VP8 ") {
+      return {
+        width: view.getUint16(26, true) & 0x3fff,
+        height: view.getUint16(28, true) & 0x3fff,
+      };
+    }
+    if (chunk === "VP8L") {
+      const bits = view.getUint32(21, true);
+      return {
+        width: (bits & 0x3fff) + 1,
+        height: ((bits >> 14) & 0x3fff) + 1,
+      };
+    }
+    return null;
+  }
+
+  // JPEG: walk the segment list until a start-of-frame marker carries the size.
+  if (bytes.length >= 4 && bytes[0] === 0xff && bytes[1] === 0xd8) {
+    let offset = 2;
+    while (offset + 9 <= bytes.length) {
+      if (bytes[offset] !== 0xff) return null;
+      const marker = bytes[offset + 1];
+      if (marker === 0xff) {
+        offset += 1;
+        continue;
+      }
+      // Standalone markers have no length field.
+      if (marker === 0x01 || (marker >= 0xd0 && marker <= 0xd8)) {
+        offset += 2;
+        continue;
+      }
+      if (marker === 0xd9) return null;
+      const length = view.getUint16(offset + 2);
+      if (length < 2) return null;
+      const isStartOfFrame =
+        marker >= 0xc0 &&
+        marker <= 0xcf &&
+        marker !== 0xc4 &&
+        marker !== 0xc8 &&
+        marker !== 0xcc;
+      if (isStartOfFrame) {
+        return {
+          height: view.getUint16(offset + 5),
+          width: view.getUint16(offset + 7),
+        };
+      }
+      offset += 2 + length;
+    }
+    return null;
+  }
+
+  return null;
+}
+
+/** Resize a known source into a thumbnail-sized box, longest side first. */
+function thumbnailResizeOptions(source: { width: number; height: number }): {
+  resizeWidth: number;
+  resizeHeight: number;
+} {
+  const scale =
+    IMAGE_THUMBNAIL_MAX_SIZE / Math.max(source.width, source.height);
+  return {
+    resizeWidth: Math.max(1, Math.round(source.width * scale)),
+    resizeHeight: Math.max(1, Math.round(source.height * scale)),
+  };
+}
+
+/**
  * Generate thumbnail for any file type - always returns a thumbnail (placeholder if needed)
  */
 export async function generateThumbnailForFile(file: File): Promise<string> {
@@ -244,8 +385,14 @@ export async function generateThumbnailForFile(file: File): Promise<string> {
   // without intrinsic size, exotic codecs) falls back to the data URL.
   if (file.type.startsWith("image/")) {
     try {
+      const source = await readImageDimensions(file);
       const bitmap = await createImageBitmap(file, {
-        resizeWidth: IMAGE_THUMBNAIL_WIDTH,
+        // A width-only request derives the height from the source aspect ratio,
+        // so a 1x100000px image would ask for a 320x32,000,000 bitmap. Pass
+        // both dimensions when the header gave us a ratio to scale from.
+        ...(source
+          ? thumbnailResizeOptions(source)
+          : { resizeWidth: IMAGE_THUMBNAIL_MAX_SIZE }),
         resizeQuality: "high",
         imageOrientation: "from-image",
       });
