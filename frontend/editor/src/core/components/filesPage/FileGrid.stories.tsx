@@ -91,6 +91,38 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+export const SingleSelection: Story = {
+  args: {
+    selectedFileIds: new Set([localFile.id]),
+  },
+};
+
+export const NativeFilePicker: Story = {
+  args: {
+    entries: [
+      {
+        kind: "diskFile",
+        disk: {
+          path: "/documents/README",
+          name: "README",
+          sizeBytes: 1000,
+          lastModified: 0,
+        },
+      },
+      ...fileEntries,
+    ],
+    picker: {
+      isEligible: () => true,
+      selectionDisabled: false,
+      disabledReason: () => undefined,
+      selectedDiskPaths: new Set(["/documents/README"]),
+      onSelectDiskFile: () => {},
+      onSetDiskSelection: () => {},
+      onUnzipFile: () => {},
+    },
+  },
+};
+
 export const ListMode: Story = {
   args: {
     viewMode: "list",
