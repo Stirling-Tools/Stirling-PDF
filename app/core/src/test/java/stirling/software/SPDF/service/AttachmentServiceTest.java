@@ -360,6 +360,49 @@ class AttachmentServiceTest {
     }
 
     @Test
+    void extractSingleAttachment_PrefersCaseSensitiveMatch() throws IOException {
+        try (var document = new PDDocument()) {
+            attachmentService.addAttachment(
+                    document,
+                    List.of(
+                            new MockMultipartFile(
+                                    "file",
+                                    "REPORT.PDF",
+                                    MediaType.APPLICATION_PDF_VALUE,
+                                    "upper".getBytes()),
+                            new MockMultipartFile(
+                                    "file",
+                                    "Report.pdf",
+                                    MediaType.APPLICATION_PDF_VALUE,
+                                    "mixed".getBytes())));
+            Optional<byte[]> extracted =
+                    attachmentService.extractSingleAttachment(document, "Report.pdf");
+            assertTrue(extracted.isPresent());
+            assertEquals("mixed", new String(extracted.get()));
+        }
+    }
+
+    @Test
+    void extractSingleAttachment_EmptyWhenCaseInsensitiveMatchIsAmbiguous() throws IOException {
+        try (var document = new PDDocument()) {
+            attachmentService.addAttachment(
+                    document,
+                    List.of(
+                            new MockMultipartFile(
+                                    "file",
+                                    "Report.pdf",
+                                    MediaType.APPLICATION_PDF_VALUE,
+                                    "mixed".getBytes()),
+                            new MockMultipartFile(
+                                    "file",
+                                    "REPORT.PDF",
+                                    MediaType.APPLICATION_PDF_VALUE,
+                                    "upper".getBytes())));
+            assertTrue(attachmentService.extractSingleAttachment(document, "report.pdf").isEmpty());
+        }
+    }
+
+    @Test
     void extractSingleAttachment_EmptyWhenFallbackMatchIsAmbiguous() throws IOException {
         try (var document = new PDDocument()) {
             attachmentService.addAttachment(

@@ -373,31 +373,37 @@ public class AttachmentService implements AttachmentServiceInterface {
         return document;
     }
 
-    private boolean matchesAttachmentNameExact(
-            String candidateName, String entryKey, String targetName) {
-        if (StringUtils.isBlank(targetName)) {
-            return false;
-        }
-        String normTarget = targetName.trim();
-        return normTarget.equalsIgnoreCase(candidateName) || normTarget.equalsIgnoreCase(entryKey);
-    }
-
     /**
-     * Entry whose name matches the target, preferring an exact candidate/key match so a simplified
-     * name can never shadow a later exact one (dir/report.pdf must not win over report.pdf). Falls
-     * back to simplified and decoded matching only when nothing matches exactly, and only when that
-     * fallback is unambiguous.
+     * Entry whose name matches the target. A case-sensitive match wins outright; otherwise a
+     * case-insensitive full-name match is only used when it is unique, so Report.pdf/REPORT.PDF
+     * cannot resolve by map order. Falls back to simplified and decoded matching only when no full
+     * name matches, and only when that fallback is unambiguous.
      */
     private Optional<Map.Entry<String, PDComplexFileSpecification>> findAttachmentEntry(
             Map<String, PDComplexFileSpecification> embeddedFiles, String targetName) {
+        if (StringUtils.isBlank(targetName)) {
+            return Optional.empty();
+        }
+        String normTarget = targetName.trim();
+
+        Map.Entry<String, PDComplexFileSpecification> caseInsensitive = null;
         for (Map.Entry<String, PDComplexFileSpecification> entry : embeddedFiles.entrySet()) {
-            if (matchesAttachmentNameExact(
-                    determineFilename(entry.getKey(), entry.getValue()),
-                    entry.getKey(),
-                    targetName)) {
+            String candidateName = determineFilename(entry.getKey(), entry.getValue());
+            if (normTarget.equals(candidateName) || normTarget.equals(entry.getKey())) {
                 return Optional.of(entry);
             }
+            if (normTarget.equalsIgnoreCase(candidateName)
+                    || normTarget.equalsIgnoreCase(entry.getKey())) {
+                if (caseInsensitive != null) {
+                    return Optional.empty();
+                }
+                caseInsensitive = entry;
+            }
         }
+        if (caseInsensitive != null) {
+            return Optional.of(caseInsensitive);
+        }
+
         Map.Entry<String, PDComplexFileSpecification> fallback = null;
         for (Map.Entry<String, PDComplexFileSpecification> entry : embeddedFiles.entrySet()) {
             if (matchesAttachmentName(
