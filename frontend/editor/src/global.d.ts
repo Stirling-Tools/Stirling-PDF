@@ -52,6 +52,8 @@ declare global {
 declare module "axios" {
   export interface AxiosRequestConfig<_D = unknown> {
     suppressErrorToast?: boolean;
+    /** Supplies pipeline details only when that request caused the credit prompt. */
+    accountLinkBlockContext?: import("@app/services/accountLinkBlock").AccountLinkBlockContext;
     skipAuthRedirect?: boolean;
     skipBackendReadyCheck?: boolean;
   }
