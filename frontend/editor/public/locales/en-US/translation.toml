@@ -4672,11 +4672,11 @@ done = "Ready"
 doneHint = "Processed - opens the result"
 failed = "Failed"
 processing = "Processing"
-processingHint = "Processing - available when it finishes"
+processingHint = "Processing - available when processed"
 retry = "Retry"
 retryHint = "Run this file again"
 waiting = "Queued"
-waitingHint = "Queued for processing - available when its folder has run it"
+waitingHint = "Queued for processing - available when processed"
 
 [filesPage.empty]
 hint = "Drop PDFs anywhere on this page to upload, or use the New folder button to organize your files."
