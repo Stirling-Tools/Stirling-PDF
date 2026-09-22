@@ -337,6 +337,50 @@ class AttachmentServiceTest {
     }
 
     @Test
+    void extractSingleAttachment_PrefersExactMatchOverSimplifiedFallback() throws IOException {
+        try (var document = new PDDocument()) {
+            attachmentService.addAttachment(
+                    document,
+                    List.of(
+                            new MockMultipartFile(
+                                    "file",
+                                    "dir/report.pdf",
+                                    MediaType.APPLICATION_PDF_VALUE,
+                                    "dir".getBytes()),
+                            new MockMultipartFile(
+                                    "file",
+                                    "report.pdf",
+                                    MediaType.APPLICATION_PDF_VALUE,
+                                    "exact".getBytes())));
+            Optional<byte[]> extracted =
+                    attachmentService.extractSingleAttachment(document, "report.pdf");
+            assertTrue(extracted.isPresent());
+            assertEquals("exact", new String(extracted.get()));
+        }
+    }
+
+    @Test
+    void extractSingleAttachment_EmptyWhenFallbackMatchIsAmbiguous() throws IOException {
+        try (var document = new PDDocument()) {
+            attachmentService.addAttachment(
+                    document,
+                    List.of(
+                            new MockMultipartFile(
+                                    "file",
+                                    "a/report.pdf",
+                                    MediaType.APPLICATION_PDF_VALUE,
+                                    "a".getBytes()),
+                            new MockMultipartFile(
+                                    "file",
+                                    "b/report.pdf",
+                                    MediaType.APPLICATION_PDF_VALUE,
+                                    "b".getBytes())));
+            assertTrue(
+                    attachmentService.extractSingleAttachment(document, "report.pdf").isEmpty());
+        }
+    }
+
+    @Test
     void extractSingleAttachment_EmptyWhenNameNotFound() throws IOException {
         try (var document = new PDDocument()) {
             var file =

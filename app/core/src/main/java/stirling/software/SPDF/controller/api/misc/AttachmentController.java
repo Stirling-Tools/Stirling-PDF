@@ -116,9 +116,8 @@ public class AttachmentController {
     }
 
     /**
-     * Output filename source for fileId-based requests, where no upload exists
-     * to name the result after. Mirrors the null-safe handling in
-     * extractAttachments.
+     * Output filename source for fileId-based requests, where no upload exists to name the result
+     * after. Mirrors the null-safe handling in extractAttachments.
      */
     private static String sourceFileName(MultipartFile fileInput, String fileId) {
         return fileInput != null ? fileInput.getOriginalFilename() : fileId;

@@ -86,14 +86,12 @@ public class AttachmentService implements AttachmentServiceInterface {
 
             // A batch that cannot read one staged file must fail, not save the
             // rest: callers return this document as the operation result.
-            PDEmbeddedFile embeddedFile =
-                    new PDEmbeddedFile(document, attachment.getInputStream());
+            PDEmbeddedFile embeddedFile = new PDEmbeddedFile(document, attachment.getInputStream());
             embeddedFile.setSize((int) attachment.getSize());
             // use java.time.Instant and convert to GregorianCalendar for PDFBox
             Instant now = Instant.now();
             GregorianCalendar nowCal =
-                    GregorianCalendar.from(
-                            ZonedDateTime.ofInstant(now, ZoneId.systemDefault()));
+                    GregorianCalendar.from(ZonedDateTime.ofInstant(now, ZoneId.systemDefault()));
             embeddedFile.setCreationDate(nowCal);
             embeddedFile.setModDate(nowCal);
             String contentType = attachment.getContentType();
@@ -237,14 +235,12 @@ public class AttachmentService implements AttachmentServiceInterface {
         Map<String, PDComplexFileSpecification> embeddedFiles = new LinkedHashMap<>();
         collectEmbeddedFiles(embeddedFilesTree, embeddedFiles);
 
-        for (Map.Entry<String, PDComplexFileSpecification> entry : embeddedFiles.entrySet()) {
-            PDComplexFileSpecification fileSpecification = entry.getValue();
-            String currentName = determineFilename(entry.getKey(), fileSpecification);
-            if (matchesAttachmentName(currentName, entry.getKey(), attachmentName)) {
-                PDEmbeddedFile embeddedFile = getEmbeddedFile(fileSpecification);
-                if (embeddedFile != null) {
-                    return readAttachmentData(embeddedFile);
-                }
+        Optional<Map.Entry<String, PDComplexFileSpecification>> match =
+                findAttachmentEntry(embeddedFiles, attachmentName);
+        if (match.isPresent()) {
+            PDEmbeddedFile embeddedFile = getEmbeddedFile(match.get().getValue());
+            if (embeddedFile != null) {
+                return readAttachmentData(embeddedFile);
             }
         }
         return Optional.empty();
@@ -316,16 +312,13 @@ public class AttachmentService implements AttachmentServiceInterface {
         Map<String, PDComplexFileSpecification> allEmbeddedFiles = new LinkedHashMap<>();
         collectEmbeddedFiles(embeddedFilesTree, allEmbeddedFiles);
 
+        Optional<Map.Entry<String, PDComplexFileSpecification>> match =
+                findAttachmentEntry(allEmbeddedFiles, attachmentName);
         PDComplexFileSpecification fileToRename = null;
         String keyToRename = null;
-
-        for (Map.Entry<String, PDComplexFileSpecification> entry : allEmbeddedFiles.entrySet()) {
-            String currentName = determineFilename(entry.getKey(), entry.getValue());
-            if (matchesAttachmentName(currentName, entry.getKey(), attachmentName)) {
-                fileToRename = entry.getValue();
-                keyToRename = entry.getKey();
-                break;
-            }
+        if (match.isPresent()) {
+            fileToRename = match.get().getValue();
+            keyToRename = match.get().getKey();
         }
 
         if (fileToRename == null || keyToRename == null) {
@@ -358,15 +351,9 @@ public class AttachmentService implements AttachmentServiceInterface {
         Map<String, PDComplexFileSpecification> allEmbeddedFiles = new LinkedHashMap<>();
         collectEmbeddedFiles(embeddedFilesTree, allEmbeddedFiles);
 
-        String keyToRemove = null;
-
-        for (Map.Entry<String, PDComplexFileSpecification> entry : allEmbeddedFiles.entrySet()) {
-            String currentName = determineFilename(entry.getKey(), entry.getValue());
-            if (matchesAttachmentName(currentName, entry.getKey(), attachmentName)) {
-                keyToRemove = entry.getKey();
-                break;
-            }
-        }
+        Optional<Map.Entry<String, PDComplexFileSpecification>> match =
+                findAttachmentEntry(allEmbeddedFiles, attachmentName);
+        String keyToRemove = match.map(Map.Entry::getKey).orElse(null);
 
         if (keyToRemove == null) {
             log.warn("Attachment '{}' not found for deletion", attachmentName);
@@ -384,6 +371,48 @@ public class AttachmentService implements AttachmentServiceInterface {
         log.info("Deleted attachment: '{}'", attachmentName);
 
         return document;
+    }
+
+    private boolean matchesAttachmentNameExact(
+            String candidateName, String entryKey, String targetName) {
+        if (StringUtils.isBlank(targetName)) {
+            return false;
+        }
+        String normTarget = targetName.trim();
+        return normTarget.equalsIgnoreCase(candidateName)
+                || normTarget.equalsIgnoreCase(entryKey);
+    }
+
+    /**
+     * Entry whose name matches the target, preferring an exact candidate/key
+     * match so a simplified name can never shadow a later exact one
+     * (dir/report.pdf must not win over report.pdf). Falls back to simplified
+     * and decoded matching only when nothing matches exactly, and only when
+     * that fallback is unambiguous.
+     */
+    private Optional<Map.Entry<String, PDComplexFileSpecification>> findAttachmentEntry(
+            Map<String, PDComplexFileSpecification> embeddedFiles, String targetName) {
+        for (Map.Entry<String, PDComplexFileSpecification> entry : embeddedFiles.entrySet()) {
+            if (matchesAttachmentNameExact(
+                    determineFilename(entry.getKey(), entry.getValue()),
+                    entry.getKey(),
+                    targetName)) {
+                return Optional.of(entry);
+            }
+        }
+        Map.Entry<String, PDComplexFileSpecification> fallback = null;
+        for (Map.Entry<String, PDComplexFileSpecification> entry : embeddedFiles.entrySet()) {
+            if (matchesAttachmentName(
+                    determineFilename(entry.getKey(), entry.getValue()),
+                    entry.getKey(),
+                    targetName)) {
+                if (fallback != null) {
+                    return Optional.empty();
+                }
+                fallback = entry;
+            }
+        }
+        return Optional.ofNullable(fallback);
     }
 
     private boolean matchesAttachmentName(
