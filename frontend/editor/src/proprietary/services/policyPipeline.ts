@@ -52,6 +52,7 @@ export interface BackendPolicy {
   trigger: BackendTriggerConfig | null;
   steps: BackendPipelineStep[];
   output: BackendOutputSpec;
+  outputIds?: string[];
   /** Whether the editor runs this policy per file, and on which moment. */
   editor?: BackendEditorConfig;
   /** A policy (blocking on failure) rather than an ordinary pipeline; see Policy.required. */
@@ -105,6 +106,7 @@ export interface PolicyRunView {
    */
   errorSubscribed?: boolean | null;
   outputs: BackendResultFile[];
+  externalOutput?: boolean;
   /** When the run was created (epoch millis); lets a rediscovered run show its real age. */
   createdAt: number;
 }
@@ -125,6 +127,7 @@ export interface DecodedPolicy {
   sources: string[];
   /** Whether the editor runs this policy per file, straight from the policy's own flag. */
   runsOnEditor: boolean;
+  externalOutput?: boolean;
   /** A policy (blocking on failure) rather than an ordinary pipeline (see Policy.required). */
   required: boolean;
   scopeTypes: string[];
@@ -175,6 +178,8 @@ export function fromBackendPolicy(policy: BackendPolicy): DecodedPolicy {
     fieldValues:
       (meta.fieldValues as DecodedPolicy["fieldValues"] | undefined) ?? {},
     runsOnEditor: editor?.allowed === true,
+    externalOutput:
+      Boolean(policy.outputIds?.length) || policy.output.type !== "inline",
     required: policy.required === true,
     folder: {
       runOn: resolveRunOn(editor?.runOn, policyKey),

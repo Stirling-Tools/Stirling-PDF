@@ -31,10 +31,13 @@ export interface TauriHttpRequestConfig {
   withCredentials?: boolean;
   // Custom properties for desktop
   operationName?: string;
+  /** Pins background automation requests to the account and server that started them. */
+  automationSession?: string;
   skipBackendReadyCheck?: boolean;
   skipAuthRedirect?: boolean;
   // Axios compatibility properties (ignored by Tauri HTTP)
   suppressErrorToast?: boolean;
+  accountLinkBlockContext?: import("@app/services/accountLinkBlock").AccountLinkBlockContext;
   cancelToken?: any;
   signal?: AbortSignal;
 }

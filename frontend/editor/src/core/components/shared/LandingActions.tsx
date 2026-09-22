@@ -4,11 +4,13 @@ import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Icon } from "@app/ui/Icon";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
+import { useFilesPage } from "@app/contexts/FilesPageContext";
+import { useFolders } from "@app/contexts/FolderContext";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
-import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { CreateProcessingFolderButton } from "@app/components/policies/CreateProcessingFolderButton";
+import { folderKind } from "@app/types/folder";
 
 type LandingActionsProps = {
   fileInputRef: React.RefObject<HTMLInputElement | null>;
@@ -25,31 +27,30 @@ export function LandingActions({
 }: LandingActionsProps) {
   const terminology = useFileActionTerminology();
   const { openFilesModal } = useFilesModalContext();
-  const icons = useFileActionIcons();
+  const { allFiles, loading } = useFilesPage();
+  const folders = useFolders();
   const { config } = useAppConfig();
   const isMobile = useIsMobile();
+  // Mounted directories are listed on demand, so their files may not be cached yet.
+  const hasMountedFolders = folders.folders.some(
+    (folder) => folderKind(folder) === "local",
+  );
+  const libraryEmpty =
+    !loading && !folders.loading && allFiles.length === 0 && !hasMountedFolders;
 
   return (
     <>
       <Group gap="sm" justify="center" wrap="wrap" mb="xs">
         <Button
           fat
-          leftSection={<Icon name={icons.upload} size="1rem" />}
-          onClick={(e) => {
-            e.stopPropagation();
-            onUploadClick();
-          }}
-        >
-          {terminology.uploadFromComputer}
-        </Button>
-
-        <Button
-          variant="secondary"
-          fat
           leftSection={<Icon name="plus" size="1rem" />}
           onClick={(e) => {
             e.stopPropagation();
-            openFilesModal();
+            if (libraryEmpty) {
+              onUploadClick();
+            } else {
+              openFilesModal();
+            }
           }}
         >
           {terminology.addFiles}
