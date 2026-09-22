@@ -5647,7 +5647,7 @@ direction = "ltr"
 [legacyBilling]
 currentTeamAllowance = "Current allowance for your legacy team"
 loadError = "We couldn't check your existing subscription. Try again before purchasing another plan."
-loading = "Checking your subscription…"
+loading = "Checking your subscription..."
 portalError = "We couldn't open Stripe billing. Please try again."
 pro = "Pro (legacy)"
 retry = "Try again"

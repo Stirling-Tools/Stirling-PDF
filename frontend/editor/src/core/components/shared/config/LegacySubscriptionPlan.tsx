@@ -16,7 +16,7 @@ export function LegacySubscriptionPlan({
   if (billing.loading)
     return (
       <Text role="status">
-        {t("legacyBilling.loading", "Checking your subscription…")}
+        {t("legacyBilling.loading", "Checking your subscription...")}
       </Text>
     );
   if (billing.loadError) {
