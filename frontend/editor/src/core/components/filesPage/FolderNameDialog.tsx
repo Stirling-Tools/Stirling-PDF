@@ -11,6 +11,7 @@ interface FolderNameDialogProps {
   submitLabel: string;
   onClose: () => void;
   onSubmit: (name: string) => void | Promise<void>;
+  zIndex?: number;
 }
 
 export function FolderNameDialog({
@@ -20,6 +21,7 @@ export function FolderNameDialog({
   submitLabel,
   onClose,
   onSubmit,
+  zIndex,
 }: FolderNameDialogProps) {
   const { t } = useTranslation();
   const [value, setValue] = useState(initialName);
@@ -43,9 +45,6 @@ export function FolderNameDialog({
       await onSubmit(name);
       onClose();
     } catch (err) {
-      // Keep dialog open so the user can retry. Closing on error was a
-      // silent failure (the dialog vanished, but the folder was never
-      // created - user thinks success, sees no folder).
       setError(
         err instanceof Error
           ? err.message
@@ -65,6 +64,7 @@ export function FolderNameDialog({
       onClose={onClose}
       title={title}
       centered
+      zIndex={zIndex}
       size="sm"
       keepMounted
       transitionProps={{ duration: 0 }}

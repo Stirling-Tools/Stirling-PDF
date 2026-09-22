@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -85,6 +86,25 @@ public class ApplicationProperties {
     private InternalApi internalApi = new InternalApi();
     private Cluster cluster = new Cluster();
     private Policies policies = new Policies();
+
+    @PostConstruct
+    public void migrateSsoAutoLoginFromEnvironment() {
+        migrateSsoAutoLoginFromEnvironment(java.lang.System.getenv());
+    }
+
+    void migrateSsoAutoLoginFromEnvironment(Map<String, String> environment) {
+        for (String key :
+                List.of(
+                        "SECURITY_SSOAUTOLOGIN",
+                        "PREMIUM_PROFEATURES_SSOAUTOLOGIN",
+                        "ENTERPRISEEDITION_SSOAUTOLOGIN")) {
+            String value = environment.get(key);
+            if (value != null) {
+                security.setSsoAutoLogin(Boolean.parseBoolean(value));
+                return;
+            }
+        }
+    }
 
     @Bean
     public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
@@ -935,6 +955,7 @@ public class ApplicationProperties {
     @Data
     public static class Security {
         private boolean enableLogin;
+        private boolean ssoAutoLogin;
         private InitialLogin initialLogin = new InitialLogin();
         private OAUTH2 oauth2 = new OAUTH2();
         private SAML2 saml2 = new SAML2();
@@ -1822,7 +1843,6 @@ public class ApplicationProperties {
 
         @Data
         public static class ProFeatures {
-            private boolean ssoAutoLogin;
             private boolean database;
             private CustomMetadata customMetadata = new CustomMetadata();
             private GoogleDrive googleDrive = new GoogleDrive();
