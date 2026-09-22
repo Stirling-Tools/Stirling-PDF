@@ -253,7 +253,11 @@ class TauriHttpClient {
         };
       } = {
         method,
-        headers,
+        // The dev webview has a Vite origin; cloud CORS accepts the packaged app origin.
+        // task desktop:dev alone enables the plugin feature needed to override Origin.
+        headers: import.meta.env.DEV
+          ? { Origin: "tauri://localhost", ...headers }
+          : headers,
         body,
         credentials,
         ...(finalConfig.signal ? { signal: finalConfig.signal } : {}),

@@ -90,7 +90,7 @@ export const TOOL_FORMAT_EXTENSIONS: Record<ToolFormat, readonly string[]> = {
   CSV: ["csv"],
   HTML: ["html", "htm", "xhtml"],
   XML: ["xml", "xsd", "xsl"],
-  JSON: ["json"],
+  JSON: ["json", "jsonl"],
   TEXT: ["txt", "text", "md", "markdown"],
   MARKDOWN: ["md", "markdown"],
   JAVASCRIPT: ["js", "jsx"],
@@ -361,6 +361,38 @@ export const TOOL_IO: ToolIOTable = {
     accepts: ["POSTSCRIPT"],
     produces: "PDF",
     arity: "SISO",
+  },
+  "/api/v1/docparse/ingest": {
+    accepts: ["PDF"],
+    produces: "PDF",
+    arity: "SIMO",
+    cases: [
+      {
+        when: [
+          { param: "includeOriginal", matches: ["false"], default: "true" },
+          { param: "exportMarkdown", matches: ["false"], default: "false" },
+        ],
+        produces: "JSON",
+        arity: "SIMO",
+      },
+      {
+        when: [
+          { param: "includeOriginal", matches: ["false"], default: "true" },
+          { param: "exportChunksJsonl", matches: ["false"], default: "false" },
+        ],
+        produces: "MARKDOWN",
+        arity: "SIMO",
+      },
+      {
+        when: [
+          { param: "includeOriginal", matches: ["false"], default: "true" },
+          { param: "exportMarkdown", matches: ["true"], default: "false" },
+          { param: "exportChunksJsonl", matches: ["true"], default: "false" },
+        ],
+        produces: "ANY",
+        arity: "SIMO",
+      },
+    ],
   },
   "/api/v1/filter/filter-contains-image": {
     accepts: ["PDF"],

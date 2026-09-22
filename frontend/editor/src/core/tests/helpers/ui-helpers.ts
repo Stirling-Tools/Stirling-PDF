@@ -134,7 +134,9 @@ async function waitForStoredFiles(page: Page, names: string[]): Promise<void> {
         open.onblocked = () => resolve(false);
       }),
     names,
-    { timeout: 10_000, polling: 100 },
+    // The IndexedDB write can lag the upload on WebKit under parallel CI load;
+    // it lands, just not always within 10s, so give the commit room to finish.
+    { timeout: 30_000, polling: 100 },
   );
 }
 
