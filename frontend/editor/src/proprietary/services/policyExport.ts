@@ -12,6 +12,8 @@
 
 import { dispatchPolicyFile } from "@app/services/policyDispatch";
 import { loadPolicies } from "@app/services/policyStorage";
+import { reportFreeTierExhausted } from "@app/services/accountLinkBlock";
+import { policyCreditContext } from "@app/services/policyCreditContext";
 import { assertFilesNotBlocked } from "@app/services/policyFileGuard";
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
 import { editorTriggerOf } from "@app/policies/runOn";
@@ -106,7 +108,12 @@ async function runToCompletion(
   file: File,
 ): Promise<PolicyRunResult> {
   const target = resolvePolicyRunTarget();
-  const runId = await runStoredPolicy(backendId, [file]);
+  const runId = await runStoredPolicy(
+    backendId,
+    [file],
+    undefined,
+    "background",
+  );
   for (let i = 0; i < MAX_POLLS; i++) {
     await delay(POLL_MS);
     let view;
@@ -134,6 +141,9 @@ async function runToCompletion(
       return { file: enforced, runId, target, outputs: view.outputs ?? [] };
     }
     if (view.status === "FAILED" || view.status === "CANCELLED") {
+      if (view.errorCode === "FREE_TIER_EXHAUSTED") {
+        reportFreeTierExhausted(policyCreditContext(backendId));
+      }
       throw new Error(view.error || `policy run ${view.status.toLowerCase()}`);
     }
     if (view.status === "WAITING_FOR_INPUT") {

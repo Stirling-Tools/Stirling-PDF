@@ -3,14 +3,7 @@ import { Box, Text, Stack, Group, Loader, ScrollArea } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import AddIcon from "@mui/icons-material/Add";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import CloseIcon from "@mui/icons-material/Close";
-import FolderPlusIcon from "@mui/icons-material/CreateNewFolder";
-import PauseCircleOutlineIcon from "@mui/icons-material/PauseCircleOutlined";
-import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutlined";
+import { Icon } from "@app/ui/Icon";
 import { useWatchedFolders } from "@app/hooks/useWatchedFolders";
 import { useFolderRunStatuses } from "@app/hooks/useFolderRunStatuses";
 import {
@@ -241,9 +234,9 @@ function FolderCard({
           }
         >
           {isPaused ? (
-            <PlayCircleOutlineIcon style={{ fontSize: "1.125rem" }} />
+            <Icon name="circle-play" size={"1.125rem"} />
           ) : (
-            <PauseCircleOutlineIcon style={{ fontSize: "1.125rem" }} />
+            <Icon name="circle-pause" size={"1.125rem"} />
           )}
         </ActionIcon>
         <ActionIcon
@@ -252,7 +245,7 @@ function FolderCard({
           onClick={() => onEdit(folder)}
           aria-label={t("watchedFolders.home.editFolder", "Edit folder")}
         >
-          <EditIcon style={{ fontSize: "1.125rem" }} />
+          <Icon name="pencil" size={"1.125rem"} />
         </ActionIcon>
         <ActionIcon
           size="md"
@@ -261,7 +254,7 @@ function FolderCard({
           onClick={() => onDelete(folder)}
           aria-label={t("watchedFolders.home.deleteFolder", "Delete folder")}
         >
-          <DeleteOutlineIcon style={{ fontSize: "1.125rem" }} />
+          <Icon name="trash" size={"1.125rem"} />
         </ActionIcon>
       </div>
     </div>
@@ -316,11 +309,10 @@ function HowItWorks() {
     >
       <Group gap="xs" mb="sm" justify="space-between">
         <Group gap="xs">
-          <InfoOutlinedIcon
-            style={{
-              fontSize: "1rem",
-              color: "var(--c-accent-text)",
-            }}
+          <Icon
+            name="info"
+            size={"1rem"}
+            style={{ color: "var(--c-accent-text)" }}
           />
           <Text fw={600} size="xs">
             {t("watchedFolders.howItWorks.title", "How Watched Folders work")}
@@ -335,11 +327,10 @@ function HowItWorks() {
           }}
           aria-label={t("watchedFolders.actions.dismiss", "Dismiss")}
         >
-          <CloseIcon
-            style={{
-              fontSize: "0.75rem",
-              color: "var(--mantine-color-text)",
-            }}
+          <Icon
+            name="x"
+            size={"0.75rem"}
+            style={{ color: "var(--mantine-color-text)" }}
           />
         </ActionIcon>
       </Group>
@@ -390,7 +381,7 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
   return (
     <div className="wf-empty">
       <span className="wf-empty-icon">
-        <FolderPlusIcon style={{ fontSize: "2.5rem" }} />
+        <Icon name="folder-plus" size={"2.5rem"} />
       </span>
       <div className="wf-empty-title">
         {t("watchedFolders.home.emptyTitle", "Automate your PDF workflows")}
@@ -405,7 +396,7 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
       <Button
         size="md"
         variant="primary"
-        leftSection={<AddIcon style={{ fontSize: "1.125rem" }} />}
+        leftSection={<Icon name="plus" size={"1.125rem"} />}
         onClick={onCreate}
         style={{ marginTop: "var(--mantine-spacing-sm)" }}
       >
@@ -627,7 +618,7 @@ export function WatchedFolderHomePage() {
                   }}
                 >
                   <span className="wf-new-tile-icon">
-                    <FolderPlusIcon style={{ fontSize: "1.5rem" }} />
+                    <Icon name="folder-plus" size={"1.5rem"} />
                   </span>
                   <Text size="sm" fw={600}>
                     {t(
