@@ -102,14 +102,16 @@ jobs:
           CACHE_IS_FORK: ${{ steps.cache.outputs.is-fork }}
           CACHE_READ_ONLY: ${{ steps.cache.outputs.read-only }}
           CACHE_HIT: ${{ steps.cache.outputs.cache-hit }}
+          CACHE_ERROR: ${{ steps.cache.outputs.error }}
         shell: bash
         run: |
           echo "Fork: $CACHE_IS_FORK"
           echo "Read-only: $CACHE_READ_ONLY"
           echo "Cache Hit: $CACHE_HIT"
+          echo "Cache Error: $CACHE_ERROR"
 
       - name: Cache Gradle
-        if: ${{ steps.cache.outputs.}}
+        if: ${{ steps.cache.outputs.error}}
         id: cache-gradle-restore
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
