@@ -142,7 +142,7 @@ jobs:
 
       - name: Resolve backend dependencies
         if: ${{ steps.cache-gradle-restore.outputs.cache-hit || steps.cache.outputs.cache-hit }}
-        run: ./gradlew --offline :stirling-pdf:classes --no-daemon
+        run: ./gradlew :stirling-pdf:classes --no-daemon
         env:
           STIRLING_FLAVOR: saas
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
