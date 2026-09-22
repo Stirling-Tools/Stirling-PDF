@@ -82,6 +82,8 @@ class AccountLinkAuthorizationTest {
         when(ownerService.isCurrentUser(any())).thenReturn(true);
         controller.connectStart(null, new MockHttpServletRequest());
         controller.connectReauth(null, new MockHttpServletRequest());
+        when(connectService.complete("nonce"))
+                .thenReturn(ConnectService.ConnectStatus.of(ConnectService.Phase.LINKED));
         controller.connectComplete(new AccountLinkController.ConnectCompleteRequest("nonce"));
         controller.unlink();
         controller.recheck();

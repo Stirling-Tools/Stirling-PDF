@@ -1,35 +1,7 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import React from "react";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { SuggestedAutomation } from "@app/types/automation";
 import { SPLIT_METHODS } from "@app/constants/splitConstants";
-
-// Create icon components
-const CompressIcon = () =>
-  React.createElement(LocalIcon, {
-    icon: "compress",
-    width: "1.5rem",
-    height: "1.5rem",
-  });
-const SecurityIcon = () =>
-  React.createElement(LocalIcon, {
-    icon: "security",
-    width: "1.5rem",
-    height: "1.5rem",
-  });
-const StarIcon = () =>
-  React.createElement(LocalIcon, {
-    icon: "star",
-    width: "1.5rem",
-    height: "1.5rem",
-  });
-const PrivacyIcon = () =>
-  React.createElement(LocalIcon, {
-    icon: "shield-lock",
-    width: "1.5rem",
-    height: "1.5rem",
-  });
 
 export function useSuggestedAutomations(): SuggestedAutomation[] {
   const { t } = useTranslation();
@@ -93,7 +65,7 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
         ],
         createdAt: now,
         updatedAt: now,
-        icon: SecurityIcon,
+        icon: "shield-check",
       },
       {
         id: "pre-publish-sanitization",
@@ -156,7 +128,7 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
         ],
         createdAt: now,
         updatedAt: now,
-        icon: PrivacyIcon,
+        icon: "shield",
       },
       {
         id: "email-preparation",
@@ -206,7 +178,7 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
         ],
         createdAt: now,
         updatedAt: now,
-        icon: CompressIcon,
+        icon: "shrink",
       },
       {
         id: "secure-workflow",
@@ -248,7 +220,7 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
         ],
         createdAt: now,
         updatedAt: now,
-        icon: SecurityIcon,
+        icon: "shield-check",
       },
       {
         id: "process-images",
@@ -285,7 +257,7 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
         ],
         createdAt: now,
         updatedAt: now,
-        icon: StarIcon,
+        icon: "star",
       },
     ];
   }, [t]);

@@ -1,23 +1,11 @@
-/**
- * SaaS "Plan" page — the single entry point for billing, plan state, and
- * usage. Branches on the team's wallet state and the viewer's role:
- *
- *   - free + leader → {@link PaygFreeLeader} (upgrade CTA + manual-tools
- *     framing)
- *   - free + member → {@link PaygFreeMember} (ask-the-owner note)
- *   - subscribed + leader → {@link PaygLeader} (full dashboard, editable cap)
- *   - subscribed + member → {@link PaygMember} (member dashboard)
- *
- * <p>The hook handles loading + error states locally so the four view
- * components stay focused on rendering the data they own. {@code Plan} is
- * intentionally tiny (under 60 lines) so future "Plan-level" affordances —
- * a top-level error toast, a subscription confirmation card, etc — have
- * obvious places to land.
- */
+/** Account-owned legacy billing can coexist with the current team's wallet. */
 import React, { useCallback } from "react";
-import { Alert, Center, Loader } from "@mantine/core";
+import { Center, Group, Loader, Stack } from "@mantine/core";
+import { Banner, Button } from "@app/ui";
 import { useTranslation } from "react-i18next";
 import { useWallet } from "@app/hooks/useWallet";
+import { useLegacySubscriptions } from "@app/hooks/useLegacySubscriptions";
+import { LegacySubscriptionPlan } from "@app/components/shared/config/LegacySubscriptionPlan";
 import { useRenderCount } from "@app/hooks/useRenderCount";
 import {
   PaygLeader,
@@ -31,6 +19,11 @@ import {
 const Plan: React.FC = () => {
   useRenderCount("Plan");
   const { t } = useTranslation();
+  const legacyBilling = useLegacySubscriptions();
+  const hasLegacyBilling =
+    legacyBilling.loading ||
+    legacyBilling.loadError ||
+    legacyBilling.subscriptions.length > 0;
   const { wallet, loading, error, markSubscribed, updateCap, openPortal } =
     useWallet();
 
@@ -49,46 +42,76 @@ const Plan: React.FC = () => {
     [markSubscribed],
   );
 
-  if (loading && !wallet) {
-    return (
-      <Center mih={200}>
-        <Loader />
-      </Center>
-    );
-  }
+  const renderWallet = () => {
+    if (loading && !wallet) {
+      return (
+        <Center mih={200}>
+          <Loader />
+        </Center>
+      );
+    }
 
-  if (error || !wallet) {
-    return (
-      <Alert
-        color="red"
-        title={t("payg.error.title", "Couldn't load your plan")}
-      >
-        {error ??
-          t(
-            "payg.error.body",
-            "We couldn't reach the billing service. Refresh the page to try again.",
+    if (error || !wallet) {
+      return (
+        <Banner
+          tone="danger"
+          title={t("payg.error.title", "Couldn't load your plan")}
+        >
+          {error ??
+            t(
+              "payg.error.body",
+              "We couldn't reach the billing service. Refresh the page to try again.",
+            )}
+        </Banner>
+      );
+    }
+
+    if (wallet.status === "subscribed") {
+      return wallet.role === "leader" ? (
+        <PaygLeader
+          wallet={wallet}
+          onSaveCap={updateCap}
+          onOpenPortal={openPortal}
+        />
+      ) : (
+        <PaygMember wallet={wallet} />
+      );
+    }
+
+    if (hasLegacyBilling) return null;
+
+    // Free tier — only the leader sees the upgrade CTA.
+    if (wallet.role === "leader") {
+      return <PaygFreeLeader onUpgraded={onUpgraded} />;
+    }
+    return <PaygFreeMember />;
+  };
+
+  return (
+    <Stack>
+      {legacyBilling.subscriptions.length > 0 && (
+        <Group justify="flex-end">
+          <Button
+            variant="secondary"
+            onClick={legacyBilling.openPortal}
+            disabled={legacyBilling.opening}
+          >
+            {t("payment.manageSubscription", "Manage subscription")}
+          </Button>
+        </Group>
+      )}
+      {legacyBilling.portalError && (
+        <Banner tone="danger">
+          {t(
+            "legacyBilling.portalError",
+            "We couldn't open Stripe billing. Please try again.",
           )}
-      </Alert>
-    );
-  }
-
-  if (wallet.status === "subscribed") {
-    return wallet.role === "leader" ? (
-      <PaygLeader
-        wallet={wallet}
-        onSaveCap={updateCap}
-        onOpenPortal={openPortal}
-      />
-    ) : (
-      <PaygMember wallet={wallet} />
-    );
-  }
-
-  // Free tier — only the leader sees the upgrade CTA.
-  if (wallet.role === "leader") {
-    return <PaygFreeLeader onUpgraded={onUpgraded} />;
-  }
-  return <PaygFreeMember />;
+        </Banner>
+      )}
+      <LegacySubscriptionPlan billing={legacyBilling} />
+      {renderWallet()}
+    </Stack>
+  );
 };
 
 export default Plan;
