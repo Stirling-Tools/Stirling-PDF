@@ -24,6 +24,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.http.CacheControl;
 import org.springframework.web.servlet.config.annotation.CorsRegistration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistration;
@@ -116,6 +117,44 @@ class WebMvcConfigTest {
             List<String> allPatterns =
                     captor.getAllValues().stream().flatMap(java.util.Arrays::stream).toList();
             assertThat(allPatterns).contains("/**", "/assets/**", "/sw.js");
+        }
+
+        @Test
+        @DisplayName("serves fonts as immutable for a year so fallback faces cache")
+        void fontsAreImmutable() {
+            ResourceHandlerRegistry registry = mock(ResourceHandlerRegistry.class);
+            ResourceHandlerRegistration sw =
+                    mock(ResourceHandlerRegistration.class, RETURNS_DEEP_STUBS);
+            ResourceHandlerRegistration assets =
+                    mock(ResourceHandlerRegistration.class, RETURNS_DEEP_STUBS);
+            ResourceHandlerRegistration media =
+                    mock(ResourceHandlerRegistration.class, RETURNS_DEEP_STUBS);
+            ResourceHandlerRegistration branding =
+                    mock(ResourceHandlerRegistration.class, RETURNS_DEEP_STUBS);
+            ResourceHandlerRegistration catchAll =
+                    mock(ResourceHandlerRegistration.class, RETURNS_DEEP_STUBS);
+            when(registry.addResourceHandler(any(String[].class)))
+                    .thenReturn(sw, assets, media, branding, catchAll);
+            // addResourceLocations is the chain link before setCacheControl.
+            when(sw.addResourceLocations(any(String[].class))).thenReturn(sw);
+            when(assets.addResourceLocations(any(String[].class))).thenReturn(assets);
+            when(media.addResourceLocations(any(String[].class))).thenReturn(media);
+            when(branding.addResourceLocations(any(String[].class))).thenReturn(branding);
+            when(catchAll.addResourceLocations(any(String[].class))).thenReturn(catchAll);
+
+            config.addResourceHandlers(registry);
+
+            // Third registration is the media/fonts group; its cache tier is what
+            // keeps a 17 MB CJK fallback face from being re-fetched on every
+            // viewer open.
+            ArgumentCaptor<String[]> patterns = ArgumentCaptor.forClass(String[].class);
+            verify(registry, times(5)).addResourceHandler(patterns.capture());
+            assertThat(patterns.getAllValues().get(2)).contains("/fonts/**");
+
+            ArgumentCaptor<CacheControl> caches = ArgumentCaptor.forClass(CacheControl.class);
+            verify(media).setCacheControl(caches.capture());
+            String header = caches.getValue().getHeaderValue();
+            assertThat(header).contains("max-age=31536000").contains("immutable");
         }
     }
 
