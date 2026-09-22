@@ -616,13 +616,17 @@ export default function FileManagerView() {
     retry: false,
   });
 
-  const [processingPollFailures, setProcessingPollFailures] = useState(0);
+  const activeProcessingKey = processingView ? (processingRecordId ?? "") : "";
+  const [processingPollFailures, setProcessingPollFailures] = useState({
+    key: "",
+    count: 0,
+  });
   const processingPollEvent = useRef({ key: "", updatedAt: 0 });
   useEffect(() => {
-    const key = processingView ? (processingRecordId ?? "") : "";
+    const key = activeProcessingKey;
     if (processingPollEvent.current.key !== key) {
       processingPollEvent.current = { key, updatedAt: 0 };
-      setProcessingPollFailures(0);
+      setProcessingPollFailures({ key, count: 0 });
     }
     if (!key) return;
 
@@ -634,18 +638,22 @@ export default function FileManagerView() {
       return;
 
     processingPollEvent.current.updatedAt = updatedAt;
-    setProcessingPollFailures((count) =>
-      processingFilesStatus === "error" ? count + 1 : 0,
-    );
+    setProcessingPollFailures((failures) => ({
+      key,
+      count:
+        processingFilesStatus === "error"
+          ? (failures.key === key ? failures.count : 0) + 1
+          : 0,
+    }));
   }, [
+    activeProcessingKey,
     processingFilesErrorAt,
     processingFilesStatus,
     processingFilesUpdatedAt,
-    processingRecordId,
-    processingView,
   ]);
   const processingStatesUnavailable =
-    processingPollFailures >= PROCESSING_FILES_FAILURE_LIMIT;
+    processingPollFailures.key === activeProcessingKey &&
+    processingPollFailures.count >= PROCESSING_FILES_FAILURE_LIMIT;
   useEffect(() => {
     if (!processingStatesUnavailable) return;
     setFolderError(
