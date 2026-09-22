@@ -721,14 +721,19 @@ class OfficeConversionMatrixTest {
         }
     }
 
-    @Test
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
     @EnabledIf("sofficeAvailable")
     @DisplayName("a word binary carrying no field converts to the same text sanitized or not")
-    void wordBinarySanitizationLeavesAnOrdinaryDocumentAlone() throws Exception {
+    void wordBinarySanitizationLeavesAnOrdinaryDocumentAlone(boolean nonTextDecoys)
+            throws Exception {
         Path staging = Files.createTempDirectory("wordrich_");
         try {
             byte[] fixture =
                     export(writeTemp(".fodt", writerRichSource()), "doc", "MS Word 97", staging);
+            if (nonTextDecoys) {
+                fixture = appendNonTextFieldDecoys(fixture);
+            }
 
             Path staged = staging.resolve("rich.doc");
             Files.write(staged, fixture);
@@ -749,6 +754,24 @@ class OfficeConversionMatrixTest {
             }
         } finally {
             FileUtils.deleteDirectory(staging.toFile());
+        }
+    }
+
+    private static byte[] appendNonTextFieldDecoys(byte[] document) throws IOException {
+        try (POIFSFileSystem fs = new POIFSFileSystem(new ByteArrayInputStream(document))) {
+            ByteArrayOutputStream word = new ByteArrayOutputStream();
+            try (DocumentInputStream input = fs.createDocumentInputStream("WordDocument")) {
+                input.transferTo(word);
+            }
+            String decoy = "\u0013 INCLUDETEXT /private/file \u0014cached\u0015";
+            word.writeBytes(decoy.getBytes(StandardCharsets.ISO_8859_1));
+            word.writeBytes(decoy.getBytes(StandardCharsets.UTF_16LE));
+            fs.getRoot().getEntry("WordDocument").delete();
+            fs.getRoot()
+                    .createDocument("WordDocument", new ByteArrayInputStream(word.toByteArray()));
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            fs.writeFilesystem(output);
+            return output.toByteArray();
         }
     }
 

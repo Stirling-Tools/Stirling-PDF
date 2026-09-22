@@ -3,6 +3,11 @@ package stirling.software.SPDF.controller.api.converters;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.Comparator;
+import java.util.Deque;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -15,7 +20,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.util.OfficeDocumentSanitizer;
 
-/** Blanks resolving Word field instructions while preserving offsets and field-result text. */
+/**
+ * Uses field tables and text pieces to blank resolving instructions without rewriting other data.
+ */
 @Slf4j
 final class WordBinarySanitizer {
 
@@ -56,15 +63,25 @@ final class WordBinarySanitizer {
 
     private static final int MAX_KEYWORD_LENGTH = 32;
 
-    // No genuine field instruction runs anything like this long; the cap bounds the rewrite a
-    // stream with no terminating field character could otherwise provoke.
     private static final int MAX_INSTRUCTION_CHARS = 8192;
 
-    // WW8 stores a text run either compressed to one byte per character or as UTF-16LE.
-    private static final int[] CHARACTER_WIDTHS = {1, 2};
+    // MS-DOC story order; each field table uses character positions relative to its own story.
+    private static final int[] FIELD_TABLE_INDEXES = {16, 18, 17, 20, 19, 48, 57, 59};
 
-    // Stands in for a UTF-16 character no keyword or reference can be written with.
-    private static final char NON_ASCII = '\uFFFF';
+    private record TextPiece(int start, int end, int offset, int width) {
+        int byteOffset(int cp) {
+            return offset + (cp - start) * width;
+        }
+    }
+
+    private static final class Field {
+        final int begin;
+        int separator = -1;
+
+        Field(int begin) {
+            this.begin = begin;
+        }
+    }
 
     private WordBinarySanitizer() {}
 
@@ -80,10 +97,7 @@ final class WordBinarySanitizer {
                     fileSystem.createDocumentInputStream(WORD_DOCUMENT_STREAM)) {
                 stream = in.readAllBytes();
             }
-            int blanked = 0;
-            for (int characterWidth : CHARACTER_WIDTHS) {
-                blanked += blankResolvingFields(stream, characterWidth);
-            }
+            int blanked = blankResolvingFields(stream, root);
             if (blanked == 0) {
                 return;
             }
@@ -97,49 +111,200 @@ final class WordBinarySanitizer {
         }
     }
 
-    private static int blankResolvingFields(byte[] stream, int characterWidth) {
+    private static int blankResolvingFields(byte[] stream, DirectoryNode root) throws IOException {
+        int version = unsignedShort(stream, 2);
+        boolean modern = version >= 0xC1;
+        require(modern || (version >= 0x65 && version <= 0x68));
+        int flags = unsignedShort(stream, 10);
+        require((flags & 0x8100) == 0);
+        int pairs = modern ? 154 : 88;
+        if (modern) {
+            require(unsignedShort(stream, 32) == 14 && unsignedShort(stream, 62) == 22);
+            require(unsignedShort(stream, 152) >= 60);
+            bounds(stream, pairs, Math.multiplyExact(unsignedShort(stream, 152), 8));
+        }
+        byte[] table = stream;
+        if (modern) {
+            try (DocumentInputStream in =
+                    root.createDocumentInputStream((flags & 0x200) == 0 ? "0Table" : "1Table")) {
+                table = in.readAllBytes();
+            }
+        }
+        int[] lengths = new int[FIELD_TABLE_INDEXES.length];
+        int total = 0;
+        for (int i = 0; i < lengths.length; i++) {
+            lengths[i] = nonnegativeInt(stream, (modern ? 76 : 52) + i * 4);
+            total = Math.addExact(total, lengths[i]);
+        }
+        require(total <= stream.length);
+        List<TextPiece> pieces = textPieces(stream, table, modern, flags, pairs, total);
+        BitSet erase = new BitSet();
+        BitSet markers = new BitSet();
+        int storyStart = 0;
         int blanked = 0;
-        for (int i = 0; i + characterWidth <= stream.length; i++) {
-            if (!isCharacter(stream, i, characterWidth, FIELD_BEGIN)) {
-                continue;
+        for (int i = 0; i < lengths.length; i++) {
+            int index = FIELD_TABLE_INDEXES[i];
+            int pair = pairs + index * 8 + (!modern && index >= 38 ? 10 : 0);
+            int size = nonnegativeInt(stream, pair + 4);
+            if (size != 0) {
+                int offset = nonnegativeInt(stream, pair);
+                bounds(table, offset, size);
+                require(size >= 4 && (size - 4) % 6 == 0);
+                int count = (size - 4) / 6;
+                Deque<Field> stack = new ArrayDeque<>();
+                int previous = -1;
+                for (int n = 0; n < count; n++) {
+                    int relative = nonnegativeInt(table, offset + n * 4);
+                    require(relative > previous && relative < lengths[i]);
+                    previous = relative;
+                    int cp = Math.addExact(storyStart, relative);
+                    int marker = table[offset + (count + 1) * 4 + n * 2] & 0x1F;
+                    require(character(stream, pieces, cp) == marker);
+                    markers.set(cp);
+                    switch (marker) {
+                        case FIELD_BEGIN -> stack.push(new Field(cp));
+                        case FIELD_SEPARATOR -> {
+                            require(!stack.isEmpty() && stack.peek().separator == -1);
+                            stack.peek().separator = cp;
+                        }
+                        case FIELD_END -> {
+                            require(!stack.isEmpty());
+                            Field field = stack.pop();
+                            int end = field.separator < 0 ? cp : field.separator;
+                            int start = field.begin + 1;
+                            require(end - start <= MAX_INSTRUCTION_CHARS);
+                            StringBuilder instruction = new StringBuilder(end - start);
+                            for (int at = start; at < end; at++) {
+                                instruction.append(character(stream, pieces, at));
+                            }
+                            if (isResolving(instruction.toString())) {
+                                // Legacy code pages can use variable-width characters; never guess
+                                // their byte widths.
+                                require(modern || instruction.chars().allMatch(c -> c < 128));
+                                erase.set(start, end);
+                                blanked++;
+                            }
+                        }
+                        default -> throw new IOException("Invalid Word field marker");
+                    }
+                }
+                require(stack.isEmpty());
+                require(nonnegativeInt(table, offset + count * 4) > previous);
             }
-            int start = i + characterWidth;
-            int end = instructionEnd(stream, i, characterWidth);
-            if (end < 0 || !isResolving(instruction(stream, start, end, characterWidth))) {
-                continue;
-            }
-            for (int at = start; at < end; at += characterWidth) {
-                stream[at] = ' ';
-                if (characterWidth == 2) {
-                    stream[at + 1] = 0;
+            storyStart = Math.addExact(storyStart, lengths[i]);
+        }
+        if (blanked == 0) {
+            return 0;
+        }
+        // Shared physical text would let an instruction rewrite alter unrelated visible text.
+        List<TextPiece> physical = new ArrayList<>(pieces);
+        physical.sort(Comparator.comparingInt(TextPiece::offset));
+        int previousEnd = 0;
+        for (TextPiece piece : physical) {
+            require(piece.offset() >= previousEnd);
+            previousEnd = piece.byteOffset(piece.end());
+        }
+        // Preserve nested field delimiters so all field tables and cached results stay valid.
+        erase.andNot(markers);
+        for (TextPiece piece : pieces) {
+            for (int cp = erase.nextSetBit(piece.start());
+                    cp >= 0 && cp < piece.end();
+                    cp = erase.nextSetBit(cp + 1)) {
+                int offset = piece.byteOffset(cp);
+                stream[offset] = ' ';
+                if (piece.width() == 2) {
+                    stream[offset + 1] = 0;
                 }
             }
-            blanked++;
-            i = end;
         }
         return blanked;
     }
 
-    /** Finds the next separator or end marker within the scan limit, or returns -1. */
-    private static int instructionEnd(byte[] stream, int fieldBegin, int characterWidth) {
-        int limit = Math.min(stream.length, fieldBegin + MAX_INSTRUCTION_CHARS * characterWidth);
-        for (int end = fieldBegin + characterWidth; end + characterWidth <= limit; ) {
-            if (isCharacter(stream, end, characterWidth, FIELD_SEPARATOR)
-                    || isCharacter(stream, end, characterWidth, FIELD_END)) {
-                return end;
-            }
-            end += characterWidth;
+    private static List<TextPiece> textPieces(
+            byte[] stream, byte[] table, boolean modern, int flags, int pairs, int total)
+            throws IOException {
+        int min = nonnegativeInt(stream, 24);
+        require(min >= (modern ? pairs + unsignedShort(stream, 152) * 8 : 586));
+        if (!modern && (flags & 4) == 0) {
+            bounds(stream, min, total);
+            return List.of(new TextPiece(0, total, min, 1));
         }
-        return -1;
+        int clx = nonnegativeInt(stream, pairs + 33 * 8);
+        int size = nonnegativeInt(stream, pairs + 33 * 8 + 4);
+        bounds(table, clx, size);
+        int limit = clx + size;
+        while (clx < limit && table[clx] == 1) {
+            require(limit - clx >= 3);
+            int skip = 3 + unsignedShort(table, clx + 1);
+            require(skip <= limit - clx);
+            clx += skip;
+        }
+        require(limit - clx >= 5 && table[clx] == 2);
+        int length = nonnegativeInt(table, clx + 1);
+        require(length >= 4 && (length - 4) % 12 == 0 && length == limit - clx - 5);
+        int count = (length - 4) / 12;
+        int cps = clx + 5;
+        int descriptors = cps + (count + 1) * 4;
+        List<TextPiece> pieces = new ArrayList<>();
+        require(nonnegativeInt(table, cps) == 0);
+        for (int n = 0; n < count; n++) {
+            int start = nonnegativeInt(table, cps + n * 4);
+            int end = nonnegativeInt(table, cps + (n + 1) * 4);
+            require(end > start);
+            int fc = nonnegativeInt(table, descriptors + n * 8 + 2);
+            boolean compressed = !modern || (fc & 0x40000000) != 0;
+            int offset = modern && compressed ? (fc & 0x3FFFFFFF) / 2 : fc;
+            int width = compressed ? 1 : 2;
+            require(offset >= min);
+            require(!modern || !compressed || (fc & 1) == 0);
+            bounds(stream, offset, Math.multiplyExact(end - start, width));
+            pieces.add(new TextPiece(start, end, offset, width));
+        }
+        require(!pieces.isEmpty() && pieces.getLast().end() >= total);
+        return pieces;
     }
 
-    private static String instruction(byte[] stream, int start, int end, int characterWidth) {
-        StringBuilder instruction = new StringBuilder((end - start) / characterWidth);
-        for (int at = start; at + characterWidth <= end; at += characterWidth) {
-            boolean ascii = characterWidth == 1 || stream[at + 1] == 0;
-            instruction.append(ascii ? (char) (stream[at] & 0xFF) : NON_ASCII);
+    private static char character(byte[] stream, List<TextPiece> pieces, int cp)
+            throws IOException {
+        int low = 0;
+        int high = pieces.size() - 1;
+        while (low <= high) {
+            int middle = (low + high) >>> 1;
+            TextPiece piece = pieces.get(middle);
+            if (cp < piece.start()) {
+                high = middle - 1;
+            } else if (cp >= piece.end()) {
+                low = middle + 1;
+            } else {
+                int offset = piece.byteOffset(cp);
+                return (char)
+                        (piece.width() == 2
+                                ? unsignedShort(stream, offset)
+                                : stream[offset] & 0xFF);
+            }
         }
-        return instruction.toString();
+        throw new IOException("Word field is outside the text pieces");
+    }
+
+    private static int unsignedShort(byte[] bytes, int offset) throws IOException {
+        bounds(bytes, offset, 2);
+        return (bytes[offset] & 0xFF) | (bytes[offset + 1] & 0xFF) << 8;
+    }
+
+    private static int nonnegativeInt(byte[] bytes, int offset) throws IOException {
+        int value = unsignedShort(bytes, offset) | unsignedShort(bytes, offset + 2) << 16;
+        require(value >= 0);
+        return value;
+    }
+
+    private static void bounds(byte[] bytes, int offset, int length) throws IOException {
+        require(offset >= 0 && length >= 0 && offset <= bytes.length - length);
+    }
+
+    private static void require(boolean valid) throws IOException {
+        if (!valid) {
+            throw new IOException("Invalid or unsupported Word field metadata");
+        }
     }
 
     private static boolean isResolving(String instruction) {
@@ -196,12 +361,5 @@ final class WordBinarySanitizer {
 
     private static boolean isAsciiLetter(char character) {
         return (character >= 'A' && character <= 'Z') || (character >= 'a' && character <= 'z');
-    }
-
-    private static boolean isCharacter(byte[] stream, int offset, int characterWidth, int value) {
-        if (offset < 0 || offset + characterWidth > stream.length) {
-            return false;
-        }
-        return (stream[offset] & 0xFF) == value && (characterWidth == 1 || stream[offset + 1] == 0);
     }
 }
