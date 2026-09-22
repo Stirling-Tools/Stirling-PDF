@@ -78,6 +78,12 @@ references. The pre-upgrade snapshot reads their contents, while the upgraded
 snapshot expects current text/JSON storage. Keeping an OID number without
 converting its contents therefore fails the test.
 
+Startup converts these legacy large objects in a transaction before Hibernate
+updates the schema. The migration uses the audit column's `oid` type as its
+legacy marker, so subsequent starts leave ordinary numeric settings alone.
+Missing large objects abort startup and roll back the conversion. This does
+not repair databases already upgraded to text containing unresolved references.
+
 Generated values can differ between H2 and PostgreSQL; each PostgreSQL upgrade
 must preserve its own values. User timestamps and license entitlements are
 excluded because startup may change them. File storage, workflows, invites,
