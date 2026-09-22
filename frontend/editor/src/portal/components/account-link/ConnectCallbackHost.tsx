@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
+import { clearAccountLinkBlock } from "@app/services/accountLinkBlock";
 import { useLocation, useNavigate } from "react-router-dom";
 import { completeConnect, type ConnectPhase } from "@app/portal/api/link";
 import { ensureSaasSupabase } from "@app/portal/auth/saasSupabase";
@@ -131,6 +132,7 @@ export function ConnectCallbackHost() {
             return;
           }
           accepted = true;
+          clearAccountLinkBlock();
           await refreshRef.current();
           if (!current()) return;
         }

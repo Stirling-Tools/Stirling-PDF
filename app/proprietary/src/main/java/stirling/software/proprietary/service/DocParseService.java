@@ -82,6 +82,32 @@ public class DocParseService {
         }
     }
 
+    /** Live readiness for guided setup; unavailable engines cannot enable ingestion policies. */
+    public record Capabilities(
+            boolean enabled, boolean engineReachable, boolean indexingConfigured) {}
+
+    private record EngineCapabilities(boolean indexingConfigured) {}
+
+    /**
+     * Probe current engine readiness without ingesting documents or calling an embedding provider.
+     */
+    public Capabilities capabilities() {
+        boolean enabled = applicationProperties.getDocparse().isEnabled();
+        if (!enabled || !applicationProperties.getAiEngine().isEnabled()) {
+            return new Capabilities(enabled, false, false);
+        }
+        try {
+            EngineCapabilities result =
+                    objectMapper.readValue(
+                            aiEngineClient.get("/api/v1/docparse/capabilities", currentUserId()),
+                            EngineCapabilities.class);
+            return new Capabilities(enabled, true, result.indexingConfigured());
+        } catch (IOException | RuntimeException e) {
+            log.debug("Could not check ingestion readiness: {}", e.getMessage());
+            return new Capabilities(enabled, false, false);
+        }
+    }
+
     /**
      * Convert the document to Markdown blocks, then chunk, embed, and index them into the engine's
      * knowledge base and/or hand them back for corpus export.
