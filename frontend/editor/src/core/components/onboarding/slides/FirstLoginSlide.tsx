@@ -7,6 +7,7 @@ import { Icon } from "@app/ui/Icon";
 import { UNIFIED_CIRCLE_CONFIG } from "@app/components/onboarding/slides/unifiedBackgroundConfig";
 import { accountService } from "@app/services/accountService";
 import { alert as showToast } from "@app/components/toast";
+import { MIN_PASSWORD_LENGTH } from "@app/constants/passwordPolicy";
 import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
 
 interface FirstLoginSlideProps {
@@ -52,7 +53,7 @@ function FirstLoginForm({
       return;
     }
 
-    if (newPassword.length < 8) {
+    if (newPassword.length < MIN_PASSWORD_LENGTH) {
       setError(
         t(
           "firstLogin.passwordTooShort",
@@ -203,8 +204,8 @@ function FirstLoginForm({
               disabled={
                 !newPassword ||
                 !confirmPassword ||
-                newPassword.length < 8 ||
-                confirmPassword.length < 8
+                newPassword.length < MIN_PASSWORD_LENGTH ||
+                confirmPassword.length < MIN_PASSWORD_LENGTH
               }
               size="md"
               style={{ marginTop: "var(--mantine-spacing-xs)" }}

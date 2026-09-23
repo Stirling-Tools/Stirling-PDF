@@ -21,6 +21,8 @@ import "@app/auth/ui/auth.css";
 import { BASE_PATH } from "@app/constants/app";
 import apiClient from "@app/services/apiClient";
 import { Button } from "@app/ui/Button";
+import { MIN_PASSWORD_LENGTH } from "@app/constants/passwordPolicy";
+
 interface InviteData {
   email: string | null;
   role: string;
@@ -112,6 +114,15 @@ export default function InviteAccept() {
       return;
     }
 
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setError(
+        t("invite.passwordTooShort", "Password must be at least 8 characters", {
+          count: MIN_PASSWORD_LENGTH,
+        }),
+      );
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError(t("invite.passwordMismatch", "Passwords do not match"));
       return;
@@ -135,7 +146,9 @@ export default function InviteAccept() {
       navigate("/login?messageType=accountCreated");
     } catch (err: unknown) {
       const errorMessage = isAxiosError(err)
-        ? err.response?.data?.error || err.message
+        ? err.response?.data?.message ||
+          err.response?.data?.error ||
+          err.message
         : (err instanceof Error ? err.message : undefined) ||
           t("invite.acceptError", "Failed to create account");
       setError(errorMessage);
@@ -215,7 +228,7 @@ export default function InviteAccept() {
 
       <ErrorMessage error={error} />
 
-      <form onSubmit={handleAccept}>
+      <form onSubmit={handleAccept} noValidate>
         <div className="auth-fields">
           {inviteData?.emailRequired && (
             <div className="auth-field">
@@ -240,6 +253,9 @@ export default function InviteAccept() {
           <div className="auth-field">
             <PasswordInput
               label={t("invite.choosePassword", "Choose a password")}
+              description={t("invite.passwordHint", "At least 8 characters", {
+                count: MIN_PASSWORD_LENGTH,
+              })}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder={t(
@@ -248,6 +264,7 @@ export default function InviteAccept() {
               )}
               disabled={submitting}
               required
+              minLength={MIN_PASSWORD_LENGTH}
               autoComplete="new-password"
               classNames={{ label: "auth-label" }}
               styles={authInputStyles}
