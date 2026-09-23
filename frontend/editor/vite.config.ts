@@ -80,8 +80,9 @@ async function compressFile(file: string, distDir: string): Promise<void> {
   ]);
 }
 
-// Bounds the zlib queue by the batch (two encoder jobs per file) instead of
-// letting the whole dist queue at once.
+// Bounds the zlib queue by the batch instead of letting the whole dist queue
+// at once: 16 files per batch with both encoders in flight, so up to 32 jobs
+// share the 16-thread libuv pool set by the build entrypoints.
 const COMPRESSION_BATCH_FILES = 16;
 
 async function compressFiles(files: string[], distDir: string): Promise<void> {
