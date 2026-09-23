@@ -6,7 +6,7 @@ import { constants, brotliCompress, gzip } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { defineConfig, loadEnv } from "vite";
-import type { Connect, PluginOption } from "vite";
+import type { Connect, PluginOption, Rollup } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
 import { iconSvgr } from "./scripts/icons/svgrOptions.mts";
@@ -15,6 +15,32 @@ import { viteStaticCopy } from "vite-plugin-static-copy";
 const gzipPromise = promisify(gzip);
 const brotliPromise = promisify(brotliCompress);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+type ManualChunkMeta = Parameters<Rollup.GetManualChunk>[1];
+
+const startupModulesByOutput = new WeakMap<ManualChunkMeta, Set<string>>();
+
+/**
+ * The modules the entry imports statically. These load before first render in
+ * whichever chunk they sit, so a chunk every page loads should hold only these.
+ * Rollup hands manualChunks the module graph once per output, so the walk runs
+ * once per build.
+ */
+function startupModules(meta: ManualChunkMeta): Set<string> {
+  let modules = startupModulesByOutput.get(meta);
+  if (modules) return modules;
+  modules = new Set();
+  const queue = [...meta.getModuleIds()].filter(
+    (id) => meta.getModuleInfo(id)?.isEntry,
+  );
+  for (const id of queue) {
+    if (modules.has(id)) continue;
+    modules.add(id);
+    queue.push(...(meta.getModuleInfo(id)?.importedIds ?? []));
+  }
+  startupModulesByOutput.set(meta, modules);
+  return modules;
+}
 
 function compressStaticCopyPlugin(): PluginOption {
   return {
@@ -431,7 +457,7 @@ export default defineConfig(async ({ mode, command }) => {
       },
       rollupOptions: {
         output: {
-          manualChunks(id: string) {
+          manualChunks(id: string, meta: ManualChunkMeta) {
             if (id.includes("material-symbols-icons.json"))
               return "vendor-iconset";
             // An asset URL import compiles to a single string. Filed by package
@@ -454,7 +480,10 @@ export default defineConfig(async ({ mode, command }) => {
                 id.includes("@mui") ||
                 id.includes("@iconify")
               ) {
-                return "vendor-ui";
+                // Every page loads vendor-ui, and by package name it also took
+                // libraries only some screens use, such as the markdown
+                // renderer and the date pickers. Those now go with the screens.
+                return startupModules(meta).has(id) ? "vendor-ui" : undefined;
               }
               if (id.includes("@supabase")) return "vendor-supabase";
               if (id.includes("posthog-js") || id.includes("@posthog"))
