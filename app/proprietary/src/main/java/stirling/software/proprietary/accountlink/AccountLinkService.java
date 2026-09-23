@@ -72,6 +72,11 @@ public class AccountLinkService {
         return status();
     }
 
+    /** Local only: unlike {@link #status()}, never refreshes entitlement from Stirling Cloud. */
+    public boolean isLinked() {
+        return credentialStore.isLinked();
+    }
+
     public LinkStatus status() {
         Optional<DeviceCredential> cred = credentialStore.get();
         if (cred.isPresent()) entitlementCache.current();

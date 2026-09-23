@@ -17,6 +17,8 @@ import apiClient from "@app/services/apiClient";
 import { Button } from "@app/ui/Button";
 import { StatusBadge } from "@app/ui/StatusBadge";
 import { Switch, Anchor } from "@mantine/core";
+import { useAuth } from "@app/auth/context";
+import { HAS_PORTAL } from "@app/routes/hasPortal";
 import { useAccountLinked } from "@app/components/shared/config/configSections/ai/useAiEngineStatus";
 import type { AiCardProps } from "@app/components/shared/config/configSections/ai/aiCardProps";
 import "@app/components/shared/config/configSections/ai/AiModeOption.css";
@@ -120,6 +122,10 @@ export function AiConnectionCard({
   const [testingConnection, setTestingConnection] = useState(false);
   const enabled = settings.enabled || false;
   const linked = useAccountLinked();
+  const { isAdmin, user, portalAccess } = useAuth();
+  const isOwner = isAdmin && user?.orgOwner === true;
+  // Mirrors useSettingsNav, which lists the account-link page only for the owner in portal builds.
+  const canOpenAccountLink = HAS_PORTAL && portalAccess && isOwner;
   const mode: AiMode = !enabled
     ? "off"
     : settings.mode === "CLOUD"
@@ -369,7 +375,7 @@ export function AiConnectionCard({
             ) : null
           }
           footer={
-            linked === false ? (
+            linked !== false ? null : canOpenAccountLink ? (
               <Anchor
                 href="/settings/account-link"
                 size="sm"
@@ -383,6 +389,13 @@ export function AiConnectionCard({
                 )}{" "}
                 &rsaquo;
               </Anchor>
+            ) : !isOwner ? (
+              <Text size="sm" c="dimmed">
+                {t(
+                  "admin.settings.ai.general.mode.cloud.ownerOnly",
+                  "Only the organization owner can link this server to a Stirling account.",
+                )}
+              </Text>
             ) : null
           }
         >

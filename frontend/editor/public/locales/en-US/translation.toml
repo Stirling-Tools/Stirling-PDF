@@ -831,6 +831,7 @@ label = "Where AI runs"
 description = "No container, no provider key, no model choice - the work runs on Stirling Cloud and is billed to the account this server is linked to."
 linkCta = "Connect this server to a Stirling account"
 notLinked = "Link an account first"
+ownerOnly = "Only the organization owner can link this server to a Stirling account."
 title = "Use Stirling Cloud AI"
 
 [admin.settings.ai.general.mode.off]

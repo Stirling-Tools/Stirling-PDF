@@ -11,6 +11,16 @@ import type { Page, Route } from "@playwright/test";
 
 test.use({ stubOptions: { enableLogin: true, isAdmin: true }, seedJwt: true });
 
+/** The organization owner, the only admin the account-link page is listed for. */
+const OWNER = {
+  id: 1,
+  username: "owner",
+  email: "owner@example.com",
+  roles: ["ROLE_ADMIN"],
+  role: "ROLE_ADMIN",
+  orgOwner: true,
+};
+
 const ENABLED_SETTINGS = {
   enabled: true,
   url: "http://stirling-engine:5001",
@@ -41,7 +51,7 @@ async function openAiSettings(
   // null leaves the link status unanswered, as it is while the request is in flight.
   linked: boolean | null = false,
 ) {
-  await page.route("**/api/v1/account-link/status", (route: Route) =>
+  await page.route("**/api/v1/account-link/linked", (route: Route) =>
     linked === null ? undefined : route.fulfill({ json: { linked } }),
   );
   await page.route(
@@ -304,19 +314,70 @@ test("a server already in cloud mode opens on it", async ({ page }) => {
   ).toBeChecked();
 });
 
-test("an unlinked server is pointed at where to link one", async ({ page }) => {
-  await openAiSettings(
-    page,
-    { enabled: true, reachable: true, authenticated: true },
-    ENABLED_SETTINGS,
-    false,
-  );
+test.describe("as the organization owner", () => {
+  test.use({ stubOptions: { enableLogin: true, isAdmin: true, user: OWNER } });
 
-  const link = page.getByRole("link", {
-    name: /Connect this server to a Stirling account/i,
+  test("an unlinked server is pointed at where to link one", async ({
+    page,
+  }) => {
+    await openAiSettings(
+      page,
+      { enabled: true, reachable: true, authenticated: true },
+      ENABLED_SETTINGS,
+      false,
+    );
+
+    const link = page.getByRole("link", {
+      name: /Connect this server to a Stirling account/i,
+    });
+    await expect(link).toBeVisible();
+    await expect(link).toHaveAttribute("href", "/settings/account-link");
   });
-  await expect(link).toBeVisible();
-  await expect(link).toHaveAttribute("href", "/settings/account-link");
+});
+
+test.describe("as an admin who is not the owner", () => {
+  test.use({
+    stubOptions: {
+      enableLogin: true,
+      isAdmin: true,
+      user: { ...OWNER, id: 2, username: "admin", orgOwner: false },
+    },
+  });
+
+  test("an unlinked server says only the owner can link it", async ({
+    page,
+  }) => {
+    await openAiSettings(
+      page,
+      { enabled: true, reachable: true, authenticated: true },
+      ENABLED_SETTINGS,
+      false,
+    );
+
+    await expect(
+      page.getByText(/Only the organization owner can link this server/i),
+    ).toBeVisible();
+    // The account-link page is not listed for them, so a link there would lead nowhere.
+    await expect(
+      page.getByRole("link", {
+        name: /Connect this server to a Stirling account/i,
+      }),
+    ).toHaveCount(0);
+  });
+
+  test("a linked server offers cloud AI to them too", async ({ page }) => {
+    await openAiSettings(
+      page,
+      { enabled: true, reachable: true, authenticated: true },
+      ENABLED_SETTINGS,
+      true,
+    );
+
+    await expect(
+      page.getByRole("radio", { name: /Stirling Cloud AI/i }),
+    ).toBeEnabled();
+    await expect(page.getByText(/Link an account first/i)).toHaveCount(0);
+  });
 });
 
 test("cloud mode reports on Stirling Cloud, not on a local engine", async ({

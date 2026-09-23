@@ -104,8 +104,11 @@ export function useAccountLinked() {
 
   useEffect(() => {
     let live = true;
+    // /linked, not /status: status is owner-only, and any admin can open this page.
     apiClient
-      .get<{ linked?: boolean }>("/api/v1/account-link/status")
+      .get<{ linked?: boolean }>("/api/v1/account-link/linked", {
+        suppressErrorToast: true,
+      })
       .then((response) => {
         if (live) setLinked(response.data?.linked ?? false);
       })
