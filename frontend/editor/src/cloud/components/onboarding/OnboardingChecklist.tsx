@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { useAuth } from "@app/auth/UseSession";
-import { useTeamAuth } from "@app/auth/teamSession";
+import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
 import {
   useChecklistSetupItem,
   type ChecklistItem,
@@ -31,7 +31,7 @@ const STEP_SHARE_ANALYTICS = "share-analytics";
 export function OnboardingChecklist() {
   const { t } = useTranslation();
   const { isAnonymous, loading } = useAuth();
-  const { canUseTeams } = useTeamAuth();
+  const { isTeamLeader } = useSaaSTeam();
 
   const [dismissed, setDismissed] = useState(() => hasSeenFlow(FLOW_ID));
   const [done, setDone] = useState<string[]>(() => getFlowProgress(FLOW_ID));
@@ -59,7 +59,7 @@ export function OnboardingChecklist() {
 
   const items: ChecklistItem[] = [
     ...(setup.item ? [setup.item] : []),
-    ...(canUseTeams
+    ...(isTeamLeader
       ? [
           {
             id: STEP_INVITE_TEAM,
