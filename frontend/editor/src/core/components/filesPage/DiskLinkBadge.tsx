@@ -1,8 +1,6 @@
 import { useTranslation } from "react-i18next";
+import { Icon } from "@app/ui/Icon";
 import { Tooltip } from "@mantine/core";
-import LinkOffIcon from "@mui/icons-material/LinkOff";
-import SyncProblemIcon from "@mui/icons-material/SyncProblem";
-import CloudOffIcon from "@mui/icons-material/CloudOff";
 
 import { StirlingFileStub } from "@app/types/fileContext";
 import { diskLinkState } from "@app/services/diskLinkState";
@@ -56,7 +54,7 @@ export function DiskLinkBadge({ file, compact = false }: DiskLinkBadgeProps) {
     state === "unavailable"
       ? {
           label: t("filesPage.diskLink.unavailable", "Unavailable"),
-          icon: <CloudOffIcon style={{ fontSize: "0.85rem" }} />,
+          icon: <Icon name="cloud-off" size={"0.85rem"} />,
           tooltip: t(
             ...unavailableHint[file.diskUnavailableReason ?? "unknown"],
           ),
@@ -68,7 +66,7 @@ export function DiskLinkBadge({ file, compact = false }: DiskLinkBadgeProps) {
       : state === "orphaned"
         ? {
             label: t("filesPage.diskLink.orphaned", "Not on disk"),
-            icon: <LinkOffIcon style={{ fontSize: "0.85rem" }} />,
+            icon: <Icon name="unlink" size={"0.85rem"} />,
             tooltip: t(
               "filesPage.diskLink.orphanedHint",
               "The original at {{path}} is gone. This copy is only here - saving it will ask for a new location.",
@@ -77,7 +75,7 @@ export function DiskLinkBadge({ file, compact = false }: DiskLinkBadgeProps) {
           }
         : {
             label: t("filesPage.diskLink.conflict", "Disk changed"),
-            icon: <SyncProblemIcon style={{ fontSize: "0.85rem" }} />,
+            icon: <Icon name="refresh-cw-off" size={"0.85rem"} />,
             tooltip: t(
               "filesPage.diskLink.conflictHint",
               "The file on disk changed while you had unsaved edits. Your version is shown - saving will overwrite the one on disk.",

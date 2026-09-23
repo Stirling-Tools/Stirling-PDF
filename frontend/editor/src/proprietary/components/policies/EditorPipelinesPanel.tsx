@@ -1,10 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import InputOutlinedIcon from "@mui/icons-material/InputOutlined";
-import OutputOutlinedIcon from "@mui/icons-material/OutputOutlined";
+import { Icon } from "@app/ui/Icon";
 import { usePortalAccess } from "@app/hooks/usePortalAccess";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { PORTAL_BASENAME } from "@app/routes/portalBasename";
@@ -20,7 +17,7 @@ import "@app/components/policies/EditorPipelinesPanel.css";
 
 const PIPELINES_PATH = `${PORTAL_BASENAME}/pipelines`;
 const ICON_SIZE = "1.05rem";
-const TRIGGER_SX = { fontSize: "0.8125rem" } as const;
+const TRIGGER_SIZE = "0.8125rem";
 
 function rowState(pipeline: EditorPipeline): "running" | "failed" | "idle" {
   if (pipeline.running) return "running";
@@ -52,8 +49,7 @@ function PipelineRow({
     pipeline.runOn === "export"
       ? t("policies.editorPanel.triggerExport", "Runs on export")
       : t("policies.editorPanel.triggerImport", "Runs on import");
-  const TriggerIcon =
-    pipeline.runOn === "export" ? OutputOutlinedIcon : InputOutlinedIcon;
+  const triggerIcon = pipeline.runOn === "export" ? "log-out" : "log-in";
 
   const body = (
     <>
@@ -61,10 +57,11 @@ function PipelineRow({
         {policyCategoryIcon(pipeline.policyKey, ICON_SIZE)}
       </span>
       <span className="editor-pipelines__row-label">{pipeline.label}</span>
-      <TriggerIcon
+      <Icon
+        name={triggerIcon}
         className="editor-pipelines__row-trigger"
-        sx={TRIGGER_SX}
-        titleAccess={trigger}
+        size={TRIGGER_SIZE}
+        title={trigger}
       />
       {pipeline.runsToday > 0 && (
         <span
@@ -131,12 +128,12 @@ export function EditorPipelinesPanelView({
           <span className="editor-pipelines__title">
             {t("policies.editorPanel.title", "PDF Processor")}
           </span>
+          {/* The span carries data-open and the class: <Icon> forwards no data-*
+              attributes, and the css rotates on that hook. */}
           {total > 0 && (
-            <ExpandMoreIcon
-              className="editor-pipelines__chevron"
-              data-open={open}
-              sx={{ fontSize: "1.1rem" }}
-            />
+            <span className="editor-pipelines__chevron" data-open={open}>
+              <Icon name="chevron-down" size={"1.1rem"} />
+            </span>
           )}
         </button>
         {onOpenProcessor && (
@@ -150,7 +147,7 @@ export function EditorPipelinesPanelView({
               "Open the PDF Processor",
             )}
           >
-            <OpenInNewIcon sx={{ fontSize: "1rem" }} />
+            <Icon name="external-link" size={"1rem"} />
           </ActionIcon>
         )}
       </div>
