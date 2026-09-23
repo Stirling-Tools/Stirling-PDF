@@ -115,6 +115,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # Stage 3: Final runtime image on top of pre-built base
 FROM ${BASE_IMAGE}
 
+RUN test -s /usr/local/lib/stirling/soffice_no_network.so || \
+    { echo "Base image lacks the LibreOffice network guard; rebuild docker/base and set BASE_IMAGE." >&2; exit 1; }
+
 ARG VERSION_TAG
 
 WORKDIR /app
