@@ -33,9 +33,8 @@ export function healthOf(
 }
 
 /**
- * Polls the engine status endpoint, and tracks when it last answered so the card can say how stale
- * it is. Only fetches while AI is enabled: with it off the backend short-circuits anyway, and an
- * admin toggling the switch should not trigger a round trip per keystroke elsewhere on the page.
+ * Fetches the status once on open and again on demand, never on a timer; skipped while AI is off.
+ * Tracks when it last answered so the card can say how stale it is.
  */
 export function useAiEngineStatus(enabled: boolean) {
   const [status, setStatus] = useState<AiEngineStatusData | null>(null);
