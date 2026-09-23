@@ -721,5 +721,44 @@ class PdfMetadataServiceTest {
                 assertNotNull(doc.getDocumentCatalog().getMetadata());
             }
         }
+
+        @Test
+        void reservedPdfxKeysAreRejectedAndLeaveTheConformanceStatement() throws Exception {
+            PdfMetadataService service = nonProService(null);
+            try (PDDocument doc = new PDDocument()) {
+                doc.addPage(new PDPage());
+
+                XMPMetadata initialXmp = XMPMetadata.createXMPMetadata();
+                XMPSchema pdfxInitial =
+                        new XMPSchema(initialXmp, PdfMetadataService.PDFX_NAMESPACE, "pdfx");
+                pdfxInitial.setTextPropertyValueAsSimple("GTS_PDFXVersion", "PDF/X-1:2001");
+                initialXmp.addSchema(pdfxInitial);
+
+                ByteArrayOutputStream xmpBaos = new ByteArrayOutputStream();
+                new XmpSerializer().serialize(initialXmp, xmpBaos, true);
+                PDMetadata pdMetadata = new PDMetadata(doc);
+                pdMetadata.importXMPMetadata(xmpBaos.toByteArray());
+                doc.getDocumentCatalog().setMetadata(pdMetadata);
+
+                // A case-variant custom key must not delete the canonical property.
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () ->
+                                service.synchronizeXmpMetadata(
+                                        doc, Map.of("gts_pdfxversion", "PDF/X-4")));
+
+                DomXmpParser parser = new DomXmpParser();
+                parser.setStrictParsing(false);
+                XMPMetadata xmp =
+                        parser.parse(
+                                new ByteArrayInputStream(
+                                        doc.getDocumentCatalog().getMetadata().toByteArray()));
+                XMPSchema pdfx = xmp.getSchema(PdfMetadataService.PDFX_NAMESPACE);
+                assertNotNull(pdfx);
+                assertEquals(
+                        "PDF/X-1:2001", pdfx.getUnqualifiedTextPropertyValue("GTS_PDFXVersion"));
+                assertNull(pdfx.getAbstractProperty("gts_pdfxversion"));
+            }
+        }
     }
 }

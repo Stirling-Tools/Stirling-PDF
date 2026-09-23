@@ -38,6 +38,7 @@ import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -63,6 +64,24 @@ public class MetadataController {
                     "deleteall",
                     "fileinput",
                     "allrequestparams");
+
+    /**
+     * Info fields PDFBox manages as first-class properties. A custom key that matches one
+     * case-insensitively would collide with the dedicated request fields, and the case-variant
+     * cleanup could delete the real field.
+     */
+    private static final Set<String> RESERVED_INFO_KEYS =
+            Set.of(
+                    "author",
+                    "creationdate",
+                    "creator",
+                    "keywords",
+                    "modificationdate",
+                    "moddate",
+                    "producer",
+                    "subject",
+                    "title",
+                    "trapped");
 
     private static final Pattern CUSTOM_KEY_PATTERN = Pattern.compile("^customKey(\\d*)$");
     private static final Pattern BRACKET_PARAM_PATTERN =
@@ -158,6 +177,8 @@ public class MetadataController {
                 }
             }
         }
+
+        rejectReservedCustomKeys(customMetadata);
 
         try (PDDocument document = pdfDocumentFactory.load(pdfFile, true)) {
 
@@ -291,5 +312,17 @@ public class MetadataController {
 
     public ResponseEntity<Resource> metadata(MetadataRequest request) throws IOException {
         return metadata(request, null);
+    }
+
+    /** Fails before any mutation when a custom key would shadow a standard Info field. */
+    private static void rejectReservedCustomKeys(Map<String, String> customMetadata) {
+        for (String key : customMetadata.keySet()) {
+            if (RESERVED_INFO_KEYS.contains(key.toLowerCase(Locale.ROOT))) {
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.reservedMetadataKey",
+                        "Custom metadata key ''{0}'' matches a standard PDF information field",
+                        key);
+            }
+        }
     }
 }

@@ -228,6 +228,23 @@ class MetadataControllerTest {
     }
 
     @Test
+    void testMetadata_reservedInfoKeyIsRejected() throws Exception {
+        when(pdfDocumentFactory.load(any(MultipartFile.class), eq(true))).thenReturn(mockDocument);
+
+        Map<String, String> params = new HashMap<>();
+        params.put("customKey1", "title");
+        params.put("customValue1", "ShadowTitle");
+
+        MetadataRequest request = new MetadataRequest();
+        request.setFileInput(mockFile);
+        request.setDeleteAll(false);
+        request.setAllRequestParams(params);
+
+        assertThrows(IllegalArgumentException.class, () -> metadataController.metadata(request));
+        verify(mockInfo, never()).setCustomMetadataValue(anyString(), any());
+    }
+
+    @Test
     void testMetadata_nullAllRequestParamsDefaultsToEmptyMap() throws Exception {
         when(pdfDocumentFactory.load(any(MultipartFile.class), eq(true))).thenReturn(mockDocument);
         when(mockDocument.getDocumentInformation()).thenReturn(mockInfo);

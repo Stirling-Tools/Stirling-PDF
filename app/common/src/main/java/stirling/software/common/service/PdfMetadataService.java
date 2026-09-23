@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -52,6 +53,14 @@ public class PdfMetadataService {
     public static final String CLASSIFICATION_KEY = "StirlingPDFClassification";
 
     public static final String PDFX_NAMESPACE = "http://ns.adobe.com/pdfx/1.3/";
+
+    /**
+     * The properties the pdfx namespace defines (ISO 15930 via the ANSI CGATS GTS registry). A
+     * custom key that collides with one, case-insensitively, would clobber the PDF/X conformance
+     * statement.
+     */
+    private static final Set<String> RESERVED_PDFX_PROPERTIES =
+            Set.of("gts_pdfxversion", "gts_pdfxconformance");
 
     private static final Pattern ILLEGAL_XML_NAME_CHARS = Pattern.compile("[^A-Za-z0-9._-]");
 
@@ -545,8 +554,9 @@ public class PdfMetadataService {
 
     /**
      * Rejects custom metadata whose keys sanitize to the same XML property name (e.g. 1A and _1A):
-     * the later write would silently overwrite the earlier one. Runs before any XMP mutation so a
-     * rejection leaves the document untouched.
+     * the later write would silently overwrite the earlier one, and keys that collide with a
+     * reserved PDF/X property would replace standard conformance metadata. Runs before any XMP
+     * mutation so a rejection leaves the document untouched.
      */
     private static void validateCustomMetadataKeys(Map<String, String> customMetadata) {
         if (customMetadata == null) {
@@ -558,6 +568,12 @@ public class PdfMetadataService {
                 continue;
             }
             String cleanKey = sanitizeXmlPropertyName(rawKey.trim());
+            if (RESERVED_PDFX_PROPERTIES.contains(cleanKey.toLowerCase(Locale.ROOT))) {
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.reservedMetadataKey",
+                        "Custom metadata key ''{0}'' collides with a reserved PDF/X property",
+                        rawKey);
+            }
             String previous = seen.putIfAbsent(cleanKey, rawKey);
             if (previous != null) {
                 throw ExceptionUtils.createIllegalArgumentException(
