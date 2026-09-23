@@ -84,7 +84,11 @@ beforeEach(() => {
     originalPath: "/downloads/.stirling/a.pdf",
     run: { status: "COMPLETED" },
   });
-  mocks.readDir.mockResolvedValue([]);
+  mocks.readDir.mockImplementation(async (path) =>
+    path === folder.directory
+      ? []
+      : [{ name: entry().originalPath!.split(/[/\\]/).pop()! }],
+  );
   mocks.exists.mockImplementation(
     async (path) => path.includes("/.stirling") || mocks.present.has(path),
   );
@@ -122,10 +126,9 @@ test.each([
 
 test("a returned file resets the grace period", async () => {
   await scan(START);
-  mocks.readDir.mockResolvedValue([{ name: "a.pdf" }]);
+  mocks.readDir.mockResolvedValueOnce([{ name: "a.pdf" }]);
   await scan(START + 6 * DAY);
   expect(entry().orphanedOriginal).toBeUndefined();
-  mocks.readDir.mockResolvedValue([]);
   await scan(START + 8 * DAY);
   await scan(START + 14 * DAY);
   expect(mocks.remove).not.toHaveBeenCalled();
@@ -235,8 +238,32 @@ test("symlinked archive directories are not followed for cleanup", async () => {
 });
 
 test("a backup already deleted on disk releases its stale history", async () => {
+  mocks.readDir.mockResolvedValue([]);
   mocks.exists.mockResolvedValue(false);
   await scan(START);
   expect(mocks.remove).not.toHaveBeenCalled();
   expect(mocks.files.size).toBe(0);
+});
+
+test("unreadable backup metadata retains its history when exists returns false", async () => {
+  mocks.exists.mockResolvedValue(false);
+  mocks.lstat.mockImplementation(async (path) => {
+    if (path.endsWith(".pdf")) throw new Error("Permission denied");
+    return { isDirectory: true };
+  });
+
+  expect(await scan(START)).toEqual([entry()]);
+  expect(mocks.delete).not.toHaveBeenCalled();
+  expect(mocks.remove).not.toHaveBeenCalled();
+});
+
+test("an unreadable archive listing retains its backup history", async () => {
+  mocks.readDir.mockImplementation(async (path) => {
+    if (path !== folder.directory) throw new Error("Permission denied");
+    return [];
+  });
+
+  expect(await scan(START)).toEqual([entry()]);
+  expect(mocks.delete).not.toHaveBeenCalled();
+  expect(mocks.remove).not.toHaveBeenCalled();
 });

@@ -68,7 +68,14 @@ async function reconcileOriginal(
   if (!archive) return entry;
   const archiveInfo = await lstat(archive);
   if (!archiveInfo.isDirectory || archiveInfo.isSymlink) return entry;
-  if (!(await exists(entry.originalPath))) {
+  const originalKey = directoryKey(entry.originalPath);
+  const archived = await readDir(archive);
+  if (
+    !archived.some(
+      (file) =>
+        directoryKey(processingPath(archive, file.name)) === originalKey,
+    )
+  ) {
     await storage.deleteFile(entry.id);
     return null;
   }
