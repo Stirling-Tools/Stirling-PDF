@@ -21,9 +21,9 @@ export default defineConfig({
     "playwright-report",
     "storybook-static",
     "test-results",
-    "editor/dist",
-    "editor/public",
-    "editor/src-tauri",
+    "dist",
+    "public",
+    "src-tauri",
   ],
   rules: {
     "comments/quality": "error",

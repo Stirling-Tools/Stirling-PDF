@@ -113,7 +113,7 @@ jobs:
       - name: Flag flaky tests
         if: always()
         working-directory: frontend
-        run: npx tsx editor/scripts/report-flaky-tests.mts "$PLAYWRIGHT_JSON_OUTPUT_FILE"
+        run: npx tsx scripts/report-flaky-tests.mts "$PLAYWRIGHT_JSON_OUTPUT_FILE"
         env:
           PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results.json
           FLAKY_STRICT_BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || '' }}

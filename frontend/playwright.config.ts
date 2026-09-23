@@ -1,0 +1,207 @@
+import { defineConfig, devices } from "@playwright/test";
+
+/**
+ * Stirling-PDF E2E Test Configuration
+ *
+ * The suite is split into two projects:
+ *   - `stubbed` - backend-free specs that mock `/api/v1/*` via `page.route()`.
+ *                 Safe to run in CI without the Spring Boot server. Lives in
+ *                 `src/editor/core/tests/stubbed/**`.
+ *   - `live`    - specs that require a real backend on `localhost:8080`
+ *                 (auth, admin mutation, real tool round-trips). Lives in
+ *                 `src/editor/core/tests/live/**`.
+ *
+ * Run one:
+ *   npx playwright test --project=stubbed
+ *   npx playwright test --project=live
+ *
+ * @see https://playwright.dev/docs/test-configuration
+ */
+/** Shared by every stubbed project so a spec sees one layout on all engines. */
+const STUBBED_VIEWPORT = { width: 1920, height: 1080 };
+
+const chromiumViewport = {
+  ...devices["Desktop Chrome"],
+  viewport: STUBBED_VIEWPORT,
+};
+
+// Dedicated dev-server port via V2_PORT so local runs don't collide with a
+// vite already on 5173 from other parallel work. Defaults to 5173.
+const DEV_PORT = process.env.V2_PORT ?? "5173";
+
+// The disk-link suite needs `--mode desktop`: on any other build the file-link
+// seam is the core no-op, nothing reconciles, and every spec in it skips. Its
+// own port so it can run beside a dev server already on DEV_PORT.
+const DESKTOP_PORT = process.env.V2_DESKTOP_PORT ?? "5273";
+const DISK_LINK_SPECS = /disk-link-.*\.spec\.ts/;
+
+// The viewer swap specs sample animation frames during a byte swap and assert
+// that no frame shows the wrong position, zoom or page width. Three workers on
+// a 2-core CI runner starve that sampler, so CI runs them on their own leg with
+// one worker; the sharded stubbed projects skip them.
+const VIEWER_SWAP_SPECS =
+  /viewer-(hot-reload-matrix|in-place-reload)\.spec\.ts/;
+
+export default defineConfig({
+  testDir: "./src/editor/core/tests",
+  testMatch: "**/*.spec.ts",
+
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : "50%",
+  // In CI, add a JSON report alongside the HTML/list output so the workflow
+  // can flag flaky tests (passed only on retry) as warnings without failing
+  // the job. Path is pinned via PLAYWRIGHT_JSON_OUTPUT_FILE in the workflow;
+  // the outputFile here is just a sane default. Omitted locally to keep dev
+  // runs' terminal output clean.
+  reporter: process.env.CI
+    ? [
+        ["html", { open: "never" }],
+        ["list"],
+        ["json", { outputFile: "playwright-report/results.json" }],
+      ]
+    : [["html", { open: "never" }], ["list"]],
+  timeout: 60_000,
+  expect: { timeout: 10_000 },
+
+  use: {
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${DEV_PORT}`,
+    trace: "on-first-retry",
+    screenshot: "only-on-failure",
+    video: "on-first-retry",
+    actionTimeout: 10_000,
+    navigationTimeout: 30_000,
+  },
+
+  projects: [
+    // Stubbed - no backend required. The chromium arm of the cross-browser
+    // set below; CI fans all three out, one job per engine.
+    {
+      name: "stubbed",
+      testDir: "./src/editor/core/tests/stubbed",
+      testIgnore: [DISK_LINK_SPECS, VIEWER_SWAP_SPECS],
+      use: chromiumViewport,
+    },
+
+    // Desktop-mode arm of the stubbed suite. Separate project because it needs
+    // its own server: the seam it exercises is chosen at build time.
+    {
+      name: "stubbed-desktop",
+      testDir: "./src/editor/core/tests/stubbed",
+      testMatch: DISK_LINK_SPECS,
+      use: {
+        ...chromiumViewport,
+        baseURL: `http://localhost:${DESKTOP_PORT}`,
+      },
+    },
+
+    // Serial arm of the stubbed suite, one per engine: the frame-sampling
+    // viewer swap specs. `fullyParallel: false` keeps each file in one worker;
+    // the CI leg also passes --workers=1.
+    {
+      name: "stubbed-viewer-swap",
+      testDir: "./src/editor/core/tests/stubbed",
+      testMatch: VIEWER_SWAP_SPECS,
+      fullyParallel: false,
+      use: chromiumViewport,
+    },
+    {
+      name: "stubbed-viewer-swap-firefox",
+      testDir: "./src/editor/core/tests/stubbed",
+      testMatch: VIEWER_SWAP_SPECS,
+      fullyParallel: false,
+      use: { ...devices["Desktop Firefox"], viewport: STUBBED_VIEWPORT },
+    },
+    {
+      name: "stubbed-viewer-swap-webkit",
+      testDir: "./src/editor/core/tests/stubbed",
+      testMatch: VIEWER_SWAP_SPECS,
+      fullyParallel: false,
+      use: {
+        ...devices["Desktop Safari"],
+        viewport: STUBBED_VIEWPORT,
+        deviceScaleFactor: 1,
+      },
+    },
+
+    // Live setup - runs once before the live suite to perform the real
+    // forced-password-change first-login flow against a freshly-booted
+    // backend. The live project depends on it.
+    {
+      name: "live-setup",
+      testDir: "./src/editor/core/tests/live-setup",
+      testMatch: /.*\.setup\.ts$/,
+      use: chromiumViewport,
+    },
+
+    // Live backend - auth + admin-mutation + real-tool smoke
+    {
+      name: "live",
+      testDir: "./src/editor/core/tests/live",
+      use: chromiumViewport,
+      dependencies: ["live-setup"],
+    },
+
+    // Enterprise - license-gated SSO/SAML/audit/teams against keycloak compose
+    // Uses port 8080 directly (the docker compose stack publishes the
+    // backend's built-in frontend there); the Vite dev server is bypassed
+    // because the OAuth/SAML callback URLs are registered against 8080.
+    {
+      name: "enterprise",
+      testDir: "./src/editor/core/tests/enterprise",
+      use: {
+        ...chromiumViewport,
+        baseURL: "http://localhost:8080",
+      },
+    },
+
+    // Cross-browser coverage for the stubbed suite. Same viewport as `stubbed`,
+    // or a layout difference here reads as an engine outage.
+    {
+      name: "stubbed-firefox",
+      testDir: "./src/editor/core/tests/stubbed",
+      testIgnore: [DISK_LINK_SPECS, VIEWER_SWAP_SPECS],
+      use: { ...devices["Desktop Firefox"], viewport: STUBBED_VIEWPORT },
+    },
+    {
+      name: "stubbed-webkit",
+      testDir: "./src/editor/core/tests/stubbed",
+      testIgnore: [DISK_LINK_SPECS, VIEWER_SWAP_SPECS],
+      // Desktop Safari ships deviceScaleFactor 2; the editor now renders
+      // bitmaps at dpr x zoom, so leaving it would 4x every page raster in
+      // this suite. The HiDPI spec opts into 2x deliberately where it matters.
+      use: {
+        ...devices["Desktop Safari"],
+        viewport: STUBBED_VIEWPORT,
+        deviceScaleFactor: 1,
+      },
+    },
+  ],
+
+  // PW_DESKTOP picks the desktop-mode server instead of the default one, so a
+  // normal run never pays for a second build it has no project for.
+  webServer:
+    process.env.PW_DESKTOP === "1"
+      ? {
+          command: process.env.CI
+            ? `npx vite preview --outDir dist-desktop --port ${DESKTOP_PORT} --strictPort`
+            : `npx vite --mode desktop --port ${DESKTOP_PORT} --strictPort`,
+          url: `http://localhost:${DESKTOP_PORT}`,
+          reuseExistingServer: !process.env.CI,
+          timeout: 120_000,
+        }
+      : {
+          // In CI, serve a pre-built `dist/` via `vite preview` so the heavy tool
+          // pages don't pay vite's on-demand transform cost on first hit (which
+          // blew the 30s navigationTimeout under --workers=3 - see
+          // all-tool-pages-load.spec.ts). Locally, keep `vite` dev for HMR.
+          command: process.env.CI
+            ? `npx vite preview --port ${DEV_PORT} --strictPort`
+            : `npx vite --mode proprietary --port ${DEV_PORT} --strictPort`,
+          url:
+            process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${DEV_PORT}`,
+          reuseExistingServer: !process.env.CI,
+          timeout: 120_000,
+        },
+});

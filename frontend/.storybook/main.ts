@@ -2,20 +2,20 @@ import { resolve } from "node:path";
 import type { StorybookConfig } from "@storybook/react-vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
-import { iconSvgr } from "../editor/scripts/icons/svgrOptions.mts";
+import { iconSvgr } from "../scripts/icons/svgrOptions.mts";
 // By path, not @app/*: this file runs in node, before the aliases exist.
 // oxlint-disable-next-line no-restricted-imports -- config runs before aliases exist
-import { legacyIconsPlugin } from "../editor/scripts/icons/legacyIcons.vite.mts";
+import { legacyIconsPlugin } from "../scripts/icons/legacyIcons.vite.mts";
 // oxlint-disable-next-line no-restricted-imports -- config runs before aliases exist
-import { usedIconsPlugin } from "../editor/scripts/icons/usedIcons.vite.mts";
+import { usedIconsPlugin } from "../scripts/icons/usedIcons.vite.mts";
 
 /**
  * Storybook 9 ships essentials, interactions, and docs as built-ins, so the
  * addon list is just the extras we want: theme switching + a11y auditing.
  *
- * Story files live next to their components under editor/src/ (which includes
- * the portal layer at editor/src/portal/). MDX docs pages live in
- * editor/src/portal/docs/.
+ * Story files live next to their components under src/editor/ (which includes
+ * the portal layer at src/processor/proprietary/). MDX docs pages live in
+ * src/processor/proprietary/docs/.
  */
 /**
  * Editor stories import via `@app/*` (proprietary→core fallback), `@core/*` and
@@ -32,15 +32,15 @@ import { usedIconsPlugin } from "../editor/scripts/icons/usedIcons.vite.mts";
 const editorPathAliases = () =>
   tsconfigPaths({
     projects: [
-      resolve(__dirname, "../editor/tsconfig.proprietary.vite.json"),
-      resolve(__dirname, "../editor/tsconfig.desktop.vite.json"),
+      resolve(__dirname, "../tsconfig.proprietary.vite.json"),
+      resolve(__dirname, "../tsconfig.desktop.vite.json"),
     ],
   });
 
 const config: StorybookConfig = {
   stories: [
-    "../editor/src/portal/**/*.mdx",
-    "../editor/src/**/*.stories.@(ts|tsx)",
+    "../src/processor/proprietary/**/*.mdx",
+    "../src/**/*.stories.@(ts|tsx)",
   ],
   addons: [
     "@storybook/addon-themes",
@@ -56,7 +56,7 @@ const config: StorybookConfig = {
   },
   // Serve the MSW worker file from the portal's public dir so Storybook can
   // intercept network calls the same way the dev portal does.
-  staticDirs: ["../editor/public"],
+  staticDirs: ["../public"],
   viteFinal: async (config) => {
     // Wire the @portal/* alias directly on the Storybook bundler so portal
     // story imports resolve without needing the portal's vite config.
@@ -67,24 +67,36 @@ const config: StorybookConfig = {
         __dirname,
         "billingSupabaseClient.ts",
       ),
-      "@portal": resolve(__dirname, "../editor/src/portal"),
+      "@portal": resolve(__dirname, "../src/processor/proprietary"),
       // Direct layer aliases so .storybook config files (preview.tsx), which sit
       // outside src/ and so aren't covered by tsconfigPaths, can import layer
       // modules (e.g. the auth supabase client that moved into proprietary).
-      "@proprietary": resolve(__dirname, "../editor/src/proprietary"),
-      "@core": resolve(__dirname, "../editor/src/core"),
+      "@proprietary": resolve(__dirname, "../src/editor/proprietary"),
+      "@core": resolve(__dirname, "../src/editor/core"),
       // Public assets (e.g. the en-US translation TOML loaded ?raw by preview.tsx).
       // No src alias covers public/, so this lets the config use an alias rather
       // than a relative path.
-      "@public": resolve(__dirname, "../editor/public"),
+      "@public": resolve(__dirname, "../public"),
     };
     config.plugins = config.plugins ?? [];
+    // Storybook's builder-vite auto-loads the app's vite.config.ts and merges in
+    // its plugins, but a Storybook build is not an app build. Drop the app's
+    // build-only plugins that emit deploy artifacts against a dist/ that a
+    // Storybook build never produces (prerender-og would otherwise throw ENOENT).
+    const APP_BUILD_ONLY = new Set(["prerender-og", "compress-static-copy"]);
+    config.plugins = config.plugins.filter((p) => {
+      const name =
+        p && typeof p === "object" && "name" in p
+          ? (p as { name?: unknown }).name
+          : undefined;
+      return typeof name !== "string" || !APP_BUILD_ONLY.has(name);
+    });
     config.plugins.push(iconSvgr());
     config.plugins.push(editorPathAliases());
     // Reads the audit's "before" glyphs from the icon packages, so none of their artwork is checked in.
     config.plugins.push(legacyIconsPlugin(resolve(__dirname, "..")));
     // Scanned at startup rather than committed, so the gallery's "in use" view cannot go stale.
-    config.plugins.push(usedIconsPlugin(resolve(__dirname, "../editor/src")));
+    config.plugins.push(usedIconsPlugin(resolve(__dirname, "../src")));
     // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`, so
     // without this a worker importing @app/* fails to resolve while the same
     // import works everywhere else. Mirrors editor/vite.config.ts.
