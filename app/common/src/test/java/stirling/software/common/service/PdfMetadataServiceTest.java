@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -697,9 +698,14 @@ class PdfMetadataServiceTest {
                 Map<String, String> custom = new LinkedHashMap<>();
                 custom.put("1A", "first");
                 custom.put("_1A", "second");
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> service.synchronizeXmpMetadata(doc, custom));
+                IllegalArgumentException thrown =
+                        assertThrows(
+                                IllegalArgumentException.class,
+                                () -> service.synchronizeXmpMetadata(doc, custom));
+                // Both raw keys are named: '_1A' sanitizes to itself, so a
+                // message built from the sanitized pair would be unreadable.
+                assertTrue(thrown.getMessage().contains("1A"));
+                assertTrue(thrown.getMessage().contains("_1A"));
                 // Rejected before any XMP mutation: no metadata stream created.
                 assertNull(doc.getDocumentCatalog().getMetadata());
             }

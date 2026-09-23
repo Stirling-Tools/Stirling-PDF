@@ -13,7 +13,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.format.ResolverStyle;
 import java.util.Calendar;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -552,18 +552,19 @@ public class PdfMetadataService {
         if (customMetadata == null) {
             return;
         }
-        Set<String> seen = new HashSet<>();
+        Map<String, String> seen = new HashMap<>();
         for (String rawKey : customMetadata.keySet()) {
             if (rawKey == null || rawKey.trim().isEmpty()) {
                 continue;
             }
             String cleanKey = sanitizeXmlPropertyName(rawKey.trim());
-            if (!seen.add(cleanKey)) {
+            String previous = seen.putIfAbsent(cleanKey, rawKey);
+            if (previous != null) {
                 throw ExceptionUtils.createIllegalArgumentException(
                         "error.duplicateMetadataKey",
                         "Custom metadata keys ''{0}'' and ''{1}'' map to the same property name",
-                        rawKey,
-                        cleanKey);
+                        previous,
+                        rawKey);
             }
         }
     }
