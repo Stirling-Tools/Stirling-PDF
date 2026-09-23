@@ -13,7 +13,15 @@ type PdfLib = typeof import("@cantoo/pdf-lib");
 let pdfLibPromise: Promise<PdfLib> | null = null;
 
 const getPdfLib = (): Promise<PdfLib> => {
-  pdfLibPromise ??= import("@cantoo/pdf-lib");
+  pdfLibPromise ??= import("@cantoo/pdf-lib").then(
+    (lib) => lib,
+    (error: unknown) => {
+      // A chunk-load failure (deploy, network) must stay retryable: drop the
+      // rejection so the next caller imports again instead of inheriting it.
+      pdfLibPromise = null;
+      throw error;
+    },
+  );
   return pdfLibPromise;
 };
 
