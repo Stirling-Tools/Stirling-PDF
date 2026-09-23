@@ -5,8 +5,7 @@
 
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
-import TuneIcon from "@mui/icons-material/Tune";
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import { Icon } from "@app/ui/Icon";
 import { Modal } from "@app/ui/Modal";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
@@ -68,7 +67,7 @@ export function FileSidebarGroupControls({
         aria-label={t("fileSidebar.customizeGroups", "Customize groups")}
         data-testid="customize-groups"
       >
-        <TuneIcon sx={{ fontSize: "1rem" }} />
+        <Icon name="sliders-horizontal" size={"1rem"} />
       </ActionIcon>
 
       <Modal
@@ -85,7 +84,7 @@ export function FileSidebarGroupControls({
             <Button
               variant="tertiary"
               size="sm"
-              leftSection={<RestartAltIcon sx={{ fontSize: "1rem" }} />}
+              leftSection={<Icon name="rotate-ccw" size={"1rem"} />}
               onClick={resetHiddenCategories}
             >
               {t("fileSidebar.groupsModal.reset", "Show all")}

@@ -229,7 +229,16 @@ public class ProcessExecutor {
         List<String> commandToRun = command;
         Set<Path> ipcPipesBefore = null;
         LibreOfficeSandboxPolicy.JobPolicy jobPolicy = null;
-        if (shouldUseUnoServerPool(command)) {
+
+        boolean useUnoServerPool = shouldUseUnoServerPool(command);
+
+        if (useUnoServerPool) {
+            // Signal the on-demand manager to start unoserver if needed, then
+            // wait on the leased endpoint itself: probing every endpoint and
+            // leasing one afterwards could pick an endpoint that never became
+            // ready. A direct soffice command never signals: it does not call
+            // an endpoint, and its demand would wake a server nobody uses.
+            signalUnoServerDemand();
             try {
                 unoLease = unoServerPool.acquireEndpoint(timeoutDuration, TimeUnit.MINUTES);
             } catch (TimeoutException e) {
@@ -238,6 +247,12 @@ public class ProcessExecutor {
                                 + timeoutDuration
                                 + " minutes",
                         e);
+            }
+            if (!unoServerPool.waitForEndpoint(
+                    unoLease.getEndpoint(), UNO_SERVER_READY_WAIT_SECONDS, TimeUnit.SECONDS)) {
+                log.warn(
+                        "No local unoserver endpoint accepted connections within {}s; continuing",
+                        UNO_SERVER_READY_WAIT_SECONDS);
             }
             commandToRun = applyUnoServerEndpoint(command, unoLease.getEndpoint());
             useSemaphore = false;
@@ -267,6 +282,9 @@ public class ProcessExecutor {
             // Use the working directory if it's set
             if (workingDirectory != null) {
                 processBuilder.directory(workingDirectory);
+            }
+            if (useUnoServerPool) {
+                signalUnoServerDemand();
             }
             Process process = processBuilder.start();
 
@@ -327,8 +345,41 @@ public class ProcessExecutor {
             errorReaderThread.start();
             outputReaderThread.start();
 
-            // Wait for the conversion process to complete
-            boolean finished = process.waitFor(timeoutDuration, TimeUnit.MINUTES);
+            Thread unoHeartbeat = null;
+            if (useUnoServerPool) {
+                unoHeartbeat =
+                        Thread.ofVirtual()
+                                .unstarted(
+                                        () -> {
+                                            while (!Thread.currentThread().isInterrupted()
+                                                    && process.isAlive()) {
+                                                try {
+                                                    Thread.sleep(30_000);
+                                                } catch (InterruptedException e) {
+                                                    Thread.currentThread().interrupt();
+                                                    break;
+                                                }
+                                                signalUnoServerDemand();
+                                            }
+                                        });
+                unoHeartbeat.start();
+            }
+
+            // Wait for the conversion process to complete. The heartbeat must be
+            // stopped on every exit path, and a cancelled request must not leave
+            // the child alive still refreshing demand.
+            boolean finished;
+            try {
+                finished = process.waitFor(timeoutDuration, TimeUnit.MINUTES);
+            } catch (InterruptedException e) {
+                process.descendants().forEach(ProcessHandle::destroyForcibly);
+                process.destroyForcibly();
+                throw e;
+            } finally {
+                if (unoHeartbeat != null) {
+                    unoHeartbeat.interrupt();
+                }
+            }
 
             if (!finished) {
                 // Kill the entire process tree (descendants first, then the process itself)
@@ -652,6 +703,32 @@ public class ProcessExecutor {
             }
         }
         // For relative paths, trust that PATH resolution will work or fail appropriately
+    }
+
+    /**
+     * How long a conversion waits for a local unoserver endpoint to accept connections after
+     * signalling demand. The manager notices the demand file on its own schedule and then starts
+     * soffice, which takes a few seconds; the wait is bounded so a broken setup still reaches the
+     * soffice fallback quickly.
+     */
+    private static final long UNO_SERVER_READY_WAIT_SECONDS = 15;
+
+    /**
+     * Signal the on-demand unoserver manager that a conversion is needed. Writes the current epoch
+     * timestamp to /tmp/uno-last-used. The demand manager watches this file. Skips writing when
+     * configured purely with remoteunoserver endpoints.
+     */
+    private static void signalUnoServerDemand() {
+        if (unoServerPool != null && !unoServerPool.hasLocalEndpoints()) {
+            return;
+        }
+        try {
+            Path demandFile = Path.of("/tmp/uno-last-used");
+            String epoch = String.valueOf(System.currentTimeMillis() / 1000);
+            Files.writeString(demandFile, epoch);
+        } catch (IOException e) {
+            log.debug("Could not write unoserver demand file: {}", e.getMessage());
+        }
     }
 
     public enum Processes {

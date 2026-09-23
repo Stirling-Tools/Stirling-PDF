@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import { Icon } from "@app/ui/Icon";
 import {
   Button,
   EmptyState,
@@ -12,7 +12,6 @@ import {
 } from "@app/ui";
 import type { DocumentStatus, ReviewDocument } from "@portal/api/documents";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
-import { DocumentsIcon } from "@portal/components/icons";
 import { ReviewQueueTable } from "@portal/components/documents/ReviewQueueTable";
 import { DocumentDrawer } from "@portal/components/documents/DocumentDrawer";
 import { SourceModal } from "@portal/components/sources/SourceModal";
@@ -30,20 +29,6 @@ const FILTER_STATUSES: Record<QueueFilter, DocumentStatus[] | null> = {
 interface ReviewQueueProps {
   documents: ReviewDocument[];
   loading: boolean;
-}
-
-function SearchIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
-      <path
-        d="m20 20-3.5-3.5"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
 }
 
 /**
@@ -125,7 +110,7 @@ export function ReviewQueue({ documents, loading }: ReviewQueueProps) {
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("portal.documents.search")}
             aria-label={t("portal.documents.search")}
-            leadingIcon={<SearchIcon />}
+            leadingIcon={<Icon name="search" size={15} />}
             inputSize="sm"
           />
         </div>
@@ -141,7 +126,7 @@ export function ReviewQueue({ documents, loading }: ReviewQueueProps) {
 
       {isEmpty && (
         <EmptyState
-          icon={<DocumentsIcon size={28} />}
+          icon={<Icon name="file-text" size={28} />}
           title={t("portal.documents.queue.empty.title")}
           description={t("portal.documents.queue.empty.description")}
           actions={
@@ -150,9 +135,7 @@ export function ReviewQueue({ documents, loading }: ReviewQueueProps) {
                 onClick={() =>
                   navigate(`${toPortalPath(VIEW_PATHS.pipelines)}/new`)
                 }
-                leftSection={
-                  <AddRoundedIcon style={{ fontSize: "1.125rem" }} />
-                }
+                leftSection={<Icon name="plus" size={"1.125rem"} />}
               >
                 {t("portal.documents.queue.empty.createPipeline")}
               </Button>
