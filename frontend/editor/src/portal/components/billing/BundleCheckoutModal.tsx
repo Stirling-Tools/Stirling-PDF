@@ -8,6 +8,7 @@ import {
   Input,
   Modal,
   NumberInput,
+  Select,
   Skeleton,
 } from "@app/ui";
 import {
@@ -22,12 +23,19 @@ import {
   formatMoneyMajor,
   currencySymbol,
 } from "@app/billing";
-import type { Wallet } from "@portal/api/billing";
+import type { Wallet } from "@app/portal/api/billing";
+import { stripeMinorUnitScale } from "@app/utils/stripeCurrency";
+import {
+  getPreferredCurrency,
+  setCachedCurrency,
+} from "@app/utils/currencyDetection";
 import {
   acceptBundleStripeQuote,
   cancelBundleQuote,
   createBundleStripeQuote,
   fetchBundleQuotePdf,
+  fetchBundlePricing,
+  type BundlePricing,
   finalizeBundleInvoice,
   getLatestBundleQuote,
   StripeFunctionError,
@@ -35,9 +43,8 @@ import {
   type BundleInvoice,
   type BundleQuote,
   type BundleStripeQuote,
-  type LatestBundleQuote,
-} from "@portal/billing/stripe";
-import "@portal/theme/surface.css";
+} from "@app/portal/billing/stripe";
+import "@app/portal/theme/surface.css";
 
 const DEFAULT_POOL_CREDITS = 1_200_000;
 const DEFAULT_USERS = 25;
@@ -197,7 +204,7 @@ interface Props {
   onClose: () => void;
   /** Return to payment choices without cancelling the saved quote; omitted for top-ups. */
   onBack?: () => void;
-  /** Drives teamId, per-run rate, currency, and top-up vs first-buy copy. */
+  /** Identifies the team and whether this is a top-up. Stripe supplies pricing. */
   wallet: Wallet;
   /** Fired after a completed purchase so the parent can refetch the wallet. */
   onComplete?: () => void;
@@ -214,10 +221,14 @@ export function BundleCheckoutModal({
 }: Props) {
   const { t } = useTranslation();
   const teamId = wallet.teamId;
-  const walletCurrency = wallet.currency ?? "usd";
+  const [pricing, setPricing] = useState<BundlePricing | null>(null);
+  const pricingRequest = useRef(0);
+  const [persistedSubtotal, setPersistedSubtotal] = useState<number | null>(
+    null,
+  );
   // The pool is priced per size-scaled RUN at the prepaid-bundle rate (bundle:processor), NOT the
   // metered per-document rate — so the estimate matches the amount the checkout edge fn charges.
-  const ratePerRunMinor = wallet.bundleRatePerCreditMinor;
+  const ratePerRunMinor = pricing?.unitAmountMinor ?? null;
 
   const [phase, setPhase] = useState<Phase>("calc");
   const [poolCredits, setPoolCredits] = useState(DEFAULT_POOL_CREDITS);
@@ -296,8 +307,10 @@ export function BundleCheckoutModal({
       setStripeQuoteSig(null);
       setInvoice(null);
       setPersistedPriceMinor(null);
-      setPersistedPoolCredits(null);
       setPersistedCurrency(null);
+      setPersistedSubtotal(null);
+      setPricing(null);
+      setPersistedPoolCredits(null);
       setBusy(false);
       setPdfBusy(false);
       setActionError(null);
@@ -309,13 +322,43 @@ export function BundleCheckoutModal({
     }
     let cancelled = false;
     (async () => {
-      let latest: LatestBundleQuote | null;
-      try {
-        latest = await getLatestBundleQuote(teamId);
-      } catch {
-        latest = null; // no backend / not a leader — fall through to local progress
-      }
+      const [pricingResult, quoteResult] = await Promise.allSettled([
+        fetchBundlePricing(teamId),
+        getLatestBundleQuote(teamId),
+      ]);
       if (cancelled) return;
+      if (quoteResult.status === "rejected") {
+        const error = quoteResult.reason;
+        setActionError(error instanceof Error ? error.message : String(error));
+        setPricing(null);
+        setResolving(false);
+        return;
+      }
+      const latest = quoteResult.value;
+      let resolvedPricing =
+        pricingResult.status === "fulfilled" ? pricingResult.value : null;
+      const preferredCurrency = latest?.currency ?? getPreferredCurrency();
+      if (
+        resolvedPricing?.currencyLocked === false &&
+        preferredCurrency !== resolvedPricing.currency &&
+        resolvedPricing.availableCurrencies.includes(preferredCurrency)
+      ) {
+        try {
+          resolvedPricing = await fetchBundlePricing(teamId, preferredCurrency);
+        } catch (error) {
+          resolvedPricing = null;
+          if (!cancelled)
+            setActionError(
+              error instanceof Error ? error.message : String(error),
+            );
+        }
+        if (cancelled) return;
+      }
+      setPricing(resolvedPricing);
+      if (pricingResult.status === "rejected" && !latest?.stripeRef) {
+        const error = pricingResult.reason;
+        setActionError(error instanceof Error ? error.message : String(error));
+      }
       const saved = readCalcSettings(teamId);
       if (latest) {
         // Resume the existing quote: restore its sizing + consent + id (landing on the calculator), and
@@ -327,13 +370,18 @@ export function BundleCheckoutModal({
         setPipelineId(pipelineIdFor(latest.pipelineMult));
         setConsented(latest.consentedAt != null);
         setQuoteId(latest.quoteId);
-        setPersistedPriceMinor(latest.priceMinor);
+        const sameCurrency = latest.currency === resolvedPricing?.currency;
+        setPersistedPriceMinor(
+          (sameCurrency && latest.stripeQuoteId) || latest.stripeRef
+            ? latest.priceMinor
+            : null,
+        );
         setPersistedCurrency(latest.currency);
         setPersistedPoolCredits(latest.poolCredits);
         if (saved?.poNumber) setPoNumber(saved.poNumber);
         if (saved?.companyName) setCompanyName(saved.companyName);
         if (saved?.accountName) setAccountName(saved.accountName);
-        if (latest.stripeQuoteId) {
+        if (latest.stripeQuoteId && (sameCurrency || latest.stripeRef)) {
           setStripeQuote({
             stripeQuoteId: latest.stripeQuoteId,
             stripeQuoteNumber: latest.stripeQuoteNumber,
@@ -382,8 +430,40 @@ export function BundleCheckoutModal({
     })();
     return () => {
       cancelled = true;
+      pricingRequest.current += 1;
     };
   }, [open, teamId]);
+
+  async function changeCurrency(selected: string) {
+    if (
+      teamId == null ||
+      pricing?.currencyLocked !== false ||
+      busy ||
+      pdfBusy ||
+      invoice
+    )
+      return;
+    const request = ++pricingRequest.current;
+    setBusy(true);
+    setActionError(null);
+    try {
+      const next = await fetchBundlePricing(teamId, selected);
+      if (request !== pricingRequest.current) return;
+      setPricing(next);
+      setCachedCurrency(next.currency);
+      setPersistedPriceMinor(null);
+      setPersistedCurrency(null);
+      setPersistedSubtotal(null);
+      setStripeQuote(null);
+      setStripeQuoteSig(null);
+    } catch (error) {
+      if (request === pricingRequest.current) {
+        setActionError(error instanceof Error ? error.message : String(error));
+      }
+    } finally {
+      if (request === pricingRequest.current) setBusy(false);
+    }
+  }
 
   // Persist pre-quote calculator progress so close/reload keeps the buyer's place. Held until hydration
   // completes so it can't clobber restored values.
@@ -430,9 +510,9 @@ export function BundleCheckoutModal({
   }, [poolCredits, ratePerRunMinor]);
 
   const currency =
-    persistedPoolCredits === poolCredits
-      ? (persistedCurrency ?? walletCurrency)
-      : walletCurrency;
+    persistedPriceMinor != null && persistedPoolCredits === quote.poolCredits
+      ? (persistedCurrency ?? pricing?.currency ?? "usd")
+      : (pricing?.currency ?? "usd");
 
   function changePool(credits: number) {
     const next = Number.isSafeInteger(credits) && credits > 0 ? credits : 0;
@@ -441,6 +521,7 @@ export function BundleCheckoutModal({
     setPersistedPriceMinor(null);
     setPersistedPoolCredits(null);
     setPersistedCurrency(null);
+    setPersistedSubtotal(null);
     setPoolCredits(next);
     setUsers(null);
     setPostureId("essentials");
@@ -459,10 +540,13 @@ export function BundleCheckoutModal({
     return {
       ...quote,
       priceMinor: persistedPriceMinor,
-      listMinor: null,
-      savingsMinor: null,
+      listMinor: persistedSubtotal,
+      savingsMinor:
+        persistedSubtotal != null
+          ? persistedSubtotal - persistedPriceMinor
+          : null,
     };
-  }, [quote, persistedPriceMinor, persistedPoolCredits]);
+  }, [quote, persistedPriceMinor, persistedPoolCredits, persistedSubtotal]);
 
   // Flip the loader on synchronously the moment the modal opens (React's "adjust state during render"),
   // so the resume runs behind a loader from the very first frame — the calculator never shows en route to
@@ -476,7 +560,10 @@ export function BundleCheckoutModal({
 
   // calc → pay only needs a valid pool; consent + the account-holder name are captured on the payment
   // step, so they gate the commit (accept + finalize).
-  const canContinue = quote.poolCredits > 0 && !quote.overEnterprise;
+  const canContinue =
+    (pricing != null || invoice != null) &&
+    quote.poolCredits > 0 &&
+    !quote.overEnterprise;
   const nameProvided = accountName.trim().length > 0;
   // Once the invoice is issued, the recipient details + consent are already captured on it and the fields
   // are locked, so on resume Pay/Download just re-open the existing invoice — don't re-gate on the (now
@@ -541,6 +628,12 @@ export function BundleCheckoutModal({
       poNumber: poNumber.trim() || undefined,
     });
     setStripeQuote(sq);
+    if (sq.currency && sq.amountTotal != null) {
+      setPersistedCurrency(sq.currency);
+      setPersistedSubtotal(sq.amountSubtotal ?? null);
+      setPersistedPriceMinor(sq.amountTotal);
+      setPersistedPoolCredits(quote.poolCredits);
+    }
     setStripeQuoteSig(sig);
     return { quoteId: q.quoteId, stripeQuote: sq };
   }
@@ -573,9 +666,12 @@ export function BundleCheckoutModal({
   // returns the existing invoice, an already-finalized invoice comes back as-is. Returns the current
   // (simulated) invoice when there's no SaaS backend.
   async function acceptAndFinalize(): Promise<BundleInvoice | null> {
+    if (invoiceIssued) return invoice;
     if (teamId == null || quoteId == null) return invoice;
-    await ensureQuote(); // persists consented=true (pay-step state) so accept can verify it
-    await acceptBundleStripeQuote({ teamId, quoteId });
+    if (!invoice) {
+      await ensureQuote();
+      await acceptBundleStripeQuote({ teamId, quoteId });
+    }
     const inv = await finalizeBundleInvoice({
       teamId,
       quoteId,
@@ -645,7 +741,7 @@ export function BundleCheckoutModal({
   // Download the Stripe-rendered quote PDF. Mints the quote (if not already) — that's what makes the
   // PDF exist — then streams it. No SaaS backend → nothing to download.
   async function downloadPdf() {
-    if (busy || pdfBusy || quote.poolCredits <= 0) return;
+    if (busy || pdfBusy || !canContinue) return;
     setPdfBusy(true);
     setActionError(null);
     try {
@@ -788,12 +884,16 @@ export function BundleCheckoutModal({
         )}
         {!resolving && phase === "calc" && (
           <CalculatorStep
+            key={(pricing?.currency ?? currency) + ":" + ratePerRunMinor}
             credits={poolCredits}
             rate={ratePerRunMinor}
-            selectionCurrency={walletCurrency}
+            selectionCurrency={pricing?.currency ?? currency}
             onCreditsChange={changePool}
             quote={receiptQuote}
             currency={currency}
+            pricing={pricing}
+            onCurrencyChange={(selected) => void changeCurrency(selected)}
+            currencyBusy={busy || pdfBusy || !!invoice}
             onDownload={downloadPdf}
             downloading={pdfBusy}
             actionError={actionError}
@@ -875,7 +975,9 @@ function QuoteReceipt({
       <Button
         variant="quiet"
         size="sm"
-        disabled={downloading || quote.poolCredits <= 0}
+        disabled={
+          downloading || quote.poolCredits <= 0 || quote.priceMinor == null
+        }
         onClick={onDownload}
       >
         {downloading
@@ -893,6 +995,9 @@ function CalculatorStep({
   onCreditsChange,
   quote,
   currency,
+  pricing,
+  onCurrencyChange,
+  currencyBusy,
   onDownload,
   downloading,
   actionError,
@@ -900,6 +1005,9 @@ function CalculatorStep({
   credits: number;
   rate: number | null;
   selectionCurrency: string;
+  pricing: BundlePricing | null;
+  onCurrencyChange: (currency: string) => void;
+  currencyBusy: boolean;
   onCreditsChange: (credits: number) => void;
   quote: BundleQuoteBreakdown;
   currency: string;
@@ -909,7 +1017,9 @@ function CalculatorStep({
 }) {
   const { t } = useTranslation();
   const presets = [12_000, 24_000, 48_000];
-  const yearValue = rate && rate > 0 ? Math.round(credits * rate) / 100 : null;
+  const minorUnitScale = stripeMinorUnitScale(selectionCurrency);
+  const yearValue =
+    rate && rate > 0 ? Math.round(credits * rate) / minorUnitScale : null;
   const [custom, setCustom] = useState(
     yearValue == null || !presets.includes(yearValue),
   );
@@ -919,12 +1029,41 @@ function CalculatorStep({
     const amount = Number(value);
     onCreditsChange(
       rate && rate > 0 && Number.isFinite(amount) && amount > 0
-        ? Math.round((amount * 100) / rate)
+        ? Math.round((amount * minorUnitScale) / rate)
         : 0,
     );
   };
   return (
     <div className="portal-billing__bundle-calc">
+      {pricing && (
+        <FormField
+          label={t("portal.billing.prepaid.calc.currency", "Quote currency")}
+          helperText={
+            pricing.currencyLocked !== false
+              ? t(
+                  "portal.billing.prepaid.calc.currencyLocked",
+                  "Uses your existing Stripe billing currency.",
+                )
+              : undefined
+          }
+        >
+          <Select
+            aria-label={t(
+              "portal.billing.prepaid.calc.currency",
+              "Quote currency",
+            )}
+            value={currency}
+            comboboxProps={{ withinPortal: false }}
+            options={(pricing.availableCurrencies ?? [currency]).map(
+              (code) => ({ value: code, label: code.toUpperCase() }),
+            )}
+            disabled={currencyBusy || pricing.currencyLocked !== false}
+            onChange={(selected) => {
+              if (selected) onCurrencyChange(selected);
+            }}
+          />
+        </FormField>
+      )}
       {actionError && (
         <Banner
           tone="danger"
@@ -977,7 +1116,7 @@ function CalculatorStep({
               hideControls
               clampBehavior="none"
               prefix={currencySymbol(selectionCurrency)}
-              decimalScale={2}
+              decimalScale={Math.log10(minorUnitScale)}
               allowNegative={false}
               aria-label={t("portal.billing.simple.yearSize", "Year size")}
             />

@@ -11,6 +11,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.mcp.catalog.McpToolCatalog;
 import stirling.software.proprietary.mcp.catalog.OperationCategory;
 import stirling.software.proprietary.mcp.catalog.OperationMeta;
+import stirling.software.proprietary.service.AiEngineRouter;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -24,8 +25,7 @@ class EngineCapabilityParseTest {
         ObjectMapper mapper = new ObjectMapper();
         ApplicationProperties props = new ApplicationProperties();
         // parseManifest doesn't touch the catalog, so a null catalog is fine.
-        EngineCapabilityClient client =
-                new EngineCapabilityClient(props, (McpToolCatalog) null, mapper);
+        EngineCapabilityClient client = newClient(props, mapper);
 
         String body =
                 """
@@ -77,9 +77,7 @@ class EngineCapabilityParseTest {
     @Test
     void missing_capabilities_array_throws() {
         ObjectMapper mapper = new ObjectMapper();
-        EngineCapabilityClient client =
-                new EngineCapabilityClient(
-                        new ApplicationProperties(), (McpToolCatalog) null, mapper);
+        EngineCapabilityClient client = newClient(new ApplicationProperties(), mapper);
 
         try {
             Method parse =
@@ -97,9 +95,7 @@ class EngineCapabilityParseTest {
     @Test
     void unsafe_routes_are_skipped_and_blank_scope_fails_safe() throws Exception {
         ObjectMapper mapper = new ObjectMapper();
-        EngineCapabilityClient client =
-                new EngineCapabilityClient(
-                        new ApplicationProperties(), (McpToolCatalog) null, mapper);
+        EngineCapabilityClient client = newClient(new ApplicationProperties(), mapper);
 
         String body =
                 """
@@ -134,5 +130,12 @@ class EngineCapabilityParseTest {
         assertThat(EngineCapabilityClient.isSafeRelativeRoute("http://evil/x")).isFalse();
         assertThat(EngineCapabilityClient.isSafeRelativeRoute("/admin/x")).isFalse();
         assertThat(EngineCapabilityClient.isSafeRelativeRoute("/api/v1/x y")).isFalse();
+    }
+
+    /** parseManifest never touches the catalog or the network, so both can be absent. */
+    private static EngineCapabilityClient newClient(
+            ApplicationProperties props, ObjectMapper mapper) {
+        return new EngineCapabilityClient(
+                props, (McpToolCatalog) null, mapper, AiEngineRouter.selfHosted(props, null));
     }
 }

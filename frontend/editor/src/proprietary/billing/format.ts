@@ -6,6 +6,11 @@
  * diverging from the backend when a rate encoding changes.
  */
 
+import {
+  stripeAmountToMajor,
+  stripeMinorUnitScale,
+} from "@app/utils/stripeCurrency";
+
 /** Quick-amount cap presets (major currency units) offered everywhere. */
 export const DEFAULT_CAP_PRESETS = [500, 1000, 2500, 5000] as const;
 
@@ -34,9 +39,9 @@ export function formatMinor(
   currency: string | null | undefined,
 ): string {
   const num = new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: 2,
+    minimumFractionDigits: Math.log10(stripeMinorUnitScale(currency)),
     maximumFractionDigits: 3,
-  }).format(minor / 100);
+  }).format(stripeAmountToMajor(minor, currency));
   return `${currencySymbol(currency)}${num}`;
 }
 
