@@ -28,6 +28,8 @@ function decoratePolicy(
   const status: PolicyStatus = decoded.enabled ? "active" : "paused";
   const state: PolicyState = {
     configured: true,
+    name: decoded.name,
+    icon: decoded.icon,
     outputIds: decoded.outputIds,
     routingRules: decoded.routingRules,
     status,
@@ -35,6 +37,7 @@ function decoratePolicy(
     extraOptions: decoded.extraOptions,
     sources: decoded.sources,
     trigger: decoded.trigger,
+    inputs: decoded.inputs,
     runsOnEditor: decoded.runsOnEditor,
     scopeTypes: decoded.scopeTypes,
     reviewerEmail: decoded.reviewerEmail,

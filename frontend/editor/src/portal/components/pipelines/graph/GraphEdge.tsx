@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui";
 import type { LaidOutEdge } from "@portal/components/pipelines/graph/pipelineLayout";
 import { useEdgeDrop } from "@portal/components/pipelines/graph/useChainDragDrop";
@@ -67,7 +66,7 @@ export function GraphEdge({
       aria-label={t("portal.pipelines.graph.insertHere")}
       onClick={() => onInsert(edge.insertIndex as number)}
     >
-      <AddRoundedIcon style={{ fontSize: "0.875rem" }} />
+      <Icon name="plus" size={"0.875rem"} />
     </ActionIcon>
   ) : null;
 
@@ -94,7 +93,7 @@ export function GraphEdge({
       {warning ? (
         <span className="portal-graph-edge__note">
           <span className="portal-graph-edge__warning" title={warning.text}>
-            <WarningAmberRoundedIcon style={{ fontSize: "0.875rem" }} />
+            <Icon name="triangle-alert" size={"0.875rem"} />
             <span className="portal-graph-edge__warning-label">
               {warning.text}
             </span>

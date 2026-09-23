@@ -4,14 +4,62 @@ import {
   formatMinor,
   formatMoneyMajor,
   formatPeriodDate,
+  remainingMeter,
 } from "@app/billing/format";
 import { MeterRow } from "@app/billing/MeterRow";
 import { estimatedBillWithPending } from "@app/billing/pendingUsage";
 import type { Wallet } from "@app/billing/types";
 
+/** One tranche of the row's breakdown: a labelled figure over its own small bar. */
+function Tranche({
+  label,
+  value,
+  pct,
+  note,
+  showBar = true,
+}: {
+  label: string;
+  value: ReactNode;
+  /** Null draws the track empty and reports no value — an unknown, not a zero. */
+  pct: number | null;
+  note?: ReactNode;
+  showBar?: boolean;
+}) {
+  const width = pct == null ? 0 : Math.min(100, Math.max(0, pct));
+  return (
+    <div>
+      <div className="billing-breakdown__row">
+        <span>{label}</span>
+        <strong>{value}</strong>
+      </div>
+      {showBar && (
+        <span
+          className="billing-breakdown__bar"
+          role="progressbar"
+          aria-label={label}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={pct == null ? undefined : Math.round(width)}
+        >
+          <span
+            className="billing-breakdown__fill"
+            style={{ width: `${width}%` }}
+          />
+        </span>
+      )}
+      {note && <small>{note}</small>}
+    </div>
+  );
+}
+
 /**
- * The Processor product, as a row: the free grant draining towards activation while off, spend
- * against the limit while on.
+ * The Processor product, as a row: the free grant draining towards activation while off, a live
+ * prepaid pool while one is held, and spend against the limit once the meter is what is left.
+ *
+ * <p>All three are tranches of one product, so they share one row rather than stacking cards.
+ * The headline is whichever governs the team right now and the hover breakdown carries the rest.
+ * A live prepaid pool leads: it is what the team draws on, and the metered figure cannot move
+ * until it empties.
  *
  * <p>Money arrives in two scales. The estimate is minor units and the limit is major, so the
  * comparison converts once here rather than leaving a factor of a hundred to a caller. An unknown
@@ -58,16 +106,182 @@ export function ProcessorPlanRow({
     );
   if (!wallet) return null;
   const rate = wallet.pricePerDocMinor;
+  const active = wallet.processor.active;
 
-  const includedCredits = (() => {
-    if (wallet.processor.active || wallet.freeAllowance <= 0) return null;
-    const used = Math.min(
-      wallet.freeAllowance,
-      Math.max(0, wallet.freeAllowance - wallet.freeRemaining + pendingUnits),
+  // One door per row, and both of them already reach a purchase: the activation fork sells
+  // prepay, the spend-limit dialog sells credits. Prepaid therefore adds no third door.
+  const door = active
+    ? onGovern
+      ? (governLabel ?? t("portal.billing.processor.raiseLimit", "Raise limit"))
+      : undefined
+    : onActivate
+      ? (activateLabel ??
+        t("portal.billing.processor.activate", "Switch on the Processor"))
+      : undefined;
+  const onDoor = active ? onGovern : onActivate;
+
+  // Drawdown order mirrors pendingMeteredUnits: the free grant, then the prepaid pool, then the
+  // meter. Unsynced units consume them in that same order, so no tranche reports headroom the
+  // entitlement gate will refuse.
+  const freeLeft = Math.min(
+    wallet.freeAllowance,
+    Math.max(0, wallet.freeRemaining - pendingUnits),
+  );
+  const prepaidTotal = wallet.prepaidUnitsTotal;
+  const prepaidLeft = Math.max(
+    0,
+    wallet.prepaidUnitsRemaining -
+      Math.max(0, pendingUnits - wallet.freeRemaining),
+  );
+  const heldPrepaid = prepaidTotal > 0;
+  const prepaidMeter = heldPrepaid
+    ? remainingMeter(prepaidLeft, prepaidTotal)
+    : null;
+
+  const spentMinor = active
+    ? estimatedBillWithPending(wallet, pendingUnits)
+    : null;
+  const capped = active && !wallet.noCap && wallet.capUsd != null;
+  // One conversion, in one place: the estimate is minor units, the limit is major.
+  const spentMajor = spentMinor != null ? spentMinor / 100 : null;
+  const spendPct =
+    capped && spentMajor != null
+      ? wallet.capUsd === 0
+        ? 100
+        : (spentMajor / (wallet.capUsd as number)) * 100
+      : 0;
+
+  const remainingOf = (remaining: number, total: number) =>
+    t("portal.billing.processor.remainingOf", "{{remaining}} of {{total}}", {
+      remaining: remaining.toLocaleString(),
+      total: total.toLocaleString(),
+    });
+
+  const tranches: ReactNode[] = [];
+  if (wallet.freeAllowance > 0)
+    tranches.push(
+      <Tranche
+        key="free"
+        label={t(
+          "portal.billing.processor.freeRemaining",
+          "Free credits remaining",
+        )}
+        value={remainingOf(freeLeft, wallet.freeAllowance)}
+        pct={(freeLeft / wallet.freeAllowance) * 100}
+      />,
     );
-    const pct =
-      wallet.freeAllowance > 0 ? (used / wallet.freeAllowance) * 100 : 0;
-    const mid =
+  if (heldPrepaid)
+    tranches.push(
+      <Tranche
+        key="prepaid"
+        label={t(
+          "portal.billing.processor.prepaidRemaining",
+          "Prepaid credits remaining",
+        )}
+        value={remainingOf(prepaidLeft, prepaidTotal)}
+        pct={prepaidMeter?.pct ?? 0}
+        note={
+          prepaidLeft === 0
+            ? t(
+                "portal.billing.processor.prepaidExhausted",
+                "Used up, metered billing has resumed",
+              )
+            : wallet.prepaidExpiresAt
+              ? t(
+                  "portal.billing.processor.prepaidExpires",
+                  "Expires {{date}}",
+                  {
+                    date: formatPeriodDate(wallet.prepaidExpiresAt, {
+                      year: true,
+                    }),
+                  },
+                )
+              : undefined
+        }
+      />,
+    );
+  if (active)
+    tranches.push(
+      <Tranche
+        key="paid"
+        label={t("portal.billing.processor.paidUsed", "Paid metered usage")}
+        value={
+          <>
+            {spentMinor == null
+              ? "—"
+              : formatMinor(spentMinor, wallet.currency)}
+            {capped
+              ? ` / ${formatMoneyMajor(wallet.capUsd as number, wallet.currency)}`
+              : ""}
+          </>
+        }
+        pct={spentMinor == null ? null : spendPct}
+        showBar={capped}
+        note={
+          capped
+            ? undefined
+            : t("portal.billing.processor.noSpendLimit", "No spend limit")
+        }
+      />,
+    );
+  // A lone tranche is what the headline already says, and a tooltip would only repeat it.
+  const details =
+    tranches.length > 1 ? (
+      <div className="billing-breakdown">{tranches}</div>
+    ) : undefined;
+
+  if (heldPrepaid && prepaidLeft > 0) {
+    const summary = t(
+      "portal.billing.processor.midPrepaid",
+      "Prepaid credits, drawn before metered billing",
+    );
+    return (
+      <MeterRow
+        name={name}
+        mid={
+          wallet.prepaidExpiresAt
+            ? t(
+                "portal.billing.processor.midPrepaidExpiry",
+                "{{summary}} · Expires {{date}}",
+                {
+                  summary,
+                  date: formatPeriodDate(wallet.prepaidExpiresAt, {
+                    year: true,
+                  }),
+                },
+              )
+            : summary
+        }
+        midTitle={t(
+          "portal.billing.processor.prepaidTooltip",
+          "Drawn before metered billing, and outside your spend limit.",
+        )}
+        details={details}
+        pct={prepaidMeter?.pct ?? 0}
+        tone={prepaidMeter?.state === "FULL" ? "paid" : "warn"}
+        fact={t("portal.billing.processor.factPrepaid", "{{remaining}} left", {
+          remaining: prepaidLeft.toLocaleString(),
+        })}
+        door={door}
+        onDoor={onDoor}
+      />
+    );
+  }
+
+  if (!active) {
+    if (wallet.freeAllowance <= 0)
+      return (
+        <MeterRow
+          name={name}
+          mid=""
+          fact=""
+          showTrack={false}
+          door={door}
+          onDoor={onDoor}
+        />
+      );
+    const used = wallet.freeAllowance - freeLeft;
+    const freeMid =
       rate != null
         ? t(
             "portal.billing.processor.midIncluded",
@@ -84,7 +298,6 @@ export function ProcessorPlanRow({
               allowance: wallet.freeAllowance.toLocaleString(),
             },
           );
-
     return (
       <MeterRow
         name={name}
@@ -94,13 +307,14 @@ export function ProcessorPlanRow({
                 "portal.billing.processor.includedRenewal",
                 "{{summary}} · Renews {{date}}",
                 {
-                  summary: mid,
+                  summary: freeMid,
                   date: formatPeriodDate(wallet.includedPeriodEnd),
                 },
               )
-            : mid
+            : freeMid
         }
-        pct={pct}
+        details={details}
+        pct={(used / wallet.freeAllowance) * 100}
         tone="free"
         fact={t(
           "portal.billing.processor.factFree",
@@ -110,48 +324,11 @@ export function ProcessorPlanRow({
             allowance: wallet.freeAllowance.toLocaleString(),
           },
         )}
-        door={
-          !wallet.processor.active && onActivate
-            ? (activateLabel ??
-              t("portal.billing.processor.activate", "Switch on the Processor"))
-            : undefined
-        }
-        onDoor={!wallet.processor.active ? onActivate : undefined}
+        door={door}
+        onDoor={onDoor}
       />
     );
-  })();
-  if (!wallet.processor.active)
-    return (
-      includedCredits ?? (
-        <MeterRow
-          name={name}
-          mid=""
-          fact=""
-          showTrack={false}
-          door={
-            onActivate
-              ? (activateLabel ??
-                t(
-                  "portal.billing.processor.activate",
-                  "Switch on the Processor",
-                ))
-              : undefined
-          }
-          onDoor={onActivate}
-        />
-      )
-    );
-
-  const spentMinor = estimatedBillWithPending(wallet, pendingUnits);
-  const capped = !wallet.noCap && wallet.capUsd != null;
-  // One conversion, in one place: the estimate is minor units, the limit is major.
-  const spentMajor = spentMinor != null ? spentMinor / 100 : null;
-  const pct =
-    capped && spentMajor != null
-      ? wallet.capUsd === 0
-        ? 100
-        : (spentMajor / (wallet.capUsd as number)) * 100
-      : 0;
+  }
 
   const mid =
     spentMinor != null
@@ -177,109 +354,21 @@ export function ProcessorPlanRow({
     ? spentMinor == null
       ? "—"
       : t("portal.billing.processor.percentUsed", "{{pct}}%", {
-          pct: Math.round(pct).toLocaleString(),
+          pct: Math.round(spendPct).toLocaleString(),
         })
     : t("portal.billing.processor.factNoCap", "no limit");
-
-  const door =
-    governLabel ??
-    (onGovern
-      ? t("portal.billing.processor.raiseLimit", "Raise limit")
-      : undefined);
-  const freeRemaining = Math.min(
-    wallet.freeAllowance,
-    Math.max(0, wallet.freeRemaining - pendingUnits),
-  );
-  const freePct =
-    wallet.freeAllowance > 0 ? (freeRemaining / wallet.freeAllowance) * 100 : 0;
-  const freeLabel = t(
-    "portal.billing.processor.freeRemaining",
-    "Free credits remaining",
-  );
-  const paidLabel = t(
-    "portal.billing.processor.paidUsed",
-    "Paid metered usage",
-  );
-  const details = (
-    <div className="billing-breakdown">
-      <div>
-        <div className="billing-breakdown__row">
-          <span>{freeLabel}</span>
-          <strong>
-            {t(
-              "portal.billing.processor.remainingOf",
-              "{{remaining}} of {{total}}",
-              {
-                remaining: freeRemaining.toLocaleString(),
-                total: wallet.freeAllowance.toLocaleString(),
-              },
-            )}
-          </strong>
-        </div>
-        <span
-          className="billing-breakdown__bar"
-          role="progressbar"
-          aria-label={freeLabel}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={Math.round(freePct)}
-        >
-          <span
-            className="billing-breakdown__fill"
-            style={{ width: `${freePct}%` }}
-          />
-        </span>
-      </div>
-      <div>
-        <div className="billing-breakdown__row">
-          <span>{paidLabel}</span>
-          <strong>
-            {spentMinor == null
-              ? "—"
-              : formatMinor(spentMinor, wallet.currency)}
-            {capped
-              ? ` / ${formatMoneyMajor(wallet.capUsd as number, wallet.currency)}`
-              : ""}
-          </strong>
-        </div>
-        {capped ? (
-          <span
-            className="billing-breakdown__bar"
-            role="progressbar"
-            aria-label={paidLabel}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={
-              spentMinor == null
-                ? undefined
-                : Math.round(Math.min(100, Math.max(0, pct)))
-            }
-          >
-            <span
-              className="billing-breakdown__fill"
-              style={{ width: `${Math.min(100, Math.max(0, pct))}%` }}
-            />
-          </span>
-        ) : (
-          <small>
-            {t("portal.billing.processor.noSpendLimit", "No spend limit")}
-          </small>
-        )}
-      </div>
-    </div>
-  );
 
   return (
     <MeterRow
       name={name}
       mid={mid}
       details={details}
-      pct={pct}
-      tone={capped && pct >= 90 ? "warn" : "paid"}
+      pct={spendPct}
+      tone={capped && spendPct >= 90 ? "warn" : "paid"}
       showTrack={capped}
       fact={fact}
-      door={onGovern ? door : undefined}
-      onDoor={onGovern}
+      door={door}
+      onDoor={onDoor}
       midTitle={
         capped
           ? t(
