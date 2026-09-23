@@ -96,6 +96,50 @@ class SaasOwnershipHandoverServiceTest {
                                 null));
     }
 
+    @Test
+    void candidatesExcludeOwnerUnacceptedDisabledAndDepartedAccounts() {
+        var invited = member(3L, "invited@example.com", TeamRole.MEMBER);
+        invited.setAcceptedAt(null);
+        var disabled = member(4L, "disabled@example.com", TeamRole.MEMBER);
+        disabled.getUser().setEnabled(false);
+        var departed = member(5L, "departed@example.com", TeamRole.MEMBER);
+        departed.getUser().setTeam(null);
+        var missingEmail = member(6L, null, TeamRole.MEMBER);
+        when(memberships.findByTeamId(9L))
+                .thenReturn(List.of(leader, target, invited, disabled, departed, missingEmail));
+        var result = service.candidates(9L);
+        assertEquals(9L, result.teamId());
+        assertEquals(List.of(2L), result.members().stream().map(m -> m.id()).toList());
+        verifyNoInteractions(invitations, ownership);
+    }
+
+    @Test
+    void pinnedCloudIdentityRejectsReassignedEmail() {
+        assertEquals(
+                "CLOUD_TARGET_CHANGED",
+                assertThrows(
+                                ResponseStatusException.class,
+                                () -> service.status(9L, "new@example.com", 99L))
+                        .getReason());
+        assertEquals(2L, service.status(9L, "new@example.com", 2L).targetUserId());
+        var instance = new LinkedInstance();
+        instance.setTeamId(9L);
+        assertEquals(
+                "CLOUD_TARGET_CHANGED",
+                assertThrows(
+                                ResponseStatusException.class,
+                                () ->
+                                        service.changeFromInstance(
+                                                instance,
+                                                "new@example.com",
+                                                1L,
+                                                leader.getUser(),
+                                                "transfer",
+                                                99L))
+                        .getReason());
+        verifyNoInteractions(ownership, invitations);
+    }
+
     @ParameterizedTest(name = "paid={0}, account={1}, state={2}")
     @CsvSource({
         "false,no-account,NEEDS_MEMBERSHIP",

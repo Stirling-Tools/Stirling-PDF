@@ -24,6 +24,7 @@ export interface ModalProps {
   /** Accessible name when no visible title is provided. */
   ariaLabel?: string;
   className?: string;
+  zIndex?: number;
   children?: ReactNode;
 }
 
@@ -41,6 +42,7 @@ export function Modal({
   disableEscapeClose = false,
   ariaLabel,
   className,
+  zIndex,
   children,
 }: ModalProps) {
   const titleId = useId();
@@ -79,6 +81,7 @@ export function Modal({
   return createPortal(
     <div
       className="sui-modal__backdrop"
+      style={zIndex === undefined ? undefined : { zIndex }}
       onClick={onBackdropClick}
       role="presentation"
     >

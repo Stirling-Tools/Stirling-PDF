@@ -220,7 +220,24 @@ class OrgOwnerServiceTest {
         device.setDeviceId("device");
         device.setTeamId(9L);
         when(credentials.findCredential()).thenReturn(Optional.of(device));
-        when(cloud.ownership(any(), eq("second@example.com"), isNull(), eq("status"), isNull()))
+        when(cloud.ownershipCandidates(device))
+                .thenReturn(
+                        new stirling.software.proprietary.accountlink.CloudOwnershipCandidates(
+                                9L,
+                                "Cloud team",
+                                java.util.List.of(
+                                        new stirling.software.proprietary.accountlink
+                                                .CloudOwnershipCandidates.Member(
+                                                20L,
+                                                "Second cloud account",
+                                                "second@example.com"))));
+        when(cloud.ownership(
+                        any(),
+                        eq("second@example.com"),
+                        isNull(),
+                        eq("status"),
+                        isNull(),
+                        nullable(Long.class)))
                 .thenReturn(
                         new CloudOwnershipStatus(
                                 9L,
@@ -232,13 +249,24 @@ class OrgOwnerServiceTest {
                                 CloudOwnershipStatus.State.READY));
         assertThrows(
                 ResponseStatusException.class, () -> owners.transfer(second.getId(), auth(first)));
-        handovers.prepare(second.getId(), auth(first));
+        handovers.prepare(
+                second.getId(), new OwnershipHandoverService.Selection(20L, null), auth(first));
         assertEquals(
                 second.getId(), ownerRepository.findById(1L).orElseThrow().getHandoverTargetId());
+        assertEquals(20L, ownerRepository.findById(1L).orElseThrow().getHandoverCloudUserId());
+        assertEquals(
+                "second@example.com",
+                ownerRepository.findById(1L).orElseThrow().getHandoverCloudEmail());
         assertThrows(
                 ResponseStatusException.class, () -> owners.transfer(second.getId(), auth(first)));
         assertEquals(Optional.of(first.getId()), owners.ownerId());
-        when(cloud.ownership(any(), eq("second@example.com"), isNull(), eq("status"), isNull()))
+        when(cloud.ownership(
+                        any(),
+                        eq("second@example.com"),
+                        isNull(),
+                        eq("status"),
+                        isNull(),
+                        nullable(Long.class)))
                 .thenReturn(
                         new CloudOwnershipStatus(
                                 9L,

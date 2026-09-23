@@ -1,6 +1,6 @@
-import { apiClient } from "@portal/api/http";
-import { getPortalSaasToken } from "@portal/auth/portalSaasSession";
-import type { Member } from "@portal/api/users";
+import { apiClient } from "@app/portal/api/http";
+import { getPortalSaasToken } from "@app/portal/auth/portalSaasSession";
+import type { Member } from "@app/portal/api/users";
 import type {
   CloudOwnershipStatus,
   OwnershipStatus,
@@ -33,6 +33,11 @@ export function ownershipAdapter(
       prepare: () =>
         apiClient.local.json<OwnershipStatus>(`${path}/${member.id}`, {
           method: "POST",
+        }),
+      selectCloud: (selection) =>
+        apiClient.local.json<OwnershipStatus>(`${path}/${member.id}`, {
+          method: "POST",
+          body: selection,
         }),
       invite: () => cloudAction("invite"),
       transferCloud: () => cloudAction("transfer"),

@@ -25,8 +25,12 @@ public class LocalOwnershipHandoverController {
     }
 
     @PostMapping("/{targetId}")
-    public Status prepare(@PathVariable Long targetId, Authentication auth) {
-        return handovers.prepare(targetId, auth);
+    public Status prepare(
+            @PathVariable Long targetId,
+            @jakarta.validation.Valid @RequestBody(required = false)
+                    OwnershipHandoverService.Selection selection,
+            Authentication auth) {
+        return handovers.prepare(targetId, selection, auth);
     }
 
     @PostMapping("/cloud/{action:invite|transfer}")

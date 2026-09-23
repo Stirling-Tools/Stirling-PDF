@@ -77,8 +77,124 @@ class OwnershipHandoverServiceTest {
 
     private void linked(State state, boolean paid) throws IOException {
         when(credentials.findCredential()).thenReturn(Optional.of(credential));
-        when(cloud.ownership(credential, successor.getEmail(), null, "status", null))
+        when(cloud.ownershipCandidates(credential))
+                .thenReturn(
+                        new CloudOwnershipCandidates(
+                                9L,
+                                "Team",
+                                java.util.List.of(
+                                        new CloudOwnershipCandidates.Member(
+                                                2L, "Cloud member", "new@example.com"))));
+        when(cloud.ownership(
+                        eq(credential),
+                        eq("new@example.com"),
+                        isNull(),
+                        eq("status"),
+                        isNull(),
+                        nullable(Long.class)))
                 .thenReturn(state(state, paid));
+        when(cloud.ownership(
+                        eq(credential),
+                        eq("new@example.com"),
+                        anyString(),
+                        eq("transfer"),
+                        anyLong(),
+                        nullable(Long.class)))
+                .thenReturn(state(State.TRANSFERRED, paid));
+    }
+
+    private OwnershipHandoverService.Status prepareSelected() {
+        return service.prepare(
+                2L, new OwnershipHandoverService.Selection(null, "new@example.com"), auth);
+    }
+
+    @Test
+    void changedCloudAccountCanBeCancelledWithoutAbandoningACompletedTransfer() throws IOException {
+        linked(State.READY, false);
+        prepareSelected();
+        when(cloud.ownership(credential, "new@example.com", null, "status", null, null))
+                .thenReturn(
+                        new CloudOwnershipStatus(
+                                9L, "Team", 1L, null, 2, false, State.NEEDS_MEMBERSHIP));
+        service.cancel(auth);
+        assertNull(owner.getHandoverTargetId());
+        when(cloud.ownership(credential, "new@example.com", null, "status", null, null))
+                .thenReturn(state(State.READY, false));
+        prepareSelected();
+        when(cloud.ownership(credential, "new@example.com", null, "status", null, null))
+                .thenReturn(
+                        new CloudOwnershipStatus(
+                                9L, "Team", 2L, null, 2, false, State.NEEDS_MEMBERSHIP));
+        assertEquals(
+                "FINISH_LOCAL_TRANSFER",
+                assertThrows(ResponseStatusException.class, () -> service.cancel(auth))
+                        .getReason());
+        assertEquals(2L, owner.getHandoverTargetId());
+    }
+
+    @Test
+    void linkedUserWithoutEmailCanBrowseWithoutStartingAHandover() throws IOException {
+        linked(State.READY, false);
+        successor.setEmail(null);
+        var result = service.prepare(2L, auth);
+        assertEquals(2L, result.candidates().members().getFirst().id());
+        assertNull(result.cloud());
+        assertNull(owner.getHandoverTargetId());
+        assertNull(service.current(auth));
+    }
+
+    @Test
+    void selectedCloudMemberIsPinnedIndependentlyOfTheLocalEmail() throws IOException {
+        linked(State.READY, false);
+        successor.setEmail(null);
+        var result = service.prepare(2L, new OwnershipHandoverService.Selection(2L, null), auth);
+        assertNull(result.targetEmail());
+        assertEquals("new@example.com", result.cloudEmail());
+        assertNull(successor.getEmail());
+        assertEquals(2L, owner.getHandoverCloudUserId());
+        service.changeCloud(auth, "Bearer human", "transfer");
+        verify(cloud).ownership(credential, "new@example.com", "Bearer human", "transfer", 1L, 2L);
+        assertThrows(
+                ResponseStatusException.class,
+                () -> service.prepare(2L, new OwnershipHandoverService.Selection(3L, null), auth));
+    }
+
+    @Test
+    void rejectsMemberNotInLinkedTeamWithoutPersistingIntent() throws IOException {
+        linked(State.READY, false);
+        assertEquals(
+                "CLOUD_TARGET_CHANGED",
+                assertThrows(
+                                ResponseStatusException.class,
+                                () ->
+                                        service.prepare(
+                                                2L,
+                                                new OwnershipHandoverService.Selection(123L, null),
+                                                auth))
+                        .getReason());
+        assertNull(owner.getHandoverTargetId());
+    }
+
+    @Test
+    void cannotPairTheLocalSuccessorWithTheCurrentCloudOwner() throws IOException {
+        linked(State.TRANSFERRED, false);
+        assertEquals(
+                "CHOOSE_ANOTHER_CLOUD_USER",
+                assertThrows(ResponseStatusException.class, this::prepareSelected).getReason());
+        assertNull(owner.getHandoverTargetId());
+    }
+
+    @Test
+    void invitationPinsTheAcceptedAccountBeforeTransfer() throws IOException {
+        linked(State.NEEDS_MEMBERSHIP, true);
+        successor.setEmail(null);
+        prepareSelected();
+        assertNull(owner.getHandoverCloudUserId());
+        linked(State.READY, true);
+        prepareSelected();
+        assertEquals(2L, owner.getHandoverCloudUserId());
+        service.changeCloud(auth, "Bearer human", "transfer");
+        verify(cloud).ownership(credential, "new@example.com", "Bearer human", "transfer", 1L, 2L);
     }
 
     @Test
@@ -103,7 +219,7 @@ class OwnershipHandoverServiceTest {
             throws IOException {
         State readiness = account.equals("same-team") ? State.READY : State.NEEDS_MEMBERSHIP;
         linked(readiness, paid);
-        assertEquals(readiness, service.prepare(2L, auth).cloud().state());
+        assertEquals(readiness, prepareSelected().cloud().state());
         assertEquals(
                 "CLOUD_TRANSFER_REQUIRED",
                 assertThrows(
@@ -131,30 +247,30 @@ class OwnershipHandoverServiceTest {
     @Test
     void deviceCredentialAloneCannotTransferCloudOwnership() throws IOException {
         linked(State.READY, false);
-        service.prepare(2L, auth);
+        prepareSelected();
         assertEquals(
                 "CLOUD_SIGN_IN_REQUIRED",
                 assertThrows(
                                 ResponseStatusException.class,
                                 () -> service.changeCloud(auth, null, "transfer"))
                         .getReason());
-        verify(cloud, never()).ownership(any(), any(), any(), eq("transfer"), any());
+        verify(cloud, never()).ownership(any(), any(), any(), eq("transfer"), any(), any());
     }
 
     @Test
     void humanBearerIsForwardedWithPinnedLeaderButNeverPersisted() throws IOException {
         linked(State.READY, true);
-        service.prepare(2L, auth);
+        prepareSelected();
         service.changeCloud(auth, "Bearer human", "transfer");
-        verify(cloud).ownership(credential, "new@example.com", "Bearer human", "transfer", 1L);
+        verify(cloud).ownership(credential, "new@example.com", "Bearer human", "transfer", 1L, 2L);
         assertEquals(1L, owner.getHandoverLeaderId());
     }
 
     @Test
     void lostCloudResponseCanResumeWithoutOldLeadersBearer() throws IOException {
         linked(State.READY, true);
-        service.prepare(2L, auth);
-        when(cloud.ownership(credential, "new@example.com", "Bearer human", "transfer", 1L))
+        prepareSelected();
+        when(cloud.ownership(credential, "new@example.com", "Bearer human", "transfer", 1L, 2L))
                 .thenThrow(new IOException("lost response"));
         assertThrows(
                 ResponseStatusException.class,
@@ -170,8 +286,8 @@ class OwnershipHandoverServiceTest {
 
     @Test
     void changedRecipientOrLinkCannotComplete() throws IOException {
-        linked(State.TRANSFERRED, true);
-        service.prepare(2L, auth);
+        linked(State.READY, true);
+        prepareSelected();
         successor.setEmail("other@example.com");
         assertEquals(
                 "TARGET_CHANGED",
@@ -192,8 +308,8 @@ class OwnershipHandoverServiceTest {
     @Test
     void outageFailsClosedButPendingRecordCanStillBeDiscovered() throws IOException {
         linked(State.READY, false);
-        service.prepare(2L, auth);
-        when(cloud.ownership(credential, "new@example.com", null, "status", null))
+        prepareSelected();
+        when(cloud.ownership(credential, "new@example.com", null, "status", null, 2L))
                 .thenThrow(new IOException());
         assertThrows(ResponseStatusException.class, () -> service.validateCompletion(owner, 2L));
         assertEquals(2L, service.current(auth).targetId());
@@ -216,7 +332,7 @@ class OwnershipHandoverServiceTest {
     @Test
     void cancelBeforeCloudTransferClearsOnlyHandover() throws IOException {
         linked(State.READY, true);
-        service.prepare(2L, auth);
+        prepareSelected();
         successor.setEmail("updated@example.com");
         service.cancel(auth);
         assertNull(owner.getHandoverTargetId());

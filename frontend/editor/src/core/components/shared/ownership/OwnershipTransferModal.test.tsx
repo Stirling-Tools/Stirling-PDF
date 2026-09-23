@@ -77,6 +77,122 @@ describe("ownership handover", () => {
     await click(screen.getByRole("button", { name: "Transfer ownership" }));
   }
 
+  function choosing(
+    members = [{ id: 42, name: "Jamie Cloud", email: "cloud@example.com" }],
+  ): OwnershipStatus {
+    return {
+      ...status(null),
+      targetEmail: null,
+      candidates: { teamId: 9, teamName: "Acme", members },
+    };
+  }
+
+  it("selects a team member for a local user without an email and reviews both accounts", async () => {
+    vi.mocked(adapter.prepare).mockResolvedValue(choosing());
+    adapter.selectCloud = vi.fn().mockResolvedValue({
+      ...status("READY"),
+      targetEmail: null,
+      cloudEmail: "cloud@example.com",
+    });
+    show();
+    expect(
+      await screen.findByText("Choose their Stirling account"),
+    ).toBeVisible();
+    expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
+    await click(screen.getByRole("radio", { name: /Jamie Cloud/ }));
+    await click(screen.getByRole("button", { name: "Continue" }));
+    await screen.findByRole("checkbox");
+    expect(adapter.selectCloud).toHaveBeenCalledWith({ cloudUserId: 42 });
+    expect(screen.getByText("Server account")).toBeVisible();
+    expect(screen.getByText("Jamie")).toBeVisible();
+    expect(screen.getByText("cloud@example.com")).toBeVisible();
+    expect(adapter.transferCloud).not.toHaveBeenCalled();
+    await confirm();
+    expect(onTransferred).toHaveBeenCalledOnce();
+  });
+
+  it("closing a member picker does not create or cancel an intent", async () => {
+    vi.mocked(adapter.prepare).mockResolvedValue(choosing());
+    show();
+    await click(
+      await screen.findByRole("button", { name: "Close transfer dialog" }),
+    );
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(adapter.cancel).not.toHaveBeenCalled();
+    expect(adapter.transferCloud).not.toHaveBeenCalled();
+  });
+
+  it("guides an empty team through invitation and acceptance before offering transfer", async () => {
+    vi.mocked(adapter.prepare).mockResolvedValue(choosing([]));
+    const awaiting = {
+      ...status("NEEDS_MEMBERSHIP"),
+      targetEmail: null,
+      cloudEmail: "new@example.com",
+    };
+    adapter.selectCloud = vi.fn().mockResolvedValue(awaiting);
+    vi.mocked(adapter.invite!).mockResolvedValue(awaiting);
+    show();
+    expect(await screen.findByText("Invite your next owner")).toBeVisible();
+    expect(screen.queryByRole("alert")).toBeNull();
+    await click(screen.getByRole("button", { name: "Invite new owner" }));
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Their email address" }),
+      { target: { value: "invalid" } },
+    );
+    expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Their email address" }),
+      { target: { value: "new@example.com" } },
+    );
+    await click(screen.getByRole("button", { name: "Continue" }));
+    await click(await screen.findByRole("button", { name: "Send invitation" }));
+    expect(adapter.selectCloud).toHaveBeenCalledWith({
+      cloudEmail: "new@example.com",
+    });
+    expect(await screen.findByText("Waiting for them to join")).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: "Transfer ownership" }),
+    ).toBeNull();
+    expect(adapter.completeLocal).not.toHaveBeenCalled();
+    vi.mocked(adapter.prepare).mockResolvedValue({
+      ...status("READY"),
+      cloudEmail: "new@example.com",
+    });
+    await click(screen.getByRole("button", { name: "Check again" }));
+    await confirm();
+    expect(onTransferred).toHaveBeenCalledOnce();
+  });
+
+  it("keeps the picker open when a chosen member is no longer eligible", async () => {
+    vi.mocked(adapter.prepare).mockResolvedValue(choosing());
+    adapter.selectCloud = vi
+      .fn()
+      .mockRejectedValue(new Error("CLOUD_TARGET_CHANGED"));
+    show();
+    await click(await screen.findByRole("radio", { name: /Jamie Cloud/ }));
+    await click(screen.getByRole("button", { name: "Continue" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Choose another cloud member",
+    );
+    expect(adapter.transferCloud).not.toHaveBeenCalled();
+    expect(adapter.completeLocal).not.toHaveBeenCalled();
+  });
+
+  it("changing the selected account cancels its draft before loading the member picker", async () => {
+    adapter.selectCloud = vi.fn();
+    show();
+    await screen.findByRole("checkbox");
+    vi.mocked(adapter.prepare).mockResolvedValue(choosing());
+    await click(
+      screen.getByRole("button", { name: "Choose a different account" }),
+    );
+    expect(
+      await screen.findByText("Choose their Stirling account"),
+    ).toBeVisible();
+    expect(adapter.cancel).toHaveBeenCalledOnce();
+    expect(adapter.transferCloud).not.toHaveBeenCalled();
+  });
+
   it("unlinked transfer needs no cloud account", async () => {
     vi.mocked(adapter.prepare).mockResolvedValue(status(null));
     show();

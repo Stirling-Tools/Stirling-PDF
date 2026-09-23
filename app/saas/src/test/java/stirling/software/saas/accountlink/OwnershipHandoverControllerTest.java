@@ -25,6 +25,23 @@ class OwnershipHandoverControllerTest {
             new OwnershipHandoverController.Request("successor@example.com", 1L);
 
     @Test
+    void candidateReadIsScopedToTheDeviceTeam() {
+        controller.candidates(new LinkedInstanceAuthenticationToken(4L, 9L));
+        verify(handovers).candidates(9L);
+        verifyNoInteractions(links, users);
+    }
+
+    @Test
+    void humanSessionCannotReadCandidatesThroughTheDeviceEndpoint() {
+        assertEquals(
+                403,
+                assertThrows(ResponseStatusException.class, () -> controller.candidates(auth))
+                        .getStatusCode()
+                        .value());
+        verifyNoInteractions(handovers, links, users);
+    }
+
+    @Test
     void humanSessionWithoutValidDeviceCredentialsCannotUseInstanceTransfer() {
         when(links.resolveActiveInstance("device", "wrong-secret")).thenReturn(Optional.empty());
         var error =
@@ -51,7 +68,7 @@ class OwnershipHandoverControllerTest {
             controller.change("transfer", "device", "secret", request, auth);
         }
         verify(handovers)
-                .changeFromInstance(instance, "successor@example.com", 1L, owner, "transfer");
+                .changeFromInstance(instance, "successor@example.com", 1L, owner, "transfer", null);
         verify(handovers, never()).change(anyLong(), anyString(), anyLong(), any(), anyString());
     }
 }

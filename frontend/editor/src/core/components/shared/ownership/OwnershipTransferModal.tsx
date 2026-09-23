@@ -1,8 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Alert, Checkbox, Group, Modal, Stack, Text } from "@mantine/core";
+import { Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
+import { FlowModal } from "@app/components/shared/FlowModal";
+import { StepModalHeader } from "@app/components/shared/StepModalHeader";
+import { Icon } from "@app/ui/Icon";
+import "@app/components/shared/ownership/OwnershipTransferModal.css";
 
 export interface CloudOwnershipStatus {
   teamId: number;
@@ -19,12 +23,22 @@ export interface OwnershipStatus {
   targetName: string;
   targetEmail: string | null;
   cloud: CloudOwnershipStatus | null;
+  cloudEmail?: string | null;
+  candidates?: {
+    teamId: number;
+    teamName: string;
+    members: { id: number; name: string | null; email: string }[];
+  } | null;
 }
 
 /** Callbacks reject on failure; completion must enforce cloud readiness on the server. */
 export interface OwnershipTransferAdapter {
   local: boolean;
   prepare: () => Promise<OwnershipStatus>;
+  selectCloud?: (selection: {
+    cloudUserId?: number;
+    cloudEmail?: string;
+  }) => Promise<OwnershipStatus>;
   invite?: () => Promise<OwnershipStatus>;
   transferCloud: (status: OwnershipStatus) => Promise<OwnershipStatus>;
   completeLocal?: (status: OwnershipStatus) => Promise<void>;
@@ -66,6 +80,10 @@ export function OwnershipTransferModal({
   const [invited, setInvited] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [done, setDone] = useState(false);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [search, setSearch] = useState("");
+  const [inviteMode, setInviteMode] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
   const working = useRef(false);
   const initialAdapter = useRef(adapter);
 
@@ -93,7 +111,12 @@ export function OwnershipTransferModal({
   const cloudDone = status?.cloud?.state === "TRANSFERRED";
   const partial = adapter.local && cloudDone && !done;
   const canCancel = Boolean(
-    adapter.local && adapter.cancel && status && !partial && !done,
+    adapter.local &&
+    adapter.cancel &&
+    status &&
+    !status.candidates &&
+    !partial &&
+    !done,
   );
   const startFromInstance =
     !adapter.local &&
@@ -116,7 +139,7 @@ export function OwnershipTransferModal({
   }
 
   async function transfer() {
-    if (!status || startFromInstance) return;
+    if (!status || status.candidates || startFromInstance) return;
     let next = status;
     try {
       if (next.cloud && next.cloud.state !== "TRANSFERRED") {
@@ -149,302 +172,515 @@ export function OwnershipTransferModal({
     }
   }
 
+  const choosing = Boolean(status?.candidates);
+  const linked = Boolean(status?.cloud || choosing);
+  const total = adapter.local && linked ? 3 : 2;
+  const step = done ? total : choosing || needsMember ? 1 : total - 1;
+  const cloudEmail = status?.cloudEmail ?? status?.targetEmail;
+  const members =
+    status?.candidates?.members.filter((member) =>
+      `${member.name ?? ""} ${member.email}`
+        .toLowerCase()
+        .includes(search.toLowerCase()),
+    ) ?? [];
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inviteEmail.trim());
+  const title = done
+    ? t("ownership.done", "Ownership transferred")
+    : startFromInstance
+      ? t(
+          "ownership.startFromInstanceTitle",
+          "Start from your self-hosted server",
+        )
+      : choosing
+        ? t("ownership.chooseCloud", "Choose their Stirling account")
+        : needsMember
+          ? invited
+            ? t("ownership.waiting", "Waiting for them to join")
+            : t("ownership.joinTitle", "Join the cloud team first")
+          : partial
+            ? t("ownership.finishTitle", "Finish the server transfer")
+            : status
+              ? t("ownership.review", "Review & transfer")
+              : t("ownership.prepareTitle", "Prepare the transfer");
+
+  function errorText() {
+    if (partial || error?.includes("FINISH_LOCAL_TRANSFER"))
+      return t(
+        "ownership.partialError",
+        "Cloud ownership has transferred. Finish the server transfer to keep both owners aligned.",
+      );
+    if (
+      error?.includes("CLOUD_SIGN_IN_REQUIRED") ||
+      error?.includes("CLOUD_OWNER_REQUIRED")
+    )
+      return t(
+        "ownership.ownerRequired",
+        "Sign in as the current cloud team owner, then try this step again.",
+      );
+    if (error?.includes("INVITATION_BLOCKED"))
+      return t(
+        "ownership.inviteBlocked",
+        "The invitation could not be sent. Check available team seats and whether the recipient already has a paid subscription.",
+      );
+    if (error?.includes("CLOUD_OWNER_CHANGED"))
+      return t(
+        "ownership.ownerChanged",
+        "Cloud ownership changed after this transfer started. Cancel this transfer and start again with the current cloud owner.",
+      );
+    if (
+      error?.includes("CLOUD_TARGET_CHANGED") ||
+      error?.includes("CHOOSE_ANOTHER_CLOUD_USER")
+    )
+      return t(
+        "ownership.cloudTargetChanged",
+        "Choose another cloud member. This account is no longer eligible for the handover.",
+      );
+    if (
+      error?.includes("TARGET_CHANGED") ||
+      error?.includes("TARGET_UNAVAILABLE")
+    )
+      return t(
+        "ownership.targetChanged",
+        "The recipient's account changed. Restore their access or cancel this transfer and choose them again.",
+      );
+    if (error?.includes("HANDOVER_IN_PROGRESS"))
+      return t(
+        "ownership.inProgress",
+        "Another recipient already has a pending transfer. Close this dialog and resume it from Users.",
+      );
+    if (error?.includes("LINK_CHANGED"))
+      return t(
+        "ownership.linkChanged",
+        "The server's cloud link changed. Ask the server operator to restore the original link before resuming.",
+      );
+    return t(
+      "ownership.error",
+      "We couldn't complete this step. Check the recipient is active and the server is connected, then check again. A pending transfer can be resumed here.",
+    );
+  }
+
+  async function chooseCloud() {
+    if (!adapter.selectCloud) return;
+    const selection = inviteMode
+      ? { cloudEmail: inviteEmail.trim() }
+      : { cloudUserId: selectedId! };
+    setStatus(await adapter.selectCloud(selection));
+    setAccepted(false);
+    setInvited(false);
+  }
+
+  async function changeAccount() {
+    await adapter.cancel!();
+    setStatus(await adapter.prepare());
+    setAccepted(false);
+    setInvited(false);
+  }
+
+  function primaryAction() {
+    if (done)
+      return <Button onClick={onClose}>{t("common.done", "Done")}</Button>;
+    if (startFromInstance) return null;
+    if (choosing && !inviteMode && status?.candidates?.members.length === 0)
+      return (
+        <Button disabled={busy} onClick={() => setInviteMode(true)}>
+          {t("ownership.inviteNewOwner", "Invite new owner")}
+        </Button>
+      );
+    if (choosing)
+      return (
+        <Button
+          disabled={busy || (inviteMode ? !emailValid : selectedId === null)}
+          onClick={() => void run(chooseCloud)}
+        >
+          {t("common.continue", "Continue")}
+        </Button>
+      );
+    if (!status || (error && !partial) || (needsMember && invited))
+      return (
+        <Button
+          disabled={busy}
+          onClick={() =>
+            void run(async () => {
+              setStatus(await adapter.prepare());
+            })
+          }
+        >
+          {t("ownership.check", "Check again")}
+        </Button>
+      );
+    if (needsMember)
+      return (
+        <Button
+          disabled={busy || !adapter.invite}
+          onClick={() =>
+            void run(async () => {
+              setStatus(await adapter.invite!());
+              setInvited(true);
+            })
+          }
+        >
+          {t("ownership.invite", "Send invitation")}
+        </Button>
+      );
+    return (
+      <Button
+        disabled={busy || (!accepted && !partial)}
+        onClick={() => void run(transfer)}
+      >
+        {partial
+          ? t("ownership.finish", "Finish server transfer")
+          : t("ownership.transfer", "Transfer ownership")}
+      </Button>
+    );
+  }
+
   return (
-    <Modal
-      opened
-      centered
+    <FlowModal
+      open
       onClose={close}
-      closeButtonProps={{
-        "aria-label": t("ownership.close", "Close transfer dialog"),
-      }}
-      closeOnClickOutside={false}
-      closeOnEscape={!busy}
-      withCloseButton={!busy}
-      size="md"
+      label={t("ownership.title", "Transfer ownership")}
+      disableBackdropClose
+      disableEscapeClose={busy}
       zIndex={Z_INDEX_OVER_CONFIG_MODAL + 1}
-      title={t("ownership.title", "Transfer ownership")}
+      footer={
+        <>
+          {!done && (
+            <Button variant="tertiary" disabled={busy} onClick={close}>
+              {canCancel
+                ? t("ownership.cancel", "Cancel transfer")
+                : t("common.close", "Close")}
+            </Button>
+          )}
+          {primaryAction()}
+        </>
+      }
     >
-      <Stack gap="md" aria-busy={busy}>
+      <StepModalHeader
+        brand={t("ownership.title", "Transfer ownership")}
+        title={title}
+        step={startFromInstance ? undefined : step}
+        total={total}
+        stepLabel={
+          startFromInstance
+            ? undefined
+            : t("ownership.step", "Step {{current}} of {{total}}", {
+                current: step,
+                total,
+              })
+        }
+        closeLabel={t("ownership.close", "Close transfer dialog")}
+        onClose={busy ? undefined : close}
+      />
+      <div className="ownership-flow" aria-busy={busy}>
+        {busy && (
+          <p className="ownership-flow__muted" role="status">
+            {t("ownership.working", "Checking and updating ownership…")}
+          </p>
+        )}
+        {error && !startFromInstance && (
+          <div
+            className="ownership-flow__notice ownership-flow__notice--error"
+            role="alert"
+          >
+            {errorText()}
+          </div>
+        )}
         {done ? (
-          <>
-            <Text fw={600}>{t("ownership.done", "Ownership transferred")}</Text>
-            <Text>
+          <div className="ownership-flow__success">
+            <Icon name="circle-check" size={32} />
+            <p>
               {t("ownership.newOwner", "{{name}} is now the owner.", {
                 name: status?.targetName,
               })}
-            </Text>
-            <Button onClick={onClose}>{t("common.done", "Done")}</Button>
-          </>
+            </p>
+            <p className="ownership-flow__muted">
+              {adapter.local && linked
+                ? t(
+                    "ownership.bothDone",
+                    "Server and cloud ownership are now aligned.",
+                  )
+                : t("ownership.accessUpdated", "Their owner access is ready.")}
+            </p>
+          </div>
+        ) : startFromInstance ? (
+          <p role="alert">
+            {t(
+              "ownership.startFromInstanceBody",
+              "This team has linked servers. On the self-hosted server, open Settings → Users and change the recipient's role to Org Owner. That flow transfers cloud ownership before completing the server transfer.",
+            )}
+          </p>
         ) : (
           <>
             {status && (
-              <div>
-                <Text size="sm" c="dimmed">
-                  {t("ownership.newOwnerLabel", "New owner")}
-                </Text>
-                <Text fw={600}>{status.targetName}</Text>
-                {status.targetEmail && (
-                  <Text size="sm">{status.targetEmail}</Text>
+              <div className="ownership-flow__accounts">
+                <div>
+                  <span>
+                    {adapter.local
+                      ? t("ownership.serverAccount", "Server account")
+                      : t("ownership.newOwnerLabel", "New owner")}
+                  </span>
+                  <strong>{status.targetName}</strong>
+                </div>
+                {!choosing && status.cloud && (
+                  <div>
+                    <span>
+                      {t("ownership.cloudAccount", "Stirling account")}
+                    </span>
+                    <strong>{cloudEmail}</strong>
+                  </div>
                 )}
               </div>
             )}
-            {busy && (
-              <Text role="status">
-                {t("ownership.working", "Checking and updating ownership…")}
-              </Text>
-            )}
-            {startFromInstance && (
-              <Alert
-                role="alert"
-                title={t(
-                  "ownership.startFromInstanceTitle",
-                  "Start from your self-hosted server",
-                )}
-              >
-                {t(
-                  "ownership.startFromInstanceBody",
-                  "This team has linked servers. On the self-hosted server, open Settings → Users and change the recipient's role to Org Owner. That flow transfers cloud ownership before completing the server transfer.",
-                )}
-              </Alert>
-            )}
-            {error && !startFromInstance && (
-              <Alert role="alert" color="red">
-                {partial
-                  ? t(
-                      "ownership.partialError",
-                      "Cloud ownership has transferred. Finish the server transfer to keep both owners aligned.",
-                    )
-                  : t(
-                      "ownership.error",
-                      "We couldn't complete this step. Check the recipient is active and the server is connected, then check again. A pending transfer can be resumed here.",
-                    )}
-              </Alert>
-            )}
-            {error && !startFromInstance && (
-              <Text size="sm">
-                {error.includes("CLOUD_SIGN_IN_REQUIRED") ||
-                error.includes("CLOUD_OWNER_REQUIRED")
-                  ? t(
-                      "ownership.ownerRequired",
-                      "Sign in as the current cloud team owner, then try this step again.",
-                    )
-                  : error.includes("INVITATION_BLOCKED")
-                    ? t(
-                        "ownership.inviteBlocked",
-                        "The invitation could not be sent. Check available team seats and whether the recipient already has a paid subscription.",
-                      )
-                    : error.includes("CLOUD_OWNER_CHANGED")
-                      ? t(
-                          "ownership.ownerChanged",
-                          "Cloud ownership changed after this transfer started. Cancel this transfer and start again with the current cloud owner.",
-                        )
-                      : error.includes("TARGET_CHANGED") ||
-                          error.includes("TARGET_UNAVAILABLE")
-                        ? t(
-                            "ownership.targetChanged",
-                            "The recipient's account changed. Restore their access or cancel this transfer and choose them again.",
-                          )
-                        : error.includes("HANDOVER_IN_PROGRESS")
-                          ? t(
-                              "ownership.inProgress",
-                              "Another recipient already has a pending transfer. Close this dialog and resume it from Users.",
-                            )
-                          : error.includes("EMAIL_REQUIRED")
-                            ? t(
-                                "ownership.emailRequired",
-                                "Add an email address to this user's account before transferring a linked server.",
-                              )
-                            : error.includes("LINK_CHANGED")
-                              ? t(
-                                  "ownership.linkChanged",
-                                  "The server's cloud link changed. Ask the server operator to restore the original link before resuming.",
-                                )
-                              : null}
-              </Text>
-            )}
-            {!status && !busy && !startFromInstance && (
-              <Text>
-                {t(
-                  "ownership.prepareError",
-                  "For a linked server, the recipient needs an email address and must have completed their first login. If another transfer is pending, resume it from Users.",
-                )}
-              </Text>
-            )}
-            {needsMember && !startFromInstance && (
+            {choosing && (
               <>
-                <Text fw={600}>
-                  {t("ownership.joinTitle", "Join the cloud team first")}
-                </Text>
-                <Text>
+                <p>
+                  {t(
+                    "ownership.chooseCloudBody",
+                    "Select the account that belongs to {{name}} in {{team}}.",
+                    {
+                      name: status?.targetName,
+                      team: status?.candidates?.teamName,
+                    },
+                  )}
+                </p>
+                {inviteMode ? (
+                  <>
+                    <label className="ownership-flow__field">
+                      {t("ownership.inviteEmail", "Their email address")}
+                      <input
+                        type="email"
+                        value={inviteEmail}
+                        onChange={(event) => setInviteEmail(event.target.value)}
+                        disabled={busy}
+                        autoComplete="email"
+                      />
+                    </label>
+                    <p className="ownership-flow__muted">
+                      {t(
+                        "ownership.inviteEmailBody",
+                        "They can create a Stirling account or sign in to accept the invitation. You stay the owner until they join and you confirm the transfer.",
+                      )}
+                    </p>
+                    <Button
+                      variant="tertiary"
+                      disabled={busy}
+                      onClick={() => setInviteMode(false)}
+                    >
+                      {t("ownership.backToMembers", "Back to team members")}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    {status?.candidates?.members.length ? (
+                      <>
+                        <input
+                          className="ownership-flow__search"
+                          type="search"
+                          aria-label={t(
+                            "ownership.searchMembers",
+                            "Search team members",
+                          )}
+                          placeholder={t(
+                            "ownership.searchMembers",
+                            "Search team members",
+                          )}
+                          value={search}
+                          onChange={(event) => setSearch(event.target.value)}
+                        />
+                        <div
+                          className="ownership-flow__members"
+                          role="radiogroup"
+                          aria-label={t(
+                            "ownership.cloudAccount",
+                            "Stirling account",
+                          )}
+                        >
+                          {members.map((member) => (
+                            <label
+                              key={member.id}
+                              className={`ownership-flow__member ${selectedId === member.id ? "is-selected" : ""}`}
+                            >
+                              <input
+                                type="radio"
+                                name="cloud-successor"
+                                value={member.id}
+                                checked={selectedId === member.id}
+                                disabled={busy}
+                                onChange={() => setSelectedId(member.id)}
+                              />
+                              <span>
+                                <strong>{member.name || member.email}</strong>
+                                {member.name && <small>{member.email}</small>}
+                              </span>
+                            </label>
+                          ))}
+                          {!members.length && (
+                            <p className="ownership-flow__muted">
+                              {t(
+                                "ownership.noMatches",
+                                "No matching team members.",
+                              )}
+                            </p>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="ownership-flow__empty">
+                        <Icon name="users" size={28} />
+                        <strong>
+                          {t("ownership.noMembers", "Invite your next owner")}
+                        </strong>
+                        <p>
+                          {t(
+                            "ownership.noMembersBody",
+                            "There are no other eligible members in this cloud team. Invite the recipient to join before transferring ownership.",
+                          )}
+                        </p>
+                      </div>
+                    )}
+                    {status?.candidates?.members.length ? (
+                      <Button
+                        variant="secondary"
+                        disabled={busy}
+                        onClick={() => setInviteMode(true)}
+                      >
+                        {t(
+                          "ownership.inviteSomeoneElse",
+                          "Invite someone else",
+                        )}
+                      </Button>
+                    ) : null}
+                  </>
+                )}
+              </>
+            )}
+            {needsMember && (
+              <>
+                <p>
                   {t(
                     "ownership.joinBody",
                     "Send an invitation to {{email}}. They can create an account or sign in, then accept it to join {{team}}. Ownership stays with you until they are ready.",
-                    {
-                      email: status?.targetEmail,
-                      team: status?.cloud?.teamName,
-                    },
+                    { email: cloudEmail, team: status?.cloud?.teamName },
                   )}
-                </Text>
-                <Text size="sm" c="dimmed">
-                  {t(
-                    "ownership.otherTeam",
-                    "If they belong to another team, accepting may move their account. A paid account or ownership of another team may need resolving first. We won't move their subscription or merge teams.",
-                  )}
-                </Text>
+                </p>
                 {invited && (
-                  <Text role="status">
+                  <div role="status" className="ownership-flow__notice">
                     {t(
                       "ownership.invited",
                       "Invitation sent. Ask them to accept it, then check again.",
                     )}
-                  </Text>
+                  </div>
                 )}
-                {adapter.invite && (
-                  <Button
-                    variant="secondary"
-                    disabled={busy}
-                    onClick={() =>
-                      void run(async () => {
-                        setStatus(await adapter.invite!());
-                        setInvited(true);
-                      })
-                    }
-                  >
-                    {t("ownership.invite", "Send invitation")}
-                  </Button>
-                )}
+                <p className="ownership-flow__muted">
+                  {t(
+                    "ownership.otherTeam",
+                    "If they belong to another team, accepting may move their account. A paid account or ownership of another team may need resolving first. We won't move their subscription or merge teams.",
+                  )}
+                </p>
               </>
             )}
-            {status?.cloud && adapter.signIn && !cloudDone && (
-              <div>
-                <Text size="sm">
-                  {t(
-                    "ownership.signInBody",
-                    "Use the current cloud team owner's account to invite or transfer. Your server login stays the same.",
-                  )}
-                </Text>
-                <Button
-                  variant="tertiary"
-                  disabled={busy}
-                  onClick={() => {
-                    onClose();
-                    adapter.signIn?.();
-                  }}
-                >
-                  {t("ownership.signIn", "Sign in to cloud")}
-                </Button>
-              </div>
-            )}
-            {status && !needsMember && !startFromInstance && (
+            {status && !choosing && !needsMember && (
               <>
-                <Text fw={600}>
-                  {partial
-                    ? t("ownership.finishTitle", "Finish the server transfer")
-                    : t("ownership.review", "Review & transfer")}
-                </Text>
-                {partial && !error && (
-                  <Alert color="blue" role="status">
+                {partial ? (
+                  <div className="ownership-flow__notice" role="status">
                     {t(
                       "ownership.partialError",
                       "Cloud ownership has transferred. Finish the server transfer to keep both owners aligned.",
                     )}
-                  </Alert>
-                )}
-                {status.cloud && !partial && (
+                  </div>
+                ) : (
                   <>
-                    <Text>
-                      {t(
-                        "ownership.cloudScope",
-                        "{{name}} will own the entire {{team}} cloud team and manage its members and billing settings.",
-                        {
-                          name: status.targetName,
-                          team: status.cloud.teamName,
-                        },
+                    <div className="ownership-flow__summary">
+                      {status.cloud && (
+                        <>
+                          <p>
+                            {t(
+                              "ownership.cloudScope",
+                              "{{name}} will own the entire {{team}} cloud team and manage its members and billing settings.",
+                              {
+                                name: status.targetName,
+                                team: status.cloud.teamName,
+                              },
+                            )}
+                          </p>
+                          <p className="ownership-flow__muted">
+                            {t(
+                              "ownership.billing",
+                              "The subscription, wallet, payment method and existing licenses stay in place. Billing contact details do not change automatically.",
+                            )}
+                          </p>
+                          {status.cloud.linkedInstances > 1 && (
+                            <p className="ownership-flow__muted">
+                              {t(
+                                "ownership.instances",
+                                "This team has {{count}} linked servers. Their cloud billing stays with this team; other servers' local owners do not change.",
+                                { count: status.cloud.linkedInstances },
+                              )}
+                            </p>
+                          )}
+                          <p className="ownership-flow__muted">
+                            {t(
+                              "ownership.demote",
+                              "The previous cloud owner becomes a team member.",
+                            )}
+                          </p>
+                        </>
                       )}
-                    </Text>
-                    {status.cloud.linkedInstances > 0 && (
-                      <Text size="sm">
-                        {t(
-                          "ownership.servers",
-                          "This team has {{count}} linked servers. Their cloud billing stays with this team; other servers' local owners do not change.",
-                          { count: status.cloud.linkedInstances },
-                        )}
-                      </Text>
-                    )}
-                    <Text size="sm">
-                      {t(
-                        "ownership.billing",
-                        "The subscription, wallet, payment method and existing licenses stay in place. Billing contact details do not change automatically.",
+                      {adapter.local && (
+                        <p>
+                          {t(
+                            "ownership.localScope",
+                            "They will own this server and manage billing and cloud connections. You keep administrator access, but lose access to those settings.",
+                          )}
+                        </p>
                       )}
-                    </Text>
-                    <Text size="sm">
-                      {t(
-                        "ownership.demote",
-                        "The previous cloud owner becomes a team member.",
+                    </div>
+                    <Checkbox
+                      checked={accepted}
+                      onChange={(event) =>
+                        setAccepted(event.currentTarget.checked)
+                      }
+                      label={t(
+                        "ownership.confirm",
+                        "I understand the access and ownership changes.",
                       )}
-                    </Text>
+                    />
                   </>
-                )}
-                {adapter.local && (
-                  <Text>
-                    {t(
-                      "ownership.localScope",
-                      "They will own this server and manage billing and cloud connections. You keep administrator access, but lose access to those settings.",
-                    )}
-                  </Text>
-                )}
-                {!partial && (
-                  <Checkbox
-                    checked={accepted}
-                    onChange={(event) =>
-                      setAccepted(event.currentTarget.checked)
-                    }
-                    label={t(
-                      "ownership.confirm",
-                      "I understand the access and ownership changes.",
-                    )}
-                  />
                 )}
               </>
             )}
-            <Group justify="flex-end">
-              {startFromInstance && (
-                <Button variant="secondary" onClick={onClose} disabled={busy}>
-                  {t("common.close", "Close")}
-                </Button>
-              )}
-              {canCancel && (
-                <Button variant="tertiary" disabled={busy} onClick={close}>
-                  {t("ownership.cancel", "Cancel transfer")}
-                </Button>
-              )}
-              {(!status || needsMember || error) && (
-                <Button
-                  variant="secondary"
-                  disabled={busy}
-                  onClick={() =>
-                    void run(async () => {
-                      setStatus(await adapter.prepare());
-                    })
-                  }
-                >
-                  {t("ownership.check", "Check again")}
-                </Button>
-              )}
-              {status && !needsMember && !startFromInstance && (
-                <Button
-                  disabled={busy || (!accepted && !partial)}
-                  onClick={() => void run(transfer)}
-                >
-                  {partial
-                    ? t("ownership.finish", "Finish server transfer")
-                    : t("ownership.transfer", "Transfer ownership")}
-                </Button>
-              )}
-            </Group>
+            {adapter.selectCloud && status?.cloud && !partial && (
+              <Button
+                variant="tertiary"
+                disabled={busy}
+                onClick={() => void run(changeAccount)}
+              >
+                {t("ownership.changeAccount", "Choose a different account")}
+              </Button>
+            )}
+            {status?.cloud && adapter.signIn && !cloudDone && error && (
+              <Button
+                variant="secondary"
+                disabled={busy}
+                onClick={() => {
+                  onClose();
+                  adapter.signIn?.();
+                }}
+              >
+                {t("ownership.signIn", "Sign in to cloud")}
+              </Button>
+            )}
+            {!status && !busy && (
+              <p className="ownership-flow__muted">
+                {t(
+                  "ownership.prepareHelp",
+                  "The recipient must have completed their first server login. You can retry here, or return to Users to choose someone else.",
+                )}
+              </p>
+            )}
           </>
         )}
-      </Stack>
-    </Modal>
+      </div>
+    </FlowModal>
   );
 }

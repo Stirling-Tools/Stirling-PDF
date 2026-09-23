@@ -62,14 +62,24 @@ public class AccountLinkClient {
     /** A non-2xx reply from the SaaS account-link API. */
     public static class UpstreamException extends IOException {
         private final int status;
+        private final String reason;
 
         public UpstreamException(int status, String body) {
+            this(status, body, null);
+        }
+
+        public UpstreamException(int status, String body, String reason) {
             super("SaaS account-link returned HTTP " + status + ": " + body);
             this.status = status;
+            this.reason = reason;
         }
 
         public int status() {
             return status;
+        }
+
+        public String reason() {
+            return reason;
         }
     }
 
@@ -225,9 +235,22 @@ public class AccountLinkClient {
     public CloudOwnershipStatus ownership(
             DeviceCredential credential, String email, String token, String action, Long leaderId)
             throws IOException {
+        return ownership(credential, email, token, action, leaderId, null);
+    }
+
+    /** Pins the cloud recipient as well as the expected leader when a member has been selected. */
+    public CloudOwnershipStatus ownership(
+            DeviceCredential credential,
+            String email,
+            String token,
+            String action,
+            Long leaderId,
+            Long targetUserId)
+            throws IOException {
         ObjectNode body = mapper.createObjectNode();
         body.put("email", email);
         if (leaderId != null) body.put("expectedLeaderId", leaderId);
+        if (targetUserId != null) body.put("expectedTargetId", targetUserId);
         String path =
                 "status".equals(action)
                         ? "/api/v1/instance/ownership/status"
@@ -243,9 +266,33 @@ public class AccountLinkClient {
         if (token != null && !token.isBlank()) request.header("Authorization", token);
         HttpResponse<String> response = send(request.build());
         if (response.statusCode() / 100 != 2) {
-            throw new UpstreamException(response.statusCode(), response.body());
+            String reason = null;
+            try {
+                reason = text(mapper.readTree(response.body()), "detail");
+            } catch (RuntimeException ignored) {
+                // An HTML gateway error has no structured ownership reason.
+            }
+            throw new UpstreamException(response.statusCode(), response.body(), reason);
         }
         return mapper.readValue(response.body(), CloudOwnershipStatus.class);
+    }
+
+    /** Reads only the linked team's eligible members; device credentials stay on the server. */
+    public CloudOwnershipCandidates ownershipCandidates(DeviceCredential credential)
+            throws IOException {
+        HttpRequest request =
+                HttpRequest.newBuilder()
+                        .uri(uri("/api/v1/instance/ownership/members"))
+                        .header(HEADER_DEVICE_ID, credential.getDeviceId())
+                        .header(HEADER_DEVICE_SECRET, credential.getDeviceSecret())
+                        .timeout(timeout())
+                        .GET()
+                        .build();
+        HttpResponse<String> response = send(request);
+        if (response.statusCode() / 100 != 2) {
+            throw new UpstreamException(response.statusCode(), response.body());
+        }
+        return mapper.readValue(response.body(), CloudOwnershipCandidates.class);
     }
 
     /** Revokes only the instance presenting this device credential. */

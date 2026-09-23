@@ -33,11 +33,33 @@ public class OwnershipHandoverService {
     private final ObjectProvider<AccountLinkClient> client;
 
     public record Status(
-            Long targetId, String targetName, String targetEmail, CloudOwnershipStatus cloud) {}
+            Long targetId,
+            String targetName,
+            String targetEmail,
+            CloudOwnershipStatus cloud,
+            CloudOwnershipCandidates candidates,
+            String cloudEmail) {
+        public Status(
+                Long targetId, String targetName, String targetEmail, CloudOwnershipStatus cloud) {
+            this(targetId, targetName, targetEmail, cloud, null, targetEmail);
+        }
+    }
+
+    public record Selection(
+            Long cloudUserId, @jakarta.validation.constraints.Email String cloudEmail) {}
 
     /** Persists one successor per owner; retries cannot replace the recipient or cloud team. */
     @Transactional
     public Status prepare(Long targetId, Authentication auth) {
+        return prepare(targetId, null, auth);
+    }
+
+    /**
+     * No intent is persisted for a linked server until the owner explicitly chooses a cloud
+     * account.
+     */
+    @Transactional
+    public Status prepare(Long targetId, Selection selection, Authentication auth) {
         OrgOwner owner = requireOwner(auth);
         User target = target(targetId);
         if (Objects.equals(targetId, owner.getOwnerUserId())) throw conflict("CHOOSE_ANOTHER_USER");
@@ -46,18 +68,64 @@ public class OwnershipHandoverService {
             throw conflict("HANDOVER_IN_PROGRESS");
         }
         if (owner.getHandoverTargetId() == null) {
+            var credential = credentials.findCredential();
+            String cloudEmail = null;
+            Long cloudUserId = null;
+            CloudOwnershipStatus cloud = null;
+            if (credential.isPresent()) {
+                CloudOwnershipCandidates candidates = candidates(credential.get());
+                if (!Objects.equals(candidates.teamId(), credential.get().getTeamId()))
+                    throw conflict("LINK_CHANGED");
+                if (selection == null
+                        || (selection.cloudUserId() == null
+                                && (selection.cloudEmail() == null
+                                        || selection.cloudEmail().isBlank()))) {
+                    return new Status(
+                            targetId,
+                            target.getUsername(),
+                            target.getEmail(),
+                            null,
+                            candidates,
+                            null);
+                }
+                if (selection.cloudUserId() != null) {
+                    var member =
+                            candidates.members().stream()
+                                    .filter(m -> Objects.equals(m.id(), selection.cloudUserId()))
+                                    .findFirst()
+                                    .orElseThrow(() -> conflict("CLOUD_TARGET_CHANGED"));
+                    cloudEmail = member.email();
+                    cloudUserId = member.id();
+                } else {
+                    cloudEmail = selection.cloudEmail().strip().toLowerCase(java.util.Locale.ROOT);
+                    if (!cloudEmail.matches("[^\\s@]+@[^\\s@]+\\.[^\\s@]+"))
+                        throw conflict("CLOUD_EMAIL_REQUIRED");
+                }
+                cloud = remote(credential.get(), cloudEmail, null, "status", null, cloudUserId);
+                if (!Objects.equals(cloud.teamId(), credential.get().getTeamId()))
+                    throw conflict("LINK_CHANGED");
+                if (cloud.state() == CloudOwnershipStatus.State.TRANSFERRED)
+                    throw conflict("CHOOSE_ANOTHER_CLOUD_USER");
+                cloudUserId = cloud.targetUserId();
+            }
             owner.setHandoverTargetId(targetId);
             owner.setHandoverTargetUsername(target.getUsername());
             owner.setHandoverTargetEmail(target.getEmail());
-            var credential = credentials.findCredential();
+            owner.setHandoverCloudEmail(cloudEmail);
+            owner.setHandoverCloudUserId(cloudUserId);
             if (credential.isPresent()) {
                 owner.setHandoverDeviceId(credential.get().getDeviceId());
                 owner.setHandoverTeamId(credential.get().getTeamId());
-                CloudOwnershipStatus cloud =
-                        remote(credential.get(), target.getEmail(), null, "status", null);
                 verifyTeam(owner, cloud);
                 owner.setHandoverLeaderId(cloud.leaderUserId());
             }
+        } else if (selection != null
+                && ((selection.cloudUserId() != null
+                                && !Objects.equals(
+                                        selection.cloudUserId(), owner.getHandoverCloudUserId()))
+                        || (selection.cloudEmail() != null
+                                && !selection.cloudEmail().equalsIgnoreCase(cloudEmail(owner))))) {
+            throw conflict("HANDOVER_IN_PROGRESS");
         }
         return status(owner);
     }
@@ -72,7 +140,9 @@ public class OwnershipHandoverService {
                         owner.getHandoverTargetId(),
                         owner.getHandoverTargetUsername(),
                         owner.getHandoverTargetEmail(),
-                        null);
+                        null,
+                        null,
+                        cloudEmail(owner));
     }
 
     /**
@@ -89,10 +159,11 @@ public class OwnershipHandoverService {
         }
         remote(
                 credential(owner),
-                current.targetEmail(),
+                cloudEmail(owner),
                 bearer,
                 action,
-                owner.getHandoverLeaderId());
+                owner.getHandoverLeaderId(),
+                owner.getHandoverCloudUserId());
         return status(owner);
     }
 
@@ -107,8 +178,11 @@ public class OwnershipHandoverService {
         CloudOwnershipStatus cloud =
                 credential == null
                         ? null
-                        : remote(credential, owner.getHandoverTargetEmail(), null, "status", null);
-        if (cloud != null && cloud.state() == CloudOwnershipStatus.State.TRANSFERRED) {
+                        : remote(credential, cloudEmail(owner), null, "status", null, null);
+        if (cloud != null
+                && (owner.getHandoverCloudUserId() == null
+                        ? cloud.state() == CloudOwnershipStatus.State.TRANSFERRED
+                        : Objects.equals(owner.getHandoverCloudUserId(), cloud.leaderUserId()))) {
             throw conflict("FINISH_LOCAL_TRANSFER");
         }
         clear(owner);
@@ -138,6 +212,8 @@ public class OwnershipHandoverService {
         owner.setHandoverTargetId(null);
         owner.setHandoverTargetUsername(null);
         owner.setHandoverTargetEmail(null);
+        owner.setHandoverCloudEmail(null);
+        owner.setHandoverCloudUserId(null);
         owner.setHandoverDeviceId(null);
         owner.setHandoverTeamId(null);
         owner.setHandoverLeaderId(null);
@@ -153,9 +229,43 @@ public class OwnershipHandoverService {
         CloudOwnershipStatus cloud =
                 credential == null
                         ? null
-                        : remote(credential, owner.getHandoverTargetEmail(), null, "status", null);
-        if (cloud != null) verifyTeam(owner, cloud);
-        return new Status(target.getId(), target.getUsername(), target.getEmail(), cloud);
+                        : remote(
+                                credential,
+                                cloudEmail(owner),
+                                null,
+                                "status",
+                                null,
+                                owner.getHandoverCloudUserId());
+        if (cloud != null) {
+            verifyTeam(owner, cloud);
+            if (owner.getHandoverCloudUserId() == null && cloud.targetUserId() != null) {
+                owner.setHandoverCloudUserId(cloud.targetUserId());
+            }
+        }
+        return new Status(
+                target.getId(),
+                target.getUsername(),
+                target.getEmail(),
+                cloud,
+                null,
+                cloudEmail(owner));
+    }
+
+    private String cloudEmail(OrgOwner owner) {
+        return owner.getHandoverCloudEmail() != null
+                ? owner.getHandoverCloudEmail()
+                : owner.getHandoverTargetEmail();
+    }
+
+    private CloudOwnershipCandidates candidates(DeviceCredential credential) {
+        AccountLinkClient upstream = client.getIfAvailable();
+        if (upstream == null)
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "CLOUD_UNAVAILABLE");
+        try {
+            return upstream.ownershipCandidates(credential);
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "CLOUD_UNAVAILABLE");
+        }
     }
 
     private DeviceCredential credential(OrgOwner owner) {
@@ -219,13 +329,22 @@ public class OwnershipHandoverService {
     }
 
     private CloudOwnershipStatus remote(
-            DeviceCredential credential, String email, String bearer, String action, Long leader) {
+            DeviceCredential credential,
+            String email,
+            String bearer,
+            String action,
+            Long leader,
+            Long targetUserId) {
         if (email == null || email.isBlank()) throw conflict("EMAIL_REQUIRED");
         AccountLinkClient upstream = client.getIfAvailable();
         if (upstream == null)
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "CLOUD_UNAVAILABLE");
         try {
-            return upstream.ownership(credential, email, bearer, action, leader);
+            CloudOwnershipStatus status =
+                    upstream.ownership(credential, email, bearer, action, leader, targetUserId);
+            if (targetUserId != null && !Objects.equals(targetUserId, status.targetUserId()))
+                throw conflict("CLOUD_TARGET_CHANGED");
+            return status;
         } catch (AccountLinkClient.UpstreamException e) {
             String reason =
                     switch (e.status()) {
@@ -234,7 +353,10 @@ public class OwnershipHandoverService {
                         case 403 ->
                                 "status".equals(action) ? "LINK_CHANGED" : "CLOUD_OWNER_REQUIRED";
                         case 400 -> "INVITATION_BLOCKED";
-                        case 409 -> "CLOUD_OWNER_CHANGED";
+                        case 409 ->
+                                "CLOUD_TARGET_CHANGED".equals(e.reason())
+                                        ? "CLOUD_TARGET_CHANGED"
+                                        : "CLOUD_OWNER_CHANGED";
                         default -> "CLOUD_UNAVAILABLE";
                     };
             throw new ResponseStatusException(HttpStatus.CONFLICT, reason);

@@ -1,0 +1,125 @@
+.ownership-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.ownership-flow p {
+  margin: 0;
+}
+.ownership-flow__muted {
+  color: var(--c-text-muted);
+  font-size: 0.8125rem;
+}
+.ownership-flow__accounts {
+  border: 1px solid var(--c-border);
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+.ownership-flow__accounts > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.85rem 1rem;
+}
+.ownership-flow__accounts > div + div {
+  border-top: 1px solid var(--c-border-subtle);
+}
+.ownership-flow__accounts span {
+  color: var(--c-text-muted);
+  font-size: 0.75rem;
+}
+.ownership-flow__accounts strong {
+  overflow-wrap: anywhere;
+}
+.ownership-flow__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  font-weight: 600;
+}
+.ownership-flow__field input,
+.ownership-flow__search {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--c-input-bg);
+  color: var(--c-text);
+  border: 1px solid var(--c-border);
+  border-radius: 0.5rem;
+  padding: 0.7rem 0.85rem;
+  font: inherit;
+}
+.ownership-flow__field input:focus-visible,
+.ownership-flow__search:focus-visible,
+.ownership-flow__member:focus-within {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+}
+.ownership-flow__members {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 15rem;
+  overflow-y: auto;
+  padding: 0.2rem;
+}
+.ownership-flow__member {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  border: 1px solid var(--c-border);
+  border-radius: 0.65rem;
+  padding: 0.8rem;
+  cursor: pointer;
+}
+.ownership-flow__member.is-selected {
+  border-color: var(--c-primary);
+  background: var(--c-primary-subtle);
+}
+.ownership-flow__member input {
+  accent-color: var(--c-primary);
+}
+.ownership-flow__member span {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.ownership-flow__member small {
+  color: var(--c-text-muted);
+}
+.ownership-flow__empty,
+.ownership-flow__success {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 1.25rem 1rem;
+  text-align: center;
+}
+.ownership-flow__empty {
+  border: 1px dashed var(--c-border);
+  border-radius: 0.75rem;
+}
+.ownership-flow__empty svg {
+  color: var(--c-text-muted);
+}
+.ownership-flow__success svg {
+  color: var(--c-success);
+}
+.ownership-flow__summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.ownership-flow__notice {
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface-sunken);
+  border-radius: 0.65rem;
+}
+.ownership-flow__notice--error {
+  border-color: var(--c-danger);
+}

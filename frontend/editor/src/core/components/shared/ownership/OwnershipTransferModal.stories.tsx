@@ -46,6 +46,69 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const LinkedPaid: Story = {};
+export const ChooseCloudMember: Story = {
+  args: {
+    adapter: {
+      ...adapter(ready),
+      prepare: async () => ({
+        ...ready,
+        targetName: "jamie-local",
+        targetEmail: null,
+        cloud: null,
+        candidates: {
+          teamId: 9,
+          teamName: "Acme",
+          members: [
+            { id: 42, name: "Jamie Chen", email: "jamie@acme.com" },
+            { id: 43, name: "Alex Morgan", email: "alex@acme.com" },
+          ],
+        },
+      }),
+      selectCloud: async (choice) => ({
+        ...ready,
+        targetName: "jamie-local",
+        targetEmail: null,
+        cloudEmail:
+          choice.cloudUserId === 43 ? "alex@acme.com" : "jamie@acme.com",
+      }),
+    },
+  },
+};
+export const NoOtherCloudMembers: Story = {
+  args: {
+    adapter: {
+      ...adapter(ready),
+      prepare: async () => ({
+        ...ready,
+        targetName: "jamie-local",
+        targetEmail: null,
+        cloud: null,
+        candidates: { teamId: 9, teamName: "Acme", members: [] },
+      }),
+      selectCloud: async (choice) => ({
+        ...ready,
+        targetName: "jamie-local",
+        targetEmail: null,
+        cloudEmail: choice.cloudEmail,
+        cloud: {
+          ...ready.cloud!,
+          state: "NEEDS_MEMBERSHIP",
+          targetUserId: null,
+        },
+      }),
+    },
+  },
+};
+export const ReviewSeparateAccounts: Story = {
+  args: {
+    adapter: adapter({
+      ...ready,
+      targetName: "jamie-local",
+      targetEmail: null,
+      cloudEmail: "jamie@acme.com",
+    }),
+  },
+};
 export const Unlinked: Story = {
   args: { adapter: adapter({ ...ready, cloud: null }) },
 };

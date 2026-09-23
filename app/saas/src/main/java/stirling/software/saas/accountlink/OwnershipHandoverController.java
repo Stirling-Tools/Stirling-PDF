@@ -10,6 +10,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.proprietary.accountlink.CloudOwnershipCandidates;
 import stirling.software.proprietary.accountlink.CloudOwnershipStatus;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.saas.service.SaasOwnershipHandoverService;
@@ -25,7 +26,20 @@ public class OwnershipHandoverController {
     private final SaasOwnershipHandoverService handovers;
     private final UserRepository users;
 
-    public record Request(String email, Long expectedLeaderId) {}
+    public record Request(String email, Long expectedLeaderId, Long expectedTargetId) {
+        public Request(String email, Long expectedLeaderId) {
+            this(email, expectedLeaderId, null);
+        }
+    }
+
+    @GetMapping("/api/v1/instance/ownership/members")
+    @PreAuthorize("hasRole('LINKED_INSTANCE')")
+    public CloudOwnershipCandidates candidates(Authentication auth) {
+        if (!(auth instanceof LinkedInstanceAuthenticationToken token)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+        return handovers.candidates(token.getTeamId());
+    }
 
     @PostMapping("/api/v1/instance/ownership/status")
     @PreAuthorize("hasRole('LINKED_INSTANCE')")
@@ -33,7 +47,7 @@ public class OwnershipHandoverController {
         if (!(auth instanceof LinkedInstanceAuthenticationToken token)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
-        return handovers.status(token.getTeamId(), request.email());
+        return handovers.status(token.getTeamId(), request.email(), request.expectedTargetId());
     }
 
     @PostMapping("/api/v1/account-link/ownership/{action:invite|transfer}")
@@ -55,6 +69,7 @@ public class OwnershipHandoverController {
                 request.email(),
                 request.expectedLeaderId(),
                 AuthenticationUtils.getCurrentUser(auth, users),
-                action);
+                action,
+                request.expectedTargetId());
     }
 }
