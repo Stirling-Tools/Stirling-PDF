@@ -28,6 +28,11 @@ case "$IDLE_TIMEOUT" in ''|*[!0-9]*) log "Invalid UNOSERVER_IDLE_TIMEOUT_SECONDS
 
 mkdir -p "$PROFILE_DIR"
 
+export STIRLING_LO_SANDBOX="${STIRLING_LO_SANDBOX:-enforce}"
+# Read-only paths come from lo-sandbox's built-in default unless STIRLING_LO_ALLOW_RO is set.
+export STIRLING_LO_ALLOW_RW="${STIRLING_LO_ALLOW_RW:-/tmp:/dev:${PROFILE_DIR}:${HOME:-/home/unoserver}}"
+log "LibreOffice sandbox mode=${STIRLING_LO_SANDBOX}"
+
 start_xvfb() {
   if command -v Xvfb >/dev/null 2>&1 && [ -z "${DISPLAY:-}" ]; then
     Xvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset >/dev/null 2>&1 &
