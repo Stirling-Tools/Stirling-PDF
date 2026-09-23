@@ -729,6 +729,8 @@ permissionNotice = "tessdata-sökvägen är inte skrivbar. Nedladdningar öppnas
 
 [admin.settings.ai]
 description = "Anslut Stirling till Python AI-motorn, välj dess modeller och ange skyddsräcken för hur den körs."
+managedByCloud = "Hanteras av Stirling Cloud i detta läge."
+managedByCloudShort = "Hanteras av Stirling Cloud"
 
 [admin.settings.ai.documents]
 description = "Konfigurera inbäddningsmodellen och hämtningsinställningarna som används för att besvara frågor om dokument. Tillämpas på AI-motorn när de sparas."
@@ -771,11 +773,24 @@ label = "Top K"
 [admin.settings.ai.general]
 connection = "Anslutning"
 description = "Anslut Stirling till Python AI-motorn och välj vilka AI-funktioner som ska exponeras. Ändringar tillämpas vid omstart."
+restartNote = "Ändring av URL:en eller någon tidsgräns börjar gälla efter en omstart."
 title = "AI-motor"
 
 [admin.settings.ai.general.capabilities]
 description = "Slå på eller av enskilda AI-funktioner. Inaktiverade funktioner döljs i appen."
 title = "Funktioner"
+
+[admin.settings.ai.general.cloud]
+note = "Modeller och leverantörsnycklar hanteras av Stirling Cloud, så de inställningarna gäller inte i detta läge."
+
+[admin.settings.ai.general.cloud.indexing]
+description = "Varje AI-verktyg skickar den sidtext det behöver för att svara. Detta avgör om Stirling Cloud också får behålla den texten, indexerad, så att senare frågor kan söka i dokumentet."
+help = "Av innebär att dokumentfrågor inte är tillgängliga. Det stoppar inte text från att skickas - bara från att lagras."
+label = "Låt Stirling Cloud behålla indexerade dokument"
+
+[admin.settings.ai.general.cloudNote]
+body = "Resonemanget körs på Stirlings infrastruktur och debiteras kontot som den här servern är länkad till. Det finns ingen container att köra och ingen leverantörsnyckel att ha här. Allt som AI:n läser bearbetas av Stirling Cloud istället för på din egen maskinvara."
+title = "Om Stirling Cloud AI"
 
 [admin.settings.ai.general.enabled]
 description = "Huvudbrytare. När den är avstängd är inga AI-verktyg, agenter eller motoranrop tillgängliga."
@@ -809,9 +824,28 @@ label = "PDF-kommentaragent"
 description = "Timeout för tyngre agentåtgärder, till exempel dokumentgenerering."
 label = "Timeout för långvariga åtgärder (sekunder)"
 
+[admin.settings.ai.general.mode]
+label = "Var AI körs"
+
+[admin.settings.ai.general.mode.cloud]
+description = "Ingen container, ingen leverantörsnyckel, inget modellval - arbetet körs på Stirling Cloud och debiteras kontot som den här servern är länkad till."
+linkCta = "Anslut den här servern till ett Stirling-konto"
+notLinked = "Länka ett konto först"
+ownerOnly = "Endast organisationsägaren kan länka den här servern till ett Stirling-konto."
+title = "Använd Stirling Cloud AI"
+
+[admin.settings.ai.general.mode.off]
+description = "Inga AI-verktyg någonstans i appen, och inget lämnar den här servern."
+title = "Av"
+
+[admin.settings.ai.general.mode.self]
+description = "En container som du hostar, kopplad till en modellleverantör som du väljer. Din nyckel, din faktura, din dataväg."
+title = "Kör din egen motor"
+
 [admin.settings.ai.general.note]
-body = "AI-motorn körs som en separat tjänst. Dess delade hemlighet"
-body2 = "ställs in via en containermiljövariabel. Leverantörers API keys kan anges på dessa sidor eller tillhandahållas som motorns miljövariabler; nycklar som anges här skickas till motorn när de sparas."
+docs = "Installationsguide"
+intro = "En separat container som du kör bredvid Stirling. Den sköter resonemanget; Stirling gör fortfarande varje sidåtgärd själv. Den behöver samma"
+outro = "på båda containrarna och en modellleverantörsnyckel. Allt som AI:n läser skickas till leverantören du väljer - en Ollama som du hostar behåller varje sida internt."
 title = "Om AI-motorn"
 
 [admin.settings.ai.general.streamTimeoutSeconds]
@@ -890,6 +924,67 @@ label = "Smart modell"
 body = "Ändringar skickas automatiskt till AI-motorn."
 bodyNoPush = "Inställningarna har sparats. De tillämpas nästa gång AI-motorn hämtar sin konfiguration."
 title = "AI-inställningar sparade"
+
+[admin.settings.ai.status]
+capabilities = "Funktioner"
+capabilitiesValue = "{{on}} av {{total}} aktiva"
+checked = "kontrollerad"
+checking = "Kontrollerar motorn…"
+description = "Om motorn kan nås, om den accepterar den här servern och vad den kör."
+fastModel = "Snabb modell"
+justNow = "nyss"
+latency = "Svarstid"
+linkLabel = "Kontolänk"
+minutesAgo = "för {{count}} min sedan"
+recheck = "Kontrollera igen"
+runningOn = "Körs på"
+secondsAgo = "för {{count}} s sedan"
+secretLabel = "Delad hemlighet"
+smartModel = "Smart modell"
+title = "Status"
+url = "Motor-URL"
+
+[admin.settings.ai.status.cloud]
+hostDown = "Nere"
+hostLabel = "Stirling.com"
+hostUp = "Uppe"
+name = "Stirling Cloud"
+sharingLabel = "AI-delning"
+sharingOff = "Inaktiverad"
+sharingOn = "Aktiverad"
+
+[admin.settings.ai.status.cloud.degraded]
+body = "Stirling Cloud svarade men avvisade den här servern. Kontolänken kan ha återkallats."
+title = "Stirling Cloud avvisar den här servern"
+
+[admin.settings.ai.status.cloud.down]
+body = "Den här servern kunde inte nå Stirling Cloud. Kontrollera kontolänken och att den här servern kan nå internet."
+title = "Stirling Cloud kan inte nås"
+
+[admin.settings.ai.status.cloud.ok]
+body = "Stirling Cloud accepterade den här servern. Inget att köra eller patcha här."
+title = "Körs på Stirling Cloud"
+
+[admin.settings.ai.status.degraded]
+body = "Den svarade på hälsokontrollen men avvisade en riktig begäran. De två sidorna använder olika delade hemligheter."
+title = "Motorn är igång, men avvisar den här servern"
+
+[admin.settings.ai.status.down]
+body = "Kontrollera URL:en, att motorcontainern körs och att du startade om efter att ha aktiverat AI."
+title = "Motorn kan inte nås"
+
+[admin.settings.ai.status.off]
+body = "Välj hur AI körs nedan, spara sedan och starta om."
+title = "AI är avstängt"
+
+[admin.settings.ai.status.ok]
+body = "Hälsokontroll och en autentiserad begäran lyckades båda."
+title = "Motorn körs"
+
+[admin.settings.ai.status.secret]
+no = "Avvisad"
+unknown = "Okänd"
+yes = "Accepterad"
 
 [admin.settings.badge]
 clickToUpgrade = "Klicka för att visa plandetaljer"
@@ -4453,6 +4548,7 @@ openFromComputer = "Öppna från dator"
 openSettings = "Öppna inställningar"
 other = "Annat"
 recent = "Senaste"
+searchFiles = "Sök filer"
 uploadFailedBody = "Kunde inte lägga till de valda filerna."
 uploadFailedTitle = "Uppladdning misslyckades"
 viewAll = "Visa alla {{count}} filer"
@@ -5827,6 +5923,8 @@ label = "Free credits"
 adoptFailed = "Dokumentet låstes upp men kunde inte öppnas här. Prova verktyget direkt."
 empty = "Inget att rapportera."
 handoffUnavailable = "Den här webbläsaren låter inte bearbetaren skicka dokumentet till redigeraren. Öppna det från redigeraren istället."
+inSmartFolder = "Det här dokumentet finns i en smart mapp, så det hanteras på servern istället för här."
+inSmartFolderNamed = "{{name}} finns i en smart mapp, så det hanteras på servern istället för här."
 noDocumentLinked = "Det här felet är inte kopplat till ett specifikt dokument, så det finns inget att öppna här."
 notOnThisDevice = "Det här dokumentet finns inte på den här enheten, så det kan inte öppnas här."
 occurrences = "{{count}} gånger"
@@ -5837,6 +5935,7 @@ repairedRerunNotAdopted = "Det reparerade dokumentet gick igenom, men resultatet
 repairedRerunUndelivered = "Dokumentet reparerades och omkörning av policyn startade, men resultatet kan inte levereras här, så detta fel förblir öppet."
 rerunRejected = "Policyn kunde inte köras igen just nu. Försök igen om en stund."
 rerunUndelivered = "Omkörning av policyn startade, men resultatet kan inte levereras här, så detta fel förblir öppet."
+retryInFolderFailed = "Det dokumentet kunde inte köras igen just nu."
 retryUnavailable = "Det här dokumentet kan inte längre försökas igen från den här webbläsaren."
 title = "Aviseringar"
 unlockedNotRerun = "Dokumentet låstes upp och öppnades här, men policyn kunde inte köras på det igen."
@@ -6625,9 +6724,11 @@ title = "Justera Team-plan"
 [payment.capacityStage]
 adjustmentNote = "Stripe visar den exakta debiteringen, eventuella proportionella justeringar och ditt nästa faktureringsdatum innan du bekräftar. Din sparade betalningsmetod används om den är tillgänglig."
 continue = "Fortsätt till betalning"
+currencyAtCheckout = "Stripe bekräftar slutbeloppet och betalningsvalutan i kassan."
 customLabel = "Antal användare"
 dueToday = "Förfaller idag"
 enterpriseQuote = "Begär offert för företag"
+estimatedTotal = "Beräknad summa"
 lineItem = "Team · {{price}}{{period}} per {{block}} användare"
 minimumForCurrentUsers = "Du har {{users}} användare, så planen måste täcka minst {{minimum}}."
 modalTitle = "Uppgradera till {{planName}}"
@@ -6865,6 +6966,25 @@ width = "Bredd"
 widthHint = "En textrutas bredd följer dess innehåll och radbrytning."
 x = "X"
 y = "Y"
+
+[pdfTextEditor.mobile]
+actions = "Redigeringsåtgärder"
+addImage = "Bild"
+addText = "Text"
+cancel = "Avbryt"
+delete = "Ta bort"
+details = "Detaljer"
+document = "Dokument"
+done = "Klar"
+download = "Spara och ladda ner"
+find = "Sök"
+lock = "Lås"
+openPdf = "Öppna en PDF"
+panelHint = "Redigering sker i Workspace-vyn. Tryck på text på sidan för att ändra den."
+save = "Spara"
+style = "Stil"
+tapToPlace = "Tryck på sidan där texten ska placeras"
+unlock = "Lås upp"
 
 [pdfTextEditor.password]
 cancel = "Avbryt"
@@ -7574,6 +7694,49 @@ plan = "Plan"
 procurement = "Inköp"
 usage = "Användning"
 
+[portal.billing.compare]
+current = "Nuvarande"
+enterpriseData = "Datahemvist och SCIM"
+enterpriseName = "Enterprise"
+enterprisePrice = "Enligt ditt avtal"
+enterpriseProcessing = "Förbrukningsbaserat eller fast"
+enterpriseSignIn = "SAML och granskning"
+enterpriseSupport = "SLA:er för upptid, hjälp med driftsättning"
+enterpriseUsers = "Ingen övre gräns"
+enterpriseWhere = "Plus multi-node och air-gapped"
+exploreEnterprise = "Utforska Enterprise"
+freeData = "Stannar där du kör det"
+freeName = "Free"
+freePrice = "Inget kort, inget utgångsdatum"
+freeProcessing = "{{allowance}} krediter per månad"
+freeProcessingUnknown = "En månatlig kreditkvot"
+freeSignIn = "E-post, Google och SSO"
+freeSignInNote = "OAuth2/OIDC"
+freeSupport = "Community"
+freeUsers = "Upp till {{users}}"
+freeUsersUnknown = "Ett litet team"
+freeWhere = "Moln, desktop eller egenhostat"
+lede = "Varje plan innehåller varje PDF-verktyg och SSO. Det som skiljer är hur många personer som använder den, var den körs och vilket stöd du får."
+open = "Jämför planer"
+rowData = "Dina data"
+rowHeader = "Funktion"
+rowProcessing = "Bearbetning"
+rowSignIn = "Inloggning"
+rowSupport = "Support"
+rowUsers = "Användare"
+rowWhere = "Var det körs"
+teamData = "Google Drive, din egen databas"
+teamName = "Team"
+teamPrice = "$99/mån per 100 användare"
+teamProcessing = "{{allowance}} per månad, därefter förbrukningsbaserat"
+teamProcessingUnknown = "En större kvot, därefter förbrukningsbaserat"
+teamSignIn = "Samma"
+teamSupport = "E-post"
+teamUsers = "100 per block"
+teamWhere = "Moln, desktop eller egenhostat"
+title = "Jämför planer"
+upgradeTeam = "Uppgradera till Team"
+
 [portal.billing.cycle]
 credits = "Krediter"
 creditsNote = "{{units}} använda · inkluderar gratis och förbetalda krediter"
@@ -7679,6 +7842,8 @@ payTitle = "Betala för ditt år"
 step = "Steg {{current}} av {{total}}"
 
 [portal.billing.prepaid.calc]
+currency = "Offertvaluta"
+currencyLocked = "Använder din befintliga faktureringsvaluta i Stripe."
 rateUnknown = "Vi visar det exakta priset i kassan."
 
 [portal.billing.prepaid.consent]
@@ -8481,6 +8646,10 @@ title = "Filen kunde inte repareras"
 [portal.failures.kind.inputWrongType]
 description = "Din fil är inte i ett format som detta steg kan öppna, så körningen kunde inte läsa den."
 title = "Fel filtyp"
+
+[portal.failures.kind.sourceUnreadable]
+description = "Din smarta mapp kunde inte läsas, så inget i den bearbetades."
+title = "Mappen kunde inte läsas"
 
 [portal.failures.kind.stepCannotRenderPage]
 description = "En sida i din fil kunde inte ritas upp, så körningen kunde inte slutföras."
@@ -12235,6 +12404,7 @@ goBack = "Gå tillbaka"
 pdfTools = "PDF-verktyg"
 placeholder = "Välj ett verktyg för att komma igång"
 premiumFeature = "Premiumfunktion:"
+searchTools = "Sök verktyg"
 toolsHeader = "Verktyg"
 viewAllTools = "Visa alla verktyg"
 
@@ -12399,13 +12569,10 @@ visits = "Besök"
 
 [users]
 lastActive = "Senast aktiv"
-learnMore = "Läs mer om roller och åtkomst."
 locked = "Låst"
 ownerSetupRequired = "Organisationens ägare har inte slutfört första inloggningen. Slutför konfigurationen eller be serveroperatören att återställa ägarskapet innan du överför ägarskapet."
 roleFor = "Roll för {{name}}"
 rowActions = "Åtgärder för {{name}}"
-showAll = "Visa alla {{count}}"
-showLess = "Visa mindre"
 subtitle2 = "Dina personer, team och åtkomstnivåer."
 suspended = "Avstängd"
 teamActions = "Teamåtgärder"
@@ -12414,6 +12581,7 @@ you = "(du)"
 
 [users.action]
 cancelInvite = "Avbryt inbjudan"
+createFromDefault = "Skapa team från Default"
 deleteTeam = "Ta bort team"
 disableMfa = "Återställ MFA"
 move = "Flytta till team"
@@ -12451,6 +12619,7 @@ email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
+team = "Team"
 
 [users.confirm]
 cancelInviteBody = "Avbryt inbjudan till {{email}}? De kommer inte att kunna gå med via den aktuella länken."
@@ -12469,15 +12638,12 @@ transferOwnershipTitle = "Överför organisationsägarskap"
 description = "Bjud in ditt team för att börja samarbeta."
 title = "Inga medlemmar än"
 
+[users.filters]
+noMatches = "Ingen matchar dessa filter."
+search = "Sök personer"
+
 [users.group]
 addToTeam = "Lägg till i team"
-administrators = "{{count}} administratörer"
-guestCount = "{{count}} gäst"
-guests = "Gäster"
-ledBy = "ledd av {{owner}}"
-org = "Organisation"
-team = "{{name}}-team"
-teamMeta = "{{count}} personer"
 
 [users.invite]
 access = "Åtkomst"
@@ -12542,6 +12708,9 @@ title = "Nytt team"
 
 [users.renameTeam]
 apply = "Byt namn"
+defaultApply = "Skapa och flytta"
+defaultDescription = "Default förblir tillgängligt för nya användare. Alla som för närvarande finns i Default flyttas till det nya teamet."
+defaultTitle = "Skapa team från Default"
 name = "Teamnamn"
 title = "Byt namn på team"
 
@@ -12566,6 +12735,15 @@ guest = "Gäst"
 member = "Medlem"
 orgOwner = "Organisationsägare"
 teamOwner = "Teamägare"
+
+[users.seats]
+full = "Varje licensierad plats används. Frigör en plats eller höj antalet platser för att lägga till någon annan."
+update = "Uppdatera platser"
+
+[users.tabs]
+all = "Alla"
+label = "Filtrera efter team"
+unassigned = "Inget team"
 
 [users.team]
 grantProcessor = "Tilldela Processor till teamet"
@@ -13216,232 +13394,14 @@ submitSignature = "Skicka signatur"
 title = "Arbetsyta"
 
 [workspace.people]
-active = "Aktiv"
-activeSession = "Aktiv session"
-addMembers = "Lägg till medlemmar"
-admin = "Admin"
-confirmDelete = "Är du säker på att du vill ta bort denna användare? Detta kan inte ångras."
-confirmUnlock = "Är du säker på att du vill låsa upp detta användarkonto?"
-deleteUser = "Ta bort användare"
-deleteUserError = "Misslyckades med att ta bort användare"
-deleteUserSuccess = "Användare borttagen"
 description = "Hantera arbetsytans medlemmar och deras behörigheter"
-disable = "Inaktivera"
-disabled = "Inaktiverad"
-editRole = "Redigera roll"
-enable = "Aktivera"
-loading = "Laddar personer..."
-locked = "låst"
-lockedBadge = "Låst"
-loginRequired = "Aktivera inloggningsläge först"
-memberActions = "Medlemsåtgärder"
-noMembersFound = "Inga medlemmar hittades"
-ownerLocked = "Överför organisationsägarskap i Inställningar → Arbetsyta → Användare innan du ändrar ägarens roll eller konto."
-role = "Roll"
-searchMembers = "Sök medlemmar..."
-team = "Team"
-unlockAccount = "Lås upp konto"
-unlockUserError = "Det gick inte att låsa upp användarkontot"
-unlockUserSuccess = "Användarkontot har låsts upp"
-user = "Användare"
-userInfo = "Användarinformation"
-
-[workspace.people.actions]
-upgrade = "Uppgradera"
-
-[workspace.people.addMember]
-authType = "Autentiseringstyp"
-error = "Misslyckades med att skapa användare"
-forceMFA = "Kräv att MFA konfigureras vid nästa inloggning"
-forcePasswordChange = "Tvinga lösenordsbyte vid första inloggningen"
-password = "Lösenord"
-passwordPlaceholder = "Ange lösenord"
-passwordRequired = "Lösenord krävs"
-role = "Roll"
-submit = "Lägg till medlem"
-success = "Användare skapad"
-team = "Team (valfritt)"
-teamPlaceholder = "Välj ett team"
-username = "Användarnamn (e-post)"
-usernamePlaceholder = "user@example.com"
-usernameRequired = "Användarnamn och lösenord krävs"
-
-[workspace.people.authType]
-oauth = "OAuth2"
-password = "Lösenord"
-saml = "SAML2"
-ssoDescription = "Användaren kommer att autentisera sig via SSO-leverantör"
-
-[workspace.people.changePassword]
-action = "Byt lösenord"
-confirmPassword = "Bekräfta lösenord"
-confirmPlaceholder = "Ange det nya lösenordet igen"
-copiedToClipboard = "Lösenord kopierat till urklipp"
-copyFailed = "Det gick inte att kopiera lösenordet"
-copyTooltip = "Kopiera till urklipp"
-emailUnavailable = "Den här användarens e-postadress är inte giltig. Aviseringar är inaktiverade."
-error = "Det gick inte att uppdatera lösenordet"
-forcePasswordChange = "Tvinga användaren att byta lösenord vid nästa inloggning"
-generatedPreview = "Genererat lösenord:"
-generateRandom = "Generera säkert lösenord"
-includePassword = "Inkludera det nya lösenordet i e-postmeddelandet"
-newPassword = "Nytt lösenord"
-notifyOnly = "Ett e-postmeddelande skickas utan lösenordet och informerar användaren om att en admin har ändrat det."
-passwordMismatch = "Lösenorden matchar inte"
-passwordRequired = "Ange ett nytt lösenord"
-placeholder = "Ange ett nytt lösenord"
-sendEmail = "Skicka e-post till användaren om denna ändring"
-smtpDisabled = "E-postaviseringar kräver att SMTP är aktiverat i inställningarna."
-submit = "Uppdatera lösenord"
-subtitle = "Uppdatera lösenordet för"
-success = "Lösenordet har uppdaterats"
-title = "Byt lösenord"
-
-[workspace.people.editMember]
-editing = "Editing: <0>{{username}}</0>"
-error = "Misslyckades med att uppdatera användare"
-role = "Roll"
-submit = "Update User"
-success = "Användare uppdaterad"
-team = "Team (valfritt)"
-teamPlaceholder = "Välj ett team"
-title = "Edit User"
-
-[workspace.people.emailInvite]
-allFailed = "Misslyckades med att bjuda in användare"
-emails = "E-postadresser"
-emailsPlaceholder = "user1@example.com, user2@example.com"
-emailsRequired = "Minst en e-postadress krävs"
-error = "Misslyckades med att skicka inbjudningar"
-partialFailure = "Vissa inbjudningar misslyckades"
-submit = "Skicka inbjudningar"
-success = "Användare inbjudna"
-
-[workspace.people.inviteLink]
-copied = "Länk kopierad till urklipp"
-email = "E-postadress"
-emailDescription = "Valfritt - lämna tomt för en generell inbjudningslänk som kan användas av vem som helst"
-emailPlaceholder = "user@example.com (valfritt)"
-emailSent = "Inbjudningslänk genererad och skickad via e-post"
-error = "Misslyckades med att generera inbjudningslänk"
-expiryHours = "Giltighetstid i timmar"
-generate = "Generera länk"
-generated = "Inbjudningslänk genererad"
-sendEmail = "Skicka inbjudningslänken via e-post"
-sendEmailDescription = "Om aktiverat skickas inbjudningslänken till angiven e-postadress"
-submit = "Generera inbjudningslänk"
-
-[workspace.people.inviteMembers]
-label = "Bjud in medlemmar"
-subtitle = "Skriv eller klistra in e-postadresser nedan, separerade med kommatecken. Din arbetsyta debiteras per medlem."
-
-[workspace.people.inviteMode]
-email = "E-post"
-emailDisabled = "E-postinbjudningar kräver SMTP-konfiguration och mail.enableInvites=true i inställningarna"
-link = "Länk"
-username = "Användarnamn"
 
 [workspace.people.license]
-currentUsage = "Använder för närvarande {{current}} av {{max}} användarlicenser"
-fromLicense = "från licens"
-grandfathered = "Enligt tidigare villkor"
-grandfatheredShort = "{{count}} enligt tidigare villkor"
-slotsAvailable_one = "{{count}} user slot available"
-slotsAvailable_other = "{{count}} user slots available"
-slotsAvailable_zero = "No slots available"
 users_one = "user"
 users_other = "users"
 
-[workspace.people.mfa]
-adminDisableError = "Det gick inte att inaktivera MFA för användaren"
-adminDisableSuccess = "MFA inaktiverades för användaren"
-disableByAdmin = "Inaktivera MFA"
-
-[workspace.people.roleDescriptions]
-admin = "Kan hantera inställningar och bjuda in medlemmar, med full administrativ åtkomst."
-currentRole = "Aktuell tilldelad roll."
-user = "Can view and edit shared files, but cannot manage workspace settings or users."
-
-[workspace.people.toggleEnabled]
-error = "Misslyckades med att uppdatera användarstatus"
-success = "Användarstatus uppdaterad"
-
 [workspace.teams]
-addMember = "Lägg till medlem"
-backToTeams = "Tillbaka till Team"
-cannotAddToInternal = "Kan inte lägga till medlemmar i teamet Internal"
-cannotDeleteInternal = "Kan inte ta bort teamet Internal"
-cannotRenameInternal = "Kan inte byta namn på teamet Internal"
-confirmDelete = "Är du säker på att du vill ta bort detta team? Teamet måste vara tomt för att tas bort."
-confirmRemove = "Ta bort användare från detta team?"
-createNewTeam = "Skapa nytt team"
-deleteTeamLabel = "Ta bort team"
 description = "Hantera team och organisera arbetsytans medlemmar"
-loadError = "Det gick inte att läsa in teamets uppgifter"
-loading = "Laddar team..."
-loadingDetails = "Laddar teamdetaljer..."
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
-noMembers = "Inga medlemmar i detta team"
-noTeamsFound = "Inga team hittades"
-removeMember = "Ta bort från team"
-removeMemberError = "Misslyckades med att ta bort användare från team"
-removeMemberSuccess = "Användare borttagen från team"
-renameTeamLabel = "Byt namn på team"
-system = "System"
-teamActions = "Teamåtgärder"
-teamName = "Teamnamn"
-teamNotFound = "Teamet hittades inte"
-totalMembers = "Totalt antal medlemmar"
-viewTeam = "Visa team"
-
-[workspace.teams.addMemberToTeam]
-addingTo = "Lägger till i"
-currentlyIn = "för närvarande i"
-error = "Misslyckades med att lägga till medlem i team"
-selectUser = "Välj användare"
-selectUserPlaceholder = "Välj en användare"
-selectUserRequired = "Välj en användare"
-submit = "Lägg till medlem"
-success = "Medlem tillagd i teamet"
-title = "Lägg till medlem i team"
-userRequired = "Välj en användare"
-willBeMoved = "Obs: Denna användare flyttas från sitt nuvarande team till detta team."
-
-[workspace.teams.changeTeam]
-changing = "Flyttar"
-error = "Misslyckades med att byta team"
-label = "Byt team"
-selectTeam = "Välj team"
-selectTeamPlaceholder = "Välj ett team"
-selectTeamRequired = "Välj ett team"
-submit = "Byt team"
-success = "Team bytt"
-title = "Byt team"
-
-[workspace.teams.createTeam]
-error = "Misslyckades med att skapa team"
-nameRequired = "Teamnamn krävs"
-submit = "Skapa team"
-success = "Team skapat"
-teamName = "Teamnamn"
-teamNamePlaceholder = "Ange teamnamn"
-title = "Skapa nytt team"
-
-[workspace.teams.deleteTeam]
-error = "Misslyckades med att ta bort team. Se till att teamet är tomt."
-success = "Team borttaget"
-
-[workspace.teams.renameTeam]
-error = "Misslyckades med att byta namn på team"
-nameRequired = "Teamnamn krävs"
-newTeamName = "Nytt teamnamn"
-newTeamNamePlaceholder = "Ange nytt teamnamn"
-renaming = "Byter namn:"
-submit = "Byt namn på team"
-success = "Team bytt namn"
-title = "Byt namn på team"
 
 [zipWarning]
 cancel = "Avbryt"
