@@ -17,10 +17,24 @@ const nodeModulesDir = path.resolve(
   "../node_modules",
 );
 
+/** Resolve a path under node_modules, refusing anything that escapes the tree. */
+function resolveInNodeModules(...parts) {
+  const resolved = path.resolve(nodeModulesDir, ...parts);
+  if (
+    resolved !== nodeModulesDir &&
+    !resolved.startsWith(nodeModulesDir + path.sep)
+  ) {
+    console.error(
+      `[patch-embedpdf-plugins] refusing to touch a path outside node_modules: ${resolved}`,
+    );
+    process.exit(1);
+  }
+  return resolved;
+}
+
 function loadPackage(name, relTarget = "dist/index.js") {
-  const dir = path.join(nodeModulesDir, name);
-  const packageJsonPath = path.join(dir, "package.json");
-  const target = path.join(dir, relTarget);
+  const packageJsonPath = resolveInNodeModules(name, "package.json");
+  const target = resolveInNodeModules(name, relTarget);
   if (!existsSync(target) || !existsSync(packageJsonPath)) {
     console.error(
       `[patch-embedpdf-plugins] ${name} is not installed; cannot verify the local patches`,
