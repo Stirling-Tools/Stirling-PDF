@@ -120,8 +120,7 @@ export function SaaSTeamProvider({ children }: { children: ReactNode }) {
       return activeTeam || null;
     } catch (error) {
       console.error("[SaaSTeamContext] Failed to fetch teams:", error);
-      setCurrentTeam(null);
-      setTeams([]);
+      // A failed background poll must not unmount an in-progress transfer or its receipt.
       return null;
     } finally {
       setLoading(false);

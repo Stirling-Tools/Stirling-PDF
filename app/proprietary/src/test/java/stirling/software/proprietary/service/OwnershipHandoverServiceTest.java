@@ -50,7 +50,7 @@ class OwnershipHandoverServiceTest {
         current.setFirstLogin(false);
         current.addAuthority(new Authority(Role.ADMIN.getRoleId(), current));
         when(users.findById(1L)).thenReturn(Optional.of(current));
-        auth = new UsernamePasswordAuthenticationToken("owner", "", current.getAuthorities());
+        auth = new UsernamePasswordAuthenticationToken(current, "", current.getAuthorities());
         successor = new User();
         successor.setId(2L);
         successor.setUsername("new-owner");
@@ -390,7 +390,10 @@ class OwnershipHandoverServiceTest {
     @Test
     void mixedCaseOwnerCanPrepareReadAdvanceAndCancel() throws IOException {
         linked(State.READY, false);
-        auth = new UsernamePasswordAuthenticationToken("OwNeR", "", java.util.List.of());
+        User principal = new User();
+        principal.setId(1L);
+        principal.setUsername("OwNeR");
+        auth = new UsernamePasswordAuthenticationToken(principal, "", java.util.List.of());
         prepareSelected();
         assertEquals(2L, service.current(auth).targetId());
         assertEquals(1, service.members(auth).members().size());
@@ -399,6 +402,47 @@ class OwnershipHandoverServiceTest {
         service.changeCloud(auth, "Bearer human", "invite");
         service.cancel(auth);
         assertNull(owner.getHandoverTargetId());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"true", "false"})
+    void caseVariantAdministratorCannotActAsOwner(boolean userPrincipal) {
+        successor.setUsername("OWNER");
+        successor.addAuthority(new Authority(Role.ADMIN.getRoleId(), successor));
+        if (!userPrincipal) when(users.findByUsername("OWNER")).thenReturn(Optional.of(successor));
+        var impersonator =
+                new UsernamePasswordAuthenticationToken(
+                        userPrincipal ? successor : "OWNER", "", successor.getAuthorities());
+        assertEquals(
+                403,
+                assertThrows(ResponseStatusException.class, () -> service.prepare(2L, impersonator))
+                        .getStatusCode()
+                        .value());
+        assertEquals(
+                403,
+                assertThrows(ResponseStatusException.class, () -> service.cancel(impersonator))
+                        .getStatusCode()
+                        .value());
+        verifyNoInteractions(cloud, credentials);
+        assertNull(owner.getHandoverTargetId());
+    }
+
+    @Test
+    void namedPrincipalResolvesTheAuthenticatedAccountBeforeCheckingOwnership() {
+        var current = users.findById(1L);
+        when(users.findByUsername("owner")).thenReturn(current);
+        var named = new UsernamePasswordAuthenticationToken("owner", "", java.util.List.of());
+        assertNotNull(service.prepare(2L, named));
+    }
+
+    @Test
+    void staleOwnerPrincipalCannotBypassCurrentAccountRestrictions() {
+        users.findById(1L).orElseThrow().setEnabled(false);
+        assertEquals(
+                403,
+                assertThrows(ResponseStatusException.class, () -> service.prepare(2L, auth))
+                        .getStatusCode()
+                        .value());
     }
 
     @Test

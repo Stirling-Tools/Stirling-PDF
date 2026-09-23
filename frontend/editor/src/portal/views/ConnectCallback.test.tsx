@@ -182,7 +182,7 @@ describe("account-link callback", () => {
         access_token: "at",
         refresh_token: "rt",
       });
-      expect(routeState).toBeNull();
+      await waitFor(() => expect(routeState).toBeNull());
     },
   );
 

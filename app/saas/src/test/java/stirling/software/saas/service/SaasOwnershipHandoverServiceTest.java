@@ -276,6 +276,34 @@ class SaasOwnershipHandoverServiceTest {
     }
 
     @Test
+    void retainedLeaderRemainsTransferredAfterSwitchingActiveTeams() {
+        Team other = new Team();
+        other.setId(10L);
+        target.getUser().setTeam(other);
+        assertEquals(State.NEEDS_MEMBERSHIP, service.status(9L, "new@example.com").state());
+        target.setRole(TeamRole.LEADER);
+        leader.setRole(TeamRole.MEMBER);
+        when(memberships.findByTeamIdAndUserId(9L, 2L)).thenReturn(Optional.of(target));
+        assertEquals(State.TRANSFERRED, service.status(9L, "new@example.com", 2L).state());
+        assertEquals(
+                State.TRANSFERRED,
+                service.change(9L, "new@example.com", 2L, target.getUser(), "transfer").state());
+        verifyNoInteractions(ownership, invitations);
+        target.getUser().setTeam(null);
+        assertEquals(State.NEEDS_MEMBERSHIP, service.status(9L, "new@example.com").state());
+    }
+
+    @Test
+    void retainedLeaderStillRequiresAcceptedEnabledMembership() {
+        target.setRole(TeamRole.LEADER);
+        target.getUser().setEnabled(false);
+        assertEquals(State.NEEDS_MEMBERSHIP, service.status(9L, "new@example.com").state());
+        target.getUser().setEnabled(true);
+        target.setAcceptedAt(null);
+        assertEquals(State.NEEDS_MEMBERSHIP, service.status(9L, "new@example.com").state());
+    }
+
+    @Test
     void personalTeamCannotTransfer() {
         when(extensions.isPersonal(team)).thenReturn(true);
         assertEquals(

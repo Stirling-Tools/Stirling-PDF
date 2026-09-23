@@ -3,8 +3,8 @@ package stirling.software.saas.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -1083,10 +1083,13 @@ class SaasTeamServiceTest {
             Team transferred = team(teamId, "Transferred team");
             TeamMembership bobOwner = membership(transferred, bob, TeamRole.LEADER);
             TeamMembership aliceMember = membership(transferred, alice, TeamRole.MEMBER);
-            when(membershipRepository.findByTeamIdAndUserId(teamId, 1L)).thenReturn(Optional.of(bobOwner));
-            when(membershipRepository.findByTeamIdAndRole(teamId, TeamRole.LEADER)).thenReturn(List.of(bobOwner));
+            when(membershipRepository.findByTeamIdAndUserId(teamId, 1L))
+                    .thenReturn(Optional.of(bobOwner));
+            when(membershipRepository.findByTeamIdAndRole(teamId, TeamRole.LEADER))
+                    .thenReturn(List.of(bobOwner));
             when(membershipRepository.findByTeamIdAndUserId(teamId, 2L))
-                    .thenReturn(Optional.of(aliceMember)).thenReturn(Optional.empty());
+                    .thenReturn(Optional.of(aliceMember))
+                    .thenReturn(Optional.empty());
             when(saasUserExtensionService.getHomeTeamId(alice)).thenReturn(teamId);
             stubCreatePersonalTeam(alice, 500L);
 
@@ -1094,7 +1097,8 @@ class SaasTeamServiceTest {
 
             verify(membershipRepository).delete(aliceMember);
             verify(saasUserExtensionService).setHomeTeamId(alice, 500L);
-            verify(membershipRepository, never()).save(argThat(m -> m.getTeam().getId().equals(teamId)));
+            verify(membershipRepository, never())
+                    .save(argThat(m -> m.getTeam().getId().equals(teamId)));
             assertThat(alice.getTeam().getId()).isEqualTo(500L);
             assertThat(bobOwner.getRole()).isEqualTo(TeamRole.LEADER);
         }

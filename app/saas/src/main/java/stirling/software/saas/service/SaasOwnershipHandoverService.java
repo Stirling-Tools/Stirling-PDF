@@ -218,6 +218,6 @@ public class SaasOwnershipHandoverService {
                 && user.getEmail() != null
                 && user.getEmail().equalsIgnoreCase(email.strip())
                 && user.getTeam() != null
-                && Objects.equals(user.getTeam().getId(), teamId);
+                && (membership.isLeader() || Objects.equals(user.getTeam().getId(), teamId));
     }
 }

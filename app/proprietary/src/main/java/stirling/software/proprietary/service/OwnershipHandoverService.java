@@ -308,19 +308,21 @@ public class OwnershipHandoverService {
 
     private OrgOwner requireOwner(Authentication auth) {
         OrgOwner owner = owners.lockOwner().orElseThrow(() -> conflict("OWNER_UNAVAILABLE"));
-        if (auth == null
-                || !auth.isAuthenticated()
-                || owner.getOwnerUsername() == null
-                || !owner.getOwnerUsername().equalsIgnoreCase(auth.getName())) {
+        if (auth == null || !auth.isAuthenticated() || auth.getName() == null) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "ORG_OWNER_REQUIRED");
         }
-        users.findById(owner.getOwnerUserId())
+        Long authenticatedId =
+                auth.getPrincipal() instanceof User principal
+                        ? principal.getId()
+                        : users.findByUsername(auth.getName()).map(User::getId).orElse(null);
+        if (authenticatedId == null || !Objects.equals(authenticatedId, owner.getOwnerUserId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "ORG_OWNER_REQUIRED");
+        }
+        users.findById(authenticatedId)
                 .filter(
                         u ->
                                 u.isEnabled()
                                         && !u.isFirstLogin()
-                                        && u.getUsername() != null
-                                        && u.getUsername().equalsIgnoreCase(auth.getName())
                                         && u.getAuthorities().stream()
                                                 .anyMatch(
                                                         a ->

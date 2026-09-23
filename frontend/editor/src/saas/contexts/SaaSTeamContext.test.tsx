@@ -1,4 +1,5 @@
 import { it, expect, vi } from "vitest";
+import { expectConsole } from "@app/tests/failOnConsole";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { SaaSTeamProvider, useSaaSTeam } from "@app/contexts/SaaSTeamContext";
@@ -37,6 +38,12 @@ it("uses the server's current team and never guesses a parked team when that mar
     ),
   });
   await waitFor(() => expect(result.current.currentTeam?.teamId).toBe(2));
+  expectConsole.error(/Failed to fetch teams.*Network unavailable/s);
+  get.mockRejectedValueOnce(new Error("Network unavailable"));
+  await act(() => result.current.refreshTeams());
+  expect(result.current.currentTeam?.teamId).toBe(2);
+  expect(result.current.teams).toEqual([parked, active]);
+  expect(result.current.loading).toBe(false);
   teams = [parked];
   await act(() => result.current.refreshTeams());
   expect(result.current.currentTeam).toBeNull();

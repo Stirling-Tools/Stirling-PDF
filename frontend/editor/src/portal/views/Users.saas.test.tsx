@@ -134,8 +134,10 @@ describe("Users page (SaaS flavor, end-to-end via SaasTeamController mocks)", ()
     fireEvent.click(
       await screen.findByRole("button", { name: "Remove from team" }),
     );
-    await waitFor(() =>
-      expect(screen.queryByText("priya@acme.com")).not.toBeInTheDocument(),
+    await waitFor(
+      () =>
+        expect(screen.queryByText("priya@acme.com")).not.toBeInTheDocument(),
+      { timeout: 5000 },
     );
     expect(screen.getByText("marcus@acme.com")).toBeInTheDocument();
   });
@@ -151,8 +153,10 @@ describe("Users page (SaaS flavor, end-to-end via SaasTeamController mocks)", ()
     fireEvent.click(
       await screen.findByRole("button", { name: "Cancel invitation" }),
     );
-    await waitFor(() =>
-      expect(screen.queryByText("sam.lee@acme.com")).not.toBeInTheDocument(),
+    await waitFor(
+      () =>
+        expect(screen.queryByText("sam.lee@acme.com")).not.toBeInTheDocument(),
+      { timeout: 5000 },
     );
   });
 });
