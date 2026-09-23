@@ -3868,7 +3868,7 @@ approve = "Renew sign-in"
 failed = "Your sign-in could not be renewed. Try again, or dismiss this page and start again from your server."
 lead = "This server is already linked to your account. Renew your sign-in to return to billing and usage on your server."
 title = "Renew your server sign-in"
-wrongAccount = "This account cannot renew this server's sign-in. Switch to the account originally used to link the server. That account must still own the linked team."
+wrongAccount = "Sign in as the current owner of the linked cloud team to renew this server's sign-in. If ownership was transferred, use the new owner's account."
 
 [convert]
 autoRotate = "Auto Rotate"

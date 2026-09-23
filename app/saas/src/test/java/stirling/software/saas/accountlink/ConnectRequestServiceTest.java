@@ -179,16 +179,16 @@ class ConnectRequestServiceTest {
     }
 
     @Test
-    void createReauth_pinsTheAccountAndTeamFromTheCredential() {
+    void createReauth_pinsTheTeamFromTheCredentialUntilItsCurrentOwnerApproves() {
         ConnectRequestService.CreateResult result =
-                service.createReauth(null, CALLBACK, NONCE, CLAIM_SECRET, null, 7L, 42L);
+                service.createReauth(null, CALLBACK, NONCE, CLAIM_SECRET, null, 7L);
 
         assertThat(result.isRejected()).isFalse();
         ArgumentCaptor<ConnectRequest> saved = ArgumentCaptor.forClass(ConnectRequest.class);
         verify(repo).save(saved.capture());
         assertThat(saved.getValue().getMode()).isEqualTo(ConnectRequest.Mode.REAUTH);
         assertThat(saved.getValue().getTeamId()).isEqualTo(7L);
-        assertThat(saved.getValue().getApprovedByUserId()).isEqualTo(42L);
+        assertThat(saved.getValue().getApprovedByUserId()).isNull();
         assertThat(saved.getValue().getApprovedAt()).isNull();
     }
 
@@ -196,7 +196,7 @@ class ConnectRequestServiceTest {
     void createReauth_withoutAnAuthenticatedInstanceIsRefused() {
         // The controller passes null when the offered device credential did not authenticate.
         assertThat(
-                        service.createReauth(null, CALLBACK, NONCE, CLAIM_SECRET, null, null, null)
+                        service.createReauth(null, CALLBACK, NONCE, CLAIM_SECRET, null, null)
                                 .rejection())
                 .isEqualTo(CreateRejection.NOT_LINKED);
         verify(repo, never()).save(any());
@@ -228,7 +228,7 @@ class ConnectRequestServiceTest {
     }
 
     @Test
-    void approve_acceptsTheOriginalAccountInTheLinkedTeam() {
+    void approve_acceptsTheAuthenticatedOwnerInTheLinkedTeam() {
         ConnectRequest row = reauthPinnedTo(7L);
         when(repo.findByRequestIdForUpdate("req")).thenReturn(Optional.of(row));
 
@@ -236,20 +236,11 @@ class ConnectRequestServiceTest {
         assertThat(row.getStatus()).isEqualTo(ConnectRequest.Status.APPROVED);
     }
 
-    @Test
-    void createReauth_withoutAnOriginalLinkingUserFailsClosed() {
-        assertThat(
-                        service.createReauth(null, CALLBACK, NONCE, CLAIM_SECRET, null, 7L, null)
-                                .rejection())
-                .isEqualTo(CreateRejection.NOT_LINKED);
-        verify(repo, never()).save(any());
-    }
-
     @ParameterizedTest
     @CsvSource(
-            value = {"7,43", "99,43", "NULL,42", "7,NULL"},
+            value = {"99,43", "NULL,42", "7,NULL"},
             nullValues = "NULL")
-    void approve_rejectsAnotherAccountOrMissingIdentity(Long teamId, Long userId) {
+    void approve_rejectsAnotherTeamOrMissingIdentity(Long teamId, Long userId) {
         ConnectRequest row = reauthPinnedTo(7L);
         when(repo.findByRequestIdForUpdate("req")).thenReturn(Optional.of(row));
 
@@ -263,12 +254,10 @@ class ConnectRequestServiceTest {
         verifyNoInteractions(accountLinkService);
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = {true, false})
-    void approve_rejectsLegacyRenewalRequestsWithoutBothPins(boolean missingUser) {
+    @Test
+    void approve_rejectsRenewalRequestsWithoutAPinnedTeam() {
         ConnectRequest row = reauthPinnedTo(7L);
-        if (missingUser) row.setApprovedByUserId(null);
-        else row.setTeamId(null);
+        row.setTeamId(null);
         when(repo.findByRequestIdForUpdate("req")).thenReturn(Optional.of(row));
 
         assertThat(service.approve("req", 7L, 42L).rejection())
