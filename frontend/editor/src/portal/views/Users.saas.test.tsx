@@ -83,6 +83,10 @@ beforeEach(() => {
   HTMLElement.prototype.scrollIntoView = vi.fn();
 });
 
+// A confirmed mutation refetches /team/my, /members and /invitations in turn
+// before the roster re-renders; on a loaded CI run that nears waitFor's 1s default.
+const REFETCH_WAIT = { timeout: 5000 };
+
 function renderUsers() {
   return render(
     <PortalTestProviders>
@@ -137,7 +141,7 @@ describe("Users page (SaaS flavor, end-to-end via SaasTeamController mocks)", ()
     await waitFor(
       () =>
         expect(screen.queryByText("priya@acme.com")).not.toBeInTheDocument(),
-      { timeout: 5000 },
+      REFETCH_WAIT,
     );
     expect(screen.getByText("marcus@acme.com")).toBeInTheDocument();
   });
@@ -156,7 +160,7 @@ describe("Users page (SaaS flavor, end-to-end via SaasTeamController mocks)", ()
     await waitFor(
       () =>
         expect(screen.queryByText("sam.lee@acme.com")).not.toBeInTheDocument(),
-      { timeout: 5000 },
+      REFETCH_WAIT,
     );
   });
 });
