@@ -52,6 +52,7 @@ import {
   localBaseUrl,
   onLocalUnauthorized,
 } from "@app/portal/api/localBackend";
+import { localFetch } from "@app/portal/localTransport";
 
 /**
  * SaaS base URL via the flavor seam: self-hosted reads VITE_SAAS_API_URL (a
@@ -156,7 +157,7 @@ async function localJson<T>(
     options,
   );
   if (demo) return unwrap<T>(demo, options.accountLinkBlockContext);
-  const res = await fetch(`${localBaseUrl()}${path}`, {
+  const res = await localFetch(`${localBaseUrl()}${path}`, {
     method: options.method ?? "GET",
     headers: {
       Accept: "application/json",
@@ -184,7 +185,7 @@ async function localBlob(
   path: string,
   options: HttpRequestOptions = {},
 ): Promise<Blob> {
-  const res = await fetch(`${localBaseUrl()}${path}`, {
+  const res = await localFetch(`${localBaseUrl()}${path}`, {
     method: options.method ?? "GET",
     headers: { ...(await localAuthHeader()), ...options.headers },
     signal: options.signal,
@@ -203,7 +204,7 @@ async function localForm<T>(
   params: Record<string, string>,
   method: "POST" | "PUT" | "DELETE" = "POST",
 ): Promise<T> {
-  const res = await fetch(`${localBaseUrl()}${path}`, {
+  const res = await localFetch(`${localBaseUrl()}${path}`, {
     method,
     headers: { Accept: "application/json", ...(await localAuthHeader()) },
     body: new URLSearchParams(params),
@@ -221,7 +222,7 @@ async function localMultipart<T>(
   body: FormData,
   context?: AccountLinkBlockContext,
 ): Promise<T> {
-  const res = await fetch(`${localBaseUrl()}${path}`, {
+  const res = await localFetch(`${localBaseUrl()}${path}`, {
     method: "POST",
     headers: { Accept: "application/json", ...(await localAuthHeader()) },
     body,

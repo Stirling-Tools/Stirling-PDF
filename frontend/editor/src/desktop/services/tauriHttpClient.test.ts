@@ -70,6 +70,52 @@ describe("tauriHttpClient — Content-Type handling", () => {
     fetchMock.mockResolvedValue(okJson());
   });
 
+  test("sends URLSearchParams as an encoded form with repeated and empty values", async () => {
+    const client = create({ baseURL: "https://api.test" });
+    const params = new URLSearchParams([
+      ["username", "Jörg + admin&"],
+      ["role", "ROLE_USER"],
+      ["role", "ROLE_ADMIN"],
+      ["empty", ""],
+    ]);
+
+    await client.post("/api/v1/user/admin/saveUser", params);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.test/api/v1/user/admin/saveUser",
+      expect.objectContaining({
+        body: "username=J%C3%B6rg+%2B+admin%26&role=ROLE_USER&role=ROLE_ADMIN&empty=",
+        headers: expect.objectContaining({
+          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+        }),
+      }),
+    );
+  });
+
+  test.each(["Content-Type", "content-type", "CONTENT-TYPE"])(
+    "preserves an explicit %s header for URLSearchParams",
+    async (header) => {
+      const client = create({ baseURL: "https://api.test" });
+      const contentType = "application/x-www-form-urlencoded";
+
+      await client.post(
+        "/api/v1/team/rename",
+        new URLSearchParams({ name: "A B" }),
+        {
+          headers: { [header]: contentType },
+        },
+      );
+
+      expect(fetchMock.mock.calls[0][1].body).toBe("name=A+B");
+      expect(
+        Object.entries(lastFetchHeaders()).filter(
+          ([key]) => key.toLowerCase() === "content-type",
+        ),
+      ).toEqual([[header, contentType]]);
+    },
+  );
+
   test("strips a caller-set Content-Type on FormData so the boundary is generated", async () => {
     const client = create({ baseURL: "https://api.test" });
     const form = new FormData();
