@@ -367,6 +367,17 @@ RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
     find /opt/venv -name '*.so' -exec strip --strip-unneeded {} + 2>/dev/null || true
 
 
+FROM ubuntu:noble@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517 AS lo-sandbox-build
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends gcc libc6-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY lo-sandbox.c /src/lo-sandbox.c
+RUN gcc -O2 -Wall -Wextra -Werror -o /usr/local/bin/lo-sandbox /src/lo-sandbox.c && \
+    strip --strip-unneeded /usr/local/bin/lo-sandbox
+
+
 # Final runtime image - the actual base image
 FROM eclipse-temurin:25-jre-noble@sha256:b4c93a50fc67612798db73d68ca3b0ee4ebdd51736e59cca370e689b9797037e AS runtime
 
@@ -630,6 +641,22 @@ RUN set -eux; \
           -d /home/stirlingpdfuser -s /bin/bash stirlingpdfuser; \
     fi
 
+RUN set -eux; \
+    if ! getent group stirlingofficegroup >/dev/null 2>&1; then \
+      groupadd -g 1100 stirlingofficegroup 2>/dev/null \
+        || groupadd stirlingofficegroup; \
+    fi; \
+    if ! id -u stirlingofficeuser >/dev/null 2>&1; then \
+      useradd -m -u 1100 -g stirlingofficegroup \
+        -d /home/stirlingofficeuser -s /usr/sbin/nologin stirlingofficeuser 2>/dev/null \
+        || useradd -m -g stirlingofficegroup \
+          -d /home/stirlingofficeuser -s /usr/sbin/nologin stirlingofficeuser; \
+    fi; \
+    mkdir -p /var/lib/libreoffice-sandbox; \
+    chown stirlingofficeuser:stirlingofficegroup \
+      /home/stirlingofficeuser /var/lib/libreoffice-sandbox; \
+    chmod 700 /var/lib/libreoffice-sandbox
+
 # Application directories
 RUN set -eux; \
     mkdir -p /configs /configs/cache /configs/heap_dumps /logs /customFiles \
@@ -651,6 +678,25 @@ RUN set -eux; \
     ln -sf /opt/venv/bin/weasyprint /usr/local/bin/weasyprint; \
     ln -sf /opt/venv/bin/unoping    /usr/local/bin/unoping; \
     fc-cache -f
+
+COPY --from=lo-sandbox-build /usr/local/bin/lo-sandbox /usr/local/lib/stirling/lo-sandbox
+COPY stirling-hardening.xcd /usr/lib/libreoffice/share/registry/stirling-hardening.xcd
+COPY unoserver-pipe-transport.py /usr/local/lib/stirling/unoserver-pipe-transport.py
+
+RUN set -eux; \
+    chown root:root /usr/local/lib/stirling/lo-sandbox \
+                    /usr/lib/libreoffice/share/registry/stirling-hardening.xcd; \
+    chmod 0755 /usr/local/lib/stirling/lo-sandbox; \
+    chmod 0644 /usr/lib/libreoffice/share/registry/stirling-hardening.xcd; \
+    for name in /usr/bin/soffice /usr/bin/libreoffice /usr/bin/ooffice; do \
+      if [ -e "$name" ] || [ -L "$name" ]; then rm -f "$name"; fi; \
+      cp /usr/local/lib/stirling/lo-sandbox "$name"; \
+      chown root:root "$name"; \
+      chmod 0755 "$name"; \
+    done; \
+    /opt/venv/bin/python /usr/local/lib/stirling/unoserver-pipe-transport.py \
+      "$(/opt/venv/bin/python -c 'import unoserver, os; print(os.path.dirname(unoserver.__file__))')"; \
+    STIRLING_LO_SANDBOX=off /usr/bin/soffice --version
 
 # Metadata labels - base image
 LABEL org.opencontainers.image.title="Stirling-PDF Base" \

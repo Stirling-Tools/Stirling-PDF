@@ -289,7 +289,11 @@ jobs:
             docker/unoserver/Dockerfile \
             docker/unoserver/entrypoint.sh \
             docker/unoserver/healthcheck.sh \
+            docker/unoserver/fonts.conf \
             docker/unoserver/VERSION \
+            docker/base/lo-sandbox.c \
+            docker/base/stirling-hardening.xcd \
+            docker/base/unoserver-pipe-transport.py \
             | sha256sum | cut -d' ' -f1)
           echo "hash=${hash}" >> "$GITHUB_OUTPUT"
           echo "Unoserver source hash: ${hash}"
