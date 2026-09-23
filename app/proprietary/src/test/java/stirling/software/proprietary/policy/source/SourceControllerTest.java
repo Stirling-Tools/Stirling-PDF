@@ -36,6 +36,7 @@ import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.RoutingRule;
+import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.store.InProcessPolicyStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
@@ -54,6 +55,7 @@ class SourceControllerTest {
     private PolicyTriggerManager triggerManager;
     private SourceController controller;
     private SourceController webhookController;
+    private final PolicyOutputSink vectorSink = mock(PolicyOutputSink.class);
 
     @TempDir Path tempDir;
 
@@ -75,7 +77,19 @@ class SourceControllerTest {
         triggerManager = mock(PolicyTriggerManager.class);
         // A permissive input source so config validation passes and save can be exercised.
         InputSource folderInput = mock(InputSource.class);
-        when(folderInput.supports(any())).thenReturn(true);
+        when(folderInput.supports(any()))
+                .thenAnswer(
+                        invocation ->
+                                !"vectordb"
+                                        .equals(
+                                                ((stirling.software.proprietary.policy.model
+                                                                        .InputSpec)
+                                                                invocation.getArgument(0))
+                                                        .type()));
+        when(vectorSink.supports(any()))
+                .thenAnswer(
+                        invocation ->
+                                "vectordb".equals(((OutputSpec) invocation.getArgument(0)).type()));
         when(folderInput.prepareOptionsForSave(any(), anyBoolean()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
         controller =
@@ -88,7 +102,8 @@ class SourceControllerTest {
                         authority,
                         triggerManager,
                         properties,
-                        List.of(folderInput));
+                        List.of(folderInput),
+                        List.of(vectorSink));
         WebhookInputSource webhookInput =
                 new WebhookInputSource(new WebhookSpool(tempDir), mock(FileReadinessChecker.class));
         webhookController =
@@ -101,7 +116,24 @@ class SourceControllerTest {
                         authority,
                         triggerManager,
                         properties,
-                        List.of(webhookInput));
+                        List.of(webhookInput),
+                        List.of());
+    }
+
+    @Test
+    void savesAnOutputOnlySourceWithoutAnInputHandler() {
+        Source source =
+                new Source(
+                        null,
+                        "Knowledge",
+                        "vectordb",
+                        Map.of("connectionId", "42", "collection", "Documents"),
+                        true,
+                        null,
+                        null);
+        Source saved = controller.save(source).getBody();
+        assertEquals("vectordb", saved.type());
+        org.mockito.Mockito.verify(vectorSink).validate(source.toOutputSpec());
     }
 
     @Test

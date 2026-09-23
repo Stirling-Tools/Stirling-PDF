@@ -17,6 +17,8 @@ import { stripBasePath } from "@app/constants/app";
 import { rememberSettingsOrigin } from "@app/utils/settingsNavigation";
 import { canCreateProcessingFolders } from "@app/hooks/useProcessingFolderCreation";
 import { requestProcessingFolderCreation } from "@app/utils/pendingProcessingFolderCreation";
+import { requestProcessorSignup } from "@app/services/processorSignup";
+import { useConnectedServer } from "@app/hooks/useConnectedServer";
 
 import { Icon } from "@app/ui/Icon";
 const SIZE = "1.125rem";
@@ -30,6 +32,10 @@ export function QuickNavRailHost() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const host = useQuickNavHost();
+  // Processing folders run on the non-core API server. True on web (served by that backend);
+  // on desktop it tracks the signed-in connection, so the entry falls inert until the user
+  // signs in to Stirling Cloud or a self-hosted server.
+  const connectedServer = useConnectedServer();
 
   const appMounted = Boolean(host?.appMounted);
 
@@ -114,12 +120,17 @@ export function QuickNavRailHost() {
     label: t("quickNav.processor", "Processor"),
     icon: <Icon name="cpu" size={SIZE} filled={inPortal} />,
     current: inPortal,
-    disabled: HAS_PORTAL && !inPortal && !host?.portalAccess,
+    disabled:
+      HAS_PORTAL && !inPortal && !host?.portalAccess && !host?.isAnonymous,
     reason:
-      HAS_PORTAL && !inPortal && !host?.portalAccess
+      HAS_PORTAL && !inPortal && !host?.portalAccess && !host?.isAnonymous
         ? t("quickNav.noProcessorAccess", "Ask an admin for processor access")
         : undefined,
     onClick: () => {
+      if (host?.isAnonymous) {
+        requestProcessorSignup();
+        return;
+      }
       if (inPortal) {
         returnHome();
         return;
@@ -175,7 +186,15 @@ export function QuickNavRailHost() {
             id: "createProcessingFolder",
             label: t("processingFolders.setup.title"),
             icon: <Icon name="folder-plus" size={SIZE} />,
+            disabled: !connectedServer,
+            reason: connectedServer
+              ? undefined
+              : t("quickNav.signInToUse", "Sign in to use this"),
             onClick: () => {
+              if (host?.isAnonymous) {
+                requestProcessorSignup();
+                return;
+              }
               const open = host?.actions.current?.createProcessingFolder;
               if (open) open();
               else

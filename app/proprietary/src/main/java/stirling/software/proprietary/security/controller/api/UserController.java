@@ -115,7 +115,10 @@ public class UserController {
                                                 + ", Available slots: "
                                                 + availableSlots));
             }
-            Team team = teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME).orElse(null);
+            Team team =
+                    teamRepository
+                            .findFirstByNameOrderByIdAsc(TeamService.DEFAULT_TEAM_NAME)
+                            .orElse(null);
             SaveUserRequest.Builder builder =
                     SaveUserRequest.builder()
                             .username(username)
@@ -448,7 +451,9 @@ public class UserController {
         Long effectiveTeamId = teamId;
         if (effectiveTeamId == null) {
             Team defaultTeam =
-                    teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME).orElse(null);
+                    teamRepository
+                            .findFirstByNameOrderByIdAsc(TeamService.DEFAULT_TEAM_NAME)
+                            .orElse(null);
             if (defaultTeam != null) {
                 effectiveTeamId = defaultTeam.getId();
             }
@@ -557,7 +562,9 @@ public class UserController {
         Long effectiveTeamId = teamId;
         if (effectiveTeamId == null) {
             Team defaultTeam =
-                    teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME).orElse(null);
+                    teamRepository
+                            .findFirstByNameOrderByIdAsc(TeamService.DEFAULT_TEAM_NAME)
+                            .orElse(null);
             if (defaultTeam != null) {
                 effectiveTeamId = defaultTeam.getId();
             }

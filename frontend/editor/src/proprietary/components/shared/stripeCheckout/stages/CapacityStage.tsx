@@ -1,5 +1,14 @@
 import React, { useState } from "react";
-import { Stack, Text, Group, Divider, Alert, NumberInput } from "@mantine/core";
+import {
+  Stack,
+  Text,
+  Group,
+  Divider,
+  Alert,
+  NumberInput,
+  Box,
+} from "@mantine/core";
+import "@app/components/shared/stripeCheckout/team-checkout.css";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { PlanTier } from "@app/services/licenseService";
@@ -16,22 +25,30 @@ import {
 interface CapacityStageProps {
   /** The plan the buyer picked a billing period for; supplies block price and currency. */
   selectedPlan: PlanTier | null;
-  /**
-   * Blocks of users being bought. Held in blocks because that is what the Stripe line item counts,
-   * but nothing shown to the buyer says so.
-   */
+  /** Stripe quantity counts blocks of users. */
   serverQuantity: number;
   setServerQuantity: (quantity: number) => void;
   /** Users already on this installation, so capacity cannot be set below what is in use. */
   currentUsers?: number;
-  /**
-   * Users the current plan already covers, when there is one. Its presence switches this from
-   * "upgrade to Team" to "add capacity": the buyer is choosing a new total, so the line item states
-   * what is being ADDED rather than what is covered, which is the number they are deciding about.
-   */
+  /** Existing purchased capacity; an adjustment selects the new total. */
   currentLimit?: number | null;
+  periodPicker?: React.ReactNode;
+  capacityNotice?: { users: number; limit: number };
   onContinue: () => void;
   onContactSales?: () => void;
+}
+
+function showCustomValueInvalid(
+  value: number | string,
+  minimum: number,
+  maximum: number,
+) {
+  return (
+    value === "" ||
+    !Number.isSafeInteger(Number(value)) ||
+    Number(value) < minimum ||
+    Number(value) > maximum
+  );
 }
 
 /**
@@ -47,6 +64,8 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
   setServerQuantity,
   currentUsers = 0,
   currentLimit = null,
+  periodPicker,
+  capacityNotice,
   onContinue,
   onContactSales,
 }) => {
@@ -57,13 +76,15 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
   const isYearly = selectedPlan?.period?.includes("year") ?? false;
   const covered = usersForBlocks(serverQuantity);
   const total = blockPrice * serverQuantity;
+  const [draftUsers, setDraftUsers] = useState<number | string>(covered);
 
-  // Adding capacity cannot reduce the purchased allowance or strand existing users.
-  const minBlocks = blocksForUsers(Math.max(currentUsers, currentLimit ?? 0));
+  const minBlocks = currentLimit == null ? blocksForUsers(currentUsers) : 1;
+  const reducing = currentLimit != null && covered < currentLimit;
   const minUsers = usersForBlocks(minBlocks);
   const maxUsers = usersForBlocks(SELF_SERVE_MAX_BLOCKS);
   const belowMinimumCapacity = serverQuantity < minBlocks;
   const offerEnterprise = shouldOfferEnterprise(serverQuantity);
+  const invalidDraft = showCustomValueInvalid(draftUsers, 1, maxUsers);
 
   const presets = USER_PRESETS.filter((users) => users <= maxUsers);
   const [showCustom, setShowCustom] = useState(
@@ -78,65 +99,115 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
     setServerQuantity(blocksForUsers(users));
 
   return (
-    <Stack gap="lg" style={{ padding: "1.5rem 2rem" }}>
+    <Stack gap="sm" className="team-capacity">
+      {capacityNotice && capacityNotice.users > capacityNotice.limit && (
+        <Box className="team-capacity__notice">
+          <Text size="sm" fw={500}>
+            {t(
+              "payment.capacityStage.overCapacityTitle",
+              "Your server has more users than your plan covers",
+            )}
+          </Text>
+          <Text size="sm" mt={4}>
+            {t(
+              "payment.capacityStage.overCapacityBody",
+              "{{users}} users are on this server; your current allowance is {{limit}}. Choose a Team plan below to cover everyone.",
+              { users: capacityNotice.users, limit: capacityNotice.limit },
+            )}
+          </Text>
+          <Text size="xs" c="dimmed" mt={6}>
+            {t(
+              "payment.capacityStage.overCapacityConsequence",
+              "Existing accounts stay in place. Adding or inviting users is blocked until you add capacity or free up seats.",
+            )}
+          </Text>
+        </Box>
+      )}
       <Text size="sm" c="dimmed">
         {currentLimit != null
           ? t(
               "payment.capacityStage.subheadingAdd",
               "Your plan covers {{current}} users today. Choose the new total.",
-              { current: currentLimit },
+              {
+                current: currentLimit,
+              },
             )
           : t(
               "payment.capacityStage.subheading",
               "Covers everyone you invite, in blocks of {{users}} users.",
-              { users: USERS_PER_BLOCK },
+              {
+                users: USERS_PER_BLOCK,
+              },
             )}
       </Text>
 
-      <Group gap="sm" wrap="wrap" align="center">
-        <Text size="sm" fw={500}>
-          {t("payment.capacityStage.usersLabel", "Users")}
-        </Text>
-        {presets.map((users) => (
+      <Box className="team-capacity__selection">
+        <Group gap="xs" wrap="wrap" align="center">
+          <Text size="sm" fw={500}>
+            {t("payment.capacityStage.usersLabel", "Users")}
+          </Text>
+          {presets.map((users) => (
+            <Button
+              key={users}
+              variant="secondary"
+              className="team-capacity__pill"
+              aria-pressed={!showCustom && covered === users}
+              disabled={users < minUsers}
+              onClick={() => {
+                setShowCustom(false);
+                setDraftUsers(users);
+                selectUsers(users);
+              }}
+            >
+              {users}
+            </Button>
+          ))}
           <Button
-            key={users}
-            variant={!showCustom && covered === users ? "primary" : "secondary"}
-            disabled={users < minUsers}
+            variant="secondary"
+            className="team-capacity__pill"
+            aria-pressed={showCustom}
             onClick={() => {
-              setShowCustom(false);
-              selectUsers(users);
+              setDraftUsers(covered);
+              setShowCustom(true);
             }}
           >
-            {users}
+            {t("payment.capacityStage.other", "Other")}
           </Button>
-        ))}
-        <Button
-          variant={showCustom ? "primary" : "secondary"}
-          onClick={() => setShowCustom(true)}
-        >
-          {t("payment.capacityStage.other", "Other")}
-        </Button>
-      </Group>
+        </Group>
 
-      {showCustom && (
-        <NumberInput
-          label={t("payment.capacityStage.customLabel", "Number of users")}
-          description={t(
-            "payment.capacityStage.customHint",
-            "Rounded up to the next block of {{users}}.",
-            { users: USERS_PER_BLOCK },
-          )}
-          value={covered}
-          onChange={(value) => selectUsers(Number(value) || minUsers)}
-          min={minUsers}
-          max={maxUsers}
-          step={USERS_PER_BLOCK}
-          clampBehavior="strict"
-          allowDecimal={false}
-          allowNegative={false}
-          style={{ width: 220 }}
-        />
-      )}
+        {showCustom && (
+          <Group gap="xs" mt="xs">
+            <NumberInput
+              aria-label={t(
+                "payment.capacityStage.customLabel",
+                "Number of users",
+              )}
+              value={draftUsers}
+              onChange={(value) => {
+                setDraftUsers(value);
+                if (
+                  value !== "" &&
+                  Number.isSafeInteger(Number(value)) &&
+                  Number(value) > 0
+                )
+                  selectUsers(Number(value));
+              }}
+              min={minUsers}
+              max={maxUsers}
+              clampBehavior="none"
+              hideControls
+              allowDecimal={false}
+              allowNegative={false}
+              style={{ width: 80 }}
+            />
+            <Text size="xs" c="dimmed">
+              {t("payment.capacityStage.roundsTo", "rounds to {{users}}", {
+                users: covered,
+              })}
+            </Text>
+          </Group>
+        )}
+      </Box>
 
       {belowMinimumCapacity && (
         <Alert color="yellow" variant="light">
@@ -148,9 +219,17 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
         </Alert>
       )}
 
-      <Divider />
+      {periodPicker}
+      {reducing && (
+        <Text size="sm" c="dimmed">
+          {t(
+            "payment.capacityStage.reductionNote",
+            "The lower capacity starts at your next renewal. Until then, you can use your current allowance. Existing users stay; new users are blocked if you are over capacity when the change takes effect.",
+          )}
+        </Text>
+      )}
 
-      <Stack gap="xs">
+      <Stack gap="sm" className="team-capacity__receipt">
         <Group justify="space-between">
           <Text size="sm" c="dimmed">
             {t(
@@ -164,35 +243,53 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
             )}
           </Text>
           <Text size="sm" fw={500}>
-            {currentLimit != null
-              ? t("payment.capacityStage.userDelta", "+{{users}} users", {
-                  users: Math.max(0, covered - currentLimit),
-                })
-              : t("payment.capacityStage.userTotal", "{{users}} users", {
-                  users: covered,
-                })}
+            {t("payment.capacityStage.userTotal", "{{users}} users", {
+              users: covered,
+            })}
           </Text>
         </Group>
+        <Divider />
         <Group justify="space-between" align="baseline">
           <Text fw={600}>
-            {t("payment.capacityStage.dueToday", "Due today")}
+            {currentLimit != null
+              ? t("payment.capacityStage.newPlanTotal", "New plan total")
+              : t("payment.capacityStage.estimatedTotal", "Estimated total")}
           </Text>
-          <Text size="xl" fw={700}>
+          <Text size="md" fw={600}>
             {formatPrice(total, currency)}
           </Text>
         </Group>
-        <Text size="xs" c="dimmed">
-          {t(
-            "payment.capacityStage.renewalNote",
-            "Renews at {{total}}{{period}}. Cancel any time in Usage & Billing.",
-            { total: formatPrice(total, currency, 0), period },
-          )}
-        </Text>
       </Stack>
+      <Text size="xs" c="dimmed">
+        {currentLimit != null
+          ? t(
+              "payment.capacityStage.adjustmentNote",
+              "Stripe will show the exact charge, any prorations and your next billing date before you confirm. Your saved payment method will be used if available.",
+            )
+          : t(
+              "payment.capacityStage.renewalNote",
+              "Renews at {{total}}{{period}}. Cancel any time in Usage & Billing.",
+              {
+                total: formatPrice(total, currency, 0),
+                period,
+              },
+            )}
+      </Text>
 
-      <Stack gap="sm">
-        <Button onClick={onContinue} disabled={belowMinimumCapacity} fullWidth>
-          {t("payment.capacityStage.continue", "Continue to payment")}
+      <Text size="xs" c="dimmed">
+        {t(
+          "payment.capacityStage.currencyAtCheckout",
+          "Stripe confirms the final amount and payment currency at checkout.",
+        )}
+      </Text>
+      <Group justify="flex-end" mt="sm">
+        <Button
+          onClick={onContinue}
+          disabled={belowMinimumCapacity || (showCustom && invalidDraft)}
+        >
+          {currentLimit != null
+            ? t("payment.capacityStage.reviewChange", "Review change in Stripe")
+            : t("payment.capacityStage.continue", "Continue to payment")}
         </Button>
 
         {offerEnterprise && onContactSales && (
@@ -203,7 +300,7 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
             )}
           </Button>
         )}
-      </Stack>
+      </Group>
     </Stack>
   );
 };

@@ -180,7 +180,6 @@ const TOOL_SEO_TITLES = {
   read: "PDF Viewer",
   annotate: "Annotate PDF",
   automate: "PDF Workflow Automation",
-  scannerEffect: "Make a PDF Look Scanned",
   scannerImageSplit: "Split Scanned Photos",
   autoRename: "Auto Rename PDF Files",
   bookletImposition: "Create a PDF Booklet",

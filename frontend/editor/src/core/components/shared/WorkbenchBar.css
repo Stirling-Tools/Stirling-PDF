@@ -21,6 +21,16 @@
   z-index: 50;
 }
 
+/* When the top row is portalled into a title-bar strip, only the tool row stays
+   inline. It sits directly under the strip (which carries its own bottom
+   hairline), so drop the tool row's own top hairline to avoid doubling. */
+.workbench-bar[data-portaled="true"] {
+  min-height: 0;
+}
+.workbench-bar[data-portaled="true"] .workbench-bar-center {
+  border-top: none;
+}
+
 /* ---- View switcher (left) ---- */
 /* Follows the view switcher, which claims order 1 in the bar's reflow. */
 .workbench-bar-lead {

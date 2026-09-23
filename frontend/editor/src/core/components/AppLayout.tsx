@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { useBanner } from "@app/contexts/BannerContext";
 import NavigationWarningModal from "@app/components/shared/NavigationWarningModal";
+import { TitleBarSearch } from "@app/components/layout/TitleBarSearch";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -22,7 +23,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       `}</style>
       <div
         style={{
-          height: "var(--app-viewport-height, 100dvh)",
+          height: "var(--titlebar-body-h, var(--app-viewport-height, 100dvh))",
           display: "flex",
           flexDirection: "column",
         }}
@@ -30,6 +31,9 @@ export function AppLayout({ children }: AppLayoutProps) {
         {banner}
         <div style={{ flex: 1, minHeight: 0, height: 0 }}>{children}</div>
       </div>
+      {/* Portals Super Search into the title-bar strip when a layer provides one;
+          otherwise renders nothing. Kept here so it stays mounted across views. */}
+      <TitleBarSearch />
       <NavigationWarningModal />
     </>
   );

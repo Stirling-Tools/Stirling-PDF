@@ -3,7 +3,7 @@
 
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mantine/core";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import { Icon } from "@app/ui/Icon";
 import { FormField, Input, Select } from "@app/ui";
 
 export type ScheduleUnit = "MINUTES" | "HOURS" | "DAYS";
@@ -62,7 +62,7 @@ export function PipelineInputTrigger({
           >
             <span className="portal-builder__label-hint">
               {label}
-              <InfoOutlinedIcon style={{ fontSize: "0.875rem" }} />
+              <Icon name="info" size={"0.875rem"} />
             </span>
           </Tooltip>
         }

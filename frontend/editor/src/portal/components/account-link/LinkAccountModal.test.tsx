@@ -1,7 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { PortalTestProviders } from "@portal/test/TestQueryProvider";
+import {
+  UIProvider,
+  useUI,
+  type LinkModalMode,
+} from "@app/portal/contexts/UIContext";
+import { PortalTestProviders } from "@app/portal/test/TestQueryProvider";
 
 /** The step machine: what drives each step, and what must not skip or repeat one. */
 const { startConnect, startReauth, fetchWallet, EMAIL } = vi.hoisted(() => ({
@@ -11,9 +16,26 @@ const { startConnect, startReauth, fetchWallet, EMAIL } = vi.hoisted(() => ({
   EMAIL: "admin@acme.example",
 }));
 
-vi.mock("@portal/api/link", () => ({ startConnect, startReauth }));
-vi.mock("@portal/api/billing", () => ({ fetchWallet }));
-vi.mock("@portal/auth/saasSupabase", () => ({
+vi.mock("@portal/hooks/useFreeTierBalance", () => ({
+  useFreeTierBalance: () => ({
+    data: {
+      grantUnits: 500,
+      remainingUnits: 0,
+      periodEnd: "2026-10-01T00:00:00",
+    },
+  }),
+}));
+vi.mock("@app/ui", async () => ({
+  ...(await import("@app/ui/Button")),
+  ...(await import("@app/ui/Banner")),
+  ...(await import("@app/ui/Modal")),
+  ...(await import("@app/ui/Skeleton")),
+  ...(await import("@app/ui/Spinner")),
+}));
+
+vi.mock("@app/portal/api/link", () => ({ startConnect, startReauth }));
+vi.mock("@app/portal/api/billing", () => ({ fetchWallet }));
+vi.mock("@app/portal/auth/saasSupabase", () => ({
   isSaasSupabaseConfigured: true,
   // Step 3 reads the connected account's email off this session.
   ensureSaasSupabase: () => ({
@@ -27,9 +49,37 @@ vi.mock("@portal/auth/saasSupabase", () => ({
   }),
 }));
 
-import { LinkAccountModal } from "@portal/components/account-link/LinkAccountModal";
-import type { ConnectOutcome } from "@portal/components/account-link/ConnectCallbackView";
-import { freeWallet } from "@portal/components/billing/walletFixtures";
+import {
+  clearAccountLinkBlock,
+  reportFreeTierExhausted,
+} from "@app/services/accountLinkBlock";
+import {
+  LinkAccountModal,
+  LinkAccountModalHost,
+} from "@app/portal/components/account-link/LinkAccountModal";
+import type { ConnectOutcome } from "@app/portal/components/account-link/ConnectCallbackView";
+import { freeWallet } from "@app/portal/components/billing/walletFixtures";
+
+const ownership = vi.hoisted(() => ({ isAdmin: true, orgOwner: true }));
+vi.mock("@app/auth", () => ({
+  useAuth: () => ({
+    ...ownership,
+    user: { orgOwner: ownership.orgOwner },
+    loading: false,
+  }),
+}));
+
+function HostedModal() {
+  const { openLinkModal } = useUI();
+  return (
+    <>
+      <button onClick={() => openLinkModal("reauth")}>
+        Open billing renewal
+      </button>
+      <LinkAccountModalHost />
+    </>
+  );
+}
 
 const AUTHORIZE = "http://localhost:5174/link?request=req-1";
 const deployment = vi.hoisted(() => ({ basePath: "" }));
@@ -38,23 +88,25 @@ vi.mock("@app/constants/app", async (importOriginal) => ({
   withBasePath: (path: string) => `${deployment.basePath}${path}`,
 }));
 
-const BENEFITS = "Pipelines, policies, sources and audit";
-const GHOST = /Taking you to stirling\.com/;
+const BENEFITS = "Add more users with a paid Team plan";
+const GHOST = /Opening Stirling sign-in/;
 const CONNECT = /Connect Stirling account/;
 
 function renderModal(
-  mode?: "link" | "reauth",
+  mode?: LinkModalMode,
   outcome: ConnectOutcome | null = null,
 ) {
   return render(
     <PortalTestProviders>
-      <MemoryRouter>
-        <LinkAccountModal
-          open
-          onClose={() => {}}
-          mode={mode}
-          outcome={outcome}
-        />
+      <MemoryRouter initialEntries={["/processor/usage"]}>
+        <UIProvider>
+          <LinkAccountModal
+            open
+            onClose={() => {}}
+            mode={mode}
+            outcome={outcome}
+          />
+        </UIProvider>
       </MemoryRouter>
     </PortalTestProviders>,
   );
@@ -74,8 +126,37 @@ function filledSteps(): number {
 describe("LinkAccountModal", () => {
   let assign: ReturnType<typeof vi.fn>;
 
+  it("omits pipeline controls for a banner prompt even after a pipeline failure", () => {
+    clearAccountLinkBlock();
+    reportFreeTierExhausted({
+      pipelineId: "rotate",
+      trigger: "upload",
+    });
+    renderModal("exhausted");
+    expect(screen.getByRole("dialog")).toBeTruthy();
+    expect(screen.queryByText("Active pipelines")).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Open pipeline settings" }),
+    ).toBeNull();
+    clearAccountLinkBlock();
+  });
+
+  it("returns keyboard focus to the trigger when the dialog unmounts", () => {
+    const trigger = document.createElement("button");
+    document.body.append(trigger);
+    trigger.focus();
+    const view = renderModal("exhausted");
+    view.unmount();
+    expect(document.activeElement).toBe(trigger);
+    trigger.remove();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
+    ownership.isAdmin = true;
+    ownership.orgOwner = true;
+    sessionStorage.clear();
+    localStorage.setItem("stirling.portalSaasOwner", "owner");
     deployment.basePath = "";
     fetchWallet.mockResolvedValue(freeWallet);
     startConnect.mockResolvedValue({
@@ -96,11 +177,68 @@ describe("LinkAccountModal", () => {
       value: {
         origin: "http://localhost:5173",
         hostname: "localhost",
+        pathname: "/processor/pipelines",
         href: "http://localhost:5173/app",
         search: "",
         assign,
       },
     });
+  });
+
+  it.each([
+    { isAdmin: true, orgOwner: false },
+    { isAdmin: false, orgOwner: true },
+  ])(
+    "does not mount a requested renewal for $isAdmin admin / $orgOwner owner",
+    (auth) => {
+      Object.assign(ownership, auth);
+      render(
+        <PortalTestProviders>
+          <MemoryRouter>
+            <UIProvider>
+              <HostedModal />
+            </UIProvider>
+          </MemoryRouter>
+        </PortalTestProviders>,
+      );
+      click("Open billing renewal");
+      expect(screen.queryByRole("dialog")).toBeNull();
+      expect(startReauth).not.toHaveBeenCalled();
+      expect(startConnect).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([
+    { state: "expired" as const, sessionRestored: false },
+    { state: "linked" as const, sessionRestored: false },
+  ])(
+    "shows a failed renewal retry after $state and lets the owner retry again",
+    async (outcome) => {
+      startReauth.mockRejectedValueOnce(new Error("offline"));
+      renderModal("reauth", outcome);
+      click(/Try again/);
+      expect(await screen.findByText(/outbound network access/)).toBeTruthy();
+      expect(assign).not.toHaveBeenCalled();
+      expect(screen.queryByText(GHOST)).toBeNull();
+      click(/Sign in again/);
+      await waitFor(() => expect(assign).toHaveBeenCalledWith(AUTHORIZE));
+      expect(startReauth).toHaveBeenCalledTimes(2);
+      expect(startConnect).not.toHaveBeenCalled();
+    },
+  );
+
+  it("shows callback configuration guidance when retrying a partial session fails", async () => {
+    startReauth.mockResolvedValue({
+      phase: "CALLBACK_MISMATCH",
+      authorizeUrl: null,
+    });
+    renderModal("reauth", { state: "linked", sessionRestored: false });
+    click(/Try again/);
+    expect(
+      await screen.findByText(/configured frontend address does not match/),
+    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Sign in again/ })).toBeTruthy();
+    expect(assign).not.toHaveBeenCalled();
   });
 
   it("opens on the pitch, and asks nothing of the backend until told", () => {
@@ -112,13 +250,55 @@ describe("LinkAccountModal", () => {
     expect(startConnect).not.toHaveBeenCalled();
   });
 
-  it("offers no sign-in form, because a sign-in started here cannot complete", () => {
-    const { container } = renderModal();
-    click(CONNECT);
+  it("starts renewal on HTTP hosts without crypto.randomUUID", async () => {
+    const original = crypto.randomUUID;
+    Object.defineProperty(crypto, "randomUUID", {
+      configurable: true,
+      value: undefined,
+    });
+    try {
+      renderModal("reauth");
+      click(/Sign in again/);
+      await waitFor(() => expect(startReauth).toHaveBeenCalled(), {
+        timeout: 500,
+      });
+      expect(startReauth.mock.calls[0][0]).toMatch(/state=.+/);
+    } finally {
+      Object.defineProperty(crypto, "randomUUID", {
+        configurable: true,
+        value: original,
+      });
+    }
+  });
 
-    // A sign-in started on this origin cannot complete, so nothing here may collect credentials.
-    expect(container.querySelector("input[type=password]")).toBeNull();
-    expect(container.querySelector("input[type=email]")).toBeNull();
+  it("does not redirect if the renewal dialog closes while the request is pending", async () => {
+    let resolve!: (value: unknown) => void;
+    startReauth.mockReturnValue(
+      new Promise((done) => {
+        resolve = done;
+      }),
+    );
+    const view = renderModal("reauth");
+    click(/Sign in again/);
+    view.unmount();
+    await act(async () => {
+      resolve({ phase: "PENDING", authorizeUrl: AUTHORIZE });
+    });
+    expect(assign).not.toHaveBeenCalled();
+  });
+
+  it("keeps credential fields out of the portaled connection dialog", async () => {
+    renderModal();
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toBeVisible();
+    expect(
+      dialog.querySelector('input[type="password"], input[type="email"]'),
+    ).toBeNull();
+    click(CONNECT);
+    await waitFor(() => expect(assign).toHaveBeenCalledWith(AUTHORIZE));
+    expect(
+      dialog.querySelector('input[type="password"], input[type="email"]'),
+    ).toBeNull();
   });
 
   it("hands over on the first click, showing the ghost while it goes", async () => {
@@ -131,7 +311,9 @@ describe("LinkAccountModal", () => {
     // The backend checks this against the request's Origin header.
     expect(startConnect).toHaveBeenCalledWith(
       "http://localhost:5173",
-      "http://localhost:5173/account-link/callback",
+      expect.stringMatching(
+        /^http:\/\/localhost:5173\/account-link\/callback\?state=/,
+      ),
     );
     await waitFor(() => expect(assign).toHaveBeenCalledWith(AUTHORIZE));
     expect(startReauth).not.toHaveBeenCalled();
@@ -149,7 +331,9 @@ describe("LinkAccountModal", () => {
     // A different endpoint: reauth presents the credential, so the team is pinned server-side.
     await waitFor(() =>
       expect(startReauth).toHaveBeenCalledWith(
-        "http://localhost:5173/account-link/callback",
+        expect.stringMatching(
+          /^http:\/\/localhost:5173\/account-link\/callback\?state=/,
+        ),
       ),
     );
     expect(startConnect).not.toHaveBeenCalled();
@@ -165,7 +349,9 @@ describe("LinkAccountModal", () => {
     await waitFor(() =>
       expect(startConnect).toHaveBeenCalledWith(
         "http://localhost:5173/pdf",
-        "http://localhost:5173/pdf/account-link/callback",
+        expect.stringMatching(
+          /^http:\/\/localhost:5173\/pdf\/account-link\/callback\?state=/,
+        ),
       ),
     );
   });
@@ -183,6 +369,46 @@ describe("LinkAccountModal", () => {
     expect(screen.getByText(BENEFITS)).toBeTruthy();
     expect(filledSteps()).toBe(1);
   });
+
+  it.each(["link", "reauth"] as const)(
+    "explains a callback address mismatch during %s and allows retry after correction",
+    async (mode) => {
+      const start = mode === "reauth" ? startReauth : startConnect;
+      const button = mode === "reauth" ? /Sign in again/ : CONNECT;
+      start.mockResolvedValue({
+        phase: "CALLBACK_MISMATCH",
+        authorizeUrl: null,
+        secondsRemaining: null,
+        teamId: null,
+      });
+      renderModal(mode);
+      click(button);
+
+      expect(
+        await screen.findByText(/configured frontend address does not match/),
+      ).toBeTruthy();
+      expect(assign).not.toHaveBeenCalled();
+      expect(sessionStorage.getItem("stirling.portalConnect")).toBeNull();
+      expect(screen.queryByText(GHOST)).toBeNull();
+
+      start.mockResolvedValue({
+        phase: "PENDING",
+        authorizeUrl: AUTHORIZE,
+        secondsRemaining: 900,
+        teamId: null,
+      });
+      click(button);
+      await waitFor(() => expect(assign).toHaveBeenCalledWith(AUTHORIZE));
+      const callbackUrl = start.mock.calls[1][mode === "reauth" ? 0 : 1];
+      const pending = JSON.parse(
+        sessionStorage.getItem("stirling.portalConnect")!,
+      );
+      expect(pending.browserState).toBe(
+        new URL(callbackUrl).searchParams.get("state"),
+      );
+      expect(pending.mode).toBe(mode);
+    },
+  );
 
   it("does not navigate when there is nothing to navigate to", async () => {
     // Already linked: the backend reports status without an authorize URL.
@@ -216,24 +442,93 @@ describe("LinkAccountModal", () => {
       expect(filledSteps()).toBe(1);
     });
 
-    /**
-     * Not the close path itself (the host unmounts, so a fresh mount is clean by construction) but
-     * the property behind it: hoist the flag into UIContext and the trap returns, failing here.
-     */
-    it("keeps the in-flight flag local, so a fresh mount cannot inherit one", async () => {
-      const first = renderModal();
-      click(CONNECT);
-      await waitFor(() => expect(screen.getByText(GHOST)).toBeTruthy());
+    it("dismisses a pending renewal and opens a fresh attempt through the real host", async () => {
+      let finish!: (value: unknown) => void;
+      startReauth.mockReturnValueOnce(
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+      );
+      render(
+        <PortalTestProviders>
+          <MemoryRouter>
+            <UIProvider>
+              <HostedModal />
+            </UIProvider>
+          </MemoryRouter>
+        </PortalTestProviders>,
+      );
+      click("Open billing renewal");
+      click(/Sign in again/);
+      expect(screen.getByText(GHOST)).toBeVisible();
+      act(() =>
+        within(screen.getByRole("dialog"))
+          .getAllByRole("button", { name: "Close" })[0]
+          .click(),
+      );
+      await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+      await act(async () =>
+        finish({ phase: "PENDING", authorizeUrl: AUTHORIZE }),
+      );
+      expect(assign).not.toHaveBeenCalled();
+      expect(sessionStorage.getItem("stirling.portalConnect")).toBeNull();
 
-      first.unmount();
-      renderModal();
-
-      expect(screen.getByText(BENEFITS)).toBeTruthy();
+      click("Open billing renewal");
       expect(screen.queryByText(GHOST)).toBeNull();
+      click(/Sign in again/);
+      await waitFor(() => expect(assign).toHaveBeenCalledWith(AUTHORIZE));
+      expect(startReauth).toHaveBeenCalledTimes(2);
     });
   });
 
   describe("resuming after the round trip", () => {
+    it("renews missing browser access after an exhausted free-tier link succeeds", async () => {
+      renderModal("exhausted", {
+        state: "linked",
+        sessionRestored: false,
+      });
+
+      expect(screen.getByText("Renew billing access")).toBeTruthy();
+      expect(filledSteps()).toBe(0);
+      click(/Try again/);
+
+      await waitFor(() => expect(startReauth).toHaveBeenCalledTimes(1));
+      expect(startConnect).not.toHaveBeenCalled();
+    });
+
+    it("keeps the normal completion after an exhausted free-tier link restores access", async () => {
+      renderModal("exhausted", { state: "linked", sessionRestored: true });
+
+      expect(
+        await screen.findByText(/now runs against your Stirling account/),
+      ).toBeTruthy();
+      expect(filledSteps()).toBe(3);
+      expect(startReauth).not.toHaveBeenCalled();
+    });
+
+    it("keeps a renewal success to one step without the link onboarding", async () => {
+      renderModal("reauth", {
+        mode: "reauth",
+        state: "linked",
+        sessionRestored: true,
+      });
+      expect(
+        await screen.findByText(/billing access has been renewed/),
+      ).toBeTruthy();
+      expect(screen.queryByText("Invite your team")).toBeNull();
+      expect(filledSteps()).toBe(0);
+    });
+
+    it("retries expired renewal with reauth rather than registering again", async () => {
+      renderModal("reauth", {
+        mode: "reauth",
+        state: "expired",
+        sessionRestored: false,
+      });
+      click(/Try again/);
+      await waitFor(() => expect(startReauth).toHaveBeenCalledTimes(1));
+      expect(startConnect).not.toHaveBeenCalled();
+    });
     it("lands on step 3 rather than restarting the pitch", async () => {
       renderModal("link", { state: "linked", sessionRestored: true });
 
@@ -273,5 +568,35 @@ describe("LinkAccountModal", () => {
       ).toBeTruthy();
       expect(screen.queryByRole("button", { name: /Try again/ })).toBeNull();
     });
+  });
+
+  it("leads with credits and explains which benefits need a paid plan", async () => {
+    renderModal("exhausted");
+    expect(screen.getByText("Keep your workflows running")).toBeTruthy();
+    expect(screen.getByText(BENEFITS)).toBeTruthy();
+    expect(screen.queryByText(/Linking does not start a paid plan/)).toBeNull();
+    expect(
+      screen.queryByText(/Manual PDF tools are still available/),
+    ).toBeNull();
+    expect(screen.queryByText("500 free per month")).toBeNull();
+    expect(filledSteps()).toBe(0);
+    click("Link account for more credits");
+    await waitFor(() => expect(assign).toHaveBeenCalledWith(AUTHORIZE));
+  });
+
+  it.each([
+    { isAdmin: false, orgOwner: false },
+    { isAdmin: true, orgOwner: false },
+  ])("offers non-owners guidance without a handshake: %j", (roles) => {
+    Object.assign(ownership, roles);
+    renderModal("exhausted");
+    expect(screen.getByText(/open Usage & billing/)).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Copy message for administrator" }),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole("button", { name: "Link account for more credits" }),
+    ).toBeNull();
+    expect(startConnect).not.toHaveBeenCalled();
   });
 });
