@@ -12,6 +12,12 @@ import { useTranslation } from "react-i18next";
 import { useEditorStore } from "@app/tools/pdfTextEditor/hooks/useEditorStore";
 import { ensurePageRead } from "@app/tools/pdfTextEditor/hooks/useDocumentLoader";
 import { EditorTopBar } from "@app/tools/pdfTextEditor/components/EditorTopBar";
+import { MobileEditorTopBar } from "@app/tools/pdfTextEditor/components/MobileEditorTopBar";
+import { MobileActionBar } from "@app/tools/pdfTextEditor/components/MobileActionBar";
+import { useIsMobile } from "@app/hooks/useIsMobile";
+import { Button } from "@app/ui/Button";
+import { Icon } from "@app/ui/Icon";
+import { fitToWidthScale } from "@app/tools/pdfTextEditor/util/fitToWidth";
 import { FindBar } from "@app/tools/pdfTextEditor/components/FindBar";
 import { useToolbarController } from "@app/tools/pdfTextEditor/hooks/useToolbarController";
 import { ZoomPill } from "@app/tools/pdfTextEditor/components/ZoomPill";
@@ -25,6 +31,8 @@ import { SetImageTransformCommand } from "@app/tools/pdfTextEditor/commands/SetI
 import type { SelectionState } from "@app/tools/pdfTextEditor/types";
 
 const DEFAULT_SCALE = 1.5;
+const DESKTOP_FIT_PAD_PX = 64;
+const MOBILE_FIT_PAD_PX = 16;
 
 // Custom workbench view: the contextual formatting toolbar as a bar across the
 // top, then the scrollable pages stack with editable overlays beneath.
@@ -40,6 +48,7 @@ export function PageStage() {
   const [draggingFile, setDraggingFile] = useState(false);
   const dragCountRef = useRef(0);
   const stageRootRef = useRef<HTMLDivElement | null>(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => store.selection.subscribe(setSelection), [store]);
   useEffect(
@@ -70,7 +79,27 @@ export function PageStage() {
   // inspector derives from the same controller, so both surfaces read one
   // source of truth.
   const controller = useToolbarController(store, state, selection);
-  const topBar = (
+
+  const fittedDocRef = useRef<object | null>(null);
+  const firstPageWidth = state.pages[0]?.width;
+  useEffect(() => {
+    const doc = store.document;
+    const stage = stageRootRef.current;
+    if (!isMobile || !doc || !stage || !firstPageWidth) return;
+    if (fittedDocRef.current === doc) return;
+    fittedDocRef.current = doc;
+    store.setRenderScale(
+      fitToWidthScale(stage.clientWidth, firstPageWidth, MOBILE_FIT_PAD_PX),
+    );
+  }, [isMobile, firstPageWidth, store]);
+
+  const topBar = isMobile ? (
+    <MobileEditorTopBar
+      controller={controller}
+      hasDocument={state.hasDocument}
+      dirty={state.dirty}
+    />
+  ) : (
     <EditorTopBar
       controller={controller}
       hasDocument={state.hasDocument}
@@ -95,16 +124,33 @@ export function PageStage() {
           style={{ flex: 1, minHeight: 0 }}
           data-testid="pdf-editor-stage-empty"
         >
-          <Stack align="center" gap="xs">
+          <Stack align="center" gap="xs" px="md">
             <Text c="dimmed">
               {t("pdfTextEditor.stage.noDocument", "No document loaded.")}
             </Text>
-            <Text c="dimmed" size="sm">
-              {t(
-                "pdfTextEditor.stage.pickPrompt",
-                "Pick a PDF from the Files panel on the left to begin editing.",
-              )}
-            </Text>
+            {isMobile ? (
+              <Button
+                size="xl"
+                leftSection={<Icon name="file-up" size={22} />}
+                onClick={() =>
+                  document
+                    .querySelector<HTMLInputElement>(
+                      '[data-testid="pdf-editor-file-input"]',
+                    )
+                    ?.click()
+                }
+                data-testid="pdf-editor-mobile-open"
+              >
+                {t("pdfTextEditor.mobile.openPdf", "Open a PDF")}
+              </Button>
+            ) : (
+              <Text c="dimmed" size="sm">
+                {t(
+                  "pdfTextEditor.stage.pickPrompt",
+                  "Pick a PDF from the Files panel on the left to begin editing.",
+                )}
+              </Text>
+            )}
           </Stack>
         </Center>
       </Stack>
@@ -254,7 +300,7 @@ export function PageStage() {
         <MarqueeSelector store={store} />
         <ScrollArea h="100%" type="auto" data-testid="pdf-editor-stage">
           <Box
-            py="lg"
+            py={isMobile ? "sm" : "lg"}
             onPointerDown={(e) => {
               // Shift means "extend" here (shift-click) and Ctrl/Cmd+Shift
               // starts the marquee: neither may wipe what it is about to add
@@ -264,7 +310,7 @@ export function PageStage() {
             }}
             data-testid="pdf-editor-pages"
           >
-            <Stack gap="lg" align="center">
+            <Stack gap={isMobile ? "sm" : "lg"} align="center">
               {state.pages.map((page) =>
                 store.document ? (
                   <PageView
@@ -345,9 +391,19 @@ export function PageStage() {
             store={store}
             renderScale={state.renderScale}
             pages={state.pages}
+            fitPaddingPx={isMobile ? MOBILE_FIT_PAD_PX : DESKTOP_FIT_PAD_PX}
+            compact={isMobile}
           />
         )}
       </Box>
+      {isMobile && state.hasDocument && (
+        <MobileActionBar
+          store={store}
+          controller={controller}
+          addTextArmed={state.mode === "addText"}
+          findOpen={state.findOpen}
+        />
+      )}
     </Stack>
   );
 }
