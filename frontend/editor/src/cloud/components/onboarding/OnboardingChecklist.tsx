@@ -7,8 +7,6 @@ import {
   useChecklistSetupItem,
   type ChecklistItem,
 } from "@app/components/onboarding/checklistSetupItem";
-import StaticOnboardingSlide from "@app/components/onboarding/StaticOnboardingSlide";
-import { DEFAULT_RUNTIME_STATE } from "@app/components/onboarding/orchestrator/onboardingConfig";
 import {
   getFlowProgress,
   hasSeenFlow,
@@ -17,14 +15,12 @@ import {
 } from "@app/components/onboarding/orchestrator/onboardingStorage";
 import { openAppSettings } from "@app/utils/appSettings";
 import { requestStartTour } from "@app/constants/events";
-import apiClient from "@app/services/apiClient";
 import stirlingMark from "@app/assets/brand/modern-logo/logo512.png";
 import styles from "@app/components/onboarding/OnboardingChecklist.module.css";
 
 const FLOW_ID = "saas-checklist";
 const STEP_INVITE_TEAM = "invite-team";
 const STEP_TAKE_TOUR = "take-tour";
-const STEP_SHARE_ANALYTICS = "share-analytics";
 
 /** Getting-started checklist above the sidebar footer. Ticks and the X dismissal
  * persist per browser in the shared onboarding store. */
@@ -36,7 +32,6 @@ export function OnboardingChecklist() {
   const [dismissed, setDismissed] = useState(() => hasSeenFlow(FLOW_ID));
   const [done, setDone] = useState<string[]>(() => getFlowProgress(FLOW_ID));
   const [expanded, setExpanded] = useState(true);
-  const [analyticsOpen, setAnalyticsOpen] = useState(false);
 
   const markDone = useCallback((stepId: string) => {
     setStepDone(FLOW_ID, stepId);
@@ -79,14 +74,6 @@ export function OnboardingChecklist() {
       descriptionFallback: "See how Stirling works in a quick walkthrough",
       onClick: handleTakeTour,
     },
-    {
-      id: STEP_SHARE_ANALYTICS,
-      titleKey: "onboarding.checklist.shareAnalytics.title",
-      titleFallback: "Share anonymous usage data",
-      descriptionKey: "onboarding.checklist.shareAnalytics.description",
-      descriptionFallback: "Help improve Stirling",
-      onClick: () => setAnalyticsOpen(true),
-    },
   ];
 
   const doneCount = items.filter((item) => done.includes(item.id)).length;
@@ -97,33 +84,6 @@ export function OnboardingChecklist() {
     markFlowSeen(FLOW_ID);
     setDismissed(true);
   }, []);
-
-  const closeAnalytics = useCallback(() => {
-    markDone(STEP_SHARE_ANALYTICS);
-    setAnalyticsOpen(false);
-  }, [markDone]);
-
-  const handleAnalyticsAction = useCallback(
-    (action: string) => {
-      if (action === "enable-analytics" || action === "disable-analytics") {
-        const formData = new FormData();
-        formData.append(
-          "enabled",
-          action === "enable-analytics" ? "true" : "false",
-        );
-        void apiClient
-          .post("/api/v1/settings/update-enable-analytics", formData)
-          .catch((error) => {
-            console.error(
-              "[OnboardingChecklist] analytics update failed",
-              error,
-            );
-          });
-      }
-      closeAnalytics();
-    },
-    [closeAnalytics],
-  );
 
   if (loading || isAnonymous || dismissed) {
     return null;
@@ -262,17 +222,6 @@ export function OnboardingChecklist() {
       </div>
 
       {setup.dialog}
-
-      {analyticsOpen && (
-        <StaticOnboardingSlide
-          key="analytics-choice"
-          slideId="analytics-choice"
-          runtimeState={DEFAULT_RUNTIME_STATE}
-          allowDismiss
-          onSkip={closeAnalytics}
-          onAction={handleAnalyticsAction}
-        />
-      )}
     </>
   );
 }

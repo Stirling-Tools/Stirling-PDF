@@ -6018,10 +6018,6 @@ title = "Invite team members"
 description = "Open PDF files in Stirling PDF"
 title = "Make Stirling your default"
 
-[onboarding.checklist.shareAnalytics]
-description = "Help improve Stirling"
-title = "Share anonymous usage data"
-
 [onboarding.checklist.takeTour]
 description = "See how Stirling works in a quick walkthrough"
 title = "Take the tour"
