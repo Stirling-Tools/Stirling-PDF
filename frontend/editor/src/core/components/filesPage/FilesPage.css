@@ -8,27 +8,34 @@
   overflow: hidden;
 }
 
-/* The library's own row. The shared bar above carries only what every view has,
-   so the folder path sits here instead. */
-.files-page-tabs-row {
+.files-page-navigation {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  min-width: 0;
+  gap: 0.75rem;
+  padding: 0.5rem 1.25rem;
+  border-block: 1px solid var(--c-border-subtle);
+  overflow-x: auto;
+  flex-shrink: 0;
 }
 
-.files-page-tabs-path {
+.files-page-view-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.files-page-view-tabs > .files-page-breadcrumbs {
   flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  overflow: hidden;
 }
 
-/* The folder path. Sized and coloured like the bar's own controls, since on mobile
-   that is where it renders. Fixed height and no wrapping: a deep trail would
-   otherwise push its row taller, so depth is handled by showing fewer crumbs - see
-   the overflow menu. */
+@media (max-width: 768px) {
+  .files-page-navigation {
+    padding-inline: 0.75rem;
+  }
+}
+
+/* A fixed height keeps deep folder paths from pushing the file list down. */
 .files-page-breadcrumbs {
   display: flex;
   align-items: center;
@@ -67,7 +74,6 @@
   color: var(--c-text);
 }
 
-/* The parents that don't fit, root included. */
 .files-page-breadcrumb-overflow {
   flex-shrink: 0;
 }
@@ -105,10 +111,6 @@
   flex-shrink: 0;
   flex-wrap: wrap;
   min-height: 3rem;
-  /* Safety net - the content should always fit thanks to the shrink rules on
-     `.files-page-toolbar-actions` below, but if a future addition ever breaks
-     that, this stops the action group bleeding into sibling areas (notably the
-     details panel on the right). */
   overflow-x: hidden;
 }
 
@@ -118,7 +120,6 @@
   font-weight: 500;
 }
 
-/* Upload + New folder at the start of the toolbar. */
 .files-page-toolbar-create {
   display: inline-flex;
   align-items: center;
@@ -137,31 +138,25 @@
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: 0.5rem;
-  /* Allow this container to shrink below its intrinsic content width so it
-     wraps inside the toolbar rather than bursting out of it (it would bleed
-     under the right-hand details panel). */
   min-width: 0;
 }
 
-/* The filter, search and sort controls are text: shrinking them renders
-   "All sources" as "All s". They keep their declared width and the group
-   above wraps to a second line when the toolbar runs out of room. */
 .files-page-toolbar-actions > .mantine-Select-root,
 .files-page-toolbar-actions > .mantine-MultiSelect-root,
 .files-page-toolbar-actions > .mantine-TextInput-root {
   flex-shrink: 0;
 }
 
-/* The menu triggers in the toolbar - selection actions, folder settings. Tighter
-   on the chevron side than the label side so the caret sits against the edge
-   rather than floating in its own margin. */
 .files-page-toolbar-bulk-trigger {
   padding-left: 0.75rem;
   padding-right: 0.5rem;
   flex-shrink: 0;
 }
-/* Pin the view toggle: never let it clip off the right. flex-shrink:0
-   keeps its width fixed; the rest of the row shrinks around it. */
+
+.files-page-selection-actions {
+  flex-shrink: 0;
+}
+
 .files-page-toolbar-actions .mantine-SegmentedControl-root {
   flex-shrink: 0;
 }
@@ -173,10 +168,7 @@
   margin: 0 0.15rem;
 }
 
-/* SegmentedControl in the toolbar uses icon-only options; this centers the
-   MUI icon inside Mantine's `.mantine-SegmentedControl-innerLabel` (which
-   defaults to `display: inline` and baseline-aligns its children, leaving
-   the icon visually pinned to the top of the label box). */
+/* Mantine's inline label otherwise aligns icons to the text baseline. */
 .files-page-view-toggle-icon {
   display: inline-flex;
   align-items: center;
@@ -185,10 +177,6 @@
   vertical-align: middle;
 }
 
-/* Visually-hidden text that screen readers still announce. Lets us put
-   localised labels next to icon-only buttons (SegmentedControl options,
-   icon-only action rows) without growing the visible UI. Standard
-   "sr-only" / "visually-hidden" recipe. */
 .files-page-sr-only {
   position: absolute;
   width: 1px;
@@ -203,11 +191,23 @@
 
 .files-page-content {
   flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
   overflow: auto;
-  padding: 1.25rem;
+  padding: 0.5rem 1.25rem 1.25rem;
   position: relative;
   scrollbar-width: thin;
   scrollbar-color: var(--c-border-subtle) transparent;
+}
+
+.files-page-above-table + .files-page-content {
+  padding-top: 0;
+}
+
+.files-page-content:has(> .files-page-list) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .files-page-content::-webkit-scrollbar {
@@ -250,9 +250,7 @@
   gap: 1rem;
 }
 
-/* Stands in for the rows outside the rendered window, so the scrollbar reflects the
-   whole folder. Spans every column: in the grid a spacer sharing a row with cards
-   would be laid out beside them instead of above. */
+/* Spacers span every column so virtual rows reserve vertical space in both layouts. */
 .files-page-virtual-pad {
   grid-column: 1 / -1;
   pointer-events: none;
@@ -261,35 +259,39 @@
 .files-page-list {
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
   border: 1px solid var(--c-border-subtle);
   border-radius: 0.6rem;
-  /* Scrolls sideways once the rows hit their floors - see the narrow step
-     below. Still clips vertically, so rows stay inside the rounded corners. */
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--c-border-subtle) transparent;
   background: var(--c-surface);
+}
+
+.files-page-list > * {
+  flex-shrink: 0;
+}
+
+.files-page-list--adaptive {
+  container: files-list / inline-size;
+}
+
+.files-page-list-meta {
+  display: none;
 }
 
 .files-page-list-row {
   display: grid;
-  /* No column is ever dropped, so every track carries a floor: denied its width
-     a value wraps and the row grows, a timestamp into three lines. Type floors
-     for "Processing folder" and status for two chips ("1 Failed  12 Ready"),
-     the widest those cells hold; name floors widest, being what stays on screen
-     when the row is wider than the list.
-
-     Floors are lengths, never max-content: each row is its own grid, so a track
-     measuring its own text lands a few pixels off its neighbours and the
-     columns drift apart while scrolled. */
-  grid-template-columns:
-    2.25rem minmax(17rem, 3fr) minmax(7.5rem, 1fr) minmax(4.5rem, 1fr)
-    minmax(9.5rem, 1.5fr) minmax(8rem, 11rem) 2.5rem;
-  /* The sum of those floors: a flex item will not grow to its own content, so
-     without this the tracks overflow a box that never grew and nothing scrolls. */
-  min-width: 56rem;
+  /* Keep fixed column floors across independent row grids; intrinsic widths misalign rows. */
+  --files-page-list-columns: minmax(17rem, 3fr) minmax(7.5rem, 1fr)
+    minmax(4.5rem, 1fr) minmax(9.5rem, 1.5fr) minmax(8rem, 11rem) 2.5rem;
+  grid-template-columns: var(--files-page-list-columns);
+  /* Match the column floors so the list owns horizontal overflow. */
+  min-width: 53.25rem;
   gap: 0.5rem;
   align-items: center;
-  /* Same offscreen skip as .files-page-card. */
+
   content-visibility: auto;
   contain-intrinsic-size: auto 3rem;
   padding: 0.5rem 0.75rem;
@@ -299,11 +301,20 @@
   transition: background-color 0.12s ease;
 }
 
+.files-page-list--selection-column .files-page-list-row {
+  grid-template-columns: 2.25rem var(--files-page-list-columns);
+  min-width: 56rem;
+}
+
 .files-page-list-row:last-child {
   border-bottom: none;
 }
 
 .files-page-list-row.is-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  content-visibility: visible;
   background: var(--c-bg-raised);
   color: var(--c-text-subtle);
   text-transform: uppercase;
@@ -311,39 +322,16 @@
   letter-spacing: 0.05em;
   cursor: default;
   user-select: none;
-  /* Tall enough for the selection bar's button, so swapping the column labels
-     for it leaves the rows below where they were. A header that grows on the
-     first click moves the row under the pointer mid-double-click. */
   min-height: 3rem;
 }
 
-/* Selecting replaces the column labels with what acts on the selection: they
-   have nothing to sort while a selection is the subject. The select-all box
-   keeps its track so it does not jump. */
-.files-page-list-row.is-header.is-selecting {
-  grid-template-columns: 2.25rem minmax(0, 1fr);
-  background: color-mix(in srgb, var(--c-primary) 10%, var(--c-bg-raised));
-  color: var(--c-text);
-  text-transform: none;
-  letter-spacing: normal;
-}
-
-.files-page-list-selection-bar {
+.files-page-list-name-header {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  min-width: 0;
-}
-
-.files-page-list-selection-count {
-  font-size: 0.85rem;
-  font-weight: 600;
-  white-space: nowrap;
+  gap: 0.5rem;
 }
 
 .files-page-list-row.is-header [data-sortable="true"] {
-  /* Block so the hit area and hover tint fill the columnheader cell that wraps
-     it, rather than hugging the label text. */
   display: block;
   cursor: pointer;
   padding: 0.2rem 0.4rem;
@@ -358,9 +346,13 @@
   background: var(--c-hover);
   color: var(--c-text);
 }
-.files-page-list-row:not(.is-header):hover,
-.files-page-list-row.is-selected {
+
+.files-page-list-row:not(.is-header, .is-selected):hover {
   background: var(--c-hover);
+}
+
+.files-page-list-row.is-selected {
+  background: var(--c-primary-subtle);
 }
 
 .files-page-list-row.is-drop-target {
@@ -372,9 +364,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  /* Offscreen cards skip layout and paint — a 500-entry folder only pays
-     for the rows in view. The intrinsic size stands in for unrendered
-     cards so the scrollbar doesn't jump (auto: measured size once seen). */
+  /* Reserve unrendered card height to avoid scrollbar jumps. */
   content-visibility: auto;
   contain-intrinsic-size: auto 13rem;
   background: var(--c-surface);
@@ -471,8 +461,6 @@
   letter-spacing: -0.005em;
 }
 
-/* Values wrap as whole units onto their own lines rather than breaking
-   mid-value ("239.26 / KB") around a stranded separator. */
 .files-page-card-meta {
   font-size: 0.76rem;
   color: var(--c-text-subtle);
@@ -491,8 +479,6 @@
   display: none;
 }
 
-/* Marks a folder that runs a pipeline over anything added to it. Replaces the
-   item count so a processing folder reads as a different kind of thing. */
 .files-page-processing-tag {
   display: inline-flex;
   align-items: center;
@@ -520,9 +506,6 @@
   background: currentColor;
 }
 
-/* Per-file processing state on a working folder's listing. The badge names the
-   state; a not-yet-processed file is also inert (no open, no menu) until its
-   result exists, and reads that way. */
 .files-page-state-badge {
   display: inline-flex;
   align-items: center;
@@ -536,8 +519,7 @@
   color: var(--c-text-muted);
 }
 
-/* Cards only: a row is a grid whose nearest positioned ancestor is the scrolling
-   area, so the same rule would take the badge out of the row entirely. */
+/* Rows have no positioned ancestor of their own; badge overlays apply only to cards. */
 .files-page-card .files-page-state-badge {
   position: absolute;
   top: 6px;
@@ -572,7 +554,6 @@
   display: none;
 }
 
-/* The open folder's own actions, inline beside the items count. */
 .files-page-folder-actions {
   display: flex;
   align-items: center;
@@ -582,22 +563,14 @@
   border-left: 1px solid var(--c-border-subtle);
 }
 
-/* The strip between the toolbar and the listing: state chips on the left, and
-   in grid view the selection's actions on the right, list view having a column
-   header to hold them. They sit here rather than in the toolbar because a
-   toolbar that reflows on selection moves every row under it, which breaks
-   double-click-to-open. Side padding matches the toolbar so the chips line up
-   with the count above them. */
 .files-page-above-table {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  /* Same space empty as full, so filling it moves nothing below. */
-  min-height: 2.5rem;
+  min-height: 2rem;
   padding: 0 1.25rem;
 }
 
-/* State filter chips above a working folder's listing. */
 .files-page-state-filters {
   display: flex;
   align-items: center;
@@ -623,7 +596,6 @@
   background: var(--c-primary-subtle, var(--c-surface));
 }
 
-/* Count on a filter chip ("Failed 3"). */
 .files-page-state-count {
   margin-left: 0.3rem;
   font-variant-numeric: tabular-nums;
@@ -631,9 +603,7 @@
 }
 
 /* Retry on a failed file's badge; must stay clickable inside an inert card. */
-/* The failed chip is the retry control: hovering it swaps its label for the
-   action. Both labels occupy one grid cell so the chip keeps the width of the
-   wider of them and the row's other cells never shift. */
+/* Stack both labels to reserve their width and prevent hover layout shifts. */
 .files-page-state-retry {
   display: inline-grid;
   font: inherit;
@@ -664,7 +634,6 @@
   visibility: visible;
 }
 
-/* A working folder's per-state counts, one dotted chip per non-zero state. */
 .files-page-folder-stats {
   display: flex;
   flex-wrap: wrap;
@@ -672,8 +641,7 @@
   margin-top: 0.3rem;
 }
 
-/* The row's height is fixed, so the breakdown stays on the one line the status
-   cell gives it and clips rather than wrapping. */
+/* Virtualized rows require a fixed height, so status text must not wrap. */
 .files-page-folder-stats.is-row {
   margin-top: 0;
   flex-wrap: nowrap;
@@ -681,8 +649,7 @@
   min-width: 0;
 }
 
-/* One width whatever the row has to show, so every name in the column starts at
-   the same x and none of them move when a thumbnail resolves. */
+/* Reserve thumbnail width so file names do not shift when images load. */
 .files-page-list-thumb {
   display: inline-flex;
   align-items: center;
@@ -699,8 +666,6 @@
   border-radius: 0.25rem;
 }
 
-/* The state has a column of its own: beside the name it outgrows the cell and
-   runs under the actions. */
 .files-page-list-status {
   display: flex;
   align-items: center;
@@ -738,8 +703,6 @@
   background: var(--c-danger, var(--c-text));
 }
 
-/* Parent-folder breadcrumb shown on cards/rows during recursive search so
-   the user can tell which folder each hit lives in without navigating. */
 .files-page-card-path {
   font-size: 0.72rem;
   color: var(--c-text-subtle);
@@ -759,8 +722,7 @@
   pointer-events: none;
 }
 
-/* Reveal on hover, on focus-within (keyboard navigation), and when the card is selected.
-   :focus-within is what makes the checkbox + kebab discoverable without a pointer device. */
+/* Focus must expose the same controls as pointer hover. */
 .files-page-card:hover .files-page-card-selector,
 .files-page-card:focus-within .files-page-card-selector,
 .files-page-card.is-selected .files-page-card-selector {
@@ -768,8 +730,6 @@
   pointer-events: auto;
 }
 
-/* Style the Mantine checkbox so it reads as a soft pill rather than a
-   bare form control. */
 .files-page-card-selector :where(.mantine-Checkbox-input) {
   background: var(--c-surface);
   border-color: var(--c-border-subtle);
@@ -785,10 +745,7 @@
   z-index: 4;
 }
 
-/* Make the kebab a high-contrast pill that works on dark thumbnails,
-   white PDFs, and any background underneath.
-   Use stronger specificity + !important to win over Mantine's
-   variant=filled inline styles. */
+/* Override Mantine's inline variant styles for contrast on arbitrary thumbnails. */
 .files-page-card .files-page-card-actions button.mantine-ActionIcon-root {
   background-color: var(--c-surface-raised, var(--c-surface)) !important;
   color: var(--c-text) !important;
@@ -801,8 +758,6 @@
   background-color: var(--c-hover) !important;
 }
 
-/* Row-view kebab: same high-contrast treatment so it's readable
-   against selected (tinted) and in-workspace rows. */
 .files-page-list-row .mantine-ActionIcon-root[aria-label$="actions"] {
   color: var(--c-text-muted);
 }
@@ -816,17 +771,13 @@
   position: absolute;
   bottom: 0.4rem;
   left: 0.4rem;
-  /* The overlay itself stays transparent to the card's clicks and drags, but
-     the badge inside must catch hover or its tooltip can never open. */
+  /* Pass clicks through the overlay while allowing the badge tooltip to receive hover. */
   pointer-events: none;
 }
 .files-page-card-origin > * {
   pointer-events: auto;
 }
 
-/* "Open" badge - file is currently loaded in the active workspace.
-   Solid pill with white text so it reads against any thumbnail
-   (white PDFs, dark covers, photos). */
 .files-page-card-open-badge {
   position: absolute;
   top: 0.5rem;
@@ -914,7 +865,7 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
 }
 
-.files-page-list-row.is-in-workspace {
+.files-page-list-row.is-in-workspace:not(.is-selected) {
   background: color-mix(
     in srgb,
     var(--mantine-color-teal-6, var(--c-success)) 4%,
@@ -1034,7 +985,6 @@
   line-height: 1.5;
 }
 
-/* Empty-state CTA row; stacks on phones. */
 .files-page-empty-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1060,11 +1010,30 @@
   overflow: hidden;
 }
 
+.files-page-details-drawer-body {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+}
+.files-page-details-drawer-body > .files-page-details {
+  flex: 1;
+  width: auto;
+  border-left: none;
+}
+
+.files-page-details-drawer.is-sheet {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  width: 100%;
+  height: auto;
+  max-height: 85dvh;
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 .files-page-details-header {
-  /* Tight vertical padding so the "DETAILS" label hugs the body content
-     below it - it's a quiet section header, not a banner, and the old
-     ~16px top + 18px body padding wasted nearly two character heights
-     of vertical space before the user saw the file thumbnail. */
   padding: 0.35rem 1.1rem;
   display: flex;
   align-items: center;
@@ -1081,12 +1050,7 @@
 }
 
 .files-page-details-body {
-  /* Smaller top padding to pair with the tightened header above. Side
-     and bottom padding stays at 1.1rem so the content still breathes
-     against the panel edges. */
   padding: 0.3rem 1.1rem 1.1rem;
-  /* Grow to fill the panel and scroll internally so the action footer below
-     stays pinned and visible regardless of how tall the content gets. */
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -1095,7 +1059,6 @@
   gap: 0.65rem;
 }
 
-/* Pinned action footer - always visible so the buttons never scroll off. */
 .files-page-details-actions {
   flex-shrink: 0;
   display: flex;
@@ -1112,14 +1075,11 @@
   gap: 0.4rem;
 }
 
-/* The panel is narrow enough that "Add {{count}} to workspace" wraps to two
-   lines. ActionIcon is square by default, so without this the icons keep their
-   own height and the row stops sharing a baseline. */
+/* Match icon-button height to action labels that wrap. */
 .files-page-details-actions-row .mantine-ActionIcon-root {
   height: auto;
 }
 
-/* Collapsible "File info" header (size/type/dates). */
 .files-page-details-collapse-toggle {
   display: flex;
   align-items: center;
@@ -1144,9 +1104,7 @@
 }
 
 .files-page-details-thumb {
-  /* Compact fixed height (was a tall 4:3 box that dominated the panel and
-     pushed the action buttons off the bottom). */
-  height: 6.5rem;
+  height: clamp(15rem, 40vh, 25rem);
   background: var(--c-surface);
   border: 1px solid var(--c-border-subtle);
   border-radius: 0.6rem;
@@ -1155,11 +1113,7 @@
   justify-content: center;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  /* Inside an overflow-y:auto flex column, `aspect-ratio` alone doesn't
-     guarantee intrinsic height - flex-shrink:1 (default) can squash the
-     thumb to a 2px sliver when the column gets cramped (notably after
-     tightening the body padding above). Pin shrink so the thumb keeps
-     its 4:3 box. */
+  /* Scroll the details body instead of squashing the preview. */
   flex-shrink: 0;
 }
 
@@ -1220,9 +1174,6 @@
   color: var(--c-text-subtle);
 }
 
-/* Filename chip next to the title - "PDF", "DOCX", etc.
-   Mantine's <Badge variant="default"> rendered effectively invisible
-   in dark mode; project CSS vars track the active color scheme. */
 .files-page-details-ext-tag {
   display: inline-flex;
   align-items: center;
@@ -1238,13 +1189,6 @@
   line-height: 1.2;
 }
 
-/* Vertical timeline of version history.
-   Each row has a left rail (dot + connector) and a body (summary + meta
-   + expandable detail). The rail visually threads versions together
-   like a commit graph; clicking a row's summary toggles its expanded
-   detail (cumulative tool chain, full meta). Long chains (> 6) collapse
-   the middle behind a "Show N earlier versions" button. */
-/* Version Timeline styling */
 .files-page-details-version-timeline {
   display: flex;
   flex-direction: column;
@@ -1543,25 +1487,15 @@
 }
 
 @media (max-width: 800px) {
-  /* Details panel visibility is controlled by JSX (conditional Drawer) at this
-     width, not CSS: blanket-hiding .files-page-details would also hide it when it
-     lives inside the Drawer's portaled overlay tree. */
+  /* JSX controls drawer visibility; hiding this class would also hide the portalled panel. */
   .files-page-content {
-    padding: 0.75rem;
+    padding: 0.5rem 0.75rem 0.75rem;
   }
 }
 
-/* Below this width the toolbar holds the count, the filter and sort triggers
-   and the view toggle in the room the details panel used to leave it. What
-   follows tightens their spacing and collapses the controls that can afford to
-   lose their labels. */
 @media (max-width: 1024px) {
   .files-page-toolbar {
-    /* nowrap so the count shares a row with the filter and sort triggers and
-       the view toggle. Runs to the app's own mobile breakpoint: stopping at
-       900px left 901-1024px wrapping to two rows, and that band is where the
-       mobile layout renders. Scrolls rather than clips, so nothing the row
-       cannot fit ends up unreachable behind its edge. */
+    /* Scroll narrow toolbars so overflow controls remain reachable. */
     flex-wrap: nowrap;
     gap: 0.35rem;
     padding: 0.35rem 0.5rem;
@@ -1573,26 +1507,20 @@
     display: none;
   }
   .files-page-toolbar-info {
-    /* The toolbar's only status text. Pinned, because against nowrap
-       siblings it lost every shrink round and rendered as "3 i". */
+    /* Keep the item count readable beside fixed-width controls. */
     flex-shrink: 0;
     min-width: 0;
     white-space: nowrap;
   }
-  /* Filter and sort collapse to icon triggers here (see FilesToolbar*Menu);
-     they are the whole control, so they never shrink. */
+
   .files-page-toolbar-icon-btn {
     flex-shrink: 0;
   }
 
-  /* The desktop inset cost the state chips a chip's worth of room and wrapped
-     the last one onto a second line. */
   .files-page-above-table {
     padding: 0 0.5rem;
   }
 
-  /* The gear alone: its label and caret cost more width here than the two
-     filter controls beside it. */
   .files-page-folder-actions .files-page-toolbar-bulk-trigger {
     padding-left: 0.4rem;
     padding-right: 0.4rem;
@@ -1616,22 +1544,14 @@
   }
   .files-page-toolbar-actions .mantine-Select-root,
   .files-page-toolbar-actions .mantine-Select-input {
-    /* Mantine Select defaults to ~12rem which is huge for narrow widths.
-       The inline `style={{ width: 140|160 }}` on the Selects gets
-       overridden here so they actually shrink. */
+    /* Override inline control widths to fit narrow toolbars. */
     min-width: 0;
     max-width: 7.5rem;
     width: auto !important;
   }
 }
 
-/* ── Mobile (≤640px) ────────────────────────────────────────────────
-   Tighten the chrome so the file manager fits inside the mobile workspace
-   slide: the slide-rail's bottom tab bar already carries the navigation, and
-   uploads have the centre drop overlay. */
-
 @media (max-width: 640px) {
-  /* Grid: single column on very narrow phones; two columns from ~440px */
   .files-page-grid {
     grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
     gap: 0.75rem;
@@ -1642,19 +1562,75 @@
 }
 
 @media (max-width: 420px) {
-  /* Don't force 1fr - auto-fill with the 9rem floor already keeps two cards
-     per row on a 360px phone, which feels right for one-handed taps. The
-     real fix at this width is the list view, which had 6 columns that wouldn't
-     fit at all. */
   .files-page-grid {
     grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
     gap: 0.5rem;
   }
 }
 
-/* Honour user preference for reduced motion (WCAG 2.3.3). Disables the
-   open-badge pulse, drop-overlay pulse + scale, and the card hover lift -
-   keeps focus rings and selection borders so state is still visible. */
+@container files-list (max-width: 40rem) {
+  .files-page-list-row {
+    grid-template-columns: minmax(0, 1fr) auto 2.5rem;
+    min-width: 0;
+    min-height: 3.25rem;
+    padding: 0.35rem 0.25rem 0.35rem 0.75rem;
+  }
+  .files-page-list--selection-column .files-page-list-row {
+    grid-template-columns: 2rem minmax(0, 1fr) auto 2.5rem;
+    min-width: 0;
+    padding-left: 0.25rem;
+  }
+  .files-page-list-row > :first-child {
+    overflow: hidden;
+  }
+  .files-page-list-row .files-page-col-type,
+  .files-page-list-row .files-page-col-size,
+  .files-page-list-row .files-page-col-date,
+  .files-page-list-row.is-header .files-page-list-status {
+    display: none;
+  }
+  .files-page-list-row.is-header {
+    min-height: 2.5rem;
+  }
+  .files-page-list-meta {
+    display: block;
+    overflow: hidden;
+    color: var(--c-text-subtle);
+    font-size: 0.75rem;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+@media (hover: none) {
+  .files-page-card-actions {
+    opacity: 1;
+  }
+}
+
+@media (pointer: coarse) {
+  .files-page-list-row:not(.is-header),
+  .files-page-card {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .files-page-view-tabs {
+    flex-wrap: wrap;
+    flex-shrink: 1;
+    min-width: 0;
+    row-gap: 0.35rem;
+  }
+  .files-page-view-tabs > .files-page-breadcrumbs {
+    order: 1;
+    flex-basis: 100%;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .files-page-card-open-dot,
   .files-page-drop-overlay {
@@ -1675,9 +1651,7 @@
   }
 }
 
-/* A disabled destination still has to be read - its caption carries the reason - and
-   Mantine's disabled colour drops below comfortable contrast in dark mode. Selector
-   stands on the item's own class because the dropdown renders in a portal. */
+/* Keep disabled reasons readable; the menu is portalled outside its trigger's subtree. */
 .files-page-new-folder-option[data-disabled] {
   color: var(--c-text-muted) !important;
   opacity: 1;

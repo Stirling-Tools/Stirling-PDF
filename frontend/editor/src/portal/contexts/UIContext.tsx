@@ -2,12 +2,15 @@ import {
   createContext,
   useContext,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
 import { navigateToSettings } from "@app/utils/settingsNavigation";
 import type { NavKey } from "@app/components/shared/config/types";
-import type { ConnectOutcome } from "@portal/components/account-link/ConnectCallbackView";
+import type { AccountLinkBlockContext } from "@app/services/accountLinkBlock";
+import type { ConnectOutcome } from "@app/portal/components/account-link/ConnectCallbackView";
+import { clearPendingConnect } from "@app/portal/auth/pendingConnect";
 
 /**
  * Why the dialog is open. All three run the same handshake; the mode only chooses the pitch.
@@ -40,7 +43,11 @@ interface UIContextValue {
   /** The account-link login modal. A single top-level instance. */
   linkModalOpen: boolean;
   linkModalMode: LinkModalMode;
-  openLinkModal: (mode?: LinkModalMode) => void;
+  linkModalFailureContext?: AccountLinkBlockContext;
+  openLinkModal: (
+    mode?: LinkModalMode,
+    failureContext?: AccountLinkBlockContext,
+  ) => void;
   closeLinkModal: () => void;
   /**
    * A one-shot signal like {@link UIContextValue.trialSetupRequested}: the callback route and the
@@ -83,7 +90,10 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] =
     useState(readSidebarCollapsed);
   const [assistantOpen, setAssistantOpen] = useState(false);
+  const linkModalActive = useRef(false);
   const [linkModalOpen, setLinkModalOpen] = useState(false);
+  const [linkModalFailureContext, setLinkModalFailureContext] =
+    useState<AccountLinkBlockContext>();
   const [trialSetupRequested, setTrialSetupRequested] = useState(false);
   const [linkModalMode, setLinkModalMode] = useState<LinkModalMode>("link");
   const [connectOutcome, setConnectOutcome] = useState<ConnectOutcome | null>(
@@ -118,9 +128,18 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
       linkModalOpen,
       linkModalMode,
-      openLinkModal: (mode: LinkModalMode = "link") => {
+      linkModalFailureContext,
+      openLinkModal: (
+        mode: LinkModalMode = "link",
+        failureContext?: AccountLinkBlockContext,
+      ) => {
+        // Background failures must not replace a handoff or callback already in progress.
+        if (linkModalActive.current) return;
+        linkModalActive.current = true;
+        setLinkModalFailureContext(failureContext);
         setMobileNavOpen(false);
         setLinkModalMode(mode);
+        setConnectOutcome(null);
         setLinkModalOpen(true);
       },
       trialSetupRequested,
@@ -131,13 +150,18 @@ export function UIProvider({ children }: { children: ReactNode }) {
       clearTrialSetupRequest: () => setTrialSetupRequested(false),
       connectOutcome,
       publishConnectOutcome: (outcome: ConnectOutcome) => {
+        linkModalActive.current = true;
         setMobileNavOpen(false);
         setConnectOutcome(outcome);
-        setLinkModalMode("link");
+        setLinkModalMode(outcome.mode ?? "link");
         setLinkModalOpen(true);
       },
       clearConnectOutcome: () => setConnectOutcome(null),
       closeLinkModal: () => {
+        setLinkModalFailureContext(undefined);
+        linkModalActive.current = false;
+        connectOutcome?.cancel?.();
+        clearPendingConnect();
         setLinkModalOpen(false);
         setLinkModalMode("link");
         // A reopen from a CTA is a fresh flow, not a handshake already dismissed.
@@ -150,6 +174,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
       assistantOpen,
       linkModalOpen,
       linkModalMode,
+      linkModalFailureContext,
       trialSetupRequested,
       connectOutcome,
     ],

@@ -145,8 +145,8 @@ export async function getPdfiumModule(): Promise<WrappedPdfiumModule> {
  */
 export function resetPdfiumModule(): void {
   // The module is discarded here, so a handle no reader holds is closed now.
-  // With readers it is dropped, and their later close only closes the document
-  // pointer; the pixel buffer goes with the discarded module.
+  // A handle a reader still holds is left to that reader: its close frees the
+  // data buffer against the module it captured.
   try {
     if (sharedDocument && sharedDocument.refs <= 0 && _module) {
       closeDocumentNow(_module, sharedDocument.docPtr);
@@ -158,25 +158,20 @@ export function resetPdfiumModule(): void {
   sharedReleasePending = false;
   _module = null;
   _initPromise = null;
-  _docFileAccess.clear();
-  _docHeapCopies.clear();
 }
 
-interface FileAccess {
-  accessPtr: number;
-  getBlockPtr: number;
-  /** The bytes the callback reads from; kept alive for the document's life. */
-  bytes: Uint8Array;
-}
-const _docFileAccess = new Map<number, FileAccess>();
-
-/** Heap copies made when the runtime cannot host a file-access callback. */
-const _docHeapCopies = new Map<number, number>();
-
-// FPDF_FILEACCESS: unsigned long m_FileLen, get_block m_GetBlock, void* m_Param.
-const FILE_ACCESS_BYTES = 12;
-// int(void* param, unsigned long position, unsigned char* buf, unsigned long size)
-const GET_BLOCK_SIGNATURE = "iiiii";
+/**
+ * Map of document pointer → its WASM data buffer and the module that owns it.
+ * FPDF_LoadMemDocument does NOT copy the data — it keeps a reference, so the
+ * buffer must stay alive until FPDF_CloseDocument is called. The owning module
+ * is recorded because a reset discards the module while readers may still close
+ * their documents: both the close and the free must go to the old instance, not
+ * to whichever module the caller re-fetched.
+ */
+const _docDataPtrs = new Map<
+  number,
+  { module: WrappedPdfiumModule; ptr: number }
+>();
 
 /**
  * Read an annotation rectangle using the CropBox-adjusted `EPDFAnnot_GetRect`
@@ -305,6 +300,14 @@ export function readEffectivePageBox(
  * Creates a fresh Uint8Array view of the WASM memory buffer AFTER malloc
  * so it is never stale even if malloc triggered a memory growth.
  */
+function copyToWasmHeap(
+  m: WrappedPdfiumModule,
+  bytes: Uint8Array,
+  ptr: number,
+): void {
+  (m.pdfium as typeof m.pdfium & ExtendedPdfiumRuntime).HEAPU8.set(bytes, ptr);
+}
+
 /** Human-readable message for an FPDF_GetLastError() code. */
 function pdfiumOpenErrorMessage(err: number): string {
   switch (err) {
@@ -340,10 +343,9 @@ export class PdfiumOpenError extends Error {
 }
 
 /**
- * One open document shared by every scan of the same bytes. Each reopen parses
- * the file again through the file-access callback and leaves PDFium caches
- * behind, growing the heap high-water per scan. Password opens are never
- * shared.
+ * One open document shared by every scan of the same bytes. Each reopen copies
+ * the file into the WASM heap again and leaves PDFium caches behind, growing
+ * the heap high-water per scan. Password opens are never shared.
  *
  * A document released while scans still hold it is closed by the last reader:
  * `releaseSharedDocument()` only arms `sharedReleasePending` when refs are
@@ -357,96 +359,18 @@ interface SharedDocument {
 let sharedDocument: SharedDocument | null = null;
 let sharedReleasePending = false;
 
-/**
- * Opens the document through an FPDF_FILEACCESS callback instead of copying the
- * whole file into the WASM heap. PDFium reads 64 KB blocks from the JS bytes as
- * it needs them, so a large file costs its metadata plus the blocks actually
- * touched, not a second copy of every byte. The callback and its struct live
- * until closeDocumentNow.
- */
-function openWithFileAccess(
-  m: WrappedPdfiumModule,
-  bytes: Uint8Array,
-  password?: string,
-): number {
-  const runtime = m.pdfium as typeof m.pdfium & ExtendedPdfiumRuntime;
-  // The callback needs the runtime's function-table helpers. Builds without
-  // them (or with an older export shape) fall back to one heap copy instead of
-  // failing every open; pdfiumBitmapUtils guards the same helpers the same way.
-  if (
-    typeof runtime.addFunction !== "function" ||
-    typeof runtime.removeFunction !== "function" ||
-    typeof runtime.setValue !== "function"
-  ) {
-    return openWithHeapCopy(m, bytes, password);
-  }
-
-  const accessPtr = m.pdfium.wasmExports.malloc(FILE_ACCESS_BYTES);
-  const getBlockPtr = m.pdfium.addFunction(
-    (_param: number, position: number, bufferPtr: number, size: number) => {
-      const end = position + size;
-      if (position < 0 || end > bytes.length) return 0;
-      (m.pdfium as typeof m.pdfium & ExtendedPdfiumRuntime).HEAPU8.set(
-        bytes.subarray(position, end),
-        bufferPtr,
-      );
-      return 1;
-    },
-    GET_BLOCK_SIGNATURE,
-  );
-  m.pdfium.setValue(accessPtr, bytes.length, "i32");
-  m.pdfium.setValue(accessPtr + 4, getBlockPtr, "i32");
-  m.pdfium.setValue(accessPtr + 8, 0, "i32");
-
-  const docPtr = m.FPDF_LoadCustomDocument(accessPtr, password ?? "");
-  if (!docPtr) {
-    m.pdfium.removeFunction(getBlockPtr);
-    m.pdfium.wasmExports.free(accessPtr);
-    throw new PdfiumOpenError(m.FPDF_GetLastError());
-  }
-  _docFileAccess.set(docPtr, { accessPtr, getBlockPtr, bytes });
-  return docPtr;
-}
-
 function closeDocumentNow(m: WrappedPdfiumModule, docPtr: number): void {
-  m.FPDF_CloseDocument(docPtr);
-  const access = _docFileAccess.get(docPtr);
-  if (access) {
-    m.pdfium.removeFunction(access.getBlockPtr);
-    m.pdfium.wasmExports.free(access.accessPtr);
-    _docFileAccess.delete(docPtr);
-  }
-  const heapCopy = _docHeapCopies.get(docPtr);
-  if (heapCopy) {
-    m.pdfium.wasmExports.free(heapCopy);
-    _docHeapCopies.delete(docPtr);
+  const entry = _docDataPtrs.get(docPtr);
+  (entry?.module ?? m).FPDF_CloseDocument(docPtr);
+  if (entry) {
+    _docDataPtrs.delete(docPtr);
+    entry.module.pdfium.wasmExports.free(entry.ptr);
   }
 }
 
 /**
- * The pre-callback path: one copy of the bytes in the WASM heap, freed by
- * closeDocumentNow. Kept for runtimes without the function-table helpers.
- */
-function openWithHeapCopy(
-  m: WrappedPdfiumModule,
-  bytes: Uint8Array,
-  password?: string,
-): number {
-  const ptr = m.pdfium.wasmExports.malloc(bytes.length);
-  (m.pdfium as typeof m.pdfium & ExtendedPdfiumRuntime).HEAPU8.set(bytes, ptr);
-  const docPtr = m.FPDF_LoadMemDocument(ptr, bytes.length, password ?? "");
-  if (!docPtr) {
-    m.pdfium.wasmExports.free(ptr);
-    throw new PdfiumOpenError(m.FPDF_GetLastError());
-  }
-  _docHeapCopies.set(docPtr, ptr);
-  return docPtr;
-}
-
-/**
- * Open a PDF in PDFium and return the document pointer. The bytes stay in JS
- * and PDFium reads them through the file-access callback; the caller MUST call
- * `closeRawDocument(docPtr)` when finished.
+ * Load a PDF into PDFium memory and return the document pointer.
+ * Caller MUST call `closeRawDocument(docPtr)` when finished.
  */
 export async function openRawDocument(
   data: ArrayBuffer | Uint8Array,
@@ -459,20 +383,32 @@ export async function openRawDocument(
     return sharedDocument.docPtr;
   }
 
-  const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
-  const docPtr = openWithFileAccess(m, bytes, password);
+  // A different document is being opened, so an idle shared one goes before the
+  // new buffer is allocated: two large copies must not sit in the heap at once.
+  // With readers outstanding the close stays deferred to the last reader.
+  if (!password && sharedDocument && sharedDocument.refs <= 0) {
+    closeDocumentNow(m, sharedDocument.docPtr);
+    sharedDocument = null;
+    sharedReleasePending = false;
+  }
 
-  if (!password) {
+  const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
+  const len = bytes.length;
+  const ptr = m.pdfium.wasmExports.malloc(len);
+  copyToWasmHeap(m, bytes, ptr);
+
+  const docPtr = m.FPDF_LoadMemDocument(ptr, len, password ?? "");
+  if (!docPtr) {
+    m.pdfium.wasmExports.free(ptr);
+    throw new PdfiumOpenError(m.FPDF_GetLastError());
+  }
+  // Keep the buffer alive; freed by closeDocumentNow()
+  _docDataPtrs.set(docPtr, { module: m, ptr });
+
+  if (!password && !sharedDocument) {
     // A scan still reading the previous document keeps it open; only adopt the
     // new one once its refs drop to zero.
-    if (sharedDocument && sharedDocument.refs <= 0) {
-      closeDocumentNow(m, sharedDocument.docPtr);
-      sharedDocument = null;
-      sharedReleasePending = false;
-    }
-    if (!sharedDocument) {
-      sharedDocument = { bytes: data, docPtr, refs: 1 };
-    }
+    sharedDocument = { bytes: data, docPtr, refs: 1 };
   }
 
   return docPtr;

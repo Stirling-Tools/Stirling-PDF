@@ -8,61 +8,34 @@ import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 const pdfium = vi.hoisted(() => {
   const state = {
     module: null as Record<string, unknown> | null,
-    heap: new Uint8Array(1 << 20),
     closeCalls: [] as number[],
     freeCalls: [] as number[],
-    removeCalls: [] as number[],
-    lastGetBlock: null as
-      | ((param: number, position: number, ptr: number, size: number) => number)
-      | null,
-    failOpen: false,
-    withoutRuntimeHelpers: false,
+    allocationOrder: [] as string[],
     nextDocPtr: 1000,
     nextDataPtr: 5000,
   };
-  const makeModule = (options: { withoutRuntimeHelpers?: boolean } = {}) => {
-    const withoutRuntimeHelpers =
-      options.withoutRuntimeHelpers ?? state.withoutRuntimeHelpers;
+  const makeModule = () => {
     const heap = new Uint8Array(1 << 20);
-    state.heap = heap;
     state.closeCalls = [];
     state.freeCalls = [];
-    state.removeCalls = [];
-    state.lastGetBlock = null;
-    state.failOpen = false;
+    state.allocationOrder = [];
     const module = {
       PDFiumExt_Init: vi.fn(),
-      FPDF_LoadCustomDocument: vi.fn(() =>
-        state.failOpen ? 0 : ++state.nextDocPtr,
-      ),
       FPDF_LoadMemDocument: vi.fn(() => ++state.nextDocPtr),
       FPDF_CloseDocument: vi.fn((p: number) => state.closeCalls.push(p)),
       FPDF_GetLastError: vi.fn(() => 0),
       pdfium: {
         wasmExports: {
-          malloc: vi.fn(() => (state.nextDataPtr += 1 << 16)),
-          free: vi.fn((p: number) => state.freeCalls.push(p)),
+          malloc: vi.fn(() => {
+            state.allocationOrder.push("malloc");
+            return (state.nextDataPtr += 1 << 16);
+          }),
+          free: vi.fn((p: number) => {
+            state.allocationOrder.push("free");
+            state.freeCalls.push(p);
+          }),
         },
         HEAPU8: heap,
-        removeFunction: vi.fn((p: number) => state.removeCalls.push(p)),
-        setValue: vi.fn(),
-        ...(withoutRuntimeHelpers
-          ? {}
-          : {
-              addFunction: vi.fn(
-                (
-                  fn: (
-                    param: number,
-                    position: number,
-                    ptr: number,
-                    size: number,
-                  ) => number,
-                ) => {
-                  state.lastGetBlock = fn;
-                  return ++state.nextDataPtr;
-                },
-              ),
-            }),
       },
     };
     state.module = module;
@@ -97,7 +70,6 @@ const freeCalls = () => pdfium.state.freeCalls;
 
 describe("shared document lifecycle", () => {
   beforeEach(async () => {
-    pdfium.state.withoutRuntimeHelpers = false;
     pdfium.makeModule();
     resetPdfiumModule();
     await getPdfiumModule();
@@ -175,6 +147,22 @@ describe("shared document lifecycle", () => {
 
     closeDocAndFreeBuffer(await getPdfiumModule(), doc);
     expect(closeCalls()).toEqual([doc]);
+    // The reader re-fetches the module after the reset, so the close must
+    // still free the buffer in the heap that allocated it.
+    expect(freeCalls()).toHaveLength(1);
+  });
+
+  it("closes an idle shared handle before allocating its replacement", async () => {
+    const dataA = new ArrayBuffer(16);
+    const dataB = new ArrayBuffer(24);
+    const docA = await openRawDocumentSafe(dataA);
+    closeDocAndFreeBuffer(await getPdfiumModule(), docA);
+    pdfium.state.allocationOrder = [];
+
+    await openRawDocumentSafe(dataB);
+
+    // A's buffer is freed before B's allocation, so the two never coexist.
+    expect(pdfium.state.allocationOrder).toEqual(["free", "malloc"]);
   });
 
   it("queues the release behind a scan so a late open cannot linger", async () => {
@@ -204,53 +192,5 @@ describe("shared document lifecycle", () => {
 
     await openRawDocumentSafe(dataA);
     expect(closeCalls()).toEqual([docA]);
-  });
-
-  it("copies requested blocks through the file-access callback", async () => {
-    const data = new Uint8Array([1, 2, 3, 4]).buffer;
-    await openRawDocumentSafe(data);
-    const getBlock = pdfium.state.lastGetBlock;
-    expect(getBlock).toBeTypeOf("function");
-
-    expect(getBlock?.(0, 1, 100, 2)).toBe(1);
-    expect(Array.from(pdfium.state.heap.slice(100, 102))).toEqual([2, 3]);
-    // A range past the file must fail rather than copy garbage.
-    expect(getBlock?.(0, 3, 100, 5)).toBe(0);
-  });
-
-  it("releases the access struct and the callback when the document closes", async () => {
-    const doc = await openRawDocumentSafe(new Uint8Array([1, 2, 3, 4]).buffer);
-    const m = await getPdfiumModule();
-    closeDocAndFreeBuffer(m, doc);
-    releaseSharedDocument();
-
-    expect(pdfium.state.removeCalls).toHaveLength(1);
-    expect(freeCalls().length).toBe(1);
-  });
-
-  it("releases the access struct and the callback when the open fails", async () => {
-    pdfium.state.failOpen = true;
-    await expect(
-      openRawDocumentSafe(new Uint8Array([1, 2, 3, 4]).buffer),
-    ).rejects.toThrow();
-    pdfium.state.failOpen = false;
-
-    expect(pdfium.state.removeCalls).toHaveLength(1);
-    expect(freeCalls().length).toBe(1);
-  });
-
-  it("falls back to a heap copy without the function-table helpers", async () => {
-    pdfium.state.withoutRuntimeHelpers = true;
-    resetPdfiumModule();
-    const m = await getPdfiumModule();
-    const doc = await openRawDocumentSafe(new Uint8Array([1, 2, 3, 4]).buffer);
-
-    expect(
-      (pdfium.state.module as { FPDF_LoadMemDocument: unknown })
-        .FPDF_LoadMemDocument,
-    ).toHaveBeenCalled();
-    closeDocAndFreeBuffer(m, doc);
-    releaseSharedDocument();
-    expect(freeCalls().length).toBe(1);
   });
 });
