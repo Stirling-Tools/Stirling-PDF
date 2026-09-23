@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { useAuth } from "@app/auth/UseSession";
-import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
+import { useChecklistInviteTarget } from "@app/components/onboarding/checklistInviteTarget";
 import {
   useChecklistSetupItem,
   type ChecklistItem,
@@ -31,7 +31,7 @@ const STEP_SHARE_ANALYTICS = "share-analytics";
 export function OnboardingChecklist() {
   const { t } = useTranslation();
   const { isAnonymous, loading } = useAuth();
-  const { isTeamLeader } = useSaaSTeam();
+  const inviteTarget = useChecklistInviteTarget();
 
   const [dismissed, setDismissed] = useState(() => hasSeenFlow(FLOW_ID));
   const [done, setDone] = useState<string[]>(() => getFlowProgress(FLOW_ID));
@@ -44,9 +44,9 @@ export function OnboardingChecklist() {
   }, []);
 
   const handleInviteTeam = useCallback(() => {
-    openAppSettings("users");
+    if (inviteTarget) openAppSettings(inviteTarget);
     markDone(STEP_INVITE_TEAM);
-  }, [markDone]);
+  }, [inviteTarget, markDone]);
 
   const handleTakeTour = useCallback(() => {
     // Always the user (tools) walkthrough, regardless of admin/user role. The
@@ -59,7 +59,7 @@ export function OnboardingChecklist() {
 
   const items: ChecklistItem[] = [
     ...(setup.item ? [setup.item] : []),
-    ...(isTeamLeader
+    ...(inviteTarget
       ? [
           {
             id: STEP_INVITE_TEAM,
@@ -244,16 +244,12 @@ export function OnboardingChecklist() {
                   </span>
                   <span className={styles.itemText}>
                     <span
-                      className={`${styles.itemTitle} ${
-                        isDone ? styles.itemTitleDone : ""
-                      }`}
+                      className={`${styles.itemTitle} ${isDone ? styles.itemTitleDone : ""}`}
                     >
                       {t(item.titleKey, item.titleFallback)}
                     </span>
                     <span
-                      className={`${styles.itemDescription} ${
-                        isDone ? styles.itemDescriptionDone : ""
-                      }`}
+                      className={`${styles.itemDescription} ${isDone ? styles.itemDescriptionDone : ""}`}
                     >
                       {t(item.descriptionKey, item.descriptionFallback)}
                     </span>
