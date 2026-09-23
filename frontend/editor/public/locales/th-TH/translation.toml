@@ -34,11 +34,12 @@ downloadUnavailable = "ไม่สามารถดาวน์โหลดร
 edit = "แก้ไข"
 editSecret = "แก้ไขค่านี้"
 editYourNewFiles = "แก้ไขไฟล์ใหม่ของคุณ"
-encryptedFilesBlocked_one = "ไฟล์ถูกป้องกันด้วยรหัสผ่าน โปรดปลดล็อกก่อน"
-encryptedFilesBlocked_other = "{{count}} ไฟล์ถูกป้องกันด้วยรหัสผ่าน โปรดปลดล็อกก่อน"
 exportAndContinue = "ส่งออกและทำต่อ"
 false = "เท็จ"
+fileChangedOnDisk = "มีการเปลี่ยนแปลงบนดิสก์หลังจากที่คุณแก้ไข"
+fileDiskUnavailable = "ไม่สามารถเข้าถึงไฟล์บนดิสก์ได้"
 fileNotSavedToDisk = "ยังไม่ได้บันทึกลงดิสก์"
+fileOriginalDeleted = "ต้นฉบับถูกลบแล้ว - บันทึกเพื่อเก็บสำเนาไว้"
 fileSavedToDisk = "บันทึกไฟล์ลงดิสก์แล้ว"
 fileSelected = "ที่เลือก: {{filename}}"
 filesSelected = "{{count}} ไฟล์"
@@ -193,9 +194,6 @@ title = "การทำงาน"
 
 [AddAttachmentsRequest.tooltip.header]
 title = "เกี่ยวกับการเพิ่มไฟล์แนบ"
-
-[addFileCard]
-upload = "อัปโหลด"
 
 [addImage]
 applySignatures = "ใช้รูปภาพ"
@@ -559,6 +557,47 @@ close = "ปิด"
 error = "ข้อผิดพลาด"
 expand = "ขยาย"
 
+[admin.formDetection]
+confirmUninstall = "คลิกเพื่อยืนยัน"
+description = "ตรวจจับช่องข้อความ ช่องทำเครื่องหมาย และพื้นที่ลายเซ็นใน PDF แล้วเปลี่ยนให้เป็นช่องแบบฟอร์มที่กรอกได้ การตรวจจับทำงานบนเซิร์ฟเวอร์นี้ด้วยโมเดลที่คุณติดตั้งด้านล่าง"
+downloadingNote = "{{percent}}% จาก {{size}}"
+enableFeature = "เปิดใช้งานฟีเจอร์"
+engineUnavailable = "บิลด์นี้ไม่มี detection engine ดังนั้นเครื่องมือจะยังไม่พร้อมใช้งานแม้จะติดตั้งโมเดลแล้วก็ตาม"
+errorTitle = "มีบางอย่างผิดพลาด"
+install = "ติดตั้ง"
+installFailed = "ติดตั้งไม่สำเร็จ"
+licenseLabel = "สัญญาอนุญาต"
+modelsLabel = "โมเดลการตรวจจับ"
+notAvailable = "ยังไม่ได้กำหนด URL/checksum สำหรับดาวน์โหลด จึงไม่สามารถติดตั้งโมเดลนี้ได้"
+notWritable = "ไดเรกทอรีโมเดลไม่สามารถเขียนได้ โปรดตรวจสอบการเมานต์ configs volume"
+saveFailed = "บันทึกการตั้งค่าไม่สำเร็จ"
+sizeUnknown = "ไม่ทราบขนาด"
+switch = "ใช้โมเดลนี้"
+title = "การตรวจจับแบบฟอร์มด้วย AI"
+uninstall = "ถอนการติดตั้ง"
+uninstallFailed = "ถอนการติดตั้งไม่สำเร็จ"
+verifyingNote = "กำลังตรวจสอบ SHA-256 checksum..."
+
+[admin.formDetection.airgap]
+intro = "เซิร์ฟเวอร์ไม่มีอินเทอร์เน็ตใช่ไหม? ดาวน์โหลดโมเดลจากที่อื่น ตรวจสอบ แล้วคัดลอกไปยังไดเรกทอรีโมเดล ระบบจะตรวจพบเมื่อรีสตาร์ท"
+noSha = "(ไม่ได้ตั้งค่า checksum)"
+show = "ติดตั้งแบบออฟไลน์ / air-gapped"
+step1 = "1. ดาวน์โหลดบนเครื่องที่มีอินเทอร์เน็ต:"
+step2 = "2. ตรวจสอบว่า SHA-256 checksum ตรงกัน:"
+step3 = "3. คัดลอกไปยังไดเรกทอรีโมเดลบนเซิร์ฟเวอร์นี้:"
+step4 = "4. ตั้งค่า formDetection.activeModelId เป็น id ของโมเดลใน settings.yml แล้วรีสตาร์ท <configs> คือ configs volume (เช่น /configs ใน Docker) อิมเมจแบบ air-gapped มาพร้อมกับโมเดลที่ติดตั้งไว้แล้ว"
+
+[admin.formDetection.badge]
+active = "ใช้งานอยู่"
+installed = "ติดตั้งแล้ว"
+
+[admin.formDetection.state]
+downloading = "กำลังดาวน์โหลด..."
+failed = "ล้มเหลว"
+notInstalled = "ยังไม่ได้ติดตั้งโมเดล"
+ready = "พร้อมใช้งาน"
+verifying = "กำลังตรวจสอบ..."
+
 [admin.settings]
 discard = "ละทิ้ง"
 error = "บันทึกการตั้งค่าไม่สำเร็จ"
@@ -688,6 +727,9 @@ manualLinks = "ดาวน์โหลดด้วยตนเอง: คลิ
 noLanguages = "ไม่พบภาษา tessdata ในไดเรกทอรีที่กำหนดค่าไว้"
 permissionNotice = "เส้นทาง tessdata ไม่สามารถเขียนได้ การดาวน์โหลดจะถูกเปิดในเบราว์เซอร์ โปรดบันทึกไฟล์ .traineddata ลงในโฟลเดอร์ tessdata ด้วยตนเอง"
 
+[admin.settings.ai]
+description = "เชื่อมต่อ Stirling กับ Python AI engine เลือกโมเดล และตั้งค่า guardrails ที่ใช้ควบคุมการทำงาน"
+
 [admin.settings.ai.documents]
 description = "กำหนดค่าโมเดล embedding และการตั้งค่าการดึงข้อมูลที่ใช้ตอบคำถามเกี่ยวกับเอกสาร จะนำไปใช้กับ AI engine เมื่อบันทึก"
 title = "เอกสารและ RAG"
@@ -727,6 +769,7 @@ description = "จำนวนชิ้นส่วนที่เกี่ย�
 label = "Top K"
 
 [admin.settings.ai.general]
+connection = "การเชื่อมต่อ"
 description = "เชื่อมต่อ Stirling กับ Python AI engine และเลือกความสามารถ AI ที่จะแสดง การเปลี่ยนแปลงจะมีผลเมื่อรีสตาร์ท"
 title = "AI Engine"
 
@@ -818,6 +861,7 @@ openai = "OpenAI API key"
 setPlaceholder = "บันทึกแล้ว - เว้นว่างเพื่อคง key ปัจจุบันไว้"
 
 [admin.settings.ai.models.baseUrl]
+contextWindow = "ใช้ context window อย่างน้อย 16,384 tokens หน้าต่างที่เล็กกว่าจะตัดบางส่วนของ prompt ออกโดยไม่แจ้งเตือน ค่าเริ่มต้นของ Ollama คือ 4,096 - เพิ่ม OLLAMA_CONTEXT_LENGTH"
 description = "Base URL ของ endpoint ที่เข้ากันได้กับ OpenAI / Ollama เช่น http://ollama:11434/v1"
 label = "Provider base URL"
 warning = "Base URL ต้องชี้ไปยัง endpoint ภายในที่เชื่อถือได้ engine จะส่งคำขอฝั่งเซิร์ฟเวอร์ไปยังค่านั้น ดังนั้นค่าที่ไม่น่าเชื่อถือจึงไวต่อ SSRF"
@@ -852,6 +896,7 @@ clickToUpgrade = "คลิกเพื่อดูรายละเอีย�
 
 [admin.settings.connections]
 connect = "เชื่อมต่อ"
+connectedServicesDescription = "บริการที่เซิร์ฟเวอร์นี้เชื่อมต่ออยู่ ผู้ให้บริการลงชื่อเข้าใช้อยู่ภายใต้ ลงชื่อเข้าใช้และความปลอดภัย"
 description = "กำหนดค่าผู้ให้บริการยืนยันตัวตนภายนอก เช่น OAuth2 และ SAML"
 disconnect = "ตัดการเชื่อมต่อ"
 disconnected = "ตัดการเชื่อมต่อผู้ให้บริการสำเร็จ"
@@ -974,6 +1019,8 @@ configuration = "การกำหนดค่าฐานข้อมูล"
 confirmCodeLabel = "กรอกรหัสยืนยันเพื่อดำเนินการต่อ"
 confirmImport = "ยืนยันการนำเข้า"
 confirmImportTitle = "ยืนยันการนำเข้าฐานข้อมูล"
+connection = "การเชื่อมต่อ"
+connectionDescription = "ชี้ Stirling ไปยังฐานข้อมูลภายนอกแทนฐานข้อมูลในตัว"
 createBackup = "สร้างไฟล์สำรอง"
 created = "วันที่สร้าง"
 delete = "ลบ"
@@ -1114,6 +1161,7 @@ placeholder = "/data/inbox"
 remove = "ลบรากโฟลเดอร์"
 
 [admin.settings.general]
+branding = "แบรนด์และรูปลักษณ์"
 description = "กำหนดค่าการตั้งค่าแอปพลิเคชันทั่วทั้งระบบ รวมถึงการสร้างแบรนด์และพฤติกรรมเริ่มต้น"
 system = "ระบบ"
 title = "การตั้งค่าระบบ"
@@ -1217,14 +1265,6 @@ description = "ภาษาที่ผู้ใช้สามารถเล�
 label = "ภาษาที่มีให้ใช้"
 placeholder = "เลือกภาษา"
 
-[admin.settings.general.logoStyle]
-classic = "คลาสสิก"
-classicAlt = "โลโก้แบบคลาสสิก"
-description = "เลือกระหว่างโลโก้มินิมอลสมัยใหม่หรือไอคอน S แบบคลาสสิก"
-label = "สไตล์โลโก้"
-modern = "ทันสมัย"
-modernAlt = "โลโก้แบบสมัยใหม่"
-
 [admin.settings.general.showUpdate]
 description = "แสดงการแจ้งเตือนเมื่อมีเวอร์ชันใหม่"
 label = "แสดงการแจ้งเตือนอัปเดต"
@@ -1235,6 +1275,7 @@ label = "แสดงอัปเดตให้ผู้ดูแลเท่�
 
 [admin.settings.legal]
 description = "กำหนดค่าลิงก์ไปยังเอกสารและนโยบายทางกฎหมาย"
+documentsDescription = "ลิงก์ที่แสดงให้ผู้ใช้เห็นสำหรับเงื่อนไข ความเป็นส่วนตัว คุกกี้ และ impressum"
 title = "เอกสารทางกฎหมาย"
 
 [admin.settings.legal.accessibilityStatement]
@@ -1488,8 +1529,7 @@ label = "บันทึกการตรวจสอบ"
 showDetails = "แสดงรายละเอียดระดับการตรวจสอบ"
 
 [admin.settings.security.audit.advancedOptions]
-description = "ตัวเลือกต่อไปนี้จะเพิ่มเวลาและหน่วยความจำในการประมวลผล เปิดใช้เฉพาะเมื่อจำเป็นจริงๆ"
-title = "ตัวเลือกขั้นสูง"
+cost = "ขณะนี้กำลังเพิ่มเวลาในการประมวลผลและการใช้หน่วยความจำในทุกการดำเนินการ"
 
 [admin.settings.security.audit.captureFileHash]
 description = "ดึงค่าแฮช SHA-256 ของไฟล์ PDF ที่อัปโหลดเพื่อการตรวจสอบความถูกต้อง ไม่ขึ้นกับระดับการตรวจสอบ"
@@ -1833,6 +1873,7 @@ comment = "ความคิดเห็น"
 comments = "ความคิดเห็น"
 contents = "ข้อความ"
 delete = "ลบ"
+deleted = "ลบคำอธิบายประกอบแล้ว"
 drawing = "การวาด"
 editSelectDescription = "คลิกคำอธิบายประกอบที่มีอยู่เพื่อแก้ไขสี ความทึบ ข้อความ หรือขนาด"
 editText = "แก้ไขกล่องข้อความ"
@@ -1874,6 +1915,7 @@ textAlignment = "การจัดแนวข้อความ"
 textMarkup = "การมาร์กอัปข้อความ"
 title = "ใส่คำอธิบายประกอบ"
 underline = "ขีดเส้นใต้"
+undoDelete = "เลิกทำ"
 width = "ความกว้าง"
 
 [app]
@@ -2060,6 +2102,50 @@ bullet2 = "สร้างชื่อไฟล์ที่สะอาดแล
 bullet3 = "คงชื่อเดิมไว้หากไม่พบชื่อที่เหมาะสม"
 title = "การตั้งชื่ออัจฉริยะ"
 
+[autoFormDetection]
+loading = "กำลังตรวจจับช่องแบบฟอร์ม..."
+submit = "ตรวจจับช่องแบบฟอร์ม"
+
+[autoFormDetection.detects]
+checkboxes = "ช่องทำเครื่องหมาย"
+label = "ค้นหาและทำให้กรอกได้"
+signatures = "ลายเซ็น"
+text = "ช่องข้อความ"
+
+[autoFormDetection.error]
+failed = "เกิดข้อผิดพลาดขณะตรวจจับช่องแบบฟอร์ม"
+
+[autoFormDetection.progress]
+detecting = "กำลังวิเคราะห์เอกสารของคุณ..."
+
+[autoFormDetection.results]
+title = "ตรวจสอบ PDF ที่กรอกได้"
+
+[autoFormDetection.sensitivity]
+balanced = "สมดุล"
+balancedHint = "แนะนำสำหรับแบบฟอร์มส่วนใหญ่"
+high = "ละเอียด"
+highHint = "ค้นหาช่องได้มากขึ้น แต่อาจเพิ่มบางช่องในตำแหน่งที่ไม่ควรมี"
+label = "ความไวในการตรวจจับ"
+low = "เข้มงวด"
+lowHint = "เฉพาะรายการที่มั่นใจมากเท่านั้น - ช่องน้อยลง ข้อผิดพลาดน้อยลง"
+
+[autoFormDetection.settings]
+title = "การตั้งค่า"
+
+[autoFormDetection.summary]
+checkboxes = "ช่องทำเครื่องหมาย"
+noneBody = "เอกสารอาจไม่มีพื้นที่ที่คล้ายแบบฟอร์ม เลิกทำ เปลี่ยนความไวเป็น \"ละเอียด\" แล้วเรียกใช้อีกครั้งเพื่อค้นหาให้มากขึ้น"
+noneTitle = "ไม่พบช่องแบบฟอร์ม"
+pages_one = "ใน {{count}} หน้า"
+pages_other = "ใน {{count}} หน้า"
+radioButtons = "ปุ่มตัวเลือก"
+signatures = "ลายเซ็น"
+stepTitle = "ผลการตรวจจับ"
+textFields = "ช่องข้อความ"
+title_one = "เพิ่มช่องที่กรอกได้ {{count}} ช่องแล้ว"
+title_other = "เพิ่มช่องที่กรอกได้ {{count}} ช่องแล้ว"
+
 [automate]
 copyToSaved = "คัดลอกไปยังที่บันทึกไว้"
 desc = "สร้างเวิร์กโฟลว์หลายขั้นตอนโดยการเชื่อมการทำงานของ PDF เข้าด้วยกัน เหมาะสำหรับงานที่ทำซ้ำ"
@@ -2154,6 +2240,7 @@ title = "ที่แนะนำ"
 finish = "เสร็จสิ้น"
 run = "เรียกใช้ระบบอัตโนมัติ"
 running = "กำลังเรียกใช้ระบบอัตโนมัติ..."
+signInToRun = "ลงชื่อเข้าใช้เพื่อเรียกใช้ระบบอัตโนมัติ"
 steps_one = "{{count}} step"
 steps_other = "{{count}} ขั้นตอน"
 unnamed = "ระบบอัตโนมัติที่ไม่มีชื่อ"
@@ -2369,6 +2456,35 @@ bullet3 = "เย็บกระดาษหรือเข้าเล่มต
 bullet4 = "สำหรับเครื่องที่พลิกด้านสั้น: เปิดใช้ตัวเลือก 'พลิกด้านสั้น'"
 text = "ทำตามขั้นตอนเหล่านี้เพื่อให้ได้สมุดที่สมบูรณ์แบบ:"
 title = "วิธีพิมพ์และประกอบ"
+
+[brickGame]
+balls = "ลูกบอล"
+best = "ดีที่สุด"
+close = "ปิดเกม"
+effectTimer = "{{label}} {{seconds}} วินาที"
+hint = "เลื่อนด้วยตัวชี้หรือปุ่มลูกศร คลิกเพื่อจับตัวชี้ กด Esc เพื่อกลับไปทำงาน"
+hintPointerLocked = "จับตัวชี้แล้ว กด Esc เพื่อปล่อย แล้วกด Esc อีกครั้งเพื่อกลับไปทำงาน"
+score = "คะแนน"
+title = "เกมที่ซ่อนอยู่"
+
+[brickGame.effect]
+fast = "เร็ว"
+narrow = "แคบ"
+reversed = "กลับทิศ"
+slow = "ช้า"
+wide = "กว้าง"
+
+[brickGame.lost]
+detail = "คลิกหรือกด Space เพื่อลองอีกครั้ง"
+headline = "ลูกบอลหมด"
+
+[brickGame.ready]
+detail = "คลิกหรือกด Space เพื่อเริ่ม"
+headline = "พร้อม"
+
+[brickGame.won]
+detail = "คลิกหรือกด Space เพื่อเล่นอีกครั้ง"
+headline = "เคลียร์ทั้งหมด"
 
 [bulkSelection]
 syntaxError = "มีปัญหาเกี่ยวกับไวยากรณ์ ดูเคล็ดลับการเลือกหน้าเพื่อขอความช่วยเหลือ"
@@ -3001,6 +3117,361 @@ summary_one = "เรียกใช้เครื่องมือ 1 รา�
 summary_other = "เรียกใช้เครื่องมือ {{count}} รายการ"
 unknownTool = "เครื่องมือที่ไม่รู้จัก"
 
+[classification.families]
+correspondence = "จดหมายโต้ตอบ"
+education = "การศึกษา"
+engineering = "วิศวกรรม"
+finance = "การเงิน"
+forms = "แบบฟอร์ม"
+government = "รัฐบาล"
+health = "การแพทย์"
+hr = "HR"
+legal = "กฎหมาย"
+operations = "ปฏิบัติการ"
+projects = "โครงการ"
+property = "ทรัพย์สิน"
+reports = "รายงาน"
+sales = "การตลาด"
+travel = "การเดินทาง"
+
+[classification.labels]
+academic-record = "ระเบียนการศึกษา"
+action-plan = "แผนปฏิบัติการ"
+addendum = "ภาคผนวกเพิ่มเติม"
+advertisement = "โฆษณา"
+affidavit = "คำให้การเป็นลายลักษณ์อักษร"
+agenda = "วาระการประชุม"
+amendment = "การแก้ไขเพิ่มเติม"
+analytics-report = "รายงานการวิเคราะห์"
+announcement = "ประกาศ"
+annual-report = "รายงานประจำปี"
+api-documentation = "เอกสาร API"
+application-form = "แบบฟอร์มใบสมัคร"
+appraisal-report = "รายงานการประเมิน"
+architecture-document = "เอกสารสถาปัตยกรรม"
+articles-of-incorporation = "หนังสือบริคณห์สนธิ"
+assignment-brief = "สรุปงานมอบหมาย"
+audit-report = "รายงานการตรวจสอบ"
+balance-sheet = "งบดุล"
+bank-statement = "รายการเดินบัญชีธนาคาร"
+benefits-summary = "สรุปสิทธิประโยชน์"
+bill-of-lading = "ใบตราส่งสินค้า"
+bill-of-materials = "รายการวัสดุ"
+blueprint = "พิมพ์เขียว"
+board-report = "รายงานต่อคณะกรรมการ"
+board-resolution = "มติคณะกรรมการ"
+booking-confirmation = "การยืนยันการจอง"
+brochure = "โบรชัวร์"
+budget = "งบประมาณ"
+business-plan = "แผนธุรกิจ"
+business-proposal = "ข้อเสนอทางธุรกิจ"
+bylaws = "ข้อบังคับ"
+campaign-brief = "สรุปแคมเปญ"
+case-study = "กรณีศึกษา"
+cash-flow-statement = "งบกระแสเงินสด"
+catalog = "แคตตาล็อก"
+cease-and-desist = "หนังสือให้หยุดและละเว้น"
+certificate = "ใบรับรอง"
+certificate-of-completion = "ใบรับรองการสำเร็จ"
+change-log = "บันทึกการเปลี่ยนแปลง"
+checklist = "รายการตรวจสอบ"
+claim-form = "แบบฟอร์มเรียกร้องค่าสินไหม"
+closing-statement = "สรุปการปิดบัญชี"
+complaint-letter = "จดหมายร้องเรียน"
+compliance-document = "เอกสารการปฏิบัติตามข้อกำหนด"
+confirmation-letter = "จดหมายยืนยัน"
+consent-form = "แบบฟอร์มยินยอม"
+contract = "สัญญา"
+course-syllabus = "ประมวลรายวิชา"
+court-filing = "เอกสารยื่นต่อศาล"
+cover-letter = "จดหมายนำ"
+credit-note = "ใบลดหนี้"
+customs-declaration = "ใบสำแดงศุลกากร"
+customs-form = "แบบฟอร์มศุลกากร"
+cv = "CV"
+datasheet = "Datasheet"
+debit-note = "ใบเพิ่มหนี้"
+deed = "โฉนด"
+delivery-note = "ใบส่งสินค้า"
+demand-letter = "จดหมายทวงถาม"
+design-document = "เอกสารการออกแบบ"
+diploma = "ประกาศนียบัตร"
+discharge-summary = "สรุปการจำหน่ายผู้ป่วย"
+dissertation = "ดุษฎีนิพนธ์"
+donation-receipt = "ใบเสร็จรับบริจาค"
+dunning-letter = "จดหมายติดตามหนี้"
+email-thread = "เธรด Email"
+employee-handbook = "คู่มือพนักงาน"
+employment-contract = "สัญญาจ้างงาน"
+estimate = "ประมาณการ"
+event-agenda = "กำหนดการงาน"
+event-program = "โปรแกรมงาน"
+eviction-notice = "หนังสือแจ้งขับไล่"
+exam-paper = "ข้อสอบ"
+expense-report = "รายงานค่าใช้จ่าย"
+expense-summary = "สรุปค่าใช้จ่าย"
+explanation-of-benefits = "คำอธิบายสิทธิประโยชน์"
+fact-sheet = "เอกสารข้อมูลสรุป"
+faq-document = "เอกสาร FAQ"
+feasibility-study = "การศึกษาความเป็นไปได้"
+feedback-form = "แบบฟอร์มความคิดเห็น"
+financial-forecast = "การคาดการณ์ทางการเงิน"
+financial-statement = "งบการเงิน"
+floor-plan = "แปลนพื้น"
+flyer = "ใบปลิว"
+form = "แบบฟอร์ม"
+franchise-agreement = "สัญญาแฟรนไชส์"
+freight-document = "เอกสารขนส่งสินค้า"
+gift-certificate = "บัตรของขวัญ"
+glossary = "อภิธานศัพท์"
+government-notice = "ประกาศราชการ"
+grade-report = "รายงานผลการเรียน"
+grant-agreement = "ข้อตกลงทุนสนับสนุน"
+grant-application = "ใบสมัครขอทุน"
+hoa-document = "เอกสาร HOA"
+home-inspection-report = "รายงานการตรวจบ้าน"
+hr-memo = "บันทึก HR"
+hr-policy = "นโยบาย HR"
+immigration-document = "เอกสารตรวจคนเข้าเมือง"
+immunization-record = "ประวัติการฉีดวัคซีน"
+incident-report = "รายงานเหตุการณ์"
+income-statement = "งบกำไรขาดทุน"
+index = "ดัชนี"
+inspection-report = "รายงานการตรวจสอบ"
+insurance-certificate = "ใบรับรองประกันภัย"
+insurance-claim = "การเคลมประกัน"
+insurance-policy = "กรมธรรม์ประกันภัย"
+intake-form = "แบบฟอร์มรับข้อมูล"
+inventory-list = "รายการสินค้าคงคลัง"
+investment-summary = "สรุปการลงทุน"
+invitation = "คำเชิญ"
+invoice = "ใบแจ้งหนี้"
+itinerary = "กำหนดการเดินทาง"
+job-application = "ใบสมัครงาน"
+job-description = "คำบรรยายลักษณะงาน"
+lab-report = "รายงานห้องปฏิบัติการ"
+lease-agreement = "สัญญาเช่า"
+leave-request = "คำขอลา"
+legal-brief = "สรุปข้อกฎหมาย"
+legal-filing = "เอกสารยื่นทางกฎหมาย"
+legal-notice = "หนังสือแจ้งทางกฎหมาย"
+legal-opinion = "ความเห็นทางกฎหมาย"
+lesson-plan = "แผนการสอน"
+letter = "จดหมาย"
+letter-of-intent = "หนังสือแสดงเจตจำนง"
+license = "ใบอนุญาต"
+license-agreement = "ข้อตกลงสัญญาอนุญาต"
+loan-agreement = "สัญญาเงินกู้"
+loan-document = "เอกสารเงินกู้"
+maintenance-log = "บันทึกการบำรุงรักษา"
+manual = "คู่มือ"
+market-research = "การวิจัยตลาด"
+marketing-plan = "แผนการตลาด"
+media-kit = "ชุดสื่อประชาสัมพันธ์"
+medical-invoice = "ใบแจ้งหนี้ทางการแพทย์"
+medical-report = "รายงานทางการแพทย์"
+meeting-agenda = "วาระการประชุม"
+meeting-minutes = "รายงานการประชุม"
+meeting-notes = "บันทึกการประชุม"
+membership-document = "เอกสารสมาชิกภาพ"
+memo = "บันทึกข้อความ"
+memorandum-of-understanding = "บันทึกความเข้าใจ"
+mortgage-document = "เอกสารจำนอง"
+nda = "NDA"
+newsletter = "จดหมายข่าว"
+non-compete-agreement = "ข้อตกลงไม่แข่งขัน"
+notice = "ประกาศ"
+offer-letter = "จดหมายเสนอการจ้างงาน"
+onboarding-document = "เอกสารปฐมนิเทศ"
+order-confirmation = "การยืนยันคำสั่งซื้อ"
+order-form = "แบบฟอร์มสั่งซื้อ"
+organization-chart = "แผนผังองค์กร"
+packing-slip = "ใบรายการบรรจุภัณฑ์"
+partnership-agreement = "ข้อตกลงหุ้นส่วน"
+patent = "สิทธิบัตร"
+pathology-report = "รายงานพยาธิวิทยา"
+payment-reminder = "การแจ้งเตือนการชำระเงิน"
+payroll-document = "เอกสารเงินเดือน"
+payslip = "สลิปเงินเดือน"
+performance-review = "การประเมินผลงาน"
+permit = "ใบอนุญาต"
+petition = "คำร้อง"
+pitch-deck = "Pitch deck"
+power-of-attorney = "หนังสือมอบอำนาจ"
+prescription = "ใบสั่งยา"
+presentation = "งานนำเสนอ"
+press-release = "ข่าวประชาสัมพันธ์"
+price-list = "รายการราคา"
+pricing-sheet = "แผ่นราคา"
+privacy-policy = "นโยบายความเป็นส่วนตัว"
+product-sheet = "แผ่นข้อมูลผลิตภัณฑ์"
+proforma-invoice = "ใบแจ้งหนี้ Proforma"
+progress-report = "รายงานความคืบหน้า"
+project-charter = "กฎบัตรโครงการ"
+project-plan = "แผนโครงการ"
+promotional-material = "สื่อส่งเสริมการขาย"
+property-listing = "รายการทรัพย์สิน"
+proposal = "ข้อเสนอ"
+public-notice = "ประกาศสาธารณะ"
+purchase-agreement = "สัญญาซื้อขาย"
+purchase-order = "ใบสั่งซื้อ"
+quality-report = "รายงานคุณภาพ"
+quarterly-report = "รายงานรายไตรมาส"
+questionnaire = "แบบสอบถาม"
+quick-start-guide = "คู่มือเริ่มต้นอย่างรวดเร็ว"
+quote = "ใบเสนอราคา"
+radiology-report = "รายงานรังสีวิทยา"
+receipt = "ใบเสร็จ"
+recommendation-letter = "จดหมายแนะนำ"
+reference-letter = "จดหมายอ้างอิง"
+referral-letter = "จดหมายส่งต่อ"
+registration-confirmation = "การยืนยันการลงทะเบียน"
+registration-form = "แบบฟอร์มลงทะเบียน"
+regulatory-filing = "เอกสารยื่นต่อหน่วยงานกำกับดูแล"
+release-notes = "บันทึกประจำรุ่น"
+remittance-advice = "ใบแจ้งการโอนเงิน"
+rental-agreement = "สัญญาเช่า"
+report = "รายงาน"
+request-for-proposal = "คำขอข้อเสนอ"
+request-for-quotation = "คำขอใบเสนอราคา"
+requirements-document = "เอกสารข้อกำหนดความต้องการ"
+research-abstract = "บทคัดย่อวิจัย"
+research-paper = "บทความวิจัย"
+reservation = "การจอง"
+resignation-letter = "จดหมายลาออก"
+resume = "เรซูเม่"
+retrospective = "การทบทวนย้อนหลัง"
+return-authorization = "การอนุมัติการคืนสินค้า"
+risk-assessment = "การประเมินความเสี่ยง"
+roadmap = "แผนงาน"
+safety-data-sheet = "เอกสารข้อมูลความปลอดภัย"
+safety-procedure = "ขั้นตอนความปลอดภัย"
+sales-proposal = "ข้อเสนอการขาย"
+sales-report = "รายงานการขาย"
+schematic = "แผนผังวงจร"
+scope-of-work = "ขอบเขตงาน"
+service-agreement = "ข้อตกลงการให้บริการ"
+service-report = "รายงานการให้บริการ"
+settlement-agreement = "ข้อตกลงยอมความ"
+shareholder-agreement = "ข้อตกลงผู้ถือหุ้น"
+shipping-confirmation = "การยืนยันการจัดส่ง"
+specification = "ข้อกำหนดเฉพาะ"
+sponsorship-agreement = "ข้อตกลงผู้สนับสนุน"
+standard-operating-procedure = "ขั้นตอนการปฏิบัติงานมาตรฐาน"
+statement-of-account = "ใบแจ้งยอดบัญชี"
+statement-of-work = "คำชี้แจงขอบเขตงาน"
+status-report = "รายงานสถานะ"
+stock-report = "รายงานสต็อก"
+study-guide = "คู่มือการเรียน"
+subpoena = "หมายเรียก"
+subscription-confirmation = "การยืนยันการสมัครสมาชิก"
+supply-order = "คำสั่งจัดหาสินค้า"
+survey-form = "แบบฟอร์มสำรวจ"
+survey-results = "ผลการสำรวจ"
+sustainability-report = "รายงานความยั่งยืน"
+table-of-contents = "สารบัญ"
+tax-form = "แบบฟอร์มภาษี"
+tax-return = "แบบแสดงรายการภาษี"
+tax-statement = "ใบแจ้งยอดภาษี"
+technical-drawing = "แบบทางเทคนิค"
+technical-specification = "ข้อกำหนดทางเทคนิค"
+tenancy-agreement = "สัญญาเช่า"
+tender-document = "เอกสารประกวดราคา"
+termination-letter = "จดหมายเลิกจ้าง"
+terms-and-conditions = "ข้อกำหนดและเงื่อนไข"
+terms-of-service = "ข้อกำหนดการให้บริการ"
+test-plan = "แผนการทดสอบ"
+test-report = "รายงานการทดสอบ"
+thesis = "วิทยานิพนธ์"
+ticket = "ตั๋ว"
+timeline = "ไทม์ไลน์"
+timesheet = "ใบบันทึกเวลา"
+title-document = "เอกสารสิทธิ์"
+training-material = "สื่อการฝึกอบรม"
+transcript = "ใบแสดงผลการเรียน"
+travel-itinerary = "กำหนดการเดินทาง"
+trust-document = "เอกสารทรัสต์"
+user-guide = "คู่มือผู้ใช้"
+utility-bill = "บิลค่าสาธารณูปโภค"
+vendor-agreement = "ข้อตกลงผู้ขาย"
+visa-document = "เอกสารวีซ่า"
+waiver = "หนังสือสละสิทธิ์"
+warehouse-receipt = "ใบรับคลังสินค้า"
+warranty-document = "เอกสารการรับประกัน"
+waybill = "ใบตราส่งสินค้า"
+white-paper = "เอกสารไวท์เปเปอร์"
+will = "พินัยกรรม"
+work-instruction = "คำแนะนำการทำงาน"
+work-order = "ใบสั่งงาน"
+
+[classificationDemo]
+folderName = "Downloads"
+
+[classificationDemo.buttons]
+done = "เสร็จสิ้น"
+notNow = "ไม่ใช่ตอนนี้"
+skip = "ข้าม"
+stop = "หยุด"
+
+[classificationDemo.chart]
+centre = "เอกสาร"
+hint = "เลือกส่วนหนึ่งเพื่อดูประเภทเอกสารที่อยู่เบื้องหลัง"
+label = "เอกสารตามประเภท: {{summary}}"
+noTypes = "เอกสารเหล่านี้ไม่ตรงกับประเภทที่รู้จัก"
+
+[classificationDemo.defaultApp]
+body = "ตั้ง Stirling เป็นแอป PDF เริ่มต้นของคุณ PDF ทุกไฟล์ที่คุณเปิด ไม่ว่าจะจาก email เบราว์เซอร์ หรือเดสก์ท็อป จะมาที่นี่ พร้อมให้อ่านหรือแก้ไข คุณสามารถเปลี่ยนได้ทุกเมื่อในการตั้งค่า"
+cta = "ตั้ง Stirling เป็นค่าเริ่มต้นของฉัน"
+title = "เปิด PDF ทุกไฟล์ใน Stirling"
+
+[classificationDemo.followUp]
+background = "การทำงานนี้ทำงานอยู่เบื้องหลัง วงแหวนทางซ้ายแสดงความคืบหน้า"
+restCta = "ประมวลผลส่วนที่เหลือ"
+serverCredits = "เซิร์ฟเวอร์ที่เชื่อมต่อของคุณจัดการเครดิตสำหรับการประมวลผลไฟล์เหล่านี้"
+title = "ต้องการดำเนินการต่อไหม? คุณมี PDF อีก {{count}} ไฟล์ในโฟลเดอร์ Downloads"
+
+[classificationDemo.groups]
+other = "อื่นๆ"
+
+[classificationDemo.offer]
+body = "จัดประเภทและจัดระเบียบ PDF ล่าสุด {{count}} ไฟล์ในโฟลเดอร์ Downloads ของคุณตามประเภท"
+cta = "ประมวลผลโฟลเดอร์ Downloads ของฉัน"
+privacy = "PDF ของคุณยังคงอยู่บนอุปกรณ์นี้ เซิร์ฟเวอร์ที่เชื่อมต่อของคุณจะบันทึกการใช้งานการประมวลผล"
+title = "ดูว่า Stirling ทำอะไรได้บ้างกับทั้งโฟลเดอร์"
+
+[classificationDemo.phase]
+finishing = "กำลังดำเนินการให้เสร็จสิ้น..."
+gathering = "กำลังรวบรวมไฟล์ PDF..."
+processing = "กำลังประมวลผลไฟล์ {{done}}/{{total}}..."
+reading = "กำลังอ่านโฟลเดอร์ Downloads..."
+
+[classificationDemo.processing]
+counts = "ประมวลผล PDF แล้วจากทั้งหมด {{total}} ไฟล์"
+
+[classificationDemo.results]
+documentCount_one = "{{count}} PDF"
+documentCount_other = "{{count}} PDFs"
+failedBody = "Stirling ไม่สามารถอ่านโฟลเดอร์ Downloads ของคุณได้ ไม่มีการเปลี่ยนแปลงใดๆ บนคอมพิวเตอร์ของคุณ"
+failedTitle = "การดำเนินการนั้นไม่เสร็จสิ้น"
+heading = "Downloads ของคุณ จัดเรียงแล้ว"
+summary = "Stirling อ่าน {{documents}} และจัดเรียงเป็น {{types}}"
+typeCount_one = "{{count}} ประเภท"
+typeCount_other = "{{count}} ประเภท"
+
+[classificationDemo.ring]
+done = "จัดประเภท {{folder}} แล้ว"
+doneDetail = "จัดเรียง PDF {{count}} ไฟล์ตามประเภทแล้ว"
+progress = "PDF {{done}} จาก {{total}} ไฟล์ ({{percent}}%)"
+running = "กำลังจัดประเภท {{folder}}"
+
+[classificationDemo.status]
+checked = "ตรวจสอบแล้ว {{checked}} จาก {{total}} ไฟล์..."
+checking = "กำลังตรวจสอบชื่อและวันที่ของแต่ละไฟล์..."
+connecting = "กำลังเชื่อมต่อโฟลเดอร์ Downloads ของคุณ..."
+library = "กำลังเพิ่มลงในไลบรารีไฟล์ของคุณ..."
+listing = "กำลังแสดงรายการไฟล์ใน Downloads..."
+picking = "กำลังค้นหา PDF ล่าสุด {{count}} ไฟล์..."
+
 [cloudBadge]
 tooltip = "การดำเนินการนี้จะใช้เครดิตคลาวด์ของคุณ"
 
@@ -3016,6 +3487,8 @@ title = "เลือกสี"
 actions = "Actions"
 back = "ย้อนกลับ"
 cancel = "ยกเลิก"
+change = "เปลี่ยน"
+clearFilters = "ล้างตัวกรอง"
 close = "ปิด"
 codeSample = "Code sample"
 collapse = "ยุบ"
@@ -3027,6 +3500,7 @@ done = "เสร็จสิ้น"
 enterValue = "Enter value"
 error = "ข้อผิดพลาด"
 expand = "ขยาย"
+filterEmpty = "ไม่มีสิ่งให้กรอง"
 loading = "กำลังโหลด..."
 next = "ถัดไป"
 open = "Open"
@@ -3036,6 +3510,7 @@ refresh = "รีเฟรช"
 remaining = "คงเหลือ"
 retry = "ลองใหม่"
 save = "บันทึก"
+search = "ค้นหา"
 stepOf = "Step {{current}} of {{total}}"
 
 [compare]
@@ -3227,7 +3702,9 @@ tags = "ย่อ, เล็ก, จิ๋ว"
 
 [config]
 plan = "แผน"
+planDescription = "แผน เครดิตและขีดจำกัดการใช้จ่ายของคุณ และใบแจ้งหนี้ที่เกี่ยวข้อง"
 team = "Team"
+teamDescription = "ผู้ที่ใช้พื้นที่ทำงานนี้ร่วมกัน และคำเชิญที่ยังรอคำตอบ"
 
 [config.account.overview]
 confirmDelete = "ลบบัญชีของฉัน"
@@ -3319,7 +3796,6 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
-title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -3350,6 +3826,49 @@ basic = "การกำหนดค่าพื้นฐาน"
 integration = "การกำหนดค่าการผสานรวม"
 security = "การกำหนดค่าความปลอดภัย"
 system = "การกำหนดค่าระบบ"
+
+[connect]
+loading = "กำลังตรวจสอบคำขอนี้"
+redirecting = "กำลังพาคุณกลับไปยังเซิร์ฟเวอร์ของคุณ"
+step = "ขั้นตอน {{current}} จาก {{total}}"
+
+[connect.confirm]
+acknowledge = "ฉันจำที่อยู่นี้ได้และต้องการเชื่อมต่อกับทีมของฉัน"
+approve = "เชื่อมต่อเซิร์ฟเวอร์"
+cannotDecide = "เฉพาะเจ้าของทีมเท่านั้นที่สามารถอนุมัติหรือปฏิเสธการเชื่อมต่อนี้ ใช้บัญชีอื่นหรือปิดข้อความนี้เพื่อใช้ Stirling ต่อ"
+deny = "ปฏิเสธ"
+dismiss = "ปิด"
+lead = "เซิร์ฟเวอร์ Stirling กำลังขอเชื่อมต่อกับทีมของคุณ ตรวจสอบว่าที่อยู่ด้านล่างเป็นของคุณก่อนอนุมัติ"
+originLabel = "ที่อยู่"
+signedInAs = "ลงชื่อเข้าใช้เป็น"
+switchAccount = "ใช้บัญชีอื่น"
+title = "เชื่อมต่อเซิร์ฟเวอร์นี้หรือไม่?"
+unknownAccount = "บัญชีที่ไม่รู้จัก"
+
+[connect.confirm.insecure]
+body = "ที่อยู่นี้ไม่ได้ใช้ HTTPS ดังนั้นการลงชื่อเข้าใช้ของคุณจะถูกส่งผ่านการเชื่อมต่อที่ไม่ได้เข้ารหัส อนุมัติเฉพาะบนเครือข่ายที่คุณเชื่อถือเท่านั้น"
+label = "ไม่ใช่ที่อยู่ที่เข้ารหัส"
+
+[connect.declined]
+body = "ไม่มีการเชื่อมต่อใดๆ คุณสามารถปิดหน้านี้ได้"
+title = "ปฏิเสธคำขอแล้ว"
+
+[connect.error]
+failed = "การดำเนินการนั้นไม่สำเร็จ เฉพาะเจ้าของทีมเท่านั้นที่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้"
+
+[connect.meta]
+title = "เชื่อมต่อเซิร์ฟเวอร์"
+
+[connect.notFound]
+body = "คำขอเชื่อมต่อนี้ไม่ถูกต้อง อาจหมดอายุแล้ว หรือถูกใช้ไปแล้ว เริ่มคำขอใหม่จากเซิร์ฟเวอร์ของคุณ"
+title = "คำขอไม่ถูกต้อง"
+
+[connect.renewal]
+approve = "ต่ออายุการลงชื่อเข้าใช้"
+failed = "ไม่สามารถต่ออายุการลงชื่อเข้าใช้ของคุณได้ ลองอีกครั้ง หรือปิดหน้านี้แล้วเริ่มใหม่จากเซิร์ฟเวอร์ของคุณ"
+lead = "เซิร์ฟเวอร์นี้เชื่อมโยงกับบัญชีของคุณแล้ว ต่ออายุการลงชื่อเข้าใช้เพื่อกลับไปยังการเรียกเก็บเงินและการใช้งานบนเซิร์ฟเวอร์ของคุณ"
+title = "ต่ออายุการลงชื่อเข้าใช้เซิร์ฟเวอร์ของคุณ"
+wrongAccount = "บัญชีนี้ไม่สามารถต่ออายุการลงชื่อเข้าใช้ของเซิร์ฟเวอร์นี้ได้ เปลี่ยนไปใช้บัญชีที่ใช้เชื่อมโยงเซิร์ฟเวอร์เดิม บัญชีนั้นต้องยังคงเป็นเจ้าของทีมที่เชื่อมโยงอยู่"
 
 [convert]
 autoRotate = "หมุนอัตโนมัติ"
@@ -3494,6 +4013,26 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[createPortfolio]
+coverTitle = "ชื่อหน้าปก"
+coverTitlePlaceholder = "PDF Portfolio"
+description = "ไฟล์ที่เลือกทุกไฟล์จะถูกเก็บไว้ครบถ้วนภายใน PDF ใหม่ ไม่ว่าจะเป็นประเภทใดก็ตาม โปรแกรมอ่านที่ไม่รองรับพอร์ตโฟลิโอจะแสดงหน้าปกพร้อมไฟล์ที่แนบมา"
+goToFileEditor = "ไปที่ตัวแก้ไขไฟล์"
+info = "รวมไฟล์ของคุณเป็น PDF เดียวที่เก็บแต่ละไฟล์ไว้ครบถ้วนภายใน เปิดผลลัพธ์เพื่อเรียกดูไฟล์และดูหรือบันทึกไฟล์ใดๆ แยกต่างหากได้"
+settings = "การตั้งค่าพอร์ตโฟลิโอ"
+submit = "สร้างพอร์ตโฟลิโอ"
+title = "ผลลัพธ์พอร์ตโฟลิโอ"
+viewerModeHint = "พอร์ตโฟลิโอต้องมีไฟล์ 2 ไฟล์ขึ้นไป ไปที่ตัวแก้ไขไฟล์เพื่อเลือกไฟล์"
+
+[createPortfolio.error]
+failed = "เกิดข้อผิดพลาดขณะสร้าง PDF portfolio"
+
+[createPortfolio.tooltip.description]
+title = "สิ่งที่ทำ"
+
+[createPortfolio.tooltip.header]
+title = "เกี่ยวกับ PDF Portfolios"
+
 [crop]
 autoCrop = "ครอบตัดช่องว่างอัตโนมัติ"
 noFileSelected = "เลือกไฟล์ PDF เพื่อเริ่มการครอบตัด"
@@ -3567,6 +4106,36 @@ title = "เปิดการตั้งค่าแล้ว"
 [defaultApp.success]
 message = "Stirling PDF เป็นโปรแกรมแก้ไข PDF เริ่มต้นของคุณแล้ว"
 title = "ตั้งเป็นแอปเริ่มต้นแล้ว"
+
+[desktopFileLink]
+saveAs = "บันทึกเป็น…"
+useDiskVersion = "ใช้เวอร์ชันบนดิสก์"
+
+[desktopFileLink.conflict]
+hint = "การเก็บการเปลี่ยนแปลงของคุณไว้จะเขียนทับไฟล์บนดิสก์เมื่อคุณบันทึกครั้งถัดไป"
+keepMine = "เก็บการเปลี่ยนแปลงของฉัน"
+prompt = "ไฟล์นี้เปลี่ยนแปลงบนดิสก์ขณะที่คุณมีการเปลี่ยนแปลงที่ยังไม่ได้บันทึกที่นี่ สามารถเก็บไว้ได้เพียงเวอร์ชันเดียว"
+remaining = "เหลือให้ตรวจสอบอีก {{count}} รายการ"
+title = "ไฟล์เปลี่ยนแปลงบนดิสก์"
+useDisk = "ใช้เวอร์ชันบนดิสก์"
+
+[desktopFileLink.missing]
+body = "\"{{name}}\" ถูกลบหรือย้ายบนดิสก์แล้ว จึงถูกนำออกจากไฟล์ของคุณ"
+title = "ไฟล์ไม่มีอยู่อีกต่อไป"
+
+[desktopFileLink.openDeleted]
+body_one = "\"{{name}}\" ไม่มีอยู่บนดิสก์อีกต่อไป แต่ยังเปิดอยู่ที่นี่ - การบันทึกจะขอตำแหน่งใหม่จากคุณ"
+body_other = "ไฟล์ {{count}} ไฟล์ไม่มีอยู่บนดิสก์อีกต่อไป แต่ยังเปิดอยู่ที่นี่ - การบันทึกแต่ละไฟล์จะขอตำแหน่งใหม่จากคุณ"
+title_one = "ไฟล์ถูกลบบนดิสก์"
+title_other = "ไฟล์ถูกลบบนดิสก์"
+
+[desktopFileLink.reloaded]
+body = "\"{{name}}\" เปลี่ยนแปลงบนดิสก์และถูกโหลดใหม่แล้ว"
+title = "อัปเดตจากดิสก์แล้ว"
+
+[desktopFileLink.tooLarge]
+body = "\"{{name}}\" เปลี่ยนแปลงบนดิสก์ ไฟล์มีขนาดใหญ่พอที่การโหลดใหม่จะใช้เวลาสักครู่ ดังนั้นเวอร์ชันที่นี่จึงถูกปล่อยไว้ตามเดิม"
+title = "ไฟล์เปลี่ยนแปลงบนดิสก์"
 
 [desktopUpdate]
 downloading = "กำลังดาวน์โหลดอัปเดต..."
@@ -3692,9 +4261,6 @@ subtitle = "นำเข้า สร้างลำดับชั้น แล
 description = "เลือกเครื่องมือแก้ไขสารบัญเพื่อโหลดพื้นที่ทำงาน"
 title = "เปิดเครื่องมือเพื่อเริ่มแก้ไข"
 
-[emptyFilesState]
-upload = "อัปโหลด"
-
 [encryptedPdfUnlock]
 description = "ไฟล์ PDF นี้ถูกป้องกันด้วยรหัสผ่าน ป้อนรหัสผ่านเพื่อทำงานต่อได้"
 emptyResponse = "การลบรหัสผ่านไม่สร้างไฟล์"
@@ -3775,111 +4341,70 @@ closeFile = "ปิดไฟล์"
 addFiles = "เพิ่มไฟล์"
 
 [fileManager]
-active = "ใช้งานอยู่"
 addToUpload = "เพิ่มไปยังอัปโหลด"
-changesNotUploaded = "ยังไม่ได้อัปโหลดการเปลี่ยนแปลง"
 clearAll = "ล้างทั้งหมด"
 clearSelection = "ล้างการเลือก"
-closeAllFiles = "ปิดไฟล์ทั้งหมด"
-closeFile = "ปิดไฟล์"
-cloudFile = "ไฟล์คลาวด์"
-copyCreated = "บันทึกสำเนาลงในอุปกรณ์นี้แล้ว"
-copyFailed = "ไม่สามารถสร้างสำเนาได้"
 delete = "ลบ"
 deleteAll = "ลบทั้งหมด"
-deleteSelected = "ลบที่เลือก"
-deselectAll = "ยกเลิกการเลือกทั้งหมด"
-details = "รายละเอียดไฟล์"
 download = "ดาวน์โหลด"
 downloadSelected = "ดาวน์โหลดที่เลือก"
-dropFilesHere = "วางไฟล์ที่นี่"
-fileFormat = "รูปแบบ"
-fileHistory = "ประวัติไฟล์"
-fileName = "ชื่อ"
-fileSize = "ขนาด"
 filesSelected = "ไฟล์ที่เลือก"
 filesStored = "ไฟล์ที่จัดเก็บ"
-fileVersion = "เวอร์ชัน"
-filterAll = "ทั้งหมด"
-filterLocal = "ภายในเครื่อง"
-filterSharedByMe = "ฉันเป็นผู้แชร์"
-filterSharedWithMe = "แชร์กับฉัน"
-googleDrive = "Google Drive"
-googleDriveNotAvailable = "ไม่สามารถใช้งานการเชื่อมต่อกับ Google Drive"
-googleDriveShort = "Drive"
-hideHistory = "ซ่อนประวัติ"
-lastModified = "แก้ไขล่าสุด"
-lastSynced = "ซิงค์ล่าสุด"
-leaveShare = "นำออกจากรายการของฉัน"
-leaveShareFailed = "ไม่สามารถนำไฟล์ที่แชร์ออกได้"
-leaveShareSuccess = "นำออกจากรายการที่แชร์ของคุณแล้ว"
 loadingFiles = "กำลังโหลดไฟล์..."
-localOnly = "เฉพาะภายในเครื่อง"
-makeCopy = "สร้างสำเนา"
-mobileShort = "มือถือ"
-mobileUpload = "อัปโหลดจากมือถือ"
-mobileUploadNotAvailable = "ไม่ได้เปิดใช้งานการอัปโหลดจากมือถือ"
-moreOptions = "ตัวเลือกเพิ่มเติม"
-myFiles = "ไฟล์ของฉัน"
-nextFile = "ไฟล์ถัดไป"
 noFiles = "ไม่มีไฟล์"
 noFilesFound = "ไม่พบไฟล์ที่ตรงกับการค้นหา"
-noRecentFiles = "ไม่พบไฟล์ล่าสุด"
-openFile = "เปิดไฟล์"
-openFiles = "เปิดไฟล์"
 openInFileEditor = "เปิดในตัวแก้ไขไฟล์"
 openInPageEditor = "เปิดในตัวแก้ไขหน้า"
-owner = "เจ้าของ"
-ownerUnknown = "ไม่ทราบ"
-previousFile = "ไฟล์ก่อนหน้า"
-recent = "ล่าสุด"
-removeBoth = "นำออกจากทั้งสองที่"
-removeFilePrompt = "ไฟล์นี้ถูกบันทึกไว้ในอุปกรณ์นี้และบนเซิร์ฟเวอร์ของคุณ คุณต้องการนำออกจากที่ใด?"
-removeFileTitle = "นำไฟล์ออก"
-removeLocalOnly = "เฉพาะอุปกรณ์นี้"
-removeServerFailed = "ไม่สามารถนำไฟล์ออกจากเซิร์ฟเวอร์ได้"
-removeServerOnly = "เฉพาะเซิร์ฟเวอร์"
-removeServerOnlyPrompt = "ไฟล์นี้ถูกจัดเก็บไว้เฉพาะบนเซิร์ฟเวอร์ของคุณ คุณต้องการนำออกจากเซิร์ฟเวอร์หรือไม่?"
-removeServerSuccess = "นำออกจากเซิร์ฟเวอร์แล้ว"
-removeSharedPrompt = "ไฟล์นี้ถูกแชร์กับคุณ คุณสามารถนำออกจากอุปกรณ์นี้หรือจากรายการที่แชร์ของคุณ"
-removeSharedServerOnlyBlockedPrompt = "ไฟล์นี้ถูกแชร์กับคุณและจัดเก็บไว้เฉพาะบนเซิร์ฟเวอร์"
-removeSharedServerOnlyPrompt = "ไฟล์นี้ถูกแชร์กับคุณและจัดเก็บไว้เฉพาะบนเซิร์ฟเวอร์ นำออกจากรายการของคุณหรือไม่?"
-restore = "กู้คืน"
 saveSelected = "บันทึกที่เลือก"
 searchFiles = "ค้นหาไฟล์..."
-selectAll = "เลือกทั้งหมด"
-selectedCount = "เลือกแล้ว {{count}} รายการ"
 share = "แชร์"
 shared = "ที่แชร์"
-sharedByYou = "คุณเป็นผู้แชร์"
 sharedEditNoticeBody = "คุณไม่มีสิทธิ์แก้ไขเวอร์ชันบนเซิร์ฟเวอร์ของไฟล์นี้ การแก้ไขใดๆ ที่คุณทำจะถูกบันทึกเป็นสำเนาภายในเครื่อง"
 sharedEditNoticeConfirm = "รับทราบ"
 sharedEditNoticeTitle = "สำเนาบนเซิร์ฟเวอร์แบบอ่านอย่างเดียว"
 sharedWithYou = "แชร์กับคุณ"
-shareSelected = "แชร์ที่เลือก"
-sharing = "การแชร์"
 showAll = "แสดงทั้งหมด"
-showHistory = "แสดงประวัติ"
 sortBy = "Sort files"
 sortByDate = "เรียงตามวันที่"
 sortByName = "เรียงตามชื่อ"
 sortBySize = "เรียงตามขนาด"
 storage = "ที่เก็บ"
-storageState = "ที่เก็บข้อมูล"
 storageUsed = "Storage used"
-synced = "ซิงค์แล้ว"
 title = "อัปโหลดไฟล์ PDF"
-toolChain = "เครื่องมือที่ใช้"
 unsupported = "ไม่รองรับ"
 unzip = "แตกไฟล์"
 updateOnServer = "อัปเดตบนเซิร์ฟเวอร์"
-uploadSelected = "อัปโหลดที่เลือก"
 uploadToServer = "อัปโหลดไปยังเซิร์ฟเวอร์"
 versionHistory = "Version history"
+
+[filePicker]
+add_one = "เพิ่มไฟล์ {{count}} ไฟล์"
+add_other = "เพิ่มไฟล์ {{count}} ไฟล์"
+addHere = "เพิ่มที่นี่"
+adding = "กำลังเพิ่มไฟล์…"
+chooseDestination = "เลือกโฟลเดอร์ หรือเพิ่มที่นี่"
+dropHint = "เลือกไฟล์ที่คุณต้องการทำงานด้วย"
+dropTitle = "วางไฟล์ที่นี่ หรือคลิกเพื่อเรียกดู"
+emptyZip = "ไม่สามารถแยกไฟล์ใดๆ จาก ZIP นี้ได้"
+error = "ไม่สามารถเพิ่มไฟล์เหล่านี้ได้ โปรดลองอีกครั้ง"
+errorTitle = "ไม่สามารถเพิ่มไฟล์ได้"
+filesUnavailable = "ไม่สามารถเพิ่มได้: {{names}}"
+fileUnavailable = "{{name}} ไม่พร้อมใช้งานอีกต่อไป"
+folderPath = "เส้นทางโฟลเดอร์"
+fromComputer = "จากคอมพิวเตอร์ของคุณ"
+fromPhone = "จากโทรศัพท์ของคุณ"
+limit = "เลือกได้สูงสุด {{count}} ไฟล์"
+selectedLimit = "เลือกแล้ว {{count}} จาก {{limit}}"
+selectVersion = "เลือกเวอร์ชัน {{version}}"
+sources = "แหล่งที่มาของไฟล์"
+subtitle = "เลือกจากไลบรารีของคุณหรือเพิ่มรายการใหม่"
+title = "เพิ่มไฟล์"
+unsupported = "เครื่องมือที่เลือกไม่รองรับไฟล์ประเภทนี้"
 
 [files]
 addFiles = "เพิ่มไฟล์"
 created = "สร้างเมื่อ"
+notIncludedInToolRun = "ไม่รวมอยู่ในการเรียกใช้เครื่องมือนี้"
 selectFromWorkbench = "เลือกไฟล์จากเวิร์กเบนช์หรือ "
 selectMultipleFromWorkbench = "เลือกอย่างน้อย {{count}} ไฟล์จากเวิร์กเบนช์หรือ "
 size = "ขนาดไฟล์"
@@ -3920,8 +4445,6 @@ dropToAdd = "Drop files to add"
 duplicateFailed = "Could not duplicate file"
 expand = "ขยายแถบข้าง"
 googleDrive = "Google Drive"
-googleDriveDisabled = "ยังไม่ได้กำหนดค่า Google Drive"
-leaveMyFiles = "ออกจากไฟล์ของฉัน"
 library = "ไลบรารี PDF"
 myFiles = "ไฟล์ของฉัน"
 noFiles = "ยังไม่มีไฟล์"
@@ -3930,6 +4453,8 @@ openFromComputer = "เปิดจากคอมพิวเตอร์"
 openSettings = "เปิดการตั้งค่า"
 other = "อื่นๆ"
 recent = "ล่าสุด"
+uploadFailedBody = "ไม่สามารถเพิ่มไฟล์ที่เลือกได้"
+uploadFailedTitle = "อัปโหลดล้มเหลว"
 viewAll = "ดูไฟล์ทั้งหมด {{count}} ไฟล์"
 
 [fileSidebar.fileItem]
@@ -3961,6 +4486,10 @@ save = "Rename"
 title = "Rename file"
 
 [filesPage]
+addedToLibrary = "เพิ่มไปยังไลบรารี Stirling แล้ว"
+addingToLibrary = "กำลังเพิ่มไปยังไลบรารี Stirling…"
+addToLibrary = "เพิ่มไปยังไลบรารี Stirling…"
+addToLibraryFailed = "ไม่สามารถเพิ่มบางไฟล์ได้"
 addToWorkspace = "เพิ่มไปยังพื้นที่ทำงาน"
 addToWorkspaceCount = "เพิ่ม {{count}} ไปยังพื้นที่ทำงาน"
 allFiles = "ไฟล์ทั้งหมด"
@@ -3968,6 +4497,7 @@ back = "ย้อนกลับ"
 backToFolder = "ย้อนกลับไปยัง {{folder}}"
 backToMyFiles = "ย้อนกลับไปยังไฟล์ของฉัน"
 breadcrumbs = "เส้นทางโฟลเดอร์"
+breadcrumbsOverflow = "แสดงโฟลเดอร์หลัก"
 bulkActions = "การดำเนินการ"
 cancel = "ยกเลิก"
 classification = "การจัดประเภท"
@@ -4002,6 +4532,7 @@ downloadAll = "ดาวน์โหลดทั้งหมด"
 downloadVersion = "ดาวน์โหลดเวอร์ชันนี้"
 dropOverlay = "ปล่อยไฟล์เพื่ออัปโหลด"
 dropOverlaySub = "ไฟล์จะเริ่มใน ในเครื่อง ใช้ 'ย้ายไปยัง' หรือ 'บันทึกไปยังคลาวด์' เพื่อจัดระเบียบลงในโฟลเดอร์."
+dropOverlaySubFolder = "ไฟล์เหล่านี้จะถูกเพิ่มไปยังโฟลเดอร์นี้"
 duplicate = "Duplicate"
 file = "ไฟล์"
 fileInfo = "File info"
@@ -4010,15 +4541,21 @@ folder = "โฟลเดอร์"
 folderItems_one = "{{count}} item"
 folderItems_other = "{{count}} items"
 folderMenu = "การดำเนินการโฟลเดอร์"
+folderSettings = "การตั้งค่าโฟลเดอร์"
 inPath = "ใน {{path}}"
 inWorkspace = "เปิด"
 inWorkspaceAria = "อยู่ในพื้นที่ทำงานแล้ว"
-loading = "กำลังโหลด…"
-localFoldersUnavailable = "โฟลเดอร์ใช้ได้เฉพาะคลาวด์ - บันทึกไฟล์ไปยังคลาวด์เพื่อจัดระเบียบ."
+localFolderManagedByDisk = "โฟลเดอร์นี้จัดการโดยไดเรกทอรีบนดิสก์"
+moveAcrossKindsBlocked = "โฟลเดอร์เหล่านี้อยู่คนละตำแหน่ง จึงไม่สามารถย้ายโฟลเดอร์หนึ่งเข้าไปในอีกโฟลเดอร์ได้"
+moveIntoMountCloudSkipped_one = "ไฟล์เซิร์ฟเวอร์ {{count}} ไฟล์ยังคงอยู่ในไฟล์ของคุณ ไฟล์นี้อยู่บนเซิร์ฟเวอร์ ไม่ใช่บนดิสก์นี้"
+moveIntoMountCloudSkipped_other = "ไฟล์เซิร์ฟเวอร์ {{count}} ไฟล์ยังคงอยู่ในไฟล์ของคุณ ไฟล์เหล่านี้อยู่บนเซิร์ฟเวอร์ ไม่ใช่บนดิสก์นี้"
+moveIntoMountFailed_one = "ไม่สามารถเขียนไฟล์ {{count}} ไฟล์ลงในโฟลเดอร์ได้"
+moveIntoMountFailed_other = "ไม่สามารถเขียนไฟล์ {{count}} ไฟล์ลงในโฟลเดอร์ได้"
+moveIntoVirtualCloudSkipped_one = "ไฟล์เซิร์ฟเวอร์ {{count}} ไฟล์ถูกปล่อยไว้ที่เดิม ไฟล์เซิร์ฟเวอร์ไม่สามารถอยู่ในโฟลเดอร์ที่มีเฉพาะในเบราว์เซอร์ได้"
+moveIntoVirtualCloudSkipped_other = "ไฟล์เซิร์ฟเวอร์ {{count}} ไฟล์ถูกปล่อยไว้ที่เดิม ไฟล์เซิร์ฟเวอร์ไม่สามารถอยู่ในโฟลเดอร์ที่มีเฉพาะในเบราว์เซอร์ได้"
 moveSkippedRemote_one = "{{count}} file couldn't be moved on the server (no permission or already deleted)."
 moveSkippedRemote_other = "{{count}} files couldn't be moved on the server (no permission or already deleted)."
 moveTo = "ย้ายไปยัง…"
-myFiles = "ไฟล์ของฉัน"
 newFolder = "โฟลเดอร์ใหม่"
 newFolderStorageDisabled = "การจัดเก็บโฟลเดอร์บนเซิร์ฟเวอร์ไม่ได้เปิดใช้งาน โปรดขอให้ผู้ดูแลระบบเปิดใช้งาน."
 newFolderTabUnavailable = "สวิตช์ไปที่ ทั้งหมด หรือ คลาวด์ เพื่อสร้างโฟลเดอร์."
@@ -4026,20 +4563,23 @@ offlineNoFolderEdits = "ซิงก์โฟลเดอร์กับเซ�
 open = "เปิด"
 openVersionInWorkspace = "เปิดในพื้นที่ทำงาน"
 originFilter = "กรองตามแหล่งที่มา"
+recentFiles = "ล่าสุด"
 refresh = "รีเฟรชจากเซิร์ฟเวอร์"
+refreshNeedsConnection = "ลงชื่อเข้าใช้เพื่อรีเฟรชจากเซิร์ฟเวอร์"
 remove = "ลบ"
+removeLocalFolder = "ยกเลิกการเมานต์จาก Stirling"
 removeVersion = "เอาเวอร์ชันนี้ออก"
 rename = "เปลี่ยนชื่อ"
 renamed = "เปลี่ยนชื่อแล้ว"
 renameFolder = "เปลี่ยนชื่อโฟลเดอร์"
-resizeFolderTree = "ปรับขนาดต้นไม้โฟลเดอร์ (ปุ่มลูกศร, กด Shift เพื่อก้าวใหญ่ขึ้น; ดับเบิลคลิกเพื่อปรับอัตโนมัติ)"
 save = "บันทึก"
 saveToServer = "บันทึกไปยังเซิร์ฟเวอร์"
 saveToServerDisabledHint = "การบันทึกไปยังเซิร์ฟเวอร์ไม่ได้เปิดใช้งานบนเซิร์ฟเวอร์นี้ โปรดขอให้ผู้ดูแลระบบเปิดใช้งาน."
 selectAll = "เลือกทั้งหมด"
-selectAllHint = "คลิกเพื่อเลือกทั้งหมด เคล็ดลับ: กด Ctrl (หรือ Cmd) เพื่อเพิ่มทีละไฟล์ กด Shift เพื่อเลือกช่วง."
 selectedCount = "เลือกแล้ว {{count}}"
+selectedFile = "{{name}}, เลือกแล้ว"
 selectFile = "เลือกไฟล์ {{name}}"
+serverFolderNeedsConnection = "ลงชื่อเข้าใช้ Stirling Cloud หรือเชื่อมต่อเซิร์ฟเวอร์ที่โฮสต์เองเพื่อใช้โฟลเดอร์เซิร์ฟเวอร์"
 shareDisabledHint = "การแชร์ไฟล์ไม่ได้เปิดใช้งานบนเซิร์ฟเวอร์นี้ โปรดขอให้ผู้ดูแลระบบเปิดใช้งาน."
 shareManage = "จัดการการแชร์"
 showDetails = "แสดงรายละเอียด"
@@ -4047,8 +4587,10 @@ signInRequired = "Sign in to use cloud storage."
 summary_one = "{{count}} item"
 summary_other = "{{count}} items"
 tree = "โฟลเดอร์"
+unmount = "ยกเลิกการเมานต์"
+unmountFolderBody = "ยกเลิกการเมานต์ \"{{name}}\" หรือไม่? โฟลเดอร์และไฟล์จะยังคงอยู่บนดิสก์ของคุณ"
+unmountFolderTitle = "ยกเลิกการเมานต์จาก Stirling หรือไม่?"
 upload = "อัปโหลด"
-uploadedToLocal = "ไฟล์ที่อัปโหลดจะเริ่มใน ในเครื่อง ใช้ 'บันทึกไปยังคลาวด์' เพื่อใส่ไว้ในโฟลเดอร์."
 uploadFromMobile = "อัปโหลดจากมือถือ"
 versionActions = "การดำเนินการเวอร์ชัน"
 versionCollapse = "ยุบเวอร์ชันตรงกลาง"
@@ -4061,14 +4603,18 @@ viewVersionHistory = "Version journey ({{count}})"
 
 [filesPage.appearance]
 colour = "สี"
+done = "เสร็จสิ้น"
+edit = "ลักษณะที่ปรากฏ..."
 icon = "ไอคอน"
 title = "ลักษณะที่ปรากฏ"
 useColour = "ใช้สี {{c}}"
 
 [filesPage.column]
+added = "เพิ่มเมื่อ"
 modified = "แก้ไขเมื่อ"
 name = "ชื่อ"
 size = "ขนาด"
+status = "สถานะ"
 type = "ชนิด"
 
 [filesPage.deleteScope]
@@ -4079,9 +4625,30 @@ deviceHint = "Removes the local copy. The cloud copy is kept."
 everywhere = "Everywhere"
 everywhereHint = "Deletes the file from this device and the cloud."
 
+[filesPage.diskLink]
+conflict = "ดิสก์มีการเปลี่ยนแปลง"
+conflictHint = "ไฟล์บนดิสก์มีการเปลี่ยนแปลงขณะที่คุณมีการแก้ไขที่ยังไม่ได้บันทึก เวอร์ชันของคุณจะแสดงอยู่ - การบันทึกจะเขียนทับไฟล์บนดิสก์"
+orphaned = "ไม่อยู่บนดิสก์"
+orphanedHint = "ต้นฉบับที่ {{path}} หายไปแล้ว สำเนานี้อยู่ที่นี่เท่านั้น - การบันทึกจะขอตำแหน่งใหม่"
+unavailable = "ไม่พร้อมใช้งาน"
+unavailableHintOffline = "ไดรฟ์หรือแชร์ที่ไฟล์นี้อยู่ไม่ได้เชื่อมต่ออยู่ เชื่อมต่อใหม่เพื่อรับการเปลี่ยนแปลงอีกครั้ง"
+unavailableHintPermission = "Stirling ไม่ได้รับอนุญาตให้อ่านตำแหน่งนี้ ให้สิทธิ์การเข้าถึงในการตั้งค่าระบบเพื่อรับการเปลี่ยนแปลงอีกครั้ง"
+unavailableHintUnknown = "ไม่สามารถเข้าถึงไฟล์นี้ได้ในขณะนี้ สำเนาที่นี่ไม่มีการเปลี่ยนแปลง"
+
+[filesPage.diskState]
+all = "ทั้งหมด"
+done = "พร้อม"
+doneHint = "ประมวลผลแล้ว - เปิดผลลัพธ์"
+failed = "ล้มเหลว"
+processing = "กำลังประมวลผล"
+processingHint = "ไฟล์นี้จะพร้อมใช้งานเมื่อการประมวลผลเสร็จสมบูรณ์"
+retry = "ลองอีกครั้ง"
+retryHint = "เรียกใช้ไฟล์นี้อีกครั้ง"
+waiting = "อยู่ในคิว"
+waitingHint = "ไฟล์นี้อยู่ในคิวและจะพร้อมใช้งานเมื่อการประมวลผลเสร็จสมบูรณ์"
+
 [filesPage.empty]
 hint = "ปล่อย PDF ลงที่ใดก็ได้ในหน้านี้เพื่ออัปโหลด หรือใช้ปุ่ม โฟลเดอร์ใหม่ เพื่อจัดระเบียบไฟล์ของคุณ."
-newFolderCta = "สร้างโฟลเดอร์"
 title = "โฟลเดอร์นี้ว่างเปล่า"
 uploadCta = "อัปโหลดไฟล์"
 
@@ -4090,10 +4657,6 @@ hint = "อัปโหลดไฟล์เพื่อเริ่มต้น
 offlineHint = "เชื่อมต่อใหม่เพื่อโหลดไลบรารีคลาวด์ของคุณ."
 offlineTitle = "ไม่มีไฟล์คลาวด์ที่แคชไว้"
 title = "ยังไม่มีไฟล์คลาวด์"
-
-[filesPage.empty.local]
-hint = "ไฟล์ที่บันทึกโดยไม่อัปโหลดจะอยู่ที่นี่ ปล่อยไฟล์เพื่อเพิ่ม."
-title = "ไม่มีไฟล์เฉพาะในเครื่อง"
 
 [filesPage.empty.noResults]
 hint = "No files in this folder match your filter. Try a different term or clear the filter."
@@ -4114,6 +4677,8 @@ title = "คุณยังไม่ได้แชร์ไฟล์ใดๆ"
 [filesPage.error]
 actionFailed = "ไม่สามารถ {{action}} ได้."
 actionFailedDetail = "ไม่สามารถ {{action}} ได้: {{message}}"
+addFolderFailed = "ไม่สามารถเพิ่มโฟลเดอร์ได้"
+addFolderFailedDetail = "ไม่สามารถเพิ่มโฟลเดอร์ได้: {{message}}"
 cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
 deleteFolderFailed = "ไม่สามารถลบโฟลเดอร์ได้."
@@ -4126,8 +4691,21 @@ moveFilesFailed = "ไม่สามารถย้ายไฟล์ได้.
 moveFilesFailedDetail = "ไม่สามารถย้ายไฟล์ได้: {{message}}"
 moveFolderFailed = "ไม่สามารถย้ายโฟลเดอร์ได้."
 moveFolderFailedDetail = "ไม่สามารถย้ายโฟลเดอร์ได้: {{message}}"
+openDiskFileFailed = "ไม่สามารถเปิด {{name}} ได้"
+openDiskFileFailedDetail = "ไม่สามารถเปิด {{name}} ได้: {{message}}"
+processingStatusUnavailable = "ไม่สามารถรีเฟรชสถานะการประมวลผลได้ การล็อกไฟล์ถูกปล่อยจนกว่าการเชื่อมต่อจะกลับมา"
+readFolderFailed = "ไม่สามารถอ่านโฟลเดอร์ได้"
+readFolderFailedDetail = "ไม่สามารถอ่านโฟลเดอร์ได้: {{message}}"
 removeFilesFailed = "ไม่สามารถลบไฟล์ได้."
 removeFilesFailedDetail = "ไม่สามารถลบไฟล์ได้: {{message}}"
+removeFolderFailed = "ไม่สามารถลบโฟลเดอร์ได้"
+removeFolderFailedDetail = "ไม่สามารถลบโฟลเดอร์ได้: {{message}}"
+retryFailed = "ไม่สามารถลอง {{name}} อีกครั้งได้"
+retryFailedDetail = "ไม่สามารถลอง {{name}} อีกครั้งได้: {{message}}"
+revertAllFailed = "ไม่สามารถกู้คืนต้นฉบับได้"
+revertAllFailedDetail = "ไม่สามารถกู้คืนต้นฉบับได้: {{message}}"
+revertFailed = "ไม่สามารถกู้คืน {{name}} ได้"
+revertFailedDetail = "ไม่สามารถกู้คืน {{name}} ได้: {{message}}"
 uploadFilesFailed = "ไม่สามารถอัปโหลดไฟล์ได้."
 uploadFilesFailedDetail = "ไม่สามารถอัปโหลดไฟล์ได้: {{message}}"
 
@@ -4147,11 +4725,20 @@ activeCount = "มีตัวกรองที่ใช้งานอยู�
 clearAll = "ล้างตัวกรอง"
 label = "ตัวกรอง"
 
+[filesPage.folderKind]
+local = "โฟลเดอร์ในเครื่อง"
+virtual = "โฟลเดอร์เบราว์เซอร์"
+
 [filesPage.folderName]
 cancel = "ยกเลิก"
 error = "ไม่สามารถบันทึกโฟลเดอร์ได้ โปรดลองอีกครั้ง."
 label = "ชื่อโฟลเดอร์"
 placeholder = "ชื่อโฟลเดอร์"
+
+[filesPage.folderOrigin]
+diskHint = "โฟลเดอร์ที่เมานต์จากไดเรกทอรีบนดิสก์ของคุณ"
+serverHint = "โฟลเดอร์ที่จัดเก็บบนเซิร์ฟเวอร์ Stirling"
+virtualHint = "โฟลเดอร์ที่อยู่เฉพาะในเบราว์เซอร์นี้"
 
 [filesPage.moveDialog]
 cancel = "ยกเลิก"
@@ -4166,14 +4753,45 @@ newFolderPlaceholder = "ชื่อโฟลเดอร์"
 newFolderToggle = "สร้างโฟลเดอร์ใหม่…"
 title = "ย้ายไปยังโฟลเดอร์"
 
+[filesPage.newFolderMenu]
+addExisting = "เพิ่มโฟลเดอร์ในเครื่อง"
+server = "โฟลเดอร์ใหม่บนเซิร์ฟเวอร์"
+serverHint = "ซิงค์กับบัญชีของคุณ ใช้งานได้ทุกที่ที่คุณลงชื่อเข้าใช้"
+
 [filesPage.origin]
 all = "ทุกแหล่งที่มา"
 cloud = "คลาวด์"
 cloudHint = "เก็บไว้บนเซิร์ฟเวอร์ของ Stirling"
+diskFileHint = "จัดเก็บบนคอมพิวเตอร์ของคุณ"
+diskHint = "ไฟล์ในโฟลเดอร์ที่เมานต์บนดิสก์ของคุณ"
 local = "ในเครื่อง"
 localHint = "เก็บไว้เฉพาะในเบราว์เซอร์นี้"
 shared = "แชร์"
 sharedHint = "แชร์กับคุณผ่านลิงก์"
+
+[filesPage.processing]
+active = "กำลังประมวลผลโฟลเดอร์"
+blockedNeedsConnection = "ลงชื่อเข้าใช้ Stirling Cloud หรือเชื่อมต่อเซิร์ฟเวอร์ที่โฮสต์เองเพื่อประมวลผลโฟลเดอร์"
+edit = "แก้ไขการประมวลผล..."
+nothingToRestore = "ไม่มีต้นฉบับให้กู้คืน - ไฟล์เหล่านี้เป็นต้นฉบับอยู่แล้ว"
+paused = "หยุดการประมวลผลชั่วคราว"
+remove = "ลบการประมวลผล"
+restore = "กู้คืนต้นฉบับ"
+restoreAll = "กู้คืนต้นฉบับทั้งหมด"
+resume = "ดำเนินการประมวลผลต่อ"
+revertCancel = "ยกเลิก"
+revertConfirm = "กู้คืนและหยุดชั่วคราว"
+revertConfirmAll = "กู้คืนต้นฉบับทุกไฟล์ในโฟลเดอร์นี้หรือไม่? การประมวลผลจะถูกหยุดชั่วคราว และไฟล์ที่กู้คืนจะแสดงเป็นอยู่ในคิวจนกว่าคุณจะดำเนินการต่อ"
+revertConfirmFile = "กู้คืน \"{{name}}\" เป็นต้นฉบับหรือไม่? การประมวลผลสำหรับโฟลเดอร์นี้จะถูกหยุดชั่วคราว และไฟล์จะแสดงเป็นอยู่ในคิวจนกว่าคุณจะดำเนินการต่อ"
+revertConfirmTitle = "กู้คืนต้นฉบับหรือไม่?"
+section = "การประมวลผล"
+start = "ประมวลผลไฟล์ในโฟลเดอร์นี้..."
+stop = "หยุดการประมวลผลชั่วคราว"
+sweep = "ลองไฟล์ที่ล้มเหลวอีกครั้ง"
+
+[filesPage.processingSetup]
+back = "ย้อนกลับ"
+cancel = "ยกเลิก"
 
 [filesPage.search]
 clear = "Clear filter"
@@ -4193,19 +4811,6 @@ sizeDesc = "ใหญ่สุดก่อน"
 client = "ซิงก์โฟลเดอร์ล้มเหลว."
 network = "ไม่สามารถติดต่อเซิร์ฟเวอร์ได้."
 server = "ข้อผิดพลาดของเซิร์ฟเวอร์ระหว่างซิงก์โฟลเดอร์."
-
-[filesPage.tabName]
-local = "ในเครื่อง"
-recent = "ล่าสุด"
-shared = "ที่แชร์กับฉัน"
-sharedByMe = "ที่ฉันแชร์"
-
-[filesPage.tabs]
-all = "ทั้งหมด"
-ariaLabel = "มุมมองไฟล์"
-recent = "ล่าสุด"
-shared = "ที่แชร์กับฉัน"
-sharedByMe = "ที่ฉันแชร์"
 
 [filesPage.treeMenu]
 actions = "การดำเนินการโฟลเดอร์สำหรับ {{name}}"
@@ -4626,6 +5231,12 @@ desc = "ไฮไลต์ วาด เพิ่มโน้ตและรู�
 tags = "คำอธิบายประกอบ,ไฮไลต์,วาด"
 title = "ใส่คำอธิบายประกอบ"
 
+[home.autoFormDetection]
+desc = "ตรวจจับช่องฟอร์มโดยอัตโนมัติด้วย AI และทำให้ PDF ของคุณกรอกได้"
+tags = "form,detect,fillable,acroform,auto detect,ai,fields,make fillable,form detection"
+title = "การตรวจจับฟอร์มอัตโนมัติ"
+unavailable = "ต้องใช้โมเดลตรวจจับ AI ซึ่งไม่ได้ติดตั้งบนเซิร์ฟเวอร์นี้ ผู้ดูแลระบบสามารถเพิ่มได้ที่ Settings > Features > AI Form Detection"
+
 [home.automate]
 desc = "สร้างเวิร์กโฟลว์หลายขั้นตอนโดยเชื่อมโยงการกระทำ PDF เข้าด้วยกัน เหมาะสำหรับงานที่เกิดซ้ำ"
 tags = "เวิร์กโฟลว์,ลำดับ,ระบบอัตโนมัติ"
@@ -4687,6 +5298,11 @@ title = "บีบอัด"
 desc = "แปลงไฟล์ระหว่างรูปแบบต่างๆ"
 tags = "แปลง,เปลี่ยน"
 title = "แปลง"
+
+[home.createPortfolio]
+desc = "รวมหลายไฟล์เป็น Adobe PDF Portfolio"
+tags = "portfolio,collection,package,bundle,combine files,pdf portfolio,adobe portfolio,pdf collection,container"
+title = "สร้าง Portfolio"
 
 [home.crop]
 desc = "ครอบตัด PDF เพื่อลดขนาด (รักษาข้อความ!)"
@@ -4870,11 +5486,6 @@ desc = "เปลี่ยนขนาด/สเกลของหน้าแ�
 tags = "ปรับขนาด,ปรับ,สเกล"
 title = "ปรับขนาดหน้า"
 
-[home.scannerEffect]
-desc = "สร้าง PDF ที่ดูเหมือนถูกสแกน"
-tags = "สแกน,จำลอง,สร้าง"
-title = "โหมดสแกน"
-
 [home.scannerImageSplit]
 desc = "ตรวจจับและแยกรูปถ่ายที่สแกนออกเป็นหน้าที่แยกกัน"
 tags = "ตรวจจับ,แยก,รูปถ่าย"
@@ -4987,6 +5598,26 @@ uploadFromComputer = "อัปโหลดจากคอมพิวเตอ�
 [language]
 direction = "ltr"
 
+[legacyBilling]
+currentTeamAllowance = "สิทธิ์การใช้งานปัจจุบันสำหรับทีม legacy ของคุณ"
+loadError = "เราไม่สามารถตรวจสอบการสมัครใช้งานที่มีอยู่ของคุณได้ ลองอีกครั้งก่อนซื้อแผนอื่น"
+loading = "กำลังตรวจสอบการสมัครใช้งานของคุณ..."
+portalError = "เราไม่สามารถเปิดการเรียกเก็บเงิน Stripe ได้ โปรดลองอีกครั้ง"
+pro = "Pro (legacy)"
+retry = "ลองอีกครั้ง"
+team = "Team (legacy)"
+teamUsers = "ทีมของคุณ: {{used}} จาก {{limit}} ผู้ใช้"
+unlimitedUsers = "ทีมของคุณ: ผู้ใช้ไม่จำกัด (ใช้งานอยู่ {{used}})"
+usersUnavailable = "เราไม่สามารถยืนยันสิทธิ์จำนวนผู้ใช้ของทีมคุณได้ ติดต่อฝ่ายสนับสนุนเพื่อตรวจสอบแผน legacy ของคุณ"
+
+[legacyBilling.status]
+active = "ใช้งานอยู่"
+incomplete = "รอการชำระเงิน"
+past_due = "ค้างชำระ"
+paused = "หยุดชั่วคราว"
+trialing = "ทดลองใช้"
+unpaid = "ยังไม่ได้ชำระ"
+
 [legal]
 accessibility = "ความเข้าถึง"
 cookie = "นโยบายคุกกี้"
@@ -5000,6 +5631,7 @@ terms = "ข้อกำหนดการใช้งาน"
 title = "ใบอนุญาตบุคคลที่สาม"
 
 [localMode]
+automationUnavailable = "ลงชื่อเข้าใช้ Stirling Cloud หรือเซิร์ฟเวอร์ที่โฮสต์เองเพื่อใช้โฟลเดอร์การประมวลผลและ pipelines"
 toolUnavailable = "เครื่องมือนี้ต้องมีบัญชี ลงชื่อเข้าใช้ Stirling Cloud หรือเชื่อมต่อกับเซิร์ฟเวอร์ที่โฮสต์เองเพื่อใช้งาน"
 
 [localMode.toolPicker]
@@ -5047,7 +5679,6 @@ unexpectedError = "ข้อผิดพลาดที่ไม่คาดค�
 updatePassword = "อัปเดตรหัสผ่าน"
 useMagicLink = "ใช้ Magic Link แทน"
 username = "ชื่อผู้ใช้"
-youAreLoggedIn = "คุณได้เข้าสู่ระบบแล้ว!"
 
 [margin]
 large = "ใหญ่"
@@ -5097,39 +5728,45 @@ sort = "เรียงลำดับ"
 title = "ภาพรวมการตั้งค่าการรวม"
 
 [mobileScanner]
-addToBatch = "เพิ่มไปยังชุด"
+addMore = "เพิ่มอีก"
 back = "ย้อนกลับ"
-batchImages = "ชุด"
 camera = "กล้อง"
 cameraAccessDenied = "ถูกปฏิเสธการเข้าถึงกล้อง โปรดเปิดการเข้าถึงกล้อง"
 cameraDescription = "สแกนเอกสารด้วยกล้องอุปกรณ์ของคุณ พร้อมตรวจจับขอบอัตโนมัติ"
 capture = "ถ่ายภาพ"
 chooseMethod = "เลือกวิธีการอัปโหลด"
 chooseMethodDescription = "เลือกวิธีที่คุณต้องการสแกนและอัปโหลดเอกสาร"
-clearBatch = "ล้าง"
+clearAll = "ล้างทั้งหมด"
+closeTabHint = "คุณสามารถปิดแท็บนี้ได้แล้ว"
+dismiss = "ปิด"
 edgeDetection = "การตรวจจับขอบ"
 fileDescription = "อัปโหลดรูปภาพหรือเอกสารที่มีอยู่จากอุปกรณ์ของคุณ"
+fileReadFailed = "ไม่สามารถอ่านไฟล์นั้นได้"
 fileUpload = "อัปโหลดไฟล์"
-flash = "แฟลช"
 flashlight = "ไฟฉาย"
 httpsRequired = "การเข้าถึงกล้องต้องใช้ HTTPS หรือ localhost โปรดใช้ HTTPS หรือเข้าผ่าน localhost"
-noSession = "เซสชันไม่ถูกต้อง"
+imageCount_one = "{{count}} รูปภาพ"
+imageCount_other = "{{count}} รูปภาพ"
+imagePosition = "รูปภาพ {{index}} จาก {{total}}"
+invalidFileType = "โปรดเลือกไฟล์รูปภาพ"
 noSessionMessage = "โปรดสแกนรหัส QR ที่ถูกต้องเพื่อเข้าถึงหน้านี้"
 processing = "กำลังประมวลผล..."
+remove = "ลบ"
 retake = "ถ่ายใหม่"
+scanAnother = "สแกนอีกไฟล์"
 selectFilesPrompt = "เลือกไฟล์เพื่ออัปโหลด"
-selectImage = "เลือกรูปภาพ"
+selectImages = "เลือกรูปภาพ"
 sessionExpired = "เซสชันนี้หมดอายุแล้ว โปรดรีเฟรชและลองอีกครั้ง"
 sessionInvalid = "ข้อผิดพลาดของเซสชัน"
 sessionNotFound = "ไม่พบเซสชัน โปรดรีเฟรชและลองอีกครั้ง"
 sessionValidationError = "ไม่สามารถยืนยันเซสชันได้ โปรดลองอีกครั้ง"
+startingCamera = "กำลังเริ่มกล้อง…"
 title = "สแกนเนอร์มือถือ"
-upload = "อัปโหลด"
-uploadAll = "อัปโหลดทั้งหมด"
 uploadFailed = "อัปโหลดไม่สำเร็จ โปรดลองอีกครั้ง"
 uploading = "กำลังอัปโหลด..."
 uploadSuccess = "อัปโหลดสำเร็จ!"
 uploadSuccessMessage = "ถ่ายโอนรูปภาพของคุณเรียบร้อยแล้ว"
+uploadWithCount = "อัปโหลด ({{total}})"
 validating = "กำลังตรวจสอบเซสชัน..."
 
 [mobileSign]
@@ -5187,24 +5824,31 @@ count = "{{remaining}} of {{total}}"
 label = "Free credits"
 
 [notifications]
+adoptFailed = "ปลดล็อกเอกสารแล้วแต่ไม่สามารถเปิดที่นี่ได้ ลองใช้เครื่องมือโดยตรง"
 empty = "ไม่มีอะไรต้องรายงาน"
 handoffUnavailable = "เบราว์เซอร์นี้ไม่อนุญาตให้ตัวประมวลผลส่งเอกสารไปยังตัวแก้ไข โปรดเปิดจากตัวแก้ไขแทน"
 noDocumentLinked = "ความล้มเหลวนี้ไม่ได้เชื่อมโยงกับเอกสารเฉพาะ จึงไม่มีอะไรให้เปิดที่นี่"
 notOnThisDevice = "เอกสารนี้ไม่ได้อยู่บนอุปกรณ์นี้ จึงไม่สามารถเปิดที่นี่ได้"
 occurrences = "{{count}} ครั้ง"
 open = "การแจ้งเตือน"
+repairAdoptFailed = "ซ่อมแซมเอกสารแล้วแต่ไม่สามารถเปิดที่นี่ได้ ลองใช้เครื่องมือ Repair โดยตรง"
+repairedNotRerun = "ซ่อมแซมเอกสารและเปิดที่นี่แล้ว แต่ไม่สามารถเรียกใช้นโยบายกับเอกสารนี้อีกครั้งได้"
+repairedRerunNotAdopted = "เอกสารที่ซ่อมแซมดำเนินการสำเร็จ แต่ไม่สามารถเปิดผลลัพธ์ที่นี่ได้"
+repairedRerunUndelivered = "เอกสารได้รับการซ่อมแซมและเริ่มเรียกใช้นโยบายอีกครั้งแล้ว แต่ไม่สามารถส่งผลลัพธ์มาที่นี่ได้ ดังนั้นข้อผิดพลาดนี้จึงยังคงเปิดอยู่"
+rerunRejected = "ไม่สามารถเรียกใช้นโยบายอีกครั้งได้ในตอนนี้ ลองอีกครั้งในอีกสักครู่"
+rerunUndelivered = "เริ่มเรียกใช้นโยบายอีกครั้งแล้ว แต่ไม่สามารถส่งผลลัพธ์มาที่นี่ได้ ดังนั้นข้อผิดพลาดนี้จึงยังคงเปิดอยู่"
+retryUnavailable = "ไม่สามารถลองเอกสารนี้อีกครั้งจากเบราว์เซอร์นี้ได้อีกต่อไป"
 title = "การแจ้งเตือน"
+unlockedNotRerun = "ปลดล็อกเอกสารและเปิดที่นี่แล้ว แต่ไม่สามารถเรียกใช้นโยบายกับเอกสารนี้อีกครั้งได้"
+unlockedRerunUndelivered = "ปลดล็อกเอกสารและเริ่มเรียกใช้นโยบายอีกครั้งแล้ว แต่ไม่สามารถส่งผลลัพธ์มาที่นี่ได้ ดังนั้นข้อผิดพลาดนี้จึงยังคงเปิดอยู่"
 unread = "ยังไม่ได้อ่าน"
 
 [notifications.action]
+copiedLog = "คัดลอกแล้ว"
+copyLog = "คัดลอกบันทึก"
 failed = "ไม่สำเร็จ โปรดลองอีกครั้งในอีกสักครู่"
+more = "ตัวเลือกเพิ่มเติม"
 unavailable = "ไม่พร้อมใช้งานสำหรับการแจ้งเตือนนี้"
-
-[notifications.detail]
-copied = "คัดลอกแล้ว"
-copy = "คัดลอกข้อผิดพลาด"
-less = "แสดงน้อยลง"
-more = "แสดงข้อความทั้งหมด"
 
 [notifications.section]
 earlier = "ก่อนหน้านี้"
@@ -5355,7 +5999,9 @@ wrapUp = "เสร็จเรียบร้อย! คุณได้เร�
 
 [onboarding.buttons]
 back = "ย้อนกลับ"
+continue = "ดำเนินการต่อ"
 download = "ดาวน์โหลด →"
+getStarted = "เริ่มต้นใช้งาน"
 next = "ถัดไป →"
 showMeAround = "พาชมรอบๆ"
 skipForNow = "ข้ามไปก่อน"
@@ -5386,6 +6032,11 @@ body = "Stirling ใช้งานได้ดีที่สุดแบบแ
 selectOs = "เลือกระบบปฏิบัติการ"
 title = "ดาวน์โหลด"
 titleWithOs = "ดาวน์โหลดสำหรับ {{osLabel}}"
+
+[onboarding.desktopWelcome]
+body = "มีการเปลี่ยนแปลงใหม่มากมายให้สำรวจ รวมถึง <strong>Agent Chat</strong>, การ<strong>จัดประเภท</strong>เอกสารอัตโนมัติ และอื่นๆ"
+freeLine = "ตอนนี้ตัวแก้ไข<free>ฟรีทั้งหมด</free>"
+title = "ยินดีต้อนรับสู่ Stirling <product>Desktop</product>"
 
 [onboarding.mfa]
 authenticationCode = "รหัสยืนยันตัวตน"
@@ -5736,7 +6387,7 @@ noKey = "VITE_STRIPE_PUBLISHABLE_KEY is unset. Real iframe mounts here once conf
 title = "Stripe Embedded Checkout (mock mode)"
 
 [payg.confirm]
-body = "Your team can now run automation, AI, and API operations beyond your 500 free PDFs."
+bodyWithAllowance = "ตอนนี้ทีมของคุณสามารถเรียกใช้งาน automation, AI และ API ได้เกิน {{limit}} PDF ฟรีของคุณ"
 capValue = "{{symbol}}{{amount}} / month"
 noCap = "No cap"
 note = "You can change your cap, cancel, or open the Stripe customer portal any time from this page."
@@ -5763,7 +6414,7 @@ benefit3Body = "call any Stirling endpoint programmatically"
 benefit3Title = "API access"
 button = "Turn on Processor →"
 reassurance = "No minimum · Set a $0 cap to test · Cancel anytime"
-subtitle = "Keep going past your 500 free PDFs with automation, AI, and the API. Set a monthly ceiling, so you stay in control."
+subtitleWithAllowance = "ใช้งานต่อเกิน {{limit}} PDF ฟรีของคุณด้วย automation, AI และ API ตั้งเพดานรายเดือนเพื่อให้คุณควบคุมได้"
 title = "Turn on the Processor plan"
 
 [payg.free.editor]
@@ -5841,17 +6492,16 @@ leader = "Team owner"
 member = "Member"
 
 [payg.signupRequired]
-body = "Stirling PDF gives every signed-up account 500 free operations, enough to keep most workflows humming without paying a cent. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing."
-cancel = "Not now"
-cta = "Sign up free"
-subtext = "Creating an account is free and takes a few seconds. No credit card required."
-title = "Sign up to use {{category}}"
-
-[payg.signupRequired.category]
-ai = "AI features"
-api = "this tool"
-automation = "automations"
-default = "this feature"
+aiPromo = "สร้าง แก้ไข และถามเกี่ยวกับ PDF ด้วย AI"
+apiPromo = "เชื่อมต่อแอปและผู้ช่วย AI ของคุณ"
+automationPromo = "ทำงาน PDF ที่ซ้ำๆ ให้เป็นอัตโนมัติ"
+createAccount = "สร้างบัญชีฟรี"
+editorLabel = "PDF Editor"
+login = "เข้าสู่ระบบ"
+manualToolsPromo = "เครื่องมือ PDF แบบใช้เองฟรีไม่จำกัด"
+processorLabel = "PDF Processor"
+processorTitle = "สร้างบัญชีเพื่อปลดล็อกสิ่งที่ดีที่สุดของ Stirling"
+readerLabel = "PDF Reader"
 
 [payg.spendCapMeter]
 barAria = "Spend against cap"
@@ -5902,7 +6552,7 @@ apiBody = "programmatic access to any Stirling endpoint"
 apiTitle = "API calls"
 automationBody = "chained tools or scheduled runs that don't need clicks"
 automationTitle = "Automation pipelines"
-footnote = "Manual tools (viewing, editing, merging, splitting, watermarking, compressing, manual OCR) are always free, even past 500. The distinction is the type of work, not where you click."
+footnoteUnlimited = "เครื่องมือแบบใช้เอง (การดู การแก้ไข การผสาน การแยก การใส่ลายน้ำ การบีบอัด manual OCR) ใช้งานได้ฟรีเสมอ แม้หลังจากใช้เครดิตที่รวมไว้หมดแล้ว ความแตกต่างคือประเภทของงาน ไม่ใช่ตำแหน่งที่คุณคลิก"
 title = "What we count toward billing"
 
 [payg.upgrade.promise]
@@ -5930,6 +6580,8 @@ resetsTomorrow = "Resets tomorrow"
 thisPeriod = "This billing period"
 
 [payment]
+billingPeriod = "รอบการเรียกเก็บเงิน"
+cancelTeamChange = "ใช้แผนปัจจุบันต่อ"
 canCloseWindow = "คุณสามารถปิดหน้าต่างนี้ได้แล้ว"
 error = "ข้อผิดพลาดในการชำระเงิน"
 generatingLicense = "กำลังสร้าง license key ของคุณ..."
@@ -5941,27 +6593,65 @@ licenseKey = "License Key ของคุณ"
 licensePollingError = "ชำระเงินสำเร็จแต่ไม่สามารถดึง license key อัตโนมัติ โปรดตรวจสอบอีเมลของคุณหรือ ติดต่อฝ่ายสนับสนุนพร้อมหลักฐานการชำระเงิน"
 licenseRetrievalError = "ชำระเงินสำเร็จแต่ดึงไลเซนส์ไม่สำเร็จ คุณจะได้รับ license key ทางอีเมล โปรดติดต่อฝ่ายสนับสนุนหากไม่ถึงภายใน 10 นาที"
 licenseSaveError = "บันทึก license key ไม่สำเร็จ โปรดติดต่อฝ่ายสนับสนุนพร้อม license key ของคุณเพื่อทำการเปิดใช้ให้เสร็จสมบูรณ์"
+manageSubscription = "จัดการการสมัครใช้งาน"
 monthly = "รายเดือน"
 paymentCanceled = "ยกเลิกการชำระเงินแล้ว จะไม่มีการเรียกเก็บเงิน"
 perMonth = "/เดือน"
+perUserBlock = "ต่อ 100 ผู้ใช้"
 preparing = "กำลังเตรียมหน้าชำระเงินของคุณ..."
 redirecting = "กำลังเปลี่ยนเส้นทางไปยังการชำระเงินที่ปลอดภัย..."
 success = "ชำระเงินสำเร็จ!"
 successMessage = "การสมัครสมาชิกของคุณเปิดใช้งานเรียบร้อยแล้ว คุณจะได้รับอีเมลยืนยันในไม่ช้า"
 syncError = "ชำระเงินสำเร็จแต่ซิงค์ไลเซนส์ล้มเหลว ไลเซนส์ของคุณจะอัปเดตในไม่ช้า โปรดติดต่อฝ่ายสนับสนุนหากปัญหายังคงอยู่"
 syncingLicense = "กำลังซิงค์ไลเซนส์ที่อัปเกรดของคุณ..."
+teamActivated = "ความจุ Team ของคุณใช้งานอยู่"
+teamActivating = "กำลังยืนยันความจุ Team ของคุณ..."
+teamChangeCurrent = "สิทธิ์การใช้งานปัจจุบันของคุณยังคงใช้ได้จนถึงตอนนั้น ใช้แผนปัจจุบันต่อเพื่อยกเลิกการเปลี่ยนแปลงนี้ก่อนปรับเปลี่ยนอีกครั้ง"
+teamChangePending = "{{users}} ผู้ใช้ · {{period}} ตั้งแต่ {{date}}"
+teamChangeSupport = "การสมัครใช้งาน Team ของคุณมีการเปลี่ยนแปลงที่กำหนดเวลาไว้ซึ่งต้องให้ฝ่ายสนับสนุนการเรียกเก็บเงินปรับเปลี่ยน"
+teamChangeUnavailable = "ไม่สามารถโหลดการเปลี่ยนแปลง Team ที่กำหนดเวลาไว้ได้ รีเฟรชเพื่อลองอีกครั้ง"
+teamPending = "การซื้อ Team ของคุณยังอยู่ระหว่างการประมวลผล รีเฟรชหน้านี้ในอีกสักครู่"
+teamProcessing = "กำลังประมวลผลการซื้อ Team"
+teamScheduled = "การเปลี่ยนแปลง Team ของคุณมีกำหนดในวันที่ {{date}} ความจุปัจจุบันของคุณยังคงใช้งานได้จนถึงตอนนั้น"
 upgradeComplete = "อัปเกรดเสร็จสิ้น"
 upgradeCompleteMessage = "การสมัครของคุณอัปเกรดเรียบร้อยแล้ว และได้อัปเดต license key เดิมของคุณแล้ว"
 upgradeSuccess = "ชำระเงินสำเร็จ! การสมัครของคุณได้รับการอัปเกรดแล้ว ไลเซนส์บนเซิร์ฟเวอร์ของคุณถูกอัปเดตแล้ว คุณจะได้รับอีเมลยืนยันในไม่ช้า"
 upgradeTitle = "อัปเกรดเป็น {{planName}}"
 yearly = "รายปี"
 
+[payment.adjustTeam]
+title = "ปรับแผน Team"
+
+[payment.capacityStage]
+adjustmentNote = "Stripe จะแสดงยอดเรียกเก็บที่แน่นอน การคิดตามสัดส่วน และวันที่เรียกเก็บเงินครั้งถัดไปก่อนที่คุณจะยืนยัน ระบบจะใช้วิธีชำระเงินที่บันทึกไว้หากมี"
+continue = "ดำเนินการต่อไปยังการชำระเงิน"
+customLabel = "จำนวนผู้ใช้"
+dueToday = "ชำระวันนี้"
+enterpriseQuote = "ขอใบเสนอราคาระดับองค์กร"
+lineItem = "Team · {{price}}{{period}} ต่อ {{block}} ผู้ใช้"
+minimumForCurrentUsers = "คุณมีผู้ใช้ {{users}} คน ดังนั้นแผนต้องครอบคลุมอย่างน้อย {{minimum}} คน"
+modalTitle = "อัปเกรดเป็น {{planName}}"
+newPlanTotal = "ยอดรวมแผนใหม่"
+other = "อื่นๆ"
+overCapacityBody = "มีผู้ใช้ {{users}} คนบนเซิร์ฟเวอร์นี้ สิทธิ์ปัจจุบันของคุณคือ {{limit}} เลือกแผน Team ด้านล่างเพื่อครอบคลุมทุกคน"
+overCapacityConsequence = "บัญชีที่มีอยู่จะยังคงอยู่ การเพิ่มหรือเชิญผู้ใช้จะถูกบล็อกจนกว่าคุณจะเพิ่มความจุหรือปล่อยที่นั่งว่าง"
+overCapacityTitle = "เซิร์ฟเวอร์ของคุณมีผู้ใช้มากกว่าที่แผนครอบคลุม"
+perMonth = "/เดือน"
+perYear = "/ปี"
+reductionNote = "ความจุที่ลดลงจะเริ่มในรอบต่ออายุถัดไปของคุณ จนถึงตอนนั้น คุณสามารถใช้สิทธิ์ปัจจุบันได้ ผู้ใช้ที่มีอยู่จะยังคงอยู่ ผู้ใช้ใหม่จะถูกบล็อกหากคุณเกินความจุเมื่อการเปลี่ยนแปลงมีผล"
+renewalNote = "ต่ออายุที่ {{total}}{{period}} ยกเลิกได้ทุกเมื่อใน Usage & Billing"
+reviewChange = "ตรวจสอบการเปลี่ยนแปลงใน Stripe"
+roundsTo = "ปัดเป็น {{users}} ผู้ใช้"
+subheading = "ครอบคลุมทุกคนที่คุณเชิญ เป็นบล็อกละ {{users}} ผู้ใช้"
+subheadingAdd = "แผนของคุณครอบคลุม {{current}} ผู้ใช้ในวันนี้ เลือกยอดรวมใหม่"
+usersLabel = "ผู้ใช้"
+userTotal = "{{users}} ผู้ใช้"
+
 [payment.emailStage]
 continue = "ดำเนินการต่อ"
 description = "เราจะใช้สำหรับส่ง license key และใบเสร็จ"
 emailLabel = "ที่อยู่อีเมล"
 emailPlaceholder = "your@email.com"
-modalTitle = "เริ่มต้น - {{planName}}"
 
 [payment.paymentStage]
 modalTitle = "ชำระเงินให้เสร็จ - {{planName}}"
@@ -5971,8 +6661,13 @@ billedYearly = "เรียกเก็บปีละ {{currency}}{{amount}}"
 modalTitle = "เลือกรอบบิล - {{planName}}"
 savePercent = "ประหยัด {{percent}}%"
 savingsAmount = "คุณประหยัด {{amount}}"
+selectedMonthly = "รายเดือน"
+selectedYearly = "รายปี"
 selectMonthly = "เลือกแบบรายเดือน"
 selectYearly = "เลือกแบบรายปี"
+
+[payment.upgradeTeam]
+title = "อัปเกรดเป็น Team"
 
 [pdfCommentAgent]
 submit = "สร้างความคิดเห็น"
@@ -6025,99 +6720,271 @@ REVERSE_ORDER = "พลิกเอกสารให้หน้าสุดท
 SIDE_STITCH_BOOKLET_SORT = "จัดเรียงหน้าสำหรับพิมพ์แบบสมุดเย็บข้าง (ปรับให้เหมาะกับการเข้าเล่มด้านข้าง)"
 
 [pdfTextEditor]
-conversionFailed = "แปลง PDF ไม่สำเร็จ โปรดลองอีกครั้ง"
-converting = "กำลังแปลง PDF เป็นรูปแบบที่แก้ไขได้..."
-currentFile = "ไฟล์ปัจจุบัน: {{name}}"
-imageLabel = "รูปภาพที่วางแล้ว"
-noTextOnPage = "ไม่พบข้อความที่แก้ไขได้ในหน้านี้"
-pagePreviewAlt = "ภาพตัวอย่างหน้า"
-pageSummary = "หน้า {{number}} จาก {{total}}"
+download = "ดาวน์โหลด"
+downloadTooltip = "บันทึกและดาวน์โหลด PDF ที่แก้ไขแล้ว"
+save = "บันทึก PDF"
+saveTooltip = "ใช้การเปลี่ยนแปลงกับไฟล์ในพื้นที่ทำงานของคุณ ({{shortcut}})"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "ตัวแก้ไข PDF JSON"
-viewLabel = "ตัวแก้ไข PDF"
+unsaved = "(ยังไม่ได้บันทึก)"
+workbenchLabel = "ตัวแก้ไข"
 
-[pdfTextEditor.actions]
-applyChanges = "ใช้การเปลี่ยนแปลง"
-clearText = "ล้างข้อความ"
-downloadCopy = "ดาวน์โหลดสำเนา"
-moreOptions = "ตัวเลือกเพิ่มเติม"
-reset = "รีเซ็ตการเปลี่ยนแปลง"
+[pdfTextEditor.annotations]
+freetext = "ข้อความคำอธิบายประกอบ - ไม่ใช่ข้อความบนหน้า จึงแก้ไขที่นี่ไม่ได้"
+stamp = "คำอธิบายประกอบแบบตราประทับ - ไม่ใช่ข้อความบนหน้า จึงแก้ไขที่นี่ไม่ได้"
+widget = "ช่องฟอร์ม - ไม่ใช่ข้อความบนหน้า จึงแก้ไขที่นี่ไม่ได้"
 
-[pdfTextEditor.badges]
-earlyAccess = "เข้าถึงล่วงหน้า"
-modified = "แก้ไขแล้ว"
-
-[pdfTextEditor.empty]
-dropzone = "ลากและวางไฟล์ PDF หรือ JSON ที่นี่ หรือคลิกเพื่อเรียกดู"
-dropzoneWithFiles = "เลือกไฟล์จากแท็บไฟล์ หรือลากและวางไฟล์ PDF หรือ JSON ที่นี่ หรือคลิกเพื่อเรียกดู"
-title = "ยังไม่ได้โหลดเอกสาร"
-
-[pdfTextEditor.errors]
-invalidJson = "ไม่สามารถอ่านไฟล์ JSON โปรดตรวจสอบว่าไฟล์ถูกสร้างโดยเครื่องมือ PDF to JSON"
-pdfConversion = "ไม่สามารถแปลง JSON ที่แก้ไขกลับเป็น PDF"
-
-[pdfTextEditor.fontAnalysis]
-allFonts = "ฟอนต์ทั้งหมด"
-currentPageFonts = "ฟอนต์บนหน้านี้"
-details = "รายละเอียดฟอนต์"
-embedded = "ฝังไว้"
-fallback = "fallback"
-infoMessage = "มีข้อมูลการทำซ้ำฟอนต์"
-missing = "หายไป"
-perfect = "สมบูรณ์แบบ"
-perfectMessage = "สามารถทำซ้ำฟอนต์ทั้งหมดได้อย่างสมบูรณ์แบบ"
-subset = "subset"
-suggestions = "หมายเหตุ"
-type = "ประเภท"
-warningMessage = "บางฟอนต์อาจแสดงผลไม่ถูกต้อง"
-warnings = "คำเตือน"
-webFormat = "รูปแบบเว็บ"
-
-[pdfTextEditor.groupingMode]
-auto = "อัตโนมัติ"
-paragraph = "ย่อหน้า"
-singleLine = "บรรทัดเดียว"
-
-[pdfTextEditor.manual]
-expandWidth = "ขยายถึงขอบหน้า"
-merge = "รวมที่เลือก"
-mergeTooltip = "รวมกล่องที่เลือก"
-resetWidth = "รีเซ็ตความกว้าง"
-resizeHandle = "ปรับความกว้างข้อความ"
-ungroup = "ยกเลิกการจัดกลุ่มที่เลือก"
-ungroupTooltip = "แยกย่อหน้าเป็นบรรทัด"
-widthMenu = "ตัวเลือกความกว้าง"
-
-[pdfTextEditor.modeChange]
+[pdfTextEditor.discard]
+body = "การเปิด {{name}} จะปิดเอกสารที่คุณกำลังแก้ไข การเปลี่ยนแปลงที่ยังไม่ได้บันทึกจะสูญหาย"
 cancel = "ยกเลิก"
-confirm = "รีเซ็ตและเปลี่ยนโหมด"
-title = "ยืนยันการเปลี่ยนโหมด"
-warning = "การเปลี่ยนโหมดจัดกลุ่มข้อความจะรีเซ็ตการเปลี่ยนแปลงที่ยังไม่บันทึกทั้งหมด คุณแน่ใจหรือไม่ว่าต้องการดำเนินการต่อ?"
+confirm = "ละทิ้งและเปิด"
+hint = "ยกเลิก แล้วบันทึก PDF เพื่อเก็บไว้ในพื้นที่ทำงานของคุณก่อน"
+title = "ละทิ้งการเปลี่ยนแปลงที่ยังไม่ได้บันทึกหรือไม่?"
 
-[pdfTextEditor.options.advanced]
-title = "การตั้งค่าขั้นสูง"
+[pdfTextEditor.drop]
+hint = "การปล่อยบนพื้นที่ตัวแก้ไขจะแทนที่เอกสารที่เปิดอยู่"
+title = "วาง PDF เพื่อเปิด"
 
-[pdfTextEditor.options.autoScaleText]
-description = "ปรับข้อความในแนวนอนอัตโนมัติให้พอดีกับกรอบขอบเขตเดิมเมื่อการเรนเดอร์ฟอนต์ต่างจากใน PDF"
-title = "ปรับขนาดข้อความอัตโนมัติให้พอดีกล่อง"
+[pdfTextEditor.error]
+decodeImage = "ไม่สามารถถอดรหัสรูปภาพที่เลือกได้"
+insertImage = "ไม่สามารถแทรกรูปภาพที่เลือกได้"
 
-[pdfTextEditor.options.forceSingleElement]
-description = "เมื่อเปิดใช้ เครื่องมือจะส่งออกแต่ละกล่องข้อความที่แก้ไขเป็นองค์ประกอบข้อความ PDF เดียว เพื่อหลีกเลี่ยงอักขระซ้อนทับหรือฟอนต์ปะปน"
-title = "ล็อกข้อความที่แก้ไขเป็นองค์ประกอบ PDF เดียว"
+[pdfTextEditor.find]
+close = "ปิดแถบค้นหา"
+count = "{{current}} จาก {{total}}"
+findPlaceholder = "ค้นหา"
+ignoreAccents = "ไม่สนใจเครื่องหมายกำกับเสียง"
+matchCase = "ตรงตามตัวพิมพ์ใหญ่เล็ก"
+next = "รายการที่ตรงกันถัดไป"
+noMatches = "ไม่พบรายการที่ตรงกัน"
+previous = "รายการที่ตรงกันก่อนหน้า"
+replace = "แทนที่"
+replaceAll = "แทนที่ทั้งหมด"
+replaced = "แทนที่แล้ว {{count}} รายการ"
+replacePlaceholder = "แทนที่ด้วย"
+wholeWord = "ทั้งคำ"
 
-[pdfTextEditor.options.groupingMode]
-autoDescription = "ตรวจจับประเภทหน้าอัตโนมัติและจัดกลุ่มข้อความให้เหมาะสม"
-paragraphDescription = "จัดกลุ่มบรรทัดที่จัดแนวเป็นกล่องข้อความย่อหน้าหลายบรรทัด"
-singleLineDescription = "คงแต่ละบรรทัดข้อความใน PDF เป็นกล่องข้อความแยกกัน"
-title = "โหมดจัดกลุ่มข้อความ"
+[pdfTextEditor.fontPicker]
+builtInGroup = "ฟอนต์ในตัว"
+deviceFontsNone = "ไม่พบฟอนต์อุปกรณ์เพิ่มเติม"
+deviceFontsUnavailable = "ฟอนต์อุปกรณ์ไม่พร้อมใช้งาน ฟอนต์ในตัวยังคงใช้ได้"
+deviceGroup = "ฟอนต์อุปกรณ์"
+documentGroup = "ฟอนต์เอกสาร"
+label = "ตระกูลฟอนต์"
+mixed = "ผสม"
+noMatch = "ไม่พบฟอนต์ที่ตรงกัน"
+placeholder = "ตระกูลฟอนต์"
+useDeviceFonts = "ใช้ฟอนต์อุปกรณ์"
 
-[pdfTextEditor.pageType]
-paragraph = "หน้าแบบย่อหน้า"
-sparse = "ข้อความกระจัดกระจาย"
+[pdfTextEditor.fonts]
+allPresent = "มีตัวอักษรและตัวเลขทั้งหมด"
+missing = "ขาด: {{glyphs}}"
+title = "ฟอนต์"
 
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
+[pdfTextEditor.fonts.compat]
+info = "การแก้ไขข้อความที่มีอยู่ทำได้อย่างสมบูรณ์ อักขระใหม่ที่ฟอนต์ฝังตัวไม่มีจะใช้ฟอนต์มาตรฐานแทน"
+ok = "ฟอนต์ทุกตัวมีตัวอักษรและตัวเลขครบถ้วน - พิมพ์ได้อย่างอิสระ"
+warnOther = "ฟอนต์ {{count}} ตัวขาดตัวอักษรหรือตัวเลขบางตัว - การพิมพ์อักขระเหล่านั้นจะใช้ฟอนต์มาตรฐานแทน"
+
+[pdfTextEditor.fonts.pill]
+info = "ฝังตัว"
+ok = "glyphs ทั้งหมด"
+warn = "{{count}} มีช่องว่าง"
+
+[pdfTextEditor.fonts.status.embedded]
+label = "ฝังตัว"
+
+[pdfTextEditor.fonts.status.standard]
+label = "มาตรฐาน"
+
+[pdfTextEditor.fonts.status.subset]
+label = "ชุดย่อย"
+
+[pdfTextEditor.help]
+ariaLabel = "แป้นพิมพ์ลัด"
+title = "แป้นพิมพ์ลัด"
+tooltip = "แป้นพิมพ์ลัด (?)"
+
+[pdfTextEditor.help.clipboard]
+copyDesc = "คัดลอกข้อความที่เลือก"
+cutDesc = "ตัดรายการที่เลือก (คัดลอก + ลบ)"
+heading = "คลิปบอร์ด"
+pasteDesc = "วางข้อความคลิปบอร์ดเป็น run ใหม่"
+pastePlainDesc = "วางเป็นข้อความธรรมดา"
+
+[pdfTextEditor.help.document]
+escDesc = "ล้างการเลือก / ปิดการค้นหา / ปิดวิธีใช้"
+heading = "เอกสาร"
+helpDesc = "วิธีใช้นี้"
+saveDesc = "บันทึกไปยังพื้นที่ทำงานของคุณ"
+
+[pdfTextEditor.help.editing]
+deleteDesc = "ลบรายการที่เลือก"
+duplicateDesc = "ทำซ้ำรายการที่เลือก"
+groupDesc = "จัดกลุ่ม runs ที่เลือกเป็นหนึ่งย่อหน้า"
+heading = "การแก้ไข"
+marqueeDesc = "เลือกหลายรายการแบบลากกรอบ"
+moveDesc = "ย้าย text run"
+selectAllDesc = "เลือกทั้งหมด"
+shiftClickDesc = "เพิ่ม / ลบ run จากการเลือก"
+undoRedoDesc = "เลิกทำ / ทำซ้ำ"
+
+[pdfTextEditor.help.find]
+heading = "ค้นหาและแทนที่"
+nextDesc = "รายการที่ตรงกันถัดไป (เพิ่ม Shift สำหรับก่อนหน้า)"
+openDesc = "เปิดแถบค้นหา (และแทนที่)"
+
+[pdfTextEditor.help.navigation]
+firstLastDesc = "หน้าแรก / หน้าสุดท้าย"
+heading = "การนำทาง"
+pageDesc = "หน้าก่อนหน้า / หน้าถัดไป"
+zoomDesc = "ซูมเข้า / ออก"
+
+[pdfTextEditor.inspector]
+document = "เอกสาร"
+fontEmbedded = "ฟอนต์ฝังตัว · อักขระที่ไม่มีจะใช้ Helvetica แทน"
+fontGap = "{{name}} · ขาด {{glyphs}} - การพิมพ์อักขระเหล่านั้นจะใช้ Helvetica แทน"
+geometry = "ตำแหน่งและขนาด"
+height = "ความสูง"
+heightHint = "ความสูงของกล่องข้อความเป็นไปตามขนาดตัวอักษรและจำนวนบรรทัด"
+image = "รูปภาพ"
+images = "รูปภาพ"
+manyImages = "{{count}} รูปภาพ"
+manyText = "ข้อความ · {{count}} กล่อง"
+mixed = "{{count}} วัตถุ"
+multiGeometry = "เลือกวัตถุเดียวเพื่อแก้ไขตำแหน่งและขนาด"
+nothingSelected = "ไม่ได้เลือกอะไร"
+nothingSelectedHint = "คลิกข้อความหรือรูปภาพใดๆ บนหน้าเพื่อแก้ไขที่นี่"
+oneImage = "รูปภาพ"
+oneText = "ข้อความ"
+pages = "หน้า"
+tabDocument = "เอกสาร"
+tabSelected = "เลือกแล้ว"
+textBoxes = "กล่องข้อความ"
+width = "ความกว้าง"
+widthHint = "ความกว้างของกล่องข้อความเป็นไปตามเนื้อหาและการตัดบรรทัด"
+x = "X"
+y = "Y"
+
+[pdfTextEditor.password]
+cancel = "ยกเลิก"
+incorrect = "รหัสผ่านไม่ถูกต้อง - ลองอีกครั้ง"
+label = "รหัสผ่าน"
+open = "เปิด"
+protected = "PDF นี้มีการป้องกันด้วยรหัสผ่าน"
+protectedNamed = "\"{{fileName}}\" มีการป้องกันด้วยรหัสผ่าน"
+title = "ต้องใช้รหัสผ่าน"
+
+[pdfTextEditor.rulers]
+guide = "เส้นนำแนวที่ {{value}} {{unit}} - ลากไปยังไม้บรรทัดเพื่อลบ"
+hint = "ลากจากไม้บรรทัดเพื่อเพิ่มเส้นนำแนว"
+horizontal = "ไม้บรรทัดแนวนอน"
+unit = "pt"
+vertical = "ไม้บรรทัดแนวตั้ง"
+
+[pdfTextEditor.run]
+lockedTitle = "ล็อกอยู่ - ใช้ปุ่มปลดล็อกเพื่อแก้ไข"
+
+[pdfTextEditor.saveRisk]
+cancel = "ยกเลิก"
+intro = "การบันทึกสำเนาที่แก้ไขจะเปลี่ยนไฟล์ ซึ่งหมายความว่า:"
+note = "การแก้ไขของคุณจะถูกเก็บไว้ การเปลี่ยนแปลงที่แสดงด้านบนหลีกเลี่ยงไม่ได้เมื่อบันทึกสำเนาที่แก้ไข"
+saveAnyway = "บันทึกต่อไป"
+title = "การบันทึกจะเปลี่ยน PDF นี้"
+
+[pdfTextEditor.settings]
+advanced = "ขั้นสูง"
+find = "ค้นหาในเอกสาร"
+findTooltip = "ค้นหา ({{shortcut}})"
+view = "มุมมอง"
+
+[pdfTextEditor.sidebar]
+addImage = "เพิ่มรูปภาพ"
+addText = "เพิ่มข้อความ"
+clickPageToAddText = "คลิกหน้าเพื่อเพิ่มข้อความ"
+document = "เอกสาร"
+group = "จัดกลุ่ม"
+groupingAuto = "อัตโนมัติ"
+groupingAutoHint = "จัดกลุ่มบรรทัดที่มีระยะห่างเท่ากันเป็นย่อหน้า การเปลี่ยนค่านี้จะอ่านเอกสารใหม่และล้างประวัติการเลิกทำ"
+groupingLine = "บรรทัด"
+groupTooltip = "รวม runs ที่เลือกเป็นหนึ่งย่อหน้า ({{shortcut}})"
+groupTooltipDisabled = "เลือก 2+ runs เพื่อรวม"
+noFile = "ไม่ได้โหลดไฟล์"
+noFileHint = "เลือก PDF จากแผงไฟล์ทางซ้าย หรือวางไฟล์เข้ามา ตัวแก้ไขจะเปิดไฟล์โดยอัตโนมัติ"
+opening = "กำลังเปิดเอกสาร..."
+paragraph = "ย่อหน้า"
+rulers = "ไม้บรรทัดและเส้นนำแนว"
+textBoxWidth = "ความกว้างกล่องข้อความใหม่"
+textGrouping = "การจัดกลุ่มข้อความ"
+ungroup = "ยกเลิกการจัดกลุ่ม"
+ungroupTooltip = "แยกย่อหน้านี้เป็นหนึ่ง run ต่อบรรทัด"
+ungroupTooltipDisabled = "เลือกย่อหน้าหลายบรรทัดเพื่อยกเลิกการจัดกลุ่ม"
+widthGrow = "ขยาย"
+widthGrowHint = "ขยายจะทำให้กล่องกว้างขึ้นขณะที่คุณพิมพ์; ตัดบรรทัดจะคงความกว้างและไหลไปยังบรรทัดใหม่"
+widthWrap = "ตัดบรรทัด"
+
+[pdfTextEditor.spellcheck]
+auto = "อัตโนมัติ"
+enable = "ตรวจตัวสะกดขณะพิมพ์"
+language = "ภาษาพจนานุกรม"
+
+[pdfTextEditor.stage]
+loadingDocument = "กำลังโหลดเอกสาร"
+loadingProgress = "ความคืบหน้าการโหลด"
+noDocument = "ไม่ได้โหลดเอกสาร"
+pickPrompt = "เลือก PDF จากแผงไฟล์ทางซ้ายเพื่อเริ่มแก้ไข"
+renderingPreview = "กำลังเรนเดอร์ตัวอย่าง"
+
+[pdfTextEditor.toolbar]
+addTextTooltip = "เพิ่มกล่องข้อความ - จากนั้นคลิกหน้า"
+advancedColour = "สีขั้นสูง"
+advancedColourTooltip = "สีขั้นสูง (เส้นขอบ glyph)"
+alignBottom = "จัดชิดล่าง"
+alignCentre = "จัดกึ่งกลาง"
+alignLabel = "จัดแนว · ต้องมี 2+ วัตถุ"
+alignLeft = "จัดชิดซ้าย"
+alignMiddle = "จัดกึ่งกลางแนวตั้ง"
+alignRight = "จัดชิดขวา"
+alignTop = "จัดชิดบน"
+arrange = "จัดเรียง"
+bringForward = "นำมาข้างหน้า"
+bringToFront = "นำมาไว้หน้าสุด"
+caseLower = "ตัวพิมพ์เล็ก"
+caseSentence = "รูปแบบประโยค"
+caseTitle = "Title Case"
+caseUpper = "ตัวพิมพ์ใหญ่"
+changeCase = "เปลี่ยนตัวพิมพ์"
+changeCaseTooltip = "เปลี่ยนตัวพิมพ์ (เฉพาะ text runs)"
+delete = "ลบรายการที่เลือก"
+deleteTooltip = "ลบ (Del)"
+distributeHorizontally = "กระจายแนวนอน"
+distributeLabel = "กระจาย · ต้องมี 3+ วัตถุ"
+distributeVertically = "กระจายแนวตั้ง"
+editImageExternally = "แก้ไขในแอปอื่น"
+flipHorizontal = "พลิกแนวนอน"
+flipVertical = "พลิกแนวตั้ง"
+fontColour = "สีฟอนต์"
+fontSize = "ขนาดฟอนต์"
+formatting = "การจัดรูปแบบข้อความ"
+italic = "ตัวเอียง"
+italicUnavailable = "ฟอนต์นี้ไม่มีเวอร์ชันตัวเอียง โหลดฟอนต์อุปกรณ์ของคุณหรือเลือกตระกูลฟอนต์อื่น"
+lock = "ล็อกการเลือก"
+lockTooltip = "ล็อกการเลือก - ป้องกันการแก้ไขโดยไม่ตั้งใจ"
+more = "การดำเนินการเพิ่มเติม"
+order = "ลำดับ"
+outlineColour = "สีเส้นขอบ"
+outlineWidth = "ความกว้างเส้นขอบ (0 = ไม่มี)"
+redo = "ทำซ้ำ"
+redoTooltip = "ทำซ้ำ ({{shortcut}})"
+replaceImage = "แทนที่โดยคงตำแหน่งไว้"
+rotateLeft = "หมุนซ้าย 90°"
+rotateRight = "หมุนขวา 90°"
+sendBackward = "ส่งไปข้างหลัง"
+sendToBack = "ส่งไปไว้หลังสุด"
+undo = "เลิกทำ"
+undoTooltip = "เลิกทำ ({{shortcut}})"
+unlock = "ปลดล็อกการเลือก"
+unlockTooltip = "ปลดล็อกการเลือก - ทำให้แก้ไขได้อีกครั้ง"
 
 [pdfTextEditor.tooltip.alpha]
 text = "Alpha Viewer นี้ยังอยู่ระหว่างพัฒนา—แบบอักษรบางชนิด สี เอฟเฟกต์ความโปร่งใส และรายละเอียดเลย์เอาต์อาจเปลี่ยนเล็กน้อย โปรดตรวจสอบ PDF ที่สร้างอย่างรอบคอบก่อนแชร์"
@@ -6134,31 +7001,12 @@ title = "ความแตกต่างระหว่างการแส�
 text = "พื้นที่ทำงานนี้เน้นการแก้ไขข้อความและปรับตำแหน่งรูปภาพที่ฝังไว้ งานกราฟิกของหน้าแบบซับซ้อน วิดเจ็ตฟอร์ม และกราฟิกแบบหลายชั้นจะคงไว้สำหรับการส่งออก แต่ไม่สามารถแก้ไขได้ทั้งหมดที่นี่"
 title = "เน้นข้อความและรูปภาพ"
 
-[pdfTextEditor.welcomeBanner]
-bestFor = "เหมาะที่สุดกับ:"
-bestFor1 = "PDF แบบง่ายที่มีข้อความและภาพเป็นหลัก"
-bestFor2 = "เอกสารที่จัดรูปแบบย่อหน้ามาตรฐาน"
-bestFor3 = "จดหมาย เรียงความ รายงาน และเอกสารพื้นฐาน"
-dontShowAgain = "ไม่ต้องแสดงอีก"
-experimental = "นี่คือฟีเจอร์ทดลองที่กำลังพัฒนา อาจมีความไม่เสถียรและปัญหาในการใช้งาน"
-feedback = "นี่คือฟีเจอร์ Early Access โปรดรายงานปัญหาที่พบเพื่อช่วยให้เราพัฒนาขึ้น!"
-gotIt = "รับทราบ"
-howItWorks = "เครื่องมือนี้จะแปลง PDF ของคุณเป็นรูปแบบที่แก้ไขได้ เพื่อให้คุณปรับข้อความและจัดตำแหน่งภาพใหม่ การเปลี่ยนแปลงจะถูกบันทึกกลับเป็น PDF ใหม่"
-issue1 = "ยังไม่คงรักษาสีของข้อความ (จะเพิ่มเร็วๆ นี้)"
-issue2 = "โหมดย่อหน้ามีปัญหาการจัดแนวและระยะห่างมากกว่า - แนะนำให้ใช้โหมดบรรทัดเดียว"
-issue3 = "การแสดงตัวอย่างต่างจาก PDF ที่ส่งออก - PDF ที่ส่งออกใกล้เคียงต้นฉบับมากกว่า"
-issue4 = "การจัดแนวข้อความที่หมุนอาจต้องปรับด้วยตนเอง"
-issue5 = "เอฟเฟ็กต์ความโปร่งใสและการซ้อนเลเยอร์อาจต่างจากต้นฉบับ"
-knownIssues = "ปัญหาที่ทราบ (กำลังแก้ไข):"
-limitation1 = "การเรนเดอร์ฟอนต์อาจต่างจาก PDF ต้นฉบับเล็กน้อย"
-limitation2 = "กราฟิกซับซ้อน ช่องฟอร์ม และคำอธิบายประกอบจะถูกเก็บไว้แต่แก้ไขไม่ได้"
-limitation3 = "ไฟล์ขนาดใหญ่อาจใช้เวลาในการแปลงและประมวลผล"
-limitations = "ข้อจำกัดปัจจุบัน:"
-notIdealFor = "ไม่เหมาะกับ:"
-notIdealFor1 = "PDF ที่มีรูปแบบพิเศษ เช่น รายการหัวข้อย่อย ตาราง หรือเค้าโครงหลายคอลัมน์"
-notIdealFor2 = "นิตยสาร โบรชัวร์ หรือเอกสารที่ออกแบบซับซ้อน"
-notIdealFor3 = "คู่มือที่มีเค้าโครงซับซ้อน"
-title = "ยินดีต้อนรับสู่ PDF Text Editor (Early Access)"
+[pdfTextEditor.zoom]
+fit = "พอดี"
+fitToWidth = "พอดีกับความกว้าง"
+in = "ซูมเข้า"
+out = "ซูมออก"
+reset = "รีเซ็ตการซูมเป็น 100%"
 
 [PDFToCSV]
 header = "PDF เป็น CSV"
@@ -6298,10 +7146,10 @@ saml = "SAML"
 secureLoginSupport = "รองรับการเข้าสู่ระบบอย่างปลอดภัย"
 selfHostedDeployment = "ปรับใช้แบบโฮสต์เอง"
 sso = "SSO (OAuth2/OIDC)"
-unlimitedUsers = "ผู้ใช้ไม่จำกัด"
 upToFiveUsers = "สูงสุด 5 ผู้ใช้"
 upToFiveUsersLowercase = "สูงสุด 5 ผู้ใช้"
 usageTracking = "การติดตามการใช้งาน"
+usersIncluded = "รวมผู้ใช้ 100 คน"
 usersLimitedToSeats = "จำกัดผู้ใช้ตามจำนวนที่นั่ง"
 
 [plan.free]
@@ -6330,9 +7178,9 @@ saveWithAnnualBilling = "ประหยัดเมื่อเรียกเ�
 selfHosted = "โฮสต์เอง"
 selfHostedOnInfrastructure = "โฮสต์เองบนโครงสร้างพื้นฐานของคุณ"
 ssoOAuth = "SSO (OAuth2/OIDC)"
-unlimitedUsers = "ผู้ใช้ไม่จำกัด"
 upToFiveUsers = "สูงสุด 5 ผู้ใช้"
 usageTrackingPrometheus = "การติดตามการใช้งานและ Prometheus"
+usersIncluded = "รวมผู้ใช้ 100 คน"
 
 [plan.licenseWarning]
 body = "คุณมีผู้ใช้ {{total}} คน แต่ระดับฟรีรองรับเพียง {{limit}} ต่อเซิร์ฟเวอร์ อัปเกรดเพื่อให้ Stirling PDF ทำงานราบรื่น"
@@ -6379,11 +7227,29 @@ keyDescription = "วางคีย์ไลเซนส์จากอีเ�
 success = "เปิดใช้งานไลเซนส์แล้ว!"
 successMessage = "เปิดใช้งานไลเซนส์ของคุณเรียบร้อยแล้ว ตอนนี้คุณสามารถปิดหน้าต่างนี้ได้"
 
+[plan.team]
+maxUsers = "100 ผู้ใช้"
+name = "Team"
+
 [policies.activity]
 outputsUnavailable = "ผลลัพธ์ของนโยบายไม่สามารถดาวน์โหลดได้อีกต่อไป"
 partialOutputsUnavailable = "ผลลัพธ์ของนโยบายบางรายการไม่สามารถดาวน์โหลดได้อีกต่อไป"
 runNotFound = "ไม่พบการรันการบังคับใช้นี้แล้ว"
 timedOut = "การบังคับใช้หมดเวลาก่อนที่การรันจะเสร็จสิ้น"
+
+[policies.editorPanel]
+collapse = "ซ่อน pipelines"
+empty = "ยังไม่มีอะไรทำงานเมื่อนำเข้าหรือส่งออก"
+expand = "แสดง pipelines"
+openProcessor = "เปิด PDF Processor"
+rowFailed = "{{label}} - การเรียกใช้ล่าสุดล้มเหลว"
+rowIdle = "{{label}} ทำงานโดยอัตโนมัติ"
+rowRunning = "{{label}} กำลังทำงานอยู่ตอนนี้"
+runsToday_one = "วันนี้เรียกใช้ {{count}} ครั้ง"
+runsToday_other = "วันนี้เรียกใช้ {{count}} ครั้ง"
+title = "PDF Processor"
+triggerExport = "ทำงานเมื่อส่งออก"
+triggerImport = "ทำงานเมื่อนำเข้า"
 
 [policies.enforcement]
 applying = "กำลังนำ {{names}} ไปใช้"
@@ -6422,59 +7288,44 @@ badgeRan = "นโยบาย {{name}} ทำงานกับไฟล์น�
 badgeRunning = "{{name}} กำลังทำงาน..."
 blockingAction = "{{action}} ถูกบล็อกขณะบังคับใช้นโยบาย โปรดรอ..."
 dismiss = "ปิดโอเวอร์เลย์"
-enforcingTitle = "กำลังบังคับใช้นโยบาย..."
+enforcingPipelineTitle = "กำลังบังคับใช้ pipeline..."
+enforcingPolicyTitle = "กำลังบังคับใช้นโยบาย..."
+exportBlocked = "นโยบายที่จำเป็นล้มเหลว การส่งออกถูกยกเลิก ลองส่งออกอีกครั้ง"
+recoveryBody = "เราไม่สามารถใช้นโยบายที่จำเป็นกับไฟล์เหล่านี้ได้ ลองอีกครั้ง หรือปิดไฟล์ที่ได้รับผลกระทบเพื่อทำงานต่อ"
+recoveryClose_one = "ปิดไฟล์"
+recoveryClose_other = "ปิด {{count}} ไฟล์"
+recoveryClosing_one = "กำลังปิดไฟล์..."
+recoveryClosing_other = "กำลังปิด {{count}} ไฟล์..."
+recoveryContactAdmin = "ติดต่อผู้ดูแลระบบของคุณเพื่อขอความช่วยเหลือ"
+recoveryContactOwner = "ติดต่อ {{owner}} เพื่อขอความช่วยเหลือ"
+recoveryError = "ไม่สามารถดำเนินการให้เสร็จสิ้นได้ ลองอีกครั้ง"
+recoveryOwnedPolicy = "ตรวจสอบการตั้งค่านโยบาย แล้วลองอีกครั้ง"
+recoveryRetry_one = "ลองไฟล์อีกครั้ง"
+recoveryRetry_other = "ลอง {{count}} ไฟล์อีกครั้ง"
+recoveryRetrying_one = "กำลังลองไฟล์อีกครั้ง..."
+recoveryRetrying_other = "กำลังลอง {{count}} ไฟล์อีกครั้ง..."
+recoverySummary_one = "มีไฟล์ได้รับผลกระทบ {{count}} ไฟล์"
+recoverySummary_other = "มีไฟล์ได้รับผลกระทบ {{count}} ไฟล์"
+recoveryTechnicalDetails = "รายละเอียดทางเทคนิค"
+recoveryTitle = "การบังคับใช้นโยบายล้มเหลว"
 viewAnyway = "ดูไฟล์ (นโยบายยังคงบังคับใช้อยู่)"
 
 [policyOption]
-autoRedactPhi = "ปกปิด PHI อัตโนมัติ"
-blockExport = "บล็อกการส่งออก"
-ccpa = "CCPA"
-contracts = "สัญญา"
-documents = "เอกสาร"
-fedramp = "FedRAMP"
-financialReports = "รายงานทางการเงิน"
-flagForReview = "ทำเครื่องหมายเพื่อตรวจสอบ"
-gdpr = "GDPR"
-hipaa = "HIPAA"
-hold = "ระงับ"
-hrRecords = "ระเบียน HR"
-indefinite = "ไม่มีกำหนด"
-insurance = "ประกันภัย"
-invoices = "ใบแจ้งหนี้"
-iso27001 = "ISO 27001"
-legalFilings = "เอกสารยื่นทางกฎหมาย"
-medicalPhi = "การแพทย์ / PHI"
-never = "ไม่เลย"
-ninetyDays = "90 วัน"
-oneYear = "1 ปี"
-p60 = "60%"
-p70 = "70%"
-p80 = "80%"
-p90 = "90%"
-p95 = "95%"
-pciDss = "PCI DSS"
-quarantineDocument = "กักกันเอกสาร"
-routeToBucket = "กำหนดเส้นทางไปยัง bucket"
-s3Bucket = "S3 bucket"
-sevenYears = "7 ปี"
-sharePoint = "SharePoint"
-soc2 = "SOC 2"
-taxDocuments = "เอกสารภาษี"
-thirtyDays = "30 วัน"
-threeYears = "3 ปี"
-webhook = "Webhook"
-
-[portal]
-comingSoon = "เร็วๆ นี้"
+pdfa-1 = "PDF/A-1b"
+pdfa-2b = "PDF/A-2b"
+pdfa-3b = "PDF/A-3b"
 
 [portal.accountLink.card]
 billingNote = "การประมวลผลแบบไม่ต้องดูแลจะเรียกเก็บเงินจากกระเป๋าเงินองค์กรของคุณ"
+connectDescription = "เชื่อมต่อเซิร์ฟเวอร์นี้เพื่อใช้สิทธิ์การประมวลผลของทีมคุณใน Stirling Cloud"
+disconnectBody = "เซิร์ฟเวอร์นี้จะหยุดใช้สิทธิ์การประมวลผลของทีมคุณใน Stirling Cloud ไฟล์ในเครื่องของคุณจะยังคงอยู่บนเซิร์ฟเวอร์นี้ หากต้องการเชื่อมต่ออีกครั้ง ให้ทำตามขั้นตอนการเชื่อมต่อเดิม"
+disconnectTitle = "ตัดการเชื่อมต่ออินสแตนซ์นี้หรือไม่?"
 eyebrow = "การเชื่อมโยงบัญชี"
 linkButton = "เชื่อมโยงบัญชี Stirling ของคุณ"
-linked = "เชื่อมโยงแล้ว"
-linkedAs = "เชื่อมโยงเป็น {{name}}"
-linkedGeneric = "อินสแตนซ์นี้เชื่อมโยงแล้ว"
+loading = "กำลังตรวจสอบการเชื่อมต่อบัญชี"
 notLinked = "ยังไม่ได้เชื่อมโยง"
+signedInAs = "ลงชื่อเข้าใช้ Stirling Cloud ในชื่อ"
+statusError = "ไม่สามารถตรวจสอบการเชื่อมต่อบัญชีได้"
 title = "เชื่อมโยงองค์กรนี้กับบัญชี Stirling"
 unlink = "ยกเลิกการเชื่อมโยง"
 
@@ -6482,48 +7333,109 @@ unlink = "ยกเลิกการเชื่อมโยง"
 title = "ไม่สามารถเชื่อมโยงได้"
 
 [portal.accountLink.card.loginNotConfigured]
-after = "เพื่อเปิดใช้งานการเชื่อมโยงบัญชีกับบัญชี Stirling ที่โฮสต์อยู่ ใน dev คุณสามารถจำลองการลงชื่อเข้าใช้จากกล่องโต้ตอบการเชื่อมโยงได้"
-before = "ตั้งค่า"
+description = "ขอให้ผู้ดูแลเซิร์ฟเวอร์ของคุณเปิดใช้งานการเชื่อมต่อกับ Stirling Cloud"
 title = "ยังไม่ได้กำหนดค่าการเข้าสู่ระบบ SaaS"
 
+[portal.accountLink.connect]
+adminRequired = "ขอให้ผู้ดูแลเซิร์ฟเวอร์ของคุณเปิด Usage & billing และเชื่อมโยงบัญชี Stirling เพื่อรับเครดิตรายเดือนเพิ่มเติม เครื่องมือ PDF แบบใช้เองยังคงพร้อมใช้งาน"
+adminTitle = "ขอให้ผู้ดูแลเซิร์ฟเวอร์ของคุณดำเนินการ"
+close = "ปิด"
+copied = "คัดลอกแล้ว"
+copyAdminMessage = "คัดลอกข้อความสำหรับผู้ดูแลระบบ"
+exhaustedLede = "เซิร์ฟเวอร์นี้ใช้เครดิตฟรีของเดือนหมดแล้ว เชื่อมโยงบัญชี Stirling ใหม่หรือที่มีอยู่เพื่อเข้าถึงสิทธิ์รายเดือนของทีมคุณ"
+notNow = "ไม่ใช่ตอนนี้"
+start = "เชื่อมต่อบัญชี Stirling"
+step = "ขั้นตอน {{current}} จาก {{total}}"
+
+[portal.accountLink.connect.benefits]
+billingDetail = "จัดการการใช้งาน การเรียกเก็บเงิน และเซิร์ฟเวอร์ที่เชื่อมโยงร่วมกัน"
+billingLabel = "บัญชีเดียว"
+creditsDetail = "เข้าถึงสิทธิ์ฟรีรายเดือนของทีมคุณ"
+creditsLabel = "เครดิตฟรีรายเดือน"
+processingDetail = "ซื้อเครดิตเพิ่มเติมสำหรับ API, AI และ automation เมื่อคุณเติบโต"
+processingLabel = "การประมวลผลเพิ่มเติม"
+teamsDetail = "เพิ่มผู้ใช้เพิ่มเติมด้วยแผน Team แบบชำระเงิน"
+teamsLabel = "ทีมที่ใหญ่ขึ้น"
+
+[portal.accountLink.connect.callback]
+linkedNotSignedIn = "คุณยังไม่ได้ลงชื่อเข้าใช้ Stirling ในเบราว์เซอร์นี้ ดังนั้น usage and billing จะขอให้คุณลงชื่อเข้าใช้"
+retry = "ลองอีกครั้ง"
+signedInAnyway = "คุณลงชื่อเข้าใช้ Stirling แล้ว ดังนั้น billing and usage จะโหลดได้ มีเพียงลิงก์เซิร์ฟเวอร์เท่านั้นที่ยังไม่สมบูรณ์"
+working = "กำลังทำให้การเชื่อมต่อเสร็จสิ้น"
+
+[portal.accountLink.connect.callback.expired]
+body = "คำขอเชื่อมต่อมีอายุสั้น เริ่มคำขอใหม่"
+title = "คำขอหมดอายุ"
+
+[portal.accountLink.connect.callback.malformed]
+body = "หน้านี้ถูกเปิดโดยไม่มีการตอบกลับการเชื่อมต่อที่ถูกต้อง เริ่มการเชื่อมต่อจากการตั้งค่า"
+title = "ไม่สามารถอ่านการตอบกลับได้"
+
+[portal.accountLink.connect.callback.rejected]
+body = "คำขอนี้ถูกปฏิเสธหรือถูกใช้ไปแล้ว เริ่มคำขอใหม่หากไม่ได้ตั้งใจให้เป็นเช่นนั้น"
+title = "การเชื่อมต่อไม่เสร็จสมบูรณ์"
+
+[portal.accountLink.connect.callback.unfinished]
+body = "Stirling ไม่ได้ยืนยันการเชื่อมต่อ โดยปกติจะเป็นเพียงชั่วคราว"
+title = "ยังไม่เสร็จสิ้น"
+
+[portal.accountLink.connect.done]
+accountLabel = "บัญชี"
+addPolicy = "เพิ่มนโยบาย"
+buildPipeline = "ตั้งค่า pipeline"
+creditsBarLabel = "เครดิตฟรีที่เหลือ"
+creditsSuffix = "จากเครดิตฟรี {{allowance}} ที่เหลืออยู่"
+cta = "เสร็จสิ้น"
+inviteTeam = "เชิญทีมของคุณ"
+lede = "เซิร์ฟเวอร์นี้ทำงานกับบัญชี Stirling ของคุณแล้ว"
+pendingTitle = "เกือบเสร็จแล้ว"
+switchOnProcessor = "เปิดใช้งาน Processor"
+title = "เชื่อมต่อแล้ว"
+
+[portal.accountLink.connect.handoff]
+opening = "กำลังเปิดการลงชื่อเข้าใช้ Stirling..."
+reauthLede = "เซสชัน Stirling ของคุณหมดอายุ การลงชื่อเข้าใช้อีกครั้งจะช่วยให้มองเห็นการใช้งานและการเรียกเก็บเงินได้ เซิร์ฟเวอร์นี้ยังคงเชื่อมต่ออยู่ไม่ว่ากรณีใด"
+title = "กำลังเชื่อมต่อ"
+
+[portal.accountLink.connectionNotice]
+expiredBody = "เซิร์ฟเวอร์นี้ไม่สามารถเข้าถึง Stirling Cloud ภายในโควตาการใช้งานแบบออฟไลน์ได้ ฟีเจอร์ Team ที่รองรับโดย Cloud และงาน Processor ถูกหยุดชั่วคราว ข้อมูลที่มีอยู่และสิทธิ์ไลเซนส์ที่ติดตั้งไว้จะยังคงอยู่ การเข้าถึงจะกลับมาโดยอัตโนมัติหลังจากการเชื่อมต่อสำเร็จยืนยันแผนของคุณ"
+expiredTitle = "หยุดการเข้าถึง Cloud ชั่วคราว"
+offlineBody = "แผนที่ยืนยันล่าสุดของคุณจะยังคงใช้งานได้จนถึง {{deadline}} กู้คืนการเชื่อมต่อของเซิร์ฟเวอร์นี้ก่อนเวลานั้นเพื่อหลีกเลี่ยงการหยุดฟีเจอร์และการประมวลผลที่รองรับโดย Cloud ชั่วคราว"
+offlineTitle = "ไม่สามารถเข้าถึง Stirling Cloud ได้"
+retry = "ตรวจสอบการเชื่อมต่อ"
+revokedBody = "Stirling Cloud ปฏิเสธการเชื่อมต่อบัญชีนี้ เชื่อมต่อบัญชีใหม่ในการตั้งค่าเพื่อกู้คืนฟีเจอร์ที่รองรับโดย Cloud ที่มีสิทธิ์ใช้งาน"
+revokedTitle = "การเชื่อมต่อบัญชีถูกเพิกถอน"
+
+[portal.accountLink.failure]
+automatic = "Pipeline “{{pipeline}}” หยุดระหว่างการทำงานอัตโนมัติ เนื่องจากเซิร์ฟเวอร์นี้เครดิตหมด"
+export = "Pipeline “{{pipeline}}” หยุดก่อนดาวน์โหลด เนื่องจากเซิร์ฟเวอร์นี้เครดิตหมด"
+manage = "เปิดการตั้งค่า Pipeline"
+manual = "Pipeline “{{pipeline}}” หยุดเมื่อคุณเรียกใช้งาน เนื่องจากเซิร์ฟเวอร์นี้เครดิตหมด"
+openFailed = "เปิด Processor บนเซิร์ฟเวอร์ที่เชื่อมต่อของคุณเพื่อจัดการ Pipeline นี้"
+pipeline = "Pipeline"
+upload = "Pipeline “{{pipeline}}” หยุดหลังจากอัปโหลด เนื่องจากเซิร์ฟเวอร์นี้เครดิตหมด"
+
 [portal.accountLink.gate]
-action = "เชื่อมโยงบัญชี"
-description = "เชื่อมโยงบัญชี Stirling ขององค์กรนี้เพื่อใช้ฟีเจอร์ที่มีการเรียกเก็บเงิน"
-title = "เชื่อมโยงเพื่อปลดล็อก"
-titleFeature = "เชื่อมโยงเพื่อปลดล็อก {{feature}}"
+retry = "ลองอีกครั้ง"
 
 [portal.accountLink.instances]
-active = "ใช้งานอยู่"
-revoke = "เพิกถอน"
-revoked = "เพิกถอนแล้ว"
 unnamed = "อินสแตนซ์ไม่มีชื่อ"
-
-[portal.accountLink.instances.columns]
-instance = "อินสแตนซ์"
-lastSeen = "พบล่าสุด"
-linked = "เชื่อมโยงแล้ว"
-status = "สถานะ"
 
 [portal.accountLink.instances.empty]
 description = "เชื่อมโยงบัญชีขององค์กรนี้ จากนั้นลงทะเบียนอินสแตนซ์ที่โฮสต์เองของคุณเพื่อดูที่นี่"
+otherDescription = "นี่คืออินสแตนซ์ที่เชื่อมต่อเพียงรายการเดียวที่แสดงสำหรับทีมของคุณ"
+otherTitle = "ไม่มีอินสแตนซ์อื่นที่เชื่อมต่อ"
 title = "ไม่มีอินสแตนซ์ที่เชื่อมโยง"
 
-[portal.accountLink.instances.time]
-daysAgo_one = "{{count}}d ที่แล้ว"
-daysAgo_other = "{{count}}d ที่แล้ว"
-hoursAgo_one = "{{count}}h ที่แล้ว"
-hoursAgo_other = "{{count}}h ที่แล้ว"
-justNow = "เมื่อสักครู่"
-minutesAgo_one = "{{count}}m ที่แล้ว"
-minutesAgo_other = "{{count}}m ที่แล้ว"
-never = "ไม่เคย"
-
 [portal.accountLink.modal]
-linkSubtitle = "ลงชื่อเข้าใช้บัญชีที่เซิร์ฟเวอร์นี้ควรเรียกเก็บเงิน"
+callbackMismatch = "ที่อยู่ frontend ที่กำหนดค่าของเซิร์ฟเวอร์นี้ไม่ตรงกับที่อยู่ที่คุณเปิด เปิดเซิร์ฟเวอร์ที่ที่อยู่ที่กำหนดค่าไว้ หรืออัปเดต Frontend URL ในการตั้งค่าทั่วไป แล้วลองอีกครั้ง"
+cancel = "ยกเลิก"
+continueReauth = "ลงชื่อเข้าใช้อีกครั้ง"
+exhaustedTitle = "ทำให้เวิร์กโฟลว์ของคุณทำงานต่อไป"
+identity = "บัญชี Stirling"
 linkTitle = "เชื่อมโยงบัญชี Stirling ของคุณ"
-reauthSubtitle = "เซสชันของคุณหมดอายุ — ลงชื่อเข้าใช้บัญชี Stirling ของคุณอีกครั้ง อินสแตนซ์ของคุณยังคงเชื่อมโยงอยู่"
-reauthTitle = "ลงชื่อเข้าใช้อีกครั้ง"
-simulateSignIn = "จำลองการลงชื่อเข้าใช้ (dev)"
+noAuthorizeUrl = "Stirling ไม่ได้ส่งตำแหน่งสำหรับดำเนินการต่อกลับมา ลองอีกครั้งในอีกสักครู่"
+startFailed = "ไม่สามารถเข้าถึง Stirling เพื่อเริ่มการเชื่อมต่อได้ ตรวจสอบการเข้าถึงเครือข่ายขาออกของเซิร์ฟเวอร์นี้ แล้วลองอีกครั้ง"
 
 [portal.accountLink.modal.loginNotConfigured]
 after = "เพื่อเปิดใช้งานการเชื่อมโยงในแอปกับบัญชี Stirling ที่โฮสต์อยู่"
@@ -6531,16 +7443,59 @@ and = "และ"
 before = "ตั้งค่า"
 title = "ยังไม่ได้กำหนดค่าการเข้าสู่ระบบ SaaS"
 
+[portal.accountLink.notice]
+openFailed = "ไม่สามารถเปิดเบราว์เซอร์ของคุณได้ เปิดการใช้งานและการเรียกเก็บเงินบนเซิร์ฟเวอร์ที่เชื่อมต่อของคุณเพื่อเชื่อมโยงบัญชี"
+
 [portal.accountLink.panel]
 instancesSub = "ทุกอินสแตนซ์ที่โฮสต์เองซึ่งลงทะเบียนกับองค์กรนี้ เพิกถอนข้อมูลรับรองเพื่อตัดการเข้าถึงแบบไม่ต้องดูแลทันที"
 instancesTitle = "อินสแตนซ์ที่เชื่อมโยง"
+manageCloud = "จัดการบน stirling.com"
+otherInstancesSub = "เซิร์ฟเวอร์ self-hosted อื่นที่เชื่อมต่อกับทีมเดียวกันใน Stirling Cloud"
+otherInstancesTitle = "อินสแตนซ์อื่นที่เชื่อมต่อ"
 revokeError = "ไม่สามารถเพิกถอนอินสแตนซ์ได้"
+sessionRequired = "อินสแตนซ์ที่เชื่อมต่อจะปรากฏหลังจากคุณต่ออายุการเข้าถึงการเรียกเก็บเงิน"
 sub = "เชื่อมโยงองค์กรที่โฮสต์เองนี้กับบัญชี Stirling เพื่อให้การประมวลผลแบบไม่ต้องดูแลเรียกเก็บเงินจากกระเป๋าเงินองค์กรของคุณ"
 
 [portal.accountLink.panel.loadError]
 forbidden = "เฉพาะเจ้าของทีมเท่านั้นที่สามารถดูอินสแตนซ์ที่เชื่อมโยงขององค์กรได้"
 generic = "ไม่สามารถโหลดอินสแตนซ์ที่เชื่อมโยงของทีมได้ ลองอีกครั้งในอีกสักครู่"
 title = "ไม่สามารถโหลดอินสแตนซ์ที่เชื่อมโยงได้"
+
+[portal.accountLink.pipelines]
+editorExport = "Editor · ก่อนดาวน์โหลด"
+editorUpload = "Editor · เมื่ออัปโหลด"
+empty = "ไม่มี Pipeline ที่ใช้งานอยู่"
+loadFailed = "ไม่สามารถโหลด Pipeline ได้ เปิดการตั้งค่า Pipeline เพื่อลองอีกครั้ง"
+loading = "กำลังโหลด Pipeline…"
+manual = "การเรียกใช้ด้วยตนเอง"
+paused = "หยุดชั่วคราว"
+required = "นโยบายที่จำเป็น · จัดการในการตั้งค่า Pipeline"
+saveFailed = "ไม่สามารถเปลี่ยน Pipeline นี้ได้ เปิดการตั้งค่า Pipeline เพื่อตรวจสอบ"
+title = "Pipeline ที่ใช้งานอยู่"
+triggered = "ทริกเกอร์พรอมต์นี้"
+viewAll = "ดู Pipeline ทั้งหมด"
+
+[portal.accountLink.rail]
+adminCta = "วิธีรับเครดิตเพิ่มเติม"
+adminSub = "ขอให้ผู้ดูแลระบบเซิร์ฟเวอร์ของคุณเชื่อมโยงบัญชี Stirling เพื่อรับเครดิตเพิ่มเติม เครื่องมือ PDF แบบแมนนวลยังคงใช้งานได้"
+exhaustedCta = "เชื่อมโยงบัญชีเพื่อรับเครดิตเพิ่มเติม"
+exhaustedSub = "เชื่อมโยงเพื่อรับเครดิตรายเดือน การเรียกเก็บเงินร่วม และตัวเลือกในการเติบโตด้วยแผน Team"
+exhaustedTitle = "เครดิตฟรีของเซิร์ฟเวอร์นี้ถูกใช้หมดแล้ว"
+
+[portal.accountLink.renewal]
+dataUnavailable = "แผนและการใช้งานของคุณจะปรากฏหลังจากคุณต่ออายุการเข้าถึงการเรียกเก็บเงิน เซิร์ฟเวอร์นี้ยังคงเชื่อมต่ออยู่ และการประมวลผลเอกสารภายในเครื่องยังคงใช้งานได้"
+expired = "คำขอลงชื่อเข้าใช้นี้หมดอายุแล้ว ลองอีกครั้งเพื่อต่ออายุการเข้าถึงการเรียกเก็บเงิน เซิร์ฟเวอร์ของคุณยังคงเชื่อมต่ออยู่"
+expiredTitle = "คำขอลงชื่อเข้าใช้หมดอายุ"
+incomplete = "เซิร์ฟเวอร์นี้ยังคงเชื่อมต่ออยู่ แต่เราไม่สามารถกู้คืนการเข้าถึงการเรียกเก็บเงินในเบราว์เซอร์นี้ได้ ลองลงชื่อเข้าใช้อีกครั้ง"
+malformed = "เราไม่สามารถยืนยันการตอบกลับการลงชื่อเข้าใช้นี้ได้ เริ่มใหม่จากการใช้งานและการเรียกเก็บเงิน เซิร์ฟเวอร์ของคุณยังคงเชื่อมต่ออยู่"
+malformedTitle = "ไม่สามารถยืนยันการลงชื่อเข้าใช้ได้"
+rejected = "คำขอลงชื่อเข้าใช้นี้ถูกปฏิเสธหรือถูกใช้ไปแล้ว ลองอีกครั้งเพื่อต่ออายุการเข้าถึงการเรียกเก็บเงิน"
+rejectedTitle = "การลงชื่อเข้าใช้ยังไม่เสร็จสมบูรณ์"
+retry = "Stirling ไม่สามารถต่ออายุการเข้าถึงการเรียกเก็บเงินให้เสร็จสิ้นได้ ลองอีกครั้งในอีกสักครู่ เซิร์ฟเวอร์ของคุณยังคงเชื่อมต่ออยู่"
+retryTitle = "ยังไม่ได้กู้คืนการเข้าถึงการเรียกเก็บเงิน"
+success = "การเข้าถึงการเรียกเก็บเงินของคุณได้รับการต่ออายุแล้ว เซิร์ฟเวอร์นี้ยังคงเชื่อมต่อกับบัญชี Stirling เดิม"
+title = "ต่ออายุการเข้าถึงการเรียกเก็บเงิน"
+working = "กำลังกู้คืนการเข้าถึงการเรียกเก็บเงิน"
 
 [portal.accountLink.state]
 free = "แผน Editor"
@@ -6562,6 +7517,9 @@ typing = "กำลังพิมพ์"
 [portal.auth]
 loading = "กำลังโหลด"
 redirectingToEditor = "กำลังเปลี่ยนเส้นทางไปยังตัวแก้ไข..."
+
+[portal.billing]
+dataUnavailable = "ขณะนี้ตัวเลขการใช้งานไม่พร้อมใช้งาน"
 
 [portal.billing.activation]
 maybeLater = "ไว้ทีหลัง"
@@ -6587,13 +7545,8 @@ title = "เกือบเสร็จแล้ว"
 
 [portal.billing.checkout.cap]
 amountAria = "ขีดจำกัดค่าใช้จ่ายรายเดือน"
-back = "กลับ"
 continue = "ไปต่อที่การชำระเงิน"
 error = "ไม่สามารถตั้งขีดจำกัดค่าใช้จ่ายของคุณได้"
-finePrint = "ออกใบแจ้งหนี้รายเดือน ยกเลิกได้ทุกเมื่อ"
-noLimit = "ไม่จำกัด"
-note = "คุณจะไม่ถูกเรียกเก็บเกินขีดจำกัดของคุณ การประมวลผลจะหยุดชั่วคราวเท่านั้น"
-perMonth = "/ เดือน"
 title = "ตั้งขีดจำกัดค่าใช้จ่ายของคุณ"
 
 [portal.billing.checkout.card]
@@ -6613,71 +7566,85 @@ title = "กำลังเปิดใช้งานแผน Processor ขอ
 limit = "ขีดจำกัดค่าใช้จ่ายรายเดือน {{amount}}/เดือน การประมวลผลจะหยุดชั่วคราวเมื่อถึงขีดจำกัด"
 limitNoCap = "ไม่มีขีดจำกัดค่าใช้จ่าย การประมวลผลจะไม่หยุดชั่วคราว ออกใบแจ้งหนี้รายเดือน"
 
-[portal.billing.enterpriseUpsell]
-cta = "สร้างใบเสนอราคา Enterprise ของคุณ"
-description = "ส่วนลดตามปริมาณที่ตกลงไว้ การติดตั้งแบบ air-gapped, MSA แบบกำหนดเองและการตรวจสอบความปลอดภัย และความร่วมมือกับผู้จัดจำหน่ายบุคคลที่ 3"
-eyebrow = "ส่วนลดตามปริมาณ · 1M+ PDFs"
-title = "Stirling Enterprise"
+[portal.billing.chip]
+invoices = "ใบแจ้งหนี้"
+nav = "ส่วนต่าง ๆ"
+payment = "การชำระเงิน"
+plan = "แผน"
+procurement = "การจัดซื้อ"
+usage = "การใช้งาน"
 
-[portal.billing.freeEditors]
-activeThisMonth = "ใช้งานในเดือนนี้"
-cost = "ค่าใช้จ่าย"
-editorsDeployed = "Editors ที่ติดตั้ง"
-inviteTeammates = "เชิญเพื่อนร่วมทีม"
-pdfsEdited = "PDFs ที่แก้ไข"
-subtitle = "ติดตั้งได้ทุกที่ สำหรับทั้งทีมของคุณ"
-title = "Free PDF Editors"
+[portal.billing.cycle]
+credits = "เครดิต"
+creditsNote = "ใช้แล้ว {{units}} · รวมเครดิตฟรีและเครดิตแบบชำระล่วงหน้า"
+day = "วันที่ {{day}} จาก {{of}}"
+editors = "Editor ที่ใช้งาน"
+estimated = "โดยประมาณ · มิเตอร์จะสรุปเมื่อปิดรอบ"
+estimatedPending = "โดยประมาณ · รวม {{pending}} ที่ยังไม่ได้ซิงค์จากอินสแตนซ์ของคุณ"
+pdfs = "PDF ที่ประมวลผลแล้ว"
+users = "ผู้ใช้"
+
+[portal.billing.enterprise]
+cta = "ขอใบเสนอราคาระดับองค์กร"
+sub = "การปรับใช้แบบ air-gapped, SCIM, ถิ่นที่อยู่ของข้อมูล, SLA เวลาใช้งาน และข้อตกลงที่เหมาะสม"
+title = "กำลังใช้งาน Stirling ในสภาพแวดล้อมที่มีข้อกำกับดูแลอยู่หรือไม่"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "ไม่สามารถเริ่มชำระเงินได้"
-currentPlan = "แผนปัจจุบัน"
-freeForever = "ฟรีตลอดไป"
 noTeamResolved = "ยังไม่พบทีมในกระเป๋าเงินของคุณ — รีเฟรชแล้วลองอีกครั้ง"
-ownerOnly = "เฉพาะเจ้าของทีมเท่านั้นที่สามารถเปิดใช้แผน Processor ได้"
 payInvoice = "ชำระใบแจ้งหนี้เพื่อดำเนินการให้เสร็จ"
-planName = "Editor"
-ssoIncluded = "รวม SSO"
-switchOnProcessor = "เปิดใช้ Processor →"
-unlimitedUsers = "ผู้ใช้ไม่จำกัด"
 viewQuote = "ดูใบเสนอราคา"
 
-[portal.billing.invoices]
-columnAmount = "จำนวนเงิน"
-columnDate = "วันที่"
-columnDescription = "คำอธิบาย"
-columnPdfsProcessed = "PDFs ที่ประมวลผล"
-columnStatus = "สถานะ"
-descriptionFallback = "ใบแจ้งหนี้"
-downloadAriaLabel = "ดาวน์โหลดใบแจ้งหนี้ {{number}} เป็น PDF"
-emptyDescription = "เมื่อทีมของคุณสมัครใช้งานและรอบแรกปิด ใบแจ้งหนี้ของคุณจะปรากฏที่นี่"
-emptyTitle = "ยังไม่มีใบแจ้งหนี้"
-fetchLimitNote_one = "กำลังแสดงใบแจ้งหนี้ล่าสุด {{count}} รายการของคุณ ใบแจ้งหนี้เก่าอยู่ในพอร์ทัล Stripe"
-fetchLimitNote_other = "กำลังแสดงใบแจ้งหนี้ล่าสุด {{count}} รายการของคุณ ใบแจ้งหนี้เก่าอยู่ในพอร์ทัล Stripe"
-loadError = "ไม่สามารถโหลดใบแจ้งหนี้ได้: {{error}}"
-pdfLink = "PDF ↓"
-showAll_one = "แสดงทั้งหมด {{count}}"
-showAll_other = "แสดงทั้งหมด {{count}}"
-showFewer_one = "แสดงน้อยลง (บนสุด {{count}})"
-showFewer_other = "แสดงน้อยลง (บนสุด {{count}})"
-showMostRecent_one = "แสดงล่าสุด {{count}} รายการ"
-showMostRecent_other = "แสดงล่าสุด {{count}} รายการ"
-title = "ประวัติใบแจ้งหนี้"
-viewAriaLabel = "ดูใบแจ้งหนี้ {{number}} ใน Stripe"
-viewLink = "ดู ↗"
+[portal.billing.identity]
+oauthSso = "SSO (OAuth2/OIDC)"
 
-[portal.billing.linkPrompt]
-cta = "เชื่อมโยงบัญชี Stirling"
-description = "การแก้ไข PDF ด้วยตนเอง — ดู ลงชื่อ รวม แยก ลายน้ำ บีบอัด แปลง OCR ด้วยตนเอง — ฟรีเสมอ ไม่ว่าจะเชื่อมโยงหรือไม่ เชื่อมโยงเพื่อรับสิทธิ์ประมวลผลตามปริมาณการใช้งานฟรี 500 PDFs (ระบบอัตโนมัติ, AI และ API); เมื่อคุณต้องการมากกว่านั้น ให้เปิดใช้แผน Processor และจ่ายเฉพาะเท่าที่ใช้"
-title = "เชื่อมโยงบัญชี Stirling ของคุณ"
+[portal.billing.identity.free]
+chipAnywhere = "Web, desktop และ self-hosted"
+chipCredits = "เครดิตฟรี {{allowance}} ต่อเดือน"
+chipTools = "เครื่องมือ PDF ทุกตัว"
+name = "ฟรี"
+sub = "PDF Editor แบบเต็ม"
 
-[portal.billing.paymentMethod]
-billedMonthly = "เรียกเก็บเงินรายเดือน"
-cardEnding = "{{brand}} ลงท้ายด้วย {{last4}}"
-cardFallback = "บัตร"
-expiresBilledMonthly = "หมดอายุ {{expiry}} · เรียกเก็บเงินรายเดือน"
-eyebrow = "วิธีชำระเงิน"
-managedSub = "บัตรและรายละเอียดการเรียกเก็บเงินของคุณถูกเก็บไว้อย่างปลอดภัยในพอร์ทัลลูกค้าของ Stripe"
-managedTitle = "จัดการใน Stripe"
+[portal.billing.identity.processor]
+chipMetered = "การประมวลผลตามมิเตอร์"
+chipPipelines = "Pipeline และ API"
+name = "Processor"
+sub = "ฐาน Team บวก {{rate}} ต่อเครดิต"
+subNoRate = "ฐาน Team บวกการประมวลผลตามมิเตอร์"
+
+[portal.billing.identity.team]
+chipFleet = "การควบคุม Fleet"
+chipIncluded = "รวมเครดิต {{allowance}} ต่อเดือน"
+name = "Team"
+sub = "สูงสุด {{users}} ผู้ใช้"
+subNoLimit = "ไม่จำกัดผู้ใช้"
+
+[portal.billing.invoiceRow]
+current = "ปัจจุบัน"
+failed = "ยังไม่ได้ชำระ"
+paid = "ชำระแล้ว"
+undated = "ไม่มีวันที่"
+unknownAmount = "ไม่ทราบ"
+view = "ดู"
+
+[portal.billing.license]
+add = "เพิ่ม"
+addTitle = "เพิ่มไลเซนส์"
+empty = "ยังไม่ได้ติดตั้งไลเซนส์"
+label = "คีย์ไลเซนส์"
+update = "อัปเดต"
+updateTitle = "อัปเดตไลเซนส์"
+view = "ดู"
+
+[portal.billing.payment]
+billedTo = "เรียกเก็บเงินถึง"
+card = "{{brand}} ลงท้าย {{last4}}"
+cardWithExpiry = "{{brand}} ลงท้าย {{last4}} · หมดอายุ {{month}} / {{year}}"
+dateUnavailable = "ยังไม่มีวันที่เรียกเก็บเงิน"
+invoicesTo = "ส่งใบแจ้งหนี้ไปที่"
+method = "วิธีชำระเงิน"
+nextInvoice = "ใบแจ้งหนี้ถัดไป"
+noCard = "ไม่มีบัตรในระบบ"
 update = "อัปเดต"
 
 [portal.billing.pdfsProcessed]
@@ -6692,27 +7659,19 @@ segmentApiDesc = "คำขอ API โดยตรง"
 segmentApiLabel = "API"
 segmentAutomationDesc = "ระบบอัตโนมัติและ pipelines"
 segmentAutomationLabel = "ระบบอัตโนมัติ"
-sizeMultiplier = "{{formatted}} PDFs ใช้ตัวคูณขนาด"
 summary = "{{unique}} ไม่ซ้ำ · {{units}} หน่วยมิเตอร์ · เฉลี่ย {{avg}} ต่อ PDF"
 summaryNoRate = "{{unique}} ไม่ซ้ำ · {{units}} หน่วยมิเตอร์"
 unit = "PDFs ตามปริมาณการใช้งาน"
 unitsPending_one = "{{units}} หน่วยมิเตอร์รอซิงค์จากอินสแตนซ์ที่เชื่อมโยง"
 unitsPending_other = "{{units}} หน่วยมิเตอร์รอซิงค์จากอินสแตนซ์ที่เชื่อมโยง"
 
-[portal.billing.prepaid]
-capSuffix = "จาก {{total}} เครดิตแบบชำระล่วงหน้า"
-expires = "หมดอายุ {{date}}"
-eyebrow = "ความจุแบบชำระล่วงหน้า"
-note = "ใช้ก่อนการเรียกเก็บเงินตามมิเตอร์และอยู่นอกขีดจำกัดค่าใช้จ่ายของคุณ"
-topUp = "เติมเงิน"
-
 [portal.billing.prepaid.buy]
 back = "กลับ"
-calcTitle = "คำนวณการชำระเงินรายปีของคุณ"
 cancel = "ยกเลิก"
 cancelPurchase = "ยกเลิกการซื้อ"
 close = "ปิด"
 continueToPayment = "ไปต่อที่การชำระเงิน"
+creditTitle = "ชำระล่วงหน้าสำหรับหนึ่งปี"
 finalise = "ดำเนินการให้เสร็จสิ้น"
 invoiceErrorTitle = "ไม่สามารถสร้างใบแจ้งหนี้ได้"
 loadingTitle = "กำลังโหลดใบเสนอราคาของคุณ"
@@ -6720,38 +7679,12 @@ payTitle = "ชำระเงินสำหรับปีของคุณ"
 step = "ขั้นตอนที่ {{current}} จาก {{total}}"
 
 [portal.billing.prepaid.calc]
-change = "เปลี่ยน"
-deployRow = "การปรับใช้"
-done = "เสร็จสิ้น"
-enterpriseHint = "นี่คือระดับ enterprise ที่ปริมาณนี้ อัตรา enterprise ดีกว่าส่วนลดแบบบริการตนเองใด ๆ ล็อกอัตรา เงื่อนไข และใบเสนอราคาได้ในไม่กี่นาที"
-governanceRow = "การกำกับดูแล"
-governanceValue = "{{label}} · {{count}} policies"
-handlesLabel = "Processor ของคุณ"
-handlesValue = "รองรับ {{volume}} เครดิต / เดือน"
-pipelinesLabel = "Pipelines"
-policiesMeta = "{{count}} policies"
-poolCaption = "กองเครดิตเดียวจำนวน {{credits}} เครดิตสำหรับทั้งปี เดือนที่ใช้งานหนักยืมจากเดือนที่ใช้งานเบาได้"
-priceLabel = "ปีของคุณ · 12 เดือนในราคา 10 เดือน"
 rateUnknown = "เราจะแสดงราคาที่แน่นอนตอนชำระเงิน"
-savings = "คุณประหยัด {{amount}} · ฟรี 2 เดือน"
-sizingRow = "การกำหนดขนาด"
-sizingValue = "{{label}} · {{desc}}"
-usersLabel = "ผู้ใช้ทั้งหมด"
 
 [portal.billing.prepaid.consent]
 label = "ฉันเข้าใจว่าเมื่อความจุแบบชำระล่วงหน้าของฉันถูกใช้หมดหรือหมดอายุหลังจาก 12 เดือน การประมวลผลจะดำเนินต่อโดยอัตโนมัติในอัตรามาตรฐานแบบคิดตามมิเตอร์จ่ายตามการใช้งาน (ไม่เกินขีดจำกัดค่าใช้จ่ายของฉัน) เว้นแต่ฉันจะยกเลิก และฉันสามารถยกเลิกได้ทุกเมื่อจาก billing portal"
 
-[portal.billing.prepaid.deploy]
-cloud = "Stirling Cloud"
-cloudDesc = "จัดการโดย Stirling ใช้งานได้ในไม่กี่นาที"
-cloudValue = "Stirling Cloud · จัดการแล้ว"
-selfhost = "Self-hosted"
-selfhostDesc = "ทำงานบนโครงสร้างพื้นฐานส่วนตัว อัตราเดียวกัน"
-selfhostValue = "Self-hosted · โครงสร้างพื้นฐานส่วนตัว"
-
 [portal.billing.prepaid.offer]
-cta = "ตรวจสอบข้อเสนอ"
-subtitle = "ชำระล่วงหน้าหนึ่งปีสำหรับการประมวลผล PDF และรับฟรีสองเดือน ใช้ก่อนการเรียกเก็บเงินตามมิเตอร์ และอยู่นอกขีดจำกัดค่าใช้จ่ายของคุณ"
 title = "รับ 12 เดือนในราคา 10 เดือน"
 
 [portal.billing.prepaid.pay]
@@ -6764,52 +7697,92 @@ payOnline = "ชำระออนไลน์"
 poNumber = "หมายเลข PO (ไม่บังคับ)"
 poNumberPlaceholder = "เช่น PO-2026-0142"
 
-[portal.billing.prepaid.pipelines]
-advanced = "ขั้นสูง"
-advancedDesc = "Pipelines ขับเคลื่อนการประมวลผลส่วนใหญ่ของคุณ"
-none = "ไม่มี"
-noneDesc = "ยังไม่ได้เรียกใช้ pipelines เปิดได้ทุกเมื่อ"
-standard = "มาตรฐาน"
-standardDesc = "Pipelines บางรายการประมวลผล PDFs ที่เข้ามาซ้ำ"
-
-[portal.billing.prepaid.posture]
-essentials = "พื้นฐาน"
-essentialsDesc = "การจัดหมวดหมู่ ค่าเริ่มต้น รวมถึงการแชร์"
-governed = "มีการกำกับดูแล"
-governedDesc = "เพิ่มความปลอดภัยและการกำหนดเส้นทาง"
-regulated = "มีการควบคุม"
-regulatedDesc = "ทุกหมวดหมู่ รวมถึง Compliance, Retention, Ingestion"
-
 [portal.billing.prepaid.review]
 download = "ดาวน์โหลดใบเสนอราคา (PDF)"
 downloading = "กำลังเตรียม…"
-share = "แชร์เพื่อขออนุมัติ"
 
-[portal.billing.prepaid.size]
-compact = "กะทัดรัด"
-compactDesc = "ไฟล์ต่ำกว่า 25 MB ไม่มีค่าใช้จ่ายข้อมูล"
-heavy = "หนัก"
-heavyDesc = "สแกนหรือมีรูปภาพจำนวนมาก โดยปกติ 50 MB+"
-standard = "มาตรฐาน"
-standardDesc = "ส่วนใหญ่เป็นไฟล์เล็ก มีบางสแกนเกิน 25 MB"
+[portal.billing.processor]
+activate = "เปิดใช้งาน Processor"
+factFree = "ใช้แล้ว {{used}} จาก {{allowance}}"
+factNoCap = "ไม่จำกัด"
+factPrepaid = "เหลือ {{remaining}}"
+freeRemaining = "เครดิตฟรีที่เหลือ"
+included = "รวมอยู่ในไลเซนส์ของคุณ"
+includedRenewal = "{{summary}} · ต่ออายุ {{date}}"
+meteredCapTooltip = "หยุดการประมวลผลตามมิเตอร์ชั่วคราวเมื่อถึงวงเงินใช้จ่ายของคุณ"
+midIncluded = "{{rate}} ต่อเครดิต · รวม {{allowance}} ทุกเดือน"
+midIncludedNoRate = "รวม {{allowance}} ทุกเดือน"
+midMetered = "คิดตามมิเตอร์ {{spend}} ในรอบนี้"
+midMeteredUnknown = "คิดตามมิเตอร์ในรอบนี้"
+midPrepaid = "เครดิตแบบชำระล่วงหน้า ใช้ก่อนการเรียกเก็บเงินตามมิเตอร์"
+midPrepaidExpiry = "{{summary}} · หมดอายุ {{date}}"
+noSpendLimit = "ไม่มีวงเงินใช้จ่าย"
+paidUsed = "การใช้งานตามมิเตอร์ที่ชำระเงิน"
+percentUsed = "{{pct}}%"
+prepaidExhausted = "ใช้หมดแล้ว การเรียกเก็บเงินตามมิเตอร์กลับมาทำงานแล้ว"
+prepaidExpires = "หมดอายุ {{date}}"
+prepaidRemaining = "เครดิตแบบชำระล่วงหน้าที่เหลือ"
+prepaidTooltip = "ใช้ก่อนการเรียกเก็บเงินตามมิเตอร์ และอยู่นอกวงเงินใช้จ่ายของคุณ"
+raiseLimit = "เพิ่มวงเงิน"
+remainingOf = "{{remaining}} จาก {{total}}"
+rowName = "Processor"
+spendAgainstLimit = "{{spend}} จาก {{cap}} ตามมิเตอร์ในรอบนี้"
 
-[portal.billing.prepaid.state]
-exhausted = "ใช้หมดแล้ว"
-healthy = "เหลืออีกมาก"
-low = "ใกล้หมด"
+[portal.billing.seats]
+awaitingSync = "กำลังรอการซิงค์รายวัน ยังไม่รวมในยอดรวม Fleet"
+breakdown = "ตำแหน่งที่นับผู้ใช้"
+cloud = "Stirling Cloud"
+deployment = "เซิร์ฟเวอร์ที่เชื่อมโยง"
+lastReported = "รายงานเมื่อ {{date}}"
+live = "จำนวนผู้ใช้ปัจจุบัน"
+notReported = "ยังไม่ได้รายงาน"
+ownerExcluded = "เจ้าของทีม Cloud ที่จำเป็นไม่ใช้ seat"
+thisServer = "เซิร์ฟเวอร์นี้"
+
+[portal.billing.section]
+cycle = "รอบนี้"
+invoices = "ใบแจ้งหนี้"
+payment = "การชำระเงิน"
+plan = "แผนของคุณ"
+
+[portal.billing.serverPlan]
+active = "ไลเซนส์ self-hosted ที่ใช้งานอยู่"
+connectBody = "เชื่อมต่อเพื่อเพิ่มเครดิตการประมวลผลบน Cloud ไลเซนส์เซิร์ฟเวอร์ของคุณยังคงใช้งานอยู่"
+enterprise = "Enterprise"
+enterpriseConnectBody = "ไลเซนส์ Enterprise ของคุณรวมการประมวลผลบนเซิร์ฟเวอร์นี้ การเชื่อมต่อบัญชีเป็นทางเลือก"
+included = "รวมอยู่ในไลเซนส์ของคุณ"
+seats = "{{seats}} seat ที่มีไลเซนส์"
+server = "Server"
+unlimited = "ผู้ใช้ไม่จำกัด"
+
+[portal.billing.simple]
+afterYear = "หลังจากหนึ่งปี"
+afterYearNote = "ไม่มีการต่ออายุอัตโนมัติ การประมวลผลเพิ่มเติมต้องมีแผนตามมิเตอร์ที่ใช้งานอยู่และอยู่ภายในวงเงินใช้จ่าย"
+billingNote = "ไม่มีค่าธรรมเนียมประจำ เครดิตจะเรียกเก็บรายเดือนตามการใช้งาน ยกเลิกได้ทุกเวลาใน Usage & Billing"
+creditEstimate = "≈ {{credits}} เครดิต"
+credits = "เครดิต"
+limit = "วงเงินใช้จ่าย · การประมวลผลหยุดชั่วคราวที่นี่"
+limitIntro = "จำกัดจำนวนเงินที่ Processor สามารถเรียกเก็บได้ในแต่ละเดือน"
+monthlyAmount = "{{amount}}/เดือน"
+prepayDiscount = "ส่วนลดชำระล่วงหน้า · 12 ในราคา 10"
+prepayIntro = "การประมวลผลหนึ่งปีในราคาพิเศษ"
+rate = "{{rate}} ต่อรายการ · เรียกเก็บตามการใช้งาน"
+ratePending = "อัตราจะแสดงตอนชำระเงิน"
+setLimit = "ตั้งวงเงินใช้จ่าย"
+yearSize = "ขนาดรายปี"
+yearValue = "การประมวลผลหนึ่งปี"
 
 [portal.billing.spendLimit]
 adjustLimit = "ปรับขีดจำกัด"
+buyCredits = "ซื้อเครดิต"
 cancel = "ยกเลิก"
 capControlNote = "การเปลี่ยนแปลงมีผลทันที — เพิ่มหรือลดเพดานได้ทุกเมื่อ"
 capSuffix = "/ เดือน"
-capSuffixWithDocs = "/ เดือน · ≈ {{documents}} เอกสาร"
 displaySub = "คุณจะถูกเรียกเก็บเงินเฉพาะสิ่งที่ประมวลผลอัตโนมัติ — ไม่เกินเพดาน"
 editTitle = "ตั้งเพดานรายเดือนของคุณ"
 eyebrow = "ขีดจำกัดค่าใช้จ่าย"
-guardrailBody = "เพดานแบบเข้มงวด — คุณจะไม่ถูกเรียกเก็บเงินเกินนั้น เมื่อถึงขีดจำกัด การประมวลผลตามปริมาณการใช้งานจะหยุดชั่วคราว (การแก้ไข PDF ไม่จำกัดยังคงใช้งานได้) จนกว่าคุณจะเพิ่มขีดจำกัดหรือรอบจะรีเซ็ต ไม่มีสิ่งใดสูญหาย"
-guardrailLabel = "ราวป้องกันของคุณ:"
 noCap = "ไม่มีเพดาน"
+pauseNote = "การประมวลผลตามมิเตอร์จะหยุดชั่วคราวเมื่อถึงวงเงินของคุณ การแก้ไข PDF ยังคงใช้งานได้"
 pctUsed = "ใช้แล้ว {{pct}}%"
 remaining = "คงเหลือ {{amount}}"
 save = "บันทึกขีดจำกัด"
@@ -6823,15 +7796,6 @@ body_one = "ที่ {{rate}}/วัน คุณจะถึงขีดจำ
 body_other = "ที่ {{rate}}/วัน คุณจะถึงขีดจำกัดใน ~{{count}} วัน (~{{monthEnd}} สิ้นเดือน) ขีดจำกัดที่แนะนำ ~{{suggested}}"
 label = "คาดว่าจะเกิน"
 
-[portal.billing.spendThisMonth]
-eyebrow = "ค่าใช้จ่ายเดือนนี้"
-freeRemaining_one = "เหลือ PDF ฟรี {{formatted}} ไฟล์"
-freeRemaining_other = "เหลือ PDFs ฟรี {{formatted}} ไฟล์"
-processed_one = "ประมวลผล {{formattedCount}} PDF แล้ว"
-processed_other = "ประมวลผล {{formattedCount}} PDFs แล้ว"
-processedWithRate_one = "ประมวลผล {{formattedCount}} PDF แล้ว ที่ {{rate}} ต่อรายการ"
-processedWithRate_other = "ประมวลผล {{formattedCount}} PDFs แล้ว ที่ {{rate}} ต่อรายการ"
-
 [portal.billing.subscribedPlan.capWarn]
 approachingBody = "เพิ่มตอนนี้เพื่อให้การประมวลผลอัตโนมัติไม่หยุดชั่วคราว"
 approachingTitle = "คุณใช้ถึง {{pct}}% ของขีดจำกัดค่าใช้จ่ายรายเดือนแล้ว"
@@ -6842,18 +7806,16 @@ reachedTitle = "ถึงขีดจำกัดค่าใช้จ่าย�
 [portal.billing.subscribedPlan.portalError]
 title = "ไม่สามารถเปิดพอร์ทัล Stripe ได้"
 
-[portal.billing.walletMeter]
-barAria = "Free PDFs remaining"
-capSuffix_one = "จาก {{allowance}} PDFs ฟรีถูกใช้แล้ว"
-capSuffix_other = "จาก {{allowance}} PDFs ฟรีถูกใช้แล้ว"
-eyebrow = "ทดลองใช้ Processor"
-statusLabel_one = "ใช้ไปแล้ว {{used}}"
-statusLabel_other = "ใช้ไปแล้ว {{used}}"
-sub = "ใช้ PDF Editor ได้ฟรี จ่ายเพื่อประมวลผล PDFs อัตโนมัติ"
-title_one = "ประมวลผล {{allowance}} PDFs ฟรี"
-title_other = "ประมวลผล {{allowance}} PDFs ฟรี"
-titleWithRate_one = "ประมวลผล {{allowance}} PDFs ฟรี จากนั้น {{rate}}/PDF"
-titleWithRate_other = "ประมวลผล {{allowance}} PDFs ฟรี จากนั้น {{rate}}/PDF"
+[portal.billing.team]
+addCapacity = "เพิ่มความจุ"
+fact = "{{users}} จาก {{licensed}} ผู้ใช้"
+factNoLimit = "{{users}} ผู้ใช้"
+midFree = "แผน Team ครอบคลุมผู้ใช้ 100 คน"
+midFreeSelfHosted = "ระดับฟรีครอบคลุมผู้ใช้แรกของคุณ"
+midIncluded = "รวมอยู่ในฐาน Team ของคุณ"
+midLocalCapacity = "ความจุที่พร้อมใช้งานสำหรับเซิร์ฟเวอร์นี้"
+midPrice = "$99/เดือน ต่อ 100 ผู้ใช้"
+rowName = "ผู้ใช้"
 
 [portal.components.billingUnit]
 approval = "การอนุมัติ"
@@ -7224,6 +8186,14 @@ baseUrlPlaceholder = "https://your-org.webhook.office.com/webhookb2/..."
 description = "โพสต์ข้อความไปยังช่อง Teams เมื่อ policy ทำงาน"
 label = "Microsoft Teams"
 
+[portal.connections.types.vectordb]
+baseUrlPlaceholder = "https://your-database-host"
+description = "จัดทำดัชนีชิ้นส่วนเอกสารโดยใช้ embedding ฝั่งเซิร์ฟเวอร์ของ Weaviate หรือ Pinecone ใช้ Weaviate server URL หรือ Pinecone index host endpoint ส่วนตัวต้องให้ผู้ปฏิบัติงานเปิดใช้นโยบาย policies.allowPrivateApiEndpoints"
+label = "ฐานข้อมูลเวกเตอร์"
+pinecone = "Pinecone"
+vendor = "ฐานข้อมูล"
+weaviate = "Weaviate"
+
 [portal.connections.types.webhook]
 baseUrlPlaceholder = "https://example.com/hooks/documents"
 description = "โพสต์เอกสารแต่ละฉบับ หรือเพียงรายละเอียด ไปยัง URL ที่คุณเลือก"
@@ -7431,114 +8401,34 @@ status = "สถานะ"
 time = "เวลา"
 user = "ผู้ใช้"
 
-[portal.editorAdmin]
-subtitle = "ปรับใช้ Stirling PDF Editor, จับคู่อินสแตนซ์ที่โฮสต์เองกับองค์กรของคุณ และจัดการฟลีตที่กำลังทำงาน — เป้าหมาย สุขภาพ ข้อมูลประจำตัว และการเปิดใช้งานออฟไลน์ในที่เดียว"
-title = "การปรับใช้ Editor"
-
-[portal.editorAdmin.health.columns]
-activeUsers = "ผู้ใช้ที่ใช้งานอยู่"
-host = "Host"
-lastSeen = "เห็นล่าสุด"
-region = "ภูมิภาค"
-status = "สถานะ"
-target = "Target"
-version = "เวอร์ชัน"
-
-[portal.editorAdmin.health.empty]
-description = "ปรับใช้เป้าหมายและจับคู่เพื่อดูสถานะสุขภาพของอินสแตนซ์แบบสดที่นี่"
-title = "ไม่มีอินสแตนซ์รายงาน"
-
-[portal.editorAdmin.offlineActivation]
-enterpriseTag = "Enterprise"
-generateButton = "สร้างบันเดิลออฟไลน์"
-lockCopy = "การเปิดใช้งานแบบออฟไลน์และ on-prem เป็นส่วนหนึ่งของ Enterprise"
-subtitle = "สร้างบันเดิลการเปิดใช้งานที่ลงนามแล้วสำหรับการติดตั้งแบบออฟไลน์หรือ on-prem ที่ไม่มีเส้นทางเครือข่ายขาออก โอนไปยังอินสแตนซ์และนำไปใช้ระหว่างการตั้งค่าเมื่อรันครั้งแรก"
-talkToSales = "คุยกับฝ่ายขาย"
-title = "การเปิดใช้งานแบบ air-gapped"
-
-[portal.editorAdmin.offlineActivation.readyBanner]
-description = "{{file}} ได้รับการลงนามและพร้อมโอนแล้ว ใช้เปิดใช้งานหนึ่งอินสแตนซ์และหมดอายุใน 14 วัน"
-title = "บันเดิลพร้อมแล้ว"
-
-[portal.editorAdmin.pairing]
-generated = "สร้างแล้ว ✓"
-generateNewCode = "สร้างรหัสใหม่"
-lockCopy = "การจัดสรร IaC เป็นส่วนหนึ่งของ Enterprise"
-rotate = "หมุนเวียน"
-talkToSales = "คุยกับฝ่ายขาย"
-
-[portal.editorAdmin.sections.health]
-sub = "ทุกอินสแตนซ์ของ Editor ที่รายงานเข้ามา — เวอร์ชัน ภูมิภาค สถานะ เห็นล่าสุด และผู้ใช้ที่ใช้งานอยู่"
-title = "สุขภาพอินสแตนซ์"
-
-[portal.editorAdmin.sections.pairing]
-sub = "เชื่อมต่อ editor ที่โฮสต์เองกับองค์กรนี้ สร้าง token ส่งต่อรหัสสั้น หรือเชื่อมผ่าน IaC"
-title = "การจับคู่"
-
-[portal.editorAdmin.sections.targets]
-sub = "ตำแหน่งที่ Editor ทำงาน คัดลอก snippet เพื่อสร้างอินสแตนซ์ที่โฮสต์เอง หรือใช้ Managed Cloud โดยไม่ต้องดูแลระบบ"
-title = "เป้าหมายการปรับใช้"
-
-[portal.editorAdmin.serviceToken]
-currentToken = "Token ปัจจุบัน"
-lastRotated = "หมุนเวียนล่าสุด"
-rotateButton = "หมุนเวียน service token"
-subtitle = "อินสแตนซ์ยืนยันตัวตนกับองค์กรด้วยข้อมูลประจำตัวนี้ หมุนเวียนตามกำหนดการหรือทันทีหลังสงสัยว่ารั่วไหล"
-title = "Service token"
-
-[portal.editorAdmin.serviceToken.rotatedBanner]
-description = "ออก token ใหม่แล้ว อัปเดต STIRLING_SERVICE_TOKEN ของอินสแตนซ์ที่โฮสต์เองแต่ละรายการภายในช่วงผ่อนผัน 24 ชม. ไม่เช่นนั้นอินสแตนซ์จะออฟไลน์"
-title = "หมุนเวียนอินสแตนซ์ที่กำลังทำงาน"
-
-[portal.editorAdmin.status]
-degraded = "เสื่อมสภาพ"
-healthy = "สุขภาพดี"
-offline = "ออฟไลน์"
-pairing = "กำลังจับคู่"
-
-[portal.editorAdmin.targets]
-instanceCount_one = "{{count}} อินสแตนซ์"
-instanceCount_other = "{{count}} อินสแตนซ์"
-talkToSales = "คุยกับฝ่ายขาย"
-upgradePlan = "อัปเกรดแผน"
-
-[portal.editorAdmin.targets.lock]
-enterprise = "การโฮสต์เองแบบ on-prem และ Kubernetes เป็นส่วนหนึ่งของ Enterprise"
-paid = "การโฮสต์เองด้วย Docker และ Kubernetes จะปลดล็อกในแผนแบบชำระเงิน"
-
-[portal.editorAdmin.targets.state]
-available = "พร้อมใช้งาน"
-locked = "ถูกล็อก"
-running = "กำลังทำงาน"
-
 [portal.errorBoundary]
 description = "มุมมองนี้พบข้อผิดพลาดที่ไม่คาดคิด ลองอีกครั้ง หรือเลือกส่วนอื่นจากแถบด้านข้าง"
 retry = "ลองอีกครั้ง"
 title = "มีบางอย่างผิดพลาดในหน้านี้"
 
 [portal.failures]
-fromSource = "From source {{source}}"
+closedBySystem = "Stirling"
+noMatches = "ไม่มีรายการที่ตรงกับตัวกรองปัจจุบัน"
 occurrences = "{{count}} occurrences"
-reportedBy = "Hit by {{actor}}"
-runReference = "Run {{runId}}"
-subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
-title = "Failures"
+searchPlaceholder = "ค้นหาปัญหา ผู้ใช้ และข้อผิดพลาด"
 
 [portal.failures.action]
 acknowledge = "Acknowledge"
-confirm = "Are you sure?"
+decrypt = "ปลดล็อก"
 dismiss = "Dismiss"
-dismissSkipFile = "Skip this file"
+openInTool = "ลองอีกครั้ง"
+repair = "ซ่อมแซม"
 viewFile = "ดูไฟล์"
 viewInProcessor = "ดูในตัวประมวลผล"
 
-[portal.failures.debug]
-copyJson = "Copy JSON"
-dismissAll = "Dismiss all ({{total}})"
-dismissing = "Dismissing..."
-hideJson = "Hide raw JSON ({{total}})"
-refresh = "Refresh failures"
-showJson = "Show raw JSON ({{total}})"
+[portal.failures.columns]
+closedBy = "ปิดโดย"
+date = "วันที่"
+failure = "ปัญหา"
+origin = "เกิดขึ้นใน"
+outcome = "ผลลัพธ์"
+source = "แหล่งที่มา"
+user = "ผู้ใช้"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
@@ -7550,25 +8440,102 @@ unavailable = "Not available for this failure."
 description = "Policy runs that fail will appear here with the actions you can take."
 title = "No failures recorded"
 
+[portal.failures.emptyClosed]
+description = "รายการที่คุณยกเลิกหรือแก้ไขแล้วจะถูกเก็บไว้ที่นี่พร้อมผลลัพธ์"
+title = "ยังไม่มีรายการที่ปิด"
+
+[portal.failures.filters]
+origin = "เกิดขึ้นใน"
+source = "แหล่งที่มา"
+type = "ประเภท"
+user = "ผู้ใช้"
+
+[portal.failures.kind.complianceNotMet]
+description = "การตรวจสอบการปฏิบัติตามข้อกำหนดปฏิเสธเอกสารนี้เนื่องจากไม่เป็นไปตามมาตรฐานที่นโยบายตรวจสอบ การละเมิดแสดงอยู่ด้านล่าง"
+title = "ไม่เป็นไปตามมาตรฐานการปฏิบัติตามข้อกำหนด"
+
+[portal.failures.kind.inputCorrupted]
+description = "ไฟล์ของคุณเสียหาย จึงทำให้การทำงานไม่สามารถอ่านได้"
+title = "เอกสารเสียหาย"
+
+[portal.failures.kind.inputEmpty]
+description = "ไฟล์ของคุณไม่มีเนื้อหา จึงไม่มีสิ่งใดให้การทำงานประมวลผล"
+title = "ไฟล์ว่าง"
+
 [portal.failures.kind.inputPasswordProtected]
 description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
 title = "Password-protected document"
 
+[portal.failures.kind.inputUnavailable]
+description = "ไม่สามารถเข้าถึงไฟล์เบื้องหลังการทำงานนี้ได้ จึงไม่เคยถูกประมวลผล"
+title = "ไฟล์ไม่พร้อมใช้งาน"
+
+[portal.failures.kind.inputUnreadable]
+description = "ไม่สามารถเปิดไฟล์ของคุณได้ จึงทำให้การทำงานไม่สามารถอ่านได้"
+title = "ไฟล์อ่านไม่ได้"
+
+[portal.failures.kind.inputUnrepairable]
+description = "ไฟล์ของคุณเสียหายเกินกว่าที่เครื่องมือซ่อมแซมจะแก้ไขได้"
+title = "ไม่สามารถซ่อมแซมไฟล์ได้"
+
+[portal.failures.kind.inputWrongType]
+description = "ไฟล์ของคุณไม่ใช่รูปแบบที่ขั้นตอนนี้เปิดได้ จึงทำให้การทำงานไม่สามารถอ่านได้"
+title = "ประเภทไฟล์ไม่ถูกต้อง"
+
+[portal.failures.kind.stepCannotRenderPage]
+description = "ไม่สามารถวาดหน้าในไฟล์ของคุณได้ จึงทำให้การทำงานไม่สามารถเสร็จสิ้นได้"
+title = "ไม่สามารถ render หน้าได้"
+
+[portal.failures.kind.stepInterrupted]
+description = "ขั้นตอนนี้ถูกหยุดก่อนเสร็จสิ้น ไฟล์ของคุณจึงไม่ได้รับการประมวลผล การเรียกใช้อีกครั้งมักจะได้ผล"
+title = "ขั้นตอนถูกขัดจังหวะ"
+
+[portal.failures.kind.stepMisconfigured]
+description = "การตั้งค่าของขั้นตอนนี้ไม่ถูกต้อง จึงไม่สามารถทำงานกับไฟล์ใด ๆ ได้ แก้ไขขั้นตอนเพื่อแก้ปัญหา"
+title = "การตั้งค่าขั้นตอนไม่ถูกต้อง"
+
+[portal.failures.kind.stepPageTooLarge]
+description = "ไม่สามารถ render หน้าในไฟล์ของคุณด้วยความละเอียดที่ร้องขอได้ ลด DPI ในขั้นตอน หรือแยกไฟล์"
+title = "หน้าใหญ่เกินกว่าจะ render"
+
+[portal.failures.kind.stepToolFailed]
+description = "เครื่องมือที่ขั้นตอนนี้พึ่งพาไม่สามารถประมวลผลไฟล์ของคุณได้"
+title = "เครื่องมือไม่สามารถประมวลผลไฟล์ได้"
+
+[portal.failures.kind.toolNotInstalled]
+description = "เซิร์ฟเวอร์นี้ไม่มีซอฟต์แวร์ที่ขั้นตอนต้องใช้ จึงไม่สามารถเริ่มการทำงานได้"
+title = "ยังไม่ได้ติดตั้งซอฟต์แวร์"
+
 [portal.failures.kind.unknown]
 description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
 title = "Unrecognised failure"
+
+[portal.failures.log]
+copy = "คัดลอกข้อผิดพลาด"
+view = "ดูข้อผิดพลาด"
 
 [portal.failures.origin]
 pipeline = "Pipeline"
 policy = "Policy"
 tool = "Tool run"
 
-[portal.failures.stage]
-blocked = "Blocked"
-input = "Input"
-internal = "Internal"
-never_ran = "Never ran"
-output = "Output"
+[portal.failures.outcome]
+dismissed = "ยกเลิกแล้ว"
+fileRemoved = "ลบไฟล์แล้ว"
+open = "เปิด"
+resolved = "แก้ไขแล้ว"
+
+[portal.failures.scope]
+ariaLabel = "สถานะการตรวจสอบ"
+closed = "ปิดแล้ว"
+open = "เปิด"
+
+[portal.failures.source]
+editor = "Editor"
+
+[portal.failures.unavailable]
+description = "คิวนี้มองเห็นได้สำหรับหัวหน้าทีมใน workspace ที่เรียกใช้นโยบาย"
+title = "ไม่มีสิ่งที่ต้องตรวจสอบ"
 
 [portal.home.download]
 back = "กลับ"
@@ -7644,12 +8611,6 @@ kubernetes = "โฮสต์เอง · Kubernetes"
 afternoon = "สวัสดีตอนบ่าย"
 evening = "สวัสดีตอนเย็น"
 morning = "สวัสดีตอนเช้า"
-
-[portal.infrastructure]
-manageEditorDeployment = "จัดการการปรับใช้ Editor"
-sectionsAriaLabel = "ส่วนโครงสร้างพื้นฐาน"
-subtitle = "การปรับใช้ ข้อมูลประจำตัว สถานะความปลอดภัย พื้นที่จัดเก็บ และ audit trail สำหรับ workspace Stirling ของคุณ"
-title = "โครงสร้างพื้นฐาน"
 
 [portal.infrastructure.apiKeys]
 createKey = "สร้างคีย์"
@@ -7760,17 +8721,175 @@ subtitleCreated = "คัดลอก secret นี้ตอนนี้ — จ
 title = "สร้าง API key"
 titleCreated = "สร้างคีย์แล้ว"
 
+[portal.infrastructure.encryption]
+heading = "Encryption at rest"
+hintLabel = "ข้อมูลเพิ่มเติมเกี่ยวกับส่วนนี้"
+subheading = "ไฟล์ที่จัดเก็บจะถูกเข้ารหัสก่อนถึงดิสก์ ฐานข้อมูล หรือ object storage"
+unknown = "ไม่ทราบ"
+
+[portal.infrastructure.encryption.auditNotice]
+description = "การเข้ารหัสเปิดใช้งานบนไลเซนส์นี้ แต่เหตุการณ์ encrypt, decrypt, revocation และ export จะไม่ถูกเขียนลง audit trail การเข้ารหัสเองไม่ได้รับผลกระทบ"
+title = "เหตุการณ์ audit ต้องใช้ไลเซนส์ Enterprise"
+
+[portal.infrastructure.encryption.coverage]
+decryptOnlyNote = "การอัปโหลดใหม่จะถูกจัดเก็บเป็น plaintext ไฟล์ที่เข้ารหัสไว้ก่อนหน้ายังคงอ่านได้"
+encrypted = "ไฟล์ที่เข้ารหัสแล้ว"
+heading = "ความครอบคลุม"
+percentEncrypted = "เข้ารหัสแล้ว {{percent}}%"
+plaintext = "ไฟล์ plaintext"
+progressLabel = "เข้ารหัสไฟล์ที่จัดเก็บแล้ว {{percent}}%"
+subheading = "ครอบคลุมไฟล์ใน My Files และเวิร์กโฟลว์การลงนาม ไฟล์ที่ Pipeline อ่านจากตำแหน่งเดิม รวมถึงแหล่งที่มาบนเครือข่าย จะไม่ถูกจัดเก็บที่นี่และไม่ถูกเข้ารหัส"
+
+[portal.infrastructure.encryption.error]
+action = "ไม่สามารถใช้การเปลี่ยนแปลงคีย์นั้นได้ โปรดลองอีกครั้ง"
+keyMissing = "คีย์นั้นไม่มีอยู่อีกต่อไป รีเฟรชเพื่อดูรายการปัจจุบัน"
+migrationStart = "ไม่สามารถเริ่มการย้ายข้อมูลได้ โปรดลองอีกครั้ง"
+rotate = "ไม่สามารถ re-wrap ให้เสร็จสมบูรณ์ได้ โปรดลองอีกครั้ง"
+
+[portal.infrastructure.encryption.generatedKey]
+backupGuide = "วิธีสำรองข้อมูล"
+description = "ไม่ได้กำหนดค่าคีย์เข้ารหัสไว้ จึงสร้างคีย์หนึ่งบนเซิร์ฟเวอร์นี้ สำรองข้อมูลตอนนี้: หากสูญหาย จะไม่สามารถกู้คืนไฟล์ที่เข้ารหัสได้"
+title = "คีย์นี้ถูกสร้างให้คุณ"
+
+[portal.infrastructure.encryption.keys]
+changedAt = "เปลี่ยนเมื่อ {{when}}"
+changedBy = "โดย {{actor}}"
+changedByAt = "โดย {{actor}} เมื่อ {{when}}"
+heading = "คีย์ตาม scope"
+keyVersion = "เวอร์ชัน {{version}}"
+neverChanged = "ไม่เคยเปลี่ยน"
+restore = "กู้คืนการเข้าถึง"
+retiredNote = "คีย์ที่เลิกใช้งานแล้วยังคงถอดรหัสไฟล์ที่จัดเก็บภายใต้คีย์นั้นได้ แต่คีย์ใหม่กว่าจะ wrap การอัปโหลดใหม่"
+revoke = "เพิกถอน"
+subheading = "หนึ่งคีย์ต่อหนึ่ง scope การเพิกถอนคีย์จะบล็อกการอ่านทุกอย่างที่จัดเก็บภายใต้คีย์นั้น"
+
+[portal.infrastructure.encryption.keys.columns]
+actions = "การดำเนินการ"
+lastChange = "การเปลี่ยนแปลงล่าสุด"
+scope = "Scope"
+status = "สถานะ"
+
+[portal.infrastructure.encryption.keys.empty]
+description = "คีย์จะถูกสร้างเมื่อมีคนอัปโหลดไฟล์ครั้งแรก ไม่ใช่ตอนเริ่มต้นระบบ"
+title = "ยังไม่มีคีย์"
+
+[portal.infrastructure.encryption.masterKey]
+backend = "Storage backend"
+compareNote = "เปรียบเทียบสิ่งนี้กับ fingerprint ในข้อมูลสำรองคีย์ของคุณและใน startup log"
+copied = "คัดลอกแล้ว"
+copy = "คัดลอก"
+copyFailed = "เบราว์เซอร์นี้ไม่อนุญาตให้คัดลอก เลือก fingerprint ไว้แล้ว โปรดคัดลอกด้วยตนเอง"
+fingerprint = "Fingerprint"
+fingerprintHelp = "fingerprint นี้ใช้ทำอะไร"
+heading = "Master key"
+notMaterialised = "กลไกคีย์ยังไม่ได้เริ่มบน node นี้"
+s3StreamingNote = "ขณะที่มีสิ่งใดถูกเข้ารหัส การดาวน์โหลดจาก object-store จะถูก stream ผ่านเซิร์ฟเวอร์นี้แทนการ redirect จึงใช้ bandwidth ของเซิร์ฟเวอร์นี้"
+subheading = "Wrap คีย์ทุก scope ไม่เคยแสดงหรือรับผ่าน API"
+version = "เวอร์ชัน"
+
+[portal.infrastructure.encryption.migration]
+backlog_one = "ไฟล์ {{formatted}} ถูกจัดเก็บเป็น plaintext และสามารถเข้ารหัสได้ตอนนี้"
+backlog_other = "ไฟล์ {{formatted}} ถูกจัดเก็บเป็น plaintext และสามารถเข้ารหัสได้ตอนนี้"
+encrypted = "เข้ารหัสแล้ว"
+failedCount = "ล้มเหลว"
+heading = "เข้ารหัสไฟล์ที่มีอยู่"
+hint = "เข้ารหัส backlog plaintext ที่เหลือจากก่อนเปิดการเข้ารหัส ความคืบหน้าถูกเก็บไว้ในหน่วยความจำ ดังนั้นการรีสตาร์ท backend จะรีเซ็ตเป็นยังไม่เริ่มต้น การเรียกใช้อีกครั้งจะข้ามไฟล์ที่เข้ารหัสแล้ว"
+noBacklog = "ไฟล์ที่จัดเก็บทั้งหมดถูกเข้ารหัสแล้ว"
+progressLabel = "เข้ารหัสไฟล์แล้ว {{processed}} จาก {{total}}"
+requiresEncryptionOn = "เปิดการเข้ารหัสก่อนเรียกใช้งานนี้: backlog จะถูกเข้ารหัสโดยใช้ write path เดียวกับการอัปโหลดใหม่"
+runAgain = "เรียกใช้อีกครั้ง"
+skipped = "ข้ามแล้ว"
+skippedHelp = "ข้ามหมายความว่าอย่างไร"
+skippedNote = "ไฟล์ที่ข้ามถูกผู้ใช้แทนที่ขณะการทำงานกำลังดำเนินอยู่ ดังนั้นสำเนาของไฟล์เหล่านั้นจึงถูกปล่อยไว้ตามเดิม"
+start = "เริ่ม"
+startedAt = "เริ่มเมื่อ {{when}}"
+
+[portal.infrastructure.encryption.migration.confirm]
+cancel = "ยกเลิก"
+confirm = "เริ่มเข้ารหัส"
+noCancel = "ไม่มีตัวควบคุมหยุด เมื่อเริ่มแล้ว การทำงานจะดำเนินต่อจนเสร็จสิ้นหรือจนกว่าการเข้ารหัสจะถูกปิด"
+rewrites_one = "เขียนไฟล์ที่จัดเก็บ {{formatted}} ใหม่ โดยแทนที่สำเนา plaintext ด้วยสำเนาที่เข้ารหัส"
+rewrites_other = "เขียนไฟล์ที่จัดเก็บ {{formatted}} ใหม่ โดยแทนที่สำเนา plaintext ด้วยสำเนาที่เข้ารหัส"
+throttled = "งานนี้ถูกจำกัดความเร็วและปลอดภัยที่จะเรียกใช้อีกครั้ง ไฟล์ที่เข้ารหัสแล้วจะถูกข้าม"
+title = "เข้ารหัส backlog ที่มีอยู่หรือไม่"
+
+[portal.infrastructure.encryption.migration.failed]
+description = "การเข้ารหัสถูกปิดขณะการย้ายข้อมูลกำลังทำงาน ไฟล์ที่เหลือจึงถูกปล่อยไว้โดยไม่เปลี่ยนแปลง เปิดกลับมาแล้วเรียกใช้อีกครั้ง"
+title = "การทำงานหยุดก่อนกำหนด"
+
+[portal.infrastructure.encryption.migration.state]
+COMPLETED = "เสร็จสมบูรณ์"
+FAILED = "ล้มเหลว"
+IDLE = "ยังไม่เริ่ม"
+RUNNING = "กำลังทำงาน"
+
+[portal.infrastructure.encryption.revoke]
+cancel = "ยกเลิก"
+clusterDelay = "บน cluster, node อื่นจะนำไปใช้ภายใน 60 วินาที"
+confirm = "เพิกถอนการเข้าถึง"
+readsFail = "ไฟล์ที่จัดเก็บภายใต้คีย์นี้แล้วจะเปิดไม่ได้สำหรับทุกคน"
+reversible = "สามารถย้อนกลับได้ ไม่มีการลบ key material"
+title = "เพิกถอนการเข้าถึงคีย์นี้หรือไม่"
+uploadsContinue = "การอัปโหลดใหม่ยังทำงานต่อไป จะได้รับคีย์ใหม่ จึงยังคงอ่านได้"
+
+[portal.infrastructure.encryption.rotation]
+currentVersion = "เวอร์ชันปัจจุบัน"
+heading = "การหมุนเวียน Master key"
+hint = "Re-wrap คีย์ scope ภายใต้ master key ใหม่ เนื้อหาไฟล์จะไม่ถูกเขียนใหม่ คีย์ใหม่ถูกตั้งค่าใน configuration และนำไปใช้เมื่อรีสตาร์ท ดังนั้นปุ่มนี้จะทำเฉพาะการ re-wrap"
+pendingRows = "แถวบนเวอร์ชันเก่า"
+rewrap = "Re-wrap คีย์"
+rewrapped_one = "re-wrap แถวคีย์ {{count}} แล้ว"
+rewrapped_other = "re-wrap แถวคีย์ {{count}} แล้ว"
+runbook = "Runbook การหมุนเวียน"
+
+[portal.infrastructure.encryption.rotation.confirm]
+cancel = "ยกเลิก"
+confirm = "Re-wrap คีย์"
+noFiles = "เนื้อหาไฟล์จะไม่ถูกแตะ ต้องเขียนใหม่เฉพาะตารางคีย์เท่านั้น"
+rerunnable = "ปลอดภัยที่จะเรียกใช้อีกครั้งหากไม่เสร็จสิ้น"
+rewraps_one = "Re-wrap แถวคีย์ {{count}} ภายใต้ master key ปัจจุบัน"
+rewraps_other = "Re-wrap แถวคีย์ {{count}} ภายใต้ master key ปัจจุบัน"
+title = "Re-wrap ตารางคีย์หรือไม่"
+
+[portal.infrastructure.encryption.rotation.pending]
+description = "อย่าเพิ่งลบคีย์ก่อนหน้าจาก configuration ไฟล์ภายใต้คีย์เหล่านั้นจะเปิดไม่ได้"
+title_one = "แถวคีย์ {{count}} ยังอยู่บน master key ก่อนหน้า"
+title_other = "แถวคีย์ {{count}} ยังอยู่บน master key ก่อนหน้า"
+
+[portal.infrastructure.encryption.scope]
+global = "ผู้ใช้ทั้งหมด"
+source = "แหล่งที่มา {{id}}"
+team = "ทีม {{id}}"
+
+[portal.infrastructure.encryption.status]
+ACTIVE = "ใช้งานอยู่"
+DISABLED = "เพิกถอนแล้ว"
+RETIRED = "เลิกใช้งานแล้ว"
+
+[portal.infrastructure.encryption.unavailable.forbidden]
+description = "บัญชีของคุณไม่มีสิทธิ์ดูการตั้งค่าการเข้ารหัส"
+title = "ไม่พร้อมใช้งานสำหรับบัญชีของคุณ"
+
+[portal.infrastructure.encryption.unavailable.registry-unavailable]
+description = "ไม่สามารถอ่าน registry คีย์เข้ารหัสได้ ตรวจสอบการเชื่อมต่อฐานข้อมูลและ application log"
+title = "Key registry ไม่พร้อมใช้งาน"
+
+[portal.infrastructure.encryption.unavailable.storage-disabled]
+description = "File storage ถูกปิดบนเซิร์ฟเวอร์นี้ จึงไม่มีสิ่งใดให้เข้ารหัส"
+title = "Storage ถูกปิดใช้งาน"
+
+[portal.infrastructure.encryption.unavailable.unknown]
+description = "ไม่สามารถโหลดสถานะการเข้ารหัสได้ โปรดลองอีกครั้ง"
+title = "สถานะไม่พร้อมใช้งาน"
+
+[portal.infrastructure.encryption.writeState]
+decryptOnly = "ถอดรหัสเท่านั้น"
+encrypting = "กำลังเข้ารหัสการอัปโหลดใหม่"
+off = "ปิด"
+
 [portal.infrastructure.keyLabel]
 active = "ใช้งานอยู่"
 revoked = "ถูกเพิกถอน"
-
-[portal.infrastructure.tabs]
-apiKeys = "API Keys"
-audit = "Audit Logs"
-deployments = "การปรับใช้"
-models = "Models"
-security = "ความปลอดภัย"
-storage = "พื้นที่จัดเก็บ"
 
 [portal.integrations]
 availableHeading = "พร้อมใช้งาน"
@@ -7827,6 +8946,7 @@ integrations = "Integrations"
 pipelines = "Pipelines"
 policies = "นโยบาย"
 procurement = "การจัดซื้อ"
+review = "ตรวจสอบ"
 sources = "แหล่งที่มา"
 usage = "การใช้งานและการเรียกเก็บเงิน"
 users = "ผู้ใช้"
@@ -7836,11 +8956,16 @@ platform = "แพลตฟอร์ม PDF"
 processor = "ตัวประมวลผล PDF"
 
 [portal.pipelines]
+permissionsRetry = "ลองอีกครั้ง"
+permissionsUnavailable = "ไม่สามารถตรวจสอบได้ว่าคุณสามารถจัดการนโยบายได้หรือไม่ ดังนั้นการดำเนินการเกี่ยวกับนโยบายจึงยังไม่พร้อมใช้งานในตอนนี้"
 subtitle = "Pipeline เอกสารอัตโนมัติทุกรายการบน backend: ลำดับการดำเนินการที่เรียงไว้เหนือชุดแหล่งที่มา ทำงานเมื่อมี trigger คลิกแถวเพื่อดูขั้นตอนและแหล่งที่มา"
 title = "Pipelines"
 
 [portal.pipelines.actions]
-newPipeline = "Pipeline ใหม่"
+newCustomPipeline = "Pipeline แบบกำหนดเองใหม่"
+
+[portal.pipelines.all]
+title = "Pipeline ทั้งหมด"
 
 [portal.pipelines.builder]
 activate = "Activate"
@@ -7851,6 +8976,8 @@ chooseDestination = "เลือกปลายทาง"
 chooseOperation = "เลือกสิ่งที่ขั้นตอนนี้ทำ"
 chooseSource = "เลือกแหล่งที่มา"
 discard = "ละทิ้งการเปลี่ยนแปลง"
+editorDestination = "Editor"
+editorDestinationDetail = "แทนที่ไฟล์ที่คุณเรียกใช้งาน"
 inputs = "อินพุต"
 inputSource = "แหล่งที่มาของอินพุต"
 inputTrigger = "Trigger"
@@ -7862,6 +8989,10 @@ needsSource = "No source chosen"
 noToolMatches = "ไม่มีเครื่องมือที่ตรงกับการค้นหาของคุณ"
 pause = "Pause"
 rename = "Rename pipeline"
+runOn = "เรียกใช้เมื่อ"
+runOnExport = "ทุกการส่งออก"
+runOnTooltip = "เลือกเวลาที่ Pipeline นี้ทำงานกับไฟล์ของคุณ: เมื่อคุณเพิ่มไฟล์ หรือเมื่อคุณส่งออกไฟล์"
+runOnUpload = "ทุกการอัปโหลด"
 searchTools = "ค้นหาเครื่องมือ"
 sendToSystem = "ส่งไปยังระบบอื่น"
 stepsIncompatible = "ขั้นตอนเหล่านี้ไม่สามารถทำงานกับผลลัพธ์จากขั้นตอนก่อนหน้าได้: {{tools}}"
@@ -7875,10 +9006,14 @@ usesDefaults = "ทำงานด้วยการตั้งค่าเร�
 viewDefinition = "View definition"
 
 [portal.pipelines.builder.blocker]
+aiClassification = "เปิดใช้งานการจำแนกประเภทด้วย AI ในการตั้งค่า หรือลบขั้นตอน Classify"
 destination = "Choose a destination"
 heading = "To create this pipeline:"
 incompatible = "Fix steps that can't run in order: {{tools}}"
+managerOnly = "เฉพาะผู้ดูแลระบบหรือหัวหน้าทีมเท่านั้นที่สามารถแก้ไขนโยบายได้"
 name = "Give the pipeline a name"
+routing = "ระบุประเภทเอกสารและปลายทางให้ทุก route"
+routingNeedsClassify = "เพิ่มขั้นตอน Classify หรือปิดการ routing ตามประเภทเอกสาร"
 saveHeading = "To save your changes:"
 schedule = "Set how often it runs"
 setup = "Finish setting up: {{tools}}"
@@ -7891,6 +9026,53 @@ format-mismatch = "ต้องใช้ {{accepts}} แต่ขั้นตอ
 output-uncertain = "อาจไม่รัน: ผลลัพธ์ของขั้นตอนก่อนหน้าขึ้นอยู่กับวิธีตั้งค่า"
 source-mismatch = "ต้องใช้ {{accepts}} แต่อินพุตของไปป์ไลน์นี้คือ {{produced}}"
 undeclared-operation = "ตรวจสอบไม่ได้ว่าขั้นตอนนี้รับอะไรได้บ้าง"
+
+[portal.pipelines.builder.icon]
+label = "เปลี่ยนไอคอน"
+
+[portal.pipelines.builder.ingest]
+chunkSize = "ขนาด chunk"
+chunkSizeHint = "จำนวนอักขระต่อ chunk chunk ที่เล็กกว่าจะดึงข้อมูลได้แม่นยำกว่า ส่วน chunk ที่ใหญ่กว่าจะเก็บบริบทรวมกันได้มากกว่า"
+destinationNeedsChunks = "ปลายทางฐานข้อมูลเวกเตอร์นี้ต้องมีขั้นตอนการนำเข้า AI ขั้นสุดท้ายที่ส่งออกเฉพาะ chunk"
+editorPdfOnly = "เฉพาะ PDF เท่านั้นที่สามารถกลับไปยัง editor ได้ หากต้องการส่งออก chunk หรือ Markdown ให้เลือกเก็บต้นฉบับและส่งไปยังปลายทางภายใต้ Output"
+exportChunks = "ส่งออก chunk เป็น JSONL"
+exportChunksHint = "หนึ่ง chunk ต่อบรรทัดพร้อมช่วงหน้า พร้อมโหลดเข้าสู่ระบบอื่น"
+exportMarkdown = "ส่งออก markdown"
+exportMarkdownHint = "ข้อความของเอกสารเป็นไฟล์ Markdown เดียว"
+includeOriginal = "รวม PDF ต้นฉบับ"
+includeOriginalHint = "ส่ง PDF ไปพร้อมกับข้อความที่ส่งออก สิ่งนี้ไม่เปลี่ยนแปลงว่าแหล่งที่มาจะเก็บต้นฉบับไว้หรือไม่"
+index = "จัดทำดัชนีเข้าสู่ knowledge base"
+indexHint = "ฝังเอกสารเพื่อให้ค้นหาและถามเกี่ยวกับเอกสารได้ ต้องใช้ AI engine"
+nothingToDo = "เปิดอย่างน้อยหนึ่งอย่างระหว่างการจัดทำดัชนีหรือการส่งออก มิฉะนั้นขั้นตอนนี้จะไม่มีอะไรทำและการทำงานจะล้มเหลว"
+overlap = "Overlap"
+overlapHint = "อักขระที่ซ้ำกันระหว่าง chunk ข้างเคียง เพื่อให้ประโยคที่ถูกแบ่งข้ามสอง chunk ยังคงค้นหาได้"
+overlapTooBig = "Overlap ต้องเล็กกว่าขนาด chunk ({{chunkSize}})"
+prepareDestination = "เตรียม chunk สำหรับปลายทางนี้"
+unavailable = "การนำเข้า AI ต้องเปิดใช้งาน AI engine และ DocParse รวมถึงเมื่อฐานข้อมูลปลายทางสร้าง embedding"
+
+[portal.pipelines.builder.routing]
+addRule = "เพิ่ม route"
+aiDisabled = "ไม่ได้เปิดใช้งานการจำแนกประเภทด้วย AI เปิดใช้งานในการตั้งค่า หรือ route ตามคุณสมบัติเอกสารแทน"
+aiToolDisabled = "ไม่พร้อมใช้งานจนกว่าจะเปิดใช้งานการจำแนกประเภทด้วย AI ในการตั้งค่า"
+aiUnavailable = "การ routing ตามประเภทเอกสารถูกปิดใช้งานเนื่องจากการจำแนกประเภทด้วย AI ไม่พร้อมใช้งาน ให้ route ตามคุณสมบัติเอกสารแทน"
+extensionPlaceholder = "pdf, docx, png"
+fallback = "อย่างอื่นทั้งหมดไปที่"
+heading = "Routes"
+matchAuthor = "ผู้เขียน PDF"
+matchBy = "จับคู่ตาม"
+matchDocumentType = "ประเภทเอกสาร (การจำแนกประเภทด้วย AI)"
+matchDocumentTypeDisabled = "ประเภทเอกสาร (AI ไม่พร้อมใช้งาน)"
+matchExtension = "นามสกุลไฟล์"
+matchFilename = "ชื่อไฟล์ตรงกัน"
+matchTitle = "ชื่อเรื่อง PDF"
+matchValues = "ค่าที่ต้องจับคู่"
+needsClassify = "เพิ่มขั้นตอน Classify เพื่อใช้การ routing ตามประเภทเอกสาร หรือจับคู่กับคุณสมบัติเอกสารแทน"
+nodeSummary_one = "1 route แล้วตามด้วย fallback"
+nodeSummary_other = "{{count}} routes แล้วตามด้วย fallback"
+toggle = "ส่งประเภทเอกสารไปยังตำแหน่งต่างกัน"
+toggleOff = "เอกสารทุกฉบับไปยังปลายทางด้านล่าง"
+toggleOn = "เอกสารถูก route ตามเงื่อนไขเอกสารแรกที่ตรงกัน"
+valuePlaceholder = "ป้อนค่าที่ตรงกันทุกประการ คั่นด้วยจุลภาค"
 
 [portal.pipelines.composer]
 addTool = "เพิ่มเครื่องมือ"
@@ -7941,6 +9123,12 @@ connectSource = "เชื่อมต่อแหล่งที่มา"
 description = "สร้าง pipeline แรกของคุณ: เลือกแหล่งที่มาที่จะรัน เชื่อมโยงการดำเนินการ และเลือกตำแหน่งผลลัพธ์"
 title = "ยังไม่มี pipelines"
 
+[portal.pipelines.enforce]
+desc = "นโยบายจะบล็อกไฟล์ที่ไม่ผ่าน ส่วน Pipeline ปกติจะรายงานข้อผิดพลาดแต่ปล่อยให้ไฟล์ผ่านไป"
+info = "ความหมายของการบังคับใช้เป็นนโยบาย"
+label = "บังคับใช้เป็นนโยบาย"
+managerOnly = "เฉพาะผู้ดูแลระบบหรือหัวหน้าทีมเท่านั้นที่สามารถบังคับใช้ Pipeline เป็นนโยบายได้"
+
 [portal.pipelines.graph]
 addFirstTool = "Add a tool"
 dragHint = "Drop on a line to move it"
@@ -7972,11 +9160,6 @@ failed_other = "Failed after {{done}} of {{count}} steps"
 running_one = "Running the only step"
 running_other = "Running step {{done}} of {{count}}"
 
-[portal.pipelines.kpi]
-active = "ใช้งานอยู่"
-paused = "หยุดชั่วคราว"
-total = "Pipelines"
-
 [portal.pipelines.run]
 allProcessed_one = "ไม่มีอะไรให้รัน: เอกสาร {{count}} รายการของแหล่งที่มาได้รับการประมวลผลแล้ว"
 allProcessed_other = "ไม่มีอะไรให้รัน: เอกสารทั้งหมด {{count}} รายการในแหล่งที่มาได้รับการประมวลผลแล้ว"
@@ -8000,20 +9183,29 @@ sources = "แหล่งที่มา"
 status = "สถานะ"
 steps = "ขั้นตอน"
 trigger = "Trigger"
+type = "ประเภท"
+
+[portal.pipelines.templates]
+setUp = "ตั้งค่า"
+title = "Template"
 
 [portal.pipelines.trigger]
+editor-export = "ทุกการส่งออก"
+editor-upload = "ทุกการอัปโหลด"
 folder-watch = "เฝ้าดูโฟลเดอร์"
 manual = "Manual"
 schedule = "ตามกำหนดเวลา"
+storage-folder-watch = "ไฟล์ใหม่ในโฟลเดอร์ storage"
+
+[portal.pipelines.type]
+pipeline = "Pipeline"
+policy = "นโยบาย"
 
 [portal.policies]
 defaultName = "นโยบาย {{category}}"
-subtitle = "ระบบอัตโนมัติถาวรที่บังคับใช้ tool pipeline กับทุกเอกสาร แต่ละนโยบายจะทำงานเมื่อ upload หรือ export รัน tool chain และบันทึกเวอร์ชันที่บังคับใช้ควบคู่กับต้นฉบับ"
-title = "นโยบาย"
 
 [portal.policies.card]
 comingSoon = "อัปเกรดเป็น Enterprise"
-notSetUp = "ยังไม่ได้ตั้งค่า"
 requiresAiEngine = "ต้องใช้ AI engine"
 
 [portal.policies.categories.classification]
@@ -8025,7 +9217,7 @@ desc = "บังคับใช้ข้อกำหนด HIPAA, GDPR, SOC 2 �
 label = "การปฏิบัติตามข้อกำหนด"
 
 [portal.policies.categories.ingestion]
-desc = "จำแนกเอกสาร ดึงข้อมูลแบบมีโครงสร้าง บังคับใช้รูปแบบการตั้งชื่อ และปรับหน้าให้เป็นมาตรฐาน"
+description = "อ่านเอกสาร เตรียม chunk ที่ค้นหาได้ และส่งไปยัง knowledge base หรือปลายทางการส่งออก"
 label = "การนำเข้า"
 
 [portal.policies.categories.retention]
@@ -8053,29 +9245,23 @@ summary = "จัดประเภทเอกสารที่อัปโห
 [portal.policies.config.compliance]
 summary = "ตรวจสอบเอกสารกับ regulatory frameworks ก่อนออกจากระบบ"
 
-[portal.policies.config.compliance.fields]
-accessLog = "Access log"
-auditTrail = "Audit trail"
-frameworks = "Frameworks"
-onViolation = "เมื่อไม่เป็นไปตามข้อกำหนด"
-
 [portal.policies.config.compliance.rules]
 0 = "Framework scan"
 1 = "บังคับใช้การดำเนินการ"
 2 = "Audit trail"
 
 [portal.policies.config.ingestion]
-summary = "จำแนกเอกสาร ดึงข้อมูลแบบมีโครงสร้าง บังคับใช้การตั้งชื่อ และปรับหน้าให้เป็นมาตรฐาน"
-
-[portal.policies.config.ingestion.fields]
-belowThreshold = "ต่ำกว่าเกณฑ์"
-minConfidence = "ความเชื่อมั่นขั้นต่ำ"
+description = "เลือกเอกสารที่จะประมวลผล ทำให้ข้อความค้นหาได้ และส่ง chunk ไปยังฐานข้อมูลหรือส่งออก"
 
 [portal.policies.config.ingestion.rules]
 0 = "จำแนก"
 1 = "ดึงข้อมูล"
 2 = "ตั้งชื่อ"
 3 = "ปรับให้เป็นมาตรฐาน"
+
+[portal.policies.config.pdfa.fields.outputFormat]
+help = "PDF/A-2b เหมาะกับ archive ส่วนใหญ่ PDF/A-1b เข้มงวดที่สุดและเป็นที่ยอมรับอย่างกว้างขวางที่สุด ส่วน PDF/A-3b อนุญาตให้มีไฟล์แนบเพิ่มเติม"
+label = "โปรไฟล์ archive"
 
 [portal.policies.config.purview]
 label = "ใช้ป้ายกำกับความละเอียดอ่อนของ Microsoft Purview"
@@ -8116,11 +9302,6 @@ keepFor = "เก็บไว้เป็นเวลา"
 [portal.policies.config.routing]
 summary = "Route เอกสารไปยังปลายทางที่ถูกต้องตามประเภทและการจำแนก"
 
-[portal.policies.config.routing.fields]
-destination = "ปลายทาง"
-notify = "แจ้งเตือนเมื่อ route"
-webhookUrl = "Webhook URL"
-
 [portal.policies.config.routing.rules]
 0 = "จำแนกอัตโนมัติ"
 1 = "Route ไปยังโฟลเดอร์"
@@ -8134,49 +9315,17 @@ summary = "ตรวจจับและ redact PII, ลบ active content (Jav
 1 = "ลบ JavaScript"
 2 = "ลายน้ำ"
 
-[portal.policies.detail]
-enforces = "บังคับใช้"
-onEveryExport = "ในทุก export"
-onEveryUpload = "ในทุก upload"
-outputAsNewFile = "เป็นไฟล์ใหม่"
-outputAsNewVersion = "เป็นเวอร์ชันใหม่"
-recentActivity = "กิจกรรมล่าสุด"
-retry = "ลองใหม่"
-showLess = "แสดงน้อยลง"
-showMore = "แสดงเพิ่มเติม"
-sources = "แหล่งที่มา"
-
-[portal.policies.detail.actions]
-clearHistory = "ล้างประวัติที่ประมวลผลแล้ว"
-delete = "ลบ"
-editSettings = "แก้ไขการตั้งค่า"
-pause = "หยุดชั่วคราว"
-resume = "ทำต่อ"
-runNow = "เรียกใช้ตอนนี้"
-
-[portal.policies.detail.clearHistory]
-body = "นโยบายนี้จะลืมทุกไฟล์ที่เคยประมวลผลแล้ว และประมวลผลทุกอย่างที่อยู่ในแหล่งที่มาปัจจุบันอีกครั้งในการเรียกใช้ครั้งถัดไป ไฟล์เองจะไม่ถูกเปลี่ยนแปลง การดำเนินการนี้ไม่สามารถย้อนกลับได้"
-cancel = "ยกเลิก"
-confirm = "ล้างประวัติ"
-title = "ล้างประวัติที่ประมวลผลแล้วหรือไม่?"
-
-[portal.policies.detail.emptyActivity]
-description = "เอกสารจะปรากฏที่นี่เมื่อนโยบายนี้ทำงาน"
-title = "ยังไม่มีกิจกรรม"
-
 [portal.policies.endpoints]
 addWatermark = "ลายน้ำ"
 autoRedact = "ปกปิด PII"
 classifyAndLabel = "จัดประเภท"
 compressPdf = "บีบอัด"
 flatten = "Flatten"
+ingest = "เตรียมสำหรับการค้นหาความรู้"
 ocrPdf = "OCR"
+pdfa = "แปลงเป็น PDF/A"
 sanitizePdf = "ลบ JavaScript"
-
-[portal.policies.offline]
-description = "นโยบายของคุณถูกบันทึกแล้วและจะปรากฏเมื่อการเชื่อมต่อกลับมา"
-retry = "ลองอีกครั้ง"
-title = "Backend ไม่พร้อมใช้งาน"
+validateCompliance = "ตรวจสอบการปฏิบัติตามข้อกำหนด"
 
 [portal.policies.operations]
 change = "เปลี่ยนสิ่งที่ขั้นตอนนี้ทำ"
@@ -8373,48 +9522,20 @@ label = "โพสต์เอกสารไปยัง webhook"
 description = "ส่งรายละเอียดการรันให้ระบบอัตโนมัติของคุณ"
 label = "Trigger Zap หรือ Make scenario"
 
-[portal.policies.stats]
-activeFor = "ใช้งานอยู่"
-dataProcessed = "ข้อมูลที่ประมวลผลแล้ว"
-docsEnforced = "เอกสารที่บังคับใช้แล้ว"
-
-[portal.policies.status]
-active = "ใช้งานอยู่"
-paused = "หยุดชั่วคราว"
-
-[portal.policies.summary.active]
-description = "บังคับใช้เมื่ออัปโหลด/ส่งออก"
-label = "นโยบายที่ใช้งานอยู่"
-
-[portal.policies.summary.categories]
-description = "พร้อมให้กำหนดค่า"
-label = "หมวดหมู่"
-
-[portal.policies.summary.docsEnforced]
-description = "ในนโยบายที่ใช้งานอยู่ทั้งหมด"
-label = "เอกสารที่บังคับใช้แล้ว"
-
-[portal.policies.summary.paused]
-description = "กำหนดค่าแล้วแต่ยังไม่ทำงาน"
-label = "หยุดชั่วคราว"
-
-[portal.policies.table]
-appliesTo = "ใช้กับ"
-docs = "เอกสารที่บังคับใช้"
-enforces = "บังคับใช้"
-policy = "นโยบาย"
-status = "สถานะ"
-
 [portal.policies.wizard.actions]
-back = "ย้อนกลับ"
 cancel = "ยกเลิก"
-continue = "ดำเนินการต่อ"
+customise = "ปรับแต่ง"
+customiseUnavailable = "builder แบบเต็มอยู่บน Processor"
 enablePolicy = "เปิดใช้นโยบาย"
 saveChanges = "บันทึกการเปลี่ยนแปลง"
 
 [portal.policies.wizard.capability.classify]
 desc = "ระบุประเภทของเอกสารจากป้ายกำกับของทีมคุณและติดแท็ก เพื่อให้จัดเก็บและค้นหาตามหมวดหมู่ได้"
 label = "จัดประเภทเอกสาร"
+
+[portal.policies.wizard.capability.complianceCheck]
+desc = "ตรวจสอบเอกสารที่เสร็จแล้วกับ PDF/A และหยุดการทำงานหากไม่ผ่าน"
+label = "ตรวจสอบว่าเอกสารเป็นไปตามมาตรฐาน"
 
 [portal.policies.wizard.capability.compress]
 desc = "บีบอัดเอกสารให้มีขนาดไฟล์เล็กลง"
@@ -8424,9 +9545,17 @@ label = "ลดขนาดไฟล์"
 desc = "รวมฟิลด์ฟอร์มและคำอธิบายประกอบเข้ากับหน้าเพื่อไม่ให้แก้ไขได้"
 label = "Flatten เอกสาร"
 
+[portal.policies.wizard.capability.ingest]
+desc = "เตรียม chunk ที่ค้นหาได้สำหรับ knowledge base ในตัว ฐานข้อมูลเวกเตอร์ที่เชื่อมต่อ หรือการส่งออก corpus"
+label = "เตรียมสำหรับการค้นหาความรู้"
+
 [portal.policies.wizard.capability.ocr]
 desc = "เรียกใช้ OCR เพื่อให้หน้าที่สแกนกลายเป็นข้อความที่เลือกและค้นหาได้"
 label = "ทำให้ค้นหาข้อความได้"
+
+[portal.policies.wizard.capability.pdfa]
+desc = "เขียนเอกสารใหม่ในรูปแบบ archive ตาม ISO โดยฝังฟอนต์และโปรไฟล์สี เพื่อให้ยัง render เหมือนเดิมในอีกหลายปีข้างหน้า ทำให้ลายเซ็นดิจิทัลใช้ไม่ได้"
+label = "แปลงเป็น PDF/A สำหรับการเก็บถาวร"
 
 [portal.policies.wizard.capability.redact]
 desc = "ค้นหาและปิดทับรายละเอียดที่ละเอียดอ่อน — เช่น หมายเลขประกันสังคมและหมายเลขบัตร — เพื่อไม่ให้อ่านได้"
@@ -8452,38 +9581,60 @@ labelsHeading = "ป้ายกำกับการจัดประเภท
 noTools = "เปิดใช้อย่างน้อยหนึ่งเครื่องมือในเวิร์กโฟลว์ก่อน"
 saveFailed = "ไม่สามารถบันทึกนโยบายได้ โปรดลองอีกครั้ง"
 
-[portal.policies.wizard.output]
-heading = "เอาต์พุตและการเรียกใช้"
+[portal.policies.wizard.locations]
+aiSettings = "เปิดการตั้งค่า AI"
+builtin = "Stirling knowledge base"
+builtinHelp = "จัดทำดัชนี chunk ที่ค้นหาได้ใน Stirling และส่ง PDF ที่ประมวลผลแล้วกลับไปยังปลายทางด้านล่าง ต้องกำหนดค่า embedding provider ในการตั้งค่า AI"
+checking = "กำลังตรวจสอบความพร้อมใช้งานการนำเข้า..."
+chooseOutput = "เลือกปลายทาง output ที่เปิดใช้งานก่อนบันทึก"
+chooseSource = "เลือกแหล่งที่มาของเอกสาร"
+chunkSettings = "การตั้งค่า chunk"
+connectInput = "เชื่อมต่อแหล่ง input"
+consumed = "ตรวจสอบโหมดการประมวลผลของแหล่งที่มานี้: consume จะลบต้นฉบับหลังจากทำงานสำเร็จ เลือก Track ในแก้ไขแหล่ง input เพื่อเก็บไว้"
+delivery = "การส่งมอบ"
+desktopExternal = "จัดการการเชื่อมต่อฐานข้อมูลนี้ใน Processor ของ web app หรือเปลี่ยนประเภท output เพื่อส่งผลลัพธ์กลับไปยังโฟลเดอร์นี้"
+destination = "ปลายทาง"
+editInput = "แก้ไขแหล่ง input"
+editor = "ไฟล์ที่เปิดใน editor"
+editorDestination = "Workspace ของ Editor"
+editorOutput = "PDF ที่ประมวลผลแล้วจะกลับไปยัง workspace ของ editor"
+engineUnavailable = "AI engine ถูกปิดใช้งานหรือเข้าถึงไม่ได้ เปิดใช้งานเพื่อเตรียม chunk หรือปิดการค้นหาความรู้เพื่อเรียกใช้เฉพาะ OCR"
+export = "ส่งออก chunk โดยไม่มีฐานข้อมูล"
+exportHelp = "บันทึก PDF ที่ประมวลผลแล้วและ chunk (JSONL) ไปยังปลายทางด้านล่าง AI engine จะเตรียม chunk ไม่จำเป็นต้องใช้ฐานข้อมูลหรือ embedding provider"
+external = "ฐานข้อมูลเวกเตอร์ที่เชื่อมต่อ"
+externalHelp = "ส่ง chunk ไปยังฐานข้อมูลที่เลือก ซึ่งจะสร้าง embedding การทำงานจะส่งคืนใบรับการจัดทำดัชนี"
+folder = "Input: {{name}} ต้นฉบับจะถูกเก็บไว้เมื่อส่งไปยังฐานข้อมูลเวกเตอร์"
+folderOutput = "ไฟล์ที่ประมวลผลแล้วจะถูกบันทึกในโฟลเดอร์นี้ การส่งออก corpus จะเก็บ PDF ต้นฉบับไว้"
+indexingUnavailable = "knowledge base ในตัวต้องใช้ embedding provider กำหนดค่าในการตั้งค่า AI เชื่อมต่อฐานข้อมูลเวกเตอร์ หรือส่งออก chunk โดยไม่มีฐานข้อมูล"
+input = "เอกสารที่จะประมวลผล"
+invalidChunks = "เลือกขนาด chunk ตั้งแต่ 64 ถึง 32768 และ overlap ตั้งแต่ 0 ถึง 4096 ที่เล็กกว่าขนาด chunk"
+keepOriginal = "เก็บต้นฉบับและส่งไปยังปลายทาง"
+keepOriginalHelp = "สำเนาจะทำงานในพื้นหลัง ไฟล์ใน editor ของคุณจะไม่เปลี่ยนแปลง ผลลัพธ์จะถูกบันทึกไปยังปลายทางด้านล่าง"
+noDatabase = "ยังไม่ได้ตั้งค่าปลายทางฐานข้อมูลเวกเตอร์ เชื่อมต่อแหล่งที่มาด้านล่าง แล้วเลือกหรือสร้างการเชื่อมต่อฐานข้อมูลและ collection"
+output = "Output"
+outputType = "ประเภท Output"
+recheck = "ตรวจสอบอีกครั้ง"
+retained = "แหล่งที่มานี้ไม่ลบ input หลังประมวลผล เลือกปลายทางแยกต่างหากเพื่อเก็บไฟล์ต้นฉบับไว้โดยไม่เปลี่ยนแปลง"
+returnToEditor = "ส่งผลลัพธ์กลับไปยัง editor"
+returnToFolder = "ส่งผลลัพธ์กลับไปยังโฟลเดอร์นี้"
+savedDatabase = "ฐานข้อมูลเวกเตอร์ที่บันทึกไว้"
+source = "แหล่ง input"
 
-[portal.policies.wizard.output.filenameRule]
-autoNumber = "ใส่หมายเลขอัตโนมัติ"
-label = "กฎชื่อไฟล์"
-placeholder = "ข้อความที่จะเพิ่ม (ไม่บังคับ)"
-prefix = "คำนำหน้า"
-suffix = "คำต่อท้าย"
-
-[portal.policies.wizard.output.outputAs]
-label = "เอาต์พุตเป็น"
-newFile = "ไฟล์ใหม่"
-newVersion = "เวอร์ชันใหม่"
-
-[portal.policies.wizard.output.runOn]
-export = "ส่งออก"
-helper = "เมื่อนโยบายทำงาน: เมื่ออัปโหลด หรือก่อนส่งออก"
-label = "เรียกใช้เมื่อ"
-upload = "อัปโหลด"
-
-[portal.policies.wizard.settings]
-heading = "การตั้งค่า"
+[portal.policies.wizard.routing]
+chooseDestination = "เลือกปลายทาง"
+chooseSource = "เลือกสิ่งที่จะเฝ้าดู"
+description = "เอกสารแต่ละฉบับจะถูกจำแนกก่อน จากนั้นส่งไปยังกฎแรกที่ตรงกัน รายการใดที่ไม่ตรงกับกฎใดเลยจะไปยังปลายทางด้านล่าง"
+destinationAria = "ปลายทาง"
+labelAria = "ประเภทเอกสาร"
+labelPlaceholder = "เลือกประเภทเอกสาร"
+needsDestination = "เพิ่มปลายทางด้านล่างก่อน - กฎต้องมีที่สำหรับส่งเอกสารไป"
+needsSource = "เชื่อมต่อโฟลเดอร์ bucket หรือ webhook เพื่อให้นโยบายนี้เฝ้าดู"
+remove = "ลบกฎ"
+sourceDescription = "เอกสารที่มาถึงที่นี่จะถูกจำแนก แล้วส่งต่อโดยกฎด้านล่าง"
+sourceHeading = "เฝ้าดู"
 
 [portal.policies.wizard.sources]
-heading = "แหล่งที่มา"
-loading = "กำลังโหลดแหล่งที่มา…"
-
-[portal.policies.wizard.tabs]
-ariaLabel = "ขั้นตอนการตั้งค่า"
-settings = "การตั้งค่า"
-workflow = "การดำเนินการ"
+connect = "เชื่อมต่อแหล่งที่มา"
 
 [portal.policies.wizard.title]
 edit = "แก้ไขนโยบาย {{category}}"
@@ -8491,9 +9642,6 @@ setUp = "ตั้งค่านโยบาย {{category}}"
 
 [portal.policies.wizard.workflow]
 description = "เลือกว่านโยบายนี้จะทำอะไรกับทุกเอกสารที่ประมวลผล"
-
-[portal.policySummary.action]
-setUp = "ตั้งค่า"
 
 [portal.processorFlow]
 footnote = "จำนวนเป็นของ 24 ชั่วโมงล่าสุด ความเร็วของ Flow เป็นเพียงภาพประกอบ"
@@ -8692,6 +9840,7 @@ sentenceTrial = "ตั้งค่าพื้นที่ทำงานทด
 [portal.procurement.journey]
 daysLeft_one = "เหลือ {{count}} วัน"
 daysLeft_other = "เหลือ {{count}} วัน"
+expired = "ช่วงทดลองใช้หมดอายุแล้ว"
 
 [portal.procurement.journeySteps.agreement]
 blurb = "ลายเซ็นเดียวครอบคลุม MSA, order form, EULA และ DPA"
@@ -8806,8 +9955,9 @@ maxed = "ถึงขีดจำกัดแล้ว"
 subtitle = "trial ฟรีของคุณใช้งานได้ถึง {{date}} ไม่ต้องใช้บัตร"
 title = "Enterprise trial"
 
-[portal.settings.groups]
-admin = "Admin"
+[portal.review]
+subtitle = "รายการใด ๆ จากการรันนโยบายของคุณและตัวแก้ไขของทีมที่ต้องการความสนใจจากคุณ"
+title = "ตรวจสอบ"
 
 [portal.settings.sections]
 account-link = "การเชื่อมโยงบัญชี"
@@ -8817,7 +9967,6 @@ appEditor = "Editor"
 appProcessor = "Processor"
 linkAccount = "เชื่อมโยงบัญชี Stirling"
 primaryNav = "การนำทางหลัก"
-switchApp = "สลับแอป"
 
 [portal.shell.topbar]
 closeNav = "ปิดการนำทาง"
@@ -8825,6 +9974,7 @@ openNav = "เปิดการนำทาง"
 search = "ค้นหา"
 
 [portal.sources]
+processingModeHelp = "Track จะเก็บต้นฉบับไว้และประมวลผลแต่ละเวอร์ชันหนึ่งครั้ง Snapshot จะเก็บต้นฉบับไว้และประมวลผลทุกครั้งที่รัน Consume จะลบต้นฉบับหลังจากส่งสำเร็จ"
 subtitle = "การเชื่อมต่ออินพุตที่ใช้ซ้ำได้ซึ่งส่งเอกสารเข้าสู่ Stirling กำหนดค่าการเชื่อมต่อครั้งเดียว แล้วอ้างอิงจากนโยบายกี่รายการก็ได้ คลิกแถวเพื่อดูการกำหนดค่าและนโยบายที่ใช้งาน"
 title = "แหล่งที่มา"
 
@@ -8838,6 +9988,7 @@ backToSource = "กลับไปที่การตั้งค่าแห�
 backToTypes = "ประเภทแหล่งที่มาทั้งหมด"
 cancel = "ยกเลิก"
 chooseHint = "เลือกแหล่งที่มาของเอกสาร คอนเน็กเตอร์ที่เป็นสีเทากำลังจะมา"
+chooseOutputHint = "เลือกตำแหน่งที่จะส่งเอกสารที่ประมวลผลแล้ว ตัวเชื่อมต่อที่เป็นสีเทากำลังจะมา"
 comingSoon = "เร็ว ๆ นี้"
 comingSoonHeading = "เร็ว ๆ นี้"
 create = "สร้างแหล่งที่มา"
@@ -8857,11 +10008,6 @@ cancel = "ยกเลิก"
 confirm = "ลบ"
 title = "ลบแหล่งที่มาหรือไม่?"
 
-[portal.sources.kpi]
-inUse = "กำลังใช้งาน"
-total = "การเชื่อมต่อ"
-unused = "ไม่ได้ใช้งาน"
-
 [portal.sources.networkFields.connection]
 helperText = "การเชื่อมต่อที่จัดเก็บไว้พร้อมที่อยู่เซิร์ฟเวอร์และข้อมูลประจำตัว ใช้ซ้ำโดยทุกแหล่งที่มาที่อ้างอิงถึง"
 label = "การเชื่อมต่อ"
@@ -8872,12 +10018,12 @@ label = "โฟลเดอร์"
 placeholder = "incoming/"
 
 [portal.sources.networkFields.mode]
-helperText = "Consume จะลบแต่ละไฟล์ออกจากเซิร์ฟเวอร์เมื่อทุกนโยบายประมวลผลแล้ว"
 label = "โหมดการอ่าน"
 
 [portal.sources.networkFields.mode.options]
 consume = "Consume: ประมวลผลแต่ละไฟล์ครั้งเดียว"
 snapshot = "Snapshot: อ่านโฟลเดอร์ซ้ำทุกครั้งที่รัน"
+track = "เก็บต้นฉบับไว้; ประมวลผลการเปลี่ยนแปลงหนึ่งครั้ง"
 
 [portal.sources.networkFields.recursive]
 helperText = "รวมโฟลเดอร์ย่อยหากไฟล์ของคุณถูกจัดไว้ในโฟลเดอร์ซ้อนกัน หรือเฝ้าดูเฉพาะระดับบนสุด"
@@ -8940,6 +10086,7 @@ label = "โหมดการอ่าน"
 [portal.sources.types.folder.fields.mode.options]
 consume = "Consume: ประมวลผลแต่ละไฟล์ครั้งเดียว"
 snapshot = "Snapshot: อ่านโฟลเดอร์ใหม่ทุกครั้งที่เรียกใช้"
+track = "เก็บไว้ และประมวลผลอีกครั้งเฉพาะเมื่อมีการเปลี่ยนแปลง"
 
 [portal.sources.types.folder.fields.recursive]
 helperText = "รวมโฟลเดอร์ย่อยหากไฟล์ของคุณถูกจัดไว้ในโฟลเดอร์ซ้อนกัน หรือเฝ้าดูเฉพาะระดับบนสุด"
@@ -8974,12 +10121,12 @@ helperText = "การเชื่อมต่อที่จัดเก็บ
 label = "การเชื่อมต่อ"
 
 [portal.sources.types.s3.fields.mode]
-helperText = "Consume จะลบแต่ละ object ออกจาก bucket เมื่อทุกนโยบายประมวลผลแล้ว"
 label = "โหมดการอ่าน"
 
 [portal.sources.types.s3.fields.mode.options]
 consume = "Consume: ประมวลผลแต่ละ object ครั้งเดียว"
 snapshot = "Snapshot: อ่าน bucket ซ้ำทุกครั้งที่รัน"
+track = "เก็บต้นฉบับไว้; ประมวลผลการเปลี่ยนแปลงหนึ่งครั้ง"
 
 [portal.sources.types.s3.fields.prefix]
 helperText = "ประมวลผลเฉพาะ object ที่ key เริ่มต้นด้วย prefix นี้"
@@ -8996,6 +10143,17 @@ label = "SharePoint"
 
 [portal.sources.types.unknown]
 label = "แหล่งที่มา"
+
+[portal.sources.types.vectordb]
+collection = "ชื่อคอลเลกชัน / ดัชนี"
+collectionHint = "ใช้คอลเลกชันหรือดัชนีที่มีอยู่ซึ่งกำหนดค่าสำหรับ server-side embedding"
+connection = "การเชื่อมต่อฐานข้อมูล"
+description = "ปลายทางเอาต์พุตสำหรับชิ้นส่วนเอกสารที่เตรียมไว้ ฐานข้อมูลจะสร้าง embeddings; ต้นฉบับจะคงอยู่ในแหล่งอินพุตของคุณเมื่อเลือกโหมด track"
+label = "ฐานข้อมูลเวกเตอร์"
+namespace = "Namespace / tenant"
+namespaceHint = "Pinecone namespace หรือ Weaviate tenant ที่ไม่บังคับ เว้นว่างไว้สำหรับ namespace เริ่มต้นหรือคอลเลกชันแบบ tenant เดียว"
+textField = "ฟิลด์ข้อความ"
+textFieldHint = "ฟิลด์ที่ฐานข้อมูลทำ embedding ให้ ตรงกับสคีมาคอลเลกชันหรือแผนที่ฟิลด์ Pinecone"
 
 [portal.sources.types.webhook]
 createNote = "Delivery URL และ signing secret จะถูกสร้างเมื่อคุณสร้าง webhook นี้ ผู้ส่ง POST เอกสารไปยัง URL นั้น และนโยบายที่อ้างอิงจะรันเมื่อมาถึง"
@@ -9025,7 +10183,6 @@ type = "ประเภท"
 close = "ปิด"
 
 [portal.usage]
-managePayment = "จัดการการชำระเงิน"
 subtitle = "การใช้งาน ใบแจ้งหนี้ และการจัดการแผนสำหรับทุก PDF ที่ Stirling เรียกเก็บเงิน ในคอนโซลเดียว"
 title = "การใช้งานและการเรียกเก็บเงิน"
 
@@ -9034,10 +10191,20 @@ loadWallet = "ไม่สามารถโหลด wallet ได้"
 openStripePortal = "ไม่สามารถเปิด Stripe portal ได้"
 walletUnavailable = "wallet ไม่พร้อมใช้งาน: {{status}} {{statusText}}"
 
+[portal.usage.freeTier]
+adminOnly = "เครดิตรายเดือนของเซิร์ฟเวอร์นี้ถูกใช้ร่วมกันโดยทุกคนบนเซิร์ฟเวอร์ ดังนั้นมีเพียงผู้ดูแลระบบเท่านั้นที่เห็นตัวเลขได้ ทุกอย่างที่คุณรันได้ยังคงพร้อมใช้งาน"
+barAria = "เครดิตฟรีที่เหลือ"
+capSuffix_one = "จากเครดิตฟรี {{allowance}} ที่เหลือในเดือนนี้"
+capSuffix_other = "จากเครดิตฟรี {{allowance}} ที่เหลือในเดือนนี้"
+connect = "เชื่อมต่อบัญชี Stirling"
+connectBody = "การเชื่อมต่อจะเพิ่มโควตารายเดือนชุดที่สอง เพิ่มจำนวนผู้ใช้ที่เซิร์ฟเวอร์นี้มีได้ และเปิดใช้งานตัวประมวลผล"
+connectTitle = "เซิร์ฟเวอร์นี้ไม่มีบัญชี Stirling"
+loadError = "ไม่สามารถอ่านการใช้เครดิตของเซิร์ฟเวอร์นี้ได้ ลองอีกครั้งในอีกสักครู่"
+loadErrorTitle = "ไม่สามารถโหลดการใช้เครดิตได้"
+resets = "รีเซ็ต {{date}}"
+
 [portal.usage.sessionExpired]
-action = "ลงชื่อเข้าใช้อีกครั้ง"
 body = "เซสชันบัญชี Stirling ของคุณหมดอายุ ลงชื่อเข้าใช้อีกครั้งเพื่อดูการเรียกเก็บเงิน — instance ของคุณยังคงเชื่อมโยงอยู่"
-title = "เซสชันหมดอายุ"
 
 [portal.users]
 title = "ผู้ใช้"
@@ -9088,6 +10255,89 @@ unlimited = "{{used}} · ไม่จำกัด"
 
 [printFile]
 title = "พิมพ์ไฟล์"
+
+[processingFolders.downloads]
+approve = "ประมวลผล Downloads ของฉัน"
+cancelSweep = "ยกเลิก"
+capped = "คุณมี PDF {{found}} ไฟล์; {{limit}} ไฟล์แรกจะถูกประมวลผลตอนนี้ และที่เหลือจะตามมา"
+close = "เสร็จสิ้น"
+explain_one = "Stirling สามารถจำแนก PDF {{count}} ไฟล์ที่อยู่ในโฟลเดอร์ Downloads ของคุณแล้ว และเปิดผลลัพธ์ที่นี่"
+explain_other = "Stirling สามารถจำแนก PDF {{count}} ไฟล์ที่อยู่ในโฟลเดอร์ Downloads ของคุณแล้ว และเปิดผลลัพธ์ที่นี่"
+failed = "ไม่สามารถตั้งค่านั้นได้ ไฟล์ของคุณยังไม่ได้ถูกเปลี่ยนแปลง"
+finished_one = "จำแนกไฟล์ {{count}} ไฟล์แล้ว และเปิด {{opened}} ไฟล์ที่นี่ พร้อมให้ทำงานต่อ"
+finished_other = "จำแนกไฟล์ {{count}} ไฟล์แล้ว และเปิด {{opened}} ไฟล์ที่นี่ พร้อมให้ทำงานต่อ"
+nothingNew_one = "ไม่มีรายการใหม่ให้ประมวลผล - ไฟล์ {{count}} ไฟล์นี้เคยผ่านกระบวนการแล้ว"
+nothingNew_other = "ไม่มีรายการใหม่ให้ประมวลผล - ไฟล์ {{count}} ไฟล์เหล่านี้เคยผ่านกระบวนการแล้ว"
+notModified = "ไฟล์ของคุณใน Downloads จะไม่ถูกเปลี่ยนแปลง - Stirling จะอ่านไฟล์และเปิดไฟล์ที่นี่"
+notNow = "ไม่ใช่ตอนนี้"
+progressCounts = "ประมวลผลแล้วจาก {{total}}"
+someFailed_one = "ไม่สามารถประมวลผล {{count}} ได้ และถูกปล่อยไว้โดยไม่แตะต้อง"
+someFailed_other = "ไม่สามารถประมวลผล {{count}} ได้ และถูกปล่อยไว้โดยไม่แตะต้อง"
+stillRunning = "บางไฟล์ยังคงกำลังประมวลผลในเบื้องหลัง"
+title = "จัดระเบียบ Downloads ของคุณหรือไม่"
+trigger_one = "ประมวลผล PDF {{count}} ไฟล์ใน Downloads"
+trigger_other = "ประมวลผล PDF {{count}} ไฟล์ใน Downloads"
+typesFound_one = "พบประเภทเอกสาร {{count}} ประเภท"
+typesFound_other = "พบประเภทเอกสาร {{count}} ประเภท"
+working = "กำลังประมวลผล ..."
+
+[processingFolders.setup]
+addFolder = "เพิ่มโฟลเดอร์"
+advancedSteps = "โฟลเดอร์นี้ใช้การตั้งค่าการประมวลผลที่วิซาร์ดนี้ไม่สามารถแก้ไขได้ ขั้นตอนที่บันทึกไว้ของโฟลเดอร์ยังไม่ได้ถูกเปลี่ยนแปลง"
+change = "เปลี่ยน"
+changeLocation = "เปลี่ยนตำแหน่งโฟลเดอร์"
+chooseFolder = "เราควรประมวลผลโฟลเดอร์ใด"
+chooseParent = "เลือกตำแหน่งที่จะสร้างโฟลเดอร์"
+chooseProcessing = "เลือกการประมวลผล"
+computer = "บนคอมพิวเตอร์เครื่องนี้"
+computerDescription = "คลิกเพื่อเลือกโฟลเดอร์จากคอมพิวเตอร์ของคุณ"
+computerHeading = "ประมวลผลโฟลเดอร์ของคุณเอง"
+createIn = "สร้างใน"
+downloadsAction = "ลองประมวลผลโฟลเดอร์ downloads ของคุณ"
+dropDescription = "หรือคลิกเพื่อเลือกจากคอมพิวเตอร์ของคุณ"
+dropError = "วางโฟลเดอร์เดียวที่นี่ หรือคลิกเพื่อเลือก"
+dropHeading = "วางโฟลเดอร์ที่นี่"
+editFolder = "แก้ไข {{name}}"
+editTitle = "แก้ไขการประมวลผลโฟลเดอร์"
+enable = "เปิดใช้งานการประมวลผล"
+existingTitle = "ตั้งค่าการประมวลผลโฟลเดอร์"
+folder = "โฟลเดอร์"
+folderChoice = "ใช้โฟลเดอร์ที่มีอยู่หรือสร้างใหม่"
+folderName = "ชื่อโฟลเดอร์"
+fromComputer = "จากคอมพิวเตอร์..."
+invalidName = "ป้อนชื่อโฟลเดอร์โดยไม่มีตัวคั่นเส้นทาง"
+location = "ตำแหน่งโฟลเดอร์"
+namePlaceholder = "เช่น ใบแจ้งหนี้"
+newFolder = "โฟลเดอร์ใหม่"
+noFolders = "ไม่มีโฟลเดอร์ที่นี่"
+noMatchingFolders = "ไม่มีโฟลเดอร์ที่ตรงกัน"
+openFolder = "เปิด {{name}}"
+portalOnlyPreset = "กำหนดค่า preset นี้ในพอร์ทัล"
+presetInfo = "เกี่ยวกับ {{name}}"
+presetsLabel = "Preset การประมวลผล"
+processing = "การประมวลผล"
+progress = "ความคืบหน้าการตั้งค่า"
+replaceWarning = "\"{{name}}\" มีการประมวลผลอยู่แล้ว การบันทึกจะแทนที่การตั้งค่าการประมวลผลปัจจุบัน"
+retry = "ลองอีกครั้ง"
+review = "ตรวจสอบ"
+saveChanges = "บันทึกการเปลี่ยนแปลง"
+saveFolder = "บันทึกโฟลเดอร์"
+searchFolders = "ค้นหาโฟลเดอร์..."
+searchLocations = "ค้นหาตำแหน่ง..."
+selectFolder = "เลือกโฟลเดอร์"
+server = "ที่เก็บข้อมูลเซิร์ฟเวอร์"
+serverAction = "หรือเพิ่มโฟลเดอร์ใหม่ไปยังเซิร์ฟเวอร์ของคุณ"
+settings = "ปรับการตั้งค่า"
+signInRequired = "ลงชื่อเข้าใช้เพื่อตั้งค่าการประมวลผลโฟลเดอร์"
+title = "ประมวลผลโฟลเดอร์"
+useExisting = "ใช้โฟลเดอร์ที่มีอยู่"
+viewLabels = "ดูป้ายกำกับการจำแนก"
+
+[processingFolders.wall]
+done = "เสร็จสิ้น"
+failed = "ล้มเหลว"
+title = "กำลังประมวลผลโฟลเดอร์นี้"
+waiting = "อยู่ในคิว ..."
 
 [provider.googledrive]
 name = "Google Drive"
@@ -9296,8 +10546,34 @@ automate = "ออโต้"
 config = "คอนฟิก"
 files = "ไฟล์"
 
+[quickNav]
+account = "บัญชี"
+docs = "เอกสารประกอบ"
+editor = "ตัวแก้ไข"
+home = "Stirling"
+invite = "เชิญ"
+landmark = "การนำทางด่วน"
+noProcessorAccess = "ขอสิทธิ์เข้าถึงตัวประมวลผลจากผู้ดูแลระบบ"
+notifications = "การแจ้งเตือน"
+processor = "ตัวประมวลผล"
+reader = "ตัวอ่าน"
+signInToUse = "ลงชื่อเข้าใช้เพื่อใช้สิ่งนี้"
+
 [read]
 tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
+
+[reader.rail]
+addDocument = "เพิ่มไฟล์"
+bookmarks = "บุ๊กมาร์ก"
+close = "ปิดเอกสาร"
+comment = "ความคิดเห็น"
+label = "เครื่องมืออ่าน"
+readAloud = "อ่านออกเสียง"
+rotateLeft = "หมุนซ้าย"
+rotateRight = "หมุนขวา"
+search = "ค้นหาในเอกสาร"
+switchDocument = "สลับเอกสาร"
+thumbnails = "หน้า"
 
 [redact]
 submit = "Manual Redaction"
@@ -9817,8 +11093,11 @@ expired = "สถานะของคุณในระบบหมดอาย
 
 [settings]
 backToSections = "การตั้งค่าทั้งหมด"
-close = "ปิด"
 title = "การตั้งค่า"
+
+[settings.about]
+description = "ทัวร์ เอกสารทางกฎหมาย และใบอนุญาตของทุกสิ่งที่รวมมากับ build นี้"
+title = "เกี่ยวกับ"
 
 [settings.ai]
 documents = "เอกสารและ RAG"
@@ -9833,12 +11112,47 @@ database = "ฐานข้อมูล"
 endpoints = "Endpoints"
 features = "ฟีเจอร์"
 folderAccess = "การเข้าถึงโฟลเดอร์"
+integrations = "การผสานรวม"
 mcp = "MCP Server"
 storageSharing = "การจัดเก็บไฟล์และการแชร์"
 systemSettings = "การตั้งค่าระบบ"
-title = "การกำหนดค่า"
+
+[settings.connectedInstances]
+confirmBody = "การดำเนินการนี้จะเพิกถอนการเข้าถึงทีมของคุณใน Stirling Cloud จากอินสแตนซ์นี้ แต่จะไม่ลบไฟล์ในเครื่องหรือลบการใช้งานที่บันทึกไว้แล้ว หากต้องการเชื่อมต่ออีกครั้ง ให้ทำตามขั้นตอนการเชื่อมต่อเดิมบนอินสแตนซ์"
+confirmTitle = "ลบ {{name}} หรือไม่"
+connectedAt = "เชื่อมต่อแล้ว: {{date}}"
+connectedDate = "เชื่อมต่อแล้ว"
+connectHelp = "หากต้องการเชื่อมต่อเซิร์ฟเวอร์ ให้เปิด Settings → Account connection บนอินสแตนซ์ self-hosted ของคุณ แล้วทำตามขั้นตอนการเชื่อมต่อ"
+copied = "คัดลอก ID แล้ว"
+copyError = "ไม่สามารถคัดลอก ID ได้ เลือกเพื่อคัดลอกด้วยตนเอง"
+copyId = "คัดลอก ID"
+details = "รายละเอียด"
+displayName = "ชื่อที่แสดง (ไม่บังคับ)"
+editName = "แก้ไขชื่อ"
+empty = "ไม่มีอินสแตนซ์ที่เชื่อมต่อ"
+id = "Instance ID"
+justConnected = "เพิ่งเชื่อมต่อ"
+lastSeen = "เห็นล่าสุด: {{date}}"
+loadError = "ไม่สามารถโหลดอินสแตนซ์ที่เชื่อมต่อได้"
+loadErrorBody = "ไม่สามารถตรวจสอบการเชื่อมต่อของคุณได้ ลองอีกครั้ง"
+loading = "กำลังโหลดอินสแตนซ์ที่เชื่อมต่อ"
+ownerOnly = "มีเพียงเจ้าของทีมเท่านั้นที่จัดการอินสแตนซ์ที่เชื่อมต่อได้"
+remove = "ลบการเชื่อมต่อ"
+removedSuccess = "{{name}} ถูกตัดการเชื่อมต่อจากทีมของคุณแล้ว"
+removeError = "ไม่สามารถลบการเชื่อมต่อได้ ลองอีกครั้ง"
+renameError = "ไม่สามารถบันทึกชื่อได้ ลองอีกครั้ง"
+retry = "ลองอีกครั้ง"
+saveName = "บันทึกชื่อ"
+seatsReported = "{{count}} สิทธิ์ผู้ใช้ทีม · รายงานเมื่อ {{date}} การปรับใช้แบบออฟไลน์จะคงสิทธิ์ผู้ใช้ไว้จนกว่าจะยกเลิกการเชื่อมโยง"
+seatsUnknown = "กำลังรอให้การปรับใช้นี้รายงานจำนวนผู้ใช้ในการซิงค์รายวัน"
+subtitle = "จัดการเซิร์ฟเวอร์ self-hosted ที่เชื่อมต่อกับทีมของคุณ"
+teamNote = "อินสแตนซ์เหล่านี้ใช้โควตาการประมวลผลของทีมคุณร่วมกัน"
+title = "อินสแตนซ์ที่เชื่อมต่อ"
+unknown = "ไม่พร้อมใช้งาน"
+yourTeam = "ทีมของคุณ"
 
 [settings.connection]
+description = "ทำงานในเครื่องบนเครื่องนี้หรือเชื่อมต่อแอปกับเซิร์ฟเวอร์ Stirling"
 localDescription = "คุณกำลังใช้แบ็กเอนด์ภายในเครื่องโดยไม่มีบัญชี เครื่องมือบางอย่างที่ต้องประมวลผลบนคลาวด์หรือเซิร์ฟเวอร์ที่โฮสต์เองจะไม่พร้อมใช้งาน"
 logout = "ออกจากระบบ"
 server = "เซิร์ฟเวอร์"
@@ -9853,13 +11167,12 @@ selfhosted = "โฮสต์เอง"
 
 [settings.developer]
 apiKeys = "API Keys"
+apiKeysDescription = "คีย์ส่วนตัวสำหรับเรียก Stirling API จากสคริปต์และการผสานรวม"
 title = "นักพัฒนา"
 
 [settings.general]
 autoUnzip = "แตก ZIP จาก API อัตโนมัติ"
-autoUnzipDescription = "แยกไฟล์จากการตอบกลับ ZIP โดยอัตโนมัติ"
 autoUnzipFileLimit = "จำกัดจำนวนไฟล์ที่แตกอัตโนมัติ"
-autoUnzipFileLimitDescription = "จำนวนไฟล์สูงสุดที่จะดึงออกจาก ZIP"
 autoUnzipFileLimitTooltip = "แตกไฟล์ก็ต่อเมื่อ ZIP มีจำนวนไฟล์เท่ากับหรือน้อยกว่านี้ ตั้งค่าสูงขึ้นเพื่อแตก ZIP ขนาดใหญ่"
 autoUnzipTooltip = "แยกไฟล์ ZIP ที่ส่งกลับจากการทำงานของ API โดยอัตโนมัติ ปิดเพื่อเก็บไฟล์ ZIP ไว้ครบถ้วน การตั้งค่านี้ไม่กระทบเวิร์กโฟลว์อัตโนมัติ"
 defaultPdfEditor = "โปรแกรมแก้ไข PDF เริ่มต้น"
@@ -9910,12 +11223,6 @@ intro = "เปิดใช้การยืนยันตัวตนผู�
 learnMore = "เรียนรู้เพิ่มเติมในเอกสาร"
 title = "สำหรับผู้ดูแลระบบ"
 
-[settings.general.loginLanding]
-description = "เลือกแอปที่จะเปิดเมื่อคุณลงชื่อเข้าใช้ Stirling Cloud"
-editor = "ตัวแก้ไข"
-processor = "ตัวประมวลผล"
-title = "หลังจากลงชื่อเข้าใช้"
-
 [settings.general.mode]
 fullscreen = "เต็มหน้าจอ"
 sidebar = "แถบด้านข้าง"
@@ -9958,6 +11265,7 @@ fitPage = "พอดีหน้า"
 fitWidth = "พอดีกับความกว้าง"
 
 [settings.help]
+description = "คำแนะนำแบบทีละขั้นตอนของตัวแก้ไขและพื้นที่ผู้ดูแลระบบ"
 label = "ทัวร์แนะนำ"
 title = "วิธีใช้"
 
@@ -9990,6 +11298,7 @@ mac = "ให้มี ⌘ (Command), ⌥ (Option) หรือปุ่มด�
 windows = "ให้มี Ctrl, Alt หรือปุ่มดัดแปลงอื่นในชุดแป้นลัดของคุณ"
 
 [settings.legal]
+description = "ข้อกำหนด นโยบายความเป็นส่วนตัว และการตั้งค่าคุกกี้ของคุณ"
 label = "Legal"
 title = "Legal"
 
@@ -10018,9 +11327,15 @@ version = "Version"
 
 [settings.licensingAnalytics]
 audit = "การตรวจสอบ"
+auditDescription = "ใครทำอะไรบนเซิร์ฟเวอร์นี้ และบันทึกนั้นจะถูกเก็บไว้นานเท่าใด"
 plan = "แผน"
-title = "สิทธิ์การใช้งานและการวิเคราะห์"
+planDescription = "ใบอนุญาต สิทธิ์ผู้ใช้ และสิ่งที่แผนปัจจุบันปลดล็อกให้คุณ"
+usage = "การวิเคราะห์การใช้งาน"
 usageAnalytics = "การวิเคราะห์การใช้งาน"
+usageDescription = "วิธีที่เซิร์ฟเวอร์ถูกใช้งาน: การดำเนินการ ปริมาณ และแนวโน้มตามเวลา"
+
+[settings.monitoring]
+title = "การตรวจสอบ"
 
 [settings.planBilling]
 currentPlan = "แผนปัจจุบัน"
@@ -10058,18 +11373,6 @@ memberCount_one = "{{count}} team member"
 memberCount_other = "{{count}} team members"
 memberCount_zero = "no team members"
 
-[settings.planBilling.tier]
-enterprise = "Enterprise"
-enterpriseDescription = "ฟีเจอร์และการสนับสนุนระดับองค์กรที่ปรับแต่งได้"
-free = "Free"
-freeDescription = "50 เครดิตต่อเดือน"
-team = "Team"
-teamBadge = "Team"
-teamDescription = "รวม 500 เครดิต/เดือน พร้อมการคิดค่าบริการส่วนเกินอัตโนมัติเพื่อการใช้งานต่อเนื่อง"
-teamTooltipCredits = "แผน Team รวม {{credits}} เครดิต/เดือน"
-teamTooltipFineprint = "จ่ายเฉพาะส่วนที่ใช้เกินจากเครดิตที่รวมมาให้"
-teamTooltipOverage = "การคิดค่าบริการส่วนเกินอัตโนมัติที่ {{price}}/เครดิต ช่วยให้บริการไม่สะดุด"
-
 [settings.planBilling.trial]
 daysRemaining = "เหลืออีก {{days}} วัน"
 daysRemainingFull = "ช่วงทดลองใช้ของคุณจะสิ้นสุดใน {{days}} วัน"
@@ -10094,6 +11397,10 @@ privacy = "ความเป็นส่วนตัว"
 title = "นโยบายและความเป็นส่วนตัว"
 
 [settings.preferences]
+appearance = "รูปลักษณ์"
+description = "ลักษณะและการทำงานของตัวแก้ไขสำหรับคุณและบัญชีของคุณ"
+downloads = "Downloads"
+editorDefaults = "ค่าเริ่มต้นของตัวแก้ไข"
 title = "ค่ากำหนด"
 
 [settings.security]
@@ -10120,6 +11427,10 @@ connections = "การเชื่อมต่อ"
 security = "ความปลอดภัย"
 telegram = "Telegram"
 title = "ความปลอดภัยและการยืนยันตัวตน"
+
+[settings.server]
+system = "ระบบ"
+title = "เซิร์ฟเวอร์"
 
 [settings.signOut]
 confirm = "คุณแน่ใจหรือไม่ว่าต้องการลงชื่อออก?"
@@ -10660,7 +11971,6 @@ commenterHint = "การแสดงความคิดเห็นจะม
 copied = "คัดลอกลิงก์ไปยังคลิปบอร์ดแล้ว"
 copy = "คัดลอก"
 copyFailed = "คัดลอกไม่สำเร็จ"
-copyLink = "คัดลอกลิงก์แชร์"
 createdAt = "สร้างเมื่อ"
 description = "สร้างลิงก์แชร์สำหรับไฟล์นี้ ผู้ใช้ที่ลงชื่อเข้าใช้และมีลิงก์สามารถเข้าถึงได้"
 download = "ดาวน์โหลด"
@@ -10797,17 +12107,26 @@ leaveButton = "ออกจากทีม"
 leaveError = "ออกจากทีมไม่สำเร็จ"
 leaveSuccess = "ออกจากทีมเรียบร้อยแล้ว"
 loading = "กำลังโหลดข้อมูลทีม..."
+makeOwner = "ตั้งเป็นเจ้าของ"
 memberCount_one = "{{count}} member"
 memberCount_other = "{{count}} members"
 memberCount_zero = "no members"
 memberRemoved = "ลบสมาชิกเรียบร้อยแล้ว"
 namePlaceholder = "ป้อนชื่อทีม"
+noOwner = "ทีมนี้ไม่มีเจ้าของ"
 personal = "ส่วนบุคคล"
+recoverBody = "สมาชิกที่มีอยู่สามารถกู้คืนความเป็นเจ้าของเพื่อจัดการทีมและการตั้งค่าการเรียกเก็บเงินของทีมได้"
+recoverOwner = "เป็นเจ้าของทีม"
+recoverSuccess = "ตอนนี้คุณเป็นเจ้าของทีมแล้ว"
 removeError = "ลบสมาชิกล้มเหลว"
 renameCancel = "ยกเลิกการเปลี่ยนชื่อ"
 renameError = "เปลี่ยนชื่อทีมไม่สำเร็จ"
 renameSubmit = "บันทึกชื่อทีม"
 renameSuccess = "เปลี่ยนชื่อทีมเรียบร้อยแล้ว"
+transferBody = "ตั้งให้ {{email}} เป็นเจ้าของทีมหรือไม่ พวกเขาจะควบคุมการเป็นสมาชิกทีมและการตั้งค่าการเรียกเก็บเงินขององค์กร คุณจะกลายเป็นสมาชิก การสมัครใช้งานและกระเป๋าเงินของทีมจะยังคงอยู่กับทีม"
+transferError = "ไม่สามารถโอนความเป็นเจ้าของได้ รีเฟรชทีมแล้วลองอีกครั้ง"
+transferSuccess = "โอนความเป็นเจ้าของทีมแล้ว บทบาทของคุณตอนนี้คือสมาชิก"
+transferTitle = "โอนความเป็นเจ้าของทีม"
 
 [team.invitationBanner]
 acceptButton = "ยอมรับ"
@@ -10912,8 +12231,6 @@ ZIP = "ไฟล์เก็บถาวร ZIP"
 [toolPanel]
 alpha = "อัลฟา"
 backToAllTools = "กลับไปที่เครื่องมือทั้งหมด"
-collapse = "ยุบแผง"
-expand = "ขยายแผง"
 goBack = "ย้อนกลับ"
 pdfTools = "เครื่องมือ PDF"
 placeholder = "เลือกเครื่องมือเพื่อเริ่มต้น"
@@ -11084,6 +12401,7 @@ visits = "การเข้าชม"
 lastActive = "ใช้งานล่าสุด"
 learnMore = "เรียนรู้เพิ่มเติมเกี่ยวกับบทบาทและการเข้าถึง"
 locked = "ถูกล็อก"
+ownerSetupRequired = "เจ้าขององค์กรยังไม่ได้เข้าสู่ระบบครั้งแรกให้เสร็จสมบูรณ์ ตั้งค่าให้เสร็จหรือขอให้ผู้ดูแลเซิร์ฟเวอร์กู้คืนความเป็นเจ้าของก่อนโอนความเป็นเจ้าของ"
 roleFor = "บทบาทสำหรับ {{name}}"
 rowActions = "การดำเนินการสำหรับ {{name}}"
 showAll = "แสดงทั้งหมด {{count}}"
@@ -11105,6 +12423,7 @@ removeTeam = "นำออกจากทีม"
 rename = "เปลี่ยนชื่อทีม"
 resetPw = "รีเซ็ตรหัสผ่าน"
 suspend = "ระงับ"
+transferOwnership = "โอนความเป็นเจ้าของ"
 unlock = "ปลดล็อกบัญชี"
 
 [users.activity]
@@ -11143,6 +12462,8 @@ disableMfaTitle = "รีเซ็ต MFA"
 removeBody = "ลบ {{name}} ออกจากองค์กรอย่างถาวรหรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้"
 removeTeamBody = "นำ {{name}} ออกจากทีมหรือไม่? ผู้ใช้จะยังคงมีบัญชีอยู่ แต่จะเสียสิทธิ์เข้าถึงทรัพยากรของทีมนี้"
 removeTitle = "ลบสมาชิก"
+transferOwnershipBody = "ตั้งให้ {{name}} เป็นเจ้าขององค์กรหรือไม่ พวกเขาจะกลายเป็นผู้ดูแลระบบ คุณจะยังคงเป็นผู้ดูแลระบบแต่จะเสียความเป็นเจ้าของ เฉพาะเจ้าของใหม่หรือผู้ดูแลเซิร์ฟเวอร์เท่านั้นที่สามารถโอนกลับได้"
+transferOwnershipTitle = "โอนความเป็นเจ้าขององค์กร"
 
 [users.empty]
 description = "เชิญทีมของคุณเพื่อเริ่มทำงานร่วมกัน"
@@ -11150,11 +12471,11 @@ title = "ยังไม่มีสมาชิก"
 
 [users.group]
 addToTeam = "เพิ่มเข้าทีม"
+administrators = "ผู้ดูแลระบบ {{count}} คน"
 guestCount = "{{count}} guest"
 guests = "Guests"
 ledBy = "นำโดย {{owner}}"
 org = "องค์กร"
-owners = "เจ้าของ {{count}} คน"
 team = "ทีม {{name}}"
 teamMeta = "{{count}} คน"
 
@@ -11214,15 +12535,9 @@ title = "ย้ายไปยังทีม"
 [users.newTeam]
 action = "+ ทีมใหม่"
 create = "สร้างทีม"
-emailError = "ป้อนที่อยู่อีเมลที่ถูกต้อง"
 name = "ชื่อทีม"
 namePlaceholder = "เช่น การเงิน"
 nameRequired = "จำเป็นต้องระบุชื่อทีม"
-owner = "เจ้าของทีม"
-ownerFailed = "สร้างทีมแล้ว แต่ไม่สามารถเชิญเจ้าของได้ กำหนดเจ้าของจากรายชื่อสมาชิก"
-ownerHelper = "ทุกทีมมีผู้นำ พวกเขาจะได้รับเชิญเป็นเจ้าของทีม โดยเปิดใช้ Processor และสามารถเพิ่มคนอื่น ๆ ได้ คุณสามารถมอบหมายใหม่ได้ในภายหลัง"
-ownerPlaceholder = "owner@company.com"
-subtitle = "จัดกลุ่มผู้คนภายใต้เจ้าของทีมที่จัดการการเข้าถึงของพวกเขา"
 title = "ทีมใหม่"
 
 [users.renameTeam]
@@ -11246,6 +12561,7 @@ title = "รีเซ็ตรหัสผ่าน"
 tooShort = "รหัสผ่านต้องมีอย่างน้อย 8 อักขระ"
 
 [users.role]
+admin = "ผู้ดูแลระบบ"
 guest = "ผู้เยี่ยมชม"
 member = "สมาชิก"
 orgOwner = "เจ้าขององค์กร"
@@ -11357,11 +12673,15 @@ validUntrusted = "ถูกต้อง แต่ผู้ลงนามไม�
 cannotPreviewFile = "ไม่สามารถแสดงตัวอย่างไฟล์ได้"
 copyText = "Copy"
 disableColorFilter = "ปิดใช้งานตัวกรองสี"
+documentUpdated = "อัปเดตเอกสารแล้ว"
 dualPageView = "มุมมองสองหน้า"
 enableDarkFilter = "เปิดใช้งานตัวกรองโทนมืด"
 enableSepiaFilter = "เปิดใช้งานตัวกรองเซเปีย"
+engineLoadError = "ไม่สามารถเริ่มต้นเอนจินตัวดู PDF ได้"
+engineSlowWarning = "การเริ่มต้นเอนจิน PDF ใช้เวลานานกว่าที่คาดไว้ โปรดตรวจสอบการตั้งค่า WebAssembly และ Worker ของเบราว์เซอร์ของคุณ หรือโหลดหน้าใหม่"
 firstPage = "หน้าแรก"
 lastPage = "หน้าสุดท้าย"
+loadingEngine = "กำลังโหลด PDF Engine..."
 moreOptions = "เพิ่มเติม"
 nextPage = "หน้าถัดไป"
 onlyPdfSupported = "ตัวแสดงผลรองรับเฉพาะไฟล์ PDF ไฟล์นี้ดูเหมือนจะเป็นรูปแบบอื่น"
@@ -11382,6 +12702,7 @@ close = "ปิดไฟล์แนบ"
 closeSidebar = "ปิดแถบด้านข้างไฟล์แนบ"
 download = "ดาวน์โหลดไฟล์แนบ"
 empty = "ไม่มีไฟล์แนบในเอกสารนี้"
+loadFailed = "โหลดไฟล์แนบไม่สำเร็จ"
 loading = "กำลังโหลดไฟล์แนบ..."
 noDocument = "เปิด PDF เพื่อดูไฟล์แนบ"
 noMatch = "ไม่มีไฟล์แนบที่ตรงกับการค้นหา"
@@ -11389,6 +12710,7 @@ noSupport = "ตัวแสดงผลนี้ไม่รองรับไ�
 retry = "ลองอีกครั้ง"
 searchPlaceholder = "ค้นหาไฟล์แนบ"
 title = "ไฟล์แนบ"
+untitled = "ไม่มีชื่อ"
 
 [viewer.bookmarks]
 addBookmark = "Add bookmark"
@@ -11396,6 +12718,7 @@ bookmarkTitle = "ชื่อบุ๊กมาร์ก"
 bookmarkTitleRequired = "จำเป็นต้องมีชื่อบุ๊กมาร์ก"
 closeSidebar = "ปิดแถบด้านข้างบุ๊กมาร์ก"
 collapseAll = "ยุบบุ๊กมาร์กทั้งหมด"
+editorOnly = "บุ๊กมาร์กของเอกสารนี้สามารถแก้ไขได้เฉพาะในตัวแก้ไขเท่านั้น"
 empty = "No bookmarks in this document"
 expandAll = "ขยายบุ๊กมาร์กทั้งหมด"
 searchPlaceholder = "ค้นหาบุ๊กมาร์ก"
@@ -11471,7 +12794,19 @@ renderMarkdown = "แสดงผล Markdown"
 sortedBy = "เรียงตาม: {{column}}"
 textStats = "{{lines}} บรรทัด · {{size}}"
 
+[viewer.portfolio]
+addFile = "เพิ่มไฟล์"
+count_one = "{{count}} ไฟล์ใน portfolio นี้"
+count_other = "{{count}} ไฟล์ใน portfolio นี้"
+import = "นำเข้าสู่ Stirling"
+importFailed = "ไม่สามารถเพิ่มไฟล์นี้ไปยังพื้นที่ทำงานของคุณได้"
+memberUnavailable = "ไม่สามารถอ่านไฟล์นี้จาก portfolio ได้"
+preview = "ดูตัวอย่าง"
+searchPlaceholder = "ค้นหาไฟล์"
+title = "Portfolio"
+
 [viewer.redaction]
+applyAll = "ใช้การปิดทับทั้งหมด"
 removeMark = "เอาเครื่องหมายนี้ออก"
 
 [viewer.search]
@@ -11796,6 +13131,10 @@ title = "ข้อความลายน้ำ"
 image = "รูปภาพ"
 text = "ข้อความ"
 
+[workbench.sessionRestore]
+none = "ไฟล์ก่อนหน้าของคุณไม่ได้ถูกจัดเก็บไว้บนอุปกรณ์นี้อีกต่อไป"
+partial = "กู้คืนไฟล์ {{restored}} จาก {{total}} ไฟล์แล้ว ที่เหลือไม่ได้ถูกจัดเก็บไว้บนอุปกรณ์นี้อีกต่อไป"
+
 [workbenchBar]
 activeFiles = "ไฟล์ที่ใช้งานอยู่"
 annotations = "คำอธิบายประกอบ"
@@ -11897,10 +13236,10 @@ lockedBadge = "ถูกล็อก"
 loginRequired = "เปิดโหมดล็อกอินก่อน"
 memberActions = "การดำเนินการของสมาชิก"
 noMembersFound = "ไม่พบสมาชิก"
+ownerLocked = "โอนความเป็นเจ้าขององค์กรใน Settings → Workspace → Users ก่อนเปลี่ยนบทบาทหรือบัญชีของเจ้าของ"
 role = "บทบาท"
 searchMembers = "ค้นหาสมาชิก..."
 team = "ทีม"
-title = "บุคคล"
 unlockAccount = "ปลดล็อกบัญชี"
 unlockUserError = "ปลดล็อกบัญชีผู้ใช้ล้มเหลว"
 unlockUserSuccess = "ปลดล็อกบัญชีผู้ใช้สำเร็จแล้ว"
@@ -12054,7 +13393,6 @@ system = "ระบบ"
 teamActions = "การดำเนินการของทีม"
 teamName = "ชื่อทีม"
 teamNotFound = "ไม่พบทีม"
-title = "ทีม"
 totalMembers = "สมาชิกทั้งหมด"
 viewTeam = "ดูทีม"
 
