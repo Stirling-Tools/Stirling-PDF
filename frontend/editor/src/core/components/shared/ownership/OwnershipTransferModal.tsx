@@ -53,7 +53,7 @@ function ownershipError(cause: unknown): string {
   );
 }
 
-/** Mounted for one selected recipient. Closing preserves a pending server handover for recovery. */
+/** Mounted for one recipient. Dismissal cancels preparation but preserves a committed cloud step. */
 export function OwnershipTransferModal({
   adapter,
   onClose,
@@ -92,6 +92,9 @@ export function OwnershipTransferModal({
   const needsMember = status?.cloud?.state === "NEEDS_MEMBERSHIP";
   const cloudDone = status?.cloud?.state === "TRANSFERRED";
   const partial = adapter.local && cloudDone && !done;
+  const canCancel = Boolean(
+    adapter.local && adapter.cancel && status && !partial && !done,
+  );
   const startFromInstance =
     !adapter.local &&
     ((status?.cloud?.linkedInstances ?? 0) > 0 ||
@@ -134,11 +137,26 @@ export function OwnershipTransferModal({
     }
   }
 
+  function close() {
+    if (busy || working.current) return;
+    if (canCancel) {
+      void run(async () => {
+        await adapter.cancel!();
+        onClose();
+      });
+    } else {
+      onClose();
+    }
+  }
+
   return (
     <Modal
       opened
       centered
-      onClose={() => !busy && onClose()}
+      onClose={close}
+      closeButtonProps={{
+        "aria-label": t("ownership.close", "Close transfer dialog"),
+      }}
       closeOnClickOutside={false}
       closeOnEscape={!busy}
       withCloseButton={!busy}
@@ -395,17 +413,8 @@ export function OwnershipTransferModal({
                   {t("common.close", "Close")}
                 </Button>
               )}
-              {adapter.cancel && !partial && (
-                <Button
-                  variant="tertiary"
-                  disabled={busy}
-                  onClick={() =>
-                    void run(async () => {
-                      await adapter.cancel!();
-                      onClose();
-                    })
-                  }
-                >
+              {canCancel && (
+                <Button variant="tertiary" disabled={busy} onClick={close}>
                   {t("ownership.cancel", "Cancel transfer")}
                 </Button>
               )}

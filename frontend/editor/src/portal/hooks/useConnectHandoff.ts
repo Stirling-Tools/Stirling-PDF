@@ -108,17 +108,32 @@ export function useConnectHandoff(reauth: boolean): ConnectHandoff {
         inFlight.current = false;
       } catch (error) {
         if (!mounted.current) return;
-        setError(
-          error instanceof HttpError && error.status === 403
-            ? t(
-                "portal.accountLink.ownerRequired",
-                "Only the org owner can link or unlink this server.",
-              )
-            : t(
-                "portal.accountLink.modal.startFailed",
-                "Could not reach Stirling to start the connection. Check this server's outbound network access, then try again.",
-              ),
-        );
+        if (error instanceof HttpError && error.status === 403) {
+          setError(
+            t(
+              "portal.accountLink.ownerRequired",
+              "Only the org owner can link or unlink this server.",
+            ),
+          );
+        } else if (
+          !reauth &&
+          error instanceof HttpError &&
+          error.status === 409
+        ) {
+          setError(
+            t(
+              "portal.accountLink.modal.transferPending",
+              "An ownership transfer is pending. Go to Settings → Users to finish or cancel it, then try linking again.",
+            ),
+          );
+        } else {
+          setError(
+            t(
+              "portal.accountLink.modal.startFailed",
+              "Could not reach Stirling to start the connection. Check this server's outbound network access, then try again.",
+            ),
+          );
+        }
         setBusy(false);
         inFlight.current = false;
       }

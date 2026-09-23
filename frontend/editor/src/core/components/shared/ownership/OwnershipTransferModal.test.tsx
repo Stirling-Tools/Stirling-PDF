@@ -86,6 +86,101 @@ describe("ownership handover", () => {
     expect(adapter.completeLocal).toHaveBeenCalledOnce();
   });
 
+  it.each([null, "READY", "NEEDS_MEMBERSHIP"] as const)(
+    "closing the dialog cancels an unfinished transfer in state %s",
+    async (state) => {
+      vi.mocked(adapter.prepare).mockResolvedValue(status(state));
+      show();
+      await click(
+        await screen.findByRole("button", { name: "Close transfer dialog" }),
+      );
+      await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+      expect(adapter.cancel).toHaveBeenCalledOnce();
+      expect(adapter.transferCloud).not.toHaveBeenCalled();
+      expect(adapter.completeLocal).not.toHaveBeenCalled();
+    },
+  );
+
+  it("Escape uses the same cancellation as the close button", async () => {
+    show();
+    await screen.findByRole("checkbox");
+    await act(async () => {
+      fireEvent.keyDown(screen.getByRole("dialog"), {
+        key: "Escape",
+        code: "Escape",
+      });
+    });
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+    expect(adapter.cancel).toHaveBeenCalledOnce();
+  });
+
+  it("waits for cancellation before dismissing", async () => {
+    let resolveCancel!: () => void;
+    vi.mocked(adapter.cancel!).mockReturnValue(
+      new Promise<void>((resolve) => {
+        resolveCancel = resolve;
+      }),
+    );
+    show();
+    await click(
+      await screen.findByRole("button", { name: "Close transfer dialog" }),
+    );
+    expect(adapter.cancel).toHaveBeenCalledOnce();
+    expect(onClose).not.toHaveBeenCalled();
+    await act(async () => {
+      resolveCancel();
+    });
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it("keeps the dialog open if the server refuses cancellation", async () => {
+    vi.mocked(adapter.cancel!).mockRejectedValue(
+      new Error("Cloud state unknown"),
+    );
+    show();
+    await click(
+      await screen.findByRole("button", { name: "Close transfer dialog" }),
+    );
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "We couldn't complete this step",
+    );
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("preserves the pending transfer when cloud ownership has already moved", async () => {
+    vi.mocked(adapter.prepare).mockResolvedValue(status("TRANSFERRED"));
+    show();
+    await click(
+      await screen.findByRole("button", { name: "Close transfer dialog" }),
+    );
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(adapter.cancel).not.toHaveBeenCalled();
+    expect(adapter.completeLocal).not.toHaveBeenCalled();
+  });
+
+  it("closing a completed transfer does not cancel it", async () => {
+    show();
+    await confirm();
+    await screen.findByText("Ownership transferred");
+    await click(
+      await screen.findByRole("button", { name: "Close transfer dialog" }),
+    );
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(adapter.cancel).not.toHaveBeenCalled();
+  });
+
+  it("does not cancel another recipient's transfer when preparation fails", async () => {
+    vi.mocked(adapter.prepare).mockRejectedValue(
+      new Error("HANDOVER_IN_PROGRESS"),
+    );
+    show();
+    await click(
+      await screen.findByRole("button", { name: "Close transfer dialog" }),
+    );
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(adapter.cancel).not.toHaveBeenCalled();
+  });
+
   it.each([false, true])(
     "same-team recipient transfers cloud before server (paid=%s)",
     async (paid) => {

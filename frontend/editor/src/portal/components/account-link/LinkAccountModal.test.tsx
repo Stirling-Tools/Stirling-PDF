@@ -7,6 +7,7 @@ import {
   type LinkModalMode,
 } from "@app/portal/contexts/UIContext";
 import { PortalTestProviders } from "@app/portal/test/TestQueryProvider";
+import { HttpError } from "@app/portal/api/http";
 
 /** The step machine: what drives each step, and what must not skip or repeat one. */
 const { startConnect, startReauth, fetchWallet, EMAIL } = vi.hoisted(() => ({
@@ -368,6 +369,24 @@ describe("LinkAccountModal", () => {
     expect(await screen.findByText(/outbound network access/)).toBeTruthy();
     expect(screen.getByText(BENEFITS)).toBeTruthy();
     expect(filledSteps()).toBe(1);
+  });
+
+  it("explains a pending ownership transfer and allows linking after it is resolved", async () => {
+    startConnect.mockRejectedValueOnce(new HttpError(409, "Conflict", {}));
+
+    renderModal();
+    click(CONNECT);
+
+    expect(
+      await screen.findByText(/Settings → Users to finish or cancel/),
+    ).toBeTruthy();
+    expect(screen.queryByText(/outbound network access/)).toBeNull();
+    expect(assign).not.toHaveBeenCalled();
+    expect(sessionStorage.getItem("stirling.portalConnect")).toBeNull();
+    expect(filledSteps()).toBe(1);
+
+    click(CONNECT);
+    await waitFor(() => expect(assign).toHaveBeenCalledWith(AUTHORIZE));
   });
 
   it.each(["link", "reauth"] as const)(
