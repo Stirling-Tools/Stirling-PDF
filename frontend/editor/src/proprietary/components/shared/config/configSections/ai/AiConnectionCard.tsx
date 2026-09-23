@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Icon } from "@app/ui/Icon";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { useTranslation } from "react-i18next";
 import {
@@ -13,7 +14,6 @@ import {
   Code,
 } from "@mantine/core";
 import { alert } from "@app/components/toast";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import apiClient from "@app/services/apiClient";
 import { Button } from "@app/ui/Button";
@@ -220,7 +220,7 @@ export function AiConnectionCard({
         variant="light"
         color="blue"
         title={t("admin.settings.ai.general.note.title", "About the AI engine")}
-        icon={<LocalIcon icon="info-rounded" width="1rem" height="1rem" />}
+        icon={<Icon name="info" size="1rem" />}
       >
         <Text size="xs">
           {t(

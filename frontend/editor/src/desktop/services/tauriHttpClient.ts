@@ -37,6 +37,7 @@ export interface TauriHttpRequestConfig {
   skipAuthRedirect?: boolean;
   // Axios compatibility properties (ignored by Tauri HTTP)
   suppressErrorToast?: boolean;
+  accountLinkBlockContext?: import("@app/services/accountLinkBlock").AccountLinkBlockContext;
   cancelToken?: any;
   signal?: AbortSignal;
 }
@@ -228,6 +229,16 @@ class TauriHttpClient {
           if (key.toLowerCase() === "content-type") {
             delete headers[key];
           }
+        }
+      } else if (finalConfig.data instanceof URLSearchParams) {
+        body = finalConfig.data.toString();
+        if (
+          !Object.keys(headers).some(
+            (key) => key.toLowerCase() === "content-type",
+          )
+        ) {
+          headers["Content-Type"] =
+            "application/x-www-form-urlencoded;charset=UTF-8";
         }
       } else if (typeof finalConfig.data === "object") {
         // Serialize as JSON

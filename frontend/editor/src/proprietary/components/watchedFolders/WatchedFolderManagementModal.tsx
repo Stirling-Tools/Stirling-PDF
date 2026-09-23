@@ -28,8 +28,7 @@ import {
   canWriteLocalFolder,
   FS_WRITE_UNSUPPORTED_MSG,
 } from "@app/utils/fsAccessCapability";
-import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { Icon } from "@app/ui/Icon";
 import {
   Z_INDEX_AUTOMATE_MODAL,
   Z_INDEX_AUTOMATE_DROPDOWN,
@@ -453,9 +452,10 @@ export function WatchedFolderManagementModal({
                         }}
                       >
                         <Group gap="xs" align="center" wrap="nowrap">
-                          <FolderSpecialIcon
+                          <Icon
+                            name="folder-bookmark"
+                            size={"1rem"}
                             style={{
-                              fontSize: "1rem",
                               color: inputDirName
                                 ? "var(--color-green-500)"
                                 : "var(--mantine-color-yellow-6)",
@@ -537,9 +537,10 @@ export function WatchedFolderManagementModal({
                     }}
                   >
                     <Group gap="xs" align="center" wrap="nowrap">
-                      <FolderSpecialIcon
+                      <Icon
+                        name="folder-bookmark"
+                        size={"1rem"}
                         style={{
-                          fontSize: "1rem",
                           color: outputDirName
                             ? "var(--color-green-500)"
                             : "var(--mantine-color-dimmed)",
@@ -632,9 +633,10 @@ export function WatchedFolderManagementModal({
                     textTransform: "uppercase",
                   }}
                 >
-                  <ChevronRightIcon
-                    sx={{
-                      fontSize: "1rem",
+                  <Icon
+                    name="chevron-right"
+                    size={"1rem"}
+                    style={{
                       transform: showAdvanced ? "rotate(90deg)" : "none",
                       transition: "transform 160ms ease",
                     }}

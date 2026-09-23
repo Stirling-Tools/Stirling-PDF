@@ -7,6 +7,10 @@ ARG UNOSERVER_VERSION=3.7
 # ~120 MB of CJK fonts — opt-in.
 ARG INSTALL_CJK_FONTS=false
 
+# UNOSERVER_IDLE_TIMEOUT_SECONDS=0 keeps idle shutdown off. A positive value only
+# works when something sharing /tmp/uno-last-used writes a fresh timestamp (the
+# embedded Stirling container does); a standalone unoserver has no wake source
+# and would stay stopped while still reporting healthy.
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
@@ -15,7 +19,14 @@ ENV DEBIAN_FRONTEND=noninteractive \
     UNOSERVER_INTERFACE=0.0.0.0 \
     UNOSERVER_CONVERSION_TIMEOUT=1800 \
     UNOSERVER_RECYCLE_INTERVAL_SECONDS=0 \
-    UNOSERVER_PROFILE_DIR=/var/lib/unoserver/profile
+    UNOSERVER_IDLE_TIMEOUT_SECONDS=0 \
+    UNOSERVER_PROFILE_DIR=/var/lib/unoserver/profile \
+    SAL_USE_VCLPLUGIN=svp \
+    SAL_DISABLE_PRINTERLIST=1 \
+    OOO_FORCE_DESKTOP=none \
+    SAL_LOG="-WARN-INFO" \
+    MALLOC_ARENA_MAX=2 \
+    DBUS_SESSION_BUS_ADDRESS=/dev/null
 
 RUN set -eux; \
     apt-get update; \

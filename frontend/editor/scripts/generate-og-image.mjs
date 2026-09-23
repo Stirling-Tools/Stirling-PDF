@@ -97,8 +97,10 @@ export async function resolveIcon(icon) {
   const open = raw.indexOf("<svg");
   const body = raw.slice(raw.indexOf(">", open) + 1, raw.lastIndexOf("</svg>"));
   // Root attributes are replaced: the source files carry lucide's default
-  // weight, and the card wants the app's stroke in white.
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="${STROKE_WIDTH}" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
+  // weight, and the card wants the app's stroke in white. White goes on `color`
+  // rather than straight onto `stroke`, because a glyph that fills part of
+  // itself does so with `fill="currentColor"` and would otherwise paint black.
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" color="#fff" stroke="currentColor" stroke-width="${STROKE_WIDTH}" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
 }
 
 // ---- html template ---------------------------------------------------------
@@ -249,6 +251,9 @@ const MISSING_TOOL_ICONS = {
 
 const kebab = (id) => id.replace(/([A-Z])/g, "-$1").toLowerCase();
 
+// Some t() keys are kebab ("home.overlay-pdfs.title"); the registry is camelCase.
+const toolId = (key) => key.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+
 // English name/description live next to each tool as the `t(key, fallback)` default.
 function readRegistryStrings() {
   const src = readFileSync(
@@ -259,13 +264,13 @@ function readRegistryStrings() {
   const titles = {},
     descs = {};
   for (const m of src.matchAll(
-    new RegExp('t\\(\\s*"home\\.([A-Za-z0-9_]+)\\.title"\\s*,\\s*' + STR, "g"),
+    new RegExp('t\\(\\s*"home\\.([A-Za-z0-9_-]+)\\.title"\\s*,\\s*' + STR, "g"),
   ))
-    titles[m[1]] = m[2];
+    titles[toolId(m[1])] = m[2];
   for (const m of src.matchAll(
-    new RegExp('t\\(\\s*"home\\.([A-Za-z0-9_]+)\\.desc"\\s*,\\s*' + STR, "g"),
+    new RegExp('t\\(\\s*"home\\.([A-Za-z0-9_-]+)\\.desc"\\s*,\\s*' + STR, "g"),
   ))
-    descs[m[1]] = m[2];
+    descs[toolId(m[1])] = m[2];
   return { titles, descs };
 }
 
@@ -299,12 +304,12 @@ export function readRegistryIcons() {
   }));
   const byId = {};
   for (const m of src.matchAll(
-    /name:\s*t\(\s*"home\.([A-Za-z0-9_]+)\.title"/g,
+    /name:\s*t\(\s*"home\.([A-Za-z0-9_-]+)\.title"/g,
   )) {
     let best = null;
     for (const ic of icons)
       if (ic.pos < m.index && (!best || ic.pos > best.pos)) best = ic;
-    if (best) byId[m[1]] = best.name;
+    if (best) byId[toolId(m[1])] = best.name;
   }
   return byId;
 }
