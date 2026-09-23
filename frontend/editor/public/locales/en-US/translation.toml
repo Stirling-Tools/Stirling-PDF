@@ -6630,9 +6630,11 @@ title = "Adjust Team plan"
 [payment.capacityStage]
 adjustmentNote = "Stripe will show the exact charge, any prorations and your next billing date before you confirm. Your saved payment method will be used if available."
 continue = "Continue to payment"
+currencyAtCheckout = "Stripe confirms the final amount and payment currency at checkout."
 customLabel = "Number of users"
 dueToday = "Due today"
 enterpriseQuote = "Get an enterprise quote"
+estimatedTotal = "Estimated total"
 lineItem = "Team · {{price}}{{period}} per {{block}} users"
 minimumForCurrentUsers = "You have {{users}} users, so the plan must cover at least {{minimum}}."
 modalTitle = "Upgrade to {{planName}}"
@@ -7727,6 +7729,8 @@ payTitle = "Pay for your year"
 step = "Step {{current}} of {{total}}"
 
 [portal.billing.prepaid.calc]
+currency = "Quote currency"
+currencyLocked = "Uses your existing Stripe billing currency."
 rateUnknown = "We'll show the exact price at checkout."
 
 [portal.billing.prepaid.consent]
