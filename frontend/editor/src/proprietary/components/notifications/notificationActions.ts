@@ -30,6 +30,7 @@ import {
   unavailable,
 } from "@app/components/notifications/resolutions";
 import {
+  closesPanelFor,
   type ClientActionOutcome,
   type ClientActionRegistry,
   type ClientActionSpec,
@@ -37,6 +38,7 @@ import {
 } from "@core/components/notifications/notificationActions";
 
 export {
+  closesPanelFor,
   type ClientActionOutcome,
   type ClientActionRegistry,
   type ClientActionSpec,
@@ -247,7 +249,9 @@ export function useNotificationActions(): ClientActionRegistry {
         heldByServer(context)
           ? rerunInFolder.available(context)
           : openInTool.available(context),
-      closesPanel: openInTool.closesPanel,
+      // The server's half changes nothing on screen to move to, so the panel stays and shows the
+      // row leave the list; the client's half opens the tool behind it.
+      closesPanel: (context) => !heldByServer(context),
       run: (context) =>
         heldByServer(context)
           ? rerunInFolder.run(context)

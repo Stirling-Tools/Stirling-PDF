@@ -75,6 +75,7 @@ function policyRow(overrides: Partial<AppNotification> = {}): AppNotification {
     documentName: null,
     documentLocation: "BROWSER",
     sourceKind: "EDITOR",
+    heldByServer: false,
     sourceId: null,
     policyId: "pol-1",
     occurrences: 1,

@@ -82,14 +82,11 @@ export function isResolvableHere(notification: AppNotification): boolean {
 }
 
 /**
- * Rows the server keeps on the reader's behalf: a smart folder's documents, and the folder itself
- * when it could not be read. Nothing here is fixable in this browser, so they are shown to be read.
+ * Rows the server keeps on the reader's behalf. The server says which, so a smart-folder policy
+ * run from the editor, whose document is this browser's, is not mistaken for one.
  */
 function isHeldByServer(notification: AppNotification): boolean {
-  return (
-    notification.documentLocation === "SMART_FOLDER" ||
-    notification.sourceKind === "SMART_FOLDER"
-  );
+  return notification.heldByServer;
 }
 
 interface NotificationsSnapshot {

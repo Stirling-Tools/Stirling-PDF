@@ -23,6 +23,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.SweepOutcome;
+import stirling.software.proprietary.policy.ledger.ClaimState;
+import stirling.software.proprietary.policy.ledger.ProcessedFileStatus;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.Policy;
@@ -173,12 +175,18 @@ class RetryInFolderActionTest {
         }
 
         @Test
-        void leavesTheRowOpenWhenTheFolderYieldedNoRun() {
+        void leavesTheRowOpenAndParkedAgainWhenTheFolderYieldedNoRun() {
             // A paused or unreadable folder, or a file that has since left it, starts nothing.
-            // Resolving anyway would make the failure vanish with nothing re-run.
+            // Resolving anyway would make the failure vanish with nothing re-run, and leaving the
+            // ledger row forgotten would have the next press answer "no parked failure".
             when(policyStore.get(FOLDER_ID))
                     .thenReturn(java.util.Optional.of(folder(Policy.SURFACE_PROCESSING_FOLDER)));
             when(policyAccessGuard.canAccess(any(Policy.class))).thenReturn(true);
+            when(processedLedger.statesFor(FOLDER_ID, List.of(IDENTITY)))
+                    .thenReturn(
+                            Map.of(
+                                    IDENTITY,
+                                    new ClaimState(ProcessedFileStatus.ERROR, "gate-1", "hash-1")));
             when(processedLedger.forgetFailure(FOLDER_ID, IDENTITY)).thenReturn(true);
             when(policyRunner.runFile(any(Policy.class), anyString())).thenReturn(noRuns());
 
@@ -187,6 +195,7 @@ class RetryInFolderActionTest {
                     .extracting(e -> ((FailureActionException) e).getReason())
                     .isEqualTo(FailureActionException.Reason.NOTHING_TO_RUN);
 
+            verify(processedLedger).settle(FOLDER_ID, IDENTITY, "gate-1", "hash-1", false);
             verify(store, never()).applyStatus(any(), any(), any(), any());
         }
 

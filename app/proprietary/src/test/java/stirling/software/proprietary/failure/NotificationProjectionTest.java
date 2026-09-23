@@ -270,8 +270,9 @@ class NotificationProjectionTest {
             owner.setUsername(ACTOR);
             StoredFile file = new StoredFile();
             file.setOwner(owner);
+            file.setId(42L);
             file.setOriginalFilename("march.pdf");
-            when(storedFiles.findById(42L)).thenReturn(Optional.of(file));
+            when(storedFiles.findAllById(List.of(42L))).thenReturn(List.of(file));
             store.record(
                     RecordFailure.forRun(
                             FailureKind.UNKNOWN,
@@ -314,8 +315,9 @@ class NotificationProjectionTest {
             someoneElse.setUsername("someone.else@example.com");
             StoredFile file = new StoredFile();
             file.setOwner(someoneElse);
+            file.setId(42L);
             file.setOriginalFilename("payroll.pdf");
-            when(storedFiles.findById(42L)).thenReturn(Optional.of(file));
+            when(storedFiles.findAllById(List.of(42L))).thenReturn(List.of(file));
             store.record(
                     RecordFailure.forRun(
                             FailureKind.UNKNOWN,

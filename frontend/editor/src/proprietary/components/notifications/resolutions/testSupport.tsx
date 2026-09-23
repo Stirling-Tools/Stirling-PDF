@@ -28,6 +28,7 @@ export function notification(
     documentName: null,
     documentLocation: "BROWSER",
     sourceKind: "EDITOR",
+    heldByServer: false,
     sourceId: null,
     policyId: null,
     occurrences: 3,

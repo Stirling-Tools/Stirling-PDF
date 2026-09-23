@@ -69,6 +69,7 @@ function notification(
     documentName: null,
     documentLocation: "BROWSER",
     sourceKind: "EDITOR",
+    heldByServer: false,
     sourceId: null,
     policyId: null,
     occurrences: 1,
@@ -130,6 +131,7 @@ describe("useNotifications", () => {
           sourceId: "src-s3-invoices",
           sourceKind: "SMART_FOLDER",
           documentLocation: "SMART_FOLDER",
+          heldByServer: true,
           fileId: null,
         }),
       ]),
@@ -172,6 +174,31 @@ describe("useNotifications", () => {
     expect(result.current.unreadCount).toBe(1);
   });
 
+  it("still asks this device about a smart-folder policy the member ran from the editor", async () => {
+    // The policy is a smart folder's, but the run was attended and the document is the browser's.
+    // Only the server's word makes a row held by it; the policy's kind alone does not.
+    hasLocalFile.mockResolvedValue(false);
+    fetchNotifications.mockResolvedValue(
+      feed(
+        [
+          notification("attended", {
+            policyId: "folder-policy",
+            sourceKind: "SMART_FOLDER",
+            documentLocation: "BROWSER",
+            heldByServer: false,
+            fileId: "elsewhere",
+          }),
+        ],
+        false,
+      ),
+    );
+
+    const { result } = renderHook(() => useNotifications());
+
+    await waitFor(() => expect(hasLocalFile).toHaveBeenCalledWith("elsewhere"));
+    await waitFor(() => expect(result.current.notifications).toHaveLength(0));
+  });
+
   it("shows a member the rows a smart folder produced, which reach nobody else", async () => {
     // Their own folder, their own documents: hidden, the person who set it up hears nothing when it
     // stops working. Storage is never asked either: a hit on a server-side reference is a collision.
@@ -183,6 +210,7 @@ describe("useNotifications", () => {
             sourceId: "src-downloads",
             sourceKind: "SMART_FOLDER",
             documentLocation: "SMART_FOLDER",
+            heldByServer: true,
             fileId: null,
           }),
         ],
@@ -209,6 +237,7 @@ describe("useNotifications", () => {
             sourceId: "src-downloads",
             sourceKind: "SMART_FOLDER",
             documentLocation: "UNREACHABLE",
+            heldByServer: true,
             fileId: null,
           }),
         ],

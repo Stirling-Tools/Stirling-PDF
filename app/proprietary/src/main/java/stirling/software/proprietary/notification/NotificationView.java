@@ -33,6 +33,11 @@ public record NotificationView(
         String documentName,
         FileRunEventView.DocumentLocation documentLocation,
         /**
+         * Whether the server keeps this row on the reader's behalf: a smart folder's document, or
+         * the folder itself when it could not be read. The one rule a member's bell filters on.
+         */
+        boolean heldByServer,
+        /**
          * What fed the run, for a row the reader did not cause; {@code EDITOR} for one they did.
          */
         SourceKind sourceKind,

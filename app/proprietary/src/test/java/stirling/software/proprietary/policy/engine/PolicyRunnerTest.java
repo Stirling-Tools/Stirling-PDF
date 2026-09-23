@@ -148,6 +148,33 @@ class PolicyRunnerTest {
     }
 
     @Test
+    void aSourceThatBlowsUpIsNotCalledAnUnreadableFolder() throws Exception {
+        // A bug in a source, or a bucket's SDK error, is a RuntimeException. Recording it would
+        // tell the owner their folder cannot be read when nothing about the folder changed.
+        PolicyFailureRecorder recorder = mock(PolicyFailureRecorder.class);
+        PolicyRunner recording =
+                new PolicyRunner(
+                        policyEngine,
+                        List.of(folderSource),
+                        sourceStore,
+                        docCounter,
+                        processedLedger,
+                        new ApplicationProperties(),
+                        reachableOwners(),
+                        databaseLicenseGuard,
+                        recorder,
+                        eventPublisher);
+        InputSpec spec = InputSpec.folder("/Users/carol/Payroll");
+        Policy policy = policy(List.of(spec));
+        when(folderSource.supports(spec)).thenReturn(true);
+        when(folderSource.resolve(eq(spec), any())).thenThrow(new IllegalStateException("boom"));
+
+        recording.run(policy);
+
+        verifyNoInteractions(recorder);
+    }
+
+    @Test
     void runsOnceWithNoFilesWhenThePolicyHasNoSources() {
         Policy policy = policy(List.of());
         when(policyEngine.runPolicy(eq(policy), any(), any(), any(), any(), any()))

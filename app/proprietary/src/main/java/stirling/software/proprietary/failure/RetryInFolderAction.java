@@ -1,5 +1,6 @@
 package stirling.software.proprietary.failure;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Component;
@@ -10,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.SweepOutcome;
+import stirling.software.proprietary.policy.ledger.ClaimState;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.PolicyStore;
@@ -46,6 +48,7 @@ public class RetryInFolderAction implements FailureAction {
 
         // Taken from the row, never from the caller: the one file this incident is about is the
         // only one a press can reach, so no input can widen it to a sibling or to another folder.
+        ClaimState parked = processedLedger.statesFor(policy.id(), List.of(identity)).get(identity);
         if (!processedLedger.forgetFailure(policy.id(), identity)) {
             throw new FailureActionException(
                     FailureActionException.Reason.NOTHING_TO_RUN,
@@ -53,10 +56,13 @@ public class RetryInFolderAction implements FailureAction {
         }
         SweepOutcome outcome = policyRunner.runFile(policy, identity);
         // A paused or unreadable folder, a missing licence, or a file that has since left the
-        // folder all yield no run. The row stays open: closing it would call the failure fixed
-        // with nothing re-run. The forgotten ledger row is not restored, so the next sweep that
-        // can list the folder claims the file fresh.
+        // folder all yield no run. The row stays open, and the failure is parked again at the
+        // gate it had, so the next press finds something to run rather than "no parked failure".
         if (outcome.runIds().isEmpty()) {
+            if (parked != null) {
+                processedLedger.settle(
+                        policy.id(), identity, parked.gate(), parked.contentHash(), false);
+            }
             throw new FailureActionException(
                     FailureActionException.Reason.NOTHING_TO_RUN,
                     "This document could not be run again: the folder is paused, unreadable, or"

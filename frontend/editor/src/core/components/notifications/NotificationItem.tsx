@@ -9,10 +9,11 @@ import {
   refreshNotificationsNow,
 } from "@app/hooks/useNotifications";
 import type { NotificationDocumentState } from "@app/hooks/useNotifications";
-import type {
-  ClientActionRegistry,
-  ClientActionSpec,
-  NotificationActionContext,
+import {
+  closesPanelFor,
+  type ClientActionRegistry,
+  type ClientActionSpec,
+  type NotificationActionContext,
 } from "@app/components/notifications/notificationActions";
 import { promoteActions } from "@app/components/notifications/notificationActionSlots";
 import type {
@@ -66,8 +67,8 @@ function noteFor(
           "notifications.inSmartFolder",
           "This document is in a smart folder, so it is handled on the server rather than here.",
         );
-  // A source that could not be read names no document by design, so there is none to miss.
-  if (!notification.fileId && notification.sourceKind !== "EDITOR") return null;
+  // A folder that could not be read names no document by design, so there is none to miss.
+  if (!notification.fileId && notification.heldByServer) return null;
   if (!notification.fileId)
     return t(
       "notifications.noDocumentLinked",
@@ -157,7 +158,7 @@ export function NotificationItem({
     // without this the row a reader just fixed sits there until a poll happens to land. Re-read
     // rather than patched here, as the password path does: the server decides what closed.
     refreshNotificationsNow();
-    if (spec.closesPanel) onDismissPanel();
+    if (closesPanelFor(spec, context)) onDismissPanel();
   };
 
   const copyDetail = async () => {

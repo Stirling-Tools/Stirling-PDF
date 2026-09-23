@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.failure.FailureKind;
 import stirling.software.proprietary.failure.PolicyFailureRecorder;
+import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.input.ResolvedInput;
@@ -272,17 +273,22 @@ public class PolicyRunner {
                     spec.type(),
                     policy.id(),
                     e.getMessage());
-            // Recorded, not just logged: its owner would otherwise never hear that the folder
-            // stopped working. The reason without the path: reviewers across the team read this.
-            failureRecorder.recordRunFailureAs(
-                    FailureKind.SOURCE_UNREADABLE,
-                    null,
-                    policy.id(),
-                    storedSource.id(),
-                    policy.owner(),
-                    e instanceof FileSystemException fs && fs.getReason() != null
-                            ? fs.getReason()
-                            : "The folder could not be listed");
+            // Recorded, not just logged, for a disk folder that failed to list: its owner would
+            // otherwise never hear that the folder stopped working, and only they can fix it. A
+            // bucket's SDK error or a bug in a source is a RuntimeException and is not the folder
+            // being unreadable, so it stays a log line. The reason without the path: reviewers
+            // across the team read this.
+            if (e instanceof IOException && FolderAccessGuard.FOLDER_TYPE.equals(spec.type())) {
+                failureRecorder.recordRunFailureAs(
+                        FailureKind.SOURCE_UNREADABLE,
+                        null,
+                        policy.id(),
+                        storedSource.id(),
+                        policy.owner(),
+                        e instanceof FileSystemException fs && fs.getReason() != null
+                                ? fs.getReason()
+                                : "The folder could not be listed");
+            }
             context.vetoCleanup();
             return List.of();
         }
