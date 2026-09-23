@@ -11,6 +11,7 @@ import java.security.MessageDigest;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -213,22 +214,35 @@ public class FolderOutputSink implements PolicyOutputSink {
         }
     }
 
-    /** Where a directory's pre-processing originals are kept, beside the staging dir. */
+    /** Originals are direct files here; subdirectories contain internal processing data. */
     public static Path originalsDir(Path dir) {
-        return dir.resolve(".stirling").resolve("originals");
+        return dir.resolve(".stirling");
     }
 
     /**
-     * Where a same-name re-drop's original goes once the canonical slot is taken. A subdirectory,
-     * not a numbered sibling: a restore brings back every regular file directly under {@link
-     * #originalsDir}, so a sibling would be restored as a file the watched folder never held.
-     *
-     * <p>Canonical stays with the first original, which is wrong when the user replaced the file
-     * with a different document of the same name; telling that apart needs the previous output's
-     * content hash, which the next claim clears from the ledger row.
+     * Resolves a single filename's original, including backups from the nested archive layout.
+     * Callers must validate that name contains no path components.
      */
-    private static Path supersededDir(Path dir) {
-        return originalsDir(dir).resolve("superseded");
+    public static Path originalPath(Path dir, String name) {
+        Path original = originalsDir(dir).resolve(name);
+        Path legacy = originalsDir(dir).resolve("originals").resolve(name);
+        return !Files.exists(original) && Files.isRegularFile(legacy) ? legacy : original;
+    }
+
+    /** Lists restorable filenames, excluding staging files and nested backup history. */
+    public static List<String> originalNames(Path dir) throws IOException {
+        var names = new LinkedHashSet<String>();
+        Path originals = originalsDir(dir);
+        for (Path archive : List.of(originals, originals.resolve("originals"))) {
+            if (!Files.isDirectory(archive)) continue;
+            try (Stream<Path> entries = Files.list(archive)) {
+                entries.filter(Files::isRegularFile)
+                        .map(entry -> entry.getFileName().toString())
+                        .filter(name -> !name.startsWith("."))
+                        .forEach(names::add);
+            }
+        }
+        return List.copyOf(names);
     }
 
     /**
@@ -247,11 +261,9 @@ public class FolderOutputSink implements PolicyOutputSink {
     }
 
     /**
-     * Move the target into {@code .stirling/originals} before a replace overwrites it, returning
-     * the archived path, or null when nothing is at the target. Throws if an existing target cannot
-     * be archived, so the caller aborts before overwriting and never destroys an unpreserved
-     * original. With the canonical slot already taken, the kept original stays there and this
-     * content goes to {@link #supersededDir}.
+     * Move the first original into {@code .stirling} before replacing it. Returns null when an
+     * original is already kept or no target exists; subsequent replacements leave the current file
+     * in place until the atomic delivery succeeds. An archive failure aborts the replacement.
      *
      * <p>Plain move, not {@code ATOMIC_MOVE}: the archive is hidden under {@code .stirling} so
      * needs no atomic visibility, and a plain move survives a cross-device archive dir where {@code
@@ -262,15 +274,13 @@ public class FolderOutputSink implements PolicyOutputSink {
             return null;
         }
         stirlingDir(dir);
-        Path originals = originalsDir(dir);
-        Files.createDirectories(originals);
         String name = target.getFileName().toString();
-        Path archived = originals.resolve(name);
+        Path archived = originalPath(dir, name);
         if (Files.exists(archived)) {
-            // Kept aside, so the overwrite cannot destroy this content either.
-            Path superseded = supersededDir(dir);
-            Files.createDirectories(superseded);
-            archived = uniqueTarget(superseded, name);
+            if (!Files.isRegularFile(archived)) {
+                throw new IOException("Original archive is not a regular file: " + archived);
+            }
+            return null;
         }
         Files.move(target, archived);
         return archived;

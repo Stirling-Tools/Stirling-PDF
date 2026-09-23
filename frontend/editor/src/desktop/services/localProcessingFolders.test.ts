@@ -22,8 +22,10 @@ const mocks = vi.hoisted(() => ({
   download: vi.fn(),
   replace: vi.fn(),
   archive: vi.fn(),
+  remove: vi.fn(),
+  original: vi.fn(),
 }));
-vi.mock("@tauri-apps/plugin-fs", () => ({ remove: vi.fn() }));
+vi.mock("@tauri-apps/plugin-fs", () => ({ remove: mocks.remove }));
 vi.mock("@app/services/localFolderStorage", () => ({
   directoryKey: (value: string) => value.replace(/\/$/, ""),
   localFolderStorage: {
@@ -86,12 +88,13 @@ vi.mock("@app/services/localProcessingDelivery", () => ({
     if (entry.lastModified !== mocks.disk.lastModified)
       throw new Error("File changed");
   },
-  readProcessingOriginal: vi.fn(),
+  readProcessingOriginal: mocks.original,
 }));
 import {
   saveLocalProcessingFolder,
   sweepLocalProcessingFolder,
   scanLocalProcessingFolders,
+  revertLocalProcessingFile,
 } from "@app/services/localProcessingFolders";
 
 const request = {
@@ -137,9 +140,8 @@ describe("desktop processing folder handoff", () => {
     mocks.download.mockResolvedValue(
       new File(["result"], "a.pdf", { type: "application/pdf" }),
     );
-    mocks.archive.mockResolvedValue(
-      "/downloads/.stirling-originals/original.pdf",
-    );
+    mocks.archive.mockResolvedValue("/downloads/.stirling/a.pdf");
+    mocks.original.mockResolvedValue(new File(["original"], "a.pdf"));
     mocks.replace.mockImplementation(async () => {
       mocks.disk = { ...mocks.disk, lastModified: 2, sizeBytes: 5 };
       return { ...mocks.disk };
@@ -174,6 +176,35 @@ describe("desktop processing folder handoff", () => {
     await expect(saveLocalProcessingFolder(request)).rejects.toThrow("Sign in");
     expect(mocks.submit).not.toHaveBeenCalled();
     expect(mocks.folders.size).toBe(0);
+  });
+
+  test("reprocessing changed input keeps the first original", async () => {
+    const folder = await saveLocalProcessingFolder(request);
+    await waitFor(() => expect(onlyFile()?.run.status).toBe("COMPLETED"));
+    const originalPath = onlyFile().originalPath;
+    mocks.disk = { ...mocks.disk, lastModified: 3 };
+
+    await sweepLocalProcessingFolder(folder.id);
+    await waitFor(() => expect(mocks.submit).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(onlyFile().run.status).toBe("COMPLETED"));
+
+    expect(onlyFile().originalPath).toBe(originalPath);
+    expect(mocks.archive).toHaveBeenCalledOnce();
+  });
+
+  test.each([
+    "/downloads/.stirling/a.pdf",
+    "/downloads/.stirling-originals/old-a.pdf",
+  ])("restoring consumes the backup at %s", async (originalPath) => {
+    mocks.archive.mockResolvedValueOnce(originalPath);
+    const folder = await saveLocalProcessingFolder(request);
+    await waitFor(() => expect(onlyFile()?.run.status).toBe("COMPLETED"));
+
+    await revertLocalProcessingFile(folder.id, "a.pdf");
+
+    expect(mocks.original).toHaveBeenCalledWith(originalPath);
+    expect(mocks.remove).toHaveBeenCalledWith(originalPath);
+    expect(mocks.files.size).toBe(0);
   });
 
   test("a file edited while the server works is never overwritten", async () => {

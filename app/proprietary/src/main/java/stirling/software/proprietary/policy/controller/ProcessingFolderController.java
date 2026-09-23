@@ -384,7 +384,6 @@ public class ProcessingFolderController {
                             files.stream()
                                     .map(f -> FolderIdentities.identity(canonicalDir, permitted, f))
                                     .toList());
-            Path originals = FolderOutputSink.originalsDir(canonicalDir);
             return files.stream()
                     .map(
                             f ->
@@ -394,7 +393,9 @@ public class ProcessingFolderController {
                                                     FolderIdentities.identity(
                                                             canonicalDir, permitted, f)),
                                             Files.isRegularFile(
-                                                    originals.resolve(f.getFileName().toString()))))
+                                                    FolderOutputSink.originalPath(
+                                                            canonicalDir,
+                                                            f.getFileName().toString()))))
                     .filter(Objects::nonNull)
                     .toList();
         } catch (IOException e) {
@@ -598,7 +599,7 @@ public class ProcessingFolderController {
         }
         try {
             Path canonicalDir = FolderIdentities.canonicalDir(permitted);
-            Path archived = FolderOutputSink.originalsDir(canonicalDir).resolve(name);
+            Path archived = FolderOutputSink.originalPath(canonicalDir, name);
             if (!Files.isRegularFile(archived)) {
                 throw new ResponseStatusException(
                         HttpStatus.CONFLICT, "'" + name + "' has no original to restore");
@@ -655,16 +656,7 @@ public class ProcessingFolderController {
             // Wait for claims to settle: clearing the ledger before that lets a late settle
             // re-add a row. A run that outruns this wait leaves its file skipped below.
             policyRunner.awaitQuiesce(policy.id(), Duration.ofSeconds(10));
-            List<String> names = List.of();
-            Path originals = FolderOutputSink.originalsDir(canonicalDir);
-            if (Files.isDirectory(originals)) {
-                try (Stream<Path> entries = Files.list(originals)) {
-                    names =
-                            entries.filter(Files::isRegularFile)
-                                    .map(entry -> entry.getFileName().toString())
-                                    .toList();
-                }
-            }
+            List<String> names = FolderOutputSink.originalNames(canonicalDir);
             int restored = 0;
             int skipped = 0;
             for (String name : names) {
@@ -704,7 +696,7 @@ public class ProcessingFolderController {
         if (!permitted.equals(target.getParent())) {
             return false;
         }
-        Path archived = FolderOutputSink.originalsDir(canonicalDir).resolve(name);
+        Path archived = FolderOutputSink.originalPath(canonicalDir, name);
         String identity = FolderIdentities.identity(canonicalDir, permitted, target);
         ClaimState state = processedLedger.statesFor(policy.id(), List.of(identity)).get(identity);
         if (state != null && state.status() == ProcessedFileStatus.PROCESSING) {

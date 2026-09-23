@@ -1,7 +1,15 @@
-import { mkdir, rename, remove, stat, writeFile } from "@tauri-apps/plugin-fs";
+import {
+  exists,
+  mkdir,
+  open,
+  rename,
+  remove,
+  stat,
+  writeFile,
+} from "@tauri-apps/plugin-fs";
 import {
   readDiskFile,
-  writeDiskFile,
+  isWithinMount,
   type DiskFileEntry,
 } from "@app/services/localFolderContents";
 import { generateId } from "@app/utils/generateId";
@@ -49,20 +57,33 @@ export async function requireUnchangedProcessingFile(
   }
 }
 
-/** Keeps a recoverable original before any processed output replaces it. */
+/** Keeps the first original at its filename; later processing reuses that backup. */
 export async function archiveProcessingInput(
   directory: string,
   file: File,
 ): Promise<string> {
-  const archive = `${directory}/.stirling-originals`;
+  const archive = processingPath(directory, ".stirling");
+  const path = processingPath(archive, file.name);
+  if (!(await isWithinMount(archive))) {
+    throw new Error("The processing folder is no longer mounted");
+  }
   await mkdir(archive, { recursive: true });
-  const name = await writeDiskFile(
-    archive,
-    `${generateId()}-${file.name}`,
-    file,
-  );
-  if (!name) throw new Error("The processing folder is no longer mounted");
-  return processingPath(archive, name);
+  if (await exists(path)) {
+    if (!(await stat(path)).isFile)
+      throw new Error("The original is not a file");
+    return path;
+  }
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const original = await open(path, { write: true, createNew: true });
+  try {
+    await original.write(bytes);
+  } catch (error) {
+    await original.close();
+    await remove(path);
+    throw error;
+  }
+  await original.close();
+  return path;
 }
 
 /** Stages bytes beside the input before replacing it; a failed write leaves the input intact. */

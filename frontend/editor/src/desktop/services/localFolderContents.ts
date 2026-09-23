@@ -25,7 +25,7 @@ export type { DiskDirEntry, DiskFileEntry, DiskListing, ListDirectoryOptions };
  * Containment: these reads and writes run under a filesystem-wide Tauri capability, but
  * the contract here is mounted directories only, so any path outside one is refused.
  */
-async function isWithinMount(path: string): Promise<boolean> {
+export async function isWithinMount(path: string): Promise<boolean> {
   const pathKey = directoryKey(path);
   const folders = await localFolderStorage.getAllFolders();
   return folders

@@ -341,10 +341,7 @@ async function queueLocalProcessingFiles(
       folderId: id,
       input,
       outputs: previous?.outputs ?? [],
-      originalPath:
-        previous && sameProcessingFile(previous.input, input)
-          ? previous.originalPath
-          : undefined,
+      originalPath: previous?.originalPath,
       run: {
         runId: `queued:${generateId()}`,
         status: "PENDING",
@@ -419,6 +416,7 @@ export async function revertLocalProcessingFile(
   for (const output of entry.outputs) {
     if (output.path !== entry.input.path) await remove(output.path);
   }
+  await remove(entry.originalPath);
   await storage.deleteFile(entry.id);
 }
 

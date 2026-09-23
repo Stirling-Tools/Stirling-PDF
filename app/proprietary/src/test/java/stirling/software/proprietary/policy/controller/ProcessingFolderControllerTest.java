@@ -849,7 +849,7 @@ class ProcessingFolderControllerTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
         var view = controller.save(diskRequest()).getBody();
         Files.writeString(tempDir.resolve("doc.pdf"), "processed");
-        Path originals = tempDir.resolve(".stirling").resolve("originals");
+        Path originals = tempDir.resolve(".stirling");
         Files.createDirectories(originals);
         Files.writeString(originals.resolve("doc.pdf"), "original");
 
@@ -889,7 +889,7 @@ class ProcessingFolderControllerTest {
                 .when(folderAccessGuard.requirePermitted(any(Path.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
         var view = controller.save(diskRequest()).getBody();
-        Path originals = tempDir.resolve(".stirling").resolve("originals");
+        Path originals = tempDir.resolve(".stirling");
         Files.createDirectories(originals);
         for (String name : List.of("doc1.pdf", "doc2.pdf")) {
             Files.writeString(tempDir.resolve(name), "processed");
@@ -911,33 +911,55 @@ class ProcessingFolderControllerTest {
     }
 
     @Test
-    void revertAllIgnoresNestedArchivesSoItRestoresOnlyTheFolderSOwnFiles() throws Exception {
+    void revertAllRestoresBothLayoutsWithoutRestoringStagingOrExtraHistory() throws Exception {
         lenient()
                 .when(folderAccessGuard.requirePermitted(any(Path.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
         var view = controller.save(diskRequest()).getBody();
-        Path originals = tempDir.resolve(".stirling").resolve("originals");
-        // The consumer half of the superseded layout: a same-name re-drop displaces the original
-        // it replaces one level down, and revert-all must leave it there. Restoring it as a
-        // sibling would leave the user a second "doc.pdf" their folder never held. The write half
-        // - that only the canonical name ever lands in this namespace - is pinned by
-        // FolderOutputSinkTest.aSupersededOriginalIsKeptOutOfTheRestoreNamespace.
-        Path superseded = originals.resolve("superseded");
+        Path archive = tempDir.resolve(".stirling");
+        Path legacy = archive.resolve("originals");
+        Path superseded = legacy.resolve("superseded");
+        Path staging = archive.resolve("tmp");
         Files.createDirectories(superseded);
+        Files.createDirectories(staging);
         Files.writeString(tempDir.resolve("doc.pdf"), "processed");
-        Files.writeString(originals.resolve("doc.pdf"), "the-original");
-        Files.writeString(superseded.resolve("doc.pdf"), "displaced-original");
+        Files.writeString(archive.resolve("doc.pdf"), "the-original");
+        Files.writeString(legacy.resolve("old.pdf"), "legacy-original");
+        Files.writeString(superseded.resolve("doc.pdf"), "extra-history");
+        Files.writeString(staging.resolve("output.pdf"), "partial-output");
 
         var outcome = controller.revertAllFiles(view.id());
 
-        assertThat(outcome.restored()).isEqualTo(1);
+        assertThat(outcome.restored()).isEqualTo(2);
         assertThat(Files.readString(tempDir.resolve("doc.pdf"))).isEqualTo("the-original");
+        assertThat(Files.readString(tempDir.resolve("old.pdf"))).isEqualTo("legacy-original");
         try (Stream<Path> entries = Files.list(tempDir)) {
             assertThat(entries.filter(Files::isRegularFile).map(f -> f.getFileName().toString()))
-                    .containsExactly("doc.pdf");
+                    .containsExactlyInAnyOrder("doc.pdf", "old.pdf");
         }
-        // Still preserved, just not restored over anything.
-        assertThat(Files.readString(superseded.resolve("doc.pdf"))).isEqualTo("displaced-original");
+        assertThat(Files.readString(superseded.resolve("doc.pdf"))).isEqualTo("extra-history");
+        assertThat(Files.readString(staging.resolve("output.pdf"))).isEqualTo("partial-output");
+    }
+
+    @Test
+    void anExistingNestedOriginalIsStillListedAndRestorable() throws Exception {
+        lenient()
+                .when(folderAccessGuard.requirePermitted(any(Path.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        var view = controller.save(diskRequest()).getBody();
+        Files.writeString(tempDir.resolve("doc.pdf"), "processed");
+        Path original = tempDir.resolve(".stirling/originals/doc.pdf");
+        Files.createDirectories(original.getParent());
+        Files.writeString(original, "original");
+
+        assertThat(controller.files(view.id()))
+                .singleElement()
+                .satisfies(file -> assertThat(file.hasOriginal()).isTrue());
+        controller.revertFile(
+                view.id(), new ProcessingFolderController.RevertFileRequest("doc.pdf"));
+
+        assertThat(Files.readString(tempDir.resolve("doc.pdf"))).isEqualTo("original");
+        assertThat(Files.exists(original)).isFalse();
     }
 
     @Test

@@ -62,6 +62,15 @@
       "allow": [{ "path": "**" }]
     },
     {
+      "identifier": "fs:allow-exists",
+      "allow": [{ "path": "**" }]
+    },
+    {
+      "identifier": "fs:allow-open",
+      "allow": [{ "path": "**" }]
+    },
+    "fs:allow-write",
+    {
       "identifier": "fs:allow-rename",
       "allow": [{ "path": "**" }]
     },
