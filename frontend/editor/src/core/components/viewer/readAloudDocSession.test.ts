@@ -114,7 +114,8 @@ describe("createReadAloudDocSession", () => {
     expect(open).toHaveBeenCalledTimes(2);
   });
 
-  it("close drops the handle and tolerates close failures", async () => {    const open = vi.fn(async () => 7);
+  it("close drops the handle and tolerates close failures", async () => {
+    const open = vi.fn(async () => 7);
     const close = vi.fn(async () => {
       throw new Error("busy");
     });
