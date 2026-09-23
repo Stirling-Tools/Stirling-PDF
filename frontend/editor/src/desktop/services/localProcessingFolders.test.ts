@@ -187,6 +187,7 @@ describe("desktop processing folder handoff", () => {
   test.each([
     ["/downloads", "/downloads/invoices"],
     ["/downloads/", "/downloads/invoices/2026"],
+    ["/downloads", "/downloads/.archive/invoices..2026"],
     ["C:\\Users\\Reece\\Downloads\\", "c:/users/reece/downloads/invoices"],
     ["\\\\server\\share\\docs", "//SERVER/share/docs/invoices"],
     ["C:\\", "c:/invoices"],
@@ -216,6 +217,31 @@ describe("desktop processing folder handoff", () => {
       ).rejects.toThrow("Mount the directory before enabling processing");
       expect(mocks.submit).not.toHaveBeenCalled();
       expect(mocks.folders.size).toBe(0);
+    },
+  );
+
+  test.each([
+    ["/downloads/../private", "/downloads"],
+    ["/downloads/./invoices", "/downloads"],
+    ["/downloads/invoices/..", "/downloads"],
+    ["/downloads/.", "/downloads"],
+    ["C:\\Downloads\\..\\private", "C:\\Downloads"],
+    ["C:\\Downloads\\.\\invoices", "C:\\Downloads"],
+    ["c:/downloads\\..\\private", "C:\\Downloads"],
+    ["//server/share/docs/../private", "\\\\server\\share\\docs"],
+    ["\\\\server\\share\\docs\\.\\invoices", "//server/share/docs"],
+  ])(
+    "rejects processing paths with dot segments: %s",
+    async (directory, mount) => {
+      mocks.mountedDirectories = [mount];
+
+      await expect(
+        saveLocalProcessingFolder({ ...request, directory }),
+      ).rejects.toThrow("Mount the directory before enabling processing");
+      expect(mocks.folders.size).toBe(0);
+      expect(mocks.submit).not.toHaveBeenCalled();
+      expect(mocks.archive).not.toHaveBeenCalled();
+      expect(mocks.replace).not.toHaveBeenCalled();
     },
   );
 

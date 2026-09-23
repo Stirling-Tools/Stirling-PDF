@@ -22,10 +22,14 @@ import { pendingFilePathMappings } from "@app/services/pendingFilePathMappings";
 export type { DiskDirEntry, DiskFileEntry, DiskListing, ListDirectoryOptions };
 
 /**
- * Descendants need no separate mount record. Paths are compared lexically, so callers
- * must supply paths without dot segments. Filesystem links are not resolved.
+ * Descendants need no separate mount record. Paths with dot segments are rejected;
+ * remaining paths are compared lexically. Filesystem links are not resolved.
  */
 export async function isWithinMount(path: string): Promise<boolean> {
+  const components = path.replace(/\\/g, "/").split("/");
+  if (components.some((component) => component === "." || component === "..")) {
+    return false;
+  }
   const pathKey = directoryKey(path);
   const folders = await localFolderStorage.getAllFolders();
   return folders
