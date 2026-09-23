@@ -729,6 +729,8 @@ permissionNotice = "Шлях до tessdata недоступний для зап�
 
 [admin.settings.ai]
 description = "Підключіть Stirling до Python AI-рушія, виберіть його моделі та задайте обмеження, в межах яких він працює."
+managedByCloud = "У цьому режимі керується Stirling Cloud."
+managedByCloudShort = "Керується Stirling Cloud"
 
 [admin.settings.ai.documents]
 description = "Налаштуйте модель ембедингів і параметри пошуку, що використовуються для відповідей на запитання щодо документів. Застосовується до AI engine після збереження."
@@ -771,11 +773,24 @@ label = "Top K"
 [admin.settings.ai.general]
 connection = "Підключення"
 description = "Підключіть Stirling до Python AI engine і виберіть, які можливості AI будуть доступні. Зміни застосовуються після перезапуску."
+restartNote = "Зміна URL або будь-якого тайм-ауту набуває чинності після перезапуску."
 title = "AI Engine"
 
 [admin.settings.ai.general.capabilities]
 description = "Увімкніть або вимкніть окремі функції AI. Вимкнені функції приховані в застосунку."
 title = "Можливості"
+
+[admin.settings.ai.general.cloud]
+note = "Моделі та ключі постачальника керуються Stirling Cloud, тому ці налаштування не застосовуються в цьому режимі."
+
+[admin.settings.ai.general.cloud.indexing]
+description = "Кожен інструмент ШІ надсилає текст сторінки, потрібний для відповіді. Це визначає, чи може Stirling Cloud також зберігати цей текст індексованим, щоб наступні запитання могли шукати в документі."
+help = "Вимкнено означає, що запитання щодо документа недоступні. Це не зупиняє надсилання тексту — лише його зберігання."
+label = "Дозволити Stirling Cloud зберігати індексовані документи"
+
+[admin.settings.ai.general.cloudNote]
+body = "Обґрунтування виконується в інфраструктурі Stirling, а оплата виставляється на обліковий запис, до якого прив’язано цей сервер. Тут не потрібно запускати контейнер і зберігати ключ постачальника. Усе, що читає ШІ, обробляється Stirling Cloud, а не на вашому обладнанні."
+title = "Про Stirling Cloud AI"
 
 [admin.settings.ai.general.enabled]
 description = "Головний перемикач. Якщо вимкнено, інструменти AI, агенти або виклики engine недоступні."
@@ -809,9 +824,28 @@ label = "Агент коментарів PDF"
 description = "Тайм-аут для важчих операцій агентів, таких як створення документів."
 label = "Тайм-аут тривалих операцій (секунди)"
 
+[admin.settings.ai.general.mode]
+label = "Де працює ШІ"
+
+[admin.settings.ai.general.mode.cloud]
+description = "Без контейнера, без ключа постачальника, без вибору моделі — робота виконується в Stirling Cloud, а оплата виставляється на обліковий запис, до якого прив’язано цей сервер."
+linkCta = "Підключити цей сервер до облікового запису Stirling"
+notLinked = "Спочатку прив’яжіть обліковий запис"
+ownerOnly = "Лише власник організації може прив’язати цей сервер до облікового запису Stirling."
+title = "Використовувати Stirling Cloud AI"
+
+[admin.settings.ai.general.mode.off]
+description = "Інструменти ШІ недоступні в усьому застосунку, і нічого не залишає цей сервер."
+title = "Вимкнено"
+
+[admin.settings.ai.general.mode.self]
+description = "Контейнер, який ви розміщуєте самі й спрямовуєте до вибраного постачальника моделей. Ваш ключ, ваш рахунок, ваш шлях даних."
+title = "Запустити власний рушій"
+
 [admin.settings.ai.general.note]
-body = "AI engine працює як окремий сервіс. Його спільний секрет"
-body2 = "задається через змінну середовища контейнера. Provider API keys можна ввести на цих сторінках або надати як змінні середовища engine; ключі, введені тут, надсилаються до engine після збереження."
+docs = "Посібник із налаштування"
+intro = "Окремий контейнер, який ви запускаєте поруч зі Stirling. Він виконує обґрунтування; Stirling і надалі самостійно виконує всі операції зі сторінками. Йому потрібен той самий"
+outro = "в обох контейнерах і ключ постачальника моделей. Усе, що читає ШІ, надсилається вибраному вами постачальнику — Ollama, яку ви розміщуєте самі, зберігає кожну сторінку всередині вашої інфраструктури."
 title = "Про AI engine"
 
 [admin.settings.ai.general.streamTimeoutSeconds]
@@ -890,6 +924,67 @@ label = "Розумна модель"
 body = "Зміни автоматично надсилаються до AI engine."
 bodyNoPush = "Налаштування збережено. Вони застосуються, коли AI engine наступного разу підхопить свою конфігурацію."
 title = "Налаштування AI збережено"
+
+[admin.settings.ai.status]
+capabilities = "Можливості"
+capabilitiesValue = "{{on}} із {{total}} увімкнено"
+checked = "перевірено"
+checking = "Перевірка рушія…"
+description = "Чи доступний рушій, чи приймає він цей сервер і що на ньому запущено."
+fastModel = "Швидка модель"
+justNow = "щойно"
+latency = "Час відповіді"
+linkLabel = "Прив’язка облікового запису"
+minutesAgo = "{{count}} хв тому"
+recheck = "Перевірити ще раз"
+runningOn = "Працює на"
+secondsAgo = "{{count}} с тому"
+secretLabel = "Спільний секрет"
+smartModel = "Розумна модель"
+title = "Стан"
+url = "URL рушія"
+
+[admin.settings.ai.status.cloud]
+hostDown = "Не працює"
+hostLabel = "Stirling.com"
+hostUp = "Працює"
+name = "Stirling Cloud"
+sharingLabel = "Спільний доступ AI"
+sharingOff = "Вимкнено"
+sharingOn = "Увімкнено"
+
+[admin.settings.ai.status.cloud.degraded]
+body = "Stirling Cloud відповів, але відхилив цей сервер. Можливо, прив’язку облікового запису було відкликано."
+title = "Stirling Cloud відхиляє цей сервер"
+
+[admin.settings.ai.status.cloud.down]
+body = "Цей сервер не зміг зв’язатися зі Stirling Cloud. Перевірте прив’язку облікового запису та чи може цей сервер підключатися до інтернету."
+title = "Stirling Cloud недоступний"
+
+[admin.settings.ai.status.cloud.ok]
+body = "Stirling Cloud прийняв цей сервер. Тут нічого не потрібно запускати або виправляти."
+title = "Працює на Stirling Cloud"
+
+[admin.settings.ai.status.degraded]
+body = "Він відповів на перевірку працездатності, але відхилив справжній запит. Дві сторони використовують різні спільні секрети."
+title = "Рушій працює, але відхиляє цей сервер"
+
+[admin.settings.ai.status.down]
+body = "Перевірте URL, чи запущено контейнер рушія та чи виконано перезапуск після ввімкнення ШІ."
+title = "Рушій недоступний"
+
+[admin.settings.ai.status.off]
+body = "Виберіть нижче, як працює ШІ, потім збережіть і перезапустіть."
+title = "ШІ вимкнено"
+
+[admin.settings.ai.status.ok]
+body = "Перевірка працездатності та автентифікований запит виконані успішно."
+title = "Рушій працює"
+
+[admin.settings.ai.status.secret]
+no = "Відхилено"
+unknown = "Невідомо"
+yes = "Прийнято"
 
 [admin.settings.badge]
 clickToUpgrade = "Клацніть, щоб переглянути деталі плану"
@@ -4453,6 +4548,7 @@ openFromComputer = "Відкрити з комп’ютера"
 openSettings = "Відкрити налаштування"
 other = "Інше"
 recent = "Нещодавні"
+searchFiles = "Пошук файлів"
 uploadFailedBody = "Не вдалося додати вибрані файли."
 uploadFailedTitle = "Завантаження не вдалося"
 viewAll = "Переглянути всі файли ({{count}})"
@@ -5827,6 +5923,8 @@ label = "Free credits"
 adoptFailed = "Документ було розблоковано, але його не вдалося відкрити тут. Спробуйте інструмент безпосередньо."
 empty = "Немає повідомлень."
 handoffUnavailable = "Цей браузер не дозволить обробнику передати документ до редактора. Натомість відкрийте його з редактора."
+inSmartFolder = "Цей документ знаходиться в розумній папці, тому обробляється на сервері, а не тут."
+inSmartFolderNamed = "{{name}} знаходиться в розумній папці, тому обробляється на сервері, а не тут."
 noDocumentLinked = "Цей збій не пов’язаний із конкретним документом, тому тут нічого відкривати."
 notOnThisDevice = "Цей документ не на цьому пристрої, тому його не можна відкрити тут."
 occurrences = "{{count}} разів"
@@ -5837,6 +5935,7 @@ repairedRerunNotAdopted = "Відновлений документ пройшо�
 repairedRerunUndelivered = "Документ було відновлено й розпочато повторний запуск політики, але його результат не можна доставити сюди, тому ця помилка залишається відкритою."
 rerunRejected = "Політику не вдалося запустити знову зараз. Спробуйте ще раз за мить."
 rerunUndelivered = "Розпочато повторний запуск політики, але його результат не можна доставити сюди, тому ця помилка залишається відкритою."
+retryInFolderFailed = "Не вдалося повторно запустити обробку цього документа зараз."
 retryUnavailable = "Цей документ більше не можна повторити з цього браузера."
 title = "Сповіщення"
 unlockedNotRerun = "Документ було розблоковано й відкрито тут, але політику не вдалося запустити для нього знову."
@@ -6625,9 +6724,11 @@ title = "Налаштувати план Team"
 [payment.capacityStage]
 adjustmentNote = "Stripe покаже точну суму, будь-які пропорційні перерахунки та дату наступного платежу перед підтвердженням. Якщо доступний збережений спосіб оплати, його буде використано."
 continue = "Перейти до оплати"
+currencyAtCheckout = "Stripe підтверджує остаточну суму та валюту платежу під час оформлення."
 customLabel = "Кількість користувачів"
 dueToday = "До сплати сьогодні"
 enterpriseQuote = "Отримати корпоративну пропозицію"
+estimatedTotal = "Орієнтовна сума"
 lineItem = "Team · {{price}}{{period}} за {{block}} користувачів"
 minimumForCurrentUsers = "У вас {{users}} користувачів, тому план має покривати щонайменше {{minimum}}."
 modalTitle = "Перейти на {{planName}}"
@@ -6865,6 +6966,25 @@ width = "Ширина"
 widthHint = "Ширина текстового поля відповідає його вмісту та перенесенню."
 x = "X"
 y = "Y"
+
+[pdfTextEditor.mobile]
+actions = "Дії редактора"
+addImage = "Зображення"
+addText = "Текст"
+cancel = "Скасувати"
+delete = "Видалити"
+details = "Деталі"
+document = "Документ"
+done = "Готово"
+download = "Зберегти й завантажити"
+find = "Знайти"
+lock = "Заблокувати"
+openPdf = "Відкрити PDF"
+panelHint = "Редагування відбувається в поданні Workspace. Торкніться тексту на сторінці, щоб змінити його."
+save = "Зберегти"
+style = "Стиль"
+tapToPlace = "Торкніться сторінки, де має бути текст"
+unlock = "Розблокувати"
 
 [pdfTextEditor.password]
 cancel = "Скасувати"
@@ -7574,6 +7694,49 @@ plan = "План"
 procurement = "Закупівля"
 usage = "Використання"
 
+[portal.billing.compare]
+current = "Поточний"
+enterpriseData = "Розміщення даних і SCIM"
+enterpriseName = "Enterprise"
+enterprisePrice = "За вашою угодою"
+enterpriseProcessing = "За лічильником або фіксовано"
+enterpriseSignIn = "SAML і аудит"
+enterpriseSupport = "SLA щодо безвідмовної роботи, допомога з розгортанням"
+enterpriseUsers = "Без обмежень"
+enterpriseWhere = "Плюс багатовузлове та ізольоване від мережі"
+exploreEnterprise = "Ознайомитися з Enterprise"
+freeData = "Залишається там, де ви запускаєте"
+freeName = "Безкоштовний"
+freePrice = "Без картки, без строку дії"
+freeProcessing = "{{allowance}} кредитів на місяць"
+freeProcessingUnknown = "Місячна квота кредитів"
+freeSignIn = "Email, Google і SSO"
+freeSignInNote = "OAuth2/OIDC"
+freeSupport = "Спільнота"
+freeUsers = "До {{users}}"
+freeUsersUnknown = "Невелика команда"
+freeWhere = "Хмара, настільний застосунок або самостійне розміщення"
+lede = "Кожен тарифний план містить усі інструменти PDF і SSO. Змінюється те, скільки людей ним користуються, де він працює та яку підтримку ви отримуєте."
+open = "Порівняти плани"
+rowData = "Ваші дані"
+rowHeader = "Функція"
+rowProcessing = "Обробка"
+rowSignIn = "Вхід"
+rowSupport = "Підтримка"
+rowUsers = "Користувачі"
+rowWhere = "Де працює"
+teamData = "Google Drive, ваша власна база даних"
+teamName = "Team"
+teamPrice = "$99/міс за 100 користувачів"
+teamProcessing = "{{allowance}} на місяць, далі за лічильником"
+teamProcessingUnknown = "Більша квота, далі за лічильником"
+teamSignIn = "Те саме"
+teamSupport = "Email"
+teamUsers = "100 на блок"
+teamWhere = "Хмара, настільний застосунок або самостійне розміщення"
+title = "Порівняння планів"
+upgradeTeam = "Перейти на Team"
+
 [portal.billing.cycle]
 credits = "Кредити"
 creditsNote = "Використано {{units}} · включає безкоштовні та передплачені кредити"
@@ -7679,6 +7842,8 @@ payTitle = "Оплатіть свій рік"
 step = "Крок {{current}} з {{total}}"
 
 [portal.billing.prepaid.calc]
+currency = "Валюта розрахунку"
+currencyLocked = "Використовує вашу наявну валюту виставлення рахунків Stripe."
 rateUnknown = "Ми покажемо точну ціну під час оформлення."
 
 [portal.billing.prepaid.consent]
@@ -8481,6 +8646,10 @@ title = "Файл не вдалося відновити"
 [portal.failures.kind.inputWrongType]
 description = "Ваш файл має формат, який цей крок не може відкрити, тому запуск не зміг його прочитати."
 title = "Неправильний тип файлу"
+
+[portal.failures.kind.sourceUnreadable]
+description = "Не вдалося прочитати вашу розумну папку, тому нічого в ній не було оброблено."
+title = "Не вдалося прочитати папку"
 
 [portal.failures.kind.stepCannotRenderPage]
 description = "Не вдалося намалювати сторінку у вашому файлі, тому запуск не зміг завершитися."
@@ -12235,6 +12404,7 @@ goBack = "Повернутися"
 pdfTools = "Інструменти PDF"
 placeholder = "Виберіть інструмент, щоб почати"
 premiumFeature = "Преміум-функція:"
+searchTools = "Пошук інструментів"
 toolsHeader = "Інструменти"
 viewAllTools = "Переглянути всі інструменти"
 
@@ -12399,13 +12569,10 @@ visits = "Відвідування"
 
 [users]
 lastActive = "Остання активність"
-learnMore = "Дізнатися більше про ролі та доступ."
 locked = "Заблоковано"
 ownerSetupRequired = "Власник організації не завершив перший вхід. Завершіть налаштування або попросіть оператора сервера відновити право власності перед передачею права власності."
 roleFor = "Роль для {{name}}"
 rowActions = "Дії для {{name}}"
-showAll = "Показати всі {{count}}"
-showLess = "Показати менше"
 subtitle2 = "Ваші люди, команди та рівні доступу."
 suspended = "Призупинено"
 teamActions = "Дії команди"
@@ -12414,6 +12581,7 @@ you = "(ви)"
 
 [users.action]
 cancelInvite = "Скасувати запрошення"
+createFromDefault = "Створити команду з Default"
 deleteTeam = "Видалити команду"
 disableMfa = "Скинути MFA"
 move = "Перемістити до команди"
@@ -12451,6 +12619,7 @@ email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
+team = "Команда"
 
 [users.confirm]
 cancelInviteBody = "Скасувати запрошення для {{email}}? Вони не зможуть приєднатися за поточним посиланням."
@@ -12469,15 +12638,12 @@ transferOwnershipTitle = "Передати право власності на о
 description = "Запросіть свою команду, щоб почати співпрацю."
 title = "Учасників ще немає"
 
+[users.filters]
+noMatches = "Ніхто не відповідає цим фільтрам."
+search = "Пошук людей"
+
 [users.group]
 addToTeam = "Додати до команди"
-administrators = "{{count}} адміністраторів"
-guestCount = "{{count}} гість"
-guests = "Гості"
-ledBy = "під керівництвом {{owner}}"
-org = "Організація"
-team = "Команда {{name}}"
-teamMeta = "{{count}} людей"
 
 [users.invite]
 access = "Доступ"
@@ -12542,6 +12708,9 @@ title = "Нова команда"
 
 [users.renameTeam]
 apply = "Перейменувати"
+defaultApply = "Створити й перемістити"
+defaultDescription = "Default залишиться доступною для нових користувачів. Усі, хто зараз у Default, будуть переміщені до нової команди."
+defaultTitle = "Створити команду з Default"
 name = "Назва команди"
 title = "Перейменувати команду"
 
@@ -12566,6 +12735,15 @@ guest = "Гість"
 member = "Учасник"
 orgOwner = "Власник організації"
 teamOwner = "Власник команди"
+
+[users.seats]
+full = "Усі ліцензовані місця зайняті. Звільніть одне або збільште кількість місць, щоб додати когось ще."
+update = "Оновити місця"
+
+[users.tabs]
+all = "Усі"
+label = "Фільтрувати за командою"
+unassigned = "Без команди"
 
 [users.team]
 grantProcessor = "Надати Processor команді"
@@ -13216,232 +13394,14 @@ submitSignature = "Надіслати підпис"
 title = "Робочий простір"
 
 [workspace.people]
-active = "Активний"
-activeSession = "Активна сесія"
-addMembers = "Додати учасників"
-admin = "Адміністратор"
-confirmDelete = "Ви впевнені, що хочете видалити цього користувача? Цю дію не можна скасувати."
-confirmUnlock = "Ви впевнені, що хочете розблокувати цей обліковий запис користувача?"
-deleteUser = "Видалити користувача"
-deleteUserError = "Не вдалося видалити користувача"
-deleteUserSuccess = "Користувача успішно видалено"
 description = "Керуйте учасниками робочого простору та їхніми дозволами"
-disable = "Вимкнути"
-disabled = "Вимкнено"
-editRole = "Редагувати роль"
-enable = "Увімкнути"
-loading = "Завантаження учасників..."
-locked = "заблоковано"
-lockedBadge = "Заблоковано"
-loginRequired = "Спочатку увімкніть режим входу"
-memberActions = "Дії з учасником"
-noMembersFound = "Учасників не знайдено"
-ownerLocked = "Передайте право власності на організацію в Налаштування → Робоча область → Користувачі, перш ніж змінювати роль або обліковий запис власника."
-role = "Роль"
-searchMembers = "Пошук учасників..."
-team = "Команда"
-unlockAccount = "Розблокувати обліковий запис"
-unlockUserError = "Не вдалося розблокувати обліковий запис користувача"
-unlockUserSuccess = "Обліковий запис користувача успішно розблоковано"
-user = "Користувач"
-userInfo = "Інформація про користувача"
-
-[workspace.people.actions]
-upgrade = "Оновити"
-
-[workspace.people.addMember]
-authType = "Тип автентифікації"
-error = "Не вдалося створити користувача"
-forceMFA = "Примусове налаштування MFA під час наступного входу"
-forcePasswordChange = "Примусово змінити пароль під час першого входу"
-password = "Пароль"
-passwordPlaceholder = "Введіть пароль"
-passwordRequired = "Пароль обов’язковий"
-role = "Роль"
-submit = "Додати учасника"
-success = "Користувача успішно створено"
-team = "Команда (необов’язково)"
-teamPlaceholder = "Виберіть команду"
-username = "Ім’я користувача (електронна адреса)"
-usernamePlaceholder = "user@example.com"
-usernameRequired = "Потрібні ім’я користувача та пароль"
-
-[workspace.people.authType]
-oauth = "OAuth2"
-password = "Пароль"
-saml = "SAML2"
-ssoDescription = "Користувач проходитиме автентифікацію через постачальника SSO"
-
-[workspace.people.changePassword]
-action = "Змінити пароль"
-confirmPassword = "Підтвердження пароля"
-confirmPlaceholder = "Повторно введіть новий пароль"
-copiedToClipboard = "Пароль скопійовано в буфер обміну"
-copyFailed = "Не вдалося скопіювати пароль"
-copyTooltip = "Копіювати в буфер обміну"
-emailUnavailable = "Електронна адреса цього користувача недійсна. Сповіщення вимкнено."
-error = "Не вдалося оновити пароль"
-forcePasswordChange = "Примусити користувача змінити пароль під час наступного входу"
-generatedPreview = "Згенерований пароль:"
-generateRandom = "Згенерувати надійний пароль"
-includePassword = "Додати новий пароль до листа"
-newPassword = "Новий пароль"
-notifyOnly = "Буде надіслано лист без пароля, щоб повідомити користувача, що адміністратор його змінив."
-passwordMismatch = "Паролі не збігаються"
-passwordRequired = "Будь ласка, введіть новий пароль"
-placeholder = "Введіть новий пароль"
-sendEmail = "Надіслати користувачу електронний лист про цю зміну"
-smtpDisabled = "Для сповіщень електронною поштою потрібно ввімкнути SMTP у налаштуваннях."
-submit = "Оновити пароль"
-subtitle = "Оновити пароль для"
-success = "Пароль успішно оновлено"
-title = "Змінити пароль"
-
-[workspace.people.editMember]
-editing = "Editing: <0>{{username}}</0>"
-error = "Не вдалося оновити користувача"
-role = "Роль"
-submit = "Update User"
-success = "Користувача успішно оновлено"
-team = "Команда (необов’язково)"
-teamPlaceholder = "Виберіть команду"
-title = "Edit User"
-
-[workspace.people.emailInvite]
-allFailed = "Не вдалося запросити користувачів"
-emails = "Електронні адреси"
-emailsPlaceholder = "user1@example.com, user2@example.com"
-emailsRequired = "Потрібна щонайменше одна електронна адреса"
-error = "Не вдалося надіслати запрошення"
-partialFailure = "Деякі запрошення не вдалося надіслати"
-submit = "Надіслати запрошення"
-success = "Користувача(ів) успішно запрошено"
-
-[workspace.people.inviteLink]
-copied = "Посилання скопійовано в буфер обміну"
-email = "Електронна адреса"
-emailDescription = "Необов’язково — залиште порожнім для загального посилання-запрошення, яким може скористатися будь-хто"
-emailPlaceholder = "user@example.com (необов’язково)"
-emailSent = "Посилання-запрошення згенеровано й надіслано електронною поштою"
-error = "Не вдалося створити посилання-запрошення"
-expiryHours = "Години дії"
-generate = "Згенерувати посилання"
-generated = "Посилання-запрошення створено"
-sendEmail = "Надіслати посилання-запрошення електронною поштою"
-sendEmailDescription = "Якщо ввімкнено, посилання буде надіслано на вказану електронну адресу"
-submit = "Згенерувати посилання-запрошення"
-
-[workspace.people.inviteMembers]
-label = "Запросити учасників"
-subtitle = "Введіть або вставте адреси email нижче, розділені комами. Оплата за робочий простір здійснюється за кількістю учасників."
-
-[workspace.people.inviteMode]
-email = "Email"
-emailDisabled = "Запрошення електронною поштою потребують налаштування SMTP і mail.enableInvites=true в налаштуваннях"
-link = "Посилання"
-username = "Ім’я користувача"
 
 [workspace.people.license]
-currentUsage = "Зараз використано {{current}} із {{max}} ліцензій користувача"
-fromLicense = "з ліцензії"
-grandfathered = "За попередніми умовами"
-grandfatheredShort = "{{count}} за попередніми умовами"
-slotsAvailable_one = "{{count}} user slot available"
-slotsAvailable_other = "{{count}} user slots available"
-slotsAvailable_zero = "No slots available"
 users_one = "user"
 users_other = "users"
 
-[workspace.people.mfa]
-adminDisableError = "Не вдалося вимкнути MFA для користувача"
-adminDisableSuccess = "MFA успішно вимкнено для користувача"
-disableByAdmin = "Вимкнути MFA"
-
-[workspace.people.roleDescriptions]
-admin = "Може керувати налаштуваннями й запрошувати учасників, має повний адміністративний доступ."
-currentRole = "Поточна призначена роль."
-user = "Can view and edit shared files, but cannot manage workspace settings or users."
-
-[workspace.people.toggleEnabled]
-error = "Не вдалося оновити статус користувача"
-success = "Статус користувача успішно оновлено"
-
 [workspace.teams]
-addMember = "Додати учасника"
-backToTeams = "Назад до команд"
-cannotAddToInternal = "Не можна додавати учасників до внутрішньої команди"
-cannotDeleteInternal = "Не можна видалити внутрішню команду"
-cannotRenameInternal = "Не можна перейменувати внутрішню команду"
-confirmDelete = "Ви впевнені, що хочете видалити цю команду? Перед видаленням команда має бути порожньою."
-confirmRemove = "Вилучити користувача з цієї команди?"
-createNewTeam = "Створити нову команду"
-deleteTeamLabel = "Видалити команду"
 description = "Керуйте командами та організовуйте учасників робочого простору"
-loadError = "Не вдалося завантажити дані команди"
-loading = "Завантаження команд..."
-loadingDetails = "Завантаження відомостей про команду..."
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
-noMembers = "У цій команді немає учасників"
-noTeamsFound = "Команд не знайдено"
-removeMember = "Вилучити з команди"
-removeMemberError = "Не вдалося вилучити користувача з команди"
-removeMemberSuccess = "Користувача вилучено з команди"
-renameTeamLabel = "Перейменувати команду"
-system = "Система"
-teamActions = "Дії з командою"
-teamName = "Назва команди"
-teamNotFound = "Команду не знайдено"
-totalMembers = "Усього учасників"
-viewTeam = "Переглянути команду"
-
-[workspace.teams.addMemberToTeam]
-addingTo = "Додавання до"
-currentlyIn = "зараз у"
-error = "Не вдалося додати учасника до команди"
-selectUser = "Виберіть користувача"
-selectUserPlaceholder = "Виберіть користувача"
-selectUserRequired = "Будь ласка, виберіть користувача"
-submit = "Додати учасника"
-success = "Учасника успішно додано до команди"
-title = "Додати учасника до команди"
-userRequired = "Будь ласка, виберіть користувача"
-willBeMoved = "Примітка: цього користувача буде переміщено з поточної команди до цієї."
-
-[workspace.teams.changeTeam]
-changing = "Переміщення"
-error = "Не вдалося змінити команду"
-label = "Змінити команду"
-selectTeam = "Виберіть команду"
-selectTeamPlaceholder = "Виберіть команду"
-selectTeamRequired = "Будь ласка, виберіть команду"
-submit = "Змінити команду"
-success = "Команду успішно змінено"
-title = "Змінити команду"
-
-[workspace.teams.createTeam]
-error = "Не вдалося створити команду"
-nameRequired = "Потрібна назва команди"
-submit = "Створити команду"
-success = "Команду успішно створено"
-teamName = "Назва команди"
-teamNamePlaceholder = "Введіть назву команди"
-title = "Створити нову команду"
-
-[workspace.teams.deleteTeam]
-error = "Не вдалося видалити команду. Переконайтеся, що команда порожня."
-success = "Команду успішно видалено"
-
-[workspace.teams.renameTeam]
-error = "Не вдалося перейменувати команду"
-nameRequired = "Потрібна назва команди"
-newTeamName = "Нова назва команди"
-newTeamNamePlaceholder = "Введіть нову назву команди"
-renaming = "Перейменування:"
-submit = "Перейменувати команду"
-success = "Команду успішно перейменовано"
-title = "Перейменувати команду"
 
 [zipWarning]
 cancel = "Скасувати"

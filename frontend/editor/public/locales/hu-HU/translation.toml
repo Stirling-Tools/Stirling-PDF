@@ -729,6 +729,8 @@ permissionNotice = "A tessdata elérési út nem írható. A letöltések a bön
 
 [admin.settings.ai]
 description = "Csatlakoztassa a Stirlinget a Python AI motorhoz, válassza ki a modelljeit, és állítsa be a működési korlátokat."
+managedByCloud = "Ebben a módban a Stirling Cloud kezeli."
+managedByCloudShort = "Stirling Cloud által kezelve"
 
 [admin.settings.ai.documents]
 description = "Konfigurálja a dokumentumokkal kapcsolatos kérdések megválaszolásához használt beágyazási modellt és visszakeresési beállításokat. Mentéskor az AI-motorra lesz alkalmazva."
@@ -771,11 +773,24 @@ label = "Top K"
 [admin.settings.ai.general]
 connection = "Kapcsolat"
 description = "Csatlakoztassa a Stirlinget a Python AI-motorhoz, és válassza ki, mely AI-képességek legyenek elérhetők. A módosítások újraindításkor lépnek életbe."
+restartNote = "Az URL vagy bármely időtúllépés módosítása újraindítás után lép érvénybe."
 title = "AI-motor"
 
 [admin.settings.ai.general.capabilities]
 description = "Kapcsolja be vagy ki az egyes AI-funkciókat. A letiltott funkciók el vannak rejtve az alkalmazásban."
 title = "Képességek"
+
+[admin.settings.ai.general.cloud]
+note = "A modelleket és a szolgáltatói kulcsokat a Stirling Cloud kezeli, ezért ezek a beállítások ebben a módban nem érvényesek."
+
+[admin.settings.ai.general.cloud.indexing]
+description = "Minden AI eszköz elküldi azt az oldalszöveget, amelyre a válaszadáshoz szüksége van. Ez dönti el, hogy a Stirling Cloud megtarthatja-e ezt a szöveget indexelve, hogy a későbbi kérdések a dokumentumban kereshessenek."
+help = "Kikapcsolva a dokumentumkérdések nem érhetők el. Ez nem akadályozza meg a szöveg elküldését – csak a tárolását."
+label = "A Stirling Cloud megtarthatja az indexelt dokumentumokat"
+
+[admin.settings.ai.general.cloudNote]
+body = "Az érvelés a Stirling infrastruktúráján fut, és annak a fióknak kerül kiszámlázásra, amelyhez ez a szerver kapcsolódik. Itt nincs futtatandó konténer és nincs tárolandó szolgáltatói kulcs. Amit az AI olvas, azt a Stirling Cloud dolgozza fel, nem a saját hardvere."
+title = "A Stirling Cloud AI-ról"
 
 [admin.settings.ai.general.enabled]
 description = "Főkapcsoló. Kikapcsolt állapotban nem érhetők el AI-eszközök, ügynökök vagy motorhívások."
@@ -809,9 +824,28 @@ label = "PDF-megjegyzés ügynök"
 description = "Időtúllépés nagyobb ügynökműveletekhez, például dokumentumgeneráláshoz."
 label = "Hosszú futású időtúllépés (másodperc)"
 
+[admin.settings.ai.general.mode]
+label = "Hol fut az AI"
+
+[admin.settings.ai.general.mode.cloud]
+description = "Nincs konténer, nincs szolgáltatói kulcs, nincs modellválasztás – a munka a Stirling Cloudban fut, és annak a fióknak kerül kiszámlázásra, amelyhez ez a szerver kapcsolódik."
+linkCta = "Szerver csatlakoztatása egy Stirling-fiókhoz"
+notLinked = "Először kapcsoljon egy fiókot"
+ownerOnly = "Csak a szervezet tulajdonosa kapcsolhatja ezt a szervert egy Stirling-fiókhoz."
+title = "Stirling Cloud AI használata"
+
+[admin.settings.ai.general.mode.off]
+description = "Nincsenek AI eszközök az alkalmazásban, és semmi sem hagyja el ezt a szervert."
+title = "Kikapcsolva"
+
+[admin.settings.ai.general.mode.self]
+description = "Egy Ön által üzemeltetett konténer, amely az Ön által választott modellszolgáltatóra mutat. Az Ön kulcsa, az Ön számlája, az Ön adatútvonala."
+title = "Saját motor futtatása"
+
 [admin.settings.ai.general.note]
-body = "Az AI-motor külön szolgáltatásként fut. A megosztott titka"
-body2 = "konténerkörnyezeti változóval van beállítva. A szolgáltatói API key-k megadhatók ezeken az oldalakon, vagy átadhatók motor környezeti változóként; az itt megadott kulcsok mentéskor továbbításra kerülnek a motorhoz."
+docs = "Beállítási útmutató"
+intro = "Egy külön konténer, amelyet a Stirling mellett futtat. Ez végzi az érvelést; a Stirling továbbra is maga végez minden oldalműveletet. Ugyanarra van szüksége"
+outro = "mindkét konténeren és egy modellszolgáltatói kulcsra. Amit az AI olvas, az elküldésre kerül az Ön által választott szolgáltatónak – egy Ön által üzemeltetett Ollama minden oldalt házon belül tart."
 title = "Az AI-motorról"
 
 [admin.settings.ai.general.streamTimeoutSeconds]
@@ -890,6 +924,67 @@ label = "Okos modell"
 body = "A módosítások automatikusan továbbításra kerülnek az AI-motorhoz."
 bodyNoPush = "A beállítások mentve. Akkor lépnek életbe, amikor az AI-motor legközelebb betölti a konfigurációját."
 title = "AI-beállítások mentve"
+
+[admin.settings.ai.status]
+capabilities = "Képességek"
+capabilitiesValue = "{{on}} / {{total}} bekapcsolva"
+checked = "ellenőrizve"
+checking = "A motor ellenőrzése…"
+description = "Elérhető-e a motor, elfogadja-e ezt a szervert, és mi fut rajta."
+fastModel = "Gyors modell"
+justNow = "épp most"
+latency = "Válaszidő"
+linkLabel = "Fiókkapcsolat"
+minutesAgo = "{{count}} perce"
+recheck = "Újraellenőrzés"
+runningOn = "Fut ezen"
+secondsAgo = "{{count}} másodperce"
+secretLabel = "Megosztott titok"
+smartModel = "Okos modell"
+title = "Állapot"
+url = "Motor URL"
+
+[admin.settings.ai.status.cloud]
+hostDown = "Nem elérhető"
+hostLabel = "Stirling.com"
+hostUp = "Elérhető"
+name = "Stirling Cloud"
+sharingLabel = "AI megosztás"
+sharingOff = "Letiltva"
+sharingOn = "Engedélyezve"
+
+[admin.settings.ai.status.cloud.degraded]
+body = "A Stirling Cloud válaszolt, de elutasította ezt a szervert. Lehet, hogy a fiókkapcsolat vissza lett vonva."
+title = "A Stirling Cloud elutasítja ezt a szervert"
+
+[admin.settings.ai.status.cloud.down]
+body = "Ez a szerver nem tudta elérni a Stirling Cloudot. Ellenőrizze a fiókkapcsolatot, és hogy ez a szerver eléri-e az internetet."
+title = "A Stirling Cloud nem érhető el"
+
+[admin.settings.ai.status.cloud.ok]
+body = "A Stirling Cloud elfogadta ezt a szervert. Itt nincs mit futtatni vagy javítani."
+title = "Stirling Cloudon fut"
+
+[admin.settings.ai.status.degraded]
+body = "Válaszolt az állapotellenőrzésre, de elutasított egy valódi kérést. A két oldal eltérő megosztott titkokat használ."
+title = "A motor működik, de elutasítja ezt a szervert"
+
+[admin.settings.ai.status.down]
+body = "Ellenőrizze az URL-t, hogy fut-e a motorkonténer, és hogy újraindította-e az AI engedélyezése után."
+title = "A motor nem érhető el"
+
+[admin.settings.ai.status.off]
+body = "Válassza ki alább, hogyan fusson az AI, majd mentse és indítsa újra."
+title = "Az AI ki van kapcsolva"
+
+[admin.settings.ai.status.ok]
+body = "Az állapotellenőrzés és egy hitelesített kérés is sikeres volt."
+title = "A motor fut"
+
+[admin.settings.ai.status.secret]
+no = "Elutasítva"
+unknown = "Ismeretlen"
+yes = "Elfogadva"
 
 [admin.settings.badge]
 clickToUpgrade = "Kattintson a csomag részleteihez"
@@ -4453,6 +4548,7 @@ openFromComputer = "Megnyitás a számítógépről"
 openSettings = "Beállítások megnyitása"
 other = "Egyéb"
 recent = "Legutóbbi"
+searchFiles = "Fájlok keresése"
 uploadFailedBody = "Nem sikerült hozzáadni a kiválasztott fájlokat."
 uploadFailedTitle = "A feltöltés sikertelen"
 viewAll = "Mind a(z) {{count}} fájl megtekintése"
@@ -5827,6 +5923,8 @@ label = "Free credits"
 adoptFailed = "A dokumentum fel lett oldva, de itt nem sikerült megnyitni. Próbáld közvetlenül az eszközt."
 empty = "Nincs jelenteni való."
 handoffUnavailable = "Ez a böngésző nem engedi, hogy a feldolgozó átadja a dokumentumot a szerkesztőnek. Nyissa meg inkább a szerkesztőből."
+inSmartFolder = "Ez a dokumentum egy intelligens mappában van, ezért a szerveren kerül kezelésre, nem itt."
+inSmartFolderNamed = "{{name}} egy intelligens mappában van, ezért a szerveren kerül kezelésre, nem itt."
 noDocumentLinked = "Ez a hiba nincs konkrét dokumentumhoz kapcsolva, ezért itt nincs mit megnyitni."
 notOnThisDevice = "Ez a dokumentum nincs ezen az eszközön, ezért itt nem nyitható meg."
 occurrences = "{{count}} alkalommal"
@@ -5837,6 +5935,7 @@ repairedRerunNotAdopted = "A javított dokumentum lefutott, de az eredményét i
 repairedRerunUndelivered = "A dokumentum javítva lett, és a szabályzat újrafuttatása elindult, de az eredménye nem kézbesíthető ide, ezért ez a hiba nyitva marad."
 rerunRejected = "A szabályzatot most nem sikerült újra futtatni. Próbáld újra egy pillanat múlva."
 rerunUndelivered = "A szabályzat újrafuttatása elindult, de az eredménye nem kézbesíthető ide, ezért ez a hiba nyitva marad."
+retryInFolderFailed = "Ezt a dokumentumot most nem lehetett újra futtatni."
 retryUnavailable = "Ez a dokumentum ebből a böngészőből már nem próbálható újra."
 title = "Értesítések"
 unlockedNotRerun = "A dokumentum fel lett oldva és itt megnyílt, de a szabályzatot nem sikerült újra futtatni rajta."
@@ -6625,9 +6724,11 @@ title = "Team csomag módosítása"
 [payment.capacityStage]
 adjustmentNote = "A Stripe megjeleníti a pontos díjat, az esetleges időarányos tételeket és a következő számlázási dátumot, mielőtt megerősíted. Ha elérhető, a mentett fizetési módod lesz használva."
 continue = "Tovább a fizetéshez"
+currencyAtCheckout = "A Stripe a végső összeget és a fizetési pénznemet a fizetéskor erősíti meg."
 customLabel = "Felhasználók száma"
 dueToday = "Ma esedékes"
 enterpriseQuote = "Vállalati ajánlat kérése"
+estimatedTotal = "Becsült végösszeg"
 lineItem = "Team · {{price}}{{period}} / {{block}} felhasználó"
 minimumForCurrentUsers = "{{users}} felhasználód van, ezért a csomagnak legalább {{minimum}} felhasználót kell lefednie."
 modalTitle = "Frissítés erre: {{planName}}"
@@ -6865,6 +6966,25 @@ width = "Szélesség"
 widthHint = "A szövegdoboz szélessége a tartalmát és a sortörést követi."
 x = "X"
 y = "Y"
+
+[pdfTextEditor.mobile]
+actions = "Szerkesztési műveletek"
+addImage = "Kép"
+addText = "Szöveg"
+cancel = "Mégse"
+delete = "Törlés"
+details = "Részletek"
+document = "Dokumentum"
+done = "Kész"
+download = "Mentés és letöltés"
+find = "Keresés"
+lock = "Zárolás"
+openPdf = "PDF megnyitása"
+panelHint = "A szerkesztés a Munkaterület nézetben történik. Koppintson a szövegre az oldalon a módosításához."
+save = "Mentés"
+style = "Stílus"
+tapToPlace = "Koppintson arra a helyre az oldalon, ahová a szöveg kerüljön"
+unlock = "Feloldás"
 
 [pdfTextEditor.password]
 cancel = "Mégse"
@@ -7574,6 +7694,49 @@ plan = "Csomag"
 procurement = "Beszerzés"
 usage = "Használat"
 
+[portal.billing.compare]
+current = "Jelenlegi"
+enterpriseData = "Adatrezidencia és SCIM"
+enterpriseName = "Enterprise"
+enterprisePrice = "Megállapodás szerint"
+enterpriseProcessing = "Használatalapú vagy fix"
+enterpriseSignIn = "SAML és auditálás"
+enterpriseSupport = "Üzemidő SLA-k, üzembe helyezési segítség"
+enterpriseUsers = "Nincs felső korlát"
+enterpriseWhere = "Emellett többcsomópontos és izolált"
+exploreEnterprise = "Enterprise felfedezése"
+freeData = "Ott marad, ahol futtatja"
+freeName = "Free"
+freePrice = "Nincs kártya, nincs lejárat"
+freeProcessing = "{{allowance}} kredit havonta"
+freeProcessingUnknown = "Havi kreditkeret"
+freeSignIn = "Email, Google és SSO"
+freeSignInNote = "OAuth2/OIDC"
+freeSupport = "Közösség"
+freeUsers = "Legfeljebb {{users}}"
+freeUsersUnknown = "Egy kisebb csapat"
+freeWhere = "Cloud, asztali vagy saját üzemeltetésű"
+lede = "Minden csomag tartalmazza az összes PDF eszközt és az SSO-t. Az változik, hányan használják, hol fut, és milyen támogatást kap."
+open = "Csomagok összehasonlítása"
+rowData = "Az Ön adatai"
+rowHeader = "Funkció"
+rowProcessing = "Feldolgozás"
+rowSignIn = "Bejelentkezés"
+rowSupport = "Támogatás"
+rowUsers = "Felhasználók"
+rowWhere = "Hol fut"
+teamData = "Google Drive, saját adatbázis"
+teamName = "Team"
+teamPrice = "$99/hó 100 felhasználónként"
+teamProcessing = "{{allowance}} havonta, utána használatalapú"
+teamProcessingUnknown = "Nagyobb keret, utána használatalapú"
+teamSignIn = "Ugyanaz"
+teamSupport = "Email"
+teamUsers = "100 blokkonként"
+teamWhere = "Cloud, asztali vagy saját üzemeltetésű"
+title = "Csomagok összehasonlítása"
+upgradeTeam = "Frissítés Team csomagra"
+
 [portal.billing.cycle]
 credits = "Kreditek"
 creditsNote = "{{units}} felhasználva · ingyenes és előre fizetett krediteket is tartalmaz"
@@ -7679,6 +7842,8 @@ payTitle = "Fizessen az évéért"
 step = "{{current}}/{{total}}. lépés"
 
 [portal.billing.prepaid.calc]
+currency = "Ajánlat pénzneme"
+currencyLocked = "A meglévő Stripe számlázási pénznemét használja."
 rateUnknown = "A pontos árat a pénztárnál mutatjuk."
 
 [portal.billing.prepaid.consent]
@@ -8481,6 +8646,10 @@ title = "A fájlt nem sikerült kijavítani"
 [portal.failures.kind.inputWrongType]
 description = "A fájl formátumát ez a lépés nem tudja megnyitni, ezért a futás nem tudta beolvasni."
 title = "Hibás fájltípus"
+
+[portal.failures.kind.sourceUnreadable]
+description = "Az intelligens mappája nem volt olvasható, ezért semmi sem lett feldolgozva benne."
+title = "A mappa nem volt olvasható"
 
 [portal.failures.kind.stepCannotRenderPage]
 description = "A fájl egyik oldalát nem lehetett kirajzolni, ezért a futás nem tudott befejeződni."
@@ -12235,6 +12404,7 @@ goBack = "Vissza"
 pdfTools = "PDF-eszközök"
 placeholder = "Válasszon egy eszközt a kezdéshez"
 premiumFeature = "Prémium funkció:"
+searchTools = "Eszközök keresése"
 toolsHeader = "Eszközök"
 viewAllTools = "Összes eszköz megtekintése"
 
@@ -12399,13 +12569,10 @@ visits = "Látogatások"
 
 [users]
 lastActive = "Utoljára aktív"
-learnMore = "Tudjon meg többet a szerepkörökről és hozzáférésről."
 locked = "Zárolva"
 ownerSetupRequired = "A szervezet tulajdonosa még nem fejezte be az első bejelentkezést. Fejezze be a beállítást, vagy kérje meg a szerver üzemeltetőjét a tulajdonjog visszaállítására, mielőtt átadná a tulajdonjogot."
 roleFor = "{{name}} szerepköre"
 rowActions = "Műveletek ehhez: {{name}}"
-showAll = "Összes {{count}} megjelenítése"
-showLess = "Kevesebb megjelenítése"
 subtitle2 = "Az Ön emberei, csapatai és hozzáférési szintjei."
 suspended = "Felfüggesztve"
 teamActions = "Csapatműveletek"
@@ -12414,6 +12581,7 @@ you = "(Ön)"
 
 [users.action]
 cancelInvite = "Meghívás visszavonása"
+createFromDefault = "Csapat létrehozása a Defaultból"
 deleteTeam = "Csapat törlése"
 disableMfa = "MFA visszaállítása"
 move = "Áthelyezés csapatba"
@@ -12451,6 +12619,7 @@ email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
+team = "Csapat"
 
 [users.confirm]
 cancelInviteBody = "Visszavonja a(z) {{email}} címre küldött meghívást? A jelenlegi hivatkozással nem fog tudni csatlakozni."
@@ -12469,15 +12638,12 @@ transferOwnershipTitle = "Szervezeti tulajdonjog átadása"
 description = "Hívja meg csapatát az együttműködés megkezdéséhez."
 title = "Még nincsenek tagok"
 
+[users.filters]
+noMatches = "Senki sem felel meg ezeknek a szűrőknek."
+search = "Személyek keresése"
+
 [users.group]
 addToTeam = "Hozzáadás csapathoz"
-administrators = "{{count}} rendszergazda"
-guestCount = "{{count}} vendég"
-guests = "Vendégek"
-ledBy = "vezeti: {{owner}}"
-org = "Szervezet"
-team = "{{name}} csapat"
-teamMeta = "{{count}} ember"
 
 [users.invite]
 access = "Hozzáférés"
@@ -12542,6 +12708,9 @@ title = "Új csapat"
 
 [users.renameTeam]
 apply = "Átnevezés"
+defaultApply = "Létrehozás és áthelyezés"
+defaultDescription = "A Default továbbra is elérhető marad az új felhasználók számára. Mindenki, aki jelenleg a Defaultban van, átkerül az új csapatba."
+defaultTitle = "Csapat létrehozása a Defaultból"
 name = "Csapat neve"
 title = "Csapat átnevezése"
 
@@ -12566,6 +12735,15 @@ guest = "Vendég"
 member = "Tag"
 orgOwner = "Szervezettulajdonos"
 teamOwner = "Csapattulajdonos"
+
+[users.seats]
+full = "Minden licencelt hely használatban van. Szabadítson fel egyet, vagy növelje a helyek számát, hogy mást is hozzáadhasson."
+update = "Helyek frissítése"
+
+[users.tabs]
+all = "Összes"
+label = "Szűrés csapat szerint"
+unassigned = "Nincs csapat"
 
 [users.team]
 grantProcessor = "Feldolgozó jogosultság megadása a csapatnak"
@@ -13216,232 +13394,14 @@ submitSignature = "Aláírás elküldése"
 title = "Munkaterület"
 
 [workspace.people]
-active = "Aktív"
-activeSession = "Aktív munkamenet"
-addMembers = "Tagok hozzáadása"
-admin = "Admin"
-confirmDelete = "Biztosan törli ezt a felhasználót? Ez a művelet nem vonható vissza."
-confirmUnlock = "Biztosan feloldja ezt a felhasználói fiókot?"
-deleteUser = "Felhasználó törlése"
-deleteUserError = "A felhasználó törlése sikertelen"
-deleteUserSuccess = "Felhasználó sikeresen törölve"
 description = "A munkaterület tagjainak és jogosultságainak kezelése"
-disable = "Letiltás"
-disabled = "Letiltva"
-editRole = "Szerepkör szerkesztése"
-enable = "Engedélyezés"
-loading = "Tagok betöltése..."
-locked = "zárolva"
-lockedBadge = "Zárolva"
-loginRequired = "Előbb engedélyezze a bejelentkezési módot"
-memberActions = "Tagműveletek"
-noMembersFound = "Nem találhatók tagok"
-ownerLocked = "Adja át a szervezeti tulajdonjogot a Beállítások → Munkaterület → Felhasználók részben, mielőtt módosítaná a tulajdonos szerepkörét vagy fiókját."
-role = "Szerepkör"
-searchMembers = "Tagok keresése..."
-team = "Csapat"
-unlockAccount = "Fiók feloldása"
-unlockUserError = "Nem sikerült feloldani a felhasználói fiókot"
-unlockUserSuccess = "A felhasználói fiók sikeresen feloldva"
-user = "Felhasználó"
-userInfo = "Felhasználói adatok"
-
-[workspace.people.actions]
-upgrade = "Frissítés"
-
-[workspace.people.addMember]
-authType = "Hitelesítési típus"
-error = "Nem sikerült létrehozni a felhasználót"
-forceMFA = "MFA beállításának kényszerítése a következő bejelentkezéskor"
-forcePasswordChange = "Jelszócsere kényszerítése az első bejelentkezéskor"
-password = "Jelszó"
-passwordPlaceholder = "Adja meg a jelszót"
-passwordRequired = "Jelszó szükséges"
-role = "Szerepkör"
-submit = "Tag hozzáadása"
-success = "Felhasználó sikeresen létrehozva"
-team = "Csapat (opcionális)"
-teamPlaceholder = "Válasszon csapatot"
-username = "Felhasználónév (e-mail)"
-usernamePlaceholder = "user@example.com"
-usernameRequired = "Felhasználónév és jelszó megadása kötelező"
-
-[workspace.people.authType]
-oauth = "OAuth2"
-password = "Jelszó"
-saml = "SAML2"
-ssoDescription = "A felhasználó SSO szolgáltatón keresztül azonosítja magát"
-
-[workspace.people.changePassword]
-action = "Jelszó módosítása"
-confirmPassword = "Jelszó megerősítése"
-confirmPlaceholder = "Adja meg újra az új jelszót"
-copiedToClipboard = "A jelszó a vágólapra másolva"
-copyFailed = "A jelszó másolása nem sikerült"
-copyTooltip = "Másolás a vágólapra"
-emailUnavailable = "Ennek a felhasználónak az e-mail címe érvénytelen. Az értesítések le vannak tiltva."
-error = "A jelszó frissítése nem sikerült"
-forcePasswordChange = "A felhasználó kényszerítése a jelszó megváltoztatására a következő bejelentkezéskor"
-generatedPreview = "Generált jelszó:"
-generateRandom = "Biztonságos jelszó generálása"
-includePassword = "Az új jelszó szerepeljen az e-mailben"
-newPassword = "Új jelszó"
-notifyOnly = "E-mailt küldünk jelszó nélkül, amelyben értesítjük a felhasználót, hogy egy admin módosította a jelszót."
-passwordMismatch = "A jelszavak nem egyeznek"
-passwordRequired = "Kérjük, adjon meg egy új jelszót"
-placeholder = "Adjon meg egy új jelszót"
-sendEmail = "E-mail küldése a felhasználónak a változásról"
-smtpDisabled = "Az e-mail értesítésekhez az SMTP engedélyezése szükséges a beállításokban."
-submit = "Jelszó frissítése"
-subtitle = "Jelszó frissítése ehhez:"
-success = "A jelszó sikeresen frissítve"
-title = "Jelszó módosítása"
-
-[workspace.people.editMember]
-editing = "Editing: <0>{{username}}</0>"
-error = "Nem sikerült frissíteni a felhasználót"
-role = "Szerepkör"
-submit = "Update User"
-success = "Felhasználó sikeresen frissítve"
-team = "Csapat (opcionális)"
-teamPlaceholder = "Válasszon csapatot"
-title = "Edit User"
-
-[workspace.people.emailInvite]
-allFailed = "Nem sikerült meghívni a felhasználókat"
-emails = "E-mail címek"
-emailsPlaceholder = "user1@example.com, user2@example.com"
-emailsRequired = "Legalább egy e-mail cím megadása szükséges"
-error = "Nem sikerült elküldeni a meghívókat"
-partialFailure = "Néhány meghívás sikertelen volt"
-submit = "Meghívók küldése"
-success = "felhasználó sikeresen meghívva"
-
-[workspace.people.inviteLink]
-copied = "Hivatkozás vágólapra másolva"
-email = "E-mail cím"
-emailDescription = "Opcionális – hagyja üresen általános meghívó linkhez, amelyet bárki felhasználhat"
-emailPlaceholder = "user@example.com (opcionális)"
-emailSent = "Meghívó link létrehozva és e-mailben elküldve"
-error = "Nem sikerült létrehozni a meghívó linket"
-expiryHours = "Lejárati idő (óra)"
-generate = "Link generálása"
-generated = "Meghívó link létrehozva"
-sendEmail = "Meghívó link küldése e-mailben"
-sendEmailDescription = "Ha engedélyezve van, a meghívó linket elküldjük a megadott e-mail címre"
-submit = "Meghívó link generálása"
-
-[workspace.people.inviteMembers]
-label = "Tagok meghívása"
-subtitle = "Írja be vagy illessze be alább az e-mail címeket, vesszővel elválasztva. A munkaterület számlázása a tagok alapján történik."
-
-[workspace.people.inviteMode]
-email = "E-mail"
-emailDisabled = "Az e-mailes meghívókhoz SMTP konfiguráció és a settings-ben a mail.enableInvites=true szükséges"
-link = "Hivatkozás"
-username = "Felhasználónév"
 
 [workspace.people.license]
-currentUsage = "Jelenleg {{current}} / {{max}} felhasználói licenc használatban"
-fromLicense = "licencből"
-grandfathered = "Örökölt"
-grandfatheredShort = "{{count}} örökölt"
-slotsAvailable_one = "{{count}} user slot available"
-slotsAvailable_other = "{{count}} user slots available"
-slotsAvailable_zero = "No slots available"
 users_one = "user"
 users_other = "users"
 
-[workspace.people.mfa]
-adminDisableError = "Nem sikerült letiltani az MFA-t a felhasználónál"
-adminDisableSuccess = "A felhasználónál az MFA sikeresen letiltva"
-disableByAdmin = "MFA letiltása"
-
-[workspace.people.roleDescriptions]
-admin = "Kezelheti a beállításokat és meghívhat tagokat, teljes adminisztratív hozzáféréssel."
-currentRole = "Jelenleg hozzárendelt szerepkör."
-user = "Can view and edit shared files, but cannot manage workspace settings or users."
-
-[workspace.people.toggleEnabled]
-error = "Nem sikerült frissíteni a felhasználói állapotot"
-success = "Felhasználói állapot sikeresen frissítve"
-
 [workspace.teams]
-addMember = "Tag hozzáadása"
-backToTeams = "Vissza a csapatokhoz"
-cannotAddToInternal = "A Belső csapathoz nem vehetők fel tagok"
-cannotDeleteInternal = "A Belső csapat nem törölhető"
-cannotRenameInternal = "A Belső csapat nem nevezhető át"
-confirmDelete = "Biztosan törli ezt a csapatot? A csapat törléséhez üresnek kell lennie."
-confirmRemove = "Eltávolítja a felhasználót ebből a csapatból?"
-createNewTeam = "Új csapat létrehozása"
-deleteTeamLabel = "Csapat törlése"
 description = "Csapatok kezelése és a munkaterület tagjainak rendszerezése"
-loadError = "Nem sikerült betölteni a csapat adatait"
-loading = "Csapatok betöltése..."
-loadingDetails = "Csapat részleteinek betöltése..."
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
-noMembers = "Nincsenek tagok ebben a csapatban"
-noTeamsFound = "Nem találhatók csapatok"
-removeMember = "Eltávolítás a csapatból"
-removeMemberError = "Nem sikerült eltávolítani a felhasználót a csapatból"
-removeMemberSuccess = "Felhasználó eltávolítva a csapatból"
-renameTeamLabel = "Csapat átnevezése"
-system = "Rendszer"
-teamActions = "Csapatműveletek"
-teamName = "Csapat neve"
-teamNotFound = "A csapat nem található"
-totalMembers = "Tagok összesen"
-viewTeam = "Csapat megtekintése"
-
-[workspace.teams.addMemberToTeam]
-addingTo = "Hozzáadás ide:"
-currentlyIn = "jelenleg itt:"
-error = "Nem sikerült tagot hozzáadni a csapathoz"
-selectUser = "Felhasználó kiválasztása"
-selectUserPlaceholder = "Válasszon felhasználót"
-selectUserRequired = "Kérjük, válasszon felhasználót"
-submit = "Tag hozzáadása"
-success = "Tag sikeresen hozzáadva a csapathoz"
-title = "Tag hozzáadása a csapathoz"
-userRequired = "Kérjük, válasszon felhasználót"
-willBeMoved = "Megjegyzés: Ez a felhasználó átkerül a jelenlegi csapatából ebbe a csapatba."
-
-[workspace.teams.changeTeam]
-changing = "Áthelyezés"
-error = "Nem sikerült módosítani a csapatot"
-label = "Csapat módosítása"
-selectTeam = "Csapat kiválasztása"
-selectTeamPlaceholder = "Válasszon csapatot"
-selectTeamRequired = "Kérjük, válasszon csapatot"
-submit = "Csapat módosítása"
-success = "A csapat sikeresen módosítva"
-title = "Csapat módosítása"
-
-[workspace.teams.createTeam]
-error = "Nem sikerült létrehozni a csapatot"
-nameRequired = "A csapat neve kötelező"
-submit = "Csapat létrehozása"
-success = "A csapat sikeresen létrehozva"
-teamName = "Csapat neve"
-teamNamePlaceholder = "Adja meg a csapat nevét"
-title = "Új csapat létrehozása"
-
-[workspace.teams.deleteTeam]
-error = "Nem sikerült törölni a csapatot. Győződjön meg róla, hogy a csapat üres."
-success = "A csapat sikeresen törölve"
-
-[workspace.teams.renameTeam]
-error = "Nem sikerült átnevezni a csapatot"
-nameRequired = "A csapat neve kötelező"
-newTeamName = "Új csapatnév"
-newTeamNamePlaceholder = "Adja meg az új csapatnevet"
-renaming = "Átnevezés:"
-submit = "Csapat átnevezése"
-success = "A csapat sikeresen átnevezve"
-title = "Csapat átnevezése"
 
 [zipWarning]
 cancel = "Mégse"
