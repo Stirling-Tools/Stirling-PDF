@@ -90,8 +90,9 @@ public class RepairController {
                     if (gsResult.getRc() == 0) {
                         repairSuccess = true;
                     }
-                } catch (Exception e) {
-                    // Log and continue to QPDF fallback
+                } catch (IOException | RuntimeException e) {
+                    // An interrupt is left to propagate: caught here, a cancelled job would fall
+                    // through to qpdf and could be reported as unrepairable.
                     log.warn("Ghostscript repair failed, trying QPDF fallback: ", e);
                 }
             }

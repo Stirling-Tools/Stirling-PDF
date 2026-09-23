@@ -235,6 +235,32 @@ class RepairControllerMoreTest {
                 verify(qpdfExecutor, times(1)).runCommandWithOutputHandling(any());
             }
         }
+
+        @Test
+        @DisplayName("a job cancelled during Ghostscript stays cancelled and never reaches qpdf")
+        void ghostscriptInterruptPropagates() throws Exception {
+            when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(true);
+
+            try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
+                ProcessExecutor gsExecutor = mock(ProcessExecutor.class);
+                when(gsExecutor.runCommandWithOutputHandling(any()))
+                        .thenThrow(new InterruptedException("cancelled"));
+
+                mockedFactory
+                        .when(
+                                () ->
+                                        ProcessExecutor.getInstance(
+                                                ProcessExecutor.Processes.GHOSTSCRIPT))
+                        .thenReturn(gsExecutor);
+
+                assertThrows(
+                        InterruptedException.class,
+                        () -> repairController.repairPdf(pdfFileFrom(inputPdf(1))));
+
+                mockedFactory.verify(
+                        () -> ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF), never());
+            }
+        }
     }
 
     @Nested
