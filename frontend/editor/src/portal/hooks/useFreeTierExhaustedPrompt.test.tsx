@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render } from "@testing-library/react";
+import { act, render } from "@testing-library/react";
 
 /**
  * The cadence decision, reversed from what it was: being unlinked is not a reason to ask anything.
@@ -7,18 +7,29 @@ import { render } from "@testing-library/react";
  * grant spent — and it is raised from the real reporter here rather than a hand-fired event, so the
  * sentinel shape stays part of what this pins down.
  */
-const { openLinkModal } = vi.hoisted(() => ({ openLinkModal: vi.fn() }));
+const { openLinkModal, flags } = vi.hoisted(() => ({
+  openLinkModal: vi.fn(),
+  flags: { isAdmin: true, isLinked: false, orgOwner: true },
+}));
+vi.mock("@app/auth", () => ({
+  useAuth: () => ({ ...flags, user: { orgOwner: flags.orgOwner } }),
+}));
+vi.mock("@app/portal/contexts/LinkContext", () => ({ useLink: () => flags }));
 
-vi.mock("@portal/contexts/UIContext", () => ({
+vi.mock("@app/portal/contexts/UIContext", () => ({
   useUI: () => ({ openLinkModal }),
 }));
 
-import { HttpError } from "@portal/api/http";
-import { reportAccountLinkBlock } from "@portal/services/accountLinkBlock";
-import { useFreeTierExhaustedPrompt } from "@portal/hooks/useFreeTierExhaustedPrompt";
+import {
+  clearAccountLinkBlock,
+  reportFreeTierExhausted,
+} from "@app/services/accountLinkBlock";
+import { HttpError } from "@app/portal/api/http";
+import { reportAccountLinkBlock } from "@app/portal/services/accountLinkBlock";
+import { useFreeTierExhaustedPrompt } from "@app/portal/hooks/useFreeTierExhaustedPrompt";
 
-function Probe() {
-  useFreeTierExhaustedPrompt();
+function Probe({ enabled = true }: { enabled?: boolean }) {
+  useFreeTierExhaustedPrompt(enabled);
   return null;
 }
 
@@ -29,17 +40,54 @@ const blocked = (reason: string) =>
   });
 
 describe("the account-link prompt", () => {
-  beforeEach(() => openLinkModal.mockReset());
+  beforeEach(() => {
+    sessionStorage.clear();
+    clearAccountLinkBlock();
+    openLinkModal.mockReset();
+    flags.isAdmin = true;
+    flags.orgOwner = true;
+    flags.isLinked = false;
+  });
 
   it("stays quiet on mount while the instance is unlinked", () => {
     render(<Probe />);
     expect(openLinkModal).not.toHaveBeenCalled();
   });
 
+  it("leaves pending failures for the active dialog host", () => {
+    const view = render(<Probe enabled={false} />);
+    act(() => {
+      reportAccountLinkBlock(blocked("FREE_TIER_EXHAUSTED"));
+    });
+    expect(openLinkModal).not.toHaveBeenCalled();
+    view.rerender(<Probe />);
+    expect(openLinkModal).toHaveBeenCalledExactlyOnceWith(
+      "exhausted",
+      undefined,
+    );
+  });
+
   it("opens on the allowance pitch when the grant is reported spent", () => {
     render(<Probe />);
+    act(() => {
+      reportAccountLinkBlock(blocked("FREE_TIER_EXHAUSTED"));
+    });
+    expect(openLinkModal).toHaveBeenCalledWith("exhausted", undefined);
+  });
+
+  it("passes the triggering pipeline to the automatic modal", () => {
+    render(<Probe />);
+    const cause = { pipelineId: "rotate", trigger: "upload" as const };
+    act(() => reportFreeTierExhausted(cause));
+    expect(openLinkModal).toHaveBeenCalledWith("exhausted", cause);
+  });
+
+  it("does not reopen for later responses from the same exhausted batch", () => {
+    const view = render(<Probe />);
     reportAccountLinkBlock(blocked("FREE_TIER_EXHAUSTED"));
-    expect(openLinkModal).toHaveBeenCalledWith("exhausted");
+    view.rerender(<Probe />);
+    reportAccountLinkBlock(blocked("FREE_TIER_EXHAUSTED"));
+    expect(openLinkModal).toHaveBeenCalledOnce();
   });
 
   it("leaves a linked team's own billing problems to their own surface", () => {
@@ -50,6 +98,17 @@ describe("the account-link prompt", () => {
     expect(openLinkModal).not.toHaveBeenCalled();
   });
 
+  it.each(["already linked"])(
+    "does not offer initial linking to %s",
+    (state) => {
+      flags.isAdmin = state !== "non-owner";
+      flags.isLinked = state === "already linked";
+      render(<Probe />);
+      reportAccountLinkBlock(blocked("FREE_TIER_EXHAUSTED"));
+      expect(openLinkModal).not.toHaveBeenCalled();
+    },
+  );
+
   it("ignores an unrelated failure", () => {
     render(<Probe />);
     reportAccountLinkBlock(new HttpError(403, "Forbidden", null));
@@ -59,7 +118,49 @@ describe("the account-link prompt", () => {
 
   it("stops listening once unmounted", () => {
     render(<Probe />).unmount();
-    reportAccountLinkBlock(blocked("FREE_TIER_EXHAUSTED"));
+    act(() => {
+      reportAccountLinkBlock(blocked("FREE_TIER_EXHAUSTED"));
+    });
     expect(openLinkModal).not.toHaveBeenCalled();
   });
+
+  it("coalesces concurrent failures and stays quiet after dismissal and remount", () => {
+    const first = render(<Probe />);
+    act(() => {
+      reportAccountLinkBlock(blocked("FREE_TIER_EXHAUSTED"));
+      reportAccountLinkBlock(blocked("FREE_TIER_EXHAUSTED"));
+    });
+    first.unmount();
+    render(<Probe />);
+    act(() => {
+      reportAccountLinkBlock(blocked("FREE_TIER_EXHAUSTED"));
+    });
+    expect(openLinkModal).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the session suppression after credits recover", () => {
+    render(<Probe />);
+    act(() => {
+      reportAccountLinkBlock(blocked("FREE_TIER_EXHAUSTED"));
+    });
+    act(() => {
+      clearAccountLinkBlock();
+    });
+    act(() => {
+      reportAccountLinkBlock(blocked("FREE_TIER_EXHAUSTED"));
+    });
+    expect(openLinkModal).toHaveBeenCalledTimes(1);
+  });
+});
+
+it("routes an ordinary admin to the role-aware exhaustion dialog", () => {
+  sessionStorage.clear();
+  clearAccountLinkBlock();
+  flags.isAdmin = true;
+  flags.orgOwner = false;
+  flags.isLinked = false;
+  openLinkModal.mockReset();
+  render(<Probe />);
+  act(() => reportFreeTierExhausted());
+  expect(openLinkModal).toHaveBeenCalledWith("exhausted", undefined);
 });

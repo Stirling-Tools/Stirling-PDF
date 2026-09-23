@@ -34,11 +34,12 @@ downloadUnavailable = "Preuzimanje nije dostupno za ovu stavku"
 edit = "Uredi"
 editSecret = "Uredi ovu vrednost"
 editYourNewFiles = "Uredite svoje nove datoteke"
-encryptedFilesBlocked_one = "Datoteka je zaštićena lozinkom. Prvo je otključajte."
-encryptedFilesBlocked_other = "{{count}} datoteka su zaštićene lozinkom. Prvo ih otključajte."
 exportAndContinue = "Izvezi i nastavi"
 false = "Netačno"
+fileChangedOnDisk = "Promenjeno na disku otkako ste ga uredili"
+fileDiskUnavailable = "Nije moguće pristupiti datoteci na disku"
 fileNotSavedToDisk = "Nije sačuvano na disk"
+fileOriginalDeleted = "Original je obrisan – sačuvajte da zadržite kopiju"
 fileSavedToDisk = "Fajl je sačuvan na disk"
 fileSelected = "Izabrano: {{filename}}"
 filesSelected = "{{count}} fajlova"
@@ -193,9 +194,6 @@ title = "Šta radi"
 
 [AddAttachmentsRequest.tooltip.header]
 title = "O dodavanju priloga"
-
-[addFileCard]
-upload = "Otpremi"
 
 [addImage]
 applySignatures = "Primeni slike"
@@ -559,6 +557,47 @@ close = "Zatvori"
 error = "Greška"
 expand = "Proširi"
 
+[admin.formDetection]
+confirmUninstall = "Kliknite za potvrdu"
+description = "Otkriva tekstualna polja, polja za potvrdu i oblasti za potpis u PDF-u i pretvara ih u polja obrasca koja se mogu popunjavati. Otkrivanje se izvršava na ovom serveru pomoću modela koji instalirate ispod."
+downloadingNote = "{{percent}}% od {{size}}"
+enableFeature = "Omogući funkciju"
+engineUnavailable = "Ova verzija ne uključuje mehanizam za otkrivanje, pa alat ostaje nedostupan čak i sa instaliranim modelom."
+errorTitle = "Nešto je pošlo naopako"
+install = "Instaliraj"
+installFailed = "Instalacija nije uspela"
+licenseLabel = "Licenca"
+modelsLabel = "Model za otkrivanje"
+notAvailable = "URL za preuzimanje/kontrolna suma još nisu konfigurisani, pa ovaj model ne može biti instaliran."
+notWritable = "U direktorijum modela nije moguće pisati; proverite montiranje configs volumena."
+saveFailed = "Čuvanje podešavanja nije uspelo"
+sizeUnknown = "veličina nepoznata"
+switch = "Koristi ovaj model"
+title = "AI otkrivanje obrazaca"
+uninstall = "Deinstaliraj"
+uninstallFailed = "Deinstalacija nije uspela"
+verifyingNote = "Provera SHA-256 kontrolne sume..."
+
+[admin.formDetection.airgap]
+intro = "Nema interneta na serveru? Preuzmite model drugde, proverite ga i kopirajte ga u direktorijum modela. Biće prepoznat pri ponovnom pokretanju."
+noSha = "(kontrolna suma nije podešena)"
+show = "Offline / instalacija u izolovanom okruženju"
+step1 = "1. Preuzmite na računaru sa internetom:"
+step2 = "2. Proverite da se SHA-256 kontrolna suma poklapa:"
+step3 = "3. Kopirajte ga u direktorijum modela na ovom serveru:"
+step4 = "4. Podesite formDetection.activeModelId na id modela u settings.yml i ponovo pokrenite. <configs> je configs volumen (npr. /configs u Docker-u). Slika za izolovano okruženje dolazi sa već instaliranim modelom."
+
+[admin.formDetection.badge]
+active = "Aktivan"
+installed = "Instaliran"
+
+[admin.formDetection.state]
+downloading = "Preuzimanje..."
+failed = "Neuspelo"
+notInstalled = "Nijedan model nije instaliran"
+ready = "Spremno"
+verifying = "Provera..."
+
 [admin.settings]
 discard = "Odbaci"
 error = "Nije uspelo čuvanje podešavanja"
@@ -688,6 +727,9 @@ manualLinks = "Ručno preuzimanje: kliknite na linkove i smestite datoteke u tes
 noLanguages = "U podešenom direktorijumu nisu pronađeni tessdata jezici."
 permissionNotice = "Putanja tessdata nije upisiva. Preuzimanja će biti otvorena u pregledaču; sačuvajte .traineddata datoteke ručno u tessdata folder."
 
+[admin.settings.ai]
+description = "Povežite Stirling sa Python AI mehanizmom, izaberite njegove modele i podesite ograničenja pod kojima radi."
+
 [admin.settings.ai.documents]
 description = "Konfigurišite model za embedding i podešavanja pretrage koja se koriste za odgovaranje na pitanja nad dokumentima. Primenjuje se na AI mehanizam nakon čuvanja."
 title = "Dokumenti i RAG"
@@ -727,6 +769,7 @@ description = "Broj najrelevantnijih delova dobijenih po pretrazi."
 label = "Top K"
 
 [admin.settings.ai.general]
+connection = "Veza"
 description = "Povežite Stirling sa Python AI mehanizmom i izaberite koje AI mogućnosti su dostupne. Promene se primenjuju pri ponovnom pokretanju."
 title = "AI mehanizam"
 
@@ -818,6 +861,7 @@ openai = "OpenAI API ključ"
 setPlaceholder = "Sačuvano - ostavite prazno da zadržite trenutni ključ"
 
 [admin.settings.ai.models.baseUrl]
+contextWindow = "Koristite kontekstni prozor od najmanje 16.384 tokena. Manji prozori tiho odbacuju deo upita. Ollama podrazumevano koristi 4.096 – povećajte OLLAMA_CONTEXT_LENGTH."
 description = "Osnovni URL OpenAI-kompatibilne / Ollama krajnje tačke, npr. http://ollama:11434/v1."
 label = "Osnovni URL provajdera"
 warning = "Osnovni URL mora da upućuje na pouzdanu internu krajnju tačku. Mehanizam će upućivati serverske zahteve ka njoj, pa je nepouzdana vrednost osetljiva na SSRF."
@@ -852,6 +896,7 @@ clickToUpgrade = "Kliknite da vidite detalje plana"
 
 [admin.settings.connections]
 connect = "Poveži"
+connectedServicesDescription = "Usluge sa kojima je ovaj server povezan. Pružaoci prijave nalaze se pod Prijava i bezbednost."
 description = "Podesite spoljne provajdere autentikacije kao što su OAuth2 i SAML."
 disconnect = "Prekini vezu"
 disconnected = "Veza sa provajderom je uspešno prekinuta"
@@ -974,6 +1019,8 @@ configuration = "Konfiguracija baze podataka"
 confirmCodeLabel = "Unesite potvrdni kod za nastavak"
 confirmImport = "Potvrdi uvoz"
 confirmImportTitle = "Potvrdite uvoz baze podataka"
+connection = "Veza"
+connectionDescription = "Usmerite Stirling na spoljnu bazu podataka umesto ugrađene."
 createBackup = "Kreiraj rezervnu kopiju"
 created = "Kreirano"
 delete = "Obriši"
@@ -1114,6 +1161,7 @@ placeholder = "/data/inbox"
 remove = "Ukloni koren fascikle"
 
 [admin.settings.general]
+branding = "Brendiranje i izgled"
 description = "Podesite sistemska podešavanja aplikacije uključujući brendiranje i podrazumevano ponašanje."
 system = "Sistem"
 title = "Sistemska podešavanja"
@@ -1217,14 +1265,6 @@ description = "Jezici koje korisnici mogu izabrati (ostavite prazno da omogućit
 label = "Dostupni jezici"
 placeholder = "Izaberite jezike"
 
-[admin.settings.general.logoStyle]
-classic = "Klasični"
-classicAlt = "Klasični logo"
-description = "Izaberite između modernog minimalističkog logotipa ili klasične S ikone"
-label = "Stil logotipa"
-modern = "Moderni"
-modernAlt = "Moderni logo"
-
 [admin.settings.general.showUpdate]
 description = "Prikaži obaveštenja kada je dostupna nova verzija"
 label = "Prikaži obaveštenja o ažuriranjima"
@@ -1235,6 +1275,7 @@ label = "Prikaz ažuriranja samo administratorima"
 
 [admin.settings.legal]
 description = "Podesite linkove ka pravnim dokumentima i politikama."
+documentsDescription = "Linkovi koji se korisnicima prikazuju za uslove, privatnost, kolačiće i impressum."
 title = "Pravni dokumenti"
 
 [admin.settings.legal.accessibilityStatement]
@@ -1449,8 +1490,8 @@ toggle = "Imate licencni ključ ili datoteku sertifikata?"
 auditLogging = "<0>Audit Logging</0> (ENTERPRISE) - Bezbednost"
 customMetadata = "<0>Custom Metadata</0> (PRO) - Opšte"
 databaseConfiguration = "<0>Database Configuration</0> (ENTERPRISE) - Baza podataka"
-message = "Premium i Enterprise funkcije su sada organizovane u svojim odgovarajućim odeljcima:"
-title = "Premium funkcije raspoređene"
+message = "Podesite autentifikaciju i licencirane funkcije u odgovarajućim odeljcima:"
+title = "Podešavanja funkcija"
 
 [admin.settings.privacy]
 analytics = "Analitika i praćenje"
@@ -1488,8 +1529,7 @@ label = "Reviziono logovanje"
 showDetails = "Prikaži detalje nivoa revizije"
 
 [admin.settings.security.audit.advancedOptions]
-description = "Sledeće opcije povećavaju vreme obrade i upotrebu memorije. Omogućite samo ako je zaista potrebno."
-title = "Napredne opcije"
+cost = "Sada povećava vreme obrade i korišćenje memorije pri svakoj operaciji."
 
 [admin.settings.security.audit.captureFileHash]
 description = "Izdvajanje SHA-256 heša otpremljenih PDF datoteka radi provere integriteta. Nezavisno od nivoa revizije."
@@ -1833,6 +1873,7 @@ comment = "Komentar"
 comments = "Komentari"
 contents = "Tekst"
 delete = "Obriši"
+deleted = "Anotacija je obrisana"
 drawing = "Crtanje"
 editSelectDescription = "Kliknite postojeću anotaciju da biste uredili njenu boju, neprozirnost, tekst ili veličinu."
 editText = "Uredi tekstualni okvir"
@@ -1874,6 +1915,7 @@ textAlignment = "Poravnanje teksta"
 textMarkup = "Označavanje teksta"
 title = "Anotiraj"
 underline = "Podvuci"
+undoDelete = "Opozovi"
 width = "Širina"
 
 [app]
@@ -2060,6 +2102,50 @@ bullet2 = "Kreira čist, važeći naziv fajla od detektovanog naslova"
 bullet3 = "Zadržava originalni naziv ako nije pronađen odgovarajući naslov"
 title = "Pametno preimenovanje"
 
+[autoFormDetection]
+loading = "Otkrivanje polja obrasca..."
+submit = "Otkrij polja obrasca"
+
+[autoFormDetection.detects]
+checkboxes = "Polja za potvrdu"
+label = "Pronalazi i čini popunjivim"
+signatures = "Potpisi"
+text = "Tekstualna polja"
+
+[autoFormDetection.error]
+failed = "Došlo je do greške pri otkrivanju polja obrasca."
+
+[autoFormDetection.progress]
+detecting = "Analiza dokumenta..."
+
+[autoFormDetection.results]
+title = "Pregledajte popunjivi PDF"
+
+[autoFormDetection.sensitivity]
+balanced = "Uravnoteženo"
+balancedHint = "Preporučeno za većinu obrazaca."
+high = "Temeljno"
+highHint = "Pronalazi više polja, ali može dodati neka tamo gde ne pripadaju."
+label = "Osetljivost otkrivanja"
+low = "Strogo"
+lowHint = "Samo veoma pouzdana poklapanja – manje polja, manje grešaka."
+
+[autoFormDetection.settings]
+title = "Podešavanja"
+
+[autoFormDetection.summary]
+checkboxes = "Polja za potvrdu"
+noneBody = "Dokument možda ne sadrži oblasti nalik obrascu. Opozovite, promenite osetljivost na \"Temeljno\" i pokrenite ponovo za detaljniju pretragu."
+noneTitle = "Nisu pronađena polja obrasca"
+pages_one = "Na {{count}} stranici."
+pages_other = "Na {{count}} stranica."
+radioButtons = "Radio dugmad"
+signatures = "Potpisi"
+stepTitle = "Rezultati otkrivanja"
+textFields = "Tekstualna polja"
+title_one = "Dodato je {{count}} popunjivo polje"
+title_other = "Dodato je {{count}} popunjivih polja"
+
 [automate]
 copyToSaved = "Kopiraj u sačuvano"
 desc = "Kreirajte višekorakne tokove rada povezivanjem PDF akcija. Idealno za ponavljajuće zadatke."
@@ -2154,6 +2240,7 @@ title = "Predloženo"
 finish = "Završi"
 run = "Pokreni automatizaciju"
 running = "Pokretanje automatizacije..."
+signInToRun = "Prijavite se da biste pokrenuli automatizacije."
 steps_one = "{{count}} step"
 steps_other = "{{count}} koraka"
 unnamed = "Automatizacija bez naziva"
@@ -2369,6 +2456,35 @@ bullet3 = "Heftajte ili povežite duž presavijenog hrbata"
 bullet4 = "Za štampače sa kratkom ivicom: omogućite opciju 'Okreni na kratkoj ivici'"
 text = "Sledite ove korake za savršene knjižice:"
 title = "Kako štampati i sastaviti"
+
+[brickGame]
+balls = "Lopte"
+best = "Najbolje"
+close = "Zatvori igru"
+effectTimer = "{{label}} {{seconds}}s"
+hint = "Pomerajte pokazivačem ili tasterima sa strelicama. Kliknite da uhvatite pokazivač, Esc za povratak na posao."
+hintPointerLocked = "Pokazivač je uhvaćen. Esc ga oslobađa, zatim ponovo Esc za povratak na posao."
+score = "Rezultat"
+title = "Skrivena igra"
+
+[brickGame.effect]
+fast = "Brzo"
+narrow = "Usko"
+reversed = "Obrnuto"
+slow = "Sporo"
+wide = "Široko"
+
+[brickGame.lost]
+detail = "Kliknite ili pritisnite Space da pokušate ponovo"
+headline = "Nema više lopti"
+
+[brickGame.ready]
+detail = "Kliknite ili pritisnite Space za serviranje"
+headline = "Spremno"
+
+[brickGame.won]
+detail = "Kliknite ili pritisnite Space da igrate ponovo"
+headline = "Sve očišćeno"
 
 [bulkSelection]
 syntaxError = "Postoji problem sa sintaksom. Pogledajte savete za izbor stranica za pomoć."
@@ -3001,6 +3117,361 @@ summary_one = "Pokrenut 1 alat"
 summary_other = "Pokrenuto {{count}} alata"
 unknownTool = "Nepoznat alat"
 
+[classification.families]
+correspondence = "Korespondencija"
+education = "Obrazovanje"
+engineering = "Inženjering"
+finance = "Finansije"
+forms = "Obrasci"
+government = "Država"
+health = "Medicina"
+hr = "HR"
+legal = "Pravno"
+operations = "Operacije"
+projects = "Projekti"
+property = "Imovina"
+reports = "Izveštaji"
+sales = "Marketing"
+travel = "Putovanja"
+
+[classification.labels]
+academic-record = "Akademska evidencija"
+action-plan = "Akcioni plan"
+addendum = "Dodatak"
+advertisement = "Oglas"
+affidavit = "Izjava pod zakletvom"
+agenda = "Dnevni red"
+amendment = "Izmena"
+analytics-report = "Analitički izveštaj"
+announcement = "Obaveštenje"
+annual-report = "Godišnji izveštaj"
+api-documentation = "API dokumentacija"
+application-form = "Obrazac prijave"
+appraisal-report = "Izveštaj o proceni"
+architecture-document = "Arhitektonski dokument"
+articles-of-incorporation = "Osnivački akt"
+assignment-brief = "Kratak opis zadatka"
+audit-report = "Revizorski izveštaj"
+balance-sheet = "Bilans stanja"
+bank-statement = "Izvod iz banke"
+benefits-summary = "Sažetak beneficija"
+bill-of-lading = "Teretnica"
+bill-of-materials = "Sastavnica materijala"
+blueprint = "Nacrt"
+board-report = "Izveštaj odbora"
+board-resolution = "Odluka odbora"
+booking-confirmation = "Potvrda rezervacije"
+brochure = "Brošura"
+budget = "Budžet"
+business-plan = "Poslovni plan"
+business-proposal = "Poslovni predlog"
+bylaws = "Statut"
+campaign-brief = "Kratak opis kampanje"
+case-study = "Studija slučaja"
+cash-flow-statement = "Izveštaj o novčanim tokovima"
+catalog = "Katalog"
+cease-and-desist = "Opomena za prestanak radnji"
+certificate = "Sertifikat"
+certificate-of-completion = "Sertifikat o završetku"
+change-log = "Dnevnik izmena"
+checklist = "Kontrolna lista"
+claim-form = "Obrazac zahteva"
+closing-statement = "Završni obračun"
+complaint-letter = "Pismo žalbe"
+compliance-document = "Dokument o usklađenosti"
+confirmation-letter = "Pismo potvrde"
+consent-form = "Obrazac saglasnosti"
+contract = "Ugovor"
+course-syllabus = "Nastavni program kursa"
+court-filing = "Sudski podnesak"
+cover-letter = "Propratno pismo"
+credit-note = "Knjižno odobrenje"
+customs-declaration = "Carinska deklaracija"
+customs-form = "Carinski obrazac"
+cv = "CV"
+datasheet = "Tehnički list"
+debit-note = "Knjižno zaduženje"
+deed = "Isprava"
+delivery-note = "Otpremnica"
+demand-letter = "Pismo zahteva"
+design-document = "Dizajnerski dokument"
+diploma = "Diploma"
+discharge-summary = "Otpusna lista"
+dissertation = "Disertacija"
+donation-receipt = "Potvrda o donaciji"
+dunning-letter = "Opomena za plaćanje"
+email-thread = "Email prepiska"
+employee-handbook = "Priručnik za zaposlene"
+employment-contract = "Ugovor o radu"
+estimate = "Procena"
+event-agenda = "Dnevni red događaja"
+event-program = "Program događaja"
+eviction-notice = "Obaveštenje o iseljenju"
+exam-paper = "Ispitni rad"
+expense-report = "Izveštaj o troškovima"
+expense-summary = "Sažetak troškova"
+explanation-of-benefits = "Objašnjenje beneficija"
+fact-sheet = "Informativni list"
+faq-document = "FAQ dokument"
+feasibility-study = "Studija izvodljivosti"
+feedback-form = "Obrazac za povratne informacije"
+financial-forecast = "Finansijska prognoza"
+financial-statement = "Finansijski izveštaj"
+floor-plan = "Tlocrt"
+flyer = "Flajer"
+form = "Obrazac"
+franchise-agreement = "Ugovor o franšizi"
+freight-document = "Teretni dokument"
+gift-certificate = "Poklon-vaučer"
+glossary = "Rečnik pojmova"
+government-notice = "Državno obaveštenje"
+grade-report = "Izveštaj o ocenama"
+grant-agreement = "Ugovor o grantu"
+grant-application = "Prijava za grant"
+hoa-document = "HOA dokument"
+home-inspection-report = "Izveštaj o pregledu doma"
+hr-memo = "HR beleška"
+hr-policy = "HR politika"
+immigration-document = "Imigracioni dokument"
+immunization-record = "Evidencija imunizacije"
+incident-report = "Izveštaj o incidentu"
+income-statement = "Bilans uspeha"
+index = "Indeks"
+inspection-report = "Izveštaj o inspekciji"
+insurance-certificate = "Sertifikat o osiguranju"
+insurance-claim = "Zahtev za osiguranje"
+insurance-policy = "Polisa osiguranja"
+intake-form = "Prijemni obrazac"
+inventory-list = "Lista inventara"
+investment-summary = "Sažetak investicija"
+invitation = "Pozivnica"
+invoice = "Faktura"
+itinerary = "Plan puta"
+job-application = "Prijava za posao"
+job-description = "Opis posla"
+lab-report = "Laboratorijski izveštaj"
+lease-agreement = "Ugovor o zakupu"
+leave-request = "Zahtev za odsustvo"
+legal-brief = "Pravni podnesak"
+legal-filing = "Pravni podnesak"
+legal-notice = "Pravno obaveštenje"
+legal-opinion = "Pravno mišljenje"
+lesson-plan = "Plan časa"
+letter = "Pismo"
+letter-of-intent = "Pismo o namerama"
+license = "Licenca"
+license-agreement = "Licencni ugovor"
+loan-agreement = "Ugovor o zajmu"
+loan-document = "Dokument o zajmu"
+maintenance-log = "Dnevnik održavanja"
+manual = "Priručnik"
+market-research = "Istraživanje tržišta"
+marketing-plan = "Marketing plan"
+media-kit = "Media kit"
+medical-invoice = "Medicinska faktura"
+medical-report = "Medicinski izveštaj"
+meeting-agenda = "Dnevni red sastanka"
+meeting-minutes = "Zapisnik sa sastanka"
+meeting-notes = "Beleške sa sastanka"
+membership-document = "Dokument o članstvu"
+memo = "Beleška"
+memorandum-of-understanding = "Memorandum o razumevanju"
+mortgage-document = "Hipotekarni dokument"
+nda = "NDA"
+newsletter = "Bilten"
+non-compete-agreement = "Ugovor o zabrani konkurencije"
+notice = "Obaveštenje"
+offer-letter = "Pismo ponude"
+onboarding-document = "Dokument za uvođenje u posao"
+order-confirmation = "Potvrda porudžbine"
+order-form = "Obrazac porudžbine"
+organization-chart = "Organizaciona šema"
+packing-slip = "Otpremnica za pakovanje"
+partnership-agreement = "Ugovor o partnerstvu"
+patent = "Patent"
+pathology-report = "Patološki izveštaj"
+payment-reminder = "Podsetnik za plaćanje"
+payroll-document = "Dokument o platnom spisku"
+payslip = "Platni listić"
+performance-review = "Ocena učinka"
+permit = "Dozvola"
+petition = "Peticija"
+pitch-deck = "Pitch deck"
+power-of-attorney = "Punomoćje"
+prescription = "Recept"
+presentation = "Prezentacija"
+press-release = "Saopštenje za javnost"
+price-list = "Cenovnik"
+pricing-sheet = "List sa cenama"
+privacy-policy = "Politika privatnosti"
+product-sheet = "List proizvoda"
+proforma-invoice = "Profaktura"
+progress-report = "Izveštaj o napretku"
+project-charter = "Povelja projekta"
+project-plan = "Plan projekta"
+promotional-material = "Promotivni materijal"
+property-listing = "Oglas nekretnine"
+proposal = "Predlog"
+public-notice = "Javno obaveštenje"
+purchase-agreement = "Ugovor o kupovini"
+purchase-order = "Narudžbenica"
+quality-report = "Izveštaj o kvalitetu"
+quarterly-report = "Kvartalni izveštaj"
+questionnaire = "Upitnik"
+quick-start-guide = "Vodič za brzi početak"
+quote = "Ponuda"
+radiology-report = "Radiološki izveštaj"
+receipt = "Račun"
+recommendation-letter = "Pismo preporuke"
+reference-letter = "Referentno pismo"
+referral-letter = "Uputno pismo"
+registration-confirmation = "Potvrda registracije"
+registration-form = "Obrazac registracije"
+regulatory-filing = "Regulatorni podnesak"
+release-notes = "Napomene o izdanju"
+remittance-advice = "Obaveštenje o doznaci"
+rental-agreement = "Ugovor o najmu"
+report = "Izveštaj"
+request-for-proposal = "Zahtev za predlog"
+request-for-quotation = "Zahtev za ponudu"
+requirements-document = "Dokument sa zahtevima"
+research-abstract = "Sažetak istraživanja"
+research-paper = "Istraživački rad"
+reservation = "Rezervacija"
+resignation-letter = "Pismo ostavke"
+resume = "Rezime"
+retrospective = "Retrospektiva"
+return-authorization = "Odobrenje povraćaja"
+risk-assessment = "Procena rizika"
+roadmap = "Plan razvoja"
+safety-data-sheet = "Bezbednosni list"
+safety-procedure = "Bezbednosna procedura"
+sales-proposal = "Prodajni predlog"
+sales-report = "Izveštaj o prodaji"
+schematic = "Šema"
+scope-of-work = "Obim posla"
+service-agreement = "Ugovor o uslugama"
+service-report = "Izveštaj o usluzi"
+settlement-agreement = "Sporazum o poravnanju"
+shareholder-agreement = "Ugovor akcionara"
+shipping-confirmation = "Potvrda isporuke"
+specification = "Specifikacija"
+sponsorship-agreement = "Ugovor o sponzorstvu"
+standard-operating-procedure = "Standardna operativna procedura"
+statement-of-account = "Izvod stanja računa"
+statement-of-work = "Izjava o radu"
+status-report = "Statusni izveštaj"
+stock-report = "Izveštaj o zalihama"
+study-guide = "Vodič za učenje"
+subpoena = "Sudski poziv"
+subscription-confirmation = "Potvrda pretplate"
+supply-order = "Porudžbina zaliha"
+survey-form = "Obrazac ankete"
+survey-results = "Rezultati ankete"
+sustainability-report = "Izveštaj o održivosti"
+table-of-contents = "Sadržaj"
+tax-form = "Poreski obrazac"
+tax-return = "Poreska prijava"
+tax-statement = "Poreski izveštaj"
+technical-drawing = "Tehnički crtež"
+technical-specification = "Tehnička specifikacija"
+tenancy-agreement = "Ugovor o stanarskom pravu"
+tender-document = "Tenderska dokumentacija"
+termination-letter = "Pismo o raskidu"
+terms-and-conditions = "Uslovi i odredbe"
+terms-of-service = "Uslovi korišćenja"
+test-plan = "Plan testiranja"
+test-report = "Izveštaj o testiranju"
+thesis = "Teza"
+ticket = "Karta"
+timeline = "Vremenska linija"
+timesheet = "Evidencija radnog vremena"
+title-document = "Vlasnički dokument"
+training-material = "Materijal za obuku"
+transcript = "Transkript"
+travel-itinerary = "Plan putovanja"
+trust-document = "Dokument povereničkog fonda"
+user-guide = "Korisnički vodič"
+utility-bill = "Račun za komunalije"
+vendor-agreement = "Ugovor sa dobavljačem"
+visa-document = "Dokument za vizu"
+waiver = "Odricanje"
+warehouse-receipt = "Skladišna potvrda"
+warranty-document = "Garantni dokument"
+waybill = "Tovarni list"
+white-paper = "White paper"
+will = "Testament"
+work-instruction = "Radno uputstvo"
+work-order = "Radni nalog"
+
+[classificationDemo]
+folderName = "Preuzimanja"
+
+[classificationDemo.buttons]
+done = "Gotovo"
+notNow = "Ne sada"
+skip = "Preskoči"
+stop = "Zaustavi"
+
+[classificationDemo.chart]
+centre = "dokumenti"
+hint = "Izaberite segment da vidite tipove dokumenata iza njega."
+label = "Dokumenti po tipu: {{summary}}"
+noTypes = "Ovi dokumenti se ne poklapaju sa poznatim tipom."
+
+[classificationDemo.defaultApp]
+body = "Postavite Stirling kao podrazumevanu PDF aplikaciju. Svaki PDF koji otvorite, iz email-a, pregledača ili radne površine, završiće ovde, spreman za čitanje ili uređivanje. Ovo možete promeniti bilo kada u Podešavanjima."
+cta = "Postavi Stirling kao podrazumevani"
+title = "Otvorite svaki PDF u Stirling-u"
+
+[classificationDemo.followUp]
+background = "Ovo se izvršava u pozadini. Prsten levo prikazuje napredak."
+restCta = "Obradi ostatak"
+serverCredits = "Vaš povezani server upravlja kreditima za obradu ovih datoteka."
+title = "Želite da nastavite? Imate još {{count}} PDF-ova u fascikli Preuzimanja."
+
+[classificationDemo.groups]
+other = "Ostalo"
+
+[classificationDemo.offer]
+body = "Klasifikujte i organizujte {{count}} najnovijih PDF-ova u fascikli Preuzimanja po tipu."
+cta = "Obradi moju fasciklu Preuzimanja"
+privacy = "Vaši PDF-ovi ostaju na ovom uređaju. Vaš povezani server beleži korišćenje obrade."
+title = "Pogledajte šta Stirling može da uradi sa celom fasciklom"
+
+[classificationDemo.phase]
+finishing = "Završavanje..."
+gathering = "Prikupljanje PDF datoteka..."
+processing = "Obrada datoteke {{done}}/{{total}}..."
+reading = "Čitanje fascikle Preuzimanja..."
+
+[classificationDemo.processing]
+counts = "od {{total}} PDF-ova obrađeno"
+
+[classificationDemo.results]
+documentCount_one = "{{count}} PDF"
+documentCount_other = "{{count}} PDF-ova"
+failedBody = "Stirling nije mogao da pročita vašu fasciklu Preuzimanja. Ništa na vašem računaru nije promenjeno."
+failedTitle = "To nije završeno"
+heading = "Vaša Preuzimanja, sortirana"
+summary = "Stirling je pročitao {{documents}} i sortirao ih u {{types}}."
+typeCount_one = "{{count}} tip"
+typeCount_other = "{{count}} tipova"
+
+[classificationDemo.ring]
+done = "{{folder}} klasifikovano"
+doneDetail = "{{count}} PDF-ova sortirano po tipu"
+progress = "{{done}} od {{total}} PDF-ova ({{percent}}%)"
+running = "Klasifikovanje {{folder}}"
+
+[classificationDemo.status]
+checked = "Provereno {{checked}} od {{total}} datoteka..."
+checking = "Provera imena i datuma svake datoteke..."
+connecting = "Povezivanje vaše fascikle Preuzimanja..."
+library = "Dodavanje u vašu biblioteku datoteka..."
+listing = "Listanje datoteka u Preuzimanjima..."
+picking = "Traženje {{count}} najnovijih PDF-ova..."
+
 [cloudBadge]
 tooltip = "Ova operacija će potrošiti vaše cloud kredite"
 
@@ -3016,6 +3487,8 @@ title = "Izaberite boju"
 actions = "Actions"
 back = "Nazad"
 cancel = "Otkaži"
+change = "Promeni"
+clearFilters = "Obriši filtere"
 close = "Zatvori"
 codeSample = "Code sample"
 collapse = "Skupi"
@@ -3027,6 +3500,7 @@ done = "Gotovo"
 enterValue = "Enter value"
 error = "Greška"
 expand = "Proširi"
+filterEmpty = "Nema ničega za filtriranje"
 loading = "Učitavanje..."
 next = "Sledeće"
 open = "Open"
@@ -3036,6 +3510,7 @@ refresh = "Osveži"
 remaining = "Preostalo"
 retry = "Pokušaj ponovo"
 save = "Sačuvaj"
+search = "Pretraga"
 stepOf = "Step {{current}} of {{total}}"
 
 [compare]
@@ -3227,7 +3702,9 @@ tags = "smanji,mali,minijaturni"
 
 [config]
 plan = "Plan"
+planDescription = "Vaš plan, krediti i ograničenje potrošnje, kao i fakture iza njih."
 team = "Team"
+teamDescription = "Ko deli ovaj radni prostor i pozivnice koje još čekaju odgovor."
 
 [config.account.overview]
 confirmDelete = "Obriši moj nalog"
@@ -3319,7 +3796,6 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
-title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -3350,6 +3826,49 @@ basic = "Osnovna konfiguracija"
 integration = "Konfiguracija integracije"
 security = "Bezbednosna konfiguracija"
 system = "Sistemska konfiguracija"
+
+[connect]
+loading = "Provera ovog zahteva."
+redirecting = "Vraćanje na vaš server."
+step = "Korak {{current}} od {{total}}"
+
+[connect.confirm]
+acknowledge = "Prepoznajem ovu adresu i želim da je povežem sa svojim timom"
+approve = "Poveži server"
+cannotDecide = "Samo vlasnik tima može da odobri ili odbije ovu vezu. Koristite drugi nalog ili odbacite ovaj upit da nastavite da koristite Stirling."
+deny = "Odbij"
+dismiss = "Odbaci"
+lead = "Stirling server traži da se poveže sa vašim timom. Proverite da li je adresa ispod vaša pre nego što odobrite."
+originLabel = "Adresa"
+signedInAs = "Prijavljeni kao"
+switchAccount = "Koristi drugi nalog"
+title = "Povezati ovaj server?"
+unknownAccount = "nepoznat nalog"
+
+[connect.confirm.insecure]
+body = "Ova adresa ne koristi HTTPS, pa će vaša prijava biti poslata preko nešifrovane veze. Odobrite samo na mreži kojoj verujete."
+label = "Nije šifrovana adresa"
+
+[connect.declined]
+body = "Ništa nije povezano. Možete zatvoriti ovu stranicu."
+title = "Zahtev odbijen"
+
+[connect.error]
+failed = "To nije prošlo. Samo vlasnik tima može da poveže server."
+
+[connect.meta]
+title = "Poveži server"
+
+[connect.notFound]
+body = "Ovaj zahtev za povezivanje nije važeći. Možda je istekao ili je već iskorišćen. Pokrenite novi sa svog servera."
+title = "Zahtev nije važeći"
+
+[connect.renewal]
+approve = "Obnovi prijavu"
+failed = "Vaša prijava nije mogla biti obnovljena. Pokušajte ponovo ili odbacite ovu stranicu i pokrenite ponovo sa svog servera."
+lead = "Ovaj server je već povezan sa vašim nalogom. Obnovite prijavu da biste se vratili na naplatu i korišćenje na svom serveru."
+title = "Obnovite prijavu na server"
+wrongAccount = "Ovaj nalog ne može da obnovi prijavu za ovaj server. Prebacite se na nalog koji je prvobitno korišćen za povezivanje servera. Taj nalog i dalje mora biti vlasnik povezanog tima."
 
 [convert]
 autoRotate = "Automatska rotacija"
@@ -3494,6 +4013,26 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog analitika"
 scarf = "Scarf piksel"
 
+[createPortfolio]
+coverTitle = "Naslov naslovne strane"
+coverTitlePlaceholder = "PDF Portfolio"
+description = "Svaka izabrana datoteka ostaje cela unutar novog PDF-a, bez obzira na njen tip. Čitači koji ne podržavaju portfolije prikazuju naslovnu stranu sa priloženim datotekama."
+goToFileEditor = "Idi na uređivač datoteka"
+info = "Kombinuje vaše datoteke u jedan PDF koji čuva svaku datoteku celu unutar njega. Otvorite rezultat da pregledate datoteke i prikažete ili sačuvate bilo koju od njih zasebno."
+settings = "Podešavanja portfolija"
+submit = "Kreiraj portfolio"
+title = "Rezultati portfolija"
+viewerModeHint = "Portfolio zahteva 2 ili više datoteka. Idite u uređivač datoteka da ih izaberete."
+
+[createPortfolio.error]
+failed = "Došlo je do greške pri kreiranju PDF portfolija."
+
+[createPortfolio.tooltip.description]
+title = "Šta radi"
+
+[createPortfolio.tooltip.header]
+title = "O PDF portfolijima"
+
 [crop]
 autoCrop = "Automatski iseci beline"
 noFileSelected = "Izaberite PDF fajl da biste započeli isecanje"
@@ -3567,6 +4106,36 @@ title = "Podešavanja otvorena"
 [defaultApp.success]
 message = "Stirling PDF je sada vaš podrazumevani PDF uređivač"
 title = "Podrazumevana aplikacija postavljena"
+
+[desktopFileLink]
+saveAs = "Sačuvaj kao…"
+useDiskVersion = "Koristi verziju sa diska"
+
+[desktopFileLink.conflict]
+hint = "Zadržavanje vaših izmena prepisuje datoteku na disku pri sledećem čuvanju."
+keepMine = "Zadrži moje izmene"
+prompt = "Ova datoteka je promenjena na disku dok ste ovde imali nesačuvane izmene. Može se zadržati samo jedna verzija."
+remaining = "Još {{count}} za pregled"
+title = "Datoteka je promenjena na disku"
+useDisk = "Koristi verziju sa diska"
+
+[desktopFileLink.missing]
+body = "\"{{name}}\" je obrisana ili premeštena na disku, pa je uklonjena iz vaših datoteka."
+title = "Datoteka više ne postoji"
+
+[desktopFileLink.openDeleted]
+body_one = "\"{{name}}\" više ne postoji na disku. I dalje je otvorena ovde – čuvanje će od vas tražiti novu lokaciju."
+body_other = "{{count}} datoteka više ne postoji na disku. I dalje su otvorene ovde – čuvanje svake od njih tražiće od vas novu lokaciju."
+title_one = "Datoteka obrisana na disku"
+title_other = "Datoteke obrisane na disku"
+
+[desktopFileLink.reloaded]
+body = "\"{{name}}\" je promenjena na disku i ponovo učitana."
+title = "Ažurirano sa diska"
+
+[desktopFileLink.tooLarge]
+body = "\"{{name}}\" je promenjena na disku. Dovoljno je velika da će ponovno učitavanje potrajati, pa je verzija ovde ostavljena neizmenjena."
+title = "Datoteka je promenjena na disku"
 
 [desktopUpdate]
 downloading = "Preuzimanje ažuriranja..."
@@ -3692,9 +4261,6 @@ subtitle = "Uvezite obeleživače, gradite hijerarhije i primenite sadržaj bez 
 description = "Izaberite alat Uredi sadržaj da učitate njegov radni prostor."
 title = "Otvorite alat da započnete uređivanje"
 
-[emptyFilesState]
-upload = "Otpremi"
-
 [encryptedPdfUnlock]
 description = "Ovaj PDF je zaštićen lozinkom. Unesite lozinku da biste nastavili rad."
 emptyResponse = "Uklanjanje lozinke nije proizvelo fajl."
@@ -3775,111 +4341,70 @@ closeFile = "Zatvori fajl"
 addFiles = "Dodaj datoteke"
 
 [fileManager]
-active = "Aktivno"
 addToUpload = "Dodaj za otpremanje"
-changesNotUploaded = "Izmene nisu otpremljene"
 clearAll = "Očisti sve"
 clearSelection = "Očisti izbor"
-closeAllFiles = "Zatvori sve datoteke"
-closeFile = "Zatvori datoteku"
-cloudFile = "Datoteka u oblaku"
-copyCreated = "Kopija sačuvana na ovom uređaju."
-copyFailed = "Nije moguće napraviti kopiju."
 delete = "Obriši"
 deleteAll = "Obriši sve"
-deleteSelected = "Izaberi izabrano"
-deselectAll = "Poništi sve"
-details = "Detalji datoteke"
 download = "Preuzmi"
 downloadSelected = "Preuzmi izabrano"
-dropFilesHere = "Prevucite datoteke ovde"
-fileFormat = "Format"
-fileHistory = "Istorija datoteka"
-fileName = "Ime"
-fileSize = "Veličina"
 filesSelected = "izabrane datoteke"
 filesStored = "sačuvanih datoteka"
-fileVersion = "Verzija"
-filterAll = "Sve"
-filterLocal = "Lokalno"
-filterSharedByMe = "Deljeno od mene"
-filterSharedWithMe = "Deljeno sa mnom"
-googleDrive = "Google Drive"
-googleDriveNotAvailable = "Integracija sa Google Drive nije dostupna"
-googleDriveShort = "Drive"
-hideHistory = "Sakrij istoriju"
-lastModified = "Poslednja izmena"
-lastSynced = "Poslednja sinhronizacija"
-leaveShare = "Ukloni sa moje liste"
-leaveShareFailed = "Nije moguće ukloniti deljenu datoteku."
-leaveShareSuccess = "Uklonjeno sa vaše liste deljenih datoteka."
 loadingFiles = "Učitavanje datoteka..."
-localOnly = "Samo lokalno"
-makeCopy = "Napravi kopiju"
-mobileShort = "Mobilni"
-mobileUpload = "Otpremanje sa mobilnog"
-mobileUploadNotAvailable = "Otpremanje sa mobilnog nije omogućeno"
-moreOptions = "Više opcija"
-myFiles = "Moje datoteke"
-nextFile = "Sledeći fajl"
 noFiles = "Nema dostupnih datoteka"
 noFilesFound = "Nije pronađena nijedna datoteka koja odgovara vašoj pretrazi"
-noRecentFiles = "Nisu pronađene nedavne datoteke"
-openFile = "Otvori datoteku"
-openFiles = "Otvori datoteke"
 openInFileEditor = "Otvori u uređivaču datoteka"
 openInPageEditor = "Otvori u uređivaču stranica"
-owner = "Vlasnik"
-ownerUnknown = "Nepoznato"
-previousFile = "Prethodni fajl"
-recent = "Nedavno"
-removeBoth = "Ukloni sa oba mesta"
-removeFilePrompt = "Ova datoteka je sačuvana na ovom uređaju i na vašem serveru. Odakle želite da je uklonite?"
-removeFileTitle = "Ukloni datoteku"
-removeLocalOnly = "Samo ovaj uređaj"
-removeServerFailed = "Nije moguće ukloniti datoteku sa servera."
-removeServerOnly = "Samo server"
-removeServerOnlyPrompt = "Ova datoteka je sačuvana samo na vašem serveru. Želite li da je uklonite sa servera?"
-removeServerSuccess = "Uklonjeno sa servera."
-removeSharedPrompt = "Ova datoteka je podeljena sa vama. Možete je ukloniti sa ovog uređaja ili sa liste deljenih."
-removeSharedServerOnlyBlockedPrompt = "Ova datoteka je podeljena sa vama i nalazi se samo na serveru."
-removeSharedServerOnlyPrompt = "Ova datoteka je podeljena sa vama i nalazi se samo na serveru. Ukloniti je sa vaše liste?"
-restore = "Vrati"
 saveSelected = "Sačuvaj izabrano"
 searchFiles = "Pretraži datoteke..."
-selectAll = "Izaberi sve"
-selectedCount = "{{count}} izabrano"
 share = "Podeli"
 shared = "Deljeno"
-sharedByYou = "Deljeno od vas"
 sharedEditNoticeBody = "Nemate prava za uređivanje serverske verzije ove datoteke. Sve izmene koje napravite biće sačuvane kao lokalna kopija."
 sharedEditNoticeConfirm = "Razumem"
 sharedEditNoticeTitle = "Serverska kopija samo za čitanje"
 sharedWithYou = "Deljeno sa vama"
-shareSelected = "Podeli izabrano"
-sharing = "Deljenje"
 showAll = "Prikaži sve"
-showHistory = "Prikaži istoriju"
 sortBy = "Sort files"
 sortByDate = "Sortiraj po datumu"
 sortByName = "Sortiraj po nazivu"
 sortBySize = "Sortiraj po veličini"
 storage = "Skladište"
-storageState = "Skladište"
 storageUsed = "Storage used"
-synced = "Sinhronizovano"
 title = "Otpremi PDF datoteke"
-toolChain = "Primеnjeni alati"
 unsupported = "Nepodržano"
 unzip = "Raspakuj"
 updateOnServer = "Ažuriraj na serveru"
-uploadSelected = "Otpremi izabrano"
 uploadToServer = "Otpremi na server"
 versionHistory = "Version history"
+
+[filePicker]
+add_one = "Dodaj {{count}} datoteku"
+add_other = "Dodaj {{count}} datoteka"
+addHere = "Dodaj ovde"
+adding = "Dodavanje datoteka…"
+chooseDestination = "Izaberite fasciklu ili dodajte ovde."
+dropHint = "Izaberite datoteke sa kojima želite da radite."
+dropTitle = "Prevucite datoteke ovde ili kliknite za pregled"
+emptyZip = "Nije moguće izdvojiti datoteke iz ovog ZIP-a."
+error = "Nije moguće dodati ove datoteke. Pokušajte ponovo."
+errorTitle = "Nije moguće dodati datoteke"
+filesUnavailable = "Nije moguće dodati: {{names}}"
+fileUnavailable = "{{name}} više nije dostupna."
+folderPath = "Putanja fascikle"
+fromComputer = "Sa vašeg računara"
+fromPhone = "Sa vašeg telefona"
+limit = "Izaberite do {{count}} datoteka."
+selectedLimit = "Izabrano {{count}} od {{limit}}"
+selectVersion = "Izaberite verziju {{version}}"
+sources = "Izvori datoteka"
+subtitle = "Izaberite iz svoje biblioteke ili dodajte nešto novo."
+title = "Dodaj datoteke"
+unsupported = "Izabrani alat ne podržava ovaj tip datoteke."
 
 [files]
 addFiles = "Dodaj datoteke"
 created = "Kreirano"
+notIncludedInToolRun = "Nije uključeno u ovo pokretanje alata"
 selectFromWorkbench = "Izaberite datoteke sa radnog stola ili "
 selectMultipleFromWorkbench = "Izaberite najmanje {{count}} datoteka sa radnog stola ili "
 size = "Veličina datoteke"
@@ -3920,8 +4445,6 @@ dropToAdd = "Drop files to add"
 duplicateFailed = "Could not duplicate file"
 expand = "Proširi bočnu traku"
 googleDrive = "Google Drive"
-googleDriveDisabled = "Google Drive nije konfigurisan"
-leaveMyFiles = "Napusti Moje fajlove"
 library = "PDF biblioteka"
 myFiles = "Moji fajlovi"
 noFiles = "Još nema datoteka"
@@ -3930,6 +4453,8 @@ openFromComputer = "Otvori sa računara"
 openSettings = "Otvori podešavanja"
 other = "Ostalo"
 recent = "Nedavno"
+uploadFailedBody = "Nije moguće dodati izabrane datoteke."
+uploadFailedTitle = "Otpremanje nije uspelo"
 viewAll = "Prikaži svih {{count}} fajlova"
 
 [fileSidebar.fileItem]
@@ -3961,6 +4486,10 @@ save = "Rename"
 title = "Rename file"
 
 [filesPage]
+addedToLibrary = "Dodato u Stirling biblioteku"
+addingToLibrary = "Dodavanje u Stirling biblioteku…"
+addToLibrary = "Dodaj u Stirling biblioteku…"
+addToLibraryFailed = "Neke datoteke nije moguće dodati"
 addToWorkspace = "Dodaj u radni prostor"
 addToWorkspaceCount = "Dodaj {{count}} u radni prostor"
 allFiles = "Svi fajlovi"
@@ -3968,6 +4497,7 @@ back = "Nazad"
 backToFolder = "Nazad na {{folder}}"
 backToMyFiles = "Nazad na Moje fajlove"
 breadcrumbs = "Putanja fascikle"
+breadcrumbsOverflow = "Prikaži nadređene fascikle"
 bulkActions = "Radnje"
 cancel = "Otkaži"
 classification = "Klasifikacija"
@@ -4002,6 +4532,7 @@ downloadAll = "Preuzmi sve"
 downloadVersion = "Preuzmi ovu verziju"
 dropOverlay = "Ispustite fajlove za otpremanje"
 dropOverlaySub = "Fajlovi počinju u Lokalno. Koristite 'Premesti u' ili 'Sačuvaj u oblaku' da ih organizujete u fasciklu."
+dropOverlaySubFolder = "Biće dodate u ovu fasciklu."
 duplicate = "Duplicate"
 file = "Fajl"
 fileInfo = "File info"
@@ -4010,15 +4541,21 @@ folder = "Fascikla"
 folderItems_one = "{{count}} item"
 folderItems_other = "{{count}} items"
 folderMenu = "Radnje nad fasciklom"
+folderSettings = "Podešavanja fascikle"
 inPath = "u {{path}}"
 inWorkspace = "Otvori"
 inWorkspaceAria = "Već u radnom prostoru"
-loading = "Učitavanje…"
-localFoldersUnavailable = "Fascikle su samo u oblaku – sačuvajte fajl u oblaku da biste ih organizovali."
+localFolderManagedByDisk = "Ovom fasciklom se upravlja preko njenog direktorijuma na disku."
+moveAcrossKindsBlocked = "Ove fascikle se nalaze na različitim mestima, pa jedna ne može da ide u drugu."
+moveIntoMountCloudSkipped_one = "{{count}} serverska datoteka je ostala u vašim datotekama. Nalazi se na serveru, ne na ovom disku."
+moveIntoMountCloudSkipped_other = "{{count}} serverskih datoteka je ostalo u vašim datotekama. Nalaze se na serveru, ne na ovom disku."
+moveIntoMountFailed_one = "{{count}} datoteka nije mogla biti upisana u fasciklu."
+moveIntoMountFailed_other = "{{count}} datoteka nije moglo biti upisano u fasciklu."
+moveIntoVirtualCloudSkipped_one = "{{count}} serverska datoteka je ostavljena na mestu. Serverske datoteke ne mogu da se nalaze u fasciklama samo za pregledač."
+moveIntoVirtualCloudSkipped_other = "{{count}} serverskih datoteka je ostavljeno na mestu. Serverske datoteke ne mogu da se nalaze u fasciklama samo za pregledač."
 moveSkippedRemote_one = "{{count}} file couldn't be moved on the server (no permission or already deleted)."
 moveSkippedRemote_other = "{{count}} files couldn't be moved on the server (no permission or already deleted)."
 moveTo = "Premesti u…"
-myFiles = "Moji fajlovi"
 newFolder = "Nova fascikla"
 newFolderStorageDisabled = "Skladištenje fascikli na serveru nije omogućeno. Zamolite administratora da ga uključi."
 newFolderTabUnavailable = "Prebacite se na Sve ili Oblak da kreirate fascikle."
@@ -4026,20 +4563,23 @@ offlineNoFolderEdits = "Sinhronizacija fascikli sa serverom nije dostupna – iz
 open = "Otvori"
 openVersionInWorkspace = "Otvori u radnom prostoru"
 originFilter = "Filtriraj po izvoru"
+recentFiles = "Nedavno"
 refresh = "Osveži sa servera"
+refreshNeedsConnection = "Prijavite se da osvežite sa servera."
 remove = "Obriši"
+removeLocalFolder = "Demontiraj iz Stirling"
 removeVersion = "Ukloni ovu verziju"
 rename = "Preimenuj"
 renamed = "Preimenovano"
 renameFolder = "Preimenuj fasciklu"
-resizeFolderTree = "Promeni veličinu stabla fascikli (tasteri sa strelicama, Shift za veće korake; dvoklik za automatsko uklapanje)"
 save = "Sačuvaj"
 saveToServer = "Sačuvaj na server"
 saveToServerDisabledHint = "Čuvanje na serveru nije omogućeno na ovom serveru. Zamolite administratora da ga uključi."
 selectAll = "Izaberi sve"
-selectAllHint = "Kliknite da izaberete sve. Savet: držite Ctrl (ili Cmd) da dodajete fajlove jedan po jedan, Shift za izbor opsega."
 selectedCount = "{{count}} izabrano"
+selectedFile = "{{name}}, izabrano"
 selectFile = "Izaberi fajl {{name}}"
+serverFolderNeedsConnection = "Prijavite se u Stirling Cloud ili povežite sopstveno hostovan server da biste koristili serverske fascikle."
 shareDisabledHint = "Deljenje fajlova nije omogućeno na ovom serveru. Zamolite administratora da ga uključi."
 shareManage = "Upravljaj deljenjem"
 showDetails = "Prikaži detalje"
@@ -4047,8 +4587,10 @@ signInRequired = "Sign in to use cloud storage."
 summary_one = "{{count}} item"
 summary_other = "{{count}} items"
 tree = "Fascikle"
+unmount = "Demontiraj"
+unmountFolderBody = "Demontirati \"{{name}}\"? Fascikla i njene datoteke ostaju na vašem disku."
+unmountFolderTitle = "Demontirati iz Stirling?"
 upload = "Otpremi"
-uploadedToLocal = "Otpremeljeni fajlovi počinju u Lokalno. Koristite 'Sačuvaj u oblaku' da ih smestite u fasciklu."
 uploadFromMobile = "Otpremi sa mobilnog"
 versionActions = "Radnje nad verzijom"
 versionCollapse = "Skupi srednje verzije"
@@ -4061,14 +4603,18 @@ viewVersionHistory = "Version journey ({{count}})"
 
 [filesPage.appearance]
 colour = "Boja"
+done = "Gotovo"
+edit = "Izgled..."
 icon = "Ikona"
 title = "Izgled"
 useColour = "Koristi boju {{c}}"
 
 [filesPage.column]
+added = "Dodato"
 modified = "Izmenjeno"
 name = "Naziv"
 size = "Veličina"
+status = "Status"
 type = "Tip"
 
 [filesPage.deleteScope]
@@ -4079,9 +4625,30 @@ deviceHint = "Removes the local copy. The cloud copy is kept."
 everywhere = "Everywhere"
 everywhereHint = "Deletes the file from this device and the cloud."
 
+[filesPage.diskLink]
+conflict = "Disk je promenjen"
+conflictHint = "Datoteka na disku se promenila dok ste imali nesačuvane izmene. Prikazana je vaša verzija - čuvanje će prepisati onu na disku."
+orphaned = "Nije na disku"
+orphanedHint = "Original na {{path}} je nestao. Ova kopija je samo ovde - čuvanje će tražiti novu lokaciju."
+unavailable = "Nedostupno"
+unavailableHintOffline = "Disk ili deljeni resurs na kome se ova datoteka nalazi nije povezan. Ponovo ga povežite da biste ponovo preuzeli izmene."
+unavailableHintPermission = "Stirling nema dozvolu da čita ovu lokaciju. Odobrite pristup u sistemskim podešavanjima da biste ponovo preuzeli izmene."
+unavailableHintUnknown = "Ova datoteka trenutno nije dostupna. Kopija ovde nije promenjena."
+
+[filesPage.diskState]
+all = "Sve"
+done = "Spremno"
+doneHint = "Obrađeno - otvara rezultat"
+failed = "Neuspešno"
+processing = "Obrada"
+processingHint = "Ova datoteka će biti dostupna kada se obrada završi"
+retry = "Pokušaj ponovo"
+retryHint = "Ponovo pokreni ovu datoteku"
+waiting = "U redu čekanja"
+waitingHint = "Ova datoteka je u redu čekanja i biće dostupna kada se obrada završi"
+
 [filesPage.empty]
 hint = "Ispustite PDF-ove bilo gde na ovoj stranici da ih otpremite ili koristite dugme Nova fascikla da organizujete fajlove."
-newFolderCta = "Kreiraj fasciklu"
 title = "Ova fascikla je prazna"
 uploadCta = "Otpremi fajlove"
 
@@ -4090,10 +4657,6 @@ hint = "Otpremite fajl za početak ili kreirajte fasciklu da organizujete."
 offlineHint = "Ponovo se povežite da učitate vašu cloud biblioteku."
 offlineTitle = "Nema keširanih cloud fajlova"
 title = "Još nema cloud fajlova"
-
-[filesPage.empty.local]
-hint = "Fajlovi sačuvani bez otpremanja ostaju ovde. Ispustite fajl da dodate jedan."
-title = "Nema samo-lokalnih fajlova"
 
 [filesPage.empty.noResults]
 hint = "No files in this folder match your filter. Try a different term or clear the filter."
@@ -4114,6 +4677,8 @@ title = "Još niste delili nijedan fajl"
 [filesPage.error]
 actionFailed = "Nije moguće {{action}}."
 actionFailedDetail = "Nije moguće {{action}}: {{message}}"
+addFolderFailed = "Nije moguće dodati fasciklu."
+addFolderFailedDetail = "Nije moguće dodati fasciklu: {{message}}"
 cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
 deleteFolderFailed = "Nije moguće obrisati fasciklu."
@@ -4126,8 +4691,21 @@ moveFilesFailed = "Nije moguće premestiti fajlove."
 moveFilesFailedDetail = "Nije moguće premestiti fajlove: {{message}}"
 moveFolderFailed = "Nije moguće premestiti fasciklu."
 moveFolderFailedDetail = "Nije moguće premestiti fasciklu: {{message}}"
+openDiskFileFailed = "Nije moguće otvoriti {{name}}."
+openDiskFileFailedDetail = "Nije moguće otvoriti {{name}}: {{message}}"
+processingStatusUnavailable = "Nije moguće osvežiti status obrade. Zaključavanja datoteka su oslobođena dok se veza ne oporavi."
+readFolderFailed = "Nije moguće pročitati fasciklu."
+readFolderFailedDetail = "Nije moguće pročitati fasciklu: {{message}}"
 removeFilesFailed = "Nije moguće ukloniti fajlove."
 removeFilesFailedDetail = "Nije moguće ukloniti fajlove: {{message}}"
+removeFolderFailed = "Nije moguće ukloniti fasciklu."
+removeFolderFailedDetail = "Nije moguće ukloniti fasciklu: {{message}}"
+retryFailed = "Nije moguće ponovo pokušati {{name}}."
+retryFailedDetail = "Nije moguće ponovo pokušati {{name}}: {{message}}"
+revertAllFailed = "Nije moguće vratiti originale."
+revertAllFailedDetail = "Nije moguće vratiti originale: {{message}}"
+revertFailed = "Nije moguće vratiti {{name}}."
+revertFailedDetail = "Nije moguće vratiti {{name}}: {{message}}"
 uploadFilesFailed = "Nije moguće otpremiti fajlove."
 uploadFilesFailedDetail = "Nije moguće otpremiti fajlove: {{message}}"
 
@@ -4147,11 +4725,20 @@ activeCount = "{{count}} filtera aktivno"
 clearAll = "Obriši filtere"
 label = "Filteri"
 
+[filesPage.folderKind]
+local = "Lokalna fascikla"
+virtual = "Fascikla pregledača"
+
 [filesPage.folderName]
 cancel = "Otkaži"
 error = "Nije moguće sačuvati fasciklu. Pokušajte ponovo."
 label = "Naziv fascikle"
 placeholder = "Naziv fascikle"
+
+[filesPage.folderOrigin]
+diskHint = "Fascikla montirana iz direktorijuma na vašem disku"
+serverHint = "Fascikla sačuvana na Stirling serveru"
+virtualHint = "Fascikla koja postoji samo u ovom pregledaču"
 
 [filesPage.moveDialog]
 cancel = "Otkaži"
@@ -4166,14 +4753,45 @@ newFolderPlaceholder = "Naziv fascikle"
 newFolderToggle = "Kreiraj novu fasciklu…"
 title = "Premesti u fasciklu"
 
+[filesPage.newFolderMenu]
+addExisting = "Dodaj lokalnu fasciklu"
+server = "Nova fascikla na serveru"
+serverHint = "Sinhronizuje se sa vašim nalogom, dostupna je gde god se prijavite."
+
 [filesPage.origin]
 all = "Svi izvori"
 cloud = "Oblak"
 cloudHint = "Skladišteno na Stirling serveru"
+diskFileHint = "Sačuvano na vašem računaru"
+diskHint = "Datoteka u montiranoj fascikli na vašem disku"
 local = "Lokalno"
 localHint = "Samo skladišteno u ovom pregledaču"
 shared = "Podeljeno"
 sharedHint = "Podeljeno sa vama putem linka"
+
+[filesPage.processing]
+active = "Obrada fascikle"
+blockedNeedsConnection = "Prijavite se u Stirling Cloud ili povežite sopstveno hostovan server da biste obrađivali fascikle."
+edit = "Uredi obradu..."
+nothingToRestore = "Nema originala za vraćanje - ove datoteke su već svoji originali."
+paused = "Obrada pauzirana"
+remove = "Ukloni obradu"
+restore = "Vrati original"
+restoreAll = "Vrati sve originale"
+resume = "Nastavi obradu"
+revertCancel = "Otkaži"
+revertConfirm = "Vrati i pauziraj"
+revertConfirmAll = "Vratiti svaki original u ovoj fascikli? Obrada će biti pauzirana, a vraćene datoteke će se prikazivati kao u redu čekanja dok ne nastavite."
+revertConfirmFile = "Vratiti \"{{name}}\" na original? Obrada za ovu fasciklu će biti pauzirana, a datoteka će se prikazivati kao u redu čekanja dok ne nastavite."
+revertConfirmTitle = "Vratiti originale?"
+section = "Obrada"
+start = "Obradi datoteke u ovoj fascikli..."
+stop = "Pauziraj obradu"
+sweep = "Ponovo pokušaj neuspele datoteke"
+
+[filesPage.processingSetup]
+back = "Nazad"
+cancel = "Otkaži"
 
 [filesPage.search]
 clear = "Clear filter"
@@ -4193,19 +4811,6 @@ sizeDesc = "Najveće prvo"
 client = "Neuspešna sinhronizacija fascikli."
 network = "Nije moguće pristupiti serveru."
 server = "Greška servera tokom sinhronizacije fascikli."
-
-[filesPage.tabName]
-local = "Lokalno"
-recent = "Skorašnje"
-shared = "Podeljeno sa mnom"
-sharedByMe = "Podeljeno od mene"
-
-[filesPage.tabs]
-all = "Sve"
-ariaLabel = "Prikazi fajlova"
-recent = "Skorašnje"
-shared = "Podeljeno sa mnom"
-sharedByMe = "Podeljeno od mene"
 
 [filesPage.treeMenu]
 actions = "Radnje fascikle za {{name}}"
@@ -4626,6 +5231,12 @@ desc = "Istaknite, crtajte, dodajte beleške i oblike u pregledaču"
 tags = "anotiraj,istakni,crtaj"
 title = "Anotiraj"
 
+[home.autoFormDetection]
+desc = "Automatski otkrijte polja obrasca pomoću AI i učinite vaš PDF popunjivim."
+tags = "obrazac,otkrij,popunjiv,acroform,automatsko otkrivanje,ai,polja,učini popunjivim,otkrivanje obrasca"
+title = "Automatsko otkrivanje obrazaca"
+unavailable = "Potreban je AI model za otkrivanje, koji nije instaliran na ovom serveru. Administrator ga može dodati u Podešavanja > Funkcije > AI otkrivanje obrazaca."
+
 [home.automate]
 desc = "Gradite višekorake tokove rada povezivanjem PDF akcija. Idealno za ponavljajuće zadatke."
 tags = "tok rada,sekvenca,automatizacija"
@@ -4687,6 +5298,11 @@ title = "Kompresuj"
 desc = "Konvertujte datoteke između različitih formata"
 tags = "pretvori,transformiši,promeni"
 title = "Konvertuj"
+
+[home.createPortfolio]
+desc = "Objedinite više datoteka u Adobe PDF Portfolio"
+tags = "portfolio,kolekcija,paket,povez,spoji datoteke,pdf portfolio,adobe portfolio,pdf kolekcija,kontejner"
+title = "Kreiraj Portfolio"
 
 [home.crop]
 desc = "Skraćuje PDF radi smanjenja veličine (zadržava tekst!)"
@@ -4870,11 +5486,6 @@ desc = "Podesi veličinu/skalu stranice i/ili njenog sadržaja."
 tags = "promeni veličinu,prilagodi,skaliraj"
 title = "Podesi veličinu/skalu stranice"
 
-[home.scannerEffect]
-desc = "Napravite PDF koji izgleda kao da je skeniran"
-tags = "skener,simuliraj,kreiraj"
-title = "Efekat skenera"
-
 [home.scannerImageSplit]
 desc = "Otkrivanje i deljenje skeniranih fotografija na zasebne strane"
 tags = "detektuj,podeli,fotografije"
@@ -4987,6 +5598,26 @@ uploadFromComputer = "Otpremi sa računara"
 [language]
 direction = "ltr"
 
+[legacyBilling]
+currentTeamAllowance = "Trenutna kvota za vaš legacy tim"
+loadError = "Nismo mogli da proverimo vašu postojeću pretplatu. Pokušajte ponovo pre kupovine drugog plana."
+loading = "Provera vaše pretplate..."
+portalError = "Nismo mogli da otvorimo Stripe naplatu. Pokušajte ponovo."
+pro = "Pro (legacy)"
+retry = "Pokušaj ponovo"
+team = "Team (legacy)"
+teamUsers = "Vaš tim: {{used}} od {{limit}} korisnika"
+unlimitedUsers = "Vaš tim: neograničen broj korisnika ({{used}} u upotrebi)"
+usersUnavailable = "Nismo mogli da potvrdimo korisničku kvotu vašeg tima. Kontaktirajte podršku da proverite svoj legacy plan."
+
+[legacyBilling.status]
+active = "Aktivno"
+incomplete = "Plaćanje na čekanju"
+past_due = "Plaćanje kasni"
+paused = "Pauzirano"
+trialing = "Probni period"
+unpaid = "Neplaćeno"
+
 [legal]
 accessibility = "Pristupačnost"
 cookie = "Politika kolačića"
@@ -5000,6 +5631,7 @@ terms = "Uslovi i odredbe"
 title = "3rd Party Licenses"
 
 [localMode]
+automationUnavailable = "Prijavite se u Stirling Cloud ili na sopstveno hostovan server da biste koristili fascikle za obradu i tokove obrade."
 toolUnavailable = "Ovaj alat zahteva nalog. Prijavite se na Stirling Cloud ili se povežite na samohostovani server da biste ga koristili."
 
 [localMode.toolPicker]
@@ -5047,7 +5679,6 @@ unexpectedError = "Neočekivana greška: {{message}}"
 updatePassword = "Ažuriraj lozinku"
 useMagicLink = "Umesto toga koristite magični link"
 username = "Korisničko ime"
-youAreLoggedIn = "Prijavljeni ste!"
 
 [margin]
 large = "Veliko"
@@ -5097,39 +5728,45 @@ sort = "Sortiraj"
 title = "Pregled podešavanja spajanja"
 
 [mobileScanner]
-addToBatch = "Dodaj u grupu"
+addMore = "Dodaj još"
 back = "Nazad"
-batchImages = "Grupa"
 camera = "Kamera"
 cameraAccessDenied = "Pristup kameri je odbijen. Omogućite pristup kameri."
 cameraDescription = "Skenirajte dokumente kamerom uređaja uz automatsko prepoznavanje ivica"
 capture = "Snimi fotografiju"
 chooseMethod = "Izaberite metod otpremanja"
 chooseMethodDescription = "Izaberite kako želite da skenirate i otpremite dokumente"
-clearBatch = "Očisti"
+clearAll = "Obriši sve"
+closeTabHint = "Sada možete zatvoriti ovu karticu."
+dismiss = "Odbaci"
 edgeDetection = "Detekcija ivica"
 fileDescription = "Otpremite postojeće fotografije ili dokumente sa uređaja"
+fileReadFailed = "Nije moguće pročitati tu datoteku."
 fileUpload = "Otpremanje fajlova"
-flash = "Blic"
 flashlight = "Svetiljka"
 httpsRequired = "Pristup kameri zahteva HTTPS ili localhost. Koristite HTTPS ili pristupite preko localhost-a."
-noSession = "Nevažeća sesija"
+imageCount_one = "{{count}} slika"
+imageCount_other = "{{count}} slika"
+imagePosition = "Slika {{index}} od {{total}}"
+invalidFileType = "Izaberite datoteku slike."
 noSessionMessage = "Skenirajte važeći QR kod da biste pristupili ovoj stranici."
 processing = "Obrada..."
+remove = "Ukloni"
 retake = "Ponovi snimak"
+scanAnother = "Skeniraj još jednu"
 selectFilesPrompt = "Izaberite fajlove za otpremanje"
-selectImage = "Izaberi sliku"
+selectImages = "Izaberi slike"
 sessionExpired = "Ova sesija je istekla. Osvežite i pokušajte ponovo."
 sessionInvalid = "Greška sesije"
 sessionNotFound = "Sesija nije pronađena. Osvežite i pokušajte ponovo."
 sessionValidationError = "Nije moguće verifikovati sesiju. Pokušajte ponovo."
+startingCamera = "Pokretanje kamere…"
 title = "Mobilni skener"
-upload = "Otpremi"
-uploadAll = "Otpremi sve"
 uploadFailed = "Otpremanje nije uspelo. Pokušajte ponovo."
 uploading = "Otpremanje..."
 uploadSuccess = "Otpremanje uspešno!"
 uploadSuccessMessage = "Vaše slike su prenete."
+uploadWithCount = "Otpremi ({{total}})"
 validating = "Provera sesije..."
 
 [mobileSign]
@@ -5187,24 +5824,31 @@ count = "{{remaining}} of {{total}}"
 label = "Free credits"
 
 [notifications]
+adoptFailed = "Dokument je otključan, ali nije mogao biti otvoren ovde. Pokušajte direktno alat."
 empty = "Nema ničega za prijavu."
 handoffUnavailable = "Ovaj pregledač neće dozvoliti procesoru da prosledi dokument uređivaču. Umesto toga, otvori ga iz uređivača."
 noDocumentLinked = "Ovaj neuspeh nije povezan sa određenim dokumentom, pa ovde nema ničega za otvaranje."
 notOnThisDevice = "Ovaj dokument nije na ovom uređaju, pa se ovde ne može otvoriti."
 occurrences = "{{count}} puta"
 open = "Obaveštenja"
+repairAdoptFailed = "Dokument je popravljen, ali nije mogao biti otvoren ovde. Pokušajte direktno alat za popravku."
+repairedNotRerun = "Dokument je popravljen i otvoren ovde, ali smernica nije mogla ponovo da se pokrene na njemu."
+repairedRerunNotAdopted = "Popravljeni dokument je prošao, ali njegov rezultat nije mogao biti otvoren ovde."
+repairedRerunUndelivered = "Dokument je popravljen i ponovno pokretanje smernice je započeto, ali njegov rezultat ne može biti isporučen ovde, pa ovaj neuspeh ostaje otvoren."
+rerunRejected = "Smernica trenutno ne može ponovo da se pokrene. Pokušajte ponovo za trenutak."
+rerunUndelivered = "Ponovno pokretanje smernice je započeto, ali njegov rezultat ne može biti isporučen ovde, pa ovaj neuspeh ostaje otvoren."
+retryUnavailable = "Ovaj dokument se više ne može ponovo pokušati iz ovog pregledača."
 title = "Obaveštenja"
+unlockedNotRerun = "Dokument je otključan i otvoren ovde, ali smernica nije mogla ponovo da se pokrene na njemu."
+unlockedRerunUndelivered = "Dokument je otključan i ponovno pokretanje smernice je započeto, ali njegov rezultat ne može biti isporučen ovde, pa ovaj neuspeh ostaje otvoren."
 unread = "Nepročitano"
 
 [notifications.action]
+copiedLog = "Kopirano"
+copyLog = "Kopiraj evidenciju"
 failed = "To nije uspelo. Pokušaj ponovo za trenutak."
+more = "Više opcija"
 unavailable = "Nije dostupno za ovo obaveštenje."
-
-[notifications.detail]
-copied = "Kopirano"
-copy = "Kopiraj grešku"
-less = "Prikaži manje"
-more = "Prikaži celu poruku"
 
 [notifications.section]
 earlier = "Ranije"
@@ -5355,7 +5999,9 @@ wrapUp = "Spremni ste! Naučili ste o glavnim delovima aplikacije i kako da ih k
 
 [onboarding.buttons]
 back = "Nazad"
+continue = "Nastavi"
 download = "Preuzmi →"
+getStarted = "Počnite"
 next = "Dalje →"
 showMeAround = "Provedi me kroz aplikaciju"
 skipForNow = "Preskoči za sada"
@@ -5386,6 +6032,11 @@ body = "Stirling najbolje radi kao desktop aplikacija. Možete je koristiti offl
 selectOs = "Izaberite operativni sistem"
 title = "Preuzmi"
 titleWithOs = "Preuzmi za {{osLabel}}"
+
+[onboarding.desktopWelcome]
+body = "Postoji mnoštvo novih promena za istraživanje, uključujući <strong>Agent Chat</strong>, automatsku <strong>klasifikaciju</strong> dokumenata i još mnogo toga."
+freeLine = "Uređivač je sada <free>potpuno besplatan</free>."
+title = "Dobro došli u Stirling <product>Desktop</product>"
 
 [onboarding.mfa]
 authenticationCode = "Autentifikacioni kod"
@@ -5440,7 +6091,7 @@ rolePlaceholder = "Potvrdite svoju ulogu"
 roleUser = "Korisnik"
 
 [onboarding.serverLicense]
-freeBody = "Naše <strong>Open-Core</strong> licenciranje dozvoljava do <strong>{{freeTierLimit}}</strong> korisnika besplatno po serveru. Da se bez prekida skalirate i dobijete rani pristup našem novom <strong>alatu za uređivanje PDF teksta</strong>, preporučujemo Stirling Server plan - puno uređivanje i <strong>neograničena mesta</strong> za $99/server/mes."
+freeBody = "Naša <strong>Open-Core</strong> licenca uključuje <strong>OAuth SSO</strong> i do <strong>{{freeTierLimit}}</strong> korisnika besplatno. Za rast bez prekida preporučujemo plan Stirling Team — <strong>100 korisnika</strong> za 99 USD mesečno."
 freeTitle = "Serverska licenca"
 overLimitBody = "Naše licenciranje dozvoljava do <strong>{{freeTierLimit}}</strong> korisnika besplatno po serveru. Imate <strong>{{overLimitUserCopy}}</strong> Stirling korisnika. Da nastavite bez prekida, pređite na Stirling Server plan - <strong>neograničena mesta</strong>, uređivanje PDF teksta i puna admin kontrola za $99/server/mes."
 overLimitTitle = "Potrebna serverska licenca"
@@ -5736,7 +6387,7 @@ noKey = "VITE_STRIPE_PUBLISHABLE_KEY is unset. Real iframe mounts here once conf
 title = "Stripe Embedded Checkout (mock mode)"
 
 [payg.confirm]
-body = "Your team can now run automation, AI, and API operations beyond your 500 free PDFs."
+bodyWithAllowance = "Vaš tim sada može da pokreće automatizaciju, AI i API operacije preko vaših {{limit}} besplatnih PDF-ova."
 capValue = "{{symbol}}{{amount}} / month"
 noCap = "No cap"
 note = "You can change your cap, cancel, or open the Stripe customer portal any time from this page."
@@ -5763,7 +6414,7 @@ benefit3Body = "call any Stirling endpoint programmatically"
 benefit3Title = "API access"
 button = "Turn on Processor →"
 reassurance = "No minimum · Set a $0 cap to test · Cancel anytime"
-subtitle = "Keep going past your 500 free PDFs with automation, AI, and the API. Set a monthly ceiling, so you stay in control."
+subtitleWithAllowance = "Nastavite preko svojih {{limit}} besplatnih PDF-ova uz automatizaciju, AI i API. Postavite mesečni limit da zadržite kontrolu."
 title = "Turn on the Processor plan"
 
 [payg.free.editor]
@@ -5841,17 +6492,16 @@ leader = "Team owner"
 member = "Member"
 
 [payg.signupRequired]
-body = "Stirling PDF gives every signed-up account 500 free operations, enough to keep most workflows humming without paying a cent. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing."
-cancel = "Not now"
-cta = "Sign up free"
-subtext = "Creating an account is free and takes a few seconds. No credit card required."
-title = "Sign up to use {{category}}"
-
-[payg.signupRequired.category]
-ai = "AI features"
-api = "this tool"
-automation = "automations"
-default = "this feature"
+aiPromo = "Kreirajte, uređujte i pitajte o PDF-ovima pomoću AI"
+apiPromo = "Povežite svoje aplikacije i AI asistente"
+automationPromo = "Automatizujte ponavljajuće PDF zadatke"
+createAccount = "Kreiraj besplatan nalog"
+editorLabel = "PDF uređivač"
+login = "Prijavite se"
+manualToolsPromo = "Neograničeni besplatni ručni PDF alati"
+processorLabel = "PDF procesor"
+processorTitle = "Kreirajte nalog da otključate najbolje od Stirling"
+readerLabel = "PDF čitač"
 
 [payg.spendCapMeter]
 barAria = "Spend against cap"
@@ -5902,7 +6552,7 @@ apiBody = "programmatic access to any Stirling endpoint"
 apiTitle = "API calls"
 automationBody = "chained tools or scheduled runs that don't need clicks"
 automationTitle = "Automation pipelines"
-footnote = "Manual tools (viewing, editing, merging, splitting, watermarking, compressing, manual OCR) are always free, even past 500. The distinction is the type of work, not where you click."
+footnoteUnlimited = "Ručni alati (pregled, uređivanje, spajanje, deljenje, vodeni žig, kompresovanje, ručni OCR) uvek su besplatni, čak i nakon što iskoristite uključene kredite. Razlika je u vrsti posla, ne u tome gde kliknete."
 title = "What we count toward billing"
 
 [payg.upgrade.promise]
@@ -5930,6 +6580,8 @@ resetsTomorrow = "Resets tomorrow"
 thisPeriod = "This billing period"
 
 [payment]
+billingPeriod = "Obračunski period"
+cancelTeamChange = "Zadrži trenutni plan"
 canCloseWindow = "Sada možete zatvoriti ovaj prozor."
 error = "Greška pri plaćanju"
 generatingLicense = "Generišemo vaš licencni ključ..."
@@ -5941,27 +6593,65 @@ licenseKey = "Vaš licencni ključ"
 licensePollingError = "Plaćanje je uspešno, ali nismo mogli automatski da preuzmemo licencni ključ. Proverite email ili kontaktirajte podršku uz potvrdu o plaćanju."
 licenseRetrievalError = "Plaćanje je uspešno, ali preuzimanje licence nije uspelo. Licencni ključ ćete dobiti emailom. Kontaktirajte podršku ako ga ne dobijete u roku od 10 minuta."
 licenseSaveError = "Neuspešno čuvanje licencnog ključa. Kontaktirajte podršku sa svojim licencnim ključem da završite aktivaciju."
+manageSubscription = "Upravljaj pretplatom"
 monthly = "Mesečno"
 paymentCanceled = "Plaćanje je otkazano. Nije izvršena naplata."
 perMonth = "/mesec"
+perUserBlock = "po 100 korisnika"
 preparing = "Priprema vaše kupovine..."
 redirecting = "Preusmeravanje na sigurnu naplatu..."
 success = "Plaćanje uspešno!"
 successMessage = "Vaša pretplata je uspešno aktivirana. Uskoro ćete dobiti potvrdni email."
 syncError = "Plaćanje je uspešno, ali sinhronizacija licence nije uspela. Vaša licenca će uskoro biti ažurirana. Kontaktirajte podršku ako problem potraje."
 syncingLicense = "Sinhronizujemo vašu nadograđenu licencu..."
+teamActivated = "Vaš Team kapacitet je aktivan"
+teamActivating = "Potvrđivanje vašeg Team kapaciteta..."
+teamChangeCurrent = "Vaša trenutna kvota ostaje dostupna do tada. Zadržite trenutni plan da otkažete ovu promenu pre nego što napravite drugo prilagođavanje."
+teamChangePending = "{{users}} korisnika · {{period}} od {{date}}"
+teamChangeSupport = "Vaša Team pretplata ima zakazanu promenu za čije prilagođavanje je potrebna podrška za naplatu."
+teamChangeUnavailable = "Zakazane Team promene nije moguće učitati. Osvežite da pokušate ponovo."
+teamPending = "Vaša Team kupovina se još obrađuje. Uskoro osvežite ovu stranicu."
+teamProcessing = "Obrada Team kupovine"
+teamScheduled = "Vaša Team promena je zakazana za {{date}}. Vaš trenutni kapacitet ostaje aktivan do tada."
 upgradeComplete = "Nadogradnja završena"
 upgradeCompleteMessage = "Vaša pretplata je uspešno nadograđena. Postojeći licencni ključ je ažuriran."
 upgradeSuccess = "Plaćanje uspešno! Vaša pretplata je nadograđena. Licenca je ažurirana na vašem serveru. Uskoro ćete dobiti potvrdni email."
 upgradeTitle = "Nadogradi na {{planName}}"
 yearly = "Godišnje"
 
+[payment.adjustTeam]
+title = "Prilagodi Team plan"
+
+[payment.capacityStage]
+adjustmentNote = "Stripe će prikazati tačan iznos, sva proporcionalna zaduženja i sledeći datum naplate pre nego što potvrdite. Vaš sačuvani način plaćanja biće korišćen ako je dostupan."
+continue = "Nastavi na plaćanje"
+customLabel = "Broj korisnika"
+dueToday = "Dospeva danas"
+enterpriseQuote = "Zatraži enterprise ponudu"
+lineItem = "Team · {{price}}{{period}} po {{block}} korisnika"
+minimumForCurrentUsers = "Imate {{users}} korisnika, pa plan mora da pokrije najmanje {{minimum}}."
+modalTitle = "Nadogradi na {{planName}}"
+newPlanTotal = "Novi ukupan iznos plana"
+other = "Drugo"
+overCapacityBody = "{{users}} korisnika je na ovom serveru; vaša trenutna kvota je {{limit}}. Izaberite Team plan ispod da pokrijete sve."
+overCapacityConsequence = "Postojeći nalozi ostaju na mestu. Dodavanje ili pozivanje korisnika je blokirano dok ne dodate kapacitet ili oslobodite mesta."
+overCapacityTitle = "Vaš server ima više korisnika nego što vaš plan pokriva"
+perMonth = "/mes"
+perYear = "/god"
+reductionNote = "Manji kapacitet počinje pri sledećoj obnovi. Do tada možete koristiti trenutnu kvotu. Postojeći korisnici ostaju; novi korisnici su blokirani ako ste preko kapaciteta kada promena stupi na snagu."
+renewalNote = "Obnavlja se po {{total}}{{period}}. Otkažite bilo kada u Korišćenje i naplata."
+reviewChange = "Pregledaj promenu u Stripe"
+roundsTo = "zaokružuje se na {{users}}"
+subheading = "Pokriva sve koje pozovete, u blokovima od {{users}} korisnika."
+subheadingAdd = "Vaš plan danas pokriva {{current}} korisnika. Izaberite novi ukupan broj."
+usersLabel = "Korisnici"
+userTotal = "{{users}} korisnika"
+
 [payment.emailStage]
 continue = "Nastavi"
 description = "Koristićemo ga za slanje licencnog ključa i računa."
 emailLabel = "Email adresa"
 emailPlaceholder = "your@email.com"
-modalTitle = "Početak - {{planName}}"
 
 [payment.paymentStage]
 modalTitle = "Završite plaćanje - {{planName}}"
@@ -5971,8 +6661,13 @@ billedYearly = "Naplaćuje se godišnje {{currency}}{{amount}}"
 modalTitle = "Izaberite period naplate - {{planName}}"
 savePercent = "Uštedite {{percent}}%"
 savingsAmount = "Uštedeli ste {{amount}}"
+selectedMonthly = "Mesečno"
+selectedYearly = "Godišnje"
 selectMonthly = "Izaberi mesečno"
 selectYearly = "Izaberi godišnje"
+
+[payment.upgradeTeam]
+title = "Nadogradi na Team"
 
 [pdfCommentAgent]
 submit = "Generiši komentare"
@@ -6025,99 +6720,271 @@ REVERSE_ORDER = "Obrnite dokument tako da poslednja strana postane prva i tako r
 SIDE_STITCH_BOOKLET_SORT = "Rasporedite strane za brošuru sa bočnim šivenjem (optimizovano za povez na strani)."
 
 [pdfTextEditor]
-conversionFailed = "Konverzija PDF-a nije uspela. Pokušajte ponovo."
-converting = "Konvertovanje PDF-a u format za uređivanje..."
-currentFile = "Trenutni fajl: {{name}}"
-imageLabel = "Postavljena slika"
-noTextOnPage = "Na ovoj strani nije detektovan tekst za uređivanje."
-pagePreviewAlt = "Pregled strane"
-pageSummary = "Strana {{number}} od {{total}}"
+download = "Preuzmi"
+downloadTooltip = "Sačuvaj i preuzmi uređeni PDF"
+save = "Sačuvaj PDF"
+saveTooltip = "Primeni izmene na datoteku u vašem radnom prostoru ({{shortcut}})"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF JSON uređivač"
-viewLabel = "PDF uređivač"
+unsaved = "(nesačuvano)"
+workbenchLabel = "Uređivač"
 
-[pdfTextEditor.actions]
-applyChanges = "Primeni izmene"
-clearText = "Obriši tekst"
-downloadCopy = "Preuzmi kopiju"
-moreOptions = "Više opcija"
-reset = "Poništi izmene"
+[pdfTextEditor.annotations]
+freetext = "Tekst anotacije - nije tekst stranice, pa se ovde ne može uređivati"
+stamp = "Anotacija pečata - nije tekst stranice, pa se ovde ne može uređivati"
+widget = "Polje obrasca - nije tekst stranice, pa se ovde ne može uređivati"
 
-[pdfTextEditor.badges]
-earlyAccess = "Rani pristup"
-modified = "Izmenjeno"
-
-[pdfTextEditor.empty]
-dropzone = "Prevucite i otpustite PDF ili JSON datoteku ovde ili kliknite da izaberete"
-dropzoneWithFiles = "Izaberite datoteku sa kartice Datoteke, ili prevucite i otpustite PDF ili JSON datoteku ovde, ili kliknite da izaberete"
-title = "Nijedan dokument nije učitan"
-
-[pdfTextEditor.errors]
-invalidJson = "Nije moguće pročitati JSON datoteku. Uverite se da je generisana alatom PDF u JSON."
-pdfConversion = "Nije moguće konvertovati izmenjeni JSON nazad u PDF."
-
-[pdfTextEditor.fontAnalysis]
-allFonts = "Svi fontovi"
-currentPageFonts = "Fontovi na ovoj stranici"
-details = "Detalji fonta"
-embedded = "Ugrađen"
-fallback = "rezervni"
-infoMessage = "Dostupne su informacije o reprodukciji fontova."
-missing = "nedostaje"
-perfect = "savršeno"
-perfectMessage = "Svi fontovi se mogu savršeno reprodukovati."
-subset = "podskup"
-suggestions = "Napomene"
-type = "Tip"
-warningMessage = "Neki fontovi možda neće biti ispravno prikazani."
-warnings = "Upozorenja"
-webFormat = "Web format"
-
-[pdfTextEditor.groupingMode]
-auto = "Auto"
-paragraph = "Pasus"
-singleLine = "Jedna linija"
-
-[pdfTextEditor.manual]
-expandWidth = "Proširi do ivice stranice"
-merge = "Spoji izbor"
-mergeTooltip = "Spoji izabrane okvire"
-resetWidth = "Resetuj širinu"
-resizeHandle = "Podesi širinu teksta"
-ungroup = "Razgrupiši izbor"
-ungroupTooltip = "Podeli pasus nazad na redove"
-widthMenu = "Opcije širine"
-
-[pdfTextEditor.modeChange]
+[pdfTextEditor.discard]
+body = "Otvaranje {{name}} zatvara dokument koji uređujete. Vaše nesačuvane izmene će biti izgubljene."
 cancel = "Otkaži"
-confirm = "Resetuj i promeni režim"
-title = "Potvrdi promenu režima"
-warning = "Promena načina grupisanja teksta resetuje sve nesačuvane izmene. Da li ste sigurni da želite da nastavite?"
+confirm = "Odbaci i otvori"
+hint = "Otkažite, zatim Sačuvaj PDF da ih prvo zadržite u svom radnom prostoru."
+title = "Odbaciti nesačuvane izmene?"
 
-[pdfTextEditor.options.advanced]
-title = "Napredna podešavanja"
+[pdfTextEditor.drop]
+hint = "Puštanje na scenu uređivača zamenjuje svaki otvoreni dokument."
+title = "Ispustite PDF za otvaranje"
 
-[pdfTextEditor.options.autoScaleText]
-description = "Automatski horizontalno prilagođava tekst da stane u njegov izvorni granični okvir kada se iscrtavanje fonta razlikuje od PDF-a."
-title = "Automatski prilagodi tekst okvirima"
+[pdfTextEditor.error]
+decodeImage = "Nije moguće dekodirati izabranu sliku."
+insertImage = "Nije moguće umetnuti izabranu sliku."
 
-[pdfTextEditor.options.forceSingleElement]
-description = "Kada je uključeno, editor izvozi svaki izmenjeni tekstualni okvir kao jedan PDF tekstualni element kako bi se izbeglo preklapanje glifova ili mešani fontovi."
-title = "Zaključaj izmenjeni tekst u jedan PDF element"
+[pdfTextEditor.find]
+close = "Zatvori traku za pretragu"
+count = "{{current}} od {{total}}"
+findPlaceholder = "Pronađi"
+ignoreAccents = "Ignoriši akcente"
+matchCase = "Razlikuj velika i mala slova"
+next = "Sledeće podudaranje"
+noMatches = "Nema podudaranja"
+previous = "Prethodno podudaranje"
+replace = "Zameni"
+replaceAll = "Zameni sve"
+replaced = "{{count}} zamenjeno"
+replacePlaceholder = "Zameni sa"
+wholeWord = "Cela reč"
 
-[pdfTextEditor.options.groupingMode]
-autoDescription = "Automatski prepoznaje tip stranice i odgovarajuće grupiše tekst."
-paragraphDescription = "Grupiše poravnate redove u višeredne pasusne tekstualne okvire."
-singleLineDescription = "Zadržava svaki red teksta u PDF-u kao zaseban tekstualni okvir."
-title = "Način grupisanja teksta"
+[pdfTextEditor.fontPicker]
+builtInGroup = "Ugrađeni fontovi"
+deviceFontsNone = "Nisu pronađeni dodatni fontovi uređaja."
+deviceFontsUnavailable = "Fontovi uređaja nisu dostupni. Ugrađeni fontovi i dalje rade."
+deviceGroup = "Fontovi uređaja"
+documentGroup = "Font dokumenta"
+label = "Porodica fonta"
+mixed = "Mešovito"
+noMatch = "Nema odgovarajućeg fonta"
+placeholder = "Porodica fonta"
+useDeviceFonts = "Koristi fontove uređaja"
 
-[pdfTextEditor.pageType]
-paragraph = "Strana sa pasusima"
-sparse = "Rasuti tekst"
+[pdfTextEditor.fonts]
+allPresent = "Sva slova i brojevi su prisutni"
+missing = "Nedostaje: {{glyphs}}"
+title = "Fontovi"
 
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
+[pdfTextEditor.fonts.compat]
+info = "Postojeći tekst se uređuje savršeno. Novi znak koji ugrađeni font ne sadrži koristi rezervni standardni font."
+ok = "Svaki font sadrži punu abecedu i cifre - slobodno kucajte."
+warnOther = "{{count}} fontova nema neka slova ili brojeve - kucanje njih koristi standardni rezervni font."
+
+[pdfTextEditor.fonts.pill]
+info = "Ugrađeno"
+ok = "Svi glifovi"
+warn = "{{count}} sa prazninama"
+
+[pdfTextEditor.fonts.status.embedded]
+label = "Ugrađeno"
+
+[pdfTextEditor.fonts.status.standard]
+label = "Standardno"
+
+[pdfTextEditor.fonts.status.subset]
+label = "Podskup"
+
+[pdfTextEditor.help]
+ariaLabel = "Prečice na tastaturi"
+title = "Prečice na tastaturi"
+tooltip = "Prečice na tastaturi (?)"
+
+[pdfTextEditor.help.clipboard]
+copyDesc = "Kopiraj izabrani tekst"
+cutDesc = "Iseci izabrano (kopiraj + obriši)"
+heading = "Clipboard"
+pasteDesc = "Nalepi tekst iz clipboard kao novi niz"
+pastePlainDesc = "Nalepi kao običan tekst"
+
+[pdfTextEditor.help.document]
+escDesc = "Očisti izbor / zatvori pretragu / zatvori pomoć"
+heading = "Dokument"
+helpDesc = "Ova pomoć"
+saveDesc = "Sačuvaj u radni prostor"
+
+[pdfTextEditor.help.editing]
+deleteDesc = "Ukloni izabrano"
+duplicateDesc = "Dupliraj izabrano"
+groupDesc = "Grupiši izabrane nizove u jedan pasus"
+heading = "Uređivanje"
+marqueeDesc = "Višestruki izbor okvirom"
+moveDesc = "Premesti tekstualni niz"
+selectAllDesc = "Izaberi sve"
+shiftClickDesc = "Dodaj / ukloni niz iz izbora"
+undoRedoDesc = "Poništi / Ponovi"
+
+[pdfTextEditor.help.find]
+heading = "Pronađi i zameni"
+nextDesc = "Sledeće podudaranje (dodajte Shift za prethodno)"
+openDesc = "Otvori traku za pretragu (i zamenu)"
+
+[pdfTextEditor.help.navigation]
+firstLastDesc = "Prva / poslednja stranica"
+heading = "Navigacija"
+pageDesc = "Prethodna / sledeća stranica"
+zoomDesc = "Uvećaj / umanji"
+
+[pdfTextEditor.inspector]
+document = "Dokument"
+fontEmbedded = "Ugrađeni font · znak koji mu nedostaje koristi rezervni Helvetica."
+fontGap = "{{name}} · nedostaje {{glyphs}} - kucanje njih koristi rezervni Helvetica."
+geometry = "Položaj i veličina"
+height = "Visina"
+heightHint = "Visina tekstualnog okvira prati veličinu tipa i broj redova."
+image = "Slika"
+images = "Slike"
+manyImages = "{{count}} slika"
+manyText = "Tekst · {{count}} okvira"
+mixed = "{{count}} objekata"
+multiGeometry = "Izaberite jedan objekat da uredite njegov položaj i veličinu."
+nothingSelected = "Ništa nije izabrano"
+nothingSelectedHint = "Kliknite na bilo koji tekst ili sliku na stranici da ga ovde uredite."
+oneImage = "Slika"
+oneText = "Tekst"
+pages = "Stranice"
+tabDocument = "Dokument"
+tabSelected = "Izabrano"
+textBoxes = "Tekstualni okviri"
+width = "Širina"
+widthHint = "Širina tekstualnog okvira prati njegov sadržaj i prelamanje."
+x = "X"
+y = "Y"
+
+[pdfTextEditor.password]
+cancel = "Otkaži"
+incorrect = "Pogrešna lozinka - pokušajte ponovo."
+label = "Lozinka"
+open = "Otvori"
+protected = "Ovaj PDF je zaštićen lozinkom."
+protectedNamed = "\"{{fileName}}\" je zaštićen lozinkom."
+title = "Potrebna je lozinka"
+
+[pdfTextEditor.rulers]
+guide = "Vodič za poravnanje na {{value}} {{unit}} - prevucite na lenjir da uklonite"
+hint = "Prevucite sa lenjira da dodate vodič za poravnanje"
+horizontal = "Horizontalni lenjir"
+unit = "pt"
+vertical = "Vertikalni lenjir"
+
+[pdfTextEditor.run]
+lockedTitle = "Zaključano - koristite dugme Otključaj za uređivanje"
+
+[pdfTextEditor.saveRisk]
+cancel = "Otkaži"
+intro = "Čuvanje uređene kopije menja datoteku. To znači:"
+note = "Vaše izmene se čuvaju. Gore navedene promene su neizbežne pri čuvanju uređene kopije."
+saveAnyway = "Ipak sačuvaj"
+title = "Čuvanje će promeniti ovaj PDF"
+
+[pdfTextEditor.settings]
+advanced = "Napredno"
+find = "Pronađi u dokumentu"
+findTooltip = "Pronađi ({{shortcut}})"
+view = "Prikaz"
+
+[pdfTextEditor.sidebar]
+addImage = "Dodaj sliku"
+addText = "Dodaj tekst"
+clickPageToAddText = "Kliknite na stranicu da dodate tekst"
+document = "Dokument"
+group = "Grupiši"
+groupingAuto = "Automatski"
+groupingAutoHint = "Grupiše jednako razmaknute redove u pasuse. Promena ovoga ponovo čita dokument i briše istoriju poništavanja."
+groupingLine = "Red"
+groupTooltip = "Spoji izabrane nizove u jedan pasus ({{shortcut}})"
+groupTooltipDisabled = "Izaberite 2+ niza za spajanje"
+noFile = "Nema učitane datoteke"
+noFileHint = "Izaberite PDF iz panela Datoteke levo ili ga ispustite ovde. Uređivač će ga automatski otvoriti."
+opening = "Otvaranje dokumenta..."
+paragraph = "Pasus"
+rulers = "Lenjiri i vodiči"
+textBoxWidth = "Širina novog tekstualnog okvira"
+textGrouping = "Grupisanje teksta"
+ungroup = "Razgrupiši"
+ungroupTooltip = "Podeli ovaj pasus na jedan niz po redu"
+ungroupTooltipDisabled = "Izaberite višeredni pasus za razgrupisavanje"
+widthGrow = "Rasti"
+widthGrowHint = "Rasti širi okvir dok kucate; Prelomi zadržava njegovu širinu i prebacuje tekst u nove redove."
+widthWrap = "Prelomi"
+
+[pdfTextEditor.spellcheck]
+auto = "Automatski"
+enable = "Proveravaj pravopis dok kucate"
+language = "Jezik rečnika"
+
+[pdfTextEditor.stage]
+loadingDocument = "Učitavanje dokumenta"
+loadingProgress = "Napredak učitavanja"
+noDocument = "Nema učitanog dokumenta."
+pickPrompt = "Izaberite PDF iz panela Datoteke levo da počnete uređivanje."
+renderingPreview = "Renderovanje pregleda"
+
+[pdfTextEditor.toolbar]
+addTextTooltip = "Dodajte tekstualni okvir - zatim kliknite na stranicu"
+advancedColour = "Napredna boja"
+advancedColourTooltip = "Napredna boja (kontura glifa)"
+alignBottom = "Poravnaj dole"
+alignCentre = "Poravnaj po sredini"
+alignLabel = "Poravnaj · potrebno 2+ objekta"
+alignLeft = "Poravnaj levo"
+alignMiddle = "Poravnaj po sredini vertikalno"
+alignRight = "Poravnaj desno"
+alignTop = "Poravnaj gore"
+arrange = "Rasporedi"
+bringForward = "Pomeri napred"
+bringToFront = "Pomeri na vrh"
+caseLower = "mala slova"
+caseSentence = "Rečenični oblik"
+caseTitle = "Naslovni oblik"
+caseUpper = "VELIKA SLOVA"
+changeCase = "Promeni velika/mala slova"
+changeCaseTooltip = "Promeni velika/mala slova (samo tekstualni nizovi)"
+delete = "Obriši izabrano"
+deleteTooltip = "Obriši (Del)"
+distributeHorizontally = "Raspodeli horizontalno"
+distributeLabel = "Raspodeli · potrebno 3+ objekta"
+distributeVertically = "Raspodeli vertikalno"
+editImageExternally = "Uredi u drugoj aplikaciji"
+flipHorizontal = "Preokreni horizontalno"
+flipVertical = "Preokreni vertikalno"
+fontColour = "Boja fonta"
+fontSize = "Veličina fonta"
+formatting = "Formatiranje teksta"
+italic = "Kurziv"
+italicUnavailable = "Ovaj font nema kurzivnu verziju. Učitajte fontove uređaja ili izaberite drugu porodicu fonta."
+lock = "Zaključaj izbor"
+lockTooltip = "Zaključaj izbor - sprečava slučajne izmene"
+more = "Više radnji"
+order = "Redosled"
+outlineColour = "Boja konture"
+outlineWidth = "Širina konture (0 = nema)"
+redo = "Ponovi"
+redoTooltip = "Ponovi ({{shortcut}})"
+replaceImage = "Zameni, zadrži položaj"
+rotateLeft = "Rotiraj 90° ulevo"
+rotateRight = "Rotiraj 90° udesno"
+sendBackward = "Pošalji nazad"
+sendToBack = "Pošalji u pozadinu"
+undo = "Poništi"
+undoTooltip = "Poništi ({{shortcut}})"
+unlock = "Otključaj izbor"
+unlockTooltip = "Otključaj izbor - ponovo omogućava uređivanje"
 
 [pdfTextEditor.tooltip.alpha]
 text = "Ovaj alfa pregledač se i dalje razvija—određeni fontovi, boje, efekti providnosti i detalji rasporeda mogu se blago promeniti. Molimo dvaput proverite generisani PDF pre deljenja."
@@ -6134,31 +7001,12 @@ title = "Razlike u prikazu"
 text = "Ovaj radni prostor je usredsređen na uređivanje teksta i premeštanje ugrađenih slika. Složen crtež stranice, vidžeti formulara i slojevita grafika čuvaju se za izvoz, ali ovde nisu u potpunosti izmenjivi."
 title = "Fokus na tekst i sliku"
 
-[pdfTextEditor.welcomeBanner]
-bestFor = "Najbolje radi sa:"
-bestFor1 = "Jednostavni PDF-ovi sa uglavnom tekstom i slikama"
-bestFor2 = "Dokumenti sa standardnim formatiranjem pasusa"
-bestFor3 = "Pisma, eseji, izveštaji i osnovni dokumenti"
-dontShowAgain = "Ne prikazuj ponovo"
-experimental = "Ovo je eksperimentalna funkcija u aktivnom razvoju. Očekujte izvesnu nestabilnost i probleme tokom korišćenja."
-feedback = "Ovo je funkcija ranog pristupa. Molimo prijavite sve probleme na koje naiđete kako biste nam pomogli da unapredimo alat!"
-gotIt = "Razumem"
-howItWorks = "Ovaj alat konvertuje vaš PDF u format koji se može uređivati, gde možete menjati tekst i premeštati slike. Promene se čuvaju nazad kao novi PDF."
-issue1 = "Boja teksta se trenutno ne zadržava (uskoro će biti dodato)"
-issue2 = "Režim pasusa ima više problema sa poravnanjem i razmakom — preporučuje se režim Jedan red"
-issue3 = "Prikaz pregleda se razlikuje od izvezenog PDF-a — izvezeni PDF je bliži originalu"
-issue4 = "Poravnanje rotiranog teksta može zahtevati ručno podešavanje"
-issue5 = "Efekti transparencije i slojeva mogu odstupati od originala"
-knownIssues = "Poznati problemi (u rešavanju):"
-limitation1 = "Iscrtavanje fontova može se malo razlikovati od originalnog PDF-a"
-limitation2 = "Složena grafika, polja obrazaca i anotacije se čuvaju, ali nisu uređivi"
-limitation3 = "Većim datotekama može trebati vremena za konverziju i obradu"
-limitations = "Trenutna ograničenja:"
-notIdealFor = "Nije idealno za:"
-notIdealFor1 = "PDF-ove sa posebnim formatiranjem poput nabrajanja, tabela ili višekolonskih rasporeda"
-notIdealFor2 = "Magazini, brošure ili kompleksno dizajnirani dokumenti"
-notIdealFor3 = "Uputstva sa složenim rasporedima"
-title = "Dobrodošli u Uređivač teksta za PDF (rani pristup)"
+[pdfTextEditor.zoom]
+fit = "Uklopi"
+fitToWidth = "Uklopi u širinu"
+in = "Uvećaj"
+out = "Umanji"
+reset = "Resetuj uvećanje na 100%"
 
 [PDFToCSV]
 header = "PDF u CSV"
@@ -6297,11 +7145,11 @@ regularUpdates = "Redovna ažuriranja"
 saml = "SAML"
 secureLoginSupport = "Podrška za bezbednu prijavu"
 selfHostedDeployment = "Samostalno hostovano okruženje"
-sso = "SSO"
-unlimitedUsers = "Neograničen broj korisnika"
+sso = "SSO (OAuth2/OIDC)"
 upToFiveUsers = "Do 5 korisnika"
 upToFiveUsersLowercase = "do 5 korisnika"
 usageTracking = "Praćenje upotrebe"
+usersIncluded = "Uključeno 100 korisnika"
 usersLimitedToSeats = "Korisnici ograničeni na broj sedišta"
 
 [plan.free]
@@ -6330,9 +7178,9 @@ saveWithAnnualBilling = "Uštedite uz godišnje naplate"
 selfHosted = "Samostalno hostovano"
 selfHostedOnInfrastructure = "Samostalno hostovano na vašoj infrastrukturi"
 ssoOAuth = "SSO (OAuth2/OIDC)"
-unlimitedUsers = "Neograničen broj korisnika"
 upToFiveUsers = "Do 5 korisnika"
 usageTrackingPrometheus = "Praćenje upotrebe i Prometheus"
+usersIncluded = "Uključeno 100 korisnika"
 
 [plan.licenseWarning]
 body = "Imate {{total}} korisnika, ali besplatni nivo podržava samo {{limit}} po serveru. Nadogradite da bi Stirling PDF radio neometano."
@@ -6379,11 +7227,29 @@ keyDescription = "Nalepite licencni ključ iz e-pošte"
 success = "Licenca aktivirana!"
 successMessage = "Vaša licenca je uspešno aktivirana. Sada možete zatvoriti ovaj prozor."
 
+[plan.team]
+maxUsers = "100 korisnika"
+name = "Team"
+
 [policies.activity]
 outputsUnavailable = "Rezultati politike više nisu dostupni za preuzimanje."
 partialOutputsUnavailable = "Neki rezultati politike više nisu dostupni za preuzimanje."
 runNotFound = "Izvršavanje primene više nije moguće pronaći."
 timedOut = "Vreme za primenu je isteklo pre nego što je izvršavanje moglo da se završi."
+
+[policies.editorPanel]
+collapse = "Sakrij tokove obrade"
+empty = "Još ništa ne radi pri uvozu ili izvozu"
+expand = "Prikaži tokove obrade"
+openProcessor = "Otvori PDF procesor"
+rowFailed = "{{label}} - poslednje pokretanje nije uspelo"
+rowIdle = "{{label}} se pokreće automatski"
+rowRunning = "{{label}} se sada izvršava"
+runsToday_one = "{{count}} pokretanje danas"
+runsToday_other = "{{count}} pokretanja danas"
+title = "PDF procesor"
+triggerExport = "Pokreće se pri izvozu"
+triggerImport = "Pokreće se pri uvozu"
 
 [policies.enforcement]
 applying = "Primena {{names}}"
@@ -6422,59 +7288,44 @@ badgeRan = "Politika {{name}} je pokrenuta na ovom fajlu"
 badgeRunning = "{{name}} se izvršava..."
 blockingAction = "{{action}} blokirano dok se politika primenjuje, sačekajte..."
 dismiss = "Zatvori preklop"
-enforcingTitle = "Primena politike..."
+enforcingPipelineTitle = "Sprovođenje toka obrade..."
+enforcingPolicyTitle = "Sprovođenje smernice..."
+exportBlocked = "Obavezna smernica nije uspela. Izvoz je otkazan. Pokušajte ponovo da izvezete."
+recoveryBody = "Nismo mogli da primenimo obaveznu smernicu na ove datoteke. Pokušajte ponovo ili zatvorite pogođene datoteke da nastavite rad."
+recoveryClose_one = "Zatvori datoteku"
+recoveryClose_other = "Zatvori {{count}} datoteka"
+recoveryClosing_one = "Zatvaranje datoteke..."
+recoveryClosing_other = "Zatvaranje {{count}} datoteka..."
+recoveryContactAdmin = "Kontaktirajte administratora za pomoć."
+recoveryContactOwner = "Kontaktirajte {{owner}} za pomoć."
+recoveryError = "Radnja nije mogla biti dovršena. Pokušajte ponovo."
+recoveryOwnedPolicy = "Proverite podešavanja smernice, zatim pokušajte ponovo."
+recoveryRetry_one = "Ponovo pokušaj datoteku"
+recoveryRetry_other = "Ponovo pokušaj {{count}} datoteka"
+recoveryRetrying_one = "Ponovni pokušaj datoteke..."
+recoveryRetrying_other = "Ponovni pokušaj {{count}} datoteka..."
+recoverySummary_one = "Pogođena je {{count}} datoteka."
+recoverySummary_other = "Pogođeno je {{count}} datoteka."
+recoveryTechnicalDetails = "Tehnički detalji"
+recoveryTitle = "Sprovođenje smernice nije uspelo"
 viewAnyway = "Prikaži fajl (politika se i dalje primenjuje)"
 
 [policyOption]
-autoRedactPhi = "Automatski rediguj PHI"
-blockExport = "Blokiraj izvoz"
-ccpa = "CCPA"
-contracts = "Ugovori"
-documents = "Dokumenti"
-fedramp = "FedRAMP"
-financialReports = "Finansijski izveštaji"
-flagForReview = "Označi za pregled"
-gdpr = "GDPR"
-hipaa = "HIPAA"
-hold = "Zadrži"
-hrRecords = "HR evidencija"
-indefinite = "Neograničeno"
-insurance = "Osiguranje"
-invoices = "Fakture"
-iso27001 = "ISO 27001"
-legalFilings = "Pravne prijave"
-medicalPhi = "Medicinsko / PHI"
-never = "Nikad"
-ninetyDays = "90 dana"
-oneYear = "1 godina"
-p60 = "60%"
-p70 = "70%"
-p80 = "80%"
-p90 = "90%"
-p95 = "95%"
-pciDss = "PCI DSS"
-quarantineDocument = "Stavi dokument u karantin"
-routeToBucket = "Usmeri u bucket"
-s3Bucket = "S3 bucket"
-sevenYears = "7 godina"
-sharePoint = "SharePoint"
-soc2 = "SOC 2"
-taxDocuments = "Poreski dokumenti"
-thirtyDays = "30 dana"
-threeYears = "3 godine"
-webhook = "Webhook"
-
-[portal]
-comingSoon = "Uskoro"
+pdfa-1 = "PDF/A-1b"
+pdfa-2b = "PDF/A-2b"
+pdfa-3b = "PDF/A-3b"
 
 [portal.accountLink.card]
 billingNote = "Nenadzirana obrada se naplaćuje iz novčanika vaše organizacije."
+connectDescription = "Povežite ovaj server da biste koristili kvotu obrade svog tima u Stirling Cloud."
+disconnectBody = "Ovaj server će prestati da koristi kvotu obrade vašeg tima u Stirling Cloud. Vaše lokalne datoteke ostaju na ovom serveru. Da biste se ponovo povezali, pratite originalne korake povezivanja."
+disconnectTitle = "Prekinuti vezu ove instance?"
 eyebrow = "Povezivanje naloga"
 linkButton = "Poveži svoj Stirling nalog"
-linked = "Povezano"
-linkedAs = "Povezano kao {{name}}."
-linkedGeneric = "Ova instanca je povezana."
+loading = "Provera veze naloga"
 notLinked = "Nije povezano"
+signedInAs = "Prijavljeni ste u Stirling Cloud kao"
+statusError = "Nije moguće proveriti vezu naloga"
 title = "Poveži ovu organizaciju sa njenim Stirling nalogom"
 unlink = "Prekini vezu"
 
@@ -6482,48 +7333,109 @@ unlink = "Prekini vezu"
 title = "Nije moguće povezati"
 
 [portal.accountLink.card.loginNotConfigured]
-after = "da biste omogućili povezivanje naloga sa hostovanim Stirling nalogom. U razvojnom okruženju možete simulirati prijavu iz dijaloga za povezivanje."
-before = "Podesite"
+description = "Zamolite administratora servera da omogući vezu sa Stirling Cloud."
 title = "SaaS prijava nije konfigurisana"
 
+[portal.accountLink.connect]
+adminRequired = "Zamolite administratora servera da otvori Korišćenje i naplata i poveže Stirling nalog za više mesečnih kredita. Ručni PDF alati su i dalje dostupni."
+adminTitle = "Zamolite administratora servera"
+close = "Zatvori"
+copied = "Kopirano"
+copyAdminMessage = "Kopiraj poruku za administratora"
+exhaustedLede = "Ovaj server je iskoristio besplatne kredite za ovaj mesec. Povežite novi ili postojeći Stirling nalog da pristupite mesečnoj kvoti svog tima."
+notNow = "Ne sada"
+start = "Poveži Stirling nalog"
+step = "Korak {{current}} od {{total}}"
+
+[portal.accountLink.connect.benefits]
+billingDetail = "Upravljajte korišćenjem, naplatom i povezanim serverima zajedno"
+billingLabel = "Jedan nalog"
+creditsDetail = "Pristupite besplatnoj mesečnoj kvoti svog tima"
+creditsLabel = "Mesečni krediti"
+processingDetail = "Kupujte više kredita za API, AI i automatizaciju kako rastete"
+processingLabel = "Više obrade"
+teamsDetail = "Dodajte više korisnika uz plaćeni Team plan"
+teamsLabel = "Veći timovi"
+
+[portal.accountLink.connect.callback]
+linkedNotSignedIn = "Niste prijavljeni u Stirling u ovom pregledaču, pa će korišćenje i naplata tražiti da se prijavite."
+retry = "Pokušaj ponovo"
+signedInAnyway = "Prijavljeni ste u Stirling, pa će se naplata i korišćenje učitati. Samo veza servera nije dovršena."
+working = "Završavanje povezivanja."
+
+[portal.accountLink.connect.callback.expired]
+body = "Zahtevi za povezivanje kratko traju. Pokrenite novi."
+title = "Zahtev je istekao"
+
+[portal.accountLink.connect.callback.malformed]
+body = "Ova stranica je otvorena bez važećeg odgovora za povezivanje. Pokrenite povezivanje iz podešavanja."
+title = "Nije moguće pročitati odgovor"
+
+[portal.accountLink.connect.callback.rejected]
+body = "Ovaj zahtev je odbijen ili je već iskorišćen. Pokrenite novi ako to nije bilo namerno."
+title = "Povezivanje nije dovršeno"
+
+[portal.accountLink.connect.callback.unfinished]
+body = "Stirling nije potvrdio povezivanje. Ovo je obično privremeno."
+title = "Još nije završeno"
+
+[portal.accountLink.connect.done]
+accountLabel = "Nalog"
+addPolicy = "Dodaj smernicu"
+buildPipeline = "Podesi tok obrade"
+creditsBarLabel = "Preostali besplatni krediti"
+creditsSuffix = "od {{allowance}} besplatnih kredita je preostalo"
+cta = "Gotovo"
+inviteTeam = "Pozovite svoj tim"
+lede = "Ovaj server sada radi preko vašeg Stirling naloga."
+pendingTitle = "Još malo"
+switchOnProcessor = "Uključite Processor"
+title = "Povezano"
+
+[portal.accountLink.connect.handoff]
+opening = "Otvaranje Stirling prijave..."
+reauthLede = "Vaša Stirling sesija je istekla. Ponovna prijava zadržava vidljivost korišćenja i naplate. Ovaj server ostaje povezan u svakom slučaju."
+title = "Povezivanje"
+
+[portal.accountLink.connectionNotice]
+expiredBody = "Ovaj server nije dosegao Stirling Cloud u okviru dozvoljenog offline perioda. Team funkcije podržane cloud-om i rad Processor-a su pauzirani. Postojeći podaci i prava instalirane licence su sačuvani. Pristup se automatski vraća nakon uspešne veze koja potvrdi vaš plan."
+expiredTitle = "Cloud pristup je pauziran"
+offlineBody = "Vaš poslednji potvrđeni plan ostaje dostupan do {{deadline}}. Obnovite vezu ovog servera pre toga da biste izbegli pauziranje funkcija podržanih cloud-om i obrade."
+offlineTitle = "Stirling Cloud nije dostupan"
+retry = "Proveri vezu"
+revokedBody = "Stirling Cloud je odbio ovu vezu naloga. Ponovo povežite nalog u Podešavanjima da biste obnovili podobne funkcije podržane cloud-om."
+revokedTitle = "Veza naloga je opozvana"
+
+[portal.accountLink.failure]
+automatic = "Tok obrade „{{pipeline}}” je zaustavljen tokom automatskog pokretanja jer ovaj server nema kredita."
+export = "Tok obrade „{{pipeline}}” je zaustavljen pre preuzimanja jer ovaj server nema kredita."
+manage = "Otvori podešavanja toka obrade"
+manual = "Tok obrade „{{pipeline}}” je zaustavljen kada ste ga pokrenuli jer ovaj server nema kredita."
+openFailed = "Otvorite Processor na povezanom serveru da biste upravljali ovim tokom obrade."
+pipeline = "Tok obrade"
+upload = "Tok obrade „{{pipeline}}” je zaustavljen nakon otpremanja jer ovaj server nema kredita."
+
 [portal.accountLink.gate]
-action = "Poveži nalog"
-description = "Povežite Stirling nalog ove organizacije da biste koristili funkcije koje se naplaćuju."
-title = "Povežite za otključavanje"
-titleFeature = "Povežite za otključavanje {{feature}}"
+retry = "Pokušaj ponovo"
 
 [portal.accountLink.instances]
-active = "Aktivno"
-revoke = "Opozovi"
-revoked = "Opozvano"
 unnamed = "Neimenovana instanca"
-
-[portal.accountLink.instances.columns]
-instance = "Instanca"
-lastSeen = "Poslednji put viđeno"
-linked = "Povezano"
-status = "Status"
 
 [portal.accountLink.instances.empty]
 description = "Povežite nalog ove organizacije, zatim registrujte svoje self-hosted instance da biste ih videli ovde."
+otherDescription = "Ovo je jedina povezana instanca prikazana za vaš tim."
+otherTitle = "Nema drugih povezanih instanci"
 title = "Nema povezanih instanci"
 
-[portal.accountLink.instances.time]
-daysAgo_one = "pre {{count}} d"
-daysAgo_other = "pre {{count}} d"
-hoursAgo_one = "pre {{count}} h"
-hoursAgo_other = "pre {{count}} h"
-justNow = "upravo sada"
-minutesAgo_one = "pre {{count}} min"
-minutesAgo_other = "pre {{count}} min"
-never = "nikad"
-
 [portal.accountLink.modal]
-linkSubtitle = "Prijavite se na nalog na koji ovaj server treba da naplaćuje."
+callbackMismatch = "Konfigurisana frontend adresa ovog servera se ne poklapa sa adresom koju ste otvorili. Otvorite server na njegovoj konfigurisanoj adresi ili ažurirajte Frontend URL u Opštim podešavanjima, pa pokušajte ponovo."
+cancel = "Otkaži"
+continueReauth = "Prijavi se ponovo"
+exhaustedTitle = "Nastavite da održavate svoje tokove rada"
+identity = "Stirling nalog"
 linkTitle = "Povežite svoj Stirling nalog"
-reauthSubtitle = "Vaša sesija je istekla — ponovo se prijavite na svoj Stirling nalog. Vaša instanca ostaje povezana."
-reauthTitle = "Prijavite se ponovo"
-simulateSignIn = "Simuliraj prijavu (dev)"
+noAuthorizeUrl = "Stirling nije vratio lokaciju za nastavak. Pokušajte ponovo za trenutak."
+startFailed = "Nije bilo moguće dosegnuti Stirling za pokretanje povezivanja. Proverite odlazni mrežni pristup ovog servera, pa pokušajte ponovo."
 
 [portal.accountLink.modal.loginNotConfigured]
 after = "da biste omogućili povezivanje u aplikaciji sa hostovanim Stirling nalogom."
@@ -6531,16 +7443,59 @@ and = "i"
 before = "Podesite"
 title = "SaaS prijava nije konfigurisana"
 
+[portal.accountLink.notice]
+openFailed = "Nije bilo moguće otvoriti vaš pregledač. Otvorite Korišćenje i naplata na povezanom serveru da biste povezali nalog."
+
 [portal.accountLink.panel]
 instancesSub = "Svaka self-hosted instanca registrovana za ovu organizaciju. Opozovite akreditiv da biste odmah prekinuli njen nenadzirani pristup."
 instancesTitle = "Povezane instance"
+manageCloud = "Upravljaj na stirling.com"
+otherInstancesSub = "Drugi samostalno hostovani serveri povezani sa istim timom u Stirling Cloud-u."
+otherInstancesTitle = "Druge povezane instance"
 revokeError = "Nije moguće opozvati instancu"
+sessionRequired = "Povezane instance će se pojaviti nakon što obnovite pristup naplati."
 sub = "Povežite ovu self-hosted organizaciju sa njenim Stirling nalogom kako bi se nenadzirana obrada naplaćivala iz novčanika vaše organizacije."
 
 [portal.accountLink.panel.loadError]
 forbidden = "Samo vlasnik tima može da vidi povezane instance organizacije."
 generic = "Nije moguće učitati povezane instance tima. Pokušajte ponovo za trenutak."
 title = "Nije moguće učitati povezane instance"
+
+[portal.accountLink.pipelines]
+editorExport = "Editor · pre preuzimanja"
+editorUpload = "Editor · pri otpremanju"
+empty = "Nema aktivnih tokova obrade."
+loadFailed = "Nije bilo moguće učitati tokove obrade. Otvorite podešavanja tokova obrade da pokušate ponovo."
+loading = "Učitavanje tokova obrade…"
+manual = "Ručna pokretanja"
+paused = "Pauzirano"
+required = "Obavezna politika · upravljajte u podešavanjima toka obrade"
+saveFailed = "Nije bilo moguće promeniti ovaj tok obrade. Otvorite podešavanja toka obrade da ga pregledate."
+title = "Aktivni tokovi obrade"
+triggered = "Pokrenulo je ovaj upit"
+viewAll = "Prikaži sve tokove obrade"
+
+[portal.accountLink.rail]
+adminCta = "Kako dobiti više kredita"
+adminSub = "Zatražite od administratora servera da poveže Stirling nalog za više kredita. Ručni PDF alati su i dalje dostupni."
+exhaustedCta = "Povežite nalog za više kredita"
+exhaustedSub = "Povežite se za mesečne kredite, deljenu naplatu i opciju rasta uz Team plan."
+exhaustedTitle = "Besplatni krediti ovog servera su potrošeni"
+
+[portal.accountLink.renewal]
+dataUnavailable = "Vaš plan i korišćenje će se pojaviti nakon što obnovite pristup naplati. Ovaj server ostaje povezan, a lokalna obrada dokumenata ostaje dostupna."
+expired = "Ovaj zahtev za prijavu je istekao. Pokušajte ponovo da obnovite pristup naplati; vaš server je i dalje povezan."
+expiredTitle = "Zahtev za prijavu je istekao"
+incomplete = "Ovaj server je i dalje povezan, ali nismo mogli da obnovimo pristup naplati u ovom pregledaču. Pokušajte ponovo da se prijavite."
+malformed = "Nismo mogli da proverimo ovaj odgovor za prijavu. Počnite ponovo iz Korišćenje i naplata; vaš server je i dalje povezan."
+malformedTitle = "Nije bilo moguće proveriti prijavu"
+rejected = "Ovaj zahtev za prijavu je odbijen ili je već iskorišćen. Pokušajte ponovo da obnovite pristup naplati."
+rejectedTitle = "Prijava nije završena"
+retry = "Stirling nije mogao da dovrši obnovu pristupa naplati. Pokušajte ponovo za trenutak; vaš server je i dalje povezan."
+retryTitle = "Pristup naplati nije obnovljen"
+success = "Vaš pristup naplati je obnovljen. Ovaj server je i dalje povezan sa istim Stirling nalogom."
+title = "Obnovi pristup naplati"
+working = "Obnavljanje pristupa naplati."
 
 [portal.accountLink.state]
 free = "Editor plan"
@@ -6562,6 +7517,9 @@ typing = "Kuca"
 [portal.auth]
 loading = "Učitavanje"
 redirectingToEditor = "Preusmeravanje u editor..."
+
+[portal.billing]
+dataUnavailable = "Podaci o korišćenju trenutno nisu dostupni."
 
 [portal.billing.activation]
 maybeLater = "Možda kasnije"
@@ -6587,13 +7545,8 @@ title = "Skoro gotovo"
 
 [portal.billing.checkout.cap]
 amountAria = "Mesečni limit potrošnje"
-back = "Nazad"
 continue = "Nastavi na plaćanje"
 error = "Nije moguće postaviti limit potrošnje"
-finePrint = "Fakture se izdaju mesečno. Otkažite bilo kada."
-noLimit = "Bez limita"
-note = "Nikada vam se ne naplaćuje preko limita. Obrada se samo pauzira."
-perMonth = "/ mes"
 title = "Postavite limit potrošnje"
 
 [portal.billing.checkout.card]
@@ -6613,71 +7566,85 @@ title = "Aktiviranje vašeg Processor plana..."
 limit = "Mesečni limit potrošnje {{amount}}/mes. Obrada se pauzira na limitu."
 limitNoCap = "Bez limita potrošnje. Obrada se neće pauzirati. Fakture se izdaju mesečno."
 
-[portal.billing.enterpriseUpsell]
-cta = "Sastavite svoju Enterprise ponudu"
-description = "Popusti za ugovoreni obim, air-gapped implementacija, prilagođeni MSA i bezbednosne provere, kao i partnerstva sa distributerima trećih strana."
-eyebrow = "Popust na obim · 1M+ PDF dokumenata"
-title = "Stirling Enterprise"
+[portal.billing.chip]
+invoices = "Fakture"
+nav = "Odeljci"
+payment = "Plaćanje"
+plan = "Plan"
+procurement = "Nabavka"
+usage = "Korišćenje"
 
-[portal.billing.freeEditors]
-activeThisMonth = "Aktivno ovog meseca"
-cost = "Trošak"
-editorsDeployed = "Editor-i implementirani"
-inviteTeammates = "Pozovi članove tima"
-pdfsEdited = "PDF dokumenti uređeni"
-subtitle = "Implementirajte bilo gde, za ceo tim."
-title = "Besplatni PDF Editor-i"
+[portal.billing.cycle]
+credits = "Krediti"
+creditsNote = "{{units}} iskorišćeno · uključuje besplatne i prepaid kredite"
+day = "Dan {{day}} od {{of}}"
+editors = "Implementirani editori"
+estimated = "procenjeno · merač se zaključuje pri zatvaranju"
+estimatedPending = "procenjeno · uključuje {{pending}} još nesinhronizovanih sa vaših instanci"
+pdfs = "Obrađeni PDF-ovi"
+users = "Korisnici"
+
+[portal.billing.enterprise]
+cta = "Zatražite enterprise ponudu"
+sub = "Air-gapped implementacija, SCIM, rezidencija podataka, uptime SLA-ovi i odgovarajući ugovor."
+title = "Pokrećete Stirling u regulisanom okruženju?"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "Nije moguće pokrenuti checkout"
-currentPlan = "Trenutni plan"
-freeForever = "Besplatno zauvek"
 noTeamResolved = "Još nije razrešen tim na vašem novčaniku — osvežite i pokušajte ponovo."
-ownerOnly = "Samo vlasnik tima može da uključi Processor plan."
 payInvoice = "Platite fakturu za završetak"
-planName = "Editor"
-ssoIncluded = "SSO uključen"
-switchOnProcessor = "Uključi Processor →"
-unlimitedUsers = "Neograničen broj korisnika"
 viewQuote = "Prikaži ponudu"
 
-[portal.billing.invoices]
-columnAmount = "Iznos"
-columnDate = "Datum"
-columnDescription = "Opis"
-columnPdfsProcessed = "PDF dokumenti obrađeni"
-columnStatus = "Status"
-descriptionFallback = "Faktura"
-downloadAriaLabel = "Preuzmi fakturu {{number}} kao PDF"
-emptyDescription = "Kada se vaš tim pretplati i prvi ciklus se zatvori, vaše fakture će se pojaviti ovde."
-emptyTitle = "Još nema faktura"
-fetchLimitNote_one = "Prikazuje se {{count}} najnovija faktura. Starije fakture su u Stripe portalu."
-fetchLimitNote_other = "Prikazuje se {{count}} najnovijih faktura. Starije fakture su u Stripe portalu."
-loadError = "Nije moguće učitati fakture: {{error}}"
-pdfLink = "PDF ↓"
-showAll_one = "Prikaži svih {{count}}"
-showAll_other = "Prikaži svih {{count}}"
-showFewer_one = "Prikaži manje (prvih {{count}})"
-showFewer_other = "Prikaži manje (prvih {{count}})"
-showMostRecent_one = "Prikaži {{count}} najnoviju"
-showMostRecent_other = "Prikaži {{count}} najnovijih"
-title = "Istorija faktura"
-viewAriaLabel = "Prikaži fakturu {{number}} u Stripe"
-viewLink = "Prikaži ↗"
+[portal.billing.identity]
+oauthSso = "SSO (OAuth2/OIDC)"
 
-[portal.billing.linkPrompt]
-cta = "Poveži Stirling nalog"
-description = "Ručno uređivanje PDF-a — prikaz, potpisivanje, spajanje, deljenje, vodeni žig, kompresovanje, konvertovanje, ručni OCR — uvek je besplatno, povezano ili ne. Povežite da biste preuzeli 500 besplatnih PDF dokumenata merene obrade (automatizacija, AI i API); kada vam zatreba više, uključite Processor plan i plaćajte samo ono što koristite."
-title = "Povežite svoj Stirling nalog"
+[portal.billing.identity.free]
+chipAnywhere = "Web, desktop i samostalno hostovano"
+chipCredits = "{{allowance}} besplatnih kredita mesečno"
+chipTools = "Svaki PDF alat"
+name = "Free"
+sub = "Potpuni PDF Editor."
 
-[portal.billing.paymentMethod]
-billedMonthly = "Naplaćuje se mesečno"
-cardEnding = "{{brand}} koja se završava sa {{last4}}"
-cardFallback = "Kartica"
-expiresBilledMonthly = "Ističe {{expiry}} · naplaćuje se mesečno"
-eyebrow = "Način plaćanja"
-managedSub = "Vaša kartica i detalji naplate se bezbedno čuvaju u Stripe korisničkom portalu."
-managedTitle = "Upravlja se u Stripe"
+[portal.billing.identity.processor]
+chipMetered = "Merena obrada"
+chipPipelines = "Tokovi obrade i API"
+name = "Processor"
+sub = "Team osnova plus {{rate}} po kreditu"
+subNoRate = "Team osnova plus merena obrada"
+
+[portal.billing.identity.team]
+chipFleet = "Kontrola flote"
+chipIncluded = "{{allowance}} uključenih kredita mesečno"
+name = "Team"
+sub = "Do {{users}} korisnika"
+subNoLimit = "Bez ograničenja korisnika"
+
+[portal.billing.invoiceRow]
+current = "Trenutno"
+failed = "Neplaćeno"
+paid = "Plaćeno"
+undated = "Bez datuma"
+unknownAmount = "Nepoznato"
+view = "Prikaži"
+
+[portal.billing.license]
+add = "Dodaj"
+addTitle = "Dodaj licencu"
+empty = "Nema instalirane licence"
+label = "Ključ licence"
+update = "Ažuriraj"
+updateTitle = "Ažuriraj licencu"
+view = "Prikaži"
+
+[portal.billing.payment]
+billedTo = "Naplata za"
+card = "{{brand}} koja se završava sa {{last4}}"
+cardWithExpiry = "{{brand}} koja se završava sa {{last4}} · ističe {{month}} / {{year}}"
+dateUnavailable = "Datum naplate još nije dostupan"
+invoicesTo = "Fakture idu na"
+method = "Način plaćanja"
+nextInvoice = "Sledeća faktura"
+noCard = "Nema kartice u evidenciji"
 update = "Ažuriraj"
 
 [portal.billing.pdfsProcessed]
@@ -6692,27 +7659,19 @@ segmentApiDesc = "Direktni API zahtevi"
 segmentApiLabel = "API"
 segmentAutomationDesc = "Automatizacije i pipeline-ovi"
 segmentAutomationLabel = "Automatizacija"
-sizeMultiplier = "{{formatted}} PDF-ova je koristilo množilac veličine"
 summary = "{{unique}} jedinstvenih · {{units}} obračunskih jedinica · {{avg}} prosek po PDF-u"
 summaryNoRate = "{{unique}} jedinstvenih · {{units}} obračunskih jedinica"
 unit = "mereni PDF dokumenti"
 unitsPending_one = "{{units}} obračunska jedinica čeka sinhronizaciju iz povezanih instanci"
 unitsPending_other = "{{units}} obračunskih jedinica čeka sinhronizaciju iz povezanih instanci"
 
-[portal.billing.prepaid]
-capSuffix = "od {{total}} unapred plaćenih kredita"
-expires = "Ističe {{date}}"
-eyebrow = "Unapred plaćeni kapacitet"
-note = "Koristi se pre obračuna po potrošnji i izvan vašeg limita potrošnje."
-topUp = "Dopuni"
-
 [portal.billing.prepaid.buy]
 back = "Nazad"
-calcTitle = "Izračunajte godišnju uplatu"
 cancel = "Otkaži"
 cancelPurchase = "Otkaži kupovinu"
 close = "Zatvori"
 continueToPayment = "Nastavi na plaćanje"
+creditTitle = "Platite godinu unapred"
 finalise = "Završi"
 invoiceErrorTitle = "Nije moguće generisati fakturu"
 loadingTitle = "Učitavanje vaše ponude"
@@ -6720,38 +7679,12 @@ payTitle = "Platite svoju godinu"
 step = "Korak {{current}} od {{total}}"
 
 [portal.billing.prepaid.calc]
-change = "Promeni"
-deployRow = "Implementacija"
-done = "Gotovo"
-enterpriseHint = "Ovo je enterprise nivo. Pri ovom obimu, enterprise cene nadmašuju svaki self-serve popust. Zaključavanje cene, uslovi i ponuda za nekoliko minuta."
-governanceRow = "Upravljanje"
-governanceValue = "{{label}} · {{count}} pravila"
-handlesLabel = "Vaš Procesor"
-handlesValue = "obrađuje {{volume}} kredita / mes"
-pipelinesLabel = "Tokovi obrade"
-policiesMeta = "{{count}} pravila"
-poolCaption = "Jedan skup od {{credits}} kredita za godinu. Teži meseci pozajmljuju od lakših."
-priceLabel = "Vaša godina · 12 meseci po ceni 10"
 rateUnknown = "Tačnu cenu ćemo prikazati pri plaćanju."
-savings = "Štedite {{amount}} · 2 meseca besplatno."
-sizingRow = "Dimenzionisanje"
-sizingValue = "{{label}} · {{desc}}"
-usersLabel = "Ukupno korisnika"
 
 [portal.billing.prepaid.consent]
 label = "Razumem da, kada se moj unapred plaćeni kapacitet potroši ili istekne posle 12 meseci, obrada automatski nastavlja po standardnoj stopi plaćanja po potrošnji (do mog limita potrošnje) osim ako ne otkažem, i da mogu da otkažem bilo kada iz portala za naplatu."
 
-[portal.billing.prepaid.deploy]
-cloud = "Stirling Cloud"
-cloudDesc = "Upravlja Stirling. Uživo za nekoliko minuta."
-cloudValue = "Stirling Cloud · Upravljano"
-selfhost = "Self-hosted"
-selfhostDesc = "Radi na privatnoj infrastrukturi. Ista cena."
-selfhostValue = "Self-hosted · Privatna infrastruktura"
-
 [portal.billing.prepaid.offer]
-cta = "Pregledaj ponudu"
-subtitle = "Platite unapred godinu obrade PDF-ova i dobijte dva meseca besplatno, koristi se pre obračuna po potrošnji, izvan vašeg limita potrošnje."
 title = "Dobijte 12 meseci po ceni 10"
 
 [portal.billing.prepaid.pay]
@@ -6764,52 +7697,92 @@ payOnline = "Plati online"
 poNumber = "PO broj (opciono)"
 poNumberPlaceholder = "npr. PO-2026-0142"
 
-[portal.billing.prepaid.pipelines]
-advanced = "Napredno"
-advancedDesc = "Tokovi obrade pokreću većinu vaše obrade."
-none = "Nijedan"
-noneDesc = "Još ne pokrećete tokove obrade. Uključite ih bilo kada."
-standard = "Standardno"
-standardDesc = "Nekoliko tokova obrade ponovo obrađuje pristigle PDF-ove."
-
-[portal.billing.prepaid.posture]
-essentials = "Osnove"
-essentialsDesc = "Klasifikacija, podrazumevano, plus Deljenje"
-governed = "Upravljano"
-governedDesc = "Dodaje Bezbednost i Usmeravanje"
-regulated = "Regulisano"
-regulatedDesc = "Svaka kategorija, uklj. Usklađenost, Zadržavanje, Unos"
-
 [portal.billing.prepaid.review]
 download = "Preuzmi ponudu (PDF)"
 downloading = "Priprema…"
-share = "podeli za odobrenje"
 
-[portal.billing.prepaid.size]
-compact = "Kompaktno"
-compactDesc = "Datoteke ispod 25 MB, bez troškova za podatke"
-heavy = "Teško"
-heavyDesc = "Skenirano ili sa mnogo slika, redovno 50 MB+"
-standard = "Standardno"
-standardDesc = "Uglavnom malo, neki skenovi preko 25 MB"
+[portal.billing.processor]
+activate = "Uključite Processor"
+factFree = "{{used}} od {{allowance}} iskorišćeno"
+factNoCap = "bez ograničenja"
+factPrepaid = "{{remaining}} preostalo"
+freeRemaining = "Preostali besplatni krediti"
+included = "Uključeno u vašu licencu"
+includedRenewal = "{{summary}} · Obnavlja se {{date}}"
+meteredCapTooltip = "Pauzira merenu obradu na vašem ograničenju potrošnje."
+midIncluded = "{{rate}} po kreditu · {{allowance}} uključeno svakog meseca"
+midIncludedNoRate = "{{allowance}} uključeno svakog meseca"
+midMetered = "{{spend}} mereno u ovom ciklusu"
+midMeteredUnknown = "Mereno u ovom ciklusu"
+midPrepaid = "Prepaid krediti, koriste se pre merene naplate"
+midPrepaidExpiry = "{{summary}} · Ističe {{date}}"
+noSpendLimit = "Bez ograničenja potrošnje"
+paidUsed = "Plaćeno mereno korišćenje"
+percentUsed = "{{pct}}%"
+prepaidExhausted = "Potrošeno, merena naplata je nastavljena"
+prepaidExpires = "Ističe {{date}}"
+prepaidRemaining = "Preostali prepaid krediti"
+prepaidTooltip = "Koriste se pre merene naplate i van vašeg ograničenja potrošnje."
+raiseLimit = "Povećaj ograničenje"
+remainingOf = "{{remaining}} od {{total}}"
+rowName = "Processor"
+spendAgainstLimit = "{{spend}} od {{cap}} mereno u ovom ciklusu"
 
-[portal.billing.prepaid.state]
-exhausted = "Potrošeno"
-healthy = "Dovoljno preostalo"
-low = "Pri kraju"
+[portal.billing.seats]
+awaitingSync = "Čeka se dnevna sinhronizacija; još nije uključeno u ukupan zbir flote."
+breakdown = "Gde se korisnici broje"
+cloud = "Stirling Cloud"
+deployment = "Povezani server"
+lastReported = "Prijavljeno {{date}}"
+live = "Broj aktivnih korisnika"
+notReported = "Još nije prijavljeno"
+ownerExcluded = "Obavezni vlasnik cloud tima ne koristi mesto."
+thisServer = "Ovaj server"
+
+[portal.billing.section]
+cycle = "Ovaj ciklus"
+invoices = "Fakture"
+payment = "Plaćanje"
+plan = "Vaš plan"
+
+[portal.billing.serverPlan]
+active = "Aktivna samostalno hostovana licenca"
+connectBody = "Povežite se da dodate kredite za cloud obradu. Vaša serverska licenca ostaje aktivna."
+enterprise = "Enterprise"
+enterpriseConnectBody = "Vaša Enterprise licenca uključuje obradu na ovom serveru. Povezivanje naloga je opcionalno."
+included = "Uključeno u vašu licencu"
+seats = "{{seats}} licenciranih mesta"
+server = "Server"
+unlimited = "Neograničen broj korisnika"
+
+[portal.billing.simple]
+afterYear = "Nakon godine"
+afterYearNote = "Nema automatskog obnavljanja. Dalja obrada zahteva aktivan mereni plan i ostaje u okviru njegovog ograničenja potrošnje."
+billingNote = "Nema stalne naknade. Krediti se naplaćuju mesečno prema korišćenju. Otkažite bilo kada u Korišćenje i naplata."
+creditEstimate = "≈ {{credits}} kredita"
+credits = "Krediti"
+limit = "Ograničenje potrošnje · obrada se ovde pauzira"
+limitIntro = "Ograničite koliko Processor može da naplati svakog meseca."
+monthlyAmount = "{{amount}}/mes."
+prepayDiscount = "Popust za plaćanje unapred · 12 za 10"
+prepayIntro = "Godina obrade uz popust."
+rate = "{{rate}} po kreditu · naplaćuje se prema korišćenju"
+ratePending = "Cena prikazana pri plaćanju"
+setLimit = "Postavi ograničenje potrošnje"
+yearSize = "Veličina godine"
+yearValue = "Godina obrade"
 
 [portal.billing.spendLimit]
 adjustLimit = "Podesi limit"
+buyCredits = "Kupi kredite"
 cancel = "Otkaži"
 capControlNote = "Promene se primenjuju odmah — povećajte ili smanjite gornju granicu bilo kada."
 capSuffix = "/ mesec"
-capSuffixWithDocs = "/ mesec · ≈ {{documents}} dokumenata"
 displaySub = "Naplaćuje vam se samo ono što automatski obradite — nikad preko gornje granice."
 editTitle = "Postavite mesečnu gornju granicu"
 eyebrow = "Limit potrošnje"
-guardrailBody = "čvrsta gornja granica — nikad vam se ne naplaćuje preko nje. Kada se dostigne limit, merena obrada se pauzira (neograničeno uređivanje PDF-a nastavlja da radi) dok je ne povećate ili se ciklus ne resetuje. Ništa se ne gubi."
-guardrailLabel = "Vaša zaštitna ograda:"
 noCap = "bez limita"
+pauseNote = "Merena obrada se pauzira na vašem ograničenju. PDF uređivanje ostaje dostupno."
 pctUsed = "{{pct}}% iskorišćeno"
 remaining = "{{amount}} preostalo"
 save = "Sačuvaj limit"
@@ -6823,15 +7796,6 @@ body_one = "Pri {{rate}}/dan dostižete limit za ~{{count}} dan (~{{monthEnd}} k
 body_other = "Pri {{rate}}/dan dostižete limit za ~{{count}} dana (~{{monthEnd}} kraj meseca). Predloženi limit ~{{suggested}}."
 label = "Projektovano prekoračenje."
 
-[portal.billing.spendThisMonth]
-eyebrow = "Potrošnja ovog meseca"
-freeRemaining_one = "Preostaje {{formatted}} besplatan PDF"
-freeRemaining_other = "Preostaje {{formatted}} besplatnih PDF-ova"
-processed_one = "Obrađen {{formattedCount}} PDF dokument."
-processed_other = "Obrađeno {{formattedCount}} PDF dokumenata."
-processedWithRate_one = "Obrađen {{formattedCount}} PDF dokument, po {{rate}} svaki."
-processedWithRate_other = "Obrađeno {{formattedCount}} PDF dokumenata, po {{rate}} svaki."
-
 [portal.billing.subscribedPlan.capWarn]
 approachingBody = "Povećajte ga sada da se automatska obrada nikad ne pauzira."
 approachingTitle = "Na {{pct}}% ste mesečnog limita potrošnje"
@@ -6842,18 +7806,16 @@ reachedTitle = "Dostignut je mesečni limit potrošnje"
 [portal.billing.subscribedPlan.portalError]
 title = "Nije moguće otvoriti Stripe portal"
 
-[portal.billing.walletMeter]
-barAria = "Free PDFs remaining"
-capSuffix_one = "od {{allowance}} besplatnih PDF dokumenata iskorišćeno"
-capSuffix_other = "od {{allowance}} besplatnih PDF dokumenata iskorišćeno"
-eyebrow = "Processor probni period"
-statusLabel_one = "{{used}} iskorišćen"
-statusLabel_other = "{{used}} iskorišćeno"
-sub = "Koristite PDF Editor besplatno. Platite za automatsku obradu PDF dokumenata."
-title_one = "Obradite {{allowance}} PDF dokumenata besplatno"
-title_other = "Obradite {{allowance}} PDF dokumenata besplatno"
-titleWithRate_one = "Obradite {{allowance}} PDF dokumenata besplatno, zatim {{rate}}/PDF"
-titleWithRate_other = "Obradite {{allowance}} PDF dokumenata besplatno, zatim {{rate}}/PDF"
+[portal.billing.team]
+addCapacity = "Dodaj kapacitet"
+fact = "{{users}} od {{licensed}} korisnika"
+factNoLimit = "{{users}} korisnika"
+midFree = "Team plan pokriva 100 korisnika"
+midFreeSelfHosted = "Besplatni nivo pokriva vaše prve korisnike"
+midIncluded = "Uključeno u vašu Team osnovu"
+midLocalCapacity = "Kapacitet dostupan ovom serveru"
+midPrice = "$99/mes. po 100 korisnika"
+rowName = "Korisnici"
 
 [portal.components.billingUnit]
 approval = "odobrenje"
@@ -7224,6 +8186,14 @@ baseUrlPlaceholder = "https://your-org.webhook.office.com/webhookb2/..."
 description = "Objavite poruku na Teams kanalu kada se pravilo pokrene."
 label = "Microsoft Teams"
 
+[portal.connections.types.vectordb]
+baseUrlPlaceholder = "https://your-database-host"
+description = "Indeksirajte delove dokumenata koristeći Weaviate ili Pinecone embedding na serverskoj strani. Koristite Weaviate server URL ili Pinecone index host. Privatni endpoint-i zahtevaju da operator omogući policies.allowPrivateApiEndpoints."
+label = "Vektorska baza podataka"
+pinecone = "Pinecone"
+vendor = "Baza podataka"
+weaviate = "Weaviate"
+
 [portal.connections.types.webhook]
 baseUrlPlaceholder = "https://example.com/hooks/documents"
 description = "Objavite svaki dokument, ili samo detalje, na URL koji izaberete."
@@ -7431,114 +8401,34 @@ status = "Status"
 time = "Vreme"
 user = "Korisnik"
 
-[portal.editorAdmin]
-subtitle = "Postavite Stirling PDF Editor, uparite self-hosted instance sa svojom organizacijom i upravljajte aktivnom flotom — ciljevima, stanjem, akreditivima i offline aktivacijom na jednom mestu."
-title = "Postavljanje Editora"
-
-[portal.editorAdmin.health.columns]
-activeUsers = "Aktivni korisnici"
-host = "Host"
-lastSeen = "Poslednji put viđeno"
-region = "Region"
-status = "Status"
-target = "Target"
-version = "Verzija"
-
-[portal.editorAdmin.health.empty]
-description = "Postavite cilj i uparite ga da biste ovde videli uživo stanje instance."
-title = "Nema instanci koje izveštavaju"
-
-[portal.editorAdmin.offlineActivation]
-enterpriseTag = "Enterprise"
-generateButton = "Generiši offline paket"
-lockCopy = "Offline i on-prem aktivacija su deo Enterprise plana."
-subtitle = "Generišite potpisani aktivacioni paket za offline ili on-prem instalaciju bez izlazne mrežne putanje. Prenesite ga na instancu i primenite tokom podešavanja pri prvom pokretanju."
-talkToSales = "Razgovarajte sa prodajom"
-title = "Aktivacija u izolovanoj mreži"
-
-[portal.editorAdmin.offlineActivation.readyBanner]
-description = "{{file}} je potpisan i spreman za prenos. Aktivira jednu instancu i ističe za 14 dana."
-title = "Paket je spreman"
-
-[portal.editorAdmin.pairing]
-generated = "Generisano ✓"
-generateNewCode = "Generiši novi kod"
-lockCopy = "IaC obezbeđivanje je deo Enterprise plana."
-rotate = "Rotiraj"
-talkToSales = "Razgovarajte sa prodajom"
-
-[portal.editorAdmin.sections.health]
-sub = "Svaka Editor instanca koja se javlja — verzija, region, status, poslednje viđeno i aktivni korisnici."
-title = "Stanje instance"
-
-[portal.editorAdmin.sections.pairing]
-sub = "Povežite self-hosted editor sa ovom organizacijom. Generišite token, prosledite kratki kod ili ga povežite preko IaC."
-title = "Uparivanje"
-
-[portal.editorAdmin.sections.targets]
-sub = "Gde se Editor izvršava. Kopirajte isečak za pokretanje self-hosted instance ili koristite Managed Cloud bez operativnog održavanja."
-title = "Ciljevi postavljanja"
-
-[portal.editorAdmin.serviceToken]
-currentToken = "Trenutni token"
-lastRotated = "Poslednja rotacija"
-rotateButton = "Rotiraj servisni token"
-subtitle = "Instance se autentifikuju prema organizaciji ovim akreditivom. Rotirajte ga po rasporedu ili odmah nakon sumnje na curenje."
-title = "Servisni token"
-
-[portal.editorAdmin.serviceToken.rotatedBanner]
-description = "Izdat je novi token. Ažurirajte STIRLING_SERVICE_TOKEN svake self-hosted instance u okviru 24h grejs perioda ili će preći offline."
-title = "Rotirajte aktivne instance"
-
-[portal.editorAdmin.status]
-degraded = "Degradirano"
-healthy = "Zdravo"
-offline = "Offline"
-pairing = "Uparivanje"
-
-[portal.editorAdmin.targets]
-instanceCount_one = "{{count}} instanca"
-instanceCount_other = "{{count}} instanci"
-talkToSales = "Razgovarajte sa prodajom"
-upgradePlan = "Nadogradite plan"
-
-[portal.editorAdmin.targets.lock]
-enterprise = "On-prem i Kubernetes self-hosting su deo Enterprise plana."
-paid = "Self-hosting uz Docker i Kubernetes otključava se na plaćenom planu."
-
-[portal.editorAdmin.targets.state]
-available = "Dostupno"
-locked = "Zaključano"
-running = "Pokrenuto"
-
 [portal.errorBoundary]
 description = "Ovaj prikaz je naišao na neočekivanu grešku. Pokušajte ponovo ili izaberite drugi odeljak iz bočne trake."
 retry = "Pokušajte ponovo"
 title = "Nešto je pošlo naopako na ovoj stranici"
 
 [portal.failures]
-fromSource = "From source {{source}}"
+closedBySystem = "Stirling"
+noMatches = "Ništa se ne poklapa sa trenutnim filterima"
 occurrences = "{{count}} occurrences"
-reportedBy = "Hit by {{actor}}"
-runReference = "Run {{runId}}"
-subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
-title = "Failures"
+searchPlaceholder = "Pretražite probleme, korisnike i greške"
 
 [portal.failures.action]
 acknowledge = "Acknowledge"
-confirm = "Are you sure?"
+decrypt = "Otključaj"
 dismiss = "Dismiss"
-dismissSkipFile = "Skip this file"
+openInTool = "Pokušaj ponovo"
+repair = "Popravi"
 viewFile = "Prikaži datoteku"
 viewInProcessor = "Prikaži u procesoru"
 
-[portal.failures.debug]
-copyJson = "Copy JSON"
-dismissAll = "Dismiss all ({{total}})"
-dismissing = "Dismissing..."
-hideJson = "Hide raw JSON ({{total}})"
-refresh = "Refresh failures"
-showJson = "Show raw JSON ({{total}})"
+[portal.failures.columns]
+closedBy = "Zatvorio"
+date = "Datum"
+failure = "Problem"
+origin = "Pokrenuto u"
+outcome = "Ishod"
+source = "Izvor"
+user = "Korisnik"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
@@ -7550,25 +8440,102 @@ unavailable = "Not available for this failure."
 description = "Policy runs that fail will appear here with the actions you can take."
 title = "No failures recorded"
 
+[portal.failures.emptyClosed]
+description = "Stavke koje odbacite ili rešite čuvaju se ovde sa svojim ishodom."
+title = "Još ništa nije zatvoreno"
+
+[portal.failures.filters]
+origin = "Pokrenuto u"
+source = "Izvor"
+type = "Tip"
+user = "Korisnik"
+
+[portal.failures.kind.complianceNotMet]
+description = "Provera usklađenosti je odbila ovaj dokument jer ne ispunjava standard prema kojem politika validira. Kršenje je prikazano ispod."
+title = "Standard usklađenosti nije ispunjen"
+
+[portal.failures.kind.inputCorrupted]
+description = "Vaša datoteka je oštećena, pa je pokretanje nije moglo pročitati."
+title = "Oštećen dokument"
+
+[portal.failures.kind.inputEmpty]
+description = "Vaša datoteka nema sadržaj, pa nije bilo ničega za obradu."
+title = "Prazna datoteka"
+
 [portal.failures.kind.inputPasswordProtected]
 description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
 title = "Password-protected document"
 
+[portal.failures.kind.inputUnavailable]
+description = "Datoteka iza ovog pokretanja nije mogla biti dosegnuta, pa nikada nije obrađena."
+title = "Datoteka nije dostupna"
+
+[portal.failures.kind.inputUnreadable]
+description = "Vaša datoteka nije mogla biti otvorena, pa je pokretanje nije moglo pročitati."
+title = "Datoteka nije čitljiva"
+
+[portal.failures.kind.inputUnrepairable]
+description = "Vaša datoteka je oštećena više nego što alati za popravku mogu da poprave."
+title = "Datoteka nije mogla biti popravljena"
+
+[portal.failures.kind.inputWrongType]
+description = "Vaša datoteka nije u formatu koji ovaj korak može da otvori, pa je pokretanje nije moglo pročitati."
+title = "Pogrešan tip datoteke"
+
+[portal.failures.kind.stepCannotRenderPage]
+description = "Stranica u vašoj datoteci nije mogla biti iscrtana, pa pokretanje nije moglo da se završi."
+title = "Stranica nije mogla biti renderovana"
+
+[portal.failures.kind.stepInterrupted]
+description = "Ovaj korak je zaustavljen pre završetka, pa vaša datoteka nije obrađena. Ponovno pokretanje obično funkcioniše."
+title = "Korak je prekinut"
+
+[portal.failures.kind.stepMisconfigured]
+description = "Podešavanja ovog koraka nisu važeća, pa se nije mogao pokrenuti ni na jednoj datoteci. Izmenite korak da ih popravite."
+title = "Podešavanja koraka nisu važeća"
+
+[portal.failures.kind.stepPageTooLarge]
+description = "Stranica u vašoj datoteci nije mogla biti renderovana u traženoj rezoluciji. Smanjite DPI u koraku ili podelite datoteku."
+title = "Stranica je prevelika za renderovanje"
+
+[portal.failures.kind.stepToolFailed]
+description = "Alat na koji se ovaj korak oslanja nije mogao da obradi vašu datoteku."
+title = "Alat nije mogao da obradi datoteku"
+
+[portal.failures.kind.toolNotInstalled]
+description = "Na ovom serveru nedostaje softver koji je koraku potreban, pa pokretanje nije moglo da ga započne."
+title = "Softver nije instaliran"
+
 [portal.failures.kind.unknown]
 description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
 title = "Unrecognised failure"
+
+[portal.failures.log]
+copy = "Kopiraj grešku"
+view = "Prikaži grešku"
 
 [portal.failures.origin]
 pipeline = "Pipeline"
 policy = "Policy"
 tool = "Tool run"
 
-[portal.failures.stage]
-blocked = "Blocked"
-input = "Input"
-internal = "Internal"
-never_ran = "Never ran"
-output = "Output"
+[portal.failures.outcome]
+dismissed = "Odbačeno"
+fileRemoved = "Datoteka obrisana"
+open = "Otvoreno"
+resolved = "Rešeno"
+
+[portal.failures.scope]
+ariaLabel = "Stanje pregleda"
+closed = "Zatvoreno"
+open = "Otvoreno"
+
+[portal.failures.source]
+editor = "Editor"
+
+[portal.failures.unavailable]
+description = "Ovaj red je vidljiv vođama tima u radnim prostorima koji pokreću politike."
+title = "Nema ničega za pregled"
 
 [portal.home.download]
 back = "Nazad"
@@ -7644,12 +8611,6 @@ kubernetes = "Self-hosted · Kubernetes"
 afternoon = "Dobar dan"
 evening = "Dobro veče"
 morning = "Dobro jutro"
-
-[portal.infrastructure]
-manageEditorDeployment = "Upravljajte postavljanjem Editora"
-sectionsAriaLabel = "Odeljci infrastrukture"
-subtitle = "Postavljanja, akreditivi, bezbednosni položaj, skladište i audit trag za vaš Stirling radni prostor."
-title = "Infrastruktura"
 
 [portal.infrastructure.apiKeys]
 createKey = "Kreiraj ključ"
@@ -7760,17 +8721,175 @@ subtitleCreated = "Kopirajte ovu tajnu sada — neće biti ponovo prikazana."
 title = "Kreiraj API ključ"
 titleCreated = "Ključ je kreiran"
 
+[portal.infrastructure.encryption]
+heading = "Šifrovanje u mirovanju"
+hintLabel = "Više o ovom odeljku"
+subheading = "Sačuvane datoteke se šifruju pre nego što stignu na disk, u bazu podataka ili object storage."
+unknown = "Nepoznato"
+
+[portal.infrastructure.encryption.auditNotice]
+description = "Šifrovanje je aktivno na ovoj licenci, ali događaji šifrovanja, dešifrovanja, opoziva i izvoza se ne upisuju u audit trag. Samo šifrovanje nije pogođeno."
+title = "Audit događaji zahtevaju Enterprise licencu"
+
+[portal.infrastructure.encryption.coverage]
+decryptOnlyNote = "Nova otpremanja se čuvaju kao plaintext. Ranije šifrovane datoteke su i dalje čitljive."
+encrypted = "Šifrovane datoteke"
+heading = "Pokrivenost"
+percentEncrypted = "{{percent}}% šifrovano"
+plaintext = "Plaintext datoteke"
+progressLabel = "{{percent}}% sačuvanih datoteka šifrovano"
+subheading = "Obuhvata datoteke u Moje datoteke i tokove rada potpisivanja. Datoteke koje tok obrade čita na mestu, uključujući mrežne izvore, ne čuvaju se ovde i nisu šifrovane."
+
+[portal.infrastructure.encryption.error]
+action = "Ta promena ključa nije mogla biti primenjena. Pokušajte ponovo."
+keyMissing = "Taj ključ više ne postoji. Osvežite da vidite trenutnu listu."
+migrationStart = "Migracija nije mogla biti pokrenuta. Pokušajte ponovo."
+rotate = "Re-wrap nije mogao biti dovršen. Pokušajte ponovo."
+
+[portal.infrastructure.encryption.generatedKey]
+backupGuide = "Kako napraviti rezervnu kopiju"
+description = "Nije bio konfigurisan ključ za šifrovanje, pa je jedan kreiran na ovom serveru. Napravite rezervnu kopiju sada: ako se izgubi, šifrovane datoteke se ne mogu oporaviti."
+title = "Ovaj ključ je generisan za vas"
+
+[portal.infrastructure.encryption.keys]
+changedAt = "Promenjeno {{when}}"
+changedBy = "Od {{actor}}"
+changedByAt = "Od {{actor}} dana {{when}}"
+heading = "Ključevi opsega"
+keyVersion = "Verzija {{version}}"
+neverChanged = "Nikada nije promenjeno"
+restore = "Vrati pristup"
+retiredNote = "Penzionisani ključ i dalje dešifruje datoteke sačuvane pod njim, ali noviji ključ obavija nova otpremanja."
+revoke = "Opozovi"
+subheading = "Jedan ključ po opsegu. Opozivanje ključa blokira čitanje svega sačuvanog pod njim."
+
+[portal.infrastructure.encryption.keys.columns]
+actions = "Radnje"
+lastChange = "Poslednja promena"
+scope = "Opseg"
+status = "Status"
+
+[portal.infrastructure.encryption.keys.empty]
+description = "Ključ se kreira prvi put kada neko otpremi datoteku, ne pri pokretanju."
+title = "Još nema ključeva"
+
+[portal.infrastructure.encryption.masterKey]
+backend = "Storage backend"
+compareNote = "Uporedite ovo sa fingerprint-om u rezervnoj kopiji ključa i u startup log-u."
+copied = "Kopirano"
+copy = "Kopiraj"
+copyFailed = "Ovaj pregledač nije dozvolio kopiranje. Fingerprint je izabran, pa ga kopirajte ručno."
+fingerprint = "Fingerprint"
+fingerprintHelp = "Čemu služi ovaj fingerprint?"
+heading = "Glavni ključ"
+notMaterialised = "Mehanizam ključeva još nije pokrenut na ovom čvoru."
+s3StreamingNote = "Dok je bilo šta šifrovano, preuzimanja iz object-store-a se stream-uju kroz ovaj server umesto preusmeravanja, pa koriste njegov bandwidth."
+subheading = "Obavija svaki ključ opsega. Nikada se ne prikazuje niti prihvata preko API-ja."
+version = "Verzija"
+
+[portal.infrastructure.encryption.migration]
+backlog_one = "{{formatted}} datoteka je sačuvana kao plaintext i sada može biti šifrovana."
+backlog_other = "{{formatted}} datoteka je sačuvano kao plaintext i sada mogu biti šifrovane."
+encrypted = "Šifrovano"
+failedCount = "Neuspešno"
+heading = "Šifruj postojeće datoteke"
+hint = "Šifruje plaintext zaostatak koji je ostao pre uključivanja šifrovanja. Napredak se čuva u memoriji, pa ga restart backend-a resetuje na nepokrenuto. Ponovno pokretanje preskače datoteke koje su već šifrovane."
+noBacklog = "Svaka sačuvana datoteka je već šifrovana."
+progressLabel = "{{processed}} od {{total}} datoteka šifrovano"
+requiresEncryptionOn = "Uključite šifrovanje pre pokretanja ovoga: zaostatak se šifruje koristeći isti put upisa kao nova otpremanja."
+runAgain = "Pokreni ponovo"
+skipped = "Preskočeno"
+skippedHelp = "Šta znači preskočeno?"
+skippedNote = "Preskočene datoteke je zamenio korisnik dok je pokretanje bilo u toku, pa je njihova kopija ostavljena netaknuta."
+start = "Pokreni"
+startedAt = "Pokrenuto {{when}}"
+
+[portal.infrastructure.encryption.migration.confirm]
+cancel = "Otkaži"
+confirm = "Pokreni šifrovanje"
+noCancel = "Ne postoji kontrola za zaustavljanje. Kada se pokrene, proces se nastavlja dok se ne završi ili dok se šifrovanje ne isključi."
+rewrites_one = "Ponovo upisuje {{formatted}} sačuvanu datoteku, zamenjujući plaintext kopiju šifrovanom."
+rewrites_other = "Ponovo upisuje {{formatted}} sačuvanih datoteka, zamenjujući plaintext kopije šifrovanim."
+throttled = "Zadatak je ograničen i bezbedan za ponovno pokretanje. Već šifrovane datoteke se preskaču."
+title = "Šifrovati postojeći zaostatak?"
+
+[portal.infrastructure.encryption.migration.failed]
+description = "Šifrovanje je isključeno dok je migracija bila u toku, pa su preostale datoteke ostavljene netaknute. Uključite ga ponovo i pokrenite opet."
+title = "Pokretanje je zaustavljeno ranije"
+
+[portal.infrastructure.encryption.migration.state]
+COMPLETED = "Završeno"
+FAILED = "Neuspešno"
+IDLE = "Nije pokrenuto"
+RUNNING = "U toku"
+
+[portal.infrastructure.encryption.revoke]
+cancel = "Otkaži"
+clusterDelay = "Na klasteru, drugi čvorovi ovo primenjuju u roku od 60 sekundi."
+confirm = "Opozovi pristup"
+readsFail = "Datoteke već sačuvane pod ovim ključem prestaju da se otvaraju, za sve."
+reversible = "Ovo je reverzibilno. Materijal ključa se ne briše."
+title = "Opozvati pristup ovom ključu?"
+uploadsContinue = "Nova otpremanja nastavljaju da rade. Dobijaju svež ključ, pa ostaju čitljiva."
+
+[portal.infrastructure.encryption.rotation]
+currentVersion = "Trenutna verzija"
+heading = "Rotacija glavnog ključa"
+hint = "Ponovo obavija ključeve opsega pod novim glavnim ključem; sadržaj datoteka se nikada ne prepisuje. Novi ključ se postavlja u konfiguraciji i primenjuje pri restartu, pa ovo dugme samo izvršava re-wrap."
+pendingRows = "Redovi na starijoj verziji"
+rewrap = "Re-wrap ključeve"
+rewrapped_one = "{{count}} red ključa je ponovo obavijen."
+rewrapped_other = "{{count}} redova ključeva je ponovo obavijeno."
+runbook = "Runbook rotacije"
+
+[portal.infrastructure.encryption.rotation.confirm]
+cancel = "Otkaži"
+confirm = "Re-wrap ključeve"
+noFiles = "Sadržaj datoteka se ne dira. Prepisuje se samo tabela ključeva."
+rerunnable = "Bezbedno za ponovno pokretanje ako se ne završi."
+rewraps_one = "Ponovo obavija {{count}} red ključa pod trenutnim glavnim ključem."
+rewraps_other = "Ponovo obavija {{count}} redova ključeva pod trenutnim glavnim ključem."
+title = "Ponovo obaviti tabelu ključeva?"
+
+[portal.infrastructure.encryption.rotation.pending]
+description = "Još ne uklanjajte prethodni ključ iz konfiguracije. Datoteke pod tim ključevima bi prestale da se otvaraju."
+title_one = "{{count}} red ključa je još uvek na prethodnom glavnom ključu"
+title_other = "{{count}} redova ključeva je još uvek na prethodnom glavnom ključu"
+
+[portal.infrastructure.encryption.scope]
+global = "Svi korisnici"
+source = "Izvor {{id}}"
+team = "Tim {{id}}"
+
+[portal.infrastructure.encryption.status]
+ACTIVE = "Aktivno"
+DISABLED = "Opozvano"
+RETIRED = "Penzionisano"
+
+[portal.infrastructure.encryption.unavailable.forbidden]
+description = "Vaš nalog nema dozvolu za pregled podešavanja šifrovanja."
+title = "Nije dostupno za vaš nalog"
+
+[portal.infrastructure.encryption.unavailable.registry-unavailable]
+description = "Registar ključeva za šifrovanje nije mogao biti pročitan. Proverite vezu sa bazom podataka i log-ove aplikacije."
+title = "Registar ključeva nije dostupan"
+
+[portal.infrastructure.encryption.unavailable.storage-disabled]
+description = "Skladištenje datoteka je isključeno na ovom serveru, pa nema ničega za šifrovanje."
+title = "Skladištenje je onemogućeno"
+
+[portal.infrastructure.encryption.unavailable.unknown]
+description = "Status šifrovanja nije mogao biti učitan. Pokušajte ponovo."
+title = "Status nije dostupan"
+
+[portal.infrastructure.encryption.writeState]
+decryptOnly = "Samo dešifrovanje"
+encrypting = "Šifrovanje novih otpremanja"
+off = "Isključeno"
+
 [portal.infrastructure.keyLabel]
 active = "Aktivno"
 revoked = "Opozvano"
-
-[portal.infrastructure.tabs]
-apiKeys = "API ključevi"
-audit = "Audit zapisi"
-deployments = "Postavljanja"
-models = "Modeli"
-security = "Bezbednost"
-storage = "Skladište"
 
 [portal.integrations]
 availableHeading = "Dostupno"
@@ -7827,6 +8946,7 @@ integrations = "Integracije"
 pipelines = "Procesni tokovi"
 policies = "Politike"
 procurement = "Nabavka"
+review = "Pregled"
 sources = "Izvori"
 usage = "Korišćenje i naplata"
 users = "Korisnici"
@@ -7836,11 +8956,16 @@ platform = "PDF platforma"
 processor = "PDF procesor"
 
 [portal.pipelines]
+permissionsRetry = "Pokušaj ponovo"
+permissionsUnavailable = "Nije bilo moguće proveriti da li možete da upravljate politikama, pa radnje za politike trenutno nisu dostupne."
 subtitle = "Svaki automatizovani procesni tok dokumenata na backendu: uređeni lanac operacija nad skupom izvora, pokrenut okidačem. Kliknite na red za njegove korake i izvore."
 title = "Procesni tokovi"
 
 [portal.pipelines.actions]
-newPipeline = "Novi procesni tok"
+newCustomPipeline = "Novi prilagođeni tok obrade"
+
+[portal.pipelines.all]
+title = "Svi tokovi obrade"
 
 [portal.pipelines.builder]
 activate = "Activate"
@@ -7851,6 +8976,8 @@ chooseDestination = "Izaberite odredište"
 chooseOperation = "Izaberite šta ovaj korak radi"
 chooseSource = "Izaberite izvor"
 discard = "Odbaci izmene"
+editorDestination = "Editor"
+editorDestinationDetail = "Zamenjuje datoteku na kojoj ste ga pokrenuli"
 inputs = "Unos"
 inputSource = "Izvor unosa"
 inputTrigger = "Okidač"
@@ -7862,6 +8989,10 @@ needsSource = "No source chosen"
 noToolMatches = "Nijedan alat ne odgovara vašoj pretrazi."
 pause = "Pause"
 rename = "Rename pipeline"
+runOn = "Pokreće se na"
+runOnExport = "Svaki izvoz"
+runOnTooltip = "Izaberite kada se ovaj tok obrade pokreće na vašim datotekama: kada ih dodate ili kada ih izvezete."
+runOnUpload = "Svako otpremanje"
 searchTools = "Pretraži alate"
 sendToSystem = "Pošalji u drugi sistem"
 stepsIncompatible = "Ovi koraci ne mogu da se pokrenu na onome što njihov prethodni korak proizvodi: {{tools}}."
@@ -7875,10 +9006,14 @@ usesDefaults = "Pokreće se sa podrazumevanim podešavanjima"
 viewDefinition = "View definition"
 
 [portal.pipelines.builder.blocker]
+aiClassification = "Omogućite AI klasifikaciju u Podešavanjima ili uklonite korak Klasifikuj"
 destination = "Choose a destination"
 heading = "To create this pipeline:"
 incompatible = "Fix steps that can't run in order: {{tools}}"
+managerOnly = "Samo administrator ili vođa tima može da izmeni politiku"
 name = "Give the pipeline a name"
+routing = "Dodelite svakoj ruti tipove dokumenata i odredište"
+routingNeedsClassify = "Dodajte korak Klasifikuj ili isključite rutiranje po tipu dokumenta"
 saveHeading = "To save your changes:"
 schedule = "Set how often it runs"
 setup = "Finish setting up: {{tools}}"
@@ -7891,6 +9026,53 @@ format-mismatch = "Zahteva {{accepts}}, ali prethodni korak proizvodi {{produced
 output-uncertain = "Možda se neće pokrenuti: izlaz prethodnog koraka zavisi od njegovog podešavanja"
 source-mismatch = "Zahteva {{accepts}}, ali unos ovog toka obrade je {{produced}}"
 undeclared-operation = "Nije moguće proveriti šta ovaj korak prihvata"
+
+[portal.pipelines.builder.icon]
+label = "Promeni ikonu"
+
+[portal.pipelines.builder.ingest]
+chunkSize = "Veličina dela"
+chunkSizeHint = "Karaktera po delu. Manji delovi se preciznije pronalaze; veći zajedno čuvaju više konteksta."
+destinationNeedsChunks = "Ovom odredištu vektorske baze podataka potreban je završni AI ingestion korak koji izvozi samo delove."
+editorPdfOnly = "Samo PDF-ovi mogu da se vrate u editor. Za izvoz delova ili Markdown-a, izaberite Zadrži originale i pošalji na odredište pod Izlaz."
+exportChunks = "Izvezi delove kao JSONL"
+exportChunksHint = "Jedan deo po redu sa rasponom stranica, spremno za učitavanje u drugi sistem."
+exportMarkdown = "Izvezi markdown"
+exportMarkdownHint = "Tekst dokumenta kao jedna Markdown datoteka."
+includeOriginal = "Uključi ulazni PDF"
+includeOriginalHint = "Isporučuje PDF zajedno sa izvezenim tekstom. Ovo ne menja da li izvor zadržava svoj original."
+index = "Indeksiraj u bazu znanja"
+indexHint = "Ugrađuje dokument tako da može da se pretražuje i postavljaju pitanja o njemu. Potreban je AI engine."
+nothingToDo = "Uključite barem indeksiranje ili izvoz, inače ovaj korak nema šta da radi i pokretanje će biti neuspešno."
+overlap = "Preklapanje"
+overlapHint = "Karakteri koji se ponavljaju između susednih delova, tako da se rečenica podeljena između dva dela i dalje može pronaći."
+overlapTooBig = "Preklapanje mora biti manje od veličine dela ({{chunkSize}})."
+prepareDestination = "Pripremi delove za ovo odredište"
+unavailable = "AI ingestion zahteva uključen AI engine i DocParse, uključujući i kada odredišna baza podataka generiše embedding-e."
+
+[portal.pipelines.builder.routing]
+addRule = "Dodaj rutu"
+aiDisabled = "AI klasifikacija nije omogućena. Omogućite je u Podešavanjima ili rutirajte po svojstvu dokumenta."
+aiToolDisabled = "Nedostupno dok se AI klasifikacija ne omogući u Podešavanjima"
+aiUnavailable = "Rutiranje po tipu dokumenta je onemogućeno jer AI klasifikacija nije dostupna. Umesto toga rutirajte po svojstvu dokumenta."
+extensionPlaceholder = "pdf, docx, png"
+fallback = "Sve ostalo ide na"
+heading = "Rute"
+matchAuthor = "PDF autor"
+matchBy = "Poklopi po"
+matchDocumentType = "Tip dokumenta (AI klasifikacija)"
+matchDocumentTypeDisabled = "Tip dokumenta (AI nije dostupan)"
+matchExtension = "Ekstenzija datoteke"
+matchFilename = "Tačan naziv datoteke"
+matchTitle = "PDF naslov"
+matchValues = "Vrednosti za poklapanje"
+needsClassify = "Dodajte korak Klasifikuj da biste koristili rutiranje po tipu dokumenta ili se umesto toga poklapajte po svojstvu dokumenta."
+nodeSummary_one = "1 ruta, zatim fallback"
+nodeSummary_other = "{{count}} ruta, zatim fallback"
+toggle = "Pošalji tipove dokumenata na različita mesta"
+toggleOff = "Svaki dokument ide na odredište ispod."
+toggleOn = "Dokumenti se rutiraju prema prvom uslovu dokumenta sa kojim se poklope."
+valuePlaceholder = "Unesite tačne vrednosti, odvojene zarezima"
 
 [portal.pipelines.composer]
 addTool = "Dodaj alat"
@@ -7941,6 +9123,12 @@ connectSource = "Poveži izvor"
 description = "Kreirajte svoj prvi procesni tok: izaberite izvore nad kojima se pokreće, povežite operacije u lanac i izaberite gde izlaz ide."
 title = "Još nema procesnih tokova"
 
+[portal.pipelines.enforce]
+desc = "Politika blokira datoteku koja je ne prođe; običan tok obrade prijavljuje grešku, ali propušta datoteku."
+info = "Šta znači primena kao politika"
+label = "Primeni kao politiku"
+managerOnly = "Samo administrator ili vođa tima može da primeni tok obrade kao politiku"
+
 [portal.pipelines.graph]
 addFirstTool = "Add a tool"
 dragHint = "Drop on a line to move it"
@@ -7972,11 +9160,6 @@ failed_other = "Failed after {{done}} of {{count}} steps"
 running_one = "Running the only step"
 running_other = "Running step {{done}} of {{count}}"
 
-[portal.pipelines.kpi]
-active = "Aktivni"
-paused = "Pauzirani"
-total = "Procesni tokovi"
-
 [portal.pipelines.run]
 allProcessed_one = "Nema šta da se pokrene: {{count}} dokument iz izvora je već obrađen."
 allProcessed_other = "Nema šta da se pokrene: svih {{count}} dokumenata u izvorima je već obrađeno."
@@ -8000,20 +9183,29 @@ sources = "Izvori"
 status = "Status"
 steps = "Koraci"
 trigger = "Trigger"
+type = "Tip"
+
+[portal.pipelines.templates]
+setUp = "Podesi"
+title = "Šabloni"
 
 [portal.pipelines.trigger]
+editor-export = "Svaki izvoz"
+editor-upload = "Svako otpremanje"
 folder-watch = "Nadzor foldera"
 manual = "Ručno"
 schedule = "Zakazano"
+storage-folder-watch = "Nove datoteke u folderu skladišta"
+
+[portal.pipelines.type]
+pipeline = "Tok obrade"
+policy = "Politika"
 
 [portal.policies]
 defaultName = "Politika za {{category}}"
-subtitle = "Stalne automatizacije koje primenjuju procesni tok alata na svaki dokument. Svaka politika se aktivira pri otpremanju ili izvozu, pokreće svoj lanac alata i čuva primenjenu verziju pored originala."
-title = "Politike"
 
 [portal.policies.card]
 comingSoon = "Nadogradite na Enterprise"
-notSetUp = "Nije podešeno"
 requiresAiEngine = "Zahteva AI engine"
 
 [portal.policies.categories.classification]
@@ -8025,7 +9217,7 @@ desc = "Sprovedite HIPAA, GDPR, SOC 2 ili FedRAMP zahteve na svakom dokumentu."
 label = "Usklađenost"
 
 [portal.policies.categories.ingestion]
-desc = "Klasifikujte dokumente, izdvojite strukturisane podatke, sprovedite konvencije imenovanja i normalizujte stranice."
+description = "Čitajte dokumente, pripremite delove za pretragu i isporučite ih u bazu znanja ili izvozno odredište."
 label = "Unos"
 
 [portal.policies.categories.retention]
@@ -8053,29 +9245,23 @@ summary = "Klasifikuje svaki otpremljeni dokument prema oznakama vašeg tima i o
 [portal.policies.config.compliance]
 summary = "Validira dokumente prema regulatornim okvirima pre nego što napuste sistem."
 
-[portal.policies.config.compliance.fields]
-accessLog = "Zapis pristupa"
-auditTrail = "Audit trag"
-frameworks = "Okviri"
-onViolation = "Kada nije usklađeno"
-
 [portal.policies.config.compliance.rules]
 0 = "Skeniranje okvira"
 1 = "Sprovedi radnju"
 2 = "Audit trag"
 
 [portal.policies.config.ingestion]
-summary = "Klasifikuje dokumente, izdvaja strukturisane podatke, sprovodi imenovanje i normalizuje stranice."
-
-[portal.policies.config.ingestion.fields]
-belowThreshold = "Ispod praga"
-minConfidence = "Min. pouzdanost"
+description = "Izaberite dokumente za obradu, učinite njihov tekst pretraživim i pošaljite delove u bazu podataka ili ih izvezite."
 
 [portal.policies.config.ingestion.rules]
 0 = "Klasifikuj"
 1 = "Izdvoji"
 2 = "Imenuj"
 3 = "Normalizuj"
+
+[portal.policies.config.pdfa.fields.outputFormat]
+help = "PDF/A-2b odgovara većini arhiva. PDF/A-1b je najstroži i najšire prihvaćen; PDF/A-3b dodatno dozvoljava priloge."
+label = "Arhivski profil"
 
 [portal.policies.config.purview]
 label = "Primeni Microsoft Purview oznaku osetljivosti"
@@ -8116,11 +9302,6 @@ keepFor = "Čuvaj tokom"
 [portal.policies.config.routing]
 summary = "Rutira dokumente ka pravom odredištu na osnovu tipa i klasifikacije."
 
-[portal.policies.config.routing.fields]
-destination = "Odredište"
-notify = "Obavesti pri rutiranju"
-webhookUrl = "Webhook URL"
-
 [portal.policies.config.routing.rules]
 0 = "Automatski klasifikuj"
 1 = "Rutiraj u folder"
@@ -8134,49 +9315,17 @@ summary = "Detektuje i rediguje PII, uklanja aktivni sadržaj (JavaScript) i dod
 1 = "Ukloni JavaScript"
 2 = "Vodeni žig"
 
-[portal.policies.detail]
-enforces = "Sprovodi"
-onEveryExport = "Pri svakom izvozu"
-onEveryUpload = "Pri svakom otpremanju"
-outputAsNewFile = "kao novu datoteku"
-outputAsNewVersion = "kao novu verziju"
-recentActivity = "Nedavna aktivnost"
-retry = "Pokušaj ponovo"
-showLess = "Prikaži manje"
-showMore = "Prikaži više"
-sources = "Izvori"
-
-[portal.policies.detail.actions]
-clearHistory = "Obriši istoriju obrade"
-delete = "Izbriši"
-editSettings = "Izmeni podešavanja"
-pause = "Pauziraj"
-resume = "Nastavi"
-runNow = "Pokreni sada"
-
-[portal.policies.detail.clearHistory]
-body = "Ova politika će zaboraviti svaku datoteku koju je već obradila i ponovo obraditi sve što je trenutno u njenim izvorima pri sledećem pokretanju. Same datoteke se ne menjaju. Ovo se ne može opozvati."
-cancel = "Otkaži"
-confirm = "Obriši istoriju"
-title = "Obrisati istoriju obrade?"
-
-[portal.policies.detail.emptyActivity]
-description = "Dokumenti će se pojaviti ovde kada se ova politika pokrene."
-title = "Još nema aktivnosti"
-
 [portal.policies.endpoints]
 addWatermark = "Vodeni žig"
 autoRedact = "Rediguj PII"
 classifyAndLabel = "Klasifikuj"
 compressPdf = "Kompresuj"
 flatten = "Poravnaj"
+ingest = "Pripremi za pretragu znanja"
 ocrPdf = "OCR"
+pdfa = "Konvertuj u PDF/A"
 sanitizePdf = "Ukloni JavaScript"
-
-[portal.policies.offline]
-description = "Vaše politike su sačuvane i pojaviće se kada se veza obnovi."
-retry = "Pokušaj ponovo"
-title = "Backend nije dostupan"
+validateCompliance = "Validiraj usklađenost"
 
 [portal.policies.operations]
 change = "Promeni šta ovaj korak radi"
@@ -8373,48 +9522,20 @@ label = "Pošalji dokument na webhook"
 description = "Predaje detalje pokretanja vašoj automatizaciji."
 label = "Pokreni Zap ili Make scenario"
 
-[portal.policies.stats]
-activeFor = "Aktivno"
-dataProcessed = "Obrađeni podaci"
-docsEnforced = "Primenjeno na dokumente"
-
-[portal.policies.status]
-active = "Aktivno"
-paused = "Pauzirano"
-
-[portal.policies.summary.active]
-description = "Primenjuje se pri otpremanju/izvozu"
-label = "Aktivne politike"
-
-[portal.policies.summary.categories]
-description = "Dostupno za konfigurisanje"
-label = "Kategorije"
-
-[portal.policies.summary.docsEnforced]
-description = "Kroz aktivne politike"
-label = "Primenjeno na dokumente"
-
-[portal.policies.summary.paused]
-description = "Konfigurisano, ali se ne pokreće"
-label = "Pauzirano"
-
-[portal.policies.table]
-appliesTo = "Primenjuje se na"
-docs = "Dokumenti pod pravilima"
-enforces = "Sprovodi"
-policy = "Politika"
-status = "Status"
-
 [portal.policies.wizard.actions]
-back = "Nazad"
 cancel = "Otkaži"
-continue = "Nastavi"
+customise = "Prilagodi"
+customiseUnavailable = "Potpuni builder se nalazi na Processor-u"
 enablePolicy = "Omogući politiku"
 saveChanges = "Sačuvaj izmene"
 
 [portal.policies.wizard.capability.classify]
 desc = "Identifikuje tip dokumenta iz oznaka vašeg tima i označava ga, kako bi se arhivirao i pretraživao po kategoriji."
 label = "Klasifikuj dokument"
+
+[portal.policies.wizard.capability.complianceCheck]
+desc = "Validira završeni dokument prema PDF/A i zaustavlja pokretanje ako ne izdrži proveru."
+label = "Proveri da dokument ispunjava standard"
 
 [portal.policies.wizard.capability.compress]
 desc = "Kompresuje dokument na manju veličinu datoteke."
@@ -8424,9 +9545,17 @@ label = "Smanji veličinu datoteke"
 desc = "Spaja polja obrasca i napomene sa stranicom tako da ne mogu da se uređuju."
 label = "Poravnaj dokument"
 
+[portal.policies.wizard.capability.ingest]
+desc = "Pripremite delove za pretragu za ugrađenu bazu znanja, povezanu vektorsku bazu podataka ili izvoz korpusa."
+label = "Pripremi za pretragu znanja"
+
 [portal.policies.wizard.capability.ocr]
 desc = "Pokreće OCR kako bi skenirane stranice postale tekst koji se može izabrati i pretraživati."
 label = "Učini tekst pretraživim"
+
+[portal.policies.wizard.capability.pdfa]
+desc = "Prepisuje dokument u ISO arhivski format, ugrađujući njegove fontove i profile boja tako da se isto renderuje i za nekoliko godina. Poništava digitalne potpise."
+label = "Konvertuj u PDF/A za arhiviranje"
 
 [portal.policies.wizard.capability.redact]
 desc = "Pronalazi i zacrnjuje osetljive detalje — kao što su brojevi socijalnog osiguranja i kartica — tako da ne mogu da se pročitaju."
@@ -8452,38 +9581,60 @@ labelsHeading = "Oznake klasifikacije"
 noTools = "Prvo omogućite bar jedan alat u toku rada."
 saveFailed = "Nije moguće sačuvati politiku. Pokušajte ponovo."
 
-[portal.policies.wizard.output]
-heading = "Izlaz i pokretanje"
+[portal.policies.wizard.locations]
+aiSettings = "Otvori AI podešavanja"
+builtin = "Stirling baza znanja"
+builtinHelp = "Indeksira pretražive delove u Stirling-u i vraća obrađeni PDF na odredište ispod. Embedding provider mora biti konfigurisan u AI podešavanjima."
+checking = "Provera dostupnosti ingestion-a..."
+chooseOutput = "Izaberite omogućeno izlazno odredište pre čuvanja."
+chooseSource = "Izaberite odakle dokumenti dolaze"
+chunkSettings = "Podešavanja delova"
+connectInput = "Poveži ulazni izvor"
+consumed = "Proverite režim obrade ovog izvora: consume briše originale nakon uspešnog pokretanja. Izaberite Track u Uredi ulazni izvor da ih zadržite."
+delivery = "Isporuka"
+desktopExternal = "Upravljajte ovom vezom baze podataka u Processor-u web aplikacije ili promenite tip izlaza da biste rezultate vratili u ovaj folder."
+destination = "Odredište"
+editInput = "Uredi ulazni izvor"
+editor = "Datoteke otvorene u editoru"
+editorDestination = "Radni prostor editora"
+editorOutput = "Obrađeni PDF-ovi se vraćaju u radni prostor editora."
+engineUnavailable = "AI engine je onemogućen ili nedostupan. Omogućite ga da pripremite delove ili isključite pretragu znanja da pokrenete samo OCR."
+export = "Izvezi delove bez baze podataka"
+exportHelp = "Čuva obrađeni PDF i delove (JSONL) na odredište ispod. AI engine priprema delove; baza podataka ili embedding provider nisu potrebni."
+external = "Povezana vektorska baza podataka"
+externalHelp = "Šalje delove u izabranu bazu podataka, koja generiše embedding-e. Pokretanje vraća potvrdu o indeksiranju."
+folder = "Ulaz: {{name}}. Originali se zadržavaju pri isporuci u vektorsku bazu podataka."
+folderOutput = "Obrađene datoteke se čuvaju u ovom folderu. Izvozi korpusa zadržavaju originalni PDF."
+indexingUnavailable = "Ugrađenoj bazi znanja je potreban embedding provider. Konfigurišite ga u AI podešavanjima, povežite vektorsku bazu podataka ili izvezite delove bez baze podataka."
+input = "Dokumenti za obradu"
+invalidChunks = "Izaberite veličinu dela od 64 do 32768 i preklapanje od 0 do 4096 manje od veličine dela."
+keepOriginal = "Zadrži originale i pošalji na odredište"
+keepOriginalHelp = "Kopija se pokreće u pozadini. Vaše datoteke u editoru ostaju nepromenjene; rezultati se čuvaju na odredište ispod."
+noDatabase = "Nije podešeno nijedno odredište vektorske baze podataka. Povežite izvor ispod, zatim izaberite ili kreirajte njegovu vezu baze podataka i kolekciju."
+output = "Izlaz"
+outputType = "Tip izlaza"
+recheck = "Proveri ponovo"
+retained = "Ovaj izvor ne briše ulaze nakon obrade. Izaberite zasebno odredište da originalne datoteke ostanu nepromenjene."
+returnToEditor = "Vrati rezultate u editor"
+returnToFolder = "Vrati rezultate u ovaj folder"
+savedDatabase = "Sačuvana vektorska baza podataka"
+source = "Ulazni izvor"
 
-[portal.policies.wizard.output.filenameRule]
-autoNumber = "Automatsko numerisanje"
-label = "Pravilo naziva datoteke"
-placeholder = "Tekst za dodavanje (opciono)"
-prefix = "Prefiks"
-suffix = "Sufiks"
-
-[portal.policies.wizard.output.outputAs]
-label = "Izlaz kao"
-newFile = "Nova datoteka"
-newVersion = "Nova verzija"
-
-[portal.policies.wizard.output.runOn]
-export = "Izvoz"
-helper = "Kada se politika pokreće: pri otpremanju ili pre izvoza."
-label = "Pokreni pri"
-upload = "Otpremanje"
-
-[portal.policies.wizard.settings]
-heading = "Podešavanja"
+[portal.policies.wizard.routing]
+chooseDestination = "Izaberite odredište"
+chooseSource = "Izaberite šta pratiti"
+description = "Svaki dokument se prvo klasifikuje, zatim se prosleđuje prvom pravilu kojem odgovara. Sve što ne odgovara nijednom pravilu ide na odredište ispod."
+destinationAria = "Odredište"
+labelAria = "Tipovi dokumenata"
+labelPlaceholder = "Izaberite tipove dokumenata"
+needsDestination = "Prvo dodajte odredište ispod - pravilu je potrebno mesto na koje šalje dokumente."
+needsSource = "Povežite fasciklu, bucket ili webhook koji će ova politika pratiti."
+remove = "Ukloni pravilo"
+sourceDescription = "Dokumenti koji stignu ovde se klasifikuju, zatim šalju dalje prema pravilima ispod."
+sourceHeading = "Praćenje"
 
 [portal.policies.wizard.sources]
-heading = "Izvori"
-loading = "Učitavanje izvora…"
-
-[portal.policies.wizard.tabs]
-ariaLabel = "Koraci podešavanja"
-settings = "Podešavanja"
-workflow = "Radnje"
+connect = "Poveži izvor"
 
 [portal.policies.wizard.title]
 edit = "Izmeni {{category}} politiku"
@@ -8491,9 +9642,6 @@ setUp = "Podesi {{category}} politiku"
 
 [portal.policies.wizard.workflow]
 description = "Izaberite šta ova politika radi svakom dokumentu koji obrađuje."
-
-[portal.policySummary.action]
-setUp = "Podesi"
 
 [portal.processorFlow]
 footnote = "Brojevi su za poslednja 24 sata. Brzina toka je ilustrativna."
@@ -8692,6 +9840,7 @@ sentenceTrial = "podesite probni radni prostor"
 [portal.procurement.journey]
 daysLeft_one = "Preostao je {{count}} dan"
 daysLeft_other = "Preostalo je {{count}} dana"
+expired = "Probni period je istekao"
 
 [portal.procurement.journeySteps.agreement]
 blurb = "Jedan potpis pokriva MSA, order form, EULA i DPA."
@@ -8806,8 +9955,9 @@ maxed = "Maksimalno iskorišćeno"
 subtitle = "Vaš besplatni probni period traje do {{date}}. Kartica nije potrebna."
 title = "Enterprise probni period"
 
-[portal.settings.groups]
-admin = "Admin"
+[portal.review]
+subtitle = "Sve iz izvršavanja vaših politika i uređivača vašeg tima što zahteva vašu pažnju."
+title = "Pregled"
 
 [portal.settings.sections]
 account-link = "Povezivanje naloga"
@@ -8817,7 +9967,6 @@ appEditor = "Editor"
 appProcessor = "Processor"
 linkAccount = "Poveži Stirling nalog"
 primaryNav = "Primarna navigacija"
-switchApp = "Promeni aplikaciju"
 
 [portal.shell.topbar]
 closeNav = "Zatvori navigaciju"
@@ -8825,6 +9974,7 @@ openNav = "Otvori navigaciju"
 search = "Pretraga"
 
 [portal.sources]
+processingModeHelp = "Praćenje čuva originale i obrađuje svaku verziju jednom. Snapshot čuva originale i obrađuje ih pri svakom pokretanju. Potrošnja briše originale nakon uspešne isporuke."
 subtitle = "Ponovo upotrebljive ulazne veze koje dostavljaju dokumente u Stirling. Konfigurišite vezu jednom, a zatim je referencirajte iz bilo kog broja politika. Kliknite na red za njenu konfiguraciju i politike koje je koriste."
 title = "Izvori"
 
@@ -8838,6 +9988,7 @@ backToSource = "Nazad na podešavanje izvora"
 backToTypes = "Svi tipovi izvora"
 cancel = "Otkaži"
 chooseHint = "Izaberite odakle dokumenti dolaze. Zasivljeni konektori stižu uskoro."
+chooseOutputHint = "Izaberite gde idu obrađeni dokumenti. Zasivljeni konektori su na putu."
 comingSoon = "Uskoro"
 comingSoonHeading = "Uskoro"
 create = "Kreiraj izvor"
@@ -8857,11 +10008,6 @@ cancel = "Otkaži"
 confirm = "Izbriši"
 title = "Izbrisati izvor?"
 
-[portal.sources.kpi]
-inUse = "U upotrebi"
-total = "Veze"
-unused = "Neiskorišćeno"
-
 [portal.sources.networkFields.connection]
 helperText = "Sačuvana veza sa adresom servera i akreditivima. Ponovo je koristi svaki izvor koji se na nju poziva."
 label = "Veza"
@@ -8872,12 +10018,12 @@ label = "Fascikla"
 placeholder = "incoming/"
 
 [portal.sources.networkFields.mode]
-helperText = "Obrada jednom uklanja svaku datoteku sa servera kada je svaka politika obradi."
 label = "Režim čitanja"
 
 [portal.sources.networkFields.mode.options]
 consume = "Obrada jednom: obradi svaku datoteku jednom"
 snapshot = "Snimak: ponovo pročitaj fasciklu pri svakom pokretanju"
+track = "Zadrži originale; obradi izmene jednom"
 
 [portal.sources.networkFields.recursive]
 helperText = "Uključi potfascikle ako su datoteke organizovane u ugnežđene fascikle, ili prati samo najviši nivo."
@@ -8940,6 +10086,7 @@ label = "Režim čitanja"
 [portal.sources.types.folder.fields.mode.options]
 consume = "Potroši: obradi svaku datoteku jednom"
 snapshot = "Snapshot: ponovo pročitaj fasciklu pri svakom pokretanju"
+track = "Zadrži ga i ponovo ga obradi samo ako se promeni"
 
 [portal.sources.types.folder.fields.recursive]
 helperText = "Uključi potfascikle ako su datoteke organizovane u ugnežđene fascikle, ili prati samo najviši nivo."
@@ -8974,12 +10121,12 @@ helperText = "Sačuvana veza koja sadrži bucket i akreditive. Ponovo je koristi
 label = "Veza"
 
 [portal.sources.types.s3.fields.mode]
-helperText = "Obrada jednom uklanja svaki objekat iz bucket-a kada ga svaka politika obradi."
 label = "Režim čitanja"
 
 [portal.sources.types.s3.fields.mode.options]
 consume = "Obrada jednom: obradi svaki objekat jednom"
 snapshot = "Snimak: ponovo pročitaj bucket pri svakom pokretanju"
+track = "Zadrži originale; obradi izmene jednom"
 
 [portal.sources.types.s3.fields.prefix]
 helperText = "Obrađuju se samo objekti čiji ključevi počinju ovim prefiksom."
@@ -8996,6 +10143,17 @@ label = "SharePoint"
 
 [portal.sources.types.unknown]
 label = "Izvor"
+
+[portal.sources.types.vectordb]
+collection = "Naziv kolekcije / indeksa"
+collectionHint = "Koristite postojeću kolekciju ili indeks konfigurisan za embedding na strani servera."
+connection = "Veza sa bazom podataka"
+description = "Izlazno odredište za pripremljene delove dokumenata. Baza podataka generiše embedding-e; originali ostaju u vašem ulaznom izvoru kada je izabran režim praćenja."
+label = "Vektorska baza podataka"
+namespace = "Namespace / tenant"
+namespaceHint = "Opcioni Pinecone namespace ili Weaviate tenant. Ostavite prazno za podrazumevani namespace ili kolekciju sa jednim tenant-om."
+textField = "Polje teksta"
+textFieldHint = "Polje koje baza podataka embed-uje, u skladu sa šemom kolekcije ili Pinecone mapom polja."
 
 [portal.sources.types.webhook]
 createNote = "URL za isporuku i tajna za potpisivanje generišu se kada kreirate ovaj webhook. Pošiljaoci šalju dokumente POST metodom na taj URL i politike koje se na njega pozivaju pokreću se po prijemu."
@@ -9025,7 +10183,6 @@ type = "Tip"
 close = "Zatvori"
 
 [portal.usage]
-managePayment = "Upravljaj plaćanjem"
 subtitle = "Potrošnja, fakture i upravljanje planom za svaki PDF koji je Stirling naplatio, u jednoj konzoli."
 title = "Korišćenje i naplata"
 
@@ -9034,10 +10191,20 @@ loadWallet = "Nije moguće učitati novčanik"
 openStripePortal = "Nije moguće otvoriti Stripe portal"
 walletUnavailable = "Novčanik nije dostupan: {{status}} {{statusText}}"
 
+[portal.usage.freeTier]
+adminOnly = "Mesečne kredite ovog servera dele svi na njemu, pa samo administrator može da vidi iznose. Sve što možete da pokrenete ostaje dostupno."
+barAria = "Preostali besplatni krediti"
+capSuffix_one = "od {{allowance}} besplatnog kredita preostalo ovog meseca"
+capSuffix_other = "od {{allowance}} besplatnih kredita preostalo ovog meseca"
+connect = "Povežite Stirling nalog"
+connectBody = "Povezivanje dodaje drugo mesečno ograničenje, povećava broj korisnika koji ovaj server može da ima i uključuje Procesor."
+connectTitle = "Ovaj server nema Stirling nalog"
+loadError = "Nije moguće pročitati korišćenje kredita ovog servera. Pokušajte ponovo za trenutak."
+loadErrorTitle = "Nije moguće učitati korišćenje kredita"
+resets = "Resetuje se {{date}}"
+
 [portal.usage.sessionExpired]
-action = "Prijavite se ponovo"
 body = "Sesija vašeg Stirling naloga je istekla. Prijavite se ponovo da biste videli naplatu — vaša instanca ostaje povezana."
-title = "Sesija je istekla"
 
 [portal.users]
 title = "Korisnici"
@@ -9088,6 +10255,89 @@ unlimited = "{{used}} · Neograničeno"
 
 [printFile]
 title = "Odštampaj datoteku"
+
+[processingFolders.downloads]
+approve = "Obradi moja Preuzimanja"
+cancelSweep = "Otkaži"
+capped = "Imate {{found}} PDF dokumenata; prvih {{limit}} se obrađuje sada, a ostali slede kasnije."
+close = "Gotovo"
+explain_one = "Stirling može da klasifikuje {{count}} PDF koji je već u vašoj fascikli Preuzimanja i da ovde otvori rezultate."
+explain_other = "Stirling može da klasifikuje {{count}} PDF dokumenata koji su već u vašoj fascikli Preuzimanja i da ovde otvori rezultate."
+failed = "Nije moguće to podesiti. Vaše datoteke nisu izmenjene."
+finished_one = "Klasifikovana je {{count}} datoteka i ovde je otvoreno {{opened}} njih, spremno za rad."
+finished_other = "Klasifikovano je {{count}} datoteka i ovde je otvoreno {{opened}} njih, spremno za rad."
+nothingNew_one = "Nema ničeg novog za obradu - ova {{count}} datoteka je već prošla obradu."
+nothingNew_other = "Nema ničeg novog za obradu - ovih {{count}} datoteka je već prošlo obradu."
+notModified = "Vaše datoteke u Preuzimanjima se ne menjaju - Stirling ih čita i otvara ovde."
+notNow = "Ne sada"
+progressCounts = "od {{total}} obrađeno"
+someFailed_one = "{{count}} nije mogao da bude obrađen i ostavljen je netaknut."
+someFailed_other = "{{count}} nije moglo da bude obrađeno i ostavljeno je netaknuto."
+stillRunning = "Neke datoteke se još obrađuju u pozadini."
+title = "Organizovati vaša Preuzimanja?"
+trigger_one = "Obradi {{count}} PDF u Preuzimanjima"
+trigger_other = "Obradi {{count}} PDF dokumenata u Preuzimanjima"
+typesFound_one = "Pronađen je {{count}} tip dokumenta"
+typesFound_other = "Pronađeno je {{count}} tipova dokumenata"
+working = "Obrada ..."
+
+[processingFolders.setup]
+addFolder = "Dodaj fasciklu"
+advancedSteps = "Ova fascikla koristi podešavanje obrade koje ovaj čarobnjak ne može da uređuje. Njeni sačuvani koraci nisu izmenjeni."
+change = "Promeni"
+changeLocation = "Promeni lokaciju fascikle"
+chooseFolder = "Koju fasciklu treba da obradimo?"
+chooseParent = "Izaberite gde da se kreira fascikla"
+chooseProcessing = "Izaberite obradu"
+computer = "Na ovom računaru"
+computerDescription = "Kliknite da izaberete fasciklu sa svog računara."
+computerHeading = "Obradite svoju fasciklu"
+createIn = "Kreiraj u"
+downloadsAction = "Probajte obradu fascikle za preuzimanja"
+dropDescription = "ili kliknite da izaberete jednu sa svog računara."
+dropError = "Prevucite jednu fasciklu ovde ili kliknite da je izaberete."
+dropHeading = "Prevucite fasciklu ovde"
+editFolder = "Uredi {{name}}"
+editTitle = "Uredi obradu fascikle"
+enable = "Omogući obradu"
+existingTitle = "Podesi obradu fascikle"
+folder = "Fascikla"
+folderChoice = "Koristite postojeću fasciklu ili kreirajte novu"
+folderName = "Naziv fascikle"
+fromComputer = "Sa računara..."
+invalidName = "Unesite naziv fascikle bez separatora putanje."
+location = "Lokacija fascikle"
+namePlaceholder = "npr. Fakture"
+newFolder = "Nova fascikla"
+noFolders = "Ovde nema fascikli."
+noMatchingFolders = "Nema podudarnih fascikli."
+openFolder = "Otvori {{name}}"
+portalOnlyPreset = "Konfigurišite ovu unapred podešenu vrednost na portalu."
+presetInfo = "O {{name}}"
+presetsLabel = "Unapred podešene obrade"
+processing = "Obrada"
+progress = "Napredak podešavanja"
+replaceWarning = "\"{{name}}\" već ima obradu. Čuvanje će zameniti trenutna podešavanja obrade."
+retry = "Pokušaj ponovo"
+review = "Pregled"
+saveChanges = "Sačuvaj izmene"
+saveFolder = "Sačuvaj fasciklu"
+searchFolders = "Pretraži fascikle..."
+searchLocations = "Pretraži lokacije..."
+selectFolder = "Izaberite fasciklu"
+server = "Skladište servera"
+serverAction = "Ili dodajte novu fasciklu na server"
+settings = "Prilagodi podešavanja"
+signInRequired = "Prijavite se da podesite obradu fascikle"
+title = "Obradi fasciklu"
+useExisting = "Koristi postojeću fasciklu"
+viewLabels = "Prikaži oznake klasifikacije"
+
+[processingFolders.wall]
+done = "Gotovo"
+failed = "Neuspešno"
+title = "Obrada ove fascikle"
+waiting = "U redu čekanja ..."
 
 [provider.googledrive]
 name = "Google Drive"
@@ -9296,8 +10546,34 @@ automate = "Auto radnje"
 config = "Konfig"
 files = "Fajlovi"
 
+[quickNav]
+account = "Nalog"
+docs = "Dokumentacija"
+editor = "Uređivač"
+home = "Stirling"
+invite = "Pozovi"
+landmark = "Brza navigacija"
+noProcessorAccess = "Zatražite pristup procesoru od administratora"
+notifications = "Obaveštenja"
+processor = "Procesor"
+reader = "Čitač"
+signInToUse = "Prijavite se da koristite ovo"
+
 [read]
 tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
+
+[reader.rail]
+addDocument = "Dodaj datoteku"
+bookmarks = "Obeleživači"
+close = "Zatvori dokument"
+comment = "Komentari"
+label = "Alati za čitanje"
+readAloud = "Čitaj naglas"
+rotateLeft = "Rotiraj ulevo"
+rotateRight = "Rotiraj udesno"
+search = "Pronađi u dokumentu"
+switchDocument = "Promeni dokument"
+thumbnails = "Stranice"
 
 [redact]
 submit = "Redaktuj"
@@ -9817,8 +11093,11 @@ expired = "Istekla ti je sesija. Osveži stranicu i pokušaj ponovo."
 
 [settings]
 backToSections = "Sva podešavanja"
-close = "Zatvori"
 title = "Podešavanja"
+
+[settings.about]
+description = "Obilasci, pravni dokumenti i licence svega što je uključeno u ovu verziju."
+title = "O aplikaciji"
 
 [settings.ai]
 documents = "Dokumenti i RAG"
@@ -9833,12 +11112,47 @@ database = "Baza podataka"
 endpoints = "Krajnje tačke"
 features = "Funkcije"
 folderAccess = "Pristup fasciklama"
+integrations = "Integracije"
 mcp = "MCP Server"
 storageSharing = "Skladištenje datoteka i deljenje"
 systemSettings = "Sistemska podešavanja"
-title = "Konfiguracija"
+
+[settings.connectedInstances]
+confirmBody = "Ovim se opoziva pristup instance vašem timu u Stirling Cloud-u. Ne brišu se lokalne datoteke niti se uklanja već zabeleženo korišćenje. Da biste se ponovo povezali, pratite originalne korake povezivanja na instanci."
+confirmTitle = "Ukloniti {{name}}?"
+connectedAt = "Povezano: {{date}}"
+connectedDate = "Povezano"
+connectHelp = "Da povežete server, otvorite Podešavanja → Veza naloga na svojoj samostalno hostovanoj instanci i pratite korake povezivanja."
+copied = "ID kopiran"
+copyError = "Nije moguće kopirati ID. Izaberite ga da biste ga ručno kopirali."
+copyId = "Kopiraj ID"
+details = "Detalji"
+displayName = "Prikazano ime (opciono)"
+editName = "Uredi ime"
+empty = "Nema povezanih instanci"
+id = "ID instance"
+justConnected = "Upravo povezano"
+lastSeen = "Poslednji put viđeno: {{date}}"
+loadError = "Nije moguće učitati povezane instance"
+loadErrorBody = "Vaše veze nije moguće proveriti. Pokušajte ponovo."
+loading = "Učitavanje povezanih instanci"
+ownerOnly = "Samo vlasnik tima može da upravlja povezanim instancama."
+remove = "Ukloni vezu"
+removedSuccess = "{{name}} je prekinuo vezu sa vašim timom."
+removeError = "Nije moguće ukloniti vezu. Pokušajte ponovo."
+renameError = "Nije moguće sačuvati ime. Pokušajte ponovo."
+retry = "Pokušaj ponovo"
+saveName = "Sačuvaj ime"
+seatsReported = "{{count}} timskih mesta · prijavljeno {{date}}. Offline implementacije zadržavaju svoja mesta dok se ne razvežu."
+seatsUnknown = "Čeka se da ova implementacija prijavi broj korisnika u dnevnoj sinhronizaciji."
+subtitle = "Upravljajte samostalno hostovanim serverima povezanim sa vašim timom."
+teamNote = "Ove instance dele ograničenje obrade vašeg tima."
+title = "Povezane instance"
+unknown = "Nije dostupno"
+yourTeam = "Vaš tim"
 
 [settings.connection]
+description = "Radite lokalno na ovom računaru ili povežite aplikaciju sa Stirling serverom."
 localDescription = "Koristite lokalni pozadinski servis bez naloga. Neki alati koji zahtevaju obradu u oblaku ili samohostovani server nisu dostupni."
 logout = "Odjava"
 server = "Server"
@@ -9853,13 +11167,12 @@ selfhosted = "Samohostovano"
 
 [settings.developer]
 apiKeys = "API ključevi"
+apiKeysDescription = "Lični ključevi za pozivanje Stirling API-ja iz skripti i integracija."
 title = "Razvoj"
 
 [settings.general]
 autoUnzip = "Automatski raspakuj API odgovore"
-autoUnzipDescription = "Automatski izdvoji datoteke iz ZIP odgovora"
 autoUnzipFileLimit = "Ograničenje za automatsko raspakivanje"
-autoUnzipFileLimitDescription = "Maksimalan broj datoteka za izdvajanje iz ZIP-a"
 autoUnzipFileLimitTooltip = "Raspakuj samo ako ZIP sadrži ovoliko ili manje datoteka. Povećajte vrednost da biste izdvojili veće ZIP-ove."
 autoUnzipTooltip = "Automatski raspakuj ZIP datoteke vraćene iz API operacija. Isključite da biste zadržali ZIP datoteke netaknute. Ovo ne utiče na automatizovane tokove rada."
 defaultPdfEditor = "Podrazumevani PDF uređivač"
@@ -9910,12 +11223,6 @@ intro = "Omogućite autentifikaciju korisnika, upravljanje timom i funkcije radn
 learnMore = "Saznaj više u dokumentaciji"
 title = "Za sistemske administratore"
 
-[settings.general.loginLanding]
-description = "Izaberite koja se aplikacija otvara kada se prijavite u Stirling Cloud."
-editor = "Uređivač"
-processor = "Procesor"
-title = "Nakon prijavljivanja"
-
 [settings.general.mode]
 fullscreen = "Ceo ekran"
 sidebar = "Bočna traka"
@@ -9958,6 +11265,7 @@ fitPage = "Uklopi stranicu"
 fitWidth = "Uklopi po širini"
 
 [settings.help]
+description = "Vođeni obilasci uređivača i administratorske oblasti."
 label = "Vodiči"
 title = "Pomoć"
 
@@ -9990,6 +11298,7 @@ mac = "Uključite ⌘ (Command), ⌥ (Option) ili neki drugi modifikator u preč
 windows = "Uključite Ctrl, Alt ili neki drugi modifikator u prečicu."
 
 [settings.legal]
+description = "Uslovi, politika privatnosti i vaše postavke kolačića."
 label = "Legal"
 title = "Legal"
 
@@ -10018,9 +11327,15 @@ version = "Verzija"
 
 [settings.licensingAnalytics]
 audit = "Revizija"
+auditDescription = "Ko je šta uradio na ovom serveru i koliko dugo se taj zapis čuva."
 plan = "Plan"
-title = "Licenciranje i analitika"
+planDescription = "Vaša licenca, mesta i šta trenutni plan otključava."
+usage = "Analitika korišćenja"
 usageAnalytics = "Analitika korišćenja"
+usageDescription = "Kako se server koristi: operacije, obim i trendovi tokom vremena."
+
+[settings.monitoring]
+title = "Nadgledanje"
 
 [settings.planBilling]
 currentPlan = "Trenutni plan"
@@ -10058,18 +11373,6 @@ memberCount_one = "{{count}} team member"
 memberCount_other = "{{count}} team members"
 memberCount_zero = "no team members"
 
-[settings.planBilling.tier]
-enterprise = "Enterprise"
-enterpriseDescription = "Prilagođene enterprise funkcije i podrška"
-free = "Free"
-freeDescription = "50 kredita mesečno"
-team = "Team"
-teamBadge = "Team"
-teamDescription = "500 kredita/mesec uključeno, automatska naplata prekoračenja za neprekidnu uslugu"
-teamTooltipCredits = "Plan Team uključuje {{credits}} kredita/mesec."
-teamTooltipFineprint = "Plaćate samo ono što potrošite preko uključenih kredita."
-teamTooltipOverage = "Automatska naplata prekoračenja po {{price}}/kreditu obezbeđuje neprekidnu uslugu."
-
 [settings.planBilling.trial]
 daysRemaining = "Preostalo {{days}} dana"
 daysRemainingFull = "Vaša proba se završava za {{days}} dana"
@@ -10094,6 +11397,10 @@ privacy = "Privatnost"
 title = "Politike i privatnost"
 
 [settings.preferences]
+appearance = "Izgled"
+description = "Kako uređivač izgleda i ponaša se za vas i vaš nalog."
+downloads = "Preuzimanja"
+editorDefaults = "Podrazumevana podešavanja uređivača"
 title = "Preferencije"
 
 [settings.security]
@@ -10120,6 +11427,10 @@ connections = "Konekcije"
 security = "Bezbednost"
 telegram = "Telegram"
 title = "Bezbednost i autentikacija"
+
+[settings.server]
+system = "Sistem"
+title = "Server"
 
 [settings.signOut]
 confirm = "Da li ste sigurni da želite da se odjavite?"
@@ -10660,7 +11971,6 @@ commenterHint = "Komentarisanje uskoro stiže."
 copied = "Link kopiran u privremenu memoriju"
 copy = "Kopiraj"
 copyFailed = "Kopiranje nije uspelo"
-copyLink = "Kopiraj link za deljenje"
 createdAt = "Kreirano"
 description = "Kreirajte link za deljenje za ovu datoteku. Prijavljeni korisnici sa linkom mogu da mu pristupe."
 download = "Preuzmi"
@@ -10797,17 +12107,26 @@ leaveButton = "Napusti tim"
 leaveError = "Neuspešno napuštanje tima"
 leaveSuccess = "Uspešno ste napustili tim"
 loading = "Učitavanje informacija o timu..."
+makeOwner = "Postavi za vlasnika"
 memberCount_one = "{{count}} member"
 memberCount_other = "{{count}} members"
 memberCount_zero = "no members"
 memberRemoved = "Član uspešno uklonjen"
 namePlaceholder = "Unesite naziv tima"
+noOwner = "Ovaj tim nema vlasnika"
 personal = "Lični"
+recoverBody = "Postojeći član može da povrati vlasništvo da bi upravljao timom i njegovim podešavanjima naplate."
+recoverOwner = "Postani vlasnik tima"
+recoverSuccess = "Sada ste vlasnik tima."
 removeError = "Neuspešno uklanjanje člana"
 renameCancel = "Otkaži preimenovanje"
 renameError = "Neuspešno preimenovanje tima"
 renameSubmit = "Sačuvaj naziv tima"
 renameSuccess = "Tim uspešno preimenovan"
+transferBody = "Postaviti {{email}} za vlasnika tima? Kontrolisaće članstvo u timu i podešavanja naplate organizacije. Vi ćete postati član. Pretplata i novčanik tima ostaju uz tim."
+transferError = "Vlasništvo nije moglo da se prenese. Osvežite tim i pokušajte ponovo."
+transferSuccess = "Vlasništvo nad timom je preneto. Vaša uloga je sada član."
+transferTitle = "Prenos vlasništva nad timom"
 
 [team.invitationBanner]
 acceptButton = "Prihvati"
@@ -10912,8 +12231,6 @@ ZIP = "ZIP arhiva"
 [toolPanel]
 alpha = "Alfa"
 backToAllTools = "Nazad na sve alate"
-collapse = "Skupi panel"
-expand = "Proširi panel"
 goBack = "Idi nazad"
 pdfTools = "PDF alati"
 placeholder = "Izaberite alat da biste započeli"
@@ -11028,7 +12345,7 @@ urgent = "Hitno"
 attentionBody = "Vaš admin treba da se prijavi da vidi više informacija. Odmah ih kontaktirajte."
 attentionBodyAdmin = "Pregledajte zahteve licence da ovaj server ostane usklađen."
 attentionTitle = "Ovaj server zahteva pažnju admina"
-message = "Iskoristite maksimum iz Stirling PDF uz neograničene korisnike i napredne funkcije"
+message = "Iskoristite maksimum iz Stirling PDF uz 100 korisnika, uređivanje PDF teksta i napredne funkcije"
 seeInfo = "Pogledajte info"
 title = "Nadogradite na Server plan"
 upgradeButton = "Nadogradite sada"
@@ -11084,6 +12401,7 @@ visits = "Posete"
 lastActive = "Poslednja aktivnost"
 learnMore = "Saznajte više o ulogama i pristupu."
 locked = "Zaključano"
+ownerSetupRequired = "Vlasnik organizacije nije završio prvo prijavljivanje. Dovršite podešavanje ili zamolite operatora servera da povrati vlasništvo pre prenosa vlasništva."
 roleFor = "Uloga za {{name}}"
 rowActions = "Radnje za {{name}}"
 showAll = "Prikaži svih {{count}}"
@@ -11105,6 +12423,7 @@ removeTeam = "Ukloni iz tima"
 rename = "Preimenuj tim"
 resetPw = "Resetuj lozinku"
 suspend = "Suspenduj"
+transferOwnership = "Prenesi vlasništvo"
 unlock = "Otključaj nalog"
 
 [users.activity]
@@ -11143,6 +12462,8 @@ disableMfaTitle = "Resetuj MFA"
 removeBody = "Trajno ukloniti {{name}} iz organizacije? Ovo se ne može opozvati."
 removeTeamBody = "Ukloniti {{name}} iz tima? Zadržaće nalog, ali će izgubiti pristup resursima ovog tima."
 removeTitle = "Ukloni člana"
+transferOwnershipBody = "Postaviti {{name}} za vlasnika organizacije? Postaće administrator. Vi ćete ostati administrator, ali ćete izgubiti vlasništvo. Samo novi vlasnik ili operator servera mogu da ga prenesu nazad."
+transferOwnershipTitle = "Prenos vlasništva nad organizacijom"
 
 [users.empty]
 description = "Pozovite svoj tim da počnete saradnju."
@@ -11150,11 +12471,11 @@ title = "Još nema članova"
 
 [users.group]
 addToTeam = "Dodaj u tim"
+administrators = "{{count}} administratora"
 guestCount = "{{count}} gost"
 guests = "Gosti"
 ledBy = "vodi {{owner}}"
 org = "Organizacija"
-owners = "{{count}} vlasnik"
 team = "{{name}} tim"
 teamMeta = "{{count}} osoba"
 
@@ -11214,15 +12535,9 @@ title = "Premesti u tim"
 [users.newTeam]
 action = "+ Novi tim"
 create = "Kreiraj tim"
-emailError = "Unesite važeću email adresu"
 name = "Naziv tima"
 namePlaceholder = "npr. Finansije"
 nameRequired = "Naziv tima je obavezan"
-owner = "Vlasnik tima"
-ownerFailed = "Tim je kreiran, ali vlasnik nije mogao biti pozvan. Dodelite jednog sa spiska."
-ownerHelper = "Svaki tim ima vođu. Biće pozvan kao Vlasnik tima, uz omogućen Processor, i može dodati ostale. Kasnije možete promeniti dodelu."
-ownerPlaceholder = "owner@company.com"
-subtitle = "Grupišite ljude pod Vlasnikom tima koji upravlja njihovim pristupom."
 title = "Novi tim"
 
 [users.renameTeam]
@@ -11246,6 +12561,7 @@ title = "Resetuj lozinku"
 tooShort = "Lozinka mora imati najmanje 8 karaktera"
 
 [users.role]
+admin = "Administrator"
 guest = "Gost"
 member = "Član"
 orgOwner = "Vlasnik organizacije"
@@ -11357,11 +12673,15 @@ validUntrusted = "Važeći, potpisnik nije potvrđen"
 cannotPreviewFile = "Nije moguće pregledati datoteku"
 copyText = "Copy"
 disableColorFilter = "Onemogući filter boja"
+documentUpdated = "Dokument je ažuriran"
 dualPageView = "Prikaz dve stranice"
 enableDarkFilter = "Omogući tamni filter"
 enableSepiaFilter = "Omogući sepija filter"
+engineLoadError = "Nije uspelo inicijalizovanje PDF viewer engine-a"
+engineSlowWarning = "Inicijalizacija PDF engine-a traje duže nego što je očekivano. Proverite WebAssembly i Worker podešavanja pregledača ili ponovo učitajte stranicu."
 firstPage = "Prva stranica"
 lastPage = "Poslednja stranica"
+loadingEngine = "Učitavanje PDF Engine-a..."
 moreOptions = "Više"
 nextPage = "Sledeća stranica"
 onlyPdfSupported = "Prikazivač podržava samo PDF datoteke. Izgleda da je ova datoteka drugačijeg formata."
@@ -11382,6 +12702,7 @@ close = "Zatvori priloge"
 closeSidebar = "Zatvori bočnu traku priloga"
 download = "Preuzmi prilog"
 empty = "Nema priloga u ovom dokumentu"
+loadFailed = "Učitavanje priloga nije uspelo"
 loading = "Učitavanje priloga..."
 noDocument = "Otvorite PDF da biste videli njegove priloge."
 noMatch = "Nijedan prilog ne odgovara vašoj pretrazi"
@@ -11389,6 +12710,7 @@ noSupport = "Podrška za priloge nije dostupna u ovom pregledaču."
 retry = "Pokušaj ponovo"
 searchPlaceholder = "Pretraži priloge"
 title = "Prilozi"
+untitled = "Bez naslova"
 
 [viewer.bookmarks]
 addBookmark = "Add bookmark"
@@ -11396,6 +12718,7 @@ bookmarkTitle = "Naslov obeleživača"
 bookmarkTitleRequired = "Naslov obeleživača je obavezan"
 closeSidebar = "Zatvori bočnu traku obeleživača"
 collapseAll = "Skupi sve obeleživače"
+editorOnly = "Obeleživači ovog dokumenta mogu da se uređuju samo u uređivaču."
 empty = "No bookmarks in this document"
 expandAll = "Proširi sve obeleživače"
 searchPlaceholder = "Pretraži obeleživače"
@@ -11471,7 +12794,19 @@ renderMarkdown = "Prikaži markdown"
 sortedBy = "Sortirano po: {{column}}"
 textStats = "{{lines}} linija · {{size}}"
 
+[viewer.portfolio]
+addFile = "Dodaj datoteku"
+count_one = "{{count}} datoteka u ovom portfoliju"
+count_other = "{{count}} datoteka u ovom portfoliju"
+import = "Uvezi u Stirling"
+importFailed = "Ova datoteka nije mogla da bude dodata u vaš radni prostor."
+memberUnavailable = "Ova datoteka nije mogla da bude pročitana iz portfolija."
+preview = "Pregled"
+searchPlaceholder = "Pretraži datoteke"
+title = "Portfolio"
+
 [viewer.redaction]
+applyAll = "Primeni redakcije"
 removeMark = "Ukloni ovu oznaku"
 
 [viewer.search]
@@ -11796,6 +13131,10 @@ title = "Tekst vodenog žiga"
 image = "Slika"
 text = "Tekst"
 
+[workbench.sessionRestore]
+none = "Vaše prethodne datoteke više nisu sačuvane na ovom uređaju."
+partial = "Vraćeno je {{restored}} od {{total}} datoteka. Ostale više nisu sačuvane na ovom uređaju."
+
 [workbenchBar]
 activeFiles = "Aktivne datoteke"
 annotations = "Anotacije"
@@ -11897,10 +13236,10 @@ lockedBadge = "Zaključan"
 loginRequired = "Prvo omogućite režim prijave"
 memberActions = "Radnje člana"
 noMembersFound = "Nijedan član nije pronađen"
+ownerLocked = "Prenesite vlasništvo nad organizacijom u Podešavanja → Radni prostor → Korisnici pre promene uloge ili naloga vlasnika."
 role = "Uloga"
 searchMembers = "Pretraži članove..."
 team = "Tim"
-title = "Osobe"
 unlockAccount = "Otključaj nalog"
 unlockUserError = "Nije uspelo otključavanje korisničkog naloga"
 unlockUserSuccess = "Korisnički nalog je uspešno otključan"
@@ -12054,7 +13393,6 @@ system = "Sistem"
 teamActions = "Radnje tima"
 teamName = "Naziv tima"
 teamNotFound = "Tim nije pronađen"
-title = "Timovi"
 totalMembers = "Ukupno članova"
 viewTeam = "Prikaži tim"
 

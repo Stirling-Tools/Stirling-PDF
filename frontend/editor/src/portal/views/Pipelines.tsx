@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import { Icon } from "@app/ui/Icon";
 import { Banner, Button, CardRail, EmptyState, Skeleton } from "@app/ui";
 import { errorMessage } from "@portal/api/http";
 import { useSectionFlags } from "@portal/hooks/useAsync";
@@ -22,7 +22,6 @@ import {
 } from "@portal/api/policies";
 import { qk } from "@portal/queries/keys";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
-import { PipelinesIcon } from "@portal/components/icons";
 import { PipelinesTable } from "@portal/components/pipelines/PipelinesTable";
 import { PipelineTemplateCard } from "@portal/components/pipelines/PipelineTemplateCard";
 import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
@@ -98,8 +97,6 @@ export function Pipelines() {
   const connectSource = () =>
     navigate(`${toPortalPath(VIEW_PATHS.sources)}/new`);
 
-  // Open a suggested template in the simple wizard (a fresh policy). AI-gated templates stay closed
-  // until the engine is confirmed on, so a click during the app-config load can't open a disabled one.
   const openTemplate = useCallback(
     (entry: CatalogueEntry) => {
       if (entry.category.comingSoon) return;
@@ -149,12 +146,10 @@ export function Pipelines() {
       icon: stored?.icon,
       enabled: stored ? stored.status !== "paused" : wire.enabled,
       required: wire.required,
-      inputs: [],
+      inputs: wire.inputs ?? [],
       steps: wire.steps,
       output: { type: wire.output.type, options: wire.output.options },
-      outputIds: [],
-      // A wizard policy only ever runs on the editor, so hand its editor participation to the
-      // builder rather than letting it default to disabled.
+      outputIds: wire.outputIds ?? [],
       editor: wire.editor,
     };
     return draft;
@@ -172,6 +167,7 @@ export function Pipelines() {
       refetch();
     } catch (e) {
       setPageError(errorMessage(e));
+      throw e;
     }
   }
 
@@ -199,7 +195,7 @@ export function Pipelines() {
         <Button
           fat
           onClick={openCreate}
-          leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
+          leftSection={<Icon name="plus" size={"1.125rem"} />}
         >
           {t("portal.pipelines.actions.newCustomPipeline")}
         </Button>
@@ -234,16 +230,14 @@ export function Pipelines() {
 
         {showEmpty && (
           <EmptyState
-            icon={<PipelinesIcon size={28} />}
+            icon={<Icon name="workflow" size={28} />}
             title={t("portal.pipelines.empty.title")}
             description={t("portal.pipelines.empty.description")}
             actions={
               <>
                 <Button
                   onClick={openCreate}
-                  leftSection={
-                    <AddRoundedIcon style={{ fontSize: "1.125rem" }} />
-                  }
+                  leftSection={<Icon name="plus" size={"1.125rem"} />}
                 >
                   {t("portal.pipelines.empty.action")}
                 </Button>

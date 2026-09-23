@@ -52,6 +52,13 @@ export function useClassificationDemo(
   );
   const cancelled = useRef(false);
 
+  useEffect(
+    () => () => {
+      cancelled.current = true;
+    },
+    [],
+  );
+
   // From the OS, not the backend's `downloads-suggestion`: that endpoint is
   // proprietary-only, so the desktop-bundled backend 404s it every time.
   useEffect(() => {

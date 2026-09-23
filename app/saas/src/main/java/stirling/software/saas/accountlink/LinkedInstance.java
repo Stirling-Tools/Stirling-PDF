@@ -45,7 +45,8 @@ public class LinkedInstance {
     private Long teamId;
 
     /**
-     * Admin who registered the instance; informational (no FK, so a user delete never offlines it).
+     * Account allowed to renew browser sign-in. No FK: deleting the user does not stop device
+     * access.
      */
     @Column(name = "created_by_user_id")
     private Long createdByUserId;
@@ -70,6 +71,12 @@ public class LinkedInstance {
     /** Stamped when the device credential last authenticated; powers staleness display. */
     @Column(name = "last_seen_at")
     private LocalDateTime lastSeenAt;
+
+    @Column(name = "seat_count")
+    private Integer seatCount;
+
+    @Column(name = "seats_reported_at")
+    private java.time.OffsetDateTime seatsReportedAt;
 
     /** NULL = active. Set on unlink/revoke; a revoked credential fails authentication. */
     @Column(name = "revoked_at")

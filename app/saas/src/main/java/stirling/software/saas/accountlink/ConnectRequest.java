@@ -78,6 +78,7 @@ public class ConnectRequest {
     @Column(name = "team_id")
     private Long teamId;
 
+    /** LINK: set on approval. REAUTH: pinned to the original linking user at creation. */
     @Column(name = "approved_by_user_id")
     private Long approvedByUserId;
 

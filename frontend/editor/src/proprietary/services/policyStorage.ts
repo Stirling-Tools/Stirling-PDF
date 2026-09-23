@@ -28,6 +28,11 @@ export function rawStoredPolicies(): string | null {
 }
 export const POLICIES_CHANGE_EVENT = "stirling:policies-changed";
 
+/** Clears server-owned policy settings before connecting to another server or account. */
+export function clearPolicies(): void {
+  persist({});
+}
+
 function defaultState(policyKey: string): PolicyState {
   // Unconfigured by default. The backend is the source of truth for what's
   // actually configured + active; this is just the empty local-cache shape.
@@ -104,6 +109,12 @@ export function loadPolicies(): PoliciesByKey {
     }
   }
   return out;
+}
+
+/** Whether the stored entry for this key is an enforced policy (blocking) rather
+ *  than an ordinary pipeline. Unknown keys are treated as pipelines. */
+export function isEnforcedPolicy(policyKey: string | undefined): boolean {
+  return policyKey != null && loadPolicies()[policyKey]?.required === true;
 }
 
 function persist(state: PoliciesByKey): void {

@@ -35,7 +35,61 @@ public record InstanceEntitlement(
         LocalDateTime periodEnd,
         Integer licensedUsers,
         int automationStepLimit,
-        long prepaidRemainingUnits) {
+        long prepaidRemainingUnits,
+        Integer fleetUserLimit) {
+
+    public InstanceEntitlement(
+            boolean subscribed,
+            long freeRemainingUnits,
+            long periodSpendUnits,
+            Long periodCapUnits,
+            EntitlementState state,
+            UnitCalcPolicy unitCalcPolicy,
+            LocalDateTime periodStart,
+            LocalDateTime periodEnd,
+            Integer licensedUsers,
+            int automationStepLimit,
+            long prepaidRemainingUnits) {
+        this(
+                subscribed,
+                freeRemainingUnits,
+                periodSpendUnits,
+                periodCapUnits,
+                state,
+                unitCalcPolicy,
+                periodStart,
+                periodEnd,
+                licensedUsers,
+                automationStepLimit,
+                prepaidRemainingUnits,
+                null);
+    }
+
+    public InstanceEntitlement(
+            boolean subscribed,
+            long freeRemainingUnits,
+            long periodSpendUnits,
+            Long periodCapUnits,
+            EntitlementState state,
+            UnitCalcPolicy unitCalcPolicy,
+            LocalDateTime periodStart,
+            LocalDateTime periodEnd,
+            Integer licensedUsers,
+            int automationStepLimit) {
+        this(
+                subscribed,
+                freeRemainingUnits,
+                periodSpendUnits,
+                periodCapUnits,
+                state,
+                unitCalcPolicy,
+                periodStart,
+                periodEnd,
+                licensedUsers,
+                automationStepLimit,
+                0L,
+                null);
+    }
 
     public InstanceEntitlement {
         automationStepLimit = BillingStepLimit.resolve(automationStepLimit);
