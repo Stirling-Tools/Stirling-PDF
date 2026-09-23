@@ -1,5 +1,6 @@
 package stirling.software.proprietary.failure;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Component;
@@ -7,6 +8,8 @@ import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.proprietary.policy.engine.PolicyRunner;
+import stirling.software.proprietary.policy.engine.SweepOutcome;
+import stirling.software.proprietary.policy.ledger.ClaimState;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.Policy;
 
@@ -34,12 +37,26 @@ public class RetryInFolderAction implements FailureAction {
         Policy policy = fix.ownedFolderFor(event);
         String identity = fix.documentIdentity(event);
 
+        ClaimState parked = processedLedger.statesFor(policy.id(), List.of(identity)).get(identity);
         if (!processedLedger.forgetFailure(policy.id(), identity)) {
             throw new FailureActionException(
-                    FailureActionException.Reason.ALREADY_CLOSED,
+                    FailureActionException.Reason.NOTHING_TO_RUN,
                     "This document has no parked failure to run again");
         }
-        policyRunner.runFile(policy, identity);
+        SweepOutcome outcome = policyRunner.runFile(policy, identity);
+        // A paused or unreadable folder, a missing licence, or a file that has since left the
+        // folder all yield no run. The row stays open, and the failure is parked again at the
+        // gate it had, so the next press finds something to run rather than "no parked failure".
+        if (outcome.runIds().isEmpty()) {
+            if (parked != null) {
+                processedLedger.settle(
+                        policy.id(), identity, parked.gate(), parked.contentHash(), false);
+            }
+            throw new FailureActionException(
+                    FailureActionException.Reason.NOTHING_TO_RUN,
+                    "This document could not be run again: the folder is paused, unreadable, or"
+                            + " no longer holds it");
+        }
 
         // Closed on dispatch, not on the re-run's outcome: the run is asynchronous, and a repeat
         // failure records its own incident, which folds back onto this row by dedup key.

@@ -68,7 +68,10 @@ vi.mock("@app/components/notifications/useNotificationsAvailable", () => ({
 }));
 
 // Core's own registry is empty, so without this there are no client actions to test.
-vi.mock("@app/components/notifications/notificationActions", () => ({
+vi.mock("@app/components/notifications/notificationActions", async () => ({
+  ...(await vi.importActual<
+    typeof import("@app/components/notifications/notificationActions")
+  >("@app/components/notifications/notificationActions")),
   useNotificationActions: () => h.specs,
 }));
 
@@ -144,6 +147,7 @@ function notification(
     documentName: null,
     documentLocation: "BROWSER",
     sourceKind: "EDITOR",
+    heldByServer: false,
     sourceId: null,
     policyId: null,
     occurrences: 1,
@@ -503,6 +507,7 @@ describe("NotificationBell", () => {
         sourceId: "src-downloads",
         sourceKind: "SMART_FOLDER",
         documentLocation: "SMART_FOLDER",
+        heldByServer: true,
         fileId: null,
       }),
     ]);

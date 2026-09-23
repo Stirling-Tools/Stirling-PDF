@@ -23,7 +23,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import stirling.software.common.service.InternalApiClient;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
+import stirling.software.proprietary.policy.engine.SweepOutcome;
 import stirling.software.proprietary.policy.input.FolderDocuments;
+import stirling.software.proprietary.policy.ledger.ClaimState;
+import stirling.software.proprietary.policy.ledger.ProcessedFileStatus;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.Policy;
@@ -31,10 +34,8 @@ import stirling.software.proprietary.policy.output.FolderOutputSink;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
- * Tests for {@link RetryInFolderAction}, which is the one action that makes the server open and
- * process a file on behalf of a caller. Mostly about who may press it: reading an incident and
- * running the document behind it are different powers, and a team leader has the first over rows
- * they do not own.
+ * Tests for {@link RetryInFolderAction}, the one action that makes the server process a file for a
+ * caller. Mostly about who may press it: a team leader reads rows they may not run.
  */
 @ExtendWith(MockitoExtension.class)
 class RetryInFolderActionTest {
@@ -180,6 +181,7 @@ class RetryInFolderActionTest {
                     .thenReturn(java.util.Optional.of(folder(Policy.SURFACE_PROCESSING_FOLDER)));
             when(policyAccessGuard.canAccess(any(Policy.class))).thenReturn(true);
             when(processedLedger.forgetFailure(FOLDER_ID, IDENTITY)).thenReturn(true);
+            when(policyRunner.runFile(any(Policy.class), anyString())).thenReturn(oneRun());
             when(store.applyStatus(any(), any(), any(), any()))
                     .thenReturn(mock(FileRunEvent.class));
 
@@ -188,6 +190,31 @@ class RetryInFolderActionTest {
             // The identity comes from the row, so the inputs cannot redirect it at a sibling file.
             verify(policyRunner)
                     .runFile(any(Policy.class), org.mockito.ArgumentMatchers.eq(IDENTITY));
+        }
+
+        @Test
+        void leavesTheRowOpenAndParkedAgainWhenTheFolderYieldedNoRun() {
+            // A paused or unreadable folder, or a file that has since left it, starts nothing.
+            // Resolving anyway would make the failure vanish with nothing re-run, and leaving the
+            // ledger row forgotten would have the next press answer "no parked failure".
+            when(policyStore.get(FOLDER_ID))
+                    .thenReturn(java.util.Optional.of(folder(Policy.SURFACE_PROCESSING_FOLDER)));
+            when(policyAccessGuard.canAccess(any(Policy.class))).thenReturn(true);
+            when(processedLedger.statesFor(FOLDER_ID, List.of(IDENTITY)))
+                    .thenReturn(
+                            Map.of(
+                                    IDENTITY,
+                                    new ClaimState(ProcessedFileStatus.ERROR, "gate-1", "hash-1")));
+            when(processedLedger.forgetFailure(FOLDER_ID, IDENTITY)).thenReturn(true);
+            when(policyRunner.runFile(any(Policy.class), anyString())).thenReturn(noRuns());
+
+            assertThatThrownBy(() -> action.execute(event(FOLDER_ID, IDENTITY), Map.of(), "carol"))
+                    .isInstanceOf(FailureActionException.class)
+                    .extracting(e -> ((FailureActionException) e).getReason())
+                    .isEqualTo(FailureActionException.Reason.NOTHING_TO_RUN);
+
+            verify(processedLedger).settle(FOLDER_ID, IDENTITY, "gate-1", "hash-1", false);
+            verify(store, never()).applyStatus(any(), any(), any(), any());
         }
 
         @Test
@@ -216,6 +243,14 @@ class RetryInFolderActionTest {
 
             verify(processedLedger, never()).forgetFailure(anyString(), anyString());
         }
+    }
+
+    private static SweepOutcome oneRun() {
+        return new SweepOutcome(List.of("run-2"), 1, 0, 0, 0, 0);
+    }
+
+    private static SweepOutcome noRuns() {
+        return new SweepOutcome(List.of(), 0, 0, 0, 0, 0);
     }
 
     @Test

@@ -43,12 +43,8 @@ class RecordFailurePrivacyTest {
 
     @Test
     void hasNoFileNameFieldAtAll() {
-        // Structural, not behavioural: if a name component is ever added back, this fails. Both
-        // spellings, because a view once grew a documentName that this test did not catch.
-        //
-        // NotificationView is deliberately absent: it carries a documentName derived per reader
-        // and owner-scoped, which is the opposite of storing one. Nothing here may hold a name,
-        // so nothing here can disclose one to a reader who is not the owner.
+        // Structural, not behavioural: if a name component is ever added back, this fails. Not
+        // NotificationView, whose documentName is derived per reader, never stored.
         assertThat(List.of(RecordFailure.class.getRecordComponents()))
                 .extracting(RecordComponent::getName)
                 .doesNotContain("fileName", "documentName");

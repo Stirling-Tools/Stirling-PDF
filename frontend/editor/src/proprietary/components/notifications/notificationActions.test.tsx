@@ -603,6 +603,7 @@ describe("OPEN_IN_TOOL for a smart folder's document", () => {
       kindId: "UNKNOWN",
       documentLocation: "SMART_FOLDER" as const,
       sourceKind: "SMART_FOLDER" as const,
+      heldByServer: true,
       sourceId: "src-downloads",
       fileId: null,
     }),

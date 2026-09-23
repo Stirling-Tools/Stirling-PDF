@@ -75,24 +75,18 @@ const NO_DOCUMENT: NotificationDocumentState = {
 
 /**
  * Whether this browser holds the document a row names, and so could run a fix over it. The server
- * says; inferring it from `sourceId` also hid every smart-folder row from the person watching the
- * folder, who has no other way to hear that it stopped working.
+ * says: a client inferring it from `sourceId` cannot see a smart folder's rows at all.
  */
 export function isResolvableHere(notification: AppNotification): boolean {
   return notification.documentLocation === "BROWSER";
 }
 
 /**
- * Rows the server keeps on the reader's behalf: a smart folder's documents, and the folder itself
- * when it could not be read, which names no document and so has no location to speak of. Nothing
- * here can be fixed in this browser, so they are shown for what they say rather than what they
- * offer.
+ * Rows the server keeps on the reader's behalf. The server says which, so a smart-folder policy
+ * run from the editor, whose document is this browser's, is not mistaken for one.
  */
 function isHeldByServer(notification: AppNotification): boolean {
-  return (
-    notification.documentLocation === "SMART_FOLDER" ||
-    notification.sourceKind === "SMART_FOLDER"
-  );
+  return notification.heldByServer;
 }
 
 interface NotificationsSnapshot {
@@ -170,8 +164,7 @@ async function read(forCycle: number): Promise<void> {
 
   const documents = Object.fromEntries(resolved);
   // Presentation, not access: the server has already scoped these rows to the reader. A member is
-  // shown what they can act on, plus what the server holds for them — a smart folder's failures
-  // reach nobody else, so hiding them tells its owner nothing at all.
+  // shown what they can act on, plus what the server holds for them and nobody else.
   const visible = viewerReviewsTeam
     ? listed
     : listed.filter(

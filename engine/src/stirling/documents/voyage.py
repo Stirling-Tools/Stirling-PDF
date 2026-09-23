@@ -24,6 +24,11 @@ _MISSING_API_KEY = "stirling-voyage-api-key-not-configured"
 class VoyageEmbeddingModel(OpenAIEmbeddingModel):
     """Voyage embeddings spoken over the OpenAI wire format."""
 
+    @property
+    def configured(self) -> bool:
+        """Whether the client has credentials; this does not make a provider request."""
+        return self._client.api_key != _MISSING_API_KEY
+
     async def embed(
         self,
         inputs: str | Sequence[str],

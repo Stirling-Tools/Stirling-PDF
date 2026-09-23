@@ -7,8 +7,8 @@ import java.util.List;
  * copy, so the server can ship a new kind without a client release, and {@code actions} arrive
  * already resolved so the client needs no rules.
  *
- * <p>A source-fed row carries no {@code fileId}: the identity behind it is a path on the operator's
- * disk, and the client has nothing to resolve it against anyway. See {@link #documentLocation}.
+ * <p>No document name, and no {@code fileId} on a source-fed row, whose identity is a path on the
+ * operator's disk. See {@link #documentLocation}.
  */
 public record FileRunEventView(
         String id,
@@ -26,7 +26,7 @@ public record FileRunEventView(
         String runId,
         String sourceId,
         String fileId,
-        /** Where the document is, so the client stops inferring it from {@code sourceId}. */
+        /** Where the document is, decided by the server rather than inferred from the ids here. */
         DocumentLocation documentLocation,
         String actor,
         int occurrences,
@@ -49,11 +49,8 @@ public record FileRunEventView(
         UNREACHABLE;
 
         /**
-         * Gated on the source, decided by what produced it. A source's reference is a location on
-         * the server, so a source-fed row is never {@code BROWSER}, even once the policy that fed
-         * it is gone and its kind reads as nothing. Among source-fed rows only a smart folder's is
-         * reachable: a bucket-fed policy has a source too, and calling its document a smart
-         * folder's offered a retry that could only ever be refused.
+         * Fails closed on the source id: a source-fed row is never {@code BROWSER}, even once the
+         * policy that fed it is gone, and only a smart folder's is reachable from here.
          */
         public static DocumentLocation of(FileRunEvent event, SourceKind source) {
             if (event.fileId() == null || event.fileId().isBlank()) {

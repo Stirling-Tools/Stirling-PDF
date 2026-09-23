@@ -2243,6 +2243,7 @@ title = "Suggested"
 finish = "Finish"
 run = "Run Automation"
 running = "Running Automation..."
+signInToRun = "Sign in to run automations."
 steps_one = "{{count}} step"
 steps_other = "{{count}} steps"
 unnamed = "Unnamed Automation"
@@ -3428,10 +3429,8 @@ title = "Open every PDF in Stirling"
 
 [classificationDemo.followUp]
 background = "This runs in the background. The ring on the left shows progress."
-batchCta = "Process another {{count}}"
-free = "They are all covered by your remaining free allowance."
-partial = "{{count}} of them are covered by your remaining free allowance."
 restCta = "Process the rest"
+serverCredits = "Your connected server manages credits for processing these files."
 title = "Want to keep going? You have {{count}} more PDFs in your Downloads folder."
 
 [classificationDemo.groups]
@@ -3440,7 +3439,7 @@ other = "Other"
 [classificationDemo.offer]
 body = "Classify and organise the {{count}} most recent PDFs in your Downloads folder by type."
 cta = "Process my Downloads folder"
-privacy = "Everything stays on this device and you can stop anytime."
+privacy = "Your PDFs stay on this device. Your connected server records processing usage."
 title = "See what Stirling can do with a whole folder"
 
 [classificationDemo.phase]
@@ -4609,6 +4608,7 @@ open = "Open"
 openVersionInWorkspace = "Open in workspace"
 originFilter = "Filter by source"
 refresh = "Refresh"
+refreshNeedsConnection = "Sign in to refresh from the server."
 remove = "Delete"
 removeLocalFolder = "Unmount from Stirling"
 removeVersion = "Remove this version"
@@ -4682,10 +4682,11 @@ done = "Ready"
 doneHint = "Processed - opens the result"
 failed = "Failed"
 processing = "Processing"
-processingHint = "Processing - available when it finishes"
+processingHint = "This file will be available when processing is complete"
 retry = "Retry"
 retryHint = "Run this file again"
 waiting = "Queued"
+waitingHint = "This file is queued and will be available when processing is complete"
 
 [filesPage.empty]
 hint = "Drop PDFs anywhere on this page to upload, or use the New folder button to organize your files."
@@ -4733,6 +4734,7 @@ moveFolderFailed = "Could not move folder."
 moveFolderFailedDetail = "Could not move folder: {{message}}"
 openDiskFileFailed = "Could not open {{name}}."
 openDiskFileFailedDetail = "Could not open {{name}}: {{message}}"
+processingStatusUnavailable = "Could not refresh processing status. File locks have been released until the connection recovers."
 readFolderFailed = "Could not read the folder."
 readFolderFailedDetail = "Could not read the folder: {{message}}"
 removeFilesFailed = "Could not remove files."
@@ -5644,6 +5646,26 @@ uploadFromComputer = "Browse files"
 [language]
 direction = "ltr"
 
+[legacyBilling]
+currentTeamAllowance = "Current allowance for your legacy team"
+loadError = "We couldn't check your existing subscription. Try again before purchasing another plan."
+loading = "Checking your subscription..."
+portalError = "We couldn't open Stripe billing. Please try again."
+pro = "Pro (legacy)"
+retry = "Try again"
+team = "Team (legacy)"
+teamUsers = "Your team: {{used}} of {{limit}} users"
+unlimitedUsers = "Your team: unlimited users ({{used}} in use)"
+usersUnavailable = "We couldn't confirm your team's user allowance. Contact support to check your legacy plan."
+
+[legacyBilling.status]
+active = "Active"
+incomplete = "Payment pending"
+past_due = "Payment overdue"
+paused = "Paused"
+trialing = "Trial"
+unpaid = "Unpaid"
+
 [legal]
 accessibility = "Accessibility"
 cookie = "Cookie Policy"
@@ -5657,6 +5679,7 @@ terms = "Terms and Conditions"
 title = "3rd Party Licenses"
 
 [localMode]
+automationUnavailable = "Sign in to Stirling Cloud or a self-hosted server to use processing folders and pipelines."
 toolUnavailable = "This tool requires an account. Sign in to Stirling Cloud or connect to a self-hosted server to use it."
 
 [localMode.toolPicker]
@@ -7368,19 +7391,25 @@ description = "Ask your server administrator to enable the connection to Stirlin
 title = "Account connection unavailable"
 
 [portal.accountLink.connect]
+adminRequired = "Ask your server administrator to open Usage & billing and link a Stirling account for more monthly credits. Manual PDF tools are still available."
+adminTitle = "Ask your server administrator"
 close = "Close"
-exhaustedLede = "This server has used its free credits for the month. They reset when the period rolls over. Connecting a Stirling account adds a further monthly allowance on top."
+copied = "Copied"
+copyAdminMessage = "Copy message for administrator"
+exhaustedLede = "This server has used its free credits for the month. Link a new or existing Stirling account to access your team’s monthly allowance."
 notNow = "Not now"
 start = "Connect Stirling account"
 step = "Step {{current}} of {{total}}"
 
 [portal.accountLink.connect.benefits]
-creditsDetailMonthly = "Free monthly allowance"
-creditsLabel = "Credits"
-processorDetail = "Pipelines, policies, sources and audit"
-processorLabel = "Processor"
-teamsDetail = "Free for up to 5 users"
-teamsLabel = "Teams"
+billingDetail = "Manage usage, billing and linked servers together"
+billingLabel = "One account"
+creditsDetail = "Access your team’s free monthly allowance"
+creditsLabel = "Monthly credits"
+processingDetail = "Buy more credits for API, AI and automation as you grow"
+processingLabel = "More processing"
+teamsDetail = "Add more users with a paid Team plan"
+teamsLabel = "Larger teams"
 
 [portal.accountLink.connect.callback]
 linkedNotSignedIn = "You are not signed in to Stirling in this browser, so usage and billing will ask you to sign in."
@@ -7431,6 +7460,15 @@ retry = "Check connection"
 revokedBody = "Stirling Cloud rejected this account connection. Reconnect the account in Settings to restore eligible cloud-backed features."
 revokedTitle = "Account connection revoked"
 
+[portal.accountLink.failure]
+automatic = "Pipeline “{{pipeline}}” stopped during an automatic run because this server is out of credits."
+export = "Pipeline “{{pipeline}}” stopped before download because this server is out of credits."
+manage = "Open pipeline settings"
+manual = "Pipeline “{{pipeline}}” stopped when you ran it because this server is out of credits."
+openFailed = "Open the Processor on your connected server to manage this pipeline."
+pipeline = "Pipeline"
+upload = "Pipeline “{{pipeline}}” stopped after upload because this server is out of credits."
+
 [portal.accountLink.gate]
 retry = "Try again"
 
@@ -7447,7 +7485,7 @@ title = "No connected instances"
 callbackMismatch = "This server's configured frontend address does not match the address you opened. Open the server at its configured address, or update Frontend URL in General settings, then try again."
 cancel = "Cancel"
 continueReauth = "Sign in again"
-exhaustedTitle = "Add more monthly credits"
+exhaustedTitle = "Keep your workflows running"
 identity = "Stirling account"
 linkTitle = "Connect your Stirling account"
 noAuthorizeUrl = "Stirling did not return somewhere to continue. Try again in a moment."
@@ -7458,6 +7496,9 @@ after = "so this server can finish the connection when you come back."
 and = "and"
 before = "Set"
 title = "Stirling connection not configured"
+
+[portal.accountLink.notice]
+openFailed = "Could not open your browser. Open Usage & billing on your connected server to link an account."
 
 [portal.accountLink.panel]
 instancesSub = "Self-hosted servers connected to the same team."
@@ -7473,6 +7514,27 @@ sub = "Manage this server’s connection to your Stirling Cloud account."
 forbidden = "Only the team owner can manage connected instances."
 generic = "Your connections could not be checked. Try again."
 title = "Couldn’t load connected instances"
+
+[portal.accountLink.pipelines]
+editorExport = "Editor · before download"
+editorUpload = "Editor · on upload"
+empty = "No active pipelines."
+loadFailed = "Could not load pipelines. Open pipeline settings to try again."
+loading = "Loading pipelines…"
+manual = "Manual runs"
+paused = "Paused"
+required = "Required policy · manage in pipeline settings"
+saveFailed = "Could not change this pipeline. Open pipeline settings to review it."
+title = "Active pipelines"
+triggered = "Triggered this prompt"
+viewAll = "View all pipelines"
+
+[portal.accountLink.rail]
+adminCta = "How to get more credits"
+adminSub = "Ask your server administrator to link a Stirling account for more credits. Manual PDF tools are still available."
+exhaustedCta = "Link account for more credits"
+exhaustedSub = "Link for monthly credits, shared billing and the option to grow with a Team plan."
+exhaustedTitle = "This server’s free credits are used up"
 
 [portal.accountLink.renewal]
 dataUnavailable = "Your plan and usage will appear after you renew billing access. This server stays connected, and local document processing remains available."
@@ -8192,6 +8254,14 @@ label = "Sumo Logic"
 baseUrlPlaceholder = "https://your-org.webhook.office.com/webhookb2/..."
 description = "Post a message to a Teams channel when a policy runs."
 label = "Microsoft Teams"
+
+[portal.connections.types.vectordb]
+baseUrlPlaceholder = "https://your-database-host"
+description = "Index document chunks using Weaviate or Pinecone server-side embedding. Use the Weaviate server URL or Pinecone index host. Private endpoints require the operator to enable policies.allowPrivateApiEndpoints."
+label = "Vector database"
+pinecone = "Pinecone"
+vendor = "Database"
+weaviate = "Weaviate"
 
 [portal.connections.types.webhook]
 baseUrlPlaceholder = "https://example.com/hooks/documents"
@@ -8981,7 +9051,6 @@ chooseSource = "Choose a source"
 discard = "Discard changes"
 editorDestination = "Editor"
 editorDestinationDetail = "Replaces the file you ran it on"
-editorDestinationHelp = "This pipeline runs on the files in your workspace, and its results replace the file it ran on. There is nowhere else to send them."
 inputs = "Input"
 inputSource = "Input source"
 inputTrigger = "Trigger"
@@ -9037,7 +9106,8 @@ label = "Change icon"
 [portal.pipelines.builder.ingest]
 chunkSize = "Chunk size"
 chunkSizeHint = "Characters per chunk. Smaller chunks retrieve more precisely; larger ones keep more context together."
-editorPdfOnly = "Editor policies return PDFs only. To export chunks or Markdown, choose a saved input source and a file destination."
+destinationNeedsChunks = "This vector database destination needs a final AI ingestion step that exports chunks only."
+editorPdfOnly = "Only PDFs can return to the editor. To export chunks or Markdown, choose Keep originals and send to a destination under Output."
 exportChunks = "Export chunks as JSONL"
 exportChunksHint = "One chunk per line with its page span, ready to load into another system."
 exportMarkdown = "Export markdown"
@@ -9050,6 +9120,7 @@ nothingToDo = "Turn on at least one of indexing or an export, or this step has n
 overlap = "Overlap"
 overlapHint = "Characters repeated between neighbouring chunks, so a sentence split across two is still findable."
 overlapTooBig = "Overlap must be smaller than the chunk size ({{chunkSize}})."
+prepareDestination = "Prepare chunks for this destination"
 unavailable = "AI ingestion needs the AI engine and DocParse turned on, including when the destination database generates embeddings."
 
 [portal.pipelines.builder.routing]
@@ -9219,7 +9290,7 @@ desc = "Strip hidden data, convert to PDF/A for archiving, and validate every do
 label = "Compliance"
 
 [portal.policies.categories.ingestion]
-desc = "Classify documents, extract structured data, enforce naming conventions, and normalize pages."
+description = "Read documents, prepare searchable chunks, and deliver them to a knowledge base or export destination."
 label = "Ingestion"
 
 [portal.policies.categories.retention]
@@ -9253,13 +9324,13 @@ summary = "Strips hidden data, converts to the PDF/A archival format, and valida
 2 = "Validate compliance"
 
 [portal.policies.config.ingestion]
-summary = "Classifies documents, extracts structured data, enforces naming, and normalizes pages."
+description = "Choose the documents to process, make their text searchable, and send chunks to a database or export them."
 
 [portal.policies.config.ingestion.rules]
-0 = "Classify"
-1 = "Extract"
-2 = "Name"
-3 = "Normalize"
+0 = "Read text"
+1 = "Chunk"
+2 = "Index"
+3 = "Keep the original"
 
 [portal.policies.config.pdfa.fields.outputFormat]
 help = "PDF/A-2b suits most archives. PDF/A-1b is the strictest and most widely accepted; PDF/A-3b additionally allows attachments."
@@ -9582,6 +9653,45 @@ labelsHeading = "Classification labels"
 [portal.policies.wizard.errors]
 noTools = "Enable at least one action."
 saveFailed = "Couldn't save the pipeline. Please try again."
+
+[portal.policies.wizard.locations]
+aiSettings = "Open AI settings"
+builtin = "Stirling knowledge base"
+builtinHelp = "Indexes searchable chunks in Stirling and returns the processed PDF to the destination below. An embedding provider must be configured in AI settings."
+checking = "Checking ingestion availability..."
+chooseOutput = "Choose an enabled output destination before saving."
+chooseSource = "Choose where documents come from"
+chunkSettings = "Chunk settings"
+connectInput = "Connect input source"
+consumed = "Check this source's processing mode: consume deletes originals after a successful run. Choose Track in Edit input source to keep them."
+delivery = "Delivery"
+desktopExternal = "Manage this database connection in the web app’s Processor, or change the output type to return results to this folder."
+destination = "Destination"
+editInput = "Edit input source"
+editor = "Files opened in the editor"
+editorDestination = "Editor workspace"
+editorOutput = "Processed PDFs return to the editor workspace."
+engineUnavailable = "The AI engine is disabled or unreachable. Enable it to prepare chunks, or turn off knowledge search to run OCR only."
+export = "Export chunks without a database"
+exportHelp = "Saves the processed PDF and chunks (JSONL) to the destination below. The AI engine prepares the chunks; no database or embedding provider is needed."
+external = "Connected vector database"
+externalHelp = "Sends chunks to the selected database, which generates embeddings. The run returns an indexing receipt."
+folder = "Input: {{name}}. Originals are retained when delivering to a vector database."
+folderOutput = "Processed files are saved in this folder. Corpus exports keep the original PDF."
+indexingUnavailable = "The built-in knowledge base needs an embedding provider. Configure one in AI settings, connect a vector database, or export chunks without a database."
+input = "Documents to process"
+invalidChunks = "Choose a chunk size from 64 to 32768 and an overlap from 0 to 4096 smaller than the chunk size."
+keepOriginal = "Keep originals and send to a destination"
+keepOriginalHelp = "A copy runs in the background. Your editor files stay unchanged; results are saved to the destination below."
+noDatabase = "No vector database destination is set up. Connect a source below, then choose or create its database connection and collection."
+output = "Output"
+outputType = "Output type"
+recheck = "Check again"
+retained = "This source does not delete inputs after processing. Choose a separate destination to keep the original files unchanged."
+returnToEditor = "Return results to editor"
+returnToFolder = "Return results to this folder"
+savedDatabase = "Saved vector database"
+source = "Input source"
 
 [portal.policies.wizard.routing]
 chooseDestination = "Choose a destination"
@@ -9951,6 +10061,7 @@ backToSource = "Back to source setup"
 backToTypes = "All source types"
 cancel = "Cancel"
 chooseHint = "Choose where documents come from. Greyed-out connectors are on the way."
+chooseOutputHint = "Choose where processed documents go. Greyed-out connectors are on the way."
 comingSoon = "Coming soon"
 comingSoonHeading = "Coming soon"
 create = "Create source"
@@ -10106,6 +10217,17 @@ label = "SharePoint"
 [portal.sources.types.unknown]
 label = "Source"
 
+[portal.sources.types.vectordb]
+collection = "Collection / index name"
+collectionHint = "Use an existing collection or index configured for server-side embedding."
+connection = "Database connection"
+description = "An output destination for prepared document chunks. The database generates embeddings; originals stay in your input source when track mode is selected."
+label = "Vector database"
+namespace = "Namespace / tenant"
+namespaceHint = "Optional Pinecone namespace or Weaviate tenant. Leave empty for the default namespace or a single-tenant collection."
+textField = "Text field"
+textFieldHint = "The field the database embeds, matching the collection schema or Pinecone field map."
+
 [portal.sources.types.webhook]
 createNote = "A delivery URL and signing secret are generated when you create this webhook. Senders POST documents to that URL and the referencing policies run on arrival."
 description = "Receive documents by signed HTTP POST from any external system."
@@ -10144,11 +10266,15 @@ walletUnavailable = "Wallet unavailable: {{status}} {{statusText}}"
 
 [portal.usage.freeTier]
 adminOnly = "This server's monthly credits are shared by everyone on it, so only an administrator can see the figures. Everything you can run stays available."
+barAria = "Free credits remaining"
+capSuffix_one = "of {{allowance}} free credit left this month"
+capSuffix_other = "of {{allowance}} free credits left this month"
 connect = "Connect a Stirling account"
 connectBody = "Connecting adds a second monthly allowance, raises the users this server can have, and turns on the Processor."
 connectTitle = "This server has no Stirling account"
 loadError = "Couldn't read this server's credit usage. Try again in a moment."
 loadErrorTitle = "Couldn't load credit usage"
+resets = "Resets {{date}}"
 
 [portal.usage.sessionExpired]
 body = "Your Stirling account session has expired. Sign in again to view billing — your instance stays linked."
@@ -10275,6 +10401,7 @@ selectFolder = "Select a folder"
 server = "Server storage"
 serverAction = "Or add a new folder to your server"
 settings = "Adjust settings"
+signInRequired = "Sign in to set up folder processing"
 title = "Set up folder processing"
 useExisting = "Use existing folder"
 viewLabels = "View classification labels"
@@ -10503,6 +10630,7 @@ noProcessorAccess = "Ask an admin for processor access"
 notifications = "Notifications"
 processor = "Processor"
 reader = "Reader"
+signInToUse = "Sign in to use this"
 
 [read]
 tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"

@@ -54,7 +54,11 @@ export interface AppNotification {
   /** What to call a document this browser does not hold. The owner's own files only. */
   documentName: string | null;
   documentLocation: DocumentLocation;
-  /** What produced the row, so it can say where the work came from. */
+  /**
+   * The server keeps this row for the reader: a smart folder's document, or the folder itself
+   * when it could not be read. Shown to a member without a local file; never fixable here.
+   */
+  heldByServer: boolean;
   sourceKind: SourceKind;
   /** Which folder, bucket or webhook fed the run, and null for an attended one. */
   sourceId: string | null;
@@ -131,9 +135,16 @@ export async function dispatchNotificationAction(
     await apiClient.post(
       `${NOTIFICATIONS_PATH}/${encodeURIComponent(notificationId)}/actions/${encodeURIComponent(actionId)}`,
       inputs,
+      { suppressErrorToast: true },
     );
     return null;
   } catch (error) {
+    // Ids and status only: the row's detail and document name stay out of the console.
+    console.warn(
+      `Notification action ${actionId} on ${notificationId} failed`,
+      (error as { response?: { status?: number } })?.response?.status ??
+        "no response",
+    );
     return refusalReason(error) ?? "";
   }
 }

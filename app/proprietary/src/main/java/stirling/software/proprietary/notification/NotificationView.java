@@ -11,9 +11,8 @@ import stirling.software.proprietary.failure.Ownership;
 import stirling.software.proprietary.failure.SourceKind;
 
 /**
- * A source's row flattened to what a bell renders. {@code fileId} is an opaque reference the
- * reader's own client minted, and is present only when {@code documentLocation} is {@code BROWSER}.
- * A document the server holds is never addressable, and is named only for the row's own owner.
+ * A source's row flattened to what a bell renders. {@code fileId} is present only when {@code
+ * documentLocation} is {@code BROWSER}; a document the server holds is named only for its owner.
  */
 public record NotificationView(
         String id,
@@ -33,6 +32,11 @@ public record NotificationView(
          */
         String documentName,
         FileRunEventView.DocumentLocation documentLocation,
+        /**
+         * Whether the server keeps this row on the reader's behalf: a smart folder's document, or
+         * the folder itself when it could not be read. The one rule a member's bell filters on.
+         */
+        boolean heldByServer,
         /**
          * What fed the run, for a row the reader did not cause; {@code EDITOR} for one they did.
          */

@@ -29,11 +29,8 @@ public final class StorageFileIdentities {
     }
 
     /**
-     * The row id behind an identity this class wrote, or null for anything else — including a
-     * folder source's identity, which is a path rather than an id.
-     *
-     * <p>Lives beside {@link #identity} so the two cannot drift: a reader that parses the prefix
-     * itself keeps working when the writer stops using one.
+     * The row id behind an identity this class wrote, or null for anything else, including a folder
+     * source's path identity. Lives beside {@link #identity} so the two cannot drift.
      */
     public static Long storedFileIdOf(String identity) {
         if (identity == null || !identity.startsWith(PREFIX)) {

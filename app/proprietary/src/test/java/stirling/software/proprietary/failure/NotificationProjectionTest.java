@@ -183,9 +183,7 @@ class NotificationProjectionTest {
         @Test
         void withholdsTheReferenceBehindASourceFedRow() {
             // A folder source builds its identity from the file's canonical path, so sending the
-            // reference would hand every reader a location on the operator's disk. The client has
-            // nothing to resolve it against either, so the row says what kind of failure it is and
-            // nothing about which document.
+            // reference would hand every reader a location on the operator's disk.
             store.record(
                     RecordFailure.forRun(
                             FailureKind.INPUT_PASSWORD_PROTECTED,
@@ -260,6 +258,8 @@ class NotificationProjectionTest {
             assertThat(notification.documentLocation())
                     .isEqualTo(FileRunEventView.DocumentLocation.UNREACHABLE);
             assertThat(notification.fileId()).isNull();
+            // Still a policy's row: EDITOR would have the bell blame the reader's own editor.
+            assertThat(notification.sourceKind()).isEqualTo(SourceKind.POLICY);
             assertThat(notification.toString()).doesNotContain("Payroll", "march.pdf");
         }
 

@@ -38,7 +38,13 @@ public class FailureActionException extends RuntimeException {
          * The action was allowed to run and could not do its job: a repair the document defeated, a
          * password that did not open it, a folder that could not be written back to.
          */
-        FIX_FAILED
+        FIX_FAILED,
+
+        /**
+         * Dispatched, but there was nothing to act on: the document is no longer parked as a
+         * failure, or its folder yielded no run. The event stays open.
+         */
+        NOTHING_TO_RUN
     }
 
     private final Reason reason;
@@ -63,7 +69,7 @@ public class FailureActionException extends RuntimeException {
                     HttpStatus.BAD_REQUEST;
             // Not a 404: the caller may legitimately read the row, they just may not do this.
             case ACTION_NOT_THEIRS -> HttpStatus.FORBIDDEN;
-            case ALREADY_CLOSED -> HttpStatus.CONFLICT;
+            case ALREADY_CLOSED, NOTHING_TO_RUN -> HttpStatus.CONFLICT;
             // The request was well-formed and permitted; the document is what refused.
             case FIX_FAILED -> HttpStatus.UNPROCESSABLE_ENTITY;
         };

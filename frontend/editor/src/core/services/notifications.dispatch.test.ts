@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const post = vi.fn();
 
@@ -22,8 +22,15 @@ const PROBLEM = {
 };
 
 describe("dispatchNotificationAction", () => {
+  let warned: ReturnType<typeof vi.spyOn>;
+
   beforeEach(() => {
     post.mockReset();
+    warned = vi.spyOn(console, "warn").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    warned.mockRestore();
   });
 
   it("answers null when the action ran", async () => {
@@ -53,6 +60,18 @@ describe("dispatchNotificationAction", () => {
     expect(await dispatchNotificationAction("failure:evt-1", "REPAIR")).toBe(
       PROBLEM.detail,
     );
+  });
+
+  it("logs which action on which row was refused, and nothing the row said", async () => {
+    post.mockRejectedValue(refusal(PROBLEM));
+
+    await dispatchNotificationAction("failure:evt-1", "REPAIR");
+
+    expect(warned).toHaveBeenCalledTimes(1);
+    const logged = warned.mock.calls[0].map(String).join(" ");
+    expect(logged).toContain("REPAIR");
+    expect(logged).toContain("failure:evt-1");
+    expect(logged).not.toContain(PROBLEM.detail);
   });
 
   it("reads it from a body handed back as text", async () => {

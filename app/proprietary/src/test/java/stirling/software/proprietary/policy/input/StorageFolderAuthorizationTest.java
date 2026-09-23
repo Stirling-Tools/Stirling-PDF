@@ -148,7 +148,8 @@ class StorageFolderAuthorizationTest {
                         authority,
                         mock(PolicyTriggerManager.class),
                         properties,
-                        List.of(input));
+                        List.of(input),
+                        List.of());
         runner =
                 new PolicyRunner(
                         engine,

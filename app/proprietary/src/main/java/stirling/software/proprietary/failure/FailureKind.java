@@ -176,12 +176,8 @@ public enum FailureKind {
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
 
     /**
-     * A source could not be listed at all: a watched folder that was unplugged, renamed or had its
-     * permissions changed. Scoped to the source, so a folder that has been gone a week is one
-     * incident rather than one per sweep.
-     *
-     * <p>Claims no error code: nothing throws a coded exception here. The sweep records it
-     * directly, which is why it is reached without the classifier.
+     * A source could not be listed at all: a folder unplugged, renamed or locked down. Scoped to
+     * the source, so a week-long outage is one incident. Claims no error code.
      */
     SOURCE_UNREADABLE(
             FailureStage.INPUT,
@@ -284,9 +280,7 @@ public enum FailureKind {
             FailureScope.RUN,
             noErrorCodes(),
             fallback("This run failed for a reason Stirling does not yet recognise."),
-            // No known fix to declare, so a plain retry leads: these are often one-offs. One id
-            // wherever the document is: a browser holding it opens the tool, and a smart folder's
-            // document is run again by the server.
+            // No known fix to declare, so a plain retry leads: these are often one-offs.
             resolution(OPEN_IN_TOOL, OWNER),
             global(VIEW_FILE, OWNER, SECONDARY),
             global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),

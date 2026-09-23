@@ -6,6 +6,7 @@ import React, {
   useState,
   useSyncExternalStore,
 } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
@@ -33,6 +34,7 @@ import { ViewerContext, useViewer } from "@app/contexts/ViewerContext";
 import { WorkbenchType, isBaseWorkbench } from "@app/types/workbench";
 import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
 import { useEditorSearchScopes } from "@app/hooks/useSuperSearch";
+import { useTitleBarStrip } from "@app/contexts/TitleBarStripContext";
 import ViewerShareButton from "@app/components/viewer/ViewerShareButton";
 import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
@@ -85,6 +87,7 @@ export default function WorkbenchBar({
 }: WorkbenchBarProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const strip = useTitleBarStrip();
   const searchScopes = useEditorSearchScopes();
   const returnRoute = useSyncExternalStore(
     subscribeFilesPageReturnRoute,
@@ -458,6 +461,9 @@ export default function WorkbenchBar({
   // little room for a usable search, bump the search to its own row
   const barRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
+    // The strip lays its single row out itself; search isn't in the inline bar
+    // to measure, so there's nothing to reflow.
+    if (strip.enabled) return;
     const bar = barRef.current;
     if (!bar) return;
     const MIN_SEARCH_WIDTH = 320;
@@ -497,7 +503,182 @@ export default function WorkbenchBar({
     if (globalsEl) ro.observe(globalsEl);
     measure();
     return () => ro.disconnect();
-  }, []);
+  }, [strip.enabled]);
+
+  // Left: optional "Back to File library" + view switcher.
+  const viewsCluster = (
+    <div className="workbench-bar-views" data-tour="view-switcher">
+      {returnRoute && hasFiles && (
+        <>
+          <Button
+            variant="tertiary"
+            className="workbench-bar-view-btn workbench-bar-back-btn"
+            onClick={handleBackToFiles}
+            aria-label={t(
+              returnRoute.label
+                ? "filesPage.backToFolder"
+                : "filesPage.backToMyFiles",
+              returnRoute.label
+                ? `Back to ${returnRoute.label}`
+                : "Back to File library",
+              { folder: returnRoute.label ?? "" },
+            )}
+            leftSection={<Icon name="arrow-left" size={"1.1rem"} />}
+          >
+            <span className="workbench-bar-view-label">
+              {returnRoute.label
+                ? t("filesPage.backToFolder", "Back to {{folder}}", {
+                    folder: returnRoute.label,
+                  })
+                : t("filesPage.backToMyFiles", "Back to File library")}
+            </span>
+          </Button>
+          <div className="workbench-bar-divider" />
+        </>
+      )}
+      {/* Not in the library: it browses files rather than showing one, and the
+          rail is what moves between surfaces. */}
+      {currentView !== "myFiles" && (hasFiles || isCustomView) && (
+        <SegmentedControl<WorkbenchType>
+          className="workbench-bar-views"
+          size="sm"
+          value={currentView}
+          onChange={setCurrentView}
+          variant="secondary"
+          options={viewOptions.map((opt) => ({
+            value: opt.value,
+            label: (
+              <>
+                {opt.icon}
+                <span className="workbench-bar-view-label">{opt.label}</span>
+              </>
+            ),
+          }))}
+        />
+      )}
+      {barLeadButtons.map((btn) => {
+        const content = renderButton(btn);
+        if (!content) return null;
+        return (
+          <div className="workbench-bar-lead" key={btn.id}>
+            <div className="workbench-bar-divider" />
+            {content}
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  // Global super search - always present, even on the homepage.
+  const searchCluster = (
+    <div className="workbench-bar-search">
+      <SuperSearch scopes={searchScopes} />
+    </div>
+  );
+
+  // Tool buttons - second row, only rendered when buttons exist. In the viewer
+  // the row is retractable: a handle on its right edge hides the whole row;
+  // Workbench then shows a tab below the bar to bring it back.
+  const toolRow =
+    sectionsWithButtons.length > 0 && !(isViewer && viewerToolbarCollapsed) ? (
+      <div
+        className={`workbench-bar-center${
+          isMobile && mobileToolsExpanded
+            ? " workbench-bar-center--expanded"
+            : ""
+        }`}
+      >
+        <div className="workbench-bar-center-scroll">
+          {sectionsWithButtons.map(
+            ({ section, buttons: sectionButtons }, idx) => (
+              <React.Fragment key={section}>
+                {idx > 0 && <div className="workbench-bar-divider" />}
+                {sectionButtons.map((btn) => {
+                  const content = renderButton(btn);
+                  if (!content) return null;
+                  return (
+                    <div key={btn.id} className="workbench-bar-action-wrapper">
+                      {content}
+                    </div>
+                  );
+                })}
+              </React.Fragment>
+            ),
+          )}
+        </div>
+        <WorkbenchBarToolbarHandle
+          isMobile={isMobile}
+          expanded={mobileToolsExpanded}
+          onToggleExpanded={toggleMobileTools}
+          onRetract={
+            isViewer && onCollapseViewerToolbar
+              ? handleRetractToolbar
+              : undefined
+          }
+        />
+      </div>
+    ) : null;
+
+  // Right: global buttons - export group left, close anchored right.
+  const globalsCluster = (
+    <div className="workbench-bar-globals">
+      {/* A view's own controls, ahead of the globals every view shares. */}
+      {barRowButtons.map((btn) => {
+        const content = renderButton(btn);
+        if (!content) return null;
+        return (
+          <div key={btn.id} className="workbench-bar-action-wrapper">
+            {content}
+          </div>
+        );
+      })}
+      {barRowButtons.length > 0 && (
+        <div className="workbench-bar-divider workbench-bar-globals-sep" />
+      )}
+      {/* Share (viewer only; opens the same modal as My Files "Manage sharing") */}
+      {currentView === "viewer" && sharingEnabled && (
+        <ViewerShareButton disabled={actionsDisabled} />
+      )}
+
+      {isMobile ? (
+        <WorkbenchBarMobileActions {...globalActionProps} />
+      ) : (
+        <WorkbenchBarDesktopActions
+          {...globalActionProps}
+          enforcingProgress={enforcingProgress}
+        />
+      )}
+      {isPhone && (
+        <>
+          {/* Last in the globals, so it is the rightmost control. */}
+          <div className="workbench-bar-divider workbench-bar-globals-sep" />
+          <NotificationBell />
+        </>
+      )}
+    </div>
+  );
+
+  // With a title-bar strip, the top row lives in it: portal the view switcher and
+  // globals into its slots, keep the tool row inline, and leave search to the
+  // strip (which owns the single SuperSearch instance).
+  if (strip.enabled) {
+    return (
+      <>
+        {strip.viewsSlot && createPortal(viewsCluster, strip.viewsSlot)}
+        {strip.globalsSlot && createPortal(globalsCluster, strip.globalsSlot)}
+        {toolRow && (
+          <div
+            ref={barRef}
+            className="workbench-bar"
+            data-wrapped="false"
+            data-portaled="true"
+          >
+            {toolRow}
+          </div>
+        )}
+      </>
+    );
+  }
 
   return (
     <div
@@ -506,155 +687,10 @@ export default function WorkbenchBar({
       data-wrapped="false"
       data-tour="workbench-bar"
     >
-      {/* Left: optional "Back to File library" + view switcher */}
-      <div className="workbench-bar-views" data-tour="view-switcher">
-        {returnRoute && hasFiles && (
-          <>
-            <Button
-              variant="tertiary"
-              className="workbench-bar-view-btn workbench-bar-back-btn"
-              onClick={handleBackToFiles}
-              aria-label={t(
-                returnRoute.label
-                  ? "filesPage.backToFolder"
-                  : "filesPage.backToMyFiles",
-                returnRoute.label
-                  ? `Back to ${returnRoute.label}`
-                  : "Back to File library",
-                { folder: returnRoute.label ?? "" },
-              )}
-              leftSection={<Icon name="arrow-left" size={"1.1rem"} />}
-            >
-              <span className="workbench-bar-view-label">
-                {returnRoute.label
-                  ? t("filesPage.backToFolder", "Back to {{folder}}", {
-                      folder: returnRoute.label,
-                    })
-                  : t("filesPage.backToMyFiles", "Back to File library")}
-              </span>
-            </Button>
-            <div className="workbench-bar-divider" />
-          </>
-        )}
-        {/* Not in the library: it browses files rather than showing one, and the
-            rail is what moves between surfaces. */}
-        {currentView !== "myFiles" && (hasFiles || isCustomView) && (
-          <SegmentedControl<WorkbenchType>
-            className="workbench-bar-views"
-            size="sm"
-            value={currentView}
-            onChange={setCurrentView}
-            variant="secondary"
-            options={viewOptions.map((opt) => ({
-              value: opt.value,
-              label: (
-                <>
-                  {opt.icon}
-                  <span className="workbench-bar-view-label">{opt.label}</span>
-                </>
-              ),
-            }))}
-          />
-        )}
-        {barLeadButtons.map((btn) => {
-          const content = renderButton(btn);
-          if (!content) return null;
-          return (
-            <div className="workbench-bar-lead" key={btn.id}>
-              <div className="workbench-bar-divider" />
-              {content}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Global super search - always present, even on the homepage */}
-      <div className="workbench-bar-search">
-        <SuperSearch scopes={searchScopes} />
-      </div>
-
-      {/* Tool buttons - second row, only rendered when buttons exist. In the
-          viewer the row is retractable: a handle on its right edge hides the
-          whole row; Workbench then shows a tab below the bar to bring it back. */}
-      {sectionsWithButtons.length > 0 &&
-        !(isViewer && viewerToolbarCollapsed) && (
-          <div
-            className={`workbench-bar-center${
-              isMobile && mobileToolsExpanded
-                ? " workbench-bar-center--expanded"
-                : ""
-            }`}
-          >
-            <div className="workbench-bar-center-scroll">
-              {sectionsWithButtons.map(
-                ({ section, buttons: sectionButtons }, idx) => (
-                  <React.Fragment key={section}>
-                    {idx > 0 && <div className="workbench-bar-divider" />}
-                    {sectionButtons.map((btn) => {
-                      const content = renderButton(btn);
-                      if (!content) return null;
-                      return (
-                        <div
-                          key={btn.id}
-                          className="workbench-bar-action-wrapper"
-                        >
-                          {content}
-                        </div>
-                      );
-                    })}
-                  </React.Fragment>
-                ),
-              )}
-            </div>
-            <WorkbenchBarToolbarHandle
-              isMobile={isMobile}
-              expanded={mobileToolsExpanded}
-              onToggleExpanded={toggleMobileTools}
-              onRetract={
-                isViewer && onCollapseViewerToolbar
-                  ? handleRetractToolbar
-                  : undefined
-              }
-            />
-          </div>
-        )}
-
-      {/* Right: Global buttons - export group left, close anchored right */}
-      <div className="workbench-bar-globals">
-        {/* A view's own controls, ahead of the globals every view shares. */}
-        {barRowButtons.map((btn) => {
-          const content = renderButton(btn);
-          if (!content) return null;
-          return (
-            <div key={btn.id} className="workbench-bar-action-wrapper">
-              {content}
-            </div>
-          );
-        })}
-        {barRowButtons.length > 0 && (
-          <div className="workbench-bar-divider workbench-bar-globals-sep" />
-        )}
-        {/* Share (viewer only; opens the same modal as My Files "Manage sharing") */}
-        {currentView === "viewer" && sharingEnabled && (
-          <ViewerShareButton disabled={actionsDisabled} />
-        )}
-
-        {isMobile ? (
-          <WorkbenchBarMobileActions {...globalActionProps} />
-        ) : (
-          <WorkbenchBarDesktopActions
-            {...globalActionProps}
-            enforcingProgress={enforcingProgress}
-          />
-        )}
-        {isPhone && (
-          <>
-            {/* Last in the globals, so it is the rightmost control. */}
-            <div className="workbench-bar-divider workbench-bar-globals-sep" />
-            <NotificationBell />
-          </>
-        )}
-      </div>
+      {viewsCluster}
+      {searchCluster}
+      {toolRow}
+      {globalsCluster}
     </div>
   );
 }

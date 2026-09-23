@@ -2,14 +2,6 @@ import fs from "node:fs";
 import path from "path";
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 
-// Quarantined on WebKit: restoring zoom/scroll after an in-place byte swap
-// races the settle on the slow CI WebKit engine and flakes. Passes on Chromium
-// and Firefox.
-test.skip(
-  ({ browserName }) => browserName === "webkit",
-  "viewer swap-restore flakes on slow CI WebKit",
-);
-
 interface SwapSamplerState {
   swapMs: number;
   swapAt: number;
@@ -469,6 +461,7 @@ test("tool output reloads the document in place", async ({ page }) => {
 
 test("a tool output reload shows the saved position in its first frame", async ({
   page,
+  browserName,
 }) => {
   test.setTimeout(240_000);
   await loadViewer(page);
@@ -509,6 +502,10 @@ test("a tool output reload shows the saved position in its first frame", async (
 
   // Read the baseline once the panel has settled; the tool page can otherwise
   // contribute its own preview pages to the sample stream.
+  if (browserName === "chromium") {
+    const session = await page.context().newCDPSession(page);
+    await session.send("Emulation.setCPUThrottlingRate", { rate: 4 });
+  }
   const pageTopBefore = await page
     .locator('[data-page-index="1"]')
     .first()

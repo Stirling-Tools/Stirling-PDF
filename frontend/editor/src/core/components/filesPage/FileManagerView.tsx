@@ -72,6 +72,8 @@ import {
 } from "@app/hooks/useProcessingFolders";
 import { FolderProcessingSetup } from "@app/components/policies/FolderProcessingSetup";
 import { useServerProcessingBlock } from "@app/hooks/useServerProcessingBlock";
+import { useConnectedServer } from "@app/hooks/useConnectedServer";
+import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
 import { FolderSweepWall } from "@app/components/policies/SweepRunWall";
 import { RestoreOriginalsDialog } from "@app/components/filesPage/RestoreOriginalsDialog";
 import { useNewFailureNotifications } from "@app/components/filesPage/useNewFailureNotifications";
@@ -137,7 +139,8 @@ export default function FileManagerView() {
     useState<StirlingFileStub | null>(null);
   const folders = useFolders();
   const { actions: fileActions } = useFileActions();
-  const { fileIds: activeWorkspaceFileIds } = useAllFiles();
+  const { fileIds: activeWorkspaceFileIds, fileStubs: activeWorkspaceFiles } =
+    useAllFiles();
   const activeWorkspaceFileIdSet = useMemo(
     () => new Set(activeWorkspaceFileIds.map((id) => id as string)),
     [activeWorkspaceFileIds],
@@ -153,6 +156,17 @@ export default function FileManagerView() {
   const signInRequiredReason = isAnonymous
     ? t("filesPage.signInRequired", "Sign in to use cloud storage.")
     : null;
+  // Refresh pulls from the server. True on web (server-backed); on desktop it tracks the
+  // signed-in connection, so the control falls inert with an explanation until connected.
+  const connectedServer = useConnectedServer();
+  const refreshDisabledReason =
+    signInRequiredReason ??
+    (connectedServer
+      ? null
+      : t(
+          "filesPage.refreshNeedsConnection",
+          "Sign in to refresh from the server.",
+        ));
   // Server storage gate; mirrors ConfigController's storageEnabled
   // (enableLogin && storage.isEnabled). When off, Save-to-server stays
   // visible but disabled with an explanatory tooltip (discoverability beats
@@ -571,6 +585,7 @@ export default function FileManagerView() {
   // A working folder lists its real contents; each file wears its pipeline state and a state
   // filter narrows the listing. Files the pipeline never claims carry no state at all.
   const processingApi = useProcessingFolders();
+  const processingEnabled = usePoliciesEnabled();
   const currentProcessing = currentFolder
     ? processingApi.stateFor(currentFolder)
     : undefined;
@@ -589,14 +604,66 @@ export default function FileManagerView() {
   // Per-file state from the backend's ledger: processing in place leaves no output folder to
   // infer it from. Polled while the folder is open so badges follow the sweep live, and the
   // poll stands down with the tab rather than asking every 3s into a background window.
-  const { data: processingFiles } = useQuery({
+  const {
+    data: processingFiles,
+    dataUpdatedAt: processingFilesUpdatedAt,
+    errorUpdatedAt: processingFilesErrorAt,
+    status: processingFilesStatus,
+  } = useQuery({
     queryKey: processingFilesKey,
-    // A failed read reports no states rather than an error: the badges are ambient
-    // and the next tick retries.
-    queryFn: () => listFiles(processingRecordId!).catch(() => []),
+    queryFn: () => listFiles(processingRecordId!),
     enabled: processingView && Boolean(processingRecordId),
     refetchInterval: PROCESSING_FILES_POLL_MS,
+    retry: false,
   });
+
+  const activeProcessingKey = processingView ? (processingRecordId ?? "") : "";
+  const [processingPollFailures, setProcessingPollFailures] = useState({
+    key: "",
+    count: 0,
+  });
+  const processingPollEvent = useRef({ key: "", updatedAt: 0 });
+  useEffect(() => {
+    const key = activeProcessingKey;
+    if (processingPollEvent.current.key !== key) {
+      processingPollEvent.current = { key, updatedAt: 0 };
+      setProcessingPollFailures({ key, count: 0 });
+    }
+    if (!key) return;
+
+    const updatedAt =
+      processingFilesStatus === "error"
+        ? processingFilesErrorAt
+        : processingFilesUpdatedAt;
+    if (!updatedAt || updatedAt <= processingPollEvent.current.updatedAt)
+      return;
+
+    processingPollEvent.current.updatedAt = updatedAt;
+    setProcessingPollFailures((failures) => ({
+      key,
+      count:
+        processingFilesStatus === "error"
+          ? (failures.key === key ? failures.count : 0) + 1
+          : 0,
+    }));
+  }, [
+    activeProcessingKey,
+    processingFilesErrorAt,
+    processingFilesStatus,
+    processingFilesUpdatedAt,
+  ]);
+  const processingStatesUnavailable =
+    processingPollFailures.key === activeProcessingKey &&
+    processingPollFailures.count >= PROCESSING_FILES_FAILURE_LIMIT;
+  useEffect(() => {
+    if (!processingStatesUnavailable) return;
+    setFolderError(
+      t(
+        "filesPage.error.processingStatusUnavailable",
+        "Could not refresh processing status. File locks have been released until the connection recovers.",
+      ),
+    );
+  }, [processingStatesUnavailable, setFolderError, t]);
 
   // Stable empties for a folder with no processing: a fresh Map/Set is never
   // Object.is equal, so returning one would re-render every reader for nothing.
@@ -643,6 +710,61 @@ export default function FileManagerView() {
   const [diskStateFilter, setDiskStateFilter] = useState<DiskFileState | "all">(
     "all",
   );
+  const processingLockedFor = useCallback(
+    (key: string): boolean => {
+      if (!processingView || processingStatesUnavailable) return false;
+      const state = fileStates.get(key);
+      return state !== "done" && state !== "failed";
+    },
+    [processingView, processingStatesUnavailable, fileStates],
+  );
+
+  const processingLockedFileIds = useMemo(
+    () =>
+      new Set(
+        allFiles
+          .filter(
+            (file) =>
+              (file.folderId ?? null) === (currentFolderId ?? null) &&
+              processingLockedFor(file.name),
+          )
+          .map((file) => file.id),
+      ),
+    [allFiles, currentFolderId, processingLockedFor],
+  );
+
+  const processingLockedDiskQuickKeys = useMemo(
+    () =>
+      new Set(
+        diskEntries
+          .filter((file) => processingLockedFor(file.name))
+          .map((file) => `${file.name}|${file.sizeBytes}|${file.lastModified}`),
+      ),
+    [diskEntries, processingLockedFor],
+  );
+
+  useEffect(() => {
+    const openLockedFileIds = activeWorkspaceFiles
+      .filter(
+        (file) =>
+          !file.isDirty &&
+          (processingLockedFileIds.has(file.id) ||
+            processingLockedDiskQuickKeys.has(
+              file.quickKey ??
+                `${file.name}|${file.size}|${file.lastModified ?? 0}`,
+            )),
+      )
+      .map((file) => file.id);
+    if (openLockedFileIds.length > 0) {
+      void fileActions.removeFiles(openLockedFileIds, false);
+    }
+  }, [
+    activeWorkspaceFiles,
+    fileActions,
+    processingLockedDiskQuickKeys,
+    processingLockedFileIds,
+  ]);
+
   const diskStateFor = useCallback(
     (name: string): DiskFileState | undefined => fileStates.get(name),
     [fileStates],
@@ -787,6 +909,8 @@ export default function FileManagerView() {
             kind: "diskFile",
             disk,
             diskState: outputDirectory ? diskStateFor(disk.name) : undefined,
+            processingLocked:
+              Boolean(outputDirectory) && processingLockedFor(disk.name),
             hasOriginal: outputDirectory
               ? revertables.has(disk.name)
               : undefined,
@@ -820,7 +944,12 @@ export default function FileManagerView() {
         .map<FilesPageEntry>((file) => ({
           kind: "file",
           file,
-          diskState: processingView ? diskStateFor(file.name) : undefined,
+          diskState:
+            processingView &&
+            (file.folderId ?? null) === (currentFolderId ?? null)
+              ? diskStateFor(file.name)
+              : undefined,
+          processingLocked: processingLockedFileIds.has(file.id),
           parentPath:
             inSearch && (file.folderId ?? null) !== (currentFolderId ?? null)
               ? pathForFolderId(file.folderId ?? null) || undefined
@@ -843,6 +972,7 @@ export default function FileManagerView() {
     diskEntries,
     outputDirectory,
     processingView,
+    processingLockedFileIds,
     diskStateFor,
     revertables,
     diskStateFilter,
@@ -1053,8 +1183,11 @@ export default function FileManagerView() {
   );
 
   const handleAddToWorkspace = useCallback(
-    (fileIds: FileId[]) => openFilesInWorkbench(fileIds),
-    [openFilesInWorkbench],
+    (fileIds: FileId[]) => {
+      const openable = fileIds.filter((id) => !processingLockedFileIds.has(id));
+      return openable.length > 0 ? openFilesInWorkbench(openable) : undefined;
+    },
+    [openFilesInWorkbench, processingLockedFileIds],
   );
 
   const handleOpenFile = useCallback(
@@ -1437,14 +1570,14 @@ export default function FileManagerView() {
     () => (
       <>
         <Tooltip
-          label={signInRequiredReason ?? t("filesPage.refresh", "Refresh")}
+          label={refreshDisabledReason ?? t("filesPage.refresh", "Refresh")}
           withinPortal
         >
           <ActionIcon
             variant="tertiary"
             size="sm"
             loading={refreshing}
-            disabled={refreshing || Boolean(signInRequiredReason)}
+            disabled={refreshing || Boolean(refreshDisabledReason)}
             aria-busy={refreshing}
             aria-label={t("filesPage.refresh", "Refresh")}
             onClick={handleRefresh}
@@ -1467,7 +1600,7 @@ export default function FileManagerView() {
     ),
     [
       t,
-      signInRequiredReason,
+      refreshDisabledReason,
       refreshing,
       handleRefresh,
       newFolderControl,
@@ -1566,7 +1699,7 @@ export default function FileManagerView() {
               totalCount={totalCount}
               selectedCount={selectedFiles.length}
             />
-            {currentFolder && !mobileSelection && (
+            {currentFolder && !mobileSelection && processingEnabled && (
               <div className="files-page-folder-actions">
                 <FolderMenu
                   folder={currentFolder}
@@ -1904,7 +2037,9 @@ export default function FileManagerView() {
               onSelectFile={handleSelectFile}
               onSetSelection={setSelectedFileIds}
               onOpenFolder={handleOpenFolder}
-              onStartProcessing={setProcessingSetupFolder}
+              onStartProcessing={
+                processingEnabled ? setProcessingSetupFolder : undefined
+              }
               onOpenDiskFile={(entry) => void openDiskFile(entry)}
               onRetryFile={retryDiskFile}
               onRevertFile={setRevertConfirmName}
@@ -2013,10 +2148,12 @@ export default function FileManagerView() {
           if (revertAllTarget) revertAllInFolder(revertAllTarget);
         }}
       />
-      <FolderProcessingSetup
-        folder={processingBlock ? null : processingSetupFolder}
-        onClose={() => setProcessingSetupFolder(null)}
-      />
+      {processingEnabled && (
+        <FolderProcessingSetup
+          folder={processingBlock ? null : processingSetupFolder}
+          onClose={() => setProcessingSetupFolder(null)}
+        />
+      )}
 
       {/* Drawer hosts the details panel on ≤800px viewports. */}
       {isCompactDetailsViewport && (
@@ -2168,6 +2305,7 @@ export default function FileManagerView() {
  */
 /** How often a working folder's per-file states re-read while it is open. */
 const PROCESSING_FILES_POLL_MS = 3000;
+const PROCESSING_FILES_FAILURE_LIMIT = 3;
 const EMPTY_FILE_STATES: ReadonlyMap<string, DiskFileState> = new Map();
 const EMPTY_REVERTABLES: ReadonlySet<string> = new Set();
 

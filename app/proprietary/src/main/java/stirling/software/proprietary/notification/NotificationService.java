@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -35,9 +34,8 @@ public class NotificationService {
     private final StoredFileRepository storedFiles;
 
     /**
-     * Newest first, and only open failures with something to tell the reader: about a document, or
-     * about a source that could not be read at all. One already dealt with is not news, and a row
-     * naming no file has nothing the bell can offer beyond saying so.
+     * Newest first, and only open failures that name a document or a source that could not be read:
+     * one already dealt with is not news, and a row naming neither has nothing to offer.
      *
      * <p>Filtered on the named file rather than the kind's scope, because a RUN-scoped kind still
      * names one when the editor reported it: a failed tool run belongs here. Applied after the
@@ -79,13 +77,8 @@ public class NotificationService {
     }
 
     /**
-     * What to call the document, for the one reader entitled to know: the person the row belongs
-     * to, looking at a file they own.
-     *
-     * <p>Derived, never stored, and never sent to anyone else — a colleague's filename is not a
-     * team leader's to read. Only a storage-backed folder can answer at all: its identity is the
-     * stored row's id, so the name comes from the row. A disk folder's identity is a path, and
-     * returning the last segment of it would be the same disclosure by another route.
+     * The stored files behind the reader's own rows, in one query for the page. Only a
+     * storage-backed folder's identity resolves; a disk folder's is a path and stays unnamed.
      */
     private String documentNameFor(
             FileRunEvent event, Ownership ownership, Map<Long, StoredFile> named) {
@@ -93,16 +86,16 @@ public class NotificationService {
             return null;
         }
         Long storedFileId = StorageFileIdentities.storedFileIdOf(event.fileId());
-        if (storedFileId == null) {
+        // Guarded rather than looked up: an immutable empty map refuses a null key.
+        StoredFile file = storedFileId == null ? null : named.get(storedFileId);
+        // Belt and braces over the ownership above: that says the reader raised the row, this says
+        // the document is theirs. A row can outlive the file it named.
+        if (file == null
+                || file.getOwner() == null
+                || !event.actor().equals(file.getOwner().getUsername())) {
             return null;
         }
-        return Optional.ofNullable(named.get(storedFileId))
-                // Belt and braces over the ownership above: that says the reader raised the row,
-                // this says the document is theirs. A row can outlive the file it named.
-                .filter(file -> file.getOwner() != null)
-                .filter(file -> event.actor().equals(file.getOwner().getUsername()))
-                .map(StoredFile::getOriginalFilename)
-                .orElse(null);
+        return file.getOriginalFilename();
     }
 
     private static boolean namesADocument(FileRunEvent event) {
@@ -127,11 +120,8 @@ public class NotificationService {
     }
 
     /**
-     * Run one of the row's own server actions, addressed the way the bell holds it. The prefix is
-     * the whole reason this exists rather than the bell calling the failure endpoint directly.
-     *
-     * <p>Nothing is decided here: the producing service re-checks that the caller may see the row
-     * and that its kind declares the action, and each action authorises its own effects.
+     * Run one of the row's own server actions, addressed by prefixed id. Nothing is authorised
+     * here: the producing service re-checks the row and the action.
      */
     public NotificationView act(
             String notificationId, String actionId, Map<String, String> inputs) {
@@ -163,6 +153,12 @@ public class NotificationService {
         FileRunEventView.DocumentLocation location =
                 FileRunEventView.DocumentLocation.of(event, source);
         boolean resolvableHere = location == FileRunEventView.DocumentLocation.BROWSER;
+        // A smart folder's document, or the folder itself when it could not be read: the server
+        // keeps these for the reader, and a member's bell shows them without a local file.
+        boolean heldByServer =
+                location == FileRunEventView.DocumentLocation.SMART_FOLDER
+                        || (event.scope() == FailureScope.SOURCE
+                                && source == SourceKind.SMART_FOLDER);
         Ownership ownership = fileRunEvents.ownershipOf(event);
         return new NotificationView(
                 NotificationSource.FAILURE.qualify(event.id()),
@@ -180,6 +176,7 @@ public class NotificationService {
                 resolvableHere ? event.fileId() : null,
                 resolvableHere ? null : documentNameFor(event, ownership, named),
                 location,
+                heldByServer,
                 source,
                 event.sourceId(),
                 event.policyId(),
