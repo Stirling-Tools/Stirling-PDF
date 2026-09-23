@@ -83,7 +83,10 @@ export interface EditorViewState {
   showRulers: boolean;
   findOpen: boolean;
   helpOpen: boolean;
+  mobileSheet: MobileSheet | null;
 }
+
+export type MobileSheet = "style" | "details";
 
 const POSITION_REFRESH_MS = 600;
 
@@ -108,6 +111,7 @@ const INITIAL: EditorViewState = {
   showRulers: false,
   findOpen: false,
   helpOpen: false,
+  mobileSheet: null,
 };
 
 // Single observable store for the editor's React layer. Components never reach
@@ -218,6 +222,11 @@ export class EditorStore {
   setHelpOpen(helpOpen: boolean): void {
     if (this.state.helpOpen === helpOpen) return;
     this.patch({ helpOpen });
+  }
+
+  setMobileSheet(mobileSheet: MobileSheet | null): void {
+    if (this.state.mobileSheet === mobileSheet) return;
+    this.patch({ mobileSheet });
   }
 
   get groupingMode(): GroupingMode {
