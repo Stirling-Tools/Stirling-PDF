@@ -52,7 +52,7 @@ export const useConfigNavSections = (
         {
           key: "ocr",
           label: t("settings.ocr.title", "Text recognition"),
-          icon: "document-scanner-rounded",
+          icon: "scan-text",
           component: <OcrSection />,
         },
       ],
