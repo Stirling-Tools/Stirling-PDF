@@ -3,9 +3,9 @@ import {
   policySourceIds,
 } from "@app/services/policyFileGuard";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Alert, Stack } from "@mantine/core";
+import { Alert, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import DescriptionIcon from "@mui/icons-material/DescriptionOutlined";
+import { Icon } from "@app/ui/Icon";
 import { downloadFile } from "@app/services/downloadService";
 import { useFileContext, useFileSelection } from "@app/contexts/FileContext";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
@@ -31,6 +31,7 @@ import { HelpOverlay } from "@app/tools/pdfTextEditor/components/HelpOverlay";
 import { PasswordPromptModal } from "@app/tools/pdfTextEditor/components/PasswordPromptModal";
 import { EditorPanelActions } from "@app/tools/pdfTextEditor/components/EditorPanelActions";
 import { EditorSidebar } from "@app/tools/pdfTextEditor/components/EditorSidebar";
+import { MobileEditorSheets } from "@app/tools/pdfTextEditor/components/MobileEditorSheets";
 import { EditorFileInputs } from "@app/tools/pdfTextEditor/components/EditorFileInputs";
 import { PageStage } from "@app/tools/pdfTextEditor/components/PageStage";
 import { InsertImageCommand } from "@app/tools/pdfTextEditor/commands/InsertImageCommand";
@@ -47,7 +48,11 @@ import {
 } from "@app/tools/pdfTextEditor/util/documentRisks";
 import { preloadFallbackFontBytes } from "@app/tools/pdfTextEditor/util/fallbackFont";
 import { visiblePageNumber } from "@app/tools/pdfTextEditor/util/dom";
-import type { SelectionState } from "@app/tools/pdfTextEditor/types";
+import type {
+  GroupingMode,
+  SelectionState,
+  WidthMode,
+} from "@app/tools/pdfTextEditor/types";
 
 const WORKBENCH_ID = "custom:pdfTextEditor" as const;
 const WORKBENCH_VIEW_ID = "pdfTextEditorWorkbench";
@@ -84,8 +89,9 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     workbenchId: WORKBENCH_ID,
     workbenchViewId: WORKBENCH_VIEW_ID,
     label: t("pdfTextEditor.workbenchLabel", "Editor"),
-    icon: <DescriptionIcon fontSize="small" />,
+    icon: <Icon name="file-text" size={20} />,
     component: PageStage,
+    takeOverScreen: isMobile,
   });
   // Uploading flips the workbench to Active Files, so landing a document has to
   // pin the canvas back. useAutoLoadFile only fires for a genuine file change.
@@ -586,6 +592,19 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     [store],
   );
 
+  const sidebarProps = {
+    store,
+    state,
+    selection,
+    canGroup,
+    canUngroup,
+    onGroup: handleMergeSelection,
+    onUngroup: handleUngroupSelection,
+    onSetGroupingMode: (mode: GroupingMode) => store.setGroupingMode(mode),
+    onSetWidthMode: (m: WidthMode) => store.setWidthMode(m),
+    onSetShowRulers: (show: boolean) => store.setShowRulers(show),
+  };
+
   return (
     <Stack
       gap={0}
@@ -619,18 +638,24 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         onConfirm={confirmPendingOpen}
         onCancel={() => setPendingOpen(null)}
       />
-      <EditorSidebar
-        store={store}
-        state={state}
-        selection={selection}
-        canGroup={canGroup}
-        canUngroup={canUngroup}
-        onGroup={handleMergeSelection}
-        onUngroup={handleUngroupSelection}
-        onSetGroupingMode={(mode) => store.setGroupingMode(mode)}
-        onSetWidthMode={(m) => store.setWidthMode(m)}
-        onSetShowRulers={(show) => store.setShowRulers(show)}
-      />
+      {isMobile ? (
+        <>
+          <MobileEditorSheets {...sidebarProps} />
+          <Text
+            size="sm"
+            c="dimmed"
+            p="md"
+            data-testid="pdf-editor-mobile-hint"
+          >
+            {t(
+              "pdfTextEditor.mobile.panelHint",
+              "Editing happens in the Workspace view. Tap text on the page to change it.",
+            )}
+          </Text>
+        </>
+      ) : (
+        <EditorSidebar {...sidebarProps} />
+      )}
       {state.hasDocument && (
         <EditorPanelActions
           compact={isMobile}

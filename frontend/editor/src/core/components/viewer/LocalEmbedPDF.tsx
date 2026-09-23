@@ -2,11 +2,13 @@ import React, {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
-import { createPluginRegistration } from "@embedpdf/core";
-import type { PluginRegistry } from "@embedpdf/core";
+import { createPluginRegistration, type PluginRegistry } from "@embedpdf/core";
+import type { InitialDocumentOptions } from "@embedpdf/plugin-document-manager";
 import { EmbedPDF, useDocumentState } from "@embedpdf/core/react";
 import { usePdfiumEngine } from "@embedpdf/engines/react";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
@@ -75,6 +77,7 @@ import { HistoryAPIBridge } from "@app/components/viewer/HistoryAPIBridge";
 import type {
   SignatureAPI,
   AnnotationAPI,
+  AnnotationMenuAnchor,
   HistoryAPI,
   SignaturePreview,
   SignatureOverlayAPI,
@@ -90,6 +93,9 @@ import { LinkLayer } from "@app/components/viewer/LinkLayer";
 import { TextSelectionHandler } from "@app/components/viewer/TextSelectionHandler";
 import { RedactionSelectionMenu } from "@app/components/viewer/RedactionSelectionMenu";
 import { AnnotationSelectionMenu } from "@app/components/viewer/AnnotationSelectionMenu";
+import { AnnotationMenuEvents } from "@app/components/viewer/AnnotationMenuEvents";
+import { DocumentSwapBridge } from "@app/components/viewer/DocumentSwapBridge";
+import { AnnotationDeletedMenu } from "@app/components/viewer/AnnotationDeletedMenu";
 import { TextSelectionMenu } from "@app/components/viewer/TextSelectionMenu";
 import {
   RedactionPendingTracker,
@@ -152,6 +158,16 @@ interface LocalEmbedPDFProps {
   onSignaturePreviewsChange?: (previews: SignaturePreview[]) => void;
   /** Imperative handle for reading/clearing/deleting signature previews. */
   signatureOverlayApiRef?: React.RefObject<SignatureOverlayAPI | null>;
+  /** Veto for a swap the mounted document already shows; must be stable. */
+  shouldSkipBytes?: (stableKey: string) => boolean;
+  /** Fires from the layout pass that mounts a page, before it paints. */
+  onPageLayout?: () => void;
+  /** Fires when the swap bridge activates a replacement document. */
+  onDocumentSwapped?: () => void;
+  /** Fires when the swap bridge fails to open or activate a replacement document. */
+  onDocumentSwapFailed?: (error: unknown) => void;
+  /** True while a view restore is in flight; gates the per-page layout hook. */
+  restorePending?: boolean;
 }
 
 interface ViewerPageContainerProps {
@@ -160,6 +176,10 @@ interface ViewerPageContainerProps {
   width: number;
   height: number;
   children: React.ReactNode;
+  /** Runs in the same layout pass that mounts a page, before it paints. */
+  onPageLayout?: () => void;
+  /** Gates the layout callback so steady-state scrolling pays nothing. */
+  restorePending?: boolean;
 }
 
 function normalizePageRotation(rotation: number | null | undefined): number {
@@ -174,11 +194,18 @@ function ViewerPageContainer({
   width,
   height,
   children,
+  onPageLayout,
+  restorePending = false,
 }: ViewerPageContainerProps) {
   const documentState = useDocumentState(documentId);
   const pageRotation = normalizePageRotation(
     documentState?.document?.pages?.[pageIndex]?.rotation,
   );
+
+  useLayoutEffect(() => {
+    if (!restorePending) return;
+    onPageLayout?.();
+  });
 
   return (
     <div
@@ -234,6 +261,11 @@ export function LocalEmbedPDF({
   signaturePlacementType,
   onSignaturePreviewsChange,
   signatureOverlayApiRef,
+  shouldSkipBytes,
+  onPageLayout,
+  onDocumentSwapped,
+  onDocumentSwapFailed,
+  restorePending = false,
 }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const { config } = useAppConfig();
@@ -311,61 +343,6 @@ export function LocalEmbedPDF({
   // FileContext produces new File object references for the same file content.
   const fileStableKey =
     fileId ?? (file ? `${(file as File).name}-${file.size}` : null);
-  useEffect(() => {
-    if (url) {
-      setPdfUrl(url);
-      return;
-    }
-    if (file) {
-      const objectUrl = URL.createObjectURL(file);
-      setPdfUrl(objectUrl);
-      return () => URL.revokeObjectURL(objectUrl);
-    }
-    // When file is present, use the stable key to avoid blob URL churn from FileContext
-    // re-renders. When only url is provided, depend on url directly so changes are picked up.
-  }, [url, file ? fileStableKey : null]);
-
-  const [pdfBuffer, setPdfBuffer] = useState<ArrayBuffer | null>(null);
-
-  // Read file/url directly into an ArrayBuffer on the main thread so EmbedPDF's worker
-  // receives the document data via buffer rather than failing to fetch partitioned blob URLs.
-  useEffect(() => {
-    let cancelled = false;
-    setPdfBuffer(null);
-    if (file && typeof (file as Blob).arrayBuffer === "function") {
-      (file as Blob)
-        .arrayBuffer()
-        .then((buf) => {
-          if (!cancelled) setPdfBuffer(buf);
-        })
-        .catch((err) => {
-          console.error(
-            "[LocalEmbedPDF] Failed to read file arrayBuffer:",
-            err,
-          );
-        });
-      return () => {
-        cancelled = true;
-      };
-    }
-    if (url) {
-      fetch(url)
-        .then((r) => r.arrayBuffer())
-        .then((buf) => {
-          if (!cancelled) setPdfBuffer(buf);
-        })
-        .catch((err) => {
-          console.error(
-            "[LocalEmbedPDF] Failed to fetch url arrayBuffer:",
-            err,
-          );
-        });
-      return () => {
-        cancelled = true;
-      };
-    }
-    setPdfBuffer(null);
-  }, [file ? fileStableKey : null, url]);
 
   // Keyed by fileStableKey to avoid recomputing on every FileContext re-render.
   const exportFileName = useMemo(() => {
@@ -375,13 +352,185 @@ export function LocalEmbedPDF({
     return "document.pdf";
   }, [fileStableKey, fileName, url]);
 
+  // The first document goes through the registry; replacements open in the
+  // background and activate once ready, so the viewer never blanks.
+  const [initialDocument, setInitialDocument] = useState<{
+    buffer: ArrayBuffer;
+    name: string;
+  } | null>(null);
+  const [pendingDocument, setPendingDocument] = useState<{
+    buffer: ArrayBuffer;
+    name: string;
+  } | null>(null);
+  const initialDocumentOpenedRef = useRef(false);
+  const openedContentKeyRef = useRef<string | null>(null);
+  // Anchors survive deselection per annotation id, so a delete that happens
+  // while no menu is open (keyboard, sidebar) still has somewhere to appear.
+  const annotationAnchorsByIdRef = useRef<Map<string, AnnotationMenuAnchor>>(
+    new Map(),
+  );
+  const [deletedAnnotationMenu, setDeletedAnnotationMenu] =
+    useState<AnnotationMenuAnchor | null>(null);
+  const handleAnnotationMenuAnchor = useCallback(
+    (anchor: AnnotationMenuAnchor | null) => {
+      if (anchor) {
+        annotationAnchorsByIdRef.current.set(anchor.annotationId, anchor);
+      }
+    },
+    [],
+  );
+  const getAnnotationAnchor = useCallback(
+    (annotationId: string) =>
+      // Only the anchor keyed by this annotation: falling back to the
+      // last-open menu would pin a deletion to another annotation's spot.
+      annotationAnchorsByIdRef.current.get(annotationId) ?? null,
+    [],
+  );
+  const handleAnnotationDeleted = useCallback(
+    (anchor: AnnotationMenuAnchor) => setDeletedAnnotationMenu(anchor),
+    [],
+  );
+  const dismissDeletedAnnotationMenu = useCallback(
+    () => setDeletedAnnotationMenu(null),
+    [],
+  );
+  // The published blob URL is revoked by its replacement or on unmount, never
+  // by the effect run that decided to skip a swap.
+  const publishedObjectUrlRef = useRef<string | null>(null);
+  const revokeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Reads bytes on the main thread for the worker, and lands bytes plus URL in
+  // one commit so the registry rebuilds once per replacement.
+  useEffect(() => {
+    if (fileStableKey && shouldSkipBytes?.(fileStableKey)) {
+      // The live document already shows this save; swapping the bytes would
+      // reopen it and lose the scroll position for no visual gain.
+      return;
+    }
+    let cancelled = false;
+    let objectUrl: string | null = null;
+    const openDocument = (
+      buffer: ArrayBuffer,
+      name: string,
+      contentKey: string | null,
+    ) => {
+      // A repeat run for the same content (a rename, a FileContext churn) must
+      // not reopen the document.
+      if (!contentKey || openedContentKeyRef.current === contentKey) return;
+      openedContentKeyRef.current = contentKey;
+      if (!initialDocumentOpenedRef.current) {
+        initialDocumentOpenedRef.current = true;
+        setInitialDocument({ buffer, name });
+        return;
+      }
+      setPendingDocument({ buffer, name });
+    };
+    const fail = (source: string) => (err: unknown) => {
+      console.error(
+        `[LocalEmbedPDF] Failed to read ${source} arrayBuffer:`,
+        err,
+      );
+    };
+    if (file && typeof (file as Blob).arrayBuffer === "function") {
+      (file as Blob)
+        .arrayBuffer()
+        .then((buf) => {
+          if (cancelled) return;
+          objectUrl = URL.createObjectURL(file);
+          const previous = publishedObjectUrlRef.current;
+          publishedObjectUrlRef.current = objectUrl;
+          openDocument(buf, exportFileName, fileStableKey);
+          setPdfUrl(objectUrl);
+          if (previous && previous !== objectUrl) {
+            URL.revokeObjectURL(previous);
+          }
+        })
+        .catch(fail("file"));
+    } else if (url) {
+      setPdfUrl(url);
+      fetch(url)
+        .then((r) => r.arrayBuffer())
+        .then((buf) => {
+          if (!cancelled) openDocument(buf, exportFileName, url);
+        })
+        .catch(fail("url"));
+    } else {
+      initialDocumentOpenedRef.current = false;
+      openedContentKeyRef.current = null;
+      setInitialDocument(null);
+      setPendingDocument(null);
+      setPdfUrl(null);
+    }
+    return () => {
+      cancelled = true;
+      // Revokes only URLs that never reached state; the published one is
+      // replaced or revoked on real unmount below.
+      if (objectUrl && publishedObjectUrlRef.current !== objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [file ? fileStableKey : null, url, shouldSkipBytes, exportFileName]);
+
+  useEffect(() => {
+    // A pending revocation belongs to a previous mount of this effect; cancel
+    // it so React's strict-mode simulated unmount cannot revoke the live URL.
+    if (revokeTimerRef.current !== null) {
+      clearTimeout(revokeTimerRef.current);
+      revokeTimerRef.current = null;
+    }
+    return () => {
+      revokeTimerRef.current = setTimeout(() => {
+        revokeTimerRef.current = null;
+        const urlToRevoke = publishedObjectUrlRef.current;
+        publishedObjectUrlRef.current = null;
+        if (urlToRevoke) URL.revokeObjectURL(urlToRevoke);
+      }, 0);
+    };
+  }, []);
+
+  const [swapAnnouncement, setSwapAnnouncement] = useState<string | null>(null);
+
+  const handleDocumentSwapped = useCallback(() => {
+    onDocumentSwapped?.();
+    setPendingDocument(null);
+    setSwapAnnouncement(t("viewer.documentUpdated", "Document updated"));
+    setTimeout(() => setSwapAnnouncement(null), 3000);
+  }, [onDocumentSwapped, t]);
+  const handleDocumentSwapFailed = useCallback(
+    (error: unknown) => {
+      // The outgoing document stays active; the replacement never landed.
+      console.warn(
+        "[LocalEmbedPDF] Replacement document failed to open:",
+        error,
+      );
+      onDocumentSwapFailed?.(error);
+      setPendingDocument(null);
+    },
+    [onDocumentSwapFailed],
+  );
+
+  useEffect(() => {
+    // A replacement document has no relation to the deleted annotation.
+    setDeletedAnnotationMenu(null);
+    annotationAnchorsByIdRef.current.clear();
+  }, [fileStableKey]);
+
+  // The registry is built from the viewer's first source; later bytes arrive
+  // through DocumentSwapBridge, so no replacement may change that identity.
+  const urlDocumentSource = file ? null : pdfUrl;
+  const urlPluginsSource = useMemo(() => {
+    if (file || !urlDocumentSource) return null;
+    return { url: urlDocumentSource, name: exportFileName };
+  }, [!!file, urlDocumentSource, exportFileName]);
+
   // Create plugins configuration
   const plugins = useMemo(() => {
-    // When a File object is the source, we MUST wait for the buffer, the
-    // worker cannot fetch partitioned blob: URLs.  pdfUrl is still created
-    // (for thumbnails etc.) but plugins must not start until the buffer lands.
-    if (file && !pdfBuffer) return [];
-    if (!pdfBuffer && !pdfUrl) return [];
+    const initialSource = initialDocument ?? urlPluginsSource;
+    if (!initialSource) return [];
+    const initialDocuments: InitialDocumentOptions[] =
+      "buffer" in initialSource
+        ? [{ buffer: initialSource.buffer, name: initialSource.name }]
+        : [{ url: initialSource.url, name: initialSource.name }];
 
     // Calculate 3.5rem in pixels dynamically based on root font size
     const rootFontSize = parseFloat(
@@ -391,21 +540,7 @@ export function LocalEmbedPDF({
 
     return [
       createPluginRegistration(DocumentManagerPluginPackage, {
-        initialDocuments: pdfBuffer
-          ? [
-              {
-                buffer: pdfBuffer,
-                name: exportFileName,
-              },
-            ]
-          : pdfUrl
-            ? [
-                {
-                  url: pdfUrl,
-                  name: exportFileName,
-                },
-              ]
-            : [],
+        initialDocuments,
       }),
       createPluginRegistration(ViewportPluginPackage, {
         viewportGap,
@@ -487,7 +622,7 @@ export function LocalEmbedPDF({
 
       createPluginRegistration(PrintPluginPackage),
     ];
-  }, [!!file, pdfBuffer, pdfUrl, enableAnnotations, exportFileName]);
+  }, [initialDocument, urlPluginsSource, enableAnnotations]);
 
   const fontFallbackConfig = useMemo(() => getLocalFontFallbackConfig(), []);
 
@@ -551,7 +686,7 @@ export function LocalEmbedPDF({
   }
 
   const hasInput = Boolean(file || url);
-  const isInputReady = Boolean(pdfBuffer || (!file && pdfUrl));
+  const isInputReady = Boolean(initialDocument || (!file && pdfUrl));
 
   if (isLoading || !engine || (hasInput && !isInputReady)) {
     return (
@@ -601,6 +736,7 @@ export function LocalEmbedPDF({
   return (
     <PrivateContent>
       <div
+        aria-busy={pendingDocument !== null}
         style={{
           height: "100%",
           width: "100%",
@@ -610,6 +746,9 @@ export function LocalEmbedPDF({
           minWidth: 0,
         }}
       >
+        <span className="sr-only" aria-live="polite" aria-atomic="true">
+          {swapAnnouncement}
+        </span>
         <EmbedPDF
           engine={engine}
           plugins={plugins}
@@ -622,7 +761,7 @@ export function LocalEmbedPDF({
             if (!annotationApi) return;
 
             if (enableAnnotations) {
-              // LooseAnnotationTool bypasses strict Partial<T> defaults typing from the library —
+              // LooseAnnotationTool bypasses strict Partial<T> defaults typing from the library:
               // EmbedPDF accepts extra runtime properties (borderWidth, textColor, finishOnDoubleClick,
               // etc.) that aren't reflected in the TypeScript model types.
               type LooseAnnotationTool = {
@@ -1101,6 +1240,11 @@ export function LocalEmbedPDF({
             }
           }}
         >
+          <DocumentSwapBridge
+            pending={pendingDocument}
+            onSwapped={handleDocumentSwapped}
+            onFailed={handleDocumentSwapFailed}
+          />
           <ZoomAPIBridge />
           <ScrollAPIBridge />
           <SelectionAPIBridge />
@@ -1112,6 +1256,18 @@ export function LocalEmbedPDF({
           <RotateAPIBridge />
           {(enableAnnotations || enableRedaction || isManualRedactionMode) && (
             <HistoryAPIBridge ref={historyApiRef} />
+          )}
+          {(enableAnnotations || enableRedaction || isManualRedactionMode) && (
+            <>
+              <AnnotationMenuEvents
+                getAnchor={getAnnotationAnchor}
+                onDeleted={handleAnnotationDeleted}
+              />
+              <AnnotationDeletedMenu
+                anchor={deletedAnnotationMenu}
+                onDismiss={dismissDeletedAnnotationMenu}
+              />
+            </>
           )}
           {/* Always render RedactionAPIBridge when in manual redaction mode so buttons can switch from annotation mode */}
           {(enableRedaction || isManualRedactionMode) && <RedactionAPIBridge />}
@@ -1173,6 +1329,8 @@ export function LocalEmbedPDF({
                                 pageIndex={pageIndex}
                                 width={width}
                                 height={height}
+                                onPageLayout={onPageLayout}
+                                restorePending={restorePending}
                               >
                                 <div
                                   style={{
@@ -1292,7 +1450,10 @@ export function LocalEmbedPDF({
                                     pageIndex={pageIndex}
                                     selectionOutline={{ color: "#007ACC" }}
                                     selectionMenu={(props) => (
-                                      <AnnotationSelectionMenu {...props} />
+                                      <AnnotationSelectionMenu
+                                        {...props}
+                                        onAnchor={handleAnnotationMenuAnchor}
+                                      />
                                     )}
                                     style={
                                       !showBakedAnnotations

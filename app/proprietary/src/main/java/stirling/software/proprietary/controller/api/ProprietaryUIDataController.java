@@ -168,7 +168,7 @@ public class ProprietaryUIDataController {
 
         // Add enableLogin flag so frontend doesn't need to call /app-config
         data.setEnableLogin(securityProps.isEnableLogin());
-        data.setSsoAutoLogin(applicationProperties.getPremium().getProFeatures().isSsoAutoLogin());
+        data.setSsoAutoLogin(applicationProperties.getSecurity().isSsoAutoLogin());
 
         // Check if this is first-time setup with default credentials
         // The isFirstLogin flag captures: default username/password usage and unchanged state
@@ -231,7 +231,7 @@ public class ProprietaryUIDataController {
 
         SAML2 saml2 = securityProps.getSaml2();
         // Only add SAML2 providers if loginMethod allows it
-        if (securityProps.isSaml2Active() && applicationProperties.getPremium().isEnabled()) {
+        if (securityProps.isSaml2Active() && licenseSettingsService.hasPaidLicense()) {
             String samlIdp = saml2.getProvider();
             String saml2AuthenticationPath = "/saml2/authenticate/" + saml2.getRegistrationId();
 
@@ -351,7 +351,7 @@ public class ProprietaryUIDataController {
         long availableSlots = licenseSettingsService.getAvailableUserSlots();
         int grandfatheredCount = licenseSettingsService.getDisplayGrandfatheredCount();
         int licenseMaxUsers = licenseSettingsService.getSettings().getLicenseMaxUsers();
-        boolean premiumEnabled = applicationProperties.getPremium().isEnabled();
+        boolean premiumEnabled = licenseSettingsService.hasPaidLicense();
         long pendingInvites = inviteTokenRepository.countActiveInvites(LocalDateTime.now());
 
         // Resolve portal access for the whole roster. The teamLead display flag counts a
@@ -619,7 +619,7 @@ public class ProprietaryUIDataController {
         // Portal access (same policy /me uses).
         summary.setPortalAccess(portalAccessUserIds.contains(user.getId()));
         summary.setUsername(user.getUsername());
-        summary.setEmail(user.getUsername()); // Use username as email for consistency
+        summary.setEmail(user.getEmail());
         summary.setRoleName(user.getRoleName());
         summary.setRolesAsString(user.getRolesAsString());
         summary.setEnabled(user.isEnabled());

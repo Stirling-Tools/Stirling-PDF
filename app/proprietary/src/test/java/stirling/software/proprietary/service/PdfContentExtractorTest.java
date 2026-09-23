@@ -152,6 +152,29 @@ class PdfContentExtractorTest {
     class ExtractPageTextRaw {
 
         @Test
+        @DisplayName("orders OCR words by position instead of content stream order")
+        void restoresReadingOrder() throws IOException {
+            extractor = newExtractor();
+            try (PDDocument doc = blankDocument(1)) {
+                String[][] lines = {{"Solar", "panels", "shine"}, {"Wind", "turbines", "turn"}};
+                try (PDPageContentStream content = new PDPageContentStream(doc, doc.getPage(0))) {
+                    for (int column = 0; column < 3; column++) {
+                        for (int row = 0; row < 2; row++) {
+                            content.beginText();
+                            content.setFont(
+                                    new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
+                            content.newLineAtOffset(72 + column * 70, 700 - row * 30);
+                            content.showText(lines[row][column]);
+                            content.endText();
+                        }
+                    }
+                }
+                assertThat(extractor.extractPageTextRaw(doc, 1))
+                        .contains("Solar panels shine", "Wind turbines turn");
+            }
+        }
+
+        @Test
         @DisplayName("returns trimmed page text")
         void returnsText() throws IOException {
             extractor = newExtractor();

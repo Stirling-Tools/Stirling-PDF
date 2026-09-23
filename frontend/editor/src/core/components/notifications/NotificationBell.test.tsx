@@ -12,9 +12,20 @@ import type {
   NotificationActionSlot,
 } from "@app/services/notifications";
 
-// @app/ui Button is a Mantine wrapper, so it needs the provider in the tree.
+vi.mock("@mantine/hooks", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@mantine/hooks")>()),
+  useReducedMotion: () => true,
+}));
+
+// Reduced motion also stops transition timers, which env="test" alone still schedules.
 const render = (ui: Parameters<typeof baseRender>[0]) =>
-  baseRender(ui, { wrapper: MantineProvider });
+  baseRender(ui, {
+    wrapper: ({ children }) => (
+      <MantineProvider env="test" theme={{ respectReducedMotion: true }}>
+        {children}
+      </MantineProvider>
+    ),
+  });
 
 // The bell's own two jobs: what counts as read, and how a row behaves around an action.
 
@@ -57,7 +68,10 @@ vi.mock("@app/components/notifications/useNotificationsAvailable", () => ({
 }));
 
 // Core's own registry is empty, so without this there are no client actions to test.
-vi.mock("@app/components/notifications/notificationActions", () => ({
+vi.mock("@app/components/notifications/notificationActions", async () => ({
+  ...(await vi.importActual<
+    typeof import("@app/components/notifications/notificationActions")
+  >("@app/components/notifications/notificationActions")),
   useNotificationActions: () => h.specs,
 }));
 
@@ -130,6 +144,9 @@ function notification(
     defaultTitle: title,
     detail: "boom",
     fileId: "f-1",
+    documentName: null,
+    documentLocation: "BROWSER",
+    heldByServer: false,
     sourceId: null,
     policyId: null,
     occurrences: 1,
@@ -479,19 +496,24 @@ describe("NotificationBell", () => {
     ).toBeTruthy();
   });
 
-  it("claims nothing about a device for a row it never looks up", async () => {
-    // Never on any device, so never probed, and an absent lookup is not an absent document.
+  it("says where a server-held document is rather than that it is missing", async () => {
+    // Never on any device, so never probed, and an absent lookup is not an absent document. "Not on
+    // this device" would read as a fault in a folder working exactly as configured.
     h.hasLocalFile = false;
     fetchNotifications.mockResolvedValue([
       notification("a", "Password-protected document", {
         origin: "POLICY",
-        sourceId: "src-s3-invoices",
+        sourceId: "src-downloads",
+        documentLocation: "SMART_FOLDER",
+        heldByServer: true,
+        fileId: null,
       }),
     ]);
     render(<NotificationBell />);
     await openPanel();
 
     expect(await screen.findByText("Password-protected document")).toBeTruthy();
+    expect(screen.getByText(/is in a smart folder/)).toBeTruthy();
     expect(
       screen.queryByText(
         /not on this device|not linked to a specific document/,

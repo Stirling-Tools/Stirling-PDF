@@ -48,6 +48,19 @@ public class DeviceCredential implements Serializable {
     @Column(name = "team_id")
     private Long teamId;
 
+    /** Last confirmed SaaS entitlement for this device; failed attempts never advance it. */
+    @Column(name = "last_entitlement_success_at")
+    private java.time.Instant lastEntitlementSuccessAt;
+
+    @Column(
+            name = "entitlement_revoked",
+            nullable = false,
+            columnDefinition = "boolean not null default false")
+    private boolean entitlementRevoked;
+
+    @Column(name = "fleet_user_limit")
+    private Integer fleetUserLimit;
+
     @Column(name = "linked_at", nullable = false)
     private LocalDateTime linkedAt;
 }

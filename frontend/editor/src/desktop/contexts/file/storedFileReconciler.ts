@@ -21,7 +21,7 @@ import {
   getDiskFileState,
   type PresentDiskFileState,
 } from "@app/services/desktopFileLink";
-import { pendingFilePathMappings } from "@app/services/pendingFilePathMappings";
+import { sourcePathForFile } from "@app/services/fileImportPaths";
 import { isPristineLocalPassthrough } from "@app/services/pruneMissingRecentFiles";
 import {
   cancelDiskConflict,
@@ -115,11 +115,10 @@ export function inheritedSourceLink(
 }
 
 export async function sourceLinkForNewFile(
-  quickKey: string,
+  file: File,
 ): Promise<Partial<StirlingFileStub>> {
-  const localFilePath = pendingFilePathMappings.get(quickKey);
+  const localFilePath = await sourcePathForFile(file);
   if (!localFilePath) return {};
-  pendingFilePathMappings.delete(quickKey);
   // Baseline what disk held at read time; without it the next open has nothing
   // to compare against and re-reads the file needlessly.
   const state = await getDiskFileState(localFilePath);

@@ -30,8 +30,20 @@ export interface ClientActionSpec {
   ): ClientActionOutcome | void | Promise<ClientActionOutcome | void>;
   /** Collect a password before running. Never stored, never logged. */
   needsPassword?: boolean;
-  /** Whether the panel should get out of the way, the destination being behind it. */
-  closesPanel?: boolean;
+  /**
+   * Whether the panel should get out of the way, the destination being behind it. A function
+   * answers per row, for an action that navigates for one document and stays put for another.
+   */
+  closesPanel?: boolean | ((context: NotificationActionContext) => boolean);
+}
+
+export function closesPanelFor(
+  spec: ClientActionSpec,
+  context: NotificationActionContext,
+): boolean {
+  return typeof spec.closesPanel === "function"
+    ? spec.closesPanel(context)
+    : Boolean(spec.closesPanel);
 }
 
 /** An id with no entry is skipped rather than rendered unwired. */

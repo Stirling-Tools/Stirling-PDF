@@ -204,8 +204,7 @@ test.describe("15.7 Tour selectors - admin modal nav items", () => {
   });
 
   const adminNavSections = [
-    "people",
-    "teams",
+    "users",
     "adminGeneral",
     "adminAdvanced",
     "adminSecurity",
