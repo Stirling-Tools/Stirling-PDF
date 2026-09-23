@@ -65,6 +65,8 @@ export function Logo({
           src={markUrl}
           alt={showText ? "" : alt}
           aria-hidden={showText ? true : undefined}
+          width={71}
+          height={79}
           style={{ height: iconHeight }}
         />
       )}
@@ -74,12 +76,16 @@ export function Logo({
             className="sui-logo__wordmark sui-logo__wordmark--light"
             src={wordmarkLightUrl}
             alt={alt}
+            width={58}
+            height={21}
             style={{ height: textHeight }}
           />
           <img
             className="sui-logo__wordmark sui-logo__wordmark--dark"
             src={wordmarkDarkUrl}
             alt={alt}
+            width={58}
+            height={21}
             style={{ height: textHeight }}
           />
         </>
