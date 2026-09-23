@@ -71,7 +71,7 @@ describe("ownership handover", () => {
   });
   function show() {
     return render(
-      <MantineProvider>
+      <MantineProvider env="test">
         <OwnershipTransferModal
           adapter={adapter}
           onClose={onClose}
@@ -103,20 +103,43 @@ describe("ownership handover", () => {
       cloudEmail: "cloud@example.com",
     });
     show();
+    const input = await screen.findByRole("combobox", {
+      name: "Stirling account",
+    });
     expect(
-      await screen.findByText("Choose their Stirling account"),
-    ).toBeVisible();
-    expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
-    await click(screen.getByRole("radio", { name: /Jamie Cloud/ }));
-    await click(screen.getByRole("button", { name: "Continue" }));
+      screen.getByRole("button", { name: "Transfer ownership" }),
+    ).toBeDisabled();
+    fireEvent.focus(input);
+    await click(
+      await screen.findByRole("option", { name: "cloud@example.com" }),
+    );
     await screen.findByRole("checkbox");
     expect(adapter.selectCloud).toHaveBeenCalledWith({ cloudUserId: 42 });
     expect(screen.getByText("Server account")).toBeVisible();
     expect(screen.getAllByText("Jamie")[0]).toBeVisible();
-    expect(screen.getByText("cloud@example.com")).toBeVisible();
+    expect(
+      screen.getByRole("combobox", { name: "Stirling account" }),
+    ).toHaveValue("cloud@example.com");
     expect(adapter.transferCloud).not.toHaveBeenCalled();
     await confirm();
     expect(screen.getByText("Ownership transferred")).toBeVisible();
+  });
+
+  it("Escape closes the email dropdown before dismissing the transfer", async () => {
+    vi.mocked(adapter.prepare).mockResolvedValue(choosing());
+    adapter.selectCloud = vi.fn();
+    show();
+    const input = await screen.findByRole("combobox", {
+      name: "Stirling account",
+    });
+    fireEvent.focus(input);
+    await screen.findByRole("option", { name: "cloud@example.com" });
+    fireEvent.keyDown(input, { key: "Escape", code: "Escape" });
+    expect(input).toHaveAttribute("aria-expanded", "false");
+    expect(onClose).not.toHaveBeenCalled();
+    expect(adapter.cancel).not.toHaveBeenCalled();
+    fireEvent.keyDown(input, { key: "Escape", code: "Escape" });
+    expect(onClose).toHaveBeenCalledOnce();
   });
 
   it("closing a member picker does not create or cancel an intent", async () => {
@@ -140,24 +163,25 @@ describe("ownership handover", () => {
     adapter.selectCloud = vi.fn().mockResolvedValue(awaiting);
     vi.mocked(adapter.invite!).mockResolvedValue(awaiting);
     show();
-    expect(await screen.findByText("Invite your next owner")).toBeVisible();
+    await screen.findByRole("combobox", { name: "Stirling account" });
     expect(screen.queryByRole("alert")).toBeNull();
-    await click(screen.getByRole("button", { name: "Invite new owner" }));
     fireEvent.change(
-      screen.getByRole("textbox", { name: "Their email address" }),
+      screen.getByRole("combobox", { name: "Stirling account" }),
       { target: { value: "invalid" } },
     );
-    expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Transfer ownership" }),
+    ).toBeDisabled();
     fireEvent.change(
-      screen.getByRole("textbox", { name: "Their email address" }),
+      screen.getByRole("combobox", { name: "Stirling account" }),
       { target: { value: "new@example.com" } },
     );
-    await click(screen.getByRole("button", { name: "Continue" }));
+    expect(adapter.invite).not.toHaveBeenCalled();
     await click(await screen.findByRole("button", { name: "Send invitation" }));
     expect(adapter.selectCloud).toHaveBeenCalledWith({
       cloudEmail: "new@example.com",
     });
-    expect(await screen.findByText("Waiting for them to join")).toBeVisible();
+    expect(await screen.findByText("Invitation sent")).toBeVisible();
     expect(
       screen.queryByRole("button", { name: "Transfer ownership" }),
     ).toBeNull();
@@ -177,8 +201,12 @@ describe("ownership handover", () => {
       .fn()
       .mockRejectedValue(new Error("CLOUD_TARGET_CHANGED"));
     show();
-    await click(await screen.findByRole("radio", { name: /Jamie Cloud/ }));
-    await click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.focus(
+      await screen.findByRole("combobox", { name: "Stirling account" }),
+    );
+    await click(
+      await screen.findByRole("option", { name: "cloud@example.com" }),
+    );
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Choose another cloud member",
     );
@@ -191,10 +219,14 @@ describe("ownership handover", () => {
     show();
     await screen.findByRole("checkbox");
     vi.mocked(adapter.prepare).mockResolvedValue(choosing());
-    await click(screen.getByRole("button", { name: "Change" }));
+    fireEvent.change(
+      screen.getByRole("combobox", { name: "Stirling account" }),
+      { target: { value: "other@example.com" } },
+    );
+    await waitFor(() => expect(adapter.cancel).toHaveBeenCalledOnce());
     expect(
-      await screen.findByText("Choose their Stirling account"),
-    ).toBeVisible();
+      screen.getByRole("combobox", { name: "Stirling account" }),
+    ).toHaveValue("other@example.com");
     expect(adapter.cancel).toHaveBeenCalledOnce();
     expect(adapter.transferCloud).not.toHaveBeenCalled();
   });
@@ -295,11 +327,11 @@ describe("ownership handover", () => {
       onTransferred.mockImplementationOnce(() => view.unmount());
       await confirm();
       expect(await screen.findByText("Ownership transferred")).toBeVisible();
-      expect(
-        screen.getByText(local ? "Step 3 of 3" : "Step 2 of 2"),
-      ).toBeVisible();
+      expect(screen.queryByText(/Step \d of/)).toBeNull();
       expect(screen.getByRole("status")).toHaveTextContent(
-        "Jamie is now the owner.",
+        local
+          ? "Jamie is now the owner."
+          : "jamie@example.com is now the owner.",
       );
       expect(onTransferred).not.toHaveBeenCalled();
       expect(onClose).not.toHaveBeenCalled();
@@ -312,29 +344,73 @@ describe("ownership handover", () => {
     },
   );
 
-  it("searches a larger team and opens invitation entry without sending an invitation", async () => {
+  it("searches by email only and uses the typed invitation address without sending on entry", async () => {
+    adapter.selectCloud = vi.fn();
     vi.mocked(adapter.prepare).mockResolvedValue(
       choosing(
         Array.from({ length: 8 }, (_, index) => ({
           id: index + 10,
-          name: "Member " + (index + 1),
-          email: "member" + (index + 1) + "@example.com",
+          name: "Display " + index,
+          email: "member" + index + "@example.com",
         })),
       ),
     );
     show();
-    expect(await screen.findAllByRole("radio")).toHaveLength(8);
-    fireEvent.change(screen.getByRole("searchbox"), {
-      target: { value: "member8@" },
+    const input = await screen.findByRole("combobox", {
+      name: "Stirling account",
     });
-    expect(screen.getAllByRole("radio")).toHaveLength(1);
-    expect(screen.getByRole("radio", { name: /Member 8/ })).toBeVisible();
-    await click(screen.getByRole("button", { name: "Invite" }));
+    fireEvent.focus(input);
+    expect(await screen.findAllByRole("option")).toHaveLength(8);
+    fireEvent.change(input, { target: { value: "member7@" } });
+    expect(screen.getAllByRole("option")).toHaveLength(1);
     expect(
-      screen.getByRole("textbox", { name: "Their email address" }),
+      screen.getByRole("option", { name: "member7@example.com" }),
     ).toBeVisible();
+    fireEvent.change(input, { target: { value: "Display" } });
+    expect(screen.queryByRole("option")).toBeNull();
+    fireEvent.change(input, { target: { value: "new@example.com" } });
+    expect(
+      screen.getByRole("button", { name: "Send invitation" }),
+    ).toBeEnabled();
+    expect(screen.getByText("new@example.com")).toBeVisible();
+    expect(adapter.selectCloud).not.toHaveBeenCalled();
+    expect(adapter.invite).not.toHaveBeenCalled();
+  });
+
+  it("does not send an invitation if the entered address is already a member when checked", async () => {
+    vi.mocked(adapter.prepare).mockResolvedValue(choosing([]));
+    adapter.selectCloud = vi.fn().mockResolvedValue({
+      ...status("READY"),
+      cloudEmail: "joined@example.com",
+    });
+    show();
+    fireEvent.change(
+      await screen.findByRole("combobox", { name: "Stirling account" }),
+      { target: { value: "joined@example.com" } },
+    );
+    await click(screen.getByRole("button", { name: "Send invitation" }));
+    expect(await screen.findByRole("checkbox")).not.toBeChecked();
     expect(adapter.invite).not.toHaveBeenCalled();
     expect(adapter.transferCloud).not.toHaveBeenCalled();
+  });
+
+  it("does not advance a changed email if cancelling the previous selection fails", async () => {
+    adapter.selectCloud = vi.fn();
+    vi.mocked(adapter.cancel!).mockRejectedValue(new Error("network"));
+    show();
+    const input = await screen.findByRole("combobox", {
+      name: "Stirling account",
+    });
+    fireEvent.change(input, { target: { value: "other@example.com" } });
+    expect(await screen.findByRole("alert")).toBeVisible();
+    expect(screen.queryByRole("checkbox")).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Send invitation" }),
+    ).toBeNull();
+    expect(adapter.selectCloud).not.toHaveBeenCalled();
+    expect(adapter.invite).not.toHaveBeenCalled();
+    await click(screen.getByRole("button", { name: "Check again" }));
+    expect(input).toHaveValue("jamie@example.com");
   });
 
   it("makes billing details available on keyboard focus", async () => {
@@ -407,9 +483,7 @@ describe("ownership handover", () => {
     );
     show();
     await click(await screen.findByRole("button", { name: "Send invitation" }));
-    await screen.findByText(
-      "Invitation sent. Ask them to accept it, then check again.",
-    );
+    await screen.findByText("Invitation sent");
     expect(
       screen.queryByRole("button", { name: "Transfer ownership" }),
     ).not.toBeInTheDocument();
@@ -471,7 +545,7 @@ describe("ownership handover", () => {
     vi.mocked(adapter.prepare).mockResolvedValue(unlinked);
     show();
     expect(await screen.findByText("New owner")).toBeVisible();
-    expect(screen.getByText("jamie@example.com")).toBeVisible();
+    expect(screen.getAllByText("jamie@example.com")[0]).toBeVisible();
     expect(screen.queryByText("Stirling account")).toBeNull();
     expect(
       screen.getByText("You'll become a team member and lose owner access."),
@@ -498,7 +572,9 @@ describe("ownership handover", () => {
       expect(
         screen.queryByRole("button", { name: "Transfer ownership" }),
       ).toBeNull();
-      await click(screen.getByRole("button", { name: "Close" }));
+      await click(
+        screen.getByRole("button", { name: "Close transfer dialog" }),
+      );
       expect(onClose).toHaveBeenCalledOnce();
       expect(adapter.transferCloud).not.toHaveBeenCalled();
       expect(adapter.completeLocal).not.toHaveBeenCalled();

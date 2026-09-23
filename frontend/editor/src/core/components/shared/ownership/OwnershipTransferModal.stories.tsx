@@ -46,77 +46,72 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const LinkedPaid: Story = {};
+function pickerAdapter(
+  members: NonNullable<OwnershipStatus["candidates"]>["members"],
+): OwnershipTransferAdapter {
+  const initial: OwnershipStatus = {
+    ...ready,
+    targetName: "jamie-local",
+    targetEmail: null,
+    cloud: null,
+    candidates: { teamId: 9, teamName: "Acme", members },
+  };
+  let current = initial;
+  return {
+    ...adapter(initial),
+    prepare: async () => current,
+    selectCloud: async (choice) => {
+      const member = members.find((entry) =>
+        choice.cloudUserId !== undefined
+          ? entry.id === choice.cloudUserId
+          : entry.email === choice.cloudEmail,
+      );
+      current = {
+        ...initial,
+        candidates: null,
+        cloudEmail: member?.email ?? choice.cloudEmail,
+        cloud: {
+          ...ready.cloud!,
+          targetUserId: member?.id ?? null,
+          state: member ? "READY" : "NEEDS_MEMBERSHIP",
+        },
+      };
+      return current;
+    },
+    invite: async () => current,
+    transferCloud: async () => {
+      current = {
+        ...current,
+        cloud: { ...current.cloud!, state: "TRANSFERRED" },
+      };
+      return current;
+    },
+    cancel: async () => {
+      current = initial;
+    },
+  };
+}
+
 export const ChooseCloudMember: Story = {
   args: {
-    adapter: {
-      ...adapter(ready),
-      prepare: async () => ({
-        ...ready,
-        targetName: "jamie-local",
-        targetEmail: null,
-        cloud: null,
-        candidates: {
-          teamId: 9,
-          teamName: "Acme",
-          members: [
-            { id: 42, name: "Jamie Chen", email: "jamie@acme.com" },
-            { id: 43, name: "Alex Morgan", email: "alex@acme.com" },
-          ],
-        },
-      }),
-      selectCloud: async (choice) => ({
-        ...ready,
-        targetName: "jamie-local",
-        targetEmail: null,
-        cloudEmail:
-          choice.cloudUserId === 43 ? "alex@acme.com" : "jamie@acme.com",
-      }),
-    },
+    adapter: pickerAdapter([
+      { id: 42, name: "Jamie Chen", email: "jamie@acme.com" },
+      { id: 43, name: "Alex Morgan", email: "alex@acme.com" },
+    ]),
   },
 };
 export const NoOtherCloudMembers: Story = {
-  args: {
-    adapter: {
-      ...adapter(ready),
-      prepare: async () => ({
-        ...ready,
-        targetName: "jamie-local",
-        targetEmail: null,
-        cloud: null,
-        candidates: { teamId: 9, teamName: "Acme", members: [] },
-      }),
-      selectCloud: async (choice) => ({
-        ...ready,
-        targetName: "jamie-local",
-        targetEmail: null,
-        cloudEmail: choice.cloudEmail,
-        cloud: {
-          ...ready.cloud!,
-          state: "NEEDS_MEMBERSHIP",
-          targetUserId: null,
-        },
-      }),
-    },
-  },
+  args: { adapter: pickerAdapter([]) },
 };
 export const ScrollableCloudMembers: Story = {
   args: {
-    adapter: {
-      ...ChooseCloudMember.args!.adapter!,
-      prepare: async () => ({
-        ...ready,
-        cloud: null,
-        candidates: {
-          teamId: 9,
-          teamName: "Acme",
-          members: Array.from({ length: 8 }, (_, index) => ({
-            id: index + 42,
-            name: `Member ${index + 1}`,
-            email: `member${index + 1}@acme.com`,
-          })),
-        },
-      }),
-    },
+    adapter: pickerAdapter(
+      Array.from({ length: 8 }, (_, index) => ({
+        id: index + 42,
+        name: `Member ${index + 1}`,
+        email: `member${index + 1}@acme.com`,
+      })),
+    ),
   },
 };
 export const ReviewSeparateAccounts: Story = {
