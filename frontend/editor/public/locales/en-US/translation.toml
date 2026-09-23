@@ -6235,7 +6235,7 @@ targetChanged = "The recipient's account changed. Restore their access or cancel
 title = "Transfer ownership"
 transfer = "Transfer ownership"
 waitingForEmail = "Waiting for {{email}} to join {{team}}."
-working = "Checking and updating ownership…"
+working = "Checking and updating ownership..."
 yourCloudAccess = "You'll become a team member and lose owner access."
 
 [pageEdit]
