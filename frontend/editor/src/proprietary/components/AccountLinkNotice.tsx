@@ -17,7 +17,7 @@ const EditorLinkModal = lazy(() =>
 
 import {
   acknowledgeAccountLinkPrompt,
-  clearAccountLinkBlock,
+  clearBlockIfAllowanceRemains,
   useAccountLinkBlock,
 } from "@app/services/accountLinkBlock";
 
@@ -49,28 +49,22 @@ export function AccountLinkNotice({
     !onShowOptions && !hasLinkDialog && isAdmin && !loading && exhausted;
   const ledger = useQuery({
     queryKey: ["accountLink", "editorFreeTier"],
-    queryFn: async () =>
-      (
-        await apiClient.get<FreeTierBalance>("/api/v1/account-link/free-tier", {
-          suppressErrorToast: true,
-          skipAuthRedirect: true,
-        })
-      ).data,
+    queryFn: async ({ signal }) => {
+      const { data } = await apiClient.get<FreeTierBalance>(
+        "/api/v1/account-link/free-tier",
+        { suppressErrorToast: true, skipAuthRedirect: true },
+      );
+      clearBlockIfAllowanceRemains(data, signal);
+      return data;
+    },
     enabled: readsBalance,
+    // This only runs while a block is up, so anything cached when one appears was
+    // read before it; the first read has to be fresh or it lifts the block on an
+    // older answer than the one that raised it.
+    staleTime: 0,
     retry: false,
     refetchInterval: 60_000,
   });
-
-  useEffect(() => {
-    if (
-      readsBalance &&
-      ledger.isSuccess &&
-      !ledger.isFetching &&
-      ledger.data.remainingUnits > 0
-    ) {
-      clearAccountLinkBlock();
-    }
-  }, [readsBalance, ledger.isSuccess, ledger.isFetching, ledger.data]);
 
   useEffect(() => {
     if (!exhausted || hasLinkDialog) setOpen(false);
