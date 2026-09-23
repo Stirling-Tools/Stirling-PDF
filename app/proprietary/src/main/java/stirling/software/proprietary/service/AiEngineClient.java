@@ -18,39 +18,52 @@ import org.springframework.web.server.ResponseStatusException;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.billing.AiCallRecord;
 
 @Slf4j
 @Service
 public class AiEngineClient {
 
+    /** The one route that makes Stirling Cloud keep a document past the request. */
+    private static final String DOCUMENT_INGEST_PATH = "/api/v1/documents";
+
     private final ApplicationProperties applicationProperties;
     private final HttpClient httpClient;
-    private final String engineSharedSecret;
+    private final AiEngineRouter router;
 
     @Autowired
-    public AiEngineClient(ApplicationProperties applicationProperties) {
+    public AiEngineClient(ApplicationProperties applicationProperties, AiEngineRouter router) {
         this(
                 applicationProperties,
                 HttpClient.newBuilder()
                         .connectTimeout(
                                 Duration.ofSeconds(
                                         applicationProperties.getAiEngine().getTimeoutSeconds()))
-                        .build());
+                        .build(),
+                router);
     }
 
-    /** Package-private constructor that accepts an HttpClient directly; intended for tests. */
-    AiEngineClient(ApplicationProperties applicationProperties, HttpClient httpClient) {
-        this(applicationProperties, httpClient, System.getenv("STIRLING_ENGINE_SHARED_SECRET"));
-    }
-
-    /** Package-private constructor that also injects the engine shared secret; for tests. */
-    AiEngineClient(
+    public AiEngineClient(
             ApplicationProperties applicationProperties,
             HttpClient httpClient,
-            String engineSharedSecret) {
+            AiEngineRouter router) {
         this.applicationProperties = applicationProperties;
         this.httpClient = httpClient;
-        this.engineSharedSecret = engineSharedSecret;
+        this.router = router;
+    }
+
+    // The cloud retention check lives here so every engine call, new ones included, passes it.
+    private AiEngineTarget resolveTarget(String path) {
+        AiEngineTarget target = router.resolve();
+        if (target.cloud()
+                && DOCUMENT_INGEST_PATH.equals(path)
+                && !router.documentIndexingAllowed()) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Storing documents on Stirling Cloud is turned off on this server, so"
+                            + " document questions are unavailable in cloud AI mode.");
+        }
+        return target;
     }
 
     public String post(String path, String jsonBody, String userId) throws IOException {
@@ -77,7 +90,8 @@ public class AiEngineClient {
                     HttpStatus.SERVICE_UNAVAILABLE, "AI engine is not enabled");
         }
 
-        String url = config.getUrl().stripTrailing() + path;
+        AiEngineTarget target = resolveTarget(path);
+        String url = target.urlFor(path);
         log.debug("Proxying AI engine request to {} (timeout {}s)", url, timeout.toSeconds());
 
         HttpRequest.Builder builder =
@@ -88,22 +102,16 @@ public class AiEngineClient {
                         .timeout(timeout)
                         .POST(HttpRequest.BodyPublishers.ofString(jsonBody));
         addUserHeader(builder, userId);
-        addEngineAuthHeader(builder);
-        HttpResponse<String> response = sendRequest(builder.build());
+        addEngineAuthHeader(builder, target);
+        HttpResponse<String> response = sendRequest(builder.build(), target);
 
         log.debug("AI engine responded with status {}", response.statusCode());
         checkResponseStatus(response);
         return response.body();
     }
 
-    /**
-     * Attach the {@code X-Engine-Auth} shared secret when configured so the engine trusts this
-     * backend request.
-     */
-    private void addEngineAuthHeader(HttpRequest.Builder builder) {
-        if (engineSharedSecret != null && !engineSharedSecret.isBlank()) {
-            builder.header("X-Engine-Auth", engineSharedSecret);
-        }
+    private static void addEngineAuthHeader(HttpRequest.Builder builder, AiEngineTarget target) {
+        target.headers().forEach(builder::header);
     }
 
     private static void addUserHeader(HttpRequest.Builder builder, String userId) {
@@ -130,7 +138,8 @@ public class AiEngineClient {
                     HttpStatus.SERVICE_UNAVAILABLE, "AI engine is not enabled");
         }
 
-        String url = config.getUrl().stripTrailing() + path;
+        AiEngineTarget target = resolveTarget(path);
+        String url = target.urlFor(path);
         Duration timeout = Duration.ofSeconds(config.getLongRunningTimeoutSeconds());
         log.debug(
                 "Proxying AI engine streaming request to {} (timeout {}s)",
@@ -145,17 +154,18 @@ public class AiEngineClient {
                         .timeout(timeout)
                         .POST(HttpRequest.BodyPublishers.ofString(jsonBody));
         addUserHeader(builder, userId);
-        addEngineAuthHeader(builder);
+        addEngineAuthHeader(builder, target);
         HttpRequest request = builder.build();
 
         HttpResponse<Stream<String>> response;
         try {
             response = httpClient.send(request, HttpResponse.BodyHandlers.ofLines());
+            recordWhereItRan(target);
         } catch (HttpTimeoutException e) {
             throw new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT, "AI engine timed out", e);
         } catch (IOException e) {
             throw new ResponseStatusException(
-                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine unreachable: " + e.getMessage(), e);
+                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine unreachable: " + describe(e), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new ResponseStatusException(
@@ -164,9 +174,7 @@ public class AiEngineClient {
 
         int status = response.statusCode();
         if (status >= 400) {
-            throw new ResponseStatusException(
-                    HttpStatus.valueOf(status >= 500 ? 502 : status),
-                    "AI engine returned error: " + status);
+            throw failureFor(status, null);
         }
 
         try (Stream<String> lines = response.body()) {
@@ -191,7 +199,8 @@ public class AiEngineClient {
                     HttpStatus.SERVICE_UNAVAILABLE, "AI engine is not enabled");
         }
 
-        String url = config.getUrl().stripTrailing() + path;
+        AiEngineTarget target = resolveTarget(path);
+        String url = target.urlFor(path);
         log.debug("Proxying AI engine DELETE request to {}", url);
 
         HttpRequest.Builder builder =
@@ -201,8 +210,8 @@ public class AiEngineClient {
                         .timeout(Duration.ofSeconds(config.getTimeoutSeconds()))
                         .DELETE();
         addUserHeader(builder, userId);
-        addEngineAuthHeader(builder);
-        HttpResponse<String> response = sendRequest(builder.build());
+        addEngineAuthHeader(builder, target);
+        HttpResponse<String> response = sendRequest(builder.build(), target);
 
         log.debug("AI engine responded with status {}", response.statusCode());
         checkResponseStatus(response);
@@ -216,7 +225,8 @@ public class AiEngineClient {
                     HttpStatus.SERVICE_UNAVAILABLE, "AI engine is not enabled");
         }
 
-        String url = config.getUrl().stripTrailing() + path;
+        AiEngineTarget target = resolveTarget(path);
+        String url = target.urlFor(path);
         log.debug("Proxying AI engine GET request to {}", url);
 
         HttpRequest.Builder builder =
@@ -226,17 +236,34 @@ public class AiEngineClient {
                         .timeout(Duration.ofSeconds(config.getTimeoutSeconds()))
                         .GET();
         addUserHeader(builder, userId);
-        addEngineAuthHeader(builder);
-        HttpResponse<String> response = sendRequest(builder.build());
+        addEngineAuthHeader(builder, target);
+        HttpResponse<String> response = sendRequest(builder.build(), target);
 
         log.debug("AI engine responded with status {}", response.statusCode());
         checkResponseStatus(response);
         return response.body();
     }
 
-    private HttpResponse<String> sendRequest(HttpRequest request) throws IOException {
+    /** The JDK's ConnectException has no message, which would render as "unreachable: null". */
+    private static String describe(Exception e) {
+        String message = e.getMessage();
+        return message != null && !message.isBlank()
+                ? message
+                : e.getClass().getSimpleName() + " (nothing listening on the configured URL?)";
+    }
+
+    // Any answer counts, failures included: the meter skips failed requests on their status.
+    private static void recordWhereItRan(AiEngineTarget target) {
+        AiCallRecord.record(target.cloud() ? AiCallRecord.Where.REMOTE : AiCallRecord.Where.LOCAL);
+    }
+
+    private HttpResponse<String> sendRequest(HttpRequest request, AiEngineTarget target)
+            throws IOException {
         try {
-            return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response =
+                    httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            recordWhereItRan(target);
+            return response;
         } catch (HttpTimeoutException e) {
             throw new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT, "AI engine timed out", e);
         } catch (IOException e) {
@@ -244,7 +271,7 @@ public class AiEngineClient {
             // SERVICE_UNAVAILABLE so every caller of this client sees a structured
             // status rather than a raw 500 from an unhandled IOException.
             throw new ResponseStatusException(
-                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine unreachable: " + e.getMessage(), e);
+                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine unreachable: " + describe(e), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new ResponseStatusException(
@@ -254,14 +281,42 @@ public class AiEngineClient {
 
     private void checkResponseStatus(HttpResponse<String> response) {
         int status = response.statusCode();
+        if (status >= 400) {
+            throw failureFor(status, response.body());
+        }
+    }
+
+    /**
+     * An upstream 401/403 is about this server's credentials; relayed as-is, the frontend would
+     * treat it as its own session expiring and reload mid-flow.
+     */
+    private static ResponseStatusException failureFor(int status, String body) {
+        if (status == 401 || status == 403) {
+            return new EngineRejectedCredentials(status);
+        }
         if (status >= 500) {
-            throw new ResponseStatusException(
+            return new ResponseStatusException(
                     HttpStatus.BAD_GATEWAY, "AI engine returned error: " + status);
         }
-        if (status >= 400) {
-            throw new ResponseStatusException(
-                    HttpStatus.valueOf(status),
-                    "AI engine returned client error: " + response.body());
+        String detail = body == null || body.isBlank() ? "" : ": " + body;
+        return new ResponseStatusException(
+                HttpStatus.valueOf(status),
+                "AI engine returned client error (HTTP " + status + ")" + detail);
+    }
+
+    /** The engine, or the cloud gateway in front of it, refused this server's own credentials. */
+    public static final class EngineRejectedCredentials extends ResponseStatusException {
+        private final int upstreamStatus;
+
+        EngineRejectedCredentials(int upstreamStatus) {
+            super(
+                    HttpStatus.BAD_GATEWAY,
+                    "AI engine rejected this server's credentials (HTTP " + upstreamStatus + ")");
+            this.upstreamStatus = upstreamStatus;
+        }
+
+        public int upstreamStatus() {
+            return upstreamStatus;
         }
     }
 }

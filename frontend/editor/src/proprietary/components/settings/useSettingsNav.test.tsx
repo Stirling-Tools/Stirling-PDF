@@ -2,6 +2,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 
 const state = vi.hoisted(() => ({ owner: true, loading: false }));
+vi.mock("@app/contexts/AppConfigContext", () => ({
+  useAppConfig: () => ({ config: { isAdmin: true } }),
+}));
 vi.mock("@app/auth/context", () => ({
   useAuth: () => ({
     isAdmin: true,
@@ -45,6 +48,7 @@ describe("self-hosted owner settings", () => {
         section.items.map((item) => item.key),
       );
       expect(keys).toContain("adminUsage");
+      expect(keys).toContain("users");
       expect(keys.includes("billing")).toBe(owner);
       expect(keys.includes("account-link")).toBe(owner);
     },
