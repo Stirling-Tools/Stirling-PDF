@@ -434,6 +434,16 @@ export default defineConfig(async ({ mode, command }) => {
           manualChunks(id: string) {
             if (id.includes("material-symbols-icons.json"))
               return "vendor-iconset";
+            // An asset URL import compiles to a single string. Filed by package
+            // name it joins that package's vendor chunk, and its importer then
+            // loads the whole chunk: the startup WASM warm-up imports pdfium's
+            // URL, which put all of embedpdf on the initial load.
+            if (id.includes("?url")) return undefined;
+            // Vite's helper behind every dynamic import(). Unassigned, Rollup
+            // files it into the first vendor chunk that depends on it, which
+            // was embedpdf, so every lazy import in the app loaded the viewer
+            // engine at startup.
+            if (id.includes("vite/preload-helper")) return "preload-helper";
             if (id.includes("node_modules")) {
               if (id.includes("pdfjs-dist")) return "vendor-pdfjs";
               if (id.includes("@embedpdf")) return "vendor-embedpdf";

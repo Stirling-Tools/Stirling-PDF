@@ -37,6 +37,11 @@ export function startEagerWasmCompilation(): void {
     return;
   }
 
+  // The JS glue that runs this WASM is a lazy chunk. Fetch it in the same idle
+  // slot so the first thumbnail or form read waits for neither. A failure here
+  // is left to pdfiumService, whose own import retries it and reports it.
+  import("@embedpdf/pdfium").catch(() => {});
+
   const compileWithFallback = async (): Promise<WebAssembly.Module | null> => {
     try {
       if (typeof WebAssembly.compileStreaming === "function") {
