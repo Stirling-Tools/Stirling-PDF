@@ -233,8 +233,12 @@ class NotificationProjectionTest {
                     .filteredOn(action -> action.id().equals("OPEN_IN_TOOL"))
                     .extracting(FileRunEventView.ActionView::execution)
                     .containsExactly(FailureActionId.Execution.CLIENT);
+            // The reason, not just the type: with no OPEN_IN_TOOL handler registered here, a broken
+            // location guard would still throw, as ACTION_NOT_RECOGNISED, and pass a looser check.
             assertThatThrownBy(() -> failures.dispatch(row.id(), "OPEN_IN_TOOL", Map.of()))
-                    .isInstanceOf(FailureActionException.class);
+                    .isInstanceOf(FailureActionException.class)
+                    .extracting(e -> ((FailureActionException) e).getReason())
+                    .isEqualTo(FailureActionException.Reason.ACTION_NOT_DISPATCHABLE);
         }
 
         @Test
