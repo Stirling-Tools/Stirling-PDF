@@ -22,10 +22,11 @@ async function addBanner(
   return page.evaluate((px) => {
     const shell = Array.from(document.querySelectorAll("div")).find(
       (element) =>
-        // #7518 moved the shell to dvh so mobile browser chrome stops clipping
-        // the app. Matching 100vh alone finds no shell at all, and the guard
-        // below turns that into a failure rather than a silent pass.
-        (element.style.height === "100dvh" ||
+        // The shell's height is 100dvh (#7518, so mobile browser chrome stops
+        // clipping the app), written as var(--titlebar-body-h, 100dvh) since the
+        // desktop title bar (#8114). An exact match finds no shell at all, and
+        // the guard below turns that into a failure rather than a silent pass.
+        (element.style.height.includes("100dvh") ||
           element.style.height === "100vh") &&
         element.style.display === "flex" &&
         element.style.flexDirection === "column",
