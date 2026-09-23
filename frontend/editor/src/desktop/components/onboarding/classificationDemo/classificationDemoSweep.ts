@@ -21,6 +21,7 @@ import type {
 import { LABEL_FAMILIES } from "@app/data/classificationLabels";
 import { accentColor, accentCycleColor } from "@app/utils/accentColors";
 import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
+import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
 
 /** Names this run in the billing audit trail, so onboarding's sweep is distinguishable
  *  from classification on upload. */
@@ -36,6 +37,37 @@ export const CLASSIFICATION_DEMO_BATCH_SIZE = 50;
 /** Text-reading allowance per document, counted once it is open, so a cold pdf.js worker
  *  is not charged. Opening has its own headroom, so a document's worst case is both. */
 export const HEURISTIC_BUDGET_MS = 1000;
+
+/** Longest any one step for one document may take before the sweep moves on without it.
+ *  Above every bound the steps set themselves (the 30s encryption probe inside addFiles,
+ *  pdf.js open plus the text budget), so it only ends a wait nothing else would: a full
+ *  pdf.js worker pool, the addFiles lock, or an IPC or storage call that never answers. */
+export const STEP_DEADLINE_MS = 45_000;
+
+const STEP_TIMED_OUT = Symbol("step timed out");
+
+/** Resolves to {@link STEP_TIMED_OUT} if `work` has not settled by the deadline. The work
+ *  keeps running; the warning names the step, so a stall says where it happened. */
+async function withinStepDeadline<T>(
+  work: Promise<T>,
+  step: string,
+  fileName: string,
+): Promise<T | typeof STEP_TIMED_OUT> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<typeof STEP_TIMED_OUT>((resolve) => {
+    timer = setTimeout(() => resolve(STEP_TIMED_OUT), STEP_DEADLINE_MS);
+  });
+  const result = await Promise.race([work, deadline]).finally(() =>
+    clearTimeout(timer),
+  );
+  if (result === STEP_TIMED_OUT) {
+    console.warn(
+      `[classificationDemo] ${step} for ${fileName} did not finish in ${STEP_DEADLINE_MS}ms; moving on`,
+      { pdfWorkers: pdfWorkerManager.getWorkerStats() },
+    );
+  }
+  return result;
+}
 
 /** Roll-up id used for a document the heuristic could not place. */
 export const UNCLASSIFIED_GROUP_ID = "other";
@@ -240,17 +272,20 @@ async function classifyAndAdd(
   file: File,
   deps: ClassificationDemoDeps,
 ): Promise<string[] | null> {
-  let verdict: HeuristicResult;
+  let verdict: HeuristicResult | typeof STEP_TIMED_OUT;
   try {
-    verdict = await classifyFileHeuristically(file, {
-      budgetMs: HEURISTIC_BUDGET_MS,
-    });
+    verdict = await withinStepDeadline(
+      classifyFileHeuristically(file, { budgetMs: HEURISTIC_BUDGET_MS }),
+      "Classifying",
+      file.name,
+    );
   } catch {
     return null;
   }
+  if (verdict === STEP_TIMED_OUT) return null;
   // Storage failing does not invalidate the verdict: the tally still counts the document,
   // it just will not appear in the library.
-  await deps
+  const storing = deps
     .addFiles([file], {
       // The sidebar reads IndexedDB, so this still groups in the library without
       // becoming an open file — nothing selected, user's workspace untouched.
@@ -267,6 +302,7 @@ async function classifyAndAdd(
       },
     })
     .catch(() => []);
+  await withinStepDeadline(storing, "Saving", file.name);
   return verdict.labels;
 }
 
@@ -335,12 +371,23 @@ export async function runClassificationDemoSweep(
   let pending = read(0);
   for (let index = 0; index < batch.length; index += 1) {
     if (deps.isCancelled?.()) break;
-    await requireAutomationSession(session.key);
     const entry = batch[index];
+    // A session that cannot be confirmed fails the sweep, as a changed one does: running
+    // on without it would store and meter under an account nobody checked.
+    if (
+      (await withinStepDeadline(
+        requireAutomationSession(session.key),
+        "Checking the session",
+        entry.name,
+      )) === STEP_TIMED_OUT
+    ) {
+      throw new Error("The server session could not be confirmed.");
+    }
     // Recorded before the attempt, so a document that cannot be read is retired rather
     // than offered again by every follow-up batch for the rest of the flow.
     sweptPaths.push(entry.path);
-    const file = await pending;
+    const readResult = await withinStepDeadline(pending, "Reading", entry.name);
+    const file = readResult === STEP_TIMED_OUT ? null : readResult;
     pending = read(index + 1);
     if (file) {
       const labels = await classifyAndAdd(file, deps);

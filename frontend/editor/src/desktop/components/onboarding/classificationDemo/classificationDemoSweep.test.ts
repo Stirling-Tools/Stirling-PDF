@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 // Pins the sweep's contract: browser-only classification, results written locked so the
 // classification demo's files never reach the AI, and the batch accounting follow-ups depend on.
@@ -27,9 +27,16 @@ vi.mock("@app/services/heuristic/heuristicClassification", () => ({
 vi.mock("@app/services/automationMeter", () => ({
   meterAutomationRun: (...args: unknown[]) => meterAutomationRun(...args),
 }));
+vi.mock("@app/services/pdfWorkerManager", () => ({
+  pdfWorkerManager: {
+    getWorkerStats: () => ({ active: 10, max: 10, total: 10 }),
+  },
+}));
+import { requireAutomationSession } from "@app/services/serverAutomationSession";
 import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 import {
   HEURISTIC_BUDGET_MS,
+  STEP_DEADLINE_MS,
   mergeOutcomes,
   pickRecentPdfs,
   runClassificationDemoSweep,
@@ -237,6 +244,83 @@ describe("runClassificationDemoSweep", () => {
     await runClassificationDemoSweep("/downloads", d);
     expect(classifyFileHeuristically).toHaveBeenCalledWith(expect.any(File), {
       budgetMs: HEURISTIC_BUDGET_MS,
+    });
+  });
+
+  describe("a step that never answers", () => {
+    const never = <T>() => new Promise<T>(() => {});
+
+    beforeEach(() => {
+      vi.useFakeTimers();
+      vi.spyOn(console, "warn").mockImplementation(() => {});
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+      vi.mocked(console.warn).mockRestore();
+    });
+
+    async function settle<T>(run: Promise<T>): Promise<T> {
+      const outcome = run.then(
+        (value) => ({ value }),
+        (error: unknown) => ({ error }),
+      );
+      await vi.advanceTimersByTimeAsync(STEP_DEADLINE_MS * 3);
+      const result = await outcome;
+      if ("error" in result) throw result.error;
+      return result.value;
+    }
+
+    test("retires a document whose read stalls and carries on", async () => {
+      readDiskFile.mockImplementationOnce(() => never());
+      const outcome = await settle(
+        runClassificationDemoSweep("/downloads", deps()),
+      );
+
+      expect(outcome.processed).toBe(1);
+      expect(outcome.sweptPaths).toEqual([
+        "/downloads/a.pdf",
+        "/downloads/b.pdf",
+      ]);
+    });
+
+    test("retires a document whose classification stalls and carries on", async () => {
+      classifyFileHeuristically.mockImplementationOnce(() => never());
+      const outcome = await settle(
+        runClassificationDemoSweep("/downloads", deps()),
+      );
+
+      expect(outcome.processed).toBe(1);
+    });
+
+    test("still counts a document whose save stalls: the verdict stands", async () => {
+      const addFiles = vi
+        .fn()
+        .mockImplementationOnce(() => never())
+        .mockResolvedValue([]);
+      const outcome = await settle(
+        runClassificationDemoSweep("/downloads", deps({ addFiles })),
+      );
+
+      expect(outcome.processed).toBe(2);
+    });
+
+    test("names the step that stalled, so a hang says where it happened", async () => {
+      classifyFileHeuristically.mockImplementationOnce(() => never());
+      await settle(runClassificationDemoSweep("/downloads", deps()));
+
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining("Classifying for a.pdf"),
+        { pdfWorkers: { active: 10, max: 10, total: 10 } },
+      );
+    });
+
+    test("fails the sweep when the session cannot be confirmed", async () => {
+      vi.mocked(requireAutomationSession).mockImplementationOnce(() => never());
+
+      await expect(
+        settle(runClassificationDemoSweep("/downloads", deps())),
+      ).rejects.toThrow("could not be confirmed");
+      expect(classifyFileHeuristically).not.toHaveBeenCalled();
     });
   });
 
