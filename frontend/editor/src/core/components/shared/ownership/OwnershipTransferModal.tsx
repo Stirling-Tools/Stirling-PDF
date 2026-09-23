@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Checkbox } from "@mantine/core";
-import { useTranslation } from "react-i18next";
+import { Checkbox, Tooltip } from "@mantine/core";
+import { Trans, useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import { FlowModal } from "@app/components/shared/FlowModal";
 import { StepModalHeader } from "@app/components/shared/StepModalHeader";
@@ -49,6 +50,7 @@ export interface OwnershipTransferAdapter {
 interface Props {
   adapter: OwnershipTransferAdapter;
   onClose: () => void;
+  /** Runs when the success screen is dismissed, so session refresh cannot hide the result. */
   onTransferred: () => void;
 }
 
@@ -85,6 +87,7 @@ export function OwnershipTransferModal({
   const [inviteMode, setInviteMode] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const working = useRef(false);
+  const dismissed = useRef(false);
   const initialAdapter = useRef(adapter);
 
   useEffect(() => {
@@ -148,7 +151,6 @@ export function OwnershipTransferModal({
       }
       if (adapter.local) await adapter.completeLocal!(next);
       setDone(true);
-      onTransferred();
     } catch (cause) {
       // A lost cloud response may have committed. Read its state before offering any retry.
       try {
@@ -161,7 +163,13 @@ export function OwnershipTransferModal({
   }
 
   function close() {
-    if (busy || working.current) return;
+    if (busy || working.current || dismissed.current) return;
+    if (done) {
+      dismissed.current = true;
+      onTransferred();
+      onClose();
+      return;
+    }
     if (canCancel) {
       void run(async () => {
         await adapter.cancel!();
@@ -274,11 +282,14 @@ export function OwnershipTransferModal({
     setStatus(await adapter.prepare());
     setAccepted(false);
     setInvited(false);
+    setInviteMode(false);
+    setSearch("");
+    setSelectedId(null);
   }
 
   function primaryAction() {
     if (done)
-      return <Button onClick={onClose}>{t("common.done", "Done")}</Button>;
+      return <Button onClick={close}>{t("common.done", "Done")}</Button>;
     if (startFromInstance) return null;
     if (choosing && !inviteMode && status?.candidates?.members.length === 0)
       return (
@@ -386,12 +397,18 @@ export function OwnershipTransferModal({
           </div>
         )}
         {done ? (
-          <div className="ownership-flow__success">
+          <div className="ownership-flow__success" role="status">
             <Icon name="circle-check" size={32} />
             <p>
-              {t("ownership.newOwner", "{{name}} is now the owner.", {
-                name: status?.targetName,
-              })}
+              <Trans
+                t={t}
+                i18nKey="ownership.newOwnerStyled"
+                defaults="<user>{{name}}</user> is now the owner."
+                values={{ name: status?.targetName }}
+                components={{
+                  user: <strong className="ownership-flow__username" />,
+                }}
+              />
             </p>
             <p className="ownership-flow__muted">
               {adapter.local && linked
@@ -419,14 +436,26 @@ export function OwnershipTransferModal({
                       ? t("ownership.serverAccount", "Server account")
                       : t("ownership.newOwnerLabel", "New owner")}
                   </span>
-                  <strong>{status.targetName}</strong>
+                  <strong title={status.targetName}>{status.targetName}</strong>
                 </div>
                 {!choosing && status.cloud && (
                   <div>
                     <span>
                       {t("ownership.cloudAccount", "Stirling account")}
                     </span>
-                    <strong>{cloudEmail}</strong>
+                    <strong title={cloudEmail ?? undefined}>
+                      {cloudEmail}
+                    </strong>
+                    {adapter.selectCloud && !partial && (
+                      <Button
+                        variant="quiet"
+                        size="sm"
+                        disabled={busy}
+                        onClick={() => void run(changeAccount)}
+                      >
+                        {t("ownership.change", "Change")}
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>
@@ -434,14 +463,18 @@ export function OwnershipTransferModal({
             {choosing && (
               <>
                 <p>
-                  {t(
-                    "ownership.chooseCloudBody",
-                    "Select the account that belongs to {{name}} in {{team}}.",
-                    {
+                  <Trans
+                    t={t}
+                    i18nKey="ownership.chooseCloudStyled"
+                    defaults="Select the account for <user>{{name}}</user> in {{team}}."
+                    values={{
                       name: status?.targetName,
                       team: status?.candidates?.teamName,
-                    },
-                  )}
+                    }}
+                    components={{
+                      user: <strong className="ownership-flow__username" />,
+                    }}
+                  />
                 </p>
                 {inviteMode ? (
                   <>
@@ -473,20 +506,29 @@ export function OwnershipTransferModal({
                   <>
                     {status?.candidates?.members.length ? (
                       <>
-                        <input
-                          className="ownership-flow__search"
-                          type="search"
-                          aria-label={t(
-                            "ownership.searchMembers",
-                            "Search team members",
-                          )}
-                          placeholder={t(
-                            "ownership.searchMembers",
-                            "Search team members",
-                          )}
-                          value={search}
-                          onChange={(event) => setSearch(event.target.value)}
-                        />
+                        <div className="ownership-flow__search-row">
+                          <input
+                            className="ownership-flow__search"
+                            type="search"
+                            aria-label={t(
+                              "ownership.searchMembers",
+                              "Search team members",
+                            )}
+                            placeholder={t(
+                              "ownership.searchMembers",
+                              "Search team members",
+                            )}
+                            value={search}
+                            onChange={(event) => setSearch(event.target.value)}
+                          />
+                          <Button
+                            variant="secondary"
+                            disabled={busy}
+                            onClick={() => setInviteMode(true)}
+                          >
+                            {t("ownership.openInvite", "Invite")}
+                          </Button>
+                        </div>
                         <div
                           className="ownership-flow__members"
                           role="radiogroup"
@@ -498,6 +540,11 @@ export function OwnershipTransferModal({
                           {members.map((member) => (
                             <label
                               key={member.id}
+                              title={
+                                member.name && member.name !== member.email
+                                  ? `${member.name} · ${member.email}`
+                                  : member.email
+                              }
                               className={`ownership-flow__member ${selectedId === member.id ? "is-selected" : ""}`}
                             >
                               <input
@@ -510,7 +557,10 @@ export function OwnershipTransferModal({
                               />
                               <span>
                                 <strong>{member.name || member.email}</strong>
-                                {member.name && <small>{member.email}</small>}
+                                {member.name &&
+                                  member.name !== member.email && (
+                                    <small>{member.email}</small>
+                                  )}
                               </span>
                             </label>
                           ))}
@@ -538,18 +588,6 @@ export function OwnershipTransferModal({
                         </p>
                       </div>
                     )}
-                    {status?.candidates?.members.length ? (
-                      <Button
-                        variant="secondary"
-                        disabled={busy}
-                        onClick={() => setInviteMode(true)}
-                      >
-                        {t(
-                          "ownership.inviteSomeoneElse",
-                          "Invite someone else",
-                        )}
-                      </Button>
-                    ) : null}
                   </>
                 )}
               </>
@@ -594,29 +632,86 @@ export function OwnershipTransferModal({
                       {status.cloud && (
                         <>
                           <p>
-                            {t(
-                              "ownership.cloudScope",
-                              "{{name}} will own the entire {{team}} cloud team and manage its members and billing settings.",
-                              {
+                            <Trans
+                              t={t}
+                              i18nKey="ownership.cloudScopeStyled"
+                              defaults="<user>{{name}}</user> will manage {{team}}, its members and billing."
+                              values={{
                                 name: status.targetName,
                                 team: status.cloud.teamName,
-                              },
-                            )}
+                              }}
+                              components={{
+                                user: (
+                                  <strong className="ownership-flow__username" />
+                                ),
+                              }}
+                            />
                           </p>
-                          <p className="ownership-flow__muted">
-                            {t(
-                              "ownership.billing",
-                              "The subscription, wallet, payment method and existing licenses stay in place. Billing contact details do not change automatically.",
-                            )}
-                          </p>
-                          {status.cloud.linkedInstances > 1 && (
-                            <p className="ownership-flow__muted">
+                          <div className="ownership-flow__detail">
+                            <span>
                               {t(
-                                "ownership.instances",
-                                "This team has {{count}} linked servers. Their cloud billing stays with this team; other servers' local owners do not change.",
-                                { count: status.cloud.linkedInstances },
+                                "ownership.billingUnchanged",
+                                "Subscription and billing stay in place",
                               )}
-                            </p>
+                            </span>
+                            <Tooltip
+                              multiline
+                              w={300}
+                              zIndex={Z_INDEX_OVER_CONFIG_MODAL + 2}
+                              events={{ hover: true, focus: true, touch: true }}
+                              label={t(
+                                "ownership.billing",
+                                "The subscription, wallet, payment method and existing licenses stay in place. Billing contact details do not change automatically.",
+                              )}
+                            >
+                              <ActionIcon
+                                variant="quiet"
+                                size="sm"
+                                aria-label={t(
+                                  "ownership.billingDetails",
+                                  "Billing details",
+                                )}
+                              >
+                                <Icon name="info" size={16} />
+                              </ActionIcon>
+                            </Tooltip>
+                          </div>
+                          {status.cloud.linkedInstances > 1 && (
+                            <div className="ownership-flow__detail">
+                              <span>
+                                {t(
+                                  "ownership.linkedServerCount",
+                                  "{{count}} linked servers",
+                                  { count: status.cloud.linkedInstances },
+                                )}
+                              </span>
+                              <Tooltip
+                                multiline
+                                w={300}
+                                zIndex={Z_INDEX_OVER_CONFIG_MODAL + 2}
+                                events={{
+                                  hover: true,
+                                  focus: true,
+                                  touch: true,
+                                }}
+                                label={t(
+                                  "ownership.instances",
+                                  "This team has {{count}} linked servers. Their cloud billing stays with this team; other servers' local owners do not change.",
+                                  { count: status.cloud.linkedInstances },
+                                )}
+                              >
+                                <ActionIcon
+                                  variant="quiet"
+                                  size="sm"
+                                  aria-label={t(
+                                    "ownership.serverDetails",
+                                    "Linked server details",
+                                  )}
+                                >
+                                  <Icon name="info" size={16} />
+                                </ActionIcon>
+                              </Tooltip>
+                            </div>
                           )}
                           <p className="ownership-flow__muted">
                             {t(
@@ -648,15 +743,6 @@ export function OwnershipTransferModal({
                   </>
                 )}
               </>
-            )}
-            {adapter.selectCloud && status?.cloud && !partial && (
-              <Button
-                variant="tertiary"
-                disabled={busy}
-                onClick={() => void run(changeAccount)}
-              >
-                {t("ownership.changeAccount", "Choose a different account")}
-              </Button>
             )}
             {status?.cloud && adapter.signIn && !cloudDone && error && (
               <Button

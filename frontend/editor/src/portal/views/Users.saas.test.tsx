@@ -60,17 +60,17 @@ vi.mock("@portal/contexts/TierContext", () => ({
   useTier: () => ({ tier: "pro" }),
 }));
 
-vi.mock("react-i18next", () => ({
-  useTranslation: () => ({
-    t: (key: string, fallback?: string, opts?: Record<string, unknown>) => {
-      const base = fallback ?? key;
-      return opts
-        ? base.replace(/\{\{(\w+)\}\}/g, (_, k) => String(opts[k] ?? ""))
-        : base;
-    },
-    i18n: { changeLanguage: vi.fn() },
-  }),
-}));
+vi.mock("react-i18next", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("react-i18next")>();
+  const { createInstance } = await import("i18next");
+  const i18n = createInstance();
+  await i18n.use(actual.initReactI18next).init({
+    lng: "en",
+    resources: {},
+    interpolation: { escapeValue: false },
+  });
+  return { ...actual, useTranslation: () => ({ t: i18n.t, i18n }) };
+});
 
 import { Users } from "@portal/views/Users";
 

@@ -1,7 +1,7 @@
 .ownership-flow {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.85rem;
   font-size: 0.875rem;
   line-height: 1.55;
 }
@@ -15,24 +15,51 @@
 }
 .ownership-flow__accounts {
   border: 1px solid var(--c-border);
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   overflow: hidden;
 }
 .ownership-flow__accounts > div {
   display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  padding: 0.85rem 1rem;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.75rem;
 }
 .ownership-flow__accounts > div + div {
   border-top: 1px solid var(--c-border-subtle);
 }
-.ownership-flow__accounts span {
+.ownership-flow__accounts > div > span {
+  flex: 0 0 7rem;
   color: var(--c-text-muted);
   font-size: 0.75rem;
 }
 .ownership-flow__accounts strong {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ownership-flow__accounts button {
+  flex-shrink: 0;
+}
+.ownership-flow__username {
+  color: var(--c-accent-fg);
+  background: var(--c-primary-subtle);
+  border-radius: 0.25rem;
+  padding: 0.05rem 0.3rem;
   overflow-wrap: anywhere;
+}
+.ownership-flow__search-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.ownership-flow__search-row input {
+  flex: 1;
+  min-width: 0;
+}
+.ownership-flow__search-row button {
+  flex-shrink: 0;
 }
 .ownership-flow__field {
   display: flex;
@@ -48,7 +75,7 @@
   color: var(--c-text);
   border: 1px solid var(--c-border);
   border-radius: 0.5rem;
-  padding: 0.7rem 0.85rem;
+  padding: 0.45rem 0.65rem;
   font: inherit;
 }
 .ownership-flow__field input:focus-visible,
@@ -58,34 +85,51 @@
   outline-offset: 2px;
 }
 .ownership-flow__members {
+  box-sizing: content-box;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  max-height: 15rem;
+  --member-height: 2.5rem;
+  --member-gap: 0.25rem;
+  gap: var(--member-gap);
+  max-height: calc(5 * var(--member-height) + 4 * var(--member-gap));
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 0.2rem;
 }
 .ownership-flow__member {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
-  border: 1px solid var(--c-border);
-  border-radius: 0.65rem;
-  padding: 0.8rem;
+  gap: 0.65rem;
+  flex: 0 0 var(--member-height);
+  box-sizing: border-box;
+  min-width: 0;
+  border: 1px solid transparent;
+  border-radius: 0.4rem;
+  padding: 0.35rem 0.5rem;
   cursor: pointer;
+}
+.ownership-flow__member:hover {
+  background: var(--c-surface-sunken);
 }
 .ownership-flow__member.is-selected {
   border-color: var(--c-primary);
   background: var(--c-primary-subtle);
 }
 .ownership-flow__member input {
+  flex-shrink: 0;
   accent-color: var(--c-primary);
 }
 .ownership-flow__member span {
   display: flex;
-  flex-direction: column;
+  align-items: baseline;
+  gap: 0.5rem;
   min-width: 0;
-  overflow-wrap: anywhere;
+}
+.ownership-flow__member strong,
+.ownership-flow__member small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .ownership-flow__member small {
   color: var(--c-text-muted);
@@ -112,7 +156,14 @@
 .ownership-flow__summary {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
+}
+.ownership-flow__detail {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--c-text-muted);
+  font-size: 0.8125rem;
 }
 .ownership-flow__notice {
   padding: 0.85rem 1rem;

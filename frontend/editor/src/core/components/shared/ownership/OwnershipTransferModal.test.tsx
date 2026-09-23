@@ -13,9 +13,17 @@ import {
   type OwnershipTransferAdapter,
 } from "@app/components/shared/ownership/OwnershipTransferModal";
 
-vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (_key: string, fallback: string) => fallback }),
-}));
+vi.mock("react-i18next", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("react-i18next")>();
+  const { createInstance } = await import("i18next");
+  const i18n = createInstance();
+  await i18n.use(actual.initReactI18next).init({
+    lng: "en",
+    resources: {},
+    interpolation: { escapeValue: false },
+  });
+  return { ...actual, useTranslation: () => ({ t: i18n.t, i18n }) };
+});
 
 async function click(element: HTMLElement) {
   await act(async () => {
@@ -104,11 +112,11 @@ describe("ownership handover", () => {
     await screen.findByRole("checkbox");
     expect(adapter.selectCloud).toHaveBeenCalledWith({ cloudUserId: 42 });
     expect(screen.getByText("Server account")).toBeVisible();
-    expect(screen.getByText("Jamie")).toBeVisible();
+    expect(screen.getAllByText("Jamie")[0]).toBeVisible();
     expect(screen.getByText("cloud@example.com")).toBeVisible();
     expect(adapter.transferCloud).not.toHaveBeenCalled();
     await confirm();
-    expect(onTransferred).toHaveBeenCalledOnce();
+    expect(screen.getByText("Ownership transferred")).toBeVisible();
   });
 
   it("closing a member picker does not create or cancel an intent", async () => {
@@ -160,7 +168,7 @@ describe("ownership handover", () => {
     });
     await click(screen.getByRole("button", { name: "Check again" }));
     await confirm();
-    expect(onTransferred).toHaveBeenCalledOnce();
+    expect(screen.getByText("Ownership transferred")).toBeVisible();
   });
 
   it("keeps the picker open when a chosen member is no longer eligible", async () => {
@@ -183,9 +191,7 @@ describe("ownership handover", () => {
     show();
     await screen.findByRole("checkbox");
     vi.mocked(adapter.prepare).mockResolvedValue(choosing());
-    await click(
-      screen.getByRole("button", { name: "Choose a different account" }),
-    );
+    await click(screen.getByRole("button", { name: "Change" }));
     expect(
       await screen.findByText("Choose their Stirling account"),
     ).toBeVisible();
@@ -197,7 +203,7 @@ describe("ownership handover", () => {
     vi.mocked(adapter.prepare).mockResolvedValue(status(null));
     show();
     await confirm();
-    await waitFor(() => expect(onTransferred).toHaveBeenCalledOnce());
+    await screen.findByText("Ownership transferred");
     expect(adapter.transferCloud).not.toHaveBeenCalled();
     expect(adapter.completeLocal).toHaveBeenCalledOnce();
   });
@@ -274,6 +280,75 @@ describe("ownership handover", () => {
     expect(adapter.completeLocal).not.toHaveBeenCalled();
   });
 
+  it.each([true, false])(
+    "keeps success visible until Done before refreshing its host (local=%s)",
+    async (local) => {
+      adapter.local = local;
+      const ready = status("READY");
+      if (!local) ready.cloud!.linkedInstances = 0;
+      vi.mocked(adapter.prepare).mockResolvedValue(ready);
+      vi.mocked(adapter.transferCloud).mockResolvedValue({
+        ...ready,
+        cloud: { ...ready.cloud!, state: "TRANSFERRED" },
+      });
+      const view = show();
+      onTransferred.mockImplementationOnce(() => view.unmount());
+      await confirm();
+      expect(await screen.findByText("Ownership transferred")).toBeVisible();
+      expect(
+        screen.getByText(local ? "Step 3 of 3" : "Step 2 of 2"),
+      ).toBeVisible();
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "Jamie is now the owner.",
+      );
+      expect(onTransferred).not.toHaveBeenCalled();
+      expect(onClose).not.toHaveBeenCalled();
+      await click(screen.getByRole("button", { name: "Done" }));
+      expect(onTransferred).toHaveBeenCalledOnce();
+      expect(onClose).toHaveBeenCalledOnce();
+      expect(screen.queryByRole("dialog")).toBeNull();
+      expect(adapter.transferCloud).toHaveBeenCalledOnce();
+      expect(adapter.cancel).not.toHaveBeenCalled();
+    },
+  );
+
+  it("searches a larger team and opens invitation entry without sending an invitation", async () => {
+    vi.mocked(adapter.prepare).mockResolvedValue(
+      choosing(
+        Array.from({ length: 8 }, (_, index) => ({
+          id: index + 10,
+          name: "Member " + (index + 1),
+          email: "member" + (index + 1) + "@example.com",
+        })),
+      ),
+    );
+    show();
+    expect(await screen.findAllByRole("radio")).toHaveLength(8);
+    fireEvent.change(screen.getByRole("searchbox"), {
+      target: { value: "member8@" },
+    });
+    expect(screen.getAllByRole("radio")).toHaveLength(1);
+    expect(screen.getByRole("radio", { name: /Member 8/ })).toBeVisible();
+    await click(screen.getByRole("button", { name: "Invite" }));
+    expect(
+      screen.getByRole("textbox", { name: "Their email address" }),
+    ).toBeVisible();
+    expect(adapter.invite).not.toHaveBeenCalled();
+    expect(adapter.transferCloud).not.toHaveBeenCalled();
+  });
+
+  it("makes billing details available on keyboard focus", async () => {
+    show();
+    const details = await screen.findByRole("button", {
+      name: "Billing details",
+    });
+    fireEvent.focus(details);
+    expect(await screen.findByRole("tooltip")).toHaveTextContent(
+      "Billing contact details do not change automatically.",
+    );
+    expect(screen.getByText(/You keep administrator access/)).toBeVisible();
+  });
+
   it("closing a completed transfer does not cancel it", async () => {
     show();
     await confirm();
@@ -315,7 +390,7 @@ describe("ownership handover", () => {
         screen.getByRole("button", { name: "Transfer ownership" }),
       ).toBeDisabled();
       await confirm();
-      await waitFor(() => expect(onTransferred).toHaveBeenCalledOnce());
+      await screen.findByText("Ownership transferred");
       expect(order).toEqual(["cloud", "server"]);
       expect(screen.getByText("Ownership transferred")).toBeInTheDocument();
     },
@@ -344,7 +419,7 @@ describe("ownership handover", () => {
     );
     await click(screen.getByRole("button", { name: "Check again" }));
     await confirm();
-    await waitFor(() => expect(onTransferred).toHaveBeenCalledOnce());
+    await screen.findByText("Ownership transferred");
   });
 
   it("cloud failure leaves server ownership untouched", async () => {
@@ -370,7 +445,7 @@ describe("ownership handover", () => {
     await click(
       await screen.findByRole("button", { name: "Finish server transfer" }),
     );
-    await waitFor(() => expect(onTransferred).toHaveBeenCalledOnce());
+    await screen.findByText("Ownership transferred");
     expect(adapter.transferCloud).toHaveBeenCalledOnce();
     expect(adapter.completeLocal).toHaveBeenCalledOnce();
   });
@@ -385,7 +460,7 @@ describe("ownership handover", () => {
       screen.queryByRole("button", { name: "Cancel transfer" }),
     ).not.toBeInTheDocument();
     await click(finish);
-    await waitFor(() => expect(onTransferred).toHaveBeenCalledOnce());
+    await screen.findByText("Ownership transferred");
     expect(adapter.transferCloud).not.toHaveBeenCalled();
   });
 
@@ -396,7 +471,7 @@ describe("ownership handover", () => {
     vi.mocked(adapter.prepare).mockResolvedValue(unlinked);
     show();
     await confirm();
-    await waitFor(() => expect(onTransferred).toHaveBeenCalledOnce());
+    await screen.findByText("Ownership transferred");
     expect(adapter.transferCloud).toHaveBeenCalledOnce();
     expect(adapter.completeLocal).not.toHaveBeenCalled();
   });

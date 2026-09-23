@@ -99,6 +99,26 @@ export const NoOtherCloudMembers: Story = {
     },
   },
 };
+export const ScrollableCloudMembers: Story = {
+  args: {
+    adapter: {
+      ...ChooseCloudMember.args!.adapter!,
+      prepare: async () => ({
+        ...ready,
+        cloud: null,
+        candidates: {
+          teamId: 9,
+          teamName: "Acme",
+          members: Array.from({ length: 8 }, (_, index) => ({
+            id: index + 42,
+            name: `Member ${index + 1}`,
+            email: `member${index + 1}@acme.com`,
+          })),
+        },
+      }),
+    },
+  },
+};
 export const ReviewSeparateAccounts: Story = {
   args: {
     adapter: adapter({

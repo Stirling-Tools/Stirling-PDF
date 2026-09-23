@@ -14,6 +14,7 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 import { StatusBadge } from "@app/ui/StatusBadge";
 import { useTranslation } from "react-i18next";
 import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
+import { useTeamAuth } from "@app/auth/teamSession";
 import { Icon } from "@app/ui/Icon";
 import {
   OwnershipTransferModal,
@@ -24,6 +25,7 @@ import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 
 const TeamSection: React.FC = () => {
   const { t } = useTranslation();
+  const { refreshAfterMembershipChange } = useTeamAuth();
   const {
     currentTeam,
     teamMembers,
@@ -33,7 +35,6 @@ const TeamSection: React.FC = () => {
     inviteUser,
     cancelInvitation,
     removeMember,
-    transferLeadership,
     claimLeadership,
     leaveTeam,
     refreshTeams,
@@ -245,9 +246,12 @@ const TeamSection: React.FC = () => {
               ).data,
             }),
             transferCloud: async (state) => {
-              await transferLeadership(
-                transferTarget.email,
-                state.cloud!.leaderUserId,
+              await apiClient.post(
+                `/api/v1/team/${state.cloud!.teamId}/ownership/transfer`,
+                {
+                  email: transferTarget.email,
+                  expectedLeaderId: state.cloud!.leaderUserId,
+                },
               );
               return {
                 ...state,
@@ -256,14 +260,16 @@ const TeamSection: React.FC = () => {
             },
           }}
           onClose={() => setTransferTarget(null)}
-          onTransferred={() =>
+          onTransferred={() => {
             setSuccess(
               t(
                 "team.transferSuccess",
                 "Team ownership transferred. Your role is now member.",
               ),
-            )
-          }
+            );
+            void refreshTeams();
+            void refreshAfterMembershipChange();
+          }}
         />
       )}
 
