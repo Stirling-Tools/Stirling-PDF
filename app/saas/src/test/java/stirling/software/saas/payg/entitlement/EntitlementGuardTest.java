@@ -180,9 +180,7 @@ class EntitlementGuardTest {
 
     @Test
     void asyncDispatch_isNotGuardedAgain() throws Exception {
-        // A streamed body completes through an ASYNC dispatch on which the security filters do
-        // not run, so the context is empty here. Re-gating would read the caller as anonymous and
-        // write a 401 body into a response that has already been sent.
+        // Security filters skip ASYNC dispatches, so re-gating would 401 a response already sent.
         HandlerMethod hm = handlerFor("plainEndpoint");
         MockHttpServletRequest req = new MockHttpServletRequest();
         req.setRequestURI("/api/v1/ai/tools/math-auditor-agent");
@@ -469,15 +467,9 @@ class EntitlementGuardTest {
         assertThat(body.get("missingGates").get(0).asText()).isEqualTo("AI_SUPPORT");
     }
 
-    // ---------------------------------------------------------------------------------------
-    // Linked instances: a device credential is not a user, so its team comes off the token
-    // ---------------------------------------------------------------------------------------
-
     @Test
     void linkedInstance_aiRouteDegraded_returns402() throws Exception {
-        // The gateway a self-hosted server calls for cloud AI. Its principal is an instance id,
-        // not a Supabase uuid, so resolving the team by user lookup would fail open and hand a
-        // team without AI_SUPPORT the whole engine.
+        // Its principal is an instance id, so a user lookup would fail open for an unentitled team.
         SecurityContextHolder.getContext()
                 .setAuthentication(new LinkedInstanceAuthenticationToken(9L, 42L));
         when(entitlementService.getSnapshot(42L)).thenReturn(degradedSnapshot());

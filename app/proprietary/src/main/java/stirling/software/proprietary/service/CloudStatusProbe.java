@@ -13,13 +13,8 @@ import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Is Stirling Cloud itself answering?
- *
- * <p>Separate from every other AI probe because it asks a different question. The gateway probe
- * needs the device credential and tells you whether <em>your</em> server may use cloud AI; this one
- * is unauthenticated, hits the host's ordinary {@code /api/v1/info/status}, and tells you whether
- * the host is up at all. Without it an admin cannot tell a Stirling outage from a broken link, and
- * both look identical from the gateway.
+ * Whether the Stirling Cloud host is up at all, via its unauthenticated status endpoint. Tells a
+ * Stirling outage apart from a broken link, which look the same from the gateway.
  */
 @Slf4j
 @Service
@@ -46,12 +41,7 @@ public class CloudStatusProbe {
         this.router = router;
     }
 
-    /**
-     * Probes only the validated, administrator-configured cloud host. Callers cannot supply a
-     * destination, redirects are not followed, and the response body is discarded.
-     *
-     * @return whether the host answered, never throwing - an outage is an answer, not a fault
-     */
+    /** Probes only the validated configured host, without following redirects. Never throws. */
     public boolean isUp() {
         try {
             String baseUrl = router.cloudHost();

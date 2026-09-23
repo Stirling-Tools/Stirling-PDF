@@ -3,6 +3,7 @@ package stirling.software.saas.accountlink;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -14,10 +15,9 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.http.HttpClient;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.AfterEach;
@@ -41,36 +41,40 @@ import stirling.software.proprietary.service.AiEngineClient;
 import stirling.software.proprietary.service.AiEngineRouter;
 
 /**
- * The whole cloud AI path, over real sockets: a self-hosted server's {@link AiEngineClient} calls
- * Stirling Cloud, {@link InstanceAiController} authenticates the instance and rewrites the owner,
- * {@link InstanceAiGatewayService} forwards to the engine.
- *
- * <p>Two real HTTP hops. The only stand-in is the engine itself, which is replaced by a recorder -
- * real inference needs a provider key, and what needs proving here is the routing and the tenancy,
- * not that a model answers.
- *
- * <p>Spring's own dispatch and the device-credential filter are not exercised; the controller is
- * invoked directly with an already-authenticated principal, which is what those layers produce.
+ * A self-hosted server's {@link AiEngineClient} through {@link InstanceAiController} to a stub
+ * engine, over real sockets. The controller is called directly, as the credential filter would.
  */
 class CloudAiEndToEndTest {
 
-    /** What the engine saw, so the test can assert on the far end of both hops. */
-    private record EngineCall(String method, String path, String userId, String engineAuth) {}
-
-    private HttpServer cloud;
-    private HttpServer engine;
-    private final List<EngineCall> engineCalls = new ArrayList<>();
-    private final AtomicReference<Exception> cloudFailure = new AtomicReference<>();
-    private InstanceAiUsageService usageService;
-    private ApplicationProperties instanceProps;
+    private record EngineCall(
+            String method, String path, String userId, String engineAuth, String body) {}
 
     private static final String ENGINE_SECRET = "cloud-engine-secret";
     private static final String DEVICE_ID = "device-abc";
     private static final String DEVICE_SECRET = "device-secret-xyz";
+    private static final String OPEN_API =
+            """
+            {"paths": {
+              "/health": {"get": {"x-linked-instance": true}},
+              "/api/v1/orchestrator": {"post": {"x-linked-instance": true}},
+              "/api/v1/documents": {"post": {"x-linked-instance": true}},
+              "/api/v1/documents/by-owner": {"delete": {"x-linked-instance": true}},
+              "/api/v1/config": {"post": {}}
+            }}
+            """;
+
+    private HttpServer cloud;
+    private HttpServer engine;
+    private final List<EngineCall> engineCalls = new CopyOnWriteArrayList<>();
+    private final AtomicReference<Exception> cloudFailure = new AtomicReference<>();
+    private InstanceAiUsageService usageService;
+    private ApplicationProperties instanceProps;
 
     @BeforeEach
     void startServers() throws IOException {
         engine = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        // Public, like the real engine's, and not an engine call worth recording.
+        engine.createContext("/openapi.json", exchange -> respond(exchange, 200, OPEN_API));
         engine.createContext(
                 "/",
                 exchange -> {
@@ -79,8 +83,8 @@ class CloudAiEndToEndTest {
                                     exchange.getRequestMethod(),
                                     exchange.getRequestURI().getPath(),
                                     exchange.getRequestHeaders().getFirst("X-User-Id"),
-                                    exchange.getRequestHeaders().getFirst("X-Engine-Auth")));
-                    // Fail closed like the shipped engine image does.
+                                    exchange.getRequestHeaders().getFirst("X-Engine-Auth"),
+                                    bodyOf(exchange)));
                     if (!ENGINE_SECRET.equals(
                             exchange.getRequestHeaders().getFirst("X-Engine-Auth"))) {
                         respond(exchange, 401, "{\"detail\":\"bad secret\"}");
@@ -93,22 +97,23 @@ class CloudAiEndToEndTest {
                 });
         engine.start();
 
-        usageService = mock(InstanceAiUsageService.class);
+        ApplicationProperties cloudProps = new ApplicationProperties();
+        cloudProps.getAiEngine().setUrl("http://127.0.0.1:" + engine.getAddress().getPort());
+        cloudProps.getAiEngine().setLongRunningTimeoutSeconds(30);
         InstanceAiGatewayService gateway =
                 new InstanceAiGatewayService(
-                        "http://127.0.0.1:" + engine.getAddress().getPort(),
-                        10,
-                        30,
-                        ENGINE_SECRET,
+                        cloudProps,
+                        AiEngineRouter.selfHosted(cloudProps, ENGINE_SECRET),
                         HttpClient.newHttpClient());
-        InstanceAiController controller = new InstanceAiController(gateway, usageService);
+        usageService = mock(InstanceAiUsageService.class);
+        InstanceAiController controller = new InstanceAiController(gateway, usageService, true);
 
         cloud = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         cloud.createContext(
                 "/api/v1/instance/ai",
                 exchange -> {
                     try {
-                        // What the device-credential filter would have established.
+                        // Stands in for the device-credential filter.
                         String deviceId = exchange.getRequestHeaders().getFirst("X-Device-Id");
                         String deviceSecret =
                                 exchange.getRequestHeaders().getFirst("X-Device-Secret");
@@ -116,20 +121,9 @@ class CloudAiEndToEndTest {
                             respond(exchange, 401, "{\"detail\":\"unknown device\"}");
                             return;
                         }
-                        MockHttpServletRequest request =
-                                new MockHttpServletRequest(
-                                        exchange.getRequestMethod(),
-                                        exchange.getRequestURI().getPath());
-                        request.setRequestURI(exchange.getRequestURI().getPath());
-                        LinkedInstanceAuthenticationToken auth =
-                                new LinkedInstanceAuthenticationToken(42L, 99L);
-                        String userId = exchange.getRequestHeaders().getFirst("X-User-Id");
-                        // Stands in for Spring picking the exact /status mapping over the
-                        // catch-all /** the forwarding methods are bound to.
+                        String path = exchange.getRequestURI().getPath();
                         if ("GET".equals(exchange.getRequestMethod())
-                                && exchange.getRequestURI()
-                                        .getPath()
-                                        .endsWith("/api/v1/instance/ai/status")) {
+                                && path.endsWith("/api/v1/instance/ai/status")) {
                             InstanceAiController.InstanceAiStatus body = controller.status();
                             respond(
                                     exchange,
@@ -141,14 +135,20 @@ class CloudAiEndToEndTest {
                                             + "}");
                             return;
                         }
+                        MockHttpServletRequest request =
+                                new MockHttpServletRequest(exchange.getRequestMethod(), path);
+                        request.setQueryString(exchange.getRequestURI().getRawQuery());
+                        LinkedInstanceAuthenticationToken auth =
+                                new LinkedInstanceAuthenticationToken(42L, 99L);
+                        String userId = exchange.getRequestHeaders().getFirst("X-User-Id");
                         ResponseEntity<StreamingResponseBody> reply =
                                 switch (exchange.getRequestMethod()) {
                                     case "GET" -> controller.get(request, auth, userId);
                                     case "DELETE" -> controller.delete(request, auth, userId);
-                                    default -> controller.post(request, auth, userId, "{}");
+                                    default ->
+                                            controller.post(
+                                                    request, auth, userId, bodyOf(exchange));
                                 };
-                        // The controller answers with a stream in every branch; drain it the way
-                        // Spring's streaming writer would.
                         ByteArrayOutputStream drained = new ByteArrayOutputStream();
                         if (reply.getBody() != null) {
                             reply.getBody().writeTo(drained);
@@ -170,12 +170,21 @@ class CloudAiEndToEndTest {
         instanceProps.getAiEngine().setEnabled(true);
         instanceProps.getAiEngine().setMode(AiEngineMode.CLOUD);
         instanceProps.getAiEngine().setTimeoutSeconds(10);
+        instanceProps.getAiEngine().setCloudBaseUrl(cloudUrl());
     }
 
     @AfterEach
     void stopServers() {
         engine.stop(0);
         cloud.stop(0);
+    }
+
+    private String cloudUrl() {
+        return "http://127.0.0.1:" + cloud.getAddress().getPort();
+    }
+
+    private static String bodyOf(HttpExchange exchange) throws IOException {
+        return new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
     }
 
     private static void respond(HttpExchange exchange, int status, String body) throws IOException {
@@ -194,6 +203,15 @@ class CloudAiEndToEndTest {
         return provider;
     }
 
+    private AiEngineClient clientWith(DeviceCredentialStore store) {
+        AccountLinkProperties linkProps = new AccountLinkProperties();
+        linkProps.setSaasBaseUrl(cloudUrl());
+        AiEngineRouter router =
+                new AiEngineRouter(
+                        instanceProps, providing(store), providing(linkProps), "local-secret");
+        return new AiEngineClient(instanceProps, HttpClient.newHttpClient(), router);
+    }
+
     /** A self-hosted server's engine client, linked and pointed at the cloud under test. */
     private AiEngineClient linkedInstanceClient() {
         DeviceCredential credential = new DeviceCredential();
@@ -201,19 +219,7 @@ class CloudAiEndToEndTest {
         credential.setDeviceSecret(DEVICE_SECRET);
         DeviceCredentialStore store = mock(DeviceCredentialStore.class);
         when(store.get()).thenReturn(Optional.of(credential));
-
-        AccountLinkProperties linkProps = new AccountLinkProperties();
-        linkProps.setSaasBaseUrl("http://127.0.0.1:" + cloud.getAddress().getPort());
-        // The configured API host wins over the account-link host, so point it at the test server
-        // or this would dial the real api.stirling.com.
-        instanceProps
-                .getAiEngine()
-                .setCloudBaseUrl("http://127.0.0.1:" + cloud.getAddress().getPort());
-
-        AiEngineRouter router =
-                new AiEngineRouter(
-                        instanceProps, providing(store), providing(linkProps), "local-secret");
-        return new AiEngineClient(instanceProps, HttpClient.newHttpClient(), router);
+        return clientWith(store);
     }
 
     @Test
@@ -223,10 +229,9 @@ class CloudAiEndToEndTest {
         assertThat(cloudFailure.get()).isNull();
         assertThat(body).contains("demo-smart");
         assertThat(engineCalls).hasSize(1);
-        EngineCall call = engineCalls.get(0);
-        assertThat(call.path()).isEqualTo("/health");
+        assertThat(engineCalls.get(0).path()).isEqualTo("/health");
         // The instance's own shared secret never leaves it; the cloud presents its own.
-        assertThat(call.engineAuth()).isEqualTo(ENGINE_SECRET);
+        assertThat(engineCalls.get(0).engineAuth()).isEqualTo(ENGINE_SECRET);
     }
 
     @Test
@@ -246,58 +251,47 @@ class CloudAiEndToEndTest {
     }
 
     @Test
-    void healthChecksAreNotBilled() throws Exception {
+    void healthChecksAreNotBilledAsReasoning() throws Exception {
         linkedInstanceClient().get("/health", "alice");
 
-        // recordCall is still invoked; the free-path decision lives inside it, and its own test
-        // covers that. What matters here is that a health probe is not a billable orchestration.
+        // recordCall decides that /health is free; its own test covers that.
         verify(usageService).recordCall(99L, 42L, "/health");
-        verify(usageService, never())
-                .recordCall(any(), any(), org.mockito.ArgumentMatchers.eq("/api/v1/orchestrator"));
+        verify(usageService, never()).recordCall(any(), any(), eq("/api/v1/orchestrator"));
     }
 
     @Test
     void anUnlinkedServerInCloudModeRefusesBeforeItCallsAnything() {
         DeviceCredentialStore unlinked = mock(DeviceCredentialStore.class);
         when(unlinked.get()).thenReturn(Optional.empty());
-        AccountLinkProperties linkProps = new AccountLinkProperties();
-        linkProps.setSaasBaseUrl("http://127.0.0.1:" + cloud.getAddress().getPort());
-        instanceProps
-                .getAiEngine()
-                .setCloudBaseUrl("http://127.0.0.1:" + cloud.getAddress().getPort());
-        AiEngineClient client =
-                new AiEngineClient(
-                        instanceProps,
-                        HttpClient.newHttpClient(),
-                        new AiEngineRouter(
-                                instanceProps, providing(unlinked), providing(linkProps), null));
 
-        assertThatThrownBy(() -> client.get("/health", "alice"))
+        assertThatThrownBy(() -> clientWith(unlinked).get("/health", "alice"))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("not linked");
         assertThat(engineCalls).isEmpty();
     }
 
     @Test
-    void documentUploadIsRefusedLocallyWhenCloudIngestionIsOff() {
-        AiEngineClient client = linkedInstanceClient();
-
-        assertThatThrownBy(() -> client.post("/api/v1/documents", "{}", "alice"))
+    void documentUploadIsRefusedLocallyWhenCloudIndexingIsOff() {
+        assertThatThrownBy(() -> linkedInstanceClient().post("/api/v1/documents", "{}", "alice"))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("turned off");
-        // Refused on the instance, so the document never crosses the network at all.
         assertThat(engineCalls).isEmpty();
     }
 
     @Test
-    void turningCloudIngestionOnLetsTheDocumentThrough() throws Exception {
+    void anUploadReachesTheEngineUnderTheInstanceOwnerOnceIndexingIsOn() throws Exception {
         instanceProps.getAiEngine().setCloudDocumentIndexing(true);
 
-        linkedInstanceClient().post("/api/v1/documents", "{}", "alice");
+        linkedInstanceClient()
+                .post(
+                        "/api/v1/documents",
+                        "{\"documentId\":\"d1\",\"ownerId\":\"alice\",\"readPrincipals\":[\"alice\"]}",
+                        "alice");
 
         assertThat(cloudFailure.get()).isNull();
         assertThat(engineCalls).hasSize(1);
         assertThat(engineCalls.get(0).path()).isEqualTo("/api/v1/documents");
+        assertThat(engineCalls.get(0).body()).contains("\"ownerId\":\"instance:42:alice\"");
     }
 
     @Test
@@ -313,20 +307,21 @@ class CloudAiEndToEndTest {
         client.get("/health", "alice");
 
         assertThat(engineCalls).hasSize(1);
-        // Straight to the engine: the owner is the local username, un-namespaced.
         assertThat(engineCalls.get(0).userId()).isEqualTo("alice");
         verify(usageService, never()).recordCall(any(), any(), any());
     }
 
     @Test
-    void theGatewayRefusesEngineRoutesThatAreNotOnItsAllowlist() {
-        // Config push would let one tenant repoint the models Stirling Cloud runs for everyone.
-        assertThat(InstanceAiGatewayService.isAllowedPath("/api/v1/config")).isFalse();
-        assertThat(Map.of()).isEmpty();
+    void aRouteTheEngineDoesNotMarkNeverReachesIt() {
+        // Config push would let one tenant repoint the models every tenant shares.
+        assertThatThrownBy(() -> linkedInstanceClient().post("/api/v1/config", "{}", null))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("404");
+        assertThat(engineCalls).isEmpty();
     }
 
     @Test
-    void theLogoutPurgeReachesTheCloudEngineInsteadOfFourOhFouring() throws Exception {
+    void theLogoutPurgeReachesTheCloudEngineInTheInstanceNamespace() throws Exception {
         linkedInstanceClient().delete("/api/v1/documents/by-owner", "alice");
 
         assertThat(cloudFailure.get()).isNull();
@@ -334,13 +329,11 @@ class CloudAiEndToEndTest {
         EngineCall call = engineCalls.get(0);
         assertThat(call.method()).isEqualTo("DELETE");
         assertThat(call.path()).isEqualTo("/api/v1/documents/by-owner");
-        // Scoped to this instance's namespace, so it cannot purge another tenant.
         assertThat(call.userId()).isEqualTo("instance:42:alice");
     }
 
     @Test
     void aLinkedInstanceCanAskWhetherTheCloudSharesItsAi() throws Exception {
-        // The probe the self-hosted status card makes, over the same two hops a real call takes.
         String body = linkedInstanceClient().get("/status", "alice");
 
         assertThat(body).contains("\"sharingEnabled\":true");

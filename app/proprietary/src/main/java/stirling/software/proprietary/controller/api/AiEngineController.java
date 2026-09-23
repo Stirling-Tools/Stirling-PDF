@@ -120,10 +120,8 @@ public class AiEngineController {
     }
 
     /**
-     * The engine's own {@code /health} is exempt from the shared-secret check and never contacts
-     * the model provider, so it stays green while every real route answers 401. Probing a
-     * secret-gated route as well is what separates "something is listening" from "it will take our
-     * requests".
+     * Also probes a secret-gated route: the engine's {@code /health} skips the shared-secret check,
+     * so it stays green while real calls get 401.
      */
     @GetMapping("/status")
     @Operation(
@@ -140,11 +138,8 @@ public class AiEngineController {
         AiEngineStatus.AiEngineStatusBuilder status = AiEngineStatus.builder().enabled(true);
         String userId = currentUserId();
 
-        // Cloud mode answers two questions the engine probe cannot: is Stirling Cloud up at all,
-        // and does it lend its AI out. Asked first, because either being false explains a failure
-        // below that would otherwise read as "unreachable" with no cause an admin can act on.
-        boolean cloud = aiEngineRouter.isCloudMode();
-        if (cloud) {
+        // Asked first: a cloud outage or sharing being off explains any failure that follows.
+        if (aiEngineRouter.isCloudMode()) {
             boolean cloudUp = cloudStatusProbe.isUp();
             status.cloudUp(cloudUp);
             if (!cloudUp) {
@@ -167,7 +162,6 @@ public class AiEngineController {
         try {
             health = aiEngineClient.get("/health", userId);
         } catch (IOException | RuntimeException e) {
-            // Unreachable is the whole answer; there is nothing left worth probing.
             return status.reachable(false).error(describeFailure(e)).build();
         }
         status.reachable(true)
@@ -186,10 +180,7 @@ public class AiEngineController {
     }
 
     /**
-     * Asks the cloud gateway whether it shares its AI. Outside the gateway's own sharing gate on
-     * purpose, so a switched-off deployment answers plainly instead of looking unreachable.
-     *
-     * @return false only when the gateway said so; null when the question went unanswered
+     * @return false only when the gateway said so; null when it could not be asked
      */
     private Boolean probeCloudSharing(String userId) {
         try {
@@ -203,8 +194,7 @@ public class AiEngineController {
     }
 
     /**
-     * @return true when the secret-gated route answered, false when it rejected us, null when the
-     *     call failed for some other reason and the question is genuinely unanswered.
+     * @return true if accepted, false if rejected, null if the probe failed for another reason
      */
     private Boolean probeAuthentication(
             String userId, AiEngineStatus.AiEngineStatusBuilder status) {
@@ -220,8 +210,7 @@ public class AiEngineController {
         } catch (ResponseStatusException e) {
             int code = e.getStatusCode().value();
             String reason = e.getReason();
-            // The client collapses every engine 5xx to 502, so the engine's own fail-closed 503
-            // ("auth required but no secret configured") only survives in the message.
+            // Engine 5xx arrive as 502, so its fail-closed 503 survives only in the message.
             if (code == HttpStatus.BAD_GATEWAY.value()
                     && reason != null
                     && reason.endsWith("503")) {

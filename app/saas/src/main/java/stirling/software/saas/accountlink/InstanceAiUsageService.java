@@ -1,5 +1,7 @@
 package stirling.software.saas.accountlink;
 
+import java.util.Set;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
@@ -14,16 +16,8 @@ import stirling.software.saas.payg.model.JobSource;
 import stirling.software.saas.payg.model.ProcessType;
 
 /**
- * Bills a linked instance's cloud AI call to the team that owns it.
- *
- * <p>This is the <b>only</b> meter for work run in cloud mode. The instance suppresses its own
- * local metering when it is routing here, because both meters write a DEBIT to the same team's
- * wallet ledger and neither knows the other exists - so leaving both on charges one user action
- * twice. That constraint is pinned by {@code AiCloudDoubleChargeTest}.
- *
- * <p>Reasoning calls are billed flat rather than by document size: the gateway forwards JSON bodies
- * it does not parse, so it has no page or byte count to work from, and inventing one from the body
- * length would bill a long prompt like a long document.
+ * The only meter for a linked instance's cloud AI, since the instance skips its own for cloud work.
+ * Billed flat per call: the gateway never parses a page or byte count out of the body.
  */
 @Slf4j
 @Service
@@ -31,10 +25,9 @@ import stirling.software.saas.payg.model.ProcessType;
 @ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
 public class InstanceAiUsageService {
 
-    /** Paths that are bookkeeping rather than reasoning, and so cost nothing. */
-    private static final java.util.Set<String> FREE_PATHS =
-            java.util.Set.of(
-                    "/health", "/api/v1/agents/capabilities", "/api/v1/documents/by-owner");
+    /** Bookkeeping routes that run no model, so cost nothing. */
+    private static final Set<String> FREE_PATHS =
+            Set.of("/health", "/api/v1/agents/capabilities", "/api/v1/documents/by-owner");
 
     private final JobChargeService chargeService;
     private final LinkedInstanceRepository linkedInstanceRepository;
@@ -56,8 +49,7 @@ public class InstanceAiUsageService {
                         .map(LinkedInstance::getCreatedByUserId)
                         .orElse(null);
         if (actorUserId == null) {
-            // Same stance as the nightly sync: without an actor the charge cannot be attributed, so
-            // skip rather than guess. Visible in logs, and the work still happened.
+            // Same as the nightly sync: a charge with no actor cannot be attributed, so skip it.
             log.warn(
                     "Cloud AI call for instance {} has no linking admin; not billing {}",
                     instanceId,

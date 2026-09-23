@@ -187,10 +187,8 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
                 || category == BillingCategory.BYPASSED) {
             return;
         }
-        // Charge AI only for work this server's own engine did. Stirling Cloud bills what it
-        // runs, so metering that here too would put two DEBITs on one team's wallet for one user
-        // action - and a route that answered without calling the engine at all (an already
-        // classified document, say) has nothing to bill for on either side.
+        // Bill AI only when this server's own engine ran: Stirling Cloud bills its own work, and a
+        // route that never reached an engine did none.
         if (category == BillingCategory.AI
                 && !AiCallRecord.ranLocally(request.getAttribute(AiCallRecord.attributeName()))) {
             return;

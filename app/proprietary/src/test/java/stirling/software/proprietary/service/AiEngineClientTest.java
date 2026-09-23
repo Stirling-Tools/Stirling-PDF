@@ -3,6 +3,7 @@ package stirling.software.proprietary.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -12,13 +13,18 @@ import java.net.ConnectException;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.billing.AiCallRecord;
 
 /**
  * Verifies that AiEngineClient surfaces network-layer failures as structured HTTP statuses so every
@@ -104,6 +110,24 @@ class AiEngineClientTest {
         assertEquals(HttpStatus.BAD_GATEWAY, ex.getStatusCode());
         assertEquals(401, ((AiEngineClient.EngineRejectedCredentials) ex).upstreamStatus());
         assertEquals("AI engine rejected this server's credentials (HTTP 401)", ex.getReason());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void aStreamedCallRecordsWhereItRanForTheMeter() throws Exception {
+        HttpResponse<Stream<String>> streamed = mock(HttpResponse.class);
+        when(streamed.statusCode()).thenReturn(200);
+        when(streamed.body()).thenReturn(Stream.of("{\"event\":\"result\"}"));
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(streamed);
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+        try {
+            client.streamPost("/api/v1/orchestrator", "{}", null, line -> {});
+        } finally {
+            RequestContextHolder.resetRequestAttributes();
+        }
+
+        assertTrue(AiCallRecord.ranLocally(request.getAttribute(AiCallRecord.attributeName())));
     }
 
     @Test

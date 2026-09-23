@@ -128,10 +128,8 @@ public class EntitlementGuard implements HandlerInterceptor {
         if (!(handler instanceof HandlerMethod hm)) {
             return true;
         }
-        // A streamed body completes through an ASYNC dispatch that the security filters skip
-        // (spring.security.filter.dispatcher-types), so the context here is empty and the checks
-        // below would read an authenticated caller as anonymous and write a 401 body into a
-        // response already sent. The REQUEST dispatch made the decision; this one only finishes it.
+        // The REQUEST dispatch already decided. Security filters skip ASYNC dispatches, so the
+        // empty context here would 401 a streamed response that has already started.
         if (request.getDispatcherType() == DispatcherType.ASYNC) {
             return true;
         }
@@ -259,8 +257,7 @@ public class EntitlementGuard implements HandlerInterceptor {
     }
 
     private Long resolveTeamId(Authentication auth) {
-        // A linked instance is not a user and has no Supabase id, so the lookup below would find
-        // nothing and the caller would fail open. Its team is on the token already.
+        // A linked instance has no Supabase id, so the user lookup below would fail open.
         if (auth instanceof LinkedInstanceAuthenticationToken instance) {
             return instance.getTeamId();
         }

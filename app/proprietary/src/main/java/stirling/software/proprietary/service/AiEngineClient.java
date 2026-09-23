@@ -24,6 +24,9 @@ import stirling.software.proprietary.billing.AiCallRecord;
 @Service
 public class AiEngineClient {
 
+    /** The one route that makes Stirling Cloud keep a document past the request. */
+    private static final String DOCUMENT_INGEST_PATH = "/api/v1/documents";
+
     private final ApplicationProperties applicationProperties;
     private final HttpClient httpClient;
     private final AiEngineRouter router;
@@ -40,7 +43,6 @@ public class AiEngineClient {
                 router);
     }
 
-    /** Explicit-dependency form, for callers that supply their own HttpClient and routing. */
     public AiEngineClient(
             ApplicationProperties applicationProperties,
             HttpClient httpClient,
@@ -50,15 +52,7 @@ public class AiEngineClient {
         this.router = router;
     }
 
-    /**
-     * The one engine route that makes Stirling Cloud <em>keep</em> a document rather than read it
-     * for a single request. Every AI route sends extracted page text, so gating this is about
-     * retention, not about keeping the text on-site. Enforced here because this client is the one
-     * place every engine call passes through - a new caller inherits the guard rather than having
-     * to remember it.
-     */
-    private static final String DOCUMENT_INGEST_PATH = "/api/v1/documents";
-
+    // The cloud retention check lives here so every engine call, new ones included, passes it.
     private AiEngineTarget resolveTarget(String path) {
         AiEngineTarget target = router.resolve();
         if (target.cloud()
@@ -116,9 +110,6 @@ public class AiEngineClient {
         return response.body();
     }
 
-    /**
-     * Whatever the resolved target needs to be trusted: a shared secret, or a device credential.
-     */
     private static void addEngineAuthHeader(HttpRequest.Builder builder, AiEngineTarget target) {
         target.headers().forEach(builder::header);
     }
@@ -169,6 +160,7 @@ public class AiEngineClient {
         HttpResponse<Stream<String>> response;
         try {
             response = httpClient.send(request, HttpResponse.BodyHandlers.ofLines());
+            recordWhereItRan(target);
         } catch (HttpTimeoutException e) {
             throw new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT, "AI engine timed out", e);
         } catch (IOException e) {
@@ -252,11 +244,7 @@ public class AiEngineClient {
         return response.body();
     }
 
-    /**
-     * A ConnectException from the JDK client carries no message, so the obvious {@code
-     * e.getMessage()} renders as "unreachable: null" - the most common failure of all, reported as
-     * if something were missing from the code rather than from the network.
-     */
+    /** The JDK's ConnectException has no message, which would render as "unreachable: null". */
     private static String describe(Exception e) {
         String message = e.getMessage();
         return message != null && !message.isBlank()
@@ -264,15 +252,17 @@ public class AiEngineClient {
                 : e.getClass().getSimpleName() + " (nothing listening on the configured URL?)";
     }
 
+    // Any answer counts, failures included: the meter skips failed requests on their status.
+    private static void recordWhereItRan(AiEngineTarget target) {
+        AiCallRecord.record(target.cloud() ? AiCallRecord.Where.REMOTE : AiCallRecord.Where.LOCAL);
+    }
+
     private HttpResponse<String> sendRequest(HttpRequest request, AiEngineTarget target)
             throws IOException {
         try {
             HttpResponse<String> response =
                     httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            // Recorded on any answer, not only a 2xx. A call that failed was not billed by the
-            // cloud either, and the meter skips failed requests on status anyway.
-            AiCallRecord.record(
-                    target.cloud() ? AiCallRecord.Where.REMOTE : AiCallRecord.Where.LOCAL);
+            recordWhereItRan(target);
             return response;
         } catch (HttpTimeoutException e) {
             throw new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT, "AI engine timed out", e);
@@ -297,10 +287,8 @@ public class AiEngineClient {
     }
 
     /**
-     * An upstream status is kept only when it says something true about this request. A 401 or 403
-     * from the engine, or from Stirling Cloud in front of it, is about this server's credentials,
-     * not the browser's: relayed as-is, the frontend reads it as its own session expiring and
-     * reloads the page mid-flow.
+     * An upstream 401/403 is about this server's credentials; relayed as-is, the frontend would
+     * treat it as its own session expiring and reload mid-flow.
      */
     private static ResponseStatusException failureFor(int status, String body) {
         if (status == 401 || status == 403) {

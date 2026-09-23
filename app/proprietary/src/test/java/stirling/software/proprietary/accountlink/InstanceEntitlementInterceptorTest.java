@@ -81,10 +81,7 @@ class InstanceEntitlementInterceptorTest {
                         new Object());
     }
 
-    /**
-     * What the engine client does on a real AI call. Metering keys off this rather than off the
-     * configured mode, so a test that meters has to have made the call it is being billed for.
-     */
+    /** Records an engine call as AiEngineClient does; AI metering keys off it, not the mode. */
     private static void engineCalled(
             jakarta.servlet.http.HttpServletRequest request, AiCallRecord.Where where) {
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
@@ -291,8 +288,7 @@ class InstanceEntitlementInterceptorTest {
 
     @Test
     void doesNotMeterAiThatStirlingCloudAlreadyBilled() throws Exception {
-        // Cloud mode: the work ran on Stirling Cloud, which billed it on success. Metering here
-        // too would put two DEBITs on one team's wallet for a single user action.
+        // Stirling Cloud billed this on success; metering it here too would charge twice.
         when(gate.evaluate(anyBoolean(), anyBoolean()))
                 .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
         InstanceEntitlementInterceptor interceptor = interceptor();
@@ -309,9 +305,7 @@ class InstanceEntitlementInterceptorTest {
 
     @Test
     void doesNotMeterAnAiRouteThatNeverCalledTheEngine() throws Exception {
-        // An AI route can answer successfully without reasoning over anything - a document that
-        // already carries a verdict, or no labels configured to classify against. Nobody did any
-        // work, so nobody should be billed. Reading the mode instead would have charged for this.
+        // e.g. a document that already carries a verdict: no engine call, so nothing to bill.
         when(gate.evaluate(anyBoolean(), anyBoolean()))
                 .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
         InstanceEntitlementInterceptor interceptor = interceptor();

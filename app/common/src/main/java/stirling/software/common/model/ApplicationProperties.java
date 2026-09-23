@@ -354,11 +354,7 @@ public class ApplicationProperties {
     public static class AiEngine {
         private boolean enabled = false;
 
-        /**
-         * Where the reasoning runs. {@code SELF_HOSTED} calls {@link #url} directly; {@code CLOUD}
-         * calls Stirling Cloud's instance AI gateway with this server's account-link device
-         * credential, so the customer runs no engine of their own.
-         */
+        /** {@code SELF_HOSTED} calls {@link #url}; {@code CLOUD} runs AI on Stirling Cloud. */
         private AiEngineMode mode = AiEngineMode.SELF_HOSTED;
 
         private String url = "http://localhost:5001";
@@ -393,27 +389,17 @@ public class ApplicationProperties {
         private Features features = new Features();
 
         /**
-         * Whether Stirling Cloud may keep a document's text and index it for later questions.
-         *
-         * <p>Cloud mode only, and off by default. This is about retention, not transmission: every
-         * AI tool already sends extracted page text, so turning this off does not keep a document
-         * on-site. What it stops is the copy that outlives the request - RAG ingestion stores the
-         * text under an owner with an expiry so later questions can retrieve it. Off, document
-         * questions degrade rather than quietly leaving a corpus on someone else's disk.
+         * Cloud mode only: whether Stirling Cloud may keep document text for later questions. AI
+         * tools send page text either way, so this controls retention, not what leaves the server.
          */
         private boolean cloudDocumentIndexing = false;
 
         /**
-         * Stirling Cloud's API host. Blank, the default, follows the account-link base URL: the
-         * device credential that authenticates these calls was issued by the deployment this server
-         * linked to, so that is the only host it can be valid for, and a fixed default sent staging
-         * and preview servers' credentials to production. Set it only when the API answers on a
-         * different name from the link host, through the environment or custom_settings.yml; it is
-         * deliberately not in settings.yml, whose template merge drops keys it does not know.
+         * Stirling Cloud's API host; blank uses the account-link host, the only one the device
+         * credential is valid for. Not in settings.yml: set it via env or custom_settings.yml.
          */
         private String cloudBaseUrl = "";
 
-        /** Where the reasoning runs. */
         public enum AiEngineMode {
             SELF_HOSTED,
             CLOUD

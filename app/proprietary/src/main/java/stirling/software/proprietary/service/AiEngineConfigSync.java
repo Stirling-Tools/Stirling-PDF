@@ -62,9 +62,7 @@ public class AiEngineConfigSync {
             return;
         }
         if (router.isCloudMode()) {
-            // Stirling Cloud picks its own models, and its gateway does not forward the config
-            // route at all - pushing would be five retries against a 404 and, if it ever did
-            // land, one tenant repointing the models every tenant shares.
+            // Stirling Cloud picks its own models, and its gateway refuses the config route.
             log.debug("Skipping AI engine config push: this server is using Stirling Cloud AI");
             return;
         }

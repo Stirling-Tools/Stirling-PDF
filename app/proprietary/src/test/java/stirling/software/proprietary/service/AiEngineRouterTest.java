@@ -65,6 +65,18 @@ class AiEngineRouterTest {
     }
 
     @Test
+    void theSelfHostedTargetIsTheConfiguredEngineEvenInCloudMode() {
+        // Stirling Cloud's gateway forwards to its own engine whatever the mode says.
+        AiEngineRouter router = AiEngineRouter.selfHosted(props(AiEngineMode.CLOUD), "shh");
+
+        AiEngineTarget target = router.selfHostedTarget();
+
+        assertThat(target.cloud()).isFalse();
+        assertThat(target.urlFor("/health")).isEqualTo("http://stirling-engine:5001/health");
+        assertThat(target.headers()).containsExactly(java.util.Map.entry("X-Engine-Auth", "shh"));
+    }
+
+    @Test
     void selfHostedWithNoSecretSendsNoAuthHeader() {
         AiEngineRouter router = AiEngineRouter.selfHosted(props(AiEngineMode.SELF_HOSTED), "  ");
 

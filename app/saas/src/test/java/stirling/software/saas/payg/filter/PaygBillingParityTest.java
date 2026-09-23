@@ -345,8 +345,7 @@ class PaygBillingParityTest {
         }
         MockHttpServletResponse resp = new MockHttpServletResponse();
         interceptor.preHandle(req, resp, handler(op.handler()));
-        // A real AI op reaches the engine, and the self-hosted meter now bills on that having
-        // happened rather than on the route's name. Parity is with a call that actually ran.
+        // The self-hosted meter bills AI only after an engine call, so record one like a real op.
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(req));
         try {
             AiCallRecord.record(AiCallRecord.Where.LOCAL);

@@ -108,8 +108,6 @@ public class EngineCapabilityClient {
             catalog.replaceAiCapabilities(Map.of());
             return;
         }
-        // Same routing as every other engine call, so cloud mode reaches the gateway rather than
-        // a local URL nobody is listening on.
         AiEngineTarget target = router.resolve();
         URI uri = URI.create(target.urlFor("/api/v1/agents/capabilities"));
         HttpRequest.Builder reqBuilder =

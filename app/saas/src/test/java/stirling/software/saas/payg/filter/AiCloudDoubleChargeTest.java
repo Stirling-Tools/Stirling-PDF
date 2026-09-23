@@ -13,26 +13,8 @@ import stirling.software.proprietary.billing.BillingCategory;
 import stirling.software.saas.payg.cap.AiToolRoutes;
 
 /**
- * AI paths where local and cloud billing classifiers overlap.
- *
- * <p>The two meters are independent and neither knows the other exists. A self-hosted instance
- * bills locally through {@code InstanceEntitlementInterceptor} and reports the total to {@code
- * /api/v1/instance/sync}; the cloud bills live through {@link PaygChargeInterceptor}. Both land as
- * a DEBIT on the same team's {@code wallet_ledger}. So for any path where <b>both</b> classifiers
- * say "billable", one user action costs the customer two charges.
- *
- * <p>{@code InstanceEntitlementInterceptor} meters AI only when {@code AiCallRecord} records local
- * work, leaving {@code InstanceAiUsageService} as the single meter for cloud AI. This test maps the
- * overlapping classifiers so a widened prefix on either side fails loudly.
- *
- * <p>The nightly sync is <b>not</b> the risk: it bills {@code cumulative - lastCumulative} behind a
- * monotonic {@code syncSeq}, so a resend is worth zero. The risk is the live double-accrual.
- *
- * <p>Note also that the local dedup window cannot save this. Its key comes from the automation
- * headers and is only read when {@code X-Stirling-Automation} is present, so an interactive AI call
- * has a null key and always charges.
- *
- * @see PaygBillingParityTest for the matrix asserting the two deployments agree on a category
+ * AI paths both the self-hosted and cloud meters classify as billable, where one action could debit
+ * the same wallet twice. Pinned so a prefix widened on either side fails here first.
  */
 class AiCloudDoubleChargeTest {
 

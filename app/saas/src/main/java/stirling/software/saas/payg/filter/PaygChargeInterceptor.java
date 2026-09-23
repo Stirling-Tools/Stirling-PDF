@@ -511,9 +511,8 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
         if (auth instanceof ApiKeyAuthenticationToken && auth.getPrincipal() instanceof User u) {
             return u;
         }
-        // A linked instance is not a user and its principal is an instance id, which would only
-        // fail the UUID parse below and log a spurious failure on every gateway call. Its work is
-        // metered by InstanceAiUsageService, so there is nothing for this interceptor to charge.
+        // InstanceAiUsageService meters linked instances; their instance-id principal would only
+        // fail the UUID parse below and log a spurious error per call.
         if (auth instanceof LinkedInstanceAuthenticationToken) {
             return null;
         }

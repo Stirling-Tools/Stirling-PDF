@@ -27,14 +27,10 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import stirling.software.saas.accountlink.InstanceAiGatewayService.EngineReply;
-import stirling.software.saas.accountlink.InstanceAiGatewayService.StreamedReply;
 
 /**
- * The gateway through Spring's own dispatch, which is the layer {@link CloudAiEndToEndTest}
- * deliberately stands in for. It exists because the orchestrator route once answered 500 there: the
- * handler was declared {@code ResponseEntity<?>}, so Spring chose the message converters over the
- * streaming writer for the {@code StreamingResponseBody} it returned. A test that calls the
- * controller directly cannot see that; only the return-value handler selection does.
+ * The gateway through Spring's own dispatch, which picks the response writer from the declared
+ * return type; calling the controller directly cannot catch a wrong choice there.
  */
 class InstanceAiControllerDispatchTest {
 
@@ -56,20 +52,24 @@ class InstanceAiControllerDispatchTest {
         return new LinkedInstanceAuthenticationToken(42L, 99L);
     }
 
+    private static EngineReply reply(int status, String contentType, String body) {
+        return new EngineReply(
+                status,
+                contentType,
+                new ByteArrayInputStream(body.getBytes(StandardCharsets.UTF_8)));
+    }
+
     @Test
     void theOrchestratorStreamReachesTheInstanceAsNdjson() throws Exception {
         String frames = "{\"event\":\"progress\"}\n{\"event\":\"result\"}\n";
-        when(gateway.forwardStreaming(
+        when(gateway.forward(
                         eq("POST"),
                         eq("/api/v1/orchestrator"),
                         isNull(),
                         anyString(),
                         eq(42L),
                         eq("alice")))
-                .thenReturn(
-                        new StreamedReply(
-                                200,
-                                new ByteArrayInputStream(frames.getBytes(StandardCharsets.UTF_8))));
+                .thenReturn(reply(200, "application/x-ndjson", frames));
 
         MvcResult started =
                 mvc.perform(
@@ -90,9 +90,9 @@ class InstanceAiControllerDispatchTest {
     }
 
     @Test
-    void aBufferedReplyIsPassedThroughAsJson() throws Exception {
+    void aJsonReplyIsPassedThroughAsJson() throws Exception {
         when(gateway.forward(eq("GET"), eq("/health"), isNull(), isNull(), eq(42L), eq("alice")))
-                .thenReturn(new EngineReply(200, "{\"status\":\"ok\"}"));
+                .thenReturn(reply(200, "application/json", "{\"status\":\"ok\"}"));
 
         MvcResult started =
                 mvc.perform(
@@ -112,7 +112,7 @@ class InstanceAiControllerDispatchTest {
     void anEngineErrorKeepsItsStatusAndIsNotBilled() throws Exception {
         when(gateway.forward(
                         eq("POST"), eq("/api/v1/pdf/edit"), isNull(), anyString(), eq(42L), any()))
-                .thenReturn(new EngineReply(422, "{\"detail\":\"bad plan\"}"));
+                .thenReturn(reply(422, "application/json", "{\"detail\":\"bad plan\"}"));
 
         MvcResult started =
                 mvc.perform(
@@ -131,9 +131,8 @@ class InstanceAiControllerDispatchTest {
     }
 
     @Test
-    void queryParametersReachTheEngineWithTheAllowedPath() throws Exception {
-        // The math auditor sends its tolerance as a query parameter; a gateway that matched the
-        // path and dropped the rest ran the engine with defaults and nobody noticed.
+    void queryParametersReachTheGatewayWithThePath() throws Exception {
+        // The math auditor sends its tolerance as a query parameter; dropping it ran defaults.
         when(gateway.forward(
                         eq("POST"),
                         eq("/api/v1/ai/math-auditor-agent/deliberate"),
@@ -141,7 +140,7 @@ class InstanceAiControllerDispatchTest {
                         anyString(),
                         eq(42L),
                         any()))
-                .thenReturn(new EngineReply(200, "{\"verdict\":\"ok\"}"));
+                .thenReturn(reply(200, "application/json", "{\"verdict\":\"ok\"}"));
 
         MvcResult started =
                 mvc.perform(
