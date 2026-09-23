@@ -5,7 +5,6 @@ import { AppLayout } from "@app/components/AppLayout";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import { ThemeProvider } from "@app/components/shared/ThemeProvider";
-import { useConnectedServer } from "@app/hooks/useConnectedServer";
 
 const Landing = lazy(() => import("@app/routes/Landing"));
 const Login = lazy(() => import("@app/routes/Login"));
@@ -16,13 +15,9 @@ const ParticipantView = lazy(
   () => import("@app/components/workflow/ParticipantView"),
 );
 const Onboarding = lazy(() => import("@app/components/onboarding/Onboarding"));
-const WatchedFoldersRegistration = lazy(
-  () => import("@app/components/watchedFolders/WatchedFoldersRegistration"),
-);
 
 const MobileScannerPage = lazy(() => import("@app/pages/MobileScannerPage"));
 const MobileSignPage = lazy(() => import("@app/pages/MobileSignPage"));
-import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
 import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
 import { AppFrame } from "@app/components/layout/AppFrame";
 import { NoAppChrome } from "@app/components/layout/NoAppChrome";
@@ -55,7 +50,6 @@ function ParticipantViewPage() {
 }
 
 export default function App() {
-  const connectedServer = useConnectedServer();
   return (
     <Suspense fallback={<LoadingFallback />}>
       <Routes>
@@ -128,9 +122,6 @@ export default function App() {
                       <Route path="/*" element={<Landing />} />
                     </Routes>
                     <Onboarding />
-                    {WATCHED_FOLDERS_ENABLED && connectedServer && (
-                      <WatchedFoldersRegistration />
-                    )}
                   </AppLayout>
                 </AppProviders>
               </RootGate>

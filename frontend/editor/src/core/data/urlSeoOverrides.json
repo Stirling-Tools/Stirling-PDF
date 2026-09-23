@@ -367,14 +367,6 @@
     "title": "PDF Workflow Automation",
     "description": "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
   },
-  "/scanner-effect": {
-    "title": "Make a PDF Look Scanned",
-    "description": "Create a PDF that looks like it was scanned"
-  },
-  "/fake-scan": {
-    "title": "Make a PDF Look Scanned",
-    "description": "Create a PDF that looks like it was scanned"
-  },
   "/scanner-image-split": {
     "title": "Split Scanned Photos",
     "description": "Detect and split scanned photos into separate pages"

@@ -62,6 +62,7 @@ import stirling.software.proprietary.controller.api.converters.ConvertPdfToPdfUa
 import stirling.software.proprietary.security.configuration.ee.DynamicLicenseService;
 import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
+import stirling.software.proprietary.service.AiEngineRouter;
 import stirling.software.proprietary.service.ua.FontEmbeddingService;
 import stirling.software.proprietary.service.ua.PdfUaConversionService;
 import stirling.software.proprietary.service.ua.PdfUaValidationService;
@@ -306,7 +307,7 @@ class EnterpriseProcessingHttpIntegrationTest {
         UsageMeterService.class, UsageSyncService.class, DeviceCredentialStore.class,
         EntitlementCache.class, DynamicLicenseService.class, TempFileManager.class,
         TempFileRegistry.class, ConvertPdfToPdfUa.class, PdfUaConversionService.class,
-        PdfUaValidationService.class, FontEmbeddingService.class
+        PdfUaValidationService.class, FontEmbeddingService.class, AiEngineRouter.class
     })
     static class TestApp {
         @Bean

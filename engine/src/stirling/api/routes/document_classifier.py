@@ -6,12 +6,13 @@ from fastapi import APIRouter, Depends
 
 from stirling.agents import DocumentClassifierAgent
 from stirling.api.dependencies import get_document_classifier_agent
+from stirling.api.linked_instance import LINKED_INSTANCE
 from stirling.contracts import ClassifyDocumentRequest, ClassifyDocumentResponse
 
 router = APIRouter(prefix="/api/v1/documents/classify", tags=["document-classifier"])
 
 
-@router.post("", response_model=ClassifyDocumentResponse)
+@router.post("", response_model=ClassifyDocumentResponse, openapi_extra=LINKED_INSTANCE)
 async def classify_document(
     request: ClassifyDocumentRequest,
     agent: Annotated[DocumentClassifierAgent, Depends(get_document_classifier_agent)],
