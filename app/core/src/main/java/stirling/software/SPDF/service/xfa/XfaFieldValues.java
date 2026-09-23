@@ -90,7 +90,8 @@ final class XfaFieldValues {
         if (field instanceof PDPushButton || "button".equals(ui)) {
             return Value.skip("button");
         }
-        if ("passwordEdit".equals(ui)) {
+        if ("passwordEdit".equals(ui)
+                || (field instanceof PDTextField textField && textField.isPassword())) {
             return Value.skip("password");
         }
         if ("imageEdit".equals(ui)) {

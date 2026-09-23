@@ -125,6 +125,7 @@ public final class XfaFixtures {
 
     public static final class Builder {
         private boolean singleStream;
+        private String template = TEMPLATE;
         private String datasets = STALE_DATASETS;
         private boolean hexEncodedDatasets = true;
         private boolean withFields = true;
@@ -137,6 +138,11 @@ public final class XfaFixtures {
         /** The whole XDP document in one stream instead of a packet array. */
         public Builder singleStream() {
             this.singleStream = true;
+            return this;
+        }
+
+        public Builder template(String xml) {
+            this.template = xml;
             return this;
         }
 
@@ -216,7 +222,7 @@ public final class XfaFixtures {
                 String whole =
                         PREAMBLE
                                 + CONFIG
-                                + TEMPLATE
+                                + template
                                 + (datasets == null ? "" : datasets)
                                 + FORM_PACKET
                                 + POSTAMBLE;
@@ -225,7 +231,7 @@ public final class XfaFixtures {
             COSArray packets = new COSArray();
             addPacket(packets, "xdp:xdp", stream(document, PREAMBLE, COSName.FLATE_DECODE));
             addPacket(packets, "config", stream(document, CONFIG, COSName.FLATE_DECODE));
-            addPacket(packets, "template", stream(document, TEMPLATE, COSName.FLATE_DECODE));
+            addPacket(packets, "template", stream(document, template, COSName.FLATE_DECODE));
             if (datasets != null) {
                 COSStream packet =
                         stream(

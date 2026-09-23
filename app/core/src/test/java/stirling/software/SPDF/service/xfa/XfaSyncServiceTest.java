@@ -216,6 +216,27 @@ class XfaSyncServiceTest {
         }
 
         @Test
+        @DisplayName("keeps a password field out when only its AcroForm flag says so")
+        void passwordFlagAloneKeepsTheValueOut() throws Exception {
+            String template =
+                    XfaFixtures.TEMPLATE.replace(
+                            "<field name=\"Clave\"><ui><passwordEdit/></ui>"
+                                    + "<bind match=\"global\"/></field>",
+                            "");
+            assertThat(template).doesNotContain("Clave");
+            try (PDDocument document = XfaFixtures.builder().template(template).build()) {
+                FieldResult clave = field(sync(document, Set.of()), XfaFixtures.CLAVE);
+
+                assertThat(clave.status()).isEqualTo(Status.SKIPPED_TYPE);
+                assertThat(clave.acroForm()).isNull();
+                assertThat(clave.before()).isNull();
+                assertThat(clave.after()).isNull();
+                assertThat(XfaFixtures.dataValues(document))
+                        .containsEntry("form1.Clave", "secreto viejo");
+            }
+        }
+
+        @Test
         @DisplayName("is idempotent: a second pass changes nothing")
         void secondPassIsANoOp() throws Exception {
             try (PDDocument document = XfaFixtures.hybrid()) {
