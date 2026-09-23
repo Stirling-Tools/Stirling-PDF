@@ -7594,9 +7594,6 @@ limit = "Monthly spend limit {{amount}}/mo. Processing pauses at the limit."
 limitNoCap = "No spend limit. Processing won't pause. Invoices post monthly."
 
 [portal.billing.chip]
-invoices = "Invoices"
-nav = "Sections"
-payment = "Payment"
 plan = "Plan"
 procurement = "Procurement"
 usage = "Usage"
