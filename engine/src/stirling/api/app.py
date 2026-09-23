@@ -12,6 +12,7 @@ from pydantic_ai.models.instrumented import InstrumentationSettings
 from stirling.api.bootstrap import apply_app_state, build_app_state
 from stirling.api.dependencies import enforce_required_user_id
 from stirling.api.engine_auth import EngineSharedSecretMiddleware
+from stirling.api.linked_instance import LINKED_INSTANCE
 from stirling.api.middleware import UserIdMiddleware
 from stirling.api.routes import (
     agent_capabilities_router,
@@ -224,7 +225,7 @@ app.include_router(docparse_router, dependencies=_user_gate)
 app.include_router(config_router)
 
 
-@app.get("/health", response_model=HealthResponse)
+@app.get("/health", response_model=HealthResponse, openapi_extra=LINKED_INSTANCE)
 async def healthcheck(http_request: Request) -> HealthResponse:
     # Report the LIVE config on app.state, not the boot-time env cache, so an admin
     # "Test connection" shows the model actually in use after a push. Falls back to env.

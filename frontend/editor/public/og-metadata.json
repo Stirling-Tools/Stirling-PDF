@@ -120,11 +120,6 @@
       "title": "Edit PDF Bookmarks - Stirling PDF",
       "description": "Add or edit bookmarks and table of contents in PDF documents"
     },
-    "scannerEffect": {
-      "image": "/og_images/scanner-effect.png",
-      "title": "Make a PDF Look Scanned - Stirling PDF",
-      "description": "Create a PDF that looks like it was scanned"
-    },
     "autoRename": {
       "image": "/og_images/auto-rename-pdf-file.png",
       "title": "Auto Rename PDF Files - Stirling PDF",
@@ -798,7 +793,6 @@
     "/annotate": "annotate",
     "/scanner-image-split": "scannerImageSplit",
     "/edit-table-of-contents": "editTableOfContents",
-    "/scanner-effect": "scannerEffect",
     "/auto-rename": "autoRename",
     "/page-layout": "pageLayout",
     "/scale-pages": "scalePages",
@@ -868,7 +862,6 @@
     "/auto-split-pdf": "split",
     "/auto-size-split-pdf": "split",
     "/annotations": "annotate",
-    "/fake-scan": "scannerEffect",
     "/replace-color-pdf": "replaceColor",
     "/show-js": "showJS",
     "/pdf-organizer": "reorganizePages",
@@ -953,7 +946,6 @@
   },
   "canonicalByPath": {
     "/annotate": "/annotations",
-    "/scanner-effect": "/fake-scan",
     "/pdf-to-single-page": "/single-large-page",
     "/remove-cert-sign": "/remove-certificate-sign",
     "/unlock-p-d-f-forms": "/unlock-pdf-forms",
@@ -1115,10 +1107,6 @@
     {
       "path": "/img-to-pdf",
       "label": "Image to PDF Converter"
-    },
-    {
-      "path": "/fake-scan",
-      "label": "Make a PDF Look Scanned"
     },
     {
       "path": "/add-attachments",
