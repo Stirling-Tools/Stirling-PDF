@@ -10,7 +10,6 @@ import {
   readPdfiumPageMetadata,
 } from "@app/utils/pdfiumPageRender";
 import { jpegExifOrientation } from "@app/utils/jpegOrientation";
-import { lossyEncodeOptions } from "@app/utils/canvasImageEncoding";
 
 export interface ThumbnailWithMetadata {
   thumbnail: string; // Always returns a thumbnail (placeholder if needed)
@@ -431,9 +430,13 @@ async function encodeThumbnailJpeg(bitmap: ImageBitmap): Promise<string> {
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("2d context unavailable");
     paintThumbnail(ctx, bitmap);
-    // The probe keeps WebKit's silent PNG serialisation of an unencodable type
-    // from inflating the thumbnail.
-    const blob = await canvas.convertToBlob(await lossyEncodeOptions(0.8));
+    // JPEG on purpose: the data URL is the thumbnail contract every consumer
+    // and the DOM fallback below share, so the engine must not pick another
+    // format here.
+    const blob = await canvas.convertToBlob({
+      type: "image/jpeg",
+      quality: 0.8,
+    });
     return blobToDataUrl(blob);
   }
 
