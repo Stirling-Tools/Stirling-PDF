@@ -5,9 +5,7 @@
 // tauri.conf.json bundles the whole libs/*.jar glob, so the newest artifact has
 // to be picked explicitly and the previous one removed.
 //
-// Usage: stage-backend-jar.mjs <sourceDir> <destDir> [--check]
-//   --check exits 0 when destDir already holds exactly the newest source jar,
-//   which is what the Taskfile's `status:` uses to skip the Gradle rebuild.
+// Usage: stage-backend-jar.mjs <sourceDir> <destDir>
 import {
   copyFileSync,
   existsSync,
@@ -18,8 +16,7 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 
-const [sourceDir, destDir, ...flags] = process.argv.slice(2);
-const check = flags.includes("--check");
+const [sourceDir, destDir] = process.argv.slice(2);
 
 const jarsIn = (dir) =>
   existsSync(dir)
@@ -36,16 +33,6 @@ const newestJar = (dir) => {
 
 const source = newestJar(sourceDir);
 const staged = jarsIn(destDir);
-
-if (check) {
-  const upToDate =
-    source !== null &&
-    staged.length === 1 &&
-    staged[0] === source.name &&
-    statSync(join(destDir, staged[0])).size ===
-      statSync(join(sourceDir, source.name)).size;
-  process.exit(upToDate ? 0 : 1);
-}
 
 if (!source) {
   console.error(`No stirling-pdf-*.jar found in ${sourceDir}`);

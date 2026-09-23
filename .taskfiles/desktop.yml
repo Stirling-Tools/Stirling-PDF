@@ -1,5 +1,10 @@
 version: '3'
 
+# Tauri's beforeBuildCommand builds the frontend, so the desktop entrypoint
+# needs the same threadpool size as the frontend build tasks.
+env:
+  UV_THREADPOOL_SIZE: "16"
+
 vars:
   # jdk.dynalink is required by VeraPDF (PDF/A validation); without it the bundled JRE throws
   # NoClassDefFoundError: jdk/dynalink/Namespace at runtime in get-info-on-pdf and verify-pdf
@@ -140,8 +145,6 @@ tasks:
       # (and could be selected as the backend). The script stages only the jar
       # this build just produced, replacing whatever the last build left there.
       - node frontend/editor/scripts/stage-backend-jar.mjs app/core/build/libs frontend/editor/src-tauri/libs
-    status:
-      - node frontend/editor/scripts/stage-backend-jar.mjs app/core/build/libs frontend/editor/src-tauri/libs --check
 
   jlink:runtime:
     desc: "Create custom JRE with jlink"
