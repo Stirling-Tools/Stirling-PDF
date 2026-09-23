@@ -1,6 +1,5 @@
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import {
   ActionIcon,
   Avatar,
@@ -16,6 +15,7 @@ import {
   type TabItem,
   Tabs,
 } from "@app/ui";
+import { Icon } from "@app/ui/Icon";
 import { type Member, type RoleId } from "@portal/api/users";
 import type { Team } from "@portal/api/teams";
 import type { UsersCapabilities } from "@portal/api/usersCapabilities";
@@ -574,7 +574,7 @@ export function UsersDirectory({
                   requestAnimationFrame(() => searchRef.current?.focus());
                 }}
               >
-                <LocalIcon icon="search-rounded" width="1rem" height="1rem" />
+                <Icon name="search" size="1rem" />
               </ActionIcon>
             )}
           </div>

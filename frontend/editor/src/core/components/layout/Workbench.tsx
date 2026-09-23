@@ -18,6 +18,7 @@ import styles from "@app/components/layout/Workbench.module.css";
 
 import WorkbenchBar from "@app/components/shared/WorkbenchBar";
 import { useWorkbenchTakeover } from "@app/components/layout/WorkbenchTakeover";
+import { useTitleBarStrip } from "@app/contexts/TitleBarStripContext";
 import WorkbenchFloatingSearch from "@app/components/shared/WorkbenchFloatingSearch";
 import LandingPage from "@app/components/shared/LandingPage";
 import DismissAllErrorsButton from "@app/components/shared/DismissAllErrorsButton";
@@ -42,6 +43,7 @@ export default function Workbench() {
   // A flow that owns the canvas outright (desktop onboarding's Downloads sweep).
   // Null in every other case, which is every case in core.
   const takeover = useWorkbenchTakeover();
+  const strip = useTitleBarStrip();
 
   // Use context-based hooks to eliminate all prop drilling
   const { files: activeFiles, fileIds } = useAllFiles();
@@ -97,7 +99,11 @@ export default function Workbench() {
   const showWorkbenchBar =
     topControlsAvailable && hasWorkbenchContent && !readerMode && !takeover;
   const showFloatingSearch =
-    topControlsAvailable && !hasWorkbenchContent && !readerMode && !takeover;
+    topControlsAvailable &&
+    !hasWorkbenchContent &&
+    !readerMode &&
+    !takeover &&
+    !strip.enabled;
 
   // On the transition, so reading sets the toolbar's start state without locking it.
   const prevReaderModeRef = useRef(readerMode);

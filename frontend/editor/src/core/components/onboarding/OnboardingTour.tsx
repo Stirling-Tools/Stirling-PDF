@@ -9,9 +9,7 @@
 import React, { type ReactNode } from "react";
 import { TourProvider, useTour, type StepType } from "@reactour/tour";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import CheckIcon from "@mui/icons-material/Check";
+import { Icon } from "@app/ui/Icon";
 import type { TFunction } from "i18next";
 import i18n from "@app/i18n";
 
@@ -147,7 +145,6 @@ export default function OnboardingTour({
         setIsOpen,
       }) => {
         const isLast = tourCurrentStep === stepsLength - 1;
-        const ArrowIcon = isRTL ? ArrowBackIcon : ArrowForwardIcon;
         return (
           <ActionIcon
             onClick={() =>
@@ -166,7 +163,11 @@ export default function OnboardingTour({
                 : t("onboarding.next", "Next")
             }
           >
-            {isLast ? <CheckIcon /> : <ArrowIcon />}
+            {isLast ? (
+              <Icon name="check" />
+            ) : (
+              <Icon name={isRTL ? "arrow-left" : "arrow-right"} />
+            )}
           </ActionIcon>
         );
       }}

@@ -32,7 +32,7 @@ vi.mock("@app/components/settings/portalSettingsNav", () => ({
         {
           key: "billing",
           label: "Billing",
-          icon: "payments-rounded",
+          icon: "credit-card",
           component: null,
         },
       ],

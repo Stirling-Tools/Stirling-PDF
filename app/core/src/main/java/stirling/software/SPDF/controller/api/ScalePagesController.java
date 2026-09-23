@@ -46,7 +46,7 @@ public class ScalePagesController {
             String targetPDRectangle, String orientation, PDDocument sourceDocument) {
         if ("KEEP".equals(targetPDRectangle)) {
             if (sourceDocument.getNumberOfPages() == 0) {
-                throw ExceptionUtils.createInvalidPageSizeException("KEEP");
+                throw ExceptionUtils.createPdfNoPages();
             }
 
             PDPage sourcePage = sourceDocument.getPage(0);

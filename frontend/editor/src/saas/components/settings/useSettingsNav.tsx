@@ -65,7 +65,7 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
                   "settings.connectedInstances.title",
                   "Connected instances",
                 ),
-                icon: "link-rounded",
+                icon: "link",
                 fullBleed: true,
                 component: (
                   <Suspense fallback={<LoadingFallback />}>

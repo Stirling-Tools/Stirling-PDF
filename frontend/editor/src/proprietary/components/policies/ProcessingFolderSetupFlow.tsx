@@ -12,10 +12,7 @@ import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useServerFolderBlock } from "@app/hooks/useServerFolderBlock";
 import { useAiEngineEnabled } from "@app/hooks/useAiEngineEnabled";
 import { useDownloadsProcessing } from "@app/hooks/useDownloadsProcessing";
-import {
-  useProcessingFolders,
-  refreshProcessingFolders,
-} from "@app/hooks/useProcessingFolders";
+import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
 import { canPickDirectory, pickDirectory } from "@app/services/directoryPicker";
 import { saveProcessingFolder } from "@app/services/processingFolderApi";
 import {
@@ -150,11 +147,15 @@ export function ProcessingFolderSetupFlow({
         parameters: step.parameters ?? {},
       })),
     });
-    void refreshProcessingFolders();
+    void processing.refresh();
     if (onDisk)
-      void deliverSweepResults(saved.id, null, addFiles, {
-        excludeRunIds: baseline,
-      });
+      void deliverSweepResults(
+        saved.id,
+        null,
+        addFiles,
+        { folderId: selected.id },
+        { excludeRunIds: baseline },
+      );
     onClose();
     if (!folder) navigate(`/files/${selected.id}`);
   }
@@ -164,7 +165,12 @@ export function ProcessingFolderSetupFlow({
       initialFolder={folder}
       aiEngineEnabled={aiEngineEnabled}
       catalogue={presets.catalogue}
-      destinations={routingDestinations(sources.data, outputModes)}
+      // No vectordb: routing emits at most a classify step, never the chunks-only
+      // ingest final step a vector database destination requires.
+      destinations={routingDestinations(
+        sources.data,
+        outputModes.filter((mode) => mode !== "vectordb"),
+      )}
       destinationsLoading={sources.loading}
       destinationsError={sources.error}
       onCreateDestination={() => {
@@ -175,7 +181,7 @@ export function ProcessingFolderSetupFlow({
       loading={folders.loading || processing.loading || presets.loading}
       loadError={processing.loadError ?? presets.error}
       onRetry={() => {
-        void refreshProcessingFolders();
+        void processing.refresh();
         setReload((current) => current + 1);
       }}
       canPickDirectory={canPickDirectory}

@@ -41,6 +41,7 @@
  * entitlement calls. It never enters the portal — the browser is the human
  * admin and uses the Supabase JWT for SaaS reads. Don't add it here.
  */
+import type { AccountLinkBlockContext } from "@app/services/accountLinkBlock";
 import { withPortalSaasSession } from "@app/portal/auth/portalSaasSession";
 import { reportAccountLinkBlock } from "@app/portal/services/accountLinkBlock";
 export { SaasSessionRequiredError } from "@app/portal/auth/portalSaasSession";
@@ -64,6 +65,7 @@ function saasBaseUrl(): string | null {
 }
 
 export interface HttpRequestOptions {
+  accountLinkBlockContext?: AccountLinkBlockContext;
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
   /** Extra headers; Content-Type and Accept are set automatically. */
@@ -115,7 +117,10 @@ export function errorMessage(error: unknown): string {
 // Shared response handler
 // ────────────────────────────────────────────────────────────────────────────
 
-async function unwrap<T>(res: Response): Promise<T> {
+async function unwrap<T>(
+  res: Response,
+  context?: AccountLinkBlockContext,
+): Promise<T> {
   if (!res.ok) {
     let body: unknown = null;
     try {
@@ -127,7 +132,7 @@ async function unwrap<T>(res: Response): Promise<T> {
     // The instance's entitlement gate answers a spent free grant here, and the prompt it raises is
     // the actionable surface. Reported for every domain rather than only the local one because the
     // classifier keys on a sentinel only the local backend sends, so a SaaS 402 cannot reach it.
-    reportAccountLinkBlock(error);
+    reportAccountLinkBlock(error, context);
     throw error;
   }
   // 204 / empty-body responses have nothing to parse.
@@ -151,7 +156,7 @@ async function localJson<T>(
     new URL(`${localBaseUrl()}${path}`, window.location.origin),
     options,
   );
-  if (demo) return unwrap<T>(demo);
+  if (demo) return unwrap<T>(demo, options.accountLinkBlockContext);
   const res = await localFetch(`${localBaseUrl()}${path}`, {
     method: options.method ?? "GET",
     headers: {
@@ -170,7 +175,7 @@ async function localJson<T>(
     // Spring token to re-show login; SaaS lets the auth boundary handle it).
     onLocalUnauthorized();
   }
-  return unwrap<T>(res);
+  return unwrap<T>(res, options.accountLinkBlockContext);
 }
 
 /** GET returning a binary Blob (e.g. a CSV/JSON export download), via the
@@ -212,7 +217,11 @@ async function localForm<T>(
 
 /** POST a multipart/form-data body (file uploads), via the localBackend seam. The Content-Type is
  * deliberately left unset so the browser writes it with the multipart boundary. */
-async function localMultipart<T>(path: string, body: FormData): Promise<T> {
+async function localMultipart<T>(
+  path: string,
+  body: FormData,
+  context?: AccountLinkBlockContext,
+): Promise<T> {
   const res = await localFetch(`${localBaseUrl()}${path}`, {
     method: "POST",
     headers: { Accept: "application/json", ...(await localAuthHeader()) },
@@ -221,7 +230,7 @@ async function localMultipart<T>(path: string, body: FormData): Promise<T> {
   if (res.status === 401) {
     onLocalUnauthorized();
   }
-  return unwrap<T>(res);
+  return unwrap<T>(res, context);
 }
 
 // ────────────────────────────────────────────────────────────────────────────

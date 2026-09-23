@@ -51,13 +51,15 @@ public class DeviceCredentialStore {
         cred.setLinkedAt(LocalDateTime.now());
         cred.setLastEntitlementSuccessAt(null);
         cred.setEntitlementRevoked(false);
+        cred.setFleetUserLimit(null);
         repo.save(cred);
     }
 
     /** Commits successful contact independently of the caller's work or transaction rollback. */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void recordEntitlementContact(String deviceId, Instant at, boolean revoked) {
-        repo.recordEntitlementContact(deviceId, at, revoked);
+    public void recordEntitlementContact(
+            String deviceId, Instant at, boolean revoked, Integer fleetUserLimit) {
+        repo.recordEntitlementContact(deviceId, at, revoked, revoked ? null : fleetUserLimit);
     }
 
     /** Unlinks this instance locally (idempotent). */

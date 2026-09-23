@@ -72,6 +72,12 @@ public class LinkedInstance {
     @Column(name = "last_seen_at")
     private LocalDateTime lastSeenAt;
 
+    @Column(name = "seat_count")
+    private Integer seatCount;
+
+    @Column(name = "seats_reported_at")
+    private java.time.OffsetDateTime seatsReportedAt;
+
     /** NULL = active. Set on unlink/revoke; a revoked credential fails authentication. */
     @Column(name = "revoked_at")
     private LocalDateTime revokedAt;

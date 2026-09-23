@@ -77,7 +77,7 @@ export function buildPortalSettingsSections(
         "users.subtitle2",
         "Your people, teams, and access levels.",
       ),
-      icon: "group-rounded",
+      icon: "users",
       component: <UsersSection />,
       fullBleed: true,
     });
@@ -86,7 +86,7 @@ export function buildPortalSettingsSections(
     workspace.push({
       key: "billing",
       label: t("portal.nav.usage", "Usage & Billing"),
-      icon: "payments-rounded",
+      icon: "credit-card",
       component: <BillingSection />,
       fullBleed: true,
     });
@@ -99,7 +99,7 @@ export function buildPortalSettingsSections(
         "portal.accountLink.panel.sub",
         "Manage this server’s connection to your Stirling Cloud account.",
       ),
-      icon: "link-rounded",
+      icon: "link",
       component: <AccountLinkSection />,
       fullBleed: true,
     });
@@ -129,7 +129,7 @@ export function buildPortalSettingsSections(
             "settings.developer.apiKeysDescription",
             "Personal keys for calling the Stirling API from scripts and integrations.",
           ),
-          icon: "key-rounded",
+          icon: "key",
           component: <ApiKeysSection />,
           fullBleed: true,
         },
@@ -152,7 +152,7 @@ export function buildPortalSettingsSections(
             "portal.infrastructure.encryption.subheading",
             "Stored files are encrypted before they reach disk, the database or object storage.",
           ),
-          icon: "encrypted-rounded",
+          icon: "lock-keyhole",
           component: <EncryptionSection />,
           fullBleed: true,
         },
@@ -172,7 +172,7 @@ export function buildPortalSettingsSections(
             "settings.licensingAnalytics.auditDescription",
             "Who did what on this server, and how long that record is kept.",
           ),
-          icon: "fact-check-rounded",
+          icon: "clipboard-check",
           component: <AuditSection />,
           fullBleed: true,
         },
