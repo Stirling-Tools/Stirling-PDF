@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Text, ScrollArea } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import CloseIcon from "@mui/icons-material/Close";
+import { Icon } from "@app/ui/Icon";
 import {
   CardModalPhase,
   CARD_MODAL_TIMINGS,
@@ -209,7 +209,7 @@ export function CardExpansionModal({
                 right: "0.375rem",
               }}
             >
-              <CloseIcon style={{ fontSize: "1.25rem" }} />
+              <Icon name="x" size={"1.25rem"} />
             </ActionIcon>
           </div>
         </div>

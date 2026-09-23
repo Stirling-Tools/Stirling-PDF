@@ -42,7 +42,6 @@ public class AccountLinkController {
     private final ConnectService connectService;
     private final LocalUsageService localUsageService;
     private final FreeTierUsageService freeTierUsageService;
-    // Present only when metering is on (its own flag); absent → /sync-now reports 409.
     private final ObjectProvider<UsageSyncService> syncServiceProvider;
 
     public AccountLinkController(
@@ -102,11 +101,23 @@ public class AccountLinkController {
         }
     }
 
-    /** Called by the callback page with the nonce it found in the fragment. */
+    /** Finishes the link, then reports seats after the credential transaction has committed. */
     @PostMapping("/connect/complete")
     public ResponseEntity<ConnectService.ConnectStatus> connectComplete(
             @RequestBody(required = false) ConnectCompleteRequest req) {
-        return ResponseEntity.ok(connectService.complete(req != null ? req.nonce() : null));
+        ConnectService.ConnectStatus result =
+                connectService.complete(req != null ? req.nonce() : null);
+        if (result.phase() == ConnectService.Phase.LINKED) {
+            UsageSyncService sync = syncServiceProvider.getIfAvailable();
+            if (sync != null) {
+                try {
+                    sync.syncNow();
+                } catch (RuntimeException e) {
+                    log.warn("Initial account-link sync failed; the scheduled sync will retry", e);
+                }
+            }
+        }
+        return ResponseEntity.ok(result);
     }
 
     /** Everything we know about where the admin's browser is, for the callback. */

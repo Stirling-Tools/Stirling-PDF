@@ -1,10 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
-import CloseIcon from "@mui/icons-material/Close";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import { Icon } from "@app/ui/Icon";
 import { useAuth } from "@app/auth/UseSession";
 import SaasOnboardingModal from "@app/components/onboarding/SaasOnboardingModal";
 import StaticOnboardingSlide from "@app/components/onboarding/StaticOnboardingSlide";
@@ -187,9 +183,17 @@ export function OnboardingChecklist() {
               {doneCount} / {total}
             </span>
             {expanded ? (
-              <ExpandLessIcon className={styles.chevron} />
+              <Icon
+                name="chevron-up"
+                size="0.95rem"
+                className={styles.chevron}
+              />
             ) : (
-              <ExpandMoreIcon className={styles.chevron} />
+              <Icon
+                name="chevron-down"
+                size="0.95rem"
+                className={styles.chevron}
+              />
             )}
             <span
               className={styles.closeButton}
@@ -209,9 +213,13 @@ export function OnboardingChecklist() {
               }}
             >
               {allDone ? (
-                <CheckCircleIcon className={styles.completeIcon} />
+                <Icon
+                  name="circle-check"
+                  size="1.05rem"
+                  className={styles.completeIcon}
+                />
               ) : (
-                <CloseIcon className={styles.closeIcon} />
+                <Icon name="x" size="0.95rem" />
               )}
             </span>
           </span>
@@ -244,9 +252,17 @@ export function OnboardingChecklist() {
                 >
                   <span className={styles.itemIcon}>
                     {isDone ? (
-                      <CheckCircleIcon className={styles.checkDone} />
+                      <Icon
+                        name="circle-check"
+                        size="1.05rem"
+                        className={styles.checkDone}
+                      />
                     ) : (
-                      <RadioButtonUncheckedIcon className={styles.checkTodo} />
+                      <Icon
+                        name="circle"
+                        size="1.05rem"
+                        className={styles.checkTodo}
+                      />
                     )}
                   </span>
                   <span className={styles.itemText}>

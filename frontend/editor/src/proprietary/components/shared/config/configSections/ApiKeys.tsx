@@ -7,8 +7,7 @@ import RefreshModal from "./apiKeys/RefreshModal";
 // oxlint-disable-next-line no-restricted-imports
 import useApiKey from "./apiKeys/hooks/useApiKey";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
-
+import { Icon } from "@app/ui/Icon";
 export default function ApiKeys() {
   const [copied, setCopied] = useState<string | null>(null);
   const [showRefreshModal, setShowRefreshModal] = useState(false);
@@ -77,10 +76,9 @@ export default function ApiKeys() {
         }}
       >
         <Group gap="xs" wrap="nowrap" align="flex-start">
-          <LocalIcon
-            icon="info-rounded"
-            width={18}
-            height={18}
+          <Icon
+            name="info"
+            size={18}
             style={{ marginTop: 2, flexShrink: 0, opacity: 0.7 }}
           />
           <Stack gap={8} style={{ flex: 1 }}>
@@ -106,11 +104,7 @@ export default function ApiKeys() {
                   }}
                 >
                   {t("config.apiKeys.docsLink", "API Documentation")}
-                  <LocalIcon
-                    icon="open-in-new-rounded"
-                    width={14}
-                    height={14}
-                  />
+                  <Icon name="external-link" size={14} />
                 </Anchor>
               </Text>
               <Text size="sm">
@@ -125,11 +119,7 @@ export default function ApiKeys() {
                   }}
                 >
                   {t("config.apiKeys.schemaLink", "API Schema Reference")}
-                  <LocalIcon
-                    icon="open-in-new-rounded"
-                    width={14}
-                    height={14}
-                  />
+                  <Icon name="external-link" size={14} />
                 </Anchor>
               </Text>
             </Stack>

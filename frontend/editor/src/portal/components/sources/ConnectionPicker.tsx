@@ -1,4 +1,4 @@
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import { Icon } from "@app/ui/Icon";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, Select } from "@app/ui";
@@ -102,7 +102,7 @@ export function ConnectionPicker({
       )}
       <Button
         variant="secondary"
-        leftSection={<AddRoundedIcon fontSize="inherit" />}
+        leftSection={<Icon name="plus" size="1em" />}
         onClick={openCreate}
       >
         {t("portal.connections.picker.createNew")}

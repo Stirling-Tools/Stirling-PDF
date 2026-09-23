@@ -1,7 +1,6 @@
 import { Alert, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
-
+import { Icon } from "@app/ui/Icon";
 interface EnterpriseRequiredBannerProps {
   show: boolean;
   featureName: string;
@@ -20,9 +19,7 @@ export default function EnterpriseRequiredBanner({
 
   return (
     <Alert
-      icon={
-        <LocalIcon icon="workspace-premium-rounded" width={20} height={20} />
-      }
+      icon={<Icon name="award" size={20} />}
       title={t(
         "admin.settings.enterpriseRequired.title",
         "Enterprise License Required",
