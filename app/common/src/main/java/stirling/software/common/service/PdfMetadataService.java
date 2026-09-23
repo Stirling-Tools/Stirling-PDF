@@ -11,6 +11,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
@@ -55,37 +56,49 @@ public class PdfMetadataService {
 
     private static final Pattern ILLEGAL_XML_NAME_CHARS = Pattern.compile("[^A-Za-z0-9._-]");
 
+    /**
+     * Localized formatter with strict resolution: impossible dates such as February 30 are rejected
+     * instead of rolling into the next valid day. {@code uuuu} (proleptic year) is required because
+     * strict mode cannot resolve {@code yyyy} (year-of-era) without an era.
+     */
+    private static DateTimeFormatter strict(String pattern) {
+        return DateTimeFormatter.ofPattern(pattern.replace("yyyy", "uuuu"))
+                .withResolverStyle(ResolverStyle.STRICT);
+    }
+
+    // Day-first patterns precede month-first ones, so an ambiguous slash date such as
+    // 03/04/2025 resolves to 3 April, not March 4.
     private static final List<DateTimeFormatter> DATE_TIME_FORMATTERS =
             List.of(
-                    DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss"),
-                    DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm"),
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"),
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"),
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS"),
-                    DateTimeFormatter.ofPattern("d.M.yyyy HH:mm:ss"),
-                    DateTimeFormatter.ofPattern("d.M.yyyy HH:mm"),
-                    DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss"),
-                    DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"),
-                    DateTimeFormatter.ofPattern("d/M/yyyy HH:mm:ss"),
-                    DateTimeFormatter.ofPattern("d/M/yyyy HH:mm"),
-                    DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"),
-                    DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"),
-                    DateTimeFormatter.ofPattern("M/d/yyyy HH:mm:ss"),
-                    DateTimeFormatter.ofPattern("M/d/yyyy HH:mm"),
-                    DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm:ss"),
-                    DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm"));
+                    strict("yyyy/MM/dd HH:mm:ss"),
+                    strict("yyyy/MM/dd HH:mm"),
+                    strict("yyyy-MM-dd HH:mm:ss"),
+                    strict("yyyy-MM-dd HH:mm"),
+                    strict("yyyy-MM-dd'T'HH:mm:ss"),
+                    strict("yyyy-MM-dd'T'HH:mm:ss.SSS"),
+                    strict("d.M.yyyy HH:mm:ss"),
+                    strict("d.M.yyyy HH:mm"),
+                    strict("dd.MM.yyyy HH:mm:ss"),
+                    strict("dd.MM.yyyy HH:mm"),
+                    strict("d/M/yyyy HH:mm:ss"),
+                    strict("d/M/yyyy HH:mm"),
+                    strict("dd/MM/yyyy HH:mm:ss"),
+                    strict("dd/MM/yyyy HH:mm"),
+                    strict("M/d/yyyy HH:mm:ss"),
+                    strict("M/d/yyyy HH:mm"),
+                    strict("MM/dd/yyyy HH:mm:ss"),
+                    strict("MM/dd/yyyy HH:mm"));
 
     private static final List<DateTimeFormatter> DATE_ONLY_FORMATTERS =
             List.of(
-                    DateTimeFormatter.ofPattern("yyyy/MM/dd"),
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd"),
-                    DateTimeFormatter.ofPattern("d.M.yyyy"),
-                    DateTimeFormatter.ofPattern("dd.MM.yyyy"),
-                    DateTimeFormatter.ofPattern("d/M/yyyy"),
-                    DateTimeFormatter.ofPattern("dd/MM/yyyy"),
-                    DateTimeFormatter.ofPattern("M/d/yyyy"),
-                    DateTimeFormatter.ofPattern("MM/dd/yyyy"));
+                    strict("yyyy/MM/dd"),
+                    strict("yyyy-MM-dd"),
+                    strict("d.M.yyyy"),
+                    strict("dd.MM.yyyy"),
+                    strict("d/M/yyyy"),
+                    strict("dd/MM/yyyy"),
+                    strict("M/d/yyyy"),
+                    strict("MM/dd/yyyy"));
 
     private final ApplicationProperties applicationProperties;
     private final String stirlingPDFLabel;

@@ -140,6 +140,24 @@ class PdfMetadataServiceTest {
         }
 
         @Test
+        @DisplayName("rejects impossible dates instead of rolling them over")
+        void impossibleDatesReturnNull() {
+            assertNull(PdfMetadataService.parseToCalendar("2025/02/30"));
+            assertNull(PdfMetadataService.parseToCalendar("30.02.2025"));
+            assertNull(PdfMetadataService.parseToCalendar("2025-02-30 10:00:00"));
+        }
+
+        @Test
+        @DisplayName("resolves ambiguous slash dates day-first")
+        void ambiguousSlashDateIsDayFirst() {
+            Calendar cal = PdfMetadataService.parseToCalendar("03/04/2025");
+            assertNotNull(cal);
+            assertEquals(3, cal.get(Calendar.DAY_OF_MONTH));
+            assertEquals(Calendar.APRIL, cal.get(Calendar.MONTH));
+            assertEquals(2025, cal.get(Calendar.YEAR));
+        }
+
+        @Test
         @DisplayName("parses diverse date formats including 1.1.2025 and ISO")
         void parsesDiverseDateFormats() {
             Calendar dotCal = PdfMetadataService.parseToCalendar("1.1.2025");
