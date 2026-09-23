@@ -7263,12 +7263,6 @@ upToFiveUsers = "Up to 5 users"
 usageTrackingPrometheus = "Usage tracking & Prometheus"
 usersIncluded = "100 users included"
 
-[plan.licenseWarning]
-body = "You have {{total}} users but the free tier only supports {{limit}}. Upgrade to keep Stirling PDF running smoothly."
-cta = "See plans"
-overLimit = "more than {{limit}}"
-title = "Free self-hosted limit reached"
-
 [plan.period]
 month = "month"
 

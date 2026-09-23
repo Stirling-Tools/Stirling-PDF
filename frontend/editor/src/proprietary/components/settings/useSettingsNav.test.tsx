@@ -1,7 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 
-const state = vi.hoisted(() => ({ owner: true, loading: false }));
+const state = vi.hoisted(() => ({
+  owner: true,
+  loading: false,
+  portal: true,
+  roster: true,
+}));
 vi.mock("@app/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({ config: { isAdmin: true } }),
 }));
@@ -13,11 +18,19 @@ vi.mock("@app/auth/context", () => ({
   }),
 }));
 vi.mock("@app/hooks/usePortalAccess", () => ({
-  usePortalAccessState: () => ({ granted: true, settled: true }),
+  usePortalAccessState: () => ({ granted: state.portal, settled: true }),
+}));
+vi.mock("@app/hooks/useRosterAvailable", () => ({
+  useRosterAvailable: () => state.roster,
 }));
 vi.mock("@core/components/settings/useSettingsNav", () => ({
   useSettingsNav: () => ({
     sections: [
+      {
+        id: "workspace",
+        title: "Workspace",
+        items: [{ key: "adminPlan", label: "Plan", component: null }],
+      },
       {
         id: "monitoring",
         title: "Monitoring",
@@ -37,6 +50,8 @@ describe("self-hosted owner settings", () => {
   beforeEach(() => {
     state.owner = true;
     state.loading = false;
+    state.portal = true;
+    state.roster = true;
   });
 
   it.each([false, true])(
@@ -51,6 +66,8 @@ describe("self-hosted owner settings", () => {
       expect(keys).toContain("users");
       expect(keys.includes("billing")).toBe(owner);
       expect(keys.includes("account-link")).toBe(owner);
+      expect(keys).not.toContain("adminPlan");
+      expect(keys).not.toContain("plan");
     },
   );
 
@@ -65,12 +82,29 @@ describe("self-hosted owner settings", () => {
     rerender();
     expect(keys()).not.toContain("billing");
     expect(keys()).not.toContain("account-link");
+    expect(keys()).not.toContain("adminPlan");
     expect(keys()).toContain("adminUsage");
     state.owner = true;
     rerender();
     expect(keys()).toContain("billing");
     expect(keys()).toContain("account-link");
   });
+
+  it.each([false, true])(
+    "retires the legacy Plan URL without processor sections for ownership=%s",
+    (owner) => {
+      state.owner = owner;
+      state.portal = false;
+      state.roster = false;
+      const { result } = renderHook(() => useSettingsNav(vi.fn()));
+      const keys = result.current.sections.flatMap((section) =>
+        section.items.map((item) => item.key),
+      );
+      expect(keys).not.toContain("adminPlan");
+      expect(keys).toContain("adminUsage");
+      expect(keys).not.toContain("billing");
+    },
+  );
 
   it("waits for ownership to settle before resolving a settings bookmark", () => {
     state.loading = true;
@@ -79,7 +113,7 @@ describe("self-hosted owner settings", () => {
     expect(
       result.current.sections
         .flatMap((section) => section.items)
-        .some((item) => item.key === "billing"),
+        .some((item) => ["billing", "adminPlan", "plan"].includes(item.key)),
     ).toBe(false);
   });
 });
