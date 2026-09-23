@@ -145,8 +145,9 @@ export async function getPdfiumModule(): Promise<WrappedPdfiumModule> {
  */
 export function resetPdfiumModule(): void {
   // The module is discarded here, so a handle no reader holds is closed now.
-  // With readers it is dropped, and their later close only closes the document
-  // pointer; the pixel buffer goes with the discarded module.
+  // A handle a reader still holds keeps its entry in the ownership maps: its
+  // close releases the callback and the buffer against the module that
+  // allocated them.
   try {
     if (sharedDocument && sharedDocument.refs <= 0 && _module) {
       closeDocumentNow(_module, sharedDocument.docPtr);
@@ -158,11 +159,14 @@ export function resetPdfiumModule(): void {
   sharedReleasePending = false;
   _module = null;
   _initPromise = null;
-  _docFileAccess.clear();
-  _docHeapCopies.clear();
 }
 
 interface FileAccess {
+  /** The module whose heap owns `accessPtr` and whose function table owns
+   *  `getBlockPtr`. A reset discards the module while readers may still close
+   *  their documents, and both must be released against the instance that
+   *  allocated them. */
+  module: WrappedPdfiumModule;
   accessPtr: number;
   getBlockPtr: number;
   /** The bytes the callback reads from; kept alive for the document's life. */
@@ -171,7 +175,10 @@ interface FileAccess {
 const _docFileAccess = new Map<number, FileAccess>();
 
 /** Heap copies made when the runtime cannot host a file-access callback. */
-const _docHeapCopies = new Map<number, number>();
+const _docHeapCopies = new Map<
+  number,
+  { module: WrappedPdfiumModule; ptr: number }
+>();
 
 // FPDF_FILEACCESS: unsigned long m_FileLen, get_block m_GetBlock, void* m_Param.
 const FILE_ACCESS_BYTES = 12;
@@ -404,21 +411,22 @@ function openWithFileAccess(
     m.pdfium.wasmExports.free(accessPtr);
     throw new PdfiumOpenError(m.FPDF_GetLastError());
   }
-  _docFileAccess.set(docPtr, { accessPtr, getBlockPtr, bytes });
+  _docFileAccess.set(docPtr, { module: m, accessPtr, getBlockPtr, bytes });
   return docPtr;
 }
 
 function closeDocumentNow(m: WrappedPdfiumModule, docPtr: number): void {
-  m.FPDF_CloseDocument(docPtr);
   const access = _docFileAccess.get(docPtr);
+  const heapCopy = _docHeapCopies.get(docPtr);
+  const owner = access?.module ?? heapCopy?.module ?? m;
+  owner.FPDF_CloseDocument(docPtr);
   if (access) {
-    m.pdfium.removeFunction(access.getBlockPtr);
-    m.pdfium.wasmExports.free(access.accessPtr);
+    owner.pdfium.removeFunction(access.getBlockPtr);
+    owner.pdfium.wasmExports.free(access.accessPtr);
     _docFileAccess.delete(docPtr);
   }
-  const heapCopy = _docHeapCopies.get(docPtr);
   if (heapCopy) {
-    m.pdfium.wasmExports.free(heapCopy);
+    heapCopy.module.pdfium.wasmExports.free(heapCopy.ptr);
     _docHeapCopies.delete(docPtr);
   }
 }
@@ -439,7 +447,7 @@ function openWithHeapCopy(
     m.pdfium.wasmExports.free(ptr);
     throw new PdfiumOpenError(m.FPDF_GetLastError());
   }
-  _docHeapCopies.set(docPtr, ptr);
+  _docHeapCopies.set(docPtr, { module: m, ptr });
   return docPtr;
 }
 
@@ -459,20 +467,22 @@ export async function openRawDocument(
     return sharedDocument.docPtr;
   }
 
+  // A different document is being opened, so an idle shared one goes before the
+  // new one exists: PDFium caches and the JS bytes must not double up. With
+  // readers outstanding the close stays deferred to the last reader.
+  if (!password && sharedDocument && sharedDocument.refs <= 0) {
+    closeDocumentNow(m, sharedDocument.docPtr);
+    sharedDocument = null;
+    sharedReleasePending = false;
+  }
+
   const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
   const docPtr = openWithFileAccess(m, bytes, password);
 
-  if (!password) {
+  if (!password && !sharedDocument) {
     // A scan still reading the previous document keeps it open; only adopt the
     // new one once its refs drop to zero.
-    if (sharedDocument && sharedDocument.refs <= 0) {
-      closeDocumentNow(m, sharedDocument.docPtr);
-      sharedDocument = null;
-      sharedReleasePending = false;
-    }
-    if (!sharedDocument) {
-      sharedDocument = { bytes: data, docPtr, refs: 1 };
-    }
+    sharedDocument = { bytes: data, docPtr, refs: 1 };
   }
 
   return docPtr;

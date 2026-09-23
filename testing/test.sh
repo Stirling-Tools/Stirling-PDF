@@ -345,6 +345,7 @@ capture_file_list() {
         -not -path '*/tmp/stirling-pdf/lu*' \
         -not -path '*/tmp/stirling-pdf/tmp*' \
         -not -path '/tmp/lu*' \
+        -not -path '/var/lib/libreoffice-sandbox/tmp/lu*' \
         -not -path '*/tmp/*/user/registrymodifications.xcu' \
         -not -path '/app/stirling.aot' \
         -not -path '*/tmp/stirling.aotconf' \
@@ -377,7 +378,7 @@ capture_file_list() {
             -not -path '*/tmp/stirling-pdf/tmp*' \
             -not -path '*/tmp/lu*' \
             -not -path '*/tmp/tmp*' \
-            -not -path '/app/stirling.aot' \
+                -not -path '/app/stirling.aot' \
             -not -path '*/tmp/stirling.aotconf' \
             -not -path '*/tmp/aot-*.log' \
             2>/dev/null | sort" > "$output_file"
@@ -429,6 +430,8 @@ compare_file_lists() {
             grep -i "tmp\|temp" "$after_file" \
                 | grep -v '/jpdfium-' \
                 | grep -v '\.libreoffice_uno_' \
+                | grep -v '/var/lib/libreoffice-sandbox/profiles/' \
+                | grep -v '/var/lib/libreoffice-template/' \
                 | grep -v '\.X99-lock' \
                 | grep -v 'uno-last-used' \
                 | grep -v 'xdg-' \
@@ -469,6 +472,7 @@ compare_file_lists() {
             grep -i "tmp\|temp" "${diff_file}.added" \
                 | grep -v '/jpdfium-' \
                 | grep -v '\.libreoffice_uno_' \
+                | grep -v '/var/lib/libreoffice-sandbox/profiles/' \
                 | grep -v '\.X99-lock' \
                 | grep -v 'uno-last-used' \
                 | grep -v 'xdg-' \
