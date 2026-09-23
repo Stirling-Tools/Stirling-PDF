@@ -136,14 +136,12 @@ tasks:
         platforms: [windows]
       - cmd: ./gradlew bootJar --no-daemon -PjpdfiumPlatforms={{.JPDFIUM_PLATFORMS}}
         platforms: [linux, darwin]
-      - mkdir -p frontend/editor/src-tauri/libs
       # The bundle globs libs/*.jar, so an old jar left behind would ship too
-      # (and could be selected as the backend). Copy only the jar this build
-      # just produced, replacing whatever the last build left there.
-      - rm -f frontend/editor/src-tauri/libs/stirling-pdf-*.jar
-      - cp "$(ls -t app/core/build/libs/stirling-pdf-*.jar | head -n 1)" frontend/editor/src-tauri/libs/
+      # (and could be selected as the backend). The script stages only the jar
+      # this build just produced, replacing whatever the last build left there.
+      - node frontend/editor/scripts/stage-backend-jar.mjs app/core/build/libs frontend/editor/src-tauri/libs
     status:
-      - test "$(ls frontend/editor/src-tauri/libs/stirling-pdf-*.jar 2>/dev/null | wc -l | tr -d ' ')" = "1"
+      - node frontend/editor/scripts/stage-backend-jar.mjs app/core/build/libs frontend/editor/src-tauri/libs --check
 
   jlink:runtime:
     desc: "Create custom JRE with jlink"
