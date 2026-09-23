@@ -729,6 +729,8 @@ permissionNotice = "Η διαδρομή tessdata δεν είναι εγγράψ�
 
 [admin.settings.ai]
 description = "Συνδέστε το Stirling με τη μηχανή Python AI, επιλέξτε τα μοντέλα της και ορίστε τα όρια ασφαλείας υπό τα οποία εκτελείται."
+managedByCloud = "Διαχειρίζεται από το Stirling Cloud σε αυτήν τη λειτουργία."
+managedByCloudShort = "Διαχειρίζεται από το Stirling Cloud"
 
 [admin.settings.ai.documents]
 description = "Ρυθμίστε το μοντέλο embedding και τις ρυθμίσεις ανάκτησης που χρησιμοποιούνται για απαντήσεις σε ερωτήσεις πάνω σε έγγραφα. Εφαρμόζεται στη μηχανή AI όταν αποθηκευτεί."
@@ -771,11 +773,24 @@ label = "Top K"
 [admin.settings.ai.general]
 connection = "Σύνδεση"
 description = "Συνδέστε το Stirling με τη μηχανή Python AI και επιλέξτε ποιες δυνατότητες AI είναι διαθέσιμες. Οι αλλαγές εφαρμόζονται με επανεκκίνηση."
+restartNote = "Η αλλαγή του URL ή οποιουδήποτε χρονικού ορίου ισχύει μετά από επανεκκίνηση."
 title = "Μηχανή AI"
 
 [admin.settings.ai.general.capabilities]
 description = "Ενεργοποιήστε ή απενεργοποιήστε μεμονωμένες λειτουργίες AI. Οι απενεργοποιημένες λειτουργίες αποκρύπτονται στην εφαρμογή."
 title = "Δυνατότητες"
+
+[admin.settings.ai.general.cloud]
+note = "Τα μοντέλα και τα κλειδιά παρόχων διαχειρίζονται από το Stirling Cloud, επομένως αυτές οι ρυθμίσεις δεν ισχύουν σε αυτήν τη λειτουργία."
+
+[admin.settings.ai.general.cloud.indexing]
+description = "Κάθε εργαλείο AI στέλνει το κείμενο σελίδας που χρειάζεται για να απαντήσει. Αυτό καθορίζει αν το Stirling Cloud μπορεί επίσης να διατηρεί αυτό το κείμενο, ευρετηριασμένο, ώστε μεταγενέστερες ερωτήσεις να μπορούν να αναζητούν σε όλο το έγγραφο."
+help = "Απενεργοποιημένο σημαίνει ότι οι ερωτήσεις για έγγραφα δεν είναι διαθέσιμες. Δεν σταματά την αποστολή κειμένου - μόνο την αποθήκευσή του."
+label = "Να επιτρέπεται στο Stirling Cloud να διατηρεί ευρετηριασμένα έγγραφα"
+
+[admin.settings.ai.general.cloudNote]
+body = "Η συλλογιστική εκτελείται στην υποδομή του Stirling, με χρέωση στον λογαριασμό με τον οποίο είναι συνδεδεμένος αυτός ο διακομιστής. Δεν υπάρχει container για εκτέλεση και κανένα κλειδί παρόχου για αποθήκευση εδώ. Ό,τι διαβάζει το AI επεξεργάζεται από το Stirling Cloud αντί για το δικό σας υλικό."
+title = "Σχετικά με το Stirling Cloud AI"
 
 [admin.settings.ai.general.enabled]
 description = "Κεντρικός διακόπτης. Όταν είναι απενεργοποιημένος, δεν είναι διαθέσιμα εργαλεία AI, agents ή κλήσεις μηχανής."
@@ -809,9 +824,28 @@ label = "PDF comment agent"
 description = "Χρονικό όριο για πιο βαριές λειτουργίες agent, όπως η δημιουργία εγγράφων."
 label = "Χρονικό όριο μακράς διάρκειας (δευτερόλεπτα)"
 
+[admin.settings.ai.general.mode]
+label = "Πού εκτελείται το AI"
+
+[admin.settings.ai.general.mode.cloud]
+description = "Χωρίς container, χωρίς κλειδί παρόχου, χωρίς επιλογή μοντέλου - η εργασία εκτελείται στο Stirling Cloud και χρεώνεται στον λογαριασμό με τον οποίο είναι συνδεδεμένος αυτός ο διακομιστής."
+linkCta = "Συνδέστε αυτόν τον διακομιστή με έναν λογαριασμό Stirling"
+notLinked = "Συνδέστε πρώτα έναν λογαριασμό"
+ownerOnly = "Μόνο ο κάτοχος του οργανισμού μπορεί να συνδέσει αυτόν τον διακομιστή με έναν λογαριασμό Stirling."
+title = "Χρήση Stirling Cloud AI"
+
+[admin.settings.ai.general.mode.off]
+description = "Κανένα εργαλείο AI οπουδήποτε στην εφαρμογή και τίποτα δεν φεύγει από αυτόν τον διακομιστή."
+title = "Απενεργοποιημένο"
+
+[admin.settings.ai.general.mode.self]
+description = "Ένα container που φιλοξενείτε, συνδεδεμένο με πάροχο μοντέλων της επιλογής σας. Το κλειδί σας, η χρέωσή σας, η διαδρομή των δεδομένων σας."
+title = "Εκτέλεση της δικής σας μηχανής"
+
 [admin.settings.ai.general.note]
-body = "Η μηχανή AI εκτελείται ως ξεχωριστή υπηρεσία. Το κοινό μυστικό της"
-body2 = "ορίζεται μέσω μεταβλητής περιβάλλοντος container. Τα Provider API keys μπορούν να εισαχθούν σε αυτές τις σελίδες ή να δοθούν ως μεταβλητές περιβάλλοντος της μηχανής· τα keys που εισάγονται εδώ προωθούνται στη μηχανή όταν αποθηκευτούν."
+docs = "Οδηγός ρύθμισης"
+intro = "Ένα ξεχωριστό container που εκτελείτε δίπλα στο Stirling. Αυτό κάνει τη συλλογιστική· το Stirling εξακολουθεί να κάνει μόνο του κάθε λειτουργία σελίδας. Χρειάζεται το ίδιο"
+outro = "και στα δύο containers και ένα κλειδί παρόχου μοντέλων. Ό,τι διαβάζει το AI αποστέλλεται στον πάροχο που επιλέγετε - ένα Ollama που φιλοξενείτε διατηρεί κάθε σελίδα εσωτερικά."
 title = "Σχετικά με τη μηχανή AI"
 
 [admin.settings.ai.general.streamTimeoutSeconds]
@@ -890,6 +924,67 @@ label = "Smart μοντέλο"
 body = "Οι αλλαγές προωθούνται αυτόματα στη μηχανή AI."
 bodyNoPush = "Οι ρυθμίσεις αποθηκεύτηκαν. Θα εφαρμοστούν την επόμενη φορά που η μηχανή AI θα λάβει τη διαμόρφωσή της."
 title = "Οι ρυθμίσεις AI αποθηκεύτηκαν"
+
+[admin.settings.ai.status]
+capabilities = "Δυνατότητες"
+capabilitiesValue = "{{on}} από {{total}} ενεργά"
+checked = "ελέγχθηκε"
+checking = "Έλεγχος της μηχανής…"
+description = "Αν η μηχανή είναι προσβάσιμη, αν αποδέχεται αυτόν τον διακομιστή και τι εκτελεί."
+fastModel = "Γρήγορο μοντέλο"
+justNow = "μόλις τώρα"
+latency = "Χρόνος απόκρισης"
+linkLabel = "Σύνδεση λογαριασμού"
+minutesAgo = "πριν από {{count}} λεπ."
+recheck = "Έλεγχος ξανά"
+runningOn = "Εκτελείται σε"
+secondsAgo = "πριν από {{count}} δευτ."
+secretLabel = "Κοινό μυστικό"
+smartModel = "Έξυπνο μοντέλο"
+title = "Κατάσταση"
+url = "URL μηχανής"
+
+[admin.settings.ai.status.cloud]
+hostDown = "Εκτός λειτουργίας"
+hostLabel = "Stirling.com"
+hostUp = "Σε λειτουργία"
+name = "Stirling Cloud"
+sharingLabel = "Κοινή χρήση AI"
+sharingOff = "Απενεργοποιημένη"
+sharingOn = "Ενεργοποιημένη"
+
+[admin.settings.ai.status.cloud.degraded]
+body = "Το Stirling Cloud απάντησε αλλά απέρριψε αυτόν τον διακομιστή. Η σύνδεση λογαριασμού ενδέχεται να έχει ανακληθεί."
+title = "Το Stirling Cloud απορρίπτει αυτόν τον διακομιστή"
+
+[admin.settings.ai.status.cloud.down]
+body = "Αυτός ο διακομιστής δεν μπόρεσε να φτάσει στο Stirling Cloud. Ελέγξτε τη σύνδεση λογαριασμού και ότι αυτός ο διακομιστής μπορεί να έχει πρόσβαση στο internet."
+title = "Το Stirling Cloud δεν είναι προσβάσιμο"
+
+[admin.settings.ai.status.cloud.ok]
+body = "Το Stirling Cloud αποδέχθηκε αυτόν τον διακομιστή. Δεν υπάρχει τίποτα για εκτέλεση ή ενημέρωση εδώ."
+title = "Εκτελείται στο Stirling Cloud"
+
+[admin.settings.ai.status.degraded]
+body = "Απάντησε στον έλεγχο υγείας, αλλά απέρριψε ένα πραγματικό αίτημα. Οι δύο πλευρές χρησιμοποιούν διαφορετικά κοινά μυστικά."
+title = "Η μηχανή λειτουργεί, αλλά απορρίπτει αυτόν τον διακομιστή"
+
+[admin.settings.ai.status.down]
+body = "Ελέγξτε το URL, ότι το container της μηχανής εκτελείται και ότι κάνατε επανεκκίνηση μετά την ενεργοποίηση του AI."
+title = "Η μηχανή δεν είναι προσβάσιμη"
+
+[admin.settings.ai.status.off]
+body = "Επιλέξτε παρακάτω πώς εκτελείται το AI, έπειτα αποθηκεύστε και επανεκκινήστε."
+title = "Το AI είναι απενεργοποιημένο"
+
+[admin.settings.ai.status.ok]
+body = "Ο έλεγχος υγείας και ένα αυθεντικοποιημένο αίτημα ολοκληρώθηκαν και τα δύο με επιτυχία."
+title = "Η μηχανή εκτελείται"
+
+[admin.settings.ai.status.secret]
+no = "Απορρίφθηκε"
+unknown = "Άγνωστο"
+yes = "Έγινε αποδεκτό"
 
 [admin.settings.badge]
 clickToUpgrade = "Κάντε κλικ για προβολή λεπτομερειών πλάνου"
@@ -4453,6 +4548,7 @@ openFromComputer = "Άνοιγμα από υπολογιστή"
 openSettings = "Άνοιγμα ρυθμίσεων"
 other = "Άλλα"
 recent = "Πρόσφατα"
+searchFiles = "Αναζήτηση αρχείων"
 uploadFailedBody = "Δεν ήταν δυνατή η προσθήκη των επιλεγμένων αρχείων."
 uploadFailedTitle = "Η μεταφόρτωση απέτυχε"
 viewAll = "Προβολή όλων των {{count}} αρχείων"
@@ -5827,6 +5923,8 @@ label = "Free credits"
 adoptFailed = "Το έγγραφο ξεκλειδώθηκε, αλλά δεν ήταν δυνατό να ανοίξει εδώ. Δοκιμάστε το εργαλείο απευθείας."
 empty = "Δεν υπάρχει τίποτα προς αναφορά."
 handoffUnavailable = "Αυτό το πρόγραμμα περιήγησης δεν θα επιτρέψει στον επεξεργαστή να περάσει το έγγραφο στον επεξεργαστή φόρμας. Ανοίξτε το από τον επεξεργαστή φόρμας αντ' αυτού."
+inSmartFolder = "Αυτό το έγγραφο βρίσκεται σε έναν έξυπνο φάκελο, επομένως το χειρίζεται ο διακομιστής αντί για εδώ."
+inSmartFolderNamed = "Το {{name}} βρίσκεται σε έναν έξυπνο φάκελο, επομένως το χειρίζεται ο διακομιστής αντί για εδώ."
 noDocumentLinked = "Αυτή η αποτυχία δεν συνδέεται με συγκεκριμένο έγγραφο, επομένως δεν υπάρχει κάτι να ανοίξετε εδώ."
 notOnThisDevice = "Αυτό το έγγραφο δεν βρίσκεται σε αυτήν τη συσκευή, επομένως δεν μπορεί να ανοιχτεί εδώ."
 occurrences = "{{count}} φορές"
@@ -5837,6 +5935,7 @@ repairedRerunNotAdopted = "Το επιδιορθωμένο έγγραφο ολο
 repairedRerunUndelivered = "Το έγγραφο επιδιορθώθηκε και ξεκίνησε η επανεκτέλεση της πολιτικής, αλλά το αποτέλεσμά του δεν μπορεί να παραδοθεί εδώ, οπότε αυτή η αποτυχία παραμένει ανοικτή."
 rerunRejected = "Δεν ήταν δυνατή η επανεκτέλεση της πολιτικής αυτήν τη στιγμή. Δοκιμάστε ξανά σε λίγο."
 rerunUndelivered = "Η επανεκτέλεση της πολιτικής ξεκίνησε, αλλά το αποτέλεσμά της δεν μπορεί να παραδοθεί εδώ, οπότε αυτή η αποτυχία παραμένει ανοικτή."
+retryInFolderFailed = "Δεν ήταν δυνατή η εκ νέου εκτέλεση αυτού του εγγράφου αυτήν τη στιγμή."
 retryUnavailable = "Αυτό το έγγραφο δεν μπορεί πλέον να επαναληφθεί από αυτόν τον browser."
 title = "Ειδοποιήσεις"
 unlockedNotRerun = "Το έγγραφο ξεκλειδώθηκε και άνοιξε εδώ, αλλά η πολιτική δεν μπόρεσε να εκτελεστεί ξανά σε αυτό."
@@ -6625,9 +6724,11 @@ title = "Προσαρμογή προγράμματος Team"
 [payment.capacityStage]
 adjustmentNote = "Το Stripe θα εμφανίσει την ακριβή χρέωση, τυχόν αναλογικές χρεώσεις και την επόμενη ημερομηνία χρέωσης πριν επιβεβαιώσετε. Η αποθηκευμένη μέθοδος πληρωμής σας θα χρησιμοποιηθεί αν είναι διαθέσιμη."
 continue = "Συνέχεια στην πληρωμή"
+currencyAtCheckout = "Το Stripe επιβεβαιώνει το τελικό ποσό και το νόμισμα πληρωμής κατά την ολοκλήρωση αγοράς."
 customLabel = "Αριθμός χρηστών"
 dueToday = "Οφειλή σήμερα"
 enterpriseQuote = "Λήψη προσφοράς enterprise"
+estimatedTotal = "Εκτιμώμενο σύνολο"
 lineItem = "Team · {{price}}{{period}} ανά {{block}} χρήστες"
 minimumForCurrentUsers = "Έχετε {{users}} χρήστες, επομένως το πρόγραμμα πρέπει να καλύπτει τουλάχιστον {{minimum}}."
 modalTitle = "Αναβάθμιση σε {{planName}}"
@@ -6865,6 +6966,25 @@ width = "Πλάτος"
 widthHint = "Το πλάτος ενός πλαισίου κειμένου ακολουθεί το περιεχόμενο και την αναδίπλωσή του."
 x = "X"
 y = "Y"
+
+[pdfTextEditor.mobile]
+actions = "Ενέργειες επεξεργαστή"
+addImage = "Εικόνα"
+addText = "Κείμενο"
+cancel = "Ακύρωση"
+delete = "Διαγραφή"
+details = "Λεπτομέρειες"
+document = "Έγγραφο"
+done = "Ολοκλήρωση"
+download = "Αποθήκευση και λήψη"
+find = "Εύρεση"
+lock = "Κλείδωμα"
+openPdf = "Άνοιγμα PDF"
+panelHint = "Η επεξεργασία γίνεται στην προβολή Workspace. Πατήστε το κείμενο στη σελίδα για να το αλλάξετε."
+save = "Αποθήκευση"
+style = "Στυλ"
+tapToPlace = "Πατήστε στη σελίδα όπου πρέπει να μπει το κείμενο"
+unlock = "Ξεκλείδωμα"
 
 [pdfTextEditor.password]
 cancel = "Ακύρωση"
@@ -7574,6 +7694,49 @@ plan = "Πλάνο"
 procurement = "Προμήθειες"
 usage = "Χρήση"
 
+[portal.billing.compare]
+current = "Τρέχον"
+enterpriseData = "Τοπικότητα δεδομένων και SCIM"
+enterpriseName = "Enterprise"
+enterprisePrice = "Βάσει της συμφωνίας σας"
+enterpriseProcessing = "Με μέτρηση ή σταθερή χρέωση"
+enterpriseSignIn = "SAML και έλεγχος"
+enterpriseSupport = "SLA διαθεσιμότητας, βοήθεια ανάπτυξης"
+enterpriseUsers = "Χωρίς όριο"
+enterpriseWhere = "Επιπλέον multi-node και air-gapped"
+exploreEnterprise = "Εξερευνήστε το Enterprise"
+freeData = "Παραμένουν εκεί όπου το εκτελείτε"
+freeName = "Free"
+freePrice = "Χωρίς κάρτα, χωρίς λήξη"
+freeProcessing = "{{allowance}} πιστώσεις τον μήνα"
+freeProcessingUnknown = "Μηνιαίο όριο πιστώσεων"
+freeSignIn = "Email, Google και SSO"
+freeSignInNote = "OAuth2/OIDC"
+freeSupport = "Κοινότητα"
+freeUsers = "Έως {{users}}"
+freeUsersUnknown = "Μικρή ομάδα"
+freeWhere = "Cloud, desktop ή self-hosted"
+lede = "Κάθε πρόγραμμα περιλαμβάνει κάθε εργαλείο PDF και SSO. Αυτό που αλλάζει είναι πόσα άτομα το χρησιμοποιούν, πού εκτελείται και τι υποστήριξη λαμβάνετε."
+open = "Σύγκριση προγραμμάτων"
+rowData = "Τα δεδομένα σας"
+rowHeader = "Δυνατότητα"
+rowProcessing = "Επεξεργασία"
+rowSignIn = "Σύνδεση"
+rowSupport = "Υποστήριξη"
+rowUsers = "Χρήστες"
+rowWhere = "Πού εκτελείται"
+teamData = "Google Drive, η δική σας βάση δεδομένων"
+teamName = "Team"
+teamPrice = "$99/μήνα ανά 100 χρήστες"
+teamProcessing = "{{allowance}} τον μήνα, έπειτα με μέτρηση"
+teamProcessingUnknown = "Μεγαλύτερο όριο, έπειτα με μέτρηση"
+teamSignIn = "Το ίδιο"
+teamSupport = "Email"
+teamUsers = "100 ανά μπλοκ"
+teamWhere = "Cloud, desktop ή self-hosted"
+title = "Σύγκριση προγραμμάτων"
+upgradeTeam = "Αναβάθμιση σε Team"
+
 [portal.billing.cycle]
 credits = "Credits"
 creditsNote = "Χρησιμοποιήθηκαν {{units}} · περιλαμβάνει δωρεάν και προπληρωμένα credits"
@@ -7679,6 +7842,8 @@ payTitle = "Πληρώστε για το έτος σας"
 step = "Βήμα {{current}} από {{total}}"
 
 [portal.billing.prepaid.calc]
+currency = "Νόμισμα προσφοράς"
+currencyLocked = "Χρησιμοποιεί το υπάρχον νόμισμα χρέωσης Stripe."
 rateUnknown = "Θα εμφανίσουμε την ακριβή τιμή στο checkout."
 
 [portal.billing.prepaid.consent]
@@ -8481,6 +8646,10 @@ title = "Το αρχείο δεν ήταν δυνατό να επισκευασ�
 [portal.failures.kind.inputWrongType]
 description = "Το αρχείο σας δεν είναι σε μορφή που μπορεί να ανοίξει αυτό το βήμα, επομένως η εκτέλεση δεν μπόρεσε να το διαβάσει."
 title = "Λάθος τύπος αρχείου"
+
+[portal.failures.kind.sourceUnreadable]
+description = "Δεν ήταν δυνατή η ανάγνωση του έξυπνου φακέλου σας, επομένως τίποτα σε αυτόν δεν υποβλήθηκε σε επεξεργασία."
+title = "Δεν ήταν δυνατή η ανάγνωση του φακέλου"
 
 [portal.failures.kind.stepCannotRenderPage]
 description = "Δεν ήταν δυνατή η σχεδίαση μιας σελίδας στο αρχείο σας, επομένως η εκτέλεση δεν μπόρεσε να ολοκληρωθεί."
@@ -12235,6 +12404,7 @@ goBack = "Επιστροφή"
 pdfTools = "Εργαλεία PDF"
 placeholder = "Επιλέξτε ένα εργαλείο για να ξεκινήσετε"
 premiumFeature = "Premium λειτουργία:"
+searchTools = "Αναζήτηση εργαλείων"
 toolsHeader = "Εργαλεία"
 viewAllTools = "Προβολή όλων των εργαλείων"
 
@@ -12399,13 +12569,10 @@ visits = "Επισκέψεις"
 
 [users]
 lastActive = "Τελευταία ενεργός"
-learnMore = "Μάθετε περισσότερα για ρόλους και πρόσβαση."
 locked = "Κλειδωμένο"
 ownerSetupRequired = "Ο κάτοχος του οργανισμού δεν έχει ολοκληρώσει την πρώτη σύνδεση. Ολοκληρώστε τη ρύθμιση ή ζητήστε από τον χειριστή του server να ανακτήσει την ιδιοκτησία πριν μεταβιβάσετε την ιδιοκτησία."
 roleFor = "Ρόλος για {{name}}"
 rowActions = "Ενέργειες για {{name}}"
-showAll = "Εμφάνιση όλων {{count}}"
-showLess = "Εμφάνιση λιγότερων"
 subtitle2 = "Οι άνθρωποί σας, οι ομάδες και τα επίπεδα πρόσβασης."
 suspended = "Σε αναστολή"
 teamActions = "Ενέργειες ομάδας"
@@ -12414,6 +12581,7 @@ you = "(εσείς)"
 
 [users.action]
 cancelInvite = "Ακύρωση πρόσκλησης"
+createFromDefault = "Δημιουργία ομάδας από το Default"
 deleteTeam = "Διαγραφή ομάδας"
 disableMfa = "Επαναφορά MFA"
 move = "Μετακίνηση σε ομάδα"
@@ -12451,6 +12619,7 @@ email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
+team = "Ομάδα"
 
 [users.confirm]
 cancelInviteBody = "Να ακυρωθεί η πρόσκληση προς {{email}}; Δεν θα μπορούν να συμμετάσχουν με τον τρέχοντα σύνδεσμο."
@@ -12469,15 +12638,12 @@ transferOwnershipTitle = "Μεταβίβαση ιδιοκτησίας οργαν
 description = "Προσκαλέστε την ομάδα σας για να αρχίσετε να συνεργάζεστε."
 title = "Δεν υπάρχουν ακόμη μέλη"
 
+[users.filters]
+noMatches = "Κανείς δεν ταιριάζει με αυτά τα φίλτρα."
+search = "Αναζήτηση ατόμων"
+
 [users.group]
 addToTeam = "Προσθήκη σε ομάδα"
-administrators = "{{count}} διαχειριστές"
-guestCount = "{{count}} επισκέπτης"
-guests = "Επισκέπτες"
-ledBy = "με επικεφαλής {{owner}}"
-org = "Οργανισμός"
-team = "Ομάδα {{name}}"
-teamMeta = "{{count}} άτομα"
 
 [users.invite]
 access = "Πρόσβαση"
@@ -12542,6 +12708,9 @@ title = "Νέα ομάδα"
 
 [users.renameTeam]
 apply = "Μετονομασία"
+defaultApply = "Δημιουργία και μετακίνηση"
+defaultDescription = "Το Default θα παραμείνει διαθέσιμο για νέους χρήστες. Όλοι όσοι βρίσκονται αυτήν τη στιγμή στο Default θα μετακινηθούν στη νέα ομάδα."
+defaultTitle = "Δημιουργία ομάδας από το Default"
 name = "Όνομα ομάδας"
 title = "Μετονομασία ομάδας"
 
@@ -12566,6 +12735,15 @@ guest = "Επισκέπτης"
 member = "Μέλος"
 orgOwner = "Κάτοχος οργανισμού"
 teamOwner = "Κάτοχος ομάδας"
+
+[users.seats]
+full = "Κάθε αδειοδοτημένη θέση χρησιμοποιείται. Ελευθερώστε μία ή αυξήστε τον αριθμό θέσεων, για να προσθέσετε κάποιον άλλο."
+update = "Ενημέρωση θέσεων"
+
+[users.tabs]
+all = "Όλοι"
+label = "Φίλτρο ανά ομάδα"
+unassigned = "Χωρίς ομάδα"
 
 [users.team]
 grantProcessor = "Παραχώρηση Processor στην ομάδα"
@@ -13216,232 +13394,14 @@ submitSignature = "Υποβολή υπογραφής"
 title = "Χώρος εργασίας"
 
 [workspace.people]
-active = "Ενεργός"
-activeSession = "Ενεργή συνεδρία"
-addMembers = "Προσθήκη μελών"
-admin = "Διαχειριστής"
-confirmDelete = "Είστε βέβαιοι ότι θέλετε να διαγράψετε αυτόν τον χρήστη; Αυτή η ενέργεια δεν μπορεί να αναιρεθεί."
-confirmUnlock = "Είστε βέβαιοι ότι θέλετε να ξεκλειδώσετε αυτόν τον λογαριασμό χρήστη;"
-deleteUser = "Διαγραφή χρήστη"
-deleteUserError = "Αποτυχία διαγραφής χρήστη"
-deleteUserSuccess = "Ο χρήστης διαγράφηκε με επιτυχία"
 description = "Διαχείριση μελών χώρου εργασίας και των δικαιωμάτων τους"
-disable = "Απενεργοποίηση"
-disabled = "Απενεργοποιημένος"
-editRole = "Επεξεργασία ρόλου"
-enable = "Ενεργοποίηση"
-loading = "Φόρτωση μελών..."
-locked = "κλειδωμένο"
-lockedBadge = "Κλειδωμένο"
-loginRequired = "Ενεργοποιήστε πρώτα τη λειτουργία σύνδεσης"
-memberActions = "Ενέργειες μέλους"
-noMembersFound = "Δεν βρέθηκαν μέλη"
-ownerLocked = "Μεταβιβάστε την ιδιοκτησία του οργανισμού στις Ρυθμίσεις → Χώρος εργασίας → Χρήστες πριν αλλάξετε τον ρόλο ή τον λογαριασμό του κατόχου."
-role = "Ρόλος"
-searchMembers = "Αναζήτηση μελών..."
-team = "Ομάδα"
-unlockAccount = "Ξεκλείδωμα λογαριασμού"
-unlockUserError = "Αποτυχία ξεκλειδώματος λογαριασμού χρήστη"
-unlockUserSuccess = "Ο λογαριασμός χρήστη ξεκλειδώθηκε με επιτυχία"
-user = "Χρήστης"
-userInfo = "Πληροφορίες χρήστη"
-
-[workspace.people.actions]
-upgrade = "Αναβάθμιση"
-
-[workspace.people.addMember]
-authType = "Τύπος ελέγχου ταυτότητας"
-error = "Αποτυχία δημιουργίας χρήστη"
-forceMFA = "Επιβολή ρύθμισης MFA στην επόμενη σύνδεση"
-forcePasswordChange = "Εξαναγκασμός αλλαγής κωδικού στην πρώτη σύνδεση"
-password = "Κωδικός πρόσβασης"
-passwordPlaceholder = "Εισαγάγετε κωδικό πρόσβασης"
-passwordRequired = "Απαιτείται κωδικός πρόσβασης"
-role = "Ρόλος"
-submit = "Προσθήκη μέλους"
-success = "Ο χρήστης δημιουργήθηκε με επιτυχία"
-team = "Ομάδα (Προαιρετικό)"
-teamPlaceholder = "Επιλέξτε ομάδα"
-username = "Όνομα χρήστη (Email)"
-usernamePlaceholder = "user@example.com"
-usernameRequired = "Απαιτούνται όνομα χρήστη και κωδικός πρόσβασης"
-
-[workspace.people.authType]
-oauth = "OAuth2"
-password = "Κωδικός πρόσβασης"
-saml = "SAML2"
-ssoDescription = "Ο χρήστης θα πραγματοποιεί έλεγχο ταυτότητας μέσω παρόχου SSO"
-
-[workspace.people.changePassword]
-action = "Αλλαγή κωδικού πρόσβασης"
-confirmPassword = "Επιβεβαίωση κωδικού πρόσβασης"
-confirmPlaceholder = "Εισαγάγετε ξανά τον νέο κωδικό πρόσβασης"
-copiedToClipboard = "Ο κωδικός πρόσβασης αντιγράφηκε στο πρόχειρο"
-copyFailed = "Αποτυχία αντιγραφής κωδικού πρόσβασης"
-copyTooltip = "Αντιγραφή στο πρόχειρο"
-emailUnavailable = "Το email αυτού του χρήστη δεν είναι έγκυρη διεύθυνση email. Οι ειδοποιήσεις είναι απενεργοποιημένες."
-error = "Αποτυχία ενημέρωσης κωδικού πρόσβασης"
-forcePasswordChange = "Υποχρεωτική αλλαγή κωδικού πρόσβασης κατά την επόμενη σύνδεση"
-generatedPreview = "Δημιουργημένος κωδικός πρόσβασης:"
-generateRandom = "Δημιουργία ασφαλούς κωδικού πρόσβασης"
-includePassword = "Να συμπεριληφθεί ο νέος κωδικός πρόσβασης στο email"
-newPassword = "Νέος κωδικός πρόσβασης"
-notifyOnly = "Θα σταλεί email χωρίς τον κωδικό πρόσβασης, ενημερώνοντας τον χρήστη ότι ένας διαχειριστής τον άλλαξε."
-passwordMismatch = "Οι κωδικοί πρόσβασης δεν ταιριάζουν"
-passwordRequired = "Παρακαλούμε εισαγάγετε νέο κωδικό πρόσβασης"
-placeholder = "Εισαγάγετε νέο κωδικό πρόσβασης"
-sendEmail = "Αποστολή email στον χρήστη για αυτήν την αλλαγή"
-smtpDisabled = "Οι ειδοποιήσεις μέσω email απαιτούν την ενεργοποίηση του SMTP στις ρυθμίσεις."
-submit = "Ενημέρωση κωδικού πρόσβασης"
-subtitle = "Ενημέρωση κωδικού πρόσβασης για"
-success = "Ο κωδικός πρόσβασης ενημερώθηκε με επιτυχία"
-title = "Αλλαγή κωδικού πρόσβασης"
-
-[workspace.people.editMember]
-editing = "Editing: <0>{{username}}</0>"
-error = "Αποτυχία ενημέρωσης χρήστη"
-role = "Ρόλος"
-submit = "Update User"
-success = "Ο χρήστης ενημερώθηκε με επιτυχία"
-team = "Ομάδα (Προαιρετικό)"
-teamPlaceholder = "Επιλέξτε ομάδα"
-title = "Edit User"
-
-[workspace.people.emailInvite]
-allFailed = "Αποτυχία πρόσκλησης χρηστών"
-emails = "Διευθύνσεις email"
-emailsPlaceholder = "user1@example.com, user2@example.com"
-emailsRequired = "Απαιτείται τουλάχιστον μία διεύθυνση email"
-error = "Αποτυχία αποστολής προσκλήσεων"
-partialFailure = "Ορισμένες προσκλήσεις απέτυχαν"
-submit = "Αποστολή προσκλήσεων"
-success = "στάλθηκαν προσκλήσεις με επιτυχία"
-
-[workspace.people.inviteLink]
-copied = "Ο σύνδεσμος αντιγράφηκε στο πρόχειρο"
-email = "Διεύθυνση email"
-emailDescription = "Προαιρετικό - αφήστε κενό για γενικό σύνδεσμο πρόσκλησης που μπορεί να χρησιμοποιήσει οποιοσδήποτε"
-emailPlaceholder = "user@example.com (προαιρετικό)"
-emailSent = "Ο σύνδεσμος πρόσκλησης δημιουργήθηκε και εστάλη μέσω email"
-error = "Αποτυχία δημιουργίας συνδέσμου πρόσκλησης"
-expiryHours = "Ώρες λήξης"
-generate = "Δημιουργία συνδέσμου"
-generated = "Ο σύνδεσμος πρόσκλησης δημιουργήθηκε"
-sendEmail = "Αποστολή συνδέσμου πρόσκλησης μέσω email"
-sendEmailDescription = "Αν ενεργοποιηθεί, ο σύνδεσμος πρόσκλησης θα σταλεί στη συγκεκριμένη διεύθυνση email"
-submit = "Δημιουργία συνδέσμου πρόσκλησης"
-
-[workspace.people.inviteMembers]
-label = "Πρόσκληση μελών"
-subtitle = "Πληκτρολογήστε ή επικολλήστε emails παρακάτω, χωρισμένα με κόμμα. Ο χώρος εργασίας σας θα χρεώνεται ανά μέλος."
-
-[workspace.people.inviteMode]
-email = "Email"
-emailDisabled = "Οι προσκλήσεις μέσω email απαιτούν ρύθμιση SMTP και mail.enableInvites=true στις ρυθμίσεις"
-link = "Σύνδεσμος"
-username = "Όνομα χρήστη"
 
 [workspace.people.license]
-currentUsage = "Αυτή τη στιγμή χρησιμοποιείτε {{current}} από {{max}} άδειες χρήστη"
-fromLicense = "από την άδεια"
-grandfathered = "Με μεταβατικό καθεστώς"
-grandfatheredShort = "{{count}} με μεταβατικό καθεστώς"
-slotsAvailable_one = "{{count}} user slot available"
-slotsAvailable_other = "{{count}} user slots available"
-slotsAvailable_zero = "No slots available"
 users_one = "user"
 users_other = "users"
 
-[workspace.people.mfa]
-adminDisableError = "Αποτυχία απενεργοποίησης MFA για τον χρήστη"
-adminDisableSuccess = "Το MFA απενεργοποιήθηκε με επιτυχία για τον χρήστη"
-disableByAdmin = "Απενεργοποίηση MFA"
-
-[workspace.people.roleDescriptions]
-admin = "Μπορεί να διαχειρίζεται ρυθμίσεις και να προσκαλεί μέλη, με πλήρη δικαιώματα διαχείρισης."
-currentRole = "Τρέχων ανατεθειμένος ρόλος."
-user = "Can view and edit shared files, but cannot manage workspace settings or users."
-
-[workspace.people.toggleEnabled]
-error = "Αποτυχία ενημέρωσης κατάστασης χρήστη"
-success = "Η κατάσταση του χρήστη ενημερώθηκε με επιτυχία"
-
 [workspace.teams]
-addMember = "Προσθήκη μέλους"
-backToTeams = "Πίσω στις ομάδες"
-cannotAddToInternal = "Δεν είναι δυνατή η προσθήκη μελών στην ομάδα Internal"
-cannotDeleteInternal = "Δεν είναι δυνατή η διαγραφή της ομάδας Internal"
-cannotRenameInternal = "Δεν είναι δυνατή η μετονομασία της ομάδας Internal"
-confirmDelete = "Είστε βέβαιοι ότι θέλετε να διαγράψετε αυτήν την ομάδα; Η ομάδα πρέπει να είναι άδεια για να διαγραφεί."
-confirmRemove = "Κατάργηση χρήστη από αυτήν την ομάδα;"
-createNewTeam = "Δημιουργία νέας ομάδας"
-deleteTeamLabel = "Διαγραφή ομάδας"
 description = "Διαχείριση ομάδων και οργάνωση μελών του χώρου εργασίας"
-loadError = "Αποτυχία φόρτωσης στοιχείων ομάδας"
-loading = "Φόρτωση ομάδων..."
-loadingDetails = "Φόρτωση λεπτομερειών ομάδας..."
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
-noMembers = "Δεν υπάρχουν μέλη σε αυτήν την ομάδα"
-noTeamsFound = "Δεν βρέθηκαν ομάδες"
-removeMember = "Κατάργηση από την ομάδα"
-removeMemberError = "Αποτυχία κατάργησης χρήστη από την ομάδα"
-removeMemberSuccess = "Ο χρήστης αφαιρέθηκε από την ομάδα"
-renameTeamLabel = "Μετονομασία ομάδας"
-system = "Σύστημα"
-teamActions = "Ενέργειες ομάδας"
-teamName = "Όνομα ομάδας"
-teamNotFound = "Η ομάδα δεν βρέθηκε"
-totalMembers = "Σύνολο μελών"
-viewTeam = "Προβολή ομάδας"
-
-[workspace.teams.addMemberToTeam]
-addingTo = "Προσθήκη σε"
-currentlyIn = "βρίσκεται τώρα στην"
-error = "Αποτυχία προσθήκης μέλους στην ομάδα"
-selectUser = "Επιλογή χρήστη"
-selectUserPlaceholder = "Επιλέξτε χρήστη"
-selectUserRequired = "Παρακαλούμε επιλέξτε χρήστη"
-submit = "Προσθήκη μέλους"
-success = "Το μέλος προστέθηκε στην ομάδα με επιτυχία"
-title = "Προσθήκη μέλους στην ομάδα"
-userRequired = "Παρακαλούμε επιλέξτε χρήστη"
-willBeMoved = "Σημείωση: Αυτός ο χρήστης θα μετακινηθεί από την τρέχουσα ομάδα του σε αυτή την ομάδα."
-
-[workspace.teams.changeTeam]
-changing = "Μετακίνηση"
-error = "Αποτυχία αλλαγής ομάδας"
-label = "Αλλαγή ομάδας"
-selectTeam = "Επιλογή ομάδας"
-selectTeamPlaceholder = "Επιλέξτε ομάδα"
-selectTeamRequired = "Παρακαλούμε επιλέξτε ομάδα"
-submit = "Αλλαγή ομάδας"
-success = "Η ομάδα άλλαξε με επιτυχία"
-title = "Αλλαγή ομάδας"
-
-[workspace.teams.createTeam]
-error = "Αποτυχία δημιουργίας ομάδας"
-nameRequired = "Απαιτείται όνομα ομάδας"
-submit = "Δημιουργία ομάδας"
-success = "Η ομάδα δημιουργήθηκε με επιτυχία"
-teamName = "Όνομα ομάδας"
-teamNamePlaceholder = "Εισαγάγετε όνομα ομάδας"
-title = "Δημιουργία νέας ομάδας"
-
-[workspace.teams.deleteTeam]
-error = "Αποτυχία διαγραφής ομάδας. Βεβαιωθείτε ότι η ομάδα είναι άδεια."
-success = "Η ομάδα διαγράφηκε με επιτυχία"
-
-[workspace.teams.renameTeam]
-error = "Αποτυχία μετονομασίας ομάδας"
-nameRequired = "Απαιτείται όνομα ομάδας"
-newTeamName = "Νέο όνομα ομάδας"
-newTeamNamePlaceholder = "Εισαγάγετε νέο όνομα ομάδας"
-renaming = "Μετονομασία:"
-submit = "Μετονομασία ομάδας"
-success = "Η ομάδα μετονομάστηκε με επιτυχία"
-title = "Μετονομασία ομάδας"
 
 [zipWarning]
 cancel = "Άκυρο"

@@ -59,6 +59,7 @@
   .library-file-picker .files-page-list-row {
     grid-template-columns: 0 minmax(0, 1fr) 2.5rem;
     min-width: 0;
+    padding-left: 0.25rem;
   }
   .library-file-picker
     .files-page-list--adaptive:has(

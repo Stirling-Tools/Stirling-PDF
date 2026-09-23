@@ -34,7 +34,6 @@ import {
 import { SidebarHeader } from "@app/components/shared/SidebarHeader";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
-import type { WatchedFolderViewData } from "@app/types/watchedFolders";
 import { FileItem } from "@app/components/shared/FileSidebarFileItem";
 import { useLabelName } from "@app/data/labelDisplay";
 import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
@@ -60,32 +59,19 @@ import { useOpenInNewWindow } from "@app/extensions/openInNewWindow";
 import { openSuperSearch } from "@app/components/shared/superSearch/openSuperSearch";
 import { alert } from "@app/components/toast";
 import { useBulkAddProgress } from "@app/services/bulkAddProgress";
-import { useFolderMembership } from "@app/hooks/useFolderMembership";
 import { useIsScrolled } from "@app/hooks/useIsScrolled";
-import { useAllWatchedFolders } from "@app/hooks/useAllWatchedFolders";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
-import {
-  setWatchedFolderDraggedFileIds,
-  clearWatchedFolderDraggedFileIds,
-} from "@app/components/watchedFolders/watchedFolderDragState";
-import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
 import { FolderTreeSidebar } from "@app/components/filesPage/FolderTreeSidebar";
 import { useFilesPage } from "@app/contexts/FilesPageContext";
 import type { FolderId, FolderRecord } from "@app/types/folder";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useToolEligibleFileIds } from "@app/contexts/ToolFileEligibilityContext";
 import "@app/components/shared/FileSidebar.css";
 
 // Shared with the processor sidebar via tokens, so the two cannot drift.
 const SIDEBAR_WIDTH = "var(--sidebar-w)";
 
-// Inlined to avoid a circular import with WatchedFoldersRegistration.
-const WATCHED_FOLDER_VIEW_ID = "watchedFolder";
-const WATCHED_FOLDER_WORKBENCH_ID = "custom:watchedFolder";
-
-// Stable empty props for rows without folders/policies, so the memoized
+// Stable empty props for rows without policies, so the memoized
 // FileItem isn't re-rendered by a fresh `?? []` identity on every list render.
-const NO_FOLDERS: never[] = [];
 const NO_POLICIES: never[] = [];
 
 /** Show pre-dispatch progress only for large drops; small imports finish before it paints. */
@@ -198,52 +184,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { state } = useFileState();
     const { actions: fileActions } = useFileActions();
     const { actions: navActions } = useNavigationActions();
-    const { setCustomWorkbenchViewData, customWorkbenchViews } =
-      useToolWorkflow();
     const { workbench: currentWorkbench, selectedTool } = useNavigationState();
-    const isWatchedFoldersActive =
-      currentWorkbench === WATCHED_FOLDER_WORKBENCH_ID;
-    const watchedFolderView = customWorkbenchViews.find(
-      (v) => v.id === WATCHED_FOLDER_VIEW_ID,
-    );
-    const activeWatchedFolderId =
-      (watchedFolderView?.data as WatchedFolderViewData | undefined)
-        ?.folderId ?? null;
-    // In Watched Folders, selection means membership of the open folder, not the workspace.
-    const folderMembership = useFolderMembership();
-    const allFolders = useAllWatchedFolders();
     const policyFileBadges = usePolicyFileBadges();
-    const folderById = useMemo(
-      () => new Map(allFolders.map((f) => [f.id, f])),
-      [allFolders],
-    );
-
-    const openWatchedFolder = useCallback(
-      (folderId: string) => {
-        setCustomWorkbenchViewData(WATCHED_FOLDER_VIEW_ID, { folderId });
-        navActions.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID);
-      },
-      [setCustomWorkbenchViewData, navActions],
-    );
-
-    // In Watched Folders view, sidebar files can be dragged onto a folder card / drop
-    // zone (which read the watchedFolderFileId dataTransfer key).
-    const handleWatchedFolderDragStart = useCallback(
-      (e: React.DragEvent, fileId: FileId) => {
-        e.dataTransfer.setData("watchedFolderFileId", String(fileId));
-        e.dataTransfer.effectAllowed = "copy";
-        // Publish the id so drop targets can detect "already in folder" during
-        // dragover (dataTransfer values are unreadable then). Clear on dragend
-        // regardless of whether the drag ended in a drop or was cancelled.
-        setWatchedFolderDraggedFileIds([String(fileId)]);
-        const clear = () => {
-          clearWatchedFolderDraggedFileIds();
-          document.removeEventListener("dragend", clear);
-        };
-        document.addEventListener("dragend", clear);
-      },
-      [],
-    );
     const isMultiTool =
       currentWorkbench === "pageEditor" && selectedTool === "multiTool";
     const { requestNavigation } = useNavigationGuard();
@@ -600,19 +542,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           return;
         }
 
-        // In the Watched Folders view a click sends the file into the open folder
-        // (mirrors how a click toggles a file into the active workbench elsewhere).
-        // On the folder list (no folder open) it's a no-op so browsing isn't disrupted.
-        if (isWatchedFoldersActive) {
-          if (activeWatchedFolderId) {
-            setCustomWorkbenchViewData(WATCHED_FOLDER_VIEW_ID, {
-              folderId: activeWatchedFolderId,
-              pendingFileId: stub.id,
-            });
-          }
-          return;
-        }
-
         const workbenchFileId = state.files.ids.find(
           (id) => (id as string) === (stub.id as string),
         );
@@ -664,9 +593,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         activeFileId,
         requestNavigation,
         isMultiTool,
-        isWatchedFoldersActive,
-        activeWatchedFolderId,
-        setCustomWorkbenchViewData,
       ],
     );
 
@@ -833,27 +759,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const renderFileRow = (stub: StirlingFileStub) => {
       const isInWorkbench = workbenchIds.has(stub.id as string);
       const workbenchFileId = isInWorkbench ? (stub.id as FileId) : undefined;
-      const isSelected = isWatchedFoldersActive
-        ? activeWatchedFolderId != null &&
-          (folderMembership
-            .get(stub.id as string)
-            ?.includes(activeWatchedFolderId) ??
-            false)
-        : isInWorkbench;
-      const showFolderDots =
-        WATCHED_FOLDERS_ENABLED &&
-        isWatchedFoldersActive &&
-        activeWatchedFolderId === null;
-      const memberFolders = showFolderDots
-        ? (folderMembership.get(stub.id as string) ?? [])
-            .map((fid) => folderById.get(fid))
-            .filter((f): f is NonNullable<typeof f> => !!f)
-            .map((f) => ({
-              id: f.id,
-              name: f.name,
-              accentColor: f.accentColor,
-            }))
-        : NO_FOLDERS;
       const isViewedInViewer = !!(
         viewedWorkbenchId && viewedWorkbenchId === (stub.id as string)
       );
@@ -877,7 +782,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         <FileItem
           isToolSkipped={
             isInWorkbench &&
-            !isWatchedFoldersActive &&
             eligibleFileIds !== null &&
             !eligibleFileIds.has(stub.id)
           }
@@ -886,31 +790,25 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           name={stub.name}
           size={stub.size}
           lastModified={stub.lastModified}
-          isSelected={isSelected}
+          isSelected={isInWorkbench}
           isActive={isActive}
           isViewedInViewer={isViewedInViewer}
           thumbnailUrl={thumbnailUrl}
           onClick={handleFileClick}
           onEyeClick={handleEyeClick}
           dataUnavailable={dataUnavailable}
-          draggable={isWatchedFoldersActive}
-          onDragStart={handleWatchedFolderDragStart}
-          folders={memberFolders}
-          onFolderClick={openWatchedFolder}
           policies={policyFileBadges.get(stub.id as string) ?? NO_POLICIES}
-          onDelete={isWatchedFoldersActive ? undefined : handleSidebarDelete}
+          onDelete={handleSidebarDelete}
           onDownload={handleDownload}
-          onRename={isWatchedFoldersActive ? undefined : handleRename}
-          onDuplicate={isWatchedFoldersActive ? undefined : handleDuplicate}
+          onRename={handleRename}
+          onDuplicate={handleDuplicate}
           onOpenInNewWindow={
             canOpenInNewWindow(stub) ? handleOpenInNewWindow : undefined
           }
-          onSaveToCloud={isWatchedFoldersActive ? undefined : handleSaveToCloud}
+          onSaveToCloud={handleSaveToCloud}
           canSaveToCloud={storageEnabled && fileOrigin !== "shared-with-me"}
           isUploadedToCloud={fileOrigin === "cloud"}
-          onVersionHistory={
-            isWatchedFoldersActive ? undefined : handleVersionHistory
-          }
+          onVersionHistory={handleVersionHistory}
           hasVersionHistory={(stub.versionNumber ?? 1) > 1}
           primaryLabel={
             classificationEnabled && stub.classificationLabels?.[0]

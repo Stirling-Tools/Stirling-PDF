@@ -729,6 +729,8 @@ permissionNotice = "Putanja do tessdata nije zapisiva. Preuzimanja će se otvori
 
 [admin.settings.ai]
 description = "Povežite Stirling s Python AI mehanizmom, odaberite njegove modele i postavite zaštitna pravila pod kojima radi."
+managedByCloud = "U ovom načinu rada upravlja Stirling Cloud."
+managedByCloudShort = "Upravlja Stirling Cloud"
 
 [admin.settings.ai.documents]
 description = "Konfigurirajte model ugradnje i postavke dohvaćanja koje se koriste za odgovaranje na pitanja o dokumentima. Primjenjuje se na AI engine nakon spremanja."
@@ -771,11 +773,24 @@ label = "Top K"
 [admin.settings.ai.general]
 connection = "Veza"
 description = "Povežite Stirling s Python AI engineom i odaberite koje su AI mogućnosti dostupne. Promjene se primjenjuju pri ponovnom pokretanju."
+restartNote = "Promjena URL-a ili bilo kojeg vremenskog ograničenja stupa na snagu nakon ponovnog pokretanja."
 title = "AI engine"
 
 [admin.settings.ai.general.capabilities]
 description = "Uključite ili isključite pojedinačne AI značajke. Onemogućene značajke skrivene su u aplikaciji."
 title = "Mogućnosti"
+
+[admin.settings.ai.general.cloud]
+note = "Modelima i ključevima pružatelja upravlja Stirling Cloud, pa se te postavke ne primjenjuju u ovom načinu rada."
+
+[admin.settings.ai.general.cloud.indexing]
+description = "Svaki AI alat šalje tekst stranice koji mu je potreban za odgovor. Time se određuje smije li Stirling Cloud također zadržati taj tekst, indeksiran, kako bi kasnija pitanja mogla pretraživati dokument."
+help = "Isključeno znači da pitanja o dokumentu nisu dostupna. To ne zaustavlja slanje teksta - samo pohranu."
+label = "Dopusti da Stirling Cloud zadrži indeksirane dokumente"
+
+[admin.settings.ai.general.cloudNote]
+body = "Zaključivanje se izvodi na Stirlingovoj infrastrukturi i naplaćuje se računu s kojim je ovaj poslužitelj povezan. Ovdje nema kontejnera za pokretanje ni ključa pružatelja za čuvanje. Sve što AI čita obrađuje Stirling Cloud, a ne vaš vlastiti hardver."
+title = "O Stirling Cloud AI"
 
 [admin.settings.ai.general.enabled]
 description = "Glavni prekidač. Kada je isključen, nisu dostupni AI alati, agenti ni pozivi enginea."
@@ -809,9 +824,28 @@ label = "Agent za PDF komentare"
 description = "Istek vremena za zahtjevnije operacije agenata, poput generiranja dokumenata."
 label = "Istek vremena za dugotrajne zadatke (sekunde)"
 
+[admin.settings.ai.general.mode]
+label = "Gdje se AI izvodi"
+
+[admin.settings.ai.general.mode.cloud]
+description = "Nema kontejnera, nema ključa pružatelja, nema odabira modela - posao se izvodi na Stirling Cloud i naplaćuje se računu s kojim je ovaj poslužitelj povezan."
+linkCta = "Poveži ovaj poslužitelj sa Stirling računom"
+notLinked = "Najprije povežite račun"
+ownerOnly = "Samo vlasnik organizacije može povezati ovaj poslužitelj sa Stirling računom."
+title = "Koristi Stirling Cloud AI"
+
+[admin.settings.ai.general.mode.off]
+description = "Nema AI alata nigdje u aplikaciji i ništa ne napušta ovaj poslužitelj."
+title = "Isključeno"
+
+[admin.settings.ai.general.mode.self]
+description = "Kontejner koji hostate, usmjeren na pružatelja modela po vašem izboru. Vaš ključ, vaš račun, vaš put podataka."
+title = "Pokrenite vlastiti mehanizam"
+
 [admin.settings.ai.general.note]
-body = "AI engine radi kao zasebna usluga. Njegova dijeljena tajna"
-body2 = "postavlja se putem varijable okruženja spremnika. API ključevi pružatelja mogu se unijeti na ovim stranicama ili dostaviti kao varijable okruženja enginea; ovdje uneseni ključevi šalju se engineu nakon spremanja."
+docs = "Vodič za postavljanje"
+intro = "Zaseban kontejner koji pokrećete uz Stirling. On obavlja zaključivanje; Stirling i dalje sam obavlja svaku operaciju sa stranicama. Potreban mu je isti"
+outro = "na oba kontejnera i ključ pružatelja modela. Sve što AI čita šalje se pružatelju kojeg odaberete - Ollama koju hostate zadržava svaku stranicu interno."
 title = "O AI engineu"
 
 [admin.settings.ai.general.streamTimeoutSeconds]
@@ -890,6 +924,67 @@ label = "Pametni model"
 body = "Promjene se automatski šalju AI engineu."
 bodyNoPush = "Postavke su spremljene. Primijenit će se sljedeći put kada AI engine preuzme svoju konfiguraciju."
 title = "AI postavke spremljene"
+
+[admin.settings.ai.status]
+capabilities = "Mogućnosti"
+capabilitiesValue = "{{on}} od {{total}} uključeno"
+checked = "provjereno"
+checking = "Provjera mehanizma…"
+description = "Je li mehanizam dostupan, prihvaća li ovaj poslužitelj i što izvodi."
+fastModel = "Brzi model"
+justNow = "upravo sada"
+latency = "Vrijeme odziva"
+linkLabel = "Veza računa"
+minutesAgo = "prije {{count}} min"
+recheck = "Provjeri ponovno"
+runningOn = "Izvodi se na"
+secondsAgo = "prije {{count}} s"
+secretLabel = "Dijeljena tajna"
+smartModel = "Pametni model"
+title = "Status"
+url = "URL mehanizma"
+
+[admin.settings.ai.status.cloud]
+hostDown = "Nedostupno"
+hostLabel = "Stirling.com"
+hostUp = "Dostupno"
+name = "Stirling Cloud"
+sharingLabel = "AI dijeljenje"
+sharingOff = "Onemogućeno"
+sharingOn = "Omogućeno"
+
+[admin.settings.ai.status.cloud.degraded]
+body = "Stirling Cloud je odgovorio, ali je odbio ovaj poslužitelj. Veza računa možda je opozvana."
+title = "Stirling Cloud odbija ovaj poslužitelj"
+
+[admin.settings.ai.status.cloud.down]
+body = "Ovaj poslužitelj nije mogao pristupiti Stirling Cloud. Provjerite vezu računa i može li ovaj poslužitelj pristupiti internetu."
+title = "Stirling Cloud nije dostupan"
+
+[admin.settings.ai.status.cloud.ok]
+body = "Stirling Cloud je prihvatio ovaj poslužitelj. Ovdje nema ničega za pokretanje ili zakrpanje."
+title = "Izvodi se na Stirling Cloud"
+
+[admin.settings.ai.status.degraded]
+body = "Odgovorio je na provjeru stanja, ali je odbio stvarni zahtjev. Dvije strane koriste različite dijeljene tajne."
+title = "Mehanizam radi, ali odbija ovaj poslužitelj"
+
+[admin.settings.ai.status.down]
+body = "Provjerite URL, radi li kontejner mehanizma i jeste li ponovno pokrenuli nakon omogućavanja AI."
+title = "Mehanizam nije dostupan"
+
+[admin.settings.ai.status.off]
+body = "Odaberite u nastavku kako se AI izvodi, zatim spremite i ponovno pokrenite."
+title = "AI je isključen"
+
+[admin.settings.ai.status.ok]
+body = "Provjera stanja i autentificirani zahtjev uspješno su dovršeni."
+title = "Mehanizam radi"
+
+[admin.settings.ai.status.secret]
+no = "Odbijeno"
+unknown = "Nepoznato"
+yes = "Prihvaćeno"
 
 [admin.settings.badge]
 clickToUpgrade = "Kliknite za prikaz detalja plana"
@@ -4453,6 +4548,7 @@ openFromComputer = "Otvori s računala"
 openSettings = "Otvori postavke"
 other = "Ostalo"
 recent = "Nedavno"
+searchFiles = "Pretraži datoteke"
 uploadFailedBody = "Nije moguće dodati odabrane datoteke."
 uploadFailedTitle = "Prijenos nije uspio"
 viewAll = "Prikaži svih {{count}} datoteka"
@@ -5827,6 +5923,8 @@ label = "Free credits"
 adoptFailed = "Dokument je otključan, ali ga ovdje nije moguće otvoriti. Pokušajte izravno s alatom."
 empty = "Nema ništa za prijaviti."
 handoffUnavailable = "Ovaj preglednik neće dopustiti obrađivaču da proslijedi dokument uređivaču. Umjesto toga otvorite ga iz uređivača."
+inSmartFolder = "Ovaj je dokument u pametnoj mapi, pa se obrađuje na poslužitelju, a ne ovdje."
+inSmartFolderNamed = "{{name}} je u pametnoj mapi, pa se obrađuje na poslužitelju, a ne ovdje."
 noDocumentLinked = "Ovaj neuspjeh nije povezan s određenim dokumentom, pa se ovdje nema što otvoriti."
 notOnThisDevice = "Ovaj dokument nije na ovom uređaju, pa ga ovdje nije moguće otvoriti."
 occurrences = "{{count}} puta"
@@ -5837,6 +5935,7 @@ repairedRerunNotAdopted = "Popravljeni dokument je prošao, ali njegov rezultat 
 repairedRerunUndelivered = "Dokument je popravljen i ponovno pokretanje pravila je započelo, ali njegov rezultat nije moguće isporučiti ovdje, pa ovaj neuspjeh ostaje otvoren."
 rerunRejected = "Pravilo se trenutačno nije moglo ponovno pokrenuti. Pokušajte ponovno za trenutak."
 rerunUndelivered = "Ponovno pokretanje pravila je započelo, ali njegov rezultat nije moguće isporučiti ovdje, pa ovaj neuspjeh ostaje otvoren."
+retryInFolderFailed = "Taj dokument trenutačno nije moguće ponovno pokrenuti."
 retryUnavailable = "Ovaj dokument više nije moguće ponovno pokušati iz ovog preglednika."
 title = "Obavijesti"
 unlockedNotRerun = "Dokument je otključan i otvoren ovdje, ali pravilo se nije moglo ponovno pokrenuti na njemu."
@@ -6625,9 +6724,11 @@ title = "Prilagodi Team plan"
 [payment.capacityStage]
 adjustmentNote = "Stripe će prikazati točnu naplatu, sva proporcionalna usklađenja i vaš sljedeći datum naplate prije potvrde. Vaš spremljeni način plaćanja koristit će se ako je dostupan."
 continue = "Nastavi na plaćanje"
+currencyAtCheckout = "Stripe potvrđuje konačni iznos i valutu plaćanja pri naplati."
 customLabel = "Broj korisnika"
 dueToday = "Dospijeva danas"
 enterpriseQuote = "Zatraži enterprise ponudu"
+estimatedTotal = "Procijenjeni ukupni iznos"
 lineItem = "Team · {{price}}{{period}} po {{block}} korisnika"
 minimumForCurrentUsers = "Imate {{users}} korisnika, pa plan mora pokrivati najmanje {{minimum}}."
 modalTitle = "Nadogradnja na {{planName}}"
@@ -6865,6 +6966,25 @@ width = "Širina"
 widthHint = "Širina tekstnog okvira prati njegov sadržaj i prelamanje."
 x = "X"
 y = "Y"
+
+[pdfTextEditor.mobile]
+actions = "Radnje uređivača"
+addImage = "Slika"
+addText = "Tekst"
+cancel = "Odustani"
+delete = "Izbriši"
+details = "Pojedinosti"
+document = "Dokument"
+done = "Gotovo"
+download = "Spremi i preuzmi"
+find = "Pronađi"
+lock = "Zaključaj"
+openPdf = "Otvori PDF"
+panelHint = "Uređivanje se odvija u prikazu radnog prostora. Dodirnite tekst na stranici kako biste ga promijenili."
+save = "Spremi"
+style = "Stil"
+tapToPlace = "Dodirnite stranicu gdje tekst treba ići"
+unlock = "Otključaj"
 
 [pdfTextEditor.password]
 cancel = "Odustani"
@@ -7574,6 +7694,49 @@ plan = "Plan"
 procurement = "Nabava"
 usage = "Korištenje"
 
+[portal.billing.compare]
+current = "Trenutačno"
+enterpriseData = "Lokacija podataka i SCIM"
+enterpriseName = "Enterprise"
+enterprisePrice = "Prema vašem ugovoru"
+enterpriseProcessing = "Prema potrošnji ili fiksno"
+enterpriseSignIn = "SAML i revizija"
+enterpriseSupport = "SLA za dostupnost, pomoć pri implementaciji"
+enterpriseUsers = "Bez gornje granice"
+enterpriseWhere = "Plus više čvorova i air-gapped"
+exploreEnterprise = "Istraži Enterprise"
+freeData = "Ostaje tamo gdje ga pokrećete"
+freeName = "Free"
+freePrice = "Bez kartice, bez isteka"
+freeProcessing = "{{allowance}} kredita mjesečno"
+freeProcessingUnknown = "Mjesečni iznos kredita"
+freeSignIn = "Email, Google i SSO"
+freeSignInNote = "OAuth2/OIDC"
+freeSupport = "Zajednica"
+freeUsers = "Do {{users}}"
+freeUsersUnknown = "Mali tim"
+freeWhere = "Cloud, desktop ili self-hosted"
+lede = "Svaki plan uključuje svaki PDF alat i SSO. Mijenja se broj ljudi koji ga koriste, mjesto izvođenja i podrška koju dobivate."
+open = "Usporedi planove"
+rowData = "Vaši podaci"
+rowHeader = "Značajka"
+rowProcessing = "Obrada"
+rowSignIn = "Prijava"
+rowSupport = "Podrška"
+rowUsers = "Korisnici"
+rowWhere = "Gdje se izvodi"
+teamData = "Google Drive, vaša vlastita baza podataka"
+teamName = "Team"
+teamPrice = "99 USD/mj po 100 korisnika"
+teamProcessing = "{{allowance}} mjesečno, zatim prema potrošnji"
+teamProcessingUnknown = "Veći iznos, zatim prema potrošnji"
+teamSignIn = "Isto"
+teamSupport = "Email"
+teamUsers = "100 po bloku"
+teamWhere = "Cloud, desktop ili self-hosted"
+title = "Usporedi planove"
+upgradeTeam = "Nadogradi na Team"
+
 [portal.billing.cycle]
 credits = "Krediti"
 creditsNote = "{{units}} iskorišteno · uključuje besplatne i unaprijed plaćene kredite"
@@ -7679,6 +7842,8 @@ payTitle = "Platite svoju godinu"
 step = "Korak {{current}} od {{total}}"
 
 [portal.billing.prepaid.calc]
+currency = "Valuta ponude"
+currencyLocked = "Koristi vašu postojeću Stripe valutu naplate."
 rateUnknown = "Točnu cijenu prikazat ćemo pri plaćanju."
 
 [portal.billing.prepaid.consent]
@@ -8481,6 +8646,10 @@ title = "Datoteku nije moguće popraviti"
 [portal.failures.kind.inputWrongType]
 description = "Vaša datoteka nije u formatu koji ovaj korak može otvoriti, pa je pokretanje nije moglo pročitati."
 title = "Pogrešna vrsta datoteke"
+
+[portal.failures.kind.sourceUnreadable]
+description = "Vaša pametna mapa nije se mogla pročitati, pa ništa u njoj nije obrađeno."
+title = "Mapa se nije mogla pročitati"
 
 [portal.failures.kind.stepCannotRenderPage]
 description = "Stranica u vašoj datoteci nije se mogla nacrtati, pa pokretanje nije moglo završiti."
@@ -12235,6 +12404,7 @@ goBack = "Vrati se"
 pdfTools = "PDF alati"
 placeholder = "Odaberite alat za početak"
 premiumFeature = "Premium značajka:"
+searchTools = "Pretraži alate"
 toolsHeader = "Alati"
 viewAllTools = "Prikaži sve alate"
 
@@ -12399,13 +12569,10 @@ visits = "Posjete"
 
 [users]
 lastActive = "Zadnje aktivno"
-learnMore = "Saznajte više o ulogama i pristupu."
 locked = "Zaključano"
 ownerSetupRequired = "Vlasnik organizacije nije dovršio prvu prijavu. Dovršite postavljanje ili zamolite operatera poslužitelja da oporavi vlasništvo prije prijenosa vlasništva."
 roleFor = "Uloga za {{name}}"
 rowActions = "Radnje za {{name}}"
-showAll = "Prikaži sve {{count}}"
-showLess = "Prikaži manje"
 subtitle2 = "Vaši ljudi, timovi i razine pristupa."
 suspended = "Suspendirano"
 teamActions = "Radnje tima"
@@ -12414,6 +12581,7 @@ you = "(vi)"
 
 [users.action]
 cancelInvite = "Otkaži pozivnicu"
+createFromDefault = "Stvori tim iz Default"
 deleteTeam = "Izbriši tim"
 disableMfa = "Resetiraj MFA"
 move = "Premjesti u tim"
@@ -12451,6 +12619,7 @@ email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
+team = "Tim"
 
 [users.confirm]
 cancelInviteBody = "Otkazati pozivnicu za {{email}}? Neće se moći pridružiti putem trenutačne poveznice."
@@ -12469,15 +12638,12 @@ transferOwnershipTitle = "Prijenos vlasništva nad organizacijom"
 description = "Pozovite svoj tim da počne surađivati."
 title = "Još nema članova"
 
+[users.filters]
+noMatches = "Nitko ne odgovara ovim filtrima."
+search = "Pretraži osobe"
+
 [users.group]
 addToTeam = "Dodaj u tim"
-administrators = "{{count}} administratora"
-guestCount = "{{count}} gost"
-guests = "Gosti"
-ledBy = "vodi {{owner}}"
-org = "Organizacija"
-team = "{{name}} tim"
-teamMeta = "{{count}} osoba"
 
 [users.invite]
 access = "Pristup"
@@ -12542,6 +12708,9 @@ title = "Novi tim"
 
 [users.renameTeam]
 apply = "Preimenuj"
+defaultApply = "Stvori i premjesti"
+defaultDescription = "Default će ostati dostupan za nove korisnike. Svi koji su trenutačno u Default bit će premješteni u novi tim."
+defaultTitle = "Stvori tim iz Default"
 name = "Naziv tima"
 title = "Preimenuj tim"
 
@@ -12566,6 +12735,15 @@ guest = "Gost"
 member = "Član"
 orgOwner = "Vlasnik organizacije"
 teamOwner = "Vlasnik tima"
+
+[users.seats]
+full = "Sva licencirana mjesta su u upotrebi. Oslobodite jedno ili povećajte broj mjesta kako biste dodali nekog drugog."
+update = "Ažuriraj mjesta"
+
+[users.tabs]
+all = "Svi"
+label = "Filtriraj po timu"
+unassigned = "Bez tima"
 
 [users.team]
 grantProcessor = "Dodijeli Processor timu"
@@ -13216,232 +13394,14 @@ submitSignature = "Pošalji potpis"
 title = "Radni prostor"
 
 [workspace.people]
-active = "Aktivno"
-activeSession = "Aktivna sesija"
-addMembers = "Dodaj članove"
-admin = "Administrator"
-confirmDelete = "Jeste li sigurni da želite izbrisati ovog korisnika? Ova radnja se ne može poništiti."
-confirmUnlock = "Jeste li sigurni da želite otključati ovaj korisnički račun?"
-deleteUser = "Izbriši korisnika"
-deleteUserError = "Nije uspjelo brisanje korisnika"
-deleteUserSuccess = "Korisnik je uspješno izbrisan"
 description = "Upravljajte članovima radnog prostora i njihovim dozvolama"
-disable = "Onemogući"
-disabled = "Onemogućeno"
-editRole = "Uredi ulogu"
-enable = "Omogući"
-loading = "Učitavanje osoba..."
-locked = "zaključan"
-lockedBadge = "Zaključan"
-loginRequired = "Najprije omogućite način prijave"
-memberActions = "Radnje člana"
-noMembersFound = "Nije pronađen nijedan član"
-ownerLocked = "Prenesite vlasništvo nad organizacijom u Postavke → Radni prostor → Korisnici prije promjene uloge ili računa vlasnika."
-role = "Uloga"
-searchMembers = "Pretraži članove..."
-team = "Tim"
-unlockAccount = "Otključaj račun"
-unlockUserError = "Otključavanje korisničkog računa nije uspjelo"
-unlockUserSuccess = "Korisnički račun je uspješno otključan"
-user = "Korisnik"
-userInfo = "Podaci o korisniku"
-
-[workspace.people.actions]
-upgrade = "Nadogradi"
-
-[workspace.people.addMember]
-authType = "Vrsta autentikacije"
-error = "Stvaranje korisnika nije uspjelo"
-forceMFA = "Nametni postavljanje MFA pri sljedećoj prijavi"
-forcePasswordChange = "Prisili promjenu lozinke pri prvoj prijavi"
-password = "Lozinka"
-passwordPlaceholder = "Unesite lozinku"
-passwordRequired = "Lozinka je obavezna"
-role = "Uloga"
-submit = "Dodaj člana"
-success = "Korisnik je uspješno stvoren"
-team = "Tim (neobavezno)"
-teamPlaceholder = "Odaberite tim"
-username = "Korisničko ime (e-pošta)"
-usernamePlaceholder = "user@example.com"
-usernameRequired = "Potrebni su korisničko ime i lozinka"
-
-[workspace.people.authType]
-oauth = "OAuth2"
-password = "Lozinka"
-saml = "SAML2"
-ssoDescription = "Korisnik će se autentificirati putem SSO pružatelja"
-
-[workspace.people.changePassword]
-action = "Promijeni lozinku"
-confirmPassword = "Potvrdi lozinku"
-confirmPlaceholder = "Ponovno unesite novu lozinku"
-copiedToClipboard = "Lozinka kopirana u međuspremnik"
-copyFailed = "Nije uspjelo kopiranje lozinke"
-copyTooltip = "Kopiraj u međuspremnik"
-emailUnavailable = "E-adresa ovog korisnika nije valjana. Obavijesti su onemogućene."
-error = "Nije uspjelo ažuriranje lozinke"
-forcePasswordChange = "Prisili korisnika da promijeni lozinku pri sljedećoj prijavi"
-generatedPreview = "Generirana lozinka:"
-generateRandom = "Generiraj sigurnu lozinku"
-includePassword = "Uključi novu lozinku u e-poruku"
-newPassword = "Nova lozinka"
-notifyOnly = "Poslat će se e-poruka bez lozinke kako bi se korisniku javilo da ju je administrator promijenio."
-passwordMismatch = "Lozinke se ne podudaraju"
-passwordRequired = "Unesite novu lozinku"
-placeholder = "Unesite novu lozinku"
-sendEmail = "Pošalji korisniku e-poruku o ovoj promjeni"
-smtpDisabled = "Obavijesti e-poštom zahtijevaju da SMTP bude omogućen u postavkama."
-submit = "Ažuriraj lozinku"
-subtitle = "Ažuriraj lozinku za"
-success = "Lozinka je uspješno ažurirana"
-title = "Promijeni lozinku"
-
-[workspace.people.editMember]
-editing = "Editing: <0>{{username}}</0>"
-error = "Ažuriranje korisnika nije uspjelo"
-role = "Uloga"
-submit = "Update User"
-success = "Korisnik je uspješno ažuriran"
-team = "Tim (neobavezno)"
-teamPlaceholder = "Odaberite tim"
-title = "Edit User"
-
-[workspace.people.emailInvite]
-allFailed = "Pozivanje korisnika nije uspjelo"
-emails = "E-mail adrese"
-emailsPlaceholder = "user1@example.com, user2@example.com"
-emailsRequired = "Potreban je barem jedan e-mail"
-error = "Slanje poziva nije uspjelo"
-partialFailure = "Neke pozivnice nisu uspjele"
-submit = "Pošalji pozive"
-success = "Korisnici su uspješno pozvani"
-
-[workspace.people.inviteLink]
-copied = "Poveznica kopirana u međuspremnik"
-email = "E-mail adresa"
-emailDescription = "Neobavezno - ostavite prazno za opću pozivnicu koju može koristiti bilo tko"
-emailPlaceholder = "user@example.com (neobavezno)"
-emailSent = "Poveznica za poziv generirana i poslana e-poštom"
-error = "Generiranje poveznice za poziv nije uspjelo"
-expiryHours = "Sati isteka"
-generate = "Generiraj poveznicu"
-generated = "Poveznica za poziv je generirana"
-sendEmail = "Pošalji poveznicu za poziv e-poštom"
-sendEmailDescription = "Ako je omogućeno, poveznica za poziv bit će poslana na navedenu e-mail adresu"
-submit = "Generiraj poveznicu za poziv"
-
-[workspace.people.inviteMembers]
-label = "Pozovi članove"
-subtitle = "Upišite ili zalijepite e-adrese dolje, odvojene zarezima. Vaš radni prostor naplaćuje se po članovima."
-
-[workspace.people.inviteMode]
-email = "E-pošta"
-emailDisabled = "Pozivi e-poštom zahtijevaju konfiguraciju SMTP-a i postavku mail.enableInvites=true"
-link = "Poveznica"
-username = "Korisničko ime"
 
 [workspace.people.license]
-currentUsage = "Trenutno se koristi {{current}} od {{max}} korisničkih licenci"
-fromLicense = "iz licence"
-grandfathered = "Zaštićeno starim uvjetima"
-grandfatheredShort = "{{count}} zaštićenih starim uvjetima"
-slotsAvailable_one = "{{count}} user slot available"
-slotsAvailable_other = "{{count}} user slots available"
-slotsAvailable_zero = "No slots available"
 users_one = "user"
 users_other = "users"
 
-[workspace.people.mfa]
-adminDisableError = "Onemogućavanje MFA za korisnika nije uspjelo"
-adminDisableSuccess = "MFA je uspješno onemogućena za korisnika"
-disableByAdmin = "Onemogući MFA"
-
-[workspace.people.roleDescriptions]
-admin = "Može upravljati postavkama i pozivati članove, s punim administrativnim pristupom."
-currentRole = "Trenutno dodijeljena uloga."
-user = "Can view and edit shared files, but cannot manage workspace settings or users."
-
-[workspace.people.toggleEnabled]
-error = "Nije uspjelo ažuriranje statusa korisnika"
-success = "Status korisnika je uspješno ažuriran"
-
 [workspace.teams]
-addMember = "Dodaj člana"
-backToTeams = "Natrag na timove"
-cannotAddToInternal = "Nije moguće dodavati članove u tim Internal"
-cannotDeleteInternal = "Nije moguće izbrisati tim Internal"
-cannotRenameInternal = "Nije moguće preimenovati tim Internal"
-confirmDelete = "Jeste li sigurni da želite izbrisati ovaj tim? Tim mora biti prazan za brisanje."
-confirmRemove = "Ukloniti korisnika iz ovog tima?"
-createNewTeam = "Stvori novi tim"
-deleteTeamLabel = "Izbriši tim"
 description = "Upravljajte timovima i organizirajte članove radnog prostora"
-loadError = "Nije uspjelo učitavanje detalja tima"
-loading = "Učitavanje timova..."
-loadingDetails = "Učitavanje pojedinosti o timu..."
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
-noMembers = "Nema članova u ovom timu"
-noTeamsFound = "Nije pronađen nijedan tim"
-removeMember = "Ukloni iz tima"
-removeMemberError = "Nije uspjelo uklanjanje korisnika iz tima"
-removeMemberSuccess = "Korisnik je uklonjen iz tima"
-renameTeamLabel = "Preimenuj tim"
-system = "Sustav"
-teamActions = "Radnje tima"
-teamName = "Naziv tima"
-teamNotFound = "Tim nije pronađen"
-totalMembers = "Ukupno članova"
-viewTeam = "Prikaži tim"
-
-[workspace.teams.addMemberToTeam]
-addingTo = "Dodavanje u"
-currentlyIn = "trenutno u"
-error = "Dodavanje člana u tim nije uspjelo"
-selectUser = "Odaberite korisnika"
-selectUserPlaceholder = "Odaberite korisnika"
-selectUserRequired = "Molimo odaberite korisnika"
-submit = "Dodaj člana"
-success = "Član je uspješno dodan u tim"
-title = "Dodaj člana u tim"
-userRequired = "Molimo odaberite korisnika"
-willBeMoved = "Napomena: ovaj korisnik bit će premješten iz svojeg trenutačnog tima u ovaj tim."
-
-[workspace.teams.changeTeam]
-changing = "Premještanje"
-error = "Promjena tima nije uspjela"
-label = "Promijeni tim"
-selectTeam = "Odaberi tim"
-selectTeamPlaceholder = "Odaberite tim"
-selectTeamRequired = "Molimo odaberite tim"
-submit = "Promijeni tim"
-success = "Tim je uspješno promijenjen"
-title = "Promijeni tim"
-
-[workspace.teams.createTeam]
-error = "Stvaranje tima nije uspjelo"
-nameRequired = "Naziv tima je obavezan"
-submit = "Stvori tim"
-success = "Tim je uspješno stvoren"
-teamName = "Naziv tima"
-teamNamePlaceholder = "Unesite naziv tima"
-title = "Stvori novi tim"
-
-[workspace.teams.deleteTeam]
-error = "Brisanje tima nije uspjelo. Provjerite je li tim prazan."
-success = "Tim je uspješno izbrisan"
-
-[workspace.teams.renameTeam]
-error = "Preimenovanje tima nije uspjelo"
-nameRequired = "Naziv tima je obavezan"
-newTeamName = "Novi naziv tima"
-newTeamNamePlaceholder = "Unesite novi naziv tima"
-renaming = "Preimenovanje:"
-submit = "Preimenuj tim"
-success = "Tim je uspješno preimenovan"
-title = "Preimenuj tim"
 
 [zipWarning]
 cancel = "Odustani"
