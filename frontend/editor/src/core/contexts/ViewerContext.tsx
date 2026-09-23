@@ -4,6 +4,7 @@ import React, {
   useState,
   useMemo,
   useEffect,
+  useLayoutEffect,
   ReactNode,
   useRef,
   useCallback,
@@ -262,11 +263,15 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   // ViewerProvider sits inside FileContextProvider so these hooks are valid here.
   const selectors = useFileSelectors();
   const selectorsRef = useRef(selectors);
-  selectorsRef.current = selectors;
   const tRef = useRef(t);
-  tRef.current = t;
   const activeFileIdRef = useRef(activeFileId);
-  activeFileIdRef.current = activeFileId;
+  // Updated after commit, not during render: a concurrent render React abandons
+  // would otherwise leave the callbacks reading values that were never shown.
+  useLayoutEffect(() => {
+    selectorsRef.current = selectors;
+    tRef.current = t;
+    activeFileIdRef.current = activeFileId;
+  }, [selectors, t, activeFileId]);
   const fileIds = useFileSelector((s) => s.files.ids);
 
   // Clear activeFileId when its file is removed from the workbench.
