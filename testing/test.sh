@@ -345,6 +345,7 @@ capture_file_list() {
         -not -path '*/tmp/stirling-pdf/lu*' \
         -not -path '*/tmp/stirling-pdf/tmp*' \
         -not -path '/tmp/lu*' \
+        -not -path '/var/lib/libreoffice-sandbox/tmp/lu*' \
         -not -path '*/tmp/*/user/registrymodifications.xcu' \
         -not -path '/app/stirling.aot' \
         -not -path '*/tmp/stirling.aotconf' \
@@ -377,7 +378,7 @@ capture_file_list() {
             -not -path '*/tmp/stirling-pdf/tmp*' \
             -not -path '*/tmp/lu*' \
             -not -path '*/tmp/tmp*' \
-            -not -path '/app/stirling.aot' \
+                -not -path '/app/stirling.aot' \
             -not -path '*/tmp/stirling.aotconf' \
             -not -path '*/tmp/aot-*.log' \
             2>/dev/null | sort" > "$output_file"
@@ -426,7 +427,17 @@ compare_file_lists() {
         # Check if we at least have the after file to look for temp files
         if [ -s "$after_file" ]; then
             echo "Checking for temp files in the after snapshot..."
-            grep -i "tmp\|temp" "$after_file" > "${diff_file}.tmp"
+            grep -i "tmp\|temp" "$after_file" \
+                | grep -v '/jpdfium-' \
+                | grep -v '\.libreoffice_uno_' \
+                | grep -v '/var/lib/libreoffice-sandbox/profiles/' \
+                | grep -v '/var/lib/libreoffice-template/' \
+                | grep -v '\.X99-lock' \
+                | grep -v 'uno-last-used' \
+                | grep -v 'xdg-' \
+                | grep -v 'dconf' \
+                | grep -v 'fontconfig' \
+                > "${diff_file}.tmp" || true
             if [ -s "${diff_file}.tmp" ]; then
                 echo "WARNING: Temporary files found:"
                 cat "${diff_file}.tmp"
@@ -456,8 +467,17 @@ compare_file_lists() {
 
             # Exclude JPDFium native cache + merge seed temp files
             # (both deleteOnExit-registered, not leaks).
+            # Also exclude LibreOffice instance folders, X11 locks, and dconf caches
+            # which are transient and normal during container operation.
             grep -i "tmp\|temp" "${diff_file}.added" \
                 | grep -v '/jpdfium-' \
+                | grep -v '\.libreoffice_uno_' \
+                | grep -v '/var/lib/libreoffice-sandbox/profiles/' \
+                | grep -v '\.X99-lock' \
+                | grep -v 'uno-last-used' \
+                | grep -v 'xdg-' \
+                | grep -v 'dconf' \
+                | grep -v 'fontconfig' \
                 > "${diff_file}.tmp" || true
             if [ -s "${diff_file}.tmp" ]; then
                 echo "WARNING: Temporary files detected:"
