@@ -461,6 +461,7 @@ test("tool output reloads the document in place", async ({ page }) => {
 
 test("a tool output reload shows the saved position in its first frame", async ({
   page,
+  browserName,
 }) => {
   test.setTimeout(240_000);
   await loadViewer(page);
@@ -501,6 +502,10 @@ test("a tool output reload shows the saved position in its first frame", async (
 
   // Read the baseline once the panel has settled; the tool page can otherwise
   // contribute its own preview pages to the sample stream.
+  if (browserName === "chromium") {
+    const session = await page.context().newCDPSession(page);
+    await session.send("Emulation.setCPUThrottlingRate", { rate: 4 });
+  }
   const pageTopBefore = await page
     .locator('[data-page-index="1"]')
     .first()

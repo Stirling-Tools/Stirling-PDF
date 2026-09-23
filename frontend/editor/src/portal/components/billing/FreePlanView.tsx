@@ -2,11 +2,8 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner } from "@app/ui";
 import type { Wallet } from "@portal/api/billing";
-import type { SaasCurrency } from "@portal/billing/stripe";
 import { StripeCheckoutModal } from "@portal/components/billing/StripeCheckoutModal";
-import { ActivationChoiceModal } from "@portal/components/billing/ActivationChoiceModal";
 import { BundleCheckoutModal } from "@portal/components/billing/BundleCheckoutModal";
-import { PrepaidCapacityCard } from "@portal/components/billing/PrepaidCapacityCard";
 
 interface Props {
   wallet: Wallet;
@@ -27,11 +24,10 @@ interface Props {
   onActivationClosed?: () => void;
 }
 
-function isSaasCurrency(c: string | null): c is SaasCurrency {
-  return c === "usd" || c === "eur" || c === "gbp";
-}
-
-/** Owns activation dialogs and prepaid capacity; the host supplies the Processor row action. */
+/**
+ * Owns the activation dialogs; the host supplies the Processor row action that opens them.
+ * Nothing renders here at rest — a held prepaid pool reads on the Processor row itself.
+ */
 export function FreePlanView({
   wallet,
   step: controlledStep,
@@ -40,39 +36,15 @@ export function FreePlanView({
   onActivationClosed,
 }: Props) {
   const { t } = useTranslation();
-  // Activation fork (demo D97): choose → the metered checkout (payg) or the
-  // discounted bundle (prepay). Exactly one is open at a time.
   const [ownStep, setOwnStep] = useState<"choose" | "payg" | "prepay" | null>(
     null,
   );
   const step = onStepChange ? (controlledStep ?? null) : ownStep;
   const setStep = onStepChange ?? setOwnStep;
-  const [missingTeam, setMissingTeam] = useState<string | null>(null);
 
-  const isLeader = wallet.role === "leader";
-  const currency: SaasCurrency = isSaasCurrency(wallet.currency)
-    ? wallet.currency
-    : "usd";
-
-  function requireTeam(): boolean {
-    if (wallet.teamId == null) {
-      setMissingTeam(
-        t(
-          "portal.billing.freePlan.noTeamResolved",
-          "No team is resolved on your wallet yet — refresh and try again.",
-        ),
-      );
-      return false;
-    }
-    setMissingTeam(null);
-    return true;
-  }
-
-  // Reopens the bundle modal directly; its resume effect lands on the calculator (quote) or the
-  // payment step (invoice awaiting payment).
-  function resumeBundle() {
-    if (requireTeam()) setStep("prepay");
-  }
+  // Every dialog below needs a team to scope checkout, so an unresolved one would open nothing
+  // at all. Saying so beats a door that silently does nothing.
+  const missingTeam = step != null && wallet.teamId == null;
 
   // Closing any activation modal re-reads the flow state so the CTA reflects a
   // freshly-minted quote / invoice without a full page reload.
@@ -83,15 +55,6 @@ export function FreePlanView({
 
   return (
     <div className="portal-billing__stack">
-      {/* A live pool is usable without a metered subscription, so it surfaces on the free plan
-          too. The no-pool upsell face never does. */}
-      {wallet.prepaidUnitsRemaining > 0 && (
-        <PrepaidCapacityCard
-          wallet={wallet}
-          onBuy={isLeader ? resumeBundle : undefined}
-        />
-      )}
-
       {missingTeam && (
         <Banner
           tone="warning"
@@ -100,24 +63,18 @@ export function FreePlanView({
             "Couldn't start checkout",
           )}
         >
-          {missingTeam}
+          {t(
+            "portal.billing.freePlan.noTeamResolved",
+            "No team is resolved on your wallet yet — refresh and try again.",
+          )}
         </Banner>
       )}
-      <ActivationChoiceModal
-        open={step === "choose"}
-        onClose={closeModals}
-        onChoosePayg={() => setStep("payg")}
-        onChoosePrepay={() => setStep("prepay")}
-      />
-
       {wallet.teamId != null && (
         <StripeCheckoutModal
-          open={step === "payg"}
+          open={step === "payg" || step === "choose"}
           onClose={closeModals}
-          onBack={() => setStep("choose")}
+          onPrepay={() => setStep("prepay")}
           teamId={wallet.teamId}
-          currency={currency}
-          pricePerDocMinor={wallet.pricePerDocMinor}
           initialCapUsd={wallet.capUsd}
           onComplete={() => onSubscribed?.() ?? Promise.resolve(false)}
         />
@@ -133,7 +90,7 @@ export function FreePlanView({
         <BundleCheckoutModal
           open={step === "prepay"}
           onClose={closeModals}
-          onBack={() => setStep("choose")}
+          onBack={() => setStep("payg")}
           wallet={wallet}
           onComplete={() => {
             closeModals();

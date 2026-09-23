@@ -24,7 +24,12 @@ const service = vi.hoisted(() => ({
 vi.mock("@app/services/licenseService", () => ({ default: service }));
 vi.mock("@app/hooks/useIsMobile", () => ({ useIsMobile: () => false }));
 vi.mock("@mantine/core", () => ({
-  Modal: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  Modal: ({ children, title }: { children: ReactNode; title?: ReactNode }) => (
+    <div>
+      {title}
+      {children}
+    </div>
+  ),
   Text: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   Group: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
@@ -88,14 +93,17 @@ vi.mock(
 vi.mock("@app/components/shared/stripeCheckout/stages/CapacityStage", () => ({
   CapacityStage: ({
     serverQuantity,
+    periodPicker,
     currentLimit,
     onContinue,
   }: {
     serverQuantity: number;
+    periodPicker?: ReactNode;
     currentLimit: number;
     onContinue: () => void;
   }) => (
     <div>
+      {periodPicker}
       Capacity: {serverQuantity} blocks; current: {currentLimit}
       <button onClick={onContinue}>Continue to payment</button>
     </div>

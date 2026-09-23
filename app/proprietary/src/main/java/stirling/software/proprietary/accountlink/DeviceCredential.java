@@ -58,6 +58,9 @@ public class DeviceCredential implements Serializable {
             columnDefinition = "boolean not null default false")
     private boolean entitlementRevoked;
 
+    @Column(name = "fleet_user_limit")
+    private Integer fleetUserLimit;
+
     @Column(name = "linked_at", nullable = false)
     private LocalDateTime linkedAt;
 }

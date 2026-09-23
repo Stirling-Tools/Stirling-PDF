@@ -395,6 +395,21 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * A tool or runtime the deployment lacks: the FFmpeg case generalised. 503, not 500, because
+     * only the server is missing something and retries fail until it is installed.
+     */
+    @ExceptionHandler(ToolRequiredException.class)
+    public ResponseEntity<ProblemDetail> handleToolRequired(
+            ToolRequiredException ex, HttpServletRequest request) {
+        logException("warn", "Required tool unavailable", request, ex, ex.getErrorCode());
+
+        String title =
+                getLocalizedMessage("error.toolRequired.title", ErrorTitles.TOOL_REQUIRED_DEFAULT);
+        return createProblemDetailResponse(
+                ex, HttpStatus.SERVICE_UNAVAILABLE, ErrorTypes.TOOL_REQUIRED, title, request);
+    }
+
+    /**
      * Handle PDF and DPI-related BaseAppException subtypes.
      *
      * <p>Related factory methods in {@link ExceptionUtils}:
@@ -1162,6 +1177,8 @@ public class GlobalExceptionHandler {
                 return handleGhostscriptException((GhostscriptException) appEx, request);
             } else if (appEx instanceof FfmpegRequiredException) {
                 return handleFfmpegRequired((FfmpegRequiredException) appEx, request);
+            } else if (appEx instanceof ToolRequiredException toolEx) {
+                return handleToolRequired(toolEx, request);
             } else {
                 return handleBaseApp(appEx, request);
             }
@@ -1462,6 +1479,7 @@ public class GlobalExceptionHandler {
         static final String PDF_PASSWORD = "/errors/pdf-password";
         static final String GHOSTSCRIPT = "/errors/ghostscript";
         static final String FFMPEG_REQUIRED = "/errors/ffmpeg-required";
+        static final String TOOL_REQUIRED = "/errors/tool-required";
         static final String OUT_OF_MEMORY_DPI = "/errors/out-of-memory-dpi";
         static final String PDF_CORRUPTED = "/errors/pdf-corrupted";
         static final String PDF_ENCRYPTION = "/errors/pdf-encryption";
@@ -1490,6 +1508,7 @@ public class GlobalExceptionHandler {
         static final String PDF_PASSWORD_DEFAULT = "PDF Password Required";
         static final String GHOSTSCRIPT_DEFAULT = "Ghostscript Processing Error";
         static final String FFMPEG_REQUIRED_DEFAULT = "FFmpeg Required";
+        static final String TOOL_REQUIRED_DEFAULT = "Required Tool Not Installed";
         static final String OUT_OF_MEMORY_DPI_DEFAULT = "Insufficient Memory for Image Rendering";
         static final String PDF_CORRUPTED_DEFAULT = "PDF File Corrupted";
         static final String PDF_ENCRYPTION_DEFAULT = "PDF Encryption Error";
