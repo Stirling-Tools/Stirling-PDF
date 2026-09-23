@@ -25,7 +25,7 @@ import { CardExpansionModal } from "@app/components/watchedFolders/CardExpansion
 import { StatCard } from "@app/components/watchedFolders/StatCard";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
-import JSZip from "jszip";
+import { createZip } from "@app/services/jszipLoader";
 import { useWatchedFolders } from "@app/hooks/useWatchedFolders";
 import { useFolderData } from "@app/hooks/useFolderData";
 import type { TFunction } from "i18next";
@@ -678,7 +678,7 @@ export function WatchedFolderWorkbenchView({
 
   const handleBatchDownload = useCallback(
     async (ids: Iterable<string> = selectedActivityIds) => {
-      const zip = new JSZip();
+      const zip = await createZip();
       let count = 0;
       for (const f of collectExportFiles(ids)) {
         zip.file(f.name, await f.arrayBuffer());

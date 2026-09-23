@@ -1,4 +1,4 @@
-import JSZip from "jszip";
+import { createZip } from "@app/services/jszipLoader";
 
 import { fileStorage } from "@app/services/fileStorage";
 import type { FileId, ToolOperation } from "@app/types/file";
@@ -55,7 +55,7 @@ export async function buildHistoryBundle(
     allStubs.push({ rootId, stubs });
   }
 
-  const zip = new JSZip();
+  const zip = await createZip();
   const entries: ShareBundleEntry[] = [];
 
   for (const chain of allStubs) {
@@ -120,7 +120,7 @@ export async function buildSharePackage(stubs: StirlingFileStub[]): Promise<{
     throw new Error("No files provided for sharing.");
   }
 
-  const zip = new JSZip();
+  const zip = await createZip();
   const entries: ShareBundleEntry[] = [];
 
   for (const stub of stubs) {

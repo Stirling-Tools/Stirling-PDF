@@ -1,4 +1,5 @@
-import JSZip, { JSZipObject } from "jszip";
+import type { JSZipObject } from "jszip";
+import { createZip } from "@app/services/jszipLoader";
 import { StirlingFileStub, createStirlingFile } from "@app/types/fileContext";
 import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
 import { fileStorage } from "@app/services/fileStorage";
@@ -85,7 +86,7 @@ export class ZipFileService {
       }
 
       // Load and validate ZIP contents
-      const zip = new JSZip();
+      const zip = await createZip();
       const zipContents = await zip.loadAsync(file);
 
       let totalSize = 0;
@@ -151,7 +152,7 @@ export class ZipFileService {
     zipFilename: string,
   ): Promise<{ zipFile: File; size: number }> {
     try {
-      const zip = new JSZip();
+      const zip = await createZip();
 
       // Add each file to the ZIP
       for (const file of files) {
@@ -206,7 +207,7 @@ export class ZipFileService {
       }
 
       // Load ZIP contents
-      const zip = new JSZip();
+      const zip = await createZip();
       const zipContents = await zip.loadAsync(file);
 
       // Get all PDF files
@@ -359,7 +360,7 @@ export class ZipFileService {
    */
   async containsHtmlFiles(file: Blob | File): Promise<boolean> {
     try {
-      const zip = new JSZip();
+      const zip = await createZip();
       const zipContents = await zip.loadAsync(file);
 
       // Check if any file is an HTML file
@@ -443,7 +444,7 @@ export class ZipFileService {
     try {
       // Automation always extracts - but still need to count files for warning
       if (skipAutoUnzip) {
-        const zip = new JSZip();
+        const zip = await createZip();
         const zipContents = await zip.loadAsync(zipBlob);
         const fileCount = Object.values(zipContents.files).filter(
           (entry) => !entry.dir,
@@ -457,7 +458,7 @@ export class ZipFileService {
       }
 
       // Load ZIP and count files (single parse)
-      const zip = new JSZip();
+      const zip = await createZip();
       const zipContents = await zip.loadAsync(zipBlob);
 
       // Count non-directory entries
@@ -571,7 +572,7 @@ export class ZipFileService {
 
     try {
       // Load ZIP contents
-      const zip = new JSZip();
+      const zip = await createZip();
       const zipContents = await zip.loadAsync(file);
 
       // Get all files (not directories)

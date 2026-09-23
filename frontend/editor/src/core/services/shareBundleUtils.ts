@@ -1,6 +1,5 @@
-import JSZip from "jszip";
-
 import type { ShareBundleManifest } from "@app/services/serverStorageBundle";
+import { createZip } from "@app/services/jszipLoader";
 
 const MANIFEST_FILENAME = "stirling-share.json";
 
@@ -100,7 +99,8 @@ export async function loadShareBundleEntries(blob: Blob): Promise<{
   sortedEntries: ShareBundleManifest["entries"];
   files: File[];
 } | null> {
-  const zip = await JSZip.loadAsync(blob);
+  const zip = await createZip();
+  await zip.loadAsync(blob);
   const manifestEntry = zip.file(MANIFEST_FILENAME);
   if (!manifestEntry) {
     return null;
