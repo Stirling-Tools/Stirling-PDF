@@ -42,7 +42,7 @@
   flex-shrink: 0;
 }
 .ownership-flow__username {
-  color: var(--c-accent-fg);
+  color: var(--c-text);
   background: var(--c-primary-subtle);
   border-radius: 0.25rem;
   padding: 0.05rem 0.3rem;
