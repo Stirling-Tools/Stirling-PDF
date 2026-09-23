@@ -5,8 +5,6 @@ import {
   useConfigNavSections as useCoreConfigNavSections,
   ConfigNavSection,
 } from "@core/components/shared/config/configNavSections";
-import PeopleSection from "@app/components/shared/config/configSections/PeopleSection";
-import TeamsSection from "@app/components/shared/config/configSections/TeamsSection";
 import AdminPlanSection from "@app/components/shared/config/configSections/AdminPlanSection";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import PreferencesSection from "@core/components/shared/config/configSections/preferences/PreferencesSection";
@@ -98,7 +96,7 @@ export const useConfigNavSections = (
           "settings.developer.apiKeysDescription",
           "Personal keys for calling the Stirling API from scripts and integrations.",
         ),
-        icon: "key-rounded",
+        icon: "key",
         component: <ApiKeys />,
       });
     }
@@ -121,35 +119,13 @@ export const useConfigNavSections = (
       title: t("settings.workspace.title", "Workspace"),
       items: [
         {
-          key: "people",
-          label: t("settings.workspace.people", "People"),
-          description: t(
-            "workspace.people.description",
-            "Everyone with an account on this server, their role and their team.",
-          ),
-          icon: "group-rounded",
-          component: <PeopleSection />,
-          ...gated,
-        },
-        {
-          key: "teams",
-          label: t("settings.workspace.teams", "Teams"),
-          description: t(
-            "workspace.teams.description",
-            "Group people into teams and manage who belongs where.",
-          ),
-          icon: "groups-rounded",
-          component: <TeamsSection />,
-          ...gated,
-        },
-        {
           key: "adminPlan",
           label: t("settings.licensingAnalytics.plan", "Plan"),
           description: t(
             "settings.licensingAnalytics.planDescription",
             "Your licence, seats and what the current plan unlocks.",
           ),
-          icon: "star-rounded",
+          icon: "star",
           component: <AdminPlanSection />,
           ...gated,
         },
@@ -170,7 +146,7 @@ export const useConfigNavSections = (
               "admin.settings.general.description",
               "How this server runs: branding, storage, the tools it exposes, and the paths it may touch.",
             ),
-            icon: "settings-rounded",
+            icon: "settings",
             component: (
               <Suspense fallback={<LoadingFallback />}>
                 <AdminSystemSection />
@@ -185,7 +161,7 @@ export const useConfigNavSections = (
               "admin.settings.security.description",
               "How people sign in, how sessions are held, and what this server discloses about itself.",
             ),
-            icon: "shield-rounded",
+            icon: "shield",
             component: (
               <Suspense fallback={<LoadingFallback />}>
                 <AdminSecurityPage />
@@ -200,7 +176,7 @@ export const useConfigNavSections = (
               "admin.settings.connections.description",
               "Mail, Telegram, Drive, and uploading from a phone.",
             ),
-            icon: "hub-rounded",
+            icon: "network",
             component: (
               <Suspense fallback={<LoadingFallback />}>
                 <AdminIntegrationsPage />
@@ -215,7 +191,7 @@ export const useConfigNavSections = (
               "admin.settings.ai.description",
               "Connect Stirling to the Python AI engine, choose its models, and set the guardrails it runs under.",
             ),
-            icon: "smart-toy-rounded",
+            icon: "bot",
             component: (
               <Suspense fallback={<LoadingFallback />}>
                 <AdminAiSection />
@@ -230,7 +206,7 @@ export const useConfigNavSections = (
               "admin.settings.database.description",
               "Connect a custom database, and back up or restore the one in use.",
             ),
-            icon: "database-rounded",
+            icon: "database",
             component: (
               <Suspense fallback={<LoadingFallback />}>
                 <AdminDatabasePage />
@@ -245,7 +221,7 @@ export const useConfigNavSections = (
               "admin.settings.advanced.description",
               "Feature flags, processing limits, temp files and the database. Set once at install, if ever.",
             ),
-            icon: "tune-rounded",
+            icon: "sliders-horizontal",
             component: (
               <Suspense fallback={<LoadingFallback />}>
                 <AdminAdvancedPage />
@@ -260,7 +236,7 @@ export const useConfigNavSections = (
               "admin.settings.legal.description",
               "Configure links to legal documents and policies.",
             ),
-            icon: "gavel-rounded",
+            icon: "gavel",
             component: (
               <Suspense fallback={<LoadingFallback />}>
                 <AdminLegalPrivacyPage />
@@ -282,7 +258,7 @@ export const useConfigNavSections = (
               "settings.licensingAnalytics.usageDescription",
               "Endpoint usage and activity for this server.",
             ),
-            icon: "monitoring",
+            icon: "chart-line",
             component: <AdminUsageSection />,
             ...gated,
           },
@@ -293,7 +269,7 @@ export const useConfigNavSections = (
               "settings.licensingAnalytics.auditDescription",
               "Who did what on this server, and how long that record is kept.",
             ),
-            icon: "fact-check-rounded",
+            icon: "clipboard-check",
             component: <AdminAuditSection />,
             ...gated,
           },

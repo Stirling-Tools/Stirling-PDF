@@ -45,15 +45,3 @@ export const EditExisting: Story = {
     toolRegistry: emptyToolRegistry,
   },
 };
-
-export const EmbeddedHideMetadata: Story = {
-  args: {
-    mode: AutomationMode.CREATE,
-    hideMetadata: true,
-    nameOverride: "Watched Folder Automation",
-    onBack: () => {},
-    onComplete: () => {},
-    onSaveFailed: () => {},
-    toolRegistry: emptyToolRegistry,
-  },
-};

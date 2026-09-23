@@ -9,6 +9,11 @@ const updateCap = vi.hoisted(() => vi.fn());
 vi.mock("@portal/api/billing", () => ({ updateCap }));
 vi.mock("@portal/billing/stripe", () => ({
   getStripePublishableKey: () => null,
+  fetchCheckoutPricing: async () => ({
+    currency: "usd",
+    currencyLocked: false,
+    unitAmountMinor: 1,
+  }),
 }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -75,20 +80,19 @@ describe("Processor spend limit", () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it("keeps an explicitly uncapped value when opening Processor signup", () => {
+  it("keeps an explicitly uncapped value when opening Processor signup", async () => {
     render(
       <MantineProvider>
         <StripeCheckoutModal
           open
           teamId={42}
-          currency="usd"
           initialCapUsd={null}
           onClose={() => {}}
           onComplete={async () => false}
         />
       </MantineProvider>,
     );
-    expect(screen.getByText("No cap")).toBeInTheDocument();
+    expect(await screen.findByText("No cap")).toBeInTheDocument();
     expect(updateCap).not.toHaveBeenCalled();
   });
 });

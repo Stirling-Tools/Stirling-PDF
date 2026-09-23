@@ -8,9 +8,10 @@ import {
 import { updateCap } from "@portal/api/billing";
 import {
   createCheckoutSession,
+  fetchCheckoutPricing,
   getStripePublishableKey,
   loadStripeOnce,
-  type SaasCurrency,
+  type CheckoutPricing,
 } from "@portal/billing/stripe";
 import { CardPlaceholder } from "@portal/components/billing/CardPlaceholder";
 import { ProcessorSpendFields } from "@portal/components/billing/ProcessorSpendFields";
@@ -22,10 +23,6 @@ interface Props {
   onPrepay?: () => void;
   /** Caller's resolved team id. The edge function needs it to scope checkout. */
   teamId: number;
-  /** "usd" | "eur" | "gbp" — the SaaS PAYG offering's supported set. */
-  currency: SaasCurrency;
-  /** Per-credit rate in minor currency units. */
-  pricePerDocMinor?: number | null;
   /** Cap to seed the spend-limit step with; defaults to $100/mo. */
   initialCapUsd?: number | null;
   /** Optional billing email prefill (Stripe locks the field when set). */
@@ -107,8 +104,6 @@ export function StripeCheckoutModal({
   onClose,
   onPrepay,
   teamId,
-  currency,
-  pricePerDocMinor,
   initialCapUsd,
   billingOwnerEmail,
   onComplete,
@@ -117,6 +112,28 @@ export function StripeCheckoutModal({
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pricing, setPricing] = useState<CheckoutPricing | null>(null);
+  const [pricingError, setPricingError] = useState<string | null>(null);
+  const currency = pricing?.currency ?? "usd";
+  useEffect(() => {
+    setPricing(null);
+    setPricingError(null);
+    if (!open) return;
+    let cancelled = false;
+    fetchCheckoutPricing(teamId, "processor")
+      .then((value) => {
+        if (!cancelled) setPricing(value);
+      })
+      .catch((cause: unknown) => {
+        if (!cancelled)
+          setPricingError(
+            cause instanceof Error ? cause.message : String(cause),
+          );
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, teamId]);
   // "cap" = spend-limit step; "checkout" = Stripe card form; "finalizing" =
   // payment done, waiting for activation (non-dismissable); "activationSlow" =
   // webhook lagging past the poll window (dismissable).
@@ -209,6 +226,7 @@ export function StripeCheckoutModal({
   // Apply the chosen ceiling, then advance to payment. Applying it up front keeps
   // "you're never billed past it" true from the first processed PDF.
   async function handleContinue() {
+    if (!pricing) return;
     // Guard the empty-field sentinel: clearing the input maps to 0, which is neither a real cap nor the
     // explicit "No limit" (null). Proceeding would set a $0 ceiling (processing immediately paused), so
     // treat it as incomplete and stay put — the Continue button is disabled in this state too.
@@ -302,13 +320,27 @@ export function StripeCheckoutModal({
       {phase === "cap" && (
         <div className="portal-billing__checkout-cap">
           <div className="portal-billing__checkout-scroll">
-            <ProcessorSpendFields
-              value={capUsd}
-              onChange={setCapUsd}
-              currency={currency}
-              rate={pricePerDocMinor ?? null}
-              disabled={capBusy}
-            />
+            {pricing ? (
+              <ProcessorSpendFields
+                value={capUsd}
+                onChange={setCapUsd}
+                currency={currency}
+                rate={pricing.unitAmountMinor ?? null}
+                disabled={capBusy}
+              />
+            ) : pricingError ? (
+              <Banner
+                tone="danger"
+                title={t(
+                  "portal.billing.checkout.error.title",
+                  "Couldn't start checkout",
+                )}
+              >
+                {pricingError}
+              </Banner>
+            ) : (
+              <Skeleton height="8rem" />
+            )}
             <p className="portal-billing__checkout-finePrint">
               {t(
                 "portal.billing.simple.billingNote",
@@ -336,7 +368,7 @@ export function StripeCheckoutModal({
               </Button>
               <Button
                 loading={capBusy}
-                disabled={!capValid}
+                disabled={!capValid || !pricing}
                 onClick={handleContinue}
                 rightSection={<span aria-hidden>›</span>}
               >

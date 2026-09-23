@@ -36,7 +36,7 @@ export async function createCheckoutSession(
   }>("create-checkout-session", {
     body: {
       team_id: params.teamId,
-      currency: params.currency ?? "gbp",
+      currency: params.currency ?? "usd",
       success_url: returnUrl,
       cancel_url: returnUrl,
       ...(params.billingOwnerEmail
