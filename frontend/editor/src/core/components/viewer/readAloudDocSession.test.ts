@@ -91,8 +91,30 @@ describe("createReadAloudDocSession", () => {
     expect(open).toHaveBeenCalledTimes(2);
   });
 
-  it("close drops the handle and tolerates close failures", async () => {
-    const open = vi.fn(async () => 7);
+  it("a reopen after close invalidates the still-pending first open", async () => {
+    const firstGate = deferred<number>();
+    const secondGate = deferred<number>();
+    const open = vi
+      .fn()
+      .mockReturnValueOnce(firstGate.promise)
+      .mockReturnValueOnce(secondGate.promise);
+    const close = vi.fn(async () => {});
+    const session = createReadAloudDocSession(open, close);
+    const bytes = new ArrayBuffer(8);
+    const file = { id: "a" };
+
+    const first = session.ensure(file, bytes);
+    session.close();
+    const second = session.ensure(file, bytes);
+    firstGate.resolve(21);
+    await expect(first).resolves.toBeNull();
+    expect(close).toHaveBeenCalledWith(21);
+    secondGate.resolve(22);
+    await expect(second).resolves.toBe(22);
+    expect(open).toHaveBeenCalledTimes(2);
+  });
+
+  it("close drops the handle and tolerates close failures", async () => {    const open = vi.fn(async () => 7);
     const close = vi.fn(async () => {
       throw new Error("busy");
     });

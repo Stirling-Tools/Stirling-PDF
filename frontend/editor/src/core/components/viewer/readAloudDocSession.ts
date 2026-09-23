@@ -41,7 +41,7 @@ export function createReadAloudDocSession(
     }
     try {
       const docPtr = await current;
-      if (key !== sessionKey) {
+      if (pending !== current || key !== sessionKey) {
         return null;
       }
       return docPtr;
