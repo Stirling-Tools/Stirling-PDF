@@ -875,6 +875,7 @@ public class AuditService {
                 || path.equals("/api/v1/footer-info")
                 || path.equals("/api/v1/admin/license-info")
                 || path.equals("/api/v1/endpoints-availability")
+                || path.equals("/api/v1/notifications")
                 || path.equals("/health")
                 || path.startsWith("/health/")
                 || path.equals("/metrics")

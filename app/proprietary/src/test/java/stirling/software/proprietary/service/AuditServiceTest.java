@@ -657,6 +657,11 @@ class AuditServiceTest {
             healthReq.setRequestURI("/actuator/health/db");
             assertThat(service.isPollingCall(healthReq)).isTrue();
 
+            MockHttpServletRequest bellReq = new MockHttpServletRequest();
+            bellReq.setMethod("GET");
+            bellReq.setRequestURI("/api/v1/notifications");
+            assertThat(service.isPollingCall(bellReq)).isTrue();
+
             MockHttpServletRequest postReq = new MockHttpServletRequest();
             postReq.setMethod("POST");
             postReq.setRequestURI("/api/v1/auth/me");
