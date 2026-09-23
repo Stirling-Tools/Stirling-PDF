@@ -6,7 +6,7 @@ import { constants, brotliCompress, gzip } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { defineConfig, loadEnv } from "vite";
-import type { Connect, PluginOption } from "vite";
+import type { Connect, PluginOption, Rollup } from "vite";
 import type { PreRenderedAsset } from "rollup";
 import tsconfigPaths from "vite-tsconfig-paths";
 // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
@@ -92,6 +92,32 @@ async function compressFiles(files: string[], distDir: string): Promise<void> {
         .map((f) => compressFile(f, distDir)),
     );
   }
+}
+
+type ManualChunkMeta = Parameters<Rollup.GetManualChunk>[1];
+
+const startupModulesByOutput = new WeakMap<ManualChunkMeta, Set<string>>();
+
+/**
+ * The modules the entry imports statically. They load before first render in
+ * whichever chunk they sit, so a chunk every page loads should hold only these.
+ * Rollup hands manualChunks the module graph once per output, so the walk runs
+ * once per build.
+ */
+function startupModules(meta: ManualChunkMeta): Set<string> {
+  let modules = startupModulesByOutput.get(meta);
+  if (modules) return modules;
+  modules = new Set();
+  const queue = [...meta.getModuleIds()].filter(
+    (id) => meta.getModuleInfo(id)?.isEntry,
+  );
+  for (const id of queue) {
+    if (modules.has(id)) continue;
+    modules.add(id);
+    queue.push(...(meta.getModuleInfo(id)?.importedIds ?? []));
+  }
+  startupModulesByOutput.set(meta, modules);
+  return modules;
 }
 
 function compressStaticCopyPlugin(): PluginOption {
@@ -576,9 +602,14 @@ export default defineConfig(async ({ mode, command }) => {
       rollupOptions: {
         output: {
           assetFileNames: mjsToJsAssetFileNames,
-          manualChunks(id: string) {
+          manualChunks(id: string, meta: ManualChunkMeta) {
             if (id.includes("material-symbols-icons.json"))
               return "vendor-iconset";
+            // An asset URL import compiles to a single string. Filed by package
+            // name it joins that package's vendor chunk, and its importer then
+            // loads the whole chunk: the startup WASM warm-up imports pdfium's
+            // URL, which put all of embedpdf on the initial load.
+            if (id.includes("?url")) return undefined;
             // Left to Rollup, this lands in the first dynamic-importing vendor
             // chunk and the entry then statically imports that whole chunk.
             if (id.includes("vite/preload-helper")) return "vendor-preload";
@@ -640,7 +671,10 @@ export default defineConfig(async ({ mode, command }) => {
               if (id.includes("@mui/icons-material")) return "vendor-mui-icons";
               if (id.includes("@iconify/react")) return "vendor-iconify";
               // These packages are mutually circular; splitting them breaks
-              // module init order at runtime.
+              // module init order at runtime. Every page loads vendor-ui, and by
+              // package name it also took libraries only some screens use, such
+              // as the markdown renderer and the date pickers. Those go with the
+              // screens that import them.
               if (
                 id.includes("react") ||
                 id.includes("scheduler") ||
@@ -649,7 +683,7 @@ export default defineConfig(async ({ mode, command }) => {
                 id.includes("@emotion") ||
                 id.includes("@iconify")
               ) {
-                return "vendor-ui";
+                return startupModules(meta).has(id) ? "vendor-ui" : undefined;
               }
               if (id.includes("@supabase")) return "vendor-supabase";
               if (id.includes("posthog-js") || id.includes("@posthog"))
