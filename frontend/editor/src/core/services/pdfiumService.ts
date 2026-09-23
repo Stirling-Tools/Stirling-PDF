@@ -12,11 +12,7 @@
  * `getSignatures`, `saveAsCopy`, …) wrap the `PdfEngine` interface so callers
  * never have to deal with raw pointers or Tasks.
  */
-import {
-  init,
-  type WrappedPdfiumModule,
-  type PdfiumModule,
-} from "@embedpdf/pdfium";
+import type { WrappedPdfiumModule, PdfiumModule } from "@embedpdf/pdfium";
 import {
   pdfiumWasmModulePromise,
   startEagerWasmCompilation,
@@ -88,7 +84,13 @@ async function initPdfiumModule(): Promise<WrappedPdfiumModule> {
   startEagerWasmCompilation();
 
   const overrides: PdfiumModuleOverrides = { locateFile: () => wasmUrl() };
-  const precompiled = await pdfiumWasmModulePromise;
+  // The glue is imported here, not at the top: this service is reached from
+  // app-root contexts, and a static import put the whole embedpdf chunk on the
+  // initial load. It downloads alongside the WASM rather than after it.
+  const [precompiled, { init }] = await Promise.all([
+    pdfiumWasmModulePromise,
+    import("@embedpdf/pdfium"),
+  ]);
 
   let reportFailure: (error: unknown) => void = () => {};
   const instantiateFailed = new Promise<never>((_, reject) => {
