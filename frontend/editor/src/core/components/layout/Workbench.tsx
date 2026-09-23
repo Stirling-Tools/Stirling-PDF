@@ -306,9 +306,7 @@ export default function Workbench() {
       <DismissAllErrorsButton />
 
       {/* Floating AI chat button + panel */}
-      {(currentView === "viewer" || currentView === "fileEditor") && (
-        <ChatFAB />
-      )}
+      {currentView !== "myFiles" && <ChatFAB />}
 
       {/* Main content area */}
       <Box
