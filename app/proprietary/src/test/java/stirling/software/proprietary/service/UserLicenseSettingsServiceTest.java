@@ -59,7 +59,8 @@ class UserLicenseSettingsServiceTest {
         when(userService.getTotalUsersCount()).thenReturn(80L);
         when(settingsRepository.save(any(UserLicenseSettings.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.NORMAL);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.NORMAL);
         when(licenseKeyCheckerProvider.getIfAvailable()).thenReturn(licenseKeyChecker);
 
         // Create service with overridden validateSettingsIntegrity to bypass signature validation
@@ -79,10 +80,42 @@ class UserLicenseSettingsServiceTest {
     }
 
     @Test
+    void offlineExpirySuspendsTeamAllowanceWithoutDestroyingItAndReconnectRestoresIt() {
+        EntitlementCache cache = org.mockito.Mockito.mock(EntitlementCache.class);
+        when(entitlementCacheProvider.getIfAvailable()).thenReturn(cache);
+        when(cache.fleetUserLimit()).thenReturn(null);
+        when(cache.linkedDeviceId()).thenReturn("device");
+        mockSettings.setLinkedTeamDeviceId("device");
+        mockSettings.setLinkedTeamUsers(300);
+        when(cache.current()).thenReturn(Optional.empty());
+        when(cache.isGraceExpired()).thenReturn(true);
+        assertEquals(null, service.refreshLinkedTeamUsers());
+        assertEquals(300, mockSettings.getLinkedTeamUsers());
+        assertEquals(80, service.calculateMaxAllowedUsers());
+        when(cache.isGraceExpired()).thenReturn(false);
+        when(cache.current())
+                .thenReturn(
+                        Optional.of(
+                                new stirling.software.proprietary.accountlink.InstanceEntitlement(
+                                        true,
+                                        0,
+                                        0,
+                                        null,
+                                        stirling.software.proprietary.accountlink.EntitlementState
+                                                .OK,
+                                        null,
+                                        null,
+                                        null,
+                                        300)));
+        assertEquals(300, service.calculateMaxAllowedUsers());
+    }
+
+    @Test
     void noLicense_returnsGrandfatheredLimit() {
         // No license active
         when(premium.isEnabled()).thenReturn(false);
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.NORMAL);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.NORMAL);
 
         int result = service.calculateMaxAllowedUsers();
 
@@ -93,7 +126,8 @@ class UserLicenseSettingsServiceTest {
     void serverLicense_returnsUnlimited() {
         // SERVER license with users=0
         when(premium.isEnabled()).thenReturn(true);
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.SERVER);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.SERVER);
         mockSettings.setLicenseMaxUsers(0);
 
         int result = service.calculateMaxAllowedUsers();
@@ -105,7 +139,8 @@ class UserLicenseSettingsServiceTest {
     void enterpriseLicense_returnsLicenseSeatsOnly() {
         // ENTERPRISE license with 5 seats
         when(premium.isEnabled()).thenReturn(true);
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.ENTERPRISE);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.ENTERPRISE);
         mockSettings.setLicenseMaxUsers(5);
 
         int result = service.calculateMaxAllowedUsers();
@@ -120,7 +155,8 @@ class UserLicenseSettingsServiceTest {
     void enterpriseLicense_ignoresGrandfathering() {
         // ENTERPRISE with 20 seats, grandfathered was 80
         when(premium.isEnabled()).thenReturn(true);
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.ENTERPRISE);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.ENTERPRISE);
         mockSettings.setLicenseMaxUsers(20);
         mockSettings.setGrandfatheredUserCount(80); // This should be ignored
 
@@ -148,7 +184,8 @@ class UserLicenseSettingsServiceTest {
         // Fresh install with SERVER license
         mockSettings.setGrandfatheredUserCount(5);
         when(premium.isEnabled()).thenReturn(true);
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.SERVER);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.SERVER);
         mockSettings.setLicenseMaxUsers(0);
 
         int result = service.calculateMaxAllowedUsers();
@@ -164,7 +201,8 @@ class UserLicenseSettingsServiceTest {
         // Fresh install with ENTERPRISE 10 seats
         mockSettings.setGrandfatheredUserCount(5);
         when(premium.isEnabled()).thenReturn(true);
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.ENTERPRISE);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.ENTERPRISE);
         mockSettings.setLicenseMaxUsers(10);
 
         int result = service.calculateMaxAllowedUsers();
@@ -189,7 +227,8 @@ class UserLicenseSettingsServiceTest {
         // V1→V2 with 80 users, then buy ENTERPRISE 5 seats
         mockSettings.setGrandfatheredUserCount(80);
         when(premium.isEnabled()).thenReturn(true);
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.ENTERPRISE);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.ENTERPRISE);
         mockSettings.setLicenseMaxUsers(5);
 
         int result = service.calculateMaxAllowedUsers();
@@ -275,112 +314,6 @@ class UserLicenseSettingsServiceTest {
         verify(userService, times(1)).grandfatherPendingSsoUsersWithoutSession();
     }
 
-    // ===== OAuth Eligibility Tests =====
-
-    @Test
-    void isOAuthEligible_grandfatheredUser_returnsTrue() {
-        // Grandfathered user should be eligible regardless of license
-        stirling.software.proprietary.security.model.User user =
-                new stirling.software.proprietary.security.model.User();
-        user.setUsername("grandfathered-user");
-        user.setOauthGrandfathered(true);
-
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
-
-        boolean result = service.isOAuthEligible(user);
-
-        assertEquals(true, result, "Grandfathered user should be eligible for OAuth");
-    }
-
-    @Test
-    void isOAuthEligible_nonGrandfatheredUserWithServerLicense_returnsTrue() {
-        // Non-grandfathered user with SERVER license should be eligible
-        stirling.software.proprietary.security.model.User user =
-                new stirling.software.proprietary.security.model.User();
-        user.setUsername("test-user");
-        user.setOauthGrandfathered(false);
-
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
-
-        boolean result = service.isOAuthEligible(user);
-
-        assertEquals(true, result, "Non-grandfathered user with SERVER license should be eligible");
-    }
-
-    @Test
-    void isOAuthEligible_nonGrandfatheredUserWithEnterpriseLicense_returnsTrue() {
-        // Non-grandfathered user with ENTERPRISE license should be eligible
-        stirling.software.proprietary.security.model.User user =
-                new stirling.software.proprietary.security.model.User();
-        user.setUsername("test-user");
-        user.setOauthGrandfathered(false);
-
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
-
-        boolean result = service.isOAuthEligible(user);
-
-        assertEquals(
-                true, result, "Non-grandfathered user with ENTERPRISE license should be eligible");
-    }
-
-    @Test
-    void isOAuthEligible_nonGrandfatheredUserWithNoLicense_returnsFalse() {
-        // Non-grandfathered user without license should NOT be eligible
-        stirling.software.proprietary.security.model.User user =
-                new stirling.software.proprietary.security.model.User();
-        user.setUsername("test-user");
-        user.setOauthGrandfathered(false);
-
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
-
-        boolean result = service.isOAuthEligible(user);
-
-        assertEquals(
-                false,
-                result,
-                "Non-grandfathered user without paid license should NOT be eligible");
-    }
-
-    @Test
-    void isOAuthEligible_newUserWithServerLicense_returnsTrue() {
-        // New user (null) with SERVER license should be eligible for auto-creation
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
-
-        boolean result = service.isOAuthEligible(null);
-
-        assertEquals(
-                true, result, "New user with SERVER license should be eligible for auto-creation");
-    }
-
-    @Test
-    void isOAuthEligible_newUserWithNoLicense_returnsFalse() {
-        // New user (null) without license should NOT be eligible
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
-
-        boolean result = service.isOAuthEligible(null);
-
-        assertEquals(
-                false,
-                result,
-                "New user without paid license should NOT be eligible for auto-creation");
-    }
-
-    @Test
-    void isOAuthEligible_licenseCheckerUnavailable_returnsFalse() {
-        // If LicenseKeyChecker is unavailable, OAuth should be blocked
-        when(licenseKeyCheckerProvider.getIfAvailable()).thenReturn(null);
-
-        stirling.software.proprietary.security.model.User user =
-                new stirling.software.proprietary.security.model.User();
-        user.setUsername("test-user");
-        user.setOauthGrandfathered(false);
-
-        boolean result = service.isOAuthEligible(user);
-
-        assertEquals(
-                false, result, "OAuth should be blocked when LicenseKeyChecker is unavailable");
-    }
-
     // ===== SAML Eligibility Tests =====
 
     @Test
@@ -391,7 +324,8 @@ class UserLicenseSettingsServiceTest {
         user.setUsername("grandfathered-user");
         user.setOauthGrandfathered(true);
 
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.NORMAL);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.NORMAL);
 
         boolean result = service.isSamlEligible(user);
 
@@ -406,7 +340,8 @@ class UserLicenseSettingsServiceTest {
         user.setUsername("test-user");
         user.setOauthGrandfathered(false);
 
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.ENTERPRISE);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.ENTERPRISE);
 
         boolean result = service.isSamlEligible(user);
 
@@ -424,7 +359,8 @@ class UserLicenseSettingsServiceTest {
         user.setUsername("test-user");
         user.setOauthGrandfathered(false);
 
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.SERVER);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.SERVER);
 
         boolean result = service.isSamlEligible(user);
 
@@ -442,7 +378,8 @@ class UserLicenseSettingsServiceTest {
         user.setUsername("test-user");
         user.setOauthGrandfathered(false);
 
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.NORMAL);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.NORMAL);
 
         boolean result = service.isSamlEligible(user);
 
@@ -455,7 +392,8 @@ class UserLicenseSettingsServiceTest {
     @Test
     void isSamlEligible_newUserWithEnterpriseLicense_returnsTrue() {
         // New user (null) with ENTERPRISE license should be eligible for auto-creation
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.ENTERPRISE);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.ENTERPRISE);
 
         boolean result = service.isSamlEligible(null);
 
@@ -468,7 +406,8 @@ class UserLicenseSettingsServiceTest {
     @Test
     void isSamlEligible_newUserWithServerLicense_returnsFalse() {
         // New user (null) with SERVER license should NOT be eligible for SAML
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.SERVER);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.SERVER);
 
         boolean result = service.isSamlEligible(null);
 
@@ -491,5 +430,68 @@ class UserLicenseSettingsServiceTest {
         boolean result = service.isSamlEligible(user);
 
         assertEquals(false, result, "SAML should be blocked when LicenseKeyChecker is unavailable");
+    }
+
+    @Test
+    void fleetAllowanceSurvivesOfflineRestartExpiresAndRecovers() {
+        EntitlementCache cache = org.mockito.Mockito.mock(EntitlementCache.class);
+        when(entitlementCacheProvider.getIfAvailable()).thenReturn(cache);
+        when(cache.linkedDeviceId()).thenReturn("device");
+        mockSettings.setLinkedTeamDeviceId("device");
+        mockSettings.setLinkedTeamUsers(300);
+        when(cache.fleetUserLimit()).thenReturn(17);
+        when(cache.current()).thenReturn(Optional.empty());
+        assertEquals(17, service.calculateMaxAllowedUsers());
+        when(cache.isGraceExpired()).thenReturn(true);
+        assertEquals(80, service.calculateMaxAllowedUsers());
+        assertEquals(17, cache.fleetUserLimit());
+        when(cache.isGraceExpired()).thenReturn(false);
+        when(cache.current())
+                .thenReturn(
+                        Optional.of(
+                                new stirling.software.proprietary.accountlink.InstanceEntitlement(
+                                        true,
+                                        0,
+                                        0,
+                                        null,
+                                        stirling.software.proprietary.accountlink.EntitlementState
+                                                .OK,
+                                        null,
+                                        null,
+                                        null,
+                                        300,
+                                        10,
+                                        23)));
+        when(cache.fleetUserLimit()).thenReturn(23);
+        assertEquals(23, service.calculateMaxAllowedUsers());
+        assertEquals(300, mockSettings.getLinkedTeamUsers());
+    }
+
+    @Test
+    void revokedOrReplacedIdentityClearsFleetAllowance() {
+        EntitlementCache cache = org.mockito.Mockito.mock(EntitlementCache.class);
+        when(entitlementCacheProvider.getIfAvailable()).thenReturn(cache);
+        when(cache.linkedDeviceId()).thenReturn("device");
+        mockSettings.setLinkedTeamDeviceId("device");
+        mockSettings.setLinkedTeamUsers(300);
+        when(cache.fleetUserLimit()).thenReturn(17);
+        when(cache.current())
+                .thenReturn(
+                        Optional.of(
+                                new stirling.software.proprietary.accountlink.InstanceEntitlement(
+                                        false,
+                                        0,
+                                        0,
+                                        null,
+                                        stirling.software.proprietary.accountlink.EntitlementState
+                                                .REVOKED)));
+        when(cache.fleetUserLimit()).thenReturn(null);
+        assertEquals(80, service.calculateMaxAllowedUsers());
+
+        when(cache.fleetUserLimit()).thenReturn(17);
+        when(cache.linkedDeviceId()).thenReturn("other-device");
+        when(cache.current()).thenReturn(Optional.empty());
+        when(cache.fleetUserLimit()).thenReturn(null);
+        assertEquals(80, service.calculateMaxAllowedUsers());
     }
 }

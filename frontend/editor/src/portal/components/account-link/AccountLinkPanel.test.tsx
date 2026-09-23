@@ -8,7 +8,7 @@ import {
   within,
 } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import type { UseAccountLink } from "@portal/hooks/useAccountLink";
+import type { UseAccountLink } from "@app/portal/hooks/useAccountLink";
 
 const state = vi.hoisted(() => ({
   fetchInstances: vi.fn(),
@@ -19,11 +19,19 @@ const state = vi.hoisted(() => ({
   status: { linked: true, name: "Production" } as UseAccountLink["status"],
   statusError: null as string | null,
   email: "owner@example.com" as string | null,
+  isOwner: true,
 }));
-vi.mock("@portal/hooks/useLinkedAccountEmail", () => ({
+vi.mock("@app/portal/hooks/useAccountLinkOwner", () => ({
+  useAccountLinkOwner: () => state.isOwner,
+}));
+vi.mock("@app/portal/contexts/LinkContext", () => ({
+  useLink: () => ({ isLinked: state.status?.linked ?? false }),
+}));
+vi.mock("@app/portal/hooks/useLinkedAccountEmail", () => ({
   useLinkedAccountEmail: () => state.email,
 }));
-vi.mock("@portal/contexts/AccountLinkContext", () => ({
+vi.mock("@app/portal/contexts/AccountLinkContext", () => ({
+  useAccountLinkOptional: () => null,
   useAccountLinkContext: () => ({
     loginConfigured: true,
     status: state.status,
@@ -34,10 +42,10 @@ vi.mock("@portal/contexts/AccountLinkContext", () => ({
     refresh: state.refresh,
   }),
 }));
-vi.mock("@portal/contexts/UIContext", () => ({
+vi.mock("@app/portal/contexts/UIContext", () => ({
   useUI: () => ({ openLinkModal: state.openLinkModal }),
 }));
-vi.mock("@portal/api/link", () => ({
+vi.mock("@app/portal/api/link", () => ({
   fetchInstances: state.fetchInstances,
   revokeInstance: state.revokeInstance,
 }));
@@ -51,7 +59,8 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-import { AccountLinkPanel } from "@portal/components/account-link/AccountLinkPanel";
+import { SaasSessionRequiredError } from "@app/portal/auth/portalSaasSession";
+import { AccountLinkPanel } from "@app/portal/components/account-link/AccountLinkPanel";
 
 const instance = {
   instanceId: 42,
@@ -79,6 +88,7 @@ describe("Self-hosted account connection", () => {
     state.unlink.mockReset();
     state.status = { linked: true, name: "Production" };
     state.statusError = null;
+    state.isOwner = true;
     state.email = "owner@example.com";
   });
 
@@ -271,4 +281,26 @@ describe("Self-hosted account connection", () => {
       screen.queryByRole("button", { name: "Connect your Stirling account" }),
     ).not.toBeInTheDocument();
   });
+
+  it("leaves session recovery to the shell instead of offering an ineffective data retry", async () => {
+    state.status = { linked: true, name: "Production" };
+    state.fetchInstances.mockRejectedValue(new SaasSessionRequiredError());
+    mount();
+    expect(
+      await screen.findByText(
+        "Connected instances will appear after you renew billing access.",
+      ),
+    ).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
+    expect(screen.queryByText("Couldn’t load connected instances")).toBeNull();
+  });
+});
+
+it("does not mount account management or fetch team instances for a non-owner", () => {
+  state.isOwner = false;
+  state.fetchInstances.mockClear();
+  mount();
+  expect(screen.queryByText("Account connection")).toBeNull();
+  expect(screen.queryByRole("button")).toBeNull();
+  expect(state.fetchInstances).not.toHaveBeenCalled();
 });

@@ -61,7 +61,8 @@ tasks:
     ignore_error: true
     dir: editor
     cmds:
-      - npx tauri dev --no-watch
+      # Dev HTTP uses the packaged app origin instead of the Vite origin; keep this out of builds.
+      - npx tauri dev --no-watch --features tauri-plugin-http/unsafe-headers
 
   build:
     desc: "Build Tauri desktop app (production)"

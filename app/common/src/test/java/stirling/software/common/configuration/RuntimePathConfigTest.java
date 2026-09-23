@@ -23,6 +23,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.CustomPaths.Operations;
 import stirling.software.common.model.ApplicationProperties.CustomPaths.Pipeline;
 import stirling.software.common.model.ApplicationProperties.ProcessExecutor.UnoServerEndpoint;
+import stirling.software.common.util.UnoServerPool;
 
 /**
  * Unit tests for {@link RuntimePathConfig}. All of the resolution logic lives in the constructor,
@@ -538,6 +539,16 @@ class RuntimePathConfigTest {
             for (UnoServerEndpoint endpoint : endpoints) {
                 assertEquals("127.0.0.1", endpoint.getHost());
             }
+        }
+
+        @Test
+        @DisplayName("Auto endpoints count as local, so conversions wake the on-demand pool")
+        void autoEndpointsAreLocalForTheDemandManager() {
+            RuntimePathConfig config = build(newProperties());
+
+            UnoServerPool pool = new UnoServerPool(config.getUnoServerEndpoints());
+
+            assertTrue(pool.hasLocalEndpoints());
         }
 
         @Test

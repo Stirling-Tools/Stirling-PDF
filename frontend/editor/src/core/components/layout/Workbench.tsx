@@ -12,14 +12,13 @@ import {
 } from "@app/contexts/NavigationContext";
 import { isBaseWorkbench } from "@app/types/workbench";
 import { VIEWER_SUPPORTED_EXTENSIONS } from "@app/utils/fileUtils";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useSigningOverlay } from "@app/contexts/SigningOverlayContext";
-import { useCookieConsent } from "@app/hooks/useCookieConsent";
 import { useIsPhone } from "@app/hooks/useIsMobile";
 import styles from "@app/components/layout/Workbench.module.css";
 
 import WorkbenchBar from "@app/components/shared/WorkbenchBar";
 import { useWorkbenchTakeover } from "@app/components/layout/WorkbenchTakeover";
+import { useTitleBarStrip } from "@app/contexts/TitleBarStripContext";
 import WorkbenchFloatingSearch from "@app/components/shared/WorkbenchFloatingSearch";
 import LandingPage from "@app/components/shared/LandingPage";
 import DismissAllErrorsButton from "@app/components/shared/DismissAllErrorsButton";
@@ -41,14 +40,10 @@ const FileManagerView = lazy(
 
 // No props needed - component uses contexts directly
 export default function Workbench() {
-  const { config } = useAppConfig();
   // A flow that owns the canvas outright (desktop onboarding's Downloads sweep).
   // Null in every other case, which is every case in core.
   const takeover = useWorkbenchTakeover();
-
-  // The consent banner used to be initialised by the footer; the legal links
-  // now live in Settings → Legal, so the workbench owns the banner lifecycle.
-  useCookieConsent({ analyticsEnabled: config?.enableAnalytics === true });
+  const strip = useTitleBarStrip();
 
   // Use context-based hooks to eliminate all prop drilling
   const { files: activeFiles, fileIds } = useAllFiles();
@@ -58,10 +53,8 @@ export default function Workbench() {
   const {
     previewFile,
     pageEditorFunctions,
-    sidebarsVisible,
     setPreviewFile,
     setPageEditorFunctions,
-    setSidebarsVisible,
     customWorkbenchViews,
     readerMode,
   } = useToolWorkflow();
@@ -106,7 +99,11 @@ export default function Workbench() {
   const showWorkbenchBar =
     topControlsAvailable && hasWorkbenchContent && !readerMode && !takeover;
   const showFloatingSearch =
-    topControlsAvailable && !hasWorkbenchContent && !readerMode && !takeover;
+    topControlsAvailable &&
+    !hasWorkbenchContent &&
+    !readerMode &&
+    !takeover &&
+    !strip.enabled;
 
   // On the transition, so reading sets the toolbar's start state without locking it.
   const prevReaderModeRef = useRef(readerMode);
@@ -163,8 +160,6 @@ export default function Workbench() {
     if (currentView === "viewer" && signingOverlay?.file) {
       return (
         <Viewer
-          sidebarsVisible={sidebarsVisible}
-          setSidebarsVisible={setSidebarsVisible}
           previewFile={signingOverlay.file}
           signaturePreviews={signingOverlay.signaturePreviews}
           signaturePreviewsReadOnly={signingOverlay.signaturePreviewsReadOnly}
@@ -217,12 +212,7 @@ export default function Workbench() {
 
       case "viewer":
         return (
-          <Viewer
-            sidebarsVisible={sidebarsVisible}
-            setSidebarsVisible={setSidebarsVisible}
-            previewFile={previewFile}
-            onClose={handlePreviewClose}
-          />
+          <Viewer previewFile={previewFile} onClose={handlePreviewClose} />
         );
 
       case "pageEditor":
@@ -276,7 +266,7 @@ export default function Workbench() {
       style={{ backgroundColor: "var(--c-bg)", minWidth: 0 }}
     >
       {/* Phone only: above that the rail carries the bell, and here no bar does. */}
-      {isPhone && !showWorkbenchBar && (
+      {isPhone && !showWorkbenchBar && topControlsAvailable && (
         <div style={{ position: "absolute", top: 12, right: 12, zIndex: 20 }}>
           <NotificationBell />
         </div>
@@ -316,7 +306,7 @@ export default function Workbench() {
       <DismissAllErrorsButton />
 
       {/* Floating AI chat button + panel */}
-      <ChatFAB />
+      {currentView !== "myFiles" && <ChatFAB />}
 
       {/* Main content area */}
       <Box

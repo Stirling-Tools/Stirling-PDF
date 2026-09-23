@@ -46,7 +46,7 @@ export const useConfigNavSections = (
             "settings.preferences.description",
             "How the editor looks and behaves for you, and your account.",
           ),
-          icon: "tune-rounded",
+          icon: "sliders-horizontal",
           component: <PreferencesSection />,
         },
         {
@@ -70,7 +70,7 @@ export const useConfigNavSections = (
             "settings.about.description",
             "Tours, legal documents and the licences of everything bundled with this build.",
           ),
-          icon: "help-rounded",
+          icon: "circle-question-mark",
           component: (
             <AboutSection isAdmin={_isAdmin} onRequestClose={onRequestClose} />
           ),
@@ -101,13 +101,13 @@ export const createConfigNavSections = (
       {
         key: "general",
         label: t("settings.general.title", "General"),
-        icon: "settings-rounded",
+        icon: "settings",
         component: <GeneralSection hideTitle />,
       },
       {
         key: "hotkeys",
         label: t("settings.hotkeys.title", "Keyboard Shortcuts"),
-        icon: "keyboard-rounded",
+        icon: "keyboard",
         component: <HotkeysSection />,
       },
     ],

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Box, Center, Group, Stack, Tabs, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import HighlightAltIcon from "@mui/icons-material/HighlightAltOutlined";
+import { Icon } from "@app/ui/Icon";
 import { useToolbarController } from "@app/tools/pdfTextEditor/hooks/useToolbarController";
 import { useSelectionGeometry } from "@app/tools/pdfTextEditor/hooks/useSelectionGeometry";
 import { DocumentInspector } from "@app/tools/pdfTextEditor/components/inspector/DocumentInspector";
@@ -29,9 +29,10 @@ interface SidebarProps {
   onSetGroupingMode: (mode: GroupingMode) => void;
   onSetWidthMode: (mode: WidthMode) => void;
   onSetShowRulers: (show: boolean) => void;
+  initialTab?: SidebarTab;
 }
 
-type TabId = "selected" | "document";
+export type SidebarTab = "selected" | "document";
 
 export function EditorSidebar({
   store,
@@ -44,13 +45,14 @@ export function EditorSidebar({
   onSetGroupingMode,
   onSetWidthMode,
   onSetShowRulers,
+  initialTab = "selected",
 }: SidebarProps) {
   const { t } = useTranslation();
   const controller = useToolbarController(store, state, selection);
   const geometry = useSelectionGeometry(store, state, selection);
   const hasSelection =
     selection.runIds.length > 0 || selection.imageIds.length > 0;
-  const [tab, setTab] = useState<TabId>("selected");
+  const [tab, setTab] = useState<SidebarTab>(initialTab);
 
   // Picking something on the page is a request to see its properties, so the
   // panel follows. Clearing does NOT yank the tab back - a user who opened
@@ -72,7 +74,7 @@ export function EditorSidebar({
   return (
     <Tabs
       value={tab}
-      onChange={(next) => setTab((next as TabId | null) ?? "selected")}
+      onChange={(next) => setTab((next as SidebarTab | null) ?? "selected")}
       data-testid="pdf-editor-sidebar-status"
     >
       <Group
@@ -138,12 +140,10 @@ function NothingSelected() {
   return (
     <Center p="xl" data-testid="pdf-editor-nothing-selected">
       <Stack align="center" gap={6}>
-        <HighlightAltIcon
-          style={{
-            fontSize: 34,
-            color: "var(--mantine-color-dimmed)",
-            opacity: 0.5,
-          }}
+        <Icon
+          name="square-dashed"
+          size={34}
+          style={{ color: "var(--mantine-color-dimmed)", opacity: 0.5 }}
         />
         <Text size="sm" fw={500} c="dimmed">
           {t("pdfTextEditor.inspector.nothingSelected", "Nothing selected")}
@@ -192,7 +192,10 @@ function useSelectedFontNote(
       return t(
         "pdfTextEditor.inspector.fontGap",
         "{{name}} · missing {{glyphs}} - typing those falls back to Helvetica.",
-        { name: font.name, glyphs: gaps.slice(0, 6).join(" ") },
+        {
+          name: font.name,
+          glyphs: gaps.slice(0, 6).join(" "),
+        },
       );
     }
     // Silent when the font can render anything the user types: a standard

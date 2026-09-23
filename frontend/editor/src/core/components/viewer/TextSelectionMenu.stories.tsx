@@ -15,6 +15,10 @@ function baseProps(
   };
 }
 
+// TextSelectionMenu reads the active document from ActiveDocumentContext, which
+// defaults to `null` outside of a live EmbedPDF document-manager session (not something the
+// shared preview can stub). With no active document it short-circuits and renders nothing,
+// so this story only exercises that no-active-document mount path without throwing.
 const meta = {
   title: "Viewer/TextSelectionMenu",
   component: TextSelectionMenu,

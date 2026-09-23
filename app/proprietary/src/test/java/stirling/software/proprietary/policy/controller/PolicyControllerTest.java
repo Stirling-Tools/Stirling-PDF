@@ -12,8 +12,11 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -34,6 +37,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import stirling.software.common.cluster.JobStore;
+import stirling.software.common.cluster.JobStoreEntry;
 import stirling.software.common.cluster.inprocess.InProcessJobStore;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.job.JobResponse;
@@ -60,6 +64,7 @@ import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunView;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 import stirling.software.proprietary.policy.source.EditorSource;
+import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceAccessGuard;
 import stirling.software.proprietary.policy.source.SourceDocCounter;
 import stirling.software.proprietary.policy.source.SourceStore;
@@ -227,7 +232,7 @@ class PolicyControllerTest {
     }
 
     private static PolicyRunHandle handle(String runId) {
-        PolicyRun run = new PolicyRun(runId, null, definitionWithStep(), null, null, null);
+        PolicyRun run = new PolicyRun(runId, null, definitionWithStep(), null, null, null, null);
         return new PolicyRunHandle(runId, CompletableFuture.completedFuture(run));
     }
 
@@ -285,7 +290,7 @@ class PolicyControllerTest {
                             new OutputSpec("s3", Map.of("connectionId", 999)));
             doThrow(new IllegalArgumentException("unknown or inaccessible s3 connection"))
                     .when(policyValidator)
-                    .validateOutput(any());
+                    .validateOutput(any(), any());
 
             assertThatThrownBy(() -> controller.run(definition, null, new PolicyRunFiles()))
                     .isInstanceOf(ResponseStatusException.class)
@@ -379,13 +384,46 @@ class PolicyControllerTest {
         @Test
         @DisplayName("returns the run view when present")
         void found() {
-            PolicyRun run = new PolicyRun("run-3", null, definitionWithStep(), null, null, null);
+            PolicyRun run =
+                    new PolicyRun("run-3", null, definitionWithStep(), null, null, null, null);
             when(runRegistry.get("run-3")).thenReturn(run);
+            when(jobOwnershipService.extractJobId("run-3")).thenReturn("run-3");
+            when(jobOwnershipService.createScopedJobKey("run-3")).thenReturn("run-3");
 
             ResponseEntity<PolicyRunView> response = controller.status("run-3");
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody().runId()).isEqualTo("run-3");
+        }
+
+        @Test
+        void rejectsAnotherUsersRunBeforeReadingLocalOrSharedState() {
+            when(jobOwnershipService.extractJobId("alice:run")).thenReturn("run");
+            when(jobOwnershipService.createScopedJobKey("run")).thenReturn("bob:run");
+
+            assertThat(controller.status("alice:run").getStatusCode())
+                    .isEqualTo(HttpStatus.NOT_FOUND);
+            verifyNoInteractions(runRegistry);
+        }
+
+        @Test
+        void returnsTheOwnersSharedRunWhenItIsNotLocal() {
+            when(jobOwnershipService.extractJobId("alice:run")).thenReturn("run");
+            when(jobOwnershipService.createScopedJobKey("run")).thenReturn("alice:run");
+            jobStore.put(
+                    new JobStoreEntry(
+                            "alice:run",
+                            JobStoreEntry.JobState.COMPLETE,
+                            "peer",
+                            Instant.now(),
+                            Instant.now(),
+                            null,
+                            List.of("output"),
+                            Map.of("policyId", "pipeline")),
+                    Duration.ofMinutes(5));
+
+            assertThat(controller.status("alice:run").getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(controller.status("alice:run").getBody().outputs()).hasSize(1);
         }
 
         @Test
@@ -408,11 +446,14 @@ class PolicyControllerTest {
         @Test
         @DisplayName("excludes ad-hoc runs and runs owned by others")
         void filtersRuns() {
-            PolicyRun adHoc = new PolicyRun("adhoc", null, definitionWithStep(), null, null, null);
+            PolicyRun adHoc =
+                    new PolicyRun("adhoc", null, definitionWithStep(), null, null, null, null);
             PolicyRun ownedStored =
-                    new PolicyRun("owned", "policy-A", definitionWithStep(), null, null, null);
+                    new PolicyRun(
+                            "owned", "policy-A", definitionWithStep(), null, null, null, null);
             PolicyRun otherStored =
-                    new PolicyRun("other", "policy-B", definitionWithStep(), null, null, null);
+                    new PolicyRun(
+                            "other", "policy-B", definitionWithStep(), null, null, null, null);
             when(runRegistry.all()).thenReturn(List.of(adHoc, ownedStored, otherStored));
 
             // ownedByCurrentUser: strip then re-apply scope reproduces the key only for the owned
@@ -863,6 +904,26 @@ class PolicyControllerTest {
         }
 
         @Test
+        void rejectsLegacyEditorCorpusExportsBeforeStartingARun() {
+            Policy p = policy("a", 1L);
+            when(policyStore.get("a")).thenReturn(Optional.of(p));
+            when(policyAccessGuard.canAccess(p)).thenReturn(true);
+            doThrow(new IllegalArgumentException("Editor policies must return PDFs"))
+                    .when(policyValidator)
+                    .validateEditorOutput(p);
+
+            assertThatThrownBy(() -> controller.runStoredPolicy("a", new PolicyRunFiles()))
+                    .isInstanceOfSatisfying(
+                            ResponseStatusException.class,
+                            error -> {
+                                assertThat(error.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+                                assertThat(error.getReason())
+                                        .contains("Editor policies must return PDFs");
+                            });
+            verify(policyRunner, never()).runWith(any(), any(), any(), any());
+        }
+
+        @Test
         @DisplayName("runs a stored, accessible policy")
         void runsStored() throws Exception {
             Policy p = policy("a", 1L);
@@ -893,6 +954,47 @@ class PolicyControllerTest {
             // One incident, one reference: naming one of several would attribute it to whichever
             // bound first.
             assertThat(documentReferenceOf(filesWith("editor-file-1", 3))).isNull();
+        }
+
+        @Test
+        void refusesAnInaccessibleDestinationBeforeSubmittingTheEditorCopy() {
+            Policy p = policy("a", 1L).withOutputIds(List.of("other-team"));
+            Source destination =
+                    new Source(
+                            "other-team",
+                            "Private",
+                            "folder",
+                            Map.of("directory", "/out"),
+                            true,
+                            "owner",
+                            2L);
+            when(policyStore.get("a")).thenReturn(Optional.of(p));
+            when(policyAccessGuard.canAccess(p)).thenReturn(true);
+            when(sourceStore.get("other-team")).thenReturn(Optional.of(destination));
+            when(sourceAccessGuard.canAccess(destination)).thenReturn(false);
+            assertThatThrownBy(() -> controller.runStoredPolicy("a", new PolicyRunFiles()))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .satisfies(
+                            e ->
+                                    assertThat(((ResponseStatusException) e).getStatusCode())
+                                            .isEqualTo(HttpStatus.BAD_REQUEST));
+            verifyNoInteractions(policyRunner);
+        }
+
+        @Test
+        @DisplayName("keeps the reference when the one document sent was empty")
+        void keepsTheReferenceForAnEmptyUpload() throws Exception {
+            // An empty part resolves to no input at all, so this once fell to the several-documents
+            // guard and filed the failure against no document. The bell lists only rows naming one,
+            // so the row a reader could see least of became the row they were not shown.
+            PolicyRunFiles files = new PolicyRunFiles();
+            files.setFileId("editor-file-1");
+            files.setFileInput(
+                    List.of(
+                            new MockMultipartFile(
+                                    "fileInput", "empty.pdf", "application/pdf", new byte[0])));
+
+            assertThat(documentReferenceOf(files)).isEqualTo("editor-file-1");
         }
 
         @Test

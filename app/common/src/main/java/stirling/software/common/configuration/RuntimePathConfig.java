@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -177,6 +178,12 @@ public class RuntimePathConfig {
         }
         this.unoServerEndpoints = buildUnoServerEndpoints(processExecutor, libreOfficeLimit);
         ProcessExecutor.setUnoServerPool(new UnoServerPool(this.unoServerEndpoints));
+
+        ApplicationProperties.TempFileManagement tempFiles = system.getTempFileManagement();
+        if (tempFiles != null) {
+            ProcessExecutor.setLibreOfficeWorkRoots(
+                    Arrays.asList(tempFiles.getBaseTmpDir(), tempFiles.getLibreofficeDir()));
+        }
     }
 
     private String resolvePath(String defaultPath, String customPath) {

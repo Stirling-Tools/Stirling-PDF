@@ -1,17 +1,35 @@
 import type { ReactNode } from "react";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Skeleton } from "@app/ui";
+import {
+  ComparePlansModal,
+  type ComparePlan,
+} from "@app/billing/ComparePlansModal";
 import { formatMinor } from "@app/billing/format";
 import { KvRow } from "@app/billing/KvRow";
 import { TeamPlanRow } from "@app/billing/TeamPlanRow";
 import { ProcessorPlanRow } from "@app/billing/ProcessorPlanRow";
 import { estimatedBillWithPending } from "@app/billing/pendingUsage";
+import { fleetUsersInUse } from "@app/billing/fleetSeats";
 import type { ServerPlan } from "@app/billing/serverPlan";
 import type { Wallet } from "@app/billing/types";
+import type { LegacyTeamAllowance } from "@app/types/legacyBilling";
 import "@app/billing/billing-screen.css";
 
 export interface BillingScreenProps {
+  /** Host-specific occupied seats; null means unavailable, undefined uses the wallet. */
+  usersInUse?: number | null;
+  /** Standalone server allowance; linked fleets display the full Team capacity. */
+  userLimit?: number | null;
+  /** Identifies the deployment whose live roster overrides its last fleet report. */
+  deviceId?: string | null;
+  /** Host-authorized account actions beside the page title. */
+  headerAction?: ReactNode;
+  /** Account-owned historical subscriptions, independent of current wallet products. */
+  legacyPlan?: ReactNode;
+  /** Raw legacy capacity retains historical unlimited limits that wallet products omit. */
+  legacyTeamAllowance?: LegacyTeamAllowance;
   /**
    * Null while loading, or when the host could not read one. A non-null wallet must be complete:
    * the sections dereference its fields without guards, so a hand-built partial object throws
@@ -19,6 +37,8 @@ export interface BillingScreenProps {
    */
   wallet: Wallet | null;
   loading?: boolean;
+  /** Keeps Plan and Usage visible when their data cannot currently be read. */
+  unavailable?: ReactNode;
   /** Self-hosted phrases its free tier differently. */
   selfHosted?: boolean;
   /** Local licence takes precedence over the cloud product names and user capacity. */
@@ -49,6 +69,8 @@ export interface BillingScreenProps {
   invoicesSection?: ReactNode;
   /** Null when the backend cannot compute it, which omits the row rather than showing a zero. */
   editorsDeployed?: number | null;
+  /** Overrides wallet analytics when supplied; null omits an unavailable activity count. */
+  pdfsProcessed?: number | null;
   /** The enterprise door. Omitted for a team already on an agreement. */
   onEnterpriseQuote?: () => void;
   /** Host-owned surfaces that are not sections of this card: modals, upsells, detail cards. */
@@ -80,8 +102,15 @@ function cycleDay(
  * <p>A chip exists only where its section does, so an omitted slot removes both.
  */
 export function BillingScreen({
+  usersInUse,
+  userLimit,
+  deviceId,
+  headerAction,
+  legacyPlan,
+  legacyTeamAllowance,
   wallet,
   loading = false,
+  unavailable,
   selfHosted = false,
   serverPlan,
   serverPlanAction,
@@ -95,12 +124,14 @@ export function BillingScreen({
   procurementSection,
   licenseSection,
   editorsDeployed,
+  pdfsProcessed,
   paymentSection,
   invoicesSection,
   onEnterpriseQuote,
   extras,
 }: BillingScreenProps) {
   const { t } = useTranslation();
+  const [comparing, setComparing] = useState(false);
 
   const jump = useCallback((id: string) => {
     document
@@ -111,6 +142,10 @@ export function BillingScreen({
   const enterpriseProcessor = serverPlan?.licenseType === "ENTERPRISE";
   const paying = Boolean(wallet?.processor?.active) && !enterpriseProcessor;
   const teamHeld = Boolean(wallet?.team?.held);
+  const processedCount =
+    pdfsProcessed === undefined
+      ? wallet?.docsProcessedThisPeriod
+      : pdfsProcessed;
 
   const chips = useMemo(() => {
     const out: Array<[string, string]> = [];
@@ -119,9 +154,10 @@ export function BillingScreen({
         "ub-procurement",
         t("portal.billing.chip.procurement", "Procurement"),
       ]);
-    if (wallet || serverPlan)
+    if (wallet || serverPlan || legacyPlan || unavailable)
       out.push(["ub-plan", t("portal.billing.chip.plan", "Plan")]);
-    if (wallet) out.push(["ub-usage", t("portal.billing.chip.usage", "Usage")]);
+    if (wallet || unavailable)
+      out.push(["ub-usage", t("portal.billing.chip.usage", "Usage")]);
     if (wallet && paymentSection)
       out.push(["ub-pay", t("portal.billing.chip.payment", "Payment")]);
     if (wallet && invoicesSection)
@@ -135,6 +171,8 @@ export function BillingScreen({
   }, [
     wallet,
     serverPlan,
+    legacyPlan,
+    unavailable,
     procurementSection,
     licenseSection,
     paymentSection,
@@ -185,7 +223,10 @@ export function BillingScreen({
         ],
       };
     }
-    if (teamHeld) {
+    if (
+      teamHeld &&
+      (!legacyTeamAllowance || legacyTeamAllowance.teamId !== wallet.teamId)
+    ) {
       return {
         name: t("portal.billing.identity.team.name", "Team"),
         sub:
@@ -195,11 +236,18 @@ export function BillingScreen({
               })
             : t("portal.billing.identity.team.subNoLimit", "No user limit"),
         chips: [
-          t("portal.billing.identity.team.chipSso", "SSO"),
           t("portal.billing.identity.team.chipFleet", "Fleet control"),
+          t(
+            "portal.billing.identity.team.chipIncluded",
+            "{{allowance}} included credits monthly",
+            {
+              allowance: wallet.freeAllowance.toLocaleString(),
+            },
+          ),
         ],
       };
     }
+    if (legacyPlan) return null;
     return {
       name: t("portal.billing.identity.free.name", "Free"),
       sub: t("portal.billing.identity.free.sub", "The full PDF Editor."),
@@ -218,9 +266,54 @@ export function BillingScreen({
         ),
       ],
     };
-  }, [wallet, paying, teamHeld, serverPlan, t]);
+  }, [
+    wallet,
+    paying,
+    teamHeld,
+    serverPlan,
+    legacyPlan,
+    legacyTeamAllowance,
+    t,
+  ]);
+
+  /**
+   * The column the matrix marks as the caller's own. A Server licence sits in the Team column:
+   * it is the same hundred-user deal the cloud sells, bought locally instead.
+   */
+  const currentPlan: ComparePlan | null = serverPlan
+    ? serverPlan.licenseType === "ENTERPRISE"
+      ? "enterprise"
+      : "team"
+    : !wallet
+      ? null
+      : paying || teamHeld
+        ? "team"
+        : "free";
+
+  /**
+   * {@code freeAllowance} is whatever grant the WALLET carries, so it describes the Team column
+   * only where the wallet itself is paying. A local Server licence puts the caller in the Team
+   * column while its wallet is still free, and quoting that free grant as Team's included
+   * allowance would overstate what the plan buys. The user ceiling is not overloaded this way —
+   * it stays the free one whatever is held — so it always describes the Free column.
+   */
+  const walletPays = Boolean(wallet) && (teamHeld || paying);
+  const compareTeamAllowance = walletPays
+    ? (wallet?.freeAllowance ?? null)
+    : null;
+  const compareFreeAllowance = walletPays
+    ? null
+    : (wallet?.freeAllowance ?? null);
+  const compareFreeUsers = wallet?.freeUserAllowance ?? null;
 
   const creditUnits = (wallet?.spendUnitsThisPeriod ?? 0) + pendingUnits;
+  const occupiedSeats = serverPlan
+    ? serverPlan.usersInUse
+    : wallet?.team.fleet
+      ? fleetUsersInUse(wallet.team, deviceId, usersInUse)
+      : usersInUse === undefined
+        ? wallet?.team.usersInUse
+        : usersInUse;
   const showTeam = Boolean(
     wallet &&
     (wallet.team.held ||
@@ -237,17 +330,20 @@ export function BillingScreen({
 
   return (
     <div className="billing-page">
-      <header className="billing-page__head">
-        <h1 className="billing-page__title">
-          {t("portal.usage.title", "Usage & Billing")}
-        </h1>
-        <p className="billing-page__subtitle">
-          {t(
-            "portal.usage.subtitle",
-            "Your plan, your usage, and every invoice.",
-          )}
-        </p>
-      </header>
+      <div className="billing-page__head">
+        <div>
+          <h1 className="billing-page__title">
+            {t("portal.usage.title", "Usage & Billing")}
+          </h1>
+          <p className="billing-page__subtitle">
+            {t(
+              "portal.usage.subtitle",
+              "Your plan, your usage, and every invoice.",
+            )}
+          </p>
+        </div>
+        {headerAction}
+      </div>
 
       <div className="billing-page__body">
         <div className="billing-page__notices">{notices}</div>
@@ -258,7 +354,11 @@ export function BillingScreen({
           </div>
         )}
 
-        {(procurementSection || licenseSection || identity) && (
+        {(procurementSection ||
+          licenseSection ||
+          identity ||
+          legacyPlan ||
+          unavailable) && (
           <div className="billing-card">
             <nav
               className="billing-card__chips"
@@ -286,31 +386,59 @@ export function BillingScreen({
               </section>
             )}
 
-            {identity && (
+            {(identity || legacyPlan) && (
               <>
                 <section id="ub-plan" className="billing-sec">
-                  <span className="billing-eyebrow">
-                    {t("portal.billing.section.plan", "Your plan")}
-                  </span>
-                  <div className="billing-id">
-                    <span className="billing-id__name">{identity.name}</span>
-                    <span className="billing-id__sub">{identity.sub}</span>
-                    {serverPlanAction && (
-                      <div className="billing-id__action">
-                        {serverPlanAction}
-                      </div>
+                  <div className="billing-eyebrow-row">
+                    <span className="billing-eyebrow">
+                      {t("portal.billing.section.plan", "Your plan")}
+                    </span>
+                    {identity && (
+                      <button
+                        type="button"
+                        className="billing-compare-open"
+                        onClick={() => setComparing(true)}
+                      >
+                        {t("portal.billing.compare.open", "Compare plans")}
+                      </button>
                     )}
                   </div>
-                  <div className="billing-id__chips">
-                    {identity.chips.map((c) => (
-                      <span key={c} className="billing-id__chip">
-                        {c}
-                      </span>
-                    ))}
-                  </div>
+                  {legacyPlan}
+                  {identity && (
+                    <div className="billing-id">
+                      <span className="billing-id__name">{identity.name}</span>
+                      <span className="billing-id__sub">{identity.sub}</span>
+                      {serverPlanAction && (
+                        <div className="billing-id__action">
+                          {serverPlanAction}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {(identity || selfHosted) && (
+                    <div className="billing-id__chips">
+                      {selfHosted && (
+                        <span className="billing-id__chip">
+                          {t(
+                            "portal.billing.identity.oauthSso",
+                            "SSO (OAuth2/OIDC)",
+                          )}
+                        </span>
+                      )}
+                      {identity?.chips.map((c) => (
+                        <span key={c} className="billing-id__chip">
+                          {c}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   <div className="billing-meters">
                     {(showTeam || serverPlan) && (
                       <TeamPlanRow
+                        legacyAllowance={legacyTeamAllowance}
+                        usersInUse={usersInUse}
+                        userLimit={userLimit}
+                        deviceId={deviceId}
                         wallet={wallet}
                         selfHosted={selfHosted}
                         serverPlan={serverPlan}
@@ -374,18 +502,19 @@ export function BillingScreen({
                         </div>
                       )}
 
-                      <KvRow
-                        label={t("portal.billing.cycle.pdfs", "PDFs processed")}
-                        value={wallet.docsProcessedThisPeriod.toLocaleString()}
-                      />
-                      {(serverPlan
-                        ? serverPlan.usersInUse != null
-                        : showTeam) && (
+                      {processedCount != null && (
+                        <KvRow
+                          label={t(
+                            "portal.billing.cycle.pdfs",
+                            "PDFs processed",
+                          )}
+                          value={processedCount.toLocaleString()}
+                        />
+                      )}
+                      {(serverPlan || showTeam) && occupiedSeats != null && (
                         <KvRow
                           label={t("portal.billing.cycle.users", "Users")}
-                          value={(
-                            serverPlan?.usersInUse ?? wallet.team.usersInUse
-                          ).toLocaleString()}
+                          value={occupiedSeats.toLocaleString()}
                         />
                       )}
                       {editorsDeployed != null && (
@@ -441,6 +570,29 @@ export function BillingScreen({
                 )}
               </>
             )}
+            {unavailable && !wallet && (
+              <>
+                {!identity && (
+                  <section id="ub-plan" className="billing-sec">
+                    <span className="billing-eyebrow">
+                      {t("portal.billing.chip.plan", "Plan")}
+                    </span>
+                    <p className="billing-id__sub">{unavailable}</p>
+                  </section>
+                )}
+                <section id="ub-usage" className="billing-sec">
+                  <span className="billing-eyebrow">
+                    {t("portal.billing.chip.usage", "Usage")}
+                  </span>
+                  <p className="billing-id__sub">
+                    {t(
+                      "portal.billing.dataUnavailable",
+                      "Usage figures are currently unavailable.",
+                    )}
+                  </p>
+                </section>
+              </>
+            )}
             {licenseSection && (
               <section
                 id="ub-license"
@@ -481,6 +633,31 @@ export function BillingScreen({
             </button>
           </div>
         )}
+
+        <ComparePlansModal
+          open={comparing}
+          onClose={() => setComparing(false)}
+          currentPlan={currentPlan}
+          freeUserLimit={compareFreeUsers}
+          freeAllowance={compareFreeAllowance}
+          teamAllowance={compareTeamAllowance}
+          onUpgradeTeam={
+            onAddCapacity && currentPlan === "free"
+              ? () => {
+                  setComparing(false);
+                  onAddCapacity();
+                }
+              : undefined
+          }
+          onExploreEnterprise={
+            onEnterpriseQuote && currentPlan !== "enterprise"
+              ? () => {
+                  setComparing(false);
+                  onEnterpriseQuote();
+                }
+              : undefined
+          }
+        />
 
         {extras}
       </div>

@@ -15,6 +15,10 @@ import { HAS_PORTAL } from "@app/routes/hasPortal";
 import { DOCS_PATH, HAS_DOCS } from "@app/routes/docsRoute";
 import { stripBasePath } from "@app/constants/app";
 import { rememberSettingsOrigin } from "@app/utils/settingsNavigation";
+import { canCreateProcessingFolders } from "@app/hooks/useProcessingFolderCreation";
+import { requestProcessingFolderCreation } from "@app/utils/pendingProcessingFolderCreation";
+import { requestProcessorSignup } from "@app/services/processorSignup";
+import { useConnectedServer } from "@app/hooks/useConnectedServer";
 
 import { Icon } from "@app/ui/Icon";
 const SIZE = "1.125rem";
@@ -28,6 +32,10 @@ export function QuickNavRailHost() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const host = useQuickNavHost();
+  // Processing folders run on the non-core API server. True on web (served by that backend);
+  // on desktop it tracks the signed-in connection, so the entry falls inert until the user
+  // signs in to Stirling Cloud or a self-hosted server.
+  const connectedServer = useConnectedServer();
 
   const appMounted = Boolean(host?.appMounted);
 
@@ -69,14 +77,15 @@ export function QuickNavRailHost() {
     return { disabled: Boolean(reason), reason };
   };
 
-  // The three apps you switch between. Reader is a mode over the editor rather
-  // than a place of its own, but it leads the group because it is where most
-  // visits start.
+  // Reading is a surface of its own rather than a tool inside the editor, and it
+  // leads the group because it is where most visits start.
   const reader: QuickNavEntry = {
     id: "reader",
     label: t("quickNav.reader", "Reader"),
     icon: <Icon name="book-open" size={SIZE} />,
-    pressed: Boolean(host?.readerMode),
+    // Current means the surface you are on, not a switch left on: reader mode set
+    // from the processor does not count until you are in the editor.
+    current: inEditor && Boolean(host?.readerMode),
     // From the processor there is no editor to toggle - see pendingReaderMode.
     onClick: () => {
       const setMode = host?.actions.current?.setReaderMode;
@@ -93,8 +102,9 @@ export function QuickNavRailHost() {
     id: "editor",
     label: t("quickNav.editor", "Editor"),
     icon: <Icon name="pencil" size={SIZE} filled={inEditor} />,
-    // The library is a place of its own, not the editor with a different centre.
-    current: inEditor && !host?.fileLibrary,
+    // The library and reading are places of their own, not the editor with a
+    // different centre.
+    current: inEditor && !host?.fileLibrary && !host?.readerMode,
     onClick: () => {
       if (inEditor) {
         returnHome();
@@ -110,12 +120,17 @@ export function QuickNavRailHost() {
     label: t("quickNav.processor", "Processor"),
     icon: <Icon name="cpu" size={SIZE} filled={inPortal} />,
     current: inPortal,
-    disabled: HAS_PORTAL && !inPortal && !host?.portalAccess,
+    disabled:
+      HAS_PORTAL && !inPortal && !host?.portalAccess && !host?.isAnonymous,
     reason:
-      HAS_PORTAL && !inPortal && !host?.portalAccess
+      HAS_PORTAL && !inPortal && !host?.portalAccess && !host?.isAnonymous
         ? t("quickNav.noProcessorAccess", "Ask an admin for processor access")
         : undefined,
     onClick: () => {
+      if (host?.isAnonymous) {
+        requestProcessorSignup();
+        return;
+      }
       if (inPortal) {
         returnHome();
         return;
@@ -125,17 +140,33 @@ export function QuickNavRailHost() {
     },
   };
 
-  // Editor and processor only pair off where there is a processor to reach.
-  const apps: QuickNavEntry[] = HAS_PORTAL
-    ? [reader, editor, processor]
-    : [reader];
+  // The processor is additive: dropping the editor with it left a lone reader
+  // entry in builds without a portal, with no way back out of reading.
+  const surfaces: QuickNavEntry[] = [
+    reader,
+    editor,
+    ...(HAS_PORTAL ? [processor] : []),
+  ];
 
   const within: QuickNavEntry[] = [
+    ...(!host?.hasOpenFromComputer
+      ? []
+      : [
+          {
+            id: "openFromComputer",
+            label: t("fileSidebar.openFromComputer", "Open from computer"),
+            icon: <Icon name="file-up" size={SIZE} />,
+            testId: "files-button",
+            tourId: "files-button",
+            onClick: () => host?.actions.current?.openFromComputer?.(),
+          },
+        ]),
     {
       id: "files",
       label: t("fileSidebar.myFiles", "File library"),
       icon: <Icon name="folder" size={SIZE} />,
       current: Boolean(host?.fileLibrary),
+      testId: "my-files-button",
       // Through the app where possible: the library is a view, not a route. From the
       // processor there is no editor to ask, so the path carries it and HomePage seeds
       // the view on arrival. Unwrapped: setting the view runs the app's own
@@ -149,6 +180,32 @@ export function QuickNavRailHost() {
         else go("/files");
       },
     },
+    ...(canCreateProcessingFolders
+      ? [
+          {
+            id: "createProcessingFolder",
+            label: t("processingFolders.setup.title"),
+            icon: <Icon name="folder-plus" size={SIZE} />,
+            disabled: !connectedServer,
+            reason: connectedServer
+              ? undefined
+              : t("quickNav.signInToUse", "Sign in to use this"),
+            onClick: () => {
+              if (host?.isAnonymous) {
+                requestProcessorSignup();
+                return;
+              }
+              const open = host?.actions.current?.createProcessingFolder;
+              if (open) open();
+              else
+                guarded(() => {
+                  requestProcessingFolderCreation();
+                  navigate(EDITOR_BASENAME);
+                });
+            },
+          },
+        ]
+      : []),
     {
       id: "automate",
       label: t("quickAccess.automate", "Automate"),
@@ -191,7 +248,7 @@ export function QuickNavRailHost() {
 
   return (
     <QuickNavRailContainer
-      groups={[apps, within]}
+      groups={[surfaces, within]}
       onReturnHome={returnHome}
       identity={host?.identity ?? null}
       onOpenAccount={openAccount}

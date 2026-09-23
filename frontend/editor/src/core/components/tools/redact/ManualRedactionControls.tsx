@@ -44,7 +44,8 @@ export default function ManualRedactionControls({
   const { signatureApiRef } = useSignature();
 
   // Check if user is navigating away (modal shown) — don't fight the save/leave process
-  const { showNavigationWarning } = useNavigationGuard();
+  const { showNavigationWarning, hasUnsavedChanges: navHasUnsavedChanges } =
+    useNavigationGuard();
 
   const isLeavingRef = useRef(false);
   const prevFileIndexRef = useRef(activeFileIndex);
@@ -134,8 +135,9 @@ export default function ManualRedactionControls({
     }
   }, [applyChanges]);
 
-  // Check if there are unsaved changes to save (pending redactions OR applied redactions)
-  const hasUnsavedChanges = pendingCount > 0 || redactionsApplied;
+  // Check if there are unsaved changes to save (pending redactions OR applied redactions OR unsaved changes)
+  const hasUnsavedChanges =
+    pendingCount > 0 || redactionsApplied || navHasUnsavedChanges;
 
   const isApiReady = isBridgeReady;
 

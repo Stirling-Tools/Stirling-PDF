@@ -34,11 +34,12 @@ downloadUnavailable = "Pobieranie niedostępne dla tego elementu"
 edit = "Edytuj"
 editSecret = "Edytuj tę wartość"
 editYourNewFiles = "Edytuj nowo utworzone pliki"
-encryptedFilesBlocked_one = "Plik jest zabezpieczony hasłem. Najpierw go odblokuj."
-encryptedFilesBlocked_other = "{{count}} plików jest zabezpieczonych hasłem. Najpierw je odblokuj."
 exportAndContinue = "Eksportuj i kontynuuj"
 false = "Nie"
+fileChangedOnDisk = "Zmieniono na dysku od czasu edycji"
+fileDiskUnavailable = "Nie można uzyskać dostępu do pliku na dysku"
 fileNotSavedToDisk = "Nie zapisano na dysku"
+fileOriginalDeleted = "Oryginał usunięty — zapisz, aby zachować kopię"
 fileSavedToDisk = "Plik zapisano na dysku"
 fileSelected = "Wybrano: {{filename}}"
 filesSelected = "{{count}} plików"
@@ -193,9 +194,6 @@ title = "Działanie"
 
 [AddAttachmentsRequest.tooltip.header]
 title = "O narzędziu Dodaj załączniki"
-
-[addFileCard]
-upload = "Prześlij"
 
 [addImage]
 applySignatures = "Zastosuj obrazy"
@@ -559,6 +557,47 @@ close = "Zamknij"
 error = "Błąd"
 expand = "Rozwiń"
 
+[admin.formDetection]
+confirmUninstall = "Kliknij, aby potwierdzić"
+description = "Wykrywa pola tekstowe, pola wyboru i obszary podpisu w PDF oraz zamienia je w wypełnialne pola formularza. Wykrywanie działa na tym serwerze z modelem zainstalowanym poniżej."
+downloadingNote = "{{percent}}% z {{size}}"
+enableFeature = "Włącz funkcję"
+engineUnavailable = "Ta kompilacja nie zawiera silnika wykrywania, więc narzędzie pozostaje niedostępne nawet po zainstalowaniu modelu."
+errorTitle = "Coś poszło nie tak"
+install = "Zainstaluj"
+installFailed = "Instalacja nie powiodła się"
+licenseLabel = "Licencja"
+modelsLabel = "Model wykrywania"
+notAvailable = "Nie skonfigurowano jeszcze URL pobierania/sumy kontrolnej, więc tego modelu nie można zainstalować."
+notWritable = "Katalog modelu nie jest zapisywalny; sprawdź montowanie woluminu konfiguracji."
+saveFailed = "Nie udało się zapisać ustawienia"
+sizeUnknown = "rozmiar nieznany"
+switch = "Użyj tego modelu"
+title = "Wykrywanie formularzy AI"
+uninstall = "Odinstaluj"
+uninstallFailed = "Odinstalowanie nie powiodło się"
+verifyingNote = "Weryfikowanie sumy kontrolnej SHA-256..."
+
+[admin.formDetection.airgap]
+intro = "Brak internetu na serwerze? Pobierz model gdzie indziej, zweryfikuj go i skopiuj do katalogu modelu. Zostanie wykryty po ponownym uruchomieniu."
+noSha = "(suma kontrolna nie ustawiona)"
+show = "Instalacja offline / air-gapped"
+step1 = "1. Pobierz na komputerze z internetem:"
+step2 = "2. Sprawdź, czy suma kontrolna SHA-256 się zgadza:"
+step3 = "3. Skopiuj go do katalogu modelu na tym serwerze:"
+step4 = "4. Ustaw formDetection.activeModelId na id modelu w settings.yml i uruchom ponownie. <configs> to wolumin konfiguracji (np. /configs w Docker). Obraz air-gapped zawiera już zainstalowany model."
+
+[admin.formDetection.badge]
+active = "Aktywny"
+installed = "Zainstalowany"
+
+[admin.formDetection.state]
+downloading = "Pobieranie..."
+failed = "Niepowodzenie"
+notInstalled = "Nie zainstalowano modelu"
+ready = "Gotowe"
+verifying = "Weryfikowanie..."
+
 [admin.settings]
 discard = "Odrzuć"
 error = "Nie udało się zapisać ustawień"
@@ -688,6 +727,9 @@ manualLinks = "Pobieranie ręczne: kliknij linki i umieść pliki w folderze tes
 noLanguages = "Nie znaleziono języków tessdata w skonfigurowanym katalogu."
 permissionNotice = "Ścieżka tessdata nie jest zapisywalna. Pobrania zostaną otwarte w przeglądarce; zapisz pliki .traineddata ręcznie w folderze tessdata."
 
+[admin.settings.ai]
+description = "Połącz Stirling z silnikiem Python AI, wybierz jego modele i ustaw ograniczenia, w których działa."
+
 [admin.settings.ai.documents]
 description = "Skonfiguruj model embeddingów i ustawienia pobierania używane do odpowiadania na pytania dotyczące dokumentów. Po zapisaniu stosowane do silnika AI."
 title = "Dokumenty i RAG"
@@ -727,6 +769,7 @@ description = "Liczba najtrafniejszych fragmentów pobieranych na wyszukiwanie."
 label = "Top K"
 
 [admin.settings.ai.general]
+connection = "Połączenie"
 description = "Połącz Stirling z silnikiem Python AI i wybierz, które funkcje AI mają być dostępne. Zmiany zostaną zastosowane po ponownym uruchomieniu."
 title = "Silnik AI"
 
@@ -818,6 +861,7 @@ openai = "Klucz API OpenAI"
 setPlaceholder = "Zapisano — pozostaw puste, aby zachować bieżący klucz"
 
 [admin.settings.ai.models.baseUrl]
+contextWindow = "Użyj okna kontekstu co najmniej 16 384 tokenów. Mniejsze okna po cichu odrzucają część promptu. Ollama domyślnie używa 4096 — zwiększ OLLAMA_CONTEXT_LENGTH."
 description = "Bazowy URL punktu końcowego zgodnego z OpenAI / Ollama, np. http://ollama:11434/v1."
 label = "Bazowy URL dostawcy"
 warning = "Bazowy URL musi wskazywać zaufany wewnętrzny punkt końcowy. Silnik będzie wykonywać do niego żądania po stronie serwera, więc niezaufana wartość jest wrażliwa na SSRF."
@@ -852,6 +896,7 @@ clickToUpgrade = "Kliknij, aby zobaczyć szczegóły planu"
 
 [admin.settings.connections]
 connect = "Połącz"
+connectedServicesDescription = "Usługi, z którymi ten serwer jest połączony. Dostawcy logowania znajdują się w sekcji Logowanie i bezpieczeństwo."
 description = "Skonfiguruj zewnętrznych dostawców uwierzytelniania, takich jak OAuth2 i SAML."
 disconnect = "Odłącz"
 disconnected = "Pomyślnie odłączono dostawcę"
@@ -974,6 +1019,8 @@ configuration = "Konfiguracja bazy danych"
 confirmCodeLabel = "Wprowadź kod potwierdzający, aby kontynuować"
 confirmImport = "Potwierdź import"
 confirmImportTitle = "Potwierdź import bazy danych"
+connection = "Połączenie"
+connectionDescription = "Skieruj Stirling na zewnętrzną bazę danych zamiast wbudowanej."
 createBackup = "Utwórz kopię zapasową"
 created = "Utworzono"
 delete = "Usuń"
@@ -1114,6 +1161,7 @@ placeholder = "/data/inbox"
 remove = "Usuń folder główny"
 
 [admin.settings.general]
+branding = "Marka i wygląd"
 description = "Skonfiguruj ustawienia aplikacji w całym systemie, w tym branding i domyślne zachowanie."
 system = "System"
 title = "Ustawienia systemu"
@@ -1217,14 +1265,6 @@ description = "Języki, które użytkownicy mogą wybierać (pozostaw puste, aby
 label = "Dostępne języki"
 placeholder = "Wybierz języki"
 
-[admin.settings.general.logoStyle]
-classic = "Klasyczny"
-classicAlt = "Klasyczne logo"
-description = "Wybierz między nowoczesnym minimalistycznym logo a klasyczną ikoną S"
-label = "Styl logo"
-modern = "Nowoczesny"
-modernAlt = "Nowoczesne logo"
-
 [admin.settings.general.showUpdate]
 description = "Wyświetlaj powiadomienia, gdy dostępna jest nowa wersja"
 label = "Pokaż powiadomienia o aktualizacjach"
@@ -1235,6 +1275,7 @@ label = "Pokazuj aktualizacje tylko administratorom"
 
 [admin.settings.legal]
 description = "Skonfiguruj linki do dokumentów i polityk prawnych."
+documentsDescription = "Linki wyświetlane użytkownikom do regulaminu, prywatności, plików cookie i impressum."
 title = "Dokumenty prawne"
 
 [admin.settings.legal.accessibilityStatement]
@@ -1449,8 +1490,8 @@ toggle = "Masz klucz licencyjny lub plik certyfikatu?"
 auditLogging = "<0>Rejestrowanie audytu</0> (ENTERPRISE) - Bezpieczeństwo"
 customMetadata = "<0>Własne metadane</0> (PRO) - Ogólne"
 databaseConfiguration = "<0>Konfiguracja bazy danych</0> (ENTERPRISE) - Baza danych"
-message = "Funkcje Premium i Enterprise są teraz uporządkowane w odpowiednich sekcjach:"
-title = "Funkcje Premium rozdzielone"
+message = "Skonfiguruj uwierzytelnianie i funkcje objęte licencją w odpowiednich sekcjach:"
+title = "Ustawienia funkcji"
 
 [admin.settings.privacy]
 analytics = "Analityka i śledzenie"
@@ -1488,8 +1529,7 @@ label = "Rejestrowanie audytu"
 showDetails = "Pokaż szczegóły poziomu audytu"
 
 [admin.settings.security.audit.advancedOptions]
-description = "Poniższe opcje zwiększają czas przetwarzania i zużycie pamięci. Włączaj tylko, jeśli jest to naprawdę potrzebne."
-title = "Opcje zaawansowane"
+cost = "Teraz zwiększa czas przetwarzania i użycie pamięci przy każdej operacji."
 
 [admin.settings.security.audit.captureFileHash]
 description = "Wyodrębnij skrót SHA-256 przesłanych plików PDF w celu weryfikacji integralności. Niezależne od poziomu audytu."
@@ -1833,6 +1873,7 @@ comment = "Komentarz"
 comments = "Komentarze"
 contents = "Tekst"
 delete = "Usuń"
+deleted = "Adnotacja usunięta"
 drawing = "Rysowanie"
 editSelectDescription = "Kliknij istniejącą adnotację, aby edytować jej kolor, przezroczystość, tekst lub rozmiar."
 editText = "Edytuj pole tekstowe"
@@ -1874,6 +1915,7 @@ textAlignment = "Wyrównanie tekstu"
 textMarkup = "Oznaczenia tekstu"
 title = "Adnotuj"
 underline = "Podkreślenie"
+undoDelete = "Cofnij"
 width = "Szerokość"
 
 [app]
@@ -2060,6 +2102,50 @@ bullet2 = "Tworzy czystą, prawidłową nazwę pliku z wykrytego tytułu"
 bullet3 = "Zachowuje oryginalną nazwę, jeśli nie znaleziono odpowiedniego tytułu"
 title = "Inteligentna zmiana nazwy"
 
+[autoFormDetection]
+loading = "Wykrywanie pól formularza..."
+submit = "Wykryj pola formularza"
+
+[autoFormDetection.detects]
+checkboxes = "Pola wyboru"
+label = "Znajduje i tworzy wypełnialne"
+signatures = "Podpisy"
+text = "Pola tekstowe"
+
+[autoFormDetection.error]
+failed = "Wystąpił błąd podczas wykrywania pól formularza."
+
+[autoFormDetection.progress]
+detecting = "Analizowanie dokumentu..."
+
+[autoFormDetection.results]
+title = "Sprawdź wypełnialny PDF"
+
+[autoFormDetection.sensitivity]
+balanced = "Zrównoważona"
+balancedHint = "Zalecana dla większości formularzy."
+high = "Dokładna"
+highHint = "Znajduje więcej pól, ale może dodać też takie, które nie powinny istnieć."
+label = "Czułość wykrywania"
+low = "Ścisła"
+lowHint = "Tylko bardzo pewne dopasowania — mniej pól, mniej błędów."
+
+[autoFormDetection.settings]
+title = "Ustawienia"
+
+[autoFormDetection.summary]
+checkboxes = "Pola wyboru"
+noneBody = "Dokument może nie zawierać obszarów podobnych do formularza. Cofnij, zmień czułość na \"Dokładna\" i uruchom ponownie, aby szukać dokładniej."
+noneTitle = "Nie znaleziono pól formularza"
+pages_one = "Na {{count}} stronie."
+pages_other = "Na {{count}} stronach."
+radioButtons = "Przyciski radiowe"
+signatures = "Podpisy"
+stepTitle = "Wyniki wykrywania"
+textFields = "Pola tekstowe"
+title_one = "Dodano {{count}} wypełnialne pole"
+title_other = "Dodano {{count}} wypełnialnych pól"
+
 [automate]
 copyToSaved = "Skopiuj do zapisanych"
 desc = "Buduj wieloetapowe przepływy pracy, łącząc akcje PDF. Idealne dla zadań powtarzalnych."
@@ -2154,6 +2240,7 @@ title = "Sugerowane"
 finish = "Zakończ"
 run = "Uruchom automatyzację"
 running = "Uruchamianie automatyzacji..."
+signInToRun = "Zaloguj się, aby uruchamiać automatyzacje."
 steps_one = "{{count}} step"
 steps_other = "{{count}} kroki"
 unnamed = "Automatyzacja bez nazwy"
@@ -2369,6 +2456,35 @@ bullet3 = "Zszyj lub opraw wzdłuż złożonego grzbietu"
 bullet4 = "Dla drukarek obracających na krótkiej krawędzi: włącz opcję 'Flip on short edge'"
 text = "Postępuj według tych kroków, aby uzyskać idealną broszurę:"
 title = "Jak drukować i składać"
+
+[brickGame]
+balls = "Piłki"
+best = "Najlepszy wynik"
+close = "Zamknij grę"
+effectTimer = "{{label}} {{seconds}} s"
+hint = "Poruszaj wskaźnikiem lub klawiszami strzałek. Kliknij, aby przechwycić wskaźnik, Esc, aby wrócić do pracy."
+hintPointerLocked = "Wskaźnik przechwycony. Esc go zwalnia, a kolejne Esc pozwala wrócić do pracy."
+score = "Wynik"
+title = "Ukryta gra"
+
+[brickGame.effect]
+fast = "Szybko"
+narrow = "Wąsko"
+reversed = "Odwrócone"
+slow = "Wolno"
+wide = "Szeroko"
+
+[brickGame.lost]
+detail = "Kliknij lub naciśnij Spację, aby spróbować ponownie"
+headline = "Brak piłek"
+
+[brickGame.ready]
+detail = "Kliknij lub naciśnij Spację, aby zacząć"
+headline = "Gotowe"
+
+[brickGame.won]
+detail = "Kliknij lub naciśnij Spację, aby zagrać ponownie"
+headline = "Wszystko wyczyszczone"
 
 [bulkSelection]
 syntaxError = "Wystąpił błąd składni. Zobacz wskazówki dotyczące wyboru stron."
@@ -3001,6 +3117,361 @@ summary_one = "Uruchomiono 1 narzędzie"
 summary_other = "Uruchomiono {{count}} narzędzi"
 unknownTool = "Nieznane narzędzie"
 
+[classification.families]
+correspondence = "Korespondencja"
+education = "Edukacja"
+engineering = "Inżynieria"
+finance = "Finanse"
+forms = "Formularze"
+government = "Administracja publiczna"
+health = "Medyczne"
+hr = "HR"
+legal = "Prawne"
+operations = "Operacje"
+projects = "Projekty"
+property = "Nieruchomości"
+reports = "Raporty"
+sales = "Marketing"
+travel = "Podróże"
+
+[classification.labels]
+academic-record = "Dokumentacja akademicka"
+action-plan = "Plan działania"
+addendum = "Aneks"
+advertisement = "Reklama"
+affidavit = "Oświadczenie pod przysięgą"
+agenda = "Agenda"
+amendment = "Poprawka"
+analytics-report = "Raport analityczny"
+announcement = "Ogłoszenie"
+annual-report = "Raport roczny"
+api-documentation = "Dokumentacja API"
+application-form = "Formularz wniosku"
+appraisal-report = "Raport wyceny"
+architecture-document = "Dokument architektury"
+articles-of-incorporation = "Akt założycielski spółki"
+assignment-brief = "Opis zadania"
+audit-report = "Raport z audytu"
+balance-sheet = "Bilans"
+bank-statement = "Wyciąg bankowy"
+benefits-summary = "Podsumowanie świadczeń"
+bill-of-lading = "Konosament"
+bill-of-materials = "Zestawienie materiałów"
+blueprint = "Projekt techniczny"
+board-report = "Raport dla zarządu"
+board-resolution = "Uchwała zarządu"
+booking-confirmation = "Potwierdzenie rezerwacji"
+brochure = "Broszura"
+budget = "Budżet"
+business-plan = "Biznesplan"
+business-proposal = "Oferta biznesowa"
+bylaws = "Regulamin wewnętrzny"
+campaign-brief = "Brief kampanii"
+case-study = "Studium przypadku"
+cash-flow-statement = "Rachunek przepływów pieniężnych"
+catalog = "Katalog"
+cease-and-desist = "Wezwanie do zaprzestania naruszeń"
+certificate = "Certyfikat"
+certificate-of-completion = "Certyfikat ukończenia"
+change-log = "Dziennik zmian"
+checklist = "Lista kontrolna"
+claim-form = "Formularz roszczenia"
+closing-statement = "Rozliczenie końcowe"
+complaint-letter = "Pismo reklamacyjne"
+compliance-document = "Dokument zgodności"
+confirmation-letter = "Pismo potwierdzające"
+consent-form = "Formularz zgody"
+contract = "Umowa"
+course-syllabus = "Program kursu"
+court-filing = "Pismo sądowe"
+cover-letter = "List motywacyjny"
+credit-note = "Nota kredytowa"
+customs-declaration = "Deklaracja celna"
+customs-form = "Formularz celny"
+cv = "CV"
+datasheet = "Karta danych"
+debit-note = "Nota debetowa"
+deed = "Akt prawny"
+delivery-note = "Dokument dostawy"
+demand-letter = "Wezwanie do zapłaty"
+design-document = "Dokument projektowy"
+diploma = "Dyplom"
+discharge-summary = "Karta wypisu"
+dissertation = "Rozprawa"
+donation-receipt = "Potwierdzenie darowizny"
+dunning-letter = "Monit płatniczy"
+email-thread = "Wątek Email"
+employee-handbook = "Podręcznik pracownika"
+employment-contract = "Umowa o pracę"
+estimate = "Kosztorys"
+event-agenda = "Agenda wydarzenia"
+event-program = "Program wydarzenia"
+eviction-notice = "Zawiadomienie o eksmisji"
+exam-paper = "Arkusz egzaminacyjny"
+expense-report = "Raport wydatków"
+expense-summary = "Podsumowanie wydatków"
+explanation-of-benefits = "Wyjaśnienie świadczeń"
+fact-sheet = "Arkusz informacyjny"
+faq-document = "Dokument FAQ"
+feasibility-study = "Studium wykonalności"
+feedback-form = "Formularz opinii"
+financial-forecast = "Prognoza finansowa"
+financial-statement = "Sprawozdanie finansowe"
+floor-plan = "Plan piętra"
+flyer = "Ulotka"
+form = "Formularz"
+franchise-agreement = "Umowa franczyzowa"
+freight-document = "Dokument przewozowy"
+gift-certificate = "Bon podarunkowy"
+glossary = "Glosariusz"
+government-notice = "Zawiadomienie urzędowe"
+grade-report = "Raport ocen"
+grant-agreement = "Umowa dotacji"
+grant-application = "Wniosek o dotację"
+hoa-document = "Dokument HOA"
+home-inspection-report = "Raport z inspekcji domu"
+hr-memo = "Notatka HR"
+hr-policy = "Polityka HR"
+immigration-document = "Dokument imigracyjny"
+immunization-record = "Karta szczepień"
+incident-report = "Raport incydentu"
+income-statement = "Rachunek zysków i strat"
+index = "Indeks"
+inspection-report = "Raport z inspekcji"
+insurance-certificate = "Certyfikat ubezpieczenia"
+insurance-claim = "Roszczenie ubezpieczeniowe"
+insurance-policy = "Polisa ubezpieczeniowa"
+intake-form = "Formularz przyjęcia"
+inventory-list = "Lista inwentarza"
+investment-summary = "Podsumowanie inwestycji"
+invitation = "Zaproszenie"
+invoice = "Faktura"
+itinerary = "Plan podróży"
+job-application = "Podanie o pracę"
+job-description = "Opis stanowiska"
+lab-report = "Raport laboratoryjny"
+lease-agreement = "Umowa najmu"
+leave-request = "Wniosek urlopowy"
+legal-brief = "Memoriał prawny"
+legal-filing = "Pismo prawne"
+legal-notice = "Zawiadomienie prawne"
+legal-opinion = "Opinia prawna"
+lesson-plan = "Plan lekcji"
+letter = "List"
+letter-of-intent = "List intencyjny"
+license = "Licencja"
+license-agreement = "Umowa licencyjna"
+loan-agreement = "Umowa pożyczki"
+loan-document = "Dokument pożyczki"
+maintenance-log = "Dziennik konserwacji"
+manual = "Instrukcja"
+market-research = "Badanie rynku"
+marketing-plan = "Plan marketingowy"
+media-kit = "Media kit"
+medical-invoice = "Faktura medyczna"
+medical-report = "Raport medyczny"
+meeting-agenda = "Agenda spotkania"
+meeting-minutes = "Protokół spotkania"
+meeting-notes = "Notatki ze spotkania"
+membership-document = "Dokument członkowski"
+memo = "Notatka"
+memorandum-of-understanding = "Memorandum of understanding"
+mortgage-document = "Dokument hipoteczny"
+nda = "NDA"
+newsletter = "Newsletter"
+non-compete-agreement = "Umowa o zakazie konkurencji"
+notice = "Zawiadomienie"
+offer-letter = "List z ofertą"
+onboarding-document = "Dokument onboardingowy"
+order-confirmation = "Potwierdzenie zamówienia"
+order-form = "Formularz zamówienia"
+organization-chart = "Schemat organizacyjny"
+packing-slip = "Specyfikacja pakowania"
+partnership-agreement = "Umowa partnerska"
+patent = "Patent"
+pathology-report = "Raport patologiczny"
+payment-reminder = "Przypomnienie o płatności"
+payroll-document = "Dokument płacowy"
+payslip = "Pasek wynagrodzenia"
+performance-review = "Ocena pracownicza"
+permit = "Zezwolenie"
+petition = "Petycja"
+pitch-deck = "Prezentacja pitch deck"
+power-of-attorney = "Pełnomocnictwo"
+prescription = "Recepta"
+presentation = "Prezentacja"
+press-release = "Komunikat prasowy"
+price-list = "Cennik"
+pricing-sheet = "Arkusz cenowy"
+privacy-policy = "Polityka prywatności"
+product-sheet = "Karta produktu"
+proforma-invoice = "Faktura proforma"
+progress-report = "Raport postępu"
+project-charter = "Karta projektu"
+project-plan = "Plan projektu"
+promotional-material = "Materiał promocyjny"
+property-listing = "Oferta nieruchomości"
+proposal = "Propozycja"
+public-notice = "Ogłoszenie publiczne"
+purchase-agreement = "Umowa kupna"
+purchase-order = "Zamówienie zakupu"
+quality-report = "Raport jakości"
+quarterly-report = "Raport kwartalny"
+questionnaire = "Kwestionariusz"
+quick-start-guide = "Przewodnik szybkiego startu"
+quote = "Oferta cenowa"
+radiology-report = "Raport radiologiczny"
+receipt = "Paragon"
+recommendation-letter = "List polecający"
+reference-letter = "List referencyjny"
+referral-letter = "Skierowanie"
+registration-confirmation = "Potwierdzenie rejestracji"
+registration-form = "Formularz rejestracyjny"
+regulatory-filing = "Zgłoszenie regulacyjne"
+release-notes = "Informacje o wydaniu"
+remittance-advice = "Zawiadomienie o płatności"
+rental-agreement = "Umowa najmu"
+report = "Raport"
+request-for-proposal = "Zapytanie ofertowe"
+request-for-quotation = "Zapytanie o wycenę"
+requirements-document = "Dokument wymagań"
+research-abstract = "Streszczenie badania"
+research-paper = "Praca badawcza"
+reservation = "Rezerwacja"
+resignation-letter = "Wypowiedzenie umowy o pracę"
+resume = "Resume"
+retrospective = "Retrospektywa"
+return-authorization = "Autoryzacja zwrotu"
+risk-assessment = "Ocena ryzyka"
+roadmap = "Plan rozwoju"
+safety-data-sheet = "Karta charakterystyki"
+safety-procedure = "Procedura bezpieczeństwa"
+sales-proposal = "Oferta sprzedaży"
+sales-report = "Raport sprzedaży"
+schematic = "Schemat"
+scope-of-work = "Zakres prac"
+service-agreement = "Umowa o świadczenie usług"
+service-report = "Raport serwisowy"
+settlement-agreement = "Ugoda"
+shareholder-agreement = "Umowa wspólników"
+shipping-confirmation = "Potwierdzenie wysyłki"
+specification = "Specyfikacja"
+sponsorship-agreement = "Umowa sponsorska"
+standard-operating-procedure = "Standardowa procedura operacyjna"
+statement-of-account = "Wyciąg z konta"
+statement-of-work = "Opis prac"
+status-report = "Raport statusu"
+stock-report = "Raport magazynowy"
+study-guide = "Przewodnik do nauki"
+subpoena = "Wezwanie sądowe"
+subscription-confirmation = "Potwierdzenie subskrypcji"
+supply-order = "Zamówienie dostawy"
+survey-form = "Formularz ankiety"
+survey-results = "Wyniki ankiety"
+sustainability-report = "Raport zrównoważonego rozwoju"
+table-of-contents = "Spis treści"
+tax-form = "Formularz podatkowy"
+tax-return = "Zeznanie podatkowe"
+tax-statement = "Informacja podatkowa"
+technical-drawing = "Rysunek techniczny"
+technical-specification = "Specyfikacja techniczna"
+tenancy-agreement = "Umowa najmu"
+tender-document = "Dokument przetargowy"
+termination-letter = "Pismo o rozwiązaniu umowy"
+terms-and-conditions = "Regulamin"
+terms-of-service = "Warunki świadczenia usług"
+test-plan = "Plan testów"
+test-report = "Raport z testów"
+thesis = "Praca dyplomowa"
+ticket = "Zgłoszenie"
+timeline = "Oś czasu"
+timesheet = "Karta czasu pracy"
+title-document = "Dokument tytułu własności"
+training-material = "Materiał szkoleniowy"
+transcript = "Transkrypcja"
+travel-itinerary = "Plan podróży"
+trust-document = "Dokument trustu"
+user-guide = "Przewodnik użytkownika"
+utility-bill = "Rachunek za media"
+vendor-agreement = "Umowa z dostawcą"
+visa-document = "Dokument wizowy"
+waiver = "Zrzeczenie się"
+warehouse-receipt = "Kwit magazynowy"
+warranty-document = "Dokument gwarancyjny"
+waybill = "List przewozowy"
+white-paper = "White paper"
+will = "Testament"
+work-instruction = "Instrukcja pracy"
+work-order = "Zlecenie pracy"
+
+[classificationDemo]
+folderName = "Pobrane"
+
+[classificationDemo.buttons]
+done = "Gotowe"
+notNow = "Nie teraz"
+skip = "Pomiń"
+stop = "Zatrzymaj"
+
+[classificationDemo.chart]
+centre = "dokumenty"
+hint = "Wybierz wycinek, aby zobaczyć typy dokumentów za nim."
+label = "Dokumenty według typu: {{summary}}"
+noTypes = "Te dokumenty nie pasują do znanego typu."
+
+[classificationDemo.defaultApp]
+body = "Ustaw Stirling jako domyślną aplikację PDF. Każdy PDF otwierany z emaila, przeglądarki lub pulpitu trafi tutaj, gotowy do czytania lub edycji. Możesz to zmienić w dowolnym momencie w Ustawieniach."
+cta = "Ustaw Stirling jako domyślny"
+title = "Otwieraj każdy PDF w Stirling"
+
+[classificationDemo.followUp]
+background = "To działa w tle. Pierścień po lewej pokazuje postęp."
+restCta = "Przetwórz resztę"
+serverCredits = "Połączony serwer zarządza kredytami za przetwarzanie tych plików."
+title = "Chcesz kontynuować? Masz jeszcze {{count}} plików PDF w folderze Pobrane."
+
+[classificationDemo.groups]
+other = "Inne"
+
+[classificationDemo.offer]
+body = "Klasyfikuj i organizuj {{count}} najnowszych plików PDF w folderze Pobrane według typu."
+cta = "Przetwórz mój folder Pobrane"
+privacy = "Twoje PDF pozostają na tym urządzeniu. Połączony serwer rejestruje użycie przetwarzania."
+title = "Zobacz, co Stirling potrafi zrobić z całym folderem"
+
+[classificationDemo.phase]
+finishing = "Kończenie..."
+gathering = "Zbieranie plików PDF..."
+processing = "Przetwarzanie pliku {{done}}/{{total}}..."
+reading = "Odczytywanie folderu Pobrane..."
+
+[classificationDemo.processing]
+counts = "z {{total}} przetworzonych plików PDF"
+
+[classificationDemo.results]
+documentCount_one = "{{count}} PDF"
+documentCount_other = "{{count}} PDF"
+failedBody = "Stirling nie mógł odczytać folderu Pobrane. Nic na komputerze nie zostało zmienione."
+failedTitle = "Nie udało się ukończyć"
+heading = "Twoje Pobrane, posortowane"
+summary = "Stirling odczytał {{documents}} i posortował je na {{types}}."
+typeCount_one = "{{count}} typ"
+typeCount_other = "{{count}} typów"
+
+[classificationDemo.ring]
+done = "{{folder}} sklasyfikowany"
+doneDetail = "{{count}} PDF posortowano według typu"
+progress = "{{done}} z {{total}} PDF ({{percent}}%)"
+running = "Klasyfikowanie {{folder}}"
+
+[classificationDemo.status]
+checked = "Sprawdzono {{checked}} z {{total}} plików..."
+checking = "Sprawdzanie nazwy i daty każdego pliku..."
+connecting = "Łączenie z folderem Pobrane..."
+library = "Dodawanie go do biblioteki plików..."
+listing = "Wyświetlanie plików w Pobranych..."
+picking = "Szukanie {{count}} najnowszych plików PDF..."
+
 [cloudBadge]
 tooltip = "Ta operacja wykorzysta Twoje kredyty w chmurze"
 
@@ -3016,6 +3487,8 @@ title = "Wybierz kolor"
 actions = "Actions"
 back = "Wstecz"
 cancel = "Anuluj"
+change = "Zmień"
+clearFilters = "Wyczyść filtry"
 close = "Zamknij"
 codeSample = "Code sample"
 collapse = "Zwiń"
@@ -3027,6 +3500,7 @@ done = "Gotowe"
 enterValue = "Enter value"
 error = "Błąd"
 expand = "Rozwiń"
+filterEmpty = "Brak elementów do filtrowania"
 loading = "Wczytywanie..."
 next = "Dalej"
 open = "Open"
@@ -3036,6 +3510,7 @@ refresh = "Odśwież"
 remaining = "Pozostało"
 retry = "Ponów"
 save = "Zapisz"
+search = "Szukaj"
 stepOf = "Step {{current}} of {{total}}"
 
 [compare]
@@ -3227,7 +3702,9 @@ tags = "zgniatać,mały,malutki"
 
 [config]
 plan = "Plan"
+planDescription = "Twój plan, kredyty i limit wydatków oraz powiązane faktury."
 team = "Team"
+teamDescription = "Kto współdzieli ten obszar roboczy oraz zaproszenia nadal oczekujące na odpowiedź."
 
 [config.account.overview]
 confirmDelete = "Usuń moje konto"
@@ -3319,7 +3796,6 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
-title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -3350,6 +3826,49 @@ basic = "Podstawowa konfiguracja"
 integration = "Konfiguracja integracji"
 security = "Konfiguracja zabezpieczeń"
 system = "Konfiguracja systemu"
+
+[connect]
+loading = "Sprawdzanie tego żądania."
+redirecting = "Powrót do Twojego serwera."
+step = "Krok {{current}} z {{total}}"
+
+[connect.confirm]
+acknowledge = "Rozpoznaję ten adres i chcę połączyć go z moim zespołem"
+approve = "Połącz serwer"
+cannotDecide = "Tylko właściciel zespołu może zatwierdzić lub odrzucić to połączenie. Użyj innego konta lub zamknij ten monit, aby dalej korzystać ze Stirling."
+deny = "Odrzuć"
+dismiss = "Zamknij"
+lead = "Serwer Stirling prosi o połączenie z Twoim zespołem. Przed zatwierdzeniem sprawdź, czy poniższy adres należy do Ciebie."
+originLabel = "Adres"
+signedInAs = "Zalogowano jako"
+switchAccount = "Użyj innego konta"
+title = "Połączyć ten serwer?"
+unknownAccount = "nieznane konto"
+
+[connect.confirm.insecure]
+body = "Ten adres nie używa HTTPS, więc logowanie zostanie wysłane przez nieszyfrowane połączenie. Zatwierdź tylko w sieci, której ufasz."
+label = "Adres nie jest szyfrowany"
+
+[connect.declined]
+body = "Nic nie zostało połączone. Możesz zamknąć tę stronę."
+title = "Żądanie odrzucone"
+
+[connect.error]
+failed = "To się nie udało. Tylko właściciel zespołu może połączyć serwer."
+
+[connect.meta]
+title = "Połącz serwer"
+
+[connect.notFound]
+body = "To żądanie połączenia jest nieprawidłowe. Mogło wygasnąć albo zostało już użyte. Rozpocznij kolejne z serwera."
+title = "Żądanie nieprawidłowe"
+
+[connect.renewal]
+approve = "Odnów logowanie"
+failed = "Nie można odnowić logowania. Spróbuj ponownie albo zamknij tę stronę i rozpocznij ponownie z serwera."
+lead = "Ten serwer jest już połączony z Twoim kontem. Odnów logowanie, aby wrócić do rozliczeń i użycia na serwerze."
+title = "Odnów logowanie do serwera"
+wrongAccount = "To konto nie może odnowić logowania tego serwera. Przełącz się na konto użyte pierwotnie do połączenia serwera. To konto nadal musi być właścicielem połączonego zespołu."
 
 [convert]
 autoRotate = "Automatyczny obrót"
@@ -3494,6 +4013,26 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[createPortfolio]
+coverTitle = "Tytuł strony okładki"
+coverTitlePlaceholder = "Portfolio PDF"
+description = "Każdy wybrany plik jest zachowywany w całości w nowym PDF, niezależnie od typu. Czytniki, które nie obsługują portfolio, pokazują stronę okładki z załączonymi plikami."
+goToFileEditor = "Przejdź do edytora plików"
+info = "Łączy pliki w jeden PDF, który zachowuje każdy plik w całości wewnątrz. Otwórz wynik, aby przeglądać pliki i wyświetlić lub zapisać dowolny z nich osobno."
+settings = "Ustawienia portfolio"
+submit = "Utwórz portfolio"
+title = "Wyniki portfolio"
+viewerModeHint = "Portfolio wymaga co najmniej 2 plików. Przejdź do edytora plików, aby je wybrać."
+
+[createPortfolio.error]
+failed = "Wystąpił błąd podczas tworzenia portfolio PDF."
+
+[createPortfolio.tooltip.description]
+title = "Co robi"
+
+[createPortfolio.tooltip.header]
+title = "O portfolio PDF"
+
 [crop]
 autoCrop = "Automatycznie przytnij białe obszary"
 noFileSelected = "Wybierz plik PDF, aby rozpocząć przycinanie"
@@ -3567,6 +4106,36 @@ title = "Otworzono ustawienia"
 [defaultApp.success]
 message = "Stirling PDF jest teraz domyślnym edytorem PDF"
 title = "Ustawiono domyślną aplikację"
+
+[desktopFileLink]
+saveAs = "Zapisz jako…"
+useDiskVersion = "Użyj wersji z dysku"
+
+[desktopFileLink.conflict]
+hint = "Zachowanie Twoich zmian nadpisze plik na dysku przy następnym zapisie."
+keepMine = "Zachowaj moje zmiany"
+prompt = "Ten plik został zmieniony na dysku, gdy tutaj były niezapisane zmiany. Można zachować tylko jedną wersję."
+remaining = "{{count}} więcej do sprawdzenia"
+title = "Plik zmieniony na dysku"
+useDisk = "Użyj wersji z dysku"
+
+[desktopFileLink.missing]
+body = "\"{{name}}\" został usunięty lub przeniesiony na dysku, więc usunięto go z Twoich plików."
+title = "Plik już nie istnieje"
+
+[desktopFileLink.openDeleted]
+body_one = "\"{{name}}\" już nie istnieje na dysku. Nadal jest tutaj otwarty — przy zapisie poprosi o nową lokalizację."
+body_other = "{{count}} plików już nie istnieje na dysku. Nadal są tutaj otwarte — zapis każdego z nich poprosi o nową lokalizację."
+title_one = "Plik usunięty na dysku"
+title_other = "Pliki usunięte na dysku"
+
+[desktopFileLink.reloaded]
+body = "\"{{name}}\" został zmieniony na dysku i ponownie wczytany."
+title = "Zaktualizowano z dysku"
+
+[desktopFileLink.tooLarge]
+body = "\"{{name}}\" został zmieniony na dysku. Jest na tyle duży, że ponowne wczytanie potrwa, więc wersja tutaj pozostała bez zmian."
+title = "Plik zmieniony na dysku"
 
 [desktopUpdate]
 downloading = "Pobieranie aktualizacji..."
@@ -3692,9 +4261,6 @@ subtitle = "Importuj zakładki, twórz hierarchie i zastosuj konspekt bez ciasny
 description = "Wybierz narzędzie Edytuj spis treści, aby wczytać jego obszar roboczy."
 title = "Otwórz narzędzie, aby rozpocząć edycję"
 
-[emptyFilesState]
-upload = "Prześlij"
-
 [encryptedPdfUnlock]
 description = "Ten PDF jest zabezpieczony hasłem. Wpisz hasło, aby kontynuować pracę."
 emptyResponse = "Usunięcie hasła nie zwróciło pliku."
@@ -3775,111 +4341,70 @@ closeFile = "Zamknij plik"
 addFiles = "Dodaj pliki"
 
 [fileManager]
-active = "Aktywny"
 addToUpload = "Dodaj do przesyłania"
-changesNotUploaded = "Zmiany nie zostały przesłane"
 clearAll = "Wyczyść wszystko"
 clearSelection = "Wyczyść wybór"
-closeAllFiles = "Zamknij wszystkie pliki"
-closeFile = "Zamknij plik"
-cloudFile = "Plik w chmurze"
-copyCreated = "Kopia zapisana na tym urządzeniu."
-copyFailed = "Nie udało się utworzyć kopii."
 delete = "usuń"
 deleteAll = "Usuń wszystko"
-deleteSelected = "Usuń zaznaczone"
-deselectAll = "Odznacz wszystko"
-details = "Szczegóły pliku"
 download = "Pobierz"
 downloadSelected = "Pobierz wybrane"
-dropFilesHere = "Upuść pliki tutaj"
-fileFormat = "Format"
-fileHistory = "Historia plików"
-fileName = "Nazwa"
-fileSize = "Rozmiar"
 filesSelected = "wybrane pliki"
 filesStored = "przechowywane pliki"
-fileVersion = "Wersja"
-filterAll = "Wszystkie"
-filterLocal = "Lokalne"
-filterSharedByMe = "Udostępnione przeze mnie"
-filterSharedWithMe = "Udostępnione mi"
-googleDrive = "Google Drive"
-googleDriveNotAvailable = "Integracja z Google Drive niedostępna"
-googleDriveShort = "Dysk"
-hideHistory = "Ukryj historię"
-lastModified = "Ostatnia modyfikacja"
-lastSynced = "Ostatnia synchronizacja"
-leaveShare = "Usuń z mojej listy"
-leaveShareFailed = "Nie udało się usunąć udostępnionego pliku."
-leaveShareSuccess = "Usunięto z listy udostępnionych."
 loadingFiles = "Ładowanie plików..."
-localOnly = "Tylko lokalnie"
-makeCopy = "Utwórz kopię"
-mobileShort = "Mobilne"
-mobileUpload = "Przesyłanie z telefonu"
-mobileUploadNotAvailable = "Przesyłanie z telefonu nie jest włączone"
-moreOptions = "Więcej opcji"
-myFiles = "Moje pliki"
-nextFile = "Następny plik"
 noFiles = "Brak dostępnych plików"
 noFilesFound = "Nie znaleziono plików pasujących do wyszukiwania"
-noRecentFiles = "Nie znaleziono ostatnich plików"
-openFile = "Otwórz plik"
-openFiles = "Otwórz pliki"
 openInFileEditor = "Otwórz w Edytorze plików"
 openInPageEditor = "Otwórz w Edytorze stron"
-owner = "Właściciel"
-ownerUnknown = "Nieznany"
-previousFile = "Poprzedni plik"
-recent = "Ostatnie"
-removeBoth = "Usuń z obu"
-removeFilePrompt = "Ten plik jest zapisany na tym urządzeniu i na twoim serwerze. Skąd chcesz go usunąć?"
-removeFileTitle = "Usuń plik"
-removeLocalOnly = "Tylko to urządzenie"
-removeServerFailed = "Nie udało się usunąć pliku z serwera."
-removeServerOnly = "Tylko serwer"
-removeServerOnlyPrompt = "Ten plik jest przechowywany tylko na twoim serwerze. Czy chcesz usunąć go z serwera?"
-removeServerSuccess = "Usunięto z serwera."
-removeSharedPrompt = "Ten plik jest z tobą udostępniony. Możesz usunąć go z tego urządzenia lub z listy udostępnionych."
-removeSharedServerOnlyBlockedPrompt = "Ten plik jest z tobą udostępniony i przechowywany wyłącznie na serwerze."
-removeSharedServerOnlyPrompt = "Ten plik jest z tobą udostępniony i przechowywany wyłącznie na serwerze. Usunąć go z twojej listy?"
-restore = "Przywróć"
 saveSelected = "Zapisz wybrane"
 searchFiles = "Szukaj plików..."
-selectAll = "Zaznacz wszystko"
-selectedCount = "{{count}} wybrane"
 share = "Udostępnij"
 shared = "Udostępnione"
-sharedByYou = "Udostępnione przez ciebie"
 sharedEditNoticeBody = "Nie masz praw edycji do wersji serwerowej tego pliku. Wszelkie zmiany zostaną zapisane jako kopia lokalna."
 sharedEditNoticeConfirm = "Rozumiem"
 sharedEditNoticeTitle = "Serwerowa kopia tylko do odczytu"
 sharedWithYou = "Udostępnione tobie"
-shareSelected = "Udostępnij wybrane"
-sharing = "Udostępnianie"
 showAll = "Pokaż wszystko"
-showHistory = "Pokaż historię"
 sortBy = "Sort files"
 sortByDate = "Sortuj według daty"
 sortByName = "Sortuj według nazwy"
 sortBySize = "Sortuj według rozmiaru"
 storage = "Magazyn"
-storageState = "Przechowywanie"
 storageUsed = "Storage used"
-synced = "Zsynchronizowano"
 title = "Prześlij pliki PDF"
-toolChain = "Zastosowane narzędzia"
 unsupported = "Nieobsługiwane"
 unzip = "Rozpakuj"
 updateOnServer = "Zaktualizuj na serwerze"
-uploadSelected = "Prześlij wybrane"
 uploadToServer = "Prześlij na serwer"
 versionHistory = "Version history"
+
+[filePicker]
+add_one = "Dodaj {{count}} plik"
+add_other = "Dodaj {{count}} plików"
+addHere = "Dodaj tutaj"
+adding = "Dodawanie plików…"
+chooseDestination = "Wybierz folder lub dodaj tutaj."
+dropHint = "Wybierz pliki, z którymi chcesz pracować."
+dropTitle = "Upuść pliki tutaj lub kliknij, aby przeglądać"
+emptyZip = "Nie można wyodrębnić żadnych plików z tego ZIP."
+error = "Nie można dodać tych plików. Spróbuj ponownie."
+errorTitle = "Nie udało się dodać plików"
+filesUnavailable = "Nie można dodać: {{names}}"
+fileUnavailable = "{{name}} nie jest już dostępny."
+folderPath = "Ścieżka folderu"
+fromComputer = "Z komputera"
+fromPhone = "Z telefonu"
+limit = "Wybierz maksymalnie {{count}} plików."
+selectedLimit = "Wybrano {{count}} z {{limit}}"
+selectVersion = "Wybierz wersję {{version}}"
+sources = "Źródła plików"
+subtitle = "Wybierz z biblioteki lub dodaj coś nowego."
+title = "Dodaj pliki"
+unsupported = "Ten typ pliku nie jest obsługiwany przez wybrane narzędzie."
 
 [files]
 addFiles = "Dodaj pliki"
 created = "Utworzono"
+notIncludedInToolRun = "Nie uwzględniono w tym uruchomieniu narzędzia"
 selectFromWorkbench = "Wybierz pliki z obszaru roboczego lub "
 selectMultipleFromWorkbench = "Wybierz co najmniej {{count}} plików z obszaru roboczego lub "
 size = "Rozmiar pliku"
@@ -3920,8 +4445,6 @@ dropToAdd = "Drop files to add"
 duplicateFailed = "Could not duplicate file"
 expand = "Rozwiń pasek boczny"
 googleDrive = "Google Drive"
-googleDriveDisabled = "Google Drive nie jest skonfigurowany"
-leaveMyFiles = "Wyjdź z Moich plików"
 library = "Biblioteka PDF"
 myFiles = "Moje pliki"
 noFiles = "Brak plików"
@@ -3930,6 +4453,8 @@ openFromComputer = "Otwórz z komputera"
 openSettings = "Otwórz ustawienia"
 other = "Inne"
 recent = "Ostatnie"
+uploadFailedBody = "Nie udało się dodać wybranych plików."
+uploadFailedTitle = "Przesyłanie nie powiodło się"
 viewAll = "Wyświetl wszystkie pliki ({{count}})"
 
 [fileSidebar.fileItem]
@@ -3961,6 +4486,10 @@ save = "Rename"
 title = "Rename file"
 
 [filesPage]
+addedToLibrary = "Dodano do biblioteki Stirling"
+addingToLibrary = "Dodawanie do biblioteki Stirling…"
+addToLibrary = "Dodaj do biblioteki Stirling…"
+addToLibraryFailed = "Nie udało się dodać niektórych plików"
 addToWorkspace = "Dodaj do przestrzeni roboczej"
 addToWorkspaceCount = "Dodaj {{count}} do przestrzeni roboczej"
 allFiles = "Wszystkie pliki"
@@ -3968,6 +4497,7 @@ back = "Wstecz"
 backToFolder = "Wróć do {{folder}}"
 backToMyFiles = "Wróć do Moich plików"
 breadcrumbs = "Ścieżka folderu"
+breadcrumbsOverflow = "Pokaż foldery nadrzędne"
 bulkActions = "Akcje"
 cancel = "Anuluj"
 classification = "Klasyfikacja"
@@ -4002,6 +4532,7 @@ downloadAll = "Pobierz wszystko"
 downloadVersion = "Pobierz tę wersję"
 dropOverlay = "Upuść pliki, aby je przesłać"
 dropOverlaySub = "Pliki trafiają najpierw do Lokalnych. Użyj 'Przenieś do' lub 'Zapisz w chmurze', aby umieścić je w folderze."
+dropOverlaySubFolder = "Zostaną dodane do tego folderu."
 duplicate = "Duplicate"
 file = "Plik"
 fileInfo = "File info"
@@ -4010,15 +4541,21 @@ folder = "Folder"
 folderItems_one = "{{count}} item"
 folderItems_other = "{{count}} items"
 folderMenu = "Akcje folderu"
+folderSettings = "Ustawienia folderu"
 inPath = "w {{path}}"
 inWorkspace = "Otwórz"
 inWorkspaceAria = "Już w przestrzeni roboczej"
-loading = "Ładowanie…"
-localFoldersUnavailable = "Foldery działają tylko w chmurze – zapisz plik w chmurze, aby je uporządkować."
+localFolderManagedByDisk = "Ten folder jest zarządzany przez swój katalog na dysku."
+moveAcrossKindsBlocked = "Te foldery znajdują się w różnych miejscach, więc jeden nie może znajdować się w drugim."
+moveIntoMountCloudSkipped_one = "{{count}} plik serwera pozostał w Twoich plikach. Znajduje się na serwerze, a nie na tym dysku."
+moveIntoMountCloudSkipped_other = "{{count}} plików serwera pozostało w Twoich plikach. Znajdują się na serwerze, a nie na tym dysku."
+moveIntoMountFailed_one = "{{count}} pliku nie udało się zapisać w folderze."
+moveIntoMountFailed_other = "{{count}} plików nie udało się zapisać w folderze."
+moveIntoVirtualCloudSkipped_one = "{{count}} plik serwera pozostawiono na miejscu. Pliki serwera nie mogą znajdować się w folderach dostępnych tylko w przeglądarce."
+moveIntoVirtualCloudSkipped_other = "{{count}} plików serwera pozostawiono na miejscu. Pliki serwera nie mogą znajdować się w folderach dostępnych tylko w przeglądarce."
 moveSkippedRemote_one = "{{count}} file couldn't be moved on the server (no permission or already deleted)."
 moveSkippedRemote_other = "{{count}} files couldn't be moved on the server (no permission or already deleted)."
 moveTo = "Przenieś do…"
-myFiles = "Moje pliki"
 newFolder = "Nowy folder"
 newFolderStorageDisabled = "Pamięć folderów na serwerze nie jest włączona. Poproś administratora o jej włączenie."
 newFolderTabUnavailable = "Przełącz na Wszystkie lub Chmura, aby tworzyć foldery."
@@ -4026,20 +4563,23 @@ offlineNoFolderEdits = "Synchronizacja folderów z serwerem jest niedostępna �
 open = "Otwórz"
 openVersionInWorkspace = "Otwórz w przestrzeni roboczej"
 originFilter = "Filtruj wg źródła"
+recentFiles = "Ostatnie"
 refresh = "Odśwież z serwera"
+refreshNeedsConnection = "Zaloguj się, aby odświeżyć dane z serwera."
 remove = "Usuń"
+removeLocalFolder = "Odłącz od Stirling"
 removeVersion = "Usuń tę wersję"
 rename = "Zmień nazwę"
 renamed = "Zmieniono nazwę"
 renameFolder = "Zmień nazwę folderu"
-resizeFolderTree = "Zmień rozmiar drzewa folderów (strzałki, Shift dla większych kroków; dwuklik, aby dopasować automatycznie)"
 save = "Zapisz"
 saveToServer = "Zapisz na serwerze"
 saveToServerDisabledHint = "Zapisywanie na serwerze nie jest włączone na tym serwerze. Poproś administratora, aby je włączył."
 selectAll = "Zaznacz wszystko"
-selectAllHint = "Kliknij, aby zaznaczyć wszystko. Wskazówka: przytrzymaj Ctrl (lub Cmd), aby dodawać pliki pojedynczo, a Shift, aby zaznaczyć zakres."
 selectedCount = "Wybrano: {{count}}"
+selectedFile = "{{name}}, wybrano"
 selectFile = "Wybierz plik {{name}}"
+serverFolderNeedsConnection = "Zaloguj się do Stirling Cloud lub połącz serwer self-hosted, aby używać folderów serwera."
 shareDisabledHint = "Udostępnianie plików nie jest włączone na tym serwerze. Poproś administratora, aby je włączył."
 shareManage = "Zarządzaj udostępnianiem"
 showDetails = "Pokaż szczegóły"
@@ -4047,8 +4587,10 @@ signInRequired = "Sign in to use cloud storage."
 summary_one = "{{count}} item"
 summary_other = "{{count}} items"
 tree = "Foldery"
+unmount = "Odłącz"
+unmountFolderBody = "Odłączyć \"{{name}}\"? Folder i jego pliki pozostaną na dysku."
+unmountFolderTitle = "Odłączyć od Stirling?"
 upload = "Prześlij"
-uploadedToLocal = "Przesłane pliki trafiają najpierw do Lokalnych. Użyj 'Zapisz w chmurze', aby umieścić je w folderze."
 uploadFromMobile = "Prześlij z telefonu"
 versionActions = "Akcje wersji"
 versionCollapse = "Zwiń środkowe wersje"
@@ -4061,14 +4603,18 @@ viewVersionHistory = "Version journey ({{count}})"
 
 [filesPage.appearance]
 colour = "Kolor"
+done = "Gotowe"
+edit = "Wygląd..."
 icon = "Ikona"
 title = "Wygląd"
 useColour = "Użyj koloru {{c}}"
 
 [filesPage.column]
+added = "Dodano"
 modified = "Zmodyfikowano"
 name = "Nazwa"
 size = "Rozmiar"
+status = "Status"
 type = "Typ"
 
 [filesPage.deleteScope]
@@ -4079,9 +4625,30 @@ deviceHint = "Removes the local copy. The cloud copy is kept."
 everywhere = "Everywhere"
 everywhereHint = "Deletes the file from this device and the cloud."
 
+[filesPage.diskLink]
+conflict = "Dysk się zmienił"
+conflictHint = "Plik na dysku zmienił się, gdy miałeś niezapisane zmiany. Wyświetlana jest Twoja wersja — zapisanie nadpisze wersję na dysku."
+orphaned = "Brak na dysku"
+orphanedHint = "Oryginał w {{path}} zniknął. Ta kopia jest tylko tutaj — zapisanie poprosi o nową lokalizację."
+unavailable = "Niedostępne"
+unavailableHintOffline = "Dysk lub udział, na którym znajduje się ten plik, nie jest podłączony. Podłącz go ponownie, aby znów odbierać zmiany."
+unavailableHintPermission = "Stirling nie ma uprawnień do odczytu tej lokalizacji. Przyznaj dostęp w ustawieniach systemu, aby znów odbierać zmiany."
+unavailableHintUnknown = "Ten plik jest teraz niedostępny. Kopia tutaj pozostaje bez zmian."
+
+[filesPage.diskState]
+all = "Wszystkie"
+done = "Gotowe"
+doneHint = "Przetworzono — otwiera wynik"
+failed = "Niepowodzenie"
+processing = "Przetwarzanie"
+processingHint = "Ten plik będzie dostępny po zakończeniu przetwarzania"
+retry = "Ponów"
+retryHint = "Uruchom ten plik ponownie"
+waiting = "W kolejce"
+waitingHint = "Ten plik jest w kolejce i będzie dostępny po zakończeniu przetwarzania"
+
 [filesPage.empty]
 hint = "Upuść pliki PDF w dowolnym miejscu na tej stronie, aby je przesłać, lub użyj przycisku Nowy folder, aby uporządkować pliki."
-newFolderCta = "Utwórz folder"
 title = "Ten folder jest pusty"
 uploadCta = "Prześlij pliki"
 
@@ -4090,10 +4657,6 @@ hint = "Aby zacząć, prześlij plik lub utwórz folder, aby uporządkować."
 offlineHint = "Połącz się ponownie, aby wczytać bibliotekę w chmurze."
 offlineTitle = "Brak zbuforowanych plików w chmurze"
 title = "Brak plików w chmurze"
-
-[filesPage.empty.local]
-hint = "Pliki zapisane bez przesłania pozostają tutaj. Upuść plik, aby dodać."
-title = "Brak plików tylko lokalnych"
 
 [filesPage.empty.noResults]
 hint = "No files in this folder match your filter. Try a different term or clear the filter."
@@ -4114,6 +4677,8 @@ title = "Nie udostępniłeś(-aś) jeszcze żadnych plików"
 [filesPage.error]
 actionFailed = "Nie można było wykonać czynności: {{action}}."
 actionFailedDetail = "Nie można było wykonać czynności: {{action}}: {{message}}"
+addFolderFailed = "Nie udało się dodać folderu."
+addFolderFailedDetail = "Nie udało się dodać folderu: {{message}}"
 cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
 deleteFolderFailed = "Nie można było usunąć folderu."
@@ -4126,8 +4691,21 @@ moveFilesFailed = "Nie można było przenieść plików."
 moveFilesFailedDetail = "Nie można było przenieść plików: {{message}}"
 moveFolderFailed = "Nie można było przenieść folderu."
 moveFolderFailedDetail = "Nie można było przenieść folderu: {{message}}"
+openDiskFileFailed = "Nie udało się otworzyć {{name}}."
+openDiskFileFailedDetail = "Nie udało się otworzyć {{name}}: {{message}}"
+processingStatusUnavailable = "Nie udało się odświeżyć statusu przetwarzania. Blokady plików zostały zwolnione do czasu przywrócenia połączenia."
+readFolderFailed = "Nie udało się odczytać folderu."
+readFolderFailedDetail = "Nie udało się odczytać folderu: {{message}}"
 removeFilesFailed = "Nie można było usunąć plików."
 removeFilesFailedDetail = "Nie można było usunąć plików: {{message}}"
+removeFolderFailed = "Nie udało się usunąć folderu."
+removeFolderFailedDetail = "Nie udało się usunąć folderu: {{message}}"
+retryFailed = "Nie udało się ponowić {{name}}."
+retryFailedDetail = "Nie udało się ponowić {{name}}: {{message}}"
+revertAllFailed = "Nie udało się przywrócić oryginałów."
+revertAllFailedDetail = "Nie udało się przywrócić oryginałów: {{message}}"
+revertFailed = "Nie udało się przywrócić {{name}}."
+revertFailedDetail = "Nie udało się przywrócić {{name}}: {{message}}"
 uploadFilesFailed = "Nie można było przesłać plików."
 uploadFilesFailedDetail = "Nie można było przesłać plików: {{message}}"
 
@@ -4147,11 +4725,20 @@ activeCount = "Aktywne filtry: {{count}}"
 clearAll = "Wyczyść filtry"
 label = "Filtry"
 
+[filesPage.folderKind]
+local = "Folder lokalny"
+virtual = "Folder przeglądarki"
+
 [filesPage.folderName]
 cancel = "Anuluj"
 error = "Nie można było zapisać folderu. Spróbuj ponownie."
 label = "Nazwa folderu"
 placeholder = "Nazwa folderu"
+
+[filesPage.folderOrigin]
+diskHint = "Folder zamontowany z katalogu na Twoim dysku"
+serverHint = "Folder przechowywany na serwerze Stirling"
+virtualHint = "Folder istniejący tylko w tej przeglądarce"
 
 [filesPage.moveDialog]
 cancel = "Anuluj"
@@ -4166,14 +4753,45 @@ newFolderPlaceholder = "Nazwa folderu"
 newFolderToggle = "Utwórz nowy folder…"
 title = "Przenieś do folderu"
 
+[filesPage.newFolderMenu]
+addExisting = "Dodaj folder lokalny"
+server = "Nowy folder na serwerze"
+serverHint = "Synchronizowany z Twoim kontem, dostępny wszędzie tam, gdzie się zalogujesz."
+
 [filesPage.origin]
 all = "Wszystkie źródła"
 cloud = "Chmura"
 cloudHint = "Przechowywane na serwerze Stirling"
+diskFileHint = "Przechowywany na Twoim komputerze"
+diskHint = "Plik w zamontowanym folderze na Twoim dysku"
 local = "Lokalne"
 localHint = "Przechowywane tylko w tej przeglądarce"
 shared = "Udostępnione"
 sharedHint = "Udostępnione Tobie przez link"
+
+[filesPage.processing]
+active = "Przetwarzanie folderu"
+blockedNeedsConnection = "Zaloguj się do Stirling Cloud lub połącz serwer self-hosted, aby przetwarzać foldery."
+edit = "Edytuj przetwarzanie..."
+nothingToRestore = "Brak oryginałów do przywrócenia — te pliki są już swoimi oryginałami."
+paused = "Przetwarzanie wstrzymane"
+remove = "Usuń przetwarzanie"
+restore = "Przywróć oryginał"
+restoreAll = "Przywróć wszystkie oryginały"
+resume = "Wznów przetwarzanie"
+revertCancel = "Anuluj"
+revertConfirm = "Przywróć i wstrzymaj"
+revertConfirmAll = "Przywrócić każdy oryginał w tym folderze? Przetwarzanie zostanie wstrzymane, a przywrócone pliki będą widoczne jako oczekujące w kolejce do czasu wznowienia."
+revertConfirmFile = "Przywrócić \"{{name}}\" do oryginału? Przetwarzanie tego folderu zostanie wstrzymane, a plik będzie widoczny jako oczekujący w kolejce do czasu wznowienia."
+revertConfirmTitle = "Przywrócić oryginały?"
+section = "Przetwarzanie"
+start = "Przetwarzaj pliki w tym folderze..."
+stop = "Wstrzymaj przetwarzanie"
+sweep = "Ponów pliki z błędami"
+
+[filesPage.processingSetup]
+back = "Wstecz"
+cancel = "Anuluj"
 
 [filesPage.search]
 clear = "Clear filter"
@@ -4193,19 +4811,6 @@ sizeDesc = "Najpierw największe"
 client = "Synchronizacja folderu nie powiodła się."
 network = "Nie można połączyć się z serwerem."
 server = "Błąd serwera podczas synchronizacji folderu."
-
-[filesPage.tabName]
-local = "Lokalne"
-recent = "Ostatnie"
-shared = "Udostępnione mi"
-sharedByMe = "Udostępnione przeze mnie"
-
-[filesPage.tabs]
-all = "Wszystkie"
-ariaLabel = "Widoki plików"
-recent = "Ostatnie"
-shared = "Udostępnione mi"
-sharedByMe = "Udostępnione przeze mnie"
 
 [filesPage.treeMenu]
 actions = "Akcje folderu dla {{name}}"
@@ -4626,6 +5231,12 @@ desc = "Podświetlaj, rysuj, dodawaj notatki i kształty w przeglądarce"
 tags = "adnotuj,podświetlaj,rysuj"
 title = "Adnotuj"
 
+[home.autoFormDetection]
+desc = "Automatycznie wykrywaj pola formularza z użyciem AI i spraw, aby Twój PDF był możliwy do wypełnienia."
+tags = "formularz,wykrywanie,do wypełnienia,acroform,automatyczne wykrywanie,ai,pola,umożliw wypełnianie,wykrywanie formularzy"
+title = "Automatyczne wykrywanie formularzy"
+unavailable = "Wymaga modelu wykrywania AI, który nie jest zainstalowany na tym serwerze. Administrator może dodać go w Ustawienia > Funkcje > Wykrywanie formularzy AI."
+
 [home.automate]
 desc = "Buduj wieloetapowe przepływy, łącząc akcje PDF. Idealne do powtarzających się zadań."
 tags = "przepływ,sekwencja,automatyzacja"
@@ -4687,6 +5298,11 @@ title = "Kompresuj"
 desc = "Konwertuj pliki między różnymi formatami"
 tags = "konwertuj,zmień"
 title = "Konwertuj"
+
+[home.createPortfolio]
+desc = "Połącz wiele plików w Adobe PDF Portfolio"
+tags = "portfolio,kolekcja,pakiet,zestaw,łącz pliki,pdf portfolio,adobe portfolio,kolekcja pdf,kontener"
+title = "Utwórz Portfolio"
 
 [home.crop]
 desc = "Przytnij dokument PDF w celu zmniejszenia rozmiaru"
@@ -4870,11 +5486,6 @@ desc = "Dopasuj rozmiar stron wybranego dokumentu PDF"
 tags = "zmień rozmiar,dostosuj,skaluj"
 title = "Dopasuj rozmiar stron"
 
-[home.scannerEffect]
-desc = "Utwórz PDF, który wygląda jak zeskanowany"
-tags = "skan,symuluj,utwórz"
-title = "Efekt skanera"
-
 [home.scannerImageSplit]
 desc = "Wykrywaj i dziel zeskanowane zdjęcia na osobne strony"
 tags = "wykryj,podziel,zdjęcia"
@@ -4987,6 +5598,26 @@ uploadFromComputer = "Prześlij z komputera"
 [language]
 direction = "ltr"
 
+[legacyBilling]
+currentTeamAllowance = "Bieżący limit dla Twojego starszego zespołu"
+loadError = "Nie mogliśmy sprawdzić Twojej istniejącej subskrypcji. Spróbuj ponownie przed zakupem innego planu."
+loading = "Sprawdzanie subskrypcji..."
+portalError = "Nie udało się otworzyć rozliczeń Stripe. Spróbuj ponownie."
+pro = "Pro (starszy)"
+retry = "Spróbuj ponownie"
+team = "Team (starszy)"
+teamUsers = "Twój zespół: {{used}} z {{limit}} użytkowników"
+unlimitedUsers = "Twój zespół: nieograniczona liczba użytkowników (w użyciu: {{used}})"
+usersUnavailable = "Nie mogliśmy potwierdzić limitu użytkowników Twojego zespołu. Skontaktuj się z pomocą techniczną, aby sprawdzić swój starszy plan."
+
+[legacyBilling.status]
+active = "Aktywna"
+incomplete = "Płatność oczekuje"
+past_due = "Płatność zaległa"
+paused = "Wstrzymana"
+trialing = "Okres próbny"
+unpaid = "Nieopłacona"
+
 [legal]
 accessibility = "Dostępność"
 cookie = "Polityka plików cookie"
@@ -5000,6 +5631,7 @@ terms = "Zasady i Postanowienia"
 title = "Licencje stron trzecich"
 
 [localMode]
+automationUnavailable = "Zaloguj się do Stirling Cloud lub serwera self-hosted, aby używać folderów przetwarzania i potoków."
 toolUnavailable = "To narzędzie wymaga konta. Zaloguj się do Stirling Cloud lub połącz z serwerem self-hosted, aby z niego skorzystać."
 
 [localMode.toolPicker]
@@ -5047,7 +5679,6 @@ unexpectedError = "Nieoczekiwany błąd: {{message}}"
 updatePassword = "Zaktualizuj hasło"
 useMagicLink = "Zamiast tego użyj magicznego linku"
 username = "Nazwa użytkownika"
-youAreLoggedIn = "Jesteś zalogowany!"
 
 [margin]
 large = "Duży"
@@ -5097,39 +5728,45 @@ sort = "Sortuj"
 title = "Przegląd ustawień łączenia"
 
 [mobileScanner]
-addToBatch = "Dodaj do partii"
+addMore = "Dodaj więcej"
 back = "Wstecz"
-batchImages = "Partia"
 camera = "Aparat"
 cameraAccessDenied = "Dostęp do kamery zablokowany. Włącz dostęp do kamery."
 cameraDescription = "Skanuj dokumenty aparatem urządzenia z automatycznym wykrywaniem krawędzi"
 capture = "Zrób zdjęcie"
 chooseMethod = "Wybierz metodę przesyłania"
 chooseMethodDescription = "Wybierz, jak chcesz zeskanować i przesłać dokumenty"
-clearBatch = "Wyczyść"
+clearAll = "Wyczyść wszystko"
+closeTabHint = "Możesz teraz zamknąć tę kartę."
+dismiss = "Odrzuć"
 edgeDetection = "Wykrywanie krawędzi"
 fileDescription = "Prześlij istniejące zdjęcia lub dokumenty z urządzenia"
+fileReadFailed = "Nie udało się odczytać tego pliku."
 fileUpload = "Przesyłanie plików"
-flash = "Lampa błyskowa"
 flashlight = "Latarka"
 httpsRequired = "Dostęp do kamery wymaga HTTPS lub localhost. Użyj HTTPS lub uzyskaj dostęp przez localhost."
-noSession = "Nieprawidłowa sesja"
+imageCount_one = "{{count}} obraz"
+imageCount_other = "{{count}} obrazów"
+imagePosition = "Obraz {{index}} z {{total}}"
+invalidFileType = "Wybierz plik obrazu."
 noSessionMessage = "Zeskanuj prawidłowy kod QR, aby uzyskać dostęp do tej strony."
 processing = "Przetwarzanie..."
+remove = "Usuń"
 retake = "Zrób ponownie"
+scanAnother = "Zeskanuj kolejny"
 selectFilesPrompt = "Wybierz pliki do przesłania"
-selectImage = "Wybierz obraz"
+selectImages = "Wybierz obrazy"
 sessionExpired = "Ta sesja wygasła. Odśwież i spróbuj ponownie."
 sessionInvalid = "Błąd sesji"
 sessionNotFound = "Nie znaleziono sesji. Odśwież i spróbuj ponownie."
 sessionValidationError = "Nie można zweryfikować sesji. Spróbuj ponownie."
+startingCamera = "Uruchamianie kamery…"
 title = "Skaner mobilny"
-upload = "Prześlij"
-uploadAll = "Prześlij wszystkie"
 uploadFailed = "Przesyłanie nie powiodło się. Spróbuj ponownie."
 uploading = "Przesyłanie..."
 uploadSuccess = "Przesyłanie zakończone!"
 uploadSuccessMessage = "Twoje obrazy zostały przesłane."
+uploadWithCount = "Prześlij ({{total}})"
 validating = "Weryfikowanie sesji..."
 
 [mobileSign]
@@ -5187,24 +5824,31 @@ count = "{{remaining}} of {{total}}"
 label = "Free credits"
 
 [notifications]
+adoptFailed = "Dokument został odblokowany, ale nie udało się go tutaj otworzyć. Spróbuj użyć narzędzia bezpośrednio."
 empty = "Brak zgłoszeń."
 handoffUnavailable = "Ta przeglądarka nie pozwoli procesorowi przekazać dokumentu do edytora. Otwórz go zamiast tego z poziomu edytora."
 noDocumentLinked = "Ta awaria nie jest powiązana z konkretnym dokumentem, więc nie ma tu nic do otwarcia."
 notOnThisDevice = "Tego dokumentu nie ma na tym urządzeniu, więc nie można go tutaj otworzyć."
 occurrences = "{{count}} razy"
 open = "Powiadomienia"
+repairAdoptFailed = "Dokument został naprawiony, ale nie udało się go tutaj otworzyć. Spróbuj użyć narzędzia Napraw bezpośrednio."
+repairedNotRerun = "Dokument został naprawiony i otwarty tutaj, ale nie udało się ponownie uruchomić na nim zasady."
+repairedRerunNotAdopted = "Naprawiony dokument został przetworzony, ale jego wyniku nie udało się tutaj otworzyć."
+repairedRerunUndelivered = "Dokument został naprawiony i rozpoczęto ponowne uruchomienie zasady, ale jej wynik nie może zostać tutaj dostarczony, więc to niepowodzenie pozostaje otwarte."
+rerunRejected = "Nie udało się teraz ponownie uruchomić zasady. Spróbuj ponownie za chwilę."
+rerunUndelivered = "Rozpoczęto ponowne uruchomienie zasady, ale jej wynik nie może zostać tutaj dostarczony, więc to niepowodzenie pozostaje otwarte."
+retryUnavailable = "Nie można już ponowić tego dokumentu z tej przeglądarki."
 title = "Powiadomienia"
+unlockedNotRerun = "Dokument został odblokowany i otwarty tutaj, ale nie udało się ponownie uruchomić na nim zasady."
+unlockedRerunUndelivered = "Dokument został odblokowany i rozpoczęto ponowne uruchomienie zasady, ale jej wynik nie może zostać tutaj dostarczony, więc to niepowodzenie pozostaje otwarte."
 unread = "Nieprzeczytane"
 
 [notifications.action]
+copiedLog = "Skopiowano"
+copyLog = "Kopiuj dziennik"
 failed = "To nie zadziałało. Spróbuj ponownie za chwilę."
+more = "Więcej opcji"
 unavailable = "Niedostępne dla tego powiadomienia."
-
-[notifications.detail]
-copied = "Skopiowano"
-copy = "Kopiuj błąd"
-less = "Pokaż mniej"
-more = "Pokaż pełny komunikat"
 
 [notifications.section]
 earlier = "Wcześniejsze"
@@ -5355,7 +5999,9 @@ wrapUp = "Wszystko gotowe! Poznałeś główne obszary aplikacji i sposób ich u
 
 [onboarding.buttons]
 back = "Wstecz"
+continue = "Kontynuuj"
 download = "Pobierz →"
+getStarted = "Rozpocznij"
 next = "Dalej →"
 showMeAround = "Pokaż, co nowego"
 skipForNow = "Pomiń na razie"
@@ -5386,6 +6032,11 @@ body = "Stirling najlepiej działa jako aplikacja desktopowa. Możesz używać g
 selectOs = "Wybierz system operacyjny"
 title = "Pobierz"
 titleWithOs = "Pobierz dla {{osLabel}}"
+
+[onboarding.desktopWelcome]
+body = "Jest mnóstwo nowych zmian do odkrycia, w tym <strong>Agent Chat</strong>, automatyczna <strong>klasyfikacja</strong> dokumentów i nie tylko."
+freeLine = "Edytor jest teraz <free>całkowicie darmowy</free>."
+title = "Witamy w Stirling <product>Desktop</product>"
 
 [onboarding.mfa]
 authenticationCode = "Kod uwierzytelniający"
@@ -5440,7 +6091,7 @@ rolePlaceholder = "Potwierdź swoją rolę"
 roleUser = "Użytkownik"
 
 [onboarding.serverLicense]
-freeBody = "Nasza licencja <strong>Open-Core</strong> pozwala na maks. <strong>{{freeTierLimit}}</strong> użytkowników bez opłat na serwer. Aby skalować bez przerw i uzyskać wczesny dostęp do nowego <strong>narzędzia edycji tekstu PDF</strong>, polecamy plan Stirling Server – pełna edycja i <strong>nielimitowane miejsca</strong> za 99 USD/serwer/mies."
+freeBody = "Nasza licencja <strong>Open-Core</strong> obejmuje <strong>OAuth SSO</strong> i maksymalnie <strong>{{freeTierLimit}}</strong> użytkowników bez opłat. Aby rozwijać się bez przerw, polecamy plan Stirling Team — <strong>100 użytkowników</strong> za 99 USD/miesiąc."
 freeTitle = "Licencja serwera"
 overLimitBody = "Nasza licencja pozwala na maks. <strong>{{freeTierLimit}}</strong> użytkowników bez opłat na serwer. Masz <strong>{{overLimitUserCopy}}</strong> użytkowników Stirling. Aby kontynuować bez przerw, przejdź na plan Stirling Server – <strong>nielimitowane miejsca</strong>, edycja tekstu PDF i pełna kontrola administracyjna za 99 USD/serwer/mies."
 overLimitTitle = "Wymagana licencja serwera"
@@ -5736,7 +6387,7 @@ noKey = "VITE_STRIPE_PUBLISHABLE_KEY is unset. Real iframe mounts here once conf
 title = "Stripe Embedded Checkout (mock mode)"
 
 [payg.confirm]
-body = "Your team can now run automation, AI, and API operations beyond your 500 free PDFs."
+bodyWithAllowance = "Twój zespół może teraz uruchamiać automatyzację, AI i operacje API poza limitem {{limit}} darmowych PDF."
 capValue = "{{symbol}}{{amount}} / month"
 noCap = "No cap"
 note = "You can change your cap, cancel, or open the Stripe customer portal any time from this page."
@@ -5763,7 +6414,7 @@ benefit3Body = "call any Stirling endpoint programmatically"
 benefit3Title = "API access"
 button = "Turn on Processor →"
 reassurance = "No minimum · Set a $0 cap to test · Cancel anytime"
-subtitle = "Keep going past your 500 free PDFs with automation, AI, and the API. Set a monthly ceiling, so you stay in control."
+subtitleWithAllowance = "Przekrocz limit {{limit}} darmowych PDF dzięki automatyzacji, AI i API. Ustaw miesięczny limit, aby zachować kontrolę."
 title = "Turn on the Processor plan"
 
 [payg.free.editor]
@@ -5841,17 +6492,16 @@ leader = "Team owner"
 member = "Member"
 
 [payg.signupRequired]
-body = "Stirling PDF gives every signed-up account 500 free operations, enough to keep most workflows humming without paying a cent. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing."
-cancel = "Not now"
-cta = "Sign up free"
-subtext = "Creating an account is free and takes a few seconds. No credit card required."
-title = "Sign up to use {{category}}"
-
-[payg.signupRequired.category]
-ai = "AI features"
-api = "this tool"
-automation = "automations"
-default = "this feature"
+aiPromo = "Twórz, edytuj i pytaj o PDF za pomocą AI"
+apiPromo = "Połącz swoje aplikacje i asystentów AI"
+automationPromo = "Automatyzuj powtarzalne zadania PDF"
+createAccount = "Utwórz darmowe konto"
+editorLabel = "Edytor PDF"
+login = "Zaloguj się"
+manualToolsPromo = "Nieograniczone darmowe ręczne narzędzia PDF"
+processorLabel = "Procesor PDF"
+processorTitle = "Utwórz konto, aby odblokować to, co najlepsze w Stirling"
+readerLabel = "Czytnik PDF"
 
 [payg.spendCapMeter]
 barAria = "Spend against cap"
@@ -5902,7 +6552,7 @@ apiBody = "programmatic access to any Stirling endpoint"
 apiTitle = "API calls"
 automationBody = "chained tools or scheduled runs that don't need clicks"
 automationTitle = "Automation pipelines"
-footnote = "Manual tools (viewing, editing, merging, splitting, watermarking, compressing, manual OCR) are always free, even past 500. The distinction is the type of work, not where you click."
+footnoteUnlimited = "Narzędzia ręczne (wyświetlanie, edycja, scalanie, dzielenie, dodawanie znaków wodnych, kompresja, ręczne OCR) są zawsze darmowe, nawet po wykorzystaniu przyznanych kredytów. Różnica dotyczy rodzaju pracy, a nie miejsca kliknięcia."
 title = "What we count toward billing"
 
 [payg.upgrade.promise]
@@ -5930,6 +6580,8 @@ resetsTomorrow = "Resets tomorrow"
 thisPeriod = "This billing period"
 
 [payment]
+billingPeriod = "Okres rozliczeniowy"
+cancelTeamChange = "Zachowaj obecny plan"
 canCloseWindow = "Możesz teraz zamknąć to okno."
 error = "Błąd płatności"
 generatingLicense = "Generowanie klucza licencyjnego..."
@@ -5941,27 +6593,65 @@ licenseKey = "Twój klucz licencyjny"
 licensePollingError = "Płatność zakończona, ale nie udało się automatycznie pobrać klucza licencyjnego. Sprawdź e‑mail lub skontaktuj się z pomocą, podając potwierdzenie płatności."
 licenseRetrievalError = "Płatność zakończona, ale pobranie licencji nie powiodło się. Otrzymasz klucz licencyjny e‑mailem. Skontaktuj się z pomocą, jeśli nie dotrze w ciągu 10 minut."
 licenseSaveError = "Nie udało się zapisać klucza licencyjnego. Skontaktuj się z pomocą i podaj swój klucz, aby dokończyć aktywację."
+manageSubscription = "Zarządzaj subskrypcją"
 monthly = "Miesięcznie"
 paymentCanceled = "Płatność została anulowana. Nic nie pobrano."
 perMonth = "/mies."
+perUserBlock = "za 100 użytkowników"
 preparing = "Przygotowywanie kasy..."
 redirecting = "Przekierowywanie do bezpiecznej kasy..."
 success = "Płatność zakończona sukcesem!"
 successMessage = "Twoja subskrypcja została pomyślnie aktywowana. Wkrótce otrzymasz e‑mail z potwierdzeniem."
 syncError = "Płatność zakończona, ale synchronizacja licencji nie powiodła się. Twoja licencja zostanie wkrótce zaktualizowana. Skontaktuj się z pomocą, jeśli problem będzie się powtarzał."
 syncingLicense = "Synchronizowanie ulepszonej licencji..."
+teamActivated = "Pojemność Team jest aktywna"
+teamActivating = "Potwierdzanie pojemności Team..."
+teamChangeCurrent = "Twój obecny limit pozostaje dostępny do tego czasu. Zachowaj obecny plan, aby anulować tę zmianę przed wprowadzeniem kolejnej korekty."
+teamChangePending = "{{users}} użytkowników · {{period}} od {{date}}"
+teamChangeSupport = "Twoja subskrypcja Team ma zaplanowaną zmianę, która wymaga wsparcia rozliczeniowego do korekty."
+teamChangeUnavailable = "Nie udało się załadować zaplanowanych zmian Team. Odśwież, aby spróbować ponownie."
+teamPending = "Zakup Team jest nadal przetwarzany. Odśwież tę stronę za chwilę."
+teamProcessing = "Przetwarzanie zakupu Team"
+teamScheduled = "Zmiana Team jest zaplanowana na {{date}}. Twoja obecna pojemność pozostanie aktywna do tego czasu."
 upgradeComplete = "Ulepszenie zakończone"
 upgradeCompleteMessage = "Subskrypcja została pomyślnie ulepszona. Zaktualizowano istniejący klucz licencyjny."
 upgradeSuccess = "Płatność zakończona! Twoja subskrypcja została ulepszona. Licencję zaktualizowano na Twoim serwerze. Wkrótce otrzymasz e‑mail z potwierdzeniem."
 upgradeTitle = "Uaktualnij do {{planName}}"
 yearly = "Rocznie"
 
+[payment.adjustTeam]
+title = "Dostosuj plan Team"
+
+[payment.capacityStage]
+adjustmentNote = "Stripe pokaże dokładną opłatę, ewentualne proporcjonalne rozliczenia i następną datę rozliczenia przed potwierdzeniem. Zapisana metoda płatności zostanie użyta, jeśli jest dostępna."
+continue = "Przejdź do płatności"
+customLabel = "Liczba użytkowników"
+dueToday = "Do zapłaty dziś"
+enterpriseQuote = "Uzyskaj ofertę enterprise"
+lineItem = "Team · {{price}}{{period}} za {{block}} użytkowników"
+minimumForCurrentUsers = "Masz {{users}} użytkowników, więc plan musi obejmować co najmniej {{minimum}}."
+modalTitle = "Przejdź na {{planName}}"
+newPlanTotal = "Nowa łączna kwota planu"
+other = "Inne"
+overCapacityBody = "Na tym serwerze jest {{users}} użytkowników; Twój obecny limit to {{limit}}. Wybierz poniżej plan Team, aby objąć wszystkich."
+overCapacityConsequence = "Istniejące konta pozostaną. Dodawanie lub zapraszanie użytkowników jest zablokowane, dopóki nie dodasz pojemności lub nie zwolnisz miejsc."
+overCapacityTitle = "Twój serwer ma więcej użytkowników, niż obejmuje Twój plan"
+perMonth = "/mies."
+perYear = "/rok"
+reductionNote = "Niższa pojemność zacznie obowiązywać przy następnym odnowieniu. Do tego czasu możesz korzystać z obecnego limitu. Istniejący użytkownicy pozostaną; nowi użytkownicy będą zablokowani, jeśli w momencie wejścia zmiany w życie przekroczysz pojemność."
+renewalNote = "Odnawia się za {{total}}{{period}}. Anuluj w dowolnym momencie w sekcji Użycie i rozliczenia."
+reviewChange = "Sprawdź zmianę w Stripe"
+roundsTo = "zaokrągla do {{users}}"
+subheading = "Obejmuje wszystkich zaproszonych, w blokach po {{users}} użytkowników."
+subheadingAdd = "Twój plan obejmuje dziś {{current}} użytkowników. Wybierz nową łączną liczbę."
+usersLabel = "Użytkownicy"
+userTotal = "{{users}} użytkowników"
+
 [payment.emailStage]
 continue = "Kontynuuj"
 description = "Użyjemy go do wysłania klucza licencyjnego i rachunków."
 emailLabel = "Adres e‑mail"
 emailPlaceholder = "your@email.com"
-modalTitle = "Zaczynamy – {{planName}}"
 
 [payment.paymentStage]
 modalTitle = "Dokończ płatność – {{planName}}"
@@ -5971,8 +6661,13 @@ billedYearly = "Rozliczane rocznie: {{currency}}{{amount}}"
 modalTitle = "Wybierz okres rozliczeniowy – {{planName}}"
 savePercent = "Oszczędź {{percent}}%"
 savingsAmount = "Oszczędzasz {{amount}}"
+selectedMonthly = "Miesięcznie"
+selectedYearly = "Rocznie"
 selectMonthly = "Wybierz miesięcznie"
 selectYearly = "Wybierz rocznie"
+
+[payment.upgradeTeam]
+title = "Przejdź na Team"
 
 [pdfCommentAgent]
 submit = "Wygeneruj komentarze"
@@ -6025,99 +6720,271 @@ REVERSE_ORDER = "Odwróć kolejność dokumentu, aby ostatnia strona stała się
 SIDE_STITCH_BOOKLET_SORT = "Ułóż strony do broszury zszywanej bocznie (zoptymalizowane pod bindowanie z boku)."
 
 [pdfTextEditor]
-conversionFailed = "Nie udało się przekonwertować PDF. Spróbuj ponownie."
-converting = "Konwertowanie PDF do formatu edytowalnego..."
-currentFile = "Bieżący plik: {{name}}"
-imageLabel = "Umieszczony obraz"
-noTextOnPage = "Na tej stronie nie wykryto edytowalnego tekstu."
-pagePreviewAlt = "Podgląd strony"
-pageSummary = "Strona {{number}} z {{total}}"
+download = "Pobierz"
+downloadTooltip = "Zapisz i pobierz edytowany PDF"
+save = "Zapisz PDF"
+saveTooltip = "Zastosuj zmiany do pliku w swoim obszarze roboczym ({{shortcut}})"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Edytor JSON PDF"
-viewLabel = "Edytor PDF"
+unsaved = "(niezapisane)"
+workbenchLabel = "Edytor"
 
-[pdfTextEditor.actions]
-applyChanges = "Zastosuj zmiany"
-clearText = "Wyczyść tekst"
-downloadCopy = "Pobierz kopię"
-moreOptions = "Więcej opcji"
-reset = "Resetuj zmiany"
+[pdfTextEditor.annotations]
+freetext = "Tekst adnotacji — to nie tekst strony, więc nie można go tutaj edytować"
+stamp = "Adnotacja stempla — to nie tekst strony, więc nie można jej tutaj edytować"
+widget = "Pole formularza — to nie tekst strony, więc nie można go tutaj edytować"
 
-[pdfTextEditor.badges]
-earlyAccess = "Wczesny dostęp"
-modified = "Edytowano"
-
-[pdfTextEditor.empty]
-dropzone = "Przeciągnij i upuść tutaj plik PDF lub JSON albo kliknij, aby przeglądać"
-dropzoneWithFiles = "Wybierz plik z karty Pliki, przeciągnij i upuść tutaj plik PDF lub JSON albo kliknij, aby przeglądać"
-title = "Nie wczytano dokumentu"
-
-[pdfTextEditor.errors]
-invalidJson = "Nie można odczytać pliku JSON. Upewnij się, że został wygenerowany przez narzędzie PDF do JSON."
-pdfConversion = "Nie można przekonwertować edytowanego JSON z powrotem na PDF."
-
-[pdfTextEditor.fontAnalysis]
-allFonts = "Wszystkie czcionki"
-currentPageFonts = "Czcionki na tej stronie"
-details = "Szczegóły czcionki"
-embedded = "Osadzona"
-fallback = "zapasowa"
-infoMessage = "Dostępne są informacje o odwzorowaniu czcionek."
-missing = "brakująca"
-perfect = "idealna"
-perfectMessage = "Wszystkie czcionki mogą być odtworzone idealnie."
-subset = "częściowa"
-suggestions = "Uwagi"
-type = "Typ"
-warningMessage = "Niektóre czcionki mogą wyświetlać się niepoprawnie."
-warnings = "Ostrzeżenia"
-webFormat = "Format webowy"
-
-[pdfTextEditor.groupingMode]
-auto = "Auto"
-paragraph = "Akapit"
-singleLine = "Pojedyncza linia"
-
-[pdfTextEditor.manual]
-expandWidth = "Rozszerz do krawędzi strony"
-merge = "Scal zaznaczenie"
-mergeTooltip = "Scal zaznaczone pola"
-resetWidth = "Zresetuj szerokość"
-resizeHandle = "Dostosuj szerokość tekstu"
-ungroup = "Rozgrupuj zaznaczenie"
-ungroupTooltip = "Podziel akapit z powrotem na linie"
-widthMenu = "Opcje szerokości"
-
-[pdfTextEditor.modeChange]
+[pdfTextEditor.discard]
+body = "Otwarcie {{name}} zamknie dokument, który edytujesz. Niezapisane zmiany zostaną utracone."
 cancel = "Anuluj"
-confirm = "Resetuj i zmień tryb"
-title = "Potwierdź zmianę trybu"
-warning = "Zmiana trybu grupowania tekstu spowoduje utratę wszystkich niezapisanych zmian. Czy na pewno chcesz kontynuować?"
+confirm = "Odrzuć i otwórz"
+hint = "Anuluj, a następnie najpierw użyj Zapisz PDF, aby zachować je w swoim obszarze roboczym."
+title = "Odrzucić niezapisane zmiany?"
 
-[pdfTextEditor.options.advanced]
-title = "Ustawienia zaawansowane"
+[pdfTextEditor.drop]
+hint = "Upuszczenie na obszarze edytora zastępuje dowolny otwarty dokument."
+title = "Upuść PDF, aby otworzyć"
 
-[pdfTextEditor.options.autoScaleText]
-description = "Automatycznie skaluje tekst poziomo, aby mieścił się w oryginalnym polu ograniczającym, gdy renderowanie czcionki różni się od PDF."
-title = "Automatycznie skaluj tekst do pól"
+[pdfTextEditor.error]
+decodeImage = "Nie udało się zdekodować wybranego obrazu."
+insertImage = "Nie udało się wstawić wybranego obrazu."
 
-[pdfTextEditor.options.forceSingleElement]
-description = "Po włączeniu edytor eksportuje każde edytowane pole tekstowe jako jeden element tekstowy PDF, aby uniknąć nakładających się glifów lub mieszanych czcionek."
-title = "Zablokuj edytowany tekst do pojedynczego elementu PDF"
+[pdfTextEditor.find]
+close = "Zamknij pasek wyszukiwania"
+count = "{{current}} z {{total}}"
+findPlaceholder = "Znajdź"
+ignoreAccents = "Ignoruj znaki diakrytyczne"
+matchCase = "Uwzględnij wielkość liter"
+next = "Następne dopasowanie"
+noMatches = "Brak dopasowań"
+previous = "Poprzednie dopasowanie"
+replace = "Zastąp"
+replaceAll = "Zastąp wszystko"
+replaced = "Zastąpiono: {{count}}"
+replacePlaceholder = "Zastąp przez"
+wholeWord = "Całe słowo"
 
-[pdfTextEditor.options.groupingMode]
-autoDescription = "Automatycznie wykrywa typ strony i odpowiednio grupuje tekst."
-paragraphDescription = "Grupuje wyrównane linie w wielowierszowe pola tekstowe akapitu."
-singleLineDescription = "Pozostawia każdą linię tekstu PDF jako oddzielne pole tekstowe."
-title = "Tryb grupowania tekstu"
+[pdfTextEditor.fontPicker]
+builtInGroup = "Wbudowane czcionki"
+deviceFontsNone = "Nie znaleziono dodatkowych czcionek urządzenia."
+deviceFontsUnavailable = "Czcionki urządzenia są niedostępne. Wbudowane czcionki nadal działają."
+deviceGroup = "Czcionki urządzenia"
+documentGroup = "Czcionka dokumentu"
+label = "Rodzina czcionek"
+mixed = "Mieszane"
+noMatch = "Brak pasującej czcionki"
+placeholder = "Rodzina czcionek"
+useDeviceFonts = "Użyj czcionek urządzenia"
 
-[pdfTextEditor.pageType]
-paragraph = "Strona akapitowa"
-sparse = "Rzadki tekst"
+[pdfTextEditor.fonts]
+allPresent = "Wszystkie litery i cyfry obecne"
+missing = "Brakujące: {{glyphs}}"
+title = "Czcionki"
 
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
+[pdfTextEditor.fonts.compat]
+info = "Istniejący tekst edytuje się idealnie. Nowy znak, którego nie zawiera osadzona czcionka, użyje standardowej czcionki zastępczej."
+ok = "Każda czcionka zawiera pełny alfabet i cyfry — pisz swobodnie."
+warnOther = "{{count}} czcionek nie ma niektórych liter lub cyfr — ich wpisywanie użyje standardowej czcionki zastępczej."
+
+[pdfTextEditor.fonts.pill]
+info = "Osadzona"
+ok = "Wszystkie glify"
+warn = "{{count}} z brakami"
+
+[pdfTextEditor.fonts.status.embedded]
+label = "Osadzona"
+
+[pdfTextEditor.fonts.status.standard]
+label = "Standardowa"
+
+[pdfTextEditor.fonts.status.subset]
+label = "Podzbiór"
+
+[pdfTextEditor.help]
+ariaLabel = "Skróty klawiaturowe"
+title = "Skróty klawiaturowe"
+tooltip = "Skróty klawiaturowe (?)"
+
+[pdfTextEditor.help.clipboard]
+copyDesc = "Kopiuj zaznaczony tekst"
+cutDesc = "Wytnij zaznaczone (kopiuj + usuń)"
+heading = "Schowek"
+pasteDesc = "Wklej tekst ze schowka jako nowy fragment"
+pastePlainDesc = "Wklej jako zwykły tekst"
+
+[pdfTextEditor.help.document]
+escDesc = "Wyczyść zaznaczenie / zamknij wyszukiwanie / zamknij pomoc"
+heading = "Dokument"
+helpDesc = "Ta pomoc"
+saveDesc = "Zapisz w obszarze roboczym"
+
+[pdfTextEditor.help.editing]
+deleteDesc = "Usuń zaznaczone"
+duplicateDesc = "Duplikuj zaznaczone"
+groupDesc = "Grupuj zaznaczone fragmenty w jeden akapit"
+heading = "Edycja"
+marqueeDesc = "Zaznaczanie wielu elementów ramką"
+moveDesc = "Przenieś fragment tekstu"
+selectAllDesc = "Zaznacz wszystko"
+shiftClickDesc = "Dodaj / usuń fragment z zaznaczenia"
+undoRedoDesc = "Cofnij / Ponów"
+
+[pdfTextEditor.help.find]
+heading = "Znajdź i zastąp"
+nextDesc = "Następne dopasowanie (dodaj Shift dla poprzedniego)"
+openDesc = "Otwórz pasek wyszukiwania (i zastępowania)"
+
+[pdfTextEditor.help.navigation]
+firstLastDesc = "Pierwsza / ostatnia strona"
+heading = "Nawigacja"
+pageDesc = "Poprzednia / następna strona"
+zoomDesc = "Powiększ / pomniejsz"
+
+[pdfTextEditor.inspector]
+document = "Dokument"
+fontEmbedded = "Osadzona czcionka · brakujący znak zostanie zastąpiony przez Helvetica."
+fontGap = "{{name}} · brak {{glyphs}} — ich wpisywanie zostanie zastąpione przez Helvetica."
+geometry = "Pozycja i rozmiar"
+height = "Wysokość"
+heightHint = "Wysokość pola tekstowego zależy od rozmiaru tekstu i liczby wierszy."
+image = "Obraz"
+images = "Obrazy"
+manyImages = "{{count}} obrazów"
+manyText = "Tekst · {{count}} pól"
+mixed = "{{count}} obiektów"
+multiGeometry = "Wybierz pojedynczy obiekt, aby edytować jego pozycję i rozmiar."
+nothingSelected = "Nic nie zaznaczono"
+nothingSelectedHint = "Kliknij dowolny tekst lub obraz na stronie, aby edytować go tutaj."
+oneImage = "Obraz"
+oneText = "Tekst"
+pages = "Strony"
+tabDocument = "Dokument"
+tabSelected = "Zaznaczone"
+textBoxes = "Pola tekstowe"
+width = "Szerokość"
+widthHint = "Szerokość pola tekstowego zależy od jego zawartości i zawijania."
+x = "X"
+y = "Y"
+
+[pdfTextEditor.password]
+cancel = "Anuluj"
+incorrect = "Nieprawidłowe hasło — spróbuj ponownie."
+label = "Hasło"
+open = "Otwórz"
+protected = "Ten PDF jest chroniony hasłem."
+protectedNamed = "\"{{fileName}}\" jest chroniony hasłem."
+title = "Wymagane hasło"
+
+[pdfTextEditor.rulers]
+guide = "Prowadnica wyrównania na {{value}} {{unit}} — przeciągnij na linijkę, aby usunąć"
+hint = "Przeciągnij z linijki, aby dodać prowadnicę wyrównania"
+horizontal = "Linijka pozioma"
+unit = "pt"
+vertical = "Linijka pionowa"
+
+[pdfTextEditor.run]
+lockedTitle = "Zablokowane — użyj przycisku Odblokuj, aby edytować"
+
+[pdfTextEditor.saveRisk]
+cancel = "Anuluj"
+intro = "Zapisanie edytowanej kopii zmienia plik. Oznacza to:"
+note = "Twoje edycje zostaną zachowane. Zmiany wymienione powyżej są nieuniknione przy zapisywaniu edytowanej kopii."
+saveAnyway = "Zapisz mimo to"
+title = "Zapis zmieni ten PDF"
+
+[pdfTextEditor.settings]
+advanced = "Zaawansowane"
+find = "Znajdź w dokumencie"
+findTooltip = "Znajdź ({{shortcut}})"
+view = "Widok"
+
+[pdfTextEditor.sidebar]
+addImage = "Dodaj obraz"
+addText = "Dodaj tekst"
+clickPageToAddText = "Kliknij stronę, aby dodać tekst"
+document = "Dokument"
+group = "Grupuj"
+groupingAuto = "Auto"
+groupingAutoHint = "Grupuje równomiernie rozstawione wiersze w akapity. Zmiana tego ustawienia ponownie odczytuje dokument i czyści historię cofania."
+groupingLine = "Wiersz"
+groupTooltip = "Scal zaznaczone fragmenty w jeden akapit ({{shortcut}})"
+groupTooltipDisabled = "Wybierz co najmniej 2 fragmenty, aby scalić"
+noFile = "Nie wczytano pliku"
+noFileHint = "Wybierz PDF z panelu Pliki po lewej albo upuść go tutaj. Edytor otworzy go automatycznie."
+opening = "Otwieranie dokumentu..."
+paragraph = "Akapit"
+rulers = "Linijki i prowadnice"
+textBoxWidth = "Szerokość nowego pola tekstowego"
+textGrouping = "Grupowanie tekstu"
+ungroup = "Rozgrupuj"
+ungroupTooltip = "Podziel ten akapit na jeden fragment na wiersz"
+ungroupTooltipDisabled = "Wybierz wielowierszowy akapit, aby rozgrupować"
+widthGrow = "Rozszerzaj"
+widthGrowHint = "Rozszerzaj zwiększa szerokość pola podczas pisania; Zawijaj zachowuje szerokość i przenosi tekst do nowych wierszy."
+widthWrap = "Zawijaj"
+
+[pdfTextEditor.spellcheck]
+auto = "Automatycznie"
+enable = "Sprawdzaj pisownię podczas pisania"
+language = "Język słownika"
+
+[pdfTextEditor.stage]
+loadingDocument = "Wczytywanie dokumentu"
+loadingProgress = "Postęp wczytywania"
+noDocument = "Nie wczytano dokumentu."
+pickPrompt = "Wybierz PDF z panelu Pliki po lewej, aby rozpocząć edycję."
+renderingPreview = "Renderowanie podglądu"
+
+[pdfTextEditor.toolbar]
+addTextTooltip = "Dodaj pole tekstowe — następnie kliknij stronę"
+advancedColour = "Kolor zaawansowany"
+advancedColourTooltip = "Kolor zaawansowany (kontur glifu)"
+alignBottom = "Wyrównaj do dołu"
+alignCentre = "Wyrównaj do środka"
+alignLabel = "Wyrównaj · wymaga co najmniej 2 obiektów"
+alignLeft = "Wyrównaj do lewej"
+alignMiddle = "Wyrównaj do środka w pionie"
+alignRight = "Wyrównaj do prawej"
+alignTop = "Wyrównaj do góry"
+arrange = "Rozmieść"
+bringForward = "Przesuń do przodu"
+bringToFront = "Przenieś na wierzch"
+caseLower = "małe litery"
+caseSentence = "Jak w zdaniu"
+caseTitle = "Każde Słowo Wielką Literą"
+caseUpper = "WIELKIE LITERY"
+changeCase = "Zmień wielkość liter"
+changeCaseTooltip = "Zmień wielkość liter (tylko fragmenty tekstu)"
+delete = "Usuń zaznaczone"
+deleteTooltip = "Usuń (Del)"
+distributeHorizontally = "Rozmieść poziomo"
+distributeLabel = "Rozmieść · wymaga co najmniej 3 obiektów"
+distributeVertically = "Rozmieść pionowo"
+editImageExternally = "Edytuj w innej aplikacji"
+flipHorizontal = "Odwróć poziomo"
+flipVertical = "Odwróć pionowo"
+fontColour = "Kolor czcionki"
+fontSize = "Rozmiar czcionki"
+formatting = "Formatowanie tekstu"
+italic = "Kursywa"
+italicUnavailable = "Ta czcionka nie ma wersji kursywy. Wczytaj czcionki urządzenia lub wybierz inną rodzinę czcionek."
+lock = "Zablokuj zaznaczenie"
+lockTooltip = "Zablokuj zaznaczenie — zapobiega przypadkowym edycjom"
+more = "Więcej działań"
+order = "Kolejność"
+outlineColour = "Kolor konturu"
+outlineWidth = "Szerokość konturu (0 = brak)"
+redo = "Ponów"
+redoTooltip = "Ponów ({{shortcut}})"
+replaceImage = "Zastąp, zachowując położenie"
+rotateLeft = "Obróć o 90° w lewo"
+rotateRight = "Obróć o 90° w prawo"
+sendBackward = "Przesuń do tyłu"
+sendToBack = "Przenieś na spód"
+undo = "Cofnij"
+undoTooltip = "Cofnij ({{shortcut}})"
+unlock = "Odblokuj zaznaczenie"
+unlockTooltip = "Odblokuj zaznaczenie — umożliwia ponowną edycję"
 
 [pdfTextEditor.tooltip.alpha]
 text = "Ten widok alfa wciąż się rozwija — niektóre czcionki, kolory, efekty przezroczystości i szczegóły układu mogą się nieznacznie zmieniać. Przed udostępnieniem prosimy o ponowne sprawdzenie wygenerowanego PDF."
@@ -6134,31 +7001,12 @@ title = "Różnice w podglądzie"
 text = "To środowisko koncentruje się na edycji tekstu i przestawianiu osadzonych obrazów. Złożona grafika strony, kontrolki formularzy i warstwowa grafika są zachowane do eksportu, ale nie są tutaj w pełni edytowalne."
 title = "Fokus tekstu i obrazów"
 
-[pdfTextEditor.welcomeBanner]
-bestFor = "Najlepiej działa z:"
-bestFor1 = "Proste PDF-y zawierające głównie tekst i obrazy"
-bestFor2 = "Dokumenty ze standardowym formatowaniem akapitów"
-bestFor3 = "Listy, eseje, raporty i podstawowe dokumenty"
-dontShowAgain = "Nie pokazuj ponownie"
-experimental = "To funkcja eksperymentalna w aktywnym rozwoju. Możliwa niestabilność i problemy podczas używania."
-feedback = "To funkcja we wczesnym dostępie. Prosimy o zgłaszanie napotkanych problemów, aby pomóc nam się ulepszać!"
-gotIt = "Rozumiem"
-howItWorks = "To narzędzie konwertuje PDF do edytowalnego formatu, w którym można modyfikować tekst i zmieniać położenie obrazów. Zmiany zapisywane są jako nowy PDF."
-issue1 = "Kolor tekstu nie jest obecnie zachowywany (wkrótce zostanie dodany)"
-issue2 = "Tryb akapitu ma więcej problemów z wyrównaniem i odstępami — zalecany jest tryb pojedynczej linii"
-issue3 = "Podgląd różni się od eksportowanego PDF — eksportowane PDF-y są bliższe oryginałowi"
-issue4 = "Wyrównanie obróconego tekstu może wymagać ręcznej korekty"
-issue5 = "Efekty przezroczystości i warstw mogą się różnić od oryginału"
-knownIssues = "Znane problemy (w trakcie naprawy):"
-limitation1 = "Renderowanie czcionek może się nieznacznie różnić od oryginalnego PDF"
-limitation2 = "Złożona grafika, pola formularzy i adnotacje są zachowane, lecz nieedytowalne"
-limitation3 = "Konwersja i przetwarzanie dużych plików może potrwać"
-limitations = "Obecne ograniczenia:"
-notIdealFor = "Nie nadaje się do:"
-notIdealFor1 = "PDF-y ze specjalnym formatowaniem, jak wypunktowania, tabele lub układy wielokolumnowe"
-notIdealFor2 = "Magazyny, broszury lub bogato projektowane dokumenty"
-notIdealFor3 = "Instrukcje o złożonych układach"
-title = "Witamy w edytorze tekstu PDF (wczesny dostęp)"
+[pdfTextEditor.zoom]
+fit = "Dopasuj"
+fitToWidth = "Dopasuj do szerokości"
+in = "Powiększ"
+out = "Pomniejsz"
+reset = "Zresetuj powiększenie do 100%"
 
 [PDFToCSV]
 header = "PDF na CSV"
@@ -6297,11 +7145,11 @@ regularUpdates = "Regularne aktualizacje"
 saml = "SAML"
 secureLoginSupport = "Obsługa bezpiecznego logowania"
 selfHostedDeployment = "Wdrożenie self-hosted"
-sso = "SSO"
-unlimitedUsers = "Nieograniczona liczba użytkowników"
+sso = "SSO (OAuth2/OIDC)"
 upToFiveUsers = "Do 5 użytkowników"
 upToFiveUsersLowercase = "do 5 użytkowników"
 usageTracking = "Śledzenie użycia"
+usersIncluded = "100 użytkowników w cenie"
 usersLimitedToSeats = "Użytkownicy ograniczeni liczbą miejsc"
 
 [plan.free]
@@ -6330,9 +7178,9 @@ saveWithAnnualBilling = "Oszczędzaj z rozliczeniem rocznym"
 selfHosted = "Self-hosted"
 selfHostedOnInfrastructure = "Self-hosted na Twojej infrastrukturze"
 ssoOAuth = "SSO (OAuth2/OIDC)"
-unlimitedUsers = "Nieograniczona liczba użytkowników"
 upToFiveUsers = "Do 5 użytkowników"
 usageTrackingPrometheus = "Śledzenie użycia i Prometheus"
+usersIncluded = "100 użytkowników w cenie"
 
 [plan.licenseWarning]
 body = "Masz {{total}} użytkowników, ale darmowy poziom obsługuje tylko {{limit}} na serwer. Ulepsz, aby Stirling PDF działał bez zakłóceń."
@@ -6379,11 +7227,29 @@ keyDescription = "Wklej klucz licencyjny z e-maila"
 success = "Licencja aktywowana!"
 successMessage = "Twoja licencja została pomyślnie aktywowana. Możesz zamknąć to okno."
 
+[plan.team]
+maxUsers = "100 użytkowników"
+name = "Team"
+
 [policies.activity]
 outputsUnavailable = "Wyniki polityki nie są już dostępne do pobrania."
 partialOutputsUnavailable = "Niektóre wyniki polityki nie są już dostępne do pobrania."
 runNotFound = "Nie można już znaleźć przebiegu egzekwowania."
 timedOut = "Upłynął limit czasu egzekwowania, zanim przebieg mógł się zakończyć."
+
+[policies.editorPanel]
+collapse = "Ukryj potoki"
+empty = "Nic jeszcze nie działa przy imporcie ani eksporcie"
+expand = "Pokaż potoki"
+openProcessor = "Otwórz Procesor PDF"
+rowFailed = "{{label}} — ostatnie uruchomienie nie powiodło się"
+rowIdle = "{{label}} uruchamia się automatycznie"
+rowRunning = "{{label}} jest teraz uruchomiony"
+runsToday_one = "{{count}} uruchomienie dzisiaj"
+runsToday_other = "{{count}} uruchomień dzisiaj"
+title = "Procesor PDF"
+triggerExport = "Uruchamia się przy eksporcie"
+triggerImport = "Uruchamia się przy imporcie"
 
 [policies.enforcement]
 applying = "Stosowanie {{names}}"
@@ -6422,59 +7288,44 @@ badgeRan = "Zasada {{name}} została uruchomiona dla tego pliku"
 badgeRunning = "{{name}} działa..."
 blockingAction = "{{action}} zablokowano podczas wymuszania zasady, poczekaj..."
 dismiss = "Zamknij nakładkę"
-enforcingTitle = "Wymuszanie zasady..."
+enforcingPipelineTitle = "Wymuszanie potoku..."
+enforcingPolicyTitle = "Wymuszanie zasady..."
+exportBlocked = "Wymagana zasada nie powiodła się. Eksport został anulowany. Spróbuj wyeksportować ponownie."
+recoveryBody = "Nie udało się zastosować wymaganej zasady do tych plików. Spróbuj ponownie albo zamknij pliki, których dotyczy problem, aby kontynuować pracę."
+recoveryClose_one = "Zamknij plik"
+recoveryClose_other = "Zamknij {{count}} plików"
+recoveryClosing_one = "Zamykanie pliku..."
+recoveryClosing_other = "Zamykanie {{count}} plików..."
+recoveryContactAdmin = "Skontaktuj się z administratorem, aby uzyskać pomoc."
+recoveryContactOwner = "Skontaktuj się z {{owner}}, aby uzyskać pomoc."
+recoveryError = "Nie udało się ukończyć działania. Spróbuj ponownie."
+recoveryOwnedPolicy = "Sprawdź ustawienia zasady, a następnie ponów."
+recoveryRetry_one = "Ponów plik"
+recoveryRetry_other = "Ponów {{count}} plików"
+recoveryRetrying_one = "Ponawianie pliku..."
+recoveryRetrying_other = "Ponawianie {{count}} plików..."
+recoverySummary_one = "Dotyczy {{count}} pliku."
+recoverySummary_other = "Dotyczy {{count}} plików."
+recoveryTechnicalDetails = "Szczegóły techniczne"
+recoveryTitle = "Wymuszanie zasady nie powiodło się"
 viewAnyway = "Wyświetl plik (zasada nadal jest wymuszana)"
 
 [policyOption]
-autoRedactPhi = "Automatycznie zredaguj PHI"
-blockExport = "Zablokuj eksport"
-ccpa = "CCPA"
-contracts = "Umowy"
-documents = "Dokumenty"
-fedramp = "FedRAMP"
-financialReports = "Raporty finansowe"
-flagForReview = "Oznacz do przeglądu"
-gdpr = "GDPR"
-hipaa = "HIPAA"
-hold = "Wstrzymaj"
-hrRecords = "Dokumentacja HR"
-indefinite = "Bezterminowo"
-insurance = "Ubezpieczenia"
-invoices = "Faktury"
-iso27001 = "ISO 27001"
-legalFilings = "Dokumenty prawne"
-medicalPhi = "Medyczne / PHI"
-never = "Nigdy"
-ninetyDays = "90 dni"
-oneYear = "1 rok"
-p60 = "60%"
-p70 = "70%"
-p80 = "80%"
-p90 = "90%"
-p95 = "95%"
-pciDss = "PCI DSS"
-quarantineDocument = "Poddaj dokument kwarantannie"
-routeToBucket = "Skieruj do bucket"
-s3Bucket = "S3 bucket"
-sevenYears = "7 lat"
-sharePoint = "SharePoint"
-soc2 = "SOC 2"
-taxDocuments = "Dokumenty podatkowe"
-thirtyDays = "30 dni"
-threeYears = "3 lata"
-webhook = "Webhook"
-
-[portal]
-comingSoon = "Wkrótce"
+pdfa-1 = "PDF/A-1b"
+pdfa-2b = "PDF/A-2b"
+pdfa-3b = "PDF/A-3b"
 
 [portal.accountLink.card]
 billingNote = "Przetwarzanie nienadzorowane jest rozliczane z portfela Twojej organizacji."
+connectDescription = "Połącz ten serwer, aby używać limitu przetwarzania swojego zespołu w Stirling Cloud."
+disconnectBody = "Ten serwer przestanie używać limitu przetwarzania Twojego zespołu w Stirling Cloud. Twoje pliki lokalne pozostaną na tym serwerze. Aby połączyć ponownie, wykonaj pierwotne kroki połączenia."
+disconnectTitle = "Odłączyć tę instancję?"
 eyebrow = "Połączenie konta"
 linkButton = "Połącz konto Stirling"
-linked = "Połączono"
-linkedAs = "Połączono jako {{name}}."
-linkedGeneric = "Ta instancja jest połączona."
+loading = "Sprawdzanie połączenia z kontem"
 notLinked = "Nie połączono"
+signedInAs = "Zalogowano do Stirling Cloud jako"
+statusError = "Nie udało się sprawdzić połączenia z kontem"
 title = "Połącz tę organizację z jej kontem Stirling"
 unlink = "Odłącz"
 
@@ -6482,48 +7333,109 @@ unlink = "Odłącz"
 title = "Nie udało się połączyć"
 
 [portal.accountLink.card.loginNotConfigured]
-after = "aby włączyć łączenie kont z hostowanym kontem Stirling. W trybie deweloperskim możesz zasymulować logowanie w oknie łączenia."
-before = "Ustaw"
+description = "Poproś administratora serwera o włączenie połączenia ze Stirling Cloud."
 title = "Logowanie SaaS nie jest skonfigurowane"
 
+[portal.accountLink.connect]
+adminRequired = "Poproś administratora serwera o otwarcie Użycie i rozliczenia oraz połączenie konta Stirling, aby uzyskać więcej miesięcznych kredytów. Ręczne narzędzia PDF są nadal dostępne."
+adminTitle = "Poproś administratora serwera"
+close = "Zamknij"
+copied = "Skopiowano"
+copyAdminMessage = "Kopiuj wiadomość dla administratora"
+exhaustedLede = "Ten serwer wykorzystał darmowe kredyty na ten miesiąc. Połącz nowe lub istniejące konto Stirling, aby uzyskać dostęp do miesięcznego limitu swojego zespołu."
+notNow = "Nie teraz"
+start = "Połącz konto Stirling"
+step = "Krok {{current}} z {{total}}"
+
+[portal.accountLink.connect.benefits]
+billingDetail = "Zarządzaj razem użyciem, rozliczeniami i połączonymi serwerami"
+billingLabel = "Jedno konto"
+creditsDetail = "Uzyskaj dostęp do darmowego miesięcznego limitu swojego zespołu"
+creditsLabel = "Miesięczne kredyty"
+processingDetail = "Kupuj więcej kredytów na API, AI i automatyzację w miarę rozwoju"
+processingLabel = "Więcej przetwarzania"
+teamsDetail = "Dodaj więcej użytkowników dzięki płatnemu planowi Team"
+teamsLabel = "Większe zespoły"
+
+[portal.accountLink.connect.callback]
+linkedNotSignedIn = "Nie jesteś zalogowany do Stirling w tej przeglądarce, więc użycie i rozliczenia poproszą Cię o zalogowanie."
+retry = "Spróbuj ponownie"
+signedInAnyway = "Jesteś zalogowany do Stirling, więc rozliczenia i użycie się załadują. Tylko połączenie z serwerem jest niekompletne."
+working = "Kończenie połączenia."
+
+[portal.accountLink.connect.callback.expired]
+body = "Żądania połączenia są krótkotrwałe. Rozpocznij kolejne."
+title = "Żądanie wygasło"
+
+[portal.accountLink.connect.callback.malformed]
+body = "Ta strona została otwarta bez prawidłowej odpowiedzi połączenia. Rozpocznij połączenie z ustawień."
+title = "Nie udało się odczytać odpowiedzi"
+
+[portal.accountLink.connect.callback.rejected]
+body = "To żądanie zostało odrzucone lub już użyte. Rozpocznij kolejne, jeśli nie było to zamierzone."
+title = "Połączenie nie zostało ukończone"
+
+[portal.accountLink.connect.callback.unfinished]
+body = "Stirling nie potwierdził połączenia. Zwykle jest to tymczasowe."
+title = "Jeszcze nie zakończono"
+
+[portal.accountLink.connect.done]
+accountLabel = "Konto"
+addPolicy = "Dodaj zasadę"
+buildPipeline = "Skonfiguruj potok"
+creditsBarLabel = "Pozostałe darmowe kredyty"
+creditsSuffix = "z {{allowance}} darmowych kredytów pozostałych"
+cta = "Gotowe"
+inviteTeam = "Zaproś swój zespół"
+lede = "Ten serwer działa teraz z Twoim kontem Stirling."
+pendingTitle = "Prawie gotowe"
+switchOnProcessor = "Włącz Processor"
+title = "Połączono"
+
+[portal.accountLink.connect.handoff]
+opening = "Otwieranie logowania Stirling..."
+reauthLede = "Twoja sesja Stirling wygasła. Ponowne zalogowanie zapewnia widoczność użycia i rozliczeń. Ten serwer pozostaje połączony niezależnie od tego."
+title = "Łączenie"
+
+[portal.accountLink.connectionNotice]
+expiredBody = "Ten serwer nie połączył się ze Stirling Cloud w ramach dozwolonego czasu offline. Funkcje Team wspierane przez chmurę i praca Processor są wstrzymane. Istniejące dane i prawa zainstalowanej licencji są zachowane. Dostęp wróci automatycznie po pomyślnym połączeniu, które potwierdzi Twój plan."
+expiredTitle = "Dostęp do chmury wstrzymany"
+offlineBody = "Ostatnio potwierdzony plan pozostaje dostępny do {{deadline}}. Przywróć połączenie tego serwera przed tym terminem, aby uniknąć wstrzymania funkcji i przetwarzania wspieranych przez chmurę."
+offlineTitle = "Stirling Cloud jest niedostępny"
+retry = "Sprawdź połączenie"
+revokedBody = "Stirling Cloud odrzucił to połączenie konta. Połącz konto ponownie w Ustawieniach, aby przywrócić kwalifikujące się funkcje wspierane przez chmurę."
+revokedTitle = "Połączenie konta cofnięte"
+
+[portal.accountLink.failure]
+automatic = "Potok „{{pipeline}}” został zatrzymany podczas automatycznego uruchomienia, ponieważ na tym serwerze zabrakło kredytów."
+export = "Potok „{{pipeline}}” został zatrzymany przed pobraniem, ponieważ na tym serwerze zabrakło kredytów."
+manage = "Otwórz ustawienia potoku"
+manual = "Potok „{{pipeline}}” został zatrzymany po uruchomieniu, ponieważ na tym serwerze zabrakło kredytów."
+openFailed = "Otwórz Processor na połączonym serwerze, aby zarządzać tym potokiem."
+pipeline = "Potok"
+upload = "Potok „{{pipeline}}” został zatrzymany po przesłaniu, ponieważ na tym serwerze zabrakło kredytów."
+
 [portal.accountLink.gate]
-action = "Połącz konto"
-description = "Połącz konto Stirling tej organizacji, aby korzystać z funkcji płatnych."
-title = "Połącz, aby odblokować"
-titleFeature = "Połącz, aby odblokować {{feature}}"
+retry = "Spróbuj ponownie"
 
 [portal.accountLink.instances]
-active = "Aktywna"
-revoke = "Unieważnij"
-revoked = "Unieważniona"
 unnamed = "Nienazwana instancja"
-
-[portal.accountLink.instances.columns]
-instance = "Instancja"
-lastSeen = "Ostatnio widziana"
-linked = "Połączono"
-status = "Status"
 
 [portal.accountLink.instances.empty]
 description = "Połącz konto tej organizacji, a następnie zarejestruj swoje instancje self-hosted, aby zobaczyć je tutaj."
+otherDescription = "To jedyna połączona instancja pokazana dla Twojego zespołu."
+otherTitle = "Brak innych połączonych instancji"
 title = "Brak połączonych instancji"
 
-[portal.accountLink.instances.time]
-daysAgo_one = "{{count}} d temu"
-daysAgo_other = "{{count}} d temu"
-hoursAgo_one = "{{count}} h temu"
-hoursAgo_other = "{{count}} h temu"
-justNow = "przed chwilą"
-minutesAgo_one = "{{count}} min temu"
-minutesAgo_other = "{{count}} min temu"
-never = "nigdy"
-
 [portal.accountLink.modal]
-linkSubtitle = "Zaloguj się na konto, na które ma być rozliczany ten serwer."
+callbackMismatch = "Skonfigurowany adres frontend tego serwera nie pasuje do adresu, który otwarto. Otwórz serwer pod skonfigurowanym adresem albo zaktualizuj Frontend URL w ustawieniach ogólnych, a następnie spróbuj ponownie."
+cancel = "Anuluj"
+continueReauth = "Zaloguj się ponownie"
+exhaustedTitle = "Utrzymaj działanie swoich przepływów pracy"
+identity = "Konto Stirling"
 linkTitle = "Połącz konto Stirling"
-reauthSubtitle = "Twoja sesja wygasła — zaloguj się ponownie na konto Stirling. Twoja instancja pozostaje połączona."
-reauthTitle = "Zaloguj się ponownie"
-simulateSignIn = "Symuluj logowanie (dev)"
+noAuthorizeUrl = "Stirling nie zwrócił miejsca do kontynuacji. Spróbuj ponownie za chwilę."
+startFailed = "Nie udało się połączyć ze Stirling, aby rozpocząć połączenie. Sprawdź dostęp tego serwera do sieci wychodzącej, a następnie spróbuj ponownie."
 
 [portal.accountLink.modal.loginNotConfigured]
 after = "aby włączyć łączenie w aplikacji z hostowanym kontem Stirling."
@@ -6531,16 +7443,59 @@ and = "oraz"
 before = "Ustaw"
 title = "Logowanie SaaS nie jest skonfigurowane"
 
+[portal.accountLink.notice]
+openFailed = "Nie udało się otworzyć przeglądarki. Otwórz Użycie i rozliczenia na połączonym serwerze, aby połączyć konto."
+
 [portal.accountLink.panel]
 instancesSub = "Każda instancja self-hosted zarejestrowana w tej organizacji. Unieważnij poświadczenie, aby natychmiast odciąć jej dostęp nienadzorowany."
 instancesTitle = "Połączone instancje"
+manageCloud = "Zarządzaj na stirling.com"
+otherInstancesSub = "Inne samodzielnie hostowane serwery połączone z tym samym zespołem w Stirling Cloud."
+otherInstancesTitle = "Inne połączone instancje"
 revokeError = "Nie udało się unieważnić instancji"
+sessionRequired = "Połączone instancje pojawią się po odnowieniu dostępu do rozliczeń."
 sub = "Połącz tę organizację self-hosted z jej kontem Stirling, aby przetwarzanie nienadzorowane było rozliczane z portfela Twojej organizacji."
 
 [portal.accountLink.panel.loadError]
 forbidden = "Tylko właściciel zespołu może wyświetlać połączone instancje organizacji."
 generic = "Nie udało się wczytać połączonych instancji zespołu. Spróbuj ponownie za chwilę."
 title = "Nie udało się wczytać połączonych instancji"
+
+[portal.accountLink.pipelines]
+editorExport = "Edytor · przed pobraniem"
+editorUpload = "Edytor · przy przesłaniu"
+empty = "Brak aktywnych potoków."
+loadFailed = "Nie udało się załadować potoków. Otwórz ustawienia potoku, aby spróbować ponownie."
+loading = "Ładowanie potoków…"
+manual = "Uruchomienia ręczne"
+paused = "Wstrzymano"
+required = "Wymagana polityka · zarządzaj w ustawieniach potoku"
+saveFailed = "Nie udało się zmienić tego potoku. Otwórz ustawienia potoku, aby go sprawdzić."
+title = "Aktywne potoki"
+triggered = "Wywołało ten monit"
+viewAll = "Wyświetl wszystkie potoki"
+
+[portal.accountLink.rail]
+adminCta = "Jak uzyskać więcej kredytów"
+adminSub = "Poproś administratora serwera o połączenie konta Stirling, aby uzyskać więcej kredytów. Ręczne narzędzia PDF są nadal dostępne."
+exhaustedCta = "Połącz konto, aby uzyskać więcej kredytów"
+exhaustedSub = "Połącz, aby otrzymywać miesięczne kredyty, wspólne rozliczenia i możliwość rozwoju z planem Team."
+exhaustedTitle = "Darmowe kredyty tego serwera zostały wykorzystane"
+
+[portal.accountLink.renewal]
+dataUnavailable = "Twój plan i użycie pojawią się po odnowieniu dostępu do rozliczeń. Ten serwer pozostaje połączony, a lokalne przetwarzanie dokumentów pozostaje dostępne."
+expired = "To żądanie logowania wygasło. Spróbuj ponownie, aby odnowić dostęp do rozliczeń; Twój serwer nadal jest połączony."
+expiredTitle = "Żądanie logowania wygasło"
+incomplete = "Ten serwer nadal jest połączony, ale nie udało się przywrócić dostępu do rozliczeń w tej przeglądarce. Spróbuj zalogować się ponownie."
+malformed = "Nie udało się zweryfikować tej odpowiedzi logowania. Zacznij ponownie od Użycia i rozliczeń; Twój serwer nadal jest połączony."
+malformedTitle = "Nie udało się zweryfikować logowania"
+rejected = "To żądanie logowania zostało odrzucone albo zostało już użyte. Spróbuj ponownie, aby odnowić dostęp do rozliczeń."
+rejectedTitle = "Logowanie nieukończone"
+retry = "Stirling nie mógł zakończyć odnawiania dostępu do rozliczeń. Spróbuj ponownie za chwilę; Twój serwer nadal jest połączony."
+retryTitle = "Dostęp do rozliczeń nie został przywrócony"
+success = "Twój dostęp do rozliczeń został odnowiony. Ten serwer nadal jest połączony z tym samym kontem Stirling."
+title = "Odnów dostęp do rozliczeń"
+working = "Przywracanie dostępu do rozliczeń."
 
 [portal.accountLink.state]
 free = "Plan Editor"
@@ -6562,6 +7517,9 @@ typing = "Pisze"
 [portal.auth]
 loading = "Ładowanie"
 redirectingToEditor = "Przekierowywanie do edytora..."
+
+[portal.billing]
+dataUnavailable = "Dane użycia są obecnie niedostępne."
 
 [portal.billing.activation]
 maybeLater = "Może później"
@@ -6587,13 +7545,8 @@ title = "Prawie gotowe"
 
 [portal.billing.checkout.cap]
 amountAria = "Miesięczny limit wydatków"
-back = "Wstecz"
 continue = "Przejdź do płatności"
 error = "Nie udało się ustawić limitu wydatków"
-finePrint = "Faktury wystawiane są co miesiąc. Anuluj w dowolnym momencie."
-noLimit = "Bez limitu"
-note = "Nigdy nie zapłacisz więcej niż wynosi Twój limit. Przetwarzanie po prostu się wstrzyma."
-perMonth = "/ mies."
 title = "Ustaw limit wydatków"
 
 [portal.billing.checkout.card]
@@ -6613,71 +7566,85 @@ title = "Aktywowanie planu Processor..."
 limit = "Miesięczny limit wydatków {{amount}}/mies. Przetwarzanie wstrzyma się po osiągnięciu limitu."
 limitNoCap = "Brak limitu wydatków. Przetwarzanie nie zostanie wstrzymane. Faktury wystawiane są co miesiąc."
 
-[portal.billing.enterpriseUpsell]
-cta = "Utwórz wycenę Enterprise"
-description = "Rabaty za zadeklarowany wolumen, wdrożenie air-gapped, niestandardowa MSA i przeglądy bezpieczeństwa oraz partnerstwa z dystrybutorami zewnętrznymi."
-eyebrow = "Rabat wolumenowy · 1M+ PDF"
-title = "Stirling Enterprise"
+[portal.billing.chip]
+invoices = "Faktury"
+nav = "Sekcje"
+payment = "Płatność"
+plan = "Plan"
+procurement = "Zakupy"
+usage = "Użycie"
 
-[portal.billing.freeEditors]
-activeThisMonth = "Aktywne w tym miesiącu"
-cost = "Koszt"
-editorsDeployed = "Wdrożone edytory"
-inviteTeammates = "Zaproś członków zespołu"
-pdfsEdited = "Edytowane PDF"
-subtitle = "Wdrażaj wszędzie, dla całego zespołu."
-title = "Bezpłatne edytory PDF"
+[portal.billing.cycle]
+credits = "Kredyty"
+creditsNote = "Wykorzystano {{units}} · obejmuje darmowe i przedpłacone kredyty"
+day = "Dzień {{day}} z {{of}}"
+editors = "Wdrożone edytory"
+estimated = "szacowane · licznik rozlicza się przy zamknięciu"
+estimatedPending = "szacowane · obejmuje {{pending}}, które nie zostały jeszcze zsynchronizowane z Twoich instancji"
+pdfs = "Przetworzone PDF"
+users = "Użytkownicy"
+
+[portal.billing.enterprise]
+cta = "Poproś o wycenę enterprise"
+sub = "Wdrożenie air-gapped, SCIM, rezydencja danych, SLA dostępności i odpowiednia umowa."
+title = "Uruchamiasz Stirling w środowisku regulowanym?"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "Nie udało się rozpocząć finalizacji zakupu"
-currentPlan = "Bieżący plan"
-freeForever = "Bezpłatnie na zawsze"
 noTeamResolved = "W Twoim portfelu nie ustalono jeszcze zespołu — odśwież i spróbuj ponownie."
-ownerOnly = "Tylko właściciel zespołu może włączyć plan Processor."
 payInvoice = "Opłać fakturę, aby zakończyć"
-planName = "Editor"
-ssoIncluded = "SSO w cenie"
-switchOnProcessor = "Włącz Processor →"
-unlimitedUsers = "Nieograniczona liczba użytkowników"
 viewQuote = "Zobacz wycenę"
 
-[portal.billing.invoices]
-columnAmount = "Kwota"
-columnDate = "Data"
-columnDescription = "Opis"
-columnPdfsProcessed = "Przetworzone PDF"
-columnStatus = "Status"
-descriptionFallback = "Faktura"
-downloadAriaLabel = "Pobierz fakturę {{number}} jako PDF"
-emptyDescription = "Gdy Twój zespół rozpocznie subskrypcję i zamknie się pierwszy cykl, faktury pojawią się tutaj."
-emptyTitle = "Nie ma jeszcze faktur"
-fetchLimitNote_one = "Wyświetlanie {{count}} najnowszych faktur. Starsze faktury są w portalu Stripe."
-fetchLimitNote_other = "Wyświetlanie {{count}} najnowszych faktur. Starsze faktury są w portalu Stripe."
-loadError = "Nie udało się wczytać faktur: {{error}}"
-pdfLink = "PDF ↓"
-showAll_one = "Pokaż wszystkie ({{count}})"
-showAll_other = "Pokaż wszystkie ({{count}})"
-showFewer_one = "Pokaż mniej (pierwsze {{count}})"
-showFewer_other = "Pokaż mniej (pierwsze {{count}})"
-showMostRecent_one = "Pokaż {{count}} najnowszą"
-showMostRecent_other = "Pokaż {{count}} najnowszych"
-title = "Historia faktur"
-viewAriaLabel = "Wyświetl fakturę {{number}} w Stripe"
-viewLink = "Wyświetl ↗"
+[portal.billing.identity]
+oauthSso = "SSO (OAuth2/OIDC)"
 
-[portal.billing.linkPrompt]
-cta = "Połącz konto Stirling"
-description = "Ręczna edycja PDF — wyświetlanie, podpisywanie, scalanie, dzielenie, znak wodny, kompresja, konwersja, ręczne OCR — jest zawsze bezpłatna, niezależnie od połączenia konta. Połącz konto, aby odebrać 500 bezpłatnych PDF w ramach przetwarzania rozliczanego wg użycia (automatyzacja, AI i API); gdy potrzebujesz więcej, włącz plan Processor i płać tylko za to, czego używasz."
-title = "Połącz konto Stirling"
+[portal.billing.identity.free]
+chipAnywhere = "Web, desktop i samodzielnie hostowane"
+chipCredits = "{{allowance}} darmowych kredytów miesięcznie"
+chipTools = "Każde narzędzie PDF"
+name = "Free"
+sub = "Pełny Edytor PDF."
 
-[portal.billing.paymentMethod]
-billedMonthly = "Rozliczane miesięcznie"
-cardEnding = "{{brand}} kończąca się na {{last4}}"
-cardFallback = "Karta"
-expiresBilledMonthly = "Wygasa {{expiry}} · rozliczane miesięcznie"
-eyebrow = "Metoda płatności"
-managedSub = "Twoja karta i dane rozliczeniowe są bezpiecznie przechowywane w portalu klienta Stripe."
-managedTitle = "Zarządzane w Stripe"
+[portal.billing.identity.processor]
+chipMetered = "Przetwarzanie mierzone"
+chipPipelines = "Potoki i API"
+name = "Processor"
+sub = "Podstawa Team plus {{rate}} za kredyt"
+subNoRate = "Podstawa Team plus przetwarzanie mierzone"
+
+[portal.billing.identity.team]
+chipFleet = "Kontrola floty"
+chipIncluded = "{{allowance}} kredytów wliczonych miesięcznie"
+name = "Team"
+sub = "Do {{users}} użytkowników"
+subNoLimit = "Brak limitu użytkowników"
+
+[portal.billing.invoiceRow]
+current = "Bieżąca"
+failed = "Nieopłacona"
+paid = "Opłacona"
+undated = "Bez daty"
+unknownAmount = "Nieznana"
+view = "Wyświetl"
+
+[portal.billing.license]
+add = "Dodaj"
+addTitle = "Dodaj licencję"
+empty = "Brak zainstalowanej licencji"
+label = "Klucz licencyjny"
+update = "Aktualizuj"
+updateTitle = "Aktualizuj licencję"
+view = "Wyświetl"
+
+[portal.billing.payment]
+billedTo = "Rozliczane na"
+card = "{{brand}} kończąca się na {{last4}}"
+cardWithExpiry = "{{brand}} kończąca się na {{last4}} · wygasa {{month}} / {{year}}"
+dateUnavailable = "Data rozliczenia nie jest jeszcze dostępna"
+invoicesTo = "Faktury trafiają do"
+method = "Metoda płatności"
+nextInvoice = "Następna faktura"
+noCard = "Brak zapisanej karty"
 update = "Aktualizuj"
 
 [portal.billing.pdfsProcessed]
@@ -6692,27 +7659,19 @@ segmentApiDesc = "Bezpośrednie żądania API"
 segmentApiLabel = "API"
 segmentAutomationDesc = "Automatyzacje i potoki"
 segmentAutomationLabel = "Automatyzacja"
-sizeMultiplier = "{{formatted}} PDF użyło mnożnika rozmiaru"
 summary = "{{unique}} unikatowych · {{units}} jednostek licznika · średnio {{avg}} na PDF"
 summaryNoRate = "{{unique}} unikatowych · {{units}} jednostek licznika"
 unit = "PDF rozliczane wg użycia"
 unitsPending_one = "{{units}} jednostka licznika oczekuje na synchronizację z połączonych instancji"
 unitsPending_other = "{{units}} jednostek licznika oczekuje na synchronizację z połączonych instancji"
 
-[portal.billing.prepaid]
-capSuffix = "z {{total}} przedpłaconych kredytów"
-expires = "Wygasa {{date}}"
-eyebrow = "Przedpłacona pojemność"
-note = "Używane przed rozliczaniem licznikowym i poza limitem wydatków."
-topUp = "Doładuj"
-
 [portal.billing.prepaid.buy]
 back = "Wstecz"
-calcTitle = "Oblicz płatność roczną"
 cancel = "Anuluj"
 cancelPurchase = "Anuluj zakup"
 close = "Zamknij"
 continueToPayment = "Przejdź do płatności"
+creditTitle = "Opłać rok z góry"
 finalise = "Sfinalizuj"
 invoiceErrorTitle = "Nie udało się wygenerować faktury"
 loadingTitle = "Ładowanie wyceny"
@@ -6720,38 +7679,12 @@ payTitle = "Zapłać za rok"
 step = "Krok {{current}} z {{total}}"
 
 [portal.billing.prepaid.calc]
-change = "Zmień"
-deployRow = "Wdrożenie"
-done = "Gotowe"
-enterpriseHint = "To skala enterprise. Przy takim wolumenie stawki enterprise przewyższają każdy rabat samoobsługowy. Blokada stawki, warunki i wycena w kilka minut."
-governanceRow = "Zarządzanie"
-governanceValue = "{{label}} · {{count}} zasad"
-handlesLabel = "Twój Processor"
-handlesValue = "obsługuje {{volume}} kredytów / mies."
-pipelinesLabel = "Potoki"
-policiesMeta = "{{count}} zasad"
-poolCaption = "Jedna pula {{credits}} kredytów na rok. Cięższe miesiące korzystają z zapasu lżejszych."
-priceLabel = "Twój rok · 12 miesięcy w cenie 10"
 rateUnknown = "Pokażemy dokładną cenę przy finalizacji zakupu."
-savings = "Oszczędzasz {{amount}} · 2 miesiące gratis."
-sizingRow = "Rozmiar"
-sizingValue = "{{label}} · {{desc}}"
-usersLabel = "Łączna liczba użytkowników"
 
 [portal.billing.prepaid.consent]
 label = "Rozumiem, że gdy moja przedpłacona pojemność zostanie wykorzystana lub wygaśnie po 12 miesiącach, przetwarzanie automatycznie będzie kontynuowane według standardowej licznikowej stawki pay-as-you-go (do mojego limitu wydatków), chyba że anuluję, oraz że mogę anulować w dowolnym momencie w portalu rozliczeń."
 
-[portal.billing.prepaid.deploy]
-cloud = "Stirling Cloud"
-cloudDesc = "Zarządzane przez Stirling. Gotowe w kilka minut."
-cloudValue = "Stirling Cloud · Zarządzane"
-selfhost = "Self-hosted"
-selfhostDesc = "Działa na prywatnej infrastrukturze. Ta sama stawka."
-selfhostValue = "Self-hosted · Prywatna infrastruktura"
-
 [portal.billing.prepaid.offer]
-cta = "Przejrzyj ofertę"
-subtitle = "Zapłać z góry za rok przetwarzania PDF i otrzymaj dwa miesiące gratis, używane przed rozliczaniem licznikowym i poza limitem wydatków."
 title = "Otrzymaj 12 miesięcy w cenie 10"
 
 [portal.billing.prepaid.pay]
@@ -6764,52 +7697,92 @@ payOnline = "Zapłać online"
 poNumber = "Numer PO (opcjonalnie)"
 poNumberPlaceholder = "np. PO-2026-0142"
 
-[portal.billing.prepaid.pipelines]
-advanced = "Zaawansowane"
-advancedDesc = "Potoki napędzają większość Twojego przetwarzania."
-none = "Brak"
-noneDesc = "Potoki jeszcze nie działają. Możesz je włączyć w dowolnym momencie."
-standard = "Standardowe"
-standardDesc = "Kilka potoków ponownie przetwarza przychodzące PDF."
-
-[portal.billing.prepaid.posture]
-essentials = "Podstawy"
-essentialsDesc = "Klasyfikacja, domyślnie, plus udostępnianie"
-governed = "Zarządzane"
-governedDesc = "Dodaje bezpieczeństwo i kierowanie"
-regulated = "Regulowane"
-regulatedDesc = "Każda kategoria, w tym zgodność, retencja, pobieranie"
-
 [portal.billing.prepaid.review]
 download = "Pobierz wycenę (PDF)"
 downloading = "Przygotowywanie…"
-share = "udostępnij do zatwierdzenia"
 
-[portal.billing.prepaid.size]
-compact = "Kompaktowy"
-compactDesc = "Pliki poniżej 25 MB, brak opłat za dane"
-heavy = "Ciężki"
-heavyDesc = "Skanowane lub z dużą ilością obrazów, rutynowo 50 MB+"
-standard = "Standardowy"
-standardDesc = "Głównie małe, niektóre skany powyżej 25 MB"
+[portal.billing.processor]
+activate = "Włącz Processor"
+factFree = "Wykorzystano {{used}} z {{allowance}}"
+factNoCap = "bez limitu"
+factPrepaid = "Pozostało {{remaining}}"
+freeRemaining = "Pozostałe darmowe kredyty"
+included = "Wliczone w Twoją licencję"
+includedRenewal = "{{summary}} · Odnawia się {{date}}"
+meteredCapTooltip = "Wstrzymuje przetwarzanie mierzone po osiągnięciu limitu wydatków."
+midIncluded = "{{rate}} za kredyt · {{allowance}} wliczone co miesiąc"
+midIncludedNoRate = "{{allowance}} wliczone co miesiąc"
+midMetered = "{{spend}} mierzone w tym cyklu"
+midMeteredUnknown = "Mierzone w tym cyklu"
+midPrepaid = "Przedpłacone kredyty, wykorzystywane przed rozliczeniem mierzonym"
+midPrepaidExpiry = "{{summary}} · Wygasa {{date}}"
+noSpendLimit = "Brak limitu wydatków"
+paidUsed = "Płatne użycie mierzone"
+percentUsed = "{{pct}}%"
+prepaidExhausted = "Wykorzystane, wznowiono rozliczenie mierzone"
+prepaidExpires = "Wygasa {{date}}"
+prepaidRemaining = "Pozostałe przedpłacone kredyty"
+prepaidTooltip = "Wykorzystywane przed rozliczeniem mierzonym i poza limitem wydatków."
+raiseLimit = "Zwiększ limit"
+remainingOf = "{{remaining}} z {{total}}"
+rowName = "Processor"
+spendAgainstLimit = "{{spend}} z {{cap}} mierzone w tym cyklu"
 
-[portal.billing.prepaid.state]
-exhausted = "Wykorzystano"
-healthy = "Dużo pozostało"
-low = "Kończy się"
+[portal.billing.seats]
+awaitingSync = "Oczekiwanie na codzienną synchronizację; jeszcze nie uwzględniono w łącznej liczbie floty."
+breakdown = "Gdzie liczeni są użytkownicy"
+cloud = "Stirling Cloud"
+deployment = "Połączony serwer"
+lastReported = "Zgłoszono {{date}}"
+live = "Liczba użytkowników na żywo"
+notReported = "Jeszcze nie zgłoszono"
+ownerExcluded = "Wymagany właściciel zespołu chmurowego nie zajmuje miejsca."
+thisServer = "Ten serwer"
+
+[portal.billing.section]
+cycle = "Ten cykl"
+invoices = "Faktury"
+payment = "Płatność"
+plan = "Twój plan"
+
+[portal.billing.serverPlan]
+active = "Aktywna licencja samodzielnie hostowana"
+connectBody = "Połącz, aby dodać kredyty przetwarzania w chmurze. Licencja serwera pozostaje aktywna."
+enterprise = "Enterprise"
+enterpriseConnectBody = "Twoja licencja Enterprise obejmuje przetwarzanie na tym serwerze. Połączenie konta jest opcjonalne."
+included = "Wliczone w Twoją licencję"
+seats = "{{seats}} licencjonowanych miejsc"
+server = "Serwer"
+unlimited = "Nieograniczona liczba użytkowników"
+
+[portal.billing.simple]
+afterYear = "Po roku"
+afterYearNote = "Brak automatycznego odnowienia. Dalsze przetwarzanie wymaga aktywnego planu mierzonego i pozostaje w jego limicie wydatków."
+billingNote = "Brak stałej opłaty. Kredyty są rozliczane miesięcznie zgodnie z użyciem. Anuluj w dowolnym momencie w Użyciu i rozliczeniach."
+creditEstimate = "≈ {{credits}} kredytów"
+credits = "Kredyty"
+limit = "Limit wydatków · przetwarzanie zatrzymuje się tutaj"
+limitIntro = "Ogranicz, ile Processor może naliczyć miesięcznie."
+monthlyAmount = "{{amount}}/mies."
+prepayDiscount = "Rabat za przedpłatę · 12 za 10"
+prepayIntro = "Rok przetwarzania ze zniżką."
+rate = "{{rate}} za szt. · rozliczane według użycia"
+ratePending = "Stawka pokazana przy kasie"
+setLimit = "Ustaw limit wydatków"
+yearSize = "Wielkość roczna"
+yearValue = "Rok przetwarzania"
 
 [portal.billing.spendLimit]
 adjustLimit = "Dostosuj limit"
+buyCredits = "Kup kredyty"
 cancel = "Anuluj"
 capControlNote = "Zmiany obowiązują natychmiast — w każdej chwili zwiększ lub zmniejsz pułap."
 capSuffix = "/ miesiąc"
-capSuffixWithDocs = "/ miesiąc · ≈ {{documents}} dokumentów"
 displaySub = "Płacisz tylko za to, co przetwarzasz automatycznie — nigdy ponad pułap."
 editTitle = "Ustaw miesięczny pułap"
 eyebrow = "Limit wydatków"
-guardrailBody = "twardy pułap — nigdy nie zostaniesz obciążony powyżej niego. Po osiągnięciu pułapu przetwarzanie rozliczane wg użycia zostaje wstrzymane (nieograniczona edycja PDF nadal działa), dopóki go nie podniesiesz lub cykl się nie zresetuje. Nic nie zostanie utracone."
-guardrailLabel = "Twoje zabezpieczenie:"
 noCap = "brak pułapu"
+pauseNote = "Przetwarzanie mierzone wstrzymuje się po osiągnięciu limitu. Edycja PDF pozostaje dostępna."
 pctUsed = "Wykorzystano {{pct}}%"
 remaining = "Pozostało {{amount}}"
 save = "Zapisz limit"
@@ -6823,15 +7796,6 @@ body_one = "Przy {{rate}}/dzień osiągniesz pułap za ~{{count}} dzień (~{{mon
 body_other = "Przy {{rate}}/dzień osiągniesz pułap za ~{{count}} dni (~{{monthEnd}} do końca miesiąca). Sugerowany limit ~{{suggested}}."
 label = "Prognozowane przekroczenie."
 
-[portal.billing.spendThisMonth]
-eyebrow = "Wydatki w tym miesiącu"
-freeRemaining_one = "Pozostał {{formatted}} darmowy PDF"
-freeRemaining_other = "Pozostało {{formatted}} darmowych PDF"
-processed_one = "Przetworzono {{formattedCount}} PDF."
-processed_other = "Przetworzono {{formattedCount}} PDF."
-processedWithRate_one = "Przetworzono {{formattedCount}} PDF, po {{rate}} za każdy."
-processedWithRate_other = "Przetworzono {{formattedCount}} PDF, po {{rate}} za każdy."
-
 [portal.billing.subscribedPlan.capWarn]
 approachingBody = "Podnieś go teraz, aby automatyczne przetwarzanie nigdy się nie wstrzymało."
 approachingTitle = "Jesteś na poziomie {{pct}}% miesięcznego limitu wydatków"
@@ -6842,18 +7806,16 @@ reachedTitle = "Osiągnięto miesięczny limit wydatków"
 [portal.billing.subscribedPlan.portalError]
 title = "Nie udało się otworzyć portalu Stripe"
 
-[portal.billing.walletMeter]
-barAria = "Free PDFs remaining"
-capSuffix_one = "z {{allowance}} bezpłatnych PDF wykorzystano"
-capSuffix_other = "z {{allowance}} bezpłatnych PDF wykorzystano"
-eyebrow = "Okres próbny Processor"
-statusLabel_one = "Wykorzystano {{used}}"
-statusLabel_other = "Wykorzystano {{used}}"
-sub = "Korzystaj z edytora PDF bezpłatnie. Płać za automatyczne przetwarzanie PDF."
-title_one = "Przetwórz {{allowance}} PDF bezpłatnie"
-title_other = "Przetwórz {{allowance}} PDF bezpłatnie"
-titleWithRate_one = "Przetwórz {{allowance}} PDF bezpłatnie, potem {{rate}}/PDF"
-titleWithRate_other = "Przetwórz {{allowance}} PDF bezpłatnie, potem {{rate}}/PDF"
+[portal.billing.team]
+addCapacity = "Dodaj pojemność"
+fact = "{{users}} z {{licensed}} użytkowników"
+factNoLimit = "{{users}} użytkowników"
+midFree = "Plan Team obejmuje 100 użytkowników"
+midFreeSelfHosted = "Darmowy poziom obejmuje pierwszych użytkowników"
+midIncluded = "Wliczone w podstawę Team"
+midLocalCapacity = "Pojemność dostępna dla tego serwera"
+midPrice = "99 USD/mies. za 100 użytkowników"
+rowName = "Użytkownicy"
 
 [portal.components.billingUnit]
 approval = "zatwierdzenie"
@@ -7224,6 +8186,14 @@ baseUrlPlaceholder = "https://your-org.webhook.office.com/webhookb2/..."
 description = "Opublikuj wiadomość w kanale Teams, gdy działa zasada."
 label = "Microsoft Teams"
 
+[portal.connections.types.vectordb]
+baseUrlPlaceholder = "https://your-database-host"
+description = "Indeksuj fragmenty dokumentów przy użyciu osadzania po stronie serwera Weaviate lub Pinecone. Użyj URL serwera Weaviate albo hosta indeksu Pinecone. Prywatne endpointy wymagają od operatora włączenia policies.allowPrivateApiEndpoints."
+label = "Baza danych wektorowa"
+pinecone = "Pinecone"
+vendor = "Baza danych"
+weaviate = "Weaviate"
+
 [portal.connections.types.webhook]
 baseUrlPlaceholder = "https://example.com/hooks/documents"
 description = "Wyślij każdy dokument lub tylko szczegóły na wybrany URL."
@@ -7431,114 +8401,34 @@ status = "Status"
 time = "Czas"
 user = "Użytkownik"
 
-[portal.editorAdmin]
-subtitle = "Wdróż Stirling PDF Editor, sparuj instancje hostowane samodzielnie ze swoją organizacją i zarządzaj działającą flotą — cele, kondycja, dane uwierzytelniające i aktywacja offline w jednym miejscu."
-title = "Wdrożenie Edytora"
-
-[portal.editorAdmin.health.columns]
-activeUsers = "Aktywni użytkownicy"
-host = "Host"
-lastSeen = "Ostatnio widziano"
-region = "Region"
-status = "Status"
-target = "Target"
-version = "Wersja"
-
-[portal.editorAdmin.health.empty]
-description = "Wdróż cel i sparuj go, aby zobaczyć tutaj bieżącą kondycję instancji."
-title = "Brak zgłaszających się instancji"
-
-[portal.editorAdmin.offlineActivation]
-enterpriseTag = "Enterprise"
-generateButton = "Wygeneruj pakiet offline"
-lockCopy = "Aktywacja offline i on-prem jest częścią Enterprise."
-subtitle = "Wygeneruj podpisany pakiet aktywacyjny dla instalacji offline lub on-prem bez ścieżki sieciowej wychodzącej. Przenieś go do instancji i zastosuj podczas konfiguracji przy pierwszym uruchomieniu."
-talkToSales = "Porozmawiaj ze sprzedażą"
-title = "Aktywacja w środowisku air-gapped"
-
-[portal.editorAdmin.offlineActivation.readyBanner]
-description = "{{file}} jest podpisany i gotowy do przeniesienia. Aktywuje jedną instancję i wygasa za 14 dni."
-title = "Pakiet gotowy"
-
-[portal.editorAdmin.pairing]
-generated = "Wygenerowano ✓"
-generateNewCode = "Wygeneruj nowy kod"
-lockCopy = "Provisioning IaC jest częścią Enterprise."
-rotate = "Rotuj"
-talkToSales = "Porozmawiaj ze sprzedażą"
-
-[portal.editorAdmin.sections.health]
-sub = "Każda instancja Edytora zgłaszająca się — wersja, region, status, ostatnio widziano i aktywni użytkownicy."
-title = "Kondycja instancji"
-
-[portal.editorAdmin.sections.pairing]
-sub = "Połącz edytor hostowany samodzielnie z tą organizacją. Wygeneruj token, przekaż krótki kod lub podłącz go przez IaC."
-title = "Parowanie"
-
-[portal.editorAdmin.sections.targets]
-sub = "Gdzie działa Edytor. Skopiuj fragment, aby uruchomić instancję hostowaną samodzielnie, albo użyj Managed Cloud bez operacji administracyjnych."
-title = "Cele wdrożenia"
-
-[portal.editorAdmin.serviceToken]
-currentToken = "Bieżący token"
-lastRotated = "Ostatnio rotowano"
-rotateButton = "Rotuj token usługi"
-subtitle = "Instancje uwierzytelniają się w organizacji za pomocą tych danych uwierzytelniających. Rotuj je zgodnie z harmonogramem lub natychmiast po podejrzeniu wycieku."
-title = "Token usługi"
-
-[portal.editorAdmin.serviceToken.rotatedBanner]
-description = "Wydano nowy token. Zaktualizuj STIRLING_SERVICE_TOKEN w każdej instancji hostowanej samodzielnie w 24-godzinnym oknie karencji, inaczej przejdą offline."
-title = "Rotuj działające instancje"
-
-[portal.editorAdmin.status]
-degraded = "Pogorszony"
-healthy = "Sprawny"
-offline = "Offline"
-pairing = "Parowanie"
-
-[portal.editorAdmin.targets]
-instanceCount_one = "{{count}} instancja"
-instanceCount_other = "{{count}} instancji"
-talkToSales = "Porozmawiaj ze sprzedażą"
-upgradePlan = "Ulepsz plan"
-
-[portal.editorAdmin.targets.lock]
-enterprise = "Samodzielny hosting on-prem i Kubernetes jest częścią Enterprise."
-paid = "Samodzielny hosting z Docker i Kubernetes jest odblokowany w płatnym planie."
-
-[portal.editorAdmin.targets.state]
-available = "Dostępne"
-locked = "Zablokowane"
-running = "Działa"
-
 [portal.errorBoundary]
 description = "Ten widok napotkał nieoczekiwany błąd. Spróbuj ponownie albo wybierz inną sekcję z paska bocznego."
 retry = "Spróbuj ponownie"
 title = "Coś poszło nie tak na tej stronie"
 
 [portal.failures]
-fromSource = "From source {{source}}"
+closedBySystem = "Stirling"
+noMatches = "Nic nie pasuje do bieżących filtrów"
 occurrences = "{{count}} occurrences"
-reportedBy = "Hit by {{actor}}"
-runReference = "Run {{runId}}"
-subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
-title = "Failures"
+searchPlaceholder = "Szukaj problemów, użytkowników i błędów"
 
 [portal.failures.action]
 acknowledge = "Acknowledge"
-confirm = "Are you sure?"
+decrypt = "Odblokuj"
 dismiss = "Dismiss"
-dismissSkipFile = "Skip this file"
+openInTool = "Ponów"
+repair = "Napraw"
 viewFile = "Wyświetl plik"
 viewInProcessor = "Wyświetl w procesorze"
 
-[portal.failures.debug]
-copyJson = "Copy JSON"
-dismissAll = "Dismiss all ({{total}})"
-dismissing = "Dismissing..."
-hideJson = "Hide raw JSON ({{total}})"
-refresh = "Refresh failures"
-showJson = "Show raw JSON ({{total}})"
+[portal.failures.columns]
+closedBy = "Zamknięte przez"
+date = "Data"
+failure = "Problem"
+origin = "Zgłoszone w"
+outcome = "Wynik"
+source = "Źródło"
+user = "Użytkownik"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
@@ -7550,25 +8440,102 @@ unavailable = "Not available for this failure."
 description = "Policy runs that fail will appear here with the actions you can take."
 title = "No failures recorded"
 
+[portal.failures.emptyClosed]
+description = "Elementy odrzucone lub rozwiązane są przechowywane tutaj wraz z ich wynikiem."
+title = "Nic jeszcze nie zamknięto"
+
+[portal.failures.filters]
+origin = "Zgłoszone w"
+source = "Źródło"
+type = "Typ"
+user = "Użytkownik"
+
+[portal.failures.kind.complianceNotMet]
+description = "Kontrola zgodności odrzuciła ten dokument, ponieważ nie spełnia standardu, względem którego weryfikuje polityka. Naruszenie pokazano poniżej."
+title = "Standard zgodności nie został spełniony"
+
+[portal.failures.kind.inputCorrupted]
+description = "Twój plik jest uszkodzony, więc uruchomienie nie mogło go odczytać."
+title = "Uszkodzony dokument"
+
+[portal.failures.kind.inputEmpty]
+description = "Twój plik nie ma zawartości, więc uruchomienie nie miało na czym pracować."
+title = "Pusty plik"
+
 [portal.failures.kind.inputPasswordProtected]
 description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
 title = "Password-protected document"
 
+[portal.failures.kind.inputUnavailable]
+description = "Nie można było uzyskać dostępu do pliku stojącego za tym uruchomieniem, więc nigdy nie został przetworzony."
+title = "Plik niedostępny"
+
+[portal.failures.kind.inputUnreadable]
+description = "Nie można było otworzyć pliku, więc uruchomienie nie mogło go odczytać."
+title = "Plik nieczytelny"
+
+[portal.failures.kind.inputUnrepairable]
+description = "Twój plik jest uszkodzony bardziej, niż narzędzia naprawcze mogą naprawić."
+title = "Nie udało się naprawić pliku"
+
+[portal.failures.kind.inputWrongType]
+description = "Twój plik nie jest w formacie, który ten krok może otworzyć, więc uruchomienie nie mogło go odczytać."
+title = "Nieprawidłowy typ pliku"
+
+[portal.failures.kind.stepCannotRenderPage]
+description = "Nie można było narysować strony w Twoim pliku, więc uruchomienie nie mogło się zakończyć."
+title = "Nie udało się wyrenderować strony"
+
+[portal.failures.kind.stepInterrupted]
+description = "Ten krok został zatrzymany przed ukończeniem, więc Twój plik nie został przetworzony. Ponowne uruchomienie zwykle działa."
+title = "Krok został przerwany"
+
+[portal.failures.kind.stepMisconfigured]
+description = "Ustawienia tego kroku są nieprawidłowe, więc nie można go uruchomić na żadnym pliku. Edytuj krok, aby je naprawić."
+title = "Ustawienia kroku są nieprawidłowe"
+
+[portal.failures.kind.stepPageTooLarge]
+description = "Nie można było wyrenderować strony w Twoim pliku w żądanej rozdzielczości. Obniż DPI w kroku albo podziel plik."
+title = "Strona zbyt duża do wyrenderowania"
+
+[portal.failures.kind.stepToolFailed]
+description = "Narzędzie, od którego zależy ten krok, nie mogło przetworzyć Twojego pliku."
+title = "Narzędzie nie mogło przetworzyć pliku"
+
+[portal.failures.kind.toolNotInstalled]
+description = "Na tym serwerze brakuje oprogramowania potrzebnego temu krokowi, więc uruchomienie nie mogło go rozpocząć."
+title = "Oprogramowanie nie jest zainstalowane"
+
 [portal.failures.kind.unknown]
 description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
 title = "Unrecognised failure"
+
+[portal.failures.log]
+copy = "Kopiuj błąd"
+view = "Wyświetl błąd"
 
 [portal.failures.origin]
 pipeline = "Pipeline"
 policy = "Policy"
 tool = "Tool run"
 
-[portal.failures.stage]
-blocked = "Blocked"
-input = "Input"
-internal = "Internal"
-never_ran = "Never ran"
-output = "Output"
+[portal.failures.outcome]
+dismissed = "Odrzucono"
+fileRemoved = "Plik usunięty"
+open = "Otwórz"
+resolved = "Rozwiązano"
+
+[portal.failures.scope]
+ariaLabel = "Stan przeglądu"
+closed = "Zamknięte"
+open = "Otwarte"
+
+[portal.failures.source]
+editor = "Edytor"
+
+[portal.failures.unavailable]
+description = "Ta kolejka jest widoczna dla liderów zespołu w obszarach roboczych, które uruchamiają polityki."
+title = "Nic do przeglądu"
 
 [portal.home.download]
 back = "Wstecz"
@@ -7644,12 +8611,6 @@ kubernetes = "Hostowane samodzielnie · Kubernetes"
 afternoon = "Dzień dobry"
 evening = "Dobry wieczór"
 morning = "Dzień dobry"
-
-[portal.infrastructure]
-manageEditorDeployment = "Zarządzaj wdrożeniem Edytora"
-sectionsAriaLabel = "Sekcje infrastruktury"
-subtitle = "Wdrożenia, dane uwierzytelniające, stan bezpieczeństwa, magazyn i ścieżka audytu dla Twojej przestrzeni roboczej Stirling."
-title = "Infrastruktura"
 
 [portal.infrastructure.apiKeys]
 createKey = "Utwórz klucz"
@@ -7760,17 +8721,175 @@ subtitleCreated = "Skopiuj ten sekret teraz — nie zostanie pokazany ponownie."
 title = "Utwórz klucz API"
 titleCreated = "Klucz utworzony"
 
+[portal.infrastructure.encryption]
+heading = "Szyfrowanie danych w spoczynku"
+hintLabel = "Więcej o tej sekcji"
+subheading = "Przechowywane pliki są szyfrowane, zanim trafią na dysk, do bazy danych lub magazynu obiektów."
+unknown = "Nieznane"
+
+[portal.infrastructure.encryption.auditNotice]
+description = "Szyfrowanie jest aktywne w tej licencji, ale zdarzenia szyfrowania, odszyfrowywania, cofnięcia i eksportu nie są zapisywane w dzienniku audytu. Samo szyfrowanie pozostaje bez zmian."
+title = "Zdarzenia audytu wymagają licencji Enterprise"
+
+[portal.infrastructure.encryption.coverage]
+decryptOnlyNote = "Nowe przesłania są przechowywane jako tekst jawny. Pliki zaszyfrowane wcześniej nadal są czytelne."
+encrypted = "Zaszyfrowane pliki"
+heading = "Pokrycie"
+percentEncrypted = "{{percent}}% zaszyfrowane"
+plaintext = "Pliki w tekście jawnym"
+progressLabel = "{{percent}}% przechowywanych plików zaszyfrowanych"
+subheading = "Obejmuje pliki w Moich plikach i przepływy podpisywania. Pliki odczytywane przez potok w miejscu, w tym źródła sieciowe, nie są tu przechowywane i nie są szyfrowane."
+
+[portal.infrastructure.encryption.error]
+action = "Nie udało się zastosować tej zmiany klucza. Spróbuj ponownie."
+keyMissing = "Ten klucz już nie istnieje. Odśwież, aby zobaczyć bieżącą listę."
+migrationStart = "Nie udało się rozpocząć migracji. Spróbuj ponownie."
+rotate = "Nie udało się ukończyć ponownego opakowania. Spróbuj ponownie."
+
+[portal.infrastructure.encryption.generatedKey]
+backupGuide = "Jak wykonać kopię zapasową"
+description = "Nie skonfigurowano klucza szyfrowania, więc utworzono go na tym serwerze. Wykonaj teraz jego kopię zapasową: jeśli zostanie utracony, zaszyfrowanych plików nie będzie można odzyskać."
+title = "Ten klucz został wygenerowany dla Ciebie"
+
+[portal.infrastructure.encryption.keys]
+changedAt = "Zmieniono {{when}}"
+changedBy = "Przez {{actor}}"
+changedByAt = "Przez {{actor}} dnia {{when}}"
+heading = "Klucze zakresu"
+keyVersion = "Wersja {{version}}"
+neverChanged = "Nigdy nie zmieniono"
+restore = "Przywróć dostęp"
+retiredNote = "Wycofany klucz nadal odszyfrowuje pliki pod nim zapisane, ale nowszy klucz opakowuje nowe przesłania."
+revoke = "Cofnij"
+subheading = "Jeden klucz na zakres. Cofnięcie klucza blokuje odczyt wszystkiego, co zostało pod nim zapisane."
+
+[portal.infrastructure.encryption.keys.columns]
+actions = "Akcje"
+lastChange = "Ostatnia zmiana"
+scope = "Zakres"
+status = "Status"
+
+[portal.infrastructure.encryption.keys.empty]
+description = "Klucz jest tworzony, gdy ktoś po raz pierwszy przesyła plik, a nie przy starcie."
+title = "Brak kluczy"
+
+[portal.infrastructure.encryption.masterKey]
+backend = "Backend przechowywania"
+compareNote = "Porównaj to z fingerprintem w kopii zapasowej klucza i w logu startowym."
+copied = "Skopiowano"
+copy = "Kopiuj"
+copyFailed = "Ta przeglądarka nie zezwoliła na kopiowanie. Fingerprint jest zaznaczony, więc skopiuj go ręcznie."
+fingerprint = "Fingerprint"
+fingerprintHelp = "Do czego służy ten fingerprint?"
+heading = "Klucz główny"
+notMaterialised = "Mechanizm kluczy nie został jeszcze uruchomiony na tym węźle."
+s3StreamingNote = "Gdy cokolwiek jest zaszyfrowane, pobieranie z magazynu obiektów jest strumieniowane przez ten serwer zamiast przekierowania, więc zużywa jego przepustowość."
+subheading = "Opakowuje każdy klucz zakresu. Nigdy nie jest pokazywany ani przyjmowany przez API."
+version = "Wersja"
+
+[portal.infrastructure.encryption.migration]
+backlog_one = "{{formatted}} plik jest przechowywany jako tekst jawny i można go teraz zaszyfrować."
+backlog_other = "{{formatted}} plików jest przechowywanych jako tekst jawny i można je teraz zaszyfrować."
+encrypted = "Zaszyfrowano"
+failedCount = "Niepowodzenia"
+heading = "Zaszyfruj istniejące pliki"
+hint = "Szyfruje zaległe pliki w tekście jawnym pozostałe sprzed włączenia szyfrowania. Postęp jest przechowywany w pamięci, więc restart backendu resetuje go do stanu nierozpoczętego. Ponowne uruchomienie pomija pliki, które są już zaszyfrowane."
+noBacklog = "Każdy przechowywany plik jest już zaszyfrowany."
+progressLabel = "Zaszyfrowano {{processed}} z {{total}} plików"
+requiresEncryptionOn = "Włącz szyfrowanie przed uruchomieniem: zaległość jest szyfrowana przy użyciu tej samej ścieżki zapisu co nowe przesłania."
+runAgain = "Uruchom ponownie"
+skipped = "Pominięto"
+skippedHelp = "Co oznacza pominięto?"
+skippedNote = "Pominięte pliki zostały zastąpione przez użytkownika w trakcie uruchomienia, więc ich kopia została pozostawiona bez zmian."
+start = "Rozpocznij"
+startedAt = "Rozpoczęto {{when}}"
+
+[portal.infrastructure.encryption.migration.confirm]
+cancel = "Anuluj"
+confirm = "Rozpocznij szyfrowanie"
+noCancel = "Nie ma kontrolki zatrzymania. Po rozpoczęciu uruchomienie trwa, aż się zakończy lub szyfrowanie zostanie wyłączone."
+rewrites_one = "Przepisuje {{formatted}} przechowywany plik, zastępując kopię w tekście jawnym zaszyfrowaną."
+rewrites_other = "Przepisuje {{formatted}} przechowywanych plików, zastępując kopie w tekście jawnym zaszyfrowanymi."
+throttled = "Zadanie jest ograniczane i można je bezpiecznie uruchomić ponownie. Pliki już zaszyfrowane są pomijane."
+title = "Zaszyfrować istniejącą zaległość?"
+
+[portal.infrastructure.encryption.migration.failed]
+description = "Szyfrowanie zostało wyłączone w trakcie migracji, więc pozostałe pliki pozostawiono bez zmian. Włącz je ponownie i uruchom jeszcze raz."
+title = "Uruchomienie zatrzymało się przedwcześnie"
+
+[portal.infrastructure.encryption.migration.state]
+COMPLETED = "Ukończono"
+FAILED = "Niepowodzenie"
+IDLE = "Nie rozpoczęto"
+RUNNING = "W toku"
+
+[portal.infrastructure.encryption.revoke]
+cancel = "Anuluj"
+clusterDelay = "W klastrze inne węzły zastosują to w ciągu 60 sekund."
+confirm = "Cofnij dostęp"
+readsFail = "Pliki już zapisane pod tym kluczem przestaną się otwierać dla wszystkich."
+reversible = "To jest odwracalne. Materiał klucza nie jest usuwany."
+title = "Cofnąć dostęp do tego klucza?"
+uploadsContinue = "Nowe przesłania nadal działają. Otrzymują świeży klucz, więc pozostają czytelne."
+
+[portal.infrastructure.encryption.rotation]
+currentVersion = "Bieżąca wersja"
+heading = "Rotacja klucza głównego"
+hint = "Ponownie opakowuje klucze zakresu pod nowym kluczem głównym; zawartość plików nigdy nie jest przepisywana. Nowy klucz jest ustawiany w konfiguracji i stosowany przy restarcie, więc ten przycisk wykonuje tylko ponowne opakowanie."
+pendingRows = "Wiersze na starszej wersji"
+rewrap = "Ponownie opakuj klucze"
+rewrapped_one = "Ponownie opakowano {{count}} wiersz klucza."
+rewrapped_other = "Ponownie opakowano {{count}} wierszy kluczy."
+runbook = "Runbook rotacji"
+
+[portal.infrastructure.encryption.rotation.confirm]
+cancel = "Anuluj"
+confirm = "Ponownie opakuj klucze"
+noFiles = "Zawartość plików nie jest naruszana. Przepisywana jest tylko tabela kluczy."
+rerunnable = "Można bezpiecznie uruchomić ponownie, jeśli się nie zakończy."
+rewraps_one = "Ponownie opakowuje {{count}} wiersz klucza pod bieżącym kluczem głównym."
+rewraps_other = "Ponownie opakowuje {{count}} wierszy kluczy pod bieżącym kluczem głównym."
+title = "Ponownie opakować tabelę kluczy?"
+
+[portal.infrastructure.encryption.rotation.pending]
+description = "Nie usuwaj jeszcze poprzedniego klucza z konfiguracji. Pliki pod tymi kluczami przestałyby się otwierać."
+title_one = "{{count}} wiersz klucza nadal jest na poprzednim kluczu głównym"
+title_other = "{{count}} wierszy kluczy nadal jest na poprzednim kluczu głównym"
+
+[portal.infrastructure.encryption.scope]
+global = "Wszyscy użytkownicy"
+source = "Źródło {{id}}"
+team = "Zespół {{id}}"
+
+[portal.infrastructure.encryption.status]
+ACTIVE = "Aktywny"
+DISABLED = "Cofnięty"
+RETIRED = "Wycofany"
+
+[portal.infrastructure.encryption.unavailable.forbidden]
+description = "Twoje konto nie ma uprawnień do wyświetlania ustawień szyfrowania."
+title = "Niedostępne dla Twojego konta"
+
+[portal.infrastructure.encryption.unavailable.registry-unavailable]
+description = "Nie udało się odczytać rejestru kluczy szyfrowania. Sprawdź połączenie z bazą danych i logi aplikacji."
+title = "Rejestr kluczy niedostępny"
+
+[portal.infrastructure.encryption.unavailable.storage-disabled]
+description = "Przechowywanie plików jest wyłączone na tym serwerze, więc nie ma czego szyfrować."
+title = "Przechowywanie jest wyłączone"
+
+[portal.infrastructure.encryption.unavailable.unknown]
+description = "Nie udało się załadować statusu szyfrowania. Spróbuj ponownie."
+title = "Status niedostępny"
+
+[portal.infrastructure.encryption.writeState]
+decryptOnly = "Tylko odszyfrowywanie"
+encrypting = "Szyfrowanie nowych przesłań"
+off = "Wyłączone"
+
 [portal.infrastructure.keyLabel]
 active = "Aktywny"
 revoked = "Unieważniony"
-
-[portal.infrastructure.tabs]
-apiKeys = "Klucze API"
-audit = "Dzienniki audytu"
-deployments = "Wdrożenia"
-models = "Modele"
-security = "Bezpieczeństwo"
-storage = "Magazyn"
 
 [portal.integrations]
 availableHeading = "Dostępne"
@@ -7827,6 +8946,7 @@ integrations = "Integracje"
 pipelines = "Potoki"
 policies = "Zasady"
 procurement = "Zakupy"
+review = "Przegląd"
 sources = "Źródła"
 usage = "Użycie i rozliczenia"
 users = "Użytkownicy"
@@ -7836,11 +8956,16 @@ platform = "Platforma PDF"
 processor = "Procesor PDF"
 
 [portal.pipelines]
+permissionsRetry = "Ponów"
+permissionsUnavailable = "Nie udało się sprawdzić, czy możesz zarządzać politykami, więc akcje polityk są na razie niedostępne."
 subtitle = "Każdy zautomatyzowany potok dokumentów na backendzie: uporządkowany łańcuch operacji na zestawie źródeł, uruchamiany przez wyzwalacz. Kliknij wiersz, aby zobaczyć jego kroki i źródła."
 title = "Potoki"
 
 [portal.pipelines.actions]
-newPipeline = "Nowy potok"
+newCustomPipeline = "Nowy niestandardowy potok"
+
+[portal.pipelines.all]
+title = "Wszystkie potoki"
 
 [portal.pipelines.builder]
 activate = "Activate"
@@ -7851,6 +8976,8 @@ chooseDestination = "Wybierz miejsce docelowe"
 chooseOperation = "Wybierz, co robi ten krok"
 chooseSource = "Wybierz źródło"
 discard = "Odrzuć zmiany"
+editorDestination = "Edytor"
+editorDestinationDetail = "Zastępuje plik, na którym go uruchomiono"
 inputs = "Wejście"
 inputSource = "Źródło wejściowe"
 inputTrigger = "Wyzwalacz"
@@ -7862,6 +8989,10 @@ needsSource = "No source chosen"
 noToolMatches = "Żadne narzędzia nie pasują do wyszukiwania."
 pause = "Pause"
 rename = "Rename pipeline"
+runOn = "Uruchamia się przy"
+runOnExport = "Każdym eksporcie"
+runOnTooltip = "Wybierz, kiedy ten potok uruchamia się na Twoich plikach: gdy je dodajesz albo gdy je eksportujesz."
+runOnUpload = "Każdym przesłaniu"
 searchTools = "Szukaj narzędzi"
 sendToSystem = "Wyślij do innego systemu"
 stepsIncompatible = "Te kroki nie mogą działać na tym, co wytwarza poprzedni krok: {{tools}}."
@@ -7875,10 +9006,14 @@ usesDefaults = "Uruchamia się z ustawieniami domyślnymi"
 viewDefinition = "View definition"
 
 [portal.pipelines.builder.blocker]
+aiClassification = "Włącz klasyfikację AI w Ustawieniach albo usuń krok Klasyfikuj"
 destination = "Choose a destination"
 heading = "To create this pipeline:"
 incompatible = "Fix steps that can't run in order: {{tools}}"
+managerOnly = "Tylko administrator lub lider zespołu może modyfikować politykę"
 name = "Give the pipeline a name"
+routing = "Nadaj każdej trasie typy dokumentów i miejsce docelowe"
+routingNeedsClassify = "Dodaj krok Klasyfikuj albo wyłącz trasowanie według typu dokumentu"
 saveHeading = "To save your changes:"
 schedule = "Set how often it runs"
 setup = "Finish setting up: {{tools}}"
@@ -7891,6 +9026,53 @@ format-mismatch = "Wymaga {{accepts}}, ale poprzedni krok wytwarza {{produced}}"
 output-uncertain = "Może się nie uruchomić: wynik poprzedniego kroku zależy od jego konfiguracji"
 source-mismatch = "Wymaga {{accepts}}, ale wejściem tego potoku jest {{produced}}"
 undeclared-operation = "Nie można sprawdzić, co akceptuje ten krok"
+
+[portal.pipelines.builder.icon]
+label = "Zmień ikonę"
+
+[portal.pipelines.builder.ingest]
+chunkSize = "Rozmiar fragmentu"
+chunkSizeHint = "Znaki na fragment. Mniejsze fragmenty wyszukują precyzyjniej; większe zachowują więcej kontekstu razem."
+destinationNeedsChunks = "To miejsce docelowe bazy danych wektorowej wymaga końcowego kroku ingestii AI, który eksportuje tylko fragmenty."
+editorPdfOnly = "Tylko PDF mogą wracać do edytora. Aby eksportować fragmenty lub Markdown, wybierz Zachowaj oryginały i wyślij do miejsca docelowego w Wyjściu."
+exportChunks = "Eksportuj fragmenty jako JSONL"
+exportChunksHint = "Jeden fragment na wiersz wraz z zakresem stron, gotowy do załadowania do innego systemu."
+exportMarkdown = "Eksportuj Markdown"
+exportMarkdownHint = "Tekst dokumentu jako jeden plik Markdown."
+includeOriginal = "Dołącz wejściowy PDF"
+includeOriginalHint = "Dostarcz PDF obok eksportowanego tekstu. Nie zmienia to tego, czy źródło zachowuje oryginał."
+index = "Indeksuj w bazie wiedzy"
+indexHint = "Osadza dokument, aby można było go wyszukiwać i zadawać o niego pytania. Wymaga silnika AI."
+nothingToDo = "Włącz co najmniej indeksowanie lub eksport, inaczej ten krok nie będzie miał nic do zrobienia i uruchomienie zakończy się niepowodzeniem."
+overlap = "Nakładanie"
+overlapHint = "Znaki powtarzane między sąsiednimi fragmentami, aby zdanie podzielone między dwa fragmenty nadal było możliwe do znalezienia."
+overlapTooBig = "Nakładanie musi być mniejsze niż rozmiar fragmentu ({{chunkSize}})."
+prepareDestination = "Przygotuj fragmenty dla tego miejsca docelowego"
+unavailable = "Ingestia AI wymaga włączonego silnika AI i DocParse, także gdy docelowa baza danych generuje osadzenia."
+
+[portal.pipelines.builder.routing]
+addRule = "Dodaj trasę"
+aiDisabled = "Klasyfikacja AI nie jest włączona. Włącz ją w Ustawieniach albo trasuj według właściwości dokumentu."
+aiToolDisabled = "Niedostępne do czasu włączenia klasyfikacji AI w Ustawieniach"
+aiUnavailable = "Trasowanie według typu dokumentu jest wyłączone, ponieważ klasyfikacja AI jest niedostępna. Trasuj według właściwości dokumentu."
+extensionPlaceholder = "pdf, docx, png"
+fallback = "Wszystko inne trafia do"
+heading = "Trasy"
+matchAuthor = "Autor PDF"
+matchBy = "Dopasuj według"
+matchDocumentType = "Typ dokumentu (klasyfikacja AI)"
+matchDocumentTypeDisabled = "Typ dokumentu (AI niedostępne)"
+matchExtension = "Rozszerzenie pliku"
+matchFilename = "Dokładna nazwa pliku"
+matchTitle = "Tytuł PDF"
+matchValues = "Wartości do dopasowania"
+needsClassify = "Dodaj krok Klasyfikuj, aby użyć trasowania według typu dokumentu, albo dopasuj według właściwości dokumentu."
+nodeSummary_one = "1 trasa, potem fallback"
+nodeSummary_other = "{{count}} tras, potem fallback"
+toggle = "Wysyłaj typy dokumentów do różnych miejsc"
+toggleOff = "Każdy dokument trafia do miejsca docelowego poniżej."
+toggleOn = "Dokumenty są trasowane według pierwszego warunku dokumentu, do którego pasują."
+valuePlaceholder = "Wprowadź dokładne wartości, oddzielone przecinkami"
 
 [portal.pipelines.composer]
 addTool = "Dodaj narzędzie"
@@ -7941,6 +9123,12 @@ connectSource = "Połącz źródło"
 description = "Utwórz swój pierwszy potok: wybierz źródła, na których działa, połącz operacje w łańcuch i wybierz miejsce zapisu wyjścia."
 title = "Brak potoków"
 
+[portal.pipelines.enforce]
+desc = "Polityka blokuje plik, który jej nie spełnia; zwykły potok zgłasza błąd, ale przepuszcza plik dalej."
+info = "Co oznacza egzekwowanie jako polityki"
+label = "Egzekwuj jako politykę"
+managerOnly = "Tylko administrator lub lider zespołu może egzekwować potok jako politykę"
+
 [portal.pipelines.graph]
 addFirstTool = "Add a tool"
 dragHint = "Drop on a line to move it"
@@ -7972,11 +9160,6 @@ failed_other = "Failed after {{done}} of {{count}} steps"
 running_one = "Running the only step"
 running_other = "Running step {{done}} of {{count}}"
 
-[portal.pipelines.kpi]
-active = "Aktywne"
-paused = "Wstrzymane"
-total = "Potoki"
-
 [portal.pipelines.run]
 allProcessed_one = "Nic do uruchomienia: {{count}} dokument ze źródła został już przetworzony."
 allProcessed_other = "Nic do uruchomienia: wszystkie {{count}} dokumenty w źródłach zostały już przetworzone."
@@ -8000,20 +9183,29 @@ sources = "Źródła"
 status = "Status"
 steps = "Kroki"
 trigger = "Trigger"
+type = "Typ"
+
+[portal.pipelines.templates]
+setUp = "Skonfiguruj"
+title = "Szablony"
 
 [portal.pipelines.trigger]
+editor-export = "Każdy eksport"
+editor-upload = "Każde przesłanie"
 folder-watch = "Obserwacja folderu"
 manual = "Ręcznie"
 schedule = "Zaplanowane"
+storage-folder-watch = "Nowe pliki w folderze przechowywania"
+
+[portal.pipelines.type]
+pipeline = "Potok"
+policy = "Polityka"
 
 [portal.policies]
 defaultName = "Zasada {{category}}"
-subtitle = "Stałe automatyzacje, które wymuszają potok narzędzi na każdym dokumencie. Każda zasada uruchamia się przy przesyłaniu lub eksporcie, wykonuje swój łańcuch narzędzi i zapisuje wymuszoną wersję obok oryginału."
-title = "Zasady"
 
 [portal.policies.card]
 comingSoon = "Ulepsz do Enterprise"
-notSetUp = "Nie skonfigurowano"
 requiresAiEngine = "Wymaga silnika AI"
 
 [portal.policies.categories.classification]
@@ -8025,7 +9217,7 @@ desc = "Wymuszaj wymagania HIPAA, GDPR, SOC 2 lub FedRAMP na każdym dokumencie.
 label = "Zgodność"
 
 [portal.policies.categories.ingestion]
-desc = "Klasyfikuj dokumenty, wyodrębniaj dane strukturalne, wymuszaj konwencje nazewnictwa i normalizuj strony."
+description = "Odczytuj dokumenty, przygotowuj fragmenty możliwe do wyszukiwania i dostarczaj je do bazy wiedzy lub miejsca docelowego eksportu."
 label = "Import"
 
 [portal.policies.categories.retention]
@@ -8053,29 +9245,23 @@ summary = "Klasyfikuje każdy przesłany dokument według etykiet zespołu i ozn
 [portal.policies.config.compliance]
 summary = "Waliduje dokumenty względem frameworków regulacyjnych, zanim opuszczą system."
 
-[portal.policies.config.compliance.fields]
-accessLog = "Dziennik dostępu"
-auditTrail = "Ścieżka audytu"
-frameworks = "Frameworki"
-onViolation = "Gdy niezgodne"
-
 [portal.policies.config.compliance.rules]
 0 = "Skan frameworka"
 1 = "Wymuś działanie"
 2 = "Ścieżka audytu"
 
 [portal.policies.config.ingestion]
-summary = "Klasyfikuje dokumenty, wyodrębnia dane strukturalne, wymusza nazewnictwo i normalizuje strony."
-
-[portal.policies.config.ingestion.fields]
-belowThreshold = "Poniżej progu"
-minConfidence = "Min. pewność"
+description = "Wybierz dokumenty do przetworzenia, spraw, aby ich tekst był możliwy do wyszukiwania, i wyślij fragmenty do bazy danych lub wyeksportuj je."
 
 [portal.policies.config.ingestion.rules]
 0 = "Klasyfikuj"
 1 = "Wyodrębnij"
 2 = "Nazwij"
 3 = "Normalizuj"
+
+[portal.policies.config.pdfa.fields.outputFormat]
+help = "PDF/A-2b pasuje do większości archiwów. PDF/A-1b jest najbardziej rygorystyczny i najszerzej akceptowany; PDF/A-3b dodatkowo pozwala na załączniki."
+label = "Profil archiwalny"
 
 [portal.policies.config.purview]
 label = "Zastosuj etykietę poufności Microsoft Purview"
@@ -8116,11 +9302,6 @@ keepFor = "Przechowuj przez"
 [portal.policies.config.routing]
 summary = "Kieruje dokumenty do właściwego miejsca docelowego na podstawie typu i klasyfikacji."
 
-[portal.policies.config.routing.fields]
-destination = "Miejsce docelowe"
-notify = "Powiadom przy routingu"
-webhookUrl = "Webhook URL"
-
 [portal.policies.config.routing.rules]
 0 = "Automatycznie klasyfikuj"
 1 = "Kieruj do folderu"
@@ -8134,49 +9315,17 @@ summary = "Wykrywa i redaguje PII, usuwa aktywną treść (JavaScript) i dodaje 
 1 = "Usuń JavaScript"
 2 = "Znak wodny"
 
-[portal.policies.detail]
-enforces = "Wymusza"
-onEveryExport = "Przy każdym eksporcie"
-onEveryUpload = "Przy każdym przesłaniu"
-outputAsNewFile = "jako nowy plik"
-outputAsNewVersion = "jako nową wersję"
-recentActivity = "Ostatnia aktywność"
-retry = "Ponów"
-showLess = "Pokaż mniej"
-showMore = "Pokaż więcej"
-sources = "Źródła"
-
-[portal.policies.detail.actions]
-clearHistory = "Wyczyść historię przetwarzania"
-delete = "Usuń"
-editSettings = "Edytuj ustawienia"
-pause = "Wstrzymaj"
-resume = "Wznów"
-runNow = "Uruchom teraz"
-
-[portal.policies.detail.clearHistory]
-body = "Ta polityka zapomni każdy plik, który już przetworzyła, i przy następnym uruchomieniu ponownie przetworzy wszystko, co aktualnie znajduje się w jej źródłach. Same pliki nie zostaną zmienione. Tej operacji nie można cofnąć."
-cancel = "Anuluj"
-confirm = "Wyczyść historię"
-title = "Wyczyścić historię przetwarzania?"
-
-[portal.policies.detail.emptyActivity]
-description = "Dokumenty pojawią się tutaj po uruchomieniu tej polityki."
-title = "Brak aktywności"
-
 [portal.policies.endpoints]
 addWatermark = "Znak wodny"
 autoRedact = "Redaguj PII"
 classifyAndLabel = "Klasyfikuj"
 compressPdf = "Kompresuj"
 flatten = "Spłaszcz"
+ingest = "Przygotuj do wyszukiwania wiedzy"
 ocrPdf = "OCR"
+pdfa = "Konwertuj do PDF/A"
 sanitizePdf = "Usuń JavaScript"
-
-[portal.policies.offline]
-description = "Twoje polityki są zapisane i pojawią się po przywróceniu połączenia."
-retry = "Ponów próbę"
-title = "Backend niedostępny"
+validateCompliance = "Weryfikuj zgodność"
 
 [portal.policies.operations]
 change = "Zmień działanie tego kroku"
@@ -8373,48 +9522,20 @@ label = "Opublikuj dokument do webhooka"
 description = "Przekazuje szczegóły uruchomienia do Twojej automatyzacji."
 label = "Uruchom Zap lub scenariusz Make"
 
-[portal.policies.stats]
-activeFor = "Aktywne"
-dataProcessed = "Przetworzone dane"
-docsEnforced = "Egzekwowane dokumenty"
-
-[portal.policies.status]
-active = "Aktywna"
-paused = "Wstrzymana"
-
-[portal.policies.summary.active]
-description = "Egzekwowanie przy przesyłaniu/eksporcie"
-label = "Aktywne polityki"
-
-[portal.policies.summary.categories]
-description = "Dostępne do skonfigurowania"
-label = "Kategorie"
-
-[portal.policies.summary.docsEnforced]
-description = "We wszystkich aktywnych politykach"
-label = "Egzekwowane dokumenty"
-
-[portal.policies.summary.paused]
-description = "Skonfigurowane, ale nieuruchamiane"
-label = "Wstrzymane"
-
-[portal.policies.table]
-appliesTo = "Dotyczy"
-docs = "Dokumenty objęte wymuszeniem"
-enforces = "Wymusza"
-policy = "Zasada"
-status = "Status"
-
 [portal.policies.wizard.actions]
-back = "Wstecz"
 cancel = "Anuluj"
-continue = "Kontynuuj"
+customise = "Dostosuj"
+customiseUnavailable = "Pełny kreator jest dostępny w Processor"
 enablePolicy = "Włącz politykę"
 saveChanges = "Zapisz zmiany"
 
 [portal.policies.wizard.capability.classify]
 desc = "Identyfikuje typ dokumentu na podstawie etykiet zespołu i oznacza go, aby można było go archiwizować i wyszukiwać według kategorii."
 label = "Klasyfikuj dokument"
+
+[portal.policies.wizard.capability.complianceCheck]
+desc = "Weryfikuje gotowy dokument względem PDF/A i zatrzymuje uruchomienie, jeśli nie spełnia wymagań."
+label = "Sprawdź, czy dokument spełnia standard"
 
 [portal.policies.wizard.capability.compress]
 desc = "Kompresuje dokument do mniejszego rozmiaru pliku."
@@ -8424,9 +9545,17 @@ label = "Zmniejsz rozmiar pliku"
 desc = "Scala pola formularza i adnotacje ze stroną, aby nie można było ich edytować."
 label = "Spłaszcz dokument"
 
+[portal.policies.wizard.capability.ingest]
+desc = "Przygotuj fragmenty możliwe do wyszukiwania dla wbudowanej bazy wiedzy, połączonej bazy danych wektorowej lub eksportu korpusu."
+label = "Przygotuj do wyszukiwania wiedzy"
+
 [portal.policies.wizard.capability.ocr]
 desc = "Uruchamia OCR, aby zeskanowane strony stały się zaznaczalnym i przeszukiwalnym tekstem."
 label = "Uczyń tekst przeszukiwalnym"
+
+[portal.policies.wizard.capability.pdfa]
+desc = "Przepisuje dokument w archiwalnym formacie ISO, osadzając jego czcionki i profile kolorów, aby nadal renderował się tak samo za lata. Unieważnia podpisy cyfrowe."
+label = "Konwertuj do PDF/A w celu archiwizacji"
 
 [portal.policies.wizard.capability.redact]
 desc = "Znajduje i zaczernia poufne dane — takie jak numery ubezpieczenia społecznego i kart — aby nie można było ich odczytać."
@@ -8452,38 +9581,60 @@ labelsHeading = "Etykiety klasyfikacji"
 noTools = "Najpierw włącz co najmniej jedno narzędzie w przepływie pracy."
 saveFailed = "Nie udało się zapisać polityki. Spróbuj ponownie."
 
-[portal.policies.wizard.output]
-heading = "Wyjście i uruchamianie"
+[portal.policies.wizard.locations]
+aiSettings = "Otwórz ustawienia AI"
+builtin = "Baza wiedzy Stirling"
+builtinHelp = "Indeksuje fragmenty możliwe do wyszukiwania w Stirling i zwraca przetworzony PDF do miejsca docelowego poniżej. Dostawca osadzeń musi być skonfigurowany w ustawieniach AI."
+checking = "Sprawdzanie dostępności ingestii..."
+chooseOutput = "Wybierz włączone wyjściowe miejsce docelowe przed zapisaniem."
+chooseSource = "Wybierz, skąd pochodzą dokumenty"
+chunkSettings = "Ustawienia fragmentów"
+connectInput = "Połącz źródło wejściowe"
+consumed = "Sprawdź tryb przetwarzania tego źródła: consume usuwa oryginały po pomyślnym uruchomieniu. Wybierz Track w Edytuj źródło wejściowe, aby je zachować."
+delivery = "Dostarczenie"
+desktopExternal = "Zarządzaj tym połączeniem bazy danych w Processor aplikacji web albo zmień typ wyjścia, aby zwracać wyniki do tego folderu."
+destination = "Miejsce docelowe"
+editInput = "Edytuj źródło wejściowe"
+editor = "Pliki otwarte w edytorze"
+editorDestination = "Obszar roboczy edytora"
+editorOutput = "Przetworzone PDF wracają do obszaru roboczego edytora."
+engineUnavailable = "Silnik AI jest wyłączony lub niedostępny. Włącz go, aby przygotować fragmenty, albo wyłącz wyszukiwanie wiedzy, aby uruchomić tylko OCR."
+export = "Eksportuj fragmenty bez bazy danych"
+exportHelp = "Zapisuje przetworzony PDF i fragmenty (JSONL) w miejscu docelowym poniżej. Silnik AI przygotowuje fragmenty; baza danych ani dostawca osadzeń nie są potrzebni."
+external = "Połączona baza danych wektorowa"
+externalHelp = "Wysyła fragmenty do wybranej bazy danych, która generuje osadzenia. Uruchomienie zwraca potwierdzenie indeksowania."
+folder = "Wejście: {{name}}. Oryginały są zachowywane przy dostarczaniu do bazy danych wektorowej."
+folderOutput = "Przetworzone pliki są zapisywane w tym folderze. Eksporty korpusu zachowują oryginalny PDF."
+indexingUnavailable = "Wbudowana baza wiedzy wymaga dostawcy osadzeń. Skonfiguruj go w ustawieniach AI, połącz bazę danych wektorową albo eksportuj fragmenty bez bazy danych."
+input = "Dokumenty do przetworzenia"
+invalidChunks = "Wybierz rozmiar fragmentu od 64 do 32768 oraz nakładanie od 0 do 4096 mniejsze niż rozmiar fragmentu."
+keepOriginal = "Zachowaj oryginały i wyślij do miejsca docelowego"
+keepOriginalHelp = "Kopia działa w tle. Pliki w edytorze pozostają bez zmian; wyniki są zapisywane w miejscu docelowym poniżej."
+noDatabase = "Nie skonfigurowano miejsca docelowego bazy danych wektorowej. Połącz źródło poniżej, a następnie wybierz lub utwórz jego połączenie bazy danych i kolekcję."
+output = "Wyjście"
+outputType = "Typ wyjścia"
+recheck = "Sprawdź ponownie"
+retained = "To źródło nie usuwa wejść po przetworzeniu. Wybierz oddzielne miejsce docelowe, aby zachować oryginalne pliki bez zmian."
+returnToEditor = "Zwróć wyniki do edytora"
+returnToFolder = "Zwróć wyniki do tego folderu"
+savedDatabase = "Zapisana baza danych wektorowa"
+source = "Źródło wejściowe"
 
-[portal.policies.wizard.output.filenameRule]
-autoNumber = "Automatyczna numeracja"
-label = "Reguła nazwy pliku"
-placeholder = "Tekst do dodania (opcjonalnie)"
-prefix = "Prefiks"
-suffix = "Sufiks"
-
-[portal.policies.wizard.output.outputAs]
-label = "Wyjście jako"
-newFile = "Nowy plik"
-newVersion = "Nowa wersja"
-
-[portal.policies.wizard.output.runOn]
-export = "Eksport"
-helper = "Kiedy polityka się uruchamia: przy przesyłaniu lub przed eksportem."
-label = "Uruchom przy"
-upload = "Przesyłanie"
-
-[portal.policies.wizard.settings]
-heading = "Ustawienia"
+[portal.policies.wizard.routing]
+chooseDestination = "Wybierz miejsce docelowe"
+chooseSource = "Wybierz, co obserwować"
+description = "Każdy dokument jest najpierw klasyfikowany, a następnie przekazywany do pierwszej pasującej reguły. Wszystko, co nie pasuje do żadnej reguły, trafia do miejsca docelowego poniżej."
+destinationAria = "Miejsce docelowe"
+labelAria = "Typy dokumentów"
+labelPlaceholder = "Wybierz typy dokumentów"
+needsDestination = "Najpierw dodaj poniżej miejsce docelowe — reguła musi mieć gdzie wysyłać dokumenty."
+needsSource = "Podłącz folder, bucket lub webhook, który ta polityka ma obserwować."
+remove = "Usuń regułę"
+sourceDescription = "Dokumenty trafiające tutaj są klasyfikowane, a następnie wysyłane dalej zgodnie z regułami poniżej."
+sourceHeading = "Obserwuj"
 
 [portal.policies.wizard.sources]
-heading = "Źródła"
-loading = "Ładowanie źródeł…"
-
-[portal.policies.wizard.tabs]
-ariaLabel = "Kroki konfiguracji"
-settings = "Ustawienia"
-workflow = "Działania"
+connect = "Podłącz źródło"
 
 [portal.policies.wizard.title]
 edit = "Edytuj politykę {{category}}"
@@ -8491,9 +9642,6 @@ setUp = "Skonfiguruj politykę {{category}}"
 
 [portal.policies.wizard.workflow]
 description = "Wybierz, co ta polityka robi z każdym przetwarzanym dokumentem."
-
-[portal.policySummary.action]
-setUp = "Skonfiguruj"
 
 [portal.processorFlow]
 footnote = "Liczby obejmują ostatnie 24 godziny. Szybkość przepływu ma charakter poglądowy."
@@ -8692,6 +9840,7 @@ sentenceTrial = "konfiguracja próbnego obszaru roboczego"
 [portal.procurement.journey]
 daysLeft_one = "Pozostał {{count}} dzień"
 daysLeft_other = "Pozostało {{count}} dni"
+expired = "Okres próbny wygasł"
 
 [portal.procurement.journeySteps.agreement]
 blurb = "Jeden podpis obejmuje MSA, formularz zamówienia, EULA i DPA."
@@ -8806,8 +9955,9 @@ maxed = "Limit wyczerpany"
 subtitle = "Twoja bezpłatna wersja próbna działa do {{date}}. Karta nie jest wymagana."
 title = "Wersja próbna Enterprise"
 
-[portal.settings.groups]
-admin = "Admin"
+[portal.review]
+subtitle = "Wszystko z uruchomień Twoich polityk i edytorów Twojego zespołu, co wymaga Twojej uwagi."
+title = "Przegląd"
 
 [portal.settings.sections]
 account-link = "Połączenie konta"
@@ -8817,7 +9967,6 @@ appEditor = "Editor"
 appProcessor = "Processor"
 linkAccount = "Połącz konto Stirling"
 primaryNav = "Nawigacja główna"
-switchApp = "Przełącz aplikację"
 
 [portal.shell.topbar]
 closeNav = "Zamknij nawigację"
@@ -8825,6 +9974,7 @@ openNav = "Otwórz nawigację"
 search = "Szukaj"
 
 [portal.sources]
+processingModeHelp = "Tryb śledzenia zachowuje oryginały i przetwarza każdą wersję raz. Migawka zachowuje oryginały i przetwarza je przy każdym uruchomieniu. Konsumowanie usuwa oryginały po pomyślnym dostarczeniu."
 subtitle = "Wielokrotnego użytku połączenia wejściowe, które dostarczają dokumenty do Stirling. Skonfiguruj połączenie raz, a następnie odwołuj się do niego z dowolnej liczby polityk. Kliknij wiersz, aby zobaczyć jego konfigurację i polityki, które go używają."
 title = "Źródła"
 
@@ -8838,6 +9988,7 @@ backToSource = "Wróć do konfiguracji źródła"
 backToTypes = "Wszystkie typy źródeł"
 cancel = "Anuluj"
 chooseHint = "Wybierz, skąd pochodzą dokumenty. Wyszarzone konektory są w przygotowaniu."
+chooseOutputHint = "Wybierz, dokąd trafiają przetworzone dokumenty. Wyszarzone konektory są w przygotowaniu."
 comingSoon = "Wkrótce"
 comingSoonHeading = "Wkrótce"
 create = "Utwórz źródło"
@@ -8857,11 +10008,6 @@ cancel = "Anuluj"
 confirm = "Usuń"
 title = "Usunąć źródło?"
 
-[portal.sources.kpi]
-inUse = "W użyciu"
-total = "Połączenia"
-unused = "Nieużywane"
-
 [portal.sources.networkFields.connection]
 helperText = "Zapisane połączenie z adresem serwera i danymi uwierzytelniającymi. Używane ponownie przez każde źródło, które się do niego odwołuje."
 label = "Połączenie"
@@ -8872,12 +10018,12 @@ label = "Folder"
 placeholder = "incoming/"
 
 [portal.sources.networkFields.mode]
-helperText = "Consume usuwa każdy plik z serwera, gdy zostanie przetworzony przez wszystkie zasady."
 label = "Tryb odczytu"
 
 [portal.sources.networkFields.mode.options]
 consume = "Consume: przetwórz każdy plik raz"
 snapshot = "Snapshot: odczytuj folder ponownie przy każdym uruchomieniu"
+track = "Zachowaj oryginały; przetwarzaj zmiany raz"
 
 [portal.sources.networkFields.recursive]
 helperText = "Uwzględnij podfoldery, jeśli pliki są uporządkowane w zagnieżdżonych folderach, albo obserwuj tylko najwyższy poziom."
@@ -8940,6 +10086,7 @@ label = "Tryb odczytu"
 [portal.sources.types.folder.fields.mode.options]
 consume = "Zużyj: przetwórz każdy plik raz"
 snapshot = "Migawka: ponownie odczytaj folder przy każdym uruchomieniu"
+track = "Zachowaj go i przetwarzaj ponownie tylko wtedy, gdy się zmieni"
 
 [portal.sources.types.folder.fields.recursive]
 helperText = "Uwzględnij podfoldery, jeśli pliki są uporządkowane w zagnieżdżonych folderach, albo obserwuj tylko najwyższy poziom."
@@ -8974,12 +10121,12 @@ helperText = "Zapisane połączenie zawierające bucket i dane uwierzytelniając
 label = "Połączenie"
 
 [portal.sources.types.s3.fields.mode]
-helperText = "Consume usuwa każdy obiekt z bucketu, gdy zostanie przetworzony przez wszystkie zasady."
 label = "Tryb odczytu"
 
 [portal.sources.types.s3.fields.mode.options]
 consume = "Consume: przetwórz każdy obiekt raz"
 snapshot = "Snapshot: odczytuj bucket ponownie przy każdym uruchomieniu"
+track = "Zachowaj oryginały; przetwarzaj zmiany raz"
 
 [portal.sources.types.s3.fields.prefix]
 helperText = "Przetwarzane są tylko obiekty, których klucze zaczynają się od tego prefiksu."
@@ -8996,6 +10143,17 @@ label = "SharePoint"
 
 [portal.sources.types.unknown]
 label = "Źródło"
+
+[portal.sources.types.vectordb]
+collection = "Nazwa kolekcji / indeksu"
+collectionHint = "Użyj istniejącej kolekcji lub indeksu skonfigurowanego do embeddingu po stronie serwera."
+connection = "Połączenie z bazą danych"
+description = "Miejsce docelowe wyjścia dla przygotowanych fragmentów dokumentów. Baza danych generuje embeddingi; oryginały pozostają w źródle wejściowym, gdy wybrany jest tryb śledzenia."
+label = "Baza danych wektorowych"
+namespace = "Przestrzeń nazw / tenant"
+namespaceHint = "Opcjonalna przestrzeń nazw Pinecone lub tenant Weaviate. Pozostaw puste dla domyślnej przestrzeni nazw lub kolekcji z jednym tenantem."
+textField = "Pole tekstowe"
+textFieldHint = "Pole, które baza danych osadza, zgodne ze schematem kolekcji lub mapą pól Pinecone."
 
 [portal.sources.types.webhook]
 createNote = "URL dostarczania i sekret podpisywania są generowane podczas tworzenia tego webhooka. Nadawcy wysyłają dokumenty metodą POST na ten URL, a odwołujące się zasady uruchamiają się po nadejściu."
@@ -9025,7 +10183,6 @@ type = "Typ"
 close = "Zamknij"
 
 [portal.usage]
-managePayment = "Zarządzaj płatnością"
 subtitle = "Zużycie, faktury i zarządzanie planem dla każdego PDF rozliczonego przez Stirling — w jednej konsoli."
 title = "Zużycie i rozliczenia"
 
@@ -9034,10 +10191,20 @@ loadWallet = "Nie udało się załadować portfela"
 openStripePortal = "Nie udało się otworzyć portalu Stripe"
 walletUnavailable = "Portfel niedostępny: {{status}} {{statusText}}"
 
+[portal.usage.freeTier]
+adminOnly = "Miesięczne kredyty tego serwera są współdzielone przez wszystkich użytkowników, więc tylko administrator może zobaczyć dane. Wszystko, co możesz uruchomić, pozostaje dostępne."
+barAria = "Pozostałe bezpłatne kredyty"
+capSuffix_one = "z {{allowance}} bezpłatnego kredytu pozostało w tym miesiącu"
+capSuffix_other = "z {{allowance}} bezpłatnych kredytów pozostało w tym miesiącu"
+connect = "Połącz konto Stirling"
+connectBody = "Połączenie dodaje drugi miesięczny limit, zwiększa liczbę użytkowników, których może mieć ten serwer, i włącza Processor."
+connectTitle = "Ten serwer nie ma konta Stirling"
+loadError = "Nie udało się odczytać użycia kredytów tego serwera. Spróbuj ponownie za chwilę."
+loadErrorTitle = "Nie udało się wczytać użycia kredytów"
+resets = "Resetuje się {{date}}"
+
 [portal.usage.sessionExpired]
-action = "Zaloguj się ponownie"
 body = "Sesja Twojego konta Stirling wygasła. Zaloguj się ponownie, aby zobaczyć rozliczenia — Twoja instancja pozostaje połączona."
-title = "Sesja wygasła"
 
 [portal.users]
 title = "Użytkownicy"
@@ -9088,6 +10255,89 @@ unlimited = "{{used}} · Bez limitu"
 
 [printFile]
 title = "Drukuj plik"
+
+[processingFolders.downloads]
+approve = "Przetwórz moje Pobrane"
+cancelSweep = "Anuluj"
+capped = "Masz {{found}} plików PDF; pierwsze {{limit}} są teraz przetwarzane, a reszta zostanie przetworzona później."
+close = "Gotowe"
+explain_one = "Stirling może sklasyfikować {{count}} plik PDF znajdujący się już w folderze Pobrane i otworzyć wyniki tutaj."
+explain_other = "Stirling może sklasyfikować {{count}} plików PDF znajdujących się już w folderze Pobrane i otworzyć wyniki tutaj."
+failed = "Nie udało się tego skonfigurować. Twoje pliki nie zostały zmienione."
+finished_one = "Sklasyfikowano {{count}} plik i otwarto tutaj {{opened}} z nich, gotowe do pracy."
+finished_other = "Sklasyfikowano {{count}} plików i otwarto tutaj {{opened}} z nich, gotowe do pracy."
+nothingNew_one = "Nie ma nic nowego do przetworzenia — ten {{count}} plik został już przetworzony."
+nothingNew_other = "Nie ma nic nowego do przetworzenia — te {{count}} plików zostały już przetworzone."
+notModified = "Twoje pliki w folderze Pobrane nie są zmieniane — Stirling je odczytuje i otwiera tutaj."
+notNow = "Nie teraz"
+progressCounts = "z {{total}} przetworzono"
+someFailed_one = "Nie udało się przetworzyć {{count}} i pozostawiono bez zmian."
+someFailed_other = "Nie udało się przetworzyć {{count}} i pozostawiono bez zmian."
+stillRunning = "Niektóre pliki są nadal przetwarzane w tle."
+title = "Uporządkować folder Pobrane?"
+trigger_one = "Przetwórz {{count}} PDF w folderze Pobrane"
+trigger_other = "Przetwórz {{count}} plików PDF w folderze Pobrane"
+typesFound_one = "Znaleziono {{count}} typ dokumentu"
+typesFound_other = "Znaleziono {{count}} typów dokumentów"
+working = "Przetwarzanie..."
+
+[processingFolders.setup]
+addFolder = "Dodaj folder"
+advancedSteps = "Ten folder używa konfiguracji przetwarzania, której ten kreator nie może edytować. Zapisane kroki nie zostały zmienione."
+change = "Zmień"
+changeLocation = "Zmień lokalizację folderu"
+chooseFolder = "Który folder mamy przetwarzać?"
+chooseParent = "Wybierz, gdzie utworzyć folder"
+chooseProcessing = "Wybierz przetwarzanie"
+computer = "Na tym komputerze"
+computerDescription = "Kliknij, aby wybrać folder z komputera."
+computerHeading = "Przetwarzaj własny folder"
+createIn = "Utwórz w"
+downloadsAction = "Spróbuj przetworzyć folder Pobrane"
+dropDescription = "lub kliknij, aby wybrać go z komputera."
+dropError = "Upuść tutaj pojedynczy folder albo kliknij, aby go wybrać."
+dropHeading = "Upuść folder tutaj"
+editFolder = "Edytuj {{name}}"
+editTitle = "Edytuj przetwarzanie folderu"
+enable = "Włącz przetwarzanie"
+existingTitle = "Skonfiguruj przetwarzanie folderu"
+folder = "Folder"
+folderChoice = "Użyj istniejącego folderu lub utwórz nowy"
+folderName = "Nazwa folderu"
+fromComputer = "Z komputera..."
+invalidName = "Wprowadź nazwę folderu bez separatorów ścieżki."
+location = "Lokalizacja folderu"
+namePlaceholder = "np. Faktury"
+newFolder = "Nowy folder"
+noFolders = "Brak folderów tutaj."
+noMatchingFolders = "Brak pasujących folderów."
+openFolder = "Otwórz {{name}}"
+portalOnlyPreset = "Skonfiguruj ten preset w portalu."
+presetInfo = "Informacje o {{name}}"
+presetsLabel = "Presety przetwarzania"
+processing = "Przetwarzanie"
+progress = "Postęp konfiguracji"
+replaceWarning = "„{{name}}” ma już przetwarzanie. Zapisanie zastąpi jego bieżące ustawienia przetwarzania."
+retry = "Spróbuj ponownie"
+review = "Przejrzyj"
+saveChanges = "Zapisz zmiany"
+saveFolder = "Zapisz folder"
+searchFolders = "Szukaj folderów..."
+searchLocations = "Szukaj lokalizacji..."
+selectFolder = "Wybierz folder"
+server = "Pamięć serwera"
+serverAction = "Lub dodaj nowy folder do serwera"
+settings = "Dostosuj ustawienia"
+signInRequired = "Zaloguj się, aby skonfigurować przetwarzanie folderu"
+title = "Przetwórz folder"
+useExisting = "Użyj istniejącego folderu"
+viewLabels = "Wyświetl etykiety klasyfikacji"
+
+[processingFolders.wall]
+done = "Gotowe"
+failed = "Niepowodzenie"
+title = "Przetwarzanie tego folderu"
+waiting = "W kolejce..."
 
 [provider.googledrive]
 name = "Google Drive"
@@ -9296,8 +10546,34 @@ automate = "Auto"
 config = "Konfig"
 files = "Pliki"
 
+[quickNav]
+account = "Konto"
+docs = "Dokumentacja"
+editor = "Edytor"
+home = "Stirling"
+invite = "Zaproś"
+landmark = "Szybka nawigacja"
+noProcessorAccess = "Poproś administratora o dostęp do Processor"
+notifications = "Powiadomienia"
+processor = "Processor"
+reader = "Czytnik"
+signInToUse = "Zaloguj się, aby tego użyć"
+
 [read]
 tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
+
+[reader.rail]
+addDocument = "Dodaj plik"
+bookmarks = "Zakładki"
+close = "Zamknij dokument"
+comment = "Komentarze"
+label = "Narzędzia do czytania"
+readAloud = "Czytaj na głos"
+rotateLeft = "Obróć w lewo"
+rotateRight = "Obróć w prawo"
+search = "Znajdź w dokumencie"
+switchDocument = "Przełącz dokument"
+thumbnails = "Strony"
 
 [redact]
 submit = "Redaguj"
@@ -9817,8 +11093,11 @@ expired = "Twoja sesja wygasła. Odśwież stronę i spróbuj ponownie."
 
 [settings]
 backToSections = "Wszystkie ustawienia"
-close = "Zamknij"
 title = "Ustawienia"
+
+[settings.about]
+description = "Samouczki, dokumenty prawne i licencje wszystkiego, co jest dołączone do tej kompilacji."
+title = "O programie"
 
 [settings.ai]
 documents = "Dokumenty i RAG"
@@ -9833,12 +11112,47 @@ database = "Baza danych"
 endpoints = "Endpointy"
 features = "Funkcje"
 folderAccess = "Dostęp do folderów"
+integrations = "Integracje"
 mcp = "MCP Server"
 storageSharing = "Przechowywanie plików i udostępnianie"
 systemSettings = "Ustawienia systemowe"
-title = "Konfiguracja"
+
+[settings.connectedInstances]
+confirmBody = "To cofa dostęp instancji do Twojego zespołu w Stirling Cloud. Nie usuwa plików lokalnych ani już zarejestrowanego użycia. Aby połączyć ponownie, wykonaj pierwotne kroki łączenia na instancji."
+confirmTitle = "Usunąć {{name}}?"
+connectedAt = "Połączono: {{date}}"
+connectedDate = "Połączono"
+connectHelp = "Aby połączyć serwer, otwórz Ustawienia → Połączenie konta na swojej instancji self-hosted i wykonaj kroki łączenia."
+copied = "Skopiowano ID"
+copyError = "Nie udało się skopiować ID. Zaznacz je, aby skopiować ręcznie."
+copyId = "Kopiuj ID"
+details = "Szczegóły"
+displayName = "Nazwa wyświetlana (opcjonalnie)"
+editName = "Edytuj nazwę"
+empty = "Brak połączonych instancji"
+id = "ID instancji"
+justConnected = "Połączono przed chwilą"
+lastSeen = "Ostatnio widziano: {{date}}"
+loadError = "Nie udało się wczytać połączonych instancji"
+loadErrorBody = "Nie udało się sprawdzić Twoich połączeń. Spróbuj ponownie."
+loading = "Wczytywanie połączonych instancji"
+ownerOnly = "Tylko właściciel zespołu może zarządzać połączonymi instancjami."
+remove = "Usuń połączenie"
+removedSuccess = "{{name}} zostało odłączone od Twojego zespołu."
+removeError = "Nie udało się usunąć połączenia. Spróbuj ponownie."
+renameError = "Nie udało się zapisać nazwy. Spróbuj ponownie."
+retry = "Spróbuj ponownie"
+saveName = "Zapisz nazwę"
+seatsReported = "{{count}} miejsc zespołu · zgłoszono {{date}}. Wdrożenia offline zachowują swoje miejsca do czasu odłączenia."
+seatsUnknown = "Oczekiwanie, aż to wdrożenie zgłosi liczbę użytkowników podczas codziennej synchronizacji."
+subtitle = "Zarządzaj serwerami self-hosted połączonymi z Twoim zespołem."
+teamNote = "Te instancje współdzielą limit przetwarzania Twojego zespołu."
+title = "Połączone instancje"
+unknown = "Niedostępne"
+yourTeam = "Twój zespół"
 
 [settings.connection]
+description = "Pracuj lokalnie na tym urządzeniu lub połącz aplikację z serwerem Stirling."
 localDescription = "Korzystasz z lokalnego backendu bez konta. Niektóre narzędzia wymagające przetwarzania w chmurze lub serwera self-hosted są niedostępne."
 logout = "Wyloguj"
 server = "Serwer"
@@ -9853,13 +11167,12 @@ selfhosted = "Własny serwer"
 
 [settings.developer]
 apiKeys = "Klucze API"
+apiKeysDescription = "Klucze osobiste do wywoływania Stirling API ze skryptów i integracji."
 title = "Deweloper"
 
 [settings.general]
 autoUnzip = "Automatycznie rozpakowuj odpowiedzi API"
-autoUnzipDescription = "Automatycznie rozpakowuj pliki z odpowiedzi ZIP"
 autoUnzipFileLimit = "Limit automatycznego rozpakowywania"
-autoUnzipFileLimitDescription = "Maksymalna liczba plików do wyodrębnienia z ZIP"
 autoUnzipFileLimitTooltip = "Rozpakowuj tylko, jeśli ZIP zawiera nie więcej niż tyle plików. Ustaw wyżej, aby rozpakowywać większe archiwa ZIP."
 autoUnzipTooltip = "Automatycznie rozpakowuje pliki ZIP zwracane przez operacje API. Wyłącz, aby zachować pliki ZIP w stanie nienaruszonym. Nie wpływa to na przepływy automatyzacji."
 defaultPdfEditor = "Domyślny edytor PDF"
@@ -9910,12 +11223,6 @@ intro = "Włącz uwierzytelnianie użytkowników, zarządzanie zespołem i funkc
 learnMore = "Więcej w dokumentacji"
 title = "Dla administratorów systemu"
 
-[settings.general.loginLanding]
-description = "Wybierz, która aplikacja otwiera się po zalogowaniu do Stirling Cloud."
-editor = "Edytor"
-processor = "Procesor"
-title = "Po zalogowaniu"
-
 [settings.general.mode]
 fullscreen = "Pełny ekran"
 sidebar = "Pasek boczny"
@@ -9958,6 +11265,7 @@ fitPage = "Dopasuj do strony"
 fitWidth = "Dopasuj do szerokości"
 
 [settings.help]
+description = "Przewodniki po edytorze i obszarze administracyjnym."
 label = "Przewodniki"
 title = "Pomoc"
 
@@ -9990,6 +11298,7 @@ mac = "Dodaj ⌘ (Command), ⌥ (Option) lub inny modyfikator do skrótu."
 windows = "Dodaj Ctrl, Alt lub inny modyfikator do skrótu."
 
 [settings.legal]
+description = "Warunki, polityka prywatności i Twoje preferencje dotyczące plików cookie."
 label = "Legal"
 title = "Legal"
 
@@ -10018,9 +11327,15 @@ version = "Wersja"
 
 [settings.licensingAnalytics]
 audit = "Audyt"
+auditDescription = "Kto co zrobił na tym serwerze i jak długo ten zapis jest przechowywany."
 plan = "Plan"
-title = "Licencje i analityka"
+planDescription = "Twoja licencja, miejsca i to, co odblokowuje bieżący plan."
+usage = "Analityka użycia"
 usageAnalytics = "Analityka użycia"
+usageDescription = "Jak serwer jest używany: operacje, wolumen i trendy w czasie."
+
+[settings.monitoring]
+title = "Monitorowanie"
 
 [settings.planBilling]
 currentPlan = "Bieżący plan"
@@ -10058,18 +11373,6 @@ memberCount_one = "{{count}} team member"
 memberCount_other = "{{count}} team members"
 memberCount_zero = "no team members"
 
-[settings.planBilling.tier]
-enterprise = "Enterprise"
-enterpriseDescription = "Niestandardowe funkcje i wsparcie dla przedsiębiorstw"
-free = "Free"
-freeDescription = "50 kredytów miesięcznie"
-team = "Team"
-teamBadge = "Team"
-teamDescription = "500 kredytów/mies. wliczone, automatyczne rozliczanie nadwyżek dla nieprzerwanej obsługi"
-teamTooltipCredits = "Plan Team obejmuje {{credits}} kredytów/mies."
-teamTooltipFineprint = "Płacisz tylko za to, co wykorzystasz ponad wliczone kredyty."
-teamTooltipOverage = "Automatyczne rozliczanie nadwyżek po {{price}}/kredyt zapewnia nieprzerwaną obsługę."
-
 [settings.planBilling.trial]
 daysRemaining = "Pozostało {{days}} dni"
 daysRemainingFull = "Twoja wersja próbna kończy się za {{days}} dni"
@@ -10094,6 +11397,10 @@ privacy = "Prywatność"
 title = "Zasady i prywatność"
 
 [settings.preferences]
+appearance = "Wygląd"
+description = "Jak edytor wygląda i działa dla Ciebie oraz Twoje konto."
+downloads = "Pobrane"
+editorDefaults = "Domyślne ustawienia edytora"
 title = "Preferencje"
 
 [settings.security]
@@ -10120,6 +11427,10 @@ connections = "Połączenia"
 security = "Bezpieczeństwo"
 telegram = "Telegram"
 title = "Bezpieczeństwo i uwierzytelnianie"
+
+[settings.server]
+system = "System"
+title = "Serwer"
 
 [settings.signOut]
 confirm = "Czy na pewno chcesz się wylogować?"
@@ -10660,7 +11971,6 @@ commenterHint = "Komentowanie już wkrótce."
 copied = "Link skopiowany do schowka"
 copy = "Kopiuj"
 copyFailed = "Kopiowanie nie powiodło się"
-copyLink = "Kopiuj link udostępniania"
 createdAt = "Utworzono"
 description = "Utwórz link udostępniania dla tego pliku. Zalogowani użytkownicy z linkiem będą mieli do niego dostęp."
 download = "Pobierz"
@@ -10797,17 +12107,26 @@ leaveButton = "Opuść zespół"
 leaveError = "Nie udało się opuścić zespołu"
 leaveSuccess = "Pomyślnie opuszczono zespół"
 loading = "Wczytywanie informacji o zespole..."
+makeOwner = "Uczyń właścicielem"
 memberCount_one = "{{count}} member"
 memberCount_other = "{{count}} members"
 memberCount_zero = "no members"
 memberRemoved = "Pomyślnie usunięto członka"
 namePlaceholder = "Wpisz nazwę zespołu"
+noOwner = "Ten zespół nie ma właściciela"
 personal = "Osobisty"
+recoverBody = "Istniejący członek może odzyskać własność, aby zarządzać zespołem i jego ustawieniami rozliczeń."
+recoverOwner = "Zostań właścicielem zespołu"
+recoverSuccess = "Jesteś teraz właścicielem zespołu."
 removeError = "Nie udało się usunąć członka"
 renameCancel = "Anuluj zmianę nazwy"
 renameError = "Nie udało się zmienić nazwy zespołu"
 renameSubmit = "Zapisz nazwę zespołu"
 renameSuccess = "Pomyślnie zmieniono nazwę zespołu"
+transferBody = "Uczynić {{email}} właścicielem zespołu? Ta osoba będzie kontrolować członkostwo w zespole i ustawienia rozliczeń organizacji. Ty zostaniesz członkiem. Subskrypcja i portfel zespołu pozostaną przy zespole."
+transferError = "Nie udało się przenieść własności. Odśwież zespół i spróbuj ponownie."
+transferSuccess = "Własność zespołu została przeniesiona. Twoja rola to teraz członek."
+transferTitle = "Przenieś własność zespołu"
 
 [team.invitationBanner]
 acceptButton = "Akceptuj"
@@ -10912,8 +12231,6 @@ ZIP = "archiwum ZIP"
 [toolPanel]
 alpha = "Alpha"
 backToAllTools = "Powrót do wszystkich narzędzi"
-collapse = "Zwiń panel"
-expand = "Rozwiń panel"
 goBack = "Wróć"
 pdfTools = "Narzędzia PDF"
 placeholder = "Wybierz narzędzie, aby zacząć"
@@ -11028,7 +12345,7 @@ urgent = "Pilny"
 attentionBody = "Administrator musi się zalogować, aby zobaczyć więcej informacji. Skontaktuj się z nim niezwłocznie."
 attentionBodyAdmin = "Sprawdź wymagania licencyjne, aby zachować zgodność serwera."
 attentionTitle = "Ten serwer wymaga uwagi administratora"
-message = "Wykorzystaj Stirling PDF w pełni dzięki nielimitowanym użytkownikom i zaawansowanym funkcjom"
+message = "Wykorzystaj Stirling PDF w pełni dzięki 100 użytkownikom, edycji tekstu PDF i zaawansowanym funkcjom"
 seeInfo = "Zobacz informacje"
 title = "Ulepsz do planu Server"
 upgradeButton = "Ulepsz teraz"
@@ -11084,6 +12401,7 @@ visits = "Wizyty"
 lastActive = "Ostatnia aktywność"
 learnMore = "Dowiedz się więcej o rolach i dostępie."
 locked = "Zablokowane"
+ownerSetupRequired = "Właściciel organizacji nie ukończył pierwszego logowania. Dokończ konfigurację lub poproś operatora serwera o odzyskanie własności przed przeniesieniem własności."
 roleFor = "Rola dla {{name}}"
 rowActions = "Działania dla {{name}}"
 showAll = "Pokaż wszystkie {{count}}"
@@ -11105,6 +12423,7 @@ removeTeam = "Usuń z zespołu"
 rename = "Zmień nazwę zespołu"
 resetPw = "Zresetuj hasło"
 suspend = "Zawieś"
+transferOwnership = "Przenieś własność"
 unlock = "Odblokuj konto"
 
 [users.activity]
@@ -11143,6 +12462,8 @@ disableMfaTitle = "Zresetuj MFA"
 removeBody = "Trwale usunąć {{name}} z organizacji? Tej operacji nie można cofnąć."
 removeTeamBody = "Usunąć {{name}} z zespołu? Konto pozostanie, ale utraci dostęp do zasobów tego zespołu."
 removeTitle = "Usuń członka"
+transferOwnershipBody = "Uczynić {{name}} właścicielem organizacji? Ta osoba zostanie administratorem. Pozostaniesz administratorem, ale utracisz własność. Tylko nowy właściciel lub operator serwera może przenieść ją z powrotem."
+transferOwnershipTitle = "Przenieś własność organizacji"
 
 [users.empty]
 description = "Zaproś zespół, aby rozpocząć współpracę."
@@ -11150,11 +12471,11 @@ title = "Brak członków"
 
 [users.group]
 addToTeam = "Dodaj do zespołu"
+administrators = "{{count}} administratorów"
 guestCount = "{{count}} gość"
 guests = "Goście"
 ledBy = "prowadzony przez {{owner}}"
 org = "Organizacja"
-owners = "{{count}} właściciel"
 team = "Zespół {{name}}"
 teamMeta = "{{count}} osób"
 
@@ -11214,15 +12535,9 @@ title = "Przenieś do zespołu"
 [users.newTeam]
 action = "+ Nowy zespół"
 create = "Utwórz zespół"
-emailError = "Wpisz prawidłowy adres email"
 name = "Nazwa zespołu"
 namePlaceholder = "np. Finanse"
 nameRequired = "Nazwa zespołu jest wymagana"
-owner = "Właściciel zespołu"
-ownerFailed = "Zespół został utworzony, ale nie udało się zaprosić właściciela. Przypisz go z listy."
-ownerHelper = "Każdy zespół ma lidera. Zostanie zaproszony jako Właściciel zespołu, z włączonym Processor, i będzie mógł dodać pozostałych. Możesz zmienić przypisanie później."
-ownerPlaceholder = "owner@company.com"
-subtitle = "Grupuj osoby pod Właścicielem zespołu, który zarządza ich dostępem."
 title = "Nowy zespół"
 
 [users.renameTeam]
@@ -11246,6 +12561,7 @@ title = "Zresetuj hasło"
 tooShort = "Hasło musi mieć co najmniej 8 znaków"
 
 [users.role]
+admin = "Administrator"
 guest = "Gość"
 member = "Członek"
 orgOwner = "Właściciel organizacji"
@@ -11357,11 +12673,15 @@ validUntrusted = "Ważny, podpisujący niezweryfikowany"
 cannotPreviewFile = "Nie można wyświetlić podglądu pliku"
 copyText = "Copy"
 disableColorFilter = "Wyłącz filtr kolorów"
+documentUpdated = "Dokument zaktualizowany"
 dualPageView = "Widok dwóch stron"
 enableDarkFilter = "Włącz ciemny filtr"
 enableSepiaFilter = "Włącz filtr sepii"
+engineLoadError = "Nie udało się zainicjować silnika przeglądarki PDF"
+engineSlowWarning = "Inicjalizacja silnika PDF trwa dłużej niż oczekiwano. Sprawdź ustawienia WebAssembly i Worker w przeglądarce albo odśwież stronę."
 firstPage = "Pierwsza strona"
 lastPage = "Ostatnia strona"
+loadingEngine = "Wczytywanie silnika PDF..."
 moreOptions = "Więcej"
 nextPage = "Następna strona"
 onlyPdfSupported = "Przeglądarka obsługuje tylko pliki PDF. Ten plik wydaje się mieć inny format."
@@ -11382,6 +12702,7 @@ close = "Zamknij załączniki"
 closeSidebar = "Zamknij panel boczny załączników"
 download = "Pobierz załącznik"
 empty = "Brak załączników w tym dokumencie"
+loadFailed = "Nie udało się wczytać załączników"
 loading = "Wczytywanie załączników..."
 noDocument = "Otwórz plik PDF, aby wyświetlić jego załączniki."
 noMatch = "Brak załączników pasujących do wyszukiwania"
@@ -11389,6 +12710,7 @@ noSupport = "Obsługa załączników jest niedostępna w tym podglądzie."
 retry = "Spróbuj ponownie"
 searchPlaceholder = "Szukaj w załącznikach"
 title = "Załączniki"
+untitled = "Bez tytułu"
 
 [viewer.bookmarks]
 addBookmark = "Add bookmark"
@@ -11396,6 +12718,7 @@ bookmarkTitle = "Tytuł zakładki"
 bookmarkTitleRequired = "Tytuł zakładki jest wymagany"
 closeSidebar = "Zamknij panel boczny zakładek"
 collapseAll = "Zwiń wszystkie zakładki"
+editorOnly = "Zakładki tego dokumentu można edytować tylko w edytorze."
 empty = "No bookmarks in this document"
 expandAll = "Rozwiń wszystkie zakładki"
 searchPlaceholder = "Szukaj zakładek"
@@ -11471,7 +12794,19 @@ renderMarkdown = "Renderuj markdown"
 sortedBy = "Sortowanie wg: {{column}}"
 textStats = "{{lines}} wierszy · {{size}}"
 
+[viewer.portfolio]
+addFile = "Dodaj plik"
+count_one = "{{count}} plik w tym portfolio"
+count_other = "{{count}} plików w tym portfolio"
+import = "Importuj do Stirling"
+importFailed = "Nie udało się dodać tego pliku do obszaru roboczego."
+memberUnavailable = "Nie udało się odczytać tego pliku z portfolio."
+preview = "Podgląd"
+searchPlaceholder = "Szukaj plików"
+title = "Portfolio"
+
 [viewer.redaction]
+applyAll = "Zastosuj redakcje"
 removeMark = "Usuń to oznaczenie"
 
 [viewer.search]
@@ -11796,6 +13131,10 @@ title = "Tekst znaku wodnego"
 image = "Obraz"
 text = "Tekst"
 
+[workbench.sessionRestore]
+none = "Twoje poprzednie pliki nie są już przechowywane na tym urządzeniu."
+partial = "Przywrócono {{restored}} z {{total}} plików. Pozostałe nie są już przechowywane na tym urządzeniu."
+
 [workbenchBar]
 activeFiles = "Aktywne pliki"
 annotations = "Adnotacje"
@@ -11897,10 +13236,10 @@ lockedBadge = "Zablokowane"
 loginRequired = "Najpierw włącz tryb logowania"
 memberActions = "Działania członka"
 noMembersFound = "Nie znaleziono członków"
+ownerLocked = "Przenieś własność organizacji w Ustawienia → Obszar roboczy → Użytkownicy przed zmianą roli lub konta właściciela."
 role = "Rola"
 searchMembers = "Szukaj członków..."
 team = "Zespół"
-title = "Osoby"
 unlockAccount = "Odblokuj konto"
 unlockUserError = "Nie udało się odblokować konta użytkownika"
 unlockUserSuccess = "Pomyślnie odblokowano konto użytkownika"
@@ -12054,7 +13393,6 @@ system = "System"
 teamActions = "Działania zespołu"
 teamName = "Nazwa zespołu"
 teamNotFound = "Nie znaleziono zespołu"
-title = "Zespoły"
 totalMembers = "Łącznie członków"
 viewTeam = "Zobacz zespół"
 

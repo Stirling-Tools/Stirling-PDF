@@ -251,7 +251,8 @@ class OCRControllerTest {
             request.setLanguages(null);
             request.setFileInput(pdfMultipartFile("in.pdf"));
 
-            assertThrows(IOException.class, () -> ocrController.processPdfWithOCR(request));
+            assertThrows(
+                    IllegalArgumentException.class, () -> ocrController.processPdfWithOCR(request));
             // Validation happens before any tool/exec interaction.
             verifyNoInteractions(endpointConfiguration);
         }
@@ -263,7 +264,8 @@ class OCRControllerTest {
             request.setLanguages(Collections.emptyList());
             request.setFileInput(pdfMultipartFile("in.pdf"));
 
-            assertThrows(IOException.class, () -> ocrController.processPdfWithOCR(request));
+            assertThrows(
+                    IllegalArgumentException.class, () -> ocrController.processPdfWithOCR(request));
             verifyNoInteractions(endpointConfiguration);
         }
 
@@ -274,7 +276,8 @@ class OCRControllerTest {
             request.setOcrRenderType("bogus");
             request.setFileInput(pdfMultipartFile("in.pdf"));
 
-            assertThrows(IOException.class, () -> ocrController.processPdfWithOCR(request));
+            assertThrows(
+                    IllegalArgumentException.class, () -> ocrController.processPdfWithOCR(request));
             // Render-type check precedes language availability lookup.
             verify(runtimePathConfig, never()).getTessDataPath();
         }
@@ -309,7 +312,8 @@ class OCRControllerTest {
             Path tessdata = tessdataDirWith("eng", "deu");
             when(runtimePathConfig.getTessDataPath()).thenReturn(tessdata.toString());
 
-            assertThrows(IOException.class, () -> ocrController.processPdfWithOCR(request));
+            assertThrows(
+                    IllegalArgumentException.class, () -> ocrController.processPdfWithOCR(request));
             // Should fail before consulting tool availability.
             verify(endpointConfiguration, never()).isGroupEnabled(anyString());
         }

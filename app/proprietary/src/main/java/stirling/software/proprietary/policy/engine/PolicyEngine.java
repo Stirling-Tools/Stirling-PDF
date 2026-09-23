@@ -52,6 +52,7 @@ import stirling.software.proprietary.policy.output.OutputDelivery;
 import stirling.software.proprietary.policy.output.PolicyOutputResolver;
 import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
+import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.service.DownstreamEntitlementError;
 
 import tools.jackson.databind.JsonNode;
@@ -162,17 +163,17 @@ public class PolicyEngine {
     /**
      * As {@link #runPolicy(Policy, PolicyInputs, PolicyProgressListener)}, recording which source
      * fed the run and its opaque reference to the document. The first says where an unattended
-     * failure came from; the second says which document, and is what lets the same document failing
-     * again fold into one incident. With no source {@code fileIdentity} is the client's own
-     * reference, with one it is that source's hash; this engine only carries it either way.
+     * failure came from; the second identifies repeat failures of the same document. Source-fed
+     * outputs belong to the source owner even when a different user triggers the run. Uploaded
+     * documents belong to the caller; a generator with no input belongs to the pipeline creator.
      */
     public PolicyRunHandle runPolicy(
             Policy policy,
             PolicyInputs inputs,
             PolicyProgressListener listener,
-            String sourceId,
+            Source source,
             String fileIdentity) {
-        return runPolicy(policy, inputs, listener, sourceId, fileIdentity, null);
+        return runPolicy(policy, inputs, listener, source, fileIdentity, null);
     }
 
     /**
@@ -183,25 +184,16 @@ public class PolicyEngine {
             Policy policy,
             PolicyInputs inputs,
             PolicyProgressListener listener,
-            String sourceId,
+            Source source,
             String fileIdentity,
             Semaphore admission) {
-        // Bill the policy owner: trigger-fired runs have no security context, and the async worker
-        // doesn't inherit the caller's, so the owner (stamped at policy creation) is the reliable
-        // billing identity — and for org-wide policies the org/owner is meant to pay. But own the
-        // OUTPUT files as the user who triggered the run (captured here on the request thread) so
-        // they can download their enforced file; otherwise an org-wide policy's output is owned by
-        // the admin and the triggering user is denied it. Trigger-fired runs have no such user, so
-        // the owner owns those outputs.
-        //
-        // The triggering user is also carried on the run, as the actor of any failure it records:
-        // null for a trigger-fired run, which is what makes an unattended incident ownerless rather
-        // than the owner's problem. Three identities, deliberately not interchangeable.
         String triggeringUser = currentActingPrincipal();
-        String fileOwner = triggeringUser != null ? triggeringUser : policy.owner();
-        // Unowned policies (the seeded Classification policy) have no owner to bill; fall back to
-        // the triggering user, or the run goes out principal-less and its tool sub-steps bill the
-        // team-less INTERNAL_API_USER, which PAYG refuses with a usage-limit 402.
+        String sourceId = source == null ? null : source.id();
+        String fileOwner = source == null ? triggeringUser : source.owner();
+        if (source == null && inputs.primary().isEmpty()) {
+            fileOwner = policy.owner() != null ? policy.owner() : triggeringUser;
+        }
+        // The pipeline's payer is independent of the document owner and the incident's actor.
         String billingPrincipal = policy.owner() != null ? policy.owner() : triggeringUser;
         PolicyInputs resolved;
         PipelineDefinition definition;
@@ -226,7 +218,8 @@ public class PolicyEngine {
                             new PipelineDefinition(policy.name(), policy.steps(), List.of()),
                             sourceId,
                             fileIdentity,
-                            triggeringUser);
+                            triggeringUser,
+                            fileOwner);
             String message = "Policy run could not start: " + e.getMessage();
             run.fail(message);
             taskManager.setError(run.getRunId(), message);
@@ -239,8 +232,6 @@ public class PolicyEngine {
                 triggeringUser,
                 policy.id(),
                 definition,
-                // main's asset-resolved inputs, not the raw ones: stored certificates and watermark
-                // images bind here, before the async hop, because worker threads have no principal.
                 resolved,
                 listener,
                 sourceId,
@@ -259,7 +250,9 @@ public class PolicyEngine {
             String sourceId,
             String fileIdentity,
             Semaphore admission) {
-        PolicyRun run = registerRun(policyId, definition, sourceId, fileIdentity, triggeringUser);
+        PolicyRun run =
+                registerRun(
+                        policyId, definition, sourceId, fileIdentity, triggeringUser, fileOwner);
         String runId = run.getRunId();
         CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
         PolicyProgressListener tracking = trackingListener(runId, run, listener);
@@ -320,17 +313,25 @@ public class PolicyEngine {
             PipelineDefinition definition,
             String sourceId,
             String fileIdentity,
-            String triggeringUser) {
-        // Scope the run id to the current user (this request thread) so the file-download
-        // ownership check passes. No-op when security is off.
-        String runId = jobOwnershipService.createScopedJobKey(UUID.randomUUID().toString());
+            String triggeringUser,
+            String fileOwner) {
+        String runId =
+                jobOwnershipService.createScopedJobKey(UUID.randomUUID().toString(), fileOwner);
         taskManager.createTask(runId);
         // Tag the shared job entry with the policy id so peers can list it as a policy run.
         if (policyId != null) {
             taskManager.putMetadata(runId, "policyId", policyId);
         }
         PolicyRun run =
-                new PolicyRun(runId, policyId, definition, sourceId, fileIdentity, triggeringUser);
+                new PolicyRun(
+                        runId,
+                        policyId,
+                        definition,
+                        sourceId,
+                        fileIdentity,
+                        triggeringUser,
+                        fileOwner);
+        taskManager.putMetadata(runId, "externalOutput", String.valueOf(run.externalOutput()));
         registry.register(run);
         return run;
     }
@@ -490,7 +491,7 @@ public class PolicyEngine {
                     run.getRunId(),
                     run.getPolicyId(),
                     run.getSourceId(),
-                    run.getTriggeringUser(),
+                    run.failureActor(),
                     message);
             completion.complete(run);
         }
@@ -510,10 +511,8 @@ public class PolicyEngine {
      * Record why a run failed. Called after the run's own state transition and task-manager update,
      * so a recording problem cannot change the outcome the caller observes.
      *
-     * <p>The actor is the run's triggering user, not the MDC audit principal: that carries the
-     * BILLING identity, which for a stored policy is always its owner. Reading it here filed every
-     * failure under the owner — hiding an attended failure from the member who caused it and holds
-     * the document, and leaving an unattended sweep's failure looking attended.
+     * <p>The actor is the run's own, not the MDC audit principal, which carries the billing
+     * identity: for a stored policy always its owner. Unattended, it falls back to the document's.
      */
     private void recordFailure(PolicyRun run, String message, Throwable cause) {
         failureRecorder.recordRunFailure(
@@ -521,7 +520,7 @@ public class PolicyEngine {
                 run.getPolicyId(),
                 run.getSourceId(),
                 run.getFileIdentity(),
-                run.getTriggeringUser(),
+                run.failureActor(),
                 message,
                 cause);
     }
@@ -575,7 +574,8 @@ public class PolicyEngine {
     private List<ResultFile> deliver(
             PolicyRun run, String runId, PolicyInputs inputs, List<Resource> files)
             throws IOException {
-        OutputDelivery delivery = new OutputDelivery(runId, run.getPolicyId(), inputs);
+        OutputDelivery delivery =
+                new OutputDelivery(runId, run.getPolicyId(), inputs, JobContext.getOwner());
         List<OutputSpec> fallback = run.getDefinition().outputs();
         if (fallback.isEmpty()) {
             // No destinations means inline delivery (results returned to the caller), preserving
@@ -675,15 +675,7 @@ public class PolicyEngine {
      */
     private static void runAsPrincipal(
             String billingPrincipal, String fileOwner, String policyName, Runnable body) {
-        // Billing identity (MDC auditPrincipal) and output-file ownership (JobContext owner) are
-        // set
-        // independently: usage is charged to billingPrincipal, but stored output files are owned by
-        // fileOwner — the user who triggered an org-wide policy — so they can fetch their results.
-        // Either may be null (e.g. login disabled, or a trigger-fired run); each is applied only
-        // when present and restored afterward (defensive — worker threads aren't pooled). The
-        // policy
-        // name rides MDC too so each tool step's loopback dispatch (InternalApiClient) can forward
-        // it as a header, letting the audit tie the step back to its policy.
+        // Tool dispatch reads the billing principal; output storage reads the document owner.
         String previousPrincipal = MDC.get(AUDIT_PRINCIPAL_MDC_KEY);
         String previousPolicyName = MDC.get(InternalApiClient.POLICY_NAME_MDC_KEY);
         String previousOwner = JobContext.getOwner();

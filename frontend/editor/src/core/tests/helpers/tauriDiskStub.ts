@@ -69,9 +69,27 @@ export async function installTauri(page: Page) {
         return id;
       },
       unregisterListener() {},
-      async invoke(cmd: string, args: any = {}) {
+      async invoke(cmd: string, args: any = {}, options: any = {}) {
         w.__invoked.push(cmd);
         switch (cmd) {
+          case "plugin:dialog|open":
+            return w.__pickedPaths ?? null;
+          case "plugin:dialog|save":
+            throw new Error(
+              "Unexpected Save As: the imported file must keep its disk path",
+            );
+          case "resolve_dropped_file_paths":
+            return w.__droppedPaths ?? [];
+          case "plugin:fs|write_file": {
+            const path = decodeURIComponent(options.headers.path);
+            w.__writtenPaths = [...(w.__writtenPaths ?? []), path];
+            w.__disk[path] = {
+              bytes: Array.from(args),
+              modifiedMs: Date.now(),
+            };
+            w.__saveDisk();
+            return null;
+          }
           case "file_disk_state":
             return stat(args.path);
           case "plugin:fs|read_file": {
@@ -126,7 +144,11 @@ export async function installTauri(page: Page) {
 
           case "get_backend_port":
             return 8080;
-          case "pop_opened_files":
+          case "pop_opened_files": {
+            const paths = w.__openedPaths ?? [];
+            w.__openedPaths = [];
+            return paths;
+          }
           case "get_opened_files":
           case "pop_window_file_ids":
             return [];
@@ -272,10 +294,7 @@ export async function seedFiles(page: Page, files: SeedFile[]) {
 
 export async function dismissModals(page: Page) {
   for (let i = 0; i < 8; i++) {
-    // Dialog-scoped first, and deliberately not by aria-label: the welcome
-    // carousel's close button carries none, so an attribute match lands on the
-    // window chrome's Close - which is earlier in the DOM and does nothing -
-    // and the carousel's overlay then eats every click that follows.
+    // Scope to the modal: the window chrome also has a Close control but cannot dismiss overlays.
     const inDialog = page
       .getByRole("dialog")
       .getByRole("button", { name: "Close" })
@@ -288,14 +307,12 @@ export async function dismissModals(page: Page) {
     await close.click({ timeout: 2000 }).catch(() => {});
     await page.waitForTimeout(250);
   }
-  // Deliberately no Escape here: it backs the file manager out to the editor,
-  // which silently moved every later scenario off the file list.
+  // Escape leaves the library, so dismiss overlays with their own controls.
   await page.waitForTimeout(300);
 }
 
 export async function openCard(page: Page, name: string) {
-  // Scope to the grid card: a bare text match also hits the library rail on the
-  // left, which navigates without loading the file into the workbench.
+  // Sidebar matches navigate without opening the file; target the grid card.
   const card = page
     .locator(".files-page-card", { hasText: name.replace(/\.pdf$/, "") })
     .first();
@@ -307,8 +324,7 @@ export async function openCard(page: Page, name: string) {
     .getByRole("button", { name: /Open Files/i })
     .waitFor({ state: "detached", timeout: 15_000 })
     .catch(() => {});
-  // And for the document itself to render - a re-read from disk re-parses the
-  // file, so the viewer sits on "Loading tool…" well after the toast has fired.
+  // Disk reads reparse the document; wait for rendering as well as the route change.
   await page
     .getByText(/Loading tool/i)
     .waitFor({ state: "detached", timeout: 20_000 })
@@ -317,7 +333,7 @@ export async function openCard(page: Page, name: string) {
 }
 
 export async function gotoFiles(page: Page) {
-  await page.goto("/files");
+  await page.goto("/files?view=recent");
   await page.waitForLoadState("networkidle");
   await page.waitForTimeout(800);
 }
