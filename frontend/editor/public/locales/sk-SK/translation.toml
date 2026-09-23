@@ -729,6 +729,8 @@ permissionNotice = "Cesta k tessdata nie je zapisovateľná. Sťahovania sa otvo
 
 [admin.settings.ai]
 description = "Pripojte Stirling k Python AI enginu, vyberte jeho modely a nastavte pravidlá, podľa ktorých beží."
+managedByCloud = "V tomto režime spravuje Stirling Cloud."
+managedByCloudShort = "Spravuje Stirling Cloud"
 
 [admin.settings.ai.documents]
 description = "Nakonfigurujte model embeddingov a nastavenia vyhľadávania používané na odpovedanie na otázky nad dokumentmi. Po uložení sa použije v AI engine."
@@ -771,11 +773,24 @@ label = "Top K"
 [admin.settings.ai.general]
 connection = "Pripojenie"
 description = "Pripojte Stirling k Python AI engine a vyberte, ktoré AI funkcie budú dostupné. Zmeny sa použijú po reštarte."
+restartNote = "Zmena URL alebo akéhokoľvek časového limitu sa prejaví po reštarte."
 title = "AI Engine"
 
 [admin.settings.ai.general.capabilities]
 description = "Zapnite alebo vypnite jednotlivé AI funkcie. Vypnuté funkcie sú v aplikácii skryté."
 title = "Možnosti"
+
+[admin.settings.ai.general.cloud]
+note = "Modely a kľúče poskytovateľov spravuje Stirling Cloud, takže tieto nastavenia sa v tomto režime nepoužijú."
+
+[admin.settings.ai.general.cloud.indexing]
+description = "Každý AI nástroj odosiela text stránky, ktorý potrebuje na odpoveď. Toto určuje, či môže Stirling Cloud tento text aj uchovať indexovaný, aby neskoršie otázky mohli vyhľadávať v celom dokumente."
+help = "Vypnuté znamená, že otázky k dokumentu nie sú dostupné. Nezabráni to odoslaniu textu – iba jeho uloženiu."
+label = "Povoliť Stirling Cloud uchovávať indexované dokumenty"
+
+[admin.settings.ai.general.cloudNote]
+body = "Odôvodňovanie beží na infraštruktúre Stirling a účtuje sa účtu, s ktorým je tento server prepojený. Tu nie je potrebné spúšťať žiadny kontajner ani uchovávať kľúč poskytovateľa. Všetko, čo AI číta, spracúva Stirling Cloud, a nie váš vlastný hardvér."
+title = "O Stirling Cloud AI"
 
 [admin.settings.ai.general.enabled]
 description = "Hlavný prepínač. Keď je vypnutý, nie sú dostupné žiadne AI nástroje, agenti ani volania engine."
@@ -809,9 +824,28 @@ label = "Agent komentárov PDF"
 description = "Časový limit pre náročnejšie operácie agenta, ako je generovanie dokumentov."
 label = "Časový limit dlhých operácií (sekundy)"
 
+[admin.settings.ai.general.mode]
+label = "Kde beží AI"
+
+[admin.settings.ai.general.mode.cloud]
+description = "Žiadny kontajner, žiadny kľúč poskytovateľa, žiadny výber modelu – práca beží v Stirling Cloud a účtuje sa účtu, s ktorým je tento server prepojený."
+linkCta = "Prepojiť tento server s účtom Stirling"
+notLinked = "Najprv prepojte účet"
+ownerOnly = "Iba vlastník organizácie môže prepojiť tento server s účtom Stirling."
+title = "Použiť Stirling Cloud AI"
+
+[admin.settings.ai.general.mode.off]
+description = "Žiadne AI nástroje nikde v aplikácii a nič neopustí tento server."
+title = "Vypnuté"
+
+[admin.settings.ai.general.mode.self]
+description = "Kontajner, ktorý hostujete vy, nasmerovaný na poskytovateľa modelu podľa vášho výberu. Váš kľúč, vaše náklady, vaša cesta dát."
+title = "Spustiť vlastný engine"
+
 [admin.settings.ai.general.note]
-body = "AI engine beží ako samostatná služba. Jej zdieľané tajomstvo"
-body2 = "sa nastavuje cez premennú prostredia kontajnera. Provider API keys je možné zadať na týchto stránkach alebo dodať ako premenné prostredia engine; kľúče zadané tu sa po uložení odošlú do engine."
+docs = "Návod na nastavenie"
+intro = "Samostatný kontajner, ktorý spustíte vedľa Stirling. Vykonáva odôvodňovanie; Stirling stále vykonáva všetky operácie so stránkami sám. Potrebuje rovnaké"
+outro = "v oboch kontajneroch a kľúč poskytovateľa modelu. Všetko, čo AI číta, sa odošle poskytovateľovi, ktorého si vyberiete – Ollama, ktorú hostujete vy, ponechá každú stránku interne."
 title = "O AI engine"
 
 [admin.settings.ai.general.streamTimeoutSeconds]
@@ -890,6 +924,67 @@ label = "Inteligentný model"
 body = "Zmeny sa automaticky odosielajú do AI engine."
 bodyNoPush = "Nastavenia boli uložené. Použijú sa pri najbližšom načítaní konfigurácie AI engine."
 title = "AI nastavenia uložené"
+
+[admin.settings.ai.status]
+capabilities = "Možnosti"
+capabilitiesValue = "{{on}} z {{total}} zapnuté"
+checked = "skontrolované"
+checking = "Kontroluje sa engine…"
+description = "Či je engine dostupný, či prijíma tento server a čo na ňom beží."
+fastModel = "Rýchly model"
+justNow = "práve teraz"
+latency = "Čas odozvy"
+linkLabel = "Prepojenie účtu"
+minutesAgo = "pred {{count}} min"
+recheck = "Skontrolovať znova"
+runningOn = "Beží na"
+secondsAgo = "pred {{count}} s"
+secretLabel = "Zdieľané tajomstvo"
+smartModel = "Inteligentný model"
+title = "Stav"
+url = "URL enginu"
+
+[admin.settings.ai.status.cloud]
+hostDown = "Nedostupné"
+hostLabel = "Stirling.com"
+hostUp = "Dostupné"
+name = "Stirling Cloud"
+sharingLabel = "Zdieľanie AI"
+sharingOff = "Zakázané"
+sharingOn = "Povolené"
+
+[admin.settings.ai.status.cloud.degraded]
+body = "Stirling Cloud odpovedal, ale odmietol tento server. Prepojenie účtu mohlo byť zrušené."
+title = "Stirling Cloud odmieta tento server"
+
+[admin.settings.ai.status.cloud.down]
+body = "Tento server sa nemohol spojiť so Stirling Cloud. Skontrolujte prepojenie účtu a či má tento server prístup na internet."
+title = "Stirling Cloud je nedostupný"
+
+[admin.settings.ai.status.cloud.ok]
+body = "Stirling Cloud prijal tento server. Tu netreba nič spúšťať ani aktualizovať."
+title = "Beží na Stirling Cloud"
+
+[admin.settings.ai.status.degraded]
+body = "Odpovedal na kontrolu stavu, ale odmietol skutočnú požiadavku. Obe strany používajú odlišné zdieľané tajomstvá."
+title = "Engine je spustený, ale odmieta tento server"
+
+[admin.settings.ai.status.down]
+body = "Skontrolujte URL, či je kontajner enginu spustený a či ste po povolení AI vykonali reštart."
+title = "Engine je nedostupný"
+
+[admin.settings.ai.status.off]
+body = "Nižšie vyberte, ako má AI bežať, potom uložte a reštartujte."
+title = "AI je vypnutá"
+
+[admin.settings.ai.status.ok]
+body = "Kontrola stavu aj overená požiadavka boli úspešné."
+title = "Engine beží"
+
+[admin.settings.ai.status.secret]
+no = "Odmietnuté"
+unknown = "Neznáme"
+yes = "Prijaté"
 
 [admin.settings.badge]
 clickToUpgrade = "Kliknite pre zobrazenie podrobností plánu"
@@ -4453,6 +4548,7 @@ openFromComputer = "Otvoriť z počítača"
 openSettings = "Otvoriť nastavenia"
 other = "Ostatné"
 recent = "Nedávne"
+searchFiles = "Hľadať súbory"
 uploadFailedBody = "Vybrané súbory sa nepodarilo pridať."
 uploadFailedTitle = "Nahrávanie zlyhalo"
 viewAll = "Zobraziť všetkých {{count}} súborov"
@@ -5827,6 +5923,8 @@ label = "Free credits"
 adoptFailed = "Dokument bol odomknutý, ale nepodarilo sa ho tu otvoriť. Skúste nástroj priamo."
 empty = "Nie je čo hlásiť."
 handoffUnavailable = "Tento prehliadač neumožní procesoru odovzdať dokument editoru. Namiesto toho ho otvorte z editora."
+inSmartFolder = "Tento dokument je v inteligentnom priečinku, takže sa spracúva na serveri, a nie tu."
+inSmartFolderNamed = "{{name}} je v inteligentnom priečinku, takže sa spracúva na serveri, a nie tu."
 noDocumentLinked = "Toto zlyhanie nie je prepojené s konkrétnym dokumentom, takže tu nie je čo otvoriť."
 notOnThisDevice = "Tento dokument nie je v tomto zariadení, takže ho tu nemožno otvoriť."
 occurrences = "{{count}}-krát"
@@ -5837,6 +5935,7 @@ repairedRerunNotAdopted = "Opravený dokument prešiel, ale jeho výsledok sa tu
 repairedRerunUndelivered = "Dokument bol opravený a opätovné spustenie politiky sa začalo, ale jeho výsledok sem nie je možné doručiť, takže toto zlyhanie zostáva otvorené."
 rerunRejected = "Politiku sa práve teraz nepodarilo spustiť znova. Skúste to o chvíľu."
 rerunUndelivered = "Opätovné spustenie politiky sa začalo, ale jeho výsledok sem nie je možné doručiť, takže toto zlyhanie zostáva otvorené."
+retryInFolderFailed = "Tento dokument sa práve teraz nepodarilo znova spracovať."
 retryUnavailable = "Tento dokument už nie je možné znova skúsiť z tohto prehliadača."
 title = "Oznámenia"
 unlockedNotRerun = "Dokument bol odomknutý a otvorený tu, ale politika na ňom nemohla byť spustená znova."
@@ -6625,9 +6724,11 @@ title = "Upraviť plán Team"
 [payment.capacityStage]
 adjustmentNote = "Stripe pred potvrdením zobrazí presný poplatok, prípadné pomerné úpravy a dátum vašej ďalšej fakturácie. Ak je dostupný uložený spôsob platby, použije sa."
 continue = "Pokračovať k platbe"
+currencyAtCheckout = "Stripe potvrdí konečnú sumu a menu platby pri pokladni."
 customLabel = "Počet používateľov"
 dueToday = "Splatné dnes"
 enterpriseQuote = "Získať cenovú ponuku pre enterprise"
+estimatedTotal = "Odhadovaný celkový súčet"
 lineItem = "Team · {{price}}{{period}} za {{block}} používateľov"
 minimumForCurrentUsers = "Máte {{users}} používateľov, takže plán musí pokryť aspoň {{minimum}}."
 modalTitle = "Prejsť na {{planName}}"
@@ -6865,6 +6966,25 @@ width = "Šírka"
 widthHint = "Šírka textového poľa sa riadi jeho obsahom a zalamovaním."
 x = "X"
 y = "Y"
+
+[pdfTextEditor.mobile]
+actions = "Akcie editora"
+addImage = "Obrázok"
+addText = "Text"
+cancel = "Zrušiť"
+delete = "Odstrániť"
+details = "Podrobnosti"
+document = "Dokument"
+done = "Hotovo"
+download = "Uložiť a stiahnuť"
+find = "Nájsť"
+lock = "Zamknúť"
+openPdf = "Otvoriť PDF"
+panelHint = "Úpravy prebiehajú v zobrazení Pracovný priestor. Ťuknite na text na stránke, ak ho chcete zmeniť."
+save = "Uložiť"
+style = "Štýl"
+tapToPlace = "Ťuknite na stránku na mieste, kam sa má text vložiť"
+unlock = "Odomknúť"
 
 [pdfTextEditor.password]
 cancel = "Zrušiť"
@@ -7574,6 +7694,49 @@ plan = "Plán"
 procurement = "Nákup"
 usage = "Používanie"
 
+[portal.billing.compare]
+current = "Aktuálny"
+enterpriseData = "Umiestnenie dát a SCIM"
+enterpriseName = "Enterprise"
+enterprisePrice = "Podľa vašej zmluvy"
+enterpriseProcessing = "Merané alebo paušálne"
+enterpriseSignIn = "SAML a auditovanie"
+enterpriseSupport = "SLA dostupnosti, pomoc s nasadením"
+enterpriseUsers = "Bez limitu"
+enterpriseWhere = "Plus viaceré uzly a izolované prostredie"
+exploreEnterprise = "Preskúmať Enterprise"
+freeData = "Zostávajú tam, kde to prevádzkujete"
+freeName = "Free"
+freePrice = "Bez karty, bez vypršania"
+freeProcessing = "{{allowance}} kreditov mesačne"
+freeProcessingUnknown = "Mesačný kreditný limit"
+freeSignIn = "E-mail, Google a SSO"
+freeSignInNote = "OAuth2/OIDC"
+freeSupport = "Komunita"
+freeUsers = "Až {{users}}"
+freeUsersUnknown = "Malý tím"
+freeWhere = "Cloud, desktop alebo vlastné hostovanie"
+lede = "Každý plán obsahuje všetky PDF nástroje a SSO. Mení sa počet používateľov, miesto, kde beží, a podpora, ktorú získate."
+open = "Porovnať plány"
+rowData = "Vaše dáta"
+rowHeader = "Funkcia"
+rowProcessing = "Spracovanie"
+rowSignIn = "Prihlásenie"
+rowSupport = "Podpora"
+rowUsers = "Používatelia"
+rowWhere = "Kde beží"
+teamData = "Google Drive, vlastná databáza"
+teamName = "Team"
+teamPrice = "$99/mes. za 100 používateľov"
+teamProcessing = "{{allowance}} mesačne, potom merané podľa spotreby"
+teamProcessingUnknown = "Väčší limit, potom merané podľa spotreby"
+teamSignIn = "Rovnaké"
+teamSupport = "E-mail"
+teamUsers = "100 na blok"
+teamWhere = "Cloud, desktop alebo vlastné hostovanie"
+title = "Porovnať plány"
+upgradeTeam = "Prejsť na Team"
+
 [portal.billing.cycle]
 credits = "Kredity"
 creditsNote = "Použité: {{units}} · zahŕňa bezplatné a predplatené kredity"
@@ -7679,6 +7842,8 @@ payTitle = "Zaplaťte za svoj rok"
 step = "Krok {{current}} z {{total}}"
 
 [portal.billing.prepaid.calc]
+currency = "Mena cenovej ponuky"
+currencyLocked = "Používa vašu existujúcu fakturačnú menu v Stripe."
 rateUnknown = "Presnú cenu zobrazíme pri pokladni."
 
 [portal.billing.prepaid.consent]
@@ -8481,6 +8646,10 @@ title = "Súbor sa nepodarilo opraviť"
 [portal.failures.kind.inputWrongType]
 description = "Váš súbor nie je vo formáte, ktorý tento krok dokáže otvoriť, takže ho spustenie nemohlo prečítať."
 title = "Nesprávny typ súboru"
+
+[portal.failures.kind.sourceUnreadable]
+description = "Váš inteligentný priečinok sa nepodarilo prečítať, takže sa v ňom nič nespracovalo."
+title = "Priečinok sa nepodarilo prečítať"
 
 [portal.failures.kind.stepCannotRenderPage]
 description = "Stránku vo vašom súbore sa nepodarilo vykresliť, takže spustenie sa nemohlo dokončiť."
@@ -12235,6 +12404,7 @@ goBack = "Prejsť späť"
 pdfTools = "Nástroje PDF"
 placeholder = "Vyberte nástroj, aby ste začali"
 premiumFeature = "Prémiová funkcia:"
+searchTools = "Hľadať nástroje"
 toolsHeader = "Nástroje"
 viewAllTools = "Zobraziť všetky nástroje"
 
@@ -12399,13 +12569,10 @@ visits = "Návštevy"
 
 [users]
 lastActive = "Naposledy aktívny"
-learnMore = "Zistiť viac o rolách a prístupe."
 locked = "Zamknuté"
 ownerSetupRequired = "Vlastník organizácie nedokončil prvé prihlásenie. Pred prenesením vlastníctva dokončite nastavenie alebo požiadajte operátora servera o obnovenie vlastníctva."
 roleFor = "Rola pre {{name}}"
 rowActions = "Akcie pre {{name}}"
-showAll = "Zobraziť všetkých {{count}}"
-showLess = "Zobraziť menej"
 subtitle2 = "Vaši ľudia, tímy a úrovne prístupu."
 suspended = "Pozastavený"
 teamActions = "Akcie tímu"
@@ -12414,6 +12581,7 @@ you = "(vy)"
 
 [users.action]
 cancelInvite = "Zrušiť pozvanie"
+createFromDefault = "Vytvoriť tím z Default"
 deleteTeam = "Odstrániť tím"
 disableMfa = "Resetovať MFA"
 move = "Presunúť do tímu"
@@ -12451,6 +12619,7 @@ email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
+team = "Tím"
 
 [users.confirm]
 cancelInviteBody = "Zrušiť pozvanie pre {{email}}? S aktuálnym odkazom sa nebudú môcť pripojiť."
@@ -12469,15 +12638,12 @@ transferOwnershipTitle = "Preniesť vlastníctvo organizácie"
 description = "Pozvite svoj tím a začnite spolupracovať."
 title = "Zatiaľ žiadni členovia"
 
+[users.filters]
+noMatches = "Týmto filtrom nezodpovedá nikto."
+search = "Hľadať ľudí"
+
 [users.group]
 addToTeam = "Pridať do tímu"
-administrators = "{{count}} správcovia"
-guestCount = "{{count}} hosť"
-guests = "Hostia"
-ledBy = "vedie {{owner}}"
-org = "Organizácia"
-team = "Tím {{name}}"
-teamMeta = "{{count}} ľudí"
 
 [users.invite]
 access = "Prístup"
@@ -12542,6 +12708,9 @@ title = "Nový tím"
 
 [users.renameTeam]
 apply = "Premenovať"
+defaultApply = "Vytvoriť a presunúť"
+defaultDescription = "Default zostane k dispozícii pre nových používateľov. Všetci, ktorí sú momentálne v Default, budú presunutí do nového tímu."
+defaultTitle = "Vytvoriť tím z Default"
 name = "Názov tímu"
 title = "Premenovať tím"
 
@@ -12566,6 +12735,15 @@ guest = "Hosť"
 member = "Člen"
 orgOwner = "Vlastník organizácie"
 teamOwner = "Vlastník tímu"
+
+[users.seats]
+full = "Všetky licencované miesta sa používajú. Uvoľnite niektoré alebo zvýšte počet miest, aby ste mohli pridať ďalších ľudí."
+update = "Aktualizovať miesta"
+
+[users.tabs]
+all = "Všetci"
+label = "Filtrovať podľa tímu"
+unassigned = "Bez tímu"
 
 [users.team]
 grantProcessor = "Udeliť tímu rolu Spracovateľ"
@@ -13216,232 +13394,14 @@ submitSignature = "Odoslať podpis"
 title = "Pracovný priestor"
 
 [workspace.people]
-active = "Aktívny"
-activeSession = "Aktívna relácia"
-addMembers = "Pridať členov"
-admin = "Admin"
-confirmDelete = "Naozaj chcete odstrániť tohto používateľa? Táto akcia sa nedá vrátiť."
-confirmUnlock = "Naozaj chcete odomknúť tento používateľský účet?"
-deleteUser = "Odstrániť používateľa"
-deleteUserError = "Používateľa sa nepodarilo odstrániť"
-deleteUserSuccess = "Používateľ úspešne odstránený"
 description = "Spravujte členov pracovného priestoru a ich povolenia"
-disable = "Zakázať"
-disabled = "Zakázaný"
-editRole = "Upraviť rolu"
-enable = "Povoliť"
-loading = "Načítavajú sa ľudia..."
-locked = "zamknutý"
-lockedBadge = "Zamknutý"
-loginRequired = "Najprv zapnite režim prihlásenia"
-memberActions = "Akcie člena"
-noMembersFound = "Nenašli sa žiadni členovia"
-ownerLocked = "Pred zmenou roly alebo účtu vlastníka preneste vlastníctvo organizácie v Nastavenia → Pracovný priestor → Používatelia."
-role = "Rola"
-searchMembers = "Hľadať členov..."
-team = "Tím"
-unlockAccount = "Odomknúť účet"
-unlockUserError = "Nepodarilo sa odomknúť používateľský účet"
-unlockUserSuccess = "Používateľský účet bol úspešne odomknutý"
-user = "Používateľ"
-userInfo = "Informácie o používateľovi"
-
-[workspace.people.actions]
-upgrade = "Upgradovať"
-
-[workspace.people.addMember]
-authType = "Typ overenia"
-error = "Používateľa sa nepodarilo vytvoriť"
-forceMFA = "Vynútiť nastavenie MFA pri ďalšom prihlásení"
-forcePasswordChange = "Vynútiť zmenu hesla pri prvom prihlásení"
-password = "Heslo"
-passwordPlaceholder = "Zadajte heslo"
-passwordRequired = "Heslo je povinné"
-role = "Rola"
-submit = "Pridať člena"
-success = "Používateľ úspešne vytvorený"
-team = "Tím (voliteľné)"
-teamPlaceholder = "Vyberte tím"
-username = "Používateľské meno (e-mail)"
-usernamePlaceholder = "user@example.com"
-usernameRequired = "Používateľské meno a heslo sú povinné"
-
-[workspace.people.authType]
-oauth = "OAuth2"
-password = "Heslo"
-saml = "SAML2"
-ssoDescription = "Používateľ sa bude overovať prostredníctvom poskytovateľa SSO"
-
-[workspace.people.changePassword]
-action = "Zmeniť heslo"
-confirmPassword = "Potvrdiť heslo"
-confirmPlaceholder = "Zadajte nové heslo ešte raz"
-copiedToClipboard = "Heslo skopírované do schránky"
-copyFailed = "Heslo sa nepodarilo skopírovať"
-copyTooltip = "Kopírovať do schránky"
-emailUnavailable = "E-mailová adresa tohto používateľa nie je platná. Upozornenia sú vypnuté."
-error = "Heslo sa nepodarilo aktualizovať"
-forcePasswordChange = "Vynútiť zmenu hesla pri najbližšom prihlásení"
-generatedPreview = "Vygenerované heslo:"
-generateRandom = "Vygenerovať bezpečné heslo"
-includePassword = "Zahrnúť nové heslo do e-mailu"
-newPassword = "Nové heslo"
-notifyOnly = "Odošle sa e-mail bez hesla, ktorý používateľa informuje, že ho zmenil administrátor."
-passwordMismatch = "Heslá sa nezhodujú"
-passwordRequired = "Zadajte nové heslo"
-placeholder = "Zadajte nové heslo"
-sendEmail = "Odoslať používateľovi e-mail o tejto zmene"
-smtpDisabled = "E-mailové upozornenia vyžadujú, aby bolo v nastaveniach povolené SMTP."
-submit = "Aktualizovať heslo"
-subtitle = "Aktualizovať heslo pre"
-success = "Heslo bolo úspešne aktualizované"
-title = "Zmeniť heslo"
-
-[workspace.people.editMember]
-editing = "Editing: <0>{{username}}</0>"
-error = "Používateľa sa nepodarilo aktualizovať"
-role = "Rola"
-submit = "Update User"
-success = "Používateľ úspešne aktualizovaný"
-team = "Tím (voliteľné)"
-teamPlaceholder = "Vyberte tím"
-title = "Edit User"
-
-[workspace.people.emailInvite]
-allFailed = "Nepodarilo sa pozvať používateľov"
-emails = "E-mailové adresy"
-emailsPlaceholder = "user1@example.com, user2@example.com"
-emailsRequired = "Vyžaduje sa aspoň jedna e-mailová adresa"
-error = "Nepodarilo sa odoslať pozvánky"
-partialFailure = "Niektoré pozvánky zlyhali"
-submit = "Odoslať pozvánky"
-success = "Používatelia boli úspešne pozvaní"
-
-[workspace.people.inviteLink]
-copied = "Odkaz skopírovaný do schránky"
-email = "E-mailová adresa"
-emailDescription = "Voliteľné – nechajte prázdne pre všeobecný pozývací odkaz použiteľný kýmkoľvek"
-emailPlaceholder = "user@example.com (voliteľné)"
-emailSent = "Pozývací odkaz bol vygenerovaný a odoslaný e-mailom"
-error = "Nepodarilo sa vygenerovať pozývací odkaz"
-expiryHours = "Doba platnosti (hodiny)"
-generate = "Vygenerovať odkaz"
-generated = "Pozývací odkaz bol vygenerovaný"
-sendEmail = "Poslať pozývací odkaz e-mailom"
-sendEmailDescription = "Ak je zapnuté, pozývací odkaz sa odošle na uvedenú e-mailovú adresu"
-submit = "Vygenerovať pozývací odkaz"
-
-[workspace.people.inviteMembers]
-label = "Pozvať členov"
-subtitle = "Zadajte alebo prilepte e-maily nižšie, oddelené čiarkami. Váš pracovný priestor bude účtovaný podľa počtu členov."
-
-[workspace.people.inviteMode]
-email = "E-mail"
-emailDisabled = "Pozvánky e-mailom vyžadujú konfiguráciu SMTP a mail.enableInvites=true v nastaveniach"
-link = "Odkaz"
-username = "Používateľské meno"
 
 [workspace.people.license]
-currentUsage = "Aktuálne používaných {{current}} z {{max}} používateľských licencií"
-fromLicense = "z licencie"
-grandfathered = "Zachované"
-grandfatheredShort = "{{count}} zachovaných"
-slotsAvailable_one = "{{count}} user slot available"
-slotsAvailable_other = "{{count}} user slots available"
-slotsAvailable_zero = "No slots available"
 users_one = "user"
 users_other = "users"
 
-[workspace.people.mfa]
-adminDisableError = "Nepodarilo sa zakázať MFA pre používateľa"
-adminDisableSuccess = "MFA bolo úspešne zakázané pre používateľa"
-disableByAdmin = "Zakázať MFA"
-
-[workspace.people.roleDescriptions]
-admin = "Môže spravovať nastavenia a pozývať členov, s plným administratívnym prístupom."
-currentRole = "Aktuálne priradená rola."
-user = "Can view and edit shared files, but cannot manage workspace settings or users."
-
-[workspace.people.toggleEnabled]
-error = "Nepodarilo sa aktualizovať stav používateľa"
-success = "Stav používateľa bol úspešne aktualizovaný"
-
 [workspace.teams]
-addMember = "Pridať člena"
-backToTeams = "Späť na tímy"
-cannotAddToInternal = "Nemožno pridávať členov do tímu Internal"
-cannotDeleteInternal = "Nemožno odstrániť tím Internal"
-cannotRenameInternal = "Nemožno premenovať tím Internal"
-confirmDelete = "Naozaj chcete odstrániť tento tím? Pred odstránením musí byť tím prázdny."
-confirmRemove = "Odstrániť používateľa z tohto tímu?"
-createNewTeam = "Vytvoriť nový tím"
-deleteTeamLabel = "Odstrániť tím"
 description = "Spravujte tímy a organizujte členov pracovného priestoru"
-loadError = "Nepodarilo sa načítať podrobnosti tímu"
-loading = "Načítavajú sa tímy..."
-loadingDetails = "Načítavajú sa podrobnosti tímu..."
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
-noMembers = "V tomto tíme nie sú žiadni členovia"
-noTeamsFound = "Nenašli sa žiadne tímy"
-removeMember = "Odstrániť z tímu"
-removeMemberError = "Nepodarilo sa odstrániť používateľa z tímu"
-removeMemberSuccess = "Používateľ bol odstránený z tímu"
-renameTeamLabel = "Premenovať tím"
-system = "Systém"
-teamActions = "Akcie tímu"
-teamName = "Názov tímu"
-teamNotFound = "Tím sa nenašiel"
-totalMembers = "Spolu členov"
-viewTeam = "Zobraziť tím"
-
-[workspace.teams.addMemberToTeam]
-addingTo = "Pridáva sa do"
-currentlyIn = "aktuálne v"
-error = "Nepodarilo sa pridať člena do tímu"
-selectUser = "Vybrať používateľa"
-selectUserPlaceholder = "Vyberte používateľa"
-selectUserRequired = "Prosím, vyberte používateľa"
-submit = "Pridať člena"
-success = "Člen bol úspešne pridaný do tímu"
-title = "Pridať člena do tímu"
-userRequired = "Prosím, vyberte používateľa"
-willBeMoved = "Poznámka: Tento používateľ bude presunutý z aktuálneho tímu do tohto tímu."
-
-[workspace.teams.changeTeam]
-changing = "Presúvanie"
-error = "Nepodarilo sa zmeniť tím"
-label = "Zmeniť tím"
-selectTeam = "Vybrať tím"
-selectTeamPlaceholder = "Vyberte tím"
-selectTeamRequired = "Prosím, vyberte tím"
-submit = "Zmeniť tím"
-success = "Tím bol úspešne zmenený"
-title = "Zmeniť tím"
-
-[workspace.teams.createTeam]
-error = "Nepodarilo sa vytvoriť tím"
-nameRequired = "Názov tímu je povinný"
-submit = "Vytvoriť tím"
-success = "Tím bol úspešne vytvorený"
-teamName = "Názov tímu"
-teamNamePlaceholder = "Zadajte názov tímu"
-title = "Vytvoriť nový tím"
-
-[workspace.teams.deleteTeam]
-error = "Nepodarilo sa odstrániť tím. Uistite sa, že tím je prázdny."
-success = "Tím bol úspešne odstránený"
-
-[workspace.teams.renameTeam]
-error = "Nepodarilo sa premenovať tím"
-nameRequired = "Názov tímu je povinný"
-newTeamName = "Nový názov tímu"
-newTeamNamePlaceholder = "Zadajte nový názov tímu"
-renaming = "Premenovanie:"
-submit = "Premenovať tím"
-success = "Tím bol úspešne premenovaný"
-title = "Premenovať tím"
 
 [zipWarning]
 cancel = "Zrušiť"

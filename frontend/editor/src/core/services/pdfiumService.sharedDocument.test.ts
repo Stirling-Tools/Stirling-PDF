@@ -11,6 +11,7 @@ const pdfium = vi.hoisted(() => {
     heap: new Uint8Array(1 << 20),
     closeCalls: [] as number[],
     freeCalls: [] as number[],
+    allocationOrder: [] as string[],
     removeCalls: [] as number[],
     lastGetBlock: null as
       | ((param: number, position: number, ptr: number, size: number) => number)
@@ -27,6 +28,7 @@ const pdfium = vi.hoisted(() => {
     state.heap = heap;
     state.closeCalls = [];
     state.freeCalls = [];
+    state.allocationOrder = [];
     state.removeCalls = [];
     state.lastGetBlock = null;
     state.failOpen = false;
@@ -40,8 +42,14 @@ const pdfium = vi.hoisted(() => {
       FPDF_GetLastError: vi.fn(() => 0),
       pdfium: {
         wasmExports: {
-          malloc: vi.fn(() => (state.nextDataPtr += 1 << 16)),
-          free: vi.fn((p: number) => state.freeCalls.push(p)),
+          malloc: vi.fn(() => {
+            state.allocationOrder.push("malloc");
+            return (state.nextDataPtr += 1 << 16);
+          }),
+          free: vi.fn((p: number) => {
+            state.allocationOrder.push("free");
+            state.freeCalls.push(p);
+          }),
         },
         HEAPU8: heap,
         removeFunction: vi.fn((p: number) => state.removeCalls.push(p)),
@@ -175,6 +183,23 @@ describe("shared document lifecycle", () => {
 
     closeDocAndFreeBuffer(await getPdfiumModule(), doc);
     expect(closeCalls()).toEqual([doc]);
+    // The reader re-fetches the module after the reset, so the close must
+    // still free what the old instance allocated.
+    expect(freeCalls()).toHaveLength(1);
+  });
+
+  it("closes an idle shared handle before opening its replacement", async () => {
+    const dataA = new ArrayBuffer(16);
+    const dataB = new ArrayBuffer(24);
+    const docA = await openRawDocumentSafe(dataA);
+    closeDocAndFreeBuffer(await getPdfiumModule(), docA);
+    pdfium.state.allocationOrder = [];
+
+    await openRawDocumentSafe(dataB);
+
+    // A's resources are released before B's are allocated, so the two never
+    // coexist.
+    expect(pdfium.state.allocationOrder).toEqual(["free", "malloc"]);
   });
 
   it("queues the release behind a scan so a late open cannot linger", async () => {

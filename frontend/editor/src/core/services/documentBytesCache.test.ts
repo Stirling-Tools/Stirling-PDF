@@ -97,7 +97,7 @@ describe("documentBytesCache", () => {
       .mockImplementation(() => Promise.resolve(bytesOf([7, 8, 9])));
 
     const first = await getDocumentBytes(file);
-    releaseDocumentBytes(file);
+    await releaseDocumentBytes(file);
     const second = await getDocumentBytes(file);
 
     expect(spy).toHaveBeenCalledTimes(2);
