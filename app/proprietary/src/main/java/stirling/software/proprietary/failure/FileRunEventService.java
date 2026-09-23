@@ -260,8 +260,11 @@ public class FileRunEventService {
         if (event.policyId() == null || event.policyId().isBlank()) {
             return SourceKind.EDITOR;
         }
+        // A policy that has since been deleted still produced the row: POLICY, not EDITOR, so the
+        // client never tells the reader their own editor caused it.
         return cache.computeIfAbsent(
-                event.policyId(), id -> SourceKind.of(policyStore.get(id).orElse(null)));
+                event.policyId(),
+                id -> policyStore.get(id).map(SourceKind::of).orElse(SourceKind.POLICY));
     }
 
     public SourceKind sourceKindOf(FileRunEvent event) {

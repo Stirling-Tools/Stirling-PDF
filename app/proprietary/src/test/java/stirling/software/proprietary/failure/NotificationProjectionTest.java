@@ -257,6 +257,8 @@ class NotificationProjectionTest {
             assertThat(notification.documentLocation())
                     .isEqualTo(FileRunEventView.DocumentLocation.UNREACHABLE);
             assertThat(notification.fileId()).isNull();
+            // Still a policy's row: EDITOR would have the bell blame the reader's own editor.
+            assertThat(notification.sourceKind()).isEqualTo(SourceKind.POLICY);
             assertThat(notification.toString()).doesNotContain("Payroll", "march.pdf");
         }
 

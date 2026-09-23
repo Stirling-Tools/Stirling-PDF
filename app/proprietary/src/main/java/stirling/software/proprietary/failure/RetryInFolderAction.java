@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
+import stirling.software.proprietary.policy.engine.SweepOutcome;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.PolicyStore;
@@ -47,10 +48,20 @@ public class RetryInFolderAction implements FailureAction {
         // only one a press can reach, so no input can widen it to a sibling or to another folder.
         if (!processedLedger.forgetFailure(policy.id(), identity)) {
             throw new FailureActionException(
-                    FailureActionException.Reason.ALREADY_CLOSED,
+                    FailureActionException.Reason.NOTHING_TO_RUN,
                     "This document has no parked failure to run again");
         }
-        policyRunner.runFile(policy, identity);
+        SweepOutcome outcome = policyRunner.runFile(policy, identity);
+        // A paused or unreadable folder, a missing licence, or a file that has since left the
+        // folder all yield no run. The row stays open: closing it would call the failure fixed
+        // with nothing re-run. The forgotten ledger row is not restored, so the next sweep that
+        // can list the folder claims the file fresh.
+        if (outcome.runIds().isEmpty()) {
+            throw new FailureActionException(
+                    FailureActionException.Reason.NOTHING_TO_RUN,
+                    "This document could not be run again: the folder is paused, unreadable, or"
+                            + " no longer holds it");
+        }
 
         // Closed on dispatch, not on the re-run's outcome: the run is asynchronous, and a repeat
         // failure records its own incident, which folds back onto this row by dedup key.

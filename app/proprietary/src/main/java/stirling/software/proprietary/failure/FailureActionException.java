@@ -32,7 +32,13 @@ public class FailureActionException extends RuntimeException {
         ACTION_NOT_THEIRS,
 
         /** The event is already closed, so no further transition is possible. */
-        ALREADY_CLOSED
+        ALREADY_CLOSED,
+
+        /**
+         * Dispatched, but there was nothing to act on: the document is no longer parked as a
+         * failure, or its folder yielded no run. The event stays open.
+         */
+        NOTHING_TO_RUN
     }
 
     private final Reason reason;
@@ -57,7 +63,7 @@ public class FailureActionException extends RuntimeException {
                     HttpStatus.BAD_REQUEST;
             // Not a 404: the caller may legitimately read the row, they just may not do this.
             case ACTION_NOT_THEIRS -> HttpStatus.FORBIDDEN;
-            case ALREADY_CLOSED -> HttpStatus.CONFLICT;
+            case ALREADY_CLOSED, NOTHING_TO_RUN -> HttpStatus.CONFLICT;
         };
     }
 }

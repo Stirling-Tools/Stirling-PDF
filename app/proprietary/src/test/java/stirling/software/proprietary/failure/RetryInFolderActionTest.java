@@ -22,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
+import stirling.software.proprietary.policy.engine.SweepOutcome;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.Policy;
@@ -160,6 +161,7 @@ class RetryInFolderActionTest {
                     .thenReturn(java.util.Optional.of(folder(Policy.SURFACE_PROCESSING_FOLDER)));
             when(policyAccessGuard.canAccess(any(Policy.class))).thenReturn(true);
             when(processedLedger.forgetFailure(FOLDER_ID, IDENTITY)).thenReturn(true);
+            when(policyRunner.runFile(any(Policy.class), anyString())).thenReturn(oneRun());
             when(store.applyStatus(any(), any(), any(), any()))
                     .thenReturn(mock(FileRunEvent.class));
 
@@ -168,6 +170,24 @@ class RetryInFolderActionTest {
             // The identity comes from the row, so the inputs cannot redirect it at a sibling file.
             verify(policyRunner)
                     .runFile(any(Policy.class), org.mockito.ArgumentMatchers.eq(IDENTITY));
+        }
+
+        @Test
+        void leavesTheRowOpenWhenTheFolderYieldedNoRun() {
+            // A paused or unreadable folder, or a file that has since left it, starts nothing.
+            // Resolving anyway would make the failure vanish with nothing re-run.
+            when(policyStore.get(FOLDER_ID))
+                    .thenReturn(java.util.Optional.of(folder(Policy.SURFACE_PROCESSING_FOLDER)));
+            when(policyAccessGuard.canAccess(any(Policy.class))).thenReturn(true);
+            when(processedLedger.forgetFailure(FOLDER_ID, IDENTITY)).thenReturn(true);
+            when(policyRunner.runFile(any(Policy.class), anyString())).thenReturn(noRuns());
+
+            assertThatThrownBy(() -> action.execute(event(FOLDER_ID, IDENTITY), Map.of(), "carol"))
+                    .isInstanceOf(FailureActionException.class)
+                    .extracting(e -> ((FailureActionException) e).getReason())
+                    .isEqualTo(FailureActionException.Reason.NOTHING_TO_RUN);
+
+            verify(store, never()).applyStatus(any(), any(), any(), any());
         }
 
         @Test
@@ -196,6 +216,14 @@ class RetryInFolderActionTest {
 
             verify(processedLedger, never()).forgetFailure(anyString(), anyString());
         }
+    }
+
+    private static SweepOutcome oneRun() {
+        return new SweepOutcome(List.of("run-2"), 1, 0, 0, 0, 0);
+    }
+
+    private static SweepOutcome noRuns() {
+        return new SweepOutcome(List.of(), 0, 0, 0, 0, 0);
     }
 
     @Test
