@@ -130,6 +130,21 @@ function compressStaticCopyPlugin(): PluginOption {
       await walk(distDir);
 
       await compressFiles(files, distDir);
+
+      // The TTFs are only ever requested through the backend, which serves the
+      // .br/.gz siblings and falls back to its own classpath copy of the raw
+      // file. Shipping the raw set in dist would duplicate ~100 MB for nothing.
+      // NotoSans-Regular.ttf stays: the text editor's Unicode fallback fetches
+      // it directly, and static hosts have no classpath to fall back to.
+      const fontsDir = path.join(distDir, "fonts");
+      const fontEntries = await fs.readdir(fontsDir).catch(() => []);
+      await Promise.all(
+        fontEntries
+          .filter(
+            (name) => name.endsWith(".ttf") && name !== "NotoSans-Regular.ttf",
+          )
+          .map((name) => fs.rm(path.join(fontsDir, name), { force: true })),
+      );
     },
   };
 }
@@ -495,6 +510,17 @@ export default defineConfig(async ({ mode, command }) => {
             src: "src/core/assets/brand/modern-logo/*",
             dest: "modern-logo",
           },
+          // The compression pass writes the .br/.gz siblings the backend JAR
+          // serves from classpath:/static/fonts/; desktop is embedded and gets
+          // them from the bundled backend instead.
+          ...(effectiveMode === "desktop"
+            ? []
+            : [
+                {
+                  src: "../../app/core/src/main/resources/static/fonts/*.ttf",
+                  dest: "fonts",
+                },
+              ]),
         ],
       }),
       ...(effectiveMode === "desktop" ? [] : [compressStaticCopyPlugin()]),

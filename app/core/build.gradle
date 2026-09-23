@@ -302,9 +302,10 @@ tasks.register('copyFrontendAssets', Copy) {
         // Exclude files that conflict with backend static resources
         exclude 'robots.txt'  // Backend already has this
         exclude 'favicon.ico' // Backend already has this
-        // Backend ships its own NotoSans-Regular.ttf here and it is git-tracked;
-        // letting the editor's copy win would dirty the source tree on every build.
-        exclude 'fonts/NotoSans-Regular.ttf'
+        // The raw TTFs are already git-tracked under static/fonts and copied by
+        // processResources; only the precompressed siblings add anything, and
+        // copying the raw set back would dirty the source tree on every build.
+        exclude 'fonts/*.ttf'
     }
     into resourcesStaticDir
     duplicatesStrategy = DuplicatesStrategy.INCLUDE  // Let frontend overwrite when needed
@@ -332,6 +333,9 @@ tasks.register('cleanFrontendAssets', Delete) {
     delete new File(resourcesStaticDir, 'processor')
     // Generated SEO sitemap (only emitted when a canonical domain is set at build).
     delete fileTree(dir: resourcesStaticDir, includes: ['sitemap.xml', 'sitemap.xml.br', 'sitemap.xml.gz'])
+    // Precompressed siblings of the tracked TTFs; only a frontend build produces
+    // them, and the backend-only JAR (desktop bundles it) serves the raw fonts.
+    delete fileTree(dir: new File(resourcesStaticDir, 'fonts'), includes: ['*.br', '*.gz'])
 }
 
 tasks.register('copyApiLandingPage', Copy) {
