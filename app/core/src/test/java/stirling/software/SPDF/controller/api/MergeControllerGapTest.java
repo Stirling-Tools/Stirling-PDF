@@ -190,10 +190,12 @@ class MergeControllerGapTest {
         }
 
         @Test
-        @DisplayName("IOException while loading yields equal (0)")
-        void ioExceptionYieldsEqual() throws Exception {
+        @DisplayName("IOException while loading sorts the unreadable file last")
+        void ioExceptionSortsLast() throws Exception {
             when(pdfDocumentFactory.load(fileA)).thenThrow(new IOException("boom"));
-            assertEquals(0, sortComparator("byPDFTitle").compare(fileA, fileB));
+            when(pdfDocumentFactory.load(fileB)).thenReturn(docWithTitle("Beta"));
+
+            assertEquals(1, sortComparator("byPDFTitle").compare(fileA, fileB));
         }
     }
 
