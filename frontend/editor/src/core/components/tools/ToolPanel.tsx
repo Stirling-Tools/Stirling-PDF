@@ -76,25 +76,6 @@ export default function ToolPanel({
         </div>
       )}
 
-      {onPicker && !showSearch && (
-        <div className="tool-panel__list-header">
-          <span className="tool-panel__list-title">
-            {t("toolPanel.toolsHeader", "Tools")}
-          </span>
-          <ActionIcon
-            variant="quiet"
-            accent="neutral"
-            size="sm"
-            onClick={() => openSuperSearch(["tools"])}
-            title={t("toolPanel.searchTools", "Search tools")}
-            aria-label={t("toolPanel.searchTools", "Search tools")}
-            data-testid="tool-panel-search"
-          >
-            <Icon name="search" size="1rem" />
-          </ActionIcon>
-        </div>
-      )}
-
       {searching && (allToolsView || panelSearch) ? (
         <div className="flex-1 flex flex-col overflow-y-auto">
           <SearchResults
@@ -112,6 +93,26 @@ export default function ToolPanel({
             isSearching={searching}
             compact={compactProp ?? !allToolsView}
             onShowAllTools={onShowAllTools}
+            header={
+              !showSearch && (
+                <div className="tool-panel__list-header">
+                  <span className="tool-panel__list-title">
+                    {t("toolPanel.toolsHeader", "Tools")}
+                  </span>
+                  <ActionIcon
+                    variant="quiet"
+                    accent="neutral"
+                    size="sm"
+                    onClick={() => openSuperSearch(["tools"])}
+                    title={t("toolPanel.searchTools", "Search tools")}
+                    aria-label={t("toolPanel.searchTools", "Search tools")}
+                    data-testid="tool-panel-search"
+                  >
+                    <Icon name="search" size="1rem" />
+                  </ActionIcon>
+                </div>
+              )
+            }
           />
         </div>
       ) : (

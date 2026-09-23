@@ -165,7 +165,7 @@
   justify-content: space-between;
   gap: 0.5rem;
   flex-shrink: 0;
-  padding: 0.5rem var(--mantine-spacing-sm) 0
+  padding: 0.5rem var(--mantine-spacing-sm) 0.25rem
     calc(var(--mantine-spacing-sm) + 0.5rem);
 }
 

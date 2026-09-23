@@ -61,6 +61,7 @@ import { openSuperSearch } from "@app/components/shared/superSearch/openSuperSea
 import { alert } from "@app/components/toast";
 import { useBulkAddProgress } from "@app/services/bulkAddProgress";
 import { useFolderMembership } from "@app/hooks/useFolderMembership";
+import { useIsScrolled } from "@app/hooks/useIsScrolled";
 import { useAllWatchedFolders } from "@app/hooks/useAllWatchedFolders";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
 import {
@@ -186,6 +187,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const [pendingViewFileId, setPendingViewFileId] = useState<string | null>(
       null,
     );
+    const { scrolled: fileListScrolled, scrollRef: fileListScrollRef } =
+      useIsScrolled();
 
     const { config } = useAppConfig();
     const {
@@ -1072,7 +1075,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
               {currentWorkbench !== "myFiles" && (
                 <div className="file-sidebar-files-section sidebar-content-fade">
-                  <div className="file-sidebar-section-header">
+                  <div
+                    className="file-sidebar-section-header"
+                    data-scrolled={fileListScrolled || undefined}
+                  >
                     <span className="file-sidebar-section-label">
                       {t("fileSidebar.library", "PDF Library")}
                     </span>
@@ -1113,7 +1119,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                       <Loader size="sm" color="var(--c-text-subtle)" />
                     </div>
                   ) : allFileStubs.length > 0 ? (
-                    <div className="file-sidebar-file-list">
+                    <div
+                      className="file-sidebar-file-list"
+                      ref={fileListScrollRef}
+                    >
                       {fileGroups ? (
                         <>
                           {fileGroups.map((group) => {

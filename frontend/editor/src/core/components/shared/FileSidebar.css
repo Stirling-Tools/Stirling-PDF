@@ -515,6 +515,13 @@
   padding: 0 6px 2px 6px;
   margin: 0;
   flex-shrink: 0;
+  /* Ruled only once files scroll beneath it. */
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.12s ease;
+}
+
+.file-sidebar-section-header[data-scrolled] {
+  border-bottom-color: var(--c-border-subtle);
 }
 
 .file-sidebar-section-label {
