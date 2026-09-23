@@ -650,6 +650,40 @@ class PdfMetadataServiceTest {
                 assertEquals("OldValue", pdfx.getUnqualifiedTextPropertyValue("OldCustom"));
             }
         }
+
+        @Test
+        @DisplayName("replaces a case-variant custom property instead of keeping both")
+        void replacesCaseVariantCustomProperty() throws Exception {
+            PdfMetadataService service = nonProService(null);
+            try (PDDocument doc = new PDDocument()) {
+                doc.addPage(new PDPage());
+
+                XMPMetadata initialXmp = XMPMetadata.createXMPMetadata();
+                XMPSchema pdfxInitial =
+                        new XMPSchema(initialXmp, PdfMetadataService.PDFX_NAMESPACE, "pdfx");
+                pdfxInitial.setTextPropertyValueAsSimple("ProjectCode", "OldValue");
+                initialXmp.addSchema(pdfxInitial);
+
+                ByteArrayOutputStream xmpBaos = new ByteArrayOutputStream();
+                new XmpSerializer().serialize(initialXmp, xmpBaos, true);
+                PDMetadata pdMetadata = new PDMetadata(doc);
+                pdMetadata.importXMPMetadata(xmpBaos.toByteArray());
+                doc.getDocumentCatalog().setMetadata(pdMetadata);
+
+                service.synchronizeXmpMetadata(doc, Map.of("projectcode", "NewValue"));
+
+                PDMetadata updatedMetadata = doc.getDocumentCatalog().getMetadata();
+                DomXmpParser parser = new DomXmpParser();
+                parser.setStrictParsing(false);
+                XMPMetadata xmp =
+                        parser.parse(new ByteArrayInputStream(updatedMetadata.toByteArray()));
+
+                XMPSchema pdfx = xmp.getSchema(PdfMetadataService.PDFX_NAMESPACE);
+                assertNotNull(pdfx);
+                assertEquals("NewValue", pdfx.getUnqualifiedTextPropertyValue("projectcode"));
+                assertNull(pdfx.getAbstractProperty("ProjectCode"));
+            }
+        }
     }
 
     @Nested

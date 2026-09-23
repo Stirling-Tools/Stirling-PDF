@@ -7,6 +7,7 @@ import static org.mockito.Mockito.*;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -198,6 +199,32 @@ class MetadataControllerTest {
         }
 
         verify(mockInfo).setCustomMetadataValue("myKey", "myValue");
+    }
+
+    @Test
+    void testMetadata_caseVariantCustomKeyReplacesExisting() throws Exception {
+        when(pdfDocumentFactory.load(any(MultipartFile.class), eq(true))).thenReturn(mockDocument);
+        when(mockDocument.getDocumentInformation()).thenReturn(mockInfo);
+        when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
+        when(mockInfo.getMetadataKeys()).thenReturn(new HashSet<>(Set.of("MyKey")));
+
+        Map<String, String> params = new HashMap<>();
+        params.put("customKey1", "mykey");
+        params.put("customValue1", "newValue");
+
+        MetadataRequest request = new MetadataRequest();
+        request.setFileInput(mockFile);
+        request.setDeleteAll(false);
+        request.setAllRequestParams(params);
+
+        try {
+            metadataController.metadata(request);
+        } catch (Exception _) {
+        }
+
+        // PDF names are case-sensitive: the old casing must not survive.
+        verify(mockInfo).setCustomMetadataValue("MyKey", null);
+        verify(mockInfo).setCustomMetadataValue("mykey", "newValue");
     }
 
     @Test

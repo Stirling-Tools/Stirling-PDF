@@ -17,7 +17,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -514,6 +513,17 @@ public class PdfMetadataService {
                     String val = entry.getValue();
                     if (rawKey != null && !rawKey.trim().isEmpty() && val != null) {
                         String cleanKey = sanitizeXmlPropertyName(rawKey.trim());
+                        // XMP property names are case-sensitive, so a variant that
+                        // differs only in case would survive as a second property
+                        // whose stale value consumers may still read.
+                        for (AbstractField field : List.copyOf(pdfx.getAllProperties())) {
+                            String name = field.getPropertyName();
+                            if (name != null
+                                    && !name.equals(cleanKey)
+                                    && name.equalsIgnoreCase(cleanKey)) {
+                                pdfx.removeProperty(field);
+                            }
+                        }
                         pdfx.setTextPropertyValueAsSimple(cleanKey, val);
                     }
                 }
