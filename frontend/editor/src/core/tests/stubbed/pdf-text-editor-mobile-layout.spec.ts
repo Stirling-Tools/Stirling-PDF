@@ -1,5 +1,6 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
+import fs from "fs";
 import path from "path";
 
 const SAMPLE_PDF = path.join(
@@ -12,7 +13,7 @@ test.use({
   hasTouch: true,
 });
 
-async function openEditor(page: Page): Promise<void> {
+async function openEditor(page: Page, fileName?: string): Promise<void> {
   await page.addInitScript(() => {
     localStorage.setItem("stirling.mobileSwipeHintSeen", "true");
   });
@@ -20,9 +21,15 @@ async function openEditor(page: Page): Promise<void> {
   await expect(page.getByTestId("pdf-editor-root")).toBeAttached({
     timeout: 30_000,
   });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(SAMPLE_PDF);
+  await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles(
+    fileName
+      ? {
+          name: fileName,
+          mimeType: "application/pdf",
+          buffer: fs.readFileSync(SAMPLE_PDF),
+        }
+      : SAMPLE_PDF,
+  );
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 60_000,
   });
@@ -58,6 +65,48 @@ test.describe("PDF text editor - phone layout", () => {
         );
       })
       .toBe(true);
+  });
+
+  test("rotating the phone refits the page to the new width", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await openEditor(page);
+    const pageWidth = async () =>
+      (await page.getByTestId("pdf-editor-page-0").boundingBox())?.width ?? 0;
+    await expect.poll(pageWidth).toBeGreaterThan(300);
+    const portrait = await pageWidth();
+
+    await page.setViewportSize({ width: 740, height: 390 });
+    await expect
+      .poll(async () => {
+        const stage = await page.getByTestId("pdf-editor-stage").boundingBox();
+        const width = await pageWidth();
+        return !!stage && width > portrait + 200 && width <= stage.width;
+      })
+      .toBe(true);
+  });
+
+  test("a long file name truncates instead of pushing Save off screen", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await openEditor(
+      page,
+      `${"quarterly-report-final-revision-".repeat(4)}.pdf`,
+    );
+
+    const toolbar = page.getByTestId("pdf-editor-toolbar");
+    await expect
+      .poll(() =>
+        toolbar.evaluate((el) => el.scrollWidth <= el.clientWidth + 1),
+      )
+      .toBe(true);
+    const bar = await toolbar.boundingBox();
+    const save = await page.getByTestId("pdf-editor-mobile-save").boundingBox();
+    expect(bar && save && save.x + save.width <= bar.x + bar.width + 1).toBe(
+      true,
+    );
   });
 
   test("the action bar follows the selection and opens the sheets", async ({

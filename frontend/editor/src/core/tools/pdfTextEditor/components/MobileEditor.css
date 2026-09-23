@@ -16,12 +16,23 @@
   align-items: center;
 }
 
+/* Every wrapper must be allowed to shrink or a long name pushes Save off screen. */
+.pdf-editor-mtopbar__file > *,
+.pdf-editor-mtopbar__file .mantine-Button-inner,
+.pdf-editor-mtopbar__file .mantine-Button-label,
+.pdf-editor-mtopbar__file [data-testid="pdf-editor-filename"] {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
 .pdf-editor-mtopbar__file .pdf-editor-topbar__file {
   max-width: 100%;
 }
 
 .pdf-editor-mtopbar__file .pdf-editor-topbar__filename {
-  display: inline;
+  display: block;
+  min-width: 0;
 }
 
 .pdf-editor-mbar {

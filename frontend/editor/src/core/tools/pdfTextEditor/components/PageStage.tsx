@@ -80,17 +80,35 @@ export function PageStage() {
   // source of truth.
   const controller = useToolbarController(store, state, selection);
 
-  const fittedDocRef = useRef<object | null>(null);
+  const lastFitRef = useRef<{
+    doc: object;
+    width: number;
+    scale: number;
+  } | null>(null);
   const firstPageWidth = state.pages[0]?.width;
   useEffect(() => {
     const doc = store.document;
     const stage = stageRootRef.current;
     if (!isMobile || !doc || !stage || !firstPageWidth) return;
-    if (fittedDocRef.current === doc) return;
-    fittedDocRef.current = doc;
-    store.setRenderScale(
-      fitToWidthScale(stage.clientWidth, firstPageWidth, MOBILE_FIT_PAD_PX),
-    );
+    const fit = () => {
+      const width = stage.clientWidth;
+      if (!width) return;
+      const last = lastFitRef.current;
+      // Refit on rotate/resize only while the user has not zoomed away from the fit.
+      if (
+        last?.doc === doc &&
+        (last.width === width || store.getState().renderScale !== last.scale)
+      ) {
+        return;
+      }
+      const scale = fitToWidthScale(width, firstPageWidth, MOBILE_FIT_PAD_PX);
+      lastFitRef.current = { doc, width, scale };
+      store.setRenderScale(scale);
+    };
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(stage);
+    return () => observer.disconnect();
   }, [isMobile, firstPageWidth, store]);
 
   const topBar = isMobile ? (
