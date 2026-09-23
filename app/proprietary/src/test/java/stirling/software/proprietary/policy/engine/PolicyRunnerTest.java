@@ -40,6 +40,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.failure.FailureKind;
 import stirling.software.proprietary.failure.PolicyFailureRecorder;
+import stirling.software.proprietary.policy.config.FolderAccessDeniedException;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.input.FolderInputSource;
@@ -144,6 +145,45 @@ class PolicyRunnerTest {
                         eq("owner"),
                         detail.capture());
         assertEquals("input directory does not exist", detail.getValue());
+        assertFalse(detail.getValue().contains("/Users/carol"));
+    }
+
+    @Test
+    void aFolderTheServerNoLongerPermitsIsRecordedWithoutNamingIt() throws Exception {
+        // Locked down is one of the three ways a folder stops being readable, and the guard's own
+        // message leads with the path, which is not for the team's reviewers to read.
+        PolicyFailureRecorder recorder = mock(PolicyFailureRecorder.class);
+        PolicyRunner recording =
+                new PolicyRunner(
+                        policyEngine,
+                        List.of(folderSource),
+                        sourceStore,
+                        docCounter,
+                        processedLedger,
+                        new ApplicationProperties(),
+                        reachableOwners(),
+                        databaseLicenseGuard,
+                        recorder,
+                        eventPublisher);
+        InputSpec spec = InputSpec.folder("/Users/carol/Payroll");
+        Policy policy = policy(List.of(spec));
+        when(folderSource.supports(spec)).thenReturn(true);
+        when(folderSource.resolve(eq(spec), any()))
+                .thenThrow(
+                        new FolderAccessDeniedException(
+                                "/Users/carol/Payroll is outside policies.allowedFolderRoots"));
+
+        recording.run(policy);
+
+        ArgumentCaptor<String> detail = ArgumentCaptor.forClass(String.class);
+        verify(recorder)
+                .recordRunFailureAs(
+                        eq(FailureKind.SOURCE_UNREADABLE),
+                        any(),
+                        eq("p1"),
+                        any(),
+                        eq("owner"),
+                        detail.capture());
         assertFalse(detail.getValue().contains("/Users/carol"));
     }
 
