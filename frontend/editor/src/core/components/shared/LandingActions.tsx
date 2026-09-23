@@ -1,7 +1,6 @@
 import React from "react";
 import { Group, Tooltip } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
 import { Icon } from "@app/ui/Icon";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import { useFilesPage } from "@app/contexts/FilesPageContext";
@@ -60,18 +59,16 @@ export function LandingActions({
 
         {config?.enableMobileScanner && !isMobile && (
           <Tooltip label={terminology.mobileUpload} position="bottom">
-            <ActionIcon
-              size="lg"
+            <Button
               variant="secondary"
+              fat
               aria-label={terminology.mobileUpload}
-              className="landing-btn-icon"
               onClick={(e) => {
                 e.stopPropagation();
                 onMobileUploadClick();
               }}
-            >
-              <Icon name="qr-code" size="1.25rem" />
-            </ActionIcon>
+              leftSection={<Icon name="qr-code" size="1.25rem" />}
+            />
           </Tooltip>
         )}
       </Group>

@@ -96,6 +96,10 @@ import {
   resolveEngineDocumentOpen,
   type EngineDocumentProbe,
 } from "@app/services/documentProbeEngine";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
+import { documentHasFormFieldsFor } from "@app/services/documentFormProbe";
+import { documentHasLayers } from "@app/components/viewer/layerUtils";
+import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 import { useTranslation } from "react-i18next";
 import { LinkLayer } from "@app/components/viewer/LinkLayer";
 import { TextSelectionHandler } from "@app/components/viewer/TextSelectionHandler";
@@ -394,16 +398,18 @@ export function LocalEmbedPDF({
   // The engine streams from the Blob handle: the local engine patch reads 64 KB
   // blocks through FileReaderSync, so the worker never holds a second copy.
   const initialSourceRef = useRef<Blob | null>(null);
-  // Kept so the plugin list can be emptied in place when the viewer clears:
-  // rebuilding the plugin list would re-trigger a document open.
+  const initialBufferRef = useRef<ArrayBuffer | null>(null);
+  // Kept so the large-document release can empty the arrays in place: rebuilding
+  // the plugin list would re-trigger a document open.
   const initialDocsArraysRef = useRef<InitialDocumentOptions[][]>([]);
+  // Blob URL that reopens the initial document if the registry is rebuilt after
+  // the large-buffer release; revoked when the file changes or the viewer unmounts.
+  const releasedDocumentUrlRef = useRef<string | null>(null);
 
   // The plugin keeps listeners for the registry's whole life and these share
   // the scope holding the document bytes; without the unsubscribe they pin it.
   const annotationUnsubscribeRef = useRef<(() => void) | null>(null);
   const documentOpenedUnsubscribeRef = useRef<(() => void) | null>(null);
-
-  // The listeners share the scope holding the document bytes, so they must not
   // outlive the component.
   useEffect(
     () => () => {
@@ -413,6 +419,18 @@ export function LocalEmbedPDF({
       documentOpenedUnsubscribeRef.current = null;
     },
     [],
+  );
+
+  // The released-document URL only exists to serve a registry rebuild; drop it
+  // when the file changes or the viewer unmounts.
+  useEffect(
+    () => () => {
+      if (releasedDocumentUrlRef.current) {
+        URL.revokeObjectURL(releasedDocumentUrlRef.current);
+        releasedDocumentUrlRef.current = null;
+      }
+    },
+    [fileStableKey],
   );
 
   // Keyed by fileStableKey to avoid recomputing on every FileContext re-render.
@@ -466,7 +484,8 @@ export function LocalEmbedPDF({
   );
   // The file path hands the engine a Blob handle and lets the worker answer the
   // form and layer probes, so nothing is read here; URL documents still fetch
-  // their bytes for the replacement path.
+  // their bytes for the replacement path, and the buffer path below serves the
+  // registry when the engine has no document for the file.
   useEffect(() => {
     if (fileStableKey && shouldSkipBytes?.(fileStableKey)) {
       // The live document already shows this save; swapping the bytes would
@@ -496,6 +515,13 @@ export function LocalEmbedPDF({
       }
       const source = file ?? buffer ?? null;
       if (!source) return;
+      // The replacement becomes the live document through the bridge, so the
+      // initial copy is dead weight from here on.
+      initialBufferRef.current = null;
+      for (const docs of initialDocsArraysRef.current) {
+        docs.length = 0;
+      }
+      initialDocsArraysRef.current.length = 0;
       setPendingDocument({ source, name });
     };
     const fail = (source: string) => (err: unknown) => {
@@ -517,6 +543,7 @@ export function LocalEmbedPDF({
     } else {
       initialDocumentOpenedRef.current = false;
       openedContentKeyRef.current = null;
+      initialBufferRef.current = null;
       for (const docs of initialDocsArraysRef.current) {
         docs.length = 0;
       }
@@ -585,9 +612,16 @@ export function LocalEmbedPDF({
               name: initialDocument.name,
             },
           ]
-        : urlPluginsSource
-          ? [{ url: urlPluginsSource.url, name: urlPluginsSource.name }]
-          : [];
+        : initialDocument && releasedDocumentUrlRef.current
+          ? [
+              {
+                url: releasedDocumentUrlRef.current,
+                name: initialDocument.name,
+              },
+            ]
+          : urlPluginsSource
+            ? [{ url: urlPluginsSource.url, name: urlPluginsSource.name }]
+            : [];
     if (initialSourceRef.current) {
       // React may run this memo more than once for the same buffer (StrictMode
       // double render), and each run builds a fresh config array; keep them all
@@ -888,6 +922,77 @@ export function LocalEmbedPDF({
               if (probeSource) resolveEngineDocumentOpen(probeSource, null);
             }
 
+            // Drop the main-thread copy once the worker has its clone, but only
+            // when nothing main-thread can need the bytes afterwards: large
+            // files are never opened for thumbnails, and a form-less answer
+            // means the overlays return [] without a scan. Seeding the probe
+            // with this buffer is what lets them answer without reading the
+            // document back after the drop. Emptied in place; a rebuild would
+            // re-open the doc.
+            const releaseLargeBuffer = async () => {
+              const buf = initialBufferRef.current;
+              if (!file || !buf) return;
+              if ((file as Blob).size < LARGE_PDF_PARSE_LIMIT) return;
+              let hasForms: boolean;
+              let hasLayers: boolean;
+              try {
+                [hasForms, hasLayers] = await Promise.all([
+                  documentHasFormFieldsFor(file as Blob, buf),
+                  documentHasLayers(file as Blob, buf),
+                ]);
+              } catch (error) {
+                // A failed probe is not an answer: keep the buffer and the
+                // document sources so a later open can still probe and release.
+                console.error(
+                  "[LocalEmbedPDF] Failed to probe large document:",
+                  error,
+                );
+                return;
+              }
+              if (hasForms || hasLayers) return;
+              // A replacement may have landed while the probe ran.
+              if (initialBufferRef.current !== buf) return;
+              // A registry rebuild (plugin flags changing) needs a source to
+              // reopen the document; the buffer is gone, so hand it a blob URL
+              // the engine reads lazily. No main-thread copy comes back.
+              if (!releasedDocumentUrlRef.current) {
+                releasedDocumentUrlRef.current = URL.createObjectURL(file);
+              }
+              initialBufferRef.current = null;
+              for (const docs of initialDocsArraysRef.current) {
+                docs.length = 0;
+              }
+              initialDocsArraysRef.current.length = 0;
+            };
+
+            try {
+              const docManager = registry.getPlugin("document-manager");
+              if (docManager && docManager.provides) {
+                const docManagerApi = docManager.provides() as {
+                  getActiveDocument?: () => unknown;
+                  onDocumentOpened?: (cb: () => void) => () => void;
+                };
+                if (docManagerApi.getActiveDocument?.()) {
+                  void releaseLargeBuffer();
+                } else if (docManagerApi.onDocumentOpened) {
+                  documentOpenedUnsubscribeRef.current?.();
+                  const unsub = docManagerApi.onDocumentOpened(() => {
+                    unsub?.();
+                    if (documentOpenedUnsubscribeRef.current === unsub) {
+                      documentOpenedUnsubscribeRef.current = null;
+                    }
+                    void releaseLargeBuffer();
+                  });
+                  documentOpenedUnsubscribeRef.current = unsub;
+                } else {
+                  void releaseLargeBuffer();
+                }
+              } else {
+                void releaseLargeBuffer();
+              }
+            } catch {
+              void releaseLargeBuffer();
+            }
             // v2.0: Use registry.getPlugin() to access plugin APIs
             const annotationPlugin = registry.getPlugin("annotation");
             if (!annotationPlugin || !annotationPlugin.provides) return;

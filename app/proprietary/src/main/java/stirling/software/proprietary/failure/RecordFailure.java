@@ -40,8 +40,8 @@ public record RecordFailure(
 
     /**
      * A processor-side run failure. {@code sourceId} says which folder, bucket or webhook fed the
-     * run, and is the only attribution an unattended failure has: there is no user to name. {@code
-     * fileId} is the source's opaque reference to the document, already hashed upstream.
+     * run; {@code fileId} is the source's reference to the document, which for a folder source is
+     * its canonical path and so is never put in a response.
      */
     public static RecordFailure forRun(
             FailureKind kind,

@@ -82,6 +82,10 @@ beforeEach(() => {
   HTMLElement.prototype.scrollIntoView = vi.fn();
 });
 
+// A confirmed mutation refetches /team/my, /members and /invitations in turn
+// before the roster re-renders; on a loaded CI run that nears waitFor's 1s default.
+const REFETCH_WAIT = { timeout: 5000 };
+
 function renderUsers() {
   return render(
     <PortalTestProviders>
@@ -131,8 +135,10 @@ describe("Users page (SaaS flavor, end-to-end via SaasTeamController mocks)", ()
     fireEvent.click(
       await screen.findByRole("button", { name: "Remove from team" }),
     );
-    await waitFor(() =>
-      expect(screen.queryByText("priya@acme.com")).not.toBeInTheDocument(),
+    await waitFor(
+      () =>
+        expect(screen.queryByText("priya@acme.com")).not.toBeInTheDocument(),
+      REFETCH_WAIT,
     );
     expect(screen.getByText("marcus@acme.com")).toBeInTheDocument();
   });
@@ -148,8 +154,10 @@ describe("Users page (SaaS flavor, end-to-end via SaasTeamController mocks)", ()
     fireEvent.click(
       await screen.findByRole("button", { name: "Cancel invitation" }),
     );
-    await waitFor(() =>
-      expect(screen.queryByText("sam.lee@acme.com")).not.toBeInTheDocument(),
+    await waitFor(
+      () =>
+        expect(screen.queryByText("sam.lee@acme.com")).not.toBeInTheDocument(),
+      REFETCH_WAIT,
     );
   });
 });
@@ -216,7 +224,6 @@ describe("SaaS ownership through the current Users page", () => {
   it("transfers through the role menu and keeps the former owner's shared roster visible", async () => {
     const owner = ownershipScenario();
     renderUsers();
-    await screen.findByText("Acme team");
     fireEvent.click(
       await screen.findByRole("textbox", { name: "Role for Blair" }),
     );
@@ -263,7 +270,6 @@ describe("SaaS ownership through the current Users page", () => {
   it("retains the current owner when a transfer conflicts", async () => {
     const owner = ownershipScenario(false, true);
     renderUsers();
-    await screen.findByText("Acme team");
     fireEvent.click(
       await screen.findByRole("textbox", { name: "Role for Blair" }),
     );

@@ -1,12 +1,21 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { Profiler } from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MantineProvider } from "@mantine/core";
 import { AccountLinkNotice } from "@app/components/AccountLinkNotice";
+import { baseQueryOptions } from "@app/query/queryClient";
 import {
   clearAccountLinkBlock,
   reportFreeTierExhausted,
+  useAccountLinkBlock,
 } from "@app/services/accountLinkBlock";
 
 const { alert, begin, auth, get } = vi.hoisted(() => ({
@@ -188,5 +197,132 @@ describe("editor shared account-link modal", () => {
       screen.queryByRole("button", { name: "Link account for more credits" }),
     ).toBeNull();
     expect(get).not.toHaveBeenCalled();
+  });
+
+  describe("administrator ledger", () => {
+    afterEach(() => vi.useRealTimers());
+
+    const ledger = (remainingUnits: number) => ({
+      data: {
+        grantUnits: 500,
+        remainingUnits,
+        periodEnd: "2026-10-01T00:00:00",
+      },
+    });
+
+    function BlockProbe() {
+      const { exhausted } = useAccountLinkBlock();
+      return (
+        <output data-testid="block">{exhausted ? "blocked" : "clear"}</output>
+      );
+    }
+
+    /** The app's own defaults: staleTime decides what a newly shown block trusts. */
+    function mountOver(client: QueryClient, onRender?: () => void) {
+      const notice = <AccountLinkNotice />;
+      return render(
+        <QueryClientProvider client={client}>
+          <MantineProvider>
+            <MemoryRouter initialEntries={["/editor"]}>
+              {onRender ? (
+                <Profiler id="notice" onRender={onRender}>
+                  {notice}
+                </Profiler>
+              ) : (
+                notice
+              )}
+              <BlockProbe />
+            </MemoryRouter>
+          </MantineProvider>
+        </QueryClientProvider>,
+      );
+    }
+
+    const appClient = () =>
+      new QueryClient({ defaultOptions: { queries: baseQueryOptions } });
+
+    async function settle() {
+      for (let i = 0; i < 4; i += 1) {
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(0);
+        });
+      }
+    }
+
+    it("lifts the block once the ledger shows room again", async () => {
+      get.mockResolvedValue(ledger(120));
+      mountOver(appClient());
+
+      await act(async () => reportFreeTierExhausted());
+
+      await waitFor(() =>
+        expect(screen.getByTestId("block")).toHaveTextContent("clear"),
+      );
+    });
+
+    it("keeps the block while the ledger shows nothing left", async () => {
+      mountOver(appClient());
+
+      await act(async () => reportFreeTierExhausted());
+      await waitFor(() => expect(get).toHaveBeenCalled());
+      await act(async () => {});
+
+      expect(screen.getByTestId("block")).toHaveTextContent("blocked");
+    });
+
+    /**
+     * The modal stays open while the administrator is blocked, and polls the
+     * ledger every minute to notice the allowance coming back. A poll that found
+     * the same balance used to re-render the whole modal twice.
+     */
+    it("does not re-render the open modal for a poll that found the same balance", async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      let commits = 0;
+      mountOver(appClient(), () => {
+        commits += 1;
+      });
+      await act(async () => reportFreeTierExhausted());
+      await settle();
+      const reads = get.mock.calls.length;
+      commits = 0;
+
+      for (let i = 0; i < 10; i += 1) {
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(60_000);
+        });
+        await settle();
+      }
+
+      expect(get.mock.calls.length).toBe(reads + 10);
+      expect(commits).toBe(0);
+    });
+
+    /**
+     * The ledger only runs while a block is up, so when one appears, whatever it
+     * has cached was read before it. Lifting on that would override the server's
+     * newer answer with an older one.
+     */
+    it("does not lift a new block with a balance read before it", async () => {
+      const client = appClient();
+      mountOver(client);
+
+      // First block, then the allowance comes back: the ledger last read 120.
+      get.mockResolvedValue(ledger(120));
+      await act(async () => reportFreeTierExhausted());
+      await waitFor(() =>
+        expect(screen.getByTestId("block")).toHaveTextContent("clear"),
+      );
+
+      // Moments later a request is refused again, and this time it holds.
+      get.mockResolvedValue(ledger(0));
+      await act(async () => reportFreeTierExhausted());
+      await act(async () => {});
+      expect(screen.getByTestId("block")).toHaveTextContent("blocked");
+
+      // And it rests on a read taken after the block, not on the cached one.
+      await waitFor(() => expect(get).toHaveBeenCalledTimes(2));
+      await act(async () => {});
+      expect(screen.getByTestId("block")).toHaveTextContent("blocked");
+    });
   });
 });

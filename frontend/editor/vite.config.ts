@@ -452,7 +452,7 @@ export default defineConfig(async ({ mode, command }) => {
       },
       rollupOptions: {
         output: {
-          manualChunks(id) {
+          manualChunks(id: string) {
             if (id.includes("material-symbols-icons.json"))
               return "vendor-iconset";
             if (id.includes("node_modules")) {

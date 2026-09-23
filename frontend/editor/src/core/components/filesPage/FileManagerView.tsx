@@ -104,7 +104,7 @@ export default function FileManagerView() {
 
   const isCompactDetailsViewport = useMediaQuery("(max-width: 800px)") ?? false;
 
-  const useFullScreenDrawer = useMediaQuery("(max-width: 640px)") ?? false;
+  const detailsAsSheet = useMediaQuery("(max-width: 640px)") ?? false;
   const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false);
   const [saveToServerTarget, setSaveToServerTarget] = useState<
     StirlingFileStub[] | null
@@ -1424,11 +1424,17 @@ export default function FileManagerView() {
         <Drawer
           opened={mobileDetailsOpen && selectedFiles.length === 1}
           onClose={() => setMobileDetailsOpen(false)}
-          position="right"
-          size={useFullScreenDrawer ? "100%" : "sm"}
+          position={detailsAsSheet ? "bottom" : "right"}
+          size={detailsAsSheet ? "auto" : "sm"}
           padding={0}
           withCloseButton={false}
           overlayProps={{ opacity: 0.45 }}
+          classNames={{
+            content: detailsAsSheet
+              ? "files-page-details-drawer is-sheet"
+              : "files-page-details-drawer",
+            body: "files-page-details-drawer-body",
+          }}
         >
           {mobileDetailsOpen && selectedFiles.length === 1 && (
             <FileDetailsPanel
