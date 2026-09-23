@@ -1,0 +1,29 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@app/*": [
+        "../../editor/prototypes/*",
+        "../../editor/proprietary/*",
+        "../../editor/core/*"
+      ],
+      "@proprietary/*": ["../../editor/proprietary/*"],
+      "@core/*": ["../../editor/core/*"],
+      "@app/portal/*": [
+        "../../editor/prototypes/portal/*",
+        "../../editor/proprietary/portal/*",
+        "../../editor/core/portal/*",
+        "../../processor/proprietary/*"
+      ],
+      "@portal/*": ["../../processor/proprietary/*"]
+    }
+  },
+  "include": [
+    "../../global.d.ts",
+    "../../*.js",
+    "../../*.ts",
+    "../../*.tsx",
+    "../core/setupTests.ts",
+    "."
+  ]
+}
