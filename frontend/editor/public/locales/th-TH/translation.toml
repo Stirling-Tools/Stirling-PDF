@@ -729,6 +729,8 @@ permissionNotice = "เส้นทาง tessdata ไม่สามารถ�
 
 [admin.settings.ai]
 description = "เชื่อมต่อ Stirling กับ Python AI engine เลือกโมเดล และตั้งค่า guardrails ที่ใช้ควบคุมการทำงาน"
+managedByCloud = "จัดการโดย Stirling Cloud ในโหมดนี้"
+managedByCloudShort = "จัดการโดย Stirling Cloud"
 
 [admin.settings.ai.documents]
 description = "กำหนดค่าโมเดล embedding และการตั้งค่าการดึงข้อมูลที่ใช้ตอบคำถามเกี่ยวกับเอกสาร จะนำไปใช้กับ AI engine เมื่อบันทึก"
@@ -771,11 +773,24 @@ label = "Top K"
 [admin.settings.ai.general]
 connection = "การเชื่อมต่อ"
 description = "เชื่อมต่อ Stirling กับ Python AI engine และเลือกความสามารถ AI ที่จะแสดง การเปลี่ยนแปลงจะมีผลเมื่อรีสตาร์ท"
+restartNote = "การเปลี่ยน URL หรือ timeout ใด ๆ จะมีผลหลังจากรีสตาร์ท"
 title = "AI Engine"
 
 [admin.settings.ai.general.capabilities]
 description = "เปิดหรือปิดฟีเจอร์ AI แต่ละรายการ ฟีเจอร์ที่ปิดจะถูกซ่อนในแอป"
 title = "ความสามารถ"
+
+[admin.settings.ai.general.cloud]
+note = "โมเดลและคีย์ผู้ให้บริการจัดการโดย Stirling Cloud ดังนั้นการตั้งค่าเหล่านั้นจะไม่ใช้ในโหมดนี้"
+
+[admin.settings.ai.general.cloud.indexing]
+description = "เครื่องมือ AI ทุกตัวจะส่งข้อความในหน้าที่จำเป็นต่อการตอบคำถาม การตั้งค่านี้กำหนดว่า Stirling Cloud อาจเก็บข้อความนั้นไว้แบบจัดทำดัชนี เพื่อให้คำถามภายหลังสามารถค้นหาทั่วทั้งเอกสารได้หรือไม่"
+help = "ปิด หมายถึงไม่สามารถใช้คำถามเกี่ยวกับเอกสารได้ การตั้งค่านี้ไม่ได้หยุดการส่งข้อความ แต่หยุดเฉพาะการจัดเก็บเท่านั้น"
+label = "อนุญาตให้ Stirling Cloud เก็บเอกสารที่จัดทำดัชนีไว้"
+
+[admin.settings.ai.general.cloudNote]
+body = "การให้เหตุผลทำงานบนโครงสร้างพื้นฐานของ Stirling และเรียกเก็บเงินกับบัญชีที่เซิร์ฟเวอร์นี้เชื่อมโยงอยู่ ไม่มีคอนเทนเนอร์ให้เรียกใช้ และไม่มีคีย์ผู้ให้บริการให้เก็บไว้ที่นี่ สิ่งใดก็ตามที่ AI อ่านจะถูกประมวลผลโดย Stirling Cloud แทนที่จะเป็นฮาร์ดแวร์ของคุณเอง"
+title = "เกี่ยวกับ Stirling Cloud AI"
 
 [admin.settings.ai.general.enabled]
 description = "สวิตช์หลัก เมื่อปิด จะไม่มีเครื่องมือ AI, agents หรือการเรียก engine ให้ใช้งาน"
@@ -809,9 +824,28 @@ label = "PDF comment agent"
 description = "หมดเวลาสำหรับการทำงานของ agent ที่หนักขึ้น เช่น การสร้างเอกสาร"
 label = "หมดเวลาการทำงานนาน (วินาที)"
 
+[admin.settings.ai.general.mode]
+label = "ตำแหน่งที่ AI ทำงาน"
+
+[admin.settings.ai.general.mode.cloud]
+description = "ไม่มีคอนเทนเนอร์ ไม่มีคีย์ผู้ให้บริการ ไม่มีตัวเลือกโมเดล งานจะทำงานบน Stirling Cloud และเรียกเก็บเงินกับบัญชีที่เซิร์ฟเวอร์นี้เชื่อมโยงอยู่"
+linkCta = "เชื่อมต่อเซิร์ฟเวอร์นี้กับบัญชี Stirling"
+notLinked = "เชื่อมโยงบัญชีก่อน"
+ownerOnly = "เฉพาะเจ้าขององค์กรเท่านั้นที่สามารถเชื่อมโยงเซิร์ฟเวอร์นี้กับบัญชี Stirling ได้"
+title = "ใช้ Stirling Cloud AI"
+
+[admin.settings.ai.general.mode.off]
+description = "ไม่มีเครื่องมือ AI ใด ๆ ในแอป และไม่มีสิ่งใดออกจากเซิร์ฟเวอร์นี้"
+title = "ปิด"
+
+[admin.settings.ai.general.mode.self]
+description = "คอนเทนเนอร์ที่คุณโฮสต์เอง โดยชี้ไปยังผู้ให้บริการโมเดลที่คุณเลือก คีย์ของคุณ บิลของคุณ เส้นทางข้อมูลของคุณ"
+title = "เรียกใช้เอนจินของคุณเอง"
+
 [admin.settings.ai.general.note]
-body = "AI engine ทำงานเป็นบริการแยกต่างหาก shared secret ของมัน"
-body2 = "ถูกตั้งค่าผ่านตัวแปรสภาพแวดล้อมของ container Provider API keys สามารถป้อนในหน้าเหล่านี้หรือจัดเตรียมเป็นตัวแปรสภาพแวดล้อมของ engine; keys ที่ป้อนที่นี่จะถูกส่งไปยัง engine เมื่อบันทึก"
+docs = "คู่มือการตั้งค่า"
+intro = "คอนเทนเนอร์แยกต่างหากที่คุณเรียกใช้ข้าง Stirling คอนเทนเนอร์นี้ทำการให้เหตุผล ส่วน Stirling ยังคงดำเนินการกับทุกหน้าด้วยตนเอง ต้องใช้ค่าเดียวกัน"
+outro = "บนคอนเทนเนอร์ทั้งสองและคีย์ผู้ให้บริการโมเดล สิ่งใดก็ตามที่ AI อ่านจะถูกส่งไปยังผู้ให้บริการที่คุณเลือก หากคุณโฮสต์ Ollama เอง ทุกหน้าจะคงอยู่ภายในองค์กร"
 title = "เกี่ยวกับ AI engine"
 
 [admin.settings.ai.general.streamTimeoutSeconds]
@@ -890,6 +924,67 @@ label = "Smart model"
 body = "การเปลี่ยนแปลงจะถูกส่งไปยัง AI engine โดยอัตโนมัติ"
 bodyNoPush = "บันทึกการตั้งค่าแล้ว จะมีผลในครั้งถัดไปที่ AI engine รับการกำหนดค่าของมัน"
 title = "บันทึกการตั้งค่า AI แล้ว"
+
+[admin.settings.ai.status]
+capabilities = "ความสามารถ"
+capabilitiesValue = "เปิด {{on}} จาก {{total}}"
+checked = "ตรวจแล้ว"
+checking = "กำลังตรวจสอบเอนจิน…"
+description = "เอนจินเข้าถึงได้หรือไม่ ยอมรับเซิร์ฟเวอร์นี้หรือไม่ และกำลังเรียกใช้อะไรอยู่"
+fastModel = "โมเดลเร็ว"
+justNow = "เมื่อสักครู่"
+latency = "เวลาตอบสนอง"
+linkLabel = "การเชื่อมโยงบัญชี"
+minutesAgo = "{{count}} นาทีที่แล้ว"
+recheck = "ตรวจสอบอีกครั้ง"
+runningOn = "ทำงานบน"
+secondsAgo = "{{count}} วินาทีที่แล้ว"
+secretLabel = "ความลับที่ใช้ร่วมกัน"
+smartModel = "โมเดลอัจฉริยะ"
+title = "สถานะ"
+url = "Engine URL"
+
+[admin.settings.ai.status.cloud]
+hostDown = "ล่ม"
+hostLabel = "Stirling.com"
+hostUp = "พร้อมใช้งาน"
+name = "Stirling Cloud"
+sharingLabel = "การแชร์ AI"
+sharingOff = "ปิดใช้งาน"
+sharingOn = "เปิดใช้งาน"
+
+[admin.settings.ai.status.cloud.degraded]
+body = "Stirling Cloud ตอบกลับแต่ปฏิเสธเซิร์ฟเวอร์นี้ การเชื่อมโยงบัญชีอาจถูกเพิกถอนแล้ว"
+title = "Stirling Cloud กำลังปฏิเสธเซิร์ฟเวอร์นี้"
+
+[admin.settings.ai.status.cloud.down]
+body = "เซิร์ฟเวอร์นี้ไม่สามารถเข้าถึง Stirling Cloud ได้ ตรวจสอบการเชื่อมโยงบัญชีและตรวจสอบว่าเซิร์ฟเวอร์นี้เข้าถึงอินเทอร์เน็ตได้"
+title = "ไม่สามารถเข้าถึง Stirling Cloud"
+
+[admin.settings.ai.status.cloud.ok]
+body = "Stirling Cloud ยอมรับเซิร์ฟเวอร์นี้แล้ว ไม่มีสิ่งใดต้องเรียกใช้หรือแพตช์ที่นี่"
+title = "ทำงานบน Stirling Cloud"
+
+[admin.settings.ai.status.degraded]
+body = "เอนจินตอบการตรวจสอบสถานะ แต่ปฏิเสธคำขอจริง ทั้งสองฝั่งใช้ความลับที่ใช้ร่วมกันต่างกัน"
+title = "เอนจินทำงานอยู่ แต่ปฏิเสธเซิร์ฟเวอร์นี้"
+
+[admin.settings.ai.status.down]
+body = "ตรวจสอบ URL ตรวจสอบว่าคอนเทนเนอร์เอนจินกำลังทำงาน และตรวจสอบว่าคุณรีสตาร์ทหลังจากเปิดใช้ AI แล้ว"
+title = "ไม่สามารถเข้าถึงเอนจิน"
+
+[admin.settings.ai.status.off]
+body = "เลือกวิธีที่ AI ทำงานด้านล่าง จากนั้นบันทึกและรีสตาร์ท"
+title = "AI ถูกปิดอยู่"
+
+[admin.settings.ai.status.ok]
+body = "การตรวจสอบสถานะและคำขอที่ยืนยันตัวตนแล้วสำเร็จทั้งคู่"
+title = "เอนจินกำลังทำงาน"
+
+[admin.settings.ai.status.secret]
+no = "ถูกปฏิเสธ"
+unknown = "ไม่ทราบ"
+yes = "ยอมรับแล้ว"
 
 [admin.settings.badge]
 clickToUpgrade = "คลิกเพื่อดูรายละเอียดแผน"
@@ -4453,6 +4548,7 @@ openFromComputer = "เปิดจากคอมพิวเตอร์"
 openSettings = "เปิดการตั้งค่า"
 other = "อื่นๆ"
 recent = "ล่าสุด"
+searchFiles = "ค้นหาไฟล์"
 uploadFailedBody = "ไม่สามารถเพิ่มไฟล์ที่เลือกได้"
 uploadFailedTitle = "อัปโหลดล้มเหลว"
 viewAll = "ดูไฟล์ทั้งหมด {{count}} ไฟล์"
@@ -5827,6 +5923,8 @@ label = "Free credits"
 adoptFailed = "ปลดล็อกเอกสารแล้วแต่ไม่สามารถเปิดที่นี่ได้ ลองใช้เครื่องมือโดยตรง"
 empty = "ไม่มีอะไรต้องรายงาน"
 handoffUnavailable = "เบราว์เซอร์นี้ไม่อนุญาตให้ตัวประมวลผลส่งเอกสารไปยังตัวแก้ไข โปรดเปิดจากตัวแก้ไขแทน"
+inSmartFolder = "เอกสารนี้อยู่ในโฟลเดอร์อัจฉริยะ จึงถูกจัดการบนเซิร์ฟเวอร์แทนที่จะเป็นที่นี่"
+inSmartFolderNamed = "{{name}} อยู่ในโฟลเดอร์อัจฉริยะ จึงถูกจัดการบนเซิร์ฟเวอร์แทนที่จะเป็นที่นี่"
 noDocumentLinked = "ความล้มเหลวนี้ไม่ได้เชื่อมโยงกับเอกสารเฉพาะ จึงไม่มีอะไรให้เปิดที่นี่"
 notOnThisDevice = "เอกสารนี้ไม่ได้อยู่บนอุปกรณ์นี้ จึงไม่สามารถเปิดที่นี่ได้"
 occurrences = "{{count}} ครั้ง"
@@ -5837,6 +5935,7 @@ repairedRerunNotAdopted = "เอกสารที่ซ่อมแซมด�
 repairedRerunUndelivered = "เอกสารได้รับการซ่อมแซมและเริ่มเรียกใช้นโยบายอีกครั้งแล้ว แต่ไม่สามารถส่งผลลัพธ์มาที่นี่ได้ ดังนั้นข้อผิดพลาดนี้จึงยังคงเปิดอยู่"
 rerunRejected = "ไม่สามารถเรียกใช้นโยบายอีกครั้งได้ในตอนนี้ ลองอีกครั้งในอีกสักครู่"
 rerunUndelivered = "เริ่มเรียกใช้นโยบายอีกครั้งแล้ว แต่ไม่สามารถส่งผลลัพธ์มาที่นี่ได้ ดังนั้นข้อผิดพลาดนี้จึงยังคงเปิดอยู่"
+retryInFolderFailed = "ไม่สามารถเรียกใช้เอกสารนั้นอีกครั้งได้ในตอนนี้"
 retryUnavailable = "ไม่สามารถลองเอกสารนี้อีกครั้งจากเบราว์เซอร์นี้ได้อีกต่อไป"
 title = "การแจ้งเตือน"
 unlockedNotRerun = "ปลดล็อกเอกสารและเปิดที่นี่แล้ว แต่ไม่สามารถเรียกใช้นโยบายกับเอกสารนี้อีกครั้งได้"
@@ -6625,9 +6724,11 @@ title = "ปรับแผน Team"
 [payment.capacityStage]
 adjustmentNote = "Stripe จะแสดงยอดเรียกเก็บที่แน่นอน การคิดตามสัดส่วน และวันที่เรียกเก็บเงินครั้งถัดไปก่อนที่คุณจะยืนยัน ระบบจะใช้วิธีชำระเงินที่บันทึกไว้หากมี"
 continue = "ดำเนินการต่อไปยังการชำระเงิน"
+currencyAtCheckout = "Stripe จะยืนยันยอดเงินสุดท้ายและสกุลเงินชำระเงินที่ checkout"
 customLabel = "จำนวนผู้ใช้"
 dueToday = "ชำระวันนี้"
 enterpriseQuote = "ขอใบเสนอราคาระดับองค์กร"
+estimatedTotal = "ยอดรวมโดยประมาณ"
 lineItem = "Team · {{price}}{{period}} ต่อ {{block}} ผู้ใช้"
 minimumForCurrentUsers = "คุณมีผู้ใช้ {{users}} คน ดังนั้นแผนต้องครอบคลุมอย่างน้อย {{minimum}} คน"
 modalTitle = "อัปเกรดเป็น {{planName}}"
@@ -6865,6 +6966,25 @@ width = "ความกว้าง"
 widthHint = "ความกว้างของกล่องข้อความเป็นไปตามเนื้อหาและการตัดบรรทัด"
 x = "X"
 y = "Y"
+
+[pdfTextEditor.mobile]
+actions = "การดำเนินการของตัวแก้ไข"
+addImage = "รูปภาพ"
+addText = "ข้อความ"
+cancel = "ยกเลิก"
+delete = "ลบ"
+details = "รายละเอียด"
+document = "เอกสาร"
+done = "เสร็จสิ้น"
+download = "บันทึกและดาวน์โหลด"
+find = "ค้นหา"
+lock = "ล็อก"
+openPdf = "เปิด PDF"
+panelHint = "การแก้ไขเกิดขึ้นในมุมมอง Workspace แตะข้อความบนหน้าเพื่อเปลี่ยนแปลง"
+save = "บันทึก"
+style = "สไตล์"
+tapToPlace = "แตะหน้าตรงตำแหน่งที่ต้องการวางข้อความ"
+unlock = "ปลดล็อก"
 
 [pdfTextEditor.password]
 cancel = "ยกเลิก"
@@ -7574,6 +7694,49 @@ plan = "แผน"
 procurement = "การจัดซื้อ"
 usage = "การใช้งาน"
 
+[portal.billing.compare]
+current = "ปัจจุบัน"
+enterpriseData = "ถิ่นที่อยู่ของข้อมูลและ SCIM"
+enterpriseName = "Enterprise"
+enterprisePrice = "ตามข้อตกลงของคุณ"
+enterpriseProcessing = "คิดตามการใช้งานหรือเหมาจ่าย"
+enterpriseSignIn = "SAML และการตรวจสอบบันทึก"
+enterpriseSupport = "Uptime SLAs, ความช่วยเหลือในการปรับใช้"
+enterpriseUsers = "ไม่จำกัด"
+enterpriseWhere = "รวมถึงหลายโหนดและแยกจากเครือข่ายภายนอก"
+exploreEnterprise = "สำรวจ Enterprise"
+freeData = "คงอยู่ในที่ที่คุณเรียกใช้"
+freeName = "Free"
+freePrice = "ไม่ต้องใช้บัตร ไม่มีวันหมดอายุ"
+freeProcessing = "{{allowance}} เครดิตต่อเดือน"
+freeProcessingUnknown = "โควตาเครดิตรายเดือน"
+freeSignIn = "อีเมล, Google และ SSO"
+freeSignInNote = "OAuth2/OIDC"
+freeSupport = "ชุมชน"
+freeUsers = "สูงสุด {{users}}"
+freeUsersUnknown = "ทีมขนาดเล็ก"
+freeWhere = "Cloud, เดสก์ท็อป หรือโฮสต์เอง"
+lede = "ทุกแผนมีเครื่องมือ PDF ทุกตัวและ SSO สิ่งที่เปลี่ยนคือจำนวนคนที่ใช้ สถานที่ที่เรียกใช้ และการสนับสนุนที่คุณได้รับ"
+open = "เปรียบเทียบแผน"
+rowData = "ข้อมูลของคุณ"
+rowHeader = "ฟีเจอร์"
+rowProcessing = "การประมวลผล"
+rowSignIn = "การลงชื่อเข้าใช้"
+rowSupport = "การสนับสนุน"
+rowUsers = "ผู้ใช้"
+rowWhere = "ตำแหน่งที่ทำงาน"
+teamData = "Google Drive, ฐานข้อมูลของคุณเอง"
+teamName = "Team"
+teamPrice = "$99/เดือน ต่อผู้ใช้ 100 คน"
+teamProcessing = "{{allowance}} ต่อเดือน จากนั้นคิดตามการใช้งาน"
+teamProcessingUnknown = "โควตาที่มากขึ้น จากนั้นคิดตามการใช้งาน"
+teamSignIn = "เหมือนกัน"
+teamSupport = "อีเมล"
+teamUsers = "100 ต่อบล็อก"
+teamWhere = "Cloud, เดสก์ท็อป หรือโฮสต์เอง"
+title = "เปรียบเทียบแผน"
+upgradeTeam = "อัปเกรดเป็น Team"
+
 [portal.billing.cycle]
 credits = "เครดิต"
 creditsNote = "ใช้แล้ว {{units}} · รวมเครดิตฟรีและเครดิตแบบชำระล่วงหน้า"
@@ -7679,6 +7842,8 @@ payTitle = "ชำระเงินสำหรับปีของคุณ"
 step = "ขั้นตอนที่ {{current}} จาก {{total}}"
 
 [portal.billing.prepaid.calc]
+currency = "สกุลเงินใบเสนอราคา"
+currencyLocked = "ใช้สกุลเงินเรียกเก็บเงิน Stripe ที่มีอยู่ของคุณ"
 rateUnknown = "เราจะแสดงราคาที่แน่นอนตอนชำระเงิน"
 
 [portal.billing.prepaid.consent]
@@ -8481,6 +8646,10 @@ title = "ไม่สามารถซ่อมแซมไฟล์ได้"
 [portal.failures.kind.inputWrongType]
 description = "ไฟล์ของคุณไม่ใช่รูปแบบที่ขั้นตอนนี้เปิดได้ จึงทำให้การทำงานไม่สามารถอ่านได้"
 title = "ประเภทไฟล์ไม่ถูกต้อง"
+
+[portal.failures.kind.sourceUnreadable]
+description = "ไม่สามารถอ่านโฟลเดอร์อัจฉริยะของคุณได้ จึงไม่มีการประมวลผลสิ่งใดในนั้น"
+title = "ไม่สามารถอ่านโฟลเดอร์ได้"
 
 [portal.failures.kind.stepCannotRenderPage]
 description = "ไม่สามารถวาดหน้าในไฟล์ของคุณได้ จึงทำให้การทำงานไม่สามารถเสร็จสิ้นได้"
@@ -12235,6 +12404,7 @@ goBack = "ย้อนกลับ"
 pdfTools = "เครื่องมือ PDF"
 placeholder = "เลือกเครื่องมือเพื่อเริ่มต้น"
 premiumFeature = "ฟีเจอร์พรีเมียม:"
+searchTools = "ค้นหาเครื่องมือ"
 toolsHeader = "เครื่องมือ"
 viewAllTools = "ดูเครื่องมือทั้งหมด"
 
@@ -12399,13 +12569,10 @@ visits = "การเข้าชม"
 
 [users]
 lastActive = "ใช้งานล่าสุด"
-learnMore = "เรียนรู้เพิ่มเติมเกี่ยวกับบทบาทและการเข้าถึง"
 locked = "ถูกล็อก"
 ownerSetupRequired = "เจ้าขององค์กรยังไม่ได้เข้าสู่ระบบครั้งแรกให้เสร็จสมบูรณ์ ตั้งค่าให้เสร็จหรือขอให้ผู้ดูแลเซิร์ฟเวอร์กู้คืนความเป็นเจ้าของก่อนโอนความเป็นเจ้าของ"
 roleFor = "บทบาทสำหรับ {{name}}"
 rowActions = "การดำเนินการสำหรับ {{name}}"
-showAll = "แสดงทั้งหมด {{count}}"
-showLess = "แสดงน้อยลง"
 subtitle2 = "ผู้คน ทีม และระดับการเข้าถึงของคุณ"
 suspended = "ถูกระงับ"
 teamActions = "การดำเนินการของทีม"
@@ -12414,6 +12581,7 @@ you = "(คุณ)"
 
 [users.action]
 cancelInvite = "ยกเลิกคำเชิญ"
+createFromDefault = "สร้างทีมจาก Default"
 deleteTeam = "ลบทีม"
 disableMfa = "รีเซ็ต MFA"
 move = "ย้ายไปยังทีม"
@@ -12451,6 +12619,7 @@ email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
+team = "ทีม"
 
 [users.confirm]
 cancelInviteBody = "ยกเลิกคำเชิญไปยัง {{email}}? พวกเขาจะไม่สามารถเข้าร่วมด้วยลิงก์ปัจจุบันได้"
@@ -12469,15 +12638,12 @@ transferOwnershipTitle = "โอนความเป็นเจ้าของ
 description = "เชิญทีมของคุณเพื่อเริ่มทำงานร่วมกัน"
 title = "ยังไม่มีสมาชิก"
 
+[users.filters]
+noMatches = "ไม่มีใครตรงกับตัวกรองเหล่านี้"
+search = "ค้นหาผู้คน"
+
 [users.group]
 addToTeam = "เพิ่มเข้าทีม"
-administrators = "ผู้ดูแลระบบ {{count}} คน"
-guestCount = "{{count}} guest"
-guests = "Guests"
-ledBy = "นำโดย {{owner}}"
-org = "องค์กร"
-team = "ทีม {{name}}"
-teamMeta = "{{count}} คน"
 
 [users.invite]
 access = "การเข้าถึง"
@@ -12542,6 +12708,9 @@ title = "ทีมใหม่"
 
 [users.renameTeam]
 apply = "เปลี่ยนชื่อ"
+defaultApply = "สร้างและย้าย"
+defaultDescription = "Default จะยังคงพร้อมใช้งานสำหรับผู้ใช้ใหม่ ทุกคนที่อยู่ใน Default ในปัจจุบันจะถูกย้ายไปยังทีมใหม่"
+defaultTitle = "สร้างทีมจาก Default"
 name = "ชื่อทีม"
 title = "เปลี่ยนชื่อทีม"
 
@@ -12566,6 +12735,15 @@ guest = "ผู้เยี่ยมชม"
 member = "สมาชิก"
 orgOwner = "เจ้าขององค์กร"
 teamOwner = "เจ้าของทีม"
+
+[users.seats]
+full = "ที่นั่งที่มีใบอนุญาตทั้งหมดถูกใช้งานอยู่ เพิ่มที่นั่งว่าง หรือเพิ่มจำนวนที่นั่ง เพื่อเพิ่มคนอื่นได้"
+update = "อัปเดตที่นั่ง"
+
+[users.tabs]
+all = "ทั้งหมด"
+label = "กรองตามทีม"
+unassigned = "ไม่มีทีม"
 
 [users.team]
 grantProcessor = "มอบสิทธิ์ Processor ให้ทีม"
@@ -13216,232 +13394,14 @@ submitSignature = "ส่งลายเซ็น"
 title = "พื้นที่ทำงาน"
 
 [workspace.people]
-active = "ใช้งานอยู่"
-activeSession = "เซสชันที่ใช้งานอยู่"
-addMembers = "เพิ่มสมาชิก"
-admin = "ผู้ดูแล"
-confirmDelete = "คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้นี้ การดำเนินการนี้ไม่สามารถย้อนกลับได้"
-confirmUnlock = "คุณแน่ใจหรือไม่ว่าต้องการปลดล็อกบัญชีผู้ใช้นี้?"
-deleteUser = "ลบผู้ใช้"
-deleteUserError = "ลบผู้ใช้ไม่สำเร็จ"
-deleteUserSuccess = "ลบผู้ใช้เรียบร้อยแล้ว"
 description = "จัดการสมาชิกในพื้นที่ทำงานและสิทธิ์ของพวกเขา"
-disable = "ปิดใช้งาน"
-disabled = "ปิดการใช้งาน"
-editRole = "แก้ไขบทบาท"
-enable = "เปิดใช้งาน"
-loading = "กำลังโหลดรายชื่อ..."
-locked = "ถูกล็อก"
-lockedBadge = "ถูกล็อก"
-loginRequired = "เปิดโหมดล็อกอินก่อน"
-memberActions = "การดำเนินการของสมาชิก"
-noMembersFound = "ไม่พบสมาชิก"
-ownerLocked = "โอนความเป็นเจ้าขององค์กรใน Settings → Workspace → Users ก่อนเปลี่ยนบทบาทหรือบัญชีของเจ้าของ"
-role = "บทบาท"
-searchMembers = "ค้นหาสมาชิก..."
-team = "ทีม"
-unlockAccount = "ปลดล็อกบัญชี"
-unlockUserError = "ปลดล็อกบัญชีผู้ใช้ล้มเหลว"
-unlockUserSuccess = "ปลดล็อกบัญชีผู้ใช้สำเร็จแล้ว"
-user = "ผู้ใช้"
-userInfo = "ข้อมูลผู้ใช้"
-
-[workspace.people.actions]
-upgrade = "อัปเกรด"
-
-[workspace.people.addMember]
-authType = "ประเภทการยืนยันตัวตน"
-error = "สร้างผู้ใช้ไม่สำเร็จ"
-forceMFA = "บังคับตั้งค่า MFA ในการเข้าสู่ระบบครั้งถัดไป"
-forcePasswordChange = "บังคับให้เปลี่ยนรหัสผ่านในการเข้าสู่ระบบครั้งแรก"
-password = "รหัสผ่าน"
-passwordPlaceholder = "ป้อนรหัสผ่าน"
-passwordRequired = "ต้องระบุรหัสผ่าน"
-role = "บทบาท"
-submit = "เพิ่มสมาชิก"
-success = "สร้างผู้ใช้เรียบร้อยแล้ว"
-team = "ทีม (ไม่บังคับ)"
-teamPlaceholder = "เลือกทีม"
-username = "ชื่อผู้ใช้ (อีเมล)"
-usernamePlaceholder = "user@example.com"
-usernameRequired = "ต้องระบุชื่อผู้ใช้และรหัสผ่าน"
-
-[workspace.people.authType]
-oauth = "OAuth2"
-password = "รหัสผ่าน"
-saml = "SAML2"
-ssoDescription = "ผู้ใช้จะยืนยันตัวตนผ่านผู้ให้บริการ SSO"
-
-[workspace.people.changePassword]
-action = "เปลี่ยนรหัสผ่าน"
-confirmPassword = "ยืนยันรหัสผ่าน"
-confirmPlaceholder = "ป้อนรหัสผ่านใหม่อีกครั้ง"
-copiedToClipboard = "คัดลอกรหัสผ่านไปยังคลิปบอร์ดแล้ว"
-copyFailed = "คัดลอกรหัสผ่านไม่สำเร็จ"
-copyTooltip = "คัดลอกไปยังคลิปบอร์ด"
-emailUnavailable = "อีเมลของผู้ใช้นี้ไม่ใช่ที่อยู่อีเมลที่ถูกต้อง การแจ้งเตือนถูกปิดใช้งาน"
-error = "อัปเดตรหัสผ่านไม่สำเร็จ"
-forcePasswordChange = "บังคับให้ผู้ใช้เปลี่ยนรหัสผ่านในการเข้าสู่ระบบครั้งถัดไป"
-generatedPreview = "รหัสผ่านที่สร้างขึ้น:"
-generateRandom = "สร้างรหัสผ่านที่ปลอดภัย"
-includePassword = "รวมรหัสผ่านใหม่ในอีเมล"
-newPassword = "รหัสผ่านใหม่"
-notifyOnly = "จะมีการส่งอีเมลโดยไม่รวมรหัสผ่าน เพื่อแจ้งให้ผู้ใช้ทราบว่าผู้ดูแลระบบได้เปลี่ยนรหัสผ่านแล้ว"
-passwordMismatch = "รหัสผ่านไม่ตรงกัน"
-passwordRequired = "โปรดป้อนรหัสผ่านใหม่"
-placeholder = "ป้อนรหัสผ่านใหม่"
-sendEmail = "ส่งอีเมลแจ้งผู้ใช้เกี่ยวกับการเปลี่ยนแปลงนี้"
-smtpDisabled = "การแจ้งเตือนทางอีเมลต้องเปิดใช้งาน SMTP ในการตั้งค่า"
-submit = "อัปเดตรหัสผ่าน"
-subtitle = "อัปเดตรหัสผ่านสำหรับ"
-success = "อัปเดตรหัสผ่านสำเร็จ"
-title = "เปลี่ยนรหัสผ่าน"
-
-[workspace.people.editMember]
-editing = "Editing: <0>{{username}}</0>"
-error = "อัปเดตผู้ใช้ไม่สำเร็จ"
-role = "บทบาท"
-submit = "Update User"
-success = "อัปเดตผู้ใช้เรียบร้อยแล้ว"
-team = "ทีม (ไม่บังคับ)"
-teamPlaceholder = "เลือกทีม"
-title = "Edit User"
-
-[workspace.people.emailInvite]
-allFailed = "เชิญผู้ใช้ไม่สำเร็จ"
-emails = "ที่อยู่อีเมล"
-emailsPlaceholder = "user1@example.com, user2@example.com"
-emailsRequired = "ต้องมีอย่างน้อยหนึ่งที่อยู่อีเมล"
-error = "ส่งคำเชิญไม่สำเร็จ"
-partialFailure = "คำเชิญบางรายการไม่สำเร็จ"
-submit = "ส่งคำเชิญ"
-success = "เชิญผู้ใช้สำเร็จ"
-
-[workspace.people.inviteLink]
-copied = "คัดลอกลิงก์ไปยังคลิปบอร์ดแล้ว"
-email = "ที่อยู่อีเมล"
-emailDescription = "ไม่บังคับ - เว้นว่างเพื่อสร้างลิงก์เชิญทั่วไปที่ใครก็ใช้ได้"
-emailPlaceholder = "user@example.com (ไม่บังคับ)"
-emailSent = "สร้างลิงก์เชิญและส่งทางอีเมลแล้ว"
-error = "สร้างลิงก์เชิญไม่สำเร็จ"
-expiryHours = "ชั่วโมงหมดอายุ"
-generate = "สร้างลิงก์"
-generated = "สร้างลิงก์เชิญแล้ว"
-sendEmail = "ส่งลิงก์เชิญทางอีเมล"
-sendEmailDescription = "หากเปิดใช้งาน ลิงก์เชิญจะถูกส่งไปยังที่อยู่อีเมลที่ระบุ"
-submit = "สร้างลิงก์เชิญ"
-
-[workspace.people.inviteMembers]
-label = "เชิญสมาชิก"
-subtitle = "พิมพ์หรือวางอีเมลด้านล่าง คั่นด้วยเครื่องหมายจุลภาค พื้นที่ทำงานของคุณจะถูกคิดค่าบริการตามจำนวนสมาชิก"
-
-[workspace.people.inviteMode]
-email = "อีเมล"
-emailDisabled = "การเชิญทางอีเมลต้องกำหนดค่า SMTP และตั้งค่า mail.enableInvites=true ในการตั้งค่า"
-link = "ลิงก์"
-username = "ชื่อผู้ใช้"
 
 [workspace.people.license]
-currentUsage = "กำลังใช้สิทธิ์ผู้ใช้ {{current}} จาก {{max}}"
-fromLicense = "จากไลเซนส์"
-grandfathered = "คงสิทธิ์เดิม"
-grandfatheredShort = "{{count}} คงสิทธิ์เดิม"
-slotsAvailable_one = "{{count}} user slot available"
-slotsAvailable_other = "{{count}} user slots available"
-slotsAvailable_zero = "No slots available"
 users_one = "user"
 users_other = "users"
 
-[workspace.people.mfa]
-adminDisableError = "ไม่สามารถปิดใช้งาน MFA สำหรับผู้ใช้ได้"
-adminDisableSuccess = "ปิดใช้งาน MFA สำหรับผู้ใช้สำเร็จแล้ว"
-disableByAdmin = "ปิดใช้งาน MFA"
-
-[workspace.people.roleDescriptions]
-admin = "สามารถจัดการการตั้งค่าและเชิญสมาชิก พร้อมการเข้าถึงระดับผู้ดูแลทั้งหมด"
-currentRole = "บทบาทที่ได้รับมอบหมายในปัจจุบัน."
-user = "Can view and edit shared files, but cannot manage workspace settings or users."
-
-[workspace.people.toggleEnabled]
-error = "อัปเดตสถานะผู้ใช้ไม่สำเร็จ"
-success = "อัปเดตสถานะผู้ใช้เรียบร้อยแล้ว"
-
 [workspace.teams]
-addMember = "เพิ่มสมาชิก"
-backToTeams = "กลับไปที่ทีม"
-cannotAddToInternal = "ไม่สามารถเพิ่มสมาชิกให้ทีม Internal"
-cannotDeleteInternal = "ไม่สามารถลบทีม Internal"
-cannotRenameInternal = "ไม่สามารถเปลี่ยนชื่อทีม Internal"
-confirmDelete = "คุณแน่ใจหรือไม่ว่าต้องการลบทีมนี้ ทีมนี้ต้องว่างเปล่าก่อนจึงจะลบได้"
-confirmRemove = "นำผู้ใช้ออกจากทีมนี้หรือไม่"
-createNewTeam = "สร้างทีมใหม่"
-deleteTeamLabel = "ลบทีม"
 description = "จัดการทีมและจัดระเบียบสมาชิกในพื้นที่ทำงาน"
-loadError = "ไม่สามารถโหลดรายละเอียดทีม"
-loading = "กำลังโหลดทีม..."
-loadingDetails = "กำลังโหลดรายละเอียดทีม..."
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
-noMembers = "ไม่มีสมาชิกในทีมนี้"
-noTeamsFound = "ไม่พบทีม"
-removeMember = "นำออกจากทีม"
-removeMemberError = "นำผู้ใช้ออกจากทีมไม่สำเร็จ"
-removeMemberSuccess = "นำผู้ใช้ออกจากทีมแล้ว"
-renameTeamLabel = "เปลี่ยนชื่อทีม"
-system = "ระบบ"
-teamActions = "การดำเนินการของทีม"
-teamName = "ชื่อทีม"
-teamNotFound = "ไม่พบทีม"
-totalMembers = "สมาชิกทั้งหมด"
-viewTeam = "ดูทีม"
-
-[workspace.teams.addMemberToTeam]
-addingTo = "กำลังเพิ่มไปยัง"
-currentlyIn = "อยู่ใน"
-error = "เพิ่มสมาชิกในทีมไม่สำเร็จ"
-selectUser = "เลือกผู้ใช้"
-selectUserPlaceholder = "เลือกผู้ใช้"
-selectUserRequired = "โปรดเลือกผู้ใช้"
-submit = "เพิ่มสมาชิก"
-success = "เพิ่มสมาชิกในทีมแล้ว"
-title = "เพิ่มสมาชิกในทีม"
-userRequired = "โปรดเลือกผู้ใช้"
-willBeMoved = "หมายเหตุ: ผู้ใช้รายนี้จะถูกย้ายจากทีมปัจจุบันไปยังทีมนี้"
-
-[workspace.teams.changeTeam]
-changing = "กำลังย้าย"
-error = "เปลี่ยนทีมไม่สำเร็จ"
-label = "เปลี่ยนทีม"
-selectTeam = "เลือกทีม"
-selectTeamPlaceholder = "เลือกทีม"
-selectTeamRequired = "โปรดเลือกทีม"
-submit = "เปลี่ยนทีม"
-success = "เปลี่ยนทีมเรียบร้อยแล้ว"
-title = "เปลี่ยนทีม"
-
-[workspace.teams.createTeam]
-error = "สร้างทีมไม่สำเร็จ"
-nameRequired = "ต้องระบุชื่อทีม"
-submit = "สร้างทีม"
-success = "สร้างทีมเรียบร้อยแล้ว"
-teamName = "ชื่อทีม"
-teamNamePlaceholder = "ป้อนชื่อทีม"
-title = "สร้างทีมใหม่"
-
-[workspace.teams.deleteTeam]
-error = "ลบทีมไม่สำเร็จ โปรดตรวจสอบให้แน่ใจว่าทีมว่างเปล่า"
-success = "ลบทีมเรียบร้อยแล้ว"
-
-[workspace.teams.renameTeam]
-error = "เปลี่ยนชื่อทีมไม่สำเร็จ"
-nameRequired = "ต้องระบุชื่อทีม"
-newTeamName = "ชื่อทีมใหม่"
-newTeamNamePlaceholder = "ป้อนชื่อทีมใหม่"
-renaming = "กำลังเปลี่ยนชื่อ:"
-submit = "เปลี่ยนชื่อทีม"
-success = "เปลี่ยนชื่อทีมเรียบร้อยแล้ว"
-title = "เปลี่ยนชื่อทีม"
 
 [zipWarning]
 cancel = "ยกเลิก"

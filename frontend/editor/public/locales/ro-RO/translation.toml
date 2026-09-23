@@ -729,6 +729,8 @@ permissionNotice = "Calea tessdata nu are permisiuni de scriere. Descărcările 
 
 [admin.settings.ai]
 description = "Conectați Stirling la motorul Python AI, alegeți-i modelele și setați limitele sub care rulează."
+managedByCloud = "Gestionat de Stirling Cloud în acest mod."
+managedByCloudShort = "Gestionat de Stirling Cloud"
 
 [admin.settings.ai.documents]
 description = "Configurați modelul de embedding și setările de recuperare folosite pentru a răspunde la întrebări despre documente. Se aplică motorului AI la salvare."
@@ -771,11 +773,24 @@ label = "Top K"
 [admin.settings.ai.general]
 connection = "Conexiune"
 description = "Conectați Stirling la motorul Python AI și alegeți ce capabilități AI sunt expuse. Modificările se aplică la repornire."
+restartNote = "Modificarea URL-ului sau a oricărui timeout intră în vigoare după o repornire."
 title = "Motor AI"
 
 [admin.settings.ai.general.capabilities]
 description = "Activați sau dezactivați funcții AI individuale. Funcțiile dezactivate sunt ascunse în aplicație."
 title = "Capabilități"
+
+[admin.settings.ai.general.cloud]
+note = "Modelele și cheile furnizorilor sunt gestionate de Stirling Cloud, deci aceste setări nu se aplică în acest mod."
+
+[admin.settings.ai.general.cloud.indexing]
+description = "Fiecare instrument AI trimite textul paginii de care are nevoie pentru a răspunde. Aceasta decide dacă Stirling Cloud poate păstra și acel text, indexat, astfel încât întrebările ulterioare să poată căuta în document."
+help = "Oprit înseamnă că întrebările despre document nu sunt disponibile. Nu oprește trimiterea textului - doar stocarea acestuia."
+label = "Permiteți Stirling Cloud să păstreze documente indexate"
+
+[admin.settings.ai.general.cloudNote]
+body = "Raționamentul rulează pe infrastructura Stirling, facturat în contul la care este legat acest server. Nu există niciun container de rulat și nicio cheie de furnizor de păstrat aici. Orice citește AI este procesat de Stirling Cloud, nu pe propriul dvs. hardware."
+title = "Despre Stirling Cloud AI"
 
 [admin.settings.ai.general.enabled]
 description = "Comutator principal. Când este dezactivat, nu sunt disponibile instrumente AI, agenți sau apeluri către motor."
@@ -809,9 +824,28 @@ label = "Agent de comentarii PDF"
 description = "Timeout pentru operațiuni de agent mai complexe, cum ar fi generarea documentelor."
 label = "Timeout pentru rulări lungi (secunde)"
 
+[admin.settings.ai.general.mode]
+label = "Unde rulează AI"
+
+[admin.settings.ai.general.mode.cloud]
+description = "Fără container, fără cheie de furnizor, fără alegere de model - lucrarea rulează pe Stirling Cloud și este facturată în contul la care este legat acest server."
+linkCta = "Conectați acest server la un cont Stirling"
+notLinked = "Legați mai întâi un cont"
+ownerOnly = "Doar proprietarul organizației poate lega acest server la un cont Stirling."
+title = "Utilizați Stirling Cloud AI"
+
+[admin.settings.ai.general.mode.off]
+description = "Niciun instrument AI nicăieri în aplicație și nimic nu părăsește acest server."
+title = "Oprit"
+
+[admin.settings.ai.general.mode.self]
+description = "Un container pe care îl găzduiți, conectat la un furnizor de modele ales de dvs. Cheia dvs., factura dvs., traseul datelor dvs."
+title = "Rulați propriul motor"
+
 [admin.settings.ai.general.note]
-body = "Motorul AI rulează ca serviciu separat. Secretul său partajat"
-body2 = "este setat printr-o variabilă de mediu a containerului. Cheile API ale furnizorilor pot fi introduse pe aceste pagini sau furnizate ca variabile de mediu ale motorului; cheile introduse aici sunt trimise către motor la salvare."
+docs = "Ghid de configurare"
+intro = "Un container separat pe care îl rulați lângă Stirling. Acesta face raționamentul; Stirling face în continuare singur fiecare operațiune pe pagină. Are nevoie de același"
+outro = "pe ambele containere și de o cheie de furnizor de modele. Orice citește AI este trimis furnizorului pe care îl alegeți - un Ollama găzduit de dvs. păstrează fiecare pagină intern."
 title = "Despre motorul AI"
 
 [admin.settings.ai.general.streamTimeoutSeconds]
@@ -890,6 +924,67 @@ label = "Model inteligent"
 body = "Modificările sunt trimise automat către motorul AI."
 bodyNoPush = "Setări salvate. Acestea se vor aplica data viitoare când motorul AI își preia configurația."
 title = "Setări AI salvate"
+
+[admin.settings.ai.status]
+capabilities = "Capabilități"
+capabilitiesValue = "{{on}} din {{total}} activate"
+checked = "verificat"
+checking = "Se verifică motorul…"
+description = "Dacă motorul este accesibil, dacă acceptă acest server și ce rulează."
+fastModel = "Model rapid"
+justNow = "chiar acum"
+latency = "Timp de răspuns"
+linkLabel = "Legătură cont"
+minutesAgo = "acum {{count}} min"
+recheck = "Verificați din nou"
+runningOn = "Rulează pe"
+secondsAgo = "acum {{count}} s"
+secretLabel = "Secret partajat"
+smartModel = "Model inteligent"
+title = "Stare"
+url = "URL motor"
+
+[admin.settings.ai.status.cloud]
+hostDown = "Indisponibil"
+hostLabel = "Stirling.com"
+hostUp = "Disponibil"
+name = "Stirling Cloud"
+sharingLabel = "Partajare AI"
+sharingOff = "Dezactivată"
+sharingOn = "Activată"
+
+[admin.settings.ai.status.cloud.degraded]
+body = "Stirling Cloud a răspuns, dar a refuzat acest server. Legătura contului poate fi fost revocată."
+title = "Stirling Cloud refuză acest server"
+
+[admin.settings.ai.status.cloud.down]
+body = "Acest server nu a putut contacta Stirling Cloud. Verificați legătura contului și că acest server poate accesa internetul."
+title = "Stirling Cloud inaccesibil"
+
+[admin.settings.ai.status.cloud.ok]
+body = "Stirling Cloud a acceptat acest server. Nu este nimic de rulat sau de corectat aici."
+title = "Rulează pe Stirling Cloud"
+
+[admin.settings.ai.status.degraded]
+body = "A răspuns la verificarea stării, dar a respins o cerere reală. Cele două părți folosesc secrete partajate diferite."
+title = "Motorul este pornit, dar refuză acest server"
+
+[admin.settings.ai.status.down]
+body = "Verificați URL-ul, că este pornit containerul motorului și că ați repornit după activarea AI."
+title = "Motor inaccesibil"
+
+[admin.settings.ai.status.off]
+body = "Alegeți mai jos cum rulează AI, apoi salvați și reporniți."
+title = "AI este oprit"
+
+[admin.settings.ai.status.ok]
+body = "Verificarea stării și o cerere autentificată au reușit ambele."
+title = "Motor în funcțiune"
+
+[admin.settings.ai.status.secret]
+no = "Respins"
+unknown = "Necunoscut"
+yes = "Acceptat"
 
 [admin.settings.badge]
 clickToUpgrade = "Faceți clic pentru a vedea detaliile planului"
@@ -4453,6 +4548,7 @@ openFromComputer = "Deschide de pe calculator"
 openSettings = "Deschide setările"
 other = "Altele"
 recent = "Recente"
+searchFiles = "Căutați fișiere"
 uploadFailedBody = "Fișierele selectate nu au putut fi adăugate."
 uploadFailedTitle = "Încărcarea a eșuat"
 viewAll = "Vezi toate cele {{count}} fișiere"
@@ -5827,6 +5923,8 @@ label = "Free credits"
 adoptFailed = "Documentul a fost deblocat, dar nu a putut fi deschis aici. Încearcă instrumentul direct."
 empty = "Nimic de raportat."
 handoffUnavailable = "Acest browser nu va permite procesorului să trimită documentul către editor. Deschide-l din editor în schimb."
+inSmartFolder = "Acest document se află într-un folder inteligent, deci este gestionat pe server, nu aici."
+inSmartFolderNamed = "{{name}} se află într-un folder inteligent, deci este gestionat pe server, nu aici."
 noDocumentLinked = "Această eroare nu este asociată cu un document anume, deci nu există nimic de deschis aici."
 notOnThisDevice = "Acest document nu se află pe acest dispozitiv, deci nu poate fi deschis aici."
 occurrences = "de {{count}} ori"
@@ -5837,6 +5935,7 @@ repairedRerunNotAdopted = "Documentul reparat a trecut, dar rezultatul său nu a
 repairedRerunUndelivered = "Documentul a fost reparat și rerularea politicii a început, dar rezultatul său nu poate fi livrat aici, așa că această eroare rămâne deschisă."
 rerunRejected = "Politica nu a putut fi rulată din nou chiar acum. Încearcă din nou peste un moment."
 rerunUndelivered = "Rerularea politicii a început, dar rezultatul său nu poate fi livrat aici, așa că această eroare rămâne deschisă."
+retryInFolderFailed = "Documentul respectiv nu a putut fi rulat din nou momentan."
 retryUnavailable = "Acest document nu mai poate fi reîncercat din acest browser."
 title = "Notificări"
 unlockedNotRerun = "Documentul a fost deblocat și deschis aici, dar politica nu a putut fi rulată din nou pe el."
@@ -6625,9 +6724,11 @@ title = "Ajustează planul Team"
 [payment.capacityStage]
 adjustmentNote = "Stripe va afișa taxa exactă, orice proratări și următoarea dată de facturare înainte să confirmi. Metoda ta de plată salvată va fi folosită dacă este disponibilă."
 continue = "Continuă la plată"
+currencyAtCheckout = "Stripe confirmă suma finală și moneda plății la finalizarea comenzii."
 customLabel = "Număr de utilizatori"
 dueToday = "De plată astăzi"
 enterpriseQuote = "Obține o ofertă enterprise"
+estimatedTotal = "Total estimat"
 lineItem = "Team · {{price}}{{period}} per {{block}} utilizatori"
 minimumForCurrentUsers = "Ai {{users}} utilizatori, deci planul trebuie să acopere cel puțin {{minimum}}."
 modalTitle = "Fă upgrade la {{planName}}"
@@ -6865,6 +6966,25 @@ width = "Lățime"
 widthHint = "Lățimea unei casete de text urmează conținutul și încadrarea acesteia."
 x = "X"
 y = "Y"
+
+[pdfTextEditor.mobile]
+actions = "Acțiuni editor"
+addImage = "Imagine"
+addText = "Text"
+cancel = "Anulați"
+delete = "Ștergeți"
+details = "Detalii"
+document = "Document"
+done = "Gata"
+download = "Salvați și descărcați"
+find = "Găsiți"
+lock = "Blocați"
+openPdf = "Deschideți un PDF"
+panelHint = "Editarea are loc în vizualizarea Spațiu de lucru. Atingeți textul de pe pagină pentru a-l modifica."
+save = "Salvați"
+style = "Stil"
+tapToPlace = "Atingeți pagina unde ar trebui să apară textul"
+unlock = "Deblocați"
 
 [pdfTextEditor.password]
 cancel = "Anulează"
@@ -7574,6 +7694,49 @@ plan = "Plan"
 procurement = "Achiziții"
 usage = "Utilizare"
 
+[portal.billing.compare]
+current = "Curent"
+enterpriseData = "Rezidența datelor și SCIM"
+enterpriseName = "Enterprise"
+enterprisePrice = "Conform acordului dvs."
+enterpriseProcessing = "Contorizat sau fix"
+enterpriseSignIn = "SAML și auditare"
+enterpriseSupport = "SLA-uri pentru uptime, ajutor la implementare"
+enterpriseUsers = "Fără limită"
+enterpriseWhere = "Plus multi-node și izolat de rețea"
+exploreEnterprise = "Explorați Enterprise"
+freeData = "Rămân acolo unde îl rulați"
+freeName = "Free"
+freePrice = "Fără card, fără expirare"
+freeProcessing = "{{allowance}} credite pe lună"
+freeProcessingUnknown = "O alocare lunară de credite"
+freeSignIn = "E-mail, Google și SSO"
+freeSignInNote = "OAuth2/OIDC"
+freeSupport = "Comunitate"
+freeUsers = "Până la {{users}}"
+freeUsersUnknown = "O echipă mică"
+freeWhere = "Cloud, desktop sau self-hosted"
+lede = "Fiecare plan include toate instrumentele PDF și SSO. Ceea ce se schimbă este câți oameni îl folosesc, unde rulează și ce suport primiți."
+open = "Comparați planurile"
+rowData = "Datele dvs."
+rowHeader = "Funcție"
+rowProcessing = "Procesare"
+rowSignIn = "Autentificare"
+rowSupport = "Suport"
+rowUsers = "Utilizatori"
+rowWhere = "Unde rulează"
+teamData = "Google Drive, propria dvs. bază de date"
+teamName = "Team"
+teamPrice = "$99/lună per 100 utilizatori"
+teamProcessing = "{{allowance}} pe lună, apoi contorizat"
+teamProcessingUnknown = "O alocare mai mare, apoi contorizat"
+teamSignIn = "La fel"
+teamSupport = "E-mail"
+teamUsers = "100 per bloc"
+teamWhere = "Cloud, desktop sau self-hosted"
+title = "Comparați planurile"
+upgradeTeam = "Faceți upgrade la Team"
+
 [portal.billing.cycle]
 credits = "Credite"
 creditsNote = "{{units}} utilizate · include credite gratuite și preplătite"
@@ -7679,6 +7842,8 @@ payTitle = "Plătiți pentru anul dvs."
 step = "Pasul {{current}} din {{total}}"
 
 [portal.billing.prepaid.calc]
+currency = "Moneda ofertei"
+currencyLocked = "Folosește moneda dvs. existentă de facturare Stripe."
 rateUnknown = "Vom afișa prețul exact la checkout."
 
 [portal.billing.prepaid.consent]
@@ -8481,6 +8646,10 @@ title = "Fișierul nu a putut fi reparat"
 [portal.failures.kind.inputWrongType]
 description = "Fișierul dvs. nu este într-un format pe care acest pas îl poate deschide, deci rularea nu l-a putut citi."
 title = "Tip de fișier greșit"
+
+[portal.failures.kind.sourceUnreadable]
+description = "Folderul dvs. inteligent nu a putut fi citit, deci nimic din el nu a fost procesat."
+title = "Folderul nu a putut fi citit"
 
 [portal.failures.kind.stepCannotRenderPage]
 description = "O pagină din fișierul dvs. nu a putut fi desenată, deci rularea nu s-a putut finaliza."
@@ -12235,6 +12404,7 @@ goBack = "Înapoi"
 pdfTools = "Instrumente PDF"
 placeholder = "Alegeți un instrument pentru a începe"
 premiumFeature = "Funcție premium:"
+searchTools = "Căutați instrumente"
 toolsHeader = "Instrumente"
 viewAllTools = "Vedeți toate instrumentele"
 
@@ -12399,13 +12569,10 @@ visits = "Vizite"
 
 [users]
 lastActive = "Ultima activitate"
-learnMore = "Află mai multe despre roluri și acces."
 locked = "Blocat"
 ownerSetupRequired = "Proprietarul organizației nu a finalizat prima autentificare. Finalizați configurarea sau cereți operatorului serverului să recupereze proprietatea înainte de a transfera proprietatea."
 roleFor = "Rol pentru {{name}}"
 rowActions = "Acțiuni pentru {{name}}"
-showAll = "Afișează toate {{count}}"
-showLess = "Afișează mai puțin"
 subtitle2 = "Oamenii, echipele și nivelurile tale de acces."
 suspended = "Suspendat"
 teamActions = "Acțiuni echipă"
@@ -12414,6 +12581,7 @@ you = "(tu)"
 
 [users.action]
 cancelInvite = "Anulează invitația"
+createFromDefault = "Creați echipă din Default"
 deleteTeam = "Șterge echipa"
 disableMfa = "Resetează MFA"
 move = "Mută în echipă"
@@ -12451,6 +12619,7 @@ email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
+team = "Echipă"
 
 [users.confirm]
 cancelInviteBody = "Anulați invitația către {{email}}? Nu va putea să se alăture cu linkul actual."
@@ -12469,15 +12638,12 @@ transferOwnershipTitle = "Transferă proprietatea organizației"
 description = "Invită-ți echipa pentru a începe colaborarea."
 title = "Încă nu există membri"
 
+[users.filters]
+noMatches = "Nimeni nu corespunde acestor filtre."
+search = "Căutați persoane"
+
 [users.group]
 addToTeam = "Adaugă în echipă"
-administrators = "{{count}} administratori"
-guestCount = "{{count}} invitat"
-guests = "Invitați"
-ledBy = "condusă de {{owner}}"
-org = "Organizație"
-team = "Echipa {{name}}"
-teamMeta = "{{count}} persoane"
 
 [users.invite]
 access = "Acces"
@@ -12542,6 +12708,9 @@ title = "Echipă nouă"
 
 [users.renameTeam]
 apply = "Redenumește"
+defaultApply = "Creați și mutați"
+defaultDescription = "Default va rămâne disponibil pentru utilizatorii noi. Toți cei aflați în prezent în Default vor fi mutați în noua echipă."
+defaultTitle = "Creați echipă din Default"
 name = "Numele echipei"
 title = "Redenumește echipa"
 
@@ -12566,6 +12735,15 @@ guest = "Invitat"
 member = "Membru"
 orgOwner = "Proprietar organizație"
 teamOwner = "Proprietar de echipă"
+
+[users.seats]
+full = "Fiecare loc licențiat este utilizat. Eliberați unul sau creșteți numărul de locuri pentru a adăuga pe altcineva."
+update = "Actualizați locurile"
+
+[users.tabs]
+all = "Toate"
+label = "Filtrați după echipă"
+unassigned = "Fără echipă"
 
 [users.team]
 grantProcessor = "Acordă Processor echipei"
@@ -13216,232 +13394,14 @@ submitSignature = "Trimiteți semnătura"
 title = "Spațiu de lucru"
 
 [workspace.people]
-active = "Activ"
-activeSession = "Sesiune activă"
-addMembers = "Adăugați membri"
-admin = "Administrator"
-confirmDelete = "Sigur doriți să ștergeți acest utilizator? Această acțiune nu poate fi anulată."
-confirmUnlock = "Sigur doriți să deblocați acest cont de utilizator?"
-deleteUser = "Ștergeți utilizatorul"
-deleteUserError = "Ștergerea utilizatorului a eșuat"
-deleteUserSuccess = "Utilizator șters cu succes"
 description = "Gestionați membrii spațiului de lucru și permisiunile lor"
-disable = "Dezactivează"
-disabled = "Dezactivat"
-editRole = "Editați rolul"
-enable = "Activează"
-loading = "Se încarcă membrii..."
-locked = "blocat"
-lockedBadge = "Blocat"
-loginRequired = "Activează mai întâi modul de autentificare"
-memberActions = "Acțiuni membru"
-noMembersFound = "Nu s-au găsit membri"
-ownerLocked = "Transferați proprietatea organizației în Setări → Spațiu de lucru → Utilizatori înainte de a schimba rolul sau contul proprietarului."
-role = "Rol"
-searchMembers = "Căutați membri..."
-team = "Echipă"
-unlockAccount = "Deblocați contul"
-unlockUserError = "Deblocarea contului de utilizator a eșuat"
-unlockUserSuccess = "Contul de utilizator a fost deblocat cu succes"
-user = "Utilizator"
-userInfo = "Informații utilizator"
-
-[workspace.people.actions]
-upgrade = "Fă upgrade"
-
-[workspace.people.addMember]
-authType = "Tip de autentificare"
-error = "Crearea utilizatorului a eșuat"
-forceMFA = "Impuneți configurarea MFA la următoarea autentificare"
-forcePasswordChange = "Forțează schimbarea parolei la prima autentificare"
-password = "Parolă"
-passwordPlaceholder = "Introduceți parola"
-passwordRequired = "Parola este obligatorie"
-role = "Rol"
-submit = "Adăugați membru"
-success = "Utilizator creat cu succes"
-team = "Echipă (opțional)"
-teamPlaceholder = "Selectați o echipă"
-username = "Nume de utilizator (email)"
-usernamePlaceholder = "user@example.com"
-usernameRequired = "Numele de utilizator și parola sunt obligatorii"
-
-[workspace.people.authType]
-oauth = "OAuth2"
-password = "Parolă"
-saml = "SAML2"
-ssoDescription = "Utilizatorul se va autentifica prin furnizorul SSO"
-
-[workspace.people.changePassword]
-action = "Schimbă parola"
-confirmPassword = "Confirmă parola"
-confirmPlaceholder = "Reintroduceți parola nouă"
-copiedToClipboard = "Parola a fost copiată în clipboard"
-copyFailed = "Copierea parolei a eșuat"
-copyTooltip = "Copiază în clipboard"
-emailUnavailable = "Emailul acestui utilizator nu este o adresă de email validă. Notificările sunt dezactivate."
-error = "Actualizarea parolei a eșuat"
-forcePasswordChange = "Forțează utilizatorul să schimbe parola la următoarea autentificare"
-generatedPreview = "Parolă generată:"
-generateRandom = "Generează o parolă sigură"
-includePassword = "Include parola nouă în email"
-newPassword = "Parolă nouă"
-notifyOnly = "Se va trimite un email fără parolă, informând utilizatorul că un administrator a schimbat-o."
-passwordMismatch = "Parolele nu coincid"
-passwordRequired = "Introduceți o parolă nouă"
-placeholder = "Introduceți o parolă nouă"
-sendEmail = "Trimite un email utilizatorului despre această modificare"
-smtpDisabled = "Notificările prin email necesită activarea SMTP în setări."
-submit = "Actualizează parola"
-subtitle = "Actualizați parola pentru"
-success = "Parola a fost actualizată cu succes"
-title = "Schimbă parola"
-
-[workspace.people.editMember]
-editing = "Editing: <0>{{username}}</0>"
-error = "Actualizarea utilizatorului a eșuat"
-role = "Rol"
-submit = "Update User"
-success = "Utilizator actualizat cu succes"
-team = "Echipă (opțional)"
-teamPlaceholder = "Selectați o echipă"
-title = "Edit User"
-
-[workspace.people.emailInvite]
-allFailed = "Invitarea utilizatorilor a eșuat"
-emails = "Adrese de email"
-emailsPlaceholder = "user1@example.com, user2@example.com"
-emailsRequired = "Este necesară cel puțin o adresă de email"
-error = "Trimiterea invitațiilor a eșuat"
-partialFailure = "Unele invitații au eșuat"
-submit = "Trimiteți invitații"
-success = "utilizator(i) invitați cu succes"
-
-[workspace.people.inviteLink]
-copied = "Link copiat în clipboard"
-email = "Adresă de email"
-emailDescription = "Opțional - lăsați necompletat pentru un link general de invitație care poate fi folosit de oricine"
-emailPlaceholder = "user@example.com (opțional)"
-emailSent = "Link de invitație generat și trimis prin email"
-error = "Generarea linkului de invitație a eșuat"
-expiryHours = "Ore până la expirare"
-generate = "Generați link"
-generated = "Link de invitație generat"
-sendEmail = "Trimiteți linkul de invitație prin email"
-sendEmailDescription = "Dacă este activat, linkul de invitație va fi trimis la adresa de email specificată"
-submit = "Generați link de invitație"
-
-[workspace.people.inviteMembers]
-label = "Invitați membri"
-subtitle = "Tastați sau lipiți emailuri mai jos, separate prin virgule. Spațiul dvs. de lucru va fi facturat în funcție de membri."
-
-[workspace.people.inviteMode]
-email = "Email"
-emailDisabled = "Invitațiile prin email necesită configurarea SMTP și mail.enableInvites=true în setări"
-link = "Link"
-username = "Utilizator"
 
 [workspace.people.license]
-currentUsage = "În prezent se folosesc {{current}} din {{max}} licențe de utilizator"
-fromLicense = "din licență"
-grandfathered = "Cu drepturi păstrate"
-grandfatheredShort = "{{count}} cu drepturi păstrate"
-slotsAvailable_one = "{{count}} user slot available"
-slotsAvailable_other = "{{count}} user slots available"
-slotsAvailable_zero = "No slots available"
 users_one = "user"
 users_other = "users"
 
-[workspace.people.mfa]
-adminDisableError = "Dezactivarea MFA pentru utilizator a eșuat"
-adminDisableSuccess = "MFA a fost dezactivată cu succes pentru utilizator"
-disableByAdmin = "Dezactivați MFA"
-
-[workspace.people.roleDescriptions]
-admin = "Poate gestiona setările și invita membri, cu acces administrativ complet."
-currentRole = "Rolul atribuit în prezent."
-user = "Can view and edit shared files, but cannot manage workspace settings or users."
-
-[workspace.people.toggleEnabled]
-error = "Actualizarea stării utilizatorului a eșuat"
-success = "Starea utilizatorului a fost actualizată cu succes"
-
 [workspace.teams]
-addMember = "Adăugați membru"
-backToTeams = "Înapoi la Echipe"
-cannotAddToInternal = "Nu se pot adăuga membri la echipa Internal"
-cannotDeleteInternal = "Nu se poate șterge echipa Internal"
-cannotRenameInternal = "Nu se poate redenumi echipa Internal"
-confirmDelete = "Sigur doriți să ștergeți această echipă? Echipa trebuie să fie goală pentru a fi ștearsă."
-confirmRemove = "Eliminați utilizatorul din această echipă?"
-createNewTeam = "Creați echipă nouă"
-deleteTeamLabel = "Ștergeți echipa"
 description = "Gestionați echipele și organizați membrii spațiului de lucru"
-loadError = "Încărcarea detaliilor echipei a eșuat"
-loading = "Se încarcă echipele..."
-loadingDetails = "Se încarcă detaliile echipei..."
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
-noMembers = "Niciun membru în această echipă"
-noTeamsFound = "Nu s-au găsit echipe"
-removeMember = "Eliminați din echipă"
-removeMemberError = "Eliminarea utilizatorului din echipă a eșuat"
-removeMemberSuccess = "Utilizator eliminat din echipă"
-renameTeamLabel = "Redenumiți echipa"
-system = "Sistem"
-teamActions = "Acțiuni echipă"
-teamName = "Numele echipei"
-teamNotFound = "Echipa nu a fost găsită"
-totalMembers = "Total membri"
-viewTeam = "Vizualizați echipa"
-
-[workspace.teams.addMemberToTeam]
-addingTo = "Se adaugă în"
-currentlyIn = "în prezent în"
-error = "Adăugarea membrului în echipă a eșuat"
-selectUser = "Selectează utilizator"
-selectUserPlaceholder = "Alege un utilizator"
-selectUserRequired = "Vă rugăm să selectați un utilizator"
-submit = "Adaugă membru"
-success = "Membru adăugat în echipă cu succes"
-title = "Adaugă membru în echipă"
-userRequired = "Vă rugăm să selectați un utilizator"
-willBeMoved = "Notă: Acest utilizator va fi mutat din echipa curentă în această echipă."
-
-[workspace.teams.changeTeam]
-changing = "Se mută"
-error = "Schimbarea echipei a eșuat"
-label = "Schimbă echipa"
-selectTeam = "Selectează echipa"
-selectTeamPlaceholder = "Alege o echipă"
-selectTeamRequired = "Vă rugăm să selectați o echipă"
-submit = "Schimbă echipa"
-success = "Echipa a fost schimbată cu succes"
-title = "Schimbă echipa"
-
-[workspace.teams.createTeam]
-error = "Crearea echipei a eșuat"
-nameRequired = "Numele echipei este obligatoriu"
-submit = "Creați echipă"
-success = "Echipă creată cu succes"
-teamName = "Numele echipei"
-teamNamePlaceholder = "Introduceți numele echipei"
-title = "Creați echipă nouă"
-
-[workspace.teams.deleteTeam]
-error = "Ștergerea echipei a eșuat. Asigurați-vă că echipa este goală."
-success = "Echipa a fost ștearsă cu succes"
-
-[workspace.teams.renameTeam]
-error = "Redenumirea echipei a eșuat"
-nameRequired = "Numele echipei este obligatoriu"
-newTeamName = "Nume nou al echipei"
-newTeamNamePlaceholder = "Introduceți numele nou al echipei"
-renaming = "Se redenumește:"
-submit = "Redenumește echipa"
-success = "Echipa a fost redenumită cu succes"
-title = "Redenumește echipa"
 
 [zipWarning]
 cancel = "Anulare"

@@ -729,6 +729,8 @@ permissionNotice = "مسیر tessdata قابل نوشتن نیست. دانلود
 
 [admin.settings.ai]
 description = "Stirling را به موتور AI پایتون متصل کنید، مدل‌های آن را انتخاب کنید و محدودیت‌هایی را که تحت آن اجرا می‌شود تنظیم کنید."
+managedByCloud = "در این حالت توسط Stirling Cloud مدیریت می‌شود."
+managedByCloudShort = "مدیریت‌شده توسط Stirling Cloud"
 
 [admin.settings.ai.documents]
 description = "مدل embedding و تنظیمات بازیابی مورد استفاده برای پاسخ به پرسش‌ها درباره اسناد را پیکربندی کنید. پس از ذخیره، روی موتور AI اعمال می‌شود."
@@ -771,11 +773,24 @@ label = "Top K"
 [admin.settings.ai.general]
 connection = "اتصال"
 description = "Stirling را به موتور Python AI متصل کنید و قابلیت‌های AI قابل ارائه را انتخاب کنید. تغییرات پس از راه‌اندازی مجدد اعمال می‌شوند."
+restartNote = "تغییر URL یا هر مهلت زمانی پس از راه‌اندازی مجدد اعمال می‌شود."
 title = "موتور AI"
 
 [admin.settings.ai.general.capabilities]
 description = "ویژگی‌های جداگانه AI را روشن یا خاموش کنید. ویژگی‌های غیرفعال در برنامه پنهان می‌شوند."
 title = "قابلیت‌ها"
+
+[admin.settings.ai.general.cloud]
+note = "مدل‌ها و کلیدهای ارائه‌دهنده توسط Stirling Cloud مدیریت می‌شوند، بنابراین آن تنظیمات در این حالت اعمال نمی‌شوند."
+
+[admin.settings.ai.general.cloud.indexing]
+description = "هر ابزار هوش مصنوعی متن صفحه‌ای را که برای پاسخ‌دادن نیاز دارد ارسال می‌کند. این تعیین می‌کند که آیا Stirling Cloud می‌تواند آن متن را نیز به‌صورت ایندکس‌شده نگه دارد تا پرسش‌های بعدی بتوانند در سراسر سند جستجو کنند."
+help = "خاموش یعنی پرسش‌های سند در دسترس نیستند. این جلوی ارسال متن را نمی‌گیرد - فقط جلوی ذخیره‌شدن آن را می‌گیرد."
+label = "اجازه بده Stirling Cloud اسناد ایندکس‌شده را نگه دارد"
+
+[admin.settings.ai.general.cloudNote]
+body = "استدلال روی زیرساخت Stirling اجرا می‌شود و هزینه آن به حسابی که این سرور به آن متصل است محاسبه می‌شود. هیچ کانتینری برای اجرا و هیچ کلید ارائه‌دهنده‌ای برای نگهداری در اینجا وجود ندارد. هرچه هوش مصنوعی می‌خواند، به‌جای سخت‌افزار خودتان، توسط Stirling Cloud پردازش می‌شود."
+title = "درباره هوش مصنوعی Stirling Cloud"
 
 [admin.settings.ai.general.enabled]
 description = "کلید اصلی. وقتی خاموش باشد، هیچ ابزار، عامل یا فراخوانی موتور AI در دسترس نیست."
@@ -809,9 +824,28 @@ label = "عامل دیدگاه PDF"
 description = "مهلت زمانی برای عملیات سنگین‌تر عامل، مانند ایجاد سند."
 label = "مهلت زمانی عملیات طولانی‌مدت (ثانیه)"
 
+[admin.settings.ai.general.mode]
+label = "هوش مصنوعی کجا اجرا شود"
+
+[admin.settings.ai.general.mode.cloud]
+description = "بدون کانتینر، بدون کلید ارائه‌دهنده، بدون انتخاب مدل - کار روی Stirling Cloud اجرا می‌شود و هزینه آن به حسابی که این سرور به آن متصل است محاسبه می‌شود."
+linkCta = "این سرور را به یک حساب Stirling متصل کنید"
+notLinked = "ابتدا یک حساب را متصل کنید"
+ownerOnly = "فقط مالک سازمان می‌تواند این سرور را به یک حساب Stirling متصل کند."
+title = "استفاده از هوش مصنوعی Stirling Cloud"
+
+[admin.settings.ai.general.mode.off]
+description = "هیچ ابزار هوش مصنوعی در هیچ‌جای برنامه فعال نیست و هیچ‌چیزی از این سرور خارج نمی‌شود."
+title = "خاموش"
+
+[admin.settings.ai.general.mode.self]
+description = "کانتینری که خودتان میزبانی می‌کنید و به ارائه‌دهنده مدل دلخواهتان متصل است. کلید شما، هزینه شما، مسیر داده‌های شما."
+title = "موتور خودتان را اجرا کنید"
+
 [admin.settings.ai.general.note]
-body = "موتور AI به‌عنوان یک سرویس جداگانه اجرا می‌شود. راز مشترک آن"
-body2 = "از طریق یک متغیر محیطی کانتینر تنظیم می‌شود. کلیدهای API ارائه‌دهنده را می‌توان در این صفحات وارد کرد یا به‌عنوان متغیرهای محیطی موتور ارائه داد؛ کلیدهای واردشده در اینجا هنگام ذخیره به موتور ارسال می‌شوند."
+docs = "راهنمای راه‌اندازی"
+intro = "یک کانتینر جداگانه که کنار Stirling اجرا می‌کنید. استدلال را انجام می‌دهد؛ Stirling همچنان همه عملیات صفحه را خودش انجام می‌دهد. به همان"
+outro = "روی هر دو کانتینر و یک کلید ارائه‌دهنده مدل نیاز دارد. هرچه هوش مصنوعی می‌خواند به ارائه‌دهنده‌ای که انتخاب می‌کنید ارسال می‌شود - یک Ollama که خودتان میزبانی می‌کنید همه صفحات را درون سازمان نگه می‌دارد."
 title = "درباره موتور AI"
 
 [admin.settings.ai.general.streamTimeoutSeconds]
@@ -890,6 +924,67 @@ label = "مدل هوشمند"
 body = "تغییرات به‌طور خودکار به موتور AI ارسال می‌شوند."
 bodyNoPush = "تنظیمات ذخیره شد. دفعه بعد که موتور AI پیکربندی خود را دریافت کند، اعمال می‌شوند."
 title = "تنظیمات AI ذخیره شد"
+
+[admin.settings.ai.status]
+capabilities = "قابلیت‌ها"
+capabilitiesValue = "{{on}} از {{total}} روشن"
+checked = "بررسی شد"
+checking = "در حال بررسی موتور…"
+description = "اینکه موتور در دسترس است، این سرور را می‌پذیرد یا نه، و چه چیزی را اجرا می‌کند."
+fastModel = "مدل سریع"
+justNow = "همین حالا"
+latency = "زمان پاسخ"
+linkLabel = "اتصال حساب"
+minutesAgo = "{{count}} دقیقه پیش"
+recheck = "دوباره بررسی کن"
+runningOn = "در حال اجرا روی"
+secondsAgo = "{{count}} ثانیه پیش"
+secretLabel = "راز مشترک"
+smartModel = "مدل هوشمند"
+title = "وضعیت"
+url = "URL موتور"
+
+[admin.settings.ai.status.cloud]
+hostDown = "قطع"
+hostLabel = "Stirling.com"
+hostUp = "فعال"
+name = "Stirling Cloud"
+sharingLabel = "اشتراک‌گذاری هوش مصنوعی"
+sharingOff = "غیرفعال"
+sharingOn = "فعال"
+
+[admin.settings.ai.status.cloud.degraded]
+body = "Stirling Cloud پاسخ داد اما این سرور را رد کرد. ممکن است اتصال حساب لغو شده باشد."
+title = "Stirling Cloud این سرور را رد می‌کند"
+
+[admin.settings.ai.status.cloud.down]
+body = "این سرور نتوانست به Stirling Cloud دسترسی پیدا کند. اتصال حساب و دسترسی این سرور به اینترنت را بررسی کنید."
+title = "Stirling Cloud در دسترس نیست"
+
+[admin.settings.ai.status.cloud.ok]
+body = "Stirling Cloud این سرور را پذیرفت. اینجا چیزی برای اجرا یا وصله‌کردن وجود ندارد."
+title = "در حال اجرا روی Stirling Cloud"
+
+[admin.settings.ai.status.degraded]
+body = "به بررسی سلامت پاسخ داد اما یک درخواست واقعی را رد کرد. دو طرف از رازهای مشترک متفاوتی استفاده می‌کنند."
+title = "موتور فعال است، اما این سرور را رد می‌کند"
+
+[admin.settings.ai.status.down]
+body = "URL را بررسی کنید، مطمئن شوید کانتینر موتور در حال اجراست، و اینکه پس از فعال‌کردن هوش مصنوعی راه‌اندازی مجدد کرده‌اید."
+title = "موتور در دسترس نیست"
+
+[admin.settings.ai.status.off]
+body = "در پایین انتخاب کنید هوش مصنوعی چگونه اجرا شود، سپس ذخیره و راه‌اندازی مجدد کنید."
+title = "هوش مصنوعی خاموش است"
+
+[admin.settings.ai.status.ok]
+body = "بررسی سلامت و یک درخواست احراز هویت‌شده هر دو موفق بودند."
+title = "موتور در حال اجراست"
+
+[admin.settings.ai.status.secret]
+no = "رد شد"
+unknown = "نامشخص"
+yes = "پذیرفته شد"
 
 [admin.settings.badge]
 clickToUpgrade = "برای مشاهده جزئیات طرح کلیک کنید"
@@ -4453,6 +4548,7 @@ openFromComputer = "باز کردن از رایانه"
 openSettings = "باز کردن تنظیمات"
 other = "سایر"
 recent = "اخیر"
+searchFiles = "جستجوی فایل‌ها"
 uploadFailedBody = "فایل‌های انتخاب‌شده اضافه نشدند."
 uploadFailedTitle = "بارگذاری ناموفق بود"
 viewAll = "مشاهده همه {{count}} فایل"
@@ -5827,6 +5923,8 @@ label = "Free credits"
 adoptFailed = "سند بازگشایی قفل شد اما اینجا باز نشد. ابزار را مستقیماً امتحان کنید."
 empty = "چیزی برای گزارش وجود ندارد."
 handoffUnavailable = "این مرورگر اجازه نمی‌دهد پردازشگر سند را به ویرایشگر منتقل کند. به‌جای آن، آن را از ویرایشگر باز کنید."
+inSmartFolder = "این سند در یک پوشه هوشمند است، بنابراین به‌جای اینجا، روی سرور پردازش می‌شود."
+inSmartFolderNamed = "{{name}} در یک پوشه هوشمند است، بنابراین به‌جای اینجا، روی سرور پردازش می‌شود."
 noDocumentLinked = "این خطا به سند خاصی مرتبط نیست، بنابراین چیزی برای باز کردن در اینجا وجود ندارد."
 notOnThisDevice = "این سند روی این دستگاه نیست، بنابراین نمی‌توان آن را اینجا باز کرد."
 occurrences = "{{count}} بار"
@@ -5837,6 +5935,7 @@ repairedRerunNotAdopted = "سند تعمیرشده پردازش شد، اما ن
 repairedRerunUndelivered = "سند تعمیر شد و اجرای دوباره سیاست شروع شد، اما نتیجه آن نمی‌تواند اینجا تحویل داده شود، بنابراین این خطا باز می‌ماند."
 rerunRejected = "در حال حاضر سیاست نتوانست دوباره اجرا شود. کمی بعد دوباره تلاش کنید."
 rerunUndelivered = "اجرای دوباره سیاست شروع شد، اما نتیجه آن نمی‌تواند اینجا تحویل داده شود، بنابراین این خطا باز می‌ماند."
+retryInFolderFailed = "آن سند در حال حاضر نتوانست دوباره اجرا شود."
 retryUnavailable = "این سند دیگر از این مرورگر قابل تلاش دوباره نیست."
 title = "اعلان‌ها"
 unlockedNotRerun = "سند بازگشایی قفل شد و اینجا باز شد، اما سیاست نتوانست دوباره روی آن اجرا شود."
@@ -6625,9 +6724,11 @@ title = "تنظیم طرح Team"
 [payment.capacityStage]
 adjustmentNote = "Stripe پیش از تأیید شما، مبلغ دقیق، هرگونه تعدیل نسبی و تاریخ صورتحساب بعدی شما را نمایش می‌دهد. در صورت موجود بودن، روش پرداخت ذخیره‌شده شما استفاده خواهد شد."
 continue = "ادامه به پرداخت"
+currencyAtCheckout = "Stripe مبلغ نهایی و ارز پرداخت را در مرحله پرداخت نهایی تأیید می‌کند."
 customLabel = "تعداد کاربران"
 dueToday = "قابل پرداخت امروز"
 enterpriseQuote = "دریافت قیمت سازمانی"
+estimatedTotal = "مجموع تخمینی"
 lineItem = "Team · {{price}}{{period}} به‌ازای هر {{block}} کاربر"
 minimumForCurrentUsers = "شما {{users}} کاربر دارید، بنابراین طرح باید حداقل {{minimum}} را پوشش دهد."
 modalTitle = "ارتقا به {{planName}}"
@@ -6865,6 +6966,25 @@ width = "عرض"
 widthHint = "عرض کادر متن از محتوا و شکست خطوط آن پیروی می‌کند."
 x = "X"
 y = "Y"
+
+[pdfTextEditor.mobile]
+actions = "اقدام‌های ویرایشگر"
+addImage = "تصویر"
+addText = "متن"
+cancel = "لغو"
+delete = "حذف"
+details = "جزئیات"
+document = "سند"
+done = "انجام شد"
+download = "ذخیره و دانلود"
+find = "یافتن"
+lock = "قفل"
+openPdf = "باز کردن یک PDF"
+panelHint = "ویرایش در نمای Workspace انجام می‌شود. برای تغییر متن، روی متن در صفحه ضربه بزنید."
+save = "ذخیره"
+style = "سبک"
+tapToPlace = "روی جایی از صفحه که متن باید قرار بگیرد ضربه بزنید"
+unlock = "باز کردن قفل"
 
 [pdfTextEditor.password]
 cancel = "لغو"
@@ -7574,6 +7694,49 @@ plan = "طرح"
 procurement = "تدارکات"
 usage = "مصرف"
 
+[portal.billing.compare]
+current = "فعلی"
+enterpriseData = "محل نگهداری داده‌ها و SCIM"
+enterpriseName = "Enterprise"
+enterprisePrice = "طبق توافق شما"
+enterpriseProcessing = "مصرفی یا ثابت"
+enterpriseSignIn = "SAML و حسابرسی"
+enterpriseSupport = "SLAهای زمان فعالیت، کمک در استقرار"
+enterpriseUsers = "بدون سقف"
+enterpriseWhere = "به‌علاوه چندگره‌ای و ایزوله از شبکه"
+exploreEnterprise = "بررسی Enterprise"
+freeData = "همان‌جا که اجرا می‌کنید باقی می‌ماند"
+freeName = "رایگان"
+freePrice = "بدون کارت، بدون انقضا"
+freeProcessing = "{{allowance}} اعتبار در ماه"
+freeProcessingUnknown = "سهمیه اعتبار ماهانه"
+freeSignIn = "ایمیل، Google و SSO"
+freeSignInNote = "OAuth2/OIDC"
+freeSupport = "جامعه کاربری"
+freeUsers = "تا {{users}}"
+freeUsersUnknown = "یک تیم کوچک"
+freeWhere = "Cloud، دسکتاپ یا خودمیزبان"
+lede = "هر طرح شامل همه ابزارهای PDF و SSO است. تفاوت در تعداد افرادی است که از آن استفاده می‌کنند، محل اجرای آن، و نوع پشتیبانی‌ای که دریافت می‌کنید."
+open = "مقایسه طرح‌ها"
+rowData = "داده‌های شما"
+rowHeader = "ویژگی"
+rowProcessing = "پردازش"
+rowSignIn = "ورود"
+rowSupport = "پشتیبانی"
+rowUsers = "کاربران"
+rowWhere = "محل اجرا"
+teamData = "Google Drive، پایگاه داده خودتان"
+teamName = "Team"
+teamPrice = "$99/mo به‌ازای هر 100 کاربر"
+teamProcessing = "{{allowance}} در ماه، سپس مصرفی"
+teamProcessingUnknown = "سهمیه بزرگ‌تر، سپس مصرفی"
+teamSignIn = "همان"
+teamSupport = "ایمیل"
+teamUsers = "100 در هر بلوک"
+teamWhere = "Cloud، دسکتاپ یا خودمیزبان"
+title = "مقایسه طرح‌ها"
+upgradeTeam = "ارتقا به Team"
+
 [portal.billing.cycle]
 credits = "اعتبارها"
 creditsNote = "{{units}} استفاده شده · شامل اعتبارهای رایگان و پیش‌پرداخت‌شده"
@@ -7679,6 +7842,8 @@ payTitle = "پرداخت برای سال شما"
 step = "مرحله {{current}} از {{total}}"
 
 [portal.billing.prepaid.calc]
+currency = "ارز پیش‌فاکتور"
+currencyLocked = "از ارز صورتحساب فعلی شما در Stripe استفاده می‌کند."
 rateUnknown = "قیمت دقیق را در پرداخت نشان می‌دهیم."
 
 [portal.billing.prepaid.consent]
@@ -8481,6 +8646,10 @@ title = "فایل قابل تعمیر نبود"
 [portal.failures.kind.inputWrongType]
 description = "فایل شما قالبی نیست که این مرحله بتواند باز کند، بنابراین اجرا نتوانست آن را بخواند."
 title = "نوع فایل نادرست"
+
+[portal.failures.kind.sourceUnreadable]
+description = "پوشه هوشمند شما خوانده نشد، بنابراین هیچ‌چیزی در آن پردازش نشد."
+title = "پوشه خوانده نشد"
 
 [portal.failures.kind.stepCannotRenderPage]
 description = "یک صفحه در فایل شما قابل ترسیم نبود، بنابراین اجرا نتوانست کامل شود."
@@ -12235,6 +12404,7 @@ goBack = "بازگشت"
 pdfTools = "ابزارهای PDF"
 placeholder = "برای شروع یک ابزار انتخاب کنید"
 premiumFeature = "ویژگی پرمیوم:"
+searchTools = "جستجوی ابزارها"
 toolsHeader = "ابزارها"
 viewAllTools = "مشاهدهٔ همهٔ ابزارها"
 
@@ -12399,13 +12569,10 @@ visits = "بازدیدها"
 
 [users]
 lastActive = "آخرین فعالیت"
-learnMore = "درباره نقش‌ها و دسترسی بیشتر بدانید."
 locked = "قفل‌شده"
 ownerSetupRequired = "مالک سازمان اولین ورود را تکمیل نکرده است. پیش از انتقال مالکیت، راه‌اندازی را کامل کنید یا از اپراتور سرور بخواهید مالکیت را بازیابی کند."
 roleFor = "نقش برای {{name}}"
 rowActions = "اقدامات برای {{name}}"
-showAll = "نمایش همه {{count}}"
-showLess = "نمایش کمتر"
 subtitle2 = "افراد، تیم‌ها و سطوح دسترسی شما."
 suspended = "تعلیق‌شده"
 teamActions = "اقدامات تیم"
@@ -12414,6 +12581,7 @@ you = "(شما)"
 
 [users.action]
 cancelInvite = "لغو دعوت"
+createFromDefault = "ایجاد تیم از Default"
 deleteTeam = "حذف تیم"
 disableMfa = "بازنشانی MFA"
 move = "انتقال به تیم"
@@ -12451,6 +12619,7 @@ email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
+team = "تیم"
 
 [users.confirm]
 cancelInviteBody = "دعوت به {{email}} لغو شود؟ آن‌ها دیگر نمی‌توانند با لینک فعلی بپیوندند."
@@ -12469,15 +12638,12 @@ transferOwnershipTitle = "انتقال مالکیت سازمان"
 description = "تیم خود را دعوت کنید تا همکاری را شروع کنید."
 title = "هنوز عضوی وجود ندارد"
 
+[users.filters]
+noMatches = "هیچ‌کس با این فیلترها مطابقت ندارد."
+search = "جستجوی افراد"
+
 [users.group]
 addToTeam = "افزودن به تیم"
-administrators = "{{count}} مدیر"
-guestCount = "{{count}} مهمان"
-guests = "مهمانان"
-ledBy = "به رهبری {{owner}}"
-org = "سازمان"
-team = "تیم {{name}}"
-teamMeta = "{{count}} نفر"
 
 [users.invite]
 access = "دسترسی"
@@ -12542,6 +12708,9 @@ title = "تیم جدید"
 
 [users.renameTeam]
 apply = "تغییر نام"
+defaultApply = "ایجاد و انتقال"
+defaultDescription = "Default برای کاربران جدید همچنان در دسترس خواهد بود. همه افرادی که اکنون در Default هستند به تیم جدید منتقل می‌شوند."
+defaultTitle = "ایجاد تیم از Default"
 name = "نام تیم"
 title = "تغییر نام تیم"
 
@@ -12566,6 +12735,15 @@ guest = "مهمان"
 member = "عضو"
 orgOwner = "مالک سازمان"
 teamOwner = "مالک تیم"
+
+[users.seats]
+full = "همه صندلی‌های دارای مجوز در حال استفاده هستند. برای افزودن فرد دیگر، یکی را آزاد کنید یا تعداد صندلی‌ها را افزایش دهید."
+update = "به‌روزرسانی صندلی‌ها"
+
+[users.tabs]
+all = "همه"
+label = "فیلتر بر اساس تیم"
+unassigned = "بدون تیم"
 
 [users.team]
 grantProcessor = "اعطای Processor به تیم"
@@ -13216,232 +13394,14 @@ submitSignature = "ارسال امضا"
 title = "فضای کاری"
 
 [workspace.people]
-active = "فعال"
-activeSession = "نشست فعال"
-addMembers = "افزودن اعضا"
-admin = "مدیر"
-confirmDelete = "مطمئنید می‌خواهید این کاربر را حذف کنید؟ این اقدام غیرقابل بازگشت است."
-confirmUnlock = "آیا مطمئن هستید می‌خواهید قفل این حساب کاربری را باز کنید؟"
-deleteUser = "حذف کاربر"
-deleteUserError = "حذف کاربر ناموفق بود"
-deleteUserSuccess = "کاربر با موفقیت حذف شد"
 description = "مدیریت اعضای فضای کاری و مجوزهای آن‌ها"
-disable = "غیرفعال‌سازی"
-disabled = "غیرفعال"
-editRole = "ویرایش نقش"
-enable = "فعال‌سازی"
-loading = "در حال بارگذاری افراد..."
-locked = "قفل‌شده"
-lockedBadge = "قفل‌شده"
-loginRequired = "ابتدا حالت لاگین را فعال کنید"
-memberActions = "اقدامات عضو"
-noMembersFound = "عضوی یافت نشد"
-ownerLocked = "پیش از تغییر نقش یا حساب مالک، مالکیت سازمان را در Settings → Workspace → Users منتقل کنید."
-role = "نقش"
-searchMembers = "جستجوی اعضا..."
-team = "تیم"
-unlockAccount = "باز کردن قفل حساب"
-unlockUserError = "باز کردن قفل حساب کاربری ناموفق بود"
-unlockUserSuccess = "قفل حساب کاربری با موفقیت باز شد"
-user = "کاربر"
-userInfo = "اطلاعات کاربر"
-
-[workspace.people.actions]
-upgrade = "ارتقا"
-
-[workspace.people.addMember]
-authType = "نوع احراز هویت"
-error = "ایجاد کاربر ناموفق بود"
-forceMFA = "الزام راه‌اندازی MFA در ورود بعدی"
-forcePasswordChange = "اجبار تغییر رمز عبور در اولین ورود"
-password = "رمز عبور"
-passwordPlaceholder = "رمز عبور را وارد کنید"
-passwordRequired = "رمز عبور الزامی است"
-role = "نقش"
-submit = "افزودن عضو"
-success = "کاربر با موفقیت ایجاد شد"
-team = "تیم (اختیاری)"
-teamPlaceholder = "یک تیم انتخاب کنید"
-username = "نام کاربری (ایمیل)"
-usernamePlaceholder = "user@example.com"
-usernameRequired = "نام کاربری و رمز عبور الزامی است"
-
-[workspace.people.authType]
-oauth = "OAuth2"
-password = "رمز عبور"
-saml = "SAML2"
-ssoDescription = "کاربر از طریق ارائه‌دهندهٔ SSO احراز هویت خواهد شد"
-
-[workspace.people.changePassword]
-action = "تغییر گذرواژه"
-confirmPassword = "تأیید گذرواژه"
-confirmPlaceholder = "گذرواژهٔ جدید را دوباره وارد کنید"
-copiedToClipboard = "گذرواژه در کلیپ‌بورد کپی شد"
-copyFailed = "کپی گذرواژه ناموفق بود"
-copyTooltip = "کپی در کلیپ‌بورد"
-emailUnavailable = "ایمیل این کاربر معتبر نیست. اعلان‌ها غیرفعال شده‌اند."
-error = "به‌روزرسانی گذرواژه ناموفق بود"
-forcePasswordChange = "کاربر را ملزم کنید در ورود بعدی گذرواژه را تغییر دهد"
-generatedPreview = "گذرواژهٔ تولیدشده:"
-generateRandom = "ایجاد گذرواژهٔ امن"
-includePassword = "گذرواژهٔ جدید را در ایمیل درج کنید"
-newPassword = "گذرواژهٔ جدید"
-notifyOnly = "ایمیلی بدون گذرواژه ارسال خواهد شد تا به کاربر اطلاع دهد که یک مدیر آن را تغییر داده است."
-passwordMismatch = "گذرواژه‌ها یکسان نیستند"
-passwordRequired = "لطفاً یک گذرواژهٔ جدید وارد کنید"
-placeholder = "گذرواژهٔ جدید وارد کنید"
-sendEmail = "به کاربر دربارهٔ این تغییر ایمیل ارسال کنید"
-smtpDisabled = "برای اعلان‌های ایمیل باید SMTP در تنظیمات فعال باشد."
-submit = "به‌روزرسانی گذرواژه"
-subtitle = "به‌روزرسانی گذرواژه برای"
-success = "گذرواژه با موفقیت به‌روزرسانی شد"
-title = "تغییر گذرواژه"
-
-[workspace.people.editMember]
-editing = "Editing: <0>{{username}}</0>"
-error = "به‌روزرسانی کاربر ناموفق بود"
-role = "نقش"
-submit = "Update User"
-success = "کاربر با موفقیت به‌روزرسانی شد"
-team = "تیم (اختیاری)"
-teamPlaceholder = "یک تیم انتخاب کنید"
-title = "Edit User"
-
-[workspace.people.emailInvite]
-allFailed = "دعوت کاربران ناموفق بود"
-emails = "آدرس‌های ایمیل"
-emailsPlaceholder = "user1@example.com, user2@example.com"
-emailsRequired = "حداقل یک آدرس ایمیل الزامی است"
-error = "ارسال دعوت‌نامه‌ها ناموفق بود"
-partialFailure = "برخی دعوت‌ها ناموفق بودند"
-submit = "ارسال دعوت‌نامه‌ها"
-success = "کاربر(ان) با موفقیت دعوت شد(ند)"
-
-[workspace.people.inviteLink]
-copied = "لینک به کلیپ‌بورد کپی شد"
-email = "آدرس ایمیل"
-emailDescription = "اختیاری - برای لینک دعوت عمومی که هرکسی می‌تواند از آن استفاده کند، خالی بگذارید"
-emailPlaceholder = "user@example.com (اختیاری)"
-emailSent = "لینک دعوت تولید و از طریق ایمیل ارسال شد"
-error = "تولید لینک دعوت ناموفق بود"
-expiryHours = "ساعات انقضا"
-generate = "تولید لینک"
-generated = "لینک دعوت تولید شد"
-sendEmail = "ارسال لینک دعوت از طریق ایمیل"
-sendEmailDescription = "در صورت فعال بودن، لینک دعوت به آدرس ایمیل مشخص‌شده ارسال می‌شود"
-submit = "تولید لینک دعوت"
-
-[workspace.people.inviteMembers]
-label = "دعوت اعضا"
-subtitle = "در زیر ایمیل‌ها را تایپ یا بچسبانید و با کاما جدا کنید. فضای کاری شما به‌ازای اعضا صورت‌حساب می‌شود."
-
-[workspace.people.inviteMode]
-email = "ایمیل"
-emailDisabled = "دعوت ایمیلی نیازمند پیکربندی SMTP و mail.enableInvites=true در تنظیمات است"
-link = "لینک"
-username = "نام کاربری"
 
 [workspace.people.license]
-currentUsage = "در حال استفاده از {{current}} از {{max}} مجوز کاربر"
-fromLicense = "از مجوز"
-grandfathered = "مشمول حقوق مکتسبه"
-grandfatheredShort = "{{count}} مشمول حقوق مکتسبه"
-slotsAvailable_one = "{{count}} user slot available"
-slotsAvailable_other = "{{count}} user slots available"
-slotsAvailable_zero = "No slots available"
 users_one = "user"
 users_other = "users"
 
-[workspace.people.mfa]
-adminDisableError = "غیرفعال کردن MFA برای کاربر ناموفق بود"
-adminDisableSuccess = "MFA برای کاربر با موفقیت غیرفعال شد"
-disableByAdmin = "غیرفعال کردن MFA"
-
-[workspace.people.roleDescriptions]
-admin = "می‌تواند تنظیمات را مدیریت و اعضا را دعوت کند، با دسترسی کامل مدیریتی."
-currentRole = "نقش تخصیص‌یافتهٔ فعلی."
-user = "Can view and edit shared files, but cannot manage workspace settings or users."
-
-[workspace.people.toggleEnabled]
-error = "به‌روزرسانی وضعیت کاربر ناموفق بود"
-success = "وضعیت کاربر با موفقیت به‌روزرسانی شد"
-
 [workspace.teams]
-addMember = "افزودن عضو"
-backToTeams = "بازگشت به تیم‌ها"
-cannotAddToInternal = "امکان افزودن عضو به تیم Internal وجود ندارد"
-cannotDeleteInternal = "امکان حذف تیم Internal وجود ندارد"
-cannotRenameInternal = "امکان تغییر نام تیم Internal وجود ندارد"
-confirmDelete = "مطمئنید می‌خواهید این تیم را حذف کنید؟ برای حذف، تیم باید خالی باشد."
-confirmRemove = "کاربر از این تیم حذف شود؟"
-createNewTeam = "ایجاد تیم جدید"
-deleteTeamLabel = "حذف تیم"
 description = "مدیریت تیم‌ها و سازمان‌دهی اعضای فضای کاری"
-loadError = "بارگذاری جزئیات تیم ناموفق بود"
-loading = "در حال بارگذاری تیم‌ها..."
-loadingDetails = "در حال بارگذاری جزئیات تیم..."
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
-noMembers = "هیچ عضوی در این تیم نیست"
-noTeamsFound = "تیمی یافت نشد"
-removeMember = "حذف از تیم"
-removeMemberError = "حذف کاربر از تیم ناموفق بود"
-removeMemberSuccess = "کاربر از تیم حذف شد"
-renameTeamLabel = "تغییر نام تیم"
-system = "سیستم"
-teamActions = "اقدامات تیم"
-teamName = "نام تیم"
-teamNotFound = "تیم پیدا نشد"
-totalMembers = "مجموع اعضا"
-viewTeam = "مشاهده تیم"
-
-[workspace.teams.addMemberToTeam]
-addingTo = "افزودن به"
-currentlyIn = "در حال حاضر در"
-error = "افزودن عضو به تیم ناموفق بود"
-selectUser = "انتخاب کاربر"
-selectUserPlaceholder = "یک کاربر انتخاب کنید"
-selectUserRequired = "لطفاً یک کاربر انتخاب کنید"
-submit = "افزودن عضو"
-success = "عضو با موفقیت به تیم اضافه شد"
-title = "افزودن عضو به تیم"
-userRequired = "لطفاً یک کاربر انتخاب کنید"
-willBeMoved = "توجه: این کاربر از تیم فعلی خود به این تیم منتقل خواهد شد."
-
-[workspace.teams.changeTeam]
-changing = "در حال انتقال"
-error = "تغییر تیم ناموفق بود"
-label = "تغییر تیم"
-selectTeam = "انتخاب تیم"
-selectTeamPlaceholder = "یک تیم انتخاب کنید"
-selectTeamRequired = "لطفاً یک تیم انتخاب کنید"
-submit = "تغییر تیم"
-success = "تیم با موفقیت تغییر کرد"
-title = "تغییر تیم"
-
-[workspace.teams.createTeam]
-error = "ایجاد تیم ناموفق بود"
-nameRequired = "نام تیم الزامی است"
-submit = "ایجاد تیم"
-success = "تیم با موفقیت ایجاد شد"
-teamName = "نام تیم"
-teamNamePlaceholder = "نام تیم را وارد کنید"
-title = "ایجاد تیم جدید"
-
-[workspace.teams.deleteTeam]
-error = "حذف تیم ناموفق بود. مطمئن شوید تیم خالی است."
-success = "تیم با موفقیت حذف شد"
-
-[workspace.teams.renameTeam]
-error = "تغییر نام تیم ناموفق بود"
-nameRequired = "نام تیم الزامی است"
-newTeamName = "نام جدید تیم"
-newTeamNamePlaceholder = "نام جدید تیم را وارد کنید"
-renaming = "در حال تغییر نام:"
-submit = "تغییر نام تیم"
-success = "نام تیم با موفقیت تغییر کرد"
-title = "تغییر نام تیم"
 
 [zipWarning]
 cancel = "انصراف"
