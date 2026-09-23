@@ -56,6 +56,8 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 const source = () => new Blob(["%PDF-1.7"], { type: "application/pdf" });
+const otherDocument = () =>
+  new Blob(["%PDF-1.7 a different form"], { type: "application/pdf" });
 
 function field(name: string, value = ""): FormField {
   return {
@@ -156,6 +158,67 @@ describe("FormFillContext XFA handling", () => {
 
     expect(saved).toBe(filled);
     expect(hook.current.xfaSyncFailed).toBe(true);
+  });
+
+  it("keeps a failed-sync notice for the saved version, not for another document", async () => {
+    expectConsole.warn(/\[FormFill\] XFA sync failed/);
+    syncXfaForm.mockRejectedValue(new Error("404"));
+    const hook = await openForm([field("a")]);
+    let saved: Blob | undefined;
+    await act(async () => {
+      saved = await hook.current.submitForm(source());
+    });
+
+    // The viewer reloads the saved PDF under a new file id.
+    await act(async () => {
+      await hook.current.fetchFields(saved!, "file-A-saved");
+    });
+    expect(hook.current.xfaSyncFailed).toBe(true);
+
+    await act(async () => {
+      await hook.current.fetchFields(otherDocument(), "file-B");
+    });
+    expect(hook.current.xfaSyncFailed).toBe(false);
+  });
+
+  it("keeps the chosen mode for the saved version and resets it for another document", async () => {
+    const hook = await openForm([field("a")]);
+    act(() => hook.current.setXfaMode("none"));
+    let saved: Blob | undefined;
+    await act(async () => {
+      saved = await hook.current.submitForm(source());
+    });
+
+    await act(async () => {
+      await hook.current.fetchFields(saved!, "file-A-saved");
+    });
+    expect(hook.current.xfaMode).toBe("none");
+
+    await act(async () => {
+      await hook.current.fetchFields(otherDocument(), "file-B");
+    });
+    expect(hook.current.xfaMode).toBe("sync");
+  });
+
+  it("keeps the chosen mode across the reload that follows a structural commit", async () => {
+    const committed = new Blob(["%PDF-1.7 with the committed fields"]);
+    applyFieldEdits.mockResolvedValue({
+      blob: committed,
+      skipped: [],
+      skippedTotal: 0,
+    });
+    const hook = await openForm([field("a")]);
+    act(() => hook.current.setXfaMode("none"));
+    act(() => hook.current.stageModification("a", { x: 1 }));
+
+    await act(async () => {
+      await hook.current.commitModifications(source());
+    });
+    await act(async () => {
+      await hook.current.fetchFields(committed, "file-A-committed");
+    });
+
+    expect(hook.current.xfaMode).toBe("none");
   });
 
   it("sends the chosen mode with structural commits", async () => {

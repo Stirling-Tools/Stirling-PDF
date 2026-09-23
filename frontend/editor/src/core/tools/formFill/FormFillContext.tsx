@@ -481,6 +481,11 @@ export function FormFillProvider({
   xfaModeRef.current = xfaMode;
   const [xfaSyncFailed, setXfaSyncFailed] = useState(false);
   const clearXfaSyncFailed = useCallback(() => setXfaSyncFailed(false), []);
+  /**
+   * Size of the PDF the last save or commit produced. The viewer reloads it under a new file id,
+   * so its size is what tells the saved version of this document from a different document.
+   */
+  const savedOutputSizeRef = useRef<number | null>(null);
 
   const [skippedEdits, setSkippedEdits] = useState<SkippedFieldEdit[]>([]);
   const [skippedTotal, setSkippedTotal] = useState(0);
@@ -566,6 +571,15 @@ export function FormFillProvider({
             ? { ...valuesStore.values }
             : {};
       retainedValuesRef.current = null;
+
+      // A different document starts from the safe default; the version a save just produced keeps
+      // the user's choice, and the notice if its sync failed.
+      const savedVersion = savedOutputSizeRef.current === file.size;
+      savedOutputSizeRef.current = null;
+      if (!sameDocument && !savedVersion) {
+        setXfaMode("sync");
+        setXfaSyncFailed(false);
+      }
 
       lastKnownFileIdRef.current = fileId ?? null;
       // Immediately clear previous state so FormFieldOverlay's stale-file guards
@@ -739,6 +753,7 @@ export function FormFillProvider({
       if (providerModeRef.current !== "pdfbox") {
         blob = await syncClientSave(file, blob, flatten);
       }
+      savedOutputSizeRef.current = blob.size;
       dispatch({ type: "MARK_CLEAN" });
       return blob;
     },
@@ -798,6 +813,9 @@ export function FormFillProvider({
     valuesStore.reset({});
     dispatch({ type: "RESET" });
     clearEditingState();
+    savedOutputSizeRef.current = null;
+    setXfaMode("sync");
+    setXfaSyncFailed(false);
   }, [valuesStore, clearEditingState]);
 
   // --- Mode switching ---
@@ -885,6 +903,7 @@ export function FormFillProvider({
         { add: definitions },
         xfaModeRef.current,
       );
+      savedOutputSizeRef.current = result.blob.size;
       bundledFieldsRef.current = result.fields
         ? { fields: result.fields, size: result.blob.size }
         : null;
@@ -948,6 +967,7 @@ export function FormFillProvider({
         { modify: updates, delete: deletedFieldNames },
         xfaModeRef.current,
       );
+      savedOutputSizeRef.current = result.blob.size;
       bundledFieldsRef.current = result.fields
         ? { fields: result.fields, size: result.blob.size }
         : null;
