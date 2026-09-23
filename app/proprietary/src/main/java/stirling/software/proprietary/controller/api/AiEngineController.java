@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -57,6 +58,9 @@ import tools.jackson.databind.node.ObjectNode;
 @Hidden
 @Tag(name = "AI Engine", description = "Endpoints for AI-powered PDF workflows")
 public class AiEngineController {
+
+    /** Per probe, connect included, so a hung engine cannot hold a request for minutes. */
+    static final Duration PROBE_TIMEOUT = Duration.ofSeconds(5);
 
     private final AiEngineClient aiEngineClient;
     private final AiWorkflowService aiWorkflowService;
@@ -115,15 +119,16 @@ public class AiEngineController {
             summary = "AI engine health check",
             description = "Returns the health status of the AI engine including configured models")
     public ResponseEntity<String> health() throws IOException {
-        String response = aiEngineClient.get("/health", currentUserId());
+        String response = aiEngineClient.get("/health", currentUserId(), PROBE_TIMEOUT);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
     }
 
     /**
      * Also probes a secret-gated route: the engine's {@code /health} skips the shared-secret check,
-     * so it stays green while real calls get 401.
+     * so it stays green while real calls get 401. Admin-only, as each call makes 2-4 requests.
      */
     @GetMapping("/status")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             summary = "AI engine status",
             description =
@@ -160,7 +165,7 @@ public class AiEngineController {
         long startedAt = System.nanoTime();
         String health;
         try {
-            health = aiEngineClient.get("/health", userId);
+            health = aiEngineClient.get("/health", userId, PROBE_TIMEOUT);
         } catch (IOException | RuntimeException e) {
             return status.reachable(false).error(describeFailure(e)).build();
         }
@@ -184,7 +189,8 @@ public class AiEngineController {
      */
     private Boolean probeCloudSharing(String userId) {
         try {
-            JsonNode body = objectMapper.readTree(aiEngineClient.get("/status", userId));
+            JsonNode body =
+                    objectMapper.readTree(aiEngineClient.get("/status", userId, PROBE_TIMEOUT));
             JsonNode enabled = body.path("sharingEnabled");
             return enabled.isBoolean() ? enabled.asBoolean() : null;
         } catch (IOException | RuntimeException e) {
@@ -199,7 +205,7 @@ public class AiEngineController {
     private Boolean probeAuthentication(
             String userId, AiEngineStatus.AiEngineStatusBuilder status) {
         try {
-            aiEngineClient.get("/api/v1/agents/capabilities", userId);
+            aiEngineClient.get("/api/v1/agents/capabilities", userId, PROBE_TIMEOUT);
             return true;
         } catch (AiEngineClient.EngineRejectedCredentials e) {
             status.error(
