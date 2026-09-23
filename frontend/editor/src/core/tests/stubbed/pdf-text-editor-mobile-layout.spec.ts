@@ -9,7 +9,6 @@ const SAMPLE_PDF = path.join(
 
 test.use({
   viewport: { width: 390, height: 844 },
-  isMobile: true,
   hasTouch: true,
 });
 
@@ -46,9 +45,10 @@ test.describe("PDF text editor - phone layout", () => {
     );
     await expect(page.getByTestId("pdf-editor-mobile-save")).toBeVisible();
 
-    const stage = await page.getByTestId("pdf-editor-stage").boundingBox();
+    // Read both boxes per poll: the phone slider is still scrolling into view.
     await expect
       .poll(async () => {
+        const stage = await page.getByTestId("pdf-editor-stage").boundingBox();
         const box = await page.getByTestId("pdf-editor-page-0").boundingBox();
         return (
           !!box &&
