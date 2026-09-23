@@ -37,6 +37,7 @@ import { isStirlingFile, getFormFillFileId } from "@app/types/fileContext";
 import type { BaseToolProps } from "@app/types/tool";
 import type { FormField } from "@app/tools/formFill/types";
 import { FieldInput } from "@app/tools/formFill/FieldInput";
+import { XfaNotice } from "@app/tools/formFill/XfaNotice";
 import {
   FIELD_TYPE_ICON,
   FIELD_TYPE_COLOR,
@@ -587,6 +588,8 @@ const FormFill = (_props: BaseToolProps) => {
                     mt={4}
                   />
                 </div>
+
+                <XfaNotice file={currentFile ?? null} variant="panel" />
 
                 {/* Flatten toggle */}
                 <Switch

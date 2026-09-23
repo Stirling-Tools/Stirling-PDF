@@ -5013,6 +5013,28 @@ restore = "Restore"
 [formFill.sidebar]
 close = "Close sidebar"
 
+[formFill.xfa]
+dynamicDescription = "This form is built entirely in XFA and has no fields other viewers can fill. Only Adobe Acrobat or Reader can fill it."
+dynamicTitle = "Dynamic XFA form"
+hybridDescription = "Adobe Acrobat shows this form's XFA data instead of the fields you fill here."
+hybridTitle = "Hybrid XFA form: Acrobat data may differ"
+modeLabel = "What saving does to the XFA"
+structureDescription = "Adobe Acrobat shows this form's XFA version, which cannot follow changes to its fields."
+syncFailed = "The XFA data could not be updated, so Acrobat may still show the old values in the saved PDF."
+
+[formFill.xfa.mode]
+none = "Leave untouched"
+noneDescription = "Keep the XFA data as it is. Acrobat will go on showing its old values."
+strip = "Remove XFA"
+stripDescription = "Every viewer, Acrobat included, uses the regular fields. The form's LiveCycle scripts and checks stop working."
+sync = "Sync XFA (recommended)"
+syncDescription = "Copy the values into the XFA data, so Acrobat shows the same as every other viewer."
+
+[formFill.xfa.structure]
+noneDescription = "Acrobat keeps showing the form as it was before these changes."
+remove = "Remove XFA (recommended)"
+removeDescription = "Its template cannot describe added, changed or deleted fields, so it has to go for Acrobat to show the new form."
+
 [getPdfInfo]
 downloadJson = "Download JSON"
 downloads = "Downloads"
