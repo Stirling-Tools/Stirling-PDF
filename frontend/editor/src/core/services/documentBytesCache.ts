@@ -99,7 +99,18 @@ function rememberFileKey(key: string, buffer: ArrayBuffer): void {
 export async function releaseDocumentBytes(blob: Blob): Promise<void> {
   resolved.delete(blob);
   pending.delete(blob);
-  const key = await documentFileKey(blob);
+  // No cached fingerprint: this Blob never created a key entry, so it has
+  // nothing to drop. Do not read the file only to release it.
+  if (!fingerprints.has(blob)) return;
+  let key: string | null = null;
+  try {
+    key = await documentFileKey(blob);
+  } catch {
+    // The file became unreadable after the read. The identity entries above
+    // are already gone, so there is nothing left to clean up.
+  } finally {
+    fingerprints.delete(blob);
+  }
   if (key) {
     resolvedByFileKey.delete(key);
     pendingByFileKey.delete(key);

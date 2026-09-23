@@ -105,6 +105,16 @@ describe("documentBytesCache", () => {
     expect(second).not.toBe(first);
   });
 
+  it("release without a prior read touches no Blob and never rejects", async () => {
+    const file = makeFile("released.pdf", [7, 8, 9]);
+    const arrayBuffer = vi.spyOn(file, "arrayBuffer");
+    const slice = vi.spyOn(file, "slice");
+
+    await expect(releaseDocumentBytes(file)).resolves.toBeUndefined();
+    expect(arrayBuffer).not.toHaveBeenCalled();
+    expect(slice).not.toHaveBeenCalled();
+  });
+
   it("does not cache a failed read, so a retry re-reads", async () => {
     const blob = new Blob([new Uint8Array([1])]);
     const spy = vi
