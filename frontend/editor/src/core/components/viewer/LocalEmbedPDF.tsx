@@ -96,7 +96,6 @@ import {
   resolveEngineDocumentOpen,
   type EngineDocumentProbe,
 } from "@app/services/documentProbeEngine";
-import { getDocumentBytes } from "@app/services/documentBytesCache";
 import { documentHasFormFieldsFor } from "@app/services/documentFormProbe";
 import { documentHasLayers } from "@app/components/viewer/layerUtils";
 import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
