@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.failure.FailureKind;
 import stirling.software.proprietary.failure.PolicyFailureRecorder;
+import stirling.software.proprietary.policy.config.FolderAccessDeniedException;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.input.InputSource;
@@ -223,6 +224,16 @@ public class PolicyRunner {
         return policyEngine.cancelAllFor(policyId);
     }
 
+    private static String unreadableFolderReason(Exception e) {
+        if (e instanceof FolderAccessDeniedException) {
+            return "The folder is outside the roots this server permits";
+        }
+        if (e instanceof FileSystemException fs && fs.getReason() != null) {
+            return fs.getReason();
+        }
+        return "The folder could not be listed";
+    }
+
     /**
      * Wait until every run of the policy has settled its claim: none outside a terminal state, no
      * ledger row in flight. False on timeout — a run inside a long tool call can outlive any
@@ -273,21 +284,23 @@ public class PolicyRunner {
                     spec.type(),
                     policy.id(),
                     e.getMessage());
-            // Recorded, not just logged, for a disk folder that failed to list: its owner would
-            // otherwise never hear that the folder stopped working, and only they can fix it. A
-            // bucket's SDK error or a bug in a source is a RuntimeException and is not the folder
-            // being unreadable, so it stays a log line. The reason without the path: reviewers
-            // across the team read this.
-            if (e instanceof IOException && FolderAccessGuard.FOLDER_TYPE.equals(spec.type())) {
+            // Recorded, not just logged, for a disk folder that could not be listed or that the
+            // server's allowlist now refuses: its owner would otherwise never hear that the folder
+            // stopped working, and only they can fix it. A bucket's SDK error or a bug in a source
+            // is neither, so it stays a log line. The reason without the path: reviewers across
+            // the team read this, and the guard's own message names the folder.
+            boolean folderUnreadable =
+                    FolderAccessGuard.FOLDER_TYPE.equals(spec.type())
+                            && (e instanceof IOException
+                                    || e instanceof FolderAccessDeniedException);
+            if (folderUnreadable) {
                 failureRecorder.recordRunFailureAs(
                         FailureKind.SOURCE_UNREADABLE,
                         null,
                         policy.id(),
                         storedSource.id(),
                         policy.owner(),
-                        e instanceof FileSystemException fs && fs.getReason() != null
-                                ? fs.getReason()
-                                : "The folder could not be listed");
+                        unreadableFolderReason(e));
             }
             context.vetoCleanup();
             return List.of();
