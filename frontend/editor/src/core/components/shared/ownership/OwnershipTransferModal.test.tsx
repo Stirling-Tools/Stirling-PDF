@@ -576,6 +576,28 @@ describe("ownership handover", () => {
     expect(adapter.completeLocal).toHaveBeenCalledOnce();
   });
 
+  it.each([
+    ["TARGET_UNAVAILABLE", "Restore the selected server user's access"],
+    ["TARGET_CHANGED", "Restore the selected server user's access"],
+    ["LINK_CHANGED", "The server's cloud link changed"],
+  ])(
+    "shows the repair needed after the cloud step: %s",
+    async (code, message) => {
+      vi.mocked(adapter.prepare).mockResolvedValue(status("TRANSFERRED"));
+      vi.mocked(adapter.completeLocal!).mockRejectedValue(new Error(code));
+      show();
+      await click(
+        await screen.findByRole("button", { name: "Finish server transfer" }),
+      );
+      expect(await screen.findByRole("alert")).toHaveTextContent(message);
+      expect(adapter.cancel).not.toHaveBeenCalled();
+      expect(
+        screen.queryByRole("button", { name: "Cancel transfer" }),
+      ).toBeNull();
+      expect(adapter.transferCloud).not.toHaveBeenCalled();
+    },
+  );
+
   it("reopening a partial handover offers completion and prevents cancellation", async () => {
     vi.mocked(adapter.prepare).mockResolvedValue(status("TRANSFERRED"));
     show();

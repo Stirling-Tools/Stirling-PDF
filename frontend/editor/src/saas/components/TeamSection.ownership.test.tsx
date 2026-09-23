@@ -3,7 +3,8 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import TeamSection from "@app/components/shared/config/configSections/TeamSection";
 
-const { post, refreshTeams, refreshSession } = vi.hoisted(() => ({
+const { post, refreshTeams, refreshSession, teamState } = vi.hoisted(() => ({
+  teamState: { available: true, loading: false },
   post: vi.fn(),
   refreshTeams: vi.fn().mockResolvedValue(undefined),
   refreshSession: vi.fn().mockResolvedValue(undefined),
@@ -15,7 +16,10 @@ vi.mock("@app/auth/teamSession", () => ({
 }));
 vi.mock("@app/contexts/SaaSTeamContext", () => ({
   useSaaSTeam: () => ({
-    currentTeam: { teamId: 9, name: "Acme", seatsUsed: 2 },
+    currentTeam: teamState.available
+      ? { teamId: 9, name: "Acme", seatsUsed: 2 }
+      : null,
+    loading: teamState.loading,
     teamMembers: [
       { id: 1, username: "Alex", email: "alex@example.com", role: "LEADER" },
       { id: 2, username: "Jamie", email: "jamie@example.com", role: "MEMBER" },
@@ -40,6 +44,8 @@ vi.mock("react-i18next", async (importOriginal) => {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  teamState.available = true;
+  teamState.loading = false;
   post.mockResolvedValue({
     data: {
       teamId: 9,
@@ -77,4 +83,21 @@ it("keeps the SaaS team settings receipt open until the owner acknowledges it", 
   });
   expect(refreshSession).toHaveBeenCalledOnce();
   expect(screen.queryByRole("dialog")).toBeNull();
+});
+
+it("shows a retry instead of endless loading when no current team is identified", async () => {
+  teamState.available = false;
+  render(
+    <MantineProvider>
+      <TeamSection />
+    </MantineProvider>,
+  );
+  expect(screen.getByText(/couldn't identify your current team/)).toBeVisible();
+  expect(screen.queryByText("Loading team information...")).toBeNull();
+  refreshTeams.mockClear();
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+  });
+  expect(refreshTeams).toHaveBeenCalledOnce();
+  expect(post).not.toHaveBeenCalled();
 });

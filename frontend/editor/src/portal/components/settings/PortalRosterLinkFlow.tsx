@@ -3,7 +3,7 @@ import { AccountLinkSessionBoundary } from "@app/portal/components/account-link/
 import { ConnectCallbackHost } from "@app/portal/components/account-link/ConnectCallbackHost";
 import { LinkAccountModalHost } from "@app/portal/components/account-link/LinkAccountModal";
 
-/** Mounted only after an explicit cloud sign-in request from the roster. */
+/** Handles an explicit roster sign-in request or its return from cloud authentication. */
 export default function PortalRosterLinkFlow() {
   return (
     <AccountLinkSessionBoundary>

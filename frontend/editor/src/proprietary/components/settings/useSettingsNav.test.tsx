@@ -68,6 +68,10 @@ describe("self-hosted owner settings", () => {
       expect(keys.includes("account-link")).toBe(owner);
       expect(keys).not.toContain("adminPlan");
       expect(keys).not.toContain("plan");
+      expect(result.current.aliases?.plan).toBe(owner ? "billing" : undefined);
+      expect(result.current.aliases?.adminPlan).toBe(
+        owner ? "billing" : undefined,
+      );
     },
   );
 
@@ -78,8 +82,11 @@ describe("self-hosted owner settings", () => {
         section.items.map((item) => item.key),
       );
     expect(keys()).toContain("billing");
+    expect(result.current.aliases?.plan).toBe("billing");
     state.owner = false;
     rerender();
+    expect(result.current.aliases?.plan).toBeUndefined();
+    expect(result.current.aliases?.adminPlan).toBeUndefined();
     expect(keys()).not.toContain("billing");
     expect(keys()).not.toContain("account-link");
     expect(keys()).not.toContain("adminPlan");

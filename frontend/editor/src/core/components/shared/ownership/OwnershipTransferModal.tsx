@@ -218,7 +218,7 @@ export function OwnershipTransferModal({
         "ownership.linkRevoked",
         "This server's cloud link is no longer valid. Cancel the transfer, then reconnect your Stirling account in settings. Ownership will not change.",
       );
-    if (partial || error?.includes("FINISH_LOCAL_TRANSFER"))
+    if (error?.includes("FINISH_LOCAL_TRANSFER"))
       return t(
         "ownership.partialError",
         "Cloud ownership has transferred. Finish the server transfer to keep both owners aligned.",
@@ -253,10 +253,15 @@ export function OwnershipTransferModal({
       error?.includes("TARGET_CHANGED") ||
       error?.includes("TARGET_UNAVAILABLE")
     )
-      return t(
-        "ownership.targetChanged",
-        "The recipient's account changed. Restore their access or cancel this transfer and choose them again.",
-      );
+      return partial
+        ? t(
+            "ownership.partialTargetChanged",
+            "Restore the selected server user's access and original account details, then finish the server transfer. Cloud ownership has already transferred.",
+          )
+        : t(
+            "ownership.targetChanged",
+            "The recipient's account changed. Restore their access or cancel this transfer and choose them again.",
+          );
     if (error?.includes("HANDOVER_IN_PROGRESS"))
       return t(
         "ownership.inProgress",
@@ -266,6 +271,11 @@ export function OwnershipTransferModal({
       return t(
         "ownership.linkChanged",
         "The server's cloud link changed. Ask the server operator to restore the original link before resuming.",
+      );
+    if (partial)
+      return t(
+        "ownership.partialError",
+        "Cloud ownership has transferred. Finish the server transfer to keep both owners aligned.",
       );
     return t(
       "ownership.error",

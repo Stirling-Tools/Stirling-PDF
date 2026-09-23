@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { HttpError } from "@app/portal/api/http";
 import type { ReactNode } from "react";
+import { PortalRosterHost } from "@app/portal/components/settings/PortalRosterHost";
 import { PortalSettingsSectionHost } from "@app/portal/components/settings/PortalSettingsSectionHost";
 import { act, render, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
@@ -139,9 +140,13 @@ describe("account-link callback", () => {
     setSession.mockResolvedValue({ error: null });
   });
 
-  it.each(["/settings/billing", "/settings/account-link"])(
+  it.each(["/settings/billing", "/settings/account-link", "/settings/users"])(
     "restores renewal through the settings host at %s",
     async (returnTo) => {
+      const Host =
+        returnTo === "/settings/users"
+          ? PortalRosterHost
+          : PortalSettingsSectionHost;
       rememberConnect({
         ownerId: "owner",
         mode: "reauth",
@@ -160,10 +165,10 @@ describe("account-link callback", () => {
               <Route
                 path={returnTo}
                 element={
-                  <PortalSettingsSectionHost>
+                  <Host>
                     <OutcomeSpy />
                     <div data-testid="settings-destination" />
-                  </PortalSettingsSectionHost>
+                  </Host>
                 }
               />
             </Routes>

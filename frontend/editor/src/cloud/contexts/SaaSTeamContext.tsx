@@ -108,7 +108,7 @@ export function SaaSTeamProvider({ children }: { children: ReactNode }) {
 
   const fetchMyTeams = useCallback(async () => {
     if (!canUseTeams) return null;
-
+    setLoading(true);
     try {
       const response = await apiClient.get<Team[]>("/api/v1/team/my", {
         suppressErrorToast: true,
@@ -120,7 +120,11 @@ export function SaaSTeamProvider({ children }: { children: ReactNode }) {
       return activeTeam || null;
     } catch (error) {
       console.error("[SaaSTeamContext] Failed to fetch teams:", error);
+      setCurrentTeam(null);
+      setTeams([]);
       return null;
+    } finally {
+      setLoading(false);
     }
   }, [canUseTeams]);
 
@@ -200,7 +204,6 @@ export function SaaSTeamProvider({ children }: { children: ReactNode }) {
       setTeamMembers([]);
       setTeamInvitations([]);
     }
-    setLoading(false);
   }, [currentTeam, fetchTeamMembers, fetchTeamInvitations]);
 
   const inviteUser = async (email: string) => {

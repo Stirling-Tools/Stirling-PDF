@@ -62,13 +62,23 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
     [base.sections, portalSections],
   );
 
+  const portalAliases = { ...PORTAL_SECTION_ALIASES };
+  if (
+    !portalSections.some((group) =>
+      group.items.some((item) => item.key === "billing"),
+    )
+  ) {
+    delete portalAliases.plan;
+    delete portalAliases.adminPlan;
+  }
+
   return {
     ...base,
     sections,
     pending: !accessSettled || loading,
     aliases:
       portalSections.length > 0
-        ? { ...base.aliases, ...PORTAL_SECTION_ALIASES }
+        ? { ...base.aliases, ...portalAliases }
         : base.aliases,
   };
 }

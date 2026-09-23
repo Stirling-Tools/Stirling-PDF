@@ -1,4 +1,5 @@
-import { lazy, Suspense, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
+import { useLocation } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { getPortalQueryClient } from "@portal/queryClient";
 import { LinkProvider } from "@portal/contexts/LinkContext";
@@ -14,7 +15,14 @@ const PortalRosterLinkFlow = lazy(
 
 function RequestedLinkFlow() {
   const { linkModalOpen } = useUI();
-  return linkModalOpen ? (
+  const location = useLocation();
+  const hasCallback = Boolean(location.state?.accountLinkReturn);
+  const [requested, setRequested] = useState(false);
+  useEffect(() => {
+    if (linkModalOpen || hasCallback) setRequested(true);
+  }, [linkModalOpen, hasCallback]);
+  // The callback clears router state before its asynchronous claim finishes.
+  return requested || linkModalOpen || hasCallback ? (
     <Suspense fallback={null}>
       <PortalRosterLinkFlow />
     </Suspense>

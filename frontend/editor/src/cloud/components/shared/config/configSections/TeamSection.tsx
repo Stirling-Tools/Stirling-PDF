@@ -28,6 +28,7 @@ const TeamSection: React.FC = () => {
   const { refreshAfterMembershipChange } = useTeamAuth();
   const {
     currentTeam,
+    loading,
     teamMembers,
     teamInvitations,
     isTeamLeader,
@@ -222,7 +223,21 @@ const TeamSection: React.FC = () => {
   if (!currentTeam) {
     return (
       <Alert color="gray">
-        <Text>{t("team.loading", "Loading team information...")}</Text>
+        {loading ? (
+          <Text>{t("team.loading", "Loading team information...")}</Text>
+        ) : (
+          <>
+            <Text>
+              {t(
+                "team.currentUnavailable",
+                "We couldn't identify your current team. Try again, or contact support if this continues.",
+              )}
+            </Text>
+            <Button onClick={() => void refreshTeams()}>
+              {t("common.retry", "Try again")}
+            </Button>
+          </>
+        )}
       </Alert>
     );
   }
