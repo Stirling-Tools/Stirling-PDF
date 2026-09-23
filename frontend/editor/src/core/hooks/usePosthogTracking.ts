@@ -81,8 +81,14 @@ export function usePosthogTracking(): void {
     let handleConsentChange: (() => void) | null = null;
 
     void (async () => {
-      const posthog = await loadPosthog();
-      if (cancelled) return;
+      const load = loadPosthog();
+      const posthog = await load.catch(() => {
+        // A rejected import would otherwise be replayed to every later effect;
+        // clearing the cache lets the next enabled effect retry.
+        if (posthogPromise === load) posthogPromise = null;
+        return null;
+      });
+      if (!posthog || cancelled) return;
       activePosthog = posthog;
       setActivePosthog(posthog);
 
