@@ -22,8 +22,25 @@ public final class StorageFileIdentities {
 
     private StorageFileIdentities() {}
 
+    private static final String PREFIX = "storage:";
+
     public static String identity(StoredFile file) {
-        return "storage:" + file.getId();
+        return PREFIX + file.getId();
+    }
+
+    /**
+     * The row id behind an identity this class wrote, or null for anything else, including a folder
+     * source's path identity. Lives beside {@link #identity} so the two cannot drift.
+     */
+    public static Long storedFileIdOf(String identity) {
+        if (identity == null || !identity.startsWith(PREFIX)) {
+            return null;
+        }
+        try {
+            return Long.valueOf(identity.substring(PREFIX.length()));
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     public static String gate(StoredFile file) {

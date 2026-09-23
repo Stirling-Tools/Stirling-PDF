@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
+import { openSuperSearch } from "@app/components/shared/superSearch/openSuperSearch";
 import { useEditorSearchScopes } from "@app/hooks/useSuperSearch";
 import "@app/components/viewer/readerRail/ReaderSuperSearch.css";
 
@@ -35,9 +36,7 @@ export function ReaderSuperSearch() {
   // once it has a box on screen to be focused in.
   useEffect(() => {
     if (!open) return;
-    const handoff = requestAnimationFrame(() =>
-      window.dispatchEvent(new Event("superSearch:focus")),
-    );
+    const handoff = requestAnimationFrame(() => openSuperSearch());
     return () => cancelAnimationFrame(handoff);
   }, [open]);
 
