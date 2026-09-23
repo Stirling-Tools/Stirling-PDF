@@ -351,11 +351,18 @@ function readScratchUtf16(
   fill: (ptr: number) => void,
 ): string {
   if (buffers.textSize < byteLen) {
-    if (buffers.text) m.pdfium.wasmExports.free(buffers.text);
+    if (buffers.text) {
+      m.pdfium.wasmExports.free(buffers.text);
+      buffers.text = 0;
+    }
     // Double rather than fit exactly: a field that grows a character at a time
     // would otherwise re-allocate on every read.
-    buffers.textSize = Math.max(byteLen, buffers.textSize * 2);
-    buffers.text = m.pdfium.wasmExports.malloc(buffers.textSize);
+    const nextTextSize = Math.max(byteLen, buffers.textSize * 2);
+    buffers.textSize = 0;
+    const nextText = m.pdfium.wasmExports.malloc(nextTextSize);
+    if (!nextText) throw new Error("Failed to allocate text buffer");
+    buffers.text = nextText;
+    buffers.textSize = nextTextSize;
   }
   fill(buffers.text);
   return readUtf16(m, buffers.text, byteLen);
