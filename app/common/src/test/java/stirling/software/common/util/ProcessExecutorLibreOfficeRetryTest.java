@@ -17,6 +17,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedConstruction;
@@ -30,6 +32,16 @@ class ProcessExecutorLibreOfficeRetryTest {
 
     private Path profile;
     private List<String> command;
+
+    @BeforeEach
+    void runAsInTheDockerImage() {
+        ProcessExecutor.setLibreOfficeSandboxed(true);
+    }
+
+    @AfterEach
+    void restoreBareInstall() {
+        ProcessExecutor.setLibreOfficeSandboxed(false);
+    }
 
     private void prepareCommand() throws IOException {
         profile = tmp.resolve("libreoffice_profile_job");

@@ -34,6 +34,11 @@ public class ProcessExecutor {
     private static ApplicationProperties applicationProperties = new ApplicationProperties();
     private static volatile UnoServerPool unoServerPool;
     private static volatile List<Path> libreOfficeWorkRoots = workRoots(List.of());
+
+    // Installed only in the Docker image (docker/base/lo-sandbox.c), where LibreOffice runs as its
+    // own user under a policy read from the environment; bare installs launch it unchanged.
+    private static volatile boolean libreOfficeSandboxed =
+            Files.isExecutable(Path.of("/usr/local/lib/stirling/lo-sandbox"));
     private final Semaphore semaphore;
     private final boolean liveUpdates;
     private long timeoutDuration;
@@ -193,6 +198,10 @@ public class ProcessExecutor {
         unoServerPool = pool;
     }
 
+    static void setLibreOfficeSandboxed(boolean sandboxed) {
+        libreOfficeSandboxed = sandboxed;
+    }
+
     /**
      * Dirs a direct soffice job's profile, output dir and inputs must lie within for it to get a
      * per-job sandbox policy. java.io.tmpdir is always included; blank or invalid entries are
@@ -297,7 +306,7 @@ public class ProcessExecutor {
             log.info("Running command: {}", String.join(" ", commandToRun));
             ProcessBuilder processBuilder = new ProcessBuilder(commandToRun);
             scrubEnvironment(processBuilder);
-            if (processType == Processes.LIBRE_OFFICE) {
+            if (processType == Processes.LIBRE_OFFICE && libreOfficeSandboxed) {
                 jobPolicy =
                         LibreOfficeSandboxPolicy.forCommand(commandToRun, libreOfficeWorkRoots)
                                 .orElse(null);
@@ -536,7 +545,7 @@ public class ProcessExecutor {
     }
 
     private void scrubEnvironment(ProcessBuilder processBuilder) {
-        if (processType != Processes.LIBRE_OFFICE) {
+        if (processType != Processes.LIBRE_OFFICE || !libreOfficeSandboxed) {
             return;
         }
         processBuilder.environment().keySet().removeIf(name -> !isLibreOfficeEnvAllowed(name));
@@ -617,7 +626,7 @@ public class ProcessExecutor {
         if (hostLocation == null
                 || hostLocation.isBlank()
                 || "auto".equalsIgnoreCase(hostLocation)) {
-            hostLocation = isLoopbackHost(host) ? "remote" : "auto";
+            hostLocation = libreOfficeSandboxed && isLoopbackHost(host) ? "remote" : "auto";
         } else {
             hostLocation = hostLocation.trim().toLowerCase(java.util.Locale.ROOT);
             if (!Set.of("auto", "local", "remote").contains(hostLocation)) {

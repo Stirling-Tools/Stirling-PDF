@@ -114,11 +114,22 @@ struct lo_ruleset_attr {
 };
 
 /* Used when STIRLING_LO_ALLOW_RO/RW are unset, so soffice started outside the init
- * scripts is still confined instead of being denied every path. The /var entries are
- * Ubuntu's LibreOffice prereg/uno_packages links and the fontconfig cache. */
-#define DEFAULT_RO                                                             \
-    "/usr:/lib:/lib64:/bin:/sbin:/etc:/proc:/var/lib/libreoffice:"             \
-    "/var/spool/libreoffice:/var/cache/fontconfig:/sys/devices/system/cpu"
+ * scripts is still confined instead of being denied every path. The read-only list is
+ * what LibreOffice opens across Writer, Calc, Impress, PDF import and PDF/A conversions:
+ * its own install and Ubuntu's /etc and /var links for it, shared libraries, locale,
+ * fonts and fontconfig, poppler's cmaps, time zones, and the few /etc files libc reads.
+ * The launcher script needs /bin/sh, dirname, grep and uname. Entries missing on a given
+ * architecture or image are skipped. */
+#define DEFAULT_RO                                                                 \
+    "/usr/lib/libreoffice:/etc/libreoffice:/var/lib/libreoffice:"                  \
+    "/var/spool/libreoffice:/usr/lib/x86_64-linux-gnu:/usr/lib/aarch64-linux-gnu:" \
+    "/usr/lib/locale:/usr/share/fonts:/usr/local/share/fonts:"                     \
+    "/usr/share/fontconfig:/etc/fonts:/var/cache/fontconfig:/usr/share/poppler:"   \
+    "/usr/share/zoneinfo:/usr/share/liblangtag:/usr/share/hyphen:"                 \
+    "/usr/share/myspell:/etc/ld.so.cache:/etc/passwd:/etc/nsswitch.conf:"          \
+    "/etc/locale.alias:/etc/localtime:/bin/sh:/usr/bin/dirname:/usr/bin/grep:"     \
+    "/usr/bin/uname:/proc/cpuinfo:/proc/meminfo:/proc/filesystems:"                \
+    "/sys/devices/system/cpu"
 #define DEFAULT_RW "/tmp:/dev"
 
 /* Fixed at build time: an exec target read from the environment would let whoever sets it

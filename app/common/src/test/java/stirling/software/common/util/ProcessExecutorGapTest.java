@@ -83,6 +83,7 @@ class ProcessExecutorGapTest {
     @AfterEach
     void resetUnoServerPool() {
         ProcessExecutor.setUnoServerPool(null);
+        ProcessExecutor.setLibreOfficeSandboxed(false);
     }
 
     // ----- validateCommand deeper branches -----------------------------------
@@ -290,8 +291,10 @@ class ProcessExecutorGapTest {
         }
 
         @Test
-        @DisplayName("blank host falls back to loopback, which forces byte transport")
+        @DisplayName(
+                "blank host falls back to loopback, which forces byte transport when sandboxed")
         void appliesHostAndPortFallbacks() throws Exception {
+            ProcessExecutor.setLibreOfficeSandboxed(true);
             List<String> command = List.of("unoconvert", "in.docx");
             ApplicationProperties.ProcessExecutor.UnoServerEndpoint ep =
                     endpoint("   ", 0, "auto", "http");
@@ -306,6 +309,18 @@ class ProcessExecutorGapTest {
                             "--host-location",
                             "remote",
                             "in.docx"),
+                    result);
+        }
+
+        @Test
+        @DisplayName("without the sandbox a loopback endpoint keeps unoconvert's own transport")
+        void loopbackStaysAutoWithoutSandbox() throws Exception {
+            List<String> command = List.of("unoconvert", "in.docx");
+            ApplicationProperties.ProcessExecutor.UnoServerEndpoint ep =
+                    endpoint("127.0.0.1", 2003, "auto", "http");
+            List<String> result = invokeApplyUnoServerEndpoint(qpdfExecutor(), command, ep);
+            assertEquals(
+                    List.of("unoconvert", "--host", "127.0.0.1", "--port", "2003", "in.docx"),
                     result);
         }
 
