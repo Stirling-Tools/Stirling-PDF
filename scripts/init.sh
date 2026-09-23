@@ -95,7 +95,8 @@ log_warn "Using TESSDATA_PREFIX=$TESSDATA_PREFIX"
 # Ensure the temporary directory exists and has proper permissions.
 mkdir -p /tmp/stirling-pdf
 chown -R stirlingpdfuser:stirlingpdfgroup /tmp/stirling-pdf || true
-chmod -R 755 /tmp/stirling-pdf || true
+# u+rwX rather than a fixed mode: stops every restart re-granting world-read on temp files.
+chmod -R u+rwX /tmp/stirling-pdf || true
 
 # === Start application ===
 # Run the main init script that handles the full startup logic.
