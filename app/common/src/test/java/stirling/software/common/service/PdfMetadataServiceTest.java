@@ -702,10 +702,11 @@ class PdfMetadataServiceTest {
                         assertThrows(
                                 IllegalArgumentException.class,
                                 () -> service.synchronizeXmpMetadata(doc, custom));
-                // Both raw keys are named: '_1A' sanitizes to itself, so a
-                // message built from the sanitized pair would be unreadable.
-                assertTrue(thrown.getMessage().contains("1A"));
-                assertTrue(thrown.getMessage().contains("_1A"));
+                // Both raw keys are named as complete quoted tokens: '_1A'
+                // sanitizes to itself, and a bare contains("1A") would pass on
+                // a message that named '_1A' twice.
+                assertTrue(thrown.getMessage().contains("'1A'"));
+                assertTrue(thrown.getMessage().contains("'_1A'"));
                 // Rejected before any XMP mutation: no metadata stream created.
                 assertNull(doc.getDocumentCatalog().getMetadata());
             }
