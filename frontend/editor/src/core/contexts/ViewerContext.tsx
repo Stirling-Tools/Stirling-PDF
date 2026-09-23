@@ -265,6 +265,8 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   selectorsRef.current = selectors;
   const tRef = useRef(t);
   tRef.current = t;
+  const activeFileIdRef = useRef(activeFileId);
+  activeFileIdRef.current = activeFileId;
   const fileIds = useFileSelector((s) => s.files.ids);
 
   // Clear activeFileId when its file is removed from the workbench.
@@ -575,16 +577,19 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   // they haven't seen. With no active export policy this is a no-op and print
   // runs straight away.
   const printWithPolicy = useCallback(async () => {
-    const file = activeFileId
-      ? selectorsRef.current.getFiles([activeFileId as FileId])[0]
+    // Through a ref: switching the active file must not rebuild this callback,
+    // or the memoised actions bundle and every effect depending on it churn.
+    const currentActiveFileId = activeFileIdRef.current;
+    const file = currentActiveFileId
+      ? selectorsRef.current.getFiles([currentActiveFileId as FileId])[0]
       : undefined;
-    if (!activeFileId || !file) {
+    if (!currentActiveFileId || !file) {
       actionsBundle.printActions.print();
       return;
     }
     const [enforced] = await enforceExportPolicies(
       [file],
-      [activeFileId],
+      [currentActiveFileId],
       "print",
     );
     // Original file back means no policy rewrote it (no active policy, already
@@ -598,7 +603,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
       title: tRef.current("policies.enforcement.printPolicyAppliedTitle"),
       body: tRef.current("policies.enforcement.printPolicyAppliedBody"),
     });
-  }, [activeFileId, actionsBundle.printActions]);
+  }, [actionsBundle.printActions]);
 
   const enforcedPrintActions = useMemo<PrintActions>(
     () => ({ print: printWithPolicy }),

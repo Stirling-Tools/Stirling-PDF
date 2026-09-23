@@ -11,10 +11,15 @@ vi.mock("@app/contexts/NavigationContext", () => ({
   useNavigation: () => ({ currentRoute: "/" }),
 }));
 
-const mockSelectors = { getFiles: () => [] };
+const mockFile = Object.assign(new File(["%PDF"], "sample.pdf"), {
+  fileId: "file-1",
+  quickKey: "quick-1",
+});
+const mockSelectors = { getFiles: () => [mockFile] };
 vi.mock("@app/contexts/FileContext", () => ({
   useFileSelectors: () => mockSelectors,
-  useFileSelector: () => [],
+  // The workbench id list the provider watches when pruning activeFileId.
+  useFileSelector: () => [mockFile.fileId],
   useFileIndex: () => -1,
 }));
 
@@ -30,12 +35,20 @@ const MemoizedProbe = React.memo(function ContextProbe({
   const ctx = useViewer();
   onRead(ctx);
   return (
-    <button
-      onClick={() => ctx.toggleThumbnailSidebar()}
-      data-testid="toggle-sidebar"
-    >
-      Toggle
-    </button>
+    <>
+      <button
+        onClick={() => ctx.toggleThumbnailSidebar()}
+        data-testid="toggle-sidebar"
+      >
+        Toggle
+      </button>
+      <button
+        onClick={() => ctx.setActiveFileIndex(0)}
+        data-testid="set-active-file"
+      >
+        Set active file
+      </button>
+    </>
   );
 });
 
@@ -77,13 +90,10 @@ describe("ViewerContext stability", () => {
     expect(renderCount).toBe(1);
     const firstCtx = latestCtx;
 
-    // Parent re-renders
     act(() => {
       getByTestId("rerender-parent").click();
     });
 
-    // Because ViewerContext.Provider value is memoized and its dependencies haven't changed,
-    // memoized context consumers bail out and skip re-rendering!
     expect(renderCount).toBe(1);
     expect(latestCtx).toBe(firstCtx);
   });
@@ -106,7 +116,6 @@ describe("ViewerContext stability", () => {
     expect(renderCount).toBe(1);
     const first = recordedContexts[0];
 
-    // Toggle thumbnail sidebar (internal state transition)
     act(() => {
       getByTestId("toggle-sidebar").click();
     });
@@ -114,11 +123,9 @@ describe("ViewerContext stability", () => {
     expect(renderCount).toBe(2);
     const second = recordedContexts[1];
 
-    // Sidebar state updated
     expect(first.isThumbnailSidebarVisible).toBe(false);
     expect(second.isThumbnailSidebarVisible).toBe(true);
 
-    // Action objects are referentially identical
     expect(second.scrollActions).toBe(first.scrollActions);
     expect(second.zoomActions).toBe(first.zoomActions);
     expect(second.panActions).toBe(first.panActions);
@@ -139,5 +146,26 @@ describe("ViewerContext stability", () => {
     expect(second.toggleBookmarkSidebar).toBe(first.toggleBookmarkSidebar);
     expect(second.toggleAttachmentSidebar).toBe(first.toggleAttachmentSidebar);
     expect(second.toggleLayerSidebar).toBe(first.toggleLayerSidebar);
+  });
+
+  it("keeps print actions identical when the active file changes", () => {
+    const recordedContexts: ViewerContextType[] = [];
+
+    const { getByTestId } = render(
+      <ViewerProvider>
+        <MemoizedProbe onRead={(ctx) => recordedContexts.push(ctx)} />
+      </ViewerProvider>,
+    );
+
+    const first = recordedContexts[0];
+    expect(first.activeFileId).toBeNull();
+
+    act(() => {
+      getByTestId("set-active-file").click();
+    });
+
+    const latest = recordedContexts[recordedContexts.length - 1];
+    expect(latest.activeFileId).toBe("file-1");
+    expect(latest.printActions).toBe(first.printActions);
   });
 });
