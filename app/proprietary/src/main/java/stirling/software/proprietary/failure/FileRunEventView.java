@@ -52,20 +52,20 @@ public record FileRunEventView(
          * Fails closed on the source id: a source-fed row is never {@code BROWSER}, even once the
          * policy that fed it is gone, and only a smart folder's is reachable from here.
          */
-        public static DocumentLocation of(FileRunEvent event, SourceKind source) {
+        public static DocumentLocation of(FileRunEvent event, ProducingSurface source) {
             if (event.fileId() == null || event.fileId().isBlank()) {
                 return UNREACHABLE;
             }
             if (event.sourceId() == null || event.sourceId().isBlank()) {
                 return BROWSER;
             }
-            return source == SourceKind.SMART_FOLDER ? SMART_FOLDER : UNREACHABLE;
+            return source == ProducingSurface.SMART_FOLDER ? SMART_FOLDER : UNREACHABLE;
         }
     }
 
     public static FileRunEventView of(
             FileRunEvent event,
-            SourceKind source,
+            ProducingSurface source,
             List<FileRunEventService.AvailableAction> actions) {
         FailureKind kind = event.kind();
         DocumentLocation location = DocumentLocation.of(event, source);

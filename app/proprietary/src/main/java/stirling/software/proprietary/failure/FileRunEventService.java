@@ -154,7 +154,7 @@ public class FileRunEventService {
         // Without this a client could post VIEW_FILE and be answered as though something happened.
         // Resolved against this row: a retry of a document the browser holds is refused, not run.
         boolean inSmartFolder =
-                FileRunEventView.DocumentLocation.of(event, sourceKindOf(event))
+                FileRunEventView.DocumentLocation.of(event, producingSurfaceOf(event))
                         == FileRunEventView.DocumentLocation.SMART_FOLDER;
         if (resolvedId.executionFor(inSmartFolder) != FailureActionId.Execution.SERVER) {
             throw new FailureActionException(
@@ -227,11 +227,11 @@ public class FileRunEventService {
      * their audience is dropped, not disabled: greyed out would read as a permission problem.
      */
     public List<AvailableAction> availableActions(FileRunEvent event) {
-        return availableActions(event, sourceKindOf(event));
+        return availableActions(event, producingSurfaceOf(event));
     }
 
     /** As {@link #availableActions(FileRunEvent)}, with the source already looked up. */
-    public List<AvailableAction> availableActions(FileRunEvent event, SourceKind source) {
+    public List<AvailableAction> availableActions(FileRunEvent event, ProducingSurface source) {
         Ownership ownership = ownershipOf(event);
         boolean reviewsTeam = reviewsTeam();
         boolean closed = event.status().terminal();
@@ -256,19 +256,24 @@ public class FileRunEventService {
      * What produced the row, read from its policy rather than stored on it, so a converted folder
      * reads as what it is now. {@code cache} spares a list one lookup per row.
      */
-    public SourceKind sourceKindOf(FileRunEvent event, Map<String, SourceKind> cache) {
+    public ProducingSurface producingSurfaceOf(
+            FileRunEvent event, Map<String, ProducingSurface> cache) {
         if (event.policyId() == null || event.policyId().isBlank()) {
-            return SourceKind.EDITOR;
+            return ProducingSurface.EDITOR;
         }
         // A policy that has since been deleted still produced the row: POLICY, not EDITOR, so the
         // client never tells the reader their own editor caused it.
         return cache.computeIfAbsent(
                 event.policyId(),
-                id -> policyStore.get(id).map(SourceKind::of).orElse(SourceKind.POLICY));
+                id ->
+                        policyStore
+                                .get(id)
+                                .map(ProducingSurface::of)
+                                .orElse(ProducingSurface.POLICY));
     }
 
-    public SourceKind sourceKindOf(FileRunEvent event) {
-        return sourceKindOf(event, new HashMap<>());
+    public ProducingSurface producingSurfaceOf(FileRunEvent event) {
+        return producingSurfaceOf(event, new HashMap<>());
     }
 
     /**

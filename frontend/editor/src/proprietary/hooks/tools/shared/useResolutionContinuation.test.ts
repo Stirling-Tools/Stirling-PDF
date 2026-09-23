@@ -74,7 +74,6 @@ function policyRow(overrides: Partial<AppNotification> = {}): AppNotification {
     fileId: "f-locked",
     documentName: null,
     documentLocation: "BROWSER",
-    sourceKind: "EDITOR",
     heldByServer: false,
     sourceId: null,
     policyId: "pol-1",

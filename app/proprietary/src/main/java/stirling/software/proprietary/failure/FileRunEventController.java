@@ -65,12 +65,12 @@ public class FileRunEventController {
         int cappedLimit = Math.min(limit == null ? DEFAULT_LIMIT : Math.max(1, limit), MAX_LIMIT);
 
         // One policy lookup per distinct policy for the whole page, not one per row.
-        Map<String, SourceKind> sources = new HashMap<>();
+        Map<String, ProducingSurface> sources = new HashMap<>();
         List<FileRunEventView> events =
                 // The kind filter is part of the query, before the limit is applied: filtering an
                 // already-limited page could return nothing while matching rows exist.
                 service.list(status, closed, kindId, cappedLimit).stream()
-                        .map(event -> view(event, service.sourceKindOf(event, sources)))
+                        .map(event -> view(event, service.producingSurfaceOf(event, sources)))
                         .toList();
         return new FileRunEventsResponse(events);
     }
@@ -92,7 +92,7 @@ public class FileRunEventController {
         Map<String, String> inputs = request == null ? Map.of() : request.safeInputs();
         try {
             FileRunEvent updated = service.dispatch(eventId, actionId, inputs);
-            return view(updated, service.sourceKindOf(updated));
+            return view(updated, service.producingSurfaceOf(updated));
         } catch (FailureActionException e) {
             throw new ResponseStatusException(
                     FailureActionException.statusOf(e.getReason()), e.getMessage(), e);
@@ -185,7 +185,7 @@ public class FileRunEventController {
         }
     }
 
-    private FileRunEventView view(FileRunEvent event, SourceKind source) {
+    private FileRunEventView view(FileRunEvent event, ProducingSurface source) {
         return FileRunEventView.of(event, source, service.availableActions(event, source));
     }
 }

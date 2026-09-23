@@ -132,7 +132,7 @@ class NotificationProjectionTest {
                     .containsExactlyElementsOf(
                             FileRunEventView.of(
                                             mine,
-                                            SourceKind.EDITOR,
+                                            ProducingSurface.EDITOR,
                                             failures.availableActions(mine))
                                     .actions()
                                     .stream()
@@ -223,7 +223,6 @@ class NotificationProjectionTest {
 
             NotificationView notification = controller.list(null).notifications().getFirst();
 
-            assertThat(notification.sourceKind()).isEqualTo(SourceKind.POLICY);
             assertThat(notification.documentLocation())
                     .isEqualTo(FileRunEventView.DocumentLocation.UNREACHABLE);
             // The retry is the browser's here, which holds nothing to run it on, so the bell hides
@@ -245,24 +244,26 @@ class NotificationProjectionTest {
             // The lookup that tells a folder from a bucket can come back empty once the policy is
             // deleted. That must not turn the row into a browser's, or the path behind it leaks.
             lenient().when(policyStore.get(anyString())).thenReturn(Optional.empty());
-            store.record(
-                    RecordFailure.forRun(
-                            FailureKind.INPUT_PASSWORD_PROTECTED,
-                            TEAM,
-                            null,
-                            "policy-gone",
-                            "run-1",
-                            "source-7",
-                            "/Users/someone/Documents/Payroll/march.pdf",
-                            "boom"));
+            FileRunEvent row =
+                    store.record(
+                            RecordFailure.forRun(
+                                    FailureKind.INPUT_PASSWORD_PROTECTED,
+                                    TEAM,
+                                    null,
+                                    "policy-gone",
+                                    "run-1",
+                                    "source-7",
+                                    "/Users/someone/Documents/Payroll/march.pdf",
+                                    "boom"));
 
             NotificationView notification = controller.list(null).notifications().getFirst();
 
             assertThat(notification.documentLocation())
                     .isEqualTo(FileRunEventView.DocumentLocation.UNREACHABLE);
             assertThat(notification.fileId()).isNull();
-            // Still a policy's row: EDITOR would have the bell blame the reader's own editor.
-            assertThat(notification.sourceKind()).isEqualTo(SourceKind.POLICY);
+            // Still a policy's row, never the editor's, so nothing downstream reads it as the
+            // browser's own.
+            assertThat(failures.producingSurfaceOf(row)).isEqualTo(ProducingSurface.POLICY);
             assertThat(notification.toString()).doesNotContain("Payroll", "march.pdf");
         }
 
