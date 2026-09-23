@@ -72,6 +72,23 @@ describe("file library accessibility", () => {
     expect(screen.getByRole("listitem", { name: "README" })).toBeVisible();
   });
 
+  it("gives every list row a checkbox before a second file is selected", () => {
+    const other = createNewStirlingFileStub(new File(["text"], "notes.pdf"));
+    render(
+      grid({
+        viewMode: "list",
+        entries: [
+          { kind: "file", file: stored },
+          { kind: "file", file: other },
+        ],
+        selectedFileIds: new Set([stored.id]),
+      }),
+    );
+    const [, selectedRow, otherRow] = screen.getAllByRole("row");
+    expect(within(selectedRow).getByRole("checkbox")).toBeChecked();
+    expect(within(otherRow).getByRole("checkbox")).not.toBeChecked();
+  });
+
   it("announces native picker selection through its label and checkbox", () => {
     render(
       grid({

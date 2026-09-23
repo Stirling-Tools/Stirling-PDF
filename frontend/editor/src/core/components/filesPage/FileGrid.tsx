@@ -1573,11 +1573,7 @@ function ListView({
               isInWorkspace={
                 activeWorkspaceFileIds?.has(entry.file.id) ?? false
               }
-              multiSelectActive={
-                !picker?.foldersOnly &&
-                (Boolean(picker) ||
-                  selectedFileIds.size >= (touchSelection ? 1 : 2))
-              }
+              selectable={!picker?.foldersOnly}
               touchSelection={touchSelection}
               downloadAvailable={Boolean(onDownloadFile)}
               renameAvailable={Boolean(onRenameFile)}
@@ -1831,7 +1827,7 @@ interface FileRowProps {
   isInWorkspace: boolean;
   parentPath?: string;
 
-  multiSelectActive: boolean;
+  selectable: boolean;
   touchSelection: boolean;
 
   downloadAvailable: boolean;
@@ -1859,7 +1855,7 @@ const FileRow = React.memo(function FileRow({
   isSelected,
   isInWorkspace,
   parentPath,
-  multiSelectActive,
+  selectable,
   touchSelection,
   downloadAvailable,
   renameAvailable,
@@ -1927,7 +1923,7 @@ const FileRow = React.memo(function FileRow({
       className={`files-page-list-row${isSelected ? " is-selected" : ""}${isInWorkspace ? " is-in-workspace" : ""}${locked ? " is-locked" : ""}`}
       title={disabledReason ?? (locked ? lockedHint : undefined)}
     >
-      {multiSelectActive ? (
+      {selectable ? (
         <span role="gridcell">
           <Checkbox
             disabled={Boolean(disabledReason)}
