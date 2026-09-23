@@ -1,10 +1,13 @@
 import apiClient from "@app/services/apiClient";
-import { supabase, isSupabaseConfigured } from "@app/services/supabaseClient";
 import type {
   PlanFeaturesMap,
   PlanHighlightsMap,
 } from "@app/constants/planConstants";
 import type { LicenseInfo, PlanFeature } from "@app/types/license";
+
+// Loaded on demand: a static import puts the Supabase SDK on the startup path
+// of every build, including installs that never reach billing.
+const loadSupabaseClient = () => import("@app/services/supabaseClient");
 
 export interface PlanTier {
   id: string;
@@ -100,7 +103,7 @@ const licenseService = {
     currency: string = "usd",
   ): Promise<PlansResponse> {
     try {
-      // Check if Supabase is configured
+      const { supabase, isSupabaseConfigured } = await loadSupabaseClient();
       if (!isSupabaseConfigured || !supabase) {
         throw new Error(
           "Supabase is not configured. Please use static plans instead.",
@@ -318,7 +321,7 @@ const licenseService = {
     returnUrl: string,
     licenseKey: string,
   ): Promise<BillingPortalResponse> {
-    // Check if Supabase is configured
+    const { supabase, isSupabaseConfigured } = await loadSupabaseClient();
     if (!isSupabaseConfigured || !supabase) {
       throw new Error(
         "Supabase is not configured. Billing portal is not available.",
@@ -361,7 +364,7 @@ const licenseService = {
    * Check if license key is ready for the given installation ID
    */
   async checkLicenseKey(installationId: string): Promise<LicenseKeyResponse> {
-    // Check if Supabase is configured
+    const { supabase, isSupabaseConfigured } = await loadSupabaseClient();
     if (!isSupabaseConfigured || !supabase) {
       throw new Error(
         "Supabase is not configured. License key lookup is not available.",
@@ -459,7 +462,7 @@ const licenseService = {
     newSeatCount: number,
     licenseKey: string,
   ): Promise<string> {
-    // Check if Supabase is configured
+    const { supabase, isSupabaseConfigured } = await loadSupabaseClient();
     if (!isSupabaseConfigured || !supabase) {
       throw new Error(
         "Supabase is not configured. Seat updates are not available.",

@@ -18,7 +18,6 @@ import { JWT_STORAGE_KEY } from "@app/auth/httpClient";
 import { type OAuthProvider } from "@app/auth/spring/oauthTypes";
 import { resetOAuthState } from "@app/auth/spring/oauthStorage";
 import { isSafePostLoginRedirect } from "@app/services/postLoginRedirect";
-import { clearSupabaseSession } from "@app/auth/supabase/supabaseClient";
 import type {
   AuthUser as User,
   AuthSession as Session,
@@ -505,6 +504,10 @@ class SpringAuthClient {
    */
   async signOut(): Promise<{ error: AuthError | null }> {
     try {
+      // Imported on demand: a static import here puts the Supabase SDK on the
+      // startup path of every build, including installs that never use it.
+      const { clearSupabaseSession } =
+        await import("@app/auth/supabase/supabaseClient");
       clearSupabaseSession();
       localStorage.removeItem("stirling.portalSaasOwner");
       sessionStorage.removeItem("stirling.portalConnect");

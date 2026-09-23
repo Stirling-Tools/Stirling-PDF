@@ -73,7 +73,8 @@ it("opens on the first click using asynchronously fetched plans", async () => {
   );
   fireEvent.click(screen.getByRole("button", { name: "Add capacity" }));
   fireEvent.click(screen.getByRole("button", { name: "Add capacity" }));
-  expect(mocks.getPlans).toHaveBeenCalledTimes(1);
+  // The click loads the Supabase client before fetching plans.
+  await waitFor(() => expect(mocks.getPlans).toHaveBeenCalledTimes(1));
   resolvePlans({ plans: [{ id: "server-monthly" }] });
   expect(await screen.findByRole("dialog")).toBeInTheDocument();
   expect(mocks.alert).not.toHaveBeenCalled();
