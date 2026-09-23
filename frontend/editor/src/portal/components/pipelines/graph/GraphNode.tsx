@@ -1,12 +1,6 @@
 import type { MouseEvent, ReactNode, Ref } from "react";
 import { useTranslation } from "react-i18next";
-import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
-import MoveToInboxRoundedIcon from "@mui/icons-material/MoveToInboxRounded";
-import SendRoundedIcon from "@mui/icons-material/SendRounded";
-import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
-import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon, NodeCard } from "@app/ui";
 import { type IconBadgeAccent } from "@app/ui/IconBadge";
 import type { GraphNodeKind } from "@portal/components/pipelines/graph/pipelineLayout";
@@ -19,9 +13,9 @@ export type NodeRunState = "running" | "done" | "failed";
 type CardKind = Exclude<GraphNodeKind, "placeholder">;
 
 const KIND_ICON: Record<CardKind, ReactNode> = {
-  input: <MoveToInboxRoundedIcon style={{ fontSize: "1.125rem" }} />,
-  step: <TuneRoundedIcon style={{ fontSize: "1.125rem" }} />,
-  output: <SendRoundedIcon style={{ fontSize: "1.125rem" }} />,
+  input: <Icon name="import" size={"1.125rem"} />,
+  step: <Icon name="sliders-horizontal" size={"1.125rem"} />,
+  output: <Icon name="send" size={"1.125rem"} />,
 };
 
 const KIND_ACCENT: Record<CardKind, IconBadgeAccent> = {
@@ -98,7 +92,7 @@ export function GraphNode({
       aria-label={t("portal.pipelines.graph.removeNode", { name: title })}
       onClick={onRemove}
     >
-      <CloseRoundedIcon style={{ fontSize: "0.875rem" }} />
+      <Icon name="x" size={"0.875rem"} />
     </ActionIcon>
   );
 
@@ -124,7 +118,7 @@ export function GraphNode({
       detail={
         warning ? (
           <span className="portal-graph-node__warning">
-            <WarningAmberRoundedIcon style={{ fontSize: "0.875rem" }} />
+            <Icon name="triangle-alert" size={"0.875rem"} />
             {warning}
           </span>
         ) : (
@@ -160,7 +154,7 @@ function RunStatus({ runState, title, onOpenRunState }: RunStatusProps) {
         aria-label={t("portal.pipelines.graph.showError", { name: title })}
         onClick={onOpenRunState}
       >
-        <ErrorOutlineRoundedIcon style={{ fontSize: "1.125rem" }} />
+        <Icon name="circle-alert" size={"1.125rem"} />
       </ActionIcon>
     );
   }
@@ -169,12 +163,8 @@ function RunStatus({ runState, title, onOpenRunState }: RunStatusProps) {
       {runState === "running" && (
         <span className="portal-graph-node__pulse" aria-hidden />
       )}
-      {runState === "done" && (
-        <CheckRoundedIcon style={{ fontSize: "1.125rem" }} />
-      )}
-      {runState === "failed" && (
-        <ErrorOutlineRoundedIcon style={{ fontSize: "1.125rem" }} />
-      )}
+      {runState === "done" && <Icon name="check" size={"1.125rem"} />}
+      {runState === "failed" && <Icon name="circle-alert" size={"1.125rem"} />}
       <span className="portal-graph-node__run-label">
         {t(`portal.pipelines.graph.run.${runState}`)}
       </span>

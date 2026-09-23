@@ -131,8 +131,12 @@
   font-size: 1.125rem;
 }
 
+/* Tool icons arrive pre-sized from the registry (1.5rem) and brand marks at their own size, so
+   the slot sizes whatever it is given to its font-size and the column reads as one set. */
 .portal-pipelines__picker-icon svg {
   display: block;
+  width: 1em;
+  height: 1em;
 }
 
 /* Name over its optional note - a two-line item, so the note reads as a sub-line rather than

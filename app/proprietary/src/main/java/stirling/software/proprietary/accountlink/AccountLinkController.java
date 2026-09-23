@@ -1,6 +1,7 @@
 package stirling.software.proprietary.accountlink;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -23,8 +24,8 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Same-origin account-link surface on the self-hosted instance (combined billing).
  *
- * <p>Owner-only class-wide: everything here is server-scoped, the free-tier meter included. Other
- * users learn of the wall from the {@code reason} on the 402, not from here.
+ * <p>Owner-only class-wide except {@link #linked()}: everything else is server-scoped, the
+ * free-tier meter included. Other users learn of the wall from the {@code reason} on the 402.
  */
 @Slf4j
 @Hidden
@@ -160,6 +161,13 @@ public class AccountLinkController {
     @GetMapping("/status")
     public ResponseEntity<AccountLinkService.LinkStatus> status() {
         return ResponseEntity.ok(service.status());
+    }
+
+    /** Any admin, not only the owner: the AI settings page needs it and a bare flag is harmless. */
+    @GetMapping("/linked")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Boolean>> linked() {
+        return ResponseEntity.ok(Map.of("linked", service.isLinked()));
     }
 
     /** Refreshes cloud entitlement without changing the linked account. */

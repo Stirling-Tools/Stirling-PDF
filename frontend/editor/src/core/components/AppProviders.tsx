@@ -35,13 +35,16 @@ import AppConfigLoader from "@app/components/shared/AppConfigLoader";
 import { UpdateStartupPopup } from "@app/components/shared/UpdateStartupPopup";
 import { RedactionProvider } from "@app/contexts/RedactionContext";
 import { FormFillProvider } from "@app/tools/formFill/FormFillContext";
-import { FolderFileContextProvider } from "@app/contexts/FolderFileContext";
 import { FolderProvider } from "@app/contexts/FolderContext";
 import { WorkbenchSessionPersistence } from "@app/components/session/WorkbenchSessionPersistence";
+import { retireLegacyFolderWorker } from "@app/services/retireLegacyFolderWorker";
 
 // Component to run app-level initialization (must be inside AppProviders for context access)
 function AppInitializer() {
   useAppInitialization();
+  useEffect(() => {
+    void retireLegacyFolderWorker();
+  }, []);
   return null;
 }
 
@@ -148,10 +151,8 @@ export function AppProviders({
                                               <WorkbenchBarProvider>
                                                 <TourOrchestrationProvider>
                                                   <AdminTourOrchestrationProvider>
-                                                    <FolderFileContextProvider>
-                                                      <WorkbenchSessionPersistence />
-                                                      {children}
-                                                    </FolderFileContextProvider>
+                                                    <WorkbenchSessionPersistence />
+                                                    {children}
                                                   </AdminTourOrchestrationProvider>
                                                 </TourOrchestrationProvider>
                                               </WorkbenchBarProvider>
