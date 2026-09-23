@@ -294,12 +294,15 @@ public class PolicyRunner {
                             && (e instanceof IOException
                                     || e instanceof FolderAccessDeniedException);
             if (folderUnreadable) {
+                // The source's owner, as a document failure is filed under: a team policy can be
+                // bound to a folder somebody else set up, and that person is the one who can fix
+                // it.
                 failureRecorder.recordRunFailureAs(
                         FailureKind.SOURCE_UNREADABLE,
                         null,
                         policy.id(),
                         storedSource.id(),
-                        policy.owner(),
+                        storedSource.owner(),
                         unreadableFolderReason(e));
             }
             context.vetoCleanup();
