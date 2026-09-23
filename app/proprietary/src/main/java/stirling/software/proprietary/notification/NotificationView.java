@@ -8,7 +8,6 @@ import stirling.software.proprietary.failure.FailureSeverity;
 import stirling.software.proprietary.failure.FileRunEventStatus;
 import stirling.software.proprietary.failure.FileRunEventView;
 import stirling.software.proprietary.failure.Ownership;
-import stirling.software.proprietary.failure.SourceKind;
 
 /**
  * A source's row flattened to what a bell renders. {@code fileId} is present only when {@code
@@ -37,10 +36,6 @@ public record NotificationView(
          * the folder itself when it could not be read. The one rule a member's bell filters on.
          */
         boolean heldByServer,
-        /**
-         * What fed the run, for a row the reader did not cause; {@code EDITOR} for one they did.
-         */
-        SourceKind sourceKind,
         String sourceId,
         String policyId,
         int occurrences,

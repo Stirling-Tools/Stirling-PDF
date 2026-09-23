@@ -68,7 +68,6 @@ function notification(
     fileId: "f-1",
     documentName: null,
     documentLocation: "BROWSER",
-    sourceKind: "EDITOR",
     heldByServer: false,
     sourceId: null,
     policyId: null,
@@ -129,7 +128,6 @@ describe("useNotifications", () => {
         notification("unattended", {
           origin: "POLICY",
           sourceId: "src-s3-invoices",
-          sourceKind: "SMART_FOLDER",
           documentLocation: "SMART_FOLDER",
           heldByServer: true,
           fileId: null,
@@ -183,7 +181,6 @@ describe("useNotifications", () => {
         [
           notification("attended", {
             policyId: "folder-policy",
-            sourceKind: "SMART_FOLDER",
             documentLocation: "BROWSER",
             heldByServer: false,
             fileId: "elsewhere",
@@ -208,7 +205,6 @@ describe("useNotifications", () => {
         [
           notification("smart-folder", {
             sourceId: "src-downloads",
-            sourceKind: "SMART_FOLDER",
             documentLocation: "SMART_FOLDER",
             heldByServer: true,
             fileId: null,
@@ -235,7 +231,6 @@ describe("useNotifications", () => {
             kindId: "SOURCE_UNREADABLE",
             origin: "POLICY",
             sourceId: "src-downloads",
-            sourceKind: "SMART_FOLDER",
             documentLocation: "UNREACHABLE",
             heldByServer: true,
             fileId: null,

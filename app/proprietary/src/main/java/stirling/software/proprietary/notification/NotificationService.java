@@ -17,7 +17,7 @@ import stirling.software.proprietary.failure.FileRunEvent;
 import stirling.software.proprietary.failure.FileRunEventService;
 import stirling.software.proprietary.failure.FileRunEventView;
 import stirling.software.proprietary.failure.Ownership;
-import stirling.software.proprietary.failure.SourceKind;
+import stirling.software.proprietary.failure.ProducingSurface;
 import stirling.software.proprietary.policy.ledger.StorageFileIdentities;
 import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.repository.StoredFileRepository;
@@ -45,7 +45,7 @@ public class NotificationService {
     public List<NotificationView> list(int limit) {
         // One lookup per distinct policy rather than per row: a folder that fails a whole batch is
         // one policy and twenty rows.
-        Map<String, SourceKind> kinds = new HashMap<>();
+        Map<String, ProducingSurface> kinds = new HashMap<>();
         List<FileRunEvent> events =
                 fileRunEvents.list(null, false, null, limit).stream()
                         .filter(
@@ -148,8 +148,8 @@ public class NotificationService {
 
     /** Prefixes the row id on the way out, so it is never sent bare. */
     private NotificationView fromFailure(
-            FileRunEvent event, Map<String, SourceKind> kinds, Map<Long, StoredFile> named) {
-        SourceKind source = fileRunEvents.sourceKindOf(event, kinds);
+            FileRunEvent event, Map<String, ProducingSurface> kinds, Map<Long, StoredFile> named) {
+        ProducingSurface source = fileRunEvents.producingSurfaceOf(event, kinds);
         FileRunEventView.DocumentLocation location =
                 FileRunEventView.DocumentLocation.of(event, source);
         boolean resolvableHere = location == FileRunEventView.DocumentLocation.BROWSER;
@@ -158,7 +158,7 @@ public class NotificationService {
         boolean heldByServer =
                 location == FileRunEventView.DocumentLocation.SMART_FOLDER
                         || (event.scope() == FailureScope.SOURCE
-                                && source == SourceKind.SMART_FOLDER);
+                                && source == ProducingSurface.SMART_FOLDER);
         Ownership ownership = fileRunEvents.ownershipOf(event);
         return new NotificationView(
                 NotificationSource.FAILURE.qualify(event.id()),
@@ -177,7 +177,6 @@ public class NotificationService {
                 resolvableHere ? null : documentNameFor(event, ownership, named),
                 location,
                 heldByServer,
-                source,
                 event.sourceId(),
                 event.policyId(),
                 event.occurrences(),
@@ -190,7 +189,8 @@ public class NotificationService {
      * What the bell may offer: every fix, including the ones the server carries out, but not a
      * disposition, which is the review surface's to apply. A new disposition belongs in this list.
      */
-    private List<FileRunEventView.ActionView> bellActions(FileRunEvent event, SourceKind source) {
+    private List<FileRunEventView.ActionView> bellActions(
+            FileRunEvent event, ProducingSurface source) {
         return fileRunEvents.availableActions(event, source).stream()
                 .filter(
                         action ->

@@ -146,7 +146,6 @@ function notification(
     fileId: "f-1",
     documentName: null,
     documentLocation: "BROWSER",
-    sourceKind: "EDITOR",
     heldByServer: false,
     sourceId: null,
     policyId: null,
@@ -505,7 +504,6 @@ describe("NotificationBell", () => {
       notification("a", "Password-protected document", {
         origin: "POLICY",
         sourceId: "src-downloads",
-        sourceKind: "SMART_FOLDER",
         documentLocation: "SMART_FOLDER",
         heldByServer: true,
         fileId: null,
@@ -529,7 +527,6 @@ describe("NotificationBell", () => {
       notification("a", "Password-protected document", {
         origin: "POLICY",
         sourceId: "src-downloads",
-        sourceKind: "SMART_FOLDER",
         documentLocation: "SMART_FOLDER",
         fileId: null,
         documentName: "march.pdf",

@@ -27,7 +27,6 @@ export function notification(
     fileId: "f-1",
     documentName: null,
     documentLocation: "BROWSER",
-    sourceKind: "EDITOR",
     heldByServer: false,
     sourceId: null,
     policyId: null,

@@ -21,9 +21,6 @@ export type NotificationActionSlot = "RESOLUTION" | "SECONDARY" | "OVERFLOW";
  */
 export type DocumentLocation = "BROWSER" | "SMART_FOLDER" | "UNREACHABLE";
 
-/** What produced a row, so it can name the smart folder rather than just failing silently. */
-export type SourceKind = "SMART_FOLDER" | "POLICY" | "EDITOR";
-
 /** `id` is an open string, not a union: the server may know actions this build does not. */
 export interface NotificationActionOffer {
   id: string;
@@ -59,7 +56,6 @@ export interface AppNotification {
    * when it could not be read. Shown to a member without a local file; never fixable here.
    */
   heldByServer: boolean;
-  sourceKind: SourceKind;
   /** Which folder, bucket or webhook fed the run, and null for an attended one. */
   sourceId: string | null;
   policyId: string | null;

@@ -602,7 +602,6 @@ describe("OPEN_IN_TOOL for a smart folder's document", () => {
     notification: notification({
       kindId: "UNKNOWN",
       documentLocation: "SMART_FOLDER" as const,
-      sourceKind: "SMART_FOLDER" as const,
       heldByServer: true,
       sourceId: "src-downloads",
       fileId: null,
@@ -648,7 +647,6 @@ describe("the fixes the server runs on a smart folder's document", () => {
     notification: notification({
       kindId,
       documentLocation: "SMART_FOLDER" as const,
-      sourceKind: "SMART_FOLDER" as const,
       sourceId: "src-downloads",
       fileId: null,
     }),
