@@ -266,7 +266,7 @@ export default function Workbench() {
       style={{ backgroundColor: "var(--c-bg)", minWidth: 0 }}
     >
       {/* Phone only: above that the rail carries the bell, and here no bar does. */}
-      {isPhone && !showWorkbenchBar && (
+      {isPhone && !showWorkbenchBar && topControlsAvailable && (
         <div style={{ position: "absolute", top: 12, right: 12, zIndex: 20 }}>
           <NotificationBell />
         </div>
