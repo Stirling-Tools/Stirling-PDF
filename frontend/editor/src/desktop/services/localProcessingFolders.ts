@@ -39,6 +39,7 @@ import type {
 } from "@app/services/processingFolderApi";
 import type { BackendPipelineStep } from "@app/services/policyPipeline";
 import { generateId } from "@app/utils/generateId";
+import { reconcileLocalProcessingOriginals } from "@app/services/localProcessingOriginals";
 
 const running = new Map<string, Promise<void>>();
 const cancelled = new Set<string>();
@@ -299,7 +300,10 @@ async function queueLocalProcessingFiles(
 ): Promise<SweepOutcome> {
   const folder = await requireLocalProcessingFolder(id);
   const listing = await listDirectory(folder.directory);
-  const history = await storage.files(id);
+  const history = await reconcileLocalProcessingOriginals(
+    folder,
+    await storage.files(id),
+  );
   const outputs = history.flatMap((entry) => entry.outputs);
   const result: SweepOutcome = {
     runIds: [],
@@ -390,37 +394,47 @@ export async function revertLocalProcessingFile(
   id: string,
   name: string,
 ): Promise<void> {
-  const folder = await requireLocalProcessingFolder(id);
-  await storage.saveFolder({ ...folder, enabled: false });
-  const entry = (await storage.files(id)).find(
-    (file) => file.input.name === name,
+  return navigator.locks.request(
+    `processing:${id}`,
+    { ifAvailable: true },
+    async (lock) => {
+      if (!lock)
+        throw new Error(
+          "Wait for processing to finish before restoring this file",
+        );
+      const folder = await requireLocalProcessingFolder(id);
+      await storage.saveFolder({ ...folder, enabled: false });
+      const entry = (await storage.files(id)).find(
+        (file) => file.input.name === name,
+      );
+      if (
+        !entry?.originalPath ||
+        !TERMINAL.has(entry.run.status) ||
+        running.has(id)
+      ) {
+        throw new Error(
+          "Wait for processing to finish before restoring this file",
+        );
+      }
+      for (const output of entry.outputs)
+        await requireUnchangedProcessingFile(output);
+      const replacement =
+        entry.outputs.find((output) => output.path === entry.input.path) ??
+        entry.input;
+      await replaceProcessingFile(
+        replacement,
+        await readProcessingOriginal(entry.originalPath),
+      );
+      for (const output of entry.outputs) {
+        if (output.path !== entry.input.path) await remove(output.path);
+      }
+      await remove(entry.originalPath);
+      await storage.deleteFile(entry.id);
+    },
   );
-  if (
-    !entry?.originalPath ||
-    !TERMINAL.has(entry.run.status) ||
-    running.has(id)
-  ) {
-    throw new Error("Wait for processing to finish before restoring this file");
-  }
-  for (const output of entry.outputs)
-    await requireUnchangedProcessingFile(output);
-  const replacement = entry.outputs.find(
-    (output) => output.path === entry.input.path,
-  );
-  if (replacement) {
-    await replaceProcessingFile(
-      replacement,
-      await readProcessingOriginal(entry.originalPath),
-    );
-  }
-  for (const output of entry.outputs) {
-    if (output.path !== entry.input.path) await remove(output.path);
-  }
-  await remove(entry.originalPath);
-  await storage.deleteFile(entry.id);
 }
 
-/** Scans enabled desktop folders while signed in. Each folder keeps at most one active upload. */
+/** Scans while signed in; paused folders still expire orphaned originals under the processing lock. */
 export async function scanLocalProcessingFolders(): Promise<void> {
   for (const folder of await localProcessingFolders()) {
     if (folder.enabled && !running.has(folder.id)) {
@@ -433,6 +447,21 @@ export async function scanLocalProcessingFolders(): Promise<void> {
       )
     ) {
       startDrain(folder.id, false);
+    } else if (!running.has(folder.id)) {
+      await navigator.locks
+        .request(
+          `processing:${folder.id}`,
+          { ifAvailable: true },
+          async (lock) => {
+            if (!lock) return;
+            const current = await requireLocalProcessingFolder(folder.id);
+            await reconcileLocalProcessingOriginals(
+              current,
+              await storage.files(folder.id),
+            );
+          },
+        )
+        .catch(() => {});
     }
   }
 }

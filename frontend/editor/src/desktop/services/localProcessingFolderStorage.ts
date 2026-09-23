@@ -19,6 +19,8 @@ export interface LocalProcessingFile {
   /** Copies written by the desktop, used to recognise its own output and protect later edits. */
   outputs: DiskFileEntry[];
   originalPath?: string;
+  /** First confirmed absence, tied to the backup version so replacement restarts retention. */
+  orphanedOriginal?: { since: number; version: string };
 }
 
 const DATABASE = {

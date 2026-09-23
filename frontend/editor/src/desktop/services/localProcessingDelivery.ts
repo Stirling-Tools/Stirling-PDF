@@ -1,7 +1,6 @@
 import {
   exists,
   mkdir,
-  open,
   rename,
   remove,
   stat,
@@ -68,22 +67,32 @@ export async function archiveProcessingInput(
     throw new Error("The processing folder is no longer mounted");
   }
   await mkdir(archive, { recursive: true });
-  if (await exists(path)) {
-    if (!(await stat(path)).isFile)
-      throw new Error("The original is not a file");
-    return path;
-  }
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  const original = await open(path, { write: true, createNew: true });
-  try {
-    await original.write(bytes);
-  } catch (error) {
-    await original.close();
-    await remove(path);
-    throw error;
-  }
-  await original.close();
-  return path;
+  return navigator.locks.request(
+    `processing-original:${directoryKey(path)}`,
+    async () => {
+      if (await exists(path)) {
+        if (!(await stat(path)).isFile)
+          throw new Error("The original is not a file");
+        return path;
+      }
+      // Only a completed write is published as an original; crash leftovers stay hidden.
+      const temporary = processingPath(
+        archive,
+        `.original-${generateId()}.tmp`,
+      );
+      try {
+        await writeFile(temporary, new Uint8Array(await file.arrayBuffer()), {
+          createNew: true,
+        });
+        if (await exists(path))
+          throw new Error("An original was created while archiving this file");
+        await rename(temporary, path);
+        return path;
+      } finally {
+        await remove(temporary).catch(() => {});
+      }
+    },
+  );
 }
 
 /** Stages bytes beside the input before replacing it; a failed write leaves the input intact. */

@@ -2,6 +2,7 @@ package stirling.software.proprietary.policy.output;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,7 +14,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.springframework.core.io.Resource;
@@ -55,6 +58,9 @@ public class FolderOutputSink implements PolicyOutputSink {
 
     // Staging entries are renamed away within one delivery; anything older is a crash leftover.
     private static final Duration STALE_TMP_AGE = Duration.ofDays(1);
+    private static final Object[] ORIGINAL_LOCKS =
+            IntStream.range(0, 64).mapToObj(i -> new Object()).toArray();
+    static final String MISSING_ORIGINAL_PREFIX = ".missing-original-";
 
     private final FolderAccessGuard accessGuard;
     private final ProcessedLedger processedLedger;
@@ -164,37 +170,9 @@ public class FolderOutputSink implements PolicyOutputSink {
             boolean replace)
             throws IOException {
         if (replace) {
-            Path target = dir.resolve(name);
-            // Archive before the ledger row flips DONE, so a restore that reads DONE finds the
-            // original safe, never mid-move.
-            Path archived = archiveOriginal(dir, target);
-            try {
-                if (delivery.policyId() != null) {
-                    processedLedger.recordOutput(
-                            delivery.policyId(), target.toString(), gate, contentHash);
-                }
-                Files.move(
-                        staged,
-                        target,
-                        StandardCopyOption.ATOMIC_MOVE,
-                        StandardCopyOption.REPLACE_EXISTING);
-            } catch (IOException | RuntimeException failed) {
-                if (archived != null) {
-                    try {
-                        Files.move(archived, target, StandardCopyOption.ATOMIC_MOVE);
-                    } catch (IOException lost) {
-                        log.warn(
-                                "Replace of {} failed and its original could not be put back: {}",
-                                target,
-                                lost.getMessage());
-                    }
-                }
-                if (delivery.policyId() != null) {
-                    processedLedger.forgetOutput(delivery.policyId(), target.toString(), gate);
-                }
-                throw failed;
+            synchronized (originalLock(dir)) {
+                return replaceOriginal(delivery, dir, name, staged, gate, contentHash);
             }
-            return target;
         }
         while (true) {
             Path target = uniqueTarget(dir, name);
@@ -212,6 +190,67 @@ public class FolderOutputSink implements PolicyOutputSink {
                 log.debug("Output name {} taken concurrently; re-picking", target);
             }
         }
+    }
+
+    private Path replaceOriginal(
+            OutputDelivery delivery,
+            Path dir,
+            String name,
+            Path staged,
+            String gate,
+            String contentHash)
+            throws IOException {
+        Path target = dir.resolve(name);
+        // Archive before the ledger row flips DONE, so a restore that reads DONE finds the
+        // original safe, never mid-move.
+        Path archived = archiveOriginal(dir, target);
+        try {
+            if (delivery.policyId() != null) {
+                processedLedger.recordOutput(
+                        delivery.policyId(), target.toString(), gate, contentHash);
+            }
+            Files.move(
+                    staged,
+                    target,
+                    StandardCopyOption.ATOMIC_MOVE,
+                    StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException | RuntimeException failed) {
+            if (archived != null) {
+                try {
+                    Files.move(archived, target, StandardCopyOption.ATOMIC_MOVE);
+                } catch (IOException lost) {
+                    log.warn(
+                            "Replace of {} failed and its original could not be put back: {}",
+                            target,
+                            lost.getMessage());
+                }
+            }
+            if (delivery.policyId() != null) {
+                processedLedger.forgetOutput(delivery.policyId(), target.toString(), gate);
+            }
+            throw failed;
+        }
+        return target;
+    }
+
+    /**
+     * Serializes archive, restore and expiry within this JVM; callers supply a canonical directory.
+     */
+    public static Object originalLock(Path canonicalDir) {
+        return ORIGINAL_LOCKS[Math.floorMod(canonicalDir.hashCode(), ORIGINAL_LOCKS.length)];
+    }
+
+    /** A returned or restored file starts a fresh retention period if it is deleted again. */
+    public static void clearOriginalExpiry(Path dir, String name) throws IOException {
+        Files.deleteIfExists(missingOriginalMarker(dir, name));
+    }
+
+    static Path missingOriginalMarker(Path dir, String name) {
+        String key = java.io.File.separatorChar == '\\' ? name.toLowerCase(Locale.ROOT) : name;
+        return originalsDir(dir)
+                .resolve(
+                        MISSING_ORIGINAL_PREFIX
+                                + UUID.nameUUIDFromBytes(key.getBytes(StandardCharsets.UTF_8)));
     }
 
     /** Originals are direct files here; subdirectories contain internal processing data. */
@@ -270,6 +309,7 @@ public class FolderOutputSink implements PolicyOutputSink {
      * ATOMIC_MOVE} would throw.
      */
     private static Path archiveOriginal(Path dir, Path target) throws IOException {
+        clearOriginalExpiry(dir, target.getFileName().toString());
         if (!Files.exists(target)) {
             return null;
         }

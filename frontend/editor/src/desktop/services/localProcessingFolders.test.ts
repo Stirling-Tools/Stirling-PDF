@@ -24,6 +24,10 @@ const mocks = vi.hoisted(() => ({
   archive: vi.fn(),
   remove: vi.fn(),
   original: vi.fn(),
+  reconcile: vi.fn(),
+}));
+vi.mock("@app/services/localProcessingOriginals", () => ({
+  reconcileLocalProcessingOriginals: mocks.reconcile,
 }));
 vi.mock("@tauri-apps/plugin-fs", () => ({ remove: mocks.remove }));
 vi.mock("@app/services/localFolderStorage", () => ({
@@ -108,6 +112,7 @@ function onlyFile() {
 describe("desktop processing folder handoff", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.reconcile.mockImplementation(async (_folder, history) => history);
     mocks.files.clear();
     mocks.folders.clear();
     mocks.connected = true;
@@ -178,6 +183,19 @@ describe("desktop processing folder handoff", () => {
     expect(mocks.folders.size).toBe(0);
   });
 
+  test("paused folders still reconcile backup retention without processing", async () => {
+    const folder = await saveLocalProcessingFolder(request);
+    await waitFor(() => expect(onlyFile()?.run.status).toBe("COMPLETED"));
+    const paused = { ...folder, enabled: false };
+    mocks.folders.set(folder.id, paused);
+    mocks.reconcile.mockClear();
+
+    await scanLocalProcessingFolders();
+
+    expect(mocks.reconcile).toHaveBeenCalledWith(paused, [onlyFile()]);
+    expect(mocks.submit).toHaveBeenCalledOnce();
+  });
+
   test("reprocessing changed input keeps the first original", async () => {
     const folder = await saveLocalProcessingFolder(request);
     await waitFor(() => expect(onlyFile()?.run.status).toBe("COMPLETED"));
@@ -220,6 +238,36 @@ describe("desktop processing folder handoff", () => {
     await waitFor(() => expect(onlyFile()?.run.status).toBe("FAILED"));
     expect(mocks.replace).not.toHaveBeenCalled();
     expect(onlyFile().run.error).toBe("File changed");
+  });
+
+  test("restoring a failed delivery restores the original even without recorded outputs", async () => {
+    mocks.replace.mockRejectedValueOnce(new Error("Delivery failed"));
+    const folder = await saveLocalProcessingFolder(request);
+    await waitFor(() => expect(onlyFile()?.run.status).toBe("FAILED"));
+    const entry = onlyFile();
+    expect(entry.outputs).toEqual([]);
+
+    await revertLocalProcessingFile(folder.id, "a.pdf");
+
+    expect(mocks.replace).toHaveBeenLastCalledWith(
+      entry.input,
+      expect.any(File),
+    );
+    expect(mocks.remove).toHaveBeenCalledWith(entry.originalPath);
+    expect(mocks.files.size).toBe(0);
+  });
+
+  test("failed restoration retains the backup and processing record", async () => {
+    const folder = await saveLocalProcessingFolder(request);
+    await waitFor(() => expect(onlyFile()?.run.status).toBe("COMPLETED"));
+    mocks.replace.mockRejectedValueOnce(new Error("Disk full"));
+
+    await expect(revertLocalProcessingFile(folder.id, "a.pdf")).rejects.toThrow(
+      "Disk full",
+    );
+
+    expect(mocks.remove).not.toHaveBeenCalled();
+    expect(mocks.files.size).toBe(1);
   });
 
   test("reconnect resumes an existing server run without charging another submission", async () => {
