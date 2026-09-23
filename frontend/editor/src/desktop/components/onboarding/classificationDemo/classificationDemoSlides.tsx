@@ -2,9 +2,8 @@
  *  belongs to {@link OnboardingSlideShell}. */
 
 import { useEffect, useState } from "react";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
-import FolderOpenRoundedIcon from "@mui/icons-material/FolderOpenRounded";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { ShellHero } from "@app/components/onboarding/OnboardingSlideShell";
 import { BrandMark } from "@app/components/shared/BrandMark";
 import {
@@ -23,7 +22,7 @@ export function DefaultAppHero() {
 export function FolderHero() {
   return (
     <ShellHero>
-      <FolderOpenRoundedIcon sx={{ fontSize: 30 }} />
+      <Icon name="folder-open" size={30} />
     </ShellHero>
   );
 }
@@ -209,26 +208,18 @@ export function PrivacyNote() {
   const { t } = useTranslation();
   return (
     <div className={styles.note}>
-      <LockOutlinedIcon fontSize="small" className={styles.noteIcon} />
+      <Icon name="lock" size={20} className={styles.noteIcon} />
       {t(
         "classificationDemo.offer.privacy",
-        "Everything stays on this device and you can stop anytime.",
+        "Your PDFs stay on this device. Your connected server records processing usage.",
       )}
     </div>
   );
 }
 
-/** The follow-up offer. A batch smaller than what is left means the allowance is the
- *  limit, so the copy names the number it can actually cover. */
-export function FollowUpPanel({
-  remaining,
-  batchSize,
-}: {
-  remaining: number;
-  batchSize: number;
-}) {
+/** The connected server owns allowances and charging for further classification. */
+export function FollowUpPanel({ remaining }: { remaining: number }) {
   const { t } = useTranslation();
-  const partial = batchSize < remaining;
   return (
     <div className={styles.panel}>
       <div className={styles.panelTitle}>
@@ -239,16 +230,10 @@ export function FollowUpPanel({
         )}
       </div>
       <div className={styles.panelBody}>
-        {partial
-          ? t(
-              "classificationDemo.followUp.partial",
-              "{{count}} of them are covered by your remaining free allowance.",
-              { count: batchSize },
-            )
-          : t(
-              "classificationDemo.followUp.free",
-              "They are all covered by your remaining free allowance.",
-            )}{" "}
+        {t(
+          "classificationDemo.followUp.serverCredits",
+          "Your connected server manages credits for processing these files.",
+        )}{" "}
         {t(
           "classificationDemo.followUp.background",
           "This runs in the background. The ring on the left shows progress.",

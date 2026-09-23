@@ -168,7 +168,7 @@ public class ProprietaryUIDataController {
 
         // Add enableLogin flag so frontend doesn't need to call /app-config
         data.setEnableLogin(securityProps.isEnableLogin());
-        data.setSsoAutoLogin(applicationProperties.getPremium().getProFeatures().isSsoAutoLogin());
+        data.setSsoAutoLogin(applicationProperties.getSecurity().isSsoAutoLogin());
 
         // Check if this is first-time setup with default credentials
         // The isFirstLogin flag captures: default username/password usage and unchanged state
@@ -619,7 +619,7 @@ public class ProprietaryUIDataController {
         // Portal access (same policy /me uses).
         summary.setPortalAccess(portalAccessUserIds.contains(user.getId()));
         summary.setUsername(user.getUsername());
-        summary.setEmail(user.getUsername()); // Use username as email for consistency
+        summary.setEmail(user.getEmail());
         summary.setRoleName(user.getRoleName());
         summary.setRolesAsString(user.getRolesAsString());
         summary.setEnabled(user.isEnabled());
