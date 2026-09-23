@@ -4,11 +4,13 @@ import { useSettingsNav as useCoreSettingsNav } from "@core/components/settings/
 import type { SettingsNav } from "@app/components/settings/settingsNavTypes";
 import { usePortalAccessState } from "@app/hooks/usePortalAccess";
 import { useAuth } from "@app/auth/context";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useRosterAvailable } from "@app/hooks/useRosterAvailable";
 import { mergeSettingsGroups } from "@app/components/settings/mergeSettingsGroups";
 import {
   buildPortalSettingsSections,
   PORTAL_SECTION_ALIASES,
-  PORTAL_SUPERSEDED_SECTION_KEYS,
+  portalSupersededSectionKeys,
 } from "@app/components/settings/portalSettingsNav";
 
 export type { SettingsNav };
@@ -30,17 +32,24 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
     usePortalAccessState();
   const { isAdmin, user } = useAuth();
   const isOwner = isAdmin && user?.orgOwner === true;
+  // Answers to the same admin flag the rest of the nav is built from, not the
+  // session's - the two disagree while /me is still in flight.
+  const { config } = useAppConfig();
+  const navAdmin = config?.isAdmin ?? false;
+  const rosterAvailable = useRosterAvailable();
 
   const portalSections = useMemo(
     () =>
-      portalAccess
-        ? buildPortalSettingsSections(t, {
-            includeEncryption: isAdmin,
-            includeBilling: isOwner,
-            includeAccountLink: isOwner,
-          })
-        : [],
-    [portalAccess, isAdmin, isOwner, t],
+      buildPortalSettingsSections(t, {
+        // The roster is this build's only one, so it does not wait on processor
+        // access the way the processor's own surfaces do.
+        includeRoster: rosterAvailable && (navAdmin || portalAccess),
+        includeApiKeys: portalAccess,
+        includeEncryption: portalAccess && isAdmin,
+        includeBilling: portalAccess && isOwner,
+        includeAccountLink: portalAccess && isOwner,
+      }),
+    [portalAccess, isAdmin, isOwner, navAdmin, rosterAvailable, t],
   );
 
   const sections = useMemo(
@@ -50,7 +59,7 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
         : mergeSettingsGroups(
             base.sections,
             portalSections,
-            PORTAL_SUPERSEDED_SECTION_KEYS,
+            portalSupersededSectionKeys(portalSections),
           ),
     [base.sections, portalSections],
   );

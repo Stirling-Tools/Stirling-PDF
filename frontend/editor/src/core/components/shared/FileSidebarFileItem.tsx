@@ -117,13 +117,6 @@ function getSidebarFileIcon(ext: string): React.ReactElement {
   return <FileDocIcon className={cls} variant={getFileDocVariant(ext)} />;
 }
 
-/** A Watched Folder this file currently belongs to, used for the membership dots. */
-export interface FileItemFolderRef {
-  id: string;
-  name: string;
-  accentColor: string;
-}
-
 export interface FileItemProps {
   fileId: FileId;
   name: string;
@@ -136,13 +129,6 @@ export interface FileItemProps {
   thumbnailUrl?: string;
   onClick: (fileId: FileId) => void;
   onEyeClick: (fileId: FileId, e: React.MouseEvent) => void;
-  /** When true, the row can be dragged (e.g. onto a Watched Folder). */
-  draggable?: boolean;
-  onDragStart?: (e: React.DragEvent, fileId: FileId) => void;
-  /** Watched Folders this file is in — rendered as small accent dots. */
-  folders?: FileItemFolderRef[];
-  /** Clicking a membership dot opens that folder. */
-  onFolderClick?: (folderId: string) => void;
   /** Policies that have run on this file — rendered as small shield badges. */
   policies?: FileItemPolicyRef[];
   /** The file's primary classification label (display name), shown in the meta
@@ -172,8 +158,6 @@ export interface FileItemProps {
    *  says so instead of pretending the file can open. */
   dataUnavailable?: boolean;
 }
-
-const MAX_VISIBLE_FOLDER_TAGS = 2;
 
 /** One kebab row. `disabledReason`, when set, greys the row out and says why. */
 function FileMenuItem({
@@ -230,10 +214,6 @@ export const FileItem = React.memo(function FileItem({
   thumbnailUrl,
   onClick,
   onEyeClick,
-  draggable,
-  onDragStart,
-  folders = [],
-  onFolderClick,
   policies = [],
   primaryLabel,
   onDelete,
@@ -296,9 +276,6 @@ export const FileItem = React.memo(function FileItem({
     ? t("fileSidebar.fileItem.closeViewer", "Close viewer")
     : t("fileSidebar.fileItem.openInViewer", "Open in viewer");
 
-  const visibleFolders = folders.slice(0, MAX_VISIBLE_FOLDER_TAGS);
-  const overflowFolders = folders.slice(MAX_VISIBLE_FOLDER_TAGS);
-
   // Only use raster thumbnails for PDFs and images — everything else uses scalable SVG icons
   const useRasterThumb = ext === "pdf" || IMAGE_EXTENSIONS.has(ext);
   const itemRef = useRef<HTMLDivElement>(null);
@@ -338,10 +315,6 @@ export const FileItem = React.memo(function FileItem({
         aria-description={toolSkipReason}
         className={`file-sidebar-file-item${isSelected ? " selected" : ""}${isActive ? " active" : ""}${isViewedInViewer ? " viewed" : ""}`}
         onClick={() => onClick(fileId)}
-        draggable={draggable}
-        onDragStart={
-          draggable && onDragStart ? (e) => onDragStart(e, fileId) : undefined
-        }
         role="button"
         tabIndex={0}
         onKeyDown={(e) => e.key === "Enter" && onClick(fileId)}
@@ -413,54 +386,6 @@ export const FileItem = React.memo(function FileItem({
             )}
             <PolicyBadges policies={policies} />
           </span>
-          {folders.length > 0 && (
-            <span className="file-sidebar-folder-tags" data-no-select>
-              {visibleFolders.map((folder) => (
-                <Tooltip
-                  key={folder.id}
-                  label={folder.name}
-                  withArrow
-                  position="top"
-                  withinPortal
-                >
-                  <span
-                    className="file-sidebar-folder-tag"
-                    style={{
-                      backgroundColor: `${folder.accentColor}1f`,
-                      borderColor: `${folder.accentColor}55`,
-                    }}
-                    role="button"
-                    tabIndex={-1}
-                    aria-label={folder.name}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onFolderClick?.(folder.id);
-                    }}
-                  >
-                    <span
-                      className="file-sidebar-folder-tag-dot"
-                      style={{ backgroundColor: folder.accentColor }}
-                    />
-                    <span className="file-sidebar-folder-tag-label">
-                      {folder.name}
-                    </span>
-                  </span>
-                </Tooltip>
-              ))}
-              {overflowFolders.length > 0 && (
-                <Tooltip
-                  label={overflowFolders.map((f) => f.name).join(", ")}
-                  withArrow
-                  position="top"
-                  withinPortal
-                >
-                  <span className="file-sidebar-folder-tag-more">
-                    +{overflowFolders.length}
-                  </span>
-                </Tooltip>
-              )}
-            </span>
-          )}
         </div>
         <div className="file-sidebar-file-actions">
           <ActionIcon

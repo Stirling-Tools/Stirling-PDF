@@ -42,7 +42,6 @@ const TOOL_IDS = [
   "annotate",
   "scannerImageSplit",
   "editTableOfContents",
-  "scannerEffect",
   "autoRename",
   "pageLayout",
   "scalePages",
