@@ -1,8 +1,9 @@
 import { useEffect } from "react";
-import posthog from "posthog-js";
+import type { PostHog } from "posthog-js";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { loadPosthog, loadedPosthog } from "@app/services/analytics";
 
-function applyPosthogConsent(): void {
+function applyPosthogConsent(posthog: PostHog): void {
   if (typeof window === "undefined" || !posthog.__loaded) {
     return;
   }
@@ -20,33 +21,20 @@ function applyPosthogConsent(): void {
   posthog.set_config({ persistence: "memory" });
 }
 
-function ensurePosthogInitialized(): boolean {
+function posthogCredentials(): { key: string; host: string } | null {
   if (typeof window === "undefined") {
-    return false;
+    return null;
   }
 
-  const posthogKey = import.meta.env.VITE_PUBLIC_POSTHOG_KEY;
-  const posthogHost = import.meta.env.VITE_PUBLIC_POSTHOG_HOST;
-
-  if (!posthogKey || !posthogHost) {
-    return false;
-  }
-
-  if (!posthog.__loaded) {
-    posthog.init(posthogKey, {
-      api_host: posthogHost,
-      defaults: "2025-05-24",
-      capture_exceptions: true,
-      debug: false,
-      opt_out_capturing_by_default: true,
-      persistence: "memory",
-      cross_subdomain_cookie: false,
-    });
-  }
-
-  return true;
+  const key = import.meta.env.VITE_PUBLIC_POSTHOG_KEY;
+  const host = import.meta.env.VITE_PUBLIC_POSTHOG_HOST;
+  return key && host ? { key, host } : null;
 }
 
+/**
+ * Starts PostHog once the server enables analytics, and only then loads it: a
+ * session with analytics off never downloads the library at all.
+ */
 export function usePosthogTracking(): void {
   const { config } = useAppConfig();
 
@@ -55,29 +43,52 @@ export function usePosthogTracking(): void {
     const posthogEnabled = analyticsEnabled && config?.enablePosthog !== false;
 
     if (!posthogEnabled) {
-      if (posthog.__loaded) {
+      // Switched off after running: stop capturing. Never loaded: nothing to stop.
+      const posthog = loadedPosthog();
+      if (posthog?.__loaded) {
         posthog.opt_out_capturing();
         posthog.set_config({ persistence: "memory" });
       }
       return;
     }
 
-    if (!ensurePosthogInitialized()) {
+    const credentials = posthogCredentials();
+    if (!credentials) {
       return;
     }
 
-    applyPosthogConsent();
+    let cancelled = false;
+    let detach = () => {};
+    void loadPosthog().then((posthog) => {
+      if (cancelled) return;
+      if (!posthog.__loaded) {
+        posthog.init(credentials.key, {
+          api_host: credentials.host,
+          defaults: "2025-05-24",
+          capture_exceptions: true,
+          debug: false,
+          opt_out_capturing_by_default: true,
+          persistence: "memory",
+          cross_subdomain_cookie: false,
+        });
+      }
 
-    const handleConsentChange = () => {
-      applyPosthogConsent();
-    };
+      applyPosthogConsent(posthog);
 
-    window.addEventListener("cc:onConsent", handleConsentChange);
-    window.addEventListener("cc:onChange", handleConsentChange);
+      const handleConsentChange = () => {
+        applyPosthogConsent(posthog);
+      };
+      window.addEventListener("cc:onConsent", handleConsentChange);
+      window.addEventListener("cc:onChange", handleConsentChange);
+      detach = () => {
+        window.removeEventListener("cc:onConsent", handleConsentChange);
+        window.removeEventListener("cc:onChange", handleConsentChange);
+      };
+    });
 
     return () => {
-      window.removeEventListener("cc:onConsent", handleConsentChange);
-      window.removeEventListener("cc:onChange", handleConsentChange);
+      cancelled = true;
+      detach();
     };
   }, [config?.enableAnalytics, config?.enablePosthog]);
 }

@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppConfigProvider } from "@app/contexts/AppConfigContext";
 import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
@@ -54,9 +54,13 @@ describe("usePosthogTracking", () => {
 
     renderHook(() => usePosthogTracking(), { wrapper });
 
-    await waitFor(() => {
-      expect(posthogMock.init).not.toHaveBeenCalled();
+    // PostHog loads asynchronously, so a load the gate wrongly let through lands
+    // after the render. Give it the time the enabled case takes before asserting
+    // it never happened: a waitFor on the negative passes on its first check.
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
     });
+    expect(posthogMock.init).not.toHaveBeenCalled();
   });
 
   it("initializes PostHog when analytics is enabled", async () => {

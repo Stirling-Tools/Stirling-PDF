@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const capture = vi.fn();
 let optedIn = true;
@@ -12,6 +12,7 @@ vi.mock("posthog-js", () => ({
 }));
 
 import {
+  loadPosthog,
   trackPdfUploaded,
   trackEditorOperation,
 } from "@app/services/analytics";
@@ -21,6 +22,12 @@ function pdf(name: string, size = 100): File {
 }
 
 describe("analytics", () => {
+  // PostHog is loaded on demand, and only once analytics is enabled; nothing can
+  // capture until then, so the capture cases start from a loaded client.
+  beforeAll(async () => {
+    await loadPosthog();
+  });
+
   beforeEach(() => {
     capture.mockClear();
     optedIn = true;
@@ -57,4 +64,17 @@ describe("analytics", () => {
     trackEditorOperation("compress", 1);
     expect(capture).not.toHaveBeenCalled();
   });
+});
+
+/** A fresh module, so this holds whatever order the file runs in. */
+it("captures nothing, and does not throw, before PostHog has loaded", async () => {
+  vi.resetModules();
+  const analytics = await import("@app/services/analytics");
+  capture.mockClear();
+
+  analytics.trackPdfUploaded([pdf("a.pdf")]);
+  analytics.trackEditorOperation("compress", 1);
+
+  expect(capture).not.toHaveBeenCalled();
+  expect(analytics.loadedPosthog()).toBeNull();
 });
