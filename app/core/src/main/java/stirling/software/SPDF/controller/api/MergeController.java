@@ -133,31 +133,11 @@ public class MergeController {
                         return Long.compare(t2, t1);
                     };
             case "byPDFTitle" ->
-                    (file1, file2) -> {
-                        try (PDDocument doc1 = pdfDocumentFactory.load(file1);
-                                PDDocument doc2 = pdfDocumentFactory.load(file2)) {
-                            String title1 =
-                                    doc1.getDocumentInformation() != null
-                                            ? doc1.getDocumentInformation().getTitle()
-                                            : null;
-                            String title2 =
-                                    doc2.getDocumentInformation() != null
-                                            ? doc2.getDocumentInformation().getTitle()
-                                            : null;
-                            if (title1 == null && title2 == null) {
-                                return 0;
-                            }
-                            if (title1 == null) {
-                                return 1;
-                            }
-                            if (title2 == null) {
-                                return -1;
-                            }
-                            return title1.compareToIgnoreCase(title2);
-                        } catch (IOException e) {
-                            return 0;
-                        }
-                    };
+                    // Titles must be read per file: a pairwise load that returns 0 when either
+                    // side is unreadable (an image input) makes the comparator intransitive.
+                    Comparator.comparing(
+                            this::getPdfTitleSafe,
+                            Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
             case "orderProvided" -> (file1, file2) -> 0;
             default -> (file1, file2) -> 0;
         };
@@ -187,6 +167,16 @@ public class MergeController {
                 ExceptionUtils.logException("document loading for TOC generation", e);
                 pageIndex++;
             }
+        }
+    }
+
+    /** Null when the file has no title or is not a loadable PDF (an image), sorting those last. */
+    private String getPdfTitleSafe(MultipartFile file) {
+        try (PDDocument doc = pdfDocumentFactory.load(file)) {
+            PDDocumentInformation info = doc.getDocumentInformation();
+            return info != null ? info.getTitle() : null;
+        } catch (IOException e) {
+            return null;
         }
     }
 
@@ -243,13 +233,16 @@ public class MergeController {
             value = "/merge-pdfs",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
-    @ToolIO(produces = ToolFormat.PDF, arity = ToolArity.MISO)
+    @ToolIO(
+            accepts = {ToolFormat.PDF, ToolFormat.IMAGE},
+            produces = ToolFormat.PDF,
+            arity = ToolArity.MISO)
     @Operation(
             summary = "Merge multiple PDF files into one",
             description =
                     "This endpoint merges multiple PDF files into a single PDF file. The merged"
                             + " file will contain all pages from the input files in the order they were"
-                            + " provided.")
+                            + " provided. Image inputs are converted to PDF pages before merging.")
     public ResponseEntity<Resource> mergePdfs(
             @ModelAttribute MergePdfsRequest request,
             @RequestParam(value = "fileOrder", required = false) String fileOrder)
