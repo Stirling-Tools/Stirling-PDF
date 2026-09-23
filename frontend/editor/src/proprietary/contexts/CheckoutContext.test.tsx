@@ -5,6 +5,8 @@ import { expectConsole } from "@app/tests/failOnConsole";
 
 const mocks = vi.hoisted(() => ({
   getPlans: vi.fn(),
+  pricing: vi.fn(),
+  preferred: vi.fn(() => "usd"),
   getLicenseInfo: vi.fn(),
   getUsers: vi.fn(),
   alert: vi.fn(),
@@ -27,7 +29,7 @@ vi.mock("@app/contexts/LicenseContext", () => ({
 }));
 vi.mock("@app/services/supabaseClient", () => ({ isSupabaseConfigured: true }));
 vi.mock("@app/utils/currencyDetection", () => ({
-  getPreferredCurrency: () => "usd",
+  getPreferredCurrency: mocks.preferred,
 }));
 vi.mock("@app/components/toast", () => ({ alert: mocks.alert }));
 vi.mock("@app/services/userManagementService", () => ({
@@ -46,10 +48,17 @@ vi.mock("@app/components/shared/stripeCheckout", () => ({
   StripeCheckout: () => <div role="dialog">Checkout</div>,
 }));
 
-function Buyer() {
+function Buyer({ linked = false }: { linked?: boolean }) {
   const checkout = useCheckout();
   return (
-    <button onClick={() => void checkout.openCheckout("server")}>
+    <button
+      onClick={() =>
+        void checkout.openCheckout(
+          "server",
+          linked ? { resolveCurrency: mocks.pricing } : {},
+        )
+      }
+    >
       Add capacity
     </button>
   );
@@ -100,4 +109,25 @@ it("reports failed price loading visibly and allows a retry", async () => {
   mocks.getPlans.mockResolvedValue({ plans: [{ id: "server-monthly" }] });
   fireEvent.click(screen.getByRole("button", { name: "Add capacity" }));
   expect(await screen.findByRole("dialog")).toBeInTheDocument();
+});
+
+it("resolves a linked customer's currency before fetching Team prices", async () => {
+  mocks.preferred.mockReturnValue("gbp");
+  mocks.pricing.mockResolvedValue({ currency: "aud", currencyLocked: true });
+  mocks.getPlans.mockResolvedValue({ plans: [{ id: "server-monthly" }] });
+  render(
+    <CheckoutProvider>
+      <Buyer linked />
+    </CheckoutProvider>,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Add capacity" }));
+  expect(await screen.findByRole("dialog")).toBeInTheDocument();
+  expect(mocks.pricing).toHaveBeenCalledWith("gbp");
+  expect(mocks.getPlans).toHaveBeenCalledWith(
+    mocks.features,
+    mocks.highlights,
+    "aud",
+    true,
+    "server",
+  );
 });

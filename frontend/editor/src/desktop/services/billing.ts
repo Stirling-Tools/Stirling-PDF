@@ -68,7 +68,7 @@ export async function createCheckoutSession(
     headers: { Authorization: `Bearer ${token}` },
     body: {
       team_id: params.teamId,
-      currency: params.currency ?? "gbp",
+      currency: params.currency ?? "usd",
       success_url: DESKTOP_BILLING_RETURN_URL,
       cancel_url: DESKTOP_BILLING_RETURN_URL,
       ...(params.billingOwnerEmail
