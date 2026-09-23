@@ -43,10 +43,10 @@ import tools.jackson.databind.ObjectMapper;
  * Installs the OCR engine and its language models on demand, so the desktop installers do not have
  * to carry ~130 MB that most users never touch.
  *
- * <p>Everything lands under {@code <installation path>/tesseract}, which is the first directory
- * {@code RuntimePathConfig} already probes for a bundled Tesseract, so nothing about path
- * resolution changes: an installed runtime is found exactly where an embedded one used to be. On
- * the desktop that directory sits in the user's own application data, so no elevation is needed.
+ * <p>Everything lands under {@code <installation path>/tesseract}, the first directory {@code
+ * RuntimePathConfig} probes for a bundled Tesseract, so path resolution finds an installed runtime
+ * without any extra lookup. On the desktop that directory sits in the user's own application data,
+ * so no elevation is needed.
  */
 @Slf4j
 @Service
@@ -100,14 +100,14 @@ public class OcrRuntimeService {
     /**
      * One client for the life of the service, deliberately never closed.
      *
-     * <p>It used to be built per call inside a try-with-resources, which deadlocks: since Java 21
-     * {@link HttpClient} is {@link AutoCloseable} and {@code close()} blocks until every exchange
-     * has finished, so closing it while handing the response body back to the caller means the body
+     * <p>Building one per call inside a try-with-resources deadlocks: since Java 21 {@link
+     * HttpClient} is {@link AutoCloseable} and {@code close()} blocks until every exchange has
+     * finished, so closing it while handing the response body back to the caller means the body
      * cannot be read until {@code close()} returns and {@code close()} cannot return until the body
-     * is read. The status endpoint simply never answered.
+     * is read. The status endpoint then never answers.
      *
-     * <p>No test caught it because every test serves its artefacts over {@code file:} URLs, which
-     * return before this client is ever touched - the logic was covered and the transport was not.
+     * <p>The tests serve their artefacts over {@code file:} URLs, which return before this client
+     * is touched, so they cover the logic but not this transport.
      */
     private final HttpClient httpClient =
             HttpClient.newBuilder()
@@ -130,16 +130,13 @@ public class OcrRuntimeService {
         return progress.get();
     }
 
-    // ---------------------------------------------------------------- layout
-
     /**
      * Where the OCR runtime lives.
      *
-     * <p>Asks {@link RuntimePathConfig} rather than deciding for itself, and that is the whole
-     * point. This used to look only at the per-user directory while the Windows installer, running
-     * elevated, writes to the machine-wide one. The engine ran fine - path resolution already knew
-     * about both - but this class did not, so it reported "not installed" over a perfectly good
-     * installation and then downloaded a second 122 MB copy beside it.
+     * <p>Asks {@link RuntimePathConfig} rather than deciding for itself, because the Windows
+     * installer, running elevated, writes to the machine-wide directory, not the per-user one. Path
+     * resolution knows about both; a check of the per-user directory alone would report "not
+     * installed" over a working installation and download a second 122 MB copy beside it.
      *
      * <p>An existing runtime, wherever it is, wins. Only when there is none does a fresh install
      * pick a destination.
@@ -204,8 +201,6 @@ public class OcrRuntimeService {
     public String platformKey() {
         return platformKey(System.getProperty("os.name"), System.getProperty("os.arch"));
     }
-
-    // -------------------------------------------------------------- manifest
 
     public String manifestUrl() {
         String configured =
@@ -313,8 +308,6 @@ public class OcrRuntimeService {
         }
     }
 
-    // ------------------------------------------------------------- installing
-
     /**
      * Downloads and unpacks the engine for this platform.
      *
@@ -397,8 +390,6 @@ public class OcrRuntimeService {
         Path target = resolveInside(tessdataRoot(), safe + ".traineddata");
         Files.deleteIfExists(target);
     }
-
-    // ------------------------------------------------------------- internals
 
     /**
      * Keeps models the user already installed when the engine itself is replaced.
