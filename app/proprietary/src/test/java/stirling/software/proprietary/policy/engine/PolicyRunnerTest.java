@@ -188,6 +188,43 @@ class PolicyRunnerTest {
     }
 
     @Test
+    void anUnreadableFolderIsFiledUnderTheSourcesOwnerNotThePolicys() throws Exception {
+        // A team policy can be bound to a folder somebody else set up. The row goes to the person
+        // who can fix the folder, as a document's failure in it would.
+        PolicyFailureRecorder recorder = mock(PolicyFailureRecorder.class);
+        PolicyRunner recording =
+                new PolicyRunner(
+                        policyEngine,
+                        List.of(folderSource),
+                        sourceStore,
+                        docCounter,
+                        processedLedger,
+                        new ApplicationProperties(),
+                        reachableOwners(),
+                        databaseLicenseGuard,
+                        recorder,
+                        eventPublisher);
+        InputSpec spec = InputSpec.folder("/Users/dave/Inbox");
+        Source daves =
+                sourceStore.save(
+                        new Source(null, "src", spec.type(), spec.options(), true, "dave", null));
+        Policy policy = policyReferencing(List.of(daves.id()));
+        when(folderSource.supports(spec)).thenReturn(true);
+        when(folderSource.resolve(eq(spec), any())).thenThrow(new IOException("mount gone"));
+
+        recording.run(policy);
+
+        verify(recorder)
+                .recordRunFailureAs(
+                        eq(FailureKind.SOURCE_UNREADABLE),
+                        any(),
+                        eq("p1"),
+                        eq(daves.id()),
+                        eq("dave"),
+                        any());
+    }
+
+    @Test
     void aSourceThatBlowsUpIsNotCalledAnUnreadableFolder() throws Exception {
         // A bug in a source, or a bucket's SDK error, is a RuntimeException. Recording it would
         // tell the owner their folder cannot be read when nothing about the folder changed.
