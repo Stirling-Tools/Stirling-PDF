@@ -323,7 +323,14 @@ public class PolicyEngine {
             taskManager.putMetadata(runId, "policyId", policyId);
         }
         PolicyRun run =
-                new PolicyRun(runId, policyId, definition, sourceId, fileIdentity, triggeringUser);
+                new PolicyRun(
+                        runId,
+                        policyId,
+                        definition,
+                        sourceId,
+                        fileIdentity,
+                        triggeringUser,
+                        fileOwner);
         taskManager.putMetadata(runId, "externalOutput", String.valueOf(run.externalOutput()));
         registry.register(run);
         return run;
@@ -484,7 +491,7 @@ public class PolicyEngine {
                     run.getRunId(),
                     run.getPolicyId(),
                     run.getSourceId(),
-                    run.getTriggeringUser(),
+                    run.failureActor(),
                     message);
             completion.complete(run);
         }
@@ -504,10 +511,8 @@ public class PolicyEngine {
      * Record why a run failed. Called after the run's own state transition and task-manager update,
      * so a recording problem cannot change the outcome the caller observes.
      *
-     * <p>The actor is the run's triggering user, not the MDC audit principal: that carries the
-     * BILLING identity, which for a stored policy is always its owner. Reading it here filed every
-     * failure under the owner — hiding an attended failure from the member who caused it and holds
-     * the document, and leaving an unattended sweep's failure looking attended.
+     * <p>The actor is the run's own, not the MDC audit principal, which carries the billing
+     * identity: for a stored policy always its owner. Unattended, it falls back to the document's.
      */
     private void recordFailure(PolicyRun run, String message, Throwable cause) {
         failureRecorder.recordRunFailure(
@@ -515,7 +520,7 @@ public class PolicyEngine {
                 run.getPolicyId(),
                 run.getSourceId(),
                 run.getFileIdentity(),
-                run.getTriggeringUser(),
+                run.failureActor(),
                 message,
                 cause);
     }

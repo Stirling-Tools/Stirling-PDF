@@ -23,13 +23,12 @@ import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import { isSupabaseConfigured } from "@app/services/supabaseClient";
 
 const AdminPlanSection: React.FC = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { loginEnabled, validateLoginEnabled } = useLoginRequired();
   const { openCheckout } = useCheckout();
   const { licenseInfo } = useLicense();
   const [currency, setCurrency] = useState<string>(() => {
-    // Initialize with auto-detected currency on first render
-    return getPreferredCurrency(i18n.language);
+    return getPreferredCurrency();
   });
   const [useStaticVersion, setUseStaticVersion] = useState(false);
   const { plans, loading, error, refetch } = usePlans(currency);

@@ -54,8 +54,19 @@ import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import type { FilesPageSortMode } from "@app/contexts/FilesPageContext";
 import { OpenInNewWindowMenuItem } from "@app/components/filesPage/OpenInNewWindowMenuItem";
+import { useLongPress } from "@app/components/filesPage/useLongPress";
+import { useIsTouch } from "@app/hooks/useIsMobile";
 
 export type FilesPageViewMode = "grid" | "list";
+
+function formatCompactDate(ms: number): string {
+  if (!ms) return "";
+  return new Date(ms).toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
 
 /** A file's place in its working folder's pipeline, when one is attached. */
 export type DiskFileState = "done" | "processing" | "failed" | "waiting";
@@ -162,6 +173,13 @@ interface FileGridProps {
  */
 interface FileGridActions {
   selectFile: (id: FileId, shiftKey: boolean, ctrlKey: boolean) => void;
+  activateFile: (
+    file: StirlingFileStub,
+    canOpen: boolean,
+    shiftKey: boolean,
+    ctrlKey: boolean,
+  ) => void;
+  toggleFile: (id: FileId) => void;
   openFolder: (id: FolderId) => void;
   openFile: (file: StirlingFileStub) => void;
   openDiskFile: (entry: DiskFileEntry) => void;
@@ -208,6 +226,9 @@ export function FileGrid(props: FileGridProps & { loading?: boolean }) {
 
   const latest = useRef(props);
   latest.current = props;
+  const touchSelection = useIsTouch() && !props.picker;
+  const touchSelectionRef = useRef(touchSelection);
+  touchSelectionRef.current = touchSelection;
   const { t } = useTranslation();
   const translateRef = useRef(t);
   translateRef.current = t;
@@ -237,6 +258,17 @@ export function FileGrid(props: FileGridProps & { loading?: boolean }) {
       unzipFile: (file) => latest.current.picker?.onUnzipFile(file),
       selectFile: (id, shiftKey, ctrlKey) =>
         latest.current.onSelectFile(id, shiftKey, ctrlKey),
+      activateFile: (file, canOpen, shiftKey, ctrlKey) => {
+        const { onSelectFile, onOpenFile, selectedFileIds } = latest.current;
+        if (!touchSelectionRef.current) {
+          onSelectFile(file.id, shiftKey, ctrlKey);
+        } else if (selectedFileIds.size > 0) {
+          onSelectFile(file.id, false, true);
+        } else if (canOpen) {
+          onOpenFile(file);
+        }
+      },
+      toggleFile: (id) => latest.current.onSelectFile(id, false, true),
       openFolder: (id) => latest.current.onOpenFolder(id),
       openFile: (file) => latest.current.onOpenFile(file),
       openDiskFile: (entry) => latest.current.onOpenDiskFile?.(entry),
@@ -300,6 +332,7 @@ export function FileGrid(props: FileGridProps & { loading?: boolean }) {
     return (
       <ListView
         {...props}
+        touchSelection={touchSelection}
         actions={actions}
         policyBadges={policyBadges}
         processingBlock={processingBlock}
@@ -311,6 +344,7 @@ export function FileGrid(props: FileGridProps & { loading?: boolean }) {
   return (
     <GridView
       {...props}
+      touchSelection={touchSelection}
       actions={actions}
       policyBadges={policyBadges}
       processingBlock={processingBlock}
@@ -322,7 +356,11 @@ function SkeletonGrid({ viewMode }: { viewMode: FilesPageViewMode }) {
   const placeholders = Array.from({ length: 6 });
   if (viewMode === "list") {
     return (
-      <div className="files-page-list" role="grid" aria-busy="true">
+      <div
+        className="files-page-list files-page-list--adaptive"
+        role="grid"
+        aria-busy="true"
+      >
         {placeholders.map((_, i) => (
           <div key={i} className="files-page-list-row files-page-skeleton-row">
             <span />
@@ -331,15 +369,15 @@ function SkeletonGrid({ viewMode }: { viewMode: FilesPageViewMode }) {
               style={{ width: "60%" }}
             />
             <span
-              className="files-page-skeleton-bar"
+              className="files-page-skeleton-bar files-page-col-type"
               style={{ width: "40%" }}
             />
             <span
-              className="files-page-skeleton-bar"
+              className="files-page-skeleton-bar files-page-col-size"
               style={{ width: "50%" }}
             />
             <span
-              className="files-page-skeleton-bar"
+              className="files-page-skeleton-bar files-page-col-date"
               style={{ width: "55%" }}
             />
             <span />
@@ -491,6 +529,7 @@ function EmptyState({
 }
 
 type FileGridLayoutProps = FileGridProps & {
+  touchSelection: boolean;
   actions: FileGridActions;
   policyBadges: Map<string, FileItemPolicyRef[]>;
   processingBlock: string | null;
@@ -509,6 +548,7 @@ function GridView({
   onDuplicateFile,
   saveToServerDisabledReason,
   serverReachable,
+  touchSelection,
   actions,
   policyBadges,
   processingBlock,
@@ -576,8 +616,10 @@ function GridView({
               }
               multiSelectActive={
                 !picker?.foldersOnly &&
-                (Boolean(picker) || selectedFileIds.size >= 2)
+                (Boolean(picker) ||
+                  selectedFileIds.size >= (touchSelection ? 1 : 2))
               }
+              touchSelection={touchSelection}
               downloadAvailable={Boolean(onDownloadFile)}
               renameAvailable={Boolean(onRenameFile)}
               duplicateAvailable={Boolean(onDuplicateFile)}
@@ -1115,6 +1157,7 @@ interface FileCardProps {
   parentPath?: string;
 
   multiSelectActive: boolean;
+  touchSelection: boolean;
 
   downloadAvailable: boolean;
   renameAvailable: boolean;
@@ -1142,6 +1185,7 @@ const FileCard = React.memo(function FileCard({
   isSelected,
   isInWorkspace,
   multiSelectActive,
+  touchSelection,
   downloadAvailable,
   renameAvailable,
   duplicateAvailable,
@@ -1159,11 +1203,15 @@ const FileCard = React.memo(function FileCard({
   const fileSize = useMemo(() => formatFileSize(file.size), [file.size]);
   const fileDate = useMemo(() => getFileDate({ lastModified: date }), [date]);
 
+  const longPress = useLongPress(() => {
+    if (!disabledReason) actions.toggleFile(file.id);
+  }, touchSelection);
   const onClick = useCallback(
-    (e: React.MouseEvent) =>
-      !disabledReason &&
-      actions.selectFile(file.id, e.shiftKey, e.metaKey || e.ctrlKey),
-    [actions, file.id, disabledReason],
+    (e: React.MouseEvent) => {
+      if (longPress.consumeGesture() || disabledReason) return;
+      actions.activateFile(file, !locked, e.shiftKey, e.metaKey || e.ctrlKey);
+    },
+    [actions, file, disabledReason, locked, longPress],
   );
   const onDoubleClick = useCallback(() => {
     if (!locked && !disabledReason) actions.openFile(file);
@@ -1192,11 +1240,11 @@ const FileCard = React.memo(function FileCard({
   const handleContextMenu = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault();
-
+      if (longPress.consumeGesture()) return;
       if (!isSelected) onClick(e);
       kebabRef.current?.click();
     },
-    [isSelected, onClick],
+    [isSelected, onClick, longPress],
   );
 
   return (
@@ -1214,6 +1262,7 @@ const FileCard = React.memo(function FileCard({
       draggable={!selectionOnly}
       aria-disabled={Boolean(disabledReason)}
       onDragStart={handleDragStart}
+      {...longPress.handlers}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       onContextMenu={handleContextMenu}
@@ -1340,6 +1389,7 @@ function ListView({
   sortMode,
   onChangeSortMode,
   serverReachable,
+  touchSelection,
   actions,
   policyBadges,
   processingBlock,
@@ -1394,7 +1444,11 @@ function ListView({
     false,
   );
   return (
-    <div className="files-page-list" role="grid" ref={setContainer}>
+    <div
+      className="files-page-list files-page-list--adaptive"
+      role="grid"
+      ref={setContainer}
+    >
       <div className="files-page-list-row is-header" role="row">
         {onSetSelection && visibleCount > 0 ? (
           <span role="columnheader">
@@ -1437,14 +1491,16 @@ function ListView({
             {sortIndicator("name-asc", "name-desc")}
           </span>
         </span>
-        <span role="columnheader">{t("filesPage.column.type", "Type")}</span>
-        <span role="columnheader">
+        <span role="columnheader" className="files-page-col-type">
+          {t("filesPage.column.type", "Type")}
+        </span>
+        <span role="columnheader" className="files-page-col-size">
           <span {...headerProps("size-asc", "size-desc")}>
             {t("filesPage.column.size", "Size")}
             {sortIndicator("size-asc", "size-desc")}
           </span>
         </span>
-        <span role="columnheader">
+        <span role="columnheader" className="files-page-col-date">
           <span {...headerProps("modified-asc", "modified-desc")}>
             {currentTab === "recent"
               ? t("filesPage.column.added", "Added")
@@ -1453,7 +1509,7 @@ function ListView({
           </span>
         </span>
         {!picker && (
-          <span role="columnheader">
+          <span role="columnheader" className="files-page-list-status">
             {t("filesPage.column.status", "Status")}
           </span>
         )}
@@ -1519,8 +1575,10 @@ function ListView({
               }
               multiSelectActive={
                 !picker?.foldersOnly &&
-                (Boolean(picker) || selectedFileIds.size >= 2)
+                (Boolean(picker) ||
+                  selectedFileIds.size >= (touchSelection ? 1 : 2))
               }
+              touchSelection={touchSelection}
               downloadAvailable={Boolean(onDownloadFile)}
               renameAvailable={Boolean(onRenameFile)}
               duplicateAvailable={Boolean(onDuplicateFile)}
@@ -1558,6 +1616,12 @@ const FolderRow = React.memo(function FolderRow({
   const onOpen = () => actions.openFolder(folder.id);
 
   const kind = folderKind(folder);
+  const folderKindLabel =
+    kind === "virtual"
+      ? t("filesPage.folderKind.virtual", "Browser folder")
+      : kind === "local"
+        ? t("filesPage.folderKind.local", "Local folder")
+        : t("filesPage.folder", "Folder");
   const {
     stateFor: processingStateFor,
     enable: enableProcessing,
@@ -1661,30 +1725,46 @@ const FolderRow = React.memo(function FolderRow({
               {t("filesPage.inPath", "in {{path}}", { path: parentPath })}
             </span>
           )}
+          <span className="files-page-list-meta">
+            {processing ? (
+              <span className="files-page-processing-tag">
+                {processing.enabled
+                  ? t("filesPage.processing.active", "Processing folder")
+                  : t("filesPage.processing.paused", "Processing paused")}
+              </span>
+            ) : (
+              [
+                folderKindLabel,
+                fileCount
+                  ? t("filesPage.folderItems", "{{count}} items", {
+                      count: fileCount,
+                    })
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")
+            )}
+          </span>
         </span>
         <FolderOriginBadge folder={folder} />
       </span>
-      <span role="gridcell">
+      <span role="gridcell" className="files-page-col-type">
         {processing ? (
           <span className="files-page-processing-tag">
             {processing.enabled
               ? t("filesPage.processing.active", "Processing folder")
               : t("filesPage.processing.paused", "Processing paused")}
           </span>
-        ) : kind === "virtual" ? (
-          t("filesPage.folderKind.virtual", "Browser folder")
-        ) : kind === "local" ? (
-          t("filesPage.folderKind.local", "Local folder")
         ) : (
-          t("filesPage.folder", "Folder")
+          folderKindLabel
         )}
       </span>
-      <span role="gridcell">
+      <span role="gridcell" className="files-page-col-size">
         {fileCount === 0
           ? "-"
           : t("filesPage.folderItems", "{{count}} items", { count: fileCount })}
       </span>
-      <span role="gridcell">
+      <span role="gridcell" className="files-page-col-date">
         {getFileDate({ lastModified: folder.updatedAt })}
       </span>
       {!selectionOnly && (
@@ -1752,6 +1832,7 @@ interface FileRowProps {
   parentPath?: string;
 
   multiSelectActive: boolean;
+  touchSelection: boolean;
 
   downloadAvailable: boolean;
   renameAvailable: boolean;
@@ -1779,6 +1860,7 @@ const FileRow = React.memo(function FileRow({
   isInWorkspace,
   parentPath,
   multiSelectActive,
+  touchSelection,
   downloadAvailable,
   renameAvailable,
   duplicateAvailable,
@@ -1801,9 +1883,14 @@ const FileRow = React.memo(function FileRow({
     file.size,
     file.thumbnailUrl,
   );
-  const onClick = (e: React.MouseEvent) =>
-    !disabledReason &&
-    actions.selectFile(file.id, e.shiftKey, e.metaKey || e.ctrlKey);
+  const compactDate = useMemo(() => formatCompactDate(date), [date]);
+  const longPress = useLongPress(() => {
+    if (!disabledReason) actions.toggleFile(file.id);
+  }, touchSelection);
+  const onClick = (e: React.MouseEvent) => {
+    if (longPress.consumeGesture() || disabledReason) return;
+    actions.activateFile(file, !locked, e.shiftKey, e.metaKey || e.ctrlKey);
+  };
   const onOpen = () => {
     if (!locked && !disabledReason) actions.openFile(file);
   };
@@ -1821,10 +1908,12 @@ const FileRow = React.memo(function FileRow({
         );
         e.dataTransfer.effectAllowed = "move";
       }}
+      {...longPress.handlers}
       onClick={onClick}
       onDoubleClick={onOpen}
       onContextMenu={(e) => {
         e.preventDefault();
+        if (longPress.consumeGesture()) return;
         if (!isSelected) onClick(e);
         kebabRef.current?.click();
       }}
@@ -1906,6 +1995,11 @@ const FileRow = React.memo(function FileRow({
               {t("filesPage.inPath", "in {{path}}", { path: parentPath })}
             </span>
           )}
+          <span className="files-page-list-meta">
+            {[ext || t("filesPage.file", "File"), fileSize, compactDate].join(
+              " · ",
+            )}
+          </span>
         </span>
         <FileOriginBadge
           origin={getFileOrigin(file)}
@@ -1921,9 +2015,15 @@ const FileRow = React.memo(function FileRow({
           </span>
         )}
       </span>
-      <span role="gridcell">{ext || t("filesPage.file", "File")}</span>
-      <span role="gridcell">{fileSize}</span>
-      <span role="gridcell">{fileDate}</span>
+      <span role="gridcell" className="files-page-col-type">
+        {ext || t("filesPage.file", "File")}
+      </span>
+      <span role="gridcell" className="files-page-col-size">
+        {fileSize}
+      </span>
+      <span role="gridcell" className="files-page-col-date">
+        {fileDate}
+      </span>
       {!selectionOnly && (
         <span role="gridcell" className="files-page-list-status">
           <FileStateBadge
@@ -2195,13 +2295,29 @@ const DiskFileRow = React.memo(function DiskFileRow({
         </span>
         <span
           style={{
+            display: "flex",
+            flexDirection: "column",
+            minWidth: 0,
             overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
           }}
-          title={entry.name}
         >
-          {entry.name}
+          <span
+            style={{
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+            title={entry.name}
+          >
+            {entry.name}
+          </span>
+          <span className="files-page-list-meta">
+            {[
+              ext || t("filesPage.file", "File"),
+              formatFileSize(entry.sizeBytes),
+              formatCompactDate(entry.lastModified),
+            ].join(" · ")}
+          </span>
         </span>
         <FileOriginBadge
           origin="local"
@@ -2213,9 +2329,13 @@ const DiskFileRow = React.memo(function DiskFileRow({
           compact
         />
       </span>
-      <span role="gridcell">{ext || t("filesPage.file", "File")}</span>
-      <span role="gridcell">{formatFileSize(entry.sizeBytes)}</span>
-      <span role="gridcell">
+      <span role="gridcell" className="files-page-col-type">
+        {ext || t("filesPage.file", "File")}
+      </span>
+      <span role="gridcell" className="files-page-col-size">
+        {formatFileSize(entry.sizeBytes)}
+      </span>
+      <span role="gridcell" className="files-page-col-date">
         {getFileDate({ lastModified: entry.lastModified })}
       </span>
       {!selectionOnly && (
