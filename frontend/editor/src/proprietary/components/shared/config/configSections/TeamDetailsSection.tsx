@@ -16,7 +16,7 @@ import {
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { alert } from "@app/components/toast";
 import { teamService } from "@app/services/teamService";
 import {
@@ -304,7 +304,7 @@ User: ${user.username}`)
           onClick={onBack}
           aria-label={t("common.back", "Back")}
         >
-          <LocalIcon icon="arrow-back" width="1.2rem" height="1.2rem" />
+          <Icon name="arrow-left" size="1.2rem" />
         </ActionIcon>
         <div style={{ flex: 1 }}>
           <Text fw={600} size="lg">
@@ -328,9 +328,7 @@ User: ${user.username}`)
           zIndex={Z_INDEX_OVER_CONFIG_MODAL}
         >
           <Button
-            leftSection={
-              <LocalIcon icon="person-add" width="1rem" height="1rem" />
-            }
+            leftSection={<Icon name="user-plus" size="1rem" />}
             onClick={() => setAddMemberModalOpened(true)}
             disabled={
               team.name === "Internal" ||
@@ -498,7 +496,7 @@ User: ${user.username}`)
                             "User info",
                           )}
                         >
-                          <LocalIcon icon="info" width="1rem" height="1rem" />
+                          <Icon name="info" size="1rem" />
                         </ActionIcon>
                       </Tooltip>
 
@@ -512,11 +510,7 @@ User: ${user.username}`)
                               "Member actions",
                             )}
                           >
-                            <LocalIcon
-                              icon="more-vert"
-                              width="1rem"
-                              height="1rem"
-                            />
+                            <Icon name="ellipsis-vertical" size="1rem" />
                           </ActionIcon>
                         </Menu.Target>
                         <Menu.Dropdown
@@ -524,11 +518,7 @@ User: ${user.username}`)
                         >
                           <Menu.Item
                             leftSection={
-                              <LocalIcon
-                                icon="swap-horiz"
-                                width="1rem"
-                                height="1rem"
-                              />
+                              <Icon name="arrow-left-right" size="1rem" />
                             }
                             onClick={() => openChangeTeamModal(user)}
                             disabled={processing || team.name === "Internal"}
@@ -539,13 +529,7 @@ User: ${user.username}`)
                             )}
                           </Menu.Item>
                           <Menu.Item
-                            leftSection={
-                              <LocalIcon
-                                icon="lock"
-                                width="1rem"
-                                height="1rem"
-                              />
-                            }
+                            leftSection={<Icon name="lock" size="1rem" />}
                             onClick={() => openChangePasswordModal(user)}
                             disabled={processing}
                           >
@@ -557,11 +541,7 @@ User: ${user.username}`)
                           {isLockedUser(user) && (
                             <Menu.Item
                               leftSection={
-                                <LocalIcon
-                                  icon="lock-open"
-                                  width="1rem"
-                                  height="1rem"
-                                />
+                                <Icon name="lock-open" size="1rem" />
                               }
                               onClick={() => handleUnlockUser(user)}
                               disabled={processing}
@@ -576,11 +556,7 @@ User: ${user.username}`)
                             team.name !== "Default" && (
                               <Menu.Item
                                 leftSection={
-                                  <LocalIcon
-                                    icon="person-remove"
-                                    width="1rem"
-                                    height="1rem"
-                                  />
+                                  <Icon name="user-minus" size="1rem" />
                                 }
                                 onClick={() => handleRemoveMember(user)}
                                 disabled={processing}
@@ -594,13 +570,7 @@ User: ${user.username}`)
                           <Menu.Divider />
                           <Menu.Item
                             color="red"
-                            leftSection={
-                              <LocalIcon
-                                icon="delete"
-                                width="1rem"
-                                height="1rem"
-                              />
-                            }
+                            leftSection={<Icon name="trash" size="1rem" />}
                             onClick={() => handleDeleteUser(user)}
                             disabled={processing || team.name === "Internal"}
                           >
@@ -648,15 +618,14 @@ User: ${user.username}`)
               zIndex: 1,
             }}
           >
-            <LocalIcon icon="close-rounded" />
+            <Icon name="x" size="1em" />
           </ActionIcon>
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">
-              <LocalIcon
-                icon="person-add"
-                width="3rem"
-                height="3rem"
+              <Icon
+                name="user-plus"
+                size="3rem"
                 style={{ color: "var(--mantine-color-gray-6)" }}
               />
               <Text size="xl" fw={600} ta="center">
@@ -731,15 +700,14 @@ User: ${user.username}`)
               zIndex: 1,
             }}
           >
-            <LocalIcon icon="close-rounded" />
+            <Icon name="x" size="1em" />
           </ActionIcon>
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">
-              <LocalIcon
-                icon="swap-horiz"
-                width="3rem"
-                height="3rem"
+              <Icon
+                name="arrow-left-right"
+                size="3rem"
                 style={{ color: "var(--mantine-color-gray-6)" }}
               />
               <Text size="xl" fw={600} ta="center">

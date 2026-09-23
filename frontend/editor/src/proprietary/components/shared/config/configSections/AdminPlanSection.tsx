@@ -184,7 +184,7 @@ const AdminPlanSection: React.FC = () => {
   if (!plans || plans.length === 0) {
     return (
       <SettingsEmptyState
-        icon="star-rounded"
+        icon="star"
         title={t("admin.settings.plan.noData.title", "No plan data")}
       >
         {t(
@@ -199,7 +199,7 @@ const AdminPlanSection: React.FC = () => {
     <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
       {shouldShowLicenseWarning && (
         <AppBanner
-          icon="warning-rounded"
+          icon="triangle-alert"
           tone="warning"
           title={t(
             "plan.licenseWarning.title",
@@ -210,7 +210,7 @@ const AdminPlanSection: React.FC = () => {
             limit: licenseAlert.freeTierLimit,
           })}
           buttonText={t("plan.licenseWarning.cta", "See plans")}
-          buttonIcon="upgrade-rounded"
+          buttonIcon="circle-arrow-up"
           onButtonClick={scrollToPlans}
           dismissible={false}
         />
