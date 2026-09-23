@@ -17,11 +17,9 @@ const gzipPromise = promisify(gzip);
 const brotliPromise = promisify(brotliCompress);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Must be set before zlib first uses the threadpool: the precompression passes
-// queue far more jobs than the default 4 threads can keep busy. Each file
-// queues one gzip and one brotli job, so a 16-file batch keeps up to 32 queued
-// and this many run at once.
-process.env.UV_THREADPOOL_SIZE ??= "16";
+// UV_THREADPOOL_SIZE is set by the build entrypoints (the Taskfiles and the
+// frontend Dockerfile): loading this config already touches the pool, so it
+// cannot be set here.
 
 // One list so the plugin's regex and the walk cannot drift.
 const COMPRESSION_EXCLUDED_EXTENSIONS = [
