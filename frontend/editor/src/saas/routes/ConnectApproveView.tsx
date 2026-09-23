@@ -165,7 +165,7 @@ export function ConnectApproveView({
                 "This server is already linked to your account. Renew your sign-in to return to billing and usage on your server.",
               )
             : t(
-                "connect.renewal.wrongAccount",
+                "connect.renewal.currentOwnerRequired",
                 "Sign in as the current owner of the linked cloud team to renew this server's sign-in. If ownership was transferred, use the new owner's account.",
               )
           : pending?.canApprove
