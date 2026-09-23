@@ -11,6 +11,13 @@
  * data through FormFillContext, which delegates to whichever provider is active.
  */
 import type { FormField } from "@app/tools/formFill/types";
+import type { XfaMode } from "@app/tools/formFill/xfa";
+
+/** Per-save choices; a provider that cannot honour one ignores it. */
+export interface FillOptions {
+  /** What the save does to a hybrid form's XFA. Only a provider that saves on the backend acts on it. */
+  xfaMode?: XfaMode;
+}
 
 export interface IFormDataProvider {
   /** Unique identifier for the provider (for debugging/logging) */
@@ -33,5 +40,6 @@ export interface IFormDataProvider {
     file: File | Blob,
     values: Record<string, string>,
     flatten: boolean,
+    options?: FillOptions,
   ): Promise<Blob>;
 }
