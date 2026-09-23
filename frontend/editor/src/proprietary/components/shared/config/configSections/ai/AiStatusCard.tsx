@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Paper, Stack, Group, Text, Loader } from "@mantine/core";
 import { StatusBadge, type StatusTone } from "@app/ui/StatusBadge";
 import { Button } from "@app/ui/Button";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import type { AiEngineSettingsData } from "@app/components/shared/config/configSections/aiEngineSettings";
 import {
   formatAge,
@@ -194,10 +194,9 @@ export function AiStatusCard({ settings }: AiStatusCardProps) {
 
         {status?.error && health !== "ok" && (
           <Group gap="xs" wrap="nowrap" align="flex-start">
-            <LocalIcon
-              icon="error-rounded"
-              width="1rem"
-              height="1rem"
+            <Icon
+              name="circle-alert"
+              size="1rem"
               style={{ flexShrink: 0, marginTop: "0.1rem" }}
             />
             <Text size="xs" c="dimmed">

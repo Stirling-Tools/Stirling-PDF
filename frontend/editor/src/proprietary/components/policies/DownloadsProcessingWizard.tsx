@@ -94,7 +94,9 @@ export function DownloadsProcessingWizard({
       setFound({ directory, entries: pdfs });
       // Warm the AI engine while the user reads the offer, so the first escalation pays no
       // cold start. Best-effort.
-      void apiClient.get("/api/v1/ai/health").catch(() => {});
+      void apiClient
+        .get("/api/v1/ai/health", { suppressErrorToast: true })
+        .catch(() => {});
     })();
 
     return () => {

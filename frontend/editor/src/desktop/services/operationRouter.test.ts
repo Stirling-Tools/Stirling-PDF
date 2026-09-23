@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 // Verifies operationRouter.getBaseUrl host selection in SaaS mode: cloud-only
 // feature endpoints (payg/team/policies) must hit the SaaS backend, NOT the local
@@ -6,6 +6,13 @@ import { describe, expect, test, vi } from "vitest";
 // /api/v1/payg/wallet). A plain non-cloud, non-tool endpoint still defaults local.
 
 const SAAS_URL = "https://api.saas.test";
+
+vi.mock("@app/services/authService", () => ({
+  authService: {
+    isAuthenticated: vi.fn().mockResolvedValue(true),
+    awaitRefreshIfInProgress: vi.fn().mockResolvedValue(undefined),
+  },
+}));
 
 // NB: vi.mock factories are hoisted above top-level consts, so they must use
 // literals (not SAAS_URL/LOCAL_URL) to avoid a TDZ ReferenceError.
@@ -33,13 +40,66 @@ vi.mock("@app/services/endpointAvailabilityService", () => ({
   },
 }));
 vi.mock("@app/services/selfHostedServerMonitor", () => ({
-  selfHostedServerMonitor: { getSnapshot: () => ({ status: "online" }) },
+  selfHostedServerMonitor: { getSnapshot: vi.fn(() => ({ status: "online" })) },
 }));
 vi.mock("@app/i18n", () => ({
   default: { t: (_k: string, fallback: string) => fallback || _k },
 }));
 
 import { operationRouter } from "@app/services/operationRouter";
+import { connectionModeService } from "@app/services/connectionModeService";
+import { authService } from "@app/services/authService";
+import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
+
+beforeEach(() => {
+  vi.mocked(connectionModeService.getCurrentMode).mockResolvedValue("saas");
+  vi.mocked(authService.isAuthenticated).mockResolvedValue(true);
+});
+
+describe("server-owned automation", () => {
+  const endpoints = [
+    "/api/v1/policies",
+    "/api/v1/policies?limit=20",
+    "/api/v1/policies/run",
+    "/api/v1/processing-folders",
+    "/api/v1/automation/meter",
+    "/api/v1/pipeline/handleData",
+  ];
+  test.each(endpoints)("refuses %s in local mode", async (endpoint) => {
+    vi.mocked(connectionModeService.getCurrentMode).mockResolvedValue("local");
+    await expect(operationRouter.getBaseUrl(endpoint)).rejects.toThrow(
+      "Sign in",
+    );
+  });
+  test.each(endpoints)(
+    "keeps %s on an offline self-hosted server",
+    async (endpoint) => {
+      vi.mocked(connectionModeService.getCurrentMode).mockResolvedValue(
+        "selfhosted",
+      );
+      vi.mocked(connectionModeService.getServerConfig).mockResolvedValue({
+        url: "https://selfhosted.test/",
+      });
+      vi.mocked(selfHostedServerMonitor.getSnapshot).mockReturnValue({
+        status: "offline",
+        isOnline: false,
+        serverUrl: "https://selfhosted.test",
+      });
+      await expect(operationRouter.getBaseUrl(endpoint)).resolves.toBe(
+        "https://selfhosted.test",
+      );
+      await expect(
+        operationRouter.shouldSkipBackendReadyCheck(endpoint),
+      ).resolves.toBe(true);
+    },
+  );
+  test("rejects a configured server without a session", async () => {
+    vi.mocked(authService.isAuthenticated).mockResolvedValue(false);
+    await expect(
+      operationRouter.getBaseUrl("/api/v1/policies/run"),
+    ).rejects.toThrow("Sign in");
+  });
+});
 
 describe("operationRouter.getBaseUrl — SaaS mode cloud-only routing", () => {
   test.each([
@@ -54,6 +114,7 @@ describe("operationRouter.getBaseUrl — SaaS mode cloud-only routing", () => {
     // so routing them local-first left them 404ing on desktop even when signed in.
     "/api/v1/processing-folders",
     "/api/v1/processing-folders/downloads-suggestion",
+    "/api/v1/storage/files/result/download",
     "/api/v1/notifications",
     "/api/v1/notifications?limit=20",
   ])("%s routes to the SaaS backend (not local)", async (endpoint) => {

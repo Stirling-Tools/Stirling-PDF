@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Alert, Group, Text, Code } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { handleExternalLinkClick } from "@app/platform/externalLinkClick";
 
 /**
@@ -29,7 +29,7 @@ export function AiAboutNotice({ cloud = false }: { cloud?: boolean }) {
           "admin.settings.ai.general.cloudNote.title",
           "About Stirling Cloud AI",
         )}
-        icon={<LocalIcon icon="info-rounded" width="1rem" height="1rem" />}
+        icon={<Icon name="info" size="1rem" />}
       >
         <Text size="xs">
           {t(
@@ -46,7 +46,7 @@ export function AiAboutNotice({ cloud = false }: { cloud?: boolean }) {
       variant="light"
       color="blue"
       title={t("admin.settings.ai.general.note.title", "About the AI engine")}
-      icon={<LocalIcon icon="info-rounded" width="1rem" height="1rem" />}
+      icon={<Icon name="info" size="1rem" />}
     >
       <Group gap="md" align="center" wrap="nowrap">
         <Text size="xs" style={{ flexGrow: 1 }}>
@@ -71,13 +71,7 @@ export function AiAboutNotice({ cloud = false }: { cloud?: boolean }) {
           onClick={(event) =>
             handleExternalLinkClick(AI_ENGINE_DOCS_URL, event)
           }
-          rightSection={
-            <LocalIcon
-              icon="open-in-new-rounded"
-              width="0.8rem"
-              height="0.8rem"
-            />
-          }
+          rightSection={<Icon name="external-link" size="0.8rem" />}
           style={{ flexShrink: 0 }}
         >
           {t("admin.settings.ai.general.note.docs", "Set-up guide")}

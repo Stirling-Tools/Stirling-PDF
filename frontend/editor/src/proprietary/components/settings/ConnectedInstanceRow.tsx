@@ -99,6 +99,23 @@ export function ConnectedInstanceRow({
                   )}
           </p>
         )}
+        {!instance.revoked && (
+          <p>
+            {instance.seatCount == null
+              ? t(
+                  "settings.connectedInstances.seatsUnknown",
+                  "Waiting for this deployment to report its user count in the daily sync.",
+                )
+              : t(
+                  "settings.connectedInstances.seatsReported",
+                  "{{count}} Team seats · reported {{date}}. Offline deployments keep their seats until unlinked.",
+                  {
+                    count: instance.seatCount,
+                    date: formatDate(instance.seatsReportedAt ?? null),
+                  },
+                )}
+          </p>
+        )}
         <details className="account-connection__details">
           <summary>
             {t("settings.connectedInstances.details", "Details")}

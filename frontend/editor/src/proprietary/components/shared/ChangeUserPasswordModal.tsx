@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { alert } from "@app/components/toast";
 import {
   ChangeUserPasswordRequest,
@@ -247,14 +247,13 @@ export default function ChangeUserPasswordModal({
                 zIndex: 1,
               }}
             >
-              <LocalIcon icon="close-rounded" />
+              <Icon name="x" size="1em" />
             </ActionIcon>
             <Stack gap="lg" pt="md">
               <Stack gap="md" align="center">
-                <LocalIcon
-                  icon="lock"
-                  width="3rem"
-                  height="3rem"
+                <Icon
+                  name="lock"
+                  size="3rem"
                   style={{ color: "var(--mantine-color-gray-6)" }}
                 />
                 <Text size="xl" fw={600} ta="center">
@@ -363,11 +362,7 @@ export default function ChangeUserPasswordModal({
                           onClick={handleCopyPassword}
                           disabled={processing}
                         >
-                          <LocalIcon
-                            icon="content-copy"
-                            width="0.9rem"
-                            height="0.9rem"
-                          />
+                          <Icon name="copy" size="0.9rem" />
                         </ActionIcon>
                       </Tooltip>
                     </Group>

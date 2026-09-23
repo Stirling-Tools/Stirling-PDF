@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { Icon, type IconName } from "@app/ui/Icon";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { useTranslation } from "react-i18next";
 import {
@@ -11,7 +12,6 @@ import {
   Group,
 } from "@mantine/core";
 import { alert } from "@app/components/toast";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import apiClient from "@app/services/apiClient";
 import { Button } from "@app/ui/Button";
@@ -32,7 +32,7 @@ interface ModeOptionProps {
   onSelect: (mode: AiMode) => void;
   disabled?: boolean;
   badge?: ReactNode;
-  icon?: string;
+  icon?: IconName;
   /** Shown under the description even when the option cannot be selected. */
   footer?: ReactNode;
   children?: ReactNode;
@@ -82,7 +82,7 @@ function ModeOption({
         />
         <div style={{ flexGrow: 1, minWidth: 0 }}>
           <Group gap="xs" align="center" wrap="nowrap">
-            {icon && <LocalIcon icon={icon} width="1rem" height="1rem" />}
+            {icon && <Icon name={icon} size="1rem" />}
             <Text fw={600} size="sm">
               {title}
             </Text>
@@ -349,7 +349,7 @@ export function AiConnectionCard({
           selected={mode}
           onSelect={selectMode}
           disabled={linked === false}
-          icon="cloud-rounded"
+          icon="cloud"
           title={t(
             "admin.settings.ai.general.mode.cloud.title",
             "Use Stirling Cloud AI",
