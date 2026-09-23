@@ -74,11 +74,19 @@ const NO_DOCUMENT: NotificationDocumentState = {
 };
 
 /**
- * Whether this browser could resolve the document a row names. Two id spaces share `fileId`: an
- * attended run reports the id its editor minted, a source-fed one a hash that was never on a device.
+ * Whether this browser holds the document a row names, and so could run a fix over it. The server
+ * says: a client inferring it from `sourceId` cannot see a smart folder's rows at all.
  */
 export function isResolvableHere(notification: AppNotification): boolean {
-  return (notification.sourceId ?? null) === null;
+  return notification.documentLocation === "BROWSER";
+}
+
+/**
+ * Rows the server keeps on the reader's behalf. The server says which, so a smart-folder policy
+ * run from the editor, whose document is this browser's, is not mistaken for one.
+ */
+function isHeldByServer(notification: AppNotification): boolean {
+  return notification.heldByServer;
 }
 
 interface NotificationsSnapshot {
@@ -155,15 +163,16 @@ async function read(forCycle: number): Promise<void> {
   if (forCycle !== cycle) return;
 
   const documents = Object.fromEntries(resolved);
-  // Presentation, not access: the server has already scoped these rows to the reader. Hidden
-  // because every offer a member gets needs the document, so the row would only say so.
+  // Presentation, not access: the server has already scoped these rows to the reader. A member is
+  // shown what they can act on, plus what the server holds for them and nobody else.
   const visible = viewerReviewsTeam
     ? listed
     : listed.filter(
         // Asked, not left to the lookup missing: a hit on another id space would be a collision.
         (n) =>
-          isResolvableHere(n) &&
-          Boolean(n.fileId && documents[n.fileId]?.hasLocalFile),
+          isHeldByServer(n) ||
+          (isResolvableHere(n) &&
+            Boolean(n.fileId && documents[n.fileId]?.hasLocalFile)),
       );
 
   // Per read, since signing in or out changes whose marker applies without remounting the bell.
