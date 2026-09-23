@@ -53,7 +53,7 @@ export function AiAboutNotice({ cloud = false }: { cloud?: boolean }) {
           <Code>STIRLING_ENGINE_SHARED_SECRET</Code>{" "}
           {t(
             "admin.settings.ai.general.note.outro",
-            "on both containers and a model provider key. Whatever the AI reads is sent to the provider you pick — an Ollama you host keeps every page in-house.",
+            "on both containers and a model provider key. Whatever the AI reads is sent to the provider you pick - an Ollama you host keeps every page in-house.",
           )}
         </Text>
         {AI_ENGINE_DOCS_URL && (

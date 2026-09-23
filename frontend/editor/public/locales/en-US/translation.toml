@@ -828,7 +828,7 @@ label = "Long-running timeout (seconds)"
 label = "Where AI runs"
 
 [admin.settings.ai.general.mode.cloud]
-description = "No container, no provider key, no model choice — the work runs on Stirling Cloud and is billed to the account this server is linked to."
+description = "No container, no provider key, no model choice - the work runs on Stirling Cloud and is billed to the account this server is linked to."
 linkCta = "Connect this server to a Stirling account"
 notLinked = "Link an account first"
 title = "Use Stirling Cloud AI"
@@ -844,7 +844,7 @@ title = "Run your own engine"
 [admin.settings.ai.general.note]
 docs = "Set-up guide"
 intro = "A separate container you run next to Stirling. It does the reasoning; Stirling still does every page operation itself. It needs the same"
-outro = "on both containers and a model provider key. Whatever the AI reads is sent to the provider you pick — an Ollama you host keeps every page in-house."
+outro = "on both containers and a model provider key. Whatever the AI reads is sent to the provider you pick - an Ollama you host keeps every page in-house."
 title = "About the AI engine"
 
 [admin.settings.ai.general.streamTimeoutSeconds]

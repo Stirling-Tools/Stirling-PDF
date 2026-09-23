@@ -356,7 +356,7 @@ export function AiConnectionCard({
           )}
           description={t(
             "admin.settings.ai.general.mode.cloud.description",
-            "No container, no provider key, no model choice — the work runs on Stirling Cloud and is billed to the account this server is linked to.",
+            "No container, no provider key, no model choice - the work runs on Stirling Cloud and is billed to the account this server is linked to.",
           )}
           badge={
             linked === false ? (
