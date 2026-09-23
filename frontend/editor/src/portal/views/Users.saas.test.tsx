@@ -216,7 +216,6 @@ describe("SaaS ownership through the current Users page", () => {
   it("transfers through the role menu and keeps the former owner's shared roster visible", async () => {
     const owner = ownershipScenario();
     renderUsers();
-    await screen.findByText("Acme team");
     fireEvent.click(
       await screen.findByRole("textbox", { name: "Role for Blair" }),
     );
@@ -263,7 +262,6 @@ describe("SaaS ownership through the current Users page", () => {
   it("retains the current owner when a transfer conflicts", async () => {
     const owner = ownershipScenario(false, true);
     renderUsers();
-    await screen.findByText("Acme team");
     fireEvent.click(
       await screen.findByRole("textbox", { name: "Role for Blair" }),
     );

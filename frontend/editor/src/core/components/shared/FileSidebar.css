@@ -515,6 +515,13 @@
   padding: 0 6px 2px 6px;
   margin: 0;
   flex-shrink: 0;
+  /* Ruled only once files scroll beneath it. */
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.12s ease;
+}
+
+.file-sidebar-section-header[data-scrolled] {
+  border-bottom-color: var(--c-border-subtle);
 }
 
 .file-sidebar-section-label {
@@ -606,14 +613,10 @@
   pointer-events: auto;
 }
 
-/* Whichever add control comes first takes the gap, so the pair stays together
-   at the end of the header row. */
-.file-sidebar-section-btn-drive,
-.file-sidebar-section-btn-add {
+/* Search leads the trailing cluster and takes the gap, so it and the add
+   controls stay together at the end of the header row. */
+.file-sidebar-section-btn-search {
   margin-left: auto;
-}
-.file-sidebar-section-btn-drive + .file-sidebar-section-btn-add {
-  margin-left: 0;
 }
 
 /* Rows are conditionally rendered, so they fade in with an animation rather than
