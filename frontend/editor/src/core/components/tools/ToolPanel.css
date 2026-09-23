@@ -165,6 +165,24 @@
   margin: 0;
 }
 
+/* Title inset matches the section headings' text below it. */
+.tool-panel__list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  padding: 0.5rem var(--mantine-spacing-sm) 0.25rem
+    calc(var(--mantine-spacing-sm) + 0.5rem);
+}
+
+.tool-panel__list-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--c-text);
+}
+
 .tool-panel__compact-header-actions {
   display: flex;
   align-items: center;

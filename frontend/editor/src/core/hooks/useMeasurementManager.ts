@@ -228,7 +228,7 @@ export function useMeasurementManager({
 
   useEffect(() => {
     const fileBlob = effectiveFile?.file;
-    if (!fileBlob || !currentFileKey) {
+    if (!fileBlob || !currentFileKey || !isRulerActive) {
       setPageMeasureScales(null);
       return;
     }
@@ -252,7 +252,7 @@ export function useMeasurementManager({
     return () => {
       cancelled = true;
     };
-  }, [currentFileKey, effectiveFile?.file]);
+  }, [currentFileKey, effectiveFile?.file, isRulerActive]);
 
   useEffect(() => {
     if (!rulerOverlayRef.current || !currentFileKey) return;

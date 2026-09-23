@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner } from "@app/ui";
 import type { Wallet } from "@portal/api/billing";
-import type { SaasCurrency } from "@portal/billing/stripe";
 import { StripeCheckoutModal } from "@portal/components/billing/StripeCheckoutModal";
 import { BundleCheckoutModal } from "@portal/components/billing/BundleCheckoutModal";
 
@@ -25,10 +24,6 @@ interface Props {
   onActivationClosed?: () => void;
 }
 
-function isSaasCurrency(c: string | null): c is SaasCurrency {
-  return c === "usd" || c === "eur" || c === "gbp";
-}
-
 /**
  * Owns the activation dialogs; the host supplies the Processor row action that opens them.
  * Nothing renders here at rest — a held prepaid pool reads on the Processor row itself.
@@ -47,9 +42,6 @@ export function FreePlanView({
   const step = onStepChange ? (controlledStep ?? null) : ownStep;
   const setStep = onStepChange ?? setOwnStep;
 
-  const currency: SaasCurrency = isSaasCurrency(wallet.currency)
-    ? wallet.currency
-    : "usd";
   // Every dialog below needs a team to scope checkout, so an unresolved one would open nothing
   // at all. Saying so beats a door that silently does nothing.
   const missingTeam = step != null && wallet.teamId == null;
@@ -83,8 +75,6 @@ export function FreePlanView({
           onClose={closeModals}
           onPrepay={() => setStep("prepay")}
           teamId={wallet.teamId}
-          currency={currency}
-          pricePerDocMinor={wallet.pricePerDocMinor}
           initialCapUsd={wallet.capUsd}
           onComplete={() => onSubscribed?.() ?? Promise.resolve(false)}
         />
