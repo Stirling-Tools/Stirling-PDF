@@ -394,12 +394,14 @@ export default defineConfig(async ({ mode, command }) => {
   };
 
   // Shared between `vite` (dev) and `vite preview` (production-build serve, used
-  // in CI/E2E) so the live test suite still resolves /api → :8080.
+  // in CI/E2E) so the live test suite still resolves /api to :8080. /fonts comes
+  // from the backend JAR, which is the only copy the app ships.
   const backendProxyConfig =
     effectiveMode === "desktop"
       ? undefined
       : {
           "/api": backendProxy,
+          "/fonts": backendProxy,
           "/oauth2": backendProxy,
           "/saml2": backendProxy,
           "/login/oauth2": backendProxy,
@@ -492,11 +494,6 @@ export default defineConfig(async ({ mode, command }) => {
             // and useLogoAssets resolve against.
             src: "src/core/assets/brand/modern-logo/*",
             dest: "modern-logo",
-          },
-          {
-            // Fallback TrueType fonts for PDFium (Noto Sans, CJK, Arabic, etc.)
-            src: "../../app/core/src/main/resources/static/fonts/*.ttf",
-            dest: "fonts",
           },
         ],
       }),
