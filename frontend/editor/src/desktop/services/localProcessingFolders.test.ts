@@ -206,7 +206,7 @@ describe("desktop processing folder handoff", () => {
     expect(mocks.submit).toHaveBeenCalledOnce();
   });
 
-  test("a different same-name document replaces the backup and restores the new original", async () => {
+  test("editing and reprocessing a document still restores its uploaded original", async () => {
     mocks.archive.mockImplementation(async (_directory, file) => {
       mocks.original.mockResolvedValue(file);
       return "/downloads/.stirling/a.pdf";
@@ -215,40 +215,62 @@ describe("desktop processing folder handoff", () => {
     await waitFor(() => expect(onlyFile()?.run.status).toBe("COMPLETED"));
     const originalPath = onlyFile().originalPath;
     mocks.disk = { ...mocks.disk, lastModified: 3 };
-    mocks.diskContent = "another invoice";
+    mocks.diskContent = "annotated processed invoice";
 
     await sweepLocalProcessingFolder(folder.id);
     await waitFor(() => expect(mocks.submit).toHaveBeenCalledTimes(2));
     await waitFor(() => expect(onlyFile().run.status).toBe("COMPLETED"));
 
     expect(onlyFile().originalPath).toBe(originalPath);
-    expect(mocks.archive).toHaveBeenCalledTimes(2);
-    expect(mocks.archive).toHaveBeenLastCalledWith(
-      "/downloads",
-      expect.any(File),
-      true,
-    );
+    expect(mocks.archive).toHaveBeenCalledOnce();
     await revertLocalProcessingFile(folder.id, "a.pdf");
     expect(mocks.replace).toHaveBeenLastCalledWith(
       expect.anything(),
-      mocks.archive.mock.calls[1][1],
+      mocks.archive.mock.calls[0][1],
     );
+  });
+
+  test("an edited output can be restored before the next processing sweep", async () => {
+    const folder = await saveLocalProcessingFolder(request);
+    await waitFor(() => expect(onlyFile()?.run.status).toBe("COMPLETED"));
+    mocks.disk = { ...mocks.disk, lastModified: 3 };
+    const edited = { ...mocks.disk };
+
+    await revertLocalProcessingFile(folder.id, "a.pdf");
+
+    expect(mocks.replace).toHaveBeenLastCalledWith(edited, expect.any(File));
+    expect(mocks.original).toHaveBeenCalledWith("/downloads/.stirling/a.pdf");
+    expect(mocks.submit).toHaveBeenCalledOnce();
   });
 
   test.each([
     "/downloads/.stirling/a.pdf",
     "/downloads/.stirling-originals/old-a.pdf",
-  ])("restoring consumes the backup at %s", async (originalPath) => {
-    mocks.archive.mockResolvedValueOnce(originalPath);
-    const folder = await saveLocalProcessingFolder(request);
-    await waitFor(() => expect(onlyFile()?.run.status).toBe("COMPLETED"));
+  ])(
+    "restoring retains the backup at %s for later edits and restores",
+    async (originalPath) => {
+      mocks.archive.mockResolvedValueOnce(originalPath);
+      const folder = await saveLocalProcessingFolder(request);
+      await waitFor(() => expect(onlyFile()?.run.status).toBe("COMPLETED"));
 
-    await revertLocalProcessingFile(folder.id, "a.pdf");
+      await revertLocalProcessingFile(folder.id, "a.pdf");
 
-    expect(mocks.original).toHaveBeenCalledWith(originalPath);
-    expect(mocks.remove).toHaveBeenCalledWith(originalPath);
-    expect(mocks.files.size).toBe(0);
-  });
+      expect(mocks.original).toHaveBeenCalledWith(originalPath);
+      expect(mocks.remove).not.toHaveBeenCalledWith(originalPath);
+      expect(onlyFile().originalPath).toBe(originalPath);
+      expect(onlyFile().restored).toBe(true);
+
+      await sweepLocalProcessingFolder(folder.id);
+      await waitFor(() => expect(onlyFile().run.status).toBe("COMPLETED"));
+      expect(mocks.submit).toHaveBeenCalledTimes(2);
+      expect(mocks.archive).toHaveBeenCalledOnce();
+
+      mocks.disk = { ...mocks.disk, lastModified: 4 };
+      await revertLocalProcessingFile(folder.id, "a.pdf");
+      expect(mocks.original).toHaveBeenLastCalledWith(originalPath);
+      expect(mocks.remove).not.toHaveBeenCalledWith(originalPath);
+    },
+  );
 
   test.each([
     ["/downloads", "/downloads/invoices"],
@@ -367,8 +389,9 @@ describe("desktop processing folder handoff", () => {
       entry.input,
       expect.any(File),
     );
-    expect(mocks.remove).toHaveBeenCalledWith(entry.originalPath);
-    expect(mocks.files.size).toBe(0);
+    expect(mocks.remove).not.toHaveBeenCalledWith(entry.originalPath);
+    expect(onlyFile().originalPath).toBe(entry.originalPath);
+    expect(onlyFile().restored).toBe(true);
   });
 
   test("failed restoration retains the backup and processing record", async () => {

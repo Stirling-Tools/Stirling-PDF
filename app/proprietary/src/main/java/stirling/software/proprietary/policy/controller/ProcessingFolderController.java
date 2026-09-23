@@ -573,8 +573,9 @@ public class ProcessingFolderController {
     @Operation(
             summary = "Restore a file's archived original",
             description =
-                    "Moves the pre-processing original kept under .stirling back"
-                            + " over the processed file. The folder is paused first so"
+                    "Restores the pre-processing original kept under .stirling"
+                            + " over the processed file, retaining the backup for future restores."
+                            + " The folder is paused first so"
                             + " nothing claims the restored file, and its ledger row is"
                             + " forgotten — it reads as waiting until processing resumes."
                             + " Disk-backed folders only: storage-backed replacement keeps no"
@@ -621,7 +622,7 @@ public class ProcessingFolderController {
                     throw new ResponseStatusException(
                             HttpStatus.CONFLICT, "'" + name + "' is being processed right now");
                 }
-                return toMountedFile(target, null, false);
+                return toMountedFile(target, null, true);
             }
         } catch (IOException e) {
             throw new ResponseStatusException(
@@ -637,9 +638,9 @@ public class ProcessingFolderController {
             summary = "Restore every archived original in the folder",
             description =
                     "Resets the folder: pauses it, cancels its in-flight runs and waits for"
-                            + " them to stop, moves each original kept under"
+                            + " them to stop, copies each original kept under"
                             + " .stirling back over its"
-                            + " processed file, and forgets the whole processed history —"
+                            + " processed file, retains the backups, and forgets the whole processed history —"
                             + " failed files included — so everything reads as waiting"
                             + " until it resumes. Only files of the watched directory itself"
                             + " are touched, and a file mid-run is skipped rather than"
@@ -695,8 +696,8 @@ public class ProcessingFolderController {
     }
 
     /**
-     * Move one archived original back and forget its ledger row so the file reads unprocessed.
-     * False when the file is mid-run or the name resolves outside the watched directory.
+     * Restore the archived original without consuming it and forget its ledger row. False when the
+     * file is mid-run or the name resolves outside the watched directory.
      */
     private boolean restoreOriginal(Policy policy, Path permitted, Path canonicalDir, String name)
             throws IOException {
@@ -711,12 +712,19 @@ public class ProcessingFolderController {
             return false;
         }
         FolderOutputSink.clearOriginalExpiry(canonicalDir, name);
-        Files.move(
-                archived,
-                target,
-                StandardCopyOption.ATOMIC_MOVE,
-                StandardCopyOption.REPLACE_EXISTING);
-        FolderOutputSink.clearOriginalRecognition(canonicalDir, name);
+        Path staging = FolderOutputSink.originalsDir(canonicalDir).resolve("tmp");
+        Files.createDirectories(staging);
+        Path pending = Files.createTempFile(staging, "restore-", ".tmp");
+        try {
+            Files.copy(archived, pending, StandardCopyOption.REPLACE_EXISTING);
+            Files.move(
+                    pending,
+                    target,
+                    StandardCopyOption.ATOMIC_MOVE,
+                    StandardCopyOption.REPLACE_EXISTING);
+        } finally {
+            Files.deleteIfExists(pending);
+        }
         processedLedger.forget(policy.id(), identity);
         return true;
     }

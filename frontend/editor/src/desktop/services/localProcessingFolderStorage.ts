@@ -19,6 +19,8 @@ export interface LocalProcessingFile {
   /** Copies written by the desktop, used to recognise its own output and protect later edits. */
   outputs: DiskFileEntry[];
   originalPath?: string;
+  /** Keeps backup ownership after restore while allowing the restored input to be processed again. */
+  restored?: boolean;
   /** First confirmed absence, tied to the backup version so replacement restarts retention. */
   orphanedOriginal?: { since: number; version: string };
 }

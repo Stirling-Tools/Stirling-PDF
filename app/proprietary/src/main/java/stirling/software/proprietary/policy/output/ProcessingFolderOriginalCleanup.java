@@ -32,6 +32,7 @@ import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.ledger.FolderIdentities;
 import stirling.software.proprietary.policy.ledger.ProcessedFileStatus;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
+import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
@@ -66,21 +67,25 @@ public class ProcessingFolderOriginalCleanup {
     void sweep(Instant now) {
         Map<Path, Set<String>> directories = new HashMap<>();
         for (Policy policy : policyStore.all()) {
-            if (!Policy.SURFACE_PROCESSING_FOLDER.equals(policy.surface())) continue;
-            for (String sourceId : policy.sourceIds()) {
-                var source = sourceStore.get(sourceId).orElse(null);
-                if (source == null || !FolderAccessGuard.FOLDER_TYPE.equals(source.type()))
-                    continue;
-                if (!(source.options().get("directory") instanceof String directory)) continue;
-                try {
-                    Path permitted = accessGuard.requirePermitted(Path.of(directory));
-                    Path canonical = FolderIdentities.canonicalDir(permitted);
-                    directories
-                            .computeIfAbsent(canonical, ignored -> new HashSet<>())
-                            .add(policy.id());
-                } catch (IOException | RuntimeException e) {
-                    log.debug("Original cleanup cannot access {}: {}", directory, e.getMessage());
+            if (Policy.SURFACE_PROCESSING_FOLDER.equals(policy.surface())) {
+                for (String sourceId : policy.sourceIds()) {
+                    var source = sourceStore.get(sourceId).orElse(null);
+                    if (source != null && FolderAccessGuard.FOLDER_TYPE.equals(source.type())) {
+                        registerDirectory(
+                                directories, policy.id(), source.options().get("directory"));
+                    }
                 }
+            }
+            if (policy.outputIds().isEmpty()) {
+                registerOutput(directories, policy.id(), policy.output());
+            }
+            for (String outputId : policy.allOutputIds()) {
+                sourceStore
+                        .get(outputId)
+                        .ifPresent(
+                                source ->
+                                        registerOutput(
+                                                directories, policy.id(), source.toOutputSpec()));
             }
         }
         for (var entry : directories.entrySet()) {
@@ -91,6 +96,26 @@ public class ProcessingFolderOriginalCleanup {
             } catch (IOException | RuntimeException e) {
                 log.debug("Original cleanup deferred for {}: {}", entry.getKey(), e.getMessage());
             }
+        }
+    }
+
+    private void registerOutput(
+            Map<Path, Set<String>> directories, String policyId, OutputSpec output) {
+        if (FolderAccessGuard.FOLDER_TYPE.equals(output.type())
+                && Boolean.parseBoolean(String.valueOf(output.options().get("replace")))) {
+            registerDirectory(directories, policyId, output.options().get("directory"));
+        }
+    }
+
+    private void registerDirectory(
+            Map<Path, Set<String>> directories, String policyId, Object value) {
+        if (!(value instanceof String directory) || directory.isBlank()) return;
+        try {
+            Path permitted = accessGuard.requirePermitted(Path.of(directory));
+            Path canonical = FolderIdentities.canonicalDir(permitted);
+            directories.computeIfAbsent(canonical, ignored -> new HashSet<>()).add(policyId);
+        } catch (IOException | RuntimeException e) {
+            log.debug("Original cleanup cannot access {}: {}", directory, e.getMessage());
         }
     }
 
@@ -144,7 +169,6 @@ public class ProcessingFolderOriginalCleanup {
                 continue;
             }
             for (Path original : entry.getValue()) Files.deleteIfExists(original);
-            FolderOutputSink.clearOriginalRecognition(dir, name);
             Files.deleteIfExists(marker);
         }
         try (Stream<Path> entries = Files.list(workspace)) {

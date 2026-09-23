@@ -228,7 +228,7 @@ class FolderOutputSinkTest {
     }
 
     @Test
-    void aDifferentDocumentWithTheSameNameReplacesTheOriginal() throws IOException {
+    void editingProcessedContentPreservesTheUploadedOriginal() throws IOException {
         Path out = tempDir.resolve("out");
         Files.createDirectories(out);
         Files.writeString(out.resolve("a.pdf"), "first-original");
@@ -237,20 +237,20 @@ class FolderOutputSinkTest {
 
         sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "output-document")), replace);
         var outputTime = Files.getLastModifiedTime(out.resolve("a.pdf"));
-        Files.writeString(out.resolve("a.pdf"), "second-original");
+        Files.writeString(out.resolve("a.pdf"), "annotated-output");
         Files.setLastModifiedTime(out.resolve("a.pdf"), outputTime);
         sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "processed2")), replace);
 
         assertEquals("processed2", Files.readString(out.resolve("a.pdf")));
         Path originals = out.resolve(".stirling");
-        assertEquals("second-original", Files.readString(originals.resolve("a.pdf")));
+        assertEquals("first-original", Files.readString(originals.resolve("a.pdf")));
         assertEquals(List.of("a.pdf"), FolderOutputSink.originalNames(out));
         assertFalse(Files.exists(originals.resolve("originals")));
         assertFalse(Files.exists(originals.resolve("superseded")));
     }
 
     @Test
-    void aNewDocumentRefreshesTheExistingNestedBackup() throws IOException {
+    void reprocessingMigratesTheNestedOriginalWithoutChangingItsContents() throws IOException {
         Path out = tempDir.resolve("out");
         Path original = out.resolve(".stirling/originals/a.pdf");
         Files.createDirectories(original.getParent());
@@ -262,10 +262,10 @@ class FolderOutputSinkTest {
         sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "processed2")), replace);
 
         assertEquals("processed2", Files.readString(out.resolve("a.pdf")));
-        assertEquals("new-document", Files.readString(original));
-        assertFalse(Files.exists(out.resolve(".stirling/a.pdf")));
+        assertEquals("first-original", Files.readString(out.resolve(".stirling/a.pdf")));
+        assertFalse(Files.exists(original));
         assertFalse(Files.exists(original.getParent().resolve("superseded")));
-        assertEquals(original, FolderOutputSink.originalPath(out, "a.pdf"));
+        assertEquals(out.resolve(".stirling/a.pdf"), FolderOutputSink.originalPath(out, "a.pdf"));
     }
 
     @Test
@@ -308,7 +308,7 @@ class FolderOutputSinkTest {
     }
 
     @Test
-    void aNewDocumentRemainsRecoverableWhenDeliveryFailsAndIsRetried() throws IOException {
+    void editsAndFailedRetriesNeverOverwriteTheUploadedOriginal() throws IOException {
         Path out = tempDir.resolve("out");
         Files.createDirectories(out);
         Files.writeString(out.resolve("a.pdf"), "first-original");
@@ -325,12 +325,12 @@ class FolderOutputSinkTest {
                 IllegalStateException.class,
                 () -> sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "v2")), replace));
         assertEquals("second-original", Files.readString(out.resolve("a.pdf")));
-        assertEquals("second-original", Files.readString(out.resolve(".stirling/a.pdf")));
+        assertEquals("first-original", Files.readString(out.resolve(".stirling/a.pdf")));
 
         sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "v2")), replace);
 
         assertEquals("v2", Files.readString(out.resolve("a.pdf")));
-        assertEquals("second-original", Files.readString(out.resolve(".stirling/a.pdf")));
+        assertEquals("first-original", Files.readString(out.resolve(".stirling/a.pdf")));
     }
 
     @Test

@@ -152,7 +152,6 @@ async function processFile(
       entry.originalPath ??= await archiveProcessingInput(
         folder.directory,
         file,
-        true,
       );
       await storage.saveFile(entry);
       const pipeline = pipelineSteps(folder.steps);
@@ -318,6 +317,7 @@ async function queueLocalProcessingFiles(
     if (
       output ||
       (previous?.run.status === "COMPLETED" &&
+        !previous.restored &&
         sameProcessingFile(previous.input, input))
     ) {
       result.alreadyProcessed++;
@@ -332,16 +332,12 @@ async function queueLocalProcessingFiles(
       continue;
     }
     if (previous?.run.status === "FAILED") result.retried++;
-    const sameDocument =
-      previous &&
-      (sameProcessingFile(previous.input, input) ||
-        previous.outputs.some((file) => sameProcessingFile(file, input)));
     const entry: LocalProcessingFile = {
       id: previous?.id ?? generateId(),
       folderId: id,
       input,
-      outputs: sameDocument ? previous.outputs : [],
-      originalPath: sameDocument ? previous.originalPath : undefined,
+      outputs: previous?.outputs ?? [],
+      originalPath: previous?.originalPath,
       run: {
         runId: `queued:${generateId()}`,
         status: "PENDING",
@@ -385,7 +381,7 @@ export async function deleteLocalProcessingFolder(id: string): Promise<void> {
   cancelled.delete(id);
 }
 
-/** Restores one archived input only if none of this run's outputs were subsequently edited. */
+/** Restores the original over the current input; edited split outputs are never silently deleted. */
 export async function revertLocalProcessingFile(
   id: string,
   name: string,
@@ -412,20 +408,28 @@ export async function revertLocalProcessingFile(
           "Wait for processing to finish before restoring this file",
         );
       }
-      for (const output of entry.outputs)
-        await requireUnchangedProcessingFile(output);
-      const replacement =
-        entry.outputs.find((output) => output.path === entry.input.path) ??
-        entry.input;
-      await replaceProcessingFile(
+      for (const output of entry.outputs) {
+        if (directoryKey(output.path) !== directoryKey(entry.input.path))
+          await requireUnchangedProcessingFile(output);
+      }
+      const replacement = await processingFileState(entry.input.path);
+      const restored = await replaceProcessingFile(
         replacement,
         await readProcessingOriginal(entry.originalPath),
       );
       for (const output of entry.outputs) {
-        if (output.path !== entry.input.path) await remove(output.path);
+        if (directoryKey(output.path) !== directoryKey(entry.input.path))
+          await remove(output.path);
       }
-      await remove(entry.originalPath);
-      await storage.deleteFile(entry.id);
+      await storage.saveFile({
+        ...entry,
+        input: restored,
+        outputs: [],
+        restored: true,
+        serverRunId: undefined,
+        orphanedOriginal: undefined,
+        run: { status: "COMPLETED" },
+      });
     },
   );
 }

@@ -4,7 +4,7 @@ const mocks = vi.hoisted(() => ({
   writeFile: vi.fn(),
   rename: vi.fn(),
   remove: vi.fn(),
-  exists: vi.fn(),
+  readDir: vi.fn(),
   mounted: vi.fn(),
 }));
 vi.mock("@tauri-apps/plugin-fs", () => ({ ...mocks, mkdir: vi.fn() }));
@@ -36,7 +36,7 @@ beforeEach(() => {
   mocks.rename.mockResolvedValue(undefined);
   mocks.remove.mockResolvedValue(undefined);
   mocks.mounted.mockResolvedValue(true);
-  mocks.exists.mockResolvedValue(false);
+  mocks.readDir.mockResolvedValue([]);
   const pending = new Map<string, Promise<unknown>>();
   Object.defineProperty(navigator, "locks", {
     configurable: true,
@@ -76,7 +76,7 @@ test("the original is stored directly under .stirling with its own filename", as
 });
 
 test("an existing original is reused without writing another copy", async () => {
-  mocks.exists.mockResolvedValue(true);
+  mocks.readDir.mockResolvedValue([{ name: "a.pdf" }]);
   mocks.stat.mockResolvedValue({ isFile: true });
   expect(
     await archiveProcessingInput("/downloads", new File(["later"], "a.pdf")),
@@ -84,8 +84,8 @@ test("an existing original is reused without writing another copy", async () => 
   expect(mocks.writeFile).not.toHaveBeenCalled();
 });
 
-test("a new same-name document replaces the backup only after staging succeeds", async () => {
-  mocks.exists.mockResolvedValue(true);
+test("changed content cannot overwrite an existing original", async () => {
+  mocks.readDir.mockResolvedValue([{ name: "a.pdf" }]);
   mocks.stat.mockResolvedValue({
     isFile: true,
     size: 10,
@@ -96,31 +96,22 @@ test("a new same-name document replaces the backup only after staging succeeds",
     new TextEncoder().encode("new document").buffer,
   );
 
-  await archiveProcessingInput("/downloads", file, true);
-
-  expect(Array.from(mocks.writeFile.mock.calls[0][1])).toEqual(
-    Array.from(new TextEncoder().encode("new document")),
-  );
-  expect(mocks.writeFile).toHaveBeenCalledBefore(mocks.rename);
-  expect(mocks.rename).toHaveBeenCalledWith(
-    mocks.writeFile.mock.calls[0][0],
+  expect(await archiveProcessingInput("/downloads", file)).toBe(
     "/downloads/.stirling/a.pdf",
   );
+  expect(mocks.writeFile).not.toHaveBeenCalled();
+  expect(mocks.rename).not.toHaveBeenCalled();
 });
 
-test("failed backup refresh preserves the previous backup", async () => {
-  mocks.exists.mockResolvedValue(true);
-  mocks.stat.mockResolvedValue({
-    isFile: true,
-    size: 10,
-    mtime: new Date(1000),
-  });
-  mocks.writeFile.mockRejectedValueOnce(new Error("Disk full"));
+test("an unreadable original blocks processing instead of replacing the backup", async () => {
+  mocks.readDir.mockResolvedValue([{ name: "a.pdf" }]);
+  mocks.stat.mockRejectedValueOnce(new Error("Permission denied"));
 
   await expect(
-    archiveProcessingInput("/downloads", new File(["new"], "a.pdf"), true),
-  ).rejects.toThrow("Disk full");
+    archiveProcessingInput("/downloads", new File(["new"], "a.pdf")),
+  ).rejects.toThrow("Permission denied");
 
+  expect(mocks.writeFile).not.toHaveBeenCalled();
   expect(mocks.rename).not.toHaveBeenCalled();
   expect(mocks.remove).not.toHaveBeenCalledWith("/downloads/.stirling/a.pdf");
 });
@@ -136,7 +127,9 @@ test("an incomplete backup is removed so a retry can archive the input", async (
 });
 
 test("a backup created concurrently is never removed", async () => {
-  mocks.exists.mockResolvedValueOnce(false).mockResolvedValue(true);
+  mocks.readDir
+    .mockResolvedValueOnce([])
+    .mockResolvedValue([{ name: "a.pdf" }]);
   await expect(
     archiveProcessingInput("/downloads", new File(["input"], "a.pdf")),
   ).rejects.toThrow("created while archiving");
@@ -146,7 +139,9 @@ test("a backup created concurrently is never removed", async () => {
 
 test("concurrent archive requests publish only the first original", async () => {
   const published = new Set<string>();
-  mocks.exists.mockImplementation(async (path) => published.has(path));
+  mocks.readDir.mockImplementation(async () =>
+    [...published].map((path) => ({ name: path.split("/").pop()! })),
+  );
   mocks.stat.mockResolvedValue({ isFile: true });
   mocks.rename.mockImplementation(async (_temporary, path) => {
     published.add(path);

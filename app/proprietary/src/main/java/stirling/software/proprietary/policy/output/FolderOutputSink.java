@@ -1,5 +1,7 @@
 package stirling.software.proprietary.policy.output;
 
+import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -104,8 +106,7 @@ public class FolderOutputSink implements PolicyOutputSink {
             String name =
                     OutputNames.safeName(replaceInPlace ? inputName : resource.getFilename(), i);
             Path staged = tmpDir.resolve(UUID.randomUUID().toString());
-            String contentHash =
-                    stage(resource, staged, delivery.policyId() != null || replaceInPlace);
+            String contentHash = stage(resource, staged, delivery.policyId() != null);
             long size = Files.size(staged);
             // Size and mtime survive the rename.
             String gate = FolderIdentities.statGate(staged);
@@ -137,7 +138,7 @@ public class FolderOutputSink implements PolicyOutputSink {
     /**
      * Stream the output to its staging path. For a recorded delivery (stored policy) the content
      * hash is digested in the same pass, so the ledger gets both version tiers without re-reading a
-     * possibly huge output. Replacements also need the hash to recognize their own output later.
+     * possibly huge output.
      */
     private static String stage(Resource resource, Path staged, boolean hashed) throws IOException {
         if (!hashed) {
@@ -204,7 +205,7 @@ public class FolderOutputSink implements PolicyOutputSink {
         Path target = dir.resolve(name);
         // Archive before the ledger row flips DONE, so a restore that reads DONE finds the
         // original safe, never mid-move.
-        archiveOriginal(dir, target, contentHash);
+        archiveOriginal(dir, target);
         try {
             if (delivery.policyId() != null) {
                 processedLedger.recordOutput(
@@ -240,11 +241,6 @@ public class FolderOutputSink implements PolicyOutputSink {
         return metadataPath(dir, name, MISSING_ORIGINAL_PREFIX);
     }
 
-    /** Removes recognition data after its backup is successfully restored or expired. */
-    public static void clearOriginalRecognition(Path dir, String name) throws IOException {
-        Files.deleteIfExists(metadataPath(dir, name, ".original-content-"));
-    }
-
     private static Path metadataPath(Path dir, String name, String prefix) {
         String key = java.io.File.separatorChar == '\\' ? name.toLowerCase(Locale.ROOT) : name;
         return originalsDir(dir)
@@ -261,9 +257,15 @@ public class FolderOutputSink implements PolicyOutputSink {
      * Callers must validate that name contains no path components.
      */
     public static Path originalPath(Path dir, String name) {
-        Path original = originalsDir(dir).resolve(reservedName(name) ? ".original-" + name : name);
+        Path original = flatOriginalPath(dir, name);
         Path legacy = originalsDir(dir).resolve("originals").resolve(name);
-        return !Files.exists(original) && Files.isRegularFile(legacy) ? legacy : original;
+        return Files.notExists(original, NOFOLLOW_LINKS) && !Files.notExists(legacy, NOFOLLOW_LINKS)
+                ? legacy
+                : original;
+    }
+
+    private static Path flatOriginalPath(Path dir, String name) {
+        return originalsDir(dir).resolve(reservedName(name) ? ".original-" + name : name);
     }
 
     /** Lists restorable filenames, excluding staging files and nested backup history. */
@@ -309,48 +311,30 @@ public class FolderOutputSink implements PolicyOutputSink {
         return root;
     }
 
-    private static void archiveOriginal(Path dir, Path target, String outputHash)
-            throws IOException {
+    private static void archiveOriginal(Path dir, Path target) throws IOException {
         clearOriginalExpiry(dir, target.getFileName().toString());
-        if (!Files.exists(target)) {
+        if (Files.notExists(target, NOFOLLOW_LINKS)) {
             return;
         }
         stirlingDir(dir);
         String name = target.getFileName().toString();
-        Path archived = originalPath(dir, name);
-        Path recognition = metadataPath(dir, name, ".original-content-");
-        String inputHash = FolderIdentities.contentHash(target);
-        boolean sameDocument =
-                Files.isRegularFile(recognition)
-                        && Files.readAllLines(recognition).contains(inputHash);
-        if (Files.exists(archived)) {
-            if (!Files.isRegularFile(archived)) {
-                throw new IOException("Original archive is not a regular file: " + archived);
+        Path existing = originalPath(dir, name);
+        Path archived = flatOriginalPath(dir, name);
+        if (!Files.notExists(existing, NOFOLLOW_LINKS)) {
+            if (!Files.isRegularFile(existing, NOFOLLOW_LINKS)) {
+                throw new IOException("Original archive is not a regular file: " + existing);
             }
-        }
-        if (!Files.exists(archived) || !sameDocument) {
-            Path pending = Files.createTempFile(archived.getParent(), ".original-", ".tmp");
-            try {
-                Files.copy(target, pending, StandardCopyOption.REPLACE_EXISTING);
-                Files.move(
-                        pending,
-                        archived,
-                        StandardCopyOption.ATOMIC_MOVE,
-                        StandardCopyOption.REPLACE_EXISTING);
-            } finally {
-                Files.deleteIfExists(pending);
+            if (!existing.equals(archived)) {
+                Files.move(existing, archived, StandardCopyOption.ATOMIC_MOVE);
             }
+            return;
         }
-        // Claims replace the ledger hash. Keep recognition beside the backup, including the
-        // backed-up input so a failed delivery or crash before publication can be retried safely.
-        Path pending = Files.createTempFile(originalsDir(dir), ".original-content-", ".tmp");
+        // Keep the input in place until output publication succeeds; edits never replace this
+        // backup.
+        Path pending = Files.createTempFile(originalsDir(dir).resolve("tmp"), "original-", ".tmp");
         try {
-            Files.writeString(pending, inputHash + "\n" + outputHash);
-            Files.move(
-                    pending,
-                    recognition,
-                    StandardCopyOption.ATOMIC_MOVE,
-                    StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(target, pending, StandardCopyOption.REPLACE_EXISTING);
+            Files.move(pending, archived, StandardCopyOption.ATOMIC_MOVE);
         } finally {
             Files.deleteIfExists(pending);
         }

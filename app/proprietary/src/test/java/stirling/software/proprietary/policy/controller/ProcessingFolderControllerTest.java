@@ -859,11 +859,17 @@ class ProcessingFolderControllerTest {
                         view.id(), new ProcessingFolderController.RevertFileRequest("doc.pdf"));
 
         assertThat(Files.readString(tempDir.resolve("doc.pdf"))).isEqualTo("original");
-        assertThat(Files.exists(originals.resolve("doc.pdf"))).isFalse();
+        assertThat(Files.readString(originals.resolve("doc.pdf"))).isEqualTo("original");
         assertThat(restored.state()).isEqualTo("waiting");
+        assertThat(restored.hasOriginal()).isTrue();
         // Forgotten, not settled: the file reads as unprocessed until the folder resumes.
         verify(processedLedger).forget(eq(view.id()), anyString());
         assertThat(policyStore.get(view.id()).orElseThrow().enabled()).isFalse();
+        Files.writeString(tempDir.resolve("doc.pdf"), "edited after restore");
+        controller.revertFile(
+                view.id(), new ProcessingFolderController.RevertFileRequest("doc.pdf"));
+        assertThat(Files.readString(tempDir.resolve("doc.pdf"))).isEqualTo("original");
+        assertThat(Files.readString(originals.resolve("doc.pdf"))).isEqualTo("original");
     }
 
     @Test
@@ -900,7 +906,7 @@ class ProcessingFolderControllerTest {
         controller.revertFile(view.id(), new ProcessingFolderController.RevertFileRequest(name));
 
         assertThat(Files.readString(tempDir.resolve(name))).isEqualTo("original");
-        assertThat(Files.exists(original)).isFalse();
+        assertThat(Files.readString(original)).isEqualTo("original");
     }
 
     @Test
@@ -922,7 +928,7 @@ class ProcessingFolderControllerTest {
         assertThat(outcome.skipped()).isZero();
         assertThat(Files.readString(tempDir.resolve("doc1.pdf"))).isEqualTo("original");
         assertThat(Files.readString(tempDir.resolve("doc2.pdf"))).isEqualTo("original");
-        assertThat(Files.exists(originals.resolve("doc1.pdf"))).isFalse();
+        assertThat(Files.readString(originals.resolve("doc1.pdf"))).isEqualTo("original");
         assertThat(policyStore.get(view.id()).orElseThrow().enabled()).isFalse();
         verify(policyRunner).cancelRuns(view.id());
         verify(policyRunner).awaitQuiesce(eq(view.id()), any());
@@ -979,7 +985,7 @@ class ProcessingFolderControllerTest {
                 view.id(), new ProcessingFolderController.RevertFileRequest("doc.pdf"));
 
         assertThat(Files.readString(tempDir.resolve("doc.pdf"))).isEqualTo("original");
-        assertThat(Files.exists(original)).isFalse();
+        assertThat(Files.readString(original)).isEqualTo("original");
     }
 
     @Test

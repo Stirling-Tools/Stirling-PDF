@@ -235,6 +235,61 @@ class ProcessingFolderOriginalCleanupTest {
         assertThat(Files.exists(original)).isTrue();
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void teamPolicyReplacementOutputsReceiveRetention(boolean savedDestination) throws Exception {
+        Path original = original("a.pdf");
+        OutputSpec output =
+                new OutputSpec(
+                        "folder", Map.of("directory", directory.toString(), "replace", true));
+        Policy teamPolicy = policy.withSurface(Policy.SURFACE_POLICY).withOutput(output);
+        if (savedDestination) {
+            when(sources.get("output"))
+                    .thenReturn(
+                            Optional.of(
+                                    new Source(
+                                            "output",
+                                            "Output",
+                                            "folder",
+                                            output.options(),
+                                            false,
+                                            null,
+                                            1L)));
+            teamPolicy =
+                    teamPolicy.withOutput(OutputSpec.inline()).withOutputIds(List.of("output"));
+        }
+        when(policies.all()).thenReturn(List.of(teamPolicy));
+
+        cleanup.sweep(START);
+        cleanup.sweep(START.plus(Duration.ofDays(7)));
+
+        assertThat(Files.exists(original)).isFalse();
+    }
+
+    @Test
+    void teamPolicyOutputsRetainOriginalsWhileTheirFilesExist() throws Exception {
+        Path original = original("a.pdf");
+        when(policies.all())
+                .thenReturn(
+                        List.of(
+                                policy.withSurface(Policy.SURFACE_POLICY)
+                                        .withOutput(
+                                                new OutputSpec(
+                                                        "folder",
+                                                        Map.of(
+                                                                "directory",
+                                                                directory.toString(),
+                                                                "replace",
+                                                                true)))));
+        Files.writeString(directory.resolve("a.pdf"), "processed");
+
+        cleanup.sweep(START);
+        cleanup.sweep(START.plus(Duration.ofDays(100)));
+
+        assertThat(Files.readString(original)).isEqualTo("original");
+        assertThat(Files.exists(marker())).isFalse();
+    }
+
     @Test
     void metadataIsExcludedFromRestoreAndRemovedWhenTheBackupDisappears() throws Exception {
         Path original = original("a.pdf");

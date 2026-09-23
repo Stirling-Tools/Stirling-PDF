@@ -1,6 +1,6 @@
 import {
-  exists,
   mkdir,
+  readDir,
   rename,
   remove,
   stat,
@@ -56,11 +56,20 @@ export async function requireUnchangedProcessingFile(
   }
 }
 
-/** Stages a complete original; a new document can replace an existing same-name backup. */
+async function hasArchivedOriginal(
+  archive: string,
+  path: string,
+): Promise<boolean> {
+  return (await readDir(archive)).some(
+    (entry) =>
+      directoryKey(processingPath(archive, entry.name)) === directoryKey(path),
+  );
+}
+
+/** Publishes the first complete original and preserves it through subsequent edits and runs. */
 export async function archiveProcessingInput(
   directory: string,
   file: File,
-  replaceExisting = false,
 ): Promise<string> {
   const archive = processingPath(directory, ".stirling");
   const path = processingPath(archive, file.name);
@@ -71,12 +80,10 @@ export async function archiveProcessingInput(
   return navigator.locks.request(
     `processing-original:${directoryKey(path)}`,
     async () => {
-      let previous: DiskFileEntry | undefined;
-      if (await exists(path)) {
+      if (await hasArchivedOriginal(archive, path)) {
         if (!(await stat(path)).isFile)
           throw new Error("The original is not a file");
-        if (!replaceExisting) return path;
-        previous = await processingFileState(path);
+        return path;
       }
       // Only a completed write is published as an original; crash leftovers stay hidden.
       const temporary = processingPath(
@@ -87,8 +94,7 @@ export async function archiveProcessingInput(
         await writeFile(temporary, new Uint8Array(await file.arrayBuffer()), {
           createNew: true,
         });
-        if (previous) await requireUnchangedProcessingFile(previous);
-        else if (await exists(path))
+        if (await hasArchivedOriginal(archive, path))
           throw new Error("An original was created while archiving this file");
         await rename(temporary, path);
         return path;
