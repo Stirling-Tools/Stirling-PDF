@@ -7,8 +7,10 @@ import java.io.InputStreamReader;
 import java.io.InterruptedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,6 +33,7 @@ public class ProcessExecutor {
     private static final Map<Processes, ProcessExecutor> instances = new ConcurrentHashMap<>();
     private static ApplicationProperties applicationProperties = new ApplicationProperties();
     private static volatile UnoServerPool unoServerPool;
+    private static volatile List<Path> libreOfficeWorkRoots = workRoots(List.of());
     private final Semaphore semaphore;
     private final boolean liveUpdates;
     private long timeoutDuration;
@@ -190,6 +193,31 @@ public class ProcessExecutor {
         unoServerPool = pool;
     }
 
+    /**
+     * Dirs a direct soffice job's profile, output dir and inputs must lie within for it to get a
+     * per-job sandbox policy. java.io.tmpdir is always included; blank or invalid entries are
+     * ignored.
+     */
+    public static void setLibreOfficeWorkRoots(Collection<String> dirs) {
+        libreOfficeWorkRoots = workRoots(dirs);
+    }
+
+    private static List<Path> workRoots(Collection<String> dirs) {
+        List<Path> roots = new ArrayList<>();
+        roots.add(Path.of(System.getProperty("java.io.tmpdir")).toAbsolutePath().normalize());
+        for (String dir : dirs) {
+            if (dir == null || dir.isBlank()) {
+                continue;
+            }
+            try {
+                roots.add(Path.of(dir).toAbsolutePath().normalize());
+            } catch (InvalidPathException e) {
+                log.warn("Ignoring invalid LibreOffice work dir {}: {}", dir, e.getMessage());
+            }
+        }
+        return List.copyOf(roots);
+    }
+
     public ProcessExecutorResult runCommandWithOutputHandling(List<String> command)
             throws IOException, InterruptedException {
         return runCommandWithOutputHandling(command, null);
@@ -201,21 +229,24 @@ public class ProcessExecutor {
         try {
             return runOnce(command, workingDirectory, outcome);
         } catch (IOException e) {
-            // A fresh profile makes soffice relaunch under the IPC pipe it could not unlink; the
-            // pipe is cleared and the profile initialised now, so one more run does not relaunch.
-            // freshProfile is this job's own state, not the shared /tmp sweep, so parallel jobs
-            // garbage-collecting each other's dead pipes never trigger a spurious retry here.
-            if (!outcome.freshProfile || !outcome.stalePipeRemoved || outcome.timedOut) {
+            // A fresh profile makes soffice initialise it, relaunch under the IPC pipe the sandbox
+            // would not let it unlink, and exit 1; with the profile now initialised, one more run
+            // does not relaunch. Gated on this job's own profile, not on its pipe sweep finding the
+            // dead pipe: another job's sweep, or the init script's, may have removed it first.
+            if (outcome.freshProfile == null
+                    || outcome.timedOut
+                    || LibreOfficeSandboxPolicy.isProfileUninitialised(outcome.freshProfile)) {
                 throw e;
             }
-            log.info("Retrying LibreOffice after clearing its leftover IPC pipe");
+            log.info("Retrying LibreOffice now its fresh profile is initialised");
             return runOnce(command, workingDirectory, new RunOutcome());
         }
     }
 
     private static final class RunOutcome {
-        boolean freshProfile;
-        boolean stalePipeRemoved;
+        /** The job's profile when it had no user layer before this run, else null. */
+        Path freshProfile;
+
         boolean timedOut;
     }
 
@@ -267,12 +298,15 @@ public class ProcessExecutor {
             ProcessBuilder processBuilder = new ProcessBuilder(commandToRun);
             scrubEnvironment(processBuilder);
             if (processType == Processes.LIBRE_OFFICE) {
-                jobPolicy = LibreOfficeSandboxPolicy.forCommand(commandToRun).orElse(null);
+                jobPolicy =
+                        LibreOfficeSandboxPolicy.forCommand(commandToRun, libreOfficeWorkRoots)
+                                .orElse(null);
                 if (jobPolicy != null) {
                     processBuilder.environment().putAll(jobPolicy.env());
                     LibreOfficeSandboxPolicy.seedProfile(jobPolicy.profile());
-                    outcome.freshProfile =
-                            LibreOfficeSandboxPolicy.isProfileUninitialised(jobPolicy.profile());
+                    if (LibreOfficeSandboxPolicy.isProfileUninitialised(jobPolicy.profile())) {
+                        outcome.freshProfile = jobPolicy.profile();
+                    }
                     ipcPipesBefore =
                             LibreOfficeSandboxPolicy.snapshotIpcPipes(
                                     Path.of(LibreOfficeSandboxPolicy.IPC_PIPE_DIR));
@@ -441,9 +475,8 @@ public class ProcessExecutor {
             }
         } finally {
             if (ipcPipesBefore != null) {
-                outcome.stalePipeRemoved =
-                        LibreOfficeSandboxPolicy.removeLeftoverIpcPipes(
-                                Path.of(LibreOfficeSandboxPolicy.IPC_PIPE_DIR), ipcPipesBefore);
+                LibreOfficeSandboxPolicy.removeLeftoverIpcPipes(
+                        Path.of(LibreOfficeSandboxPolicy.IPC_PIPE_DIR), ipcPipesBefore);
                 if (exitCode == 0) {
                     Path profile = jobPolicy.profile();
                     LibreOfficeSandboxPolicy.rememberProfile(profile, profile.getParent());

@@ -3,13 +3,10 @@ package stirling.software.common.util;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -58,20 +55,14 @@ public class OfficeDocumentSanitizer {
     private static final Set<String> ODF_XML_PARTS =
             Set.of("content.xml", "styles.xml", "meta.xml", "settings.xml");
 
-    private static final Pattern RAW_REFERENCE_PATTERN =
-            Pattern.compile("((?:[A-Za-z0-9_-]+:)?href\\s*=\\s*)\"([^\"]*)\"");
-
     private final SsrfProtectionService ssrfProtectionService;
     private final ApplicationProperties applicationProperties;
-    private final RtfSanitizer rtfSanitizer;
 
     public OfficeDocumentSanitizer(
             SsrfProtectionService ssrfProtectionService,
-            ApplicationProperties applicationProperties,
-            RtfSanitizer rtfSanitizer) {
+            ApplicationProperties applicationProperties) {
         this.ssrfProtectionService = ssrfProtectionService;
         this.applicationProperties = applicationProperties;
-        this.rtfSanitizer = rtfSanitizer;
     }
 
     public boolean isSanitizableExtension(String extension) {
@@ -90,51 +81,10 @@ public class OfficeDocumentSanitizer {
             log.debug("Office document sanitization disabled by configuration");
             return documentBytes;
         }
-
-        OfficeDocumentFamily family = OfficeDocumentFamily.detect(documentBytes);
-        if (isMismatch(family, extension)) {
-            log.warn(
-                    "Uploaded file claims extension '{}' but its content is {}; sanitizing as {}",
-                    extension,
-                    family,
-                    family);
+        if (!isSanitizableExtension(extension)) {
+            return documentBytes;
         }
 
-        return switch (family) {
-            case ZIP_PACKAGE -> sanitizeZipPackage(documentBytes);
-            case FLAT_XML -> sanitizeFlatXml(documentBytes);
-            case RTF -> rtfSanitizer.sanitize(documentBytes);
-            default -> documentBytes;
-        };
-    }
-
-    private boolean isMismatch(OfficeDocumentFamily family, String extension) {
-        if (extension == null) {
-            return false;
-        }
-        String lower = extension.toLowerCase(Locale.ROOT);
-        boolean claimsZip = OOXML_EXTENSIONS.contains(lower) || ODF_EXTENSIONS.contains(lower);
-        if (claimsZip) {
-            return family != OfficeDocumentFamily.ZIP_PACKAGE;
-        }
-        return family == OfficeDocumentFamily.ZIP_PACKAGE;
-    }
-
-    private byte[] sanitizeFlatXml(byte[] documentBytes) {
-        try {
-            return sanitizeOdfXml(documentBytes);
-        } catch (ParserConfigurationException
-                | SAXException
-                | IOException
-                | TransformerException e) {
-            log.warn(
-                    "Failed to parse flat XML document for sanitization, masking references: {}",
-                    e.getMessage());
-            return scrubRawReferences(documentBytes);
-        }
-    }
-
-    private byte[] sanitizeZipPackage(byte[] documentBytes) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream(documentBytes.length);
         try (ZipInputStream zipIn =
                         ZipSecurity.createHardenedInputStream(
@@ -182,32 +132,11 @@ public class OfficeDocumentSanitizer {
                 | IOException
                 | TransformerException e) {
             log.warn(
-                    "Failed to parse XML part '{}' for sanitization, masking references: {}",
+                    "Failed to parse XML part '{}' for sanitization, leaving as-is: {}",
                     entryName,
                     e.getMessage());
-            return scrubRawReferences(entryBytes);
         }
         return entryBytes;
-    }
-
-    private byte[] scrubRawReferences(byte[] xmlBytes) {
-        String text = new String(xmlBytes, StandardCharsets.UTF_8);
-        Matcher matcher = RAW_REFERENCE_PATTERN.matcher(text);
-        StringBuilder result = new StringBuilder(text.length());
-        boolean modified = false;
-        while (matcher.find()) {
-            String value = matcher.group(2);
-            if (isExternalUrl(value) && !isAdminAllowed(value)) {
-                log.warn("Masking unparsed external reference: {}", truncateForLog(value));
-                matcher.appendReplacement(
-                        result, Matcher.quoteReplacement(matcher.group(1) + "\"\""));
-                modified = true;
-            } else {
-                matcher.appendReplacement(result, Matcher.quoteReplacement(matcher.group()));
-            }
-        }
-        matcher.appendTail(result);
-        return modified ? result.toString().getBytes(StandardCharsets.UTF_8) : xmlBytes;
     }
 
     private boolean isOdfXmlPart(String lowerName) {
@@ -318,20 +247,8 @@ public class OfficeDocumentSanitizer {
             return false;
         }
         String trimmed = url.trim().toLowerCase(Locale.ROOT);
-        if (trimmed.isEmpty() || trimmed.startsWith("#")) {
+        if (trimmed.isEmpty() || trimmed.startsWith("#") || trimmed.startsWith("../")) {
             return false;
-        }
-        if (trimmed.startsWith("../") || trimmed.contains("/../")) {
-            return true;
-        }
-        if (trimmed.startsWith("/") && !trimmed.startsWith("//")) {
-            return true;
-        }
-        if (trimmed.length() > 2
-                && trimmed.charAt(1) == ':'
-                && trimmed.charAt(0) >= 'a'
-                && trimmed.charAt(0) <= 'z') {
-            return true;
         }
         return trimmed.startsWith("http://")
                 || trimmed.startsWith("https://")

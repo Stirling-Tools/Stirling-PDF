@@ -51,33 +51,50 @@ final class LibreOfficeSandboxPolicy {
 
     /**
      * Environment overrides confining {@code command} to its own files, or empty when the command
-     * is not a direct soffice conversion or its paths cannot be expressed in the colon-separated
-     * lists lo-sandbox reads, in which case the inherited shared policy still applies.
+     * is not a direct soffice conversion, its paths cannot be expressed in the colon-separated
+     * lists lo-sandbox reads, or any of them lies outside {@code workRoots} (absolute, normalised
+     * dirs), in which case the inherited shared policy still applies.
      */
-    static Optional<JobPolicy> forCommand(List<String> command) {
-        Path profile = null;
-        Path outDir = null;
-        List<Path> inputs = new ArrayList<>();
+    static Optional<JobPolicy> forCommand(List<String> command, List<Path> workRoots) {
+        Path rawProfile = null;
+        Path rawOutDir = null;
+        List<Path> rawInputs = new ArrayList<>();
         for (int i = 1; i < command.size(); i++) {
             String arg = command.get(i);
             if (arg.startsWith(USER_INSTALLATION_PREFIX)) {
-                profile = toPath(arg.substring(USER_INSTALLATION_PREFIX.length()));
+                rawProfile = toPath(arg.substring(USER_INSTALLATION_PREFIX.length()));
             } else if ("--outdir".equals(arg) && i + 1 < command.size()) {
-                outDir = toPath(command.get(++i));
+                rawOutDir = toPath(command.get(++i));
             } else if (OPTIONS_WITH_VALUE.contains(arg)) {
                 i++;
             } else if (!arg.startsWith("-")) {
                 Path input = toPath(arg);
-                if (input != null && Files.isRegularFile(input)) {
-                    inputs.add(input.toAbsolutePath().normalize());
+                if (input != null) {
+                    rawInputs.add(input);
                 }
             }
         }
-        if (profile == null || outDir == null || !listable(profile, outDir, inputs)) {
+        if (rawProfile == null || rawOutDir == null) {
             return Optional.empty();
         }
-        profile = profile.toAbsolutePath().normalize();
-        outDir = outDir.toAbsolutePath().normalize();
+        Path profile = confined(rawProfile, workRoots);
+        Path outDir = confined(rawOutDir, workRoots);
+        List<Path> inputs = new ArrayList<>();
+        for (Path rawInput : rawInputs) {
+            Path input = confined(rawInput, workRoots);
+            if (input == null) {
+                return outsideWorkRoots(rawInput);
+            }
+            if (Files.isRegularFile(input)) {
+                inputs.add(input);
+            }
+        }
+        if (profile == null || outDir == null) {
+            return outsideWorkRoots(profile == null ? rawProfile : rawOutDir);
+        }
+        if (!listable(profile, outDir, inputs)) {
+            return Optional.empty();
+        }
         Path tmp = profile.resolve(PROFILE_TMP_DIR);
         try {
             Files.createDirectories(tmp);
@@ -96,6 +113,25 @@ final class LibreOfficeSandboxPolicy {
             env.put(name, tmp.toString());
         }
         return Optional.of(new JobPolicy(env, profile));
+    }
+
+    /**
+     * {@code path} made absolute and normalised when it lies within one of {@code roots}, null
+     * otherwise. Normalising first means {@code ..} cannot climb out of a root.
+     */
+    private static Path confined(Path path, List<Path> roots) {
+        Path normalized = path.toAbsolutePath().normalize();
+        for (Path root : roots) {
+            if (normalized.startsWith(root)) {
+                return normalized;
+            }
+        }
+        return null;
+    }
+
+    private static Optional<JobPolicy> outsideWorkRoots(Path path) {
+        log.warn("LibreOffice job path {} is outside the temp dirs; not granting it", path);
+        return Optional.empty();
     }
 
     /**

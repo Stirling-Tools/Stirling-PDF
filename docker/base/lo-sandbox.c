@@ -121,7 +121,16 @@ struct lo_ruleset_attr {
     "/var/spool/libreoffice:/var/cache/fontconfig:/sys/devices/system/cpu"
 #define DEFAULT_RW "/tmp:/dev"
 
-#define DEFAULT_REAL "/usr/lib/libreoffice/program/soffice"
+/* Fixed at build time: an exec target read from the environment would let whoever sets it
+ * run any binary through the launcher. */
+#define REAL_SOFFICE "/usr/lib/libreoffice/program/soffice"
+
+/* Applies the sandbox exactly as a launch would, reports what is active and exits instead of
+ * starting LibreOffice, so the init script can check the running kernel. */
+#define SELF_CHECK_FLAG "--stirling-sandbox-check"
+
+/* First Landlock ABI that scopes abstract UNIX sockets and signals to the sandbox. */
+#define LANDLOCK_ABI_SCOPED 6
 
 static const char *const ENV_ALLOW[] = {"HOME",
                                         "USER",
@@ -231,7 +240,8 @@ static int install_seccomp(void) {
     if (syscall(__NR_seccomp, SECCOMP_SET_MODE_FILTER, 0, &prog) == 0) {
         return 0;
     }
-    if (errno != ENOSYS) {
+    /* QEMU user-mode emulation answers EINVAL rather than ENOSYS. */
+    if (errno != ENOSYS && errno != EINVAL) {
         return -1;
     }
     if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &prog) == 0) {
@@ -299,6 +309,8 @@ static int landlock_add_list(int fd, const char *list, uint64_t access,
     return 0;
 }
 
+/* Returns the Landlock ABI the ruleset was enforced with, 0 when the kernel has no Landlock,
+ * or -1 when it has Landlock but the ruleset could not be applied. */
 static int install_landlock(const char *ro, const char *ro_extra, const char *rw,
                             const char *sock) {
     struct lo_ruleset_attr attr;
@@ -310,7 +322,7 @@ static int install_landlock(const char *ro, const char *ro_extra, const char *rw
     abi = (int)syscall(__NR_landlock_create_ruleset, NULL, 0,
                        LANDLOCK_CREATE_RULESET_VERSION);
     if (abi < 1) {
-        return 1;
+        return 0;
     }
 
     access = LANDLOCK_ACCESS_FS_EXECUTE | LANDLOCK_ACCESS_FS_WRITE_FILE |
@@ -338,15 +350,15 @@ static int install_landlock(const char *ro, const char *ro_extra, const char *rw
         attr.handled_access_net = LO_ACCESS_NET_BIND_TCP | LO_ACCESS_NET_CONNECT_TCP;
         attr_size = offsetof(struct lo_ruleset_attr, scoped);
     }
-    if (abi >= 6) {
-        /* Pathname sockets (the unoserver pipe) are unaffected; abstract ones such as
-         * X11's and signals to processes outside the sandbox are refused. */
+    if (abi >= LANDLOCK_ABI_SCOPED) {
+        /* Pathname sockets (the unoserver pipe) are unaffected; abstract sockets and
+         * signals to processes outside the sandbox are refused. */
         attr.scoped = LO_SCOPE_ABSTRACT_UNIX_SOCKET | LO_SCOPE_SIGNAL;
         attr_size = sizeof(attr);
     }
     fd = (int)syscall(__NR_landlock_create_ruleset, &attr, attr_size, 0);
     if (fd < 0) {
-        return 1;
+        return -1;
     }
 
     if (landlock_add_list(fd, ro, LO_ACCESS_RO & access, 0) != 0 ||
@@ -361,7 +373,7 @@ static int install_landlock(const char *ro, const char *ro_extra, const char *rw
         return -1;
     }
     close(fd);
-    return 0;
+    return abi;
 }
 
 /* Only a bare probe skips the sandbox; a flag appended to a real invocation must not. */
@@ -374,7 +386,6 @@ static int is_probe(int argc, char **argv) {
 }
 
 int main(int argc, char **argv, char **envp) {
-    const char *real = getenv("STIRLING_LO_REAL");
     const char *mode = getenv("STIRLING_LO_SANDBOX");
     const char *ro = getenv("STIRLING_LO_ALLOW_RO");
     const char *rw = getenv("STIRLING_LO_ALLOW_RW");
@@ -383,13 +394,11 @@ int main(int argc, char **argv, char **envp) {
      * must bind there, but gets no read, write, list or delete right on /tmp itself. */
     const char *sock = getenv("STIRLING_LO_ALLOW_SOCK");
     int required;
-    int landlock_rc;
+    int check;
+    int landlock_abi;
     int seccomp_rc;
     char **clean;
 
-    if (real == NULL || *real == '\0') {
-        real = DEFAULT_REAL;
-    }
     if (mode == NULL || *mode == '\0') {
         mode = "enforce";
     }
@@ -400,11 +409,20 @@ int main(int argc, char **argv, char **envp) {
         rw = DEFAULT_RW;
     }
     required = strcmp(mode, "required") == 0;
+    check = argc == 2 && strcmp(argv[1], SELF_CHECK_FLAG) == 0;
 
-    if (strcmp(mode, "off") == 0 || is_probe(argc, argv)) {
-        execv(real, argv);
-        fprintf(stderr, "lo-sandbox: exec %s failed: %s\n", real,
-                strerror(errno));
+    if (strcmp(mode, "off") == 0) {
+        if (check) {
+            fprintf(stderr, "lo-sandbox: disabled (mode=off)\n");
+            return 0;
+        }
+        execv(REAL_SOFFICE, argv);
+        fprintf(stderr, "lo-sandbox: exec %s failed: %s\n", REAL_SOFFICE, strerror(errno));
+        return 127;
+    }
+    if (is_probe(argc, argv)) {
+        execv(REAL_SOFFICE, argv);
+        fprintf(stderr, "lo-sandbox: exec %s failed: %s\n", REAL_SOFFICE, strerror(errno));
         return 127;
     }
 
@@ -416,13 +434,13 @@ int main(int argc, char **argv, char **envp) {
         return 125;
     }
 
-    landlock_rc = install_landlock(ro, ro_extra, rw, sock);
-    if (landlock_rc < 0) {
+    landlock_abi = install_landlock(ro, ro_extra, rw, sock);
+    if (landlock_abi < 0) {
         fprintf(stderr, "lo-sandbox: landlock ruleset failed: %s\n",
                 strerror(errno));
         return 125;
     }
-    if (landlock_rc > 0) {
+    if (landlock_abi == 0) {
         if (required) {
             fprintf(stderr,
                     "lo-sandbox: landlock unavailable and mode=required\n");
@@ -430,6 +448,20 @@ int main(int argc, char **argv, char **envp) {
         }
         fprintf(stderr,
                 "lo-sandbox: landlock unavailable, filesystem unconfined\n");
+    } else if (landlock_abi < LANDLOCK_ABI_SCOPED) {
+        if (required) {
+            fprintf(stderr,
+                    "lo-sandbox: landlock ABI %d cannot scope signals and abstract "
+                    "sockets (needs %d) and mode=required\n",
+                    landlock_abi, LANDLOCK_ABI_SCOPED);
+            return 125;
+        }
+        if (check) {
+            fprintf(stderr,
+                    "lo-sandbox: landlock scoping unavailable (ABI %d), signals and "
+                    "abstract sockets unconfined\n",
+                    landlock_abi);
+        }
     }
 
     seccomp_rc = install_seccomp();
@@ -446,7 +478,12 @@ int main(int argc, char **argv, char **envp) {
         fprintf(stderr, "lo-sandbox: seccomp unavailable, network unconfined\n");
     }
 
-    execve(real, argv, clean);
-    fprintf(stderr, "lo-sandbox: exec %s failed: %s\n", real, strerror(errno));
+    if (check) {
+        fprintf(stderr, "lo-sandbox: landlock ABI %d, seccomp %s\n", landlock_abi,
+                seccomp_rc == 0 ? "active" : "unavailable");
+        return 0;
+    }
+    execve(REAL_SOFFICE, argv, clean);
+    fprintf(stderr, "lo-sandbox: exec %s failed: %s\n", REAL_SOFFICE, strerror(errno));
     return 127;
 }

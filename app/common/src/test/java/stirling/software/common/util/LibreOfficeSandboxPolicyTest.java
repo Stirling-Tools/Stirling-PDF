@@ -14,11 +14,17 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 class LibreOfficeSandboxPolicyTest {
 
     @TempDir Path tmp;
+
+    private List<Path> roots() {
+        return List.of(tmp);
+    }
 
     private List<String> sofficeCommand(Path profile, Path outDir, Path input) {
         return List.of(
@@ -40,7 +46,7 @@ class LibreOfficeSandboxPolicyTest {
         Path input = Files.writeString(tmp.resolve("in.docx"), "x");
 
         LibreOfficeSandboxPolicy.JobPolicy policy =
-                LibreOfficeSandboxPolicy.forCommand(sofficeCommand(profile, outDir, input))
+                LibreOfficeSandboxPolicy.forCommand(sofficeCommand(profile, outDir, input), roots())
                         .orElseThrow();
         Map<String, String> env = policy.env();
 
@@ -71,7 +77,8 @@ class LibreOfficeSandboxPolicyTest {
                                         tmp.resolve("pdf").toString(),
                                         "--outdir",
                                         tmp.resolve("o").toString(),
-                                        input.toString()))
+                                        input.toString()),
+                                roots())
                         .orElseThrow()
                         .env();
 
@@ -90,7 +97,8 @@ class LibreOfficeSandboxPolicyTest {
                                 "--convert-to",
                                 "pdf",
                                 "/tmp/a.docx",
-                                "/tmp/a.pdf")));
+                                "/tmp/a.pdf"),
+                        roots()));
     }
 
     @Test
@@ -103,7 +111,8 @@ class LibreOfficeSandboxPolicyTest {
                                 "-env:UserInstallation=" + tmp.resolve("p").toUri(),
                                 "--convert-to",
                                 "pdf",
-                                "in.docx")));
+                                "in.docx"),
+                        roots()));
     }
 
     @Test
@@ -114,7 +123,35 @@ class LibreOfficeSandboxPolicyTest {
         assertEquals(
                 Optional.empty(),
                 LibreOfficeSandboxPolicy.forCommand(
-                        sofficeCommand(odd.resolve("profile"), tmp.resolve("out"), input)));
+                        sofficeCommand(odd.resolve("profile"), tmp.resolve("out"), input),
+                        roots()));
+    }
+
+    @Test
+    void pathsOutsideTheWorkRootsAreNotGranted() throws IOException {
+        Path root = Files.createDirectories(tmp.resolve("work"));
+        Path outside = Files.createDirectories(tmp.resolve("elsewhere"));
+        Path input = Files.writeString(root.resolve("in.docx"), "x");
+        Path outsideInput = Files.writeString(outside.resolve("secret.docx"), "x");
+        List<Path> roots = List.of(root);
+
+        assertTrue(
+                LibreOfficeSandboxPolicy.forCommand(
+                                sofficeCommand(root.resolve("p"), root.resolve("o"), input), roots)
+                        .isPresent());
+        assertEquals(
+                Optional.empty(),
+                LibreOfficeSandboxPolicy.forCommand(
+                        sofficeCommand(outside.resolve("p"), root.resolve("o"), input), roots));
+        assertEquals(
+                Optional.empty(),
+                LibreOfficeSandboxPolicy.forCommand(
+                        sofficeCommand(root.resolve("p"), root.resolve("../elsewhere/o"), input),
+                        roots));
+        assertEquals(
+                Optional.empty(),
+                LibreOfficeSandboxPolicy.forCommand(
+                        sofficeCommand(root.resolve("p"), root.resolve("o"), outsideInput), roots));
     }
 
     @Test
@@ -152,6 +189,7 @@ class LibreOfficeSandboxPolicyTest {
     }
 
     @Test
+    @EnabledOnOs(OS.LINUX)
     void removesOnlyUnboundPipesCreatedDuringTheRun() throws IOException {
         Path preexisting = Files.writeString(tmp.resolve("OSL_PIPE_1000_old"), "");
         Set<Path> before = LibreOfficeSandboxPolicy.snapshotIpcPipes(tmp);
