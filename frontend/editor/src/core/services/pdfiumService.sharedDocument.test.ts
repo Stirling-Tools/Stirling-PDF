@@ -139,6 +139,26 @@ describe("shared document lifecycle", () => {
 
     closeDocAndFreeBuffer(await getPdfiumModule(), doc);
     expect(closeCalls()).toEqual([doc]);
+    // The reader re-fetches the module after the reset, so the close must
+    // still free the buffer in the heap that allocated it.
+    expect(freeCalls()).toHaveLength(1);
+  });
+
+  it("closes an idle shared handle before allocating its replacement", async () => {
+    const dataA = new ArrayBuffer(16);
+    const dataB = new ArrayBuffer(24);
+    const docA = await openRawDocumentSafe(dataA);
+    closeDocAndFreeBuffer(await getPdfiumModule(), docA);
+
+    const wasm = pdfium.state.module!.pdfium.wasmExports;
+    const mallocsBefore = wasm.malloc.mock.invocationCallOrder.length;
+    const freesBefore = wasm.free.mock.invocationCallOrder.length;
+
+    await openRawDocumentSafe(dataB);
+
+    expect(wasm.free.mock.invocationCallOrder[freesBefore]).toBeLessThan(
+      wasm.malloc.mock.invocationCallOrder[mallocsBefore],
+    );
   });
 
   it("queues the release behind a scan so a late open cannot linger", async () => {

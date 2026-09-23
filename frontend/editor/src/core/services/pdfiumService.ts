@@ -145,8 +145,8 @@ export async function getPdfiumModule(): Promise<WrappedPdfiumModule> {
  */
 export function resetPdfiumModule(): void {
   // The module is discarded here, so a handle no reader holds is closed now.
-  // With readers it is dropped, and their later close only closes the document
-  // pointer; the pixel buffer goes with the discarded module.
+  // A handle a reader still holds is left to that reader: its close frees the
+  // data buffer against the module it captured.
   try {
     if (sharedDocument && sharedDocument.refs <= 0 && _module) {
       closeDocumentNow(_module, sharedDocument.docPtr);
@@ -158,15 +158,20 @@ export function resetPdfiumModule(): void {
   sharedReleasePending = false;
   _module = null;
   _initPromise = null;
-  _docDataPtrs.clear();
 }
 
 /**
- * Map of document pointer → WASM data buffer pointer.
+ * Map of document pointer → its WASM data buffer and the module that owns it.
  * FPDF_LoadMemDocument does NOT copy the data — it keeps a reference, so the
- * buffer must stay alive until FPDF_CloseDocument is called.
+ * buffer must stay alive until FPDF_CloseDocument is called. The owning module
+ * is recorded because a reset discards the module while readers may still close
+ * their documents: both the close and the free must go to the old instance, not
+ * to whichever module the caller re-fetched.
  */
-const _docDataPtrs = new Map<number, number>();
+const _docDataPtrs = new Map<
+  number,
+  { module: WrappedPdfiumModule; ptr: number }
+>();
 
 /**
  * Read an annotation rectangle using the CropBox-adjusted `EPDFAnnot_GetRect`
@@ -355,11 +360,11 @@ let sharedDocument: SharedDocument | null = null;
 let sharedReleasePending = false;
 
 function closeDocumentNow(m: WrappedPdfiumModule, docPtr: number): void {
-  m.FPDF_CloseDocument(docPtr);
-  const dataPtr = _docDataPtrs.get(docPtr);
-  if (dataPtr) {
-    m.pdfium.wasmExports.free(dataPtr);
+  const entry = _docDataPtrs.get(docPtr);
+  (entry?.module ?? m).FPDF_CloseDocument(docPtr);
+  if (entry) {
     _docDataPtrs.delete(docPtr);
+    entry.module.pdfium.wasmExports.free(entry.ptr);
   }
 }
 
@@ -378,6 +383,15 @@ export async function openRawDocument(
     return sharedDocument.docPtr;
   }
 
+  // A different document is being opened, so an idle shared one goes before the
+  // new buffer is allocated: two large copies must not sit in the heap at once.
+  // With readers outstanding the close stays deferred to the last reader.
+  if (!password && sharedDocument && sharedDocument.refs <= 0) {
+    closeDocumentNow(m, sharedDocument.docPtr);
+    sharedDocument = null;
+    sharedReleasePending = false;
+  }
+
   const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
   const len = bytes.length;
   const ptr = m.pdfium.wasmExports.malloc(len);
@@ -389,19 +403,12 @@ export async function openRawDocument(
     throw new PdfiumOpenError(m.FPDF_GetLastError());
   }
   // Keep the buffer alive; freed by closeDocumentNow()
-  _docDataPtrs.set(docPtr, ptr);
+  _docDataPtrs.set(docPtr, { module: m, ptr });
 
-  if (!password) {
+  if (!password && !sharedDocument) {
     // A scan still reading the previous document keeps it open; only adopt the
     // new one once its refs drop to zero.
-    if (sharedDocument && sharedDocument.refs <= 0) {
-      closeDocumentNow(m, sharedDocument.docPtr);
-      sharedDocument = null;
-      sharedReleasePending = false;
-    }
-    if (!sharedDocument) {
-      sharedDocument = { bytes: data, docPtr, refs: 1 };
-    }
+    sharedDocument = { bytes: data, docPtr, refs: 1 };
   }
 
   return docPtr;
