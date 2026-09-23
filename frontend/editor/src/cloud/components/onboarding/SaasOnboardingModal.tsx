@@ -1,5 +1,4 @@
-import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
-import GroupAddRoundedIcon from "@mui/icons-material/GroupAddRounded";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import OnboardingSlideShell, {
   ShellHero,
@@ -47,8 +46,8 @@ export default function SaasOnboardingModal(props: SaasOnboardingModalProps) {
       <ShellHero appIcon />
     ) : (
       <ShellHero>
-        {heroType === "bolt" && <BoltRoundedIcon sx={{ fontSize: 30 }} />}
-        {heroType === "team" && <GroupAddRoundedIcon sx={{ fontSize: 30 }} />}
+        {heroType === "bolt" && <Icon name="zap" size={30} />}
+        {heroType === "team" && <Icon name="users-plus" size={30} />}
       </ShellHero>
     );
 

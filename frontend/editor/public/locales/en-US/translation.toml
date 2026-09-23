@@ -4453,6 +4453,7 @@ openFromComputer = "Open from computer"
 openSettings = "Open settings"
 other = "Other"
 recent = "Recent"
+searchFiles = "Search files"
 uploadFailedBody = "Could not add the selected files."
 uploadFailedTitle = "Upload failed"
 viewAll = "View all {{count}} files"
@@ -5486,11 +5487,6 @@ desc = "Change the size/scale of a page and/or its contents."
 tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
 title = "Adjust page size/scale"
 
-[home.scannerEffect]
-desc = "Create a PDF that looks like it was scanned"
-tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
-title = "Scanner Effect"
-
 [home.scannerImageSplit]
 desc = "Detect and split scanned photos into separate pages"
 tags = "detect,split,photos,auto detect,detect photos,split photos,separate photos,split scanned images,multiple photos,auto split,photo detection,image detection,scan separation"
@@ -5832,6 +5828,8 @@ label = "Free credits"
 adoptFailed = "The document was unlocked but could not be opened here. Try the tool directly."
 empty = "You're all caught up."
 handoffUnavailable = "This browser will not let the processor pass the document to the editor. Open it from the editor instead."
+inSmartFolder = "This document is in a smart folder, so it is handled on the server rather than here."
+inSmartFolderNamed = "{{name}} is in a smart folder, so it is handled on the server rather than here."
 noDocumentLinked = "This failure is not linked to a specific document, so it cannot be opened or retried here."
 notOnThisDevice = "This document is not on this device, so it cannot be opened or retried here."
 occurrences = "{{count}} times"
@@ -5842,6 +5840,7 @@ repairedRerunNotAdopted = "The repaired document went through, but its result co
 repairedRerunUndelivered = "The document was repaired and the policy re-run started, but its result cannot be delivered here, so this failure stays open."
 rerunRejected = "The policy could not be run again just now. Try again in a moment."
 rerunUndelivered = "The policy re-run started, but its result cannot be delivered here, so this failure stays open."
+retryInFolderFailed = "That document could not be run again just now."
 retryUnavailable = "This document can no longer be retried from this browser."
 title = "Notifications"
 unlockedNotRerun = "The document was unlocked and opened here, but the policy could not be run on it again."
@@ -6632,9 +6631,11 @@ title = "Adjust Team plan"
 [payment.capacityStage]
 adjustmentNote = "Stripe will show the exact charge, any prorations and your next billing date before you confirm. Your saved payment method will be used if available."
 continue = "Continue to payment"
+currencyAtCheckout = "Stripe confirms the final amount and payment currency at checkout."
 customLabel = "Number of users"
 dueToday = "Due today"
 enterpriseQuote = "Get an enterprise quote"
+estimatedTotal = "Estimated total"
 lineItem = "Team · {{price}}{{period}} per {{block}} users"
 minimumForCurrentUsers = "You have {{users}} users, so the plan must cover at least {{minimum}}."
 modalTitle = "Upgrade to {{planName}}"
@@ -6872,6 +6873,25 @@ width = "Width"
 widthHint = "A text box's width follows its content and wrapping."
 x = "X"
 y = "Y"
+
+[pdfTextEditor.mobile]
+actions = "Editor actions"
+addImage = "Image"
+addText = "Text"
+cancel = "Cancel"
+delete = "Delete"
+details = "Details"
+document = "Document"
+done = "Done"
+download = "Save and download"
+find = "Find"
+lock = "Lock"
+openPdf = "Open a PDF"
+panelHint = "Editing happens in the Workspace view. Tap text on the page to change it."
+save = "Save"
+style = "Style"
+tapToPlace = "Tap the page where the text should go"
+unlock = "Unlock"
 
 [pdfTextEditor.password]
 cancel = "Cancel"
@@ -7581,6 +7601,49 @@ plan = "Plan"
 procurement = "Procurement"
 usage = "Usage"
 
+[portal.billing.compare]
+current = "Current"
+enterpriseData = "Data residency and SCIM"
+enterpriseName = "Enterprise"
+enterprisePrice = "Under your agreement"
+enterpriseProcessing = "Metered or flat"
+enterpriseSignIn = "SAML and auditing"
+enterpriseSupport = "Uptime SLAs, deployment help"
+enterpriseUsers = "No ceiling"
+enterpriseWhere = "Plus multi-node and air-gapped"
+exploreEnterprise = "Explore Enterprise"
+freeData = "Stays where you run it"
+freeName = "Free"
+freePrice = "No card, no expiry"
+freeProcessing = "{{allowance}} credits a month"
+freeProcessingUnknown = "A monthly credit allowance"
+freeSignIn = "Email, Google and SSO"
+freeSignInNote = "OAuth2/OIDC"
+freeSupport = "Community"
+freeUsers = "Up to {{users}}"
+freeUsersUnknown = "A small team"
+freeWhere = "Cloud, desktop or self-hosted"
+lede = "Every plan includes every PDF tool and SSO. What changes is how many people use it, where it runs, and what support you get."
+open = "Compare plans"
+rowData = "Your data"
+rowHeader = "Feature"
+rowProcessing = "Processing"
+rowSignIn = "Sign-in"
+rowSupport = "Support"
+rowUsers = "Users"
+rowWhere = "Where it runs"
+teamData = "Google Drive, your own database"
+teamName = "Team"
+teamPrice = "$99/mo per 100 users"
+teamProcessing = "{{allowance}} a month, then metered"
+teamProcessingUnknown = "A larger allowance, then metered"
+teamSignIn = "The same"
+teamSupport = "Email"
+teamUsers = "100 per block"
+teamWhere = "Cloud, desktop or self-hosted"
+title = "Compare plans"
+upgradeTeam = "Upgrade to Team"
+
 [portal.billing.cycle]
 credits = "Credits"
 creditsNote = "{{units}} used · includes free and prepaid credits"
@@ -7672,13 +7735,6 @@ unit = "PDFs"
 unitsPending_one = "{{units}} meter unit pending sync from linked instances"
 unitsPending_other = "{{units}} meter units pending sync from linked instances"
 
-[portal.billing.prepaid]
-capSuffix = "of {{total}} prepaid credits"
-expires = "Expires {{date}}"
-eyebrow = "Prepaid capacity"
-note = "Used before metered billing and outside your spend limit."
-topUp = "Top up"
-
 [portal.billing.prepaid.buy]
 back = "Back"
 cancel = "Cancel"
@@ -7693,6 +7749,8 @@ payTitle = "Pay for your year"
 step = "Step {{current}} of {{total}}"
 
 [portal.billing.prepaid.calc]
+currency = "Quote currency"
+currencyLocked = "Uses your existing Stripe billing currency."
 rateUnknown = "We'll show the exact price at checkout."
 
 [portal.billing.prepaid.consent]
@@ -7701,8 +7759,6 @@ label = "I understand that when my prepaid capacity is used up or expires after 
 [portal.billing.prepaid.deploy]
 
 [portal.billing.prepaid.offer]
-cta = "Review offer"
-subtitle = "Prepay a year of PDF processing and get two months free, used before metered billing, outside your spend limit."
 title = "Get 12 months for the price of 10"
 
 [portal.billing.prepaid.pay]
@@ -7725,15 +7781,11 @@ downloading = "Preparing…"
 
 [portal.billing.prepaid.size]
 
-[portal.billing.prepaid.state]
-exhausted = "Used up"
-healthy = "Plenty left"
-low = "Running low"
-
 [portal.billing.processor]
 activate = "Switch on the Processor"
 factFree = "{{used}} of {{allowance}} used"
 factNoCap = "no limit"
+factPrepaid = "{{remaining}} left"
 freeRemaining = "Free credits remaining"
 included = "Included in your license"
 includedRenewal = "{{summary}} · Renews {{date}}"
@@ -7742,9 +7794,15 @@ midIncluded = "{{rate}} per credit · {{allowance}} included every month"
 midIncludedNoRate = "{{allowance}} included every month"
 midMetered = "{{spend}} metered this cycle"
 midMeteredUnknown = "Metered this cycle"
+midPrepaid = "Prepaid credits, drawn before metered billing"
+midPrepaidExpiry = "{{summary}} · Expires {{date}}"
 noSpendLimit = "No spend limit"
 paidUsed = "Paid metered usage"
 percentUsed = "{{pct}}%"
+prepaidExhausted = "Used up, metered billing has resumed"
+prepaidExpires = "Expires {{date}}"
+prepaidRemaining = "Prepaid credits remaining"
+prepaidTooltip = "Drawn before metered billing, and outside your spend limit."
 raiseLimit = "Raise limit"
 remainingOf = "{{remaining}} of {{total}}"
 rowName = "Processor"
@@ -8505,6 +8563,10 @@ title = "File could not be repaired"
 [portal.failures.kind.inputWrongType]
 description = "Your file is not a format this step can open, so the run could not read it."
 title = "Wrong file type"
+
+[portal.failures.kind.sourceUnreadable]
+description = "Your smart folder could not be read, so nothing in it was processed."
+title = "Folder could not be read"
 
 [portal.failures.kind.stepCannotRenderPage]
 description = "A page in your file could not be drawn, so the run could not finish."
@@ -10274,8 +10336,8 @@ summary = "Owns a team — manages its members' resources and shared configs."
 3 = "Everything Member can do"
 
 [portal.users.seats]
-limited = "{{used}} / {{limit}}"
-unlimited = "{{used}} · Unlimited"
+limited = "{{used}} / {{limit}} seats"
+unlimited = "{{used}} seats · Unlimited"
 
 [printFile]
 title = "Print File"
@@ -12259,6 +12321,7 @@ goBack = "Go back"
 pdfTools = "PDF Tools"
 placeholder = "Choose a tool to get started"
 premiumFeature = "Premium feature:"
+searchTools = "Search tools"
 toolsHeader = "Tools"
 viewAllTools = "View all tools"
 
@@ -12423,13 +12486,10 @@ visits = "Visits"
 
 [users]
 lastActive = "Last active"
-learnMore = "Learn more about roles and access."
 locked = "Locked"
 ownerSetupRequired = "The organization owner has not completed first login. Complete setup or ask the server operator to recover ownership before transferring ownership."
 roleFor = "Role for {{name}}"
 rowActions = "Actions for {{name}}"
-showAll = "Show all {{count}}"
-showLess = "Show less"
 subtitle2 = "Your people, teams, and access levels."
 suspended = "Suspended"
 teamActions = "Team actions"
@@ -12438,6 +12498,7 @@ you = "(you)"
 
 [users.action]
 cancelInvite = "Cancel invitation"
+createFromDefault = "Create team from Default"
 deleteTeam = "Delete team"
 disableMfa = "Reset MFA"
 move = "Move to team"
@@ -12475,6 +12536,7 @@ email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
+team = "Team"
 
 [users.confirm]
 cancelInviteBody = "Cancel the invitation to {{email}}? They won't be able to join with the current link."
@@ -12493,15 +12555,12 @@ transferOwnershipTitle = "Transfer organization ownership"
 description = "Invite your team to start collaborating."
 title = "No members yet"
 
+[users.filters]
+noMatches = "No one matches these filters."
+search = "Search people"
+
 [users.group]
 addToTeam = "Add to team"
-administrators = "{{count}} administrators"
-guestCount = "{{count}} guest"
-guests = "Guests"
-ledBy = "led by {{owner}}"
-org = "Organization"
-team = "{{name}} team"
-teamMeta = "{{count}} people"
 
 [users.invite]
 access = "Access"
@@ -12523,7 +12582,7 @@ method = "How to add them"
 methodDirect = "Create account directly"
 methodEmail = "Invite by email"
 password = "Password"
-passwordError = "Password must be at least 8 characters"
+passwordError = "Password must be at least 6 characters"
 processorDeferred = "Invite sent, but Processor access couldn't be granted yet - set it from the roster once they've joined."
 processorDesc = "The governance surface, run pipelines, agents, and the API."
 role = "Role"
@@ -12532,7 +12591,7 @@ subtitle2 = "They'll get an email to join your Stirling workspace."
 team = "Team"
 title = "Invite people"
 username = "Username"
-usernameError = "Username must be at least 3 characters"
+usernameError = "Enter a valid username (3-50 characters) or email address"
 usernamePlaceholder = "jsmith"
 
 [users.invites]
@@ -12566,6 +12625,9 @@ title = "New team"
 
 [users.renameTeam]
 apply = "Rename"
+defaultApply = "Create and move"
+defaultDescription = "Default will remain available for new users. Everyone currently in Default will be moved to the new team."
+defaultTitle = "Create team from Default"
 name = "Team name"
 title = "Rename team"
 
@@ -12590,6 +12652,15 @@ guest = "Guest"
 member = "Member"
 orgOwner = "Org Owner"
 teamOwner = "Team Lead"
+
+[users.seats]
+full = "Every licensed seat is in use. Free one up, or raise the seat count, to add anyone else."
+update = "Update seats"
+
+[users.tabs]
+all = "All"
+label = "Filter by team"
+unassigned = "No team"
 
 [users.team]
 grantProcessor = "Grant Processor to team"
@@ -13240,232 +13311,14 @@ submitSignature = "Submit Signature"
 title = "Workspace"
 
 [workspace.people]
-active = "Active"
-activeSession = "Active session"
-addMembers = "Add Members"
-admin = "Admin"
-confirmDelete = "Are you sure you want to delete this user? This action cannot be undone."
-confirmUnlock = "Are you sure you want to unlock this user account?"
-deleteUser = "Delete User"
-deleteUserError = "Failed to delete user"
-deleteUserSuccess = "User deleted successfully"
 description = "Manage workspace members and their permissions"
-disable = "Disable"
-disabled = "Disabled"
-editRole = "Edit Role"
-enable = "Enable"
-loading = "Loading people..."
-locked = "locked"
-lockedBadge = "Locked"
-loginRequired = "Enable login mode first"
-memberActions = "Member actions"
-noMembersFound = "No members found"
-ownerLocked = "Transfer organization ownership in Settings → Workspace → Users before changing the owner’s role or account."
-role = "Role"
-searchMembers = "Search members..."
-team = "Team"
-unlockAccount = "Unlock Account"
-unlockUserError = "Failed to unlock user account"
-unlockUserSuccess = "User account unlocked successfully"
-user = "User"
-userInfo = "User info"
-
-[workspace.people.actions]
-upgrade = "Upgrade"
-
-[workspace.people.addMember]
-authType = "Authentication Type"
-error = "Failed to create user"
-forceMFA = "Force MFA setup on next login"
-forcePasswordChange = "Force password change on first login"
-password = "Password"
-passwordPlaceholder = "Enter password"
-passwordRequired = "Password is required"
-role = "Role"
-submit = "Add Member"
-success = "User created successfully"
-team = "Team (Optional)"
-teamPlaceholder = "Select a team"
-username = "Username (Email)"
-usernamePlaceholder = "user@example.com"
-usernameRequired = "Username and password are required"
-
-[workspace.people.authType]
-oauth = "OAuth2"
-password = "Password"
-saml = "SAML2"
-ssoDescription = "User will authenticate via SSO provider"
-
-[workspace.people.changePassword]
-action = "Change password"
-confirmPassword = "Confirm password"
-confirmPlaceholder = "Re-enter the new password"
-copiedToClipboard = "Password copied to clipboard"
-copyFailed = "Failed to copy password"
-copyTooltip = "Copy to clipboard"
-emailUnavailable = "This user's email is not a valid email address. Notifications are disabled."
-error = "Failed to update password"
-forcePasswordChange = "Force user to change password on next login"
-generatedPreview = "Generated password:"
-generateRandom = "Generate secure password"
-includePassword = "Include the new password in the email"
-newPassword = "New password"
-notifyOnly = "An email will be sent without the password, letting the user know an admin changed it."
-passwordMismatch = "Passwords do not match"
-passwordRequired = "Please enter a new password"
-placeholder = "Enter a new password"
-sendEmail = "Email the user about this change"
-smtpDisabled = "Email notifications require SMTP to be enabled in settings."
-submit = "Update password"
-subtitle = "Update the password for"
-success = "Password updated successfully"
-title = "Change password"
-
-[workspace.people.editMember]
-editing = "Editing: <0>{{username}}</0>"
-error = "Failed to update user"
-role = "Role"
-submit = "Update User"
-success = "User updated successfully"
-team = "Team (Optional)"
-teamPlaceholder = "Select a team"
-title = "Edit User"
-
-[workspace.people.emailInvite]
-allFailed = "Failed to invite users"
-emails = "Email Addresses"
-emailsPlaceholder = "user1@example.com, user2@example.com"
-emailsRequired = "At least one email address is required"
-error = "Failed to send invites"
-partialFailure = "Some invites failed"
-submit = "Send Invites"
-success = "user(s) invited successfully"
-
-[workspace.people.inviteLink]
-copied = "Link copied to clipboard"
-email = "Email Address"
-emailDescription = "Optional - leave blank for a general invite link that can be used by anyone"
-emailPlaceholder = "user@example.com (optional)"
-emailSent = "Invite link generated and sent via email"
-error = "Failed to generate invite link"
-expiryHours = "Expiry Hours"
-generate = "Generate Link"
-generated = "Invite Link Generated"
-sendEmail = "Send invite link via email"
-sendEmailDescription = "If enabled, the invite link will be sent to the specified email address"
-submit = "Generate Invite Link"
-
-[workspace.people.inviteMembers]
-label = "Invite Members"
-subtitle = "Type or paste in emails below, separated by commas. Your workspace will be billed by members."
-
-[workspace.people.inviteMode]
-email = "Email"
-emailDisabled = "Email invites require SMTP configuration and mail.enableInvites=true in settings"
-link = "Link"
-username = "Username"
 
 [workspace.people.license]
-currentUsage = "Currently using {{current}} of {{max}} user licenses"
-fromLicense = "from license"
-grandfathered = "Grandfathered"
-grandfatheredShort = "{{count}} grandfathered"
-slotsAvailable_one = "{{count}} user slot available"
-slotsAvailable_other = "{{count}} user slots available"
-slotsAvailable_zero = "No slots available"
 users_one = "user"
 users_other = "users"
 
-[workspace.people.mfa]
-adminDisableError = "Failed to disable MFA for user"
-adminDisableSuccess = "MFA disabled successfully for user"
-disableByAdmin = "Disable MFA"
-
-[workspace.people.roleDescriptions]
-admin = "Can manage settings and invite users, with full administrative access."
-currentRole = "Current assigned role."
-user = "Can view and edit shared files, but cannot manage workspace settings or users."
-
-[workspace.people.toggleEnabled]
-error = "Failed to update user status"
-success = "User status updated successfully"
-
 [workspace.teams]
-addMember = "Add Member"
-backToTeams = "Back to Teams"
-cannotAddToInternal = "Cannot add members to the Internal team"
-cannotDeleteInternal = "Cannot delete the Internal team"
-cannotRenameInternal = "Cannot rename the Internal team"
-confirmDelete = "Are you sure you want to delete this team? This team must be empty to delete."
-confirmRemove = "Remove user from this team?"
-createNewTeam = "Create New Team"
-deleteTeamLabel = "Delete Team"
 description = "Manage teams and organize workspace members"
-loadError = "Failed to load team details"
-loading = "Loading teams..."
-loadingDetails = "Loading team details..."
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
-noMembers = "No members in this team"
-noTeamsFound = "No teams found"
-removeMember = "Remove from team"
-removeMemberError = "Failed to remove user from team"
-removeMemberSuccess = "User removed from team"
-renameTeamLabel = "Rename Team"
-system = "System"
-teamActions = "Team actions"
-teamName = "Team Name"
-teamNotFound = "Team not found"
-totalMembers = "Total Members"
-viewTeam = "View Team"
-
-[workspace.teams.addMemberToTeam]
-addingTo = "Adding to"
-currentlyIn = "currently in"
-error = "Failed to add member to team"
-selectUser = "Select User"
-selectUserPlaceholder = "Choose a user"
-selectUserRequired = "Please select a user"
-submit = "Add Member"
-success = "Member added to team successfully"
-title = "Add Member to Team"
-userRequired = "Please select a user"
-willBeMoved = "Note: This user will be moved from their current team to this team."
-
-[workspace.teams.changeTeam]
-changing = "Moving"
-error = "Failed to change team"
-label = "Change Team"
-selectTeam = "Select Team"
-selectTeamPlaceholder = "Choose a team"
-selectTeamRequired = "Please select a team"
-submit = "Change Team"
-success = "Team changed successfully"
-title = "Change Team"
-
-[workspace.teams.createTeam]
-error = "Failed to create team"
-nameRequired = "Team name is required"
-submit = "Create Team"
-success = "Team created successfully"
-teamName = "Team Name"
-teamNamePlaceholder = "Enter team name"
-title = "Create New Team"
-
-[workspace.teams.deleteTeam]
-error = "Failed to delete team. Make sure the team is empty."
-success = "Team deleted successfully"
-
-[workspace.teams.renameTeam]
-error = "Failed to rename team"
-nameRequired = "Team name is required"
-newTeamName = "New Team Name"
-newTeamNamePlaceholder = "Enter new team name"
-renaming = "Renaming:"
-submit = "Rename Team"
-success = "Team renamed successfully"
-title = "Rename Team"
 
 [zipWarning]
 cancel = "Cancel"
