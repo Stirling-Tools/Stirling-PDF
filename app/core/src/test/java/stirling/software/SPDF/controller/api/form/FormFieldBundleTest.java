@@ -40,11 +40,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
+import stirling.software.SPDF.service.xfa.XfaSyncService;
 import stirling.software.common.model.FormFieldWithCoordinates;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.FormUtils;
@@ -67,6 +69,7 @@ class FormFieldBundleTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
+    @Spy private XfaSyncService xfaSyncService = new XfaSyncService();
     @InjectMocks private FormFillController controller;
 
     private ObjectMapper objectMapper;
@@ -188,7 +191,7 @@ class FormFieldBundleTest {
         byte[] zipBytes;
         try (PDDocument document = Loader.loadPDF(source)) {
             when(pdfDocumentFactory.load(eq(upload))).thenReturn(document);
-            zipBytes = drain(controller.editFields(upload, edits, true));
+            zipBytes = drain(controller.editFields(upload, edits, true, null));
         }
         Map<String, byte[]> bundle = unzip(zipBytes);
 
@@ -223,7 +226,7 @@ class FormFieldBundleTest {
         byte[] zipBytes;
         try (PDDocument document = Loader.loadPDF(source)) {
             when(pdfDocumentFactory.load(eq(upload))).thenReturn(document);
-            zipBytes = drain(controller.editFields(upload, edits, true));
+            zipBytes = drain(controller.editFields(upload, edits, true, null));
         }
 
         Map<String, Integer> methods = methodsOf(zipBytes);
@@ -251,7 +254,7 @@ class FormFieldBundleTest {
         byte[] zipBytes;
         try (PDDocument document = Loader.loadPDF(source)) {
             when(pdfDocumentFactory.load(eq(upload))).thenReturn(document);
-            zipBytes = drain(controller.editFields(upload, edits, true));
+            zipBytes = drain(controller.editFields(upload, edits, true, null));
         }
         Map<String, byte[]> bundle = unzip(zipBytes);
         byte[] editedPdf = bundle.get("document.pdf");
@@ -311,7 +314,7 @@ class FormFieldBundleTest {
         Map<String, byte[]> bundle;
         try (PDDocument document = Loader.loadPDF(source)) {
             when(pdfDocumentFactory.load(eq(upload))).thenReturn(document);
-            zipBytes = drain(controller.editFields(upload, edits, true));
+            zipBytes = drain(controller.editFields(upload, edits, true, null));
         }
         bundle = unzip(zipBytes);
 

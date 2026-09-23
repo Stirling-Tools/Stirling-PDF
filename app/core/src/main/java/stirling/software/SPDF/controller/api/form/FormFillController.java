@@ -41,6 +41,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.service.xfa.XfaEdit;
+import stirling.software.SPDF.service.xfa.XfaInspection;
+import stirling.software.SPDF.service.xfa.XfaMode;
+import stirling.software.SPDF.service.xfa.XfaSyncReport;
+import stirling.software.SPDF.service.xfa.XfaSyncService;
 import stirling.software.common.model.FormFieldWithCoordinates;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CsvSanitizer;
@@ -90,9 +95,30 @@ public class FormFillController {
 
     private static final String DOCUMENT_ENTRY = "document.pdf";
 
+    /**
+     * Carries {@link XfaSyncReport#summary()} as base64 JSON when the PDF has XFA. It is metadata
+     * for API callers: the browser can only read it where the CORS configuration exposes it.
+     */
+    public static final String XFA_SYNC_HEADER = "X-Stirling-Xfa-Sync";
+
+    private static final String XFA_MODE_FOR_VALUES =
+            "What to do with the XFA packet of a hybrid (Adobe LiveCycle) form, which Acrobat"
+                    + " shows instead of the AcroForm fields: sync rewrites its data from the"
+                    + " AcroForm values, strip removes it, none leaves it as it was. Sync and"
+                    + " strip also drop the Reader usage rights the save invalidates. Ignored"
+                    + " for PDFs without XFA.";
+
+    private static final String XFA_MODE_FOR_STRUCTURE =
+            "What to do with the XFA packet of a hybrid (Adobe LiveCycle) form. Its template"
+                    + " cannot follow fields being added, changed or removed, so sync and strip"
+                    + " both remove it (and the Reader usage rights) to keep Acrobat showing the"
+                    + " same form as other viewers; none leaves it as it was. Ignored for PDFs"
+                    + " without XFA.";
+
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ObjectMapper objectMapper;
     private final TempFileManager tempFileManager;
+    private final XfaSyncService xfaSyncService;
 
     private ResponseEntity<Resource> saveDocument(PDDocument document, String baseName)
             throws IOException {
@@ -162,6 +188,22 @@ public class FormFillController {
                 .headers(response.getHeaders())
                 .header(SKIPPED_EDITS_TOTAL_HEADER, String.valueOf(skipped.size()))
                 .header(SKIPPED_EDITS_HEADER, encoded)
+                .body(response.getBody());
+    }
+
+    private <T> ResponseEntity<T> withXfaSummary(ResponseEntity<T> response, XfaSyncReport report) {
+        if (report.state() == XfaInspection.State.NONE) {
+            return response;
+        }
+        String encoded =
+                Base64.getEncoder()
+                        .encodeToString(
+                                objectMapper
+                                        .writeValueAsString(report.summary())
+                                        .getBytes(StandardCharsets.UTF_8));
+        return ResponseEntity.status(response.getStatusCode())
+                .headers(response.getHeaders())
+                .header(XFA_SYNC_HEADER, encoded)
                 .body(response.getBody());
     }
 
@@ -379,9 +421,19 @@ public class FormFillController {
                                     "[{\"name\":\"NewField\",\"type\":\"text\",\"pageIndex\":0,"
                                             + "\"x\":50,\"y\":700,\"width\":200,\"height\":20}]")
                     @RequestPart(value = "fields", required = false)
-                    byte[] fieldsPayload)
+                    byte[] fieldsPayload,
+            @Parameter(
+                            description = XFA_MODE_FOR_STRUCTURE,
+                            schema =
+                                    @Schema(
+                                            type = "string",
+                                            allowableValues = {"sync", "strip", "none"},
+                                            defaultValue = "sync"))
+                    @RequestParam(value = "xfaMode", required = false)
+                    String xfaMode)
             throws IOException {
 
+        XfaMode mode = XfaMode.fromParam(xfaMode);
         String rawFields = decodePart(fieldsPayload);
         List<FormUtils.NewFormFieldDefinition> definitions =
                 FormPayloadParser.parseNewFieldDefinitions(objectMapper, rawFields);
@@ -399,6 +451,9 @@ public class FormFillController {
                 processSingleFile(
                         file,
                         "updated",
+                        false,
+                        mode,
+                        XfaEdit.STRUCTURE,
                         document -> FormUtils.addNewFields(document, definitions, skipped)),
                 skipped);
     }
@@ -435,9 +490,19 @@ public class FormFillController {
                                             + " produced, instead of the bare PDF. Saves re-uploading"
                                             + " the result just to read its fields back.")
                     @RequestParam(value = "includeFields", defaultValue = "false")
-                    boolean includeFields)
+                    boolean includeFields,
+            @Parameter(
+                            description = XFA_MODE_FOR_STRUCTURE,
+                            schema =
+                                    @Schema(
+                                            type = "string",
+                                            allowableValues = {"sync", "strip", "none"},
+                                            defaultValue = "sync"))
+                    @RequestParam(value = "xfaMode", required = false)
+                    String xfaMode)
             throws IOException {
 
+        XfaMode mode = XfaMode.fromParam(xfaMode);
         String rawEdits = decodePart(editsPayload);
         FormUtils.FieldEditBatch batch = FormPayloadParser.parseFieldEdits(objectMapper, rawEdits);
         if (batch.add().isEmpty() && batch.modify().isEmpty() && batch.delete().isEmpty()) {
@@ -452,6 +517,8 @@ public class FormFillController {
                         file,
                         "updated",
                         includeFields,
+                        mode,
+                        XfaEdit.STRUCTURE,
                         document ->
                                 FormUtils.applyFieldEdits(
                                         document,
@@ -477,9 +544,19 @@ public class FormFillController {
                                             schema = @Schema(type = "string", format = "binary")))
                     @RequestParam("file")
                     MultipartFile file,
-            @RequestPart(value = "updates", required = false) byte[] updatesPayload)
+            @RequestPart(value = "updates", required = false) byte[] updatesPayload,
+            @Parameter(
+                            description = XFA_MODE_FOR_STRUCTURE,
+                            schema =
+                                    @Schema(
+                                            type = "string",
+                                            allowableValues = {"sync", "strip", "none"},
+                                            defaultValue = "sync"))
+                    @RequestParam(value = "xfaMode", required = false)
+                    String xfaMode)
             throws IOException {
 
+        XfaMode mode = XfaMode.fromParam(xfaMode);
         String rawUpdates = decodePart(updatesPayload);
         List<FormUtils.ModifyFormFieldDefinition> modifications =
                 FormPayloadParser.parseModificationDefinitions(objectMapper, rawUpdates);
@@ -497,6 +574,9 @@ public class FormFillController {
                 processSingleFile(
                         file,
                         "updated",
+                        false,
+                        mode,
+                        XfaEdit.STRUCTURE,
                         document -> FormUtils.modifyFormFields(document, modifications, skipped)),
                 skipped);
     }
@@ -521,9 +601,19 @@ public class FormFillController {
                                             + " matching the /fields response format",
                             example = "[{\"name\":\"Field1\"}]")
                     @RequestPart(value = "names", required = false)
-                    byte[] namesPayload)
+                    byte[] namesPayload,
+            @Parameter(
+                            description = XFA_MODE_FOR_STRUCTURE,
+                            schema =
+                                    @Schema(
+                                            type = "string",
+                                            allowableValues = {"sync", "strip", "none"},
+                                            defaultValue = "sync"))
+                    @RequestParam(value = "xfaMode", required = false)
+                    String xfaMode)
             throws IOException {
 
+        XfaMode mode = XfaMode.fromParam(xfaMode);
         String rawNames = decodePart(namesPayload);
         List<String> names = FormPayloadParser.parseNameList(objectMapper, rawNames);
         if (names.isEmpty()) {
@@ -536,6 +626,9 @@ public class FormFillController {
                 processSingleFile(
                         file,
                         "updated",
+                        false,
+                        mode,
+                        XfaEdit.STRUCTURE,
                         document -> FormUtils.deleteFormFields(document, names, skipped)),
                 skipped);
     }
@@ -561,35 +654,55 @@ public class FormFillController {
                             example = "{\"field\":\"value\"}")
                     @RequestPart(value = "data", required = false)
                     byte[] valuesPayload,
-            @RequestParam(value = "flatten", defaultValue = "false") boolean flatten)
+            @RequestParam(value = "flatten", defaultValue = "false") boolean flatten,
+            @Parameter(
+                            description = XFA_MODE_FOR_VALUES,
+                            schema =
+                                    @Schema(
+                                            type = "string",
+                                            allowableValues = {"sync", "strip", "none"},
+                                            defaultValue = "sync"))
+                    @RequestParam(value = "xfaMode", required = false)
+                    String xfaMode)
             throws IOException {
 
+        XfaMode mode = XfaMode.fromParam(xfaMode);
         String rawValues = decodePart(valuesPayload);
         Map<String, Object> values = FormPayloadParser.parseValueMap(objectMapper, rawValues);
 
         return processSingleFile(
                 file,
                 "filled",
+                false,
+                mode,
+                XfaEdit.VALUES,
                 document -> FormUtils.applyFieldValues(document, values, flatten, true));
     }
 
+    /**
+     * Loads, edits and saves one PDF. The XFA service wraps the edit, so a hybrid form's XFA is
+     * brought in line with {@code xfaMode} before either kind of response is written.
+     */
     private ResponseEntity<Resource> processSingleFile(
-            MultipartFile file, String suffix, DocumentProcessor processor) throws IOException {
-        return processSingleFile(file, suffix, false, processor);
-    }
-
-    private ResponseEntity<Resource> processSingleFile(
-            MultipartFile file, String suffix, boolean includeFields, DocumentProcessor processor)
+            MultipartFile file,
+            String suffix,
+            boolean includeFields,
+            XfaMode xfaMode,
+            XfaEdit xfaEdit,
+            DocumentProcessor processor)
             throws IOException {
         requirePdf(file);
 
         String baseName = buildBaseName(file, suffix);
         try (PDDocument document = pdfDocumentFactory.load(file)) {
             FormUtils.repairMissingWidgetPageReferences(document);
-            processor.accept(document);
-            return includeFields
-                    ? saveDocumentWithFields(document, baseName)
-                    : saveDocument(document, baseName);
+            XfaSyncReport xfaReport =
+                    xfaSyncService.process(document, xfaMode, xfaEdit, processor::accept);
+            ResponseEntity<Resource> response =
+                    includeFields
+                            ? saveDocumentWithFields(document, baseName)
+                            : saveDocument(document, baseName);
+            return withXfaSummary(response, xfaReport);
         }
     }
 

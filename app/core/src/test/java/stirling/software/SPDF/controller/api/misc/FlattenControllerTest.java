@@ -10,6 +10,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -24,6 +26,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -33,6 +36,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.misc.FlattenRequest;
+import stirling.software.SPDF.service.xfa.XfaFixtures;
+import stirling.software.SPDF.service.xfa.XfaSyncService;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -54,6 +59,7 @@ class FlattenControllerTest {
     @TempDir Path tempDir;
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
+    @Spy private XfaSyncService xfaSyncService = new XfaSyncService();
     @InjectMocks private FlattenController controller;
 
     @BeforeEach
@@ -144,6 +150,31 @@ class FlattenControllerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         verify(form).flatten();
+    }
+
+    @Test
+    void flatten_formsOnly_hybridXfa_dropsXfaAndUsageRights() throws Exception {
+        byte[] pdf;
+        try (PDDocument hybrid = XfaFixtures.hybrid()) {
+            pdf = XfaFixtures.save(hybrid);
+        }
+        MockMultipartFile file =
+                new MockMultipartFile(
+                        "fileInput", "form.pdf", MediaType.APPLICATION_PDF_VALUE, pdf);
+        FlattenRequest request = new FlattenRequest();
+        request.setFileInput(file);
+        request.setFlattenOnlyForms(true);
+        when(pdfDocumentFactory.load(file)).thenReturn(Loader.loadPDF(pdf));
+
+        ResponseEntity<Resource> response = controller.flatten(request);
+
+        try (PDDocument flattened = Loader.loadPDF(drainBody(response))) {
+            COSDictionary root = flattened.getDocumentCatalog().getCOSObject();
+            COSDictionary perms = root.getCOSDictionary(COSName.PERMS);
+            assertThat(perms == null || !perms.containsKey(COSName.getPDFName("UR3"))).isTrue();
+            COSDictionary form = root.getCOSDictionary(COSName.ACRO_FORM);
+            assertThat(form == null || form.getDictionaryObject(COSName.XFA) == null).isTrue();
+        }
     }
 
     @Test
