@@ -69,7 +69,9 @@ class OfficeDocumentSanitizerTest {
     void setUp() {
         applicationProperties = new ApplicationProperties();
         ssrfProtectionService = mock(SsrfProtectionService.class);
-        sanitizer = new OfficeDocumentSanitizer(ssrfProtectionService, applicationProperties);
+        sanitizer =
+                new OfficeDocumentSanitizer(
+                        ssrfProtectionService, applicationProperties, new RtfSanitizer());
     }
 
     @Test
@@ -313,6 +315,57 @@ class OfficeDocumentSanitizerTest {
     }
 
     @Test
+    void sanitize_malformedRelsIsRefused() throws IOException {
+        String malformedRels =
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                        + "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
+                        + "<Relationship Id=\"rId1\" Type=\"image\" Target='"
+                        + EXTERNAL_URL
+                        + "' TargetMode=\"External\">";
+        byte[] docx = zip(Map.of("word/_rels/document.xml.rels", bytes(malformedRels)));
+
+        assertThrows(IOException.class, () -> sanitizer.sanitize(docx, "docx"));
+    }
+
+    @Test
+    void sanitize_relsBehindAPlainDoctypeIsParsedAndStripped() throws IOException {
+        String rels =
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE Relationships>"
+                        + "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
+                        + "<Relationship Id=\"rId9\" Type=\"image\""
+                        + " Target=\"&#104;ttps://attacker.example/x.png\" TargetMode=\"External\"/>"
+                        + "<Relationship Id=\"rId2\" Type=\"image\" Target=\""
+                        + INTERNAL_TARGET
+                        + "\"/></Relationships>";
+        byte[] docx = zip(Map.of("word/_rels/document.xml.rels", bytes(rels)));
+
+        byte[] cleaned = sanitizer.sanitize(docx, "docx");
+
+        String out =
+                new String(
+                        unzip(cleaned).get("word/_rels/document.xml.rels"), StandardCharsets.UTF_8);
+        assertFalse(out.contains("rId9"), "External relationship must be removed: " + out);
+        assertFalse(out.contains("DOCTYPE"), "DOCTYPE must not reach LibreOffice: " + out);
+        assertTrue(out.contains(INTERNAL_TARGET), out);
+    }
+
+    @Test
+    void sanitize_doctypeWithInternalSubsetIsRefused() throws IOException {
+        String rels =
+                "<?xml version=\"1.0\"?><!DOCTYPE Relationships [<!ENTITY s \"https\">]>"
+                        + "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
+                        + "<Relationship Id=\"rId9\" Type=\"image\" Target=\"&s;://x/y.png\""
+                        + " TargetMode=\"External\"/></Relationships>";
+        byte[] docx = zip(Map.of("word/_rels/document.xml.rels", bytes(rels)));
+
+        assertThrows(IOException.class, () -> sanitizer.sanitize(docx, "docx"));
+    }
+
+    private static byte[] bytes(String text) {
+        return text.getBytes(StandardCharsets.UTF_8);
+    }
+
+    @Test
     void sanitize_corruptZipProducesSafeOutput() throws IOException {
         byte[] garbage = "this is not a zip file".getBytes(StandardCharsets.UTF_8);
         byte[] result = sanitizer.sanitize(garbage, "docx");
@@ -321,7 +374,7 @@ class OfficeDocumentSanitizerTest {
     }
 
     @Test
-    void sanitize_relativeOdfPathsArePreserved() throws IOException {
+    void sanitize_packageEscapingPathsAreStripped() throws IOException {
         String content =
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
                         + "<office:document-content"
@@ -329,6 +382,8 @@ class OfficeDocumentSanitizerTest {
                         + " xmlns:draw=\"urn:oasis:names:tc:opendocument:xmlns:drawing:1.0\""
                         + " xmlns:xlink=\"http://www.w3.org/1999/xlink\">"
                         + "<draw:image xlink:href=\"../Pictures/image1.png\"/>"
+                        + "<draw:image xlink:href=\"/configs/settings.yml\"/>"
+                        + "<draw:image xlink:href=\"Pictures/inside.png\"/>"
                         + "<draw:image xlink:href=\"#anchor\"/>"
                         + "</office:document-content>";
         Map<String, byte[]> entries = new LinkedHashMap<>();
@@ -339,8 +394,11 @@ class OfficeDocumentSanitizerTest {
 
         Map<String, byte[]> result = unzip(cleaned);
         String out = new String(result.get("content.xml"), StandardCharsets.UTF_8);
-        assertTrue(out.contains("../Pictures/image1.png"));
-        assertTrue(out.contains("#anchor"));
+        assertFalse(
+                out.contains("../Pictures/image1.png"), "Package-escaping href must be stripped");
+        assertFalse(out.contains("/configs/settings.yml"), "Absolute local href must be stripped");
+        assertTrue(out.contains("Pictures/inside.png"), "Package-internal href must be preserved");
+        assertTrue(out.contains("#anchor"), "Anchors must be preserved");
     }
 
     private static byte[] zip(Map<String, byte[]> entries) throws IOException {

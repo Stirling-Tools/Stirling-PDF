@@ -3,6 +3,7 @@ package stirling.software.common.util;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -57,12 +58,15 @@ public class OfficeDocumentSanitizer {
 
     private final SsrfProtectionService ssrfProtectionService;
     private final ApplicationProperties applicationProperties;
+    private final RtfSanitizer rtfSanitizer;
 
     public OfficeDocumentSanitizer(
             SsrfProtectionService ssrfProtectionService,
-            ApplicationProperties applicationProperties) {
+            ApplicationProperties applicationProperties,
+            RtfSanitizer rtfSanitizer) {
         this.ssrfProtectionService = ssrfProtectionService;
         this.applicationProperties = applicationProperties;
+        this.rtfSanitizer = rtfSanitizer;
     }
 
     public boolean isSanitizableExtension(String extension) {
@@ -81,10 +85,45 @@ public class OfficeDocumentSanitizer {
             log.debug("Office document sanitization disabled by configuration");
             return documentBytes;
         }
-        if (!isSanitizableExtension(extension)) {
-            return documentBytes;
+
+        OfficeDocumentFamily family = OfficeDocumentFamily.detect(documentBytes);
+        if (isMismatch(family, extension)) {
+            log.warn(
+                    "Uploaded file claims extension '{}' but its content is {}; sanitizing as {}",
+                    extension,
+                    family,
+                    family);
         }
 
+        return switch (family) {
+            case ZIP_PACKAGE -> sanitizeZipPackage(documentBytes);
+            case FLAT_XML -> sanitizeFlatXml(documentBytes);
+            case RTF -> rtfSanitizer.sanitize(documentBytes);
+            default -> documentBytes;
+        };
+    }
+
+    private boolean isMismatch(OfficeDocumentFamily family, String extension) {
+        if (extension == null) {
+            return false;
+        }
+        String lower = extension.toLowerCase(Locale.ROOT);
+        boolean claimsZip = OOXML_EXTENSIONS.contains(lower) || ODF_EXTENSIONS.contains(lower);
+        if (claimsZip) {
+            return family != OfficeDocumentFamily.ZIP_PACKAGE;
+        }
+        return family == OfficeDocumentFamily.ZIP_PACKAGE;
+    }
+
+    private byte[] sanitizeFlatXml(byte[] documentBytes) throws IOException {
+        try {
+            return sanitizeOdfXml(documentBytes);
+        } catch (ParserConfigurationException | SAXException | TransformerException e) {
+            throw unparseable("document", e);
+        }
+    }
+
+    private byte[] sanitizeZipPackage(byte[] documentBytes) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream(documentBytes.length);
         try (ZipInputStream zipIn =
                         ZipSecurity.createHardenedInputStream(
@@ -118,7 +157,7 @@ public class OfficeDocumentSanitizer {
         return out.toByteArray();
     }
 
-    private byte[] sanitizeEntry(String entryName, byte[] entryBytes) {
+    private byte[] sanitizeEntry(String entryName, byte[] entryBytes) throws IOException {
         String lower = entryName.toLowerCase(Locale.ROOT);
         try {
             if (lower.endsWith(".rels")) {
@@ -127,16 +166,21 @@ public class OfficeDocumentSanitizer {
             if (isOdfXmlPart(lower)) {
                 return sanitizeOdfXml(entryBytes);
             }
-        } catch (ParserConfigurationException
-                | SAXException
-                | IOException
-                | TransformerException e) {
-            log.warn(
-                    "Failed to parse XML part '{}' for sanitization, leaving as-is: {}",
-                    entryName,
-                    e.getMessage());
+        } catch (ParserConfigurationException | SAXException | TransformerException e) {
+            throw unparseable("part '" + entryName + "'", e);
         }
         return entryBytes;
+    }
+
+    // Refused rather than pattern-scrubbed: LibreOffice's own parser may still read a part this
+    // one rejects, and decode references to URLs a pattern cannot see.
+    private static IOException unparseable(String what, Exception cause) {
+        return new IOException(
+                "Office document "
+                        + what
+                        + " is not XML that can be checked for external"
+                        + " references",
+                cause);
     }
 
     private boolean isOdfXmlPart(String lowerName) {
@@ -147,7 +191,8 @@ public class OfficeDocumentSanitizer {
 
     private byte[] sanitizeOoxmlRels(byte[] xmlBytes)
             throws IOException, ParserConfigurationException, SAXException, TransformerException {
-        Document doc = parseSecurely(xmlBytes);
+        ParsedXml parsed = parse(xmlBytes);
+        Document doc = parsed.document();
         Element root = doc.getDocumentElement();
         if (root == null) {
             return xmlBytes;
@@ -174,7 +219,7 @@ public class OfficeDocumentSanitizer {
                     truncateForLog(targetValue));
             toRemove.add(node);
         }
-        if (toRemove.isEmpty()) {
+        if (toRemove.isEmpty() && !parsed.doctypeRemoved()) {
             return xmlBytes;
         }
         for (Node n : toRemove) {
@@ -185,13 +230,14 @@ public class OfficeDocumentSanitizer {
 
     private byte[] sanitizeOdfXml(byte[] xmlBytes)
             throws IOException, ParserConfigurationException, SAXException, TransformerException {
-        Document doc = parseSecurely(xmlBytes);
+        ParsedXml parsed = parse(xmlBytes);
+        Document doc = parsed.document();
         Element root = doc.getDocumentElement();
         if (root == null) {
             return xmlBytes;
         }
         boolean modified = stripExternalHrefs(root);
-        if (!modified) {
+        if (!modified && !parsed.doctypeRemoved()) {
             return xmlBytes;
         }
         return serializeDocument(doc);
@@ -247,8 +293,20 @@ public class OfficeDocumentSanitizer {
             return false;
         }
         String trimmed = url.trim().toLowerCase(Locale.ROOT);
-        if (trimmed.isEmpty() || trimmed.startsWith("#") || trimmed.startsWith("../")) {
+        if (trimmed.isEmpty() || trimmed.startsWith("#")) {
             return false;
+        }
+        if (trimmed.startsWith("../") || trimmed.contains("/../")) {
+            return true;
+        }
+        if (trimmed.startsWith("/") && !trimmed.startsWith("//")) {
+            return true;
+        }
+        if (trimmed.length() > 2
+                && trimmed.charAt(1) == ':'
+                && trimmed.charAt(0) >= 'a'
+                && trimmed.charAt(0) <= 'z') {
+            return true;
         }
         return trimmed.startsWith("http://")
                 || trimmed.startsWith("https://")
@@ -273,6 +331,55 @@ public class OfficeDocumentSanitizer {
             return false;
         }
         return ssrfProtectionService.isUrlAllowed(url);
+    }
+
+    private record ParsedXml(Document document, boolean doctypeRemoved) {}
+
+    /**
+     * Parses with DOCTYPEs refused. A DOCTYPE with no internal subset, as OpenOffice 1.x parts
+     * carry, is dropped and the part parsed again; the caller must then re-serialise so the
+     * converted copy carries no DOCTYPE either.
+     */
+    private ParsedXml parse(byte[] xmlBytes)
+            throws ParserConfigurationException, SAXException, IOException {
+        try {
+            return new ParsedXml(parseSecurely(xmlBytes), false);
+        } catch (SAXException e) {
+            byte[] withoutDoctype = withoutExternalDoctype(xmlBytes);
+            if (withoutDoctype == null) {
+                throw e;
+            }
+            return new ParsedXml(parseSecurely(withoutDoctype), true);
+        }
+    }
+
+    /**
+     * The part with its DOCTYPE removed, or null when it has none or declares an internal subset,
+     * whose entities LibreOffice would expand.
+     */
+    private static byte[] withoutExternalDoctype(byte[] xmlBytes) {
+        Charset charset = OfficeDocumentFamily.textCharset(xmlBytes);
+        String text = new String(xmlBytes, charset);
+        int start = text.indexOf("<!DOCTYPE");
+        if (start < 0) {
+            return null;
+        }
+        char quote = 0;
+        for (int i = start + "<!DOCTYPE".length(); i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (quote != 0) {
+                if (c == quote) {
+                    quote = 0;
+                }
+            } else if (c == '"' || c == '\'') {
+                quote = c;
+            } else if (c == '[') {
+                return null;
+            } else if (c == '>') {
+                return (text.substring(0, start) + text.substring(i + 1)).getBytes(charset);
+            }
+        }
+        return null;
     }
 
     private Document parseSecurely(byte[] xmlBytes)
