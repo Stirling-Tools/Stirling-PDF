@@ -710,6 +710,59 @@ class EntitlementGuardTest {
         Mockito.verifyNoInteractions(entitlementService);
     }
 
+    @Test
+    void jwtCarryingResolvedUser_resolvesTeamWithoutARepositoryLookup() throws Exception {
+        // SupabaseAuthenticationFilter attaches the User it already loaded; re-querying it here
+        // cost a second transatlantic round trip on every gated request.
+        UUID supabaseId = UUID.randomUUID();
+        SecurityContextHolder.getContext()
+                .setAuthentication(jwtAuthWithUser(supabaseId, userWithTeam(7L, 42L)));
+        when(entitlementService.getSnapshot(42L)).thenReturn(degradedSnapshot());
+
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        assertThat(guard.preHandle(new MockHttpServletRequest(), res, handlerFor("aiOnly")))
+                .isFalse();
+
+        assertThat(res.getStatus()).isEqualTo(402);
+        verify(entitlementService).getSnapshot(42L);
+        verify(userRepository, never()).findBySupabaseId(any());
+    }
+
+    @Test
+    void jwtWithoutResolvedUser_stillFallsBackToTheLookup() throws Exception {
+        // Guests carry a raw Jwt rather than a User, so the lookup path must survive.
+        UUID supabaseId = UUID.randomUUID();
+        SecurityContextHolder.getContext().setAuthentication(jwtAuth(supabaseId));
+        when(userRepository.findBySupabaseId(supabaseId))
+                .thenReturn(Optional.of(userWithTeam(7L, 42L)));
+        when(entitlementService.getSnapshot(42L)).thenReturn(degradedSnapshot());
+
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        assertThat(guard.preHandle(new MockHttpServletRequest(), res, handlerFor("aiOnly")))
+                .isFalse();
+
+        verify(userRepository).findBySupabaseId(supabaseId);
+    }
+
+    private static EnhancedJwtAuthenticationToken jwtAuthWithUser(UUID supabaseId, User user) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("sub", supabaseId.toString());
+        claims.put("email", "user@example.com");
+        Jwt jwt =
+                new Jwt(
+                        "token",
+                        Instant.now(),
+                        Instant.now().plusSeconds(3600),
+                        Map.of("alg", "RS256"),
+                        claims);
+        return new EnhancedJwtAuthenticationToken(
+                jwt,
+                List.of(new SimpleGrantedAuthority("ROLE_USER")),
+                "user@example.com",
+                supabaseId.toString(),
+                user);
+    }
+
     private static EnhancedJwtAuthenticationToken jwtAuth(UUID supabaseId) {
         Map<String, Object> headers = new HashMap<>();
         headers.put("alg", "RS256");
