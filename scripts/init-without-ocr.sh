@@ -131,11 +131,6 @@ cleanup() {
     [ -n "$pid" ] && kill -TERM "$pid" 2>/dev/null || true
   done
 
-  # Stop Xvfb if running (on-demand mode)
-  if [ -n "${XVFB_PID:-}" ] && kill -0 "$XVFB_PID" 2>/dev/null; then
-    kill -TERM "$XVFB_PID" 2>/dev/null || true
-  fi
-
   # Signal Java to shut down gracefully, Spring Boot handles SIGTERM cleanly
   if [ -n "${JAVA_PID:-}" ] && kill -0 "$JAVA_PID" 2>/dev/null; then
     kill -TERM "$JAVA_PID" 2>/dev/null || true
@@ -151,7 +146,7 @@ cleanup() {
     fi
   fi
 
-  # Kill any remaining children (watchdog, Xvfb, etc.)
+  # Kill any remaining children (watchdog, etc.)
   pkill -P $$ 2>/dev/null || true
 
   log "Cleanup complete."
@@ -271,6 +266,134 @@ run_as_runtime_user() {
   fi
 }
 
+OFFICE_USER="${STIRLING_OFFICE_USER:-stirlingofficeuser}"
+OFFICE_SANDBOX_HOME="/var/lib/libreoffice-sandbox"
+OFFICE_USER_AVAILABLE=false
+# LibreOffice's own temp and XDG dirs. The inherited TMPDIR/SAL_TMP/XDG_RUNTIME_DIR point into
+# the runtime user's shared dirs, which the office user cannot write (every store then fails
+# with Io Write 16) and which the sandbox no longer grants. Set by prepare_office_dirs.
+OFFICE_TMP=""
+OFFICE_XDG=""
+
+resolve_office_user() {
+  if ! id -u "$OFFICE_USER" >/dev/null 2>&1; then
+    log "Office sandbox user ${OFFICE_USER} not present; LibreOffice will share the runtime user"
+    return
+  fi
+  if [ "$(id -u "$OFFICE_USER")" = "$(id -u "$RUNTIME_USER" 2>/dev/null || echo -1)" ]; then
+    log "WARNING: ${OFFICE_USER} and ${RUNTIME_USER} resolve to the same uid; LibreOffice privilege separation is disabled. Choose a PUID other than $(id -u "$OFFICE_USER")."
+    return
+  fi
+  if [ "$CURRENT_UID" -ne 0 ] || ! command_exists setpriv; then
+    log "Cannot switch to ${OFFICE_USER} (not root or setpriv missing); LibreOffice will share the runtime user"
+    return
+  fi
+  OFFICE_USER_AVAILABLE=true
+}
+
+run_as_office_user() {
+  if [ "$OFFICE_USER_AVAILABLE" != true ]; then
+    run_as_runtime_user env \
+      TMPDIR="$OFFICE_TMP" TMP="$OFFICE_TMP" TEMP="$OFFICE_TMP" SAL_TMP="$OFFICE_TMP" \
+      XDG_RUNTIME_DIR="$OFFICE_XDG" \
+      "$@"
+    return
+  fi
+  env HOME="$OFFICE_SANDBOX_HOME" \
+      USER="$OFFICE_USER" \
+      LOGNAME="$OFFICE_USER" \
+      TMPDIR="$OFFICE_TMP" \
+      TMP="$OFFICE_TMP" \
+      TEMP="$OFFICE_TMP" \
+      SAL_TMP="$OFFICE_TMP" \
+      XDG_RUNTIME_DIR="$OFFICE_XDG" \
+    setpriv --reuid="$OFFICE_USER" --regid="$(id -gn "$OFFICE_USER")" --init-groups -- "$@"
+}
+
+# The sandbox grants /tmp as socket-only, so LibreOffice can bind its IPC pipes there but
+# cannot unlink them. A pipe left by a killed instance would make the restart's bind fail;
+# a pipe file with no bound socket in /proc/net/unix is stale and safe to remove.
+clear_stale_office_pipes() {
+  local pipe
+  for pipe in /tmp/OSL_PIPE_*; do
+    [ -S "$pipe" ] || continue
+    if ! grep -qF " $pipe" /proc/net/unix 2>/dev/null; then
+      rm -f "$pipe" 2>/dev/null || true
+    fi
+  done
+}
+
+# Read-only paths come from lo-sandbox's built-in default unless STIRLING_LO_ALLOW_RO is set.
+# Java narrows RW/SOCK further per job for the soffice commands it runs itself.
+export_office_sandbox_policy() {
+  local profile_root=$1
+  local rw="/dev:${profile_root}:${OFFICE_TMP}:${OFFICE_XDG}"
+  [ "$OFFICE_USER_AVAILABLE" = true ] && rw="${rw}:${OFFICE_SANDBOX_HOME}"
+  export STIRLING_LO_SANDBOX="${STIRLING_LO_SANDBOX:-enforce}"
+  export STIRLING_LO_ALLOW_RW="${STIRLING_LO_ALLOW_RW:-${rw}}"
+  export STIRLING_LO_ALLOW_SOCK="${STIRLING_LO_ALLOW_SOCK:-/tmp}"
+  log "LibreOffice sandbox mode=${STIRLING_LO_SANDBOX} user=$([ "$OFFICE_USER_AVAILABLE" = true ] && echo "$OFFICE_USER" || echo "$RUNTIME_USER")"
+  check_office_sandbox
+}
+
+# enforce mode degrades silently to a stderr line per launch when the kernel lacks Landlock
+# or seccomp (old kernels, gVisor, QEMU user emulation); report it once, loudly, at startup.
+check_office_sandbox() {
+  local soffice out rc
+  soffice="$(command -v soffice || true)"
+  [ -n "$soffice" ] || return 0
+  if [ ! -x /usr/local/lib/stirling/lo-sandbox ]; then
+    log "WARNING: LibreOffice sandbox launcher is not in this image; LibreOffice runs unconfined"
+    return 0
+  fi
+  [ "$STIRLING_LO_SANDBOX" = off ] && { log "WARNING: LibreOffice sandbox disabled (STIRLING_LO_SANDBOX=off)"; return 0; }
+  rc=0
+  out="$("$soffice" --stirling-sandbox-check 2>&1)" || rc=$?
+  out="$(printf '%s' "$out" | tr '\n' ' ')"
+  if [ "$rc" -eq 125 ]; then
+    log "ERROR: LibreOffice sandbox required but unavailable; office conversions will fail: ${out}"
+  elif [ "$rc" -ne 0 ] || ! printf '%s' "$out" | grep -q 'lo-sandbox: landlock ABI'; then
+    log "ERROR: LibreOffice sandbox self-check failed (exit ${rc}): ${out}"
+  elif printf '%s' "$out" | grep -qE 'landlock unavailable|seccomp unavailable'; then
+    log "WARNING: LibreOffice sandbox is only partially active on this kernel: ${out}. Set STIRLING_LO_SANDBOX=required to refuse to run LibreOffice unconfined."
+  elif printf '%s' "$out" | grep -q 'scoping unavailable'; then
+    log "WARNING: LibreOffice sandbox active without signal and abstract-socket scoping on this kernel: ${out}. STIRLING_LO_SANDBOX=required needs Landlock ABI 6 (Linux 6.12+) and would refuse every conversion here."
+  else
+    log "LibreOffice sandbox active (${out})"
+  fi
+}
+
+# A profile from an init-only soffice run, made before any document is opened. Java copies its
+# extension registry into fresh per-job profiles so LibreOffice does not relaunch on first start,
+# which fails under the sandbox; it is root-owned so no LibreOffice process can change it later.
+OFFICE_PROFILE_TEMPLATE=/var/lib/libreoffice-template
+
+create_office_profile_template() {
+  local build="${OFFICE_PROFILE_TEMPLATE}.new"
+  [ "$CURRENT_UID" -eq 0 ] || return 0
+  rm -rf "$build" "$OFFICE_PROFILE_TEMPLATE"
+  mkdir -p "$build/tmp"
+  if [ "$OFFICE_USER_AVAILABLE" = true ]; then
+    chown -R "$OFFICE_USER" "$build"
+  else
+    chown -R "$RUNTIME_USER" "$build"
+  fi
+  run_as_office_user env HOME="$build" TMPDIR="$build/tmp" TMP="$build/tmp" TEMP="$build/tmp" \
+      SAL_TMP="$build/tmp" XDG_RUNTIME_DIR="$build/tmp" STIRLING_LO_ALLOW_RW="/dev:${build}" \
+      timeout 120 soffice --headless --norestore --terminate_after_init \
+      "-env:UserInstallation=file://${build}" >/dev/null 2>&1 || true
+  clear_stale_office_pipes
+  if [ -d "$build/user/extensions" ]; then
+    rm -rf "$build/tmp"
+    chown -R root:root "$build"
+    chmod -R a+rX,go-w "$build"
+    mv "$build" "$OFFICE_PROFILE_TEMPLATE"
+  else
+    log "WARNING: could not create the LibreOffice profile template; direct soffice jobs will retry their first run"
+    rm -rf "$build"
+  fi
+}
+
 run_as_runtime_user_with_timeout() {
   local secs=$1; shift
   if command_exists timeout; then
@@ -349,9 +472,23 @@ start_unoserver_instance() {
   conversion_timeout="$(get_unoserver_conversion_timeout_seconds)"
   # Per-instance profile dir avoids LibreOffice lock-file contention.
   local profile_dir="${LIBREOFFICE_PROFILE}/instance_${port}"
-  run_as_runtime_user mkdir -p "$profile_dir"
+  run_as_office_user mkdir -p "$profile_dir"
+  # The watchdog only signals unoserver's direct children, so a soffice.bin reparented to init
+  # can outlive a restart and keep the instance's pipe bound; the new instance then cannot start.
+  local leftover="-env:UserInstallation=file://${profile_dir}"
+  if pkill -KILL -f -- "$leftover" 2>/dev/null; then
+    for _ in 1 2 3 4 5; do pgrep -f -- "$leftover" >/dev/null 2>&1 || break; sleep 1; done
+  fi
+  clear_stale_office_pipes
+  # A fresh profile makes soffice initialise it and relaunch under an IPC pipe the sandbox will not
+  # let it unlink, so unoserver's own first soffice would die; initialise the profile up front.
+  if [ ! -d "${profile_dir}/user" ]; then
+    run_as_office_user timeout 120 soffice --headless --norestore --terminate_after_init \
+      "$leftover" >/dev/null 2>&1 || true
+    clear_stale_office_pipes
+  fi
   # --user-installation is a plain path; unoserver 3.6 crashes if pre-wrapped as file://.
-  run_as_runtime_user "$UNOSERVER_BIN" \
+  run_as_office_user "$UNOSERVER_BIN" \
     --interface 127.0.0.1 \
     --port "$port" \
     --uno-port "$uno_port" \
@@ -360,6 +497,17 @@ start_unoserver_instance() {
     2> >(grep --line-buffered -v "POST /RPC2" >&2) \
     &
   LAST_UNOSERVER_PID=$!
+  UNOSERVER_STARTED_AT[$port]=$(date +%s)
+}
+
+# unoserver waits a few seconds before binding its port, so a health check right after a
+# (re)start sees a starting instance as dead and kills it again.
+UNOSERVER_START_GRACE_SECONDS=30
+declare -A UNOSERVER_STARTED_AT=()
+
+unoserver_starting() {
+  local started=${UNOSERVER_STARTED_AT[$1]:-0}
+  [ $(( $(date +%s) - started )) -lt "$UNOSERVER_START_GRACE_SECONDS" ]
 }
 
 # Stop an unoserver instance and its soffice children. Child PIDs are captured
@@ -403,7 +551,7 @@ start_unoserver_watchdog() {
         if [ -z "$pid" ] || ! kill -0 "$pid" 2>/dev/null; then
           log "unoserver PID ${pid} not found for port ${port}"
           needs_restart=true
-        elif ! check_unoserver_port_ready "$port"; then
+        elif ! unoserver_starting "$port" && ! check_unoserver_port_ready "$port"; then
           needs_restart=true
         fi
 
@@ -459,42 +607,17 @@ start_unoserver_pool_eager() {
 }
 
 # ---------- On-demand unoserver management ----------
-# When UNO_DEMAND_ENABLED=true, unoserver + soffice + Xvfb are only started
+# When UNO_DEMAND_ENABLED=true, unoserver + soffice are only started
 # when a conversion is needed and stopped after an idle timeout.
 # This saves ~200-350 MB idle memory.
 UNO_DEMAND_FILE="/tmp/uno-last-used"
 UNO_POOL_RUNNING=false
-XVFB_PID=""
-
-start_xvfb_if_needed() {
-  if [ -n "${XVFB_PID:-}" ] && kill -0 "$XVFB_PID" 2>/dev/null; then
-    return 0
-  fi
-  if command_exists Xvfb; then
-    Xvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset > /dev/null 2>&1 &
-    XVFB_PID=$!
-    export DISPLAY=:99
-    sleep 1
-    log "Xvfb started on-demand (pid $XVFB_PID)"
-  fi
-}
-
-stop_xvfb() {
-  if [ -n "${XVFB_PID:-}" ] && kill -0 "$XVFB_PID" 2>/dev/null; then
-    kill -TERM "$XVFB_PID" 2>/dev/null || true
-    wait "$XVFB_PID" 2>/dev/null || true
-    log "Xvfb stopped"
-  fi
-  XVFB_PID=""
-}
 
 # Start the unoserver pool on-demand (called from the demand manager).
 start_unoserver_pool_now() {
   if [ "$UNO_POOL_RUNNING" = true ]; then
     return 0
   fi
-
-  start_xvfb_if_needed
 
   local count
   count="$(get_unoserver_count)"
@@ -539,14 +662,12 @@ start_unoserver_pool_now() {
   UNO_POOL_RUNNING=true
 }
 
-# Stop all unoserver instances and Xvfb to reclaim memory. Runs even when the
+# Stop all unoserver instances to reclaim memory. Runs even when the
 # pool flag was never set, so a partially started pool still gets cleaned.
 stop_unoserver_pool_now() {
   for pid in "${UNOSERVER_PIDS[@]:-}"; do
     stop_unoserver_instance "$pid"
   done
-
-  stop_xvfb
 
   UNOSERVER_PIDS=()
   UNOSERVER_PORTS=()
@@ -566,7 +687,7 @@ start_unoserver_demand_manager() {
   local check_interval=5
 
   # This loop runs in a background subshell, so the parent's cleanup cannot see
-  # its UNOSERVER_PIDS or XVFB_PID; clean the tree up from here.
+  # its UNOSERVER_PIDS; clean the tree up from here.
   manager_cleanup() {
     trap - TERM INT EXIT
     stop_unoserver_pool_now
@@ -616,7 +737,7 @@ start_unoserver_demand_manager() {
           log "unoserver PID ${pid} died for port ${port}, restarting"
           start_unoserver_instance "$port" "$uno_port"
           UNOSERVER_PIDS[i]=$LAST_UNOSERVER_PID
-        elif ! check_unoserver_port_ready "$port" "silent"; then
+        elif ! unoserver_starting "$port" && ! check_unoserver_port_ready "$port" "silent"; then
           log "unoserver port ${port} unhealthy, restarting"
           stop_unoserver_instance "$pid"
           start_unoserver_instance "$port" "$uno_port"
@@ -1171,7 +1292,7 @@ CHOWN_OK=true
 for p in "${CHOWN_PATHS[@]}"; do
   if [ -e "$p" ]; then
     chown -R "stirlingpdfuser:stirlingpdfgroup" "$p" 2>/dev/null || CHOWN_OK=false
-    chmod -R 755 "$p" 2>/dev/null || true
+    find "$p" -type d -exec chmod 755 {} + 2>/dev/null || true
   fi
 done
 
@@ -1190,7 +1311,27 @@ for dir in "${CRITICAL_DIRS[@]}"; do
   fi
 done
 
-# ---------- Xvfb + unoserver ----------
+# ---------- Private work areas ----------
+# STIRLING_TEMPDIR is user-set; a shared dir such as /tmp must keep its sticky bit and owner,
+# or the office user can no longer bind LibreOffice's IPC pipes there.
+STIRLING_FILE_STORE="${STIRLING_TEMPDIR:-/tmp/stirling-files}"
+for private_dir in /tmp/stirling-pdf "$STIRLING_FILE_STORE"; do
+  case "$(realpath -m "$private_dir" 2>/dev/null || printf '%s' "$private_dir")" in
+    /|/tmp|/var|/var/tmp|/dev/shm|/home|/run|/usr|/etc|/opt)
+      log "Not locking down shared dir ${private_dir}"
+      continue
+      ;;
+  esac
+  mkdir -p "$private_dir" 2>/dev/null || true
+  if [ -d "$private_dir" ]; then
+    chown "stirlingpdfuser:stirlingpdfgroup" "$private_dir" 2>/dev/null || true
+    chmod 700 "$private_dir" 2>/dev/null || true
+  fi
+done
+
+# ---------- unoserver ----------
+# LibreOffice renders headless (SAL_USE_VCLPLUGIN=svp), so no X server is started: one running
+# as root with access control off would be reachable from the sandbox through its socket.
 # Detect whether on-demand mode is enabled.
 UNO_DEMAND_ENABLED="${UNO_DEMAND_ENABLED:-true}"
 UNO_DEMAND_ENABLED="${UNO_DEMAND_ENABLED,,}"
@@ -1200,12 +1341,28 @@ UNOCONVERT_BIN="$(command -v unoconvert || true)"
 UNOPING_BIN="$(command -v unoping || true)"
 
 if [ -n "$UNOSERVER_BIN" ] && [ -n "$UNOCONVERT_BIN" ]; then
-  LIBREOFFICE_PROFILE="${HOME:-/home/${RUNTIME_USER}}/.libreoffice_uno_${RUID}"
-  run_as_runtime_user mkdir -p "$LIBREOFFICE_PROFILE"
+  resolve_office_user
+  if [ "$OFFICE_USER_AVAILABLE" = true ]; then
+    LIBREOFFICE_PROFILE="${OFFICE_SANDBOX_HOME}/profiles"
+    OFFICE_TMP="${OFFICE_SANDBOX_HOME}/tmp"
+    OFFICE_XDG="${OFFICE_SANDBOX_HOME}/xdg"
+    mkdir -p "$LIBREOFFICE_PROFILE" "$OFFICE_TMP" "$OFFICE_XDG"
+    chown -R "$OFFICE_USER:$(id -gn "$OFFICE_USER")" "$OFFICE_SANDBOX_HOME" 2>/dev/null || true
+    chmod 700 "$OFFICE_SANDBOX_HOME" "$OFFICE_TMP" "$OFFICE_XDG" 2>/dev/null || true
+  else
+    LIBREOFFICE_PROFILE="${HOME:-/home/${RUNTIME_USER}}/.libreoffice_uno_${RUID}"
+    OFFICE_TMP="${LIBREOFFICE_PROFILE}/tmp"
+    OFFICE_XDG="${LIBREOFFICE_PROFILE}/xdg"
+    run_as_runtime_user mkdir -p "$LIBREOFFICE_PROFILE" "$OFFICE_TMP" "$OFFICE_XDG"
+    run_as_runtime_user chmod 700 "$OFFICE_TMP" "$OFFICE_XDG" 2>/dev/null || true
+  fi
+  export_office_sandbox_policy "$LIBREOFFICE_PROFILE"
+  export STIRLING_LO_PROFILE_TEMPLATE="$OFFICE_PROFILE_TEMPLATE"
+  create_office_profile_template &
 
   if [ "$UNO_DEMAND_ENABLED" = "true" ]; then
     # ---------- On-demand mode ----------
-    # Do NOT start Xvfb, unoserver, or soffice yet.
+    # Do NOT start unoserver or soffice yet.
     # The demand manager will start them lazily when a conversion request arrives
     # and stop them after an idle timeout to reclaim ~200-350 MB RSS.
     log "unoserver on-demand mode enabled (UNO_IDLE_TIMEOUT_SECONDS=${UNO_IDLE_TIMEOUT_SECONDS:-120}s)"
@@ -1214,16 +1371,6 @@ if [ -n "$UNOSERVER_BIN" ] && [ -n "$UNOCONVERT_BIN" ]; then
     DEMAND_MANAGER_PID=$!
   else
     # ---------- Legacy always-on mode ----------
-    if command_exists Xvfb; then
-      log "Starting Xvfb on :99"
-      Xvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset > /dev/null 2>&1 &
-      XVFB_PID=$!
-      export DISPLAY=:99
-      sleep 1
-    else
-      log "Xvfb not installed; skipping virtual display setup"
-    fi
-
     start_unoserver_pool_eager
     log "unoserver pool started (Profile: $LIBREOFFICE_PROFILE), Java starting in parallel"
   fi
