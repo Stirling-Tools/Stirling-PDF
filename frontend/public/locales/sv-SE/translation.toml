@@ -108,14 +108,13 @@ undoSuccess = "Åtgärden ångrades"
 unknown = "Okänt"
 unpin = "Lossa fil (ersätt efter verktygskörning)"
 unsavedChanges = "Du har osparade ändringar i din PDF."
-unsavedChangesBody = "Du har osparade ändringar i din PDF. Är du säker på att du vill lämna?"
+unsavedChangesBody = "Du har osparade ändringar i PDF-filen. Är du säker på att du vill lämna sidan?"
 unsavedChangesTitle = "Osparade ändringar"
 unsupported = "Stöds inte"
 username = "Användarnamn"
 welcome = "Välkommen"
 white = "Vit"
 yes = "Ja"
-
 [account]
 accountSettings = "Kontoinställningar"
 adminSettings = "Admininställningar - Visa och lägg till användare"
@@ -171,7 +170,7 @@ signedInAs = "Inloggad som: {{email}}"
 tags = "paginera,etikett,organisera,indexera"
 
 [addAttachments]
-tags = "bädda in,bifoga,inkludera,bilagor,bifoga filer,bädda in filer,inkludera filer,lägg till filer,filbilaga,associerade filer,kompletterande filer"
+tags = "bädda in,bifoga,inkludera,bilagor,bifoga filer,inbäddade filer,lägg till filer,filbilaga,associerade filer,kompletterande filer"
 
 [addAttachments.error]
 failed = "Ett fel uppstod när bilagor lades till i PDF-filen."
@@ -187,6 +186,7 @@ failed = "Åtgärden för att lägga till bilagor misslyckades"
 [AddAttachmentsRequest.results]
 title = "Bilageresultat"
 
+[AddAttachmentsRequest.tooltip]
 [AddAttachmentsRequest.tooltip.description]
 title = "Vad det gör"
 
@@ -200,13 +200,13 @@ tags = "img,jpg,bild,foto"
 title = "Lägg till bild"
 
 [addImage.canvas]
-colorPickerTitle = "Choose stroke colour"
+colorPickerTitle = "Välj linjefärg"
 
 [addImage.error]
 failed = "Ett fel uppstod när bilden skulle läggas till i PDF:en."
 
 [addImage.image]
-hint = "Stöder PNG, JPEG, GIF, BMP, TIFF och SVG-filer. SVG-filer konverteras till PNG för inbäddning."
+hint = "Stöder PNG-, JPEG-, GIF-, BMP-, TIFF- och SVG-filer. SVG-filer konverteras till PNG för inbäddning."
 label = "Bildfil"
 name = "Bild"
 placeholder = "Ladda upp en bild"
@@ -231,12 +231,12 @@ title = "Resultat för Lägg till bild"
 defaultCanvasLabel = "Ritad signatur"
 defaultImageLabel = "Uppladdad bild"
 defaultLabel = "Bild"
-defaultTextLabel = "Inskriven signatur"
+defaultTextLabel = "Skriven signatur"
 delete = "Ta bort"
 emptyTitle = "Inga sparade signaturer ännu"
 heading = "Sparade signaturer"
 label = "Etikett"
-limitTitle = "Gränsen nådd"
+limitTitle = "Gränsen är nådd"
 next = "Nästa"
 personalHeading = "Personliga signaturer"
 prev = "Föregående"
@@ -247,7 +247,7 @@ sharedHeading = "Delade signaturer"
 [addImage.saved.type]
 canvas = "Ritning"
 image = "Uppladdning"
-text = "Text"
+text = "Textsignatur"
 
 [addImage.step]
 createDesc = "Ladda upp bilden du vill lägga till"
@@ -258,21 +258,21 @@ placeDesc = "Klicka på PDF:en för att lägga till bilden"
 configure = "Konfigurera bild"
 
 [addImage.text]
-colorLabel = "Text colour"
-fontLabel = "Teckensnitt"
+colorLabel = "Textfärg"
+fontLabel = "Typsnitt"
 fontSizeLabel = "Teckenstorlek"
-name = "Text"
+name = "Textinnehåll"
 placeholder = "Ange text"
 
 [addImage.type]
-canvas = "Canvas"
+canvas = "Rita"
 image = "Bild"
-saved = "Sparad"
+saved = "Sparade"
 text = "Text"
 
 [addPageNumbers]
 customize = "Anpassa utseende"
-customNumberDesc = "t.ex. \"Sida {n}\" eller lämna tomt för endast siffror"
+customNumberDesc = "t.ex. \"Sida {n}\" eller lämna tomt för bara siffror"
 fontName = "Typsnitt"
 fontSize = "Teckenstorlek"
 numberPagesDesc = "t.ex. 1,3,5-8 eller lämna tomt för alla sidor"
@@ -284,8 +284,8 @@ previewDisclaimer = "Förhandsvisningen är ungefärlig. Slutresultatet kan vari
 submit = "Lägg till sidnummer"
 tags = "nummer,paginering,antal,lägg till sidnummer,sidnumrering,sidnummer,sidfot,sidhuvud,numrera sidor,sekventiell,pagineringsverktyg"
 title = "Lägg till sidnummer"
-zeroPad = "Bredd för nollutfyllnad (Bates Stamping)"
-zeroPadTooltip = "Nollutfyll (Bates Stamp) sidnummer till denna bredd (t.ex. 3 ⇒ 001). Ange 0 för att inaktivera."
+zeroPad = "Bredd för nollutfyllnad (Bates-stämpling)"
+zeroPadTooltip = "Fyll ut sidnummer med inledande nollor (Bates-stämpel) till denna bredd, till exempel 3 ⇒ 001. Ange 0 för att inaktivera."
 
 [addPageNumbers.error]
 failed = "Åtgärden att lägga till sidnummer misslyckades"
@@ -301,9 +301,10 @@ title = "Resultat för sidnumrering"
 
 [addPassword]
 desc = "Kryptera ditt PDF-dokument med ett lösenord."
-tags = "kryptera,lösenord,lås,säker,skydda,säkerhet,kryptering,skyddsåtgärd,konfidentiell,privat,begränsa åtkomst"
+tags = "kryptera,lösenord,lås,säker,skydda,säkerhet,kryptering,skydd,konfidentiell,privat,begränsa åtkomst"
 title = "Lägg till lösenord"
 
+[addPassword.encryption]
 [addPassword.encryption.keyLength]
 128bit = "128-bit (standard)"
 256bit = "256-bit (Hög)"
@@ -316,6 +317,7 @@ failed = "Ett fel uppstod vid kryptering av PDF-filen."
 [addPassword.results]
 title = "Krypterade PDF:er"
 
+[addPassword.tooltip]
 [addPassword.tooltip.encryption]
 bullet1 = "40-bit: Grundläggande säkerhet, kompatibel med äldre läsare"
 bullet2 = "128-bit: Standard­säkerhet, brett stödd"
@@ -340,7 +342,7 @@ title = "Ändra behörigheter"
 pagePreviewAlt = "Sidförhandsvisning"
 preview = "Förhandsgranska stämpel"
 stampPreviewAlt = "Stämpelförhandsvisning"
-tags = "stämpel,markera,sigill,godkänd,avvisad,konfidentiell,stämpelverktyg,gummistämpel,datumstämpel,godkännandestämpel,mottagen,ogiltig,kopia,original"
+tags = "stämpel,märkning,sigill,godkänd,avvisad,konfidentiell,stämpelverktyg,gummistämpel,datumstämpel,godkännandestämpel,mottagen,makulerad,kopia,original"
 
 [AddStampRequest]
 alphabet = "Alfabet"
@@ -349,7 +351,7 @@ customColor = "Anpassad textfärg"
 customDateDesc = "Anpassat format"
 customPosition = "Dra stämpeln till önskad plats i förhandsvisningen."
 dateDesc = "Aktuellt datum"
-datetimeDesc = "Datum och tid kombinerat"
+datetimeDesc = "Datum och tid tillsammans"
 dateTimeVars = "Datum och tid"
 dynamicVariables = "Dynamiska variabler"
 examples = "Exempel"
@@ -359,15 +361,15 @@ fileVars = "Filinformation"
 fontSize = "Tecken-/bildstorlek"
 imageSize = "Bildstorlek"
 margin = "Marginal"
-metadataDesc = "Från PDF-dokumentegenskaper"
+metadataDesc = "Från PDF-dokumentets egenskaper"
 metadataVars = "Dokumentmetadata"
 multiLine = "flera rader"
 noStampSelected = "Ingen stämpel vald. Gå tillbaka till steg 1."
 opacity = "Opacitet"
-otherVars = "Annat"
+otherVars = "Övrigt"
 pageNumberDesc = "Aktuellt sidnummer"
 pageVars = "Sidinformation"
-position = "Position"
+position = "Placering"
 positionAndFormatting = "Position och formatering"
 preview = "Förhandsgranskning:"
 qrCode = "QR-kod"
@@ -378,7 +380,7 @@ qrContentTooLong = "För långt för att få plats i en QR-kod. Förkorta inneh�
 quickPosition = "Välj en position på sidan för att placera stämpeln."
 rotation = "Rotering"
 selectedImageAlt = "Vald stämpelbild"
-selectTemplate = "Välj en mall..."
+selectTemplate = "Välj en mall…"
 stampSetup = "Stämpelinställningar"
 stampText = "Stämpeltext"
 stampTextDescription = "Använd dynamiska variabler nedan. Använd @@ för ett bokstavligt @. Använd \\n för nya rader."
@@ -390,8 +392,8 @@ title = "Stämpla PDF"
 totalPagesDesc = "Totalt antal sidor"
 useTemplate = "Använd mall"
 uuidDesc = "Kort unik identifierare (8 tecken)"
-variablesHelp = "Klicka på en variabel för att infoga den i din stämpeltext. Använd @@ för ett bokstavligt @."
-yearMonthDayDesc = "Individuella datumdelar"
+variablesHelp = "Klicka på en variabel för att infoga den i stämpeltexten. Använd @@ för ett bokstavligt @."
+yearMonthDayDesc = "Enskilda datumdelar"
 
 [AddStampRequest.error]
 failed = "Ett fel inträffade när stämpeln skulle läggas till i PDF:en."
@@ -401,15 +403,15 @@ title = "Resultat av stämpling"
 
 [AddStampRequest.template]
 custom = "Anpassad"
-dateHeader = "Datumhuvud"
-doc-info = "Dokumentinfo"
+dateHeader = "Datumrubrik"
+doc-info = "Dokumentinformation"
 draft = "Utkastvattenstämpel"
 draftWatermark = "Utkastvattenstämpel"
 european-date = "Europeiskt datum (DD/MM/YYYY)"
 europeanDate = "Europeiskt datum"
 legal-footer = "Juridisk sidfot"
 page-numbers = "Sidnummer"
-pageNumberFooter = "Sidnummer i sidfot"
+pageNumberFooter = "Sidfot med sidnummer"
 timestamp = "Tidsstämpel"
 
 [addText]
@@ -419,7 +421,7 @@ tags = "text,annotering,etikett"
 title = "Lägg till text"
 
 [addText.canvas]
-colorPickerTitle = "Choose stroke colour"
+colorPickerTitle = "Välj linjefärg"
 
 [addText.error]
 failed = "Ett fel inträffade när text lades till i PDF:en."
@@ -444,12 +446,12 @@ title = "Resultat för Lägg till text"
 defaultCanvasLabel = "Ritad signatur"
 defaultImageLabel = "Uppladdad signatur"
 defaultLabel = "Signatur"
-defaultTextLabel = "Inskriven signatur"
+defaultTextLabel = "Skriven signatur"
 delete = "Ta bort"
 emptyTitle = "Inga sparade signaturer ännu"
 heading = "Sparade signaturer"
 label = "Etikett"
-limitTitle = "Gränsen nådd"
+limitTitle = "Gränsen är nådd"
 next = "Nästa"
 personalHeading = "Personliga signaturer"
 prev = "Föregående"
@@ -460,7 +462,7 @@ sharedHeading = "Delade signaturer"
 [addText.saved.type]
 canvas = "Ritning"
 image = "Uppladdning"
-text = "Text"
+text = "Textsignatur"
 
 [addText.step]
 createDesc = "Ange texten du vill lägga till"
@@ -479,9 +481,9 @@ name = "Textinnehåll"
 placeholder = "Ange texten du vill lägga till"
 
 [addText.type]
-canvas = "Canvas"
+canvas = "Rita"
 image = "Bild"
-saved = "Sparad"
+saved = "Sparade"
 text = "Text"
 
 [adjust-contrast]
@@ -498,7 +500,7 @@ green = "Grön"
 noPreview = "Välj en PDF för förhandsvisning"
 red = "Röd"
 saturation = "Mättnad:"
-tags = "kontrast,ljusstyrka,mättnad,justera färger,färgkorrigering,förbättra,ljusa upp,mörka ner,förbättra kvalitet,färgbalans,nyans,livfullhet"
+tags = "kontrast,ljusstyrka,mättnad,justera färger,färgkorrigering,förbättra,ljusa upp,mörka ned,förbättra kvalitet,färgbalans,nyans,färgstyrka"
 title = "Justera färger/kontrast"
 
 [adjustContrast.error]
@@ -532,6 +534,7 @@ label = "Skalningsfaktor"
 [adjustPageScale.settings]
 title = "Inställningar"
 
+[adjustPageScale.tooltip]
 [adjustPageScale.tooltip.description]
 text = "Justera storleken på PDF-innehållet och ändra sidans dimensioner."
 title = "Beskrivning"
@@ -741,14 +744,14 @@ title = "Dokument och RAG"
 
 [admin.settings.ai.documents.embeddingApiKey]
 description = "Lämna tomt för att använda motorns egna miljöuppgifter. Gäller för självhostade distributioner med en enda motor."
-generic = "Embedding API-nyckel"
+generic = "API-nyckel för inbäddningar"
 openai = "OpenAI API-nyckel"
 setPlaceholder = "Sparad – lämna tomt för att behålla den aktuella nyckeln"
 voyageai = "VoyageAI API-nyckel"
 
 [admin.settings.ai.documents.embeddingBaseUrl]
 description = "Base URL för den OpenAI-kompatibla / Ollama-embeddings-slutpunkten, t.ex. http://ollama:11434/v1. Måste peka på en betrodd intern slutpunkt (SSRF-känsligt)."
-label = "Embedding bas-URL"
+label = "Bas-URL för inbäddningar"
 
 [admin.settings.ai.documents.embeddingModel]
 description = "Namn på inbäddningsmodell. Fritext; förslag är endast tips."
@@ -771,7 +774,7 @@ reindexNote = "Om du ändrade inbäddningsmodellen, indexera om befintliga dokum
 
 [admin.settings.ai.documents.topK]
 description = "Antal mest relevanta segment som hämtas per sökning."
-label = "Top K"
+label = "Antal resultat (K)"
 
 [admin.settings.ai.general]
 connection = "Anslutning"
@@ -799,6 +802,7 @@ title = "Om Stirling Cloud AI"
 description = "Huvudbrytare. När den är avstängd är inga AI-verktyg, agenter eller motoranrop tillgängliga."
 label = "Aktivera AI"
 
+[admin.settings.ai.general.features]
 [admin.settings.ai.general.features.chat]
 description = "Konversationsassistent för arbete med PDFs."
 label = "Chattassistent"
@@ -1011,9 +1015,9 @@ mobileScannerPageFormat = "Sidformat"
 mobileScannerPageFormatDesc = "PDF-sidstorlek för konverterade bilder. \"Behåll\" använder bildens ursprungliga dimensioner."
 mobileScannerStretchToFit = "Sträck för att passa"
 mobileScannerStretchToFitDesc = "Sträck bilder för att fylla hela sidan. Om inaktiverat centreras bilder med bibehållen proportion."
-pageFormatA4 = "A4 (210×297mm)"
+pageFormatA4 = "A4 (210 × 297 mm)"
 pageFormatKeep = "Behåll (ursprungliga dimensioner)"
-pageFormatLetter = "Letter (8.5×11in)"
+pageFormatLetter = "Letter (8,5 × 11 tum)"
 title = "Anslutningar"
 unlinkedServices = "Ej länkade tjänster"
 
@@ -1033,12 +1037,12 @@ mobileScannerPageFormatDesc = "PDF-sidstorlek för konverterade bilder. \"Behål
 mobileScannerStretchToFit = "Sträck för att passa"
 mobileScannerStretchToFitDesc = "Sträck bilder för att fylla hela sidan. Om inaktiverat centreras bilder med bibehållen proportion."
 note = "Obs! Kräver att Frontend-URL är konfigurerad. "
-pageFormatA4 = "A4 (210×297mm)"
+pageFormatA4 = "A4 (210 × 297 mm)"
 pageFormatKeep = "Behåll (ursprungliga dimensioner)"
-pageFormatLetter = "Letter (8.5×11in)"
+pageFormatLetter = "Letter (8,5 × 11 tum)"
 
 [admin.settings.connections.oauth2]
-label = "OAuth2"
+label = "OAuth 2"
 
 [admin.settings.connections.oauth2.autoCreateUser]
 description = "Skapa automatiskt användarkonton vid första OAuth2-inloggningen"
@@ -1077,7 +1081,7 @@ description = "Det OAuth2-anspråk som ska användas som användarnamn (t.ex. em
 label = "Använd som användarnamn"
 
 [admin.settings.connections.saml2]
-label = "SAML2"
+label = "SAML 2"
 
 [admin.settings.connections.saml2.autoCreateUser]
 description = "Skapa automatiskt användarkonton vid första SAML2-inloggningen"
@@ -1175,7 +1179,7 @@ placeholder = "Ange databaslösenord"
 
 [admin.settings.database.port]
 description = "Databasserverns port (används inte om anpassad URL anges)"
-label = "Port"
+label = "Databasport"
 
 [admin.settings.database.type]
 description = "Typ av databas (används inte om anpassad URL anges)"
@@ -1254,13 +1258,13 @@ add = "Lägg till"
 empty = "Inga mappar tillåtna. Mappkällor och mappmål är för närvarande inaktiverade."
 hint = "Ange absoluta sökvägar, till exempel /data/inbox."
 label = "Tillåtna mapprötter"
-placeholder = "/data/inbox"
+placeholder = "t.ex. /data/inbox"
 remove = "Ta bort mapprot"
 
 [admin.settings.general]
 branding = "Varumärke och utseende"
 description = "Hur denna server körs: varumärke, lagring, verktygen den exponerar och sökvägarna den får röra."
-system = "System"
+system = "Systeminställningar"
 title = "Systeminställningar"
 ui = "Användargränssnitt"
 
@@ -1312,7 +1316,7 @@ description = "Sökväg till WeasyPrint-körbar fil för konvertering från HTML
 label = "WeasyPrint-körbar fil"
 
 [admin.settings.general.customPaths.pipeline]
-label = "Pipeline-kataloger"
+label = "Arbetsflödeskataloger"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 description = "Katalog där bearbetade PDF-filer skrivs ut (lämna tomt för standard: /pipeline/finishedFolders)"
@@ -1320,15 +1324,15 @@ label = "Katalog för färdiga mappar"
 
 [admin.settings.general.customPaths.pipeline.pipelineDir]
 description = "Baskatalog för pipeline-resurser (lämna tomt för standard: /pipeline)"
-label = "Pipeline-katalog"
+label = "Arbetsflödeskatalog"
 
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 description = "Katalog där pipeline övervakar inkommande PDF-filer (lämna tomt för standard: /pipeline/watchedFolders)"
 label = "Katalog för övervakade mappar"
 
 [admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
-description = "Kataloger där pipeline övervakar inkommande PDF:er (en per rad eller kommaseparerade; lämna tomt för standard: /pipeline/watchedFolders)"
-label = "Kataloger för övervakade mappar"
+description = "Kataloger där pipelinen övervakar inkommande PDF-filer (en per rad eller kommaseparerade; lämna tomt för standard: /pipeline/watchedFolders)"
+label = "Kataloger för bevakade mappar"
 
 [admin.settings.general.defaultLocale]
 description = "Standardspråk för nya användare (t.ex. en_US, es_ES)"
@@ -1390,14 +1394,14 @@ title = "Varning om juridiskt ansvar"
 
 [admin.settings.legal.impressum]
 description = "URL eller filnamn till impressum (krävs i vissa jurisdiktioner)"
-label = "Impressum"
+label = "Ansvarsuppgifter"
 
 [admin.settings.legal.loginAgreement]
 defaultLocaleHint = "— används som reserv när ett språk saknar fil."
 defaultLocaleLink = "Konfigurera standardspråket"
 description = "Visa en ansvarsfriskrivning som användare måste godkänna efter inloggning. Texten följer varje användares språk."
 discardConfirm = "Du har osparade ändringar som kommer att gå förlorade. Byt språk ändå?"
-editLabel = "Markdown"
+editLabel = "Redigera Markdown"
 editPlaceholder = "## Rubrik\n\nDin ansvarsfriskrivningstext..."
 emptyPreview = "Inget att förhandsgranska ännu."
 language = "Språk"
@@ -1473,71 +1477,72 @@ description = "Användarnamn för SMTP-autentisering"
 label = "SMTP-användarnamn"
 
 [admin.settings.mcp]
-apikeyNote = "Klienter skickar en Stirling API key i X-API-KEY-headern (eller Authorization: Bearer <key>). Nyckeln kopplas till den Stirling-användare som äger den – endast förberedda konton får åtkomst, och åtgärder granskas som den användaren. Hantera nycklar under Konto > API Keys."
-description = "Exponera Stirlings PDF-verktyg och AI-agenter för MCP-klienter via en OAuth-skyddad endpoint."
+apikeyNote = "Klienter skickar en Stirling API-nyckel i huvudet X-API-KEY (eller Authorization: Bearer <key>). Nyckeln kopplas till sin Stirling-användare – endast etablerade konton kommer in och åtgärder granskas som den användaren. Hantera nycklar under Konto > API-nycklar."
+description = "Exponera Stirlings PDF-verktyg och AI-agenter för MCP-klienter via en OAuth-skyddad slutpunkt."
 title = "MCP-server"
 
 [admin.settings.mcp.acceptedAudiences]
-description = "Extra token audience-värden som accepteras utöver Resource ID (kommaseparerade eller separerade med mellanslag). Lämna tomt för strikt RFC 8707. Behövs för IdP:er som inte kan skapa resursaudiences – t.ex. utfärdar Supabases OAuth-server alltid aud=authenticated."
-label = "Ytterligare accepterade audiences (valfritt)"
+description = "Ytterligare tokenmålgruppsvärden som accepteras utöver resurs-ID:t (komma- eller blankstegsseparerade). Lämna tomt för strikt RFC 8707. Krävs för IdP:er som inte kan utfärda resursmålgrupper, till exempel Supabases OAuth-server som alltid utfärdar aud=authenticated."
+label = "Ytterligare accepterade målgrupper (valfritt)"
 
 [admin.settings.mcp.allowedOps]
-description = "Om angivet exponeras ENDAST dessa operation ids (en tillåtelselista; kommaseparerade eller separerade med mellanslag). Lämna tomt för att exponera alla aktiverade verktyg utom de som blockeras nedan."
+description = "Om detta anges exponeras ENDAST dessa åtgärds-ID:n (en tillåtelselista; komma- eller blankstegsseparerad). Lämna tomt för att exponera alla aktiverade verktyg utom de som blockeras nedan."
 label = "Tillåtna verktyg"
 
 [admin.settings.mcp.blockedOps]
-description = "Operation ids att dölja från MCP (kommaseparerade eller separerade med mellanslag), t.ex. add-password remove-password. Lämna tomt för att exponera alla aktiverade verktyg."
+description = "Åtgärds-ID:n som ska döljas från MCP (komma- eller blankstegsseparerade), t.ex. add-password remove-password. Lämna tomt för att exponera alla aktiverade verktyg."
 label = "Blockerade verktyg"
 
 [admin.settings.mcp.enabled]
-description = "När av (standard) läses ingen /mcp endpoint, metadata eller MCP beans in."
-label = "Aktivera MCP Server"
+description = "När den är avstängd (standard) läses ingen /mcp-slutpunkt, metadata eller MCP-komponenter in."
+label = "Aktivera MCP-server"
 
 [admin.settings.mcp.guide]
-step1 = "Ange din OAuth issuer + resource ID ovan, spara och starta om."
-step1ApiKey = "Skapa en API key under Konto > API Keys (varje användare använder sin egen)."
-step2 = "Lägg till en i din MCP-klient"
+step1 = "Ange OAuth-utfärdaren och resurs-ID:t ovan, spara och starta om."
+step1ApiKey = "Skapa en API-nyckel under Konto > API-nycklar (varje användare använder sin egen)."
+step2 = "Lägg till en"
 step2b = "server som pekar på:"
 step3 = "Klienten hittar OAuth automatiskt från:"
-step3ApiKey = "Skicka nyckeln i en"
-step3ApiKeyb = "header (eller Authorization: Bearer <key>). Ingen OAuth eller metadataupptäckt används."
-step4 = "Godkänn inloggningen; klienten försöker igen med en token. Verktyg visas grupperade: convert, pages, misc, security, ai."
-step4ApiKey = "Verktyg visas grupperade: convert, pages, misc, security, ai – och varje anrop granskas som nyckelns ägare."
-tip = "Tips: registrera resource ID som en tillåten audience i din IdP. Testat med MCP Inspector och Claude Desktop."
-tipApiKey = "Tips: API key-läge behöver ingen extern IdP – enklast för self-host. Nyckeln kopplas till den Stirling-användare som äger den."
+step3ApiKey = "Skicka nyckeln i ett"
+step3ApiKeyb = "huvud (eller Authorization: Bearer <key>). OAuth eller metadatasökning används inte."
+step4 = "Godkänn inloggningen; klienten försöker igen med en token. Verktygen grupperas som konvertera, sidor, övrigt, säkerhet och AI."
+step4ApiKey = "Verktygen grupperas som konvertera, sidor, övrigt, säkerhet och AI – varje anrop granskas som nyckelns ägare."
+tip = "Tips: registrera resurs-ID:t som en tillåten målgrupp i din IdP. Testat med MCP Inspector och Claude Desktop."
+tipApiKey = "Tips: API-nyckelläget behöver ingen extern IdP – enklast för självhosting. Nyckeln kopplas till sin Stirling-användare."
 title = "Anslut en MCP-klient"
 
 [admin.settings.mcp.issuerUri]
-description = "Din OAuth2 auktoriseringsserver (måste publicera /.well-known/openid-configuration). Krävs när aktiverad."
-label = "OAuth-utfärdarens URL"
+description = "Din OAuth2-auktoriseringsserver (måste publicera /.well-known/openid-configuration). Krävs när funktionen är aktiverad."
+label = "URL för OAuth-utfärdare"
 
 [admin.settings.mcp.jwksUri]
-description = "Lämna tomt för att hitta den från issuer. Ange endast om din IdP tillhandahåller nycklar på en icke-standard URL."
-label = "JWKS URL (valfritt)"
-placeholder = "Hittas automatiskt från issuer"
+description = "Lämna tomt för att hitta den från utfärdaren. Ange endast om din IdP tillhandahåller nycklar på en icke-standardiserad URL."
+label = "JWKS-URL (valfritt)"
+placeholder = "Hittas automatiskt från utfärdaren"
 
 [admin.settings.mcp.mode]
 apikey = "API-nyckel (Stirling-nyckel per användare)"
-description = "OAuth behöver en extern IdP. API key använder en Stirling API key per användare (X-API-KEY) – enklast för self-host."
+description = "OAuth behöver en extern IdP. API-nyckel använder en Stirling-API-nyckel per användare (X-API-KEY) – enklast för självhosting."
 label = "Autentiseringsläge"
 oauth = "OAuth 2.1 (extern IdP)"
 
 [admin.settings.mcp.requireAccount]
-description = "Släpp endast igenom tokens om deras subject matchar en förberedd, aktiverad Stirling-användare."
+description = "Tillåt endast token om dess subjekt kopplas till en etablerad och aktiverad Stirling-användare."
 label = "Kräv ett befintligt Stirling-konto"
 
 [admin.settings.mcp.resourceId]
-description = "Denna servers offentliga /mcp URL. Tokens måste ange den i sin audience (RFC 8707), annars avvisas de."
+description = "Den här serverns publika /mcp-URL. Token måste ange den i sin målgrupp (RFC 8707), annars avvisas de."
 label = "Resurs-ID"
 
 [admin.settings.mcp.scopes]
 description = "Kräv mcp.tools.read för läsåtgärder och mcp.tools.write för skriv-/AI-åtgärder."
-label = "Tillämpa OAuth scopes"
+label = "Tvinga OAuth-scope"
 
 [admin.settings.mcp.usernameClaim]
-description = "JWT claim matchas mot ett Stirling-användarnamn (t.ex. sub, email, preferred_username)."
-label = "Användarnamnsanspråk"
+description = "JWT-claim som matchas mot ett Stirling-användarnamn (t.ex. sub, email, preferred_username)."
+label = "Claim för användarnamn"
 
+[admin.settings.plan]
 [admin.settings.plan.noData]
 message = "Denna server kunde inte nå licenstjänsten. Försök igen eller kontrollera licensnyckeln."
 title = "Ingen plandata"
@@ -1591,8 +1596,8 @@ toggle = "Har du en licensnyckel eller certifikatfil?"
 auditLogging = "<0>Granskningsloggning</0> (ENTERPRISE) - Säkerhet"
 customMetadata = "<0>Anpassade metadata</0> (PRO) - Allmänt"
 databaseConfiguration = "<0>Databaskonfiguration</0> (ENTERPRISE) - Databas"
-message = "Konfigurera autentisering och licensierade funktioner i respektive avsnitt:"
-title = "Funktionsinställningar"
+message = "Premium- och Enterprise-funktioner är nu organiserade i sina respektive sektioner:"
+title = "Premiumfunktioner uppdelade"
 
 [admin.settings.privacy]
 analytics = "Analys och spårning"
@@ -1788,9 +1793,9 @@ title = "Letar du efter SSO/SAML-inställningar?"
 
 [admin.settings.security.xFrameOptions]
 deny = "Neka (förhindrar all inramning)"
-description = "Styr om applikationen kan bäddas in i iframes"
-disabled = "Inaktiverad (ingen X-Frame-Options-header)"
-label = "X-Frame-Options"
+description = "Styr om programmet kan bäddas in i iframes"
+disabled = "Inaktiverad (inget X-Frame-Options-huvud)"
+label = "Skydd mot iframe-inbäddning (X-Frame-Options)"
 sameorigin = "Samma ursprung (tillåt inramning från samma domän)"
 
 [admin.settings.storage]
@@ -1801,6 +1806,7 @@ title = "Fillagring och delning"
 description = "Tillåt användare att lagra filer på servern."
 label = "Aktivera fillagring på servern"
 
+[admin.settings.storage.sharing]
 [admin.settings.storage.sharing.email]
 description = "Tillåt delning med e-postadresser."
 label = "Aktivera delning via e-post"
@@ -1817,6 +1823,7 @@ frontendUrlLink = "Konfigurera i systeminställningar"
 frontendUrlNote = "Kräver en Frontend URL. "
 label = "Aktivera delningslänkar"
 
+[admin.settings.storage.signing]
 [admin.settings.storage.signing.enabled]
 description = "Tillåt användare att skapa signeringssessioner med flera deltagare. Kräver att fillagring på servern är aktiverad."
 title = "Aktivera gruppsignering"
@@ -1882,6 +1889,7 @@ label = "Visa bearbetningsfel (Kanal)"
 description = "Undertryck svaret \"inget giltigt dokument\" för kanaluppladdningar."
 label = "Visa \"Inget giltigt dokument\" (Kanal)"
 
+[admin.settings.telegram.feedback.general]
 [admin.settings.telegram.feedback.general.enabled]
 description = "Styr om boten överhuvudtaget skickar feedbackmeddelanden."
 label = "Aktivera feedback"
@@ -1936,7 +1944,7 @@ welcome = "Välkommen till <strong>Admin-rundturen</strong>! Låt oss utforska d
 wrapUp = "Det var administratörsturen! Du har sett enterprise-funktionerna som gör Stirling PDF till en kraftfull, anpassningsbar lösning för organisationer. Du kan spela upp den igen när som helst – öppna bara <strong>Inställningar</strong> och hitta den här i avsnittet <strong>Turer</strong> under Hjälp."
 
 [adminUserSettings]
-admin = "Admin"
+admin = "Administratör"
 title = "Användarhanteringsinställningar"
 
 [alphabetOptions]
@@ -1954,7 +1962,7 @@ paragraph2 = "Var god aktivera analyser för att hjälpa Stirling-PDF att växa 
 title = "Vill du hjälpa till att göra Stirling PDF bättre?"
 
 [annotate]
-tags = "annotera,markera,rita,uppmärkning,kommentar,anteckningar,granska,rödmarkering,feedback,uppmärkningsverktyg,klisterlappar,former,pilar,textruta,frihand"
+tags = "annotera,markera,rita,uppmärkning,kommentar,anteckningar,granskning,ändringsmarkering,återkoppling,uppmärkningsverktyg,notislappar,former,pilar,textruta,friform"
 
 [annotation]
 alignCenter = "Centrera"
@@ -2034,7 +2042,7 @@ width = "Bredd"
 description = "En gratis, privat PDF-redigerare som du kan köra på valfri infrastruktur."
 
 [appBanner]
-dismiss = "Avvisa"
+dismiss = "Stäng"
 
 [attachments]
 addAttachments = "Lägg till bilagor..."
@@ -2052,8 +2060,8 @@ remove = "Ta bort bilaga"
 rename = "Byt namn på bilaga"
 restore = "Ångra radering"
 saveChanges = "Spara ändringar ({{count}})"
-tags = "bilagor,lägg till,ta bort,bädda in,fil,extrahera,hantera"
-title = "Hantera bilagor"
+tags = "bädda in,bifoga,fil,bilaga,bilagor"
+title = "Lägg till bilagor"
 
 [attachments.badges]
 deleted = "RADERAD"
@@ -2236,6 +2244,7 @@ title = "Resultat för automatisk namnändring"
 [auto-rename.settings]
 title = "Om"
 
+[auto-rename.tooltip]
 [auto-rename.tooltip.description]
 title = "Vad det gör"
 
@@ -2298,12 +2307,12 @@ desc = "Bygg arbetsflöden i flera steg genom att kedja samman PDF-verktyg. Idea
 export = "Exportera"
 exportForFolderScanning = "Exportera för mappskanning"
 import = "Importera"
-importPartialSuccess_one = "Importerad med {{count}} omappad åtgärd: {{ops}}"
-importPartialSuccess_other = "Importerad med {{count}} omappade åtgärder: {{ops}}"
+importPartialSuccess_one = "Importerades med {{count}} ej mappad åtgärd: {{ops}}"
+importPartialSuccess_other = "Importerades med {{count}} ej mappade åtgärder: {{ops}}"
 importSuccess = "Importerad automatisering: {{name}}"
 invalidStep = "Ogiltigt steg"
 reviewTitle = "Resultat av automatisering"
-tags = "workflow,sekvens,automation,automatisera,batch,batchbearbetning,pipeline,kedja,flersteg,återkommande,schemalagd,automatisk,bearbeta flera,massåtgärder"
+tags = "arbetsflöde,sekvens,automatisering,automatisera,gruppvis,batch,gruppbearbetning,pipeline,kedja,flersteg,återkommande,schemalagd,automatisk,bearbeta flera,massåtgärder"
 title = "Automatisera"
 
 [automate.config]
@@ -2353,8 +2362,8 @@ label = "Öppna meny för {{title}}"
 [automate.importModal]
 cancel = "Avbryt"
 confirm = "Importera"
-detectedAutomation = "Automate JSON"
-detectedFolderScan = "Mappskanning JSON"
+detectedAutomation = "JSON för automatisering"
+detectedFolderScan = "JSON för mappskanning"
 dropHint = "Släpp JSON här eller klicka för att välja en fil"
 dropSubhint = "Både Automate- och Folder Scanning-konfigurationer accepteras"
 dropzoneAriaLabel = "Släpp en automations-JSON-fil här"
@@ -2392,6 +2401,7 @@ steps_one = "{{count}} steg"
 steps_other = "{{count}} steg"
 unnamed = "Namnlös automatisering"
 
+[automation]
 [automation.suggested]
 emailPreparation = "Förberedelse för e-post"
 emailPreparationDesc = "Optimerar PDF:er för e-postdistribution genom att komprimera filer, dela upp stora dokument i delar om 20 MB och ta bort metadata av integritetsskäl."
@@ -2406,7 +2416,7 @@ secureWorkflowDesc = "Säkrar PDF-dokument genom att ta bort potentiellt skadlig
 
 [autoRename]
 description = "Detta verktyg byter automatiskt namn på PDF-filer baserat på deras innehåll. Det analyserar dokumentet för att hitta den mest lämpliga titeln från texten."
-tags = "auto-detektera,rubrikbaserad,organisera,etikettera om,byt namn automatiskt,automatisk namnändring,smart namnändring,byt namn efter innehåll,filnamn,filnamngivning,upptäck titel"
+tags = "autodetektera,rubrikbaserad,organisera,etikettera om,byt namn automatiskt,automatiskt namnbyte,smart namnbyte,byt namn efter innehåll,filnamn,namnge fil,identifiera titel"
 
 [autoRotate]
 submit = "Rotera automatiskt"
@@ -2457,6 +2467,7 @@ title = "Resultat för automatisk rotering"
 [autoRotate.settings]
 title = "Inställningar"
 
+[autoRotate.tooltip]
 [autoRotate.tooltip.confidenceThreshold]
 text = "Hur säker kontrollen måste vara innan en sida roteras. Sänk den för att rotera fler sidor, höj den för att lämna fler sidor orörda."
 title = "Konfidensgräns"
@@ -2579,6 +2590,7 @@ tooltip = "För arabiska, hebreiska eller andra språk med höger-till-vänster"
 [bookletImposition.settings]
 title = "Inställningar"
 
+[bookletImposition.tooltip]
 [bookletImposition.tooltip.advanced]
 bullet1 = "Höger-till-vänster-bindning: För arabiska, hebreiska eller RTL-språk"
 bullet2 = "Kanter: Visar skärlinjer för trimning"
@@ -2759,6 +2771,7 @@ visible = "Synlig"
 [certSign.appearance.options]
 title = "Signaturdetaljer"
 
+[certSign.appearance.tooltip]
 [certSign.appearance.tooltip.header]
 title = "Om signaturutseende"
 
@@ -2780,6 +2793,8 @@ title = "Synliga signaturer"
 [certSign.certFiles]
 stepTitle = "Certifikatfiler"
 
+[certSign.certType]
+[certSign.certType.tooltip]
 [certSign.certType.tooltip.convert]
 text = "Konvertera din fil till ett Java-nyckellager (.jks) med keytool och välj sedan JKS."
 title = "Nyckeln finns inte med?"
@@ -2802,6 +2817,7 @@ title = "Vilket alternativ ska jag använda?"
 [certSign.certTypeStep]
 stepTitle = "Certifikatformat"
 
+[certSign.collab]
 [certSign.collab.addParticipants]
 add_one = "Lägg till {{count}} deltagare"
 add_other = "Lägg till {{count}} deltagare"
@@ -2819,7 +2835,7 @@ included = "Inkluderade signaturer"
 requiresSignature = "Minst en deltagare måste signera innan du kan slutföra."
 
 [certSign.collab.participant]
-certInvalid = "✗ {{error}}"
+certInvalid = "✗ Ogiltigt certifikat: {{error}}"
 certInvalidFallback = "Ogiltigt certifikat"
 certNetworkError = "Kunde inte validera certifikat"
 certValid = "✓ Giltigt certifikat"
@@ -2912,8 +2928,8 @@ certInvalidFallback = "Ogiltigt certifikat"
 certNetworkError = "Kunde inte validera certifikat"
 certValidating = "Validerar certifikat..."
 certValidUntil = "Certifikatet giltigt till {{date}}"
-description_one = "{{count}} synlig markering är klar. Välj ett certifikat för att slutföra signeringen."
-description_other = "{{count}} synliga markeringar är klara. Välj ett certifikat för att slutföra signeringen."
+description_one = "Du har placerat {{count}} signatur. Välj certifikat för att slutföra signeringen."
+description_other = "Du har placerat {{count}} signaturer. Välj certifikat för att slutföra signeringen."
 description_zero = "Ditt certifikat signerar dokumentet utan synliga markeringar."
 details = "Signeringsuppgifter (valfritt)"
 format = "Certifikatformat"
@@ -3022,6 +3038,8 @@ pdfNotReadyDesc = "Den signerade PDF:en genereras. Försök igen om en stund."
 results = "Signerad PDF"
 submit = "Signera PDF"
 
+[certSign.signMode]
+[certSign.signMode.tooltip]
 [certSign.signMode.tooltip.auto]
 text = "Signerar med ett <b>självsignerat</b> servercertifikat. Samma <b>manipuleringsspårande sigill</b> och <b>revisionsspår</b>; visas normalt som <b>Unverified</b> i visningsprogram."
 title = "Auto – noll konfiguration, omedelbar systemstämpel"
@@ -3064,7 +3082,7 @@ title = "Ändra inloggningsuppgifter"
 [changeMetadata]
 filenamePrefix = "metadata"
 submit = "Ändra"
-tags = "redigera,ändra,uppdatera,metadata,egenskaper,dokumentegenskaper,författare,titel,ämne,nyckelord,skapare,producent,info,dokumentinfo,filegenskaper"
+tags = "redigera,ändra,uppdatera,metadata,egenskaper,dokumentegenskaper,författare,titel,ämne,nyckelord,skapare,producent,info,dokumentinformation,filegenskaper"
 
 [changeMetadata.advanced]
 title = "Avancerade alternativ"
@@ -3127,6 +3145,7 @@ placeholder = "Dokumentämne"
 label = "Titel"
 placeholder = "Dokumenttitel"
 
+[changeMetadata.tooltip]
 [changeMetadata.tooltip.advanced]
 title = "Avancerade alternativ"
 
@@ -3180,6 +3199,7 @@ title = "Ändra behörigheter"
 failed = "Ett fel uppstod vid ändring av PDF-behörigheter."
 readFailed = "Kunde inte läsa denna PDF:s aktuella behörigheter. Ange begränsningarna manuellt innan du tillämpar ändringar."
 
+[changePermissions.permissions]
 [changePermissions.permissions.preventAssembly]
 label = "Förhindra sammansättning av dokument"
 
@@ -3207,6 +3227,7 @@ label = "Förhindra utskrift av olika format"
 [changePermissions.results]
 title = "Modifierade PDF:er"
 
+[changePermissions.tooltip]
 [changePermissions.tooltip.description]
 text = "Ändrar dokumentbehörigheter och tillåter/avvisar åtkomst till olika funktioner i PDF-läsare."
 
@@ -3216,6 +3237,7 @@ title = "Ändra behörigheter"
 [changePermissions.tooltip.warning]
 text = "För att göra dessa behörigheter oföränderliga, använd verktyget Lägg till lösenord för att ange ett ägarlösenord."
 
+[chat]
 [chat.actions]
 copy = "Kopiera meddelande"
 
@@ -3228,7 +3250,7 @@ title = "Stirling Agent"
 clearChat = "Rensa chatt"
 
 [chat.input]
-disclaimer = "AI kan göra misstag. Kontrollera resultatet innan du delar det."
+disclaimer = "AI kan göra misstag. Kontrollera alltid resultatet innan du delar det."
 send = "Skicka meddelande"
 
 [chat.progress]
@@ -3240,11 +3262,11 @@ executing_tool_single = "Kör {{tool}}..."
 executing_tool_step = "Kör {{tool}} (steg {{step}} av {{total}})..."
 extracting_content = "Extraherar innehåll från dina dokument..."
 processing = "Bearbetar extraherat innehåll..."
-ranForMinutes_one = "Körde i 1 minut"
-ranForMinutes_other = "Körde i {{count}} minuter"
-ranForMinutesSeconds = "Körde i {{minutes}} min, {{seconds}} sek"
-ranForSeconds_one = "Körde i 1 sekund"
-ranForSeconds_other = "Körde i {{count}} sekunder"
+ranForMinutes_one = "Kördes i 1 minut"
+ranForMinutes_other = "Kördes i {{count}} minuter"
+ranForMinutesSeconds = "Kördes i {{minutes}} min, {{seconds}} sek"
+ranForSeconds_one = "Kördes i 1 sekund"
+ranForSeconds_other = "Kördes i {{count}} sekunder"
 thinking = "Tänker..."
 whole_doc_compression_round = "Sammanställer anteckningar..."
 whole_doc_read_done = "Läste klart dokumentet..."
@@ -3270,8 +3292,9 @@ need_clarification = "Kan du förtydliga din begäran?"
 not_found = "Jag kunde inte hitta den begärda informationen."
 processing = "Bearbetar ({{outcome}})..."
 unsupported_capability = "Funktionen stöds inte: {{capability}}"
-usage_limit_reached = "Du har nått din användningsgräns. Kontrollera dina planalternativ för att fortsätta."
+usage_limit_reached = "Du har nått användningsgränsen. Se abonnemangsalternativen för att fortsätta."
 
+[classification]
 [classification.families]
 correspondence = "Korrespondens"
 education = "Utbildning"
@@ -3630,6 +3653,7 @@ picking = "Letar efter de {{count}} senaste PDF-filerna..."
 [cloudBadge]
 tooltip = "Denna åtgärd kommer att använda dina molnkrediter"
 
+[color]
 [color.eyeDropper]
 tooltip = "Välj färg från skärmen"
 
@@ -3719,7 +3743,7 @@ title = "Dessa PDF:er ser mycket olika ut"
 
 [compare.edited]
 label = "Redigerad PDF"
-placeholder = "Välj den redigerade PDF:en"
+placeholder = "Välj den redigerade PDF-filen"
 selectBaseFirst = "Välj ursprunglig PDF först"
 
 [compare.error]
@@ -3728,6 +3752,7 @@ generic = "Kan inte jämföra dessa filer."
 selectRequired = "Välj ett original- och ett redigerat dokument."
 title = "Jämförelse misslyckades"
 
+[compare.large]
 [compare.large.file]
 message = "En eller båda de angivna dokumenten är för stora att bearbeta"
 
@@ -3735,12 +3760,13 @@ message = "En eller båda de angivna dokumenten är för stora att bearbeta"
 body = "Dessa PDF:er överstiger tillsammans 2 000 sidor. Bearbetning kan ta flera minuter."
 title = "Stor jämförelse pågår"
 
+[compare.no]
 [compare.no.text]
 message = "En eller båda de valda PDF:erna innehåller ingen textinnehåll. Välj PDF:er med text för jämförelse."
 
 [compare.original]
 label = "Original-PDF"
-placeholder = "Välj original-PDF:en"
+placeholder = "Välj den ursprungliga PDF-filen"
 
 [compare.pixel]
 base = "Original"
@@ -3800,13 +3826,14 @@ label = "Byt"
 unlinkedBody = "Tips: Pil upp/ned rullar båda panelerna; panorering flyttar bara den aktiva panelen."
 unlinkedTitle = "Oberoende rullning och panorering aktiverad"
 
+[compare.too]
 [compare.too.dissimilar]
 message = "Dessa dokument verkar vara mycket olika. Jämförelsen stoppades för att spara tid."
 
 [compress]
 desc = "Komprimera PDF:er för att minska filstorleken."
 submit = "Komprimera"
-tags = "krymp,minska,optimera,komprimera,mindre,minska storlek,filstorlek,reducera storlek,minimera,gör mindre,minska storlek,optimera storlek"
+tags = "förminska,minska,optimera,komprimera,mindre,filstorlek,minska storlek,minimera,gör mindre,optimera storlek"
 title = "Komprimera"
 
 [compress.compressionLevel]
@@ -3850,6 +3877,7 @@ desiredSizePlaceholder = "Ange storlek"
 desiredSizeUnit = "Storleksenhet"
 title = "Inställningar"
 
+[compress.tooltip]
 [compress.tooltip.description]
 text = "Komprimering är ett enkelt sätt att minska filstorleken. Välj Filstorlek för att ange en målstorlek så justerar vi kvaliteten åt dig. Välj Kvalitet för att ställa in komprimeringsstyrkan manuellt."
 title = "Beskrivning"
@@ -3880,6 +3908,7 @@ planDescription = "Din plan, krediter och utgiftsgräns samt fakturorna bakom de
 team = "Team"
 teamDescription = "Vilka som delar den här arbetsytan och inbjudningar som fortfarande väntar på svar."
 
+[config.account]
 [config.account.overview]
 confirmDelete = "Ta bort mitt konto"
 deleteAccount = "Ta bort konto"
@@ -3974,26 +4003,26 @@ title = "Uppdatera API-nycklar"
 warning = "⚠️ Varning: Denna åtgärd kommer att generera nya API-nycklar och göra dina tidigare nycklar ogiltiga."
 
 [config.mcp]
-description = "Model Context Protocol (MCP) låter AI-assistenter som Claude använda dina Stirling PDF-verktyg direkt. Anslut en klient en gång så kan din assistent konvertera, redigera, säkra och bearbeta dokument åt dig."
+description = "Model Context Protocol (MCP) låter AI-assistenter som Claude använda dina Stirling PDF-verktyg direkt. Anslut en klient en gång så kan assistenten konvertera, redigera, skydda och bearbeta dokument åt dig."
 guestInfo = "Gästanvändare kan inte ansluta MCP-klienter. Skapa ett konto för att använda MCP-servern och låta din AI-assistent köra Stirling PDF-verktyg åt dig."
 navLabel = "MCP-server"
-tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
-viewApiKeys = "Visa API keys"
+tip = "Varje åtgärd assistenten kör utförs som ditt konto och räknas mot din användning, precis som när du använder Stirling PDF direkt."
+viewApiKeys = "Visa API-nycklar"
 
 [config.mcp.copy]
 configLabel = "Konfiguration"
 copied = "Kopierad"
 copy = "Kopiera"
-endpointLabel = "Endpoint-URL"
+endpointLabel = "Slutpunkts-URL"
 tooltip = "Kopiera {{label}}"
 tooltipCopied = "{{label}} kopierad"
 
 [config.mcp.endpoint]
-label = "Din MCP endpoint"
+label = "Din MCP-slutpunkt"
 
 [config.mcp.setup]
 addTo = "Lägg till i"
-hint = "Välj din klient, klistra in kodsnutten i filen som visas och starta sedan om den. Du loggar in med ditt Stirling-konto vid första användningen – inga nycklar att kopiera."
+hint = "Välj klient, klistra in kodavsnittet i den visade filen och starta sedan om den. Vid första användningen loggar du in med ditt Stirling-konto – inga nycklar behöver kopieras."
 title = "Anslut din AI-assistent"
 
 [config.overview]
@@ -4068,8 +4097,8 @@ color = "Färg"
 colorType = "Färgtyp"
 combineImages = "Kombinera bilder"
 combineImagesDescription = "Kombinera alla bilder till en PDF, eller skapa separata PDF:er för varje bild"
-combineSvgs = "Kombinera SVG:er till en enda PDF"
-combineSvgsDescription = "Kombinera alla SVG-filer till en PDF med flera sidor, eller skapa separata PDF:er för varje SVG"
+combineSvgs = "Kombinera SVG-filer till en PDF"
+combineSvgsDescription = "Kombinera alla SVG-filer till en PDF med flera sidor eller skapa separata PDF-filer för varje SVG"
 conversionResults = "Konverteringsresultat"
 convertFiles = "Konvertera filer"
 convertFrom = "Konvertera från"
@@ -4104,24 +4133,24 @@ pdfOptions = "PDF‑alternativ"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
 pdfToEpub = "PDF → EPUB"
-pdfUaAltTextNotice = "Bilder behöver en skriftlig beskrivning innan ett dokument kan certifieras. Beskrivningar genereras aldrig automatiskt, eftersom en påhittad beskrivning klarar kontrollen men inte säger något till en skärmläsaranvändare. Alla bilder som lämnas utan beskrivning rapporteras, och filen kommer tillbaka taggad men inte certifierad."
-pdfUaAltTextScanFailed = "Bilderna kunde inte listas. Konvertera ändå så rapporterar svaret vad som saknas."
-pdfUaAltTextSingleFileOnly = "Beskrivningar hör till ett dokument: en bild identifieras av sin position, vilket är en annan bild i varje fil. Konvertera dessa {{fileCount}} filer för att tagga dem, och konvertera sedan en i taget för att beskriva dess bilder."
-pdfUaEmbedFonts = "Bädda in saknade teckensnitt"
-pdfUaEmbedFontsHelp = "PDF/UA kräver att varje teckensnitt är inbäddat. Att stänga av detta går snabbare men förhindrar vanligtvis överensstämmelse."
+pdfUaAltTextNotice = "Bilder behöver en skriven beskrivning innan ett dokument kan certifieras. Beskrivningar skapas aldrig automatiskt, eftersom en påhittad beskrivning kan godkännas av kontrollen utan att säga en skärmläsaranvändare något. Varje bild utan beskrivning rapporteras och filen kommer tillbaka taggad men inte certifierad."
+pdfUaAltTextScanFailed = "Bilderna kunde inte listas. Konvertera ändå så visar svaret vad som saknas."
+pdfUaAltTextSingleFileOnly = "Beskrivningar hör till ett dokument: en bild identifieras av sin position, som skiljer sig i varje fil. Konvertera dessa {{fileCount}} filer för att tagga dem och konvertera sedan en fil i taget för att beskriva dess bilder."
+pdfUaEmbedFonts = "Bädda in saknade typsnitt"
+pdfUaEmbedFontsHelp = "PDF/UA kräver att varje typsnitt bäddas in. Att stänga av detta går snabbare men förhindrar vanligtvis överensstämmelse."
 pdfUaFigureLabel = "Sida {{page}} {{kind}}"
-pdfUaFigurePlaceholder = "Vad den här bilden berättar för läsaren"
+pdfUaFigurePlaceholder = "Vad bilden berättar för läsaren"
 pdfUaFindImages = "Hitta bilder som behöver en beskrivning"
 pdfUaLanguage = "Dokumentspråk"
-pdfUaLanguageHelp = "En BCP-47-tagg som en-GB. Används endast när dokumentet inte redan anger sitt eget språk."
+pdfUaLanguageHelp = "En BCP-47-tagg som sv-SE. Används endast om dokumentet inte redan anger ett eget språk."
 pdfUaNoImagesNeedingText = "Ingen bild saknar beskrivning."
 pdfUaOptions = "PDF/UA-alternativ"
 pdfUaOverrideLanguage = "Ersätt dokumentets eget språk"
-pdfUaOverrideLanguageHelp = "Markera detta endast om språket ovan är korrekt och dokumentets eget är fel. Att märka om ett dokument till ett språk det inte är skrivet på gör en skärmläsare obegriplig."
+pdfUaOverrideLanguageHelp = "Kryssa bara i detta om språket ovan är rätt och dokumentets eget är fel. Att märka om ett dokument till ett språk det inte är skrivet på gör det obegripligt i en skärmläsare."
 pdfUaProfile = "Överensstämmelsenivå"
-pdfUaSignatureWarning = "Denna PDF är digitalt signerad. Taggning skriver om sidinnehållet som signaturen omfattar, så signaturen kommer inte längre att verifieras. Konvertera först och signera sedan om."
+pdfUaSignatureWarning = "Den här PDF-filen är digitalt signerad. Taggning skriver om sidinnehållet som signaturen omfattar, så signaturen slutar verifieras. Konvertera först och signera sedan på nytt."
 pdfUaTitle = "Dokumenttitel"
-pdfUaTitleHelp = "Visas av en läsare i stället för filnamnet. Om tomt används den första rubriken."
+pdfUaTitleHelp = "Visas av en läsare i stället för filnamnet. Om den lämnas tom används den första rubriken."
 selectSourceFormatFirst = "Välj ett källformat först"
 settings = "Inställningar"
 single = "En"
@@ -4129,11 +4158,11 @@ sourceFormatPlaceholder = "Källformat"
 stirlingOfficeConvert = "Använd Stirling Office Convert (beta)"
 stirlingOfficeConvertDescription = "Bättre, snabbare konverteringar med mindre minnesanvändning. Stäng av för att använda standardkonverteraren."
 strictMode = "Strikt läge"
-strictModeDesc = "Fel om konverteringen inte är perfekt (använder VeraPDF-verifiering)"
+strictModeDesc = "Ge fel om konverteringen inte är perfekt (använder VeraPDF-verifiering)"
 svgPdfOptions = "Alternativ för SVG till PDF"
 svgToPdf = "SVG → PDF"
-svgVectorNote = "SVG-filer renderas som vektorgrafik för skarp utdata i valfri upplösning. Dimensioner från SVG avgör PDF-sidstorleken."
-tags = "omvandla,ändra,konvertera,PDF till Word,PDF till Excel,PDF till bild,Word till PDF,Excel till PDF,PowerPoint till PDF,HTML till PDF,export,import,filkonvertering,formatändring,spara som"
+svgVectorNote = "SVG-filer återges som vektorgrafik för skarp utdata vid alla upplösningar. Dimensionerna i SVG-filen avgör PDF-sidans storlek."
+tags = "omvandla,ändra,konvertera,PDF till Word,PDF till Excel,PDF till bild,Word till PDF,Excel till PDF,PowerPoint till PDF,HTML till PDF,exportera,importera,filkonvertering,formatändring,spara som"
 targetFormatPlaceholder = "Målformat"
 title = "Konvertera"
 webOptions = "Webb till PDF‑alternativ"
@@ -4177,6 +4206,7 @@ any = "Valfri"
 images = "Bilder"
 msgOutlook = "MSG (Outlook)"
 
+[cookieBanner]
 [cookieBanner.popUp]
 acceptAllBtn = "Okej"
 acceptNecessaryBtn = "Nej tack"
@@ -4185,7 +4215,7 @@ title = "Hur vi använder cookies"
 
 [cookieBanner.popUp.description]
 1 = "Vi använder cookies och andra tekniker för att få Stirling PDF att fungera bättre för dig – hjälpa oss att förbättra våra verktyg och fortsätta bygga funktioner du kommer att uppskatta."
-2 = "Om du hellre avstår aktiverar ett klick på 'Nej tack' endast de nödvändiga cookies som behövs för att allt ska fungera smidigt."
+2 = "Om du hellre avstår aktiverar ”Nej tack” bara de nödvändiga cookies som krävs för att allt ska fungera smidigt."
 
 [cookieBanner.preferencesModal]
 acceptAllBtn = "Acceptera alla"
@@ -4206,7 +4236,7 @@ title = "Analys"
 3 = "Din integritet och ditt förtroende är kärnan i det vi gör."
 
 [cookieBanner.preferencesModal.necessary]
-description = "Dessa cookies är nödvändiga för att webbplatsen ska fungera korrekt. De möjliggör kärnfunktioner som att ställa in dina integritetsinställningar, logga in och fylla i formulär – därför kan de inte stängas av."
+description = "De här cookies är nödvändiga för att webbplatsen ska fungera. De möjliggör grundläggande funktioner som integritetsinställningar, inloggning och formulär, och kan därför inte stängas av."
 
 [cookieBanner.preferencesModal.necessary.title]
 1 = "Absolut nödvändiga cookies"
@@ -4230,6 +4260,7 @@ viewerModeHint = "En portfölj behöver 2 eller fler filer. Gå till filredigera
 [createPortfolio.error]
 failed = "Ett fel inträffade när PDF-portföljen skulle skapas."
 
+[createPortfolio.tooltip]
 [createPortfolio.tooltip.description]
 title = "Vad den gör"
 
@@ -4318,6 +4349,7 @@ title = "Inställningar öppnade"
 message = "Stirling PDF är nu din standard-PDF-redigerare"
 title = "Standardapp angiven"
 
+[desktop]
 [desktop.fileSave]
 saveFilesTitle_one = "Spara {{count}} fil"
 saveFilesTitle_other = "Spara {{count}} filer"
@@ -4388,16 +4420,16 @@ message = "Stirling-PDF har inte behörighet att uppdatera sig själv på den h�
 title = "Administratörsbehörighet krävs"
 
 [devAirgapped]
-tags = "air-gapped,offline,isolerad,inget internet,frånkopplad,säker,nätverksisolering,fristående"
+tags = "luftgap,offline,isolerad,utan internet,frånkopplad,säker,nätverksisolering,fristående"
 
 [devApi]
-tags = "API,utveckling,dokumentation,utvecklare,REST,integration,endpoints,programmatisk,automation,scripting"
+tags = "API,utveckling,dokumentation,utvecklare,REST,integration,slutpunkter,programmatisk,automation,skriptning"
 
 [devFolderScanning]
-tags = "automation,mapp,skanning,övervaka mapp,hot folder,automatisk bearbetning,batch,övervaka mapp,autobearbeta,mappövervakning"
+tags = "automation,mapp,skanning,bevakad mapp,hot folder,automatisk bearbetning,batch,övervaka mapp,automatisk process,mappbevakning"
 
 [devSsoGuide]
-tags = "SSO,single sign-on,autentisering,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
+tags = "SSO,enkel inloggning,autentisering,SAML,OAuth,OIDC,inloggning,enterprise,identitetsleverantör,IdP"
 
 [dropdownList]
 noItems = "Inga objekt tillgängliga"
@@ -4413,7 +4445,7 @@ editSecretValue = "Redigera hemligt värde"
 
 [editTableOfContents]
 submit = "Tillämpa innehållsförteckning"
-tags = "bokmärken,innehåll,redigera,innehållsförteckning,TOC,outline,navigering,kapitel,avsnitt,lägg till bokmärken,redigera bokmärken,PDF outline"
+tags = "bokmärken,innehåll,redigera,innehållsförteckning,TOC,disposition,navigering,kapitel,avsnitt,lägg till bokmärken,redigera bokmärken,PDF-disposition"
 workbenchLabel = "Dispositionsarbetsyta"
 
 [editTableOfContents.actions]
@@ -4635,7 +4667,7 @@ tags = "extrahera"
 
 [extractPages]
 submit = "Extrahera sidor"
-tags = "dra ut,välj,kopiera,extrahera,extrahera sidor,hämta sidor,dra ut,spara sidor,exportera sidor,kopiera sidor,välj sidor,specifika sidor"
+tags = "hämta,välj,kopiera,extrahera,extrahera sidor,hämta sidor,ta ut,spara sidor,exportera sidor,kopiera sidor,välj sidor,specifika sidor"
 title = "Extrahera sidor"
 
 [extractPages.error]
@@ -4791,9 +4823,9 @@ addFiles = "Lägg till filer"
 addingFiles = "Lägger till filer…"
 collapse = "Fäll ihop sidofält"
 customizeGroups = "Anpassa grupper"
-dataLostBody = "Den här webbläsaren har förlorat innehållet i denna fil. Ladda upp den igen för att fortsätta arbeta med den."
-dataLostTitle = "Fildata är otillgängliga"
-downloadFailed = "Nedladdning misslyckades"
+dataLostBody = "Webbläsaren har förlorat filens innehåll. Ladda upp den igen för att fortsätta arbeta med den."
+dataLostTitle = "Fildata är inte tillgänglig"
+downloadFailed = "Nedladdningen misslyckades"
 dropHint = "Öppna filer för att komma igång"
 duplicateFailed = "Kunde inte duplicera filen"
 expand = "Expandera sidofält"
@@ -4813,9 +4845,9 @@ viewAll = "Visa alla {{count}} filer"
 
 [fileSidebar.fileItem]
 closeViewer = "Stäng visare"
-dataLost = "Data förlorade"
-dataLostTooltip = "Den här webbläsaren har förlorat innehållet i denna fil. Ladda upp den igen för att fortsätta arbeta med den."
-delete = "Radera"
+dataLost = "Data har gått förlorade"
+dataLostTooltip = "Webbläsaren har förlorat filens innehåll. Ladda upp den igen för att fortsätta arbeta med den."
+delete = "Ta bort"
 duplicate = "Duplicera"
 moreActions = "Fler åtgärder"
 openInViewer = "Öppna i visare"
@@ -4860,26 +4892,26 @@ closeDetails = "Stäng detaljer"
 create = "Skapa"
 cycleBlocked = "Kan inte flytta en mapp till en av sina egna undermappar."
 delete = "Ta bort"
-deleteFilesChoiceBody = "Vissa av dessa filer är sparade både på den här enheten och i molnet. Var ska de raderas från?"
-deleteFilesCloudBody_one = "Radera 1 fil från molnet? Detta kan inte ångras."
-deleteFilesCloudBody_other = "Radera {{count}} filer från molnet? Detta kan inte ångras."
-deleteFilesError = "Kunde inte radera. Försök igen."
-deleteFilesLocalBody_one = "Radera 1 fil från den här enheten? Detta kan inte ångras."
-deleteFilesLocalBody_other = "Radera {{count}} filer från den här enheten? Detta kan inte ångras."
-deleteFilesTitle_one = "Radera 1 fil?"
-deleteFilesTitle_other = "Radera {{count}} filer?"
+deleteFilesChoiceBody = "Vissa av dessa filer sparas både på den här enheten och i molnet. Var ska de tas bort?"
+deleteFilesCloudBody_one = "Ta bort 1 fil från molnet? Detta kan inte ångras."
+deleteFilesCloudBody_other = "Ta bort {{count}} filer från molnet? Detta kan inte ångras."
+deleteFilesError = "Kunde inte ta bort. Försök igen."
+deleteFilesLocalBody_one = "Ta bort 1 fil från den här enheten? Detta kan inte ångras."
+deleteFilesLocalBody_other = "Ta bort {{count}} filer från den här enheten? Detta kan inte ångras."
+deleteFilesTitle_one = "Ta bort 1 fil?"
+deleteFilesTitle_other = "Ta bort {{count}} filer?"
 deleteFolder = "Ta bort mapp"
 deleteFolderBody = "Ta bort mappen \"{{name}}\"?"
-deleteFolderContents_one = "Radera även {{count}} fil i mappen"
-deleteFolderContents_other = "Radera även {{count}} filer i mappen"
+deleteFolderContents_one = "Ta även bort {{count}} fil i mappen"
+deleteFolderContents_other = "Ta även bort {{count}} filer i mappen"
 deleteFolderContentsWarning = "Filerna tas bort permanent och kan inte återställas."
 deleteFolderError = "Kunde inte ta bort mappen. Försök igen."
 deleteFolderKeepHint = "Filer inuti flyttas till Stirling-biblioteket."
 deleteFolderTitle = "Ta bort mapp?"
 deselectAll = "Rensa markering"
 details = "Detaljer"
-detailsCount_one = "{{count}} fil vald"
-detailsCount_other = "{{count}} filer valda"
+detailsCount_one = "{{count}} fil markerad"
+detailsCount_other = "{{count}} filer markerade"
 dismissError = "Avfärda"
 download = "Ladda ner"
 downloadAll = "Ladda ner alla"
@@ -4889,7 +4921,7 @@ dropOverlaySub = "Filer visas i Senaste. Organisera dem i mappar när som helst.
 dropOverlaySubFolder = "De läggs till i den här mappen."
 duplicate = "Duplicera"
 file = "Fil"
-fileInfo = "Filinfo"
+fileInfo = "Filinformation"
 fileMenu = "Filåtgärder"
 folder = "Mapp"
 folderItems_one = "{{count}} objekt"
@@ -4907,8 +4939,8 @@ moveIntoMountFailed_one = "{{count}} fil kunde inte skrivas till mappen."
 moveIntoMountFailed_other = "{{count}} filer kunde inte skrivas till mappen."
 moveIntoVirtualCloudSkipped_one = "{{count}} serverfil lämnades kvar. Serverfiler kan inte finnas i mappar som bara finns i webbläsaren."
 moveIntoVirtualCloudSkipped_other = "{{count}} serverfiler lämnades kvar. Serverfiler kan inte finnas i mappar som bara finns i webbläsaren."
-moveSkippedRemote_one = "{{count}} fil kunde inte flyttas på servern (ingen behörighet eller redan raderad)."
-moveSkippedRemote_other = "{{count}} filer kunde inte flyttas på servern (ingen behörighet eller redan raderade)."
+moveSkippedRemote_one = "{{count}} fil kunde inte flyttas på servern (ingen behörighet eller redan borttagen)."
+moveSkippedRemote_other = "{{count}} filer kunde inte flyttas på servern (ingen behörighet eller redan borttagna)."
 moveTo = "Flytta till…"
 newFolder = "Ny mapp"
 newFolderStorageDisabled = "Servermapplagring är inte aktiverad."
@@ -4949,11 +4981,11 @@ uploadFromMobile = "Ladda upp från mobil"
 versionActions = "Versionsåtgärder"
 versionCollapse = "Fäll ihop mellanliggande versioner"
 versionHistory = "Versionshistorik"
-versionHistoryEmpty = "Denna fil har inga tidigare versioner."
+versionHistoryEmpty = "Den här filen har inga tidigare versioner."
 versionOrigin = "Ursprunglig uppladdning"
 versionsCount = "{{count}} versioner"
 versionShowHidden = "Visa {{count}} tidigare versioner"
-viewVersionHistory = "Versionsresa ({{count}})"
+viewVersionHistory = "Versionshistorik ({{count}})"
 
 [filesPage.appearance]
 colour = "Färg"
@@ -4973,11 +5005,11 @@ type = "Typ"
 
 [filesPage.deleteScope]
 cloud = "Endast molnet"
-cloudHint = "Raderar från servern. En kopia finns kvar på den här enheten."
+cloudHint = "Tar bort från servern. En kopia finns kvar på enheten."
 device = "Endast den här enheten"
 deviceHint = "Tar bort den lokala kopian. Molnkopian behålls."
 everywhere = "Överallt"
-everywhereHint = "Raderar filen från den här enheten och molnet."
+everywhereHint = "Tar bort filen från den här enheten och molnet."
 
 [filesPage.diskLink]
 conflict = "Disken ändrad"
@@ -5013,7 +5045,7 @@ offlineTitle = "Inga cachade molnfiler"
 title = "Inga molnfiler ännu"
 
 [filesPage.empty.noResults]
-hint = "Inga filer i den här mappen matchar ditt filter. Försök med en annan term eller rensa filtret."
+hint = "Inga filer i den här mappen matchar filtret. Prova en annan term eller rensa filtret."
 title = "Inga matchande filer"
 
 [filesPage.empty.recent]
@@ -5033,13 +5065,13 @@ actionFailed = "Kunde inte {{action}}."
 actionFailedDetail = "Kunde inte {{action}}: {{message}}"
 addFolderFailed = "Kunde inte lägga till mappen."
 addFolderFailedDetail = "Kunde inte lägga till mappen: {{message}}"
-cloudDeleteFailed_one = "Kunde inte radera 1 fil från molnet."
-cloudDeleteFailed_other = "Kunde inte radera {{count}} filer från molnet."
+cloudDeleteFailed_one = "Kunde inte ta bort 1 fil från molnet."
+cloudDeleteFailed_other = "Kunde inte ta bort {{count}} filer från molnet."
 createOutsideMount = "Kan inte skapa en mapp utanför en monterad katalog"
 deleteFolderFailed = "Kunde inte ta bort mappen."
 deleteFolderFailedDetail = "Kunde inte ta bort mappen: {{message}}"
 diskFoldersUnsupported = "Den här byggversionen kan inte skapa mappar på disk"
-downloadFailed = "Kunde inte ladda ner filen."
+downloadFailed = "Kunde inte ladda ned filen."
 duplicateFailed = "Kunde inte duplicera filen."
 folderAppearanceFailed = "Kunde inte uppdatera mappens utseende."
 folderAppearanceFailedDetail = "Kunde inte uppdatera mappens utseende: {{message}}"
@@ -5158,9 +5190,9 @@ back = "Tillbaka"
 cancel = "Avbryt"
 
 [filesPage.search]
-clear = "Rensa sökning"
-label = "Sök filnamn"
-placeholder = "Sök filnamn…"
+clear = "Rensa filter"
+label = "Filtrera filer efter namn"
+placeholder = "Filtrera filer…"
 
 [filesPage.sort]
 label = "Sortera filer"
@@ -5191,10 +5223,12 @@ grid = "Rutnätsvy"
 label = "Visningsläge"
 list = "Listvy"
 
+[fileStorage]
 [fileStorage.unreadable]
 body = "\"{{name}}\" är sparad i den här webbläsaren men innehållet kan inte längre läsas. Ladda upp filen igen för att fortsätta arbeta med den."
 title = "Fildata är inte tillgängliga"
 
+[fileSync]
 [fileSync.openFailed]
 multiple_one = "Kunde inte öppna {{count}} fil inklusive \"{{name}}\"."
 multiple_other = "Kunde inte öppna {{count}} filer inklusive \"{{name}}\"."
@@ -5274,6 +5308,7 @@ placeholder = "t.ex. 150"
 [flatten.results]
 title = "Resultat för utplattning"
 
+[flatten.tooltip]
 [flatten.tooltip.description]
 bullet1 = "Textfält blir vanlig text (kan inte redigeras)"
 bullet2 = "Kryssrutor och knappar blir bilder"
@@ -5412,7 +5447,7 @@ title = "Formulärfält"
 [getPdfInfo]
 downloadJson = "Ladda ner JSON"
 downloads = "Nedladdningar"
-indexTitle = "Index"
+indexTitle = "Register"
 noData = "Ingen data"
 noneDetected = "Inget upptäckt"
 noResults = "Kör verktyget för att skapa en rapport."
@@ -5444,10 +5479,10 @@ fileSizeBytes = "({{size}} byte)"
 javaScript = "JavaScript"
 layers = "Lager"
 modified = "Ändrad: {{date}}"
-structureTree = "StructureTree"
+structureTree = "Strukturträd"
 unnamedAttachment = "Namnlös bilaga"
 unnamedFile = "Namnlös fil"
-xmp = "XMPMetadata"
+xmp = "XMP-metadata"
 
 [getPdfInfo.perPage]
 annotations = "Anteckningar"
@@ -5518,6 +5553,7 @@ javaScript = "JavaScript"
 layers = "Lager"
 multimedia = "Multimedia"
 
+[groupSigning]
 [groupSigning.steps]
 back = "Tillbaka"
 
@@ -5538,8 +5574,8 @@ location = "Plats:"
 logo = "Logotyp:"
 logoHidden = "Ingen logotyp"
 logoShown = "Stirling PDF-logotyp visas"
-participantCount_one = "{{count}} deltagare vald"
-participantCount_other = "{{count}} deltagare valda"
+participantCount_one = "{{count}} deltagare kommer att signera i ordning"
+participantCount_other = "{{count}} deltagare kommer att signera i ordning"
 participants = "Deltagare"
 reason = "Orsak:"
 send = "Skicka signeringsförfrågningar"
@@ -5590,6 +5626,7 @@ message = "Skapa ett gratis konto för att spara ditt arbete, få tillgång till
 signUp = "Registrera dig gratis"
 title = "Du använder Stirling PDF som gäst!"
 
+[home]
 [home.addAttachments]
 desc = "Visa, lägg till, extrahera, byt namn på eller ta bort inbäddade PDF-bilagor"
 tags = "bädda in,bifoga,inkludera,bilagor,bifoga filer,bädda in filer,inkludera filer,lägg till filer,filbilaga,associerade filer,kompletterande filer,extrahera,hantera"
@@ -5607,7 +5644,7 @@ title = "Lägg till sidnummer"
 
 [home.addPassword]
 desc = "Lägg till lösenordsskydd och begränsningar i PDF-filer"
-tags = "kryptera,lösenord,lås,säker,skydda,säkerhet,kryptering,skydda,konfidentiell,privat,begränsa åtkomst"
+tags = "kryptera,lösenord,lås,säker,skydda,säkerhet,kryptering,skyddsåtgärd,konfidentiell,privat,begränsa åtkomst"
 title = "Lägg till lösenord"
 
 [home.addStamp]
@@ -5710,7 +5747,7 @@ title = "Beskär PDF"
 
 [home.devAirgapped]
 desc = "Länk till guide för isolerad installation"
-tags = "air-gapped,offline,isolerad,inget internet,frånkopplad,säker,nätverksisolering,fristående"
+tags = "luftgap,frånkopplad,isolerad,utan internet,ej ansluten,säker,nätverksisolering,fristående"
 title = "Isolerad installation"
 
 [home.devApi]
@@ -5725,7 +5762,7 @@ title = "Automatiserad mappskanning"
 
 [home.devSsoGuide]
 desc = "Länk till SSO‑guide"
-tags = "SSO,single sign-on,autentisering,SAML,OAuth,OIDC,inloggning,företag,identitetsleverantör,IdP"
+tags = "SSO,enkel inloggning,autentisering,SAML,OAuth,OIDC,inloggning,enterprise,identitetsleverantör,IdP"
 title = "SSO‑guide"
 
 [home.editTableOfContents]
@@ -5788,7 +5825,7 @@ title = "OCR / Rensa skanningar"
 
 [home.overlay-pdfs]
 desc = "Lägg en PDF ovanpå en annan"
-tags = "överlägg,kombinera,slå ihop,lager,superponera,överlägg PDF,lager PDFs,kombinera PDFs,stapla,överlägg sidor,bakgrund,förgrund,komposit"
+tags = "överlägg,kombinera,slå samman,lager,överlagra,överläggs-PDF,lagra PDF:er,kombinera PDF:er,stapla,överläggssidor,bakgrund,förgrund,komposit"
 title = "Överlagra PDF:er"
 
 [home.pageLayout]
@@ -5802,7 +5839,7 @@ title = "Ordna"
 
 [home.pdfTextEditor]
 desc = "Granska och redigera Stirling PDF JSON-exporter med grupperad textredigering och PDF-återgenerering"
-tags = "redigera text,ändra text,ändra text,redigera innehåll,uppdatera text,skriv om,korrigera,ändra,rödmarkera,revidera,texteditor,innehållseditor"
+tags = "redigera text,ändra text,modifiera text,redigera innehåll,uppdatera text,skriv om,rätta,justera,ändringsmarkera,granska,textredigerare,innehållsredigerare"
 title = "PDF-textredigerare"
 
 [home.pdfToSinglePage]
@@ -5862,7 +5899,7 @@ title = "Reparera"
 
 [home.replaceColor]
 desc = "Ersätt eller invertera färger i PDF‑dokument"
-tags = "ersätt färg,invertera färg,färgersättning,byt färger,ändra färg,invertera,negativ,färgbyte,hitta och ersätt färg,konvertera färg,färgändring"
+tags = "ersätt färg,invertera färg,färgersättning,byt färger,ändra färg,invertera,negativ,byt färg,sök och ersätt färg,konvertera färg,färgändring"
 title = "Ersätt och invertera färg"
 
 [home.rotate]
@@ -5943,6 +5980,7 @@ header = "HTML till PDF"
 tags = "markup,webbinnehåll,transformation,konvertera"
 title = "HTML till PDF"
 
+[image]
 [image.upload]
 hint = "Ladda upp en PNG, JPG, SVG eller annan bildfil att placera på PDF:en. SVG-filer konverteras till PNG för kompatibilitet."
 label = "Ladda upp bild"
@@ -6127,6 +6165,7 @@ sort = "Sortera"
 [merge.sortFiles]
 title = "Sortera filer"
 
+[merge.tooltip]
 [merge.tooltip.header]
 title = "Översikt över sammanfogningsinställningar"
 
@@ -6175,20 +6214,20 @@ validating = "Validerar session..."
 [mobileSign]
 clear = "Rensa"
 drawingArea = "Rityta för signatur"
-invalidSession = "Sessionen har löpt ut"
-invalidSessionMessage = "Den här QR-koden är inte längre giltig. Öppna signeringsverktyget på din dator och skanna den nya koden."
+invalidSession = "Sessionen har gått ut"
+invalidSessionMessage = "Den här QR-koden är inte längre giltig. Öppna Signera på datorn och skanna den nya koden."
 penSizeLabel = "Pennstorlek"
-send = "Skicka till dator"
-sendAnother = "Skicka en annan signatur"
+send = "Skicka till datorn"
+sendAnother = "Skicka en till signatur"
 sendError = "Kunde inte skicka signaturen. Kontrollera anslutningen och försök igen."
-sentMessage = "Signaturen har skickats till din dator. Du kan skicka en till eller stänga den här sidan."
+sentMessage = "Signaturen skickades till datorn. Du kan skicka en till eller stänga sidan."
 tabsLabel = "Signaturkälla"
 undo = "Ångra"
-validating = "Kontrollerar session…"
+validating = "Kontrollerar sessionen…"
 
 [mobileSign.photo]
-fromGallery = "Från galleri"
-hint = "Fotografera en signatur på vitt papper, eller välj en befintlig bild."
+fromGallery = "Från galleriet"
+hint = "Fotografera en signatur på vitt papper eller välj en befintlig bild."
 invalidType = "Välj en bildfil."
 previewAlt = "Signatur"
 takePhoto = "Ta ett foto"
@@ -6221,12 +6260,12 @@ tags = "Multiverktyg,Multioperation,UI,klicka dra,front end,klientsida"
 title = "PDF-multiverktyg"
 
 [navFooter]
-openEditor = "Öppna PDF Editor"
-openProcessor = "Öppna PDF Processor"
+openEditor = "Öppna PDF-redigeraren"
+openProcessor = "Öppna PDF-processorn"
 
 [navFooter.credits]
 count = "{{remaining}} av {{total}}"
-label = "Gratis krediter"
+label = "Fria krediter"
 
 [notifications]
 adoptFailed = "Dokumentet låstes upp men kunde inte öppnas här. Prova verktyget direkt."
@@ -6262,6 +6301,7 @@ unavailable = "Inte tillgängligt för den här aviseringen."
 earlier = "Tidigare"
 new = "Nya"
 
+[oauth]
 [oauth.error]
 message = "Autentiseringen lyckades inte. Du kan stänga detta fönster och försöka igen."
 title = "Autentisering misslyckades"
@@ -6272,25 +6312,25 @@ title = "Autentisering lyckades"
 
 [oauthConsent]
 approve = "Tillåt åtkomst"
-approving = "Tillåter..."
+approving = "Tillåter…"
 decisionFailed = "Kunde inte skicka ditt beslut. Försök igen."
 deny = "Neka"
-denying = "Nekar..."
-loadFailed = "This authorisation request is invalid or has expired. Close this tab and try connecting again from the app."
-loading = "Loading authorisation request..."
-missingId = "Missing authorisation request. Start the connection from your app and try again."
-redirecting = "Tar dig tillbaka till appen..."
-requesting = "{{app}} vill komma åt ditt Stirling PDF-konto"
-scopesIntro = "Detta gör att {{app}} kan:"
+denying = "Nekar…"
+loadFailed = "Den här auktoriseringsbegäran är ogiltig eller har gått ut. Stäng fliken och försök ansluta igen från appen."
+loading = "Läser in auktoriseringsbegäran…"
+missingId = "Auktoriseringsbegäran saknas. Starta anslutningen från appen och försök igen."
+redirecting = "Återgår till appen…"
+requesting = "{{app}} vill få åtkomst till ditt Stirling PDF-konto"
+scopesIntro = "Detta ger {{app}} rätt att:"
 signedInAs = "Inloggad som {{name}}"
 signInButton = "Logga in för att fortsätta"
 signInPrompt = "Logga in på ditt Stirling PDF-konto för att fortsätta ansluta appen."
-title = "Authorise access"
-unknownApp = "En tredjepartsapplikation"
+title = "Godkänn åtkomst"
+unknownApp = "En tredjepartsapp"
 
 [oauthConsent.access]
 actAsYou = "Agera som du – allt {{app}} gör körs under ditt konto och räknas mot din användning"
-tools = "Använda dina Stirling PDF-verktyg åt dig – konvertera, redigera, signera, säkra och bearbeta dina dokument"
+tools = "Använd dina Stirling PDF-verktyg åt dig – konvertera, redigera, signera, säkra och bearbeta dina dokument"
 
 [oauthConsent.scope]
 email = "Se din e-postadress"
@@ -6343,6 +6383,8 @@ force = "Tvinga (OCR:a allt på nytt, ersätt text)"
 label = "OCR-läge"
 strict = "Strikt (avbryt om text hittas)"
 
+[ocr.tooltip]
+[ocr.tooltip.advanced]
 [ocr.tooltip.advanced.clean]
 text = "Förbehandlar indata genom att ta bort brus, förbättra kontrast och optimera bilden för bättre OCR-igenkänning före bearbetning."
 title = "Rensa indatafil"
@@ -6389,10 +6431,10 @@ title = "Utdata"
 
 [onboarding]
 activeFiles = "Vyn <strong>Aktiva filer</strong> visar alla PDFs som du har laddat in i verktyget."
-allTools = "Det här är panelen <strong>Verktyg</strong>, där du kan bläddra och välja bland alla tillgängliga PDF-verktyg."
+allTools = "Det här är panelen <strong>Alla verktyg</strong>, där du kan bläddra bland och välja alla tillgängliga PDF-verktyg."
 close = "Stäng"
 cropSettings = "Nu när vi har valt filen vi vill beskära kan vi konfigurera Beskär-verktyget för att välja området som vi vill beskära PDF-filen till."
-dialogLabel = "Introduktion"
+dialogLabel = "Kom igång"
 fileCheckbox = "Filer på arbetsytan är valda för bearbetning. Du kan välja flera filer för batchåtgärder med det vänstra sidofältet för filer."
 fileReplacement = "Den ändrade filen ersätter originalfilen i Arbetsbänken automatiskt, vilket gör det enkelt att köra den genom fler verktyg."
 filesButton = "Knappen <strong>Filer</strong> på snabbåtkomstfältet låter dig ladda upp PDF-filer att använda verktygen på."
@@ -6479,21 +6521,22 @@ body = "Stirling kör nu <strong>policyer</strong> — automatiserade regler som
 cta = "Kolla in Processor"
 title = "Kolla in Stirling Processor"
 
+[onboarding.saas]
 [onboarding.saas.freeEditor]
-freeLine = "Editorn är nu <free>helt gratis</free>."
-premium = "Vi har lagt till massor av nya funktioner, inklusive <strong>Policyer</strong> och <strong>Agent Chat</strong>."
+freeLine = "Redigeraren är nu <free>helt kostnadsfri</free>."
+premium = "Vi har lagt till många nya funktioner, bland annat <strong>policyer</strong> och <strong>agentchatt</strong>."
 title = "Välkommen till Stirling"
 
 [onboarding.saas.team]
 addButton = "Lägg till"
-createBody = "Arbeta med dokument tillsammans: teammedlemmar delar filer, automationer och ditt abonnemang. Lägg till den första medlemmen via e-post för att skapa ditt team."
+createBody = "Arbeta tillsammans med dokument: teammedlemmar delar filer, automationer och abonnemang. Lägg till den första medlemmen via e-post för att skapa teamet."
 createTitle = "Skapa ditt team"
-inviteBody = "Everyone on your team shares files, automations and your plan. Add teammates by email and they'll get an invitation."
-inviteTitle = "Bjud in medlemmar till ditt team"
+inviteBody = "Alla i teamet delar filer, automationer och abonnemang. Lägg till teammedlemmar via e-post så får de en inbjudan."
+inviteTitle = "Bjud in medlemmar till teamet"
 
 [onboarding.saas.usage]
-body = "Automationer, AI och API-förfrågningar använder din gratis tilldelning. Manuell redigering räknas aldrig mot den."
-title = "Din kostnadsfria Processor-tilldelning"
+body = "Automationer, AI och API-anrop använder din kostnadsfria kvot. Manuell redigering räknas aldrig mot den."
+title = "Din kostnadsfria Processor-kvot"
 
 [onboarding.securityCheck]
 message = "Applikationen har nyligen genomgått stora förändringar. Din serveradmins uppmärksamhet kan krävas. Bekräfta din roll för att fortsätta."
@@ -6503,7 +6546,7 @@ roleUser = "Användare"
 title = "Säkerhetskontroll"
 
 [onboarding.serverLicense]
-freeBody = "Vår <strong>Open-Core</strong>-licens inkluderar <strong>OAuth SSO</strong> och upp till <strong>{{freeTierLimit}}</strong> användare gratis. För att växa utan avbrott rekommenderar vi Stirling Team-abonnemanget — <strong>100 användare</strong> för $99/mån."
+freeBody = "Vår <strong>Open-Core</strong>-licens tillåter upp till <strong>{{freeTierLimit}}</strong> användare gratis per server. För att skala utan avbrott och få tidig åtkomst till vårt nya <strong>PDF-textredigeringsverktyg</strong> rekommenderar vi Stirling Server-planen - full redigering och <strong>obegränsade platser</strong> för $99/server/mån."
 freeTitle = "Team-abonnemang"
 overLimitBody = "Vår licens tillåter upp till <strong>{{freeTierLimit}}</strong> användare gratis. Du har <strong>{{overLimitUserCopy}}</strong> Stirling-användare. För att fortsätta utan avbrott, uppgradera till Stirling Team-abonnemanget – <strong>100 användare</strong>, PDF-textredigering och full administratörskontroll för $99/mån."
 overLimitTitle = "Team-abonnemang krävs"
@@ -6563,6 +6606,7 @@ title = "Resultat av överlagring"
 [overlay-pdfs.settings]
 title = "Inställningar"
 
+[overlay-pdfs.tooltip]
 [overlay-pdfs.tooltip.counts]
 text = "Ange ett positivt tal för varje överläggningsfil som visar hur många sidor som ska tas innan du går vidare till nästa. Krävs när läget är Fast upprepning."
 title = "Antal (endast fast upprepning)"
@@ -6673,6 +6717,8 @@ tags = "slå samman,sammansatt,enkel-vy,organisera"
 title = "Flersidigt layout"
 top = "Övre marginal"
 
+[pageLayout.advanced]
+[pageLayout.advanced.tooltip]
 [pageLayout.advanced.tooltip.arrangement]
 bullet1 = "Radvis: Fyll varje rad först."
 bullet2 = "Kolumnvis: Fyll varje kolumn först."
@@ -6717,6 +6763,8 @@ leftPlaceholder = "Ange vänster marginal"
 rightPlaceholder = "Ange höger marginal"
 topPlaceholder = "Ange övre marginal"
 
+[pageLayout.marginsBorders]
+[pageLayout.marginsBorders.tooltip]
 [pageLayout.marginsBorders.tooltip.borders]
 text = "Aktivera kantlinjer för att rita linjer runt varje placerad sida. Detta kan hjälpa visuell åtskillnad eller trimning."
 title = "Lägg till kantlinjer"
@@ -6756,6 +6804,7 @@ advanced = "Avancerade inställningar"
 layout = "Layoutinställningar"
 marginsBorders = "Marginaler och ramar"
 
+[pageLayout.tooltip]
 [pageLayout.tooltip.header]
 title = "Guide för sidlayout"
 
@@ -6780,6 +6829,7 @@ title = "Rader och kolumner (anpassat läge)"
 [pageRemover]
 title = "Sidborttagare"
 
+[pageSelection]
 [pageSelection.tooltip]
 description = "Välj vilka sidor som ska användas för åtgärden. Stöder enstaka sidor, intervall, formler och nyckelordet all."
 
@@ -6890,116 +6940,118 @@ rename = "Byt namn på fil"
 [pageTracks.wrap]
 label = "Radbryt sidor"
 
+[payg]
 [payg.activity]
 docs = "dokument"
-empty = "Ingen fakturerbar aktivitet ännu under denna period."
-subtitle = "Endast AI och automation använder din budget. Vardagliga verktyg är gratis och visas inte här."
-title = "Senaste fakturerbara aktivitet"
+empty = "Ingen debiterbar aktivitet ännu under denna period."
+subtitle = "Endast AI och automation använder din budget. Vardagsverktyg är kostnadsfria och visas inte här."
+title = "Senaste debiterbara aktivitet"
 
 [payg.cap]
-amount = "Takbelopp"
-custom = "Anpassat"
-docsEstimate = "≈ {{docs}} krediter / månad"
-docsRate = "vid {{rate}} / kredit"
-noCapDesc = "Användning faktureras utan övre gräns. Du kan aktivera ett tak igen när som helst."
-noCapLabel = "Inget tak"
-noneShort = "Inget tak"
+amount = "Beloppsgräns"
+custom = "Anpassad"
+docsEstimate = "≈ {{docs}} bearbetade PDF:er per månad"
+docsRate = "vid {{rate}} per PDF"
+noCapDesc = "Användning debiteras utan övre gräns. Du kan återaktivera en gräns när som helst."
+noCapLabel = "Ingen gräns"
+noneShort = "Ingen gräns"
 perMonth = "/ månad"
-save = "Uppdatera tak"
-subtitle = "Ange din maximala kostnad. Vi konverterar detta till PDFs med den aktuella prisnivån."
-title = "Månatligt kostnadstak"
+save = "Uppdatera gräns"
+subtitle = "Ange din högsta kostnad. Vi omvandlar den till PDF:er med den aktuella prisnivån."
+title = "Månatligt utgiftstak"
 
 [payg.checkout]
 connecting = "Ansluter till Stripe…"
 errorTitle = "Stripe-fel"
 
 [payg.checkout.error]
-startFailed = "Kunde inte starta checkout-session"
+startFailed = "Kunde inte starta kassasessionen"
 
 [payg.checkout.mock]
-backend = "Backend är i mock-läge; ingen riktig Stripe-session skapades."
-continue = "Fortsätt med mock-prenumeration"
-noKey = "VITE_STRIPE_PUBLISHABLE_KEY är inte angiven. En riktig iframe monteras här när den har konfigurerats."
-title = "Stripe Embedded Checkout (mock-läge)"
+backend = "Bakänden är i testläge; ingen riktig Stripe-session skapades."
+continue = "Fortsätt med testprenumeration"
+noKey = "VITE_STRIPE_PUBLISHABLE_KEY är inte angiven. Den riktiga iframe-rutan visas här när den har konfigurerats."
+title = "Inbäddad Stripe-kassa (testläge)"
 
 [payg.confirm]
 bodyWithAllowance = "Ditt team kan nu köra automatisering, AI och API-operationer utöver dina {{limit}} kostnadsfria PDF-filer."
 capValue = "{{symbol}}{{amount}} / månad"
-noCap = "Inget tak"
-note = "Du kan ändra ditt tak, avbryta eller öppna Stripes kundportal när som helst från den här sidan."
+noCap = "Ingen gräns"
+note = "Du kan ändra gränsen, avsluta eller öppna Stripes kundportal när som helst från denna sida."
 summaryLabel = "Månatligt tak"
 title = "Välkommen till Processor-abonnemanget"
 
 [payg.docHelp]
-billable = "Endast automationer, AI-verktyg och API-anrop räknas. Manuella verktyg i editorn är alltid gratis."
-chains = "Att köra samma fil genom flera steg i en automation räknas en gång, inte en gång per steg."
-perFile = "Varje fil du bearbetar räknas som en PDF. Mycket långa eller mycket stora filer kan räknas som fler än en."
-refunds = "Om ett jobb misslyckas i sitt första steg krediteras PDF:en automatiskt tillbaka."
+billable = "Endast automatiseringskörningar, AI-verktyg och API-anrop räknas. Manuella verktyg i redigeraren är alltid kostnadsfria."
+chains = "Om samma fil körs genom flera steg i en automation räknas den en gång, inte en gång per steg."
+perFile = "Varje fil du bearbetar räknas som en PDF. Mycket långa eller stora filer kan räknas som fler än en."
+refunds = "Om ett jobb misslyckas i första steget återställs PDF-krediten automatiskt."
 toggle = "Vad räknas som en PDF?"
 
 [payg.error]
-body = "Vi kunde inte nå faktureringstjänsten. Uppdatera sidan för att försöka igen."
+body = "Det gick inte att nå faktureringstjänsten. Uppdatera sidan och försök igen."
 title = "Kunde inte läsa in ditt abonnemang"
 
+[payg.free]
 [payg.free.cta]
 benefit1Body = "kedja verktyg, schemalägg körningar, batchbearbeta"
 benefit1Title = "Automationspipelines"
-benefit2Body = "summarise, classify, redact, AI-OCR"
+benefit2Body = "sammanfatta, klassificera, maskera, AI-OCR"
 benefit2Title = "AI-verktyg"
-benefit3Body = "anropa valfri Stirling-endpoint programmässigt"
+benefit3Body = "anropa valfri Stirling-slutpunkt programmatiskt"
 benefit3Title = "API-åtkomst"
 button = "Aktivera Processor →"
-reassurance = "Inget minimum · Sätt ett tak på $0 för att testa · Avbryt när som helst"
+reassurance = "Ingen miniminivå · Ange en gräns på 0 USD för att testa · Avsluta när som helst"
 subtitleWithAllowance = "Fortsätt efter dina {{limit}} kostnadsfria PDF-filer med automatisering, AI och API. Ange ett månadstak så behåller du kontrollen."
 title = "Aktivera Processor-abonnemanget"
 
 [payg.free.editor]
-eyebrow = "Editor-abonnemang · Alltid gratis"
+eyebrow = "Redigerarabonnemang · Alltid kostnadsfritt"
 
 [payg.free.header]
-freeBody = "Visa, redigera, slå ihop, dela, signera, vattenstämpla, komprimera, konvertera och manuell OCR – så mycket du vill, oavsett var du startar det."
+freeBody = "Visa, redigera, slå samman, dela, signera, vattenmärka, komprimera, konvertera och kör manuell OCR – hur mycket du vill, oavsett var du startar det."
 freeTitle = "Obegränsad PDF-redigering"
 
 [payg.free.hero]
-barAria = "Gratis PDFs kvar"
-capSuffix = "av {{limit}} gratis PDFs kvar denna månad"
-metaCategories = "Automation · AI · API-förfrågningar"
+barAria = "Kostnadsfria PDF-filer kvar"
+capSuffix = "/ {{limit}} kostnadsfria PDF:er"
+metaCategories = "Automatisering · AI · API-begäranden"
 
 [payg.free.member]
-ownerOnly = "Endast teamägaren kan aktivera Processor. Manuella verktyg förblir gratis för dig att använda så mycket du vill."
+ownerOnly = "Endast teamägaren kan aktivera Processor. Manuella verktyg är fortsatt kostnadsfria att använda hur mycket du vill."
 
 [payg.free.proc]
-eyebrow = "Processor-abonnemang · uppmätt"
+eyebrow = "Processor-abonnemang · användningsbaserat"
 
 [payg.free.state]
 approachingLimit = "Närmar sig gränsen"
-limitReached = "Gräns nådd"
+limitReached = "Gränsen har nåtts"
 plentyLeft = "Gott om kvar"
 
 [payg.gates]
 ai = "AI-verktyg (AI Create, förslag, AI-OCR)"
 automation = "Automationer och pipelines"
-client = "Verktyg endast i webbläsaren (visare, sideditor, filhantering)"
-offsite = "Serververktyg (komprimera, OCR, konvertera, vattenstämpel…)"
-pauses = "pausar vid taket"
-title = "Vad händer när taket nås"
+client = "Endast webbläsarverktyg (visare, sidredigerare, filhantering)"
+offsite = "Serververktyg (komprimera, OCR, konvertera, vattenmärka …)"
+pauses = "pausas vid gränsen"
+title = "Vad som händer när gränsen nås"
 
 [payg.header]
-eyebrow = "Processor-abonnemang · {{start}} – {{end}}"
-freeBody = "Visa, redigera, slå ihop, dela, signera, vattenstämpla, komprimera, konvertera och manuell OCR – så mycket du vill, oavsett var du startar det."
-freeLabel = "Alltid gratis"
+eyebrow = "Processor-abonnemang · {{start}}–{{end}}"
+freeBody = "Visa, redigera, slå samman, dela, signera, vattenmärka, komprimera, konvertera och kör manuell OCR – hur mycket du vill, oavsett var du startar det."
+freeLabel = "Alltid kostnadsfritt"
 freeTitle = "Obegränsad PDF-redigering"
-meterBody = "{{limit}} gratis PDFs till att börja med, därefter fakturering per PDF upp till ditt tak."
-meterLabel = "Uppmätt"
+meterBody = "{{limit}} kostnadsfria PDF-filer till att börja med, sedan debitering per PDF upp till din gräns."
+meterLabel = "Användningsbaserat"
 meterTitle = "Automatisering · AI · API"
 
 [payg.member]
-askLeader = "Endast teamägaren kan ändra taket."
+askLeader = "Endast teamägaren kan ändra gränsen."
 
 [payg.members]
 docs = "PDF-filer"
-subtitle = "Fakturerbara PDFs som varje teammedlem har bearbetat under denna period."
-title = "Användning per teammedlem"
+subtitle = "Debiterbara PDF-filer som varje teammedlem har bearbetat under denna period."
+title = "Teammedlemmars användning"
 
 [payg.prepaid]
 chip = "Förbetalt år"
@@ -7040,21 +7092,22 @@ processorTitle = "Skapa ett konto för att låsa upp det bästa av Stirling"
 readerLabel = "PDF-läsare"
 
 [payg.spendCapMeter]
-barAria = "Kostnad mot tak"
-capSuffix = "/ {{amount}} tak"
-metaCategories = "Automation · AI · API-kostnad"
+barAria = "Kostnad mot gräns"
+capSuffix = "/ {{amount}} gräns"
+metaCategories = "Automatisering · AI · API-kostnad"
 resets = "Återställs varje faktureringsperiod"
 
 [payg.state]
-degraded = "Tak nått"
-full = "Friskt"
-warned = "Närmar sig tak"
+degraded = "Gränsen har nåtts"
+full = "Fungerar normalt"
+warned = "Närmar sig gränsen"
 
 [payg.stripe]
-open = "Öppna faktureringsportal"
-subtitle = "Kvitton, fakturor, betalningsmetod, faktureringsvaluta."
+open = "Öppna faktureringsportalen"
+subtitle = "Kvitton, fakturor, betalningsmetod och faktureringsvaluta."
 title = "Hantera fakturering i Stripe"
 
+[payg.stripe.toast]
 [payg.stripe.toast.unavailable]
 body = "Faktureringsportalen är inte tillgänglig just nu. Försök igen om en stund."
 title = "Faktureringsportalen är inte tillgänglig"
@@ -7069,50 +7122,50 @@ continue = "Fortsätt →"
 finish = "Slutför"
 
 [payg.upgrade.cap]
-help = "Vi debiterar aldrig över detta. Sätt $0 om du vill hålla allt gratis under testning."
-title = "Ange ditt månatliga kostnadstak"
-usdNote = "Beräknat i USD. Du kan justera ditt tak när som helst efter prenumeration, i din egen valuta."
+help = "Vi debiterar aldrig över detta belopp. Ange 0 USD om du vill hålla allt kostnadsfritt under testning."
+title = "Ange ditt månatliga utgiftstak"
+usdNote = "Uppskattat i USD. Efter prenumerationen kan du när som helst justera gränsen i din egen valuta."
 
 [payg.upgrade.checkout]
 capValue = "{{symbol}}{{amount}} / månad"
 edit = "Redigera"
 help = "Stripe hanterar dina kortuppgifter. Stirling ser dem aldrig."
-loading = "Laddar checkout…"
-noCap = "Inget tak"
-title = "Lägg till din betalningsmetod"
+loading = "Läser in kassan …"
+noCap = "Ingen gräns"
+title = "Lägg till betalningsmetod"
 
 [payg.upgrade.help]
 aiBody = "summarise, classify, redact, AI-OCR"
 aiTitle = "AI-verktyg"
-apiBody = "programmatisk åtkomst till valfri Stirling-endpoint"
+apiBody = "programmatisk åtkomst till valfri Stirling-slutpunkt"
 apiTitle = "API-anrop"
 automationBody = "kedjade verktyg eller schemalagda körningar som inte kräver klick"
 automationTitle = "Automationspipelines"
 footnoteUnlimited = "Manuella verktyg (visning, redigering, sammanslagning, delning, vattenstämplar, komprimering, manuell OCR) är alltid kostnadsfria, även efter att dina inkluderade krediter har använts. Skillnaden är typen av arbete, inte var du klickar."
-title = "Vad vi räknar mot fakturering"
+title = "Vad som räknas vid fakturering"
 
 [payg.upgrade.promise]
-body = "Du betalar endast för automationspipelines, AI-verktyg och API-anrop – arbete som går bortom ett enda klick. Redigera, slå ihop, dela, signera och komprimera så mycket du vill, utan kostnad."
-highlight = "Manuella verktyg förblir gratis, alltid."
+body = "Du betalar bara för automationspipelines, AI-verktyg och API-anrop – arbete som går utöver ett enda klick. Redigera, slå samman, dela, signera och komprimera hur mycket du vill utan kostnad."
+highlight = "Manuella verktyg är alltid kostnadsfria."
 
 [payg.upgrade.steps]
 cap = "Ange månatligt tak"
 payment = "Lägg till betalningsmetod"
 
 [payg.upgrade.title]
-confirm = "Du prenumererar"
+confirm = "Du prenumererar nu"
 default = "Uppgradera till Processor-abonnemanget"
 
 [payg.usage]
-breakdown = "AI {{ai}} • Automatisering {{automation}} • API {{api}}"
-capLine = "{{cap}}/mån tak"
+breakdown = "AI {{ai}} • automatisering {{automation}} • API {{api}}"
+capLine = "{{cap}}/mån. gräns"
 estBill = "≈ {{amount}} hittills denna period"
-firstFree = "Första {{free}} gratis"
+firstFree = "Första {{free}} kostnadsfria"
 noCap = "Inget månatligt tak"
-ofLimitProcessed = "/ {{limit}} PDFs bearbetade"
-processed = "PDFs bearbetade"
+ofLimitProcessed = "/ {{limit}} PDF-filer bearbetade"
+processed = "PDF-filer bearbetade"
 resetsIn = "Återställs om {{days}} dagar"
-resetsTomorrow = "Återställs imorgon"
+resetsTomorrow = "Återställs i morgon"
 thisPeriod = "Denna faktureringsperiod"
 
 [payment]
@@ -7192,7 +7245,7 @@ userTotal = "{{users}} användare"
 continue = "Fortsätt"
 description = "Vi använder den för att skicka din licensnyckel och kvitton."
 emailLabel = "E-postadress"
-emailPlaceholder = "din@email.com"
+emailPlaceholder = "din@epost.se"
 
 [payment.paymentStage]
 modalTitle = "Slutför betalning - {{planName}}"
@@ -7255,7 +7308,7 @@ download = "Ladda ner"
 downloadTooltip = "Spara och ladda ner den redigerade PDF-filen"
 save = "Spara PDF"
 saveTooltip = "Tillämpa ändringar på filen i din arbetsyta ({{shortcut}})"
-tags = "redigera text,ändra text,ändra text,redigera innehåll,uppdatera text,skriv om,korrigera,ändra,rödmarkera,revidera,texteditor,innehållseditor"
+tags = "redigera text,ändra text,uppdatera text,skriv om,rätta,justera,textredigerare,innehållsredigerare"
 title = "PDF-textredigerare"
 unsaved = "(osparad)"
 workbenchLabel = "Redigerare"
@@ -7335,6 +7388,7 @@ info = "Inbäddat"
 ok = "Alla glyfer"
 warn = "{{count}} med luckor"
 
+[pdfTextEditor.fonts.status]
 [pdfTextEditor.fonts.status.embedded]
 label = "Inbäddat"
 
@@ -7586,6 +7640,7 @@ undoTooltip = "Ångra ({{shortcut}})"
 unlock = "Lås upp markering"
 unlockTooltip = "Lås upp markering – gör den redigerbar igen"
 
+[pdfTextEditor.tooltip]
 [pdfTextEditor.tooltip.alpha]
 text = "Den här alfavisaren utvecklas fortfarande – vissa typsnitt, färger, transparenseffekter och layoutdetaljer kan ändras något. Dubbelkolla den genererade PDF:en innan du delar den."
 title = "Alfa-visare"
@@ -7633,7 +7688,7 @@ title = "PDF till PDF/A"
 
 [pdfToPDFUA]
 header = "PDF till PDF/UA"
-tags = "tillgänglighet,tillgänglig,taggad,skärmläsare,wcag,eaa,section 508,konvertering"
+tags = "tillgänglighet,tillgänglig,taggad,skärmläsare,wcag,eaa,avsnitt 508,konvertering"
 title = "PDF till PDF/UA"
 
 [pdfToPDFX]
@@ -7651,7 +7706,7 @@ tags = "enstaka sida"
 [pdfToSinglePage]
 description = "Det här verktyget sammanfogar alla sidor i din PDF till en enda stor sida. Bredden förblir densamma som originalsidornas, men höjden blir summan av alla sidors höjd."
 submit = "Konvertera till en sida"
-tags = "kombinera,slå ihop,enkel,en sida,enda sida,slå ihop till en,kombinera alla,sy ihop sidor,konkatenera vertikalt,lång sida,poster"
+tags = "kombinera,slå samman,enkel,enskild sida,en sida,slå samman till en,kombinera alla,sammanfoga sidor,vertikal sammanfogning,lång sida,affisch"
 title = "PDF till en sida"
 
 [pdfToSinglePage.error]
@@ -7686,7 +7741,7 @@ title = "Ändra behörigheter"
 
 [pipeline]
 tags = "automatisera,sekvens,skriptad,batchprocess"
-title = "Pipeline (Avancerat)"
+title = "Arbetsflöde (avancerat)"
 
 [plan]
 contact = "Kontakta oss"
@@ -7748,7 +7803,7 @@ regularUpdates = "Regelbundna uppdateringar"
 saml = "SAML"
 secureLoginSupport = "Stöd för säker inloggning"
 selfHostedDeployment = "Självhostad distribution"
-sso = "SSO (OAuth2/OIDC)"
+sso = "SSO"
 upToFiveUsers = "Upp till 5 användare"
 upToFiveUsersLowercase = "upp till 5 användare"
 usageTracking = "Användningsspårning"
@@ -7764,10 +7819,10 @@ included = "Ingår"
 name = "Gratis"
 
 [plan.freeLimit]
-cta = "Visa Processor-abonnemang"
+cta = "Visa Processor-abonnemanget"
 dismiss = "Kanske senare"
-message = "Det var hela din gratis tilldelning för automation, AI och API denna månad. Verkligen imponerande! Den återställs nästa månad, eller fortsätt i samma tempo nu för bara småpengar per dag."
-title = "Wow, {{total}} PDFs bearbetade!"
+message = "Där användes hela din kostnadsfria kvot för automation, AI och API:t. Imponerande! Fortsätt för bara några ören per dag."
+title = "Oj, {{total}} PDF-filer bearbetade!"
 
 [plan.highlights]
 advancedIntegrations = "Avancerade integrationer"
@@ -7796,10 +7851,10 @@ highlight3 = "Inga vattenstämplar"
 name = "Pro"
 
 [plan.spendCap]
-cta = "Visa kostnadsgräns"
+cta = "Visa utgiftsgräns"
 dismiss = "Inte nu"
-message = "Du har utnyttjat den här månadens tak maximalt. Det är massor av automation, AI och API-arbete! Höj det när du vill för att fortsätta."
-title = "Du är på gång!"
+message = "Du har använt hela månadens gräns. Det är mycket automation, AI- och API-arbete! Höj den när du vill för att fortsätta."
+title = "Det flyter på!"
 
 [plan.static]
 activateLicense = "Aktivera din licens"
@@ -7829,6 +7884,7 @@ successMessage = "Din licens har aktiverats. Du kan nu stänga detta fönster."
 maxUsers = "100 användare"
 name = "Team"
 
+[policies]
 [policies.activity]
 outputsUnavailable = "Policyutdata är inte längre tillgängliga att ladda ned."
 partialOutputsUnavailable = "Vissa policyutdata är inte längre tillgängliga att ladda ned."
@@ -7873,10 +7929,10 @@ showCategory = "Visa kategori"
 account = "Kontonummer (etiketterade)"
 card = "Kredit-/betalkort"
 email = "E-postadresser"
-fieldLabel = "PII att maskera"
+fieldLabel = "Personuppgifter att maskera"
 iban = "IBAN-nummer"
 phone = "Telefonnummer"
-placeholder = "Välj PII-typer"
+placeholder = "Välj typer av personuppgifter"
 routing = "USA-routingnummer (ABA)"
 ssn = "Social Security-nummer"
 
@@ -7913,6 +7969,7 @@ pdfa-1 = "PDF/A-1b"
 pdfa-2b = "PDF/A-2b"
 pdfa-3b = "PDF/A-3b"
 
+[portal]
 [portal.accountLink]
 ownerRequired = "Endast organisationsägaren kan länka eller avlänka den här servern."
 
@@ -8321,6 +8378,7 @@ unit = "PDF-filer"
 unitsPending_one = "{{units}} mätarenhet väntar på synk från länkade instanser"
 unitsPending_other = "{{units}} mätarenheter väntar på synk från länkade instanser"
 
+[portal.billing.prepaid]
 [portal.billing.prepaid.buy]
 back = "Tillbaka"
 cancel = "Avbryt"
@@ -8454,6 +8512,7 @@ body_one = "Med {{rate}}/dag når du taket om ~{{count}} dag (~{{monthEnd}} vid 
 body_other = "Med {{rate}}/dag når du taket om ~{{count}} dagar (~{{monthEnd}} vid månadsslut). Föreslagen gräns ~{{suggested}}."
 label = "Prognos att överskridas."
 
+[portal.billing.subscribedPlan]
 [portal.billing.subscribedPlan.capWarn]
 approachingBody = "Höj den nu så att automatisk bearbetning aldrig pausas."
 approachingTitle = "Du har nått {{pct}}% av din månatliga utgiftsgräns"
@@ -8475,6 +8534,7 @@ midLocalCapacity = "Kapacitet tillgänglig för den här servern"
 midPrice = "$99/mån per 100 användare"
 rowName = "Användare"
 
+[portal.components]
 [portal.components.billingUnit]
 approval = "godkännande"
 check = "kontroll"
@@ -8496,6 +8556,7 @@ edit = "Redigera"
 editTitle = "Redigera anslutning"
 unsupportedType = "Den här anslutningstypen kan inte redigeras här."
 
+[portal.connections.categories]
 [portal.connections.categories.advanced]
 description = "För en tjänst som vi inte stöder ännu."
 label = "Avancerat"
@@ -8520,6 +8581,7 @@ label = "E-signatur och notarisering"
 description = "Där bearbetade dokument hamnar – en bucket, en enhet, ett ärende eller en sida."
 label = "Fil och bifoga"
 
+[portal.connections.commonFields]
 [portal.connections.commonFields.accessToken]
 helperText = "Stirling lagrar detta krypterat och visar det aldrig igen."
 label = "Åtkomsttoken"
@@ -8570,13 +8632,16 @@ noResultsBody = "Vi stöder det inte ännu – berätta om det så tittar vi på
 noResultsTitle = "Inget matchar \"{{query}}\""
 searchPlaceholder = "Sök integrationer – prova \"sign\", \"ocr\" eller ett produktnamn"
 
+[portal.connections.types]
 [portal.connections.types.api]
 description = "Anropa valfritt HTTP API från en policy. Du väljer URL, autentisering och payload."
 label = "Anpassat API"
 
+[portal.connections.types.api.fields]
 [portal.connections.types.api.fields.authType]
 label = "Autentisering"
 
+[portal.connections.types.api.fields.authType.options]
 [portal.connections.types.api.fields.authType.options.basic]
 label = "Användarnamn och lösenord"
 
@@ -8620,7 +8685,7 @@ label = "Skicka token som denna header"
 
 [portal.connections.types.api.fields.tokenResponseHeader]
 helperText = "Svarsheadern som inloggningsanropet returnerar token i, t.ex. X-Auth-Token."
-label = "Header för tokensvar"
+label = "Tokensvarshuvud"
 
 [portal.connections.types.api.fields.username]
 label = "Användarnamn"
@@ -8647,6 +8712,7 @@ label = "Confluence"
 description = "Skicka dokument till ConsignO Cloud (Notarius) för elektronisk signatur och notarisering."
 label = "ConsignO Cloud"
 
+[portal.connections.types.consigno.fields]
 [portal.connections.types.consigno.fields.baseUrl]
 helperText = "Din ConsignO Cloud-miljö, inklusive /api/v1."
 label = "Server-URL"
@@ -8683,6 +8749,7 @@ description = "Hämta nya dokument från en FTP- eller FTPS-server."
 hostPlaceholder = "ftp.example.com"
 label = "FTP / FTPS"
 
+[portal.connections.types.ftp.fields]
 [portal.connections.types.ftp.fields.passive]
 label = "Anslutningsläge"
 
@@ -8715,35 +8782,38 @@ label = "Mailgun"
 
 [portal.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
-description = "Skicka dokument till ett n8n workflow och ta emot vad det än producerar."
+description = "Skicka dokument till ett n8n-arbetsflöde och ta emot det som arbetsflödet producerar."
 label = "n8n"
 
+[portal.connections.types.n8n.fields]
 [portal.connections.types.n8n.fields.authType]
-helperText = "Matcha Authentication som är inställd på n8n Webhook-noden."
+helperText = "Måste matcha autentiseringen som är angiven på n8n:s webhook-nod."
 label = "Webhook-autentisering"
 
+[portal.connections.types.n8n.fields.authType.options]
 [portal.connections.types.n8n.fields.authType.options.basic]
-label = "Basic auth"
+label = "Grundläggande autentisering"
 
 [portal.connections.types.n8n.fields.authType.options.header]
-label = "Header-auth"
+label = "Autentisering via huvud"
 
 [portal.connections.types.n8n.fields.authType.options.none]
 label = "Ingen"
 
 [portal.connections.types.n8n.fields.headerName]
-helperText = "Header-namnet från n8n-uppgiften, inte dess värde."
-label = "Header-namn"
+helperText = "Huvudnamnet från n8n-autentiseringsuppgiften, inte dess värde."
+label = "Huvudnamn"
 placeholder = "X-N8N-Key"
 
 [portal.connections.types.n8n.fields.token]
-label = "Header-värde"
+label = "Huvudvärde"
 
 [portal.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "Lagra bearbetade dokument i Nextcloud."
 label = "Nextcloud"
 
+[portal.connections.types.nextcloud.fields]
 [portal.connections.types.nextcloud.fields.appPassword]
 label = "Applösenord"
 
@@ -8756,22 +8826,24 @@ label = "Presidio (självhostad)"
 description = "Läs och tillämpa Microsoft Purview-känslighetsetiketter på PDFs."
 label = "Microsoft Purview"
 
+[portal.connections.types.purview.fields]
 [portal.connections.types.purview.fields.clientId]
 helperText = "Valfritt. Behövs bara för att välja etiketter efter namn; etikettering fungerar utan det."
-label = "Application (client) ID"
+label = "Program-ID (klient)"
 
 [portal.connections.types.purview.fields.clientSecret]
 label = "Klienthemlighet"
 
 [portal.connections.types.purview.fields.tenantId]
 helperText = "Stämplas på varje etikett som dess SiteId, så Purview-medvetna verktyg vet vilken organisation som tillämpade den."
-label = "Directory (tenant) ID"
+label = "Katalog-ID (klientorganisation)"
 placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
 
 [portal.connections.types.s3]
 description = "En S3 bucket som källor kan läsa från och pipeline-utdata kan skriva till."
 label = "S3-lagring"
 
+[portal.connections.types.s3.fields]
 [portal.connections.types.s3.fields.accessKeyId]
 label = "Åtkomstnyckel-ID"
 
@@ -8780,7 +8852,7 @@ label = "Bucket"
 
 [portal.connections.types.s3.fields.endpoint]
 helperText = "Lämna tomt för AWS. Ange detta för MinIO eller en annan S3-kompatibel lagring."
-label = "Endpoint"
+label = "Slutpunkt"
 
 [portal.connections.types.s3.fields.region]
 label = "Region"
@@ -8797,6 +8869,7 @@ description = "Hämta nya dokument från en SFTP (SSH)-server."
 hostPlaceholder = "sftp.example.com"
 label = "SFTP"
 
+[portal.connections.types.sftp.fields]
 [portal.connections.types.sftp.fields.hostKeyFingerprint]
 helperText = "Valfritt. Serverns SHA-256 host key fingerprint (från `ssh-keyscan host | ssh-keygen -lf -`). När den anges accepteras endast en server som presenterar denna nyckel; när den lämnas tom fästs nyckeln som ses vid första anslutningen och senare ändringar nekas."
 label = "Värdnyckelns fingeravtryck"
@@ -8821,6 +8894,7 @@ description = "Övervaka en SMB / CIFS-nätverksresurs (Windows eller Samba)."
 hostPlaceholder = "fileserver.example.com"
 label = "SMB / Nätverksresurs"
 
+[portal.connections.types.smb.fields]
 [portal.connections.types.smb.fields.domain]
 helperText = "Valfritt. Windows-domänen eller arbetsgruppen, om din server använder en."
 label = "Domän"
@@ -8885,8 +8959,8 @@ eyebrow = "API-REFERENS"
 fieldCount_one = "{{count}} fält"
 fieldCount_other = "{{count}} fält"
 filterAll = "Alla"
-filterAriaLabel = "Filtrera endpoints efter vertikal"
-lead = "Varje dokumenttyp är en typad endpoint. POST:a en fil, ta emot schemavaliderad JSON. Filtrera efter vertikal nedan."
+filterAriaLabel = "Filtrera slutpunkter efter användningsområde"
+lead = "Varje dokumenttyp har en typad slutpunkt. POST:a en fil och ta emot schemavaliderad JSON. Filtrera efter användningsområde nedan."
 title = "Slutpunkter"
 
 [portal.docs.errors]
@@ -8911,7 +8985,7 @@ title = "Snabbstart"
 bodyAfterLink = "för copy-paste-recept."
 bodyBeforeLink = "koppla samma anrop till en pipeline för att kedja validering, maskering och leverans — eller exponera det för en agent över MCP. Se"
 label = "Nästa:"
-link = "Playbooks"
+link = "Spelplaner"
 
 [portal.docs.quickstart.step1]
 body = "Skapa en avgränsad nyckel från fliken Infrastruktur. Nycklar har hastighetsgränser och en valfri IP-allowlist. Exportera den till ditt shell:"
@@ -8928,7 +9002,7 @@ codeCaption = "200 OK"
 title = "Läs det strukturerade resultatet"
 
 [portal.docs.rateLimits]
-burst = "Burst"
+burst = "Tillfällig topp"
 codeCaption = "429 Too Many Requests"
 concurrency = "Samtidighet"
 eyebrow = "KOM IGÅNG"
@@ -8938,12 +9012,12 @@ title = "Hastighetsgränser och kvoter"
 
 [portal.docs.recipes]
 cloneButton = "Klona recept"
-eyebrow = "PLAYBOOKS"
+eyebrow = "SPELPLANER"
 lead = "End-to-end-mönster som kedjar källor, åtgärder och destinationer. Varje mappar till en pipeline som du kan klona."
 title = "Recept"
 
 [portal.docs.sdks]
-eyebrow = "SDKS"
+eyebrow = "SDK:ER"
 lead = "Förstapartsklienter med typade svar, automatiska omförsök och strömmande uppladdningar. Alla följer samma endpoint-katalog."
 title = "Officiella SDK:er"
 
@@ -8952,7 +9026,7 @@ beta = "Beta"
 deprecated = "Föråldrad"
 
 [portal.docs.skills]
-eyebrow = "SKILLS"
+eyebrow = "FÄRDIGHETER"
 lead = "Medföljande, namngivna förmågor som din agent anropar som ett enda verktyg. Varje skill är en deterministisk åtgärdskedja med kopplade evals."
 title = "Agent-skills"
 
@@ -8963,10 +9037,10 @@ title = "På denna sida"
 codeCaption = "document.processed"
 eyebrow = "API-REFERENS"
 lead = "Prenumerera på händelserna document.processed, pipeline.completed och quota.threshold. Payloads signeras med HMAC-SHA256."
-title = "Webhooks"
+title = "Webhookar"
 
 [portal.docs.webhooks.callout]
-afterHelper = "hjälpare."
+afterHelper = "hjälpfunktion."
 beforeHelper = "headern mot din signeringshemlighet innan du litar på en payload. SDK:er levereras med en"
 beforeSignature = "Verifiera"
 
@@ -9024,16 +9098,17 @@ inReview = "Under granskning"
 processed = "Bearbetade"
 
 [portal.documents.overview]
-action = "Pipeline / Åtgärd"
+action = "Arbetsflöde / åtgärd"
 product = "Produkt"
 received = "Tid"
 status = "Status"
 type = "Typ"
 user = "Användare"
 
+[portal.documents.queue]
 [portal.documents.queue.empty]
 connectSource = "Anslut en källa"
-createPipeline = "Skapa en pipeline"
+createPipeline = "Skapa ett arbetsflöde"
 description = "När källor matar in dokument i dina pipelines visas de här för granskning."
 title = "Inga dokument i kön"
 
@@ -9051,7 +9126,7 @@ rowActions = "Radåtgärder"
 sensitiveLabel = "Känsligt"
 
 [portal.documents.table.columns]
-action = "Pipeline / Åtgärd"
+action = "Arbetsflöde / åtgärd"
 document = "Dokument"
 labels = "Etiketter"
 product = "Produkt"
@@ -9095,8 +9170,8 @@ unattended = "Den här filen matades in av en mapp, bucket eller webhook, så in
 unavailable = "Inte tillgängligt för det här felet."
 
 [portal.failures.empty]
-description = "Allt från en policykörning eller ett redigeringsverktyg som behöver granskas visas här."
-title = "Inget behöver din uppmärksamhet"
+description = "Misslyckade policykörningar visas här med de åtgärder du kan vidta."
+title = "Inga fel registrerade"
 
 [portal.failures.emptyClosed]
 description = "Objekt du avfärdar eller löser sparas här med sitt resultat."
@@ -9108,6 +9183,7 @@ source = "Källa"
 type = "Typ"
 user = "Användare"
 
+[portal.failures.kind]
 [portal.failures.kind.complianceNotMet]
 description = "Efterlevnadskontrollen nekade detta dokument eftersom det inte uppfyller standarden som policyn validerar mot. Överträdelsen visas nedan."
 title = "Efterlevnadsstandard uppfylls inte"
@@ -9121,7 +9197,7 @@ description = "Din fil har inget innehåll, så det fanns inget för körningen 
 title = "Tom fil"
 
 [portal.failures.kind.inputPasswordProtected]
-description = "Din fil är lösenordsskyddad, så körningen kunde inte läsa den."
+description = "Arbetsflödet kunde inte öppna dokumentet eftersom det är lösenordsskyddat. Lås upp det och kör igen, eller hoppa över den här filen."
 title = "Lösenordsskyddat dokument"
 
 [portal.failures.kind.inputUnavailable]
@@ -9169,17 +9245,17 @@ description = "Den här servern saknar programvara som steget behöver, så kör
 title = "Programvara inte installerad"
 
 [portal.failures.kind.unknown]
-description = "Något gick fel som Stirling ännu inte känner igen."
-title = "Okänt problem"
+description = "Körningen misslyckades av en anledning som Stirling ännu inte känner igen. Råmeddelandet visas nedan."
+title = "Okänt fel"
 
 [portal.failures.log]
 copy = "Kopiera fel"
 view = "Visa fel"
 
 [portal.failures.origin]
-pipeline = "Pipeline"
+pipeline = "Arbetsflöde"
 policy = "Policykörning"
-tool = "Redigeringsverktyg"
+tool = "Verktygskörning"
 
 [portal.failures.outcome]
 dismissed = "Avfärdad"
@@ -9199,6 +9275,7 @@ editor = "Redigerare"
 description = "Den här kön är synlig för teamledare på arbetsytor som kör policies."
 title = "Inget att granska"
 
+[portal.home]
 [portal.home.download]
 back = "Tillbaka"
 body = "Ladda ner desktop-appen eller självhosta servern."
@@ -9267,7 +9344,7 @@ options = "Visa distributionsalternativ"
 start = "Distribuera editorn"
 
 [portal.home.editor.target]
-cloud = "Hanterat Cloud"
+cloud = "Hanterat moln"
 docker = "Självhostad · Docker"
 kubernetes = "Självhostad · Kubernetes"
 
@@ -9276,6 +9353,7 @@ afternoon = "God eftermiddag"
 evening = "God kväll"
 morning = "God morgon"
 
+[portal.infrastructure]
 [portal.infrastructure.apiKeys]
 createKey = "Skapa nyckel"
 heading = "API-nycklar"
@@ -9530,6 +9608,7 @@ ACTIVE = "Aktiv"
 DISABLED = "Återkallad"
 RETIRED = "Pensionerad"
 
+[portal.infrastructure.encryption.unavailable]
 [portal.infrastructure.encryption.unavailable.forbidden]
 description = "Ditt konto har inte behörighet att visa krypteringsinställningar."
 title = "Inte tillgängligt för ditt konto"
@@ -9577,18 +9656,18 @@ signing = "Signering"
 storage = "Lagring"
 
 [portal.integrations.noResults]
-description = "Inga integrationer matchar dina filter. Prova en annan kategori eller sökning."
+description = "Inga integrationer matchar filtren. Prova en annan kategori eller sökning."
 title = "Inga träffar"
 
 [portal.integrations.status]
 connected = "Ansluten"
 
 [portal.integrations.table]
-integration = "Integration"
+integration = "Integrering"
 worksWith = "Fungerar med"
 
 [portal.integrations.worksWith]
-pipelines = "Pipelines"
+pipelines = "Arbetsflöden"
 policies = "Policyer"
 sources = "Källor"
 
@@ -9607,7 +9686,7 @@ editor = "Redigerare"
 home = "Hem"
 infrastructure = "Infrastruktur"
 integrations = "Integrationer"
-pipelines = "Pipelines"
+pipelines = "Arbetsflöden"
 policies = "Policyer"
 procurement = "Inköp"
 review = "Granska"
@@ -9623,7 +9702,7 @@ processor = "PDF-processor"
 permissionsRetry = "Försök igen"
 permissionsUnavailable = "Kunde inte kontrollera om du kan hantera policies, så policyåtgärder är inte tillgängliga just nu."
 subtitle = "Automatisera dina dokumentflöden. Börja med en mall för en enkel, guidad konfiguration, eller bygg en anpassad pipeline från grunden. Tillämpa valfri pipeline som en policy för att köra den på varje dokument."
-title = "Pipelines"
+title = "Arbetsflöden"
 
 [portal.pipelines.actions]
 newCustomPipeline = "Ny anpassad pipeline"
@@ -9667,20 +9746,20 @@ unknownStep = "Okänd åtgärd, behålls som den är."
 unsavedBody = "Du har osparade ändringar. Spara dem innan du lämnar, eller kassera dem?"
 unsavedTitle = "Osparade ändringar"
 usesDefaults = "Körs med standardinställningar"
-viewDefinition = "Visa definition"
+viewDefinition = "Visa arbetsflödesdefinition"
 
 [portal.pipelines.builder.blocker]
 aiClassification = "Aktivera AI-klassificering i Inställningar, eller ta bort steget Klassificera"
 destination = "Välj en destination"
 heading = "För att skapa denna pipeline:"
-incompatible = "Åtgärda steg som inte kan köras i ordning: {{tools}}"
+incompatible = "Åtgärda steg som inte kan köras i följd: {{tools}}"
 managerOnly = "Endast en administratör eller teamledare kan ändra en policy"
 name = "Ge pipelinen ett namn"
 routing = "Ge varje rutt dokumenttyper och en destination"
 routingNeedsClassify = "Lägg till ett Klassificera-steg, eller stäng av routing efter dokumenttyp"
-saveHeading = "För att spara dina ändringar:"
+saveHeading = "För att spara ändringarna:"
 schedule = "Ange hur ofta den körs"
-setup = "Slutför konfigurationen: {{tools}}"
+setup = "Slutför konfigureringen: {{tools}}"
 source = "Välj en indatakälla"
 
 [portal.pipelines.builder.diagnostic]
@@ -9767,7 +9846,7 @@ hours = "timmar"
 minutes = "minuter"
 
 [portal.pipelines.definition]
-subtitle = "Pipelinen så som den skulle sparas."
+subtitle = "Arbetsflödet så som det kommer att sparas."
 title = "Definition"
 
 [portal.pipelines.delete]
@@ -9795,7 +9874,7 @@ managerOnly = "Endast en administratör eller teamledare kan tillämpa en pipeli
 
 [portal.pipelines.graph]
 addFirstTool = "Lägg till ett verktyg"
-dragHint = "Släpp på en linje för att flytta det"
+dragHint = "Släpp på en rad för att flytta det"
 insertHere = "Lägg till ett verktyg här"
 removeNode = "Ta bort {{name}}"
 showError = "Visa varför {{name}} misslyckades"
@@ -9810,16 +9889,16 @@ failed = "Misslyckades"
 running = "Körs"
 
 [portal.pipelines.inspector]
-multipleBody = "Dra någon av dem till en linje för att flytta dem tillsammans, eller tryck på Delete för att ta bort dem."
-multipleSelected_one = "{{count}} steg markerat"
-multipleSelected_other = "{{count}} steg markerade"
+multipleBody = "Dra någon av dem till en rad för att flytta dem tillsammans, eller tryck på Delete för att ta bort dem."
+multipleSelected_one = "{{count}} steg valt"
+multipleSelected_other = "{{count}} steg valda"
 noSelectionBody = "Välj en nod i grafen för att ändra vad den gör."
-noSelectionTitle = "Inget markerat"
+noSelectionTitle = "Inget valt"
 
 [portal.pipelines.inspector.status]
 completed_one = "Slutförde det enda steget"
 completed_other = "Slutförde alla {{count}} steg"
-failed_one = "Misslyckades på det enda steget"
+failed_one = "Misslyckades i det enda steget"
 failed_other = "Misslyckades efter {{done}} av {{count}} steg"
 running_one = "Kör det enda steget"
 running_other = "Kör steg {{done}} av {{count}}"
@@ -9842,7 +9921,7 @@ active = "Aktiv"
 paused = "Pausad"
 
 [portal.pipelines.table]
-name = "Pipeline"
+name = "Arbetsflöde"
 sources = "Källor"
 status = "Status"
 steps = "Steg"
@@ -9872,6 +9951,7 @@ defaultName = "{{category}}-pipeline"
 comingSoon = "Uppgradera till Enterprise"
 requiresAiEngine = "Kräver AI-motor"
 
+[portal.policies.categories]
 [portal.policies.categories.classification]
 desc = "Identifiera varje dokuments typ vid uppladdning och tagga dess metadata för arkivering och sökning."
 label = "Klassificering"
@@ -9890,7 +9970,7 @@ label = "Lagringstid"
 
 [portal.policies.categories.routing]
 desc = "Dirigera dokument automatiskt till rätt team, mapp eller system."
-label = "Routing"
+label = "Dirigering"
 
 [portal.policies.categories.security]
 desc = "Upptäck PII, maskera, ta bort aktivt innehåll och vattenmärk dokument."
@@ -9923,6 +10003,8 @@ description = "Välj dokumenten att bearbeta, gör deras text sökbar och skicka
 2 = "Indexera"
 3 = "Behåll originalet"
 
+[portal.policies.config.pdfa]
+[portal.policies.config.pdfa.fields]
 [portal.policies.config.pdfa.fields.outputFormat]
 help = "PDF/A-2b passar de flesta arkiv. PDF/A-1b är striktast och mest allmänt accepterad; PDF/A-3b tillåter dessutom bilagor."
 label = "Arkivprofil"
@@ -10035,6 +10117,7 @@ label = "Publicera ett meddelande på Discord"
 description = "Registrerar vad policyn gjorde som ett sökbart dokument."
 label = "Indexera en granskningshändelse i Elasticsearch"
 
+[portal.policies.operations.fields]
 [portal.policies.operations.fields.bodyMode]
 helperText = "Multipart passar uppladdnings-API:er; JSON passar API:er som vill ha filen i en payload; binary skickar de råa byten."
 label = "Hur dokumentet ska skickas"
@@ -10061,7 +10144,7 @@ placeholder = "processor@acme.com"
 
 [portal.policies.operations.fields.headers]
 helperText = "Ett JSON-objekt med par av header-namn/värde. Anslutningens inloggningsuppgift läggs till åt dig."
-label = "Rubriker"
+label = "Huvuden"
 
 [portal.policies.operations.fields.index]
 label = "Index"
@@ -10129,22 +10212,22 @@ description = "Skickar det bearbetade dokumentet som en bilaga."
 label = "Skicka dokumentet via e-post (Mailgun)"
 
 [portal.policies.operations.n8nGate]
-description = "Ditt workflow avgör om körningen fortsätter."
-label = "Be ett n8n-workflow godkänna"
-note = "Workflowet måste svara med {\"approved\": true}. Allt annat — inklusive en timeout — stoppar körningen och parkerar dokumentet."
+description = "Ditt arbetsflöde avgör om körningen fortsätter."
+label = "Låt ett n8n-arbetsflöde godkänna"
+note = "Arbetsflödet måste svara med {\"approved\": true}. Allt annat – även en tidsgräns – stoppar körningen och parkerar dokumentet."
 
 [portal.policies.operations.n8nNotify]
-description = "Skickar körningens detaljer, inte dokumentet."
-label = "Meddela ett n8n-workflow"
+description = "Skickar körningens uppgifter, inte dokumentet."
+label = "Meddela ett n8n-arbetsflöde"
 
 [portal.policies.operations.n8nSend]
-description = "Skickar dokumentet och körningens detaljer till ditt workflow."
+description = "Skickar dokumentet och körningens uppgifter till ditt arbetsflöde."
 label = "Skicka dokumentet till n8n"
 
 [portal.policies.operations.n8nTransform]
-description = "Ditt workflow bearbetar dokumentet och filen det returnerar ersätter det."
+description = "Ditt arbetsflöde bearbetar dokumentet och filen det returnerar ersätter det."
 label = "Bearbeta dokumentet i n8n"
-note = "Ställ in Webhook-noden så att den svarar med \"Using Respond to Webhook Node\" och returnerar en fil. Med standardinställningen \"Immediately\" svarar n8n med en bekräftelse, och den skulle ersätta dokumentet."
+note = "Ställ in webhook-noden att svara med \"Using Respond to Webhook Node\" och returnera en fil. Med standardinställningen \"Immediately\" svarar n8n med en bekräftelse, och den skulle ersätta dokumentet."
 
 [portal.policies.operations.nextcloudUpload]
 description = "Skriver det bearbetade dokumentet till en mapp."
@@ -10187,6 +10270,7 @@ label = "Posta dokumentet till en webhook"
 description = "Skickar körningens detaljer till din automatisering."
 label = "Utlös ett Zap- eller Make-scenario"
 
+[portal.policies.wizard]
 [portal.policies.wizard.actions]
 cancel = "Avbryt"
 customise = "Anpassa"
@@ -10194,6 +10278,7 @@ customiseUnavailable = "Den fullständiga byggaren finns på Processor"
 enablePolicy = "Skapa pipeline"
 saveChanges = "Spara ändringar"
 
+[portal.policies.wizard.capability]
 [portal.policies.wizard.capability.classify]
 desc = "Identifierar dokumentets typ utifrån ditt teams etiketter och taggar det, så att det arkiveras och söks efter kategori."
 label = "Klassificera dokumentet"
@@ -10310,7 +10395,7 @@ description = "Välj vad denna pipeline gör med varje dokument den bearbetar."
 
 [portal.processorFlow]
 footnote = "Antal avser de senaste 24 timmarna. Flödeshastigheten är illustrativ."
-liveBadge = "Live"
+liveBadge = "Direkt"
 stats = "{{connected}} anslutna · {{processed}} PDF-dokument bearbetade"
 title = "PDF-processor"
 
@@ -10507,6 +10592,7 @@ daysLeft_one = "{{count}} dag kvar"
 daysLeft_other = "{{count}} dagar kvar"
 expired = "Provperioden har löpt ut"
 
+[portal.procurement.journeySteps]
 [portal.procurement.journeySteps.agreement]
 blurb = "En signatur täcker MSA, beställningsformulär, EULA och DPA."
 gatingAction = "Granska och signera ditt avtal"
@@ -10582,7 +10668,7 @@ subtitle = "Din lösningsingenjör går igenom utrullningen med ditt team. Välj
 title = "Boka ett samtal"
 
 [portal.procurement.setup]
-airgap = "Air-gapped"
+airgap = "Luftgap"
 airgapSub = "Isolerad, ingen utgående trafik"
 back = "Tillbaka"
 businessName = "Företagsnamn"
@@ -10624,9 +10710,11 @@ title = "Enterprise-testperiod"
 subtitle = "Allt från dina policykörningar och teamets redigerare som kräver din uppmärksamhet."
 title = "Granskning"
 
+[portal.settings]
 [portal.settings.sections]
 account-link = "Kontokoppling"
 
+[portal.shell]
 [portal.shell.sidebar]
 appEditor = "Redigerare"
 appProcessor = "Processor"
@@ -10673,6 +10761,7 @@ cancel = "Avbryt"
 confirm = "Ta bort"
 title = "Ta bort källa?"
 
+[portal.sources.networkFields]
 [portal.sources.networkFields.connection]
 helperText = "Den sparade kopplingen med serveradress och autentiseringsuppgifter. Delas av varje källa som använder den."
 label = "Anslutning"
@@ -10710,6 +10799,7 @@ status = "Status"
 type = "Typ"
 usedBy = "Policyer"
 
+[portal.sources.types]
 [portal.sources.types.box]
 description = "Hämta dokument från Box-mappar som ditt team redan delar."
 label = "Box"
@@ -10731,6 +10821,7 @@ label = "E-postinkorg"
 description = "Bevaka en katalog på servern för nya dokument."
 label = "Mapp"
 
+[portal.sources.types.folder.fields]
 [portal.sources.types.folder.fields.directory]
 helperText = "Den absoluta sökvägen till mappen som ska bevakas för nya filer."
 label = "Mapp"
@@ -10781,6 +10872,7 @@ label = "OneDrive"
 description = "Hämta dokument från en Amazon S3- eller S3-kompatibel bucket."
 label = "Amazon S3"
 
+[portal.sources.types.s3.fields]
 [portal.sources.types.s3.fields.connection]
 helperText = "Den sparade kopplingen med bucket och autentiseringsuppgifter. Delas av varje källa och pipeline-utdata som använder den."
 label = "Anslutning"
@@ -10874,6 +10966,7 @@ body = "Din Stirling-kontosession har löpt ut. Logga in igen för att visa fakt
 [portal.users]
 title = "Användare"
 
+[portal.users.roles]
 [portal.users.roles.admin]
 label = "Admin (organisationsägare)"
 summary = "Full styrning över arbetsytan, inställningar och medlemmar."
@@ -10921,6 +11014,7 @@ unlimited = "{{used}} platser · Obegränsat"
 [printFile]
 title = "Skriv ut fil"
 
+[processingFolders]
 [processingFolders.setup]
 addFolder = "Lägg till mapp"
 advancedSteps = "Den här mappen använder en bearbetningskonfiguration som den här guiden inte kan redigera. Dess sparade steg har inte ändrats."
@@ -10979,6 +11073,7 @@ failed = "Misslyckades"
 title = "Bearbetar den här mappen"
 waiting = "Köad ..."
 
+[provider]
 [provider.googledrive]
 name = "Google Drive"
 scope = "Filimport"
@@ -11003,6 +11098,7 @@ label = "Aktivera filväljare för Google Drive"
 notConfigured = "Google Drive är inte konfigurerat"
 pickerFailed = "Det gick inte att öppna Google Drive-väljaren"
 
+[provider.oauth2]
 [provider.oauth2.generic]
 name = "Generisk OAuth2"
 scope = "SSO"
@@ -11036,8 +11132,8 @@ description = "Namnet på din OAuth2-leverantör (t.ex. Azure AD, Okta)"
 label = "Leverantörsnamn"
 
 [provider.oauth2.generic.scopes]
-description = "Kommaseparerade OAuth2-scopes"
-label = "Scopes"
+description = "Kommaseparerade OAuth2-behörighetsomfång"
+label = "Behörighetsomfång"
 
 [provider.oauth2.generic.useAsUsername]
 description = "Fält att använda som användarnamn"
@@ -11055,8 +11151,8 @@ description = "OAuth2 Client Secret från GitHub Developer Settings"
 label = "Klienthemlighet"
 
 [provider.oauth2.github.scopes]
-description = "Kommaseparerade OAuth2-scopes"
-label = "Scopes"
+description = "Kommaseparerade OAuth2-behörighetsomfång"
+label = "Behörighetsomfång"
 
 [provider.oauth2.github.useAsUsername]
 description = "Fält att använda som användarnamn (email, login, name)"
@@ -11074,8 +11170,8 @@ description = "OAuth2 Client Secret från Google Cloud Console"
 label = "Klienthemlighet"
 
 [provider.oauth2.google.scopes]
-description = "Kommaseparerade OAuth2-scopes"
-label = "Scopes"
+description = "Kommaseparerade OAuth2-behörighetsomfång"
+label = "Behörighetsomfång"
 
 [provider.oauth2.google.useAsUsername]
 description = "Fält att använda som användarnamn (email, name, given_name, family_name)"
@@ -11097,16 +11193,16 @@ description = "URL till Keycloak-realmets OpenID Connect Discovery-slutpunkt"
 label = "Utfärdarens URL"
 
 [provider.oauth2.keycloak.scopes]
-description = "Kommaseparerade OAuth2-scopes"
-label = "Scopes"
+description = "Kommaseparerade OAuth2-behörighetsomfång"
+label = "Behörighetsomfång"
 
 [provider.oauth2.keycloak.useAsUsername]
 description = "Fält att använda som användarnamn (email, name, given_name, family_name, preferred_username)"
 label = "Använd som användarnamn"
 
 [provider.saml2]
-name = "SAML2"
-scope = "SSO (SAML)"
+name = "SAML 2"
+scope = "Enkel inloggning (SAML)"
 
 [provider.saml2.autoCreateUser]
 description = "Skapa automatiskt användarkonton vid första SAML2-inloggningen"
@@ -11130,15 +11226,15 @@ label = "IDP-utfärdare"
 
 [provider.saml2.idpMetadataUri]
 description = "URI till din leverantörs metadata"
-label = "IDP Metadata URI"
+label = "IDP-metadata-URI"
 
 [provider.saml2.idpSingleLoginUrl]
 description = "URL för att initiera SSO"
-label = "IDP Single Login URL"
+label = "IDP-URL för enkel inloggning"
 
 [provider.saml2.idpSingleLogoutUrl]
 description = "URL för att initiera SLO"
-label = "IDP Single Logout URL"
+label = "IDP-URL för enkel utloggning"
 
 [provider.saml2.privateKey]
 description = "Sökväg till din privata nyckel"
@@ -11204,8 +11300,9 @@ reader = "Läsare"
 signInToUse = "Logga in för att använda detta"
 
 [read]
-tags = "visa,öppna,display,läsa,visare,PDF-visare,PDF-läsare,öppna PDF,visa PDF,display PDF,förhandsgranska,bläddra"
+tags = "visa,öppna,visa innehåll,läsa,visare,PDF-visare,PDF-läsare,öppna PDF,visa PDF,förhandsgranskning,bläddra"
 
+[reader]
 [reader.rail]
 addDocument = "Lägg till fil"
 bookmarks = "Bokmärken"
@@ -11261,6 +11358,8 @@ manual = "Manuell"
 mode = "Läge"
 title = "Maskningsmetod"
 
+[redact.tooltip]
+[redact.tooltip.advanced]
 [redact.tooltip.advanced.caseSensitive]
 text = "Matcha endast text med samma skiftläge. 'Secret' matchar inte 'SECRET' när detta är aktiverat, och [A-Z] i en regex matchar endast versaler."
 title = "Skiftlägeskänslig matchning"
@@ -11286,6 +11385,7 @@ title = "Använd regex"
 text = "Matcha endast kompletta ord, inte delträffar. 'John' matchar inte 'Johnson' när detta är aktiverat."
 title = "Endast hela ord"
 
+[redact.tooltip.manual]
 [redact.tooltip.manual.apply]
 bullet1 = "Markera så många områden som behövs innan du tillämpar"
 bullet2 = "Alla väntande maskningar tillämpas samtidigt"
@@ -11304,6 +11404,7 @@ title = "Verktyg för att markera område"
 text = "Markera text direkt på PDF-filen för maskering. Klicka och dra för att markera specifik text som du vill maskera."
 title = "Verktyg för att markera text"
 
+[redact.tooltip.mode]
 [redact.tooltip.mode.automatic]
 text = "Hittar och maskerar automatiskt angiven text i hela dokumentet. Perfekt för att ta bort återkommande känslig information som namn, adresser eller konfidentiella markeringar."
 title = "Automatisk maskning"
@@ -11348,6 +11449,7 @@ description = "Detta verktyg tar bort alla annoteringar (kommentarer, markeringa
 [removeAnnotations.settings]
 title = "Inställningar"
 
+[removeAnnotations.tooltip]
 [removeAnnotations.tooltip.description]
 title = "Vad det gör"
 
@@ -11356,7 +11458,7 @@ title = "Om Ta bort annoteringar"
 
 [removeBlanks]
 submit = "Ta bort tomma sidor"
-tags = "ta bort,rensa,tom,ta bort tom,ta bort tomma sidor,tomma sidor,vita sidor,ta bort tomma,rensa upp,rensa tomma"
+tags = "ta bort,rensa,tom,ta bort tomma,ta bort tomma sidor,tomma sidor,blanka sidor,rensa tomma,rensning"
 title = "Ta bort tomrum"
 
 [removeBlanks.error]
@@ -11374,6 +11476,7 @@ title = "Inställningar"
 [removeBlanks.threshold]
 label = "Tröskel för pixelvitt"
 
+[removeBlanks.tooltip]
 [removeBlanks.tooltip.header]
 title = "Inställningar för att ta bort tomma sidor"
 
@@ -11415,7 +11518,7 @@ title = "Resultat för borttagning av certifikat"
 
 [removeImage]
 submit = "Ta bort bild"
-tags = "ta bort,radera,rensa,ta bort bild,radera bild,ta bort bilder,ta bort fotografier,radera foton,rensa bilder,minska storlek,ta bort grafik"
+tags = "ta bort,radera,rensa,ta bort bild,radera bild,ta bort bilder,ta bort foton,rensa bilder,minska storlek,ta bort grafik"
 title = "Ta bort bild"
 
 [removeImage.error]
@@ -11446,6 +11549,7 @@ title = "Resultat för borttagning av sidor"
 [removePages.settings]
 title = "Inställningar"
 
+[removePages.tooltip]
 [removePages.tooltip.examples]
 bullet1 = "Ta bort första sidan: 1"
 bullet2 = "Ta bort sista 3 sidorna: -3"
@@ -11541,6 +11645,7 @@ custom = "Anpassad"
 highContrast = "Hög kontrast"
 invertAll = "Invertera alla färger"
 
+[replaceColor.tooltip]
 [replaceColor.tooltip.cmyk]
 text = "Konvertera PDF:en från RGB-färgrymd till CMYK-färgrymd, optimerad för professionell utskrift. Denna process konverterar färger till modellen Cyan, Magenta, Yellow, Black som används av skrivare."
 title = "Konvertera till CMYK"
@@ -11587,6 +11692,7 @@ title = "Förhandsvisning av rotation"
 [rotate.settings]
 title = "Inställningar"
 
+[rotate.tooltip]
 [rotate.tooltip.controls]
 text = "Använd rotationsknapparna för att justera orienteringen. Vänster knapp roterar moturs, höger knapp roterar medurs. Varje klick roterar 90 grader."
 title = "Kontroller"
@@ -11621,6 +11727,7 @@ continue = "Fortsätt"
 subtitle = "Välj var det körs."
 title = "Var vill du köra Stirling?"
 
+[runLocation.choice]
 [runLocation.choice.browser]
 description = "Webbappen."
 title = "I din webbläsare"
@@ -11721,7 +11828,7 @@ title = "Sanera PDF"
 tags = "rengöra,säkra,säker,ta bort hot"
 
 [scalePages]
-tags = "ändra storlek,justera,skala,sidstorlek,ändra sidstorlek,skala sida,ändra storlek,justera storlek,förstora,krymp sida,anpassa till sida,A4,letter size"
+tags = "ändra storlek,justera,skala,sidstorlek,ändra sidstorlek,skala sida,ändra mått,justera mått,förstora,förminska sida,anpassa till sida,A4,letter-storlek"
 title = "Justera sidskala"
 
 [scaleSettings]
@@ -11752,11 +11859,11 @@ unit = "Enhet"
 unitInvalid = "Ogiltig enhet: {{scaleUnit}}"
 
 [scannerEffect]
-tags = "skanna,simulera,skapa,fejkad skanning,se skannad ut,skannereffekt,få att se skannad ut,fotokopieffekt,simulera skanner,realistisk skanning"
+tags = "skanna,simulera,skapa,fejkad skanning,ser skannad ut,skannereffekt,ge skannat utseende,kopieringseffekt,simulera skanner,realistisk skanning"
 
 [scannerImageSplit]
 submit = "Extrahera bildskanningar"
-tags = "separera,auto-detektera,skanningar,multifoto,organisera"
+tags = "separera,autodetektera,skanningar,flera foton,organisera"
 title = "Extraherade bilder"
 
 [scannerImageSplit.error]
@@ -11788,6 +11895,7 @@ whatThisDoes = "Vad detta gör"
 whatThisDoesDesc = "Hittar och extraherar automatiskt varje foto från en skannad sida eller sammansatt bild – ingen manuell beskärning."
 whenToUse = "När den ska användas"
 
+[ScannerImageSplit]
 [ScannerImageSplit.selectText]
 1 = "Vinkeltröskel:"
 10 = "Extra utfyllnad (i pixlar) runt varje sparat foto så att kanterna inte skärs bort."
@@ -11806,6 +11914,7 @@ placeholder = "Ange sökterm..."
 searching = "Söker..."
 title = "Sök i PDF"
 
+[selfHosted]
 [selfHosted.offline]
 hideTools = "Dölj otillgängliga verktyg ▴"
 messageNoFallback = "Verktygen är otillgängliga tills din server är online igen."
@@ -11830,7 +11939,7 @@ documents = "Dokument och RAG"
 general = "AI-motor"
 limits = "Gränser och prestanda"
 models = "Modeller och leverantörer"
-title = "AI"
+title = "AI-inställningar"
 
 [settings.billing]
 title = "Fakturering"
@@ -11887,14 +11996,14 @@ yourTeam = "Ditt team"
 description = "Arbeta lokalt på den här datorn eller anslut appen till en Stirling-server."
 localDescription = "Du använder den lokala backend utan konto. Vissa verktyg som kräver molnbearbetning eller en självhostad server är inte tillgängliga."
 logout = "Logga ut"
-server = "Server"
+server = "Serveranslutning"
 signIn = "Logga in"
 title = "Anslutningsläge"
 user = "Inloggad som"
 
 [settings.connection.mode]
 local = "Endast lokalt"
-saas = "Stirling Cloud"
+saas = "Stirling Cloud (molntjänst)"
 selfhosted = "Självhostad"
 
 [settings.developer]
@@ -11940,7 +12049,7 @@ themeDark = "Mörkt"
 themeDescription = "Välj ljust, mörkt eller följ ditt system så att det växlar automatiskt."
 themeLight = "Ljust"
 themeReset = "Återställ temat till standard"
-themeSystem = "System"
+themeSystem = "Följ systemet"
 title = "Allmänt"
 user = "Användare"
 
@@ -11964,8 +12073,8 @@ tools = "Verktyg"
 
 [settings.general.updates]
 checkForUpdates = "Sök efter uppdateringar"
-currentBackendVersion = "Aktuell backend-version"
-currentFrontendVersion = "Aktuell frontend-version"
+currentBackendVersion = "Aktuell backendversion"
+currentFrontendVersion = "Aktuell frontendversion"
 description = "Sök efter uppdateringar och visa versionsinfo"
 latestVersion = "Senaste version"
 managedByAdmin = "Hanteras av administratör"
@@ -11980,7 +12089,7 @@ updateBehaviorError = "Kunde inte ändra uppdateringsbeteende"
 updateBehaviorErrorLocked = "Den här inställningen är låst av din administratör."
 updateBehaviorLockedDescription = "Din administratör har konfigurerat hur Stirling-PDF hanterar uppdateringar på den här datorn. Kontakta dem för att ändra detta."
 updateBehaviorSaved = "Uppdateringsbeteende sparat."
-versionMismatch = "Din skrivbordsapp och server kör olika versioner. Uppdatera båda till samma version för att undvika kompatibilitetsproblem."
+versionMismatch = "Varning: klientversionen och AppConfig-versionen skiljer sig åt. Olika versioner kan orsaka kompatibilitetsproblem, fel och säkerhetsrisker. Kontrollera att server och klient använder samma version."
 viewDetails = "Visa detaljer"
 
 [settings.general.versionInfo]
@@ -11990,7 +12099,7 @@ server = "Serverversion"
 title = "Versionsinformation"
 
 [settings.general.zoomLevel]
-auto = "Auto"
+auto = "Automatiskt"
 fitPage = "Anpassa till sida"
 fitWidth = "Anpassa till bredd"
 
@@ -12029,11 +12138,11 @@ windows = "Inkludera Ctrl, Alt eller en annan modifierare i ditt kortkommando."
 
 [settings.legal]
 description = "Villkor, integritetspolicy och dina cookieinställningar."
-label = "Juridiskt"
-title = "Juridiskt"
+label = "Juridik"
+title = "Juridik"
 
 [settings.legal.cookiePreferences]
-description = "Granska eller ändra dina val för cookie-samtycke."
+description = "Granska eller ändra dina val för samtycke till kakor."
 manage = "Hantera"
 
 [settings.legal.documents]
@@ -12053,12 +12162,12 @@ listDescription = "Listan visas direkt i UI från releasepaketet eller backend-e
 listTitle = "Paketerade beroenden"
 loadError = "Det gick inte att läsa in tredjepartslicenser"
 module = "Modul"
-version = "Version"
+version = "Versionsnummer"
 
 [settings.licensingAnalytics]
 audit = "Granskningslogg"
 auditDescription = "Vem som gjorde vad på den här servern och hur länge den posten sparas."
-plan = "Plan"
+plan = "Prenumeration"
 planDescription = "Din licens, platser och vad den aktuella planen låser upp."
 usage = "Användningsanalys"
 usageAnalytics = "Användningsanalys"
@@ -12155,7 +12264,7 @@ update = "Uppdatera lösenord"
 [settings.securityAuth]
 connections = "Single Sign-On"
 security = "Inloggning och säkerhet"
-telegram = "Telegram"
+telegram = "Telegram-meddelanden"
 title = "Säkerhet och inloggning"
 
 [settings.server]
@@ -12168,7 +12277,7 @@ submit = "Logga ut"
 title = "Logga ut"
 
 [settings.team]
-title = "Team"
+title = "Mitt team"
 
 [settings.tooltips]
 enableLoginFirst = "Aktivera inloggningsläge först"
@@ -12179,6 +12288,7 @@ people = "Personer"
 teams = "Team"
 title = "Arbetsyta"
 
+[setup]
 [setup.error]
 loginIncomplete = "Det gick inte att slutföra inloggningen"
 noSaasServer = "Ingen SaaS-server konfigurerad"
@@ -12194,7 +12304,7 @@ connectingTo = "Ansluter till:"
 oauthPending = "Öppnar webbläsaren för autentisering..."
 orContinueWith = "Eller fortsätt med e-post"
 skipSignIn = "Fortsätt utan att logga in"
-sso = "Single Sign-On"
+sso = "Enkel inloggning"
 submit = "Logga in"
 
 [setup.login.error]
@@ -12227,7 +12337,7 @@ title = "Anslut till server"
 useLast = "Senast använda server: {{serverUrl}}"
 
 [setup.server.error]
-configFetch = "Kunde inte hämta serverkonfiguration (status {{status}})"
+configFetch = "Det gick inte att hämta serverkonfigurationen (status {{status}})"
 configFetchError = "Det gick inte att hämta serverkonfigurationen: {{error}}"
 dnsFailed = "Kan inte slå upp värdnamn: {{hostname}}"
 emptyUrl = "Ange en server-URL"
@@ -12289,7 +12399,7 @@ last = "Sista sidan"
 maintainRatio = "Växla bibehållet bildförhållande"
 next = "Nästa sida"
 noSavedSigs = "Inga sparade signaturer hittades"
-penSizePlaceholder = "Ange eller välj pennstorlek (1-200)"
+penSizePlaceholder = "Skriv eller välj pennstorlek (1–200)"
 personalSigs = "Personliga signaturer"
 previous = "Föregående sida"
 redo = "Gör om"
@@ -12299,7 +12409,7 @@ sharedSigningRequest = "Begär signaturer"
 sharedSigningStepDesc = "Skicka det här dokumentet till andra för att signera i stället för att signera det själv."
 sharedSigs = "Delade signaturer"
 submit = "Signera dokument"
-tags = "signatur,autograf,e-signatur,elektronisk signatur,digital signatur,signera dokument,godkännande,signoff,auktorisera,endorse,bläcksignatur,handstil"
+tags = "signatur,autograf,e-signering,elektronisk signatur,digital signatur,signera dokument,godkännande,auktorisera,bläcksignatur,handstil"
 title = "Signera"
 undo = "Ångra"
 updateAndPlace = "Uppdatera och placera"
@@ -12344,15 +12454,15 @@ text = "När du har angett ditt namn ovan, klicka var som helst i PDF:en för at
 title = "Så här lägger du till signatur"
 
 [sign.mobile]
-createFromPhone = "Mobil uppladdning"
-description = "Skanna denna QR-kod med din telefon eller surfplatta, rita din signatur, så visas den här automatiskt."
+createFromPhone = "Ladda upp från mobilen"
+description = "Skanna QR-koden med mobilen eller surfplattan, rita din signatur så visas den här automatiskt."
 error = "Anslutningsfel"
-expiryWarning = "QR-koden löper snart ut"
-expiryWarningMessage = "Denna QR-kod löper ut om {{seconds}} sekunder. En ny kod genereras automatiskt."
-instructions = "Öppna kameraappen på din telefon och skanna denna kod. Håll detta fönster öppet medan du ritar."
+expiryWarning = "QR-koden upphör snart att gälla"
+expiryWarningMessage = "QR-koden upphör att gälla om {{seconds}} sekunder. En ny kod skapas automatiskt."
+instructions = "Öppna kameraappen på telefonen och skanna koden. Håll fönstret öppet medan du ritar."
 pollingError = "Fel vid kontroll av signaturen"
 sessionCreateError = "Kunde inte skapa session"
-title = "Rita på din telefon"
+title = "Rita på telefonen"
 
 [sign.mode]
 move = "Flytta signatur"
@@ -12398,7 +12508,7 @@ saved = "Sparad"
 [sign.saved.type]
 canvas = "Ritning"
 image = "Uppladdning"
-text = "Text"
+text = "Textsignatur"
 
 [sign.step]
 createDesc = "Välj hur du vill skapa signaturen"
@@ -12417,11 +12527,11 @@ name = "Text"
 placeholder = "Ange text"
 
 [sign.type]
-canvas = "Canvas"
+canvas = "Rita"
 draw = "Rita"
 image = "Bild"
 saved = "Sparad"
-text = "Text"
+text = "Textsignatur"
 title = "Signaturtyp"
 
 [sign.wallet]
@@ -12581,6 +12691,7 @@ rotateRight = "Rotera åt höger"
 trim = "Beskär till signaturen"
 trimHint = "Beskär det tomma utrymmet runt den"
 
+[signatureSettings]
 [signatureSettings.tooltip]
 header = "Inställningar för signaturutseende"
 
@@ -12767,12 +12878,13 @@ resultsTitle = "Delningsresultat"
 selectMethod = "Välj en delningsmetod"
 splitPages = "Ange sidor att dela på:"
 submit = "Dela"
-tags = "dela,separera,bryta upp,split,extrahera sidor,separera sidor,dela dokument,bryta isär,separata filer,lossa,dela efter sida,dela efter kapitel"
+tags = "dela,separera,bryt,dela upp,extrahera sidor,separera sidor,dela dokument,dela isär,separera filer,lossa bindning,dela efter sida,dela efter kapitel"
 title = "Dela upp PDF"
 
 [split.error]
 failed = "Ett fel inträffade vid delning av PDF:en."
 
+[split.methods]
 [split.methods.byChapters]
 name = "Kapitel"
 tooltip = "Använder PDF‑bokmärken för att bestämma delningspunkter"
@@ -12810,6 +12922,7 @@ splitAt = "Dela vid"
 splitBy = "Dela efter"
 splitInto = "Dela upp i"
 
+[split.methodSelection]
 [split.methodSelection.tooltip]
 bullet1 = "Klicka på ett metodkort för att välja det"
 bullet2 = "Håll muspekaren över varje kort för en snabb beskrivning"
@@ -12851,6 +12964,7 @@ selectMethodFirst = "Välj först en delningsmetod"
 chooseMethod = "Välj metod"
 settings = "Inställningar"
 
+[split.tooltip]
 [split.tooltip.byChapters]
 bullet1 = "Bokmärkesnivå: Vilken nivå som ska delas på (1=topnivå)"
 bullet2 = "Inkludera metadata: Bevara dokumentegenskaper"
@@ -12910,6 +13024,7 @@ bullet3 = "Systemet delar vid sidbrytningar"
 text = "Skapa flera PDF:er som inte överskrider en angiven filstorlek. Perfekt vid storleksbegränsningar eller e‑postbilagor."
 title = "Dela efter filstorlek"
 
+[split.value]
 [split.value.docCount]
 label = "Antal filer"
 placeholder = "t.ex. 3, 5"
@@ -13072,24 +13187,24 @@ uploadButton = "Ladda upp till server"
 
 [superSearch]
 all = "Alla"
-ariaLabel = "Supersökning"
+ariaLabel = "Snabbsökning"
 filtersAriaLabel = "Sökfilter"
 hint = "Skriv för att söka"
 placeholder = "Sök i Stirling"
 placeholderShort = "Sök"
-showLess = "Visa mindre"
+showLess = "Visa färre"
 showMore = "Visa {{count}} till"
 
 [superSearch.group]
-docs = "Dokument"
+docs = "Dokumentation"
 files = "Filer"
 pages = "Sidor"
-processor = "Bearbetare"
+processor = "PDF-processor"
 settings = "Inställningar"
 tools = "Verktyg"
 
 [survey]
-title = "Stirling-PDF-enkät"
+title = "Stirling PDF-enkät"
 
 [swagger]
 clickHere = "klicka här"
@@ -13166,6 +13281,7 @@ right = "Höger"
 [textInput]
 clear = "Rensa inmatning"
 
+[time]
 [time.relative]
 daysAgo = "{{count}}d sedan"
 hoursAgo = "{{count}}h sedan"
@@ -13360,7 +13476,7 @@ urgent = "Brådskande"
 attentionBody = "Din admin behöver logga in för att se mer info. Kontakta dem omedelbart."
 attentionBodyAdmin = "Gå igenom licenskraven för att hålla denna server kompatibel."
 attentionTitle = "Denna server kräver adminåtgärd"
-message = "Få ut det mesta av Stirling PDF med 100 användare, PDF-textredigering och avancerade funktioner"
+message = "Få ut det mesta av Stirling PDF med obegränsade användare och avancerade funktioner"
 seeInfo = "Visa info"
 title = "Uppgradera till Team-planen"
 upgradeButton = "Uppgradera nu"
@@ -13453,17 +13569,17 @@ yearsAgo_one = "för {{count}} år sedan"
 yearsAgo_other = "för {{count}} år sedan"
 
 [users.cap]
-addProcessor = "+ Bearbetare"
+addProcessor = "+ Lägg till Processor"
 approver = "Godkänner policy"
 editor = "Redigerare"
-processor = "Bearbetare"
+processor = "PDF-processor"
 
 [users.columns]
-capabilities = "Funktioner"
-email = "E-post"
+capabilities = "Behörigheter"
+email = "E-postadress"
 person = "Person"
 role = "Roll"
-status = "Status"
+status = "Kontostatus"
 team = "Team"
 
 [users.confirm]
@@ -13491,8 +13607,8 @@ addToTeam = "Lägg till i team"
 [users.invite]
 access = "Åtkomst"
 action = "Bjud in personer"
-authOauth = "OAuth2 / SSO"
-authSaml = "SAML 2.0"
+authOauth = "OAuth 2 / SSO"
+authSaml = "SAML 2"
 authType = "Inloggningsmetod"
 authWeb = "Lösenord"
 create = "Skapa konto"
@@ -13514,7 +13630,7 @@ processorDesc = "Styrningsytan, kör pipelines, agenter och API."
 role = "Roll"
 send2 = "Skicka inbjudan"
 subtitle2 = "De får ett e-postmeddelande för att gå med i din Stirling-arbetsyta."
-team = "Team"
+team = "Tilldela team"
 title = "Bjud in personer"
 username = "Användarnamn"
 usernameError = "Ange ett giltigt användarnamn (3-50 tecken) eller en email-adress"
@@ -13530,7 +13646,7 @@ title = "Väntande inbjudningar"
 
 [users.invites.columns]
 expires = "Upphör"
-invitee = "Inbjuden"
+invitee = "Inbjuden person"
 
 [users.loadError]
 description = "Något gick fel vid kontakt med backend, eller så har du inte åtkomst. Försök igen."
@@ -13538,7 +13654,7 @@ title = "Kunde inte läsa in medlemmar"
 
 [users.moveTeam]
 apply = "Flytta"
-team = "Team"
+team = "Målteam"
 title = "Flytta till team"
 
 [users.newTeam]
@@ -13703,6 +13819,8 @@ enableDarkFilter = "Aktivera mörkt filter"
 enableSepiaFilter = "Aktivera sepiafilter"
 engineLoadError = "Det gick inte att initiera PDF-visningsmotorn"
 engineSlowWarning = "Initieringen av PDF-motorn tar längre tid än förväntat. Kontrollera webbläsarens WebAssembly- och Worker-inställningar, eller ladda om sidan."
+fitPage = "Anpassa till sida"
+fitWidth = "Anpassa till bredd"
 firstPage = "Första sidan"
 fitPage = "Anpassa till sidan"
 fitWidth = "Anpassa till bredden"
@@ -13747,7 +13865,7 @@ bookmarkTitleRequired = "Bokmärkestitel krävs"
 closeSidebar = "Stäng sidopanel för bokmärken"
 collapseAll = "Fäll ihop alla bokmärken"
 editorOnly = "Det här dokumentets bokmärken kan endast redigeras i redigeraren."
-empty = "Inga bokmärken i detta dokument"
+empty = "Inga bokmärken i det här dokumentet"
 expandAll = "Expandera alla bokmärken"
 loadFailed = "Det gick inte att läsa in bokmärken"
 loading = "Läser in bokmärken..."
@@ -13914,7 +14032,7 @@ tooltipTitle = "Varning"
 [watermark]
 desc = "Lägg till text- eller bildvattenstämplar i PDF‑filer"
 submit = "Lägg till vattenstämpel"
-tags = "stämpel,märke,överlägg,vattenstämpel,branding,logo,konfidentiellt,utkast,upphovsrätt,varumärke,textöverlägg,bildöverlägg,bakgrundstext"
+tags = "stämpel,märkning,överlägg,vattenmärke,varumärke,logotyp,konfidentiell,utkast,upphovsrätt,varumärke,textöverlägg,bildöverlägg,bakgrundstext"
 title = "Lägg till vattenstämpel"
 
 [watermark.error]
@@ -13950,6 +14068,7 @@ textStyle = "Stil"
 type = "Typ av vattenstämpel"
 wording = "Formulering"
 
+[watermark.tooltip]
 [watermark.tooltip.appearance]
 bullet1 = "Rotation: -360° till 360° för vinklade vattenstämplar"
 bullet2 = "Opacitet: 0–100 % för kontroll av transparens"
@@ -13957,6 +14076,7 @@ bullet3 = "Lägre opacitet ger diskreta vattenstämplar"
 text = "Styr hur din vattenstämpel ser ut och smälter in i dokumentet."
 title = "Utseendeinställningar"
 
+[watermark.tooltip.file]
 [watermark.tooltip.file.header]
 title = "Bilduppladdning"
 
@@ -13974,6 +14094,7 @@ bullet3 = "Högupplösta bilder bibehåller kvaliteten bättre"
 text = "Ladda upp en bildfil att använda som vattenstämpel."
 title = "Bildval"
 
+[watermark.tooltip.formatting]
 [watermark.tooltip.formatting.header]
 title = "Formatering och layout"
 
@@ -14001,6 +14122,7 @@ bullet3 = "Högre värden ger mer utspridda mönster"
 text = "Justera avståndet mellan upprepade vattenstämplar över sidan."
 title = "Avståndskontroll"
 
+[watermark.tooltip.textStyle]
 [watermark.tooltip.textStyle.color]
 bullet1 = "Ljusgrå (#d3d3d3) för diskreta vattenstämplar"
 bullet2 = "Svart eller mörka färger för hög kontrast"
@@ -14011,6 +14133,7 @@ title = "Färgval"
 [watermark.tooltip.textStyle.header]
 title = "Textstil"
 
+[watermark.tooltip.type]
 [watermark.tooltip.type.description]
 text = "Välj mellan text- eller bildvattenstämplar utifrån dina behov."
 title = "Välj din vattenstämpel"
@@ -14032,6 +14155,7 @@ bullet3 = "Idealiskt för juridisk text eller varumärkning"
 text = "Perfekt för att lägga till upphovsrättsmeddelanden, företagsnamn eller sekretessmärkningar. Stöder flera språk och anpassade färger."
 title = "Textvattenstämplar"
 
+[watermark.tooltip.wording]
 [watermark.tooltip.wording.header]
 title = "Textinnehåll"
 
@@ -14102,13 +14226,14 @@ toggleLayers = "Visa/dölj lager"
 toggleSidebar = "Visa/dölj sidofält"
 viewer = "Visare"
 
+[workflow]
 [workflow.participant]
 accessExpired = "Din åtkomst till detta dokument har löpt ut."
 certificateFile = "Certifikatfil"
 certificateFilePlaceholder = "Välj certifikatfil"
 certificatePassword = "Certifikatlösenord"
 certificateType = "Certifikattyp"
-certTypeJks = "JKS Keystore"
+certTypeJks = "JKS-nyckellager"
 certTypeP12 = "P12/PKCS12-certifikat"
 certTypeServer = "Servercertifikat (om tillgängligt)"
 completedDeclined = "Du har avböjt detta dokument."
@@ -14156,6 +14281,6 @@ description = "Hantera team och organisera arbetsytans medlemmar"
 [zipWarning]
 cancel = "Avbryt"
 confirm = "Extrahera"
-message_one = "Denna ZIP innehåller {{count}} fil. Extrahera ändå?"
-message_other = "Denna ZIP innehåller {{count}} filer. Extrahera ändå?"
+message_one = "Den här ZIP-filen innehåller {{count}} fil. Extrahera ändå?"
+message_other = "Den här ZIP-filen innehåller {{count}} filer. Extrahera ändå?"
 title = "Stor ZIP-fil"
