@@ -18,14 +18,24 @@ const meta: Meta<typeof BundleCheckoutModal> = {
       handlers: [
         http.post(
           "http://saas.mock/functions/v1/create-payg-bundle-quote",
-          () =>
-            HttpResponse.json({
-              success: true,
-              currency: "usd",
-              unit_amount_minor: 1,
-              available_currencies: ["usd"],
-              currency_locked: false,
-            }),
+          async ({ request }) => {
+            const body = (await request.json()) as { preview?: boolean };
+            return HttpResponse.json(
+              body.preview
+                ? {
+                    success: true,
+                    currency: "usd",
+                    unit_amount_minor: 1,
+                    available_currencies: ["usd"],
+                    currency_locked: false,
+                  }
+                : {
+                    success: true,
+                    stripe_quote_id: "qt_story_bundle",
+                    stripe_quote_number: "Q-STORY-1",
+                  },
+            );
+          },
         ),
         http.post(
           "http://saas.mock/rest/v1/rpc/payg_get_latest_bundle_quote",

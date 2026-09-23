@@ -450,6 +450,34 @@ it("reads Stripe's billing currency and fractional credit rate before prepay", a
   });
 });
 
+it.each([
+  { currency: "GBP" },
+  { currency: "not-a-currency" },
+  { currency: ["usd"] },
+  { currency: 123 },
+  { available_currencies: "usd" },
+  { available_currencies: {} },
+  { available_currencies: ["usd", "GBP"] },
+  { available_currencies: ["usd", null] },
+  { available_currencies: [["usd"]] },
+  { unit_amount_minor: "1" },
+  { unit_amount_minor: 0 },
+  { unit_amount_minor: Infinity },
+])("rejects malformed bundle pricing: %j", async (invalidFields) => {
+  invoke.mockResolvedValue({
+    data: {
+      success: true,
+      currency: "usd",
+      unit_amount_minor: 1,
+      ...invalidFields,
+    },
+    error: null,
+  });
+  await expect(fetchBundlePricing(42)).rejects.toThrow(
+    "Bundle pricing is unavailable.",
+  );
+});
+
 it("requests a chosen quote currency without setting a Checkout currency", async () => {
   invoke.mockResolvedValue({
     data: {

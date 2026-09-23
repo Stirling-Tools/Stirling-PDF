@@ -132,6 +132,74 @@ describe("annual credit purchases", () => {
     },
   );
 
+  it("blocks new quotes when saved-quote lookup fails and resumes the existing quote after reopening", async () => {
+    api.getLatestBundleQuote.mockRejectedValueOnce(
+      new Error("Could not load saved quote"),
+    );
+    const view = showCheckout();
+    expect(
+      await screen.findByText("Could not load saved quote"),
+    ).toBeInTheDocument();
+    const continueButton = screen.getByRole("button", {
+      name: "Continue to payment",
+    });
+    const downloadButton = screen.getByRole("button", {
+      name: "Download quote (PDF)",
+    });
+    expect(continueButton).toBeDisabled();
+    expect(downloadButton).toBeDisabled();
+    fireEvent.click(continueButton);
+    fireEvent.click(downloadButton);
+    expect(api.upsertBundleQuote).not.toHaveBeenCalled();
+    expect(api.createBundleStripeQuote).not.toHaveBeenCalled();
+    expect(sessionStorage.getItem("payg-bundle-calc:42")).toBeNull();
+
+    api.getLatestBundleQuote.mockResolvedValue({
+      quoteId: 7,
+      users: null,
+      posturePolicies: 1,
+      sizeMult: 1,
+      pipelineMult: 1,
+      poolCredits: 1_200_000,
+      priceMinor: 1_000_000,
+      currency: "usd",
+      consentedAt: null,
+      stripeQuoteId: "qt_saved",
+      stripeQuoteNumber: "Q-7",
+      stripeRef: null,
+      validUntil: "2027-01-01",
+    } satisfies LatestBundleQuote);
+    view.rerender(
+      <MantineProvider env="test">
+        <BundleCheckoutModal
+          open={false}
+          wallet={subscribedWallet}
+          onClose={() => {}}
+        />
+      </MantineProvider>,
+    );
+    view.rerender(
+      <MantineProvider env="test">
+        <BundleCheckoutModal
+          open
+          wallet={subscribedWallet}
+          onClose={() => {}}
+        />
+      </MantineProvider>,
+    );
+    await screen.findByText("$10,000.00");
+    expect(
+      screen.queryByText("Could not load saved quote"),
+    ).not.toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Continue to payment" }),
+    );
+    await screen.findByText("Pay for your year");
+    expect(api.getLatestBundleQuote).toHaveBeenCalledTimes(2);
+    expect(api.upsertBundleQuote).not.toHaveBeenCalled();
+    expect(api.createBundleStripeQuote).not.toHaveBeenCalled();
+  });
+
   it("remembers a manual currency selection ahead of browser detection", async () => {
     vi.spyOn(navigator, "languages", "get").mockReturnValue(["en-GB"]);
     api.fetchBundlePricing.mockImplementation(

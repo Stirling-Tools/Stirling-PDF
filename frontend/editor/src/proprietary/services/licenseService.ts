@@ -204,33 +204,36 @@ const licenseService = {
           features: planFeatures.SERVER,
           highlights: planHighlights.SERVER_YEARLY,
         },
-        {
-          id: "selfhosted:enterprise:monthly",
-          lookupKey: "selfhosted:team:monthly",
-          name: "Enterprise - Monthly",
-          price: getPriceInfo("selfhosted:team:monthly"),
-          seatPrice: getPriceInfo("selfhosted:enterpriseseat:monthly"),
-          currency: priceCurrency("selfhosted:team:monthly"),
-          period: "/month",
-          popular: false,
-          requiresSeats: true,
-          features: planFeatures.ENTERPRISE,
-          highlights: planHighlights.ENTERPRISE_MONTHLY,
-        },
-        {
-          id: "selfhosted:enterprise:yearly",
-          lookupKey: "selfhosted:team:yearly",
-          name: "Enterprise - Yearly",
-          price: getPriceInfo("selfhosted:team:yearly"),
-          seatPrice: getPriceInfo("selfhosted:enterpriseseat:yearly"),
-          currency: priceCurrency("selfhosted:team:yearly"),
-          period: "/year",
-          popular: false,
-          requiresSeats: true,
-          features: planFeatures.ENTERPRISE,
-          highlights: planHighlights.ENTERPRISE_YEARLY,
-        },
       ];
+      if (tier !== "server")
+        plans.push(
+          {
+            id: "selfhosted:enterprise:monthly",
+            lookupKey: "selfhosted:team:monthly",
+            name: "Enterprise - Monthly",
+            price: getPriceInfo("selfhosted:team:monthly"),
+            seatPrice: getPriceInfo("selfhosted:enterpriseseat:monthly"),
+            currency: priceCurrency("selfhosted:team:monthly"),
+            period: "/month",
+            popular: false,
+            requiresSeats: true,
+            features: planFeatures.ENTERPRISE,
+            highlights: planHighlights.ENTERPRISE_MONTHLY,
+          },
+          {
+            id: "selfhosted:enterprise:yearly",
+            lookupKey: "selfhosted:team:yearly",
+            name: "Enterprise - Yearly",
+            price: getPriceInfo("selfhosted:team:yearly"),
+            seatPrice: getPriceInfo("selfhosted:enterpriseseat:yearly"),
+            currency: priceCurrency("selfhosted:team:yearly"),
+            period: "/year",
+            popular: false,
+            requiresSeats: true,
+            features: planFeatures.ENTERPRISE,
+            highlights: planHighlights.ENTERPRISE_YEARLY,
+          },
+        );
 
       // Filter out plans with missing prices (price === 0 means Stripe price not found)
       const validPlans = plans.filter((plan) => plan.price > 0);

@@ -403,7 +403,13 @@ export async function fetchBundlePricing(
   });
   if (
     !res.success ||
-    !res.currency ||
+    typeof res.currency !== "string" ||
+    !/^[a-z]{3}$/.test(res.currency) ||
+    (res.available_currencies != null &&
+      (!Array.isArray(res.available_currencies) ||
+        !res.available_currencies.every(
+          (value) => typeof value === "string" && /^[a-z]{3}$/.test(value),
+        ))) ||
     res.unit_amount_minor == null ||
     !Number.isFinite(res.unit_amount_minor) ||
     res.unit_amount_minor <= 0

@@ -327,8 +327,14 @@ export function BundleCheckoutModal({
         getLatestBundleQuote(teamId),
       ]);
       if (cancelled) return;
-      const latest =
-        quoteResult.status === "fulfilled" ? quoteResult.value : null;
+      if (quoteResult.status === "rejected") {
+        const error = quoteResult.reason;
+        setActionError(error instanceof Error ? error.message : String(error));
+        setPricing(null);
+        setResolving(false);
+        return;
+      }
+      const latest = quoteResult.value;
       let resolvedPricing =
         pricingResult.status === "fulfilled" ? pricingResult.value : null;
       const preferredCurrency = latest?.currency ?? getPreferredCurrency();
@@ -969,7 +975,9 @@ function QuoteReceipt({
       <Button
         variant="quiet"
         size="sm"
-        disabled={downloading || quote.poolCredits <= 0}
+        disabled={
+          downloading || quote.poolCredits <= 0 || quote.priceMinor == null
+        }
         onClick={onDownload}
       >
         {downloading

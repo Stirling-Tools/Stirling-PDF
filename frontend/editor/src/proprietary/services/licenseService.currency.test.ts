@@ -74,4 +74,12 @@ it("looks up only Team prices so Enterprise currency support cannot force a USD 
   expect(
     result.plans.find((p) => p.id === "selfhosted:team:monthly"),
   ).toMatchObject({ currency: "AUD", price: 150 });
+  expect(result.plans.map((plan) => plan.id)).toEqual([
+    "free",
+    "selfhosted:team:monthly",
+    "selfhosted:team:yearly",
+  ]);
+  expect(
+    licenseService.groupPlansByTier(result.plans).map((group) => group.tier),
+  ).toEqual(["free", "server"]);
 });
