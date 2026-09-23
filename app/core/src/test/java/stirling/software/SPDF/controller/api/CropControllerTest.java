@@ -285,6 +285,28 @@ class CropControllerTest {
             verify(mockDocument, times(1)).close();
             verify(newDocument, times(1)).close();
         }
+
+        @Test
+        @DisplayName("Should reject a page selection that matches no page")
+        void shouldRejectEmptyPageSelection() throws IOException {
+            MockMultipartFile testFile = pdfFactory.createStandardPdf("test.pdf");
+            CropPdfForm request =
+                    new CropRequestBuilder()
+                            .withFile(testFile)
+                            .withCoordinates(50f, 50f, 512f, 692f)
+                            .withRemoveDataOutsideCrop(false)
+                            .withAutoCrop(false)
+                            .withPageNumbers("9")
+                            .build();
+
+            PDDocument mockDocument = mock(PDDocument.class);
+            when(mockDocument.getNumberOfPages()).thenReturn(3);
+            when(pdfDocumentFactory.load(request)).thenReturn(mockDocument);
+
+            assertThatThrownBy(() -> cropController.cropPdf(request))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("does not select any page");
+        }
     }
 
     @Nested

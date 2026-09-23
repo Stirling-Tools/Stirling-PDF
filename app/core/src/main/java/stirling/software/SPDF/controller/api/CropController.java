@@ -135,6 +135,11 @@ public class CropController {
     private static BitSet pageSelection(CropPdfForm request, PDDocument document) {
         BitSet selected = new BitSet(document.getNumberOfPages());
         request.getPageNumbersList(document, false).forEach(selected::set);
+        String pageNumbers = request.getPageNumbers();
+        if (selected.isEmpty() && pageNumbers != null && !pageNumbers.isBlank()) {
+            throw new IllegalArgumentException(
+                    "pageNumbers '" + pageNumbers + "' does not select any page");
+        }
         return selected;
     }
 
