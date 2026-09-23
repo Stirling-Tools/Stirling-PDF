@@ -38,16 +38,11 @@ jobs:
           - { browser: chromium, project: stubbed }
           - { browser: firefox, project: stubbed-firefox }
           - { browser: webkit, project: stubbed-webkit }
-          # A `shard` value outside the list above makes these standalone
-          # legs instead of additions to every shard. The frame-sampling
-          # viewer swap specs run serially on an unloaded runner (see the
-          # stubbed-viewer-swap projects in playwright.config.ts).
-          - { browser: chromium, shard: viewer-swap, project: stubbed-viewer-swap, workers: 1 }
-          - { browser: firefox, shard: viewer-swap, project: stubbed-viewer-swap-firefox, workers: 1 }
-          - { browser: webkit, shard: viewer-swap, project: stubbed-viewer-swap-webkit, workers: 1 }
-          # The disk-link suite exercises a seam chosen at build time, so it
-          # needs a desktop-mode bundle of its own. Chromium only: it is not
-          # testing engine behaviour.
+          # A `shard` value outside the list above makes this a standalone
+          # leg instead of an addition to every shard. The disk-link suite
+          # exercises a seam chosen at build time, so it needs a desktop-mode
+          # bundle of its own. Chromium only: it is not testing engine
+          # behaviour.
           - { browser: chromium, shard: disk-link, project: stubbed-desktop, suite: desktop }
     steps:
       - name: Harden Runner
@@ -89,7 +84,7 @@ jobs:
           NPM_CONFIG_FETCH_RETRY_FACTOR: "2"
           NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: "1000"
           NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT: "120000"
-        run: task e2e:stubbed-project PROJECT=${{ matrix.project }} -- --workers=${{ matrix.workers || 3 }} ${{ contains(matrix.shard, '/') && format('--shard={0}', matrix.shard) || '' }}
+        run: task e2e:stubbed-project PROJECT=${{ matrix.project }} -- --workers=3 ${{ contains(matrix.shard, '/') && format('--shard={0}', matrix.shard) || '' }}
       - name: Build frontend (desktop mode, for the disk-link suite)
         if: matrix.suite == 'desktop'
         env:
