@@ -314,7 +314,12 @@ export function FileGrid(props: FileGridProps & { loading?: boolean }) {
   }, []);
 
   if (loading && entries.length === 0) {
-    return <SkeletonGrid viewMode={viewMode} />;
+    return (
+      <SkeletonGrid
+        viewMode={viewMode}
+        selectionColumn={Boolean(props.picker)}
+      />
+    );
   }
 
   const emptyState =
@@ -352,7 +357,13 @@ export function FileGrid(props: FileGridProps & { loading?: boolean }) {
   );
 }
 
-function SkeletonGrid({ viewMode }: { viewMode: FilesPageViewMode }) {
+function SkeletonGrid({
+  viewMode,
+  selectionColumn,
+}: {
+  viewMode: FilesPageViewMode;
+  selectionColumn: boolean;
+}) {
   const placeholders = Array.from({ length: 6 });
   if (viewMode === "list") {
     return (
@@ -363,7 +374,7 @@ function SkeletonGrid({ viewMode }: { viewMode: FilesPageViewMode }) {
       >
         {placeholders.map((_, i) => (
           <div key={i} className="files-page-list-row files-page-skeleton-row">
-            <span />
+            {selectionColumn && <span />}
             <span
               className="files-page-skeleton-bar"
               style={{ width: "60%" }}
@@ -617,7 +628,7 @@ function GridView({
               multiSelectActive={
                 !picker?.foldersOnly &&
                 (Boolean(picker) ||
-                  selectedFileIds.size >= (touchSelection ? 1 : 2))
+                  (touchSelection && selectedFileIds.size > 0))
               }
               touchSelection={touchSelection}
               downloadAvailable={Boolean(onDownloadFile)}
@@ -646,6 +657,7 @@ function GridView({
 
 interface FolderItemProps {
   selectionOnly?: boolean;
+  selectionColumn?: boolean;
   folder: FolderRecord;
   fileCount: number;
 
@@ -1438,6 +1450,39 @@ function ListView({
     },
   });
 
+  const selectAll =
+    onSetSelection && visibleCount > 0 ? (
+      <Checkbox
+        checked={allSelected}
+        indeterminate={someSelected}
+        disabled={picker?.selectionDisabled}
+        onChange={(event) => {
+          // A click clears the native mixed state even when the pick limit prevents a selection change.
+          event.currentTarget.indeterminate = someSelected;
+          if (picker) {
+            const next = new Set(selectedFileIds);
+            for (const id of visibleFileIds) {
+              if (allSelected) next.delete(id);
+              else next.add(id);
+            }
+            onSetSelection(next);
+            picker.onSetDiskSelection(allSelected ? [] : visibleDiskFiles);
+          } else {
+            onSetSelection(allSelected ? new Set() : new Set(visibleFileIds));
+          }
+        }}
+        aria-label={
+          allSelected
+            ? t("filesPage.deselectAll", "Clear selection")
+            : t("filesPage.selectAll", "Select all")
+        }
+      />
+    ) : null;
+
+  // Touch selection toggles on tap, so its rows gain checkboxes from the first pick.
+  const touchSelecting = touchSelection && selectedFileIds.size > 0;
+  const selectionColumn = Boolean(picker) || touchSelecting;
+
   const { range, padTop, padBottom, setContainer } = useVirtualFileRows(
     entries.length,
     rowHeightPx(false),
@@ -1445,47 +1490,22 @@ function ListView({
   );
   return (
     <div
-      className="files-page-list files-page-list--adaptive"
+      className={`files-page-list files-page-list--adaptive${touchSelecting ? " files-page-list--selection-column" : ""}`}
       role="grid"
       ref={setContainer}
     >
       <div className="files-page-list-row is-header" role="row">
-        {onSetSelection && visibleCount > 0 ? (
-          <span role="columnheader">
-            <Checkbox
-              checked={allSelected}
-              indeterminate={someSelected}
-              disabled={picker?.selectionDisabled}
-              onChange={(event) => {
-                // A click clears the native mixed state even when the pick limit prevents a selection change.
-                event.currentTarget.indeterminate = someSelected;
-                if (picker) {
-                  const next = new Set(selectedFileIds);
-                  for (const id of visibleFileIds) {
-                    if (allSelected) next.delete(id);
-                    else next.add(id);
-                  }
-                  onSetSelection(next);
-                  picker.onSetDiskSelection(
-                    allSelected ? [] : visibleDiskFiles,
-                  );
-                } else {
-                  onSetSelection(
-                    allSelected ? new Set() : new Set(visibleFileIds),
-                  );
-                }
-              }}
-              aria-label={
-                allSelected
-                  ? t("filesPage.deselectAll", "Clear selection")
-                  : t("filesPage.selectAll", "Select all")
-              }
-            />
-          </span>
-        ) : (
-          <span aria-hidden="true" />
-        )}
-        <span role="columnheader">
+        {selectionColumn &&
+          (selectAll ? (
+            <span role="columnheader">{selectAll}</span>
+          ) : (
+            <span aria-hidden="true" />
+          ))}
+        <span role="columnheader" className="files-page-list-name-header">
+          {/* The thumbnail's slot, so the checkbox sits over the file icons and Name over the file names. */}
+          {!selectionColumn && (
+            <span className="files-page-list-thumb">{selectAll}</span>
+          )}
           <span {...headerProps("name-asc", "name-desc")}>
             {t("filesPage.column.name", "Name")}
             {sortIndicator("name-asc", "name-desc")}
@@ -1533,6 +1553,7 @@ function ListView({
             <FolderRow
               key={`folder-${entry.folder.id}`}
               selectionOnly={Boolean(picker)}
+              selectionColumn={selectionColumn}
               folder={entry.folder}
               fileCount={entry.folderFileCount ?? 0}
               parentPath={entry.parentPath}
@@ -1547,6 +1568,7 @@ function ListView({
             <DiskFileRow
               key={`disk-${entry.disk.path}`}
               selectionOnly={Boolean(picker)}
+              selectionColumn={selectionColumn}
               isSelected={picker?.selectedDiskPaths.has(entry.disk.path)}
               disabledReason={picker?.disabledReason(entry)}
               entry={entry.disk}
@@ -1573,7 +1595,7 @@ function ListView({
               isInWorkspace={
                 activeWorkspaceFileIds?.has(entry.file.id) ?? false
               }
-              selectable={!picker?.foldersOnly}
+              selectionColumn={selectionColumn}
               touchSelection={touchSelection}
               downloadAvailable={Boolean(onDownloadFile)}
               renameAvailable={Boolean(onRenameFile)}
@@ -1601,6 +1623,7 @@ function ListView({
 
 const FolderRow = React.memo(function FolderRow({
   selectionOnly,
+  selectionColumn,
   folder,
   fileCount,
   parentPath,
@@ -1690,7 +1713,7 @@ const FolderRow = React.memo(function FolderRow({
       }}
       className={`files-page-list-row${isDropTarget ? " is-drop-target" : ""}`}
     >
-      <span aria-hidden="true" />
+      {selectionColumn && <span aria-hidden="true" />}
 
       <span
         role="gridcell"
@@ -1827,7 +1850,7 @@ interface FileRowProps {
   isInWorkspace: boolean;
   parentPath?: string;
 
-  selectable: boolean;
+  selectionColumn: boolean;
   touchSelection: boolean;
 
   downloadAvailable: boolean;
@@ -1855,7 +1878,7 @@ const FileRow = React.memo(function FileRow({
   isSelected,
   isInWorkspace,
   parentPath,
-  selectable,
+  selectionColumn,
   touchSelection,
   downloadAvailable,
   renameAvailable,
@@ -1923,26 +1946,27 @@ const FileRow = React.memo(function FileRow({
       className={`files-page-list-row${isSelected ? " is-selected" : ""}${isInWorkspace ? " is-in-workspace" : ""}${locked ? " is-locked" : ""}`}
       title={disabledReason ?? (locked ? lockedHint : undefined)}
     >
-      {selectable ? (
-        <span role="gridcell">
-          <Checkbox
-            disabled={Boolean(disabledReason)}
-            checked={isSelected}
-            onClick={(e) => {
-              e.stopPropagation();
-              actions.selectFile(file.id, false, true);
-            }}
-            onChange={() => {
-              /* handled by onClick */
-            }}
-            aria-label={t("filesPage.selectFile", "Select file {{name}}", {
-              name: file.name,
-            })}
-          />
-        </span>
-      ) : (
-        <span aria-hidden="true" />
-      )}
+      {selectionColumn &&
+        (folderPicker ? (
+          <span aria-hidden="true" />
+        ) : (
+          <span role="gridcell">
+            <Checkbox
+              disabled={Boolean(disabledReason)}
+              checked={isSelected}
+              onClick={(e) => {
+                e.stopPropagation();
+                actions.selectFile(file.id, false, true);
+              }}
+              onChange={() => {
+                /* handled by onClick */
+              }}
+              aria-label={t("filesPage.selectFile", "Select file {{name}}", {
+                name: file.name,
+              })}
+            />
+          </span>
+        ))}
       <span
         role="gridcell"
         style={{
@@ -2208,6 +2232,7 @@ const DiskFileCard = React.memo(function DiskFileCard({
 
 const DiskFileRow = React.memo(function DiskFileRow({
   selectionOnly,
+  selectionColumn,
   isSelected,
   disabledReason,
   entry,
@@ -2217,6 +2242,7 @@ const DiskFileRow = React.memo(function DiskFileRow({
   actions,
 }: {
   selectionOnly?: boolean;
+  selectionColumn: boolean;
   isSelected?: boolean;
   disabledReason?: string;
   entry: DiskFileEntry;
@@ -2255,22 +2281,24 @@ const DiskFileRow = React.memo(function DiskFileRow({
       }}
       title={disabledReason ?? (processingLocked ? lockedHint : entry.path)}
     >
-      <span role="gridcell">
-        {selectionOnly && (
-          <Checkbox
-            checked={Boolean(isSelected)}
-            disabled={locked}
-            onClick={(event) => {
-              event.stopPropagation();
-              actions.selectDiskFile(entry, event.shiftKey);
-            }}
-            onChange={() => {}}
-            aria-label={t("filesPage.selectFile", "Select file {{name}}", {
-              name: entry.name,
-            })}
-          />
-        )}
-      </span>
+      {selectionColumn && (
+        <span role="gridcell">
+          {selectionOnly && (
+            <Checkbox
+              checked={Boolean(isSelected)}
+              disabled={locked}
+              onClick={(event) => {
+                event.stopPropagation();
+                actions.selectDiskFile(entry, event.shiftKey);
+              }}
+              onChange={() => {}}
+              aria-label={t("filesPage.selectFile", "Select file {{name}}", {
+                name: entry.name,
+              })}
+            />
+          )}
+        </span>
+      )}
       <span
         role="gridcell"
         style={{

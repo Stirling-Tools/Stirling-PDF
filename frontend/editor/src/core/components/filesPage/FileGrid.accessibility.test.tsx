@@ -72,7 +72,7 @@ describe("file library accessibility", () => {
     expect(screen.getByRole("listitem", { name: "README" })).toBeVisible();
   });
 
-  it("gives every list row a checkbox before a second file is selected", () => {
+  it("marks selected list rows without giving them checkboxes", () => {
     const other = createNewStirlingFileStub(new File(["text"], "notes.pdf"));
     render(
       grid({
@@ -81,12 +81,16 @@ describe("file library accessibility", () => {
           { kind: "file", file: stored },
           { kind: "file", file: other },
         ],
-        selectedFileIds: new Set([stored.id]),
+        selectedFileIds: new Set([stored.id, other.id]),
+        onSetSelection: () => {},
       }),
     );
-    const [, selectedRow, otherRow] = screen.getAllByRole("row");
-    expect(within(selectedRow).getByRole("checkbox")).toBeChecked();
-    expect(within(otherRow).getByRole("checkbox")).not.toBeChecked();
+    const [header, ...rows] = screen.getAllByRole("row");
+    expect(within(header).getByRole("checkbox")).toBeChecked();
+    for (const row of rows) {
+      expect(row).toHaveAttribute("aria-selected", "true");
+      expect(within(row).queryByRole("checkbox")).not.toBeInTheDocument();
+    }
   });
 
   it("announces native picker selection through its label and checkbox", () => {
