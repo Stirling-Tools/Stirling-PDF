@@ -82,6 +82,76 @@ use tokio::sync::RwLock;
 use lru::LruCache;
 use std::num::NonZeroUsize;
 
+/// Total bytes the static-asset cache may hold. Entry count alone would let a
+/// few large wasm files keep hundreds of megabytes resident.
+const ASSET_CACHE_MAX_BYTES: usize = 64 * 1024 * 1024;
+
+/// A cached asset pinned to the file's length and mtime: the allowed roots
+/// include writable directories, so a path-only key would keep serving the old
+/// bytes after the file changes.
+struct CachedAsset {
+    bytes: Arc<Vec<u8>>,
+    len: u64,
+    modified: Option<std::time::SystemTime>,
+}
+
+/// Byte-bounded LRU over static assets. `get` promotes recency, unlike `peek`.
+struct AssetCache {
+    entries: LruCache<String, CachedAsset>,
+    bytes: usize,
+}
+
+impl AssetCache {
+    fn new() -> Self {
+        Self {
+            entries: LruCache::new(NonZeroUsize::new(128).unwrap()),
+            bytes: 0,
+        }
+    }
+
+    fn get(
+        &mut self,
+        key: &str,
+        len: u64,
+        modified: Option<std::time::SystemTime>,
+    ) -> Option<Arc<Vec<u8>>> {
+        let current = self
+            .entries
+            .get(key)
+            .is_some_and(|entry| entry.len == len && entry.modified == modified);
+        if !current {
+            if let Some(removed) = self.entries.pop(key) {
+                self.bytes -= removed.bytes.len();
+            }
+            return None;
+        }
+        self.entries.get(key).map(|entry| Arc::clone(&entry.bytes))
+    }
+
+    fn put(
+        &mut self,
+        key: String,
+        bytes: Arc<Vec<u8>>,
+        len: u64,
+        modified: Option<std::time::SystemTime>,
+    ) {
+        let size = bytes.len();
+        if size > ASSET_CACHE_MAX_BYTES {
+            return;
+        }
+        if let Some(previous) = self.entries.put(key, CachedAsset { bytes, len, modified }) {
+            self.bytes -= previous.bytes.len();
+        }
+        self.bytes += size;
+        while self.bytes > ASSET_CACHE_MAX_BYTES {
+            match self.entries.pop_lru() {
+                Some((_, evicted)) => self.bytes -= evicted.bytes.len(),
+                None => break,
+            }
+        }
+    }
+}
+
 fn status_response(status: u16) -> tauri::http::Response<Vec<u8>> {
     tauri::http::Response::builder()
         .status(status)
@@ -308,9 +378,7 @@ pub fn run() {
   if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() {
     std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
   }
-  let cache: Arc<RwLock<LruCache<String, Arc<Vec<u8>>>>> = Arc::new(RwLock::new(
-    LruCache::new(NonZeroUsize::new(128).unwrap())
-  ));
+  let cache: Arc<RwLock<AssetCache>> = Arc::new(RwLock::new(AssetCache::new()));
 
   tauri::Builder::default()
     .register_asynchronous_uri_scheme_protocol("asset", move |ctx, request, responder| {
@@ -361,14 +429,24 @@ pub fn run() {
           // LRU cache for hot static assets
           if is_cacheable {
               let key = canonical_path.to_string_lossy().to_string();
-              let cached = cache.read().await.peek(&key).cloned();
-              if let Some(bytes) = cached {
-                  responder.respond(full_response(mime, &bytes));
-                  return;
+              let stamp = tokio::fs::metadata(&canonical_path)
+                  .await
+                  .ok()
+                  .map(|m| (m.len(), m.modified().ok()));
+              if let Some((len, modified)) = stamp {
+                  if let Some(bytes) = cache.write().await.get(&key, len, modified) {
+                      responder.respond(full_response(mime, &bytes));
+                      return;
+                  }
               }
               if let Ok(bytes) = tokio::fs::read(&canonical_path).await {
                   let bytes = Arc::new(bytes);
-                  cache.write().await.put(key, Arc::clone(&bytes));
+                  if let Some((len, modified)) = stamp {
+                      cache
+                          .write()
+                          .await
+                          .put(key, Arc::clone(&bytes), len, modified);
+                  }
                   responder.respond(full_response(mime, &bytes));
                   return;
               }
