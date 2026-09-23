@@ -313,12 +313,7 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
                         category,
                         runId);
 
-        ChargeOutcome outcome;
-        try {
-            outcome = chargeService.openProcess(ctx, inputs);
-        } catch (IOException e) {
-            throw new RuntimeException("openProcess IO failure", e);
-        }
+        ChargeOutcome outcome = chargeService.openProcess(ctx, inputs);
         request.setAttribute(ATTR_JOB_ID, outcome.processId());
         request.setAttribute(ATTR_DISPOSITION, outcome.disposition());
 

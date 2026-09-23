@@ -20,6 +20,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import stirling.software.common.util.TempFileManager;
 import stirling.software.saas.payg.billing.TeamBillingService;
@@ -117,7 +118,8 @@ class SupportingFileBillingTest {
                         mock(PaygMeterReportingService.class),
                         ledger,
                         mock(PrepaidBundleService.class),
-                        mock(TeamBillingService.class));
+                        mock(TeamBillingService.class),
+                        mock(PlatformTransactionManager.class));
     }
 
     @Test

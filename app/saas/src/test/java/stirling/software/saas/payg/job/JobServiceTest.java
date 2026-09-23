@@ -81,7 +81,8 @@ class JobServiceTest {
         Path input = givenFile(tmp, "in.bin");
         // No detector matches.
 
-        JoinOrOpenResult result = service.joinOrOpen(ctx(42L, 100L, 10), List.of(input));
+        JoinOrOpenResult result =
+                service.joinOrOpen(ctx(42L, 100L, 10), service.signaturesOf(List.of(input)));
 
         assertThat(result.disposition()).isEqualTo(JoinOrOpenResult.Disposition.OPENED);
         assertThat(result.job().getOwnerUserId()).isEqualTo(42L);
@@ -104,7 +105,8 @@ class JobServiceTest {
         detector.willMatch(
                 input, new LineageMatch(existingId, ArtifactKind.INPUT, existing.getLastStepAt()));
 
-        JoinOrOpenResult result = service.joinOrOpen(ctx(42L, 100L, 10), List.of(input));
+        JoinOrOpenResult result =
+                service.joinOrOpen(ctx(42L, 100L, 10), service.signaturesOf(List.of(input)));
 
         assertThat(result.disposition()).isEqualTo(JoinOrOpenResult.Disposition.JOINED);
         assertThat(result.job().getId()).isEqualTo(existingId);
@@ -127,7 +129,8 @@ class JobServiceTest {
                 inA, new LineageMatch(jobAId, ArtifactKind.OUTPUT, jobA.getLastStepAt()));
         // inB has no detector match.
 
-        JoinOrOpenResult result = service.joinOrOpen(ctx(42L, 100L, 10), List.of(inA, inB));
+        JoinOrOpenResult result =
+                service.joinOrOpen(ctx(42L, 100L, 10), service.signaturesOf(List.of(inA, inB)));
 
         assertThat(result.disposition()).isEqualTo(JoinOrOpenResult.Disposition.JOINED);
         assertThat(result.job().getId()).isEqualTo(jobAId);
@@ -151,7 +154,8 @@ class JobServiceTest {
         detector.willMatch(inA, new LineageMatch(olderId, ArtifactKind.OUTPUT, older));
         detector.willMatch(inB, new LineageMatch(newerId, ArtifactKind.OUTPUT, newer));
 
-        JoinOrOpenResult result = service.joinOrOpen(ctx(42L, 100L, 10), List.of(inA, inB));
+        JoinOrOpenResult result =
+                service.joinOrOpen(ctx(42L, 100L, 10), service.signaturesOf(List.of(inA, inB)));
 
         assertThat(result.disposition()).isEqualTo(JoinOrOpenResult.Disposition.JOINED);
         assertThat(result.job().getId()).isEqualTo(newerId);
@@ -171,7 +175,8 @@ class JobServiceTest {
         detector.willMatch(
                 input, new LineageMatch(existingId, ArtifactKind.OUTPUT, existing.getLastStepAt()));
 
-        JoinOrOpenResult result = service.joinOrOpen(ctx(42L, 100L, 10), List.of(input));
+        JoinOrOpenResult result =
+                service.joinOrOpen(ctx(42L, 100L, 10), service.signaturesOf(List.of(input)));
 
         assertThat(result.disposition()).isEqualTo(JoinOrOpenResult.Disposition.OPENED);
         assertThat(result.job().getId()).isNotEqualTo(existingId);
@@ -195,7 +200,8 @@ class JobServiceTest {
         JobContext standalone =
                 new JobContext(
                         42L, 100L, JobSource.API, ProcessType.SINGLE_TOOL, 1L, 10); // null runId
-        JoinOrOpenResult result = service.joinOrOpen(standalone, List.of(input));
+        JoinOrOpenResult result =
+                service.joinOrOpen(standalone, service.signaturesOf(List.of(input)));
 
         assertThat(result.disposition()).isEqualTo(JoinOrOpenResult.Disposition.OPENED);
         verify(jobRepo, never()).findById(existingId);
@@ -209,7 +215,8 @@ class JobServiceTest {
         Path a = givenFile(tmp, "a.bin");
         Path b = givenFile(tmp, "b.bin");
 
-        JoinOrOpenResult result = service.joinOrOpen(ctx(42L, 100L, 10), List.of(a, b));
+        JoinOrOpenResult result =
+                service.joinOrOpen(ctx(42L, 100L, 10), service.signaturesOf(List.of(a, b)));
 
         assertThat(result.disposition()).isEqualTo(JoinOrOpenResult.Disposition.OPENED);
         assertThat(result.job().getDocCount()).isEqualTo(2);
@@ -219,7 +226,10 @@ class JobServiceTest {
 
     @Test
     void joinOrOpen_emptyInputs_throws() {
-        assertThatThrownBy(() -> service.joinOrOpen(ctx(42L, 100L, 10), List.of()))
+        assertThatThrownBy(
+                        () ->
+                                service.joinOrOpen(
+                                        ctx(42L, 100L, 10), service.signaturesOf(List.of())))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("inputs must not be empty");
     }
@@ -234,7 +244,10 @@ class JobServiceTest {
         detector.willMatch(
                 input, new LineageMatch(staleId, ArtifactKind.OUTPUT, LocalDateTime.now()));
 
-        assertThatThrownBy(() -> service.joinOrOpen(ctx(42L, 100L, 10), List.of(input)))
+        assertThatThrownBy(
+                        () ->
+                                service.joinOrOpen(
+                                        ctx(42L, 100L, 10), service.signaturesOf(List.of(input))))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("stale signature");
     }

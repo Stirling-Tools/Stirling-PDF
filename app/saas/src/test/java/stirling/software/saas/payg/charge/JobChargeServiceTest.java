@@ -4,7 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -27,8 +29,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mockito;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
@@ -77,6 +81,7 @@ class JobChargeServiceTest {
     private WalletLedgerRepository ledgerRepo;
     private PrepaidBundleService prepaidBundleService;
     private TeamBillingService teamBillingService;
+    private PlatformTransactionManager transactionManager;
     private JobChargeService service;
 
     private static final LocalDateTime PERIOD_START =
@@ -103,6 +108,7 @@ class JobChargeServiceTest {
         teamBillingService = Mockito.mock(TeamBillingService.class);
         when(teamBillingService.forTeam(Mockito.anyLong())).thenReturn(billingContext(GRANT));
         when(teamBillingService.resolveGrant(Mockito.anyLong(), any())).thenReturn(GRANT);
+        transactionManager = Mockito.mock(PlatformTransactionManager.class);
         service =
                 new JobChargeService(
                         jobService,
@@ -114,7 +120,8 @@ class JobChargeServiceTest {
                         meterReporter,
                         ledgerRepo,
                         prepaidBundleService,
-                        teamBillingService);
+                        teamBillingService,
+                        transactionManager);
     }
 
     private static TeamBillingContext billingContext(long grant) {
@@ -143,14 +150,15 @@ class JobChargeServiceTest {
     }
 
     @Test
-    void openProcess_joinedDisposition_skipsClassifierAndShadowWrite(@TempDir Path tmp)
-            throws IOException {
+    void openProcess_joinedDisposition_skipsShadowWrite(@TempDir Path tmp) throws IOException {
         // Setup: policy + a JOINED result.
         PricingPolicy policy = stubPolicy(/*minCharge*/ 1, Map.of(JobSource.WEB, 10));
         when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
         ProcessingJob joinedJob = openJob(UUID.randomUUID());
-        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+        when(jobService.joinOrOpen(any(JobContext.class), anyMap()))
                 .thenReturn(new JoinOrOpenResult(joinedJob, JoinOrOpenResult.Disposition.JOINED));
+        when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
+                .thenReturn(new DocumentMetrics(50, 1024L, "application/pdf", 4));
 
         JobInput in = jobInput(tmp, "in.pdf", "application/pdf");
 
@@ -167,10 +175,33 @@ class JobChargeServiceTest {
         assertThat(out.disposition()).isEqualTo(ChargeOutcome.Disposition.JOINED);
         assertThat(out.processId()).isEqualTo(joinedJob.getId());
         assertThat(out.units()).isZero();
-        verify(classifier, never()).classify(any(MultipartFile.class), any());
-        verify(classifier, never()).classify(anyList(), any());
         verify(shadowRepo, never()).save(any());
         verify(ledgerRepo, never()).save(any());
+    }
+
+    @Test
+    void openProcess_hashesAndCountsPagesBeforeTheTransactionOpens(@TempDir Path tmp)
+            throws IOException {
+        PricingPolicy policy = stubPolicy(/*minCharge*/ 1, Map.of(JobSource.WEB, 10));
+        when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
+        ProcessingJob newJob = openJob(UUID.randomUUID());
+        when(jobService.joinOrOpen(any(JobContext.class), anyMap()))
+                .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
+        when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
+                .thenReturn(new DocumentMetrics(50, 1024L, "application/pdf", 4));
+
+        service.openProcess(
+                new ChargeContext(
+                        42L, 100L, JobSource.WEB, ProcessType.SINGLE_TOOL, BillingCategory.API),
+                List.of(jobInput(tmp, "in.pdf", "application/pdf")));
+
+        InOrder order = inOrder(jobService, classifier, transactionManager, shadowRepo);
+        order.verify(jobService).signaturesOf(anyList());
+        order.verify(classifier).classify(any(MultipartFile.class), any(Path.class), eq(policy));
+        order.verify(transactionManager).getTransaction(any());
+        order.verify(jobService).joinOrOpen(any(JobContext.class), anyMap());
+        order.verify(shadowRepo).save(any());
+        order.verify(transactionManager).commit(any());
     }
 
     @Test
@@ -179,7 +210,7 @@ class JobChargeServiceTest {
         PricingPolicy policy = stubPolicy(/*minCharge*/ 1, Map.of(JobSource.WEB, 10));
         when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
         ProcessingJob newJob = openJob(UUID.randomUUID());
-        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+        when(jobService.joinOrOpen(any(JobContext.class), anyMap()))
                 .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
 
         JobInput in = jobInput(tmp, "in.pdf", "application/pdf");
@@ -247,7 +278,7 @@ class JobChargeServiceTest {
         PricingPolicy policy = stubPolicy(/*minCharge*/ 1, Map.of(JobSource.WEB, 10));
         when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
         ProcessingJob newJob = openJob(UUID.randomUUID());
-        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+        when(jobService.joinOrOpen(any(JobContext.class), anyMap()))
                 .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
         when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
                 .thenReturn(new DocumentMetrics(50, 1024L, "application/pdf", 4));
@@ -282,7 +313,7 @@ class JobChargeServiceTest {
         PricingPolicy policy = stubPolicy(/*minCharge*/ 1, Map.of(JobSource.WEB, 10));
         when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
         ProcessingJob newJob = openJob(UUID.randomUUID());
-        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+        when(jobService.joinOrOpen(any(JobContext.class), anyMap()))
                 .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
         when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
                 .thenReturn(new DocumentMetrics(1, 100L, "application/pdf", 1));
@@ -307,7 +338,7 @@ class JobChargeServiceTest {
                 stubPolicy(/*minCharge*/ 1, Map.of(JobSource.WEB, 10, JobSource.PIPELINE, 20));
         when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
         ProcessingJob newJob = openJob(UUID.randomUUID());
-        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+        when(jobService.joinOrOpen(any(JobContext.class), anyMap()))
                 .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
         when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
                 .thenReturn(new DocumentMetrics(1, 100L, "application/pdf", 1));
@@ -332,7 +363,7 @@ class JobChargeServiceTest {
         PricingPolicy policy = stubPolicy(/*minCharge*/ 1, Map.of(JobSource.WEB, 10));
         when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
         ProcessingJob newJob = openJob(UUID.randomUUID());
-        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+        when(jobService.joinOrOpen(any(JobContext.class), anyMap()))
                 .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
 
         JobInput a = jobInput(tmp, "a.pdf", "application/pdf");
@@ -361,7 +392,7 @@ class JobChargeServiceTest {
         PricingPolicy policy = stubPolicy(/*minCharge*/ 5, Map.of(JobSource.WEB, 10));
         when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
         ProcessingJob newJob = openJob(UUID.randomUUID());
-        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+        when(jobService.joinOrOpen(any(JobContext.class), anyMap()))
                 .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
         when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
                 .thenReturn(new DocumentMetrics(10, 1024L, "application/pdf", 2));
@@ -387,7 +418,7 @@ class JobChargeServiceTest {
         PricingPolicy policy = stubPolicy(1, Map.of(JobSource.WEB, 10));
         when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
         ProcessingJob newJob = openJob(UUID.randomUUID());
-        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+        when(jobService.joinOrOpen(any(JobContext.class), anyMap()))
                 .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
         when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
                 .thenReturn(new DocumentMetrics(50, 1024L, "application/pdf", 4));
@@ -420,7 +451,7 @@ class JobChargeServiceTest {
         PricingPolicy policy = stubPolicy(1, Map.of(JobSource.WEB, 10));
         when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
         ProcessingJob newJob = openJob(UUID.randomUUID());
-        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+        when(jobService.joinOrOpen(any(JobContext.class), anyMap()))
                 .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
         when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
                 .thenReturn(new DocumentMetrics(50, 1024L, "application/pdf", 4));
@@ -450,7 +481,7 @@ class JobChargeServiceTest {
         PricingPolicy policy = stubPolicy(1, Map.of(JobSource.WEB, 10));
         when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
         ProcessingJob newJob = openJob(UUID.randomUUID());
-        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+        when(jobService.joinOrOpen(any(JobContext.class), anyMap()))
                 .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
         when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
                 .thenReturn(new DocumentMetrics(50, 1024L, "application/pdf", 1));
@@ -480,7 +511,7 @@ class JobChargeServiceTest {
         PricingPolicy policy = stubPolicy(1, Map.of(JobSource.WEB, 10));
         when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
         ProcessingJob newJob = openJob(UUID.randomUUID());
-        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+        when(jobService.joinOrOpen(any(JobContext.class), anyMap()))
                 .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
         when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
                 .thenReturn(new DocumentMetrics(50, 1024L, "application/pdf", 3));
@@ -510,7 +541,7 @@ class JobChargeServiceTest {
         PricingPolicy policy = stubPolicy(1, Map.of(JobSource.WEB, 10));
         when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
         ProcessingJob newJob = openJob(UUID.randomUUID());
-        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+        when(jobService.joinOrOpen(any(JobContext.class), anyMap()))
                 .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
         when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
                 .thenReturn(new DocumentMetrics(50, 1024L, "application/pdf", 10));
@@ -540,7 +571,7 @@ class JobChargeServiceTest {
         PricingPolicy policy = stubPolicy(1, Map.of(JobSource.WEB, 10));
         when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
         ProcessingJob newJob = openJob(UUID.randomUUID());
-        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+        when(jobService.joinOrOpen(any(JobContext.class), anyMap()))
                 .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
         when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
                 .thenReturn(new DocumentMetrics(50, 1024L, "application/pdf", 5));
@@ -571,7 +602,7 @@ class JobChargeServiceTest {
                 stubPolicy(/*minCharge*/ 1, Map.of(JobSource.WEB, 10, JobSource.PIPELINE, 20));
         when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
         ProcessingJob newJob = openJob(UUID.randomUUID());
-        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+        when(jobService.joinOrOpen(any(JobContext.class), anyMap()))
                 .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
         when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
                 .thenReturn(new DocumentMetrics(1, 100L, "application/pdf", 1));
@@ -586,7 +617,7 @@ class JobChargeServiceTest {
                 List.of(jobInput(tmp, "in.pdf", "application/pdf")));
 
         ArgumentCaptor<JobContext> ctxCaptor = ArgumentCaptor.forClass(JobContext.class);
-        verify(jobService).joinOrOpen(ctxCaptor.capture(), anyList());
+        verify(jobService).joinOrOpen(ctxCaptor.capture(), anyMap());
         assertThat(ctxCaptor.getValue().stepLimit()).isEqualTo(20);
         assertThat(ctxCaptor.getValue().source()).isEqualTo(JobSource.PIPELINE);
         assertThat(ctxCaptor.getValue().policyId()).isEqualTo(policy.getId());
@@ -600,7 +631,7 @@ class JobChargeServiceTest {
         PricingPolicy policy = stubPolicy(/*minCharge*/ 1, Map.of(JobSource.WEB, 10));
         when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
         ProcessingJob newJob = openJob(UUID.randomUUID());
-        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+        when(jobService.joinOrOpen(any(JobContext.class), anyMap()))
                 .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
         when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
                 .thenReturn(new DocumentMetrics(1, 100L, "application/pdf", 1));
@@ -615,7 +646,7 @@ class JobChargeServiceTest {
                 List.of(jobInput(tmp, "in.pdf", "application/pdf")));
 
         ArgumentCaptor<JobContext> ctxCaptor = ArgumentCaptor.forClass(JobContext.class);
-        verify(jobService).joinOrOpen(ctxCaptor.capture(), anyList());
+        verify(jobService).joinOrOpen(ctxCaptor.capture(), anyMap());
         assertThat(ctxCaptor.getValue().stepLimit()).isEqualTo(10);
     }
 

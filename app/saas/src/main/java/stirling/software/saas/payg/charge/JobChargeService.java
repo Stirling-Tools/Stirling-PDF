@@ -1,19 +1,22 @@
 package stirling.software.saas.payg.charge;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +30,7 @@ import stirling.software.saas.payg.job.JobContext;
 import stirling.software.saas.payg.job.JobService;
 import stirling.software.saas.payg.job.JoinOrOpenResult;
 import stirling.software.saas.payg.job.ProcessingJob;
+import stirling.software.saas.payg.lineage.LineageSignature;
 import stirling.software.saas.payg.meter.PaygMeterReportingService;
 import stirling.software.saas.payg.model.BillingCategory;
 import stirling.software.saas.payg.model.JobStatus;
@@ -73,6 +77,7 @@ public class JobChargeService {
     private final WalletLedgerRepository ledgerRepository;
     private final PrepaidBundleService prepaidBundleService;
     private final TeamBillingService teamBillingService;
+    private final TransactionTemplate transactions;
 
     public JobChargeService(
             JobService jobService,
@@ -84,7 +89,8 @@ public class JobChargeService {
             PaygMeterReportingService meterReportingService,
             WalletLedgerRepository ledgerRepository,
             PrepaidBundleService prepaidBundleService,
-            TeamBillingService teamBillingService) {
+            TeamBillingService teamBillingService,
+            PlatformTransactionManager transactionManager) {
         this.jobService = Objects.requireNonNull(jobService, "jobService");
         this.policyService = Objects.requireNonNull(policyService, "policyService");
         this.classifier = Objects.requireNonNull(classifier, "classifier");
@@ -98,6 +104,9 @@ public class JobChargeService {
         this.prepaidBundleService =
                 Objects.requireNonNull(prepaidBundleService, "prepaidBundleService");
         this.teamBillingService = Objects.requireNonNull(teamBillingService, "teamBillingService");
+        this.transactions =
+                new TransactionTemplate(
+                        Objects.requireNonNull(transactionManager, "transactionManager"));
     }
 
     /**
@@ -105,8 +114,7 @@ public class JobChargeService {
      * ProcessingJob} row plus input signatures, and — on OPENED — writes a {@code
      * payg_shadow_charge} row carrying the would-be PAYG units.
      */
-    @Transactional
-    public ChargeOutcome openProcess(ChargeContext ctx, List<JobInput> inputs) throws IOException {
+    public ChargeOutcome openProcess(ChargeContext ctx, List<JobInput> inputs) {
         Objects.requireNonNull(ctx, "ctx");
         Objects.requireNonNull(inputs, "inputs");
         if (inputs.isEmpty()) {
@@ -114,6 +122,17 @@ public class JobChargeService {
         }
 
         PricingPolicy policy = policyService.getEffectivePolicy(ctx.ownerTeamId());
+        Map<Path, Set<LineageSignature>> signatures =
+                jobService.signaturesOf(lineagePaths(ctx, inputs));
+        int units = computeUnits(inputs, policy);
+        return transactions.execute(status -> recordOpen(ctx, policy, signatures, units));
+    }
+
+    private ChargeOutcome recordOpen(
+            ChargeContext ctx,
+            PricingPolicy policy,
+            Map<Path, Set<LineageSignature>> signatures,
+            int units) {
         int stepLimit = policy.resolveStepLimit(ctx.source());
 
         JobContext jobCtx =
@@ -126,14 +145,13 @@ public class JobChargeService {
                         stepLimit,
                         ctx.runId());
 
-        JoinOrOpenResult result = jobService.joinOrOpen(jobCtx, lineagePaths(ctx, inputs));
+        JoinOrOpenResult result = jobService.joinOrOpen(jobCtx, signatures);
 
         if (result.disposition() == JoinOrOpenResult.Disposition.JOINED) {
             return new ChargeOutcome(result.job().getId(), 0, ChargeOutcome.Disposition.JOINED);
         }
 
         ProcessingJob job = result.job();
-        int units = computeUnits(inputs, policy);
         job.setDocUnits(units);
 
         FreeGrantDraw freeDraw = consumeFreeGrant(ctx, units);

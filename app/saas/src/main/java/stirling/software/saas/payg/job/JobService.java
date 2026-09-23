@@ -9,8 +9,8 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HexFormat;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -73,12 +73,12 @@ public class JobService {
      * Decide whether {@code inputs} should join an existing open process or start a new one, and
      * persist that decision. Returns the job to attach to plus the disposition.
      *
-     * <p>Rule: hash every input. If any input's signatures match an open process owned by the same
-     * user within the workflow window, attach to that process. When multiple inputs match different
-     * processes, the one with the freshest {@code lastStepAt} wins — preserves the
-     * "most-recent-job-wins" invariant the lineage primitives test for. When the matched process is
-     * already at its step-limit ceiling, fall through to opening a fresh process; the new job's
-     * input signatures are still recorded so downstream calls lineage-match to it.
+     * <p>Rule: if any input's signatures match an open process owned by the same user within the
+     * workflow window, attach to that process. When multiple inputs match different processes, the
+     * one with the freshest {@code lastStepAt} wins - preserves the "most-recent-job-wins"
+     * invariant the lineage primitives test for. When the matched process is already at its
+     * step-limit ceiling, fall through to opening a fresh process; the new job's input signatures
+     * are still recorded so downstream calls lineage-match to it.
      *
      * <p>Race note: the read of candidate matches and the subsequent write happen in one
      * transaction at default isolation (READ COMMITTED in Postgres). A concurrent admin write or
@@ -87,18 +87,12 @@ public class JobService {
      * if it materialises as a real-money issue.
      */
     @Transactional
-    public JoinOrOpenResult joinOrOpen(JobContext ctx, List<Path> inputs) throws IOException {
+    public JoinOrOpenResult joinOrOpen(
+            JobContext ctx, Map<Path, Set<LineageSignature>> signaturesByInput) {
         Objects.requireNonNull(ctx, "ctx");
-        Objects.requireNonNull(inputs, "inputs");
-        if (inputs.isEmpty()) {
+        Objects.requireNonNull(signaturesByInput, "signaturesByInput");
+        if (signaturesByInput.isEmpty()) {
             throw new IllegalArgumentException("inputs must not be empty");
-        }
-
-        // Extract signatures ONCE per input, then reuse for both the lineage lookup and the
-        // post-decision record() call. Avoids hashing every input twice on the hot path.
-        Map<Path, Set<LineageSignature>> signaturesByInput = new HashMap<>(inputs.size());
-        for (Path input : inputs) {
-            signaturesByInput.put(input, detector.extractSignatures(input));
         }
 
         // Lineage joins are scoped to one automation run: a standalone call (no run id) never
@@ -108,7 +102,7 @@ public class JobService {
         Optional<LineageMatch> bestMatch =
                 ctx.runId() == null
                         ? Optional.empty()
-                        : findBestMatch(ctx.ownerUserId(), ctx.runId(), inputs, signaturesByInput);
+                        : findBestMatch(ctx.ownerUserId(), ctx.runId(), signaturesByInput);
 
         if (bestMatch.isPresent()) {
             ProcessingJob existing =
@@ -136,16 +130,24 @@ public class JobService {
         return openFresh(ctx, signaturesByInput);
     }
 
+    public Map<Path, Set<LineageSignature>> signaturesOf(List<Path> inputs) {
+        Objects.requireNonNull(inputs, "inputs");
+        Map<Path, Set<LineageSignature>> signaturesByInput = new LinkedHashMap<>(inputs.size());
+        for (Path input : inputs) {
+            signaturesByInput.put(input, detector.extractSignatures(input));
+        }
+        return signaturesByInput;
+    }
+
     /**
      * Records {@code outputFile}'s signatures against {@code jobId} as {@code OUTPUT}. Called after
      * a tool runs successfully — failed tools don't record outputs. Multi-output tools call this
      * once per output.
      */
-    @Transactional
     public void recordOutput(UUID jobId, Path outputFile) throws IOException {
         Objects.requireNonNull(jobId, "jobId");
         Objects.requireNonNull(outputFile, "outputFile");
-        detector.record(jobId, outputFile, ArtifactKind.OUTPUT);
+        detector.record(jobId, detector.extractSignatures(outputFile), ArtifactKind.OUTPUT);
     }
 
     /** Appends an audit-trail step row after a tool call completes. */
@@ -222,13 +224,10 @@ public class JobService {
     }
 
     private Optional<LineageMatch> findBestMatch(
-            Long userId,
-            String runId,
-            List<Path> inputs,
-            Map<Path, Set<LineageSignature>> signaturesByInput) {
-        List<LineageMatch> matches = new ArrayList<>(inputs.size());
-        for (Path input : inputs) {
-            detector.detect(userId, runId, signaturesByInput.get(input)).ifPresent(matches::add);
+            Long userId, String runId, Map<Path, Set<LineageSignature>> signaturesByInput) {
+        List<LineageMatch> matches = new ArrayList<>(signaturesByInput.size());
+        for (Set<LineageSignature> signatures : signaturesByInput.values()) {
+            detector.detect(userId, runId, signatures).ifPresent(matches::add);
         }
         return matches.stream().max(Comparator.comparing(LineageMatch::jobLastStepAt));
     }
