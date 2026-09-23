@@ -5,8 +5,6 @@ import {
   useConfigNavSections as useCoreConfigNavSections,
   ConfigNavSection,
 } from "@core/components/shared/config/configNavSections";
-import PeopleSection from "@app/components/shared/config/configSections/PeopleSection";
-import TeamsSection from "@app/components/shared/config/configSections/TeamsSection";
 import AdminPlanSection from "@app/components/shared/config/configSections/AdminPlanSection";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import PreferencesSection from "@core/components/shared/config/configSections/preferences/PreferencesSection";
@@ -120,28 +118,6 @@ export const useConfigNavSections = (
       id: "workspace",
       title: t("settings.workspace.title", "Workspace"),
       items: [
-        {
-          key: "people",
-          label: t("settings.workspace.people", "People"),
-          description: t(
-            "workspace.people.description",
-            "Everyone with an account on this server, their role and their team.",
-          ),
-          icon: "users",
-          component: <PeopleSection />,
-          ...gated,
-        },
-        {
-          key: "teams",
-          label: t("settings.workspace.teams", "Teams"),
-          description: t(
-            "workspace.teams.description",
-            "Group people into teams and manage who belongs where.",
-          ),
-          icon: "users",
-          component: <TeamsSection />,
-          ...gated,
-        },
         {
           key: "adminPlan",
           label: t("settings.licensingAnalytics.plan", "Plan"),

@@ -23,6 +23,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.dao.DataAccessResourceFailureException;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.failure.PolicyFailureRecorder;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.engine.PolicyEngine;
 import stirling.software.proprietary.policy.engine.PolicyRunHandle;
@@ -104,6 +105,7 @@ class StorageFolderTriggerTest {
                         properties,
                         mock(PolicyAccessGuard.class),
                         mock(DatabaseLicenseGuard.class),
+                        mock(PolicyFailureRecorder.class),
                         events);
         trigger = new StorageFolderTrigger(policies, sources, runner, properties);
         doAnswer(
@@ -128,6 +130,7 @@ class StorageFolderTriggerTest {
                                             policy.toDefinition(),
                                             inv.<Source>getArgument(3).id(),
                                             identity,
+                                            null,
                                             null);
                             CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
                             Runnable finish =

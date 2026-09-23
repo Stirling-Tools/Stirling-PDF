@@ -7,8 +7,10 @@ import java.io.InputStreamReader;
 import java.io.InterruptedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,6 +33,15 @@ public class ProcessExecutor {
     private static final Map<Processes, ProcessExecutor> instances = new ConcurrentHashMap<>();
     private static ApplicationProperties applicationProperties = new ApplicationProperties();
     private static volatile UnoServerPool unoServerPool;
+    private static volatile List<Path> libreOfficeWorkRoots = workRoots(List.of());
+
+    // Installed only in the Docker image (docker/base/lo-sandbox.c), where LibreOffice runs as its
+    // own user under a policy read from the environment; bare installs launch it unchanged.
+    private static volatile boolean libreOfficeSandboxed =
+            Files.isExecutable(Path.of("/usr/local/lib/stirling/lo-sandbox"));
+
+    // Made by the init script (create_office_profile_template in init-without-ocr.sh).
+    private static final Path libreOfficeProfileTemplate = profileTemplateFromEnvironment();
     private final Semaphore semaphore;
     private final boolean liveUpdates;
     private long timeoutDuration;
@@ -190,6 +201,47 @@ public class ProcessExecutor {
         unoServerPool = pool;
     }
 
+    static void setLibreOfficeSandboxed(boolean sandboxed) {
+        libreOfficeSandboxed = sandboxed;
+    }
+
+    private static Path profileTemplateFromEnvironment() {
+        String template = System.getenv("STIRLING_LO_PROFILE_TEMPLATE");
+        if (template == null || template.isBlank()) {
+            return null;
+        }
+        try {
+            return Path.of(template);
+        } catch (InvalidPathException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Dirs a direct soffice job's profile, output dir and inputs must lie within for it to get a
+     * per-job sandbox policy. java.io.tmpdir is always included; blank or invalid entries are
+     * ignored.
+     */
+    public static void setLibreOfficeWorkRoots(Collection<String> dirs) {
+        libreOfficeWorkRoots = workRoots(dirs);
+    }
+
+    private static List<Path> workRoots(Collection<String> dirs) {
+        List<Path> roots = new ArrayList<>();
+        roots.add(Path.of(System.getProperty("java.io.tmpdir")).toAbsolutePath().normalize());
+        for (String dir : dirs) {
+            if (dir == null || dir.isBlank()) {
+                continue;
+            }
+            try {
+                roots.add(Path.of(dir).toAbsolutePath().normalize());
+            } catch (InvalidPathException e) {
+                log.warn("Ignoring invalid LibreOffice work dir {}: {}", dir, e.getMessage());
+            }
+        }
+        return List.copyOf(roots);
+    }
+
     public ProcessExecutorResult runCommandWithOutputHandling(List<String> command)
             throws IOException, InterruptedException {
         return runCommandWithOutputHandling(command, null);
@@ -197,11 +249,41 @@ public class ProcessExecutor {
 
     public ProcessExecutorResult runCommandWithOutputHandling(
             List<String> command, File workingDirectory) throws IOException, InterruptedException {
+        RunOutcome outcome = new RunOutcome();
+        try {
+            return runOnce(command, workingDirectory, outcome);
+        } catch (IOException e) {
+            // A fresh profile makes soffice initialise it, relaunch under the IPC pipe the sandbox
+            // would not let it unlink, and exit 1; with the profile now initialised, one more run
+            // does not relaunch. Gated on this job's own profile, not on its pipe sweep finding the
+            // dead pipe: another job's sweep, or the init script's, may have removed it first.
+            if (outcome.freshProfile == null
+                    || outcome.timedOut
+                    || LibreOfficeSandboxPolicy.isProfileUninitialised(outcome.freshProfile)) {
+                throw e;
+            }
+            log.info("Retrying LibreOffice now its fresh profile is initialised");
+            return runOnce(command, workingDirectory, new RunOutcome());
+        }
+    }
+
+    private static final class RunOutcome {
+        /** The job's profile when it had no user layer before this run, else null. */
+        Path freshProfile;
+
+        boolean timedOut;
+    }
+
+    private ProcessExecutorResult runOnce(
+            List<String> command, File workingDirectory, RunOutcome outcome)
+            throws IOException, InterruptedException {
         String messages = "";
         int exitCode = 1;
         UnoServerPool.UnoServerLease unoLease = null;
         boolean useSemaphore = true;
         List<String> commandToRun = command;
+        Set<Path> ipcPipesBefore = null;
+        LibreOfficeSandboxPolicy.JobPolicy jobPolicy = null;
 
         boolean useUnoServerPool = shouldUseUnoServerPool(command);
 
@@ -238,6 +320,23 @@ public class ProcessExecutor {
             validateCommand(commandToRun);
             log.info("Running command: {}", String.join(" ", commandToRun));
             ProcessBuilder processBuilder = new ProcessBuilder(commandToRun);
+            scrubEnvironment(processBuilder);
+            if (processType == Processes.LIBRE_OFFICE && libreOfficeSandboxed) {
+                jobPolicy =
+                        LibreOfficeSandboxPolicy.forCommand(commandToRun, libreOfficeWorkRoots)
+                                .orElse(null);
+                if (jobPolicy != null) {
+                    processBuilder.environment().putAll(jobPolicy.env());
+                    LibreOfficeSandboxPolicy.seedProfile(
+                            jobPolicy.profile(), libreOfficeProfileTemplate);
+                    if (LibreOfficeSandboxPolicy.isProfileUninitialised(jobPolicy.profile())) {
+                        outcome.freshProfile = jobPolicy.profile();
+                    }
+                    ipcPipesBefore =
+                            LibreOfficeSandboxPolicy.snapshotIpcPipes(
+                                    Path.of(LibreOfficeSandboxPolicy.IPC_PIPE_DIR));
+                }
+            }
 
             // Use the working directory if it's set
             if (workingDirectory != null) {
@@ -348,6 +447,7 @@ public class ProcessExecutor {
                 // Interrupt the reader threads
                 errorReaderThread.interrupt();
                 outputReaderThread.interrupt();
+                outcome.timedOut = true;
                 throw new IOException("Process timeout exceeded.");
             }
             exitCode = process.exitValue();
@@ -399,6 +499,10 @@ public class ProcessExecutor {
                 }
             }
         } finally {
+            if (ipcPipesBefore != null) {
+                LibreOfficeSandboxPolicy.removeLeftoverIpcPipes(
+                        Path.of(LibreOfficeSandboxPolicy.IPC_PIPE_DIR), ipcPipesBefore);
+            }
             if (useSemaphore) {
                 semaphore.release();
             }
@@ -407,6 +511,71 @@ public class ProcessExecutor {
             }
         }
         return new ProcessExecutorResult(exitCode, messages);
+    }
+
+    private static final Set<String> LIBRE_OFFICE_ENV_ALLOWLIST =
+            Set.of(
+                    "HOME",
+                    "USER",
+                    "LOGNAME",
+                    "PATH",
+                    "SHELL",
+                    "PWD",
+                    "TMPDIR",
+                    "TMP",
+                    "LANG",
+                    "LANGUAGE",
+                    "TZ",
+                    "TERM",
+                    "HOSTNAME",
+                    "DISPLAY",
+                    "XDG_RUNTIME_DIR",
+                    "XDG_CACHE_HOME",
+                    "XDG_CONFIG_HOME",
+                    "XDG_DATA_HOME",
+                    "LD_LIBRARY_PATH",
+                    "JAVA_HOME",
+                    "FONTCONFIG_PATH",
+                    "FONTCONFIG_FILE",
+                    "DBUS_SESSION_BUS_ADDRESS",
+                    "MALLOC_ARENA_MAX",
+                    "PYTHONIOENCODING",
+                    "PYTHONUNBUFFERED");
+
+    private static final List<String> LIBRE_OFFICE_ENV_ALLOWED_PREFIXES =
+            List.of("LC_", "SAL_", "OOO_", "UNO_", "URE_", "OFFICE_", "STIRLING_LO_");
+
+    private static boolean isLoopbackHost(String host) {
+        if (host == null) {
+            return false;
+        }
+        String normalized = host.trim().toLowerCase(java.util.Locale.ROOT);
+        return "127.0.0.1".equals(normalized)
+                || "localhost".equals(normalized)
+                || "::1".equals(normalized)
+                || "[::1]".equals(normalized);
+    }
+
+    private void scrubEnvironment(ProcessBuilder processBuilder) {
+        if (processType != Processes.LIBRE_OFFICE || !libreOfficeSandboxed) {
+            return;
+        }
+        processBuilder.environment().keySet().removeIf(name -> !isLibreOfficeEnvAllowed(name));
+    }
+
+    private static boolean isLibreOfficeEnvAllowed(String name) {
+        if (name == null) {
+            return false;
+        }
+        if (LIBRE_OFFICE_ENV_ALLOWLIST.contains(name)) {
+            return true;
+        }
+        for (String prefix : LIBRE_OFFICE_ENV_ALLOWED_PREFIXES) {
+            if (name.startsWith(prefix)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean shouldUseUnoServerPool(List<String> command) {
@@ -466,8 +635,10 @@ public class ProcessExecutor {
         }
 
         // Normalize and validate hostLocation (only auto|local|remote allowed)
-        if (hostLocation == null) {
-            hostLocation = "auto";
+        if (hostLocation == null
+                || hostLocation.isBlank()
+                || "auto".equalsIgnoreCase(hostLocation)) {
+            hostLocation = libreOfficeSandboxed && isLoopbackHost(host) ? "remote" : "auto";
         } else {
             hostLocation = hostLocation.trim().toLowerCase(java.util.Locale.ROOT);
             if (!Set.of("auto", "local", "remote").contains(hostLocation)) {
