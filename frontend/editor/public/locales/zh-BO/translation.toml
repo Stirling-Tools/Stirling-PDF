@@ -729,6 +729,8 @@ permissionNotice = "tessdata 路径不可写。下载将会在浏览器中打开
 
 [admin.settings.ai]
 description = "将 Stirling 连接到 Python AI 引擎，选择其模型，并设置其运行时的防护规则。"
+managedByCloud = "此模式由 Stirling Cloud 管理。"
+managedByCloudShort = "由 Stirling Cloud 管理"
 
 [admin.settings.ai.documents]
 description = "配置用于回答文档问题的嵌入模型和检索设置。保存后应用到 AI 引擎。"
@@ -771,11 +773,24 @@ label = "Top K"
 [admin.settings.ai.general]
 connection = "连接"
 description = "将 Stirling 连接到 Python AI 引擎，并选择公开哪些 AI 功能。更改将在重启后应用。"
+restartNote = "更改 URL 或任何超时设置后，需要重启才会生效。"
 title = "AI 引擎"
 
 [admin.settings.ai.general.capabilities]
 description = "开启或关闭单个 AI 功能。禁用的功能会在应用中隐藏。"
 title = "功能"
+
+[admin.settings.ai.general.cloud]
+note = "模型和提供商密钥由 Stirling Cloud 管理，因此这些设置在此模式下不适用。"
+
+[admin.settings.ai.general.cloud.indexing]
+description = "每个 AI 工具都会发送其回答所需的页面文本。此设置决定 Stirling Cloud 是否也可以保留这些文本并建立索引，以便后续问题可在文档中搜索。"
+help = "关闭表示文档问答不可用。它不会阻止文本被发送——只会阻止被存储。"
+label = "允许 Stirling Cloud 保留已建立索引的文档"
+
+[admin.settings.ai.general.cloudNote]
+body = "推理在 Stirling 的基础设施上运行，并计入此服务器所关联账户的账单。这里无需运行容器，也无需保存提供商密钥。AI 读取的任何内容都会由 Stirling Cloud 处理，而不是在你自己的硬件上处理。"
+title = "关于 Stirling Cloud AI"
 
 [admin.settings.ai.general.enabled]
 description = "总开关。关闭时，AI 工具、代理或引擎调用均不可用。"
@@ -809,9 +824,28 @@ label = "PDF 评论代理"
 description = "较重的代理操作（如文档生成）的超时时间。"
 label = "长时间运行超时（秒）"
 
+[admin.settings.ai.general.mode]
+label = "AI 运行位置"
+
+[admin.settings.ai.general.mode.cloud]
+description = "无需容器、无需提供商密钥、无需选择模型——工作在 Stirling Cloud 上运行，并计入此服务器所关联账户的账单。"
+linkCta = "将此服务器连接到 Stirling 账户"
+notLinked = "请先关联账户"
+ownerOnly = "只有组织所有者可以将此服务器关联到 Stirling 账户。"
+title = "使用 Stirling Cloud AI"
+
+[admin.settings.ai.general.mode.off]
+description = "应用中的任何位置都没有 AI 工具，且不会有任何内容离开此服务器。"
+title = "关闭"
+
+[admin.settings.ai.general.mode.self]
+description = "你自行托管的容器，指向你选择的模型提供商。你的密钥、你的账单、你的数据路径。"
+title = "运行你自己的引擎"
+
 [admin.settings.ai.general.note]
-body = "AI 引擎作为单独服务运行。其共享密钥"
-body2 = "通过容器环境变量设置。提供商 API key 可在这些页面输入，或作为引擎环境变量提供；此处输入的 key 会在保存时推送到引擎。"
+docs = "设置指南"
+intro = "你需要在 Stirling 旁边运行一个单独的容器。它负责推理；Stirling 仍会自行完成每个页面操作。它需要两个容器使用相同的"
+outro = "，并需要一个模型提供商密钥。AI 读取的任何内容都会发送给你选择的提供商——如果你托管 Ollama，则每个页面都保留在内部。"
 title = "关于 AI 引擎"
 
 [admin.settings.ai.general.streamTimeoutSeconds]
@@ -890,6 +924,67 @@ label = "智能模型"
 body = "更改会自动推送到 AI 引擎。"
 bodyNoPush = "设置已保存。下次 AI 引擎获取其配置时将应用这些设置。"
 title = "AI 设置已保存"
+
+[admin.settings.ai.status]
+capabilities = "功能"
+capabilitiesValue = "{{total}} 项中 {{on}} 项已开启"
+checked = "已检查"
+checking = "正在检查引擎…"
+description = "引擎是否可访问、是否接受此服务器，以及正在运行的内容。"
+fastModel = "快速模型"
+justNow = "刚刚"
+latency = "响应时间"
+linkLabel = "账户关联"
+minutesAgo = "{{count}} 分钟前"
+recheck = "再次检查"
+runningOn = "运行于"
+secondsAgo = "{{count}} 秒前"
+secretLabel = "共享密钥"
+smartModel = "智能模型"
+title = "状态"
+url = "引擎 URL"
+
+[admin.settings.ai.status.cloud]
+hostDown = "离线"
+hostLabel = "Stirling.com"
+hostUp = "在线"
+name = "Stirling Cloud"
+sharingLabel = "AI 共享"
+sharingOff = "已禁用"
+sharingOn = "已启用"
+
+[admin.settings.ai.status.cloud.degraded]
+body = "Stirling Cloud 已响应，但拒绝了此服务器。账户关联可能已被撤销。"
+title = "Stirling Cloud 正在拒绝此服务器"
+
+[admin.settings.ai.status.cloud.down]
+body = "此服务器无法访问 Stirling Cloud。请检查账户关联，以及此服务器是否可以访问互联网。"
+title = "无法访问 Stirling Cloud"
+
+[admin.settings.ai.status.cloud.ok]
+body = "Stirling Cloud 已接受此服务器。这里无需运行或修补任何内容。"
+title = "正在 Stirling Cloud 上运行"
+
+[admin.settings.ai.status.degraded]
+body = "它通过了健康检查，但拒绝了真实请求。双方使用了不同的共享密钥。"
+title = "引擎已启动，但正在拒绝此服务器"
+
+[admin.settings.ai.status.down]
+body = "请检查 URL、引擎容器是否正在运行，以及启用 AI 后是否已重启。"
+title = "无法访问引擎"
+
+[admin.settings.ai.status.off]
+body = "在下方选择 AI 的运行方式，然后保存并重启。"
+title = "AI 已关闭"
+
+[admin.settings.ai.status.ok]
+body = "健康检查和经过身份验证的请求均已成功。"
+title = "引擎正在运行"
+
+[admin.settings.ai.status.secret]
+no = "已拒绝"
+unknown = "未知"
+yes = "已接受"
 
 [admin.settings.badge]
 clickToUpgrade = "点击查看方案详情"
@@ -4453,6 +4548,7 @@ openFromComputer = "从电脑打开"
 openSettings = "打开设置"
 other = "其他"
 recent = "最近"
+searchFiles = "搜索文件"
 uploadFailedBody = "无法添加所选文件。"
 uploadFailedTitle = "上传失败"
 viewAll = "查看全部 {{count}} 个文件"
@@ -5827,6 +5923,8 @@ label = "Free credits"
 adoptFailed = "文档已解锁，但无法在此处打开。请直接尝试该工具。"
 empty = "没有要报告的内容。"
 handoffUnavailable = "此浏览器不允许处理器将文档传递给编辑器。请改为从编辑器打开。"
+inSmartFolder = "此文档位于智能文件夹中，因此会在服务器上处理，而不是在这里处理。"
+inSmartFolderNamed = "{{name}} 位于智能文件夹中，因此会在服务器上处理，而不是在这里处理。"
 noDocumentLinked = "此失败未关联到特定文档，因此这里没有可打开的内容。"
 notOnThisDevice = "此文档不在此设备上，因此无法在这里打开。"
 occurrences = "{{count}} 次"
@@ -5837,6 +5935,7 @@ repairedRerunNotAdopted = "修复后的文档已通过处理，但其结果无�
 repairedRerunUndelivered = "文档已修复并开始重新运行策略，但其结果无法在此处交付，因此此失败状态保持打开。"
 rerunRejected = "目前无法再次运行策略。请稍后重试。"
 rerunUndelivered = "策略重新运行已开始，但其结果无法在此处交付，因此此失败状态保持打开。"
+retryInFolderFailed = "该文档刚才无法再次运行。"
 retryUnavailable = "此文档无法再从此浏览器重试。"
 title = "通知"
 unlockedNotRerun = "文档已解锁并在此处打开，但无法再次对其运行策略。"
@@ -6625,9 +6724,11 @@ title = "调整 Team 方案"
 [payment.capacityStage]
 adjustmentNote = "Stripe 会在您确认前显示确切费用、任何按比例计费以及下次账单日期。如可用，将使用您保存的付款方式。"
 continue = "继续付款"
+currencyAtCheckout = "Stripe 会在结账时确认最终金额和付款货币。"
 customLabel = "用户数量"
 dueToday = "今日应付"
 enterpriseQuote = "获取企业报价"
+estimatedTotal = "预估总计"
 lineItem = "Team · 每 {{block}} 位用户 {{price}}{{period}}"
 minimumForCurrentUsers = "您有 {{users}} 位用户，因此方案必须至少覆盖 {{minimum}} 位。"
 modalTitle = "升级到 {{planName}}"
@@ -6865,6 +6966,25 @@ width = "宽度"
 widthHint = "文本框宽度随其内容和换行变化。"
 x = "X"
 y = "Y"
+
+[pdfTextEditor.mobile]
+actions = "编辑器操作"
+addImage = "图片"
+addText = "文本"
+cancel = "取消"
+delete = "删除"
+details = "详情"
+document = "文档"
+done = "完成"
+download = "保存并下载"
+find = "查找"
+lock = "锁定"
+openPdf = "打开 PDF"
+panelHint = "编辑在工作区视图中进行。点击页面上的文本即可更改。"
+save = "保存"
+style = "样式"
+tapToPlace = "点击页面上应放置文本的位置"
+unlock = "解锁"
 
 [pdfTextEditor.password]
 cancel = "取消"
@@ -7574,6 +7694,49 @@ plan = "计划"
 procurement = "采购"
 usage = "使用量"
 
+[portal.billing.compare]
+current = "当前"
+enterpriseData = "数据驻留和 SCIM"
+enterpriseName = "企业版"
+enterprisePrice = "按你的协议"
+enterpriseProcessing = "按量计费或固定费用"
+enterpriseSignIn = "SAML 和审计"
+enterpriseSupport = "正常运行时间 SLA、部署帮助"
+enterpriseUsers = "无上限"
+enterpriseWhere = "另含多节点和隔离网络"
+exploreEnterprise = "了解企业版"
+freeData = "保留在你运行它的位置"
+freeName = "免费版"
+freePrice = "无需银行卡，无到期日"
+freeProcessing = "每月 {{allowance}} 个额度"
+freeProcessingUnknown = "每月额度配额"
+freeSignIn = "Email、Google 和 SSO"
+freeSignInNote = "OAuth2/OIDC"
+freeSupport = "社区"
+freeUsers = "最多 {{users}} 人"
+freeUsersUnknown = "小型团队"
+freeWhere = "Cloud、桌面或自托管"
+lede = "每个计划都包含所有 PDF 工具和 SSO。不同之处在于使用人数、运行位置以及你获得的支持。"
+open = "比较计划"
+rowData = "你的数据"
+rowHeader = "功能"
+rowProcessing = "处理"
+rowSignIn = "登录"
+rowSupport = "支持"
+rowUsers = "用户"
+rowWhere = "运行位置"
+teamData = "Google Drive、你自己的数据库"
+teamName = "团队版"
+teamPrice = "每 100 位用户 $99/月"
+teamProcessing = "每月 {{allowance}}，之后按量计费"
+teamProcessingUnknown = "更高额度，之后按量计费"
+teamSignIn = "相同"
+teamSupport = "Email"
+teamUsers = "每个区块 100 人"
+teamWhere = "Cloud、桌面或自托管"
+title = "比较计划"
+upgradeTeam = "升级到团队版"
+
 [portal.billing.cycle]
 credits = "积分"
 creditsNote = "已使用 {{units}} · 包括免费和预付积分"
@@ -7679,6 +7842,8 @@ payTitle = "支付你的年度费用"
 step = "第 {{current}} 步，共 {{total}} 步"
 
 [portal.billing.prepaid.calc]
+currency = "报价货币"
+currencyLocked = "使用你现有的 Stripe 账单货币。"
 rateUnknown = "我们会在结账时显示准确价格。"
 
 [portal.billing.prepaid.consent]
@@ -8481,6 +8646,10 @@ title = "文件无法修复"
 [portal.failures.kind.inputWrongType]
 description = "您的文件不是此步骤可打开的格式，因此运行无法读取它。"
 title = "文件类型错误"
+
+[portal.failures.kind.sourceUnreadable]
+description = "无法读取你的智能文件夹，因此其中没有任何内容被处理。"
+title = "无法读取文件夹"
 
 [portal.failures.kind.stepCannotRenderPage]
 description = "无法绘制您文件中的某一页，因此运行无法完成。"
@@ -12235,6 +12404,7 @@ goBack = "返回"
 pdfTools = "PDF 工具"
 placeholder = "选择一个工具以开始"
 premiumFeature = "高级功能："
+searchTools = "搜索工具"
 toolsHeader = "工具"
 viewAllTools = "查看所有工具"
 
@@ -12399,13 +12569,10 @@ visits = "访问量"
 
 [users]
 lastActive = "上次活动"
-learnMore = "了解有关角色和访问权限的更多信息。"
 locked = "已锁定"
 ownerSetupRequired = "组织所有者尚未完成首次登录。请先完成设置，或在转移所有权前请服务器操作员恢复所有权。"
 roleFor = "{{name}} 的角色"
 rowActions = "{{name}} 的操作"
-showAll = "显示全部 {{count}}"
-showLess = "显示更少"
 subtitle2 = "您的人员、团队和访问级别。"
 suspended = "已暂停"
 teamActions = "团队操作"
@@ -12414,6 +12581,7 @@ you = "（您）"
 
 [users.action]
 cancelInvite = "取消邀请"
+createFromDefault = "从 Default 创建团队"
 deleteTeam = "删除团队"
 disableMfa = "重置 MFA"
 move = "移动到团队"
@@ -12451,6 +12619,7 @@ email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
+team = "团队"
 
 [users.confirm]
 cancelInviteBody = "要取消对 {{email}} 的邀请吗？他们将无法使用当前链接加入。"
@@ -12469,15 +12638,12 @@ transferOwnershipTitle = "转移组织所有权"
 description = "邀请您的团队开始协作。"
 title = "尚无成员"
 
+[users.filters]
+noMatches = "没有人符合这些筛选条件。"
+search = "搜索人员"
+
 [users.group]
 addToTeam = "添加到团队"
-administrators = "{{count}} 位管理员"
-guestCount = "{{count}} 位访客"
-guests = "访客"
-ledBy = "由 {{owner}} 领导"
-org = "组织"
-team = "{{name}} 团队"
-teamMeta = "{{count}} 人"
 
 [users.invite]
 access = "访问权限"
@@ -12542,6 +12708,9 @@ title = "新建团队"
 
 [users.renameTeam]
 apply = "重命名"
+defaultApply = "创建并移动"
+defaultDescription = "Default 将继续可供新用户使用。目前位于 Default 中的所有人都会被移动到新团队。"
+defaultTitle = "从 Default 创建团队"
 name = "团队名称"
 title = "重命名团队"
 
@@ -12566,6 +12735,15 @@ guest = "访客"
 member = "成员"
 orgOwner = "组织所有者"
 teamOwner = "团队所有者"
+
+[users.seats]
+full = "所有许可席位均已使用。请释放一个席位，或增加席位数量，才能添加其他人。"
+update = "更新席位"
+
+[users.tabs]
+all = "全部"
+label = "按团队筛选"
+unassigned = "无团队"
 
 [users.team]
 grantProcessor = "向团队授予 Processor"
@@ -13216,232 +13394,14 @@ submitSignature = "提交签名"
 title = "工作区"
 
 [workspace.people]
-active = "活跃"
-activeSession = "活动会话"
-addMembers = "添加成员"
-admin = "管理员"
-confirmDelete = "确定要删除此用户吗？此操作无法撤销。"
-confirmUnlock = "确定要解锁此用户账户吗？"
-deleteUser = "删除用户"
-deleteUserError = "删除用户失败"
-deleteUserSuccess = "用户删除成功"
 description = "管理工作区成员及其权限"
-disable = "禁用"
-disabled = "已禁用"
-editRole = "编辑角色"
-enable = "启用"
-loading = "正在加载人员..."
-locked = "已锁定"
-lockedBadge = "已锁定"
-loginRequired = "请先启用登录模式"
-memberActions = "成员操作"
-noMembersFound = "未找到成员"
-ownerLocked = "在更改所有者的角色或账户之前，请在“设置 → 工作区 → 用户”中转移组织所有权。"
-role = "角色"
-searchMembers = "搜索成员..."
-team = "团队"
-unlockAccount = "解锁账户"
-unlockUserError = "解锁用户账户失败"
-unlockUserSuccess = "已成功解锁用户账户"
-user = "用户"
-userInfo = "用户信息"
-
-[workspace.people.actions]
-upgrade = "升级"
-
-[workspace.people.addMember]
-authType = "认证类型"
-error = "创建用户失败"
-forceMFA = "在下次登录时强制设置 MFA"
-forcePasswordChange = "首次登录强制修改密码"
-password = "密码"
-passwordPlaceholder = "输入密码"
-passwordRequired = "需要密码"
-role = "角色"
-submit = "添加成员"
-success = "用户创建成功"
-team = "团队（可选）"
-teamPlaceholder = "选择一个团队"
-username = "用户名（邮箱）"
-usernamePlaceholder = "user@example.com"
-usernameRequired = "需要用户名和密码"
-
-[workspace.people.authType]
-oauth = "OAuth2"
-password = "密码"
-saml = "SAML2"
-ssoDescription = "用户将通过 SSO 提供商进行认证"
-
-[workspace.people.changePassword]
-action = "更改密码"
-confirmPassword = "确认密码"
-confirmPlaceholder = "再次输入新密码"
-copiedToClipboard = "密码已复制到剪贴板"
-copyFailed = "复制密码失败"
-copyTooltip = "复制到剪贴板"
-emailUnavailable = "该用户的邮箱地址无效，已禁用通知。"
-error = "密码更新失败"
-forcePasswordChange = "强制用户下次登录时更改密码"
-generatedPreview = "已生成的密码："
-generateRandom = "生成安全密码"
-includePassword = "在邮件中包含新密码"
-newPassword = "新密码"
-notifyOnly = "将发送不包含密码的邮件，告知用户管理员已更改其密码。"
-passwordMismatch = "两次输入的密码不一致"
-passwordRequired = "请输入新密码"
-placeholder = "输入新密码"
-sendEmail = "通过电子邮件通知用户此更改"
-smtpDisabled = "邮件通知需要在设置中启用 SMTP。"
-submit = "更新密码"
-subtitle = "为其更新密码"
-success = "密码更新成功"
-title = "更改密码"
-
-[workspace.people.editMember]
-editing = "Editing: <0>{{username}}</0>"
-error = "更新用户失败"
-role = "角色"
-submit = "Update User"
-success = "用户更新成功"
-team = "团队（可选）"
-teamPlaceholder = "选择一个团队"
-title = "Edit User"
-
-[workspace.people.emailInvite]
-allFailed = "邀请用户失败"
-emails = "邮箱地址"
-emailsPlaceholder = "user1@example.com, user2@example.com"
-emailsRequired = "至少需要一个邮箱地址"
-error = "发送邀请失败"
-partialFailure = "部分邀请发送失败"
-submit = "发送邀请"
-success = "已成功邀请用户"
-
-[workspace.people.inviteLink]
-copied = "链接已复制到剪贴板"
-email = "邮箱地址"
-emailDescription = "可选 - 留空将生成任何人都可使用的通用邀请链接"
-emailPlaceholder = "user@example.com（可选）"
-emailSent = "邀请链接已生成并通过邮件发送"
-error = "生成邀请链接失败"
-expiryHours = "过期小时数"
-generate = "生成链接"
-generated = "已生成邀请链接"
-sendEmail = "通过邮件发送邀请链接"
-sendEmailDescription = "启用后，邀请链接将发送到指定邮箱地址"
-submit = "生成邀请链接"
-
-[workspace.people.inviteMembers]
-label = "邀请成员"
-subtitle = "在下方输入或粘贴邮箱，使用逗号分隔。您的工作区将按成员计费。"
-
-[workspace.people.inviteMode]
-email = "邮箱"
-emailDisabled = "邮件邀请需要在设置中配置 SMTP 并将 mail.enableInvites=true"
-link = "链接"
-username = "用户名"
 
 [workspace.people.license]
-currentUsage = "当前使用 {{current}} / {{max}} 个用户许可证"
-fromLicense = "来自许可证"
-grandfathered = "历史保留"
-grandfatheredShort = "{{count}} 个历史保留"
-slotsAvailable_one = "{{count}} user slot available"
-slotsAvailable_other = "{{count}} user slots available"
-slotsAvailable_zero = "No slots available"
 users_one = "user"
 users_other = "users"
 
-[workspace.people.mfa]
-adminDisableError = "未能为该用户禁用 MFA"
-adminDisableSuccess = "已为该用户成功禁用 MFA"
-disableByAdmin = "禁用 MFA"
-
-[workspace.people.roleDescriptions]
-admin = "可管理设置和邀请成员，拥有完整管理权限。"
-currentRole = "当前分配的角色。"
-user = "Can view and edit shared files, but cannot manage workspace settings or users."
-
-[workspace.people.toggleEnabled]
-error = "用户状态更新失败"
-success = "用户状态更新成功"
-
 [workspace.teams]
-addMember = "添加成员"
-backToTeams = "返回团队列表"
-cannotAddToInternal = "无法向 Internal 团队添加成员"
-cannotDeleteInternal = "无法删除 Internal 团队"
-cannotRenameInternal = "无法重命名 Internal 团队"
-confirmDelete = "确定要删除此团队吗？此团队必须为空才能删除。"
-confirmRemove = "将此用户从团队中移除？"
-createNewTeam = "创建新团队"
-deleteTeamLabel = "删除团队"
 description = "管理团队并组织工作区成员"
-loadError = "无法加载团队详情"
-loading = "正在加载团队..."
-loadingDetails = "正在加载团队详情..."
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
-noMembers = "此团队中没有成员"
-noTeamsFound = "未找到团队"
-removeMember = "从团队移除"
-removeMemberError = "从团队移除用户失败"
-removeMemberSuccess = "已将用户从团队移除"
-renameTeamLabel = "重命名团队"
-system = "系统"
-teamActions = "团队操作"
-teamName = "团队名称"
-teamNotFound = "未找到团队"
-totalMembers = "成员总数"
-viewTeam = "查看团队"
-
-[workspace.teams.addMemberToTeam]
-addingTo = "正在添加到"
-currentlyIn = "当前所在"
-error = "添加成员到团队失败"
-selectUser = "选择用户"
-selectUserPlaceholder = "选择一个用户"
-selectUserRequired = "请选择一个用户"
-submit = "添加成员"
-success = "成员已成功添加到团队"
-title = "将成员添加到团队"
-userRequired = "请选择一个用户"
-willBeMoved = "注意：将把该用户从其当前团队移动到此团队。"
-
-[workspace.teams.changeTeam]
-changing = "正在移动"
-error = "更改团队失败"
-label = "更改团队"
-selectTeam = "选择团队"
-selectTeamPlaceholder = "选择一个团队"
-selectTeamRequired = "请选择一个团队"
-submit = "更改团队"
-success = "团队更改成功"
-title = "更改团队"
-
-[workspace.teams.createTeam]
-error = "创建团队失败"
-nameRequired = "需要团队名称"
-submit = "创建团队"
-success = "团队创建成功"
-teamName = "团队名称"
-teamNamePlaceholder = "输入团队名称"
-title = "创建新团队"
-
-[workspace.teams.deleteTeam]
-error = "删除团队失败。请确保团队为空。"
-success = "团队删除成功"
-
-[workspace.teams.renameTeam]
-error = "重命名团队失败"
-nameRequired = "需要团队名称"
-newTeamName = "新团队名称"
-newTeamNamePlaceholder = "输入新团队名称"
-renaming = "正在重命名："
-submit = "重命名团队"
-success = "团队重命名成功"
-title = "重命名团队"
 
 [zipWarning]
 cancel = "取消"

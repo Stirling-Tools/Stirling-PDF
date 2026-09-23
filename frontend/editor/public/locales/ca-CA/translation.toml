@@ -729,6 +729,8 @@ permissionNotice = "El camí de tessdata no té permisos d'escriptura. Les desc�
 
 [admin.settings.ai]
 description = "Connecteu Stirling al motor d'IA de Python, trieu-ne els models i definiu les barreres sota les quals s'executa."
+managedByCloud = "Gestionat per Stirling Cloud en aquest mode."
+managedByCloudShort = "Gestionat per Stirling Cloud"
 
 [admin.settings.ai.documents]
 description = "Configura el model d'embeddings i els paràmetres de recuperació utilitzats per respondre preguntes sobre documents. S'aplica al motor d'IA en desar."
@@ -771,11 +773,24 @@ label = "Top K"
 [admin.settings.ai.general]
 connection = "Connexió"
 description = "Connecta Stirling al motor d'IA de Python i tria quines capacitats d'IA s'exposen. Els canvis s'apliquen en reiniciar."
+restartNote = "Canviar la URL o qualsevol temps d’espera té efecte després de reiniciar."
 title = "Motor d'IA"
 
 [admin.settings.ai.general.capabilities]
 description = "Activa o desactiva funcions d'IA individuals. Les funcions desactivades s'amaguen a l'aplicació."
 title = "Capacitats"
+
+[admin.settings.ai.general.cloud]
+note = "Els models i les claus del proveïdor són gestionats per Stirling Cloud, de manera que aquests paràmetres no s’apliquen en aquest mode."
+
+[admin.settings.ai.general.cloud.indexing]
+description = "Cada eina d’IA envia el text de la pàgina que necessita per respondre. Això decideix si Stirling Cloud també pot conservar aquest text, indexat, perquè les preguntes posteriors puguin cercar dins el document."
+help = "Desactivat vol dir que les preguntes sobre documents no estan disponibles. No impedeix que s’enviï text; només que s’emmagatzemi."
+label = "Permet que Stirling Cloud conservi documents indexats"
+
+[admin.settings.ai.general.cloudNote]
+body = "El raonament s’executa a la infraestructura de Stirling, facturat al compte al qual està enllaçat aquest servidor. Aquí no hi ha cap contenidor per executar ni cap clau de proveïdor per conservar. Tot el que l’IA llegeix és processat per Stirling Cloud en lloc del vostre propi maquinari."
+title = "Quant a la IA de Stirling Cloud"
 
 [admin.settings.ai.general.enabled]
 description = "Interruptor principal. Quan està desactivat, no hi ha eines d'IA, agents ni crides al motor disponibles."
@@ -809,9 +824,28 @@ label = "Agent de comentaris PDF"
 description = "Temps d'espera per a operacions d'agent més pesades, com ara la generació de documents."
 label = "Temps d'espera d'operacions llargues (segons)"
 
+[admin.settings.ai.general.mode]
+label = "On s’executa la IA"
+
+[admin.settings.ai.general.mode.cloud]
+description = "Sense contenidor, sense clau de proveïdor, sense tria de model: la feina s’executa a Stirling Cloud i es factura al compte al qual està enllaçat aquest servidor."
+linkCta = "Connecta aquest servidor a un compte de Stirling"
+notLinked = "Enllaça primer un compte"
+ownerOnly = "Només el propietari de l’organització pot enllaçar aquest servidor a un compte de Stirling."
+title = "Utilitza la IA de Stirling Cloud"
+
+[admin.settings.ai.general.mode.off]
+description = "Cap eina d’IA enlloc de l’aplicació, i res surt d’aquest servidor."
+title = "Desactivat"
+
+[admin.settings.ai.general.mode.self]
+description = "Un contenidor que allotgeu, apuntat a un proveïdor de models de la vostra elecció. La vostra clau, la vostra factura, el vostre flux de dades."
+title = "Executa el vostre propi motor"
+
 [admin.settings.ai.general.note]
-body = "El motor d'IA s'executa com un servei separat. El seu secret compartit"
-body2 = "s'estableix mitjançant una variable d'entorn del contenidor. Les claus API del proveïdor es poden introduir en aquestes pàgines o proporcionar com a variables d'entorn del motor; les claus introduïdes aquí s'envien al motor en desar."
+docs = "Guia de configuració"
+intro = "Un contenidor separat que executeu al costat de Stirling. Fa el raonament; Stirling continua fent totes les operacions de pàgina per si mateix. Necessita el mateix"
+outro = "en tots dos contenidors i una clau de proveïdor de models. Tot el que l’IA llegeix s’envia al proveïdor que trieu; un Ollama que allotgeu manté totes les pàgines internament."
 title = "Sobre el motor d'IA"
 
 [admin.settings.ai.general.streamTimeoutSeconds]
@@ -890,6 +924,67 @@ label = "Model intel·ligent"
 body = "Els canvis s'envien automàticament al motor d'IA."
 bodyNoPush = "Configuració desada. S'aplicarà la propera vegada que el motor d'IA reculli la seva configuració."
 title = "Configuració d'IA desada"
+
+[admin.settings.ai.status]
+capabilities = "Capacitats"
+capabilitiesValue = "{{on}} de {{total}} activades"
+checked = "comprovat"
+checking = "S’està comprovant el motor…"
+description = "Si el motor és accessible, si accepta aquest servidor i què està executant."
+fastModel = "Model ràpid"
+justNow = "ara mateix"
+latency = "Temps de resposta"
+linkLabel = "Enllaç del compte"
+minutesAgo = "fa {{count}} min"
+recheck = "Torna a comprovar"
+runningOn = "S’executa a"
+secondsAgo = "fa {{count}} s"
+secretLabel = "Secret compartit"
+smartModel = "Model intel·ligent"
+title = "Estat"
+url = "URL del motor"
+
+[admin.settings.ai.status.cloud]
+hostDown = "Inactiu"
+hostLabel = "Stirling.com"
+hostUp = "Actiu"
+name = "Stirling Cloud"
+sharingLabel = "Compartició d’IA"
+sharingOff = "Desactivada"
+sharingOn = "Activada"
+
+[admin.settings.ai.status.cloud.degraded]
+body = "Stirling Cloud ha respost però ha rebutjat aquest servidor. Pot ser que l’enllaç del compte hagi estat revocat."
+title = "Stirling Cloud està rebutjant aquest servidor"
+
+[admin.settings.ai.status.cloud.down]
+body = "Aquest servidor no ha pogut arribar a Stirling Cloud. Comproveu l’enllaç del compte i que aquest servidor pugui accedir a internet."
+title = "Stirling Cloud no és accessible"
+
+[admin.settings.ai.status.cloud.ok]
+body = "Stirling Cloud ha acceptat aquest servidor. No cal executar ni aplicar cap pedaç aquí."
+title = "S’executa a Stirling Cloud"
+
+[admin.settings.ai.status.degraded]
+body = "Ha respost a la comprovació d’estat, però ha rebutjat una sol·licitud real. Els dos costats utilitzen secrets compartits diferents."
+title = "El motor està actiu, però rebutja aquest servidor"
+
+[admin.settings.ai.status.down]
+body = "Comproveu la URL, que el contenidor del motor s’estigui executant i que hàgiu reiniciat després d’activar la IA."
+title = "El motor no és accessible"
+
+[admin.settings.ai.status.off]
+body = "Trieu a continuació com s’executa la IA, després deseu i reinicieu."
+title = "La IA està desactivada"
+
+[admin.settings.ai.status.ok]
+body = "La comprovació d’estat i una sol·licitud autenticada han tingut èxit."
+title = "Motor en execució"
+
+[admin.settings.ai.status.secret]
+no = "Rebutjat"
+unknown = "Desconegut"
+yes = "Acceptat"
 
 [admin.settings.badge]
 clickToUpgrade = "Fes clic per veure els detalls del pla"
@@ -4453,6 +4548,7 @@ openFromComputer = "Obre des de l’ordinador"
 openSettings = "Obre la configuració"
 other = "Altres"
 recent = "Recents"
+searchFiles = "Cerca fitxers"
 uploadFailedBody = "No s'han pogut afegir els fitxers seleccionats."
 uploadFailedTitle = "La pujada ha fallat"
 viewAll = "Mostra tots els {{count}} fitxers"
@@ -5827,6 +5923,8 @@ label = "Free credits"
 adoptFailed = "El document s'ha desbloquejat però no s'ha pogut obrir aquí. Proveu l'eina directament."
 empty = "No hi ha res a informar."
 handoffUnavailable = "Aquest navegador no permet que el processador passi el document a l'editor. Obre'l des de l'editor."
+inSmartFolder = "Aquest document és en una carpeta intel·ligent, de manera que es gestiona al servidor en lloc d’aquí."
+inSmartFolderNamed = "{{name}} és en una carpeta intel·ligent, de manera que es gestiona al servidor en lloc d’aquí."
 noDocumentLinked = "Aquesta fallada no està vinculada a cap document específic, així que no hi ha res per obrir aquí."
 notOnThisDevice = "Aquest document no es troba en aquest dispositiu, així que no es pot obrir aquí."
 occurrences = "{{count}} vegades"
@@ -5837,6 +5935,7 @@ repairedRerunNotAdopted = "El document reparat ha continuat, però el seu result
 repairedRerunUndelivered = "El document s'ha reparat i s'ha iniciat la reexecució de la política, però el seu resultat no es pot lliurar aquí, de manera que aquest error roman obert."
 rerunRejected = "La política no s'ha pogut tornar a executar ara mateix. Torneu-ho a provar d'aquí a un moment."
 rerunUndelivered = "S'ha iniciat la reexecució de la política, però el seu resultat no es pot lliurar aquí, de manera que aquest error roman obert."
+retryInFolderFailed = "Ara mateix no s’ha pogut tornar a executar aquest document."
 retryUnavailable = "Aquest document ja no es pot tornar a provar des d'aquest navegador."
 title = "Notificacions"
 unlockedNotRerun = "El document s'ha desbloquejat i s'ha obert aquí, però la política no s'hi ha pogut tornar a executar."
@@ -6625,9 +6724,11 @@ title = "Ajusta el pla Team"
 [payment.capacityStage]
 adjustmentNote = "Stripe mostrarà el càrrec exacte, qualsevol prorrateig i la propera data de facturació abans que confirmeu. S'utilitzarà el vostre mètode de pagament desat si està disponible."
 continue = "Continua al pagament"
+currencyAtCheckout = "Stripe confirma l’import final i la moneda del pagament en finalitzar la compra."
 customLabel = "Nombre d'usuaris"
 dueToday = "A pagar avui"
 enterpriseQuote = "Demana un pressupost empresarial"
+estimatedTotal = "Total estimat"
 lineItem = "Team · {{price}}{{period}} per cada {{block}} usuaris"
 minimumForCurrentUsers = "Teniu {{users}} usuaris, així que el pla ha de cobrir com a mínim {{minimum}}."
 modalTitle = "Actualitza a {{planName}}"
@@ -6865,6 +6966,25 @@ width = "Amplada"
 widthHint = "L'amplada d'un quadre de text segueix el seu contingut i l'ajust de línia."
 x = "X"
 y = "Y"
+
+[pdfTextEditor.mobile]
+actions = "Accions de l’editor"
+addImage = "Imatge"
+addText = "Text"
+cancel = "Cancel·la"
+delete = "Suprimeix"
+details = "Detalls"
+document = "Document"
+done = "Fet"
+download = "Desa i descarrega"
+find = "Cerca"
+lock = "Bloqueja"
+openPdf = "Obre un PDF"
+panelHint = "L’edició es fa a la vista d’Espai de treball. Toqueu el text de la pàgina per canviar-lo."
+save = "Desa"
+style = "Estil"
+tapToPlace = "Toqueu la pàgina on ha d’anar el text"
+unlock = "Desbloqueja"
 
 [pdfTextEditor.password]
 cancel = "Cancel·la"
@@ -7574,6 +7694,49 @@ plan = "Pla"
 procurement = "Compres"
 usage = "Ús"
 
+[portal.billing.compare]
+current = "Actual"
+enterpriseData = "Residència de dades i SCIM"
+enterpriseName = "Enterprise"
+enterprisePrice = "Segons el vostre acord"
+enterpriseProcessing = "Mesurat per ús o tarifa plana"
+enterpriseSignIn = "SAML i auditoria"
+enterpriseSupport = "SLA de temps d’activitat, ajuda amb el desplegament"
+enterpriseUsers = "Sense límit"
+enterpriseWhere = "A més de multinode i aïllat de la xarxa"
+exploreEnterprise = "Explora Enterprise"
+freeData = "Es queda on l’executeu"
+freeName = "Free"
+freePrice = "Sense targeta, sense caducitat"
+freeProcessing = "{{allowance}} crèdits al mes"
+freeProcessingUnknown = "Una assignació mensual de crèdits"
+freeSignIn = "Correu electrònic, Google i SSO"
+freeSignInNote = "OAuth2/OIDC"
+freeSupport = "Comunitat"
+freeUsers = "Fins a {{users}}"
+freeUsersUnknown = "Un equip petit"
+freeWhere = "Cloud, escriptori o autoallotjat"
+lede = "Tots els plans inclouen totes les eines PDF i SSO. El que canvia és quantes persones l’utilitzen, on s’executa i quin suport rebeu."
+open = "Compara plans"
+rowData = "Les vostres dades"
+rowHeader = "Funció"
+rowProcessing = "Processament"
+rowSignIn = "Inici de sessió"
+rowSupport = "Suport"
+rowUsers = "Usuaris"
+rowWhere = "On s’executa"
+teamData = "Google Drive, la vostra pròpia base de dades"
+teamName = "Team"
+teamPrice = "99 $/mes per cada 100 usuaris"
+teamProcessing = "{{allowance}} al mes, després mesurat per ús"
+teamProcessingUnknown = "Una assignació més gran, després mesurat per ús"
+teamSignIn = "El mateix"
+teamSupport = "Correu electrònic"
+teamUsers = "100 per bloc"
+teamWhere = "Cloud, escriptori o autoallotjat"
+title = "Compara plans"
+upgradeTeam = "Actualitza a Team"
+
 [portal.billing.cycle]
 credits = "Crèdits"
 creditsNote = "{{units}} utilitzats · inclou crèdits gratuïts i prepagats"
@@ -7679,6 +7842,8 @@ payTitle = "Paga el teu any"
 step = "Pas {{current}} de {{total}}"
 
 [portal.billing.prepaid.calc]
+currency = "Moneda del pressupost"
+currencyLocked = "Utilitza la vostra moneda de facturació existent de Stripe."
 rateUnknown = "Mostrarem el preu exacte en finalitzar la compra."
 
 [portal.billing.prepaid.consent]
@@ -8481,6 +8646,10 @@ title = "No s'ha pogut reparar el fitxer"
 [portal.failures.kind.inputWrongType]
 description = "El teu fitxer no té un format que aquest pas pugui obrir, de manera que l'execució no l'ha pogut llegir."
 title = "Tipus de fitxer incorrecte"
+
+[portal.failures.kind.sourceUnreadable]
+description = "No s’ha pogut llegir la vostra carpeta intel·ligent, de manera que no s’hi ha processat res."
+title = "No s’ha pogut llegir la carpeta"
 
 [portal.failures.kind.stepCannotRenderPage]
 description = "No s'ha pogut dibuixar una pàgina del teu fitxer, de manera que l'execució no ha pogut finalitzar."
@@ -12235,6 +12404,7 @@ goBack = "Torna enrere"
 pdfTools = "Eines PDF"
 placeholder = "Tria una eina per començar"
 premiumFeature = "Funció premium:"
+searchTools = "Cerca eines"
 toolsHeader = "Eines"
 viewAllTools = "Mostra totes les eines"
 
@@ -12399,13 +12569,10 @@ visits = "Visites"
 
 [users]
 lastActive = "Darrera activitat"
-learnMore = "Més informació sobre rols i accés."
 locked = "Bloquejat"
 ownerSetupRequired = "El propietari de l’organització no ha completat el primer inici de sessió. Completa la configuració o demana a l’operador del servidor que recuperi la propietat abans de transferir-la."
 roleFor = "Rol de {{name}}"
 rowActions = "Accions per a {{name}}"
-showAll = "Mostra-ho tot {{count}}"
-showLess = "Mostra'n menys"
 subtitle2 = "Les teves persones, equips i nivells d'accés."
 suspended = "Suspès"
 teamActions = "Accions d'equip"
@@ -12414,6 +12581,7 @@ you = "(tu)"
 
 [users.action]
 cancelInvite = "Cancel·la la invitació"
+createFromDefault = "Crea un equip a partir de Default"
 deleteTeam = "Suprimeix l'equip"
 disableMfa = "Restableix MFA"
 move = "Mou a l'equip"
@@ -12451,6 +12619,7 @@ email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
+team = "Equip"
 
 [users.confirm]
 cancelInviteBody = "Vols cancel·lar la invitació a {{email}}? No es podrà unir amb l'enllaç actual."
@@ -12469,15 +12638,12 @@ transferOwnershipTitle = "Transfereix la propietat de l’organització"
 description = "Convida el teu equip per començar a col·laborar."
 title = "Encara no hi ha membres"
 
+[users.filters]
+noMatches = "Ningú coincideix amb aquests filtres."
+search = "Cerca persones"
+
 [users.group]
 addToTeam = "Afegeix a l'equip"
-administrators = "{{count}} administradors"
-guestCount = "{{count}} convidat"
-guests = "Convidats"
-ledBy = "dirigit per {{owner}}"
-org = "Organització"
-team = "Equip {{name}}"
-teamMeta = "{{count}} persones"
 
 [users.invite]
 access = "Accés"
@@ -12542,6 +12708,9 @@ title = "Equip nou"
 
 [users.renameTeam]
 apply = "Canvia el nom"
+defaultApply = "Crea i mou"
+defaultDescription = "Default continuarà disponible per als usuaris nous. Tothom que actualment és a Default es mourà al nou equip."
+defaultTitle = "Crea un equip a partir de Default"
 name = "Nom de l'equip"
 title = "Canvia el nom de l'equip"
 
@@ -12566,6 +12735,15 @@ guest = "Convidat"
 member = "Membre"
 orgOwner = "Propietari de l'organització"
 teamOwner = "Propietari de l'equip"
+
+[users.seats]
+full = "Tots els seients amb llicència estan en ús. Allibereu-ne un o augmenteu el nombre de seients per afegir algú més."
+update = "Actualitza els seients"
+
+[users.tabs]
+all = "Tots"
+label = "Filtra per equip"
+unassigned = "Sense equip"
 
 [users.team]
 grantProcessor = "Concedeix Processor a l'equip"
@@ -13216,232 +13394,14 @@ submitSignature = "Envia la signatura"
 title = "Espai de treball"
 
 [workspace.people]
-active = "Actiu"
-activeSession = "Sessió activa"
-addMembers = "Afegeix membres"
-admin = "Administrador"
-confirmDelete = "Esteu segur que voleu suprimir aquest usuari? Aquesta acció no es pot desfer."
-confirmUnlock = "Segur que voleu desbloquejar aquest compte d'usuari?"
-deleteUser = "Suprimeix l’usuari"
-deleteUserError = "No s’ha pogut suprimir l’usuari"
-deleteUserSuccess = "Usuari suprimit correctament"
 description = "Gestioneu els membres de l’espai de treball i els seus permisos"
-disable = "Deshabilita"
-disabled = "Desactivat"
-editRole = "Edita el rol"
-enable = "Habilita"
-loading = "Carregant persones..."
-locked = "bloquejat"
-lockedBadge = "Bloquejat"
-loginRequired = "Habilita primer el mode d'inici de sessió"
-memberActions = "Accions del membre"
-noMembersFound = "No s’han trobat membres"
-ownerLocked = "Transfereix la propietat de l’organització a Configuració → Espai de treball → Usuaris abans de canviar el rol o el compte del propietari."
-role = "Rol"
-searchMembers = "Cerca membres..."
-team = "Equip"
-unlockAccount = "Desbloqueja el compte"
-unlockUserError = "No s'ha pogut desbloquejar el compte d'usuari"
-unlockUserSuccess = "El compte d'usuari s'ha desbloquejat correctament"
-user = "Usuari"
-userInfo = "Informació de l'usuari"
-
-[workspace.people.actions]
-upgrade = "Actualitza"
-
-[workspace.people.addMember]
-authType = "Tipus d'autenticació"
-error = "No s’ha pogut crear l’usuari"
-forceMFA = "Força la configuració de l'MFA en el proper inici de sessió"
-forcePasswordChange = "Obliga a canviar la contrasenya en el primer inici de sessió"
-password = "Contrasenya"
-passwordPlaceholder = "Introduïu la contrasenya"
-passwordRequired = "La contrasenya és obligatòria"
-role = "Rol"
-submit = "Afegeix membre"
-success = "Usuari creat correctament"
-team = "Equip (opcional)"
-teamPlaceholder = "Seleccioneu un equip"
-username = "Nom d’usuari (correu electrònic)"
-usernamePlaceholder = "user@example.com"
-usernameRequired = "Cal nom d’usuari i contrasenya"
-
-[workspace.people.authType]
-oauth = "OAuth2"
-password = "Contrasenya"
-saml = "SAML2"
-ssoDescription = "L'usuari s'autenticarà a través del proveïdor SSO"
-
-[workspace.people.changePassword]
-action = "Canvieu la contrasenya"
-confirmPassword = "Confirma la contrasenya"
-confirmPlaceholder = "Torneu a introduir la contrasenya nova"
-copiedToClipboard = "Contrasenya copiada al portapapers"
-copyFailed = "No s'ha pogut copiar la contrasenya"
-copyTooltip = "Copieu al portapapers"
-emailUnavailable = "El correu d'aquest usuari no és una adreça de correu vàlida. Les notificacions estan desactivades."
-error = "No s'ha pogut actualitzar la contrasenya"
-forcePasswordChange = "Obligueu l'usuari a canviar la contrasenya en el pròxim inici de sessió"
-generatedPreview = "Contrasenya generada:"
-generateRandom = "Genereu una contrasenya segura"
-includePassword = "Incloeu la contrasenya nova al correu"
-newPassword = "Contrasenya nova"
-notifyOnly = "S'enviarà un correu sense la contrasenya, informant l'usuari que un administrador l'ha canviada."
-passwordMismatch = "Les contrasenyes no coincideixen"
-passwordRequired = "Introduïu una contrasenya nova"
-placeholder = "Introduïu una contrasenya nova"
-sendEmail = "Envieu un correu a l'usuari sobre aquest canvi"
-smtpDisabled = "Les notificacions per correu electrònic requereixen habilitar SMTP als paràmetres."
-submit = "Actualitzeu la contrasenya"
-subtitle = "Actualitza la contrasenya de"
-success = "La contrasenya s'ha actualitzat correctament"
-title = "Canvi de contrasenya"
-
-[workspace.people.editMember]
-editing = "Editing: <0>{{username}}</0>"
-error = "No s’ha pogut actualitzar l’usuari"
-role = "Rol"
-submit = "Update User"
-success = "Usuari actualitzat correctament"
-team = "Equip (opcional)"
-teamPlaceholder = "Seleccioneu un equip"
-title = "Edit User"
-
-[workspace.people.emailInvite]
-allFailed = "No s’ha pogut convidar els usuaris"
-emails = "Adreces de correu"
-emailsPlaceholder = "user1@example.com, user2@example.com"
-emailsRequired = "Cal almenys una adreça de correu"
-error = "No s’han pogut enviar les invitacions"
-partialFailure = "Algunes invitacions han fallat"
-submit = "Envia invitacions"
-success = "usuari(s) convidat(s) correctament"
-
-[workspace.people.inviteLink]
-copied = "Enllaç copiat al porta-retalls"
-email = "Adreça de correu"
-emailDescription = "Opcional - deixeu-ho en blanc per a un enllaç d’invitació general que pot ser utilitzat per qualsevol persona"
-emailPlaceholder = "user@example.com (opcional)"
-emailSent = "Enllaç d’invitació generat i enviat per correu"
-error = "No s’ha pogut generar l’enllaç d’invitació"
-expiryHours = "Hores de caducitat"
-generate = "Genera enllaç"
-generated = "Enllaç d’invitació generat"
-sendEmail = "Envia l’enllaç d’invitació per correu"
-sendEmailDescription = "Si s’habilita, l’enllaç d’invitació s’enviarà a l’adreça de correu especificada"
-submit = "Genera enllaç d’invitació"
-
-[workspace.people.inviteMembers]
-label = "Convida membres"
-subtitle = "Escriviu o enganxeu correus electrònics a continuació, separats per comes. El vostre espai de treball es facturarà pels membres."
-
-[workspace.people.inviteMode]
-email = "Correu electrònic"
-emailDisabled = "Les invitacions per correu requereixen configuració d’SMTP i mail.enableInvites=true als paràmetres"
-link = "Enllaç"
-username = "Nom d’usuari"
 
 [workspace.people.license]
-currentUsage = "Actualment s’estan utilitzant {{current}} de {{max}} llicències d’usuari"
-fromLicense = "de la llicència"
-grandfathered = "Dret adquirit"
-grandfatheredShort = "{{count}} amb dret adquirit"
-slotsAvailable_one = "{{count}} user slot available"
-slotsAvailable_other = "{{count}} user slots available"
-slotsAvailable_zero = "No slots available"
 users_one = "user"
 users_other = "users"
 
-[workspace.people.mfa]
-adminDisableError = "No s'ha pogut desactivar l'MFA per a l'usuari"
-adminDisableSuccess = "MFA desactivada correctament per a l'usuari"
-disableByAdmin = "Desactiva l'MFA"
-
-[workspace.people.roleDescriptions]
-admin = "Pot gestionar paràmetres i convidar membres, amb accés administratiu complet."
-currentRole = "Rol assignat actual."
-user = "Can view and edit shared files, but cannot manage workspace settings or users."
-
-[workspace.people.toggleEnabled]
-error = "No s’ha pogut actualitzar l’estat de l’usuari"
-success = "Estat de l’usuari actualitzat correctament"
-
 [workspace.teams]
-addMember = "Afegeix membre"
-backToTeams = "Torna als equips"
-cannotAddToInternal = "No es poden afegir membres a l’equip intern"
-cannotDeleteInternal = "No es pot suprimir l’equip intern"
-cannotRenameInternal = "No es pot canviar el nom de l’equip intern"
-confirmDelete = "Esteu segur que voleu suprimir aquest equip? L’equip ha d’estar buit per suprimir-lo."
-confirmRemove = "Voleu eliminar l’usuari d’aquest equip?"
-createNewTeam = "Crea un equip nou"
-deleteTeamLabel = "Suprimeix l’equip"
 description = "Gestioneu equips i organitzeu els membres de l’espai de treball"
-loadError = "No s'han pogut carregar els detalls de l'equip"
-loading = "Carregant equips..."
-loadingDetails = "Carregant detalls de l’equip..."
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
-noMembers = "No hi ha membres en aquest equip"
-noTeamsFound = "No s’ha trobat cap equip"
-removeMember = "Elimina de l’equip"
-removeMemberError = "No s’ha pogut eliminar l’usuari de l’equip"
-removeMemberSuccess = "Usuari eliminat de l’equip"
-renameTeamLabel = "Canvia el nom de l’equip"
-system = "Sistema"
-teamActions = "Accions de l'equip"
-teamName = "Nom de l’equip"
-teamNotFound = "Equip no trobat"
-totalMembers = "Membres totals"
-viewTeam = "Mostra l’equip"
-
-[workspace.teams.addMemberToTeam]
-addingTo = "S’està afegint a"
-currentlyIn = "actualment a"
-error = "No s’ha pogut afegir el membre a l’equip"
-selectUser = "Seleccioneu usuari"
-selectUserPlaceholder = "Trieu un usuari"
-selectUserRequired = "Seleccioneu un usuari, si us plau"
-submit = "Afegeix membre"
-success = "Membre afegit a l’equip correctament"
-title = "Afegeix membre a l’equip"
-userRequired = "Seleccioneu un usuari, si us plau"
-willBeMoved = "Nota: aquest usuari es mourà del seu equip actual a aquest equip."
-
-[workspace.teams.changeTeam]
-changing = "Movent"
-error = "No s’ha pogut canviar d’equip"
-label = "Canvia d’equip"
-selectTeam = "Seleccioneu equip"
-selectTeamPlaceholder = "Trieu un equip"
-selectTeamRequired = "Seleccioneu un equip, si us plau"
-submit = "Canvia d’equip"
-success = "Equip canviat correctament"
-title = "Canvia d’equip"
-
-[workspace.teams.createTeam]
-error = "No s’ha pogut crear l’equip"
-nameRequired = "Cal nom d’equip"
-submit = "Crea l’equip"
-success = "Equip creat correctament"
-teamName = "Nom de l’equip"
-teamNamePlaceholder = "Introduïu el nom de l’equip"
-title = "Crea un equip nou"
-
-[workspace.teams.deleteTeam]
-error = "No s’ha pogut suprimir l’equip. Assegureu-vos que l’equip estigui buit."
-success = "Equip suprimit correctament"
-
-[workspace.teams.renameTeam]
-error = "No s’ha pogut canviar el nom de l’equip"
-nameRequired = "Cal nom d’equip"
-newTeamName = "Nom nou de l’equip"
-newTeamNamePlaceholder = "Introduïu el nom nou de l’equip"
-renaming = "Canviant el nom de:"
-submit = "Canvia el nom de l’equip"
-success = "Equip reanomenat correctament"
-title = "Canvia el nom de l’equip"
 
 [zipWarning]
 cancel = "Cancel·la"
