@@ -66,11 +66,20 @@ public class FileRunEventController {
 
         // One policy lookup per distinct policy for the whole page, not one per row.
         Map<String, ProducingSurface> sources = new HashMap<>();
+        FileRunEventService.Viewer viewer = service.viewer();
         List<FileRunEventView> events =
                 // The kind filter is part of the query, before the limit is applied: filtering an
                 // already-limited page could return nothing while matching rows exist.
-                service.list(status, closed, kindId, cappedLimit).stream()
-                        .map(event -> view(event, service.producingSurfaceOf(event, sources)))
+                service.list(viewer, status, closed, kindId, cappedLimit).stream()
+                        .map(
+                                event -> {
+                                    ProducingSurface source =
+                                            service.producingSurfaceOf(event, sources);
+                                    return FileRunEventView.of(
+                                            event,
+                                            source,
+                                            service.availableActions(event, source, viewer));
+                                })
                         .toList();
         return new FileRunEventsResponse(events);
     }

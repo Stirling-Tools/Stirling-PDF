@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -444,6 +446,27 @@ class NotificationProjectionTest {
         @Test
         void neverTheUsernameItself() {
             assertThat(controller.list(null).viewerKey()).doesNotContain(ACTOR);
+        }
+    }
+
+    @Nested
+    @DisplayName("what a poll costs")
+    class PollCost {
+
+        @Test
+        @DisplayName("the reader is looked up once, however many rows the bell holds")
+        void readerIsResolvedOncePerPoll() {
+            for (int i = 0; i < 20; i++) {
+                given(FailureKind.UNKNOWN, ACTOR, "f-" + i);
+            }
+
+            NotificationController.NotificationsResponse bell = controller.list(50);
+
+            assertThat(bell.notifications()).hasSize(20);
+            assertThat(bell.viewerReviewsTeam()).isTrue();
+            verify(authority, times(1)).currentUserTeamId();
+            verify(authority, times(1)).canEditPolicies();
+            verify(userService, times(1)).getCurrentUsername();
         }
     }
 }

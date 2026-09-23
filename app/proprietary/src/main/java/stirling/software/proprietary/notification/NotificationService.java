@@ -41,29 +41,38 @@ public class NotificationService {
      * limit, so a page can come back short while unattributed rows exist - the review surface is
      * where those are meant to be read, and it lists them unfiltered.
      */
-    public List<NotificationView> list(int limit) {
+    public Page page(int limit) {
+        FileRunEventService.Viewer viewer = fileRunEvents.viewer();
+        return new Page(list(viewer, limit), viewer.reviewsTeam(), fileRunEvents.viewerKey(viewer));
+    }
+
+    public record Page(
+            List<NotificationView> notifications, boolean viewerReviewsTeam, String viewerKey) {}
+
+    private List<NotificationView> list(FileRunEventService.Viewer viewer, int limit) {
         // One lookup per distinct policy rather than per row: a folder that fails a whole batch is
         // one policy and twenty rows.
         Map<String, ProducingSurface> kinds = new HashMap<>();
         List<FileRunEvent> events =
-                fileRunEvents.list(null, false, null, limit).stream()
+                fileRunEvents.list(viewer, null, false, null, limit).stream()
                         .filter(
                                 event ->
                                         namesADocument(event)
                                                 || event.scope() == FailureScope.SOURCE)
                         .toList();
-        Map<Long, StoredFile> named = storedFilesNamedBy(events);
-        return events.stream().map(event -> fromFailure(event, kinds, named)).toList();
+        Map<Long, StoredFile> named = storedFilesNamedBy(events, viewer);
+        return events.stream().map(event -> fromFailure(event, kinds, named, viewer)).toList();
     }
 
     /**
      * The stored files behind the reader's own rows, in one query for the page. Only a
      * storage-backed folder's identity resolves; a disk folder's is a path and stays unnamed.
      */
-    private Map<Long, StoredFile> storedFilesNamedBy(List<FileRunEvent> events) {
+    private Map<Long, StoredFile> storedFilesNamedBy(
+            List<FileRunEvent> events, FileRunEventService.Viewer viewer) {
         List<Long> ids =
                 events.stream()
-                        .filter(event -> fileRunEvents.ownershipOf(event) == Ownership.MINE)
+                        .filter(event -> fileRunEvents.ownershipOf(event, viewer) == Ownership.MINE)
                         .map(event -> StorageFileIdentities.storedFileIdOf(event.fileId()))
                         .filter(Objects::nonNull)
                         .distinct()
@@ -98,15 +107,6 @@ public class NotificationService {
         return event.fileId() != null && !event.fileId().isBlank();
     }
 
-    /** Whether the caller sees the whole team's incidents rather than only their own. */
-    public boolean callerReviewsTeam() {
-        return fileRunEvents.reviewsTeam();
-    }
-
-    public String callerViewerKey() {
-        return fileRunEvents.viewerKey();
-    }
-
     /** Takes the prefixed id, so the bell cannot reach a failure endpoint even by accident. */
     public NotificationView resolve(String notificationId) {
         NotificationSource.QualifiedId qualified = qualify(notificationId);
@@ -138,12 +138,17 @@ public class NotificationService {
 
     /** One row on its own, looked up for itself. */
     private NotificationView fromFailure(FileRunEvent event) {
-        return fromFailure(event, new HashMap<>(), storedFilesNamedBy(List.of(event)));
+        FileRunEventService.Viewer viewer = fileRunEvents.viewer();
+        return fromFailure(
+                event, new HashMap<>(), storedFilesNamedBy(List.of(event), viewer), viewer);
     }
 
     /** Prefixes the row id on the way out, so it is never sent bare. */
     private NotificationView fromFailure(
-            FileRunEvent event, Map<String, ProducingSurface> kinds, Map<Long, StoredFile> named) {
+            FileRunEvent event,
+            Map<String, ProducingSurface> kinds,
+            Map<Long, StoredFile> named,
+            FileRunEventService.Viewer viewer) {
         ProducingSurface source = fileRunEvents.producingSurfaceOf(event, kinds);
         FileRunEventView.DocumentLocation location =
                 FileRunEventView.DocumentLocation.of(event, source);
@@ -154,7 +159,7 @@ public class NotificationService {
                 location == FileRunEventView.DocumentLocation.SMART_FOLDER
                         || (event.scope() == FailureScope.SOURCE
                                 && source == ProducingSurface.SMART_FOLDER);
-        Ownership ownership = fileRunEvents.ownershipOf(event);
+        Ownership ownership = fileRunEvents.ownershipOf(event, viewer);
         return new NotificationView(
                 NotificationSource.FAILURE.qualify(event.id()),
                 NotificationSource.FAILURE,
@@ -177,7 +182,7 @@ public class NotificationService {
                 event.occurrences(),
                 event.createdAt(),
                 event.lastSeenAt(),
-                bellActions(event, source));
+                bellActions(event, source, viewer));
     }
 
     /**
@@ -185,8 +190,8 @@ public class NotificationService {
      * disposition, which is the review surface's to apply. A new disposition belongs in this list.
      */
     private List<FileRunEventView.ActionView> bellActions(
-            FileRunEvent event, ProducingSurface source) {
-        return fileRunEvents.availableActions(event, source).stream()
+            FileRunEvent event, ProducingSurface source, FileRunEventService.Viewer viewer) {
+        return fileRunEvents.availableActions(event, source, viewer).stream()
                 .filter(
                         action ->
                                 action.id() != FailureActionId.DISMISS

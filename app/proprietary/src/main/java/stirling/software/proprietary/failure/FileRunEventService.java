@@ -123,7 +123,12 @@ public class FileRunEventService {
      */
     public List<FileRunEvent> list(
             FileRunEventStatus status, boolean closed, String kindId, int limit) {
-        ReadScope scope = readScope();
+        return list(viewer(), status, closed, kindId, limit);
+    }
+
+    public List<FileRunEvent> list(
+            Viewer viewer, FileRunEventStatus status, boolean closed, String kindId, int limit) {
+        ReadScope scope = readScope(viewer);
         if (!scope.permitted()) {
             return List.of();
         }
@@ -140,7 +145,8 @@ public class FileRunEventService {
     public FileRunEvent dispatch(String eventId, String actionId, Map<String, String> inputs) {
         // Whoever can see it can close it: a leader for the whole team, everyone else for the
         // failures they caused. What each may then do is narrowed by audience below.
-        FileRunEvent event = requireVisible(eventId);
+        Viewer viewer = viewer();
+        FileRunEvent event = requireVisible(eventId, viewer);
 
         FailureActionId resolvedId = parseActionId(actionId);
 
@@ -163,7 +169,7 @@ public class FileRunEventService {
         }
         // Enforced here rather than per handler: reading a colleague's row is not a right to act
         // on the document behind it, and a handler that forgets to check is not the last line.
-        if (!offeredToCaller(event, resolvedId)) {
+        if (!offeredToCaller(event, resolvedId, viewer)) {
             throw new FailureActionException(
                     FailureActionException.Reason.ACTION_NOT_THEIRS,
                     "Action " + resolvedId + " belongs to the owner of this failure");
@@ -183,24 +189,25 @@ public class FileRunEventService {
                                                 FailureActionException.Reason.ACTION_NOT_RECOGNISED,
                                                 "No handler for action " + resolvedId));
 
-        return action.execute(event, inputs == null ? Map.of() : inputs, currentActor());
+        return action.execute(event, inputs == null ? Map.of() : inputs, viewer.actor());
     }
 
     /** Mark an incident resolved after a client's own retry worked. Idempotent. */
     public FileRunEvent resolve(String eventId) {
-        FileRunEvent event = requireVisible(eventId);
+        Viewer viewer = viewer();
+        FileRunEvent event = requireVisible(eventId, viewer);
         // No terminal pre-check: the store's guarded UPDATE decides, rather than racing a read.
         return store.applyStatusOnce(
                 event.id(),
                 event.teamId(),
                 FileRunEventStatus.RESOLVED,
-                currentActor(),
+                viewer.actor(),
                 FileRunEventStatus.open());
     }
 
     /** "No such event" rather than a refusal, so trying does not confirm a colleague's exists. */
-    private FileRunEvent requireVisible(String eventId) {
-        ReadScope scope = readScope();
+    private FileRunEvent requireVisible(String eventId, Viewer viewer) {
+        ReadScope scope = readScope(viewer);
         if (!scope.permitted()) {
             return notFound(eventId);
         }
@@ -215,10 +222,17 @@ public class FileRunEventService {
     }
 
     public Ownership ownershipOf(FileRunEvent event) {
+        return ownershipOf(event, currentActor());
+    }
+
+    public Ownership ownershipOf(FileRunEvent event, Viewer viewer) {
+        return ownershipOf(event, viewer.actor());
+    }
+
+    private static Ownership ownershipOf(FileRunEvent event, String caller) {
         if (event.actor() == null) {
             return Ownership.UNOWNED;
         }
-        String caller = currentActor();
         return event.actor().equals(caller) ? Ownership.MINE : Ownership.THEIRS;
     }
 
@@ -232,12 +246,17 @@ public class FileRunEventService {
 
     /** As {@link #availableActions(FileRunEvent)}, with the source already looked up. */
     public List<AvailableAction> availableActions(FileRunEvent event, ProducingSurface source) {
-        Ownership ownership = ownershipOf(event);
-        boolean reviewsTeam = reviewsTeam();
+        return availableActions(event, source, viewer());
+    }
+
+    public List<AvailableAction> availableActions(
+            FileRunEvent event, ProducingSurface source, Viewer viewer) {
+        Ownership ownership = ownershipOf(event, viewer);
+        boolean reviewsTeam = viewer.reviewsTeam();
         boolean closed = event.status().terminal();
         // Login disabled is excluded: its rows are unowned only for want of users, and its one
         // operator owns everything they can see.
-        boolean unattended = enforced() && ownership == Ownership.UNOWNED;
+        boolean unattended = viewer.enforced() && ownership == Ownership.UNOWNED;
         // Answered here, or the client reports "not on this device" about a document the row never
         // named. A source-scoped row names none by design: the folder is the subject.
         boolean documentless =
@@ -280,12 +299,11 @@ public class FileRunEventService {
      * Whether this caller is in the audience the kind declares for the action. Audience only: a
      * disabled offer stays dispatchable, since its reasons are about the row, not the caller.
      */
-    private boolean offeredToCaller(FileRunEvent event, FailureActionId id) {
-        Ownership ownership = ownershipOf(event);
-        boolean reviewsTeam = reviewsTeam();
+    private static boolean offeredToCaller(FileRunEvent event, FailureActionId id, Viewer viewer) {
+        Ownership ownership = ownershipOf(event, viewer.actor());
         return event.kind().getOfferedActions().stream()
                 .filter(offer -> offer.id() == id)
-                .anyMatch(offer -> offeredTo(offer.audience(), ownership, reviewsTeam));
+                .anyMatch(offer -> offeredTo(offer.audience(), ownership, viewer.reviewsTeam()));
     }
 
     /** Enabled is derived from the reason, so a disabled button always has one to show. */
@@ -336,12 +354,30 @@ public class FileRunEventService {
         return !enforced() || policyManagementAuthority.canEditPolicies();
     }
 
+    public Viewer viewer() {
+        if (!enforced()) {
+            return new Viewer(false, null, true, null);
+        }
+        return new Viewer(
+                true,
+                policyManagementAuthority.currentUserTeamId(),
+                policyManagementAuthority.canEditPolicies(),
+                userService.getCurrentUsername());
+    }
+
     /**
      * Opaque and stable per viewer, for a client scoping its own read state. Hashed because the
      * value ends up in that browser's storage; {@code "anonymous"} with login disabled.
      */
     public String viewerKey() {
-        String actor = currentActor();
+        return viewerKey(currentActor());
+    }
+
+    public String viewerKey(Viewer viewer) {
+        return viewerKey(viewer.actor());
+    }
+
+    private static String viewerKey(String actor) {
         return actor == null || actor.isBlank() ? "anonymous" : sha256Prefix(actor);
     }
 
@@ -381,21 +417,27 @@ public class FileRunEventService {
      * shared by every team's ad-hoc runs.
      */
     private ReadScope readScope() {
-        if (!enforced()) {
+        return readScope(viewer());
+    }
+
+    private static ReadScope readScope(Viewer viewer) {
+        if (!viewer.enforced()) {
             return ReadScope.wholeTeam(null);
         }
-        Long teamId = currentTeamId();
-        if (teamId == null) {
+        if (viewer.teamId() == null) {
             return ReadScope.denied();
         }
-        if (policyManagementAuthority.canEditPolicies()) {
-            return ReadScope.wholeTeam(teamId);
+        if (viewer.reviewsTeam()) {
+            return ReadScope.wholeTeam(viewer.teamId());
         }
         // Narrowing to "mine" needs a name to narrow by. Without one the filter would be dropped
         // and a member would read the whole team, so refuse rather than widen.
-        String actor = currentActor();
-        return actor == null ? ReadScope.denied() : ReadScope.mine(teamId, actor);
+        return viewer.actor() == null
+                ? ReadScope.denied()
+                : ReadScope.mine(viewer.teamId(), viewer.actor());
     }
+
+    public record Viewer(boolean enforced, Long teamId, boolean reviewsTeam, String actor) {}
 
     /**
      * What the caller may read. {@code actor} is the person to narrow to, or null for the whole

@@ -46,10 +46,9 @@ public class NotificationController {
                             + " to mark read here yet: the client tracks what it has shown.")
     public NotificationsResponse list(@RequestParam(required = false) Integer limit) {
         int capped = Math.min(limit == null ? DEFAULT_LIMIT : Math.max(1, limit), MAX_LIMIT);
+        NotificationService.Page page = notifications.page(capped);
         return new NotificationsResponse(
-                notifications.list(capped),
-                notifications.callerReviewsTeam(),
-                notifications.callerViewerKey());
+                page.notifications(), page.viewerReviewsTeam(), page.viewerKey());
     }
 
     @PostMapping("/{notificationId}/resolved")

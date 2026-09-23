@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -623,6 +624,24 @@ class FileRunEventControllerTest {
                             new FileRunEventController.ActionRequest(Map.of("password", "x"))
                                     .safeInputs())
                     .containsEntry("password", "x");
+        }
+    }
+
+    @Nested
+    @DisplayName("what a page costs")
+    class PageCost {
+
+        @Test
+        @DisplayName("the caller is looked up once, however many rows the page holds")
+        void callerIsResolvedOncePerPage() {
+            for (int i = 0; i < 20; i++) {
+                givenHitBy("author@example.com", FailureKind.UNKNOWN, TEAM, "f-" + i);
+            }
+
+            assertThat(controller.list(null, false, null, 50).events()).hasSize(20);
+
+            verify(authority, times(1)).currentUserTeamId();
+            verify(authority, times(1)).canEditPolicies();
         }
     }
 }
