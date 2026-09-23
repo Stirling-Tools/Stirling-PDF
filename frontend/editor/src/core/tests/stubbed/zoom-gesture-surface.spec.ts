@@ -67,7 +67,14 @@ test.describe("touch pinch", () => {
 
   test("browser magnification applies outside the viewer and not inside it", async ({
     page,
+    browserName,
   }) => {
+    // Mobile emulation (isMobile) is unsupported in Firefox and the touch
+    // pinch below drives CDP input events, so this only runs on Chromium.
+    test.skip(
+      browserName !== "chromium",
+      "touch pinch needs isMobile and CDP input, both chromium-only",
+    );
     await loadViewer(page);
 
     const outside = await pinch(page, 120, 400);
