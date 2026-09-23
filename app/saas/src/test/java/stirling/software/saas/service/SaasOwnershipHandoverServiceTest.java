@@ -49,6 +49,17 @@ class SaasOwnershipHandoverServiceTest {
     private TeamMembership leader;
     private TeamMembership target;
 
+    @Test
+    void missingCloudTeamHasAnAuthoritativeRecoveryReason() {
+        when(teams.findById(9L)).thenReturn(Optional.empty());
+        assertEquals(
+                "CLOUD_TEAM_MISSING",
+                assertThrows(
+                                ResponseStatusException.class,
+                                () -> service.status(9L, "new@example.com"))
+                        .getReason());
+    }
+
     @BeforeEach
     void setup() {
         team = new Team();

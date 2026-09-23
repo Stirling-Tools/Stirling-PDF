@@ -145,6 +145,18 @@ public class OwnershipHandoverService {
                         cloudEmail(owner));
     }
 
+    /** Reading alternative cloud accounts never cancels or replaces a saved handover. */
+    @Transactional
+    public CloudOwnershipCandidates members(Authentication auth) {
+        OrgOwner owner = requireOwner(auth);
+        DeviceCredential credential =
+                owner.getHandoverTargetId() == null
+                        ? credentials.findCredential().orElseThrow(() -> conflict("NOT_LINKED"))
+                        : credential(owner);
+        if (credential == null) throw conflict("NOT_LINKED");
+        return candidates(credential);
+    }
+
     /**
      * The bearer is forwarded for this request only; SaaS must authorize its current team owner.
      */
@@ -168,17 +180,25 @@ public class OwnershipHandoverService {
     }
 
     /**
-     * Cancellation cannot abandon a completed cloud transfer; an unreachable cloud fails closed.
+     * Cancellation preserves a completed cloud transfer or an unknown outcome. An authoritative
+     * denial of the pinned device link permits abandoning the now-disconnected handover.
      */
     @Transactional
     public void cancel(Authentication auth) {
         OrgOwner owner = requireOwner(auth);
         if (owner.getHandoverTargetId() == null) return;
         DeviceCredential credential = credential(owner);
-        CloudOwnershipStatus cloud =
-                credential == null
-                        ? null
-                        : remote(credential, cloudEmail(owner), null, "status", null, null);
+        CloudOwnershipStatus cloud;
+        try {
+            cloud =
+                    credential == null
+                            ? null
+                            : remote(credential, cloudEmail(owner), null, "status", null, null);
+        } catch (ResponseStatusException e) {
+            if (!"LINK_REVOKED".equals(e.getReason())) throw e;
+            clear(owner);
+            return;
+        }
         if (cloud != null
                 && (owner.getHandoverCloudUserId() == null
                         ? cloud.state() == CloudOwnershipStatus.State.TRANSFERRED
@@ -290,7 +310,8 @@ public class OwnershipHandoverService {
         OrgOwner owner = owners.lockOwner().orElseThrow(() -> conflict("OWNER_UNAVAILABLE"));
         if (auth == null
                 || !auth.isAuthenticated()
-                || !Objects.equals(owner.getOwnerUsername(), auth.getName())) {
+                || owner.getOwnerUsername() == null
+                || !owner.getOwnerUsername().equalsIgnoreCase(auth.getName())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "ORG_OWNER_REQUIRED");
         }
         users.findById(owner.getOwnerUserId())
@@ -298,7 +319,8 @@ public class OwnershipHandoverService {
                         u ->
                                 u.isEnabled()
                                         && !u.isFirstLogin()
-                                        && Objects.equals(u.getUsername(), auth.getName())
+                                        && u.getUsername() != null
+                                        && u.getUsername().equalsIgnoreCase(auth.getName())
                                         && u.getAuthorities().stream()
                                                 .anyMatch(
                                                         a ->
@@ -349,9 +371,13 @@ public class OwnershipHandoverService {
             String reason =
                     switch (e.status()) {
                         case 401 ->
-                                "status".equals(action) ? "LINK_CHANGED" : "CLOUD_SIGN_IN_REQUIRED";
+                                "status".equals(action) ? "LINK_REVOKED" : "CLOUD_SIGN_IN_REQUIRED";
                         case 403 ->
-                                "status".equals(action) ? "LINK_CHANGED" : "CLOUD_OWNER_REQUIRED";
+                                "status".equals(action) ? "LINK_REVOKED" : "CLOUD_OWNER_REQUIRED";
+                        case 404 ->
+                                "status".equals(action) && "CLOUD_TEAM_MISSING".equals(e.reason())
+                                        ? "LINK_REVOKED"
+                                        : "CLOUD_UNAVAILABLE";
                         case 400 -> "INVITATION_BLOCKED";
                         case 409 ->
                                 "CLOUD_TARGET_CHANGED".equals(e.reason())

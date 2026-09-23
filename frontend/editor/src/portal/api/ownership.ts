@@ -30,6 +30,10 @@ export function ownershipAdapter(
     return {
       local,
       signIn,
+      loadCandidates: () =>
+        apiClient.local.json<NonNullable<OwnershipStatus["candidates"]>>(
+          `${path}/members`,
+        ),
       prepare: () =>
         apiClient.local.json<OwnershipStatus>(`${path}/${member.id}`, {
           method: "POST",

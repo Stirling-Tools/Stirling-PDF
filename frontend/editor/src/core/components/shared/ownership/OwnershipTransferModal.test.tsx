@@ -86,7 +86,9 @@ describe("ownership handover", () => {
   }
 
   function choosing(
-    members = [{ id: 42, name: "Jamie Cloud", email: "cloud@example.com" }],
+    members: NonNullable<OwnershipStatus["candidates"]>["members"] = [
+      { id: 42, name: "Jamie Cloud", email: "cloud@example.com" },
+    ],
   ): OwnershipStatus {
     return {
       ...status(null),
@@ -212,6 +214,56 @@ describe("ownership handover", () => {
     );
     expect(adapter.transferCloud).not.toHaveBeenCalled();
     expect(adapter.completeLocal).not.toHaveBeenCalled();
+  });
+
+  it("focusing and reselecting a resumed account preserves the saved handover", async () => {
+    adapter.selectCloud = vi.fn();
+    adapter.loadCandidates = vi
+      .fn()
+      .mockResolvedValue(
+        choosing([{ id: 2, name: null, email: "jamie@example.com" }])
+          .candidates,
+      );
+    show();
+    const input = await screen.findByRole("combobox", {
+      name: "Stirling account",
+    });
+    fireEvent.focus(input);
+    await click(
+      await screen.findByRole("option", { name: "jamie@example.com" }),
+    );
+    fireEvent.blur(input);
+    fireEvent.focus(input);
+    expect(adapter.loadCandidates).toHaveBeenCalledOnce();
+    expect(adapter.cancel).not.toHaveBeenCalled();
+    expect(adapter.selectCloud).not.toHaveBeenCalled();
+    expect(adapter.prepare).toHaveBeenCalledOnce();
+    expect(input).toHaveValue("jamie@example.com");
+    fireEvent.blur(input);
+    await confirm();
+    expect(adapter.completeLocal).toHaveBeenCalledOnce();
+  });
+
+  it("offers checked cancellation when a resumed link is revoked", async () => {
+    vi.mocked(adapter.prepare).mockRejectedValue(new Error("LINK_REVOKED"));
+    show();
+    await click(await screen.findByRole("button", { name: "Cancel transfer" }));
+    expect(adapter.cancel).toHaveBeenCalledOnce();
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(adapter.completeLocal).not.toHaveBeenCalled();
+  });
+
+  it("keeps a revoked-link recovery open if cancellation cannot be verified", async () => {
+    vi.mocked(adapter.prepare).mockRejectedValue(new Error("LINK_REVOKED"));
+    vi.mocked(adapter.cancel!).mockRejectedValue(
+      new Error("CLOUD_UNAVAILABLE"),
+    );
+    show();
+    await click(await screen.findByRole("button", { name: "Cancel transfer" }));
+    expect(onClose).not.toHaveBeenCalled();
+    expect(
+      await screen.findByRole("button", { name: "Check again" }),
+    ).toBeVisible();
   });
 
   it("changing the selected account cancels its draft before loading the member picker", async () => {

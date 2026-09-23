@@ -329,6 +329,78 @@ class OwnershipHandoverServiceTest {
                         .getReason());
     }
 
+    @ParameterizedTest
+    @CsvSource({"401, invalid", "403, revoked", "404, CLOUD_TEAM_MISSING"})
+    void authoritativeLostLinkAllowsCancellationButNeverCompletion(int code, String reason)
+            throws IOException {
+        linked(State.READY, true);
+        prepareSelected();
+        when(cloud.ownership(
+                        eq(credential),
+                        anyString(),
+                        isNull(),
+                        eq("status"),
+                        isNull(),
+                        nullable(Long.class)))
+                .thenThrow(new AccountLinkClient.UpstreamException(code, "denied", reason));
+        assertEquals(
+                "LINK_REVOKED",
+                assertThrows(
+                                ResponseStatusException.class,
+                                () -> service.validateCompletion(owner, 2L))
+                        .getReason());
+        service.cancel(auth);
+        assertNull(owner.getHandoverTargetId());
+        assertNull(owner.getHandoverCloudUserId());
+        assertEquals(1L, owner.getOwnerUserId());
+        verify(credentials, never()).delete(any());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"404, route_missing", "500, error", "503, outage", "409, CLOUD_TARGET_CHANGED"})
+    void ambiguousFailureCannotAbandonHandover(int code, String reason) throws IOException {
+        linked(State.READY, true);
+        prepareSelected();
+        when(cloud.ownership(credential, "new@example.com", null, "status", null, null))
+                .thenThrow(new AccountLinkClient.UpstreamException(code, "unavailable", reason));
+        assertThrows(ResponseStatusException.class, () -> service.cancel(auth));
+        assertEquals(2L, owner.getHandoverTargetId());
+    }
+
+    @Test
+    void cancelledRequestCannotDiscardHandoverDuringNetworkOutage() throws IOException {
+        linked(State.READY, true);
+        prepareSelected();
+        when(cloud.ownership(credential, "new@example.com", null, "status", null, null))
+                .thenThrow(new IOException("timeout"));
+        assertThrows(ResponseStatusException.class, () -> service.cancel(auth));
+        assertEquals(2L, owner.getHandoverTargetId());
+    }
+
+    @Test
+    void browsingResumedCandidatesPreservesPinnedRecipient() throws IOException {
+        linked(State.READY, false);
+        prepareSelected();
+        assertEquals(2L, service.members(auth).members().getFirst().id());
+        assertEquals(2L, owner.getHandoverTargetId());
+        assertEquals(2L, owner.getHandoverCloudUserId());
+        assertEquals(1L, owner.getHandoverLeaderId());
+    }
+
+    @Test
+    void mixedCaseOwnerCanPrepareReadAdvanceAndCancel() throws IOException {
+        linked(State.READY, false);
+        auth = new UsernamePasswordAuthenticationToken("OwNeR", "", java.util.List.of());
+        prepareSelected();
+        assertEquals(2L, service.current(auth).targetId());
+        assertEquals(1, service.members(auth).members().size());
+        when(cloud.ownership(credential, "new@example.com", "Bearer human", "invite", 1L, 2L))
+                .thenReturn(state(State.READY, false));
+        service.changeCloud(auth, "Bearer human", "invite");
+        service.cancel(auth);
+        assertNull(owner.getHandoverTargetId());
+    }
+
     @Test
     void cancelBeforeCloudTransferClearsOnlyHandover() throws IOException {
         linked(State.READY, true);

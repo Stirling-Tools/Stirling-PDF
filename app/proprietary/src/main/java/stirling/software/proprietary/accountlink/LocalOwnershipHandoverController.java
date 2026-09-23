@@ -24,6 +24,11 @@ public class LocalOwnershipHandoverController {
         return handovers.current(auth);
     }
 
+    @GetMapping("/members")
+    public CloudOwnershipCandidates members(Authentication auth) {
+        return handovers.members(auth);
+    }
+
     @PostMapping("/{targetId}")
     public Status prepare(
             @PathVariable Long targetId,

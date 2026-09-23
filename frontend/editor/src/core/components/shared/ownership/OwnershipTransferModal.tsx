@@ -36,6 +36,7 @@ export interface OwnershipStatus {
 export interface OwnershipTransferAdapter {
   local: boolean;
   prepare: () => Promise<OwnershipStatus>;
+  loadCandidates?: () => Promise<NonNullable<OwnershipStatus["candidates"]>>;
   selectCloud?: (selection: {
     cloudUserId?: number;
     cloudEmail?: string;
@@ -212,6 +213,11 @@ export function OwnershipTransferModal({
   const teamName = status?.cloud?.teamName ?? candidates?.teamName;
 
   function errorText() {
+    if (error?.includes("LINK_REVOKED"))
+      return t(
+        "ownership.linkRevoked",
+        "This server's cloud link is no longer valid. Cancel the transfer, then reconnect your Stirling account in settings. Ownership will not change.",
+      );
     if (partial || error?.includes("FINISH_LOCAL_TRANSFER"))
       return t(
         "ownership.partialError",
@@ -299,6 +305,14 @@ export function OwnershipTransferModal({
     cloudEmail?: string;
   }) {
     if (!adapter.selectCloud) return null;
+    if (
+      status?.cloud &&
+      ((selection.cloudUserId != null &&
+        selection.cloudUserId === status.cloud.targetUserId) ||
+        (selection.cloudEmail != null &&
+          selection.cloudEmail.toLowerCase() === cloudEmail?.toLowerCase()))
+    )
+      return status;
     if (status?.cloud) await resetSelection();
     const next = await adapter.selectCloud(selection);
     setStatus(next);
@@ -312,6 +326,20 @@ export function OwnershipTransferModal({
     if (done)
       return <Button onClick={close}>{t("common.done", "Done")}</Button>;
     if (startFromInstance) return null;
+    if (error?.includes("LINK_REVOKED") && adapter.local && adapter.cancel)
+      return (
+        <Button
+          disabled={busy}
+          onClick={() =>
+            void run(async () => {
+              await adapter.cancel!();
+              onClose();
+            })
+          }
+        >
+          {t("ownership.cancel", "Cancel transfer")}
+        </Button>
+      );
     if (editing && !error)
       return (
         <Button
@@ -515,9 +543,14 @@ export function OwnershipTransferModal({
                                 if (
                                   status.cloud &&
                                   !candidates &&
+                                  adapter.loadCandidates &&
                                   !working.current
                                 )
-                                  void run(resetSelection);
+                                  void run(async () => {
+                                    setCandidates(
+                                      await adapter.loadCandidates!(),
+                                    );
+                                  });
                               }}
                               onClick={() => picker.openDropdown()}
                               onBlur={() => picker.closeDropdown()}

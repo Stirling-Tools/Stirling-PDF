@@ -49,7 +49,10 @@ public class SaasOwnershipHandoverService {
     public CloudOwnershipCandidates candidates(Long teamId) {
         var team =
                 teams.findById(teamId)
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND, "CLOUD_TEAM_MISSING"));
         var members =
                 memberships.findByTeamId(teamId).stream()
                         .filter(m -> !m.isLeader() && eligible(m, teamId, m.getUser().getEmail()))
@@ -85,7 +88,10 @@ public class SaasOwnershipHandoverService {
         }
         var team =
                 teams.findById(teamId)
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND, "CLOUD_TEAM_MISSING"));
         List<TeamMembership> rows = memberships.findByTeamId(teamId);
         Long leader =
                 rows.stream()
