@@ -54,6 +54,7 @@ import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.RoutingRule;
+import stirling.software.proprietary.policy.output.FolderOutputSink;
 import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.output.StorageOutputSink;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
@@ -881,6 +882,25 @@ class ProcessingFolderControllerTest {
                                                 "doc.pdf")))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("no original");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"tmp", "originals"})
+    void revertRestoresEscapedInternalNames(String name) throws Exception {
+        lenient()
+                .when(folderAccessGuard.requirePermitted(any(Path.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        var view = controller.save(diskRequest()).getBody();
+        Files.createDirectories(tempDir.resolve(".stirling/originals"));
+        Files.createDirectories(tempDir.resolve(".stirling/tmp"));
+        Path original = FolderOutputSink.originalPath(tempDir, name);
+        Files.writeString(original, "original");
+        Files.writeString(tempDir.resolve(name), "processed");
+
+        controller.revertFile(view.id(), new ProcessingFolderController.RevertFileRequest(name));
+
+        assertThat(Files.readString(tempDir.resolve(name))).isEqualTo("original");
+        assertThat(Files.exists(original)).isFalse();
     }
 
     @Test

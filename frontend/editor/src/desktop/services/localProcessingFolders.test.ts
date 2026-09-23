@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   folders: new Map<string, LocalProcessingFolder>(),
   files: new Map<string, LocalProcessingFile>(),
   connected: true,
+  diskContent: "input",
   otherDiskFiles: [] as DiskFileEntry[],
   disk: {
     path: "/downloads/a.pdf",
@@ -71,7 +72,7 @@ vi.mock("@app/services/localFolderContents", () => ({
     directories: [],
   }),
   readDiskFile: async () =>
-    new File(["input"], "a.pdf", { type: "application/pdf" }),
+    new File([mocks.diskContent], "a.pdf", { type: "application/pdf" }),
   writeDiskFile: vi.fn(),
 }));
 vi.mock("@app/services/serverPipeline", () => ({
@@ -116,6 +117,7 @@ describe("desktop processing folder handoff", () => {
     mocks.files.clear();
     mocks.folders.clear();
     mocks.connected = true;
+    mocks.diskContent = "input";
     mocks.otherDiskFiles = [];
     mocks.disk = {
       path: "/downloads/a.pdf",
@@ -196,18 +198,33 @@ describe("desktop processing folder handoff", () => {
     expect(mocks.submit).toHaveBeenCalledOnce();
   });
 
-  test("reprocessing changed input keeps the first original", async () => {
+  test("a different same-name document replaces the backup and restores the new original", async () => {
+    mocks.archive.mockImplementation(async (_directory, file) => {
+      mocks.original.mockResolvedValue(file);
+      return "/downloads/.stirling/a.pdf";
+    });
     const folder = await saveLocalProcessingFolder(request);
     await waitFor(() => expect(onlyFile()?.run.status).toBe("COMPLETED"));
     const originalPath = onlyFile().originalPath;
     mocks.disk = { ...mocks.disk, lastModified: 3 };
+    mocks.diskContent = "another invoice";
 
     await sweepLocalProcessingFolder(folder.id);
     await waitFor(() => expect(mocks.submit).toHaveBeenCalledTimes(2));
     await waitFor(() => expect(onlyFile().run.status).toBe("COMPLETED"));
 
     expect(onlyFile().originalPath).toBe(originalPath);
-    expect(mocks.archive).toHaveBeenCalledOnce();
+    expect(mocks.archive).toHaveBeenCalledTimes(2);
+    expect(mocks.archive).toHaveBeenLastCalledWith(
+      "/downloads",
+      expect.any(File),
+      true,
+    );
+    await revertLocalProcessingFile(folder.id, "a.pdf");
+    expect(mocks.replace).toHaveBeenLastCalledWith(
+      expect.anything(),
+      mocks.archive.mock.calls[1][1],
+    );
   });
 
   test.each([

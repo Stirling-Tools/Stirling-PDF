@@ -84,6 +84,47 @@ test("an existing original is reused without writing another copy", async () => 
   expect(mocks.writeFile).not.toHaveBeenCalled();
 });
 
+test("a new same-name document replaces the backup only after staging succeeds", async () => {
+  mocks.exists.mockResolvedValue(true);
+  mocks.stat.mockResolvedValue({
+    isFile: true,
+    size: 10,
+    mtime: new Date(1000),
+  });
+  const file = new File(["new document"], "a.pdf");
+  vi.spyOn(file, "arrayBuffer").mockResolvedValue(
+    new TextEncoder().encode("new document").buffer,
+  );
+
+  await archiveProcessingInput("/downloads", file, true);
+
+  expect(Array.from(mocks.writeFile.mock.calls[0][1])).toEqual(
+    Array.from(new TextEncoder().encode("new document")),
+  );
+  expect(mocks.writeFile).toHaveBeenCalledBefore(mocks.rename);
+  expect(mocks.rename).toHaveBeenCalledWith(
+    mocks.writeFile.mock.calls[0][0],
+    "/downloads/.stirling/a.pdf",
+  );
+});
+
+test("failed backup refresh preserves the previous backup", async () => {
+  mocks.exists.mockResolvedValue(true);
+  mocks.stat.mockResolvedValue({
+    isFile: true,
+    size: 10,
+    mtime: new Date(1000),
+  });
+  mocks.writeFile.mockRejectedValueOnce(new Error("Disk full"));
+
+  await expect(
+    archiveProcessingInput("/downloads", new File(["new"], "a.pdf"), true),
+  ).rejects.toThrow("Disk full");
+
+  expect(mocks.rename).not.toHaveBeenCalled();
+  expect(mocks.remove).not.toHaveBeenCalledWith("/downloads/.stirling/a.pdf");
+});
+
 test("an incomplete backup is removed so a retry can archive the input", async () => {
   mocks.writeFile.mockRejectedValueOnce(new Error("Disk full"));
   await expect(

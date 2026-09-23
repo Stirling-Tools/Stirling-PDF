@@ -144,6 +144,7 @@ public class ProcessingFolderOriginalCleanup {
                 continue;
             }
             for (Path original : entry.getValue()) Files.deleteIfExists(original);
+            FolderOutputSink.clearOriginalRecognition(dir, name);
             Files.deleteIfExists(marker);
         }
         try (Stream<Path> entries = Files.list(workspace)) {
@@ -185,11 +186,12 @@ public class ProcessingFolderOriginalCleanup {
             try (Stream<Path> entries = Files.list(archive)) {
                 for (Path original :
                         entries.filter(path -> Files.isRegularFile(path, NOFOLLOW_LINKS))
-                                .filter(path -> !path.getFileName().toString().startsWith("."))
+                                .filter(path -> FolderOutputSink.originalName(path) != null)
                                 .toList()) {
                     originals
                             .computeIfAbsent(
-                                    original.getFileName().toString(), ignored -> new ArrayList<>())
+                                    FolderOutputSink.originalName(original),
+                                    ignored -> new ArrayList<>())
                             .add(original);
                 }
             }

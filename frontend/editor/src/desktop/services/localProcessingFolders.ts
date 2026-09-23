@@ -161,6 +161,7 @@ async function processFile(
       entry.originalPath ??= await archiveProcessingInput(
         folder.directory,
         file,
+        true,
       );
       await storage.saveFile(entry);
       const pipeline = pipelineSteps(folder.steps);
@@ -340,12 +341,16 @@ async function queueLocalProcessingFiles(
       continue;
     }
     if (previous?.run.status === "FAILED") result.retried++;
+    const sameDocument =
+      previous &&
+      (sameProcessingFile(previous.input, input) ||
+        previous.outputs.some((file) => sameProcessingFile(file, input)));
     const entry: LocalProcessingFile = {
       id: previous?.id ?? generateId(),
       folderId: id,
       input,
-      outputs: previous?.outputs ?? [],
-      originalPath: previous?.originalPath,
+      outputs: sameDocument ? previous.outputs : [],
+      originalPath: sameDocument ? previous.originalPath : undefined,
       run: {
         runId: `queued:${generateId()}`,
         status: "PENDING",

@@ -18,6 +18,8 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -193,7 +195,7 @@ class FolderOutputSinkTest {
     }
 
     @Test
-    void replaceKeepsTheFirstOriginalForRevert() throws IOException {
+    void reprocessingOurOutputKeepsTheOriginalAfterLedgerResetAndRestart() throws IOException {
         Path out = tempDir.resolve("out");
         Files.createDirectories(out);
         Files.writeString(out.resolve("a.pdf"), "original");
@@ -201,6 +203,7 @@ class FolderOutputSinkTest {
                 new OutputSpec("folder", Map.of("directory", out.toString(), "replace", true));
 
         sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "v1")), replace);
+        setUp();
         sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "v2")), replace);
 
         assertEquals("v2", Files.readString(out.resolve("a.pdf")));
@@ -225,50 +228,48 @@ class FolderOutputSinkTest {
     }
 
     @Test
-    void repeatedProcessingKeepsOnlyTheFirstOriginal() throws IOException {
+    void aDifferentDocumentWithTheSameNameReplacesTheOriginal() throws IOException {
         Path out = tempDir.resolve("out");
         Files.createDirectories(out);
         Files.writeString(out.resolve("a.pdf"), "first-original");
         OutputSpec replace =
                 new OutputSpec("folder", Map.of("directory", out.toString(), "replace", true));
 
-        sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "processed1")), replace);
+        sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "output-document")), replace);
+        var outputTime = Files.getLastModifiedTime(out.resolve("a.pdf"));
         Files.writeString(out.resolve("a.pdf"), "second-original");
+        Files.setLastModifiedTime(out.resolve("a.pdf"), outputTime);
         sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "processed2")), replace);
 
         assertEquals("processed2", Files.readString(out.resolve("a.pdf")));
         Path originals = out.resolve(".stirling");
-        assertEquals("first-original", Files.readString(originals.resolve("a.pdf")));
-        try (Stream<Path> entries = Files.walk(originals)) {
-            assertEquals(
-                    List.of(originals.resolve("a.pdf")),
-                    entries.filter(Files::isRegularFile).toList());
-        }
+        assertEquals("second-original", Files.readString(originals.resolve("a.pdf")));
+        assertEquals(List.of("a.pdf"), FolderOutputSink.originalNames(out));
         assertFalse(Files.exists(originals.resolve("originals")));
         assertFalse(Files.exists(originals.resolve("superseded")));
     }
 
     @Test
-    void anExistingNestedOriginalRemainsTheOnlyBackup() throws IOException {
+    void aNewDocumentRefreshesTheExistingNestedBackup() throws IOException {
         Path out = tempDir.resolve("out");
         Path original = out.resolve(".stirling/originals/a.pdf");
         Files.createDirectories(original.getParent());
         Files.writeString(original, "first-original");
-        Files.writeString(out.resolve("a.pdf"), "processed1");
+        Files.writeString(out.resolve("a.pdf"), "new-document");
         OutputSpec replace =
                 new OutputSpec("folder", Map.of("directory", out.toString(), "replace", true));
 
         sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "processed2")), replace);
 
         assertEquals("processed2", Files.readString(out.resolve("a.pdf")));
-        assertEquals("first-original", Files.readString(original));
+        assertEquals("new-document", Files.readString(original));
         assertFalse(Files.exists(out.resolve(".stirling/a.pdf")));
         assertFalse(Files.exists(original.getParent().resolve("superseded")));
         assertEquals(original, FolderOutputSink.originalPath(out, "a.pdf"));
     }
 
     @Test
-    void failedFirstDeliveryPutsTheOriginalBack() throws IOException {
+    void failedFirstDeliveryLeavesTheInputAndBackupIntact() throws IOException {
         Path out = tempDir.resolve("out");
         Files.createDirectories(out);
         Files.writeString(out.resolve("a.pdf"), "original");
@@ -283,7 +284,7 @@ class FolderOutputSinkTest {
                 () -> sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "v1")), replace));
 
         assertEquals("original", Files.readString(out.resolve("a.pdf")));
-        assertFalse(Files.exists(out.resolve(".stirling/a.pdf")));
+        assertEquals("original", Files.readString(out.resolve(".stirling/a.pdf")));
     }
 
     @Test
@@ -307,6 +308,32 @@ class FolderOutputSinkTest {
     }
 
     @Test
+    void aNewDocumentRemainsRecoverableWhenDeliveryFailsAndIsRetried() throws IOException {
+        Path out = tempDir.resolve("out");
+        Files.createDirectories(out);
+        Files.writeString(out.resolve("a.pdf"), "first-original");
+        OutputSpec replace =
+                new OutputSpec("folder", Map.of("directory", out.toString(), "replace", true));
+        sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "v1")), replace);
+        Files.writeString(out.resolve("a.pdf"), "second-original");
+        doThrow(new IllegalStateException("ledger unavailable"))
+                .doCallRealMethod()
+                .when(ledger)
+                .recordOutput(anyString(), anyString(), anyString(), anyString());
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "v2")), replace));
+        assertEquals("second-original", Files.readString(out.resolve("a.pdf")));
+        assertEquals("second-original", Files.readString(out.resolve(".stirling/a.pdf")));
+
+        sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "v2")), replace);
+
+        assertEquals("v2", Files.readString(out.resolve("a.pdf")));
+        assertEquals("second-original", Files.readString(out.resolve(".stirling/a.pdf")));
+    }
+
+    @Test
     void aBrandNewNameArchivesNothing() throws IOException {
         Path out = tempDir.resolve("out");
         OutputSpec replace =
@@ -315,6 +342,26 @@ class FolderOutputSinkTest {
         sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "v1")), replace);
 
         assertFalse(Files.exists(out.resolve(".stirling").resolve("a.pdf")));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"tmp", "originals", "TMP", "Originals"})
+    void internalDirectoryNamesHaveFlatRestorableBackups(String name) throws IOException {
+        Path out = tempDir.resolve("out");
+        Files.createDirectories(out.resolve(".stirling/originals"));
+        Files.writeString(out.resolve(name), "original");
+        OutputSpec replace =
+                new OutputSpec("folder", Map.of("directory", out.toString(), "replace", true));
+
+        sink.deliver(inPlaceRun(name), List.of(named(name, "processed")), replace);
+
+        Path archived = FolderOutputSink.originalPath(out, name);
+        assertEquals(out.resolve(".stirling"), archived.getParent());
+        assertEquals("original", Files.readString(archived));
+        assertEquals(List.of(name), FolderOutputSink.originalNames(out));
+        assertEquals("processed", Files.readString(out.resolve(name)));
+        assertTrue(Files.isDirectory(out.resolve(".stirling/tmp")));
+        assertTrue(Files.isDirectory(out.resolve(".stirling/originals")));
     }
 
     @Test

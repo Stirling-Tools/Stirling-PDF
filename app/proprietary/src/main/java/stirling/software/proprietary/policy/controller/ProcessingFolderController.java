@@ -573,7 +573,7 @@ public class ProcessingFolderController {
     @Operation(
             summary = "Restore a file's archived original",
             description =
-                    "Moves the pre-processing original kept under .stirling/originals back"
+                    "Moves the pre-processing original kept under .stirling back"
                             + " over the processed file. The folder is paused first so"
                             + " nothing claims the restored file, and its ledger row is"
                             + " forgotten — it reads as waiting until processing resumes."
@@ -599,13 +599,17 @@ public class ProcessingFolderController {
         }
         try {
             Path canonicalDir = FolderIdentities.canonicalDir(permitted);
+            if (!Files.isRegularFile(FolderOutputSink.originalPath(canonicalDir, name))) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT, "'" + name + "' has no original to restore");
+            }
+            policy = pauseForRevert(policy);
             synchronized (FolderOutputSink.originalLock(canonicalDir)) {
                 Path archived = FolderOutputSink.originalPath(canonicalDir, name);
                 if (!Files.isRegularFile(archived)) {
                     throw new ResponseStatusException(
                             HttpStatus.CONFLICT, "'" + name + "' has no original to restore");
                 }
-                policy = pauseForRevert(policy);
                 // The per-row check below cannot see a run mid-delivery, so restore only once the
                 // machine is fully quiet.
                 if (!policyRunner.quiesced(policy.id())) {
@@ -696,13 +700,6 @@ public class ProcessingFolderController {
      */
     private boolean restoreOriginal(Policy policy, Path permitted, Path canonicalDir, String name)
             throws IOException {
-        synchronized (FolderOutputSink.originalLock(canonicalDir)) {
-            return restoreOriginalLocked(policy, permitted, canonicalDir, name);
-        }
-    }
-
-    private boolean restoreOriginalLocked(
-            Policy policy, Path permitted, Path canonicalDir, String name) throws IOException {
         Path target = permitted.resolve(name).normalize();
         if (!permitted.equals(target.getParent())) {
             return false;
@@ -719,6 +716,7 @@ public class ProcessingFolderController {
                 target,
                 StandardCopyOption.ATOMIC_MOVE,
                 StandardCopyOption.REPLACE_EXISTING);
+        FolderOutputSink.clearOriginalRecognition(canonicalDir, name);
         processedLedger.forget(policy.id(), identity);
         return true;
     }

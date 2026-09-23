@@ -101,6 +101,25 @@ class ProcessingFolderOriginalCleanupTest {
         assertThat(Files.exists(marker())).isFalse();
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"tmp", "originals"})
+    void escapedNamesExpireOnlyAfterTheirActualFilesDisappear(String name) throws Exception {
+        Files.createDirectories(directory.resolve(".stirling/originals"));
+        Path original = FolderOutputSink.originalPath(directory, name);
+        Files.writeString(original, "original");
+        Path input = Files.writeString(directory.resolve(name), "processed");
+        cleanup.sweep(START);
+        cleanup.sweep(START.plus(Duration.ofDays(100)));
+        assertThat(Files.exists(original)).isTrue();
+
+        Files.delete(input);
+        cleanup.sweep(START.plus(Duration.ofDays(101)));
+        cleanup.sweep(START.plus(Duration.ofDays(108)));
+
+        assertThat(Files.exists(original)).isFalse();
+        assertThat(Files.isDirectory(directory.resolve(".stirling/originals"))).isTrue();
+    }
+
     @Test
     void returningFilesResetTheGracePeriod() throws Exception {
         Path original = original("a.pdf");

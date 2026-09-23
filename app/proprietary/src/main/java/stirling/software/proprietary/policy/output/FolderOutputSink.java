@@ -104,7 +104,8 @@ public class FolderOutputSink implements PolicyOutputSink {
             String name =
                     OutputNames.safeName(replaceInPlace ? inputName : resource.getFilename(), i);
             Path staged = tmpDir.resolve(UUID.randomUUID().toString());
-            String contentHash = stage(resource, staged, delivery.policyId() != null);
+            String contentHash =
+                    stage(resource, staged, delivery.policyId() != null || replaceInPlace);
             long size = Files.size(staged);
             // Size and mtime survive the rename.
             String gate = FolderIdentities.statGate(staged);
@@ -136,7 +137,7 @@ public class FolderOutputSink implements PolicyOutputSink {
     /**
      * Stream the output to its staging path. For a recorded delivery (stored policy) the content
      * hash is digested in the same pass, so the ledger gets both version tiers without re-reading a
-     * possibly huge output; ad-hoc runs record nothing and skip the digest entirely.
+     * possibly huge output. Replacements also need the hash to recognize their own output later.
      */
     private static String stage(Resource resource, Path staged, boolean hashed) throws IOException {
         if (!hashed) {
@@ -203,7 +204,7 @@ public class FolderOutputSink implements PolicyOutputSink {
         Path target = dir.resolve(name);
         // Archive before the ledger row flips DONE, so a restore that reads DONE finds the
         // original safe, never mid-move.
-        Path archived = archiveOriginal(dir, target);
+        archiveOriginal(dir, target, contentHash);
         try {
             if (delivery.policyId() != null) {
                 processedLedger.recordOutput(
@@ -215,16 +216,6 @@ public class FolderOutputSink implements PolicyOutputSink {
                     StandardCopyOption.ATOMIC_MOVE,
                     StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException | RuntimeException failed) {
-            if (archived != null) {
-                try {
-                    Files.move(archived, target, StandardCopyOption.ATOMIC_MOVE);
-                } catch (IOException lost) {
-                    log.warn(
-                            "Replace of {} failed and its original could not be put back: {}",
-                            target,
-                            lost.getMessage());
-                }
-            }
             if (delivery.policyId() != null) {
                 processedLedger.forgetOutput(delivery.policyId(), target.toString(), gate);
             }
@@ -246,11 +237,18 @@ public class FolderOutputSink implements PolicyOutputSink {
     }
 
     static Path missingOriginalMarker(Path dir, String name) {
+        return metadataPath(dir, name, MISSING_ORIGINAL_PREFIX);
+    }
+
+    /** Removes recognition data after its backup is successfully restored or expired. */
+    public static void clearOriginalRecognition(Path dir, String name) throws IOException {
+        Files.deleteIfExists(metadataPath(dir, name, ".original-content-"));
+    }
+
+    private static Path metadataPath(Path dir, String name, String prefix) {
         String key = java.io.File.separatorChar == '\\' ? name.toLowerCase(Locale.ROOT) : name;
         return originalsDir(dir)
-                .resolve(
-                        MISSING_ORIGINAL_PREFIX
-                                + UUID.nameUUIDFromBytes(key.getBytes(StandardCharsets.UTF_8)));
+                .resolve(prefix + UUID.nameUUIDFromBytes(key.getBytes(StandardCharsets.UTF_8)));
     }
 
     /** Originals are direct files here; subdirectories contain internal processing data. */
@@ -263,7 +261,7 @@ public class FolderOutputSink implements PolicyOutputSink {
      * Callers must validate that name contains no path components.
      */
     public static Path originalPath(Path dir, String name) {
-        Path original = originalsDir(dir).resolve(name);
+        Path original = originalsDir(dir).resolve(reservedName(name) ? ".original-" + name : name);
         Path legacy = originalsDir(dir).resolve("originals").resolve(name);
         return !Files.exists(original) && Files.isRegularFile(legacy) ? legacy : original;
     }
@@ -276,12 +274,24 @@ public class FolderOutputSink implements PolicyOutputSink {
             if (!Files.isDirectory(archive)) continue;
             try (Stream<Path> entries = Files.list(archive)) {
                 entries.filter(Files::isRegularFile)
-                        .map(entry -> entry.getFileName().toString())
-                        .filter(name -> !name.startsWith("."))
+                        .map(FolderOutputSink::originalName)
+                        .filter(java.util.Objects::nonNull)
                         .forEach(names::add);
             }
         }
         return List.copyOf(names);
+    }
+
+    static String originalName(Path archived) {
+        String name = archived.getFileName().toString();
+        if (name.startsWith(".original-") && reservedName(name.substring(10))) {
+            return name.substring(10);
+        }
+        return name.startsWith(".") ? null : name;
+    }
+
+    private static boolean reservedName(String name) {
+        return "tmp".equalsIgnoreCase(name) || "originals".equalsIgnoreCase(name);
     }
 
     /**
@@ -299,31 +309,51 @@ public class FolderOutputSink implements PolicyOutputSink {
         return root;
     }
 
-    /**
-     * Move the first original into {@code .stirling} before replacing it. Returns null when an
-     * original is already kept or no target exists; subsequent replacements leave the current file
-     * in place until the atomic delivery succeeds. An archive failure aborts the replacement.
-     *
-     * <p>Plain move, not {@code ATOMIC_MOVE}: the archive is hidden under {@code .stirling} so
-     * needs no atomic visibility, and a plain move survives a cross-device archive dir where {@code
-     * ATOMIC_MOVE} would throw.
-     */
-    private static Path archiveOriginal(Path dir, Path target) throws IOException {
+    private static void archiveOriginal(Path dir, Path target, String outputHash)
+            throws IOException {
         clearOriginalExpiry(dir, target.getFileName().toString());
         if (!Files.exists(target)) {
-            return null;
+            return;
         }
         stirlingDir(dir);
         String name = target.getFileName().toString();
         Path archived = originalPath(dir, name);
+        Path recognition = metadataPath(dir, name, ".original-content-");
+        String inputHash = FolderIdentities.contentHash(target);
+        boolean sameDocument =
+                Files.isRegularFile(recognition)
+                        && Files.readAllLines(recognition).contains(inputHash);
         if (Files.exists(archived)) {
             if (!Files.isRegularFile(archived)) {
                 throw new IOException("Original archive is not a regular file: " + archived);
             }
-            return null;
         }
-        Files.move(target, archived);
-        return archived;
+        if (!Files.exists(archived) || !sameDocument) {
+            Path pending = Files.createTempFile(archived.getParent(), ".original-", ".tmp");
+            try {
+                Files.copy(target, pending, StandardCopyOption.REPLACE_EXISTING);
+                Files.move(
+                        pending,
+                        archived,
+                        StandardCopyOption.ATOMIC_MOVE,
+                        StandardCopyOption.REPLACE_EXISTING);
+            } finally {
+                Files.deleteIfExists(pending);
+            }
+        }
+        // Claims replace the ledger hash. Keep recognition beside the backup, including the
+        // backed-up input so a failed delivery or crash before publication can be retried safely.
+        Path pending = Files.createTempFile(originalsDir(dir), ".original-content-", ".tmp");
+        try {
+            Files.writeString(pending, inputHash + "\n" + outputHash);
+            Files.move(
+                    pending,
+                    recognition,
+                    StandardCopyOption.ATOMIC_MOVE,
+                    StandardCopyOption.REPLACE_EXISTING);
+        } finally {
+            Files.deleteIfExists(pending);
+        }
     }
 
     /** Best-effort removal of staging leftovers from crashed deliveries. */
