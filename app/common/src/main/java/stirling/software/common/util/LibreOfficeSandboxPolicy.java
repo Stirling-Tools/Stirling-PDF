@@ -17,8 +17,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import org.apache.commons.io.FileUtils;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -41,8 +39,6 @@ final class LibreOfficeSandboxPolicy {
             Set.of("--convert-to", "--outdir", "--print-to-file", "--printer-name");
 
     private static final String PROFILE_TMP_DIR = "tmp";
-    private static final Object TEMPLATE_LOCK = new Object();
-    private static volatile Path profileTemplate;
 
     /** Environment for one soffice run and the profile it will use. */
     record JobPolicy(Map<String, String> env, Path profile) {}
@@ -135,57 +131,31 @@ final class LibreOfficeSandboxPolicy {
     }
 
     /**
-     * Copies an initialised profile into {@code profile} when it has none yet. A fresh profile
-     * makes soffice exit with its restart code and relaunch under the same IPC pipe name; the
-     * relaunch cannot unlink the first pipe on the socket-only /tmp and exits 1, so every job with
-     * a fresh profile would fail its first attempt.
+     * Copies the extension registry of {@code template}, a profile the init script makes with an
+     * init-only soffice run before any document is opened, into {@code profile} when it has no user
+     * layer yet. Without it a fresh profile makes soffice exit with its restart code and relaunch
+     * under the same IPC pipe name; the relaunch cannot unlink the first pipe on the socket-only
+     * /tmp and exits 1. Only the registry is copied: it is all that stops the relaunch, and nothing
+     * a conversion writes to its own profile reaches the next job.
      */
-    static void seedProfile(Path profile) {
-        Path template = profileTemplate;
+    static void seedProfile(Path profile, Path template) {
         if (template == null || Files.exists(profile.resolve("user"))) {
             return;
         }
-        if (!Files.isDirectory(template)) {
-            profileTemplate = null;
+        Path extensions = template.resolve("user").resolve("extensions");
+        if (!Files.isDirectory(extensions, LinkOption.NOFOLLOW_LINKS)) {
             return;
         }
         try {
-            copyTree(template, profile);
+            copyTree(extensions, profile.resolve("user").resolve("extensions"));
         } catch (IOException e) {
             log.debug("Cannot seed LibreOffice profile {}: {}", profile, e.getMessage());
         }
     }
 
-    /** Keeps the first profile a run initialised as the template {@link #seedProfile} copies. */
-    static void rememberProfile(Path profile, Path templateRoot) {
-        if (profileTemplate != null || !Files.isDirectory(profile.resolve("user"))) {
-            return;
-        }
-        synchronized (TEMPLATE_LOCK) {
-            if (profileTemplate != null) {
-                return;
-            }
-            Path template =
-                    templateRoot.resolve(
-                            "stirling-lo-profile-template-" + ProcessHandle.current().pid());
-            try {
-                FileUtils.deleteDirectory(template.toFile());
-                copyTree(profile, template);
-                profileTemplate = template;
-            } catch (IOException e) {
-                log.debug("Cannot keep LibreOffice profile template: {}", e.getMessage());
-                FileUtils.deleteQuietly(template.toFile());
-            }
-        }
-    }
-
     private static void copyTree(Path from, Path to) throws IOException {
-        Path excluded = from.resolve(PROFILE_TMP_DIR);
         try (var paths = Files.walk(from)) {
             for (Path source : (Iterable<Path>) paths::iterator) {
-                if (source.startsWith(excluded)) {
-                    continue;
-                }
                 Path target = to.resolve(from.relativize(source).toString());
                 if (Files.isDirectory(source, LinkOption.NOFOLLOW_LINKS)) {
                     Files.createDirectories(target);

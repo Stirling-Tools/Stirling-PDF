@@ -363,6 +363,37 @@ check_office_sandbox() {
   fi
 }
 
+# A profile from an init-only soffice run, made before any document is opened. Java copies its
+# extension registry into fresh per-job profiles so LibreOffice does not relaunch on first start,
+# which fails under the sandbox; it is root-owned so no LibreOffice process can change it later.
+OFFICE_PROFILE_TEMPLATE=/var/lib/libreoffice-template
+
+create_office_profile_template() {
+  local build="${OFFICE_PROFILE_TEMPLATE}.new"
+  [ "$CURRENT_UID" -eq 0 ] || return 0
+  rm -rf "$build" "$OFFICE_PROFILE_TEMPLATE"
+  mkdir -p "$build/tmp"
+  if [ "$OFFICE_USER_AVAILABLE" = true ]; then
+    chown -R "$OFFICE_USER" "$build"
+  else
+    chown -R "$RUNTIME_USER" "$build"
+  fi
+  run_as_office_user env HOME="$build" TMPDIR="$build/tmp" TMP="$build/tmp" TEMP="$build/tmp" \
+      SAL_TMP="$build/tmp" XDG_RUNTIME_DIR="$build/tmp" STIRLING_LO_ALLOW_RW="/dev:${build}" \
+      timeout 120 soffice --headless --norestore --terminate_after_init \
+      "-env:UserInstallation=file://${build}" >/dev/null 2>&1 || true
+  clear_stale_office_pipes
+  if [ -d "$build/user/extensions" ]; then
+    rm -rf "$build/tmp"
+    chown -R root:root "$build"
+    chmod -R a+rX,go-w "$build"
+    mv "$build" "$OFFICE_PROFILE_TEMPLATE"
+  else
+    log "WARNING: could not create the LibreOffice profile template; direct soffice jobs will retry their first run"
+    rm -rf "$build"
+  fi
+}
+
 run_as_runtime_user_with_timeout() {
   local secs=$1; shift
   if command_exists timeout; then
@@ -1326,6 +1357,8 @@ if [ -n "$UNOSERVER_BIN" ] && [ -n "$UNOCONVERT_BIN" ]; then
     run_as_runtime_user chmod 700 "$OFFICE_TMP" "$OFFICE_XDG" 2>/dev/null || true
   fi
   export_office_sandbox_policy "$LIBREOFFICE_PROFILE"
+  export STIRLING_LO_PROFILE_TEMPLATE="$OFFICE_PROFILE_TEMPLATE"
+  create_office_profile_template &
 
   if [ "$UNO_DEMAND_ENABLED" = "true" ]; then
     # ---------- On-demand mode ----------

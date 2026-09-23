@@ -155,27 +155,31 @@ class LibreOfficeSandboxPolicyTest {
     }
 
     @Test
-    void seedsFreshProfilesFromTheFirstInitialisedOne() throws IOException {
-        Path first = tmp.resolve("profile_a");
-        Files.createDirectories(first.resolve("user/config"));
-        Files.writeString(first.resolve("user/registrymodifications.xcu"), "<items/>");
-        Files.createDirectories(first.resolve("tmp"));
-        Files.writeString(first.resolve("tmp/scratch"), "job data");
+    void seedsOnlyTheExtensionRegistryIntoFreshProfiles() throws IOException {
+        Path template = tmp.resolve("template");
+        Files.createDirectories(template.resolve("user/extensions/bundled"));
+        Files.writeString(template.resolve("user/extensions/buildid"), "build-1");
+        Files.createDirectories(template.resolve("user/basic/Standard"));
+        Files.writeString(template.resolve("user/basic/Standard/Module1.xba"), "macro");
+        Files.writeString(template.resolve("user/registrymodifications.xcu"), "<items/>");
 
-        LibreOfficeSandboxPolicy.rememberProfile(first, tmp);
         Path fresh = tmp.resolve("profile_b");
-        LibreOfficeSandboxPolicy.seedProfile(fresh);
+        LibreOfficeSandboxPolicy.seedProfile(fresh, template);
 
-        assertEquals("<items/>", Files.readString(fresh.resolve("user/registrymodifications.xcu")));
-        assertTrue(Files.isDirectory(fresh.resolve("user/config")));
-        assertFalse(Files.exists(fresh.resolve("tmp/scratch")), "job scratch is not templated");
+        assertEquals("build-1", Files.readString(fresh.resolve("user/extensions/buildid")));
+        assertTrue(Files.isDirectory(fresh.resolve("user/extensions/bundled")));
+        assertFalse(Files.exists(fresh.resolve("user/basic")), "macros are not templated");
+        assertFalse(Files.exists(fresh.resolve("user/registrymodifications.xcu")));
 
         Path existing = tmp.resolve("profile_c");
         Files.createDirectories(existing.resolve("user"));
-        Files.writeString(existing.resolve("user/registrymodifications.xcu"), "<own/>");
-        LibreOfficeSandboxPolicy.seedProfile(existing);
-        assertEquals(
-                "<own/>", Files.readString(existing.resolve("user/registrymodifications.xcu")));
+        LibreOfficeSandboxPolicy.seedProfile(existing, template);
+        assertFalse(Files.exists(existing.resolve("user/extensions")));
+
+        Path unseeded = tmp.resolve("profile_d");
+        LibreOfficeSandboxPolicy.seedProfile(unseeded, tmp.resolve("missing-template"));
+        LibreOfficeSandboxPolicy.seedProfile(unseeded, null);
+        assertFalse(Files.exists(unseeded));
     }
 
     @Test

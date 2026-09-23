@@ -39,6 +39,9 @@ public class ProcessExecutor {
     // own user under a policy read from the environment; bare installs launch it unchanged.
     private static volatile boolean libreOfficeSandboxed =
             Files.isExecutable(Path.of("/usr/local/lib/stirling/lo-sandbox"));
+
+    // Made by the init script (create_office_profile_template in init-without-ocr.sh).
+    private static final Path libreOfficeProfileTemplate = profileTemplateFromEnvironment();
     private final Semaphore semaphore;
     private final boolean liveUpdates;
     private long timeoutDuration;
@@ -202,6 +205,18 @@ public class ProcessExecutor {
         libreOfficeSandboxed = sandboxed;
     }
 
+    private static Path profileTemplateFromEnvironment() {
+        String template = System.getenv("STIRLING_LO_PROFILE_TEMPLATE");
+        if (template == null || template.isBlank()) {
+            return null;
+        }
+        try {
+            return Path.of(template);
+        } catch (InvalidPathException e) {
+            return null;
+        }
+    }
+
     /**
      * Dirs a direct soffice job's profile, output dir and inputs must lie within for it to get a
      * per-job sandbox policy. java.io.tmpdir is always included; blank or invalid entries are
@@ -312,7 +327,8 @@ public class ProcessExecutor {
                                 .orElse(null);
                 if (jobPolicy != null) {
                     processBuilder.environment().putAll(jobPolicy.env());
-                    LibreOfficeSandboxPolicy.seedProfile(jobPolicy.profile());
+                    LibreOfficeSandboxPolicy.seedProfile(
+                            jobPolicy.profile(), libreOfficeProfileTemplate);
                     if (LibreOfficeSandboxPolicy.isProfileUninitialised(jobPolicy.profile())) {
                         outcome.freshProfile = jobPolicy.profile();
                     }
@@ -486,10 +502,6 @@ public class ProcessExecutor {
             if (ipcPipesBefore != null) {
                 LibreOfficeSandboxPolicy.removeLeftoverIpcPipes(
                         Path.of(LibreOfficeSandboxPolicy.IPC_PIPE_DIR), ipcPipesBefore);
-                if (exitCode == 0) {
-                    Path profile = jobPolicy.profile();
-                    LibreOfficeSandboxPolicy.rememberProfile(profile, profile.getParent());
-                }
             }
             if (useSemaphore) {
                 semaphore.release();

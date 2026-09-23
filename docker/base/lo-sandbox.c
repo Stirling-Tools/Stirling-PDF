@@ -220,6 +220,12 @@ static int install_seccomp(void) {
         BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_KILL_PROCESS),
 
         BPF_STMT(BPF_LD | BPF_W | BPF_ABS, offsetof(struct seccomp_data, nr)),
+#if defined(__x86_64__)
+        /* x32 syscalls report AUDIT_ARCH_X86_64 but carry this bit in nr, so none of the
+         * comparisons below would match them. */
+        BPF_JUMP(BPF_JMP | BPF_JGE | BPF_K, 0x40000000U, 0, 1),
+        BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_KILL_PROCESS),
+#endif
         BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_socket, 9, 0),
         BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_socketpair, 8, 0),
         BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_io_uring_setup, 6, 0),
