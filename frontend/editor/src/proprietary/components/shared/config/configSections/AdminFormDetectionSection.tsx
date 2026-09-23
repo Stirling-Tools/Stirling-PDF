@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import {
   Stack,
@@ -15,7 +16,6 @@ import { StatusBadge, type StatusTone } from "@app/ui/StatusBadge";
 import { ProgressBar } from "@app/ui/ProgressBar";
 import { Banner } from "@app/ui/Banner";
 import { Collapsible } from "@app/ui/Collapsible";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import {
   useFormDetectionModelStatus,
   FormDetectionCatalogEntry,
@@ -67,11 +67,7 @@ function CommandRow({ code, copyLabel }: { code: string; copyLabel: string }) {
           }
         }}
       >
-        <LocalIcon
-          icon={copied ? "check-rounded" : "content-copy-outline-rounded"}
-          width="0.9rem"
-          height="0.9rem"
-        />
+        <Icon name={copied ? "check" : "copy"} size="0.9rem" />
       </ActionIcon>
     </Group>
   );
@@ -309,11 +305,7 @@ export default function AdminFormDetectionSection() {
                         : armUninstall(entry.id)
                     }
                   >
-                    <LocalIcon
-                      icon="delete-outline-rounded"
-                      width="1rem"
-                      height="1rem"
-                    />
+                    <Icon name="trash" size="1rem" />
                   </ActionIcon>
                 ) : null}
               </Group>
@@ -386,13 +378,7 @@ export default function AdminFormDetectionSection() {
           {anyError ? (
             <Banner
               tone="danger"
-              icon={
-                <LocalIcon
-                  icon="error-outline-rounded"
-                  width="1.1rem"
-                  height="1.1rem"
-                />
-              }
+              icon={<Icon name="circle-alert" size="1.1rem" />}
               title={t(
                 "admin.formDetection.errorTitle",
                 "Something went wrong",
@@ -404,13 +390,7 @@ export default function AdminFormDetectionSection() {
           {status && !status.writable ? (
             <Banner
               tone="warning"
-              icon={
-                <LocalIcon
-                  icon="warning-rounded"
-                  width="1.1rem"
-                  height="1.1rem"
-                />
-              }
+              icon={<Icon name="triangle-alert" size="1.1rem" />}
               description={t(
                 "admin.formDetection.notWritable",
                 "The model directory is not writable; check the configs volume mount.",
@@ -421,13 +401,7 @@ export default function AdminFormDetectionSection() {
           {!serverEngineAvailable ? (
             <Banner
               tone="warning"
-              icon={
-                <LocalIcon
-                  icon="warning-rounded"
-                  width="1.1rem"
-                  height="1.1rem"
-                />
-              }
+              icon={<Icon name="triangle-alert" size="1.1rem" />}
               description={t(
                 "admin.formDetection.engineUnavailable",
                 "This build does not include the detection engine, so the tool stays unavailable even with a model installed.",
@@ -449,7 +423,7 @@ export default function AdminFormDetectionSection() {
             onToggle={() => setAirgapOpen((o) => !o)}
             header={
               <Group gap={6} wrap="nowrap">
-                <LocalIcon icon="download-rounded" width="1rem" height="1rem" />
+                <Icon name="download" size="1rem" />
                 <Text size="sm">
                   {t(
                     "admin.formDetection.airgap.show",

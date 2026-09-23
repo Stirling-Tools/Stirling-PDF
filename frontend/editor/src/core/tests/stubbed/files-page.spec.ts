@@ -1,4 +1,5 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { readFileSync } from "node:fs";
 import type { Locator, Page, Route } from "@playwright/test";
 import { DATABASE_CONFIGS } from "@app/services/indexedDBManager";
 
@@ -180,16 +181,17 @@ async function openMenuItem(
   return dropdown.getByRole("menuitem", { name });
 }
 
-/** Navigate to /files and wait for at least one real (non-skeleton) card.
- *  `.files-page-card` also matches the loading-state skeleton placeholders, and
- *  their parent grid carries `aria-busy="true"` which intercepts pointer events
- *  -- so waiting for any `.files-page-card` races the skeleton→real transition
- *  and causes flaky timeouts on slower CI runners. */
+/** Waits for an interactive card; skeleton cards also match the general card class. */
 async function gotoFilesPage(
   page: Page,
-  { timeout = 10_000 }: { timeout?: number } = {},
+  {
+    timeout = 10_000,
+    view = "recent",
+  }: { timeout?: number; view?: "all" | "recent" } = {},
 ): Promise<void> {
-  await page.goto("/files", { waitUntil: "domcontentloaded" });
+  await page.goto(view === "recent" ? "/files?view=recent" : "/files", {
+    waitUntil: "domcontentloaded",
+  });
   await expect(
     page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
   ).toBeVisible({ timeout });
@@ -243,23 +245,13 @@ test.describe("Files page", () => {
       await expect(page.locator(".files-page-card.is-selected")).toHaveCount(2);
     });
 
-    test("checkboxes hidden in single-select, visible in multi-select", async ({
-      page,
-    }) => {
+    test("selection highlights cards without checkboxes", async ({ page }) => {
       await gotoFilesPage(page);
       const cards = page.locator(".files-page-card:not(.is-folder)");
-      // 0 selected: no checkboxes anywhere on file cards.
-      await expect(page.locator(".files-page-card-selector")).toHaveCount(0);
-
-      // 1 selected: still no checkbox (highlight border is the indicator).
       await cards.nth(0).click();
-      await expect(page.locator(".files-page-card-selector")).toHaveCount(0);
-
-      // 2+ selected: checkboxes appear on every file card.
       await cards.nth(1).click({ modifiers: ["ControlOrMeta"] });
-      await expect(
-        page.locator(".files-page-card-selector").first(),
-      ).toBeVisible();
+      await expect(page.locator(".files-page-card.is-selected")).toHaveCount(2);
+      await expect(page.locator(".files-page-card-selector")).toHaveCount(0);
     });
   });
 
@@ -274,14 +266,16 @@ test.describe("Files page", () => {
     });
     test.use({ autoGoto: false });
 
-    test("Save to server hidden when nothing selected", async ({ page }) => {
+    test("Add to Stirling library hidden when nothing selected", async ({
+      page,
+    }) => {
       await gotoFilesPage(page);
       await expect(
-        page.getByRole("button", { name: /^Save to server$/i }),
+        page.locator(".files-page-toolbar-bulk-trigger"),
       ).toHaveCount(0);
     });
 
-    test("Save to server visible when local file selected", async ({
+    test("Add to Stirling library visible when local file selected", async ({
       page,
     }) => {
       await gotoFilesPage(page);
@@ -295,7 +289,7 @@ test.describe("Files page", () => {
       // dropdowns stay mounted once opened, so each is read through the id its
       // own trigger controls.
       await expect(
-        page.getByRole("button", { name: /^Save to server$/i }),
+        page.getByRole("button", { name: /^Add to Stirling library/i }),
       ).toHaveCount(0);
       await expect(
         await openMenuItem(
@@ -303,7 +297,7 @@ test.describe("Files page", () => {
           page.locator(
             ".files-page-selection-actions .files-page-toolbar-bulk-trigger",
           ),
-          /^Save to server$/i,
+          /^Add to Stirling library/i,
         ),
       ).toBeVisible();
       await expect(
@@ -312,12 +306,12 @@ test.describe("Files page", () => {
           page
             .locator(".files-page-details-actions-row")
             .getByRole("button", { name: /^Actions$/i }),
-          /^Save to server$/i,
+          /^Add to Stirling library/i,
         ),
       ).toBeVisible();
     });
 
-    test("Save to server hidden when ONLY cloud files selected", async ({
+    test("Add to Stirling library hidden when ONLY cloud files selected", async ({
       page,
     }) => {
       await gotoFilesPage(page);
@@ -327,11 +321,26 @@ test.describe("Files page", () => {
         .filter({ hasText: "cloud-a.pdf" })
         .click();
       await expect(
-        page.getByRole("button", { name: /^Save to server$/i }),
+        await openMenuItem(
+          page,
+          page.locator(
+            ".files-page-selection-actions .files-page-toolbar-bulk-trigger",
+          ),
+          /^Add to Stirling library/i,
+        ),
+      ).toHaveCount(0);
+      await expect(
+        await openMenuItem(
+          page,
+          page
+            .locator(".files-page-details-actions-row")
+            .getByRole("button", { name: /^Actions$/i }),
+          /^Add to Stirling library/i,
+        ),
       ).toHaveCount(0);
     });
 
-    test("Per-file kebab has Save to server item for local file", async ({
+    test("Per-file kebab has Add to Stirling library item for local file", async ({
       page,
     }) => {
       await gotoFilesPage(page);
@@ -341,30 +350,27 @@ test.describe("Files page", () => {
         .filter({ hasText: "local-a.pdf" });
       await localCard.getByRole("button", { name: /File actions/i }).click();
       await expect(
-        page.getByRole("menuitem", { name: /^Save to server$/i }),
+        page.getByRole("menuitem", { name: /^Add to Stirling library/i }),
       ).toBeVisible();
     });
 
-    test("Per-file kebab hides Save to server for cloud file", async ({
+    test("Per-file kebab hides Add to Stirling library for cloud file", async ({
       page,
     }) => {
       await gotoFilesPage(page);
-      // Cloud file kebab omits Save to server.
       const cloudCard = page
         .locator(".files-page-card:not(.is-folder)")
         .filter({ hasText: "cloud-a.pdf" });
       await cloudCard.getByRole("button", { name: /File actions/i }).click();
       await expect(
-        page.getByRole("menuitem", { name: /^Save to server$/i }),
+        page.getByRole("menuitem", { name: /^Add to Stirling library/i }),
       ).toHaveCount(0);
     });
   });
 
-  test.describe("Save to server gating (storage disabled)", () => {
+  test.describe("Add to Stirling library gating (storage disabled)", () => {
     test.beforeEach(async ({ page }) => {
-      // storageEnabled:false -> Save-to-server stays visible for local-only
-      // files but is disabled (with an explanatory tooltip), not hidden, so
-      // users discover the feature and know to ask their admin.
+      // Keep the disabled action discoverable so users know to ask their admin.
       await stubStorageApis(page, { storageEnabled: false });
       await seedFiles(page, [
         { id: "local-a", name: "local-a.pdf", remoteStorageId: null },
@@ -372,7 +378,7 @@ test.describe("Files page", () => {
     });
     test.use({ autoGoto: false });
 
-    test("bulk Save to server is disabled (not hidden) when storage off", async ({
+    test("bulk Add to Stirling library is disabled (not hidden) when storage off", async ({
       page,
     }) => {
       await gotoFilesPage(page);
@@ -385,7 +391,7 @@ test.describe("Files page", () => {
         page.locator(
           ".files-page-selection-actions .files-page-toolbar-bulk-trigger",
         ),
-        /^Save to server$/i,
+        /^Add to Stirling library/i,
       );
       await expect(selectionSave).toBeVisible();
       await expect(selectionSave).toBeDisabled();
@@ -395,13 +401,13 @@ test.describe("Files page", () => {
         page
           .locator(".files-page-details-actions-row")
           .getByRole("button", { name: /^Actions$/i }),
-        /^Save to server$/i,
+        /^Add to Stirling library/i,
       );
       await expect(panelSave).toBeVisible();
       await expect(panelSave).toBeDisabled();
     });
 
-    test("per-file kebab Save to server is disabled (not hidden) when storage off", async ({
+    test("per-file kebab Add to Stirling library is disabled (not hidden) when storage off", async ({
       page,
     }) => {
       await gotoFilesPage(page);
@@ -409,7 +415,9 @@ test.describe("Files page", () => {
         .locator(".files-page-card:not(.is-folder)")
         .filter({ hasText: "local-a.pdf" });
       await localCard.getByRole("button", { name: /File actions/i }).click();
-      const item = page.getByRole("menuitem", { name: /^Save to server$/i });
+      const item = page.getByRole("menuitem", {
+        name: /^Add to Stirling library/i,
+      });
       await expect(item).toBeVisible();
       await expect(item).toBeDisabled();
     });
@@ -473,7 +481,7 @@ test.describe("Files page", () => {
       await expect(page).not.toHaveURL(/\/files/, { timeout: 3_000 });
 
       // Re-add the now-active file; activation branches on requested stubs.
-      await page.goto("/files", { waitUntil: "domcontentloaded" });
+      await page.goto("/files?view=recent", { waitUntil: "domcontentloaded" });
       const card2 = page
         .locator(".files-page-card:not(.is-folder)")
         .filter({ hasText: "active-test.pdf" });
@@ -517,7 +525,7 @@ test.describe("Files page", () => {
       });
 
       // Back to the library and open the same file again.
-      await page.goto("/files", { waitUntil: "domcontentloaded" });
+      await page.goto("/files?view=recent", { waitUntil: "domcontentloaded" });
       await expect(card()).toBeVisible({ timeout: 10_000 });
       await card().dblclick();
       await expect(page).not.toHaveURL(/\/files/, { timeout: 5_000 });
@@ -538,6 +546,74 @@ test.describe("Files page", () => {
       ]);
     });
     test.use({ autoGoto: false });
+
+    test("imports dropped folders and loose files despite an unreadable entry", async ({
+      page,
+    }) => {
+      await gotoFilesPage(page);
+      const bytes = Array.from(
+        readFileSync(
+          new URL("../test-fixtures/form-fields-sample.pdf", import.meta.url),
+        ),
+      );
+      await page.locator(".files-page").evaluate((element, pdfBytes) => {
+        const file = (name: string) =>
+          new File([new Uint8Array(pdfBytes)], name, {
+            type: "application/pdf",
+          });
+        const fileEntry = (name: string) => ({
+          isFile: true,
+          file: (resolve: (value: File) => void) => resolve(file(name)),
+        });
+        const directory = (batches: object[][]) => ({
+          isDirectory: true,
+          createReader: () => ({
+            readEntries: (resolve: (entries: object[]) => void) =>
+              setTimeout(() => resolve(batches.shift() ?? []), 0),
+          }),
+        });
+        const folder = directory([
+          [
+            directory([[fileEntry("nested.pdf")]]),
+            {
+              isFile: true,
+              name: "unreadable.pdf",
+              file: (_resolve: unknown, reject: (error: Error) => void) =>
+                reject(new Error("Access denied")),
+            },
+          ],
+          [fileEntry("later-batch.pdf")],
+        ]);
+        const loose = file("loose.pdf");
+        element.dispatchEvent(
+          Object.assign(
+            new Event("drop", { bubbles: true, cancelable: true }),
+            {
+              dataTransfer: {
+                types: ["Files"],
+                files: [loose],
+                items: [
+                  { kind: "file", webkitGetAsEntry: () => folder },
+                  { kind: "file", getAsFile: () => loose },
+                ],
+              },
+            },
+          ),
+        );
+      }, bytes);
+
+      await expect(
+        page.getByText("unreadable.pdf: Access denied"),
+      ).toBeVisible();
+      const cards = page.locator(".files-page-card:not(.is-folder)");
+      for (const name of ["nested.pdf", "later-batch.pdf", "loose.pdf"]) {
+        await expect(cards.filter({ hasText: name })).toBeVisible({
+          timeout: 15_000,
+        });
+      }
+      await expect(cards).toHaveCount(4);
+      await expect(page).toHaveURL(/\/files\?view=recent$/);
+    });
 
     test("card thumbnail <img> is not natively draggable", async ({ page }) => {
       // draggable={false} keeps the card's onDragStart as drag authority.
@@ -656,6 +732,139 @@ test.describe("Files page", () => {
     });
   });
 
+  test.describe("Add to Stirling library", () => {
+    test.use({ autoGoto: false, seedJwt: true });
+
+    for (const destination of ["root", "new folder"] as const) {
+      test(`uploads to ${destination} after dismissing the picker and keeps Recents open`, async ({
+        page,
+      }) => {
+        await stubStorageApis(page);
+        await seedFiles(page, [
+          { id: "to-add", name: "to-add.pdf", remoteStorageId: null },
+        ]);
+        const folder = {
+          id: "11111111-1111-4111-8111-111111111111",
+          name: "Reports",
+          parentFolderId: null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        let createdFolder = false;
+        await page.route("**/api/v1/storage/folders", async (route) => {
+          if (route.request().method() === "POST") {
+            expect(route.request().postDataJSON()).toMatchObject({
+              name: folder.name,
+              parentFolderId: null,
+            });
+            createdFolder = true;
+            await route.fulfill({ json: folder });
+          } else {
+            await route.fulfill({ json: createdFolder ? [folder] : [] });
+          }
+        });
+        const storedFile = {
+          id: 1001,
+          fileName: "to-add.pdf",
+          contentType: "application/pdf",
+          sizeBytes: 1024,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          owner: "testuser",
+          ownedByCurrentUser: true,
+          accessRole: "owner",
+          shareLinks: [],
+          filePurpose: "generic",
+          folderId: destination === "root" ? null : folder.id,
+        };
+        let finishUpload!: () => void;
+        const uploadGate = new Promise<void>((resolve) => {
+          finishUpload = resolve;
+        });
+        let uploaded = false;
+        await page.route("**/api/v1/storage/files", async (route) => {
+          if (route.request().method() === "POST") {
+            await uploadGate;
+            uploaded = true;
+            await route.fulfill({ json: storedFile });
+          } else {
+            await route.fulfill({ json: uploaded ? [storedFile] : [] });
+          }
+        });
+        await page.route("**/api/v1/storage/files/folder", (route) =>
+          route.fulfill({
+            json: { movedFileIds: [storedFile.id], skippedFileIds: [] },
+          }),
+        );
+
+        await gotoFilesPage(page);
+        const card = page
+          .locator(".files-page-card:not(.is-folder)")
+          .filter({ hasText: "to-add.pdf" });
+        await card.getByRole("button", { name: /File actions/i }).click();
+        await expect(
+          page.getByRole("menuitem", { name: /Move to/i }),
+        ).toHaveCount(0);
+        await page
+          .getByRole("menuitem", { name: /Add to Stirling library/i })
+          .click();
+        const picker = page.getByRole("dialog").filter({
+          has: page.getByRole("button", { name: "Add here", exact: true }),
+        });
+        await expect(picker).toBeVisible();
+        if (destination === "new folder") {
+          await picker
+            .getByRole("button", { name: "New folder", exact: true })
+            .click();
+          const createDialog = page.getByRole("dialog", {
+            name: "New folder",
+            exact: true,
+          });
+          await createDialog
+            .getByRole("textbox", { name: "Folder name" })
+            .fill(folder.name);
+          await createDialog
+            .getByRole("button", { name: "Create", exact: true })
+            .click();
+          await expect(createDialog).toBeHidden();
+          await expect(
+            picker.getByRole("button", { name: folder.name, exact: true }),
+          ).toBeVisible();
+        }
+
+        const uploadRequest = page.waitForRequest(
+          (request) =>
+            request.url().endsWith("/api/v1/storage/files") &&
+            request.method() === "POST",
+        );
+        const placement = page.waitForRequest("**/api/v1/storage/files/folder");
+        try {
+          await picker
+            .getByRole("button", { name: "Add here", exact: true })
+            .click();
+          await uploadRequest;
+          await expect(picker).toBeHidden();
+          expect(uploaded).toBe(false);
+          await expect(page).toHaveURL(/\/files\?view=recent$/);
+        } finally {
+          finishUpload();
+        }
+        expect((await placement).postDataJSON()).toEqual({
+          folderId: storedFile.folderId,
+          fileIds: [storedFile.id],
+        });
+        await card.getByRole("button", { name: /File actions/i }).click();
+        await expect(
+          page.getByRole("menuitem", { name: /Move to/i }),
+        ).toBeVisible();
+        await expect(
+          page.getByRole("menuitem", { name: /Add to Stirling library/i }),
+        ).toHaveCount(0);
+        await expect(page).toHaveURL(/\/files\?view=recent$/);
+      });
+    }
+  });
+
   test.describe("Move dialog inline create-folder", () => {
     // The inline create-folder affordance is gated on `serverReachable`, which
     // only flips true once a confirmed, non-anonymous user triggers the folder
@@ -665,7 +874,7 @@ test.describe("Files page", () => {
     test("Move dialog shows Create new folder affordance", async ({ page }) => {
       await stubStorageApis(page);
       await seedFiles(page, [
-        { id: "to-move", name: "to-move.pdf", remoteStorageId: null },
+        { id: "to-move", name: "to-move.pdf", remoteStorageId: 1001 },
       ]);
       await gotoFilesPage(page);
       // Open the move dialog via the per-file kebab.
@@ -837,7 +1046,9 @@ test.describe("Files page", () => {
         page
           .locator(".files-page-card:not(.is-folder)")
           .filter({ hasText: "cross-browser.pdf" }),
-      ).toBeVisible({ timeout: 5_000 });
+      ).toBeVisible({
+        timeout: 5_000,
+      });
     });
   });
 
@@ -905,9 +1116,9 @@ test.describe("Files page", () => {
           parentFolderId: i === 0 ? undefined : ids[i - 1],
         })),
       );
-      await gotoFilesPage(page);
+      await gotoFilesPage(page, { view: "all" });
 
-      const header = page.locator(".files-page-tabs-row");
+      const header = page.locator(".files-page-navigation");
       const atRoot = await header.evaluate(
         (el) => el.getBoundingClientRect().height,
       );
@@ -944,9 +1155,9 @@ test.describe("Files page", () => {
         [{ id: "h-1", name: "h-1.pdf", remoteStorageId: null }],
         [{ id: CHROME_FOLDER, name: "Invoices" }],
       );
-      await gotoFilesPage(page);
+      await gotoFilesPage(page, { view: "all" });
 
-      const header = page.locator(".files-page-tabs-row");
+      const header = page.locator(".files-page-navigation");
       const atRoot = await header.evaluate(
         (el) => el.getBoundingClientRect().height,
       );
@@ -976,7 +1187,7 @@ test.describe("Files page", () => {
       await seedFiles(page, [
         { id: "l-1", name: "l-1.pdf", remoteStorageId: null },
       ]);
-      await page.goto("/files", { waitUntil: "domcontentloaded" });
+      await page.goto("/files?view=recent", { waitUntil: "domcontentloaded" });
 
       await expect(page.locator(".files-page-list-row").first()).toBeVisible({
         timeout: 15_000,
@@ -1031,7 +1242,7 @@ test.describe("Files page", () => {
         { id: "s-2", name: "beta.pdf", remoteStorageId: null },
         { id: "s-3", name: "gamma.pdf", remoteStorageId: null },
       ]);
-      await page.goto("/files", { waitUntil: "domcontentloaded" });
+      await page.goto("/files?view=recent", { waitUntil: "domcontentloaded" });
 
       const rows = page.locator(".files-page-list-row:not(.is-header)");
       await expect(rows.first()).toBeVisible({ timeout: 15_000 });
@@ -1046,7 +1257,7 @@ test.describe("Files page", () => {
       const before = await topOf();
       await rows.nth(0).click();
       await rows.nth(1).click({ modifiers: ["ControlOrMeta"] });
-      await expect(page.locator(".files-page-list-selection-count")).toHaveText(
+      await expect(page.locator(".files-page-toolbar-info")).toHaveText(
         /2 selected/i,
       );
       await expect.poll(topOf, { timeout: 15_000 }).toBeCloseTo(before, 0);
@@ -1070,15 +1281,15 @@ test.describe("Files page", () => {
           { id: NESTED, name: "Signed originals", parentFolderId: PARENT },
         ],
       );
-      await gotoFilesPage(page);
+      await gotoFilesPage(page, { view: "all" });
 
       const bar = page.locator(".workbench-bar");
       await expect(bar).toBeVisible({ timeout: 10_000 });
-      const row = page.locator(".files-page-tabs-row");
+      const row = page.locator(".files-page-navigation");
       // On the library's row, and not in the bar above it.
       await expect(
         row.getByRole("navigation", { name: /Folder path/i }),
-      ).toBeVisible();
+      ).toHaveCount(0);
       await expect(
         row.getByRole("button", { name: /New folder/i }),
       ).toHaveCount(0);
@@ -1157,7 +1368,7 @@ test.describe("Files page", () => {
      * A breadcrumb is a plain jump to an ancestor. Everything the selection change
      * drives - the listing, the folder filters, the path write - has to survive it.
      */
-    test("clicking a breadcrumb returns to the root without throwing", async ({
+    test("clicking the active library tab returns to the root without throwing", async ({
       page,
     }) => {
       await page.goto("/files", { waitUntil: "domcontentloaded" });
@@ -1165,7 +1376,13 @@ test.describe("Files page", () => {
 
       const crumbs = page.getByRole("navigation", { name: /Folder path/i });
       await expect(crumbs).toBeVisible({ timeout: 5_000 });
-      await crumbs.getByRole("button", { name: /All files/i }).click();
+      await expect(
+        crumbs.getByRole("button", { name: /Stirling library/i }),
+      ).toHaveCount(0);
+      await page
+        .getByRole("navigation", { name: "File sources" })
+        .getByRole("button", { name: "Stirling library", exact: true })
+        .click();
 
       await expect(page).toHaveURL(/\/files\/?$/, { timeout: 5_000 });
       await expect(page.getByText(/Something went wrong/i)).toHaveCount(0);

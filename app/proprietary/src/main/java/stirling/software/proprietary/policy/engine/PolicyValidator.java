@@ -78,10 +78,32 @@ public class PolicyValidator {
             inputSourceFor(spec).validate(spec);
         }
         validateRoutingRules(policy);
+        validateEditorOutput(policy);
         validateSteps(policy.steps());
         validateAssetReferences(policy);
         validateChain(policy.steps());
-        validateOutput(policy.output());
+        validateOutput(policy.output(), policy.steps());
+    }
+
+    /** Corpus files must be delivered to a destination, never imported into the editor. */
+    public void validateEditorOutput(Policy policy) {
+        if (!policy.editor().allowed()
+                || !policy.outputIds().isEmpty()
+                || !"inline".equals(policy.output().type())) {
+            return;
+        }
+        for (PipelineStep step : policy.steps()) {
+            if (!"/api/v1/docparse/ingest".equals(step.operation())) {
+                continue;
+            }
+            Map<String, Object> params = step.parameters();
+            if (Boolean.parseBoolean(String.valueOf(params.get("exportChunksJsonl")))
+                    || Boolean.parseBoolean(String.valueOf(params.get("exportMarkdown")))
+                    || "false".equalsIgnoreCase(String.valueOf(params.get("includeOriginal")))) {
+                throw new IllegalArgumentException(
+                        "Choose a file or database destination for chunk and Markdown exports. These files cannot be returned to the editor.");
+            }
+        }
     }
 
     /**
@@ -110,7 +132,7 @@ public class PolicyValidator {
                                             new IllegalArgumentException(
                                                     "unknown routing destination: "
                                                             + rule.outputId()));
-            validateOutput(destination.toOutputSpec());
+            validateOutput(destination.toOutputSpec(), policy.steps());
         }
     }
 
@@ -233,6 +255,12 @@ public class PolicyValidator {
      */
     public void validateOutput(OutputSpec output) {
         outputSinkFor(output).validate(output);
+    }
+
+    /** Validate both the connection and the pipeline's deliverable on the caller's thread. */
+    public void validateOutput(OutputSpec output, List<PipelineStep> steps) {
+        validateOutput(output);
+        outputSinkFor(output).validatePipeline(output, steps);
     }
 
     private PolicyTrigger triggerFor(TriggerConfig config) {

@@ -1,5 +1,6 @@
 pub mod backend;
 pub mod files;
+pub mod file_drop;
 pub mod connection;
 pub mod auth;
 pub mod default_app;
@@ -16,6 +17,7 @@ pub use files::{
 };
 pub use watcher::{release_window_watches, unwatch_disk_paths, watch_disk_paths};
 pub use window::{
+    build_main_window,
     forward_files_to_window,
     open_files_in_new_window,
     open_in_new_window,
