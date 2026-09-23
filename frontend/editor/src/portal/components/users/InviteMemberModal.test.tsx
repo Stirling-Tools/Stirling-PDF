@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 
 // Deterministic i18n: render the English fallback so assertions read naturally.
@@ -29,8 +29,43 @@ vi.mock("@portal/api/access", () => ({ createGrant: vi.fn() }));
 
 import { InviteMemberModal } from "@portal/components/users/InviteMemberModal";
 import type { Team } from "@portal/api/teams";
+import { usersBackend } from "@app/portal/usersBackend";
 
 const TEAMS: Team[] = [{ id: 1, name: "Default", userCount: 1, owners: [] }];
+
+it("preserves delivery and partial-failure warnings when Processor access is deferred", async () => {
+  const onNotice = vi.fn();
+  const onClose = vi.fn();
+  vi.mocked(usersBackend.inviteMember).mockResolvedValueOnce({
+    successCount: 1,
+    warning: "The invite email could not be delivered.",
+    errors: "Another address could not be invited.",
+  });
+  renderModal({
+    canDirectCreate: false,
+    canEmailInvite: true,
+    manageGrants: true,
+    onNotice,
+    onClose,
+  });
+  fireEvent.change(screen.getByPlaceholderText("name@company.com"), {
+    target: { value: "priya@acme.com" },
+  });
+  fireEvent.click(screen.getByRole("checkbox", { name: /^Processor/ }));
+  fireEvent.click(screen.getByRole("button", { name: "Send invite" }));
+
+  await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+  expect(onNotice).toHaveBeenCalledOnce();
+  expect(onNotice).toHaveBeenCalledWith(
+    expect.stringContaining("The invite email could not be delivered."),
+  );
+  expect(onNotice).toHaveBeenCalledWith(
+    expect.stringContaining("Another address could not be invited."),
+  );
+  expect(onNotice).toHaveBeenCalledWith(
+    expect.stringContaining("Processor access couldn't be granted yet"),
+  );
+});
 
 function renderModal(props: Partial<ComponentProps<typeof InviteMemberModal>>) {
   return render(

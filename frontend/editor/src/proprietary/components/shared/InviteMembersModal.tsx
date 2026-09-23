@@ -214,14 +214,26 @@ export default function InviteMembersModal({
       });
 
       if (response.successCount > 0) {
-        // Show success message
-        alert({
-          alertType: "success",
-          title: t("workspace.people.emailInvite.success", {
-            count: response.successCount,
-            defaultValue: `Successfully invited ${response.successCount} user(s)`,
-          }),
-        });
+        const undeliveredCount = response.undelivered?.length ?? 0;
+        if (undeliveredCount > 0) {
+          // Account exists but nobody was told: never report that as a send.
+          alert({
+            alertType: "error",
+            title: t(
+              "workspace.people.emailInvite.undelivered",
+              "Accounts created, but the invite email could not be sent",
+            ),
+            body: response.warning ?? response.errors,
+          });
+        } else {
+          alert({
+            alertType: "success",
+            title: t("workspace.people.emailInvite.success", {
+              count: response.successCount,
+              defaultValue: `Successfully invited ${response.successCount} user(s)`,
+            }),
+          });
+        }
 
         // Show warning if there were partial failures
         if (response.failureCount > 0 && response.errors) {
@@ -280,13 +292,31 @@ export default function InviteMembersModal({
       actionTakenRef.current = true;
       setGeneratedInviteLink(response.inviteUrl);
       if (inviteLinkForm.sendEmail && inviteLinkForm.email) {
-        alert({
-          alertType: "success",
-          title: t(
-            "workspace.people.inviteLink.emailSent",
-            "Invite link generated and sent via email",
-          ),
-        });
+        if (response.emailSent) {
+          alert({
+            alertType: "success",
+            title: t(
+              "workspace.people.inviteLink.emailSent",
+              "Invite link generated and sent via email",
+            ),
+          });
+        } else {
+          alert({
+            alertType: "error",
+            title: t(
+              "workspace.people.inviteLink.emailNotSent",
+              "Invite link generated, but the email could not be sent",
+            ),
+            body: t(
+              "workspace.people.inviteLink.emailNotSentBody",
+              "The link is shown below - send it to {{email}} yourself. {{reason}}",
+              {
+                email: inviteLinkForm.email,
+                reason: response.emailError ?? "",
+              },
+            ),
+          });
+        }
       }
     } catch (error: unknown) {
       console.error("Failed to generate invite link:", error);

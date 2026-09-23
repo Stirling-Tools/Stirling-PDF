@@ -23,6 +23,7 @@ import stirling.software.proprietary.security.model.AuthenticationType;
  *   <li>team: null
  *   <li>role: {@code Role.USER.getRoleId()}
  *   <li>firstLogin: false
+ *   <li>invitePending: false
  *   <li>enabled: true
  *   <li>requireMfa: false
  *   <li>mfaEnabled: false
@@ -43,6 +44,14 @@ public class SaveUserRequest {
     @Builder.Default private final Team team = null;
     @Builder.Default private final String role = Role.USER.getRoleId();
     @Builder.Default private final boolean firstLogin = false;
+
+    /**
+     * Marks the account as an unused email invitation, which is what permits its temporary password
+     * to be rotated and re-sent. Only the email-invite path may set it: on any other account the
+     * password was handed over out of band and re-issuing it would silently break the login.
+     */
+    @Builder.Default private final boolean invitePending = false;
+
     @Builder.Default private final boolean enabled = true;
     @Builder.Default private final boolean requireMfa = false;
     @Builder.Default private final boolean mfaEnabled = false;

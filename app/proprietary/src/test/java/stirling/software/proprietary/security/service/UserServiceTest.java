@@ -183,7 +183,35 @@ class UserServiceTest {
                 "5",
                 persisted.getSettings().get(MfaService.MFA_LAST_USED_STEP_KEY),
                 "MFA last used step should be stored");
+        assertNull(
+                persisted.getSettings().get(UserService.INVITE_PENDING_KEY),
+                "A directly-created account is not an invitation, whatever firstLogin says");
         assertSame(saved, persisted, "Returned user should be the persisted instance");
+    }
+
+    @Test
+    void saveUserCore_invitePending_marksTheAccountInUserSettings()
+            throws SQLException, UnsupportedProviderException {
+        when(passwordEncoder.encode("plain")).thenReturn("encoded");
+        when(userRepository.save(any(User.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        Team defaultTeam = new Team();
+        when(teamRepository.findByName("Default")).thenReturn(Optional.of(defaultTeam));
+
+        userService.saveUserCore(
+                SaveUserRequest.builder()
+                        .username("invited@example.com")
+                        .password("plain")
+                        .firstLogin(true)
+                        .invitePending(true)
+                        .build());
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        // A user_settings row, not a users column: SaaS declares users migration-owned, so a new
+        // column there would never exist and every read of the entity would fail.
+        assertEquals(
+                "true", userCaptor.getValue().getSettings().get(UserService.INVITE_PENDING_KEY));
     }
 
     @Test
@@ -466,7 +494,8 @@ class UserServiceTest {
     @ParameterizedTest
     @CsvSource({
         "username, true", "password, true", "role, true", "enabled, true",
-        "username, false", "password, false", "role, false", "enabled, false"
+        "username, false", "password, false", "role, false", "enabled, false",
+        "invite, true", "invite, false"
     })
     void userMutationExportsOnlyAfterSuccessfulCommit(String mutation, boolean commit)
             throws Exception {
@@ -484,6 +513,12 @@ class UserServiceTest {
                     userService.changeRole(user, Role.ADMIN.getRoleId());
                 }
                 case "enabled" -> userService.changeUserEnabled(user, false);
+                case "invite" -> {
+                    userService.clearInvitePending(user);
+                    verify(userRepository)
+                            .deleteSettingsByUserIdAndKeys(
+                                    user.getId(), List.of(UserService.INVITE_PENDING_KEY));
+                }
                 default -> throw new IllegalArgumentException(mutation);
             }
             verify(databaseService, never()).exportDatabase();
