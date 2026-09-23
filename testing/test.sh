@@ -473,7 +473,6 @@ compare_file_lists() {
                 | grep -v '/jpdfium-' \
                 | grep -v '\.libreoffice_uno_' \
                 | grep -v '/var/lib/libreoffice-sandbox/profiles/' \
-                | grep -v '/var/lib/libreoffice-template/' \
                 | grep -v '\.X99-lock' \
                 | grep -v 'uno-last-used' \
                 | grep -v 'xdg-' \
