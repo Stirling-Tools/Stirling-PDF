@@ -606,14 +606,10 @@
   pointer-events: auto;
 }
 
-/* Whichever add control comes first takes the gap, so the pair stays together
-   at the end of the header row. */
-.file-sidebar-section-btn-drive,
-.file-sidebar-section-btn-add {
+/* Search leads the trailing cluster and takes the gap, so it and the add
+   controls stay together at the end of the header row. */
+.file-sidebar-section-btn-search {
   margin-left: auto;
-}
-.file-sidebar-section-btn-drive + .file-sidebar-section-btn-add {
-  margin-left: 0;
 }
 
 /* Rows are conditionally rendered, so they fade in with an animation rather than

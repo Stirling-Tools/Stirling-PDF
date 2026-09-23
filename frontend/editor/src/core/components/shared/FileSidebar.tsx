@@ -57,6 +57,7 @@ import {
 import { fileStorage, onRecordUnreadable } from "@app/services/fileStorage";
 import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
 import { useOpenInNewWindow } from "@app/extensions/openInNewWindow";
+import { openSuperSearch } from "@app/components/shared/superSearch/openSuperSearch";
 import { alert } from "@app/components/toast";
 import { useBulkAddProgress } from "@app/services/bulkAddProgress";
 import { useFolderMembership } from "@app/hooks/useFolderMembership";
@@ -1091,6 +1092,16 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                       data-testid="open-files-page"
                     >
                       <Icon name="maximize-2" size={"1rem"} />
+                    </ActionIcon>
+                    <ActionIcon
+                      variant="quiet"
+                      className="file-sidebar-section-btn file-sidebar-section-btn-search"
+                      onClick={() => openSuperSearch(["files"])}
+                      title={t("fileSidebar.searchFiles", "Search files")}
+                      aria-label={t("fileSidebar.searchFiles", "Search files")}
+                      data-testid="file-sidebar-search"
+                    >
+                      <Icon name="search" size={"1rem"} />
                     </ActionIcon>
                     {importActions}
                   </div>
