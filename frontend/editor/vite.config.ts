@@ -409,14 +409,14 @@ export default defineConfig(async ({ mode, command }) => {
   };
 
   // Shared between `vite` (dev) and `vite preview` (production-build serve, used
-  // in CI/E2E) so the live test suite still resolves /api to :8080. /fonts comes
-  // from the backend JAR, which is the only copy the app ships.
+  // in CI/E2E) so the live test suite still resolves /api → :8080. /fonts is
+  // deliberately absent: the stubbed suite runs backend-free and proxying font
+  // requests would turn a static 404 into a connection error.
   const backendProxyConfig =
     effectiveMode === "desktop"
       ? undefined
       : {
           "/api": backendProxy,
-          "/fonts": backendProxy,
           "/oauth2": backendProxy,
           "/saml2": backendProxy,
           "/login/oauth2": backendProxy,
