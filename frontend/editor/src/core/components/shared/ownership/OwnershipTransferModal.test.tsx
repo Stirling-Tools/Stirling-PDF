@@ -470,6 +470,12 @@ describe("ownership handover", () => {
     unlinked.cloud!.linkedInstances = 0;
     vi.mocked(adapter.prepare).mockResolvedValue(unlinked);
     show();
+    expect(await screen.findByText("New owner")).toBeVisible();
+    expect(screen.getByText("jamie@example.com")).toBeVisible();
+    expect(screen.queryByText("Stirling account")).toBeNull();
+    expect(
+      screen.getByText("You'll become a team member and lose owner access."),
+    ).toBeVisible();
     await confirm();
     await screen.findByText("Ownership transferred");
     expect(adapter.transferCloud).toHaveBeenCalledOnce();

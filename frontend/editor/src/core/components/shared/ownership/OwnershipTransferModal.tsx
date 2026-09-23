@@ -185,6 +185,9 @@ export function OwnershipTransferModal({
   const total = adapter.local && linked ? 3 : 2;
   const step = done ? total : choosing || needsMember ? 1 : total - 1;
   const cloudEmail = status?.cloudEmail ?? status?.targetEmail;
+  const ownerAccount = adapter.local
+    ? status?.targetName
+    : (cloudEmail ?? status?.targetName);
   const members =
     status?.candidates?.members.filter((member) =>
       `${member.name ?? ""} ${member.email}`
@@ -436,9 +439,9 @@ export function OwnershipTransferModal({
                       ? t("ownership.serverAccount", "Server account")
                       : t("ownership.newOwnerLabel", "New owner")}
                   </span>
-                  <strong title={status.targetName}>{status.targetName}</strong>
+                  <strong title={ownerAccount}>{ownerAccount}</strong>
                 </div>
-                {!choosing && status.cloud && (
+                {adapter.local && !choosing && status.cloud && (
                   <div>
                     <span>
                       {t("ownership.cloudAccount", "Stirling account")}
@@ -715,8 +718,8 @@ export function OwnershipTransferModal({
                           )}
                           <p className="ownership-flow__muted">
                             {t(
-                              "ownership.demote",
-                              "The previous cloud owner becomes a team member.",
+                              "ownership.yourCloudAccess",
+                              "You'll become a team member and lose owner access.",
                             )}
                           </p>
                         </>
