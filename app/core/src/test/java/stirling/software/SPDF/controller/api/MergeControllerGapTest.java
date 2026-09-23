@@ -192,8 +192,9 @@ class MergeControllerGapTest {
         @Test
         @DisplayName("IOException while loading sorts the unreadable file last")
         void ioExceptionSortsLast() throws Exception {
+            PDDocument titled = docWithTitle("Beta");
             when(pdfDocumentFactory.load(fileA)).thenThrow(new IOException("boom"));
-            when(pdfDocumentFactory.load(fileB)).thenReturn(docWithTitle("Beta"));
+            when(pdfDocumentFactory.load(fileB)).thenReturn(titled);
 
             assertEquals(1, sortComparator("byPDFTitle").compare(fileA, fileB));
         }
