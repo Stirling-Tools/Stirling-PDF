@@ -260,6 +260,8 @@
 }
 
 .billing-breakdown small {
+  display: block;
+  margin-top: 0.25rem;
   color: var(--c-text-muted);
 }
 

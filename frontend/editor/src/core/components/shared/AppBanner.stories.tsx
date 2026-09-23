@@ -12,7 +12,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Info: Story = {
   args: {
-    icon: "info-rounded",
+    icon: "info",
     title: "Heads up",
     message: "This document contains form fields that will be flattened.",
   },
@@ -21,12 +21,12 @@ export const Info: Story = {
 export const Promo: Story = {
   args: {
     tone: "promo",
-    icon: "stars-rounded",
+    icon: "sparkles",
     title: "Upgrade to Server Plan",
     message:
       "Get the most out of Stirling PDF with unlimited users and advanced features.",
     buttonText: "Upgrade Now",
-    buttonIcon: "upgrade-rounded",
+    buttonIcon: "circle-arrow-up",
     onButtonClick: () => {},
     compact: true,
   },
@@ -35,7 +35,7 @@ export const Promo: Story = {
 export const Warning: Story = {
   args: {
     tone: "warning",
-    icon: "warning-rounded",
+    icon: "triangle-alert",
     title: "Action required",
     message: "Some pages could not be processed and were skipped.",
     buttonText: "Review",
@@ -46,11 +46,11 @@ export const Warning: Story = {
 export const Danger: Story = {
   args: {
     tone: "danger",
-    icon: "warning-rounded",
+    icon: "triangle-alert",
     title: "This server needs admin attention",
     message: "Review the license requirements to keep this server compliant.",
     buttonText: "See info",
-    buttonIcon: "info-rounded",
+    buttonIcon: "info",
     onButtonClick: () => {},
     dismissible: false,
   },
@@ -59,7 +59,7 @@ export const Danger: Story = {
 export const Compact: Story = {
   args: {
     compact: true,
-    icon: "info-rounded",
+    icon: "info",
     message: "Autosave is enabled for this file.",
     dismissible: false,
   },
@@ -68,7 +68,7 @@ export const Compact: Story = {
 /** Message-only, no title: the message takes the title's weight so the bar still reads. */
 export const MessageOnly: Story = {
   args: {
-    icon: "picture-as-pdf-rounded",
+    icon: "file-text",
     message:
       "Make Stirling PDF your default application for opening PDF files.",
     buttonText: "Set Default",
@@ -120,11 +120,11 @@ export const AllTopBars: StoryObj = {
         <AppBanner
           tone="promo"
           compact
-          icon="stars-rounded"
+          icon="sparkles"
           title="Upgrade to Server Plan"
           message="Get the most out of Stirling PDF with unlimited users and advanced features."
           buttonText="Upgrade Now"
-          buttonIcon="upgrade-rounded"
+          buttonIcon="circle-arrow-up"
           onButtonClick={() => {}}
         />
       </Row>
@@ -132,11 +132,11 @@ export const AllTopBars: StoryObj = {
       <Row caption="Server needs attention · UpgradeBanner (urgent)">
         <AppBanner
           tone="warning"
-          icon="warning-rounded"
+          icon="triangle-alert"
           title="This server needs admin attention"
           message="Review the license requirements to keep this server compliant."
           buttonText="See info"
-          buttonIcon="info-rounded"
+          buttonIcon="info"
           onButtonClick={() => {}}
           dismissible={false}
         />
@@ -145,11 +145,11 @@ export const AllTopBars: StoryObj = {
       <Row caption="Free tier limit reached · AdminPlanSection">
         <AppBanner
           tone="warning"
-          icon="warning-rounded"
+          icon="triangle-alert"
           title="Free self-hosted limit reached"
           message="You have 12 users on a plan that covers 10."
           buttonText="See plans"
-          buttonIcon="upgrade-rounded"
+          buttonIcon="circle-arrow-up"
           onButtonClick={() => {}}
           dismissible={false}
         />
@@ -169,7 +169,7 @@ export const AllTopBars: StoryObj = {
 
       <Row caption="Set as default app · DefaultAppBanner (desktop)">
         <AppBanner
-          icon="picture-as-pdf-rounded"
+          icon="file-text"
           message="Make Stirling PDF your default application for opening PDF files."
           buttonText="Set Default"
           onButtonClick={() => {}}
@@ -181,7 +181,7 @@ export const AllTopBars: StoryObj = {
       <Row caption="Danger tone (available, no caller yet)">
         <AppBanner
           tone="danger"
-          icon="warning-rounded"
+          icon="triangle-alert"
           title="Storage is full"
           message="New uploads will fail until space is freed."
           buttonText="Manage storage"

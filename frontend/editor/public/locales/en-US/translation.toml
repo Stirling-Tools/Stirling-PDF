@@ -5486,11 +5486,6 @@ desc = "Change the size/scale of a page and/or its contents."
 tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
 title = "Adjust page size/scale"
 
-[home.scannerEffect]
-desc = "Create a PDF that looks like it was scanned"
-tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
-title = "Scanner Effect"
-
 [home.scannerImageSplit]
 desc = "Detect and split scanned photos into separate pages"
 tags = "detect,split,photos,auto detect,detect photos,split photos,separate photos,split scanned images,multiple photos,auto split,photo detection,image detection,scan separation"
@@ -7674,13 +7669,6 @@ unit = "PDFs"
 unitsPending_one = "{{units}} meter unit pending sync from linked instances"
 unitsPending_other = "{{units}} meter units pending sync from linked instances"
 
-[portal.billing.prepaid]
-capSuffix = "of {{total}} prepaid credits"
-expires = "Expires {{date}}"
-eyebrow = "Prepaid capacity"
-note = "Used before metered billing and outside your spend limit."
-topUp = "Top up"
-
 [portal.billing.prepaid.buy]
 back = "Back"
 cancel = "Cancel"
@@ -7705,8 +7693,6 @@ label = "I understand that when my prepaid capacity is used up or expires after 
 [portal.billing.prepaid.deploy]
 
 [portal.billing.prepaid.offer]
-cta = "Review offer"
-subtitle = "Prepay a year of PDF processing and get two months free, used before metered billing, outside your spend limit."
 title = "Get 12 months for the price of 10"
 
 [portal.billing.prepaid.pay]
@@ -7729,15 +7715,11 @@ downloading = "Preparing…"
 
 [portal.billing.prepaid.size]
 
-[portal.billing.prepaid.state]
-exhausted = "Used up"
-healthy = "Plenty left"
-low = "Running low"
-
 [portal.billing.processor]
 activate = "Switch on the Processor"
 factFree = "{{used}} of {{allowance}} used"
 factNoCap = "no limit"
+factPrepaid = "{{remaining}} left"
 freeRemaining = "Free credits remaining"
 included = "Included in your license"
 includedRenewal = "{{summary}} · Renews {{date}}"
@@ -7746,9 +7728,15 @@ midIncluded = "{{rate}} per credit · {{allowance}} included every month"
 midIncludedNoRate = "{{allowance}} included every month"
 midMetered = "{{spend}} metered this cycle"
 midMeteredUnknown = "Metered this cycle"
+midPrepaid = "Prepaid credits, drawn before metered billing"
+midPrepaidExpiry = "{{summary}} · Expires {{date}}"
 noSpendLimit = "No spend limit"
 paidUsed = "Paid metered usage"
 percentUsed = "{{pct}}%"
+prepaidExhausted = "Used up, metered billing has resumed"
+prepaidExpires = "Expires {{date}}"
+prepaidRemaining = "Prepaid credits remaining"
+prepaidTooltip = "Drawn before metered billing, and outside your spend limit."
 raiseLimit = "Raise limit"
 remainingOf = "{{remaining}} of {{total}}"
 rowName = "Processor"

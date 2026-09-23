@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { TextInput, Stack, Paper, Text, Group, Alert } from "@mantine/core";
-import WarningIcon from "@mui/icons-material/Warning";
+import { Icon } from "@app/ui/Icon";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import type { LegalCardProps } from "@app/components/shared/config/configSections/security/securityCardProps";
 
@@ -21,7 +21,7 @@ export function LegalDocumentsCard({
   return (
     <>
       <Alert
-        icon={<WarningIcon style={{ fontSize: 18 }} />}
+        icon={<Icon name="triangle-alert" size={18} />}
         title={t(
           "admin.settings.legal.disclaimer.title",
           "Legal Responsibility Warning",
