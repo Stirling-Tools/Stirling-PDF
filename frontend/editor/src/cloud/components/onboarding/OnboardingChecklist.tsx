@@ -1,8 +1,12 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { useAuth } from "@app/auth/UseSession";
-import SaasOnboardingModal from "@app/components/onboarding/SaasOnboardingModal";
+import { useTeamAuth } from "@app/auth/teamSession";
+import {
+  useChecklistSetupItem,
+  type ChecklistItem,
+} from "@app/components/onboarding/checklistSetupItem";
 import StaticOnboardingSlide from "@app/components/onboarding/StaticOnboardingSlide";
 import { DEFAULT_RUNTIME_STATE } from "@app/components/onboarding/orchestrator/onboardingConfig";
 import {
@@ -18,34 +22,20 @@ import stirlingMark from "@app/assets/brand/modern-logo/logo512.png";
 import styles from "@app/components/onboarding/OnboardingChecklist.module.css";
 
 const FLOW_ID = "saas-checklist";
-const STEP_DOWNLOAD_DESKTOP = "download-desktop";
 const STEP_INVITE_TEAM = "invite-team";
 const STEP_TAKE_TOUR = "take-tour";
 const STEP_SHARE_ANALYTICS = "share-analytics";
 
-interface ChecklistItem {
-  id: string;
-  titleKey: string;
-  titleFallback: string;
-  descriptionKey: string;
-  descriptionFallback: string;
-  onClick: () => void;
-}
-
-/**
- * SaaS-only getting-started checklist that floats above the sidebar footer for
- * new users. Progress is persisted per step via the shared onboarding store, so
- * completed items stay ticked across reloads. Dismissing it (the X) hides it
- * permanently for the user.
- */
+/** Getting-started checklist above the sidebar footer. Ticks and the X dismissal
+ * persist per browser in the shared onboarding store. */
 export function OnboardingChecklist() {
   const { t } = useTranslation();
   const { isAnonymous, loading } = useAuth();
+  const { canUseTeams } = useTeamAuth();
 
   const [dismissed, setDismissed] = useState(() => hasSeenFlow(FLOW_ID));
   const [done, setDone] = useState<string[]>(() => getFlowProgress(FLOW_ID));
   const [expanded, setExpanded] = useState(true);
-  const [downloadOpen, setDownloadOpen] = useState(false);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
 
   const markDone = useCallback((stepId: string) => {
@@ -54,9 +44,7 @@ export function OnboardingChecklist() {
   }, []);
 
   const handleInviteTeam = useCallback(() => {
-    // Open the settings modal on the Teams section without touching the URL
-    // (event-driven open + navigate; no /settings/teams pushState).
-    openAppSettings("teams");
+    openAppSettings("users");
     markDone(STEP_INVITE_TEAM);
   }, [markDone]);
 
@@ -67,43 +55,39 @@ export function OnboardingChecklist() {
     markDone(STEP_TAKE_TOUR);
   }, [markDone]);
 
-  const items: ChecklistItem[] = useMemo(
-    () => [
-      {
-        id: STEP_DOWNLOAD_DESKTOP,
-        titleKey: "onboarding.checklist.downloadDesktop.title",
-        titleFallback: "Download Stirling for Desktop",
-        descriptionKey: "onboarding.checklist.downloadDesktop.description",
-        descriptionFallback: "Run Stirling natively on your machine",
-        onClick: () => setDownloadOpen(true),
-      },
-      {
-        id: STEP_INVITE_TEAM,
-        titleKey: "onboarding.checklist.inviteTeam.title",
-        titleFallback: "Invite team members",
-        descriptionKey: "onboarding.checklist.inviteTeam.description",
-        descriptionFallback: "Collaborate with your team",
-        onClick: handleInviteTeam,
-      },
-      {
-        id: STEP_TAKE_TOUR,
-        titleKey: "onboarding.checklist.takeTour.title",
-        titleFallback: "Take the tour",
-        descriptionKey: "onboarding.checklist.takeTour.description",
-        descriptionFallback: "See how Stirling works in a quick walkthrough",
-        onClick: handleTakeTour,
-      },
-      {
-        id: STEP_SHARE_ANALYTICS,
-        titleKey: "onboarding.checklist.shareAnalytics.title",
-        titleFallback: "Share anonymous usage data",
-        descriptionKey: "onboarding.checklist.shareAnalytics.description",
-        descriptionFallback: "Help improve Stirling",
-        onClick: () => setAnalyticsOpen(true),
-      },
-    ],
-    [handleInviteTeam, handleTakeTour],
-  );
+  const setup = useChecklistSetupItem(markDone);
+
+  const items: ChecklistItem[] = [
+    ...(setup.item ? [setup.item] : []),
+    ...(canUseTeams
+      ? [
+          {
+            id: STEP_INVITE_TEAM,
+            titleKey: "onboarding.checklist.inviteTeam.title",
+            titleFallback: "Invite team members",
+            descriptionKey: "onboarding.checklist.inviteTeam.description",
+            descriptionFallback: "Collaborate with your team",
+            onClick: handleInviteTeam,
+          },
+        ]
+      : []),
+    {
+      id: STEP_TAKE_TOUR,
+      titleKey: "onboarding.checklist.takeTour.title",
+      titleFallback: "Take the tour",
+      descriptionKey: "onboarding.checklist.takeTour.description",
+      descriptionFallback: "See how Stirling works in a quick walkthrough",
+      onClick: handleTakeTour,
+    },
+    {
+      id: STEP_SHARE_ANALYTICS,
+      titleKey: "onboarding.checklist.shareAnalytics.title",
+      titleFallback: "Share anonymous usage data",
+      descriptionKey: "onboarding.checklist.shareAnalytics.description",
+      descriptionFallback: "Help improve Stirling",
+      onClick: () => setAnalyticsOpen(true),
+    },
+  ];
 
   const doneCount = items.filter((item) => done.includes(item.id)).length;
   const total = items.length;
@@ -113,13 +97,6 @@ export function OnboardingChecklist() {
     markFlowSeen(FLOW_ID);
     setDismissed(true);
   }, []);
-
-  // Both "skip" and "download" in the reused slide close the modal, and either
-  // one should complete the task.
-  const handleDownloadClose = useCallback(() => {
-    markDone(STEP_DOWNLOAD_DESKTOP);
-    setDownloadOpen(false);
-  }, [markDone]);
 
   const closeAnalytics = useCallback(() => {
     markDone(STEP_SHARE_ANALYTICS);
@@ -288,11 +265,7 @@ export function OnboardingChecklist() {
         )}
       </div>
 
-      <SaasOnboardingModal
-        opened={downloadOpen}
-        onClose={handleDownloadClose}
-        slideIds={["desktop-install"]}
-      />
+      {setup.dialog}
 
       {analyticsOpen && (
         <StaticOnboardingSlide

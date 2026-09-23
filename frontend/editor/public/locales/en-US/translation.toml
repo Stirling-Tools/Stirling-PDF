@@ -4088,16 +4088,11 @@ fileName = "File Name"
 title = "Database Import/Export"
 
 [defaultApp]
-setDefault = "Set Default"
 title = "Set as Default PDF App"
 
 [defaultApp.error]
 message = "Failed to set default PDF handler"
 title = "Error"
-
-[defaultApp.prompt]
-dontRemind = "Don't remind me again"
-message = "Make Stirling PDF your default application for opening PDF files."
 
 [defaultApp.settingsOpened]
 message = "In Windows Settings, search for 'PDF' and select Stirling PDF as your default app"
@@ -6018,6 +6013,10 @@ title = "Download Stirling for Desktop"
 [onboarding.checklist.inviteTeam]
 description = "Collaborate with your team"
 title = "Invite team members"
+
+[onboarding.checklist.setDefaultApp]
+description = "Open PDF files in Stirling PDF"
+title = "Make Stirling your default"
 
 [onboarding.checklist.shareAnalytics]
 description = "Help improve Stirling"
@@ -11191,8 +11190,6 @@ defaultPdfEditor = "Default PDF editor"
 defaultPdfEditorActive = "Stirling PDF is your default PDF editor"
 defaultPdfEditorChecking = "Checking..."
 defaultPdfEditorInactive = "Another application is set as default"
-defaultPdfEditorRemind = "Remind me to set as default"
-defaultPdfEditorRemindDescription = "Show a banner when Stirling PDF is not your default PDF application."
 defaultPdfEditorSet = "Already Default"
 defaultStartupView = "Default view on launch"
 defaultStartupViewDescription = "Choose which view is active when the app starts"
