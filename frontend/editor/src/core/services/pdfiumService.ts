@@ -411,7 +411,7 @@ function openWithFileAccess(
     m.pdfium.wasmExports.free(accessPtr);
     throw new PdfiumOpenError(m.FPDF_GetLastError());
   }
-  _docFileAccess.set(docPtr, { accessPtr, getBlockPtr, bytes });
+  _docFileAccess.set(docPtr, { module: m, accessPtr, getBlockPtr, bytes });
   return docPtr;
 }
 
