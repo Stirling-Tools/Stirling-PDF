@@ -69,4 +69,3 @@ windows = { version = "0.62", features = [
 [profile.release]
 strip = "debuginfo"
 codegen-units = 1
-panic = "abort"
