@@ -4,12 +4,8 @@ import { Button } from "@app/ui/Button";
 import { Icon } from "@app/ui/Icon";
 import { handleExternalLinkClick } from "@app/platform/externalLinkClick";
 
-/**
- * The docs page this links to does not exist yet - it is being written against this URL. Keep the
- * two in step when it lands, or the button becomes a 404 that nobody notices.
- */
-export const AI_ENGINE_DOCS_URL =
-  "https://docs.stirlingpdf.com/Configuration/AI%20Engine";
+/** Null until the docs page is written; setting it brings back the set-up guide button. */
+export const AI_ENGINE_DOCS_URL: string | null = null;
 
 /**
  * What the AI engine is, in the one place an admin is guaranteed to look.
@@ -60,22 +56,24 @@ export function AiAboutNotice({ cloud = false }: { cloud?: boolean }) {
             "on both containers and a model provider key. Whatever the AI reads is sent to the provider you pick — an Ollama you host keeps every page in-house.",
           )}
         </Text>
-        <Button
-          as="a"
-          size="sm"
-          variant="primary"
-          href={AI_ENGINE_DOCS_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          // Desktop opens links in the system browser; on web this is a no-op.
-          onClick={(event) =>
-            handleExternalLinkClick(AI_ENGINE_DOCS_URL, event)
-          }
-          rightSection={<Icon name="external-link" size="0.8rem" />}
-          style={{ flexShrink: 0 }}
-        >
-          {t("admin.settings.ai.general.note.docs", "Set-up guide")}
-        </Button>
+        {AI_ENGINE_DOCS_URL && (
+          <Button
+            as="a"
+            size="sm"
+            variant="primary"
+            href={AI_ENGINE_DOCS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            // Desktop opens links in the system browser; on web this is a no-op.
+            onClick={(event) =>
+              handleExternalLinkClick(AI_ENGINE_DOCS_URL, event)
+            }
+            rightSection={<Icon name="external-link" size="0.8rem" />}
+            style={{ flexShrink: 0 }}
+          >
+            {t("admin.settings.ai.general.note.docs", "Set-up guide")}
+          </Button>
+        )}
       </Group>
     </Alert>
   );

@@ -38,10 +38,11 @@ async function openAiSettings(
   page: Page,
   status: Record<string, unknown>,
   settings: Record<string, unknown> = ENABLED_SETTINGS,
-  linked = false,
+  // null leaves the link status unanswered, as it is while the request is in flight.
+  linked: boolean | null = false,
 ) {
   await page.route("**/api/v1/account-link/status", (route: Route) =>
-    route.fulfill({ json: { linked } }),
+    linked === null ? undefined : route.fulfill({ json: { linked } }),
   );
   await page.route(
     "**/api/v1/admin/settings/section/aiEngine",
@@ -200,18 +201,18 @@ test("the mode chooser owns the engine fields, and cloud is not selectable", asy
   await expect(page.getByLabel(/AI engine URL/i)).toBeVisible();
 });
 
-test("the about notice links to the set-up guide", async ({ page }) => {
+test("the about notice offers no set-up guide until its docs page exists", async ({
+  page,
+}) => {
   await openAiSettings(page, {
     enabled: true,
     reachable: true,
     authenticated: true,
   });
 
-  const guide = page.getByRole("link", { name: /Set-up guide/i });
-  await expect(guide).toBeVisible();
-  await expect(guide).toHaveAttribute(
-    "href",
-    "https://docs.stirlingpdf.com/Configuration/AI%20Engine",
+  await expect(page.getByText("About the AI engine")).toBeVisible();
+  await expect(page.getByRole("link", { name: /Set-up guide/i })).toHaveCount(
+    0,
   );
 });
 
@@ -229,6 +230,23 @@ test("cloud AI is not selectable until the server is linked", async ({
     page.getByRole("radio", { name: /Stirling Cloud AI/i }),
   ).toBeDisabled();
   await expect(page.getByText(/Link an account first/i).first()).toBeVisible();
+});
+
+test("cloud AI stays disabled while the link status is unknown", async ({
+  page,
+}) => {
+  await openAiSettings(
+    page,
+    { enabled: true, reachable: true, authenticated: true },
+    ENABLED_SETTINGS,
+    null,
+  );
+
+  await expect(
+    page.getByRole("radio", { name: /Stirling Cloud AI/i }),
+  ).toBeDisabled();
+  // Unknown is not unlinked, so there is nothing to prompt for yet.
+  await expect(page.getByText(/Link an account first/i)).toHaveCount(0);
 });
 
 test("a linked server can pick cloud AI, and ingestion is off until asked for", async ({
@@ -455,6 +473,25 @@ test("cloud mode makes the settings Stirling Cloud owns read-only", async ({
       name: /^Max pages per request/,
     }),
   ).toBeEnabled();
+});
+
+test("switching cloud AI off hands the model settings back", async ({
+  page,
+}) => {
+  await openAiSettings(
+    page,
+    { enabled: true, reachable: true, authenticated: true },
+    { ...ENABLED_SETTINGS, mode: "CLOUD" },
+    true,
+  );
+  await expect(smartModelInput(page)).toBeDisabled();
+
+  // Off keeps mode CLOUD so turning AI back on restores it; nothing is cloud-managed meanwhile.
+  await page.getByRole("radio", { name: /^Off$/i }).click();
+  await expect(smartModelInput(page)).toBeEnabled();
+  await expect(
+    page.getByText("Managed by Stirling Cloud", { exact: true }),
+  ).toHaveCount(0);
 });
 
 test("self-hosted mode leaves the model settings editable", async ({

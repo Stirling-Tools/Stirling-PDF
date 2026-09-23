@@ -240,7 +240,7 @@ export function AiStatusCard({ settings }: AiStatusCardProps) {
               <Fact
                 label={t(
                   "admin.settings.ai.status.cloud.hostLabel",
-                  "Stirling Cloud",
+                  "Stirling.com",
                 )}
                 value={
                   status?.cloudUp == null

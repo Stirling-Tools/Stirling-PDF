@@ -106,8 +106,8 @@ function ModeOption({
  *
  * Was a bare "Enable AI" switch above four always-visible fields, which gave the URL and timeouts
  * equal billing with the decision that makes them relevant. As a mode choice the engine fields sit
- * under the option that owns them, and there is somewhere honest to put Stirling Cloud: visible, so
- * the option is discoverable, and disabled, because nothing behind it exists yet.
+ * under the option that owns them, and Stirling Cloud stays visible but disabled until the server
+ * is linked.
  *
  * Every key here is restart-required.
  */
@@ -348,7 +348,7 @@ export function AiConnectionCard({
           mode="cloud"
           selected={mode}
           onSelect={selectMode}
-          disabled={linked === false}
+          disabled={linked !== true}
           icon="cloud"
           title={t(
             "admin.settings.ai.general.mode.cloud.title",

@@ -217,7 +217,7 @@ export default function AdminAiSection() {
   // Stirling Cloud picks the models and holds the provider keys, so these sections describe an
   // engine this server no longer talks to. Shown but inert, rather than hidden, so an admin can
   // still see what their own engine is set to before switching back.
-  const cloudManaged = settings.mode === "CLOUD";
+  const cloudManaged = settings.enabled === true && settings.mode === "CLOUD";
   const managedNote = t(
     "admin.settings.ai.managedByCloud",
     "Managed by Stirling Cloud in this mode.",
