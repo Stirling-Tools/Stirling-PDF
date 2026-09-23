@@ -505,10 +505,15 @@ class SpringAuthClient {
   async signOut(): Promise<{ error: AuthError | null }> {
     try {
       // Imported on demand: a static import here puts the Supabase SDK on the
-      // startup path of every build, including installs that never use it.
-      const { clearSupabaseSession } =
-        await import("@app/auth/supabase/supabaseClient");
-      clearSupabaseSession();
+      // startup path of every build, including installs that never use it. A
+      // failed load must not skip the local cleanup below.
+      try {
+        const { clearSupabaseSession } =
+          await import("@app/auth/supabase/supabaseClient");
+        clearSupabaseSession();
+      } catch {
+        // Nothing loaded means nothing to clear.
+      }
       localStorage.removeItem("stirling.portalSaasOwner");
       sessionStorage.removeItem("stirling.portalConnect");
       Array.from({ length: localStorage.length }, (_, i) => localStorage.key(i))
