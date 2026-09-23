@@ -762,29 +762,6 @@ fi
 # OFF by default. Set STIRLING_AOT_ENABLE=true to opt in.
 AOT_ENABLED="${STIRLING_AOT_ENABLE:-false}"
 
-detect_cpu_count() {
-  local cpus quota="" period=""
-  cpus=$(nproc 2>/dev/null || echo 2)
-  if [ -r /sys/fs/cgroup/cpu.max ]; then
-    read -r quota period < /sys/fs/cgroup/cpu.max || true
-  elif [ -r /sys/fs/cgroup/cpu/cpu.cfs_quota_us ]; then
-    quota=$(cat /sys/fs/cgroup/cpu/cpu.cfs_quota_us 2>/dev/null)
-    period=$(cat /sys/fs/cgroup/cpu/cpu.cfs_period_us 2>/dev/null)
-  fi
-  case "$quota" in
-    ''|*[!0-9]*) ;;
-    *)
-      if [ "${period:-0}" -gt 0 ] 2>/dev/null; then
-        local limit=$(( (quota + period - 1) / period ))
-        if [ "$limit" -ge 1 ] && [ "$limit" -lt "$cpus" ]; then
-          cpus=$limit
-        fi
-      fi
-      ;;
-  esac
-  echo "$cpus"
-}
-
 # ---------- Dynamic Memory Detection ----------
 # Detects the container memory limit (in MB) from cgroups v2/v1 or /proc/meminfo.
 detect_container_memory_mb() {
@@ -808,10 +785,11 @@ detect_container_memory_mb() {
       no_cgroup_limit=true
     fi
   fi
+  # No limit: use host RAM, the same total the JVM applies its percentages to.
   if [ -z "$mem_bytes" ]; then
     mem_bytes=$(awk '/MemTotal/ {print $2 * 1024}' /proc/meminfo 2>/dev/null)
     if [ "$no_cgroup_limit" = true ]; then
-      log "No container memory limit set; sizing from host RAM ($(( ${mem_bytes:-0} / 1048576 ))MB)"
+      log "No container memory limit set; sizing from host RAM ($(( ${mem_bytes:-0} / 1048576 ))MB). Set mem_limit / -m to cap it."
     fi
   fi
   if [ -n "$mem_bytes" ] && [ "$mem_bytes" -gt 0 ] 2>/dev/null; then
@@ -1083,24 +1061,6 @@ CONTAINER_MEM_MB=$(detect_container_memory_mb)
 compute_dynamic_memory "$CONTAINER_MEM_MB"
 MEMORY_FLAGS="-XX:InitialRAMPercentage=${DYNAMIC_INITIAL_RAM_PCT} -XX:MaxRAMPercentage=${DYNAMIC_MAX_RAM_PCT} -XX:MaxMetaspaceSize=${DYNAMIC_MAX_METASPACE}m"
 
-AVAILABLE_CPUS=$(detect_cpu_count)
-
-RESOURCE_TIER="${STIRLING_RESOURCE_TIER:-}"
-RESOURCE_TIER="${RESOURCE_TIER,,}"
-if [ "$RESOURCE_TIER" != "small" ] && [ "$RESOURCE_TIER" != "large" ]; then
-  if [ "$CONTAINER_MEM_MB" -gt 0 ] 2>/dev/null && [ "$CONTAINER_MEM_MB" -le 2048 ]; then
-    RESOURCE_TIER="small"
-  else
-    RESOURCE_TIER="large"
-  fi
-fi
-log "Resource tier: ${RESOURCE_TIER} (${CONTAINER_MEM_MB}MB, ${AVAILABLE_CPUS} CPUs)"
-
-footprint_flags() {
-  [ "$RESOURCE_TIER" = "small" ] || return 0
-  printf '%s' "-XX:ReservedCodeCacheSize=96m -Xss256k -XX:CICompilerCount=2"
-}
-
 # ---------- Compressed Oops Detection ----------
 # Only needed for AOT cache consistency (training and runtime must agree on this flag).
 if [ "$AOT_ENABLED" = "true" ]; then
@@ -1123,6 +1083,7 @@ fi
 
 # Calculate ConcGCThreads dynamically based on available CPUs
 # Shenandoah defaults to ParallelGCThreads/4; we cap it for large hosts
+AVAILABLE_CPUS=$(nproc 2>/dev/null || echo "2")
 if [ "$AVAILABLE_CPUS" -ge 16 ]; then
   CONC_GC_THREADS=4
 elif [ "$AVAILABLE_CPUS" -ge 8 ]; then
@@ -1143,7 +1104,7 @@ if [ -z "${JAVA_BASE_OPTS:-}" ]; then
     log "Using _JVM_OPTS (ConcGCThreads=${CONC_GC_THREADS})"
   else
     log "JAVA_BASE_OPTS and _JVM_OPTS unset; applying fallback defaults."
-    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:ShenandoahGCHeuristics=adaptive -XX:ShenandoahUncommitDelay=1000 -XX:ShenandoahGuaranteedYoungGCInterval=10000 -XX:ShenandoahGuaranteedOldGCInterval=30000 -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ConcGCThreads=${CONC_GC_THREADS} -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true"
+    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:ShenandoahGCHeuristics=adaptive -XX:ShenandoahUncommitDelay=1000 -XX:ShenandoahGuaranteedYoungGCInterval=10000 -XX:ShenandoahGuaranteedOldGCInterval=30000 -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ConcGCThreads=${CONC_GC_THREADS} -XX:ReservedCodeCacheSize=96m -XX:CICompilerCount=2 -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true"
   fi
 
   # Strip any hardcoded memory/CDS/AOT flags from the options (managed dynamically)
@@ -1159,7 +1120,7 @@ if [ -z "${JAVA_BASE_OPTS:-}" ]; then
      s/-XX:AOTConfiguration=[^ ]*//g')
 
   # Append computed dynamic memory flags
-  JAVA_BASE_OPTS="${JAVA_BASE_OPTS} ${MEMORY_FLAGS} $(footprint_flags)"
+  JAVA_BASE_OPTS="${JAVA_BASE_OPTS} ${MEMORY_FLAGS}"
 else
   # JAVA_BASE_OPTS explicitly set by user or Dockerfile
   # Only add dynamic memory if not already present
