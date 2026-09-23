@@ -32,14 +32,14 @@ vi.mock("@app/components/settings/portalSettingsNav", () => ({
         {
           key: "billing",
           label: "Billing",
-          icon: "payments-rounded",
+          icon: "credit-card",
           component: null,
         },
       ],
     },
   ],
   PORTAL_SECTION_ALIASES: {},
-  PORTAL_SUPERSEDED_SECTION_KEYS: [],
+  portalSupersededSectionKeys: () => [],
 }));
 
 import { useSettingsNav } from "@app/components/settings/useSettingsNav";

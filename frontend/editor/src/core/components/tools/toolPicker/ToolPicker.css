@@ -135,3 +135,19 @@
 .tool-picker__view-all {
   margin-top: 0.75rem;
 }
+
+/* The rule only appears once rows scroll beneath the header, so a list at
+   rest has no line separating nothing. Stacked over the scroller, whose
+   negative top margin would otherwise paint rows over the rule. */
+.tool-picker__header {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  background: var(--c-surface);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.12s ease;
+}
+
+.tool-picker__header[data-scrolled] {
+  border-bottom-color: var(--c-border-subtle);
+}
