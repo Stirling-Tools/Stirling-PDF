@@ -71,7 +71,6 @@ windows = { version = "0.62", features = [
 opt-level = 3
 lto = "thin"
 codegen-units = 1
-panic = "abort"
 strip = true
 
 [profile.release.package."*"]

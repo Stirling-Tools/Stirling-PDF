@@ -12,6 +12,23 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
+/* WebKit gives every element with momentum scrolling its own stacking context,
+   which pushed a Modal's dropdown below siblings outside the modal. Dialogs
+   keep the default scrolling behaviour instead. */
+[role="dialog"],
+[role="dialog"] *,
+[role="listbox"],
+[role="listbox"] * {
+  -webkit-overflow-scrolling: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html,
+  body {
+    scroll-behavior: auto;
+  }
+}
+
 /* Give the mount node an explicit height so full-height layouts can size against
    it with percentages. */
 #root {
