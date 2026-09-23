@@ -733,6 +733,24 @@ public class GeneralUtils {
         return patternCache.getMathExpressionPattern().matcher(expression.trim()).matches();
     }
 
+    /*
+     * Whether a token is a well-formed n-function. getMathExpressionPattern only restricts the
+     * characters, so "n+" passes it; the expression is parsed once to reject tokens the evaluator
+     * cannot read. Parsing succeeds or fails on structure alone, so a single n is enough.
+     */
+    private boolean isNFunction(String expression) {
+        if (!isMathExpression(expression)) {
+            return false;
+        }
+        try {
+            new DoubleEvaluator().evaluate(sanitizeNFunction(expression.trim(), 1));
+            return true;
+        } catch (Exception e) {
+            log.debug("Not an n-function: '{}': {}", expression, e.getMessage());
+            return false;
+        }
+    }
+
     private String sanitizeNFunction(String expression, int nValue) {
         // Remove all spaces using a specialized character removal
         StringBuilder sb = new StringBuilder(expression.length());
@@ -799,9 +817,10 @@ public class GeneralUtils {
         List<Integer> partResult = new ArrayList<>();
 
         // First check for n-syntax because it should not be processed as a range. A token that
-        // only contains an "n" ("no", "and") must not reach evaluateNFunc, which throws and would
-        // fail the whole list; it falls through and is dropped like any other bad token.
-        if (part.contains("n") && isMathExpression(part)) {
+        // only contains an "n" ("no", "and") or is not a well-formed expression ("n+") must not
+        // reach evaluateNFunc, which throws and would fail the whole list; it falls through and
+        // is dropped like any other bad token.
+        if (part.contains("n") && isNFunction(part)) {
             partResult = evaluateNFunc(part, totalPages);
             // Adjust the results according to the offset
             for (int i = 0; i < partResult.size(); i++) {

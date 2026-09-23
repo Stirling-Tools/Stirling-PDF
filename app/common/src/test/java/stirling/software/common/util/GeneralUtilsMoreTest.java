@@ -220,7 +220,7 @@ class GeneralUtilsMoreTest {
     class NonFunctionTokenTests {
 
         @ParameterizedTest(name = "\"{0}\" is dropped")
-        @ValueSource(strings = {"no", "and", "none", "xn", "2n+x"})
+        @ValueSource(strings = {"no", "and", "none", "xn", "2n+x", "n+", "n*", "n("})
         @DisplayName("token is dropped like any other non-numeric token")
         void droppedLikeOtherInvalidTokens(String token) {
             assertTrue(GeneralUtils.parsePageList(new String[] {token}, 5, true).isEmpty());
@@ -238,6 +238,12 @@ class GeneralUtilsMoreTest {
             assertThrows(
                     IllegalArgumentException.class,
                     () -> GeneralUtils.parsePageList("2n", 10001, true));
+        }
+
+        @Test
+        @DisplayName("a malformed n-token is dropped even past the evaluation limit")
+        void malformedNTokenPastLimitIsDropped() {
+            assertEquals(List.of(1, 3), GeneralUtils.parsePageList("1,n+,3", 10001, true));
         }
     }
 
