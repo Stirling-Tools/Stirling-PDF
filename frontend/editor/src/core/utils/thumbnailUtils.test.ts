@@ -241,17 +241,18 @@ describe("generateThumbnailForFile — images", () => {
     delete (globalThis as Record<string, unknown>).createImageBitmap;
   });
 
-  it("decodes at thumbnail width and closes the bitmap", async () => {
+  it("skips the decode when the header gives no dimensions", async () => {
     const { generateThumbnailForFile } =
       await import("@app/utils/thumbnailUtils");
     const { closed, draws, calls } = stubBitmapPipeline();
     const file = new File([pngBytes], "photo.png", { type: "image/png" });
     const thumb = await generateThumbnailForFile(file);
-    expect(thumb).toBe("data:image/jpeg;base64,stub");
-    expect(calls[0].resizeWidth).toBe(320);
-    expect(calls[0].resizeHeight).toBeUndefined();
-    expect(draws).toEqual([[0, 0]]);
-    expect(closed).toEqual(["closed"]);
+    // A width-only resize would let an extreme aspect ratio ask for an
+    // arbitrarily tall bitmap, so this falls back to the data URL instead.
+    expect(calls).toEqual([]);
+    expect(draws).toEqual([]);
+    expect(closed).toEqual([]);
+    expect(thumb.startsWith("data:image/png")).toBe(true);
   });
 
   it("passes both dimensions when the header gives the source size", async () => {

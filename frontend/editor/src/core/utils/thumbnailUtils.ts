@@ -10,6 +10,7 @@ import {
   readPdfiumPageMetadata,
 } from "@app/utils/pdfiumPageRender";
 import { jpegExifOrientation } from "@app/utils/jpegOrientation";
+import { lossyEncodeOptions } from "@app/utils/canvasImageEncoding";
 
 export interface ThumbnailWithMetadata {
   thumbnail: string; // Always returns a thumbnail (placeholder if needed)
@@ -403,6 +404,48 @@ function thumbnailResizeOptions(source: { width: number; height: number }): {
   };
 }
 
+function paintThumbnail(
+  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+  bitmap: ImageBitmap,
+): void {
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, bitmap.width, bitmap.height);
+  ctx.drawImage(bitmap, 0, 0);
+}
+
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+}
+
+/** JPEG-encode a bitmap. OffscreenCanvas keeps the encode off the main thread
+ *  where the engine supports it; jsdom and older WebKit fall back to a DOM
+ *  canvas. */
+async function encodeThumbnailJpeg(bitmap: ImageBitmap): Promise<string> {
+  if (typeof OffscreenCanvas === "function") {
+    const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("2d context unavailable");
+    paintThumbnail(ctx, bitmap);
+    // The probe keeps WebKit's silent PNG serialisation of an unencodable type
+    // from inflating the thumbnail.
+    const blob = await canvas.convertToBlob(await lossyEncodeOptions(0.8));
+    return blobToDataUrl(blob);
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = bitmap.width;
+  canvas.height = bitmap.height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("2d context unavailable");
+  paintThumbnail(ctx, bitmap);
+  return canvas.toDataURL("image/jpeg", 0.8);
+}
+
 /**
  * Generate thumbnail for any file type - always returns a thumbnail (placeholder if needed)
  */
@@ -420,26 +463,17 @@ export async function generateThumbnailForFile(file: File): Promise<string> {
   if (file.type.startsWith("image/")) {
     try {
       const source = await readImageDimensions(file);
+      // Without a header ratio a width-only request would let an extreme
+      // portrait ask for a 320 x tens-of-millions bitmap, so unknown sizes take
+      // the data URL path below instead of decoding.
+      if (!source) throw new Error("image dimensions unavailable");
       const bitmap = await createImageBitmap(file, {
-        // A width-only request derives the height from the source aspect ratio,
-        // so a 1x100000px image would ask for a 320x32,000,000 bitmap. Pass
-        // both dimensions when the header gave us a ratio to scale from.
-        ...(source
-          ? thumbnailResizeOptions(source)
-          : { resizeWidth: IMAGE_THUMBNAIL_MAX_SIZE }),
+        ...thumbnailResizeOptions(source),
         resizeQuality: "high",
         imageOrientation: "from-image",
       });
       try {
-        const canvas = document.createElement("canvas");
-        canvas.width = bitmap.width;
-        canvas.height = bitmap.height;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) throw new Error("2d context unavailable");
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(bitmap, 0, 0);
-        return canvas.toDataURL("image/jpeg", 0.8);
+        return await encodeThumbnailJpeg(bitmap);
       } finally {
         bitmap.close();
       }
