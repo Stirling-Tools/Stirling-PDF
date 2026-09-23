@@ -104,8 +104,10 @@ function readFontData(
   }
   if (size <= 0 || size > MAX_FACE_BYTES) return null;
 
-  const buf = w.malloc(size);
+  // scratchPtr throws when the arena cannot grow: allocate it before the
+  // font-data buffer so a throw cannot orphan an allocation outside try.
   const out = scratchPtr(m, SCRATCH.faceOut, 4);
+  const buf = w.malloc(size);
   try {
     if (!m.FPDFFont_GetFontData(fontPtr, buf, size, out)) return null;
     const heap = new Uint8Array(
