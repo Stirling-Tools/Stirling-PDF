@@ -5,11 +5,36 @@
  * and ensuring proper cleanup when operations complete.
  */
 
-import {
-  GlobalWorkerOptions,
-  getDocument,
-  PDFDocumentProxy,
-} from "pdfjs-dist/legacy/build/pdf.mjs";
+import type { PDFDocumentProxy } from "pdfjs-dist/legacy/build/pdf.mjs";
+
+type PdfJs = typeof import("pdfjs-dist/legacy/build/pdf.mjs");
+
+let pdfjs: Promise<PdfJs> | null = null;
+
+/**
+ * pdf.js, loaded on first use rather than with this module. The manager is on the
+ * startup graph (file analysis runs on every add), and a static import put all of
+ * pdf.js on the initial load before anything needed it. A failed load is not
+ * cached, so a dropped connection does not end PDF parsing for the session.
+ */
+export function loadPdfjs(): Promise<PdfJs> {
+  pdfjs ??= import("pdfjs-dist/legacy/build/pdf.mjs").then(
+    (lib) => {
+      lib.GlobalWorkerOptions.workerSrc = new URL(
+        "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
+        import.meta.url,
+      ).toString();
+      (lib.GlobalWorkerOptions as { docBaseUrl?: string }).docBaseUrl =
+        undefined;
+      return lib;
+    },
+    (error: unknown) => {
+      pdfjs = null;
+      throw error;
+    },
+  );
+  return pdfjs;
+}
 
 /** A document did not open inside the caller's `openTimeoutMs`. */
 export class PdfOpenTimeout extends Error {
@@ -25,31 +50,14 @@ class PDFWorkerManager {
   private destroyingDocuments = new WeakSet<PDFDocumentProxy>();
   private workerCount = 0;
   private maxWorkers = 10; // Limit concurrent workers
-  private isInitialized = false;
 
-  private constructor() {
-    this.initializeWorker();
-  }
+  private constructor() {}
 
   static getInstance(): PDFWorkerManager {
     if (!PDFWorkerManager.instance) {
       PDFWorkerManager.instance = new PDFWorkerManager();
     }
     return PDFWorkerManager.instance;
-  }
-
-  /**
-   * Initialize PDF.js worker once globally
-   */
-  private initializeWorker(): void {
-    if (!this.isInitialized) {
-      GlobalWorkerOptions.workerSrc = new URL(
-        "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
-        import.meta.url,
-      ).toString();
-      (GlobalWorkerOptions as { docBaseUrl?: string }).docBaseUrl = undefined;
-      this.isInitialized = true;
-    }
   }
 
   /**
@@ -88,6 +96,7 @@ class PDFWorkerManager {
       pdfData = data; // Pass through as-is
     }
 
+    const { getDocument } = await loadPdfjs();
     const loadingTask = getDocument(
       typeof pdfData === "string"
         ? {

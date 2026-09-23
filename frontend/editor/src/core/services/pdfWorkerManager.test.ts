@@ -10,6 +10,7 @@ vi.mock("pdfjs-dist/legacy/build/pdf.mjs", () => ({
 }));
 
 import {
+  loadPdfjs,
   pdfWorkerManager,
   PdfOpenTimeout,
 } from "@app/services/pdfWorkerManager";
@@ -66,5 +67,28 @@ describe("createDocument openTimeoutMs", () => {
     await vi.advanceTimersByTimeAsync(60_000);
 
     expect(settled).not.toHaveBeenCalled();
+  });
+});
+
+describe("loadPdfjs", () => {
+  test("points pdf.js at its worker when it first loads", async () => {
+    const { GlobalWorkerOptions } = await loadPdfjs();
+
+    expect(GlobalWorkerOptions.workerSrc).toMatch(/pdf\.worker\.min\.mjs$/);
+  });
+
+  test("a failed load is not cached, so the next call retries it", async () => {
+    let failures = 1;
+    vi.resetModules();
+    vi.doMock("pdfjs-dist/legacy/build/pdf.mjs", () => {
+      if (failures-- > 0)
+        throw new Error("Failed to fetch dynamically imported module");
+      return { GlobalWorkerOptions: {}, getDocument };
+    });
+    const fresh = await import("@app/services/pdfWorkerManager");
+
+    await expect(fresh.loadPdfjs()).rejects.toThrow();
+    const retried = await fresh.loadPdfjs();
+    expect(typeof retried.getDocument).toBe("function");
   });
 });
