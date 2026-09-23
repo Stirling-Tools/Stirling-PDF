@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { useZoom, ZoomMode } from "@embedpdf/plugin-zoom/react";
 import { useSpread, SpreadMode } from "@embedpdf/plugin-spread/react";
 import { useScroll } from "@embedpdf/plugin-scroll/react";
@@ -77,7 +83,7 @@ function ZoomAPIBridgeInner({
 
   // Keep zoom ref updated; the capability identity can change and
   // requestFitWidth plus bridge registration read through this ref.
-  useEffect(() => {
+  useLayoutEffect(() => {
     zoomRef.current = zoom;
   }, [zoom]);
 
@@ -318,7 +324,7 @@ function ZoomAPIBridgeInner({
   const zoomStateCurrentZoomLevel = liveZoomState?.currentZoomLevel;
 
   // Register bridge - only re-run when actual values change
-  useEffect(() => {
+  useLayoutEffect(() => {
     const currentZoom = zoomRef.current;
     if (!currentZoom || zoomStateCurrentZoomLevel === undefined) {
       return;

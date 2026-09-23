@@ -12,6 +12,7 @@
 
 security:
   enableLogin: true # set to 'true' to enable login
+  ssoAutoLogin: false
   loginAttemptCount: 5 # lock user account after 5 tries; when using e.g. Fail2Ban you can deactivate the function with -1
   loginResetTimeMinutes: 120 # lock account for 2 hours after x attempts
   loginMethod: all # Accepts values like 'all' and 'normal'(only Login with Username/Password), 'oauth2'(only Login with OAuth2) or 'saml2'(only Login with SAML2)
@@ -92,7 +93,6 @@ premium:
   key: 00000000-0000-0000-0000-000000000000
   enabled: false # Enable license key checks for pro/enterprise features
   proFeatures:
-    ssoAutoLogin: false
     customMetadata:
       autoUpdateMetadata: false
       author: username
@@ -413,6 +413,11 @@ aiEngine:
     mathAuditor: true # Numerical/formula contradiction auditing
     pdfComment: true # AI-authored PDF comments/annotations
     classify: true # Automatic document classification/labelling
+
+# DocParse: document understanding for ingestion pipelines (chunking + knowledge-base
+# indexing).
+docparse:
+  enabled: true # Master switch; hides the DocParse endpoints when false
 
 formDetection:
   enabled: true # Master on/off switch for the Auto Form Detection feature

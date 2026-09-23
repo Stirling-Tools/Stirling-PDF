@@ -87,4 +87,17 @@ describe("sortReadAloudItems", () => {
     sortReadAloudItems(items);
     expect(items.map((item) => item.str)).toEqual(["b", "a"]);
   });
+
+  it("reads a 90-degree rotated page from its visual top", () => {
+    // 90° clockwise: x' = y, y' = x, so the PDF-leftmost word is on top.
+    const rotated = (str: string, left: number, bottom: number) => ({
+      ...word(str, left, bottom),
+      viewportTransform: [0, 1, 1, 0, 0, 0],
+    });
+    const items = [rotated("right", 300, 100), rotated("left", 50, 100)];
+    expect(sortReadAloudItems(items).map((item) => item.str)).toEqual([
+      "left",
+      "right",
+    ]);
+  });
 });

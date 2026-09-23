@@ -1,3 +1,8 @@
+import { EditorDeliverySelect } from "@portal/components/pipelines/EditorDeliverySelect";
+import {
+  parseTrigger,
+  buildTriggerFor,
+} from "@portal/components/pipelines/inputTriggerConfig";
 import { requiresClassification } from "@app/data/classificationConditions";
 import { isConditionComplete } from "@app/conditions/validation";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -57,7 +62,6 @@ import {
   type PolicyRunView,
   type RunOutputFile,
   type TestRunAsset,
-  type TriggerConfig,
   type TriggerInfo,
   type TriggerOutcome,
 } from "@portal/api/pipelines";
@@ -74,6 +78,7 @@ import { availableOutputModes } from "@portal/components/pipelines/outputModes";
 import { type SourceView } from "@portal/api/sources";
 import { useSources } from "@portal/queries/sources";
 import { useCanManagePolicies } from "@portal/queries/policyPermissions";
+import { isReadableSource } from "@portal/components/sources/sourceTypes";
 import { SourceModal } from "@portal/components/sources/SourceModal";
 import { EDITOR_SOURCE_TYPE } from "@portal/components/sources/sourceTypes";
 import { useAsync } from "@portal/hooks/useAsync";
@@ -110,11 +115,17 @@ import {
   stepOperation,
 } from "@portal/components/pipelines/integrationStep";
 import {
+  isIngestStep,
+  ingestStepConfigured,
+  needsCorpusDestination,
+  vectorDestinationConfigured,
+  prepareVectorDestination,
+} from "@portal/components/pipelines/docparseStep";
+import {
   MANUAL,
   MANUAL_OPTION,
   PipelineInputTrigger,
   type EditorRunOn,
-  type ScheduleUnit,
   type WorkingInput,
 } from "@portal/components/pipelines/PipelineInputTrigger";
 import "@portal/views/PipelineBuilder.css";
@@ -129,28 +140,6 @@ type RunResult = {
   text: string;
 };
 
-function parseTrigger(trigger: TriggerConfig | null): {
-  triggerType: string;
-  count: string;
-  unit: ScheduleUnit;
-} {
-  if (!trigger) return { triggerType: MANUAL, count: "1", unit: "HOURS" };
-  if (trigger.type === "schedule") {
-    const schedule = trigger.options?.schedule as
-      | { type?: string; count?: number; unit?: ScheduleUnit }
-      | undefined;
-    if (schedule?.type === "every") {
-      return {
-        triggerType: "schedule",
-        count: String(schedule.count ?? 1),
-        unit: schedule.unit ?? "HOURS",
-      };
-    }
-    return { triggerType: "schedule", count: "1", unit: "HOURS" };
-  }
-  return { triggerType: trigger.type, count: "1", unit: "HOURS" };
-}
-
 /** The input row with nothing chosen yet: no source, manual trigger. */
 function blankInput(): WorkingInput {
   return {
@@ -159,24 +148,6 @@ function blankInput(): WorkingInput {
     scheduleCount: "1",
     scheduleUnit: "HOURS",
   };
-}
-
-/** The trigger config for the input row, or null for a manual (on-demand) input. */
-function buildTriggerFor(input: WorkingInput): TriggerConfig | null {
-  if (input.triggerType === MANUAL) return null;
-  if (input.triggerType === "schedule") {
-    return {
-      type: "schedule",
-      options: {
-        schedule: {
-          type: "every",
-          count: Number(input.scheduleCount),
-          unit: input.scheduleUnit,
-        },
-      },
-    };
-  }
-  return { type: input.triggerType, options: {} };
 }
 
 /**
@@ -188,16 +159,14 @@ const CLASSIFY_OPERATION = "/api/v1/ai/tools/classify-and-label";
 function isClassifyStep(step: WorkingToolStep): boolean {
   return step.operation === CLASSIFY_OPERATION;
 }
-
 function isClassifyTool(tool: ExecutableTool): boolean {
   return (
     tool.endpoint === CLASSIFY_OPERATION ||
     tool.endpoints?.includes(CLASSIFY_OPERATION) === true
   );
 }
-
 /** Whether a source can be written to, i.e. offered as a pipeline destination. */
-function isWritableSource(source: SourceView): boolean {
+function isWritableSource(source: { type: string }): boolean {
   return (availableOutputModes() as string[]).includes(source.type);
 }
 
@@ -316,6 +285,12 @@ export function PipelineBuilder() {
   const [outputOptions, setOutputOptions] = useState<Record<string, unknown>>(
     {},
   );
+  const [destinationRequested, setDestinationRequested] = useState(false);
+  const requiresDestination = needsCorpusDestination(steps);
+  const externalEditorOutput =
+    isEditorInput &&
+    (requiresDestination || outputIds.length > 0 || destinationRequested);
+  const returnsToEditor = isEditorInput && !externalEditorOutput;
   const [outputType, setOutputType] = useState("inline");
   /**
    * Whether the user has asked for each end of the chain yet, distinguishing "not offered" from
@@ -349,32 +324,10 @@ export function PipelineBuilder() {
   const [sourceModal, setSourceModal] = useState<{
     open: boolean;
     sourceId: string | null;
+    direction?: "input" | "output";
   }>({ open: false, sourceId: null });
-  // A source created from here is the one the pipeline was missing, so select it
-  // on arrival - as the input or the destination, whichever asked for it.
-  const autoSelectRef = useRef<"input" | "output" | null>(null);
-  const knownSourceIdsRef = useRef<Set<string>>(new Set());
-  useEffect(() => {
-    const target = autoSelectRef.current;
-    const known = knownSourceIdsRef.current;
-    knownSourceIdsRef.current = new Set(availableSources.map((s) => s.id));
-    if (!target) return;
-    const fresh = availableSources.find((s) => !known.has(s.id));
-    if (!fresh) return;
-    // One arrival answers the request, whatever type it turned out to be.
-    autoSelectRef.current = null;
-    if (target === "input") {
-      changeInputSource(fresh.id);
-    } else if (isWritableSource(fresh)) {
-      // A source of an unwritable type is left alone rather than becoming a
-      // destination the picker has no option for.
-      setOutputIds([fresh.id]);
-    }
-  }, [availableSources]);
-
   function createSourceFor(target: "input" | "output") {
-    autoSelectRef.current = target;
-    setSourceModal({ open: true, sourceId: null });
+    setSourceModal({ open: true, sourceId: null, direction: target });
   }
 
   const mounted = useRef(true);
@@ -439,8 +392,13 @@ export function PipelineBuilder() {
     setSteps(
       (policy?.steps ?? []).map((step) => deserializeToolStep(step, allTools)),
     );
-    setOutputIds(seedsEditor ? [] : (policy?.outputIds ?? []));
-    setRoutingRules(seedsEditor ? [] : (policy?.routingRules ?? []));
+    setOutputIds(policy?.outputIds ?? []);
+    setRoutingRules(policy?.routingRules ?? []);
+    setDestinationRequested(
+      seedsEditor &&
+        ((policy?.outputIds?.length ?? 0) > 0 ||
+          (policy?.routingRules?.length ?? 0) > 0),
+    );
     setSeeded(true);
   }, [
     isEdit,
@@ -460,10 +418,12 @@ export function PipelineBuilder() {
   const triggerFitsType = (trigger: TriggerInfo, type: string) =>
     !trigger.requiresSource || trigger.supportedSourceTypes.includes(type);
 
-  const sourceOptions = availableSources.map((source) => ({
-    value: source.id,
-    label: source.name,
-  }));
+  const sourceOptions = availableSources
+    .filter(isReadableSource)
+    .map((source) => ({
+      value: source.id,
+      label: source.name,
+    }));
 
   // Manual plus every trigger compatible with this row's source. Manual only until a source is set.
   function triggerOptionsFor(sourceId: string) {
@@ -508,11 +468,6 @@ export function PipelineBuilder() {
         triggerType: keepTrigger ? current.triggerType : MANUAL,
       };
     });
-    // The editor hands results back to the workspace, so it has no destination to choose.
-    if (type === EDITOR_SOURCE_TYPE) {
-      setOutputIds([]);
-      setOutputAsked(false);
-    }
   }
 
   /** Put an end on the chain and open it, so the click that asks for it also offers the choice. */
@@ -579,9 +534,14 @@ export function PipelineBuilder() {
   function updateStepParams(index: number, update: ParamsUpdate) {
     setSteps((current) =>
       current.map((step, i) => {
-        // Integration steps are deliberately toolId-less, so they must be editable too; only a
-        // genuinely unrecognised step has no editor to send changes from.
-        if (i !== index || (step.toolId === null && !isIntegrationStep(step)))
+        // Integration and DocParse steps are deliberately toolId-less, so they must be editable
+        // too; only a genuinely unrecognised step has no editor to send changes from.
+        if (
+          i !== index ||
+          (step.toolId === null &&
+            !isIntegrationStep(step) &&
+            !isIngestStep(step))
+        )
           return step;
         // Resolve the update against the CURRENT step params, so a settings UI firing several
         // single-field changes in one tick (convert's source-format change resets target + options)
@@ -617,6 +577,7 @@ export function PipelineBuilder() {
     if (op) return t(op.labelKey);
     if (isIntegrationStep(step))
       return t("portal.pipelines.builder.sendToSystem");
+    if (isIngestStep(step)) return t("portal.policies.endpoints.ingest");
     const entry = step.toolId ? allTools[step.toolId] : undefined;
     return entry?.name ?? humanizeOperation(step.operation);
   }
@@ -643,6 +604,7 @@ export function PipelineBuilder() {
     .filter(
       (step) =>
         !integrationStepConfigured(step) ||
+        !ingestStepConfigured(step, returnsToEditor) ||
         stepNeedsConfiguring(step, allTools),
     )
     .map(stepLabel);
@@ -771,15 +733,29 @@ export function PipelineBuilder() {
 
   // Each validity condition is defined exactly once here, then consumed both by the graph (which
   // flags each end) and by the blocker list below.
-  const sourceChosen = input.sourceId !== "";
+  const sourceChosen = availableSources.some(
+    (source) => source.id === input.sourceId && isReadableSource(source),
+  );
   // An editor pipeline has no trigger to schedule: it fires as each file passes through.
   const scheduleValid =
     isEditorInput ||
     input.triggerType !== "schedule" ||
     Number(input.scheduleCount) > 0;
   const inputValid = sourceChosen && scheduleValid;
-  // Nor a destination: an editor pipeline's results land back in the workspace the file came from.
-  const outputValid = isEditorInput || outputIds.length === 1;
+  const destinationIds = new Set([
+    ...outputIds,
+    ...routingRules.map((rule) => rule.outputId),
+  ]);
+  const vectorOutput = writableSources.some(
+    (source) => destinationIds.has(source.id) && source.type === "vectordb",
+  );
+  const vectorReady = !vectorOutput || vectorDestinationConfigured(steps);
+  const destinationReady =
+    outputIds.length === 1 &&
+    writableSources.some(
+      (source) => source.id === outputIds[0] && source.status !== "disabled",
+    );
+  const outputValid = returnsToEditor || (destinationReady && vectorReady);
   const classifies = steps.some(isClassifyStep);
   // Mirrors PolicyValidator.validateRoutingRules: a rule with nothing to match on, or nowhere to
   // send, would be rejected on save - so it is named here rather than surfaced as a server error.
@@ -797,14 +773,14 @@ export function PipelineBuilder() {
   const blockers: string[] = [];
   if (name.trim() === "")
     blockers.push(t("portal.pipelines.builder.blocker.name"));
-  // An editor pipeline has the editor as its chosen source and needs no destination, so sourceChosen
-  // is already true and outputValid already passes for it - these checks simply never fire.
   if (!sourceChosen)
     blockers.push(t("portal.pipelines.builder.blocker.source"));
   else if (!scheduleValid)
     blockers.push(t("portal.pipelines.builder.blocker.schedule"));
-  if (!outputValid)
+  if (!returnsToEditor && !destinationReady)
     blockers.push(t("portal.pipelines.builder.blocker.destination"));
+  if (!vectorReady)
+    blockers.push(t("portal.pipelines.builder.ingest.destinationNeedsChunks"));
   if (!routingValid)
     blockers.push(
       t(
@@ -926,7 +902,7 @@ export function PipelineBuilder() {
         enabled: enabledOverride ?? enabled,
         // Blocking is only meaningful for an editor pipeline; a source-backed one is never a policy,
         // so don't persist a stale flag if the source was switched away from the editor.
-        required: isEditorInput && required,
+        required: returnsToEditor && required,
         icon,
         // The editor is virtual - there is no stored Source to pull from, and nothing server-side
         // sweeps it - so it is never a wire input; its participation is recorded on `editor` below.
@@ -940,8 +916,8 @@ export function PipelineBuilder() {
         editor: { allowed: isEditorInput, runOn },
         // An editor pipeline delivers back into the workspace. A stored destination would send the
         // run to a folder or bucket instead, leaving the editor's copy untouched.
-        outputIds: isEditorInput ? [] : outputIds,
-        routingRules: isEditorInput ? [] : routingRules,
+        outputIds: returnsToEditor ? [] : outputIds,
+        routingRules: returnsToEditor ? [] : routingRules,
       };
       await savePipeline(policy);
       await invalidatePipelines();
@@ -1213,7 +1189,9 @@ export function PipelineBuilder() {
       // than the ungrammatical, untranslatable "Run every 1 hours".
       return t(
         `portal.pipelines.composer.runsEvery.${input.scheduleUnit.toLowerCase()}`,
-        { count: Number(input.scheduleCount) || 1 },
+        {
+          count: Number(input.scheduleCount) || 1,
+        },
       );
     return t(`portal.pipelines.trigger.${input.triggerType}`, {
       defaultValue: input.triggerType,
@@ -1238,6 +1216,9 @@ export function PipelineBuilder() {
   function stepDetail(step: WorkingToolStep): string | undefined {
     if (step.support === "unsupported")
       return t("portal.pipelines.builder.usesDefaults");
+    // Integration and DocParse steps are toolId-less by design and carry their own settings UI,
+    // so "unknown" here means "not a registry tool", not "we cannot drive this".
+    if (isIntegrationStep(step) || isIngestStep(step)) return undefined;
     if (step.support === "unknown")
       return t("portal.pipelines.builder.unknownStep");
     return undefined;
@@ -1301,7 +1282,7 @@ export function PipelineBuilder() {
     if (selected === "input") {
       // Nothing to pick from yet: a dropdown of nothing helps no one, so offer only the way to make
       // the first source. The trigger has no meaning without a source either, so it waits too.
-      const hasSources = availableSources.length > 0;
+      const hasSources = sourceOptions.length > 0;
       return (
         <>
           {hasSources && (
@@ -1356,43 +1337,62 @@ export function PipelineBuilder() {
       );
     }
 
-    if (selected === "output" && isEditorInput) {
-      return (
-        <p className="portal-builder__muted">
-          {t(
-            "portal.pipelines.builder.editorDestinationHelp",
-            "This pipeline runs on the files in your workspace, and its results replace the file it ran on. There is nowhere else to send them.",
-          )}
-        </p>
-      );
-    }
-
     if (selected === "output") {
       return (
         <>
-          <RoutingSection
-            rules={routingRules}
-            onChange={setRoutingRules}
-            destinations={writableSources}
-            onCreateDestination={() => createSourceFor("output")}
-            canClassify={classifies}
-            aiClassificationEnabled={aiClassificationEnabled}
-          />
-          <DestinationPicker
-            label={
-              routingRules.length > 0
-                ? t(
-                    "portal.pipelines.builder.routing.fallback",
-                    "Everything else goes to",
-                  )
-                : undefined
-            }
-            sources={writableSources}
-            value={outputIds}
-            onChange={setOutputIds}
-            onCreateNew={() => createSourceFor("output")}
-            onEdit={(sourceId) => setSourceModal({ open: true, sourceId })}
-          />
+          {isEditorInput && (
+            <EditorDeliverySelect
+              external={externalEditorOutput}
+              requiresDestination={requiresDestination}
+              onChange={(external) => {
+                setDestinationRequested(external);
+                if (!external) {
+                  setOutputIds([]);
+                  setRoutingRules([]);
+                }
+              }}
+            />
+          )}
+          {!returnsToEditor && (
+            <>
+              <RoutingSection
+                rules={routingRules}
+                onChange={setRoutingRules}
+                destinations={writableSources}
+                onCreateDestination={() => createSourceFor("output")}
+                canClassify={classifies}
+                aiClassificationEnabled={aiClassificationEnabled}
+              />
+              <DestinationPicker
+                label={
+                  routingRules.length > 0
+                    ? t(
+                        "portal.pipelines.builder.routing.fallback",
+                        "Everything else goes to",
+                      )
+                    : undefined
+                }
+                sources={writableSources}
+                value={outputIds}
+                onChange={setOutputIds}
+                onCreateNew={() => createSourceFor("output")}
+                onEdit={(sourceId) => setSourceModal({ open: true, sourceId })}
+              />
+            </>
+          )}
+          {vectorOutput && !vectorReady && (
+            <>
+              <p className="portal-builder__muted">
+                {t("portal.pipelines.builder.ingest.destinationNeedsChunks")}
+              </p>
+              <Button
+                size="sm"
+                onClick={() => setSteps(prepareVectorDestination(steps))}
+              >
+                {t("portal.pipelines.builder.ingest.prepareDestination")}
+              </Button>
+            </>
+          )}
         </>
       );
     }
@@ -1400,6 +1400,7 @@ export function PipelineBuilder() {
     if (selectedStep) {
       return (
         <PipelineStepSettings
+          editorInput={returnsToEditor}
           step={selectedStep}
           registry={allTools}
           onChange={(params) => updateStepParams(chosenSteps[0], params)}
@@ -1422,7 +1423,7 @@ export function PipelineBuilder() {
           onIconChange={setIcon}
           required={required}
           onRequiredChange={setRequired}
-          runsOnEditor={isEditorInput}
+          runsOnEditor={returnsToEditor}
           canManagePolicies={canManagePolicies}
           permissionsLoading={permissionsLoading}
           enabled={enabled}
@@ -1447,7 +1448,7 @@ export function PipelineBuilder() {
           onIconChange={setIcon}
           required={required}
           onRequiredChange={setRequired}
-          runsOnEditor={isEditorInput}
+          runsOnEditor={returnsToEditor}
           canManagePolicies={canManagePolicies}
           permissionsLoading={permissionsLoading}
           canSave={canSave}
@@ -1508,7 +1509,7 @@ export function PipelineBuilder() {
                 : null
             }
             output={
-              isEditorInput
+              returnsToEditor
                 ? {
                     label: t(
                       "portal.pipelines.builder.editorDestination",
@@ -1518,9 +1519,9 @@ export function PipelineBuilder() {
                       "portal.pipelines.builder.editorDestinationDetail",
                       "Replaces the file you ran it on",
                     ),
-                    fixed: true,
+                    fixed: false,
                   }
-                : outputAsked || outputValid
+                : isEditorInput || outputAsked || outputValid
                   ? {
                       label:
                         chosenDestination?.name ??
@@ -1535,7 +1536,11 @@ export function PipelineBuilder() {
                           : undefined,
                       warning: outputValid
                         ? undefined
-                        : t("portal.pipelines.builder.needsDestination"),
+                        : chosenDestination && !vectorReady
+                          ? t(
+                              "portal.pipelines.builder.ingest.destinationNeedsChunks",
+                            )
+                          : t("portal.pipelines.builder.needsDestination"),
                     }
                   : null
             }
@@ -1698,8 +1703,20 @@ export function PipelineBuilder() {
       </Modal>
 
       <SourceModal
+        direction={sourceModal.direction}
         open={sourceModal.open}
         sourceId={sourceModal.sourceId}
+        onCreated={(source) => {
+          if (!source.id) return;
+          if (sourceModal.direction === "input" && isReadableSource(source)) {
+            changeInputSource(source.id);
+          } else if (
+            sourceModal.direction === "output" &&
+            isWritableSource(source)
+          ) {
+            setOutputIds([source.id]);
+          }
+        }}
         onClose={() => setSourceModal({ open: false, sourceId: null })}
       />
     </div>

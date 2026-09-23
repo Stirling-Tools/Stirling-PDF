@@ -24,6 +24,7 @@ interface PlanSelectionStageProps {
    * neither card claims to be chosen: both buttons stay secondary.
    */
   selectedPeriod?: "monthly" | "yearly";
+  compact?: boolean;
 }
 
 export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
@@ -32,10 +33,68 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
   savings,
   onSelectPlan,
   selectedPeriod,
+  compact = false,
 }) => {
   const { t } = useTranslation();
   const isEnterprise = planGroup.tier === "enterprise";
   const seatCount = minimumSeats || 1;
+
+  if (compact) {
+    return (
+      <div
+        role="group"
+        aria-label={t("payment.billingPeriod", "Billing period")}
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+          gap: "0.75rem",
+        }}
+      >
+        {(["monthly", "yearly"] as const).map((period) => {
+          const plan = planGroup[period];
+          if (!plan) return null;
+          const selected = selectedPeriod === period;
+          return (
+            <button
+              key={period}
+              type="button"
+              aria-pressed={selected}
+              onClick={() => onSelectPlan(period)}
+              style={{
+                textAlign: "left",
+                padding: "0.75rem",
+                borderRadius: "0.75rem",
+                cursor: "pointer",
+                color: "var(--c-text)",
+                border: `1px solid ${selected ? "var(--c-primary)" : "var(--c-border)"}`,
+                background: selected
+                  ? "var(--c-primary-subtle)"
+                  : "transparent",
+              }}
+            >
+              <Text component="span" display="block" fw={600}>
+                {period === "monthly"
+                  ? t("payment.monthly", "Monthly")
+                  : t("payment.yearly", "Yearly")}
+              </Text>
+              <Text component="span" display="block" size="sm" c="dimmed">
+                {formatPrice(plan.price, plan.currency, 0)}
+                {period === "monthly"
+                  ? t("payment.capacityStage.perMonth", "/mo")
+                  : t("payment.capacityStage.perYear", "/yr")}
+                {" · "}
+                {period === "yearly" && savings
+                  ? t("payment.planStage.savePercent", "Save {{percent}}%", {
+                      percent: savings.percent,
+                    })
+                  : t("payment.perUserBlock", "per 100 users")}
+              </Text>
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
 
   return (
     <Stack gap="lg" style={{ padding: "1rem 2rem" }}>

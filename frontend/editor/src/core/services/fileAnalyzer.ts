@@ -106,9 +106,10 @@ export class FileAnalyzer {
     // large-file path exists to avoid, so trust the marker instead of it.
     if (file.size >= LARGE_PDF_PARSE_LIMIT) return true;
 
-    const m = await getPdfiumModule();
+    let m: Awaited<ReturnType<typeof getPdfiumModule>> | null = null;
     let docPtr: number | null = null;
     try {
+      m = await getPdfiumModule();
       const arrayBuffer = await file.arrayBuffer();
       docPtr = await openRawDocumentSafe(arrayBuffer, "");
       return false;
@@ -116,7 +117,7 @@ export class FileAnalyzer {
       // Any open failure prompts: a spurious prompt beats a card that never stops spinning.
       return true;
     } finally {
-      if (docPtr != null) {
+      if (m != null && docPtr != null) {
         closeDocAndFreeBuffer(m, docPtr);
       }
     }

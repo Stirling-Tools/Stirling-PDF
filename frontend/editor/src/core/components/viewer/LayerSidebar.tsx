@@ -70,9 +70,11 @@ export function LayerSidebar({
     loadedKeyRef.current = documentCacheKey;
 
     let cancelled = false;
+    let settled = false;
 
     readPdfLayers(file)
       .then((layerList) => {
+        settled = true;
         if (cancelled) return;
 
         if (layerList.length === 0) {
@@ -100,6 +102,7 @@ export function LayerSidebar({
         setStatus("ready");
       })
       .catch((err) => {
+        settled = true;
         if (cancelled) return;
         loadedKeyRef.current = null;
         setStatus("error");
@@ -110,6 +113,11 @@ export function LayerSidebar({
 
     return () => {
       cancelled = true;
+      // A canceled load must not keep its marker: reopening the same document
+      // would hit the loaded guard with status stuck at "loading".
+      if (!settled && loadedKeyRef.current === documentCacheKey) {
+        loadedKeyRef.current = null;
+      }
     };
   }, [file, documentCacheKey, visible]);
 
