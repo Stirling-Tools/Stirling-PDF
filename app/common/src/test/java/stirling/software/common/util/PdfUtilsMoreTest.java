@@ -356,6 +356,25 @@ class PdfUtilsMoreTest {
         }
 
         @Test
+        @DisplayName("a TIFF content type carrying parameters is still recognised")
+        void contentTypeWithParametersStillTiff() throws IOException {
+            CustomPDFDocumentFactory factory = mock(CustomPDFDocumentFactory.class);
+            when(factory.createNewDocument()).thenReturn(new PDDocument());
+
+            MockMultipartFile tiff =
+                    new MockMultipartFile(
+                            "file", "scan", "image/tiff; application=foo", multiFrameTiff());
+
+            byte[] pdfOut =
+                    PdfUtils.imageToPdf(
+                            new MultipartFile[] {tiff}, "fillPage", false, "color", factory);
+
+            try (PDDocument doc = org.apache.pdfbox.Loader.loadPDF(pdfOut)) {
+                assertThat(doc.getNumberOfPages()).isEqualTo(2);
+            }
+        }
+
+        @Test
         @DisplayName("a .tif extension is also handled by the TIFF reader path")
         void tifExtensionHandled() throws IOException {
             CustomPDFDocumentFactory factory = mock(CustomPDFDocumentFactory.class);

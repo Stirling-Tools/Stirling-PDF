@@ -34,6 +34,7 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.springframework.http.InvalidMediaTypeException;
 import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -468,15 +469,28 @@ public class PdfUtils {
      * upload would otherwise take the single-image path and silently drop every frame but one.
      */
     private boolean isTiff(MultipartFile file) {
-        String contentType = file.getContentType();
-        if ("image/tiff".equalsIgnoreCase(contentType)
-                || "image/x-tiff".equalsIgnoreCase(contentType)) {
+        if (hasTiffContentType(file.getContentType())) {
             return true;
         }
         String filename = Filenames.toSimpleFileName(file.getOriginalFilename());
         return filename != null
                 && (filename.toLowerCase(Locale.ROOT).endsWith(".tiff")
                         || filename.toLowerCase(Locale.ROOT).endsWith(".tif"));
+    }
+
+    /** Parsed, not compared whole: RFC 3302 allows parameters such as {@code application=}. */
+    private boolean hasTiffContentType(String contentType) {
+        if (contentType == null) {
+            return false;
+        }
+        try {
+            MediaType mediaType = MediaType.parseMediaType(contentType);
+            return "image".equals(mediaType.getType())
+                    && ("tiff".equals(mediaType.getSubtype())
+                            || "x-tiff".equals(mediaType.getSubtype()));
+        } catch (InvalidMediaTypeException e) {
+            return false;
+        }
     }
 
     /** Every frame becomes a page; streams and reader are released even when a frame fails. */
