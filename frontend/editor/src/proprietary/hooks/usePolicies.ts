@@ -43,8 +43,7 @@ export function usePolicies() {
   const refetchAppConfigRef = useRef(refetchAppConfig);
   refetchAppConfigRef.current = refetchAppConfig;
 
-  // Reconcile local cache against the backend (source of truth), preserving the
-  // locally-cached folderId; retry with backoff since the backend may not be up yet.
+  // Retry with backoff since the backend may not be up yet.
   // On recovery, also re-resolve app config in case its admin/team-leader flags settled false while down.
   useEffect(() => {
     let cancelled = false;
@@ -66,7 +65,7 @@ export function usePolicies() {
       for (const cat of loadPolicyCatalog().categories) {
         const decoded = byCategory.get(cat.id);
         reconciled[cat.id] = decoded
-          ? decodedToState(decoded, local[cat.id]?.folderId)
+          ? decodedToState(decoded)
           : {
               ...local[cat.id],
               configured: false,
@@ -78,7 +77,7 @@ export function usePolicies() {
       // still policies: one set to run on the editor has to reach the auto-run.
       for (const [key, decoded] of byCategory) {
         if (reconciled[key]) continue;
-        reconciled[key] = decodedToState(decoded, local[key]?.folderId);
+        reconciled[key] = decodedToState(decoded);
       }
       // A builder pipeline the backend no longer has was deleted on the Pipelines page. Its cached
       // entry keeps a dead backendId that still satisfies the auto-run filter, so the dispatch

@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from "react";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
 import {
@@ -6,13 +7,6 @@ import {
   type DealStage,
   type ProcurementSnapshot,
 } from "@portal/api/procurement";
-import {
-  CalendarIcon,
-  CheckIcon,
-  DocumentsIcon,
-  KeyIcon,
-  UserPlusIcon,
-} from "@portal/components/icons";
 import { warmCalendly } from "@portal/components/procurement/CalendlyInline";
 import { openApiUrl } from "@portal/api/externalUrl";
 import "@portal/theme/surface.css";
@@ -180,7 +174,7 @@ export function DealStatusHero({
       {isLive && (
         <div className="portal-hero__live">
           <span className="portal-hero__live-tile" aria-hidden>
-            <CheckIcon size={15} />
+            <Icon name="check" size={15} />
           </span>
           <span className="portal-hero__live-text">
             <span className="portal-hero__live-title">
@@ -221,21 +215,21 @@ export function DealStatusHero({
                 label={t("portal.procurement.hero.licenseKey")}
                 onClick={onLicense}
               >
-                <KeyIcon size={15} />
+                <Icon name="key" size={15} />
               </IconAction>
             )}
             <IconAction
               label={t("portal.procurement.hero.documents")}
               onClick={onDocuments}
             >
-              <DocumentsIcon size={15} />
+              <Icon name="file-text" size={15} />
             </IconAction>
             {!isLive && (
               <IconAction
                 label={t("portal.procurement.hero.inviteTeammates")}
                 onClick={onInvite}
               >
-                <UserPlusIcon size={15} />
+                <Icon name="user-plus" size={15} />
               </IconAction>
             )}
             {canSchedule && (
@@ -243,7 +237,7 @@ export function DealStatusHero({
                 label={t("portal.procurement.hero.scheduleCall")}
                 onClick={onSchedule}
               >
-                <CalendarIcon size={15} />
+                <Icon name="calendar" size={15} />
               </IconAction>
             )}
           </div>

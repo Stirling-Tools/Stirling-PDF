@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { DiskFileState } from "@app/components/filesPage/FileGrid";
 import {
@@ -23,11 +23,14 @@ export function useFolderFileStates(
   const { listFiles } = useProcessingFolders();
   const queryClient = useQueryClient();
   const processingFilesKey = qk.processingFolderFiles(processingRecordId ?? "");
+  // Only properties a quiet poll leaves alone: `data` keeps its identity under
+  // structural sharing, `isError` moves on a transition and `errorUpdateCount`
+  // on a failure. Reading `dataUpdatedAt` or `status` here re-rendered every
+  // view on the page every 3s to say nothing had changed.
   const {
     data: processingFiles,
-    dataUpdatedAt: processingFilesUpdatedAt,
-    errorUpdatedAt: processingFilesErrorAt,
-    status: processingFilesStatus,
+    isError: processingPollFailed,
+    errorUpdateCount,
   } = useQuery({
     queryKey: processingFilesKey,
     queryFn: () => listFiles(processingRecordId!),
@@ -37,43 +40,21 @@ export function useFolderFileStates(
   });
 
   const activeProcessingKey = enabled ? (processingRecordId ?? "") : "";
-  const [processingPollFailures, setProcessingPollFailures] = useState({
-    key: "",
-    count: 0,
-  });
-  const processingPollEvent = useRef({ key: "", updatedAt: 0 });
-  useEffect(() => {
-    const key = activeProcessingKey;
-    if (processingPollEvent.current.key !== key) {
-      processingPollEvent.current = { key, updatedAt: 0 };
-      setProcessingPollFailures({ key, count: 0 });
-    }
-    if (!key) return;
-
-    const updatedAt =
-      processingFilesStatus === "error"
-        ? processingFilesErrorAt
-        : processingFilesUpdatedAt;
-    if (!updatedAt || updatedAt <= processingPollEvent.current.updatedAt)
-      return;
-
-    processingPollEvent.current.updatedAt = updatedAt;
-    setProcessingPollFailures((failures) => ({
-      key,
-      count:
-        processingFilesStatus === "error"
-          ? (failures.key === key ? failures.count : 0) + 1
-          : 0,
-    }));
-  }, [
-    activeProcessingKey,
-    processingFilesErrorAt,
-    processingFilesStatus,
-    processingFilesUpdatedAt,
-  ]);
+  // Failures since the last good poll, held as a baseline rather than counted
+  // into state, so tracking them costs no render of its own.
+  const failuresBefore = useRef({ key: "", errors: 0 });
+  if (failuresBefore.current.key !== activeProcessingKey) {
+    failuresBefore.current = {
+      key: activeProcessingKey,
+      errors: errorUpdateCount,
+    };
+  } else if (!processingPollFailed) {
+    failuresBefore.current.errors = errorUpdateCount;
+  }
   const processingStatesUnavailable =
-    processingPollFailures.key === activeProcessingKey &&
-    processingPollFailures.count >= PROCESSING_FILES_FAILURE_LIMIT;
+    Boolean(activeProcessingKey) &&
+    errorUpdateCount - failuresBefore.current.errors >=
+      PROCESSING_FILES_FAILURE_LIMIT;
 
   const fileStates = useMemo(
     () =>

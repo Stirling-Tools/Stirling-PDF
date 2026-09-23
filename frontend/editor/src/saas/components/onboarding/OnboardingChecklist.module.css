@@ -55,7 +55,6 @@
 }
 
 .chevron {
-  font-size: 0.95rem !important;
   color: var(--mantine-color-dimmed);
 }
 
@@ -76,12 +75,7 @@
   color: var(--mantine-color-text);
 }
 
-.closeIcon {
-  font-size: 0.95rem !important;
-}
-
 .completeIcon {
-  font-size: 1.05rem !important;
   color: var(--c-accent-text);
 }
 
@@ -130,12 +124,10 @@
 }
 
 .checkDone {
-  font-size: 1.05rem !important;
   color: var(--c-accent-text);
 }
 
 .checkTodo {
-  font-size: 1.05rem !important;
   color: var(--mantine-color-default-border);
 }
 

@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
 import "@app/components/shared/config/SettingsCard.css";
 
@@ -51,10 +51,9 @@ export function SettingsCard({
             setEverOpened(true);
           }}
         >
-          <LocalIcon
-            icon="expand-more-rounded"
-            width={16}
-            height={16}
+          <Icon
+            name="chevron-down"
+            size={16}
             className="settings-card__chevron"
           />
           <span className="settings-card__title">{title}</span>
