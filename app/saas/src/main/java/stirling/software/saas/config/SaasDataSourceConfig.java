@@ -45,6 +45,12 @@ public class SaasDataSourceConfig {
     @Value("${spring.datasource.hikari.keepalive-time:300000}")
     private long keepaliveTime;
 
+    @Value("${spring.datasource.hikari.connection-timeout:30000}")
+    private long connectionTimeout;
+
+    @Value("${spring.datasource.hikari.leak-detection-threshold:20000}")
+    private long leakDetectionThreshold;
+
     @Value("${spring.datasource.hikari.data-source-properties.ApplicationName:StirlingPDF-SaaS}")
     private String applicationName;
 
@@ -74,15 +80,19 @@ public class SaasDataSourceConfig {
         config.setIdleTimeout(idleTimeout);
         config.setMaxLifetime(maxLifetime);
         config.setKeepaliveTime(keepaliveTime);
+        config.setConnectionTimeout(connectionTimeout);
+        config.setLeakDetectionThreshold(leakDetectionThreshold);
         if (connectionInitSql != null && !connectionInitSql.isBlank()) {
             config.setConnectionInitSql(connectionInitSql);
         }
 
         log.info(
-                "Saas DataSource configured (ApplicationName: '{}', max pool: {}, min idle: {}, search_path init: '{}')",
+                "Saas DataSource configured (ApplicationName: '{}', max pool: {}, min idle: {}, connection timeout: {}ms, leak detection: {}ms, search_path init: '{}')",
                 applicationName,
                 maximumPoolSize,
                 minimumIdle,
+                connectionTimeout,
+                leakDetectionThreshold,
                 connectionInitSql);
 
         return new HikariDataSource(config);

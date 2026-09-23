@@ -45,6 +45,8 @@ class SaasDataSourceConfigTest {
         ReflectionTestUtils.setField(config, "idleTimeout", 600000L);
         ReflectionTestUtils.setField(config, "maxLifetime", 1800000L);
         ReflectionTestUtils.setField(config, "keepaliveTime", 300000L);
+        ReflectionTestUtils.setField(config, "connectionTimeout", 30000L);
+        ReflectionTestUtils.setField(config, "leakDetectionThreshold", 20000L);
         ReflectionTestUtils.setField(config, "applicationName", "StirlingPDF-SaaS");
         ReflectionTestUtils.setField(
                 config, "connectionInitSql", "SET search_path TO stirling_pdf, auth, public");
@@ -110,6 +112,8 @@ class SaasDataSourceConfigTest {
             assertThat(hikari.getIdleTimeout()).isEqualTo(600000L);
             assertThat(hikari.getMaxLifetime()).isEqualTo(1800000L);
             assertThat(hikari.getKeepaliveTime()).isEqualTo(300000L);
+            assertThat(hikari.getConnectionTimeout()).isEqualTo(30000L);
+            assertThat(hikari.getLeakDetectionThreshold()).isEqualTo(20000L);
             assertThat(hikari.getDriverClassName())
                     .isEqualTo(DatabaseDriver.POSTGRESQL.getDriverClassName());
             assertThat(hikari.getConnectionInitSql())
