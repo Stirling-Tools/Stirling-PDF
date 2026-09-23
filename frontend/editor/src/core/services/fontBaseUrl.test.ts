@@ -13,13 +13,13 @@ describe("getFontBaseUrl", () => {
     mockedApiBase.mockReturnValue("/");
   });
 
-  it("resolves fonts under the API root", () => {
-    expect(getFontBaseUrl()).toBe("/fonts");
+  it("resolves fonts under the API root as an absolute URL", () => {
+    expect(getFontBaseUrl()).toBe(`${window.location.origin}/fonts`);
   });
 
   it("keeps a context-path prefix", () => {
     mockedApiBase.mockReturnValue("/stirling/");
-    expect(getFontBaseUrl()).toBe("/stirling/fonts");
+    expect(getFontBaseUrl()).toBe(`${window.location.origin}/stirling/fonts`);
   });
 
   it("keeps an absolute API origin", () => {
