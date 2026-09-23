@@ -10,6 +10,7 @@ const pdfium = vi.hoisted(() => {
     module: null as Record<string, unknown> | null,
     closeCalls: [] as number[],
     freeCalls: [] as number[],
+    allocationOrder: [] as string[],
     nextDocPtr: 1000,
     nextDataPtr: 5000,
   };
@@ -17,6 +18,7 @@ const pdfium = vi.hoisted(() => {
     const heap = new Uint8Array(1 << 20);
     state.closeCalls = [];
     state.freeCalls = [];
+    state.allocationOrder = [];
     const module = {
       PDFiumExt_Init: vi.fn(),
       FPDF_LoadMemDocument: vi.fn(() => ++state.nextDocPtr),
@@ -24,8 +26,14 @@ const pdfium = vi.hoisted(() => {
       FPDF_GetLastError: vi.fn(() => 0),
       pdfium: {
         wasmExports: {
-          malloc: vi.fn(() => (state.nextDataPtr += 1 << 16)),
-          free: vi.fn((p: number) => state.freeCalls.push(p)),
+          malloc: vi.fn(() => {
+            state.allocationOrder.push("malloc");
+            return (state.nextDataPtr += 1 << 16);
+          }),
+          free: vi.fn((p: number) => {
+            state.allocationOrder.push("free");
+            state.freeCalls.push(p);
+          }),
         },
         HEAPU8: heap,
       },
@@ -149,16 +157,12 @@ describe("shared document lifecycle", () => {
     const dataB = new ArrayBuffer(24);
     const docA = await openRawDocumentSafe(dataA);
     closeDocAndFreeBuffer(await getPdfiumModule(), docA);
-
-    const wasm = pdfium.state.module!.pdfium.wasmExports;
-    const mallocsBefore = wasm.malloc.mock.invocationCallOrder.length;
-    const freesBefore = wasm.free.mock.invocationCallOrder.length;
+    pdfium.state.allocationOrder = [];
 
     await openRawDocumentSafe(dataB);
 
-    expect(wasm.free.mock.invocationCallOrder[freesBefore]).toBeLessThan(
-      wasm.malloc.mock.invocationCallOrder[mallocsBefore],
-    );
+    // A's buffer is freed before B's allocation, so the two never coexist.
+    expect(pdfium.state.allocationOrder).toEqual(["free", "malloc"]);
   });
 
   it("queues the release behind a scan so a late open cannot linger", async () => {
