@@ -29,7 +29,10 @@ import { isStirlingFile } from "@app/types/fileContext";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { useNavigationState } from "@app/contexts/NavigationContext";
+import {
+  useNavigationGuard,
+  useNavigationState,
+} from "@app/contexts/NavigationContext";
 import { ViewerContext, useViewer } from "@app/contexts/ViewerContext";
 import { WorkbenchType, isBaseWorkbench } from "@app/types/workbench";
 import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
@@ -345,8 +348,15 @@ export default function WorkbenchBar({
     return terminology.downloadAll;
   }, [currentView, selectedCount, t, terminology]);
 
+  // The page editor's edits live only in memory: download would export the
+  // saved files without them, and close would drop them.
+  const { hasUnsavedChanges } = useNavigationGuard();
+  const pageEditsPending = currentView === "pageEditor" && hasUnsavedChanges;
   const actionsDisabled =
-    totalItems === 0 || allButtonsDisabled || disableForFullscreen;
+    totalItems === 0 ||
+    allButtonsDisabled ||
+    disableForFullscreen ||
+    pageEditsPending;
 
   // Shared by the mobile overflow menu and the desktop icon cluster so the two
   // stay in step; each renders the same actions in its own shape.

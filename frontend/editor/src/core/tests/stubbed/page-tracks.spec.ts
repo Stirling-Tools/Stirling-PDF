@@ -318,6 +318,35 @@ test.describe("Page Editor tracks", () => {
     await expect(saved).not.toContainText("edited");
   });
 
+  test("download and close are disabled while edits are pending", async ({
+    page,
+  }) => {
+    await openPageEditor(page);
+    const rotated = track(page, "rotated-pages.pdf");
+    await expect(rotated.locator("[data-page-id]")).toHaveCount(4, {
+      timeout: 30_000,
+    });
+    const download = page.getByRole("button", { name: "Download Files" });
+    const close = page.getByRole("button", { name: "Close All Files" });
+    await expect(download).toBeEnabled();
+    await expect(close).toBeEnabled();
+
+    const last = rotated.locator("[data-page-id]").nth(3);
+    await last.hover();
+    await last.getByRole("button", { name: "Delete page" }).click();
+    await expect(download).toBeDisabled();
+    await expect(close).toBeDisabled();
+
+    await page
+      .getByRole("button", { name: "Save changes to all files" })
+      .click();
+    await expect(track(page, "rotated-pages.pdf")).toContainText("v2", {
+      timeout: 90_000,
+    });
+    await expect(download).toBeEnabled();
+    await expect(close).toBeEnabled();
+  });
+
   test("the insertion line marks where a right-to-left drag actually lands", async ({
     page,
   }) => {

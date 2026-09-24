@@ -469,7 +469,8 @@ export default function PageTracks() {
     // no handler, and there is no separate export step to leave via.
     registerNavigationWarningHandlers({
       onApplyAndContinue: async () => {
-        await save();
+        // The prompt only holds the navigation back on a throw.
+        if (!(await save())) throw new Error("Saving page edits failed");
       },
     });
     return () => unregisterNavigationWarningHandlers();

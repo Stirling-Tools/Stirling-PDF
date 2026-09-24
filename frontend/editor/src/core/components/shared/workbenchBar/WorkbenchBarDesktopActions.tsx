@@ -33,7 +33,7 @@ export default function WorkbenchBarDesktopActions({
   const { t } = useTranslation();
   const exportDisabled = actionsDisabled || policyEnforcing;
   const closeLabel =
-    currentView === "fileEditor"
+    currentView === "fileEditor" || currentView === "pageEditor"
       ? t("workbenchBar.closeAll", "Close All")
       : t("workbenchBar.closePdf", "Close PDF");
 
