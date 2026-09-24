@@ -305,16 +305,15 @@ function TrackRowImpl({
     [setNodeRef],
   );
 
-  // Track-level actions apply to the selection inside this track, falling back
-  // to the whole track so the buttons stay useful with nothing selected.
-  const targetIds = useMemo(() => {
-    const selectedHere = track.pages
-      .filter((page) => selectedIds.has(page.id))
-      .map((page) => page.id);
-    return selectedHere.length > 0
-      ? selectedHere
-      : track.pages.map((page) => page.id);
-  }, [track.pages, selectedIds]);
+  // Deliberately no whole-track fallback: acting on every page takes an explicit
+  // select-all first, so an unselected click cannot rotate or delete a file.
+  const targetIds = useMemo(
+    () =>
+      track.pages
+        .filter((page) => selectedIds.has(page.id))
+        .map((page) => page.id),
+    [track.pages, selectedIds],
+  );
 
   const handleSelectTrack = useCallback(
     () => onSelectTrack(track.fileId),

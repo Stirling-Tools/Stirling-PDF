@@ -347,6 +347,35 @@ test.describe("Page Editor tracks", () => {
     await expect(close).toBeEnabled();
   });
 
+  test("track actions need a selection: select all, then delete every page", async ({
+    page,
+  }) => {
+    await openPageEditor(page);
+    const rotated = track(page, "rotated-pages.pdf");
+    await expect(rotated.locator("[data-page-id]")).toHaveCount(4, {
+      timeout: 30_000,
+    });
+    const header = rotated.locator("header");
+    const action = (name: string) =>
+      header.getByRole("button", { name, exact: true });
+
+    for (const name of ["Rotate left", "Rotate right", "Delete pages"]) {
+      await expect(action(name)).toBeDisabled();
+    }
+
+    await action("Select all pages").click();
+    for (const name of ["Rotate left", "Rotate right", "Delete pages"]) {
+      await expect(action(name)).toBeEnabled();
+    }
+
+    await action("Delete pages").click();
+    await expect(rotated.locator("[data-page-id]")).toHaveCount(0);
+    // The other track was never selected, so it is untouched.
+    await expect(
+      track(page, "sample.pdf").locator("[data-page-id]"),
+    ).toHaveCount(1);
+  });
+
   test("the insertion line marks where a right-to-left drag actually lands", async ({
     page,
   }) => {

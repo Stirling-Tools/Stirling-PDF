@@ -276,6 +276,14 @@
   color: var(--c-text) !important;
 }
 
+/* The !important colour above overrides Mantine's disabled styling, so a
+ * disabled icon would otherwise look exactly like an enabled one. */
+.workbench-bar-action-icon:disabled,
+.workbench-bar-action-icon[data-disabled] {
+  color: var(--c-text-muted) !important;
+  opacity: 0.45;
+}
+
 .workbench-bar-action-icon[data-variant="filled"] {
   background: var(--c-primary) !important;
   color: var(--c-text-on-primary) !important;
