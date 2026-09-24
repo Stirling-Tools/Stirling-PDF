@@ -611,6 +611,15 @@ export function FormFillProvider({
           let fields = usable
             ? bundled.fields
             : await providerRef.current.fetchFields(file, fetchOpts);
+          // The pdfium provider reports extraction failures as []; adopting it
+          // over already-loaded fields would wipe them and let validation pass.
+          if (
+            keepExisting &&
+            fields.length === 0 &&
+            fieldsRef.current.length > 0
+          ) {
+            throw new Error("Exhaustive form field load returned no fields");
+          }
           // If another fetch or reset happened while we were waiting, discard this result
           if (fetchVersionRef.current !== version) {
             console.debug(

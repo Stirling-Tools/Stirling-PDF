@@ -486,6 +486,37 @@ describe("FormFillContext per-page loading", () => {
     ]);
   });
 
+  it("treats an empty save-time full load as a failure, not an empty form", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    fetchFields.mockResolvedValueOnce(pageField("first", 0));
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+
+    // The pdfium provider reports extraction failures as an empty list
+    // instead of rejecting, so the context has to treat it as a failure.
+    fetchFields.mockResolvedValueOnce([]);
+    await act(async () => {
+      await hook.current.ensureAllFields?.();
+    });
+
+    expect(hook.current.state.fields.map((f) => f.name)).toEqual(["first"]);
+    expect(hook.current.state.error).toBeTruthy();
+
+    // The failed load stays retryable.
+    fetchFields.mockResolvedValueOnce([
+      ...pageField("first", 0),
+      ...pageField("second", 2),
+    ]);
+    await act(async () => {
+      await hook.current.ensureAllFields?.();
+    });
+    expect(hook.current.state.fields.map((f) => f.name).sort()).toEqual([
+      "first",
+      "second",
+    ]);
+  });
+
   it("waits for the initial fetch before loading a page", async () => {
     const { result: hook } = renderHook(() => useFormFill(), { wrapper });
     let resolveInitial!: (fields: FormField[]) => void;
