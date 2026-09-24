@@ -307,6 +307,7 @@ describe("shared document lifecycle", () => {
     const { init } = await import("@embedpdf/pdfium");
     const inits = vi.mocked(init).mock.calls.length;
     releasePdfiumModuleWhenIdle();
+    await runPdfiumScan(async () => undefined);
 
     const fresh = await getPdfiumModule();
     expect(fresh).not.toBe(m);
@@ -319,6 +320,7 @@ describe("shared document lifecycle", () => {
     const m = await getPdfiumModule();
 
     releasePdfiumModuleWhenIdle();
+    await runPdfiumScan(async () => undefined);
 
     expect(await getPdfiumModule()).toBe(m);
 
@@ -335,6 +337,7 @@ describe("shared document lifecycle", () => {
     closeDocAndFreeBuffer(m, doc);
 
     releasePdfiumModuleWhenIdle();
+    await runPdfiumScan(async () => undefined);
 
     expect(await getPdfiumModule()).toBe(m);
 
