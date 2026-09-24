@@ -9,7 +9,14 @@ import org.junit.jupiter.api.Test;
 class WetSignatureMetadataTest {
 
     private static WetSignatureMetadata canvas(double x, double y, double w, double h) {
-        return new WetSignatureMetadata("canvas", "data:image/png;base64,abc==", 0, x, y, w, h);
+        return new WetSignatureMetadata(
+                "canvas",
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a1X8AAAAASUVORK5CYII=",
+                0,
+                x,
+                y,
+                w,
+                h);
     }
 
     // -------------------------------------------------------------------------
@@ -25,7 +32,13 @@ class WetSignatureMetadataTest {
     void validate_image_withDataImagePrefix_passes() {
         WetSignatureMetadata sig =
                 new WetSignatureMetadata(
-                        "image", "data:image/jpeg;base64,xyz==", 0, 0.1, 0.1, 0.3, 0.3);
+                        "image",
+                        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a1X8AAAAASUVORK5CYII=",
+                        0,
+                        0.1,
+                        0.1,
+                        0.3,
+                        0.3);
         assertThatCode(sig::validate).doesNotThrowAnyException();
     }
 
@@ -40,10 +53,12 @@ class WetSignatureMetadataTest {
     }
 
     @Test
-    void validate_text_doesNotRequireDataImagePrefix() {
+    void validate_text_requiresRasterizedImage() {
         WetSignatureMetadata sig =
                 new WetSignatureMetadata("text", "John Doe", 0, 0.1, 0.1, 0.3, 0.2);
-        assertThatCode(sig::validate).doesNotThrowAnyException();
+        assertThatThrownBy(sig::validate)
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("base64 image");
     }
 
     // -------------------------------------------------------------------------

@@ -1,5 +1,12 @@
 package stirling.software.proprietary.workflow.dto;
 
+import java.io.ByteArrayInputStream;
+import java.util.Base64;
+
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
+
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -32,8 +39,8 @@ public class WetSignatureMetadata {
     private String type;
 
     /**
-     * Base64-encoded image data or text content for the signature. For canvas/image types:
-     * data:image/png;base64,... format For text type: plain text string
+     * Rasterized signature in data:image/...;base64,... format, including typed signatures.
+     * Rasterizing text preserves the participant's chosen font at finalization.
      */
     @NotNull(message = "Wet signature data is required")
     @Size(max = 5_000_000, message = "Wet signature data exceeds maximum size of 5MB")
@@ -80,11 +87,45 @@ public class WetSignatureMetadata {
      * @throws IllegalArgumentException if validation fails
      */
     public boolean validate() {
-        if (type.equals("canvas") || type.equals("image")) {
-            if (!data.startsWith("data:image/")) {
-                throw new IllegalArgumentException(
-                        "Image wet signature data must start with data:image/ prefix");
+        if (type == null || !java.util.Set.of("canvas", "image", "text").contains(type)) {
+            throw new IllegalArgumentException("Wet signature type must be canvas, image, or text");
+        }
+        if (data == null
+                || data.length() > 5_000_000
+                || !data.startsWith("data:image/")
+                || !data.contains(";base64,")) {
+            throw new IllegalArgumentException(
+                    "All wet signatures, including typed text, require a base64 image data URL with data:image/ prefix");
+        }
+        if (page == null
+                || page < 0
+                || !fraction(x, true)
+                || !fraction(y, true)
+                || !fraction(width, false)
+                || !fraction(height, false)) {
+            throw new IllegalArgumentException(
+                    "Wet signature page and fractional coordinates are invalid");
+        }
+        try (ImageInputStream input =
+                ImageIO.createImageInputStream(
+                        new ByteArrayInputStream(
+                                Base64.getDecoder().decode(extractBase64Data())))) {
+            var readers = ImageIO.getImageReaders(input);
+            if (!readers.hasNext())
+                throw new IllegalArgumentException("Wet signature image is unreadable");
+            ImageReader reader = readers.next();
+            try {
+                reader.setInput(input);
+                if (reader.getWidth(0) > 4096 || reader.getHeight(0) > 4096) {
+                    throw new IllegalArgumentException(
+                            "Wet signature image must not exceed 4096 pixels per side");
+                }
+                reader.read(0).flush();
+            } finally {
+                reader.dispose();
             }
+        } catch (java.io.IOException e) {
+            throw new IllegalArgumentException("Wet signature image is unreadable", e);
         }
         if (x != null && width != null && x + width > 1.0) {
             throw new IllegalArgumentException(
@@ -95,6 +136,13 @@ public class WetSignatureMetadata {
                     "Signature extends beyond the bottom edge of the page (y + height > 1.0)");
         }
         return true;
+    }
+
+    private boolean fraction(Double value, boolean allowZero) {
+        return value != null
+                && Double.isFinite(value)
+                && value <= 1
+                && (allowZero ? value >= 0 : value > 0);
     }
 
     /**

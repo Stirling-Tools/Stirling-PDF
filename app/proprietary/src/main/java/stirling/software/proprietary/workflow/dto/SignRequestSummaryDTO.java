@@ -17,4 +17,5 @@ public class SignRequestSummaryDTO {
     private String createdAt;
     private String dueDate;
     private ParticipantStatus myStatus;
+    private boolean finalized;
 }
