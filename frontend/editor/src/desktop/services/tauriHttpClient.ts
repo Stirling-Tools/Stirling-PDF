@@ -6,6 +6,7 @@ import {
   markFastTransportUnavailable,
 } from "@app/services/tauriLocalProxy";
 import { clampText } from "@app/services/httpErrorUtils";
+import { tryParseJson } from "@app/services/errorUtils";
 
 /**
  * Tauri HTTP Client - wrapper around Tauri's native HTTP client
@@ -52,6 +53,11 @@ export interface TauriHttpError extends Error {
   toJSON: () => object;
 }
 
+const SERVICE_UNAVAILABLE = {
+  summary: "Server unavailable or timeout - Please try again",
+  code: "ERR_SERVICE_UNAVAILABLE",
+};
+
 const KNOWN_HTTP_ERRORS: Record<number, { summary: string; code: string }> = {
   401: {
     summary: "Authentication failed - Invalid credentials",
@@ -69,18 +75,9 @@ const KNOWN_HTTP_ERRORS: Record<number, { summary: string; code: string }> = {
     summary: "Internal server error - Please check server logs",
     code: "ERR_SERVER_ERROR",
   },
-  502: {
-    summary: "Server unavailable or timeout - Please try again",
-    code: "ERR_SERVICE_UNAVAILABLE",
-  },
-  503: {
-    summary: "Server unavailable or timeout - Please try again",
-    code: "ERR_SERVICE_UNAVAILABLE",
-  },
-  504: {
-    summary: "Server unavailable or timeout - Please try again",
-    code: "ERR_SERVICE_UNAVAILABLE",
-  },
+  502: SERVICE_UNAVAILABLE,
+  503: SERVICE_UNAVAILABLE,
+  504: SERVICE_UNAVAILABLE,
 };
 
 const MAX_REASON_CHARS = 300;
@@ -90,20 +87,16 @@ const MAX_REASON_CHARS = 300;
 function serverReason(body: string): string | null {
   const text = body.trim();
   if (!text || text.startsWith("<")) return null;
+  const parsed = tryParseJson(text);
   let reason = text;
-  try {
-    const parsed: unknown = JSON.parse(text);
-    if (parsed && typeof parsed === "object") {
-      const fields = parsed as Record<string, unknown>;
-      const field = [fields.message, fields.detail, fields.error].find(
-        (value): value is string =>
-          typeof value === "string" && value.trim() !== "",
-      );
-      if (!field) return null;
-      reason = field;
-    }
-  } catch {
-    // Plain-text body.
+  if (parsed && typeof parsed === "object") {
+    const fields = parsed as Record<string, unknown>;
+    const field = [fields.message, fields.detail, fields.error].find(
+      (value): value is string =>
+        typeof value === "string" && value.trim() !== "",
+    );
+    if (!field) return null;
+    reason = field;
   }
   return clampText(reason.replace(/\s+/g, " ").trim(), MAX_REASON_CHARS);
 }
@@ -416,11 +409,11 @@ class TauriHttpClient {
 
         const known = KNOWN_HTTP_ERRORS[response.status];
         const reason = serverReason(errorBody);
-        const lead = known
-          ? reason
-            ? `${known.summary}: ${reason}`
-            : known.summary
-          : (reason ?? `Request failed with status code ${response.status}`);
+        const summary =
+          known?.summary ??
+          `Request failed with status code ${response.status}`;
+        const lead =
+          reason && known ? `${summary}: ${reason}` : (reason ?? summary);
         const errorMessage = `${lead} (${response.status} ${method} ${requestPath(url)})`;
         const errorCode = known?.code ?? "ERR_BAD_REQUEST";
 
