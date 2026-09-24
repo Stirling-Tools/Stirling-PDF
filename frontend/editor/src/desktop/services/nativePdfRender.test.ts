@@ -40,14 +40,14 @@ describe("nativePdfRender (desktop)", () => {
     expect(NATIVE_THUMBNAIL_WIDTH).toBe(240);
   });
 
-  test("renders through the Tauri command and returns a PNG data URL", async () => {
+  test("renders through the Tauri command and returns a JPEG data URL", async () => {
     mocks.result = new Uint8Array([0x89, 0x50, 0x4e, 0x47]).buffer;
     await expect(renderNativeThumbnail("/tmp/a.pdf", 1, 240)).resolves.toBe(
-      "data:image/png;base64,iVBORw==",
+      "data:image/jpeg;base64,iVBORw==",
     );
     expect(mocks.invokes).toEqual([
       {
-        command: "render_pdf_page_png",
+        command: "render_pdf_page_thumbnail",
         args: { path: "/tmp/a.pdf", page: 1, maxWidth: 240 },
       },
     ]);
@@ -63,7 +63,7 @@ describe("nativePdfRender (desktop)", () => {
 
     mocks.result = bytes.buffer;
     await expect(renderNativeThumbnail("/tmp/big.pdf", 2, 240)).resolves.toBe(
-      `data:image/png;base64,${btoa(binary)}`,
+      `data:image/jpeg;base64,${btoa(binary)}`,
     );
   });
 
