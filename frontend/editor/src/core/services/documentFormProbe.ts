@@ -97,10 +97,9 @@ async function resolveDocumentHasFormFields(
   bytes?: ArrayBuffer,
 ): Promise<boolean> {
   const key = await documentFileKey(source);
-  // A bare Blob has no key, so a concurrent caller may have answered while
-  // this one awaited the fingerprint; reuse it instead of parsing again.
-  const raced = answers.get(source);
-  if (raced) return raced;
+  // The caller already published this promise in the identity cache before the
+  // await, so a concurrent bare-Blob caller shares it; re-reading the cache
+  // here would return this promise and await itself.
   const cached = key ? answersByFileKey.get(key) : undefined;
   if (cached) return cached;
 

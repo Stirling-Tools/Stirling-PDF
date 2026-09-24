@@ -74,10 +74,9 @@ async function resolveDocumentHasLayers(
   bytes?: ArrayBuffer,
 ): Promise<boolean> {
   const key = await documentFileKey(file);
-  // A bare Blob has no key, so a concurrent caller may have answered while
-  // this one awaited the fingerprint; reuse it instead of parsing again.
-  const raced = layerAnswers.get(file);
-  if (raced) return raced;
+  // The caller already published this promise in the identity cache before the
+  // await, so a concurrent bare-Blob caller shares it; re-reading the cache
+  // here would return this promise and await itself.
   const cached = key ? layerAnswersByFileKey.get(key) : undefined;
   if (cached) return cached;
 
