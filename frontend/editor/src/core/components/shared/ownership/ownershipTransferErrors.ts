@@ -29,6 +29,16 @@ export function ownershipErrorText(
       "ownership.ownerRequired",
       "Sign in as the current cloud team owner, then try this step again.",
     );
+  if (error?.includes("PERSONAL_TEAM"))
+    return t(
+      "ownership.personalTeam",
+      "Personal teams cannot transfer ownership.",
+    );
+  if (error?.includes("MEMBERSHIP_REQUIRED"))
+    return t(
+      "ownership.membershipRequired",
+      "The recipient must join this cloud team before ownership can transfer. Ask them to accept their invitation, then check again.",
+    );
   if (error?.includes("INVITATION_BLOCKED"))
     return t(
       "ownership.inviteBlocked",

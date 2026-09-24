@@ -199,9 +199,15 @@ describe("ownership handover", () => {
 
   it("keeps the picker open when a chosen member is no longer eligible", async () => {
     vi.mocked(adapter.prepare).mockResolvedValue(choosing());
+    const awaiting = {
+      ...status("NEEDS_MEMBERSHIP"),
+      cloudEmail: "other@example.com",
+    };
     adapter.selectCloud = vi
       .fn()
-      .mockRejectedValue(new Error("CLOUD_TARGET_CHANGED"));
+      .mockRejectedValueOnce(new Error("CLOUD_TARGET_CHANGED"))
+      .mockResolvedValue(awaiting);
+    vi.mocked(adapter.invite!).mockResolvedValue(awaiting);
     show();
     fireEvent.focus(
       await screen.findByRole("combobox", { name: "Stirling account" }),
@@ -212,6 +218,16 @@ describe("ownership handover", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Choose another cloud member",
     );
+    fireEvent.change(
+      screen.getByRole("combobox", { name: "Stirling account" }),
+      { target: { value: "other@example.com" } },
+    );
+    await click(await screen.findByRole("button", { name: "Send invitation" }));
+    expect(adapter.selectCloud).toHaveBeenLastCalledWith({
+      cloudEmail: "other@example.com",
+    });
+    expect(await screen.findByText("Invitation sent")).toBeVisible();
+    expect(adapter.cancel).not.toHaveBeenCalled();
     expect(adapter.transferCloud).not.toHaveBeenCalled();
     expect(adapter.completeLocal).not.toHaveBeenCalled();
   });
@@ -276,6 +292,18 @@ describe("ownership handover", () => {
     expect(onClose).toHaveBeenCalledOnce();
     expect(adapter.cancel).toHaveBeenCalledOnce();
     expect(adapter.completeLocal).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["PERSONAL_TEAM", "Personal teams cannot transfer ownership."],
+    ["MEMBERSHIP_REQUIRED", "The recipient must join this cloud team"],
+  ])("explains a cloud transfer rejection: %s", async (reason, message) => {
+    vi.mocked(adapter.transferCloud).mockRejectedValue(new Error(reason));
+    show();
+    await confirm();
+    expect(await screen.findByRole("alert")).toHaveTextContent(message);
+    expect(adapter.completeLocal).not.toHaveBeenCalled();
+    expect(onTransferred).not.toHaveBeenCalled();
   });
 
   it("explains how to recover a retained link when linking is disabled", async () => {

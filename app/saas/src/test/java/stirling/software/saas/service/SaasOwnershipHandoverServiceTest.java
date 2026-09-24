@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.persistence.EntityManager;
@@ -199,6 +200,40 @@ class SaasOwnershipHandoverServiceTest {
         verify(instances, atLeastOnce()).countByTeamIdAndRevokedAtIsNull(9L);
         verifyNoMoreInteractions(billing, instances);
         verifyNoInteractions(invitations);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void coLeaderTransferMustDemoteOtherLeadersBeforeReportingCompletion(boolean fromInstance) {
+        target.setRole(TeamRole.LEADER);
+        var otherLeader = member(3L, "other@example.com", TeamRole.LEADER);
+        when(memberships.findByTeamId(9L)).thenReturn(List.of(leader, target, otherLeader));
+        assertEquals(State.READY, service.status(9L, "new@example.com", 2L).state());
+        LinkedInstance instance = new LinkedInstance();
+        instance.setTeamId(9L);
+        var transfer =
+                doAnswer(
+                                invocation -> {
+                                    leader.setRole(TeamRole.MEMBER);
+                                    otherLeader.setRole(TeamRole.MEMBER);
+                                    return null;
+                                })
+                        .when(ownership);
+        if (fromInstance) transfer.transferFromInstance(9L, 2L, leader.getUser(), instance);
+        else transfer.transfer(9L, 2L, leader.getUser());
+
+        var result =
+                fromInstance
+                        ? service.changeFromInstance(
+                                instance, "new@example.com", 1L, leader.getUser(), "transfer", 2L)
+                        : service.change(9L, "new@example.com", 1L, leader.getUser(), "transfer");
+
+        assertEquals(State.TRANSFERRED, result.state());
+        assertEquals(2L, result.leaderUserId());
+        if (fromInstance)
+            verify(ownership).transferFromInstance(9L, 2L, leader.getUser(), instance);
+        else verify(ownership).transfer(9L, 2L, leader.getUser());
+        verifyNoMoreInteractions(ownership);
     }
 
     @Test

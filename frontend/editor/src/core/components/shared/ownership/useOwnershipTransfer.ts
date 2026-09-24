@@ -184,6 +184,7 @@ export function useOwnershipTransfer({
 
   function editEmail(value: string) {
     setSearch(value);
+    if (status?.candidates) setError(null);
     setAccepted(false);
     setInvited(false);
     picker.resetSelectedOption();
@@ -297,9 +298,7 @@ export function useOwnershipTransfer({
       adapter.cancel &&
       !partial &&
       !done &&
-      ["LINK_REVOKED", "TARGET_CHANGED", "TARGET_UNAVAILABLE"].some((reason) =>
-        error?.includes(reason),
-      ),
+      /\b(LINK_REVOKED|TARGET_CHANGED|TARGET_UNAVAILABLE)\b/.test(error ?? ""),
     ),
     canSignIn: Boolean(adapter.signIn),
     close,

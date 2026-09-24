@@ -100,8 +100,9 @@ public class SaasOwnershipHandoverService {
                         .min(Long::compareTo)
                         .orElse(null);
         var target = rows.stream().filter(m -> eligible(m, teamId, email)).findFirst();
+        long leaderCount = rows.stream().filter(TeamMembership::isLeader).count();
         State state =
-                target.map(m -> m.isLeader() ? State.TRANSFERRED : State.READY)
+                target.map(m -> m.isLeader() && leaderCount == 1 ? State.TRANSFERRED : State.READY)
                         .orElse(State.NEEDS_MEMBERSHIP);
         return new CloudOwnershipStatus(
                 teamId,

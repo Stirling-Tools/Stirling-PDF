@@ -178,6 +178,31 @@ class OwnershipHandoverServiceTest {
                 2L, new OwnershipHandoverService.Selection(null, "new@example.com"), auth);
     }
 
+    @ParameterizedTest
+    @CsvSource({
+        "400,PERSONAL_TEAM,PERSONAL_TEAM",
+        "400,other,INVITATION_BLOCKED",
+        "409,MEMBERSHIP_REQUIRED,MEMBERSHIP_REQUIRED",
+        "409,CLOUD_TARGET_CHANGED,CLOUD_TARGET_CHANGED",
+        "409,other,CLOUD_OWNER_CHANGED"
+    })
+    void cloudRejectionPreservesSpecificGuidanceAndPendingHandover(
+            int code, String upstreamReason, String expectedReason) throws IOException {
+        linked(State.READY, false);
+        prepareSelected();
+        when(cloud.ownership(credential, "new@example.com", "Bearer owner", "transfer", 1L, 2L))
+                .thenThrow(
+                        new AccountLinkClient.UpstreamException(code, "rejected", upstreamReason));
+        assertEquals(
+                expectedReason,
+                assertThrows(
+                                ResponseStatusException.class,
+                                () -> service.changeCloud(auth, "Bearer owner", "transfer"))
+                        .getReason());
+        assertEquals(1L, owner.getOwnerUserId());
+        assertEquals(2L, owner.getHandoverTargetId());
+    }
+
     @Test
     void changedCloudAccountCanBeCancelledWithoutAbandoningACompletedTransfer() throws IOException {
         linked(State.READY, false);

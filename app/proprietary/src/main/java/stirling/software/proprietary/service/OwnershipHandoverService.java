@@ -377,11 +377,16 @@ public class OwnershipHandoverService {
                                 "status".equals(action) && "CLOUD_TEAM_MISSING".equals(e.reason())
                                         ? "LINK_REVOKED"
                                         : "CLOUD_UNAVAILABLE";
-                        case 400 -> "INVITATION_BLOCKED";
+                        case 400 ->
+                                "PERSONAL_TEAM".equals(e.reason())
+                                        ? "PERSONAL_TEAM"
+                                        : "INVITATION_BLOCKED";
                         case 409 ->
-                                "CLOUD_TARGET_CHANGED".equals(e.reason())
-                                        ? "CLOUD_TARGET_CHANGED"
-                                        : "CLOUD_OWNER_CHANGED";
+                                switch (String.valueOf(e.reason())) {
+                                    case "CLOUD_TARGET_CHANGED", "MEMBERSHIP_REQUIRED" ->
+                                            e.reason();
+                                    default -> "CLOUD_OWNER_CHANGED";
+                                };
                         default -> "CLOUD_UNAVAILABLE";
                     };
             throw new ResponseStatusException(HttpStatus.CONFLICT, reason);
