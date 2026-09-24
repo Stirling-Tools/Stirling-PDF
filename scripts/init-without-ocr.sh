@@ -785,29 +785,11 @@ detect_container_memory_mb() {
       no_cgroup_limit=true
     fi
   fi
-  # Fallback when no cgroup memory limit is found.
-  # If running inside a container (/.dockerenv or /run/.containerenv present) with no
-  # limit set, the host's /proc/meminfo would return the full host RAM.  Using that
-  # value causes InitialRAMPercentage to pre-commit gigabytes of heap against the host's
-  # RAM, making idle RSS absurdly large.  Cap the effective size at 2 GB so the JVM
-  # stays proportionate.  Users who need more should set -m / mem_limit in their
-  # docker-compose to get accurate sizing.
+  # No limit: use host RAM, the same total the JVM applies its percentages to.
   if [ -z "$mem_bytes" ]; then
-    local host_mem_bytes
-    host_mem_bytes=$(awk '/MemTotal/ {print $2 * 1024}' /proc/meminfo 2>/dev/null)
-    if [ "$no_cgroup_limit" = true ] && \
-       { [ -f /.dockerenv ] || [ -f /run/.containerenv ]; }; then
-      local cap_bytes=$(( 2048 * 1048576 ))
-      if [ "${host_mem_bytes:-0}" -gt "$cap_bytes" ] 2>/dev/null; then
-        log "WARNING: No container memory limit set. Host has $(( host_mem_bytes / 1048576 ))MB RAM."
-        log "Capping JVM sizing at 2048MB to avoid over-committing host memory."
-        log "Set mem_limit / -m in docker-compose or docker run to control heap sizing."
-        mem_bytes=$cap_bytes
-      else
-        mem_bytes=$host_mem_bytes
-      fi
-    else
-      mem_bytes=$host_mem_bytes
+    mem_bytes=$(awk '/MemTotal/ {print $2 * 1024}' /proc/meminfo 2>/dev/null)
+    if [ "$no_cgroup_limit" = true ]; then
+      log "No container memory limit set; sizing from host RAM ($(( ${mem_bytes:-0} / 1048576 ))MB). Set mem_limit / -m to cap it."
     fi
   fi
   if [ -n "$mem_bytes" ] && [ "$mem_bytes" -gt 0 ] 2>/dev/null; then
@@ -1122,7 +1104,7 @@ if [ -z "${JAVA_BASE_OPTS:-}" ]; then
     log "Using _JVM_OPTS (ConcGCThreads=${CONC_GC_THREADS})"
   else
     log "JAVA_BASE_OPTS and _JVM_OPTS unset; applying fallback defaults."
-    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:ShenandoahGCHeuristics=adaptive -XX:ShenandoahUncommitDelay=1000 -XX:ShenandoahGuaranteedYoungGCInterval=10000 -XX:ShenandoahGuaranteedOldGCInterval=30000 -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ConcGCThreads=${CONC_GC_THREADS} -XX:ReservedCodeCacheSize=96m -Xss256k -XX:CICompilerCount=2 -Djdk.virtualThreadScheduler.maxPoolSize=4 -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true"
+    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:ShenandoahGCHeuristics=adaptive -XX:ShenandoahUncommitDelay=1000 -XX:ShenandoahGuaranteedYoungGCInterval=10000 -XX:ShenandoahGuaranteedOldGCInterval=30000 -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ConcGCThreads=${CONC_GC_THREADS} -XX:ReservedCodeCacheSize=96m -XX:CICompilerCount=2 -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true"
   fi
 
   # Strip any hardcoded memory/CDS/AOT flags from the options (managed dynamically)
