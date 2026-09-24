@@ -174,8 +174,6 @@ jobs:
           & $gnuTar --version
           Add-Content -Path $env:GITHUB_PATH -Value $gitUsrBin
 
-          New-Item -ItemType Directory -Force -Path $env:NPM_CACHE | Out-Null
-
       - name: Use GNU tar on macOS
         if: runner.os == 'macOS'
         shell: bash
@@ -186,13 +184,13 @@ jobs:
 
       - name: Restore npm cache sftp
         id: cache-npm
-        uses: Ludy87/cache-the-planet@e556ab42d592f9576671b98af07d9b9d43ebd3dd
+        uses: Ludy87/cache-the-planet@fd0ef54df20a249a7531a16792f2702871ad7f47
         with:
           storage: sftp
           cache-name: npm
           save-scope: shared
           key: ${{ hashFiles('frontend/package.json', 'frontend/package-lock.json') }}
-          path: .cache/npm
+          path: ${{ env.NPM_CACHE}}
           allow-shared-restore: true
           strict: false
 
