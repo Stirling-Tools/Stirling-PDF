@@ -659,6 +659,8 @@ export function FormFillProvider({
           valuesStore.reset(values);
           forFileIdRef.current = fileId ?? null;
           setForFileId(fileId ?? null);
+          // validateForm reads this ref right after the await, before React re-renders.
+          fieldsRef.current = fields;
           dispatch({ type: "FETCH_SUCCESS", fields });
           // The full set is adopted, so page-scoped loads have nothing left to add.
           if (options?.exhaustive || providerModeRef.current === "pdfbox") {
