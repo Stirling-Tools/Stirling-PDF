@@ -49,7 +49,10 @@ import { PdfiumFormProvider } from "@app/tools/formFill/providers/PdfiumFormProv
 import { fetchSignatureFieldsWithAppearances } from "@app/services/pdfiumService";
 import { getDocumentBytes } from "@app/services/documentBytesCache";
 import { applyFieldEdits } from "@app/tools/formFill/formApi";
-import { mergeSignatureAppearances } from "@app/tools/formFill/formFieldMerge";
+import {
+  mergeSignatureAppearances,
+  mergePageFields,
+} from "@app/tools/formFill/formFieldMerge";
 
 /** Marks a skip report as belonging to whichever document the commit just produced. */
 const PENDING_SKIP_REPORT = "__pending__";
@@ -170,40 +173,8 @@ function reducer(state: FormFillState, action: Action): FormFillState {
         isDirty: false,
       };
     }
-    case "MERGE_PAGE_FIELDS": {
-      const fieldMap = new Map<string, FormField>(
-        state.fields.map((f) => [f.name, f]),
-      );
-      for (const newField of action.fields) {
-        const existing = fieldMap.get(newField.name);
-        if (existing) {
-          const mergedWidgets = [...(existing.widgets || [])];
-          for (const w of newField.widgets || []) {
-            if (
-              !mergedWidgets.some(
-                (mw) =>
-                  mw.pageIndex === w.pageIndex &&
-                  mw.x === w.x &&
-                  mw.y === w.y &&
-                  mw.width === w.width &&
-                  mw.height === w.height &&
-                  (mw.exportValue ?? "") === (w.exportValue ?? ""),
-              )
-            ) {
-              mergedWidgets.push(w);
-            }
-          }
-          // A radio value is the widget's index, and the fill counts widgets
-          // page by page; keep the merged list in page order however the pages
-          // happened to load.
-          mergedWidgets.sort((a, b) => a.pageIndex - b.pageIndex);
-          fieldMap.set(newField.name, { ...existing, widgets: mergedWidgets });
-        } else {
-          fieldMap.set(newField.name, newField);
-        }
-      }
-      return { ...state, fields: Array.from(fieldMap.values()) };
-    }
+    case "MERGE_PAGE_FIELDS":
+      return { ...state, fields: mergePageFields(state.fields, action.fields) };
     case "FETCH_ERROR":
       return { ...state, loading: false, error: action.error };
     case "MARK_DIRTY":
@@ -640,6 +611,15 @@ export function FormFillProvider({
           let fields = usable
             ? bundled.fields
             : await providerRef.current.fetchFields(file, fetchOpts);
+          // The pdfium provider reports extraction failures as []; adopting it
+          // over already-loaded fields would wipe them and let validation pass.
+          if (
+            keepExisting &&
+            fields.length === 0 &&
+            fieldsRef.current.length > 0
+          ) {
+            throw new Error("Exhaustive form field load returned no fields");
+          }
           // If another fetch or reset happened while we were waiting, discard this result
           if (fetchVersionRef.current !== version) {
             console.debug(
@@ -679,6 +659,8 @@ export function FormFillProvider({
           valuesStore.reset(values);
           forFileIdRef.current = fileId ?? null;
           setForFileId(fileId ?? null);
+          // validateForm reads this ref right after the await, before React re-renders.
+          fieldsRef.current = fields;
           dispatch({ type: "FETCH_SUCCESS", fields });
           // The full set is adopted, so page-scoped loads have nothing left to add.
           if (options?.exhaustive || providerModeRef.current === "pdfbox") {
@@ -844,18 +826,32 @@ export function FormFillProvider({
         )
           return;
         if (pageFields.length > 0) {
-          // The page can render before an exhaustive reload, so its prefilled
-          // values must exist; never overwrite what the user already typed.
-          for (const field of pageFields) {
-            if (
-              !Object.prototype.hasOwnProperty.call(
-                valuesStore.values,
-                field.name,
-              )
+          const previousFields = fieldsRef.current;
+          const mergedFields = mergePageFields(previousFields, pageFields);
+          const previousByName = new Map(
+            previousFields.map((f) => [f.name, f]),
+          );
+          for (const merged of mergedFields) {
+            if (!pageFields.some((f) => f.name === merged.name)) continue;
+            const previous = previousByName.get(merged.name);
+            const stored = valuesStore.values[merged.name];
+            if (stored === undefined) {
+              // The page can render before an exhaustive reload, so its
+              // prefilled values must exist; never overwrite what the user
+              // already typed.
+              valuesStore.setValue(merged.name, merged.value ?? "");
+            } else if (
+              previous &&
+              stored === previous.value &&
+              merged.value !== previous.value
             ) {
-              valuesStore.setValue(field.name, field.value ?? "");
+              // A radio merge reordered the widgets; the user has not touched
+              // the value, so follow the checked widget to its new index.
+              valuesStore.setValue(merged.name, merged.value);
             }
           }
+          // Keep the ref in step with the reducer, which merges the same list.
+          fieldsRef.current = mergedFields;
           dispatch({
             type: "MERGE_PAGE_FIELDS",
             pageIndex,
