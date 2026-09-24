@@ -4,10 +4,8 @@ import { useConfigNavSections as useProprietaryConfigNavSections } from "@propri
 import { ConfigNavSection } from "@core/components/shared/config/configNavSections";
 import { ConnectionSettings } from "@app/components/ConnectionSettings";
 import DesktopGeneralSection from "@app/components/shared/config/configSections/GeneralSection";
-import {
-  createCloudPlanNavItem,
-  createCloudTeamNavItem,
-} from "@app/components/shared/config/cloudConfigNavSections";
+import { createCloudTeamNavItem } from "@app/components/shared/config/cloudConfigNavSections";
+import { BillingSettingsSection } from "@app/components/settings/BillingSettingsSection";
 import { connectionModeService } from "@app/services/connectionModeService";
 import { authService } from "@app/services/authService";
 
@@ -116,14 +114,18 @@ export const useConfigNavSections = (
   // Connection Mode always sits immediately after Preferences
   result.push(connectionModeSection);
 
-  // Plan & Billing and Team sections only when authenticated in SaaS mode.
-  // These are the SHARED cloud sections — the wallet-driven PAYG Plan
-  // (dashboard + spend cap) and the team management UI — so a desktop SaaS
-  // user sees the same Plan / billing / team experience as the web app.
   if (isSaasMode && isAuthenticated) {
     result.push({
-      title: t("settings.planBilling.title", "Plan & Billing"),
-      items: [createCloudPlanNavItem(t)],
+      id: "workspace",
+      title: t("settings.workspace.title", "Workspace"),
+      items: [
+        {
+          key: "billing",
+          label: t("portal.nav.usage", "Usage & Billing"),
+          icon: "credit-card",
+          component: <BillingSettingsSection />,
+        },
+      ],
     });
     result.push({
       title: t("settings.team.title", "Team"),

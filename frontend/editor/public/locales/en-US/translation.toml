@@ -4197,6 +4197,11 @@ title = "Settings Opened"
 message = "Stirling PDF is now your default PDF editor"
 title = "Default App Set"
 
+[desktopBilling]
+description = "Manage usage and billing in your browser. Sign in with the same Stirling account you use here."
+open = "Open Usage & Billing in browser"
+openFailed = "Could not open your browser. Try again, or open Usage & Billing on the Stirling website."
+
 [desktopFileLink]
 saveAs = "Save as…"
 useDiskVersion = "Use disk version"
