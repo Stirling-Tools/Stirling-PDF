@@ -52,9 +52,9 @@ rand = "0.10"
 core-foundation = "0.10"
 core-services = "1.0"
 objc2 = "0.6.4"
-objc2-app-kit = { version = "0.3.2", features = ["NSPrintInfo", "NSPrintOperation", "NSPasteboard", "NSDragging"] }
+objc2-app-kit = { version = "0.3.2", features = ["NSPrintInfo", "NSPrintOperation", "NSPasteboard", "NSDragging", "NSBitmapImageRep", "NSImage"] }
 objc2-foundation = { version = "0.3.2", features = ["NSObject", "NSString", "NSURL"] }
-objc2-pdf-kit = { version = "0.3.2", features = ["PDFDocument", "objc2-app-kit"] }
+objc2-pdf-kit = { version = "0.3.2", features = ["PDFDocument", "PDFPage", "objc2-app-kit"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 webview2-com = "0.38.2"
