@@ -33,9 +33,151 @@ import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import EnterpriseRequiredBanner from "@app/components/shared/config/EnterpriseRequiredBanner";
 import { Icon } from "@app/ui/Icon";
-const AdminAuditSection: React.FC = () => {
+
+type TimePeriod = "day" | "week" | "month";
+
+const ConfigureAuditBanner = ({ show }: { show: boolean }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  if (!show) return null;
+  return (
+    <Alert
+      icon={<Icon name="info" size="1.2rem" />}
+      title={t("audit.configureAudit", "Configure Audit Logging")}
+      color="blue"
+      variant="light"
+    >
+      <Stack gap="xs">
+        <Text size="sm">
+          {t(
+            "audit.configureAuditMessage",
+            "Adjust audit logging level, retention period, and other settings in the Security & Authentication section.",
+          )}
+        </Text>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => navigate("/settings/adminSecurity#auditLogging")}
+          rightSection={<Icon name="arrow-right" size="0.9rem" />}
+        >
+          {t("audit.goToSettings", "Go to Audit Settings")}
+        </Button>
+      </Stack>
+    </Alert>
+  );
+};
+
+interface AuditDashboardProps {
+  isEnabled: boolean;
+  timePeriod: TimePeriod;
+  onTimePeriodChange: (period: TimePeriod) => void;
+}
+
+const AuditDashboard = ({
+  isEnabled,
+  timePeriod,
+  onTimePeriodChange,
+}: AuditDashboardProps) => {
+  const { t } = useTranslation();
+  return (
+    <Stack gap="lg">
+      {/* Stats Cards - Always Visible */}
+      <AuditStatsCards loginEnabled={isEnabled} timePeriod={timePeriod} />
+
+      {/* Charts in Accordion - Collapsible */}
+      <Accordion defaultValue={["events-over-time"]} multiple>
+        <Accordion.Item value="events-over-time">
+          <Accordion.Control>
+            {t("audit.charts.overTime", "Events Over Time")}
+          </Accordion.Control>
+          <Accordion.Panel>
+            <Suspense
+              fallback={
+                <Center style={{ padding: "2rem" }}>
+                  <Loader />
+                </Center>
+              }
+            >
+              <AuditChartsSection
+                loginEnabled={isEnabled}
+                timePeriod={timePeriod}
+                onTimePeriodChange={onTimePeriodChange}
+              />
+            </Suspense>
+          </Accordion.Panel>
+        </Accordion.Item>
+      </Accordion>
+    </Stack>
+  );
+};
+
+interface AuditTabsProps extends AuditDashboardProps {
+  status: AuditStatus;
+}
+
+const AuditTabs = ({ status, ...dashboard }: AuditTabsProps) => {
+  const { t } = useTranslation();
+  const { isEnabled } = dashboard;
+  if (!status.enabled) {
+    return (
+      <Alert
+        color="blue"
+        title={t("audit.disabled", "Audit logging is disabled")}
+      >
+        {t(
+          "audit.disabledMessage",
+          "Enable audit logging in your application configuration to track system events.",
+        )}
+      </Alert>
+    );
+  }
+  return (
+    <Tabs defaultValue="dashboard">
+      <Tabs.List>
+        <Tabs.Tab value="dashboard" disabled={!isEnabled}>
+          {t("audit.tabs.dashboard", "Dashboard")}
+        </Tabs.Tab>
+        <Tabs.Tab value="events" disabled={!isEnabled}>
+          {t("audit.tabs.events", "Audit Events")}
+        </Tabs.Tab>
+        <Tabs.Tab value="export" disabled={!isEnabled}>
+          {t("audit.tabs.export", "Export")}
+        </Tabs.Tab>
+        <Tabs.Tab value="clearData" disabled={!isEnabled}>
+          {t("audit.tabs.clearData", "Clear Data")}
+        </Tabs.Tab>
+      </Tabs.List>
+
+      <Tabs.Panel value="dashboard" pt="md">
+        <AuditDashboard {...dashboard} />
+      </Tabs.Panel>
+
+      <Tabs.Panel value="events" pt="md">
+        <AuditEventsTable
+          loginEnabled={isEnabled}
+          captureFileHash={status.captureFileHash}
+          capturePdfAuthor={status.capturePdfAuthor}
+        />
+      </Tabs.Panel>
+
+      <Tabs.Panel value="export" pt="md">
+        <AuditExportSection
+          loginEnabled={isEnabled}
+          captureFileHash={status.captureFileHash}
+          capturePdfAuthor={status.capturePdfAuthor}
+          captureOperationResults={status.captureOperationResults}
+        />
+      </Tabs.Panel>
+
+      <Tabs.Panel value="clearData" pt="md">
+        <AuditClearDataSection loginEnabled={isEnabled} />
+      </Tabs.Panel>
+    </Tabs>
+  );
+};
+
+const AdminAuditSection: React.FC = () => {
+  const { t } = useTranslation();
   const { loginEnabled } = useLoginRequired();
   const { config } = useAppConfig();
   const licenseType = config?.license ?? "NORMAL";
@@ -44,9 +186,7 @@ const AdminAuditSection: React.FC = () => {
   const [systemStatus, setSystemStatus] = useState<AuditStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [timePeriod, setTimePeriod] = useState<"day" | "week" | "month">(
-    "week",
-  );
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>("week");
 
   useEffect(() => {
     const fetchSystemStatus = async () => {
@@ -156,118 +296,16 @@ const AdminAuditSection: React.FC = () => {
         featureName={t("settings.licensingAnalytics.audit", "Audit")}
       />
 
-      {/* Info banner about audit settings */}
-      {isEnabled && (
-        <Alert
-          icon={<Icon name="info" size="1.2rem" />}
-          title={t("audit.configureAudit", "Configure Audit Logging")}
-          color="blue"
-          variant="light"
-        >
-          <Stack gap="xs">
-            <Text size="sm">
-              {t(
-                "audit.configureAuditMessage",
-                "Adjust audit logging level, retention period, and other settings in the Security & Authentication section.",
-              )}
-            </Text>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => navigate("/settings/adminSecurity#auditLogging")}
-              rightSection={<Icon name="arrow-right" size="0.9rem" />}
-            >
-              {t("audit.goToSettings", "Go to Audit Settings")}
-            </Button>
-          </Stack>
-        </Alert>
-      )}
+      <ConfigureAuditBanner show={isEnabled} />
 
       <AuditSystemStatus status={systemStatus} />
 
-      {systemStatus?.enabled ? (
-        <Tabs defaultValue="dashboard">
-          <Tabs.List>
-            <Tabs.Tab value="dashboard" disabled={!isEnabled}>
-              {t("audit.tabs.dashboard", "Dashboard")}
-            </Tabs.Tab>
-            <Tabs.Tab value="events" disabled={!isEnabled}>
-              {t("audit.tabs.events", "Audit Events")}
-            </Tabs.Tab>
-            <Tabs.Tab value="export" disabled={!isEnabled}>
-              {t("audit.tabs.export", "Export")}
-            </Tabs.Tab>
-            <Tabs.Tab value="clearData" disabled={!isEnabled}>
-              {t("audit.tabs.clearData", "Clear Data")}
-            </Tabs.Tab>
-          </Tabs.List>
-
-          <Tabs.Panel value="dashboard" pt="md">
-            <Stack gap="lg">
-              {/* Stats Cards - Always Visible */}
-              <AuditStatsCards
-                loginEnabled={isEnabled}
-                timePeriod={timePeriod}
-              />
-
-              {/* Charts in Accordion - Collapsible */}
-              <Accordion defaultValue={["events-over-time"]} multiple>
-                <Accordion.Item value="events-over-time">
-                  <Accordion.Control>
-                    {t("audit.charts.overTime", "Events Over Time")}
-                  </Accordion.Control>
-                  <Accordion.Panel>
-                    <Suspense
-                      fallback={
-                        <Center style={{ padding: "2rem" }}>
-                          <Loader />
-                        </Center>
-                      }
-                    >
-                      <AuditChartsSection
-                        loginEnabled={isEnabled}
-                        timePeriod={timePeriod}
-                        onTimePeriodChange={setTimePeriod}
-                      />
-                    </Suspense>
-                  </Accordion.Panel>
-                </Accordion.Item>
-              </Accordion>
-            </Stack>
-          </Tabs.Panel>
-
-          <Tabs.Panel value="events" pt="md">
-            <AuditEventsTable
-              loginEnabled={isEnabled}
-              captureFileHash={systemStatus?.captureFileHash}
-              capturePdfAuthor={systemStatus?.capturePdfAuthor}
-            />
-          </Tabs.Panel>
-
-          <Tabs.Panel value="export" pt="md">
-            <AuditExportSection
-              loginEnabled={isEnabled}
-              captureFileHash={systemStatus?.captureFileHash}
-              capturePdfAuthor={systemStatus?.capturePdfAuthor}
-              captureOperationResults={systemStatus?.captureOperationResults}
-            />
-          </Tabs.Panel>
-
-          <Tabs.Panel value="clearData" pt="md">
-            <AuditClearDataSection loginEnabled={isEnabled} />
-          </Tabs.Panel>
-        </Tabs>
-      ) : (
-        <Alert
-          color="blue"
-          title={t("audit.disabled", "Audit logging is disabled")}
-        >
-          {t(
-            "audit.disabledMessage",
-            "Enable audit logging in your application configuration to track system events.",
-          )}
-        </Alert>
-      )}
+      <AuditTabs
+        status={systemStatus}
+        isEnabled={isEnabled}
+        timePeriod={timePeriod}
+        onTimePeriodChange={setTimePeriod}
+      />
     </Stack>
   );
 };
