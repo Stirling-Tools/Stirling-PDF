@@ -235,7 +235,10 @@ export {
       "    __stirlingDocAccess.delete(filePtr);",
       "  }",
       "}",
-      "const __STIRLING_LAYER_SCAN_BYTES = 104857600;",
+      // Whole-file scans only pay off past the size where a main-thread
+      // parse is cheap; below it the caller parses and the verdict is null.
+      // Keep aligned with EAGER_METADATA_MAX_BYTES in @app/services/engineThumbnail.
+      "const __STIRLING_LAYER_SCAN_BYTES = 8388608;",
       "const __STIRLING_LAYER_INFLATE_BUDGET = 8388608;",
       "async function __stirlingInflate(bytes, maxBytes) {",
       "  // Read incrementally: a small Flate stream can expand to gigabytes, so the",
