@@ -94,6 +94,10 @@ public class StoreService {
         return prepare(policy, request, existingListingFor(policy).orElse(null)).report();
     }
 
+    /**
+     * Creates the listing, or republishes when the policy already links to one of the caller's
+     * team's. Team leaders only; a preflight that blocks throws {@link PublishBlockedException}.
+     */
     @Transactional
     public StoreDtos.ListingDetail publish(PublishRequest request) {
         requireCanPublish();
@@ -113,6 +117,7 @@ public class StoreService {
         return toDetail(listing, viewer());
     }
 
+    /** Replaces the store copy under the same id and relists it. Refused for a staff removal. */
     @Transactional
     public StoreDtos.ListingDetail republish(String storeId, PublishRequest request) {
         requireCanPublish();
@@ -218,6 +223,7 @@ public class StoreService {
         }
     }
 
+    /** Idempotent: starring twice, or unstarring what was never starred, changes nothing. */
     @Transactional
     public StoreDtos.StarResponse setStar(String storeId, boolean starred) {
         Long userId = requireUserId();
@@ -253,6 +259,11 @@ public class StoreService {
         return new StoreDtos.InstallResponse(count);
     }
 
+    /**
+     * One catalogue page. {@code cursor} is the offset into the filtered and sorted result, null
+     * for the start; an exact store id match comes first whatever the sort. Star state is filled
+     * only for a signed-in viewer.
+     */
     public StoreDtos.ListPage list(
             String q,
             String sort,
@@ -310,6 +321,7 @@ public class StoreService {
         return new StoreDtos.ListPage(items, next, matched.size());
     }
 
+    /** Readable by anyone while listed; once removed, 410 for everyone but the publisher's team. */
     public StoreDtos.ListingDetail detail(String storeId) {
         Viewer viewer = viewer();
         StoreListing listing = find(storeId);
@@ -319,6 +331,7 @@ public class StoreService {
         return toDetail(listing, viewer);
     }
 
+    /** The current manifest, 410 once the listing is removed. */
     public StoreManifest manifest(String storeId) {
         return readManifest(listedOrGone(storeId));
     }

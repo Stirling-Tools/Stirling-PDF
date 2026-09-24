@@ -16,7 +16,7 @@ public interface StoreListingRepository extends JpaRepository<StoreListing, Long
     /** Every listed row; the public catalogue filters, sorts and pages these in memory for now. */
     List<StoreListing> findByStatus(StoreListing.Status status);
 
-    /** The team's own listings, listed and removed, newest publish first. */
+    /** Listed and removed alike; the Published tab shows both. */
     List<StoreListing> findByPublisherTeamIdOrderByPublishedAtDesc(Long publisherTeamId);
 
     List<StoreListing> findByIdIn(Collection<Long> ids);

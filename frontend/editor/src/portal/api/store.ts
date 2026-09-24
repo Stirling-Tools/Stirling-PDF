@@ -234,7 +234,6 @@ export async function removeStoreListing(storeId: string): Promise<void> {
   await apiClient.saas.json<void>(listingPath(storeId), { method: "DELETE" });
 }
 
-/** PUT / DELETE /api/v1/store/pipelines/{storeId}/star. */
 export async function setStoreStar(
   storeId: string,
   starred: boolean,
@@ -263,7 +262,6 @@ export async function fetchTeamStoreListings(): Promise<StoreTeamListing[]> {
   return apiClient.saas.json<StoreTeamListing[]>(`${BASE}/team/pipelines`);
 }
 
-/** GET /api/v1/store/starred: the viewer's starred listings. */
 export async function fetchStarredListings(): Promise<StoreListingSummary[]> {
   return apiClient.saas.json<StoreListingSummary[]>(`${BASE}/starred`);
 }

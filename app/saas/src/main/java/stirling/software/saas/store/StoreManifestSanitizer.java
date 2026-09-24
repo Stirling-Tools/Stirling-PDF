@@ -366,9 +366,8 @@ public class StoreManifestSanitizer {
         }
         var ipv4 = IPV4.matcher(text);
         while (ipv4.find()) {
-            // Any literal IPv4 address in a pipeline setting is environment specific, private or
-            // not:
-            // the same pipeline installed elsewhere would still point at this network's machine.
+            // Any literal IPv4 address is environment specific, private range or not: installed
+            // elsewhere, the pipeline would still point at this network's machine.
             return true;
         }
         return false;

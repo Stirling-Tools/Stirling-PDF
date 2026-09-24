@@ -46,7 +46,7 @@ import "@portal/views/StoreListing.css";
 
 /**
  * One listing, read-only: what the chain does, what each step carries, what the installer still
- * supplies, and the Install button that copies it here (no picker, no modal; see D9 and D11).
+ * supplies, and the Install button that copies it here with no picker and no modal.
  */
 export function StoreListing() {
   const { t } = useTranslation();

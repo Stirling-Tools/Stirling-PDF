@@ -5,7 +5,6 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Data access for {@link StoreStar}. */
 public interface StoreStarRepository extends JpaRepository<StoreStar, StoreStar.Key> {
 
     boolean existsByListingIdAndUserId(Long listingId, Long userId);

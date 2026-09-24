@@ -26,8 +26,8 @@ public record StoreFinding(
     }
 
     /**
-     * What the finding refers to: a step (with its index and operation), the details form, the
-     * input or the output.
+     * {@code kind} is one of step, details, input or output; only a step carries an index and
+     * operation.
      */
     public record Where(String kind, Integer stepIndex, String operation) {
 

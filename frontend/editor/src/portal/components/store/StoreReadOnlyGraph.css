@@ -21,7 +21,6 @@
   color: var(--c-text-subtle);
 }
 
-/* The wire between tiles: a short vertical rule with a dot at its foot. */
 .portal-store__edge {
   display: block;
   align-self: center;

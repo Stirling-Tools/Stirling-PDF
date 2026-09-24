@@ -25,7 +25,7 @@ export function useCopyToClipboard(resetAfterMs = 1500) {
       if (timer.current) clearTimeout(timer.current);
       timer.current = setTimeout(() => setCopied(false), resetAfterMs);
     } catch {
-      // Older browsers / non-secure contexts: nothing to report.
+      // Swallowed on purpose; see the hook doc.
     }
   }
   return { copied, copy };

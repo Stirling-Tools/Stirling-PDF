@@ -27,7 +27,9 @@ public final class StoreDtos {
             boolean needsConnections,
             Boolean starred) {}
 
-    /** Shown only to the publisher's teammates. Today this is the account name (Q1 in the epic). */
+    /**
+     * Shown only to the publisher's teammates; the account name, since SaaS has no display name.
+     */
     public record Author(String displayName) {}
 
     public record Viewer(boolean starred, boolean isTeammate, Author author) {}

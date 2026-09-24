@@ -46,7 +46,6 @@ public class StoreStar {
         this.userId = userId;
     }
 
-    /** Composite primary key: (listing, user). */
     @NoArgsConstructor
     @Getter
     @Setter

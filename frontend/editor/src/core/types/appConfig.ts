@@ -30,7 +30,10 @@ export interface AppConfig {
    * anything that prompts to link must gate on this first.
    */
   accountLinkAvailable?: boolean;
-  /** Whether this backend serves the Pipeline store (or proxies it over the SaaS link). */
+  /**
+   * True when this backend hosts the Pipeline store. A self-hosted portal reaches the store over
+   * the account link instead, so the UI also treats accountLinkAvailable as reachable.
+   */
   storeAvailable?: boolean;
   termsAndConditions?: string;
   privacyPolicy?: string;

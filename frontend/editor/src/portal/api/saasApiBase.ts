@@ -19,7 +19,7 @@ export function saasApiBase(): string | null {
 
 /**
  * Build-flavour signal for features that behave differently on the hosted SaaS app (no separate
- * instance to install into). The SaaS layer shadows this file and returns {@code true}.
+ * instance to install into). The SaaS layer shadows this file and returns `true`.
  */
 export function isSaasBuild(): boolean {
   return false;
