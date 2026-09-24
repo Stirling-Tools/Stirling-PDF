@@ -176,7 +176,9 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
         accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO
     ),
     ToolEndpoint.EDIT_TEXT: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
-    ToolEndpoint.MERGE_PDFS: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.MISO),
+    ToolEndpoint.MERGE_PDFS: ToolIOSpec(
+        accepts=[ToolFormat.PDF, ToolFormat.IMAGE], produces=ToolFormat.PDF, arity=ToolArity.MISO
+    ),
     ToolEndpoint.MULTI_PAGE_LAYOUT: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.PDF_TO_SINGLE_PAGE: ToolIOSpec(
         accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO
