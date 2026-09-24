@@ -2810,7 +2810,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2a180dd8642fa45cdb7dd721cd4c11b1cadd4929ce112ebd8b9f5803cc79d536"
 dependencies = [
  "bitflags 2.11.0",
+ "block2",
  "dispatch2",
+ "libc",
  "objc2",
 ]
 
@@ -2821,10 +2823,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e022c9d066895efa1345f8e33e584b9f958da2fd4cd116792e15e07e4720a807"
 dependencies = [
  "bitflags 2.11.0",
+ "block2",
  "dispatch2",
+ "libc",
  "objc2",
  "objc2-core-foundation",
  "objc2-io-surface",
+ "objc2-metal",
 ]
 
 [[package]]
@@ -2899,6 +2904,17 @@ dependencies = [
  "bitflags 2.11.0",
  "objc2",
  "objc2-core-foundation",
+]
+
+[[package]]
+name = "objc2-metal"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a0125f776a10d00af4152d74616409f0d4a2053a6f57fa5b7d6aa2854ac04794"
+dependencies = [
+ "bitflags 2.11.0",
+ "objc2",
+ "objc2-foundation",
 ]
 
 [[package]]
@@ -4636,6 +4652,8 @@ dependencies = [
  "notify",
  "objc2",
  "objc2-app-kit",
+ "objc2-core-foundation",
+ "objc2-core-graphics",
  "objc2-foundation",
  "objc2-pdf-kit",
  "rand 0.10.2",
