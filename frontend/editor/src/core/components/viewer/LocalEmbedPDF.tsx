@@ -11,6 +11,7 @@ import { createPluginRegistration, type PluginRegistry } from "@embedpdf/core";
 import type { InitialDocumentOptions } from "@embedpdf/plugin-document-manager";
 import { EmbedPDF, useDocumentState } from "@embedpdf/core/react";
 import { useLocalPdfiumEngine } from "@app/hooks/useLocalPdfiumEngine";
+import type { FileId } from "@app/types/file";
 import { toEngineDocumentBuffer } from "@app/utils/engineDocumentSource";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
@@ -187,6 +188,9 @@ interface LocalEmbedPDFProps {
   redactionTrackerRef?: React.RefObject<RedactionPendingTrackerAPI>;
   /** File identity passed through to FormFieldOverlay for stale-field guards */
   fileId?: string | null;
+  /** Workbench record id (bare, not the content key). The engine thumbnail
+   *  handshake keys on it. Null for previews, which are never in the file list. */
+  stableFileId?: FileId | null;
   /** Comments sidebar visibility and offset (from EmbedPdfViewer) */
   isCommentsSidebarVisible?: boolean;
   commentsSidebarRightOffset?: string;
@@ -721,6 +725,7 @@ export function LocalEmbedPDF({
   historyApiRef,
   redactionTrackerRef,
   fileId,
+  stableFileId,
   isCommentsSidebarVisible = false,
   commentsSidebarRightOffset = "0rem",
   isSignMode = false,
@@ -1539,7 +1544,7 @@ export function LocalEmbedPDF({
           <PanAPIBridge />
           <SpreadAPIBridge />
           <SearchAPIBridge />
-          <ThumbnailAPIBridge />
+          <ThumbnailAPIBridge fileId={stableFileId ?? undefined} />
           <RotateAPIBridge />
           <EditingBridges
             enableAnnotations={enableAnnotations}
