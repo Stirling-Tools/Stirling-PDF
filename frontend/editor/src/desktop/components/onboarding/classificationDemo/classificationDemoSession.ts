@@ -130,8 +130,10 @@ export function updateSweep(
   emit();
 }
 
-/** Stops the running sweep at its next file. */
+/** Stops the running sweep at its next file. A no-op once it has finished, so a
+ *  finished sweep's result stays on screen. */
 export function stopSweep(): void {
+  if (sweep.status !== "running") return;
   sweepGeneration += 1;
   sweep = { ...sweep, status: "idle" };
   emit();

@@ -35,8 +35,10 @@ vi.mock("@app/services/pdfWorkerManager", () => ({
 import { requireAutomationSession } from "@app/services/serverAutomationSession";
 import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 import {
+  DOCUMENT_DEADLINE_MS,
   HEURISTIC_BUDGET_MS,
-  STEP_DEADLINE_MS,
+  MAX_CONSECUTIVE_STALLS,
+  SESSION_CHECK_DEADLINE_MS,
   mergeOutcomes,
   pickRecentPdfs,
   runClassificationDemoSweep,
@@ -266,8 +268,10 @@ describe("runClassificationDemoSweep", () => {
     });
   });
 
-  describe("a step that never answers", () => {
+  describe("a document that runs out of time", () => {
     const never = <T>() => new Promise<T>(() => {});
+    const after = <T>(ms: number, value: T) =>
+      new Promise<T>((resolve) => setTimeout(() => resolve(value), ms));
 
     beforeEach(() => {
       vi.useFakeTimers();
@@ -283,7 +287,7 @@ describe("runClassificationDemoSweep", () => {
         (value) => ({ value }),
         (error: unknown) => ({ error }),
       );
-      await vi.advanceTimersByTimeAsync(STEP_DEADLINE_MS * 3);
+      await vi.advanceTimersByTimeAsync(SESSION_CHECK_DEADLINE_MS * 2);
       const result = await outcome;
       if ("error" in result) throw result.error;
       return result.value;
@@ -323,6 +327,61 @@ describe("runClassificationDemoSweep", () => {
       expect(outcome.processed).toBe(2);
     });
 
+    test("shares one deadline across a document's steps", async () => {
+      // Each step is inside the deadline on its own; together they are over it.
+      readDiskFile.mockImplementationOnce((e: { name: string }) =>
+        after(
+          DOCUMENT_DEADLINE_MS * 0.6,
+          new File(["x"], e.name, { type: "application/pdf" }),
+        ),
+      );
+      classifyFileHeuristically.mockImplementationOnce(() =>
+        after(DOCUMENT_DEADLINE_MS * 0.6, {
+          labels: ["invoice"],
+          confidence: "low",
+          score: 10,
+          isEnglish: true,
+        }),
+      );
+      const outcome = await settle(
+        runClassificationDemoSweep("/downloads", deps()),
+      );
+
+      expect(outcome.processed).toBe(1);
+    });
+
+    test("stops the sweep after a run of stalls, keeping what it classified", async () => {
+      const names = [
+        "ok.pdf",
+        ...Array.from({ length: 5 }, (_, i) => `s${i}.pdf`),
+      ];
+      listDirectory.mockResolvedValue({
+        files: names.map((name, i) => entry(name, 100 - i)),
+        directories: [],
+      });
+      classifyFileHeuristically
+        .mockResolvedValueOnce({
+          labels: ["invoice"],
+          confidence: "low",
+          score: 10,
+          isEnglish: true,
+        })
+        .mockImplementation(() => never());
+      const outcome = await settle(
+        runClassificationDemoSweep("/downloads", deps()),
+      );
+
+      expect(classifyFileHeuristically).toHaveBeenCalledTimes(
+        1 + MAX_CONSECUTIVE_STALLS,
+      );
+      expect(outcome.processed).toBe(1);
+      expect(outcome.remaining).toBe(names.length - 1 - MAX_CONSECUTIVE_STALLS);
+      expect(meterAutomationRun).toHaveBeenCalledWith(
+        expect.objectContaining({ inputs: [{ pages: 0, bytes: 1 }] }),
+        expect.anything(),
+      );
+    });
+
     test("names the step that stalled, so a hang says where it happened", async () => {
       classifyFileHeuristically.mockImplementationOnce(() => never());
       await settle(runClassificationDemoSweep("/downloads", deps()));
@@ -331,6 +390,15 @@ describe("runClassificationDemoSweep", () => {
         expect.stringContaining("Classifying for a.pdf"),
         { pdfWorkers: { active: 10, max: 10, total: 10 } },
       );
+    });
+
+    test("waits out a slow session check longer than a document gets", async () => {
+      vi.mocked(requireAutomationSession).mockImplementationOnce(() =>
+        after(DOCUMENT_DEADLINE_MS * 2, undefined),
+      );
+      await settle(runClassificationDemoSweep("/downloads", deps()));
+
+      expect(meterAutomationRun).toHaveBeenCalledTimes(1);
     });
 
     test("fails the sweep unbilled when the session cannot be confirmed", async () => {

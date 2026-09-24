@@ -122,6 +122,16 @@ describe("useClassificationDemo", () => {
     expect(hook.result.current.outcome).toBeNull();
   });
 
+  test("stopping after the sweep finished keeps its result", async () => {
+    const hook = await startedHook();
+    await act(async () => finishSweep(OUTCOME));
+
+    act(() => hook.result.current.cancel());
+
+    expect(hook.result.current.status).toBe("done");
+    expect(hook.result.current.outcome).toEqual(OUTCOME);
+  });
+
   test("ending the demo stops its sweep and clears what it showed", async () => {
     const hook = await startedHook();
     await act(async () => finishSweep(OUTCOME));
