@@ -4,6 +4,11 @@ import { useFileManagement } from "@app/contexts/FileContext";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
 import { readDiskFile } from "@app/services/localFolderContents";
+import {
+  EAGER_METADATA_MAX_BYTES,
+  ENGINE_THUMBNAIL_ANNOUNCE_GRACE_MS,
+  getEngineThumbnail,
+} from "@app/services/engineThumbnail";
 
 const THUMBNAIL_SIZE_LIMIT = 100 * 1024 * 1024; // 100MB
 
@@ -90,7 +95,15 @@ export function useLazyThumbnail(
       try {
         const file = await indexedDB.loadFile(fileId);
         if (!file || cancelled) return;
-        const thumbnail = await generateThumbnailForFile(file);
+        // Large files: the viewer's engine renders page 1 in its worker, so
+        // there is no reason to read the bytes here. Wait briefly for an open
+        // in flight; a file nobody opens still falls back to the local parse.
+        const engineThumb =
+          size >= EAGER_METADATA_MAX_BYTES
+            ? await getEngineThumbnail(fileId, ENGINE_THUMBNAIL_ANNOUNCE_GRACE_MS)
+            : null;
+        if (cancelled) return;
+        const thumbnail = engineThumb ?? (await generateThumbnailForFile(file));
         if (!thumbnail) return;
         if (!cancelled) setThumb(thumbnail);
         void indexedDB.updateThumbnail(fileId, thumbnail);

@@ -2036,6 +2036,7 @@ const EmbedPdfViewerContent = ({
                 redactionTrackerRef as React.RefObject<RedactionPendingTrackerAPI>
               }
               fileId={currentFileId}
+              stableFileId={currentFileStableId}
               isCommentsSidebarVisible={isCommentsSidebarVisible}
               commentsSidebarRightOffset={`${(isThumbnailSidebarVisible ? sidebarWidthRem : 0) + (isBookmarkSidebarVisible ? sidebarWidthRem : 0) + (isAttachmentSidebarVisible ? sidebarWidthRem : 0) + (isLayerSidebarVisible ? sidebarWidthRem : 0)}rem`}
               onSignatureAdded={() => {
