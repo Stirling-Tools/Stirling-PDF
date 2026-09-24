@@ -5,6 +5,7 @@
  * not depend on the global jsdom Blob mock. */
 import { describe, expect, it, vi } from "vitest";
 import {
+  documentFileKey,
   getDocumentBytes,
   releaseDocumentBytes,
 } from "@app/services/documentBytesCache";
@@ -116,6 +117,27 @@ describe("documentBytesCache", () => {
     const buffer = await getDocumentBytes(blob);
     expect(buffer.byteLength).toBe(1);
     expect(spy).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not cache a failed fingerprint, so the file key retries", async () => {
+    const file = makeFile("retry-fingerprint.pdf", [1, 2, 3]);
+    const realSlice = file.slice.bind(file);
+    let failFirst = true;
+    vi.spyOn(file, "slice").mockImplementation(
+      (...args: Parameters<Blob["slice"]>) => {
+        const part = realSlice(...args);
+        if (!failFirst) return part;
+        failFirst = false;
+        return {
+          size: part.size,
+          arrayBuffer: () => Promise.reject(new Error("unreadable")),
+        } as unknown as Blob;
+      },
+    );
+
+    await expect(documentFileKey(file)).rejects.toThrow("unreadable");
+    // The rejection must not stay memoized: the next call reads again.
+    await expect(documentFileKey(file)).resolves.toEqual(expect.any(String));
   });
 
   it("does not share bytes across identical metadata with different content", async () => {
