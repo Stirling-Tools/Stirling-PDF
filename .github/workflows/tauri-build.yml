@@ -180,7 +180,7 @@ jobs:
 
       - name: Configure npm cache directory
         if: ${{ steps.cache.outputs.error == '' }}
-        run: npm config set cache "$NPM_CACHE" --global
+        run: npm config set cache "${{ env.NPM_CACHE }}" --global
 
       - name: Setup Node.js
         if: ${{ steps.cache.outputs.error }}
