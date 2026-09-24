@@ -59,6 +59,8 @@ export type TrackEditorAction =
       /** Insert before this page, or append when null. */
       beforePageId: string | null;
     }
+  /** A blank page after each of these, sized and turned like it. */
+  | { type: "insertBlankAfter"; pageIds: string[] }
   /** Swaps a page with its neighbour in the same track. */
   | { type: "shiftPage"; pageId: string; by: -1 | 1 }
   | { type: "dropTracks"; fileIds: FileId[] }
@@ -529,6 +531,19 @@ export function trackEditorReducer(
         },
       };
       return { ...withEdit(state, next), seq: state.seq + 1 };
+    }
+
+    case "insertBlankAfter": {
+      const after = new Set(action.pageIds);
+      let seq = state.seq;
+      const next = mapTracks(state.present, (pages) => {
+        if (!pages.some((p) => after.has(p.id))) return pages;
+        return pages.flatMap((p) =>
+          after.has(p.id) ? [p, blankPageLike(p, `tp-${seq++}`)] : [p],
+        );
+      });
+      if (next === state.present) return state;
+      return { ...withEdit(state, next), seq };
     }
 
     case "shiftPage": {

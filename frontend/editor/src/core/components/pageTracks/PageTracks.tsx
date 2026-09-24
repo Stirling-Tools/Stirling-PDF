@@ -345,6 +345,15 @@ export default function PageTracks() {
     [deletePages, selection.selectedIds],
   );
 
+  const insertBlankAfterSelection = useCallback(
+    () =>
+      dispatch({
+        type: "insertBlankAfter",
+        pageIds: Array.from(selection.selectedIds),
+      }),
+    [dispatch, selection.selectedIds],
+  );
+
   const clearSelection = selection.clear;
 
   /**
@@ -728,6 +737,7 @@ export default function PageTracks() {
     numberSelection,
     onRotate: rotateSelection,
     onDelete: deleteSelection,
+    onInsertBlankAfter: insertBlankAfterSelection,
     onUndo: undo,
     onRedo: redo,
     onSave: saveNow,

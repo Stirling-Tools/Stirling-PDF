@@ -601,6 +601,33 @@ test.describe("Page Editor tracks", () => {
     expect(Math.round(box.height)).toBe(600);
   });
 
+  test("the bar inserts a blank page after every selected page", async ({
+    page,
+  }) => {
+    await openPageEditor(page);
+    const rotated = track(page, "rotated-pages.pdf");
+    const tiles = rotated.locator("[data-page-id]");
+    await expect(tiles).toHaveCount(4, { timeout: 30_000 });
+    const insertAfter = page.getByRole("button", {
+      name: "Insert a blank page after each selected page",
+    });
+    await expect(insertAfter).toBeDisabled();
+
+    await tiles.nth(1).click();
+    await tiles.nth(3).click();
+    await insertAfter.click();
+
+    await expect(tiles).toHaveCount(6);
+    await expect(tiles.nth(2).locator("[data-blank-page]")).toBeVisible();
+    await expect(tiles.nth(5).locator("[data-blank-page]")).toBeVisible();
+    await expect(
+      track(page, "sample.pdf").locator("[data-page-id]"),
+    ).toHaveCount(1);
+
+    await page.getByRole("button", { name: "Undo" }).click();
+    await expect(tiles).toHaveCount(4);
+  });
+
   test("the gaps at either end of a track insert but do not split", async ({
     page,
   }) => {

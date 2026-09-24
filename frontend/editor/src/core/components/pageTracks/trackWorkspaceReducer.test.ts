@@ -443,6 +443,42 @@ describe("trackEditorReducer insertBlank", () => {
     expect(new Set(blanks.map((p) => p.id)).size).toBe(2);
   });
 
+  it("adds a blank after each given page, across tracks, as one undo step", () => {
+    const LANDSCAPE = { width: 842, height: 595 };
+    let state = sync(initialTrackEditorState, [
+      source(A, 3, [0, 90, 0], "v1", [
+        { width: 0, height: 0 },
+        LANDSCAPE,
+        { width: 0, height: 0 },
+      ]),
+      source(B, 2),
+    ]);
+    const [, a2, a3] = pagesOf(state, A);
+    const [b1] = pagesOf(state, B);
+    state = trackEditorReducer(state, {
+      type: "insertBlankAfter",
+      pageIds: [a2.id, a3.id, b1.id],
+    });
+
+    expect(ids(state, A)).toEqual([
+      `${A}:1`,
+      `${A}:2`,
+      "blank",
+      `${A}:3`,
+      "blank",
+    ]);
+    expect(ids(state, B)).toEqual([`${B}:1`, "blank", `${B}:2`]);
+    expect(pagesOf(state, A)[2]).toMatchObject({ rotation: 90, ...LANDSCAPE });
+    const blanks = [...pagesOf(state, A), ...pagesOf(state, B)].filter(
+      (p) => !isSourcePage(p),
+    );
+    expect(new Set(blanks.map((p) => p.id)).size).toBe(3);
+
+    state = trackEditorReducer(state, { type: "undo" });
+    expect(ids(state, A)).toEqual([`${A}:1`, `${A}:2`, `${A}:3`]);
+    expect(ids(state, B)).toEqual([`${B}:1`, `${B}:2`]);
+  });
+
   it("survives its neighbour's file closing", () => {
     let state = twoTracks();
     const b1 = pagesOf(state, B)[0];

@@ -35,6 +35,7 @@ export interface PageTracksBarParams {
   >;
   onRotate: (delta: number) => void;
   onDelete: () => void;
+  onInsertBlankAfter: () => void;
   onUndo: () => void;
   onRedo: () => void;
   onSave: () => void;
@@ -59,6 +60,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
     numberSelection,
     onRotate,
     onDelete,
+    onInsertBlankAfter,
     onUndo,
     onRedo,
     onSave,
@@ -75,6 +77,10 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
     rotateLeft: t("pageTracks.rotateLeft", "Rotate left"),
     rotateRight: t("pageTracks.rotateRight", "Rotate right"),
     deleteSelected: t("workbenchBar.deleteSelected", "Delete Selected Pages"),
+    insertBlankAfter: t(
+      "pageTracks.insertBlankAfterSelected",
+      "Insert a blank page after each selected page",
+    ),
     undo: t("pageTracks.undo", "Undo"),
     redo: t("pageTracks.redo", "Redo"),
     save: t("pageTracks.saveChanges", "Save changes to all files"),
@@ -181,6 +187,17 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
         onClick: () => onRotate(90),
       },
       {
+        id: "tracks-insert-blank-after",
+        icon: <Icon name="file-plus" size="1.25rem" />,
+        tooltip: labels.insertBlankAfter,
+        ariaLabel: labels.insertBlankAfter,
+        section: "middle" as const,
+        order: 25,
+        disabled: !hasSelection,
+        visible: hasPages,
+        onClick: onInsertBlankAfter,
+      },
+      {
         id: "tracks-delete-selected",
         icon: <Icon name="trash" size="1.5rem" />,
         tooltip: labels.deleteSelected,
@@ -253,6 +270,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       labels.rotateLeft,
       labels.rotateRight,
       labels.deleteSelected,
+      labels.insertBlankAfter,
       labels.undo,
       labels.redo,
       labels.save,
@@ -275,6 +293,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       numberSelection,
       onRotate,
       onDelete,
+      onInsertBlankAfter,
       onUndo,
       onRedo,
       onSave,
