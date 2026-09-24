@@ -120,6 +120,8 @@ jobs:
     environment:
       name: ${{ (inputs.sign && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))) && 'release-signing' || 'ci-signing' }}
     needs: determine-matrix
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.determine-matrix.outputs.matrix) }}
@@ -174,6 +176,13 @@ jobs:
           & $gnuTar --version
           Add-Content -Path $env:GITHUB_PATH -Value $gitUsrBin
 
+      - name: Prepare npm cache directory
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force `
+            -Path (Join-Path $env:GITHUB_WORKSPACE '.cache\npm') | Out-Null
+
       - name: Use GNU tar on macOS
         if: runner.os == 'macOS'
         shell: bash
@@ -202,7 +211,15 @@ jobs:
           package-manager-cache: false
 
       - name: Configure npm cache directory
-        if: ${{ steps.cache-npm.outputs.error == '' }}
+        if: ${{ steps.cache-npm.outputs.error == '' && runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          npm config set cache "$env:GITHUB_WORKSPACE\.cache\npm" --global
+          New-Item -ItemType Directory -Force `
+            -Path "$env:GITHUB_WORKSPACE\.cache\npm" | Out-Null
+
+      - name: Configure npm cache directory
+        if: ${{ steps.cache-npm.outputs.error == '' && runner.os != 'Windows' }}
         run: npm config set cache "${{ env.NPM_CACHE }}" --global
 
       - name: Setup Node.js
