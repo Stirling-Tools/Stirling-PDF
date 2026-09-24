@@ -40,3 +40,14 @@ export async function renderNativePdfRect(
 ): Promise<string | null> {
   return null;
 }
+
+/**
+ * The same tile as a Blob, for callers that hand it straight to the canvas and
+ * would only pay base64 encoding on the way back.
+ */
+export async function renderNativePdfRectBlob(
+  _path: string,
+  _rect: NativePdfRect,
+): Promise<Blob | null> {
+  return null;
+}

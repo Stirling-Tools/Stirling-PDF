@@ -665,6 +665,14 @@ const EmbedPdfViewerContent = ({
     [currentFile],
   );
 
+  // Disk path for native tile rendering; set when the file came from disk and
+  // unchanged while the bytes swap under it.
+  const currentFileNativePath = React.useMemo(() => {
+    if (!currentFile || !isStirlingFile(currentFile)) return null;
+    const stub = selectors.getStirlingFileStub(currentFile.fileId);
+    return stub?.localFilePath ?? null;
+  }, [currentFile, selectors]);
+
   // The workbench record to act on. Bare id, not the content key above: the
   // consume/undo paths below pass it back as a FileId.
   const currentFileStableId =
@@ -2037,6 +2045,7 @@ const EmbedPdfViewerContent = ({
               }
               fileId={currentFileId}
               stableFileId={currentFileStableId}
+              nativeFilePath={currentFileNativePath}
               isCommentsSidebarVisible={isCommentsSidebarVisible}
               commentsSidebarRightOffset={`${(isThumbnailSidebarVisible ? sidebarWidthRem : 0) + (isBookmarkSidebarVisible ? sidebarWidthRem : 0) + (isAttachmentSidebarVisible ? sidebarWidthRem : 0) + (isLayerSidebarVisible ? sidebarWidthRem : 0)}rem`}
               onSignatureAdded={() => {

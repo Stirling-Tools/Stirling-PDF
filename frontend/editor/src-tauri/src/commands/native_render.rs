@@ -195,9 +195,10 @@ mod macos {
             ),
         );
 
-        // Page space is bottom-left origin, the bitmap top-left, and the tile
-        // starts at the rect's top-left corner: flip, scale, then shift the
-        // rect origin onto (0, 0).
+        // Callers hand rects in crop-box-normalized space (origin at 0, 0).
+        // drawWithBox puts the crop box origin at the context origin (pinned
+        // against the cropbox-offset fixture), leaving the bottom-left to
+        // top-left flip and the rect shift.
         CGContext::translate_ctm(Some(&context), 0.0, pixel_height as f64);
         CGContext::scale_ctm(Some(&context), scale, -scale);
         CGContext::translate_ctm(Some(&context), -x, -y);
@@ -278,6 +279,58 @@ mod macos {
                 "content tile ({} bytes) should carry more than a blank one ({} bytes)",
                 content.len(),
                 blank.len(),
+            );
+        }
+
+        /// Renders the glyphs from the crop-offset fixture and its control at
+        /// the same crop-normalized spot: the offset page's CropBox starts at
+        /// (50, 30), so a missing offset correction samples the wrong region
+        /// and the two tiles stop matching.
+        #[test]
+        fn tiles_a_page_whose_crop_box_is_offset() {
+            let root =
+                Path::new(env!("CARGO_MANIFEST_DIR")).join("../src/core/tests/test-fixtures");
+            let offset = root
+                .join("cropbox-offset.pdf")
+                .to_string_lossy()
+                .into_owned();
+            let control = root
+                .join("cropbox-control.pdf")
+                .to_string_lossy()
+                .into_owned();
+
+            // "Hi" is at PDF (60, 350). Normalized to the crop box that is
+            // (10, 320) on the offset page and (60, 350) on the control.
+            let content = |path: &str, x: f64, y: f64| {
+                render_rect(path, 1, x, y, 40.0, 45.0, 2.0, ImageFormat::Png)
+                    .expect("render content tile")
+            };
+            let blank = render_rect(
+                &offset,
+                1,
+                5000.0,
+                5000.0,
+                40.0,
+                45.0,
+                2.0,
+                ImageFormat::Png,
+            )
+            .expect("render blank tile");
+
+            let offset_tile = content(&offset, 5.0, 300.0);
+            let control_tile = content(&control, 55.0, 330.0);
+            assert!(
+                offset_tile.len() > blank.len(),
+                "crop-offset tile ({} bytes) should carry content, blank is {} bytes",
+                offset_tile.len(),
+                blank.len(),
+            );
+            let ratio = offset_tile.len() as f64 / control_tile.len() as f64;
+            assert!(
+                (0.75..1.25).contains(&ratio),
+                "offset tile ({} bytes) should match the control's content ({} bytes)",
+                offset_tile.len(),
+                control_tile.len(),
             );
         }
 

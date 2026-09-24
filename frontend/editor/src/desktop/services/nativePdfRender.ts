@@ -28,6 +28,25 @@ export async function renderNativeThumbnail(
   }
 }
 
+/** One tile of a page, native JPEG Blob or null (caller falls back). */
+export async function renderNativePdfRectBlob(
+  path: string,
+  rect: NativePdfRect,
+): Promise<Blob | null> {
+  if (!isTauri()) return null;
+  try {
+    const bytes = await invoke<ArrayBuffer>("render_pdf_rect", {
+      path,
+      ...rect,
+    });
+    if (!(bytes instanceof ArrayBuffer) || bytes.byteLength === 0) return null;
+    return new Blob([bytes], { type: "image/jpeg" });
+  } catch (error) {
+    console.warn("[nativePdfRender] native tile render failed:", path, error);
+    return null;
+  }
+}
+
 /** One tile of a page, native JPEG data URL or null (caller falls back). */
 export async function renderNativePdfRect(
   path: string,

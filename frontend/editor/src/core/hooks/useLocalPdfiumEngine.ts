@@ -8,7 +8,7 @@
  * The engine is a module-level singleton so `warmUpViewerEngine` can start it
  * before a document lands; the last viewer to unmount destroys it.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ignore, type Logger, type PdfEngine } from "@embedpdf/models";
 import {
   createPdfiumEngine,
@@ -19,6 +19,7 @@ import {
   pdfiumWasmModulePromise,
   startEagerWasmCompilation,
 } from "@app/services/wasmPrecompiler";
+import { wrapEngineForNativeTiles } from "@app/services/nativeEngineTiles";
 
 /** Past this wait the worker fetches the wasm URL itself; a pending compile
  *  (offline deployment, test harness) must not block engine creation. */
@@ -29,6 +30,10 @@ interface LocalPdfiumEngineOptions {
   logger?: Logger;
   encoderPoolSize?: number;
   fontFallback?: FontFallbackConfig | null;
+  /** Disk path of the open file, when it has one; desktop builds render tiles
+   *  from it instead of the worker. Read per call, so it can change under a
+   *  document swap without rebuilding the engine. */
+  nativeFilePath?: string | null;
 }
 
 let sharedEngine: PdfEngine<Blob> | null = null;
@@ -100,6 +105,11 @@ export function warmUpViewerEngine(
 export function useLocalPdfiumEngine(options: LocalPdfiumEngineOptions) {
   const { wasmUrl, logger, encoderPoolSize, fontFallback } = options;
   const [engine, setEngine] = useState<PdfEngine<Blob> | null>(sharedEngine);
+  // The wrapper's identity has to stay stable per engine, or the plugin
+  // registry rebuilds (and the document reopens) on every file change, so the
+  // path is read through a ref instead.
+  const nativeFilePathRef = useRef(options.nativeFilePath ?? null);
+  nativeFilePathRef.current = options.nativeFilePath ?? null;
   const [isLoading, setIsLoading] = useState(sharedEngine === null);
   const [error, setError] = useState<Error | null>(null);
 
@@ -133,5 +143,13 @@ export function useLocalPdfiumEngine(options: LocalPdfiumEngineOptions) {
     // engine through the refcount teardown above.
   }, [wasmUrl, logger, encoderPoolSize, fontFallback]);
 
-  return { engine, isLoading, error };
+  const nativeTilesEngine = useMemo(
+    () =>
+      engine
+        ? wrapEngineForNativeTiles(engine, () => nativeFilePathRef.current)
+        : null,
+    [engine],
+  );
+
+  return { engine: nativeTilesEngine, isLoading, error };
 }
