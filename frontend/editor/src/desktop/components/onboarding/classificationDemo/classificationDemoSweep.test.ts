@@ -142,6 +142,25 @@ describe("runClassificationDemoSweep", () => {
     );
   });
 
+  test("checks the session once per batch, just before metering", async () => {
+    await runClassificationDemoSweep("/downloads", deps());
+
+    expect(requireAutomationSession).toHaveBeenCalledTimes(1);
+    expect(requireAutomationSession).toHaveBeenCalledWith("session");
+  });
+
+  test("fails the sweep unbilled when the session changed during it", async () => {
+    vi.mocked(requireAutomationSession).mockRejectedValueOnce(
+      new Error("The server connection changed."),
+    );
+
+    await expect(
+      runClassificationDemoSweep("/downloads", deps()),
+    ).rejects.toThrow("connection changed");
+    expect(classifyFileHeuristically).toHaveBeenCalledTimes(2);
+    expect(meterAutomationRun).not.toHaveBeenCalled();
+  });
+
   test("meters nothing when no document could be classified", async () => {
     classifyFileHeuristically.mockRejectedValue(new Error("encrypted"));
 
@@ -314,13 +333,13 @@ describe("runClassificationDemoSweep", () => {
       );
     });
 
-    test("fails the sweep when the session cannot be confirmed", async () => {
+    test("fails the sweep unbilled when the session cannot be confirmed", async () => {
       vi.mocked(requireAutomationSession).mockImplementationOnce(() => never());
 
       await expect(
         settle(runClassificationDemoSweep("/downloads", deps())),
       ).rejects.toThrow("could not be confirmed");
-      expect(classifyFileHeuristically).not.toHaveBeenCalled();
+      expect(meterAutomationRun).not.toHaveBeenCalled();
     });
   });
 

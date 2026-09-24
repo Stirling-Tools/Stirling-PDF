@@ -39,10 +39,10 @@ export const CLASSIFICATION_DEMO_BATCH_SIZE = 50;
 export const HEURISTIC_BUDGET_MS = 1000;
 
 /** Longest any one step for one document may take before the sweep moves on without it.
- *  Above every bound the steps set themselves (the 30s encryption probe inside addFiles,
- *  pdf.js open plus the text budget), so it only ends a wait nothing else would: a full
- *  pdf.js worker pool, the addFiles lock, or an IPC or storage call that never answers. */
-export const STEP_DEADLINE_MS = 45_000;
+ *  Deliberately below the bounds some steps set themselves (the pdf.js open timeout, the
+ *  30s encryption probe inside addFiles): a demo that sits on one file for longer than
+ *  this reads as frozen, so a slow document is given up on rather than waited out. */
+export const STEP_DEADLINE_MS = 3_000;
 
 const STEP_TIMED_OUT = Symbol("step timed out");
 
@@ -372,17 +372,6 @@ export async function runClassificationDemoSweep(
   for (let index = 0; index < batch.length; index += 1) {
     if (deps.isCancelled?.()) break;
     const entry = batch[index];
-    // A session that cannot be confirmed fails the sweep, as a changed one does: running
-    // on without it would store and meter under an account nobody checked.
-    if (
-      (await withinStepDeadline(
-        requireAutomationSession(session.key),
-        "Checking the session",
-        entry.name,
-      )) === STEP_TIMED_OUT
-    ) {
-      throw new Error("The server session could not be confirmed.");
-    }
     // Recorded before the attempt, so a document that cannot be read is retired rather
     // than offered again by every follow-up batch for the rest of the flow.
     sweptPaths.push(entry.path);
@@ -406,6 +395,18 @@ export async function runClassificationDemoSweep(
   // One call for the batch rather than per document, matching how the upload path meters
   // a run: the sweep is one automation over many inputs.
   if (metered.length > 0) {
+    // Checked once here rather than per document: nothing before the meter leaves the
+    // device. A session that changed or cannot be confirmed fails the sweep unbilled
+    // rather than charging an account that is no longer signed in.
+    if (
+      (await withinStepDeadline(
+        requireAutomationSession(session.key),
+        "Checking the session",
+        directory,
+      )) === STEP_TIMED_OUT
+    ) {
+      throw new Error("The server session could not be confirmed.");
+    }
     meterAutomationRun(
       {
         automationName: ONBOARDING_METER_NAME,
