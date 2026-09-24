@@ -94,6 +94,7 @@ import {
   closeDocAndFreeBuffer,
   getPdfiumModule,
   openRawDocumentSafe,
+  releasePdfiumModuleWhenIdle,
   releaseSharedDocument,
   releaseSharedDocumentWhenIdle,
   resetPdfiumModule,
@@ -112,6 +113,9 @@ describe("shared document lifecycle", () => {
   });
 
   afterEach(() => {
+    // Close any lingering handle so its ownership entry (and the module that
+    // allocated it) does not leak into the next test.
+    releaseSharedDocument();
     resetPdfiumModule();
   });
 
@@ -172,6 +176,9 @@ describe("shared document lifecycle", () => {
     // The lingering handle still serves the next same-bytes open.
     const doc2 = await openRawDocumentSafe(data);
     expect(doc2).toBe(doc);
+
+    closeDocAndFreeBuffer(m, doc2);
+    releaseSharedDocument();
   });
 
   it("reset with an active reader drops the handle and the reader's close closes once", async () => {
@@ -195,11 +202,14 @@ describe("shared document lifecycle", () => {
     closeDocAndFreeBuffer(await getPdfiumModule(), docA);
     pdfium.state.allocationOrder = [];
 
-    await openRawDocumentSafe(dataB);
+    const docB = await openRawDocumentSafe(dataB);
 
     // A's resources are released before B's are allocated, so the two never
     // coexist.
     expect(pdfium.state.allocationOrder).toEqual(["free", "malloc"]);
+
+    closeDocAndFreeBuffer(await getPdfiumModule(), docB);
+    releaseSharedDocument();
   });
 
   it("queues the release behind a scan so a late open cannot linger", async () => {
@@ -224,16 +234,21 @@ describe("shared document lifecycle", () => {
     const m = await getPdfiumModule();
     closeDocAndFreeBuffer(m, docA);
 
-    await openRawDocumentSafe(dataB);
+    const docB = await openRawDocumentSafe(dataB);
     expect(closeCalls()).toEqual([docA]);
 
-    await openRawDocumentSafe(dataA);
+    const extraA = await openRawDocumentSafe(dataA);
     expect(closeCalls()).toEqual([docA]);
+
+    // Close the extra A handle, then the lingering B reader.
+    closeDocAndFreeBuffer(m, extraA);
+    closeDocAndFreeBuffer(m, docB);
+    releaseSharedDocument();
   });
 
   it("copies requested blocks through the file-access callback", async () => {
     const data = new Uint8Array([1, 2, 3, 4]).buffer;
-    await openRawDocumentSafe(data);
+    const doc = await openRawDocumentSafe(data);
     const getBlock = pdfium.state.lastGetBlock;
     expect(getBlock).toBeTypeOf("function");
 
@@ -241,6 +256,9 @@ describe("shared document lifecycle", () => {
     expect(Array.from(pdfium.state.heap.slice(100, 102))).toEqual([2, 3]);
     // A range past the file must fail rather than copy garbage.
     expect(getBlock?.(0, 3, 100, 5)).toBe(0);
+
+    closeDocAndFreeBuffer(await getPdfiumModule(), doc);
+    releaseSharedDocument();
   });
 
   it("releases the access struct and the callback when the document closes", async () => {
@@ -277,5 +295,52 @@ describe("shared document lifecycle", () => {
     closeDocAndFreeBuffer(m, doc);
     releaseSharedDocument();
     expect(freeCalls().length).toBe(1);
+  });
+
+  it("drops the module when idle and re-instantiates on the next use", async () => {
+    const data = new ArrayBuffer(16);
+    const doc = await openRawDocumentSafe(data);
+    const m = await getPdfiumModule();
+    closeDocAndFreeBuffer(m, doc);
+    releaseSharedDocument();
+
+    const { init } = await import("@embedpdf/pdfium");
+    const inits = vi.mocked(init).mock.calls.length;
+    releasePdfiumModuleWhenIdle();
+    await runPdfiumScan(async () => undefined);
+
+    const fresh = await getPdfiumModule();
+    expect(fresh).not.toBe(m);
+    expect(vi.mocked(init).mock.calls.length).toBe(inits + 1);
+  });
+
+  it("keeps the module while a reader holds the shared document", async () => {
+    const data = new ArrayBuffer(16);
+    const doc = await openRawDocumentSafe(data);
+    const m = await getPdfiumModule();
+
+    releasePdfiumModuleWhenIdle();
+    await runPdfiumScan(async () => undefined);
+
+    expect(await getPdfiumModule()).toBe(m);
+
+    closeDocAndFreeBuffer(m, doc);
+    releaseSharedDocument();
+  });
+
+  it("keeps the module while a document is still open", async () => {
+    const data = new ArrayBuffer(16);
+    const doc = await openRawDocumentSafe(data);
+    const m = await getPdfiumModule();
+    // Refcount zero but the handle lingers; the ownership map still needs the
+    // module that allocated the callback.
+    closeDocAndFreeBuffer(m, doc);
+
+    releasePdfiumModuleWhenIdle();
+    await runPdfiumScan(async () => undefined);
+
+    expect(await getPdfiumModule()).toBe(m);
+
+    releaseSharedDocument();
   });
 });

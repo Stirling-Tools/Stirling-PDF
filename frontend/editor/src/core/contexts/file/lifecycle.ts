@@ -3,7 +3,10 @@
  */
 
 import { FileId } from "@app/types/file";
-import { releaseSharedDocumentWhenIdle } from "@app/services/pdfiumService";
+import {
+  releasePdfiumModuleWhenIdle,
+  releaseSharedDocumentWhenIdle,
+} from "@app/services/pdfiumService";
 import { releaseDocumentBytes } from "@app/services/documentBytesCache";
 import {
   FileContextAction,
@@ -91,6 +94,7 @@ export class FileLifecycleManager {
 
     // Clear files ref
     this.filesRef.current.clear();
+    releasePdfiumModuleWhenIdle();
   };
 
   /**
@@ -173,6 +177,9 @@ export class FileLifecycleManager {
     // and cannot be reused once it leaves the workbench.
     releaseSharedDocumentWhenIdle();
     if (file) void releaseDocumentBytes(file);
+    // With the workbench empty nothing main-thread needs PDFium; dropping the
+    // module lets its WASM memory (tens of MB on a large document) be collected.
+    if (this.filesRef.current.size === 0) releasePdfiumModuleWhenIdle();
 
     // Clean up blob URLs from file record if we have access to state
     if (stateRef) {
