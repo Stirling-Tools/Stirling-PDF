@@ -66,7 +66,12 @@ export function documentFingerprint(blob: Blob): Promise<string> {
       );
     }
     return hash.toString(16).padStart(8, "0");
-  })();
+  })().catch((error: unknown) => {
+    // A failed slice read is retryable: drop the memo so the next call reads
+    // again instead of inheriting the rejection.
+    fingerprints.delete(blob);
+    throw error;
+  });
   fingerprints.set(blob, promise);
   return promise;
 }
