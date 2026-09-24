@@ -1,10 +1,7 @@
 import React, { useCallback, useMemo } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { useTranslation } from "react-i18next";
-import RotateLeftIcon from "@mui/icons-material/RotateLeft";
-import RotateRightIcon from "@mui/icons-material/RotateRight";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineRounded";
-import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import { Icon } from "@app/ui/Icon";
 import { Checkbox } from "@app/ui/Checkbox";
 import HoverActionMenu, {
   HoverAction,
@@ -103,7 +100,7 @@ function TrackPageTileImpl({
     () => [
       {
         id: "view",
-        icon: <VisibilityOutlinedIcon style={{ fontSize: 16 }} />,
+        icon: <Icon name="eye" size={16} />,
         label: t("pageTracks.viewPage", "View page"),
         onClick: (event) => {
           event.stopPropagation();
@@ -112,7 +109,7 @@ function TrackPageTileImpl({
       },
       {
         id: "rotate-left",
-        icon: <RotateLeftIcon style={{ fontSize: 16 }} />,
+        icon: <Icon name="rotate-ccw" size={16} />,
         label: t("pageTracks.rotateLeft", "Rotate left"),
         onClick: (event) => {
           event.stopPropagation();
@@ -121,7 +118,7 @@ function TrackPageTileImpl({
       },
       {
         id: "rotate-right",
-        icon: <RotateRightIcon style={{ fontSize: 16 }} />,
+        icon: <Icon name="rotate-cw" size={16} />,
         label: t("pageTracks.rotateRight", "Rotate right"),
         onClick: (event) => {
           event.stopPropagation();
@@ -130,7 +127,7 @@ function TrackPageTileImpl({
       },
       {
         id: "delete",
-        icon: <DeleteOutlineIcon style={{ fontSize: 16 }} />,
+        icon: <Icon name="trash" size={16} />,
         label: t("pageTracks.delete.page", "Delete page"),
         color: "var(--c-danger)",
         onClick: (event) => {

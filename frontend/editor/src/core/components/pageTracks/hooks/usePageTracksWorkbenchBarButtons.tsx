@@ -1,17 +1,10 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import RotateLeftIcon from "@mui/icons-material/RotateLeft";
-import RotateRightIcon from "@mui/icons-material/RotateRight";
-import UndoIcon from "@mui/icons-material/Undo";
-import RedoIcon from "@mui/icons-material/Redo";
-import WrapTextIcon from "@mui/icons-material/WrapText";
-import ZoomInIcon from "@mui/icons-material/ZoomIn";
-import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 import {
   useWorkbenchBarButtons,
   WorkbenchBarButtonWithAction,
 } from "@app/hooks/useWorkbenchBarButtons";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import styles from "@app/components/pageTracks/PageTracks.module.css";
@@ -83,7 +76,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
     () => [
       {
         id: "tracks-wrap",
-        icon: <WrapTextIcon sx={{ fontSize: "1.25rem" }} />,
+        icon: <Icon name="text-wrap" size="1.25rem" />,
         tooltip: labels.wrap,
         ariaLabel: labels.wrap,
         section: "top" as const,
@@ -94,7 +87,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       },
       {
         id: "tracks-zoom-out",
-        icon: <ZoomOutIcon sx={{ fontSize: "1.25rem" }} />,
+        icon: <Icon name="zoom-out" size="1.25rem" />,
         tooltip: labels.zoomOut,
         ariaLabel: labels.zoomOut,
         section: "top" as const,
@@ -105,7 +98,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       },
       {
         id: "tracks-zoom-in",
-        icon: <ZoomInIcon sx={{ fontSize: "1.25rem" }} />,
+        icon: <Icon name="zoom-in" size="1.25rem" />,
         tooltip: labels.zoomIn,
         ariaLabel: labels.zoomIn,
         section: "top" as const,
@@ -116,7 +109,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       },
       {
         id: "tracks-select-all",
-        icon: <LocalIcon icon="select-all" width="1.5rem" height="1.5rem" />,
+        icon: <Icon name="select-all" size="1.5rem" />,
         tooltip: labels.selectAll,
         ariaLabel: labels.selectAll,
         section: "top" as const,
@@ -127,13 +120,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       },
       {
         id: "tracks-deselect-all",
-        icon: (
-          <LocalIcon
-            icon="crop-square-outline"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="square" size="1.5rem" />,
         tooltip: labels.deselectAll,
         ariaLabel: labels.deselectAll,
         section: "top" as const,
@@ -144,7 +131,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       },
       {
         id: "tracks-rotate-left",
-        icon: <RotateLeftIcon sx={{ fontSize: "1.25rem" }} />,
+        icon: <Icon name="rotate-ccw" size="1.25rem" />,
         tooltip: labels.rotateLeft,
         ariaLabel: labels.rotateLeft,
         section: "middle" as const,
@@ -155,7 +142,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       },
       {
         id: "tracks-rotate-right",
-        icon: <RotateRightIcon sx={{ fontSize: "1.25rem" }} />,
+        icon: <Icon name="rotate-cw" size="1.25rem" />,
         tooltip: labels.rotateRight,
         ariaLabel: labels.rotateRight,
         section: "middle" as const,
@@ -166,13 +153,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       },
       {
         id: "tracks-delete-selected",
-        icon: (
-          <LocalIcon
-            icon="delete-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="trash" size="1.5rem" />,
         tooltip: labels.deleteSelected,
         ariaLabel: labels.deleteSelected,
         section: "middle" as const,
@@ -183,7 +164,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       },
       {
         id: "tracks-undo",
-        icon: <UndoIcon sx={{ fontSize: "1.25rem" }} />,
+        icon: <Icon name="undo-2" size="1.25rem" />,
         tooltip: labels.undo,
         ariaLabel: labels.undo,
         section: "bottom" as const,
@@ -194,7 +175,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       },
       {
         id: "tracks-redo",
-        icon: <RedoIcon sx={{ fontSize: "1.25rem" }} />,
+        icon: <Icon name="redo-2" size="1.25rem" />,
         tooltip: labels.redo,
         ariaLabel: labels.redo,
         section: "bottom" as const,
@@ -226,7 +207,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
               disabled={disabled}
               aria-label={labels.save}
             >
-              <LocalIcon icon="save" width="1.5rem" height="1.5rem" />
+              <Icon name="save" size="1.5rem" />
               {isDirty && <span className={styles.unsavedDot} aria-hidden />}
             </ActionIcon>
           </Tooltip>

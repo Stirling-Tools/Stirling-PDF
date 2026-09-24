@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { Modal, Loader, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { useFileSelectors } from "@app/contexts/FileContext";
@@ -122,7 +121,7 @@ export function TrackPageViewModal({
             disabled={!hasPrev}
             onClick={() => onIndexChange(index - 1)}
           >
-            <ChevronLeftIcon sx={{ fontSize: "1.75rem" }} />
+            <Icon name="chevron-left" size="1.75rem" />
           </ActionIcon>
         </Tooltip>
 
@@ -159,7 +158,7 @@ export function TrackPageViewModal({
             disabled={!hasNext}
             onClick={() => onIndexChange(index + 1)}
           >
-            <ChevronRightIcon sx={{ fontSize: "1.75rem" }} />
+            <Icon name="chevron-right" size="1.75rem" />
           </ActionIcon>
         </Tooltip>
       </div>

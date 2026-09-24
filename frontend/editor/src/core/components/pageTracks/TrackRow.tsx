@@ -9,14 +9,7 @@ import React, {
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { useTranslation } from "react-i18next";
-import RotateLeftIcon from "@mui/icons-material/RotateLeft";
-import RotateRightIcon from "@mui/icons-material/RotateRight";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineRounded";
-import SelectAllIcon from "@mui/icons-material/SelectAll";
-import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import ContentCutIcon from "@mui/icons-material/ContentCut";
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
@@ -78,7 +71,7 @@ function SplitHandle({
           onSplit();
         }}
       >
-        <ContentCutIcon sx={{ fontSize: "0.9rem" }} />
+        <Icon name="scissors" size="0.9rem" />
       </button>
     </Tooltip>
   );
@@ -378,9 +371,9 @@ function TrackRowImpl({
             onClick={() => setCollapsed((value) => !value)}
           >
             {collapsed ? (
-              <ChevronRightIcon sx={{ fontSize: "1.25rem" }} />
+              <Icon name="chevron-right" size="1.25rem" />
             ) : (
-              <ExpandMoreIcon sx={{ fontSize: "1.25rem" }} />
+              <Icon name="chevron-down" size="1.25rem" />
             )}
           </ActionIcon>
         </Tooltip>
@@ -411,7 +404,7 @@ function TrackRowImpl({
             disabled={track.pages.length === 0 || isNew}
             onClick={() => onOpenInViewer(track.fileId)}
           >
-            <VisibilityOutlinedIcon sx={{ fontSize: "1rem" }} />
+            <Icon name="eye" size="1rem" />
           </ActionIcon>
         </Tooltip>
 
@@ -429,7 +422,7 @@ function TrackRowImpl({
               disabled={track.pages.length === 0}
               onClick={handleSelectTrack}
             >
-              <SelectAllIcon sx={{ fontSize: "1rem" }} />
+              <Icon name="select-all" size="1rem" />
             </ActionIcon>
           </Tooltip>
           <Tooltip content={t("pageTracks.rotateLeft", "Rotate left")}>
@@ -440,7 +433,7 @@ function TrackRowImpl({
               disabled={targetIds.length === 0}
               onClick={() => onRotate(targetIds, -90)}
             >
-              <RotateLeftIcon sx={{ fontSize: "1rem" }} />
+              <Icon name="rotate-ccw" size="1rem" />
             </ActionIcon>
           </Tooltip>
           <Tooltip content={t("pageTracks.rotateRight", "Rotate right")}>
@@ -451,7 +444,7 @@ function TrackRowImpl({
               disabled={targetIds.length === 0}
               onClick={() => onRotate(targetIds, 90)}
             >
-              <RotateRightIcon sx={{ fontSize: "1rem" }} />
+              <Icon name="rotate-cw" size="1rem" />
             </ActionIcon>
           </Tooltip>
           <Tooltip content={t("pageTracks.delete.selected", "Delete pages")}>
@@ -463,7 +456,7 @@ function TrackRowImpl({
               disabled={targetIds.length === 0}
               onClick={() => onDelete(targetIds)}
             >
-              <DeleteOutlineIcon sx={{ fontSize: "1rem" }} />
+              <Icon name="trash" size="1rem" />
             </ActionIcon>
           </Tooltip>
         </div>

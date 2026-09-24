@@ -302,6 +302,7 @@ import Terminal from "lucide-static/icons/terminal.svg?react";
 import TextAlignCenter from "lucide-static/icons/text-align-center.svg?react";
 import TextAlignEnd from "lucide-static/icons/text-align-end.svg?react";
 import TextAlignStart from "lucide-static/icons/text-align-start.svg?react";
+import TextWrap from "lucide-static/icons/text-wrap.svg?react";
 import ThumbsUp from "lucide-static/icons/thumbs-up.svg?react";
 import Ticket from "lucide-static/icons/ticket.svg?react";
 import Timeline from "lucide-static/icons/timeline.svg?react";
@@ -707,6 +708,7 @@ export const ICONS = {
   "text-align-center": { Component: TextAlignCenter, kind: "lucide" },
   "text-align-end": { Component: TextAlignEnd, kind: "lucide" },
   "text-align-start": { Component: TextAlignStart, kind: "lucide" },
+  "text-wrap": { Component: TextWrap, kind: "lucide" },
   "thumbs-up": { Component: ThumbsUp, kind: "lucide" },
   ticket: { Component: Ticket, kind: "lucide" },
   timeline: { Component: Timeline, kind: "lucide" },
