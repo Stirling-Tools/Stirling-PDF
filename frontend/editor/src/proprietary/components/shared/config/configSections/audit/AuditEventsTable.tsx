@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, type ReactNode } from "react";
 import {
   Card,
   Text,
@@ -21,11 +21,415 @@ import auditService, {
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import { useAuditFilters } from "@app/hooks/useAuditFilters";
 import AuditFiltersForm from "@app/components/shared/config/configSections/audit/AuditFiltersForm";
-import { Icon } from "@app/ui/Icon";
+import { Icon, type IconName } from "@app/ui/Icon";
+
 interface AuditEventsTableProps {
   loginEnabled?: boolean;
   captureFileHash?: boolean;
   capturePdfAuthor?: boolean;
+}
+
+type SortKey = "timestamp" | "eventType" | "username" | "ipAddress";
+
+const EVENT_TYPE_COLORS: Record<string, string> = {
+  USER_LOGIN: "green",
+  USER_LOGOUT: "gray",
+  USER_FAILED_LOGIN: "red",
+  USER_PROFILE_UPDATE: "blue",
+  SETTINGS_CHANGED: "orange",
+  FILE_OPERATION: "cyan",
+  PDF_PROCESS: "violet",
+  UI_DATA: "gray",
+  HTTP_REQUEST: "indigo",
+};
+
+function getEventTypeColor(type: string): string {
+  return EVENT_TYPE_COLORS[type] || "blue";
+}
+
+function formatDate(dateString: string): string {
+  return new Date(dateString).toLocaleString();
+}
+
+interface EventFileInfo {
+  documentName: string;
+  author: string;
+  fileHash: string;
+}
+
+/** Reads the first file in an event's details; author and hash only when a column shows them. */
+function getEventFileInfo(
+  event: AuditEvent,
+  withAuthorAndHash: boolean,
+): EventFileInfo {
+  const info = { documentName: "", author: "", fileHash: "" };
+  if (!event.details || typeof event.details !== "object") return info;
+  const files = (event.details as Record<string, unknown>).files;
+  if (!Array.isArray(files) || files.length === 0) return info;
+  const firstFile = files[0] as Record<string, unknown>;
+  info.documentName = typeof firstFile.name === "string" ? firstFile.name : "";
+  if (withAuthorAndHash) {
+    info.author =
+      typeof firstFile.pdfAuthor === "string" ? firstFile.pdfAuthor : "";
+    info.fileHash =
+      typeof firstFile.fileHash === "string"
+        ? firstFile.fileHash.substring(0, 16) + "..."
+        : "";
+  }
+  return info;
+}
+
+interface SortableHeaderProps {
+  label: string;
+  icon: IconName;
+  onSort: () => void;
+}
+
+function SortableHeader({ label, icon, onSort }: SortableHeaderProps) {
+  return (
+    <Table.Th
+      style={{
+        fontWeight: 600,
+        color: "var(--mantine-color-gray-7)",
+        padding: "0.5rem",
+      }}
+      fz="sm"
+    >
+      <Button
+        type="button"
+        variant="tertiary"
+        hover={false}
+        onClick={onSort}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "0.5rem",
+          cursor: "pointer",
+          userSelect: "none",
+        }}
+      >
+        {label}
+        <Icon name={icon} size="0.9rem" />
+      </Button>
+    </Table.Th>
+  );
+}
+
+function ColumnHeader({
+  children,
+  centered = false,
+}: {
+  children: ReactNode;
+  centered?: boolean;
+}) {
+  return (
+    <Table.Th
+      style={{
+        fontWeight: 600,
+        color: "var(--mantine-color-gray-7)",
+      }}
+      fz="sm"
+      ta={centered ? "center" : undefined}
+    >
+      {children}
+    </Table.Th>
+  );
+}
+
+interface EventColumns {
+  showAuthor: boolean;
+  showFileHash: boolean;
+}
+
+interface EventsTableHeaderProps extends EventColumns {
+  getSortIcon: (key: SortKey) => IconName;
+  onSort: (key: SortKey) => void;
+}
+
+function EventsTableHeader({
+  showAuthor,
+  showFileHash,
+  getSortIcon,
+  onSort,
+}: EventsTableHeaderProps) {
+  const { t } = useTranslation();
+  return (
+    <Table.Thead>
+      <Table.Tr style={{ backgroundColor: "var(--mantine-color-gray-0)" }}>
+        <SortableHeader
+          label={t("audit.events.timestamp", "Timestamp")}
+          icon={getSortIcon("timestamp")}
+          onSort={() => onSort("timestamp")}
+        />
+        <SortableHeader
+          label={t("audit.events.type", "Type")}
+          icon={getSortIcon("eventType")}
+          onSort={() => onSort("eventType")}
+        />
+        <SortableHeader
+          label={t("audit.events.user", "User")}
+          icon={getSortIcon("username")}
+          onSort={() => onSort("username")}
+        />
+        <ColumnHeader>
+          {t("audit.events.documentName", "Document Name")}
+        </ColumnHeader>
+        {showAuthor && (
+          <ColumnHeader>{t("audit.events.author", "Author")}</ColumnHeader>
+        )}
+        {showFileHash && (
+          <ColumnHeader>{t("audit.events.fileHash", "File Hash")}</ColumnHeader>
+        )}
+        <ColumnHeader centered>
+          {t("audit.events.actions", "Actions")}
+        </ColumnHeader>
+      </Table.Tr>
+    </Table.Thead>
+  );
+}
+
+function NoEventsRow({ colSpan }: { colSpan: number }) {
+  const { t } = useTranslation();
+  return (
+    <Table.Tr>
+      <Table.Td colSpan={colSpan}>
+        <Group justify="center" py="xl">
+          <Stack align="center" gap={0}>
+            <Icon name="search" size="2rem" style={{ opacity: 0.4 }} />
+            <Text ta="center" c="dimmed" size="sm">
+              {t("audit.events.noEvents", "No events found")}
+            </Text>
+          </Stack>
+        </Group>
+      </Table.Td>
+    </Table.Tr>
+  );
+}
+
+interface AuditEventRowProps extends EventColumns {
+  event: AuditEvent;
+  loginEnabled: boolean;
+  onViewDetails: () => void;
+}
+
+function AuditEventRow({
+  event,
+  showAuthor,
+  showFileHash,
+  loginEnabled,
+  onViewDetails,
+}: AuditEventRowProps) {
+  const { t } = useTranslation();
+  const { documentName, author, fileHash } = getEventFileInfo(
+    event,
+    showAuthor || showFileHash,
+  );
+  return (
+    <Table.Tr>
+      <Table.Td>
+        <Text size="sm">{formatDate(event.timestamp)}</Text>
+      </Table.Td>
+      <Table.Td>
+        <Badge
+          variant="light"
+          size="sm"
+          color={getEventTypeColor(event.eventType)}
+        >
+          {event.eventType}
+        </Badge>
+      </Table.Td>
+      <Table.Td>
+        <Text size="sm">{event.username}</Text>
+      </Table.Td>
+      <Table.Td>
+        <Text size="sm" title={documentName}>
+          {documentName || "—"}
+        </Text>
+      </Table.Td>
+      {showAuthor && (
+        <Table.Td>
+          <Text size="sm">{author}</Text>
+        </Table.Td>
+      )}
+      {showFileHash && (
+        <Table.Td>
+          <Text
+            size="sm"
+            title={fileHash}
+            style={{ fontFamily: "monospace", fontSize: "0.75rem" }}
+          >
+            {fileHash}
+          </Text>
+        </Table.Td>
+      )}
+      <Table.Td ta="center">
+        <Button
+          variant="tertiary"
+          size="sm"
+          onClick={onViewDetails}
+          disabled={!loginEnabled}
+        >
+          {t("audit.events.viewDetails", "View Details")}
+        </Button>
+      </Table.Td>
+    </Table.Tr>
+  );
+}
+
+interface EventRowsProps extends EventColumns {
+  events: AuditEvent[];
+  loginEnabled: boolean;
+  onViewDetails: (event: AuditEvent) => void;
+}
+
+function EventRows({ events, onViewDetails, ...row }: EventRowsProps) {
+  if (events.length === 0) {
+    const colSpan = 5 + (row.showAuthor ? 1 : 0) + (row.showFileHash ? 1 : 0);
+    return <NoEventsRow colSpan={colSpan} />;
+  }
+  return (
+    <>
+      {events.map((event) => (
+        <AuditEventRow
+          key={event.id}
+          event={event}
+          onViewDetails={() => onViewDetails(event)}
+          {...row}
+        />
+      ))}
+    </>
+  );
+}
+
+interface EventsPaginationProps {
+  page: number;
+  total: number;
+  onChange: (page: number) => void;
+}
+
+function EventsPagination({ page, total, onChange }: EventsPaginationProps) {
+  if (total <= 1) return null;
+  return (
+    <Group justify="center" mt="md">
+      <Pagination value={page} onChange={onChange} total={total} />
+    </Group>
+  );
+}
+
+interface AuditEventsResultsProps
+  extends EventRowsProps, Omit<EventsTableHeaderProps, keyof EventColumns> {
+  loading: boolean;
+  error: string | null;
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}
+
+function AuditEventsResults({
+  loading,
+  error,
+  page,
+  totalPages,
+  onPageChange,
+  getSortIcon,
+  onSort,
+  ...rows
+}: AuditEventsResultsProps) {
+  const { t } = useTranslation();
+  if (loading) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        <Loader size="lg" my="xl" />
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <Alert
+        color="red"
+        title={t("audit.events.error", "Error loading events")}
+      >
+        {error}
+      </Alert>
+    );
+  }
+  return (
+    <div
+      style={{
+        overflowX: "auto",
+        overflowY: "hidden",
+        marginBottom: "1rem",
+      }}
+    >
+      <Table
+        horizontalSpacing="md"
+        verticalSpacing="sm"
+        withRowBorders
+        highlightOnHover
+        style={{
+          "--table-border-color": "var(--mantine-color-gray-3)",
+        }}
+      >
+        <EventsTableHeader
+          showAuthor={rows.showAuthor}
+          showFileHash={rows.showFileHash}
+          getSortIcon={getSortIcon}
+          onSort={onSort}
+        />
+        <Table.Tbody>
+          <EventRows {...rows} />
+        </Table.Tbody>
+      </Table>
+      <EventsPagination
+        page={page}
+        total={totalPages}
+        onChange={onPageChange}
+      />
+    </div>
+  );
+}
+
+function DetailField({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div>
+      <Text size="sm" fw={600} c="dimmed">
+        {label}
+      </Text>
+      {children}
+    </div>
+  );
+}
+
+function EventDetails({ event }: { event: AuditEvent | null }) {
+  const { t } = useTranslation();
+  if (!event) return null;
+  return (
+    <Stack gap="md">
+      <DetailField label={t("audit.events.timestamp", "Timestamp")}>
+        <Text size="sm">{formatDate(event.timestamp)}</Text>
+      </DetailField>
+      <DetailField label={t("audit.events.type", "Type")}>
+        <Text size="sm">{event.eventType}</Text>
+      </DetailField>
+      <DetailField label={t("audit.events.user", "User")}>
+        <Text size="sm">{event.username}</Text>
+      </DetailField>
+      <DetailField label={t("audit.events.ipAddress", "IP Address")}>
+        <Text size="sm">{event.ipAddress}</Text>
+      </DetailField>
+      <DetailField label={t("audit.events.details", "Details")}>
+        <Code block mah={300} style={{ overflow: "auto" }}>
+          {JSON.stringify(event.details, null, 2)}
+        </Code>
+      </DetailField>
+    </Stack>
+  );
 }
 
 const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
@@ -40,13 +444,10 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<AuditEvent | null>(null);
-  const [sortKey, setSortKey] = useState<
-    "timestamp" | "eventType" | "username" | "ipAddress" | null
-  >("timestamp");
+  const [sortKey, setSortKey] = useState<SortKey | null>("timestamp");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const showAuthor = capturePdfAuthor;
   const showFileHash = captureFileHash;
-  const totalColumns = 5 + (showAuthor ? 1 : 0) + (showFileHash ? 1 : 0);
 
   // Use shared filters hook
   const { filters, eventTypes, users, handleFilterChange, handleClearFilters } =
@@ -142,14 +543,8 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
     setCurrentPage(1);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
-  };
-
   // Sort handling
-  const toggleSort = (
-    key: "timestamp" | "eventType" | "username" | "ipAddress",
-  ) => {
+  const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
       setSortDir(sortDir === "asc" ? "desc" : "asc");
     } else {
@@ -158,28 +553,9 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
     }
   };
 
-  const getSortIcon = (
-    key: "timestamp" | "eventType" | "username" | "ipAddress",
-  ) => {
+  const getSortIcon = (key: SortKey): IconName => {
     if (sortKey !== key) return "chevrons-up-down";
     return sortDir === "asc" ? "chevron-up" : "chevron-down";
-  };
-
-  // Event type colors
-  const EVENT_TYPE_COLORS: Record<string, string> = {
-    USER_LOGIN: "green",
-    USER_LOGOUT: "gray",
-    USER_FAILED_LOGIN: "red",
-    USER_PROFILE_UPDATE: "blue",
-    SETTINGS_CHANGED: "orange",
-    FILE_OPERATION: "cyan",
-    PDF_PROCESS: "violet",
-    UI_DATA: "gray",
-    HTTP_REQUEST: "indigo",
-  };
-
-  const getEventTypeColor = (type: string): string => {
-    return EVENT_TYPE_COLORS[type] || "blue";
   };
 
   // Apply sorting to current events
@@ -220,7 +596,6 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
           {t("audit.events.title", "Audit Events")}
         </Text>
 
-        {/* Filters */}
         <AuditFiltersForm
           filters={filters}
           eventTypes={eventTypes}
@@ -230,281 +605,22 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
           disabled={!loginEnabled}
         />
 
-        {/* Table */}
-        {loading ? (
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            <Loader size="lg" my="xl" />
-          </div>
-        ) : error ? (
-          <Alert
-            color="red"
-            title={t("audit.events.error", "Error loading events")}
-          >
-            {error}
-          </Alert>
-        ) : (
-          <>
-            <div
-              style={{
-                overflowX: "auto",
-                overflowY: "hidden",
-                marginBottom: "1rem",
-              }}
-            >
-              <Table
-                horizontalSpacing="md"
-                verticalSpacing="sm"
-                withRowBorders
-                highlightOnHover
-                style={{
-                  "--table-border-color": "var(--mantine-color-gray-3)",
-                }}
-              >
-                <Table.Thead>
-                  <Table.Tr
-                    style={{ backgroundColor: "var(--mantine-color-gray-0)" }}
-                  >
-                    <Table.Th
-                      style={{
-                        fontWeight: 600,
-                        color: "var(--mantine-color-gray-7)",
-                        padding: "0.5rem",
-                      }}
-                      fz="sm"
-                    >
-                      <Button
-                        type="button"
-                        variant="tertiary"
-                        hover={false}
-                        onClick={() => toggleSort("timestamp")}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.5rem",
-                          cursor: "pointer",
-                          userSelect: "none",
-                        }}
-                      >
-                        {t("audit.events.timestamp", "Timestamp")}
-                        <Icon name={getSortIcon("timestamp")} size="0.9rem" />
-                      </Button>
-                    </Table.Th>
-                    <Table.Th
-                      style={{
-                        fontWeight: 600,
-                        color: "var(--mantine-color-gray-7)",
-                        padding: "0.5rem",
-                      }}
-                      fz="sm"
-                    >
-                      <Button
-                        type="button"
-                        variant="tertiary"
-                        hover={false}
-                        onClick={() => toggleSort("eventType")}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.5rem",
-                          cursor: "pointer",
-                          userSelect: "none",
-                        }}
-                      >
-                        {t("audit.events.type", "Type")}
-                        <Icon name={getSortIcon("eventType")} size="0.9rem" />
-                      </Button>
-                    </Table.Th>
-                    <Table.Th
-                      style={{
-                        fontWeight: 600,
-                        color: "var(--mantine-color-gray-7)",
-                        padding: "0.5rem",
-                      }}
-                      fz="sm"
-                    >
-                      <Button
-                        type="button"
-                        variant="tertiary"
-                        hover={false}
-                        onClick={() => toggleSort("username")}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.5rem",
-                          cursor: "pointer",
-                          userSelect: "none",
-                        }}
-                      >
-                        {t("audit.events.user", "User")}
-                        <Icon name={getSortIcon("username")} size="0.9rem" />
-                      </Button>
-                    </Table.Th>
-                    <Table.Th
-                      style={{
-                        fontWeight: 600,
-                        color: "var(--mantine-color-gray-7)",
-                      }}
-                      fz="sm"
-                    >
-                      {t("audit.events.documentName", "Document Name")}
-                    </Table.Th>
-                    {showAuthor && (
-                      <Table.Th
-                        style={{
-                          fontWeight: 600,
-                          color: "var(--mantine-color-gray-7)",
-                        }}
-                        fz="sm"
-                      >
-                        {t("audit.events.author", "Author")}
-                      </Table.Th>
-                    )}
-                    {showFileHash && (
-                      <Table.Th
-                        style={{
-                          fontWeight: 600,
-                          color: "var(--mantine-color-gray-7)",
-                        }}
-                        fz="sm"
-                      >
-                        {t("audit.events.fileHash", "File Hash")}
-                      </Table.Th>
-                    )}
-                    <Table.Th
-                      style={{
-                        fontWeight: 600,
-                        color: "var(--mantine-color-gray-7)",
-                      }}
-                      fz="sm"
-                      ta="center"
-                    >
-                      {t("audit.events.actions", "Actions")}
-                    </Table.Th>
-                  </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>
-                  {sortedEvents.length === 0 ? (
-                    <Table.Tr>
-                      <Table.Td colSpan={totalColumns}>
-                        <Group justify="center" py="xl">
-                          <Stack align="center" gap={0}>
-                            <Icon
-                              name="search"
-                              size="2rem"
-                              style={{ opacity: 0.4 }}
-                            />
-                            <Text ta="center" c="dimmed" size="sm">
-                              {t("audit.events.noEvents", "No events found")}
-                            </Text>
-                          </Stack>
-                        </Group>
-                      </Table.Td>
-                    </Table.Tr>
-                  ) : (
-                    sortedEvents.map((event) => {
-                      // Extract document name, author, hash from details.files if available
-                      let documentName = "";
-                      let author = "";
-                      let fileHash = "";
-                      if (event.details && typeof event.details === "object") {
-                        const details = event.details as Record<
-                          string,
-                          unknown
-                        >;
-                        const files = details.files;
-                        if (Array.isArray(files) && files.length > 0) {
-                          const firstFile = files[0] as Record<string, unknown>;
-                          documentName =
-                            typeof firstFile.name === "string"
-                              ? firstFile.name
-                              : "";
-                          if (showAuthor || showFileHash) {
-                            author =
-                              typeof firstFile.pdfAuthor === "string"
-                                ? firstFile.pdfAuthor
-                                : "";
-                            fileHash =
-                              typeof firstFile.fileHash === "string"
-                                ? firstFile.fileHash.substring(0, 16) + "..."
-                                : "";
-                          }
-                        }
-                      }
-
-                      return (
-                        <Table.Tr key={event.id}>
-                          <Table.Td>
-                            <Text size="sm">{formatDate(event.timestamp)}</Text>
-                          </Table.Td>
-                          <Table.Td>
-                            <Badge
-                              variant="light"
-                              size="sm"
-                              color={getEventTypeColor(event.eventType)}
-                            >
-                              {event.eventType}
-                            </Badge>
-                          </Table.Td>
-                          <Table.Td>
-                            <Text size="sm">{event.username}</Text>
-                          </Table.Td>
-                          <Table.Td>
-                            <Text size="sm" title={documentName}>
-                              {documentName || "—"}
-                            </Text>
-                          </Table.Td>
-                          {showAuthor && (
-                            <Table.Td>
-                              <Text size="sm">{author}</Text>
-                            </Table.Td>
-                          )}
-                          {showFileHash && (
-                            <Table.Td>
-                              <Text
-                                size="sm"
-                                title={fileHash}
-                                style={{
-                                  fontFamily: "monospace",
-                                  fontSize: "0.75rem",
-                                }}
-                              >
-                                {fileHash}
-                              </Text>
-                            </Table.Td>
-                          )}
-                          <Table.Td ta="center">
-                            <Button
-                              variant="tertiary"
-                              size="sm"
-                              onClick={() => setSelectedEvent(event)}
-                              disabled={!loginEnabled}
-                            >
-                              {t("audit.events.viewDetails", "View Details")}
-                            </Button>
-                          </Table.Td>
-                        </Table.Tr>
-                      );
-                    })
-                  )}
-                </Table.Tbody>
-              </Table>
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <Group justify="center" mt="md">
-                  <Pagination
-                    value={currentPage}
-                    onChange={setCurrentPage}
-                    total={totalPages}
-                  />
-                </Group>
-              )}
-            </div>
-          </>
-        )}
+        <AuditEventsResults
+          loading={loading}
+          error={error}
+          events={sortedEvents}
+          showAuthor={showAuthor}
+          showFileHash={showFileHash}
+          loginEnabled={loginEnabled}
+          getSortIcon={getSortIcon}
+          onSort={toggleSort}
+          onViewDetails={setSelectedEvent}
+          page={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </Stack>
 
-      {/* Event Details Modal */}
       <Modal
         opened={selectedEvent !== null}
         onClose={() => setSelectedEvent(null)}
@@ -512,42 +628,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
         size="lg"
         zIndex={Z_INDEX_OVER_CONFIG_MODAL}
       >
-        {selectedEvent && (
-          <Stack gap="md">
-            <div>
-              <Text size="sm" fw={600} c="dimmed">
-                {t("audit.events.timestamp", "Timestamp")}
-              </Text>
-              <Text size="sm">{formatDate(selectedEvent.timestamp)}</Text>
-            </div>
-            <div>
-              <Text size="sm" fw={600} c="dimmed">
-                {t("audit.events.type", "Type")}
-              </Text>
-              <Text size="sm">{selectedEvent.eventType}</Text>
-            </div>
-            <div>
-              <Text size="sm" fw={600} c="dimmed">
-                {t("audit.events.user", "User")}
-              </Text>
-              <Text size="sm">{selectedEvent.username}</Text>
-            </div>
-            <div>
-              <Text size="sm" fw={600} c="dimmed">
-                {t("audit.events.ipAddress", "IP Address")}
-              </Text>
-              <Text size="sm">{selectedEvent.ipAddress}</Text>
-            </div>
-            <div>
-              <Text size="sm" fw={600} c="dimmed">
-                {t("audit.events.details", "Details")}
-              </Text>
-              <Code block mah={300} style={{ overflow: "auto" }}>
-                {JSON.stringify(selectedEvent.details, null, 2)}
-              </Code>
-            </div>
-          </Stack>
-        )}
+        <EventDetails event={selectedEvent} />
       </Modal>
     </Card>
   );
