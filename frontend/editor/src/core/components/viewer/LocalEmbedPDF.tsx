@@ -515,7 +515,10 @@ export function LocalEmbedPDF({
       const source = file ?? buffer ?? null;
       if (!source) return;
       // The replacement becomes the live document through the bridge, so the
-      // initial copy is dead weight from here on.
+      // initial copy is dead weight from here on. The source follows it: a
+      // registry rebuild and the probe handshake must target the live
+      // document, not the one the viewer opened first.
+      initialSourceRef.current = file ?? null;
       initialBufferRef.current = null;
       for (const docs of initialDocsArraysRef.current) {
         docs.length = 0;
@@ -542,6 +545,7 @@ export function LocalEmbedPDF({
     } else {
       initialDocumentOpenedRef.current = false;
       openedContentKeyRef.current = null;
+      initialSourceRef.current = null;
       initialBufferRef.current = null;
       for (const docs of initialDocsArraysRef.current) {
         docs.length = 0;
