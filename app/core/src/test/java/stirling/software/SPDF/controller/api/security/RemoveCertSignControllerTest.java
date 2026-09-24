@@ -13,8 +13,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDAppearanceContentStream;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceDictionary;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
 import org.junit.jupiter.api.BeforeEach;
@@ -191,6 +196,66 @@ class RemoveCertSignControllerTest {
 
             ResponseEntity<Resource> response = removeCertSignController.removeCertSignPDF(request);
             assertNotNull(response.getBody());
+        }
+
+        @Test
+        @DisplayName("Should remove a visible signature without drawing it onto the page")
+        void testRemoveCertSign_VisibleSignatureRemoved() throws Exception {
+            byte[] pdfWithVisibleSig;
+            try (PDDocument doc = new PDDocument()) {
+                PDPage page = new PDPage();
+                doc.addPage(page);
+                PDAcroForm acroForm = new PDAcroForm(doc);
+                doc.getDocumentCatalog().setAcroForm(acroForm);
+                acroForm.setSignaturesExist(true);
+                acroForm.setAppendOnly(true);
+
+                PDSignatureField sigField = new PDSignatureField(acroForm);
+                PDAnnotationWidget widget = sigField.getWidgets().get(0);
+                PDRectangle rect = new PDRectangle(50, 50, 200, 50);
+                widget.setRectangle(rect);
+                widget.setPage(page);
+
+                PDAppearanceStream stream = new PDAppearanceStream(doc);
+                stream.setBBox(new PDRectangle(rect.getWidth(), rect.getHeight()));
+                try (PDAppearanceContentStream cs = new PDAppearanceContentStream(stream)) {
+                    cs.addRect(0, 0, rect.getWidth(), rect.getHeight());
+                    cs.fill();
+                }
+                PDAppearanceDictionary appearance = new PDAppearanceDictionary();
+                appearance.setNormalAppearance(stream);
+                widget.setAppearance(appearance);
+
+                page.getAnnotations().add(widget);
+                acroForm.getFields().add(sigField);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                doc.save(baos);
+                pdfWithVisibleSig = baos.toByteArray();
+            }
+
+            MockMultipartFile pdfFile =
+                    new MockMultipartFile(
+                            "fileInput",
+                            "signed.pdf",
+                            MediaType.APPLICATION_PDF_VALUE,
+                            pdfWithVisibleSig);
+
+            PDFFile request = new PDFFile();
+            request.setFileInput(pdfFile);
+
+            when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                    .thenAnswer(inv -> Loader.loadPDF(pdfWithVisibleSig));
+
+            ResponseEntity<Resource> response = removeCertSignController.removeCertSignPDF(request);
+
+            try (PDDocument result = Loader.loadPDF(drainBody(response))) {
+                PDPage page = result.getPage(0);
+                assertTrue(page.getAnnotations().isEmpty());
+                assertEquals(-1, page.getContents().read(), "page content must stay empty");
+                PDAcroForm acroForm = result.getDocumentCatalog().getAcroForm();
+                assertTrue(acroForm.getFields().isEmpty());
+                assertFalse(acroForm.isSignaturesExist());
+            }
         }
 
         @Test
