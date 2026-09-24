@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, Checkbox, FormField, Input, Modal, Select } from "@app/ui";
 import {
@@ -192,9 +192,21 @@ export function InviteMemberModal({
     setTouched((current) => ({ ...current, [field]: true }));
   }
 
+  const resetTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (resetTimerRef.current !== null) {
+        window.clearTimeout(resetTimerRef.current);
+      }
+    };
+  }, []);
+
   function close() {
     onClose();
-    setTimeout(() => {
+    // The form resets after the close animation; if the modal unmounts first,
+    // the timer must not outlive it.
+    resetTimerRef.current = window.setTimeout(() => {
       setEmail("");
       setUsername("");
       setPassword("");

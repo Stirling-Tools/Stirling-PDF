@@ -291,10 +291,12 @@ describe("SaaS ownership through the current Users page", () => {
     fireEvent.click(await screen.findByRole("checkbox"));
     fireEvent.click(screen.getByRole("button", { name: "Transfer ownership" }));
     fireEvent.click(await screen.findByRole("button", { name: "Done" }));
-    await waitFor(() =>
-      expect(
-        screen.getByRole("textbox", { name: "Role for Blair" }),
-      ).toHaveValue("Org Owner"),
+    await waitFor(
+      () =>
+        expect(
+          screen.getByRole("textbox", { name: "Role for Blair" }),
+        ).toHaveValue("Org Owner"),
+      REFETCH_WAIT,
     );
     expect(owner()).toBe(2);
     expect(screen.getByRole("textbox", { name: "Role for Alex" })).toHaveValue(
@@ -310,10 +312,12 @@ describe("SaaS ownership through the current Users page", () => {
     fireEvent.click(
       await screen.findByRole("button", { name: "Become team owner" }),
     );
-    await waitFor(() =>
-      expect(
-        screen.getByRole("textbox", { name: "Role for Alex" }),
-      ).toHaveValue("Org Owner"),
+    await waitFor(
+      () =>
+        expect(
+          screen.getByRole("textbox", { name: "Role for Alex" }),
+        ).toHaveValue("Org Owner"),
+      REFETCH_WAIT,
     );
     expect(owner()).toBe(1);
     expect(
