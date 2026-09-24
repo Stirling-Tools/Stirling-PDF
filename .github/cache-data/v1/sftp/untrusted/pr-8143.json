@@ -49,10 +49,17 @@
       "source": "Stirling-Tools/Stirling-PDF",
       "created_by": "Ludy87",
       "size": 444357685
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8143/npm/macos-arm64/533f98061df54f0f3c5a897f46d180e160f7a1d7f3d0911d55eced5f04a6a8cd/v1": {
+      "object": "sha256:cc1e065cf75f3257638f97e4e968f0c158d295bb3fe7e434ebda2e8412f63814",
+      "updated_at": "2026-09-24T20:40:29.944Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 323240153
     }
   },
   "monitoring": {
-    "window_started_at": "2026-09-22T20:38:57.486Z",
-    "writes": 7
+    "window_started_at": "2026-09-24T20:40:29.943Z",
+    "writes": 1
   }
 }
