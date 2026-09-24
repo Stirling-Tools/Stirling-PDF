@@ -299,6 +299,49 @@ describe("trackEditorReducer split", () => {
   });
 });
 
+describe("trackEditorReducer revert", () => {
+  it("reverts a file's track and every track it swapped pages with, keeping the rest", () => {
+    const C = "file-c" as FileId;
+    let state = sync(initialTrackEditorState, [
+      source(A, 3),
+      source(B, 2),
+      source(C, 2),
+    ]);
+    state = trackEditorReducer(state, {
+      type: "move",
+      pageIds: [pagesOf(state, A)[0].id],
+      targetFileId: B,
+      beforePageId: null,
+    });
+    state = trackEditorReducer(state, {
+      type: "delete",
+      pageIds: [pagesOf(state, C)[0].id],
+    });
+
+    state = trackEditorReducer(state, { type: "revert", fileIds: [A] });
+
+    expect(ids(state, A)).toEqual([`${A}:1`, `${A}:2`, `${A}:3`]);
+    expect(ids(state, B)).toEqual([`${B}:1`, `${B}:2`]);
+    expect(changedTrackIds(state)).toEqual([C]);
+    expect(state.past).toEqual([]);
+  });
+
+  it("drops a split of the reverted file, returning its pages", () => {
+    let state = twoTracks();
+    state = trackEditorReducer(state, {
+      type: "split",
+      fileId: A,
+      startPageId: pagesOf(state, A)[1].id,
+    });
+
+    state = trackEditorReducer(state, { type: "revert", fileIds: [A] });
+
+    expect(state.present.order).toEqual([A, B]);
+    expect(pagesOf(state, A)).toHaveLength(3);
+    expect(changedTrackIds(state)).toEqual([]);
+  });
+});
+
 describe("trackEditorReducer history", () => {
   it("undoes and redoes an edit, restoring dirty state each way", () => {
     let state = twoTracks();

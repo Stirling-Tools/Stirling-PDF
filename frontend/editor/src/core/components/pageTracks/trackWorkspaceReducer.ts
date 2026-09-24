@@ -48,6 +48,9 @@ export type TrackEditorAction =
       beforeId: FileId | null;
     }
   | { type: "dropTracks"; fileIds: FileId[] }
+  /** Reverts these files' tracks, and every track entangled with them, to
+   *  their saved state; entangled splits are dropped. */
+  | { type: "revert"; fileIds: FileId[] }
   | { type: "undo" }
   | { type: "redo" }
   | { type: "reset" };
@@ -136,16 +139,16 @@ function withEdit(
 }
 
 /**
- * Every track that shares a page with a replaced file, transitively: a page
- * moved between two tracks ties their edits together, so voiding one side's
- * edits and keeping the other's would lose or duplicate that page.
+ * The given files plus every track sharing a page with them, transitively: a
+ * page moved between two tracks ties their edits together, so voiding one
+ * side's edits and keeping the other's would lose or duplicate that page.
  */
-function tracksEntangledWith(
+export function tracksEntangledWith(
   workspace: TrackWorkspace,
-  replaced: Set<FileId>,
+  fileIds: Set<FileId>,
 ): Set<FileId> {
-  const involved = new Set(replaced);
-  let grew = replaced.size > 0;
+  const involved = new Set(fileIds);
+  let grew = fileIds.size > 0;
   while (grew) {
     grew = false;
     for (const id of workspace.order) {
@@ -452,6 +455,33 @@ export function trackEditorReducer(
       }
       // Removing a track is structural, like a sync: its pages must not linger
       // in the undo history.
+      return {
+        ...state,
+        present: { order, tracks },
+        baseline: { order, tracks: baselineTracks },
+        past: [],
+        future: [],
+      };
+    }
+
+    case "revert": {
+      const involved = tracksEntangledWith(
+        state.present,
+        new Set(action.fileIds),
+      );
+      const order = state.present.order.filter(
+        (id) => !(involved.has(id) && state.present.tracks[id]?.isNew),
+      );
+      const tracks: Record<FileId, Track> = {};
+      const baselineTracks: Record<FileId, Track> = {};
+      for (const id of order) {
+        const track = state.present.tracks[id];
+        if (!track) continue;
+        const baseline = state.baseline.tracks[id];
+        tracks[id] = involved.has(id) && baseline ? baseline : track;
+        if (baseline) baselineTracks[id] = baseline;
+      }
+      // Undo entries could revive the reverted edits alongside the saved state.
       return {
         ...state,
         present: { order, tracks },

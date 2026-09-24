@@ -29,10 +29,7 @@ import { isStirlingFile } from "@app/types/fileContext";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import {
-  useNavigationGuard,
-  useNavigationState,
-} from "@app/contexts/NavigationContext";
+import { useNavigationState } from "@app/contexts/NavigationContext";
 import { ViewerContext, useViewer } from "@app/contexts/ViewerContext";
 import { WorkbenchType, isBaseWorkbench } from "@app/types/workbench";
 import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
@@ -103,7 +100,8 @@ export default function WorkbenchBar({
     clearFilesPageReturnRoute();
     navigate(target);
   }, [returnRoute, navigate]);
-  const { buttons, actions, allButtonsDisabled } = useWorkbenchBar();
+  const { buttons, actions, allButtonsDisabled, viewFileActions } =
+    useWorkbenchBar();
   const {
     pageEditorFunctions,
     toolPanelMode,
@@ -234,13 +232,24 @@ export default function WorkbenchBar({
         return;
       }
 
-      const filesToExport =
-        selectedFiles.length > 0 ? selectedFiles : activeFiles;
-      const stubs = filesToExport.map((file) =>
-        isStirlingFile(file)
-          ? selectors.getStirlingFileStub(file.fileId)
-          : undefined,
-      );
+      const viewExport = await viewFileActions?.getExportFiles?.();
+      if (viewExport === null) return;
+      const filesToExport = viewExport
+        ? viewExport.map((entry) => entry.file)
+        : selectedFiles.length > 0
+          ? selectedFiles
+          : activeFiles;
+      const stubs = viewExport
+        ? viewExport.map((entry) =>
+            entry.fileId
+              ? selectors.getStirlingFileStub(entry.fileId)
+              : undefined,
+          )
+        : filesToExport.map((file) =>
+            isStirlingFile(file)
+              ? selectors.getStirlingFileStub(file.fileId)
+              : undefined,
+          );
 
       // Enforce all files in one batch so the toast shows progress across the
       // whole set (e.g. "report.pdf (2 of 5)") rather than N invisible solo runs.
@@ -292,6 +301,7 @@ export default function WorkbenchBar({
       activeFiles,
       pageEditorFunctions,
       viewerContext,
+      viewFileActions,
       selectors,
       fileActions,
     ],
@@ -302,7 +312,9 @@ export default function WorkbenchBar({
   }, [viewerContext]);
 
   const handleClose = useCallback(async () => {
-    if (currentView === "fileEditor" || currentView === "pageEditor") {
+    if (viewFileActions?.onClose) {
+      viewFileActions.onClose();
+    } else if (currentView === "fileEditor" || currentView === "pageEditor") {
       await fileActions.clearAllFiles();
     } else if (currentView === "viewer") {
       const file =
@@ -332,6 +344,7 @@ export default function WorkbenchBar({
     }
   }, [
     currentView,
+    viewFileActions,
     fileActions,
     activeFiles,
     activeFileId,
@@ -348,15 +361,8 @@ export default function WorkbenchBar({
     return terminology.downloadAll;
   }, [currentView, selectedCount, t, terminology]);
 
-  // The page editor's edits live only in memory: download would export the
-  // saved files without them, and close would drop them.
-  const { hasUnsavedChanges } = useNavigationGuard();
-  const pageEditsPending = currentView === "pageEditor" && hasUnsavedChanges;
   const actionsDisabled =
-    totalItems === 0 ||
-    allButtonsDisabled ||
-    disableForFullscreen ||
-    pageEditsPending;
+    totalItems === 0 || allButtonsDisabled || disableForFullscreen;
 
   // Shared by the mobile overflow menu and the desktop icon cluster so the two
   // stay in step; each renders the same actions in its own shape.

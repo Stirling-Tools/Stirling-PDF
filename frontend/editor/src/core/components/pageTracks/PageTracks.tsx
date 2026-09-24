@@ -24,6 +24,19 @@ import { useWheelZoom } from "@app/hooks/useWheelZoom";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { truncateCenter } from "@app/utils/textUtils";
 import { FileId } from "@app/types/file";
+import { WorkbenchExportFile } from "@app/types/workbenchBar";
+import { useWorkbenchViewFileActions } from "@app/hooks/useWorkbenchViewFileActions";
+import { CloseFilesConfirmModal } from "@app/components/shared/CloseFilesConfirmModal";
+import { alert } from "@app/components/toast";
+import {
+  PolicyBlockedError,
+  assertFilesNotBlocked,
+} from "@app/services/policyFileGuard";
+import {
+  buildTrackFile,
+  policyIdsForTracks,
+} from "@app/components/pageTracks/buildTrackFile";
+import { tracksEntangledWith } from "@app/components/pageTracks/trackWorkspaceReducer";
 import { useTrackWorkspace } from "@app/components/pageTracks/hooks/useTrackWorkspace";
 import { useTrackSelection } from "@app/components/pageTracks/hooks/useTrackSelection";
 import { useTrackThumbnails } from "@app/components/pageTracks/hooks/useTrackThumbnails";
@@ -108,7 +121,7 @@ function pointerXOf(event: DragMoveEvent | DragEndEvent): number {
 
 export default function PageTracks() {
   const { t } = useTranslation();
-  const { state: fileState } = useFileState();
+  const { state: fileState, selectors: fileSelectors } = useFileState();
   const { actions: fileActions } = useFileActions();
   const {
     state,
@@ -241,23 +254,6 @@ export default function PageTracks() {
 
   const totalPages = useMemo(() => totalPageCount(workspace), [workspace]);
   const changedSet = useMemo(() => new Set(changedFileIds), [changedFileIds]);
-  // Closing a file drops every page sourced from it, including ones moved into
-  // other tracks, so a file tied to any pending edit stays open until saved.
-  const filesWithPendingEdits = useMemo(() => {
-    const ids = new Set<FileId>();
-    for (const id of changedFileIds) {
-      ids.add(id);
-      workspace.tracks[id]?.pages.forEach((page) => ids.add(page.sourceFileId));
-    }
-    return ids;
-  }, [changedFileIds, workspace]);
-  const closeFile = useCallback(
-    (fileId: FileId) => {
-      void fileActions.removeFiles([fileId], false);
-    },
-    [fileActions],
-  );
-
   const rotatePages = useCallback(
     (pageIds: string[], delta: number) =>
       dispatch({ type: "rotate", pageIds, delta }),
@@ -504,6 +500,146 @@ export default function PageTracks() {
     void save();
   }, [save]);
 
+  // Downloads what the editor shows: an unchanged track is its stored file, an
+  // edited one or a split is rendered from its pages without being saved.
+  const getExportFiles = useCallback(async (): Promise<
+    WorkbenchExportFile[] | null
+  > => {
+    const lookup = {
+      getStub: fileSelectors.getStirlingFileStub,
+      getFile: fileSelectors.getFile,
+    };
+    const trackIds = workspace.order.filter(
+      (id) => (workspace.tracks[id]?.pages.length ?? 0) > 0,
+    );
+    try {
+      assertFilesNotBlocked(
+        policyIdsForTracks(
+          workspace,
+          trackIds.filter((id) => changedSet.has(id)),
+          lookup.getStub,
+        ),
+      );
+      const files: WorkbenchExportFile[] = [];
+      for (const id of trackIds) {
+        const track = workspace.tracks[id];
+        if (!track) continue;
+        if (!changedSet.has(id)) {
+          const file = lookup.getFile(id);
+          if (file) files.push({ file, fileId: id });
+          continue;
+        }
+        const built = await buildTrackFile(track, lookup);
+        if (built) files.push({ file: built.file });
+      }
+      return files;
+    } catch (error) {
+      if (!(error instanceof PolicyBlockedError)) throw error;
+      alert({
+        alertType: "warning",
+        title: t("policy.recoveryTitle"),
+        body: t("policy.recoveryBody"),
+      });
+      return null;
+    }
+  }, [changedSet, fileSelectors, t, workspace]);
+
+  // Closing a file drops every page sourced from it, including ones moved into
+  // other tracks, so its pending edits are those of every track entangled with it.
+  const [closeRequest, setCloseRequest] = useState<FileId | "all" | null>(null);
+  const closeRequestEdits = useMemo(() => {
+    if (closeRequest === null || closeRequest === "all") return changedFileIds;
+    const entangled = tracksEntangledWith(workspace, new Set([closeRequest]));
+    return changedFileIds.filter((id) => entangled.has(id));
+  }, [changedFileIds, closeRequest, workspace]);
+
+  const closeRequested = useCallback(() => {
+    const request = closeRequest;
+    setCloseRequest(null);
+    if (request === "all") {
+      void fileActions.clearAllFiles();
+      return;
+    }
+    if (request === null) return;
+    if (closeRequestEdits.length > 0) {
+      dispatch({ type: "revert", fileIds: [request] });
+    }
+    void fileActions.removeFiles([request], false);
+  }, [closeRequest, closeRequestEdits, dispatch, fileActions]);
+
+  const saveAndCloseRequested = useCallback(async () => {
+    const request = closeRequest;
+    setCloseRequest(null);
+    if (request === null) return;
+    const versioned = await save(
+      request === "all" ? undefined : closeRequestEdits,
+    );
+    if (!versioned) return;
+    if (request === "all") {
+      await fileActions.clearAllFiles();
+      return;
+    }
+    // Saving versions the file under a new id; one that emptied is already closed.
+    const savedId = versioned.get(request);
+    if (savedId) setCloseOnceSaved(savedId);
+  }, [closeRequest, closeRequestEdits, fileActions, save]);
+
+  // The saved version only reaches file state on the next render, and removing
+  // it before then leaves its resources behind.
+  const [closeOnceSaved, setCloseOnceSaved] = useState<FileId | null>(null);
+  useEffect(() => {
+    if (!closeOnceSaved || !fileState.files.byId[closeOnceSaved]) return;
+    setCloseOnceSaved(null);
+    void fileActions.removeFiles([closeOnceSaved], false);
+  }, [closeOnceSaved, fileActions, fileState.files.byId]);
+
+  useWorkbenchViewFileActions(
+    useMemo(
+      () => ({ getExportFiles, onClose: () => setCloseRequest("all") }),
+      [getExportFiles],
+    ),
+  );
+
+  const closingAll = closeRequest === "all";
+  const hasCloseEdits = closeRequestEdits.length > 0;
+  const closeConfirmModal = (
+    <CloseFilesConfirmModal
+      opened={closeRequest !== null}
+      message={
+        hasCloseEdits
+          ? closeRequestEdits.length === 1
+            ? t("confirmCloseUnsaved", "This file has unsaved changes.")
+            : t("pageTracks.close.unsaved", "These files have unsaved changes.")
+          : closingAll
+            ? t(
+                "pageTracks.close.message",
+                "Are you sure you want to close all files?",
+              )
+            : t(
+                "confirmCloseMessage",
+                "Are you sure you want to close this file?",
+              )
+      }
+      fileNames={
+        hasCloseEdits
+          ? closeRequestEdits.map((id) => workspace.tracks[id]?.name ?? id)
+          : closingAll || closeRequest === null
+            ? []
+            : [workspace.tracks[closeRequest]?.name ?? closeRequest]
+      }
+      closeLabel={
+        hasCloseEdits
+          ? t("confirmCloseDiscard", "Discard changes and close")
+          : closingAll
+            ? t("workbenchBar.closeAll", "Close All Files")
+            : t("confirmCloseConfirm", "Close File")
+      }
+      onClose={closeRequested}
+      onCancel={() => setCloseRequest(null)}
+      onSave={hasCloseEdits ? () => void saveAndCloseRequested() : undefined}
+    />
+  );
+
   usePageTracksWorkbenchBarButtons({
     totalPages,
     selectedCount: selection.selectedCount,
@@ -529,6 +665,7 @@ export default function PageTracks() {
   if (!hasPdfFiles) {
     return (
       <Center h="100%">
+        {closeConfirmModal}
         <Stack align="center" gap="xs">
           <Text c="dimmed">
             {t("pageTracks.empty.title", "No PDF files loaded")}
@@ -546,6 +683,7 @@ export default function PageTracks() {
 
   return (
     <div className={styles.root} data-testid="page-tracks">
+      {closeConfirmModal}
       <LoadingOverlay
         visible={saving}
         loaderProps={{
@@ -620,7 +758,6 @@ export default function PageTracks() {
                   }
                   trackDragging={draggingTrack === fileId}
                   changed={changedSet.has(fileId)}
-                  closeDisabled={filesWithPendingEdits.has(fileId)}
                   thumbnails={thumbnails}
                   onSelectPage={selection.selectPage}
                   onSelectTrack={selection.selectTrack}
@@ -629,7 +766,7 @@ export default function PageTracks() {
                   onSplit={splitTrack}
                   onRotate={rotatePages}
                   onDelete={deletePages}
-                  onClose={closeFile}
+                  onClose={setCloseRequest}
                 />
               );
             })}

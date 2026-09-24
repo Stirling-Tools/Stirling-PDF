@@ -6479,6 +6479,10 @@ viewPage = "View page"
 zoomIn = "Zoom in"
 zoomOut = "Zoom out"
 
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
 [pageTracks.delete]
 page = "Delete page"
 selected = "Delete pages"
@@ -6489,7 +6493,6 @@ title = "No PDF files loaded"
 
 [pageTracks.track]
 close = "Close file"
-closeBlocked = "Save your changes before closing this file"
 collapse = "Collapse"
 expand = "Expand"
 toggleSelection = "Select all pages"

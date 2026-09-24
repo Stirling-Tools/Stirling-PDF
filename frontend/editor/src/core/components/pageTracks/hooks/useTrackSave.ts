@@ -8,14 +8,15 @@ import {
 } from "@app/contexts/file/fileActions";
 import { createStirlingFile, StirlingFileStub } from "@app/types/fileContext";
 import { FileId } from "@app/types/file";
-import { PDFDocument, PDFPage } from "@app/types/pageEditor";
-import { pdfExportService } from "@app/services/pdfExportService";
 import {
   PolicyBlockedError,
   assertFilesNotBlocked,
-  policySourceIds,
 } from "@app/services/policyFileGuard";
-import { TrackPage, TrackWorkspace } from "@app/components/pageTracks/types";
+import { TrackWorkspace } from "@app/components/pageTracks/types";
+import {
+  buildTrackFile,
+  policyIdsForTracks,
+} from "@app/components/pageTracks/buildTrackFile";
 
 /**
  * The page editor is a page-level rework of the open documents, which is what
@@ -46,8 +47,12 @@ export interface TrackSaveOptions {
 export interface TrackSaveHook {
   saving: boolean;
   progress: TrackSaveProgress | null;
-  /** Writes every changed track back as a new version of its own file. */
-  save: () => Promise<boolean>;
+  /**
+   * Writes changed tracks back as a new version of their own file: all of them,
+   * or only those in `trackIds`. Resolves to each versioned file's old id mapped
+   * to its new one, or null if nothing was saved.
+   */
+  save: (trackIds?: FileId[]) => Promise<Map<FileId, FileId> | null>;
 }
 
 interface BuiltTrack {
@@ -57,50 +62,6 @@ interface BuiltTrack {
   inputFileId: FileId | null;
   parentStub: StirlingFileStub;
   file: File;
-}
-
-/** Shape the export service expects: pages tagged with their source page. */
-function toExportDocument(
-  name: string,
-  ownFile: File,
-  pages: TrackPage[],
-): PDFDocument {
-  const exportPages: PDFPage[] = pages.map((page, index) => ({
-    id: page.id,
-    pageNumber: index + 1,
-    originalPageNumber: page.sourcePageNumber,
-    originalFileId: page.sourceFileId,
-    rotation: page.rotation,
-    thumbnail: null,
-    selected: false,
-  }));
-
-  return {
-    id: `page-tracks-${name}`,
-    name,
-    file: ownFile,
-    pages: exportPages,
-    totalPages: exportPages.length,
-  };
-}
-
-/** Every file whose bytes a save would write out, including consumed ancestors. */
-function policyIdsForTracks(
-  workspace: TrackWorkspace,
-  trackIds: FileId[],
-  getStub: (id: FileId) => StirlingFileStub | undefined,
-): string[] {
-  const fileIds = new Set<FileId>();
-  for (const id of trackIds) {
-    const track = workspace.tracks[id];
-    if (!track) continue;
-    if (!track.isNew) fileIds.add(id);
-    track.pages.forEach((page) => fileIds.add(page.sourceFileId));
-  }
-  return [...fileIds].flatMap((id) => {
-    const stub = getStub(id);
-    return stub ? policySourceIds(stub) : [id];
-  });
 }
 
 export function useTrackSave(
@@ -118,137 +79,124 @@ export function useTrackSave(
   const [saving, setSaving] = useState(false);
   const [progress, setProgress] = useState<TrackSaveProgress | null>(null);
 
-  const save = useCallback(async () => {
-    if (saving || changedFileIds.length === 0) return false;
+  const save = useCallback(
+    async (trackIds?: FileId[]) => {
+      const toSave = trackIds
+        ? changedFileIds.filter((id) => trackIds.includes(id))
+        : changedFileIds;
+      if (saving || toSave.length === 0) return null;
 
-    // A file-backed track emptied of every page has nothing to version.
-    const emptied = changedFileIds.filter((id) => {
-      const track = workspace.tracks[id];
-      return track != null && !track.isNew && track.pages.length === 0;
-    });
-    const rebuilt = changedFileIds.filter(
-      (id) => (workspace.tracks[id]?.pages.length ?? 0) > 0,
-    );
-
-    setSaving(true);
-    setProgress({ done: 0, total: rebuilt.length });
-    const policyIds = policyIdsForTracks(
-      workspace,
-      rebuilt,
-      selectors.getStirlingFileStub,
-    );
-
-    try {
-      assertFilesNotBlocked(policyIds);
-      // Build every output first: a track can hold pages belonging to another
-      // track's file, and committing as we go would swap those bytes out from
-      // under a later build.
-      const built: BuiltTrack[] = [];
-      for (const id of rebuilt) {
+      // A file-backed track emptied of every page has nothing to version.
+      const emptied = toSave.filter((id) => {
         const track = workspace.tracks[id];
-        if (!track) continue;
-        const pages = track.pages;
+        return track != null && !track.isNew && track.pages.length === 0;
+      });
+      const rebuilt = toSave.filter(
+        (id) => (workspace.tracks[id]?.pages.length ?? 0) > 0,
+      );
 
-        // A split has no file of its own: it is written to a new file, parented
-        // to (and named after) the document its pages came from.
-        const anchorFileId = track.isNew ? pages[0]?.sourceFileId : id;
-        if (!anchorFileId) continue;
-        const parentStub = selectors.getStirlingFileStub(anchorFileId);
-        const ownFile = selectors.getFile(anchorFileId);
-        if (!parentStub || !ownFile) continue;
-        const name = track.isNew ? track.name : parentStub.name;
+      setSaving(true);
+      setProgress({ done: 0, total: rebuilt.length });
+      const policyIds = policyIdsForTracks(
+        workspace,
+        rebuilt,
+        selectors.getStirlingFileStub,
+      );
 
-        const sourceFiles = new Map<string, File>();
-        for (const page of pages) {
-          if (sourceFiles.has(page.sourceFileId)) continue;
-          const sourceFile = selectors.getFile(page.sourceFileId);
-          if (sourceFile) sourceFiles.set(page.sourceFileId, sourceFile);
+      try {
+        assertFilesNotBlocked(policyIds);
+        // Build every output first: a track can hold pages belonging to another
+        // track's file, and committing as we go would swap those bytes out from
+        // under a later build.
+        const built: BuiltTrack[] = [];
+        for (const id of rebuilt) {
+          const track = workspace.tracks[id];
+          if (!track) continue;
+          const output = await buildTrackFile(track, {
+            getStub: selectors.getStirlingFileStub,
+            getFile: selectors.getFile,
+          });
+          if (!output) continue;
+          built.push({
+            trackId: id,
+            inputFileId: track.isNew ? null : id,
+            ...output,
+          });
+          setProgress({ done: built.length, total: rebuilt.length });
         }
 
-        const { blob } = await pdfExportService.exportPDFMultiFile(
-          toExportDocument(name, ownFile, pages),
-          sourceFiles,
-          [],
-          { filename: name },
-        );
+        // A policy can fail while the outputs are being built.
+        assertFilesNotBlocked(policyIds);
 
-        built.push({
-          trackId: id,
-          inputFileId: track.isNew ? null : id,
-          parentStub,
-          file: new File([blob], name, { type: "application/pdf" }),
-        });
-        setProgress({ done: built.length, total: rebuilt.length });
+        // Version each file-backed track in place (a new version of its own
+        // file). One at a time so each lands in its own slot rather than clumping
+        // at the top of the file list.
+        const versioned = new Map<FileId, FileId>();
+        for (const entry of built) {
+          if (entry.inputFileId == null) continue;
+          const processedFile = await generateProcessedFileMetadata(entry.file);
+          const outputStub = createChildStub(
+            entry.parentStub,
+            { toolId: SAVE_TOOL_ID, timestamp: Date.now() },
+            entry.file,
+            processedFile?.thumbnailUrl,
+            processedFile,
+          );
+          await actions.consumeFiles(
+            [entry.inputFileId],
+            [createStirlingFile(entry.file, outputStub.id)],
+            [outputStub],
+            { silent: true },
+          );
+          versioned.set(entry.inputFileId, outputStub.id);
+          onVersionedRef.current?.(entry.inputFileId, outputStub.id);
+        }
+
+        // A split becomes a brand-new active file, exactly like the Multi-Tool's
+        // apply: add the fresh files so they enter the workbench (and the
+        // workspace, via sync) as their own tracks.
+        const splitFiles = built
+          .filter((entry) => entry.inputFileId == null)
+          .map((entry) => entry.file);
+        if (splitFiles.length > 0) {
+          await actions.addFiles(splitFiles, {
+            selectFiles: false,
+            skipUploadTracking: true,
+          });
+        }
+
+        if (emptied.length > 0) {
+          // Every page moved out, so there is nothing left to version. Drop the
+          // file from the workbench but keep it in storage at its last version.
+          await actions.removeFiles(emptied, false);
+        }
+
+        // The split tracks now live in their own files; drop the synthetic tracks
+        // so the added files take their place as ordinary file-backed tracks.
+        const materialized = built
+          .filter((entry) => entry.inputFileId == null)
+          .map((entry) => entry.trackId);
+        if (materialized.length > 0) onMaterializedRef.current?.(materialized);
+
+        return versioned;
+      } catch (error) {
+        if (error instanceof PolicyBlockedError) {
+          alert({
+            alertType: "warning",
+            title: t("policy.recoveryTitle"),
+            body: t("policy.recoveryBody"),
+          });
+        } else {
+          console.error("[PageTracks] save failed", error);
+        }
+        return null;
+      } finally {
+        setSaving(false);
+        setProgress(null);
       }
-
-      // A policy can fail while the outputs are being built.
-      assertFilesNotBlocked(policyIds);
-
-      // Version each file-backed track in place (a new version of its own
-      // file). One at a time so each lands in its own slot rather than clumping
-      // at the top of the file list.
-      for (const entry of built) {
-        if (entry.inputFileId == null) continue;
-        const processedFile = await generateProcessedFileMetadata(entry.file);
-        const outputStub = createChildStub(
-          entry.parentStub,
-          { toolId: SAVE_TOOL_ID, timestamp: Date.now() },
-          entry.file,
-          processedFile?.thumbnailUrl,
-          processedFile,
-        );
-        await actions.consumeFiles(
-          [entry.inputFileId],
-          [createStirlingFile(entry.file, outputStub.id)],
-          [outputStub],
-          { silent: true },
-        );
-        onVersionedRef.current?.(entry.inputFileId, outputStub.id);
-      }
-
-      // A split becomes a brand-new active file, exactly like the Multi-Tool's
-      // apply: add the fresh files so they enter the workbench (and the
-      // workspace, via sync) as their own tracks.
-      const splitFiles = built
-        .filter((entry) => entry.inputFileId == null)
-        .map((entry) => entry.file);
-      if (splitFiles.length > 0) {
-        await actions.addFiles(splitFiles, {
-          selectFiles: false,
-          skipUploadTracking: true,
-        });
-      }
-
-      if (emptied.length > 0) {
-        // Every page moved out, so there is nothing left to version. Drop the
-        // file from the workbench but keep it in storage at its last version.
-        await actions.removeFiles(emptied, false);
-      }
-
-      // The split tracks now live in their own files; drop the synthetic tracks
-      // so the added files take their place as ordinary file-backed tracks.
-      const materialized = built
-        .filter((entry) => entry.inputFileId == null)
-        .map((entry) => entry.trackId);
-      if (materialized.length > 0) onMaterializedRef.current?.(materialized);
-
-      return true;
-    } catch (error) {
-      if (error instanceof PolicyBlockedError) {
-        alert({
-          alertType: "warning",
-          title: t("policy.recoveryTitle"),
-          body: t("policy.recoveryBody"),
-        });
-      } else {
-        console.error("[PageTracks] save failed", error);
-      }
-      return false;
-    } finally {
-      setSaving(false);
-      setProgress(null);
-    }
-  }, [actions, changedFileIds, saving, selectors, t, workspace]);
+    },
+    [actions, changedFileIds, saving, selectors, t, workspace],
+  );
 
   return { saving, progress, save };
 }

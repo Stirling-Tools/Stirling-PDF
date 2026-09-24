@@ -318,7 +318,7 @@ test.describe("Page Editor tracks", () => {
     await expect(saved).not.toContainText("edited");
   });
 
-  test("download and close are disabled while edits are pending", async ({
+  test("download writes out the pending edits without saving them", async ({
     page,
   }) => {
     await openPageEditor(page);
@@ -326,25 +326,76 @@ test.describe("Page Editor tracks", () => {
     await expect(rotated.locator("[data-page-id]")).toHaveCount(4, {
       timeout: 30_000,
     });
-    const download = page.getByRole("button", { name: "Download Files" });
-    const close = page.getByRole("button", { name: "Close All Files" });
-    await expect(download).toBeEnabled();
-    await expect(close).toBeEnabled();
+    // One file only: WebKit surfaces just the first of several back-to-back downloads.
+    const sample = track(page, "sample.pdf");
+    await sample
+      .locator("header")
+      .getByRole("button", { name: "Close file" })
+      .click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Close File" })
+      .click();
+    await expect(sample).toHaveCount(0);
 
     const last = rotated.locator("[data-page-id]").nth(3);
     await last.hover();
     await last.getByRole("button", { name: "Delete page" }).click();
-    await expect(download).toBeDisabled();
-    await expect(close).toBeDisabled();
+    await expect(rotated.locator("[data-page-id]")).toHaveCount(3);
 
-    await page
-      .getByRole("button", { name: "Save changes to all files" })
-      .click();
-    await expect(track(page, "rotated-pages.pdf")).toContainText("v2", {
-      timeout: 90_000,
+    const download = page.waitForEvent("download", { timeout: 30_000 });
+    await page.getByRole("button", { name: "Download Files" }).click();
+    const edited = await download;
+    expect(edited.suggestedFilename()).toBe("rotated-pages.pdf");
+    const target = path.join(
+      fs.mkdtempSync(path.join(os.tmpdir(), "page-tracks-")),
+      "rotated-pages.pdf",
+    );
+    await edited.saveAs(target);
+    const pdf = await PDFDocument.load(fs.readFileSync(target));
+    expect(pdf.getPageCount()).toBe(3);
+
+    // Downloading is not saving: the edit is still pending on version 1.
+    await expect(rotated).toContainText("edited");
+    await expect(rotated).not.toContainText("v2");
+  });
+
+  test("close asks first, and offers save or discard when edits are pending", async ({
+    page,
+  }) => {
+    await openPageEditor(page);
+    const rotated = track(page, "rotated-pages.pdf");
+    await expect(rotated.locator("[data-page-id]")).toHaveCount(4, {
+      timeout: 30_000,
     });
-    await expect(download).toBeEnabled();
-    await expect(close).toBeEnabled();
+    const closeAll = page
+      .locator(".workbench-bar")
+      .getByRole("button", { name: "Close All Files" });
+    const dialog = page.getByRole("dialog");
+
+    await closeAll.click();
+    await expect(dialog).toContainText(
+      "Are you sure you want to close all files?",
+    );
+    await dialog.getByRole("button", { name: "Cancel" }).click();
+    await expect(dialog).toHaveCount(0);
+
+    const last = rotated.locator("[data-page-id]").nth(3);
+    await last.hover();
+    await last.getByRole("button", { name: "Delete page" }).click();
+    await closeAll.click();
+    await expect(dialog).toContainText("This file has unsaved changes.");
+    await expect(dialog).toContainText("rotated-pages.pdf");
+    await dialog.getByRole("button", { name: "Cancel" }).click();
+    await expect(rotated.locator("[data-page-id]")).toHaveCount(3);
+    await expect(rotated).toContainText("edited");
+
+    await closeAll.click();
+    await dialog
+      .getByRole("button", { name: "Discard changes and close" })
+      .click();
+    await expect(rotated).toHaveCount(0, { timeout: 30_000 });
+    await expect(track(page, "sample.pdf")).toHaveCount(0);
   });
 
   test("track actions need a selection: select all, then delete every page", async ({
@@ -376,7 +427,7 @@ test.describe("Page Editor tracks", () => {
     ).toHaveCount(1);
   });
 
-  test("a track's close button closes its file, unless it has pending edits", async ({
+  test("a track's close button confirms, and offers save when that file has edits", async ({
     page,
   }) => {
     await openPageEditor(page);
@@ -387,18 +438,27 @@ test.describe("Page Editor tracks", () => {
     });
     const closeOf = (lane: import("@playwright/test").Locator) =>
       lane.locator("header").getByRole("button", { name: "Close file" });
+    const dialog = page.getByRole("dialog");
 
     const last = rotated.locator("[data-page-id]").nth(3);
     await last.hover();
     await last.getByRole("button", { name: "Delete page" }).click();
-    await expect(closeOf(rotated)).toBeDisabled();
-    await expect(closeOf(sample)).toBeEnabled();
 
     await closeOf(sample).click();
+    await expect(dialog).toContainText(
+      "Are you sure you want to close this file?",
+    );
+    await dialog.getByRole("button", { name: "Close File" }).click();
     await expect(sample).toHaveCount(0);
     // Closing an unrelated file leaves the other track's pending edit alone.
     await expect(rotated.locator("[data-page-id]")).toHaveCount(3);
     await expect(rotated).toContainText("edited");
+
+    await closeOf(rotated).click();
+    await expect(dialog).toContainText("This file has unsaved changes.");
+    await dialog.getByRole("button", { name: "Save and close" }).click();
+    await expect(rotated).toHaveCount(0, { timeout: 90_000 });
+    await expect(page.locator("[data-track-file-id]")).toHaveCount(0);
   });
 
   test("the insertion line marks where a right-to-left drag actually lands", async ({
