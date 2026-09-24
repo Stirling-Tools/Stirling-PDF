@@ -1146,7 +1146,6 @@ refresh = "Refresh"
 selectFile = "Please select a .sql file to import"
 size = "Size"
 title = "Database"
-unavailable = "Backup list unavailable for the current database configuration."
 uploadTitle = "Upload & import"
 version = "H2 Version"
 

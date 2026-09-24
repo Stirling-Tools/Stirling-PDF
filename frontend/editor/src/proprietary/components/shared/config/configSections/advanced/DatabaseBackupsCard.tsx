@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Icon } from "@app/ui/Icon";
+import { useEffect, useState, type ReactNode } from "react";
+import { Icon, type IconName } from "@app/ui/Icon";
 import { isAxiosError } from "axios";
 import { useTranslation } from "react-i18next";
 import {
@@ -29,6 +29,454 @@ import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 interface DatabaseBackupsCardProps {
   /** Backups exist only for the embedded H2 database. */
   isEmbeddedH2: boolean;
+}
+
+function H2OnlyNotice() {
+  const { t } = useTranslation();
+  return (
+    <Alert icon={<Icon name="info" size="1.2rem" />} color="yellow" radius="md">
+      <Text fw={600} size="sm">
+        {t(
+          "admin.settings.database.h2Only",
+          "Backups are available only for the embedded H2 database.",
+        )}
+      </Text>
+      <Text size="sm" c="dimmed">
+        {t(
+          "admin.settings.database.h2Hint",
+          "Set the database type to H2 and disable custom database to enable backup and restore.",
+        )}
+      </Text>
+    </Alert>
+  );
+}
+
+function BackupsPanel({ children }: { children: ReactNode }) {
+  return (
+    <Paper withBorder p="md" radius="md">
+      <Stack gap="md">{children}</Stack>
+    </Paper>
+  );
+}
+
+interface BackupsHeaderProps {
+  databaseVersion: string | null;
+  disabled: boolean;
+  creating: boolean;
+  onRefresh: () => void;
+  onCreate: () => void;
+}
+
+function BackupsHeader({
+  databaseVersion,
+  disabled,
+  creating,
+  onRefresh,
+  onCreate,
+}: BackupsHeaderProps) {
+  const { t } = useTranslation();
+  return (
+    <Group justify="space-between" align="center">
+      <Group gap="xs">
+        <Icon name="cloud-upload" size="1.4rem" />
+        <Text fw={600}>
+          {t("admin.settings.database.manageBackups", "Manage backups")}
+        </Text>
+        <Badge color="green" variant="light" size="sm">
+          {t("admin.settings.database.embedded", "Embedded H2")}
+        </Badge>
+        {databaseVersion && (
+          <Badge color="blue" variant="light" size="sm">
+            {t("admin.settings.database.version", "H2 Version")}:{" "}
+            {databaseVersion}
+          </Badge>
+        )}
+      </Group>
+      <Group gap="xs">
+        <Button
+          variant="secondary"
+          leftSection={<Icon name="refresh-cw" size="1rem" />}
+          onClick={onRefresh}
+          disabled={disabled}
+        >
+          {t("admin.settings.database.refresh", "Refresh")}
+        </Button>
+        <Button
+          leftSection={<Icon name="upload" size="1rem" />}
+          onClick={onCreate}
+          loading={creating}
+          disabled={disabled}
+        >
+          {t("admin.settings.database.createBackup", "Create backup")}
+        </Button>
+      </Group>
+    </Group>
+  );
+}
+
+interface UploadImportFormProps {
+  file: File | null;
+  onFileChange: (file: File | null) => void;
+  importing: boolean;
+  disabled: boolean;
+  onImport: () => void;
+}
+
+function UploadImportForm({
+  file,
+  onFileChange,
+  importing,
+  disabled,
+  onImport,
+}: UploadImportFormProps) {
+  const { t } = useTranslation();
+  return (
+    <Box>
+      <Text fw={500} size="sm" mb={6}>
+        {t("admin.settings.database.uploadTitle", "Upload & import")}
+      </Text>
+      <Group gap="sm" align="flex-end" wrap="wrap">
+        <FileInput
+          value={file}
+          onChange={onFileChange}
+          placeholder={t(
+            "admin.settings.database.chooseFile",
+            "Choose a .sql backup file",
+          )}
+          accept=".sql"
+          disabled={disabled}
+          styles={{ input: { minWidth: 280 } }}
+        />
+        <Button
+          variant="secondary"
+          onClick={onImport}
+          loading={importing}
+          disabled={disabled}
+          leftSection={<Icon name="circle-play" size="1rem" />}
+        >
+          {t("admin.settings.database.importFromUpload", "Import upload")}
+        </Button>
+      </Group>
+    </Box>
+  );
+}
+
+interface BackupActionButtonProps {
+  label: string;
+  icon: IconName;
+  busy: boolean;
+  disabled: boolean;
+  danger?: boolean;
+  onClick: () => void;
+}
+
+function BackupActionButton({
+  label,
+  icon,
+  busy,
+  disabled,
+  danger = false,
+  onClick,
+}: BackupActionButtonProps) {
+  return (
+    <Tooltip label={label} withArrow>
+      <ActionIcon
+        variant="tertiary"
+        accent={danger ? "danger" : undefined}
+        onClick={onClick}
+        disabled={disabled}
+        aria-label={label}
+      >
+        {busy ? <Loader size="xs" /> : <Icon name={icon} size="1rem" />}
+      </ActionIcon>
+    </Tooltip>
+  );
+}
+
+interface BackupRowProps {
+  backup: DatabaseBackupFile;
+  disabled: boolean;
+  downloading: boolean;
+  importing: boolean;
+  deleting: boolean;
+  onDownload: () => void;
+  onImport: () => void;
+  onDelete: () => void;
+}
+
+function BackupRow({
+  backup,
+  disabled,
+  downloading,
+  importing,
+  deleting,
+  onDownload,
+  onImport,
+  onDelete,
+}: BackupRowProps) {
+  const { t } = useTranslation();
+  return (
+    <Table.Tr>
+      <Table.Td>{backup.fileName}</Table.Td>
+      <Table.Td>
+        {backup.formattedCreationDate || backup.creationDate || "-"}
+      </Table.Td>
+      <Table.Td>{backup.formattedFileSize || "-"}</Table.Td>
+      <Table.Td>
+        <Group gap="xs" justify="flex-start">
+          <BackupActionButton
+            label={t("admin.settings.database.download", "Download")}
+            icon="download"
+            busy={downloading}
+            disabled={disabled}
+            onClick={onDownload}
+          />
+          <BackupActionButton
+            label={t("admin.settings.database.import", "Import")}
+            icon="cloud-upload"
+            busy={importing}
+            disabled={disabled}
+            onClick={onImport}
+          />
+          <BackupActionButton
+            label={t("admin.settings.database.delete", "Delete")}
+            icon="trash"
+            danger
+            busy={deleting}
+            disabled={disabled}
+            onClick={onDelete}
+          />
+        </Group>
+      </Table.Td>
+    </Table.Tr>
+  );
+}
+
+interface BackupsTableProps {
+  backups: DatabaseBackupFile[];
+  disabled: boolean;
+  downloadingFile: string | null;
+  importingFile: string | null;
+  deletingFile: string | null;
+  onDownload: (fileName: string) => void;
+  onImport: (fileName: string) => void;
+  onDelete: (fileName: string) => void;
+}
+
+function BackupsTable({
+  backups,
+  disabled,
+  downloadingFile,
+  importingFile,
+  deletingFile,
+  onDownload,
+  onImport,
+  onDelete,
+}: BackupsTableProps) {
+  const { t } = useTranslation();
+  return (
+    <Table highlightOnHover withColumnBorders verticalSpacing="sm">
+      <Table.Thead>
+        <Table.Tr>
+          <Table.Th>{t("admin.settings.database.fileName", "File")}</Table.Th>
+          <Table.Th>{t("admin.settings.database.created", "Created")}</Table.Th>
+          <Table.Th>{t("admin.settings.database.size", "Size")}</Table.Th>
+          <Table.Th w={150}>
+            {t("admin.settings.database.actions", "Actions")}
+          </Table.Th>
+        </Table.Tr>
+      </Table.Thead>
+      <Table.Tbody>
+        {backups.map((backup) => (
+          <BackupRow
+            key={backup.fileName}
+            backup={backup}
+            disabled={disabled}
+            downloading={downloadingFile === backup.fileName}
+            importing={importingFile === backup.fileName}
+            deleting={deletingFile === backup.fileName}
+            onDownload={() => onDownload(backup.fileName)}
+            onImport={() => onImport(backup.fileName)}
+            onDelete={() => onDelete(backup.fileName)}
+          />
+        ))}
+      </Table.Tbody>
+    </Table>
+  );
+}
+
+function BackupList({
+  loading,
+  ...table
+}: BackupsTableProps & { loading: boolean }) {
+  const { t } = useTranslation();
+  if (loading) {
+    return (
+      <Group justify="center" py="md">
+        <Loader size="sm" />
+      </Group>
+    );
+  }
+  if (table.backups.length === 0) {
+    return (
+      <Text size="sm" c="dimmed">
+        {t("admin.settings.database.noBackups", "No backups found yet.")}
+      </Text>
+    );
+  }
+  return <BackupsTable {...table} />;
+}
+
+interface ConfirmImportModalProps {
+  opened: boolean;
+  onClose: () => void;
+  code: string;
+  input: string;
+  onInputChange: (value: string) => void;
+  importing: boolean;
+  onConfirm: () => void;
+}
+
+function ConfirmImportModal({
+  opened,
+  onClose,
+  code,
+  input,
+  onInputChange,
+  importing,
+  onConfirm,
+}: ConfirmImportModalProps) {
+  const { t } = useTranslation();
+  return (
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      title={t(
+        "admin.settings.database.confirmImportTitle",
+        "Confirm database import",
+      )}
+      centered
+      withinPortal
+      zIndex={Z_INDEX_OVER_CONFIG_MODAL}
+    >
+      <Stack gap="md">
+        <Alert
+          color="red"
+          variant="light"
+          icon={<Icon name="triangle-alert" size="1.2rem" />}
+        >
+          <Text fw={600}>
+            {t(
+              "admin.settings.database.overwriteWarning",
+              "Warning: This will overwrite the current database.",
+            )}
+          </Text>
+          <Text size="sm" c="dimmed">
+            {t(
+              "admin.settings.database.overwriteWarningBody",
+              "All existing data will be replaced by the uploaded backup. This action cannot be undone.",
+            )}
+          </Text>
+        </Alert>
+        <Stack gap={6}>
+          <Text size="sm" fw={600}>
+            {t(
+              "admin.settings.database.confirmCodeLabel",
+              "Enter the confirmation code to proceed",
+            )}
+          </Text>
+          <Text size="lg" fw={700}>
+            {code}
+          </Text>
+          <TextInput
+            value={input}
+            onChange={(e) => onInputChange(e.currentTarget.value)}
+            placeholder={t(
+              "admin.settings.database.enterCode",
+              "Enter the code shown above",
+            )}
+            minLength={4}
+            maxLength={4}
+            disabled={importing}
+          />
+        </Stack>
+        <Group justify="flex-end" gap="sm">
+          <Button variant="secondary" onClick={onClose} disabled={importing}>
+            {t("cancel", "Cancel")}
+          </Button>
+          <Button
+            accent="danger"
+            onClick={onConfirm}
+            loading={importing}
+            disabled={input.length === 0}
+          >
+            {t("admin.settings.database.confirmImport", "Confirm import")}
+          </Button>
+        </Group>
+      </Stack>
+    </Modal>
+  );
+}
+
+interface DeleteBackupModalProps {
+  /** The backup awaiting confirmation; null keeps the modal closed. */
+  fileName: string | null;
+  deletingFile: string | null;
+  onClose: () => void;
+  onConfirm: (fileName: string) => void;
+}
+
+function DeleteBackupModal({
+  fileName,
+  deletingFile,
+  onClose,
+  onConfirm,
+}: DeleteBackupModalProps) {
+  const { t } = useTranslation();
+  return (
+    <Modal
+      opened={fileName !== null}
+      onClose={onClose}
+      title={t("admin.settings.database.deleteTitle", "Delete backup")}
+      centered
+      withinPortal
+      zIndex={Z_INDEX_OVER_CONFIG_MODAL}
+    >
+      <Stack gap="md">
+        <Alert
+          color="red"
+          variant="light"
+          icon={<Icon name="triangle-alert" size="1.2rem" />}
+        >
+          <Text fw={600}>
+            {t(
+              "admin.settings.database.deleteConfirm",
+              "Delete this backup? This cannot be undone.",
+            )}
+          </Text>
+          <Text size="sm" c="dimmed">
+            {fileName}
+          </Text>
+        </Alert>
+        <Group justify="flex-end" gap="sm">
+          <Button
+            variant="secondary"
+            onClick={onClose}
+            disabled={deletingFile !== null}
+          >
+            {t("cancel", "Cancel")}
+          </Button>
+          <Button
+            accent="danger"
+            onClick={() => fileName && onConfirm(fileName)}
+            loading={deletingFile === fileName}
+          >
+            {t("admin.settings.database.deleteConfirmAction", "Delete backup")}
+          </Button>
+        </Group>
+      </Stack>
+    </Modal>
+  );
 }
 
 /**
@@ -310,353 +758,60 @@ export function DatabaseBackupsCard({
     }
   };
 
+  const actionsDisabled = !loginEnabled || !isEmbeddedH2;
+
   return (
     <>
       <Stack gap="md">
-        {!isEmbeddedH2 && (
-          <Alert
-            icon={<Icon name="info" size="1.2rem" />}
-            color="yellow"
-            radius="md"
-          >
-            <Text fw={600} size="sm">
-              {t(
-                "admin.settings.database.h2Only",
-                "Backups are available only for the embedded H2 database.",
-              )}
-            </Text>
-            <Text size="sm" c="dimmed">
-              {t(
-                "admin.settings.database.h2Hint",
-                "Set the database type to H2 and disable custom database to enable backup and restore.",
-              )}
-            </Text>
-          </Alert>
-        )}
-        {isEmbeddedH2 && (
-          <Paper withBorder p="md" radius="md">
-            <Stack gap="md">
-              <Group justify="space-between" align="center">
-                <Group gap="xs">
-                  <Icon name="cloud-upload" size="1.4rem" />
-                  <Text fw={600}>
-                    {t(
-                      "admin.settings.database.manageBackups",
-                      "Manage backups",
-                    )}
-                  </Text>
-                  <Badge color="green" variant="light" size="sm">
-                    {t("admin.settings.database.embedded", "Embedded H2")}
-                  </Badge>
-                  {databaseVersion && (
-                    <Badge color="blue" variant="light" size="sm">
-                      {t("admin.settings.database.version", "H2 Version")}:{" "}
-                      {databaseVersion}
-                    </Badge>
-                  )}
-                </Group>
-                <Group gap="xs">
-                  <Button
-                    variant="secondary"
-                    leftSection={<Icon name="refresh-cw" size="1rem" />}
-                    onClick={loadBackupData}
-                    disabled={!loginEnabled || !isEmbeddedH2}
-                  >
-                    {t("admin.settings.database.refresh", "Refresh")}
-                  </Button>
-                  <Button
-                    leftSection={<Icon name="upload" size="1rem" />}
-                    onClick={handleCreateBackup}
-                    loading={creatingBackup}
-                    disabled={!loginEnabled || !isEmbeddedH2}
-                  >
-                    {t("admin.settings.database.createBackup", "Create backup")}
-                  </Button>
-                </Group>
-              </Group>
-
-              <Box>
-                <Text fw={500} size="sm" mb={6}>
-                  {t("admin.settings.database.uploadTitle", "Upload & import")}
-                </Text>
-                <Group gap="sm" align="flex-end" wrap="wrap">
-                  <FileInput
-                    value={uploadFile}
-                    onChange={setUploadFile}
-                    placeholder={t(
-                      "admin.settings.database.chooseFile",
-                      "Choose a .sql backup file",
-                    )}
-                    accept=".sql"
-                    disabled={!loginEnabled || !isEmbeddedH2}
-                    styles={{ input: { minWidth: 280 } }}
-                  />
-                  <Button
-                    variant="secondary"
-                    onClick={handleUploadImport}
-                    loading={importingUpload}
-                    disabled={!loginEnabled || !isEmbeddedH2}
-                    leftSection={<Icon name="circle-play" size="1rem" />}
-                  >
-                    {t(
-                      "admin.settings.database.importFromUpload",
-                      "Import upload",
-                    )}
-                  </Button>
-                </Group>
-              </Box>
-
-              {backupsLoading ? (
-                <Group justify="center" py="md">
-                  <Loader size="sm" />
-                </Group>
-              ) : backupFiles.length === 0 ? (
-                <Text size="sm" c="dimmed">
-                  {isEmbeddedH2
-                    ? t(
-                        "admin.settings.database.noBackups",
-                        "No backups found yet.",
-                      )
-                    : t(
-                        "admin.settings.database.unavailable",
-                        "Backup list unavailable for the current database configuration.",
-                      )}
-                </Text>
-              ) : (
-                <Table highlightOnHover withColumnBorders verticalSpacing="sm">
-                  <Table.Thead>
-                    <Table.Tr>
-                      <Table.Th>
-                        {t("admin.settings.database.fileName", "File")}
-                      </Table.Th>
-                      <Table.Th>
-                        {t("admin.settings.database.created", "Created")}
-                      </Table.Th>
-                      <Table.Th>
-                        {t("admin.settings.database.size", "Size")}
-                      </Table.Th>
-                      <Table.Th w={150}>
-                        {t("admin.settings.database.actions", "Actions")}
-                      </Table.Th>
-                    </Table.Tr>
-                  </Table.Thead>
-                  <Table.Tbody>
-                    {backupFiles.map((backup) => (
-                      <Table.Tr key={backup.fileName}>
-                        <Table.Td>{backup.fileName}</Table.Td>
-                        <Table.Td>
-                          {backup.formattedCreationDate ||
-                            backup.creationDate ||
-                            "-"}
-                        </Table.Td>
-                        <Table.Td>{backup.formattedFileSize || "-"}</Table.Td>
-                        <Table.Td>
-                          <Group gap="xs" justify="flex-start">
-                            <Tooltip
-                              label={t(
-                                "admin.settings.database.download",
-                                "Download",
-                              )}
-                              withArrow
-                            >
-                              <ActionIcon
-                                variant="tertiary"
-                                onClick={() => handleDownload(backup.fileName)}
-                                disabled={!loginEnabled || !isEmbeddedH2}
-                                aria-label={t(
-                                  "admin.settings.database.download",
-                                  "Download",
-                                )}
-                              >
-                                {downloadingFile === backup.fileName ? (
-                                  <Loader size="xs" />
-                                ) : (
-                                  <Icon name="download" size="1rem" />
-                                )}
-                              </ActionIcon>
-                            </Tooltip>
-                            <Tooltip
-                              label={t(
-                                "admin.settings.database.import",
-                                "Import",
-                              )}
-                              withArrow
-                            >
-                              <ActionIcon
-                                variant="tertiary"
-                                onClick={() =>
-                                  handleImportExisting(backup.fileName)
-                                }
-                                disabled={!loginEnabled || !isEmbeddedH2}
-                                aria-label={t(
-                                  "admin.settings.database.import",
-                                  "Import",
-                                )}
-                              >
-                                {importingBackupFile === backup.fileName ? (
-                                  <Loader size="xs" />
-                                ) : (
-                                  <Icon name="cloud-upload" size="1rem" />
-                                )}
-                              </ActionIcon>
-                            </Tooltip>
-                            <Tooltip
-                              label={t(
-                                "admin.settings.database.delete",
-                                "Delete",
-                              )}
-                              withArrow
-                            >
-                              <ActionIcon
-                                variant="tertiary"
-                                accent="danger"
-                                onClick={() =>
-                                  handleDeleteClick(backup.fileName)
-                                }
-                                disabled={!loginEnabled || !isEmbeddedH2}
-                                aria-label={t(
-                                  "admin.settings.database.delete",
-                                  "Delete",
-                                )}
-                              >
-                                {deletingFile === backup.fileName ? (
-                                  <Loader size="xs" />
-                                ) : (
-                                  <Icon name="trash" size="1rem" />
-                                )}
-                              </ActionIcon>
-                            </Tooltip>
-                          </Group>
-                        </Table.Td>
-                      </Table.Tr>
-                    ))}
-                  </Table.Tbody>
-                </Table>
-              )}
-            </Stack>
-          </Paper>
+        {isEmbeddedH2 ? (
+          <BackupsPanel>
+            <BackupsHeader
+              databaseVersion={databaseVersion}
+              disabled={actionsDisabled}
+              creating={creatingBackup}
+              onRefresh={loadBackupData}
+              onCreate={handleCreateBackup}
+            />
+            <UploadImportForm
+              file={uploadFile}
+              onFileChange={setUploadFile}
+              importing={importingUpload}
+              disabled={actionsDisabled}
+              onImport={handleUploadImport}
+            />
+            <BackupList
+              loading={backupsLoading}
+              backups={backupFiles}
+              disabled={actionsDisabled}
+              downloadingFile={downloadingFile}
+              importingFile={importingBackupFile}
+              deletingFile={deletingFile}
+              onDownload={handleDownload}
+              onImport={handleImportExisting}
+              onDelete={handleDeleteClick}
+            />
+          </BackupsPanel>
+        ) : (
+          <H2OnlyNotice />
         )}
       </Stack>
 
-      <Modal
+      <ConfirmImportModal
         opened={confirmImportOpen}
         onClose={closeConfirmImportModal}
-        title={t(
-          "admin.settings.database.confirmImportTitle",
-          "Confirm database import",
-        )}
-        centered
-        withinPortal
-        zIndex={Z_INDEX_OVER_CONFIG_MODAL}
-      >
-        <Stack gap="md">
-          <Alert
-            color="red"
-            variant="light"
-            icon={<Icon name="triangle-alert" size="1.2rem" />}
-          >
-            <Text fw={600}>
-              {t(
-                "admin.settings.database.overwriteWarning",
-                "Warning: This will overwrite the current database.",
-              )}
-            </Text>
-            <Text size="sm" c="dimmed">
-              {t(
-                "admin.settings.database.overwriteWarningBody",
-                "All existing data will be replaced by the uploaded backup. This action cannot be undone.",
-              )}
-            </Text>
-          </Alert>
-          <Stack gap={6}>
-            <Text size="sm" fw={600}>
-              {t(
-                "admin.settings.database.confirmCodeLabel",
-                "Enter the confirmation code to proceed",
-              )}
-            </Text>
-            <Text size="lg" fw={700}>
-              {confirmCode}
-            </Text>
-            <TextInput
-              value={confirmInput}
-              onChange={(e) => setConfirmInput(e.currentTarget.value)}
-              placeholder={t(
-                "admin.settings.database.enterCode",
-                "Enter the code shown above",
-              )}
-              minLength={4}
-              maxLength={4}
-              disabled={importingUpload}
-            />
-          </Stack>
-          <Group justify="flex-end" gap="sm">
-            <Button
-              variant="secondary"
-              onClick={closeConfirmImportModal}
-              disabled={importingUpload}
-            >
-              {t("cancel", "Cancel")}
-            </Button>
-            <Button
-              accent="danger"
-              onClick={handleConfirmImport}
-              loading={importingUpload}
-              disabled={confirmInput.length === 0}
-            >
-              {t("admin.settings.database.confirmImport", "Confirm import")}
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
+        code={confirmCode}
+        input={confirmInput}
+        onInputChange={setConfirmInput}
+        importing={importingUpload}
+        onConfirm={handleConfirmImport}
+      />
 
-      <Modal
-        opened={deleteConfirmFile !== null}
+      <DeleteBackupModal
+        fileName={deleteConfirmFile}
+        deletingFile={deletingFile}
         onClose={() => setDeleteConfirmFile(null)}
-        title={t("admin.settings.database.deleteTitle", "Delete backup")}
-        centered
-        withinPortal
-        zIndex={Z_INDEX_OVER_CONFIG_MODAL}
-      >
-        <Stack gap="md">
-          <Alert
-            color="red"
-            variant="light"
-            icon={<Icon name="triangle-alert" size="1.2rem" />}
-          >
-            <Text fw={600}>
-              {t(
-                "admin.settings.database.deleteConfirm",
-                "Delete this backup? This cannot be undone.",
-              )}
-            </Text>
-            <Text size="sm" c="dimmed">
-              {deleteConfirmFile}
-            </Text>
-          </Alert>
-          <Group justify="flex-end" gap="sm">
-            <Button
-              variant="secondary"
-              onClick={() => setDeleteConfirmFile(null)}
-              disabled={deletingFile !== null}
-            >
-              {t("cancel", "Cancel")}
-            </Button>
-            <Button
-              accent="danger"
-              onClick={() =>
-                deleteConfirmFile && handleDelete(deleteConfirmFile)
-              }
-              loading={deletingFile === deleteConfirmFile}
-            >
-              {t(
-                "admin.settings.database.deleteConfirmAction",
-                "Delete backup",
-              )}
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
+        onConfirm={handleDelete}
+      />
     </>
   );
 }
