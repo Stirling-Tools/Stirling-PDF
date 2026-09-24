@@ -1,4 +1,11 @@
-import { useMemo, useState, useCallback, useEffect, useRef } from "react";
+import {
+  useMemo,
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+  type ReactNode,
+} from "react";
 import {
   Box,
   Text,
@@ -288,6 +295,748 @@ function AnnotationTypeIcon({ ann }: { ann: PdfAnnotationObject }) {
   );
 }
 
+function MoreActionsMenu({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
+  return (
+    <Menu position="bottom-end" withArrow>
+      <Menu.Target>
+        <Tooltip label={t("viewer.comments.moreActions", "More actions")}>
+          <ActionIcon
+            variant="tertiary"
+            accent="neutral"
+            size="sm"
+            aria-label={t("viewer.comments.moreActions", "More actions")}
+          >
+            <Icon name="ellipsis" size={20} />
+          </ActionIcon>
+        </Tooltip>
+      </Menu.Target>
+      <Menu.Dropdown>{children}</Menu.Dropdown>
+    </Menu>
+  );
+}
+
+interface CommentsHeaderActionsProps {
+  readerMode: boolean;
+  onAdd: () => void;
+  onClearAll: () => void;
+}
+
+function CommentsHeaderActions({
+  readerMode,
+  onAdd,
+  onClearAll,
+}: CommentsHeaderActionsProps) {
+  const { t } = useTranslation();
+  return (
+    <Group gap={2} wrap="nowrap" style={{ flexShrink: 0 }}>
+      {/* Placing a comment arms the annotate tool, which only exists in the
+          editor: offering it here would take the reader there mid-sentence.
+          Reading shows the comments that are there and leaves it at that. */}
+      {!readerMode && (
+        <Tooltip label={t("viewer.comments.addComment", "Add comment")}>
+          <ActionIcon
+            variant="tertiary"
+            accent="neutral"
+            size="sm"
+            aria-label={t("viewer.comments.addComment", "Add comment")}
+            onClick={onAdd}
+          >
+            <Icon name="plus" size="1.25rem" />
+          </ActionIcon>
+        </Tooltip>
+      )}
+      <MoreActionsMenu>
+        <Menu.Item
+          leftSection={<Icon name="trash" size={18} />}
+          color="red"
+          onClick={onClearAll}
+        >
+          {t("viewer.comments.clearAll", "Clear all comments")}
+        </Menu.Item>
+      </MoreActionsMenu>
+    </Group>
+  );
+}
+
+interface AddCommentButtonProps {
+  isPlacing: boolean;
+  readerMode: boolean;
+  onAdd: () => void;
+  onCancel: () => void;
+  /** Full width and left-aligned, for the top of the comment list. */
+  block?: boolean;
+}
+
+function AddCommentButton({
+  isPlacing,
+  readerMode,
+  onAdd,
+  onCancel,
+  block = false,
+}: AddCommentButtonProps) {
+  const { t } = useTranslation();
+  const iconSize = block ? "0.9rem" : "1rem";
+  const layout = block ? ({ fullWidth: true, justify: "start" } as const) : {};
+
+  if (isPlacing) {
+    return (
+      <Button
+        variant="tertiary"
+        accent="warning"
+        size="sm"
+        {...layout}
+        onClick={onCancel}
+        leftSection={<Icon name="pointer" size={iconSize} />}
+        style={block ? { paddingInline: 6 } : undefined}
+      >
+        {t("viewer.comments.placingHint", "Click a page to place… (cancel)")}
+      </Button>
+    );
+  }
+  if (readerMode) return null;
+  return (
+    <Button
+      variant="tertiary"
+      size="sm"
+      {...layout}
+      onClick={onAdd}
+      leftSection={<Icon name="plus" size={iconSize} />}
+      style={
+        block
+          ? { paddingInline: 6, marginBottom: "var(--space-xs)" }
+          : undefined
+      }
+    >
+      {t("viewer.comments.addComment", "Add comment")}
+    </Button>
+  );
+}
+
+function CommentsEmptyState({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
+  return (
+    <Stack align="center" gap="sm" py="lg">
+      <Icon
+        name="message-square"
+        size="2rem"
+        style={{ color: "var(--mantine-color-dimmed)" }}
+      />
+      <Text size="sm" c="dimmed" ta="center">
+        {t(
+          "viewer.comments.hint",
+          "Place comments with the Comment, Insert Text, or Replace Text tools. They will appear here by page.",
+        )}
+      </Text>
+      {children}
+    </Stack>
+  );
+}
+
+interface CommentPageGroupProps {
+  pageIndex: number;
+  count: number;
+  children: ReactNode;
+}
+
+function CommentPageGroup({
+  pageIndex,
+  count,
+  children,
+}: CommentPageGroupProps) {
+  const { t } = useTranslation();
+  return (
+    <Box mb="md">
+      <Text size="sm" fw={700} mb={2}>
+        {t("viewer.comments.pageLabel", "Page {{page}}", {
+          page: pageIndex + 1,
+        })}
+      </Text>
+      <Text size="xs" c="dimmed" mb="sm">
+        {t("viewer.comments.nComments", "{{count}} comments", { count })}
+      </Text>
+      <Box
+        mb="xs"
+        style={{ borderBottom: "1px solid var(--c-border-subtle)" }}
+      />
+      <Stack gap="sm">{children}</Stack>
+    </Box>
+  );
+}
+
+interface CommentCardHeaderProps {
+  ann: PdfAnnotationObject;
+  authorName: string;
+  typeLabel: string;
+  timestamp: string;
+  onLocate: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}
+
+function CommentCardHeader({
+  ann,
+  authorName,
+  typeLabel,
+  timestamp,
+  onLocate,
+  onEdit,
+  onDelete,
+}: CommentCardHeaderProps) {
+  const { t } = useTranslation();
+  return (
+    <Group
+      wrap="nowrap"
+      gap="xs"
+      justify="space-between"
+      align="flex-start"
+      mb="xs"
+    >
+      <Group wrap="nowrap" gap="xs" style={{ minWidth: 0, flex: 1 }}>
+        <AnnotationTypeIcon ann={ann} />
+        <Box style={{ minWidth: 0 }}>
+          <Text size="sm" fw={600}>
+            {authorName}
+          </Text>
+          <Text size="xs" c="dimmed">
+            {typeLabel}
+            {timestamp ? ` · ${timestamp}` : ""}
+          </Text>
+        </Box>
+      </Group>
+      <Group gap={2} wrap="nowrap" style={{ flexShrink: 0 }}>
+        <Tooltip
+          label={t("viewer.comments.locateAnnotation", "Locate in document")}
+        >
+          <ActionIcon
+            variant="tertiary"
+            accent="neutral"
+            size="sm"
+            aria-label={t(
+              "viewer.comments.locateAnnotation",
+              "Locate in document",
+            )}
+            onClick={onLocate}
+          >
+            <Icon name="eye" size={16} />
+          </ActionIcon>
+        </Tooltip>
+        <MoreActionsMenu>
+          <Menu.Item
+            leftSection={<Icon name="pencil" size={18} />}
+            onClick={onEdit}
+          >
+            {t("annotation.editText", "Edit")}
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<Icon name="trash" size={18} />}
+            color="red"
+            onClick={onDelete}
+          >
+            {t("annotation.delete", "Delete")}
+          </Menu.Item>
+        </MoreActionsMenu>
+      </Group>
+    </Group>
+  );
+}
+
+interface CommentComposerProps {
+  value: string;
+  onChange: (value: string) => void;
+  onSubmit: () => void;
+}
+
+function CommentComposer({ value, onChange, onSubmit }: CommentComposerProps) {
+  const { t } = useTranslation();
+  const canSubmit = value.trim().length > 0;
+  return (
+    <Group gap="xs" wrap="nowrap" align="flex-end">
+      <Textarea
+        placeholder={t(
+          "viewer.comments.addCommentPlaceholder",
+          "Add comment...",
+        )}
+        size="sm"
+        autosize
+        minRows={1}
+        maxRows={6}
+        value={value}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey && canSubmit) {
+            e.preventDefault();
+            onSubmit();
+          }
+        }}
+        onChange={(e) => onChange((e?.currentTarget ?? e?.target)?.value ?? "")}
+        style={{ flex: 1, minWidth: 0 }}
+        styles={{ input: { borderColor: "var(--mantine-color-blue-3)" } }}
+        autoFocus
+      />
+      <Tooltip label={t("viewer.comments.addComment", "Add comment")}>
+        <ActionIcon
+          variant="primary"
+          size="md"
+          aria-label={t("viewer.comments.addComment", "Add comment")}
+          onClick={onSubmit}
+          disabled={!canSubmit}
+          style={{ height: "36px", width: "36px", flexShrink: 0 }}
+        >
+          <Icon name="check" size={18} />
+        </ActionIcon>
+      </Tooltip>
+    </Group>
+  );
+}
+
+interface ReplyEditorProps {
+  value: string;
+  onChange: (value: string) => void;
+  onSave: () => void;
+}
+
+function ReplyEditor({ value, onChange, onSave }: ReplyEditorProps) {
+  const { t } = useTranslation();
+  return (
+    <>
+      <Textarea
+        minRows={2}
+        autosize
+        value={value}
+        onChange={(e) => onChange((e?.currentTarget ?? e?.target)?.value ?? "")}
+        styles={{ root: { width: "100%" } }}
+        mb="xs"
+      />
+      <Group gap={4} wrap="nowrap" justify="flex-end">
+        <Tooltip label={t("viewer.comments.saveReply", "Save reply")}>
+          <ActionIcon
+            variant="primary"
+            size="sm"
+            aria-label={t("viewer.comments.saveReply", "Save reply")}
+            onClick={onSave}
+            disabled={!value.trim()}
+          >
+            <Icon name="check" size={18} />
+          </ActionIcon>
+        </Tooltip>
+      </Group>
+    </>
+  );
+}
+
+interface CommentReplyProps {
+  reply: SidebarAnnotationEntry["replies"][number];
+  displayName: string;
+  /** The text being edited, or null when the reply is not being edited. */
+  editDraft: string | null;
+  onStartEditing: () => void;
+  onEditChange: (value: string) => void;
+  onSave: (text: string) => void;
+}
+
+function CommentReply({
+  reply,
+  displayName,
+  editDraft,
+  onStartEditing,
+  onEditChange,
+  onSave,
+}: CommentReplyProps) {
+  const { t } = useTranslation();
+  const rObj = reply.object;
+  const author = getAuthorName(rObj, displayName);
+  const timestamp = formatCommentDate(rObj);
+  const canEdit = isReplyAuthoredByCurrentUser(rObj, displayName);
+
+  return (
+    <Box
+      pl="xs"
+      style={{ borderLeft: "2px solid var(--mantine-color-blue-3)" }}
+    >
+      <Box style={{ minWidth: 0 }}>
+        <Group
+          wrap="nowrap"
+          justify="space-between"
+          align="flex-start"
+          gap={4}
+          mb={2}
+        >
+          <Text size="sm" fw={600}>
+            {author}
+          </Text>
+          <Group wrap="nowrap" gap="xs" align="center">
+            {canEdit && editDraft === null ? (
+              <Button
+                variant="tertiary"
+                hover={false}
+                type="button"
+                onClick={onStartEditing}
+              >
+                <Text size="xs" c="var(--c-accent-text)">
+                  {t("annotation.editText", "Edit")}
+                </Text>
+              </Button>
+            ) : null}
+            {timestamp ? (
+              <Text size="xs" c="dimmed">
+                {timestamp}
+              </Text>
+            ) : null}
+          </Group>
+        </Group>
+        {editDraft !== null ? (
+          <ReplyEditor
+            value={editDraft}
+            onChange={onEditChange}
+            onSave={() => onSave(editDraft)}
+          />
+        ) : (
+          <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
+            {rObj?.contents ?? ""}
+          </Text>
+        )}
+      </Box>
+    </Box>
+  );
+}
+
+interface ReplyComposerProps {
+  value: string;
+  onChange: (value: string) => void;
+  onSubmit: () => void;
+}
+
+function ReplyComposer({ value, onChange, onSubmit }: ReplyComposerProps) {
+  const { t } = useTranslation();
+  const canSubmit = value.trim().length > 0;
+  return (
+    <Group gap="xs" wrap="nowrap" align="center">
+      <TextInput
+        placeholder={t("viewer.comments.addReplyPlaceholder", "Add reply...")}
+        size="sm"
+        value={value}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && canSubmit) {
+            e.preventDefault();
+            onSubmit();
+          }
+        }}
+        onChange={(e) => onChange((e?.currentTarget ?? e?.target)?.value ?? "")}
+        style={{ flex: 1, minWidth: 0 }}
+        styles={{
+          input: {
+            borderColor: "var(--mantine-color-blue-3)",
+            height: "36px",
+            minHeight: "36px",
+          },
+        }}
+      />
+      <Tooltip label={t("viewer.comments.addComment", "Add comment")}>
+        <ActionIcon
+          variant="primary"
+          size="md"
+          aria-label={t("viewer.comments.addComment", "Add comment")}
+          onClick={onSubmit}
+          disabled={!canSubmit}
+          style={{ height: "36px", width: "36px", flexShrink: 0 }}
+        >
+          <Icon name="check" size={20} />
+        </ActionIcon>
+      </Tooltip>
+    </Group>
+  );
+}
+
+/** A reply being edited. Only one reply in the sidebar is edited at a time. */
+interface EditingReply {
+  /** `${pageIndex}_${annotationId}` of the card the reply belongs to. */
+  cardKey: string;
+  replyId: string;
+  draft: string;
+}
+
+interface CommentActions {
+  locate: (pageIndex: number, ann: PdfAnnotationObject) => void;
+  requestDelete: (
+    pageIndex: number,
+    annotationId: string,
+    ann: PdfAnnotationObject,
+  ) => void;
+  startEditing: (pageIndex: number, annotationId: string) => void;
+  changeDraft: (pageIndex: number, annotationId: string, value: string) => void;
+  submit: (pageIndex: number, annotationId: string, value: string) => void;
+  changeReplyDraft: (
+    pageIndex: number,
+    parentId: string,
+    value: string,
+  ) => void;
+  sendReply: (
+    pageIndex: number,
+    parentId: string,
+    parentRect: Rect | undefined,
+  ) => void;
+  startEditingReply: (
+    pageIndex: number,
+    parentId: string,
+    replyId: string,
+    contents: string,
+  ) => void;
+  changeReplyEdit: (value: string) => void;
+  saveReplyEdit: (pageIndex: number, replyId: string, value: string) => void;
+}
+
+interface CommentRepliesProps {
+  pageIndex: number;
+  parentId: string;
+  replies: SidebarAnnotationEntry["replies"];
+  displayName: string;
+  editingReply: EditingReply | null;
+  actions: CommentActions;
+}
+
+function CommentReplies({
+  pageIndex,
+  parentId,
+  replies,
+  displayName,
+  editingReply,
+  actions,
+}: CommentRepliesProps) {
+  if (replies.length === 0) return null;
+  return (
+    <Stack gap="sm" mb="sm">
+      {replies
+        .filter((reply) => reply?.object?.id)
+        .map((reply) => (
+          <CommentReply
+            key={reply.object.id}
+            reply={reply}
+            displayName={displayName}
+            editDraft={
+              editingReply?.replyId === reply.object.id
+                ? editingReply.draft
+                : null
+            }
+            onStartEditing={() =>
+              actions.startEditingReply(
+                pageIndex,
+                parentId,
+                reply.object.id,
+                String(reply.object.contents ?? ""),
+              )
+            }
+            onEditChange={actions.changeReplyEdit}
+            onSave={(value) =>
+              actions.saveReplyEdit(pageIndex, reply.object.id, value)
+            }
+          />
+        ))}
+    </Stack>
+  );
+}
+
+interface CommentThreadProps {
+  pageIndex: number;
+  entry: SidebarAnnotationEntry;
+  content: string;
+  displayName: string;
+  replyDraft: string;
+  editingReply: EditingReply | null;
+  actions: CommentActions;
+}
+
+function CommentThread({
+  pageIndex,
+  entry,
+  content,
+  displayName,
+  replyDraft,
+  editingReply,
+  actions,
+}: CommentThreadProps) {
+  const ann = entry.annotation.object;
+  return (
+    <>
+      <Text size="sm" mb="sm" style={{ whiteSpace: "pre-wrap" }}>
+        {content}
+      </Text>
+      <CommentReplies
+        pageIndex={pageIndex}
+        parentId={ann.id}
+        replies={entry.replies}
+        displayName={displayName}
+        editingReply={editingReply}
+        actions={actions}
+      />
+      <ReplyComposer
+        value={replyDraft}
+        onChange={(value) => actions.changeReplyDraft(pageIndex, ann.id, value)}
+        onSubmit={() => actions.sendReply(pageIndex, ann.id, ann.rect)}
+      />
+    </>
+  );
+}
+
+interface CommentCardProps {
+  pageIndex: number;
+  entry: SidebarAnnotationEntry;
+  selected: boolean;
+  displayName: string;
+  /** Text typed but not yet sent; undefined shows the posted content. */
+  draft: string | undefined;
+  isEditing: boolean;
+  replyDraft: string;
+  /** Set only when the reply being edited belongs to this card. */
+  editingReply: EditingReply | null;
+  actions: CommentActions;
+}
+
+function CommentCard({
+  pageIndex,
+  entry,
+  selected,
+  displayName,
+  draft,
+  isEditing,
+  replyDraft,
+  editingReply,
+  actions,
+}: CommentCardProps) {
+  const { t } = useTranslation();
+  const ann = entry.annotation.object;
+  const id = ann.id;
+  const displayContent = getCommentDisplayContent(entry);
+  const text = draft !== undefined ? draft : displayContent;
+  /** Only treat as "comment posted" when annotation actually has content (user clicked Send), not on every keystroke. */
+  const hasMainContent = displayContent.trim().length > 0;
+
+  return (
+    <Box
+      data-comment-card={`${pageIndex}_${id}`}
+      p="sm"
+      style={{
+        border: selected
+          ? "1px solid var(--mantine-color-blue-3)"
+          : "1px solid var(--c-border-subtle)",
+        borderRadius: 8,
+        backgroundColor: "var(--c-surface-raised)",
+      }}
+    >
+      <CommentCardHeader
+        ann={ann}
+        authorName={getAuthorName(ann, displayName)}
+        typeLabel={getAnnotationTypeLabel(ann, t)}
+        timestamp={formatCommentDate(ann)}
+        onLocate={() => actions.locate(pageIndex, ann)}
+        onEdit={() => actions.startEditing(pageIndex, id)}
+        onDelete={() => actions.requestDelete(pageIndex, id, ann)}
+      />
+
+      {!hasMainContent || isEditing ? (
+        <CommentComposer
+          value={text}
+          onChange={(value) => actions.changeDraft(pageIndex, id, value)}
+          onSubmit={() => actions.submit(pageIndex, id, text)}
+        />
+      ) : (
+        <CommentThread
+          pageIndex={pageIndex}
+          entry={entry}
+          content={displayContent}
+          displayName={displayName}
+          replyDraft={replyDraft}
+          editingReply={editingReply}
+          actions={actions}
+        />
+      )}
+    </Box>
+  );
+}
+
+interface DeleteLinkedCommentModalProps {
+  opened: boolean;
+  onClose: () => void;
+  onRemoveComment: () => void;
+  onDeleteAnnotation: () => void;
+}
+
+function DeleteLinkedCommentModal({
+  opened,
+  onClose,
+  onRemoveComment,
+  onDeleteAnnotation,
+}: DeleteLinkedCommentModalProps) {
+  const { t } = useTranslation();
+  return (
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      title={t(
+        "viewer.comments.deleteTitle",
+        "Remove annotation from comments?",
+      )}
+      centered
+      size="sm"
+    >
+      <Text size="sm" c="dimmed" mb="lg">
+        {t(
+          "viewer.comments.deleteDescription",
+          "This annotation has a comment attached. You can remove just the comment from the sidebar while keeping the annotation, or delete everything.",
+        )}
+      </Text>
+      <Group justify="flex-end" gap="sm">
+        <Button variant="secondary" onClick={onRemoveComment}>
+          {t("viewer.comments.removeCommentOnly", "Remove comment only")}
+        </Button>
+        <Button accent="danger" onClick={onDeleteAnnotation}>
+          {t(
+            "viewer.comments.deleteAnnotationAndComment",
+            "Delete annotation & comment",
+          )}
+        </Button>
+      </Group>
+    </Modal>
+  );
+}
+
+interface ClearAllCommentsModalProps {
+  opened: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}
+
+function ClearAllCommentsModal({
+  opened,
+  onClose,
+  onConfirm,
+}: ClearAllCommentsModalProps) {
+  const { t } = useTranslation();
+  return (
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      title={t("viewer.comments.clearAllTitle", "Clear all comments?")}
+      centered
+      size="sm"
+    >
+      <Text size="sm" c="dimmed" mb="lg">
+        {t(
+          "viewer.comments.clearAllDescription",
+          "This removes comments and replies from the sidebar while keeping any attached annotations in the document.",
+        )}
+      </Text>
+      <Group justify="flex-end" gap="sm">
+        <Button variant="secondary" onClick={onClose}>
+          {t("viewer.comments.cancelClearAll", "Cancel")}
+        </Button>
+        <Button accent="danger" onClick={onConfirm}>
+          {t("viewer.comments.clearAll", "Clear all comments")}
+        </Button>
+      </Group>
+    </Modal>
+  );
+}
+
 export function CommentsSidebar({
   documentId,
   visible,
@@ -316,14 +1065,9 @@ export function CommentsSidebar({
     {},
   );
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
-  /** Draft text while editing an existing reply (`${pageIndex}_${parentId}_${replyId}`). */
-  const [replyEditDrafts, setReplyEditDrafts] = useState<
-    Record<string, string>
-  >({});
   /** When set, this card's main comment is in edit mode (show textarea for main comment). */
   const [editingMainKey, setEditingMainKey] = useState<string | null>(null);
-  /** Which reply is in edit mode (same key shape as replyEditDrafts). */
-  const [editingReplyKey, setEditingReplyKey] = useState<string | null>(null);
+  const [editingReply, setEditingReply] = useState<EditingReply | null>(null);
 
   // React to request to focus or highlight a comment card (e.g. from "Add comment" / "View comment" in selection menu)
   useEffect(() => {
@@ -516,6 +1260,17 @@ export function CommentsSidebar({
     [provides],
   );
 
+  const handleDraftChange = useCallback(
+    (pageIndex: number, annotationId: string, value: string) => {
+      const key = `${pageIndex}_${annotationId}`;
+      setDraftContents((prev) => ({ ...prev, [key]: value }));
+      if (editingMainKey === key) {
+        handleContentsChange(pageIndex, annotationId, value);
+      }
+    },
+    [editingMainKey, handleContentsChange],
+  );
+
   const [deleteModal, setDeleteModal] = useState<{
     pageIndex: number;
     id: string;
@@ -612,9 +1367,8 @@ export function CommentsSidebar({
 
     setDraftContents({});
     setReplyDrafts({});
-    setReplyEditDrafts({});
     setEditingMainKey(null);
-    setEditingReplyKey(null);
+    setEditingReply(null);
     setDeleteModal(null);
     setClearAllModalOpen(false);
     navActions?.setHasUnsavedChanges(true);
@@ -664,7 +1418,7 @@ export function CommentsSidebar({
   );
 
   const handleSaveReplyEdit = useCallback(
-    (editKey: string, pageIndex: number, replyId: string, value: string) => {
+    (pageIndex: number, replyId: string, value: string) => {
       const trimmed = value.trim();
       if (!trimmed || !provides?.updateAnnotation) return;
       provides.updateAnnotation(pageIndex, replyId, {
@@ -672,12 +1426,7 @@ export function CommentsSidebar({
         author: displayName,
       });
       navActions?.setHasUnsavedChanges(true);
-      setReplyEditDrafts((prev) => {
-        const next = { ...prev };
-        delete next[editKey];
-        return next;
-      });
-      setEditingReplyKey(null);
+      setEditingReply(null);
     },
     [provides, displayName, navActions],
   );
@@ -713,50 +1462,32 @@ export function CommentsSidebar({
 
   if (!visible) return null;
 
-  const commentsHeaderActions =
-    totalCount > 0 ? (
-      <Group gap={2} wrap="nowrap" style={{ flexShrink: 0 }}>
-        {/* Placing a comment arms the annotate tool, which only exists in the
-            editor: offering it here would take the reader there mid-sentence.
-            Reading shows the comments that are there and leaves it at that. */}
-        {!readerMode && (
-          <Tooltip label={t("viewer.comments.addComment", "Add comment")}>
-            <ActionIcon
-              variant="tertiary"
-              accent="neutral"
-              size="sm"
-              aria-label={t("viewer.comments.addComment", "Add comment")}
-              onClick={handleAddComment}
-            >
-              <Icon name="plus" size="1.25rem" />
-            </ActionIcon>
-          </Tooltip>
-        )}
-        <Menu position="bottom-end" withArrow>
-          <Menu.Target>
-            <Tooltip label={t("viewer.comments.moreActions", "More actions")}>
-              <ActionIcon
-                variant="tertiary"
-                accent="neutral"
-                size="sm"
-                aria-label={t("viewer.comments.moreActions", "More actions")}
-              >
-                <Icon name="ellipsis" size={20} />
-              </ActionIcon>
-            </Tooltip>
-          </Menu.Target>
-          <Menu.Dropdown>
-            <Menu.Item
-              leftSection={<Icon name="trash" size={18} />}
-              color="red"
-              onClick={() => setClearAllModalOpen(true)}
-            >
-              {t("viewer.comments.clearAll", "Clear all comments")}
-            </Menu.Item>
-          </Menu.Dropdown>
-        </Menu>
-      </Group>
-    ) : null;
+  const commentActions: CommentActions = {
+    locate: handleLocateAnnotation,
+    requestDelete: handleDeleteClick,
+    startEditing: (pageIndex, annotationId) =>
+      setEditingMainKey(`${pageIndex}_${annotationId}`),
+    changeDraft: handleDraftChange,
+    submit: (pageIndex, annotationId, value) => {
+      handleSendMainComment(pageIndex, annotationId, value);
+      setEditingMainKey(null);
+    },
+    changeReplyDraft: (pageIndex, parentId, value) =>
+      setReplyDrafts((prev) => ({
+        ...prev,
+        [`${pageIndex}_${parentId}_reply`]: value,
+      })),
+    sendReply: handleSendReply,
+    startEditingReply: (pageIndex, parentId, replyId, contents) =>
+      setEditingReply({
+        cardKey: `${pageIndex}_${parentId}`,
+        replyId,
+        draft: contents,
+      }),
+    changeReplyEdit: (draft) =>
+      setEditingReply((prev) => prev && { ...prev, draft }),
+    saveReplyEdit: handleSaveReplyEdit,
+  };
 
   return (
     <>
@@ -768,7 +1499,15 @@ export function CommentsSidebar({
         visible={visible}
         onClose={toggleCommentsSidebar}
         closeLabel={t("viewer.comments.closeSidebar", "Close comments sidebar")}
-        headerActions={commentsHeaderActions}
+        headerActions={
+          totalCount > 0 ? (
+            <CommentsHeaderActions
+              readerMode={readerMode}
+              onAdd={handleAddComment}
+              onClearAll={() => setClearAllModalOpen(true)}
+            />
+          ) : null
+        }
         searchTerm={searchTerm}
         searchPlaceholder={t(
           "viewer.comments.searchPlaceholder",
@@ -778,76 +1517,23 @@ export function CommentsSidebar({
         viewportRef={scrollViewportRef}
       >
         {totalCount === 0 ? (
-          <Stack align="center" gap="sm" py="lg">
-            <Icon
-              name="message-square"
-              size="2rem"
-              style={{ color: "var(--mantine-color-dimmed)" }}
+          <CommentsEmptyState>
+            <AddCommentButton
+              isPlacing={isPlacingComment}
+              readerMode={readerMode}
+              onAdd={handleAddComment}
+              onCancel={handleCancelPlacingComment}
             />
-            <Text size="sm" c="dimmed" ta="center">
-              {t(
-                "viewer.comments.hint",
-                "Place comments with the Comment, Insert Text, or Replace Text tools. They will appear here by page.",
-              )}
-            </Text>
-            {isPlacingComment ? (
-              <Button
-                variant="tertiary"
-                accent="warning"
-                size="sm"
-                onClick={handleCancelPlacingComment}
-                leftSection={<Icon name="pointer" size="1rem" />}
-              >
-                {t(
-                  "viewer.comments.placingHint",
-                  "Click a page to place… (cancel)",
-                )}
-              </Button>
-            ) : readerMode ? null : (
-              <Button
-                variant="tertiary"
-                size="sm"
-                onClick={handleAddComment}
-                leftSection={<Icon name="plus" size="1rem" />}
-              >
-                {t("viewer.comments.addComment", "Add comment")}
-              </Button>
-            )}
-          </Stack>
+          </CommentsEmptyState>
         ) : (
           <>
-            {isPlacingComment ? (
-              <Button
-                variant="tertiary"
-                accent="warning"
-                size="sm"
-                fullWidth
-                justify="start"
-                onClick={handleCancelPlacingComment}
-                leftSection={<Icon name="pointer" size="0.9rem" />}
-                style={{ paddingInline: 6 }}
-              >
-                {t(
-                  "viewer.comments.placingHint",
-                  "Click a page to place… (cancel)",
-                )}
-              </Button>
-            ) : readerMode ? null : (
-              <Button
-                variant="tertiary"
-                size="sm"
-                fullWidth
-                justify="start"
-                onClick={handleAddComment}
-                leftSection={<Icon name="plus" size="0.9rem" />}
-                style={{
-                  paddingInline: 6,
-                  marginBottom: "var(--space-xs)",
-                }}
-              >
-                {t("viewer.comments.addComment", "Add comment")}
-              </Button>
-            )}
+            <AddCommentButton
+              block
+              isPlacing={isPlacingComment}
+              readerMode={readerMode}
+              onAdd={handleAddComment}
+              onCancel={handleCancelPlacingComment}
+            />
             {showSearchEmpty ? (
               <div className="sidebar-base__empty-state">
                 <Text size="sm" c="dimmed" ta="center">
@@ -860,489 +1546,36 @@ export function CommentsSidebar({
             ) : (
               pageNumbers.map((pageIndex) => {
                 const entries = filteredByPage[pageIndex] ?? [];
-                const pageNum = pageIndex + 1;
                 return (
-                  <Box key={pageIndex} mb="md">
-                    <Text size="sm" fw={700} mb={2}>
-                      {t("viewer.comments.pageLabel", "Page {{page}}", {
-                        page: pageNum,
-                      })}
-                    </Text>
-                    <Text size="xs" c="dimmed" mb="sm">
-                      {t("viewer.comments.nComments", "{{count}} comments", {
-                        count: entries.length,
-                      })}
-                    </Text>
-                    <Box
-                      mb="xs"
-                      style={{
-                        borderBottom: "1px solid var(--c-border-subtle)",
-                      }}
-                    />
-                    <Stack gap="sm">
-                      {entries.map((entry) => {
-                        const ann = entry.annotation?.object;
-                        const id = ann?.id;
-                        if (!id) return null;
-                        const key = `${pageIndex}_${id}`;
-                        const replyKey = `${pageIndex}_${id}_reply`;
-                        const displayContent = getCommentDisplayContent(entry);
-                        const draft =
-                          draftContents[key] !== undefined
-                            ? draftContents[key]
-                            : displayContent;
-                        const replyDraft = replyDrafts[replyKey] ?? "";
-                        const authorName = getAuthorName(ann, displayName);
-                        /** Only treat as "comment posted" when annotation actually has content (user clicked Send), not on every keystroke. */
-                        const hasMainContent =
-                          (displayContent ?? "").trim().length > 0;
-                        const isEditingMain = editingMainKey === key;
-
-                        const mainTimestamp = formatCommentDate(ann);
-                        const typeLabel = getAnnotationTypeLabel(ann, t);
-
-                        return (
-                          <Box
-                            key={key}
-                            data-comment-card={key}
-                            p="sm"
-                            style={{
-                              border: selectedAnnotationIds.has(id)
-                                ? "1px solid var(--mantine-color-blue-3)"
-                                : "1px solid var(--c-border-subtle)",
-                              borderRadius: 8,
-                              backgroundColor: "var(--c-surface-raised)",
-                            }}
-                          >
-                            <Group
-                              wrap="nowrap"
-                              gap="xs"
-                              justify="space-between"
-                              align="flex-start"
-                              mb="xs"
-                            >
-                              <Group
-                                wrap="nowrap"
-                                gap="xs"
-                                style={{ minWidth: 0, flex: 1 }}
-                              >
-                                <AnnotationTypeIcon ann={ann} />
-                                <Box style={{ minWidth: 0 }}>
-                                  <Text size="sm" fw={600}>
-                                    {authorName}
-                                  </Text>
-                                  <Text size="xs" c="dimmed">
-                                    {typeLabel}
-                                    {mainTimestamp ? ` · ${mainTimestamp}` : ""}
-                                  </Text>
-                                </Box>
-                              </Group>
-                              <Group
-                                gap={2}
-                                wrap="nowrap"
-                                style={{ flexShrink: 0 }}
-                              >
-                                <Tooltip
-                                  label={t(
-                                    "viewer.comments.locateAnnotation",
-                                    "Locate in document",
-                                  )}
-                                >
-                                  <ActionIcon
-                                    variant="tertiary"
-                                    accent="neutral"
-                                    size="sm"
-                                    aria-label={t(
-                                      "viewer.comments.locateAnnotation",
-                                      "Locate in document",
-                                    )}
-                                    onClick={() =>
-                                      handleLocateAnnotation(pageIndex, ann)
-                                    }
-                                  >
-                                    <Icon name="eye" size={16} />
-                                  </ActionIcon>
-                                </Tooltip>
-                                <Menu position="bottom-end" withArrow>
-                                  <Menu.Target>
-                                    <Tooltip
-                                      label={t(
-                                        "viewer.comments.moreActions",
-                                        "More actions",
-                                      )}
-                                    >
-                                      <ActionIcon
-                                        variant="tertiary"
-                                        accent="neutral"
-                                        size="sm"
-                                        aria-label={t(
-                                          "viewer.comments.moreActions",
-                                          "More actions",
-                                        )}
-                                      >
-                                        <Icon name="ellipsis" size={20} />
-                                      </ActionIcon>
-                                    </Tooltip>
-                                  </Menu.Target>
-                                  <Menu.Dropdown>
-                                    <Menu.Item
-                                      leftSection={
-                                        <Icon name="pencil" size={18} />
-                                      }
-                                      onClick={() => setEditingMainKey(key)}
-                                    >
-                                      {t("annotation.editText", "Edit")}
-                                    </Menu.Item>
-                                    <Menu.Item
-                                      leftSection={
-                                        <Icon name="trash" size={18} />
-                                      }
-                                      color="red"
-                                      onClick={() =>
-                                        handleDeleteClick(pageIndex, id, ann)
-                                      }
-                                    >
-                                      {t("annotation.delete", "Delete")}
-                                    </Menu.Item>
-                                  </Menu.Dropdown>
-                                </Menu>
-                              </Group>
-                            </Group>
-
-                            {!hasMainContent || isEditingMain ? (
-                              <Group gap="xs" wrap="nowrap" align="flex-end">
-                                <Textarea
-                                  placeholder={t(
-                                    "viewer.comments.addCommentPlaceholder",
-                                    "Add comment...",
-                                  )}
-                                  size="sm"
-                                  autosize
-                                  minRows={1}
-                                  maxRows={6}
-                                  value={draft ?? ""}
-                                  onKeyDown={(e) => {
-                                    if (
-                                      e.key === "Enter" &&
-                                      !e.shiftKey &&
-                                      (draft ?? "").trim()
-                                    ) {
-                                      e.preventDefault();
-                                      handleSendMainComment(
-                                        pageIndex,
-                                        id,
-                                        draft ?? "",
-                                      );
-                                      setEditingMainKey(null);
-                                    }
-                                  }}
-                                  onChange={(e) => {
-                                    const v =
-                                      (e?.currentTarget ?? e?.target)?.value ??
-                                      "";
-                                    setDraftContents((prev) => ({
-                                      ...prev,
-                                      [key]: v,
-                                    }));
-                                    if (isEditingMain) {
-                                      handleContentsChange(pageIndex, id, v);
-                                    }
-                                  }}
-                                  style={{ flex: 1, minWidth: 0 }}
-                                  styles={{
-                                    input: {
-                                      borderColor:
-                                        "var(--mantine-color-blue-3)",
-                                    },
-                                  }}
-                                  autoFocus
-                                />
-                                <Tooltip
-                                  label={t(
-                                    "viewer.comments.addComment",
-                                    "Add comment",
-                                  )}
-                                >
-                                  <ActionIcon
-                                    variant="primary"
-                                    size="md"
-                                    aria-label={t(
-                                      "viewer.comments.addComment",
-                                      "Add comment",
-                                    )}
-                                    onClick={() => {
-                                      handleSendMainComment(
-                                        pageIndex,
-                                        id,
-                                        draft ?? "",
-                                      );
-                                      setEditingMainKey(null);
-                                    }}
-                                    disabled={!(draft ?? "").trim()}
-                                    style={{
-                                      height: "36px",
-                                      width: "36px",
-                                      flexShrink: 0,
-                                    }}
-                                  >
-                                    <Icon name="check" size={18} />
-                                  </ActionIcon>
-                                </Tooltip>
-                              </Group>
-                            ) : (
-                              <>
-                                <Text
-                                  size="sm"
-                                  mb="sm"
-                                  style={{ whiteSpace: "pre-wrap" }}
-                                >
-                                  {displayContent}
-                                </Text>
-
-                                {entry.replies?.length ? (
-                                  <Stack gap="sm" mb="sm">
-                                    {entry.replies.map((r) => {
-                                      const rObj = r?.object;
-                                      const rId = rObj?.id;
-                                      if (!rId) return null;
-                                      const rAuthor = getAuthorName(
-                                        rObj,
-                                        displayName,
-                                      );
-                                      const rTimestamp =
-                                        formatCommentDate(rObj);
-                                      const replyEditKey = `${pageIndex}_${id}_${rId}`;
-                                      const isEditingReply =
-                                        editingReplyKey === replyEditKey;
-                                      const canEditReply =
-                                        isReplyAuthoredByCurrentUser(
-                                          rObj,
-                                          displayName,
-                                        );
-                                      const replyBody =
-                                        replyEditDrafts[replyEditKey] !==
-                                        undefined
-                                          ? replyEditDrafts[replyEditKey]
-                                          : (rObj?.contents ?? "");
-                                      return (
-                                        <Box
-                                          key={rId}
-                                          pl="xs"
-                                          style={{
-                                            borderLeft:
-                                              "2px solid var(--mantine-color-blue-3)",
-                                          }}
-                                        >
-                                          <Box style={{ minWidth: 0 }}>
-                                            <Group
-                                              wrap="nowrap"
-                                              justify="space-between"
-                                              align="flex-start"
-                                              gap={4}
-                                              mb={2}
-                                            >
-                                              <Text size="sm" fw={600}>
-                                                {rAuthor}
-                                              </Text>
-                                              <Group
-                                                wrap="nowrap"
-                                                gap="xs"
-                                                align="center"
-                                              >
-                                                {canEditReply &&
-                                                !isEditingReply ? (
-                                                  <Button
-                                                    variant="tertiary"
-                                                    hover={false}
-                                                    type="button"
-                                                    onClick={() => {
-                                                      setEditingReplyKey(
-                                                        replyEditKey,
-                                                      );
-                                                      setReplyEditDrafts(
-                                                        () => ({
-                                                          [replyEditKey]:
-                                                            String(
-                                                              rObj?.contents ??
-                                                                "",
-                                                            ),
-                                                        }),
-                                                      );
-                                                    }}
-                                                  >
-                                                    <Text
-                                                      size="xs"
-                                                      c="var(--c-accent-text)"
-                                                    >
-                                                      {t(
-                                                        "annotation.editText",
-                                                        "Edit",
-                                                      )}
-                                                    </Text>
-                                                  </Button>
-                                                ) : null}
-                                                {rTimestamp ? (
-                                                  <Text size="xs" c="dimmed">
-                                                    {rTimestamp}
-                                                  </Text>
-                                                ) : null}
-                                              </Group>
-                                            </Group>
-                                            {isEditingReply ? (
-                                              <>
-                                                <Textarea
-                                                  minRows={2}
-                                                  autosize
-                                                  value={replyBody}
-                                                  onChange={(e) => {
-                                                    const v =
-                                                      (
-                                                        e?.currentTarget ??
-                                                        e?.target
-                                                      )?.value ?? "";
-                                                    setReplyEditDrafts((p) => ({
-                                                      ...p,
-                                                      [replyEditKey]: v,
-                                                    }));
-                                                  }}
-                                                  styles={{
-                                                    root: { width: "100%" },
-                                                  }}
-                                                  mb="xs"
-                                                />
-                                                <Group
-                                                  gap={4}
-                                                  wrap="nowrap"
-                                                  justify="flex-end"
-                                                >
-                                                  <Tooltip
-                                                    label={t(
-                                                      "viewer.comments.saveReply",
-                                                      "Save reply",
-                                                    )}
-                                                  >
-                                                    <ActionIcon
-                                                      variant="primary"
-                                                      size="sm"
-                                                      aria-label={t(
-                                                        "viewer.comments.saveReply",
-                                                        "Save reply",
-                                                      )}
-                                                      onClick={() =>
-                                                        handleSaveReplyEdit(
-                                                          replyEditKey,
-                                                          pageIndex,
-                                                          rId,
-                                                          replyBody,
-                                                        )
-                                                      }
-                                                      disabled={
-                                                        !replyBody.trim()
-                                                      }
-                                                    >
-                                                      <Icon
-                                                        name="check"
-                                                        size={18}
-                                                      />
-                                                    </ActionIcon>
-                                                  </Tooltip>
-                                                </Group>
-                                              </>
-                                            ) : (
-                                              <Text
-                                                size="sm"
-                                                style={{
-                                                  whiteSpace: "pre-wrap",
-                                                }}
-                                              >
-                                                {rObj?.contents ?? ""}
-                                              </Text>
-                                            )}
-                                          </Box>
-                                        </Box>
-                                      );
-                                    })}
-                                  </Stack>
-                                ) : null}
-
-                                <Group gap="xs" wrap="nowrap" align="center">
-                                  <TextInput
-                                    placeholder={t(
-                                      "viewer.comments.addReplyPlaceholder",
-                                      "Add reply...",
-                                    )}
-                                    size="sm"
-                                    value={replyDraft}
-                                    onKeyDown={(e) => {
-                                      if (
-                                        e.key === "Enter" &&
-                                        replyDraft.trim()
-                                      ) {
-                                        e.preventDefault();
-                                        handleSendReply(
-                                          pageIndex,
-                                          id,
-                                          ann?.rect,
-                                        );
-                                      }
-                                    }}
-                                    onChange={(e) => {
-                                      const v =
-                                        (e?.currentTarget ?? e?.target)
-                                          ?.value ?? "";
-                                      setReplyDrafts((p) => ({
-                                        ...p,
-                                        [replyKey]: v,
-                                      }));
-                                    }}
-                                    style={{ flex: 1, minWidth: 0 }}
-                                    styles={{
-                                      input: {
-                                        borderColor:
-                                          "var(--mantine-color-blue-3)",
-                                        height: "36px",
-                                        minHeight: "36px",
-                                      },
-                                    }}
-                                  />
-                                  <Tooltip
-                                    label={t(
-                                      "viewer.comments.addComment",
-                                      "Add comment",
-                                    )}
-                                  >
-                                    <ActionIcon
-                                      variant="primary"
-                                      size="md"
-                                      aria-label={t(
-                                        "viewer.comments.addComment",
-                                        "Add comment",
-                                      )}
-                                      onClick={() =>
-                                        handleSendReply(
-                                          pageIndex,
-                                          id,
-                                          ann?.rect,
-                                        )
-                                      }
-                                      disabled={!replyDraft.trim()}
-                                      style={{
-                                        height: "36px",
-                                        width: "36px",
-                                        flexShrink: 0,
-                                      }}
-                                    >
-                                      <Icon name="check" size={20} />
-                                    </ActionIcon>
-                                  </Tooltip>
-                                </Group>
-                              </>
-                            )}
-                          </Box>
-                        );
-                      })}
-                    </Stack>
-                  </Box>
+                  <CommentPageGroup
+                    key={pageIndex}
+                    pageIndex={pageIndex}
+                    count={entries.length}
+                  >
+                    {entries.map((entry) => {
+                      const id = entry.annotation?.object?.id;
+                      if (!id) return null;
+                      const cardKey = `${pageIndex}_${id}`;
+                      return (
+                        <CommentCard
+                          key={cardKey}
+                          pageIndex={pageIndex}
+                          entry={entry}
+                          selected={selectedAnnotationIds.has(id)}
+                          displayName={displayName}
+                          draft={draftContents[cardKey]}
+                          isEditing={editingMainKey === cardKey}
+                          replyDraft={replyDrafts[`${cardKey}_reply`] ?? ""}
+                          editingReply={
+                            editingReply?.cardKey === cardKey
+                              ? editingReply
+                              : null
+                          }
+                          actions={commentActions}
+                        />
+                      );
+                    })}
+                  </CommentPageGroup>
                 );
               })
             )}
@@ -1350,60 +1583,18 @@ export function CommentsSidebar({
         )}
       </SidebarBase>
 
-      <Modal
+      <DeleteLinkedCommentModal
         opened={!!deleteModal}
         onClose={() => setDeleteModal(null)}
-        title={t(
-          "viewer.comments.deleteTitle",
-          "Remove annotation from comments?",
-        )}
-        centered
-        size="sm"
-      >
-        <Text size="sm" c="dimmed" mb="lg">
-          {t(
-            "viewer.comments.deleteDescription",
-            "This annotation has a comment attached. You can remove just the comment from the sidebar while keeping the annotation, or delete everything.",
-          )}
-        </Text>
-        <Group justify="flex-end" gap="sm">
-          <Button variant="secondary" onClick={handleRemoveFromSidebar}>
-            {t("viewer.comments.removeCommentOnly", "Remove comment only")}
-          </Button>
-          <Button accent="danger" onClick={handleDeleteAnnotation}>
-            {t(
-              "viewer.comments.deleteAnnotationAndComment",
-              "Delete annotation & comment",
-            )}
-          </Button>
-        </Group>
-      </Modal>
+        onRemoveComment={handleRemoveFromSidebar}
+        onDeleteAnnotation={handleDeleteAnnotation}
+      />
 
-      <Modal
+      <ClearAllCommentsModal
         opened={clearAllModalOpen}
         onClose={() => setClearAllModalOpen(false)}
-        title={t("viewer.comments.clearAllTitle", "Clear all comments?")}
-        centered
-        size="sm"
-      >
-        <Text size="sm" c="dimmed" mb="lg">
-          {t(
-            "viewer.comments.clearAllDescription",
-            "This removes comments and replies from the sidebar while keeping any attached annotations in the document.",
-          )}
-        </Text>
-        <Group justify="flex-end" gap="sm">
-          <Button
-            variant="secondary"
-            onClick={() => setClearAllModalOpen(false)}
-          >
-            {t("viewer.comments.cancelClearAll", "Cancel")}
-          </Button>
-          <Button accent="danger" onClick={handleClearAllComments}>
-            {t("viewer.comments.clearAll", "Clear all comments")}
-          </Button>
-        </Group>
-      </Modal>
+        onConfirm={handleClearAllComments}
+      />
     </>
   );
 }
