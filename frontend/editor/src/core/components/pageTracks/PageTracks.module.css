@@ -246,6 +246,39 @@
   opacity: 1;
 }
 
+/* Move-one-place chips, halfway down each side and scaled with the page. */
+.shiftButton {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: flex;
+  border-radius: 999px;
+  background: var(--c-surface);
+  box-shadow: var(--shadow-sm);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
+.shiftLeft {
+  left: 0;
+  transform: translateY(-50%) scale(var(--pt-zoom, 1));
+  transform-origin: left center;
+}
+
+.shiftRight {
+  right: 0;
+  transform: translateY(-50%) scale(var(--pt-zoom, 1));
+  transform-origin: right center;
+}
+
+.tile:hover .shiftButton,
+.tile:focus-within .shiftButton,
+.shiftButton[data-force-visible="true"] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 /* Split affordance. A lane-level element (not attached to a tile), placed by
    inline left/top/height so it sits in the GAP before a page — the same line
    the drag insertion marker uses. A full-height line centred in the gap with a

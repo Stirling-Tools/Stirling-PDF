@@ -207,6 +207,32 @@ describe("trackEditorReducer operations", () => {
     expect(changedTrackIds(state)).toEqual([]);
   });
 
+  it("shifts a page one place within its track, stopping at either end", () => {
+    let state = twoTracks();
+    const [a1] = pagesOf(state, A);
+    state = trackEditorReducer(state, {
+      type: "shiftPage",
+      pageId: a1.id,
+      by: 1,
+    });
+    expect(ids(state, A)).toEqual([`${A}:2`, `${A}:1`, `${A}:3`]);
+    expect(changedTrackIds(state)).toEqual([A]);
+
+    state = trackEditorReducer(state, {
+      type: "shiftPage",
+      pageId: a1.id,
+      by: -1,
+    });
+    expect(ids(state, A)).toEqual([`${A}:1`, `${A}:2`, `${A}:3`]);
+
+    const atStart = trackEditorReducer(state, {
+      type: "shiftPage",
+      pageId: a1.id,
+      by: -1,
+    });
+    expect(atStart).toBe(state);
+  });
+
   it("appends when the anchor is null", () => {
     let state = twoTracks();
     const [a1] = pagesOf(state, A);

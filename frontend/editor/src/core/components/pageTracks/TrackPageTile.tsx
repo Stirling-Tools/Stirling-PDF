@@ -3,6 +3,8 @@ import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { Checkbox } from "@app/ui/Checkbox";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { Tooltip } from "@app/components/shared/Tooltip";
 import HoverActionMenu, {
   HoverAction,
 } from "@app/components/shared/HoverActionMenu";
@@ -24,6 +26,7 @@ export interface TrackPageTileProps {
   trackFileId: FileId;
   /** 1-based position within the track. */
   position: number;
+  isLast: boolean;
   /** Horizontal offset within the lane, from the virtualiser. */
   offsetX: number;
   /** Vertical offset within the lane (0 in single-row mode; row top in wrap). */
@@ -44,12 +47,54 @@ export interface TrackPageTileProps {
   onViewPage: (pageId: string) => void;
   onRotate: (pageIds: string[], delta: number) => void;
   onDelete: (pageIds: string[]) => void;
+  /** Swaps the page with its neighbour: -1 left, 1 right. */
+  onShift: (pageId: string, by: -1 | 1) => void;
+}
+
+interface ShiftButtonProps {
+  direction: "left" | "right";
+  label: string;
+  forceVisible: boolean;
+  onShift: () => void;
+}
+
+/** Sits on the side of the page it moves towards. */
+function ShiftButton({
+  direction,
+  label,
+  forceVisible,
+  onShift,
+}: ShiftButtonProps) {
+  return (
+    <div
+      className={`${styles.shiftButton} ${direction === "left" ? styles.shiftLeft : styles.shiftRight}`}
+      data-force-visible={forceVisible}
+      // The tile is a drag source and a selection toggle; neither should fire.
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
+    >
+      <Tooltip content={label} position={direction}>
+        <ActionIcon
+          variant="quiet"
+          size="sm"
+          aria-label={label}
+          onClick={onShift}
+        >
+          <Icon
+            name={direction === "left" ? "arrow-left" : "arrow-right"}
+            size={14}
+          />
+        </ActionIcon>
+      </Tooltip>
+    </div>
+  );
 }
 
 function TrackPageTileImpl({
   page,
   trackFileId,
   position,
+  isLast,
   offsetX,
   offsetY,
   selected,
@@ -61,6 +106,7 @@ function TrackPageTileImpl({
   onViewPage,
   onRotate,
   onDelete,
+  onShift,
 }: TrackPageTileProps) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
@@ -202,6 +248,23 @@ function TrackPageTileImpl({
           </PrivateContent>
         ) : (
           <div className={styles.thumbPending} />
+        )}
+
+        {position > 1 && (
+          <ShiftButton
+            direction="left"
+            label={t("pageTracks.moveLeft", "Move left")}
+            forceVisible={isMobile}
+            onShift={() => onShift(page.id, -1)}
+          />
+        )}
+        {!isLast && (
+          <ShiftButton
+            direction="right"
+            label={t("pageTracks.moveRight", "Move right")}
+            forceVisible={isMobile}
+            onShift={() => onShift(page.id, 1)}
+          />
         )}
 
         <HoverActionMenu

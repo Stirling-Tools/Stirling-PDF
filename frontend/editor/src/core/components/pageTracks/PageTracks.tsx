@@ -254,6 +254,11 @@ export default function PageTracks() {
 
   const totalPages = useMemo(() => totalPageCount(workspace), [workspace]);
   const changedSet = useMemo(() => new Set(changedFileIds), [changedFileIds]);
+  const shiftPage = useCallback(
+    (pageId: string, by: -1 | 1) => dispatch({ type: "shiftPage", pageId, by }),
+    [dispatch],
+  );
+
   const rotatePages = useCallback(
     (pageIds: string[], delta: number) =>
       dispatch({ type: "rotate", pageIds, delta }),
@@ -766,6 +771,7 @@ export default function PageTracks() {
                   onSplit={splitTrack}
                   onRotate={rotatePages}
                   onDelete={deletePages}
+                  onShiftPage={shiftPage}
                   onClose={setCloseRequest}
                 />
               );

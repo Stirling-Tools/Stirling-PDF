@@ -116,6 +116,7 @@ export interface TrackRowProps {
   onSplit: (fileId: FileId, startPageId: string) => void;
   onRotate: (pageIds: string[], delta: number) => void;
   onDelete: (pageIds: string[]) => void;
+  onShiftPage: (pageId: string, by: -1 | 1) => void;
   /** Asks to close the file; the parent confirms before anything closes. */
   onClose: (fileId: FileId) => void;
 }
@@ -144,6 +145,7 @@ function TrackRowImpl({
   onSplit,
   onRotate,
   onDelete,
+  onShiftPage,
   onClose,
 }: TrackRowProps) {
   const { t } = useTranslation();
@@ -542,6 +544,7 @@ function TrackRowImpl({
                         page={page}
                         trackFileId={track.fileId}
                         position={item.index + 1}
+                        isLast={item.index === pageCount - 1}
                         offsetX={item.start}
                         offsetY={0}
                         selected={selectedIds.has(page.id)}
@@ -559,6 +562,7 @@ function TrackRowImpl({
                         onViewPage={handleViewPage}
                         onRotate={onRotate}
                         onDelete={onDelete}
+                        onShift={onShiftPage}
                       />
                       {item.index > 0 && (
                         <SplitHandle
@@ -586,6 +590,7 @@ function TrackRowImpl({
                         page={page}
                         trackFileId={track.fileId}
                         position={pageIndex + 1}
+                        isLast={pageIndex === pageCount - 1}
                         offsetX={col * wrapColStride}
                         offsetY={rowTop}
                         selected={selectedIds.has(page.id)}
@@ -603,6 +608,7 @@ function TrackRowImpl({
                         onViewPage={handleViewPage}
                         onRotate={onRotate}
                         onDelete={onDelete}
+                        onShift={onShiftPage}
                       />
                       {pageIndex > 0 && (
                         <SplitHandle

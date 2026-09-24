@@ -461,6 +461,32 @@ test.describe("Page Editor tracks", () => {
     await expect(page.locator("[data-track-file-id]")).toHaveCount(0);
   });
 
+  test("a page's move buttons shift it one place within its track", async ({
+    page,
+  }) => {
+    await openPageEditor(page);
+    const rotated = track(page, "rotated-pages.pdf");
+    expect(await readRotations(rotated, 4)).toEqual([0, 90, 270, 180]);
+
+    const first = rotated.locator("[data-page-id]").first();
+    await first.hover();
+    // Only the directions a page can actually move are offered.
+    await expect(first.getByRole("button", { name: "Move left" })).toHaveCount(
+      0,
+    );
+    await first.getByRole("button", { name: "Move right" }).click();
+    expect(await readRotations(rotated, 4)).toEqual([90, 0, 270, 180]);
+    await expect(rotated).toContainText("edited");
+
+    const last = rotated.locator("[data-page-id]").last();
+    await last.hover();
+    await expect(last.getByRole("button", { name: "Move right" })).toHaveCount(
+      0,
+    );
+    await last.getByRole("button", { name: "Move left" }).click();
+    expect(await readRotations(rotated, 4)).toEqual([90, 0, 180, 270]);
+  });
+
   test("the insertion line marks where a right-to-left drag actually lands", async ({
     page,
   }) => {

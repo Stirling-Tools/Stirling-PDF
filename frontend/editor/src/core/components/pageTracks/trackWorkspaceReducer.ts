@@ -47,6 +47,8 @@ export type TrackEditorAction =
       /** Move before this track, or to the end when null. */
       beforeId: FileId | null;
     }
+  /** Swaps a page with its neighbour in the same track. */
+  | { type: "shiftPage"; pageId: string; by: -1 | 1 }
   | { type: "dropTracks"; fileIds: FileId[] }
   /** Reverts these files' tracks, and every track entangled with them, to
    *  their saved state; entangled splits are dropped. */
@@ -462,6 +464,18 @@ export function trackEditorReducer(
         past: [],
         future: [],
       };
+    }
+
+    case "shiftPage": {
+      const next = mapTracks(state.present, (pages) => {
+        const from = pages.findIndex((p) => p.id === action.pageId);
+        const to = from + action.by;
+        if (from < 0 || to < 0 || to >= pages.length) return pages;
+        const shifted = [...pages];
+        [shifted[from], shifted[to]] = [shifted[to], shifted[from]];
+        return shifted;
+      });
+      return withEdit(state, next);
     }
 
     case "revert": {
