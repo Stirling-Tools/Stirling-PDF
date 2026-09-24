@@ -41,7 +41,7 @@ function applyDomPatch(trigger: string): void {
   ): T {
     if (child.parentNode !== this) return child;
     return originalRemoveChild.call(this, child) as T;
-  } as typeof Node.prototype.removeChild;
+  };
 
   const originalInsertBefore = Node.prototype.insertBefore;
   Node.prototype.insertBefore = function patchedInsertBefore<T extends Node>(
@@ -51,7 +51,7 @@ function applyDomPatch(trigger: string): void {
   ): T {
     if (referenceNode && referenceNode.parentNode !== this) return newNode;
     return originalInsertBefore.call(this, newNode, referenceNode) as T;
-  } as typeof Node.prototype.insertBefore;
+  };
 }
 
 export function armTranslatorDetector(): void {

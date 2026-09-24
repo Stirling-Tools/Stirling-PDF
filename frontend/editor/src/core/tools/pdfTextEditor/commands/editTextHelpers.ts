@@ -1038,7 +1038,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       const ptrs: number[] = [];
       let cursor = opts.x;
       for (const pc of perChar) {
-        const ptr = m2.FPDFPageObj_CreateTextObj!(
+        const ptr = m2.FPDFPageObj_CreateTextObj(
           opts.doc.docPtr,
           pc.font,
           size,

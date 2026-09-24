@@ -82,14 +82,14 @@ async function appendSaveReopen(
       sel.addRange(range);
       document.execCommand("insertText", false, " " + txt);
     },
-    { rid: id as string, txt: text },
+    { rid: id, txt: text },
   );
   await page.waitForTimeout(200);
   await page.evaluate((rid: string) => {
     document
       .querySelector<HTMLElement>(`[data-testid="pdf-editor-run-${rid}"]`)
       ?.blur();
-  }, id as string);
+  }, id);
   await page.waitForTimeout(1000);
 
   // Save, then reopen the produced bytes.
@@ -112,7 +112,7 @@ async function appendSaveReopen(
       .runs.map((r) => r.text)
       .join("");
   });
-  return { reopened, errs, runId: id as string };
+  return { reopened, errs, runId: id };
 }
 
 for (const { name, text } of COVERED) {
@@ -197,21 +197,21 @@ for (const { name, text } of RTL_SAMPLES) {
         sel.addRange(range);
         document.execCommand("insertText", false, " " + txt);
       },
-      { rid: id as string, txt: text },
+      { rid: id, txt: text },
     );
     await page.waitForTimeout(200);
     await page.evaluate((rid: string) => {
       document
         .querySelector<HTMLElement>(`[data-testid="pdf-editor-run-${rid}"]`)
         ?.blur();
-    }, id as string);
+    }, id);
     await page.waitForTimeout(1000);
 
     // (a) model text carries the inserted RTL string.
     const model = await page.evaluate((rid: string) => {
       const s = (window as unknown as EditorTestWindow).__editor_store;
       return s.doc.page(0).runs.find((r) => r.id === rid)?.text ?? "";
-    }, id as string);
+    }, id);
     expect(model).toContain(text);
 
     // (b) the edited run stays within page bounds after the edit.
@@ -220,7 +220,7 @@ for (const { name, text } of RTL_SAMPLES) {
       const pg = s.doc.page(0);
       const r = pg.runs.find((x) => x.id === rid)!;
       return { boundsRight: r.bounds.x + r.bounds.width, pageWidth: pg.width };
-    }, id as string);
+    }, id);
     expect(
       fits.boundsRight,
       "RTL run must not extend past the page width",

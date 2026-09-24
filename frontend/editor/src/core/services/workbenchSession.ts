@@ -25,7 +25,7 @@ export interface WorkbenchSession {
 
 /** A file's stable identity across versions - what the session records. */
 export function originalIdOf(stub: StirlingFileStub): string {
-  return stub.originalFileId || (stub.id as string);
+  return stub.originalFileId || stub.id;
 }
 
 export function readWorkbenchSession(): WorkbenchSession | null {

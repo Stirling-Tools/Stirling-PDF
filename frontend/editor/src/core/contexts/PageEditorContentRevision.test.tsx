@@ -31,10 +31,7 @@ const setFiles = (entries: [string, Partial<StirlingFileStub>][]) => {
   fileState.state = {
     files: {
       ids: entries.map(([id]) => id as FileId),
-      byId: Object.fromEntries(entries) as Record<
-        FileId,
-        Partial<StirlingFileStub>
-      >,
+      byId: Object.fromEntries(entries),
     },
   };
 };

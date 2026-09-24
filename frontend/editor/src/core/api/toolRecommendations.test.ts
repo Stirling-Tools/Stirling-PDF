@@ -37,7 +37,7 @@ describe("toolRecommendations api", () => {
       const result = await fetchToolRecommendations("compare", 6);
 
       expect(result).toEqual([{ toolKey: "ocr", score: 5 }]);
-      const url = mockGet.mock.calls[0][0] as string;
+      const url = mockGet.mock.calls[0][0];
       expect(url).toContain("currentTool=compare");
       expect(url).toContain("limit=6");
     });

@@ -17,7 +17,7 @@ const mocks = vi.hoisted(() => ({
     name: "a.pdf",
     sizeBytes: 10,
     lastModified: 1,
-  } as DiskFileEntry,
+  },
   submit: vi.fn(),
   wait: vi.fn(),
   download: vi.fn(),

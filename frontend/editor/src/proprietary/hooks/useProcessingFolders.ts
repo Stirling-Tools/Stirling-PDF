@@ -158,12 +158,12 @@ export function useProcessingFolders(): ProcessingFoldersApi {
     [recordFor],
   );
 
-  const enabledFolderIds = useMemo(() => {
+  const enabledFolderIds = useMemo<ReadonlySet<string>>(() => {
     const ids = new Set<string>();
     for (const record of current) {
       if (record.enabled && record.folderId) ids.add(record.folderId);
     }
-    return ids as ReadonlySet<string>;
+    return ids;
   }, [current]);
 
   const anyEnabled = useMemo(

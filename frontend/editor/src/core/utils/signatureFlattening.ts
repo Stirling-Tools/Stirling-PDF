@@ -174,10 +174,7 @@ export async function flattenSignatures(
           const fileStub = selectors.getStirlingFileStub(allFileIds[fileIndex]);
           const fileObject = selectors.getFile(allFileIds[fileIndex]);
           if (fileStub && fileObject) {
-            currentFile = createStirlingFile(
-              fileObject,
-              allFileIds[fileIndex] as FileId,
-            );
+            currentFile = createStirlingFile(fileObject, allFileIds[fileIndex]);
           }
         }
       }
@@ -202,7 +199,7 @@ export async function flattenSignatures(
             allAnnotations,
             getImageData,
           );
-          signedFile = new File([resultBytes as BlobPart], currentFile.name, {
+          signedFile = new File([resultBytes], currentFile.name, {
             type: "application/pdf",
           });
         } catch (renderError) {

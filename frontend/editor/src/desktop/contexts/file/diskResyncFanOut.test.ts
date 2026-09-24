@@ -39,13 +39,13 @@ function stub(id: string, path?: string): StirlingFileStub {
     createdAt: 1,
     quickKey: `report.pdf|1|${id}`,
     versionNumber: 1,
-    originalFileId: id as FileId,
+    originalFileId: id,
     toolHistory: [],
     isLeaf: true,
     localFilePath: path,
     diskSyncedSize: 1,
     diskSyncedModifiedMs: 1,
-  } as StirlingFileStub;
+  };
 }
 
 function harness(stubs: StirlingFileStub[]) {
@@ -69,7 +69,7 @@ function harness(stubs: StirlingFileStub[]) {
     run: (paths: string[]) =>
       reconcileOpenFilesAt(
         paths,
-        stateRef as never,
+        stateRef,
         { current: new Map<FileId, File>() },
         lifecycleManager as never,
       ),

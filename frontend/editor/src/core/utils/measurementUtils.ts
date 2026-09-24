@@ -296,8 +296,8 @@ export function validateMeasurement(obj: unknown): obj is Measurement {
   }
 
   // Reject cross-page measurements
-  const start = m.start as PagePoint;
-  const end = m.end as PagePoint;
+  const start = m.start;
+  const end = m.end;
   if (start.pageIndex !== end.pageIndex) {
     return false;
   }

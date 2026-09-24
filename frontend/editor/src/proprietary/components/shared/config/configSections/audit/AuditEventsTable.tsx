@@ -407,10 +407,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                       let author = "";
                       let fileHash = "";
                       if (event.details && typeof event.details === "object") {
-                        const details = event.details as Record<
-                          string,
-                          unknown
-                        >;
+                        const details = event.details;
                         const files = details.files;
                         if (Array.isArray(files) && files.length > 0) {
                           const firstFile = files[0] as Record<string, unknown>;

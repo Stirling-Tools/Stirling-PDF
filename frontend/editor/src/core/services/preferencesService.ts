@@ -71,7 +71,7 @@ class PreferencesService {
       if (stored) {
         const preferences = JSON.parse(stored) as Partial<UserPreferences>;
         if (key in preferences && preferences[key] !== undefined) {
-          return preferences[key]!;
+          return preferences[key];
         }
       }
     } catch (error) {
@@ -79,7 +79,7 @@ class PreferencesService {
     }
     // Use server defaults if available, otherwise use hardcoded defaults
     if (key in this.serverDefaults && this.serverDefaults[key] !== undefined) {
-      return this.serverDefaults[key]!;
+      return this.serverDefaults[key];
     }
     return DEFAULT_PREFERENCES[key];
   }

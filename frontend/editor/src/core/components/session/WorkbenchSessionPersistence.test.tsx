@@ -329,7 +329,7 @@ describe("a lost session that comes back", () => {
     store: ReturnType<typeof makeStore>,
   ) =>
     view.rerender(
-      <FileStoreContext.Provider value={store as never}>
+      <FileStoreContext.Provider value={store}>
         <FileActionsContext.Provider
           value={{ actions, dispatch: vi.fn() } as never}
         >
@@ -367,7 +367,7 @@ describe("a lost session that comes back", () => {
     // Let the fingerprint land: writes hold off while a known identity has none yet.
     await act(async () => {});
     store.state.files.ids = ["f2" as never];
-    store.state.files.byId = { f2: stub("f2", "root-b") } as never;
+    store.state.files.byId = { f2: stub("f2", "root-b") };
     act(() => store.notify());
     view.unmount();
     expect(JSON.parse(sessionStorage.getItem(SESSION_KEY)!).fileIds).toEqual([
@@ -394,7 +394,7 @@ describe("on the login screen", () => {
 
     // And the unmount flush must not write either.
     store.state.files.ids = ["f1" as never];
-    store.state.files.byId = { f1: stub("f1", "f1") } as never;
+    store.state.files.byId = { f1: stub("f1", "f1") };
     act(() => store.notify());
     unmount();
     expect(JSON.parse(sessionStorage.getItem(SESSION_KEY)!).fileIds).toEqual([
@@ -410,7 +410,7 @@ describe("writer", () => {
     mount(store);
 
     store.state.files.ids = ["v2" as never];
-    store.state.files.byId = { v2: stub("v2", "root-a", 2) } as never;
+    store.state.files.byId = { v2: stub("v2", "root-a", 2) };
     store.state.ui.selectedFileIds = ["v2"];
     act(() => store.notify());
 
@@ -464,7 +464,7 @@ describe("writer", () => {
     const { unmount } = mount(store);
 
     store.state.files.ids = ["f1" as never];
-    store.state.files.byId = { f1: stub("f1", "f1") } as never;
+    store.state.files.byId = { f1: stub("f1", "f1") };
     act(() => store.notify());
     unmount();
 

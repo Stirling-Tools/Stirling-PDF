@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import type { AppConfig } from "@app/types/appConfig";
 import { isUpdatePopupAllowed } from "@app/components/shared/updatePopupGate";
 
 describe("isUpdatePopupAllowed", () => {
@@ -8,26 +7,20 @@ describe("isUpdatePopupAllowed", () => {
   });
 
   it("shows on desktop when the backend allows it", () => {
-    expect(
-      isUpdatePopupAllowed({ shouldShowUpdate: true } as AppConfig, false),
-    ).toBe(true);
+    expect(isUpdatePopupAllowed({ shouldShowUpdate: true }, false)).toBe(true);
   });
 
   it("never shows on a mobile / narrow viewport", () => {
-    expect(
-      isUpdatePopupAllowed({ shouldShowUpdate: true } as AppConfig, true),
-    ).toBe(false);
+    expect(isUpdatePopupAllowed({ shouldShowUpdate: true }, true)).toBe(false);
   });
 
   it("hides when the backend says not to (non-admin / showUpdate disabled)", () => {
-    expect(
-      isUpdatePopupAllowed({ shouldShowUpdate: false } as AppConfig, false),
-    ).toBe(false);
+    expect(isUpdatePopupAllowed({ shouldShowUpdate: false }, false)).toBe(
+      false,
+    );
   });
 
   it("fails closed when the backend omits the decision (e.g. 401 fallback)", () => {
-    expect(
-      isUpdatePopupAllowed({ enableLogin: true } as AppConfig, false),
-    ).toBe(false);
+    expect(isUpdatePopupAllowed({ enableLogin: true }, false)).toBe(false);
   });
 });

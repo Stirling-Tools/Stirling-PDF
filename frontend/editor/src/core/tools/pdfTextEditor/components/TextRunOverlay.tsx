@@ -774,15 +774,13 @@ export function TextRunOverlay({
         // which reads back as a line the user never typed. Seat it in the
         // block it sits beside before the input applies.
         const sel = window.getSelection();
-        if (sel)
-          normalizeContainerCaret(e.currentTarget as HTMLDivElement, sel);
+        if (sel) normalizeContainerCaret(e.currentTarget, sel);
       }}
       onPaste={(e) => {
         // Paste as PLAIN TEXT.
         e.preventDefault();
         const sel = window.getSelection();
-        if (sel)
-          normalizeContainerCaret(e.currentTarget as HTMLDivElement, sel);
+        if (sel) normalizeContainerCaret(e.currentTarget, sel);
         const text = e.clipboardData?.getData("text/plain");
         if (text) document.execCommand("insertText", false, text);
       }}
@@ -792,11 +790,7 @@ export function TextRunOverlay({
         e.stopPropagation();
         // Locked runs are inert: no select, no drag, no edit.
         if (run.locked) return;
-        const zone = edgeZoneAt(
-          e.currentTarget as HTMLDivElement,
-          e.clientX,
-          e.clientY,
-        );
+        const zone = edgeZoneAt(e.currentTarget, e.clientX, e.clientY);
 
         // Ctrl+drag still moves from anywhere inside, so existing muscle
         // memory keeps working; grabbing the frame is the discoverable path.
@@ -806,7 +800,7 @@ export function TextRunOverlay({
           dragOriginRef.current = { x: e.clientX, y: e.clientY };
           setDragging(true);
           setDragOffset({ x: 0, y: 0 });
-          (e.currentTarget as HTMLDivElement).blur();
+          e.currentTarget.blur();
           // Pointer events (mouse/pen/touch) with a global capture so the
           // drag keeps tracking even if the cursor leaves the overlay.
           const onPointerMove = (ev: PointerEvent) => {
@@ -852,14 +846,14 @@ export function TextRunOverlay({
           return;
         }
         pointerFocusRef.current = true;
-        (e.currentTarget as HTMLDivElement).focus({ preventScroll: true });
+        e.currentTarget.focus({ preventScroll: true });
         onSelect(false);
       }}
       onFocus={(e) => {
         setFocused(true);
         setTouched(false);
-        setMaskColor(readMaskColor(e.currentTarget as HTMLDivElement));
-        const el = e.currentTarget as HTMLDivElement;
+        setMaskColor(readMaskColor(e.currentTarget));
+        const el = e.currentTarget;
         // Remember the text at focus so blur can tell if the user edited it.
         focusTextRef.current = readOverlayText(el);
         const fromPointer = pointerFocusRef.current;
@@ -899,7 +893,7 @@ export function TextRunOverlay({
         // left. Once focus is genuinely outside the run, its selection goes
         // with it.
         {
-          const el = e.currentTarget as HTMLDivElement;
+          const el = e.currentTarget;
           const sel = window.getSelection();
           if (
             sel &&
@@ -913,7 +907,7 @@ export function TextRunOverlay({
         // Wrap mode: when the just-edited content overflows the locked box
         // width.
         if (!wantWrap || !onWrap) return;
-        const el = e.currentTarget as HTMLDivElement;
+        const el = e.currentTarget;
         const domText = readOverlayText(el);
         if (domText === focusTextRef.current) return; // not edited
         const widest = measureMaxLineWidth(domText, font);
@@ -942,7 +936,7 @@ export function TextRunOverlay({
       onCompositionEnd={(e) => {
         composingRef.current = false;
         // Commit the composed string once, like onInput's non-IME path.
-        const el = e.currentTarget as HTMLDivElement;
+        const el = e.currentTarget;
         onEdit(readOverlayText(el).replace(/\u00A0/g, " "));
       }}
       onInput={(e) => {
@@ -950,9 +944,8 @@ export function TextRunOverlay({
         setEditTick((n) => n + 1);
         editedAtRevisionRef.current = pageRevision ?? -1;
         // Skip intermediate IME steps; compositionend commits the result.
-        if (composingRef.current || (e.nativeEvent as InputEvent).isComposing)
-          return;
-        const el = e.currentTarget as HTMLDivElement;
+        if (composingRef.current || e.nativeEvent.isComposing) return;
+        const el = e.currentTarget;
         // Re-fit the token the user just typed into. Its painted width is the
         // PDF's advance for the ORIGINAL string, so leaving it alone lays the
         // new text out at the browser's own advances and the caret drifts off
@@ -974,9 +967,7 @@ export function TextRunOverlay({
       onPointerMove={(e) => {
         // Only while idle: mid-drag the cursor is owned by the gesture.
         if (run.locked || dragging) return;
-        setEdgeZone(
-          edgeZoneAt(e.currentTarget as HTMLDivElement, e.clientX, e.clientY),
-        );
+        setEdgeZone(edgeZoneAt(e.currentTarget, e.clientX, e.clientY));
       }}
       style={{
         left,

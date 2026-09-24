@@ -175,10 +175,7 @@ function readMemberInk(
   } catch {
     /* keep the run-level value */
   }
-  const exports = m.pdfium.wasmExports as unknown as {
-    malloc: (n: number) => number;
-    free: (p: number) => void;
-  };
+  const exports = m.pdfium.wasmExports;
   const r = exports.malloc(4);
   const g = exports.malloc(4);
   const b = exports.malloc(4);

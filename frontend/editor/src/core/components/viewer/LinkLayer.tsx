@@ -281,7 +281,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
         ta.commitState !== "deleted" &&
         ta.object.type === PdfAnnotationSubtype.LINK
       ) {
-        const annotationLink = ta.object as PdfLinkAnnoObject;
+        const annotationLink = ta.object;
         if (
           annotationLink.rect.size.width > 0 &&
           annotationLink.rect.size.height > 0

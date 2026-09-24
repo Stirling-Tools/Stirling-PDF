@@ -84,7 +84,7 @@ export async function getDropzoneFiles(
   }
 
   if ("target" in event && event.target && "files" in event.target) {
-    return Array.from((event.target as HTMLInputElement).files ?? []);
+    return Array.from(event.target.files ?? []);
   }
   return [];
 }

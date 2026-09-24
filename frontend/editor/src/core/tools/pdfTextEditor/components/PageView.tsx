@@ -225,9 +225,7 @@ export function PageView({
         if (!onPageClick) return;
         // Convert from CSS pixel coords (origin upper-left) into PDF
         // page-space coords (origin lower-left, points).
-        const rect = (
-          e.currentTarget as HTMLDivElement
-        ).getBoundingClientRect();
+        const rect = e.currentTarget.getBoundingClientRect();
         const cssX = e.clientX - rect.left;
         const cssY = e.clientY - rect.top;
         // CSS px -> display-PDF.

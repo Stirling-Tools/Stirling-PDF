@@ -1176,7 +1176,7 @@ describe("PipelineBuilder", () => {
       steps: [
         { operation: "/api/v1/misc/compress-pdf", parameters: {} },
         { operation: "/api/v1/misc/extract-images", parameters: {} },
-      ] as unknown as Policy["steps"],
+      ],
     };
   }
 
