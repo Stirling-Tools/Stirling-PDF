@@ -580,6 +580,10 @@ mod macos {
                     "annotation-text-sample",
                     root.join("../src/core/tests/test-fixtures/annotation-text-sample.pdf"),
                 ),
+                (
+                    "big-sample",
+                    root.join("../src/core/tests/test-fixtures/big-sample.pdf"),
+                ),
                 ("pages-500", root.join("../.perf-local/pages-500.pdf")),
                 ("large-40mb", root.join("../.perf-local/large-40mb.pdf")),
             ];
@@ -717,6 +721,66 @@ mod macos {
                     started.elapsed().as_secs_f64() * 1000.0,
                     viewport_bytes / 1024,
                 );
+
+                // The page's own crop size at 2x, raw and encoded: the exact
+                // operation a reference rasterizer (PDFium/MuPDF) performs.
+                if let Ok((_doc, pdf_page)) = super::open_page(&path, 1) {
+                    let bounds = unsafe {
+                        objc2_pdf_kit::PDFPage::boundsForBox(
+                            &pdf_page,
+                            objc2_pdf_kit::PDFDisplayBox::CropBox,
+                        )
+                    };
+                    let (page_w, page_h) = (bounds.size.width, bounds.size.height);
+                    let mut raw_samples = Vec::new();
+                    let mut raw_bytes = 0;
+                    for _ in 0..7 {
+                        let started = Instant::now();
+                        match render_rect_raw(&path, 1, 0.0, 0.0, page_w, page_h, 2.0) {
+                            Ok(bytes) => {
+                                raw_samples.push(started.elapsed().as_secs_f64() * 1000.0);
+                                raw_bytes = bytes.len();
+                            }
+                            Err(error) => {
+                                println!("[bench] {label} own-page raw failed: {error}");
+                                break;
+                            }
+                        }
+                    }
+                    let mut jpg_samples = Vec::new();
+                    let mut jpg_bytes = 0;
+                    for _ in 0..7 {
+                        let started = Instant::now();
+                        match render_rect(
+                            &path,
+                            1,
+                            0.0,
+                            0.0,
+                            page_w,
+                            page_h,
+                            2.0,
+                            ImageFormat::Jpeg,
+                        ) {
+                            Ok(bytes) => {
+                                jpg_samples.push(started.elapsed().as_secs_f64() * 1000.0);
+                                jpg_bytes = bytes.len();
+                            }
+                            Err(error) => {
+                                println!("[bench] {label} own-page jpeg failed: {error}");
+                                break;
+                            }
+                        }
+                    }
+                    if !raw_samples.is_empty() && !jpg_samples.is_empty() {
+                        let (raw_median, raw_min) = median(raw_samples);
+                        let (jpg_median, _) = median(jpg_samples);
+                        println!(
+                            "[bench] own-page {label} {page_w:.0}x{page_h:.0}pt@2x: raw {raw_median:.1}ms (min {raw_min:.1}) {:.1}MB, jpeg {jpg_median:.1}ms {}KB",
+                            raw_bytes as f64 / 1048576.0,
+                            jpg_bytes / 1024,
+                        );
+                    }
+                }
 
                 // The viewer asks for several tiles at once and each Tauri
                 // command runs on the threadpool, so this is the shape it gets.
