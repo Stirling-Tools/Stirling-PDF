@@ -7,7 +7,7 @@ import { renderHook, act } from "@testing-library/react";
 
 const engineMocks = vi.hoisted(() => {
   const created: Array<{ destroy: ReturnType<typeof vi.fn> }> = [];
-  const createPdfiumEngine = vi.fn(() => {
+  const createPdfiumEngine = vi.fn((..._args: unknown[]) => {
     const engine = {
       closeAllDocuments: vi.fn(() => ({ wait: (cb: () => void) => cb() })),
       destroy: vi.fn(),
