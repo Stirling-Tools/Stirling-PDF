@@ -18,10 +18,10 @@ mod macos {
     use objc2::runtime::AnyObject;
     use objc2::AnyThread;
     use objc2_app_kit::{NSBitmapImageFileType, NSBitmapImageRep};
-    use objc2_core_foundation::{CGPoint, CGRect, CGSize};
+    use objc2_core_foundation::{CFRetained, CGPoint, CGRect, CGSize, CFURL};
     use objc2_core_graphics::{
         CGBitmapContextCreate, CGBitmapContextCreateImage, CGColorSpace, CGContext, CGImage,
-        CGImageAlphaInfo, CGImageByteOrderInfo,
+        CGImageAlphaInfo, CGImageByteOrderInfo, CGPDFBox, CGPDFDocument, CGPDFPage,
     };
     use objc2_core_image::{CIContext, CIImage};
     use objc2_foundation::{NSDictionary, NSNumber, NSSize, NSString, NSURL};
@@ -72,7 +72,6 @@ mod macos {
     #[tauri::command]
     #[allow(clippy::too_many_arguments)]
     pub fn render_pdf_rect(
-        app: AppHandle,
         path: String,
         page: u32,
         x: f64,
@@ -84,18 +83,10 @@ mod macos {
         if !Path::new(&path).exists() {
             return Err(format!("PDF file does not exist: {path}"));
         }
-        let (sender, receiver) = mpsc::channel();
-        app.run_on_main_thread(move || {
-            let result = autoreleasepool(|_| {
-                render_rect(&path, page, x, y, width, height, scale, ImageFormat::Jpeg)
-            });
-            let _ = sender.send(result);
-        })
-        .map_err(|error| error.to_string())?;
-        receiver
-            .recv()
-            .map_err(|error| error.to_string())?
-            .map(Response::new)
+        // No main-thread hop: tiles are CoreGraphics-only and the command runs
+        // on the sync threadpool, so concurrent tile requests render in
+        // parallel instead of queueing behind one thread.
+        render_rect(&path, page, x, y, width, height, scale, ImageFormat::Jpeg).map(Response::new)
     }
 
     /// The document is returned alongside the page: PDFPage's link back to its
@@ -194,8 +185,14 @@ mod macos {
         encode(&bitmap, format)
     }
 
+    /// Draws one tile into a fresh bitmap context. Shared by the encoded and
+    /// raw paths so their geometry cannot drift apart.
+    ///
+    /// Rect space: crop-box normalized, origin at the crop's bottom-left, y up.
+    /// Thread safety: opens its own CGPDFDocument per call (measured 0.1ms) and
+    /// draws into its own context, so callers can render tiles in parallel.
     #[allow(clippy::too_many_arguments)]
-    fn render_rect(
+    fn render_tile_context(
         path: &str,
         page: u32,
         x: f64,
@@ -203,15 +200,15 @@ mod macos {
         width: f64,
         height: f64,
         scale: f64,
-        format: ImageFormat,
-    ) -> Result<Vec<u8>, String> {
+    ) -> Result<CFRetained<CGContext>, String> {
         if !(scale.is_finite() && scale > 0.0) {
             return Err(format!("Tile scale must be positive, got {scale}"));
         }
         if !(width.is_finite() && height.is_finite() && width > 0.0 && height > 0.0) {
             return Err(format!("Tile size must be positive, got {width}x{height}"));
         }
-        let (_document, pdf_page) = open_page(path, page)?;
+        let (_document, cg_page) = open_cg_page(path, page)?;
+        let crop = CGPDFPage::box_rect(Some(&cg_page), CGPDFBox::CropBox);
 
         let pixel_width = (width * scale).ceil().max(1.0) as usize;
         let pixel_height = (height * scale).ceil().max(1.0) as usize;
@@ -243,32 +240,72 @@ mod macos {
             ),
         );
 
-        // Callers hand rects in crop-box-normalized space (origin at 0, 0).
-        // drawWithBox puts the crop box origin at the context origin (pinned
-        // against the cropbox-offset fixture), leaving the bottom-left to
-        // top-left flip and the rect shift.
-        CGContext::translate_ctm(Some(&context), 0.0, pixel_height as f64);
-        CGContext::scale_ctm(Some(&context), scale, -scale);
+        // No flip here: drawing the page unflipped into this bitmap produces an
+        // upright image (verified by decoding the rendered PNG and locating the
+        // glyphs); the textbook flip mirrors it. Scale before shifting because
+        // CoreGraphics post-multiplies the CTM; a shift applied first would
+        // itself be scaled and 2x tiles landed in the wrong place.
+        CGContext::scale_ctm(Some(&context), scale, scale);
         CGContext::translate_ctm(Some(&context), -x, -y);
-        unsafe { pdf_page.drawWithBox_toContext(PDFDisplayBox::CropBox, &context) };
+        let box_rect = CGRect::new(
+            CGPoint::ZERO,
+            CGSize::new(crop.size.width, crop.size.height),
+        );
+        // CGPDFPageGetDrawingTransform applies /Rotate and absorbs a non-zero
+        // MediaBox/CropBox origin, which hand-rolled translation got wrong.
+        let box_transform =
+            CGPDFPage::drawing_transform(Some(&cg_page), CGPDFBox::CropBox, box_rect, 0, false);
+        CGContext::concat_ctm(Some(&context), box_transform);
+        // Clip in page space, like the Quartz sample: passing the target rect
+        // here clipped a page whose CropBox origin is non-zero.
+        CGContext::clip_to_rect(Some(&context), crop);
+        CGContext::draw_pdf_page(Some(&context), Some(&cg_page));
+        Ok(context)
+    }
 
+    #[allow(clippy::too_many_arguments)]
+    fn render_rect(
+        path: &str,
+        page: u32,
+        x: f64,
+        y: f64,
+        width: f64,
+        height: f64,
+        scale: f64,
+        format: ImageFormat,
+    ) -> Result<Vec<u8>, String> {
+        let context = render_tile_context(path, page, x, y, width, height, scale)?;
         let image = CGBitmapContextCreateImage(Some(&context))
             .ok_or_else(|| "Could not snapshot the tile".to_string())?;
         let bitmap = NSBitmapImageRep::initWithCGImage(NSBitmapImageRep::alloc(), &image);
         encode(&bitmap, format)
     }
 
+    /// CoreGraphics twin of `open_page`, for the tile path. Keeps the document
+    /// alive alongside the page: CGPDFPage needs its document.
+    fn open_cg_page(
+        path: &str,
+        page: u32,
+    ) -> Result<(CFRetained<CGPDFDocument>, CFRetained<CGPDFPage>), String> {
+        let url = CFURL::from_file_path(path).ok_or_else(|| format!("Invalid PDF path: {path}"))?;
+        let document = CGPDFDocument::with_url(Some(&url))
+            .ok_or_else(|| format!("CoreGraphics could not open {path}"))?;
+        let count = CGPDFDocument::number_of_pages(Some(&document));
+        if page == 0 || page as usize > count {
+            return Err(format!("Page {page} is outside 1..={count} of {path}"));
+        }
+        let cg_page = CGPDFDocument::page(Some(&document), page as usize)
+            .ok_or_else(|| format!("CoreGraphics could not read page {page} of {path}"))?;
+        Ok((document, cg_page))
+    }
+
     #[cfg(test)]
     mod tests {
         use super::{render, render_rect, ImageFormat};
-        use objc2_core_foundation::{CGPoint, CGRect, CGSize};
         use objc2_core_graphics::{
-            CGBitmapContextCreate, CGBitmapContextGetBytesPerRow, CGBitmapContextGetData,
-            CGColorSpace, CGContext, CGImageAlphaInfo, CGImageByteOrderInfo,
+            CGBitmapContextGetBytesPerRow, CGBitmapContextGetData, CGBitmapContextGetHeight,
         };
-        use objc2_pdf_kit::PDFDisplayBox;
         use std::path::Path;
-        use std::ptr;
 
         fn fixture() -> String {
             Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -318,13 +355,15 @@ mod macos {
                 ImageFormat::Png,
             )
             .expect("render blank tile");
+            // Text and annotations sit low on this page; rects are crop
+            // normalized with y up, so the content is near y = 210..260.
             let content = render_rect(
                 &fixture(),
                 1,
                 40.0,
-                40.0,
+                200.0,
                 100.0,
-                100.0,
+                60.0,
                 2.0,
                 ImageFormat::Png,
             )
@@ -337,6 +376,8 @@ mod macos {
             );
         }
 
+        /// Renders the fixture two ways to settle the orientation convention:
+        /// (a) canonical flip + drawing transform, (b) the same without the flip.
         /// Renders the glyphs from the crop-offset fixture and its control at
         /// the same crop-normalized spot: the offset page's CropBox starts at
         /// (50, 30), so a missing offset correction samples the wrong region
@@ -355,7 +396,9 @@ mod macos {
                 .into_owned();
 
             // "Hi" is at PDF (60, 350). Normalized to the crop box that is
-            // (10, 320) on the offset page and (60, 350) on the control.
+            // (10, 320) on the offset page and (60, 350) on the control, so a
+            // tile starting exactly at the glyph origin must rasterize the same
+            // pixels on both: anything less and the crop offset is not applied.
             let content = |path: &str, x: f64, y: f64| {
                 render_rect(path, 1, x, y, 40.0, 45.0, 2.0, ImageFormat::Png)
                     .expect("render content tile")
@@ -372,18 +415,18 @@ mod macos {
             )
             .expect("render blank tile");
 
-            let offset_tile = content(&offset, 5.0, 300.0);
-            let control_tile = content(&control, 55.0, 330.0);
+            let offset_tile = content(&offset, 10.0, 320.0);
+            let control_tile = content(&control, 60.0, 350.0);
             assert!(
                 offset_tile.len() > blank.len(),
                 "crop-offset tile ({} bytes) should carry content, blank is {} bytes",
                 offset_tile.len(),
                 blank.len(),
             );
-            let ratio = offset_tile.len() as f64 / control_tile.len() as f64;
-            assert!(
-                (0.75..1.25).contains(&ratio),
-                "offset tile ({} bytes) should match the control's content ({} bytes)",
+            assert_eq!(
+                offset_tile,
+                control_tile,
+                "the same glyphs at the same crop-normalized origin must rasterize identically ({} vs {} bytes)",
                 offset_tile.len(),
                 control_tile.len(),
             );
@@ -423,8 +466,8 @@ mod macos {
             );
         }
 
-        /// Mirror of `render_rect` that stops at the pixel buffer instead of
-        /// encoding: bench-only, so the numbers show what the encoder costs.
+        /// The shared tile pipeline without encoding, for the raw/multi-thread
+        /// benches.
         #[cfg(test)]
         fn render_rect_raw(
             path: &str,
@@ -435,38 +478,9 @@ mod macos {
             height: f64,
             scale: f64,
         ) -> Result<Vec<u8>, String> {
-            let (_document, pdf_page) = super::open_page(path, page)?;
-            let pixel_width = (width * scale).ceil().max(1.0) as usize;
-            let pixel_height = (height * scale).ceil().max(1.0) as usize;
-            let space =
-                CGColorSpace::new_device_rgb().ok_or_else(|| "No RGB color space".to_string())?;
-            let bitmap_info =
-                CGImageAlphaInfo::PremultipliedFirst.0 | CGImageByteOrderInfo::Order32Little.0;
-            let context = unsafe {
-                CGBitmapContextCreate(
-                    ptr::null_mut(),
-                    pixel_width,
-                    pixel_height,
-                    8,
-                    pixel_width * 4,
-                    Some(&space),
-                    bitmap_info,
-                )
-            }
-            .ok_or_else(|| "Could not create the tile bitmap".to_string())?;
-            CGContext::set_rgb_fill_color(Some(&context), 1.0, 1.0, 1.0, 1.0);
-            CGContext::fill_rect(
-                Some(&context),
-                CGRect::new(
-                    CGPoint::ZERO,
-                    CGSize::new(pixel_width as f64, pixel_height as f64),
-                ),
-            );
-            CGContext::translate_ctm(Some(&context), 0.0, pixel_height as f64);
-            CGContext::scale_ctm(Some(&context), scale, -scale);
-            CGContext::translate_ctm(Some(&context), -x, -y);
-            unsafe { pdf_page.drawWithBox_toContext(PDFDisplayBox::CropBox, &context) };
+            let context = super::render_tile_context(path, page, x, y, width, height, scale)?;
             let bytes_per_row = CGBitmapContextGetBytesPerRow(Some(&context));
+            let pixel_height = CGBitmapContextGetHeight(Some(&context));
             let data = CGBitmapContextGetData(Some(&context));
             if data.is_null() {
                 return Err("Tile bitmap has no data".to_string());
@@ -622,10 +636,43 @@ mod macos {
                     }
                 }
                 println!(
-                    "[bench] viewport {label} 4 tiles@2x: {:.1}ms, {}KB",
+                    "[bench] viewport {label} 4 tiles@2x serial: {:.1}ms, {}KB",
                     started.elapsed().as_secs_f64() * 1000.0,
                     viewport_bytes / 1024,
                 );
+
+                // The viewer asks for several tiles at once and each Tauri
+                // command runs on the threadpool, so this is the shape it gets.
+                for threads in [1usize, 2, 4] {
+                    let tiles = [(0.0, 0.0), (306.0, 0.0), (0.0, 396.0), (306.0, 396.0)];
+                    let started = Instant::now();
+                    std::thread::scope(|scope| {
+                        for offset in 0..threads {
+                            let path = path.clone();
+                            scope.spawn(move || {
+                                for (index, (tx, ty)) in tiles.iter().enumerate() {
+                                    if index % threads != offset {
+                                        continue;
+                                    }
+                                    let _ = render_rect(
+                                        &path,
+                                        1,
+                                        *tx,
+                                        *ty,
+                                        306.0,
+                                        396.0,
+                                        2.0,
+                                        ImageFormat::Jpeg,
+                                    );
+                                }
+                            });
+                        }
+                    });
+                    println!(
+                        "[bench] viewport {label} 4 tiles@2x on {threads} threads: {:.1}ms",
+                        started.elapsed().as_secs_f64() * 1000.0,
+                    );
+                }
             }
         }
     }

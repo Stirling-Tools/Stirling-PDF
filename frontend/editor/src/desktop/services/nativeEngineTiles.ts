@@ -76,8 +76,8 @@ function renderTileTask(
   rect: Rect,
   options?: PdfRenderPageOptions,
 ): PdfTask<Blob> {
-  // Rotated pages need the display transform applied, which this path does not
-  // carry yet; the engine keeps them.
+  // Rotated pages measure their tiles in rotated display space, which this
+  // path does not map yet; the engine keeps them.
   if (!filePath || (page.rotation ?? 0) !== 0) {
     return engineRenderPageRect(doc, page, rect, options);
   }
