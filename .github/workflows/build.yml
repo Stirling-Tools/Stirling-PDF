@@ -203,7 +203,7 @@ jobs:
     if: |
       !cancelled() &&
       needs.files-changed.outputs.tauri == 'true'
-    needs: [files-changed, gradle-cache-prime]
+    needs: [files-changed]
     permissions:
       contents: write
       pull-requests: write
