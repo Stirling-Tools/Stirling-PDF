@@ -487,6 +487,75 @@ test.describe("Page Editor tracks", () => {
     expect(await readRotations(rotated, 4)).toEqual([90, 0, 180, 270]);
   });
 
+  test("page numbers typed in the bar select that page of every track", async ({
+    page,
+  }) => {
+    await openPageEditor(page);
+    const rotated = track(page, "rotated-pages.pdf");
+    const sample = track(page, "sample.pdf");
+    await expect(rotated.locator("[data-page-id]")).toHaveCount(4, {
+      timeout: 30_000,
+    });
+    const selectedIn = (lane: import("@playwright/test").Locator) =>
+      lane.locator('[data-page-id][data-selected="true"]');
+
+    await page
+      .locator(".workbench-bar")
+      .getByRole("button", { name: "Select by Page Numbers" })
+      .click();
+    await page.getByPlaceholder("1,3,5-10").fill("1,3");
+
+    await expect(selectedIn(rotated)).toHaveCount(2);
+    await expect(rotated.locator("[data-page-id]").nth(0)).toHaveAttribute(
+      "data-selected",
+      "true",
+    );
+    await expect(rotated.locator("[data-page-id]").nth(2)).toHaveAttribute(
+      "data-selected",
+      "true",
+    );
+    // sample.pdf has no page 3, so only its first page matches.
+    await expect(selectedIn(sample)).toHaveCount(1);
+  });
+
+  test("page numbers typed on a track select only within that track", async ({
+    page,
+  }) => {
+    await openPageEditor(page);
+    const rotated = track(page, "rotated-pages.pdf");
+    const sample = track(page, "sample.pdf");
+    await expect(rotated.locator("[data-page-id]")).toHaveCount(4, {
+      timeout: 30_000,
+    });
+    const selectedIn = (lane: import("@playwright/test").Locator) =>
+      lane.locator('[data-page-id][data-selected="true"]');
+
+    await sample.locator("[data-page-id]").first().click();
+    await expect(selectedIn(sample)).toHaveCount(1);
+
+    await rotated
+      .locator("header")
+      .getByRole("button", { name: "Select pages by number" })
+      .click();
+    await page.getByPlaceholder("1,3,5-10").fill("2-3");
+
+    await expect(selectedIn(rotated)).toHaveCount(2);
+    await expect(rotated.locator("[data-page-id]").nth(1)).toHaveAttribute(
+      "data-selected",
+      "true",
+    );
+    // Another track's selection is left as it was.
+    await expect(selectedIn(sample)).toHaveCount(1);
+
+    // Narrowing the typed range replaces this track's selection.
+    await page.getByPlaceholder("1,3,5-10").fill("4");
+    await expect(selectedIn(rotated)).toHaveCount(1);
+    await expect(rotated.locator("[data-page-id]").nth(3)).toHaveAttribute(
+      "data-selected",
+      "true",
+    );
+  });
+
   test("the insertion line marks where a right-to-left drag actually lands", async ({
     page,
   }) => {

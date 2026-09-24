@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import AdvancedSelectionPanel from "@app/components/pageEditor/bulkSelectionPanel/AdvancedSelectionPanel";
+import AdvancedSelectionPanel from "@app/components/shared/pageSelection/AdvancedSelectionPanel";
 
 const meta = {
-  title: "PageEditor/BulkSelectionPanel/AdvancedSelectionPanel",
+  title: "Shared/PageSelection/AdvancedSelectionPanel",
   component: AdvancedSelectionPanel,
 } satisfies Meta<typeof AdvancedSelectionPanel>;
 export default meta;

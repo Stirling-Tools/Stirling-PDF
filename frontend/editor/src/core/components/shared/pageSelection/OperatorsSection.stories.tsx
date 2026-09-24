@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import OperatorsSection from "@app/components/pageEditor/bulkSelectionPanel/OperatorsSection";
+import OperatorsSection from "@app/components/shared/pageSelection/OperatorsSection";
 
 const meta = {
-  title: "PageEditor/BulkSelectionPanel/OperatorsSection",
+  title: "Shared/PageSelection/OperatorsSection",
   component: OperatorsSection,
 } satisfies Meta<typeof OperatorsSection>;
 export default meta;

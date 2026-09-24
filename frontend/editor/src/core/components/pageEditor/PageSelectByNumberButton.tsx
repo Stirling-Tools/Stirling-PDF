@@ -2,7 +2,7 @@ import { Popover } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Icon } from "@app/ui/Icon";
 import { Tooltip } from "@app/components/shared/Tooltip";
-import BulkSelectionPanel from "@app/components/pageEditor/BulkSelectionPanel";
+import BulkSelectionPanel from "@app/components/shared/pageSelection/BulkSelectionPanel";
 
 interface PageSelectByNumberButtonProps {
   disabled: boolean;

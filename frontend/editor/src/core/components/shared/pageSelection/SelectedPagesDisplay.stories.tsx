@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import SelectedPagesDisplay from "@app/components/pageEditor/bulkSelectionPanel/SelectedPagesDisplay";
+import SelectedPagesDisplay from "@app/components/shared/pageSelection/SelectedPagesDisplay";
 
 const displayDocument = {
   pages: [
@@ -11,7 +11,7 @@ const displayDocument = {
 };
 
 const meta = {
-  title: "PageEditor/SelectedPagesDisplay",
+  title: "Shared/PageSelection/SelectedPagesDisplay",
   component: SelectedPagesDisplay,
 } satisfies Meta<typeof SelectedPagesDisplay>;
 export default meta;

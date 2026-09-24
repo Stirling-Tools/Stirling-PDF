@@ -8,6 +8,10 @@ import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import styles from "@app/components/pageTracks/PageTracks.module.css";
+import {
+  SelectByNumberPopover,
+  SelectByNumberPopoverProps,
+} from "@app/components/pageTracks/SelectByNumberPopover";
 
 export interface PageTracksBarParams {
   totalPages: number;
@@ -24,6 +28,11 @@ export interface PageTracksBarParams {
   onZoomOut: () => void;
   onSelectAll: () => void;
   onDeselectAll: () => void;
+  /** Page-number selection across every track. */
+  numberSelection: Pick<
+    SelectByNumberPopoverProps,
+    "pages" | "maxPages" | "selectedPageIds" | "onSelect"
+  >;
   onRotate: (delta: number) => void;
   onDelete: () => void;
   onUndo: () => void;
@@ -47,6 +56,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
     onZoomOut,
     onSelectAll,
     onDeselectAll,
+    numberSelection,
     onRotate,
     onDelete,
     onUndo,
@@ -61,6 +71,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
     zoomOut: t("pageTracks.zoomOut", "Zoom out"),
     selectAll: t("workbenchBar.selectAll", "Select All"),
     deselectAll: t("workbenchBar.deselectAll", "Deselect All"),
+    selectByNumber: t("workbenchBar.selectByNumber", "Select by Page Numbers"),
     rotateLeft: t("pageTracks.rotateLeft", "Rotate left"),
     rotateRight: t("pageTracks.rotateRight", "Rotate right"),
     deleteSelected: t("workbenchBar.deleteSelected", "Delete Selected Pages"),
@@ -117,6 +128,24 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
         disabled: !hasPages || selectedCount === totalPages,
         visible: hasPages,
         onClick: onSelectAll,
+      },
+      {
+        id: "tracks-select-by-number",
+        tooltip: labels.selectByNumber,
+        ariaLabel: labels.selectByNumber,
+        section: "top" as const,
+        order: 15,
+        visible: hasPages,
+        // The popover carries its own trigger, so the bar's click action and
+        // tooltip wrapper are bypassed.
+        render: () => (
+          <SelectByNumberPopover
+            label={labels.selectByNumber}
+            iconSize="1.5rem"
+            className="workbench-bar-action-icon"
+            {...numberSelection}
+          />
+        ),
       },
       {
         id: "tracks-deselect-all",
@@ -220,6 +249,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       labels.zoomOut,
       labels.selectAll,
       labels.deselectAll,
+      labels.selectByNumber,
       labels.rotateLeft,
       labels.rotateRight,
       labels.deleteSelected,
@@ -242,6 +272,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       onZoomOut,
       onSelectAll,
       onDeselectAll,
+      numberSelection,
       onRotate,
       onDelete,
       onUndo,

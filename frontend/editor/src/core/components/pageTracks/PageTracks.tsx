@@ -254,6 +254,65 @@ export default function PageTracks() {
 
   const totalPages = useMemo(() => totalPageCount(workspace), [workspace]);
   const changedSet = useMemo(() => new Set(changedFileIds), [changedFileIds]);
+  // Page numbers are per track: "3" means the third page of each track.
+  const numberedPages = useMemo(
+    () =>
+      workspace.order.flatMap((id) =>
+        (workspace.tracks[id]?.pages ?? []).map((page, index) => ({
+          id: page.id,
+          pageNumber: index + 1,
+        })),
+      ),
+    [workspace],
+  );
+  const longestTrack = useMemo(
+    () =>
+      Math.max(
+        0,
+        ...workspace.order.map((id) => workspace.tracks[id]?.pages.length ?? 0),
+      ),
+    [workspace],
+  );
+  const selectedPageIds = useMemo(
+    () => [...selection.selectedIds],
+    [selection.selectedIds],
+  );
+  const { setSelection, selectedIds } = selection;
+  const selectNumbersEverywhere = useCallback(
+    (pageNumbers: number[]) => {
+      const wanted = new Set(pageNumbers);
+      setSelection(
+        numberedPages
+          .filter((page) => wanted.has(page.pageNumber))
+          .map((page) => page.id),
+      );
+    },
+    [numberedPages, setSelection],
+  );
+  const selectNumbersInTrack = useCallback(
+    (fileId: FileId, pageNumbers: number[]) => {
+      const pages = workspace.tracks[fileId]?.pages ?? [];
+      const inTrack = new Set(pages.map((page) => page.id));
+      const chosen = pageNumbers
+        .map((number) => pages[number - 1]?.id)
+        .filter((id): id is string => id != null);
+      setSelection([
+        ...[...selectedIds].filter((id) => !inTrack.has(id)),
+        ...chosen,
+      ]);
+    },
+    [selectedIds, setSelection, workspace],
+  );
+  const numberSelection = useMemo(
+    () => ({
+      pages: numberedPages,
+      maxPages: longestTrack,
+      selectedPageIds,
+      onSelect: selectNumbersEverywhere,
+    }),
+    [numberedPages, longestTrack, selectedPageIds, selectNumbersEverywhere],
+  );
+
   const shiftPage = useCallback(
     (pageId: string, by: -1 | 1) => dispatch({ type: "shiftPage", pageId, by }),
     [dispatch],
@@ -660,6 +719,7 @@ export default function PageTracks() {
     onZoomOut: zoomOut,
     onSelectAll: selection.selectAll,
     onDeselectAll: selection.clear,
+    numberSelection,
     onRotate: rotateSelection,
     onDelete: deleteSelection,
     onUndo: undo,
@@ -766,6 +826,7 @@ export default function PageTracks() {
                   thumbnails={thumbnails}
                   onSelectPage={selection.selectPage}
                   onSelectTrack={selection.selectTrack}
+                  onSelectNumbers={selectNumbersInTrack}
                   onOpenInViewer={openInViewer}
                   onClearSelection={clearSelection}
                   onSplit={splitTrack}

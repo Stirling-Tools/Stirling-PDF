@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
+import { SelectByNumberPopover } from "@app/components/pageTracks/SelectByNumberPopover";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { truncateCenter } from "@app/utils/textUtils";
 import { FileId } from "@app/types/file";
@@ -109,6 +110,8 @@ export interface TrackRowProps {
     modifiers: PageClickModifiers,
   ) => void;
   onSelectTrack: (fileId: FileId) => void;
+  /** Selects these 1-based pages of the track, replacing its selection. */
+  onSelectNumbers: (fileId: FileId, pageNumbers: number[]) => void;
   onOpenInViewer: (fileId: FileId) => void;
   /** Called when the click landed on empty lane surface, not on a page. */
   onClearSelection: () => void;
@@ -140,6 +143,7 @@ function TrackRowImpl({
   thumbnails,
   onSelectPage,
   onSelectTrack,
+  onSelectNumbers,
   onOpenInViewer,
   onClearSelection,
   onSplit,
@@ -320,6 +324,19 @@ function TrackRowImpl({
     [track.pages, selectedIds],
   );
 
+  const numberedPages = useMemo(
+    () =>
+      track.pages.map((page, index) => ({
+        id: page.id,
+        pageNumber: index + 1,
+      })),
+    [track.pages],
+  );
+  const handleSelectNumbers = useCallback(
+    (pageNumbers: number[]) => onSelectNumbers(track.fileId, pageNumbers),
+    [onSelectNumbers, track.fileId],
+  );
+
   const handleSelectTrack = useCallback(
     () => onSelectTrack(track.fileId),
     [onSelectTrack, track.fileId],
@@ -433,6 +450,18 @@ function TrackRowImpl({
               <Icon name="select-all" size="1rem" />
             </ActionIcon>
           </Tooltip>
+          <SelectByNumberPopover
+            label={t(
+              "pageTracks.track.selectByNumber",
+              "Select pages by number",
+            )}
+            iconSize="1rem"
+            actionSize="sm"
+            pages={numberedPages}
+            maxPages={track.pages.length}
+            selectedPageIds={targetIds}
+            onSelect={handleSelectNumbers}
+          />
           <Tooltip
             position="bottom"
             content={t("pageTracks.rotateLeft", "Rotate left")}

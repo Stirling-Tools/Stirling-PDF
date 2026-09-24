@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { usePageSelectionTips } from "@app/components/tooltips/usePageSelectionTips";
-import classes from "@app/components/pageEditor/bulkSelectionPanel/BulkSelectionPanel.module.css";
+import classes from "@app/components/shared/pageSelection/BulkSelectionPanel.module.css";
 
 interface PageSelectionInputProps {
   csvInput: string;
@@ -66,7 +66,6 @@ const PageSelectionInput = ({
         )}
       </Flex>
 
-      {/* Text input */}
       <TextInput
         value={csvInput}
         onChange={(e) => {

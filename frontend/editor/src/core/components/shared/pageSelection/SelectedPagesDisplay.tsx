@@ -1,5 +1,5 @@
 import { Text } from "@mantine/core";
-import classes from "@app/components/pageEditor/bulkSelectionPanel/BulkSelectionPanel.module.css";
+import classes from "@app/components/shared/pageSelection/BulkSelectionPanel.module.css";
 
 interface SelectedPagesDisplayProps {
   selectedPageIds: string[];
