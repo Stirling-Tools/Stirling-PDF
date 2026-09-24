@@ -162,6 +162,20 @@ export function resetPdfiumModule(): void {
   _docHeapCopies.clear();
 }
 
+/**
+ * Drop the singleton module once nothing main-thread needs it, so its
+ * grow-only WASM memory is collectible while the workbench is empty. A
+ * document still in the ownership maps, or a reader on the shared document,
+ * keeps the module: its close must free against the instance that allocated
+ * it. The next PDFium use re-instantiates the precompiled module.
+ */
+export function releasePdfiumModuleWhenIdle(): void {
+  if (_docFileAccess.size > 0 || _docHeapCopies.size > 0) return;
+  if (sharedDocument && sharedDocument.refs > 0) return;
+  if (!_module) return;
+  resetPdfiumModule();
+}
+
 interface FileAccess {
   accessPtr: number;
   getBlockPtr: number;
