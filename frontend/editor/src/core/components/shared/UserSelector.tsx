@@ -110,6 +110,10 @@ const UserSelector = ({
 
   return (
     <MultiSelect
+      aria-label={t(
+        "certSign.collab.userSelector.placeholder",
+        "Select users...",
+      )}
       data={selectData}
       value={stringValue}
       onChange={(selectedIds) => {

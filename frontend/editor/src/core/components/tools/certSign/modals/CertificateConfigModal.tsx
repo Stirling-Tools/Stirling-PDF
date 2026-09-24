@@ -9,13 +9,14 @@ import {
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Icon } from "@app/ui/Icon";
 import {
   CertificateSelector,
   CertificateType,
   UploadFormat,
 } from "@app/components/tools/certSign/CertificateSelector";
+import { isAxiosError } from "axios";
 import apiClient from "@app/services/apiClient";
 
 export interface CertificateSubmitData {
@@ -73,47 +74,65 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
   const [certValidation, setCertValidation] = useState<CertValidationState>({
     status: "idle",
   });
-  const validationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [validatedPayload, setValidatedPayload] = useState<FormData | null>(
+    null,
+  );
+  const validationPayload = useMemo(() => {
+    if (certType !== "UPLOAD") return null;
+    const form = new FormData();
+    form.append("password", password);
+    if (participantToken) form.append("participantToken", participantToken);
+    if (uploadFormat === "PEM") {
+      if (!privateKeyFile || !certFile) return null;
+      form.append("certType", "PEM");
+      form.append("privateKeyFile", privateKeyFile);
+      form.append("certFile", certFile);
+    } else {
+      const file = uploadFormat === "JKS" ? jksFile : p12File;
+      if (!file) return null;
+      form.append("certType", uploadFormat === "JKS" ? "JKS" : "P12");
+      form.append(uploadFormat === "JKS" ? "jksFile" : "p12File", file);
+    }
+    return form;
+  }, [
+    certType,
+    uploadFormat,
+    p12File,
+    jksFile,
+    privateKeyFile,
+    certFile,
+    password,
+    participantToken,
+  ]);
 
-  // Debounced certificate pre-validation: fires 600ms after cert file or password changes
   useEffect(() => {
-    // Only validate uploaded keystores (not SERVER/USER_CERT, not PEM which uses separate files)
-    const keystoreFile = uploadFormat === "JKS" ? jksFile : p12File;
-    if (certType !== "UPLOAD" || !keystoreFile || uploadFormat === "PEM") {
+    setSubmitError(null);
+    setValidatedPayload(null);
+    if (!opened || !validationPayload) {
       setCertValidation({ status: "idle" });
       return;
     }
-
-    if (validationTimerRef.current) clearTimeout(validationTimerRef.current);
+    let active = true;
+    const abort = new AbortController();
     setCertValidation({ status: "validating" });
-
-    validationTimerRef.current = setTimeout(async () => {
+    const timer = setTimeout(async () => {
       try {
-        const formData = new FormData();
-        formData.append("certType", uploadFormat === "JKS" ? "JKS" : "P12");
-        formData.append("password", password);
-        if (uploadFormat === "JKS") {
-          formData.append("jksFile", keystoreFile);
-        } else {
-          formData.append("p12File", keystoreFile);
-        }
-
         const endpoint = participantToken
           ? "/api/v1/workflow/participant/validate-certificate"
           : "/api/v1/security/cert-sign/validate-certificate";
-
-        if (participantToken) {
-          formData.append("participantToken", participantToken);
-        }
-
         const response = await apiClient.post<{
           valid: boolean;
           subjectName: string | null;
           notAfter: string | null;
           error: string | null;
-        }>(endpoint, formData);
-
+        }>(endpoint, validationPayload, {
+          signal: abort.signal,
+          suppressErrorToast: true,
+        });
+        if (!active) return;
         if (response.data.valid) {
+          setValidatedPayload(validationPayload);
           setCertValidation({
             status: "valid",
             subjectName: response.data.subjectName,
@@ -131,45 +150,38 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
           });
         }
       } catch {
-        setCertValidation({
-          status: "error",
-          message: t(
-            "certSign.collab.signRequest.certModal.certNetworkError",
-            "Could not validate certificate",
-          ),
-        });
+        if (active)
+          setCertValidation({
+            status: "error",
+            message: t(
+              "certSign.collab.signRequest.certModal.certNetworkError",
+              "Could not validate certificate",
+            ),
+          });
       }
     }, 600);
-
     return () => {
-      if (validationTimerRef.current) clearTimeout(validationTimerRef.current);
+      active = false;
+      clearTimeout(timer);
+      abort.abort();
     };
-  }, [certType, uploadFormat, p12File, jksFile, password, participantToken]);
+  }, [opened, validationPayload, participantToken, t]);
 
   // Advanced settings
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [reason, setReason] = useState(defaultReason);
   const [location, setLocation] = useState(defaultLocation);
 
-  const isUploadValid = () => {
-    if (certType !== "UPLOAD") return true;
-    switch (uploadFormat) {
-      case "PKCS12":
-      case "PFX":
-        return p12File !== null;
-      case "PEM":
-        return privateKeyFile !== null && certFile !== null;
-      case "JKS":
-        return jksFile !== null;
-    }
-  };
-
   const isValid =
-    certType === "USER_CERT" || certType === "SERVER" || isUploadValid();
+    certType !== "UPLOAD" ||
+    (validationPayload !== null &&
+      validatedPayload === validationPayload &&
+      certValidation.status === "valid");
 
   const handleSign = async () => {
     if (!isValid) return;
 
+    setSubmitError(null);
     setSigning(true);
     try {
       await onSign(
@@ -186,7 +198,21 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
         location,
       );
     } catch (error) {
-      console.error("Failed to sign document:", error);
+      const data: unknown = isAxiosError(error) ? error.response?.data : null;
+      const detail =
+        data && typeof data === "object" && "detail" in data
+          ? data.detail
+          : null;
+      setSubmitError(
+        typeof detail === "string"
+          ? detail
+          : typeof data === "string"
+            ? data
+            : t(
+                "signMenu.signFailed",
+                "Signing failed. Check your certificate and try again; your placed marks are preserved.",
+              ),
+      );
     } finally {
       setSigning(false);
     }
@@ -207,10 +233,16 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
         <Text size="sm" c="dimmed">
           {t(
             "certSign.collab.signRequest.certModal.description",
-            "You have placed {{count}} signature(s). Choose your certificate to complete signing.",
+            "You have placed {{count}} visible mark(s). Choose a certificate to submit your signature. Visible marks are optional.",
             { count: signatureCount },
           )}
         </Text>
+
+        {submitError && (
+          <Text role="alert" size="sm" c="var(--c-danger)">
+            {submitError}
+          </Text>
+        )}
 
         <CertificateSelector
           certType={certType}

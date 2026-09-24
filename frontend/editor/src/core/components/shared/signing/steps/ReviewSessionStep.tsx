@@ -79,7 +79,7 @@ export const ReviewSessionStep: React.FC<ReviewSessionStepProps> = ({
         <Text size="sm">
           {t("groupSigning.steps.review.participantCount", {
             count: participantCount,
-            defaultValue: "{{count}} participant(s) will sign in order",
+            defaultValue: "{{count}} participant(s) can sign in any order",
           })}
         </Text>
       </div>

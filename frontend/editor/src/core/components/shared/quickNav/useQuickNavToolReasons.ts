@@ -9,6 +9,8 @@ import type { ToolId } from "@app/types/toolId";
 
 const ENTRY_ENDPOINTS = {
   automate: ["automate"],
+  sign: ["sign"],
+  certSign: ["cert-sign"],
 } satisfies Partial<Record<ToolId, string[]>>;
 
 // Object.keys widens to string, which a tool-id-keyed record can't be indexed by.

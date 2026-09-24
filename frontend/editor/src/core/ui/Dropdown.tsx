@@ -156,9 +156,16 @@ export interface DropdownMenuProps {
   className?: string;
   /** Optional min-width override (px or CSS length). */
   width?: string | number;
+  /** Move keyboard focus into a command menu when it opens. */
+  autoFocus?: boolean;
 }
 
-function Menu({ children, className, width }: DropdownMenuProps) {
+function Menu({
+  children,
+  className,
+  width,
+  autoFocus = false,
+}: DropdownMenuProps) {
   const { open, menuId, align, triggerRef, menuRef } = useDropdownCtx();
   // Fixed position tracked to the trigger. Portaling to <body> keeps the menu
   // out of any `overflow` ancestor (e.g. a table's horizontal scroll area),
@@ -170,6 +177,16 @@ function Menu({ children, className, width }: DropdownMenuProps) {
     right?: number;
     maxHeight: number;
   } | null>(null);
+  const focusedOnOpen = useRef(false);
+  useEffect(() => {
+    if (!open) focusedOnOpen.current = false;
+    if (open && pos && autoFocus && !focusedOnOpen.current) {
+      menuRef.current
+        ?.querySelector<HTMLButtonElement>("button:not(:disabled)")
+        ?.focus();
+      focusedOnOpen.current = true;
+    }
+  }, [open, pos, autoFocus, menuRef]);
 
   useLayoutEffect(() => {
     if (!open) return;
@@ -228,6 +245,31 @@ function Menu({ children, className, width }: DropdownMenuProps) {
       ref={menuRef}
       className={["sui-dd__menu", className ?? ""].filter(Boolean).join(" ")}
       style={style}
+      onKeyDown={(event) => {
+        if (
+          !autoFocus ||
+          !["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)
+        )
+          return;
+        const items = Array.from(
+          event.currentTarget.querySelectorAll<HTMLButtonElement>(
+            "button:not(:disabled)",
+          ),
+        );
+        if (!items.length) return;
+        event.preventDefault();
+        const index = items.findIndex(
+          (item) => item === document.activeElement,
+        );
+        const next =
+          event.key === "Home"
+            ? 0
+            : event.key === "End"
+              ? items.length - 1
+              : (index + (event.key === "ArrowDown" ? 1 : -1) + items.length) %
+                items.length;
+        items[next].focus();
+      }}
     >
       {children}
     </div>,

@@ -2679,7 +2679,6 @@ reason = "Reason"
 serverCertMessage = "Using server certificate - no files or password required"
 showLogo = "Show Logo"
 signatureProgress = "{{signedCount}}/{{totalCount}} signatures"
-signed = "Signed"
 tags = "authenticate,PEM,P12,official,encrypt,sign,certificate,PKCS12,JKS,server,manual,auto"
 title = "Certificate Signing"
 viewed = "Viewed"
@@ -2744,7 +2743,13 @@ reasonPlaceholder = "e.g. Approval, Review..."
 
 [certSign.collab.finalize]
 button = "Finalize and Load Signed PDF"
+confirmAction = "Confirm and finalize"
+confirmDescription = "Finalizing closes this session. No more signatures can be submitted."
+confirmTitle = "Finalize this signing session?"
 early = "Finalize with Current Signatures"
+excluded = "Participants whose signatures will not be included"
+included = "Signatures included"
+requiresSignature = "At least one participant must sign before you can finalize."
 
 [certSign.collab.participant]
 certInvalid = "✗ {{error}}"
@@ -2795,6 +2800,7 @@ backToList = "Back to Sign Requests"
 certificateChoice = "Select a certificate to sign with"
 changeSignature = "Change signature"
 clearSignature = "Clear Signature"
+closed = "This session is finalized. You can view the final document, but no further signatures or declines are accepted."
 completeAndSign = "Complete & Sign"
 createNewSignature = "Create New Signature"
 decline = "Decline Request"
@@ -2810,7 +2816,6 @@ invalidFileType = "Please select an image file"
 location = "Location (Optional)"
 locationPlaceholder = "Where are you signing from?"
 noCertificate = "Please select a certificate file"
-noSignatures = "Please place at least one signature on the PDF"
 p12File = "P12/PFX Certificate File"
 password = "Certificate Password"
 penColor = "Pen Color"
@@ -5205,9 +5210,6 @@ multimedia = "Multimedia"
 
 [groupSigning.steps]
 back = "Back"
-completed = "Completed"
-current = "Current"
-stepLabel = "Step {{number}}"
 
 [groupSigning.steps.configureDefaults]
 continue = "Continue"
@@ -5215,7 +5217,6 @@ invisible = "Signatures will be invisible (metadata only)"
 locationLabel = "Location:"
 preview = "Preview"
 reasonLabel = "Reason:"
-title = "Configure Signature Settings"
 visible = "Signatures will be visible on page {{page}}"
 
 [groupSigning.steps.review]
@@ -5234,7 +5235,6 @@ reason = "Reason:"
 send = "Send Signing Requests"
 signatureSettings = "Signature Settings"
 title = "Review Session Details"
-titleShort = "Review & Send"
 visibility = "Visibility:"
 visible = "Visible on page {{page}}"
 
@@ -5242,7 +5242,6 @@ visible = "Visible on page {{page}}"
 continue = "Continue"
 noFile = "Please select a single PDF file from your active files to create a signing session."
 selectedFile = "Selected document"
-title = "Select Document"
 
 [groupSigning.steps.selectParticipants]
 continue = "Continue"
@@ -5250,7 +5249,6 @@ count_one = "{{count}} participant selected"
 count_other = "{{count}} participants selected"
 label = "Select participants"
 placeholder = "Choose participants to sign..."
-title = "Choose Participants"
 
 [groupSigning.tooltip]
 header = "About Group Signing"
@@ -11866,10 +11864,23 @@ bullet3 = "Invisible signatures still provide cryptographic validation"
 description = "Controls whether the signature is visible on the document or embedded invisibly."
 title = "Signature Visibility"
 
+[signMenu]
+anyOrder = "Participants can sign in any order. The owner finalizes the document after reviewing the collected signatures."
+certificate = "Sign with a certificate"
+dueDate = "Due date (optional)"
+optionalMarks = "Visible marks are optional. Complete & Sign also works with a certificate alone."
+personal = "Draw, type or upload a signature"
+request = "Request signatures"
+send = "Send signing request"
+sessions = "Signing sessions"
+settings = "Appearance and summary page (optional)"
+signFailed = "Signing failed. Check your certificate and try again; your placed marks are preserved."
+submitted = "Submitted · awaiting finalization"
+title = "Sign"
+
 [signRequest]
 declined = "Sign request declined"
 fetchFailed = "Failed to load sign request"
-signed = "Document signed successfully"
 
 [signSession]
 created = "Signing request sent"
