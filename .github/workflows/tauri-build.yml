@@ -274,11 +274,12 @@ jobs:
 
           # Decode client certificate
           $certBytes = [Convert]::FromBase64String("$env:SM_CLIENT_CERT_FILE_B64")
-          $certPath = "D:\Certificate_pkcs12.p12"
+          # RUNNER_TEMP, not D:\ - windows-11-arm runners have no D: drive
+          $certPath = Join-Path $env:RUNNER_TEMP "Certificate_pkcs12.p12"
           [IO.File]::WriteAllBytes($certPath, $certBytes)
 
           # Set environment variables
-          echo "SM_CLIENT_CERT_FILE=D:\Certificate_pkcs12.p12" >> $env:GITHUB_ENV
+          echo "SM_CLIENT_CERT_FILE=$certPath" >> $env:GITHUB_ENV
           echo "SM_HOST=$env:SM_HOST" >> $env:GITHUB_ENV
           echo "SM_API_KEY=$env:SM_API_KEY" >> $env:GITHUB_ENV
           echo "SM_CLIENT_CERT_PASSWORD=$env:SM_CLIENT_CERT_PASSWORD" >> $env:GITHUB_ENV
