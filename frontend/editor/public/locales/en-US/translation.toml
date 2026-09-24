@@ -6488,6 +6488,8 @@ body = "Add PDFs to expand them into editable page tracks"
 title = "No PDF files loaded"
 
 [pageTracks.track]
+close = "Close file"
+closeBlocked = "Save your changes before closing this file"
 collapse = "Collapse"
 expand = "Expand"
 toggleSelection = "Select all pages"

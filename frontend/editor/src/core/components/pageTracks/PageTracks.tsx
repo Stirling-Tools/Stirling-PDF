@@ -14,7 +14,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { useFileState } from "@app/contexts/FileContext";
+import { useFileActions, useFileState } from "@app/contexts/FileContext";
 import {
   useNavigationActions,
   useNavigationGuard,
@@ -109,6 +109,7 @@ function pointerXOf(event: DragMoveEvent | DragEndEvent): number {
 export default function PageTracks() {
   const { t } = useTranslation();
   const { state: fileState } = useFileState();
+  const { actions: fileActions } = useFileActions();
   const {
     state,
     dispatch,
@@ -240,6 +241,22 @@ export default function PageTracks() {
 
   const totalPages = useMemo(() => totalPageCount(workspace), [workspace]);
   const changedSet = useMemo(() => new Set(changedFileIds), [changedFileIds]);
+  // Closing a file drops every page sourced from it, including ones moved into
+  // other tracks, so a file tied to any pending edit stays open until saved.
+  const filesWithPendingEdits = useMemo(() => {
+    const ids = new Set<FileId>();
+    for (const id of changedFileIds) {
+      ids.add(id);
+      workspace.tracks[id]?.pages.forEach((page) => ids.add(page.sourceFileId));
+    }
+    return ids;
+  }, [changedFileIds, workspace]);
+  const closeFile = useCallback(
+    (fileId: FileId) => {
+      void fileActions.removeFiles([fileId], false);
+    },
+    [fileActions],
+  );
 
   // ── Operations ───────────────────────────────────────────────────────────
 
@@ -611,6 +628,7 @@ export default function PageTracks() {
                   }
                   trackDragging={draggingTrack === fileId}
                   changed={changedSet.has(fileId)}
+                  closeDisabled={filesWithPendingEdits.has(fileId)}
                   thumbnails={thumbnails}
                   onSelectPage={selection.selectPage}
                   onSelectTrack={selection.selectTrack}
@@ -619,6 +637,7 @@ export default function PageTracks() {
                   onSplit={splitTrack}
                   onRotate={rotatePages}
                   onDelete={deletePages}
+                  onClose={closeFile}
                 />
               );
             })}

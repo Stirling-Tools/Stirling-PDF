@@ -376,6 +376,31 @@ test.describe("Page Editor tracks", () => {
     ).toHaveCount(1);
   });
 
+  test("a track's close button closes its file, unless it has pending edits", async ({
+    page,
+  }) => {
+    await openPageEditor(page);
+    const rotated = track(page, "rotated-pages.pdf");
+    const sample = track(page, "sample.pdf");
+    await expect(rotated.locator("[data-page-id]")).toHaveCount(4, {
+      timeout: 30_000,
+    });
+    const closeOf = (lane: import("@playwright/test").Locator) =>
+      lane.locator("header").getByRole("button", { name: "Close file" });
+
+    const last = rotated.locator("[data-page-id]").nth(3);
+    await last.hover();
+    await last.getByRole("button", { name: "Delete page" }).click();
+    await expect(closeOf(rotated)).toBeDisabled();
+    await expect(closeOf(sample)).toBeEnabled();
+
+    await closeOf(sample).click();
+    await expect(sample).toHaveCount(0);
+    // Closing an unrelated file leaves the other track's pending edit alone.
+    await expect(rotated.locator("[data-page-id]")).toHaveCount(3);
+    await expect(rotated).toContainText("edited");
+  });
+
   test("the insertion line marks where a right-to-left drag actually lands", async ({
     page,
   }) => {

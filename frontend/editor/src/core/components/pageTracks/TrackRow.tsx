@@ -102,6 +102,8 @@ export interface TrackRowProps {
   /** This track's header is the one being dragged. */
   trackDragging: boolean;
   changed: boolean;
+  /** The file is tied to pending edits, so closing it would lose them. */
+  closeDisabled: boolean;
   thumbnails: TrackThumbnailStore;
   onSelectPage: (
     fileId: FileId,
@@ -116,6 +118,8 @@ export interface TrackRowProps {
   onSplit: (fileId: FileId, startPageId: string) => void;
   onRotate: (pageIds: string[], delta: number) => void;
   onDelete: (pageIds: string[]) => void;
+  /** Removes the file from the workbench, keeping it in storage. */
+  onClose: (fileId: FileId) => void;
 }
 
 function TrackRowImpl({
@@ -134,6 +138,7 @@ function TrackRowImpl({
   trackDropAfterLast,
   trackDragging,
   changed,
+  closeDisabled,
   thumbnails,
   onSelectPage,
   onSelectTrack,
@@ -142,6 +147,7 @@ function TrackRowImpl({
   onSplit,
   onRotate,
   onDelete,
+  onClose,
 }: TrackRowProps) {
   const { t } = useTranslation();
   const { setNodeRef, isOver } = useDroppable({
@@ -458,6 +464,31 @@ function TrackRowImpl({
               <Icon name="trash" size="1rem" />
             </ActionIcon>
           </Tooltip>
+          {!isNew && (
+            <>
+              <div className={styles.trackActionsDivider} />
+              <Tooltip
+                content={
+                  closeDisabled
+                    ? t(
+                        "pageTracks.track.closeBlocked",
+                        "Save your changes before closing this file",
+                      )
+                    : t("pageTracks.track.close", "Close file")
+                }
+              >
+                <ActionIcon
+                  variant="quiet"
+                  size="sm"
+                  aria-label={t("pageTracks.track.close", "Close file")}
+                  disabled={closeDisabled}
+                  onClick={() => onClose(track.fileId)}
+                >
+                  <Icon name="x" size="1rem" />
+                </ActionIcon>
+              </Tooltip>
+            </>
+          )}
         </div>
       </header>
 
