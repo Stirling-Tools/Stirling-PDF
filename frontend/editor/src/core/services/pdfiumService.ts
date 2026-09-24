@@ -322,9 +322,17 @@ interface ScanBuffers {
   textSize: number;
 }
 
+/** A 16-byte FS_RECTF buffer, or a throw: a null pointer makes PDFium report
+ *  every widget as having no rectangle. */
+function allocateRectBuffer(m: WrappedPdfiumModule): number {
+  const ptr = m.pdfium.wasmExports.malloc(16);
+  if (!ptr) throw new Error("Failed to allocate rectangle buffer");
+  return ptr;
+}
+
 function createScanBuffers(m: WrappedPdfiumModule): ScanBuffers {
   return {
-    rect: m.pdfium.wasmExports.malloc(16),
+    rect: allocateRectBuffer(m),
     annotRect: 0,
     text: 0,
     textSize: 0,
@@ -333,7 +341,7 @@ function createScanBuffers(m: WrappedPdfiumModule): ScanBuffers {
 
 /** Annotation rect buffer, allocated on the first widget that needs one. */
 function annotRectBuffer(m: WrappedPdfiumModule, buffers: ScanBuffers): number {
-  if (!buffers.annotRect) buffers.annotRect = m.pdfium.wasmExports.malloc(16);
+  if (!buffers.annotRect) buffers.annotRect = allocateRectBuffer(m);
   return buffers.annotRect;
 }
 
@@ -1600,8 +1608,9 @@ export async function extractSignatureFieldRects(
 ): Promise<PdfiumSignatureFieldRect[]> {
   const m = await getPdfiumModule();
   const docPtr = await openRawDocumentSafe(data, password);
-  const buffers = createScanBuffers(m);
+  let buffers: ScanBuffers | null = null;
   try {
+    buffers = createScanBuffers(m);
     const formInfoPtr = m.PDFiumExt_OpenFormFillInfo();
     const formEnvPtr = m.PDFiumExt_InitFormFillEnvironment(docPtr, formInfoPtr);
     const pageCount = m.FPDF_GetPageCount(docPtr);
@@ -1691,7 +1700,7 @@ export async function extractSignatureFieldRects(
 
     return results;
   } finally {
-    freeScanBuffers(m, buffers);
+    if (buffers) freeScanBuffers(m, buffers);
     closeDocAndFreeBuffer(m, docPtr);
   }
 }
@@ -1873,9 +1882,10 @@ export async function renderSignatureFieldAppearances(
 ): Promise<SignatureFieldAppearance[]> {
   const m = await getPdfiumModule();
   const docPtr = await openRawDocumentSafe(data, password);
-  const buffers = createScanBuffers(m);
+  let buffers: ScanBuffers | null = null;
 
   try {
+    buffers = createScanBuffers(m);
     const formInfoPtr = m.PDFiumExt_OpenFormFillInfo();
     const formEnvPtr = m.PDFiumExt_InitFormFillEnvironment(docPtr, formInfoPtr);
     const pageCount = m.FPDF_GetPageCount(docPtr);
@@ -2119,7 +2129,7 @@ export async function renderSignatureFieldAppearances(
 
     return results;
   } finally {
-    freeScanBuffers(m, buffers);
+    if (buffers) freeScanBuffers(m, buffers);
     closeDocAndFreeBuffer(m, docPtr);
   }
 }
@@ -2138,9 +2148,10 @@ export async function renderButtonFieldAppearances(
 ): Promise<SignatureFieldAppearance[]> {
   const m = await getPdfiumModule();
   const docPtr = await openRawDocumentSafe(data, password);
-  const buffers = createScanBuffers(m);
+  let buffers: ScanBuffers | null = null;
 
   try {
+    buffers = createScanBuffers(m);
     const formInfoPtr = m.PDFiumExt_OpenFormFillInfo();
     const formEnvPtr = m.PDFiumExt_InitFormFillEnvironment(docPtr, formInfoPtr);
     const pageCount = m.FPDF_GetPageCount(docPtr);
@@ -2286,7 +2297,7 @@ export async function renderButtonFieldAppearances(
 
     return buttonResults;
   } finally {
-    freeScanBuffers(m, buffers);
+    if (buffers) freeScanBuffers(m, buffers);
     closeDocAndFreeBuffer(m, docPtr);
   }
 }
