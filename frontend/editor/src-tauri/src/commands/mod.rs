@@ -49,7 +49,7 @@ pub use auth::{
 };
 pub use default_app::{is_default_pdf_handler, set_as_default_pdf_handler};
 pub use local_proxy::proxy_local_pdf_request;
-pub use native_render::render_pdf_page_thumbnail;
+pub use native_render::{render_pdf_page_thumbnail, render_pdf_rect};
 pub use platform::get_desktop_os;
 pub use print::print_pdf_file_native;
 pub use updater::{

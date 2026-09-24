@@ -25,6 +25,7 @@ vi.mock("@tauri-apps/api/core", () => ({
 import {
   NATIVE_THUMBNAIL_WIDTH,
   canRenderNativeThumbnails,
+  renderNativePdfRect,
   renderNativeThumbnail,
 } from "@app/services/nativePdfRender";
 
@@ -65,6 +66,20 @@ describe("nativePdfRender (desktop)", () => {
     await expect(renderNativeThumbnail("/tmp/big.pdf", 2, 240)).resolves.toBe(
       `data:image/jpeg;base64,${btoa(binary)}`,
     );
+  });
+
+  test("renders a tile through the Tauri command", async () => {
+    mocks.result = new Uint8Array([1, 2, 3]).buffer;
+    const rect = { page: 3, x: 10, y: 20, width: 300, height: 400, scale: 2 };
+    await expect(renderNativePdfRect("/tmp/a.pdf", rect)).resolves.toBe(
+      "data:image/jpeg;base64,AQID",
+    );
+    expect(mocks.invokes).toEqual([
+      {
+        command: "render_pdf_rect",
+        args: { path: "/tmp/a.pdf", ...rect },
+      },
+    ]);
   });
 
   test("falls back when the render fails", async () => {
