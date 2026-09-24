@@ -4,8 +4,11 @@
  * the module `wasmPrecompiler` already compiled instead of fetching and
  * recompiling pdfium.wasm; the patched engine falls back to the URL when the
  * module cannot be cloned across.
+ *
+ * The engine is a module-level singleton so `warmUpViewerEngine` can start it
+ * before a document lands; the last viewer to unmount destroys it.
  */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { ignore, type Logger, type PdfEngine } from "@embedpdf/models";
 import {
   createPdfiumEngine,
@@ -28,58 +31,90 @@ interface LocalPdfiumEngineOptions {
   fontFallback?: FontFallbackConfig | null;
 }
 
-export function useLocalPdfiumEngine({
-  wasmUrl,
-  logger,
-  encoderPoolSize,
-  fontFallback,
-}: LocalPdfiumEngineOptions) {
-  const [engine, setEngine] = useState<PdfEngine<Blob> | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+let sharedEngine: PdfEngine<Blob> | null = null;
+let sharedEnginePromise: Promise<PdfEngine<Blob>> | null = null;
+let sharedEngineRefs = 0;
+
+async function createViewerEngine(
+  options: LocalPdfiumEngineOptions,
+): Promise<PdfEngine<Blob>> {
+  const { wasmUrl, logger, encoderPoolSize, fontFallback } = options;
+  startEagerWasmCompilation();
+  const precompiled = await Promise.race([
+    pdfiumWasmModulePromise,
+    new Promise<null>((resolve) =>
+      setTimeout(() => resolve(null), PRECOMPILED_WAIT_MS),
+    ),
+  ]);
+  const engineOptions: CreatePdfiumEngineOptions & {
+    wasmModule?: WebAssembly.Module;
+  } = { logger, encoderPoolSize, fontFallback };
+  if (precompiled?.module) {
+    engineOptions.wasmModule = precompiled.module;
+  }
+  const engine = createPdfiumEngine(wasmUrl, engineOptions);
+  sharedEngine = engine;
+  return engine;
+}
+
+function destroySharedEngine(): void {
+  const dying = sharedEngine;
+  sharedEngine = null;
+  sharedEnginePromise = null;
+  dying?.closeAllDocuments?.()?.wait(() => dying?.destroy?.(), ignore);
+}
+
+/**
+ * Start (or join) the shared viewer engine. The warm-up and the viewer must
+ * pass the same options; the first caller's win, which the app keeps constant.
+ */
+export function warmUpViewerEngine(
+  options: LocalPdfiumEngineOptions,
+): Promise<PdfEngine<Blob>> {
+  sharedEnginePromise ??= createViewerEngine(options).catch(
+    (error: unknown) => {
+      // A failed creation must stay retryable: the next caller tries again.
+      sharedEnginePromise = null;
+      throw error;
+    },
+  );
+  return sharedEnginePromise;
+}
+
+export function useLocalPdfiumEngine(options: LocalPdfiumEngineOptions) {
+  const { wasmUrl, logger, encoderPoolSize, fontFallback } = options;
+  const [engine, setEngine] = useState<PdfEngine<Blob> | null>(sharedEngine);
+  const [isLoading, setIsLoading] = useState(sharedEngine === null);
   const [error, setError] = useState<Error | null>(null);
-  const engineRef = useRef<PdfEngine<Blob> | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      try {
-        startEagerWasmCompilation();
-        const precompiled = await Promise.race([
-          pdfiumWasmModulePromise,
-          new Promise<null>((resolve) =>
-            setTimeout(() => resolve(null), PRECOMPILED_WAIT_MS),
-          ),
-        ]);
-        const options: CreatePdfiumEngineOptions & {
-          wasmModule?: WebAssembly.Module;
-        } = { logger, encoderPoolSize, fontFallback };
-        if (precompiled?.module) {
-          options.wasmModule = precompiled.module;
-        }
-        const pdfEngine = createPdfiumEngine(wasmUrl, options);
-        if (cancelled) {
-          pdfEngine
-            .closeAllDocuments?.()
-            ?.wait(() => pdfEngine.destroy?.(), ignore);
-          return;
-        }
-        engineRef.current = pdfEngine;
+    sharedEngineRefs += 1;
+    void warmUpViewerEngine({
+      wasmUrl,
+      logger,
+      encoderPoolSize,
+      fontFallback,
+    }).then(
+      (pdfEngine) => {
+        if (cancelled) return;
         setEngine(pdfEngine);
         setIsLoading(false);
-      } catch (cause) {
-        if (!cancelled) {
-          setError(cause instanceof Error ? cause : new Error(String(cause)));
-          setIsLoading(false);
-        }
-      }
-    })();
+      },
+      (cause: unknown) => {
+        if (cancelled) return;
+        setError(cause instanceof Error ? cause : new Error(String(cause)));
+        setIsLoading(false);
+      },
+    );
 
     return () => {
       cancelled = true;
-      const current = engineRef.current;
-      engineRef.current = null;
-      current?.closeAllDocuments?.()?.wait(() => current?.destroy?.(), ignore);
+      sharedEngineRefs -= 1;
+      if (sharedEngineRefs <= 0) destroySharedEngine();
     };
+    // The options are module constants in practice; a change recreates the
+    // engine through the refcount teardown above.
   }, [wasmUrl, logger, encoderPoolSize, fontFallback]);
 
   return { engine, isLoading, error };
