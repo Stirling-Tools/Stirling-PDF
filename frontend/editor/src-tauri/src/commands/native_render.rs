@@ -9,19 +9,23 @@
 
 #[cfg(target_os = "macos")]
 mod macos {
+    use std::cell::OnceCell;
     use std::path::Path;
     use std::ptr;
     use std::sync::mpsc;
 
     use objc2::rc::{autoreleasepool, Retained};
+    use objc2::runtime::AnyObject;
     use objc2::AnyThread;
     use objc2_app_kit::{NSBitmapImageFileType, NSBitmapImageRep};
     use objc2_core_foundation::{CGPoint, CGRect, CGSize};
     use objc2_core_graphics::{
-        CGBitmapContextCreate, CGBitmapContextCreateImage, CGColorSpace, CGContext,
+        CGBitmapContextCreate, CGBitmapContextCreateImage, CGColorSpace, CGContext, CGImage,
         CGImageAlphaInfo, CGImageByteOrderInfo,
     };
-    use objc2_foundation::{NSDictionary, NSSize, NSString, NSURL};
+    use objc2_core_image::{CIContext, CIImage};
+    use objc2_foundation::{NSDictionary, NSNumber, NSSize, NSString, NSURL};
+    use objc2_metal::MTLCreateSystemDefaultDevice;
     use objc2_pdf_kit::{PDFDisplayBox, PDFDocument, PDFPage};
     use tauri::{ipc::Response, AppHandle};
 
@@ -113,7 +117,51 @@ mod macos {
         Ok((document, pdf_page))
     }
 
+    thread_local! {
+        /// CI contexts are expensive to build (Metal device, pipelines), so one
+        /// per thread: renders hop to the main thread, tests run on their own.
+        static CI_CONTEXT: OnceCell<Option<Retained<CIContext>>> = const { OnceCell::new() };
+    }
+
+    /// The Metal-backed encoder, measured 1.7x faster than ImageIO on photo
+    /// tiles (and smaller): the GPU does the JPEG encode.
+    fn metal_context() -> Option<Retained<CIContext>> {
+        CI_CONTEXT.with(|cell| {
+            cell.get_or_init(|| {
+                let device = MTLCreateSystemDefaultDevice()?;
+                Some(unsafe { CIContext::contextWithMTLDevice(&device) })
+            })
+            .clone()
+        })
+    }
+
+    fn encode_jpeg_metal(image: &CGImage) -> Option<Vec<u8>> {
+        let context = metal_context()?;
+        let space = CGColorSpace::new_device_rgb()?;
+        let ci_image = unsafe { CIImage::initWithCGImage(CIImage::alloc(), image) };
+        let key = NSString::from_str("kCGImageDestinationLossyCompressionQuality");
+        let value: Retained<AnyObject> = NSNumber::new_cgfloat(0.8).into();
+        let options = NSDictionary::from_slices(&[&*key], &[&*value]);
+        let data = unsafe {
+            context.JPEGRepresentationOfImage_colorSpace_options(&ci_image, &space, &options)
+        }?;
+        Some(data.to_vec())
+    }
+
+    /// Below this the Metal context's setup cost outweighs its faster encode:
+    /// a 240px thumbnail is quicker through ImageIO, a viewer tile is not.
+    const METAL_JPEG_MIN_PIXELS: usize = 400_000;
+
     fn encode(bitmap: &NSBitmapImageRep, format: ImageFormat) -> Result<Vec<u8>, String> {
+        let pixels = bitmap.pixelsWide().max(0) as usize * bitmap.pixelsHigh().max(0) as usize;
+        if matches!(format, ImageFormat::Jpeg) && pixels >= METAL_JPEG_MIN_PIXELS {
+            if let Some(image) = bitmap.CGImage() {
+                if let Some(encoded) = encode_jpeg_metal(&image) {
+                    return Ok(encoded);
+                }
+            }
+            // No Metal device, or CI refused the image: ImageIO still works.
+        }
         let properties = NSDictionary::new();
         let (file_type, label) = match format {
             ImageFormat::Png => (NSBitmapImageFileType::PNG, "PNG"),
@@ -213,7 +261,14 @@ mod macos {
     #[cfg(test)]
     mod tests {
         use super::{render, render_rect, ImageFormat};
+        use objc2_core_foundation::{CGPoint, CGRect, CGSize};
+        use objc2_core_graphics::{
+            CGBitmapContextCreate, CGBitmapContextGetBytesPerRow, CGBitmapContextGetData,
+            CGColorSpace, CGContext, CGImageAlphaInfo, CGImageByteOrderInfo,
+        };
+        use objc2_pdf_kit::PDFDisplayBox;
         use std::path::Path;
+        use std::ptr;
 
         fn fixture() -> String {
             Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -368,6 +423,58 @@ mod macos {
             );
         }
 
+        /// Mirror of `render_rect` that stops at the pixel buffer instead of
+        /// encoding: bench-only, so the numbers show what the encoder costs.
+        #[cfg(test)]
+        fn render_rect_raw(
+            path: &str,
+            page: u32,
+            x: f64,
+            y: f64,
+            width: f64,
+            height: f64,
+            scale: f64,
+        ) -> Result<Vec<u8>, String> {
+            let (_document, pdf_page) = super::open_page(path, page)?;
+            let pixel_width = (width * scale).ceil().max(1.0) as usize;
+            let pixel_height = (height * scale).ceil().max(1.0) as usize;
+            let space =
+                CGColorSpace::new_device_rgb().ok_or_else(|| "No RGB color space".to_string())?;
+            let bitmap_info =
+                CGImageAlphaInfo::PremultipliedFirst.0 | CGImageByteOrderInfo::Order32Little.0;
+            let context = unsafe {
+                CGBitmapContextCreate(
+                    ptr::null_mut(),
+                    pixel_width,
+                    pixel_height,
+                    8,
+                    pixel_width * 4,
+                    Some(&space),
+                    bitmap_info,
+                )
+            }
+            .ok_or_else(|| "Could not create the tile bitmap".to_string())?;
+            CGContext::set_rgb_fill_color(Some(&context), 1.0, 1.0, 1.0, 1.0);
+            CGContext::fill_rect(
+                Some(&context),
+                CGRect::new(
+                    CGPoint::ZERO,
+                    CGSize::new(pixel_width as f64, pixel_height as f64),
+                ),
+            );
+            CGContext::translate_ctm(Some(&context), 0.0, pixel_height as f64);
+            CGContext::scale_ctm(Some(&context), scale, -scale);
+            CGContext::translate_ctm(Some(&context), -x, -y);
+            unsafe { pdf_page.drawWithBox_toContext(PDFDisplayBox::CropBox, &context) };
+            let bytes_per_row = CGBitmapContextGetBytesPerRow(Some(&context));
+            let data = CGBitmapContextGetData(Some(&context));
+            if data.is_null() {
+                return Err("Tile bitmap has no data".to_string());
+            }
+            let len = bytes_per_row * pixel_height;
+            Ok(unsafe { std::slice::from_raw_parts(data as *const u8, len) }.to_vec())
+        }
+
         /// Cold cost of one render: document open + raster + encode, as every
         /// call is independent. Run with:
         ///   cargo test --lib commands::native_render -- --ignored --nocapture
@@ -438,30 +545,87 @@ mod macos {
                     ("full-page@2x", 0.0, 0.0, 612.0, 792.0, 2.0),
                 ];
                 for (name, x, y, width, height, scale) in tiles {
-                    let mut samples = Vec::new();
-                    let mut bytes = 0;
-                    for _ in 0..7 {
-                        let started = Instant::now();
-                        match render_rect(&path, 1, x, y, width, height, scale, ImageFormat::Jpeg) {
-                            Ok(encoded) => {
-                                samples.push(started.elapsed().as_secs_f64() * 1000.0);
-                                bytes = encoded.len();
-                            }
-                            Err(error) => {
-                                println!("[bench] {label} {name} failed: {error}");
-                                break;
+                    for (kind, raw) in [("jpg", false), ("raw", true)] {
+                        let mut samples = Vec::new();
+                        let mut bytes = 0;
+                        for _ in 0..7 {
+                            let started = Instant::now();
+                            let result = if raw {
+                                render_rect_raw(&path, 1, x, y, width, height, scale)
+                            } else {
+                                render_rect(&path, 1, x, y, width, height, scale, ImageFormat::Jpeg)
+                            };
+                            match result {
+                                Ok(encoded) => {
+                                    samples.push(started.elapsed().as_secs_f64() * 1000.0);
+                                    bytes = encoded.len();
+                                }
+                                Err(error) => {
+                                    println!("[bench] {label} {name} failed: {error}");
+                                    break;
+                                }
                             }
                         }
+                        if samples.is_empty() {
+                            continue;
+                        }
+                        let (median_ms, min_ms) = median(samples);
+                        println!(
+                            "[bench] tile {label} {name} {width:.0}x{height:.0}pt@{scale:.0}x {kind}: median {median_ms:.1}ms min {min_ms:.1}ms {}KB",
+                            bytes / 1024,
+                        );
                     }
-                    if samples.is_empty() {
-                        continue;
-                    }
-                    let (median_ms, min_ms) = median(samples);
-                    println!(
-                        "[bench] tile {label} {name} {width:.0}x{height:.0}pt@{scale:.0}x: median {median_ms:.1}ms min {min_ms:.1}ms {}KB",
-                        bytes / 1024,
-                    );
                 }
+
+                // Phase split for one viewer tile: open only, then the whole
+                // pipeline without the encoder, then the encoder alone.
+                let mut open_samples = Vec::new();
+                for _ in 0..7 {
+                    let started = Instant::now();
+                    let _ = super::open_page(&path, 1);
+                    open_samples.push(started.elapsed().as_secs_f64() * 1000.0);
+                }
+                let (open_median, _) = median(open_samples);
+
+                let mut paint_samples = Vec::new();
+                for _ in 0..7 {
+                    let started = Instant::now();
+                    let _ = render_rect_raw(&path, 1, 0.0, 0.0, 612.0, 396.0, 2.0);
+                    paint_samples.push(started.elapsed().as_secs_f64() * 1000.0);
+                }
+                let (paint_median, _) = median(paint_samples);
+
+                let jpeg = render_rect(&path, 1, 0.0, 0.0, 612.0, 396.0, 2.0, ImageFormat::Jpeg)
+                    .map(|v| v.len())
+                    .unwrap_or(0);
+                let mut encode_samples = Vec::new();
+                for _ in 0..7 {
+                    let started = Instant::now();
+                    let _ = render_rect(&path, 1, 0.0, 0.0, 612.0, 396.0, 2.0, ImageFormat::Jpeg);
+                    encode_samples.push(started.elapsed().as_secs_f64() * 1000.0);
+                }
+                let (total_median, _) = median(encode_samples);
+                println!(
+                    "[bench] phase {label} half-page@2x: open {open_median:.1}ms, through-pixels {paint_median:.1}ms, with-jpeg {total_median:.1}ms, jpeg {}KB",
+                    jpeg / 1024,
+                );
+
+                // One viewport at 100% on a 2x display: 2x3 half-page tiles, the
+                // work a single scroll frame can ask for.
+                let started = Instant::now();
+                let mut viewport_bytes = 0;
+                for (x, y) in [(0.0, 0.0), (306.0, 0.0), (0.0, 396.0), (306.0, 396.0)] {
+                    if let Ok(bytes) =
+                        render_rect(&path, 1, x, y, 306.0, 396.0, 2.0, ImageFormat::Jpeg)
+                    {
+                        viewport_bytes += bytes.len();
+                    }
+                }
+                println!(
+                    "[bench] viewport {label} 4 tiles@2x: {:.1}ms, {}KB",
+                    started.elapsed().as_secs_f64() * 1000.0,
+                    viewport_bytes / 1024,
+                );
             }
         }
     }
