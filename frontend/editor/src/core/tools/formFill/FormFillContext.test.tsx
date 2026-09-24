@@ -85,6 +85,27 @@ const pageField = (name: string, pageIndex: number): FormField[] => [
   },
 ];
 
+const radioField = (
+  name: string,
+  pageIndex: number,
+  value: string,
+): FormField[] => [
+  {
+    name,
+    label: name,
+    type: "radio",
+    value,
+    options: null,
+    displayOptions: null,
+    required: false,
+    readOnly: false,
+    multiSelect: false,
+    multiline: false,
+    tooltip: null,
+    widgets: [{ pageIndex, x: 1, y: 2, width: 10, height: 10 }],
+  },
+];
+
 describe("FormFillContext staged-edit ownership", () => {
   beforeEach(() => {
     applyFieldEdits.mockReset();
@@ -392,6 +413,33 @@ describe("FormFillContext per-page loading", () => {
       "fifth",
       "first",
     ]);
+  });
+
+  it("re-indexes a radio value when a later page sorts ahead of it", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    fetchFields.mockResolvedValueOnce(pageField("first", 0));
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+
+    // Page 5 loads first: its checked widget is index 0 of a one-widget list.
+    fetchFields.mockResolvedValueOnce(radioField("Choice", 5, "0"));
+    await act(async () => {
+      await hook.current.ensurePageFields?.(5);
+    });
+    expect(hook.current.getValue("Choice")).toBe("0");
+
+    // Page 3 arrives later and sorts ahead of page 5: the checked widget is
+    // now index 1, and the stored value must follow it.
+    fetchFields.mockResolvedValueOnce(radioField("Choice", 3, ""));
+    await act(async () => {
+      await hook.current.ensurePageFields?.(3);
+    });
+
+    const choice = hook.current.state.fields.find((f) => f.name === "Choice");
+    expect(choice?.widgets?.map((w) => w.pageIndex)).toEqual([3, 5]);
+    expect(choice?.value).toBe("1");
+    expect(hook.current.getValue("Choice")).toBe("1");
   });
 
   it("does not page-fetch when the provider answers with the whole document", async () => {
