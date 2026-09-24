@@ -195,7 +195,7 @@ export default defineConfig({
     "typescript/prefer-as-const": "error",
     "typescript/prefer-namespace-keyword": "error",
     "typescript/triple-slash-reference": "error",
-    "react/jsx-max-depth": ["error", { max: 10 }],
+    "react/jsx-max-depth": ["error", { max: 9 }],
   },
   overrides: [
     {
@@ -383,7 +383,10 @@ export default defineConfig({
     {
       // A provider stack nests one context per level in dependency order, so its
       // depth counts providers rather than measuring how hard the tree is to read.
-      files: ["editor/src/core/components/AppProviders.tsx"],
+      files: [
+        "editor/src/core/components/AppProviders.tsx",
+        ".storybook/preview.tsx",
+      ],
       rules: {
         "react/jsx-max-depth": "off",
       },
