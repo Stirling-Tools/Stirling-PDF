@@ -15,7 +15,7 @@ export interface TrackEditorState {
   present: TrackWorkspace;
   /** Last saved (or freshly synced) state: what "dirty" is measured against. */
   baseline: TrackWorkspace;
-  /** Per-file `pageCount:rotations` fingerprint, so an outside edit rebuilds. */
+  /** Per-file content/page-count/rotation fingerprint, so an outside edit rebuilds. */
   sourceSignatures: Record<FileId, string>;
   past: TrackWorkspace[];
   future: TrackWorkspace[];
@@ -62,7 +62,7 @@ export const initialTrackEditorState: TrackEditorState = {
 };
 
 const sourceSignature = (source: TrackSource): string =>
-  `${source.pageCount}:${source.rotations.join(",")}`;
+  `${source.contentKey}:${source.pageCount}:${source.rotations.join(",")}`;
 
 function buildTrack(source: TrackSource, seq: number): [Track, number] {
   const pages: TrackPage[] = [];
@@ -72,6 +72,7 @@ function buildTrack(source: TrackSource, seq: number): [Track, number] {
       id: `tp-${next++}`,
       sourceFileId: source.fileId,
       sourcePageNumber: i + 1,
+      sourceContentKey: source.contentKey,
       rotation: normalizeRotation(source.rotations[i] ?? 0),
     });
   }
@@ -135,11 +136,43 @@ function withEdit(
 }
 
 /**
+ * Every track that shares a page with a replaced file, transitively: a page
+ * moved between two tracks ties their edits together, so voiding one side's
+ * edits and keeping the other's would lose or duplicate that page.
+ */
+function tracksEntangledWith(
+  workspace: TrackWorkspace,
+  replaced: Set<FileId>,
+): Set<FileId> {
+  const involved = new Set(replaced);
+  let grew = replaced.size > 0;
+  while (grew) {
+    grew = false;
+    for (const id of workspace.order) {
+      const track = workspace.tracks[id];
+      if (!track) continue;
+      const touches =
+        involved.has(id) ||
+        track.pages.some((p) => involved.has(p.sourceFileId));
+      if (!touches) continue;
+      for (const fileId of [id, ...track.pages.map((p) => p.sourceFileId)]) {
+        if (involved.has(fileId)) continue;
+        involved.add(fileId);
+        grew = true;
+      }
+    }
+  }
+  return involved;
+}
+
+/**
  * Reconciles the open files into the workspace. The workspace order is
  * authoritative (splits and reorders live only here, not in the file list), so
  * this preserves it: file-backed tracks are kept or rebuilt in place, split
  * tracks are kept (their pages pruned if a source file closed), closed files
- * drop out, and newly opened files are appended.
+ * drop out, and newly opened files are appended. A file whose bytes changed
+ * voids the edits of every track entangled with it: those rebuild from their
+ * files and entangled splits are dropped.
  */
 function syncSources(
   state: TrackEditorState,
@@ -151,6 +184,15 @@ function syncSources(
   });
   const liveIds = new Set(sources.map((s) => s.fileId));
   const sourceById = new Map(sources.map((s) => [s.fileId, s]));
+  const replaced = new Set(
+    sources
+      .filter((s) => {
+        const previous = state.sourceSignatures[s.fileId];
+        return previous !== undefined && previous !== signatures[s.fileId];
+      })
+      .map((s) => s.fileId),
+  );
+  const reset = tracksEntangledWith(state.present, replaced);
 
   // A closed file's bytes are gone, so pages it sourced can't be saved anywhere.
   const pruneDead = (pages: TrackPage[]): TrackPage[] => {
@@ -172,6 +214,11 @@ function syncSources(
     if (!track) continue;
 
     if (track.isNew) {
+      // Its pages go back to the files they came from, which are all rebuilt.
+      if (reset.has(id)) {
+        historyValid = false;
+        continue;
+      }
       const pages = pruneDead(track.pages);
       if (pages.length === 0) {
         historyValid = false;
@@ -191,10 +238,8 @@ function syncSources(
       historyValid = false;
       continue;
     }
-    const changed =
-      state.sourceSignatures[track.fileId] !== signatures[track.fileId];
-    if (changed) {
-      // The bytes changed underneath us, so pending edits to this file are void.
+    if (reset.has(id)) {
+      // Pending edits describe bytes that no longer exist.
       const [rebuilt, nextSeq] = buildTrack(source, seq);
       seq = nextSeq;
       tracks[id] = rebuilt;

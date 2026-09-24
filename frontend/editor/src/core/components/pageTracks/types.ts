@@ -9,6 +9,8 @@ export interface TrackPage {
   id: string;
   sourceFileId: FileId;
   sourcePageNumber: number;
+  /** The source file's {@link TrackSource.contentKey} when this page was read. */
+  sourceContentKey: string;
   /** Absolute rotation in degrees, seeded from the source page's /Rotate. */
   rotation: number;
 }
@@ -39,11 +41,16 @@ export interface TrackSource {
   name: string;
   pageCount: number;
   rotations: number[];
+  /**
+   * Changes when the file's bytes are replaced under an unchanged id, which a
+   * disk reload does without necessarily moving the page count or rotations.
+   */
+  contentKey: string;
 }
 
 /** Cache key for a source page's thumbnail, shared by every instance of it. */
 export const sourcePageKey = (page: TrackPage): string =>
-  `${page.sourceFileId}#${page.sourcePageNumber}`;
+  `${page.sourceFileId}@${page.sourceContentKey}#${page.sourcePageNumber}`;
 
 export const trackSignature = (pages: TrackPage[]): string =>
   pages

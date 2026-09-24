@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { FileId } from "@app/types/file";
-import { TrackSource, trackSignature } from "@app/components/pageTracks/types";
+import {
+  TrackSource,
+  sourcePageKey,
+  trackSignature,
+} from "@app/components/pageTracks/types";
 import {
   TrackEditorState,
   changedTrackIds,
@@ -16,11 +20,13 @@ const source = (
   fileId: FileId,
   pageCount: number,
   rotations: number[] = [],
+  contentKey = "v1",
 ): TrackSource => ({
   fileId,
   name: `${fileId}.pdf`,
   pageCount,
   rotations: Array.from({ length: pageCount }, (_, i) => rotations[i] ?? 0),
+  contentKey,
 });
 
 const sync = (state: TrackEditorState, sources: TrackSource[]) =>
@@ -75,6 +81,64 @@ describe("trackEditorReducer sync", () => {
 
     expect(pagesOf(state, A)).toHaveLength(5);
     expect(changedTrackIds(state)).toEqual([]);
+  });
+
+  it("rebuilds a track whose bytes were replaced with the same page layout", () => {
+    let state = twoTracks();
+    state = trackEditorReducer(state, {
+      type: "delete",
+      pageIds: [pagesOf(state, A)[0].id],
+    });
+    const staleKey = sourcePageKey(pagesOf(state, A)[0]);
+
+    state = sync(state, [source(A, 3, [0, 90, 0], "v2"), source(B, 2)]);
+
+    expect(pagesOf(state, A)).toHaveLength(3);
+    expect(changedTrackIds(state)).toEqual([]);
+    expect(state.past).toEqual([]);
+    // A thumbnail cached for the old bytes must not be served for the new ones.
+    expect(pagesOf(state, A).map(sourcePageKey)).not.toContain(staleKey);
+  });
+
+  it("voids the edits of every track sharing pages with a replaced file", () => {
+    const C = "file-c" as FileId;
+    let state = sync(initialTrackEditorState, [
+      source(A, 3),
+      source(B, 2),
+      source(C, 2),
+    ]);
+    state = trackEditorReducer(state, {
+      type: "move",
+      pageIds: [pagesOf(state, A)[0].id],
+      targetFileId: B,
+      beforePageId: null,
+    });
+    state = trackEditorReducer(state, {
+      type: "delete",
+      pageIds: [pagesOf(state, C)[0].id],
+    });
+
+    state = sync(state, [source(A, 3, [], "v2"), source(B, 2), source(C, 2)]);
+
+    // The page moved out of A goes home rather than vanishing or duplicating.
+    expect(ids(state, A)).toEqual([`${A}:1`, `${A}:2`, `${A}:3`]);
+    expect(ids(state, B)).toEqual([`${B}:1`, `${B}:2`]);
+    expect(changedTrackIds(state)).toEqual([C]);
+  });
+
+  it("drops a split of a replaced file, returning its pages", () => {
+    let state = twoTracks();
+    state = trackEditorReducer(state, {
+      type: "split",
+      fileId: A,
+      startPageId: pagesOf(state, A)[1].id,
+    });
+    expect(state.present.order).toHaveLength(3);
+
+    state = sync(state, [source(A, 3, [0, 90, 0], "v2"), source(B, 2)]);
+
+    expect(state.present.order).toEqual([A, B]);
+    expect(pagesOf(state, A)).toHaveLength(3);
   });
 
   it("drops pages sourced from a file that is no longer open", () => {
