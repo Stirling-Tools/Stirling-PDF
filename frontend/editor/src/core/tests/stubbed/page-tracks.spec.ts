@@ -398,7 +398,7 @@ test.describe("Page Editor tracks", () => {
     await expect(track(page, "sample.pdf")).toHaveCount(0);
   });
 
-  test("track actions need a selection: select all, then delete every page", async ({
+  test("selecting a track from its header lets the bar act on just its pages", async ({
     page,
   }) => {
     await openPageEditor(page);
@@ -406,20 +406,13 @@ test.describe("Page Editor tracks", () => {
     await expect(rotated.locator("[data-page-id]")).toHaveCount(4, {
       timeout: 30_000,
     });
-    const header = rotated.locator("header");
-    const action = (name: string) =>
-      header.getByRole("button", { name, exact: true });
 
-    for (const name of ["Rotate left", "Rotate right", "Delete pages"]) {
-      await expect(action(name)).toBeDisabled();
-    }
+    await rotated
+      .locator("header")
+      .getByRole("button", { name: "Select all pages", exact: true })
+      .click();
+    await page.getByRole("button", { name: "Delete Selected Pages" }).click();
 
-    await action("Select all pages").click();
-    for (const name of ["Rotate left", "Rotate right", "Delete pages"]) {
-      await expect(action(name)).toBeEnabled();
-    }
-
-    await action("Delete pages").click();
     await expect(rotated.locator("[data-page-id]")).toHaveCount(0);
     // The other track was never selected, so it is untouched.
     await expect(

@@ -6490,7 +6490,6 @@ unsaved = "These files have unsaved changes."
 
 [pageTracks.delete]
 page = "Delete page"
-selected = "Delete pages"
 
 [pageTracks.empty]
 body = "Add PDFs to expand them into editable page tracks"

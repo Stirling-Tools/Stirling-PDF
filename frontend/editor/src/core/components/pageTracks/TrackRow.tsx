@@ -339,9 +339,7 @@ function TrackRowImpl({
     [setNodeRef],
   );
 
-  // Deliberately no whole-track fallback: acting on every page takes an explicit
-  // select-all first, so an unselected click cannot rotate or delete a file.
-  const targetIds = useMemo(
+  const selectedInTrack = useMemo(
     () =>
       track.pages
         .filter((page) => selectedIds.has(page.id))
@@ -488,52 +486,9 @@ function TrackRowImpl({
             actionSize="sm"
             pages={numberedPages}
             maxPages={track.pages.length}
-            selectedPageIds={targetIds}
+            selectedPageIds={selectedInTrack}
             onSelect={handleSelectNumbers}
           />
-          <Tooltip
-            position="bottom"
-            content={t("pageTracks.rotateLeft", "Rotate left")}
-          >
-            <ActionIcon
-              variant="quiet"
-              size="sm"
-              aria-label={t("pageTracks.rotateLeft", "Rotate left")}
-              disabled={targetIds.length === 0}
-              onClick={() => onRotate(targetIds, -90)}
-            >
-              <Icon name="rotate-ccw" size="1rem" />
-            </ActionIcon>
-          </Tooltip>
-          <Tooltip
-            position="bottom"
-            content={t("pageTracks.rotateRight", "Rotate right")}
-          >
-            <ActionIcon
-              variant="quiet"
-              size="sm"
-              aria-label={t("pageTracks.rotateRight", "Rotate right")}
-              disabled={targetIds.length === 0}
-              onClick={() => onRotate(targetIds, 90)}
-            >
-              <Icon name="rotate-cw" size="1rem" />
-            </ActionIcon>
-          </Tooltip>
-          <Tooltip
-            position="bottom"
-            content={t("pageTracks.delete.selected", "Delete pages")}
-          >
-            <ActionIcon
-              variant="quiet"
-              size="sm"
-              accent="danger"
-              aria-label={t("pageTracks.delete.selected", "Delete pages")}
-              disabled={targetIds.length === 0}
-              onClick={() => onDelete(targetIds)}
-            >
-              <Icon name="trash" size="1rem" />
-            </ActionIcon>
-          </Tooltip>
           {!isNew && (
             <>
               <div className={styles.trackActionsDivider} />
