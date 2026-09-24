@@ -50,12 +50,8 @@ export default function Workbench() {
   const { workbench: currentView } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
   const setCurrentView = navActions.setWorkbench;
-  const {
-    previewFile,
-    setPreviewFile,
-    customWorkbenchViews,
-    readerMode,
-  } = useToolWorkflow();
+  const { previewFile, setPreviewFile, customWorkbenchViews, readerMode } =
+    useToolWorkflow();
 
   const { handleToolSelect } = useToolWorkflow();
   const { overlay: signingOverlay } = useSigningOverlay();

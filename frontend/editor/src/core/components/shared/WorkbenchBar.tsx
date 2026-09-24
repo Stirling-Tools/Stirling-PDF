@@ -437,9 +437,7 @@ export default function WorkbenchBar({
     {
       value: "pageEditor" as WorkbenchType,
       label: t("workbenchBar.pageEditor", "Page Editor"),
-      icon: (
-        <LocalIcon icon="layers-outline-rounded" width="1rem" height="1rem" />
-      ),
+      icon: <Icon name="layers" size={20} />,
     },
     {
       value: "fileEditor" as WorkbenchType,
