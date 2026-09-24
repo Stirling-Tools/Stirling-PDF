@@ -725,7 +725,7 @@ class SortType(StrEnum):
 
 class MergePdfsParams(ApiModel):
     """
-    This endpoint merges multiple PDF files into a single PDF file. The merged file will contain all pages from the input files in the order they were provided. Input:PDF Output:PDF Type:MISO
+    This endpoint merges multiple PDF files into a single PDF file. The merged file will contain all pages from the input files in the order they were provided. Image inputs are converted to PDF pages before merging. Input:PDF/IMAGE Output:PDF Type:MISO
     """
 
     client_file_ids: str | None = Field(

@@ -4,9 +4,9 @@
 import type { NavKey } from "@app/components/shared/config/types";
 import { navigateToSettings } from "@app/utils/settingsNavigation";
 
-export function openAppSettings(targetKey?: NavKey, notice?: string) {
+export function openAppSettings(targetKey: NavKey, notice?: string) {
   try {
-    navigateToSettings(targetKey ?? "overview");
+    navigateToSettings(targetKey);
     // The Plan section shows why the caller sent the user here (e.g. "Not
     // enough credits"), and only it listens.
     if (notice) {
