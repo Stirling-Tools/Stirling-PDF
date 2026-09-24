@@ -14,6 +14,7 @@ import {
   useNavigationState,
 } from "@app/contexts/NavigationContext";
 import { StirlingFileStub } from "@app/types/fileContext";
+import { isPageEditorWorkbench } from "@app/types/workbench";
 import type { FileId } from "@app/types/file";
 import { fileStorage } from "@app/services/fileStorage";
 import apiClient from "@app/services/apiClient";
@@ -67,9 +68,9 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
   const { actions } = useFileActions();
   const fileCtx = useFileContext();
   const { actions: navActions } = useNavigationActions();
-  const { workbench: currentWorkbench, selectedTool } = useNavigationState();
-  const isMultiTool =
-    currentWorkbench === "multiTool" && selectedTool === "multiTool";
+  const { workbench: currentWorkbench } = useNavigationState();
+  // Both page editors lay out every open file, so an added file belongs there.
+  const staysOnAdd = isPageEditorWorkbench(currentWorkbench);
   const [isFilesModalOpen, setIsFilesModalOpen] = useState(false);
   const [onModalClose, setOnModalClose] = useState<(() => void) | undefined>();
   const [insertAfterPage, setInsertAfterPage] = useState<number | undefined>();
@@ -324,7 +325,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
       );
 
       const totalAdded = requestedIds.length + uploads.length;
-      if (!isMultiTool && totalAdded > 0) {
+      if (!staysOnAdd && totalAdded > 0) {
         navActions.setWorkbench(totalAdded === 1 ? "viewer" : "fileEditor");
       }
       reportUnavailable();
@@ -339,7 +340,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
       downloadRemoteFile,
       importBundleToWorkbench,
       navActions,
-      isMultiTool,
+      staysOnAdd,
       t,
     ],
   );
