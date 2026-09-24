@@ -79,6 +79,8 @@ class UserServiceMoreTest {
     @Mock private TeamMembershipService teamMembershipService;
     @Mock private ApiKeyAuthenticationService apiKeyAuthenticationService;
 
+    @org.mockito.Mock private stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
+
     @InjectMocks private UserService userService;
 
     @AfterEach
@@ -258,7 +260,8 @@ class UserServiceMoreTest {
             User u = user("p");
             Team defaultTeam = new Team();
             defaultTeam.setName("Default");
-            when(teamRepository.findByName("Default")).thenReturn(Optional.of(defaultTeam));
+            when(teamRepository.findFirstByNameOrderByIdAsc("Default"))
+                    .thenReturn(Optional.of(defaultTeam));
 
             userService.changeUserTeam(u, null);
 

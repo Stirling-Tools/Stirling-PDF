@@ -1,6 +1,7 @@
 import apiClient from "@app/services/apiClient";
 
 export interface User {
+  orgOwner?: boolean;
   id: number;
   username: string;
   email?: string;

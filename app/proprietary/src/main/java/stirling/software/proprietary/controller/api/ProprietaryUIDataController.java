@@ -81,6 +81,7 @@ public class ProprietaryUIDataController {
     private final LoginAttemptService loginAttemptService;
     private final ResourceAccessService resourceAccessService;
     private final InviteTokenRepository inviteTokenRepository;
+    private final stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
 
     public ProprietaryUIDataController(
             ApplicationProperties applicationProperties,
@@ -98,7 +99,9 @@ public class ProprietaryUIDataController {
             MfaService mfaService,
             LoginAttemptService loginAttemptService,
             ResourceAccessService resourceAccessService,
-            InviteTokenRepository inviteTokenRepository) {
+            InviteTokenRepository inviteTokenRepository,
+            stirling.software.proprietary.service.OrgOwnerService orgOwnerService) {
+        this.orgOwnerService = orgOwnerService;
         this.applicationProperties = applicationProperties;
         this.auditConfig = auditConfig;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
@@ -165,7 +168,7 @@ public class ProprietaryUIDataController {
 
         // Add enableLogin flag so frontend doesn't need to call /app-config
         data.setEnableLogin(securityProps.isEnableLogin());
-        data.setSsoAutoLogin(applicationProperties.getPremium().getProFeatures().isSsoAutoLogin());
+        data.setSsoAutoLogin(applicationProperties.getSecurity().isSsoAutoLogin());
 
         // Check if this is first-time setup with default credentials
         // The isFirstLogin flag captures: default username/password usage and unchanged state
@@ -229,7 +232,7 @@ public class ProprietaryUIDataController {
 
         SAML2 saml2 = securityProps.getSaml2();
         // Only add SAML2 providers if loginMethod allows it
-        if (securityProps.isSaml2Active() && applicationProperties.getPremium().isEnabled()) {
+        if (securityProps.isSaml2Active() && licenseSettingsService.hasPaidLicense()) {
             String samlIdp = saml2.getProvider();
             String saml2AuthenticationPath = "/saml2/authenticate/" + saml2.getRegistrationId();
 
@@ -349,7 +352,7 @@ public class ProprietaryUIDataController {
         long availableSlots = licenseSettingsService.getAvailableUserSlots();
         int grandfatheredCount = licenseSettingsService.getDisplayGrandfatheredCount();
         int licenseMaxUsers = licenseSettingsService.getSettings().getLicenseMaxUsers();
-        boolean premiumEnabled = applicationProperties.getPremium().isEnabled();
+        boolean premiumEnabled = licenseSettingsService.hasPaidLicense();
         long pendingInvites = inviteTokenRepository.countActiveInvites(LocalDateTime.now());
 
         // Resolve portal access for the whole roster. The teamLead display flag counts a
@@ -373,9 +376,18 @@ public class ProprietaryUIDataController {
                         .collect(Collectors.toSet());
         Set<Long> portalAccessUserIds =
                 resourceAccessService.usersWithPortalAccess(sortedUsers, activeTeamLeaderUserIds);
+        Long ownerId = orgOwnerService.ownerId().orElse(null);
         List<AdminUserSummary> userSummaries =
                 sortedUsers.stream()
-                        .map(user -> convertUserToSummary(user, leaderUserIds, portalAccessUserIds))
+                        .map(
+                                user -> {
+                                    AdminUserSummary summary =
+                                            convertUserToSummary(
+                                                    user, leaderUserIds, portalAccessUserIds);
+                                    summary.setOrgOwner(
+                                            java.util.Objects.equals(ownerId, user.getId()));
+                                    return summary;
+                                })
                         .toList();
 
         AdminSettingsData data = new AdminSettingsData();
@@ -608,7 +620,7 @@ public class ProprietaryUIDataController {
         // Portal access (same policy /me uses).
         summary.setPortalAccess(portalAccessUserIds.contains(user.getId()));
         summary.setUsername(user.getUsername());
-        summary.setEmail(user.getUsername()); // Use username as email for consistency
+        summary.setEmail(user.getEmail());
         summary.setRoleName(user.getRoleName());
         summary.setRolesAsString(user.getRolesAsString());
         summary.setEnabled(user.isEnabled());

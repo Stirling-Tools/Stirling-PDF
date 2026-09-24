@@ -8,12 +8,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Hidden;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,7 +47,9 @@ public class AccountLinkController {
             String name,
             String createdAt,
             String lastSeenAt,
-            boolean revoked) {}
+            boolean revoked,
+            Integer seatCount,
+            String seatsReportedAt) {}
 
     @GetMapping("/instances")
     @PreAuthorize("isAuthenticated()")
@@ -65,7 +72,11 @@ public class AccountLinkController {
                                                 i.getLastSeenAt() != null
                                                         ? i.getLastSeenAt().toString()
                                                         : null,
-                                                i.getRevokedAt() != null))
+                                                i.getRevokedAt() != null,
+                                                i.getSeatCount(),
+                                                i.getSeatsReportedAt() == null
+                                                        ? null
+                                                        : i.getSeatsReportedAt().toString()))
                         .toList();
         return ResponseEntity.ok(rows);
     }
@@ -78,6 +89,21 @@ public class AccountLinkController {
             return ResponseEntity.status(lt.error()).build();
         }
         boolean ok = service.revoke(lt.teamId(), instanceId);
+        return ok ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    }
+
+    public record RenameRequest(@Size(max = 255) String name) {}
+
+    @PatchMapping("/instances/{instanceId}")
+    public ResponseEntity<Void> rename(
+            @PathVariable Long instanceId,
+            @Valid @RequestBody RenameRequest request,
+            Authentication auth) {
+        LeaderTeam lt = leaderTeams.resolve(auth);
+        if (lt.error() != null) {
+            return ResponseEntity.status(lt.error()).build();
+        }
+        boolean ok = service.rename(lt.teamId(), instanceId, request.name());
         return ok ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 }

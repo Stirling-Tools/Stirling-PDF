@@ -1,0 +1,32 @@
+/* Review screen shell. Colours come from semantic tokens only; no literals.
+   See core/theme/README.md. */
+
+.portal-review {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  max-width: 84rem;
+  margin: 0 auto;
+}
+
+.portal-review__head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.portal-review__title {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 650;
+  color: var(--c-text);
+}
+
+.portal-review__sub {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--c-text-subtle);
+  max-width: 46rem;
+}

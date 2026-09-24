@@ -6,6 +6,9 @@ import SearchResults from "@app/components/tools/SearchResults";
 import ToolRenderer from "@app/components/tools/ToolRenderer";
 import ToolSearch from "@app/components/tools/toolPicker/ToolSearch";
 import { ToolPanelViewerBar } from "@app/components/tools/ToolPanelViewerBar";
+import { openSuperSearch } from "@app/components/shared/superSearch/openSuperSearch";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { Icon } from "@app/ui/Icon";
 import { ToolId } from "@app/types/toolId";
 
 interface ToolPanelProps {
@@ -23,7 +26,8 @@ interface ToolPanelProps {
   compact?: boolean;
   /**
    * Render a tool filter at the head of the panel. Set where the workbench
-   * bar's super search is out of reach, so the list stays searchable in place.
+   * bar's super search is out of reach, so the list stays searchable in place;
+   * otherwise the head is a header whose button opens the super search on tools.
    */
   showSearch?: boolean;
 }
@@ -52,7 +56,8 @@ export default function ToolPanel({
   // Only offer the filter over the list itself; once a tool is open the panel
   // belongs to that tool. Deriving the results branch from the same flag keeps
   // the input and what it filters from drifting apart.
-  const panelSearch = showSearch && leftPanelView === "toolPicker";
+  const onPicker = leftPanelView === "toolPicker";
+  const panelSearch = showSearch && onPicker;
   const searching = searchQuery.trim().length > 0;
 
   return (
@@ -88,6 +93,26 @@ export default function ToolPanel({
             isSearching={searching}
             compact={compactProp ?? !allToolsView}
             onShowAllTools={onShowAllTools}
+            header={
+              !showSearch && (
+                <div className="tool-panel__list-header">
+                  <span className="tool-panel__list-title">
+                    {t("toolPanel.toolsHeader", "Tools")}
+                  </span>
+                  <ActionIcon
+                    variant="quiet"
+                    accent="neutral"
+                    size="sm"
+                    onClick={() => openSuperSearch(["tools"])}
+                    title={t("toolPanel.searchTools", "Search tools")}
+                    aria-label={t("toolPanel.searchTools", "Search tools")}
+                    data-testid="tool-panel-search"
+                  >
+                    <Icon name="search" size="1rem" />
+                  </ActionIcon>
+                </div>
+              )
+            }
           />
         </div>
       ) : (

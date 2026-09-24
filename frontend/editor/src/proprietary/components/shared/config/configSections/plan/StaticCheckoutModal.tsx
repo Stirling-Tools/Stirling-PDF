@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { SettingsFieldLabel } from "@app/components/shared/config/SettingsFieldLabel";
 import {
   Modal,
   Text,
@@ -12,7 +13,7 @@ import {
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { EmailStage } from "@app/components/shared/stripeCheckout/stages/EmailStage";
 import { validateEmail } from "@app/components/shared/stripeCheckout/utils/checkoutUtils";
 import { getClickablePaperStyle } from "@app/components/shared/stripeCheckout/utils/cardStyles";
@@ -247,9 +248,7 @@ const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({
             <Alert
               variant="light"
               color="blue"
-              icon={
-                <LocalIcon icon="info-rounded" width="1rem" height="1rem" />
-              }
+              icon={<Icon name="info" size="1rem" />}
             >
               <Stack gap="sm">
                 <Text size="sm" fw={600}>
@@ -271,13 +270,7 @@ const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({
               <Alert
                 variant="light"
                 color="green"
-                icon={
-                  <LocalIcon
-                    icon="check-circle-rounded"
-                    width="1rem"
-                    height="1rem"
-                  />
-                }
+                icon={<Icon name="circle-check" size="1rem" />}
                 title={t(
                   "plan.static.licenseActivation.success",
                   "License Activated!",
@@ -300,11 +293,16 @@ const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({
                 </Text>
 
                 <TextInput
-                  label={t("admin.settings.premium.key.label", "License Key")}
-                  description={t(
-                    "plan.static.licenseActivation.keyDescription",
-                    "Paste the license key from your email",
-                  )}
+                  label={
+                    <SettingsFieldLabel
+                      info={t(
+                        "plan.static.licenseActivation.keyDescription",
+                        "Paste the license key from your email",
+                      )}
+                    >
+                      {t("admin.settings.premium.key.label", "License Key")}
+                    </SettingsFieldLabel>
+                  }
                   value={licenseKey}
                   onChange={(e) => setLicenseKey(e.target.value)}
                   placeholder="00000000-0000-0000-0000-000000000000"
@@ -367,7 +365,7 @@ const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({
               onClick={handleGoBack}
               aria-label={t("common.back", "Back")}
             >
-              <LocalIcon icon="arrow-back" width={20} height={20} />
+              <Icon name="arrow-left" size={20} />
             </ActionIcon>
           )}
           <Text fw={600} size="lg">

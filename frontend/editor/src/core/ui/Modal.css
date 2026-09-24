@@ -33,6 +33,7 @@
   /* mobile browser chrome shrinks 100vh */
   max-height: calc(100dvh - var(--modal-inset-block) * 2);
   overflow: hidden;
+  overflow: clip;
   animation: scaleIn 0.2s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
