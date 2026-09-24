@@ -258,8 +258,6 @@ export default function PageTracks() {
     [fileActions],
   );
 
-  // ── Operations ───────────────────────────────────────────────────────────
-
   const rotatePages = useCallback(
     (pageIds: string[], delta: number) =>
       dispatch({ type: "rotate", pageIds, delta }),
@@ -305,8 +303,6 @@ export default function PageTracks() {
       dispatch({ type: "split", fileId, startPageId }),
     [dispatch],
   );
-
-  // ── Drag and drop ────────────────────────────────────────────────────────
 
   const sensors = useSensors(
     // A short distance threshold keeps plain clicks (select) from starting a drag.
@@ -469,8 +465,6 @@ export default function PageTracks() {
     setTrackDropTarget(undefined);
   }, []);
 
-  // ── Save + navigation guard ──────────────────────────────────────────────
-
   const {
     setHasUnsavedChanges,
     registerNavigationWarningHandlers,
@@ -531,8 +525,6 @@ export default function PageTracks() {
     onRedo: redo,
     onSave: saveNow,
   });
-
-  // ── Render ───────────────────────────────────────────────────────────────
 
   if (!hasPdfFiles) {
     return (
