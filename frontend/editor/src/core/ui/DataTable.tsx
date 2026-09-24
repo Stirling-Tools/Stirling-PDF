@@ -1,10 +1,19 @@
-import { type KeyboardEvent, type ReactNode, useMemo, useState } from "react";
+import {
+  type HTMLAttributes,
+  type KeyboardEvent,
+  type ReactNode,
+  useMemo,
+  useState,
+} from "react";
 import { Icon } from "@app/ui/Icon";
 import {
   type ColumnDef,
   createColumnHelper,
   createSortedRowModel,
   flexRender,
+  type Header,
+  type HeaderGroup,
+  type Row,
   type RowData,
   rowSortingFeature,
   sortFn_alphanumeric,
@@ -71,6 +80,11 @@ export interface DataTableGroup<T> {
   muted?: boolean;
 }
 
+interface CollapseLabels {
+  showAll: (total: number) => string;
+  showLess: string;
+}
+
 export interface DataTableProps<T> {
   /** Columns built with the `column` vocabulary — never raw JSX. */
   columns: DataTableColumn<T>[];
@@ -107,7 +121,7 @@ export interface DataTableProps<T> {
   caption?: string;
   /** Labels for a group's "show all / show less" toggle (pass translated).
    *  `showAll` receives the group's total row count. */
-  collapseLabels?: { showAll: (total: number) => string; showLess: string };
+  collapseLabels?: CollapseLabels;
 }
 
 function SortGlyph() {
@@ -125,6 +139,11 @@ function SortGlyph() {
 }
 
 const CHEVRON_COLUMN_KEY = "__affordance";
+
+type RowPropsFn<T> = (
+  original: T,
+  muted?: boolean,
+) => HTMLAttributes<HTMLTableRowElement>;
 
 /**
  * The shared Stirling table. Call-sites supply data + behaviour; the component
@@ -250,11 +269,9 @@ export function DataTable<T extends RowData>({
     getRowId: (row) => rowKey(row),
   });
 
-  const colCount = effectiveColumns.length;
-
   // Shared row wiring so grouped rows behave like flat ones (interactivity +
   // the affordance column) instead of being a second-class path.
-  const rowProps = (original: T, muted?: boolean) => {
+  const rowProps: RowPropsFn<T> = (original, muted) => {
     const rowInteractive =
       interactive && (isRowInteractive?.(original) ?? true);
     // A row that owns the whole interaction takes the button role + keyboard
@@ -282,198 +299,382 @@ export function DataTable<T extends RowData>({
     };
   };
 
+  return (
+    <div className={`sui-datatable sui-datatable--${variant}`}>
+      <div className="sui-datatable__frame">
+        <DataTableToolbar toolbar={toolbar} />
+        <div className="sui-datatable__scroll">
+          <table className="sui-datatable__table">
+            <DataTableCaption caption={caption} />
+            <DataTableHead headerGroups={table.getHeaderGroups()} />
+            <tbody>
+              <BodyRows
+                columns={effectiveColumns}
+                sortedRows={table.getRowModel().rows}
+                groups={groups}
+                loading={loading}
+                skeletonRows={skeletonRows}
+                error={error}
+                empty={empty}
+                rowKey={rowKey}
+                rowProps={rowProps}
+                openGroups={openGroups}
+                onToggleGroup={toggleGroup}
+                collapseLabels={collapseLabels}
+              />
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DataTableToolbar({ toolbar }: { toolbar: ReactNode }) {
+  if (!toolbar) return null;
+  return <div className="sui-datatable__toolbar">{toolbar}</div>;
+}
+
+function DataTableCaption({ caption }: { caption?: string }) {
+  if (!caption) return null;
+  return <caption className="sui-datatable__caption">{caption}</caption>;
+}
+
+function DataTableHead<T extends RowData>({
+  headerGroups,
+}: {
+  headerGroups: HeaderGroup<DataTableFeatures, T>[];
+}) {
+  return (
+    <thead>
+      {headerGroups.map((headerGroup) => (
+        <tr key={headerGroup.id}>
+          {headerGroup.headers.map((header) => (
+            <HeaderCell key={header.id} header={header} />
+          ))}
+        </tr>
+      ))}
+    </thead>
+  );
+}
+
+function HeaderCell<T extends RowData>({
+  header,
+}: {
+  header: Header<DataTableFeatures, T>;
+}) {
+  const meta = header.column.columnDef.meta;
+  return (
+    <th
+      scope="col"
+      className={headerClass(meta?.align ?? "left", meta?.fit ?? false)}
+      aria-sort={ariaSort(header)}
+    >
+      <HeaderContent header={header} />
+    </th>
+  );
+}
+
+function HeaderContent<T extends RowData>({
+  header,
+}: {
+  header: Header<DataTableFeatures, T>;
+}) {
+  const label = header.isPlaceholder
+    ? null
+    : flexRender(header.column.columnDef.header, header.getContext());
+  if (header.column.getCanSort()) {
+    return (
+      <button
+        type="button"
+        className="sui-datatable__sort"
+        onClick={header.column.getToggleSortingHandler()}
+      >
+        {label}
+        <span
+          className={`sui-datatable__sort-icon sui-datatable__sort-icon--${header.column.getIsSorted() || "none"}`}
+        >
+          <SortGlyph />
+        </span>
+      </button>
+    );
+  }
+  const srHeader = header.column.columnDef.meta?.srHeader;
+  if (srHeader) {
+    return <span className="sui-datatable__th-sr">{srHeader}</span>;
+  }
+  return label;
+}
+
+function ariaSort<T extends RowData>(header: Header<DataTableFeatures, T>) {
+  if (!header.column.getCanSort()) return undefined;
+  const sorted = header.column.getIsSorted();
+  if (sorted === "asc") return "ascending";
+  if (sorted === "desc") return "descending";
+  return "none";
+}
+
+interface BodyRowsProps<T extends RowData> {
+  columns: DataTableColumn<T>[];
+  sortedRows: Row<DataTableFeatures, T>[];
+  groups?: DataTableGroup<T>[];
+  loading: boolean;
+  skeletonRows: number;
+  error?: ReactNode;
+  empty?: ReactNode;
+  rowKey: (row: T) => string;
+  rowProps: RowPropsFn<T>;
+  openGroups: Set<string>;
+  onToggleGroup: (key: string) => void;
+  collapseLabels: CollapseLabels;
+}
+
+function BodyRows<T extends RowData>({
+  columns,
+  sortedRows,
+  groups,
+  loading,
+  skeletonRows,
+  error,
+  empty,
+  rowKey,
+  rowProps,
+  openGroups,
+  onToggleGroup,
+  collapseLabels,
+}: BodyRowsProps<T>) {
   // No rows at all - covers a grouped table whose groups are all empty (or an
   // empty groups list), which would otherwise render a header-only table.
   const noRows = groups
     ? groups.every((g) => g.rows.length === 0)
-    : rows.length === 0;
+    : sortedRows.length === 0;
 
-  let body: ReactNode;
-  if (loading) {
-    body = Array.from({ length: skeletonRows }).map((_, r) => (
-      <tr key={`skeleton-${r}`} className="sui-datatable__row">
-        {effectiveColumns.map((c) => (
-          <td key={c.key} className={cellClass(c.align, c.nowrap, c.fit)}>
-            <Skeleton
-              height="0.75rem"
-              width={c.align === "right" || c.fit ? "40%" : "70%"}
-            />
-          </td>
+  if (loading) return <SkeletonRows count={skeletonRows} columns={columns} />;
+  if (error != null)
+    return <ErrorRow error={error} colCount={columns.length} />;
+  if (noRows) return <EmptyRow empty={empty} colCount={columns.length} />;
+  if (groups) {
+    return (
+      <>
+        {groups.map((group) => (
+          <GroupSection
+            key={group.key}
+            group={group}
+            open={openGroups.has(group.key)}
+            onToggle={() => onToggleGroup(group.key)}
+            columns={columns}
+            rowKey={rowKey}
+            rowProps={rowProps}
+            collapseLabels={collapseLabels}
+          />
         ))}
-      </tr>
-    ));
-  } else if (error != null) {
-    body = (
-      <tr>
-        <td
-          className="sui-datatable__state sui-datatable__state--error"
-          colSpan={colCount}
-          role="alert"
-        >
-          {error}
-        </td>
-      </tr>
+      </>
     );
-  } else if (noRows) {
-    const isNode = typeof empty === "object" && empty !== null;
-    body = (
-      <tr>
-        <td
-          className={
-            isNode
-              ? "sui-datatable__state sui-datatable__state--node"
-              : "sui-datatable__state"
-          }
-          colSpan={colCount}
-        >
-          {empty ?? "No data"}
-        </td>
-      </tr>
-    );
-  } else if (groups) {
-    body = groups.flatMap((g) => {
-      const limit = g.collapseAfter ?? Infinity;
-      const open = openGroups.has(g.key);
-      const overflow = g.rows.length > limit;
-      const shown = overflow && !open ? g.rows.slice(0, limit) : g.rows;
-      const header = (
-        <tr key={`group-${g.key}`} className="sui-datatable__group">
-          <td colSpan={colCount} className="sui-datatable__group-cell">
-            <div className="sui-datatable__group-head">
-              <div className="sui-datatable__group-title">
-                <strong>{g.title}</strong>
-                {g.meta && (
-                  <span className="sui-datatable__group-meta">{g.meta}</span>
-                )}
-              </div>
-              {g.actions &&
-                g.actions.length > 0 &&
-                renderCellActions(g.actions)}
-            </div>
-          </td>
+  }
+  return <FlatRows rows={sortedRows} rowProps={rowProps} />;
+}
+
+function SkeletonRows<T>({
+  count,
+  columns,
+}: {
+  count: number;
+  columns: DataTableColumn<T>[];
+}) {
+  return (
+    <>
+      {Array.from({ length: count }).map((_, r) => (
+        <tr key={`skeleton-${r}`} className="sui-datatable__row">
+          {columns.map((c) => (
+            <td key={c.key} className={cellClass(c.align, c.nowrap, c.fit)}>
+              <Skeleton
+                height="0.75rem"
+                width={c.align === "right" || c.fit ? "40%" : "70%"}
+              />
+            </td>
+          ))}
         </tr>
-      );
-      const rowEls = shown.map((row) => (
+      ))}
+    </>
+  );
+}
+
+function ErrorRow({ error, colCount }: { error: ReactNode; colCount: number }) {
+  return (
+    <tr>
+      <td
+        className="sui-datatable__state sui-datatable__state--error"
+        colSpan={colCount}
+        role="alert"
+      >
+        {error}
+      </td>
+    </tr>
+  );
+}
+
+function EmptyRow({ empty, colCount }: { empty: ReactNode; colCount: number }) {
+  const isNode = typeof empty === "object" && empty !== null;
+  return (
+    <tr>
+      <td
+        className={
+          isNode
+            ? "sui-datatable__state sui-datatable__state--node"
+            : "sui-datatable__state"
+        }
+        colSpan={colCount}
+      >
+        {empty ?? "No data"}
+      </td>
+    </tr>
+  );
+}
+
+interface GroupSectionProps<T> {
+  group: DataTableGroup<T>;
+  open: boolean;
+  onToggle: () => void;
+  columns: DataTableColumn<T>[];
+  rowKey: (row: T) => string;
+  rowProps: RowPropsFn<T>;
+  collapseLabels: CollapseLabels;
+}
+
+function GroupSection<T>({
+  group,
+  open,
+  onToggle,
+  columns,
+  rowKey,
+  rowProps,
+  collapseLabels,
+}: GroupSectionProps<T>) {
+  const limit = group.collapseAfter ?? Infinity;
+  const overflow = group.rows.length > limit;
+  const shown = overflow && !open ? group.rows.slice(0, limit) : group.rows;
+  return (
+    <>
+      <GroupHeaderRow group={group} colCount={columns.length} />
+      {shown.map((row) => (
         <tr
           key={rowKey(row)}
           data-row-key={rowKey(row)}
-          {...rowProps(row, g.muted)}
+          {...rowProps(row, group.muted)}
         >
-          {effectiveColumns.map((c) => (
+          {columns.map((c) => (
             <td key={c.key} className={cellClass(c.align, c.nowrap, c.fit)}>
               {c.renderCell(row)}
             </td>
           ))}
         </tr>
-      ));
-      const moreEl = overflow ? (
-        <tr key={`more-${g.key}`}>
-          <td colSpan={colCount} className="sui-datatable__group-more">
-            <button
-              type="button"
-              className="sui-datatable__show-all"
-              onClick={() => toggleGroup(g.key)}
-            >
-              {open
-                ? collapseLabels.showLess
-                : collapseLabels.showAll(g.rows.length)}
-            </button>
-          </td>
-        </tr>
-      ) : null;
-      return moreEl ? [header, ...rowEls, moreEl] : [header, ...rowEls];
-    });
-  } else {
-    body = table.getRowModel().rows.map((row) => (
-      <tr key={row.id} data-row-key={row.id} {...rowProps(row.original)}>
-        {row.getAllCells().map((cell) => {
-          const meta = cell.column.columnDef.meta;
-          return (
-            <td
-              key={cell.id}
-              className={cellClass(
-                meta?.align ?? "left",
-                meta?.nowrap ?? false,
-                meta?.fit ?? false,
-              )}
-            >
-              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-            </td>
-          );
-        })}
-      </tr>
-    ));
-  }
+      ))}
+      <GroupToggleRow
+        overflow={overflow}
+        open={open}
+        total={group.rows.length}
+        colCount={columns.length}
+        labels={collapseLabels}
+        onToggle={onToggle}
+      />
+    </>
+  );
+}
 
+function GroupHeaderRow<T>({
+  group,
+  colCount,
+}: {
+  group: DataTableGroup<T>;
+  colCount: number;
+}) {
   return (
-    <div className={`sui-datatable sui-datatable--${variant}`}>
-      <div className="sui-datatable__frame">
-        {toolbar && <div className="sui-datatable__toolbar">{toolbar}</div>}
-        <div className="sui-datatable__scroll">
-          <table className="sui-datatable__table">
-            {caption && (
-              <caption className="sui-datatable__caption">{caption}</caption>
-            )}
-            <thead>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    const meta = header.column.columnDef.meta;
-                    const align = meta?.align ?? "left";
-                    const canSort = header.column.getCanSort();
-                    const sorted = header.column.getIsSorted();
-                    const label = header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        );
-                    return (
-                      <th
-                        key={header.id}
-                        scope="col"
-                        className={headerClass(align, meta?.fit ?? false)}
-                        aria-sort={
-                          canSort
-                            ? sorted === "asc"
-                              ? "ascending"
-                              : sorted === "desc"
-                                ? "descending"
-                                : "none"
-                            : undefined
-                        }
-                      >
-                        {canSort ? (
-                          <button
-                            type="button"
-                            className="sui-datatable__sort"
-                            onClick={header.column.getToggleSortingHandler()}
-                          >
-                            {label}
-                            <span
-                              className={`sui-datatable__sort-icon sui-datatable__sort-icon--${sorted || "none"}`}
-                            >
-                              <SortGlyph />
-                            </span>
-                          </button>
-                        ) : meta?.srHeader ? (
-                          <span className="sui-datatable__th-sr">
-                            {meta.srHeader}
-                          </span>
-                        ) : (
-                          label
-                        )}
-                      </th>
-                    );
-                  })}
-                </tr>
-              ))}
-            </thead>
-            <tbody>{body}</tbody>
-          </table>
+    <tr className="sui-datatable__group">
+      <td colSpan={colCount} className="sui-datatable__group-cell">
+        <div className="sui-datatable__group-head">
+          <div className="sui-datatable__group-title">
+            <strong>{group.title}</strong>
+            <GroupMeta meta={group.meta} />
+          </div>
+          <GroupActions actions={group.actions} />
         </div>
-      </div>
-    </div>
+      </td>
+    </tr>
+  );
+}
+
+function GroupMeta({ meta }: { meta?: string }) {
+  if (!meta) return null;
+  return <span className="sui-datatable__group-meta">{meta}</span>;
+}
+
+function GroupActions({ actions }: { actions?: CellAction[] }) {
+  if (!actions || actions.length === 0) return null;
+  return renderCellActions(actions);
+}
+
+interface GroupToggleRowProps {
+  overflow: boolean;
+  open: boolean;
+  total: number;
+  colCount: number;
+  labels: CollapseLabels;
+  onToggle: () => void;
+}
+
+function GroupToggleRow({
+  overflow,
+  open,
+  total,
+  colCount,
+  labels,
+  onToggle,
+}: GroupToggleRowProps) {
+  if (!overflow) return null;
+  return (
+    <tr>
+      <td colSpan={colCount} className="sui-datatable__group-more">
+        <button
+          type="button"
+          className="sui-datatable__show-all"
+          onClick={onToggle}
+        >
+          {open ? labels.showLess : labels.showAll(total)}
+        </button>
+      </td>
+    </tr>
+  );
+}
+
+function FlatRows<T extends RowData>({
+  rows,
+  rowProps,
+}: {
+  rows: Row<DataTableFeatures, T>[];
+  rowProps: RowPropsFn<T>;
+}) {
+  return (
+    <>
+      {rows.map((row) => (
+        <tr key={row.id} data-row-key={row.id} {...rowProps(row.original)}>
+          {row.getAllCells().map((cell) => {
+            const meta = cell.column.columnDef.meta;
+            return (
+              <td
+                key={cell.id}
+                className={cellClass(
+                  meta?.align ?? "left",
+                  meta?.nowrap ?? false,
+                  meta?.fit ?? false,
+                )}
+              >
+                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+              </td>
+            );
+          })}
+        </tr>
+      ))}
+    </>
   );
 }
 
