@@ -13,6 +13,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDAppearanceContentStream;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -20,6 +22,7 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceDictionary;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
+import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
 import org.junit.jupiter.api.BeforeEach;
@@ -228,6 +231,12 @@ class RemoveCertSignControllerTest {
 
                 page.getAnnotations().add(widget);
                 acroForm.getFields().add(sigField);
+
+                PDSignature signature = new PDSignature();
+                sigField.setValue(signature);
+                COSDictionary perms = new COSDictionary();
+                perms.setItem(COSName.DOCMDP, signature);
+                doc.getDocumentCatalog().getCOSObject().setItem(COSName.PERMS, perms);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 doc.save(baos);
                 pdfWithVisibleSig = baos.toByteArray();
@@ -255,6 +264,7 @@ class RemoveCertSignControllerTest {
                 PDAcroForm acroForm = result.getDocumentCatalog().getAcroForm();
                 assertTrue(acroForm.getFields().isEmpty());
                 assertFalse(acroForm.isSignaturesExist());
+                assertFalse(result.getDocumentCatalog().getCOSObject().containsKey(COSName.PERMS));
             }
         }
 

@@ -129,5 +129,7 @@ public class RemoveCertSignController {
         }
 
         acroForm.getCOSObject().removeItem(COSName.SIG_FLAGS);
+        // /DocMDP and /UR3 point to the signature dictionaries of the removed fields.
+        document.getDocumentCatalog().getCOSObject().removeItem(COSName.PERMS);
     }
 }
