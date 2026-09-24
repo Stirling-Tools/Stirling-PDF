@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { useBanner } from "@app/contexts/BannerContext";
 import NavigationWarningModal from "@app/components/shared/NavigationWarningModal";
 import { TitleBarSearch } from "@app/components/layout/TitleBarSearch";
+import { useViewerEngineWarmUp } from "@app/hooks/useViewerEngineWarmUp";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -13,6 +14,7 @@ interface AppLayoutProps {
  */
 export function AppLayout({ children }: AppLayoutProps) {
   const { banner } = useBanner();
+  useViewerEngineWarmUp();
 
   return (
     <>
