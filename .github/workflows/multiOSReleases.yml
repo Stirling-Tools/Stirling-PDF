@@ -743,6 +743,9 @@ jobs:
           sparse-checkout: |
             .github/scripts/verify-updater-signatures.py
             frontend/editor/src-tauri/tauri.conf.json
+            engine/pyproject.toml
+            engine/uv.lock
+            engine/.python-version
           sparse-checkout-cone-mode: false
 
       - name: Download all Tauri artifacts
