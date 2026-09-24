@@ -1,4 +1,6 @@
 import { useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { alert } from "@app/components/toast";
 import { useFileActions, useFileState } from "@app/contexts/FileContext";
 import {
   createChildStub,
@@ -8,6 +10,11 @@ import { createStirlingFile, StirlingFileStub } from "@app/types/fileContext";
 import { FileId } from "@app/types/file";
 import { PDFDocument, PDFPage } from "@app/types/pageEditor";
 import { pdfExportService } from "@app/services/pdfExportService";
+import {
+  PolicyBlockedError,
+  assertFilesNotBlocked,
+  policySourceIds,
+} from "@app/services/policyFileGuard";
 import { TrackPage, TrackWorkspace } from "@app/components/pageTracks/types";
 
 /**
@@ -77,6 +84,25 @@ function toExportDocument(
   };
 }
 
+/** Every file whose bytes a save would write out, including consumed ancestors. */
+function policyIdsForTracks(
+  workspace: TrackWorkspace,
+  trackIds: FileId[],
+  getStub: (id: FileId) => StirlingFileStub | undefined,
+): string[] {
+  const fileIds = new Set<FileId>();
+  for (const id of trackIds) {
+    const track = workspace.tracks[id];
+    if (!track) continue;
+    if (!track.isNew) fileIds.add(id);
+    track.pages.forEach((page) => fileIds.add(page.sourceFileId));
+  }
+  return [...fileIds].flatMap((id) => {
+    const stub = getStub(id);
+    return stub ? policySourceIds(stub) : [id];
+  });
+}
+
 export function useTrackSave(
   workspace: TrackWorkspace,
   changedFileIds: FileId[],
@@ -84,6 +110,7 @@ export function useTrackSave(
 ): TrackSaveHook {
   const { selectors } = useFileState();
   const { actions } = useFileActions();
+  const { t } = useTranslation();
   const onVersionedRef = useRef(options.onVersioned);
   onVersionedRef.current = options.onVersioned;
   const onMaterializedRef = useRef(options.onMaterialized);
@@ -105,8 +132,14 @@ export function useTrackSave(
 
     setSaving(true);
     setProgress({ done: 0, total: rebuilt.length });
+    const policyIds = policyIdsForTracks(
+      workspace,
+      rebuilt,
+      selectors.getStirlingFileStub,
+    );
 
     try {
+      assertFilesNotBlocked(policyIds);
       // Build every output first: a track can hold pages belonging to another
       // track's file, and committing as we go would swap those bytes out from
       // under a later build.
@@ -147,6 +180,9 @@ export function useTrackSave(
         });
         setProgress({ done: built.length, total: rebuilt.length });
       }
+
+      // A policy can fail while the outputs are being built.
+      assertFilesNotBlocked(policyIds);
 
       // Version each file-backed track in place (a new version of its own
       // file). One at a time so each lands in its own slot rather than clumping
@@ -198,13 +234,21 @@ export function useTrackSave(
 
       return true;
     } catch (error) {
-      console.error("[PageTracks] save failed", error);
+      if (error instanceof PolicyBlockedError) {
+        alert({
+          alertType: "warning",
+          title: t("policy.recoveryTitle"),
+          body: t("policy.recoveryBody"),
+        });
+      } else {
+        console.error("[PageTracks] save failed", error);
+      }
       return false;
     } finally {
       setSaving(false);
       setProgress(null);
     }
-  }, [actions, changedFileIds, saving, selectors, workspace]);
+  }, [actions, changedFileIds, saving, selectors, t, workspace]);
 
   return { saving, progress, save };
 }
