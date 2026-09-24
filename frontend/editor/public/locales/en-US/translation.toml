@@ -12385,7 +12385,7 @@ pdfTools = "PDF Tools"
 placeholder = "Choose a tool to get started"
 premiumFeature = "Premium feature:"
 searchTools = "Search tools"
-toolsHeader = "Tools"
+toolsHeader = "PDF Tools"
 viewAllTools = "View all tools"
 
 [toolPanel.fullscreen]

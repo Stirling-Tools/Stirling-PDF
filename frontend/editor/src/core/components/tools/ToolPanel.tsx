@@ -97,7 +97,7 @@ export default function ToolPanel({
               !showSearch && (
                 <div className="tool-panel__list-header">
                   <span className="tool-panel__list-title">
-                    {t("toolPanel.toolsHeader", "Tools")}
+                    {t("toolPanel.toolsHeader", "PDF Tools")}
                   </span>
                   <ActionIcon
                     variant="quiet"

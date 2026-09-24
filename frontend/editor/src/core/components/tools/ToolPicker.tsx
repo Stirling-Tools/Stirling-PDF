@@ -156,7 +156,7 @@ const ToolPicker = ({
           /* Resting state: flat list of pinned + recommended only. */
           <Box className="tool-picker__compact">
             <div style={HEADER_TEXT_STYLE}>
-              {t("toolPanel.toolsHeader", "Tools")}
+              {t("toolPanel.toolsHeader", "PDF Tools")}
             </div>
             {favoriteToolItems.length === 0 && recommendedItems.length === 0 ? (
               <NoToolsFound />
