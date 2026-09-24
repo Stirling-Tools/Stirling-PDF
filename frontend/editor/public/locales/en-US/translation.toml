@@ -6274,6 +6274,7 @@ title = "Overlay Position"
 [ownership]
 acceptInvite = "They can create an account or sign in, then accept the invitation."
 accessUpdated = "Their owner access is ready."
+accountLinkDisabled = "This server still has a cloud link, but account linking is turned off. Ask the server operator to enable account linking, then resume this transfer or unlink the server in settings."
 anotherTeam = "Already on another team?"
 billing = "The subscription, wallet, payment method and existing licenses stay in place. Billing contact details do not change automatically."
 billingDetails = "Billing details"

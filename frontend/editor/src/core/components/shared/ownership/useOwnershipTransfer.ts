@@ -130,8 +130,11 @@ export function useOwnershipTransfer({
     }
     if (canCancel) {
       void run(async () => {
-        await adapter.cancel!();
-        onClose();
+        try {
+          await adapter.cancel!();
+        } finally {
+          onClose();
+        }
       });
     } else {
       onClose();
@@ -289,7 +292,15 @@ export function useOwnershipTransfer({
     local: adapter.local,
     canSelectCloud: Boolean(adapter.selectCloud),
     canInvite: Boolean(adapter.invite),
-    canCancelRevoked: Boolean(adapter.local && adapter.cancel),
+    canCancelRecovery: Boolean(
+      adapter.local &&
+      adapter.cancel &&
+      !partial &&
+      !done &&
+      ["LINK_REVOKED", "TARGET_CHANGED", "TARGET_UNAVAILABLE"].some((reason) =>
+        error?.includes(reason),
+      ),
+    ),
     canSignIn: Boolean(adapter.signIn),
     close,
     editEmail,

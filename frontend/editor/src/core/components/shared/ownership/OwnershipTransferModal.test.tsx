@@ -244,6 +244,53 @@ describe("ownership handover", () => {
     expect(adapter.completeLocal).toHaveBeenCalledOnce();
   });
 
+  it.each(["TARGET_CHANGED", "TARGET_UNAVAILABLE"])(
+    "offers checked cancellation when a saved recipient cannot be loaded: %s",
+    async (reason) => {
+      vi.mocked(adapter.prepare).mockRejectedValue(new Error(reason));
+      show();
+      await click(
+        await screen.findByRole("button", { name: "Cancel transfer" }),
+      );
+      expect(adapter.cancel).toHaveBeenCalledOnce();
+      expect(onClose).toHaveBeenCalledOnce();
+      expect(adapter.transferCloud).not.toHaveBeenCalled();
+      expect(adapter.completeLocal).not.toHaveBeenCalled();
+    },
+  );
+
+  it("keeps checked cancellation blocked after cloud completion even without recipient status", async () => {
+    vi.mocked(adapter.prepare).mockRejectedValue(
+      new Error("TARGET_UNAVAILABLE"),
+    );
+    vi.mocked(adapter.cancel!).mockRejectedValue(
+      new Error("FINISH_LOCAL_TRANSFER"),
+    );
+    show();
+    await click(await screen.findByRole("button", { name: "Cancel transfer" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Cloud ownership has transferred",
+    );
+    expect(onClose).not.toHaveBeenCalled();
+    await click(screen.getByRole("button", { name: "Close transfer dialog" }));
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(adapter.cancel).toHaveBeenCalledOnce();
+    expect(adapter.completeLocal).not.toHaveBeenCalled();
+  });
+
+  it("explains how to recover a retained link when linking is disabled", async () => {
+    vi.mocked(adapter.prepare).mockRejectedValue(
+      new Error("ACCOUNT_LINK_DISABLED"),
+    );
+    show();
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Ask the server operator to enable account linking",
+    );
+    await click(screen.getByRole("button", { name: "Close transfer dialog" }));
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(adapter.cancel).not.toHaveBeenCalled();
+  });
+
   it("offers checked cancellation when a resumed link is revoked", async () => {
     vi.mocked(adapter.prepare).mockRejectedValue(new Error("LINK_REVOKED"));
     show();
@@ -339,7 +386,7 @@ describe("ownership handover", () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
-  it("keeps the dialog open if the server refuses cancellation", async () => {
+  it("closes the dialog after cancellation fails without completing the saved handover", async () => {
     vi.mocked(adapter.cancel!).mockRejectedValue(
       new Error("Cloud state unknown"),
     );
@@ -347,10 +394,9 @@ describe("ownership handover", () => {
     await click(
       await screen.findByRole("button", { name: "Close transfer dialog" }),
     );
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "We couldn't complete this step",
-    );
-    expect(onClose).not.toHaveBeenCalled();
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+    expect(adapter.completeLocal).not.toHaveBeenCalled();
+    expect(onTransferred).not.toHaveBeenCalled();
   });
 
   it("preserves the pending transfer when cloud ownership has already moved", async () => {
@@ -438,7 +484,9 @@ describe("ownership handover", () => {
     show();
     fireEvent.change(
       await screen.findByRole("combobox", { name: "Stirling account" }),
-      { target: { value: "joined@example.com" } },
+      {
+        target: { value: "joined@example.com" },
+      },
     );
     await click(screen.getByRole("button", { name: "Send invitation" }));
     expect(await screen.findByRole("checkbox")).not.toBeChecked();

@@ -6,6 +6,11 @@ export function ownershipErrorText(
   error: string | null,
   partial: boolean,
 ) {
+  if (error?.includes("ACCOUNT_LINK_DISABLED"))
+    return t(
+      "ownership.accountLinkDisabled",
+      "This server still has a cloud link, but account linking is turned off. Ask the server operator to enable account linking, then resume this transfer or unlink the server in settings.",
+    );
   if (error?.includes("LINK_REVOKED"))
     return t(
       "ownership.linkRevoked",

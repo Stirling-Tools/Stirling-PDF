@@ -26,7 +26,7 @@ export function OwnershipTransferActions({
   if (done)
     return <Button onClick={flow.close}>{t("common.done", "Done")}</Button>;
   if (startFromInstance) return null;
-  if (error?.includes("LINK_REVOKED") && flow.canCancelRevoked)
+  if (flow.canCancelRecovery)
     return (
       <Button disabled={busy} onClick={flow.cancel}>
         {t("ownership.cancel", "Cancel transfer")}

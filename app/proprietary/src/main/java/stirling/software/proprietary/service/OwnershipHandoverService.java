@@ -61,12 +61,12 @@ public class OwnershipHandoverService {
     @Transactional
     public Status prepare(Long targetId, Selection selection, Authentication auth) {
         OrgOwner owner = requireOwner(auth);
-        User target = target(targetId);
-        if (Objects.equals(targetId, owner.getOwnerUserId())) throw conflict("CHOOSE_ANOTHER_USER");
         if (owner.getHandoverTargetId() != null
                 && !Objects.equals(owner.getHandoverTargetId(), targetId)) {
             throw conflict("HANDOVER_IN_PROGRESS");
         }
+        User target = target(targetId);
+        if (Objects.equals(targetId, owner.getOwnerUserId())) throw conflict("CHOOSE_ANOTHER_USER");
         if (owner.getHandoverTargetId() == null) {
             var credential = credentials.findCredential();
             String cloudEmail = null;
@@ -214,6 +214,7 @@ public class OwnershipHandoverService {
      */
     public void validateCompletion(OrgOwner owner, Long targetId) {
         boolean linked = credentials.findCredential().isPresent();
+        if (linked) requireClient();
         if (!linked && owner.getHandoverTargetId() == null) return;
         if (!Objects.equals(owner.getHandoverTargetId(), targetId))
             throw conflict("PREPARE_HANDOVER_FIRST");
@@ -278,9 +279,7 @@ public class OwnershipHandoverService {
     }
 
     private CloudOwnershipCandidates candidates(DeviceCredential credential) {
-        AccountLinkClient upstream = client.getIfAvailable();
-        if (upstream == null)
-            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "CLOUD_UNAVAILABLE");
+        AccountLinkClient upstream = requireClient();
         try {
             return upstream.ownershipCandidates(credential);
         } catch (IOException e) {
@@ -360,9 +359,7 @@ public class OwnershipHandoverService {
             Long leader,
             Long targetUserId) {
         if (email == null || email.isBlank()) throw conflict("EMAIL_REQUIRED");
-        AccountLinkClient upstream = client.getIfAvailable();
-        if (upstream == null)
-            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "CLOUD_UNAVAILABLE");
+        AccountLinkClient upstream = requireClient();
         try {
             CloudOwnershipStatus status =
                     upstream.ownership(credential, email, bearer, action, leader, targetUserId);
@@ -391,6 +388,12 @@ public class OwnershipHandoverService {
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "CLOUD_UNAVAILABLE");
         }
+    }
+
+    private AccountLinkClient requireClient() {
+        AccountLinkClient upstream = client.getIfAvailable();
+        if (upstream == null) throw conflict("ACCOUNT_LINK_DISABLED");
+        return upstream;
     }
 
     private ResponseStatusException conflict(String reason) {

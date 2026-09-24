@@ -27,6 +27,7 @@ class OwnershipHandoverServiceTest {
     private final UserRepository users = mock(UserRepository.class);
     private final DeviceCredentialRepository credentials = mock(DeviceCredentialRepository.class);
     private final AccountLinkClient cloud = mock(AccountLinkClient.class);
+    private ObjectProvider<AccountLinkClient> provider;
     private OwnershipHandoverService service;
     private OrgOwner owner;
     private User successor;
@@ -36,7 +37,7 @@ class OwnershipHandoverServiceTest {
     @BeforeEach
     @SuppressWarnings("unchecked")
     void setup() {
-        ObjectProvider<AccountLinkClient> provider = mock(ObjectProvider.class);
+        provider = mock(ObjectProvider.class);
         when(provider.getIfAvailable()).thenReturn(cloud);
         service = new OwnershipHandoverService(owners, users, credentials, provider);
         owner = new OrgOwner();
@@ -62,6 +63,75 @@ class OwnershipHandoverServiceTest {
         credential.setDeviceId("device");
         credential.setDeviceSecret("secret");
         credential.setTeamId(9L);
+    }
+
+    @Test
+    void disabledLinkingWithCredentialHasAnExplicitRecoveryReason() throws IOException {
+        when(credentials.findCredential()).thenReturn(Optional.of(credential));
+        when(provider.getIfAvailable()).thenReturn(null);
+        assertEquals(
+                "ACCOUNT_LINK_DISABLED",
+                assertThrows(ResponseStatusException.class, () -> service.prepare(2L, auth))
+                        .getReason());
+        assertEquals(
+                "ACCOUNT_LINK_DISABLED",
+                assertThrows(
+                                ResponseStatusException.class,
+                                () -> service.validateCompletion(owner, 2L))
+                        .getReason());
+        assertNull(owner.getHandoverTargetId());
+        verifyNoInteractions(cloud);
+        verify(credentials, never()).deleteAll();
+        when(provider.getIfAvailable()).thenReturn(cloud);
+        linked(State.READY, false);
+        assertNotNull(service.prepare(2L, auth).candidates());
+    }
+
+    @Test
+    void disabledLinkingWithoutCredentialStillAllowsLocalTransfer() {
+        when(provider.getIfAvailable()).thenReturn(null);
+        assertDoesNotThrow(() -> service.validateCompletion(owner, 2L));
+        assertNull(service.prepare(2L, auth).cloud());
+        assertDoesNotThrow(() -> service.validateCompletion(owner, 2L));
+        service.cancel(auth);
+        assertNull(owner.getHandoverTargetId());
+    }
+
+    @Test
+    void anotherPendingRecipientIsReportedBeforeValidatingAMissingTarget() {
+        owner.setHandoverTargetId(2L);
+        assertEquals(
+                "HANDOVER_IN_PROGRESS",
+                assertThrows(ResponseStatusException.class, () -> service.prepare(99L, auth))
+                        .getReason());
+        verify(users, never()).findById(99L);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "deleted,TARGET_UNAVAILABLE",
+        "disabled,TARGET_UNAVAILABLE",
+        "renamed,TARGET_CHANGED",
+        "email,TARGET_CHANGED"
+    })
+    void changedRecipientCanStillBeCancelledBeforeCloudCommit(String change, String reason)
+            throws IOException {
+        linked(State.READY, false);
+        prepareSelected();
+        switch (change) {
+            case "deleted" -> when(users.findById(2L)).thenReturn(Optional.empty());
+            case "disabled" -> successor.setEnabled(false);
+            case "renamed" -> successor.setUsername("changed");
+            case "email" -> successor.setEmail("changed@example.com");
+            default -> throw new AssertionError(change);
+        }
+        assertEquals(
+                reason,
+                assertThrows(ResponseStatusException.class, () -> service.prepare(2L, auth))
+                        .getReason());
+        service.cancel(auth);
+        assertNull(owner.getHandoverTargetId());
+        assertEquals(1L, owner.getOwnerUserId());
     }
 
     private CloudOwnershipStatus state(State state, boolean paid) {

@@ -67,9 +67,7 @@ public class OrgOwnerService {
 
     public boolean isCurrentUser(Authentication authentication) {
         if (saas() || authentication == null || !authentication.isAuthenticated()) return false;
-        return users.findByUsernameIgnoreCase(authentication.getName())
-                .filter(u -> isOwner(u.getId()))
-                .isPresent();
+        return authenticatedUserId(authentication).filter(this::isOwner).isPresent();
     }
 
     /**
@@ -93,10 +91,18 @@ public class OrgOwnerService {
         if (saas()
                 || authentication == null
                 || !authentication.isAuthenticated()
-                || !owner.getUsername().equalsIgnoreCase(authentication.getName())) {
+                || !authenticatedUserId(authentication).filter(owner.getId()::equals).isPresent()) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "orgOwnerRequired");
         }
         return row;
+    }
+
+    private Optional<Long> authenticatedUserId(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) return Optional.empty();
+        if (authentication.getPrincipal() instanceof User principal)
+            return Optional.ofNullable(principal.getId());
+        if (authentication.getName() == null) return Optional.empty();
+        return users.findByUsername(authentication.getName()).map(User::getId);
     }
 
     private Optional<OrgOwner> lockedOwner() {

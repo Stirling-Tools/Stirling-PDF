@@ -288,6 +288,47 @@ class OrgOwnerServiceTest {
     }
 
     @Test
+    void caseVariantAdminCannotLinkUnlinkOrAppearAsOwner() {
+        User owner = user("alice", Role.ADMIN.getRoleId(), false, true);
+        User other = user("Alice", Role.ADMIN.getRoleId(), false, true);
+        owners.resolveOwner();
+        var hint = new ConnectService.CallbackHint(null, null, "https://pdf.example.com");
+        for (var authentication :
+                List.of(
+                        auth(other),
+                        new UsernamePasswordAuthenticationToken(
+                                other, "", other.getAuthorities()))) {
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            assertFalse(owners.isCurrentUser(authentication));
+            assertEquals(
+                    403,
+                    assertThrows(ResponseStatusException.class, () -> connect.start("server", hint))
+                            .getStatusCode()
+                            .value());
+            assertEquals(
+                    403,
+                    assertThrows(ResponseStatusException.class, () -> accountLink.unlink())
+                            .getStatusCode()
+                            .value());
+        }
+        assertTrue(owners.isCurrentUser(auth(owner)));
+        User principal = new User();
+        principal.setId(owner.getId());
+        principal.setUsername("ALICE");
+        var authentication =
+                new UsernamePasswordAuthenticationToken(principal, "", owner.getAuthorities());
+        assertTrue(owners.isCurrentUser(authentication));
+        new TransactionTemplate(transactions)
+                .executeWithoutResult(
+                        s ->
+                                assertEquals(
+                                        owner.getId(),
+                                        owners.requireCurrentOwner(authentication)
+                                                .getOwnerUserId()));
+        verifyNoInteractions(cloud);
+    }
+
+    @Test
     void linkAuthorityMovesWithOwnershipAndOldHandshakesCannotComplete() throws Exception {
         User first = user("first", Role.ADMIN.getRoleId(), false, true);
         User second = user("second", Role.USER.getRoleId(), false, true);

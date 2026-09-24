@@ -29,7 +29,7 @@ vi.mock("@core/components/settings/useSettingsNav", () => ({
       {
         id: "workspace",
         title: "Workspace",
-        items: [{ key: "adminPlan", label: "Plan", component: null }],
+        items: [],
       },
       {
         id: "monitoring",

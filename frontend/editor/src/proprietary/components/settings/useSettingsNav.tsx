@@ -54,11 +54,11 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
 
   const sections = useMemo(
     () =>
-      mergeSettingsGroups(base.sections, portalSections, [
-        "plan",
-        "adminPlan",
-        ...portalSupersededSectionKeys(portalSections),
-      ]),
+      mergeSettingsGroups(
+        base.sections,
+        portalSections,
+        portalSupersededSectionKeys(portalSections),
+      ),
     [base.sections, portalSections],
   );
 
