@@ -301,6 +301,15 @@ jobs:
             }
           }
 
+          # Tauri's signtool lookup has no ARM64 case ("SignTool not found"), so pass it explicitly
+          if ($env:RUNNER_ARCH -eq "ARM64") {
+            $signtool = (Get-Command signtool.exe -ErrorAction SilentlyContinue).Source
+            if (-not $signtool) { $signtool = Join-Path $env:RUNNER_TOOL_CACHE "signtool/latest/arm64/signtool.exe" }
+            if (-not (Test-Path $signtool)) { throw "signtool.exe not found for ARM64 signing" }
+            Write-Host "Using signtool: $signtool"
+            echo "TAURI_WINDOWS_SIGNTOOL_PATH=$signtool" >> $env:GITHUB_ENV
+          }
+
       - name: Import Apple Developer Certificate
         if: env.SIGN_BUNDLE == 'true' && matrix.platform == 'macos-15'
         env:
