@@ -4189,16 +4189,11 @@ fileName = "File Name"
 title = "Database Import/Export"
 
 [defaultApp]
-setDefault = "Set Default"
 title = "Set as Default PDF App"
 
 [defaultApp.error]
 message = "Failed to set default PDF handler"
 title = "Error"
-
-[defaultApp.prompt]
-dontRemind = "Don't remind me again"
-message = "Make Stirling PDF your default application for opening PDF files."
 
 [defaultApp.settingsOpened]
 message = "In Windows Settings, search for 'PDF' and select Stirling PDF as your default app"
@@ -6124,9 +6119,9 @@ title = "Download Stirling for Desktop"
 description = "Collaborate with your team"
 title = "Invite team members"
 
-[onboarding.checklist.shareAnalytics]
-description = "Help improve Stirling"
-title = "Share anonymous usage data"
+[onboarding.checklist.setDefaultApp]
+description = "Open PDF files in Stirling PDF"
+title = "Make Stirling your default"
 
 [onboarding.checklist.takeTour]
 description = "See how Stirling works in a quick walkthrough"
@@ -10443,31 +10438,6 @@ unlimited = "{{used}} seats · Unlimited"
 [printFile]
 title = "Print File"
 
-[processingFolders.downloads]
-approve = "Process my Downloads"
-cancelSweep = "Cancel"
-capped = "You have {{found}} PDFs; the first {{limit}} are processed now and the rest follow."
-close = "Done"
-explain_one = "Stirling can classify the {{count}} PDF already in your Downloads folder and open the results here."
-explain_other = "Stirling can classify the {{count}} PDFs already in your Downloads folder and open the results here."
-failed = "Could not set that up. Your files have not been changed."
-finished_one = "Classified {{count}} file and opened {{opened}} of them here, ready to work on."
-finished_other = "Classified {{count}} files and opened {{opened}} of them here, ready to work on."
-nothingNew_one = "Nothing new to process - this {{count}} file has already been through."
-nothingNew_other = "Nothing new to process - these {{count}} files have already been through."
-notModified = "Your files in Downloads are not changed - Stirling reads them and opens them here."
-notNow = "Not now"
-progressCounts = "of {{total}} processed"
-someFailed_one = "{{count}} could not be processed and was left untouched."
-someFailed_other = "{{count}} could not be processed and were left untouched."
-stillRunning = "Some files are still being processed in the background."
-title = "Organize your Downloads?"
-trigger_one = "Process {{count}} PDF in Downloads"
-trigger_other = "Process {{count}} PDFs in Downloads"
-typesFound_one = "{{count}} document type found"
-typesFound_other = "{{count}} document types found"
-working = "Processing ..."
-
 [processingFolders.setup]
 addFolder = "Add folder"
 advancedSteps = "This folder uses a processing setup this wizard cannot edit. Its saved steps have not been changed."
@@ -11366,8 +11336,6 @@ defaultPdfEditor = "Default PDF editor"
 defaultPdfEditorActive = "Stirling PDF is your default PDF editor"
 defaultPdfEditorChecking = "Checking..."
 defaultPdfEditorInactive = "Another application is set as default"
-defaultPdfEditorRemind = "Remind me to set as default"
-defaultPdfEditorRemindDescription = "Show a banner when Stirling PDF is not your default PDF application."
 defaultPdfEditorSet = "Already Default"
 defaultStartupView = "Default view on launch"
 defaultStartupViewDescription = "Choose which view is active when the app starts"

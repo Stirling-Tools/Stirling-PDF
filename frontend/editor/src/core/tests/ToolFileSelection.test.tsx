@@ -255,7 +255,22 @@ describe("tool file selection", () => {
     );
   });
 
-  test("Merge requires two eligible PDFs and follows encryption changes", async () => {
+  test("Merge counts an image as an eligible input", async () => {
+    render(
+      <MantineProvider>
+        <Merge />
+      </MantineProvider>,
+    );
+    expect(
+      await screen.findByText(/2 files$/, { selector: "p" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Merge PDFs/ })).toBeEnabled();
+  });
+
+  test("Merge requires two eligible files and follows encryption changes", async () => {
+    // Images are eligible merge inputs now, so the threshold case needs a lone PDF.
+    workspace.files = workspace.files.slice(0, 1);
+    workspace.fileStubs = workspace.fileStubs.slice(0, 1);
     const renderMerge = () => (
       <MantineProvider>
         <Merge />
