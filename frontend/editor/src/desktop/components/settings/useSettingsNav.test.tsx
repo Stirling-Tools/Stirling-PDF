@@ -6,6 +6,8 @@ const state = vi.hoisted(() => ({
   mode: "saas",
   authenticated: true,
   roster: false,
+  owner: false,
+  loading: false,
 }));
 vi.mock("@proprietary/components/shared/config/configNavSections", () => ({
   useConfigNavSections: () => [
@@ -55,7 +57,11 @@ vi.mock("@app/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({ config: { isAdmin: true } }),
 }));
 vi.mock("@app/auth/context", () => ({
-  useAuth: () => ({ isAdmin: true, user: { orgOwner: false }, loading: false }),
+  useAuth: () => ({
+    isAdmin: true,
+    user: { orgOwner: state.owner },
+    loading: state.loading,
+  }),
 }));
 vi.mock("@app/hooks/usePortalAccess", () => ({
   usePortalAccessState: () => ({ granted: false, settled: true }),
@@ -75,6 +81,8 @@ beforeEach(() => {
   state.mode = "saas";
   state.authenticated = true;
   state.roster = false;
+  state.owner = false;
+  state.loading = false;
 });
 
 it("waits for the connection before resolving an old billing bookmark", async () => {
@@ -128,3 +136,36 @@ it.each([
     expect(result.current.aliases?.plan).toBeUndefined();
   },
 );
+
+it("offers self-hosted billing only to the current organisation owner", async () => {
+  state.mode = "selfhosted";
+  state.owner = true;
+  const { result, rerender } = renderHook(() => useSettingsNav(vi.fn()));
+  await waitFor(() => expect(result.current.pending).toBe(false));
+  const billing = () =>
+    result.current.sections
+      .flatMap((group) => group.items)
+      .some((item) => item.key === "billing");
+  expect(billing()).toBe(true);
+  expect(result.current.aliases?.plan).toBe("billing");
+  state.loading = true;
+  rerender();
+  expect(billing()).toBe(false);
+  state.loading = false;
+  state.owner = false;
+  rerender();
+  expect(billing()).toBe(false);
+  expect(result.current.aliases?.plan).toBeUndefined();
+});
+
+it("does not offer billing to a local-mode owner", async () => {
+  state.mode = "local";
+  state.owner = true;
+  const { result } = renderHook(() => useSettingsNav(vi.fn()));
+  await waitFor(() => expect(result.current.pending).toBe(false));
+  expect(
+    result.current.sections
+      .flatMap((group) => group.items)
+      .some((item) => item.key === "billing"),
+  ).toBe(false);
+});

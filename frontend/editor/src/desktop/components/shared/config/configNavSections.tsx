@@ -8,6 +8,7 @@ import { createCloudTeamNavItem } from "@app/components/shared/config/cloudConfi
 import { BillingSettingsSection } from "@app/components/settings/BillingSettingsSection";
 import { connectionModeService } from "@app/services/connectionModeService";
 import { authService } from "@app/services/authService";
+import { useAuth } from "@app/auth/context";
 
 export type {
   ConfigNavSection,
@@ -25,6 +26,8 @@ export const useConfigNavSections = (
   showSettingsWhenNoLogin: boolean = true,
 ): ConfigNavSection[] => {
   const { t } = useTranslation();
+  const { isAdmin: authenticatedAdmin, user, loading } = useAuth();
+  const isOwner = authenticatedAdmin && !loading && user?.orgOwner === true;
 
   const [connectionMode, setConnectionMode] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -114,7 +117,10 @@ export const useConfigNavSections = (
   // Connection Mode always sits immediately after Preferences
   result.push(connectionModeSection);
 
-  if (isSaasMode && isAuthenticated) {
+  if (
+    isAuthenticated &&
+    (isSaasMode || (connectionMode === "selfhosted" && isOwner))
+  ) {
     result.push({
       id: "workspace",
       title: t("settings.workspace.title", "Workspace"),
@@ -123,10 +129,14 @@ export const useConfigNavSections = (
           key: "billing",
           label: t("portal.nav.usage", "Usage & Billing"),
           icon: "credit-card",
-          component: <BillingSettingsSection />,
+          component: (
+            <BillingSettingsSection mode={isSaasMode ? "saas" : "selfhosted"} />
+          ),
         },
       ],
     });
+  }
+  if (isSaasMode && isAuthenticated) {
     result.push({
       title: t("settings.team.title", "Team"),
       items: [createCloudTeamNavItem(t)],

@@ -4200,7 +4200,8 @@ title = "Default App Set"
 [desktopBilling]
 description = "Manage usage and billing in your browser. Sign in with the same Stirling account you use here."
 open = "Open Usage & Billing in browser"
-openFailed = "Could not open your browser. Try again, or open Usage & Billing on the Stirling website."
+openFailed = "Could not open Usage & Billing. Check your connection and try again."
+selfHostedDescription = "Manage usage and billing on your connected server in your browser. Sign in with your server owner account."
 
 [desktopFileLink]
 saveAs = "Save as…"
