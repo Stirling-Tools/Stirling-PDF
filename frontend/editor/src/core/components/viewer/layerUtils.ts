@@ -33,6 +33,10 @@ export async function documentHasLayers(
   const byIdentity = layerAnswers.get(file);
   if (byIdentity) return byIdentity;
   const key = await documentFileKey(file);
+  // A bare Blob has no key, so a concurrent caller may have answered while
+  // this one awaited the fingerprint; reuse it instead of parsing again.
+  const raced = layerAnswers.get(file);
+  if (raced) return raced;
   const cached = key ? layerAnswersByFileKey.get(key) : undefined;
   if (cached) return cached;
 
