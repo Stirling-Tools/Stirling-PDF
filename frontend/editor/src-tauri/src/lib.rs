@@ -4,6 +4,8 @@ mod utils;
 pub mod commands;
 mod state;
 mod directory_drop;
+#[cfg(target_os = "windows")]
+mod redirection_guard;
 
 use commands::{
     add_opened_file,
@@ -92,6 +94,11 @@ fn is_app_url(url: &tauri::Url) -> bool {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+  #[cfg(target_os = "windows")]
+  if redirection_guard::relaunch_if_guarded() {
+    std::process::exit(0);
+  }
+
   // WebKitGTK's DMA-BUF renderer crashes the web process on NVIDIA and some
   // Wayland stacks (blank window, app dying on tool switch). Opt out unless overridden.
   #[cfg(target_os = "linux")]
