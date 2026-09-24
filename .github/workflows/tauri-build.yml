@@ -174,10 +174,15 @@ jobs:
           & $gnuTar --version
           Add-Content -Path $env:GITHUB_PATH -Value $gitUsrBin
 
-      - name: Verify tar
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: tar --version
+          New-Item -ItemType Directory -Force -Path $env:NPM_CACHE | Out-Null
+
+      - name: Use GNU tar on macOS
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          brew install gnu-tar
+          echo "$(brew --prefix gnu-tar)/libexec/gnubin" >> "$GITHUB_PATH"
+          tar --version
 
       - name: Restore npm cache sftp
         id: cache-npm
