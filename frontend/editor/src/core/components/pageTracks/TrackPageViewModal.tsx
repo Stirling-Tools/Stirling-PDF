@@ -7,7 +7,12 @@ import { Tooltip } from "@app/components/shared/Tooltip";
 import { useFileSelectors } from "@app/contexts/FileContext";
 import { thumbnailGenerationService } from "@app/services/thumbnailGenerationService";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
-import { TrackPage, sourcePageKey } from "@app/components/pageTracks/types";
+import {
+  TrackPage,
+  isSourcePage,
+  sourcePageKey,
+} from "@app/components/pageTracks/types";
+import { BlankPagePreview } from "@app/components/pageTracks/BlankPagePreview";
 import { TrackThumbnailStore } from "@app/components/pageTracks/hooks/useTrackThumbnails";
 import styles from "@app/components/pageTracks/PageTracks.module.css";
 
@@ -50,7 +55,7 @@ export function TrackPageViewModal({
   const hasNext = index < total - 1;
 
   useEffect(() => {
-    if (!page) return;
+    if (!page || !isSourcePage(page)) return;
     let cancelled = false;
     setHiRes(null);
     setFailed(false);
@@ -96,7 +101,9 @@ export function TrackPageViewModal({
 
   if (!page) return null;
 
-  const src = hiRes ?? thumbnails.get(sourcePageKey(page));
+  const src = isSourcePage(page)
+    ? (hiRes ?? thumbnails.get(sourcePageKey(page)))
+    : null;
   const quarterTurn = page.rotation === 90 || page.rotation === 270;
   const prevLabel = t("pageTracks.prevPage", "Previous page");
   const nextLabel = t("pageTracks.nextPage", "Next page");
@@ -126,7 +133,9 @@ export function TrackPageViewModal({
         </Tooltip>
 
         <div className={styles.pageViewStage}>
-          {src ? (
+          {page.kind === "blank" ? (
+            <BlankPagePreview page={page} placement="view" />
+          ) : src ? (
             <PrivateContent>
               <img
                 className={[

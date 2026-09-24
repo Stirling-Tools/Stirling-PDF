@@ -313,6 +313,12 @@ export default function PageTracks() {
     [numberedPages, longestTrack, selectedPageIds, selectNumbersEverywhere],
   );
 
+  const insertBlank = useCallback(
+    (fileId: FileId, beforePageId: string | null) =>
+      dispatch({ type: "insertBlank", fileId, beforePageId }),
+    [dispatch],
+  );
+
   const shiftPage = useCallback(
     (pageId: string, by: -1 | 1) => dispatch({ type: "shiftPage", pageId, by }),
     [dispatch],
@@ -830,6 +836,7 @@ export default function PageTracks() {
                   onOpenInViewer={openInViewer}
                   onClearSelection={clearSelection}
                   onSplit={splitTrack}
+                  onInsertBlank={insertBlank}
                   onRotate={rotatePages}
                   onDelete={deletePages}
                   onShiftPage={shiftPage}

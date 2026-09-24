@@ -99,7 +99,7 @@
 
 .lane {
   position: relative;
-  padding: 0.75rem;
+  padding: 0.75rem var(--pt-lane-pad-x);
   overflow-x: auto;
   overflow-y: hidden;
 }
@@ -213,6 +213,57 @@
   box-shadow: var(--shadow-md);
 }
 
+/*
+ * A blank page, fitted to its box at its own proportions: whichever of width
+ * or height binds first. A quarter turn is applied after layout, so it fits
+ * the pre-rotation box to the opposite axes, like .thumbQuarterTurn.
+ */
+.blankPage {
+  width: min(var(--blank-bw), calc(var(--blank-bh) * var(--blank-ar)));
+  height: min(var(--blank-bh), calc(var(--blank-bw) / var(--blank-ar)));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem;
+  background: var(--c-surface);
+  box-shadow: var(--shadow-md);
+  color: var(--c-text-subtle);
+  font-size: calc(0.75rem * var(--pt-zoom, 1));
+  transition:
+    transform 0.2s ease-in-out,
+    box-shadow 0.15s ease;
+}
+
+.blankInTile {
+  --blank-bw: var(--pt-tile-w);
+  --blank-bh: var(--pt-tile-h);
+}
+
+.blankInTile.blankQuarterTurn {
+  --blank-bw: var(--pt-tile-h);
+  --blank-bh: var(--pt-tile-w);
+}
+
+.blankInView {
+  --blank-bw: 80vw;
+  --blank-bh: 82vh;
+}
+
+.blankInView.blankQuarterTurn {
+  --blank-bw: 82vh;
+  --blank-bh: 80vw;
+}
+
+.thumbBox:hover .blankPage {
+  box-shadow: var(--shadow-lg);
+}
+
+.tileSelected .blankPage {
+  box-shadow:
+    0 0 0 2px var(--c-primary),
+    0 0 0 5px color-mix(in srgb, var(--c-primary) 22%, transparent);
+}
+
 /* Just the page number as plain centred text below the page, scaled with zoom. */
 .pageNumber {
   height: var(--pt-tile-footer-h);
@@ -279,29 +330,24 @@
   pointer-events: auto;
 }
 
-/* Split affordance. A lane-level element (not attached to a tile), placed by
-   inline left/top/height so it sits in the GAP before a page — the same line
-   the drag insertion marker uses. A full-height line centred in the gap with a
-   small scissors chip on it; revealed by hovering the gap. */
-.splitHandle {
+/* The controls in a gap between pages. A lane-level element (not attached to
+   a tile), placed by inline left/top/width so it covers the GAP: the same line
+   the drag insertion marker uses, with the gap's actions stacked on it.
+   Revealed by hovering or focusing the gap. */
+.gapHandle {
   position: absolute;
-  width: 0.875rem;
   z-index: 5;
   transform: translateX(-50%);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--c-primary);
-  cursor: pointer;
+  gap: calc(0.375rem * var(--pt-zoom, 1));
   opacity: 0;
   transition: opacity 0.12s ease;
 }
 
-/* The insertion line itself, centred in the strip, matching the drop marker. */
-.splitHandle::before {
+.gapHandle::before {
   content: "";
   position: absolute;
   left: 50%;
@@ -313,20 +359,33 @@
   background: var(--c-primary);
 }
 
-/* The scissors chip riding on the line. */
-.splitHandle svg {
-  position: relative;
-  z-index: 1;
-  padding: 0.1875rem;
-  border-radius: 999px;
-  background: var(--c-surface);
-  border: 1px solid var(--c-primary);
-  box-shadow: var(--shadow-sm);
+.gapHandle:hover,
+.gapHandle:focus-within {
+  opacity: 1;
 }
 
-/* Hovering the gap strip reveals the split control. */
-.splitHandle:hover {
-  opacity: 1;
+.gapAction {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(1.5rem * var(--pt-zoom, 1));
+  height: calc(1.5rem * var(--pt-zoom, 1));
+  padding: 0;
+  border: 1px solid var(--c-primary);
+  border-radius: 999px;
+  background: var(--c-surface);
+  color: var(--c-primary);
+  box-shadow: var(--shadow-sm);
+  font-size: calc(0.875rem * var(--pt-zoom, 1));
+  cursor: pointer;
+}
+
+.gapAction:hover,
+.gapAction:focus-visible {
+  background: var(--c-primary);
+  color: var(--c-text-on-primary);
 }
 
 /*

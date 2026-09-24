@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { FileId } from "@app/types/file";
 import {
   TrackSource,
+  isSourcePage,
   sourcePageKey,
   trackSignature,
 } from "@app/components/pageTracks/types";
@@ -21,11 +22,16 @@ const source = (
   pageCount: number,
   rotations: number[] = [],
   contentKey = "v1",
+  sizes: { width: number; height: number }[] = [],
 ): TrackSource => ({
   fileId,
   name: `${fileId}.pdf`,
   pageCount,
   rotations: Array.from({ length: pageCount }, (_, i) => rotations[i] ?? 0),
+  sizes: Array.from(
+    { length: pageCount },
+    (_, i) => sizes[i] ?? { width: 0, height: 0 },
+  ),
   contentKey,
 });
 
@@ -36,7 +42,9 @@ const pagesOf = (state: TrackEditorState, fileId: FileId) =>
   state.present.tracks[fileId]?.pages ?? [];
 
 const ids = (state: TrackEditorState, fileId: FileId) =>
-  pagesOf(state, fileId).map((p) => `${p.sourceFileId}:${p.sourcePageNumber}`);
+  pagesOf(state, fileId).map((p) =>
+    isSourcePage(p) ? `${p.sourceFileId}:${p.sourcePageNumber}` : "blank",
+  );
 
 /** Two files: A with 3 pages (middle one pre-rotated 90), B with 2. */
 function twoTracks(): TrackEditorState {
@@ -89,7 +97,9 @@ describe("trackEditorReducer sync", () => {
       type: "delete",
       pageIds: [pagesOf(state, A)[0].id],
     });
-    const staleKey = sourcePageKey(pagesOf(state, A)[0]);
+    const keysOf = (current: TrackEditorState) =>
+      pagesOf(current, A).filter(isSourcePage).map(sourcePageKey);
+    const [staleKey] = keysOf(state);
 
     state = sync(state, [source(A, 3, [0, 90, 0], "v2"), source(B, 2)]);
 
@@ -97,7 +107,7 @@ describe("trackEditorReducer sync", () => {
     expect(changedTrackIds(state)).toEqual([]);
     expect(state.past).toEqual([]);
     // A thumbnail cached for the old bytes must not be served for the new ones.
-    expect(pagesOf(state, A).map(sourcePageKey)).not.toContain(staleKey);
+    expect(keysOf(state)).not.toContain(staleKey);
   });
 
   it("voids the edits of every track sharing pages with a replaced file", () => {
@@ -365,6 +375,92 @@ describe("trackEditorReducer revert", () => {
     expect(state.present.order).toEqual([A, B]);
     expect(pagesOf(state, A)).toHaveLength(3);
     expect(changedTrackIds(state)).toEqual([]);
+  });
+});
+
+describe("trackEditorReducer insertBlank", () => {
+  const LETTER = { width: 612, height: 792 };
+  const LANDSCAPE = { width: 842, height: 595 };
+
+  it("sizes and turns a blank page like the page before it", () => {
+    let state = sync(initialTrackEditorState, [
+      source(A, 2, [0, 90], "v1", [LETTER, LANDSCAPE]),
+    ]);
+    const [, a2] = pagesOf(state, A);
+    state = trackEditorReducer(state, {
+      type: "insertBlank",
+      fileId: A,
+      beforePageId: null,
+    });
+
+    expect(ids(state, A)).toEqual([`${A}:1`, `${A}:2`, "blank"]);
+    const blank = pagesOf(state, A)[2];
+    expect(blank).toMatchObject({ kind: "blank", rotation: 90, ...LANDSCAPE });
+    expect(blank.id).not.toBe(a2.id);
+    expect(changedTrackIds(state)).toEqual([A]);
+
+    state = trackEditorReducer(state, { type: "undo" });
+    expect(ids(state, A)).toEqual([`${A}:1`, `${A}:2`]);
+  });
+
+  it("copies the page after it when inserted at the start", () => {
+    let state = sync(initialTrackEditorState, [
+      source(A, 2, [0, 0], "v1", [LETTER, LANDSCAPE]),
+    ]);
+    state = trackEditorReducer(state, {
+      type: "insertBlank",
+      fileId: A,
+      beforePageId: pagesOf(state, A)[0].id,
+    });
+
+    expect(ids(state, A)).toEqual(["blank", `${A}:1`, `${A}:2`]);
+    expect(pagesOf(state, A)[0]).toMatchObject(LETTER);
+  });
+
+  it("falls back to A4 when the neighbour's size is unknown", () => {
+    let state = twoTracks();
+    state = trackEditorReducer(state, {
+      type: "insertBlank",
+      fileId: A,
+      beforePageId: pagesOf(state, A)[1].id,
+    });
+
+    const blank = pagesOf(state, A)[1];
+    expect(blank.width).toBeCloseTo(595.28);
+    expect(blank.height).toBeCloseTo(841.89);
+  });
+
+  it("gives every blank page its own id", () => {
+    let state = twoTracks();
+    for (let i = 0; i < 2; i++) {
+      state = trackEditorReducer(state, {
+        type: "insertBlank",
+        fileId: A,
+        beforePageId: null,
+      });
+    }
+    const blanks = pagesOf(state, A).filter((p) => !isSourcePage(p));
+    expect(new Set(blanks.map((p) => p.id)).size).toBe(2);
+  });
+
+  it("survives its neighbour's file closing", () => {
+    let state = twoTracks();
+    const b1 = pagesOf(state, B)[0];
+    state = trackEditorReducer(state, {
+      type: "move",
+      pageIds: [b1.id],
+      targetFileId: A,
+      beforePageId: null,
+    });
+    state = trackEditorReducer(state, {
+      type: "insertBlank",
+      fileId: A,
+      beforePageId: null,
+    });
+
+    state = sync(state, [source(A, 3, [0, 90, 0])]);
+
+    expect(ids(state, A)).toEqual([`${A}:1`, `${A}:2`, `${A}:3`, "blank"]);
   });
 });
 

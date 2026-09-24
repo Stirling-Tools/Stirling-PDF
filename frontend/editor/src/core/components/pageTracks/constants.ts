@@ -7,7 +7,11 @@ export const TRACK_GEOMETRY = {
   tileWidthRem: 8.5,
   tileCanvasHeightRem: 11.5,
   tileFooterHeightRem: 1.375,
-  gapRem: 0.5,
+  /** Wide enough for the gap's split and insert controls. */
+  gapRem: 1.5,
+  /** The lane's side padding: room for the insert control before the first
+   *  page and after the last. Not zoomed, unlike the gaps. */
+  lanePaddingXRem: 1.5,
   /** Extra tiles rendered either side of the visible window. */
   overscan: 6,
 } as const;

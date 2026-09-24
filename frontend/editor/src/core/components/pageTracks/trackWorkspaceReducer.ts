@@ -1,15 +1,21 @@
 import { FileId } from "@app/types/file";
 import { createFileId } from "@app/types/fileContext";
 import {
+  BlankTrackPage,
+  PageSize,
   Track,
   TrackPage,
   TrackSource,
   TrackWorkspace,
   emptyWorkspace,
+  isSourcePage,
   trackSignature,
 } from "@app/components/pageTracks/types";
 
 const MAX_HISTORY = 100;
+
+/** A blank page's size when no neighbouring page records one. */
+const A4_SIZE: PageSize = { width: 595.28, height: 841.89 };
 
 export interface TrackEditorState {
   present: TrackWorkspace;
@@ -47,6 +53,12 @@ export type TrackEditorAction =
       /** Move before this track, or to the end when null. */
       beforeId: FileId | null;
     }
+  | {
+      type: "insertBlank";
+      fileId: FileId;
+      /** Insert before this page, or append when null. */
+      beforePageId: string | null;
+    }
   /** Swaps a page with its neighbour in the same track. */
   | { type: "shiftPage"; pageId: string; by: -1 | 1 }
   | { type: "dropTracks"; fileIds: FileId[] }
@@ -74,17 +86,40 @@ function buildTrack(source: TrackSource, seq: number): [Track, number] {
   let next = seq;
   for (let i = 0; i < source.pageCount; i++) {
     pages.push({
+      kind: "source",
       id: `tp-${next++}`,
       sourceFileId: source.fileId,
       sourcePageNumber: i + 1,
       sourceContentKey: source.contentKey,
       rotation: normalizeRotation(source.rotations[i] ?? 0),
+      width: source.sizes[i]?.width ?? 0,
+      height: source.sizes[i]?.height ?? 0,
     });
   }
   return [
     { fileId: source.fileId, name: source.name, isNew: false, pages },
     next,
   ];
+}
+
+/**
+ * A blank page that looks like `neighbour`: same size and rotation, so one
+ * inserted after a landscape page is landscape too. A4 when there is no
+ * neighbour or its size is unknown.
+ */
+function blankPageLike(
+  neighbour: TrackPage | undefined,
+  id: string,
+): BlankTrackPage {
+  const sized =
+    neighbour != null && neighbour.width > 0 && neighbour.height > 0;
+  return {
+    kind: "blank",
+    id,
+    rotation: neighbour?.rotation ?? 0,
+    width: sized ? neighbour.width : A4_SIZE.width,
+    height: sized ? neighbour.height : A4_SIZE.height,
+  };
 }
 
 /**
@@ -156,11 +191,11 @@ export function tracksEntangledWith(
     for (const id of workspace.order) {
       const track = workspace.tracks[id];
       if (!track) continue;
+      const sources = track.pages.filter(isSourcePage);
       const touches =
-        involved.has(id) ||
-        track.pages.some((p) => involved.has(p.sourceFileId));
+        involved.has(id) || sources.some((p) => involved.has(p.sourceFileId));
       if (!touches) continue;
-      for (const fileId of [id, ...track.pages.map((p) => p.sourceFileId)]) {
+      for (const fileId of [id, ...sources.map((p) => p.sourceFileId)]) {
         if (involved.has(fileId)) continue;
         involved.add(fileId);
         grew = true;
@@ -201,7 +236,9 @@ function syncSources(
 
   // A closed file's bytes are gone, so pages it sourced can't be saved anywhere.
   const pruneDead = (pages: TrackPage[]): TrackPage[] => {
-    const kept = pages.filter((p) => liveIds.has(p.sourceFileId));
+    const kept = pages.filter(
+      (p) => !isSourcePage(p) || liveIds.has(p.sourceFileId),
+    );
     return kept.length === pages.length ? pages : kept;
   };
 
@@ -401,6 +438,7 @@ export function trackEditorReducer(
         fileId: newId,
         name: splitName(track.name, taken),
         isNew: true,
+        splitFromFileId: track.isNew ? track.splitFromFileId : fileId,
         pages: track.pages.slice(idx),
       };
 
@@ -464,6 +502,33 @@ export function trackEditorReducer(
         past: [],
         future: [],
       };
+    }
+
+    case "insertBlank": {
+      const track = state.present.tracks[action.fileId];
+      if (!track) return state;
+      const at =
+        action.beforePageId == null
+          ? track.pages.length
+          : track.pages.findIndex((p) => p.id === action.beforePageId);
+      if (at < 0) return state;
+      const blank = blankPageLike(
+        track.pages[at - 1] ?? track.pages[at],
+        `tp-${state.seq}`,
+      );
+      const pages = [
+        ...track.pages.slice(0, at),
+        blank,
+        ...track.pages.slice(at),
+      ];
+      const next: TrackWorkspace = {
+        order: state.present.order,
+        tracks: {
+          ...state.present.tracks,
+          [action.fileId]: { ...track, pages },
+        },
+      };
+      return { ...withEdit(state, next), seq: state.seq + 1 };
     }
 
     case "shiftPage": {

@@ -7,7 +7,12 @@ import {
 } from "react";
 import { useFileSelectors } from "@app/contexts/FileContext";
 import { useThumbnailGeneration } from "@app/hooks/useThumbnailGeneration";
-import { TrackPage, sourcePageKey } from "@app/components/pageTracks/types";
+import {
+  SourceTrackPage,
+  TrackPage,
+  isSourcePage,
+  sourcePageKey,
+} from "@app/components/pageTracks/types";
 
 /** Pre-load a screen's worth either side so sideways scrolling stays smooth. */
 const ROOT_MARGIN = "300px";
@@ -17,7 +22,8 @@ const NOTIFY_MS = 60;
 export interface TrackThumbnailStore {
   subscribe: (listener: () => void) => () => void;
   get: (key: string) => string | null;
-  /** Ref callback for a page tile, driving lazy loading via intersection. */
+  /** Ref callback for a page tile, driving lazy loading via intersection.
+   *  A blank page has nothing to render and is not observed. */
   observe: (page: TrackPage) => (element: HTMLElement | null) => void;
 }
 
@@ -36,10 +42,10 @@ export function useTrackThumbnails(): TrackThumbnailStore {
   const resolvedRef = useRef(new Map<string, string>());
   const listenersRef = useRef(new Set<() => void>());
   const inFlightRef = useRef(new Set<string>());
-  const queueRef = useRef<TrackPage[]>([]);
+  const queueRef = useRef<SourceTrackPage[]>([]);
   const notifyTimerRef = useRef<number | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
-  const pageByElementRef = useRef(new Map<Element, TrackPage>());
+  const pageByElementRef = useRef(new Map<Element, SourceTrackPage>());
   const elementByKeyRef = useRef(new Map<string, Element>());
 
   const scheduleNotify = useCallback(() => {
@@ -90,7 +96,7 @@ export function useTrackThumbnails(): TrackThumbnailStore {
   }, [getThumbnailFromCache, requestThumbnail, scheduleNotify, selectors]);
 
   const enqueue = useCallback(
-    (page: TrackPage) => {
+    (page: SourceTrackPage) => {
       const key = sourcePageKey(page);
       if (resolvedRef.current.has(key) || inFlightRef.current.has(key)) return;
       if (queueRef.current.some((queued) => sourcePageKey(queued) === key))
@@ -133,6 +139,7 @@ export function useTrackThumbnails(): TrackThumbnailStore {
       },
       get: (key) => resolvedRef.current.get(key) ?? null,
       observe: (page) => (element) => {
+        if (!isSourcePage(page)) return;
         const observer = observerRef.current;
         const key = sourcePageKey(page);
         const previous = elementByKeyRef.current.get(key);
@@ -156,10 +163,10 @@ export function useTrackThumbnail(
   store: TrackThumbnailStore,
   page: TrackPage,
 ): string | null {
-  const key = sourcePageKey(page);
+  const key = isSourcePage(page) ? sourcePageKey(page) : null;
   return useSyncExternalStore(
     store.subscribe,
-    () => store.get(key),
+    () => (key == null ? null : store.get(key)),
     () => null,
   );
 }

@@ -556,6 +556,71 @@ test.describe("Page Editor tracks", () => {
     );
   });
 
+  test("a blank page inserted in a gap is written at the size and turn of the page before it", async ({
+    page,
+  }) => {
+    await openPageEditor(page);
+    const rotated = track(page, "rotated-pages.pdf");
+    await expect(rotated.locator("[data-page-id]")).toHaveCount(4, {
+      timeout: 30_000,
+    });
+    // One file only: WebKit surfaces just the first of several back-to-back downloads.
+    const sample = track(page, "sample.pdf");
+    await sample
+      .locator("header")
+      .getByRole("button", { name: "Close file" })
+      .click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Close File" })
+      .click();
+    await expect(sample).toHaveCount(0);
+
+    // The gap before page 3, i.e. after page 2 (400 x 600, /Rotate 90).
+    await rotated.locator('[data-insert-before="3"]').click();
+    await expect(rotated.locator("[data-page-id]")).toHaveCount(5);
+    await expect(
+      rotated.locator("[data-page-id]").nth(2).locator("[data-blank-page]"),
+    ).toBeVisible();
+    await expect(rotated).toContainText("edited");
+
+    const download = page.waitForEvent("download", { timeout: 30_000 });
+    await page.getByRole("button", { name: "Download Files" }).click();
+    const target = path.join(
+      fs.mkdtempSync(path.join(os.tmpdir(), "page-tracks-")),
+      "rotated-pages.pdf",
+    );
+    await (await download).saveAs(target);
+
+    const pdf = await PDFDocument.load(fs.readFileSync(target));
+    expect(pdf.getPageCount()).toBe(5);
+    const blank = pdf.getPage(2);
+    expect(blank.getRotation().angle).toBe(90);
+    const box = blank.getMediaBox();
+    expect(Math.round(box.width)).toBe(400);
+    expect(Math.round(box.height)).toBe(600);
+  });
+
+  test("the gaps at either end of a track insert but do not split", async ({
+    page,
+  }) => {
+    await openPageEditor(page);
+    const rotated = track(page, "rotated-pages.pdf");
+    await expect(rotated.locator("[data-page-id]")).toHaveCount(4, {
+      timeout: 30_000,
+    });
+    await expect(rotated.locator('[data-split-before="1"]')).toHaveCount(0);
+    await expect(rotated.locator('[data-split-before="5"]')).toHaveCount(0);
+
+    await rotated.locator('[data-insert-before="1"]').click();
+    await rotated.locator('[data-insert-before="6"]').click();
+
+    const tiles = rotated.locator("[data-page-id]");
+    await expect(tiles).toHaveCount(6);
+    await expect(tiles.first().locator("[data-blank-page]")).toBeVisible();
+    await expect(tiles.last().locator("[data-blank-page]")).toBeVisible();
+  });
+
   test("the insertion line marks where a right-to-left drag actually lands", async ({
     page,
   }) => {

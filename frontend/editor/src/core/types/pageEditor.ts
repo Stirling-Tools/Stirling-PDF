@@ -17,6 +17,8 @@ export interface PDFPage {
   selected: boolean;
   splitAfter?: boolean;
   isBlankPage?: boolean;
+  /** A blank page's size in PDF points, before rotation; A4 when absent. */
+  blankSize?: { width: number; height: number };
   isPlaceholder?: boolean;
   originalFileId?: FileId;
   pageBreakSettings?: PageBreakSettings;

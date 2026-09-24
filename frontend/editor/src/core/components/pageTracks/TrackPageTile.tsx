@@ -17,6 +17,7 @@ import {
   useTrackThumbnail,
 } from "@app/components/pageTracks/hooks/useTrackThumbnails";
 import styles from "@app/components/pageTracks/PageTracks.module.css";
+import { BlankPagePreview } from "@app/components/pageTracks/BlankPagePreview";
 
 export const pageDroppableId = (pageId: string) => `page:${pageId}`;
 
@@ -229,7 +230,9 @@ function TrackPageTileImpl({
           />
         </div>
 
-        {thumbnail ? (
+        {page.kind === "blank" ? (
+          <BlankPagePreview page={page} placement="tile" />
+        ) : thumbnail ? (
           <PrivateContent>
             <img
               className={[

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useReducer } from "react";
 import { useFileState } from "@app/contexts/FileContext";
 import { FileId } from "@app/types/file";
-import { TrackSource } from "@app/components/pageTracks/types";
+import { PageSize, TrackSource } from "@app/components/pageTracks/types";
+import { ProcessedFilePage } from "@app/types/fileContext";
 import {
   changedTrackIds,
   initialTrackEditorState,
@@ -21,6 +22,14 @@ export interface TrackWorkspaceHook {
   isDirty: boolean;
   canUndo: boolean;
   canRedo: boolean;
+}
+
+/** PDFium reports the size as displayed, after the page's /Rotate. */
+function unrotatedSize(page: ProcessedFilePage): PageSize {
+  const width = page.width ?? 0;
+  const height = page.height ?? 0;
+  const quarterTurn = (page.rotation ?? 0) % 180 !== 0;
+  return quarterTurn ? { width: height, height: width } : { width, height };
 }
 
 const isPdf = (name: string | undefined): boolean =>
@@ -57,6 +66,7 @@ export function useTrackWorkspace(): TrackWorkspaceHook {
         name: stub?.name ?? fileId,
         pageCount: pages.length,
         rotations: pages.map((page) => page.rotation ?? 0),
+        sizes: pages.map(unrotatedSize),
         contentKey: `${stub?.size ?? 0}:${stub?.lastModified ?? 0}`,
       });
     }

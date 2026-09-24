@@ -39,42 +39,62 @@ export interface DropHint {
 }
 
 /**
- * The split control that lives in the gap before a page (a lane-level element,
- * not attached to a tile): a full-height line centred on the gap, revealed on
- * hover, that splits the track so that page starts a new one.
+ * The controls in the gap before a page, or after the last one. The gaps at
+ * either end of a track only insert: there is nothing there to split.
  */
-function SplitHandle({
-  label,
+function GapHandle({
   left,
   top,
-  onSplit,
+  width,
   beforePosition,
+  onSplit,
+  onInsert,
 }: {
-  label: string;
   /** laneInner x of the gap centre. */
   left: number;
   /** laneInner y of the page's top. */
   top: number;
-  onSplit: () => void;
+  width: number;
+  /** 1-based position of the page after the gap; one past the end for the last gap. */
   beforePosition: number;
+  onSplit?: () => void;
+  onInsert: () => void;
 }) {
+  const { t } = useTranslation();
+  const splitLabel = t("pageTracks.splitHere", "Split here");
+  const insertLabel = t("pageTracks.insertBlank", "Insert blank page");
   return (
-    <Tooltip content={label}>
-      <button
-        type="button"
-        className={styles.splitHandle}
-        style={{ left, top, height: "var(--pt-tile-h)" }}
-        aria-label={label}
-        data-split-before={beforePosition}
-        onPointerDown={(event) => event.stopPropagation()}
-        onClick={(event) => {
-          event.stopPropagation();
-          onSplit();
-        }}
-      >
-        <Icon name="scissors" size="0.9rem" />
-      </button>
-    </Tooltip>
+    <div
+      className={styles.gapHandle}
+      style={{ left, top, width, height: "var(--pt-tile-h)" }}
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
+    >
+      {onSplit && (
+        <Tooltip content={splitLabel} position="top">
+          <button
+            type="button"
+            className={styles.gapAction}
+            aria-label={splitLabel}
+            data-split-before={beforePosition}
+            onClick={onSplit}
+          >
+            <Icon name="scissors" size="1em" />
+          </button>
+        </Tooltip>
+      )}
+      <Tooltip content={insertLabel} position="top">
+        <button
+          type="button"
+          className={styles.gapAction}
+          aria-label={insertLabel}
+          data-insert-before={beforePosition}
+          onClick={onInsert}
+        >
+          <Icon name="plus" size="1em" />
+        </button>
+      </Tooltip>
+    </div>
   );
 }
 
@@ -117,6 +137,8 @@ export interface TrackRowProps {
   onClearSelection: () => void;
   /** Split this track so `startPageId` begins a new track. */
   onSplit: (fileId: FileId, startPageId: string) => void;
+  /** Insert a blank page before `beforePageId`, or at the end when null. */
+  onInsertBlank: (fileId: FileId, beforePageId: string | null) => void;
   onRotate: (pageIds: string[], delta: number) => void;
   onDelete: (pageIds: string[]) => void;
   onShiftPage: (pageId: string, by: -1 | 1) => void;
@@ -147,6 +169,7 @@ function TrackRowImpl({
   onOpenInViewer,
   onClearSelection,
   onSplit,
+  onInsertBlank,
   onRotate,
   onDelete,
   onShiftPage,
@@ -197,6 +220,7 @@ function TrackRowImpl({
     const gapRem = TRACK_GEOMETRY.gapRem * zoom;
     return {
       gapPx: gapRem * px,
+      lanePadPx: TRACK_GEOMETRY.lanePaddingXRem * px,
       tileWidthPx: tileWidthRem * px,
       // Distance between the left edges of adjacent tiles (tile + gap).
       colStride: (tileWidthRem + gapRem) * px,
@@ -207,6 +231,7 @@ function TrackRowImpl({
         "--pt-tile-w": `${tileWidthRem}rem`,
         "--pt-tile-h": `${tileHeightRem}rem`,
         "--pt-tile-footer-h": `${tileFooterRem}rem`,
+        "--pt-lane-pad-x": `${TRACK_GEOMETRY.lanePaddingXRem}rem`,
       } as React.CSSProperties,
     };
   }, [zoom]);
@@ -217,14 +242,14 @@ function TrackRowImpl({
   const [laneWidth, setLaneWidth] = useState(0);
   // Seed the width synchronously before the first wrap paint so the column
   // count is right immediately; the observer keeps it current on resize.
-  // 0.75rem matches the lane's horizontal padding in the stylesheet. Re-runs
-  // when the lane remounts on expand so the width is right again straight away.
+  // Re-runs when the lane remounts on expand so the width is right again
+  // straight away.
   useLayoutEffect(() => {
     const element = laneRef.current;
     if (!element) return;
-    const padding = 2 * 0.75 * rootFontSizePx();
+    const padding = 2 * geometry.lanePadPx;
     setLaneWidth(Math.max(0, element.clientWidth - padding));
-  }, [wrap, collapsed]);
+  }, [wrap, collapsed, geometry.lanePadPx]);
   // Keyed on `collapsed` so the observer follows the lane element as it
   // unmounts (collapse) and remounts (expand).
   useEffect(() => {
@@ -345,6 +370,10 @@ function TrackRowImpl({
   const handleSplitPage = useCallback(
     (startPageId: string) => onSplit(track.fileId, startPageId),
     [onSplit, track.fileId],
+  );
+  const handleInsertBlank = useCallback(
+    (beforePageId: string | null) => onInsertBlank(track.fileId, beforePageId),
+    [onInsertBlank, track.fileId],
   );
 
   const hintActive = dropHint?.fileId === track.fileId;
@@ -593,13 +622,35 @@ function TrackRowImpl({
                         onDelete={onDelete}
                         onShift={onShiftPage}
                       />
-                      {item.index > 0 && (
-                        <SplitHandle
-                          label={t("pageTracks.splitHere", "Split here")}
-                          left={item.start - geometry.gapPx / 2}
+                      <GapHandle
+                        left={
+                          item.index > 0
+                            ? item.start - geometry.gapPx / 2
+                            : -geometry.lanePadPx / 2
+                        }
+                        top={0}
+                        width={
+                          item.index > 0 ? geometry.gapPx : geometry.lanePadPx
+                        }
+                        beforePosition={item.index + 1}
+                        onSplit={
+                          item.index > 0
+                            ? () => handleSplitPage(page.id)
+                            : undefined
+                        }
+                        onInsert={() => handleInsertBlank(page.id)}
+                      />
+                      {item.index === pageCount - 1 && (
+                        <GapHandle
+                          left={
+                            item.start +
+                            geometry.tileWidthPx +
+                            geometry.gapPx / 2
+                          }
                           top={0}
-                          beforePosition={item.index + 1}
-                          onSplit={() => handleSplitPage(page.id)}
+                          width={geometry.gapPx}
+                          beforePosition={pageCount + 1}
+                          onInsert={() => handleInsertBlank(null)}
                         />
                       )}
                     </React.Fragment>
@@ -639,15 +690,39 @@ function TrackRowImpl({
                         onDelete={onDelete}
                         onShift={onShiftPage}
                       />
-                      {pageIndex > 0 && (
-                        <SplitHandle
-                          label={t("pageTracks.splitHere", "Split here")}
+                      <GapHandle
+                        left={
+                          col > 0
+                            ? col * wrapColStride - gapBefore / 2
+                            : -geometry.lanePadPx / 2
+                        }
+                        top={rowTop}
+                        width={col > 0 ? gapBefore : geometry.lanePadPx}
+                        beforePosition={pageIndex + 1}
+                        onSplit={
+                          pageIndex > 0
+                            ? () => handleSplitPage(page.id)
+                            : undefined
+                        }
+                        onInsert={() => handleInsertBlank(page.id)}
+                      />
+                      {pageIndex === pageCount - 1 && (
+                        <GapHandle
+                          // In the last column the only room is the lane's padding.
                           left={
-                            col > 0 ? col * wrapColStride - gapBefore / 2 : 0
+                            col * wrapColStride +
+                            geometry.tileWidthPx +
+                            (col < columns - 1
+                              ? gapBefore
+                              : geometry.lanePadPx) /
+                              2
                           }
                           top={rowTop}
-                          beforePosition={pageIndex + 1}
-                          onSplit={() => handleSplitPage(page.id)}
+                          width={
+                            col < columns - 1 ? gapBefore : geometry.lanePadPx
+                          }
+                          beforePosition={pageCount + 1}
+                          onInsert={() => handleInsertBlank(null)}
                         />
                       )}
                     </React.Fragment>

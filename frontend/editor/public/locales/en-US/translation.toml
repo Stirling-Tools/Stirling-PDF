@@ -6454,10 +6454,12 @@ bullet1 = "<strong>all</strong> → selects all pages"
 title = "Special Keywords"
 
 [pageTracks]
+blankPage = "Blank page"
 dragging_one = "{{count}} page"
 dragging_other = "{{count}} pages"
 edited = "edited"
 emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
 moveLeft = "Move left"
 moveRight = "Move right"
 nextPage = "Next page"
