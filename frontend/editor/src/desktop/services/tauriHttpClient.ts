@@ -5,6 +5,7 @@ import {
   fetchViaLocalProxy,
   markFastTransportUnavailable,
 } from "@app/services/tauriLocalProxy";
+import { clampText } from "@app/services/httpErrorUtils";
 
 /**
  * Tauri HTTP Client - wrapper around Tauri's native HTTP client
@@ -49,6 +50,72 @@ export interface TauriHttpError extends Error {
   response?: TauriHttpResponse;
   isAxiosError: boolean;
   toJSON: () => object;
+}
+
+const KNOWN_HTTP_ERRORS: Record<number, { summary: string; code: string }> = {
+  401: {
+    summary: "Authentication failed - Invalid credentials",
+    code: "ERR_UNAUTHORIZED",
+  },
+  403: {
+    summary: "Access denied - Insufficient permissions",
+    code: "ERR_FORBIDDEN",
+  },
+  404: {
+    summary: "Endpoint not found - Server may not support this operation",
+    code: "ERR_NOT_FOUND",
+  },
+  500: {
+    summary: "Internal server error - Please check server logs",
+    code: "ERR_SERVER_ERROR",
+  },
+  502: {
+    summary: "Server unavailable or timeout - Please try again",
+    code: "ERR_SERVICE_UNAVAILABLE",
+  },
+  503: {
+    summary: "Server unavailable or timeout - Please try again",
+    code: "ERR_SERVICE_UNAVAILABLE",
+  },
+  504: {
+    summary: "Server unavailable or timeout - Please try again",
+    code: "ERR_SERVICE_UNAVAILABLE",
+  },
+};
+
+const MAX_REASON_CHARS = 300;
+
+/** The server's own explanation from an error body: the `message`, `detail` or
+ *  `error` field of a JSON body, or plain text. HTML error pages give nothing. */
+function serverReason(body: string): string | null {
+  const text = body.trim();
+  if (!text || text.startsWith("<")) return null;
+  let reason = text;
+  try {
+    const parsed: unknown = JSON.parse(text);
+    if (parsed && typeof parsed === "object") {
+      const fields = parsed as Record<string, unknown>;
+      const field = [fields.message, fields.detail, fields.error].find(
+        (value): value is string =>
+          typeof value === "string" && value.trim() !== "",
+      );
+      if (!field) return null;
+      reason = field;
+    }
+  } catch {
+    // Plain-text body.
+  }
+  return clampText(reason.replace(/\s+/g, " ").trim(), MAX_REASON_CHARS);
+}
+
+/** Path only: the host names a self-hosted server and the query can carry tokens,
+ *  and error messages reach error tracking. */
+function requestPath(url: string): string {
+  try {
+    return new URL(url).pathname;
+  } catch {
+    return url.split(/[?#]/)[0];
+  }
 }
 
 type RequestInterceptor = (
@@ -347,32 +414,15 @@ class TauriHttpClient {
           errorBody = "";
         }
 
-        // Create more descriptive error messages based on status code
-        let errorMessage =
-          errorBody || `Request failed with status code ${response.status}`;
-        let errorCode = "ERR_BAD_REQUEST";
-
-        if (response.status === 401) {
-          errorMessage = "Authentication failed - Invalid credentials";
-          errorCode = "ERR_UNAUTHORIZED";
-        } else if (response.status === 403) {
-          errorMessage = "Access denied - Insufficient permissions";
-          errorCode = "ERR_FORBIDDEN";
-        } else if (response.status === 404) {
-          errorMessage =
-            "Endpoint not found - Server may not support this operation";
-          errorCode = "ERR_NOT_FOUND";
-        } else if (response.status === 500) {
-          errorMessage = "Internal server error - Please check server logs";
-          errorCode = "ERR_SERVER_ERROR";
-        } else if (
-          response.status === 502 ||
-          response.status === 503 ||
-          response.status === 504
-        ) {
-          errorMessage = "Server unavailable or timeout - Please try again";
-          errorCode = "ERR_SERVICE_UNAVAILABLE";
-        }
+        const known = KNOWN_HTTP_ERRORS[response.status];
+        const reason = serverReason(errorBody);
+        const lead = known
+          ? reason
+            ? `${known.summary}: ${reason}`
+            : known.summary
+          : (reason ?? `Request failed with status code ${response.status}`);
+        const errorMessage = `${lead} (${response.status} ${method} ${requestPath(url)})`;
+        const errorCode = known?.code ?? "ERR_BAD_REQUEST";
 
         console.error(`[TauriHttpClient] HTTP Error ${response.status}:`, {
           url,

@@ -9,6 +9,7 @@ const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }));
 vi.mock("@tauri-apps/plugin-http", () => ({ fetch: fetchMock }));
 
 import { create } from "@app/services/tauriHttpClient";
+import { allowConsole } from "@app/tests/failOnConsole";
 
 function okJson() {
   return {
@@ -139,5 +140,72 @@ describe("tauriHttpClient — Content-Type handling", () => {
       ([k]) => k.toLowerCase() === "content-type",
     )?.[1];
     expect(ct).toBe("application/json");
+  });
+});
+
+describe("tauriHttpClient — HTTP error messages", () => {
+  beforeEach(() => {
+    fetchMock.mockReset();
+    allowConsole.error(/\[TauriHttpClient\]/);
+  });
+
+  function errorResponse(status: number, body: string) {
+    return {
+      ok: false,
+      status,
+      statusText: "",
+      headers: new Headers(),
+      text: async () => body,
+    };
+  }
+
+  async function rejection(status: number, body: string, url: string) {
+    fetchMock.mockResolvedValue(errorResponse(status, body));
+    const client = create({ baseURL: "https://server.test" });
+    return client.get(url).then(
+      () => {
+        throw new Error("expected the request to fail");
+      },
+      (error: { message: string; code: string; response: { data: string } }) =>
+        error,
+    );
+  }
+
+  test("keeps the server's reason and names the request", async () => {
+    const body = JSON.stringify({
+      status: 403,
+      error: "Forbidden",
+      message: "Admin role required",
+    });
+    const error = await rejection(
+      403,
+      body,
+      "/api/v1/user/admin/users?token=secret",
+    );
+
+    expect(error.message).toBe(
+      "Access denied - Insufficient permissions: Admin role required (403 GET /api/v1/user/admin/users)",
+    );
+    expect(error.code).toBe("ERR_FORBIDDEN");
+    expect(error.response.data).toBe(body);
+  });
+
+  test("uses the plain-text body for a status without a summary", async () => {
+    const error = await rejection(400, "Invalid page range", "/api/v1/split");
+
+    expect(error.message).toBe("Invalid page range (400 GET /api/v1/split)");
+    expect(error.code).toBe("ERR_BAD_REQUEST");
+  });
+
+  test("drops an HTML error page from the message", async () => {
+    const error = await rejection(
+      502,
+      "<html><body>Bad Gateway</body></html>",
+      "/api/v1/info/status",
+    );
+
+    expect(error.message).toBe(
+      "Server unavailable or timeout - Please try again (502 GET /api/v1/info/status)",
+    );
   });
 });
