@@ -262,6 +262,12 @@
   background: transparent !important;
 }
 
+/* Dark mode: the quick-nav rail's selected-pill white, a step below full text
+ * colour so hover still has somewhere brighter to go. */
+[data-mantine-color-scheme="dark"] .workbench-bar-action-icon {
+  color: color-mix(in srgb, var(--c-text) 80%, var(--c-surface)) !important;
+}
+
 .workbench-bar-action-icon svg,
 .workbench-bar-action-icon img {
   color: inherit !important;
