@@ -139,8 +139,12 @@ impl AssetCache {
         if size > ASSET_CACHE_MAX_BYTES {
             return;
         }
-        if let Some(previous) = self.entries.put(key, CachedAsset { bytes, len, modified }) {
-            self.bytes -= previous.bytes.len();
+        // `push` returns the displaced entry for both a same-key replacement
+        // and a capacity eviction; `put` only reports the former, which would
+        // let `bytes` drift upward until every insert evicts everything.
+        if let Some((_, displaced)) = self.entries.push(key, CachedAsset { bytes, len, modified })
+        {
+            self.bytes -= displaced.bytes.len();
         }
         self.bytes += size;
         while self.bytes > ASSET_CACHE_MAX_BYTES {
@@ -723,5 +727,32 @@ mod tests {
     // Look-alike hosts must not slip past the allowlist.
     assert!(!allows("https://localhost.evil.test/"));
     assert!(!allows("https://nottauri.localhost.evil.test/"));
+  }
+
+  #[test]
+  fn asset_cache_accounts_for_capacity_evictions() {
+    use super::AssetCache;
+    use std::sync::Arc;
+
+    let mut cache = AssetCache::new();
+    let asset = |len: usize| {
+      (
+        Arc::new(vec![0u8; len]),
+        len as u64,
+        None::<std::time::SystemTime>,
+      )
+    };
+
+    // Fill past the 128-entry capacity so `push` displaces entries it cannot
+    // report through its return value.
+    for index in 0..200 {
+      let (bytes, len, modified) = asset(1);
+      cache.put(format!("asset-{index}.js"), bytes, len, modified);
+    }
+
+    // Every eviction must come off the counter: with `put` the drift left the
+    // cache permanently empty instead of holding the 128 live entries.
+    assert_eq!(cache.entries.len(), 128);
+    assert_eq!(cache.bytes, 128);
   }
 }
