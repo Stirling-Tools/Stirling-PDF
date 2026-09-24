@@ -42,9 +42,10 @@ What the patches change:
 - **Engine, worker memory**: one pooled bitmap buffer per worker for page
   renders (`__stirlingScratchStats` on the worker global reports
   renders/allocs/reuses/bytes), and documents open through `FPDF_FILEACCESS`
-  (`FPDF_LoadCustomDocument`) so PDFium reads 64 KB blocks from the cloned
-  `ArrayBuffer` instead of copying the file into the WASM heap
-  (`__stirlingWorkerHeapBytes()` reports the worker heap and
+  (`FPDF_LoadCustomDocument`) so PDFium reads 64 KB blocks from the source
+  instead of copying the file into the WASM heap: a Blob streams its ranges
+  directly, while an `ArrayBuffer` input is still served from the worker's
+  copy of it (`__stirlingWorkerHeapBytes()` reports the worker heap and
   `__stirlingWorkerDocBytes` the document bytes the worker materialized, which
   is 0 while it streams a Blob).
 - **Plugins**: batched interaction-manager dispatch and cancellation of stale
