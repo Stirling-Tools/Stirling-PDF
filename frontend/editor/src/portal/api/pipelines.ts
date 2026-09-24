@@ -1,4 +1,5 @@
 import { apiClient } from "@portal/api/http";
+import type { WireRoutingRule } from "@app/policies/types";
 import {
   type SupportingFileBindings,
   type ToolApiStep,
@@ -49,7 +50,7 @@ export interface OutputSpec {
 }
 
 /** Source types that can be written to (used as a pipeline's output destination). */
-export type PipelineOutputMode = "folder" | "s3";
+export type PipelineOutputMode = "folder" | "s3" | "vectordb";
 
 /**
  * The stored policy record: the create/update body (`id` blank on create) and what
@@ -79,6 +80,13 @@ export interface Policy {
    * output} is used.
    */
   outputIds: string[];
+  /**
+   * Per-document delivery: each rule sends the document types it names to its own destination,
+   * tried in order, first match wins. Empty (the default) means every document goes to {@link
+   * outputIds}. A rule reading the classification verdict makes the backend prepend a classify
+   * step, so the verdict exists to route on.
+   */
+  routingRules?: WireRoutingRule[];
   /** Whether the editor runs this policy per file, and on which moment. */
   editor?: { allowed: boolean; runOn: "upload" | "export" };
   teamId?: number | null;
@@ -216,7 +224,10 @@ export interface TriggerOutcome {
 export async function triggerPipeline(id: string): Promise<TriggerOutcome> {
   return apiClient.local.json<TriggerOutcome>(
     `/api/v1/policies/${encodeURIComponent(id)}/trigger`,
-    { method: "POST" },
+    {
+      method: "POST",
+      accountLinkBlockContext: { pipelineId: id, trigger: "manual" },
+    },
   );
 }
 
@@ -266,6 +277,11 @@ export async function runPipelineTest(
   const res = await apiClient.local.multipart<{ jobId: string }>(
     "/api/v1/policies/run",
     form,
+    {
+      pipelineId: policyId,
+      pipelineName: definition.name,
+      trigger: "manual",
+    },
   );
   return { runId: res.jobId };
 }

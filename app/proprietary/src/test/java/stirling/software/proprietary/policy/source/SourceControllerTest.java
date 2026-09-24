@@ -25,6 +25,8 @@ import org.springframework.web.server.ResponseStatusException;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.FileReadinessChecker;
+import stirling.software.proprietary.document.conditions.Condition;
+import stirling.software.proprietary.document.conditions.ConditionInput;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.input.InputSource;
@@ -33,6 +35,8 @@ import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.RoutingRule;
+import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.store.InProcessPolicyStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
@@ -51,6 +55,7 @@ class SourceControllerTest {
     private PolicyTriggerManager triggerManager;
     private SourceController controller;
     private SourceController webhookController;
+    private final PolicyOutputSink vectorSink = mock(PolicyOutputSink.class);
 
     @TempDir Path tempDir;
 
@@ -72,7 +77,19 @@ class SourceControllerTest {
         triggerManager = mock(PolicyTriggerManager.class);
         // A permissive input source so config validation passes and save can be exercised.
         InputSource folderInput = mock(InputSource.class);
-        when(folderInput.supports(any())).thenReturn(true);
+        when(folderInput.supports(any()))
+                .thenAnswer(
+                        invocation ->
+                                !"vectordb"
+                                        .equals(
+                                                ((stirling.software.proprietary.policy.model
+                                                                        .InputSpec)
+                                                                invocation.getArgument(0))
+                                                        .type()));
+        when(vectorSink.supports(any()))
+                .thenAnswer(
+                        invocation ->
+                                "vectordb".equals(((OutputSpec) invocation.getArgument(0)).type()));
         when(folderInput.prepareOptionsForSave(any(), anyBoolean()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
         controller =
@@ -85,7 +102,8 @@ class SourceControllerTest {
                         authority,
                         triggerManager,
                         properties,
-                        List.of(folderInput));
+                        List.of(folderInput),
+                        List.of(vectorSink));
         WebhookInputSource webhookInput =
                 new WebhookInputSource(new WebhookSpool(tempDir), mock(FileReadinessChecker.class));
         webhookController =
@@ -98,7 +116,24 @@ class SourceControllerTest {
                         authority,
                         triggerManager,
                         properties,
-                        List.of(webhookInput));
+                        List.of(webhookInput),
+                        List.of());
+    }
+
+    @Test
+    void savesAnOutputOnlySourceWithoutAnInputHandler() {
+        Source source =
+                new Source(
+                        null,
+                        "Knowledge",
+                        "vectordb",
+                        Map.of("connectionId", "42", "collection", "Documents"),
+                        true,
+                        null,
+                        null);
+        Source saved = controller.save(source).getBody();
+        assertEquals("vectordb", saved.type());
+        org.mockito.Mockito.verify(vectorSink).validate(source.toOutputSpec());
     }
 
     @Test
@@ -137,6 +172,21 @@ class SourceControllerTest {
 
         assertEquals(409, ex.getStatusCode().value());
         assertTrue(sourceStore.get(source.id()).isPresent());
+    }
+
+    @Test
+    void deletingARoutingDestinationConflicts() {
+        Source destination = sourceStore.save(folderSource());
+        policyStore.save(policyRoutingTo("Route confidential", destination.id()));
+
+        ResponseStatusException ex =
+                assertThrows(
+                        ResponseStatusException.class, () -> controller.delete(destination.id()));
+
+        // Without the guard the rule would go unresolved at run time and its documents would be
+        // delivered to the policy's ordinary fallback destination instead.
+        assertEquals(409, ex.getStatusCode().value());
+        assertTrue(sourceStore.get(destination.id()).isPresent());
     }
 
     @Test
@@ -267,6 +317,29 @@ class SourceControllerTest {
     private static Source folderSource() {
         return new Source(
                 null, "Claims intake", "folder", Map.of("directory", "/in"), true, "owner", null);
+    }
+
+    private static Policy policyRoutingTo(String name, String destinationId) {
+        return new Policy(
+                null,
+                name,
+                "owner",
+                true,
+                false,
+                "",
+                List.of(),
+                List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                OutputSpec.inline(),
+                List.of(),
+                null,
+                null,
+                Policy.SURFACE_POLICY,
+                List.of(
+                        new RoutingRule(
+                                new Condition.MatchesAny(
+                                        new ConditionInput.DocumentField("classification.labels"),
+                                        List.of("confidential")),
+                                destinationId)));
     }
 
     private static Policy policyReferencing(String name, String sourceId) {

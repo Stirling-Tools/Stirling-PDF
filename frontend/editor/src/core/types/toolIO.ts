@@ -90,7 +90,7 @@ export const TOOL_FORMAT_EXTENSIONS: Record<ToolFormat, readonly string[]> = {
   CSV: ["csv"],
   HTML: ["html", "htm", "xhtml"],
   XML: ["xml", "xsd", "xsl"],
-  JSON: ["json"],
+  JSON: ["json", "jsonl"],
   TEXT: ["txt", "text", "md", "markdown"],
   MARKDOWN: ["md", "markdown"],
   JAVASCRIPT: ["js", "jsx"],
@@ -362,6 +362,38 @@ export const TOOL_IO: ToolIOTable = {
     produces: "PDF",
     arity: "SISO",
   },
+  "/api/v1/docparse/ingest": {
+    accepts: ["PDF"],
+    produces: "PDF",
+    arity: "SIMO",
+    cases: [
+      {
+        when: [
+          { param: "includeOriginal", matches: ["false"], default: "true" },
+          { param: "exportMarkdown", matches: ["false"], default: "false" },
+        ],
+        produces: "JSON",
+        arity: "SIMO",
+      },
+      {
+        when: [
+          { param: "includeOriginal", matches: ["false"], default: "true" },
+          { param: "exportChunksJsonl", matches: ["false"], default: "false" },
+        ],
+        produces: "MARKDOWN",
+        arity: "SIMO",
+      },
+      {
+        when: [
+          { param: "includeOriginal", matches: ["false"], default: "true" },
+          { param: "exportMarkdown", matches: ["true"], default: "false" },
+          { param: "exportChunksJsonl", matches: ["true"], default: "false" },
+        ],
+        produces: "ANY",
+        arity: "SIMO",
+      },
+    ],
+  },
   "/api/v1/filter/filter-contains-image": {
     accepts: ["PDF"],
     produces: "PDF",
@@ -392,6 +424,18 @@ export const TOOL_IO: ToolIOTable = {
     produces: "PDF",
     arity: "SISO",
   },
+  "/api/v1/form/form-detection/detect": {
+    accepts: ["PDF"],
+    produces: "PDF",
+    arity: "SISO",
+    cases: [
+      {
+        when: [{ param: "applyToPdf", matches: ["false"] }],
+        produces: "JSON",
+        arity: "SISO",
+      },
+    ],
+  },
   "/api/v1/general/booklet-imposition": {
     accepts: ["PDF"],
     produces: "PDF",
@@ -414,9 +458,22 @@ export const TOOL_IO: ToolIOTable = {
     arity: "SISO",
   },
   "/api/v1/general/merge-pdfs": {
-    accepts: ["PDF"],
+    accepts: ["PDF", "IMAGE"],
     produces: "PDF",
     arity: "MISO",
+    inputExtensions: [
+      "pdf",
+      "png",
+      "jpg",
+      "jpeg",
+      "gif",
+      "bmp",
+      "tif",
+      "tiff",
+      "webp",
+      "svg",
+      "psd",
+    ],
   },
   "/api/v1/general/multi-page-layout": {
     accepts: ["PDF"],
@@ -550,6 +607,11 @@ export const TOOL_IO: ToolIOTable = {
     produces: "PDF",
     arity: "SISO",
   },
+  "/api/v1/misc/create-portfolio": {
+    accepts: ["ANY"],
+    produces: "PDF",
+    arity: "MISO",
+  },
   "/api/v1/misc/decompress-pdf": {
     accepts: ["PDF"],
     produces: "PDF",
@@ -601,6 +663,11 @@ export const TOOL_IO: ToolIOTable = {
     arity: "SIMO",
   },
   "/api/v1/misc/flatten": { accepts: ["PDF"], produces: "PDF", arity: "SISO" },
+  "/api/v1/misc/flatten-portfolio": {
+    accepts: ["PDF"],
+    produces: "PDF",
+    arity: "SISO",
+  },
   "/api/v1/misc/list-attachments": {
     accepts: ["PDF"],
     produces: "JSON",
@@ -720,6 +787,11 @@ export const TOOL_IO: ToolIOTable = {
     arity: "SISO",
   },
   "/api/v1/security/timestamp-pdf": {
+    accepts: ["PDF"],
+    produces: "PDF",
+    arity: "SISO",
+  },
+  "/api/v1/security/validate-compliance": {
     accepts: ["PDF"],
     produces: "PDF",
     arity: "SISO",

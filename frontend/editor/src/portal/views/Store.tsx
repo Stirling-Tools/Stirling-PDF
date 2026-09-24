@@ -19,7 +19,7 @@ import {
   type StoreListingSummary,
   type StoreSort,
 } from "@portal/api/store";
-import { StoreIcon } from "@portal/components/icons";
+import { Icon } from "@app/ui/Icon";
 import { StoreCard } from "@portal/components/store/StoreCard";
 import { PublishedTable } from "@portal/components/store/PublishedTable";
 import { usePipelines } from "@portal/queries/pipelines";
@@ -145,7 +145,7 @@ export function Store() {
     if (listings.length === 0) {
       return (
         <EmptyState
-          icon={<StoreIcon size={28} />}
+          icon={<Icon name="store" size={28} />}
           title={empty.title}
           description={empty.description}
           actions={
@@ -296,7 +296,7 @@ export function Store() {
           )}
           {team.data && team.data.length === 0 && (
             <EmptyState
-              icon={<StoreIcon size={28} />}
+              icon={<Icon name="store" size={28} />}
               title={t("portal.store.empty.publishedTitle")}
               description={t("portal.store.empty.publishedDescription")}
             />

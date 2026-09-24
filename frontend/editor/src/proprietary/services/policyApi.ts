@@ -8,6 +8,8 @@
 import apiClient from "@app/services/apiClient";
 import { uploadableFile } from "@app/utils/uploadableFile";
 import { getPolicyOutputBaseUrl } from "@app/services/policyOutputBaseUrl";
+import type { AccountLinkBlockSource } from "@app/services/accountLinkBlock";
+import { policyCreditContext } from "@app/services/policyCreditContext";
 import type {
   BackendPolicy,
   PolicyExecutionTarget,
@@ -36,9 +38,9 @@ export async function runStoredPolicy(
   id: string,
   files: File[],
   fileId?: string,
+  source: AccountLinkBlockSource = "foreground",
 ): Promise<string> {
   const form = new FormData();
-  // Wrapped: WebKit uploads a File restored from IndexedDB as an empty body.
   for (const file of files) form.append("fileInput", uploadableFile(file));
   if (fileId) form.append("fileId", fileId);
   // Don't set Content-Type: the HTTP client must generate multipart/form-data
@@ -47,7 +49,10 @@ export async function runStoredPolicy(
   const res = await apiClient.post<JobResponse>(
     `/api/v1/policies/${encodeURIComponent(id)}/run`,
     form,
-    { suppressErrorToast: true },
+    {
+      suppressErrorToast: true,
+      accountLinkBlockContext: policyCreditContext(id, source),
+    },
   );
   return res.data.jobId;
 }
@@ -68,10 +73,12 @@ export async function downloadPolicyOutput(
   fileId: string,
   target: PolicyExecutionTarget,
 ): Promise<Blob> {
-  const base = getPolicyOutputBaseUrl(target);
+  const base = await getPolicyOutputBaseUrl(target);
   const res = await apiClient.get<Blob>(
     `${base}/api/v1/general/files/${encodeURIComponent(fileId)}`,
-    { responseType: "blob" },
+    {
+      responseType: "blob",
+    },
   );
   return res.data;
 }

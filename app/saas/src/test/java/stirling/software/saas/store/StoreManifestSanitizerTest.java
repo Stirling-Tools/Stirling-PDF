@@ -44,7 +44,9 @@ class StoreManifestSanitizerTest {
                 OutputSpec.inline(),
                 outputIds,
                 7L,
-                EditorConfig.disabled());
+                EditorConfig.disabled(),
+                Policy.SURFACE_POLICY,
+                List.of());
     }
 
     private static PipelineStep step(String operation, Map<String, Object> params) {

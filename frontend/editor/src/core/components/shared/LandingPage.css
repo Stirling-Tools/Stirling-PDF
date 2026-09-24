@@ -135,14 +135,6 @@
   background-color: var(--c-illustration-line-strong);
 }
 
-/* ── Action buttons ──────────────────────────────────────── */
-.landing-btn-icon {
-  min-height: 3rem !important;
-  width: 3rem !important;
-  min-width: 3rem !important;
-  border-radius: 0.75rem !important;
-}
-
 /* Dropzone accept/reject outlines. Mantine 8 no longer supports nested
  * `&[data-accept]` selectors inside the `styles` prop object, so these are
  * plain CSS attribute selectors on a class applied to the Dropzone root. */

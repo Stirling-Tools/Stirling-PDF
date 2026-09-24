@@ -38,15 +38,6 @@ public class LeaderTeamResolver {
 
     /** Caller must lead their team. */
     public LeaderTeam resolve(Authentication auth) {
-        return resolve(auth, true);
-    }
-
-    /** Caller need only belong to a team. */
-    public LeaderTeam resolveMember(Authentication auth) {
-        return resolve(auth, false);
-    }
-
-    private LeaderTeam resolve(Authentication auth, boolean requireLeader) {
         User user;
         try {
             user = AuthenticationUtils.getCurrentUser(auth, userRepository);
@@ -57,7 +48,7 @@ public class LeaderTeamResolver {
         if (teamId.isEmpty()) {
             return new LeaderTeam(null, null, HttpStatus.FORBIDDEN);
         }
-        if (requireLeader && !userTeamResolver.isLeader(user)) {
+        if (!userTeamResolver.isLeader(user)) {
             return new LeaderTeam(null, null, HttpStatus.FORBIDDEN);
         }
         return new LeaderTeam(teamId.get(), user.getId(), null);

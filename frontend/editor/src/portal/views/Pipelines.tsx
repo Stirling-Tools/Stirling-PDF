@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import { Icon } from "@app/ui/Icon";
 import { Banner, Button, CardRail, EmptyState, Skeleton } from "@app/ui";
 import { errorMessage } from "@portal/api/http";
 import { useSectionFlags } from "@portal/hooks/useAsync";
@@ -10,14 +10,11 @@ import { usePipelines } from "@portal/queries/pipelines";
 import { usePoliciesOverview } from "@portal/queries/policies";
 import {
   fetchPipeline,
-  savePipeline,
   type PipelineView,
   type Policy,
 } from "@portal/api/pipelines";
 import {
   buildWireFromSetup,
-  clearProcessedHistory,
-  deletePolicy,
   parseSimplePolicy,
   savePolicy,
   type CatalogueEntry,
@@ -25,16 +22,12 @@ import {
 } from "@portal/api/policies";
 import { qk } from "@portal/queries/keys";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
-import { PipelinesIcon } from "@portal/components/icons";
 import { PipelinesTable } from "@portal/components/pipelines/PipelinesTable";
 import { PipelineTemplateCard } from "@portal/components/pipelines/PipelineTemplateCard";
-import { PolicyDetailPanel } from "@portal/components/policies/PolicyDetailPanel";
 import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
 import { useAiEngineEnabled } from "@portal/hooks/useAiEngineEnabled";
 import { useCanManagePolicies } from "@portal/queries/policyPermissions";
-import { useConnectGate } from "@portal/hooks/useConnectGate";
 import { useStoreAvailable } from "@portal/hooks/useStoreAvailable";
-import { StoreIcon } from "@portal/components/icons";
 import "@portal/views/Pipelines.css";
 
 /**
@@ -47,8 +40,6 @@ export function Pipelines() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
-  // Building and editing a pipeline both need a linked account, so both ask for one first (#7581).
-  const { guard } = useConnectGate();
   const storeAvailable = useStoreAvailable();
 
   const listState = usePipelines();
@@ -67,9 +58,7 @@ export function Pipelines() {
     refetch: retryPermissions,
   } = useCanManagePolicies();
 
-  const [detail, setDetail] = useState<CatalogueEntry | null>(null);
   const [wizard, setWizard] = useState<CatalogueEntry | null>(null);
-  const [busy, setBusy] = useState(false);
   const [pageError, setPageError] = useState<string | null>(null);
 
   const listPath = toPortalPath(VIEW_PATHS.pipelines);
@@ -106,13 +95,10 @@ export function Pipelines() {
     queryClient.invalidateQueries({ queryKey: qk.policyRuns() });
   }, [queryClient]);
 
-  const openCreate = guard(() => navigate(`${listPath}/new`));
-  const connectSource = guard(() =>
-    navigate(`${toPortalPath(VIEW_PATHS.sources)}/new`),
-  );
+  const openCreate = () => navigate(`${listPath}/new`);
+  const connectSource = () =>
+    navigate(`${toPortalPath(VIEW_PATHS.sources)}/new`);
 
-  // Open a suggested template in the simple wizard (a fresh policy). AI-gated templates stay closed
-  // until the engine is confirmed on, so a click during the app-config load can't open a disabled one.
   const openTemplate = useCallback(
     (entry: CatalogueEntry) => {
       if (entry.category.comingSoon) return;
@@ -122,20 +108,19 @@ export function Pipelines() {
     [aiEngineEnabled],
   );
 
-  // A list row routes by representability: a policy that still fits its template opens the simple
-  // detail panel (edit/pause/delete there); anything else opens the full builder. The full record is
-  // fetched on click so parseSimplePolicy - the single authority - decides on real data.
-  const openListRow = guard(async (view: PipelineView) => {
+  // Fetch the full record before choosing the wizard: the overview cannot tell whether the
+  // pipeline has settings that only the full builder can preserve.
+  const openListRow = async (view: PipelineView) => {
     setPageError(null);
     try {
       const policy = await fetchPipeline(view.id);
-      const entry = parseSimplePolicy(policy);
-      if (entry) setDetail(entry);
+      const entry = parseSimplePolicy(policy, []);
+      if (entry) setWizard(entry);
       else navigate(`${listPath}/${view.id}`);
     } catch (e) {
       setPageError(errorMessage(e));
     }
-  });
+  };
 
   // ?setup=<categoryId> deep link (onboarding): open the wizard for that suggested policy, then
   // strip the param so back/reload doesn't re-open it.
@@ -146,8 +131,7 @@ export function Pipelines() {
       (e) => e.category.id === setupId,
     );
     if (entry && !entry.category.comingSoon) {
-      if (entry.policy) setDetail(entry);
-      else setWizard(entry);
+      setWizard(entry);
     }
     const next = new URLSearchParams(searchParams);
     next.delete("setup");
@@ -164,12 +148,10 @@ export function Pipelines() {
       icon: stored?.icon,
       enabled: stored ? stored.status !== "paused" : wire.enabled,
       required: wire.required,
-      inputs: [],
+      inputs: wire.inputs ?? [],
       steps: wire.steps,
       output: { type: wire.output.type, options: wire.output.options },
-      outputIds: [],
-      // A wizard policy only ever runs on the editor, so hand its editor participation to the
-      // builder rather than letting it default to disabled.
+      outputIds: wire.outputIds ?? [],
       editor: wire.editor,
     };
     return draft;
@@ -184,10 +166,10 @@ export function Pipelines() {
       const enabled = entry.policy?.state.status !== "paused";
       await savePolicy(buildWireFromSetup(entry, result, t, enabled));
       setWizard(null);
-      setDetail(null);
       refetch();
     } catch (e) {
       setPageError(errorMessage(e));
+      throw e;
     }
   }
 
@@ -199,51 +181,6 @@ export function Pipelines() {
     const target = draft.id ? `${listPath}/${draft.id}` : `${listPath}/new`;
     setWizard(null);
     navigate(target, { state: { draft } });
-  }
-
-  async function runLifecycle(action: () => Promise<unknown>) {
-    if (busy) return;
-    setPageError(null);
-    setBusy(true);
-    try {
-      await action();
-      setDetail(null);
-      refetch();
-    } catch (e) {
-      setPageError(errorMessage(e));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  function handleTogglePause() {
-    const id = detail?.policy?.state.backendId;
-    const paused = detail?.policy?.state.status === "paused";
-    if (!id) return;
-    void runLifecycle(async () => {
-      // Re-save the stored record with only `enabled` flipped. Rebuilding it from the decoded view
-      // (as the wizard save does) drops first-class fields that view doesn't carry - the icon, a
-      // custom name, owner - so a pause would silently rewrite them.
-      const current = await fetchPipeline(id);
-      await savePipeline({ ...current, enabled: paused });
-    });
-  }
-
-  function handleDelete() {
-    const id = detail?.policy?.state.backendId;
-    if (id) void runLifecycle(() => deletePolicy(id));
-  }
-
-  function handleClearHistory() {
-    const id = detail?.policy?.state.backendId;
-    if (id) void runLifecycle(() => clearProcessedHistory(id));
-  }
-
-  function handleEdit() {
-    if (detail) {
-      setWizard(detail);
-      setDetail(null);
-    }
   }
 
   return (
@@ -263,7 +200,7 @@ export function Pipelines() {
               fat
               variant="secondary"
               onClick={() => navigate(toPortalPath(VIEW_PATHS.store))}
-              leftSection={<StoreIcon size={18} />}
+              leftSection={<Icon name="store" size={"1.125rem"} />}
             >
               {t("portal.store.browseStore")}
             </Button>
@@ -271,7 +208,7 @@ export function Pipelines() {
           <Button
             fat
             onClick={openCreate}
-            leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
+            leftSection={<Icon name="plus" size={"1.125rem"} />}
           >
             {t("portal.pipelines.actions.newCustomPipeline")}
           </Button>
@@ -307,16 +244,14 @@ export function Pipelines() {
 
         {showEmpty && (
           <EmptyState
-            icon={<PipelinesIcon size={28} />}
+            icon={<Icon name="workflow" size={28} />}
             title={t("portal.pipelines.empty.title")}
             description={t("portal.pipelines.empty.description")}
             actions={
               <>
                 <Button
                   onClick={openCreate}
-                  leftSection={
-                    <AddRoundedIcon style={{ fontSize: "1.125rem" }} />
-                  }
+                  leftSection={<Icon name="plus" size={"1.125rem"} />}
                 >
                   {t("portal.pipelines.empty.action")}
                 </Button>
@@ -351,18 +286,6 @@ export function Pipelines() {
           </CardRail>
         </section>
       )}
-
-      <PolicyDetailPanel
-        policy={detail?.policy ?? null}
-        busy={busy}
-        canManagePolicies={canManagePolicies}
-        permissionsLoading={permissionsLoading}
-        onClose={() => setDetail(null)}
-        onEdit={handleEdit}
-        onTogglePause={handleTogglePause}
-        onDelete={handleDelete}
-        onClearHistory={handleClearHistory}
-      />
 
       <PolicySetupWizard
         entry={wizard}

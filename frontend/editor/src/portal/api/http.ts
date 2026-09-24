@@ -41,14 +41,18 @@
  * entitlement calls. It never enters the portal — the browser is the human
  * admin and uses the Supabase JWT for SaaS reads. Don't add it here.
  */
-import { getPortalSaasToken } from "@portal/auth/portalSaasSession";
-import { resolveDemoResponse } from "@portal/api/demoData";
-import { saasApiBase } from "@portal/api/saasApiBase";
+import type { AccountLinkBlockContext } from "@app/services/accountLinkBlock";
+import { withPortalSaasSession } from "@app/portal/auth/portalSaasSession";
+import { reportAccountLinkBlock } from "@app/portal/services/accountLinkBlock";
+export { SaasSessionRequiredError } from "@app/portal/auth/portalSaasSession";
+import { resolveDemoResponse } from "@app/portal/api/demoData";
+import { saasApiBase } from "@app/portal/api/saasApiBase";
 import {
   localAuthHeader,
   localBaseUrl,
   onLocalUnauthorized,
-} from "@portal/api/localBackend";
+} from "@app/portal/api/localBackend";
+import { localFetch } from "@app/portal/localTransport";
 
 /**
  * SaaS base URL via the flavor seam: self-hosted reads VITE_SAAS_API_URL (a
@@ -61,6 +65,7 @@ function saasBaseUrl(): string | null {
 }
 
 export interface HttpRequestOptions {
+  accountLinkBlockContext?: AccountLinkBlockContext;
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
   /** Extra headers; Content-Type and Accept are set automatically. */
@@ -90,16 +95,6 @@ export class SaasUnconfiguredError extends Error {
   }
 }
 
-/** Thrown by apiClient.saas.* when the admin has no SaaS session yet. */
-export class SaasNotLinkedError extends Error {
-  constructor() {
-    super(
-      "No SaaS session — admin must link an account before attended SaaS reads.",
-    );
-    this.name = "SaasNotLinkedError";
-  }
-}
-
 /**
  * Best-effort human-readable message from a thrown error: unwraps an
  * {@link HttpError}'s ProblemDetail-ish body (`detail` / `message` / `error`)
@@ -122,7 +117,10 @@ export function errorMessage(error: unknown): string {
 // Shared response handler
 // ────────────────────────────────────────────────────────────────────────────
 
-async function unwrap<T>(res: Response): Promise<T> {
+async function unwrap<T>(
+  res: Response,
+  context?: AccountLinkBlockContext,
+): Promise<T> {
   if (!res.ok) {
     let body: unknown = null;
     try {
@@ -130,7 +128,12 @@ async function unwrap<T>(res: Response): Promise<T> {
     } catch {
       // ignore — non-JSON error response
     }
-    throw new HttpError(res.status, res.statusText, body);
+    const error = new HttpError(res.status, res.statusText, body);
+    // The instance's entitlement gate answers a spent free grant here, and the prompt it raises is
+    // the actionable surface. Reported for every domain rather than only the local one because the
+    // classifier keys on a sentinel only the local backend sends, so a SaaS 402 cannot reach it.
+    reportAccountLinkBlock(error, context);
+    throw error;
   }
   // 204 / empty-body responses have nothing to parse.
   if (res.status === 204 || res.headers.get("Content-Length") === "0") {
@@ -153,8 +156,8 @@ async function localJson<T>(
     new URL(`${localBaseUrl()}${path}`, window.location.origin),
     options,
   );
-  if (demo) return unwrap<T>(demo);
-  const res = await fetch(`${localBaseUrl()}${path}`, {
+  if (demo) return unwrap<T>(demo, options.accountLinkBlockContext);
+  const res = await localFetch(`${localBaseUrl()}${path}`, {
     method: options.method ?? "GET",
     headers: {
       Accept: "application/json",
@@ -172,7 +175,7 @@ async function localJson<T>(
     // Spring token to re-show login; SaaS lets the auth boundary handle it).
     onLocalUnauthorized();
   }
-  return unwrap<T>(res);
+  return unwrap<T>(res, options.accountLinkBlockContext);
 }
 
 /** GET returning a binary Blob (e.g. a CSV/JSON export download), via the
@@ -182,7 +185,7 @@ async function localBlob(
   path: string,
   options: HttpRequestOptions = {},
 ): Promise<Blob> {
-  const res = await fetch(`${localBaseUrl()}${path}`, {
+  const res = await localFetch(`${localBaseUrl()}${path}`, {
     method: options.method ?? "GET",
     headers: { ...(await localAuthHeader()), ...options.headers },
     signal: options.signal,
@@ -201,7 +204,7 @@ async function localForm<T>(
   params: Record<string, string>,
   method: "POST" | "PUT" | "DELETE" = "POST",
 ): Promise<T> {
-  const res = await fetch(`${localBaseUrl()}${path}`, {
+  const res = await localFetch(`${localBaseUrl()}${path}`, {
     method,
     headers: { Accept: "application/json", ...(await localAuthHeader()) },
     body: new URLSearchParams(params),
@@ -214,8 +217,12 @@ async function localForm<T>(
 
 /** POST a multipart/form-data body (file uploads), via the localBackend seam. The Content-Type is
  * deliberately left unset so the browser writes it with the multipart boundary. */
-async function localMultipart<T>(path: string, body: FormData): Promise<T> {
-  const res = await fetch(`${localBaseUrl()}${path}`, {
+async function localMultipart<T>(
+  path: string,
+  body: FormData,
+  context?: AccountLinkBlockContext,
+): Promise<T> {
+  const res = await localFetch(`${localBaseUrl()}${path}`, {
     method: "POST",
     headers: { Accept: "application/json", ...(await localAuthHeader()) },
     body,
@@ -223,7 +230,7 @@ async function localMultipart<T>(path: string, body: FormData): Promise<T> {
   if (res.status === 401) {
     onLocalUnauthorized();
   }
-  return unwrap<T>(res);
+  return unwrap<T>(res, context);
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -245,21 +252,25 @@ async function saasJson<T>(
   const base = saasBaseUrl();
   // null = unset (self-hosted, no VITE_SAAS_API_URL). "" is same-origin (SaaS) — valid.
   if (base === null) throw new SaasUnconfiguredError();
-  const token = await getPortalSaasToken();
-  if (!token) throw new SaasNotLinkedError();
-  const res = await fetch(`${base}${path}`, {
-    method: options.method ?? "GET",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${token}`,
-      ...(options.body !== undefined
-        ? { "Content-Type": "application/json" }
-        : {}),
-      ...options.headers,
-    },
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-    signal: options.signal,
-  });
+  const res = await withPortalSaasSession(
+    (token) =>
+      fetch(`${base}${path}`, {
+        method: options.method ?? "GET",
+        headers: {
+          Accept: "application/json",
+          ...(options.body !== undefined
+            ? { "Content-Type": "application/json" }
+            : {}),
+          ...options.headers,
+          Authorization: `Bearer ${token}`,
+        },
+        body:
+          options.body !== undefined ? JSON.stringify(options.body) : undefined,
+        signal: options.signal,
+      }),
+    (response) => response.status === 401,
+    !options.method || options.method === "GET",
+  );
   return unwrap<T>(res);
 }
 
@@ -271,19 +282,22 @@ async function saasText(
   const base = saasBaseUrl();
   // null = unset (self-hosted, no VITE_SAAS_API_URL). "" is same-origin (SaaS) — valid.
   if (base === null) throw new SaasUnconfiguredError();
-  const token = await getPortalSaasToken();
-  if (!token) throw new SaasNotLinkedError();
-  const res = await fetch(`${base}${path}`, {
-    method: options.method ?? "GET",
-    headers: {
-      Accept: "text/plain",
-      Authorization: `Bearer ${token}`,
-      ...options.headers,
-    },
-    signal: options.signal,
-  });
+  const res = await withPortalSaasSession(
+    (token) =>
+      fetch(`${base}${path}`, {
+        method: options.method ?? "GET",
+        headers: {
+          Accept: "text/plain",
+          ...options.headers,
+          Authorization: `Bearer ${token}`,
+        },
+        signal: options.signal,
+      }),
+    (response) => response.status === 401,
+    !options.method || options.method === "GET",
+  );
   if (!res.ok) {
-    throw new Error(`SaaS request failed (${res.status})`);
+    throw new HttpError(res.status, res.statusText, null);
   }
   return res.text();
 }
@@ -296,13 +310,16 @@ async function saasBlob(
   const base = saasBaseUrl();
   // Same-origin SaaS resolves to "" (falsy); only null means unconfigured.
   if (base === null) throw new SaasUnconfiguredError();
-  const token = await getPortalSaasToken();
-  if (!token) throw new SaasNotLinkedError();
-  const res = await fetch(`${base}${path}`, {
-    method: options.method ?? "GET",
-    headers: { Authorization: `Bearer ${token}`, ...options.headers },
-    signal: options.signal,
-  });
+  const res = await withPortalSaasSession(
+    (token) =>
+      fetch(`${base}${path}`, {
+        method: options.method ?? "GET",
+        headers: { ...options.headers, Authorization: `Bearer ${token}` },
+        signal: options.signal,
+      }),
+    (response) => response.status === 401,
+    !options.method || options.method === "GET",
+  );
   if (!res.ok) throw new HttpError(res.status, res.statusText, null);
   return res.blob();
 }

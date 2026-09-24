@@ -22,7 +22,7 @@ import { errorMessage } from "@portal/api/http";
 import { isSaasBuild } from "@portal/api/saasApiBase";
 import { fetchStoreManifest } from "@portal/api/store";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
-import { StoreIcon } from "@portal/components/icons";
+import { Icon } from "@app/ui/Icon";
 import { pipelineIcon } from "@portal/components/pipelines/pipelineIcon";
 import {
   StoreIdBadge,
@@ -91,7 +91,7 @@ export function StoreListing() {
     return (
       <div className="portal-store-listing">
         <EmptyState
-          icon={<StoreIcon size={28} />}
+          icon={<Icon name="store" size={28} />}
           title={t("portal.store.detail.notFound")}
           description={listing.error ? errorMessage(listing.error) : undefined}
           actions={

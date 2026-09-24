@@ -93,6 +93,16 @@
   }
 }
 
+/* Looping "working" drift for a mark that sits out a whole job. Same keyframes as the
+   one-shot above, which return to rest each cycle, so it loops without a snap. */
+.sui-brandmark--working .sui-brandmark__a {
+  animation: sui-brandmark-drift-a 2s ease-in-out infinite;
+}
+
+.sui-brandmark--working .sui-brandmark__b {
+  animation: sui-brandmark-drift-b 2s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .sui-brandmark__a,
   .sui-brandmark__b {

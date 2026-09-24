@@ -1,7 +1,6 @@
 import React from "react";
 import { Box } from "@mantine/core";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-
+import { Icon } from "@app/ui/Icon";
 export interface HoverOverlayProps {
   onMouseEnter?: (e: React.MouseEvent) => void;
   onMouseLeave?: (e: React.MouseEvent) => void;
@@ -58,7 +57,7 @@ const HoverOverlay: React.FC<HoverOverlayProps> = ({
           pointerEvents: "none",
         }}
       >
-        <VisibilityIcon style={{ color: "white", fontSize: "1.5rem" }} />
+        <Icon name="eye" size={"1.5rem"} style={{ color: "white" }} />
       </Box>
     </Box>
   );

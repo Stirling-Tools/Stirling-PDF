@@ -123,6 +123,8 @@ public class PolicyImportController {
                         List.of(),
                         teamId,
                         EditorConfig.disabled(),
+                        Policy.SURFACE_POLICY,
+                        List.of(),
                         request.storeId());
         return ResponseEntity.status(HttpStatus.CREATED).body(policyStore.save(policy));
     }

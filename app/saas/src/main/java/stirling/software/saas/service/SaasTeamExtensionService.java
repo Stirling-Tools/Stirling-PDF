@@ -8,12 +8,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
 import stirling.software.saas.model.SaasTeamExtensions;
 import stirling.software.saas.repository.SaasTeamExtensionsRepository;
 
 /**
- * Read/write access to {@link SaasTeamExtensions}. Reads return safe defaults (non-personal team,
- * seat fields zeroed) when no row exists; writes create the row lazily.
+ * Missing rows use display defaults, but cannot admit users without a persisted capacity record.
+ * Writes create the row lazily.
  */
 @Service
 @Profile("saas")
@@ -58,8 +59,15 @@ public class SaasTeamExtensionService {
                 .orElse(0);
     }
 
+    /**
+     * The raw column; a missing row reads as the free allowance. Callers asking whether a team
+     * bought anything want {@link SaasTeamExtensions#licensedUsers()}.
+     */
     public int getMaxSeats(Team team) {
-        return repository.findByTeamId(team.getId()).map(SaasTeamExtensions::getMaxSeats).orElse(1);
+        return repository
+                .findByTeamId(team.getId())
+                .map(SaasTeamExtensions::getMaxSeats)
+                .orElse(UserLicenseSettingsService.DEFAULT_USER_LIMIT);
     }
 
     public Long getCreatedByUserId(Team team) {
@@ -69,22 +77,15 @@ public class SaasTeamExtensionService {
                 .orElse(null);
     }
 
-    /** Whether the team has unused seats. See {@link SaasTeamExtensions#hasAvailableSeats()}. */
+    /**
+     * Checks shared fleet capacity; a missing record blocks admission, as does the atomic claim.
+     */
     public boolean hasAvailableSeats(Team team) {
-        return repository
-                .findByTeamId(team.getId())
-                .map(SaasTeamExtensions::hasAvailableSeats)
-                .orElse(true);
+        return Boolean.TRUE.equals(repository.fleetHasAvailableSeats(team.getId()));
     }
 
-    /**
-     * Whether the team accepts new invitations. See {@link SaasTeamExtensions#canInviteMembers()}.
-     */
     public boolean canInviteMembers(Team team) {
-        return repository
-                .findByTeamId(team.getId())
-                .map(SaasTeamExtensions::canInviteMembers)
-                .orElse(true);
+        return !isPersonal(team) && hasAvailableSeats(team);
     }
 
     /** Atomic seat increment with personal-team cap enforcement. */

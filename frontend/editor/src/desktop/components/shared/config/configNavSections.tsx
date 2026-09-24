@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useConfigNavSections as useProprietaryConfigNavSections } from "@proprietary/components/shared/config/configNavSections";
 import { ConfigNavSection } from "@core/components/shared/config/configNavSections";
 import { ConnectionSettings } from "@app/components/ConnectionSettings";
+import DesktopGeneralSection from "@app/components/shared/config/configSections/GeneralSection";
 import {
   createCloudPlanNavItem,
   createCloudTeamNavItem,
@@ -57,39 +58,53 @@ export const useConfigNavSections = (
     showSettingsWhenNoLogin,
   );
 
+  // Desktop adds file-association defaults and its own update controls to the
+  // Preferences page; core builds the page, desktop supplies its extras.
+  const preferences = sections.find((s) => s.id === "preferences");
+  if (preferences) {
+    preferences.items = preferences.items.map((item) =>
+      item.key === "general"
+        ? { ...item, component: <DesktopGeneralSection /> }
+        : item,
+    );
+  }
+
   const connectionModeSection: ConfigNavSection = {
     title: t("settings.connection.title", "Connection Mode"),
     items: [
       {
         key: "connectionMode",
         label: t("settings.connection.title", "Connection Mode"),
-        icon: "desktop-cloud-rounded",
+        description: t(
+          "settings.connection.description",
+          "Work locally on this machine or connect the app to a Stirling server.",
+        ),
+        icon: "cloud",
         component: <ConnectionSettings />,
       },
     ],
   };
 
-  // In local mode only show Preferences + Connection Mode + Legal — everything
+  // In local mode only show Preferences + Connection Mode + About — everything
   // else requires a server and will 500 or show irrelevant admin UI.
   if (isLocalMode) {
     const result: ConfigNavSection[] = [];
     if (sections.length > 0) result.push(sections[0]);
     result.push(connectionModeSection);
-    const legalSection = sections.find((section) =>
-      section.items.some((item) => item.key === "legal"),
-    );
-    if (legalSection) result.push(legalSection);
+    // Matched on the group id: its items were four rows and are now one, and a
+    // miss here drops the group silently.
+    const aboutSection = sections.find((section) => section.id === "about");
+    if (aboutSection) result.push(aboutSection);
     return result;
   }
 
   // Identifies self-hosted admin sections by their first item's stable key.
   // Using item keys avoids dependency on translated section titles (#17).
   const SELF_HOSTED_SECTION_FIRST_KEYS = new Set([
-    "people", // Workspace section
-    "adminGeneral", // Configuration section
-    "adminSecurity", // Security & Authentication section
-    "adminPlan", // Licensing & Analytics section
-    "adminLegal", // Policies & Privacy section
+    "users", // Workspace section, once the roster supersedes People/Teams
+    "people", // Workspace section, before it does
+    "adminGeneral", // Server section
+    "adminUsage", // Monitoring section
   ]);
 
   // Build the result array explicitly instead of splice with hardcoded indices (#18).

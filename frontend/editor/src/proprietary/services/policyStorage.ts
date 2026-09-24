@@ -8,9 +8,30 @@
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
 import { defaultRunOn } from "@app/policies/runOn";
 import type { PoliciesByKey, PolicyState } from "@app/types/policies";
+import { isToolEndpoint } from "@app/hooks/tools/shared/toolApiMapping";
 
 const STORAGE_KEY = "stirling-policies-state";
+
+/**
+ * The stored policies as written, before parsing or reconciling against the catalogue. A cheap
+ * identity for callers that cache a derivation of {@link loadPolicies} and need to know whether
+ * it is still current.
+ */
+export function rawStoredPolicies(): string | null {
+  try {
+    return typeof localStorage !== "undefined"
+      ? localStorage.getItem(STORAGE_KEY)
+      : null;
+  } catch {
+    return null;
+  }
+}
 export const POLICIES_CHANGE_EVENT = "stirling:policies-changed";
+
+/** Clears server-owned policy settings before connecting to another server or account. */
+export function clearPolicies(): void {
+  persist({});
+}
 
 function defaultState(policyKey: string): PolicyState {
   // Unconfigured by default. The backend is the source of truth for what's
@@ -77,7 +98,23 @@ export function loadPolicies(): PoliciesByKey {
   for (const [key, state] of Object.entries(parsed)) {
     if (!out[key] && state) out[key] = state as PolicyState;
   }
+  // Cached endpoints can come from a different frontend version.
+  for (const state of Object.values(out)) {
+    const operation = state.firstOperation;
+    if (
+      operation !== undefined &&
+      (typeof operation !== "string" || !isToolEndpoint(operation))
+    ) {
+      state.firstOperation = null;
+    }
+  }
   return out;
+}
+
+/** Whether the stored entry for this key is an enforced policy (blocking) rather
+ *  than an ordinary pipeline. Unknown keys are treated as pipelines. */
+export function isEnforcedPolicy(policyKey: string | undefined): boolean {
+  return policyKey != null && loadPolicies()[policyKey]?.required === true;
 }
 
 function persist(state: PoliciesByKey): void {

@@ -46,6 +46,17 @@ export interface TeamHolding {
   licensedUsers: number | null;
   /** Members occupying capacity right now — the capacity meter's numerator. */
   usersInUse: number;
+  fleet?: boolean;
+  breakdown?: {
+    cloudUsers: number;
+    excludedOwners: number;
+    deployments: {
+      deviceId: string;
+      name: string | null;
+      users: number | null;
+      reportedAt: string | null;
+    }[];
+  } | null;
 }
 
 /** The Processor holding: metered automation beyond the free grant. */
@@ -70,12 +81,20 @@ export interface Wallet {
   /** ISO yyyy-mm-dd. Stripe period when subscribed; calendar month when free. */
   billingPeriodStart: string;
   billingPeriodEnd: string;
+  /** Independent monthly included-credit term; absent on older servers. */
+  includedPeriodStart?: string | null;
+  includedPeriodEnd?: string | null;
   /** Free grant used this period (free teams) or documents processed this period (subscribed). */
   billableUsed: number;
   /** Document ceiling for the window; null when subscribed-uncapped. */
   billableLimit: number | null;
   /** Free grant size per billing period; unused units don't carry over. */
   freeAllowance: number;
+  /**
+   * Users the team may have with no Team plan. The server enforces this, so the capacity row shows
+   * it as the denominator rather than any surface restating the number.
+   */
+  freeUserAllowance: number;
   /** Free grant left in this period; 0 = exhausted. */
   freeRemaining: number;
   /** Paid per-document rate in minor units (may be fractional); null = unknown (render "unknown", never substitute). */

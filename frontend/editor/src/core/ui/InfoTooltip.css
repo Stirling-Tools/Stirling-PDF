@@ -8,6 +8,8 @@
   color: var(--c-text-subtle);
   cursor: pointer;
   line-height: 0;
+  /* Ignored in flex rows; keeps the icon centred when it sits inside a line of text. */
+  vertical-align: middle;
 }
 .sui-info:hover {
   color: var(--c-text);
