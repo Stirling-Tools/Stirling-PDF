@@ -102,12 +102,8 @@ export default function WorkbenchBar({
   }, [returnRoute, navigate]);
   const { buttons, actions, allButtonsDisabled, viewFileActions } =
     useWorkbenchBar();
-  const {
-    pageEditorFunctions,
-    toolPanelMode,
-    leftPanelView,
-    customWorkbenchViews,
-  } = useToolWorkflow();
+  const { toolPanelMode, leftPanelView, customWorkbenchViews } =
+    useToolWorkflow();
   const { selectedTool } = useNavigationState();
   const isCustomView = !isBaseWorkbench(currentView);
   const isViewer = currentView === "viewer";
@@ -155,19 +151,8 @@ export default function WorkbenchBar({
     enforcingRun?.currentStep != null && enforcingRun.stepCount
       ? Math.round((enforcingRun.currentStep / enforcingRun.stepCount) * 100)
       : undefined;
-  const pageEditorTotalPages = pageEditorFunctions?.totalPages ?? 0;
-  const pageEditorSelectedCount =
-    pageEditorFunctions?.selectedPageIds?.length ?? 0;
-
-  const totalItems = useMemo(() => {
-    if (currentView === "multiTool") return pageEditorTotalPages;
-    return activeFiles.length;
-  }, [currentView, pageEditorTotalPages, activeFiles.length]);
-
-  const selectedCount = useMemo(() => {
-    if (currentView === "multiTool") return pageEditorSelectedCount;
-    return selectedFileIds.length;
-  }, [currentView, pageEditorSelectedCount, selectedFileIds.length]);
+  const totalItems = activeFiles.length;
+  const selectedCount = selectedFileIds.length;
 
   // Registered into the bar's own row rather than the tool row below it. Already
   // sorted by order when registered.
@@ -224,11 +209,6 @@ export default function WorkbenchBar({
         } catch (error) {
           console.error("[WorkbenchBar] Failed to export viewer file:", error);
         }
-        return;
-      }
-
-      if (currentView === "multiTool") {
-        pageEditorFunctions?.onExportAll?.();
         return;
       }
 
@@ -299,7 +279,6 @@ export default function WorkbenchBar({
       currentView,
       selectedFiles,
       activeFiles,
-      pageEditorFunctions,
       viewerContext,
       viewFileActions,
       selectors,
@@ -339,8 +318,6 @@ export default function WorkbenchBar({
       } else if (countBeforeRemove <= 1) {
         setCurrentView("fileEditor");
       }
-    } else if (currentView === "multiTool") {
-      pageEditorFunctions?.closePdf?.();
     }
   }, [
     currentView,
@@ -349,13 +326,10 @@ export default function WorkbenchBar({
     activeFiles,
     activeFileId,
     setActiveFileId,
-    pageEditorFunctions,
     setCurrentView,
   ]);
 
   const downloadTooltip = useMemo(() => {
-    if (currentView === "multiTool")
-      return t("workbenchBar.exportAll", "Export PDF");
     if (currentView === "viewer") return terminology.download;
     if (selectedCount > 0) return terminology.downloadSelected;
     return terminology.downloadAll;
@@ -460,16 +434,6 @@ export default function WorkbenchBar({
       label: t("workbenchBar.activeFiles", "Active Files"),
       icon: <Icon name="folder" size={20} />,
     },
-    ...(selectedTool === "multiTool"
-      ? [
-          {
-            value: "multiTool" as WorkbenchType,
-            label: t("workbenchBar.multiTool", "Multi-Tool"),
-            // The registry's multiTool glyph: one tool, one mark, wherever it is drawn.
-            icon: <Icon name="grid-2x2-plus" size="1rem" />,
-          },
-        ]
-      : []),
     ...customWorkbenchViews
       .filter((v) => v.data != null)
       .map((v) => ({

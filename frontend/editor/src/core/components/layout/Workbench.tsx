@@ -30,9 +30,6 @@ import { NotificationBell } from "@app/components/notifications/NotificationBell
 // is open. Lazy-loading keeps all of that out of the initial bundle.
 const FileEditor = lazy(() => import("@app/components/fileEditor/FileEditor"));
 const PageTracks = lazy(() => import("@app/components/pageTracks/PageTracks"));
-const MultiToolWorkbench = lazy(
-  () => import("@app/components/pageEditor/MultiToolWorkbench"),
-);
 const Viewer = lazy(() => import("@app/components/viewer/Viewer"));
 const FileManagerView = lazy(
   () => import("@app/components/filesPage/FileManagerView"),
@@ -98,9 +95,6 @@ export default function Workbench() {
     !readerMode &&
     !takeover &&
     !strip.enabled;
-  // Page-level editors scroll internally, so the shell must not add its own.
-  const isPageLevelEditor =
-    currentView === "pageEditor" || currentView === "multiTool";
 
   // On the transition, so reading sets the toolbar's start state without locking it.
   const prevReaderModeRef = useRef(readerMode);
@@ -215,9 +209,6 @@ export default function Workbench() {
       case "pageEditor":
         return <PageTracks />;
 
-      case "multiTool":
-        return <MultiToolWorkbench />;
-
       default:
         return null;
     }
@@ -274,7 +265,7 @@ export default function Workbench() {
 
       {/* Main content area */}
       <Box
-        className={`flex-1 min-h-0 z-10 ${isPageLevelEditor ? "relative flex flex-col" : `relative ${styles.workbenchScrollable}`}`}
+        className={`flex-1 min-h-0 z-10 ${currentView === "pageEditor" ? "relative flex flex-col" : `relative ${styles.workbenchScrollable}`}`}
         style={{
           transition: "opacity 0.15s ease-in-out",
           // Force min-width:0 so flex children (notably the files page
@@ -282,7 +273,7 @@ export default function Workbench() {
           // toggle) can shrink below their intrinsic content size on
           // narrow viewports instead of overflowing horizontally.
           minWidth: 0,
-          ...(isPageLevelEditor && { height: 0 }),
+          ...(currentView === "pageEditor" && { height: 0 }),
         }}
       >
         <Suspense

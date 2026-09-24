@@ -6,11 +6,7 @@ import React, {
   useMemo,
   useRef,
 } from "react";
-import {
-  WorkbenchType,
-  getDefaultWorkbench,
-  isPageEditorWorkbench,
-} from "@app/types/workbench";
+import { WorkbenchType, getDefaultWorkbench } from "@app/types/workbench";
 import { ToolId, isValidToolId } from "@app/types/toolId";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import { registerUnsavedWorkChecker } from "@app/services/unsavedWork";
@@ -178,10 +174,10 @@ export const NavigationProvider: React.FC<{
         hasUnsavedChanges,
       });
 
-      // If we're leaving a page editor, viewer, or custom workbench and have unsaved changes, request navigation
+      // If we're leaving pageEditor, viewer, or custom workbench and have unsaved changes, request navigation
       const leavingWorkbenchWithChanges =
-        (isPageEditorWorkbench(state.workbench) &&
-          workbench !== state.workbench &&
+        (state.workbench === "pageEditor" &&
+          workbench !== "pageEditor" &&
           hasUnsavedChanges) ||
         (state.workbench === "viewer" &&
           workbench !== "viewer" &&
@@ -248,10 +244,10 @@ export const NavigationProvider: React.FC<{
       const hasUnsavedChanges =
         unsavedChangesCheckerRef.current?.() || state.hasUnsavedChanges;
 
-      // If we're leaving a page editor, viewer, or custom workbench and have unsaved changes, request navigation
+      // If we're leaving pageEditor, viewer, or custom workbench and have unsaved changes, request navigation
       const leavingWorkbenchWithChanges =
-        (isPageEditorWorkbench(state.workbench) &&
-          workbench !== state.workbench &&
+        (state.workbench === "pageEditor" &&
+          workbench !== "pageEditor" &&
           hasUnsavedChanges) ||
         (state.workbench === "viewer" &&
           workbench !== "viewer" &&

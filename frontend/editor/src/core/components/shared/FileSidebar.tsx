@@ -34,7 +34,6 @@ import {
 import { SidebarHeader } from "@app/components/shared/SidebarHeader";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
-import { isPageEditorWorkbench } from "@app/types/workbench";
 import { FileItem } from "@app/components/shared/FileSidebarFileItem";
 import { useLabelName } from "@app/data/labelDisplay";
 import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
@@ -187,8 +186,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { actions: navActions } = useNavigationActions();
     const { workbench: currentWorkbench } = useNavigationState();
     const policyFileBadges = usePolicyFileBadges();
-    // Both page editors lay out every open file, so an added file belongs there.
-    const staysOnAdd = isPageEditorWorkbench(currentWorkbench);
+    // The page editor lays out every open file, so an added file belongs there.
+    const staysOnAdd = currentWorkbench === "pageEditor";
     const { requestNavigation } = useNavigationGuard();
     const { activeFileId, setActiveFileId } = useViewer();
     const { addFiles } = useFileHandler();

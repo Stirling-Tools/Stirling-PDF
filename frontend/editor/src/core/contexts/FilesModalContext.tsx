@@ -14,7 +14,6 @@ import {
   useNavigationState,
 } from "@app/contexts/NavigationContext";
 import { StirlingFileStub } from "@app/types/fileContext";
-import { isPageEditorWorkbench } from "@app/types/workbench";
 import type { FileId } from "@app/types/file";
 import { fileStorage } from "@app/services/fileStorage";
 import apiClient from "@app/services/apiClient";
@@ -69,8 +68,8 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
   const fileCtx = useFileContext();
   const { actions: navActions } = useNavigationActions();
   const { workbench: currentWorkbench } = useNavigationState();
-  // Both page editors lay out every open file, so an added file belongs there.
-  const staysOnAdd = isPageEditorWorkbench(currentWorkbench);
+  // The page editor lays out every open file, so an added file belongs there.
+  const staysOnAdd = currentWorkbench === "pageEditor";
   const [isFilesModalOpen, setIsFilesModalOpen] = useState(false);
   const [onModalClose, setOnModalClose] = useState<(() => void) | undefined>();
   const [insertAfterPage, setInsertAfterPage] = useState<number | undefined>();

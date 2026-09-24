@@ -6280,20 +6280,6 @@ title = "Overlay Position"
 deselectAll = "None"
 selectAll = "Check All"
 
-[pageEditor]
-title = "Page Editor"
-
-[pageEditor.emptyState]
-body = "Add files to start editing pages"
-title = "No PDF files loaded"
-
-[pageEditor.toolbar]
-delete = "Delete Selected"
-redo = "Redo"
-rotateLeft = "Rotate Selected Left"
-rotateRight = "Rotate Selected Right"
-undo = "Undo"
-
 [pageExtracter]
 title = "Extract Pages"
 
@@ -13224,12 +13210,9 @@ deleteSelected = "Delete Selected Pages"
 deselectAll = "Deselect All"
 downloadAll = "Download All"
 exitRedaction = "Exit Redaction Mode"
-exportAll = "Export PDF"
-exportSelected = "Export Selected Pages"
 formFill = "Form Editor"
 hideToolbar = "Hide toolbar"
 moreActions = "More actions"
-multiTool = "Multi-Tool"
 pageEditor = "Page Editor"
 panMode = "Pan Mode"
 print = "Print PDF"
@@ -13244,7 +13227,6 @@ rulerSettings = "Scale Settings"
 save = "Save"
 saveAll = "Save All"
 saveAs = "Save As"
-saveChanges = "Save Changes"
 search = "Search PDF"
 selectAll = "Select All"
 selectByNumber = "Select by Page Numbers"
