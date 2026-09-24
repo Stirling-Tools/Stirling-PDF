@@ -366,7 +366,7 @@ function TrackRowImpl({
         className={styles.trackHeader}
         {...handleListeners}
       >
-        <Tooltip content={collapseLabel}>
+        <Tooltip position="bottom" content={collapseLabel}>
           <ActionIcon
             className={styles.trackCollapse}
             variant="quiet"
@@ -398,7 +398,10 @@ function TrackRowImpl({
             .filter(Boolean)
             .join(" · ")}
         </span>
-        <Tooltip content={t("openInViewer", "Open in Viewer")}>
+        <Tooltip
+          position="bottom"
+          content={t("openInViewer", "Open in Viewer")}
+        >
           <ActionIcon
             className={styles.trackLeadAction}
             variant="quiet"
@@ -415,6 +418,7 @@ function TrackRowImpl({
 
         <div className={styles.trackActions}>
           <Tooltip
+            position="bottom"
             content={t("pageTracks.track.toggleSelection", "Select all pages")}
           >
             <ActionIcon
@@ -430,7 +434,10 @@ function TrackRowImpl({
               <Icon name="select-all" size="1rem" />
             </ActionIcon>
           </Tooltip>
-          <Tooltip content={t("pageTracks.rotateLeft", "Rotate left")}>
+          <Tooltip
+            position="bottom"
+            content={t("pageTracks.rotateLeft", "Rotate left")}
+          >
             <ActionIcon
               variant="quiet"
               size="sm"
@@ -441,7 +448,10 @@ function TrackRowImpl({
               <Icon name="rotate-ccw" size="1rem" />
             </ActionIcon>
           </Tooltip>
-          <Tooltip content={t("pageTracks.rotateRight", "Rotate right")}>
+          <Tooltip
+            position="bottom"
+            content={t("pageTracks.rotateRight", "Rotate right")}
+          >
             <ActionIcon
               variant="quiet"
               size="sm"
@@ -452,7 +462,10 @@ function TrackRowImpl({
               <Icon name="rotate-cw" size="1rem" />
             </ActionIcon>
           </Tooltip>
-          <Tooltip content={t("pageTracks.delete.selected", "Delete pages")}>
+          <Tooltip
+            position="bottom"
+            content={t("pageTracks.delete.selected", "Delete pages")}
+          >
             <ActionIcon
               variant="quiet"
               size="sm"
@@ -468,6 +481,7 @@ function TrackRowImpl({
             <>
               <div className={styles.trackActionsDivider} />
               <Tooltip
+                position="bottom"
                 content={
                   closeDisabled
                     ? t(
