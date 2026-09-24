@@ -203,7 +203,7 @@ jobs:
     if: |
       !cancelled() &&
       needs.files-changed.outputs.tauri == 'true' &&
-      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result) && false
+      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result)
     needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
