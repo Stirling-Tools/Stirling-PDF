@@ -12,6 +12,7 @@ import {
   ReadAloudTextItem,
 } from "@app/services/pdfiumService";
 import { createReadAloudDocSession } from "@app/components/viewer/readAloudDocSession";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
 
 type TextItemWithGeometry = ReadAloudTextItem;
 
@@ -292,7 +293,7 @@ export function useViewerReadAloud(defaultLanguage?: string) {
       ) {
         arrayBuffer = cachedArrayBufferRef.current;
       } else {
-        arrayBuffer = await currentFile.arrayBuffer();
+        arrayBuffer = await getDocumentBytes(currentFile);
         cachedArrayBufferRef.current = arrayBuffer;
         cachedFileRef.current = currentFile;
       }

@@ -1,4 +1,5 @@
 import { getFullMetadata } from "@app/services/pdfiumService";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
 import { FileAnalyzer } from "@app/services/fileAnalyzer";
 import {
   TrappedStatus,
@@ -67,7 +68,7 @@ export async function extractPDFMetadata(
   }
 
   try {
-    const arrayBuffer = await file.arrayBuffer();
+    const arrayBuffer = await getDocumentBytes(file);
     const meta = await getFullMetadata(arrayBuffer);
 
     let trapped = TrappedStatus.UNKNOWN;
