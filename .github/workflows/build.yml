@@ -205,7 +205,7 @@ jobs:
       needs.files-changed.outputs.tauri == 'true'
     needs: [files-changed, gradle-cache-prime]
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
     uses: ./.github/workflows/tauri-build.yml
     secrets: inherit
