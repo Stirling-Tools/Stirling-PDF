@@ -97,6 +97,10 @@ async function resolveDocumentHasFormFields(
   bytes?: ArrayBuffer,
 ): Promise<boolean> {
   const key = await documentFileKey(source);
+  // A bare Blob has no key, so a concurrent caller may have answered while
+  // this one awaited the fingerprint; reuse it instead of parsing again.
+  const raced = answers.get(source);
+  if (raced) return raced;
   const cached = key ? answersByFileKey.get(key) : undefined;
   if (cached) return cached;
 

@@ -524,6 +524,11 @@ export function LocalEmbedPDF({
         docs.length = 0;
       }
       initialDocsArraysRef.current.length = 0;
+      // A registry rebuild (a plugin flag change) needs a source for the live
+      // document; the buffer is gone, so hand it a lazy URL of the replacement.
+      if (file && !releasedDocumentUrlRef.current) {
+        releasedDocumentUrlRef.current = URL.createObjectURL(file);
+      }
       setPendingDocument({ source, name });
     };
     const fail = (source: string) => (err: unknown) => {

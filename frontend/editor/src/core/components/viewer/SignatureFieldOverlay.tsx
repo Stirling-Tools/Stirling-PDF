@@ -68,11 +68,15 @@ async function resolvePageFields(
     if (!(await documentHasFormFieldsFor(source))) return [];
     const buf = await getDocumentBytes(source);
     // One main-thread scan at a time: the queue also keeps a big document
-    // from being copied into the heap by two scans at once.
-    if (!_signaturesPromise) {
-      _signaturesPromise = runPdfiumScan(() => extractSignatures(buf));
+    // from being copied into the heap by two scans at once. The promise is
+    // only reused (and stored) while it belongs to this source: a source swap
+    // mid-await must not hand this page the previous document's signatures.
+    let sigPromise = _cachedSource === source ? _signaturesPromise : null;
+    if (!sigPromise) {
+      sigPromise = runPdfiumScan(() => extractSignatures(buf));
+      if (_cachedSource === source) _signaturesPromise = sigPromise;
     }
-    const signatures = await _signaturesPromise;
+    const signatures = await sigPromise;
     const appearances = await runPdfiumScan(() =>
       renderSignatureFieldAppearances(buf, undefined, [pageIndex]),
     );
