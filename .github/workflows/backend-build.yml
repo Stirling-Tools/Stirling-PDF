@@ -69,7 +69,7 @@ jobs:
     timeout-minutes: 30
     env:
       GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}
-      CACHE_COMPRESSION_LEVEL: 5
+      CACHE_COMPRESSION_LEVEL: 1
     permissions:
       contents: write
     strategy:
@@ -88,7 +88,7 @@ jobs:
 
       - name: Restore Gradle cache sftp
         id: cache
-        uses: Ludy87/cache-the-planet@0b9d42807720992a5869b51cf394762c89d118e7
+        uses: Ludy87/cache-the-planet@7ad8048c6af4f83eaf97b04a64801e8ecfec6e16
         with:
           manifest-branch: dev-cache
           manifest-path: .github/cache-data
