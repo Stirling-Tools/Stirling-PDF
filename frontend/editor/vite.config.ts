@@ -218,6 +218,7 @@ const VALID_MODES = [
   "proprietary",
   "saas",
   "desktop",
+  "mobile",
   "prototypes",
 ] as const;
 type BuildMode = (typeof VALID_MODES)[number];
@@ -227,6 +228,7 @@ const TSCONFIG_MAP: Record<BuildMode, string> = {
   proprietary: "./tsconfig.proprietary.vite.json",
   saas: "./tsconfig.saas.vite.json",
   desktop: "./tsconfig.desktop.vite.json",
+  mobile: "./tsconfig.mobile.vite.json",
   prototypes: "./tsconfig.prototypes.vite.json",
 };
 
@@ -291,7 +293,7 @@ export default defineConfig(async ({ mode, command }) => {
   // Shared between `vite` (dev) and `vite preview` (production-build serve, used
   // in CI/E2E) so the live test suite still resolves /api → :8080.
   const backendProxyConfig =
-    effectiveMode === "desktop"
+    effectiveMode === "desktop" || effectiveMode === "mobile"
       ? undefined
       : {
           "/api": backendProxy,
@@ -412,7 +414,7 @@ export default defineConfig(async ({ mode, command }) => {
         // tell vite to ignore watching `src-tauri`
         ignored: ["**/src-tauri/**"],
       },
-      // Only use proxy in web mode - Tauri handles backend connections directly
+      // Only use proxy in web mode - Tauri (desktop and mobile) handles backend connections directly
       proxy: backendProxyConfig,
     },
     preview: {

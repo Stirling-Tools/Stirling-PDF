@@ -1,7 +1,10 @@
 use std::path::PathBuf;
 
 pub fn app_data_dir() -> PathBuf {
-    if cfg!(target_os = "macos") {
+    // iOS: $HOME is the app's sandbox container, so this resolves to the
+    // container's Library/Application Support, which is the writable location
+    // Apple expects for app data.
+    if cfg!(any(target_os = "macos", target_os = "ios")) {
         let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
         PathBuf::from(home)
             .join("Library")

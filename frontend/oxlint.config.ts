@@ -6,9 +6,10 @@ import { defineConfig, type OxlintGlobals } from "oxlint";
 // scope must restate the full set of bans that apply to it.
 const APP_SOURCE = "editor/src/**/*.{js,mjs,jsx,ts,tsx}";
 const DESKTOP_SOURCE = "editor/src/desktop/**/*.{js,mjs,jsx,ts,tsx}";
+const MOBILE_SOURCE = "editor/src/mobile/**/*.{js,mjs,jsx,ts,tsx}";
 const TAURI_SOURCE = "editor/src/tauri/**/*.{js,mjs,jsx,ts,tsx}";
 // The layers that run inside the Tauri shell, the only ones that may reach @tauri-apps/*.
-const TAURI_LAYERS = [DESKTOP_SOURCE, TAURI_SOURCE];
+const TAURI_LAYERS = [DESKTOP_SOURCE, MOBILE_SOURCE, TAURI_SOURCE];
 const CLOUD_SOURCE = "editor/src/cloud/**/*.{js,mjs,jsx,ts,tsx}";
 
 // Shared import-ban building blocks -----------------------------------------
@@ -25,7 +26,7 @@ const aliasOverSrc = {
 const noTauriOutsideTauriLayers = {
   regex: "^@tauri-apps/",
   message:
-    "Tauri APIs are only for the tauri/ and desktop/ layers. Review frontend/editor/DeveloperGuide.md for structure advice.",
+    "Tauri APIs are only for the tauri/, desktop/ and mobile/ layers. Review frontend/editor/DeveloperGuide.md for structure advice.",
 };
 const cloudNoTauri = {
   regex: "^@tauri-apps/",
@@ -382,8 +383,8 @@ export default defineConfig({
       // they are exempt from the shared-DS Mantine import ban, and they keep the
       // Tauri allowance.
       files: [
-        "editor/src/{desktop,tauri}/**/*.test.{js,mjs,jsx,ts,tsx}",
-        "editor/src/{desktop,tauri}/**/*.stories.{js,mjs,jsx,ts,tsx}",
+        "editor/src/{desktop,mobile,tauri}/**/*.test.{js,mjs,jsx,ts,tsx}",
+        "editor/src/{desktop,mobile,tauri}/**/*.stories.{js,mjs,jsx,ts,tsx}",
       ],
       rules: {
         "no-restricted-imports": [

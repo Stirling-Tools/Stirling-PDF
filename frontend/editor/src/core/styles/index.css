@@ -91,3 +91,10 @@ code {
     transparent
   );
 }
+
+/* Full-screen modals (phone layouts) must clear the status bar / notch when the
+   webview extends under it (viewport-fit=cover). env() is 0 on desktop. */
+.mantine-Modal-content[data-full-screen] {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
