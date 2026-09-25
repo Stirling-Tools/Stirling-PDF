@@ -2,6 +2,7 @@ package stirling.software.common.util;
 
 import java.util.Locale;
 
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 
@@ -27,18 +28,21 @@ public class PageBoxUtils {
         if (pageBox == null || pageBox.isBlank()) {
             return page.getMediaBox();
         }
-        PDRectangle box =
-                switch (pageBox.toUpperCase(Locale.ROOT)) {
-                    case MEDIA_BOX -> page.getMediaBox();
-                    case CROP_BOX -> page.getCropBox();
-                    case TRIM_BOX -> page.getTrimBox();
-                    case BLEED_BOX -> page.getBleedBox();
-                    case ART_BOX -> page.getArtBox();
-                    default ->
-                            throw new IllegalArgumentException("Invalid pageBox value: " + pageBox);
-                };
-        if (box == null) {
-            log.warn("Page has no {}, falling back to MediaBox", pageBox);
+        return switch (pageBox.toUpperCase(Locale.ROOT)) {
+            case MEDIA_BOX -> page.getMediaBox();
+            case CROP_BOX -> explicitBoxOrFallback(page, COSName.CROP_BOX, page.getCropBox());
+            case TRIM_BOX -> explicitBoxOrFallback(page, COSName.TRIM_BOX, page.getTrimBox());
+            case BLEED_BOX -> explicitBoxOrFallback(page, COSName.BLEED_BOX, page.getBleedBox());
+            case ART_BOX -> explicitBoxOrFallback(page, COSName.ART_BOX, page.getArtBox());
+            default -> throw new IllegalArgumentException("Invalid pageBox value: " + pageBox);
+        };
+    }
+
+    // The PDPage getters fall back to CropBox or MediaBox when the entry is absent, so
+    // presence has to be tested on the COS dictionary itself.
+    private PDRectangle explicitBoxOrFallback(PDPage page, COSName name, PDRectangle box) {
+        if (box == null || page.getCOSObject().getItem(name) == null) {
+            log.warn("Page has no {}, falling back to MediaBox", name.getName());
             return page.getMediaBox();
         }
         return box;

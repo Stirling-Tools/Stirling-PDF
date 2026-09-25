@@ -60,6 +60,18 @@ class PageBoxUtilsTest {
     }
 
     @Test
+    @DisplayName("Missing named box falls back to MediaBox even when a CropBox is set")
+    void missingBoxFallsBackToMediaBoxNotCropBox() {
+        // The PDPage getters fall back to CropBox when TrimBox/BleedBox/ArtBox are absent,
+        // so resolution must check the page dictionary, not the getter result.
+        PDPage page = new PDPage(PDRectangle.A4);
+        page.setCropBox(new PDRectangle(10, 10, 300, 400));
+        assertRectEquals(PDRectangle.A4, PageBoxUtils.resolvePageBox(page, PageBoxUtils.TRIM_BOX));
+        assertRectEquals(PDRectangle.A4, PageBoxUtils.resolvePageBox(page, PageBoxUtils.BLEED_BOX));
+        assertRectEquals(PDRectangle.A4, PageBoxUtils.resolvePageBox(page, PageBoxUtils.ART_BOX));
+    }
+
+    @Test
     @DisplayName("Invalid pageBox value throws")
     void invalidValueThrows() {
         PDPage page = new PDPage(PDRectangle.A4);

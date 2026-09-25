@@ -138,12 +138,15 @@ public class ScalePagesController {
                                 true)) {
 
                     // Align the chosen source box's lower-left corner onto the centered offset so
-                    // that box fills the target page even when its origin is not (0, 0)
+                    // that box fills the target page. The target MediaBox keeps the selected box's
+                    // origin, which may not be (0, 0), so both origins enter the offset.
                     float x =
-                            (targetSize.getWidth() - sourceSize.getWidth() * scale) / 2
+                            targetSize.getLowerLeftX()
+                                    + (targetSize.getWidth() - sourceSize.getWidth() * scale) / 2
                                     - sourceSize.getLowerLeftX() * scale;
                     float y =
-                            (targetSize.getHeight() - sourceSize.getHeight() * scale) / 2
+                            targetSize.getLowerLeftY()
+                                    + (targetSize.getHeight() - sourceSize.getHeight() * scale) / 2
                                     - sourceSize.getLowerLeftY() * scale;
 
                     contentStream.saveGraphicsState();
