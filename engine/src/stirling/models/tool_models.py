@@ -430,13 +430,33 @@ class CreatePortfolioParams(ApiModel):
     files: list[bytes] = Field(..., description="The files to bundle into the PDF Portfolio.")
 
 
+class PageBox(StrEnum):
+    """
+    Page box used as the crop area when cropToBox is true. Pages without that box fall back to their MediaBox
+    """
+
+    media_box = "MEDIA_BOX"
+    crop_box = "CROP_BOX"
+    trim_box = "TRIM_BOX"
+    bleed_box = "BLEED_BOX"
+    art_box = "ART_BOX"
+
+
 class CropParams(ApiModel):
     """
     This operation takes an input PDF file and crops it according to the given coordinates. Input:PDF Output:PDF Type:SISO
     """
 
     auto_crop: bool | None = Field(None, description="Enable auto-crop to detect and remove white space")
+    crop_to_box: bool = Field(
+        False,
+        description="Crop each page to the named page box instead of explicit x/y/width/height. Ignored when autoCrop is true",
+    )
     height: float | None = Field(None, description="The height of the crop area")
+    page_box: PageBox = Field(
+        PageBox.media_box,
+        description="Page box used as the crop area when cropToBox is true. Pages without that box fall back to their MediaBox",
+    )
     remove_data_outside_crop: bool | None = Field(
         None, description="Whether to remove text outside the crop area (keeps images)"
     )
@@ -1436,6 +1456,18 @@ class Orientation1(StrEnum):
     landscape = "LANDSCAPE"
 
 
+class PageBox1(StrEnum):
+    """
+    Page box each source page is measured from when computing the scale. Pages without that box fall back to their MediaBox
+    """
+
+    media_box = "MEDIA_BOX"
+    crop_box = "CROP_BOX"
+    trim_box = "TRIM_BOX"
+    bleed_box = "BLEED_BOX"
+    art_box = "ART_BOX"
+
+
 class PageSize(StrEnum):
     """
     The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP.
@@ -1461,6 +1493,10 @@ class ScalePagesParams(ApiModel):
     orientation: Orientation1 = Field(
         Orientation1.portrait,
         description="Orientation to apply to the target page size. Ignored when pageSize is KEEP.",
+    )
+    page_box: PageBox1 = Field(
+        PageBox1.media_box,
+        description="Page box each source page is measured from when computing the scale. Pages without that box fall back to their MediaBox",
     )
     page_size: PageSize = Field(
         ..., description="The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP."

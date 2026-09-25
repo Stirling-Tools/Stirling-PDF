@@ -418,9 +418,17 @@ export interface CropPdfForm {
    */
   autoCrop?: boolean;
   /**
+   * Crop each page to the named page box instead of explicit x/y/width/height. Ignored when autoCrop is true
+   */
+  cropToBox?: boolean;
+  /**
    * The height of the crop area
    */
   height?: number;
+  /**
+   * Page box used as the crop area when cropToBox is true. Pages without that box fall back to their MediaBox
+   */
+  pageBox?: "MEDIA_BOX" | "CROP_BOX" | "TRIM_BOX" | "BLEED_BOX" | "ART_BOX";
   /**
    * Whether to remove text outside the crop area (keeps images)
    */
@@ -1310,6 +1318,10 @@ export interface ScalePagesRequest {
    * Orientation to apply to the target page size. Ignored when pageSize is KEEP.
    */
   orientation?: "PORTRAIT" | "LANDSCAPE";
+  /**
+   * Page box each source page is measured from when computing the scale. Pages without that box fall back to their MediaBox
+   */
+  pageBox?: "MEDIA_BOX" | "CROP_BOX" | "TRIM_BOX" | "BLEED_BOX" | "ART_BOX";
   /**
    * The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP.
    */
