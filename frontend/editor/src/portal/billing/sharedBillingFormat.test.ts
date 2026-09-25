@@ -77,6 +77,17 @@ describe("currencySymbol", () => {
 });
 
 describe("formatMinor", () => {
+  it.each([
+    [1200, "jpy", "JPY 1,200"],
+    [1200, "krw", "KRW 1,200"],
+    [1200, "cad", "CAD 12.00"],
+    [1200, "isk", "ISK 12.00"],
+    [1200, "ugx", "UGX 12.00"],
+    [1200, "mga", "MGA 1,200"],
+  ])("formats %s minor units in %s as %s", (amount, currency, expected) => {
+    expect(formatMinor(amount, currency)).toBe(expected);
+  });
+
   it("formats whole and fractional cents", () => {
     expect(formatMinor(224, "usd")).toContain("2.24");
     expect(formatMinor(5, "usd")).toContain("0.05");

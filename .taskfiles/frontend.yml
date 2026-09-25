@@ -12,6 +12,8 @@ vars:
   DEV_LABEL:
     sh: >-
       {{if eq OS "windows"}}powershell -NoProfile -Command '$root = git rev-parse --show-toplevel 2>$null; if (-not $root) { $root = (Get-Location).Path }; Split-Path -Leaf $root'{{else}}basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"{{end}}
+  VITEST_JOBS: '{{if .STIRLING_CHECK_JOBS}} --maxWorkers={{.STIRLING_CHECK_JOBS}}{{end}}'
+  OX_THREADS: '{{if .STIRLING_CHECK_JOBS}} --threads={{.STIRLING_CHECK_JOBS}}{{end}}'
 
 tasks:
   install:
@@ -83,6 +85,7 @@ tasks:
     ignore_error: true
     vars:
       MODE: '{{.MODE}}'
+      SAAS_BASE_URL: '{{.SAAS_BASE_URL | default ""}}'
       PORT: '{{.PORT | default "5173"}}'
       BACKEND_URL: '{{.BACKEND_URL | default "http://localhost:8080"}}'
       OPEN: '{{.OPEN | default ""}}'
@@ -90,7 +93,7 @@ tasks:
       BACKEND_URL: '{{.BACKEND_URL}}'
       STIRLING_DEV_LABEL: '{{.DEV_LABEL}}'
     cmds:
-      - npx vite editor --mode {{.MODE}} --port {{.PORT}}{{if .OPEN}} --open{{end}}
+      - '{{if .SAAS_BASE_URL}}VITE_SAAS_API_URL={{.SAAS_BASE_URL}} {{end}}npx vite editor --mode {{.MODE}} --port {{.PORT}}{{if .OPEN}} --open{{end}}'
 
   # Separate from dev:_run rather than a flag on it: Task sets an `env:` key even
   # when its value resolves to empty, and Vite treats an empty process.env VITE_* as
@@ -152,7 +155,7 @@ tasks:
     deps: [prepare]
     cmds:
       - task: dev:_run
-        vars: { MODE: proprietary, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
+        vars: { MODE: proprietary, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', SAAS_BASE_URL: '{{.SAAS_BASE_URL}}', OPEN: '{{.OPEN}}' }
 
   dev:saas:
     desc: "Start frontend dev server in SaaS mode (SAAS_ENV=dev|staging|prod)"
@@ -238,6 +241,14 @@ tasks:
         vars: { MODE: desktop }
     cmds:
       - npx vite build editor --mode desktop
+
+  build:desktop:e2e:
+    desc: "Desktop build in its own outDir, for the disk-link E2E project"
+    deps:
+      - task: prepare
+        vars: { MODE: desktop }
+    cmds:
+      - npx vite build editor --mode desktop --outDir dist-desktop
 
   build:prototypes:
     desc: "Build for prototypes mode"
@@ -342,7 +353,20 @@ tasks:
     cmds:
       - task: lint:oxlint
       - task: lint:colors
+      - task: lint:icons
       - task: lint:css
+
+  lint:icons:
+    desc: "Enforce one icon system - no inline svg, no retired icon libraries"
+    deps: [install]
+    cmds:
+      - npx tsx editor/scripts/lint/icon-lint.mts
+
+  lint:unused-icons:
+    desc: "Report icons we draw ourselves that nothing renders"
+    deps: [install]
+    cmds:
+      - npx tsx editor/scripts/lint/icon-lint.mts unused
 
   lint:css:
     desc: "Lint stylesheets for duplicate selectors"
@@ -373,7 +397,7 @@ tasks:
     desc: "Run oxlint linting"
     deps: [install]
     cmds:
-      - npx oxlint --config oxlint.config.ts --max-warnings=0
+      - npx oxlint --config oxlint.config.ts --max-warnings=0{{.OX_THREADS}}
 
   lint:fix:
     desc: "Auto-fix lint issues"
@@ -391,7 +415,7 @@ tasks:
     desc: "Check code formatting"
     deps: [install]
     cmds:
-      - npx oxfmt --check .
+      - npx oxfmt --check .{{.OX_THREADS}}
 
   fix:
     desc: "Auto-fix lint and format"
@@ -535,7 +559,7 @@ tasks:
       COVERAGE: '{{.COVERAGE | default .CI | default "false"}}'
     cmds:
       - >
-        npx vitest run --root editor
+        npx vitest run --root editor{{.VITEST_JOBS}}
         {{if eq .COVERAGE "true"}}--coverage
         --coverage.provider=v8
         --coverage.reporter=text-summary

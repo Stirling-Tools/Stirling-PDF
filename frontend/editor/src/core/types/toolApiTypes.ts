@@ -396,7 +396,21 @@ export interface ConvertToPdfRequest {
   /**
    * Option to determine how the image will fit onto the page
    */
-  fitOption?: "fillPage" | "fitDocumentToImage" | "maintainAspectRatio";
+  fitOption?:
+    | "fillPage"
+    | "fitDocumentToImage"
+    | "fitDocumentToPage"
+    | "maintainAspectRatio";
+}
+export interface CreatePortfolioRequest {
+  /**
+   * Title shown on the portfolio cover page.
+   */
+  coverTitle?: string;
+  /**
+   * The files to bundle into the PDF Portfolio.
+   */
+  files: File[];
 }
 export interface CropPdfForm {
   /**
@@ -532,6 +546,7 @@ export interface FileSizeRequest {
    */
   fileSize?: number;
 }
+export type FlattenPortfolioRequest = Record<string, never>;
 export interface FlattenRequest {
   /**
    * True to flatten only the forms, false to flatten full PDF (Convert page to image)
@@ -542,6 +557,10 @@ export interface FlattenRequest {
    */
   renderDpi?: number;
 }
+export interface FormFormDetectionDetectRequest {
+  applyToPdf?: boolean;
+  confThreshold?: number;
+}
 export type GeneralExtractBookmarksRequest = Record<string, never>;
 export type GeneralFile = Record<string, never>;
 export type GeneralPdfToSinglePageRequest = Record<string, never>;
@@ -551,6 +570,36 @@ export interface HTMLToPdfRequest {
    * Zoom level for displaying the website. Default is '1'.
    */
   zoom?: number;
+}
+export interface IngestApiRequest {
+  /**
+   * Target chunk size in characters (64-32768)
+   */
+  chunkSize?: number;
+  /**
+   * Stable identifier for the ingested document; re-ingesting the same id replaces its chunks. Defaults to a content hash of the uploaded bytes.
+   */
+  documentId?: string;
+  /**
+   * Also return the chunks as a JSONL file (one chunk per line with page span and heading breadcrumb), ready for external embedding or indexing
+   */
+  exportChunksJsonl?: boolean;
+  /**
+   * Also return the parsed document as a markdown file, for delivery to external systems (vector DBs, training corpora)
+   */
+  exportMarkdown?: boolean;
+  /**
+   * Include the input PDF alongside the requested corpus files
+   */
+  includeOriginal?: boolean;
+  /**
+   * Index the document into the built-in knowledge base
+   */
+  index?: boolean;
+  /**
+   * Overlap between adjacent chunks in characters (0-4096)
+   */
+  overlap?: number;
 }
 export interface IntegrationExternalApiCallRequest {
   bodyMode?: string;
@@ -1356,6 +1405,7 @@ export interface SecurityCertSignValidateCertificateRequest {
 }
 export type SecurityGetInfoOnPdfRequest = Record<string, never>;
 export type SecurityRemoveCertSignRequest = Record<string, never>;
+export type SecurityValidateComplianceRequest = Record<string, never>;
 export interface SignPDFWithCertRequest {
   /**
    * Whether to embed an RFC 3161 trusted timestamp alongside the signature, recording when the signature was applied. Uses the admin-configured default TSA server.
@@ -1534,12 +1584,14 @@ export type ToolEndpoint =
   | "/api/v1/convert/text-editor/pdf"
   | "/api/v1/convert/url/pdf"
   | "/api/v1/convert/vector/pdf"
+  | "/api/v1/docparse/ingest"
   | "/api/v1/filter/filter-contains-image"
   | "/api/v1/filter/filter-contains-text"
   | "/api/v1/filter/filter-file-size"
   | "/api/v1/filter/filter-page-count"
   | "/api/v1/filter/filter-page-rotation"
   | "/api/v1/filter/filter-page-size"
+  | "/api/v1/form/form-detection/detect"
   | "/api/v1/general/booklet-imposition"
   | "/api/v1/general/crop"
   | "/api/v1/general/edit-table-of-contents"
@@ -1572,12 +1624,14 @@ export type ToolEndpoint =
   | "/api/v1/misc/auto-rotate-pdf"
   | "/api/v1/misc/auto-split-pdf"
   | "/api/v1/misc/compress-pdf"
+  | "/api/v1/misc/create-portfolio"
   | "/api/v1/misc/decompress-pdf"
   | "/api/v1/misc/delete-attachment"
   | "/api/v1/misc/extract-attachments"
   | "/api/v1/misc/extract-image-scans"
   | "/api/v1/misc/extract-images"
   | "/api/v1/misc/flatten"
+  | "/api/v1/misc/flatten-portfolio"
   | "/api/v1/misc/list-attachments"
   | "/api/v1/misc/ocr-pdf"
   | "/api/v1/misc/remove-blanks"
@@ -1603,6 +1657,7 @@ export type ToolEndpoint =
   | "/api/v1/security/remove-password"
   | "/api/v1/security/sanitize-pdf"
   | "/api/v1/security/timestamp-pdf"
+  | "/api/v1/security/validate-compliance"
   | "/api/v1/security/validate-signature"
   | "/api/v1/security/verify-pdf";
 
@@ -1638,12 +1693,14 @@ export interface ToolApiParams {
   "/api/v1/convert/text-editor/pdf": GeneralFile;
   "/api/v1/convert/url/pdf": UrlToPdfRequest;
   "/api/v1/convert/vector/pdf": PdfVectorExportRequest;
+  "/api/v1/docparse/ingest": IngestApiRequest;
   "/api/v1/filter/filter-contains-image": PDFWithPageNums;
   "/api/v1/filter/filter-contains-text": ContainsTextRequest;
   "/api/v1/filter/filter-file-size": FileSizeRequest;
   "/api/v1/filter/filter-page-count": PDFComparisonAndCount;
   "/api/v1/filter/filter-page-rotation": PageRotationRequest;
   "/api/v1/filter/filter-page-size": PageSizeRequest;
+  "/api/v1/form/form-detection/detect": FormFormDetectionDetectRequest;
   "/api/v1/general/booklet-imposition": BookletImpositionRequest;
   "/api/v1/general/crop": CropPdfForm;
   "/api/v1/general/edit-table-of-contents": EditTableOfContentsRequest;
@@ -1676,12 +1733,14 @@ export interface ToolApiParams {
   "/api/v1/misc/auto-rotate-pdf": AutoRotatePdfRequest;
   "/api/v1/misc/auto-split-pdf": AutoSplitPdfRequest;
   "/api/v1/misc/compress-pdf": OptimizePdfRequest;
+  "/api/v1/misc/create-portfolio": CreatePortfolioRequest;
   "/api/v1/misc/decompress-pdf": MiscDecompressPdfRequest;
   "/api/v1/misc/delete-attachment": DeleteAttachmentRequest;
   "/api/v1/misc/extract-attachments": ExtractAttachmentsRequest;
   "/api/v1/misc/extract-image-scans": ExtractImageScansRequest;
   "/api/v1/misc/extract-images": PDFExtractImagesRequest;
   "/api/v1/misc/flatten": FlattenRequest;
+  "/api/v1/misc/flatten-portfolio": FlattenPortfolioRequest;
   "/api/v1/misc/list-attachments": ListAttachmentsRequest;
   "/api/v1/misc/ocr-pdf": ProcessPdfWithOcrRequest;
   "/api/v1/misc/remove-blanks": RemoveBlankPagesRequest;
@@ -1707,6 +1766,7 @@ export interface ToolApiParams {
   "/api/v1/security/remove-password": PDFPasswordRequest;
   "/api/v1/security/sanitize-pdf": SanitizePdfRequest;
   "/api/v1/security/timestamp-pdf": TimestampPdfRequest;
+  "/api/v1/security/validate-compliance": SecurityValidateComplianceRequest;
   "/api/v1/security/validate-signature": SignatureValidationRequest;
   "/api/v1/security/verify-pdf": PDFVerificationRequest;
 }
@@ -1743,12 +1803,14 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/convert/text-editor/pdf",
   "/api/v1/convert/url/pdf",
   "/api/v1/convert/vector/pdf",
+  "/api/v1/docparse/ingest",
   "/api/v1/filter/filter-contains-image",
   "/api/v1/filter/filter-contains-text",
   "/api/v1/filter/filter-file-size",
   "/api/v1/filter/filter-page-count",
   "/api/v1/filter/filter-page-rotation",
   "/api/v1/filter/filter-page-size",
+  "/api/v1/form/form-detection/detect",
   "/api/v1/general/booklet-imposition",
   "/api/v1/general/crop",
   "/api/v1/general/edit-table-of-contents",
@@ -1781,12 +1843,14 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/misc/auto-rotate-pdf",
   "/api/v1/misc/auto-split-pdf",
   "/api/v1/misc/compress-pdf",
+  "/api/v1/misc/create-portfolio",
   "/api/v1/misc/decompress-pdf",
   "/api/v1/misc/delete-attachment",
   "/api/v1/misc/extract-attachments",
   "/api/v1/misc/extract-image-scans",
   "/api/v1/misc/extract-images",
   "/api/v1/misc/flatten",
+  "/api/v1/misc/flatten-portfolio",
   "/api/v1/misc/list-attachments",
   "/api/v1/misc/ocr-pdf",
   "/api/v1/misc/remove-blanks",
@@ -1812,6 +1876,7 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/security/remove-password",
   "/api/v1/security/sanitize-pdf",
   "/api/v1/security/timestamp-pdf",
+  "/api/v1/security/validate-compliance",
   "/api/v1/security/validate-signature",
   "/api/v1/security/verify-pdf",
 ] as const satisfies readonly ToolEndpoint[];
@@ -1822,6 +1887,7 @@ export const TOOL_FILE_FIELDS = {
   "/api/v1/misc/add-attachments": ["attachments"],
   "/api/v1/misc/add-image": ["imageFile"],
   "/api/v1/misc/add-stamp": ["stampImage"],
+  "/api/v1/misc/create-portfolio": ["files"],
   "/api/v1/security/add-watermark": ["watermarkImage"],
   "/api/v1/security/cert-sign": [
     "privateKeyFile",

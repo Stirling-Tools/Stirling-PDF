@@ -276,8 +276,10 @@ jobs:
           context: .
           file: ./docker/embedded/Dockerfile
           push: true
+          # Read the cache the main-branch publish writes, never write it back:
+          # the build stage changes on every push, so the export bought nothing
+          # and its blobs crowded the nightly Rust caches out of the 10 GB store.
           cache-from: type=gha,scope=stirling-pdf-latest
-          cache-to: type=gha,mode=max,scope=stirling-pdf-latest
           tags: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:v2-${{ steps.commit-hash.outputs.app_short }}
           build-args: |
             VERSION_TAG=v2-alpha
@@ -322,9 +324,8 @@ jobs:
                 # Off so preview traffic never accrues against a real wallet or trips its cap. The
                 # 402 gate is separate and stays on, so gating is still testable here.
                 STIRLING_BILLING_ACCOUNT_LINK_METERING_ENABLED: "false"
-                # Stated rather than inferred from the request: the callback has to come back to the
-                # preview hostname, not to the container's own :8080 behind this proxy.
-                SYSTEM_FRONTENDURL: "https://${V2_PORT}.ssl.stirlingpdf.cloud"
+                # Browser connection state belongs to the origin advertised in the preview link.
+                SYSTEM_FRONTENDURL: "http://${NEW_VPS_HOST}:${V2_PORT}"
                 SECURITY_ENABLELOGIN: "true"
                 SECURITY_INITIALLOGIN_USERNAME: "${TEST_LOGIN_USERNAME}"
                 SECURITY_INITIALLOGIN_PASSWORD: "${TEST_LOGIN_PASSWORD}"
@@ -409,7 +410,7 @@ jobs:
           VPS_USER: ${{ secrets.NEW_VPS_USERNAME }}
         run: |
           set -euo pipefail
-          # `prepare` generates the icon set stories import (not committed).
+          # `prepare` runs the env, icon-registry and OG-metadata generators the stories rely on.
           task frontend:prepare
           task frontend:storybook:build
           PR=${{ needs.check-pr.outputs.pr_number }}

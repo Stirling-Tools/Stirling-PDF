@@ -24,6 +24,7 @@ const mockSignatures: SavedSignature[] = [
     dataUrl:
       "data:image/svg+xml;base64," +
       btoa(
+        // icon-lint-disable -- data-uri stand-in for a drawn signature, not an icon
         '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="80"><rect width="200" height="80" fill="white"/><text x="10" y="45" font-size="20">Approved</text></svg>',
       ),
     createdAt: Date.now(),
@@ -37,6 +38,7 @@ const mockSignatures: SavedSignature[] = [
     dataUrl:
       "data:image/svg+xml;base64," +
       btoa(
+        // icon-lint-disable -- data-uri stand-in for a drawn signature, not an icon
         '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="80"><rect width="200" height="80" fill="white"/><path d="M10 60 Q 50 10 100 60 T 190 60" stroke="black" fill="none" stroke-width="3"/></svg>',
       ),
     createdAt: Date.now(),

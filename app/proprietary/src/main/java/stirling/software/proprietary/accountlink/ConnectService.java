@@ -25,7 +25,10 @@ import stirling.software.common.model.ApplicationProperties;
 @Slf4j
 @Service
 @Profile("!saas")
-@ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
+@ConditionalOnProperty(
+        name = "stirling.billing.account-link.enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class ConnectService {
 
     /** Frontend route that consumes the callback fragment. */
@@ -64,6 +67,8 @@ public class ConnectService {
         EXPIRED,
         /** Declined or already used; start a new one. */
         REJECTED,
+        /** The browser callback would be rewritten, losing its origin or connection state. */
+        CALLBACK_MISMATCH,
         /** SaaS could not be reached; the handshake is still valid and can be retried. */
         UNAVAILABLE
     }
@@ -113,6 +118,10 @@ public class ConnectService {
             throw new IOException(
                     "Cannot determine where to send the admin back to; set system.frontendUrl");
         }
+        if (hint.requestedCallbackUrl() != null
+                && !callbackUrl.equals(hint.requestedCallbackUrl().strip())) {
+            return ConnectStatus.of(Phase.CALLBACK_MISMATCH);
+        }
         String nonce = randomSecret();
         String claimSecret = randomSecret();
 
@@ -141,8 +150,8 @@ public class ConnectService {
     public ConnectStatus complete(String nonce) {
         Optional<ConnectState> found = stateRepo.findById(ConnectState.SINGLETON_ID);
         if (found.isEmpty()) {
-            // Already finished (a double-submitted callback) or never started.
-            return status();
+            // An existing device credential does not authenticate an unsolicited callback.
+            return ConnectStatus.of(Phase.REJECTED);
         }
         ConnectState state = found.get();
         if (state.isExpired(LocalDateTime.now())) {
@@ -211,7 +220,27 @@ public class ConnectService {
     String resolveCallbackUrl(CallbackHint hint) {
         String configured = applicationProperties.getSystem().getFrontendUrl();
         if (configured != null && !configured.isBlank()) {
-            return trimTrailingSlash(configured.strip()) + CALLBACK_PATH;
+            String callback = trimTrailingSlash(configured.strip()) + CALLBACK_PATH;
+            String requested = hint.requestedCallbackUrl();
+            if (requested != null) {
+                try {
+                    URI uri = new URI(requested.strip());
+                    if (callback.equals(
+                                    new URI(
+                                                    uri.getScheme(),
+                                                    uri.getAuthority(),
+                                                    uri.getPath(),
+                                                    null,
+                                                    null)
+                                            .toString())
+                            && uri.getFragment() == null) {
+                        return requested.strip();
+                    }
+                } catch (URISyntaxException ignored) {
+                    // Invalid hints cannot override the configured callback.
+                }
+            }
+            return callback;
         }
         String browserOrigin = originOf(hint.browserOrigin());
         if (browserOrigin != null) {
