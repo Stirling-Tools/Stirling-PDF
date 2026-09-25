@@ -1,8 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mantine/core";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import SettingsIcon from "@mui/icons-material/Settings";
+import { Icon } from "@app/ui/Icon";
 import { Avatar, NavSurface } from "@app/ui";
 import { BrandMark } from "@app/components/shared/BrandMark";
 import { type AppSwitchTarget } from "@app/components/shared/AppSwitch";
@@ -33,6 +32,8 @@ export interface NavFooterProps {
   otherApp?: NavFooterAppLink | null;
   /** Extra rows above the account row (the self-hosted link-account CTA). */
   accountExtras?: ReactNode;
+  /** False where the rail owns the account control, so only one avatar is drawn. */
+  showAccount?: boolean;
   /** Icon-rail state: labels collapse to tooltips. */
   collapsed?: boolean;
   className?: string;
@@ -69,6 +70,7 @@ export function NavFooter({
   onOpenPlan,
   otherApp,
   accountExtras,
+  showAccount = true,
   collapsed = false,
   className,
 }: NavFooterProps) {
@@ -134,7 +136,7 @@ export function NavFooter({
                 {/* "Takes you there", not "opens a new tab" — both apps are
                     one SPA, so this navigates in place. */}
                 <span className="nav-footer__trailing" aria-hidden>
-                  <ArrowForwardIcon sx={{ fontSize: "1rem" }} />
+                  <Icon name="arrow-right" size={"1rem"} />
                 </span>
               </>
             )}
@@ -144,49 +146,51 @@ export function NavFooter({
     });
   }
 
-  rows.push({
-    key: "account",
-    node: (
-      <Tooltip
-        label={accountLabel}
-        position="right"
-        withinPortal
-        disabled={!collapsed}
-      >
-        <button
-          type="button"
-          className="nav-footer__row nav-footer__account"
-          // Called with no args: handlers that take optional params (the
-          // processor's openSettings(section?)) must not receive the event.
-          onClick={onOpenSettings ? () => onOpenSettings() : undefined}
-          disabled={!onOpenSettings}
-          data-testid={onOpenSettings ? "config-button" : undefined}
-          data-tour={onOpenSettings ? "config-button" : undefined}
-          aria-label={accountLabel}
+  if (showAccount) {
+    rows.push({
+      key: "account",
+      node: (
+        <Tooltip
+          label={accountLabel}
+          position="right"
+          withinPortal
+          disabled={!collapsed}
         >
-          {/* Decorative: the button's own label already names the account, so
-              an alt/label here would just repeat it to a screen reader. */}
-          <span aria-hidden>
-            <Avatar
-              size="sm"
-              name={displayName}
-              src={profilePictureUrl ?? undefined}
-            />
-          </span>
-          {!collapsed && (
-            <span className="nav-footer__row-label sidebar-content-fade">
-              {displayName}
+          <button
+            type="button"
+            className="nav-footer__row nav-footer__account"
+            // Called with no args: a handler with an optional param must not get the event.
+            onClick={onOpenSettings ? () => onOpenSettings() : undefined}
+            disabled={!onOpenSettings}
+            data-testid={onOpenSettings ? "config-button" : undefined}
+            data-tour={onOpenSettings ? "config-button" : undefined}
+            aria-label={accountLabel}
+          >
+            {/* Decorative: the button's own label already names the account. */}
+            <span aria-hidden>
+              <Avatar
+                size="sm"
+                name={displayName}
+                src={profilePictureUrl ?? undefined}
+              />
             </span>
-          )}
-          {onOpenSettings && !collapsed && (
-            <span className="nav-footer__trailing" aria-hidden>
-              <SettingsIcon sx={{ fontSize: "1.1rem" }} />
-            </span>
-          )}
-        </button>
-      </Tooltip>
-    ),
-  });
+            {!collapsed && (
+              <span className="nav-footer__row-label sidebar-content-fade">
+                {displayName}
+              </span>
+            )}
+            {onOpenSettings && !collapsed && (
+              <span className="nav-footer__trailing" aria-hidden>
+                <Icon name="settings" size={"1.1rem"} />
+              </span>
+            )}
+          </button>
+        </Tooltip>
+      ),
+    });
+  }
+
+  if (rows.length === 0) return null;
 
   return (
     <NavSurface

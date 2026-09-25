@@ -16,8 +16,6 @@ const meta: Meta<typeof StripeCheckoutModal> = {
     open: true,
     onClose: () => console.log("close"),
     teamId: 1,
-    currency: "usd",
-    pricePerDocMinor: 1,
     initialCapUsd: 100,
     onComplete: () => Promise.resolve(true),
   },
@@ -26,6 +24,14 @@ const meta: Meta<typeof StripeCheckoutModal> = {
     layout: "fullscreen",
     msw: {
       handlers: [
+        http.post("http://saas.mock/functions/v1/create-checkout-session", () =>
+          HttpResponse.json({
+            success: true,
+            currency: "usd",
+            currency_locked: false,
+            unit_amount_minor: 1,
+          }),
+        ),
         http.patch(
           "http://saas.mock/api/v1/payg/cap",
           () => new HttpResponse(null, { status: 204 }),

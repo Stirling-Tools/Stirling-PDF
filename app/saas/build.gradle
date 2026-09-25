@@ -17,5 +17,6 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-webmvc'
     api 'org.springframework.boot:spring-boot-starter-aspectj'
 
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
     testImplementation "com.tngtech.archunit:archunit-junit5:${archunitVersion}"
 }

@@ -1,5 +1,6 @@
 package stirling.software.proprietary.model;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 import jakarta.persistence.*;
@@ -19,7 +20,7 @@ import lombok.*;
 @ToString
 public class UserLicenseSettings implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    @Serial private static final long serialVersionUID = 1L;
 
     public static final Long SINGLETON_ID = 1L;
 
@@ -48,6 +49,20 @@ public class UserLicenseSettings implements Serializable {
      */
     @Column(name = "license_max_users", nullable = false)
     private int licenseMaxUsers = 0;
+
+    /**
+     * Users the linked cloud team has bought a Team plan for; null when it has bought none.
+     *
+     * <p>Mirrored here from the SaaS entitlement, which lives only in memory: an instance that
+     * boots offline, or before the first entitlement round trip finishes, would otherwise not know
+     * it is entitled at all. Rewritten on every licence sync, so SaaS stays the authority and a
+     * lapsed plan clears it.
+     */
+    @Column(name = "linked_team_users")
+    private Integer linkedTeamUsers;
+
+    @Column(name = "linked_team_device_id")
+    private String linkedTeamDeviceId;
 
     /**
      * Random salt used when generating signatures. Makes it harder to recompute the signature when

@@ -1,10 +1,7 @@
 import { Menu } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import CloseIcon from "@mui/icons-material/Close";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import PrintIcon from "@mui/icons-material/Print";
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { WorkbenchBarActionsProps } from "@app/components/shared/workbenchBar/types";
 
 /**
@@ -13,7 +10,7 @@ import { WorkbenchBarActionsProps } from "@app/components/shared/workbenchBar/ty
  */
 export default function WorkbenchBarMobileActions({
   currentView,
-  isCustomView,
+  showsFileActions,
   actionsDisabled,
   policyEnforcing,
   downloadLabel,
@@ -25,6 +22,13 @@ export default function WorkbenchBarMobileActions({
 }: WorkbenchBarActionsProps) {
   const { t } = useTranslation();
   const exportDisabled = actionsDisabled || policyEnforcing;
+  const showPrint = currentView === "viewer";
+  const showFileActions = showsFileActions;
+
+  // Custom workbench views own their content, so none of these apply. The
+  // desktop cluster renders nothing at all in that case; without this the
+  // trigger would still be there, opening an empty dropdown.
+  if (!showPrint && !showFileActions) return null;
 
   return (
     <Menu shadow="md" width={230} position="bottom-end">
@@ -35,50 +39,42 @@ export default function WorkbenchBarMobileActions({
           className="workbench-bar-action-icon"
           aria-label={t("workbenchBar.moreActions", "More actions")}
         >
-          <MoreVertIcon sx={{ fontSize: "1.25rem" }} />
+          <Icon name="ellipsis-vertical" size={"1.25rem"} />
         </ActionIcon>
       </Menu.Target>
       <Menu.Dropdown>
-        {currentView === "viewer" && (
+        {showPrint && (
           <Menu.Item
-            leftSection={<PrintIcon sx={{ fontSize: "1.1rem" }} />}
+            leftSection={<Icon name="printer" size={"1.1rem"} />}
             disabled={exportDisabled}
             onClick={onPrint}
           >
             {t("workbenchBar.print", "Print PDF")}
           </Menu.Item>
         )}
-        {!isCustomView && (
+        {showFileActions && (
           <Menu.Item
-            leftSection={
-              <LocalIcon
-                icon={downloadIconName}
-                width="1.1rem"
-                height="1.1rem"
-              />
-            }
+            leftSection={<Icon name={downloadIconName} size="1.1rem" />}
             disabled={exportDisabled}
             onClick={() => void onExport()}
           >
             {downloadLabel}
           </Menu.Item>
         )}
-        {!isCustomView && saveAsIconName && (
+        {showFileActions && saveAsIconName && (
           <Menu.Item
-            leftSection={
-              <LocalIcon icon={saveAsIconName} width="1.1rem" height="1.1rem" />
-            }
+            leftSection={<Icon name={saveAsIconName} size="1.1rem" />}
             disabled={exportDisabled}
             onClick={() => void onExport(true)}
           >
             {t("workbenchBar.saveAs", "Save As")}
           </Menu.Item>
         )}
-        {!isCustomView && (
+        {showFileActions && (
           <>
             <Menu.Divider />
             <Menu.Item
-              leftSection={<CloseIcon sx={{ fontSize: "1.1rem" }} />}
+              leftSection={<Icon name="x" size={"1.1rem"} />}
               disabled={actionsDisabled}
               onClick={() => void onClose()}
             >

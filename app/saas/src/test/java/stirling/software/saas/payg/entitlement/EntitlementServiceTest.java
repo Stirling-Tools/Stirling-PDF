@@ -21,21 +21,20 @@ import stirling.software.saas.payg.bundle.PrepaidBundleService;
 import stirling.software.saas.payg.model.EntitlementState;
 import stirling.software.saas.payg.model.FeatureGate;
 import stirling.software.saas.payg.model.FeatureSet;
-import stirling.software.saas.payg.repository.WalletLedgerRepository;
+import stirling.software.saas.payg.repository.PaygShadowChargeRepository;
 import stirling.software.saas.payg.repository.WalletPolicyRepository;
 import stirling.software.saas.payg.wallet.WalletPolicy;
 
 /**
- * Unit tests for {@link EntitlementService}. Two branches (design 2026-06-11 — the free allowance
- * is a one-time lifetime grant):
+ * Unit tests for {@link EntitlementService}. Two branches (the free allowance is a per-period
+ * grant, projected onto the current period by {@code TeamBillingService} before it gets here):
  *
  * <ul>
  *   <li><b>Unsubscribed</b> — gated by the grant. Cap = grant size, spend = {@code grant −
  *       remaining}, both read straight from the billing context (no ledger query). Exhausted grant
  *       (remaining ≤ 0) → DEGRADED.
  *   <li><b>Subscribed</b> — gated by the monthly money-derived doc cap. Spend = this period's net
- *       billable units ({@link WalletLedgerRepository#sumPeriodNetBillable} negated, refunds
- *       netted).
+ *       metered units ({@link PaygShadowChargeRepository#sumPaidUnits}, excluding refunded jobs).
  * </ul>
  *
  * Also covers cache hit/miss + the invalidate cascade.
@@ -47,15 +46,35 @@ class EntitlementServiceTest {
 
     private TeamBillingService billingService;
     private WalletPolicyRepository walletPolicyRepo;
-    private WalletLedgerRepository ledgerRepo;
+    private PaygShadowChargeRepository ledgerRepo;
     private PrepaidBundleService prepaidBundleService;
     private EntitlementService service;
+
+    @Test
+    void zeroMeteredCapDoesNotBlockIncludedTeamCredits() {
+        stubBilling(
+                42L,
+                new TeamBillingContext(
+                        true,
+                        "sub",
+                        PERIOD_START,
+                        PERIOD_END,
+                        2500,
+                        2200,
+                        null,
+                        null,
+                        0L,
+                        0L,
+                        PERIOD_START,
+                        PERIOD_END));
+        assertThat(service.getSnapshot(42L).state()).isEqualTo(EntitlementState.FULL);
+    }
 
     @BeforeEach
     void setUp() {
         billingService = Mockito.mock(TeamBillingService.class);
         walletPolicyRepo = Mockito.mock(WalletPolicyRepository.class);
-        ledgerRepo = Mockito.mock(WalletLedgerRepository.class);
+        ledgerRepo = Mockito.mock(PaygShadowChargeRepository.class);
         prepaidBundleService = Mockito.mock(PrepaidBundleService.class);
         service =
                 new EntitlementService(
@@ -90,22 +109,20 @@ class EntitlementServiceTest {
         stubBilling(42L, subscribedContext(2000L));
         when(walletPolicyRepo.findByTeamId(42L))
                 .thenReturn(Optional.of(walletPolicyThresholds(FeatureSet.MINIMAL)));
-        when(ledgerRepo.sumPeriodNetBillable(eq(42L), any(), any())).thenReturn(-500L);
+        when(ledgerRepo.sumPaidUnits(eq(42L), any(), any())).thenReturn(500L);
 
         EntitlementSnapshot snap = service.getSnapshot(42L);
 
         assertThat(snap.periodCapUnits()).isEqualTo(2000L);
         assertThat(snap.periodSpendUnits()).isEqualTo(500L);
-        // 500/2000 = 25% — FULL
         assertThat(snap.state()).isEqualTo(EntitlementState.FULL);
     }
 
     @Test
     void subscribedTeam_refundsNetAgainstSpend() {
-        // Net billable = debits − refunds. A −300 net (e.g. 500 debited, 200 refunded) → 300 spend.
         stubBilling(42L, subscribedContext(2000L));
         when(walletPolicyRepo.findByTeamId(42L)).thenReturn(Optional.empty());
-        when(ledgerRepo.sumPeriodNetBillable(eq(42L), any(), any())).thenReturn(-300L);
+        when(ledgerRepo.sumPaidUnits(eq(42L), any(), any())).thenReturn(300L);
 
         EntitlementSnapshot snap = service.getSnapshot(42L);
 
@@ -116,14 +133,14 @@ class EntitlementServiceTest {
     void spendWindow_comesFromBillingContextNotCalendarMonth() {
         stubBilling(42L, subscribedContext(2000L));
         when(walletPolicyRepo.findByTeamId(42L)).thenReturn(Optional.empty());
-        when(ledgerRepo.sumPeriodNetBillable(eq(42L), any(), any())).thenReturn(0L);
+        when(ledgerRepo.sumPaidUnits(eq(42L), any(), any())).thenReturn(0L);
 
         EntitlementSnapshot snap = service.getSnapshot(42L);
 
         // The subscription-anchored window flows through to both the snapshot and the SUM query.
         assertThat(snap.periodStart()).isEqualTo(PERIOD_START);
         assertThat(snap.periodEnd()).isEqualTo(PERIOD_END);
-        verify(ledgerRepo).sumPeriodNetBillable(eq(42L), eq(PERIOD_START), eq(PERIOD_END));
+        verify(ledgerRepo).sumPaidUnits(eq(42L), eq(PERIOD_START), eq(PERIOD_END));
     }
 
     @Test
@@ -199,7 +216,7 @@ class EntitlementServiceTest {
         when(walletPolicyRepo.findByTeamId(42L))
                 .thenReturn(Optional.of(walletPolicyThresholds(FeatureSet.MINIMAL)));
         // 1000 spent of a 1000 cap → 100% → cap gate degrades, but the pool overrides it.
-        when(ledgerRepo.sumPeriodNetBillable(eq(42L), any(), any())).thenReturn(-1000L);
+        when(ledgerRepo.sumPaidUnits(eq(42L), any(), any())).thenReturn(1000L);
         when(prepaidBundleService.prepaidRemainingUnits(42L)).thenReturn(5000L);
 
         EntitlementSnapshot snap = service.getSnapshot(42L);
@@ -227,7 +244,7 @@ class EntitlementServiceTest {
         stubBilling(42L, subscribedContext(1000L));
         when(walletPolicyRepo.findByTeamId(42L))
                 .thenReturn(Optional.of(walletPolicyThresholds(FeatureSet.MINIMAL)));
-        when(ledgerRepo.sumPeriodNetBillable(eq(42L), any(), any())).thenReturn(-1000L);
+        when(ledgerRepo.sumPaidUnits(eq(42L), any(), any())).thenReturn(1000L);
         when(prepaidBundleService.prepaidRemainingUnits(42L)).thenReturn(0L);
 
         EntitlementSnapshot snap = service.getSnapshot(42L);
@@ -246,7 +263,7 @@ class EntitlementServiceTest {
         stubBilling(42L, subscribedContext(1000L));
         when(walletPolicyRepo.findByTeamId(42L))
                 .thenReturn(Optional.of(walletPolicyThresholds(FeatureSet.MINIMAL)));
-        when(ledgerRepo.sumPeriodNetBillable(eq(42L), any(), any())).thenReturn(-250L);
+        when(ledgerRepo.sumPaidUnits(eq(42L), any(), any())).thenReturn(250L);
 
         EntitlementSnapshot snap = service.getSnapshot(42L);
 
@@ -272,7 +289,7 @@ class EntitlementServiceTest {
     void uncappedSubscribedTeam_nullCapNeverDegrades() {
         stubBilling(42L, subscribedContext(null));
         when(walletPolicyRepo.findByTeamId(42L)).thenReturn(Optional.empty());
-        when(ledgerRepo.sumPeriodNetBillable(eq(42L), any(), any())).thenReturn(-1_000_000L);
+        when(ledgerRepo.sumPaidUnits(eq(42L), any(), any())).thenReturn(1_000_000L);
 
         EntitlementSnapshot snap = service.getSnapshot(42L);
 
@@ -281,11 +298,10 @@ class EntitlementServiceTest {
     }
 
     @Test
-    void positiveNetBillable_treatedAsZeroSpend() {
-        // Subscribed defensive: if refunds exceed debits (positive net), spend clamps to zero.
+    void negativeMeteredSpend_treatedAsZeroSpend() {
         stubBilling(42L, subscribedContext(100L));
         when(walletPolicyRepo.findByTeamId(42L)).thenReturn(Optional.empty());
-        when(ledgerRepo.sumPeriodNetBillable(eq(42L), any(), any())).thenReturn(50L);
+        when(ledgerRepo.sumPaidUnits(eq(42L), any(), any())).thenReturn(-50L);
 
         EntitlementSnapshot snap = service.getSnapshot(42L);
 
@@ -297,14 +313,14 @@ class EntitlementServiceTest {
     void cacheHit_secondCallSkipsLedgerLookup() {
         stubBilling(42L, subscribedContext(500L));
         when(walletPolicyRepo.findByTeamId(42L)).thenReturn(Optional.empty());
-        when(ledgerRepo.sumPeriodNetBillable(eq(42L), any(), any())).thenReturn(0L);
+        when(ledgerRepo.sumPaidUnits(eq(42L), any(), any())).thenReturn(0L);
 
         service.getSnapshot(42L);
         service.getSnapshot(42L);
         service.getSnapshot(42L);
 
         // Only one underlying ledger SUM despite 3 calls — second + third hit the cache.
-        verify(ledgerRepo, times(1)).sumPeriodNetBillable(eq(42L), any(), any());
+        verify(ledgerRepo, times(1)).sumPaidUnits(eq(42L), any(), any());
         assertThat(service.cacheSize()).isEqualTo(1);
     }
 
@@ -312,13 +328,13 @@ class EntitlementServiceTest {
     void invalidate_dropsCacheAndCascadesToBillingService() {
         stubBilling(42L, subscribedContext(500L));
         when(walletPolicyRepo.findByTeamId(42L)).thenReturn(Optional.empty());
-        when(ledgerRepo.sumPeriodNetBillable(eq(42L), any(), any())).thenReturn(0L);
+        when(ledgerRepo.sumPaidUnits(eq(42L), any(), any())).thenReturn(0L);
 
         service.getSnapshot(42L);
         service.invalidate(42L);
         service.getSnapshot(42L);
 
-        verify(ledgerRepo, times(2)).sumPeriodNetBillable(eq(42L), any(), any());
+        verify(ledgerRepo, times(2)).sumPaidUnits(eq(42L), any(), any());
         // Window/cap facts must recompute together with the spend.
         verify(billingService).invalidate(42L);
     }
@@ -327,14 +343,14 @@ class EntitlementServiceTest {
     void invalidate_otherTeamLeavesEntryAlone() {
         when(billingService.forTeam(any())).thenReturn(subscribedContext(500L));
         when(walletPolicyRepo.findByTeamId(any())).thenReturn(Optional.empty());
-        when(ledgerRepo.sumPeriodNetBillable(any(), any(), any())).thenReturn(0L);
+        when(ledgerRepo.sumPaidUnits(any(), any(), any())).thenReturn(0L);
 
         service.getSnapshot(42L);
         service.invalidate(99L);
         service.getSnapshot(42L);
 
         // Only one fetch for team 42 — 99 invalidate didn't touch its entry.
-        verify(ledgerRepo, times(1)).sumPeriodNetBillable(eq(42L), any(), any());
+        verify(ledgerRepo, times(1)).sumPaidUnits(eq(42L), any(), any());
     }
 
     @Test
@@ -352,7 +368,18 @@ class EntitlementServiceTest {
     /** Unsubscribed team: gated by the one-time grant (size + remaining); no monthly cap. */
     private static TeamBillingContext freeContext(long grant, long remaining) {
         return new TeamBillingContext(
-                false, null, PERIOD_START, PERIOD_END, grant, remaining, null, null, null, null);
+                false,
+                null,
+                PERIOD_START,
+                PERIOD_END,
+                grant,
+                remaining,
+                null,
+                null,
+                null,
+                null,
+                PERIOD_START,
+                PERIOD_END);
     }
 
     /**
@@ -370,7 +397,9 @@ class EntitlementServiceTest {
                 java.math.BigDecimal.valueOf(2),
                 "usd",
                 monthlyCapDocUnits == null ? null : monthlyCapDocUnits * 2,
-                monthlyCapDocUnits);
+                monthlyCapDocUnits,
+                PERIOD_START,
+                PERIOD_END);
     }
 
     private static WalletPolicy walletPolicyThresholds(FeatureSet degradedSet) {

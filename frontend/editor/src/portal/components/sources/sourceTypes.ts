@@ -25,6 +25,10 @@ export const EDITOR_SOURCE_TYPE = "editor";
 export const WEBHOOK_SOURCE_TYPE = "webhook";
 
 const SOURCE_TYPE_META: Record<string, SourceTypeMeta> = {
+  vectordb: {
+    labelKey: "portal.sources.types.vectordb.label",
+    accent: "brand",
+  },
   folder: {
     labelKey: "portal.sources.types.folder.label",
     accent: "default",
@@ -74,6 +78,10 @@ export interface SourceFieldDef {
   helperTextKey?: string;
   options?: { value: string; labelKey: string }[];
   defaultValue?: string;
+  /** Tucked behind the "Advanced" disclosure: power settings whose default suits almost everyone. */
+  advanced?: boolean;
+  /** Only rendered while another field currently holds one of these values (e.g. a knob that only applies in some modes). */
+  visibleWhen?: { key: string; oneOf: string[] };
   /**
    * For `control: "connection"` - the connection-catalogue entry id this slot accepts (e.g.
    * "sftp"). Filters the picker to matching connections and pins the inline "new connection" form.
@@ -87,6 +95,7 @@ export interface CreatableSourceType {
   labelKey: string;
   descriptionKey: string;
   fields: SourceFieldDef[];
+  readable?: boolean;
 }
 
 /**
@@ -116,11 +125,16 @@ function networkSourceFields(connectionTypeId: string): SourceFieldDef[] {
       labelKey: "portal.sources.networkFields.mode.label",
       control: "select",
       defaultValue: "consume",
-      helperTextKey: "portal.sources.networkFields.mode.helperText",
+      helperTextKey: "portal.sources.processingModeHelp",
+      advanced: true,
       options: [
         {
           value: "consume",
           labelKey: "portal.sources.networkFields.mode.options.consume",
+        },
+        {
+          value: "track",
+          labelKey: "portal.sources.networkFields.mode.options.track",
         },
         {
           value: "snapshot",
@@ -133,6 +147,7 @@ function networkSourceFields(connectionTypeId: string): SourceFieldDef[] {
       labelKey: "portal.sources.networkFields.recursive.label",
       control: "select",
       defaultValue: "false",
+      helperTextKey: "portal.sources.networkFields.recursive.helperText",
       options: [
         {
           value: "false",
@@ -168,10 +183,16 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
         labelKey: "portal.sources.types.folder.fields.mode.label",
         control: "select",
         defaultValue: "consume",
+        helperTextKey: "portal.sources.processingModeHelp",
+        advanced: true,
         options: [
           {
             value: "consume",
             labelKey: "portal.sources.types.folder.fields.mode.options.consume",
+          },
+          {
+            value: "track",
+            labelKey: "portal.sources.types.folder.fields.mode.options.track",
           },
           {
             value: "snapshot",
@@ -185,6 +206,8 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
         labelKey: "portal.sources.types.folder.fields.recursive.label",
         control: "select",
         defaultValue: "false",
+        helperTextKey:
+          "portal.sources.types.folder.fields.recursive.helperText",
         options: [
           {
             value: "false",
@@ -204,6 +227,10 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
         control: "select",
         defaultValue: "stat",
         helperTextKey: "portal.sources.types.folder.fields.identity.helperText",
+        advanced: true,
+        // Change detection governs the ledger, which only consume and track keep;
+        // snapshot re-reads everything regardless.
+        visibleWhen: { key: "mode", oneOf: ["consume", "track"] },
         options: [
           {
             value: "stat",
@@ -243,11 +270,16 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
         labelKey: "portal.sources.types.s3.fields.mode.label",
         control: "select",
         defaultValue: "consume",
-        helperTextKey: "portal.sources.types.s3.fields.mode.helperText",
+        helperTextKey: "portal.sources.processingModeHelp",
+        advanced: true,
         options: [
           {
             value: "consume",
             labelKey: "portal.sources.types.s3.fields.mode.options.consume",
+          },
+          {
+            value: "track",
+            labelKey: "portal.sources.types.s3.fields.mode.options.track",
           },
           {
             value: "snapshot",
@@ -280,6 +312,42 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
     labelKey: "portal.sources.types.webhook.label",
     descriptionKey: "portal.sources.types.webhook.description",
     fields: [],
+  },
+  {
+    type: "vectordb",
+    readable: false,
+    labelKey: "portal.sources.types.vectordb.label",
+    descriptionKey: "portal.sources.types.vectordb.description",
+    fields: [
+      {
+        key: "connectionId",
+        control: "connection",
+        connectionTypeId: "vectordb",
+        required: true,
+        labelKey: "portal.sources.types.vectordb.connection",
+      },
+      {
+        key: "collection",
+        control: "text",
+        required: true,
+        labelKey: "portal.sources.types.vectordb.collection",
+        helperTextKey: "portal.sources.types.vectordb.collectionHint",
+      },
+      {
+        key: "namespace",
+        control: "text",
+        labelKey: "portal.sources.types.vectordb.namespace",
+        helperTextKey: "portal.sources.types.vectordb.namespaceHint",
+      },
+      {
+        key: "textField",
+        control: "text",
+        required: true,
+        defaultValue: "text",
+        labelKey: "portal.sources.types.vectordb.textField",
+        helperTextKey: "portal.sources.types.vectordb.textFieldHint",
+      },
+    ],
   },
 ];
 
@@ -317,4 +385,12 @@ export function defaultOptions(
     out[field.key] = field.defaultValue ?? "";
   }
   return out;
+}
+
+/** Whether a saved location can supply documents to a pipeline. */
+export function isReadableSource(source: { type: string }): boolean {
+  return (
+    CREATABLE_SOURCE_TYPES.find((entry) => entry.type === source.type)
+      ?.readable !== false
+  );
 }

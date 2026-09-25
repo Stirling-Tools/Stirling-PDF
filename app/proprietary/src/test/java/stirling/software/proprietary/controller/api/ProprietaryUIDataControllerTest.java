@@ -53,6 +53,10 @@ class ProprietaryUIDataControllerTest {
     @Mock private LoginAttemptService loginAttemptService;
     @Mock private ResourceAccessService resourceAccessService;
 
+    @Mock
+    private stirling.software.proprietary.security.repository.InviteTokenRepository
+            inviteTokenRepository;
+
     private ApplicationProperties applicationProperties;
     private AuditConfigurationProperties auditConfig;
     private ObjectMapper objectMapper;
@@ -87,7 +91,10 @@ class ProprietaryUIDataControllerTest {
                         auditRepository,
                         mfaService,
                         loginAttemptService,
-                        resourceAccessService);
+                        resourceAccessService,
+                        inviteTokenRepository,
+                        org.mockito.Mockito.mock(
+                                stirling.software.proprietary.service.OrgOwnerService.class));
     }
 
     @Test

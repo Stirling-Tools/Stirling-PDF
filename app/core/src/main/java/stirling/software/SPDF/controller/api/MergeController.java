@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
@@ -47,6 +48,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfErrorUtils;
+import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -131,31 +133,11 @@ public class MergeController {
                         return Long.compare(t2, t1);
                     };
             case "byPDFTitle" ->
-                    (file1, file2) -> {
-                        try (PDDocument doc1 = pdfDocumentFactory.load(file1);
-                                PDDocument doc2 = pdfDocumentFactory.load(file2)) {
-                            String title1 =
-                                    doc1.getDocumentInformation() != null
-                                            ? doc1.getDocumentInformation().getTitle()
-                                            : null;
-                            String title2 =
-                                    doc2.getDocumentInformation() != null
-                                            ? doc2.getDocumentInformation().getTitle()
-                                            : null;
-                            if (title1 == null && title2 == null) {
-                                return 0;
-                            }
-                            if (title1 == null) {
-                                return 1;
-                            }
-                            if (title2 == null) {
-                                return -1;
-                            }
-                            return title1.compareToIgnoreCase(title2);
-                        } catch (IOException e) {
-                            return 0;
-                        }
-                    };
+                    // Titles must be read per file: a pairwise load that returns 0 when either
+                    // side is unreadable (an image input) makes the comparator intransitive.
+                    Comparator.comparing(
+                            this::getPdfTitleSafe,
+                            Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
             case "orderProvided" -> (file1, file2) -> 0;
             default -> (file1, file2) -> 0;
         };
@@ -185,6 +167,16 @@ public class MergeController {
                 ExceptionUtils.logException("document loading for TOC generation", e);
                 pageIndex++;
             }
+        }
+    }
+
+    /** Null when the file has no title or is not a loadable PDF (an image), sorting those last. */
+    private String getPdfTitleSafe(MultipartFile file) {
+        try (PDDocument doc = pdfDocumentFactory.load(file)) {
+            PDDocumentInformation info = doc.getDocumentInformation();
+            return info != null ? info.getTitle() : null;
+        } catch (IOException e) {
+            return null;
         }
     }
 
@@ -241,13 +233,20 @@ public class MergeController {
             value = "/merge-pdfs",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
-    @ToolIO(produces = ToolFormat.PDF, arity = ToolArity.MISO)
+    @ToolIO(
+            accepts = {ToolFormat.PDF, ToolFormat.IMAGE},
+            // The installed ImageIO readers cover these; ToolFormat.IMAGE's ai/eps have none.
+            inputExtensions = {
+                "pdf", "png", "jpg", "jpeg", "gif", "bmp", "tif", "tiff", "webp", "svg", "psd"
+            },
+            produces = ToolFormat.PDF,
+            arity = ToolArity.MISO)
     @Operation(
             summary = "Merge multiple PDF files into one",
             description =
                     "This endpoint merges multiple PDF files into a single PDF file. The merged"
                             + " file will contain all pages from the input files in the order they were"
-                            + " provided.")
+                            + " provided. Image inputs are converted to PDF pages before merging.")
     public ResponseEntity<Resource> mergePdfs(
             @ModelAttribute MergePdfsRequest request,
             @RequestParam(value = "fileOrder", required = false) String fileOrder)
@@ -277,7 +276,19 @@ public class MergeController {
             List<Integer> invalidIndexes = new ArrayList<>();
             for (int index = 0; index < files.length; index++) {
                 MultipartFile multipartFile = files[index];
-                File tempFile = tempFileManager.convertMultipartFileToFile(multipartFile);
+                File tempFile;
+                if (isImageFile(multipartFile)) {
+                    // Convert images to PDF so JPDFium can merge them; fall back to the raw
+                    // upload if conversion fails so pre-validate can flag it.
+                    try {
+                        tempFile = convertImageToPdf(multipartFile);
+                    } catch (Exception e) {
+                        ExceptionUtils.logException("image to PDF conversion for merge", e);
+                        tempFile = tempFileManager.convertMultipartFileToFile(multipartFile);
+                    }
+                } else {
+                    tempFile = tempFileManager.convertMultipartFileToFile(multipartFile);
+                }
                 filesToDelete.add(tempFile);
                 inputPaths.add(tempFile.toPath());
 
@@ -374,6 +385,42 @@ public class MergeController {
                 GeneralUtils.generateFilename(firstFilename, "_merged_unsigned.pdf");
 
         return WebResponseUtils.pdfFileToWebResponse(outputTempFile, mergedFileName);
+    }
+
+    private boolean isImageFile(MultipartFile file) {
+        String contentType = file.getContentType();
+        if (contentType != null && contentType.toLowerCase(Locale.ROOT).startsWith("image/")) {
+            return true;
+        }
+        String filename = file.getOriginalFilename();
+        if (filename == null) {
+            return false;
+        }
+        int dot = filename.lastIndexOf('.');
+        if (dot < 0 || dot == filename.length() - 1) {
+            return false;
+        }
+        return ToolFormat.IMAGE
+                .getExtensions()
+                .contains(filename.substring(dot + 1).toLowerCase(Locale.ROOT));
+    }
+
+    private File convertImageToPdf(MultipartFile image) throws IOException {
+        byte[] pdfBytes =
+                PdfUtils.imageToPdf(
+                        new MultipartFile[] {image},
+                        "maintainAspectRatio",
+                        false,
+                        "color",
+                        pdfDocumentFactory);
+        File pdfFile = tempFileManager.createTempFile(".pdf");
+        try {
+            Files.write(pdfFile.toPath(), pdfBytes);
+        } catch (IOException e) {
+            tempFileManager.deleteTempFile(pdfFile);
+            throw e;
+        }
+        return pdfFile;
     }
 
     private int[] mergeWithJpdfium(

@@ -19,7 +19,7 @@ export const SignatureTypeSelector: React.FC<SignatureTypeSelectorProps> = ({
   return (
     <SegmentedControl
       value={value}
-      onChange={(val) => onChange(val as SignatureType)}
+      onChange={(val) => onChange(val)}
       options={[
         {
           value: "draw",

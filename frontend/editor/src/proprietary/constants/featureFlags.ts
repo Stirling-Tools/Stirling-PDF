@@ -5,11 +5,5 @@
  * values.
  */
 
-/**
- * Watched Folders — a proprietary feature whose implementation lives under
- * `proprietary/`. Still disabled for now; flip to `true` to surface it in the
- * proprietary build only. The core override stays `false`, so the shared
- * sidebar entry point never appears in the open-source build (which has no
- * Watched Folders implementation to navigate to).
- */
-export const WATCHED_FOLDERS_ENABLED: boolean = false;
+// Refill an empty workbench from the tab's last session (survives the editor/processor switch).
+export const WORKBENCH_SESSION_RESTORE: boolean = true;

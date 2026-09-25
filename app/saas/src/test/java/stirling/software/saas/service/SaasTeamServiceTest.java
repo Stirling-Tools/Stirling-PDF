@@ -36,6 +36,7 @@ import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
 import stirling.software.saas.accountlink.LinkedInstanceRepository;
 import stirling.software.saas.billing.repository.BillingSubscriptionRepository;
 import stirling.software.saas.config.SupabaseConfigurationProperties;
@@ -54,6 +55,19 @@ import stirling.software.saas.repository.TeamInvitationRepository;
 @ExtendWith(MockitoExtension.class)
 class SaasTeamServiceTest {
 
+    @org.junit.jupiter.api.BeforeEach
+    void ownershipLocks() {
+        org.mockito.Mockito.lenient()
+                .when(teamRepository.lockById(org.mockito.ArgumentMatchers.anyLong()))
+                .thenAnswer(
+                        i -> {
+                            Long id = i.getArgument(0);
+                            if (id.equals(100L)) return Optional.of(team(id, "Acme"));
+                            return teamRepository.findById(id);
+                        });
+    }
+
+    @Mock private jakarta.persistence.EntityManager entityManager;
     @Mock private TeamRepository teamRepository;
     @Mock private TeamMembershipRepository membershipRepository;
     @Mock private TeamInvitationRepository invitationRepository;
@@ -170,7 +184,12 @@ class SaasTeamServiceTest {
 
             assertThat(result).isSameAs(saved);
             verify(saasTeamExtensionService).setPersonal(saved, true);
-            verify(saasTeamExtensionService).setSeats(saved, 1, 1);
+            // The free allowance, not 1: a linked instance reads this as its own ceiling.
+            verify(saasTeamExtensionService)
+                    .setSeats(
+                            saved,
+                            UserLicenseSettingsService.DEFAULT_USER_LIMIT,
+                            UserLicenseSettingsService.DEFAULT_USER_LIMIT);
             verify(saasTeamExtensionService).setCreatedByUserId(saved, 1L);
             verify(saasTeamExtensionsRepository).incrementSeatsUsed(50L);
 
@@ -285,7 +304,7 @@ class SaasTeamServiceTest {
         }
 
         @Test
-        @DisplayName("converts a personal team to standard (unlimited seats) on first invitation")
+        @DisplayName("converts a personal team to standard on first invitation")
         void personalTeam_convertedToStandard() {
             Team t = team(teamId, "My Team");
             User inviter = user(1L, "a@x.com", "alice");
@@ -304,7 +323,7 @@ class SaasTeamServiceTest {
             service.inviteUserToTeam(teamId, "b@x.com", inviter);
 
             verify(saasTeamExtensionService).setPersonal(t, false);
-            verify(saasTeamExtensionService).setSeats(t, Integer.MAX_VALUE, Integer.MAX_VALUE);
+            verify(saasTeamExtensionService).setSeats(t, 5, 5);
         }
 
         @Test
@@ -1294,7 +1313,6 @@ class SaasTeamServiceTest {
             Team t = team(teamId, "My Team");
             when(teamRepository.findById(teamId)).thenReturn(Optional.of(t));
             when(saasTeamExtensionService.getSeatsUsed(t)).thenReturn(1);
-            when(saasTeamExtensionService.getMaxSeats(t)).thenReturn(1);
             // First isPersonal call (after setSeats) returns true -> convert to standard.
             when(saasTeamExtensionService.isPersonal(t)).thenReturn(true, false);
 
@@ -1311,7 +1329,6 @@ class SaasTeamServiceTest {
             Team t = team(teamId, "Acme");
             when(teamRepository.findById(teamId)).thenReturn(Optional.of(t));
             when(saasTeamExtensionService.getSeatsUsed(t)).thenReturn(1);
-            when(saasTeamExtensionService.getMaxSeats(t)).thenReturn(5);
             // Was standard (false) so reducing to 1 flips back to personal.
             when(saasTeamExtensionService.isPersonal(t)).thenReturn(false);
 
@@ -1321,39 +1338,19 @@ class SaasTeamServiceTest {
         }
 
         @Test
-        @DisplayName("removes excess members (members before leaders) when reducing below usage")
-        void reduceBelowUsage_removesExcessMembers() {
+        @DisplayName("reductions retain existing members and the standard team")
+        void reduceBelowUsage_retainsMembers() {
             Team t = team(teamId, "Acme");
-            User leader = user(1L, "a@x.com", "alice");
-            User member = user(2L, "b@x.com", "bob");
-            // Distinct membership ids so delete() verification can tell the two rows apart
-            // (TeamMembership equals is by membershipId).
-            TeamMembership leaderM = membership(t, leader, TeamRole.LEADER);
-            leaderM.setMembershipId(1L);
-            TeamMembership memberM = membership(t, member, TeamRole.MEMBER);
-            memberM.setMembershipId(2L);
-            memberM.setAcceptedAt(LocalDateTime.now());
-            leaderM.setAcceptedAt(LocalDateTime.now().minusDays(10));
-
             when(teamRepository.findById(teamId)).thenReturn(Optional.of(t));
             when(saasTeamExtensionService.getSeatsUsed(t)).thenReturn(2);
-            when(saasTeamExtensionService.getMaxSeats(t)).thenReturn(2);
-            when(membershipRepository.findByTeamId(teamId)).thenReturn(List.of(leaderM, memberM));
-            // Reduce to 1: must remove 1 excess; the MEMBER goes first.
-            stubCreatePersonalTeam(member, 500L);
             when(saasTeamExtensionService.isPersonal(t)).thenReturn(false);
 
             service.updateTeamSeats(teamId, 1);
 
-            // The MEMBER is removed, the LEADER kept (removal prioritises non-leaders).
-            verify(membershipRepository).delete(memberM);
-            verify(membershipRepository, never()).delete(leaderM);
-            // One decrement for the removed member, then a second seat update is applied via
-            // setSeats(t, 1, 1). Reducing to 1 seat also flips a standard team back to personal:
-            // setPersonal(true) is invoked for both the removed member's new personal team and t.
-            verify(saasTeamExtensionsRepository).decrementSeatsUsed(teamId);
-            verify(saasTeamExtensionService, org.mockito.Mockito.times(2))
-                    .setPersonal(any(), eq(true));
+            verify(saasTeamExtensionService).setSeats(t, 1, 1);
+            verify(membershipRepository, never()).delete(any(TeamMembership.class));
+            verify(saasTeamExtensionService, never()).decrementSeatsUsed(any());
+            verify(saasTeamExtensionService, never()).setPersonal(t, true);
         }
 
         @Test
@@ -1362,7 +1359,6 @@ class SaasTeamServiceTest {
             Team t = team(teamId, "Acme");
             when(teamRepository.findById(teamId)).thenReturn(Optional.of(t));
             when(saasTeamExtensionService.getSeatsUsed(t)).thenReturn(2);
-            when(saasTeamExtensionService.getMaxSeats(t)).thenReturn(5);
             // Already standard, raising to 10: neither conversion branch fires.
             when(saasTeamExtensionService.isPersonal(t)).thenReturn(false);
 

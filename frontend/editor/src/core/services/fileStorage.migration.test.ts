@@ -33,7 +33,7 @@ describe("legacyDerivedFromTool — IndexedDB backfill for pre-upgrade files", (
   it("flags a legacy versioned edit (has tool history)", () => {
     expect(
       legacyDerivedFromTool(
-        record({ toolHistory: [{ toolId: "compress" as any, timestamp: 0 }] }),
+        record({ toolHistory: [{ toolId: "compress", timestamp: 0 }] }),
       ),
     ).toBe(true);
   });
