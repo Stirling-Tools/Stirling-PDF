@@ -155,6 +155,19 @@ Feature: General PDF Operations API Validation
         And the response PDF should contain 1 pages
 
 
+    @set-page-boxes @positive
+    Scenario: set-page-boxes writes explicit page boxes on every page
+        Given I generate a PDF file as "fileInput"
+        And the pdf contains 2 pages
+        And the request data includes
+            | parameter | value         |
+            | trimBox   | 20,20,400,600 |
+        When I send the API request to the endpoint "/api/v1/general/set-page-boxes"
+        Then the response content type should be "application/pdf"
+        And the response status code should be 200
+        And the response PDF should contain 2 pages
+
+
     @pdf-to-single-page @positive
     Scenario: pdf-to-single-page combines all pages into one long page
         Given I generate a PDF file as "fileInput"

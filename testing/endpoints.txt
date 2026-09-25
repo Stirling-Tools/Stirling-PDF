@@ -50,6 +50,7 @@
 /api/v1/general/split-pdf-by-chapters
 /api/v1/general/split-pages
 /api/v1/general/split-by-size-or-count
+/api/v1/general/set-page-boxes
 /api/v1/general/scale-pages
 /api/v1/general/rotate-pdf
 /api/v1/general/remove-pages
