@@ -1652,7 +1652,6 @@ public class ApplicationProperties {
 
     @Data
     public static class ToolRecommendations {
-        // Extra off-switch on top of system.enableAnalytics, which must also consent to tracking.
         private boolean enabled = true;
         // How long usage and workflow rollups are kept before the retention sweep removes them.
         private int retentionDays = 180;

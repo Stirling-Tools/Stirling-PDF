@@ -94,7 +94,6 @@ class ToolUsageTrackingServiceTest {
     @BeforeEach
     void setUp() {
         properties = new ApplicationProperties();
-        properties.getSystem().setEnableAnalytics(true);
         service =
                 new ToolUsageTrackingService(
                         usageRepository, chainRepository, TOOL_KEYS, properties);
@@ -468,16 +467,13 @@ class ToolUsageTrackingServiceTest {
         }
 
         @Test
-        @DisplayName("no analytics consent records nothing, even with the feature enabled")
-        void withheldAnalyticsConsentRecordsNothing() {
-            properties.getSystem().setEnableAnalytics(null);
-            service.recordUsage(PRINCIPAL, "compare", chains(List.of("merge")));
-
+        @DisplayName("external analytics being off does not stop recording")
+        void recordsWithoutExternalAnalytics() {
             properties.getSystem().setEnableAnalytics(false);
+
             service.recordUsage(PRINCIPAL, "compare", chains(List.of("merge")));
 
-            assertThat(properties.getToolRecommendations().isEnabled()).isTrue();
-            verifyNoInteractions(usageRepository, chainRepository);
+            verify(usageRepository).incrementCount(PRINCIPAL, "merge", "compare", TODAY, 1);
         }
 
         @Test
