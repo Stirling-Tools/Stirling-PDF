@@ -34,6 +34,7 @@ import stirling.software.saas.payg.repository.PaygTeamExtensionsRepository;
 import stirling.software.saas.payg.stripe.StripePaymentMethodDao;
 import stirling.software.saas.payg.stripe.StripePaymentMethodDao.CardSummary;
 import stirling.software.saas.security.EnhancedJwtAuthenticationToken;
+import stirling.software.saas.security.UserTeamResolver;
 
 /**
  * Pure-Mockito unit tests for {@link PaygPaymentMethodController}: the auth/team-resolution and
@@ -54,7 +55,10 @@ class PaygPaymentMethodControllerTest {
     void setUp() {
         controller =
                 new PaygPaymentMethodController(
-                        paymentMethodDao, extRepo, memberRepo, userRepository);
+                        paymentMethodDao,
+                        extRepo,
+                        new UserTeamResolver(memberRepo),
+                        userRepository);
     }
 
     @Test
@@ -75,7 +79,6 @@ class PaygPaymentMethodControllerTest {
     void noTeam_returnsAbsent() {
         User user = userWithId(5L, UUID.randomUUID());
         when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
-        when(memberRepo.findPrimaryMembership(5L)).thenReturn(List.of());
 
         ResponseEntity<PaymentMethodResponse> resp = controller.get(jwtAuth(user.getSupabaseId()));
 
@@ -90,8 +93,7 @@ class PaygPaymentMethodControllerTest {
         User user = userWithId(6L, UUID.randomUUID());
         Team team = teamWithId(60L);
         when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
-        when(memberRepo.findPrimaryMembership(6L))
-                .thenReturn(List.of(membership(team, user, TeamRole.LEADER)));
+        user.setTeam(team);
         PaygTeamExtensions ext = mock(PaygTeamExtensions.class);
         when(ext.getStripeCustomerId()).thenReturn(null);
         when(extRepo.findById(60L)).thenReturn(Optional.of(ext));
@@ -108,8 +110,7 @@ class PaygPaymentMethodControllerTest {
         User user = userWithId(7L, UUID.randomUUID());
         Team team = teamWithId(70L);
         when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
-        when(memberRepo.findPrimaryMembership(7L))
-                .thenReturn(List.of(membership(team, user, TeamRole.LEADER)));
+        user.setTeam(team);
         PaygTeamExtensions ext = mock(PaygTeamExtensions.class);
         when(ext.getStripeCustomerId()).thenReturn("cus_123");
         when(extRepo.findById(70L)).thenReturn(Optional.of(ext));
@@ -132,8 +133,7 @@ class PaygPaymentMethodControllerTest {
         User user = userWithId(8L, UUID.randomUUID());
         Team team = teamWithId(80L);
         when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
-        when(memberRepo.findPrimaryMembership(8L))
-                .thenReturn(List.of(membership(team, user, TeamRole.LEADER)));
+        user.setTeam(team);
         PaygTeamExtensions ext = mock(PaygTeamExtensions.class);
         when(ext.getStripeCustomerId()).thenReturn("cus_456");
         when(extRepo.findById(80L)).thenReturn(Optional.of(ext));

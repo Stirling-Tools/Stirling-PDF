@@ -14,7 +14,7 @@ Covers:
 import requests
 from behave import given, then, when
 
-BASE_URL = "http://localhost:8080"
+from api_base import BASE_URL
 
 
 def _jwt_headers(context):

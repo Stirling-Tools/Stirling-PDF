@@ -5,6 +5,7 @@ import {
   type FilesPageEntry,
 } from "@app/components/filesPage/FileGrid";
 import { FileContextProvider } from "@app/contexts/FileContext";
+import { NewFolderButton } from "@app/components/filesPage/NewFolderButton";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
 
@@ -90,6 +91,38 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+export const SingleSelection: Story = {
+  args: {
+    selectedFileIds: new Set([localFile.id]),
+  },
+};
+
+export const NativeFilePicker: Story = {
+  args: {
+    entries: [
+      {
+        kind: "diskFile",
+        disk: {
+          path: "/documents/README",
+          name: "README",
+          sizeBytes: 1000,
+          lastModified: 0,
+        },
+      },
+      ...fileEntries,
+    ],
+    picker: {
+      isEligible: () => true,
+      selectionDisabled: false,
+      disabledReason: () => undefined,
+      selectedDiskPaths: new Set(["/documents/README"]),
+      onSelectDiskFile: () => {},
+      onSetDiskSelection: () => {},
+      onUnzipFile: () => {},
+    },
+  },
+};
+
 export const ListMode: Story = {
   args: {
     viewMode: "list",
@@ -109,6 +142,17 @@ export const Empty: Story = {
     loading: false,
     currentTab: "all",
     onEmptyUpload: () => {},
-    onEmptyCreateFolder: () => {},
+    // The page owns this control, so the story stands one up to keep both CTAs on
+    // screen here.
+    emptyNewFolderControl: (
+      <NewFolderButton
+        label="New folder"
+        size="md"
+        currentFolderId={null}
+        canAddLocalFolder={false}
+        onAddLocalFolder={() => {}}
+        onOpenDialog={() => {}}
+      />
+    ),
   },
 };

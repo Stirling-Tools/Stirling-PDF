@@ -4,6 +4,9 @@ import { resolveLandingPath } from "@app/utils/loginLanding";
 import { supabase } from "@app/auth/supabase";
 import { Button } from "@app/ui/Button";
 import { withBasePath } from "@app/constants/app";
+import { readPendingConnect } from "@app/routes/pendingConnect";
+import { isSafePostLoginRedirect } from "@app/services/postLoginRedirect";
+import { takePendingDestination } from "@app/services/pendingDestination";
 import { AuthShell } from "@app/auth/ui/AuthShell";
 import ErrorMessage from "@app/auth/ui/ErrorMessage";
 import { Spinner } from "@app/ui/Spinner";
@@ -30,7 +33,11 @@ export default function AuthCallback() {
         const code = url.searchParams.get("code");
         const error = url.searchParams.get("error");
         const errorDescription = url.searchParams.get("error_description");
-        const next = url.searchParams.get("next") || "/";
+        // For the debug log; the redirect below reads the param itself. Left
+        // undefaulted because a default would pass the safety guard, so any branch
+        // on it in that chain matches every param-less sign-in and masks the
+        // fallbacks beneath it.
+        const next = url.searchParams.get("next");
 
         console.log("[Auth Callback Debug] URL parameters:", {
           hasCode: !!code,
@@ -128,15 +135,19 @@ export default function AuthCallback() {
           }
         }
 
-        // Redirect to the intended destination. Reject protocol-relative
-        // "//host" values (same guard as Login's `next`) so a crafted callback
-        // URL can't bounce the user off-origin after sign-in.
-        // No explicit destination: land team leads on the processor and everyone
-        // else on the editor.
-        const destination =
-          next.startsWith("/") && !next.startsWith("//")
-            ? next
-            : await resolveLandingPath();
+        // A deliberate `next` outranks a remembered intent so it cannot be hijacked;
+        // a remembered one is all a sign-up has, its confirmation link being unable
+        // to carry a `next`. Claimed up front because reaching here means the detour
+        // is over, so the intent is spent whichever wins.
+        const explicitNext =
+          url.searchParams.get("next") ?? url.searchParams.get("from");
+        const pendingConnect = readPendingConnect();
+        const remembered = takePendingDestination();
+        const destination = isSafePostLoginRedirect(explicitNext)
+          ? explicitNext
+          : pendingConnect
+            ? `/link?request=${encodeURIComponent(pendingConnect)}`
+            : (remembered ?? (await resolveLandingPath()));
         console.log("[Auth Callback Debug] Redirecting to:", destination);
 
         setTimeout(() => navigate(destination, { replace: true }), 1500);

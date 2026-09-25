@@ -70,7 +70,7 @@ export const CertificateSelector: React.FC<CertificateSelectorProps> = ({
 
   return (
     <Stack gap="md">
-      {/* Managed certificate options — server plan only */}
+      {/* Managed certificate options — Team plan only */}
       {isServerPlan && (
         <Radio.Group
           value={certType}

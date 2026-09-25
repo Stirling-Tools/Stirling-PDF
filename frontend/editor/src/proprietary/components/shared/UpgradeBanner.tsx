@@ -67,15 +67,9 @@ const UpgradeBanner: React.FC = () => {
       }
     };
 
-    window.addEventListener(
-      UPGRADE_BANNER_TEST_EVENT,
-      handleTestEvent as EventListener,
-    );
+    window.addEventListener(UPGRADE_BANNER_TEST_EVENT, handleTestEvent);
     return () => {
-      window.removeEventListener(
-        UPGRADE_BANNER_TEST_EVENT,
-        handleTestEvent as EventListener,
-      );
+      window.removeEventListener(UPGRADE_BANNER_TEST_EVENT, handleTestEvent);
     };
   }, [isDev]);
 
@@ -301,7 +295,7 @@ const UpgradeBanner: React.FC = () => {
 
     return (
       <AppBanner
-        icon="warning-rounded"
+        icon="triangle-alert"
         tone="warning"
         title={t(
           "upgradeBanner.attentionTitle",
@@ -309,7 +303,7 @@ const UpgradeBanner: React.FC = () => {
         )}
         message={attentionMessage}
         buttonText={buttonText}
-        buttonIcon="info-rounded"
+        buttonIcon="info"
         onButtonClick={buttonText ? handleSeeInfo : undefined}
         dismissible={false}
       />
@@ -335,14 +329,14 @@ const UpgradeBanner: React.FC = () => {
     <>
       {friendlyVisible && (
         <AppBanner
-          icon="stars-rounded"
-          title={t("upgradeBanner.title", "Upgrade to Server Plan")}
+          icon="sparkles"
+          title={t("upgradeBanner.title", "Upgrade to the Team plan")}
           message={t(
             "upgradeBanner.message",
-            "Get the most out of Stirling PDF with unlimited users and advanced features.",
+            "Get the most out of Stirling PDF with 100 users, PDF text editing, and advanced features.",
           )}
           buttonText={t("upgradeBanner.upgradeButton", "Upgrade Now")}
-          buttonIcon="upgrade-rounded"
+          buttonIcon="circle-arrow-up"
           onButtonClick={handleUpgrade}
           onDismiss={handleFriendlyDismiss}
           show={friendlyVisible}

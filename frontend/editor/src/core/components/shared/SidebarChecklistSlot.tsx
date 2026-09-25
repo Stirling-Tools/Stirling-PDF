@@ -1,13 +1,5 @@
-export interface SidebarChecklistSlotProps {
-  /** Whether the sidebar is collapsed to its narrow rail. */
-  collapsed?: boolean;
-}
-
-/**
- * Extension point for a getting-started checklist that floats above the
- * sidebar footer. Core renders nothing; builds that offer onboarding (SaaS)
- * shadow this file to provide the real checklist.
- */
-export function SidebarChecklistSlot(_props: SidebarChecklistSlotProps) {
+/** Extension point for the getting-started checklist above the sidebar footer.
+ * Core renders nothing; the cloud builds (web SaaS and desktop) shadow it. */
+export function SidebarChecklistSlot() {
   return null;
 }

@@ -10,6 +10,7 @@ import {
   StirlingFile,
   StirlingFileStub,
   createStirlingFile,
+  type ClassificationConfidence,
 } from "@app/types/fileContext";
 import {
   indexedDBManager,
@@ -32,10 +33,32 @@ export interface StoredStirlingFileRecord extends BaseFileMetadata {
   thumbnail?: string;
   thumbnailStoredAt?: number; // Epoch ms - sliding 30-day TTL
   url?: string; // For compatibility with existing components
+  // Disk path this file came from (desktop only). Persisted so the link to the
+  // real file survives a reload - without it every restart drops to the stored copy.
+  localFilePath?: string;
+  // Size/mtime of the disk file when we last read it, so an external edit is
+  // detectable without hashing. Only meaningful alongside localFilePath.
+  diskSyncedSize?: number;
+  diskSyncedModifiedMs?: number;
+  // Disk path whose original is gone. Persisted so the "not on disk" state
+  // survives a reload instead of dying with the toast.
+  orphanedFilePath?: string;
+  // Epoch ms of an unresolved disk-vs-unsaved-edits divergence.
+  diskConflictAt?: number;
+  // Epoch ms of the last pickup of an external edit.
+  diskReloadedAt?: number;
+  // In-app edits not yet written to localFilePath. Persisted because a reload
+  // would otherwise forget them and let a disk re-read overwrite the user's work.
+  isDirty?: boolean;
   // Cached classification labels — mirrors the stub field so the sidebar can
   // group by label without re-reading PDF bytes, and it survives versioning.
   // See StirlingFileStub.classificationLabels.
   classificationLabels?: string[];
+  // See StirlingFileStub.classificationConfidence.
+  classificationConfidence?: ClassificationConfidence;
+  // See StirlingFileStub.classificationLocked. Persisted because the guarantee it
+  // carries — that no policy reclassifies this file — has to outlive a reload.
+  classificationLocked?: boolean;
 }
 
 export interface StorageStats {
@@ -147,6 +170,22 @@ export function onRecordUnreadable(
  *  deadline. Distinct from a failure: nothing was proven either way. */
 const PROBE_UNANSWERED = { unanswered: true } as const;
 const PROBE_DEADLINE_MS = 3000;
+
+/**
+ * Bytes for a record whose blob the engine will not store. Probes the backing store
+ * first: WebKit can lose a File's handle and then never answer a read (see
+ * {@link maintenanceMayRewrite}), which would hold every caller awaiting the write. A
+ * plain timeout cannot help — it could not tell that apart from a legitimately slow read
+ * of a very large file, which this app supports.
+ */
+export async function copyBlobBytes(source: Blob): Promise<ArrayBuffer> {
+  const failure = await withProbeDeadline(blobReadFailure(source));
+  if (failure === PROBE_UNANSWERED) {
+    throw new Error("Blob backing store did not answer a read probe");
+  }
+  if (failure) throw failure;
+  return source.arrayBuffer();
+}
 
 function withProbeDeadline(
   probe: Promise<unknown>,
@@ -306,9 +345,16 @@ class FileStorageService {
       // Engines that reject blob values fall back to a copy — see addFileRecord.
       data: this.blobValuesSupported
         ? stirlingFile
-        : await stirlingFile.arrayBuffer(),
+        : await copyBlobBytes(stirlingFile),
       thumbnail: stub.thumbnailUrl,
       thumbnailStoredAt: stub.thumbnailUrl ? Date.now() : undefined,
+      localFilePath: stub.localFilePath,
+      diskSyncedSize: stub.diskSyncedSize,
+      diskSyncedModifiedMs: stub.diskSyncedModifiedMs,
+      orphanedFilePath: stub.orphanedFilePath,
+      diskConflictAt: stub.diskConflictAt,
+      diskReloadedAt: stub.diskReloadedAt,
+      isDirty: stub.isDirty,
       isLeaf: stub.isLeaf ?? true,
       remoteStorageId: stub.remoteStorageId,
       remoteStorageUpdatedAt: stub.remoteStorageUpdatedAt,
@@ -330,8 +376,10 @@ class FileStorageService {
       // Folder organisation (root when null)
       folderId: stub.folderId ?? null,
 
-      // Cached classification category, if already known (preserved across re-stores).
+      // Cached classification, if already known (preserved across re-stores).
       classificationLabels: stub.classificationLabels,
+      classificationConfidence: stub.classificationConfidence,
+      classificationLocked: stub.classificationLocked,
     };
 
     try {
@@ -342,7 +390,7 @@ class FileStorageService {
       if (!(record.data instanceof Blob) || !this.noteBlobRefusal(error)) {
         throw error;
       }
-      record.data = await record.data.arrayBuffer();
+      record.data = await copyBlobBytes(record.data);
       await this.addFileRecord(db, record);
       return;
     }
@@ -684,6 +732,13 @@ class FileStorageService {
           lastModified: record.lastModified,
           quickKey: record.quickKey,
           thumbnailUrl: fresh ? record.thumbnail : undefined,
+          localFilePath: record.localFilePath,
+          diskSyncedSize: record.diskSyncedSize,
+          diskSyncedModifiedMs: record.diskSyncedModifiedMs,
+          orphanedFilePath: record.orphanedFilePath,
+          diskConflictAt: record.diskConflictAt,
+          diskReloadedAt: record.diskReloadedAt,
+          isDirty: record.isDirty,
           isLeaf: record.isLeaf,
           remoteStorageId: record.remoteStorageId,
           remoteStorageUpdatedAt: record.remoteStorageUpdatedAt,
@@ -703,6 +758,8 @@ class FileStorageService {
           folderId: record.folderId ?? null,
           createdAt: record.createdAt || Date.now(),
           classificationLabels: record.classificationLabels,
+          classificationConfidence: record.classificationConfidence,
+          classificationLocked: record.classificationLocked,
         };
 
         resolve(stub);
@@ -751,6 +808,13 @@ class FileStorageService {
               lastModified: record.lastModified,
               quickKey: record.quickKey,
               thumbnailUrl: fresh ? record.thumbnail : undefined,
+              localFilePath: record.localFilePath,
+              diskSyncedSize: record.diskSyncedSize,
+              diskSyncedModifiedMs: record.diskSyncedModifiedMs,
+              orphanedFilePath: record.orphanedFilePath,
+              diskConflictAt: record.diskConflictAt,
+              diskReloadedAt: record.diskReloadedAt,
+              isDirty: record.isDirty,
               isLeaf: record.isLeaf,
               remoteStorageId: record.remoteStorageId,
               remoteStorageUpdatedAt: record.remoteStorageUpdatedAt,
@@ -770,6 +834,8 @@ class FileStorageService {
               folderId: record.folderId ?? null,
               createdAt: record.createdAt || Date.now(),
               classificationLabels: record.classificationLabels,
+              classificationConfidence: record.classificationConfidence,
+              classificationLocked: record.classificationLocked,
             });
           }
           cursor.continue();
@@ -850,6 +916,13 @@ class FileStorageService {
               lastModified: record.lastModified,
               quickKey: record.quickKey,
               thumbnailUrl: fresh ? record.thumbnail : undefined,
+              localFilePath: record.localFilePath,
+              diskSyncedSize: record.diskSyncedSize,
+              diskSyncedModifiedMs: record.diskSyncedModifiedMs,
+              orphanedFilePath: record.orphanedFilePath,
+              diskConflictAt: record.diskConflictAt,
+              diskReloadedAt: record.diskReloadedAt,
+              isDirty: record.isDirty,
               isLeaf: record.isLeaf,
               remoteStorageId: record.remoteStorageId,
               remoteStorageUpdatedAt: record.remoteStorageUpdatedAt,
@@ -869,6 +942,8 @@ class FileStorageService {
               folderId: record.folderId ?? null,
               createdAt: record.createdAt || Date.now(),
               classificationLabels: record.classificationLabels,
+              classificationConfidence: record.classificationConfidence,
+              classificationLocked: record.classificationLocked,
             });
           }
           cursor.continue();

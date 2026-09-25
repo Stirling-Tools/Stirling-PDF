@@ -22,6 +22,10 @@ import {
   getProviderAvatarUrl,
   type ProfilePictureMetadata,
 } from "@app/services/avatarSyncService";
+import {
+  resumeWorkbenchSession,
+  suspendWorkbenchSession,
+} from "@app/services/workbenchSession";
 
 // Extend Supabase User to include optional username for compatibility
 export type User = SupabaseUser & { username?: string };
@@ -67,6 +71,8 @@ interface AuthContextType {
   error: AuthError | null;
   isPro: boolean | null;
   profilePictureUrl: string | null;
+  /** Pending until this user's picture lookup resolves, including a missing picture. */
+  profilePictureLoading: boolean;
   profilePictureMetadata: ProfilePictureMetadata | null;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
@@ -91,6 +97,7 @@ const AuthContext = createContext<AuthContextType>({
   error: null,
   isPro: null,
   profilePictureUrl: null,
+  profilePictureLoading: true,
   profilePictureMetadata: null,
   signOut: async () => {},
   refreshSession: async () => {},
@@ -107,8 +114,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(
     null,
   );
+  const [profilePictureResolvedFor, setProfilePictureResolvedFor] = useState<
+    string | null
+  >(null);
   const [profilePictureMetadata, setProfilePictureMetadata] =
     useState<ProfilePictureMetadata | null>(null);
+  const sessionRef = useRef<Session | null>(null);
+  const profilePictureRequest = useRef(0);
+
+  const updateSession = useCallback((next: Session | null) => {
+    const previousUser = sessionRef.current?.user;
+    if (previousUser?.id !== next?.user.id) {
+      profilePictureRequest.current += 1;
+      setProfilePictureUrl(null);
+      setProfilePictureResolvedFor(null);
+    }
+    sessionRef.current = next;
+    setSession(next);
+  }, []);
 
   const fetchProStatus = useCallback(
     async (sessionToUse?: Session | null) => {
@@ -165,17 +188,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const fetchProfilePicture = useCallback(
-    async (sessionToUse?: Session | null) => {
-      const currentSession = sessionToUse ?? session;
+    async (sessionToUse = sessionRef.current, syncProviderAvatar = false) => {
+      const currentSession = sessionToUse;
+      if (currentSession?.user.id !== sessionRef.current?.user.id) return;
+      // Own the whole sync/read chain so an earlier upload cannot start a newer lookup.
+      const request = ++profilePictureRequest.current;
 
       if (!currentSession?.user) {
         console.debug(
           "[Auth Debug] No user session, skipping profile picture fetch",
         );
         setProfilePictureUrl(null);
+        setProfilePictureResolvedFor(null);
         return;
       }
 
+      if (syncProviderAvatar) {
+        await syncOAuthAvatar(currentSession.user).catch((err) => {
+          console.debug("[Auth Debug] Failed to sync OAuth avatar:", err);
+        });
+        if (request !== profilePictureRequest.current) return;
+      }
+
+      let pictureUrl: string | null;
       try {
         const PROFILE_BUCKET = "profile-pictures";
         const profilePath = `${currentSession.user.id}/avatar`;
@@ -194,21 +229,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             "[Auth Debug] Profile picture not available:",
             error.message,
           );
-          setProfilePictureUrl(
-            await providerAvatarFallback(currentSession.user),
-          );
+          pictureUrl = await providerAvatarFallback(currentSession.user);
         } else {
-          setProfilePictureUrl(data.signedUrl);
+          pictureUrl = data.signedUrl;
           console.debug(
             "[Auth Debug] Profile picture URL fetched successfully",
           );
         }
       } catch (error: unknown) {
         console.debug("[Auth Debug] Failed to fetch profile picture:", error);
-        setProfilePictureUrl(await providerAvatarFallback(currentSession.user));
+        pictureUrl = await providerAvatarFallback(currentSession.user);
+      }
+      if (request === profilePictureRequest.current) {
+        setProfilePictureUrl(pictureUrl);
+        setProfilePictureResolvedFor(currentSession.user.id);
       }
     },
-    [session, providerAvatarFallback],
+    [providerAvatarFallback],
   );
 
   const refreshProfilePicture = useCallback(async () => {
@@ -295,15 +332,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Off the awaited path: a first login re-uploads the provider avatar.
         // The signed-URL read chains behind it because reading first 404s and
         // silently falls back to the provider photo.
-        const avatarSync = syncOAuthAvatar(user).catch((err) => {
-          console.debug("[Auth Debug] Failed to sync OAuth avatar:", err);
-          return false;
+        void fetchProfilePicture(sessionToLoad, true).catch((err) => {
+          console.debug("[Auth Debug] Failed to fetch profile picture:", err);
         });
-        void avatarSync
-          .then(() => fetchProfilePicture(sessionToLoad))
-          .catch((err) => {
-            console.debug("[Auth Debug] Failed to fetch profile picture:", err);
-          });
 
         await Promise.all([
           fetchProStatus(sessionToLoad),
@@ -336,10 +367,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) {
         console.error("[Auth Debug] Session refresh error:", error);
         setError(error);
-        setSession(null);
+        updateSession(null);
       } else {
         console.debug("[Auth Debug] Session refreshed successfully");
-        setSession(data.session);
+        updateSession(data.session);
       }
     } catch (err) {
       console.error(
@@ -355,18 +386,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     try {
       setError(null);
+      // Signing out is deliberate, unlike an identity check that merely failed: drop the
+      // workbench record here and stop recording, so the teardown that follows cannot
+      // write it back for whoever signs in next.
+      suspendWorkbenchSession();
+
       const { error } = await supabase.auth.signOut();
 
       if (error) {
         console.error("[Auth Debug] Sign out error:", error);
         setError(error);
+        // The sign-out did not happen and the session stands, so keep recording:
+        // otherwise a still-signed-in user silently stops persisting their workbench.
+        resumeWorkbenchSession();
       } else {
         console.debug("[Auth Debug] Signed out successfully");
-        setSession(null);
+        updateSession(null);
       }
     } catch (err) {
       console.error("[Auth Debug] Unexpected error during sign out:", err);
       setError(err as AuthError);
+      resumeWorkbenchSession();
     }
   };
 
@@ -390,7 +430,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             userId: data.session?.user?.id,
             email: data.session?.user?.email,
           });
-          setSession(data.session);
+          updateSession(data.session);
 
           // Awaited so the spinner does not clear before pro status is known.
           await loadUserData(data.session);
@@ -429,7 +469,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Don't run supabase calls inside this callback; schedule them
       setTimeout(() => {
         if (mounted) {
-          setSession(newSession);
+          updateSession(newSession);
           setError(null);
 
           // Additional handling for specific events
@@ -438,6 +478,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Clear pro status, profile picture, and metadata on sign out
             setIsPro(null);
             setProfilePictureUrl(null);
+            setProfilePictureResolvedFor(null);
             setProfilePictureMetadata(null);
             loadedForRef.current = null;
           } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
@@ -496,6 +537,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       mounted = false;
+      profilePictureRequest.current += 1;
       subscription.unsubscribe();
     };
     // Empty and load-bearing: must subscribe once. The closures are recreated
@@ -515,6 +557,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     error,
     isPro,
     profilePictureUrl,
+    profilePictureLoading: Boolean(
+      user && profilePictureResolvedFor !== user.id,
+    ),
     profilePictureMetadata,
     signOut,
     refreshSession,

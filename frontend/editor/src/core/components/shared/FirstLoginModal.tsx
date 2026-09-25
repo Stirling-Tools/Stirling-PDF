@@ -1,8 +1,9 @@
 import { useState } from "react";
+import axios from "axios";
 import { Modal, Stack, Text, PasswordInput, Alert } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { accountService } from "@app/services/accountService";
 import { alert } from "@app/components/toast";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
@@ -95,10 +96,13 @@ export default function FirstLoginModal({
       setTimeout(() => {
         onPasswordChanged();
       }, 1500);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to change password:", err);
+      const message = axios.isAxiosError<{ message?: string }>(err)
+        ? err.response?.data?.message
+        : undefined;
       setError(
-        err.response?.data?.message ||
+        message ||
           t(
             "firstLogin.passwordChangeFailed",
             "Failed to change password. Please check your current password.",
@@ -124,7 +128,7 @@ export default function FirstLoginModal({
       <form onSubmit={handleSubmit}>
         <Stack gap="md">
           <Alert
-            icon={<LocalIcon icon="info-rounded" width="1rem" height="1rem" />}
+            icon={<Icon name="info" size="1rem" />}
             title={t("firstLogin.welcomeTitle", "Welcome!")}
             color="blue"
           >
@@ -143,9 +147,7 @@ export default function FirstLoginModal({
 
           {error && (
             <Alert
-              icon={
-                <LocalIcon icon="error-rounded" width="1rem" height="1rem" />
-              }
+              icon={<Icon name="circle-alert" size="1rem" />}
               title={t("firstLogin.error", "Error")}
               color="red"
             >
