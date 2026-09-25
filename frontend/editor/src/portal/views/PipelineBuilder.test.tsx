@@ -1,3 +1,4 @@
+import { classificationCondition } from "@app/data/classificationConditions";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   fireEvent,
@@ -10,7 +11,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { qk } from "@portal/queries/keys";
 import type { Policy, TriggerOutcome } from "@portal/api/pipelines";
-import type { SourceView } from "@portal/api/sources";
+import type { Source, SourceView } from "@portal/api/sources";
 import type { ToolRegistryCatalog } from "@app/contexts/ToolRegistryContext";
 import type { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import { PipelineBuilder } from "@portal/views/PipelineBuilder";
@@ -28,12 +29,22 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
+vi.mock("@portal/hooks/useAiEngineEnabled", () => ({
+  useAiEngineEnabled: () => ({
+    enabled: true,
+    classificationEnabled: true,
+    loading: false,
+  }),
+}));
+
 const fetchPipeline = vi.fn();
 const fetchTriggers = vi.fn();
 const savePipeline = vi.fn();
 const deletePipeline = vi.fn();
 const triggerPipeline = vi.fn();
 const fetchRun = vi.fn();
+const runPipelineTest = vi.fn();
+const fetchRunOutput = vi.fn();
 vi.mock("@portal/api/pipelines", () => ({
   fetchPipeline: (id: string) => fetchPipeline(id),
   fetchTriggers: () => fetchTriggers(),
@@ -41,6 +52,9 @@ vi.mock("@portal/api/pipelines", () => ({
   deletePipeline: (id: string) => deletePipeline(id),
   triggerPipeline: (id: string) => triggerPipeline(id),
   fetchRun: (runId: string) => fetchRun(runId),
+  fetchPolicyPermissions: () => Promise.resolve({ canManagePolicies: true }),
+  runPipelineTest: (...args: unknown[]) => runPipelineTest(...args),
+  fetchRunOutput: (...args: unknown[]) => fetchRunOutput(...args),
 }));
 
 const uploadPipelineAsset = vi.fn();
@@ -85,7 +99,7 @@ vi.mock("@portal/components/pipelines/DestinationPicker", () => ({
     onEdit: (sourceId: string) => void;
   }) => (
     <>
-      <button type="button" onClick={() => onChange(["src-1"])}>
+      <button type="button" onClick={() => onChange(["src-in"])}>
         {value.length > 0 ? `output:${value.join(",")}` : "pick output"}
       </button>
       <button type="button" onClick={onCreateNew}>
@@ -94,9 +108,14 @@ vi.mock("@portal/components/pipelines/DestinationPicker", () => ({
       <button type="button" onClick={() => onEdit(value[0] ?? "")}>
         edit destination
       </button>
+      <button type="button" onClick={() => onChange([])}>
+        clear destination
+      </button>
     </>
   ),
 }));
+
+let createdSource: Source;
 
 // The source modal has its own suite; stub it to the two things the builder
 // depends on - the record it was opened on, and the sources-cache invalidation
@@ -105,9 +124,11 @@ vi.mock("@portal/components/sources/SourceModal", () => ({
   SourceModal: ({
     open,
     sourceId,
+    onCreated,
   }: {
     open: boolean;
     sourceId?: string | null;
+    onCreated?: (source: Source) => void;
   }) => {
     const queryClient = useQueryClient();
     if (!open) return null;
@@ -116,9 +137,10 @@ vi.mock("@portal/components/sources/SourceModal", () => ({
         <span>source-modal:{sourceId || "new"}</span>
         <button
           type="button"
-          onClick={() =>
-            void queryClient.invalidateQueries({ queryKey: qk.sources() })
-          }
+          onClick={async () => {
+            await queryClient.invalidateQueries({ queryKey: qk.sources() });
+            onCreated?.(createdSource);
+          }}
         >
           source saved
         </button>
@@ -260,6 +282,16 @@ vi.mock("@app/contexts/ToolRegistryContext", () => {
   return { useToolRegistry: () => catalog };
 });
 
+const routingRule = (values: string[]) => ({
+  condition: classificationCondition(values),
+  outputId: "src-1",
+});
+
+const CLASSIFY_STEP = {
+  operation: "/api/v1/ai/tools/classify-and-label",
+  parameters: {},
+};
+
 const POLICY: Policy = {
   id: "plc-1",
   name: "Existing pipeline",
@@ -268,6 +300,20 @@ const POLICY: Policy = {
   steps: [],
   output: { type: "inline", options: {} },
   outputIds: [],
+};
+
+/** The built-in editor source, offered as an input so a pipeline can run in the browser. */
+const EDITOR_SOURCE: SourceView = {
+  id: "src-editor",
+  name: "Editor",
+  type: "editor",
+  status: "active",
+  referenceCount: 0,
+  referencingPolicies: [],
+  config: [],
+  docsTotal: 0,
+  docs24h: 0,
+  docs30d: 0,
 };
 
 const SOURCE: SourceView = {
@@ -281,6 +327,12 @@ const SOURCE: SourceView = {
   docsTotal: 0,
   docs24h: 0,
   docs30d: 0,
+};
+
+const DESTINATION_SOURCE: SourceView = {
+  ...SOURCE,
+  id: "src-1",
+  name: "Archive",
 };
 
 function outcome(overrides: Partial<TriggerOutcome>): TriggerOutcome {
@@ -311,12 +363,21 @@ function renderBuilder(initial: string) {
 
 describe("PipelineBuilder", () => {
   beforeEach(() => {
+    createdSource = {
+      id: "src-new",
+      name: "Scanner drop",
+      type: "folder",
+      options: {},
+      enabled: true,
+    };
     fetchPipeline.mockReset();
     fetchTriggers.mockReset();
     savePipeline.mockReset();
     deletePipeline.mockReset();
     triggerPipeline.mockReset();
     fetchRun.mockReset();
+    runPipelineTest.mockReset();
+    runPipelineTest.mockResolvedValue({ runId: "run-test-1" });
     fetchSources.mockReset();
     fetchPipeline.mockResolvedValue(POLICY);
     fetchTriggers.mockResolvedValue([]);
@@ -572,7 +633,7 @@ describe("PipelineBuilder", () => {
         name: "Nightly compress",
         // The input pairs the chosen source with its trigger (manual by default).
         inputs: [{ sourceId: "src-in", trigger: null }],
-        outputIds: ["src-1"],
+        outputIds: ["src-in"],
         steps: [
           expect.objectContaining({ operation: "/api/v1/misc/compress-pdf" }),
         ],
@@ -670,7 +731,7 @@ describe("PipelineBuilder", () => {
     expect(savePipeline).toHaveBeenCalledWith(
       expect.objectContaining({
         inputs: [{ sourceId: "src-in", trigger: null }],
-        outputIds: ["src-1"],
+        outputIds: ["src-in"],
       }),
     );
   });
@@ -728,14 +789,30 @@ describe("PipelineBuilder", () => {
     );
   });
 
-  it("makes a destination created from the picker the pipeline's output", async () => {
+  it("selects the created destination even when another source arrives concurrently", async () => {
+    createdSource = {
+      ...createdSource,
+      name: "Vector database destination",
+      type: "vectordb",
+    };
     fetchSources
       .mockResolvedValueOnce({ kpis: [], sources: [SOURCE] })
       .mockResolvedValue({
         kpis: [],
         sources: [
           SOURCE,
-          { ...SOURCE, id: "src-new", name: "Archive bucket", type: "s3" },
+          {
+            ...SOURCE,
+            id: "src-unrelated",
+            name: "Concurrent folder",
+            type: "folder",
+          },
+          {
+            ...SOURCE,
+            id: "src-new",
+            name: "Vector database destination",
+            type: "vectordb",
+          },
         ],
       });
     renderBuilder("/processor/pipelines/new");
@@ -758,6 +835,7 @@ describe("PipelineBuilder", () => {
   });
 
   it("leaves a new source that cannot be written to out of the destination", async () => {
+    createdSource = { ...createdSource, id: "src-hook", type: "webhook" };
     // A webhook can be read from but not written to, so it must not be picked
     // as a destination the dropdown has no option for.
     fetchSources
@@ -796,7 +874,249 @@ describe("PipelineBuilder", () => {
     await pickDestination();
 
     fireEvent.click(screen.getByText("edit destination"));
-    expect(screen.getByText("source-modal:src-1")).toBeInTheDocument();
+    expect(screen.getByText("source-modal:src-in")).toBeInTheDocument();
+  });
+
+  it("saves an editor pipeline as its own flag, not as a wire input", async () => {
+    fetchSources.mockResolvedValue({
+      kpis: [],
+      sources: [SOURCE, EDITOR_SOURCE],
+    });
+    renderBuilder("/processor/pipelines/new");
+    fireEvent.change(
+      await screen.findByLabelText("portal.pipelines.composer.name"),
+      { target: { value: "Label on upload" } },
+    );
+    await addTool("Compress");
+    await pickInputSource("Editor");
+
+    fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
+
+    await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
+    const body = savePipeline.mock.calls[0][0];
+    // The editor is virtual: nothing sweeps it server-side, so it is recorded as the policy's own
+    // editor flag rather than as an input the backend would try to pull from.
+    expect(body.inputs).toEqual([]);
+    expect(body.editor).toEqual({ allowed: true, runOn: "upload" });
+    // And it needs no destination - results land back in the workspace the file came from.
+    expect(body.outputIds).toEqual([]);
+  });
+
+  it("keeps external delivery selected when a saved destination is cleared", async () => {
+    fetchSources.mockResolvedValue({
+      kpis: [],
+      sources: [SOURCE, EDITOR_SOURCE],
+    });
+    fetchPipeline.mockResolvedValue({
+      ...POLICY,
+      inputs: [],
+      editor: { allowed: true, runOn: "upload" },
+      outputIds: ["src-in"],
+      routingRules: [],
+    });
+    renderBuilder("/processor/pipelines/plc-1");
+    await screen.findByLabelText("portal.pipelines.builder.rename");
+    await openOutput();
+    fireEvent.click(await screen.findByText("clear destination"));
+    expect(
+      screen.getByRole("textbox", {
+        name: "portal.policies.wizard.locations.delivery",
+      }),
+    ).toHaveValue("portal.policies.wizard.locations.keepOriginal");
+    expect(screen.getByText("pick output")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "portal.pipelines.composer.save" }),
+    ).toBeDisabled();
+  });
+
+  it("clears hidden routing blockers when returning results to the editor", async () => {
+    HTMLElement.prototype.scrollIntoView = vi.fn();
+    fetchSources.mockResolvedValue({
+      kpis: [],
+      sources: [SOURCE, EDITOR_SOURCE],
+    });
+    fetchPipeline.mockResolvedValue({
+      ...POLICY,
+      inputs: [],
+      editor: { allowed: true, runOn: "upload" },
+      outputIds: ["src-in"],
+      routingRules: [routingRule([])],
+    });
+    renderBuilder("/processor/pipelines/plc-1");
+    await screen.findByLabelText("portal.pipelines.builder.rename");
+    await openOutput();
+    fireEvent.click(
+      screen.getByRole("textbox", {
+        name: "portal.policies.wizard.locations.delivery",
+      }),
+    );
+    fireEvent.click(
+      await screen.findByText(
+        "portal.policies.wizard.locations.returnToEditor",
+      ),
+    );
+    fireEvent.click(screen.getByText("portal.pipelines.composer.save"));
+    await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
+    expect(savePipeline.mock.calls[0][0]).toMatchObject({
+      outputIds: [],
+      routingRules: [],
+    });
+  });
+
+  it("saves a separate destination for an editor copy", async () => {
+    HTMLElement.prototype.scrollIntoView = vi.fn();
+    fetchSources.mockResolvedValue({
+      kpis: [],
+      sources: [SOURCE, EDITOR_SOURCE],
+    });
+    renderBuilder("/processor/pipelines/new");
+    fireEvent.change(
+      await screen.findByLabelText("portal.pipelines.composer.name"),
+      { target: { value: "Copy to archive" } },
+    );
+    await addTool("Compress");
+    await pickInputSource("Editor");
+    await openOutput();
+    fireEvent.click(
+      await screen.findByRole("textbox", {
+        name: "portal.policies.wizard.locations.delivery",
+      }),
+    );
+    fireEvent.click(
+      await screen.findByText("portal.policies.wizard.locations.keepOriginal"),
+    );
+    expect(
+      screen.getByRole("button", {
+        name: "portal.pipelines.composer.create",
+      }),
+    ).toBeDisabled();
+    fireEvent.click(await screen.findByText("pick output"));
+    fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
+    await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
+    expect(savePipeline.mock.calls[0][0]).toMatchObject({
+      editor: { allowed: true, runOn: "upload" },
+      required: false,
+      inputs: [],
+      outputIds: ["src-in"],
+    });
+  });
+
+  it("blocks a vector route with a file fallback until chunks are prepared", async () => {
+    fetchSources.mockResolvedValue({
+      kpis: [],
+      sources: [SOURCE, { ...DESTINATION_SOURCE, type: "vectordb" }],
+    });
+    fetchPipeline.mockResolvedValue({
+      ...POLICY,
+      inputs: [{ sourceId: "src-in", trigger: null }],
+      steps: [CLASSIFY_STEP],
+      outputIds: ["src-in"],
+      routingRules: [routingRule(["invoice"])],
+    });
+    renderBuilder("/processor/pipelines/plc-1");
+    fireEvent.click(
+      await screen.findByLabelText("portal.pipelines.builder.rename"),
+    );
+    fireEvent.change(
+      await screen.findByLabelText("portal.pipelines.composer.name"),
+      {
+        target: { value: "Renamed" },
+      },
+    );
+    await openOutput();
+    expect(
+      screen.getAllByText(
+        "portal.pipelines.builder.ingest.destinationNeedsChunks",
+      ).length,
+    ).toBeGreaterThan(0);
+    fireEvent.click(screen.getByText("portal.pipelines.composer.save"));
+    expect(savePipeline).not.toHaveBeenCalled();
+  });
+
+  it("carries a saved pipeline's routes through an unrelated edit", async () => {
+    fetchSources.mockResolvedValue({
+      kpis: [],
+      sources: [SOURCE, DESTINATION_SOURCE],
+    });
+    const routed = routingRule(["invoice"]);
+    fetchPipeline.mockResolvedValue({
+      ...POLICY,
+      inputs: [{ sourceId: "src-in", trigger: null }],
+      // Routing reads the verdict this step writes, so a routing pipeline carries one.
+      steps: [CLASSIFY_STEP],
+      outputIds: ["src-1"],
+      routingRules: [routed],
+    });
+    renderBuilder("/processor/pipelines/plc-1");
+
+    // The name is a heading until the rename affordance is used.
+    fireEvent.click(
+      await screen.findByLabelText("portal.pipelines.builder.rename"),
+    );
+    fireEvent.change(
+      await screen.findByLabelText("portal.pipelines.composer.name"),
+      { target: { value: "Renamed" } },
+    );
+    fireEvent.click(screen.getByText("portal.pipelines.composer.save"));
+
+    await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
+    // Routing is edited on the destination node; renaming the pipeline must not drop it.
+    expect(savePipeline.mock.calls[0][0].routingRules).toEqual([routed]);
+  });
+
+  it("refuses to save a route with no document types on it", async () => {
+    fetchSources.mockResolvedValue({
+      kpis: [],
+      sources: [SOURCE, DESTINATION_SOURCE],
+    });
+    fetchPipeline.mockResolvedValue({
+      ...POLICY,
+      inputs: [{ sourceId: "src-in", trigger: null }],
+      steps: [CLASSIFY_STEP],
+      outputIds: ["src-1"],
+      // What the toggle seeds: a rule the user has not filled in yet.
+      routingRules: [routingRule([])],
+    });
+    renderBuilder("/processor/pipelines/plc-1");
+
+    fireEvent.click(
+      await screen.findByLabelText("portal.pipelines.builder.rename"),
+    );
+    fireEvent.change(
+      await screen.findByLabelText("portal.pipelines.composer.name"),
+      { target: { value: "Renamed" } },
+    );
+    fireEvent.click(screen.getByText("portal.pipelines.composer.save"));
+
+    // The backend's PolicyValidator would reject this; the builder says so first.
+    await waitFor(() => expect(savePipeline).not.toHaveBeenCalled());
+  });
+
+  it("refuses to save routes whose classify step has been removed", async () => {
+    fetchSources.mockResolvedValue({
+      kpis: [],
+      sources: [SOURCE, DESTINATION_SOURCE],
+    });
+    fetchPipeline.mockResolvedValue({
+      ...POLICY,
+      inputs: [{ sourceId: "src-in", trigger: null }],
+      // Rules outliving the step that feeds them: every document would fall to the fallback.
+      steps: [],
+      outputIds: ["src-1"],
+      routingRules: [routingRule(["invoice"])],
+    });
+    renderBuilder("/processor/pipelines/plc-1");
+
+    fireEvent.click(
+      await screen.findByLabelText("portal.pipelines.builder.rename"),
+    );
+    fireEvent.change(
+      await screen.findByLabelText("portal.pipelines.composer.name"),
+      { target: { value: "Renamed" } },
+    );
+    fireEvent.click(screen.getByText("portal.pipelines.composer.save"));
+
+    await waitFor(() => expect(savePipeline).not.toHaveBeenCalled());
   });
 
   it("runs an existing pipeline and reports success", async () => {
@@ -848,6 +1168,76 @@ describe("PipelineBuilder", () => {
     expect(
       await screen.findByText("portal.pipelines.run.completed"),
     ).toBeInTheDocument();
+  });
+
+  function twoStepPolicy(): Policy {
+    return {
+      ...POLICY,
+      steps: [
+        { operation: "/api/v1/misc/compress-pdf", parameters: {} },
+        { operation: "/api/v1/misc/extract-images", parameters: {} },
+      ] as unknown as Policy["steps"],
+    };
+  }
+
+  async function runTestWith(view: Record<string, unknown>) {
+    fetchRun.mockResolvedValue({
+      runId: "run-test-1",
+      stepCount: 2,
+      outputs: [],
+      error: null,
+      ...view,
+    });
+    renderBuilder("/processor/pipelines/plc-1");
+    await screen.findByText("portal.pipelines.builder.testRun");
+    const picker = document.querySelector<HTMLInputElement>(
+      'input[type="file"][accept="application/pdf"]',
+    );
+    if (!picker) throw new Error("test-run file input not rendered");
+    fireEvent.change(picker, {
+      target: {
+        files: [new File(["x"], "in.pdf", { type: "application/pdf" })],
+      },
+    });
+    await waitFor(() => expect(runPipelineTest).toHaveBeenCalledTimes(1));
+  }
+
+  it("blames the step that actually failed, not the one after it", async () => {
+    fetchPipeline.mockResolvedValue(twoStepPolicy());
+
+    await runTestWith({ status: "FAILED", currentStep: 1, error: "boom" });
+
+    await screen.findByLabelText("portal.pipelines.graph.showError");
+    expect(screen.queryByText("portal.pipelines.graph.run.done")).toBeNull();
+  });
+
+  it("marks only the steps that finished before the one still running", async () => {
+    fetchPipeline.mockResolvedValue(twoStepPolicy());
+
+    await runTestWith({ status: "RUNNING", currentStep: 2 });
+
+    await waitFor(() =>
+      expect(
+        screen.getAllByText("portal.pipelines.graph.run.done"),
+      ).toHaveLength(1),
+    );
+  });
+
+  it("retires a test result once the chain it ran against changes", async () => {
+    fetchPipeline.mockResolvedValue(twoStepPolicy());
+
+    await runTestWith({ status: "COMPLETED", currentStep: 2 });
+    await waitFor(() =>
+      expect(
+        screen.getAllByText("portal.pipelines.graph.run.done"),
+      ).toHaveLength(2),
+    );
+
+    await addTool("OCR");
+
+    await waitFor(() =>
+      expect(screen.queryByText("portal.pipelines.graph.run.done")).toBeNull(),
+    );
   });
 
   it("uploads a step's supporting file and saves it as an asset binding", async () => {
@@ -903,7 +1293,7 @@ describe("PipelineBuilder", () => {
         },
       ],
       output: { type: "inline", options: {} },
-      outputIds: ["src-1"],
+      outputIds: ["src-in"],
     });
     renderBuilder("/processor/pipelines/plc-sign");
 

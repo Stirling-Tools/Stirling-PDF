@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 PAGE_NUMBER_METADATA_KEY = "page_number"
 CONTENT_TYPE_METADATA_KEY = "content_type"
 PAGE_TEXT_CONTENT_TYPE = "page_text"
+DOCPARSE_CHUNK_CONTENT_TYPE = "docparse_chunk"
 
 
 class DocumentService:
@@ -108,6 +109,54 @@ class DocumentService:
         embeddings = await self._embedder.embed_documents([doc.text for doc in chunks])
         await self._store.add_documents(collection, chunks, embeddings, owner_id)
         return len(chunks)
+
+    async def ingest_prepared(
+        self,
+        collection: FileId,
+        chunks: list[tuple[str, dict[str, str]]],
+        source: str,
+        owner_id: OwnerId,
+        read_principals: list[PrincipalId],
+        expires_at: datetime | None,
+        pages: list[PageText] | None = None,
+    ) -> int:
+        """Replace-ingest pre-chunked content (e.g. docparse structure-aware chunks).
+
+        Same end state as :meth:`ingest` - the ``(collection, owner_id)`` pair holds
+        exactly this content - but the ``(text, metadata)`` chunk pairs arrive
+        pre-built rather than being chunked here. ``pages`` writes the page
+        representation alongside, so a docparse-ingested document is readable whole
+        by :meth:`read_pages` and not only findable by search. Returns the number of
+        vector chunks indexed.
+
+        Embedding happens before the collection is wiped: the embedder is a remote
+        call that can fail or rate-limit part-way, and deleting first would leave the
+        document erased from the knowledge base with nothing to replace it.
+        """
+        if not read_principals:
+            raise ValueError("read_principals must not be empty - every doc needs at least one reader")
+
+        documents: list[Document] = []
+        for text, metadata in chunks:
+            if not text.strip():
+                continue
+            index = len(documents)
+            meta = {**metadata, "source": source, "chunk_index": str(index)}
+            documents.append(Document(id=f"{source}:docparse:{index}", text=text, metadata=meta))
+
+        embeddings = await self._embedder.embed_documents([doc.text for doc in documents]) if documents else []
+
+        await self._store.delete_collection(collection, owner_id)
+        await self._store.ensure_collection(collection, source, owner_id, expires_at)
+        if pages:
+            stored_pages = [StoredPage(page_number=p.page_number, text=p.text, char_count=len(p.text)) for p in pages]
+            await self._store.add_pages(collection, stored_pages, owner_id)
+        await self._store.grant_read(collection, owner_id, read_principals)
+
+        if not documents:
+            return 0
+        await self._store.add_documents(collection, documents, embeddings, owner_id)
+        return len(documents)
 
     async def search(
         self,

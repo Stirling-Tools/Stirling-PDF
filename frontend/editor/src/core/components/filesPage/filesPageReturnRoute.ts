@@ -1,6 +1,6 @@
 /**
  * Stores the route the user came from when they open files into the
- * workbench from My Files. Lets the workbench show a "Back to My Files"
+ * workbench from the file library. Lets the workbench show a "Back to File library"
  * affordance and return to the exact folder they were browsing.
  *
  * Persisted in sessionStorage so a hard reload keeps the return path

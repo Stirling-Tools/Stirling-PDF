@@ -1,21 +1,11 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Badge, Tooltip } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import CloseIcon from "@mui/icons-material/Close";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
-import DeleteIcon from "@mui/icons-material/Delete";
-import DownloadIcon from "@mui/icons-material/Download";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import HistoryIcon from "@mui/icons-material/History";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import LinkIcon from "@mui/icons-material/Link";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-
+import { Icon } from "@app/ui/Icon";
 import { FileId } from "@app/types/file";
-import { FolderRecord } from "@app/types/folder";
+import type { FolderId, FolderRecord } from "@app/types/folder";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { formatFileSize, getFileDate } from "@app/utils/fileUtils";
 import {
@@ -32,29 +22,34 @@ import {
   VersionTimeline,
   DetailField,
 } from "@app/components/filesPage/VersionTimeline";
+import { FileDetailsActions } from "@app/components/filesPage/FileDetailsActions";
+import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
+import "@app/components/filesPage/FilesPage.css";
 
 interface FileDetailsPanelProps {
+  /** Picker hosts choose a version without exposing workspace or library mutations. */
+  onPickVersion?: (file: StirlingFileStub) => void;
   selectedFileIds: FileId[];
   fileMap: Map<FileId, StirlingFileStub>;
-  currentFolder: FolderRecord | null;
+  foldersById: ReadonlyMap<FolderId, FolderRecord>;
   onClose: () => void;
-  onAddToWorkspace: (fileIds: FileId[]) => void;
-  onMove: (fileIds: FileId[]) => void;
-  onRemove: (fileIds: FileId[]) => void;
-  /** Save to server; only shown when at least one selected file is local-only. */
+  onAddToWorkspace?: (fileIds: FileId[]) => void;
+  onMove?: (fileIds: FileId[]) => void;
+  onRemove?: (fileIds: FileId[]) => void;
+  /** Receives selected files without a server copy; omitting it hides Add to library. */
   onSaveToServer?: (files: StirlingFileStub[]) => void;
-  /** When set, Save to server renders disabled with this tooltip (storage off). */
+  /** Keeps Add to library visible but disabled, with this explanation as a tooltip. */
   saveToServerDisabledReason?: string | null;
-  /** On small screens, show a compact "Version journey" button instead of the
-   *  full inline timeline (which opens onOpenVersionHistory). */
+  /** Replaces the inline version timeline with a button that invokes onOpenVersionHistory. */
   compactVersions?: boolean;
   onOpenVersionHistory?: () => void;
 }
 
 export function FileDetailsPanel({
+  onPickVersion,
   selectedFileIds,
   fileMap,
-  currentFolder,
+  foldersById,
   onClose,
   onAddToWorkspace,
   onMove,
@@ -74,21 +69,16 @@ export function FileDetailsPanel({
     [selectedFileIds, fileMap],
   );
 
-  // Hooks must run before any early return.
   const [downloading, setDownloading] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
-  // Metadata (size/type/dates) is collapsed by default so the panel stays
-  // short and the action buttons keep their pinned footer in view.
+  // Collapsed metadata leaves room for the preview and footer actions.
   const [fieldsOpen, setFieldsOpen] = useState(false);
-  // Version journey is collapsed by default so the panel stays short.
   const [versionsOpen, setVersionsOpen] = useState(false);
-  // Document classification read from PDF metadata, plus its (collapsed) section.
-  // Stored as label ids; resolve to display names via the seam.
   const [classification, setClassification] = useState<string[] | null>(null);
   const [classificationOpen, setClassificationOpen] = useState(false);
   const classificationEnabled = useClassificationEnabled();
+  // Stored classification values are IDs; display names depend on the active locale.
   const labelName = useLabelName();
-  // Version chain for the selected file; empty for v1 or multi-select.
   const [versionChain, setVersionChain] = useState<StirlingFileStub[]>([]);
   const singleFileForChain = files.length === 1 ? files[0] : null;
   useEffect(() => {
@@ -113,11 +103,6 @@ export function FileDetailsPanel({
     };
   }, [singleFileForChain]);
 
-  // Show the file's classification labels: the stub's cached copy when present
-  // (free — no byte load), else read the PDF metadata via the shared service.
-  // Gated on classification being enabled (SaaS + AI): off-feature we never read
-  // the metadata or show the section, so a PDF that happens to carry the
-  // StirlingPDFClassification key never reveals the feature in a build without it.
   useEffect(() => {
     setClassification(null);
     if (!classificationEnabled) return;
@@ -140,10 +125,12 @@ export function FileDetailsPanel({
     return null;
   }
 
-  const single = files.length === 1 ? files[0]! : null;
+  const single = files.length === 1 ? files[0] : null;
+  const selectedFolder = single?.folderId
+    ? foldersById.get(single.folderId)
+    : undefined;
   const totalSize = files.reduce((sum, f) => sum + f.size, 0);
   const ext = single ? (single.name.split(".").pop() ?? "").toUpperCase() : "";
-  // Files still needing a server upload; drives Save-to-server visibility.
   const localOnlyFiles = files.filter((f) => f.remoteStorageId == null);
 
   const handleDownload = async () => {
@@ -184,7 +171,7 @@ export function FileDetailsPanel({
             onClick={onClose}
             aria-label={t("filesPage.closeDetails", "Close details")}
           >
-            <CloseIcon fontSize="small" />
+            <Icon name="x" size={20} />
           </ActionIcon>
         </Tooltip>
       </div>
@@ -200,8 +187,10 @@ export function FileDetailsPanel({
               {single.thumbnailUrl ? (
                 <img src={single.thumbnailUrl} alt="" />
               ) : (
-                <PictureAsPdfIcon
-                  style={{ fontSize: "3rem", color: "var(--c-text-subtle)" }}
+                <Icon
+                  name="file-pdf"
+                  size={"3rem"}
+                  style={{ color: "var(--c-text-subtle)" }}
                 />
               )}
             </div>
@@ -216,10 +205,7 @@ export function FileDetailsPanel({
               <h3 style={{ margin: 0, wordBreak: "break-word", flex: 1 }}>
                 {single.name}
               </h3>
-              {ext && (
-                // Custom span; Mantine Badge default rendered invisible in dark mode.
-                <span className="files-page-details-ext-tag">{ext}</span>
-              )}
+              {ext && <span className="files-page-details-ext-tag">{ext}</span>}
               {(single.versionNumber ?? 1) > 1 && (
                 <Badge size="sm" color="blue">
                   v{single.versionNumber}
@@ -232,11 +218,12 @@ export function FileDetailsPanel({
               onClick={() => setFieldsOpen((o) => !o)}
               aria-expanded={fieldsOpen}
               rightSection={
-                <KeyboardArrowDownIcon
+                <Icon
+                  name="chevron-down"
+                  size={20}
                   className={`files-page-details-collapse-chevron${
                     fieldsOpen ? " is-open" : ""
                   }`}
-                  fontSize="small"
                 />
               }
             >
@@ -267,9 +254,11 @@ export function FileDetailsPanel({
                 <DetailField
                   label={t("filesPage.field.folder", "Folder")}
                   value={
-                    currentFolder
-                      ? currentFolder.name
-                      : t("filesPage.allFiles", "All files")
+                    selectedFolder
+                      ? selectedFolder.name
+                      : !single.folderId && getFileOrigin(single) === "local"
+                        ? t("filesPage.recentFiles", "Recents")
+                        : t("filesPage.allFiles", "Stirling library")
                   }
                 />
               </div>
@@ -284,11 +273,12 @@ export function FileDetailsPanel({
                   onClick={() => setClassificationOpen((o) => !o)}
                   aria-expanded={classificationOpen}
                   rightSection={
-                    <KeyboardArrowDownIcon
+                    <Icon
+                      name="chevron-down"
+                      size={20}
                       className={`files-page-details-collapse-chevron${
                         classificationOpen ? " is-open" : ""
                       }`}
-                      fontSize="small"
                     />
                   }
                 >
@@ -325,19 +315,11 @@ export function FileDetailsPanel({
                 )}
               </>
             )}
-            {/* Version journey. Each tool run writes a new StirlingFile
-                with the same `originalFileId` and an incremented
-                `versionNumber`, so the chain reconstructs the edit
-                timeline. The previous file manager exposed this and the
-                refactored one had silently dropped it; this revival also
-                shows WHICH tool was added at each step (the delta from
-                the prior version) so the user can read the journey
-                top-to-bottom. Long chains (> 6) collapse the middle. */}
             {versionChain.length > 1 &&
               (compactVersions && onOpenVersionHistory ? (
                 <Button
-                  leftSection={<HistoryIcon fontSize="small" />}
-                  variant="secondary"
+                  leftSection={<Icon name="rotate-ccw-clock" size={20} />}
+                  variant="tertiary"
                   onClick={onOpenVersionHistory}
                 >
                   {t(
@@ -356,11 +338,12 @@ export function FileDetailsPanel({
                     onClick={() => setVersionsOpen((o) => !o)}
                     aria-expanded={versionsOpen}
                     rightSection={
-                      <KeyboardArrowDownIcon
+                      <Icon
+                        name="chevron-down"
+                        size={20}
                         className={`files-page-details-collapse-chevron${
                           versionsOpen ? " is-open" : ""
                         }`}
-                        fontSize="small"
                       />
                     }
                   >
@@ -374,6 +357,7 @@ export function FileDetailsPanel({
                   </Button>
                   {versionsOpen && (
                     <VersionTimeline
+                      onPickVersion={onPickVersion}
                       chain={versionChain}
                       currentId={single.id}
                       onAddToWorkspace={onAddToWorkspace}
@@ -398,100 +382,24 @@ export function FileDetailsPanel({
         )}
       </div>
 
-      <div className="files-page-details-actions">
-        <Button
-          leftSection={<OpenInNewIcon fontSize="small" />}
-          onClick={() => onAddToWorkspace(selectedFileIds)}
-        >
-          {files.length === 1
-            ? t("filesPage.addToWorkspace", "Add to workspace")
-            : t("filesPage.addToWorkspaceCount", "Add {{count}} to workspace", {
-                count: files.length,
-              })}
-        </Button>
-        <Button
-          leftSection={<DownloadIcon fontSize="small" />}
-          variant="secondary"
-          onClick={handleDownload}
-          loading={downloading}
-        >
-          {single
-            ? t("filesPage.download", "Download")
-            : t("filesPage.downloadAll", "Download all")}
-        </Button>
-        {/* Share is single-file only. When sharing is disabled in
-              server config (storage.sharing.enabled=false) we still
-              render the button - disabled with an explanatory tooltip -
-              so users discover the feature exists and know how to
-              enable it, rather than wondering why "share" is missing
-              from the action stack on their build. */}
-        {single && (
-          <Tooltip
-            label={t(
-              "filesPage.shareDisabledHint",
-              "File sharing isn't enabled on this server. Ask your admin to enable it.",
-            )}
-            disabled={sharingEnabled}
-            withinPortal
-            multiline
-            w={260}
-          >
-            <Button
-              leftSection={<LinkIcon fontSize="small" />}
-              variant="secondary"
-              disabled={!sharingEnabled}
-              onClick={() => setShareModalOpen(true)}
-              style={{
-                // Keep tooltip hoverable while button is disabled.
-                pointerEvents: sharingEnabled ? undefined : "auto",
-              }}
-            >
-              {t("filesPage.shareManage", "Manage sharing")}
-            </Button>
-          </Tooltip>
-        )}
-        <Button
-          leftSection={<DriveFileMoveIcon fontSize="small" />}
-          variant="secondary"
-          onClick={() => onMove(selectedFileIds)}
-        >
-          {t("filesPage.moveTo", "Move to…")}
-        </Button>
-        {/* Save to server; shown when any selected file is local-only. When
-              storage is off it stays visible but disabled with a tooltip (same
-              treatment as Manage sharing above). */}
-        {onSaveToServer && localOnlyFiles.length > 0 && (
-          <Tooltip
-            label={saveToServerDisabledReason}
-            disabled={!saveToServerDisabledReason}
-            withinPortal
-            multiline
-            w={260}
-          >
-            <Button
-              leftSection={<CloudUploadIcon fontSize="small" />}
-              variant="secondary"
-              disabled={Boolean(saveToServerDisabledReason)}
-              onClick={() => onSaveToServer(localOnlyFiles)}
-              style={{
-                // Keep tooltip hoverable while button is disabled.
-                pointerEvents: saveToServerDisabledReason ? "auto" : undefined,
-              }}
-            >
-              {t("filesPage.saveToServer", "Save to server")}
-            </Button>
-          </Tooltip>
-        )}
-        <Button
-          leftSection={<DeleteIcon fontSize="small" />}
-          accent="danger"
-          onClick={() => onRemove(selectedFileIds)}
-        >
-          {t("filesPage.remove", "Delete")}
-        </Button>
-      </div>
-      {/* Single panel-level mount; gated on sharingEnabled. */}
-      {single && sharingEnabled && (
+      {onAddToWorkspace && onMove && onRemove && (
+        <FileDetailsActions
+          selectedFileIds={selectedFileIds}
+          single={single}
+          fileCount={files.length}
+          localOnlyFiles={localOnlyFiles}
+          sharingEnabled={sharingEnabled}
+          downloading={downloading}
+          onDownload={handleDownload}
+          onAddToWorkspace={onAddToWorkspace}
+          onMove={onMove}
+          onRemove={onRemove}
+          onSaveToServer={onSaveToServer}
+          saveToServerDisabledReason={saveToServerDisabledReason}
+          onShare={() => setShareModalOpen(true)}
+        />
+      )}
+      {single && sharingEnabled && !onPickVersion && (
         <ShareManagementModal
           opened={shareModalOpen}
           onClose={() => setShareModalOpen(false)}

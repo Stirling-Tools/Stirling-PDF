@@ -4,6 +4,7 @@
 # instead of matching only the project filter.
 ci: &ci
   - .github/workflows/build.yml
+  - .github/workflows/gradle-cache-prime.yml
   - .github/config/.files.yaml
 
 build: &build
@@ -39,7 +40,7 @@ openapi: &openapi
   - .github/workflows/check-openapi.yml
 
 docker-base: &docker-base
-  - docker/base/Dockerfile
+  - docker/base/**
 
 # Dockerfiles only (base, embedded, and unoserver). The slow multi-architecture
 # (arm64) leg of the PR Docker test build runs only when a Dockerfile changes,
@@ -124,6 +125,7 @@ tauri: &tauri
 engine: &engine
   - *ci
   - engine/**
+  - docker/engine/**
   - app/(common|core|proprietary|saas)/src/main/java/**
   - .github/workflows/ai-engine.yml
   - Taskfile.yml

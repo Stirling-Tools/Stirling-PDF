@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import { Icon } from "@app/ui/Icon";
 import { Button, Input } from "@app/ui";
 import {
   getSubcategoryLabel,
@@ -34,6 +34,8 @@ interface ToolPickerProps {
    * problem once the step is added.
    */
   precedingOutput?: ToolFormat;
+  /** Keeps an unavailable tool visible and explains why it cannot be added. */
+  unavailableReason?: (tool: ExecutableTool) => string | undefined;
 }
 
 /**
@@ -47,6 +49,7 @@ export function ToolPicker({
   operations = [],
   onPickOperation,
   precedingOutput,
+  unavailableReason,
 }: ToolPickerProps) {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
@@ -100,7 +103,7 @@ export function ToolPicker({
           value={query}
           aria-label={t("portal.pipelines.builder.searchTools")}
           placeholder={t("portal.pipelines.builder.searchTools")}
-          leadingIcon={<SearchRoundedIcon style={{ fontSize: "1.125rem" }} />}
+          leadingIcon={<Icon name="search" size={"1.125rem"} />}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Escape") onClose();
@@ -122,6 +125,7 @@ export function ToolPicker({
                 const incompatible = Boolean(
                   precedingOutput && !acceptsPreceding(tool),
                 );
+                const unavailable = unavailableReason?.(tool);
                 return (
                   <Button
                     key={tool.toolId}
@@ -134,6 +138,7 @@ export function ToolPicker({
                     ]
                       .filter(Boolean)
                       .join(" ")}
+                    disabled={Boolean(unavailable)}
                     onClick={() => onPick(tool)}
                     leftSection={
                       <span
@@ -153,6 +158,11 @@ export function ToolPicker({
                           {t("portal.pipelines.builder.cannotFollow", {
                             produced: getToolFormatLabel(t, precedingOutput),
                           })}
+                        </span>
+                      )}
+                      {unavailable && (
+                        <span className="portal-pipelines__picker-note">
+                          {unavailable}
                         </span>
                       )}
                     </span>
@@ -183,7 +193,7 @@ export function ToolPicker({
                   >
                     <BrandMark
                       id={op.custom ? "api" : op.connectionTypeId}
-                      size={17}
+                      size={18}
                     />
                   </span>
                 }

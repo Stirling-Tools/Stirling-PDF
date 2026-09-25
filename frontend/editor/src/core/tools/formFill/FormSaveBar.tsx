@@ -14,12 +14,10 @@ import { Stack, Group, Text, Transition, Paper, Badge } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import DownloadIcon from "@mui/icons-material/Download";
-import SaveIcon from "@mui/icons-material/Save";
-import EditNoteIcon from "@mui/icons-material/EditNote";
-import CloseIcon from "@mui/icons-material/Close";
+import { Icon } from "@app/ui/Icon";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
+import { getFormFillFileId } from "@app/types/fileContext";
 
 interface FormSaveBarProps {
   /** The current file being viewed */
@@ -45,10 +43,13 @@ export function FormSaveBar({
   const [applying, setApplying] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
-  // Reset dismissed state when file changes
-  const [prevFile, setPrevFile] = useState<File | Blob | null>(null);
-  if (file !== prevFile) {
-    setPrevFile(file);
+  // Reset the dismissed state only when genuinely different bytes open: the
+  // key folds the content identity (quickKey) in, so a disk reload under an
+  // unchanged record id still brings the bar back.
+  const fileRootKey = getFormFillFileId(file);
+  const [prevFileRootKey, setPrevFileRootKey] = useState<unknown>(fileRootKey);
+  if (fileRootKey !== prevFileRootKey) {
+    setPrevFileRootKey(fileRootKey);
     setDismissed(false);
   }
 
@@ -117,17 +118,20 @@ export function FormSaveBar({
             withBorder
             style={{
               pointerEvents: "auto",
-              minWidth: "320px",
-              maxWidth: "420px",
+              // Fill the viewport on small screens instead of overflowing the
+              // left edge with a fixed 320px+ minimum width.
+              width: "min(420px, calc(100vw - 2rem))",
+              maxWidth: "100%",
               overflow: "hidden",
             }}
           >
             <Stack gap="xs" p="md">
               <Group justify="space-between" wrap="nowrap">
                 <Group gap="sm" wrap="nowrap">
-                  <EditNoteIcon
-                    sx={{
-                      fontSize: 24,
+                  <Icon
+                    name="file-pen"
+                    size={24}
+                    style={{
                       color: isDirty
                         ? "var(--mantine-color-blue-6)"
                         : "var(--mantine-color-gray-6)",
@@ -163,30 +167,30 @@ export function FormSaveBar({
                   onClick={() => setDismissed(true)}
                   aria-label={t("viewer.formBar.dismiss", "Dismiss")}
                 >
-                  <CloseIcon sx={{ fontSize: 16 }} />
+                  <Icon name="x" size={16} />
                 </ActionIcon>
               </Group>
 
               {isDirty && (
-                <Group gap="xs" mt="xs">
+                <Group gap="xs" mt="xs" wrap="wrap">
                   <Button
                     size="sm"
                     variant="secondary"
-                    leftSection={<SaveIcon sx={{ fontSize: 18 }} />}
+                    leftSection={<Icon name="save" size={18} />}
                     loading={applying}
                     disabled={saving}
                     onClick={handleApply}
-                    style={{ flex: 1 }}
+                    style={{ flex: "1 1 10rem", minWidth: 0 }}
                   >
                     {t("viewer.formBar.apply", "Apply Changes")}
                   </Button>
                   <Button
                     size="sm"
-                    leftSection={<DownloadIcon sx={{ fontSize: 18 }} />}
+                    leftSection={<Icon name="download" size={18} />}
                     loading={saving}
                     disabled={applying || policyEnforcing}
                     onClick={handleDownload}
-                    style={{ flex: 1 }}
+                    style={{ flex: "1 1 10rem", minWidth: 0 }}
                   >
                     {t("viewer.formBar.download", "Download PDF")}
                   </Button>

@@ -14,7 +14,9 @@
   color: var(--c-text-muted);
 }
 
+/* Anchors .portal-shell__notifications without disturbing the column's flow. */
 .portal-shell__main {
+  position: relative;
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
@@ -31,6 +33,12 @@
      sideways as it does. */
   scrollbar-gutter: stable;
   animation: fadeInUp var(--motion-enter) both;
+}
+
+.portal-shell__view > .portal-connect-rail {
+  width: calc(100% - 3rem);
+  max-width: 75rem;
+  margin: 0.75rem auto 0;
 }
 
 /* Mobile topbar — hidden on desktop, where the sidebar is always visible.
@@ -68,4 +76,13 @@
     /* fadeIn keyframes come from core tokens.css */
     animation: fadeIn var(--motion-fast) both;
   }
+}
+
+/* Sits over the main area's top-right corner. Outside .portal-shell__view so it stays put while
+   the view scrolls, and inside .portal-shell__main so it never overlaps the sidebar. */
+.portal-shell__notifications {
+  position: absolute;
+  top: var(--sp-3, 0.75rem);
+  right: var(--sp-4, 1rem);
+  z-index: var(--z-sticky, 30);
 }

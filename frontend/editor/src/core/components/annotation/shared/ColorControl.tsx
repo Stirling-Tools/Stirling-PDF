@@ -8,7 +8,7 @@ import {
 } from "@mantine/core";
 import { useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import ColorizeIcon from "@mui/icons-material/Colorize";
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 
 // safari and firefox do not support the eye dropper API, only edge, chrome and opera do.
@@ -64,17 +64,16 @@ export function ColorControl({
       withinPortal
     >
       <Popover.Target>
-        <Tooltip label={label}>
-          <ActionIcon
-            aria-label={label}
-            variant="secondary"
-            accent="neutral"
-            size="md"
+        <Tooltip label={label} withArrow>
+          <button
+            type="button"
+            className="embedpdf-floating-btn"
             onClick={() => setOpened(!opened)}
             disabled={disabled}
+            aria-label={label}
           >
             <ColorSwatch color={localColor} size={18} />
-          </ActionIcon>
+          </button>
         </Tooltip>
       </Popover.Target>
       <Popover.Dropdown>
@@ -114,7 +113,7 @@ export function ColorControl({
                   size="sm"
                   onClick={handleEyeDropper}
                 >
-                  <ColorizeIcon style={{ fontSize: 16 }} />
+                  <Icon name="pipette" size={16} />
                 </ActionIcon>
               </Tooltip>
             </Group>

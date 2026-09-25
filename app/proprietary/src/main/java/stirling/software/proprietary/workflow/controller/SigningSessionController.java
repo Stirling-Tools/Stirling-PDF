@@ -20,8 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -39,10 +37,13 @@ import stirling.software.proprietary.workflow.dto.CertificateInfo;
 import stirling.software.proprietary.workflow.dto.CertificateValidationResponse;
 import stirling.software.proprietary.workflow.dto.ParticipantRequest;
 import stirling.software.proprietary.workflow.dto.WorkflowCreationRequest;
+import stirling.software.proprietary.workflow.model.WorkflowParticipant;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
 import stirling.software.proprietary.workflow.service.CertificateSubmissionValidator;
 import stirling.software.proprietary.workflow.service.SigningFinalizationService;
 import stirling.software.proprietary.workflow.service.WorkflowSessionService;
+
+import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
 @RestController
@@ -259,7 +260,9 @@ public class SigningSessionController {
                                 + "database until manual cleanup.",
                         sessionId,
                         session.getParticipants() != null
-                                ? session.getParticipants().stream().map(p -> p.getEmail()).toList()
+                                ? session.getParticipants().stream()
+                                        .map(WorkflowParticipant::getEmail)
+                                        .toList()
                                 : "unknown",
                         e);
                 throw new ResponseStatusException(

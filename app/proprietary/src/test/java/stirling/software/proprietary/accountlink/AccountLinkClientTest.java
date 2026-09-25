@@ -16,14 +16,17 @@ import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Stubs the {@link HttpClient} so the SaaS endpoint is never actually called. Confirms register
- * relays the JWT and parses the credential, and that entitlement parsing + the fail-open (null on
- * unreachable) behaviour hold.
+ * Stubs the {@link HttpClient} so the SaaS endpoint is never actually called. Confirms the connect
+ * handshake refuses an authorize URL it would not navigate to and carries no user token, and that
+ * entitlement parsing + the fail-open (null on unreachable) behaviour hold.
  */
 class AccountLinkClientTest {
 
@@ -48,39 +51,79 @@ class AccountLinkClientTest {
         return resp;
     }
 
+    // register() is gone with the JWT relay, and with it the two tests that asserted this client
+    // sends an Authorization: Bearer header. Nothing here carries a user token any more.
+
     @Test
     @SuppressWarnings("unchecked")
-    void registerRelaysJwtAndParsesCredential() throws Exception {
-        // Build the stub response first: nesting response() inside when() trips Mockito's
-        // unfinished-stubbing check (inner when() runs mid outer when()).
+    void connectRequestRefusesAnAuthorizeUrlItWouldNotNavigateTo() throws Exception {
+        // The reply drives a browser navigation, so a non-absolute or non-http(s) value must fail
+        // loudly here rather than reach the admin.
         HttpResponse<String> resp =
-                response(201, "{\"deviceId\":\"dev-1\",\"deviceSecret\":\"sec-1\",\"teamId\":42}");
-        ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
-        when(httpClient.send(captor.capture(), any(HttpResponse.BodyHandler.class)))
-                .thenReturn(resp);
+                response(201, "{\"requestId\":\"req-1\",\"authorizeUrl\":\"/link?request=req-1\"}");
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
 
-        AccountLinkClient.RegisterResult result = client.register("jwt-token", "My Server");
-
-        assertEquals("dev-1", result.deviceId());
-        assertEquals("sec-1", result.deviceSecret());
-        assertEquals(42L, result.teamId());
-
-        HttpRequest sent = captor.getValue();
-        assertEquals("Bearer jwt-token", sent.headers().firstValue("Authorization").orElse(null));
-        assertEquals(
-                "https://saas.example.com/api/v1/account-link/register", sent.uri().toString());
+        assertThrows(
+                java.io.IOException.class,
+                () -> client.connectRequest("n", "https://pdf.example.com/cb", "nonce", "secret"));
     }
 
     @Test
     @SuppressWarnings("unchecked")
-    void registerThrowsUpstreamExceptionWithStatusOnNon2xx() throws Exception {
-        HttpResponse<String> resp = response(401, "{\"error\":\"unauthorized\"}");
+    void connectRequestParsesTheAuthorizeUrlItIsGiven() throws Exception {
+        HttpResponse<String> resp =
+                response(
+                        201,
+                        "{\"requestId\":\"req-1\",\"expiresIn\":900,"
+                                + "\"authorizeUrl\":\"https://app.example.com/link?request=req-1\"}");
+        ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
+        when(httpClient.send(captor.capture(), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(resp);
+
+        AccountLinkClient.ConnectRequestResult result =
+                client.connectRequest("n", "https://pdf.example.com/cb", "nonce", "secret");
+
+        assertEquals("req-1", result.requestId());
+        assertEquals("https://app.example.com/link?request=req-1", result.authorizeUrl());
+        // No user token on this call, by design.
+        assertEquals(null, captor.getValue().headers().firstValue("Authorization").orElse(null));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void connectClaimGrantsTheCredentialOnSuccess() throws Exception {
+        HttpResponse<String> resp =
+                response(200, "{\"deviceId\":\"dev-1\",\"deviceSecret\":\"sec-1\",\"teamId\":7}");
         when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
-        AccountLinkClient.UpstreamException ex =
-                assertThrows(
-                        AccountLinkClient.UpstreamException.class,
-                        () -> client.register("jwt", null));
-        assertEquals(401, ex.status());
+
+        AccountLinkClient.ConnectClaimResult result = client.connectClaim("req-1", "secret");
+
+        assertEquals(AccountLinkClient.ConnectClaimOutcome.GRANTED, result.outcome());
+        assertEquals("dev-1", result.deviceId());
+        assertEquals("sec-1", result.deviceSecret());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void connectClaimMapsTheStatusItIsGiven() throws Exception {
+        // The whole point of these four: a claim consumes the request server-side, so
+        // reading 200 as anything but success loses the credential irrecoverably.
+        assertEquals(AccountLinkClient.ConnectClaimOutcome.PENDING, claimOutcome(202, "{}"));
+        assertEquals(AccountLinkClient.ConnectClaimOutcome.UNAVAILABLE, claimOutcome(503, "{}"));
+        assertEquals(AccountLinkClient.ConnectClaimOutcome.REJECTED, claimOutcome(400, "{}"));
+        assertEquals(
+                AccountLinkClient.ConnectClaimOutcome.CONFIRMED,
+                claimOutcome(200, "{\"status\":\"confirmed\",\"teamId\":7}"));
+    }
+
+    @SuppressWarnings("unchecked")
+    private AccountLinkClient.ConnectClaimOutcome claimOutcome(int status, String body)
+            throws Exception {
+        // Built before the when(), not inside it: response() stubs a mock of its own, and
+        // Mockito cannot have that happen mid-stubbing.
+        HttpResponse<String> resp = response(status, body);
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
+        return client.connectClaim("req-1", "secret").outcome();
     }
 
     @Test
@@ -101,10 +144,25 @@ class AccountLinkClientTest {
         assertEquals(10, e.periodSpendUnits());
         assertEquals(100L, e.periodCapUnits());
         assertEquals(EntitlementState.OK, e.state());
+        assertEquals(10, e.automationStepLimit());
 
         HttpRequest sent = captor.getValue();
         assertEquals("dev-1", sent.headers().firstValue("X-Device-Id").orElse(null));
         assertEquals("sec-1", sent.headers().firstValue("X-Device-Secret").orElse(null));
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(ints = {-1, 0, 1, 20, Integer.MAX_VALUE})
+    @SuppressWarnings("unchecked")
+    void fetchEntitlementParsesAutomationStepLimit(Integer limit) throws Exception {
+        HttpResponse<String> resp = response(200, "{\"automationStepLimit\":" + limit + "}");
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
+
+        InstanceEntitlement entitlement = client.fetchEntitlement("dev-1", "sec-1");
+
+        assertNotNull(entitlement);
+        assertEquals(limit != null && limit > 0 ? limit : 10, entitlement.automationStepLimit());
     }
 
     @Test
@@ -258,5 +316,19 @@ class AccountLinkClientTest {
         assertNull(
                 client.reportUsage(
                         "dev-1", "sec-1", 1L, LocalDateTime.of(2026, 6, 1, 0, 0), 1, 0, 0));
+    }
+
+    @Test
+    void dailySeatHeartbeatParsesLocalAllowance() throws Exception {
+        var reply = response(200, "{\"state\":\"OK\",\"licensedUsers\":100,\"fleetUserLimit\":17}");
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(reply);
+        var result = client.reportUsage("dev-1", "sec-1", 0, null, 0, 0, 0, 7);
+        assertNotNull(result);
+        assertEquals(100, result.licensedUsers());
+        assertEquals(17, result.fleetUserLimit());
+        var request = ArgumentCaptor.forClass(HttpRequest.class);
+        org.mockito.Mockito.verify(httpClient)
+                .send(request.capture(), any(HttpResponse.BodyHandler.class));
+        assertEquals("/api/v1/instance/sync", request.getValue().uri().getPath());
     }
 }

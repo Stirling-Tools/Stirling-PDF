@@ -20,6 +20,7 @@ Closes #(issue_number)
 - [ ] I have read the [Stirling-PDF Developer Guide](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/DeveloperGuide.md) (if applicable)
 - [ ] I have read the [How to add new languages to Stirling-PDF](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/devGuide/HowToAddNewLanguage.md) (if applicable)
 - [ ] I have performed a self-review of my own code
+- [ ] Every comment I added says something the code does not ([guide](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/devGuide/CODE_COMMENTS.md))
 - [ ] My changes generate no new warnings
 
 ### Documentation

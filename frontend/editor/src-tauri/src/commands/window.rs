@@ -27,6 +27,43 @@ fn queue_file_ids(label: &str, ids: Vec<String>) {
     map.entry(label.to_string()).or_default().extend(ids);
 }
 
+// macOS traffic-light inset, vertically centred in the frontend title-bar strip.
+// Must track the strip height in TitleBarStrip.module.css (--titlebar-h); kept in
+// Rust, not tauri.conf.json, so the value lives with the window builders.
+#[cfg(target_os = "macos")]
+const TRAFFIC_LIGHT_INSET: (f64, f64) = (13.0, 18.0);
+
+// The main window, built here rather than declared in tauri.conf.json so its
+// chrome (decorations, the macOS overlay title bar, the traffic-light inset)
+// sits beside the spawned-window chrome instead of split across a config file.
+// OS drag-drop is disabled; the frontend handles file drops itself.
+pub fn build_main_window(app: &AppHandle) -> Result<WebviewWindow, String> {
+    let builder = WebviewWindowBuilder::new(app, MAIN_WINDOW_LABEL, WebviewUrl::App("/".into()))
+        .title("Stirling PDF")
+        .inner_size(1280.0, 800.0)
+        // Below this width the file manager collapses to its mobile layout, so
+        // keep the window above the breakpoint (matches the spawned windows).
+        .min_inner_size(1030.0, 600.0)
+        .resizable(true)
+        .disable_drag_drop_handler();
+
+    #[cfg(target_os = "windows")]
+    let builder = builder
+        .additional_browser_args("--enable-features=CertVerifierBuiltinFeature")
+        .decorations(false);
+
+    #[cfg(target_os = "macos")]
+    let builder = builder
+        .title_bar_style(tauri::TitleBarStyle::Overlay)
+        .hidden_title(true)
+        .traffic_light_position(tauri::LogicalPosition::new(
+            TRAFFIC_LIGHT_INSET.0,
+            TRAFFIC_LIGHT_INSET.1,
+        ));
+
+    builder.build().map_err(|e| e.to_string())
+}
+
 // Shared window builder: every Stirling window must use identical WebView2
 // browser args so they can share one user-data folder (see the note below),
 // so all spawn paths funnel through here.
@@ -48,8 +85,24 @@ fn build_window(app: &AppHandle, label: &str, url: &str) -> Result<WebviewWindow
     // dir (and thus IndexedDB / localStorage / cookies). macOS (WKWebView) and
     // Linux (WebKitGTK) don't have this constraint, so the arg is Windows-only.
     #[cfg(target_os = "windows")]
-    let builder =
-        builder.additional_browser_args("--enable-features=CertVerifierBuiltinFeature");
+    let builder = builder
+        .additional_browser_args("--enable-features=CertVerifierBuiltinFeature")
+        // Windows: no native title bar; the frontend draws its own controls in
+        // the title-bar strip (TitleBarStrip). macOS uses the overlay style below.
+        .decorations(false);
+
+    // macOS: keep the native frame but make the title bar an overlay so the
+    // frontend strip spans under the traffic lights, positioned to sit centred in
+    // the strip (matches the main window in tauri.conf.json). Linux keeps its
+    // native decorations.
+    #[cfg(target_os = "macos")]
+    let builder = builder
+        .title_bar_style(tauri::TitleBarStyle::Overlay)
+        .hidden_title(true)
+        .traffic_light_position(tauri::LogicalPosition::new(
+            TRAFFIC_LIGHT_INSET.0,
+            TRAFFIC_LIGHT_INSET.1,
+        ));
 
     builder.build().map_err(|e| e.to_string())
 }

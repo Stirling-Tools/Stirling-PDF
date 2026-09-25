@@ -3,6 +3,7 @@ import {
   currencySymbol,
   docCapForMoney,
   formatMinor,
+  formatMoneyMajor,
   formatPeriodDate,
   meterState,
 } from "@app/billing";
@@ -76,6 +77,17 @@ describe("currencySymbol", () => {
 });
 
 describe("formatMinor", () => {
+  it.each([
+    [1200, "jpy", "JPY 1,200"],
+    [1200, "krw", "KRW 1,200"],
+    [1200, "cad", "CAD 12.00"],
+    [1200, "isk", "ISK 12.00"],
+    [1200, "ugx", "UGX 12.00"],
+    [1200, "mga", "MGA 1,200"],
+  ])("formats %s minor units in %s as %s", (amount, currency, expected) => {
+    expect(formatMinor(amount, currency)).toBe(expected);
+  });
+
   it("formats whole and fractional cents", () => {
     expect(formatMinor(224, "usd")).toContain("2.24");
     expect(formatMinor(5, "usd")).toContain("0.05");
@@ -83,6 +95,13 @@ describe("formatMinor", () => {
 
   it("keeps up to 3 fraction digits so sub-cent rates don't round to $0", () => {
     expect(formatMinor(0.5, "usd")).toContain("0.005");
+  });
+});
+
+describe("formatMoneyMajor", () => {
+  it("formats major units with standard thousand separators and symbol", () => {
+    expect(formatMoneyMajor(1000, "usd")).toBe("$1,000");
+    expect(formatMoneyMajor(500, "eur")).toBe("€500");
   });
 });
 

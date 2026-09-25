@@ -5,19 +5,22 @@ import { AppLayout } from "@app/components/AppLayout";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import { ThemeProvider } from "@app/components/shared/ThemeProvider";
-import Landing from "@app/routes/Landing";
-import Login from "@app/routes/Login";
-import AuthCallback from "@app/routes/AuthCallback";
-import InviteAccept from "@app/routes/InviteAccept";
-import ShareLinkPage from "@app/routes/ShareLinkPage";
-import ParticipantView from "@app/components/workflow/ParticipantView";
-import Onboarding from "@app/components/onboarding/Onboarding";
-import WatchedFoldersRegistration from "@app/components/watchedFolders/WatchedFoldersRegistration";
+
+const Landing = lazy(() => import("@app/routes/Landing"));
+const Login = lazy(() => import("@app/routes/Login"));
+const AuthCallback = lazy(() => import("@app/routes/AuthCallback"));
+const InviteAccept = lazy(() => import("@app/routes/InviteAccept"));
+const ShareLinkPage = lazy(() => import("@app/routes/ShareLinkPage"));
+const ParticipantView = lazy(
+  () => import("@app/components/workflow/ParticipantView"),
+);
+const Onboarding = lazy(() => import("@app/components/onboarding/Onboarding"));
 
 const MobileScannerPage = lazy(() => import("@app/pages/MobileScannerPage"));
 const MobileSignPage = lazy(() => import("@app/pages/MobileSignPage"));
-import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
 import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
+import { AppFrame } from "@app/components/layout/AppFrame";
+import { NoAppChrome } from "@app/components/layout/NoAppChrome";
 import { RootGate } from "@app/routes/RootGate";
 
 // Import global styles
@@ -80,40 +83,51 @@ export default function App() {
           }
         />
 
-        {/* Admin-only route-set (the portal): its own top-level shell, mounted
-            before the catch-all. Absent from core/desktop builds (empty stub). */}
-        {getAdminRouteExtensions()}
+        {/* Both apps, under a shared frame so the rail renders once outside them. */}
+        <Route element={<AppFrame />}>
+          {/* The portal: its own shell, before the catch-all. An empty stub in core. */}
+          {getAdminRouteExtensions()}
 
-        {/* All other routes need AppProviders for backend integration.
-            RootGate makes "/" route by role BEFORE any of it mounts, so a user
-            bound for the processor never boots the editor on the way. */}
-        <Route
-          path="*"
-          element={
-            <RootGate>
-              <AppProviders>
-                <AppLayout>
-                  <Routes>
-                    <Route path="/login" element={<Login />} />
-                    {/* Self-hosted has no signup - accounts are created by an
-                        admin. Old links land on login instead. */}
-                    <Route
-                      path="/signup"
-                      element={<Navigate to="/login" replace />}
-                    />
-                    <Route path="/auth/callback" element={<AuthCallback />} />
-                    <Route path="/invite/:token" element={<InviteAccept />} />
-                    <Route path="/share/:token" element={<ShareLinkPage />} />
-                    {/* The editor and its tool routes - Landing handles auth logic */}
-                    <Route path="/*" element={<Landing />} />
-                  </Routes>
-                  <Onboarding />
-                  {WATCHED_FOLDERS_ENABLED && <WatchedFoldersRegistration />}
-                </AppLayout>
-              </AppProviders>
-            </RootGate>
-          }
-        />
+          {/* All other routes need AppProviders for backend integration. RootGate
+              routes "/" by role before any of it mounts. */}
+          <Route
+            path="*"
+            element={
+              <RootGate>
+                <AppProviders>
+                  <AppLayout>
+                    <Routes>
+                      {/* Not the app: no rail over any of these, ever. */}
+                      <Route element={<NoAppChrome />}>
+                        <Route path="/login" element={<Login />} />
+                        {/* Self-hosted has no signup: old links land on login. */}
+                        <Route
+                          path="/signup"
+                          element={<Navigate to="/login" replace />}
+                        />
+                        <Route
+                          path="/auth/callback"
+                          element={<AuthCallback />}
+                        />
+                        <Route
+                          path="/invite/:token"
+                          element={<InviteAccept />}
+                        />
+                        <Route
+                          path="/share/:token"
+                          element={<ShareLinkPage />}
+                        />
+                      </Route>
+                      {/* The editor and its tool routes - Landing handles auth logic */}
+                      <Route path="/*" element={<Landing />} />
+                    </Routes>
+                    <Onboarding />
+                  </AppLayout>
+                </AppProviders>
+              </RootGate>
+            }
+          />
+        </Route>
       </Routes>
     </Suspense>
   );

@@ -52,9 +52,9 @@ function primeSession(
   mockedApi.post.mockResolvedValue({
     status: 200,
     data: SESSION_INFO,
-  } as never);
-  mockedApi.delete.mockResolvedValue({ status: 200 } as never);
-  mockedApi.get.mockImplementation(((url: string, config?: unknown) => {
+  });
+  mockedApi.delete.mockResolvedValue({ status: 200 });
+  mockedApi.get.mockImplementation((url: string, config?: unknown) => {
     if (url.includes("/files/")) {
       return Promise.resolve({ status: 200, data: { files } } as never);
     }
@@ -70,7 +70,7 @@ function primeSession(
       } as never);
     }
     return Promise.reject(new Error(`unexpected GET ${url}`));
-  }) as never);
+  });
 }
 
 function renderModal(

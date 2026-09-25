@@ -6,7 +6,6 @@ export interface AppConfig {
   appNameNavbar?: string;
   languages?: string[];
   defaultLocale?: string;
-  logoStyle?: "modern" | "classic";
   enableLogin?: boolean;
   showSettingsWhenNoLogin?: boolean;
   enableEmailInvites?: boolean;
@@ -19,9 +18,17 @@ export interface AppConfig {
   enablePosthog?: boolean | null;
   enableScarf?: boolean | null;
   enableDesktopInstallSlide?: boolean;
+  /** False strips the hidden novelty features - see useSecretClicks. */
+  enableEasterEggs?: boolean;
   premiumEnabled?: boolean;
   premiumKey?: string;
   paygEnabled?: boolean;
+  /**
+   * Whether this instance can link a Stirling (SaaS) account. False means the account-link
+   * endpoints are absent (404), which is indistinguishable from "not linked" on the client, so
+   * anything that prompts to link must gate on this first.
+   */
+  accountLinkAvailable?: boolean;
   termsAndConditions?: string;
   privacyPolicy?: string;
   cookiePolicy?: string;
@@ -63,6 +70,14 @@ export interface AppConfig {
   timestampCustomTsaUrls?: string[];
   timestampTsaPresets?: { label: string; url: string }[];
   aiEngineEnabled?: boolean;
+  aiFeatures?: {
+    chat?: boolean;
+    documentQuestions?: boolean;
+    createPdf?: boolean;
+    mathAuditor?: boolean;
+    pdfComment?: boolean;
+    classify?: boolean;
+  };
 }
 
 export type AppConfigBootstrapMode = "blocking" | "non-blocking";

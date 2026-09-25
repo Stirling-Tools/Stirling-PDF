@@ -2,7 +2,7 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  background: var(--c-surface);
+  background: var(--c-input-bg);
   border: 1px solid var(--c-border);
   border-radius: var(--radius-md);
   color: var(--c-text);
