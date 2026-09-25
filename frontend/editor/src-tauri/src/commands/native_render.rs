@@ -349,6 +349,177 @@ mod macos {
         Ok((document, cg_page))
     }
 
+    /// Research harness, test-only: the same tiles through Chromium's engine,
+    /// dlopened from a libpdfium extracted from the natives the repo ships.
+    /// Identical C ABI on Linux, so this is the blueprint for the Linux
+    /// production path: separate document per call, pages owned by their call.
+    /// Set PDFIUM_LIBDIR to a directory containing libpdfium.dylib (plus the
+    /// bundled sibling dylibs for its @rpath); without it the compare benches
+    /// report a skip.
+    #[cfg(test)]
+    mod pdfium_compare {
+        use libloading::{Library, Symbol};
+        use std::ffi::{c_char, c_int, c_void, CString};
+        use std::path::Path;
+        use std::sync::OnceLock;
+
+        type Document = *mut c_void;
+        type Page = *mut c_void;
+        type Bitmap = *mut c_void;
+
+        #[repr(C)]
+        #[derive(Clone, Copy, Default)]
+        struct FsRect {
+            left: f32,
+            top: f32,
+            right: f32,
+            bottom: f32,
+        }
+
+        #[repr(C)]
+        #[derive(Clone, Copy, Default)]
+        #[allow(dead_code)]
+        struct FsMatrix {
+            a: f32,
+            b: f32,
+            c: f32,
+            d: f32,
+            e: f32,
+            f: f32,
+        }
+
+        pub(super) struct Pdfium {
+            // Kept in a leak so the loaded symbols stay valid for the process;
+            // unloading mid-benchmark would invalidate every function pointer.
+            _lib: &'static Library,
+            load_doc: unsafe extern "C" fn(*const c_char, *const c_char) -> Document,
+            load_page: unsafe extern "C" fn(Document, c_int) -> Page,
+            close_page: unsafe extern "C" fn(Page),
+            close_doc: unsafe extern "C" fn(Document),
+            create_ex: unsafe extern "C" fn(c_int, c_int, c_int, *mut c_void, c_int) -> Bitmap,
+            render_matrix:
+                unsafe extern "C" fn(Bitmap, Page, *const FsMatrix, *const FsRect, c_int),
+            destroy_bmp: unsafe extern "C" fn(Bitmap),
+            last_error: unsafe extern "C" fn() -> u64,
+        }
+
+        static PDFIUM: OnceLock<Option<Pdfium>> = OnceLock::new();
+
+        pub(super) fn pdfium() -> Option<&'static Pdfium> {
+            PDFIUM.get_or_init(load).as_ref()
+        }
+
+        fn dylib_path() -> Option<std::path::PathBuf> {
+            let dir = std::env::var("PDFIUM_LIBDIR")
+                .ok()
+                .map(std::path::PathBuf::from)?;
+            let path = dir.join("libpdfium.dylib");
+            path.exists().then(|| path)
+        }
+
+        fn load() -> Option<Pdfium> {
+            let path = dylib_path()?;
+            unsafe {
+                let lib: &'static Library = Box::leak(Box::new(Library::new(&path).ok()?));
+                macro_rules! sym {
+                    ($name:literal) => {
+                        lib.get::<unsafe extern "C" fn()>(concat!($name, "\0").as_bytes())
+                            .ok()?
+                    };
+                }
+                // Symbols coerce per use site; each concrete type is checked
+                // where it is used below.
+                unsafe fn coerce<F>(s: Symbol<unsafe extern "C" fn()>) -> F
+                where
+                    F: Copy,
+                {
+                    unsafe { std::mem::transmute_copy::<Symbol<unsafe extern "C" fn()>, F>(&s) }
+                }
+                let init: unsafe extern "C" fn() = coerce(sym!("FPDF_InitLibrary"));
+                init();
+                Some(Pdfium {
+                    _lib: lib,
+                    load_doc: coerce(sym!("FPDF_LoadDocument")),
+                    load_page: coerce(sym!("FPDF_LoadPage")),
+                    close_page: coerce(sym!("FPDF_ClosePage")),
+                    close_doc: coerce(sym!("FPDF_CloseDocument")),
+                    create_ex: coerce(sym!("FPDFBitmap_CreateEx")),
+                    render_matrix: coerce(sym!("FPDF_RenderPageBitmapWithMatrix")),
+                    destroy_bmp: coerce(sym!("FPDFBitmap_Destroy")),
+                    last_error: coerce(sym!("FPDF_GetLastError")),
+                })
+            }
+        }
+
+        /// One tile in BGRA, same rect space as `render_rect_raw`: page-space
+        /// points with the crop bottom-left at (0, 0), y up.
+        pub(super) fn render_tile(
+            pdf: &Pdfium,
+            path: &str,
+            x: f64,
+            y: f64,
+            width: f64,
+            height: f64,
+            scale: f64,
+        ) -> Result<(Vec<u8>, usize, usize), String> {
+            unsafe {
+                let cpath = CString::new(path).map_err(|e| e.to_string())?;
+                let doc = (pdf.load_doc)(cpath.as_ptr(), std::ptr::null());
+                if doc.is_null() {
+                    return Err(format!("pdfium open failed: {}", (pdf.last_error)()));
+                }
+                let page = (pdf.load_page)(doc, 0);
+                if page.is_null() {
+                    (pdf.close_doc)(doc);
+                    return Err("pdfium page load failed".to_string());
+                }
+                let tw = (width * scale).ceil().max(1.0) as usize;
+                let th = (height * scale).ceil().max(1.0) as usize;
+                let mut buffer = vec![0u8; tw * th * 4];
+                let bmp = (pdf.create_ex)(
+                    tw as c_int,
+                    th as c_int,
+                    4,
+                    buffer.as_mut_ptr() as *mut c_void,
+                    (tw * 4) as c_int,
+                );
+                if bmp.is_null() {
+                    (pdf.close_page)(page);
+                    (pdf.close_doc)(doc);
+                    return Err("pdfium bitmap failed".to_string());
+                }
+                // Device: origin top-left, Y down.
+                let matrix = FsMatrix {
+                    a: scale as f32,
+                    b: 0.0,
+                    c: 0.0,
+                    d: -(scale as f32),
+                    e: -(x as f32) * (scale as f32),
+                    f: (th as f32) + (y as f32) * (scale as f32),
+                };
+                let clipping = FsRect {
+                    left: 0.0,
+                    top: 0.0,
+                    right: tw as f32,
+                    bottom: th as f32,
+                };
+                (pdf.render_matrix)(bmp, page, &matrix, &clipping, 0);
+                (pdf.destroy_bmp)(bmp);
+                (pdf.close_page)(page);
+                (pdf.close_doc)(doc);
+                Ok((buffer, tw, th))
+            }
+        }
+
+        pub(super) fn fixture_path(name: &str) -> String {
+            Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../src/core/tests/test-fixtures")
+                .join(name)
+                .to_string_lossy()
+                .into_owned()
+        }
+    }
+
     #[cfg(test)]
     mod tests {
         use super::{render, render_rect, ImageFormat};
@@ -564,6 +735,101 @@ mod macos {
             }
             let len = bytes_per_row * pixel_height;
             Ok(unsafe { std::slice::from_raw_parts(data as *const u8, len) }.to_vec())
+        }
+
+        /// The same shapes through Chromium's engine: full pages, tiles, and
+        /// parallel viewports, for a direct native-vs-native comparison.
+        /// Needs PDFIUM_LIBDIR pointing at an extracted libpdfium natives dir
+        /// (the harness prints a skip otherwise). Run with:
+        ///   PDFIUM_LIBDIR=... cargo test --lib commands::native_render -- --ignored --nocapture
+        #[test]
+        #[ignore = "benchmark; run on demand with --ignored --nocapture"]
+        fn bench_pdfium_compare() {
+            use super::pdfium_compare::{fixture_path, pdfium, render_tile};
+            use std::time::Instant;
+
+            let Some(pdf) = pdfium() else {
+                println!("[bench] pdfium: skipped (set PDFIUM_LIBDIR to an extracted natives dir)");
+                return;
+            };
+
+            // Crop size per fixture page 1 (crop matches the page here).
+            let fixtures = [
+                ("annotation-text-sample", 400.0, 300.0),
+                ("big-sample", 612.0, 792.0),
+                ("pages-500", 612.0, 792.0),
+                ("large-40mb", 612.0, 792.0),
+            ];
+
+            let median = |mut samples: Vec<f64>| {
+                samples.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                (samples[samples.len() / 2], samples[0])
+            };
+
+            for (label, page_w, page_h) in fixtures {
+                let path = if label == "annotation-text-sample" || label == "big-sample" {
+                    fixture_path(&format!("{label}.pdf"))
+                } else {
+                    Path::new(env!("CARGO_MANIFEST_DIR"))
+                        .join("../.perf-local")
+                        .join(format!("{label}.pdf"))
+                        .to_string_lossy()
+                        .into_owned()
+                };
+                if !Path::new(&path).exists() {
+                    println!("[bench] pdfium {label}: fixture missing, skipped");
+                    continue;
+                }
+                for width in [120u32, 240, 1224] {
+                    let scale = f64::from(width) / page_w;
+                    let mut samples = Vec::new();
+                    let mut bytes = 0;
+                    for _ in 0..7 {
+                        let started = Instant::now();
+                        match render_tile(pdf, &path, 0.0, 0.0, page_w, page_h, scale) {
+                            Ok((pixels, w, h)) => {
+                                samples.push(started.elapsed().as_secs_f64() * 1000.0);
+                                bytes = pixels.len();
+                                // render_tile rounds pixel sizes up, same as the app path.
+                                assert_eq!(
+                                    (w, h),
+                                    (width as usize, (page_h * scale).ceil().max(1.0) as usize)
+                                );
+                            }
+                            Err(error) => {
+                                println!("[bench] pdfium {label} @{width}px failed: {error}");
+                                break;
+                            }
+                        }
+                    }
+                    if samples.is_empty() {
+                        continue;
+                    }
+                    let (median_ms, min_ms) = median(samples);
+                    println!(
+                        "[bench] pdfium {label} @{width}px: median {median_ms:.1}ms min {min_ms:.1}ms {}KB",
+                        bytes / 1024,
+                    );
+                }
+                // One viewport: four quarter-page tiles at 2x. Serial: concurrent
+                // renders from several threads trapped flakily in this dylib
+                // (each with its own document), so a production FFI path has to
+                // serialize access until that is root-caused. The CG path has
+                // no such restriction.
+                let (tw, th) = (page_w / 2.0, page_h / 2.0);
+                let started = Instant::now();
+                let mut viewport_bytes = 0;
+                for (tx, ty) in [(0.0, 0.0), (tw, 0.0), (0.0, th), (tw, th)] {
+                    if let Ok((pixels, _, _)) = render_tile(pdf, &path, tx, ty, tw, th, 2.0) {
+                        viewport_bytes += pixels.len();
+                    }
+                }
+                println!(
+                    "[bench] pdfium viewport {label} 4 tiles@2x serial: {:.1}ms, {}KB",
+                    started.elapsed().as_secs_f64() * 1000.0,
+                    viewport_bytes / 1024,
+                );
+            }
         }
 
         /// Cold cost of one render: document open + raster + encode, as every

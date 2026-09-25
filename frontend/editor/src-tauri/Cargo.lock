@@ -4647,6 +4647,8 @@ dependencies = [
  "core-foundation 0.10.1",
  "core-services",
  "keyring",
+ "libc",
+ "libloading",
  "log",
  "notify",
  "objc2",

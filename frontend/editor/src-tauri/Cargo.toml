@@ -57,6 +57,8 @@ objc2-core-foundation = "0.3.2"
 objc2-core-graphics = { version = "0.3.2", default-features = false, features = ["std", "CGBase", "CGAffineTransform", "CGBitmapContext", "CGColorSpace", "CGContext", "CGImage"] }
 objc2-core-image = { version = "0.3.2", default-features = false, features = ["CIContext", "CIImage", "CIFilter", "objc2-metal", "objc2-core-graphics"] }
 objc2-metal = { version = "0.3.2", default-features = false, features = ["MTLDevice"] }
+libc = "0.2"
+libloading = "0.7"
 objc2-foundation = { version = "0.3.2", features = ["NSObject", "NSString", "NSURL"] }
 objc2-pdf-kit = { version = "0.3.2", features = ["PDFDocument", "PDFPage", "objc2-app-kit", "objc2-core-graphics"] }
 
