@@ -99,7 +99,7 @@
     "rotate": {
       "image": "/og_images/rotate.png",
       "title": "Rotate PDF - Stirling PDF",
-      "description": "Easily rotate your PDFs."
+      "description": "Rotate your PDFs."
     },
     "autoRotate": {
       "image": "/og_images/home.png",
