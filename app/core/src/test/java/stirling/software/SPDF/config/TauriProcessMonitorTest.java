@@ -2,8 +2,8 @@ package stirling.software.SPDF.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -11,34 +11,26 @@ import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Optional;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 
 @DisplayName("TauriProcessMonitor")
 class TauriProcessMonitorTest {
 
-    private static Object invokePrivate(TauriProcessMonitor monitor, String name, Object... args)
-            throws Exception {
-        Method method = findMethod(name);
+    private static Object invoke(TauriProcessMonitor monitor, String name) throws Exception {
+        Method method = TauriProcessMonitor.class.getDeclaredMethod(name);
         method.setAccessible(true);
-        return method.invoke(monitor, args);
-    }
-
-    private static Method findMethod(String name) {
-        for (Method m : TauriProcessMonitor.class.getDeclaredMethods()) {
-            if (m.getName().equals(name)) {
-                return m;
-            }
-        }
-        throw new IllegalStateException("Method not found: " + name);
+        return method.invoke(monitor);
     }
 
     private static void setField(TauriProcessMonitor monitor, String name, Object value)
@@ -54,230 +46,136 @@ class TauriProcessMonitorTest {
         return field.get(monitor);
     }
 
-    @Nested
-    @DisplayName("getCurrentProcessId")
-    class CurrentProcessId {
-
-        @Test
-        @DisplayName("returns a non-blank PID string")
-        void returnsPid() {
-            assertThat(TauriProcessMonitor.getCurrentProcessId()).isNotBlank();
-        }
+    private static AtomicBoolean monitoringFlag(TauriProcessMonitor monitor) throws Exception {
+        return (AtomicBoolean) getField(monitor, "monitoring");
     }
 
-    @Nested
-    @DisplayName("init")
-    class Init {
-
-        // System.getenv cannot be mocked (java.base), so init() is exercised against the real
-        // environment, which has no TAURI_PARENT_PID; the present-PID path is driven directly
-        // through startMonitoring().
-
-        @Test
-        @DisplayName("startMonitoring flips monitoring on and creates a scheduler")
-        void startMonitoringSchedulesTask() throws Exception {
-            ApplicationContext ctx = mock(ApplicationContext.class);
-            TauriProcessMonitor monitor = new TauriProcessMonitor(ctx);
-            setField(monitor, "parentProcessId", "12345");
-
-            try {
-                invokePrivate(monitor, "startMonitoring");
-
-                assertThat((Boolean) getField(monitor, "monitoring")).isTrue();
-                assertThat(getField(monitor, "scheduler")).isNotNull();
-                assertThat((String) getField(monitor, "parentProcessId")).isEqualTo("12345");
-            } finally {
-                // Stop the scheduler thread created by startMonitoring.
-                monitor.cleanup();
-            }
-        }
+    private static CountDownLatch closingContext(ConfigurableApplicationContext ctx) {
+        CountDownLatch closed = new CountDownLatch(1);
+        doAnswer(
+                        invocation -> {
+                            closed.countDown();
+                            return null;
+                        })
+                .when(ctx)
+                .close();
+        return closed;
     }
 
-    @Nested
-    @DisplayName("isProcessAlive")
-    class IsProcessAlive {
+    @Test
+    @DisplayName("init without Tauri env disables monitoring")
+    void initWithoutEnvDisablesMonitoring() throws Exception {
+        TauriProcessMonitor monitor = new TauriProcessMonitor(mock(ApplicationContext.class));
 
-        @Test
-        @DisplayName("returns true when ProcessHandle reports the PID present")
-        void aliveWhenPresent() throws Exception {
-            TauriProcessMonitor monitor = new TauriProcessMonitor(mock(ApplicationContext.class));
+        monitor.init();
 
-            try (MockedStatic<ProcessHandle> ph = mockStatic(ProcessHandle.class)) {
-                ph.when(() -> ProcessHandle.of(999L))
-                        .thenReturn(Optional.of(mock(ProcessHandle.class)));
-                Object result = invokePrivate(monitor, "isProcessAlive", "999");
-                assertThat((Boolean) result).isTrue();
-            }
-        }
-
-        @Test
-        @DisplayName("returns false when ProcessHandle reports the PID absent")
-        void deadWhenAbsent() throws Exception {
-            TauriProcessMonitor monitor = new TauriProcessMonitor(mock(ApplicationContext.class));
-
-            try (MockedStatic<ProcessHandle> ph = mockStatic(ProcessHandle.class)) {
-                ph.when(() -> ProcessHandle.of(999L)).thenReturn(Optional.empty());
-                Object result = invokePrivate(monitor, "isProcessAlive", "999");
-                assertThat((Boolean) result).isFalse();
-            }
-        }
-
-        @Test
-        @DisplayName("returns false for a non-numeric PID")
-        void falseForInvalidPid() throws Exception {
-            TauriProcessMonitor monitor = new TauriProcessMonitor(mock(ApplicationContext.class));
-
-            Object result = invokePrivate(monitor, "isProcessAlive", "not-a-number");
-            assertThat((Boolean) result).isFalse();
-        }
+        assertThat(monitoringFlag(monitor)).isFalse();
+        assertThat(getField(monitor, "scheduler")).isNull();
     }
 
-    @Nested
-    @DisplayName("checkParentProcess")
-    class CheckParentProcess {
+    @Test
+    @DisplayName("sentinel file triggers a graceful context close")
+    void sentinelTriggersShutdown(@TempDir Path tmp) throws Exception {
+        ConfigurableApplicationContext ctx = mock(ConfigurableApplicationContext.class);
+        CountDownLatch closed = closingContext(ctx);
+        TauriProcessMonitor monitor = new TauriProcessMonitor(ctx);
+        Path sentinel = Files.writeString(tmp.resolve("backend.stop"), "stop");
+        setField(monitor, "shutdownFile", sentinel);
+        setField(monitor, "monitoring", new AtomicBoolean(true));
 
-        @Test
-        @DisplayName("returns early when monitoring is off")
-        void earlyReturnWhenNotMonitoring() throws Exception {
-            TauriProcessMonitor monitor = new TauriProcessMonitor(mock(ApplicationContext.class));
-            setField(monitor, "monitoring", false);
+        invoke(monitor, "checkShutdownFile");
 
-            // Should not throw even though parentProcessId is null.
-            invokePrivate(monitor, "checkParentProcess");
-        }
-
-        @Test
-        @DisplayName("triggers graceful shutdown when the parent process is dead")
-        void shutsDownWhenParentDead() throws Exception {
-            ConfigurableApplicationContext ctx = mock(ConfigurableApplicationContext.class);
-            TauriProcessMonitor monitor = new TauriProcessMonitor(ctx);
-            setField(monitor, "monitoring", true);
-            setField(monitor, "parentProcessId", "999");
-
-            try (MockedStatic<ProcessHandle> ph = mockStatic(ProcessHandle.class)) {
-                ph.when(() -> ProcessHandle.of(999L)).thenReturn(Optional.empty());
-
-                invokePrivate(monitor, "checkParentProcess");
-
-                // initiateGracefulShutdown flips monitoring off and spawns an async close.
-                // The async close runs after a hardcoded 1s sleep, so we assert only the
-                // immediate, deterministic effect to keep the test fast.
-                assertThat((Boolean) getField(monitor, "monitoring")).isFalse();
-            }
-        }
-
-        @Test
-        @DisplayName("does nothing when the parent process is still alive")
-        void noShutdownWhenParentAlive() throws Exception {
-            ConfigurableApplicationContext ctx = mock(ConfigurableApplicationContext.class);
-            TauriProcessMonitor monitor = new TauriProcessMonitor(ctx);
-            setField(monitor, "monitoring", true);
-            setField(monitor, "parentProcessId", "999");
-
-            try (MockedStatic<ProcessHandle> ph = mockStatic(ProcessHandle.class)) {
-                ph.when(() -> ProcessHandle.of(999L))
-                        .thenReturn(Optional.of(mock(ProcessHandle.class)));
-
-                invokePrivate(monitor, "checkParentProcess");
-
-                assertThat((Boolean) getField(monitor, "monitoring")).isTrue();
-            }
-            verify(ctx, never()).close();
-        }
+        assertThat(closed.await(2, TimeUnit.SECONDS)).isTrue();
+        assertThat(Files.exists(sentinel)).isFalse();
     }
 
-    @Nested
-    @DisplayName("initiateGracefulShutdown")
-    class InitiateGracefulShutdown {
+    @Test
+    @DisplayName("missing sentinel leaves the backend running")
+    void absentSentinelKeepsRunning(@TempDir Path tmp) throws Exception {
+        TauriProcessMonitor monitor = new TauriProcessMonitor(mock(ApplicationContext.class));
+        setField(monitor, "shutdownFile", tmp.resolve("absent.stop"));
+        setField(monitor, "monitoring", new AtomicBoolean(true));
 
-        @Test
-        @DisplayName("closes a ConfigurableApplicationContext asynchronously")
-        void closesConfigurableContext() throws Exception {
-            ConfigurableApplicationContext ctx = mock(ConfigurableApplicationContext.class);
-            TauriProcessMonitor monitor = new TauriProcessMonitor(ctx);
-            setField(monitor, "monitoring", true);
+        invoke(monitor, "checkShutdownFile");
 
-            invokePrivate(monitor, "initiateGracefulShutdown");
-
-            // The async close runs after a hardcoded 1s sleep; assert only the immediate effect.
-            assertThat((Boolean) getField(monitor, "monitoring")).isFalse();
-        }
+        assertThat(monitoringFlag(monitor)).isTrue();
     }
 
-    @Nested
-    @DisplayName("cleanup")
-    class Cleanup {
+    @Test
+    @DisplayName("dead parent process triggers a graceful close")
+    void deadParentTriggersShutdown() throws Exception {
+        ConfigurableApplicationContext ctx = mock(ConfigurableApplicationContext.class);
+        CountDownLatch closed = closingContext(ctx);
+        TauriProcessMonitor monitor = new TauriProcessMonitor(ctx);
+        ProcessHandle parent = mock(ProcessHandle.class);
+        when(parent.isAlive()).thenReturn(false);
+        setField(monitor, "parentHandle", parent);
+        setField(monitor, "monitoring", new AtomicBoolean(true));
 
-        @Test
-        @DisplayName("is a no-op when no scheduler was created")
-        void noOpWithoutScheduler() throws Exception {
-            TauriProcessMonitor monitor = new TauriProcessMonitor(mock(ApplicationContext.class));
+        invoke(monitor, "checkParentProcess");
 
-            // scheduler is null by default; cleanup must not throw.
-            monitor.cleanup();
+        assertThat(closed.await(2, TimeUnit.SECONDS)).isTrue();
+    }
 
-            assertThat((Boolean) getField(monitor, "monitoring")).isFalse();
-        }
+    @Test
+    @DisplayName("live parent process leaves the backend running")
+    void liveParentKeepsRunning() throws Exception {
+        ConfigurableApplicationContext ctx = mock(ConfigurableApplicationContext.class);
+        TauriProcessMonitor monitor = new TauriProcessMonitor(ctx);
+        ProcessHandle parent = mock(ProcessHandle.class);
+        when(parent.isAlive()).thenReturn(true);
+        setField(monitor, "parentHandle", parent);
+        setField(monitor, "monitoring", new AtomicBoolean(true));
 
-        @Test
-        @DisplayName("shuts down an active scheduler")
-        void shutsDownActiveScheduler() throws Exception {
-            TauriProcessMonitor monitor = new TauriProcessMonitor(mock(ApplicationContext.class));
-            ScheduledExecutorService scheduler = mock(ScheduledExecutorService.class);
-            when(scheduler.isShutdown()).thenReturn(false);
-            when(scheduler.awaitTermination(eq(2L), eq(TimeUnit.SECONDS))).thenReturn(true);
-            setField(monitor, "scheduler", scheduler);
-            setField(monitor, "monitoring", true);
+        invoke(monitor, "checkParentProcess");
 
-            monitor.cleanup();
+        assertThat(monitoringFlag(monitor)).isTrue();
+        verify(ctx, never()).close();
+    }
 
-            verify(scheduler, times(1)).shutdown();
-            assertThat((Boolean) getField(monitor, "monitoring")).isFalse();
-        }
+    @Test
+    @DisplayName("cleanup shuts down an active scheduler")
+    void cleanupShutsScheduler() throws Exception {
+        TauriProcessMonitor monitor = new TauriProcessMonitor(mock(ApplicationContext.class));
+        ScheduledExecutorService scheduler = mock(ScheduledExecutorService.class);
+        when(scheduler.isShutdown()).thenReturn(false);
+        when(scheduler.awaitTermination(eq(2L), eq(TimeUnit.SECONDS))).thenReturn(true);
+        setField(monitor, "scheduler", scheduler);
+        setField(monitor, "monitoring", new AtomicBoolean(true));
 
-        @Test
-        @DisplayName("forces shutdownNow when awaitTermination times out")
-        void forcesShutdownNowOnTimeout() throws Exception {
-            TauriProcessMonitor monitor = new TauriProcessMonitor(mock(ApplicationContext.class));
-            ScheduledExecutorService scheduler = mock(ScheduledExecutorService.class);
-            when(scheduler.isShutdown()).thenReturn(false);
-            when(scheduler.awaitTermination(eq(2L), eq(TimeUnit.SECONDS))).thenReturn(false);
-            setField(monitor, "scheduler", scheduler);
+        monitor.cleanup();
 
-            monitor.cleanup();
+        verify(scheduler, times(1)).shutdown();
+        assertThat(monitoringFlag(monitor)).isFalse();
+    }
 
-            verify(scheduler, times(1)).shutdown();
-            verify(scheduler, times(1)).shutdownNow();
-        }
+    @Test
+    @DisplayName("cleanup forces shutdownNow when awaitTermination times out")
+    void cleanupForcesShutdownNow() throws Exception {
+        TauriProcessMonitor monitor = new TauriProcessMonitor(mock(ApplicationContext.class));
+        ScheduledExecutorService scheduler = mock(ScheduledExecutorService.class);
+        when(scheduler.isShutdown()).thenReturn(false);
+        when(scheduler.awaitTermination(eq(2L), eq(TimeUnit.SECONDS))).thenReturn(false);
+        setField(monitor, "scheduler", scheduler);
 
-        @Test
-        @DisplayName("restores interrupt flag when awaitTermination is interrupted")
-        void handlesInterruptedException() throws Exception {
-            TauriProcessMonitor monitor = new TauriProcessMonitor(mock(ApplicationContext.class));
-            ScheduledExecutorService scheduler = mock(ScheduledExecutorService.class);
-            when(scheduler.isShutdown()).thenReturn(false);
-            when(scheduler.awaitTermination(eq(2L), eq(TimeUnit.SECONDS)))
-                    .thenThrow(new InterruptedException("boom"));
-            setField(monitor, "scheduler", scheduler);
+        monitor.cleanup();
 
-            monitor.cleanup();
+        verify(scheduler, times(1)).shutdownNow();
+    }
 
-            verify(scheduler, times(1)).shutdownNow();
-            // Clear the interrupt flag we just set so it does not leak to other tests.
-            assertThat(Thread.interrupted()).isTrue();
-        }
+    @Test
+    @DisplayName("cleanup restores the interrupt flag")
+    void cleanupRestoresInterrupt() throws Exception {
+        TauriProcessMonitor monitor = new TauriProcessMonitor(mock(ApplicationContext.class));
+        ScheduledExecutorService scheduler = mock(ScheduledExecutorService.class);
+        when(scheduler.isShutdown()).thenReturn(false);
+        when(scheduler.awaitTermination(eq(2L), eq(TimeUnit.SECONDS)))
+                .thenThrow(new InterruptedException("boom"));
+        setField(monitor, "scheduler", scheduler);
 
-        @Test
-        @DisplayName("skips shutdown when scheduler already terminated")
-        void skipsAlreadyShutdownScheduler() throws Exception {
-            TauriProcessMonitor monitor = new TauriProcessMonitor(mock(ApplicationContext.class));
-            ScheduledExecutorService scheduler = mock(ScheduledExecutorService.class);
-            when(scheduler.isShutdown()).thenReturn(true);
-            setField(monitor, "scheduler", scheduler);
+        monitor.cleanup();
 
-            monitor.cleanup();
-
-            verify(scheduler, never()).shutdown();
-        }
+        verify(scheduler, times(1)).shutdownNow();
+        assertThat(Thread.interrupted()).isTrue();
     }
 }

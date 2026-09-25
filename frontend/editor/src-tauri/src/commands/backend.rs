@@ -1,7 +1,9 @@
 use tauri_plugin_shell::ShellExt;
 use tauri::Manager;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use std::path::{Path, PathBuf};
+use std::time::{Duration, Instant};
 use crate::utils::{add_log, app_data_dir};
 use crate::state::connection_state::{AppConnectionState, ConnectionMode};
 
@@ -9,6 +11,9 @@ use crate::state::connection_state::{AppConnectionState, ConnectionMode};
 static BACKEND_PROCESS: Mutex<Option<tauri_plugin_shell::process::CommandChild>> = Mutex::new(None);
 static BACKEND_STARTING: Mutex<bool> = Mutex::new(false);
 static BACKEND_PORT: Mutex<Option<u16>> = Mutex::new(None);
+// Set by the event loop when the backend exits, so cleanup can wait for it.
+static BACKEND_EXITED: AtomicBool = AtomicBool::new(true);
+static BACKEND_SHUTDOWN_FILE: Mutex<Option<PathBuf>> = Mutex::new(None);
 
 // Helper function to reset starting flag
 fn reset_starting_flag() {
@@ -261,6 +266,10 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
         }
     }
 
+    // Sentinel for a graceful stop on every platform; signals are not portable.
+    let shutdown_file = work_dir.join(".backend-stop");
+    *BACKEND_SHUTDOWN_FILE.lock().unwrap() = Some(shutdown_file.clone());
+
     let sidecar_command = app
         .shell()
         .command(java_path.to_str().unwrap())
@@ -269,7 +278,8 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
         .env("TAURI_PARENT_PID", std::process::id().to_string())
         .env("STIRLING_PDF_CONFIG_DIR", config_dir.to_str().unwrap())
         .env("STIRLING_PDF_LOG_DIR", log_dir.to_str().unwrap())
-        .env("STIRLING_PDF_WORK_DIR", work_dir.to_str().unwrap());
+        .env("STIRLING_PDF_WORK_DIR", work_dir.to_str().unwrap())
+        .env("STIRLING_PDF_SHUTDOWN_FILE", shutdown_file.to_str().unwrap());
 
     add_log("⚙️ Starting backend with bundled JRE...".to_string());
 
@@ -281,7 +291,7 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
             error_msg
         })?;
 
-    // Store the process handle
+    BACKEND_EXITED.store(false, Ordering::Release);
     {
         let mut process_guard = BACKEND_PROCESS.lock().unwrap();
         *process_guard = Some(child);
@@ -366,7 +376,7 @@ fn monitor_backend_output(mut rx: tauri::async_runtime::Receiver<tauri_plugin_sh
                             _ => println!("❌ Process terminated with code: {}", code),
                         }
                     }
-                    // Clear the stored process handle
+                    BACKEND_EXITED.store(true, Ordering::Release);
                     let mut process_guard = BACKEND_PROCESS.lock().unwrap();
                     *process_guard = None;
                 }
@@ -467,21 +477,28 @@ pub fn get_backend_port() -> Option<u16> {
     *port_guard
 }
 
-// Cleanup function to stop backend on app exit
+// Stop the backend on app exit: request a graceful Spring shutdown, then force.
 pub fn cleanup_backend() {
-    let mut process_guard = BACKEND_PROCESS.lock().unwrap();
-    if let Some(child) = process_guard.take() {
-        let pid = child.pid();
-        add_log(format!("🧹 App shutting down, cleaning up backend process (PID: {})", pid));
+    let child = BACKEND_PROCESS.lock().unwrap().take();
+    let Some(child) = child else { return };
+    let pid = child.pid();
+    add_log(format!("App shutting down, stopping backend (PID: {})", pid));
 
-        match child.kill() {
-            Ok(_) => {
-                add_log(format!("✅ Backend process (PID: {}) terminated during cleanup", pid));
-            }
-            Err(e) => {
-                add_log(format!("❌ Failed to terminate backend process during cleanup: {}", e));
-                println!("❌ Failed to terminate backend process during cleanup: {}", e);
-            }
+    if let Some(path) = BACKEND_SHUTDOWN_FILE.lock().unwrap().clone() {
+        if let Err(e) = std::fs::write(&path, b"stop") {
+            add_log(format!("Could not write shutdown file: {}", e));
         }
+    }
+
+    let deadline = Instant::now() + Duration::from_secs(10);
+    while !BACKEND_EXITED.load(Ordering::Acquire) && Instant::now() < deadline {
+        std::thread::sleep(Duration::from_millis(50));
+    }
+
+    if BACKEND_EXITED.load(Ordering::Acquire) {
+        add_log(format!("Backend (PID: {}) stopped gracefully", pid));
+    } else {
+        add_log(format!("Backend (PID: {}) did not stop in time, killing", pid));
+        let _ = child.kill();
     }
 }

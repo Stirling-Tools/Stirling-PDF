@@ -1,9 +1,13 @@
 package stirling.software.SPDF.config;
 
-import java.lang.management.ManagementFactory;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,10 +20,8 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 
 /**
- * Monitor for Tauri parent process to detect orphaned Java backend processes. When running in Tauri
- * mode, this component periodically checks if the parent Tauri process is still alive. If the
- * parent process terminates unexpectedly, this will trigger a graceful shutdown of the Java backend
- * to prevent orphaned processes.
+ * Shuts the backend down when the Tauri desktop app exits. The app writes a sentinel file (works on
+ * every platform, unlike signals); the parent PID check covers a crashed app.
  */
 @Component
 @ConditionalOnProperty(name = "STIRLING_PDF_TAURI_MODE", havingValue = "true")
@@ -27,10 +29,17 @@ public class TauriProcessMonitor {
 
     private static final Logger logger = LoggerFactory.getLogger(TauriProcessMonitor.class);
 
+    // A stat every 250 ms keeps app close responsive at negligible cost.
+    private static final long SENTINEL_POLL_MILLIS = 250;
+    private static final long PARENT_POLL_SECONDS = 5;
+    private static final LinkOption[] NO_LINKS = new LinkOption[0];
+
     private final ApplicationContext applicationContext;
-    private String parentProcessId;
+    private final AtomicBoolean monitoring = new AtomicBoolean(false);
+
+    private ProcessHandle parentHandle;
+    private Path shutdownFile;
     private ScheduledExecutorService scheduler;
-    private volatile boolean monitoring = false;
 
     public TauriProcessMonitor(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
@@ -38,91 +47,95 @@ public class TauriProcessMonitor {
 
     @PostConstruct
     public void init() {
-        parentProcessId = System.getenv("TAURI_PARENT_PID");
-
-        if (parentProcessId != null && !parentProcessId.trim().isEmpty()) {
-            logger.info("Tauri mode detected. Parent process ID: {}", parentProcessId);
-            startMonitoring();
-        } else {
-            logger.warn(
-                    "TAURI_PARENT_PID environment variable not found. Tauri process monitoring disabled.");
+        parentHandle = resolveParentHandle();
+        shutdownFile = resolveShutdownFile();
+        if (parentHandle == null && shutdownFile == null) {
+            logger.warn("Tauri mode without TAURI_PARENT_PID or STIRLING_PDF_SHUTDOWN_FILE");
+            return;
         }
+        if (shutdownFile != null) {
+            // A stale sentinel from a crashed session must not stop this one.
+            try {
+                Files.deleteIfExists(shutdownFile);
+            } catch (IOException e) {
+                logger.warn("Could not clear stale shutdown file: {}", e.getMessage());
+            }
+        }
+        startMonitoring();
+    }
+
+    private static ProcessHandle resolveParentHandle() {
+        String pid = System.getenv("TAURI_PARENT_PID");
+        if (pid == null || pid.isBlank()) return null;
+        try {
+            return ProcessHandle.of(Long.parseLong(pid.trim())).orElse(null);
+        } catch (NumberFormatException e) {
+            logger.error("Invalid TAURI_PARENT_PID: {}", pid);
+            return null;
+        }
+    }
+
+    private static Path resolveShutdownFile() {
+        String path = System.getenv("STIRLING_PDF_SHUTDOWN_FILE");
+        return path == null || path.isBlank() ? null : Path.of(path);
     }
 
     private void startMonitoring() {
         scheduler =
                 Executors.newSingleThreadScheduledExecutor(
-                        r -> {
-                            Thread t =
-                                    Thread.ofVirtual().name("tauri-process-monitor").unstarted(r);
-                            return t;
-                        });
+                        r -> Thread.ofVirtual().name("tauri-process-monitor").unstarted(r));
+        monitoring.set(true);
+        if (shutdownFile != null) {
+            scheduler.scheduleWithFixedDelay(
+                    this::checkShutdownFile, 0, SENTINEL_POLL_MILLIS, TimeUnit.MILLISECONDS);
+        }
+        if (parentHandle != null) {
+            scheduler.scheduleWithFixedDelay(
+                    this::checkParentProcess,
+                    PARENT_POLL_SECONDS,
+                    PARENT_POLL_SECONDS,
+                    TimeUnit.SECONDS);
+        }
+        logger.info(
+                "Monitoring Tauri parent {} and shutdown file {}",
+                parentHandle == null ? "-" : parentHandle.pid(),
+                shutdownFile);
+    }
 
-        monitoring = true;
-
-        // Check every 5 seconds
-        scheduler.scheduleAtFixedRate(this::checkParentProcess, 5, 5, TimeUnit.SECONDS);
-
-        logger.info("Started monitoring parent Tauri process (PID: {})", parentProcessId);
+    private void checkShutdownFile() {
+        if (!monitoring.get() || shutdownFile == null) return;
+        if (!Files.exists(shutdownFile, NO_LINKS)) return;
+        try {
+            Files.deleteIfExists(shutdownFile);
+        } catch (IOException e) {
+            logger.debug("Could not delete shutdown file: {}", e.getMessage());
+        }
+        initiateGracefulShutdown("shutdown file");
     }
 
     private void checkParentProcess() {
-        if (!monitoring) {
-            return;
-        }
-
-        try {
-            if (!isProcessAlive(parentProcessId)) {
-                logger.warn(
-                        "Parent Tauri process (PID: {}) is no longer alive. Initiating graceful shutdown...",
-                        parentProcessId);
-                initiateGracefulShutdown();
-            }
-        } catch (Exception e) {
-            logger.error("Error checking parent process status", e);
+        if (!monitoring.get() || parentHandle == null) return;
+        if (!parentHandle.isAlive()) {
+            initiateGracefulShutdown("parent process exit");
         }
     }
 
-    private boolean isProcessAlive(String pid) {
-        try {
-            long processId = Long.parseLong(pid);
-
-            // Check if process exists using ProcessHandle (Java 9+)
-            return ProcessHandle.of(processId).isPresent();
-
-        } catch (NumberFormatException e) {
-            logger.error("Invalid parent process ID format: {}", pid);
-            return false;
-        } catch (Exception e) {
-            logger.error("Error checking if process {} is alive", pid, e);
-            return false;
-        }
-    }
-
-    private void initiateGracefulShutdown() {
-        monitoring = false;
-
-        logger.info("Orphaned Java backend detected. Shutting down gracefully...");
-
-        // Shutdown asynchronously to avoid blocking the monitor thread
+    private void initiateGracefulShutdown(String reason) {
+        if (!monitoring.compareAndSet(true, false)) return;
+        logger.info("Shutting down backend: {}", reason);
         Thread.ofVirtual()
                 .name("tauri-graceful-shutdown")
                 .start(
                         () -> {
                             try {
-                                // Give a small delay to ensure logging completes
-                                Thread.sleep(1000);
-
-                                if (applicationContext instanceof ConfigurableApplicationContext) {
-                                    ((ConfigurableApplicationContext) applicationContext).close();
+                                if (applicationContext
+                                        instanceof ConfigurableApplicationContext context) {
+                                    context.close();
                                 } else {
-                                    // Fallback to system exit
-                                    logger.warn(
-                                            "Unable to shutdown Spring context gracefully, using System.exit");
                                     System.exit(0);
                                 }
                             } catch (Exception e) {
-                                logger.error("Error during graceful shutdown", e);
+                                logger.error("Graceful shutdown failed", e);
                                 System.exit(1);
                             }
                         });
@@ -130,29 +143,17 @@ public class TauriProcessMonitor {
 
     @PreDestroy
     public void cleanup() {
-        monitoring = false;
-
-        if (scheduler != null && !scheduler.isShutdown()) {
-            logger.info("Shutting down Tauri process monitor");
-            scheduler.shutdown();
-
-            try {
-                if (!scheduler.awaitTermination(2, TimeUnit.SECONDS)) {
-                    scheduler.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                scheduler.shutdownNow();
-                Thread.currentThread().interrupt();
-            }
-        }
-    }
-
-    /** Get the current Java process ID for logging/debugging purposes */
-    public static String getCurrentProcessId() {
+        monitoring.set(false);
+        if (scheduler == null || scheduler.isShutdown()) return;
+        logger.info("Shutting down Tauri process monitor");
+        scheduler.shutdown();
         try {
-            return ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
-        } catch (Exception e) {
-            return "unknown";
+            if (!scheduler.awaitTermination(2, TimeUnit.SECONDS)) {
+                scheduler.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            scheduler.shutdownNow();
+            Thread.currentThread().interrupt();
         }
     }
 }
