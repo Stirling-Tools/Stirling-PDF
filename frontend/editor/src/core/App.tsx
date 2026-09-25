@@ -1,11 +1,12 @@
 import { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 import { AppProviders } from "@app/components/AppProviders";
+import { AppFrame } from "@app/components/layout/AppFrame";
 import { AppLayout } from "@app/components/AppLayout";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import { ThemeProvider } from "@app/components/shared/ThemeProvider";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
-import HomePage from "@app/pages/HomePage";
+import { AppRoot } from "@app/components/layout/AppRoot";
 import Onboarding from "@app/components/onboarding/Onboarding";
 
 const MobileScannerPage = lazy(() => import("@app/pages/MobileScannerPage"));
@@ -53,18 +54,21 @@ export default function App() {
           }
         />
 
-        {/* All other routes need AppProviders for backend integration */}
-        <Route
-          path="*"
-          element={
-            <AppProviders>
-              <AppLayout>
-                <HomePage />
-                <Onboarding />
-              </AppLayout>
-            </AppProviders>
-          }
-        />
+        {/* The app, under a shared frame so the rail renders once outside it. */}
+        <Route element={<AppFrame />}>
+          {/* All other routes need AppProviders for backend integration */}
+          <Route
+            path="*"
+            element={
+              <AppProviders>
+                <AppLayout>
+                  <AppRoot />
+                  <Onboarding />
+                </AppLayout>
+              </AppProviders>
+            }
+          />
+        </Route>
       </Routes>
     </Suspense>
   );

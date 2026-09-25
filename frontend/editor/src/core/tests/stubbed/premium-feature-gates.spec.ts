@@ -82,7 +82,7 @@ test.describe("Premium / endpoint gating", () => {
       return;
     }
     await configBtn.click();
-    const dialog = page.locator(".mantine-Modal-content").first();
+    const dialog = page.locator(".settings-page");
     await expect(dialog).toBeVisible({ timeout: 5_000 });
 
     // Admin-only sections must not render for ROLE_USER

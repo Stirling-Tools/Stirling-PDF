@@ -1,9 +1,10 @@
+import { SaasSessionRequiredError } from "@app/portal/auth/portalSaasSession";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { usePortalLinked } from "@portal/contexts/usePortalLinked";
-import { qk } from "@portal/queries/keys";
-import { toAsyncState } from "@portal/queries/adapters";
+import { usePortalLinked } from "@app/portal/contexts/usePortalLinked";
+import { qk } from "@app/portal/queries/keys";
+import { toAsyncState } from "@app/portal/queries/adapters";
 import {
   acceptQuote,
   extendTrial,
@@ -19,7 +20,7 @@ import {
   type ProcurementSnapshot,
   type QuoteResult,
   type TrialSetupDetails,
-} from "@portal/api/procurement";
+} from "@app/portal/api/procurement";
 
 export type ProcurementExtra =
   | null
@@ -30,14 +31,13 @@ export type ProcurementExtra =
   | "documents";
 
 /**
- * Owns the procurement deal state and actions shared by the Home hero footer
- * (deal-status hero) and the takeover flow modals. Extracted from
- * ProcurementHome so the deal-status hero can render inside the tier hero card
- * while the flow modals live alongside it. Gated on an account link.
+ * Shares a linked account's deal state between the billing summary and procurement dialogs.
  */
 export interface ProcurementController {
   isLinked: boolean;
   loading: boolean;
+  loadError: string | null;
+  retry: () => void;
   data: ProcurementSnapshot | null;
   started: boolean;
   stage: ProcurementSnapshot["stage"] | undefined;
@@ -92,18 +92,17 @@ export function useProcurement(): ProcurementController {
   const isLinked = usePortalLinked();
 
   // Through the shared query cache, not a per-mount fetch: the snapshot survives navigation, so
-  // returning to Home renders the deal from cache instead of flashing the loading state again.
+  // returning to billing renders the deal from cache instead of flashing the loading state again.
   // No retry — a failing snapshot must not hold `loading` true through backoff, since the hero
   // gates its whole card on it.
   const queryClient = useQueryClient();
   const snapshotKey = qk.procurement(isLinked);
-  const state = toAsyncState(
-    useQuery<ProcurementSnapshot | null>({
-      queryKey: snapshotKey,
-      queryFn: () => (isLinked ? fetchSnapshot() : Promise.resolve(null)),
-      retry: false,
-    }),
-  );
+  const query = useQuery<ProcurementSnapshot | null>({
+    queryKey: snapshotKey,
+    queryFn: () => (isLinked ? fetchSnapshot() : Promise.resolve(null)),
+    retry: false,
+  });
+  const state = toAsyncState(query);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -123,6 +122,17 @@ export function useProcurement(): ProcurementController {
   const isDraft =
     !latest ||
     ["draft", "expired", "canceled", "cancelled"].includes(latest.status);
+
+  function reportError(cause: unknown, message: string) {
+    if (cause instanceof SaasSessionRequiredError) {
+      // Recovery is in the billing shell; keep unfinished purchases for an explicit retry.
+      setOpen(false);
+      setExtra(null);
+      setError(null);
+    } else {
+      setError(message);
+    }
+  }
 
   /**
    * Run a deal action, then refresh the snapshot so every reader sees the new stage.
@@ -148,7 +158,7 @@ export function useProcurement(): ProcurementController {
       return true;
     } catch (e) {
       console.error("[procurement] action failed", e);
-      setError(e instanceof Error ? e.message : String(e));
+      reportError(e, e instanceof Error ? e.message : String(e));
       return false;
     } finally {
       setBusy(false);
@@ -162,9 +172,10 @@ export function useProcurement(): ProcurementController {
     setExtra("setup");
     void recordInterest()
       .then((snap) => queryClient.setQueryData(snapshotKey, snap))
-      .catch((e) =>
-        console.error("[procurement] recording interest failed", e),
-      );
+      .catch((e) => {
+        console.error("[procurement] recording interest failed", e);
+        if (e instanceof SaasSessionRequiredError) reportError(e, e.message);
+      });
   };
   const onConfirmSetup = (
     deployment: string,
@@ -234,7 +245,7 @@ export function useProcurement(): ProcurementController {
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } catch (e) {
       console.error("[procurement] quote PDF download failed", e);
-      setError(t("portal.procurement.milestone.downloadError"));
+      reportError(e, t("portal.procurement.milestone.downloadError"));
     } finally {
       setDownloading(false);
     }
@@ -255,7 +266,7 @@ export function useProcurement(): ProcurementController {
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } catch (e) {
       console.error("[procurement] offline licence download failed", e);
-      setError(t("portal.procurement.license.downloadError"));
+      reportError(e, t("portal.procurement.license.downloadError"));
     } finally {
       setDownloadingLicense(false);
     }
@@ -275,7 +286,7 @@ export function useProcurement(): ProcurementController {
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } catch (e) {
       console.error("[procurement] signed agreement download failed", e);
-      setError(t("portal.procurement.agreement.downloadError"));
+      reportError(e, t("portal.procurement.agreement.downloadError"));
     } finally {
       setDownloadingAgreement(false);
     }
@@ -284,6 +295,15 @@ export function useProcurement(): ProcurementController {
   return {
     isLinked,
     loading: state.loading,
+    loadError:
+      state.error && !(state.error instanceof SaasSessionRequiredError)
+        ? state.error instanceof Error
+          ? state.error.message
+          : String(state.error)
+        : null,
+    retry: () => {
+      void query.refetch();
+    },
     data,
     started,
     stage,

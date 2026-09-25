@@ -5,9 +5,14 @@ import { ActionIcon } from "@app/ui";
 import { Sidebar } from "@portal/components/Sidebar";
 import { PortalSearchBar } from "@portal/components/PortalSearchBar";
 import { useUI } from "@portal/contexts/UIContext";
-import { MenuIcon, SearchIcon } from "@portal/components/icons";
+import { Icon } from "@app/ui/Icon";
 import { Logo } from "@app/ui/Logo";
+import "@app/components/layout/WorkspaceFrame.css";
+import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
 import "@portal/components/AppShell.css";
+import { NotificationBell } from "@app/components/notifications/NotificationBell";
+import { useIsPhone } from "@app/hooks/useIsMobile";
+import { ConnectAccountRail } from "@portal/components/ConnectAccountRail";
 
 /**
  * Compact header shown only under the mobile breakpoint (CSS-hidden on
@@ -26,7 +31,7 @@ function MobileTopbar() {
         aria-expanded={mobileNavOpen}
         onClick={toggleMobileNav}
       >
-        <MenuIcon size={20} />
+        <Icon name="menu" size={20} />
       </ActionIcon>
       <Logo
         variant="iconAndText"
@@ -43,7 +48,7 @@ function MobileTopbar() {
           document.getElementById("portal-search-input")?.focus();
         }}
       >
-        <SearchIcon size={19} />
+        <Icon name="search" size={19} />
       </ActionIcon>
     </header>
   );
@@ -59,6 +64,8 @@ function MobileTopbar() {
 export function AppShell({ children }: { children: ReactNode }) {
   const { mobileNavOpen, closeMobileNav } = useUI();
   const { pathname } = useLocation();
+  // Below this width the rail, and the bell it carries, is gone.
+  const isPhone = useIsPhone();
 
   // Navigating (tap on a nav row, back button, deep link) always dismisses the
   // drawer. Depends on pathname only: the close fn's identity changes with any
@@ -78,7 +85,10 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="portal-shell">
-      <Sidebar />
+      <QuickNavHostBridge />
+      <div className="workspace-frame">
+        <Sidebar />
+      </div>
       {mobileNavOpen && (
         <div
           className="portal-shell__scrim"
@@ -89,7 +99,16 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="portal-shell__main">
         <MobileTopbar />
         <PortalSearchBar />
-        <main className="portal-shell__view">{children}</main>
+        {/* Phone only: above that the rail carries it, and this would be a second. */}
+        {isPhone && (
+          <div className="portal-shell__notifications">
+            <NotificationBell />
+          </div>
+        )}
+        <main className="portal-shell__view">
+          <ConnectAccountRail />
+          {children}
+        </main>
       </div>
     </div>
   );

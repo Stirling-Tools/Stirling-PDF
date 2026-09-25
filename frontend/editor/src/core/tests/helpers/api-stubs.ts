@@ -120,6 +120,8 @@ export interface MockAppApiOptions {
   enableLogin?: boolean;
   /** Override `isAdmin` in app-config. Default `false`. */
   isAdmin?: boolean;
+  /** Null leaves the server analytics choice unconfigured. */
+  enableAnalytics?: boolean | null;
   /** Override the logged-in user returned by `/auth/me`. */
   user?: {
     id?: number;
@@ -130,6 +132,7 @@ export interface MockAppApiOptions {
     role?: string;
     /** Portal (Processor) access flag — gates the super search's Processor lanes. */
     portalAccess?: boolean;
+    orgOwner?: boolean;
   } | null;
   /** Languages advertised by `/config/app-config`. */
   languages?: string[];
@@ -152,6 +155,7 @@ export async function mockAppApis(
   const {
     enableLogin = false,
     isAdmin = false,
+    enableAnalytics = false,
     user = {
       id: 1,
       username: "testuser",
@@ -175,6 +179,7 @@ export async function mockAppApis(
       json: {
         enableLogin,
         isAdmin,
+        enableAnalytics,
         languages,
         defaultLocale,
       },
@@ -188,6 +193,13 @@ export async function mockAppApis(
   // Current user — anonymous by default, configurable for authenticated flows
   await page.route("**/api/v1/auth/me", (route: Route) =>
     route.fulfill({ json: { user } }),
+  );
+
+  // The signed-in user's teams. Unstubbed this 401s, and the API client reads a
+  // 401 here as an expired session: refresh, fail, bounce to /login - so any
+  // page that asks (the login-landing setting, the account tab) logs out.
+  await page.route("**/api/v1/team/my", (route: Route) =>
+    route.fulfill({ json: [] }),
   );
 
   // Tool availability — every tool enabled unless overridden
@@ -254,6 +266,36 @@ export async function mockAppApis(
     route.fulfill({ json: {} }),
   );
 
+  // An empty section never gets a dirty-tracking snapshot, so anything that
+  // compares saved-vs-current reads as unchanged. Give aiEngine real values.
+  await page.route(
+    "**/api/v1/admin/settings/section/aiEngine",
+    (route: Route) =>
+      route.fulfill({
+        json: {
+          enabled: false,
+          url: "http://stirling-pdf-engine:5001",
+          rag: { embeddingProvider: "voyageai", embeddingModel: "voyage-3" },
+        },
+      }),
+  );
+
+  // Folder access reads this on every visit to the System page; unstubbed it
+  // 401s in a retry loop and the refresh failures sign the session out.
+  await page.route(
+    "**/api/v1/admin/settings/policies/implied-folder-roots",
+    (route: Route) => route.fulfill({ json: { impliedRoots: [] } }),
+  );
+
+  // Same trap on the merged Legal and Advanced pages, which each pull in a
+  // card that fetches on mount.
+  await page.route("**/api/v1/admin/login-agreement/**", (route: Route) =>
+    route.fulfill({ json: { content: "", enabled: false } }),
+  );
+  await page.route("**/api/v1/ui-data/tessdata-languages", (route: Route) =>
+    route.fulfill({ json: { languages: [] } }),
+  );
+
   // Info sub-resources
   await page.route("**/api/v1/info/wau", (route: Route) =>
     route.fulfill({ json: { count: 0 } }),
@@ -272,6 +314,24 @@ export async function mockAppApis(
   // console error fails the page's no-unexpected-output guard.
   await page.route("**/api/v1/policies/runs", (route: Route) =>
     route.fulfill({ json: [] }),
+  );
+
+  await page.route("**/api/v1/processing-folders", (route: Route) =>
+    route.fulfill({ json: [] }),
+  );
+
+  await page.route(
+    "**/api/v1/processing-folders/downloads-suggestion",
+    (route: Route) =>
+      route.fulfill({
+        json: { directory: "", available: false, pdfCount: 0, limit: 0 },
+      }),
+  );
+
+  // The bell polls this on load. The hook swallows the failure, but the browser still logs the
+  // request, which the console-hygiene guard counts.
+  await page.route("**/api/v1/notifications*", (route: Route) =>
+    route.fulfill({ json: { notifications: [] } }),
   );
 }
 

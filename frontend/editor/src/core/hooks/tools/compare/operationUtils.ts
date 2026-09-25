@@ -358,7 +358,7 @@ export const extractContentFromPdf = async (
           .trim();
 
       const isParagraphBreak = (curr: TextItem, prev: TextItem | null) => {
-        const hasHardBreak = "hasEOL" in curr && (curr as TextItem).hasEOL;
+        const hasHardBreak = "hasEOL" in curr && curr.hasEOL;
         if (hasHardBreak) return true;
         if (!prev) return false;
         const prevY = prev.transform[5];
@@ -624,7 +624,7 @@ export const extractContentFromPdf = async (
           paragraphBuffer = appendWord(paragraphBuffer, normalizedWord);
         }
 
-        if (isParagraphBreak(item as TextItem, prevItem)) {
+        if (isParagraphBreak(item, prevItem)) {
           if (paragraphBuffer.trim().length > 0) {
             paragraphs.push({
               page: pageIndex,
@@ -641,7 +641,7 @@ export const extractContentFromPdf = async (
           });
           paragraphIndex += 1;
         }
-        prevItem = item as TextItem;
+        prevItem = item;
       }
 
       if (paragraphBuffer.trim().length > 0) {

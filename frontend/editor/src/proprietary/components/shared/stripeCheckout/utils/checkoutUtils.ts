@@ -26,16 +26,16 @@ export const getModalTitle = (
   t: TFunction,
 ): string => {
   switch (stage) {
-    case "email":
-      return t("payment.emailStage.modalTitle", "Get Started - {{planName}}", {
-        planName,
-      });
     case "plan-selection":
       return t(
         "payment.planStage.modalTitle",
         "Select Billing Period - {{planName}}",
         { planName },
       );
+    case "capacity":
+      return t("payment.capacityStage.modalTitle", "Upgrade to {{planName}}", {
+        planName,
+      });
     case "payment":
       return t(
         "payment.paymentStage.modalTitle",

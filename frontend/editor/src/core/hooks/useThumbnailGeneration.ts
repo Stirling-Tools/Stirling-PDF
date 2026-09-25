@@ -1,5 +1,9 @@
 import { useCallback } from "react";
-import { thumbnailGenerationService } from "@app/services/thumbnailGenerationService";
+import {
+  thumbnailGenerationService,
+  type ThumbnailResult,
+} from "@app/services/thumbnailGenerationService";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
 import { createQuickKey } from "@app/types/fileContext";
 import { FileId } from "@app/types/file";
 
@@ -19,9 +23,6 @@ let batchTimer: number | null = null;
 
 // Track active thumbnail requests to prevent duplicates across components
 const activeRequests = new Map<string, Promise<string | null>>();
-
-// Cache ArrayBuffers to avoid reading the same file multiple times
-const fileArrayBufferCache = new Map<File, ArrayBuffer>();
 
 // Batch processing configuration
 const BATCH_SIZE = 10; // Process thumbnails in batches of 10 for faster initial load
@@ -74,12 +75,8 @@ async function processRequestQueue() {
         try {
           const pageNumbers = requests.map((req) => req.pageNumber);
 
-          // Get or create cached ArrayBuffer to avoid reading file multiple times
-          let arrayBuffer = fileArrayBufferCache.get(file);
-          if (!arrayBuffer) {
-            arrayBuffer = await file.arrayBuffer();
-            fileArrayBufferCache.set(file, arrayBuffer);
-          }
+          // Share the cached buffer instead of minting a second copy.
+          const arrayBuffer = await getDocumentBytes(file);
 
           // Use quickKey for PDF document caching (same metadata, consistent format)
           const fileId = createQuickKey(file) as FileId;
@@ -123,10 +120,6 @@ async function processRequestQueue() {
     }
   } finally {
     isProcessingQueue = false;
-    // Clean up ArrayBuffer cache when queue is empty
-    if (requestQueue.length === 0) {
-      fileArrayBufferCache.clear();
-    }
   }
 }
 
@@ -149,7 +142,7 @@ export function useThumbnailGeneration() {
       onProgress?: (progress: {
         completed: number;
         total: number;
-        thumbnails: any[];
+        thumbnails: ThumbnailResult[];
       }) => void,
     ) => {
       return thumbnailGenerationService.generateThumbnails(
@@ -193,9 +186,6 @@ export function useThumbnailGeneration() {
     requestQueue.length = 0;
     activeRequests.clear();
     isProcessingQueue = false;
-
-    // Clear ArrayBuffer cache
-    fileArrayBufferCache.clear();
 
     thumbnailGenerationService.destroy();
   }, []);

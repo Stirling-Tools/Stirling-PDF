@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Box, Popover, ScrollArea, Text, Loader } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import AddIcon from "@mui/icons-material/Add";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import {
   createStirlingFile,
@@ -24,6 +24,11 @@ import {
 } from "@app/services/shareBundleUtils";
 import { truncateCenter } from "@app/utils/textUtils";
 import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
+import {
+  assertFilesNotBlocked,
+  policySourceIds,
+} from "@app/services/policyFileGuard";
+import { alert } from "@app/components/toast";
 import styles from "@app/components/shared/FileSelectorPicker.module.css";
 import "@app/components/shared/FileSidebarFileItem.css";
 
@@ -243,6 +248,16 @@ export function FileSelectorPicker({
   const loadAndSelect = useCallback(
     async (stub: StirlingFileStub) => {
       if (loadingId) return;
+      try {
+        assertFilesNotBlocked(policySourceIds(stub));
+      } catch {
+        alert({
+          alertType: "warning",
+          title: t("policy.recoveryTitle"),
+          body: t("policy.recoveryBody"),
+        });
+        return;
+      }
 
       // Workbench file — get StirlingFile directly from FileContext (no loading needed)
       if (workbenchIdSet.has(stub.id)) {
@@ -269,7 +284,7 @@ export function FileSelectorPicker({
               responseType: "blob",
               suppressErrorToast: true,
               skipAuthRedirect: true,
-            } as any,
+            },
           );
           const ct = readResponseHeader(res.headers, "content-type");
           const disp = readResponseHeader(res.headers, "content-disposition");
@@ -287,7 +302,7 @@ export function FileSelectorPicker({
               responseType: "blob",
               suppressErrorToast: true,
               skipAuthRedirect: true,
-            } as any,
+            },
           );
           const ct = readResponseHeader(res.headers, "content-type");
           const disp = readResponseHeader(res.headers, "content-disposition");
@@ -322,6 +337,7 @@ export function FileSelectorPicker({
               // Non-fatal — thumbnail simply won't show
             }
           }
+          assertFilesNotBlocked(policySourceIds(resolvedStub));
           onSelect({ stub: resolvedStub, stirlingFile });
           setIsOpen(false);
         }
@@ -331,7 +347,7 @@ export function FileSelectorPicker({
         setLoadingId(null);
       }
     },
-    [loadingId, workbenchIdSet, selectors, onSelect],
+    [loadingId, workbenchIdSet, selectors, onSelect, t],
   );
 
   const handleUpload = useCallback(
@@ -419,12 +435,10 @@ export function FileSelectorPicker({
               {placeholder ||
                 t("fileSelectorPicker.placeholder", "Select file")}
             </Text>
-            <AddIcon
-              style={{
-                fontSize: 18,
-                color: "var(--mantine-color-dimmed)",
-                flexShrink: 0,
-              }}
+            <Icon
+              name="plus"
+              size={18}
+              style={{ color: "var(--mantine-color-dimmed)", flexShrink: 0 }}
             />
           </Box>
         </Popover.Target>

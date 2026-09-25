@@ -1,33 +1,17 @@
-import { useCallback, useEffect, useState } from "react";
-import type { SupabaseLoginSession } from "@app/auth/ui/useSupabaseLogin";
-import {
-  ensureSaasSupabase,
-  isSaasSupabaseConfigured,
-  PENDING_LINK_KEY,
-} from "@portal/auth/saasSupabase";
+import { useCallback, useEffect, useState, useRef } from "react";
+import { clearAccountLinkBlock } from "@app/services/accountLinkBlock";
+import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
+import { errorMessage } from "@app/portal/api/http";
+import { isSaasSupabaseConfigured } from "@app/portal/auth/saasSupabase";
 import {
   fetchStatus,
-  linkInstance,
   unlinkInstance,
   type LinkStatus,
-} from "@portal/api/link";
-import { useApplyLinkFacts, useLink } from "@portal/contexts/LinkContext";
+} from "@app/portal/api/link";
+import { useApplyLinkFacts, useLink } from "@app/portal/contexts/LinkContext";
+import { clearAccountLinkSession } from "@app/portal/auth/accountLinkSession";
 
-/**
- * Orchestrates the account-link flow for THIS instance:
- *
- *   1. The admin signs in to their Stirling account IN-APP (LinkAccountModal →
- *      shared Supabase login), minting a short-term SaaS JWT.
- *   2. {@link completeLink} POSTs that JWT to the LOCAL backend (api/link.ts),
- *      which registers with SaaS and stores the device secret server-side.
- *   3. The resulting Linked / Not-linked status is read back.
- *
- * Email/password resolves inline (the modal calls completeLink). SSO redirects
- * the browser to the provider and back; the returned session is finished here on
- * mount (see the pending-link effect). The device secret is never received or
- * rendered. Subscription state is resolved separately from the wallet, so a fresh
- * link marks the org linked-free.
- */
+/** Reads and clears THIS instance's link status. */
 
 export type LinkPhase = "idle" | "linking" | "error";
 
@@ -36,107 +20,89 @@ export interface UseAccountLink {
   loginConfigured: boolean;
   /** Linked / Not-linked status for this instance; null while first loading. */
   status: LinkStatus | null;
+  /** Failure to read status, separate from an unlink failure. */
+  statusError: string | null;
   phase: LinkPhase;
   error: string | null;
-  /** Finish linking THIS instance with a SaaS session minted by the login modal. */
-  completeLink: (session: SupabaseLoginSession, name?: string) => Promise<void>;
   /** Unlink this instance. */
   unlink: () => Promise<void>;
+  /** Re-read the status, for when something outside this hook changed it. */
+  refresh: (force?: boolean) => Promise<void>;
 }
 
 export function useAccountLink(): UseAccountLink {
+  const isOwner = useAccountLinkOwner();
   const applyLinkFacts = useApplyLinkFacts();
-  const { markSaasSessionChanged } = useLink();
+  const { markStatusKnown } = useLink();
   const [status, setStatus] = useState<LinkStatus | null>(null);
+  const [statusError, setStatusError] = useState<string | null>(null);
   const [phase, setPhase] = useState<LinkPhase>("idle");
   const [error, setError] = useState<string | null>(null);
 
-  const completeLink = useCallback(
-    async (session: SupabaseLoginSession, name?: string) => {
-      setPhase("linking");
-      setError(null);
+  const previousLinked = useRef<boolean | null>(null);
+  const statusRequest = useRef(0);
+  const refresh = useCallback(
+    async (force = false) => {
+      const request = ++statusRequest.current;
+      setStatusError(null);
+      if (!isOwner) {
+        setStatus(null);
+        previousLinked.current = null;
+        return;
+      }
       try {
-        const next = await linkInstance({
-          supabaseJwt: session.access_token,
-          name,
-        });
-        setStatus(next);
-        setPhase("idle");
-        if (next.linked) applyLinkFacts(true, false);
+        const s = await fetchStatus(force);
+        if (request !== statusRequest.current) return;
+        setStatus(s);
+        if (s.linked) clearAccountLinkBlock();
+        // A linked instance is at least linked-free; subscription comes from the wallet.
+        if (s.linked && previousLinked.current !== true)
+          applyLinkFacts(true, false);
+        previousLinked.current = s.linked;
+        // Success only: marking this in the catch would read "could not ask" as "not linked".
+        markStatusKnown();
       } catch (e) {
-        setError(e instanceof Error ? e.message : String(e));
-        setPhase("error");
+        if (request === statusRequest.current) setStatusError(errorMessage(e));
       }
     },
-    [applyLinkFacts],
+    [applyLinkFacts, markStatusKnown, isOwner],
   );
 
-  // Read the current link status on mount.
   useEffect(() => {
-    let cancelled = false;
-    void fetchStatus()
-      .then((s) => {
-        if (!cancelled) {
-          setStatus(s);
-          // A linked instance is at least linked-free; subscription comes from the wallet.
-          if (s.linked) applyLinkFacts(true, false);
-        }
-      })
-      .catch(() => {
-        // Status endpoint absent (flag off) / unreachable → leave status null,
-        // which renders as "Not linked". Don't surface an error or leak an
-        // unhandled rejection for the expected flag-off case.
-        if (!cancelled) setStatus({ linked: false, name: null });
-      });
+    void refresh();
+    if (!isOwner) return;
+    const timer = window.setInterval(() => void refresh(), 60_000);
     return () => {
-      cancelled = true;
+      window.clearInterval(timer);
+      statusRequest.current++;
     };
-  }, [applyLinkFacts]);
-
-  // SSO return: an SSO sign-in we kicked off has redirected back and the SaaS
-  // session is now in the shared Supabase client. The pending marker carries the
-  // mode: "reauth" only refreshes attended reads (the instance is already linked
-  // — re-registering would mint a duplicate credential); anything else links.
-  useEffect(() => {
-    const supabase = ensureSaasSupabase();
-    const pending = sessionStorage.getItem(PENDING_LINK_KEY);
-    if (!supabase || pending === null) return;
-    let cancelled = false;
-    void supabase.auth.getSession().then(({ data }) => {
-      sessionStorage.removeItem(PENDING_LINK_KEY);
-      const token = data.session?.access_token;
-      if (!token || cancelled) return;
-      if (pending === "reauth") {
-        markSaasSessionChanged();
-      } else {
-        void completeLink({ access_token: token });
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [completeLink, markSaasSessionChanged]);
+  }, [refresh, isOwner]);
 
   const unlink = useCallback(async () => {
+    if (!isOwner) return;
     setPhase("linking");
     setError(null);
     try {
       await unlinkInstance();
+      clearAccountLinkSession();
+      statusRequest.current++;
       setStatus({ linked: false, name: null });
+      previousLinked.current = false;
       setPhase("idle");
       applyLinkFacts(false, false);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
       setPhase("error");
     }
-  }, [applyLinkFacts]);
+  }, [applyLinkFacts, isOwner]);
 
   return {
     loginConfigured: isSaasSupabaseConfigured,
     status,
+    statusError,
     phase,
     error,
-    completeLink,
     unlink,
+    refresh,
   };
 }

@@ -35,7 +35,6 @@ class ConfigInitializerMoreTest {
               enabled: false
               key: 0000
               proFeatures:
-                ssoAutoLogin: false
                 customMetadata:
                   autoUpdateMetadata: false
                   author: username
@@ -69,8 +68,6 @@ class ConfigInitializerMoreTest {
 
             assertThat(template.getValueByExactKeyPath("premium", "enabled")).isEqualTo("true");
             assertThat(template.getValueByExactKeyPath("premium", "key")).isEqualTo("ABC-123");
-            assertThat(template.getValueByExactKeyPath("premium", "proFeatures", "ssoAutoLogin"))
-                    .isEqualTo("true");
             assertThat(
                             template.getValueByExactKeyPath(
                                     "premium",

@@ -14,8 +14,12 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,9 +28,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import stirling.software.proprietary.billing.UnitCalcPolicy;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
 import stirling.software.saas.accountlink.InstanceController.EntitlementResponse;
+import stirling.software.saas.model.SaasTeamExtensions;
 import stirling.software.saas.payg.billing.TeamBillingContext;
 import stirling.software.saas.payg.billing.TeamBillingService;
+import stirling.software.saas.payg.bundle.PrepaidBundleService;
 import stirling.software.saas.payg.entitlement.EntitlementService;
 import stirling.software.saas.payg.entitlement.EntitlementSnapshot;
 import stirling.software.saas.payg.instance.InstanceUsageIngestService;
@@ -34,8 +41,10 @@ import stirling.software.saas.payg.model.BillingCategory;
 import stirling.software.saas.payg.model.EntitlementState;
 import stirling.software.saas.payg.model.FeatureGate;
 import stirling.software.saas.payg.model.FeatureSet;
+import stirling.software.saas.payg.model.JobSource;
 import stirling.software.saas.payg.policy.PricingPolicy;
 import stirling.software.saas.payg.policy.PricingPolicyService;
+import stirling.software.saas.repository.SaasTeamExtensionsRepository;
 
 /**
  * Pure-Mockito unit tests for {@link InstanceController} — the device-credential entitlement read.
@@ -51,6 +60,8 @@ class InstanceControllerTest {
     @Mock private PricingPolicyService pricingPolicyService;
     @Mock private InstanceUsageIngestService usageIngestService;
     @Mock private LinkedInstanceRepository linkedInstanceRepository;
+    @Mock private SaasTeamExtensionsRepository teamExtensionsRepository;
+    @Mock private FleetSeatService fleetSeats;
 
     private InstanceController controller() {
         return new InstanceController(
@@ -59,7 +70,10 @@ class InstanceControllerTest {
                 accountLinkService,
                 pricingPolicyService,
                 usageIngestService,
-                linkedInstanceRepository);
+                linkedInstanceRepository,
+                teamExtensionsRepository,
+                Mockito.mock(PrepaidBundleService.class),
+                fleetSeats);
     }
 
     private static PricingPolicy policy() {
@@ -87,11 +101,31 @@ class InstanceControllerTest {
         assertThat(body.state()).isEqualTo("OK");
         // Phase 2: the metering inputs the instance needs ride along.
         assertThat(body.unitCalcPolicy()).isEqualTo(new UnitCalcPolicy(1, 1_048_576L, 1, 1000));
+        assertThat(body.automationStepLimit()).isEqualTo(10);
         assertThat(body.periodStart()).isNotNull();
         assertThat(body.periodEnd()).isNotNull();
         // The instance-facing read drops the cached snapshot first so a just-subscribed team's
         // plan surfaces on the next poll instead of waiting out the cache TTL.
         verify(entitlementService).invalidate(42L);
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(ints = {-1, 0, 1, 20, Integer.MAX_VALUE})
+    void entitlementUsesThePipelineStepLimit(Integer limit) {
+        PricingPolicy policy = policy();
+        policy.getStepLimits().put(JobSource.PIPELINE, limit);
+        policy.getStepLimits().put(JobSource.LINKED_INSTANCE, 99);
+        when(billingService.forTeam(42L)).thenReturn(subscribedBilling("sub_42", 120L));
+        when(entitlementService.getSnapshot(42L))
+                .thenReturn(snapshot(EntitlementState.FULL, 0L, null));
+        when(pricingPolicyService.getEffectivePolicy(42L)).thenReturn(policy);
+
+        EntitlementResponse body =
+                controller().entitlement(new LinkedInstanceAuthenticationToken(1L, 42L)).getBody();
+
+        assertThat(body).isNotNull();
+        assertThat(body.automationStepLimit()).isEqualTo(limit != null && limit > 0 ? limit : 10);
     }
 
     @Test
@@ -110,6 +144,26 @@ class InstanceControllerTest {
         assertThat(body.freeRemainingUnits()).isEqualTo(500L);
         assertThat(body.periodCapUnits()).isNull();
         assertThat(body.state()).isEqualTo("OK");
+    }
+
+    /** Only a purchased allowance reaches the wire: a solo account's team is not a ceiling. */
+    @Test
+    void entitlement_reportsOnlyAPurchasedAllowance() {
+        Authentication token = new LinkedInstanceAuthenticationToken(4L, 9L);
+        when(billingService.forTeam(9L)).thenReturn(freeBilling(500L));
+        when(entitlementService.getSnapshot(9L))
+                .thenReturn(snapshot(EntitlementState.FULL, 0L, null));
+        when(pricingPolicyService.getEffectivePolicy(9L)).thenReturn(policy());
+
+        SaasTeamExtensions free = new SaasTeamExtensions();
+        free.setMaxSeats(UserLicenseSettingsService.DEFAULT_USER_LIMIT);
+        when(teamExtensionsRepository.findByTeamId(9L)).thenReturn(Optional.of(free));
+        assertThat(controller().entitlement(token).getBody().licensedUsers()).isNull();
+
+        SaasTeamExtensions purchased = new SaasTeamExtensions();
+        purchased.setMaxSeats(300);
+        when(teamExtensionsRepository.findByTeamId(9L)).thenReturn(Optional.of(purchased));
+        assertThat(controller().entitlement(token).getBody().licensedUsers()).isEqualTo(300);
     }
 
     @Test
@@ -242,7 +296,9 @@ class InstanceControllerTest {
                 null,
                 null,
                 null,
-                null);
+                null,
+                start,
+                start.plusMonths(1));
     }
 
     private static TeamBillingContext subscribedBilling(String subId, long freeRemaining) {
@@ -257,7 +313,9 @@ class InstanceControllerTest {
                 BigDecimal.valueOf(2),
                 "usd",
                 2500L,
-                1250L);
+                1250L,
+                start,
+                start.plusMonths(1));
     }
 
     private static EntitlementSnapshot snapshot(EntitlementState state, long spend, Long cap) {
@@ -284,5 +342,44 @@ class InstanceControllerTest {
                 start,
                 start.plusMonths(1),
                 false);
+    }
+
+    @Test
+    void seatOnlySyncUsesAuthenticatedDeploymentWithoutBillingUsage() {
+        when(billingService.forTeam(42L)).thenReturn(freeBilling(500L));
+        when(entitlementService.getSnapshot(42L))
+                .thenReturn(snapshot(EntitlementState.FULL, 0L, null));
+        when(pricingPolicyService.getEffectivePolicy(42L)).thenReturn(policy());
+        when(fleetSeats.allowance(42L, 1L)).thenReturn(17);
+        var response =
+                controller()
+                        .sync(
+                                new LinkedInstanceAuthenticationToken(1L, 42L),
+                                new InstanceController.UsageSyncRequest(0, null, null, 7));
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().fleetUserLimit()).isEqualTo(17);
+        verify(fleetSeats).report(42L, 1L, 7);
+        verifyNoInteractions(usageIngestService);
+    }
+
+    @Test
+    void negativeSeatsAndPartialUsageAreRejected() {
+        var token = new LinkedInstanceAuthenticationToken(1L, 42L);
+        assertThat(
+                        controller()
+                                .sync(
+                                        token,
+                                        new InstanceController.UsageSyncRequest(0, null, null, -1))
+                                .getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(
+                        controller()
+                                .sync(
+                                        token,
+                                        new InstanceController.UsageSyncRequest(
+                                                0, LocalDateTime.now(), null, 7))
+                                .getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
+        verifyNoInteractions(fleetSeats, usageIngestService);
     }
 }

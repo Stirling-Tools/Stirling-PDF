@@ -1,4 +1,5 @@
 import React, { Suspense, lazy, useState, useEffect } from "react";
+import { SettingsEmptyState } from "@app/components/shared/config/SettingsEmptyState";
 import { isAxiosError } from "axios";
 import {
   Tabs,
@@ -29,11 +30,9 @@ import AuditEventsTable from "@app/components/shared/config/configSections/audit
 import AuditExportSection from "@app/components/shared/config/configSections/audit/AuditExportSection";
 import AuditClearDataSection from "@app/components/shared/config/configSections/audit/AuditClearDataSection";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
-import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import EnterpriseRequiredBanner from "@app/components/shared/config/EnterpriseRequiredBanner";
-import LocalIcon from "@app/components/shared/LocalIcon";
-
+import { Icon } from "@app/ui/Icon";
 const AdminAuditSection: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -136,15 +135,15 @@ const AdminAuditSection: React.FC = () => {
 
   if (!systemStatus) {
     return (
-      <Alert
-        color="yellow"
-        title={t("audit.notAvailable", "Audit system not available")}
+      <SettingsEmptyState
+        icon="clipboard-check"
+        title={t("audit.notAvailable", "Audit logging is off")}
       >
         {t(
           "audit.notAvailableMessage",
-          "The audit system is not configured or not available.",
+          "Turn it on in Sign-in & security to start recording activity.",
         )}
-      </Alert>
+      </SettingsEmptyState>
     );
   }
 
@@ -152,7 +151,6 @@ const AdminAuditSection: React.FC = () => {
 
   return (
     <Stack gap="lg">
-      <LoginRequiredBanner show={!loginEnabled} />
       <EnterpriseRequiredBanner
         show={!hasEnterpriseLicense}
         featureName={t("settings.licensingAnalytics.audit", "Audit")}
@@ -161,7 +159,7 @@ const AdminAuditSection: React.FC = () => {
       {/* Info banner about audit settings */}
       {isEnabled && (
         <Alert
-          icon={<LocalIcon icon="info" width="1.2rem" height="1.2rem" />}
+          icon={<Icon name="info" size="1.2rem" />}
           title={t("audit.configureAudit", "Configure Audit Logging")}
           color="blue"
           variant="light"
@@ -177,13 +175,7 @@ const AdminAuditSection: React.FC = () => {
               variant="secondary"
               size="sm"
               onClick={() => navigate("/settings/adminSecurity#auditLogging")}
-              rightSection={
-                <LocalIcon
-                  icon="arrow-forward"
-                  width="0.9rem"
-                  height="0.9rem"
-                />
-              }
+              rightSection={<Icon name="arrow-right" size="0.9rem" />}
             >
               {t("audit.goToSettings", "Go to Audit Settings")}
             </Button>

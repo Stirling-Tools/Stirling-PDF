@@ -40,6 +40,8 @@ import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.ExceptionUtils.PdfUnrepairableException;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.TempFileManager;
@@ -275,25 +277,29 @@ class RepairControllerMoreTest {
         }
 
         @Test
-        @DisplayName("qpdf IOException propagates to the caller")
-        void qpdfIOExceptionPropagates() throws Exception {
+        @DisplayName("a qpdf refusal is reported as unrepairable, not passed on verbatim")
+        void qpdfIOExceptionBecomesCoded() throws Exception {
             when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(false);
             when(endpointConfiguration.isGroupEnabled("qpdf")).thenReturn(true);
 
             try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
                 ProcessExecutor qpdfExecutor = mock(ProcessExecutor.class);
                 when(qpdfExecutor.runCommandWithOutputHandling(any()))
-                        .thenThrow(new IOException("qpdf failed hard"));
+                        .thenThrow(new IOException("qpdf failed hard on /tmp/repair123.pdf"));
 
                 mockedFactory
                         .when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF))
                         .thenReturn(qpdfExecutor);
 
-                IOException thrown =
+                PdfUnrepairableException thrown =
                         assertThrows(
-                                IOException.class,
+                                PdfUnrepairableException.class,
                                 () -> repairController.repairPdf(pdfFileFrom(inputPdf(1))));
-                assertEquals("qpdf failed hard", thrown.getMessage());
+
+                assertEquals(
+                        ExceptionUtils.ErrorCode.PDF_UNREPAIRABLE.getCode(), thrown.getErrorCode());
+                // qpdf names temp paths in its stderr, and a notification is persisted.
+                assertFalse(thrown.getMessage().contains("/tmp/repair123.pdf"));
             }
         }
     }

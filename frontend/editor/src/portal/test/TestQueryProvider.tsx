@@ -1,6 +1,8 @@
 import { useState, type ReactNode } from "react";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
+import { UIProvider } from "@portal/contexts/UIContext";
 
 /**
  * Wraps a portal component under test in a fresh QueryClient (retries off for
@@ -25,5 +27,22 @@ export function PortalTestProviders({ children }: { children: ReactNode }) {
     <TestQueryProvider>
       <MantineProvider>{children}</MantineProvider>
     </TestQueryProvider>
+  );
+}
+
+/** {@link PortalTestProviders} plus the contexts the connect gate reads. Unlinked by default. */
+export function PortalViewProviders({
+  children,
+  linkState = "unlinked",
+}: {
+  children: ReactNode;
+  linkState?: LinkState;
+}) {
+  return (
+    <PortalTestProviders>
+      <LinkProvider initialState={linkState}>
+        <UIProvider>{children}</UIProvider>
+      </LinkProvider>
+    </PortalTestProviders>
   );
 }

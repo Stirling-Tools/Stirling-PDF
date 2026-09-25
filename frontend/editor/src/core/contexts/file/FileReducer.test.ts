@@ -192,6 +192,39 @@ describe("fileContextReducer — silent CONSUME_FILES (background enforcement)",
     ]);
   });
 
+  it("carries a no-label [] verdict forward (classified, not unclassified)", () => {
+    // "a" was classified and found nothing ([]) - distinct from null (never classified). The output
+    // must inherit [] so the local pass treats it as already-classified and never re-classifies (or
+    // re-bills) it.
+    const start = stateWith([stub("a", { classificationLabels: [] })]);
+    const next = fileContextReducer(start, {
+      type: "CONSUME_FILES",
+      payload: {
+        inputFileIds: ["a" as FileId],
+        outputStirlingFileStubs: [stub("b")],
+      },
+    });
+    expect(next.files.byId["b" as FileId].classificationLabels).toEqual([]);
+  });
+
+  it("prefers a real label over a merge input's no-label [] verdict", () => {
+    // Merge of a labelled file and a no-label one: the output should keep the real label.
+    const start = stateWith([
+      stub("a", { classificationLabels: [] }),
+      stub("b", { classificationLabels: ["Invoice"] }),
+    ]);
+    const next = fileContextReducer(start, {
+      type: "CONSUME_FILES",
+      payload: {
+        inputFileIds: ["a" as FileId, "b" as FileId],
+        outputStirlingFileStubs: [stub("c")],
+      },
+    });
+    expect(next.files.byId["c" as FileId].classificationLabels).toEqual([
+      "Invoice",
+    ]);
+  });
+
   it("an output's own classificationLabels win over the input's", () => {
     // A re-classify produces an output that already carries (fresher) labels.
     const start = stateWith([stub("a", { classificationLabels: ["Invoice"] })]);
@@ -207,6 +240,54 @@ describe("fileContextReducer — silent CONSUME_FILES (background enforcement)",
     expect(next.files.byId["b" as FileId].classificationLabels).toEqual([
       "Contract",
     ]);
+  });
+
+  it("carries classificationConfidence forward with the labels", () => {
+    // The confidence is part of the verdict: without it the escalation decision
+    // (localVerdictNeedsEscalation) dies at the version boundary and a chained
+    // classification never runs.
+    const start = stateWith([
+      stub("a", {
+        classificationLabels: ["Invoice"],
+        classificationConfidence: "low",
+      }),
+    ]);
+    const next = fileContextReducer(start, {
+      type: "CONSUME_FILES",
+      payload: {
+        inputFileIds: ["a" as FileId],
+        outputStirlingFileStubs: [stub("a-v2")],
+      },
+    });
+    expect(next.files.byId["a-v2" as FileId].classificationConfidence).toBe(
+      "low",
+    );
+  });
+
+  it("an output with its own verdict keeps it — no confidence bleed from the input", () => {
+    // A fresh classify result carries its own labels; stamping the input's
+    // heuristic confidence onto them would mislabel an AI verdict as unsure.
+    const start = stateWith([
+      stub("a", {
+        classificationLabels: ["Invoice"],
+        classificationConfidence: "low",
+      }),
+    ]);
+    const next = fileContextReducer(start, {
+      type: "CONSUME_FILES",
+      payload: {
+        inputFileIds: ["a" as FileId],
+        outputStirlingFileStubs: [
+          stub("b", { classificationLabels: ["Contract"] }),
+        ],
+      },
+    });
+    expect(next.files.byId["b" as FileId].classificationLabels).toEqual([
+      "Contract",
+    ]);
+    expect(
+      next.files.byId["b" as FileId].classificationConfidence,
+    ).toBeUndefined();
   });
 
   it("non-silent CONSUME_FILES still moves the output to the front (unchanged)", () => {

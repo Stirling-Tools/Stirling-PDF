@@ -1,10 +1,12 @@
+import type { IconName } from "@app/ui/Icon";
+
 /**
  * Types for automation functionality
  */
 
 export interface AutomationOperation {
   operation: string;
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
 }
 
 export interface AutomationConfig {
@@ -22,7 +24,7 @@ export interface AutomationTool {
   operation: string;
   name: string;
   configured: boolean;
-  parameters?: Record<string, any>;
+  parameters?: Record<string, unknown>;
 }
 
 export type AutomationStep =
@@ -65,5 +67,5 @@ export interface SuggestedAutomation {
   operations: AutomationOperation[];
   createdAt: string;
   updatedAt: string;
-  icon: any; // MUI Icon component
+  icon: IconName;
 }
