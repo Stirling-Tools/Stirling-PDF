@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from "react";
+import React, { useMemo } from "react";
 import { Box, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
@@ -12,6 +12,7 @@ import { renderToolButtons } from "@app/components/tools/shared/renderToolButton
 import ToolButton from "@app/components/tools/toolPicker/ToolButton";
 import { useToolWorkflowData } from "@app/contexts/ToolWorkflowContext";
 import { useSigningBadgeCount } from "@app/hooks/signing/useSigningBadgeCount";
+import { useIsScrolled } from "@app/hooks/useIsScrolled";
 import { ToolId } from "@app/types/toolId";
 import { getSubcategoryLabel } from "@app/data/toolsTaxonomy";
 import { ToolPickerFooterExtensions } from "@app/components/tools/toolPicker/ToolPickerFooterExtensions";
@@ -28,6 +29,8 @@ interface ToolPickerProps {
   compact?: boolean;
   /** Called when the user clicks "View all tools" in compact mode. */
   onShowAllTools?: () => void;
+  /** Pinned above the list; gains a rule once rows scroll beneath it. */
+  header?: React.ReactNode;
 }
 
 const EMPTY_FILTERED_TOOLS: ToolPickerProps["filteredTools"] = [];
@@ -65,10 +68,11 @@ const ToolPicker = ({
   isSearching = false,
   compact = false,
   onShowAllTools,
+  header,
 }: ToolPickerProps) => {
   const { t } = useTranslation();
 
-  const scrollableRef = useRef<HTMLDivElement>(null);
+  const { scrolled, scrollRef } = useIsScrolled();
 
   const { sections: visibleSections } = useToolSections(filteredTools);
   const { favoriteTools, toolRegistry } = useToolWorkflowData();
@@ -116,8 +120,16 @@ const ToolPicker = ({
 
   return (
     <Box h="100%" style={CONTAINER_STYLE}>
+      {header && (
+        <div
+          className="tool-picker__header"
+          data-scrolled={scrolled || undefined}
+        >
+          {header}
+        </div>
+      )}
       <Box
-        ref={scrollableRef}
+        ref={scrollRef}
         style={SCROLLABLE_STYLE}
         className="tool-picker-scrollable"
       >
@@ -144,7 +156,7 @@ const ToolPicker = ({
           /* Resting state: flat list of pinned + recommended only. */
           <Box className="tool-picker__compact">
             <div style={HEADER_TEXT_STYLE}>
-              {t("toolPanel.toolsHeader", "Tools")}
+              {t("toolPanel.toolsHeader", "PDF Tools")}
             </div>
             {favoriteToolItems.length === 0 && recommendedItems.length === 0 ? (
               <NoToolsFound />

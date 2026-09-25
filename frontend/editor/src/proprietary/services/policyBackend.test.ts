@@ -17,6 +17,7 @@ const policy = (
 ) => ({
   id,
   name: id,
+  owner: "policy-owner@example.com",
   enabled: true,
   inputs: [],
   steps: [{ operation: "/api/v1/misc/compress-pdf", parameters: {} }],
@@ -36,7 +37,7 @@ async function stateOf(wire: ReturnType<typeof policy>, key: string) {
   listPolicies.mockResolvedValue([wire]);
   const decoded = (await fetchPoliciesByCategory()).get(key);
   if (!decoded) throw new Error(`no decoded policy for ${key}`);
-  return decodedToState(decoded, undefined);
+  return decodedToState(decoded);
 }
 
 describe("fetchPoliciesByCategory", () => {
@@ -90,6 +91,25 @@ describe("fetchPoliciesByCategory", () => {
 describe("decodedToState — runsOnEditor", () => {
   beforeEach(() => listPolicies.mockReset());
 
+  it("carries the first stored endpoint through to editor file selection", async () => {
+    const wire = policy("convert", undefined, { allowed: true });
+    wire.steps = [
+      { operation: "/api/v1/convert/img/pdf", parameters: {} },
+      { operation: "/api/v1/misc/compress-pdf", parameters: {} },
+    ];
+
+    expect((await stateOf(wire, "convert")).firstOperation).toBe(
+      "/api/v1/convert/img/pdf",
+    );
+  });
+
+  it("leaves an empty pipeline without an input operation", async () => {
+    const wire = policy("empty", undefined, { allowed: true });
+    wire.steps = [];
+
+    expect((await stateOf(wire, "empty")).firstOperation).toBeNull();
+  });
+
   it("runs a catalogue tile that opted into the editor", async () => {
     const state = await stateOf(
       policy("pol-1", "security", { allowed: true }),
@@ -97,6 +117,7 @@ describe("decodedToState — runsOnEditor", () => {
     );
 
     expect(state.runsOnEditor).toBe(true);
+    expect(state.owner).toBe("policy-owner@example.com");
   });
 
   // Participation is the policy's own flag now, so a tile that never opted in does not run in the

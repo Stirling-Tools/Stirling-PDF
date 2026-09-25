@@ -8,11 +8,9 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import stirling.software.saas.payg.shadow.PaygShadowCharge;
 
-@Repository
 public interface PaygShadowChargeRepository extends JpaRepository<PaygShadowCharge, Long> {
 
     @Query(
@@ -32,12 +30,12 @@ public interface PaygShadowChargeRepository extends JpaRepository<PaygShadowChar
 
     /**
      * Paid (Stripe-metered) documents for a team in a period: {@code SUM(payg_units −
-     * free_units_consumed)} over CHARGED rows. This is exactly what was reported to Stripe in the
-     * window, so the wallet's "estimated bill so far" is the metered total × rate. REFUNDED rows
-     * are excluded.
+     * free_units_consumed − bundle_units_consumed)} over CHARGED rows. This is exactly what was
+     * reported to Stripe in the window, so the wallet's "estimated bill so far" is the metered
+     * total × rate. REFUNDED rows are excluded.
      */
     @Query(
-            "SELECT COALESCE(SUM(s.paygUnits - s.freeUnitsConsumed), 0) FROM PaygShadowCharge s"
+            "SELECT COALESCE(SUM(s.paygUnits - s.freeUnitsConsumed - s.bundleUnitsConsumed), 0) FROM PaygShadowCharge s"
                     + " WHERE s.teamId = :teamId"
                     + " AND s.status = stirling.software.saas.payg.model.ShadowChargeStatus.CHARGED"
                     + " AND s.occurredAt >= :from AND s.occurredAt < :to")

@@ -67,6 +67,10 @@ public class PaygShadowCharge implements Serializable {
     @Column(name = "free_units_consumed", nullable = false)
     private Integer freeUnitsConsumed = 0;
 
+    /** The term that funded this charge, so a late refund cannot replenish another month. */
+    @Column(name = "included_period_start")
+    private LocalDateTime includedPeriodStart;
+
     /**
      * How many of {@link #paygUnits} were drawn from prepaid bundles (the {@code BOUGHT} bucket) at
      * charge time — the tier between the free grant and the meter. The paid (Stripe-metered)

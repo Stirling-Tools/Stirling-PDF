@@ -31,6 +31,7 @@ public class TeamSecurityExpressions {
 
     private final TeamMembershipRepository membershipRepository;
     private final UserService userService;
+    private final UserTeamResolver userTeamResolver;
 
     /** Whether the current authenticated user is a {@code LEADER} of the given team. */
     public boolean isTeamLeader(Long teamId) {
@@ -46,23 +47,12 @@ public class TeamSecurityExpressions {
 
     /** Whether the current authenticated user is a {@code LEADER} of their own team. */
     public boolean isCurrentUserTeamLeader() {
-        User currentUser = getCurrentUser();
-        if (currentUser == null || currentUser.getTeam() == null) {
-            return false;
-        }
-        return membershipRepository
-                .findByTeamIdAndUserId(currentUser.getTeam().getId(), currentUser.getId())
-                .map(membership -> membership.getRole() == TeamRole.LEADER)
-                .orElse(false);
+        return userTeamResolver.isLeader(getCurrentUser());
     }
 
     /** The current authenticated user's team id, or {@code null} if unauthenticated / teamless. */
     public Long currentUserTeamId() {
-        User currentUser = getCurrentUser();
-        if (currentUser == null || currentUser.getTeam() == null) {
-            return null;
-        }
-        return currentUser.getTeam().getId();
+        return userTeamResolver.teamId(getCurrentUser()).orElse(null);
     }
 
     /** The current authenticated user's id, or {@code null} if unauthenticated. */

@@ -1,6 +1,7 @@
 package stirling.software.proprietary.accountlink;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -20,30 +21,40 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
-/** Same-origin account-link surface on the self-hosted instance (combined billing). */
+/**
+ * Same-origin account-link surface on the self-hosted instance (combined billing).
+ *
+ * <p>Owner-only class-wide except {@link #linked()}: everything else is server-scoped, the
+ * free-tier meter included. Other users learn of the wall from the {@code reason} on the 402.
+ */
 @Slf4j
 @Hidden
 @RestController
 @RequestMapping("/api/v1/account-link")
 @Profile("!saas")
-@PreAuthorize("hasRole('ADMIN')")
-@ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
+@PreAuthorize("hasRole('ADMIN') and @orgOwnerService.isCurrentUser(authentication)")
+@ConditionalOnProperty(
+        name = "stirling.billing.account-link.enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class AccountLinkController {
 
     private final AccountLinkService service;
     private final ConnectService connectService;
     private final LocalUsageService localUsageService;
-    // Present only when metering is on (its own flag); absent → /sync-now reports 409.
+    private final FreeTierUsageService freeTierUsageService;
     private final ObjectProvider<UsageSyncService> syncServiceProvider;
 
     public AccountLinkController(
             AccountLinkService service,
             ConnectService connectService,
             LocalUsageService localUsageService,
+            FreeTierUsageService freeTierUsageService,
             ObjectProvider<UsageSyncService> syncServiceProvider) {
         this.service = service;
         this.connectService = connectService;
         this.localUsageService = localUsageService;
+        this.freeTierUsageService = freeTierUsageService;
         this.syncServiceProvider = syncServiceProvider;
     }
 
@@ -91,11 +102,23 @@ public class AccountLinkController {
         }
     }
 
-    /** Called by the callback page with the nonce it found in the fragment. */
+    /** Finishes the link, then reports seats after the credential transaction has committed. */
     @PostMapping("/connect/complete")
     public ResponseEntity<ConnectService.ConnectStatus> connectComplete(
             @RequestBody(required = false) ConnectCompleteRequest req) {
-        return ResponseEntity.ok(connectService.complete(req != null ? req.nonce() : null));
+        ConnectService.ConnectStatus result =
+                connectService.complete(req != null ? req.nonce() : null);
+        if (result.phase() == ConnectService.Phase.LINKED) {
+            UsageSyncService sync = syncServiceProvider.getIfAvailable();
+            if (sync != null) {
+                try {
+                    sync.syncNow();
+                } catch (RuntimeException e) {
+                    log.warn("Initial account-link sync failed; the scheduled sync will retry", e);
+                }
+            }
+        }
+        return ResponseEntity.ok(result);
     }
 
     /** Everything we know about where the admin's browser is, for the callback. */
@@ -140,6 +163,19 @@ public class AccountLinkController {
         return ResponseEntity.ok(service.status());
     }
 
+    /** Any admin, not only the owner: the AI settings page needs it and a bare flag is harmless. */
+    @GetMapping("/linked")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Boolean>> linked() {
+        return ResponseEntity.ok(Map.of("linked", service.isLinked()));
+    }
+
+    /** Refreshes cloud entitlement without changing the linked account. */
+    @PostMapping("/recheck")
+    public ResponseEntity<AccountLinkService.LinkStatus> recheck() {
+        return ResponseEntity.ok(service.recheck());
+    }
+
     @PostMapping("/unlink")
     public ResponseEntity<Void> unlink() {
         service.unlink();
@@ -153,6 +189,15 @@ public class AccountLinkController {
     @GetMapping("/usage")
     public ResponseEntity<LocalUsageService.LocalUsage> usage() {
         return ResponseEntity.ok(localUsageService.currentPeriodUnsynced());
+    }
+
+    /**
+     * The instance's own monthly grant. Reported even while linked, where it is dormant but is what
+     * unlinking resumes on.
+     */
+    @GetMapping("/free-tier")
+    public ResponseEntity<FreeTierUsageService.FreeTierBalance> freeTier() {
+        return ResponseEntity.ok(freeTierUsageService.balance());
     }
 
     /** Forces an immediate usage sync to SaaS — the same work the daily scheduler does. */

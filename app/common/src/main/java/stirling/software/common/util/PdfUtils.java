@@ -5,6 +5,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import javax.imageio.*;
+import javax.imageio.stream.ImageInputStream;
 import javax.imageio.stream.ImageOutputStream;
 
 import org.apache.pdfbox.cos.COSName;
@@ -32,6 +34,7 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.springframework.http.InvalidMediaTypeException;
 import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -448,32 +451,10 @@ public class PdfUtils {
             throws IOException {
         try (PDDocument doc = pdfDocumentFactory.createNewDocument()) {
             for (MultipartFile file : files) {
-                String contentType = file.getContentType();
-                String originalFilename = Filenames.toSimpleFileName(file.getOriginalFilename());
-                if (originalFilename != null
-                        && (originalFilename.toLowerCase(Locale.ROOT).endsWith(".tiff")
-                                || originalFilename.toLowerCase(Locale.ROOT).endsWith(".tif"))) {
-                    ImageReader reader = ImageIO.getImageReadersByFormatName("tiff").next();
-                    reader.setInput(ImageIO.createImageInputStream(file.getInputStream()));
-                    int numPages = reader.getNumImages(true);
-                    for (int i = 0; i < numPages; i++) {
-                        BufferedImage pageImage = reader.read(i);
-                        BufferedImage convertedImage =
-                                ImageProcessingUtils.convertColorType(pageImage, colorType);
-                        PDImageXObject pdImage =
-                                LosslessFactory.createFromImage(doc, convertedImage);
-                        addImageToDocument(doc, pdImage, fitOption, autoRotate);
-                    }
+                if (isTiff(file)) {
+                    appendTiffFrames(doc, file, fitOption, autoRotate, colorType);
                 } else {
-                    BufferedImage image = ImageProcessingUtils.loadImageWithExifOrientation(file);
-                    BufferedImage convertedImage =
-                            ImageProcessingUtils.convertColorType(image, colorType);
-                    // Use JPEGFactory if it's JPEG since JPEG is lossy
-                    PDImageXObject pdImage =
-                            (contentType != null && MediaType.IMAGE_JPEG_VALUE.equals(contentType))
-                                    ? JPEGFactory.createFromImage(doc, convertedImage)
-                                    : LosslessFactory.createFromImage(doc, convertedImage);
-                    addImageToDocument(doc, pdImage, fitOption, autoRotate);
+                    appendSingleImage(doc, file, fitOption, autoRotate, colorType);
                 }
             }
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -481,6 +462,79 @@ public class PdfUtils {
             log.debug("PDF successfully saved to byte array");
             return byteArrayOutputStream.toByteArray();
         }
+    }
+
+    /**
+     * A TIFF is recognised by declared content type as well as filename suffix: an extensionless
+     * upload would otherwise take the single-image path and silently drop every frame but one.
+     */
+    private boolean isTiff(MultipartFile file) {
+        if (hasTiffContentType(file.getContentType())) {
+            return true;
+        }
+        String filename = Filenames.toSimpleFileName(file.getOriginalFilename());
+        return filename != null
+                && (filename.toLowerCase(Locale.ROOT).endsWith(".tiff")
+                        || filename.toLowerCase(Locale.ROOT).endsWith(".tif"));
+    }
+
+    /** Parsed, not compared whole: RFC 3302 allows parameters such as {@code application=}. */
+    private boolean hasTiffContentType(String contentType) {
+        if (contentType == null) {
+            return false;
+        }
+        try {
+            MediaType mediaType = MediaType.parseMediaType(contentType);
+            return "image".equals(mediaType.getType())
+                    && ("tiff".equals(mediaType.getSubtype())
+                            || "x-tiff".equals(mediaType.getSubtype()));
+        } catch (InvalidMediaTypeException e) {
+            return false;
+        }
+    }
+
+    /** Every frame becomes a page; streams and reader are released even when a frame fails. */
+    private void appendTiffFrames(
+            PDDocument doc,
+            MultipartFile file,
+            String fitOption,
+            boolean autoRotate,
+            String colorType)
+            throws IOException {
+        try (InputStream input = file.getInputStream();
+                ImageInputStream imageInput = ImageIO.createImageInputStream(input)) {
+            ImageReader reader = ImageIO.getImageReadersByFormatName("tiff").next();
+            try {
+                reader.setInput(imageInput);
+                int numPages = reader.getNumImages(true);
+                for (int i = 0; i < numPages; i++) {
+                    BufferedImage convertedImage =
+                            ImageProcessingUtils.convertColorType(reader.read(i), colorType);
+                    PDImageXObject pdImage = LosslessFactory.createFromImage(doc, convertedImage);
+                    addImageToDocument(doc, pdImage, fitOption, autoRotate);
+                }
+            } finally {
+                reader.dispose();
+            }
+        }
+    }
+
+    private void appendSingleImage(
+            PDDocument doc,
+            MultipartFile file,
+            String fitOption,
+            boolean autoRotate,
+            String colorType)
+            throws IOException {
+        BufferedImage image = ImageProcessingUtils.loadImageWithExifOrientation(file);
+        BufferedImage convertedImage = ImageProcessingUtils.convertColorType(image, colorType);
+        // Use JPEGFactory if it's JPEG since JPEG is lossy
+        String contentType = file.getContentType();
+        PDImageXObject pdImage =
+                (contentType != null && MediaType.IMAGE_JPEG_VALUE.equals(contentType))
+                        ? JPEGFactory.createFromImage(doc, convertedImage)
+                        : LosslessFactory.createFromImage(doc, convertedImage);
+        addImageToDocument(doc, pdImage, fitOption, autoRotate);
     }
 
     public void addImageToDocument(
@@ -493,7 +547,7 @@ public class PdfUtils {
             pageSize = new PDRectangle(pageSize.getHeight(), pageSize.getWidth());
         }
 
-        if ("fitDocumentToImage".equals(fitOption)) {
+        if ("fitDocumentToImage".equals(fitOption) || "fitDocumentToPage".equals(fitOption)) {
             pageSize = new PDRectangle(image.getWidth(), image.getHeight());
         }
 
@@ -505,7 +559,9 @@ public class PdfUtils {
 
         try (PDPageContentStream contentStream =
                 new PDPageContentStream(doc, page, AppendMode.APPEND, true, true)) {
-            if ("fillPage".equals(fitOption) || "fitDocumentToImage".equals(fitOption)) {
+            if ("fillPage".equals(fitOption)
+                    || "fitDocumentToImage".equals(fitOption)
+                    || "fitDocumentToPage".equals(fitOption)) {
                 contentStream.drawImage(image, 0, 0, pageWidth, pageHeight);
             } else if ("maintainAspectRatio".equals(fitOption)) {
                 float imageAspectRatio = (float) image.getWidth() / (float) image.getHeight();

@@ -1,10 +1,12 @@
 import { useEffect, useImperativeHandle } from "react";
 import { useRedaction as useEmbedPdfRedaction } from "@embedpdf/plugin-redaction/react";
 import { PdfAnnotationSubtype } from "@embedpdf/models";
-import { useRedaction } from "@app/contexts/RedactionContext";
+import { useRedaction, useRedactionMode } from "@app/contexts/RedactionContext";
+import { useNavigationState } from "@app/contexts/NavigationContext";
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
 import { useAnnotationCapability } from "@embedpdf/plugin-annotation/react";
 import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
+import { leaveRedactionMode } from "@app/components/viewer/leaveRedactionMode";
 
 /**
  * Bridges between the EmbedPDF redaction plugin and the Stirling-PDF RedactionContext.
@@ -26,6 +28,8 @@ function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
   const { state, provides: redactionProvides } =
     useEmbedPdfRedaction(documentId);
   const { provides: annotationProvides } = useAnnotationCapability();
+  const { isRedactionModeActive } = useRedactionMode();
+  const { selectedTool } = useNavigationState();
   const {
     redactionApiRef,
     setPendingCount,
@@ -35,13 +39,30 @@ function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
     manualRedactColor,
   } = useRedaction();
 
-  // Mark bridge as ready on mount, not ready on unmount
+  // Ensure EmbedPDF exits redaction mode whenever we are not in redact tool mode
+  useEffect(() => {
+    if (selectedTool !== "redact") {
+      leaveRedactionMode(redactionProvides);
+    }
+  }, [selectedTool, isRedactionModeActive, redactionProvides]);
+
+  // Mark bridge as ready on mount, cleanup on unmount
   useEffect(() => {
     setBridgeReady(true);
     return () => {
       setBridgeReady(false);
+      // The scope can belong to a document that a swap already closed.
+      leaveRedactionMode(redactionProvides);
     };
-  }, [setBridgeReady]);
+  }, [setBridgeReady, redactionProvides]);
+
+  // The interaction mode is viewer-global, so a stranded redaction mode would block
+  // selection for the next document.
+  useEffect(() => {
+    return () => {
+      leaveRedactionMode(redactionProvides);
+    };
+  }, [redactionProvides]);
 
   // Sync EmbedPDF state to our context
   useEffect(() => {
@@ -92,10 +113,11 @@ function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
         redactionProvides?.endRedact();
       },
       // Common methods
-      commitAllPending: () => {
-        redactionProvides?.commitAllPending();
-        // Don't set redactionsApplied here - it should only be set after the file is saved
-        // The save operation in applyChanges will handle setting/clearing this flag
+      commitAllPending: async () => {
+        const task = redactionProvides?.commitAllPending();
+        if (task && typeof task.toPromise === "function") {
+          await task.toPromise();
+        }
       },
       getActiveType: () => state?.activeType ?? null,
       getPendingCount: () => state?.pendingCount ?? 0,

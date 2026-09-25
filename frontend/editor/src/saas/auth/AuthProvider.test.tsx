@@ -1,4 +1,4 @@
-import { act, render, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Session, User } from "@supabase/supabase-js";
 import { expectConsole } from "@app/tests/failOnConsole";
@@ -60,8 +60,24 @@ const { writeWorkbenchSession, readWorkbenchSession, resumeWorkbenchSession } =
 
 /** Surfaces `loading` so a test can assert on it rather than on the container. */
 function LoadingProbe() {
-  const { loading } = useAuth();
-  return <span data-testid="loading">{String(loading)}</span>;
+  const {
+    loading,
+    displayName,
+    profilePictureLoading,
+    profilePictureUrl,
+    refreshProfilePicture,
+  } = useAuth();
+  return (
+    <>
+      <span data-testid="loading">{String(loading)}</span>
+      <span data-testid="picture-loading">{String(profilePictureLoading)}</span>
+      <span data-testid="picture">{profilePictureUrl}</span>
+      <span data-testid="name">{displayName}</span>
+      <button onClick={() => void refreshProfilePicture()}>
+        Refresh picture
+      </button>
+    </>
+  );
 }
 
 const USER_ID = "11111111-2222-3333-4444-555555555555";
@@ -217,11 +233,143 @@ describe("AuthProvider user-data loading", () => {
     );
     // The picture read chains behind the sync, so it has not run yet either.
     expect(createSignedUrl).not.toHaveBeenCalled();
+    expect(getByTestId("picture-loading").textContent).toBe("true");
 
     await act(async () => {
       releaseSync();
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
+    expect(getByTestId("picture-loading").textContent).toBe("false");
+    expect(getByTestId("picture").textContent).toBe(
+      "https://example.test/avatar",
+    );
+  });
+
+  it("settles the picture lookup when the user has no avatar", async () => {
+    createSignedUrl.mockResolvedValue({
+      data: null,
+      error: { message: "Not found" },
+    });
+    const { getByTestId } = renderProvider();
+
+    await waitFor(() =>
+      expect(getByTestId("picture-loading").textContent).toBe("false"),
+    );
+    expect(getByTestId("picture").textContent).toBe("");
+  });
+
+  it.each(["sync", "read", "fallback"])(
+    "ignores the previous account's late avatar %s after the new picture loads",
+    async (stage) => {
+      let release = () => {};
+      const blocked = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      if (stage === "sync") {
+        syncOAuthAvatar.mockImplementationOnce(async () => {
+          await blocked;
+          return false;
+        });
+      } else if (stage === "read") {
+        createSignedUrl.mockImplementationOnce(async () => {
+          await blocked;
+          return {
+            data: { signedUrl: "https://example.test/old-avatar" },
+            error: null,
+          };
+        });
+      } else {
+        createSignedUrl.mockResolvedValueOnce({
+          data: null,
+          error: { message: "Not found" },
+        });
+        getProfilePictureMetadata
+          .mockResolvedValueOnce(null)
+          .mockImplementationOnce(async () => {
+            await blocked;
+            return null;
+          });
+      }
+
+      const { fire, getByTestId } = renderProvider();
+      await waitFor(() =>
+        expect(getByTestId("loading")).toHaveTextContent("false"),
+      );
+      expect(getByTestId("picture-loading")).toHaveTextContent("true");
+      await fire("SIGNED_IN", makeSession({ userId: "account-b" }));
+      expect(getByTestId("picture-loading")).toHaveTextContent("false");
+
+      await act(async () => release());
+      expect(getByTestId("picture")).toHaveTextContent(
+        "https://example.test/avatar",
+      );
+      expect(getByTestId("picture-loading")).toHaveTextContent("false");
+      expect(createSignedUrl).toHaveBeenCalledTimes(stage === "sync" ? 1 : 2);
+
+      const refreshed = makeSession({
+        userId: "account-b",
+        token: "refreshed",
+      });
+      refreshed.user.user_metadata.full_name = "Updated name";
+      await fire("TOKEN_REFRESHED", refreshed);
+      expect(getByTestId("name")).toHaveTextContent("Updated name");
+      expect(getByTestId("picture-loading")).toHaveTextContent("false");
+    },
+  );
+
+  it("keeps the latest picture when refresh requests finish out of order", async () => {
+    const { getByRole, getByTestId } = renderProvider();
+    await waitFor(() =>
+      expect(getByTestId("picture-loading")).toHaveTextContent("false"),
+    );
+    let release = () => {};
+    const blocked = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    createSignedUrl.mockImplementationOnce(async () => {
+      await blocked;
+      return {
+        data: { signedUrl: "https://example.test/old-avatar" },
+        error: null,
+      };
+    });
+    fireEvent.click(getByRole("button", { name: "Refresh picture" }));
+    createSignedUrl.mockResolvedValue({
+      data: { signedUrl: "https://example.test/new-avatar" },
+      error: null,
+    });
+    fireEvent.click(getByRole("button", { name: "Refresh picture" }));
+    await waitFor(() =>
+      expect(getByTestId("picture")).toHaveTextContent(
+        "https://example.test/new-avatar",
+      ),
+    );
+
+    await act(async () => release());
+    expect(getByTestId("picture")).toHaveTextContent(
+      "https://example.test/new-avatar",
+    );
+    expect(getByTestId("picture-loading")).toHaveTextContent("false");
+  });
+
+  it("ignores a pending picture after signing out", async () => {
+    let release = () => {};
+    const blocked = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    createSignedUrl.mockImplementationOnce(async () => {
+      await blocked;
+      return {
+        data: { signedUrl: "https://example.test/old-avatar" },
+        error: null,
+      };
+    });
+    const { fire, getByTestId } = renderProvider();
+    await waitFor(() => expect(createSignedUrl).toHaveBeenCalled());
+    await fire("SIGNED_OUT", null);
+    await act(async () => release());
+    expect(getByTestId("picture").textContent).toBe("");
+    expect(getByTestId("picture-loading")).toHaveTextContent("false");
   });
 
   it("refetches after a guest upgrade, which keeps the same user id", async () => {

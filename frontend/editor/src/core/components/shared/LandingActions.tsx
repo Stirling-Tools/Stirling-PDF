@@ -1,13 +1,15 @@
 import React from "react";
 import { Group, Tooltip } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
+import { useFilesPage } from "@app/contexts/FilesPageContext";
+import { useFolders } from "@app/contexts/FolderContext";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
-import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useIsMobile } from "@app/hooks/useIsMobile";
+import { CreateProcessingFolderButton } from "@app/components/policies/CreateProcessingFolderButton";
+import { folderKind } from "@app/types/folder";
 
 type LandingActionsProps = {
   fileInputRef: React.RefObject<HTMLInputElement | null>;
@@ -24,56 +26,49 @@ export function LandingActions({
 }: LandingActionsProps) {
   const terminology = useFileActionTerminology();
   const { openFilesModal } = useFilesModalContext();
-  const icons = useFileActionIcons();
+  const { allFiles, loading } = useFilesPage();
+  const folders = useFolders();
   const { config } = useAppConfig();
   const isMobile = useIsMobile();
+  // Mounted directories are listed on demand, so their files may not be cached yet.
+  const hasMountedFolders = folders.folders.some(
+    (folder) => folderKind(folder) === "local",
+  );
+  const libraryEmpty =
+    !loading && !folders.loading && allFiles.length === 0 && !hasMountedFolders;
 
   return (
     <>
       <Group gap="sm" justify="center" wrap="wrap" mb="xs">
         <Button
           fat
-          leftSection={
-            <LocalIcon icon={icons.uploadIconName} width="1rem" height="1rem" />
-          }
+          leftSection={<Icon name="plus" size="1rem" />}
           onClick={(e) => {
             e.stopPropagation();
-            onUploadClick();
-          }}
-        >
-          {terminology.uploadFromComputer}
-        </Button>
-
-        <Button
-          variant="secondary"
-          fat
-          leftSection={<LocalIcon icon="add" width="1rem" height="1rem" />}
-          onClick={(e) => {
-            e.stopPropagation();
-            openFilesModal();
+            if (libraryEmpty) {
+              onUploadClick();
+            } else {
+              openFilesModal();
+            }
           }}
         >
           {terminology.addFiles}
         </Button>
 
+        <CreateProcessingFolderButton />
+
         {config?.enableMobileScanner && !isMobile && (
           <Tooltip label={terminology.mobileUpload} position="bottom">
-            <ActionIcon
-              size="lg"
+            <Button
               variant="secondary"
+              fat
               aria-label={terminology.mobileUpload}
-              className="landing-btn-icon"
               onClick={(e) => {
                 e.stopPropagation();
                 onMobileUploadClick();
               }}
-            >
-              <LocalIcon
-                icon="qr-code-rounded"
-                width="1.25rem"
-                height="1.25rem"
-              />
-            </ActionIcon>
+              leftSection={<Icon name="qr-code" size="1.25rem" />}
+            />
           </Tooltip>
         )}
       </Group>

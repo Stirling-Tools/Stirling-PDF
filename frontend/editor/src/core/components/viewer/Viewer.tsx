@@ -1,10 +1,12 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import EmbedPdfViewer from "@app/components/viewer/EmbedPdfViewer";
 import type { EmbedPdfViewerProps } from "@app/components/viewer/EmbedPdfViewer";
 import {
   NonPdfViewerWrapper,
   type ViewerProps,
 } from "@app/components/viewer/NonPdfViewer";
+import { AttachmentSidebar } from "@app/components/viewer/AttachmentSidebar";
+import { usePortfolioSession } from "@app/components/viewer/hooks/usePortfolioSession";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { isStirlingFile } from "@app/types/fileContext";
@@ -27,7 +29,13 @@ type SignatureOverlayPassThrough = Pick<
 
 const Viewer = (props: ViewerProps & SignatureOverlayPassThrough) => {
   const { files: activeFiles } = useAllFiles();
-  const { activeFileId } = useViewer();
+  const {
+    activeFileId,
+    isAttachmentSidebarVisible,
+    toggleAttachmentSidebar,
+    isThumbnailSidebarVisible,
+    isBookmarkSidebarVisible,
+  } = useViewer();
 
   // Determine the active file — previewFile takes priority, then look up by stable ID
   const activeFile = useMemo(() => {
@@ -38,12 +46,57 @@ const Viewer = (props: ViewerProps & SignatureOverlayPassThrough) => {
     return byId ?? activeFiles[0] ?? null;
   }, [props.previewFile, activeFiles, activeFileId]);
 
-  // Route to the appropriate viewer based on file type
-  if (activeFile && !isPdfFile(activeFile)) {
-    return <NonPdfViewerWrapper {...props} />;
-  }
+  // A portfolio stays pinned while its members are read, so the panel below
+  // outlives the viewer swap that opening a non-PDF member causes.
+  const { session, activeMemberName } = usePortfolioSession(
+    activeFile instanceof File ? activeFile : null,
+  );
 
-  return <EmbedPdfViewer {...props} />;
+  useEffect(() => {
+    if (session && !isAttachmentSidebarVisible && !activeMemberName) {
+      toggleAttachmentSidebar();
+    }
+    // Keyed on the portfolio alone: opening a member must not reopen a panel the
+    // reader has closed, and switching portfolios should offer it again.
+  }, [session?.file]);
+
+  const portfolio = useMemo(
+    () => (session ? { ...session, activeMemberName } : null),
+    [session, activeMemberName],
+  );
+
+  const viewer =
+    activeFile && !isPdfFile(activeFile) ? (
+      <NonPdfViewerWrapper {...props} />
+    ) : (
+      <EmbedPdfViewer {...props} portfolioPinned={portfolio !== null} />
+    );
+
+  if (!portfolio) return viewer;
+
+  // The panel is fixed-positioned against its nearest contained ancestor, which
+  // inside the PDF viewer is that viewer's own root. Above both viewers it needs
+  // an equivalent, or it anchors to the window and covers the tool rail.
+  return (
+    <div
+      style={{
+        position: "relative",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+        contain: "content",
+      }}
+    >
+      {viewer}
+      <AttachmentSidebar
+        visible={isAttachmentSidebarVisible}
+        thumbnailVisible={isThumbnailSidebarVisible}
+        bookmarkVisible={isBookmarkSidebarVisible}
+        portfolio={portfolio}
+      />
+    </div>
+  );
 };
 
 export default Viewer;
