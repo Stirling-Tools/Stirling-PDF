@@ -172,6 +172,43 @@ class TempFileCleanupServiceMoreTest {
     }
 
     @Nested
+    @DisplayName("cleanupStaleJpdfiumDirs")
+    class JpdfiumDirs {
+
+        @Test
+        @DisplayName("removes stale extraction dirs and keeps fresh ones at startup")
+        void removesStaleJpdfiumDirs() throws IOException {
+            when(tempFileManagement.isStartupCleanup()).thenReturn(true);
+            when(registry.contains(any(File.class))).thenReturn(false);
+
+            Path stale = Files.createDirectories(systemTempDir.resolve("jpdfium-old"));
+            Files.writeString(stale.resolve("pdfium.dll"), "dll");
+            backdate(stale, 2L * 60 * 60 * 1000);
+            Path fresh = Files.createDirectories(systemTempDir.resolve("jpdfium-fresh"));
+
+            cleanupService.init();
+
+            assertThat(Files.exists(stale)).isFalse();
+            assertThat(Files.exists(fresh)).isTrue();
+        }
+
+        @Test
+        @DisplayName("also scans the configured base temp dir")
+        void scansBaseTempDir() throws IOException {
+            when(tempFileManagement.isStartupCleanup()).thenReturn(true);
+            when(registry.contains(any(File.class))).thenReturn(false);
+
+            Path stale = Files.createDirectories(customTempDir.resolve("jpdfium-old"));
+            Files.writeString(stale.resolve("pdfium.dll"), "dll");
+            backdate(stale, 2L * 60 * 60 * 1000);
+
+            cleanupService.init();
+
+            assertThat(Files.exists(stale)).isFalse();
+        }
+    }
+
+    @Nested
     @DisplayName("scheduledCleanup")
     class ScheduledCleanup {
 

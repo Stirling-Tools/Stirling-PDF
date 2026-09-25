@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -46,6 +47,9 @@ public class TempFileCleanupService {
 
     // Maximum recursion depth for directory traversal
     private static final int MAX_RECURSION_DEPTH = 5;
+
+    // A JPDFium dir younger than this may belong to a JVM that is still starting
+    private static final long JPDFIUM_DIR_GRACE_MILLIS = 60 * 60 * 1000;
 
     // File patterns that identify our temp files
     private static final Predicate<String> IS_OUR_TEMP_FILE =
@@ -190,9 +194,59 @@ public class TempFileCleanupService {
         long maxAgeMillis = containerMode ? 0 : 24 * 60 * 60 * 1000; // 0 or 24 hours
 
         int totalDeletedCount = cleanupUnregisteredFiles(containerMode, false, maxAgeMillis);
+        cleanupStaleJpdfiumDirs();
         log.info(
                 "Startup cleanup complete. Deleted {} temporary files/directories",
                 totalDeletedCount);
+    }
+
+    /**
+     * Removes JPDFium extraction dirs leaked by older versions on Windows. Startup-only and
+     * age-gated: a younger dir may belong to a JVM that is still extracting.
+     */
+    private void cleanupStaleJpdfiumDirs() {
+        for (Path root : jpdfiumScanRoots()) {
+            if (root == null || !Files.isDirectory(root)) continue;
+            List<Path> stale;
+            try (Stream<Path> entries = Files.list(root)) {
+                stale =
+                        entries.filter(Files::isDirectory)
+                                .filter(p -> p.getFileName().toString().startsWith("jpdfium-"))
+                                .filter(p -> isOlderThan(p, JPDFIUM_DIR_GRACE_MILLIS))
+                                .toList();
+            } catch (IOException e) {
+                log.debug("JPDFium temp scan failed for {}: {}", root, e.getMessage());
+                continue;
+            }
+            for (Path dir : stale) {
+                try {
+                    GeneralUtils.deleteDirectory(dir);
+                    log.info("Removed stale JPDFium extraction dir: {}", dir);
+                } catch (IOException e) {
+                    // Windows keeps loaded DLLs locked; a later startup retries.
+                    log.debug("Could not remove JPDFium dir {}: {}", dir, e.getMessage());
+                }
+            }
+        }
+    }
+
+    private Path[] jpdfiumScanRoots() {
+        // JPDFium extracts into the real java.io.tmpdir; the configured base
+        // tmp dir only receives them when java.io.tmpdir points there.
+        Path system = getSystemTempPath();
+        String base = applicationProperties.getSystem().getTempFileManagement().getBaseTmpDir();
+        Path basePath = base == null || base.isBlank() ? null : Path.of(base);
+        if (basePath == null || basePath.equals(system)) return new Path[] {system};
+        return new Path[] {system, basePath};
+    }
+
+    private static boolean isOlderThan(Path path, long ageMillis) {
+        try {
+            return System.currentTimeMillis() - Files.getLastModifiedTime(path).toMillis()
+                    > ageMillis;
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     /**
