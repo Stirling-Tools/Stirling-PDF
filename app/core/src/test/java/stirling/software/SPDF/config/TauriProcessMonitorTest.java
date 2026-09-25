@@ -84,7 +84,8 @@ class TauriProcessMonitorTest {
         monitor.init(String.valueOf(Long.MAX_VALUE), sentinel.toString());
 
         assertThat(closed.await(2, TimeUnit.SECONDS)).isTrue();
-        assertThat(Files.exists(sentinel)).isFalse();
+        // The stop request stays on disk for Tauri's next-launch sweep.
+        assertThat(Files.exists(sentinel)).isTrue();
         assertThat(getField(monitor, "scheduler")).isNull();
     }
 
@@ -92,9 +93,8 @@ class TauriProcessMonitorTest {
     @DisplayName("init with an unparsable parent PID still watches the sentinel")
     void initWithInvalidParentPidKeepsWatching(@TempDir Path tmp) throws Exception {
         TauriProcessMonitor monitor = new TauriProcessMonitor(mock(ApplicationContext.class));
-        Path sentinel = Files.writeString(tmp.resolve("backend.stop"), "stop");
 
-        monitor.init("not-a-pid", sentinel.toString());
+        monitor.init("not-a-pid", tmp.resolve("absent.stop").toString());
         try {
             assertThat(monitoringFlag(monitor)).isTrue();
             assertThat(getField(monitor, "scheduler")).isNotNull();
@@ -107,9 +107,10 @@ class TauriProcessMonitorTest {
     @DisplayName("init with a live parent keeps monitoring")
     void initWithLiveParentKeepsMonitoring(@TempDir Path tmp) throws Exception {
         TauriProcessMonitor monitor = new TauriProcessMonitor(mock(ApplicationContext.class));
-        Path sentinel = Files.writeString(tmp.resolve("backend.stop"), "stop");
 
-        monitor.init(String.valueOf(ProcessHandle.current().pid()), sentinel.toString());
+        monitor.init(
+                String.valueOf(ProcessHandle.current().pid()),
+                tmp.resolve("absent.stop").toString());
         try {
             assertThat(monitoringFlag(monitor)).isTrue();
             assertThat(getField(monitor, "parentHandle")).isNotNull();

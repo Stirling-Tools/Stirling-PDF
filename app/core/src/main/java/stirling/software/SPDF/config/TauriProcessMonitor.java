@@ -60,14 +60,9 @@ public class TauriProcessMonitor {
             logger.warn("Tauri mode without TAURI_PARENT_PID or STIRLING_PDF_SHUTDOWN_FILE");
             return;
         }
-        if (shutdownFile != null) {
-            // A stale sentinel from a crashed session must not stop this one.
-            try {
-                Files.deleteIfExists(shutdownFile);
-            } catch (IOException e) {
-                logger.warn("Could not clear stale shutdown file: {}", e.getMessage());
-            }
-        }
+        // The sentinel is not deleted here: Tauri hands out a per-launch path and
+        // sweeps older ones, so a file at this path is a stop request that may
+        // have been written while this JVM was starting.
         if (parentPid != null && parentHandle == null) {
             // Tauri wrote the sentinel and exited while this JVM was starting; no
             // process is left to write it again, so the parent check is the only
