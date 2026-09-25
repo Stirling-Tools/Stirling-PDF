@@ -10710,6 +10710,10 @@ processor = "Processor"
 reader = "Reader"
 signInToUse = "Sign in to use this"
 
+[quickNav.accountMenu]
+allSettings = "All settings"
+server = "Server settings"
+
 [read]
 tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
 

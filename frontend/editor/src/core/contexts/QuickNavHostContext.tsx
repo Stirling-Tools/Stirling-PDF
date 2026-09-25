@@ -3,6 +3,7 @@ import {
   EMPTY_QUICK_NAV_ACCOUNT,
   updateQuickNavAccount,
   type QuickNavAccount,
+  type QuickNavAccountMenu,
   type QuickNavAccountUpdate,
 } from "@app/contexts/quickNavAccount";
 import {
@@ -19,7 +20,11 @@ import {
 
 export type QuickNavToolReasons = Partial<Record<ToolId, string>>;
 
-export type { QuickNavIdentity } from "@app/contexts/quickNavAccount";
+export type {
+  QuickNavIdentity,
+  QuickNavAccountMenu,
+  QuickNavAccountShortcut,
+} from "@app/contexts/quickNavAccount";
 
 export interface QuickNavViewData {
   readerMode: boolean;
@@ -50,6 +55,8 @@ export interface QuickNavHostActions {
    * clicked control, for whatever flies out of it.
    */
   onBrandFlourish?: (originRect: DOMRect | null) => void;
+  /** Read when the avatar menu opens, so it reflects the session at that moment. */
+  accountMenu?: QuickNavAccountMenu;
 }
 
 interface QuickNavHostValue extends QuickNavAccount, QuickNavViewData {

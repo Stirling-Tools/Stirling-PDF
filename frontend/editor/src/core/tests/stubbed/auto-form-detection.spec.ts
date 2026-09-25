@@ -107,6 +107,7 @@ test.describe("Auto Form Detection tool", () => {
       return;
     }
     await configBtn.click();
+    await page.getByRole("menuitem", { name: /all settings/i }).click();
     const settings = page.locator(SETTINGS_SURFACE);
     await expect(settings).toBeVisible({ timeout: 5_000 });
 

@@ -10,12 +10,14 @@
   flex-shrink: 0;
 }
 
-/* line-height:1 + centred tracking keeps initials optically centred at small sizes. */
+/* Trimmed to the cap height so the letter, not the font's line box, is what gets
+   centred: fallback fonts (no Inter is bundled) sit capitals ~1.5px low. */
 .sui-avatar__initials {
   display: block;
   line-height: 1;
   letter-spacing: 0.02em;
   text-indent: 0.02em;
+  text-box: trim-both cap alphabetic;
 }
 
 .sui-avatar--interactive {
