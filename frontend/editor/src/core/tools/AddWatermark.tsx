@@ -213,7 +213,11 @@ const AddWatermark = ({
 
   return createToolFlow({
     files: {
-      selectedFiles,
+      selectedFiles:
+        watermarkOperation.getEligibleFiles?.(
+          watermarkParams.parameters,
+          selectedFiles,
+        ) ?? selectedFiles,
       isCollapsed: hasResults,
     },
     steps: getSteps(),

@@ -11,38 +11,26 @@ import { ViewerContext } from "@app/contexts/ViewerContext";
 import { getToolUrlPath } from "@app/data/toolsTaxonomy";
 import {
   PORTAL_BASENAME,
-  PORTAL_FAILURES_ANCHOR,
+  PORTAL_REVIEW_PATH,
 } from "@app/routes/portalBasename";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
+import { HAS_PORTAL } from "@app/routes/hasPortal";
 import { fileStorage } from "@app/services/fileStorage";
-import {
-  clearRetryPayload,
-  retryWithPassword,
-  stashMatchesKind,
-  unlockLocalDocument,
-  type PasswordRetryOutcome,
-  type RetryOutputFile,
-  type RetryPayload,
-} from "@app/services/notificationRetry";
-import {
-  rerunPolicy,
-  rechainPolicyOnDocument,
-  type PolicyRerunOutcome,
-  type PolicyRetryTarget,
-} from "@app/services/notificationPolicyRetry";
-import { reportNotificationResolved } from "@app/services/notifications";
-import {
-  createChildStub,
-  generateProcessedFileMetadata,
-} from "@app/contexts/file/fileActions";
+import { rerunPolicy } from "@app/services/notificationPolicyRetry";
+import { dispatchNotificationAction } from "@app/services/notifications";
 import { isValidToolId, type ToolId } from "@app/types/toolId";
+import type { FileId } from "@app/types/file";
 import {
-  createStirlingFile,
-  type FileContextActions,
-  type StirlingFileStub,
-} from "@app/types/fileContext";
-import type { FileId, ToolOperation } from "@app/types/file";
+  RESOLUTIONS,
+  canRetry,
+  rerunOutcome,
+  resolutionSpec,
+  retryTargetOf,
+  toolOf,
+  unavailable,
+} from "@app/components/notifications/resolutions";
 import {
+  closesPanelFor,
   type ClientActionOutcome,
   type ClientActionRegistry,
   type ClientActionSpec,
@@ -50,6 +38,7 @@ import {
 } from "@core/components/notifications/notificationActions";
 
 export {
+  closesPanelFor,
   type ClientActionOutcome,
   type ClientActionRegistry,
   type ClientActionSpec,
@@ -60,7 +49,7 @@ export {
 
 const HANDOFF_KEY = "stirling.notifications.pendingSelection";
 
-const FAILURES_DESTINATION = `${PORTAL_BASENAME}/documents#${PORTAL_FAILURES_ANCHOR}`;
+const REVIEW_DESTINATION = `${PORTAL_BASENAME}${PORTAL_REVIEW_PATH}`;
 
 /** The document to open on arrival, and the tool to open it into. */
 interface Handoff {
@@ -103,87 +92,6 @@ function goToEditor(path: string): void {
   window.dispatchEvent(new PopStateEvent("popstate"));
 }
 
-/** The stashed `params` stay stashed: `useBaseParameters` has no seam for initial values. */
-function toolOf(payload: RetryPayload): ToolId | null {
-  return isValidToolId(payload.operation) ? payload.operation : null;
-}
-
-/** A tool retry is an endpoint plus client-held parameters; a policy retry is a stored pair. */
-type RetryTarget =
-  | { readonly kind: "tool"; readonly payload: RetryPayload }
-  | { readonly kind: "policy"; readonly policy: PolicyRetryTarget };
-
-/** Which of the two a notification describes, or null when nothing here can re-run it. */
-function retryTargetOf(context: NotificationActionContext): RetryTarget | null {
-  const { notification, hasLocalFile, retryPayload } = context;
-  if (!hasLocalFile) return null;
-
-  // The policy shape wins where it applies, being the more specific claim.
-  const attended = (notification.sourceId ?? null) === null;
-  if (attended && notification.policyId && notification.fileId) {
-    return {
-      kind: "policy",
-      policy: { policyId: notification.policyId, fileId: notification.fileId },
-    };
-  }
-
-  // One stash per file, but one incident per kind per file, so the stash may be another row's.
-  return retryPayload && stashMatchesKind(notification.kindId, retryPayload)
-    ? { kind: "tool", payload: retryPayload }
-    : null;
-}
-
-function asFiles(outputs: RetryOutputFile[]): File[] {
-  return outputs.map(
-    (output) =>
-      new File([output.blob], output.filename, {
-        type: output.blob.type || "application/pdf",
-      }),
-  );
-}
-
-/** Versions the original in place; `derivedFromTool` keeps `usePolicyAutoRun` off the result. */
-async function adopt(
-  actions: FileContextActions,
-  parentStub: StirlingFileStub | null,
-  files: File[],
-): Promise<FileId[]> {
-  const unlocked = files[0];
-  if (!unlocked) return [];
-
-  if (!parentStub) {
-    const added = await actions.addFiles([unlocked], {
-      selectFiles: true,
-      derivedFromTool: true,
-    });
-    return added.map((file) => file.fileId);
-  }
-
-  const metadata = await generateProcessedFileMetadata(unlocked);
-  const operation: ToolOperation = {
-    toolId: "removePassword",
-    timestamp: Date.now(),
-  };
-  const childStub: StirlingFileStub = {
-    ...createChildStub(
-      parentStub,
-      operation,
-      unlocked,
-      metadata?.thumbnailUrl,
-      metadata,
-    ),
-    derivedFromTool: true,
-  };
-  const stirlingFile = createStirlingFile(unlocked, childStub.id);
-  const outputIds = await actions.consumeFiles(
-    [parentStub.id],
-    [stirlingFile],
-    [childStub],
-  );
-  actions.setSelectedFiles(outputIds);
-  return outputIds;
-}
-
 export function useNotificationActions(): ClientActionRegistry {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -193,7 +101,6 @@ export function useNotificationActions(): ClientActionRegistry {
   const navigation = useContext(NavigationActionsContext);
   const viewer = useContext(ViewerContext);
   const canOpenHere = Boolean(fileContext && fileStore && navigation && viewer);
-  // The upload chain a retry rejoins excludes Classification when the engine is off.
 
   /** Opens the way the file sidebar does: an id the workbench does not hold renders nothing. */
   const openInWorkbench = useCallback(
@@ -234,7 +141,7 @@ export function useNotificationActions(): ClientActionRegistry {
     ): Promise<ClientActionOutcome | void> => {
       if (!fileId) return;
 
-      // In place: "/" is the role-based router, which lands the user wherever their role says.
+      // In place: "/" is the landing router, which redirects wherever the account belongs.
       if (canOpenHere) {
         return (await openInWorkbench(fileId)) ? undefined : { ok: false };
       }
@@ -259,7 +166,7 @@ export function useNotificationActions(): ClientActionRegistry {
       if (canOpenHere && fileId) {
         return (await openInWorkbench(fileId, tool))
           ? undefined
-          : unavailable();
+          : unavailable(t);
       }
       if (fileId && !stashSelection(fileId, tool)) {
         // Nothing would be open on arrival, so say so rather than navigate regardless.
@@ -274,94 +181,12 @@ export function useNotificationActions(): ClientActionRegistry {
       goToEditor(tool ? getToolUrlPath(tool) : EDITOR_BASENAME);
     };
 
-    const unavailable = (): ClientActionOutcome => ({
-      ok: false,
-      message: t(
-        "notifications.retryUnavailable",
-        "This document can no longer be retried from this browser.",
-      ),
-    });
-
-    /** The service reports why and this layer words it, because the wording belongs where `t` is. */
-    const unlockFailure = (
-      outcome: PasswordRetryOutcome,
-    ): ClientActionOutcome => {
-      if (outcome.reason === "fileMissing") {
-        return {
-          ok: false,
-          message: t(
-            "notifications.notOnThisDevice",
-            "This document is not on this device, so it cannot be opened or retried here.",
-          ),
-        };
-      }
-      if (outcome.reason === "notRetryable") return unavailable();
-      // The server's own words, or nothing: the row falls back to its generic failure line.
-      return { ok: false, message: outcome.message ?? undefined };
-    };
-
-    /** An untracked run is a failure on purpose: nothing here will collect what it produces. */
-    const rerunOutcome = (
-      outcome: PolicyRerunOutcome,
-      adopted: boolean,
-    ): ClientActionOutcome => {
-      if (outcome.ok && outcome.tracked) return { ok: true };
-      if (outcome.ok) {
-        return {
-          ok: false,
-          message: adopted
-            ? t(
-                "notifications.unlockedRerunUndelivered",
-                "The document was unlocked and the policy re-run started, but its result cannot be delivered here, so this failure stays open.",
-              )
-            : t(
-                "notifications.rerunUndelivered",
-                "The policy re-run started, but its result cannot be delivered here, so this failure stays open.",
-              ),
-        };
-      }
-      if (outcome.reason === "missingFile") {
-        return {
-          ok: false,
-          message: t(
-            "notifications.notOnThisDevice",
-            "This document is not on this device, so it cannot be opened or retried here.",
-          ),
-        };
-      }
-      if (adopted) {
-        return {
-          ok: false,
-          message: t(
-            "notifications.unlockedNotRerun",
-            "The document was unlocked and opened here, but the policy could not be run on it again.",
-          ),
-        };
-      }
-      return {
-        ok: false,
-        message:
-          outcome.message ??
-          t(
-            "notifications.rerunRejected",
-            "The policy could not be run again just now. Try again in a moment.",
-          ),
-      };
-    };
-
-    /** A policy re-run also needs the editor's providers, to collect its output. */
-    const canRetry = (context: NotificationActionContext): boolean => {
-      const target = retryTargetOf(context);
-      if (!target) return false;
-      return target.kind === "tool" || fileContext !== undefined;
-    };
-
     const openInTool: ClientActionSpec = {
-      available: canRetry,
+      available: (context) => canRetry(context, fileContext),
       closesPanel: true,
       run: async (context): Promise<ClientActionOutcome | void> => {
         const target = retryTargetOf(context);
-        if (!target) return unavailable();
+        if (!target) return unavailable(t);
 
         // A tool opens rather than re-runs: it failed once, so the user sees the settings first.
         if (target.kind === "tool") {
@@ -370,76 +195,8 @@ export function useNotificationActions(): ClientActionRegistry {
             toolOf(target.payload),
           );
         }
-        if (!fileContext) return unavailable();
-        return rerunOutcome(await rerunPolicy(target.policy), false);
-      },
-    };
-
-    const decrypt: ClientActionSpec = {
-      // In the processor shell an unlocked document has nowhere to go, so the row promotes on.
-      available: (context) => fileContext !== undefined && canRetry(context),
-      needsPassword: true,
-      // On success the adopted document is the destination, and it is behind the panel.
-      closesPanel: true,
-      run: async (context, password): Promise<ClientActionOutcome> => {
-        const target = retryTargetOf(context);
-        if (!target || !password || !fileContext) return unavailable();
-
-        // The stash knows a tool's parameters; a locked policy input just needs unlocking.
-        const outcome =
-          target.kind === "tool"
-            ? await retryWithPassword(
-                target.payload,
-                password,
-                context.notification.fileId,
-              )
-            : await unlockLocalDocument(target.policy.fileId, password);
-        if (!outcome.ok) return unlockFailure(outcome);
-
-        // A failed adoption fails the action: dropping the result leaves them nothing.
-        const unlocked = asFiles(outcome.files ?? []);
-        // Only a policy names an original to version; a tool retry keeps adding its output.
-        const originalId =
-          target.kind === "policy" ? (target.policy.fileId as FileId) : null;
-        // Storage too, or a file merely closed in the sidebar gets decrypted twice over.
-        const parentStub = originalId
-          ? (fileStore?.getState().files.byId?.[originalId] ??
-            (await fileStorage.getStirlingFileStub(originalId)) ??
-            null)
-          : null;
-        let adopted: FileId[] = [];
-        try {
-          adopted = await adopt(fileContext.actions, parentStub, unlocked);
-        } catch {
-          return {
-            ok: false,
-            message: t(
-              "notifications.adoptFailed",
-              "The document was unlocked but could not be opened here. Try the tool directly.",
-            ),
-          };
-        }
-
-        // Under the ORIGINAL reference so a repeat folds on, and after the adoption.
-        if (target.kind === "policy") {
-          const document = unlocked[0];
-          const rerun: PolicyRerunOutcome = document
-            ? await rechainPolicyOnDocument(
-                target.policy,
-                document,
-                adopted[0] ?? null,
-              )
-            : { ok: false, reason: "missingFile" };
-          // Anything short of a tracked run stops here: the input alone is not the result.
-          const result = rerunOutcome(rerun, true);
-          if (!result.ok) return result;
-        }
-
-        // Ignored on purpose: a refused resolve is not a failed unlock.
-        await reportNotificationResolved(context.notification.id);
-        // The stash described the run that just succeeded, so it has nothing left to offer.
-        await clearRetryPayload(context.notification.fileId);
-        return { ok: true };
+        if (!fileContext) return unavailable(t);
+        return rerunOutcome(t, await rerunPolicy(target.policy), null);
       },
     };
 
@@ -450,15 +207,67 @@ export function useNotificationActions(): ClientActionRegistry {
     };
 
     const viewInProcessor: ClientActionSpec = {
-      // Dev-only until failures get a review screen; portal/views/Documents holds the other half.
-      available: () => import.meta.env.DEV,
+      // Desktop ships the app without the processor, so the destination is not routed there and
+      // the button navigated to nothing.
+      available: () => HAS_PORTAL,
       closesPanel: true,
-      run: () => navigate(FAILURES_DESTINATION),
+      run: () => navigate(REVIEW_DESTINATION),
     };
 
+    const heldByServer = (context: NotificationActionContext) =>
+      context.notification.documentLocation === "SMART_FOLDER";
+
+    // What the server does on this browser's behalf: the document is in a folder this browser
+    // cannot reach, so all the client does is ask, and the row names which file it is about.
+    const askTheServer = (
+      actionId: string,
+      whenItFails: string,
+    ): ClientActionSpec => ({
+      available: heldByServer,
+      run: async (context): Promise<ClientActionOutcome | void> => {
+        const refusal = await dispatchNotificationAction(
+          context.notification.id,
+          actionId,
+        );
+        if (refusal === null) return;
+        // The server's own words where it gave any: only it knows why the folder refused.
+        return { ok: false, message: refusal || whenItFails };
+      },
+    });
+
+    // One id, run by whichever side holds the document: the server resolves it per row, and this
+    // picks the half that can act.
+    const rerunInFolder = askTheServer(
+      "OPEN_IN_TOOL",
+      t(
+        "notifications.retryInFolderFailed",
+        "That document could not be run again just now.",
+      ),
+    );
+    const retry: ClientActionSpec = {
+      available: (context) =>
+        heldByServer(context)
+          ? rerunInFolder.available(context)
+          : openInTool.available(context),
+      // The server's half changes nothing on screen to move to, so the panel stays and shows the
+      // row leave the list; the client's half opens the tool behind it.
+      closesPanel: (context) => !heldByServer(context),
+      run: (context) =>
+        heldByServer(context)
+          ? rerunInFolder.run(context)
+          : openInTool.run(context),
+    };
+
+    const resolutions = Object.fromEntries(
+      RESOLUTIONS.map((resolution) => [
+        resolution.actionId,
+        resolutionSpec(resolution, { t, fileContext, fileStore }),
+      ]),
+    );
+
     return {
-      OPEN_IN_TOOL: openInTool,
-      DECRYPT: decrypt,
+      OPEN_IN_TOOL: retry,
+      ...resolutions,
       VIEW_FILE: viewFile,
       VIEW_IN_PROCESSOR: viewInProcessor,
     };

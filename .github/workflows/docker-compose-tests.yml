@@ -1,8 +1,14 @@
 name: Docker Compose Cucumber tests
 
 # Reusable workflow called from build.yml when project / docker / testing
-# sources change. Boots the docker-compose stack and runs the cucumber
-# scenarios in testing/cucumber.
+# sources change. Builds the embedded images, boots the docker-compose stacks
+# and runs the cucumber scenarios in testing/cucumber.
+#
+# One leg per image. testing/test.sh builds the ultra-lite image for one
+# stack and the fat image for three; in a single job those two builds ran
+# back to back (~25 minutes) in front of ~4 minutes of tests. `--rerun` is
+# the script's own filter: a leg names the tests it owns and the script only
+# builds the image those tests need.
 on:
   workflow_call:
     inputs:
@@ -17,14 +23,28 @@ permissions:
 
 jobs:
   docker-compose-tests:
+    name: docker-compose-tests (${{ matrix.image }})
     environment:
       name: ci-unsigned
       deployment: false
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     permissions:
       actions: write
       contents: read
       checks: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: ultra-lite
+            tests: Stirling-PDF-Ultra-Lite,Webpage-Accessibility-lite,Stirling-PDF-Ultra-Lite-Version-Check
+            cucumber: false
+          # The cucumber suite (Stirling-PDF-Security-Fat-with-login) runs
+          # against the fat image, so JaCoCo coverage is collected here only.
+          - image: fat
+            tests: Stirling-PDF-Security-Fat,Webpage-Accessibility-full,Stirling-PDF-Security-Fat-Version-Check,Stirling-PDF-Security-Fat-with-login,Stirling-PDF-Fat-Disable-Endpoints,Disabled-Endpoints,Stirling-PDF-Fat-Disable-Endpoints-Version-Check
+            cucumber: true
 
     steps:
       - name: Harden Runner
@@ -35,6 +55,8 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
+      # printVersion, copyJacocoAgent and jacocoReportFromExec still run
+      # Gradle on the host, so the dependency cache is still worth restoring.
       - name: Restore cache Gradle User Home
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -44,10 +66,9 @@ jobs:
           key: gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
 
       - name: Set up JDK 25
-        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        uses: ./.github/actions/java
         with:
           java-version: "25"
-          distribution: "temurin"
 
       # When the PR changes the base image, test.sh builds it locally
       # (stirling-pdf-base:local) into the daemon image store. A buildx
@@ -64,12 +85,19 @@ jobs:
         if: inputs.docker-base-changed != 'true'
         uses: crazy-max/ghaction-github-runtime@04d248b84655b509d8c44dc1d6f990c879747487 # v4.0.0
 
+      # --fail so a gateway error page is never saved as the binary (a 504 once
+      # left bash trying to execute HTML at `docker-compose up`), and retries
+      # for the transient 5xx the runners see from GitHub releases.
       - name: Install Docker Compose
         run: |
-          sudo curl -SL "https://github.com/docker/compose/releases/download/v5.4.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo curl --fail --location --retry 5 --retry-delay 3 --retry-all-errors \
+            "https://github.com/docker/compose/releases/download/v5.4.0/docker-compose-$(uname -s)-$(uname -m)" \
+            -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose version
 
       - name: Install uv
+        if: matrix.cucumber
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           enable-cache: true
@@ -78,6 +106,7 @@ jobs:
             engine/uv.lock
 
       - name: Install Cucumber and coverage dependencies
+        if: matrix.cucumber
         run: |
           uv sync --project engine --locked --group cucumber --group tools
 
@@ -85,30 +114,33 @@ jobs:
         # Stages build/jacoco/jacocoagent.jar where the coverage override
         # file bind-mounts it into the cucumber container. The agent jar
         # never goes into the published image - this is host-only.
+        if: matrix.cucumber
         run: ./gradlew copyJacocoAgent -PnoSpotless
 
-      - name: Run Docker Compose Tests
+      - name: Run Docker Compose Tests (${{ matrix.image }})
         run: |
           chmod +x ./testing/test_webpages.sh
           chmod +x ./testing/test.sh
           chmod +x ./testing/test_disabledEndpoints.sh
-          ./testing/test.sh
+          ./testing/test.sh --rerun "$TESTS"
         env:
+          TESTS: ${{ matrix.tests }}
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           DOCKER_BASE_CHANGED: ${{ inputs.docker-base-changed }}
           # Tells test.sh to layer testing/compose/docker-compose-coverage.override.yml
           # over the cucumber compose so the container starts with the
-          # JaCoCo agent attached via JAVA_CUSTOM_OPTS.
-          STIRLING_PDF_TEST_COVERAGE: "1"
+          # JaCoCo agent attached via JAVA_CUSTOM_OPTS. Empty on the leg
+          # that never runs cucumber.
+          STIRLING_PDF_TEST_COVERAGE: ${{ matrix.cucumber && '1' || '' }}
 
       - name: Generate cucumber JaCoCo report
         # `if: always()` so a behave failure still produces partial
         # coverage from whatever endpoints did run. The exec file only
         # exists when the container shut down cleanly - guard so the step
         # is silent on the (rare) crash path.
-        if: always()
+        if: always() && matrix.cucumber
         id: cucumber-coverage
         run: |
           if [ -s testing/cucumber-coverage/cucumber.exec ]; then
@@ -123,7 +155,7 @@ jobs:
           fi
 
       - name: Cucumber coverage step summary
-        if: always() && steps.cucumber-coverage.outputs.report == 'true'
+        if: always() && matrix.cucumber && steps.cucumber-coverage.outputs.report == 'true'
         run: |
           uv run --project engine --locked --group tools python scripts/coverage-summary.py \
             --title "Cucumber (docker) JaCoCo coverage" \
@@ -131,7 +163,7 @@ jobs:
             --github-step-summary
 
       - name: Upload cucumber JaCoCo report
-        if: always() && steps.cucumber-coverage.outputs.report == 'true'
+        if: always() && matrix.cucumber && steps.cucumber-coverage.outputs.report == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: jacoco-cucumber-${{ github.run_id }}
@@ -141,7 +173,7 @@ jobs:
       - name: Upload raw cucumber .exec for aggregate merge
         # Picked up by the coverage-aggregate workflow via the
         # `jacoco-exec-*` artifact name pattern.
-        if: always() && steps.cucumber-coverage.outputs.report == 'true'
+        if: always() && matrix.cucumber && steps.cucumber-coverage.outputs.report == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: jacoco-exec-cucumber
@@ -150,7 +182,7 @@ jobs:
           if-no-files-found: warn
 
       - name: Upload Cucumber Report
-        if: always()
+        if: always() && matrix.cucumber
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: cucumber-report
@@ -162,13 +194,13 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: docker-compose-test-reports
+          name: docker-compose-test-reports-${{ matrix.image }}
           path: testing/reports/
           retention-days: 7
           if-no-files-found: warn
 
       - name: Cucumber Test Report
-        if: always()
+        if: always() && matrix.cucumber
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
         with:
           name: Cucumber Tests

@@ -12,16 +12,12 @@ describe("sidebarGroups (SaaS)", () => {
       "sources",
       "pipelines",
       "documents",
+      "review",
+      "integrations",
     ]);
   });
 
-  it("inherits the platform group unchanged from base", () => {
-    expect(GROUP_PLATFORM.map((e) => e.id)).toEqual([
-      "users",
-      "integrations",
-      "infrastructure",
-      "usage",
-      "docs",
-    ]);
+  it("carries no platform group: server administration lives in settings", () => {
+    expect(GROUP_PLATFORM).toEqual([]);
   });
 });

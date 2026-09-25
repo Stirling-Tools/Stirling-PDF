@@ -1,21 +1,16 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import ToolPanel from "@app/components/tools/ToolPanel";
 import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
-import { PolicyAutoRunController } from "@app/components/policies/PolicyAutoRunController";
-import { useFavoriteToolItems } from "@app/hooks/tools/useFavoriteToolItems";
-import { useToolSections } from "@app/hooks/useToolSections";
-import type { SubcategoryGroup } from "@app/hooks/useToolSections";
+import { EditorPipelinesPanel } from "@app/components/policies/EditorPipelinesPanel";
 import { ToolIcon } from "@app/components/shared/ToolIcon";
 import { ToolPanelHeader } from "@app/components/shared/ToolPanelHeader";
-import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { withViewTransition } from "@app/utils/viewTransition";
-import { SidebarToggleIcon } from "@app/components/shared/SidebarToggleIcon";
-import CloseIcon from "@mui/icons-material/Close";
+import { Icon } from "@app/ui/Icon";
 import { ToolId } from "@app/types/toolId";
 import type { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import {
@@ -26,54 +21,32 @@ import { useToolPanelGeometry } from "@app/hooks/tools/useToolPanelGeometry";
 import "@app/components/tools/ToolPanel.css";
 
 /**
- * Right-side rail wrapping the tool panel.
- *
- * Owns the rail-level concerns: collapse/expand chrome and the collapsed strip
- * (favourite/recommended icon shortcuts). Fullscreen takeover lives in
- * FullscreenToolPanel.
+ * Right-side rail wrapping the tool panel, which is fixed open: what the rail
+ * owns is the panel's own chrome (the header and its back/close control).
+ * Fullscreen takeover lives in FullscreenToolPanel.
  */
 export default function RightSidebar() {
   const { t } = useTranslation();
   const { sidebarRefs } = useSidebarContext();
   const { toolPanelRef, quickAccessRef } = sidebarRefs;
   const isMobile = useIsMobile();
+  const policiesEnabled = usePoliciesEnabled();
 
   const {
     leftPanelView,
-    isPanelVisible,
-    filteredTools,
     toolRegistry,
     setSearchQuery,
     selectedToolKey,
     handleToolSelect,
     handleBackToTools,
-    setLeftPanelView,
-    setReaderMode,
-    setSidebarsVisible,
-    sidebarsVisible,
-    readerMode,
-    favoriteTools,
   } = useToolWorkflow();
 
-  const policiesEnabled = usePoliciesEnabled();
   const fullscreenExpanded = useIsFullscreenExpanded();
   const fullscreenGeometry = useToolPanelGeometry({
     enabled: fullscreenExpanded,
     toolPanelRef,
     quickAccessRef,
   });
-
-  const handleExpand = () => {
-    withViewTransition(() => {
-      if (readerMode) setReaderMode(false);
-      if (leftPanelView === "hidden") setLeftPanelView("toolPicker");
-      if (!sidebarsVisible) setSidebarsVisible(true);
-    });
-  };
-
-  const handleCollapse = () => {
-    withViewTransition(() => setLeftPanelView("hidden"));
-  };
 
   const [allToolsView, setAllToolsView] = useState(false);
 
@@ -113,38 +86,6 @@ export default function RightSidebar() {
 
   const expandedWidth = "18.5rem";
 
-  const computedWidth = () => {
-    if (isMobile) return "100%";
-    if (!isPanelVisible) return "var(--nav-rail-w)";
-    return expandedWidth;
-  };
-
-  // Collapsed rail: show favourites + recommended tools as icons.
-  const favoriteToolItems = useFavoriteToolItems(favoriteTools, toolRegistry);
-  const { sections: collapsedSections } = useToolSections(filteredTools);
-  const collapsedQuickSection = useMemo(
-    () => collapsedSections.find((s) => s.key === "quick"),
-    [collapsedSections],
-  );
-  const collapsedRecommendedItems = useMemo(() => {
-    if (!collapsedQuickSection) return [];
-    const items: Array<{ id: ToolId; tool: ToolRegistryEntry }> = [];
-    collapsedQuickSection.subcategories.forEach((sc: SubcategoryGroup) =>
-      sc.tools.forEach((entry) =>
-        items.push({ id: entry.id, tool: entry.tool }),
-      ),
-    );
-    return items;
-  }, [collapsedQuickSection]);
-  const collapsedRailItems = useMemo(() => {
-    const map = new Map<ToolId, ToolRegistryEntry>();
-    favoriteToolItems.forEach(({ id, tool }) => map.set(id, tool));
-    collapsedRecommendedItems.forEach(({ id, tool }) => {
-      if (!map.has(id)) map.set(id, tool);
-    });
-    return Array.from(map, ([id, tool]) => ({ id, tool }));
-  }, [favoriteToolItems, collapsedRecommendedItems]);
-
   return (
     <div
       ref={toolPanelRef}
@@ -152,68 +93,19 @@ export default function RightSidebar() {
       data-tour={fullscreenExpanded ? undefined : "tool-panel"}
       className={`tool-panel flex flex-col ${fullscreenExpanded ? "tool-panel--fullscreen-active" : "overflow-hidden"} ${isMobile || fullscreenExpanded ? "border-l border-[var(--c-border-subtle)]" : "tool-panel--floating"} transition-all duration-300 ease-out ${isMobile ? "h-full border-r-0" : fullscreenExpanded ? "h-screen" : ""} ${fullscreenExpanded ? "tool-panel--fullscreen" : ""}`}
       style={{
-        width: computedWidth(),
+        width: isMobile ? "100%" : expandedWidth,
         padding: "0",
       }}
     >
-      {/* Headless: enforces enabled policies on every uploaded file. */}
-      {policiesEnabled && <PolicyAutoRunController />}
-      {!fullscreenExpanded && !isPanelVisible && !isMobile && (
-        <div className="tool-panel__collapsed-strip">
-          <div className="tool-panel__collapsed-top">
-            <ActionIcon
-              aria-label={t("toolPanel.expand", "Expand panel")}
-              variant="secondary"
-              accent="neutral"
-              size="md"
-              shape="circle"
-              className="tool-panel__expand-btn tool-panel__toggle-vt"
-              onClick={handleExpand}
-            >
-              <SidebarToggleIcon size={18} mirrored />
-            </ActionIcon>
-          </div>
-          <div className="tool-panel__collapsed-divider" />
-          <div className="tool-panel__collapsed-tools">
-            {collapsedRailItems.map(({ id, tool }) => (
-              <AppTooltip
-                key={id}
-                content={tool.name}
-                position="left"
-                arrow
-                // No delay: collapsed to icons, the tooltip is the only label.
-                delay={0}
-              >
-                <ActionIcon
-                  aria-label={tool.name}
-                  variant="tertiary"
-                  className="tool-panel__collapsed-tool-btn"
-                  data-selected={selectedToolKey === id}
-                  onClick={() => {
-                    handleExpand();
-                    handleToolSelectWithTransition(id);
-                  }}
-                >
-                  <ToolIcon icon={tool.icon} marginRight="0" />
-                </ActionIcon>
-              </AppTooltip>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {!fullscreenExpanded && isPanelVisible && (
+      {!fullscreenExpanded && (
         <div
-          /* Fixed width matches the expanded panel width so the inner content is
-             laid out at its final size from the moment it mounts. The outer
-             .tool-panel clips it (overflow-hidden) while it animates from the
-             collapsed rail width — text/icons stay put and just come into view
-             instead of jiggling as space becomes available. */
           style={{
             opacity: 1,
             transition: "opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
             height: "100%",
             width: isMobile ? "100%" : expandedWidth,
+            maxWidth: isMobile ? "44rem" : undefined,
+            marginInline: isMobile ? "auto" : undefined,
             flexShrink: 0,
             display: "flex",
             flexDirection: "column",
@@ -221,6 +113,7 @@ export default function RightSidebar() {
           }}
         >
           <>
+            {policiesEnabled && <EditorPipelinesPanel />}
             {activeTool ? (
               <ToolPanelHeader
                 icon={
@@ -238,42 +131,28 @@ export default function RightSidebar() {
                     : t("toolPanel.goBack", "Go back")
                 }
               />
-            ) : showCloseButton || !isMobile ? (
-              /* Without a back button this header is just the collapse control,
-                 which has no meaning on mobile - the slider switches panes. Drop
-                 it there so the tool list starts under the tabs. */
+            ) : showCloseButton ? (
+              /* Closing a tool, not the panel: the panel itself is fixed open, so
+                 with nothing to leave there is no header to show. */
               <div className="tool-panel__compact-header">
                 <span className="tool-panel__compact-title">
                   {t("toolPanel.pdfTools", "PDF Tools")}
                 </span>
                 <div className="tool-panel__compact-header-actions">
-                  {showCloseButton ? (
-                    <ActionIcon
-                      variant="tertiary"
-                      size="md"
-                      shape="circle"
-                      onClick={handleHeaderBack}
-                      aria-label={
-                        inToolView
-                          ? t("toolPanel.backToAllTools", "Back to all tools")
-                          : t("toolPanel.goBack", "Go back")
-                      }
-                      className="tool-panel__expand-btn"
-                    >
-                      <CloseIcon sx={{ fontSize: "1.1rem" }} />
-                    </ActionIcon>
-                  ) : (
-                    <ActionIcon
-                      variant="secondary"
-                      size="md"
-                      shape="circle"
-                      onClick={handleCollapse}
-                      aria-label={t("toolPanel.collapse", "Collapse panel")}
-                      className="tool-panel__expand-btn tool-panel__toggle-vt"
-                    >
-                      <SidebarToggleIcon size={18} mirrored />
-                    </ActionIcon>
-                  )}
+                  <ActionIcon
+                    variant="tertiary"
+                    size="md"
+                    shape="circle"
+                    onClick={handleHeaderBack}
+                    aria-label={
+                      inToolView
+                        ? t("toolPanel.backToAllTools", "Back to all tools")
+                        : t("toolPanel.goBack", "Go back")
+                    }
+                    className="tool-panel__expand-btn"
+                  >
+                    <Icon name="x" size={"1.1rem"} />
+                  </ActionIcon>
                 </div>
               </div>
             ) : null}

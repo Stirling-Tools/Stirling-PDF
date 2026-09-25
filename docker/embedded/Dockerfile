@@ -1,23 +1,37 @@
 # Stirling-PDF - Full version (embedded frontend)
 # Uses pre-built base image for fast builds
 
-ARG BASE_VERSION=1.0.2@sha256:c7698687f486707ddef9e0298587ca8b44c4e96185e1bdb0c3d119eb2bf9a82e
+ARG BASE_VERSION=1.0.6@sha256:003c1056474d4f9b8c38d3c8b72c78a7ac51b45e12500f831739a4cbf8803987
 ARG BASE_IMAGE=stirlingtools/stirling-pdf-base:${BASE_VERSION}
 
 # Stage 1: Build the Java application and frontend
-FROM gradle:9.7.1-jdk25@sha256:d868117760a7c92214705f47ed173116a5d13e58d68702f974ff30acd062737e AS app-build
+FROM gradle:9.7.1-jdk25@sha256:eec96c1a66c66235f8d58d4fdb3ee3b9c52852d895001cc3183388fbf421ff42 AS app-build
 
 ARG TASK_VERSION=3.53.1
+ARG NODE_MAJOR_VERSION=22
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl ca-certificates \
     && update-ca-certificates \
-    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && curl -fsSL "https://deb.nodesource.com/setup_${NODE_MAJOR_VERSION}.x" | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && ARCH=$(dpkg --print-architecture) \
     && curl -fsSL "https://github.com/go-task/task/releases/download/v${TASK_VERSION}/task_${TASK_VERSION}_linux_${ARCH}.deb" -o /tmp/task.deb \
     && dpkg -i /tmp/task.deb \
     && rm /tmp/task.deb \
     && rm -rf /var/lib/apt/lists/*
+
+# Bake the detection model in so the tool works out of the box (~26MB pull, 35MB on disk).
+# Only weights we may redistribute belong here; FFDetr is Apache-2.0 end to end.
+ARG FORM_DETECTION_MODEL_URL="https://huggingface.co/Frooodle/ffdetr-int8/resolve/ad3223d7c3ae25ce1d1ec8fe972c8ff7630aff45/ffdetr-int8.onnx"
+ARG FORM_DETECTION_MODEL_SHA256="de43bb39adb08459fe62fa1a7be6bfb4f2d397bb034c46055f3b8fa3d04fc8f4"
+ARG FORM_DETECTION_MODEL_ID="ffdetr"
+RUN mkdir -p /preinstalled-models \
+    && if [ -n "${FORM_DETECTION_MODEL_URL}" ]; then \
+         curl -fSL "${FORM_DETECTION_MODEL_URL}" -o "/preinstalled-models/${FORM_DETECTION_MODEL_ID}.onnx" \
+         && echo "${FORM_DETECTION_MODEL_SHA256}  /preinstalled-models/${FORM_DETECTION_MODEL_ID}.onnx" | sha256sum -c -; \
+       else \
+         echo "No form-detection model pre-bundled (FORM_DETECTION_MODEL_URL unset)"; \
+       fi
 
 # JDK 25+: --add-exports is no longer accepted via JAVA_TOOL_OPTIONS; use JDK_JAVA_OPTIONS instead
 ENV JDK_JAVA_OPTIONS="--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED \
@@ -71,6 +85,7 @@ RUN JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo li
       -PbuildWithPortal=${BUILD_PORTAL} \
       -PjpdfiumPlatforms="$JPDFIUM_PLATFORM" \
       -PprototypesMode=${PROTOTYPES_BUILD} \
+      -PbundleOnnxRuntime=true \
       -x spotlessApply -x spotlessCheck -x test -x sonarqube \
       --no-daemon
 
@@ -79,6 +94,13 @@ FROM eclipse-temurin:25-jre-noble@sha256:b4c93a50fc67612798db73d68ca3b0ee4ebdd51
 WORKDIR /tmp
 COPY --from=app-build /app/app/core/build/libs/*.jar app.jar
 RUN java -Djarmode=tools -jar app.jar extract --layers --destination /layers
+
+# Strip the bundled ONNX Runtime's natives down to the target Linux arch (~42MB jar -> ~8MB).
+COPY scripts/slim-onnxruntime.sh /tmp/slim-onnxruntime.sh
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends zip \
+    && rm -rf /var/lib/apt/lists/* \
+    && sh /tmp/slim-onnxruntime.sh /layers/dependencies
 
 
 # Stage 3: Final runtime image on top of pre-built base
@@ -97,6 +119,9 @@ COPY --link --from=jar-extract --chown=1000:1000 /layers/application/           
 COPY --link --from=app-build --chown=1000:1000 \
      /app/build/libs/restart-helper.jar /restart-helper.jar
 COPY --link --chown=1000:1000 scripts/ /scripts/
+
+# Baked-in detection model; FormDetectionModelManager seeds it into /configs on startup.
+COPY --link --from=app-build --chown=1000:1000 /preinstalled-models/ /opt/stirling/preinstalled-models/
 
 # Fonts go to system dir, root ownership is correct (world-readable)
 COPY app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/truetype/
@@ -121,10 +146,9 @@ RUN echo "${VERSION_TAG:-dev}" > /etc/stirling_version
 
 # Environment variables
 ENV VERSION_TAG=$VERSION_TAG \
+    FORMDETECTION_PREINSTALLEDMODELDIR="/opt/stirling/preinstalled-models" \
     STIRLING_AOT_ENABLE="false" \
-    STIRLING_JVM_PROFILE="balanced" \
-    _JVM_OPTS_BALANCED="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:G1HeapRegionSize=4m -XX:G1PeriodicGCInterval=60000 -XX:+UseStringDeduplication -XX:+UseCompactObjectHeaders -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
-    _JVM_OPTS_PERFORMANCE="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+AlwaysPreTouch -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
+    _JVM_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1PeriodicGCInterval=10000 -XX:G1PeriodicGCSystemLoadThreshold=0.0 -XX:+G1PeriodicGCInvokesConcurrent -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ReservedCodeCacheSize=96m -XX:CICompilerCount=2 -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
     JAVA_CUSTOM_OPTS="" \
     HOME=/home/stirlingpdfuser \
     PUID=1000 \

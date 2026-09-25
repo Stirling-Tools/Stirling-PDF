@@ -216,7 +216,6 @@ public class ConfigController {
             // Extract values from ApplicationProperties
             configData.put("appNameNavbar", applicationProperties.getUi().getAppNameNavbar());
             configData.put("languages", applicationProperties.getUi().getLanguages());
-            configData.put("logoStyle", applicationProperties.getUi().getLogoStyle());
             configData.put("defaultLocale", applicationProperties.getSystem().getDefaultLocale());
 
             // User preference defaults
@@ -334,9 +333,11 @@ public class ConfigController {
             configData.put(
                     "enableDesktopInstallSlide",
                     applicationProperties.getSystem().getEnableDesktopInstallSlide());
+            configData.put(
+                    "enableEasterEggs", applicationProperties.getSystem().isEnableEasterEggs());
 
             // Premium/Enterprise settings
-            configData.put("premiumEnabled", applicationProperties.getPremium().isEnabled());
+            configData.put("premiumEnabled", Boolean.TRUE.equals(isRunningProOrHigher()));
 
             // Whether this instance can link a Stirling (SaaS) account at all. The account-link
             // beans live in :proprietary and are @ConditionalOnProperty on this same key, so when

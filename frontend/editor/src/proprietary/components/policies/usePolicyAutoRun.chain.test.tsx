@@ -1,12 +1,27 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
+import type { PolicyState } from "@app/types/policies";
 
 // Two active file-producing upload policies, so the auto-run should CHAIN them: fire the first on
 // the upload, then the second on the first's output. A classification policy is also present to
 // assert the engine leaves it alone - annotating policies run themselves (see useClassificationPolicy),
 // so they are never in this server chain. Stub the contexts + network to drive dispatch against the
 // REAL run store.
-const fileStubs: { id: string; name: string; derivedFromTool?: boolean }[] = [];
+const inputOperations = vi.hoisted<{
+  security: PolicyState["firstOperation"];
+  compliance: PolicyState["firstOperation"];
+  archiveEnabled: boolean;
+}>(() => ({
+  security: "/api/v1/misc/compress-pdf",
+  compliance: "/api/v1/misc/compress-pdf",
+  archiveEnabled: false,
+}));
+const fileStubs: {
+  id: string;
+  name: string;
+  derivedFromTool?: boolean;
+  classificationLocked?: boolean;
+}[] = [];
 vi.mock("@app/contexts/FileContext", () => ({
   useAllFiles: () => ({ fileStubs }),
   useFileManagement: () => ({ addFiles: vi.fn() }),
@@ -20,6 +35,7 @@ vi.mock("@app/hooks/usePolicies", () => ({
         runsOnEditor: true,
         enabled: true,
         backendId: "backend-sec",
+        firstOperation: inputOperations.security,
         runOn: "upload",
         order: 0,
       },
@@ -28,6 +44,7 @@ vi.mock("@app/hooks/usePolicies", () => ({
         runsOnEditor: true,
         enabled: true,
         backendId: "backend-comp",
+        firstOperation: inputOperations.compliance,
         runOn: "upload",
         order: 1,
       },
@@ -39,6 +56,15 @@ vi.mock("@app/hooks/usePolicies", () => ({
         runOn: "upload",
         order: 2,
       },
+      archive: {
+        configured: true,
+        runsOnEditor: true,
+        enabled: inputOperations.archiveEnabled,
+        backendId: "backend-archive",
+        firstOperation: "/api/v1/convert/img/pdf",
+        runOn: "upload",
+        order: 3,
+      },
     },
   }),
 }));
@@ -49,7 +75,10 @@ vi.mock("@app/services/policyApi", () => ({
   resolvePolicyRunTarget: () => "saas",
 }));
 vi.mock("@app/services/fileStorage", () => ({
-  fileStorage: { getStirlingFile: vi.fn(), getStirlingFileStub: vi.fn() },
+  fileStorage: {
+    getStirlingFile: vi.fn(),
+    getStirlingFileStub: vi.fn().mockResolvedValue(null),
+  },
 }));
 vi.mock("@app/contexts/IndexedDBContext", () => ({
   useIndexedDB: () => ({ bumpRevision: vi.fn() }),
@@ -77,13 +106,13 @@ function setFileStubs(next: typeof fileStubs) {
 
 function completeRun(
   runId: string,
-  categoryId: string,
+  policyKey: string,
   fileId: string,
   outputFileIds: string[],
 ) {
   recordRunStart({
     runId,
-    categoryId,
+    policyKey,
     fileId,
     fileName: "doc.pdf",
     fileSize: 100,
@@ -101,13 +130,209 @@ beforeEach(() => {
   localStorage.clear();
   resetPolicyRuns();
   setFileStubs([]);
+  inputOperations.security = "/api/v1/misc/compress-pdf";
+  inputOperations.compliance = "/api/v1/misc/compress-pdf";
+  inputOperations.archiveEnabled = false;
   runStored.mockReset();
   getFile.mockReset();
   getFile.mockResolvedValue({ size: 100 } as never);
+  vi.mocked(fileStorage.getStirlingFileStub).mockImplementation(
+    async (id) =>
+      ({
+        id,
+        name: "doc.pdf",
+        type: "application/pdf",
+      }) as never,
+  );
 });
 afterEach(() => vi.useRealTimers());
 
 describe("auto-run ordered chaining", () => {
+  it("does not chain a compatible output whose classification is locked", async () => {
+    completeRun("run-sec", "security", "original", ["locked", "unlocked"]);
+    setFileStubs([
+      {
+        id: "locked",
+        name: "locked.pdf",
+        derivedFromTool: true,
+        classificationLocked: true,
+      },
+      { id: "unlocked", name: "unlocked.pdf", derivedFromTool: true },
+    ]);
+    runStored.mockResolvedValue("run-comp");
+
+    renderHook(() => usePolicyAutoRun());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
+
+    expect(runStored).toHaveBeenCalledTimes(1);
+    expect(runStored).toHaveBeenCalledWith(
+      "backend-comp",
+      expect.anything(),
+      "unlocked",
+      "background",
+    );
+    expect(getFile).not.toHaveBeenCalledWith("locked");
+  });
+
+  it("resumes a completed chain once the next policy's input metadata loads", async () => {
+    inputOperations.compliance = undefined;
+    completeRun("run-sec", "security", "original", ["pdf"]);
+    setFileStubs([{ id: "pdf", name: "report.pdf", derivedFromTool: true }]);
+    runStored.mockResolvedValue("run-comp");
+
+    const { rerender } = renderHook(() => usePolicyAutoRun());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
+    expect(runStored).not.toHaveBeenCalled();
+
+    inputOperations.compliance = "/api/v1/misc/compress-pdf";
+    rerender();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
+
+    expect(runStored).toHaveBeenCalledTimes(1);
+    expect(runStored).toHaveBeenCalledWith(
+      "backend-comp",
+      expect.anything(),
+      "pdf",
+      "background",
+    );
+  });
+
+  it("skips an empty pipeline without holding up a compatible one", async () => {
+    inputOperations.security = null;
+    setFileStubs([{ id: "pdf", name: "report.pdf" }]);
+    runStored.mockResolvedValue("run-comp");
+
+    renderHook(() => usePolicyAutoRun());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
+
+    expect(runStored).toHaveBeenCalledTimes(1);
+    expect(runStored).toHaveBeenCalledWith(
+      "backend-comp",
+      expect.anything(),
+      "pdf",
+      "background",
+    );
+  });
+
+  it("skips an incompatible middle policy and continues the output's chain", async () => {
+    inputOperations.archiveEnabled = true;
+    completeRun("run-sec", "security", "original", ["image"]);
+    setFileStubs([{ id: "image", name: "page.png", derivedFromTool: true }]);
+    runStored.mockResolvedValue("run-image");
+
+    renderHook(() => usePolicyAutoRun());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
+
+    expect(runStored).toHaveBeenCalledTimes(1);
+    expect(runStored).toHaveBeenCalledWith(
+      "backend-archive",
+      expect.anything(),
+      "image",
+      "background",
+    );
+  });
+  it("dispatches only matching files from a mixed upload", async () => {
+    setFileStubs([
+      { id: "pdf", name: "report.PDF" },
+      { id: "image", name: "scan.png" },
+      { id: "word", name: "letter.docx" },
+    ]);
+    runStored.mockResolvedValue("run-pdf");
+
+    const { rerender } = renderHook(() => usePolicyAutoRun());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
+    rerender();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
+
+    expect(runStored).toHaveBeenCalledTimes(1);
+    expect(runStored).toHaveBeenCalledWith(
+      "backend-sec",
+      expect.anything(),
+      "pdf",
+      "background",
+    );
+    expect(getFile).not.toHaveBeenCalledWith("image");
+    expect(getFile).not.toHaveBeenCalledWith("word");
+  });
+
+  it("starts each file at its first compatible policy in team order", async () => {
+    inputOperations.security = "/api/v1/convert/img/pdf";
+    setFileStubs([
+      { id: "image", name: "scan.PNG" },
+      { id: "pdf", name: "report.pdf" },
+      { id: "word", name: "letter.docx" },
+    ]);
+    runStored.mockImplementation(async (id) => `run-${id}`);
+
+    renderHook(() => usePolicyAutoRun());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
+
+    expect(runStored.mock.calls.map(([id, , fileId]) => [id, fileId])).toEqual([
+      ["backend-sec", "image"],
+      ["backend-comp", "pdf"],
+    ]);
+  });
+
+  it("waits for a cached pipeline's first operation before dispatching", async () => {
+    inputOperations.security = undefined;
+    inputOperations.compliance = "/api/v1/convert/img/pdf";
+    setFileStubs([{ id: "pdf", name: "report.pdf" }]);
+    runStored.mockResolvedValue("run-pdf");
+
+    const { rerender } = renderHook(() => usePolicyAutoRun());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
+    expect(runStored).not.toHaveBeenCalled();
+
+    inputOperations.security = "/api/v1/misc/compress-pdf";
+    rerender();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
+    expect(runStored).toHaveBeenCalledTimes(1);
+  });
+
+  it("checks each output's current type before chaining", async () => {
+    completeRun("run-sec", "security", "original", ["image", "pdf"]);
+    inputOperations.compliance = "/api/v1/convert/img/pdf";
+    setFileStubs([
+      { id: "image", name: "page.png", derivedFromTool: true },
+      { id: "pdf", name: "report.pdf", derivedFromTool: true },
+    ]);
+    runStored.mockResolvedValue("run-image");
+
+    renderHook(() => usePolicyAutoRun());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
+
+    expect(runStored).toHaveBeenCalledTimes(1);
+    expect(runStored).toHaveBeenCalledWith(
+      "backend-comp",
+      expect.anything(),
+      "image",
+      "background",
+    );
+    expect(getRun("run-image")?.fileName).toBe("page.png");
+  });
+
   it("dispatches only the FIRST ordered policy on upload, not the whole set", async () => {
     setFileStubs([{ id: "file-1", name: "doc.pdf" }]);
     runStored.mockResolvedValue("run-sec");
@@ -124,6 +349,7 @@ describe("auto-run ordered chaining", () => {
       "backend-sec",
       [{ size: 100 }],
       "file-1",
+      "background",
     );
   });
 
@@ -142,6 +368,7 @@ describe("auto-run ordered chaining", () => {
       "backend-comp",
       [{ size: 100 }],
       "file-1-v2",
+      "background",
     );
   });
 
@@ -160,6 +387,7 @@ describe("auto-run ordered chaining", () => {
       "backend-cls",
       expect.anything(),
       expect.anything(),
+      "background",
     );
   });
 
@@ -192,7 +420,7 @@ describe("auto-run ordered chaining", () => {
     // A browser-local heuristic run and a real server run, both left in flight.
     recordRunStart({
       runId: "local-1",
-      categoryId: "classification",
+      policyKey: "classification",
       fileId: "f1",
       fileName: "d.pdf",
       fileSize: 1,
@@ -205,7 +433,7 @@ describe("auto-run ordered chaining", () => {
     });
     recordRunStart({
       runId: "srv-1",
-      categoryId: "security",
+      policyKey: "security",
       fileId: "f2",
       fileName: "d.pdf",
       fileSize: 1,

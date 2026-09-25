@@ -1,9 +1,14 @@
 import { useCallback, useRef, useEffect, useContext } from "react";
 import apiClient from "@app/services/apiClient";
+import {
+  assertFilesNotBlocked,
+  policySourceIds,
+} from "@app/services/policyFileGuard";
 import { useTranslation } from "react-i18next";
 import { useFileContext } from "@app/contexts/FileContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { ViewerContext } from "@app/contexts/ViewerContext";
+import { toolAcceptsFile } from "@app/utils/toolIOCompat";
 import { useToolState } from "@app/hooks/tools/shared/useToolState";
 import {
   useToolApiCalls,
@@ -13,6 +18,7 @@ import { useToolResources } from "@app/hooks/tools/shared/useToolResources";
 import {
   extractErrorMessage,
   handle422Error,
+  isSignupRequiredError,
 } from "@app/utils/toolErrorHandler";
 import {
   StirlingFile,
@@ -40,8 +46,10 @@ import { createNewStirlingFileStub } from "@app/types/fileContext";
 import { ToolOperation } from "@app/types/file";
 import { ensureBackendReady } from "@app/services/backendReadinessGuard";
 import { trackEditorOperation } from "@app/services/analytics";
+import { notifyToolCompleted } from "@app/services/toolUsageTracker";
 import { useWillUseCloud } from "@app/hooks/useWillUseCloud";
 import { useCreditCheck } from "@app/hooks/useCreditCheck";
+import { useToolRunComplete } from "@app/hooks/useToolRunComplete";
 import { notifyPdfProcessingComplete } from "@app/services/desktopNotificationService";
 import {
   buildInputTracking,
@@ -130,6 +138,7 @@ export const useToolOperation = <TParams>(
   const willUseCloud = useWillUseCloud(endpointString);
   const continueResolutions = useResolutionContinuation();
   const notificationsAvailable = useNotificationsAvailable();
+  const onToolRunComplete = useToolRunComplete();
 
   // Track last operation for undo functionality
   const lastOperationRef = useRef<{
@@ -166,11 +175,16 @@ export const useToolOperation = <TParams>(
       ) {
         return;
       }
+      // The request body, not TParams: buildFormData posts what toApiParams returns, and the two
+      // shapes are free to disagree. A tool with no mapper stashes its UI shape and says so, so
+      // the row keeps its plain retry without anything re-running those parameters unattended.
+      const apiParams = config.toApiParams?.(params);
       void errorCodeOf(error).then((errorCode) =>
         stashRetryPayload({
           operation: config.operationType,
           endpoint: runtimeEndpoint,
-          params: params as Record<string, unknown>,
+          params: (apiParams ?? params) as Record<string, unknown>,
+          paramsMapped: apiParams !== undefined,
           fileIds,
           multiFile: config.toolType === ToolType.multiFile,
           errorCode,
@@ -178,19 +192,72 @@ export const useToolOperation = <TParams>(
         }),
       );
     },
-    [config.operationType, config.toolType, notificationsAvailable],
+    [config, notificationsAvailable],
+  );
+
+  const getCompatibleFiles = useCallback(
+    (params: TParams, selectedFiles: StirlingFile[]) => {
+      const endpoint =
+        typeof config.endpoint === "function"
+          ? config.endpoint(params)
+          : config.endpoint;
+      return selectedFiles.filter((file) =>
+        toolAcceptsFile(
+          endpoint ?? undefined,
+          selectors.getStirlingFileStub(file.fileId) ?? file,
+        ),
+      );
+    },
+    [config.endpoint, selectors],
+  );
+
+  const eligibleFilesRef = useRef<StirlingFile[]>([]);
+  const getEligibleFiles = useCallback(
+    (params: TParams, selectedFiles: StirlingFile[]) => {
+      const eligibleFiles = getCompatibleFiles(params, selectedFiles).filter(
+        (file) => file.size > 0,
+      );
+      const previous = eligibleFilesRef.current;
+      if (
+        eligibleFiles.length === previous.length &&
+        eligibleFiles.every((file, index) => file === previous[index])
+      ) {
+        return previous;
+      }
+      eligibleFilesRef.current = eligibleFiles;
+      return eligibleFiles;
+    },
+    [getCompatibleFiles],
   );
 
   const executeOperation = useCallback(
     async (params: TParams, selectedFiles: StirlingFile[]): Promise<void> => {
+      const policyIds = selectedFiles.flatMap((file) => {
+        const stub = selectors.getStirlingFileStub(file.fileId);
+        return stub ? policySourceIds(stub) : [file.fileId];
+      });
+      try {
+        assertFilesNotBlocked(policyIds);
+      } catch (error) {
+        actions.setError(extractErrorMessage(error));
+        return;
+      }
       // Validation
       if (selectedFiles.length === 0) {
         actions.setError(t("noFileSelected", "No file loaded"));
         return;
       }
 
+      const runtimeEndpoint: string | undefined = config.endpoint
+        ? typeof config.endpoint === "function"
+          ? (config.endpoint(params) ?? undefined)
+          : config.endpoint
+        : undefined;
+
+      const compatibleFiles = getCompatibleFiles(params, selectedFiles);
+
       // Handle zero-byte inputs explicitly: mark as error and continue with others
-      const zeroByteFiles = selectedFiles.filter((file) => file.size === 0);
+      const zeroByteFiles = compatibleFiles.filter((file) => file.size === 0);
       if (zeroByteFiles.length > 0) {
         try {
           for (const f of zeroByteFiles) {
@@ -200,42 +267,13 @@ export const useToolOperation = <TParams>(
           console.log("markFileError", e);
         }
       }
-      const validFiles: StirlingFile[] = selectedFiles.filter(
+      const validFiles: StirlingFile[] = compatibleFiles.filter(
         (file) => file.size > 0,
       );
       if (validFiles.length === 0) {
         actions.setError(t("noValidFiles", "No valid files to process"));
         return;
       }
-
-      // Block encrypted files from being sent to backend tools
-      const encryptedFiles = validFiles.filter((f) => {
-        const stub = selectors.getStirlingFileStub(f.fileId);
-        return stub?.processedFile?.isEncrypted === true;
-      });
-      if (encryptedFiles.length > 0) {
-        for (const ef of encryptedFiles) {
-          fileActions.openEncryptedUnlockPrompt(ef.fileId);
-        }
-        actions.setError(
-          t(
-            "encryptedFilesBlocked",
-            "{{count}} files are password-protected. Unlock them first.",
-            {
-              count: encryptedFiles.length,
-            },
-          ),
-        );
-        return;
-      }
-
-      // Resolve the runtime endpoint from params (static string or function result).
-      // Custom processors may omit endpoint entirely — result is undefined in that case.
-      const runtimeEndpoint: string | undefined = config.endpoint
-        ? typeof config.endpoint === "function"
-          ? (config.endpoint(params) ?? undefined)
-          : config.endpoint
-        : undefined;
 
       // Credit check — no-op in core builds, real check in desktop/SaaS versions.
       // Pass runtime endpoint so the check can determine if this routes locally (no credits needed).
@@ -282,8 +320,10 @@ export const useToolOperation = <TParams>(
       window.addEventListener(FILE_EVENTS.markError, errorListener);
 
       try {
+        assertFilesNotBlocked(policyIds);
         let processedFiles: File[];
         let successSourceIds: FileId[] = [];
+        let unprocessedSourceIds: FileId[] = [];
 
         // Use original files directly (no PDF metadata injection - history stored in IndexedDB)
         const filesForAPI = extractFiles(validFiles);
@@ -311,6 +351,7 @@ export const useToolOperation = <TParams>(
             );
             processedFiles = result.outputFiles;
             successSourceIds = result.successSourceIds;
+            unprocessedSourceIds = result.unprocessedSourceIds;
             // Reported here, not in the catch: this loop only throws when EVERY input failed,
             // so a batch that lost one file to a bad PDF reaches the success path.
             for (const failed of result.failedInputs) {
@@ -432,7 +473,7 @@ export const useToolOperation = <TParams>(
           }
           // Mark errors on inputs that didn't succeed
           for (const id of allInputIds) {
-            if (!okSet.has(id)) {
+            if (!okSet.has(id) && !unprocessedSourceIds.includes(id)) {
               try {
                 fileActions.markFileError(id);
               } catch (_e) {
@@ -448,7 +489,11 @@ export const useToolOperation = <TParams>(
           // If backend told us which sources failed, prefer that mapping
           successSourceIds = validFiles
             .map((f) => f.fileId)
-            .filter((id) => !externalErrorFileIds.includes(id));
+            .filter(
+              (id) =>
+                !externalErrorFileIds.includes(id) &&
+                !unprocessedSourceIds.includes(id),
+            );
           // Also mark failed IDs immediately
           try {
             for (const badId of externalErrorFileIds) {
@@ -460,11 +505,11 @@ export const useToolOperation = <TParams>(
         }
 
         if (processedFiles.length > 0) {
+          assertFilesNotBlocked(policyIds);
           trackEditorOperation(
             config.operationType,
             successSourceIds.length || validFiles.length,
           );
-
           actions.setFiles(processedFiles);
 
           // Generate thumbnails and download URL concurrently
@@ -476,6 +521,7 @@ export const useToolOperation = <TParams>(
           actions.setGeneratingThumbnails(false);
 
           actions.setThumbnails(thumbnails);
+          assertFilesNotBlocked(policyIds);
 
           // Determine whether outputs are new versions of their inputs or independent artifacts.
           // A version operation produces exactly one output per successful input, all in the same
@@ -504,6 +550,12 @@ export const useToolOperation = <TParams>(
             validFiles,
             selectors,
           );
+
+          // Set by both branches so the usage tracker can move each document's
+          // tool chain from the inputs onto the outputs that replaced them.
+          let producedFileIds: FileId[] = [];
+          // Inputs left in the workbench - failed, or never attempted - keep their chain.
+          let consumedInputIds: FileId[] = [];
 
           if (isVersionOp) {
             // Output is a modified version of the input — link it to the input's version chain.
@@ -552,10 +604,12 @@ export const useToolOperation = <TParams>(
             const toConsumeInputIds = successSourceIds.filter((id) =>
               inputFileIds.includes(id),
             );
+            consumedInputIds = toConsumeInputIds;
             console.debug("[useToolOperation] Consuming files (version)", {
               inputCount: inputFileIds.length,
               toConsume: toConsumeInputIds.length,
             });
+            assertFilesNotBlocked(policyIds);
             const outputFileIds = await consumeFiles(
               toConsumeInputIds,
               outputStirlingFiles,
@@ -564,6 +618,7 @@ export const useToolOperation = <TParams>(
             // Tell the viewer to follow the replacement file — consumeFiles prepends the new file
             // to the list, so activeFileIndex would point to the wrong file without this.
             if (outputFileIds.length === 1) setActiveFileId(outputFileIds[0]);
+            producedFileIds = outputFileIds;
 
             // Notify on desktop when processing completes
             await notifyPdfProcessingComplete(outputFileIds.length);
@@ -626,15 +681,18 @@ export const useToolOperation = <TParams>(
             const toConsumeInputIds = successSourceIds.filter((id) =>
               inputFileIds.includes(id),
             );
+            consumedInputIds = toConsumeInputIds;
             console.debug("[useToolOperation] Consuming files (independent)", {
               inputCount: inputFileIds.length,
               toConsume: toConsumeInputIds.length,
             });
+            assertFilesNotBlocked(policyIds);
             const outputFileIds = await consumeFiles(
               toConsumeInputIds,
               outputStirlingFiles,
               outputStirlingFileStubs,
             );
+            producedFileIds = outputFileIds;
 
             // Notify on desktop when processing completes
             await notifyPdfProcessingComplete(outputFileIds.length);
@@ -671,8 +729,24 @@ export const useToolOperation = <TParams>(
               })),
             });
           }
+
+          // Feeds the recommended-tools ranking and the workflow history. Sent
+          // after the branch so each input document's chain can be carried onto
+          // the outputs that replaced it.
+          notifyToolCompleted({
+            toolId: config.operationType,
+            inputs: inputStirlingFileStubs.filter((stub) =>
+              consumedInputIds.includes(stub.id),
+            ),
+            outputFileIds: producedFileIds,
+          });
+          onToolRunComplete();
         }
       } catch (error) {
+        if (isSignupRequiredError(error)) {
+          actions.setStatus("");
+          return;
+        }
         try {
           const handled = await handle422Error(error, (id) =>
             fileActions.markFileError(id as FileId),
@@ -709,6 +783,8 @@ export const useToolOperation = <TParams>(
       t,
       config,
       actions,
+      selectors,
+      fileActions,
       addFiles,
       consumeFiles,
       navActions,
@@ -721,7 +797,9 @@ export const useToolOperation = <TParams>(
       checkCredits,
       continueResolutions,
       notificationsAvailable,
+      onToolRunComplete,
       reportFailure,
+      getCompatibleFiles,
     ],
   );
 
@@ -829,6 +907,7 @@ export const useToolOperation = <TParams>(
     willUseCloud,
 
     // Actions
+    getEligibleFiles,
     executeOperation,
     resetResults,
     clearError: actions.clearError,

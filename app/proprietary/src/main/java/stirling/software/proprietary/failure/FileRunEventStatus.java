@@ -20,6 +20,10 @@ public enum FileRunEventStatus {
     private static final List<FileRunEventStatus> OPEN =
             Arrays.stream(values()).filter(status -> !status.terminal).toList();
 
+    /** The settled rest, kept so a reviewer can see how a past failure was disposed of. */
+    private static final List<FileRunEventStatus> CLOSED =
+            Arrays.stream(values()).filter(status -> status.terminal).toList();
+
     /** Whether no further transition is possible: the row is closed. */
     private final boolean terminal;
 
@@ -33,5 +37,9 @@ public enum FileRunEventStatus {
 
     public static List<FileRunEventStatus> open() {
         return OPEN;
+    }
+
+    public static List<FileRunEventStatus> closed() {
+        return CLOSED;
     }
 }

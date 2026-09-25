@@ -3,7 +3,7 @@
  *
  * The auto-run controller fires a backend run for each enabled policy × each
  * newly-uploaded file and records it here; the detail view's activity feed reads
- * from it. `dispatched` keys (`categoryId:fileId`) ensure a given file is only
+ * from it. `dispatched` keys (`policyKey:fileId`) ensure a given file is only
  * ever run once per policy, surviving remounts via localStorage.
  *
  * Read with {@code useSyncExternalStore}; mutated by the controller.
@@ -17,7 +17,7 @@ import type {
 
 export interface PolicyRunRecord {
   runId: string;
-  categoryId: string;
+  policyKey: string;
   fileId: string;
   fileName: string;
   fileSize: number;
@@ -30,7 +30,9 @@ export interface PolicyRunRecord {
   stepCount?: number;
   /** Output files (downloadable via /api/v1/general/files/{id}) once done. */
   outputs: { fileId: string; fileName: string }[];
-  /** True once ALL outputs have been imported into the workspace. */
+  /** Snapshotted by the server: external results must never enter the workspace. */
+  externalOutput?: boolean;
+  /** True once delivery has been handled. */
   imported?: boolean;
   /** Output fileIds already imported — tracked per-file so a partial failure
    *  retries only the missing ones and never re-adds the ones that succeeded. */
@@ -60,9 +62,20 @@ export const POLICY_IN_FLIGHT_STATUSES: readonly PolicyRunStatus[] = [
   "WAITING_FOR_INPUT",
 ];
 
+/** Latest definitive result per policy/file, retained independently of the activity log. */
+export interface PolicyRunOutcome {
+  policyKey: string;
+  fileId: string;
+  fileName?: string;
+  error?: string | null;
+  status: "COMPLETED" | "FAILED";
+  startedAt: number;
+}
+
 interface RunState {
   runs: PolicyRunRecord[];
   dispatched: string[];
+  outcomes: Record<string, PolicyRunOutcome>;
   /** startedAt of the run that began the current processing "wave" — a burst of
    *  runs with no idle gap. Reset whenever a run is recorded while nothing is in
    *  flight. The panel's progress counts (X of Y processed) scope to this so they
@@ -114,6 +127,38 @@ function capRuns(runs: PolicyRunRecord[]): PolicyRunRecord[] {
   return trimmed;
 }
 
+function recordOutcome(
+  outcomes: Record<string, PolicyRunOutcome>,
+  run: PolicyRunRecord,
+): Record<string, PolicyRunOutcome> {
+  // Success releases a failed input only after its replacement or labels have been imported.
+  if (
+    !run.fileId ||
+    run.browserLocal ||
+    (run.status !== "FAILED" && !(run.status === "COMPLETED" && run.imported))
+  )
+    return outcomes;
+  const key = dispatchKey(run.policyKey, run.fileId);
+  const previous = outcomes[key];
+  if (
+    previous &&
+    (previous.startedAt > run.startedAt ||
+      (previous.startedAt === run.startedAt && previous.status === run.status))
+  )
+    return outcomes;
+  return {
+    ...outcomes,
+    [key]: {
+      policyKey: run.policyKey,
+      fileId: run.fileId,
+      fileName: run.fileName,
+      error: run.error,
+      status: run.status,
+      startedAt: run.startedAt,
+    },
+  };
+}
+
 function read(): RunState {
   try {
     const raw =
@@ -122,12 +167,16 @@ function read(): RunState {
         : null;
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<RunState>;
-      return {
+      const runs: PolicyRunRecord[] =
         // Normalise older persisted records (which predate the `outputs` field)
         // so consumers can always rely on `outputs` being an array.
-        runs: Array.isArray(parsed.runs)
+        Array.isArray(parsed.runs)
           ? parsed.runs.map((r) => ({
               ...r,
+              // Records written before the rename carry the key as `categoryId`. Without this
+              // their policy is undefined, so badges vanish and a retry re-runs the whole chain.
+              policyKey:
+                r.policyKey ?? (r as { categoryId?: string }).categoryId ?? "",
               outputs: Array.isArray(r.outputs) ? r.outputs : [],
               importedFileIds: Array.isArray(r.importedFileIds)
                 ? r.importedFileIds
@@ -135,7 +184,11 @@ function read(): RunState {
               // Records predating per-run targets all executed on SaaS.
               target: r.target === "local" ? "local" : "saas",
             }))
-          : [],
+          : [];
+      return {
+        runs,
+        // Seed older caches from their remaining history; newer caches retain outcomes after pruning.
+        outcomes: runs.reduce(recordOutcome, parsed.outcomes ?? {}),
         dispatched: Array.isArray(parsed.dispatched) ? parsed.dispatched : [],
         waveStartedAt:
           typeof parsed.waveStartedAt === "number" ? parsed.waveStartedAt : 0,
@@ -144,7 +197,7 @@ function read(): RunState {
   } catch {
     // Corrupt/unavailable storage — start empty.
   }
-  return { runs: [], dispatched: [], waveStartedAt: 0 };
+  return { runs: [], dispatched: [], outcomes: {}, waveStartedAt: 0 };
 }
 
 let state: RunState = read();
@@ -188,6 +241,7 @@ function getSnapshot(): RunState {
 const SERVER_SNAPSHOT: RunState = {
   runs: [],
   dispatched: [],
+  outcomes: {},
   waveStartedAt: 0,
 };
 function getServerSnapshot(): RunState {
@@ -202,17 +256,17 @@ export function hasInFlightPolicyRuns(): boolean {
 }
 
 /** Key identifying a single (policy, file) run attempt. */
-export function dispatchKey(categoryId: string, fileId: string): string {
-  return `${categoryId}:${fileId}`;
+export function dispatchKey(policyKey: string, fileId: string): string {
+  return `${policyKey}:${fileId}`;
 }
 
 /** Whether this (policy, file) pair has already been dispatched. */
-export function isDispatched(categoryId: string, fileId: string): boolean {
-  return state.dispatched.includes(dispatchKey(categoryId, fileId));
+export function isDispatched(policyKey: string, fileId: string): boolean {
+  return state.dispatched.includes(dispatchKey(policyKey, fileId));
 }
 
 /** Walked back through this document's lineage. Only a COMPLETED server run counts as applied. */
-export function appliedCategoriesFor(fileId: string): Set<string> {
+export function appliedPoliciesFor(fileId: string): Set<string> {
   const applied = new Set<string>();
   let cursor: string | null = fileId;
   // A lineage cannot outrun the recorded runs, and the bound also breaks a hand-edited cycle.
@@ -224,7 +278,7 @@ export function appliedCategoriesFor(fileId: string): Set<string> {
       // A local first pass is not the policy's run: counting it would skip the escalation.
       if (run.status !== "COMPLETED" || run.browserLocal) continue;
       if (!(run.outputFileIds ?? []).includes(child)) continue;
-      applied.add(run.categoryId);
+      applied.add(run.policyKey);
       // An annotating run names its input as its own output, so it adds no lineage step.
       if (run.fileId !== child) cursor = run.fileId;
     }
@@ -234,7 +288,7 @@ export function appliedCategoriesFor(fileId: string): Set<string> {
 
 /** Record a newly-dispatched run (marks it dispatched + adds the record). */
 export function recordRunStart(record: PolicyRunRecord) {
-  const key = dispatchKey(record.categoryId, record.fileId);
+  const key = dispatchKey(record.policyKey, record.fileId);
   // A run recorded while nothing else is in flight begins a fresh wave, so the
   // progress counts reset to this upload instead of accumulating across every
   // past upload persisted in localStorage.
@@ -243,6 +297,7 @@ export function recordRunStart(record: PolicyRunRecord) {
     : record.startedAt;
   state = {
     runs: capRuns([record, ...state.runs]),
+    outcomes: recordOutcome(state.outcomes, record),
     dispatched: state.dispatched.includes(key)
       ? state.dispatched
       : [...state.dispatched, key],
@@ -259,13 +314,17 @@ export function recordRunStart(record: PolicyRunRecord) {
  */
 export function addReconciledRun(record: PolicyRunRecord) {
   if (state.runs.some((r) => r.runId === record.runId)) return;
-  state = { ...state, runs: capRuns([record, ...state.runs]) };
+  state = {
+    ...state,
+    runs: capRuns([record, ...state.runs]),
+    outcomes: recordOutcome(state.outcomes, record),
+  };
   emit();
 }
 
-/** Mark a (policy, file) pair dispatched without a run (e.g. dispatch failed). */
-export function markDispatched(categoryId: string, fileId: string) {
-  const key = dispatchKey(categoryId, fileId);
+/** Mark a (policy, file) pair handled without a run, such as a file with no remaining bytes. */
+export function markDispatched(policyKey: string, fileId: string) {
+  const key = dispatchKey(policyKey, fileId);
   if (state.dispatched.includes(key)) return;
   state = { ...state, dispatched: [...state.dispatched, key] };
   emit();
@@ -274,13 +333,16 @@ export function markDispatched(categoryId: string, fileId: string) {
 /** Patch an in-flight run's status/outputs/error as it progresses. */
 export function updateRun(runId: string, patch: Partial<PolicyRunRecord>) {
   let changed = false;
+  let outcomes = state.outcomes;
   const runs = state.runs.map((r) => {
     if (r.runId !== runId) return r;
     changed = true;
-    return { ...r, ...patch };
+    const updated = { ...r, ...patch };
+    outcomes = recordOutcome(outcomes, updated);
+    return updated;
   });
   if (!changed) return;
-  state = { ...state, runs };
+  state = { ...state, runs, outcomes };
   emit();
 }
 
@@ -299,8 +361,15 @@ export function removeRun(runId: string) {
 
 /** Reset the store — used by tests to isolate it. */
 export function resetPolicyRuns() {
-  state = { runs: [], dispatched: [], waveStartedAt: 0 };
+  state = { runs: [], dispatched: [], outcomes: {}, waveStartedAt: 0 };
   emit();
+}
+
+/** Synchronous enforcement state, available before the editor's effects mount. */
+export function getPolicyRunOutcomes(): Readonly<
+  Record<string, PolicyRunOutcome>
+> {
+  return state.outcomes;
 }
 
 export function usePolicyRuns(): PolicyRunRecord[] {

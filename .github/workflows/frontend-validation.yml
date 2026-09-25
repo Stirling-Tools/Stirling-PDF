@@ -1,18 +1,37 @@
 name: Frontend lint, type-check, and build
 
 # Reusable workflow called from build.yml when frontend / testing sources
-# change. Runs `task frontend:check:all` and uploads the 
-# coverage + dist artifacts for downstream jobs.
+# change. Runs the checks behind `task frontend:check:all` as parallel legs
+# (they are independent, and back to back on one 2-core runner they took
+# ~10 minutes) and uploads the coverage + dist artifacts for downstream jobs.
+# The `report` job owns the PR comment so the legs never race to post it.
 on:
   workflow_call:
 
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
-  frontend-validation:
+  check:
+    name: frontend-validation (${{ matrix.check }})
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # og:check stays ahead of anything that runs `prepare`, which
+          # regenerates the committed OG metadata it guards.
+          - check: lint
+            run: task frontend:og:check frontend:lint frontend:format:check
+          - check: typecheck
+            run: task frontend:typecheck:all
+          - check: build
+            run: task frontend:build
+          - check: test
+            run: task frontend:test
+          - check: storybook
+            run: task frontend:storybook:build
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
@@ -28,14 +47,59 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Install Task
         uses: ./.github/actions/setup-task
-      - name: Quality-check frontend
-        id: frontend-check
-        run: task frontend:check:all
-        continue-on-error: true
+      - name: Run ${{ matrix.check }}
+        run: ${{ matrix.run }}
+      - name: Install uv
+        if: always() && matrix.check == 'test'
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            engine/pyproject.toml
+            engine/uv.lock
+      - name: Vitest coverage step summary
+        if: always() && matrix.check == 'test'
+        run: |
+          uv run --project engine --locked --group tools python scripts/coverage-summary.py \
+            --title "Frontend Vitest coverage" \
+            --vitest frontend/editor/coverage/coverage-summary.json \
+            --github-step-summary
+      - name: Upload vitest coverage report
+        if: always() && matrix.check == 'test'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: frontend-coverage
+          path: frontend/editor/coverage/
+          retention-days: 7
+          if-no-files-found: warn
+      - name: Upload frontend build artifacts
+        if: matrix.check == 'build'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: frontend-build
+          path: frontend/editor/dist/
+          retention-days: 3
+
+  # One place for the PR comment: posted when a leg failed, removed when all
+  # passed. Fails when the legs did so the workflow result says the same.
+  report:
+    name: frontend-validation (report)
+    needs: check
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        with:
+          egress-policy: audit
       - name: Comment on frontend check failure
         # Only post a comment on PRs. github-script's PR helpers need an
         # issue/PR number, which doesn't exist on merge_group runs.
-        if: steps.frontend-check.outcome == 'failure' && github.event_name == 'pull_request'
+        if: needs.check.result == 'failure' && github.event_name == 'pull_request'
         continue-on-error: true
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
@@ -70,23 +134,8 @@ jobs:
                 body,
               });
             }
-      - name: Fail if frontend check failed
-        if: steps.frontend-check.outcome == 'failure'
-        run: |
-          echo "============================================"
-          echo "  Frontend Check Failed"
-          echo "============================================"
-          echo ""
-          echo "There are issues with your frontend code that"
-          echo "will need to be fixed before they can be merged in."
-          echo ""
-          echo "Run 'task frontend:fix' to auto-fix what can be"
-          echo "fixed automatically, then run 'task frontend:check:all'"
-          echo "to see what still needs fixing manually."
-          echo "============================================"
-          exit 1
       - name: Remove frontend check comment on success
-        if: steps.frontend-check.outcome == 'success' && github.event_name == 'pull_request'
+        if: needs.check.result == 'success' && github.event_name == 'pull_request'
         continue-on-error: true
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
@@ -105,32 +154,18 @@ jobs:
                 comment_id: existing.id,
               });
             }
-      - name: Install uv
-        if: always()
-        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
-        with:
-          enable-cache: true
-          cache-dependency-glob: |
-            engine/pyproject.toml
-            engine/uv.lock
-      - name: Vitest coverage step summary
-        if: always()
+      - name: Fail if frontend check failed
+        if: needs.check.result != 'success'
         run: |
-          uv run --project engine --locked --group tools python scripts/coverage-summary.py \
-            --title "Frontend Vitest coverage" \
-            --vitest frontend/editor/coverage/coverage-summary.json \
-            --github-step-summary
-      - name: Upload vitest coverage report
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: frontend-coverage
-          path: frontend/editor/coverage/
-          retention-days: 7
-          if-no-files-found: warn
-      - name: Upload frontend build artifacts
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: frontend-build
-          path: frontend/editor/dist/
-          retention-days: 3
+          echo "============================================"
+          echo "  Frontend Check Failed"
+          echo "============================================"
+          echo ""
+          echo "There are issues with your frontend code that"
+          echo "will need to be fixed before they can be merged in."
+          echo ""
+          echo "Run 'task frontend:fix' to auto-fix what can be"
+          echo "fixed automatically, then run 'task frontend:check:all'"
+          echo "to see what still needs fixing manually."
+          echo "============================================"
+          exit 1

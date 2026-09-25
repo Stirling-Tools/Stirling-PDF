@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import { Icon } from "@app/ui/Icon";
 import {
   Banner,
   Button,
@@ -31,7 +30,6 @@ import {
 } from "@portal/components/sources/connectionTypes";
 import { STEP_OPERATIONS } from "@portal/components/policies/stepOperations";
 import { COMING_SOON_SOURCE_TYPES } from "@portal/components/sources/sourceTypes";
-import { useConnectGate } from "@portal/hooks/useConnectGate";
 import "@portal/theme/surface.css";
 import "@portal/views/Integrations.css";
 
@@ -95,7 +93,6 @@ type IntegrationRow = {
 
 export function Integrations() {
   const { t } = useTranslation();
-  const { guard } = useConnectGate();
   const [connections, setConnections] = useState<IntegrationConfig[] | null>(
     null,
   );
@@ -214,23 +211,14 @@ export function Integrations() {
     return counts;
   }, [catalogue]);
 
-  // Connecting an integration and editing one both need a linked account. Memoised
-  // because both land in the row-building useMemo deps below.
-  const openCreate = useMemo(
-    () =>
-      guard((typeId: string) => {
-        setModal({ open: true, editing: null, fixedTypeId: typeId });
-      }),
-    [guard],
-  );
+  // Stable identities: both land in the row-building useMemo deps below.
+  const openCreate = useCallback((typeId: string) => {
+    setModal({ open: true, editing: null, fixedTypeId: typeId });
+  }, []);
 
-  const openEdit = useMemo(
-    () =>
-      guard((connection: IntegrationConfig) => {
-        setModal({ open: true, editing: connection });
-      }),
-    [guard],
-  );
+  const openEdit = useCallback((connection: IntegrationConfig) => {
+    setModal({ open: true, editing: connection });
+  }, []);
 
   const remove = useCallback(
     async (connection: IntegrationConfig) => {
@@ -385,7 +373,7 @@ export function Integrations() {
           <Button
             fat
             onClick={() => openCreate("api")}
-            leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
+            leftSection={<Icon name="plus" size={"1.125rem"} />}
           >
             {t("portal.integrations.customApi")}
           </Button>
@@ -426,7 +414,7 @@ export function Integrations() {
         </div>
         <div className="portal-integrations__toolbar-side">
           <label className="portal-integrations__search">
-            <SearchRoundedIcon fontSize="inherit" />
+            <Icon name="search" size="1em" />
             <input
               type="search"
               value={query}

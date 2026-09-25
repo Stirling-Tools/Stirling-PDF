@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import LinkIcon from "@mui/icons-material/Link";
+import { Icon } from "@app/ui/Icon";
 import { NavItem } from "@app/ui/NavItem";
 import { NavFooter } from "@app/components/shared/navFooter/NavFooter";
 
@@ -54,7 +54,7 @@ export const WithLinkAccountCta: Story = {
       <NavItem
         id="account-link"
         label="Link Stirling account"
-        icon={<LinkIcon sx={{ fontSize: "1.1rem" }} />}
+        icon={<Icon name="link" size={"1.1rem"} />}
       />
     ),
   },
@@ -75,6 +75,7 @@ export const WithProfilePicture: Story = {
     profilePictureUrl:
       "data:image/svg+xml;utf8," +
       encodeURIComponent(
+        // icon-lint-disable -- data-uri avatar fixture, not an icon
         '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="black"/><circle cx="32" cy="24" r="12" fill="white"/><ellipse cx="32" cy="56" rx="20" ry="16" fill="white"/></svg>',
       ),
   },

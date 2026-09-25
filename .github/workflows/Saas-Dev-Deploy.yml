@@ -93,6 +93,7 @@ jobs:
             VERSION_TAG=v2-alpha
             STIRLING_FLAVOR=saas
             VITE_BUILD_MODE=development
+            VITE_INCLUDE_PORTAL=true
             VITE_SUPABASE_URL=${{ steps.config.outputs.supabase_url }}
             VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=${{ secrets.SAAS_SUPABASE_PUBLISHABLE_KEY }}
           platforms: linux/amd64
@@ -101,7 +102,7 @@ jobs:
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
-          file: ./engine/Dockerfile
+          file: ./docker/engine/Dockerfile
           push: true
           cache-from: type=gha,scope=stirling-saas-engine
           cache-to: type=gha,mode=max,scope=stirling-saas-engine
@@ -149,9 +150,10 @@ jobs:
 
             ENGINE_SECRET="$(openssl rand -hex 32)"
             AI_BACKEND_VARS="
-                SYSTEM_AIENGINE_ENABLED: \"true\"
-                SYSTEM_AIENGINE_URL: \"http://saas-engine:5001\"
+                AIENGINE_ENABLED: \"true\"
+                AIENGINE_URL: \"http://saas-engine:5001\"
                 APP_AI_SERVICEBASEURL: \"http://saas-engine:5001\"
+                STIRLING_CLOUD_AI_SHARING_ENABLED: \"true\"
                 STIRLING_ENGINE_SHARED_SECRET: $(yaml "$ENGINE_SECRET")"
             AI_SERVICE="
 
