@@ -3,6 +3,7 @@ package stirling.software.saas.payg.billing;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -38,6 +39,45 @@ class TeamBillingServiceTest {
     private StripeSubscriptionDao subscriptionDao;
     private TeamBillingService service;
 
+    @Test
+    void missingTeamAllowanceFallsBackToFreePolicyButExplicitZeroIsRespected() {
+        PricingPolicy policy = new PricingPolicy();
+        policy.setFreeTierUnits(1000L);
+        when(pricingPolicyService.getEffectivePolicy(TEAM_ID)).thenReturn(policy);
+        when(pricingPolicyService.getEffectivePolicy(null)).thenReturn(policy);
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamCreditsEligible(true);
+        assertThat(service.resolveGrant(TEAM_ID, ext)).isEqualTo(1000L);
+        policy.setTeamIncludedUnits(0L);
+        assertThat(service.resolveGrant(TEAM_ID, ext)).isZero();
+    }
+
+    @Test
+    void teamAllowanceComesFromPolicyAndSurvivesProcessorChanges() {
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(TEAM_ID);
+        ext.setTeamCreditsEligible(true);
+        ext.setFreeUnitsGranted(1000L);
+        ext.setFreeUnitsRemaining(700L);
+        LocalDateTime start = TeamBillingService.calendarMonthWindow()[0];
+        ext.setFreeUnitsPeriodStart(start);
+        ext.setFreeUnitsPeriodEnd(start.plusMonths(1));
+        PricingPolicy policy = new PricingPolicy();
+        policy.setFreeTierUnits(1000L);
+        policy.setTeamIncludedUnits(2700L);
+        when(extensionsRepository.findById(TEAM_ID)).thenReturn(Optional.of(ext));
+        when(pricingPolicyService.getEffectivePolicy(TEAM_ID)).thenReturn(policy);
+        TeamBillingContext first = service.forTeam(TEAM_ID);
+        assertThat(first.freeGrantUnits()).isEqualTo(2700);
+        assertThat(first.freeRemainingUnits()).isEqualTo(2400);
+        ext.setPaygSubscriptionId("sub_processor");
+        service.invalidate(TEAM_ID);
+        TeamBillingContext second = service.forTeam(TEAM_ID);
+        assertThat(second.freeRemainingUnits()).isEqualTo(2400);
+        assertThat(second.includedPeriodStart()).isEqualTo(first.includedPeriodStart());
+        assertThat(second.includedPeriodEnd()).isEqualTo(start.plusMonths(1));
+    }
+
     @BeforeEach
     void setUp() {
         extensionsRepository = Mockito.mock(PaygTeamExtensionsRepository.class);
@@ -58,12 +98,14 @@ class TeamBillingServiceTest {
         when(pricingPolicyService.getEffectivePolicy(TEAM_ID)).thenReturn(policy);
     }
 
+    /** Stamped with the current period, so {@code freeRemaining} reads as the live balance. */
     private PaygTeamExtensions ext(String subscriptionId, String customerId, long freeRemaining) {
         PaygTeamExtensions ext = new PaygTeamExtensions();
         ext.setTeamId(TEAM_ID);
         ext.setPaygSubscriptionId(subscriptionId);
         ext.setStripeCustomerId(customerId);
         ext.setFreeUnitsRemaining(freeRemaining);
+        ext.setFreeUnitsPeriodStart(TeamBillingService.calendarMonthWindow()[0]);
         return ext;
     }
 
@@ -117,5 +159,8 @@ class TeamBillingServiceTest {
 
         assertThat(ctx.subscribed()).isFalse();
         assertThat(ctx.subscriptionId()).isNull();
+        assertThat(ctx.freeGrantUnits()).isZero();
+        assertThat(ctx.freeRemainingUnits()).isZero();
+        assertThat(ctx.includedPeriodEnd()).isNull();
     }
 }

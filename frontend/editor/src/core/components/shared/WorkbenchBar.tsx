@@ -1,17 +1,18 @@
 import React, {
   useCallback,
-  useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
+  useState,
   useSyncExternalStore,
 } from "react";
-import { Group, Loader, Progress, Stack, Text } from "@mantine/core";
+import { createPortal } from "react-dom";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { Icon } from "@app/ui/Icon";
 import {
   clearFilesPageReturnRoute,
   getFilesPageReturnRoute,
@@ -31,8 +32,9 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useNavigationState } from "@app/contexts/NavigationContext";
 import { ViewerContext, useViewer } from "@app/contexts/ViewerContext";
 import { WorkbenchType, isBaseWorkbench } from "@app/types/workbench";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
+import { useEditorSearchScopes } from "@app/hooks/useSuperSearch";
+import { useTitleBarStrip } from "@app/contexts/TitleBarStripContext";
 import ViewerShareButton from "@app/components/viewer/ViewerShareButton";
 import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
@@ -49,12 +51,14 @@ import {
   WorkbenchBarRenderContext,
   WorkbenchBarSection,
 } from "@app/types/workbenchBar";
-import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
-import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
-import CloseIcon from "@mui/icons-material/Close";
-import PrintIcon from "@mui/icons-material/Print";
-import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import WorkbenchBarDesktopActions from "@app/components/shared/workbenchBar/WorkbenchBarDesktopActions";
+import WorkbenchBarMobileActions from "@app/components/shared/workbenchBar/WorkbenchBarMobileActions";
+import WorkbenchBarToolbarHandle from "@app/components/shared/workbenchBar/WorkbenchBarToolbarHandle";
+import { renderWithTooltip } from "@app/components/shared/workbenchBar/workbenchBarTooltip";
+import { WorkbenchBarActionsProps } from "@app/components/shared/workbenchBar/types";
+import { useIsMobile, useIsPhone } from "@app/hooks/useIsMobile";
 import "@app/components/shared/WorkbenchBar.css";
+import { NotificationBell } from "@app/components/notifications/NotificationBell";
 
 const SECTION_ORDER: WorkbenchBarSection[] = ["top", "middle", "bottom"];
 
@@ -68,33 +72,23 @@ interface WorkbenchBarProps {
   currentView: WorkbenchType;
   setCurrentView: (view: WorkbenchType) => void;
   hasFiles: boolean;
-}
-
-function renderWithTooltip(
-  node: React.ReactNode,
-  tooltip: React.ReactNode | undefined,
-) {
-  if (!tooltip) return node;
-  return (
-    <Tooltip
-      content={tooltip}
-      position="bottom"
-      offset={6}
-      arrow
-      portalTarget={typeof document !== "undefined" ? document.body : undefined}
-    >
-      <div className="workbench-bar-tooltip-wrapper">{node}</div>
-    </Tooltip>
-  );
+  /** Whether the viewer's tool row is currently retracted. */
+  viewerToolbarCollapsed?: boolean;
+  /** Setter for the viewer tool-row retract state (owned by Workbench). */
+  onCollapseViewerToolbar?: (collapsed: boolean) => void;
 }
 
 export default function WorkbenchBar({
   currentView,
   setCurrentView,
   hasFiles,
+  viewerToolbarCollapsed = false,
+  onCollapseViewerToolbar,
 }: WorkbenchBarProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const strip = useTitleBarStrip();
+  const searchScopes = useEditorSearchScopes();
   const returnRoute = useSyncExternalStore(
     subscribeFilesPageReturnRoute,
     getFilesPageReturnRoute,
@@ -115,12 +109,17 @@ export default function WorkbenchBar({
   } = useToolWorkflow();
   const { selectedTool } = useNavigationState();
   const isCustomView = !isBaseWorkbench(currentView);
+  const isViewer = currentView === "viewer";
   const disableForFullscreen =
     toolPanelMode === "fullscreen" && leftPanelView === "toolPicker";
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
   const { sharingEnabled } = useSharingEnabled();
   const viewerContext = React.useContext(ViewerContext);
+  const isMobile = useIsMobile();
+  // Below this width the rail, and the bell it carries, is hidden.
+  const isPhone = useIsPhone();
+  const [mobileToolsExpanded, setMobileToolsExpanded] = useState(false);
 
   const selectors = useFileSelectors();
   const { selectedFiles, selectedFileIds } = useFileSelection();
@@ -155,32 +154,6 @@ export default function WorkbenchBar({
     enforcingRun?.currentStep != null && enforcingRun.stepCount
       ? Math.round((enforcingRun.currentStep / enforcingRun.stepCount) * 100)
       : undefined;
-  const makeEnforcingTooltip = (action: string): React.ReactNode => (
-    <Stack gap={6} py={2} w={200}>
-      <Group gap={6} wrap="nowrap">
-        <ShieldOutlinedIcon style={{ fontSize: 13 }} />
-        <Text size="xs" fw={600}>
-          {t(
-            "policy.blockingAction",
-            "{{action}} blocked while enforcing policy, please wait",
-            { action },
-          )}
-        </Text>
-      </Group>
-      {enforcingProgress != null ? (
-        <Progress
-          w="100%"
-          size="xs"
-          radius="xl"
-          value={enforcingProgress}
-          striped
-          animated
-        />
-      ) : (
-        <Loader size="xs" />
-      )}
-    </Stack>
-  );
   const pageEditorTotalPages = pageEditorFunctions?.totalPages ?? 0;
   const pageEditorSelectedCount =
     pageEditorFunctions?.selectedPageIds?.length ?? 0;
@@ -194,6 +167,24 @@ export default function WorkbenchBar({
     if (currentView === "pageEditor") return pageEditorSelectedCount;
     return selectedFileIds.length;
   }, [currentView, pageEditorSelectedCount, selectedFileIds.length]);
+
+  // Registered into the bar's own row rather than the tool row below it. Already
+  // sorted by order when registered.
+  const barRowButtons = useMemo(
+    () =>
+      buttons.filter((btn) => btn.section === "bar" && (btn.visible ?? true)),
+    [buttons],
+  );
+
+  // Beside the view switcher rather than among the actions: what the view is showing
+  // reads as part of the view, not as something to do to it.
+  const barLeadButtons = useMemo(
+    () =>
+      buttons.filter(
+        (btn) => btn.section === "bar-lead" && (btn.visible ?? true),
+      ),
+    [buttons],
+  );
 
   const sectionsWithButtons = useMemo(() => {
     return SECTION_ORDER.map((section) => {
@@ -218,7 +209,8 @@ export default function WorkbenchBar({
         try {
           const result = await downloadFile({
             data: new Blob([buffer], { type: "application/pdf" }),
-            filename: fileToExport.name,
+            // Stub name, not File.name: a rename only writes the stub.
+            filename: stub?.name ?? fileToExport.name,
             localPath: forceNewFile ? undefined : stub?.localFilePath,
             fileId: stub?.id,
           });
@@ -270,7 +262,8 @@ export default function WorkbenchBar({
         try {
           const result = await downloadRaw({
             data: enforced[idx],
-            filename: file.name,
+            // Stub name, not File.name: a rename only writes the stub.
+            filename: stub?.name ?? file.name,
             localPath: forceNewFile ? undefined : stub?.localFilePath,
             fileId: stub?.id,
           });
@@ -352,6 +345,35 @@ export default function WorkbenchBar({
     return terminology.downloadAll;
   }, [currentView, selectedCount, t, terminology]);
 
+  const actionsDisabled =
+    totalItems === 0 || allButtonsDisabled || disableForFullscreen;
+
+  // Shared by the mobile overflow menu and the desktop icon cluster so the two
+  // stay in step; each renders the same actions in its own shape.
+  const globalActionProps: WorkbenchBarActionsProps = {
+    currentView,
+    // Save, Save As and Close act on an open document. The library has none: it
+    // lists files, and opening one is what the other views are for.
+    showsFileActions: !isCustomView && currentView !== "myFiles",
+    actionsDisabled,
+    policyEnforcing,
+    downloadLabel: downloadTooltip,
+    downloadIconName: icons.download,
+    saveAsIconName: icons.saveAs,
+    onPrint: handlePrint,
+    onExport: handleExportAll,
+    onClose: handleClose,
+  };
+
+  const toggleMobileTools = useCallback(
+    () => setMobileToolsExpanded((v) => !v),
+    [],
+  );
+  const handleRetractToolbar = useCallback(
+    () => onCollapseViewerToolbar?.(true),
+    [onCollapseViewerToolbar],
+  );
+
   const renderButton = useCallback(
     (btn: WorkbenchBarButtonConfig) => {
       const action = actions[btn.id];
@@ -400,29 +422,30 @@ export default function WorkbenchBar({
   );
 
   // View options
+  // Tools that own a custom workbench ship their own canvas.
+  const ownsCustomWorkbenchAsDefault = selectedTool === "pdfTextEditor";
   const viewOptions: ViewOption[] = [
+    ...(ownsCustomWorkbenchAsDefault
+      ? []
+      : [
+          {
+            value: "viewer" as WorkbenchType,
+            label: t("workbenchBar.viewer", "Viewer"),
+            icon: <Icon name="file" size={20} />,
+          },
+        ]),
     {
-      value: "viewer",
-      label: t("workbenchBar.viewer", "Viewer"),
-      icon: <InsertDriveFileOutlinedIcon fontSize="small" />,
-    },
-    {
-      value: "fileEditor",
+      value: "fileEditor" as WorkbenchType,
       label: t("workbenchBar.activeFiles", "Active Files"),
-      icon: <FolderOutlinedIcon fontSize="small" />,
+      icon: <Icon name="folder" size={20} />,
     },
     ...(selectedTool === "multiTool"
       ? [
           {
             value: "pageEditor" as WorkbenchType,
             label: t("workbenchBar.multiTool", "Multi-Tool"),
-            icon: (
-              <LocalIcon
-                icon="dashboard-customize-outline-rounded"
-                width="1rem"
-                height="1rem"
-              />
-            ),
+            // The registry's multiTool glyph: one tool, one mark, wherever it is drawn.
+            icon: <Icon name="grid-2x2-plus" size="1rem" />,
           },
         ]
       : []),
@@ -431,102 +454,142 @@ export default function WorkbenchBar({
       .map((v) => ({
         value: v.workbenchId,
         label: v.label,
-        icon: v.icon ?? <InsertDriveFileOutlinedIcon fontSize="small" />,
+        icon: v.icon ?? <Icon name="file" size={20} />,
       })),
   ];
 
+  // Reflow the top row by content width: when the views + globals leave too
+  // little room for a usable search, bump the search to its own row
   const barRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
+  useLayoutEffect(() => {
+    // The strip lays its single row out itself; search isn't in the inline bar
+    // to measure, so there's nothing to reflow.
+    if (strip.enabled) return;
     const bar = barRef.current;
     if (!bar) return;
-
+    const MIN_SEARCH_WIDTH = 320;
     const measure = () => {
       const viewsEl = bar.querySelector<HTMLElement>(".workbench-bar-views");
       const globalsEl = bar.querySelector<HTMLElement>(
         ".workbench-bar-globals",
       );
-      const centerEl = bar.querySelector<HTMLElement>(".workbench-bar-center");
-
       const viewsWidth = viewsEl?.offsetWidth ?? 0;
       const globalsWidth = globalsEl?.offsetWidth ?? 0;
-      const centerChildren = centerEl
-        ? (Array.from(centerEl.children) as HTMLElement[])
-        : [];
-      const centerWidth =
-        centerChildren.reduce((sum, el) => sum + el.offsetWidth, 0) +
-        Math.max(0, centerChildren.length - 1) * 2; // gap: 2px
-
-      const needed = viewsWidth + centerWidth + globalsWidth + 24; // 24px bar padding
-      bar.dataset.wrapped = String(needed > bar.clientWidth);
+      // clientWidth minus the two side clusters, the bar's 16px h-padding and
+      // the two 8px column gaps flanking the search.
+      const available = bar.clientWidth - viewsWidth - globalsWidth - 16 - 16;
+      const wrapped = available < MIN_SEARCH_WIDTH;
+      bar.dataset.wrapped = String(wrapped);
+      // Centre the search on the bar rather than its slot — clamped to the
+      // slot's spare width, because the shift is a transform (no layout) and
+      // an unclamped value would paint the pill over the adjacent cluster.
+      const slotEl = bar.querySelector<HTMLElement>(".workbench-bar-search");
+      const pillEl = slotEl?.querySelector<HTMLElement>(".super-search");
+      const slack = Math.max(
+        0,
+        ((slotEl?.offsetWidth ?? 0) - (pillEl?.offsetWidth ?? 0)) / 2,
+      );
+      const centred = (globalsWidth - viewsWidth) / 2;
+      const offset = Math.min(slack, Math.max(-slack, centred));
+      bar.style.setProperty(
+        "--workbench-bar-search-offset",
+        wrapped ? "0px" : `${offset}px`,
+      );
     };
-
     const ro = new ResizeObserver(measure);
     ro.observe(bar);
+    const viewsEl = bar.querySelector<HTMLElement>(".workbench-bar-views");
+    const globalsEl = bar.querySelector<HTMLElement>(".workbench-bar-globals");
+    if (viewsEl) ro.observe(viewsEl);
+    if (globalsEl) ro.observe(globalsEl);
     measure();
     return () => ro.disconnect();
-  }, []);
+  }, [strip.enabled]);
 
-  return (
-    <div
-      ref={barRef}
-      className="workbench-bar"
-      data-wrapped="true"
-      data-tour="workbench-bar"
-    >
-      {/* Left: optional "Back to My Files" + view switcher */}
-      <div className="workbench-bar-views" data-tour="view-switcher">
-        {returnRoute && hasFiles && (
-          <>
-            <Button
-              variant="tertiary"
-              className="workbench-bar-view-btn workbench-bar-back-btn"
-              onClick={handleBackToFiles}
-              aria-label={t(
-                returnRoute.label
-                  ? "filesPage.backToFolder"
-                  : "filesPage.backToMyFiles",
-                returnRoute.label
-                  ? `Back to ${returnRoute.label}`
-                  : "Back to My Files",
-                { folder: returnRoute.label ?? "" },
-              )}
-              leftSection={<ArrowBackIcon style={{ fontSize: "1.1rem" }} />}
-            >
-              <span className="workbench-bar-view-label">
-                {returnRoute.label
-                  ? t("filesPage.backToFolder", "Back to {{folder}}", {
-                      folder: returnRoute.label,
-                    })
-                  : t("filesPage.backToMyFiles", "Back to My Files")}
-              </span>
-            </Button>
+  // Left: optional "Back to File library" + view switcher.
+  const viewsCluster = (
+    <div className="workbench-bar-views" data-tour="view-switcher">
+      {returnRoute && hasFiles && (
+        <>
+          <Button
+            variant="tertiary"
+            className="workbench-bar-view-btn workbench-bar-back-btn"
+            onClick={handleBackToFiles}
+            aria-label={t(
+              returnRoute.label
+                ? "filesPage.backToFolder"
+                : "filesPage.backToMyFiles",
+              returnRoute.label
+                ? `Back to ${returnRoute.label}`
+                : "Back to File library",
+              { folder: returnRoute.label ?? "" },
+            )}
+            leftSection={<Icon name="arrow-left" size={"1.1rem"} />}
+          >
+            <span className="workbench-bar-view-label">
+              {returnRoute.label
+                ? t("filesPage.backToFolder", "Back to {{folder}}", {
+                    folder: returnRoute.label,
+                  })
+                : t("filesPage.backToMyFiles", "Back to File library")}
+            </span>
+          </Button>
+          <div className="workbench-bar-divider" />
+        </>
+      )}
+      {/* Not in the library: it browses files rather than showing one, and the
+          rail is what moves between surfaces. */}
+      {currentView !== "myFiles" && (hasFiles || isCustomView) && (
+        <SegmentedControl<WorkbenchType>
+          className="workbench-bar-views"
+          size="sm"
+          value={currentView}
+          onChange={setCurrentView}
+          variant="secondary"
+          options={viewOptions.map((opt) => ({
+            value: opt.value,
+            label: (
+              <>
+                {opt.icon}
+                <span className="workbench-bar-view-label">{opt.label}</span>
+              </>
+            ),
+          }))}
+        />
+      )}
+      {barLeadButtons.map((btn) => {
+        const content = renderButton(btn);
+        if (!content) return null;
+        return (
+          <div className="workbench-bar-lead" key={btn.id}>
             <div className="workbench-bar-divider" />
-          </>
-        )}
-        {(hasFiles || isCustomView) && (
-          <SegmentedControl<WorkbenchType>
-            className="workbench-bar-views"
-            size="sm"
-            value={currentView}
-            onChange={setCurrentView}
-            variant="secondary"
-            options={viewOptions.map((opt) => ({
-              value: opt.value,
-              label: (
-                <>
-                  {opt.icon}
-                  <span className="workbench-bar-view-label">{opt.label}</span>
-                </>
-              ),
-            }))}
-          />
-        )}
-      </div>
+            {content}
+          </div>
+        );
+      })}
+    </div>
+  );
 
-      {/* Tool buttons - second row, only rendered when buttons exist */}
-      {sectionsWithButtons.length > 0 && (
-        <div className="workbench-bar-center">
+  // Global super search - always present, even on the homepage.
+  const searchCluster = (
+    <div className="workbench-bar-search">
+      <SuperSearch scopes={searchScopes} />
+    </div>
+  );
+
+  // Tool buttons - second row, only rendered when buttons exist. In the viewer
+  // the row is retractable: a handle on its right edge hides the whole row;
+  // Workbench then shows a tab below the bar to bring it back.
+  const toolRow =
+    sectionsWithButtons.length > 0 && !(isViewer && viewerToolbarCollapsed) ? (
+      <div
+        className={`workbench-bar-center${
+          isMobile && mobileToolsExpanded
+            ? " workbench-bar-center--expanded"
+            : ""
+        }`}
+      >
+        <div className="workbench-bar-center-scroll">
           {sectionsWithButtons.map(
             ({ section, buttons: sectionButtons }, idx) => (
               <React.Fragment key={section}>
@@ -544,126 +607,91 @@ export default function WorkbenchBar({
             ),
           )}
         </div>
+        <WorkbenchBarToolbarHandle
+          isMobile={isMobile}
+          expanded={mobileToolsExpanded}
+          onToggleExpanded={toggleMobileTools}
+          onRetract={
+            isViewer && onCollapseViewerToolbar
+              ? handleRetractToolbar
+              : undefined
+          }
+        />
+      </div>
+    ) : null;
+
+  // Right: global buttons - export group left, close anchored right.
+  const globalsCluster = (
+    <div className="workbench-bar-globals">
+      {/* A view's own controls, ahead of the globals every view shares. */}
+      {barRowButtons.map((btn) => {
+        const content = renderButton(btn);
+        if (!content) return null;
+        return (
+          <div key={btn.id} className="workbench-bar-action-wrapper">
+            {content}
+          </div>
+        );
+      })}
+      {barRowButtons.length > 0 && (
+        <div className="workbench-bar-divider workbench-bar-globals-sep" />
+      )}
+      {/* Share (viewer only; opens the same modal as My Files "Manage sharing") */}
+      {currentView === "viewer" && sharingEnabled && (
+        <ViewerShareButton disabled={actionsDisabled} />
       )}
 
-      {/* Right: Global buttons - export group left, close anchored right */}
-      <div className="workbench-bar-globals">
-        {/* Share (viewer only; opens the same modal as My Files "Manage sharing") */}
-        {currentView === "viewer" && sharingEnabled && (
-          <ViewerShareButton
-            disabled={
-              totalItems === 0 || allButtonsDisabled || disableForFullscreen
-            }
-          />
-        )}
-
-        {/* Print */}
-        {currentView === "viewer" &&
-          renderWithTooltip(
-            <ActionIcon
-              variant="tertiary"
-              hover={false}
-              className="workbench-bar-action-icon"
-              onClick={handlePrint}
-              disabled={
-                totalItems === 0 ||
-                allButtonsDisabled ||
-                disableForFullscreen ||
-                policyEnforcing
-              }
-              aria-label={t("workbenchBar.print", "Print PDF")}
-            >
-              <PrintIcon sx={{ fontSize: "1rem" }} />
-            </ActionIcon>,
-            policyEnforcing
-              ? makeEnforcingTooltip(t("workbenchBar.print", "Print PDF"))
-              : t("workbenchBar.print", "Print PDF"),
-          )}
-
-        {/* Download (file-level action — not relevant in custom views) */}
-        {!isCustomView &&
-          renderWithTooltip(
-            <ActionIcon
-              variant="tertiary"
-              hover={false}
-              className="workbench-bar-action-icon"
-              onClick={() => handleExportAll()}
-              disabled={
-                disableForFullscreen ||
-                totalItems === 0 ||
-                allButtonsDisabled ||
-                policyEnforcing
-              }
-              aria-label={downloadTooltip}
-            >
-              <LocalIcon
-                icon={icons.downloadIconName}
-                width="1rem"
-                height="1rem"
-              />
-            </ActionIcon>,
-            policyEnforcing
-              ? makeEnforcingTooltip(downloadTooltip)
-              : downloadTooltip,
-          )}
-
-        {/* Save As */}
-        {!isCustomView &&
-          icons.saveAsIconName &&
-          renderWithTooltip(
-            <ActionIcon
-              variant="tertiary"
-              hover={false}
-              className="workbench-bar-action-icon"
-              onClick={() => handleExportAll(true)}
-              disabled={
-                disableForFullscreen ||
-                totalItems === 0 ||
-                allButtonsDisabled ||
-                policyEnforcing
-              }
-              aria-label={t("workbenchBar.saveAs", "Save As")}
-            >
-              <LocalIcon
-                icon={icons.saveAsIconName}
-                width="1rem"
-                height="1rem"
-              />
-            </ActionIcon>,
-            policyEnforcing
-              ? makeEnforcingTooltip(t("workbenchBar.saveAs", "Save As"))
-              : t("workbenchBar.saveAs", "Save As"),
-          )}
-
-        {/* Separator: export group | close */}
-        {!isCustomView && (
+      {isMobile ? (
+        <WorkbenchBarMobileActions {...globalActionProps} />
+      ) : (
+        <WorkbenchBarDesktopActions
+          {...globalActionProps}
+          enforcingProgress={enforcingProgress}
+        />
+      )}
+      {isPhone && (
+        <>
+          {/* Last in the globals, so it is the rightmost control. */}
           <div className="workbench-bar-divider workbench-bar-globals-sep" />
-        )}
+          <NotificationBell />
+        </>
+      )}
+    </div>
+  );
 
-        {/* Close (context-aware: close all / close viewer file / close page editor) */}
-        {!isCustomView &&
-          renderWithTooltip(
-            <ActionIcon
-              variant="tertiary"
-              hover={false}
-              className="workbench-bar-action-icon"
-              onClick={handleClose}
-              disabled={
-                totalItems === 0 || allButtonsDisabled || disableForFullscreen
-              }
-              aria-label={
-                currentView === "fileEditor"
-                  ? t("workbenchBar.closeAll", "Close All")
-                  : t("workbenchBar.closePdf", "Close PDF")
-              }
-            >
-              <CloseIcon sx={{ fontSize: "1rem" }} />
-            </ActionIcon>,
-            currentView === "fileEditor"
-              ? t("workbenchBar.closeAll", "Close All")
-              : t("workbenchBar.closePdf", "Close PDF"),
-          )}
-      </div>
+  // With a title-bar strip, the top row lives in it: portal the view switcher and
+  // globals into its slots, keep the tool row inline, and leave search to the
+  // strip (which owns the single SuperSearch instance).
+  if (strip.enabled) {
+    return (
+      <>
+        {strip.viewsSlot && createPortal(viewsCluster, strip.viewsSlot)}
+        {strip.globalsSlot && createPortal(globalsCluster, strip.globalsSlot)}
+        {toolRow && (
+          <div
+            ref={barRef}
+            className="workbench-bar"
+            data-wrapped="false"
+            data-portaled="true"
+          >
+            {toolRow}
+          </div>
+        )}
+      </>
+    );
+  }
+
+  return (
+    <div
+      ref={barRef}
+      className="workbench-bar"
+      data-wrapped="false"
+      data-tour="workbench-bar"
+    >
+      {viewsCluster}
+      {searchCluster}
+      {toolRow}
+      {globalsCluster}
     </div>
   );
 }

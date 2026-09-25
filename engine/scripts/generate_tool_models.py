@@ -65,6 +65,8 @@ class ToolIOWhen(ApiModel):
 
     param: str
     matches: list[str]
+    # The value the endpoint uses when this parameter is absent; None when it has none.
+    default: str | None = None
 
 
 class ToolIOCase(ApiModel):
@@ -137,6 +139,7 @@ class ToolDiscovery:
         "/api/v1/security/get-info-on-pdf",
         "/api/v1/security/verify-pdf",
         "/api/v1/security/validate-signature",
+        "/api/v1/security/validate-compliance",
         "/api/v1/misc/list-attachments",
         "/api/v1/misc/show-javascript",
         "/api/v1/misc/decompress-pdf",
@@ -147,6 +150,9 @@ class ToolDiscovery:
         "/api/v1/misc/add-image",
         "/api/v1/misc/add-attachments",
         "/api/v1/general/overlay-pdfs",
+        # 5. Server maintenance, not a document operation: releases finished jobs and
+        #    their stored files. Nothing an edit agent should ever call on its own.
+        "/api/v1/general/jobs/cleanup",
     )
 
     def _is_excluded(self, path: str) -> bool:
@@ -182,7 +188,7 @@ class ToolDiscovery:
             entry: dict[str, Any] = {
                 "type": "object",
                 "properties": clean_props,
-                "description": body_schema.get("description"),
+                "description": _operation_description(path_item),
             }
             # Calculate which fields are actually required (many are marked as required,
             # but have a default set, so they're not really required)
@@ -290,6 +296,20 @@ def _rewrite_refs(obj: object) -> Iterable[str]:
             yield from _rewrite_refs(value)
 
 
+def _operation_description(path_item: dict[str, Any]) -> str | None:
+    """The operation's own prose, from ``@Operation``, as one line.
+
+    The request body's schema description is deliberately not a fallback: it documents the DTO,
+    not the operation, and every endpoint taking a bare ``PDFFile`` would otherwise share the
+    same upload boilerplate and be indistinguishable in the planner catalogue.
+    """
+    post = path_item.get("post") or {}
+    for candidate in (post.get("description"), post.get("summary")):
+        if isinstance(candidate, str) and candidate.strip():
+            return " ".join(candidate.split())
+    return None
+
+
 def _tool_name_segments(path: str) -> str:
     """Extract a descriptive name from the endpoint path.
 
@@ -378,7 +398,10 @@ def collect_tool_io(spec: dict[str, Any]) -> dict[str, dict[str, Any]]:
 
 
 def _render_when(condition: dict[str, Any]) -> str:
-    return f"ToolIOWhen(param={json.dumps(condition['param'])}, matches={json.dumps(condition['matches'])})"
+    parts = [f"param={json.dumps(condition['param'])}", f"matches={json.dumps(condition['matches'])}"]
+    if "default" in condition:
+        parts.append(f"default={json.dumps(condition['default'])}")
+    return f"ToolIOWhen({', '.join(parts)})"
 
 
 def _render_case(case: dict[str, Any]) -> str:

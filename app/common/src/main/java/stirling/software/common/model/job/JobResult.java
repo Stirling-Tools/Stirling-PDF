@@ -53,6 +53,13 @@ public class JobResult {
     private final Map<String, String> metadata = new ConcurrentHashMap<>();
 
     /**
+     * File ids of the persistent input copies made for this job. An async submit copies the upload
+     * into FileStorage so the job can still read it after the request returns; without tracking
+     * them here nothing would ever delete those copies.
+     */
+    @JsonIgnore private final List<String> inputFileIds = new CopyOnWriteArrayList<>();
+
+    /**
      * Create a new JobResult with the given job ID
      *
      * @param jobId The job ID
@@ -165,6 +172,22 @@ public class JobResult {
      */
     public List<String> getNotes() {
         return Collections.unmodifiableList(notes);
+    }
+
+    /** Record a persistent input copy so job cleanup deletes it alongside the results. */
+    public void addInputFileId(String fileId) {
+        if (fileId != null && !fileId.isBlank() && !inputFileIds.contains(fileId)) {
+            this.inputFileIds.add(fileId);
+        }
+    }
+
+    /**
+     * File ids of this job's persistent input copies.
+     *
+     * @return An unmodifiable view of the input file ids
+     */
+    public List<String> getInputFileIds() {
+        return Collections.unmodifiableList(inputFileIds);
     }
 
     /** Attach a metadata value, e.g. a policy id so cluster peers can identify a policy run. */

@@ -1,8 +1,14 @@
 name: Playwright E2E (stubbed)
 
-# Reusable workflow called from build.yml. Backend-free Playwright suite —
-# fast, no Spring Boot required. Runs against the `stubbed` project which
-# mocks API responses in the browser.
+# Reusable workflow called from build.yml. Backend-free Playwright suite: no
+# Spring Boot required, the `stubbed` projects mock API responses in the
+# browser.
+#
+# The suite is ~1000 tests. One job per browser on a 2-core runner took 30-50
+# minutes and was the longest job in every PR run, so each browser is split
+# into Playwright shards (`--shard=i/n`) that each run on their own runner.
+# The disk-link suite needs a desktop-mode bundle, so it is its own leg
+# instead of tailing the first chromium shard.
 on:
   workflow_call:
 
@@ -11,14 +17,56 @@ permissions:
 
 jobs:
   playwright-e2e:
+    name: playwright-e2e (${{ matrix.label }})
     runs-on: ubuntu-latest
+    timeout-minutes: 40
+    # The image already contains the Playwright browsers and all Linux
+    # dependencies, so no leg pays for `playwright install --with-deps`.
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.2-noble@sha256:6446946a1d9fd62d9ae501312a2d76a43ee688542b21622056a372959b65d63d
+    strategy:
+      # One leg breaking must not mask a failure in another - report all.
+      fail-fast: false
+      matrix:
+        include:
+          # webkit and firefox are the slow engines and get five shards;
+          # chromium gets four. Shards split by test count, and the viewer
+          # specs cluster, so the slowest shard still runs a few minutes
+          # longer than the rest. `artifact` is the label made safe for an
+          # artifact name.
+          - { label: "chromium 1/4", artifact: chromium-1of4, browser: chromium, project: stubbed, shard: 1, shards: 4 }
+          - { label: "chromium 2/4", artifact: chromium-2of4, browser: chromium, project: stubbed, shard: 2, shards: 4 }
+          - { label: "chromium 3/4", artifact: chromium-3of4, browser: chromium, project: stubbed, shard: 3, shards: 4 }
+          - { label: "chromium 4/4", artifact: chromium-4of4, browser: chromium, project: stubbed, shard: 4, shards: 4 }
+          - { label: "firefox 1/5", artifact: firefox-1of5, browser: firefox, project: stubbed-firefox, shard: 1, shards: 5 }
+          - { label: "firefox 2/5", artifact: firefox-2of5, browser: firefox, project: stubbed-firefox, shard: 2, shards: 5 }
+          - { label: "firefox 3/5", artifact: firefox-3of5, browser: firefox, project: stubbed-firefox, shard: 3, shards: 5 }
+          - { label: "firefox 4/5", artifact: firefox-4of5, browser: firefox, project: stubbed-firefox, shard: 4, shards: 5 }
+          - { label: "firefox 5/5", artifact: firefox-5of5, browser: firefox, project: stubbed-firefox, shard: 5, shards: 5 }
+          - { label: "webkit 1/5", artifact: webkit-1of5, browser: webkit, project: stubbed-webkit, shard: 1, shards: 5 }
+          - { label: "webkit 2/5", artifact: webkit-2of5, browser: webkit, project: stubbed-webkit, shard: 2, shards: 5 }
+          - { label: "webkit 3/5", artifact: webkit-3of5, browser: webkit, project: stubbed-webkit, shard: 3, shards: 5 }
+          - { label: "webkit 4/5", artifact: webkit-4of5, browser: webkit, project: stubbed-webkit, shard: 4, shards: 5 }
+          - { label: "webkit 5/5", artifact: webkit-5of5, browser: webkit, project: stubbed-webkit, shard: 5, shards: 5 }
+          # The frame-sampling viewer swap specs run serially on an unloaded
+          # runner (see the stubbed-viewer-swap projects in playwright.config.ts).
+          - { label: "chromium viewer-swap", artifact: chromium-viewer-swap, browser: chromium, project: stubbed-viewer-swap, workers: 1 }
+          - { label: "firefox viewer-swap", artifact: firefox-viewer-swap, browser: firefox, project: stubbed-viewer-swap-firefox, workers: 1 }
+          - { label: "webkit viewer-swap", artifact: webkit-viewer-swap, browser: webkit, project: stubbed-viewer-swap-webkit, workers: 1 }
+          # The disk-link suite exercises a seam chosen at build time, so it
+          # needs a desktop-mode bundle of its own. Chromium only: it is not
+          # testing engine behaviour.
+          - { label: "chromium disk-link", artifact: chromium-disk-link, browser: chromium, project: stubbed-desktop, suite: desktop }
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
           egress-policy: audit
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          # Full history so the flaky gate can diff a PR against its base sha.
+          fetch-depth: 0
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -26,30 +74,53 @@ jobs:
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
       - name: Install Task
-        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
-      - name: Install Playwright (chromium only)
-        run: task e2e:install -- chromium
+        uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+      # Every leg needs this, the disk-link one included: the OG prerender
+      # plugin in vite.config.ts reads dist/index.html whatever --outDir the
+      # desktop build was given.
       - name: Build frontend (production bundle for vite preview)
         env:
           VITE_BUILD_FOR_PREVIEW: "1"
-        run: task frontend:build
-      - name: Run stubbed E2E tests (chromium)
+          VITE_INCLUDE_PORTAL: "true"
+        run: task frontend:build:proprietary
+      - name: Run stubbed E2E tests (${{ matrix.label }})
+        if: matrix.suite != 'desktop'
         env:
+          # The official Playwright image expects its browser runtime under
+          # the root home directory. Keep this scoped to Playwright and use a
+          # neutral Docker config path so Docker does not read /root/.docker.
+          HOME: /root
+          DOCKER_CONFIG: /tmp/playwright-docker-config
           PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results.json
-        run: task e2e:stubbed -- --workers=3
+          NPM_CONFIG_PREFER_OFFLINE: "true"
+          NPM_CONFIG_FETCH_RETRIES: "5"
+          NPM_CONFIG_FETCH_RETRY_FACTOR: "2"
+          NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: "1000"
+          NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT: "120000"
+        run: task e2e:stubbed-project PROJECT=${{ matrix.project }} -- --workers=${{ matrix.workers || 3 }} ${{ matrix.shard && format('--shard={0}/{1}', matrix.shard, matrix.shards) || '' }}
+      - name: Build frontend (desktop mode, for the disk-link suite)
+        if: matrix.suite == 'desktop'
+        env:
+          VITE_BUILD_FOR_PREVIEW: "1"
+        run: task frontend:build:desktop:e2e
+      - name: Run disk-link E2E tests (desktop mode)
+        if: matrix.suite == 'desktop'
+        env:
+          HOME: /root
+          DOCKER_CONFIG: /tmp/playwright-docker-config
+          PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results.json
+        run: task e2e:stubbed-desktop -- --workers=3
       - name: Flag flaky tests
-        # Runs regardless of the test outcome: a flaky test (passed on retry)
-        # leaves the step green, so this is the only place it surfaces. Emits
-        # ::warning:: annotations + a job summary; never fails the job.
         if: always()
         working-directory: frontend
         run: npx tsx editor/scripts/report-flaky-tests.mts "$PLAYWRIGHT_JSON_OUTPUT_FILE"
         env:
           PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results.json
+          FLAKY_STRICT_BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || '' }}
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: playwright-report-stubbed-${{ github.run_id }}
+          name: playwright-report-stubbed-${{ matrix.artifact }}-${{ github.run_id }}
           path: frontend/playwright-report/
           retention-days: 7

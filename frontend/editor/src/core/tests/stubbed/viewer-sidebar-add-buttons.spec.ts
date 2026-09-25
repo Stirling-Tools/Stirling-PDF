@@ -23,7 +23,8 @@ const SAMPLE_PDF = path.join(
 );
 
 async function openViewerWithSample(page: import("@playwright/test").Page) {
-  await page.goto("/read");
+  // Not /read: reading collapses the workbench bar these sidebars are toggled from.
+  await page.goto("/");
   await page.waitForLoadState("domcontentloaded");
   await page
     .locator('[data-testid="file-input"]')

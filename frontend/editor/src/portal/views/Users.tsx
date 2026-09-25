@@ -1,8 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useAuth } from "@app/auth/UseSession";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Button, EmptyState, Skeleton } from "@app/ui";
+import { Button, EmptyState, Skeleton, StatusBadge, Tooltip } from "@app/ui";
 import {
+  transferOwnership,
+  transferTeamOwnership,
+  claimTeamOwnership,
   changeMemberRole,
   disableMemberMfa,
   setMemberSuspended,
@@ -18,9 +22,11 @@ import {
   revokeGrant,
   type ResourceGrant,
 } from "@portal/api/access";
-import { deleteTeam as apiDeleteTeam } from "@portal/api/teams";
+import { deleteTeam as apiDeleteTeam, type Team } from "@portal/api/teams";
 import { errorMessage } from "@portal/api/http";
-import { usersCapabilities as caps } from "@app/portal/usersCapabilities";
+import { usersCapabilities as buildCaps } from "@app/portal/usersCapabilities";
+import type { UsersCapabilities } from "@portal/api/usersCapabilities";
+import { useSeatManagement } from "@app/portal/seatManagement";
 import { UsersDirectory } from "@portal/components/users/UsersDirectory";
 import { PendingInvitations } from "@portal/components/users/PendingInvitations";
 import { InviteMemberModal } from "@portal/components/users/InviteMemberModal";
@@ -29,7 +35,7 @@ import { ResetPasswordModal } from "@portal/components/users/ResetPasswordModal"
 import { MoveToTeamModal } from "@portal/components/users/MoveToTeamModal";
 import { RenameTeamModal } from "@portal/components/users/RenameTeamModal";
 import { ConfirmModal } from "@portal/components/users/ConfirmModal";
-import type { TeamGroup } from "@portal/components/users/directory";
+import { seatsLabel } from "@portal/components/users/format";
 import { useUsersData } from "@portal/views/usersData";
 
 interface Confirm {
@@ -46,8 +52,46 @@ interface Confirm {
  */
 export function Users() {
   const { t } = useTranslation();
+  const { refreshSession } = useAuth();
+  const [actionBusy, setActionBusy] = useState(false);
   const { usersState, grantsState, teamsState, authState, refresh } =
     useUsersData();
+
+  // Who the viewer is, read off their own row in the roster the backend just
+  // returned. Only an org owner or a team lead may change anything here; for
+  // everyone else the roster is a directory, so the management controls come
+  // off rather than standing there returning 403.
+  const viewer = usersState.data?.members.find((m) => m.isSelf) ?? null;
+  const canManage =
+    viewer !== null
+      ? viewer.role === "admin" || viewer.teamLead === true
+      : // Not in the roster we were served: only an empty one is safe to offer
+        // controls for, so the first member can still be invited.
+        (usersState.data?.members.length ?? 0) === 0;
+  const caps = useMemo<UsersCapabilities>(
+    () =>
+      canManage
+        ? buildCaps
+        : {
+            ...buildCaps,
+            changeRole: false,
+            transferOwnership: false,
+            createTeam: false,
+            deleteTeam: false,
+            renameTeam: false,
+            emailInvite: false,
+            manageInvitations: false,
+            directCreate: false,
+            resetPassword: false,
+            unlock: false,
+            resetMfa: false,
+            suspend: false,
+            moveTeam: false,
+            manageGrants: false,
+            removeMember: false,
+          },
+    [canManage],
+  );
 
   const [actionError, setActionError] = useState<string | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -62,6 +106,7 @@ export function Users() {
   const [confirm, setConfirm] = useState<Confirm | null>(null);
 
   const [searchParams, setSearchParams] = useSearchParams();
+
   useEffect(() => {
     if (searchParams.get("invite") === null) return;
     setInviteOpen(true);
@@ -69,6 +114,29 @@ export function Users() {
     next.delete("invite");
     setSearchParams(next, { replace: true });
   }, [searchParams, setSearchParams]);
+
+  // Scroll to and flash the row for ?member=<id> (deep link from the super
+  // search), once the roster has rendered; then strip the param. Scoped to the
+  // roster so a pending-invitation row sharing the id can't match first.
+  const rosterRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const memberId = searchParams.get("member");
+    if (memberId === null || usersState.loading) return;
+    const row = rosterRef.current?.querySelector(
+      `[data-row-key="${CSS.escape(memberId)}"]`,
+    );
+    if (row) {
+      row.scrollIntoView({ block: "center" });
+      row.classList.add("portal-users__row--flash");
+      window.setTimeout(
+        () => row.classList.remove("portal-users__row--flash"),
+        1600,
+      );
+    }
+    const next = new URLSearchParams(searchParams);
+    next.delete("member");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams, usersState.loading]);
 
   // PORTAL grants held by a whole team (principalId = teamId); members inherit these.
   const grantByTeam = useMemo(() => {
@@ -123,17 +191,45 @@ export function Users() {
     (caps.directCreate
       ? (usersState.data?.emailInvitesEnabled ?? false)
       : true);
+  // Either route to a new member: an emailed invite, or creating the account
+  // outright. With neither, the invite controls have nothing to open.
+  const canAddMembers = canEmailInvite || caps.directCreate;
+  // Licence seats, from the same roster fetch. A null limit is an unlimited
+  // licence, which still shows the count; no summary at all (SaaS) shows nothing.
+  const summary = usersState.data?.summary;
+  const seats = summary
+    ? {
+        used: summary.seatsUsed,
+        limit: summary.seatLimit,
+        full:
+          summary.seatLimit !== null && summary.seatsUsed >= summary.seatLimit,
+      }
+    : null;
+  const seatManagement = useSeatManagement();
+  // A full licence blocks every route to a new member: the backend rejects the
+  // create/invite either way, so the controls say so instead of failing late.
+  const seatsFull = seats?.full === true;
+  const seatsFullHint = t(
+    "users.seats.full",
+    "Every licensed seat is in use. Free one up, or raise the seat count, to add anyone else.",
+  );
   const loading = usersState.loading && usersState.data === null;
   const loadError = !usersState.loading && usersState.error !== null;
   const isEmpty = !usersState.loading && !loadError && members.length === 0;
 
   function run(action: () => Promise<unknown>) {
     setActionError(null);
-    action()
-      .catch((error) => setActionError(errorMessage(error)))
-      // Refetch on success AND failure: a multi-step mutation (e.g. changeMemberRole)
-      // has no rollback, so a mid-sequence failure must resync the roster to real state.
-      .finally(() => refresh());
+    setActionBusy(true);
+    return (
+      action()
+        .catch((error) => setActionError(errorMessage(error)))
+        // Refetch on success AND failure: a multi-step mutation (e.g. changeMemberRole)
+        // has no rollback, so a mid-sequence failure must resync the roster to real state.
+        .finally(() => {
+          setActionBusy(false);
+          refresh();
+        })
+    );
   }
 
   function changeRole(member: Member, role: RoleId) {
@@ -155,7 +251,7 @@ export function Users() {
     run(() => revokeGrant(member.portalGrantId!));
   }
   // Grant/revoke Processor for a whole team (a TEAM-principal PORTAL grant).
-  function grantTeamProcessor(team: TeamGroup) {
+  function grantTeamProcessor(team: Team) {
     run(() =>
       createGrant({
         resourceType: "PORTAL",
@@ -166,7 +262,7 @@ export function Users() {
       }),
     );
   }
-  function revokeTeamProcessor(team: TeamGroup) {
+  function revokeTeamProcessor(team: Team) {
     const grant = grantByTeam.get(team.id);
     if (!grant) return;
     run(() => revokeGrant(grant.id));
@@ -174,6 +270,9 @@ export function Users() {
   function openInvite(teamId: number | null) {
     setInviteTeamId(teamId);
     setInviteOpen(true);
+  }
+  function openNewTeam() {
+    setNewTeamOpen(true);
   }
 
   // Kebab actions
@@ -195,6 +294,33 @@ export function Users() {
       action: () => disableMemberMfa(member),
     });
   }
+  function transferOwner(member: Member) {
+    setConfirm({
+      title: t(
+        "users.confirm.transferOwnershipTitle",
+        "Transfer organization ownership",
+      ),
+      body: !buildCaps.adminRole
+        ? t(
+            "team.transferBody",
+            "Make {{email}} the team owner? They will control team membership and organization billing settings. You will become a member. The team’s subscription and wallet stay with the team.",
+            { email: member.email ?? member.name },
+          )
+        : t(
+            "users.confirm.transferOwnershipBody",
+            "Make {{name}} the organization owner? They will become an admin. You will remain an admin but lose ownership. Only the new owner or the server operator can transfer it back.",
+            { name: member.name },
+          ),
+      confirmLabel: t("users.action.transferOwnership", "Transfer ownership"),
+      danger: true,
+      action: async () => {
+        if (buildCaps.adminRole) await transferOwnership(member);
+        else await transferTeamOwnership(member);
+        await refreshSession();
+      },
+    });
+  }
+
   function removeUser(member: Member) {
     // SaaS removes from the team (the account survives); self-hosted deletes the account.
     const teamScope = caps.removeScope === "team";
@@ -231,7 +357,7 @@ export function Users() {
       action: () => usersBackend.cancelInvitation(invitation.id),
     });
   }
-  function deleteTeamAction(team: TeamGroup) {
+  function deleteTeamAction(team: Team) {
     setConfirm({
       title: t("users.confirm.deleteTeamTitle", "Delete team"),
       body: t(
@@ -251,23 +377,81 @@ export function Users() {
         <div>
           <h1 className="portal-users__title">{t("users.title", "Users")}</h1>
           <p className="portal-users__sub">
-            {t("users.subtitle2", "Your people, teams, and access levels.")}{" "}
-            <a className="portal-users__link" href="/docs">
-              {t("users.learnMore", "Learn more about roles and access.")}
-            </a>
+            {t("users.subtitle2", "Your people, teams, and access levels.")}
           </p>
         </div>
         <div className="portal-users__head-actions">
+          {seats && (
+            <StatusBadge tone={seats.full ? "warning" : "neutral"}>
+              {seatsLabel(t, seats.used, seats.limit)}
+            </StatusBadge>
+          )}
+          {seatManagement.available && (
+            <Button
+              fat
+              variant="secondary"
+              loading={seatManagement.busy}
+              onClick={() => seatManagement.open(refresh)}
+            >
+              {t("users.seats.update", "Update seats")}
+            </Button>
+          )}
           {caps.createTeam && (
-            <Button variant="secondary" onClick={() => setNewTeamOpen(true)}>
+            <Button fat variant="secondary" onClick={openNewTeam}>
               {t("users.newTeam.action", "+ New team")}
             </Button>
           )}
-          <Button onClick={() => openInvite(null)}>
-            {t("users.invite.action", "Invite people")}
-          </Button>
+          {canAddMembers &&
+            (seatsFull ? (
+              <Tooltip content={seatsFullHint} placement="bottom">
+                <Button fat disabled className="portal-users__blocked">
+                  {t("users.invite.action", "Invite people")}
+                </Button>
+              </Tooltip>
+            ) : (
+              <Button fat onClick={() => openInvite(null)}>
+                {t("users.invite.action", "Invite people")}
+              </Button>
+            ))}
         </div>
       </header>
+
+      {members.some((member) => member.orgOwner && member.isFirstLogin) && (
+        <p role="status">
+          {t(
+            "users.ownerSetupRequired",
+            "The organization owner has not completed first login. Complete setup or ask the server operator to recover ownership before transferring ownership.",
+          )}
+        </p>
+      )}
+
+      {!buildCaps.adminRole &&
+        buildCaps.transferOwnership &&
+        members.length > 0 &&
+        !members.some((m) => m.teamLead) &&
+        teams.some((team) => team.isPersonal === false) && (
+          <div role="status">
+            <p>
+              {t(
+                "team.recoverBody",
+                "An existing member can recover ownership to manage the team and its billing settings.",
+              )}
+            </p>
+            <Button
+              disabled={actionBusy}
+              onClick={() => {
+                const team = teams.find((item) => item.isPersonal === false);
+                if (team)
+                  void run(async () => {
+                    await claimTeamOwnership(team.id);
+                    await refreshSession();
+                  });
+              }}
+            >
+              {t("team.recoverOwner", "Become team owner")}
+            </Button>
+          </div>
+        )}
 
       {actionError && (
         <p className="portal-users__error" role="alert">
@@ -306,9 +490,11 @@ export function Users() {
             "Invite your team to start collaborating.",
           )}
           actions={
-            <Button onClick={() => openInvite(null)}>
-              {t("users.invite.action", "Invite people")}
-            </Button>
+            canAddMembers && !seatsFull ? (
+              <Button onClick={() => openInvite(null)}>
+                {t("users.invite.action", "Invite people")}
+              </Button>
+            ) : undefined
           }
         />
       )}
@@ -318,28 +504,32 @@ export function Users() {
       )}
 
       {!loading && members.length > 0 && (
-        <UsersDirectory
-          members={members}
-          teams={teams}
-          capabilities={caps}
-          onChangeRole={changeRole}
-          onGrantProcessor={grantProcessor}
-          onRevokeProcessor={revokeProcessor}
-          processorTeamIds={processorTeamIds}
-          onGrantTeamProcessor={grantTeamProcessor}
-          onRevokeTeamProcessor={revokeTeamProcessor}
-          onAddToTeam={(team) => openInvite(team.id)}
-          onResetPassword={setResetPwMember}
-          onMoveToTeam={setMoveMember}
-          onToggleEnabled={toggleEnabled}
-          onUnlock={unlock}
-          onDisableMfa={disableMfa}
-          onRemove={removeUser}
-          onRenameTeam={(team) =>
-            setRenameTarget({ id: team.id, name: team.name })
-          }
-          onDeleteTeam={deleteTeamAction}
-        />
+        <div ref={rosterRef}>
+          <UsersDirectory
+            members={members}
+            teams={teams}
+            capabilities={caps}
+            onChangeRole={changeRole}
+            onGrantProcessor={grantProcessor}
+            onRevokeProcessor={revokeProcessor}
+            processorTeamIds={processorTeamIds}
+            onGrantTeamProcessor={grantTeamProcessor}
+            onRevokeTeamProcessor={revokeTeamProcessor}
+            onAddToTeam={canAddMembers ? (team) => openInvite(team.id) : null}
+            seatsFull={seatsFull}
+            onResetPassword={setResetPwMember}
+            onMoveToTeam={setMoveMember}
+            onToggleEnabled={toggleEnabled}
+            onUnlock={unlock}
+            onDisableMfa={disableMfa}
+            onRemove={removeUser}
+            onTransferOwnership={transferOwner}
+            onRenameTeam={(team) =>
+              setRenameTarget({ id: team.id, name: team.name })
+            }
+            onDeleteTeam={deleteTeamAction}
+          />
+        </div>
       )}
 
       <InviteMemberModal
@@ -388,11 +578,14 @@ export function Users() {
         body={confirm?.body ?? ""}
         confirmLabel={confirm?.confirmLabel ?? t("common.confirm", "Confirm")}
         danger={confirm?.danger}
+        busy={actionBusy}
         onConfirm={() => {
-          if (confirm) run(confirm.action);
-          setConfirm(null);
+          if (confirm && !actionBusy)
+            void run(confirm.action).finally(() => setConfirm(null));
         }}
-        onCancel={() => setConfirm(null)}
+        onCancel={() => {
+          if (!actionBusy) setConfirm(null);
+        }}
       />
     </div>
   );

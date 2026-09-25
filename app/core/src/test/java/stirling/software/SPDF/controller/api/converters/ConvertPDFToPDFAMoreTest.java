@@ -42,6 +42,8 @@ import org.springframework.mock.web.MockMultipartFile;
 import stirling.software.SPDF.model.api.converters.PdfToPdfARequest;
 import stirling.software.SPDF.service.VeraPDFService;
 import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.service.PdfaLevelAServiceInterface;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.TempFile;
@@ -63,10 +65,12 @@ class ConvertPDFToPDFAMoreTest {
 
     @Mock private RuntimePathConfig runtimePathConfig;
     @Mock private VeraPDFService veraPDFService;
+    @Mock private PdfaLevelAServiceInterface pdfaLevelAService;
     @Mock private TempFileManager tempFileManager;
 
     private ConvertPDFToPDFA newController() {
-        return new ConvertPDFToPDFA(runtimePathConfig, veraPDFService, tempFileManager);
+        return new ConvertPDFToPDFA(
+                runtimePathConfig, veraPDFService, pdfaLevelAService, tempFileManager);
     }
 
     private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
@@ -197,7 +201,7 @@ class ConvertPDFToPDFAMoreTest {
                             // qpdf normalize/clean writes its (last-arg) output file
                             if (command.contains("--normalize-content=y")) {
                                 // qpdf produced file is the last argument
-                                Path out = Path.of(command.get(command.size() - 1));
+                                Path out = Path.of(command.getLast());
                                 Files.write(out, simplePdfBytes());
                             }
                             return okResult;
@@ -383,7 +387,8 @@ class ConvertPDFToPDFAMoreTest {
         }
 
         @Test
-        @DisplayName("PDF/X with Ghostscript unavailable throws the conversion-failed exception")
+        @DisplayName(
+                "PDF/X with Ghostscript unavailable says the tool is missing, not that conversion failed")
         void pdfXNoGhostscript() throws Exception {
             PdfToPdfARequest request = new PdfToPdfARequest();
             request.setFileInput(pdfFile());
@@ -399,7 +404,7 @@ class ConvertPDFToPDFAMoreTest {
                 when(executor.runCommandWithOutputHandling(any(List.class))).thenReturn(notAvail);
 
                 assertThatThrownBy(() -> newController().pdfToPdfA(request))
-                        .isInstanceOf(RuntimeException.class);
+                        .isInstanceOf(ExceptionUtils.ToolRequiredException.class);
             }
         }
     }

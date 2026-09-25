@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -15,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
  * clause the state it was decided against, so a racing claim loses cleanly with 0 rows updated.
  * Transactional per call so the ledger can run them without an enclosing transaction.
  */
-@Repository
 public interface ProcessedFileRepository
         extends JpaRepository<ProcessedFileEntity, ProcessedFileId> {
 
@@ -94,6 +92,26 @@ public interface ProcessedFileRepository
             @Param("maxAttempts") int maxAttempts,
             @Param("now") long now);
 
+    /**
+     * Retry of an ERROR row at the same gate, for a user-invoked sweep. Unbounded: unlike the
+     * automatic INTERRUPTED retry, a person clicking again is the rate limiter.
+     */
+    @Modifying
+    @Transactional
+    @Query(
+            "update ProcessedFileEntity e set e.status ="
+                    + " stirling.software.proprietary.policy.ledger.ProcessedFileStatus.PROCESSING,"
+                    + " e.attempts = e.attempts + 1, e.lastSeen = :now, e.updatedAt = :now"
+                    + " where e.policyId = :policyId and e.identityHash = :identityHash"
+                    + " and e.status ="
+                    + " stirling.software.proprietary.policy.ledger.ProcessedFileStatus.ERROR"
+                    + " and e.signature = :gate")
+    int retryErrorAtGate(
+            @Param("policyId") String policyId,
+            @Param("identityHash") String identityHash,
+            @Param("gate") String gate,
+            @Param("now") long now);
+
     /** Bounded retry of an INTERRUPTED row whose gate moved but whose content is unchanged. */
     @Modifying
     @Transactional
@@ -139,6 +157,8 @@ public interface ProcessedFileRepository
     List<ProcessedFileEntity> findByPolicyIdAndIdentityHashIn(
             String policyId, Collection<String> identityHashes);
 
+    boolean existsByPolicyIdAndStatus(String policyId, ProcessedFileStatus status);
+
     /**
      * Remove an output record whose rename never landed, only while still settled exactly as
      * recorded; a row a claim has since taken over is left alone.
@@ -154,6 +174,26 @@ public interface ProcessedFileRepository
             @Param("policyId") String policyId,
             @Param("identityHash") String identityHash,
             @Param("gate") String gate);
+
+    /** Per-file retry: drop a parked failure so the file is claimable as never processed. */
+    @Modifying
+    @Transactional
+    @Query(
+            "delete from ProcessedFileEntity e where e.policyId = :policyId"
+                    + " and e.identityHash = :identityHash and e.status ="
+                    + " stirling.software.proprietary.policy.ledger.ProcessedFileStatus.ERROR")
+    int deleteFailure(
+            @Param("policyId") String policyId, @Param("identityHash") String identityHash);
+
+    /** Forget a settled row entirely; in-flight rows stay. */
+    @Modifying
+    @Transactional
+    @Query(
+            "delete from ProcessedFileEntity e where e.policyId = :policyId"
+                    + " and e.identityHash = :identityHash and e.status <>"
+                    + " stirling.software.proprietary.policy.ledger.ProcessedFileStatus.PROCESSING")
+    int deleteSettled(
+            @Param("policyId") String policyId, @Param("identityHash") String identityHash);
 
     /** Stamp presence for the given identities; chunked by the caller for very large folders. */
     @Modifying

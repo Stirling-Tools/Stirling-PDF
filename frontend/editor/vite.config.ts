@@ -8,6 +8,8 @@ import { promisify } from "node:util";
 import { defineConfig, loadEnv } from "vite";
 import type { Connect, PluginOption } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
+// oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
+import { iconSvgr } from "./scripts/icons/svgrOptions.mts";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
 const gzipPromise = promisify(gzip);
@@ -83,11 +85,12 @@ function compressStaticCopyPlugin(): PluginOption {
 // server-side rendering. Cloudflare Pages serves `compress.html` at `/compress`
 // automatically (clean URLs), and the Spring backend serves the same file.
 //
-// Absolute URLs (best for Facebook/X) are used when a canonical base is known:
+// Absolute URLs (best for Facebook/X) are used when the deploy origin is known:
 // VITE_OG_BASE_URL (custom domain) or CF_PAGES_URL (set automatically by Cloudflare
 // Pages). Otherwise URLs stay root-relative, which still resolves against whatever
-// origin serves the page (correct for self-hosted Docker). Logic lives in
-// scripts/og-prerender.mjs so it can be unit-tested without a full build.
+// origin serves the page (correct for self-hosted Docker). Indexing signals
+// (canonical, JSON-LD, sitemap) need VITE_OG_BASE_URL specifically - see below.
+// Logic lives in scripts/og-prerender.mjs so it can be unit-tested without a full build.
 function prerenderOgPlugin(isSaas: boolean): PluginOption {
   // SaaS (stirling.com) prerenders the marketing cards from a dedicated
   // manifest; every other flavour uses the tool-registry manifest.
@@ -98,15 +101,27 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
     name: "prerender-og",
     apply: "build" as const,
     async closeBundle() {
-      const { prerenderOg } = await import("./scripts/og-prerender.mjs");
-      const ogBase = (
-        process.env.VITE_OG_BASE_URL ||
-        process.env.CF_PAGES_URL ||
-        ""
-      ).replace(/\/+$/, "");
+      const { prerenderOg, buildSitemap, resolveDeployBases } =
+        // oxlint-disable-next-line no-restricted-imports -- vite config runs before path aliases resolve, so a relative import is required here
+        await import("./scripts/og-prerender.mjs");
+      const canonicalOrigin = process.env.VITE_OG_BASE_URL || "";
+      const deployOrigin = process.env.CF_PAGES_URL || "";
       // Absolute deploy base for nested routes' <base href> (matches vite `base`).
       const subpath = (process.env.RUN_SUBPATH || "").replace(/^\/+|\/+$/g, "");
       const baseHref = subpath ? `/${subpath}/` : "/";
+      const { ogBase, canonicalBase } = resolveDeployBases({
+        canonicalOrigin,
+        deployOrigin,
+        baseHref,
+      });
+      if (!canonicalBase && ogBase) {
+        console.warn(
+          "[prerender-og] VITE_OG_BASE_URL is unset: falling back to CF_PAGES_URL " +
+            `(${ogBase}) for social-card URLs only. No canonical links, JSON-LD ` +
+            "or sitemap will be emitted - set VITE_OG_BASE_URL to the public " +
+            "origin to enable them.",
+        );
+      }
       let manifest;
       try {
         manifest = JSON.parse(
@@ -120,13 +135,44 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
         return;
       }
       const distDir = path.resolve(__dirname, "dist");
-      const count = await prerenderOg({ distDir, manifest, ogBase, baseHref });
+      // The crawlable landing body only pays for itself where a crawler can
+      // reach the page; self-hosted and desktop builds just get the flash.
+      const injectLanding = Boolean(ogBase);
+      const count = await prerenderOg({
+        distDir,
+        manifest,
+        ogBase,
+        canonicalBase,
+        baseHref,
+        injectLanding,
+      });
       console.log(
         `[prerender-og] wrote ${count} prerendered route pages` +
           (ogBase
-            ? ` (absolute URLs, base=${ogBase})`
-            : " (root-relative URLs)"),
+            ? ` (absolute URLs, base=${ogBase}, crawlable landing body)`
+            : " (root-relative URLs, no landing body)"),
       );
+
+      // Sitemaps are an indexing instruction, so they need the canonical origin,
+      // not just any absolute one. Self-hosted and preview builds skip it.
+      const sitemap = buildSitemap(manifest, { canonicalBase });
+      if (sitemap) {
+        await fs.writeFile(path.join(distDir, "sitemap.xml"), sitemap);
+        // Point robots.txt at the sitemap (best-effort; robots.txt may be absent).
+        const robotsPath = path.join(distDir, "robots.txt");
+        try {
+          let robots = await fs.readFile(robotsPath, "utf8");
+          if (!/^\s*Sitemap:/im.test(robots)) {
+            robots =
+              robots.replace(/\s*$/, "\n") +
+              `Sitemap: ${canonicalBase}/sitemap.xml\n`;
+            await fs.writeFile(robotsPath, robots);
+          }
+        } catch {
+          // no robots.txt in dist - nothing to link
+        }
+        console.log(`[prerender-og] wrote sitemap.xml (base=${canonicalBase})`);
+      }
     },
   };
 }
@@ -258,10 +304,25 @@ export default defineConfig(async ({ mode, command }) => {
         };
 
   return {
+    // Per-mode: the default is one shared node_modules/.vite, so two dev servers in
+    // different modes re-optimize over each other and the browser 504s on a stale dep
+    // hash. Anchored to frontend/ because a relative path resolves against the vite
+    // root (editor/) and would create a second node_modules there.
+    cacheDir: resolve(
+      import.meta.dirname,
+      "..",
+      "node_modules",
+      `.vite-${effectiveMode}`,
+    ),
+    resolve: {
+      // Linked workspace dependencies must share the renderer's React instance.
+      dedupe: ["react", "react-dom"],
+    },
     define: {
       __DEV_WORKTREE_LABEL__: JSON.stringify(devWorktreeLabel),
     },
     plugins: [
+      iconSvgr(),
       react(),
       ...(runSubpath ? [subpathBareRedirectPlugin(runSubpath)] : []),
       tsconfigPaths({
@@ -319,21 +380,27 @@ export default defineConfig(async ({ mode, command }) => {
             dest: "pdfjs/standard_fonts",
           },
           {
-            // Brand assets live in core; the editor serves them by URL per
-            // variant, so copy each set to the /{variant}-logo path its
-            // manifests, index.html and useLogoAssets resolve against.
-            src: "src/core/assets/brand/classic-logo/*",
-            dest: "classic-logo",
-          },
-          {
+            // Brand assets live in core; the editor serves them by URL, so
+            // copy the set to the /modern-logo path its manifest, index.html
+            // and useLogoAssets resolve against.
             src: "src/core/assets/brand/modern-logo/*",
             dest: "modern-logo",
+          },
+          {
+            // Fallback TrueType fonts for PDFium (Noto Sans, CJK, Arabic, etc.)
+            src: "../../app/core/src/main/resources/static/fonts/*.ttf",
+            dest: "fonts",
           },
         ],
       }),
       compressStaticCopyPlugin(),
       prerenderOgPlugin(effectiveMode === "saas"),
     ],
+    // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`,
+    // so without this `@app/*` resolves in the app and fails in a worker.
+    worker: {
+      plugins: () => [tsconfigPaths({ projects: [tsconfigProject] })],
+    },
     server: {
       host: true,
       allowedHosts: allowedHosts.length > 0 ? allowedHosts : undefined,
@@ -356,9 +423,15 @@ export default defineConfig(async ({ mode, command }) => {
     },
     build: {
       target: "esnext",
+      modulePreload: {
+        // Lazy chunks can import the entry again. An upfront link lets Vite reuse
+        // its preload instead of fetching an already-running module in WebKit.
+        resolveDependencies: (filename, deps, { hostType }) =>
+          hostType === "html" ? [filename, ...deps] : deps,
+      },
       rollupOptions: {
         output: {
-          manualChunks(id) {
+          manualChunks(id: string) {
             if (id.includes("material-symbols-icons.json"))
               return "vendor-iconset";
             if (id.includes("node_modules")) {

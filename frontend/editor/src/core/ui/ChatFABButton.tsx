@@ -25,7 +25,12 @@ export function ChatFABButton({
     .join(" ");
 
   return (
-    <button type="button" className={classes} {...rest}>
+    <button
+      type="button"
+      className={classes}
+      aria-label="Open assistant"
+      {...rest}
+    >
       {/* Decorative: the button itself carries the accessible name. */}
       <span aria-hidden="true" style={{ display: "inline-flex" }}>
         <BrandMark height="1.875rem" />

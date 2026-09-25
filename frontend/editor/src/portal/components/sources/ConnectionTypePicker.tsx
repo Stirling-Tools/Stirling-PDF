@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import { Icon } from "@app/ui/Icon";
 import {
   CONNECTION_CATEGORIES,
   searchConnectionTypes,
@@ -8,6 +8,8 @@ import {
   type CreatableConnectionType,
 } from "@portal/components/sources/connectionTypes";
 import { BrandMark } from "@portal/components/BrandMarks";
+import "@portal/theme/surface.css";
+import "@portal/components/sources/connections.css";
 
 /**
  * Choose what to connect to.
@@ -56,7 +58,11 @@ export function ConnectionTypePicker({
   return (
     <div className="portal-conn-picker">
       <div className="portal-conn-picker__search">
-        <SearchRoundedIcon className="portal-conn-picker__search-icon" />
+        <Icon
+          name="search"
+          size={18}
+          className="portal-conn-picker__search-icon"
+        />
         <input
           type="search"
           autoFocus
@@ -112,7 +118,7 @@ function Grid({
             key={type.id}
             type="button"
             className={
-              "portal-conn-picker__card" +
+              "portal-surface portal-conn-picker__card" +
               (type.kind === "custom"
                 ? " portal-conn-picker__card--advanced"
                 : "")

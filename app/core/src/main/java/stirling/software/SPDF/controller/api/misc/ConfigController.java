@@ -195,6 +195,9 @@ public class ConfigController {
                     "enableMobileScanner",
                     applicationProperties.getSystem().isEnableMobileScanner());
             configData.put(
+                    "enableMobileSignature",
+                    applicationProperties.getSystem().isEnableMobileSignature());
+            configData.put(
                     "mobileScannerConvertToPdf",
                     applicationProperties.getSystem().getMobileScannerSettings().isConvertToPdf());
             configData.put(
@@ -213,7 +216,6 @@ public class ConfigController {
             // Extract values from ApplicationProperties
             configData.put("appNameNavbar", applicationProperties.getUi().getAppNameNavbar());
             configData.put("languages", applicationProperties.getUi().getLanguages());
-            configData.put("logoStyle", applicationProperties.getUi().getLogoStyle());
             configData.put("defaultLocale", applicationProperties.getSystem().getDefaultLocale());
 
             // User preference defaults
@@ -331,9 +333,24 @@ public class ConfigController {
             configData.put(
                     "enableDesktopInstallSlide",
                     applicationProperties.getSystem().getEnableDesktopInstallSlide());
+            configData.put(
+                    "enableEasterEggs", applicationProperties.getSystem().isEnableEasterEggs());
 
             // Premium/Enterprise settings
-            configData.put("premiumEnabled", applicationProperties.getPremium().isEnabled());
+            configData.put("premiumEnabled", Boolean.TRUE.equals(isRunningProOrHigher()));
+
+            // Whether this instance can link a Stirling (SaaS) account at all. The account-link
+            // beans live in :proprietary and are @ConditionalOnProperty on this same key, so when
+            // it is off they are absent and /api/v1/account-link/* returns 404. The frontend cannot
+            // tell that 404 apart from "not linked yet", so it needs this told to it explicitly
+            // before it can prompt anyone to link. Read from the environment rather than
+            // AccountLinkProperties because :core must not depend on :proprietary.
+            configData.put(
+                    "accountLinkAvailable",
+                    applicationContext
+                            .getEnvironment()
+                            .getProperty(
+                                    "stirling.billing.account-link.enabled", Boolean.class, false));
 
             // AI Engine settings
             ApplicationProperties.AiEngine aiEngineConfig = applicationProperties.getAiEngine();

@@ -48,7 +48,7 @@ public class UsageRestController {
             @RequestParam(value = "dataType", defaultValue = "all") String dataType,
             @RequestParam(value = "days", defaultValue = "30") Integer days) {
 
-        int lookbackDays = Math.max(1, Math.min(days, 365));
+        int lookbackDays = Math.clamp(days, 1, 365);
 
         // Get audit events filtered by type
         List<PersistentAuditEvent> events = getEventsByDataType(dataType, lookbackDays);

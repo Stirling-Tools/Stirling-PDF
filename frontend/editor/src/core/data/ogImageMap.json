@@ -1,6 +1,7 @@
 {
   "certSign": "certSign",
   "sign": "sign",
+  "sharedSign": "shared-sign",
   "addText": "add-text",
   "addPassword": "add-password",
   "removePassword": "remove-password",
@@ -20,7 +21,6 @@
   "annotate": "annotate",
   "scannerImageSplit": "detect-split-scanned-photos",
   "editTableOfContents": "edit-table-of-contents",
-  "scannerEffect": "scanner-effect",
   "autoRename": "auto-rename-pdf-file",
   "pageLayout": "multi-page-layout",
   "scalePages": "adjust-page-size-scale",

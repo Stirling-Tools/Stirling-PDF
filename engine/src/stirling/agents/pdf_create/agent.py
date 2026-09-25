@@ -45,7 +45,7 @@ from stirling.contracts.pdf_create import (
     WrittenSections,
 )
 from stirling.models.agent_tool_models import AgentToolId, CreatePdfFromHtmlAgentParams
-from stirling.services import AppRuntime
+from stirling.services import AppRuntime, language_directive
 
 logger = logging.getLogger(__name__)
 
@@ -260,6 +260,7 @@ def _build_sections_prompt(meta: DocumentMeta, user_request: str, history: str) 
 
     lines.append(f"\nConversation history:\n{history}")
     lines.append(f"\nUser request: {user_request}")
+    lines.append(f"\n{language_directive()}")
     return "\n".join(lines)
 
 
@@ -292,6 +293,7 @@ def _build_writer_prompt(plan: DocumentPlan, chunk: _Chunk) -> str:
         for point in s.key_points:
             lines.append(f"  - {point}")
 
+    lines.append(f"\n{language_directive()}")
     return "\n".join(lines)
 
 
@@ -338,6 +340,7 @@ class PdfCreateAgent:
         # ── Phase 1: plan meta ─────────────────────────────────────────────────
         logger.info("[pdf-create] phase 1/6: planning document meta")
         meta_prompt = f"Conversation history:\n{history}\n\nUser request: {request.user_message}"
+        meta_prompt += f"\n\n{language_directive()}"
         meta_result = await self._meta_planner.run(meta_prompt)
         meta = meta_result.output
 

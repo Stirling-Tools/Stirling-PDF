@@ -80,6 +80,13 @@ export const changePermissionsOperationConfig = defineSingleFileTool({
   operationType: "changePermissions",
   endpoint: ENDPOINT, // Change Permissions is a fake endpoint for the Add Password tool
   defaultParameters,
+  // Both tools post to add-password. A permissions-only step carries none of the encryption
+  // fields, so it is this tool and not Add Password; keyLength, always sent by Add Password,
+  // is the reliable tell even when a password happens to be blank.
+  claimsStoredStep: (apiParams) =>
+    !("password" in apiParams) &&
+    !("ownerPassword" in apiParams) &&
+    !("keyLength" in apiParams),
 });
 
 export const useChangePermissionsOperation = () => {

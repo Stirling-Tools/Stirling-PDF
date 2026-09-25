@@ -11,7 +11,9 @@ import { PageEditorFunctions, PDFPage } from "@app/types/pageEditor";
 // Thumbnail generation is now handled by individual PageThumbnail components
 import "@app/components/pageEditor/PageEditor.module.css";
 import PageThumbnail from "@app/components/pageEditor/PageThumbnail";
-import DragDropGrid from "@app/components/pageEditor/DragDropGrid";
+import DragDropGrid, {
+  type DragHandleProps,
+} from "@app/components/pageEditor/DragDropGrid";
 import SkeletonLoader from "@app/components/shared/SkeletonLoader";
 import { FileId } from "@app/types/file";
 import { GRID_CONSTANTS } from "@app/components/pageEditor/constants";
@@ -31,6 +33,13 @@ import { convertSplitPageIdsToIndexes } from "@app/components/pageEditor/utils/s
 
 export interface PageEditorProps {
   onFunctionsReady?: (functions: PageEditorFunctions) => void;
+}
+
+interface PageEditorFileEntry {
+  fileId: FileId;
+  name: string;
+  versionNumber: number | undefined;
+  isSelected: boolean;
 }
 
 const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
@@ -56,6 +65,7 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
     updateCurrentPages,
     savePersistedDocument,
     clearPersistedDocument,
+    contentRevision,
   } = usePageEditor();
 
   const [visiblePageIds, setVisiblePageIds] = useState<string[]>([]);
@@ -106,14 +116,14 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
   const selectedIdsKey = [...state.ui.selectedFileIds].sort().join(",");
   const filesSignature = selectors.getFilesSignature();
 
-  const fileObjectsRef = useRef(new Map<FileId, any>());
+  const fileObjectsRef = useRef(new Map<FileId, PageEditorFileEntry>());
   const gridItemRefsRef = useRef<React.MutableRefObject<
     Map<string, HTMLDivElement>
   > | null>(null);
 
   const pageEditorFiles = useMemo(() => {
     const cache = fileObjectsRef.current;
-    const newFiles: any[] = [];
+    const newFiles: PageEditorFileEntry[] = [];
 
     fileOrder.forEach((fileId) => {
       const stub = selectors.getStirlingFileStub(fileId);
@@ -185,6 +195,13 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
   const initialDocument = useInitialPageDocument();
   const { document: mergedPdfDocument } = usePageDocument();
 
+  // The undo manager is created below this hook, so the reset is forwarded
+  // through a ref rather than reordering the two.
+  const clearUndoHistoryRef = useRef<() => void>(() => {});
+  const handleDocumentReplaced = useCallback(() => {
+    clearUndoHistoryRef.current();
+  }, []);
+
   const { setEditedDocument, displayDocument, getEditedDocument } =
     useEditedDocumentState({
       initialDocument,
@@ -193,6 +210,8 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
       clearReorderedPages,
       fileOrder,
       updateCurrentPages,
+      contentRevision,
+      onDocumentReplaced: handleDocumentReplaced,
     });
 
   const displayDocumentRef = useRef(displayDocument);
@@ -393,6 +412,7 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
   } = useUndoManagerState({
     setHasUnsavedChanges,
   });
+  clearUndoHistoryRef.current = clearUndoHistory;
 
   const {
     createRotateCommand,
@@ -605,7 +625,7 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
       clearBoxSelection: () => void,
       activeDragIds: string[],
       justMoved: boolean,
-      dragHandleProps?: any,
+      dragHandleProps?: DragHandleProps,
       zoomLevelParam?: number,
     ) => {
       gridItemRefsRef.current = refs;

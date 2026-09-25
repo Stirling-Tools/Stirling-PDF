@@ -7,7 +7,7 @@ import {
   fetchAssistantSuggestions,
   getAssistantReply,
 } from "@portal/api/assistant";
-import { CloseIcon, SendIcon, SparklesIcon } from "@portal/components/icons";
+import { Icon } from "@app/ui/Icon";
 import "@portal/components/AssistantPanel.css";
 
 interface Message {
@@ -84,14 +84,16 @@ export function AssistantPanel() {
   if (!assistantOpen) return null;
 
   return (
-    <aside
+    // A plain div, not <aside>: ARIA in HTML does not permit role="dialog" on a
+    // complementary landmark.
+    <div
       className="portal-assistant"
       role="dialog"
       aria-label={t("portal.assistant.title")}
     >
       <header className="portal-assistant__header">
         <div className="portal-assistant__header-left">
-          <SparklesIcon size={16} />
+          <Icon name="sparkles" size={16} />
           <span className="portal-assistant__title">
             {t("portal.assistant.title")}
           </span>
@@ -102,7 +104,7 @@ export function AssistantPanel() {
           onClick={closeAssistant}
           aria-label={t("portal.assistant.close", "Close assistant")}
         >
-          <CloseIcon size={16} />
+          <Icon name="x" size={16} />
         </ActionIcon>
       </header>
 
@@ -174,9 +176,9 @@ export function AssistantPanel() {
           disabled={!input.trim() || typing}
           aria-label={t("portal.assistant.send")}
         >
-          <SendIcon size={14} />
+          <Icon name="send" size={14} />
         </ActionIcon>
       </form>
-    </aside>
+    </div>
   );
 }

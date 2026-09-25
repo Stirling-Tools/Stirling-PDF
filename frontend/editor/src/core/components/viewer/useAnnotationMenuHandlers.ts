@@ -14,6 +14,8 @@ import type {
   AnnotationPatch,
 } from "@app/components/viewer/viewerTypes";
 import type { ScrollActions } from "@app/contexts/viewer/viewerActions";
+import { openExternalTab } from "@app/platform/openExternalTab";
+import { getExternalHref } from "@app/utils/externalUrl";
 
 export type AnnotationType =
   | "textMarkup"
@@ -74,7 +76,6 @@ interface UseAnnotationMenuHandlersParams {
 
 export interface AnnotationMenuState {
   annotationType: AnnotationType;
-  menuWidth: number;
   obj: AnnotationObject | undefined;
   annotationId: string | undefined;
   firstLinkTarget: FirstLinkTarget | null;
@@ -192,23 +193,6 @@ export function useAnnotationMenuHandlers({
     if (type === PdfAnnotationSubtype.STAMP) return "stamp";
     return "unknown";
   }, [annotation]);
-
-  const menuWidth = useMemo((): number => {
-    switch (annotationType) {
-      case "stamp":
-        return 80;
-      case "inkHighlighter":
-      case "comment":
-      case "textMarkup":
-      case "text":
-      case "note":
-        return 280;
-      case "shape":
-        return 200;
-      default:
-        return 260;
-    }
-  }, [annotationType]);
 
   const hasCommentContent = (obj?.contents ?? "").trim().length > 0;
   const isInSidebar =
@@ -370,7 +354,15 @@ export function useAnnotationMenuHandlers({
   const onGoToLink = useCallback(() => {
     if (!firstLinkTarget) return;
     if (firstLinkTarget.type === "uri") {
-      window.open(firstLinkTarget.uri, "_blank", "noopener,noreferrer");
+      const href = getExternalHref(firstLinkTarget.uri);
+      if (href) {
+        void openExternalTab(href);
+      } else {
+        console.warn(
+          "[useAnnotationMenuHandlers] Blocked unsafe URL:",
+          firstLinkTarget.uri,
+        );
+      }
     } else {
       scrollActions.scrollToPage(firstLinkTarget.pageIndex + 1);
     }
@@ -446,7 +438,6 @@ export function useAnnotationMenuHandlers({
 
   return {
     annotationType,
-    menuWidth,
     obj,
     annotationId,
     firstLinkTarget,

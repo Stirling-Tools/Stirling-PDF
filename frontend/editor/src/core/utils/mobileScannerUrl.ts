@@ -1,10 +1,10 @@
 /**
- * Build the URL a phone opens (via the QR code) to reach the SPA's
- * `/mobile-scanner` route.
+ * Build the URL a phone opens (via a QR code) to reach one of the SPA's
+ * public mobile routes (`/mobile-scanner`, `/mobile-sign`).
  *
- * That route is a public, top-level route. It lives under the app's base path,
- * which is the router's `basename`. If the generated URL omits the base path,
- * the phone loads a path the router can't match, falls through to the
+ * These routes are public, top-level routes. They live under the app's base
+ * path, which is the router's `basename`. If the generated URL omits the base
+ * path, the phone loads a path the router can't match, falls through to the
  * auth-gated catch-all route, and gets bounced to the login page. So the base
  * path must always be present.
  *
@@ -18,15 +18,17 @@
  *
  * With no usable configured URL, fall back to the current origin + base path.
  */
-export function buildMobileScannerUrl(params: {
+export function buildMobileRouteUrl(params: {
   configuredUrl: string;
   sessionId: string;
   origin: string;
   basePath: string;
+  /** Route under the SPA base, without slashes: "mobile-scanner", "mobile-sign". */
+  routePath: string;
 }): string {
-  const { configuredUrl, sessionId, origin, basePath } = params;
+  const { configuredUrl, sessionId, origin, basePath, routePath } = params;
   const query = `?session=${sessionId}`;
-  const route = `${basePath}/mobile-scanner`;
+  const route = `${basePath}/${routePath}`;
 
   const trimmed = configuredUrl.trim();
   if (trimmed) {
@@ -35,7 +37,7 @@ export function buildMobileScannerUrl(params: {
       if (parsed.protocol === "http:" || parsed.protocol === "https:") {
         const subpath = parsed.pathname.replace(/\/+$/, "");
         return subpath
-          ? `${parsed.origin}${subpath}/mobile-scanner${query}`
+          ? `${parsed.origin}${subpath}/${routePath}${query}`
           : `${parsed.origin}${route}${query}`;
       }
     } catch {
@@ -44,4 +46,14 @@ export function buildMobileScannerUrl(params: {
   }
 
   return `${origin}${route}${query}`;
+}
+
+/** The `/mobile-scanner` QR URL. See {@link buildMobileRouteUrl}. */
+export function buildMobileScannerUrl(params: {
+  configuredUrl: string;
+  sessionId: string;
+  origin: string;
+  basePath: string;
+}): string {
+  return buildMobileRouteUrl({ ...params, routePath: "mobile-scanner" });
 }

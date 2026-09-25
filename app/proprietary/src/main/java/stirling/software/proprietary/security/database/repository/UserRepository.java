@@ -7,18 +7,21 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.model.User;
 
-@Repository
 public interface UserRepository extends JpaRepository<User, Long> {
+    @Query(
+            "SELECT u FROM User u JOIN u.authorities a WHERE a.authority = 'ROLE_ADMIN' AND (u.enabled IS NULL OR u.enabled = true) ORDER BY u.id ASC")
+    List<User> findEnabledAdminsByIdAsc();
+
     Optional<User> findByUsernameIgnoreCase(String username);
 
     @Query("FROM User u LEFT JOIN FETCH u.settings where upper(u.username) = upper(:username)")
@@ -57,6 +60,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query(
             "SELECT u FROM User u JOIN FETCH u.authorities JOIN FETCH u.team WHERE u.team.id = :teamId")
     List<User> findAllByTeamId(@Param("teamId") Long teamId);
+
+    /** Usernames alone, ordered and limited by the database, for callers that need no entities. */
+    @Query(
+            "SELECT u.username FROM User u WHERE u.team.id IN :teamIds AND u.username IS NOT NULL"
+                    + " ORDER BY u.username")
+    List<String> findUsernamesByTeamIds(
+            @Param("teamIds") Collection<Long> teamIds, Pageable pageable);
 
     long countByTeam(Team team);
 

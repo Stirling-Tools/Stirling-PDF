@@ -49,15 +49,7 @@ class UploadLimitServiceTest {
         systemProps = mock(ApplicationProperties.System.class);
         when(applicationProperties.getSystem()).thenReturn(systemProps);
 
-        uploadLimitService = new UploadLimitService();
-        // inject mock
-        try {
-            var field = UploadLimitService.class.getDeclaredField("applicationProperties");
-            field.setAccessible(true);
-            field.set(uploadLimitService, applicationProperties);
-        } catch (ReflectiveOperationException e) {
-            throw new RuntimeException(e);
-        }
+        uploadLimitService = new UploadLimitService(applicationProperties);
     }
 
     @ParameterizedTest(name = "getReadableUploadLimit case #{index}: rawValue={0}, expected={1}")

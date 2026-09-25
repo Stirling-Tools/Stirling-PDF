@@ -1,4 +1,5 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { openSettings } from "@app/tests/helpers/ui-helpers";
 
 test.describe("13. Language / Localization", () => {
   test.use({
@@ -28,11 +29,7 @@ test.describe("13. Language / Localization", () => {
         !(await languageButton.isVisible({ timeout: 1000 }).catch(() => false))
       ) {
         // Open Settings to access the language selector in the General section
-        await page.locator('[data-testid="config-button"]').first().click();
-        await page
-          .locator(".mantine-Modal-content")
-          .first()
-          .waitFor({ state: "visible", timeout: 5000 });
+        await openSettings(page, /^General$/);
         languageButton = page
           .locator('[data-testid="language-selector-button"]')
           .first();
@@ -54,12 +51,11 @@ test.describe("13. Language / Localization", () => {
         // Step 5: Wait for page reload (language change triggers window.location.reload())
         await page.waitForLoadState("domcontentloaded");
 
-        // Step 6: Verify the UI text is in English. The tool search is a
-        // header toggle, so assert its English label rather than the field,
-        // which only mounts once the toggle is pressed.
-        await expect(
-          page.getByRole("button", { name: /search tools/i }).first(),
-        ).toBeVisible({ timeout: 10000 });
+        // Step 6: Verify the UI text is in English via the always-mounted
+        // super search bar's placeholder.
+        await expect(page.getByPlaceholder(/search/i).first()).toBeVisible({
+          timeout: 10000,
+        });
       }
     });
   });

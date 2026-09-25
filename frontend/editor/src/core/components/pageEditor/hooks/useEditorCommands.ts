@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef } from "react";
 import {
   BulkRotateCommand,
   DeletePagesCommand,
+  DOMCommand,
   PageBreakCommand,
   ReorderPagesCommand,
   SplitCommand,
@@ -24,7 +25,7 @@ interface UsePageEditorCommandsParams {
   selectedPageIds: string[];
   setSelectedPageIds: (ids: string[]) => void;
   getPageNumbersFromIds: (pageIds: string[]) => number[];
-  executeCommandWithTracking: (command: any) => void;
+  executeCommandWithTracking: (command: DOMCommand) => void;
   updateFileOrderFromPages: (pages: PDFPage[]) => void;
   actions: FileActions;
   selectors: FileSelectors;
@@ -145,10 +146,8 @@ export const usePageEditorCommands = ({
     [executeCommandWithTracking, setSplitPositions],
   );
 
-  const executeCommand = useCallback((command: any) => {
-    if (command && typeof command.execute === "function") {
-      command.execute();
-    }
+  const executeCommand = useCallback((command: { execute: () => void }) => {
+    command.execute();
   }, []);
 
   const handleRotate = useCallback(

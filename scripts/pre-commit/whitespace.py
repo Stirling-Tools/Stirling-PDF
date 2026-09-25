@@ -40,7 +40,10 @@ def normalise(data: bytes) -> bytes:
     body = b"\n".join(lines)
     # Ensure a non-empty file ends with exactly one newline.
     stripped = body.rstrip(b"\r\n")
-    return stripped + b"\n" if stripped else body
+    if not stripped:
+        return body
+    newline = b"\r\n" if data.endswith(b"\r\n") else b"\n"
+    return stripped + newline
 
 
 def main() -> int:

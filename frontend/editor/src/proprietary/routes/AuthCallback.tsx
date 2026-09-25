@@ -1,11 +1,11 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { resolveLandingPath } from "@app/utils/loginLanding";
 import { useTranslation } from "react-i18next";
 import {
   consumePostLoginRedirectPath,
   springAuth,
 } from "@app/auth/spring/springAuthClient";
-import { markLoginLandingPending } from "@app/utils/loginLanding";
 import { handleAuthCallbackSuccess } from "@app/extensions/authCallback";
 import { AuthShell } from "@app/auth/ui/AuthShell";
 import { Spinner } from "@app/ui/Spinner";
@@ -100,10 +100,10 @@ export default function AuthCallback() {
         // This prevents infinite render loop when coming from cross-domain SAML redirect
         await new Promise((resolve) => setTimeout(resolve, 100));
 
-        const target = consumePostLoginRedirectPath() ?? "/";
-        // Fresh OAuth/SSO login with no explicit destination: let the role-based
-        // landing route processor users.
-        if (target === "/") markLoginLandingPending();
+        // No explicit destination: land processor users on the processor and
+        // everyone else on the editor.
+        const target =
+          consumePostLoginRedirectPath() ?? (await resolveLandingPath());
         console.info(
           `[AuthCallback] Authenticated ${data.session.user.username} in ${elapsed()}, navigating to ${target}`,
         );

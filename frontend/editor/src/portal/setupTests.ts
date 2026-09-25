@@ -1,6 +1,9 @@
 import "@testing-library/jest-dom";
 import { vi } from "vitest";
 
+// The shims `src/index.tsx` installs - see core/setupTests.ts.
+import "@app/utils/engineShims";
+
 // Mirrors the editor's setup: jsdom lacks a handful of browser APIs that shared
 // components (Mantine FocusTrap, responsive helpers) touch on render.
 
@@ -47,7 +50,7 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
   disconnect: vi.fn(),
-})) as unknown as typeof IntersectionObserver;
+}));
 
 Object.defineProperty(window, "matchMedia", {
   writable: true,

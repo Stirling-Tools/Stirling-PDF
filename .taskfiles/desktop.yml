@@ -49,7 +49,8 @@ tasks:
     ignore_error: true
     dir: editor
     cmds:
-      - npx tauri dev --no-watch
+      # Dev HTTP uses the packaged app origin instead of the Vite origin; keep this out of builds.
+      - npx tauri dev --no-watch --features tauri-plugin-http/unsafe-headers
 
   build:
     desc: "Build Tauri desktop app (production)"
@@ -195,7 +196,11 @@ tasks:
       # `desktop:build` run `jlink:clean` first to force a fresh build.
       - cmd: chmod -R u+w runtime/jre
         platforms: [linux, darwin]
-      - cmd: powershell -NoProfile -Command "Get-ChildItem -Recurse runtime/jre | ForEach-Object { $_.IsReadOnly = $false }"
+      # Single-quoted so Task's shell leaves `$_` and `$false` alone. Double
+      # quotes let it expand them as its own variables, and since neither is
+      # set the command PowerShell actually received was
+      # `ForEach-Object { .IsReadOnly = }`, which fails on every file.
+      - cmd: powershell -NoProfile -Command 'Get-ChildItem -Recurse -File runtime/jre | ForEach-Object { $_.IsReadOnly = $false }'
         platforms: [windows]
     status:
       - test -f runtime/jre/release

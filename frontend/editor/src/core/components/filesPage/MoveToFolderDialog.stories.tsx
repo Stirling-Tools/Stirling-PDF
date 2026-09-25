@@ -1,6 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { MoveToFolderDialog } from "@app/components/filesPage/MoveToFolderDialog";
-import { createFolderId, FolderRecord } from "@app/types/folder";
+import {
+  createFolderId,
+  FOLDER_COLOR_PALETTE,
+  FolderRecord,
+} from "@app/types/folder";
 
 const workId = createFolderId();
 const invoicesId = createFolderId();
@@ -11,7 +15,7 @@ const folders: FolderRecord[] = [
     id: workId,
     name: "Work",
     parentFolderId: null,
-    color: "#3b82f6",
+    color: FOLDER_COLOR_PALETTE[0],
     createdAt: Date.now(),
     updatedAt: Date.now(),
   },
@@ -19,7 +23,7 @@ const folders: FolderRecord[] = [
     id: invoicesId,
     name: "Invoices",
     parentFolderId: workId,
-    color: "#10b981",
+    color: FOLDER_COLOR_PALETTE[1],
     createdAt: Date.now(),
     updatedAt: Date.now(),
   },
@@ -27,7 +31,7 @@ const folders: FolderRecord[] = [
     id: archivedId,
     name: "Archived",
     parentFolderId: null,
-    color: "#f59e0b",
+    color: FOLDER_COLOR_PALETTE[2],
     createdAt: Date.now(),
     updatedAt: Date.now(),
   },

@@ -5,7 +5,7 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { useTranslation } from "react-i18next";
 import { supportedLanguages, setUserLanguage } from "@app/i18n";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import styles from "@app/components/shared/LanguageSelector.module.css";
 import { Z_INDEX_CONFIG_MODAL } from "@app/styles/zIndex";
 
@@ -183,6 +183,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   // 2-4: 300px/2 cols, 5-9: 400px/3 cols, 10+: 600px/4 cols
   const dropdownWidth =
     languageOptions.length <= 4 ? 300 : languageOptions.length <= 9 ? 400 : 600;
+  const responsiveDropdownWidth = `min(${dropdownWidth}px, calc(100vw - 24px))`;
 
   const gridColumns =
     languageOptions.length <= 4 ? 2 : languageOptions.length <= 9 ? 3 : 4;
@@ -236,7 +237,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
       <Menu
         opened={opened}
         onChange={setOpened}
-        width={dropdownWidth}
+        width={responsiveDropdownWidth}
         position={position}
         offset={offset}
         zIndex={Z_INDEX_CONFIG_MODAL}
@@ -256,7 +257,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
               title={!opened && tooltip ? tooltip : undefined}
               aria-label={tooltip ?? currentLanguage}
             >
-              <LocalIcon icon="language" width="1.5rem" height="1.5rem" />
+              <Icon name="globe" size="1.5rem" />
             </ActionIcon>
           ) : (
             <Button
@@ -264,9 +265,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
               accent="neutral"
               size="sm"
               data-testid="language-selector-button"
-              leftSection={
-                <LocalIcon icon="language" width="1.5rem" height="1.5rem" />
-              }
+              leftSection={<Icon name="globe" size="1.5rem" />}
             >
               <span className={styles.languageText}>{currentLanguage}</span>
             </Button>
@@ -276,6 +275,9 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         <Menu.Dropdown
           style={{
             padding: "12px",
+            maxHeight: "min(360px, calc(100vh - 160px))",
+            overflowY: "auto",
+            maxWidth: "calc(100vw - 24px)",
             borderRadius: "8px",
             boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
             backgroundColor:
@@ -286,7 +288,11 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         >
           <div
             className={styles.languageGrid}
-            style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}
+            style={
+              {
+                "--language-grid-columns": gridColumns,
+              } as React.CSSProperties
+            }
           >
             {languageOptions.map((option, index) => (
               <LanguageItem

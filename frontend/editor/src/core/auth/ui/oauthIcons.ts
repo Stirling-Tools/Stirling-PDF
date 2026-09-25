@@ -13,9 +13,8 @@ import microsoftIcon from "@app/assets/login/microsoft.svg";
 import keycloakIcon from "@app/assets/login/keycloak.svg";
 import cloudronIcon from "@app/assets/login/cloudron.svg";
 import authentikIcon from "@app/assets/login/authentik.svg";
-import oidcIcon from "@app/assets/login/oidc.svg";
 
-/** Generic fallback icon (filename) for unknown providers. */
+/** Filename used for a provider with no bundled artwork. */
 export const GENERIC_PROVIDER_ICON = "oidc.svg";
 
 const ICON_BY_FILE: Record<string, string> = {
@@ -26,10 +25,14 @@ const ICON_BY_FILE: Record<string, string> = {
   "keycloak.svg": keycloakIcon,
   "cloudron.svg": cloudronIcon,
   "authentik.svg": authentikIcon,
-  "oidc.svg": oidcIcon,
 };
+
+/** Whether a bundled mark exists for this filename. */
+export function hasProviderArtwork(file: string): boolean {
+  return Object.hasOwn(ICON_BY_FILE, file);
+}
 
 /** Resolve a provider icon filename (e.g. "google.svg") to its bundled URL. */
 export function oauthIconUrl(file: string): string {
-  return ICON_BY_FILE[file] ?? ICON_BY_FILE[GENERIC_PROVIDER_ICON];
+  return ICON_BY_FILE[file] ?? "";
 }

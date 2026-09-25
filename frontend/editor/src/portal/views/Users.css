@@ -265,7 +265,7 @@
   padding: 0.5rem 0.75rem;
   border-radius: 8px;
   background: color-mix(in srgb, var(--c-danger) 12%, transparent);
-  color: var(--c-danger);
+  color: var(--color-red-dark);
   font-size: 0.85rem;
 }
 
@@ -278,14 +278,6 @@
   align-items: center;
 }
 
-.portal-users__link {
-  color: var(--c-primary);
-  text-decoration: none;
-}
-.portal-users__link:hover {
-  text-decoration: underline;
-}
-
 .portal-users__directory {
   display: flex;
   flex-direction: column;
@@ -293,9 +285,6 @@
 }
 
 .portal-users__group {
-  background: var(--c-surface);
-  border: 1px solid var(--c-border);
-  border-radius: var(--radius-lg);
   overflow: hidden;
 }
 
@@ -337,7 +326,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   font-size: 0.8rem;
   font-weight: 500;
   white-space: nowrap;
@@ -354,6 +343,18 @@
 }
 .portal-users__row + .portal-users__row {
   border-top: 1px solid var(--c-border-subtle);
+}
+/* Deep-link landing flash (?member=<id>). */
+.portal-users__row--flash {
+  animation: portal-users-row-flash 1.6s ease-out;
+}
+@keyframes portal-users-row-flash {
+  from {
+    background: var(--c-hover);
+  }
+  to {
+    background: transparent;
+  }
 }
 .portal-users__row-main {
   display: flex;
@@ -492,7 +493,7 @@
   background: none;
   border: none;
   border-top: 1px solid var(--c-border-subtle);
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
@@ -526,4 +527,38 @@
   font-size: 0.875rem;
   line-height: 1.5;
   color: var(--c-text-subtle);
+}
+
+/* A disabled button dispatches no pointer events, so the hit test has to fall
+   through to the Tooltip's wrapper for the explanation to be reachable. */
+.portal-users__blocked:disabled {
+  pointer-events: none;
+}
+
+/* The team strip leads; the selected team's actions and the search sit at the
+   far end. Top-aligned, because the strip wraps to a second row on a big org. */
+.portal-users__filters {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+.portal-users__teams {
+  flex: 1;
+  min-width: 0;
+}
+.portal-users__filter-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+/* A hit-target-sized stub that grows into a field in place. */
+.portal-users__search {
+  width: 2rem;
+  display: flex;
+  justify-content: flex-end;
+  transition: width var(--motion-fast, 120ms);
+}
+.portal-users__search[data-open] {
+  width: 16rem;
 }

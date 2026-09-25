@@ -47,7 +47,7 @@ export function JsonViewer({ file }: JsonViewerProps) {
             flexShrink: 0,
           }}
         >
-          <Text size="xs" c="red">
+          <Text size="xs" c="var(--color-red-dark)">
             {t("viewer.nonPdf.invalidJson")}
           </Text>
         </Paper>

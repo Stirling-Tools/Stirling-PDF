@@ -1,3 +1,4 @@
+import "@app/billing/MeterBar.css";
 import type { ReactNode } from "react";
 import type { MeterState } from "@app/billing/format";
 import { StatusBadge, type StatusTone } from "@app/ui/StatusBadge";
@@ -23,6 +24,8 @@ interface MeterBarProps {
   meta?: ReactNode;
   /** Hide the fill bar (e.g. uncapped). Shown by default. */
   showBar?: boolean;
+  /** Accessible name for the fill bar — what the meter measures ("Spend limit"). */
+  barLabel: string;
 }
 
 /**
@@ -40,6 +43,7 @@ export function MeterBar({
   statusLabel,
   meta,
   showBar = true,
+  barLabel,
 }: MeterBarProps) {
   return (
     <div className="paygf-meter" data-state={state}>
@@ -61,6 +65,7 @@ export function MeterBar({
           aria-valuenow={Math.round(pct)}
           aria-valuemin={0}
           aria-valuemax={100}
+          aria-label={barLabel}
         >
           <div
             className="payg-bar__fill"

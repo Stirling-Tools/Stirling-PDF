@@ -1,3 +1,4 @@
+import { Icon } from "@app/ui/Icon";
 import React, {
   useCallback,
   useEffect,
@@ -7,92 +8,115 @@ import React, {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Drawer, Group, MultiSelect, Select, Tooltip } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Drawer, Menu, Tooltip } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useMediaQuery } from "@mantine/hooks";
-import SearchIcon from "@mui/icons-material/Search";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
-import QrCode2Icon from "@mui/icons-material/QrCode2";
-import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
-import GridViewIcon from "@mui/icons-material/GridView";
-import ViewListIcon from "@mui/icons-material/ViewList";
-import DeleteIcon from "@mui/icons-material/Delete";
-import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
-import RefreshIcon from "@mui/icons-material/Refresh";
+import { FilesToolbarBulkMenu } from "@app/components/filesPage/FilesToolbarBulkMenu";
+import { FilesToolbarCount } from "@app/components/filesPage/FilesToolbarCount";
+import { FolderMenu } from "@app/components/filesPage/FolderMenu";
+import { NewFolderButton } from "@app/components/filesPage/NewFolderButton";
+import { useFileLibraryWorkbenchBarButtons } from "@app/components/filesPage/useFileLibraryWorkbenchBarButtons";
 
-import { stripBasePath } from "@app/constants/app";
 import { useAuth } from "@app/auth/UseSession";
 import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
 import { useFolders } from "@app/contexts/FolderContext";
+import { useOpenFolder } from "@app/components/filesPage/useOpenFolder";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
+import { useDropzoneFiles } from "@app/hooks/useDropzoneFiles";
+import { openFilesFromDisk } from "@app/services/openFilesFromDisk";
 import {
   useNavigationActions,
   useNavigationGuard,
 } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
-import {
-  FILES_PAGE_VIEW_MODES,
-  FilesPageOriginFilter,
-  FilesPageSortMode,
-  useFilesPage,
-} from "@app/contexts/FilesPageContext";
-import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
+import { useFilesPage } from "@app/contexts/FilesPageContext";
+import { useLibraryFiles } from "@app/components/filesPage/useLibraryFiles";
+import { useFolderFileStates } from "@app/components/filesPage/useFolderFileStates";
+import { useDiskFolder } from "@app/components/filesPage/useDiskFolder";
+import { LibraryToolbar } from "@app/components/filesPage/LibraryToolbar";
+import { LibraryTabs } from "@app/components/filesPage/LibraryTabs";
+import { useLibraryScrollPosition } from "@app/components/filesPage/useLibraryScrollPosition";
 
 import { FileId } from "@app/types/file";
 import { StirlingFileStub } from "@app/types/fileContext";
-import { FolderId, ROOT_FOLDER_ID } from "@app/types/folder";
+import {
+  FolderId,
+  FolderRecord,
+  ROOT_FOLDER_ID,
+  folderKind,
+} from "@app/types/folder";
 
-import { FileGrid, FilesPageEntry } from "@app/components/filesPage/FileGrid";
+import {
+  FileGrid,
+  FilesPageEntry,
+  type DiskFileState,
+} from "@app/components/filesPage/FileGrid";
+import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
+import { FolderProcessingSetup } from "@app/components/policies/FolderProcessingSetup";
+import { useServerProcessingBlock } from "@app/hooks/useServerProcessingBlock";
+import { useConnectedServer } from "@app/hooks/useConnectedServer";
+import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
+import { FolderSweepWall } from "@app/components/policies/SweepRunWall";
+import { RestoreOriginalsDialog } from "@app/components/filesPage/RestoreOriginalsDialog";
 import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
-import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerModal";
-import MobileUploadModal from "@app/components/shared/MobileUploadModal";
+import { AddToLibraryModal } from "@app/components/filesPage/AddToLibraryModal";
+import { isBrowserOnlyFile } from "@app/components/filesPage/fileOrigin";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { canPickDirectory } from "@app/services/directoryPicker";
+import { isDiskFolderId } from "@app/types/folder";
+import { useNewFolderFlow } from "@app/hooks/useNewFolderFlow";
+import { useLibraryRefresh } from "@app/hooks/useLibraryRefresh";
+import { useLibraryUpload } from "@app/components/filesPage/useLibraryUpload";
+import {
+  readDiskFile,
+  type DiskFileEntry,
+} from "@app/services/localFolderContents";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { MoveToFolderDialog } from "@app/components/filesPage/MoveToFolderDialog";
 import { FolderNameDialog } from "@app/components/filesPage/FolderNameDialog";
+import { libraryEntries } from "@app/components/filesPage/libraryEntries";
 import { DeleteFolderDialog } from "@app/components/filesPage/DeleteFolderDialog";
 import { DeleteFilesDialog } from "@app/components/filesPage/DeleteFilesDialog";
 import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
+import { RenameFileDialog } from "@app/components/shared/RenameFileDialog";
+import { duplicateStoredFile } from "@app/utils/duplicateFile";
+import { downloadFileFromStorage } from "@app/utils/downloadUtils";
+import { fileStorage } from "@app/services/fileStorage";
 import { materializeServerStubs } from "@app/services/fileSyncService";
 import {
   FILES_PAGE_DRAG_TYPE,
   parseFilesPageDragPayload,
 } from "@app/components/filesPage/dragDrop";
 import { clearFilesPageReturnRoute } from "@app/components/filesPage/filesPageReturnRoute";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import "@app/components/filesPage/FilesPage.css";
 
 export default function FileManagerView() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const openFolder = useOpenFolder();
+  const folderDropHandlers = useFolderDropHandlers();
 
-  // Hide Shared tab when storageSharingEnabled is false.
   const { sharingEnabled } = useSharingEnabled();
 
-  // ≤800px hosts the details panel in a button-triggered Drawer.
   const isCompactDetailsViewport = useMediaQuery("(max-width: 800px)") ?? false;
-  // Phones get a full-screen drawer; tablets get a smaller one.
-  const useFullScreenDrawer = useMediaQuery("(max-width: 640px)") ?? false;
+
+  const detailsAsSheet = useMediaQuery("(max-width: 640px)") ?? false;
   const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false);
-  // Save-to-server modal target. Bulk button uses local-only selection;
-  // per-file kebab uses [file]. Targets root; folder placement is via drop.
   const [saveToServerTarget, setSaveToServerTarget] = useState<
     StirlingFileStub[] | null
   >(null);
-  // Version-history modal target (opened from the card kebab).
+
   const [versionHistoryFile, setVersionHistoryFile] =
     useState<StirlingFileStub | null>(null);
   const folders = useFolders();
+  const setFolderError = folders.setError;
   const { actions: fileActions } = useFileActions();
-  const { fileIds: activeWorkspaceFileIds } = useAllFiles();
+  const { fileIds: activeWorkspaceFileIds, fileStubs: activeWorkspaceFiles } =
+    useAllFiles();
   const activeWorkspaceFileIdSet = useMemo(
     () => new Set(activeWorkspaceFileIds.map((id) => id as string)),
     [activeWorkspaceFileIds],
@@ -100,20 +124,20 @@ export default function FileManagerView() {
   const { addFiles } = useFileHandler();
   const { config: appConfig } = useAppConfig();
   const isMobile = useIsMobile();
-  const isMobileUploadAvailable =
-    Boolean(appConfig?.enableMobileScanner) && !isMobile;
-  // Guests (anonymous sessions) have no server-side storage, so every cloud
-  // action is account-only. Rather than let the click fire a guaranteed 401
-  // (which surfaced as an error toast), we disable the control and explain why
-  // on hover - the same affordance the storage-disabled / wrong-tab gates use.
+  // Guests cannot use server storage; explain the disabled control before a request fails.
   const { isAnonymous } = useAuth();
   const signInRequiredReason = isAnonymous
     ? t("filesPage.signInRequired", "Sign in to use cloud storage.")
     : null;
-  // Server storage gate; mirrors ConfigController's storageEnabled
-  // (enableLogin && storage.isEnabled). When off, Save-to-server stays
-  // visible but disabled with an explanatory tooltip (discoverability beats
-  // hiding - mirrors the New folder / Manage sharing gates in this view).
+  const connectedServer = useConnectedServer();
+  const refreshDisabledReason =
+    signInRequiredReason ??
+    (connectedServer
+      ? null
+      : t(
+          "filesPage.refreshNeedsConnection",
+          "Sign in to refresh from the server.",
+        ));
   const uploadEnabled = appConfig?.storageEnabled === true;
   const saveToServerDisabledReason: string | null =
     signInRequiredReason ??
@@ -123,7 +147,6 @@ export default function FileManagerView() {
           "filesPage.saveToServerDisabledHint",
           "Saving to the server isn't enabled on this server. Ask your admin to enable it.",
         ));
-  const [mobileUploadModalOpen, setMobileUploadModalOpen] = useState(false);
   const { actions: navActions } = useNavigationActions();
   const { requestNavigation } = useNavigationGuard();
   const { setActiveFileId } = useViewer();
@@ -171,7 +194,6 @@ export default function FileManagerView() {
     setFolderAppearance,
   } = filesPage;
 
-  // Resolve queued delete ids into stubs for the DeleteFilesDialog.
   const deleteDialogFiles = useMemo(
     () =>
       deleteDialogFileIds
@@ -181,23 +203,38 @@ export default function FileManagerView() {
   );
 
   const setCurrentFolderId = folders.setCurrentFolderId;
+  const resolveDiskFolder = folders.resolveDiskFolder;
   const foldersById = folders.foldersById;
   const currentFolderId = folders.currentFolderId;
 
-  // Sync the URL into FolderContext.
   useEffect(() => {
     const match = location.pathname.match(/^\/files\/([^/]+)/);
     const param = match?.[1] ?? null;
     if (param === null) {
       setCurrentFolderId(ROOT_FOLDER_ID);
-    } else if (foldersById.has(param as FolderId)) {
+      return;
+    }
+    if (foldersById.has(param as FolderId)) {
       setCurrentFolderId(param as FolderId);
-    } else {
+      return;
+    }
+    if (isDiskFolderId(param) && resolveDiskFolder(param as FolderId)) {
+      // A mount subdirectory deep link: rebuilt from the id, mapped next render.
+      setCurrentFolderId(param as FolderId);
+      return;
+    }
+    // Wait for folder loading and mount discovery before rejecting an unknown folder ID.
+    if (!folders.loading) {
       setCurrentFolderId(ROOT_FOLDER_ID);
     }
-  }, [location.pathname, foldersById, setCurrentFolderId]);
+  }, [
+    location.pathname,
+    foldersById,
+    setCurrentFolderId,
+    resolveDiskFolder,
+    folders.loading,
+  ]);
 
-  // Bounce off any share-related tab when sharing isn't enabled.
   useEffect(() => {
     if (
       !sharingEnabled &&
@@ -207,240 +244,327 @@ export default function FileManagerView() {
     }
   }, [sharingEnabled, currentTab, setCurrentTab]);
 
-  // Push folder selection into the URL while still on /files.
-  useEffect(() => {
-    const stripped = stripBasePath(window.location.pathname);
-    if (!stripped.startsWith("/files")) return;
-    const target =
-      currentFolderId === null ? "/files" : `/files/${currentFolderId}`;
-    if (stripped !== target) {
-      navigate(target, { replace: true });
-    }
-  }, [currentFolderId, navigate]);
+  const currentFolder = currentFolderId
+    ? folders.foldersById.get(currentFolderId)
+    : undefined;
+  const currentLocalDirectory =
+    currentFolder && folderKind(currentFolder) === "local"
+      ? currentFolder.directory
+      : undefined;
+  const headerEditsDisabled = Boolean(
+    currentFolder &&
+    folderKind(currentFolder) === "server" &&
+    !folders.serverReachable,
+  );
+  const { diskRevision } = filesPage;
+  const { diskEntries, diskLoading } = useDiskFolder(
+    currentLocalDirectory,
+    currentFolderId,
+    diskRevision,
+    folders.setError,
+  );
 
-  // ─── visible items (current folder + sort + search) ─────────────────────
-
-  /** currentFolderId + all descendants. Includes `null` when at root. */
-  const subtreeFolderIds = useMemo(() => {
-    const set = new Set<FolderId | null>();
-    set.add(currentFolderId);
-    const childMap = new Map<FolderId | null, FolderId[]>();
-    for (const f of folders.folders) {
-      const list = childMap.get(f.parentFolderId) ?? [];
-      list.push(f.id);
-      childMap.set(f.parentFolderId, list);
-    }
-    // Iterative DFS to avoid stack overflow on deep chains.
-    const stack: (FolderId | null)[] = [currentFolderId];
-    while (stack.length > 0) {
-      const cur = stack.pop()!;
-      for (const childId of childMap.get(cur) ?? []) {
-        if (set.has(childId)) continue;
-        set.add(childId);
-        stack.push(childId);
-      }
-    }
-    return set;
-  }, [folders.folders, currentFolderId]);
-
-  const visibleFolders = useMemo(() => {
-    // Folders only appear in cloud-rooted tabs.
-    if (
-      currentTab === "local" ||
-      currentTab === "recent" ||
-      currentTab === "shared" ||
-      currentTab === "sharedByMe"
-    ) {
-      return [];
-    }
-    const lc = search.toLowerCase();
-    const matched = folders.folders.filter((f) => {
-      if (search) {
-        // Subtree-wide name match; exclude the current folder itself.
-        return (
-          f.id !== currentFolderId &&
-          subtreeFolderIds.has(f.parentFolderId) &&
-          f.name.toLowerCase().includes(lc)
-        );
-      }
-      // Direct children only.
-      return f.parentFolderId === currentFolderId;
-    });
-    return matched.sort((a, b) =>
-      a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
-    );
-  }, [folders.folders, currentFolderId, search, currentTab, subtreeFolderIds]);
-
-  // Files in current folder, pre-filter. Drives the type-filter dropdown.
-  const filesInCurrentFolder = useMemo(() => {
-    // Tab overrides folder navigation for Local/Recent/Shared.
-    switch (currentTab) {
-      case "local":
-        // Local = files with no server copy. folderId is forced null on this
-        // path (cf. file.ts comment), but we check remoteStorageId too so
-        // stale local-folder rows from a pre-pivot DB don't slip through.
-        return allFiles.filter((f) => f.remoteStorageId == null);
-      case "cloud":
-        // Cloud bucket; search widens to subtree, else direct-folder match.
-        return allFiles.filter((f) => {
-          if (f.remoteStorageId == null) return false;
-          if (search) return subtreeFolderIds.has(f.folderId ?? null);
-          return (f.folderId ?? null) === (currentFolderId ?? null);
-        });
-      case "recent": {
-        // Last 50 modified across local + cloud, folder context ignored.
-        const sorted = [...allFiles].sort(
-          (a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0),
-        );
-        return sorted.slice(0, 50);
-      }
-      case "shared":
-        return allFiles.filter((f) => f.remoteOwnedByCurrentUser === false);
-      case "sharedByMe":
-        // Files I own that I've shared in any way - either with a public link
-        // or with a specific user. (Previously split across two visually
-        // identical tabs; merged here so the same idea lives in one place.)
-        return allFiles.filter(
-          (f) =>
-            f.remoteOwnedByCurrentUser !== false &&
-            (f.remoteHasShareLinks === true || f.remoteHasUserShares === true),
-        );
-      case "all":
-      default:
-        // Search widens to the subtree.
-        // Files with a dangling folderId (folder deleted, or stale local IDB
-        // row) fall back to root so they aren't permanently invisible.
-        return allFiles.filter((f) => {
-          const rawFolder = f.folderId ?? null;
-          const effectiveFolder =
-            rawFolder !== null && !foldersById.has(rawFolder)
-              ? null
-              : rawFolder;
-          if (search) return subtreeFolderIds.has(effectiveFolder);
-          return effectiveFolder === (currentFolderId ?? null);
-        });
-    }
-  }, [
+  const { visibleFolders, visibleFiles, availableTypes } = useLibraryFiles({
     allFiles,
     currentFolderId,
     currentTab,
     search,
-    subtreeFolderIds,
-    foldersById,
-  ]);
-
-  const availableTypes = useMemo(() => {
-    const set = new Set<string>();
-    for (const f of filesInCurrentFolder) {
-      const ext = (f.name.split(".").pop() ?? "").toUpperCase();
-      if (ext) set.add(ext);
-    }
-    return Array.from(set).sort();
-  }, [filesInCurrentFolder]);
-
-  // Drop any active type filters that no longer appear in this folder
-  // (e.g. when the user navigates between folders).
-  useEffect(() => {
-    if (typeFilter.length === 0) return;
-    const stillValid = typeFilter.filter((t) => availableTypes.includes(t));
-    if (stillValid.length !== typeFilter.length) {
-      setTypeFilter(stillValid);
-    }
-  }, [availableTypes, typeFilter, setTypeFilter]);
-
-  const visibleFiles = useMemo(() => {
-    const filtered = filesInCurrentFolder
-      .filter((f) =>
-        search ? f.name.toLowerCase().includes(search.toLowerCase()) : true,
-      )
-      .filter((f) =>
-        originFilter === "all" ? true : getFileOrigin(f) === originFilter,
-      )
-      .filter((f) => {
-        if (typeFilter.length === 0) return true;
-        const ext = (f.name.split(".").pop() ?? "").toUpperCase();
-        return typeFilter.includes(ext);
-      });
-    const sorted = [...filtered];
-    sorted.sort((a, b) => {
-      switch (sortMode) {
-        case "name-asc":
-          return a.name.localeCompare(b.name);
-        case "name-desc":
-          return b.name.localeCompare(a.name);
-        case "modified-asc":
-          return (a.lastModified ?? 0) - (b.lastModified ?? 0);
-        case "size-desc":
-          return (b.size ?? 0) - (a.size ?? 0);
-        case "size-asc":
-          return (a.size ?? 0) - (b.size ?? 0);
-        case "modified-desc":
-        default:
-          return (b.lastModified ?? 0) - (a.lastModified ?? 0);
+    sortMode,
+    originFilter,
+    typeFilter,
+    diskEntries: currentLocalDirectory ? diskEntries : undefined,
+  });
+  const openDiskFile = useCallback(
+    async (entry: DiskFileEntry) => {
+      try {
+        const file = await readDiskFile(entry);
+        if (!file) return;
+        clearFilesPageReturnRoute();
+        await addFiles([file], { selectFiles: true });
+        navActions.setWorkbench("viewer");
+        navigate("/");
+      } catch (err) {
+        folders.setError(
+          err instanceof Error
+            ? t("filesPage.error.openDiskFileFailedDetail", {
+                name: entry.name,
+                message: err.message,
+                defaultValue: `Could not open ${entry.name}: ${err.message}`,
+              })
+            : t("filesPage.error.openDiskFileFailed", {
+                name: entry.name,
+                defaultValue: `Could not open ${entry.name}.`,
+              }),
+        );
       }
-    });
-    return sorted;
-  }, [filesInCurrentFolder, search, sortMode, originFilter, typeFilter]);
-
-  /**
-   * Resolve a folder id to its breadcrumb path (e.g. "Receipts / 2024 / Q1").
-   * Returns empty string for root / unknown. Used for the search-result
-   * "where does this live?" subtitle.
-   */
-  const pathForFolderId = useCallback(
-    (folderId: FolderId | null | undefined): string => {
-      if (folderId == null) return "";
-      const parts: string[] = [];
-      let cursor: FolderId | null = folderId;
-      const seen = new Set<FolderId>();
-      while (cursor !== null) {
-        if (seen.has(cursor)) break;
-        seen.add(cursor);
-        const f = foldersById.get(cursor);
-        if (!f) break;
-        parts.unshift(f.name);
-        cursor = f.parentFolderId;
-      }
-      return parts.join(" / ");
     },
-    [foldersById],
+    [addFiles, navActions, navigate, folders, t],
   );
 
-  const entries = useMemo<FilesPageEntry[]>(() => {
-    // When searching, items may come from anywhere in the subtree, so we
-    // expose a "parentPath" subtitle whenever the item's parent differs from
-    // currentFolderId. When no search is active, every item is in the
-    // current folder by definition and the subtitle is suppressed.
-    const inSearch = search.length > 0;
-    return [
-      ...visibleFolders.map<FilesPageEntry>((folder) => ({
-        kind: "folder",
-        folder,
-        folderFileCount: filesPage.fileCountsByFolder.get(folder.id) ?? 0,
-        parentPath:
-          inSearch && folder.parentFolderId !== currentFolderId
-            ? pathForFolderId(folder.parentFolderId) || undefined
-            : undefined,
-      })),
-      ...visibleFiles.map<FilesPageEntry>((file) => ({
-        kind: "file",
-        file,
-        parentPath:
-          inSearch && (file.folderId ?? null) !== (currentFolderId ?? null)
-            ? pathForFolderId(file.folderId ?? null) || undefined
-            : undefined,
-      })),
-    ];
+  const processingApi = useProcessingFolders();
+  const processingEnabled = usePoliciesEnabled();
+  const currentProcessing = currentFolder
+    ? processingApi.stateFor(currentFolder)
+    : undefined;
+  const outputDirectory = currentLocalDirectory
+    ? currentProcessing?.outputDirectory
+    : undefined;
+  const processingRecordId = currentProcessing?.id;
+  const processingView = Boolean(
+    processingRecordId && (outputDirectory || !currentLocalDirectory),
+  );
+  const { retryFile, revertFile } = processingApi;
+  const {
+    fileStates,
+    revertables,
+    patchProcessingFile,
+    processingLockedFor,
+    processingStatesUnavailable,
+  } = useFolderFileStates(processingRecordId, processingView);
+  useEffect(() => {
+    if (!processingStatesUnavailable) return;
+    setFolderError(
+      t(
+        "filesPage.error.processingStatusUnavailable",
+        "Could not refresh processing status. File locks have been released until the connection recovers.",
+      ),
+    );
+  }, [processingStatesUnavailable, setFolderError, t]);
+
+  const [processingSetupFolder, setProcessingSetupFolder] =
+    useState<FolderRecord | null>(null);
+  // Restoring originals also pauses the folder, so it requires confirmation.
+  const [revertConfirmName, setRevertConfirmName] = useState<string | null>(
+    null,
+  );
+  const [revertAllTarget, setRevertAllTarget] = useState<FolderRecord | null>(
+    null,
+  );
+
+  const [diskStateFilter, setDiskStateFilter] = useState<DiskFileState | "all">(
+    "all",
+  );
+  const processingLockedFileIds = useMemo(
+    () =>
+      new Set(
+        allFiles
+          .filter(
+            (file) =>
+              (file.folderId ?? null) === (currentFolderId ?? null) &&
+              processingLockedFor(file.name),
+          )
+          .map((file) => file.id),
+      ),
+    [allFiles, currentFolderId, processingLockedFor],
+  );
+
+  const processingLockedDiskQuickKeys = useMemo(
+    () =>
+      new Set(
+        diskEntries
+          .filter((file) => processingLockedFor(file.name))
+          .map((file) => `${file.name}|${file.sizeBytes}|${file.lastModified}`),
+      ),
+    [diskEntries, processingLockedFor],
+  );
+
+  useEffect(() => {
+    const openLockedFileIds = activeWorkspaceFiles
+      .filter(
+        (file) =>
+          !file.isDirty &&
+          (processingLockedFileIds.has(file.id) ||
+            processingLockedDiskQuickKeys.has(
+              file.quickKey ??
+                `${file.name}|${file.size}|${file.lastModified ?? 0}`,
+            )),
+      )
+      .map((file) => file.id);
+    if (openLockedFileIds.length > 0) {
+      void fileActions.removeFiles(openLockedFileIds, false);
+    }
   }, [
-    visibleFolders,
-    visibleFiles,
-    filesPage.fileCountsByFolder,
-    search,
-    currentFolderId,
-    pathForFolderId,
+    activeWorkspaceFiles,
+    fileActions,
+    processingLockedDiskQuickKeys,
+    processingLockedFileIds,
   ]);
 
-  // ─── selection ──────────────────────────────────────────────────────────
+  const diskStateFor = useCallback(
+    (name: string): DiskFileState | undefined => fileStates.get(name),
+    [fileStates],
+  );
+
+  const stateCounts = useMemo(() => {
+    const counts: Record<DiskFileState, number> = {
+      done: 0,
+      processing: 0,
+      failed: 0,
+      waiting: 0,
+    };
+    for (const state of fileStates.values()) counts[state] += 1;
+    return counts;
+  }, [fileStates]);
+  const retryDiskFile = useCallback(
+    (name: string) => {
+      if (!processingRecordId) return;
+      void retryFile(processingRecordId, name)
+        .then(() => patchProcessingFile(name, { state: "processing" }))
+        .catch((err) =>
+          folders.setError(
+            err instanceof Error
+              ? t("filesPage.error.retryFailedDetail", {
+                  name,
+                  message: err.message,
+                  defaultValue: `Could not retry ${name}: ${err.message}`,
+                })
+              : t("filesPage.error.retryFailed", {
+                  name,
+                  defaultValue: `Could not retry ${name}.`,
+                }),
+          ),
+        );
+    },
+    [processingRecordId, retryFile, folders, t, patchProcessingFile],
+  );
+  const revertFolderFile = useCallback(
+    (name: string) => {
+      if (!processingRecordId) return;
+      void revertFile(processingRecordId, name)
+        .then(() =>
+          patchProcessingFile(name, { state: "waiting", hasOriginal: false }),
+        )
+        .catch((err) =>
+          folders.setError(
+            err instanceof Error
+              ? t("filesPage.error.revertFailedDetail", {
+                  name,
+                  message: err.message,
+                  defaultValue: `Could not restore ${name}: ${err.message}`,
+                })
+              : t("filesPage.error.revertFailed", {
+                  name,
+                  defaultValue: `Could not restore ${name}.`,
+                }),
+          ),
+        );
+    },
+    [processingRecordId, revertFile, folders, t, patchProcessingFile],
+  );
+  const revertAllInFolder = useCallback(
+    (folder: FolderRecord) => {
+      void processingApi
+        .revertAll(folder)
+        .then((outcome) => {
+          if (outcome && outcome.restored === 0 && outcome.skipped === 0) {
+            folders.setError(
+              t(
+                "filesPage.processing.nothingToRestore",
+                "No originals to restore - these files are already their originals.",
+              ),
+            );
+          }
+        })
+        .catch((err) =>
+          folders.setError(
+            err instanceof Error
+              ? t("filesPage.error.revertAllFailedDetail", {
+                  message: err.message,
+                  defaultValue: `Could not restore originals: ${err.message}`,
+                })
+              : t(
+                  "filesPage.error.revertAllFailed",
+                  "Could not restore originals.",
+                ),
+          ),
+        );
+    },
+    [processingApi, folders, t],
+  );
+
+  const runFolderAction = useCallback(
+    (action: (folder: FolderRecord) => Promise<void>, label: string) => {
+      if (!currentFolder) return;
+      void action(currentFolder).catch((err) =>
+        folders.setError(
+          err instanceof Error
+            ? t("filesPage.error.actionFailedDetail", {
+                action: label,
+                message: err.message,
+                defaultValue: `Could not ${label}: ${err.message}`,
+              })
+            : t("filesPage.error.actionFailed", {
+                action: label,
+                defaultValue: `Could not ${label}.`,
+              }),
+        ),
+      );
+    },
+    [currentFolder, folders, t],
+  );
+
+  const entries = useMemo<FilesPageEntry[]>(
+    () =>
+      libraryEntries({
+        visibleFolders,
+        visibleFiles,
+        currentFolderId,
+        foldersById,
+        fileCountsByFolder: filesPage.fileCountsByFolder,
+        search,
+        sortMode,
+        originFilter,
+        typeFilter,
+        diskEntries: currentLocalDirectory ? diskEntries : undefined,
+      })
+        .map((entry) => {
+          const name = entry.disk?.name ?? entry.file?.name;
+          const stateVisible = entry.disk
+            ? Boolean(outputDirectory)
+            : processingView &&
+              (entry.file?.folderId ?? null) === (currentFolderId ?? null);
+          return {
+            ...entry,
+            diskState: name && stateVisible ? diskStateFor(name) : undefined,
+            processingLocked: entry.disk
+              ? Boolean(outputDirectory) && processingLockedFor(entry.disk.name)
+              : Boolean(
+                  entry.file && processingLockedFileIds.has(entry.file.id),
+                ),
+            hasOriginal:
+              entry.disk && outputDirectory
+                ? revertables.has(entry.disk.name)
+                : undefined,
+          };
+        })
+        .filter(
+          (entry) =>
+            diskStateFilter === "all" ||
+            entry.diskState === undefined ||
+            entry.diskState === diskStateFilter,
+        ),
+    [
+      visibleFolders,
+      visibleFiles,
+      currentFolderId,
+      foldersById,
+      filesPage.fileCountsByFolder,
+      search,
+      sortMode,
+      originFilter,
+      typeFilter,
+      currentLocalDirectory,
+      diskEntries,
+      outputDirectory,
+      processingView,
+      processingLockedFor,
+      processingLockedFileIds,
+      diskStateFor,
+      revertables,
+      diskStateFilter,
+    ],
+  );
+
   const lastClickedFileRef = useRef<FileId | null>(null);
   const handleSelectFile = useCallback(
     (fileId: FileId, shift: boolean, ctrl: boolean) => {
@@ -454,26 +578,16 @@ export default function FileManagerView() {
           if (idx >= 0 && lastIdx >= 0) {
             const [a, b] = idx < lastIdx ? [idx, lastIdx] : [lastIdx, idx];
             for (let i = a; i <= b; i += 1) {
-              next.add(visibleFiles[i]!.id);
+              next.add(visibleFiles[i].id);
             }
             return next;
           }
         }
-        // Once the user has 2+ files selected they're explicitly in
-        // multi-select mode (they checked a box, or shift-range'd, or
-        // ctrl-clicked) - in that mode plain clicks toggle add/remove
-        // instead of collapsing the whole selection back to one file.
-        // This is the Google Drive pattern: the "selection mode" sticks
-        // until the user explicitly exits via the X clear button or by
-        // clicking the empty background of the grid.
         const inMultiSelectMode = prev.size >= 2;
         if (ctrl || inMultiSelectMode) {
           if (next.has(fileId)) next.delete(fileId);
           else next.add(fileId);
         } else {
-          // 0 or 1 selected: plain click replaces (Finder/Explorer
-          // behaviour). Clicking the already-only-selected file
-          // deselects it, so single-file selection still toggles.
           const isSoleSelection = prev.size === 1 && prev.has(fileId);
           next.clear();
           if (!isSoleSelection) next.add(fileId);
@@ -485,11 +599,8 @@ export default function FileManagerView() {
     [visibleFiles, setSelectedFileIds],
   );
 
-  // Background click on the content area clears the selection.
   const handleContentBackgroundClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      // Only react when the click target is the scroll container itself
-      // (not a card, row, or drop overlay).
       if (e.target === e.currentTarget) {
         clearSelection();
       }
@@ -497,42 +608,23 @@ export default function FileManagerView() {
     [clearSelection],
   );
 
-  // ─── upload (drag-from-desktop or button) ───────────────────────────────
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDraggingExternal, setIsDraggingExternal] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
 
-  const handleNativeUpload = useCallback(
-    async (files: File[]) => {
-      if (files.length === 0) return;
-      // skipWorkspaceDispatch: the user is in the file manager, not opening
-      // files for work. Persist to IDB so the file appears in the grid (via
-      // FilesPageContext's independent IDB scan) but DON'T pollute workspace
-      // state - otherwise the file pops up the next time the user navigates
-      // to /viewer or /tools, which reads as "auto-opened" and surprised
-      // people every time. The grid will repaint via refresh() below.
-      const added = await addFiles(files, {
-        selectFiles: false,
-        skipWorkspaceDispatch: true,
-      });
-      const fileIds = added.map((f) => f.fileId);
-      const target = currentFolderId;
-      // Uploaded files land in Local (folderId stays null).
-      if (
-        target !== null &&
-        fileIds.length > 0 &&
-        (currentTab === "all" || currentTab === "cloud")
-      ) {
-        folders.setError(
-          t(
-            "filesPage.uploadedToLocal",
-            "Uploaded files start in Local. Use 'Save to cloud' to put them in a folder.",
-          ),
-        );
-      }
-      await refresh();
-    },
-    [addFiles, currentFolderId, currentTab, folders, refresh, t],
+  const handleNativeUpload = useLibraryUpload();
+  const getDropzoneFiles = useDropzoneFiles();
+
+  const reportUploadError = useCallback(
+    (err: unknown) =>
+      folders.setError(
+        err instanceof Error
+          ? t("filesPage.error.uploadFilesFailedDetail", {
+              message: err.message,
+              defaultValue: `Could not upload files: ${err.message}`,
+            })
+          : t("filesPage.error.uploadFilesFailed", "Could not upload files."),
+      ),
+    [folders, t],
   );
 
   const onFileInputChange = useCallback(
@@ -540,12 +632,11 @@ export default function FileManagerView() {
       const list = Array.from(e.target.files ?? []);
       e.target.value = "";
       if (list.length === 0) return;
-      await handleNativeUpload(list);
+      await handleNativeUpload(list).catch(reportUploadError);
     },
-    [handleNativeUpload],
+    [handleNativeUpload, reportUploadError],
   );
 
-  // ─── add to workspace ───────────────────────────────────────────────────
   const openFilesInWorkbench = useCallback(
     async (fileIds: FileId[]) => {
       const stubs = fileIds
@@ -556,29 +647,39 @@ export default function FileManagerView() {
       const proceed = async () => {
         clearFilesPageReturnRoute();
 
+        // Open workspace files directly; their bytes need no further materialization.
+        const alreadyOpen = stubs.filter((stub) =>
+          activeWorkspaceFileIdSet.has(stub.id as string),
+        );
+        const toOpen = stubs.filter(
+          (stub) => !activeWorkspaceFileIdSet.has(stub.id as string),
+        );
+
         // Server-only stubs have no bytes in IDB; download + ingest first.
-        const materialized = await materializeServerStubs(stubs, {
+        const materialized = await materializeServerStubs(toOpen, {
           addFiles: fileActions.addFilesWithOptions,
           updateStub: fileActions.updateStirlingFileStub,
         });
-        if (materialized.length !== stubs.length) {
-          // At least one server download failed; refresh so the grid
-          // reflects any successful ingests and the user can retry.
+        if (materialized.length !== toOpen.length) {
+          // Refresh successful imports even when another file fails.
           await refresh();
           return;
         }
 
-        await fileActions.addStirlingFileStubs(materialized, {
-          selectFiles: false,
-        });
-        // Branch on requested stubs so already-active files still activate.
-        if (materialized.length === 1) {
-          setActiveFileId(materialized[0]!.id);
+        if (materialized.length > 0) {
+          await fileActions.addStirlingFileStubs(materialized, {
+            selectFiles: false,
+          });
+        }
+
+        const opened = [...alreadyOpen, ...materialized];
+        if (opened.length === 1) {
+          setActiveFileId(opened[0].id);
           navActions.setWorkbench("viewer");
-        } else if (materialized.length > 1) {
+        } else if (opened.length > 1) {
           navActions.setWorkbench("fileEditor");
         }
-        navigate("/");
+        navigate(EDITOR_BASENAME);
       };
 
       requestNavigation(() => {
@@ -593,17 +694,21 @@ export default function FileManagerView() {
       navigate,
       requestNavigation,
       clearFilesPageReturnRoute,
+      activeWorkspaceFileIdSet,
+      refresh,
     ],
   );
 
   const handleAddToWorkspace = useCallback(
-    (fileIds: FileId[]) => openFilesInWorkbench(fileIds),
-    [openFilesInWorkbench],
+    (fileIds: FileId[]) => {
+      const openable = fileIds.filter((id) => !processingLockedFileIds.has(id));
+      return openable.length > 0 ? openFilesInWorkbench(openable) : undefined;
+    },
+    [openFilesInWorkbench, processingLockedFileIds],
   );
 
   const handleOpenFile = useCallback(
     (file: StirlingFileStub) => {
-      // Double-click commits to workspace.
       void handleAddToWorkspace([file.id]);
     },
     [handleAddToWorkspace],
@@ -611,14 +716,20 @@ export default function FileManagerView() {
 
   const handleOpenFolder = useCallback(
     (id: FolderId) => {
-      folders.setCurrentFolderId(id);
+      openFolder(id);
       clearSelection();
     },
-    [folders, clearSelection],
+    [openFolder, clearSelection],
   );
 
-  // ─── full-page drag-and-drop for OS uploads ─────────────────────────────
   const dropZoneRef = useRef<HTMLDivElement>(null);
+  const dropQueue = useRef<Promise<void>>(Promise.resolve());
+  const onScrollCapture = useLibraryScrollPosition(
+    dropZoneRef,
+    `${currentTab}:${currentFolderId}:${viewMode}`,
+    loading || diskLoading,
+    entries.length,
+  );
   useEffect(() => {
     const node = dropZoneRef.current;
     if (!node) return;
@@ -648,22 +759,15 @@ export default function FileManagerView() {
       e.preventDefault();
       counter = 0;
       setIsDraggingExternal(false);
-      const dropped = Array.from(e.dataTransfer?.files ?? []);
-      if (dropped.length > 0) {
-        handleNativeUpload(dropped).catch((err) =>
-          folders.setError(
-            err instanceof Error
-              ? t("filesPage.error.uploadFilesFailedDetail", {
-                  message: err.message,
-                  defaultValue: `Could not upload files: ${err.message}`,
-                })
-              : t(
-                  "filesPage.error.uploadFilesFailed",
-                  "Could not upload files.",
-                ),
+      // Capture drop entries while the event is live; import batches in order without losing later drops.
+      const files = getDropzoneFiles(e);
+      dropQueue.current = dropQueue.current
+        .then(async () =>
+          handleNativeUpload(
+            (await files).filter((item) => item instanceof File),
           ),
-        );
-      }
+        )
+        .catch(reportUploadError);
     };
     node.addEventListener("dragenter", onEnter);
     node.addEventListener("dragover", onOver);
@@ -675,22 +779,18 @@ export default function FileManagerView() {
       node.removeEventListener("dragleave", onLeave);
       node.removeEventListener("drop", onDrop);
     };
-  }, [handleNativeUpload]);
+  }, [getDropzoneFiles, handleNativeUpload, reportUploadError]);
 
-  // ─── close / exit ───────────────────────────────────────────────────────
   const handleClose = useCallback(() => {
     // Drop the return-route hint so the workbench doesn't show a stale back.
     clearFilesPageReturnRoute();
-    navigate("/");
+    navigate(EDITOR_BASENAME);
   }, [navigate]);
 
-  // ─── keyboard shortcuts ─────────────────────────────────────────────────
-  const searchInputRef = useRef<HTMLInputElement | null>(null);
-  // External focus trigger (used by the FileSidebar rail Search button).
-  useEffect(() => {
-    const onFocus = () => searchInputRef.current?.focus();
-    window.addEventListener("files-page:focus-search", onFocus);
-    return () => window.removeEventListener("files-page:focus-search", onFocus);
+  const focusSearch = useCallback(() => {
+    (
+      document.getElementById("super-search-input") as HTMLInputElement | null
+    )?.focus();
   }, []);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -701,14 +801,12 @@ export default function FileManagerView() {
           active.tagName === "TEXTAREA" ||
           active.isContentEditable);
 
-      // Cmd/Ctrl + A - select every visible file in the current folder.
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "a" && !inInput) {
         e.preventDefault();
         setSelectedFileIds(new Set(visibleFiles.map((f) => f.id)));
         return;
       }
 
-      // Delete / Backspace - remove selected files.
       if (
         (e.key === "Delete" || e.key === "Backspace") &&
         !inInput &&
@@ -716,7 +814,7 @@ export default function FileManagerView() {
       ) {
         e.preventDefault();
         removeFiles(Array.from(selectedFileIds)).catch((err) =>
-          folders.setError(
+          setFolderError(
             err instanceof Error
               ? t("filesPage.error.removeFilesFailedDetail", {
                   message: err.message,
@@ -731,16 +829,23 @@ export default function FileManagerView() {
         return;
       }
 
-      // "/" focuses the search field.
       if (e.key === "/" && !inInput) {
         e.preventDefault();
-        searchInputRef.current?.focus();
+        focusSearch();
         return;
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [visibleFiles, selectedFileIds, removeFiles, setSelectedFileIds]);
+  }, [
+    visibleFiles,
+    selectedFileIds,
+    removeFiles,
+    setSelectedFileIds,
+    focusSearch,
+    setFolderError,
+    t,
+  ]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -758,7 +863,7 @@ export default function FileManagerView() {
       for (const overlay of overlays) {
         if ((overlay as HTMLElement).offsetWidth > 0) return;
       }
-      // Esc-once cancels selection before closing the workbench.
+
       if (selectedFileIds.size > 0) {
         clearSelection();
         return;
@@ -769,7 +874,6 @@ export default function FileManagerView() {
     return () => window.removeEventListener("keydown", onKey);
   }, [handleClose, selectedFileIds, clearSelection]);
 
-  // ─── remove via context wrapper (clears selection state too) ────────────
   const handleRemoveFiles = useCallback(
     async (fileIds: FileId[]) => {
       await removeFiles(fileIds);
@@ -777,17 +881,97 @@ export default function FileManagerView() {
     [removeFiles],
   );
 
-  // ─── derived UI bits ────────────────────────────────────────────────────
-  const currentFolderRecord = currentFolderId
-    ? (foldersById.get(currentFolderId) ?? null)
-    : null;
-  const totalCount = entries.length;
-  const selectedFiles = useMemo(
-    () => Array.from(selectedFileIds),
-    [selectedFileIds],
+  /** Cloud-only rows hold no bytes; pull them local before acting on them. */
+  const localCopyOf = useCallback(
+    async (file: StirlingFileStub): Promise<StirlingFileStub | null> => {
+      const [materialized] = await materializeServerStubs([file], {
+        addFiles: fileActions.addFilesWithOptions,
+        updateStub: fileActions.updateStirlingFileStub,
+      });
+      return materialized ?? null;
+    },
+    [fileActions],
   );
 
-  // Local-only subset of selection; drives Save-to-server visibility.
+  const handleDownloadFile = useCallback(
+    async (file: StirlingFileStub) => {
+      try {
+        const local = await localCopyOf(file);
+        if (!local) return;
+        await downloadFileFromStorage(local);
+      } catch (err) {
+        console.error("[FilesPage] Download failed", err);
+        folders.setError(
+          t("filesPage.error.downloadFailed", "Could not download the file."),
+        );
+      }
+    },
+    [localCopyOf, folders, t],
+  );
+
+  const handleDuplicateFile = useCallback(
+    async (file: StirlingFileStub) => {
+      try {
+        const local = await localCopyOf(file);
+        if (!local) return;
+        const copyId = await duplicateStoredFile(
+          local,
+          allFiles.map((f) => f.name),
+          addFiles,
+        );
+        if (!copyId) {
+          throw new Error(`File "${local.name}" not found in storage`);
+        }
+        await refresh();
+      } catch (err) {
+        console.error("[FilesPage] Duplicate failed", err);
+        folders.setError(
+          t("filesPage.error.duplicateFailed", "Could not duplicate the file."),
+        );
+      }
+    },
+    [localCopyOf, allFiles, addFiles, refresh, folders, t],
+  );
+
+  const [renameTarget, setRenameTarget] = useState<StirlingFileStub | null>(
+    null,
+  );
+
+  // The stub name is what the UI and exports read, so a rename is a metadata
+  // write; the workbench copy (if any) is updated in the same breath.
+  const handleConfirmRename = useCallback(
+    async (name: string) => {
+      const file = renameTarget;
+      if (!file) return;
+      const local = await localCopyOf(file);
+      if (!local) return;
+      // quickKey is name|size|lastModified; a stale one would make a re-upload
+      // of the original look like a duplicate of the renamed file.
+      const quickKey = `${name}|${local.size}|${local.lastModified}`;
+      const saved = await fileStorage.updateFileMetadata(local.id, {
+        name,
+        quickKey,
+      });
+      if (!saved) {
+        throw new Error(
+          t("fileSidebar.rename.error", "Could not rename the file."),
+        );
+      }
+      fileActions.updateStirlingFileStub(local.id, { name, quickKey });
+      setRenameTarget(null);
+      await refresh();
+    },
+    [renameTarget, localCopyOf, fileActions, refresh, t],
+  );
+
+  const totalCount = entries.length;
+  const selectedFiles = useMemo(
+    () => Array.from(selectedFileIds).filter((id) => fileMap.has(id)),
+    [selectedFileIds, fileMap],
+  );
+  // On phones, selection actions and filters compete for width.
+  const mobileSelection = isMobile && selectedFiles.length > 0;
+
   const localOnlySelectedStubs = useMemo(
     () =>
       selectedFiles
@@ -798,191 +982,142 @@ export default function FileManagerView() {
         ),
     [selectedFiles, fileMap],
   );
+  const movableSelectedFiles = selectedFiles.filter((id) => {
+    const file = fileMap.get(id);
+    return file && !isBrowserOnlyFile(file);
+  });
 
-  // null = New folder actionable; string = disabled tooltip reason.
-  const newFolderDisabledReason: string | null = useMemo(() => {
-    // Guests can't use cloud folders at all - say so before any tab/storage
-    // hint, since switching tabs wouldn't help them.
-    if (signInRequiredReason) {
-      return signInRequiredReason;
+  const processingBlock = useServerProcessingBlock();
+
+  const {
+    addLocalFolder,
+    createFolderHereBlockedReason: newFolderDisabledReason,
+    serverFolderBlock: serverFolderDisabledReason,
+  } = useNewFolderFlow();
+
+  const { refreshing, refresh: handleRefresh } = useLibraryRefresh();
+
+  // The workbench bar re-registers changed values; stable identities prevent a render loop.
+  const openFilePicker = useCallback(async () => {
+    try {
+      const files = await openFilesFromDisk({
+        onFallbackOpen: () => fileInputRef.current?.click(),
+      });
+      await handleNativeUpload(files);
+    } catch (err) {
+      reportUploadError(err);
     }
-    if (currentTab === "local") {
-      return t(
-        "filesPage.localFoldersUnavailable",
-        "Folders are cloud-only - save a file to the cloud to organise it.",
-      );
-    }
-    if (
-      currentTab === "recent" ||
-      currentTab === "shared" ||
-      currentTab === "sharedByMe"
-    ) {
-      return t(
-        "filesPage.newFolderTabUnavailable",
-        "Switch to All or Cloud to create folders.",
-      );
-    }
-    if (!folders.serverReachable) {
-      return t(
-        "filesPage.newFolderStorageDisabled",
-        "Server folder storage isn't enabled. Ask your admin to turn it on.",
-      );
-    }
-    return null;
-  }, [signInRequiredReason, currentTab, folders.serverReachable, t]);
+  }, [handleNativeUpload, reportUploadError]);
+
+  const newFolderControl = useMemo(
+    () => (
+      <NewFolderButton
+        trigger="icon"
+        label={t("filesPage.newFolder", "New folder")}
+        disabledReason={newFolderDisabledReason}
+        serverDisabledReason={serverFolderDisabledReason}
+        currentFolderId={folders.currentFolderId}
+        canAddLocalFolder={canPickDirectory}
+        onAddLocalFolder={() => void addLocalFolder()}
+        onOpenDialog={openNewFolderDialog}
+      />
+    ),
+    [
+      t,
+      newFolderDisabledReason,
+      serverFolderDisabledReason,
+      folders.currentFolderId,
+      addLocalFolder,
+      openNewFolderDialog,
+    ],
+  );
+  const libraryActions = useMemo(
+    () => (
+      <>
+        <Tooltip
+          label={refreshDisabledReason ?? t("filesPage.refresh", "Refresh")}
+          withinPortal
+        >
+          <ActionIcon
+            variant="tertiary"
+            size="sm"
+            loading={refreshing}
+            disabled={refreshing || Boolean(refreshDisabledReason)}
+            aria-busy={refreshing}
+            aria-label={t("filesPage.refresh", "Refresh")}
+            onClick={handleRefresh}
+          >
+            <Icon name="refresh-cw" size={20} />
+          </ActionIcon>
+        </Tooltip>
+        {newFolderControl}
+        <Tooltip label={t("filesPage.upload", "Upload")} withinPortal>
+          <ActionIcon
+            variant="tertiary"
+            size="sm"
+            aria-label={t("filesPage.upload", "Upload")}
+            onClick={openFilePicker}
+          >
+            <Icon name="file-up" size={20} />
+          </ActionIcon>
+        </Tooltip>
+      </>
+    ),
+    [
+      t,
+      refreshDisabledReason,
+      refreshing,
+      handleRefresh,
+      newFolderControl,
+      openFilePicker,
+    ],
+  );
+
+  // Mobile has no sidebar, so its library actions live in the workbench bar.
+  useFileLibraryWorkbenchBarButtons({
+    path: null,
+    actions: isMobile ? libraryActions : null,
+  });
+
+  const bulkActionsMenu =
+    selectedFiles.length > 0 ? (
+      <FilesToolbarBulkMenu
+        selectedCount={selectedFiles.length}
+        onAddToWorkspace={() => handleAddToWorkspace(selectedFiles)}
+        onSaveToServer={
+          localOnlySelectedStubs.length > 0
+            ? () => setSaveToServerTarget(localOnlySelectedStubs)
+            : undefined
+        }
+        saveToServerDisabledReason={saveToServerDisabledReason ?? undefined}
+        onShowDetails={
+          selectedFiles.length === 1 && isCompactDetailsViewport
+            ? () => setMobileDetailsOpen(true)
+            : undefined
+        }
+        onMove={
+          movableSelectedFiles.length > 0
+            ? () => promptMoveFiles(movableSelectedFiles)
+            : undefined
+        }
+        onRemove={() => handleRemoveFiles(selectedFiles)}
+        onClearSelection={() => clearSelection()}
+      />
+    ) : null;
 
   return (
-    <div className="files-page" ref={dropZoneRef}>
-      <header className="files-page-header">
-        {/* Breadcrumb only for folder-rooted tabs. */}
-        {(currentTab === "all" || currentTab === "cloud") && <Breadcrumbs />}
-        {(currentTab === "local" ||
-          currentTab === "recent" ||
-          currentTab === "shared" ||
-          currentTab === "sharedByMe") && (
-          <div
-            style={{
-              fontSize: "0.95rem",
-              fontWeight: 600,
-              padding: "0.25rem 0.5rem",
-              color: "var(--c-text)",
-            }}
-          >
-            {currentTab === "local"
-              ? t("filesPage.tabName.local", "Local")
-              : currentTab === "recent"
-                ? t("filesPage.tabName.recent", "Recent")
-                : currentTab === "shared"
-                  ? t("filesPage.tabName.shared", "Shared with me")
-                  : t("filesPage.tabName.sharedByMe", "Shared by me")}
-          </div>
-        )}
-        {(() => {
-          // Both the inline desktop buttons and the mobile kebab menu need
-          // these handlers - extract once so we don't drift two copies.
-          const handleRefresh = async () => {
-            setRefreshing(true);
-            try {
-              // pullFromServer bumps the folder revision, which the
-              // FolderProvider's effect reacts to by re-running refresh() -
-              // no need to await folders.refresh() manually.
-              const result = await folders.pullFromServer();
-              if (!result.ok && result.reason !== "endpoint-missing") {
-                folders.setError(
-                  result.reason === "network"
-                    ? t(
-                        "filesPage.syncError.network",
-                        "Could not reach the server.",
-                      )
-                    : result.reason === "server"
-                      ? t(
-                          "filesPage.syncError.server",
-                          "Server error during folder sync.",
-                        )
-                      : t("filesPage.syncError.client", "Folder sync failed."),
-                );
-              }
-              await refresh();
-            } finally {
-              setRefreshing(false);
-            }
-          };
-          return (
-            <>
-              <SearchField
-                ref={searchInputRef}
-                value={search}
-                onChange={setSearch}
-              />
-              <div className="files-page-header-actions">
-                <Tooltip
-                  label={
-                    signInRequiredReason ??
-                    t("filesPage.refresh", "Refresh from server")
-                  }
-                  withinPortal
-                >
-                  <ActionIcon
-                    variant="secondary"
-                    size="sm"
-                    loading={refreshing}
-                    disabled={refreshing || Boolean(signInRequiredReason)}
-                    aria-busy={refreshing}
-                    onClick={handleRefresh}
-                    aria-label={t("filesPage.refresh", "Refresh from server")}
-                  >
-                    <RefreshIcon />
-                  </ActionIcon>
-                </Tooltip>
-                {newFolderDisabledReason ? (
-                  <Tooltip
-                    label={newFolderDisabledReason}
-                    withinPortal
-                    multiline
-                    w={220}
-                  >
-                    <span style={{ display: "inline-flex" }}>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        leftSection={<CreateNewFolderIcon fontSize="small" />}
-                        disabled
-                        style={{ pointerEvents: "auto" }}
-                      >
-                        {t("filesPage.newFolder", "New folder")}
-                      </Button>
-                    </span>
-                  </Tooltip>
-                ) : (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    leftSection={<CreateNewFolderIcon fontSize="small" />}
-                    onClick={() => openNewFolderDialog()}
-                  >
-                    {t("filesPage.newFolder", "New folder")}
-                  </Button>
-                )}
-                <Button
-                  size="sm"
-                  leftSection={<UploadFileIcon fontSize="small" />}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  {t("filesPage.upload", "Upload")}
-                </Button>
-                {isMobileUploadAvailable && (
-                  <Tooltip
-                    label={t(
-                      "filesPage.uploadFromMobile",
-                      "Upload from Mobile",
-                    )}
-                    withinPortal
-                  >
-                    <ActionIcon
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => setMobileUploadModalOpen(true)}
-                      aria-label={t(
-                        "filesPage.uploadFromMobile",
-                        "Upload from Mobile",
-                      )}
-                    >
-                      <QrCode2Icon fontSize="small" />
-                    </ActionIcon>
-                  </Tooltip>
-                )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  style={{ display: "none" }}
-                  onChange={onFileInputChange}
-                />
-              </div>
-            </>
-          );
-        })()}
-      </header>
+    <div
+      className="files-page"
+      ref={dropZoneRef}
+      onScrollCapture={onScrollCapture}
+    >
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        style={{ display: "none" }}
+        onChange={onFileInputChange}
+      />
 
       {folders.error && (
         <div
@@ -1013,427 +1148,155 @@ export default function FileManagerView() {
         </div>
       )}
 
-      {/* No offline banner: when the folder API is unreachable the user
-          still sees their cached local files (the IDB read survives), and
-          folder-mutation controls are individually disabled with their own
-          tooltips. Banner removed per UX feedback. */}
-
       <div className="files-page-body">
         <main className="files-page-main">
-          {/* Tab strip filters the file list; ARIA Tabs keyboard model. */}
-          {(() => {
-            const TAB_DEFS = [
-              { id: "all", label: t("filesPage.tabs.all", "All") },
-              { id: "recent", label: t("filesPage.tabs.recent", "Recent") },
-              // Sharing tabs only when sharingEnabled.
-              ...(sharingEnabled
-                ? [
-                    {
-                      id: "shared" as const,
-                      label: t("filesPage.tabs.shared", "Shared with me"),
-                    },
-                    {
-                      id: "sharedByMe" as const,
-                      label: t("filesPage.tabs.sharedByMe", "Shared by me"),
-                    },
-                  ]
-                : []),
-            ] as const;
-            const focusTab = (id: string) => {
-              const el = document.getElementById(`filesPage-tab-${id}`);
-              el?.focus();
-            };
-            return (
-              <div
-                className="files-page-tabs"
-                role="tablist"
-                aria-label={t("filesPage.tabs.ariaLabel", "File views")}
-                onKeyDown={(e) => {
-                  const idx = TAB_DEFS.findIndex((t2) => t2.id === currentTab);
-                  if (idx < 0) return;
-                  let next: number;
-                  if (e.key === "ArrowRight")
-                    next = (idx + 1) % TAB_DEFS.length;
-                  else if (e.key === "ArrowLeft")
-                    next = (idx - 1 + TAB_DEFS.length) % TAB_DEFS.length;
-                  else if (e.key === "Home") next = 0;
-                  else if (e.key === "End") next = TAB_DEFS.length - 1;
-                  else return;
-                  e.preventDefault();
-                  const target = TAB_DEFS[next]!;
-                  setCurrentTab(target.id);
-                  focusTab(target.id);
-                }}
-                style={{
-                  display: "flex",
-                  gap: "0.1rem",
-                  padding: "0.2rem 1rem 0.2rem",
-                }}
-              >
-                {TAB_DEFS.map((tab) => (
+          <LibraryTabs
+            currentTab={currentTab}
+            sharingEnabled={sharingEnabled}
+            onChange={setCurrentTab}
+            onOpenRoot={() => openFolder(ROOT_FOLDER_ID)}
+            rootDropHandlers={folderDropHandlers(ROOT_FOLDER_ID)}
+            breadcrumbs={<Breadcrumbs />}
+          />
+
+          <div className="files-page-toolbar">
+            <FilesToolbarCount
+              totalCount={totalCount}
+              selectedCount={selectedFiles.length}
+            />
+            {bulkActionsMenu && (
+              <div className="files-page-selection-actions">
+                {bulkActionsMenu}
+              </div>
+            )}
+            {currentFolder && !mobileSelection && processingEnabled && (
+              <div className="files-page-folder-actions">
+                <FolderMenu
+                  folder={currentFolder}
+                  processing={currentProcessing}
+                  continuous={folderKind(currentFolder) === "virtual"}
+                  isMount={folderKind(currentFolder) === "local"}
+                  canUnmount={currentFolder.parentFolderId === null}
+                  editsDisabled={headerEditsDisabled}
+                  processingBlock={processingBlock}
+                  editsDisabledHint={t(
+                    "filesPage.offlineNoFolderEdits",
+                    "Offline - folder changes are disabled.",
+                  )}
+                  onStartProcessing={() =>
+                    setProcessingSetupFolder(currentFolder)
+                  }
+                  onRunProcessing={() =>
+                    runFolderAction(processingApi.sweep, "process folder now")
+                  }
+                  onStopProcessing={() =>
+                    runFolderAction(
+                      processingApi.disable,
+                      "pause processing folder",
+                    )
+                  }
+                  onResumeProcessing={() =>
+                    runFolderAction(processingApi.enable, "resume processing")
+                  }
+                  onRemoveProcessing={() =>
+                    runFolderAction(
+                      processingApi.remove,
+                      "remove processing folder",
+                    )
+                  }
+                  onEditProcessing={() =>
+                    setProcessingSetupFolder(currentFolder)
+                  }
+                  onRevertAll={
+                    folderKind(currentFolder) === "local"
+                      ? () => setRevertAllTarget(currentFolder)
+                      : undefined
+                  }
+                  onRename={() => openRenameFolderDialog(currentFolder)}
+                  onChangeAppearance={(appearance) => {
+                    setFolderAppearance(currentFolder.id, appearance).catch(
+                      (err) =>
+                        folders.setError(
+                          err instanceof Error
+                            ? t(
+                                "filesPage.error.folderAppearanceFailedDetail",
+                                {
+                                  message: err.message,
+                                  defaultValue: `Could not update folder appearance: ${err.message}`,
+                                },
+                              )
+                            : t(
+                                "filesPage.error.folderAppearanceFailed",
+                                "Could not update folder appearance.",
+                              ),
+                        ),
+                    );
+                  }}
+                  onDelete={() => promptDeleteFolder(currentFolder)}
+                />
+              </div>
+            )}
+            <div className="files-page-toolbar-actions">
+              {!mobileSelection && (
+                <>
+                  <LibraryToolbar
+                    isMobile={isMobile}
+                    availableTypes={availableTypes}
+                    originFilter={originFilter}
+                    setOriginFilter={setOriginFilter}
+                    typeFilter={typeFilter}
+                    setTypeFilter={setTypeFilter}
+                    search={search}
+                    setSearch={setSearch}
+                    sortMode={sortMode}
+                    setSortMode={setSortMode}
+                    viewMode={viewMode}
+                    setViewMode={setViewMode}
+                  />
+                </>
+              )}
+            </div>
+          </div>
+
+          {processingView && (
+            <div className="files-page-above-table">
+              <div className="files-page-state-filters">
+                {(
+                  ["all", "done", "processing", "failed", "waiting"] as const
+                ).map((value) => (
                   <button
-                    key={tab.id}
-                    id={`filesPage-tab-${tab.id}`}
-                    role="tab"
+                    key={value}
                     type="button"
-                    aria-selected={currentTab === tab.id}
-                    aria-controls="filesPage-tabpanel"
-                    tabIndex={currentTab === tab.id ? 0 : -1}
-                    onClick={() => setCurrentTab(tab.id)}
-                    style={{
-                      background:
-                        currentTab === tab.id
-                          ? "var(--c-hover)"
-                          : "transparent",
-                      border: "none",
-                      borderRadius: "0.3rem",
-                      padding: "0.2rem 0.6rem",
-                      color:
-                        currentTab === tab.id
-                          ? "var(--c-text)"
-                          : "var(--c-text-subtle)",
-                      fontWeight: currentTab === tab.id ? 500 : 400,
-                      fontSize: "0.75rem",
-                      cursor: "pointer",
+                    className={diskStateFilter === value ? "is-active" : ""}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDiskStateFilter(value);
                     }}
                   >
-                    {tab.label}
+                    {t(`filesPage.diskState.${value}`, value)}
+                    {value !== "all" && stateCounts[value] > 0 && (
+                      <span className="files-page-state-count">
+                        {stateCounts[value]}
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
-            );
-          })()}
-
-          <div className="files-page-toolbar">
-            <span className="files-page-toolbar-info">
-              {loading
-                ? t("filesPage.loading", "Loading…")
-                : t("filesPage.summary", "{{count}} items", {
-                    count: totalCount,
-                  })}
-              {selectedFiles.length > 0 && (
-                <span>
-                  {" "}
-                  ·{" "}
-                  {t("filesPage.selectedCount", "{{count}} selected", {
-                    count: selectedFiles.length,
-                  })}
-                </span>
-              )}
-            </span>
-            {(() => {
-              // Select all / Clear toggle over visible files.
-              if (visibleFiles.length === 0) return null;
-              const allSelected = visibleFiles.every((f) =>
-                selectedFileIds.has(f.id),
-              );
-              const someSelected = !allSelected && selectedFiles.length > 0;
-              return (
-                <Tooltip
-                  label={t(
-                    "filesPage.selectAllHint",
-                    "Click to select all. Tip: hold Ctrl (or Cmd) to add files one at a time, Shift to select a range.",
-                  )}
-                  withinPortal
-                  multiline
-                  w={280}
-                >
-                  <Button
-                    variant="tertiary"
-                    size="sm"
-                    onClick={() => {
-                      if (allSelected) {
-                        setSelectedFileIds(new Set());
-                      } else {
-                        setSelectedFileIds(
-                          new Set(visibleFiles.map((f) => f.id)),
-                        );
-                      }
-                    }}
-                    aria-pressed={allSelected || someSelected}
-                  >
-                    {allSelected
-                      ? t("filesPage.deselectAll", "Clear selection")
-                      : t("filesPage.selectAll", "Select all")}
-                  </Button>
-                </Tooltip>
-              );
-            })()}
-            <div className="files-page-toolbar-actions">
-              {selectedFiles.length > 0 &&
-                (() => {
-                  // Bulk-action labels; CSS collapses to icon-only below 900px.
-                  const addLabel =
-                    selectedFiles.length === 1
-                      ? t("filesPage.addToWorkspace", "Add to workspace")
-                      : t(
-                          "filesPage.addToWorkspaceCount",
-                          "Add {{count}} to workspace",
-                          { count: selectedFiles.length },
-                        );
-                  const moveLabel = t("filesPage.moveTo", "Move to…");
-                  const removeLabel = t("filesPage.remove", "Remove");
-                  return (
-                    // wrap="nowrap" keeps the row single-line.
-                    <Group gap="xs" wrap="nowrap">
-                      <Tooltip label={addLabel} withinPortal>
-                        <Button
-                          size="sm"
-                          leftSection={<OpenInNewIcon fontSize="small" />}
-                          onClick={() => handleAddToWorkspace(selectedFiles)}
-                          aria-label={addLabel}
-                          data-testid="add-to-workspace"
-                        >
-                          {addLabel}
-                        </Button>
-                      </Tooltip>
-                      {/* Save to server; shown whenever local-only files are
-                          selected. When storage is off it stays visible but
-                          disabled, tooltip pointing at the admin. */}
-                      {localOnlySelectedStubs.length > 0 && (
-                        <Tooltip
-                          label={
-                            saveToServerDisabledReason ??
-                            t("filesPage.saveToServer", "Save to server")
-                          }
-                          withinPortal
-                          multiline={Boolean(saveToServerDisabledReason)}
-                          w={saveToServerDisabledReason ? 240 : undefined}
-                        >
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            leftSection={<CloudUploadIcon fontSize="small" />}
-                            disabled={Boolean(saveToServerDisabledReason)}
-                            onClick={() =>
-                              setSaveToServerTarget(localOnlySelectedStubs)
-                            }
-                            style={{
-                              // Keep the tooltip hoverable while disabled.
-                              pointerEvents: saveToServerDisabledReason
-                                ? "auto"
-                                : undefined,
-                            }}
-                            aria-label={t(
-                              "filesPage.saveToServer",
-                              "Save to server",
-                            )}
-                          >
-                            {t("filesPage.saveToServer", "Save to server")}
-                          </Button>
-                        </Tooltip>
-                      )}
-                      {/* Show details button on compact viewports. */}
-                      {selectedFiles.length === 1 &&
-                        isCompactDetailsViewport && (
-                          <Tooltip
-                            label={t("filesPage.showDetails", "Show details")}
-                            withinPortal
-                          >
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              leftSection={
-                                <InfoOutlinedIcon fontSize="small" />
-                              }
-                              onClick={() => setMobileDetailsOpen(true)}
-                              aria-label={t(
-                                "filesPage.showDetails",
-                                "Show details",
-                              )}
-                            >
-                              {t("filesPage.showDetails", "Show details")}
-                            </Button>
-                          </Tooltip>
-                        )}
-                      <Tooltip label={moveLabel} withinPortal>
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          leftSection={<DriveFileMoveIcon fontSize="small" />}
-                          onClick={() => promptMoveFiles(selectedFiles)}
-                          aria-label={moveLabel}
-                        >
-                          {moveLabel}
-                        </Button>
-                      </Tooltip>
-                      <Tooltip label={removeLabel} withinPortal>
-                        <Button
-                          size="sm"
-                          accent="danger"
-                          variant="secondary"
-                          leftSection={<DeleteIcon fontSize="small" />}
-                          onClick={() => handleRemoveFiles(selectedFiles)}
-                          aria-label={removeLabel}
-                        >
-                          {removeLabel}
-                        </Button>
-                      </Tooltip>
-                      <Tooltip
-                        label={t("filesPage.clearSelection", "Clear selection")}
-                        withinPortal
-                      >
-                        <ActionIcon
-                          variant="tertiary"
-                          size="md"
-                          onClick={() => clearSelection()}
-                          aria-label={t(
-                            "filesPage.clearSelection",
-                            "Clear selection",
-                          )}
-                        >
-                          &times;
-                        </ActionIcon>
-                      </Tooltip>
-                    </Group>
-                  );
-                })()}
-              {selectedFiles.length > 0 && (
-                <span
-                  className="files-page-toolbar-divider"
-                  aria-hidden="true"
-                />
-              )}
-              <Select
-                size="xs"
-                value={originFilter}
-                onChange={(value) =>
-                  value && setOriginFilter(value as FilesPageOriginFilter)
-                }
-                data={[
-                  {
-                    value: "all",
-                    label: t("filesPage.origin.all", "All sources"),
-                  },
-                  {
-                    value: "local",
-                    label: t("filesPage.origin.local", "Local"),
-                  },
-                  {
-                    value: "cloud",
-                    label: t("filesPage.origin.cloud", "Cloud"),
-                  },
-                  {
-                    value: "shared-with-me",
-                    label: t("filesPage.origin.shared", "Shared"),
-                  },
-                ]}
-                style={{ width: 140 }}
-                aria-label={t("filesPage.originFilter", "Filter by source")}
-              />
-              {availableTypes.length > 1 && (
-                <MultiSelect
-                  size="xs"
-                  value={typeFilter}
-                  onChange={setTypeFilter}
-                  data={availableTypes.map((ext) => ({
-                    value: ext,
-                    label: ext,
-                  }))}
-                  placeholder={
-                    typeFilter.length === 0
-                      ? t("filesPage.typeFilter.allTypes", "All types")
-                      : undefined
-                  }
-                  clearable
-                  hidePickedOptions
-                  searchable={false}
-                  style={{ width: 160 }}
-                  aria-label={t("filesPage.typeFilter.label", "Filter by type")}
-                />
-              )}
-              <Select
-                size="xs"
-                value={sortMode}
-                onChange={(value) =>
-                  value && setSortMode(value as FilesPageSortMode)
-                }
-                data={[
-                  {
-                    value: "modified-desc",
-                    label: t("filesPage.sort.modifiedDesc", "Recent first"),
-                  },
-                  {
-                    value: "modified-asc",
-                    label: t("filesPage.sort.modifiedAsc", "Oldest first"),
-                  },
-                  {
-                    value: "name-asc",
-                    label: t("filesPage.sort.nameAsc", "Name A→Z"),
-                  },
-                  {
-                    value: "name-desc",
-                    label: t("filesPage.sort.nameDesc", "Name Z→A"),
-                  },
-                  {
-                    value: "size-desc",
-                    label: t("filesPage.sort.sizeDesc", "Largest first"),
-                  },
-                  {
-                    value: "size-asc",
-                    label: t("filesPage.sort.sizeAsc", "Smallest first"),
-                  },
-                ]}
-                style={{ width: 160 }}
-              />
-              <span className="files-page-toolbar-divider" aria-hidden="true" />
-              <SegmentedControl
-                size="sm"
-                value={viewMode}
-                onChange={(v) => {
-                  // Mantine only emits values declared in `data[].value`, but
-                  // narrow defensively so a future third option can't silently
-                  // bypass the FilesPageViewMode contract. Derived from the
-                  // `as const` tuple so adding a mode anywhere in the code
-                  // base automatically widens the guard here.
-                  if (!(FILES_PAGE_VIEW_MODES as readonly string[]).includes(v))
-                    return;
-                  setViewMode(v as (typeof FILES_PAGE_VIEW_MODES)[number]);
-                }}
-                aria-label={t("filesPage.viewMode.label", "View mode")}
-                options={[
-                  {
-                    value: "grid",
-                    label: (
-                      <span
-                        className="files-page-view-toggle-icon"
-                        title={t("filesPage.viewMode.grid", "Grid view")}
-                      >
-                        <GridViewIcon fontSize="small" />
-                        <span className="files-page-sr-only">
-                          {t("filesPage.viewMode.grid", "Grid view")}
-                        </span>
-                      </span>
-                    ),
-                  },
-                  {
-                    value: "list",
-                    label: (
-                      <span
-                        className="files-page-view-toggle-icon"
-                        title={t("filesPage.viewMode.list", "List view")}
-                      >
-                        <ViewListIcon fontSize="small" />
-                        <span className="files-page-sr-only">
-                          {t("filesPage.viewMode.list", "List view")}
-                        </span>
-                      </span>
-                    ),
-                  },
-                ]}
-              />
             </div>
-          </div>
+          )}
 
           <div
             className="files-page-content"
             onClick={handleContentBackgroundClick}
           >
+            <FolderSweepWall policyId={processingRecordId} />
             <FileGrid
               entries={entries}
-              loading={loading}
+              loading={loading || diskLoading}
               currentTab={currentTab}
+              searchActive={search.trim().length > 0}
               serverReachable={folders.serverReachable}
+              onActionError={folders.setError}
               selectedFileIds={selectedFileIds}
               activeWorkspaceFileIds={activeWorkspaceFileIdSet}
               viewMode={viewMode}
@@ -1442,6 +1305,13 @@ export default function FileManagerView() {
               onSelectFile={handleSelectFile}
               onSetSelection={setSelectedFileIds}
               onOpenFolder={handleOpenFolder}
+              onStartProcessing={
+                processingEnabled ? setProcessingSetupFolder : undefined
+              }
+              onOpenDiskFile={(entry) => void openDiskFile(entry)}
+              onRetryFile={retryDiskFile}
+              onRevertFile={setRevertConfirmName}
+              onRequestRevertAll={setRevertAllTarget}
               onOpenFile={handleOpenFile}
               onMoveFiles={moveFilesTo}
               onMoveFolder={moveFolderTo}
@@ -1463,49 +1333,64 @@ export default function FileManagerView() {
                 );
               }}
               onRemoveFiles={handleRemoveFiles}
-              onPromptMoveFiles={promptMoveFiles}
+              onPromptMoveFiles={(ids) =>
+                promptMoveFiles(
+                  ids.filter((id) => {
+                    const file = fileMap.get(id);
+                    return file && !isBrowserOnlyFile(file);
+                  }),
+                )
+              }
               onSaveToServer={(file) => setSaveToServerTarget([file])}
               onVersionHistory={(file) => setVersionHistoryFile(file)}
+              onDownloadFile={handleDownloadFile}
+              onRenameFile={setRenameTarget}
+              onDuplicateFile={handleDuplicateFile}
               saveToServerDisabledReason={saveToServerDisabledReason}
-              // Center-of-grid CTAs when the empty state shows - same
-              // handlers the corner header buttons use so behaviour
-              // (disabled tooltips, native file picker, dialog) is
-              // identical regardless of where the user clicks from.
-              onEmptyUpload={() => fileInputRef.current?.click()}
-              onEmptyCreateFolder={() => openNewFolderDialog()}
-              newFolderDisabledReason={newFolderDisabledReason}
+              onEmptyUpload={openFilePicker}
+              emptyNewFolderControl={
+                <NewFolderButton
+                  label={t("filesPage.newFolder", "New folder")}
+                  size="md"
+                  disabledReason={newFolderDisabledReason}
+                  serverDisabledReason={serverFolderDisabledReason}
+                  currentFolderId={folders.currentFolderId}
+                  canAddLocalFolder={canPickDirectory}
+                  onAddLocalFolder={() => void addLocalFolder()}
+                  onOpenDialog={openNewFolderDialog}
+                />
+              }
             />
             {isDraggingExternal && (
               <div className="files-page-drop-overlay" aria-live="polite">
                 <span className="files-page-drop-overlay-icon">
-                  <UploadFileIcon />
+                  <Icon name="file-up" />
                 </span>
                 <span>
                   {t("filesPage.dropOverlay", "Drop files to upload")}
                 </span>
                 <span className="files-page-drop-overlay-sub">
-                  {/* Behavior contract: per handleNativeUpload above, all
-                      newly-uploaded files start in Local (folderId stays
-                      null) regardless of the current folder view. Saying
-                      "will land in {folder}" was a lie; tell the truth
-                      so the user reaches for Save-to-cloud / Move-to when
-                      they actually want a folder placement. */}
-                  {t(
-                    "filesPage.dropOverlaySub",
-                    "Files start in Local. Use 'Move to' or 'Save to cloud' to organise them into a folder.",
-                  )}
+                  {(currentTab === "all" || currentTab === "cloud") &&
+                  currentFolderId !== null
+                    ? t(
+                        "filesPage.dropOverlaySubFolder",
+                        "They'll be added to this folder.",
+                      )
+                    : t(
+                        "filesPage.dropOverlaySub",
+                        "Files appear in Recents. Organize them into folders any time.",
+                      )}
                 </span>
               </div>
             )}
           </div>
         </main>
 
-        {/* Inline aside on desktop. */}
         {selectedFiles.length > 0 && !isCompactDetailsViewport && (
           <FileDetailsPanel
             selectedFileIds={selectedFiles}
             fileMap={fileMap}
-            currentFolder={currentFolderRecord}
+            foldersById={foldersById}
             onClose={() => clearSelection()}
             onAddToWorkspace={handleAddToWorkspace}
             onMove={promptMoveFiles}
@@ -1516,22 +1401,46 @@ export default function FileManagerView() {
         )}
       </div>
 
-      {/* Drawer hosts the details panel on ≤800px viewports. */}
+      <RestoreOriginalsDialog
+        opened={revertConfirmName !== null || revertAllTarget !== null}
+        fileName={revertConfirmName ?? undefined}
+        onClose={() => {
+          setRevertConfirmName(null);
+          setRevertAllTarget(null);
+        }}
+        onConfirm={() => {
+          if (revertConfirmName) revertFolderFile(revertConfirmName);
+          if (revertAllTarget) revertAllInFolder(revertAllTarget);
+        }}
+      />
+      {processingEnabled && (
+        <FolderProcessingSetup
+          folder={processingBlock ? null : processingSetupFolder}
+          onClose={() => setProcessingSetupFolder(null)}
+        />
+      )}
+
       {isCompactDetailsViewport && (
         <Drawer
           opened={mobileDetailsOpen && selectedFiles.length === 1}
           onClose={() => setMobileDetailsOpen(false)}
-          position="right"
-          size={useFullScreenDrawer ? "100%" : "sm"}
+          position={detailsAsSheet ? "bottom" : "right"}
+          size={detailsAsSheet ? "auto" : "sm"}
           padding={0}
           withCloseButton={false}
           overlayProps={{ opacity: 0.45 }}
+          classNames={{
+            content: detailsAsSheet
+              ? "files-page-details-drawer is-sheet"
+              : "files-page-details-drawer",
+            body: "files-page-details-drawer-body",
+          }}
         >
           {mobileDetailsOpen && selectedFiles.length === 1 && (
             <FileDetailsPanel
               selectedFileIds={selectedFiles}
               fileMap={fileMap}
-              currentFolder={currentFolderRecord}
+              foldersById={foldersById}
               onClose={() => setMobileDetailsOpen(false)}
               onAddToWorkspace={handleAddToWorkspace}
               onMove={promptMoveFiles}
@@ -1554,7 +1463,13 @@ export default function FileManagerView() {
       <MoveToFolderDialog
         opened={moveDialog.open}
         onClose={closeMoveDialog}
-        folders={folders.folders}
+        // Folders stay within their storage kind; mounted directories cannot receive library subfolders.
+        folders={folders.folders.filter((candidate) => {
+          if (!moveDialog.folderId) return true;
+          if (folderKind(candidate) === "local") return false;
+          const moving = folders.foldersById.get(moveDialog.folderId);
+          return moving ? folderKind(candidate) === folderKind(moving) : true;
+        })}
         initialFolderId={moveDialog.initial}
         disabledFolderId={moveDialog.folderId}
         onConfirm={async (target) => {
@@ -1564,9 +1479,9 @@ export default function FileManagerView() {
             await moveFolderTo(moveDialog.folderId, target);
           }
         }}
-        // Inline-create folder; gated on serverReachable.
+
         onCreateFolder={
-          folders.serverReachable
+          serverFolderDisabledReason === null
             ? (name, parentFolderId) =>
                 folders.createFolder(name, parentFolderId)
             : undefined
@@ -1617,7 +1532,6 @@ export default function FileManagerView() {
         }}
       />
 
-      {/* Cloud-aware delete; offers local/cloud/both when a file lives in both. */}
       <DeleteFilesDialog
         opened={deleteDialogOpen}
         files={deleteDialogFiles}
@@ -1625,7 +1539,13 @@ export default function FileManagerView() {
         onConfirm={confirmRemoveFiles}
       />
 
-      {/* Version journey in a modal (opened from the card kebab). */}
+      <RenameFileDialog
+        opened={Boolean(renameTarget)}
+        fileName={renameTarget?.name ?? ""}
+        onClose={() => setRenameTarget(null)}
+        onSubmit={handleConfirmRename}
+      />
+
       <VersionHistoryModal
         opened={Boolean(versionHistoryFile)}
         onClose={() => setVersionHistoryFile(null)}
@@ -1633,140 +1553,146 @@ export default function FileManagerView() {
         onChanged={refresh}
       />
 
-      {/* Save-to-server modal; keyed on target so updates don't retarget. */}
-      <BulkUploadToServerModal
+      <AddToLibraryModal
         key={`save-${(saveToServerTarget ?? []).map((s) => s.id).join(",")}`}
-        opened={Boolean(saveToServerTarget && saveToServerTarget.length > 0)}
         onClose={() => setSaveToServerTarget(null)}
         files={saveToServerTarget ?? []}
-        onUploaded={refresh}
-      />
-
-      <MobileUploadModal
-        opened={mobileUploadModalOpen}
-        onClose={() => setMobileUploadModalOpen(false)}
-        onFilesReceived={(files) => {
-          if (files.length > 0) {
-            void addFiles(files);
-          }
-        }}
       />
     </div>
   );
 }
 
-const SearchField = React.forwardRef<
-  HTMLInputElement,
-  { value: string; onChange: (v: string) => void }
->(function SearchField({ value, onChange }, ref) {
+function useFolderDropHandlers() {
   const { t } = useTranslation();
-  return (
-    <div className="files-page-search">
-      <SearchIcon fontSize="small" style={{ color: "var(--c-text-subtle)" }} />
-      <input
-        ref={ref}
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.currentTarget.value)}
-        placeholder={t(
-          "filesPage.searchPlaceholder",
-          "Search this folder & subfolders",
-        )}
-        aria-label={t("filesPage.search", "Search")}
-      />
-      {value && (
-        <ActionIcon
-          variant="tertiary"
-          size="sm"
-          onClick={() => onChange("")}
-          aria-label={t("filesPage.clearSearch", "Clear search")}
-        >
-          &times;
-        </ActionIcon>
-      )}
-    </div>
-  );
-});
+  const folders = useFolders();
+  const filesPage = useFilesPage();
+
+  const reportFailure = (err: unknown, detailKey: string, plainKey: string) => {
+    folders.setError(
+      err instanceof Error
+        ? t(detailKey, {
+            message: err.message,
+            defaultValue: `Could not move: ${err.message}`,
+          })
+        : t(plainKey, "Could not move."),
+    );
+  };
+
+  return (folderId: FolderId | null) => ({
+    onDragOver: (e: React.DragEvent) => {
+      if (e.dataTransfer.types.includes(FILES_PAGE_DRAG_TYPE)) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+      }
+    },
+    onDrop: (e: React.DragEvent) => {
+      e.preventDefault();
+      const payload = parseFilesPageDragPayload(e.dataTransfer);
+      if (!payload) return;
+      if (payload.kind === "files") {
+        void filesPage.moveFilesTo(payload.fileIds, folderId).catch((err) => {
+          console.error("[breadcrumb] drop failed", err);
+          reportFailure(
+            err,
+            "filesPage.error.moveFilesFailedDetail",
+            "filesPage.error.moveFilesFailed",
+          );
+        });
+      } else if (payload.kind === "folder") {
+        // Use the shared move action so ancestor drops report the cycle guard's reason.
+        void filesPage.moveFolderTo(payload.folderId, folderId).catch((err) => {
+          console.error("[breadcrumb] folder drop failed", err);
+          reportFailure(
+            err,
+            "filesPage.error.moveFolderFailedDetail",
+            "filesPage.error.moveFolderFailed",
+          );
+        });
+      }
+    },
+  });
+}
 
 function Breadcrumbs() {
   const { t } = useTranslation();
   const folders = useFolders();
-  const filesPage = useFilesPage();
-  const trail = folders.breadcrumbs;
+  const openFolder = useOpenFolder();
+  const dropHandlers = useFolderDropHandlers();
+  const trail = folders.breadcrumbs.filter(
+    (entry) => entry.id !== ROOT_FOLDER_ID,
+  );
+  if (trail.length === 0) return null;
+
+  // Collapse ancestors so the current folder stays visible in deep paths.
+  const VISIBLE = 2;
+  const split = Math.max(0, trail.length - VISIBLE);
+  const hidden = trail.slice(0, split);
+  const shown = trail.slice(split);
+
   return (
     <nav
       className="files-page-breadcrumbs"
       aria-label={t("filesPage.breadcrumbs", "Folder path")}
     >
-      {trail.map((entry, idx) => {
-        const isLast = idx === trail.length - 1;
+      <Icon
+        name="chevron-right"
+        size={20}
+        className="files-page-breadcrumb-sep"
+        aria-hidden="true"
+      />
+      {hidden.length > 0 && (
+        <>
+          <Menu shadow="md" position="bottom-start" withinPortal>
+            <Menu.Target>
+              <ActionIcon
+                variant="tertiary"
+                size="sm"
+                className="files-page-breadcrumb-overflow"
+                aria-label={t(
+                  "filesPage.breadcrumbsOverflow",
+                  "Show parent folders",
+                )}
+              >
+                <Icon name="ellipsis" size={20} />
+              </ActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown>
+              {hidden.map((entry) => (
+                <Menu.Item
+                  key={entry.id ?? "root"}
+                  onClick={() => openFolder(entry.id)}
+                >
+                  {entry.name}
+                </Menu.Item>
+              ))}
+            </Menu.Dropdown>
+          </Menu>
+          <Icon
+            name="chevron-right"
+            size={20}
+            className="files-page-breadcrumb-sep"
+            aria-hidden="true"
+          />
+        </>
+      )}
+      {shown.map((entry, idx) => {
+        const isLast = idx === shown.length - 1;
         return (
           <React.Fragment key={entry.id ?? "root"}>
-            <Button
-              variant="tertiary"
+            <button
+              type="button"
               className={`files-page-breadcrumb${isLast ? " is-current" : ""}`}
-              onClick={() => folders.setCurrentFolderId(entry.id)}
-              onDragOver={(e) => {
-                if (e.dataTransfer.types.includes(FILES_PAGE_DRAG_TYPE)) {
-                  e.preventDefault();
-                  e.dataTransfer.dropEffect = "move";
-                }
-              }}
-              onDrop={(e) => {
-                e.preventDefault();
-                const payload = parseFilesPageDragPayload(e.dataTransfer);
-                if (!payload) return;
-                if (payload.kind === "files") {
-                  // Route through moveFilesTo (→ IndexedDBContext.moveFilesToFolder)
-                  // so the revision bumps and the grid refreshes. Surface
-                  // rejection via the banner - console-only was invisible
-                  // to non-dev users.
-                  void filesPage
-                    .moveFilesTo(payload.fileIds, entry.id)
-                    .catch((err) => {
-                      console.error("[breadcrumb] drop failed", err);
-                      folders.setError(
-                        err instanceof Error
-                          ? t("filesPage.error.moveFilesFailedDetail", {
-                              message: err.message,
-                              defaultValue: `Could not move files: ${err.message}`,
-                            })
-                          : t(
-                              "filesPage.error.moveFilesFailed",
-                              "Could not move files.",
-                            ),
-                      );
-                    });
-                } else if (payload.kind === "folder") {
-                  // Route through moveFolderTo so the client-side cycle guard fires
-                  // before the server call - otherwise dragging an ancestor onto a
-                  // child crumb shows the generic banner instead of the localized
-                  // "Can't move a folder into one of its own subfolders." message.
-                  void filesPage
-                    .moveFolderTo(payload.folderId, entry.id)
-                    .catch((err) => {
-                      console.error("[breadcrumb] folder drop failed", err);
-                      folders.setError(
-                        err instanceof Error
-                          ? t("filesPage.error.moveFolderFailedDetail", {
-                              message: err.message,
-                              defaultValue: `Could not move folder: ${err.message}`,
-                            })
-                          : t(
-                              "filesPage.error.moveFolderFailed",
-                              "Could not move folder.",
-                            ),
-                      );
-                    });
-                }
-              }}
+              title={entry.name}
+              onClick={() => openFolder(entry.id)}
+              {...dropHandlers(entry.id)}
             >
               {entry.name}
-            </Button>
+            </button>
             {!isLast && (
-              <KeyboardArrowRightIcon
+              <Icon
+                name="chevron-right"
+                size={20}
                 className="files-page-breadcrumb-sep"
-                fontSize="small"
                 aria-hidden="true"
               />
             )}

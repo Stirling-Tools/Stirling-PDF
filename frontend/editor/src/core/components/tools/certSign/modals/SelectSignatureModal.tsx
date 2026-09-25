@@ -6,11 +6,7 @@ import {
   useSavedSignatures,
   SavedSignature,
 } from "@app/hooks/tools/sign/useSavedSignatures";
-import DrawIcon from "@mui/icons-material/Draw";
-import TextFieldsIcon from "@mui/icons-material/TextFields";
-import ImageIcon from "@mui/icons-material/Image";
-import CloseIcon from "@mui/icons-material/Close";
-
+import { Icon } from "@app/ui/Icon";
 interface SelectSignatureModalProps {
   opened: boolean;
   onClose: () => void;
@@ -151,7 +147,7 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
                     )}
                     style={{ margin: "0 6px" }}
                   >
-                    <CloseIcon sx={{ fontSize: "1rem" }} />
+                    <Icon name="x" size={"1rem"} />
                   </ActionIcon>
                 </Group>
               ))}
@@ -173,7 +169,7 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
         <Group grow>
           <Button
             variant="secondary"
-            leftSection={<DrawIcon />}
+            leftSection={<Icon name="pen-tool" />}
             onClick={() => {
               onCreateNew("canvas");
               onClose();
@@ -183,7 +179,7 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
           </Button>
           <Button
             variant="secondary"
-            leftSection={<TextFieldsIcon />}
+            leftSection={<Icon name="type" />}
             onClick={() => {
               onCreateNew("text");
               onClose();
@@ -193,7 +189,7 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
           </Button>
           <Button
             variant="secondary"
-            leftSection={<ImageIcon />}
+            leftSection={<Icon name="image" />}
             onClick={() => {
               onCreateNew("image");
               onClose();

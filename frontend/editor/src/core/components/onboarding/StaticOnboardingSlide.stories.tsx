@@ -1,8 +1,4 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-// The shared preview only loads the portal tokens; the onboarding modal reads
-// the editor theme tokens (--bg-surface, --onboarding-title, …), so load them
-// here or the modal surface renders transparent over the dark overlay.
-import "@app/styles/theme.css";
 import StaticOnboardingSlide from "@app/components/onboarding/StaticOnboardingSlide";
 import { DEFAULT_RUNTIME_STATE } from "@app/components/onboarding/orchestrator/onboardingConfig";
 

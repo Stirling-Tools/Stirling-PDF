@@ -20,6 +20,13 @@ public interface PolicyStore {
     List<Policy> findByTeam(Long teamId);
 
     /**
+     * Whether any policy mentions this stored-asset id, across every team. Asked before reclaiming
+     * an asset, so it must answer from the raw stored form: a row {@link #all()} skips as
+     * unreadable still holds its certificate hostage, and deleting that would be unrecoverable.
+     */
+    boolean anyPolicyReferences(String assetId);
+
+    /**
      * Enabled inputs with the given trigger type, as {@code (policy, input)} bindings, so a
      * background trigger fires each input independently and pulls only its own source.
      */

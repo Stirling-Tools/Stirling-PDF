@@ -1,15 +1,25 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { Box, ScrollArea, Text, Loader, Stack, TextInput } from "@mantine/core";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useCallback,
+  type ReactElement,
+} from "react";
+import { Text, Loader, Stack } from "@mantine/core";
+import { Icon } from "@app/ui/Icon";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useViewer } from "@app/contexts/ViewerContext";
+import { useAllFiles, useFileManagement } from "@app/contexts/FileContext";
+import { createQuickKey, isStirlingFile } from "@app/types/fileContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { PdfAttachmentObject } from "@embedpdf/models";
-import AttachmentIcon from "@mui/icons-material/AttachmentRounded";
-import DownloadIcon from "@mui/icons-material/DownloadRounded";
 import { useTranslation } from "react-i18next";
-import "@app/components/viewer/SidebarBase.css";
+import { SidebarBase } from "@app/components/viewer/SidebarBase";
+import { detectNonPdfFileType, isPdfFile } from "@app/utils/fileUtils";
+import { readPortfolioMemberBytes } from "@app/utils/portfolioMembers";
+import { downloadFile } from "@app/services/downloadService";
 import "@app/components/viewer/AttachmentSidebar.css";
 
 interface AttachmentSidebarProps {
@@ -18,9 +28,100 @@ interface AttachmentSidebarProps {
   bookmarkVisible: boolean;
   documentCacheKey?: string;
   preloadCacheKeys?: string[];
+  /** Set for an Adobe PDF Portfolio: renders the richer collection experience
+   * (type icons, open-in-place) from the portfolio rather than the open document. */
+  portfolio?: PortfolioView | null;
 }
 
-const SIDEBAR_WIDTH = "15rem";
+export interface PortfolioView {
+  /** Read directly for members, so the panel outlives opening one. */
+  file: File;
+  members: PdfAttachmentObject[];
+  /** Member currently on screen, highlighted in the list. */
+  activeMemberName: string | null;
+}
+
+// Keyed by the type resolved in memberIconKey below. Literal names rather than a
+// computed one: that is what lets icon-lint and IconName check them.
+const MEMBER_ICON_STYLE = {
+  flexShrink: 0,
+  color: "var(--icon-files-color)",
+} as const;
+const MEMBER_ICONS: Record<string, ReactElement> = {
+  pdf: <Icon name="file-pdf" size="1.4rem" style={MEMBER_ICON_STYLE} />,
+  image: <Icon name="image" size="1.4rem" style={MEMBER_ICON_STYLE} />,
+  sheet: <Icon name="table" size="1.4rem" style={MEMBER_ICON_STYLE} />,
+  data: <Icon name="braces" size="1.4rem" style={MEMBER_ICON_STYLE} />,
+  text: <Icon name="file-text" size="1.4rem" style={MEMBER_ICON_STYLE} />,
+  archive: <Icon name="package" size="1.4rem" style={MEMBER_ICON_STYLE} />,
+  default: <Icon name="file" size="1.4rem" style={MEMBER_ICON_STYLE} />,
+};
+
+const memberExtension = (attachment: PdfAttachmentObject): string => {
+  const name = (attachment.name || "").toLowerCase();
+  return name.includes(".") ? name.slice(name.lastIndexOf(".") + 1) : "";
+};
+
+// Map a member's mime type / extension to an icon key.
+const memberIconKey = (attachment: PdfAttachmentObject): string => {
+  const mime = (attachment.mimeType || "").toLowerCase();
+  const ext = memberExtension(attachment);
+  if (mime.includes("pdf") || ext === "pdf") return "pdf";
+  if (
+    mime.startsWith("image/") ||
+    ["png", "jpg", "jpeg", "gif", "bmp", "svg", "webp"].includes(ext)
+  )
+    return "image";
+  if (mime.includes("csv") || ["csv", "xls", "xlsx"].includes(ext))
+    return "sheet";
+  if (mime.includes("json") || ["json", "xml", "yml", "yaml"].includes(ext))
+    return "data";
+  if (
+    ["doc", "docx", "txt", "md", "rtf"].includes(ext) ||
+    mime.startsWith("text/")
+  )
+    return "text";
+  if (["zip", "7z", "rar", "gz", "tar"].includes(ext)) return "archive";
+  return "default";
+};
+
+// Portfolios often omit an embedded file's /Subtype, so give the viewer a type
+// derived from the extension rather than passing a blank one through.
+const MEMBER_MIME_TYPES: Record<string, string> = {
+  pdf: "application/pdf",
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  gif: "image/gif",
+  bmp: "image/bmp",
+  svg: "image/svg+xml",
+  webp: "image/webp",
+  tif: "image/tiff",
+  tiff: "image/tiff",
+  csv: "text/csv",
+  tsv: "text/tab-separated-values",
+  json: "application/json",
+  txt: "text/plain",
+  md: "text/markdown",
+  markdown: "text/markdown",
+  html: "text/html",
+  htm: "text/html",
+};
+
+const memberMimeType = (attachment: PdfAttachmentObject): string =>
+  MEMBER_MIME_TYPES[memberExtension(attachment)] ||
+  attachment.mimeType ||
+  "application/octet-stream";
+
+// A member opens in the viewer when the viewer can render it; the rest (archives,
+// office documents) still download.
+const canPreviewMember = (attachment: PdfAttachmentObject): boolean => {
+  const probe = {
+    name: attachment.name || "",
+    type: memberMimeType(attachment),
+  };
+  return isPdfFile(probe) || detectNonPdfFileType(probe) !== "unknown";
+};
 
 interface AttachmentCacheEntry {
   status: "idle" | "loading" | "success" | "error";
@@ -45,12 +146,29 @@ export const AttachmentSidebar = ({
   bookmarkVisible,
   documentCacheKey,
   preloadCacheKeys = [],
+  portfolio = null,
 }: AttachmentSidebarProps) => {
+  const isPortfolio = portfolio !== null;
   const { t } = useTranslation();
-  const { attachmentActions, hasAttachmentSupport, toggleAttachmentSidebar } =
-    useViewer();
-  const { handleToolSelectForced } = useToolWorkflow();
+  const {
+    attachmentActions,
+    hasAttachmentSupport,
+    toggleAttachmentSidebar,
+    setActiveFileId,
+  } = useViewer();
+  const { addFiles } = useFileManagement();
+  const { files: libraryFiles } = useAllFiles();
+  // Member name -> the file it was opened as, so reopening one returns to it.
+  const openedMembers = useRef<Map<string, string>>(new Map());
+  const {
+    handleToolSelectForced,
+    previewFile,
+    setPreviewFile,
+    registerPreviewImport,
+  } = useToolWorkflow();
   const [searchTerm, setSearchTerm] = useState("");
+  const [openingMember, setOpeningMember] = useState<string | null>(null);
+  const [memberError, setMemberError] = useState<string | null>(null);
   const [attachmentSupport, setAttachmentSupport] = useState(() =>
     hasAttachmentSupport(),
   );
@@ -187,11 +305,9 @@ export const AttachmentSidebar = ({
             continue;
           }
           return Array.isArray(result) ? result : [];
-        } catch (error: any) {
+        } catch (error) {
           const message =
-            typeof error?.message === "string"
-              ? error.message.toLowerCase()
-              : "";
+            error instanceof Error ? error.message.toLowerCase() : "";
           const notReady =
             message.includes("document") &&
             message.includes("not") &&
@@ -223,7 +339,9 @@ export const AttachmentSidebar = ({
       .catch((error) => {
         if (cancelled) return;
         const message =
-          error instanceof Error ? error.message : "Failed to load attachments";
+          error instanceof Error
+            ? error.message
+            : t("viewer.attachments.loadFailed", "Failed to load attachments");
         const fallback = cacheRef.current.get(key);
         const entry = createEntry({
           status: "error",
@@ -252,10 +370,200 @@ export const AttachmentSidebar = ({
 
   const handleDownload = (
     attachment: PdfAttachmentObject,
-    event: React.MouseEvent,
+    event: React.SyntheticEvent,
   ) => {
     event.stopPropagation();
+    if (portfolio) {
+      void saveMember(attachment);
+      return;
+    }
     attachmentActions.downloadAttachment(attachment);
+  };
+
+  // Saved from the portfolio's own bytes: the viewer's download acts on whatever
+  // document is open, which by then may be a member rather than the portfolio.
+  const saveMember = useCallback(
+    async (attachment: PdfAttachmentObject) => {
+      setMemberError(null);
+      const bytes = portfolio
+        ? await readPortfolioMemberBytes(portfolio.file, attachment.name)
+        : null;
+      if (!bytes) {
+        setMemberError(
+          t(
+            "viewer.portfolio.memberUnavailable",
+            "This file could not be read from the portfolio.",
+          ),
+        );
+        return;
+      }
+      await downloadFile({
+        data: new Blob([bytes as BlobPart], {
+          type: memberMimeType(attachment),
+        }),
+        filename: attachment.name || "attachment",
+      });
+    },
+    [portfolio, t],
+  );
+
+  const memberFile = useCallback(
+    async (attachment: PdfAttachmentObject): Promise<File | null> => {
+      const name = attachment.name || "document.pdf";
+      const bytes = portfolio
+        ? await readPortfolioMemberBytes(portfolio.file, name)
+        : null;
+      if (!bytes) return null;
+      return new File([bytes as BlobPart], name, {
+        type: memberMimeType(attachment),
+        // Stable across clicks, so the workbench's own name|size|lastModified
+        // duplicate check recognises a member it already holds.
+        lastModified:
+          attachment.creationDate?.getTime() ??
+          portfolio?.file.lastModified ??
+          0,
+      });
+    },
+    [portfolio],
+  );
+
+  /** The workbench file holding these exact bytes, by the same name|size|
+   * lastModified key addFiles deduplicates on. */
+  const workbenchIdFor = useCallback(
+    (file: File): string | null => {
+      const quickKey = createQuickKey(file);
+      const match = libraryFiles.find(
+        (f) => isStirlingFile(f) && f.quickKey === quickKey,
+      );
+      return match && isStirlingFile(match) ? match.fileId : null;
+    },
+    [libraryFiles],
+  );
+
+  /** The file this member was imported as, if it is still in the workbench. */
+  const importedAs = useCallback(
+    (name: string): string | null => {
+      const fileId = openedMembers.current.get(name);
+      return fileId &&
+        libraryFiles.some((f) => isStirlingFile(f) && f.fileId === fileId)
+        ? fileId
+        : null;
+    },
+    [libraryFiles],
+  );
+
+  // Bring a member into the workbench as a file of its own.
+  const importMember = useCallback(
+    async (attachment: PdfAttachmentObject) => {
+      const name = attachment.name || "document.pdf";
+      const already = importedAs(name);
+      if (already) {
+        setPreviewFile(null);
+        setActiveFileId(already);
+        return;
+      }
+      try {
+        setMemberError(null);
+        setOpeningMember(name);
+        const file = await memberFile(attachment);
+        if (!file) {
+          void saveMember(attachment);
+          return;
+        }
+        const added = await addFiles([file], { selectFiles: true });
+        // addFiles drops a file the workbench already holds, so a member on its
+        // second visit comes back as nothing; promote the copy it kept instead,
+        // or the tool that follows this import runs on the portfolio.
+        const fileId = added?.[0]?.fileId ?? workbenchIdFor(file);
+        if (!fileId) {
+          setMemberError(
+            t(
+              "viewer.portfolio.importFailed",
+              "This file could not be added to your workspace.",
+            ),
+          );
+          return;
+        }
+        openedMembers.current.set(name, fileId);
+        registerPreviewImport(null);
+        setPreviewFile(null);
+        setActiveFileId(fileId);
+      } catch {
+        void saveMember(attachment);
+      } finally {
+        setOpeningMember(null);
+      }
+    },
+    [
+      importedAs,
+      memberFile,
+      saveMember,
+      addFiles,
+      workbenchIdFor,
+      setActiveFileId,
+      setPreviewFile,
+      registerPreviewImport,
+      t,
+    ],
+  );
+
+  // Clicking a member shows it without adding it to the workbench. Tools resolve
+  // their target from the file store, so selecting one imports it first.
+  const previewMember = useCallback(
+    async (attachment: PdfAttachmentObject) => {
+      if (!canPreviewMember(attachment)) {
+        void saveMember(attachment);
+        return;
+      }
+      const name = attachment.name || "document.pdf";
+      const already = importedAs(name);
+      if (already) {
+        setActiveFileId(already);
+        return;
+      }
+      try {
+        setMemberError(null);
+        setOpeningMember(name);
+        const file = await memberFile(attachment);
+        if (!file) {
+          void saveMember(attachment);
+          return;
+        }
+        setPreviewFile(file);
+        registerPreviewImport(() => importMember(attachment));
+      } catch {
+        void saveMember(attachment);
+      } finally {
+        setOpeningMember(null);
+      }
+    },
+    [
+      importedAs,
+      memberFile,
+      saveMember,
+      setActiveFileId,
+      setPreviewFile,
+      registerPreviewImport,
+      importMember,
+    ],
+  );
+
+  // Drop the pending import once the preview goes, so a dismissed member cannot
+  // be pulled in by the next tool the reader picks.
+  useEffect(() => {
+    if (!previewFile) registerPreviewImport(null);
+  }, [previewFile, registerPreviewImport]);
+
+  // Leave no import behind for a portfolio that is no longer on screen.
+  useEffect(() => () => registerPreviewImport(null), [registerPreviewImport]);
+
+  const formatDate = (date?: Date) => {
+    if (!date) return "";
+    try {
+      return date.toLocaleDateString();
+    } catch {
+      return "";
+    }
   };
 
   const handleAddAttachment = useCallback(() => {
@@ -267,13 +575,13 @@ export const AttachmentSidebar = ({
   }, [handleToolSelectForced, toggleAttachmentSidebar]);
 
   const filteredAttachments = useMemo(() => {
-    const attachments = Array.isArray(activeEntry.attachments)
-      ? activeEntry.attachments
-      : [];
+    const attachments =
+      portfolio?.members ??
+      (Array.isArray(activeEntry.attachments) ? activeEntry.attachments : []);
     if (!searchTerm.trim()) return attachments;
     const term = searchTerm.trim().toLowerCase();
     return attachments.filter((a) => a.name?.toLowerCase().includes(term));
-  }, [activeEntry.attachments, searchTerm]);
+  }, [portfolio?.members, activeEntry.attachments, searchTerm]);
 
   const formatFileSize = (bytes?: number) => {
     if (bytes === undefined) return "";
@@ -285,47 +593,108 @@ export const AttachmentSidebar = ({
   };
 
   const renderAttachments = (attachments: PdfAttachmentObject[]) => {
-    return attachments.map((attachment, index) => (
-      <div
-        key={`${attachment.name}-${index}`}
-        className="attachment-item-wrapper"
-      >
+    return attachments.map((attachment, index) => {
+      const rowClick = (event: React.SyntheticEvent) => {
+        if (isPortfolio) {
+          event.stopPropagation();
+          void previewMember(attachment);
+        } else {
+          handleDownload(attachment, event);
+        }
+      };
+      const isOpening = openingMember === (attachment.name || "document.pdf");
+      const isCurrent =
+        isPortfolio && attachment.name === portfolio?.activeMemberName;
+      const meta = isPortfolio
+        ? [formatFileSize(attachment.size), formatDate(attachment.creationDate)]
+            .filter(Boolean)
+            .join(" • ")
+        : [formatFileSize(attachment.size), attachment.description]
+            .filter(Boolean)
+            .join(" • ");
+      return (
         <div
-          className="attachment-item"
-          onClick={(event) => handleDownload(attachment, event)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              handleDownload(attachment, event as any);
-            }
-          }}
+          key={`${attachment.name}-${index}`}
+          className="attachment-item-wrapper"
         >
-          <div className="attachment-item__content">
-            <Text size="sm" fw={500} className="attachment-item__title">
-              {attachment.name || "Untitled"}
-            </Text>
-            {(attachment.size !== undefined || attachment.description) && (
-              <Text size="xs" c="dimmed" className="attachment-item__meta">
-                {[formatFileSize(attachment.size), attachment.description]
-                  .filter(Boolean)
-                  .join(" • ")}
+          <div
+            className={
+              isCurrent
+                ? "attachment-item attachment-item--current"
+                : "attachment-item"
+            }
+            onClick={rowClick}
+            role="button"
+            tabIndex={0}
+            aria-current={isCurrent ? "true" : undefined}
+            title={
+              isPortfolio
+                ? canPreviewMember(attachment)
+                  ? t("viewer.portfolio.preview", "Preview")
+                  : t("viewer.attachments.download", "Download attachment")
+                : undefined
+            }
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                rowClick(event);
+              }
+            }}
+          >
+            {isPortfolio &&
+              (MEMBER_ICONS[memberIconKey(attachment)] ?? MEMBER_ICONS.default)}
+            <div className="attachment-item__content">
+              <Text size="sm" fw={500} className="attachment-item__title">
+                {attachment.name ||
+                  t("viewer.attachments.untitled", "Untitled")}
               </Text>
+              {meta && (
+                <Text size="xs" c="dimmed" className="attachment-item__meta">
+                  {meta}
+                </Text>
+              )}
+            </div>
+            {isOpening ? (
+              <Loader size="xs" />
+            ) : (
+              <>
+                {isPortfolio && canPreviewMember(attachment) && (
+                  <ActionIcon
+                    variant="tertiary"
+                    size="sm"
+                    className="attachment-item__download-icon"
+                    aria-label={t(
+                      "viewer.portfolio.import",
+                      "Import into Stirling",
+                    )}
+                    title={t("viewer.portfolio.import", "Import into Stirling")}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      void importMember(attachment);
+                    }}
+                  >
+                    <Icon name="import" size={"1.2rem"} />
+                  </ActionIcon>
+                )}
+                <ActionIcon
+                  variant="tertiary"
+                  size="sm"
+                  className="attachment-item__download-icon"
+                  aria-label={t(
+                    "viewer.attachments.download",
+                    "Download attachment",
+                  )}
+                  title={t("viewer.attachments.download", "Download")}
+                  onClick={(event) => handleDownload(attachment, event)}
+                >
+                  <Icon name="download" size={"1.2rem"} />
+                </ActionIcon>
+              </>
             )}
           </div>
-          <ActionIcon
-            variant="tertiary"
-            size="sm"
-            className="attachment-item__download-icon"
-            aria-label={t("viewer.attachments.download", "Download attachment")}
-            onClick={(event) => handleDownload(attachment, event)}
-          >
-            <DownloadIcon sx={{ fontSize: "1.2rem" }} />
-          </ActionIcon>
         </div>
-      </div>
-    ));
+      );
+    });
   };
 
   if (!visible) {
@@ -333,9 +702,12 @@ export const AttachmentSidebar = ({
   }
 
   const isSearchActive = searchTerm.trim().length > 0;
-  const hasAttachments =
-    Array.isArray(activeEntry.attachments) &&
-    activeEntry.attachments.length > 0;
+  // A portfolio supplies its own members, so none of the live-document gates
+  // below (capability present, document open, fetch state) apply to it.
+  const hasAttachments = portfolio
+    ? portfolio.members.length > 0
+    : Array.isArray(activeEntry.attachments) &&
+      activeEntry.attachments.length > 0;
   const isLocalLoading = attachmentSupport && activeEntry.status === "loading";
   const currentError =
     attachmentSupport && activeEntry.status === "error"
@@ -343,8 +715,10 @@ export const AttachmentSidebar = ({
       : null;
 
   const showAttachmentList =
-    attachmentSupport && documentCacheKey && filteredAttachments.length > 0;
+    (isPortfolio || (attachmentSupport && documentCacheKey)) &&
+    filteredAttachments.length > 0;
   const showEmptyState =
+    !isPortfolio &&
     attachmentSupport &&
     documentCacheKey &&
     !isLocalLoading &&
@@ -352,187 +726,163 @@ export const AttachmentSidebar = ({
     activeEntry.status === "success" &&
     !hasAttachments;
   const showSearchEmpty =
-    attachmentSupport &&
-    documentCacheKey &&
+    (isPortfolio || (attachmentSupport && documentCacheKey)) &&
     isSearchActive &&
     hasAttachments &&
     filteredAttachments.length === 0;
-  const showNoDocument = attachmentSupport && !documentCacheKey;
+  const showNoDocument = !isPortfolio && attachmentSupport && !documentCacheKey;
 
   return (
-    <Box
-      className="sidebar-base attachment-sidebar"
-      style={{
-        position: "fixed",
-        right: `${(thumbnailVisible ? 15 : 0) + (bookmarkVisible ? 15 : 0)}rem`,
-        top: 0,
-        bottom: 0,
-        width: SIDEBAR_WIDTH,
-        zIndex: 998,
-      }}
+    <SidebarBase
+      className="attachment-sidebar"
+      title={
+        isPortfolio
+          ? t("viewer.portfolio.title", "Portfolio")
+          : t("viewer.attachments.title", "Attachments")
+      }
+      icon={isPortfolio ? <Icon name="library" /> : <Icon name="paperclip" />}
+      rightOffset={`${(thumbnailVisible ? 15 : 0) + (bookmarkVisible ? 15 : 0)}rem`}
+      visible={visible}
+      onClose={toggleAttachmentSidebar}
+      closeLabel={t(
+        "viewer.attachments.closeSidebar",
+        "Close attachments sidebar",
+      )}
+      searchTerm={searchTerm}
+      searchPlaceholder={
+        isPortfolio
+          ? t("viewer.portfolio.searchPlaceholder", "Search files")
+          : t("viewer.attachments.searchPlaceholder", "Search attachments")
+      }
+      onSearchChange={setSearchTerm}
     >
-      <div className="sidebar-base__header attachment-sidebar__header">
-        <div className="sidebar-base__header-title attachment-sidebar__header-title">
-          <span className="sidebar-base__header-icon attachment-sidebar__header-icon">
-            <AttachmentIcon />
-          </span>
-          <Text fw={600} size="sm" tt="uppercase" lts={0.5}>
-            {t("viewer.attachments.title", "Attachments")}
+      {!attachmentSupport && !isPortfolio && (
+        <div className="sidebar-base__empty-state">
+          <Text size="sm" c="dimmed" ta="center">
+            {t(
+              "viewer.attachments.noSupport",
+              "Attachment support is unavailable for this viewer.",
+            )}
           </Text>
         </div>
-        <Box style={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <ActionIcon
-            variant="tertiary"
-            accent="neutral"
-            size="sm"
-            onClick={toggleAttachmentSidebar}
-            aria-label={t(
-              "viewer.attachments.closeSidebar",
-              "Close attachments sidebar",
+      )}
+
+      {attachmentSupport && showNoDocument && (
+        <div className="sidebar-base__empty-state">
+          <Text size="sm" c="dimmed" ta="center">
+            {t(
+              "viewer.attachments.noDocument",
+              "Open a PDF to view its attachments.",
             )}
-            title={t("viewer.attachments.close", "Close attachments")}
-          >
-            <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
-          </ActionIcon>
-        </Box>
-      </div>
+          </Text>
+        </div>
+      )}
 
-      <Box
-        px="sm"
-        pb="sm"
-        className="sidebar-base__search attachment-sidebar__search"
-      >
-        <TextInput
-          value={searchTerm}
-          placeholder={t(
-            "viewer.attachments.searchPlaceholder",
-            "Search attachments",
-          )}
-          onChange={(event) => setSearchTerm(event.currentTarget.value)}
-          leftSection={
-            <LocalIcon icon="search" width="1.1rem" height="1.1rem" />
-          }
-          size="xs"
-        />
-      </Box>
+      {isPortfolio && memberError && (
+        <div className="sidebar-base__error">
+          <Text size="sm" c="var(--color-red-dark)" ta="center">
+            {memberError}
+          </Text>
+        </div>
+      )}
 
-      <ScrollArea style={{ flex: 1 }}>
-        <Box
-          p="sm"
-          className="sidebar-base__content attachment-sidebar__content"
-        >
-          {!attachmentSupport && (
-            <div className="sidebar-base__empty-state">
-              <Text size="sm" c="dimmed" ta="center">
-                {t(
-                  "viewer.attachments.noSupport",
-                  "Attachment support is unavailable for this viewer.",
-                )}
-              </Text>
-            </div>
-          )}
-
-          {attachmentSupport && showNoDocument && (
-            <div className="sidebar-base__empty-state">
-              <Text size="sm" c="dimmed" ta="center">
-                {t(
-                  "viewer.attachments.noDocument",
-                  "Open a PDF to view its attachments.",
-                )}
-              </Text>
-            </div>
-          )}
-
-          {attachmentSupport && documentCacheKey && currentError && (
-            <Stack gap="xs" align="center" className="sidebar-base__error">
-              <Text size="sm" c="red" ta="center">
-                {currentError}
-              </Text>
-              <ActionIcon
-                variant="secondary"
-                aria-label={t("viewer.attachments.retry", "Retry")}
-                onClick={requestReload}
-              >
-                <LocalIcon icon="refresh" />
-              </ActionIcon>
-            </Stack>
-          )}
-
-          {attachmentSupport && documentCacheKey && isLocalLoading && (
-            <Stack
-              gap="md"
-              align="center"
-              c="dimmed"
-              py="xl"
-              className="sidebar-base__loading"
+      {!isPortfolio &&
+        attachmentSupport &&
+        documentCacheKey &&
+        currentError && (
+          <Stack gap="xs" align="center" className="sidebar-base__error">
+            <Text size="sm" c="var(--color-red-dark)" ta="center">
+              {currentError}
+            </Text>
+            <ActionIcon
+              variant="secondary"
+              aria-label={t("viewer.attachments.retry", "Retry")}
+              onClick={requestReload}
             >
-              <Loader size="md" type="dots" />
-              <Text size="sm" ta="center">
-                {t("viewer.attachments.loading", "Loading attachments...")}
-              </Text>
-            </Stack>
-          )}
+              <Icon name="refresh-cw" size="1em" />
+            </ActionIcon>
+          </Stack>
+        )}
 
-          {showEmptyState && (
-            <Stack align="center" gap="sm" py="lg">
-              <LocalIcon
-                icon="attachment-rounded"
-                width="2rem"
-                height="2rem"
-                style={{ color: "var(--mantine-color-dimmed)" }}
-              />
-              <Text size="sm" c="dimmed" ta="center">
-                {t(
-                  "viewer.attachments.empty",
-                  "No attachments in this document",
-                )}
-              </Text>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleAddAttachment}
-                leftSection={
-                  <LocalIcon icon="add" width="1rem" height="1rem" />
-                }
-              >
-                {t("viewer.attachments.addAttachment", "Add attachment")}
-              </Button>
-            </Stack>
-          )}
+      {!isPortfolio &&
+        attachmentSupport &&
+        documentCacheKey &&
+        isLocalLoading && (
+          <Stack
+            gap="md"
+            align="center"
+            c="dimmed"
+            py="xl"
+            className="sidebar-base__loading"
+          >
+            <Loader size="md" type="dots" />
+            <Text size="sm" ta="center">
+              {t("viewer.attachments.loading", "Loading attachments...")}
+            </Text>
+          </Stack>
+        )}
 
-          {showAttachmentList && (
-            <>
-              <Button
-                variant="tertiary"
-                size="sm"
-                fullWidth
-                justify="start"
-                onClick={handleAddAttachment}
-                leftSection={
-                  <LocalIcon icon="add" width="0.9rem" height="0.9rem" />
-                }
-                style={{ marginBottom: "var(--space-xs)" }}
-              >
-                {t("viewer.attachments.addAttachment", "Add attachment")}
-              </Button>
-              <div className="attachment-list">
-                {renderAttachments(filteredAttachments)}
-              </div>
-            </>
-          )}
+      {showEmptyState && (
+        <Stack align="center" gap="sm" py="lg">
+          <Icon
+            name="paperclip"
+            size="2rem"
+            style={{ color: "var(--mantine-color-dimmed)" }}
+          />
+          <Text size="sm" c="dimmed" ta="center">
+            {t("viewer.attachments.empty", "No attachments in this document")}
+          </Text>
+          <Button
+            variant="tertiary"
+            size="sm"
+            onClick={handleAddAttachment}
+            leftSection={<Icon name="plus" size="1rem" />}
+          >
+            {t("viewer.attachments.addAttachment", "Add attachment")}
+          </Button>
+        </Stack>
+      )}
 
-          {showSearchEmpty && (
-            <div className="sidebar-base__empty-state">
-              <Text size="sm" c="dimmed" ta="center">
-                {t(
-                  "viewer.attachments.noMatch",
-                  "No attachments match your search",
-                )}
-              </Text>
-            </div>
+      {showAttachmentList && (
+        <>
+          {isPortfolio && (
+            <Text size="xs" c="dimmed" mb="xs">
+              {t("viewer.portfolio.count", {
+                count: filteredAttachments.length,
+                defaultValue_one: "{{count}} file in this portfolio",
+                defaultValue_other: "{{count}} files in this portfolio",
+              })}
+            </Text>
           )}
-        </Box>
-      </ScrollArea>
-    </Box>
+          <Button
+            variant="tertiary"
+            size="sm"
+            fullWidth
+            justify="start"
+            onClick={handleAddAttachment}
+            leftSection={<Icon name="plus" size="0.9rem" />}
+            style={{ marginBottom: "var(--space-xs)" }}
+          >
+            {isPortfolio
+              ? t("viewer.portfolio.addFile", "Add file")
+              : t("viewer.attachments.addAttachment", "Add attachment")}
+          </Button>
+          <div className="attachment-list">
+            {renderAttachments(filteredAttachments)}
+          </div>
+        </>
+      )}
+
+      {showSearchEmpty && (
+        <div className="sidebar-base__empty-state">
+          <Text size="sm" c="dimmed" ta="center">
+            {t(
+              "viewer.attachments.noMatch",
+              "No attachments match your search",
+            )}
+          </Text>
+        </div>
+      )}
+    </SidebarBase>
   );
 };

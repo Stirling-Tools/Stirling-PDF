@@ -1,40 +1,12 @@
 import type { ReactNode } from "react";
+import { Icon } from "@app/ui/Icon";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Button } from "@app/ui/Button";
 
-/* tiny inline icons for the demos */
-const Plus = () => (
-  <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" aria-hidden>
-    <path
-      d="M12 5v14M5 12h14"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-    />
-  </svg>
-);
-const Arrow = () => (
-  <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" aria-hidden>
-    <path
-      d="M5 12h14m0 0-5-5m5 5-5 5"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
-const Trash = () => (
-  <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" aria-hidden>
-    <path
-      d="M5 7h14M10 7V5h4v2m-8 0 1 13h6l1-13"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
+/* icons for the demos */
+const Plus = () => <Icon name="plus" size="1em" />;
+const Arrow = () => <Icon name="arrow-right" size="1em" />;
+const Trash = () => <Icon name="trash" size="1em" />;
 const Sparkle = () => (
   <svg
     width="1em"
@@ -89,6 +61,7 @@ const meta: Meta<typeof Button> = {
       options: ["center", "start", "end", "between"],
     },
     shape: { control: "inline-radio", options: ["default", "circle", "pill"] },
+    fat: { control: "boolean" },
     text: { control: "text" },
   },
 };
@@ -200,6 +173,35 @@ export const Padding: Story = {
         <Button key={p} {...args} p={p} text={p} />
       ))}
     </Wrap>
+  ),
+};
+
+/** `fat` is the chunky CTA treatment: 2.75rem tall, 1.25rem side padding, 0.75rem corners. */
+export const Fat: Story = {
+  render: () => (
+    <div
+      style={{ display: "flex", flexDirection: "column", gap: 16, width: 460 }}
+    >
+      <Wrap>
+        <Button fat leftSection={<Plus />} text="Connect source" />
+        <Button fat variant="secondary" text="Export CSV" />
+      </Wrap>
+      <Wrap>
+        <Button fat variant="tertiary" text="Tertiary" />
+        <Button fat variant="quiet" text="Quiet" />
+        <Button fat accent="premium" leftSection={<Sparkle />} text="Upgrade" />
+        <Button fat accent="danger" text="Delete" />
+      </Wrap>
+      <Wrap>
+        <Button fat loading text="Saving" />
+        <Button fat disabled text="Disabled" />
+        <Button fat leftSection={<Plus />} aria-label="Add" />
+      </Wrap>
+      <Wrap>
+        <Button text="Default" />
+        <Button fat text="Fat" />
+      </Wrap>
+    </div>
   ),
 };
 

@@ -3,19 +3,25 @@ import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { ActionIcon } from "@app/ui";
 import { Sidebar } from "@portal/components/Sidebar";
+import { PortalSearchBar } from "@portal/components/PortalSearchBar";
 import { useUI } from "@portal/contexts/UIContext";
-import { MenuIcon, SearchIcon } from "@portal/components/icons";
+import { Icon } from "@app/ui/Icon";
 import { Logo } from "@app/ui/Logo";
+import "@app/components/layout/WorkspaceFrame.css";
+import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
 import "@portal/components/AppShell.css";
+import { NotificationBell } from "@app/components/notifications/NotificationBell";
+import { useIsPhone } from "@app/hooks/useIsMobile";
+import { ConnectAccountRail } from "@portal/components/ConnectAccountRail";
 
 /**
  * Compact header shown only under the mobile breakpoint (CSS-hidden on
- * desktop): hamburger opens the sidebar drawer, search opens the palette
- * (there's no ⌘K on a phone).
+ * desktop): hamburger opens the sidebar drawer, search focuses the global
+ * search bar below (there's no ⌘K on a phone).
  */
 function MobileTopbar() {
   const { t } = useTranslation();
-  const { mobileNavOpen, toggleMobileNav, openSearch } = useUI();
+  const { mobileNavOpen, toggleMobileNav, closeMobileNav } = useUI();
   return (
     <header className="portal-shell__topbar">
       <ActionIcon
@@ -25,7 +31,7 @@ function MobileTopbar() {
         aria-expanded={mobileNavOpen}
         onClick={toggleMobileNav}
       >
-        <MenuIcon size={20} />
+        <Icon name="menu" size={20} />
       </ActionIcon>
       <Logo
         variant="iconAndText"
@@ -37,9 +43,12 @@ function MobileTopbar() {
         variant="tertiary"
         size="lg"
         aria-label={t("portal.shell.topbar.search")}
-        onClick={openSearch}
+        onClick={() => {
+          closeMobileNav();
+          document.getElementById("portal-search-input")?.focus();
+        }}
       >
-        <SearchIcon size={19} />
+        <Icon name="search" size={19} />
       </ActionIcon>
     </header>
   );
@@ -47,13 +56,16 @@ function MobileTopbar() {
 
 /**
  * Two-column layout: fixed-width sidebar on the left, a scrolling main column on
- * the right. Under the mobile breakpoint the sidebar becomes an off-canvas
- * drawer behind a scrim, opened from the topbar hamburger. The Sidebar reads
- * its state from context, so this shell stays prop-free.
+ * the right (topped by the global search bar). Under the mobile breakpoint the
+ * sidebar becomes an off-canvas drawer behind a scrim, opened from the topbar
+ * hamburger. The Sidebar reads its state from context, so this shell stays
+ * prop-free.
  */
 export function AppShell({ children }: { children: ReactNode }) {
   const { mobileNavOpen, closeMobileNav } = useUI();
   const { pathname } = useLocation();
+  // Below this width the rail, and the bell it carries, is gone.
+  const isPhone = useIsPhone();
 
   // Navigating (tap on a nav row, back button, deep link) always dismisses the
   // drawer. Depends on pathname only: the close fn's identity changes with any
@@ -73,7 +85,10 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="portal-shell">
-      <Sidebar />
+      <QuickNavHostBridge />
+      <div className="workspace-frame">
+        <Sidebar />
+      </div>
       {mobileNavOpen && (
         <div
           className="portal-shell__scrim"
@@ -83,7 +98,17 @@ export function AppShell({ children }: { children: ReactNode }) {
       )}
       <div className="portal-shell__main">
         <MobileTopbar />
-        <main className="portal-shell__view">{children}</main>
+        <PortalSearchBar />
+        {/* Phone only: above that the rail carries it, and this would be a second. */}
+        {isPhone && (
+          <div className="portal-shell__notifications">
+            <NotificationBell />
+          </div>
+        )}
+        <main className="portal-shell__view">
+          <ConnectAccountRail />
+          {children}
+        </main>
       </div>
     </div>
   );

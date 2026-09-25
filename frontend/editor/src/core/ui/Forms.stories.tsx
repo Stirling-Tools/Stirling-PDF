@@ -182,6 +182,7 @@ export const Slider_Confidence: Story = {
             step={0.01}
             onChange={setV}
             formatValue={(x) => x.toFixed(2)}
+            aria-label="Minimum confidence"
           />
         </FormField>
       );
@@ -203,6 +204,7 @@ export const Slider_Retention: Story = {
             step={1}
             onChange={setDays}
             formatValue={(d) => `${d} days`}
+            aria-label="Retain artifacts for"
           />
         </FormField>
       );
@@ -262,6 +264,7 @@ export const FullForm: Story = {
               step={0.01}
               onChange={setConf}
               formatValue={(v) => v.toFixed(2)}
+              aria-label="Confidence gate"
             />
           </FormField>
           <FormField label="Alerts">

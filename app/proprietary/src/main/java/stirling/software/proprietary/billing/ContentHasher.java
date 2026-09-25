@@ -11,9 +11,9 @@ import java.util.HexFormat;
 
 /**
  * SHA-256 content fingerprint shared by the SaaS charge path and the linked self-hosted instance's
- * meter (combined-billing "Mode A"), so both derive an <em>identical</em> signature for the same
- * bytes — the basis for lineage dedup. Pure, no Spring: fixed 64 KiB buffer (allocation independent
- * of file size), hardware-accelerated by the JVM where available.
+ * meter (combined billing), so both derive an <em>identical</em> signature for the same bytes — the
+ * basis for lineage dedup. Pure, no Spring: fixed 64 KiB buffer (allocation independent of file
+ * size), hardware-accelerated by the JVM where available.
  *
  * <p>Lives in {@code :proprietary} (not {@code :common}) so it stays out of the community core
  * build yet is reachable from {@code :saas} (which depends on {@code :proprietary}).

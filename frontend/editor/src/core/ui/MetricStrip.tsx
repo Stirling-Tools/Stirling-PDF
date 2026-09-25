@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import "@app/ui/Surface.css";
 import "@app/ui/MetricStrip.css";
 
 export interface MetricStripProps {
@@ -21,6 +22,7 @@ export function MetricStrip({
   className,
 }: MetricStripProps) {
   const classes = [
+    layout === "row" ? "sui-surface" : "",
     "sui-metric-strip",
     `sui-metric-strip--${layout}`,
     className ?? "",

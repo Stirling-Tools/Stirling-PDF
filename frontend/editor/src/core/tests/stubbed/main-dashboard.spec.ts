@@ -1,9 +1,12 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
-import { openSettings } from "@app/tests/helpers/ui-helpers";
+import {
+  openSettings,
+  expandSettingsGroups,
+} from "@app/tests/helpers/ui-helpers";
 
 test.describe("2. Main Dashboard / Home Page", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/editor");
   });
 
   test.describe("2.1 Dashboard Layout and Tool Categories", () => {
@@ -17,18 +20,15 @@ test.describe("2. Main Dashboard / Home Page", () => {
         page.locator('[data-testid="config-button"]').first(),
       ).toBeVisible();
 
-      // Tool search sits behind a header toggle now, so assert the affordance
-      // AND that pressing it actually mounts a usable search field — dropping
-      // the second half would stop covering the input entirely.
-      const searchToggle = page
-        .getByRole("button", { name: /search tools/i })
-        .first();
-      await expect(searchToggle).toBeVisible();
-      await searchToggle.click();
+      // Tool search lives in the global super search bar, always mounted.
       await expect(page.getByPlaceholder(/search/i).first()).toBeVisible();
 
+      // Both wings are fixed open, so they are on screen with nothing to press.
       await expect(
-        page.getByRole("button", { name: /fullscreen|sidebar/i }).first(),
+        page.locator('[data-sidebar="file-sidebar"]').first(),
+      ).toBeVisible();
+      await expect(
+        page.locator('[data-sidebar="tool-panel"]').first(),
       ).toBeVisible();
 
       const categories = [
@@ -80,12 +80,10 @@ test.describe("2. Main Dashboard / Home Page", () => {
 
       await expect(page).toHaveURL(/\/merge/, { timeout: 10000 });
 
-      await page.goto("/");
+      await page.goto("/editor");
 
-      // Tool search is a header toggle; the field mounts only once pressed.
-      await expect(
-        page.getByRole("button", { name: /search tools/i }).first(),
-      ).toBeVisible();
+      // Tool search lives in the global super search bar, always mounted.
+      await expect(page.getByPlaceholder(/search/i).first()).toBeVisible();
     });
   });
 
@@ -111,7 +109,8 @@ test.describe("2. Main Dashboard / Home Page", () => {
       await expect(page.getByText("Survey")).toHaveCount(0);
 
       await openSettings(page);
-      const legalNav = page.locator('[data-tour="admin-legal-nav"]').first();
+      await expandSettingsGroups(page);
+      const legalNav = page.locator('[data-tour="admin-about-nav"]').first();
       await expect(legalNav).toBeVisible({ timeout: 10000 });
       await legalNav.click();
 

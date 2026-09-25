@@ -45,7 +45,7 @@ export interface SignatureAPI {
   deleteAnnotation: (annotationId: string, pageIndex: number) => void;
   updateDrawSettings: (color: string, size: number) => void;
   deactivateTools: () => void;
-  getPageAnnotations: (pageIndex: number) => Promise<any[]>;
+  getPageAnnotations: (pageIndex: number) => Promise<unknown[]>;
   moveAnnotation?: (
     pageIndex: number,
     annotationId: string,
@@ -160,6 +160,8 @@ export interface AnnotationObject {
   backgroundColor?: string;
   textColor?: string;
   opacity?: number;
+  strokeOpacity?: number;
+  fillOpacity?: number;
   strokeWidth?: number;
   borderWidth?: number;
   lineWidth?: number;
@@ -220,4 +222,12 @@ export interface AnnotationToolOptions {
     | "locked"
     | "toggleNoView"
   )[];
+}
+
+/** Screen anchor of the selection menu, retained by a delete so an undo menu can sit in its place. */
+export interface AnnotationMenuAnchor {
+  annotationId: string;
+  pageIndex: number;
+  top: number;
+  left: number;
 }

@@ -1,7 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import StarRoundedIcon from "@mui/icons-material/StarRounded";
-import StarBorderRoundedIcon from "@mui/icons-material/StarBorderRounded";
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import type { ActionIconSize } from "@app/ui/ActionIcon";
 type FavoriteStarSize = "xs" | ActionIconSize;
@@ -29,7 +28,11 @@ const FavoriteStar: React.FC<FavoriteStarProps> = ({
 
   return (
     <ActionIcon
+      // A span, not a button: this renders inside the tool row's own button in
+      // the fullscreen tool lists, and a control may not nest inside a control.
+      // role="button" is still required for the aria-label to be permitted.
       as="span"
+      role="button"
       variant="tertiary"
       shape="circle"
       size={SIZE_MAP[size]}
@@ -51,15 +54,14 @@ const FavoriteStar: React.FC<FavoriteStarProps> = ({
       }
     >
       {isFavorite ? (
-        <StarRoundedIcon
-          fontSize="inherit"
-          style={{ color: "var(--special-color-favorites)", fontSize: "1rem" }}
+        <Icon
+          name="star"
+          size="1em"
+          filled
+          style={{ color: "var(--special-color-favorites)" }}
         />
       ) : (
-        <StarBorderRoundedIcon
-          fontSize="inherit"
-          style={{ fontSize: "1rem" }}
-        />
+        <Icon name="star" size="1em" />
       )}
     </ActionIcon>
   );

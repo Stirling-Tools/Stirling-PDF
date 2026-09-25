@@ -1,0 +1,22 @@
+/* The tool panel scrolls as a single column, so a tall settings step (PDF/UA is
+   the worst offender) pushes the primary action below the fold with nothing to
+   say it is there. Pinning keeps it reachable; when the flow already fits,
+   sticky is inert and nothing moves. */
+.executeFooter {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  background: var(--c-surface, var(--mantine-color-body));
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-sm);
+  /* Bleed across the flow's own padding so content cannot scroll through the
+     gutters beside the button. The margin cancels the padding, so an unpinned
+     footer still sits exactly where it did. */
+  margin-inline: calc(var(--mantine-spacing-sm) * -1);
+  padding-inline: var(--mantine-spacing-sm);
+  /* Paint-only skirt covering the strip below the button once pinned; a padding
+     here would change the resting layout. */
+  box-shadow: 0 var(--mantine-spacing-sm) 0 0
+    var(--c-surface, var(--mantine-color-body));
+}

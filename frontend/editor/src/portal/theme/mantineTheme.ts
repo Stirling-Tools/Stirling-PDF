@@ -82,6 +82,43 @@ const purple = tuple(
  * (forceColorScheme), so the light/dark buckets here align with
  * [data-theme="light/dark"] and the SUI token values are correct.
  */
+/**
+ * Slots Mantine paints text and fills with, written in tokens that flip with
+ * the scheme. Both halves take the same map; the dark half was previously
+ * empty, leaving those slots on Mantine's stock palette.
+ */
+const suiAccessibleColorSlots = {
+  // Every slot Mantine paints text with defaults to the hue's fill, which is
+  // chosen to carry white and is therefore too light to read on a surface.
+  // The -dark shades are the SUI tokens meant for ink.
+  "--mantine-color-anchor": "var(--color-blue-dark)",
+  "--mantine-color-blue-light-color": "var(--color-blue-dark)",
+  "--mantine-color-blue-text": "var(--color-blue-dark)",
+  "--mantine-color-blue-outline": "var(--color-blue-dark)",
+  "--mantine-color-green-light-color": "var(--color-green-dark)",
+  "--mantine-color-green-text": "var(--color-green-dark)",
+  "--mantine-color-green-outline": "var(--color-green-dark)",
+  "--mantine-color-red-light-color": "var(--color-red-dark)",
+  "--mantine-color-red-text": "var(--color-red-dark)",
+  "--mantine-color-red-outline": "var(--color-red-dark)",
+  "--mantine-color-red-filled": "var(--c-danger-solid)",
+  "--mantine-color-amber-light-color": "var(--color-amber-dark)",
+  "--mantine-color-amber-text": "var(--color-amber-dark)",
+  "--mantine-color-amber-outline": "var(--color-amber-dark)",
+  "--mantine-color-purple-light-color": "var(--color-purple-dark)",
+  "--mantine-color-purple-text": "var(--color-purple-dark)",
+  "--mantine-color-purple-outline": "var(--color-purple-dark)",
+  "--mantine-color-error": "var(--color-red-dark)",
+  "--mantine-color-dimmed": "var(--c-text-muted)",
+  // Solid fills that must carry a white label.
+  "--mantine-color-blue-filled": "var(--c-accent-solid)",
+  // The -dark shades are inks; a fill carrying a white label needs the solid.
+  "--mantine-color-purple-filled": "var(--c-accent-solid)",
+  "--mantine-color-green-filled": "var(--c-success-solid)",
+  "--mantine-color-amber-filled": "var(--c-warning-solid)",
+  "--mantine-color-gray-filled": "var(--c-neutral-solid)",
+} as const;
+
 export const suiCssVariablesResolver: CSSVariablesResolver = () => ({
   variables: {
     "--mantine-color-text": "var(--c-text)",
@@ -89,14 +126,16 @@ export const suiCssVariablesResolver: CSSVariablesResolver = () => ({
     "--mantine-color-body": "var(--c-bg)",
   },
   light: {
+    ...suiAccessibleColorSlots,
     // Popover/dropdown background + combobox search input
-    "--mantine-color-white": "var(--c-surface)",
+    "--mantine-color-white": "var(--c-surface-raised)",
     // Option hover background
     "--mantine-color-gray-0": "var(--c-hover)",
     // Dropdown border
     "--mantine-color-gray-2": "var(--c-border)",
   },
   dark: {
+    ...suiAccessibleColorSlots,
     // Popover/dropdown background (dark-6 is the floating surface in dark mode)
     "--mantine-color-dark-6": "var(--c-surface)",
     // Deeper background used for option hover + combobox search input
@@ -117,6 +156,17 @@ export const mantineTheme = createTheme({
     red,
     amber,
     purple,
+  },
+  components: {
+    // Icon-only dismiss controls carry no text; name them so screen readers
+    // can reach them (see the editor theme for the same defaults).
+    CloseButton: { defaultProps: { "aria-label": "Close" } },
+    Modal: { defaultProps: { closeButtonProps: { "aria-label": "Close" } } },
+    Drawer: { defaultProps: { closeButtonProps: { "aria-label": "Close" } } },
+    // The portal's md default radius (8px) is right for cards and buttons but
+    // rounds a 20px checkbox into a circle. Pin it to the smaller radius the
+    // editor's checkboxes use so the box reads as a checkbox.
+    Checkbox: { styles: { input: { borderRadius: "var(--radius-sm)" } } },
   },
   fontFamily: "var(--font-sans)",
   fontFamilyMonospace: "var(--font-mono)",

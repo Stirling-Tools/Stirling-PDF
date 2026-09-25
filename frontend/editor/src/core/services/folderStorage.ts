@@ -11,11 +11,23 @@
  * are all the server's job now.
  */
 
-import { FolderId, FolderRecord } from "@app/types/folder";
+import { FolderId, FolderRecord, folderKind } from "@app/types/folder";
 import {
   indexedDBManager,
   DATABASE_CONFIGS,
 } from "@app/services/indexedDBManager";
+
+/**
+ * This cache is wiped and rewritten from the server's response on every sync, so a
+ * non-server folder stored here would silently vanish on the next pull.
+ */
+function requireServerFolder(folder: FolderRecord): void {
+  if (folderKind(folder) !== "server") {
+    throw new Error(
+      `folderStorage caches server folders only; got kind "${folderKind(folder)}" for ${folder.id}`,
+    );
+  }
+}
 
 class FolderStorageService {
   private readonly dbConfig = DATABASE_CONFIGS.FILES;
@@ -43,6 +55,7 @@ class FolderStorageService {
         reject(transaction.error ?? new Error("folder cache replace aborted"));
       store.clear();
       for (const folder of folders) {
+        requireServerFolder(folder);
         store.put(folder);
       }
     });
@@ -50,6 +63,7 @@ class FolderStorageService {
 
   /** Insert or overwrite a single folder in the cache. */
   async upsertFolder(folder: FolderRecord): Promise<void> {
+    requireServerFolder(folder);
     const db = await this.getDatabase();
     await new Promise<void>((resolve, reject) => {
       const transaction = db.transaction([this.storeName], "readwrite");

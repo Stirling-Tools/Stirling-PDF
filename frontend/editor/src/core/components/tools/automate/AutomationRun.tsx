@@ -1,19 +1,28 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Text, Stack, Group, Card, Progress, Loader } from "@mantine/core";
+import {
+  Text,
+  Stack,
+  Group,
+  Card,
+  Progress,
+  Loader,
+  Tooltip,
+} from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import CheckIcon from "@mui/icons-material/Check";
+import { Icon } from "@app/ui/Icon";
+import { useConnectedServer } from "@app/hooks/useConnectedServer";
 import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import { AutomationConfig, ExecutionStep } from "@app/types/automation";
 import { EXECUTION_STATUS } from "@app/constants/automation";
 import { useResourceCleanup } from "@app/utils/resourceManager";
+import type { useAutomateOperation } from "@app/hooks/tools/automate/useAutomateOperation";
 
 interface AutomationRunProps {
   automation: AutomationConfig;
   onComplete: () => void;
-  automateOperation?: any; // TODO: Type this properly when available
+  automateOperation?: ReturnType<typeof useAutomateOperation>;
 }
 
 export default function AutomationRun({
@@ -34,13 +43,20 @@ export default function AutomationRun({
   // Use the operation hook's loading state
   const isExecuting = automateOperation?.isLoading || false;
   const hasResults =
-    automateOperation?.files.length > 0 ||
+    (automateOperation?.files.length ?? 0) > 0 ||
     automateOperation?.downloadUrl !== null;
+
+  // Automations execute on the connected server. True on web (server-backed); on desktop
+  // it tracks the signed-in connection, so running waits until one exists.
+  const connectedServer = useConnectedServer();
+  const signInReason = connectedServer
+    ? null
+    : t("automate.sequence.signInToRun", "Sign in to run automations.");
 
   // Initialize execution steps from automation
   useEffect(() => {
     if (automation?.operations) {
-      const steps = automation.operations.map((op: any, index: number) => {
+      const steps = automation.operations.map((op, index) => {
         const tool = toolRegistry[op.operation as keyof typeof toolRegistry];
         return {
           id: `${op.operation}-${index}`,
@@ -125,7 +141,7 @@ export default function AutomationRun({
       // Mark all as completed and reset current step
       setCurrentStepIndex(-1);
       console.log(`✅ Automation completed successfully`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Automation execution failed:", error);
       setCurrentStepIndex(-1);
     }
@@ -142,7 +158,7 @@ export default function AutomationRun({
   const getStepIcon = (step: ExecutionStep) => {
     switch (step.status) {
       case EXECUTION_STATUS.COMPLETED:
-        return <CheckIcon style={{ fontSize: 16, color: "green" }} />;
+        return <Icon name="check" size={16} style={{ color: "green" }} />;
       case EXECUTION_STATUS.ERROR:
         return <span style={{ fontSize: 16, color: "red" }}>✕</span>;
       case EXECUTION_STATUS.RUNNING:
@@ -216,7 +232,7 @@ export default function AutomationRun({
                   {step.name}
                 </Text>
                 {step.error && (
-                  <Text size="xs" c="red" mt="xs">
+                  <Text size="xs" c="var(--color-red-dark)" mt="xs">
                     {step.error}
                   </Text>
                 )}
@@ -227,18 +243,26 @@ export default function AutomationRun({
 
         {/* Action Buttons */}
         <Group justify="space-between" mt="xl">
-          <Button
-            leftSection={<PlayArrowIcon />}
-            onClick={executeAutomation}
-            disabled={
-              isExecuting || !selectedFiles || selectedFiles.length === 0
-            }
-            loading={isExecuting}
-          >
-            {isExecuting
-              ? t("automate.sequence.running", "Running Automation...")
-              : t("automate.sequence.run", "Run Automation")}
-          </Button>
+          <Tooltip label={signInReason} disabled={!signInReason} withArrow>
+            {/* Wrapper keeps the tooltip reachable while the button is disabled. */}
+            <span style={{ display: "inline-flex" }}>
+              <Button
+                leftSection={<Icon name="play" />}
+                onClick={executeAutomation}
+                disabled={
+                  isExecuting ||
+                  !selectedFiles ||
+                  selectedFiles.length === 0 ||
+                  Boolean(signInReason)
+                }
+                loading={isExecuting}
+              >
+                {isExecuting
+                  ? t("automate.sequence.running", "Running Automation...")
+                  : t("automate.sequence.run", "Run Automation")}
+              </Button>
+            </span>
+          </Tooltip>
 
           {hasResults && (
             <Button variant="secondary" onClick={onComplete}>

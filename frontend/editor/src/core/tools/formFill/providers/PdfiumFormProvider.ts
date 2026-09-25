@@ -14,6 +14,9 @@
  * for both providers.
  */
 import { PDF_FORM_FIELD_TYPE } from "@app/services/pdfiumService";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
+import { documentHasFormFields } from "@app/services/documentFormProbe";
+import { runPdfiumScan } from "@app/services/pdfiumScanQueue";
 import { FPDF_ANNOT_WIDGET, FLAT_PRINT } from "@app/utils/pdfiumBitmapUtils";
 import type {
   FormField,
@@ -22,12 +25,7 @@ import type {
   ButtonAction,
 } from "@app/tools/formFill/types";
 import type { IFormDataProvider } from "@app/tools/formFill/providers/types";
-import type {
-  PDFDict,
-  PDFString,
-  PDFHexString,
-  PDFName,
-} from "@cantoo/pdf-lib";
+import type { PDFDict } from "@cantoo/pdf-lib";
 
 interface PDFAcroField {
   dict: PDFDict;
@@ -76,7 +74,7 @@ function mapFieldType(t: PDF_FORM_FIELD_TYPE): FormFieldType {
  * @param buttonInfo   When provided, sets buttonLabel and buttonAction for push buttons.
  */
 function toFormField(
-  f: PdfiumFormField & { _tooltip?: string | null },
+  f: PdfiumFormField,
   optInfo?: { exportValues: string[]; displayValues: string[] } | null,
   buttonInfo?: { label?: string; action?: ButtonAction } | null,
 ): FormField {
@@ -97,7 +95,7 @@ function toFormField(
   // Derive value string
   let value = f.value;
   if (type === "checkbox") {
-    value = f.isChecked ? "Yes" : "Off";
+    value = f.isChecked ? f.widgets[0]?.exportValue || "Yes" : "Off";
   } else if (type === "radio") {
     // Use widget index as the canonical radio value.
     // This avoids issues with duplicate exportValues across widgets
@@ -130,7 +128,7 @@ function toFormField(
     readOnly: f.isReadOnly,
     multiSelect: f.type === PDF_FORM_FIELD_TYPE.LISTBOX,
     multiline: type === "text" && (f.flags & 0x1000) !== 0, // bit 13 = Multiline
-    tooltip: f._tooltip ?? null,
+    tooltip: f.tooltip ?? null,
     widgets,
     buttonLabel: buttonInfo?.label ?? null,
     buttonAction: buttonInfo?.action ?? null,
@@ -149,11 +147,11 @@ export class PdfiumFormProvider implements IFormDataProvider {
 
   async fetchFields(file: File | Blob): Promise<FormField[]> {
     try {
-      const arrayBuffer = await file.arrayBuffer();
-      const pdfiumFields = await extractFormFields(arrayBuffer);
-
-      // Enrich with alternate names (tooltips)
-      await this.enrichWithAlternateNames(arrayBuffer, pdfiumFields);
+      const arrayBuffer = await getDocumentBytes(file);
+      if (!(await documentHasFormFields(arrayBuffer, file.size))) return [];
+      const pdfiumFields = await runPdfiumScan(() =>
+        extractFormFields(arrayBuffer),
+      );
 
       // Enrich combo/listbox fields with export/display values from pdf-lib
       const optMap = await this.extractDisplayOptions(
@@ -179,102 +177,6 @@ export class PdfiumFormProvider implements IFormDataProvider {
     } catch (err) {
       console.warn("[PdfiumFormProvider] Failed to extract form fields:", err);
       return [];
-    }
-  }
-
-  /**
-   * Enrich fields with alternate names (tooltip / TU entry) via PDFium.
-   */
-  private async enrichWithAlternateNames(
-    data: ArrayBuffer,
-    fields: PdfiumFormField[],
-  ): Promise<void> {
-    try {
-      const m = await getPdfiumModule();
-      const docPtr = await openRawDocumentSafe(data);
-      try {
-        const formInfoPtr = m.PDFiumExt_OpenFormFillInfo();
-        const formEnvPtr = m.PDFiumExt_InitFormFillEnvironment(
-          docPtr,
-          formInfoPtr,
-        );
-        if (!formEnvPtr) return;
-
-        const pageCount = m.FPDF_GetPageCount(docPtr);
-        const nameToField = new Map(fields.map((f) => [f.name, f]));
-        const enriched = new Set<string>();
-
-        for (
-          let pageIdx = 0;
-          pageIdx < pageCount && enriched.size < nameToField.size;
-          pageIdx++
-        ) {
-          const pagePtr = m.FPDF_LoadPage(docPtr, pageIdx);
-          if (!pagePtr) continue;
-          m.FORM_OnAfterLoadPage(pagePtr, formEnvPtr);
-
-          const annotCount = m.FPDFPage_GetAnnotCount(pagePtr);
-          for (
-            let ai = 0;
-            ai < annotCount && enriched.size < nameToField.size;
-            ai++
-          ) {
-            const annotPtr = m.FPDFPage_GetAnnot(pagePtr, ai);
-            if (!annotPtr) continue;
-            if (m.FPDFAnnot_GetSubtype(annotPtr) !== FPDF_ANNOT_WIDGET) {
-              m.FPDFPage_CloseAnnot(annotPtr);
-              continue;
-            }
-
-            const nl = m.FPDFAnnot_GetFormFieldName(formEnvPtr, annotPtr, 0, 0);
-            let name = "";
-            if (nl > 0) {
-              const nb = m.pdfium.wasmExports.malloc(nl);
-              m.FPDFAnnot_GetFormFieldName(formEnvPtr, annotPtr, nb, nl);
-              name = readUtf16(m, nb, nl);
-              m.pdfium.wasmExports.free(nb);
-            }
-
-            if (name && nameToField.has(name) && !enriched.has(name)) {
-              const altLen = m.FPDFAnnot_GetFormFieldAlternateName(
-                formEnvPtr,
-                annotPtr,
-                0,
-                0,
-              );
-              if (altLen > 0) {
-                const altBuf = m.pdfium.wasmExports.malloc(altLen);
-                m.FPDFAnnot_GetFormFieldAlternateName(
-                  formEnvPtr,
-                  annotPtr,
-                  altBuf,
-                  altLen,
-                );
-                const altName = readUtf16(m, altBuf, altLen);
-                m.pdfium.wasmExports.free(altBuf);
-                (
-                  nameToField.get(name) as PdfiumFormField & {
-                    _tooltip?: string | null;
-                  }
-                )._tooltip = altName || null;
-              }
-              enriched.add(name);
-            }
-
-            m.FPDFPage_CloseAnnot(annotPtr);
-          }
-
-          m.FORM_OnBeforeClosePage(pagePtr, formEnvPtr);
-          m.FPDF_ClosePage(pagePtr);
-        }
-
-        m.PDFiumExt_ExitFormFillEnvironment(formEnvPtr);
-        m.PDFiumExt_CloseFormFillInfo(formInfoPtr);
-      } finally {
-        closeDocAndFreeBuffer(m, docPtr);
-      }
-    } catch (e) {
-      console.warn("[PdfiumFormProvider] Failed to enrich alternate names:", e);
     }
   }
 
@@ -317,7 +219,7 @@ export class PdfiumFormProvider implements IFormDataProvider {
 
       const decodeText = (obj: unknown): string => {
         if (obj instanceof PDFString || obj instanceof PDFHexString)
-          return (obj as PDFString | PDFHexString).decodeText();
+          return obj.decodeText();
         return String(obj ?? "");
       };
 
@@ -410,28 +312,27 @@ export class PdfiumFormProvider implements IFormDataProvider {
 
       const decodeText = (obj: unknown): string | null => {
         if (obj instanceof PDFString || obj instanceof PDFHexString)
-          return (obj as PDFString | PDFHexString).decodeText();
+          return obj.decodeText();
         if (obj instanceof PDFName)
-          return (obj as PDFName).asString() ?? String(obj).replace(/^\//, "");
+          return obj.asString() ?? String(obj).replace(/^\//, "");
         return null;
       };
 
       const parseActionDict = (aObj: unknown): ButtonAction | null => {
         if (!(aObj instanceof PDFDict)) return null;
         // @cantoo/pdf-lib ships without individual .d.ts files so instanceof can't narrow `unknown`
-        const a = aObj as PDFDict;
+        const a = aObj;
         const sObj = a.lookup(PDFName.of("S"));
         if (!(sObj instanceof PDFName)) return null;
         const actionType: string =
-          (sObj as PDFName).asString() ?? String(sObj).replace(/^\//, "");
+          sObj.asString() ?? String(sObj).replace(/^\//, "");
 
         switch (actionType) {
           case "Named": {
             const nObj = a.lookup(PDFName.of("N"));
             const name =
               nObj instanceof PDFName
-                ? ((nObj as PDFName).asString() ??
-                  String(nObj).replace(/^\//, ""))
+                ? (nObj.asString() ?? String(nObj).replace(/^\//, ""))
                 : "";
             return { type: "named", namedAction: name };
           }

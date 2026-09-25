@@ -3,9 +3,8 @@ import { Modal } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Button, type ButtonAccent } from "@app/ui/Button";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import LocalIcon from "@app/components/shared/LocalIcon";
-import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
+import { Icon } from "@app/ui/Icon";
+import { Z_INDEX_ONBOARDING_CARD } from "@app/styles/zIndex";
 import stirlingMark from "@app/assets/brand/modern-logo/logo512.png";
 import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
 
@@ -25,17 +24,27 @@ export interface ShellButton {
 
 export interface OnboardingSlideShellProps {
   opened?: boolean;
-  /** Hero art node — use {@link ShellHero} to render the app mark or a glyph. */
-  hero: ReactNode;
+  /** Hero art — see {@link ShellHero}. Omit for a slide whose body is a form: the
+   *  panel is a fixed block of height that would otherwise show nothing. */
+  hero?: ReactNode;
   slideKey: string;
-  title: ReactNode;
+  /** Omit when the body draws its own heading, so the card does not state it twice. */
+  title?: ReactNode;
   body: ReactNode;
   stepIndex: number;
   stepCount: number;
   buttons: ShellButton[];
   onAction: (action: string) => void;
   onClose: () => void;
+  /** Escape closes the card. Turn off for a flow the user has to move through. */
   allowDismiss?: boolean;
+  /** "close" dismisses; "forward" advances, for a flow with no way out. Both call
+   *  {@link onClose}; forward is drawn even when `allowDismiss` is false. */
+  headerControl?: "close" | "forward";
+  /** Standalone prompts supply their own dialog name instead of "Onboarding". */
+  ariaLabel?: string;
+  /** Prompts opened over a fullscreen editor must sit above that surface. */
+  zIndex?: number;
 }
 
 /**
@@ -75,6 +84,9 @@ export default function OnboardingSlideShell({
   onAction,
   onClose,
   allowDismiss = true,
+  headerControl = "close",
+  ariaLabel,
+  zIndex = Z_INDEX_ONBOARDING_CARD,
 }: OnboardingSlideShellProps) {
   const { t } = useTranslation();
   const showProgress = stepCount > 1;
@@ -101,7 +113,10 @@ export default function OnboardingSlideShell({
   );
 
   return (
-    <Modal
+    // Composed rather than the plain <Modal>, because only Modal.Content lands
+    // props on the role="dialog" element — the slide draws its own title, so the
+    // dialog needs an aria-label to have an accessible name.
+    <Modal.Root
       opened={opened}
       onClose={onClose}
       closeOnClickOutside={false}
@@ -109,8 +124,7 @@ export default function OnboardingSlideShell({
       centered
       size="lg"
       radius={20}
-      withCloseButton={false}
-      zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
+      zIndex={zIndex}
       styles={{
         body: { padding: 0, maxHeight: "90vh", overflow: "hidden" },
         content: {
@@ -121,106 +135,130 @@ export default function OnboardingSlideShell({
         },
       }}
     >
-      <div className={styles.card}>
-        <header className={styles.header}>
-          <div className={styles.brand}>
-            <img
-              src={stirlingMark}
-              alt=""
-              aria-hidden="true"
-              className={styles.brandLogo}
-            />
-            <span className={styles.wordmark}>Stirling</span>
-          </div>
-          <div className={styles.headerRight}>
-            {showProgress && (
-              <span className={styles.stepPill}>
-                {t("onboarding.stepOf", "Step {{current}} of {{total}}", {
-                  current: stepIndex + 1,
-                  total: stepCount,
-                })}
-              </span>
-            )}
-            {allowDismiss && (
-              <ActionIcon
-                onClick={onClose}
-                variant="tertiary"
-                accent="neutral"
-                size="md"
-                aria-label={t("common.close", "Close")}
-              >
-                <LocalIcon
-                  icon="close-rounded"
-                  width="1.1rem"
-                  height="1.1rem"
+      <Modal.Overlay />
+      <Modal.Content
+        radius={20}
+        aria-label={ariaLabel ?? t("onboarding.dialogLabel", "Onboarding")}
+      >
+        <Modal.Body>
+          <div className={styles.card}>
+            <header className={styles.header}>
+              <div className={styles.brand}>
+                <img
+                  src={stirlingMark}
+                  alt=""
+                  aria-hidden="true"
+                  className={styles.brandLogo}
                 />
-              </ActionIcon>
-            )}
-          </div>
-        </header>
+                <span className={styles.wordmark}>Stirling</span>
+              </div>
+              <div className={styles.headerRight}>
+                {showProgress && (
+                  <span className={styles.stepPill}>
+                    {t("onboarding.stepOf", "Step {{current}} of {{total}}", {
+                      current: stepIndex + 1,
+                      total: stepCount,
+                    })}
+                  </span>
+                )}
+                {(allowDismiss || headerControl === "forward") && (
+                  <ActionIcon
+                    onClick={onClose}
+                    variant="tertiary"
+                    accent="neutral"
+                    size="md"
+                    aria-label={
+                      headerControl === "forward"
+                        ? t("onboarding.buttons.continue", "Continue")
+                        : t("common.close", "Close")
+                    }
+                  >
+                    {headerControl === "forward" ? (
+                      <Icon name="arrow-right" size="1.1rem" />
+                    ) : (
+                      <Icon name="x" size="1.1rem" />
+                    )}
+                  </ActionIcon>
+                )}
+              </div>
+            </header>
 
-        {showProgress && (
-          <div
-            className={styles.progressTrack}
-            role="progressbar"
-            aria-valuenow={stepIndex + 1}
-            aria-valuemin={1}
-            aria-valuemax={stepCount}
-          >
-            {Array.from({ length: stepCount }, (_, index) => (
-              <span
-                key={index}
-                className={`${styles.progressSeg} ${
-                  index <= stepIndex ? styles.progressSegDone : ""
-                }`}
-              />
-            ))}
-          </div>
-        )}
-
-        <div className={styles.divider} />
-
-        <div className={styles.content}>
-          <div className={styles.heroPanel}>
-            <div className={styles.heroArt} key={`hero-${slideKey}`}>
-              {hero}
-            </div>
-          </div>
-
-          <div key={`title-${slideKey}`} className={styles.titleNew}>
-            {title}
-          </div>
-
-          <div key={`body-${slideKey}`} className={styles.bodyNew}>
-            {body}
-            <style>{`.${styles.bodyNew} strong{color: var(--c-text); font-weight: 600;}`}</style>
-          </div>
-
-          <div className={styles.footer}>
-            {backButtons.length === 0 ? (
-              <div className={styles.footerEnd}>{actions}</div>
-            ) : (
-              <div className={styles.footerBetween}>
-                <div className={styles.footerGroup}>
-                  {backButtons.map((button) => (
-                    <ActionIcon
-                      key={button.key}
-                      onClick={() => onAction(button.action)}
-                      variant="tertiary"
-                      accent="neutral"
-                      disabled={button.disabled}
-                      aria-label={t("onboarding.buttons.back", "Back")}
-                    >
-                      <ChevronLeftIcon fontSize="small" />
-                    </ActionIcon>
-                  ))}
-                </div>
-                {actions}
+            {showProgress && (
+              <div
+                className={styles.progressTrack}
+                role="progressbar"
+                aria-valuenow={stepIndex + 1}
+                aria-valuemin={1}
+                aria-valuemax={stepCount}
+                aria-label={t(
+                  "onboarding.stepOf",
+                  "Step {{current}} of {{total}}",
+                  {
+                    current: stepIndex + 1,
+                    total: stepCount,
+                  },
+                )}
+              >
+                {Array.from({ length: stepCount }, (_, index) => (
+                  <span
+                    key={index}
+                    className={`${styles.progressSeg} ${
+                      index <= stepIndex ? styles.progressSegDone : ""
+                    }`}
+                  />
+                ))}
               </div>
             )}
+
+            <div className={styles.divider} />
+
+            <div className={styles.content}>
+              {hero && (
+                <div className={styles.heroPanel}>
+                  <div className={styles.heroArt} key={`hero-${slideKey}`}>
+                    {hero}
+                  </div>
+                </div>
+              )}
+
+              {title && (
+                <div key={`title-${slideKey}`} className={styles.titleNew}>
+                  {title}
+                </div>
+              )}
+
+              <div key={`body-${slideKey}`} className={styles.bodyNew}>
+                {body}
+                <style>{`.${styles.bodyNew} strong{color: var(--c-text); font-weight: 600;}`}</style>
+              </div>
+
+              <div className={styles.footer}>
+                {backButtons.length === 0 ? (
+                  <div className={styles.footerEnd}>{actions}</div>
+                ) : (
+                  <div className={styles.footerBetween}>
+                    <div className={styles.footerGroup}>
+                      {backButtons.map((button) => (
+                        <ActionIcon
+                          key={button.key}
+                          onClick={() => onAction(button.action)}
+                          variant="tertiary"
+                          accent="neutral"
+                          disabled={button.disabled}
+                          aria-label={t("onboarding.buttons.back", "Back")}
+                        >
+                          <Icon name="chevron-left" size={20} />
+                        </ActionIcon>
+                      ))}
+                    </div>
+                    {actions}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    </Modal>
+        </Modal.Body>
+      </Modal.Content>
+    </Modal.Root>
   );
 }
