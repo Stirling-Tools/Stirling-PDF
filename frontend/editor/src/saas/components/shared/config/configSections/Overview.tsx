@@ -520,7 +520,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
             >
               {t(
                 "config.account.upgrade.description",
-                "Link your account to preserve your history and access more features!",
+                "Link your account to keep your history and get more features.",
               )}
             </p>
           </div>

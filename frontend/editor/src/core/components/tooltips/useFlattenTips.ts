@@ -16,7 +16,7 @@ export const useFlattenTips = (): TooltipContent => {
         ),
         description: t(
           "flatten.tooltip.description.text",
-          "Flattening makes your PDF non-editable by turning fillable forms and buttons into regular text and images. The PDF will look exactly the same, but no one can change or fill in the forms anymore. Perfect for sharing completed forms, creating final documents for records, or ensuring the PDF looks the same everywhere.",
+          "Flattening turns fillable forms and buttons into regular text and images. The PDF looks the same, but no one can change or fill in the forms.",
         ),
         bullets: [
           t(
@@ -29,7 +29,7 @@ export const useFlattenTips = (): TooltipContent => {
           ),
           t(
             "flatten.tooltip.description.bullet3",
-            "Great for final versions you don't want changed",
+            "Use for final versions you don't want changed",
           ),
           t(
             "flatten.tooltip.description.bullet4",

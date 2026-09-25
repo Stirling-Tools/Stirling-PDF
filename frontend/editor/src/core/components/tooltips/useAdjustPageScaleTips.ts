@@ -23,7 +23,7 @@ export const useAdjustPageScaleTips = (): TooltipContent => {
         title: t("adjustPageScale.tooltip.scaleFactor.title", "Scale Factor"),
         description: t(
           "adjustPageScale.tooltip.scaleFactor.text",
-          "Controls how large or small the content appears on the page. Content is scaled and centered - if scaled content is larger than the page size, it may be cropped.",
+          "Controls how large the content appears on the page. Content is scaled and centered. If it is larger than the page, it may be cropped.",
         ),
         bullets: [
           t(

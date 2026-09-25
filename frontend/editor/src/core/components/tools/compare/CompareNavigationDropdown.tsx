@@ -206,7 +206,7 @@ const CompareNavigationDropdown = ({
                     !renderedPageNumbers.has(stickyPage) && (
                       <span className="compare-dropdown-rendering-flag">
                         {" "}
-                        — {t("compare.rendering.rendering", "rendering")}
+                        ({t("compare.rendering.rendering", "rendering")})
                       </span>
                     )}
                 </div>
@@ -236,11 +236,12 @@ const CompareNavigationDropdown = ({
                               !renderedPageNumbers.has(lastPage) && (
                                 <span className="compare-dropdown-rendering-flag">
                                   {" "}
-                                  —{" "}
+                                  (
                                   {t(
                                     "compare.rendering.rendering",
                                     "rendering",
                                   )}
+                                  )
                                 </span>
                               )}
                           </div>,

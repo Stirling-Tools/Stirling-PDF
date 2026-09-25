@@ -83,7 +83,7 @@ export function McpCard({
                 <InfoTooltip
                   label={t(
                     "admin.settings.mcp.mode.description",
-                    "OAuth needs an external IdP. API key uses a Stirling per-user API key (X-API-KEY) - simplest for self-host.",
+                    "OAuth needs an external IdP. API key mode uses each user's Stirling API key (X-API-KEY) and is simplest for self-hosting.",
                   )}
                 />
               </Group>
@@ -107,7 +107,7 @@ export function McpCard({
               <Text size="xs">
                 {t(
                   "admin.settings.mcp.apikeyNote",
-                  "Clients send a Stirling API key in the X-API-KEY header (or Authorization: Bearer <key>). The key maps to its owning Stirling user - only provisioned accounts get in, and actions are audited as that user. Manage keys under Account → API Keys.",
+                  "Clients send a Stirling API key in the X-API-KEY header (or Authorization: Bearer <key>). Each key maps to its Stirling user, so only provisioned accounts can connect and actions are audited as that user. Manage keys under Account > API Keys.",
                 )}
               </Text>
             </Alert>
@@ -431,7 +431,7 @@ export function McpCard({
                 <List.Item>
                   {t(
                     "admin.settings.mcp.guide.step4ApiKey",
-                    "Tools appear grouped: convert, pages, misc, security, ai - and every call is audited as the key's owner.",
+                    "Tools appear grouped: convert, pages, misc, security, ai. Every call is audited as the key's owner.",
                   )}
                 </List.Item>
               </>
@@ -445,7 +445,7 @@ export function McpCard({
                 )
               : t(
                   "admin.settings.mcp.guide.tipApiKey",
-                  "Tip: API-key mode needs no external IdP - simplest for self-host. The key maps to its owning Stirling user.",
+                  "Tip: API-key mode needs no external IdP, so it is the simplest option for self-hosting.",
                 )}
           </Text>
         </Stack>

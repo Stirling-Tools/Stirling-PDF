@@ -46,7 +46,7 @@ export const ReviewSignatureStep: React.FC<ReviewSignatureStepProps> = ({
           "Organization Certificate",
         );
       case "UPLOAD":
-        return `${uploadFormat} — ${p12File?.name || t("certSign.collab.signRequest.uploadCert", "Custom Certificate")}`;
+        return `${uploadFormat}: ${p12File?.name || t("certSign.collab.signRequest.uploadCert", "Custom Certificate")}`;
       default:
         return "";
     }

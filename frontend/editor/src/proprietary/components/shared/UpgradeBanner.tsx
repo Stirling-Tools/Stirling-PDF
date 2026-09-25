@@ -333,7 +333,7 @@ const UpgradeBanner: React.FC = () => {
           title={t("upgradeBanner.title", "Upgrade to the Team plan")}
           message={t(
             "upgradeBanner.message",
-            "Get the most out of Stirling PDF with 100 users, PDF text editing, and advanced features.",
+            "Up to 100 users, PDF text editing and more",
           )}
           buttonText={t("upgradeBanner.upgradeButton", "Upgrade Now")}
           buttonIcon="circle-arrow-up"

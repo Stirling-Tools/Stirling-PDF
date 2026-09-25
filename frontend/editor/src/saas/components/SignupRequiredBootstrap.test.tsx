@@ -109,7 +109,7 @@ describe("guest signup prompt", () => {
     fireEvent.click(processor);
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
     expect(
-      screen.getByText("Create an account to unlock the best of Stirling"),
+      screen.getByText("Create an account to use all of Stirling"),
     ).toBeInTheDocument();
     expect(screen.getByTestId("destination")).toHaveTextContent(
       "/editor?tool=compress",
@@ -214,7 +214,7 @@ describe("guest signup prompt", () => {
     });
     expect(await screen.findAllByRole("dialog")).toHaveLength(1);
     expect(
-      screen.getByText("Create an account to unlock the best of Stirling"),
+      screen.getByText("Create an account to use all of Stirling"),
     ).toBeInTheDocument();
     fireEvent.click(
       screen.getByRole("button", { name: "Create free account" }),

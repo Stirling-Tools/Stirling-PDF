@@ -44,7 +44,7 @@ export default function SignupRequiredBootstrap() {
 
   const title = t(
     "payg.signupRequired.processorTitle",
-    "Create an account to unlock the best of Stirling",
+    "Create an account to use all of Stirling",
   );
 
   return (

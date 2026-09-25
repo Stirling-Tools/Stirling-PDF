@@ -17,7 +17,7 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
         ),
         description: t(
           "automation.suggested.securePdfIngestionDesc",
-          "Comprehensive PDF processing workflow that sanitizes documents, applies OCR with cleanup, converts to PDF/A format for long-term archival, and optimizes file size.",
+          "Sanitizes documents, applies OCR with cleanup, converts to PDF/A for long-term archiving, and reduces file size.",
         ),
         operations: [
           {

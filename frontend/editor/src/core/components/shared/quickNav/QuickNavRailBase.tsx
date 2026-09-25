@@ -53,7 +53,7 @@ export function RailButton({
 }: Omit<QuickNavEntry, "id">) {
   return (
     <Tooltip
-      content={disabled && reason ? `${label} — ${reason}` : label}
+      content={disabled && reason ? `${label}: ${reason}` : label}
       position="right"
       arrow
       containerStyle={{ pointerEvents: "none" }}

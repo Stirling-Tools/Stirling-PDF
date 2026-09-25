@@ -620,7 +620,7 @@ export function BillingScreen({
               <div className="billing-ent__sub">
                 {t(
                   "portal.billing.enterprise.sub",
-                  "Air-gapped deployment, SCIM, data residency, uptime SLAs, and an agreement to match.",
+                  "Air-gapped deployment, SCIM, data residency, uptime SLAs and custom agreements.",
                 )}
               </div>
             </div>

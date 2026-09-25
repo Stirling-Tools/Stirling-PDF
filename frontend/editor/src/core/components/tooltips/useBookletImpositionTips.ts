@@ -19,7 +19,7 @@ export const useBookletImpositionTips = (): TooltipContent => {
         ),
         description: t(
           "bookletImposition.tooltip.description.text",
-          "Creates professional booklets by arranging pages in the correct printing order. Your PDF pages are placed 2-up on landscape sheets so when folded and bound, they read in proper sequence like a real book.",
+          "Arranges pages in printing order to make a booklet. Pages are placed 2-up on landscape sheets so they read in order once folded and bound.",
         ),
       },
       {
@@ -53,7 +53,7 @@ export const useBookletImpositionTips = (): TooltipContent => {
         ),
         description: t(
           "bookletImposition.tooltip.printing.text",
-          "Follow these steps for perfect booklets:",
+          "To print and assemble:",
         ),
         bullets: [
           t(
