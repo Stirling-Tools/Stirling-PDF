@@ -437,6 +437,26 @@ class TempFileCleanupServiceMoreTest {
             assertThat(deleted).isGreaterThanOrEqualTo(1);
             assertThat(Files.exists(stale)).isFalse();
         }
+
+        @Test
+        @DisplayName("does not touch JPDFium extraction dirs or their lock")
+        void skipsJpdfiumExtractionDirs() throws Exception {
+            when(tempFileManagement.isCleanupSystemTemp()).thenReturn(true);
+            when(tempFileManagement.getSystemTempDir()).thenReturn(systemTempDir.toString());
+            when(registry.contains(any(File.class))).thenReturn(false);
+
+            Path live = Files.createDirectories(systemTempDir.resolve("jpdfium-live"));
+            Files.writeString(live.resolve("jpdfium.dll"), "dll");
+            Path lock = Files.writeString(live.resolve(".lock"), "");
+            // Older than the five-minute empty-file rule that would delete it.
+            backdate(lock, 10L * 60 * 1000);
+
+            ReflectionTestUtils.invokeMethod(
+                    cleanupService, "cleanupUnregisteredFiles", true, true, 3600000L);
+
+            assertThat(Files.exists(lock)).isTrue();
+            assertThat(Files.exists(live.resolve("jpdfium.dll"))).isTrue();
+        }
     }
 
     @Nested

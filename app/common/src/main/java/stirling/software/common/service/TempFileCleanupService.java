@@ -65,6 +65,7 @@ public class TempFileCleanupService {
 
     // Held by the owning JVM for its lifetime in fallback extraction dirs
     private static final String JPDFIUM_LOCK_FILE = ".lock";
+    private static final String JPDFIUM_DIR_PREFIX = "jpdfium-";
 
     // File patterns that identify our temp files
     private static final Predicate<String> IS_OUR_TEMP_FILE =
@@ -231,7 +232,11 @@ public class TempFileCleanupService {
             try (Stream<Path> entries = Files.list(root)) {
                 stale =
                         entries.filter(p -> Files.isDirectory(p, LinkOption.NOFOLLOW_LINKS))
-                                .filter(p -> p.getFileName().toString().startsWith("jpdfium-"))
+                                .filter(
+                                        p ->
+                                                p.getFileName()
+                                                        .toString()
+                                                        .startsWith(JPDFIUM_DIR_PREFIX))
                                 .filter(p -> isOlderThan(p, JPDFIUM_DIR_GRACE_MILLIS))
                                 .filter(TempFileCleanupService::looksLikeJpdfiumExtraction)
                                 .filter(dir -> !isJpdfiumDirInUse(dir))
@@ -472,6 +477,11 @@ public class TempFileCleanupService {
                             }
 
                             if (Files.isDirectory(path)) {
+                                if (fileName.startsWith(JPDFIUM_DIR_PREFIX)) {
+                                    // The lock-aware sweep owns these; unlinking a
+                                    // live .lock would hide it from that sweep.
+                                    return;
+                                }
                                 subdirectories.add(path);
                                 return;
                             }
