@@ -98,7 +98,10 @@ describe("nativePdfRender (desktop)", () => {
   });
 
   test("returns the document info the engine reports", async () => {
-    const info = { pageCount: 3, pages: [{ width: 612, height: 792, rotation: 90 }] };
+    const info = {
+      pageCount: 3,
+      pages: [{ width: 612, height: 792, rotation: 90 }],
+    };
     mocks.result = info as never;
     await expect(renderNativeDocumentInfo("/tmp/a.pdf")).resolves.toEqual(info);
     expect(mocks.invokes).toEqual([

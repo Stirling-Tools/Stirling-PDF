@@ -301,10 +301,21 @@ mod macos {
             CGPoint::ZERO,
             CGSize::new(crop.size.width, crop.size.height),
         );
-        // CGPDFPageGetDrawingTransform applies /Rotate and absorbs a non-zero
-        // MediaBox/CropBox origin, which hand-rolled translation got wrong.
-        let box_transform =
-            CGPDFPage::drawing_transform(Some(&cg_page), CGPDFBox::CropBox, box_rect, 0, false);
+        // CGPDFPageGetDrawingTransform folds /Rotate into the returned
+        // transform; the engine's tile convention draws rects unrotated and the
+        // viewer rotates the whole page container with CSS, so cancel the page
+        // rotation here or the desktop viewer rotates every /Rotate page twice.
+        // It also absorbs a non-zero MediaBox/CropBox origin, which hand-rolled
+        // translation got wrong.
+        let page_rotation = CGPDFPage::rotation_angle(Some(&cg_page)).rem_euclid(360);
+        let cancel_rotation = (360 - page_rotation) % 360;
+        let box_transform = CGPDFPage::drawing_transform(
+            Some(&cg_page),
+            CGPDFBox::CropBox,
+            box_rect,
+            cancel_rotation,
+            false,
+        );
         CGContext::concat_ctm(Some(&context), box_transform);
         // Clip in page space, like the Quartz sample: passing the target rect
         // here clipped a page whose CropBox origin is non-zero.
@@ -701,6 +712,71 @@ mod macos {
                 assert_eq!(many.page_count, 500);
                 assert_eq!(many.pages.len(), super::DOCUMENT_INFO_PAGE_LIMIT);
             }
+        }
+
+        #[test]
+        fn tile_renders_stay_unrotated_for_rotate_pages() {
+            // /Rotate is display metadata the viewer applies as a CSS transform
+            // over the whole page container; the engine renders tile rects
+            // unrotated (plugin-render never passes a rotation option), so the
+            // native tile path must match or every rotated page is rotated
+            // twice on the desktop. The fixture's red "TOP EDGE" run is the
+            // probe: unrotated it is a wide, short line, with /Rotate folded in
+            // it turns tall.
+            let root =
+                Path::new(env!("CARGO_MANIFEST_DIR")).join("../src/core/tests/test-fixtures");
+            let path = root
+                .join("rotated-pages.pdf")
+                .to_string_lossy()
+                .into_owned();
+            for (page, rotation) in [(1u32, 0), (2, 90), (3, 270), (4, 180)] {
+                let pixels =
+                    render_rect_raw(&path, page, 0.0, 0.0, 400.0, 600.0, 1.0).expect("render page");
+                // Premultiplied BGRA; red ink is the only red-dominant pixel.
+                let (mut min_x, mut max_x, mut min_y, mut max_y, mut count) =
+                    (usize::MAX, 0usize, usize::MAX, 0usize, 0usize);
+                for (i, px) in pixels.chunks_exact(4).enumerate() {
+                    if px[2] > 150 && px[1] < 100 && px[0] < 100 {
+                        let (x, y) = (i % 400, i / 400);
+                        min_x = min_x.min(x);
+                        max_x = max_x.max(x);
+                        min_y = min_y.min(y);
+                        max_y = max_y.max(y);
+                        count += 1;
+                    }
+                }
+                assert!(count > 100, "page {page}: red ink not found ({count} px)");
+                let (w, h) = (max_x - min_x + 1, max_y - min_y + 1);
+                assert!(
+                    w > h * 2,
+                    "page {page} (/Rotate {rotation}): the red run must stay a horizontal line (bbox {w}x{h})",
+                );
+            }
+        }
+
+        #[test]
+        fn preview_renders_rotated_pages_in_display_orientation() {
+            // NativePagePreview sizes its boxes from pdf_document_info, which
+            // reports the unrotated crop size; PDFKit renders in display
+            // orientation, so /Rotate 90/270 pages must come back landscape or
+            // the preview is stretched.
+            let root =
+                Path::new(env!("CARGO_MANIFEST_DIR")).join("../src/core/tests/test-fixtures");
+            let path = root
+                .join("rotated-pages.pdf")
+                .to_string_lossy()
+                .into_owned();
+            let dims = |page: u32| {
+                let png = render(&path, page, 240, ImageFormat::Png).expect("render page");
+                (
+                    u32::from_be_bytes([png[16], png[17], png[18], png[19]]),
+                    u32::from_be_bytes([png[20], png[21], png[22], png[23]]),
+                )
+            };
+            assert_eq!(dims(1), (240, 360));
+            assert_eq!(dims(2), (240, 160));
+            assert_eq!(dims(3), (240, 160));
+            assert_eq!(dims(4), (240, 360));
         }
 
         #[test]

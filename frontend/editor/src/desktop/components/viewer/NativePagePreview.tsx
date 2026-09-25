@@ -31,11 +31,7 @@ interface PreviewPage {
  * catches up. It sits below the page layers and removes itself as soon as real
  * content covers it, revoking every blob URL it created.
  */
-export function NativePagePreview({
-  filePath,
-}: {
-  filePath?: string | null;
-}) {
+export function NativePagePreview({ filePath }: { filePath?: string | null }) {
   const [pages, setPages] = useState<PreviewPage[]>([]);
   const urlsRef = useRef<string[]>([]);
 
@@ -65,10 +61,7 @@ export function NativePagePreview({
 
     void (async () => {
       const info = await renderNativeDocumentInfo(filePath);
-      const count = Math.max(
-        1,
-        Math.min(PREVIEW_PAGES, info?.pageCount ?? 1),
-      );
+      const count = Math.max(1, Math.min(PREVIEW_PAGES, info?.pageCount ?? 1));
       for (let page = 1; page <= count; page += 1) {
         if (cancelled) return;
         const blob = await renderNativePdfPageBlob(
@@ -80,11 +73,17 @@ export function NativePagePreview({
         const url = URL.createObjectURL(blob);
         urlsRef.current.push(url);
         const geometry = info?.pages[page - 1];
+        // PDFKit renders page previews in display orientation, so /Rotate
+        // 90/270 pages come back landscape while pdf_document_info reports the
+        // unrotated crop; the box must use the displayed dims or the preview
+        // is stretched.
+        const swapped = geometry ? geometry.rotation % 180 !== 0 : false;
         addPage({
           page,
           url,
-          width: geometry?.width ?? 0,
-          height: geometry?.height ?? 0,
+          width: swapped && geometry ? geometry.height : (geometry?.width ?? 0),
+          height:
+            swapped && geometry ? geometry.width : (geometry?.height ?? 0),
         });
       }
     })();

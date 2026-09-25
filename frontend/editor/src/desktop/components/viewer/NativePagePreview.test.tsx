@@ -8,7 +8,10 @@ import { act, render, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  info: null as { pageCount: number; pages: Array<{ width: number; height: number; rotation: number }> } | null,
+  info: null as {
+    pageCount: number;
+    pages: Array<{ width: number; height: number; rotation: number }>;
+  } | null,
   blobs: 0,
   infoCalls: [] as string[],
   pageCalls: [] as Array<[string, number, number]>,
@@ -20,7 +23,11 @@ vi.mock("@app/services/nativePdfRender", () => ({
     mocks.infoCalls.push(path);
     return mocks.info;
   },
-  renderNativePdfPageBlob: async (path: string, page: number, width: number) => {
+  renderNativePdfPageBlob: async (
+    path: string,
+    page: number,
+    width: number,
+  ) => {
     mocks.pageCalls.push([path, page, width]);
     mocks.blobs += 1;
     return new Blob([`page-${page}`], { type: "image/jpeg" });
@@ -29,7 +36,8 @@ vi.mock("@app/services/nativePdfRender", () => ({
 
 import { NativePagePreview } from "@app/components/viewer/NativePagePreview";
 
-const preview = () => document.querySelector('[data-testid="native-page-preview"]');
+const preview = () =>
+  document.querySelector('[data-testid="native-page-preview"]');
 const images = () => Array.from(preview()?.querySelectorAll("img") ?? []);
 
 describe("NativePagePreview (desktop)", () => {
@@ -47,7 +55,9 @@ describe("NativePagePreview (desktop)", () => {
     mocks.pageCalls.length = 0;
     mocks.revoked.length = 0;
     let sequence = 0;
-    URL.createObjectURL = vi.fn(() => `blob:preview-${(sequence += 1)}`) as never;
+    URL.createObjectURL = vi.fn(
+      () => `blob:preview-${(sequence += 1)}`,
+    ) as never;
     URL.revokeObjectURL = vi.fn((url: string) => {
       mocks.revoked.push(url);
     }) as never;
@@ -65,7 +75,10 @@ describe("NativePagePreview (desktop)", () => {
       ["/tmp/report.pdf", 2, 1200],
       ["/tmp/report.pdf", 3, 1200],
     ]);
-    expect(images()[2]?.style.aspectRatio).toBe("300 / 350");
+    expect(images()[1]?.style.aspectRatio).toBe("612 / 792");
+    // Page 3 carries /Rotate 90; the native preview is rendered in display
+    // orientation, so its box must use the swapped dims or it is stretched.
+    expect(images()[2]?.style.aspectRatio).toBe("350 / 300");
   });
 
   test("shows a single page when the document info is unavailable", async () => {
@@ -82,7 +95,9 @@ describe("NativePagePreview (desktop)", () => {
   });
 
   test("revokes every blob URL on unmount", async () => {
-    const { unmount } = render(<NativePagePreview filePath="/tmp/report.pdf" />);
+    const { unmount } = render(
+      <NativePagePreview filePath="/tmp/report.pdf" />,
+    );
     await waitFor(() => expect(images()).toHaveLength(3));
     unmount();
     expect(mocks.revoked).toEqual([

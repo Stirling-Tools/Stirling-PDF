@@ -37,8 +37,14 @@ export async function renderNativeDocumentInfo(
 ): Promise<NativeDocumentInfo | null> {
   if (!isTauri()) return null;
   try {
-    const info = await invoke<NativeDocumentInfo>("pdf_document_info", { path });
-    if (!info || typeof info.pageCount !== "number" || !Array.isArray(info.pages)) {
+    const info = await invoke<NativeDocumentInfo>("pdf_document_info", {
+      path,
+    });
+    if (
+      !info ||
+      typeof info.pageCount !== "number" ||
+      !Array.isArray(info.pages)
+    ) {
       return null;
     }
     return info;
