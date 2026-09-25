@@ -9,8 +9,11 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -293,6 +296,43 @@ class TempFileCleanupServiceMoreTest {
             withJvmTmpDir(tempDir.resolve("jvm-tmp-d"), cleanupService::init);
 
             assertThat(Files.exists(stale)).isFalse();
+        }
+
+        @Test
+        @DisplayName("keeps an extraction dir whose lock is held by a running JVM")
+        void keepsLockedExtractionDir() throws IOException {
+            when(tempFileManagement.isStartupCleanup()).thenReturn(true);
+            when(registry.contains(any(File.class))).thenReturn(false);
+
+            Path live = Files.createDirectories(systemTempDir.resolve("jpdfium-live"));
+            Files.writeString(live.resolve("jpdfium.dll"), "dll");
+            Path lockFile = live.resolve(".lock");
+            Files.writeString(lockFile, "");
+            backdate(live, 2L * 60 * 60 * 1000);
+
+            try (FileChannel channel =
+                            FileChannel.open(
+                                    lockFile, StandardOpenOption.READ, StandardOpenOption.WRITE);
+                    FileLock lock = channel.lock()) {
+                withJvmTmpDir(tempDir.resolve("jvm-tmp-g"), cleanupService::init);
+                assertThat(Files.exists(live)).isTrue();
+            }
+        }
+
+        @Test
+        @DisplayName("removes an extraction dir whose lock is free")
+        void removesUnlockedExtractionDir() throws IOException {
+            when(tempFileManagement.isStartupCleanup()).thenReturn(true);
+            when(registry.contains(any(File.class))).thenReturn(false);
+
+            Path leftover = Files.createDirectories(systemTempDir.resolve("jpdfium-left"));
+            Files.writeString(leftover.resolve("jpdfium.dll"), "dll");
+            Files.writeString(leftover.resolve(".lock"), "");
+            backdate(leftover, 2L * 60 * 60 * 1000);
+
+            withJvmTmpDir(tempDir.resolve("jvm-tmp-h"), cleanupService::init);
+
+            assertThat(Files.exists(leftover)).isFalse();
         }
 
         @Test

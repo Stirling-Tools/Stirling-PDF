@@ -2,10 +2,13 @@ package stirling.software.common.service;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -59,6 +62,9 @@ public class TempFileCleanupService {
     // Names of the jpdfium bridge library across platforms; every extraction dir holds one
     private static final Set<String> JPDFIUM_BRIDGE_FILES =
             Set.of("jpdfium.dll", "libjpdfium.dylib", "libjpdfium.so");
+
+    // Held by the owning JVM for its lifetime in fallback extraction dirs
+    private static final String JPDFIUM_LOCK_FILE = ".lock";
 
     // File patterns that identify our temp files
     private static final Predicate<String> IS_OUR_TEMP_FILE =
@@ -211,10 +217,9 @@ public class TempFileCleanupService {
 
     /**
      * Removes JPDFium extraction dirs leaked by older versions on Windows. The age gate keeps a dir
-     * whose JVM may still be extracting and the content check keeps the sweep away from a
-     * same-named dir this application did not create. A dir still owned by a running JVM refuses
-     * deletion on Windows (loaded DLLs are locked) and is harmless to unlink elsewhere because
-     * JPDFium loads every native up front.
+     * whose JVM may still be extracting, the content check keeps the sweep away from a same-named
+     * dir this application did not create, and the lock check keeps a running JVM's fallback dir:
+     * JPDFium holds {@code .lock} there for its lifetime.
      *
      * @return number of directories removed
      */
@@ -229,6 +234,7 @@ public class TempFileCleanupService {
                                 .filter(p -> p.getFileName().toString().startsWith("jpdfium-"))
                                 .filter(p -> isOlderThan(p, JPDFIUM_DIR_GRACE_MILLIS))
                                 .filter(TempFileCleanupService::looksLikeJpdfiumExtraction)
+                                .filter(dir -> !isJpdfiumDirInUse(dir))
                                 .toList();
             } catch (IOException | UncheckedIOException e) {
                 log.debug("JPDFium temp scan failed for {}: {}", root, e.getMessage());
@@ -285,6 +291,24 @@ public class TempFileCleanupService {
                     .anyMatch(JPDFIUM_BRIDGE_FILES::contains);
         } catch (IOException | UncheckedIOException e) {
             return false;
+        }
+    }
+
+    /**
+     * A fallback extraction dir holds a {@code .lock} the owning JVM keeps locked for its whole
+     * lifetime; a free or absent lock means the dir is a leftover. Anything unreadable counts as in
+     * use so cleanup fails closed.
+     */
+    private static boolean isJpdfiumDirInUse(Path dir) {
+        Path lockFile = dir.resolve(JPDFIUM_LOCK_FILE);
+        if (!Files.exists(lockFile, LinkOption.NOFOLLOW_LINKS)) return false;
+        try (FileChannel channel =
+                        FileChannel.open(
+                                lockFile, StandardOpenOption.READ, StandardOpenOption.WRITE);
+                FileLock lock = channel.tryLock()) {
+            return lock == null;
+        } catch (IOException | RuntimeException e) {
+            return true;
         }
     }
 
