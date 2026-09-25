@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api;
 
 import java.io.IOException;
 
+import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -97,10 +98,7 @@ public class SetPageBoxesController {
 
         PDRectangle bleed = parseRect(request.getBleedBox(), "bleedBox");
         if (bleed == null && request.getBleedMm() > 0) {
-            PDRectangle resolvedTrim =
-                    trim != null
-                            ? trim
-                            : page.getTrimBox() != null ? page.getTrimBox() : effectiveMedia;
+            PDRectangle resolvedTrim = trim != null ? trim : page.getTrimBox();
             bleed = expand(resolvedTrim, request.getBleedMm());
         }
         if (bleed != null) {
@@ -118,18 +116,19 @@ public class SetPageBoxesController {
         }
 
         if (request.isCopyMissingFromMediaBox()) {
-            // getCropBox() falls back to the MediaBox, so inspect the page dictionary to know
-            // whether a CropBox was explicitly set
-            if (crop == null && page.getCOSObject().getItem(COSName.CROP_BOX) == null) {
+            // All PDPage box getters fall back to CropBox or MediaBox when the entry is
+            // absent, so presence is tested on the page dictionary.
+            COSDictionary dict = page.getCOSObject();
+            if (crop == null && dict.getItem(COSName.CROP_BOX) == null) {
                 page.setCropBox(effectiveMedia);
             }
-            if (trim == null && page.getTrimBox() == null) {
+            if (trim == null && dict.getItem(COSName.TRIM_BOX) == null) {
                 page.setTrimBox(effectiveMedia);
             }
-            if (bleed == null && page.getBleedBox() == null) {
+            if (bleed == null && dict.getItem(COSName.BLEED_BOX) == null) {
                 page.setBleedBox(effectiveMedia);
             }
-            if (art == null && page.getArtBox() == null) {
+            if (art == null && dict.getItem(COSName.ART_BOX) == null) {
                 page.setArtBox(effectiveMedia);
             }
         }
@@ -153,6 +152,15 @@ public class SetPageBoxesController {
             float y = Float.parseFloat(parts[1].trim());
             float width = Float.parseFloat(parts[2].trim());
             float height = Float.parseFloat(parts[3].trim());
+            // NaN and Infinity parse fine but produce invalid box entries; negative
+            // origins stay allowed because BleedBox may extend outside the MediaBox.
+            if (!Float.isFinite(x)
+                    || !Float.isFinite(y)
+                    || !Float.isFinite(width)
+                    || !Float.isFinite(height)) {
+                throw new IllegalArgumentException(
+                        name + " must contain finite numbers, got: " + value);
+            }
             if (width <= 0 || height <= 0) {
                 throw new IllegalArgumentException(
                         name + " width and height must be positive, got: " + value);

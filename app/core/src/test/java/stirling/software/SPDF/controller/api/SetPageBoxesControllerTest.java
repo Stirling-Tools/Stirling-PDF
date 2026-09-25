@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
@@ -169,6 +170,15 @@ class SetPageBoxesControllerTest {
         try (PDDocument result = Loader.loadPDF(drainBody(response))) {
             PDPage page = result.getPage(0);
             PDRectangle a4 = PDRectangle.A4;
+            // The box getters fall back to CropBox/MediaBox, so the dictionary itself
+            // must contain the entries for the copy to have really happened.
+            for (COSName name :
+                    new COSName[] {
+                        COSName.CROP_BOX, COSName.TRIM_BOX, COSName.BLEED_BOX, COSName.ART_BOX
+                    }) {
+                assertNotNull(
+                        page.getCOSObject().getItem(name), name.getName() + " was not written");
+            }
             assertRectEquals(0, 0, a4.getWidth(), a4.getHeight(), page.getCropBox());
             assertRectEquals(0, 0, a4.getWidth(), a4.getHeight(), page.getTrimBox());
             assertRectEquals(0, 0, a4.getWidth(), a4.getHeight(), page.getBleedBox());
@@ -193,6 +203,15 @@ class SetPageBoxesControllerTest {
     void testNonNumericRectThrows() throws Exception {
         SetPageBoxesRequest request = request(createPdf(null));
         request.setBleedBox("a,b,c,d");
+        assertThrows(IllegalArgumentException.class, () -> controller.setPageBoxes(request));
+    }
+
+    @Test
+    void testNonFiniteRectThrows() throws Exception {
+        SetPageBoxesRequest request = request(createPdf(null));
+        request.setTrimBox("0,0,NaN,600");
+        assertThrows(IllegalArgumentException.class, () -> controller.setPageBoxes(request));
+        request.setTrimBox("0,0,Infinity,600");
         assertThrows(IllegalArgumentException.class, () -> controller.setPageBoxes(request));
     }
 
