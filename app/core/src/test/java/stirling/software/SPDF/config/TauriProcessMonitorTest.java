@@ -74,6 +74,51 @@ class TauriProcessMonitorTest {
     }
 
     @Test
+    @DisplayName("init with a parent that already exited shuts the backend down")
+    void initWithGoneParentShutsDown(@TempDir Path tmp) throws Exception {
+        ConfigurableApplicationContext ctx = mock(ConfigurableApplicationContext.class);
+        CountDownLatch closed = closingContext(ctx);
+        TauriProcessMonitor monitor = new TauriProcessMonitor(ctx);
+        Path sentinel = Files.writeString(tmp.resolve("backend.stop"), "stop");
+
+        monitor.init(String.valueOf(Long.MAX_VALUE), sentinel.toString());
+
+        assertThat(closed.await(2, TimeUnit.SECONDS)).isTrue();
+        assertThat(Files.exists(sentinel)).isFalse();
+        assertThat(getField(monitor, "scheduler")).isNull();
+    }
+
+    @Test
+    @DisplayName("init with an unparsable parent PID still watches the sentinel")
+    void initWithInvalidParentPidKeepsWatching(@TempDir Path tmp) throws Exception {
+        TauriProcessMonitor monitor = new TauriProcessMonitor(mock(ApplicationContext.class));
+        Path sentinel = Files.writeString(tmp.resolve("backend.stop"), "stop");
+
+        monitor.init("not-a-pid", sentinel.toString());
+        try {
+            assertThat(monitoringFlag(monitor)).isTrue();
+            assertThat(getField(monitor, "scheduler")).isNotNull();
+        } finally {
+            monitor.cleanup();
+        }
+    }
+
+    @Test
+    @DisplayName("init with a live parent keeps monitoring")
+    void initWithLiveParentKeepsMonitoring(@TempDir Path tmp) throws Exception {
+        TauriProcessMonitor monitor = new TauriProcessMonitor(mock(ApplicationContext.class));
+        Path sentinel = Files.writeString(tmp.resolve("backend.stop"), "stop");
+
+        monitor.init(String.valueOf(ProcessHandle.current().pid()), sentinel.toString());
+        try {
+            assertThat(monitoringFlag(monitor)).isTrue();
+            assertThat(getField(monitor, "parentHandle")).isNotNull();
+        } finally {
+            monitor.cleanup();
+        }
+    }
+
+    @Test
     @DisplayName("sentinel file triggers a graceful context close")
     void sentinelTriggersShutdown(@TempDir Path tmp) throws Exception {
         ConfigurableApplicationContext ctx = mock(ConfigurableApplicationContext.class);

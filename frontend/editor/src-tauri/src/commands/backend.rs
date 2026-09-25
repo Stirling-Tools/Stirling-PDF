@@ -3,9 +3,29 @@ use tauri::Manager;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use std::path::{Path, PathBuf};
-use std::time::{Duration, Instant};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use crate::utils::{add_log, app_data_dir};
 use crate::state::connection_state::{AppConnectionState, ConnectionMode};
+
+/// Removes shutdown markers left by previous sessions. The current path cannot
+/// exist yet, so it is never a sweep target.
+fn sweep_stale_shutdown_files(work_dir: &Path, keep: &Path) {
+    let Ok(entries) = std::fs::read_dir(work_dir) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path == keep {
+            continue;
+        }
+        let Some(name) = path.file_name().and_then(|name| name.to_str()) else {
+            continue;
+        };
+        if name.starts_with(".backend-stop") {
+            let _ = std::fs::remove_file(&path);
+        }
+    }
+}
 
 // Store backend process handle and port globally
 static BACKEND_PROCESS: Mutex<Option<tauri_plugin_shell::process::CommandChild>> = Mutex::new(None);
@@ -267,7 +287,18 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
     }
 
     // Sentinel for a graceful stop on every platform; signals are not portable.
-    let shutdown_file = work_dir.join(".backend-stop");
+    // The name is per launch so a marker a previous session failed to clear can
+    // never stop this one; stale markers are swept here, before this launch
+    // owns one.
+    let shutdown_file = work_dir.join(format!(
+        ".backend-stop-{}-{}",
+        std::process::id(),
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|elapsed| elapsed.as_millis())
+            .unwrap_or(0)
+    ));
+    sweep_stale_shutdown_files(&work_dir, &shutdown_file);
     *BACKEND_SHUTDOWN_FILE.lock().unwrap() = Some(shutdown_file.clone());
 
     let sidecar_command = app
