@@ -1,6 +1,7 @@
 package stirling.software.common.service;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.LinkOption;
@@ -54,6 +55,10 @@ public class TempFileCleanupService {
 
     // A JPDFium dir younger than this may belong to a JVM that is still starting
     private static final long JPDFIUM_DIR_GRACE_MILLIS = 60 * 60 * 1000;
+
+    // Names of the jpdfium bridge library across platforms; every extraction dir holds one
+    private static final Set<String> JPDFIUM_BRIDGE_FILES =
+            Set.of("jpdfium.dll", "libjpdfium.dylib", "libjpdfium.so");
 
     // File patterns that identify our temp files
     private static final Predicate<String> IS_OUR_TEMP_FILE =
@@ -225,7 +230,7 @@ public class TempFileCleanupService {
                                 .filter(p -> isOlderThan(p, JPDFIUM_DIR_GRACE_MILLIS))
                                 .filter(TempFileCleanupService::looksLikeJpdfiumExtraction)
                                 .toList();
-            } catch (IOException e) {
+            } catch (IOException | UncheckedIOException e) {
                 log.debug("JPDFium temp scan failed for {}: {}", root, e.getMessage());
                 continue;
             }
@@ -271,14 +276,14 @@ public class TempFileCleanupService {
     }
 
     /**
-     * Every extraction dir holds the jpdfium bridge next to pdfium itself; requiring it keeps the
-     * sweep from deleting an unrelated dir that happens to share the prefix.
+     * Every extraction dir holds the jpdfium bridge next to pdfium itself; requiring that exact
+     * artifact keeps the sweep from deleting an unrelated dir that happens to share the prefix.
      */
     private static boolean looksLikeJpdfiumExtraction(Path dir) {
         try (Stream<Path> entries = Files.list(dir)) {
             return entries.map(path -> path.getFileName().toString().toLowerCase(Locale.ROOT))
-                    .anyMatch(name -> name.contains("jpdfium"));
-        } catch (IOException e) {
+                    .anyMatch(JPDFIUM_BRIDGE_FILES::contains);
+        } catch (IOException | UncheckedIOException e) {
             return false;
         }
     }

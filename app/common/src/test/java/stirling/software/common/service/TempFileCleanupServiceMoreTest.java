@@ -248,12 +248,35 @@ class TempFileCleanupServiceMoreTest {
             when(registry.contains(any(File.class))).thenReturn(false);
 
             Path impostor = Files.createDirectories(systemTempDir.resolve("jpdfium-notours"));
-            Files.writeString(impostor.resolve("notes.txt"), "unrelated");
+            Files.writeString(impostor.resolve("jpdfium-notes.txt"), "unrelated");
             backdate(impostor, 2L * 60 * 60 * 1000);
 
             withJvmTmpDir(tempDir.resolve("jvm-tmp-c"), cleanupService::init);
 
             assertThat(Files.exists(impostor)).isTrue();
+        }
+
+        @Test
+        @DisplayName("recognizes the bridge artifact name of every platform")
+        void recognizesBridgeNames() throws IOException {
+            when(tempFileManagement.isStartupCleanup()).thenReturn(true);
+            when(registry.contains(any(File.class))).thenReturn(false);
+
+            Path linux = Files.createDirectories(systemTempDir.resolve("jpdfium-linux"));
+            Files.writeString(linux.resolve("libjpdfium.so"), "so");
+            Path mac = Files.createDirectories(systemTempDir.resolve("jpdfium-mac"));
+            Files.writeString(mac.resolve("libjpdfium.dylib"), "dylib");
+            Path win = Files.createDirectories(systemTempDir.resolve("jpdfium-win"));
+            Files.writeString(win.resolve("jpdfium.dll"), "dll");
+            for (Path dir : new Path[] {linux, mac, win}) {
+                backdate(dir, 2L * 60 * 60 * 1000);
+            }
+
+            withJvmTmpDir(tempDir.resolve("jvm-tmp-f"), cleanupService::init);
+
+            assertThat(Files.exists(linux)).isFalse();
+            assertThat(Files.exists(mac)).isFalse();
+            assertThat(Files.exists(win)).isFalse();
         }
 
         @Test
