@@ -141,7 +141,8 @@ public class CertSignController {
             String name,
             String location,
             String reason,
-            Boolean showLogo) {
+            Boolean showLogo)
+            throws IOException {
         try (PDDocument doc = pdfDocumentFactory.load(input)) {
             PDSignature signature = new PDSignature();
             signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
@@ -165,6 +166,7 @@ public class CertSignController {
             }
         } catch (Exception e) {
             ExceptionUtils.logException("PDF signing", e);
+            throw new IOException("PDF signing failed: " + e.getMessage(), e);
         }
     }
 
