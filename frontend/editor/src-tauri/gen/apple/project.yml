@@ -1,0 +1,90 @@
+name: stirling-pdf
+options:
+  bundleIdPrefix: stirling.pdf.dev
+  deploymentTarget:
+    iOS: 14.0
+fileGroups: [../../src]
+configs:
+  debug: debug
+  release: release
+settingGroups:
+  app:
+    base:
+      PRODUCT_NAME: Stirling PDF
+      PRODUCT_BUNDLE_IDENTIFIER: stirling.pdf.dev
+targetTemplates:
+  app:
+    type: application
+    sources:
+      - path: Sources
+    scheme:
+      environmentVariables:
+        RUST_BACKTRACE: full
+        RUST_LOG: info
+    settings:
+      groups: [app]
+targets:
+  stirling-pdf_iOS:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+      - path: Assets.xcassets
+      - path: AppIcon.icon
+        buildPhase: resources
+      - path: Externals
+      - path: stirling-pdf_iOS
+      - path: assets
+        buildPhase: resources
+        type: folder
+      - path: LaunchScreen.storyboard
+    info:
+      path: stirling-pdf_iOS/Info.plist
+      properties:
+        LSRequiresIPhoneOS: true
+        UILaunchStoryboardName: LaunchScreen
+        UIRequiredDeviceCapabilities: [arm64, metal]
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        CFBundleShortVersionString: 2.14.2
+        CFBundleVersion: "2.14.2"
+    entitlements:
+      path: stirling-pdf_iOS/stirling-pdf_iOS.entitlements
+    scheme:
+      environmentVariables:
+        RUST_BACKTRACE: full
+        RUST_LOG: info
+    settings:
+      base:
+        ENABLE_BITCODE: false
+        ARCHS: [arm64]
+        VALID_ARCHS: arm64
+        LIBRARY_SEARCH_PATHS[arch=x86_64]: $(inherited) $(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME) $(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)
+        LIBRARY_SEARCH_PATHS[arch=arm64]: $(inherited) $(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME) $(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)
+        ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: true
+        EXCLUDED_ARCHS[sdk=iphoneos*]: x86_64
+      groups: [app]
+    dependencies:
+      - framework: libapp.a
+        embed: false
+      - sdk: CoreGraphics.framework
+      - sdk: Metal.framework
+      - sdk: MetalKit.framework
+      - sdk: QuartzCore.framework
+      - sdk: Security.framework
+      - sdk: UIKit.framework
+      - sdk: WebKit.framework
+    preBuildScripts:
+      - script: cd "$SRCROOT/../.." && npx tauri ios xcode-script -v --platform ${PLATFORM_DISPLAY_NAME:?} --sdk-root ${SDKROOT:?} --framework-search-paths "${FRAMEWORK_SEARCH_PATHS:?}" --header-search-paths "${HEADER_SEARCH_PATHS:?}" --gcc-preprocessor-definitions "${GCC_PREPROCESSOR_DEFINITIONS:-}" --configuration ${CONFIGURATION:?} ${FORCE_COLOR} ${ARCHS:?}
+        name: Build Rust Code
+        basedOnDependencyAnalysis: false
+        outputFiles:
+          - $(SRCROOT)/Externals/x86_64/${CONFIGURATION}/libapp.a
+          - $(SRCROOT)/Externals/arm64/${CONFIGURATION}/libapp.a

@@ -5818,6 +5818,19 @@ sort = "Sort"
 [merge.tooltip.header]
 title = "Merge Settings Overview"
 
+[mobile]
+checkConnection = "Check your internet connection and try again."
+notConnected = "You are not connected to a server. Sign in to Stirling Cloud or add your own server."
+
+[mobile.account]
+notConnected = "Not connected"
+signedOutBody = "Sign in to run tools on Stirling Cloud or your own server."
+
+[mobile.files]
+addFiles = "Add files"
+addPrompt = "Add a document to get started"
+noneInStorage = "No files yet. Add one from this device to get started."
+
 [mobileScanner]
 addMore = "Add More"
 back = "Back"

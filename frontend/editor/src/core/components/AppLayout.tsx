@@ -26,6 +26,11 @@ export function AppLayout({ children }: AppLayoutProps) {
           height: "var(--titlebar-body-h, 100dvh)",
           display: "flex",
           flexDirection: "column",
+          // Keep the banner/header clear of the status bar on notched phones
+          // when the webview extends under it (viewport-fit=cover). Zero on
+          // desktop browsers, so this is a no-op everywhere else.
+          paddingTop: "env(safe-area-inset-top, 0px)",
+          boxSizing: "border-box",
         }}
       >
         {banner}
