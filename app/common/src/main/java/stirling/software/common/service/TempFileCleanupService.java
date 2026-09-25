@@ -2,9 +2,13 @@ package stirling.software.common.service;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -194,25 +198,32 @@ public class TempFileCleanupService {
         long maxAgeMillis = containerMode ? 0 : 24 * 60 * 60 * 1000; // 0 or 24 hours
 
         int totalDeletedCount = cleanupUnregisteredFiles(containerMode, false, maxAgeMillis);
-        cleanupStaleJpdfiumDirs();
+        totalDeletedCount += cleanupStaleJpdfiumDirs();
         log.info(
                 "Startup cleanup complete. Deleted {} temporary files/directories",
                 totalDeletedCount);
     }
 
     /**
-     * Removes JPDFium extraction dirs leaked by older versions on Windows. Startup-only and
-     * age-gated: a younger dir may belong to a JVM that is still extracting.
+     * Removes JPDFium extraction dirs leaked by older versions on Windows. The age gate keeps a dir
+     * whose JVM may still be extracting and the content check keeps the sweep away from a
+     * same-named dir this application did not create. A dir still owned by a running JVM refuses
+     * deletion on Windows (loaded DLLs are locked) and is harmless to unlink elsewhere because
+     * JPDFium loads every native up front.
+     *
+     * @return number of directories removed
      */
-    private void cleanupStaleJpdfiumDirs() {
+    private int cleanupStaleJpdfiumDirs() {
+        int deletedCount = 0;
         for (Path root : jpdfiumScanRoots()) {
-            if (root == null || !Files.isDirectory(root)) continue;
+            if (!Files.isDirectory(root)) continue;
             List<Path> stale;
             try (Stream<Path> entries = Files.list(root)) {
                 stale =
-                        entries.filter(Files::isDirectory)
+                        entries.filter(p -> Files.isDirectory(p, LinkOption.NOFOLLOW_LINKS))
                                 .filter(p -> p.getFileName().toString().startsWith("jpdfium-"))
                                 .filter(p -> isOlderThan(p, JPDFIUM_DIR_GRACE_MILLIS))
+                                .filter(TempFileCleanupService::looksLikeJpdfiumExtraction)
                                 .toList();
             } catch (IOException e) {
                 log.debug("JPDFium temp scan failed for {}: {}", root, e.getMessage());
@@ -221,6 +232,7 @@ public class TempFileCleanupService {
             for (Path dir : stale) {
                 try {
                     GeneralUtils.deleteDirectory(dir);
+                    deletedCount++;
                     log.info("Removed stale JPDFium extraction dir: {}", dir);
                 } catch (IOException e) {
                     // Windows keeps loaded DLLs locked; a later startup retries.
@@ -228,16 +240,47 @@ public class TempFileCleanupService {
                 }
             }
         }
+        return deletedCount;
     }
 
+    /**
+     * JPDFium extracts into {@code java.io.tmpdir}; the configured system and base temp dirs
+     * receive the dirs only when the JVM temp dir points at them, so all three are scanned and
+     * deduplicated. An unusable configured path is skipped instead of aborting startup.
+     */
     private Path[] jpdfiumScanRoots() {
-        // JPDFium extracts into the real java.io.tmpdir; the configured base
-        // tmp dir only receives them when java.io.tmpdir points there.
-        Path system = getSystemTempPath();
-        String base = applicationProperties.getSystem().getTempFileManagement().getBaseTmpDir();
-        Path basePath = base == null || base.isBlank() ? null : Path.of(base);
-        if (basePath == null || basePath.equals(system)) return new Path[] {system};
-        return new Path[] {system, basePath};
+        List<Path> roots = new ArrayList<>(3);
+        addJpdfiumScanRoot(roots, System.getProperty("java.io.tmpdir"));
+        ApplicationProperties.TempFileManagement tempFiles =
+                applicationProperties.getSystem().getTempFileManagement();
+        addJpdfiumScanRoot(roots, tempFiles.getSystemTempDir());
+        addJpdfiumScanRoot(roots, tempFiles.getBaseTmpDir());
+        return roots.toArray(Path[]::new);
+    }
+
+    private static void addJpdfiumScanRoot(List<Path> roots, String rawPath) {
+        if (rawPath == null || rawPath.isBlank()) return;
+        try {
+            Path root = Path.of(rawPath);
+            if (!roots.contains(root)) {
+                roots.add(root);
+            }
+        } catch (InvalidPathException e) {
+            log.debug("Skipping invalid temp scan root '{}': {}", rawPath, e.getMessage());
+        }
+    }
+
+    /**
+     * Every extraction dir holds the jpdfium bridge next to pdfium itself; requiring it keeps the
+     * sweep from deleting an unrelated dir that happens to share the prefix.
+     */
+    private static boolean looksLikeJpdfiumExtraction(Path dir) {
+        try (Stream<Path> entries = Files.list(dir)) {
+            return entries.map(path -> path.getFileName().toString().toLowerCase(Locale.ROOT))
+                    .anyMatch(name -> name.contains("jpdfium"));
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     private static boolean isOlderThan(Path path, long ageMillis) {

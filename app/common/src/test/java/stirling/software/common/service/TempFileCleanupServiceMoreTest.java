@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import org.junit.jupiter.api.AfterEach;
@@ -83,6 +84,23 @@ class TempFileCleanupServiceMoreTest {
     private static void backdate(Path file, long millisAgo) throws IOException {
         Files.setLastModifiedTime(
                 file, FileTime.fromMillis(System.currentTimeMillis() - millisAgo));
+    }
+
+    /**
+     * Points java.io.tmpdir at a throwaway root so the sweep under test never touches the
+     * machine's.
+     */
+    private void withJvmTmpDir(Path root, Runnable action) {
+        String oldTmp = System.getProperty("java.io.tmpdir");
+        try {
+            Files.createDirectories(root);
+            System.setProperty("java.io.tmpdir", root.toString());
+            action.run();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } finally {
+            System.setProperty("java.io.tmpdir", oldTmp);
+        }
     }
 
     @Nested
@@ -165,7 +183,7 @@ class TempFileCleanupServiceMoreTest {
             Path stale = Files.createFile(customTempDir.resolve("stirling-pdf-stale.tmp"));
             backdate(stale, 48L * 60 * 60 * 1000); // 48h old, beyond non-container 24h cutoff
 
-            cleanupService.init();
+            withJvmTmpDir(tempDir.resolve("jvm-tmp-cleanup"), cleanupService::init);
 
             assertThat(Files.exists(stale)).isFalse();
         }
@@ -182,11 +200,11 @@ class TempFileCleanupServiceMoreTest {
             when(registry.contains(any(File.class))).thenReturn(false);
 
             Path stale = Files.createDirectories(systemTempDir.resolve("jpdfium-old"));
-            Files.writeString(stale.resolve("pdfium.dll"), "dll");
+            Files.writeString(stale.resolve("jpdfium.dll"), "dll");
             backdate(stale, 2L * 60 * 60 * 1000);
             Path fresh = Files.createDirectories(systemTempDir.resolve("jpdfium-fresh"));
 
-            cleanupService.init();
+            withJvmTmpDir(tempDir.resolve("jvm-tmp-a"), cleanupService::init);
 
             assertThat(Files.exists(stale)).isFalse();
             assertThat(Files.exists(fresh)).isTrue();
@@ -199,12 +217,78 @@ class TempFileCleanupServiceMoreTest {
             when(registry.contains(any(File.class))).thenReturn(false);
 
             Path stale = Files.createDirectories(customTempDir.resolve("jpdfium-old"));
-            Files.writeString(stale.resolve("pdfium.dll"), "dll");
+            Files.writeString(stale.resolve("jpdfium.dll"), "dll");
             backdate(stale, 2L * 60 * 60 * 1000);
 
-            cleanupService.init();
+            withJvmTmpDir(tempDir.resolve("jvm-tmp-b"), cleanupService::init);
 
             assertThat(Files.exists(stale)).isFalse();
+        }
+
+        @Test
+        @DisplayName("scans the JVM temp dir even when the configured system temp dir differs")
+        void scansJvmTempDir() throws IOException {
+            when(tempFileManagement.isStartupCleanup()).thenReturn(true);
+            when(registry.contains(any(File.class))).thenReturn(false);
+
+            Path jvmTmp = tempDir.resolve("jvm-tmp");
+            Path stale = Files.createDirectories(jvmTmp.resolve("jpdfium-old"));
+            Files.writeString(stale.resolve("jpdfium.dll"), "dll");
+            backdate(stale, 2L * 60 * 60 * 1000);
+
+            withJvmTmpDir(jvmTmp, cleanupService::init);
+
+            assertThat(Files.exists(stale)).isFalse();
+        }
+
+        @Test
+        @DisplayName("keeps a prefixed dir whose content is not a JPDFium extraction")
+        void keepsUnrelatedContent() throws IOException {
+            when(tempFileManagement.isStartupCleanup()).thenReturn(true);
+            when(registry.contains(any(File.class))).thenReturn(false);
+
+            Path impostor = Files.createDirectories(systemTempDir.resolve("jpdfium-notours"));
+            Files.writeString(impostor.resolve("notes.txt"), "unrelated");
+            backdate(impostor, 2L * 60 * 60 * 1000);
+
+            withJvmTmpDir(tempDir.resolve("jvm-tmp-c"), cleanupService::init);
+
+            assertThat(Files.exists(impostor)).isTrue();
+        }
+
+        @Test
+        @DisplayName("skips an invalid configured root without aborting startup")
+        void skipsInvalidConfiguredRoot() throws IOException {
+            when(tempFileManagement.isStartupCleanup()).thenReturn(true);
+            when(registry.contains(any(File.class))).thenReturn(false);
+            when(tempFileManagement.getSystemTempDir()).thenReturn("bad\u0000root");
+
+            Path stale = Files.createDirectories(customTempDir.resolve("jpdfium-old"));
+            Files.writeString(stale.resolve("jpdfium.dll"), "dll");
+            backdate(stale, 2L * 60 * 60 * 1000);
+
+            withJvmTmpDir(tempDir.resolve("jvm-tmp-d"), cleanupService::init);
+
+            assertThat(Files.exists(stale)).isFalse();
+        }
+
+        @Test
+        @DisplayName("reports how many extraction dirs it removed")
+        void reportsRemovedCount() throws IOException {
+            Path stale = Files.createDirectories(systemTempDir.resolve("jpdfium-old"));
+            Files.writeString(stale.resolve("jpdfium.dll"), "dll");
+            backdate(stale, 2L * 60 * 60 * 1000);
+            AtomicInteger removed = new AtomicInteger(-1);
+
+            withJvmTmpDir(
+                    tempDir.resolve("jvm-tmp-e"),
+                    () ->
+                            removed.set(
+                                    (Integer)
+                                            ReflectionTestUtils.invokeMethod(
+                                                    cleanupService, "cleanupStaleJpdfiumDirs")));
+
+            assertThat(removed.get()).isEqualTo(1);
         }
     }
 
