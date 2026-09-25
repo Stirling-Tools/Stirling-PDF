@@ -120,6 +120,20 @@ Feature: General PDF Operations API Validation
             | LEGAL    |
 
 
+    @scale-pages @positive
+    Scenario: scale-pages falls back to MediaBox when the named pageBox is absent
+        Given I generate a PDF file as "fileInput"
+        And the pdf contains 1 pages
+        And the request data includes
+            | parameter | value    |
+            | pageSize  | A4       |
+            | pageBox   | TRIM_BOX |
+        When I send the API request to the endpoint "/api/v1/general/scale-pages"
+        Then the response content type should be "application/pdf"
+        And the response status code should be 200
+        And the response PDF should contain 1 pages
+
+
     @crop @positive
     Scenario: crop PDF pages to a specific region
         Given I generate a PDF file as "fileInput"
@@ -153,6 +167,20 @@ Feature: General PDF Operations API Validation
         And the response status code should be 200
         And the response file should have size greater than 0
         And the response PDF should contain 1 pages
+
+
+    @crop @positive
+    Scenario: crop to a named page box falls back to MediaBox when absent
+        Given I generate a PDF file as "fileInput"
+        And the pdf contains 2 pages
+        And the request data includes
+            | parameter | value    |
+            | cropToBox | true     |
+            | pageBox   | TRIM_BOX |
+        When I send the API request to the endpoint "/api/v1/general/crop"
+        Then the response content type should be "application/pdf"
+        And the response status code should be 200
+        And the response PDF should contain 2 pages
 
 
     @pdf-to-single-page @positive

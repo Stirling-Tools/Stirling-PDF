@@ -19,4 +19,12 @@ public class ScalePagesRequest extends PDFWithPageSize {
                     "The scale of the content on the pages of the output PDF. Acceptable values are"
                             + " floats.")
     private float scaleFactor;
+
+    @Schema(
+            description =
+                    "Page box each source page is measured from when computing the scale. Pages"
+                            + " without that box fall back to their MediaBox",
+            allowableValues = {"MEDIA_BOX", "CROP_BOX", "TRIM_BOX", "BLEED_BOX", "ART_BOX"},
+            defaultValue = "MEDIA_BOX")
+    private String pageBox = "MEDIA_BOX";
 }

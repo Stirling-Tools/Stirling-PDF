@@ -289,4 +289,41 @@ class ScalePagesControllerTest {
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
     }
+
+    @Test
+    void testScalePages_KeepUsesNamedPageBox() throws Exception {
+        PDRectangle trimBox = new PDRectangle(20, 30, 400, 600);
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            page.setTrimBox(trimBox);
+            doc.addPage(page);
+            Path pdfPath = tempDir.resolve("trimmed.pdf");
+            doc.save(pdfPath.toFile());
+            byte[] pdfBytes = Files.readAllBytes(pdfPath);
+
+            MockMultipartFile file =
+                    new MockMultipartFile(
+                            "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+
+            ScalePagesRequest request = new ScalePagesRequest();
+            request.setFileInput(file);
+            request.setPageSize("KEEP");
+            request.setPageBox("TRIM_BOX");
+            request.setScaleFactor(1.0f);
+
+            setupFactory();
+
+            ResponseEntity<Resource> response = controller.scalePages(request);
+
+            assertNotNull(response);
+            assertEquals(200, response.getStatusCode().value());
+            try (PDDocument result = org.apache.pdfbox.Loader.loadPDF(drainBody(response))) {
+                PDRectangle out = result.getPage(0).getMediaBox();
+                assertEquals(20, out.getLowerLeftX(), 0.01);
+                assertEquals(30, out.getLowerLeftY(), 0.01);
+                assertEquals(400, out.getWidth(), 0.01);
+                assertEquals(600, out.getHeight(), 0.01);
+            }
+        }
+    }
 }

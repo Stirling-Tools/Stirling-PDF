@@ -32,6 +32,7 @@ import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.PageBoxUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -145,12 +146,13 @@ public class CropController {
             return cropWithAutomaticDetection(request);
         }
 
-        if (request.getX() == null
-                || request.getY() == null
-                || request.getWidth() == null
-                || request.getHeight() == null) {
+        if (!request.isCropToBox()
+                && (request.getX() == null
+                        || request.getY() == null
+                        || request.getWidth() == null
+                        || request.getHeight() == null)) {
             throw new IllegalArgumentException(
-                    "Crop coordinates (x, y, width, height) are required when auto-crop is not enabled");
+                    "Crop coordinates (x, y, width, height) are required when neither auto-crop nor crop-to-box is enabled");
         }
 
         if (request.isRemoveDataOutsideCrop() && isGhostscriptEnabled()) {
@@ -225,6 +227,7 @@ public class CropController {
 
                 for (int i = 0; i < totalPages; i++) {
                     PDPage sourcePage = sourceDocument.getPage(i);
+                    PDRectangle cropArea = resolveCropArea(request, sourcePage);
 
                     // Create a new page with the size of the source page
                     PDPage newPage = new PDPage(sourcePage.getMediaBox());
@@ -240,10 +243,10 @@ public class CropController {
 
                         // Define the crop area
                         contentStream.addRect(
-                                request.getX(),
-                                request.getY(),
-                                request.getWidth(),
-                                request.getHeight());
+                                cropArea.getLowerLeftX(),
+                                cropArea.getLowerLeftY(),
+                                cropArea.getWidth(),
+                                cropArea.getHeight());
                         contentStream.clip();
 
                         // Draw the entire formXObject
@@ -253,12 +256,7 @@ public class CropController {
                     }
 
                     // Now, set the new page's media box to the cropped size
-                    newPage.setMediaBox(
-                            new PDRectangle(
-                                    request.getX(),
-                                    request.getY(),
-                                    request.getWidth(),
-                                    request.getHeight()));
+                    newPage.setMediaBox(cropArea);
                 }
 
                 return WebResponseUtils.pdfDocToWebResponse(
@@ -278,13 +276,7 @@ public class CropController {
         try (PDDocument sourceDocument = pdfDocumentFactory.load(request)) {
             for (int i = 0; i < sourceDocument.getNumberOfPages(); i++) {
                 PDPage page = sourceDocument.getPage(i);
-                PDRectangle cropBox =
-                        new PDRectangle(
-                                request.getX(),
-                                request.getY(),
-                                request.getWidth(),
-                                request.getHeight());
-                page.setCropBox(cropBox);
+                page.setCropBox(resolveCropArea(request, page));
             }
 
             tempInputFile = tempFileManager.createManagedTempFile(PDF_EXTENSION);
@@ -325,6 +317,14 @@ public class CropController {
                 tempOutputFile.close();
             }
         }
+    }
+
+    private static PDRectangle resolveCropArea(CropPdfForm request, PDPage page) {
+        if (request.isCropToBox()) {
+            return PageBoxUtils.resolvePageBox(page, request.getPageBox());
+        }
+        return new PDRectangle(
+                request.getX(), request.getY(), request.getWidth(), request.getHeight());
     }
 
     private record CropBounds(float x, float y, float width, float height) {

@@ -34,4 +34,20 @@ public class CropPdfForm extends PDFFile {
 
     @Schema(description = "Enable auto-crop to detect and remove white space", type = "boolean")
     private boolean autoCrop = false;
+
+    @Schema(
+            description =
+                    "Crop each page to the named page box instead of explicit x/y/width/height."
+                            + " Ignored when autoCrop is true",
+            type = "boolean",
+            defaultValue = "false")
+    private boolean cropToBox = false;
+
+    @Schema(
+            description =
+                    "Page box used as the crop area when cropToBox is true. Pages without that box"
+                            + " fall back to their MediaBox",
+            allowableValues = {"MEDIA_BOX", "CROP_BOX", "TRIM_BOX", "BLEED_BOX", "ART_BOX"},
+            defaultValue = "MEDIA_BOX")
+    private String pageBox = "MEDIA_BOX";
 }
