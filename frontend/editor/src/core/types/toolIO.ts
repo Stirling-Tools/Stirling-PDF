@@ -711,6 +711,11 @@ export const TOOL_IO: ToolIOTable = {
     produces: "JAVASCRIPT",
     arity: "SISO",
   },
+  "/api/v1/misc/text-to-outlines": {
+    accepts: ["PDF"],
+    produces: "PDF",
+    arity: "SISO",
+  },
   "/api/v1/misc/unlock-pdf-forms": {
     accepts: ["PDF"],
     produces: "PDF",
