@@ -23,7 +23,7 @@ export const useAdvancedOCRTips = (): TooltipContent => {
         title: t("ocr.tooltip.advanced.sidecar.title", "Create Text File"),
         description: t(
           "ocr.tooltip.advanced.sidecar.text",
-          "Generates a separate .txt file alongside the PDF containing all extracted text content for easy access and processing.",
+          "Saves the extracted text as a separate .txt file next to the PDF.",
         ),
       },
       {

@@ -19,7 +19,7 @@ export function FileEditorStatusDot({ file }: FileEditorStatusDotProps) {
         return {
           label: t(
             "fileOriginalDeleted",
-            "Original deleted - save to keep a copy",
+            "Original deleted. Save to keep a copy.",
           ),
           color: "var(--mantine-color-red-6)",
         };

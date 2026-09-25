@@ -375,7 +375,7 @@ const HardwareCertificateSettings = ({
             <Alert color="yellow" variant="light">
               {t(
                 "certSign.hardware.noDriver",
-                "No PKCS#11 driver was detected. Install your token's driver (e.g. OpenSC), then reopen this - or enter the driver path manually below.",
+                "No PKCS#11 driver was detected. Install your token's driver (e.g. OpenSC) and reopen this, or enter the driver path manually below.",
               )}
             </Alert>
           )}

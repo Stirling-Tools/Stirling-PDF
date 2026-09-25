@@ -25,11 +25,11 @@ export const useSignModeTips = (): TooltipContent => {
       {
         title: t(
           "certSign.signMode.tooltip.manual.title",
-          "Manual - Bring your certificate",
+          "Manual: your own certificate",
         ),
         description: t(
           "certSign.signMode.tooltip.manual.text",
-          "Use your own certificate files for brand-aligned identity. Can display <b>Trusted</b> when your CA/chain is recognized.",
+          "Use your own certificate files. Can display <b>Trusted</b> when your CA/chain is recognized.",
         ),
         bullets: [
           t(
@@ -41,7 +41,7 @@ export const useSignModeTips = (): TooltipContent => {
       {
         title: t(
           "certSign.signMode.tooltip.auto.title",
-          "Auto - Zero-setup, instant system seal",
+          "Auto: server certificate, no setup",
         ),
         description: t(
           "certSign.signMode.tooltip.auto.text",
@@ -50,7 +50,7 @@ export const useSignModeTips = (): TooltipContent => {
         bullets: [
           t(
             "certSign.signMode.tooltip.auto.use",
-            "Use when: you need speed and consistent internal identity across reviews and records.",
+            "Use when: you need a quick internal signature with no setup.",
           ),
         ],
       },

@@ -22,7 +22,7 @@ export function QuickNavRailAccount({
   const displayName =
     identity?.displayName ?? t("auth.displayName.user", "User");
   const profilePictureUrl = identity?.profilePictureUrl ?? null;
-  const label = `${displayName} — ${t("quickNav.account", "Account")}`;
+  const label = `${displayName} (${t("quickNav.accountSettings", "Account settings")})`;
 
   return (
     <div className="quick-nav-rail-account" data-active={active || undefined}>
