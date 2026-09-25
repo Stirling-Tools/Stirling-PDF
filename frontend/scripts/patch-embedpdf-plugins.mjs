@@ -1,11 +1,16 @@
 #!/usr/bin/env node
-// Local patches for the pinned @embedpdf plugins: interaction-manager emits
-// onHandlerChange per handler registration and search dispatches per result
-// page, so a jump or query in a large document re-resolves handlers and
-// subscribers hundreds of times. Both batch into one microtask, which keeps the
-// contract that listeners run before the next task. Delete once the plugins
-// batch natively.
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+// Local patches for the pinned @embedpdf packages.
+//
+// Plugins: interaction-manager emits onHandlerChange per handler registration
+// and search dispatches per result page, so a jump or query in a large document
+// re-resolves handlers and subscribers hundreds of times. Both batch into one
+// microtask, which keeps the contract that listeners run before the next task.
+//
+// Engines: tile encoding reads the wrong quality field and copies the render
+// pixels twice on the main thread before handing them to the encoder pool; see
+// the engines section for the measurements. Delete every patch once the
+// packages ship the fixes.
+import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -249,6 +254,83 @@ function applySearch(pkg) {
   return source;
 }
 
+// --- engines: quality reaches the tile encoder, pixel copies go away --------
+// `PdfEngine.encodeImage` reads `options.quality` while plugin-render writes
+// `options.imageQuality`, so every JPEG/WebP tile silently encoded at the
+// browser default. The same method copies the worker's raw pixels into a fresh
+// Uint8ClampedArray and the hybrid converter copies them again before the
+// encoder pool transfers them; both copies are pure main-thread memcpy and GC
+// pressure, so the first copy is passed through instead.
+const enginesQualityFind =
+  "const quality = options == null ? void 0 : options.quality;";
+const enginesQualityReplace = `const quality = (options == null ? void 0 : options.imageQuality) ?? (options == null ? void 0 : options.quality); /* ${MARKER} */`;
+const enginesPixelsFind = "data: new Uint8ClampedArray(rawImageData.data),";
+const enginesPixelsReplace = "data: rawImageData.data,";
+// One replacement for the hybrid converter: drop the BMP main-thread branch
+// (the encoder worker already implements image/bmp, and the raw buffer was
+// crossing to it anyway for every other format) and stop copying the pixels a
+// second time before that transfer.
+const enginesHybridFind = `    const pdfImage = getImageData();
+    if (imageType === "image/bmp") {
+      return rgbaToBmpBlob(pdfImage.data, pdfImage.width, pdfImage.height);
+    }
+    try {
+      const dataCopy = new Uint8ClampedArray(pdfImage.data);`;
+const enginesHybridReplace = `    const pdfImage = getImageData();
+    try {
+      const dataCopy = pdfImage.data; /* ${MARKER} */`;
+
+function loadEnginesFile(anchor, label) {
+  const distDir = resolveInNodeModules("@embedpdf/engines", "dist");
+  for (const entry of readdirSync(distDir).sort()) {
+    if (!entry.endsWith(".js") || entry.endsWith(".min.js")) continue;
+    const target = resolveInNodeModules("@embedpdf/engines", "dist", entry);
+    const source = readFileSync(target, "utf8");
+    if (source.includes(anchor)) {
+      return loadPackage("@embedpdf/engines", path.join("dist", entry));
+    }
+  }
+  console.error(
+    `[patch-embedpdf-plugins] no engines dist file contains "${label}"; re-verify the patch request.`,
+  );
+  process.exit(1);
+}
+
+function checkEnginesEncode(pkg) {
+  return (
+    pkg.source.includes("options.imageQuality) ??") &&
+    !pkg.source.includes(enginesPixelsFind)
+  );
+}
+
+function applyEnginesEncode(pkg) {
+  if (checkEnginesEncode(pkg)) return pkg.source;
+  let source = pkg.source;
+  if (source.includes(enginesQualityFind)) {
+    source = source.replace(enginesQualityFind, () => enginesQualityReplace);
+  } else if (!source.includes("options.imageQuality) ??")) {
+    fail(pkg.name, "encodeImage quality");
+  }
+  if (source.includes(enginesPixelsFind)) {
+    source = source.replaceAll(enginesPixelsFind, () => enginesPixelsReplace);
+  }
+  return source;
+}
+
+function checkEnginesHybrid(pkg) {
+  return (
+    pkg.source.includes("const dataCopy = pdfImage.data;") &&
+    !pkg.source.includes("return rgbaToBmpBlob(pdfImage.data")
+  );
+}
+
+function applyEnginesHybrid(pkg) {
+  if (checkEnginesHybrid(pkg)) return pkg.source;
+  if (!pkg.source.includes(enginesHybridFind))
+    fail(pkg.name, "hybrid converter BMP branch");
+  return pkg.source.replace(enginesHybridFind, () => enginesHybridReplace);
+}
+
 const jobs = [
   {
     name: "@embedpdf/plugin-interaction-manager",
@@ -262,12 +344,28 @@ const jobs = [
     check: checkTiling,
     apply: applyTiling,
   },
+  {
+    name: "@embedpdf/engines",
+    load: () => loadEnginesFile("encodeImage(rawImageData", "encodeImage"),
+    check: checkEnginesEncode,
+    apply: applyEnginesEncode,
+  },
+  {
+    name: "@embedpdf/engines",
+    load: () =>
+      loadEnginesFile(
+        "createHybridImageConverter",
+        "createHybridImageConverter",
+      ),
+    check: checkEnginesHybrid,
+    apply: applyEnginesHybrid,
+  },
 ];
 
 if (checkOnly) {
   let failed = false;
   for (const job of jobs) {
-    const pkg = loadPackage(job.name, job.file);
+    const pkg = job.load ? job.load() : loadPackage(job.name, job.file);
     if (!job.check(pkg)) {
       console.error(
         `[patch-embedpdf-plugins] check failed for ${job.name}@${EXPECTED_VERSION}. ` +
@@ -284,7 +382,7 @@ if (checkOnly) {
 }
 
 for (const job of jobs) {
-  const pkg = loadPackage(job.name, job.file);
+  const pkg = job.load ? job.load() : loadPackage(job.name, job.file);
   const patched = job.apply(pkg);
   if (patched !== pkg.source) {
     writeFileSync(pkg.target, patched);
