@@ -431,6 +431,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Other", "compare");
         addEndpointToGroup("Other", "view-pdf");
         addEndpointToGroup("Other", "multi-tool");
+        addEndpointToGroup("Other", "text-to-outlines");
         addEndpointToGroup("Other", "fields");
         addEndpointToGroup("Other", "modify-fields");
         addEndpointToGroup("Other", "delete-fields");
@@ -582,6 +583,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Ghostscript", "scanner-effect");
         addEndpointToGroup("Ghostscript", "pdf-to-vector");
         addEndpointToGroup("Ghostscript", "vector-to-pdf");
+        addEndpointToGroup("Ghostscript", "text-to-outlines");
 
         /* ImageMagick */
         addEndpointToGroup("ImageMagick", "compress-pdf");

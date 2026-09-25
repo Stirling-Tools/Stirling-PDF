@@ -10,6 +10,16 @@ Feature: API Validation
         And the response status code should be 200
 
 
+    @text-to-outlines @positive
+    Scenario: Convert text to outlines
+        Given I generate a PDF file as "fileInput"
+        And the pdf contains 1 pages with random text
+        When I send the API request to the endpoint "/api/v1/misc/text-to-outlines"
+        Then the response content type should be "application/pdf"
+        And the response file should have size greater than 0
+        And the response status code should be 200
+
+
     @ocr @positive
     Scenario: Process PDF with OCR
         Given I generate a PDF file as "fileInput"

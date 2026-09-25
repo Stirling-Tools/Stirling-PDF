@@ -15,6 +15,7 @@
 /api/v1/security/add-watermark
 /api/v1/security/add-password
 /api/v1/misc/update-metadata
+/api/v1/misc/text-to-outlines
 /api/v1/misc/show-javascript
 /api/v1/misc/replace-invert-pdf
 /api/v1/misc/repair
