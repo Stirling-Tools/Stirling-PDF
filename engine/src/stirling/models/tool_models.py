@@ -1521,6 +1521,52 @@ class ScannerEffectParams(ApiModel):
     yellowish: bool | None = Field(None, description="Simulate yellowed paper", examples=[False])
 
 
+class SetPageBoxesParams(ApiModel):
+    """
+    Sets MediaBox, CropBox, TrimBox, BleedBox and/or ArtBox on every page of the input PDF, either from explicit rectangles or from prepress shortcuts (bleed around trim, trim inset from media). Input:PDF Output:PDF Type:SISO
+    """
+
+    art_box: str | None = Field(
+        None,
+        description='ArtBox as "x,y,width,height" in points, applied to every page',
+        examples=["20,20,555.28,801.89"],
+    )
+    bleed_box: str | None = Field(
+        None,
+        description='BleedBox as "x,y,width,height" in points, applied to every page',
+        examples=["14.17,14.17,567.11,813.71"],
+    )
+    bleed_mm: float = Field(
+        0,
+        description="BleedBox expanded by this many millimetres around the resolved TrimBox on every page. Ignored when bleedBox is set",
+        ge=0.0,
+    )
+    copy_missing_from_media_box: bool = Field(
+        False,
+        description="Copy the MediaBox into any of CropBox/TrimBox/BleedBox/ArtBox still unset after the other parameters are applied",
+    )
+    crop_box: str | None = Field(
+        None,
+        description='CropBox as "x,y,width,height" in points, applied to every page',
+        examples=["0,0,595.28,841.89"],
+    )
+    media_box: str | None = Field(
+        None,
+        description='MediaBox as "x,y,width,height" in points, applied to every page',
+        examples=["0,0,595.28,841.89"],
+    )
+    trim_box: str | None = Field(
+        None,
+        description='TrimBox as "x,y,width,height" in points, applied to every page',
+        examples=["20,20,555.28,801.89"],
+    )
+    trim_margin_mm: float = Field(
+        0,
+        description="TrimBox set to the MediaBox shrunk by this margin in millimetres on every side. Ignored when trimBox is set",
+        ge=0.0,
+    )
+
+
 class SplitBySizeOrCountParams(ApiModel):
     """
     split PDF into multiple paged documents based on size/count, ie if 20 pages and split into 5, it does 5 documents each 4 pages if 10MB and each page is 1MB and you enter 2MB then 5 docs each 2MB (rounded so that it accepts 1.9MB but not 2.1MB) Input:PDF Output:PDF Type:SIMO
@@ -1837,6 +1883,7 @@ class Model(
         | RemovePagesParams
         | RotatePdfParams
         | ScalePagesParams
+        | SetPageBoxesParams
         | SplitBySizeOrCountParams
         | SplitForPosterPrintParams
         | SplitPagesParams
@@ -1916,6 +1963,7 @@ class Model(
         | RemovePagesParams
         | RotatePdfParams
         | ScalePagesParams
+        | SetPageBoxesParams
         | SplitBySizeOrCountParams
         | SplitForPosterPrintParams
         | SplitPagesParams
@@ -1996,6 +2044,7 @@ type ParamToolModel = (
     | RemovePagesParams
     | RotatePdfParams
     | ScalePagesParams
+    | SetPageBoxesParams
     | SplitBySizeOrCountParams
     | SplitForPosterPrintParams
     | SplitPagesParams
@@ -2077,6 +2126,7 @@ class ToolEndpoint(StrEnum):
     REMOVE_PAGES = "/api/v1/general/remove-pages"
     ROTATE_PDF = "/api/v1/general/rotate-pdf"
     SCALE_PAGES = "/api/v1/general/scale-pages"
+    SET_PAGE_BOXES = "/api/v1/general/set-page-boxes"
     SPLIT_BY_SIZE_OR_COUNT = "/api/v1/general/split-by-size-or-count"
     SPLIT_FOR_POSTER_PRINT = "/api/v1/general/split-for-poster-print"
     SPLIT_PAGES = "/api/v1/general/split-pages"
@@ -2156,6 +2206,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.REMOVE_PAGES: RemovePagesParams,
     ToolEndpoint.ROTATE_PDF: RotatePdfParams,
     ToolEndpoint.SCALE_PAGES: ScalePagesParams,
+    ToolEndpoint.SET_PAGE_BOXES: SetPageBoxesParams,
     ToolEndpoint.SPLIT_BY_SIZE_OR_COUNT: SplitBySizeOrCountParams,
     ToolEndpoint.SPLIT_FOR_POSTER_PRINT: SplitForPosterPrintParams,
     ToolEndpoint.SPLIT_PAGES: SplitPagesParams,

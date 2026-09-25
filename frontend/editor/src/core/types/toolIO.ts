@@ -515,6 +515,11 @@ export const TOOL_IO: ToolIOTable = {
     produces: "PDF",
     arity: "SISO",
   },
+  "/api/v1/general/set-page-boxes": {
+    accepts: ["PDF"],
+    produces: "PDF",
+    arity: "SISO",
+  },
   "/api/v1/general/split-by-size-or-count": {
     accepts: ["PDF"],
     produces: "PDF",

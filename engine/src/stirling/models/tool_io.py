@@ -188,6 +188,7 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
     ToolEndpoint.REMOVE_PAGES: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.ROTATE_PDF: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.SCALE_PAGES: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
+    ToolEndpoint.SET_PAGE_BOXES: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.SPLIT_BY_SIZE_OR_COUNT: ToolIOSpec(
         accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SIMO
     ),

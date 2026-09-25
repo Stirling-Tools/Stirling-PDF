@@ -1406,6 +1406,40 @@ export interface SecurityCertSignValidateCertificateRequest {
 export type SecurityGetInfoOnPdfRequest = Record<string, never>;
 export type SecurityRemoveCertSignRequest = Record<string, never>;
 export type SecurityValidateComplianceRequest = Record<string, never>;
+export interface SetPageBoxesRequest {
+  /**
+   * ArtBox as "x,y,width,height" in points, applied to every page
+   */
+  artBox?: string;
+  /**
+   * BleedBox as "x,y,width,height" in points, applied to every page
+   */
+  bleedBox?: string;
+  /**
+   * BleedBox expanded by this many millimetres around the resolved TrimBox on every page. Ignored when bleedBox is set
+   */
+  bleedMm?: number;
+  /**
+   * Copy the MediaBox into any of CropBox/TrimBox/BleedBox/ArtBox still unset after the other parameters are applied
+   */
+  copyMissingFromMediaBox?: boolean;
+  /**
+   * CropBox as "x,y,width,height" in points, applied to every page
+   */
+  cropBox?: string;
+  /**
+   * MediaBox as "x,y,width,height" in points, applied to every page
+   */
+  mediaBox?: string;
+  /**
+   * TrimBox as "x,y,width,height" in points, applied to every page
+   */
+  trimBox?: string;
+  /**
+   * TrimBox set to the MediaBox shrunk by this margin in millimetres on every side. Ignored when trimBox is set
+   */
+  trimMarginMm?: number;
+}
 export interface SignPDFWithCertRequest {
   /**
    * The alias of the certificate to sign with. Required for WINDOWS_STORE and recommended for PKCS11 tokens holding multiple certificates.
@@ -1603,6 +1637,7 @@ export type ToolEndpoint =
   | "/api/v1/general/remove-pages"
   | "/api/v1/general/rotate-pdf"
   | "/api/v1/general/scale-pages"
+  | "/api/v1/general/set-page-boxes"
   | "/api/v1/general/split-by-size-or-count"
   | "/api/v1/general/split-for-poster-print"
   | "/api/v1/general/split-pages"
@@ -1712,6 +1747,7 @@ export interface ToolApiParams {
   "/api/v1/general/remove-pages": PDFWithPageNums;
   "/api/v1/general/rotate-pdf": RotatePDFRequest;
   "/api/v1/general/scale-pages": ScalePagesRequest;
+  "/api/v1/general/set-page-boxes": SetPageBoxesRequest;
   "/api/v1/general/split-by-size-or-count": SplitPdfBySizeOrCountRequest;
   "/api/v1/general/split-for-poster-print": PosterPdfRequest;
   "/api/v1/general/split-pages": SplitPagesRequest;
@@ -1822,6 +1858,7 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/general/remove-pages",
   "/api/v1/general/rotate-pdf",
   "/api/v1/general/scale-pages",
+  "/api/v1/general/set-page-boxes",
   "/api/v1/general/split-by-size-or-count",
   "/api/v1/general/split-for-poster-print",
   "/api/v1/general/split-pages",
