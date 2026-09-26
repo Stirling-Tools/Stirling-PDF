@@ -438,12 +438,21 @@ policies:
   # Stirling's own config directory is always off-limits, and folder access is always
   # disabled in SaaS mode.
   allowedFolderRoots: [] # e.g. ["/data/inbox", "/data/outbox"]
+  sweepConcurrency: 6 # How many of one sweep's runs execute at once; the rest queue as pending. 0 = unbounded
   scheduleSweepSeconds: 60 # How often (seconds) scheduled policies are checked for being due
   storageFolderSweepSeconds: 60 # Seconds between safety-net sweeps of server processing folders (arrivals sweep immediately)
   watchReconcileSeconds: 300 # How often (seconds) folder-watch re-syncs watches and re-runs as a safety net for missed events
   watchQuietPeriodMs: 500 # How long (ms) folder-watch coalesces a burst of file events into a single run
   streamTimeoutMs: 1800000 # SSE timeout (ms) for live run-progress streams
   runExpiryMinutes: 30 # How long (minutes) a finished run's in-memory state is kept before eviction
+  # The allowPrivate* switches below let connections reach loopback, link-local or private addresses.
+  # They are off so a user-supplied endpoint cannot be pointed at internal services (e.g. the cloud metadata address).
+  allowPrivateS3Endpoints: false # Allow S3 source endpoints on private addresses (e.g. an in-network MinIO)
+  allowPrivateNetworkSources: false # Allow SFTP, FTP and SMB sources on any private address
+  allowedPrivateNetworkHosts: [] # Hostnames SFTP, FTP and SMB sources may use on private addresses, e.g. ["sftp.internal.example.com"]
+  allowPrivateApiEndpoints: false # Allow API integration base URLs on private addresses (e.g. an internal API gateway)
+  allowCustomApiIntegrations: true # Let admins create and edit their own API integrations; existing ones keep running when 'false'
+  webhookMaxBytes: 104857600 # Largest webhook source delivery accepted, in bytes (100 MB)
 
 # Model Context Protocol (MCP) server. Exposes Stirling's PDF tools (grouped by namespace)
 # plus the AI agents to MCP clients (Inspector, Claude Desktop, custom). OAuth-protected.
