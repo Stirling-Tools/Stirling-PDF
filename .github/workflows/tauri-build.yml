@@ -128,9 +128,21 @@ jobs:
     runs-on: ${{ matrix.platform }}
     timeout-minutes: 90
     env:
+      JAVA_VERSION: 25
+      GRADLE_FILES_TO_HASH: |
+        ${{ github.workspace }}/gradle/wrapper/gradle-wrapper.properties
+        ${{ github.workspace }}/gradle/libs.versions.toml
+        ${{ github.workspace }}/buildSrc/**
+        ${{ github.workspace }}/settings.gradle
+        ${{ github.workspace }}/build.gradle
+        ${{ github.workspace }}/app/**/build.gradle
+        ${{ github.workspace }}/gradle/**/*.gradle
+      GRADLE_CACHE_PATH: |
+        .cache/gradle-java-25/caches
+        .cache/gradle-java-25/wrapper
       CARGO_FILES_TO_HASH: |
-            ${{ github.workspace }}/frontend/editor/src-tauri/Cargo.toml
-            ${{ github.workspace }}/frontend/editor/src-tauri/Cargo.lock
+        ${{ github.workspace }}/frontend/editor/src-tauri/Cargo.toml
+        ${{ github.workspace }}/frontend/editor/src-tauri/Cargo.lock
       #       ${{ github.workspace }}/frontend/editor/src-tauri/target
       CARGO_HOME: ${{ github.workspace }}/.cache/cargo
       CACHE_MANIFEST_BRANCH: dev-cache
@@ -202,13 +214,18 @@ jobs:
 
       - name: Restore cargo cache sftp
         id: cache-cargo
-        uses: Ludy87/cache-the-planet@9ee814824414cc375eeab77644d19136cf9b440f
+        uses: Ludy87/cache-the-planet/multi-cache@9ee814824414cc375eeab77644d19136cf9b440f
         with:
           storage: sftp
-          cache-name: cargo
+          multi-cache: |
+            cargo:
+              path: ${{ env.CARGO_HOME }}
+            gradle:
+              path: ${{ env.GRADLE_CACHE_PATH }}
           save-scope: shared
-          key: ${{ hashFiles(env.CARGO_FILES_TO_HASH) }}
-          path: ${{ env.CARGO_HOME}}
+          key: |
+            cargo: ${{ hashFiles(env.CARGO_FILES_TO_HASH) }}
+            gradle: ${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
           allow-shared-restore: true
           strict: false
 
