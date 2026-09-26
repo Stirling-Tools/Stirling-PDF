@@ -172,7 +172,7 @@
     ]
   },
   "overrides": {
-    "devalue": "^5.8.1",
+    "devalue": "^5.9.2",
     "pako": "^2.2.0",
     "tsconfck": {
       "typescript": "$typescript"
