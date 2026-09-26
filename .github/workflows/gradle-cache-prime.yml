@@ -77,7 +77,7 @@ jobs:
 
       - name: Restore Gradle cache sftp
         id: cache
-        uses: Ludy87/cache-the-planet@8603ad79afba9b644ea7dd095f57c36103147ea6
+        uses: Ludy87/cache-the-planet/multi-cache@8603ad79afba9b644ea7dd095f57c36103147ea6
         with:
           manifest-branch: dev-cache
           manifest-path: .github/cache-data
@@ -87,14 +87,17 @@ jobs:
           sftp-username: ${{ secrets.CACHE_SFTP_USERNAME }}
           sftp-password: ${{ secrets.CACHE_SFTP_PASSWORD }}
           sftp-base-path: ${{ secrets.CACHE_SFTP_BASE_PATH || '/files/cache-the-planet' }}
-          cache-name: "gradle-java-${{ env.JAVA_VERSION }}"
+          multi-cache: |
+            gradle-caches:
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
+            gradle-wrapper:
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
           save-scope: shared
           token: ${{ github.token }}
-          key: ${{ needs.hash_pr.outputs.cache_key }}
+          key: |
+            gradle-caches=${{ hashFiles(env.FILES_TO_HASH) }}
+            gradle-wrapper=${{ hashFiles(env.FILES_TO_HASH) }}
           allow-shared-restore: true
-          path: |
-            .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
-            .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
           strict: false
 
       - name: Display cache information
