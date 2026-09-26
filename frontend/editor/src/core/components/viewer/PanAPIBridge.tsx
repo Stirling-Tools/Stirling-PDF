@@ -16,7 +16,9 @@ export function PanAPIBridge() {
     return null;
   }
 
-  return <PanAPIBridgeInner documentId={activeDocumentId} />;
+  return (
+    <PanAPIBridgeInner key={activeDocumentId} documentId={activeDocumentId} />
+  );
 }
 
 function PanAPIBridgeInner({ documentId }: { documentId: string }) {

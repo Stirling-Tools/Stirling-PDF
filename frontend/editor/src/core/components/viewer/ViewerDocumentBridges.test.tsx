@@ -4,6 +4,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SpreadAPIBridge } from "@app/components/viewer/SpreadAPIBridge";
 import { ScrollAPIBridge } from "@app/components/viewer/ScrollAPIBridge";
 import { RotateAPIBridge } from "@app/components/viewer/RotateAPIBridge";
+import { PanAPIBridge } from "@app/components/viewer/PanAPIBridge";
+import { SearchAPIBridge } from "@app/components/viewer/SearchAPIBridge";
 
 const fixture = vi.hoisted(() => {
   const document = () => ({
@@ -13,10 +15,13 @@ const fixture = vi.hoisted(() => {
     setRotation: vi.fn(),
     getRotation: () => 0,
     onRotateChange: () => () => {},
+    togglePan: vi.fn(),
+    nextResult: vi.fn(),
+    onSearchResultStateChange: () => () => {},
   });
   const bridges = new Map<
     string,
-    { api: Record<string, (value: number) => void> }
+    { api: Record<string, (value?: number) => void> }
   >();
   return {
     activeId: "first" as "first" | "second",
@@ -24,7 +29,7 @@ const fixture = vi.hoisted(() => {
     bridges,
     registerBridge: (
       kind: string,
-      bridge: { api: Record<string, (value: number) => void> } | null,
+      bridge: { api: Record<string, (value?: number) => void> } | null,
     ) => {
       if (bridge) bridges.set(kind, bridge);
       else bridges.delete(kind);
@@ -43,6 +48,8 @@ vi.mock("@app/contexts/ViewerContext", () => ({
     triggerImmediateSpreadUpdate: fixture.notify,
     triggerImmediateScrollUpdate: fixture.notify,
     triggerImmediateRotationUpdate: fixture.notify,
+    triggerImmediatePanUpdate: fixture.notify,
+    scrollActions: { scrollToPage: vi.fn() },
   }),
 }));
 vi.mock("@embedpdf/plugin-spread/react", () => ({
@@ -62,6 +69,17 @@ vi.mock("@embedpdf/plugin-rotate/react", () => ({
   useRotate: (id: "first" | "second") => ({
     provides: fixture.documents[id],
     rotation: 0,
+  }),
+}));
+vi.mock("@embedpdf/plugin-pan/react", () => ({
+  usePan: (id: "first" | "second") => ({
+    provides: fixture.documents[id],
+    isPanning: false,
+  }),
+}));
+vi.mock("@embedpdf/plugin-search/react", () => ({
+  useSearch: (id: "first" | "second") => ({
+    provides: fixture.documents[id],
   }),
 }));
 
@@ -114,6 +132,33 @@ describe("viewer controls after replacing a document", () => {
       expect(fixture.documents.second[action]).toHaveBeenCalledExactlyOnceWith(
         1,
       );
+    },
+  );
+
+  it.each([
+    {
+      Bridge: PanAPIBridge,
+      kind: "pan",
+      action: "toggle",
+      target: "togglePan",
+    },
+    {
+      Bridge: SearchAPIBridge,
+      kind: "search",
+      action: "next",
+      target: "nextResult",
+    },
+  ] as const)(
+    "sends $kind calls to the replacement, not the closed document",
+    ({ Bridge, kind, action, target }) => {
+      const { rerender } = render(<Bridge />);
+
+      fixture.activeId = "second";
+      rerender(<Bridge />);
+      fixture.bridges.get(kind)?.api[action]();
+
+      expect(fixture.documents.first[target]).not.toHaveBeenCalled();
+      expect(fixture.documents.second[target]).toHaveBeenCalledOnce();
     },
   );
 });

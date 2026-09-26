@@ -25,7 +25,12 @@ export function SearchAPIBridge() {
     return null;
   }
 
-  return <SearchAPIBridgeInner documentId={activeDocumentId} />;
+  return (
+    <SearchAPIBridgeInner
+      key={activeDocumentId}
+      documentId={activeDocumentId}
+    />
+  );
 }
 
 function SearchAPIBridgeInner({ documentId }: { documentId: string }) {
