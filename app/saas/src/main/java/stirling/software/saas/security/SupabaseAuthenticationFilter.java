@@ -227,21 +227,24 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
                 (metaObj instanceof Map<?, ?>) ? (Map<String, Object>) metaObj : null;
 
         try {
-            // First confirm the SupabaseUser row exists (this is the auth.users mirror).
-            // If not present, the JWT references a Supabase user this server hasn't synced.
-            SupabaseUser supabaseUser = supabaseUserService.getUser(supabaseId);
-
-            // Resolve to a local User by supabase_id.
+            // Resolve the local User first. An already-linked, non-anonymous account reads nothing
+            // from auth.users, so that select now only happens on the paths that consume it.
             Optional<User> linkedUser = userService.findBySupabaseId(supabaseId);
             if (linkedUser.isPresent()) {
                 User user = linkedUser.get();
-                if (ANONYMOUS.toString().equalsIgnoreCase(user.getAuthenticationType())
-                        && !supabaseUser.isAnonymous()) {
-                    user = upgradeAnonymousUser(user, supabaseUser, jwt);
+                if (!ANONYMOUS.toString().equalsIgnoreCase(user.getAuthenticationType())) {
+                    return user;
                 }
-                return user;
+                // Upgrade path needs the live row to tell whether Supabase still calls them a
+                // guest.
+                SupabaseUser supabaseUser = supabaseUserService.getUser(supabaseId);
+                return supabaseUser.isAnonymous()
+                        ? user
+                        : upgradeAnonymousUser(user, supabaseUser, jwt);
             }
 
+            // No local row yet: the JWT must reference a Supabase user this server can see.
+            supabaseUserService.getUser(supabaseId);
             return createUser(jwt, supabaseId, email, appMetadata);
         } catch (UserNotFoundException e) {
             throw new InvalidBearerTokenException("User not found", e);
