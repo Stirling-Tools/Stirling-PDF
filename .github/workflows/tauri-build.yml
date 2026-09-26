@@ -214,9 +214,9 @@ jobs:
           toolchain: stable
           targets: ${{ matrix.platform == 'macos-15' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
-      - name: Restore cargo cache sftp
+      - name: Restore cache sftp
         id: cache-cargo
-        uses: Ludy87/cache-the-planet/multi-cache@d7e5b942d38b35535541441de7cb6cf5735a955f
+        uses: Ludy87/cache-the-planet/multi-cache@ead0aa4219102cebb7aa4641a8d3fa0deb2ce0d6
         with:
           storage: sftp
           multi-cache: |
