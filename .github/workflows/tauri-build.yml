@@ -131,7 +131,7 @@ jobs:
       FILES_TO_HASH: |
         ${{ github.workspace }}/frontend/package.json
         ${{ github.workspace }}/frontend/package-lock.json
-      NPM_CACHE: ${{ github.workspace }}/.cache/npm
+      NPM_CONFIG_CACHE: ${{ github.workspace }}/.cache/npm
       # CARGO_HOME: ${{ github.workspace }}/.cache/cargo
       CACHE_MANIFEST_BRANCH: dev-cache
       CACHE_MANIFEST_PATH: .github/cache-data
@@ -196,13 +196,13 @@ jobs:
 
       - name: Restore npm cache sftp
         id: cache-npm
-        uses: Ludy87/cache-the-planet@fd0ef54df20a249a7531a16792f2702871ad7f47
+        uses: Ludy87/cache-the-planet@9ee814824414cc375eeab77644d19136cf9b440f
         with:
           storage: sftp
           cache-name: npm
           save-scope: shared
           key: ${{ hashFiles(env.FILES_TO_HASH) }}
-          path: ${{ env.NPM_CACHE}}
+          path: ${{ env.NPM_CONFIG_CACHE}}
           allow-shared-restore: true
           strict: false
 
@@ -223,7 +223,7 @@ jobs:
 
       - name: Configure npm cache directory
         if: ${{ steps.cache-npm.outputs.error == '' && runner.os != 'Windows' }}
-        run: npm config set cache "${{ env.NPM_CACHE }}" --global
+        run: npm config set cache "${{ env.NPM_CONFIG_CACHE }}" --global
 
       - name: Setup Node.js
         if: ${{ steps.cache-npm.outputs.error }}
