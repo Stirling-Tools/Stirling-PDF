@@ -92,13 +92,6 @@
       "created_by": "Ludy87",
       "size": 335447955
     },
-    "untrusted/Stirling-Tools/Stirling-PDF/pr-8143/gradle-wrapper/windows-x64/b9e318ff095247edf8998033df2863943000452eb21d1c600c8e1c03cfff2707/v1": {
-      "object": "sha256:e5f0f2355791937e3b1a8e6f19321d3c6587a13bbf67c004b25720c3ea8838f3",
-      "updated_at": "2026-09-26T17:46:00.798Z",
-      "source": "Stirling-Tools/Stirling-PDF",
-      "created_by": "Ludy87",
-      "size": 151786276
-    },
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8143/gradle-wrapper/windows-arm64/b9e318ff095247edf8998033df2863943000452eb21d1c600c8e1c03cfff2707/v1": {
       "object": "sha256:e5f0f2355791937e3b1a8e6f19321d3c6587a13bbf67c004b25720c3ea8838f3",
       "updated_at": "2026-09-26T17:46:07.779Z",
@@ -112,10 +105,17 @@
       "source": "Stirling-Tools/Stirling-PDF",
       "created_by": "Ludy87",
       "size": 335457781
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8143/gradle-wrapper/windows-x64/f8545726330bca60c6b4cf0d2c76436f91587302c31fc19d1c4c6b435309a07e/v1": {
+      "object": "sha256:c6f8da4a5d2cca242573c5741b15c3814f2e3ef5080c366227864fa4dd890194",
+      "updated_at": "2026-09-26T18:36:46.964Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 150537436
     }
   },
   "monitoring": {
     "window_started_at": "2026-09-26T18:10:23.810Z",
-    "writes": 5
+    "writes": 6
   }
 }
