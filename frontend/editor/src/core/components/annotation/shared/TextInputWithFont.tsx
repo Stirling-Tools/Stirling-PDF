@@ -11,6 +11,7 @@ import {
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import { ColorPicker } from "@app/components/annotation/shared/ColorPicker";
+import { useSystemFonts } from "@app/hooks/useSystemFonts";
 
 interface TextInputWithFontProps {
   text: string;
@@ -58,6 +59,7 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
   const fontSizeCombobox = useCombobox();
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [colorInput, setColorInput] = useState(textColor);
+  const { fontOptions, isLoading: loadingFonts } = useSystemFonts();
 
   // Sync font size input with prop changes
   useEffect(() => {
@@ -68,14 +70,6 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
   useEffect(() => {
     setColorInput(textColor);
   }, [textColor]);
-
-  const fontOptions = [
-    { value: "Helvetica", label: "Helvetica" },
-    { value: "Times-Roman", label: "Times" },
-    { value: "Courier", label: "Courier" },
-    { value: "Arial", label: "Arial" },
-    { value: "Georgia", label: "Georgia" },
-  ];
 
   const fontSizeOptions = [
     "8",
@@ -130,9 +124,10 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
           onAnyChange?.();
         }}
         data={fontOptions}
-        disabled={disabled}
+        disabled={disabled || loadingFonts}
         searchable
         allowDeselect={false}
+        placeholder={loadingFonts ? "Loading fonts..." : "Select a font"}
       />
 
       {/* Font Size and Color */}
