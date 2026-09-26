@@ -153,6 +153,14 @@ jobs:
           lookup-only: true
 
       - name: Set up JDK ${{ needs.hash_pr.outputs.java_version }}
+        if: runner.os == 'Windows' && runner.arch == 'ARM64'
+        # if: ${{ steps.cache-gradle-restore.outputs.cache-hit != 'true' && steps.cache.outputs.cache-hit != 'true' }}
+        uses: ./.github/actions/java
+        with:
+          java-version: ${{ needs.hash_pr.outputs.java_version }}
+
+      - name: Set up JDK ${{ needs.hash_pr.outputs.java_version }}
+        if: runner.os != 'Windows' || runner.arch != 'ARM64'
         # if: ${{ steps.cache-gradle-restore.outputs.cache-hit != 'true' && steps.cache.outputs.cache-hit != 'true' }}
         uses: ./.github/actions/java
         with:

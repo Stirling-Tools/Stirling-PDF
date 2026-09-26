@@ -16,13 +16,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Install JDK on Windows ARM64 runners when unavailable
-      if: runner.os == 'Windows' && runner.arch == 'ARM64'
-      uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
-      with:
-        distribution: ${{ inputs.distribution }}
-        java-version: ${{ inputs.java-version }}
-        architecture: arm64
     - name: Configure preinstalled JDK
       shell: bash
       env:

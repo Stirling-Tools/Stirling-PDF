@@ -1,0 +1,67 @@
+name: Windows Java
+description: Install and configure Microsoft JDK 25 on Windows runners
+inputs:
+  java-version:
+    description: JDK major version
+    required: false
+    default: "25"
+  architecture:
+    description: Target architecture (x64 or arm64)
+    required: false
+    default: ""
+runs:
+  using: composite
+  steps:
+    - name: Install Microsoft JDK
+      shell: pwsh
+      env:
+        JAVA_VERSION: ${{ inputs.java-version }}
+        JAVA_ARCHITECTURE: ${{ inputs.architecture }}
+        RUNNER_ARCHITECTURE: ${{ runner.arch }}
+      run: |
+        $ErrorActionPreference = 'Stop'
+        if ($env:JAVA_VERSION -ne '25') {
+          throw "This repository requires JDK 25; received $env:JAVA_VERSION"
+        }
+
+        $architecture = $env:JAVA_ARCHITECTURE
+        if ([string]::IsNullOrWhiteSpace($architecture)) {
+          $architecture = $env:RUNNER_ARCHITECTURE
+        }
+        switch ($architecture.ToUpperInvariant()) {
+          'X64' { $architecture = 'x64' }
+          'AMD64' { $architecture = 'x64' }
+          'ARM64' { $architecture = 'aarch64' }
+          'AARCH64' { $architecture = 'aarch64' }
+          default { throw "Unsupported Windows architecture: $architecture" }
+        }
+
+        $root = Join-Path $env:RUNNER_TEMP "microsoft-jdk-$($env:JAVA_VERSION)-$architecture"
+        $archive = Join-Path $env:RUNNER_TEMP "microsoft-jdk-$($env:JAVA_VERSION)-$architecture.zip"
+        $url = "https://aka.ms/download-jdk-$($env:JAVA_VERSION)-windows-$architecture.zip"
+        if (-not (Test-Path $root)) {
+          if (-not (Test-Path $archive)) {
+            Invoke-WebRequest -Uri $url -OutFile $archive
+          }
+          New-Item -ItemType Directory -Path $root -Force | Out-Null
+          Expand-Archive -Path $archive -DestinationPath $root -Force
+        }
+
+        $javaHome = Get-ChildItem -Path $root -Directory | Where-Object {
+          Test-Path (Join-Path $_.FullName 'bin\java.exe')
+        } | Select-Object -First 1 -ExpandProperty FullName
+        if ([string]::IsNullOrWhiteSpace($javaHome)) {
+          throw "Microsoft JDK $($env:JAVA_VERSION) was not found after extraction"
+        }
+
+        "JAVA_HOME=$javaHome" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        $javaHome | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        (Join-Path $javaHome 'bin') | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        & (Join-Path $javaHome 'bin\java.exe') -version 2>&1 | Tee-Object -FilePath (Join-Path $env:RUNNER_TEMP 'java-version.txt')
+        if ($LASTEXITCODE -ne 0) { throw 'The installed Java executable could not be run' }
+        if (-not (Select-String -Path (Join-Path $env:RUNNER_TEMP 'java-version.txt') -Pattern 'version "25(\.|")')) {
+          throw 'The installed JDK is not version 25'
+        }
+        if (-not (Select-String -Path (Join-Path $env:RUNNER_TEMP 'java-version.txt') -Pattern 'Microsoft')) {
+          throw 'The installed JDK is not a Microsoft build'
+        }
