@@ -24,7 +24,7 @@ const AddFileCard = () => {
 
   return (
     <div
-      className={`${styles.addFileCard} select-none flex flex-col transition-all relative cursor-pointer`}
+      className={`${styles.addFileCard} select-none flex flex-col relative cursor-pointer`}
       tabIndex={0}
       role="button"
       aria-label={t("fileEditor.addFiles", "Add files")}
