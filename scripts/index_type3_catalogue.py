@@ -231,7 +231,10 @@ def main() -> None:
         print(f"Warning: {reason}. Falling back to building catalogue from signature dumps...")
 
         if not signatures_dir.exists():
-            print(f"Warning: Signatures directory '{signatures_dir}' does not exist. No signatures processed.", file=sys.stderr)
+            print(
+                f"Warning: Signatures directory '{signatures_dir}' does not exist. No signatures processed.",
+                file=sys.stderr,
+            )
             signature_files = []
         else:
             signature_files = sorted(signatures_dir.rglob("*.json"))
