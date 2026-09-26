@@ -128,6 +128,9 @@ jobs:
     runs-on: ${{ matrix.platform }}
     timeout-minutes: 90
     env:
+      FILES_TO_HASH: |
+        ${{ github.workspace }}/frontend/package.json
+        ${{ github.workspace }}/frontend/package-lock.json
       NPM_CACHE: ${{ github.workspace }}/.cache/npm
       # CARGO_HOME: ${{ github.workspace }}/.cache/cargo
       CACHE_MANIFEST_BRANCH: dev-cache
@@ -198,7 +201,7 @@ jobs:
           storage: sftp
           cache-name: npm
           save-scope: shared
-          key: ${{ hashFiles('frontend/package.json', 'frontend/package-lock.json') }}
+          key: ${{ hashFiles(env.FILES_TO_HASH) }}
           path: ${{ env.NPM_CACHE}}
           allow-shared-restore: true
           strict: false
