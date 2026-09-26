@@ -1,4 +1,5 @@
 import React from "react";
+import type { FileId } from "@app/types/file";
 
 /** "bar-lead" follows the view switcher, for content naming what the view is showing;
  *  "bar" renders among the bar's own actions on the right; top/middle/bottom are lanes
@@ -47,4 +48,23 @@ export interface WorkbenchBarButtonConfig {
   className?: string;
   /** Optional active state to highlight the control */
   active?: boolean;
+}
+
+/** One file the bar's download writes out. */
+export interface WorkbenchExportFile {
+  file: File;
+  /** The workbench record these bytes are, if any: lets the download save back
+   *  to its disk location and lets export policies version it. Omit for bytes
+   *  the workbench does not hold, such as unsaved edits. */
+  fileId?: FileId;
+}
+
+/**
+ * Stands in for the bar's file-level download and close while a view that owns
+ * what it shows is open. Each is optional; the bar's default runs for the rest.
+ */
+export interface WorkbenchViewFileActions {
+  /** The files to download in place of the open ones, or null to cancel. */
+  getExportFiles?: () => Promise<WorkbenchExportFile[] | null>;
+  onClose?: () => void;
 }

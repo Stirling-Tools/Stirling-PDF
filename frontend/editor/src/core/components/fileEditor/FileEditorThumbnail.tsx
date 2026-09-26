@@ -34,6 +34,7 @@ import HoverActionMenu, {
 } from "@app/components/shared/HoverActionMenu";
 import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
+import { CloseFilesConfirmModal } from "@app/components/shared/CloseFilesConfirmModal";
 import UploadToServerModal from "@app/components/shared/UploadToServerModal";
 import ShareFileModal from "@app/components/shared/ShareFileModal";
 import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
@@ -674,58 +675,28 @@ const FileEditorThumbnail = ({
         <p className={styles.fileMeta}>{metaLine}</p>
       </div>
 
-      {/* Close Confirmation Modal */}
-      <Modal
+      <CloseFilesConfirmModal
         opened={showCloseModal}
-        onClose={handleCancelClose}
-        title={t("confirmClose", "Confirm Close")}
-        centered
-        size="auto"
-      >
-        <Stack gap="md">
-          {file.isDirty && file.localFilePath ? (
-            <>
-              <Text size="md">
-                {t("confirmCloseUnsaved", "This file has unsaved changes.")}
-              </Text>
-              <Text size="sm" c="dimmed" fw={500}>
-                <PrivateContent>{file.name}</PrivateContent>
-              </Text>
-              <Group justify="flex-end" gap="sm">
-                <Button variant="secondary" onClick={handleCancelClose}>
-                  {t("confirmCloseCancel", "Cancel")}
-                </Button>
-                <Button accent="danger" onClick={handleConfirmClose}>
-                  {t("confirmCloseDiscard", "Discard changes and close")}
-                </Button>
-                <Button onClick={handleSaveAndClose}>
-                  {t("confirmCloseSave", "Save and close")}
-                </Button>
-              </Group>
-            </>
-          ) : (
-            <>
-              <Text size="md">
-                {t(
-                  "confirmCloseMessage",
-                  "Are you sure you want to close this file?",
-                )}
-              </Text>
-              <Text size="sm" c="dimmed" fw={500}>
-                <PrivateContent>{file.name}</PrivateContent>
-              </Text>
-              <Group justify="flex-end" gap="sm">
-                <Button variant="secondary" onClick={handleCancelClose}>
-                  {t("confirmCloseCancel", "Cancel")}
-                </Button>
-                <Button accent="danger" onClick={handleConfirmClose}>
-                  {t("confirmCloseConfirm", "Close File")}
-                </Button>
-              </Group>
-            </>
-          )}
-        </Stack>
-      </Modal>
+        message={
+          file.isDirty && file.localFilePath
+            ? t("confirmCloseUnsaved", "This file has unsaved changes.")
+            : t(
+                "confirmCloseMessage",
+                "Are you sure you want to close this file?",
+              )
+        }
+        fileNames={[file.name]}
+        closeLabel={
+          file.isDirty && file.localFilePath
+            ? t("confirmCloseDiscard", "Discard changes and close")
+            : t("confirmCloseConfirm", "Close File")
+        }
+        onClose={handleConfirmClose}
+        onCancel={handleCancelClose}
+        onSave={
+          file.isDirty && file.localFilePath ? handleSaveAndClose : undefined
+        }
+      />
 
       {/* Shared edit notice modal */}
       <Modal

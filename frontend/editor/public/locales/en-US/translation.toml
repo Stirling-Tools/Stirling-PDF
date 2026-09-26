@@ -6275,20 +6275,6 @@ title = "Overlay Position"
 deselectAll = "None"
 selectAll = "Check All"
 
-[pageEditor]
-title = "Page Editor"
-
-[pageEditor.emptyState]
-body = "Add files to start editing pages"
-title = "No PDF files loaded"
-
-[pageEditor.toolbar]
-delete = "Delete Selected"
-redo = "Redo"
-rotateLeft = "Rotate Selected Left"
-rotateRight = "Rotate Selected Right"
-undo = "Undo"
-
 [pageExtracter]
 title = "Extract Pages"
 
@@ -6447,6 +6433,58 @@ title = "Page Ranges"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → selects all pages"
 title = "Special Keywords"
+
+[pageTracks]
+blankPage = "Blank page"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert a blank page after each selected page"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+saveChanges = "Save changes to all files"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+selectByNumber = "Select pages by number"
+toggleSelection = "Select all pages"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "docs"
@@ -13140,12 +13178,10 @@ deleteSelected = "Delete Selected Pages"
 deselectAll = "Deselect All"
 downloadAll = "Download All"
 exitRedaction = "Exit Redaction Mode"
-exportAll = "Export PDF"
-exportSelected = "Export Selected Pages"
 formFill = "Form Editor"
 hideToolbar = "Hide toolbar"
 moreActions = "More actions"
-multiTool = "Multi-Tool"
+pageEditor = "Page Editor"
 panMode = "Pan Mode"
 print = "Print PDF"
 readAloud = "Read Aloud"
@@ -13159,7 +13195,6 @@ rulerSettings = "Scale Settings"
 save = "Save"
 saveAll = "Save All"
 saveAs = "Save As"
-saveChanges = "Save Changes"
 search = "Search PDF"
 selectAll = "Select All"
 selectByNumber = "Select by Page Numbers"

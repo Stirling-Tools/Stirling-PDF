@@ -183,10 +183,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { state } = useFileState();
     const { actions: fileActions } = useFileActions();
     const { actions: navActions } = useNavigationActions();
-    const { workbench: currentWorkbench, selectedTool } = useNavigationState();
+    const { workbench: currentWorkbench } = useNavigationState();
     const policyFileBadges = usePolicyFileBadges();
-    const isMultiTool =
-      currentWorkbench === "pageEditor" && selectedTool === "multiTool";
+    // The page editor lays out every open file, so an added file belongs there.
+    const staysOnAdd = currentWorkbench === "pageEditor";
     const { requestNavigation } = useNavigationGuard();
     const { activeFileId, setActiveFileId } = useViewer();
     const { addFiles } = useFileHandler();
@@ -508,7 +508,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         return;
       }
       await addFiles(files);
-      if (!isMultiTool) {
+      if (!staysOnAdd) {
         navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
       }
     }, [
@@ -516,7 +516,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       openGoogleDrivePicker,
       addFiles,
       navActions,
-      isMultiTool,
+      staysOnAdd,
       onPickGoogleDriveFiles,
     ]);
 
@@ -566,7 +566,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
           await fileActions.addStirlingFileStubs([stub]);
 
-          if (isMultiTool) {
+          if (staysOnAdd) {
             fileActions.setSelectedFiles([
               ...state.ui.selectedFileIds,
               stub.id,
@@ -591,7 +591,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         currentWorkbench,
         activeFileId,
         requestNavigation,
-        isMultiTool,
+        staysOnAdd,
       ],
     );
 
@@ -664,14 +664,14 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           await addFiles(files);
           // A tool that pinned its own workbench surface owns it - switching to
           // the viewer here strands the upload outside the tool being used.
-          if (!isMultiTool && !currentWorkbench.startsWith("custom:")) {
+          if (!staysOnAdd && !currentWorkbench.startsWith("custom:")) {
             navActions.setWorkbench(
               files.length === 1 ? "viewer" : "fileEditor",
             );
           }
         }
       },
-      [addFiles, navActions, isMultiTool, onUploadFiles, currentWorkbench],
+      [addFiles, navActions, staysOnAdd, onUploadFiles, currentWorkbench],
     );
 
     const handleNativeFilePick = useCallback(

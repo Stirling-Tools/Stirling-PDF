@@ -1,0 +1,719 @@
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { useDraggable, useDroppable } from "@dnd-kit/core";
+import { useTranslation } from "react-i18next";
+import { Icon } from "@app/ui/Icon";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { Tooltip } from "@app/components/shared/Tooltip";
+import { SelectByNumberPopover } from "@app/components/pageTracks/SelectByNumberPopover";
+import { PrivateContent } from "@app/components/shared/PrivateContent";
+import { truncateCenter } from "@app/utils/textUtils";
+import { FileId } from "@app/types/file";
+import { Track } from "@app/components/pageTracks/types";
+import { TrackThumbnailStore } from "@app/components/pageTracks/hooks/useTrackThumbnails";
+import { PageClickModifiers } from "@app/components/pageTracks/hooks/useTrackSelection";
+import TrackPageTile from "@app/components/pageTracks/TrackPageTile";
+import TrackPageViewModal from "@app/components/pageTracks/TrackPageViewModal";
+import {
+  TRACK_GEOMETRY,
+  rootFontSizePx,
+} from "@app/components/pageTracks/constants";
+import styles from "@app/components/pageTracks/PageTracks.module.css";
+
+export const trackDroppableId = (fileId: FileId) => `track:${fileId}`;
+/** Whole-track drop zone, used when a track header is being dragged. */
+export const trackZoneId = (fileId: FileId) => `zone:${fileId}`;
+export const trackHandleId = (fileId: FileId) => `trackhandle:${fileId}`;
+
+export interface DropHint {
+  fileId: FileId;
+  /** Insert before this page, or append to the track when null. */
+  beforePageId: string | null;
+}
+
+/**
+ * The controls in the gap before a page, or after the last one. The gaps at
+ * either end of a track only insert: there is nothing there to split.
+ */
+function GapHandle({
+  left,
+  top,
+  width,
+  beforePosition,
+  onSplit,
+  onInsert,
+}: {
+  /** laneInner x of the gap centre. */
+  left: number;
+  /** laneInner y of the page's top. */
+  top: number;
+  width: number;
+  /** 1-based position of the page after the gap; one past the end for the last gap. */
+  beforePosition: number;
+  onSplit?: () => void;
+  onInsert: () => void;
+}) {
+  const { t } = useTranslation();
+  const splitLabel = t("pageTracks.splitHere", "Split here");
+  const insertLabel = t("pageTracks.insertBlank", "Insert blank page");
+  return (
+    <div
+      className={styles.gapHandle}
+      style={{ left, top, width, height: "var(--pt-tile-h)" }}
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
+    >
+      {onSplit && (
+        <Tooltip content={splitLabel} position="top">
+          <button
+            type="button"
+            className={styles.gapAction}
+            aria-label={splitLabel}
+            data-split-before={beforePosition}
+            onClick={onSplit}
+          >
+            <Icon name="scissors" size="1em" />
+          </button>
+        </Tooltip>
+      )}
+      <Tooltip content={insertLabel} position="top">
+        <button
+          type="button"
+          className={styles.gapAction}
+          aria-label={insertLabel}
+          data-insert-before={beforePosition}
+          onClick={onInsert}
+        >
+          <Icon name="plus" size="1em" />
+        </button>
+      </Tooltip>
+    </div>
+  );
+}
+
+export interface TrackRowProps {
+  track: Track;
+  name: string;
+  /** True for a split track not yet backed by a saved file. */
+  isNew: boolean;
+  versionNumber: number | undefined;
+  selectedIds: Set<string>;
+  draggingIds: Set<string>;
+  dropHint: DropHint | null;
+  /** Pages wrap onto multiple rows instead of one horizontally scrolling row. */
+  wrap: boolean;
+  /** Scales the page tiles (and their gaps) without resizing the rest of the UI. */
+  zoom: number;
+  /** The scrolling container wrap-mode rows are virtualised against. */
+  scrollerRef: React.RefObject<HTMLDivElement | null>;
+  /** Bumped by the parent when the stacked track heights change, forcing this
+   *  lane to re-measure its offset within the scroller. */
+  layoutVersion: number;
+  /** Draw the track-reorder line above this track. */
+  trackDropBefore: boolean;
+  /** Draw it below (last track, moving to the end). */
+  trackDropAfterLast: boolean;
+  /** This track's header is the one being dragged. */
+  trackDragging: boolean;
+  changed: boolean;
+  thumbnails: TrackThumbnailStore;
+  onSelectPage: (
+    fileId: FileId,
+    pageId: string,
+    modifiers: PageClickModifiers,
+  ) => void;
+  onSelectTrack: (fileId: FileId) => void;
+  /** Selects these 1-based pages of the track, replacing its selection. */
+  onSelectNumbers: (fileId: FileId, pageNumbers: number[]) => void;
+  onOpenInViewer: (fileId: FileId) => void;
+  /** Called when the click landed on empty lane surface, not on a page. */
+  onClearSelection: () => void;
+  /** Split this track so `startPageId` begins a new track. */
+  onSplit: (fileId: FileId, startPageId: string) => void;
+  /** Insert a blank page before `beforePageId`, or at the end when null. */
+  onInsertBlank: (fileId: FileId, beforePageId: string | null) => void;
+  onRotate: (pageIds: string[], delta: number) => void;
+  onDelete: (pageIds: string[]) => void;
+  onShiftPage: (pageId: string, by: -1 | 1) => void;
+  /** Asks to close the file; the parent confirms before anything closes. */
+  onClose: (fileId: FileId) => void;
+}
+
+function TrackRowImpl({
+  track,
+  name,
+  versionNumber,
+  selectedIds,
+  draggingIds,
+  dropHint,
+  wrap,
+  zoom,
+  scrollerRef,
+  layoutVersion,
+  isNew,
+  trackDropBefore,
+  trackDropAfterLast,
+  trackDragging,
+  changed,
+  thumbnails,
+  onSelectPage,
+  onSelectTrack,
+  onSelectNumbers,
+  onOpenInViewer,
+  onClearSelection,
+  onSplit,
+  onInsertBlank,
+  onRotate,
+  onDelete,
+  onShiftPage,
+  onClose,
+}: TrackRowProps) {
+  const { t } = useTranslation();
+  const { setNodeRef, isOver } = useDroppable({
+    id: trackDroppableId(track.fileId),
+    data: { type: "track", fileId: track.fileId },
+  });
+
+  // Reordering tracks: the header is the handle, the whole section the target.
+  // Only the pointer listeners are applied, deliberately NOT dnd-kit's ARIA
+  // attributes: those would make the header a role="button" whose accessible
+  // name is everything inside it, with the real controls nested inside.
+  const { listeners: handleListeners, setNodeRef: setHandleRef } = useDraggable(
+    {
+      id: trackHandleId(track.fileId),
+      data: { type: "trackHandle", fileId: track.fileId },
+    },
+  );
+  const { setNodeRef: setZoneRef } = useDroppable({
+    id: trackZoneId(track.fileId),
+    data: { type: "zone", fileId: track.fileId },
+  });
+
+  // A lane can hold hundreds of pages. Mounting them all is what made a single
+  // click cost ~700ms and a drag ~300ms per pointer move: every tile is a
+  // dnd-kit draggable AND droppable, so the whole set gets re-registered on
+  // each render, re-measured on drag start and hit-tested on every move.
+  const laneRef = useRef<HTMLDivElement | null>(null);
+  const laneInnerRef = useRef<HTMLDivElement | null>(null);
+  // Collapsed hides the lane, leaving just the header. Local (not lifted) so it
+  // survives track reorder via the row's fileId key; a save remounts the row,
+  // which reasonably reopens it.
+  const [collapsed, setCollapsed] = useState(false);
+  // Which page (by id) the view modal is showing, or null when closed. Kept by
+  // id, not index, so an edit that reorders pages doesn't jump the preview.
+  const [viewPageId, setViewPageId] = useState<string | null>(null);
+  // Zoom scales the tile dimensions (and gaps) only; everything derived here,
+  // and the CSS vars the tiles read, moves with it so the geometry and the
+  // virtualiser stay in agreement at any zoom.
+  const geometry = useMemo(() => {
+    const px = rootFontSizePx();
+    const tileWidthRem = TRACK_GEOMETRY.tileWidthRem * zoom;
+    const tileHeightRem = TRACK_GEOMETRY.tileCanvasHeightRem * zoom;
+    const tileFooterRem = TRACK_GEOMETRY.tileFooterHeightRem * zoom;
+    const gapRem = TRACK_GEOMETRY.gapRem * zoom;
+    return {
+      gapPx: gapRem * px,
+      lanePadPx: TRACK_GEOMETRY.lanePaddingXRem * px,
+      tileWidthPx: tileWidthRem * px,
+      // Distance between the left edges of adjacent tiles (tile + gap).
+      colStride: (tileWidthRem + gapRem) * px,
+      // Distance between the top edges of adjacent wrapped rows.
+      rowStride: (tileHeightRem + tileFooterRem + gapRem) * px,
+      cssVars: {
+        "--pt-zoom": `${zoom}`,
+        "--pt-tile-w": `${tileWidthRem}rem`,
+        "--pt-tile-h": `${tileHeightRem}rem`,
+        "--pt-tile-footer-h": `${tileFooterRem}rem`,
+        "--pt-lane-pad-x": `${TRACK_GEOMETRY.lanePaddingXRem}rem`,
+      } as React.CSSProperties,
+    };
+  }, [zoom]);
+
+  const pageCount = track.pages.length;
+
+  // Wrap mode packs as many whole tiles as the lane's content width allows.
+  const [laneWidth, setLaneWidth] = useState(0);
+  // Seed the width synchronously before the first wrap paint so the column
+  // count is right immediately; the observer keeps it current on resize.
+  // Re-runs when the lane remounts on expand so the width is right again
+  // straight away.
+  useLayoutEffect(() => {
+    const element = laneRef.current;
+    if (!element) return;
+    const padding = 2 * geometry.lanePadPx;
+    setLaneWidth(Math.max(0, element.clientWidth - padding));
+  }, [wrap, collapsed, geometry.lanePadPx]);
+  // Keyed on `collapsed` so the observer follows the lane element as it
+  // unmounts (collapse) and remounts (expand).
+  useEffect(() => {
+    const element = laneRef.current;
+    if (!element || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver((entries) => {
+      setLaneWidth(entries[0]?.contentRect.width ?? 0);
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [collapsed]);
+
+  const columns = useMemo(() => {
+    if (!wrap || laneWidth <= 0) return 1;
+    return Math.max(
+      1,
+      Math.floor((laneWidth + geometry.gapPx) / geometry.colStride),
+    );
+  }, [wrap, laneWidth, geometry.gapPx, geometry.colStride]);
+
+  const rowCount = wrap ? Math.ceil(pageCount / columns) : pageCount;
+
+  // Spread the spare width so a wrapped row fills the lane edge to edge instead
+  // of bunching left. The stride is per-column (not per-row), so a short last
+  // row still lines its tiles up under the columns above it.
+  const wrapColStride = useMemo(() => {
+    if (!wrap || columns <= 1) return geometry.colStride;
+    const gap = (laneWidth - columns * geometry.tileWidthPx) / (columns - 1);
+    return geometry.tileWidthPx + Math.max(geometry.gapPx, gap);
+  }, [
+    wrap,
+    columns,
+    laneWidth,
+    geometry.tileWidthPx,
+    geometry.gapPx,
+    geometry.colStride,
+  ]);
+
+  // Wrap-mode rows are virtualised against the shared outer scroller, so each
+  // lane needs the offset of its content within that scroller's scroll height.
+  // One track above growing or shrinking shifts this, which is why the parent
+  // bumps layoutVersion on any height change.
+  const [scrollMargin, setScrollMargin] = useState(0);
+  useLayoutEffect(() => {
+    if (!wrap) {
+      setScrollMargin((prev) => (prev === 0 ? prev : 0));
+      return;
+    }
+    const inner = laneInnerRef.current;
+    const scroller = scrollerRef.current;
+    if (!inner || !scroller) return;
+    const margin =
+      inner.getBoundingClientRect().top -
+      scroller.getBoundingClientRect().top +
+      scroller.scrollTop;
+    setScrollMargin((prev) => (Math.abs(prev - margin) > 0.5 ? margin : prev));
+  }, [
+    wrap,
+    collapsed,
+    layoutVersion,
+    columns,
+    rowCount,
+    pageCount,
+    scrollerRef,
+  ]);
+
+  const virtualizer = useVirtualizer({
+    count: wrap ? rowCount : pageCount,
+    horizontal: !wrap,
+    getScrollElement: () => (wrap ? scrollerRef.current : laneRef.current),
+    estimateSize: () => (wrap ? geometry.rowStride : geometry.colStride),
+    overscan: wrap ? 3 : TRACK_GEOMETRY.overscan,
+    scrollMargin: wrap ? scrollMargin : 0,
+  });
+
+  // Zoom changes every tile's size, so drop the cached measurements and
+  // re-derive them from the new estimate.
+  useLayoutEffect(() => {
+    virtualizer.measure();
+  }, [virtualizer, zoom, wrap]);
+
+  const setLaneRef = useCallback(
+    (element: HTMLDivElement | null) => {
+      laneRef.current = element;
+      setNodeRef(element);
+    },
+    [setNodeRef],
+  );
+
+  const selectedInTrack = useMemo(
+    () =>
+      track.pages
+        .filter((page) => selectedIds.has(page.id))
+        .map((page) => page.id),
+    [track.pages, selectedIds],
+  );
+
+  const numberedPages = useMemo(
+    () =>
+      track.pages.map((page, index) => ({
+        id: page.id,
+        pageNumber: index + 1,
+      })),
+    [track.pages],
+  );
+  const handleSelectNumbers = useCallback(
+    (pageNumbers: number[]) => onSelectNumbers(track.fileId, pageNumbers),
+    [onSelectNumbers, track.fileId],
+  );
+
+  const handleSelectTrack = useCallback(
+    () => onSelectTrack(track.fileId),
+    [onSelectTrack, track.fileId],
+  );
+
+  const handleSplitPage = useCallback(
+    (startPageId: string) => onSplit(track.fileId, startPageId),
+    [onSplit, track.fileId],
+  );
+  const handleInsertBlank = useCallback(
+    (beforePageId: string | null) => onInsertBlank(track.fileId, beforePageId),
+    [onInsertBlank, track.fileId],
+  );
+
+  const hintActive = dropHint?.fileId === track.fileId;
+  const collapseLabel = collapsed
+    ? t("pageTracks.track.expand", "Expand")
+    : t("pageTracks.track.collapse", "Collapse");
+
+  const handleViewPage = useCallback((pageId: string) => {
+    setViewPageId(pageId);
+  }, []);
+  // -1 once the shown page has been deleted, which closes the modal.
+  const viewIndex =
+    viewPageId == null ? -1 : track.pages.findIndex((p) => p.id === viewPageId);
+
+  return (
+    <section
+      ref={setZoneRef}
+      style={geometry.cssVars}
+      className={[
+        styles.track,
+        isOver ? styles.trackDropActive : "",
+        trackDragging ? styles.trackDragging : "",
+        trackDropBefore ? styles.trackDropBefore : "",
+        trackDropAfterLast ? styles.trackDropAfterLast : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      data-track-file-id={track.fileId}
+      data-changed={changed}
+      data-track-drop-before={trackDropBefore || undefined}
+      aria-label={name}
+    >
+      <header
+        ref={setHandleRef}
+        className={styles.trackHeader}
+        {...handleListeners}
+      >
+        <Tooltip position="bottom" content={collapseLabel}>
+          <ActionIcon
+            className={styles.trackCollapse}
+            variant="quiet"
+            size="sm"
+            aria-label={collapseLabel}
+            aria-expanded={!collapsed}
+            onClick={() => setCollapsed((value) => !value)}
+          >
+            {collapsed ? (
+              <Icon name="chevron-right" size="1.25rem" />
+            ) : (
+              <Icon name="chevron-down" size="1.25rem" />
+            )}
+          </ActionIcon>
+        </Tooltip>
+        <span className={styles.trackName}>
+          <PrivateContent>{truncateCenter(name, 40)}</PrivateContent>
+        </span>
+        <span className={styles.trackMeta}>
+          {[
+            versionNumber != null && versionNumber > 1
+              ? `v${versionNumber}`
+              : null,
+            t("pageTracks.pageCount", "{{count}} pages", {
+              count: track.pages.length,
+            }),
+            changed ? t("pageTracks.edited", "edited") : null,
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+        </span>
+        <Tooltip
+          position="bottom"
+          content={t("openInViewer", "Open in Viewer")}
+        >
+          <ActionIcon
+            className={styles.trackLeadAction}
+            variant="quiet"
+            size="sm"
+            aria-label={t("openInViewer", "Open in Viewer")}
+            // An emptied track has nothing to show; a split has no file until
+            // it is saved.
+            disabled={track.pages.length === 0 || isNew}
+            onClick={() => onOpenInViewer(track.fileId)}
+          >
+            <Icon name="eye" size="1rem" />
+          </ActionIcon>
+        </Tooltip>
+
+        <div className={styles.trackActions}>
+          <Tooltip
+            position="bottom"
+            content={t("pageTracks.track.toggleSelection", "Select all pages")}
+          >
+            <ActionIcon
+              variant="quiet"
+              size="sm"
+              aria-label={t(
+                "pageTracks.track.toggleSelection",
+                "Select all pages",
+              )}
+              disabled={track.pages.length === 0}
+              onClick={handleSelectTrack}
+            >
+              <Icon name="select-all" size="1rem" />
+            </ActionIcon>
+          </Tooltip>
+          <SelectByNumberPopover
+            label={t(
+              "pageTracks.track.selectByNumber",
+              "Select pages by number",
+            )}
+            iconSize="1rem"
+            actionSize="sm"
+            pages={numberedPages}
+            maxPages={track.pages.length}
+            selectedPageIds={selectedInTrack}
+            onSelect={handleSelectNumbers}
+          />
+          {!isNew && (
+            <>
+              <div className={styles.trackActionsDivider} />
+              <Tooltip
+                position="bottom"
+                content={t("pageTracks.track.close", "Close file")}
+              >
+                <ActionIcon
+                  variant="quiet"
+                  size="sm"
+                  aria-label={t("pageTracks.track.close", "Close file")}
+                  onClick={() => onClose(track.fileId)}
+                >
+                  <Icon name="x" size="1rem" />
+                </ActionIcon>
+              </Tooltip>
+            </>
+          )}
+        </div>
+      </header>
+
+      {!collapsed && (
+        <div
+          ref={setLaneRef}
+          data-track-lane={track.fileId}
+          className={[
+            styles.lane,
+            wrap ? styles.laneWrap : "",
+            track.pages.length === 0 ? styles.laneEmpty : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          // Only a click on the lane itself, never one that bubbled up from a
+          // page: clicking a tile would otherwise select it and immediately
+          // clear it again.
+          onClick={(event) => {
+            if (event.target === event.currentTarget) onClearSelection();
+          }}
+        >
+          {track.pages.length === 0 && (
+            <span className={styles.laneHint}>
+              {t(
+                "pageTracks.emptyTrack",
+                "No pages left. Drag pages here, or save to close this file.",
+              )}
+            </span>
+          )}
+          {pageCount > 0 && (
+            <div
+              ref={laneInnerRef}
+              className={styles.laneInner}
+              style={
+                wrap
+                  ? { width: "100%", height: virtualizer.getTotalSize() }
+                  : { width: virtualizer.getTotalSize() }
+              }
+            >
+              {virtualizer.getVirtualItems().map((item) => {
+                // Single row: each virtual item is a page, placed along the lane.
+                if (!wrap) {
+                  const page = track.pages[item.index];
+                  if (!page) return null;
+                  return (
+                    <React.Fragment key={page.id}>
+                      <TrackPageTile
+                        page={page}
+                        trackFileId={track.fileId}
+                        position={item.index + 1}
+                        isLast={item.index === pageCount - 1}
+                        offsetX={item.start}
+                        offsetY={0}
+                        selected={selectedIds.has(page.id)}
+                        dragging={draggingIds.has(page.id)}
+                        dropBefore={
+                          hintActive && dropHint?.beforePageId === page.id
+                        }
+                        dropAfterLast={
+                          hintActive &&
+                          dropHint?.beforePageId == null &&
+                          item.index === pageCount - 1
+                        }
+                        thumbnails={thumbnails}
+                        onSelect={onSelectPage}
+                        onViewPage={handleViewPage}
+                        onRotate={onRotate}
+                        onDelete={onDelete}
+                        onShift={onShiftPage}
+                      />
+                      <GapHandle
+                        left={
+                          item.index > 0
+                            ? item.start - geometry.gapPx / 2
+                            : -geometry.lanePadPx / 2
+                        }
+                        top={0}
+                        width={
+                          item.index > 0 ? geometry.gapPx : geometry.lanePadPx
+                        }
+                        beforePosition={item.index + 1}
+                        onSplit={
+                          item.index > 0
+                            ? () => handleSplitPage(page.id)
+                            : undefined
+                        }
+                        onInsert={() => handleInsertBlank(page.id)}
+                      />
+                      {item.index === pageCount - 1 && (
+                        <GapHandle
+                          left={
+                            item.start +
+                            geometry.tileWidthPx +
+                            geometry.gapPx / 2
+                          }
+                          top={0}
+                          width={geometry.gapPx}
+                          beforePosition={pageCount + 1}
+                          onInsert={() => handleInsertBlank(null)}
+                        />
+                      )}
+                    </React.Fragment>
+                  );
+                }
+                // Wrap: each virtual item is a row of up to `columns` pages.
+                const rowTop = item.start - scrollMargin;
+                const rowStartIndex = item.index * columns;
+                const gapBefore = wrapColStride - geometry.tileWidthPx;
+                return Array.from({ length: columns }, (_unused, col) => {
+                  const pageIndex = rowStartIndex + col;
+                  const page = track.pages[pageIndex];
+                  if (!page) return null;
+                  return (
+                    <React.Fragment key={page.id}>
+                      <TrackPageTile
+                        page={page}
+                        trackFileId={track.fileId}
+                        position={pageIndex + 1}
+                        isLast={pageIndex === pageCount - 1}
+                        offsetX={col * wrapColStride}
+                        offsetY={rowTop}
+                        selected={selectedIds.has(page.id)}
+                        dragging={draggingIds.has(page.id)}
+                        dropBefore={
+                          hintActive && dropHint?.beforePageId === page.id
+                        }
+                        dropAfterLast={
+                          hintActive &&
+                          dropHint?.beforePageId == null &&
+                          pageIndex === pageCount - 1
+                        }
+                        thumbnails={thumbnails}
+                        onSelect={onSelectPage}
+                        onViewPage={handleViewPage}
+                        onRotate={onRotate}
+                        onDelete={onDelete}
+                        onShift={onShiftPage}
+                      />
+                      <GapHandle
+                        left={
+                          col > 0
+                            ? col * wrapColStride - gapBefore / 2
+                            : -geometry.lanePadPx / 2
+                        }
+                        top={rowTop}
+                        width={col > 0 ? gapBefore : geometry.lanePadPx}
+                        beforePosition={pageIndex + 1}
+                        onSplit={
+                          pageIndex > 0
+                            ? () => handleSplitPage(page.id)
+                            : undefined
+                        }
+                        onInsert={() => handleInsertBlank(page.id)}
+                      />
+                      {pageIndex === pageCount - 1 && (
+                        <GapHandle
+                          // In the last column the only room is the lane's padding.
+                          left={
+                            col * wrapColStride +
+                            geometry.tileWidthPx +
+                            (col < columns - 1
+                              ? gapBefore
+                              : geometry.lanePadPx) /
+                              2
+                          }
+                          top={rowTop}
+                          width={
+                            col < columns - 1 ? gapBefore : geometry.lanePadPx
+                          }
+                          beforePosition={pageCount + 1}
+                          onInsert={() => handleInsertBlank(null)}
+                        />
+                      )}
+                    </React.Fragment>
+                  );
+                });
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {viewIndex >= 0 && (
+        // The modal portals to the body but is a React child of this section,
+        // so its events would bubble through the React tree to the lane/tiles.
+        // Contain them so a backdrop click can't clear or change the selection.
+        <div
+          style={{ display: "contents" }}
+          onClick={(event) => event.stopPropagation()}
+          onDoubleClick={(event) => event.stopPropagation()}
+          onPointerDown={(event) => event.stopPropagation()}
+          onKeyDown={(event) => event.stopPropagation()}
+        >
+          <TrackPageViewModal
+            pages={track.pages}
+            index={viewIndex}
+            onIndexChange={(next) =>
+              setViewPageId(track.pages[next]?.id ?? null)
+            }
+            thumbnails={thumbnails}
+            onClose={() => setViewPageId(null)}
+          />
+        </div>
+      )}
+    </section>
+  );
+}
+
+export const TrackRow = React.memo(TrackRowImpl);
+export default TrackRow;

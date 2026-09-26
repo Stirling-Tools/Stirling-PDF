@@ -134,8 +134,12 @@ export class PDFExportService {
       let insertIdx = 0;
       for (const page of pages) {
         if (page.isBlankPage || page.originalPageNumber === -1) {
-          // Insert a blank A4 page
-          await addNewPage(destDocPtr, insertIdx, A4_WIDTH, A4_HEIGHT);
+          await addNewPage(
+            destDocPtr,
+            insertIdx,
+            page.blankSize?.width ?? A4_WIDTH,
+            page.blankSize?.height ?? A4_HEIGHT,
+          );
           // Set absolute rotation (incl. 0) so editor rotation wins over source.
           await setPageRotation(
             destDocPtr,
@@ -213,7 +217,12 @@ export class PDFExportService {
 
       for (const page of pages) {
         if (page.isBlankPage || page.originalPageNumber === -1) {
-          await addNewPage(destDocPtr, insertIdx, A4_WIDTH, A4_HEIGHT);
+          await addNewPage(
+            destDocPtr,
+            insertIdx,
+            page.blankSize?.width ?? A4_WIDTH,
+            page.blankSize?.height ?? A4_HEIGHT,
+          );
           // Set absolute rotation (incl. 0) so editor rotation wins over source.
           await setPageRotation(
             destDocPtr,

@@ -125,12 +125,17 @@
   justify-content: center;
   height: 38px;
   transform: translateX(var(--workbench-bar-search-offset, 0px));
+  /* The slot spans the whole centre and is shifted by a transform, so its empty
+     flanks can sit over the view switcher or the globals cluster and swallow
+     their clicks. Only the pill itself takes pointer events. */
+  pointer-events: none;
 }
 
 .workbench-bar-search .super-search {
   flex: 0 1 24rem;
   width: min(100%, 24rem);
   max-width: 24rem;
+  pointer-events: auto;
 }
 
 .workbench-bar-search .super-search input {
@@ -275,6 +280,14 @@
 
 .workbench-bar-action-icon:hover {
   color: var(--c-text) !important;
+}
+
+/* The !important colour above overrides Mantine's disabled styling, so a
+ * disabled icon would otherwise look exactly like an enabled one. */
+.workbench-bar-action-icon:disabled,
+.workbench-bar-action-icon[data-disabled] {
+  color: var(--c-text-muted) !important;
+  opacity: 0.45;
 }
 
 .workbench-bar-action-icon[data-variant="filled"] {
