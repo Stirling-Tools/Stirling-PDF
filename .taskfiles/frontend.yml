@@ -58,12 +58,16 @@ tasks:
       - node editor/scripts/generate-og-metadata.mjs
     sources:
       - editor/src/core/types/toolId.ts
+      - editor/scripts/generate-og-metadata.mjs
+      - editor/src/core/data/publicToolContent.json
       - editor/src/core/utils/urlMapping.ts
       - editor/src/core/data/useTranslatedToolRegistry.tsx
       - editor/public/og_images/*.png
     generates:
       - editor/src/core/data/ogImageMap.json
       - editor/public/og-metadata.json
+      - editor/public/og-metadata.saas.json
+      - editor/src/core/data/urlSeoOverrides.json
 
   prepare:
     desc: "Set up dev environment"
@@ -529,6 +533,12 @@ tasks:
     desc: "Fail if committed OG/social-preview metadata is out of date"
     cmds:
       - node editor/scripts/generate-og-metadata.mjs --check
+
+  seo:verify:
+    desc: "Verify public SEO responses on a deployed site"
+    deps: [install]
+    cmds:
+      - node editor/scripts/verify-public-seo.mjs {{.CLI_ARGS}}
 
   check:all:
     desc: "Full CI quality gate"
