@@ -29,7 +29,7 @@ export function mergePendingSettings<T extends SettingsWithPending>(
   if (!settings || !settings._pending) {
     // No pending changes, return as-is (without _pending property)
     const { _pending, ...rest } = settings || {};
-    return rest as Omit<T, "_pending">;
+    return rest;
   }
 
   // Deep merge pending changes

@@ -1,27 +1,19 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
+import type { DiskFileState } from "@app/services/desktopFileLink";
 
 // The seam is a module-level const, so each behaviour is exercised by re-importing
 // the module under a fresh mock rather than by mutating a flag.
-const diskState = vi.hoisted(
-  () =>
-    ({
-      supported: true,
-      state: { availability: "present", size: 100, modifiedMs: 5000 },
-      bytes: new Uint8Array([1, 2, 3]).buffer as ArrayBuffer | null,
-    }) as {
-      supported: boolean;
-      state:
-        | { availability: "present"; size: number; modifiedMs: number }
-        | { availability: "gone" }
-        | {
-            availability: "unavailable";
-            reason: "permission" | "offline" | "unknown";
-          };
-      bytes: ArrayBuffer | null;
-    },
-);
+const diskState = vi.hoisted<{
+  supported: boolean;
+  state: DiskFileState;
+  bytes: ArrayBuffer | null;
+}>(() => ({
+  supported: true,
+  state: { availability: "present", size: 100, modifiedMs: 5000 },
+  bytes: new Uint8Array([1, 2, 3]).buffer,
+}));
 
 vi.mock("@app/services/desktopFileLink", () => ({
   get desktopFileLinkingSupported() {
@@ -86,7 +78,7 @@ function stub(overrides: Partial<StirlingFileStub> = {}): StirlingFileStub {
     diskSyncedSize: 100,
     diskSyncedModifiedMs: 5000,
     ...overrides,
-  } as StirlingFileStub;
+  };
 }
 
 beforeEach(() => {

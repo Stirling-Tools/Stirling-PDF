@@ -13,7 +13,7 @@ const buildFileStub = (
   size: 245_760,
   lastModified: Date.now(),
   isLeaf: true,
-  originalFileId: "file-1" as FileId,
+  originalFileId: "file-1",
   versionNumber: 1,
   ...overrides,
 });

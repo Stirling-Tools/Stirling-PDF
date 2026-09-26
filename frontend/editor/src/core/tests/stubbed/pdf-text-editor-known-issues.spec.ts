@@ -191,8 +191,8 @@ async function glyphs(
       return {
         boundsRight: r.bounds.x + r.bounds.width,
         pageWidth: pg.width,
-        fontId: r.fontId as string,
-        text: (r.text as string) ?? "",
+        fontId: r.fontId,
+        text: r.text ?? "",
         maxGap,
         hasYdieresis: hasY,
       };
@@ -311,7 +311,7 @@ test.describe("PDF text editor - fixed-issue regressions", () => {
       (rid: string) =>
         (window as unknown as EditorTestWindow).__editor_store.doc
           .page(1)
-          .runs.find((x) => x.id === rid)!.text as string,
+          .runs.find((x) => x.id === rid)!.text,
       id,
     );
     await replaceAll(page, id, cur.replace(/^Comprehensive/, ""));
@@ -331,7 +331,7 @@ test.describe("PDF text editor - fixed-issue regressions", () => {
       (rid: string) =>
         (window as unknown as EditorTestWindow).__editor_store.doc
           .page(1)
-          .runs.find((x) => x.id === rid)!.text as string,
+          .runs.find((x) => x.id === rid)!.text,
       id,
     );
     // drop the 'h' from "Comprehensive" -> the word should read "Compreensive"
@@ -386,7 +386,7 @@ test.describe("PDF text editor - fixed-issue regressions", () => {
       (rid: string) =>
         (window as unknown as EditorTestWindow).__editor_store.doc
           .page(1)
-          .runs.find((x) => x.id === rid)!.text as string,
+          .runs.find((x) => x.id === rid)!.text,
       id,
     );
     await replaceAll(
@@ -414,7 +414,7 @@ test.describe("PDF text editor - fixed-issue regressions", () => {
         const x = (window as unknown as EditorTestWindow).__editor_store.doc
           .page(1)
           .runs.find((y) => y.id === r);
-        return x ? (x.text as string) : "(gone)";
+        return x ? x.text : "(gone)";
       }, id);
     await caretEndInsert(page, id, " UNIQ");
     await blur(page, id);
@@ -462,7 +462,7 @@ test.describe("PDF text editor - fixed-issue regressions", () => {
       (rid: string) =>
         (window as unknown as EditorTestWindow).__editor_store.doc
           .page(1)
-          .runs.find((x) => x.id === rid)!.text as string,
+          .runs.find((x) => x.id === rid)!.text,
       id,
     );
     await caretEndInsert(page, id, "\n");
@@ -478,9 +478,9 @@ test.describe("PDF text editor - fixed-issue regressions", () => {
         () =>
           page.evaluate(
             (rid: string) =>
-              ((window as unknown as EditorTestWindow).__editor_store.doc
+              (window as unknown as EditorTestWindow).__editor_store.doc
                 .page(1)
-                .runs.find((x) => x.id === rid)?.text ?? null) as string | null,
+                .runs.find((x) => x.id === rid)?.text ?? null,
             id,
           ),
         { timeout: 6000, message: "one undo should fully revert Enter+type" },

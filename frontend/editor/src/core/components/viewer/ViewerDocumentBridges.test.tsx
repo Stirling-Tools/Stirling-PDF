@@ -4,6 +4,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SpreadAPIBridge } from "@app/components/viewer/SpreadAPIBridge";
 import { ScrollAPIBridge } from "@app/components/viewer/ScrollAPIBridge";
 import { RotateAPIBridge } from "@app/components/viewer/RotateAPIBridge";
+import type { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
+
+const activeDocument = vi.hoisted<{
+  id: ReturnType<typeof useActiveDocumentId>;
+}>(() => ({ id: "first" }));
 
 const fixture = vi.hoisted(() => {
   const document = () => ({
@@ -19,7 +24,6 @@ const fixture = vi.hoisted(() => {
     { api: Record<string, (value: number) => void> }
   >();
   return {
-    activeId: "first" as "first" | "second",
     documents: { first: document(), second: document() },
     bridges,
     registerBridge: (
@@ -34,7 +38,7 @@ const fixture = vi.hoisted(() => {
 });
 
 vi.mock("@app/components/viewer/useActiveDocumentId", () => ({
-  useActiveDocumentId: () => fixture.activeId,
+  useActiveDocumentId: () => activeDocument.id,
   useDocumentReady: () => true,
 }));
 vi.mock("@app/contexts/ViewerContext", () => ({
@@ -75,7 +79,7 @@ function RestoreOnLayout({ kind, action }: { kind: string; action: string }) {
 describe("viewer controls after replacing a document", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    fixture.activeId = "first";
+    activeDocument.id = "first";
     fixture.bridges.clear();
   });
 
@@ -107,7 +111,7 @@ describe("viewer controls after replacing a document", () => {
       const { rerender } = render(view());
       expect(fixture.documents.first[action]).toHaveBeenCalledOnce();
 
-      fixture.activeId = "second";
+      activeDocument.id = "second";
       rerender(view());
 
       expect(fixture.documents.first[action]).toHaveBeenCalledOnce();

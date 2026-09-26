@@ -98,18 +98,16 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
         }}
         onMouseEnter={(e) => {
           if (!isDragging) {
-            (e.currentTarget as HTMLDivElement).style.backgroundColor =
-              "rgba(0, 0, 0, 0.05)";
-            (e.currentTarget as HTMLDivElement).style.borderLeftColor =
-              fileColorBorderHover;
+            e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.05)";
+            e.currentTarget.style.borderLeftColor = fileColorBorderHover;
           }
         }}
         onMouseLeave={(e) => {
           if (!isDragging) {
-            (e.currentTarget as HTMLDivElement).style.backgroundColor =
-              file.isSelected ? "rgba(0, 0, 0, 0.05)" : "transparent";
-            (e.currentTarget as HTMLDivElement).style.borderLeftColor =
-              fileColorBorder;
+            e.currentTarget.style.backgroundColor = file.isSelected
+              ? "rgba(0, 0, 0, 0.05)"
+              : "transparent";
+            e.currentTarget.style.borderLeftColor = fileColorBorder;
           }
         }}
       >
@@ -204,7 +202,7 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
         }}
       >
         {files.map((file, index) => {
-          const colorIndex = fileColorMap.get(file.fileId as string) ?? 0;
+          const colorIndex = fileColorMap.get(file.fileId) ?? 0;
 
           return (
             <FileMenuItem
@@ -233,12 +231,10 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
             transition: "background-color 0.15s ease",
           }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLDivElement).style.backgroundColor =
-              "rgba(59, 130, 246, 0.25)";
+            e.currentTarget.style.backgroundColor = "rgba(59, 130, 246, 0.25)";
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLDivElement).style.backgroundColor =
-              "transparent";
+            e.currentTarget.style.backgroundColor = "transparent";
           }}
         >
           <Group gap="xs" style={{ width: "100%" }}>

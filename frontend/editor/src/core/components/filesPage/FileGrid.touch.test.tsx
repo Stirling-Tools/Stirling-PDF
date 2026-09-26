@@ -18,18 +18,17 @@ vi.mock("@app/components/shared/PolicyBadges", () => ({
 const render = (ui: Parameters<typeof baseRender>[0]) =>
   baseRender(ui, { wrapper: MantineProvider });
 
-const stub = (id: string): StirlingFileStub =>
-  ({
-    id: id as FileId,
-    name: `${id}.pdf`,
-    type: "application/pdf",
-    size: 1_000,
-    lastModified: 0,
-    isLeaf: true,
-    originalFileId: id,
-    versionNumber: 1,
-    thumbnailUrl: "data:image/svg+xml,%3Csvg/%3E",
-  }) as StirlingFileStub;
+const stub = (id: string): StirlingFileStub => ({
+  id: id as FileId,
+  name: `${id}.pdf`,
+  type: "application/pdf",
+  size: 1_000,
+  lastModified: 0,
+  isLeaf: true,
+  originalFileId: id,
+  versionNumber: 1,
+  thumbnailUrl: "data:image/svg+xml,%3Csvg/%3E",
+});
 
 function renderGrid(
   viewMode: "grid" | "list",

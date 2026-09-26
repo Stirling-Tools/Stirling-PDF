@@ -362,7 +362,7 @@ test.describe("PDF text editor - paragraph editing battery", () => {
     const baseNew = firstBaselineOfWord(info, "NEWLINEWORD");
     expect(baseNew !== null, `NEW word missing: ${info.text}`).toBe(true);
     if (baseProc !== null) {
-      expect(baseNew!).toBeLessThan(baseProc! - 1);
+      expect(baseNew!).toBeLessThan(baseProc - 1);
     }
   });
 

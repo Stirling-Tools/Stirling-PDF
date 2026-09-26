@@ -103,10 +103,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
 
         const idMap = new Map<string, FileId>();
         for (let i = 0; i < stirlingFiles.length; i += 1) {
-          idMap.set(
-            sortedEntries[i].logicalId,
-            stirlingFiles[i].fileId as FileId,
-          );
+          idMap.set(sortedEntries[i].logicalId, stirlingFiles[i].fileId);
         }
 
         const rootIdMap = new Map<string, FileId>();

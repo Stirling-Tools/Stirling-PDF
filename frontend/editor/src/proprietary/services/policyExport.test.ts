@@ -58,23 +58,22 @@ const { recordRunStart } =
   await import("@app/components/policies/policyRunStore");
 
 /** An active export-time policy as the local store holds it. */
-const exportPolicy = (over: Partial<PolicyState>): PolicyState =>
-  ({
-    configured: true,
-    enabled: true,
-    backendId: "backend-1",
-    firstOperation: "/api/v1/misc/compress-pdf",
-    sources: [],
-    runsOnEditor: false,
-    scopeTypes: [],
-    reviewerEmail: "",
-    fieldValues: {},
-    outputMode: "new_version",
-    outputName: "",
-    runOn: "export",
-    isDefault: false,
-    ...over,
-  }) as PolicyState;
+const exportPolicy = (over: Partial<PolicyState>): PolicyState => ({
+  configured: true,
+  enabled: true,
+  backendId: "backend-1",
+  firstOperation: "/api/v1/misc/compress-pdf",
+  sources: [],
+  runsOnEditor: false,
+  scopeTypes: [],
+  reviewerEmail: "",
+  fieldValues: {},
+  outputMode: "new_version",
+  outputName: "",
+  runOn: "export",
+  isDefault: false,
+  ...over,
+});
 
 const pdf = () =>
   new File(["%PDF-1.4"], "doc.pdf", { type: "application/pdf" });
@@ -287,7 +286,7 @@ describe("export-time policy selection", () => {
         runsOnEditor: true,
         backendId: "backend-editor",
       }),
-    } as unknown as PoliciesByKey);
+    });
 
     const enforcement = enforceExportPolicies([pdf()], ["file-1"]);
     await vi.runAllTimersAsync();
@@ -308,7 +307,7 @@ describe("export-time policy selection", () => {
         runsOnEditor: false,
         backendId: "backend-swept",
       }),
-    } as unknown as PoliciesByKey);
+    });
 
     const enforcement = enforceExportPolicies([pdf()], ["file-1"]);
     await vi.runAllTimersAsync();
@@ -325,7 +324,7 @@ describe("export-time policy selection", () => {
         runsOnEditor: true,
         backendId: "backend-security",
       }),
-    } as unknown as PoliciesByKey);
+    });
 
     const enforcement = enforceExportPolicies([pdf()], ["file-1"]);
     await vi.runAllTimersAsync();
@@ -351,7 +350,7 @@ describe("export-time policy selection", () => {
         backendId: "backend-first",
         order: 0,
       }),
-    } as unknown as PoliciesByKey);
+    });
 
     const enforcement = enforceExportPolicies([pdf()], ["file-1"]);
     await vi.runAllTimersAsync();

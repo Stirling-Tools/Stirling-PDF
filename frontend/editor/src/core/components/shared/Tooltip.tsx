@@ -141,10 +141,10 @@ export const Tooltip: React.FC<TooltipProps> = ({
         typeof document !== "undefined" ? document.documentElement.dir : "ltr";
       const isRTL = htmlDir === "rtl";
       const base = position ?? "right";
-      if (!isRTL) return base as NonNullable<TooltipProps["position"]>;
+      if (!isRTL) return base;
       if (base === "left") return "right";
       if (base === "right") return "left";
-      return base as NonNullable<TooltipProps["position"]>;
+      return base;
     }, [position]);
 
   const setOpen = useCallback(
@@ -383,8 +383,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
         ).ref;
         if (typeof originalRef === "function") originalRef(node);
         else if (originalRef && typeof originalRef === "object")
-          (originalRef as React.MutableRefObject<HTMLElement | null>).current =
-            node;
+          originalRef.current = node;
       },
       "aria-describedby": open ? tooltipIdRef.current : undefined,
       onPointerEnter: handlePointerEnter,

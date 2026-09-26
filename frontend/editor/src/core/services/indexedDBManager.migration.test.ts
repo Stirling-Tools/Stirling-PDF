@@ -267,7 +267,7 @@ describe("IndexedDB migration (FILES store)", () => {
 
     const rows = (await readAllFiles()) as Array<Record<string, unknown>>;
     expect(rows).toHaveLength(1);
-    const row = rows[0]!;
+    const row = rows[0];
 
     // Existing v3 fields should be unchanged
     expect(row.isLeaf).toBe(true);
@@ -360,7 +360,7 @@ describe("IndexedDB migration (FILES store)", () => {
 
     const rows = (await readAllFiles()) as Array<Record<string, unknown>>;
     expect(rows).toHaveLength(1);
-    expect(rows[0]!.folderId).toBeNull();
+    expect(rows[0].folderId).toBeNull();
   });
 
   test("SaaS v6 database is force-deleted (data lost, schema reset to v9)", async () => {

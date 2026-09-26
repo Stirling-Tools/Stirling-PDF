@@ -14,7 +14,7 @@ const mockFile: StirlingFileStub = {
   size: 110592,
   lastModified: 0,
   isLeaf: true,
-  originalFileId: "file-1" as FileId,
+  originalFileId: "file-1",
   versionNumber: 3,
 };
 

@@ -9,10 +9,7 @@ import {
   pendingIdFrom,
   pendingSelectionName,
 } from "@app/tools/formFill/pendingSelection";
-import type {
-  CreatableFieldType,
-  NewFieldDefinition,
-} from "@app/tools/formFill/types";
+import type { NewFieldDefinition } from "@app/tools/formFill/types";
 
 /** Enough offset that the copy is visibly its own field rather than hiding the original. */
 const PASTE_OFFSET_PT = 12;
@@ -91,7 +88,7 @@ export function useFieldShortcuts() {
         if (!field || !widget) return;
         clipboardRef.current = {
           name: field.name,
-          type: field.type as CreatableFieldType,
+          type: field.type,
           pageIndex: widget.pageIndex,
           x: widget.x,
           y: widget.y,

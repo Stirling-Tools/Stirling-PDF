@@ -9,7 +9,7 @@ import { describe, expect, test, vi } from "vitest";
 const init = vi.hoisted(() => vi.fn());
 vi.mock("@embedpdf/pdfium", () => ({ init }));
 
-const wasmModule = vi.hoisted(() => ({}) as WebAssembly.Module);
+const wasmModule = vi.hoisted<WebAssembly.Module>(() => ({}));
 vi.mock("@app/services/wasmPrecompiler", () => ({
   pdfiumWasmModulePromise: Promise.resolve(wasmModule),
   startEagerWasmCompilation: () => {},
@@ -33,14 +33,9 @@ async function loadService() {
 describe("pdfium bootstrap", () => {
   test("rejects when instantiating the pre-compiled module fails", async () => {
     const failure = new Error("LinkError: import mismatch");
-    vi.spyOn(WebAssembly, "instantiate").mockRejectedValue(failure as never);
+    vi.spyOn(WebAssembly, "instantiate").mockRejectedValue(failure);
     init.mockImplementation((overrides: Record<string, never>) =>
-      emscriptenInit(
-        overrides.instantiateWasm as unknown as (
-          imports: object,
-          ok: () => void,
-        ) => void,
-      ),
+      emscriptenInit(overrides.instantiateWasm),
     );
 
     const { getPdfiumModule } = await loadService();
@@ -52,7 +47,7 @@ describe("pdfium bootstrap", () => {
   test("a failed load isn't cached, so the next call retries", async () => {
     const instantiate = vi
       .spyOn(WebAssembly, "instantiate")
-      .mockRejectedValueOnce(new Error("transient") as never)
+      .mockRejectedValueOnce(new Error("transient"))
       .mockResolvedValue({} as never);
     const ready = { PDFiumExt_Init: () => {} };
     init.mockImplementation(

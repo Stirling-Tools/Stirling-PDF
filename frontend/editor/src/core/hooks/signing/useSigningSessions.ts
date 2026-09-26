@@ -95,7 +95,7 @@ export const useSigningSessions = (
     mySessions: data?.mySessions ?? EMPTY_SESSIONS,
     loading: isLoading || refreshing,
     settled: data !== undefined && !isFetching && error === null,
-    error: (error as Error | null) ?? null,
+    error: error ?? null,
     refetch: explicitRefetch,
   };
 };

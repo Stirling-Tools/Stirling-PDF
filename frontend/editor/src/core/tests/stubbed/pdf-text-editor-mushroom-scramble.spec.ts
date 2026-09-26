@@ -43,10 +43,10 @@ test("mid-line paragraph edit does not scramble unchanged words (cold backend, n
         pg.runs.find((x) => (x.paragraphLineSlots?.length ?? 0) > 1) ??
         pg.runs[0];
       return {
-        id: r?.id as string,
-        fontSubset: r?.fontSubset as boolean,
+        id: r?.id,
+        fontSubset: r?.fontSubset,
         lineCount: r?.paragraphLineSlots?.length ?? 0,
-        firstLine: (r?.text ?? "").split("\n")[0] as string,
+        firstLine: (r?.text ?? "").split("\n")[0],
       };
     });
 

@@ -98,7 +98,7 @@ const HotkeysSection: React.FC = () => {
       event.preventDefault();
       event.stopPropagation();
 
-      const binding = eventToBinding(event as KeyboardEvent);
+      const binding = eventToBinding(event);
       if (!binding) {
         const osKey = isMac ? "mac" : "windows";
         setError(t(`settings.hotkeys.errorModifier.${osKey}`));
@@ -116,7 +116,7 @@ const HotkeysSection: React.FC = () => {
         const conflictKey = conflictEntry[0];
         const conflictTool =
           conflictKey in toolRegistry
-            ? toolRegistry[conflictKey as ToolId]?.name
+            ? toolRegistry[conflictKey]?.name
             : conflictKey;
         setError(
           t(

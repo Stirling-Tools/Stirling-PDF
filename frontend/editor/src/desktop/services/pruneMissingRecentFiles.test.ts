@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
-import type { ToolId } from "@app/types/toolId";
 
 const disk = vi.hoisted(() => ({
   supported: true,
@@ -47,7 +46,7 @@ function stub(overrides: Partial<StirlingFileStub> = {}): StirlingFileStub {
     versionNumber: 1,
     toolHistory: [],
     ...overrides,
-  } as StirlingFileStub;
+  };
 }
 
 beforeEach(() => {
@@ -96,7 +95,7 @@ describe("pruneMissingRecentFiles", () => {
         id: "edited" as FileId,
         localFilePath: "C:/docs/gone.pdf",
         versionNumber: 3,
-        toolHistory: [{ toolId: "split" as ToolId, timestamp: 1 }],
+        toolHistory: [{ toolId: "split", timestamp: 1 }],
       }),
     ];
     const result = await pruneMissingRecentFiles(stubs);

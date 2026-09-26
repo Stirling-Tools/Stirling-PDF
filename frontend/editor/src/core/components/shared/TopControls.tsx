@@ -66,14 +66,14 @@ const createViewOptions = (
   const pageEditorOption = {
     label: showPageEditorDropdown ? (
       <PageEditorFileDropdown
-        files={pageEditorState!.files}
-        onToggleSelection={pageEditorState!.onToggleSelection}
-        onReorder={pageEditorState!.onReorder}
+        files={pageEditorState.files}
+        onToggleSelection={pageEditorState.onToggleSelection}
+        onReorder={pageEditorState.onReorder}
         switchingTo={switchingTo}
         viewOptionStyle={viewOptionStyle}
-        fileColorMap={pageEditorState!.fileColorMap}
-        selectedCount={pageEditorState!.selectedCount}
-        totalCount={pageEditorState!.totalCount}
+        fileColorMap={pageEditorState.fileColorMap}
+        selectedCount={pageEditorState.selectedCount}
+        totalCount={pageEditorState.totalCount}
       />
     ) : (
       <div style={viewOptionStyle}>
@@ -106,7 +106,7 @@ const createViewOptions = (
     .filter((view) => view.data != null)
     .map((view) => ({
       label: (
-        <div style={viewOptionStyle as React.CSSProperties}>
+        <div style={viewOptionStyle}>
           {switchingTo === view.workbenchId ? (
             <Loader size="sm" />
           ) : (

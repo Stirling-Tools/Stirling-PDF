@@ -1,16 +1,26 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 import { useFleetStats } from "@portal/queries/infrastructure";
 import { fetchFleetStats } from "@portal/api/fleetStats";
 
-const state = vi.hoisted(() => ({
+const state = vi.hoisted<{
+  auth: {
+    loading: boolean;
+    error: Error | null;
+    session: object | null;
+    user: { id: string } | null;
+    isAnonymous: boolean;
+    isAdmin: boolean;
+  };
+  json: Mock;
+}>(() => ({
   auth: {
     loading: false,
-    error: null as Error | null,
-    session: {} as object | null,
-    user: { id: "admin" } as { id: string } | null,
+    error: null,
+    session: {},
+    user: { id: "admin" },
     isAdmin: true,
     isAnonymous: false,
   },

@@ -322,10 +322,7 @@ function readBox(
   mod: CropBoxModule,
   pagePtr: number,
 ): PageBox | null {
-  const exports = m.pdfium.wasmExports as unknown as {
-    malloc: (n: number) => number;
-    free: (p: number) => void;
-  };
+  const exports = m.pdfium.wasmExports;
   const buf = exports.malloc(16);
   if (!buf) return null;
   try {

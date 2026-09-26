@@ -58,7 +58,7 @@ test.describe("PDF text editor - signed save stays signed", () => {
     expect(saved).not.toBeNull();
 
     const before = fs.readFileSync(SIGNED);
-    const after = fs.readFileSync(saved!);
+    const after = fs.readFileSync(saved);
 
     expect(
       after.length,
@@ -110,7 +110,7 @@ test.describe("PDF text editor - signed save stays signed", () => {
     const saved = await download.path();
 
     const before = fs.readFileSync(SIGNED);
-    const after = fs.readFileSync(saved!);
+    const after = fs.readFileSync(saved);
     expect(
       after.equals(before),
       "an untouched document must come back exactly as it went in",

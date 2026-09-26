@@ -66,7 +66,7 @@ vi.mock("@app/auth/UseSession", () => ({
 
 const stub = (id: string): StirlingFileStub => ({
   id: id as FileId,
-  originalFileId: id as FileId,
+  originalFileId: id,
   name: `${id}.pdf`,
   isLeaf: true,
   versionNumber: 1,

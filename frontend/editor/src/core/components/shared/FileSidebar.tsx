@@ -205,7 +205,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     useEffect(
       () =>
         onRecordUnreadable((fileId) =>
-          setLostFileIds((prev) => new Set(prev).add(fileId as string)),
+          setLostFileIds((prev) => new Set(prev).add(fileId)),
         ),
       [],
     );
@@ -379,7 +379,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           await downloadFileWithPolicy({
             data: file,
             filename: stub?.name ?? file.name,
-            fileId: fileId as string,
+            fileId: fileId,
           });
         } catch (error) {
           console.error("[FileSidebar] Download failed:", error);
@@ -487,7 +487,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const lineageCounts = useMemo(() => {
       const counts = new Map<string, number>();
       for (const s of allFileStubs) {
-        const k = (s.originalFileId ?? s.id) as string;
+        const k = s.originalFileId ?? s.id;
         counts.set(k, (counts.get(k) ?? 0) + 1);
       }
       return counts;
@@ -527,7 +527,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
         // Its bytes are gone; opening it can only fail. Say so instead of a
         // click that goes nowhere.
-        if (stub.dataUnavailable || lostFileIds.has(fileId as string)) {
+        if (stub.dataUnavailable || lostFileIds.has(fileId)) {
           alert({
             alertType: "warning",
             title: t("fileSidebar.dataLostTitle", "File data is unavailable"),
@@ -605,8 +605,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         if (!stub) return;
 
         const isCurrentlyViewed = !!(
-          viewedWorkbenchId &&
-          (viewedWorkbenchId as string) === (stub.id as string)
+          viewedWorkbenchId && viewedWorkbenchId === (stub.id as string)
         );
 
         if (isCurrentlyViewed) {
@@ -630,7 +629,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           }
 
           // Route through pendingViewFileId so both setActiveFileIndex + setWorkbench fire together.
-          setPendingViewFileId(stub.id as string);
+          setPendingViewFileId(stub.id);
         };
 
         if (currentWorkbench === "viewer" && viewedWorkbenchId) {
@@ -756,8 +755,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const eligibleFileIds = useToolEligibleFileIds();
 
     const renderFileRow = (stub: StirlingFileStub) => {
-      const isInWorkbench = workbenchIds.has(stub.id as string);
-      const workbenchFileId = isInWorkbench ? (stub.id as FileId) : undefined;
+      const isInWorkbench = workbenchIds.has(stub.id);
+      const workbenchFileId = isInWorkbench ? stub.id : undefined;
       const isViewedInViewer = !!(
         viewedWorkbenchId && viewedWorkbenchId === (stub.id as string)
       );
@@ -770,9 +769,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             : undefined) || stub.thumbnailUrl;
       const fileOrigin = getFileOrigin(stub);
       const dataUnavailable =
-        stub.dataUnavailable === true || lostFileIds.has(stub.id as string);
+        stub.dataUnavailable === true || lostFileIds.has(stub.id);
       // Lineage keys preserve rows across version changes; split siblings need unique leaf IDs.
-      const lineageKey = (stub.originalFileId ?? stub.id) as string;
+      const lineageKey = stub.originalFileId ?? stub.id;
       const rowKey =
         (lineageCounts.get(lineageKey) ?? 0) > 1
           ? (stub.id as string)
@@ -796,7 +795,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           onClick={handleFileClick}
           onEyeClick={handleEyeClick}
           dataUnavailable={dataUnavailable}
-          policies={policyFileBadges.get(stub.id as string) ?? NO_POLICIES}
+          policies={policyFileBadges.get(stub.id) ?? NO_POLICIES}
           onDelete={handleSidebarDelete}
           onDownload={handleDownload}
           onRename={handleRename}
