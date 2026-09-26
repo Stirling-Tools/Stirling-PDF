@@ -82,6 +82,7 @@ test.describe("Premium / endpoint gating", () => {
       return;
     }
     await configBtn.click();
+    await page.getByRole("menuitem", { name: /all settings/i }).click();
     const dialog = page.locator(".settings-page");
     await expect(dialog).toBeVisible({ timeout: 5_000 });
 

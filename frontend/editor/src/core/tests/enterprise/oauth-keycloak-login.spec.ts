@@ -58,6 +58,7 @@ test.describe("Enterprise OAuth (Keycloak) — full SSO flow", () => {
 
     // ── 2. Identity surfaced in settings → Account ────────────
     await page.locator('[data-testid="config-button"]').first().click();
+    await page.getByRole("menuitem", { name: /all settings/i }).click();
     await page
       .getByText(/account settings/i)
       .first()
