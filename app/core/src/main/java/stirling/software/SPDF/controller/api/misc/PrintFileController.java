@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.PrintFileRequest;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.ImageProcessingUtils;
 
 @RestController
 @RequestMapping("/api/v1/misc")
@@ -94,6 +95,8 @@ public class PrintFileController {
                     Files.deleteIfExists(tempFile);
                 }
             } else if (contentType.startsWith("image/")) {
+                // Reject a pixel bomb before the raster is allocated
+                ImageProcessingUtils.assertWithinPixelLimit(file);
                 try (var inputStream = file.getInputStream()) {
                     BufferedImage image = ImageIO.read(inputStream);
                     PrinterJob job = PrinterJob.getPrinterJob();
