@@ -138,8 +138,9 @@ jobs:
         ${{ github.workspace }}/app/**/build.gradle
         ${{ github.workspace }}/gradle/**/*.gradle
       GRADLE_CACHE_PATH: |
-        .cache/gradle-java-25/caches
-        .cache/gradle-java-25/wrapper
+        ${{ github.workspace }}/.cache/gradle-java-25/caches
+        ${{ github.workspace }}/.cache/gradle-java-25/wrapper
+      GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-25
       CARGO_FILES_TO_HASH: |
         ${{ github.workspace }}/frontend/editor/src-tauri/Cargo.toml
         ${{ github.workspace }}/frontend/editor/src-tauri/Cargo.lock
