@@ -141,6 +141,7 @@ const EmbedPdfViewerContent = ({
     getScrollState,
     getSpreadState,
     getZoomState,
+    registerImmediateZoomUpdate,
     getRotationState,
     spreadActions,
     zoomRestorePendingRef,
@@ -641,6 +642,21 @@ const EmbedPdfViewerContent = ({
   const isPlacementOverlayActive = Boolean(
     isInAnnotationTool && isPlacementMode && signatureConfig,
   );
+
+  const [signatureLineZoom, setSignatureLineZoom] = useState<number | null>(
+    null,
+  );
+  useEffect(() => {
+    if (selectedTool !== "sign") {
+      setSignatureLineZoom(null);
+      return;
+    }
+    setSignatureLineZoom(getZoomState()?.currentZoom ?? 1);
+    const unregister = registerImmediateZoomUpdate((percent) => {
+      setSignatureLineZoom(Math.max(percent / 100, 0.01));
+    });
+    return () => unregister?.();
+  }, [selectedTool, getZoomState, registerImmediateZoomUpdate]);
 
   // Determine which file to display — use activeFileId (stable) not activeFileIndex (shifts on removal)
   const currentFile = React.useMemo(() => {
@@ -2061,6 +2077,7 @@ const EmbedPdfViewerContent = ({
               containerRef={pdfContainerRef}
               isActive={isPlacementOverlayActive}
               signatureConfig={signatureConfig}
+              signatureLineZoom={signatureLineZoom}
             />
             <RulerOverlay
               ref={rulerOverlayRef}

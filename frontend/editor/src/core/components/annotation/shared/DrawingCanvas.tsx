@@ -6,6 +6,7 @@ import { ColorSwatchButton } from "@app/components/annotation/shared/ColorPicker
 import PenSizeSelector from "@app/components/tools/sign/PenSizeSelector";
 import SignaturePad from "signature_pad";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
+import { trimCanvas } from "@app/utils/canvasImage";
 
 interface DrawingCanvasProps {
   selectedColor: string;
@@ -94,56 +95,6 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     if (autoOpen) openModal();
   }, [autoOpen]);
 
-  const trimCanvas = (canvas: HTMLCanvasElement): string => {
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return canvas.toDataURL("image/png");
-
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const pixels = imageData.data;
-
-    let minX = canvas.width,
-      minY = canvas.height,
-      maxX = 0,
-      maxY = 0;
-
-    // Find bounds of non-transparent pixels
-    for (let y = 0; y < canvas.height; y++) {
-      for (let x = 0; x < canvas.width; x++) {
-        const alpha = pixels[(y * canvas.width + x) * 4 + 3];
-        if (alpha > 0) {
-          if (x < minX) minX = x;
-          if (x > maxX) maxX = x;
-          if (y < minY) minY = y;
-          if (y > maxY) maxY = y;
-        }
-      }
-    }
-
-    const trimWidth = maxX - minX + 1;
-    const trimHeight = maxY - minY + 1;
-
-    // Create trimmed canvas
-    const trimmedCanvas = document.createElement("canvas");
-    trimmedCanvas.width = trimWidth;
-    trimmedCanvas.height = trimHeight;
-    const trimmedCtx = trimmedCanvas.getContext("2d");
-    if (trimmedCtx) {
-      trimmedCtx.drawImage(
-        canvas,
-        minX,
-        minY,
-        trimWidth,
-        trimHeight,
-        0,
-        0,
-        trimWidth,
-        trimHeight,
-      );
-    }
-
-    return trimmedCanvas.toDataURL("image/png");
-  };
-
   const renderPreview = (dataUrl: string) => {
     const canvas = previewCanvasRef.current;
     if (!canvas) return;
@@ -171,7 +122,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     if (padRef.current && !padRef.current.isEmpty()) {
       const canvas = modalCanvasRef.current;
       if (canvas) {
-        const trimmedPng = trimCanvas(canvas);
+        const trimmedPng = trimCanvas(canvas).toDataURL("image/png");
         const untrimmedPng = canvas.toDataURL("image/png");
         setSavedSignatureData(untrimmedPng); // Save untrimmed for restoration
         onSignatureDataChange(trimmedPng);

@@ -46,6 +46,7 @@ export interface SignatureAPI {
   updateDrawSettings: (color: string, size: number) => void;
   deactivateTools: () => void;
   getPageAnnotations: (pageIndex: number) => Promise<unknown[]>;
+  selectAnnotation: (annotationId: string, pageIndex: number) => void;
   moveAnnotation?: (
     pageIndex: number,
     annotationId: string,

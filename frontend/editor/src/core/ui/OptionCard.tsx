@@ -1,5 +1,5 @@
 import type { CSSProperties, KeyboardEvent, ReactNode } from "react";
-import { Card } from "@app/ui/Card";
+import { Card, type CardProps } from "@app/ui/Card";
 import "@app/ui/OptionCard.css";
 
 export interface OptionCardProps {
@@ -21,6 +21,7 @@ export interface OptionCardProps {
   note?: ReactNode;
   /** Lines the description clamps to before ellipsis. Default 3. */
   descriptionLines?: number;
+  padding?: CardProps["padding"];
   /** Fires when a selectable card is clicked or activated by keyboard. Ignored when disabled. */
   onSelect?: () => void;
   className?: string;
@@ -40,6 +41,7 @@ export function OptionCard({
   disabled = false,
   note,
   descriptionLines = 3,
+  padding,
   onSelect,
   className,
 }: OptionCardProps) {
@@ -54,6 +56,7 @@ export function OptionCard({
 
   return (
     <Card
+      padding={padding}
       interactive={interactive}
       className={[
         "sui-option-card",

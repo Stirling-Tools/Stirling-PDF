@@ -20,6 +20,7 @@ import type {
 import type { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
+import { usePlacedSignatureTracking } from "@app/components/viewer/hooks/usePlacedSignatureTracking";
 
 // The signature tools stash the source image on stamp annotations via custom fields
 type StampAnnotation = PdfAnnotationObject & {
@@ -513,6 +514,10 @@ export const SignatureAPIBridge = forwardRef<
         annotationApi.deleteAnnotation(pageIndex, annotationId);
       },
 
+      selectAnnotation: (annotationId: string, pageIndex: number) => {
+        annotationApi?.selectAnnotation(pageIndex, annotationId);
+      },
+
       deactivateTools: () => {
         if (!annotationApi) return;
         annotationApi.setActiveTool(null);
@@ -562,7 +567,13 @@ export const SignatureAPIBridge = forwardRef<
         rectMove.moveAnnotation?.(pageIndex, annotationId, newRect);
       },
     }),
-    [annotationApi, signatureConfig, placementPreviewSize, applyStampDefaults],
+    [
+      annotationApi,
+      signatureConfig,
+      placementPreviewSize,
+      applyStampDefaults,
+      configureStampDefaults,
+    ],
   );
 
   useEffect(() => {
@@ -606,6 +617,8 @@ export const SignatureAPIBridge = forwardRef<
       unsubscribe?.();
     };
   }, [annotationApi, storeImageData, setSignaturesApplied, documentReady]);
+
+  usePlacedSignatureTracking();
 
   useEffect(() => {
     if (!isPlacementMode || !documentReady) {

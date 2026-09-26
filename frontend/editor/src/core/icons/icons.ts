@@ -104,6 +104,7 @@ import DraftingCompass from "lucide-static/icons/drafting-compass.svg?react";
 import Droplet from "lucide-static/icons/droplet.svg?react";
 import Ellipsis from "lucide-static/icons/ellipsis.svg?react";
 import EllipsisVertical from "lucide-static/icons/ellipsis-vertical.svg?react";
+import Eraser from "lucide-static/icons/eraser.svg?react";
 import ExternalLink from "lucide-static/icons/external-link.svg?react";
 import Eye from "lucide-static/icons/eye.svg?react";
 import EyeOff from "lucide-static/icons/eye-off.svg?react";
@@ -509,6 +510,7 @@ export const ICONS = {
   droplet: { Component: Droplet, kind: "lucide" },
   ellipsis: { Component: Ellipsis, kind: "lucide" },
   "ellipsis-vertical": { Component: EllipsisVertical, kind: "lucide" },
+  eraser: { Component: Eraser, kind: "lucide" },
   "external-link": { Component: ExternalLink, kind: "lucide" },
   eye: { Component: Eye, kind: "lucide" },
   "eye-off": { Component: EyeOff, kind: "lucide" },

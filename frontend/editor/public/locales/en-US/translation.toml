@@ -11835,6 +11835,154 @@ saved = "Saved"
 text = "Text"
 title = "Signature Type"
 
+[sign.wallet]
+apply_one = "Apply {{count}} signature"
+apply_other = "Apply {{count}} signatures"
+applyEmpty = "Apply signatures"
+count = "{{count}} of {{max}}"
+default = "Default"
+loading = "Loading your signatures..."
+new = "New signature"
+shared = "Shared"
+sharedHint = "Everyone can use these"
+unsaved = "Unsaved"
+yours = "Your signatures"
+
+[sign.wallet.create]
+cancel = "Cancel"
+full = "Your library is full ({{max}} signatures). Delete one to save more."
+makeDefault = "Make default"
+method = "How to create it"
+name = "Name"
+save = "Save to my signatures"
+saveBrowserHint = "Kept in this browser, ready for next time."
+saveHint = "Ready to reuse next time you sign."
+subtitle = "Create it once, reuse it on any document."
+title = "New signature"
+use = "Use signature"
+who = "Who can use it"
+whoEveryone = "Everyone"
+whoMe = "Only me"
+
+[sign.wallet.defaultName]
+draw = "My signature"
+initials = "Initials"
+phone = "Phone signature"
+type = "Typed signature"
+upload = "Uploaded signature"
+
+[sign.wallet.delete]
+body = "\"{{name}}\" is removed from your signatures. Documents you already signed keep it."
+confirm = "Delete"
+title = "Delete this signature?"
+
+[sign.wallet.draw]
+bold = "Bold pen"
+clear = "Clear"
+fine = "Fine pen"
+hint = "Sign above the line"
+medium = "Medium pen"
+pad = "Signature pad"
+pen = "Pen"
+tip = "Use a mouse, trackpad, pen or finger"
+undo = "Undo"
+
+[sign.wallet.ink]
+black = "Black ink"
+blue = "Blue ink"
+label = "Ink"
+navy = "Navy ink"
+
+[sign.wallet.intro]
+body = "Create it once. It is saved here, ready for every document you sign."
+privacy = "Saved signatures are private to you unless you choose to share them."
+privacyBrowser = "Saved signatures stay in this browser."
+title = "Add your signature"
+
+[sign.wallet.menu]
+delete = "Delete"
+discard = "Discard"
+makeDefault = "Make default"
+options = "Options for {{name}}"
+place = "Place on page"
+removeDefault = "Remove as default"
+rename = "Rename"
+save = "Save to my signatures"
+share = "Share with everyone"
+stop = "Stop placing"
+
+[sign.wallet.phone]
+expires = "Expires in {{time}}"
+qr = "QR code to sign on your phone"
+received = "Received from your phone"
+step1 = "Scan the code with your phone camera"
+step1Hint = "It opens in the phone browser, no app needed."
+step2 = "Draw, type or photograph your signature"
+step2Hint = "A big canvas made for a finger."
+step3 = "It appears here automatically"
+step3Hint = "Keep this window open while you sign."
+waiting = "Waiting for your phone..."
+
+[sign.wallet.placed]
+empty = "Signatures you place on the page are listed here."
+fallbackName = "Signature"
+page = "Page {{page}}"
+remove = "Remove {{name}}"
+show = "Show {{name}} on the page"
+title = "On this document ({{count}})"
+
+[sign.wallet.rename]
+save = "Save"
+title = "Rename signature"
+
+[sign.wallet.status]
+idle = "Pick a signature to place it"
+placing = "Click the page to place {{name}}."
+stop = "Stop"
+
+[sign.wallet.tabs]
+draw = "Draw"
+phone = "Phone"
+type = "Type"
+upload = "Upload"
+
+[sign.wallet.toast]
+saved = "Saved to your signatures"
+saveFailed = "Could not save the signature"
+saveFailedBody = "It is still ready to place on this document."
+shared = "Shared with everyone"
+shareFailed = "Could not share the signature"
+
+[sign.wallet.type]
+initials = "Initials"
+name = "Your name"
+namePlaceholder = "Type your name"
+previewName = "Your name"
+saveInitials = "Also save my initials"
+style = "Style"
+styleOption = "Style {{index}}"
+
+[sign.wallet.upload]
+browse = "or browse files"
+drop = "Drop an image here"
+failed = "Could not read that image."
+hint = "PNG, JPG or WebP up to {{size}} MB. White backgrounds are removed automatically."
+ink = "Ink color"
+inkBlack = "Black"
+inkBlue = "Blue"
+inkOriginal = "Original"
+preview = "Uploaded signature preview"
+processing = "Cleaning up the image..."
+rejected = "Choose a PNG, JPG or WebP image up to {{size}} MB."
+removeBackground = "Remove background"
+removeBackgroundHint = "White paper becomes transparent"
+replace = "Replace"
+rotate = "Rotate"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+trim = "Trim to signature"
+trimHint = "Crops the empty space around it"
+
 [signatureSettings.tooltip]
 header = "Signature Appearance Settings"
 

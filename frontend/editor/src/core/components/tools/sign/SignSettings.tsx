@@ -13,6 +13,7 @@ import { Button } from "@app/ui/Button";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
 import { useSignature } from "@app/contexts/SignatureContext";
+import { useHistoryAvailability } from "@app/hooks/useHistoryAvailability";
 import { useViewer } from "@app/contexts/ViewerContext";
 import {
   PLACEMENT_ACTIVATION_DELAY,
@@ -97,11 +98,7 @@ const SignSettings = ({
   const { t } = useTranslation();
   const { isPlacementMode, signaturesApplied, historyApiRef } = useSignature();
   const { activeFileIndex } = useViewer();
-  const [historyAvailability, setHistoryAvailability] = useState({
-    canUndo: false,
-    canRedo: false,
-  });
-  const historyApiInstance = historyApiRef.current;
+  const historyAvailability = useHistoryAvailability(historyApiRef.current);
   const translate = useCallback(
     (key: string, defaultValue: string, options?: Record<string, unknown>) =>
       t(`${translationScope}.${key}`, { defaultValue, ...options }),
@@ -558,27 +555,6 @@ const SignSettings = ({
       setPlacementManuallyPaused(false);
     }
   }, [signaturesApplied]);
-
-  useEffect(() => {
-    if (!historyApiInstance) {
-      setHistoryAvailability({ canUndo: false, canRedo: false });
-      return;
-    }
-
-    const updateAvailability = () => {
-      setHistoryAvailability({
-        canUndo: historyApiInstance.canUndo?.() ?? false,
-        canRedo: historyApiInstance.canRedo?.() ?? false,
-      });
-    };
-
-    const unsubscribe = historyApiInstance.subscribe?.(updateAvailability);
-    updateAvailability();
-
-    return () => {
-      unsubscribe?.();
-    };
-  }, [historyApiInstance]);
 
   // Handle image upload
   const handleImageChange = async (file: File | null) => {

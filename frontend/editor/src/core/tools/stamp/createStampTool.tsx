@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from "react";
+import { useEffect, useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import SignSettings, {
@@ -18,6 +18,7 @@ import { useSignature } from "@app/contexts/SignatureContext";
 import { useFileContext } from "@app/contexts/FileContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { flattenSignatures } from "@app/utils/signatureFlattening";
+import { SignatureWallet } from "@app/components/tools/sign/wallet/SignatureWallet";
 import SharedSigningLauncher from "@app/components/shared/signing/SharedSigningLauncher";
 import { SuggestedToolsSection } from "@app/components/tools/shared/SuggestedToolsSection";
 import { useGroupSigningEnabled } from "@app/hooks/useGroupSigningEnabled";
@@ -30,6 +31,7 @@ export type StampToolConfig = {
   defaultSignatureType?: SignParameters["signatureType"];
   enableApplyAction?: boolean;
   enableSharedSigning?: boolean;
+  settingsPanel?: "stamp" | "wallet";
 };
 
 const STAMP_TOOL_DEFAULT_SOURCES: SignatureSource[] = [
@@ -48,6 +50,7 @@ export const createStampTool = (config: StampToolConfig) => {
     defaultSignatureType,
     enableApplyAction = false,
     enableSharedSigning = false,
+    settingsPanel = "stamp",
   } = config;
 
   const StampTool = (props: BaseToolProps) => {
@@ -111,6 +114,8 @@ export const createStampTool = (config: StampToolConfig) => {
     ]);
 
     const hasOpenedViewer = useRef(false);
+    const [hasApplied, setHasApplied] = useState(false);
+    const showSuggestions = settingsPanel === "stamp" || hasApplied;
     const activeModeRef = useRef<"draw" | "placement" | null>(null);
 
     const handleSignaturePlacement = useCallback(() => {
@@ -177,6 +182,7 @@ export const createStampTool = (config: StampToolConfig) => {
 
           setActiveFileIndex(0);
           setSignaturesApplied(true);
+          setHasApplied(true);
           handleDeactivateSignature();
 
           const hasSignatureReady = (() => {
@@ -229,6 +235,40 @@ export const createStampTool = (config: StampToolConfig) => {
       setActiveFileIndex,
     ]);
 
+    const renderSettings = () => {
+      const onSave = enableApplyAction ? handleSaveToSystem : undefined;
+      if (settingsPanel === "wallet") {
+        return (
+          <SignatureWallet
+            onParameterChange={base.params.updateParameter}
+            disabled={base.endpointLoading}
+            onActivateSignaturePlacement={handleActivateSignaturePlacement}
+            onDeactivateSignature={handleDeactivateSignature}
+            onUndo={undo}
+            onRedo={redo}
+            onSave={onSave}
+          />
+        );
+      }
+      return (
+        <SignSettings
+          parameters={base.params.parameters}
+          onParameterChange={base.params.updateParameter}
+          disabled={base.endpointLoading}
+          onActivateDrawMode={handleActivateDrawMode}
+          onActivateSignaturePlacement={handleActivateSignaturePlacement}
+          onDeactivateSignature={handleDeactivateSignature}
+          onUpdateDrawSettings={updateDrawSettings}
+          onUndo={undo}
+          onRedo={redo}
+          onSave={onSave}
+          translationScope={translationScope}
+          allowedSignatureSources={allowedSignatureSources}
+          defaultSignatureSource={defaultSignatureSource}
+        />
+      );
+    };
+
     const getSteps = () => {
       const steps = [];
 
@@ -237,23 +277,7 @@ export const createStampTool = (config: StampToolConfig) => {
           title: translateTool("steps.configure", "Configure Stamp"),
           isCollapsed: false,
           onCollapsedClick: undefined,
-          content: (
-            <SignSettings
-              parameters={base.params.parameters}
-              onParameterChange={base.params.updateParameter}
-              disabled={base.endpointLoading}
-              onActivateDrawMode={handleActivateDrawMode}
-              onActivateSignaturePlacement={handleActivateSignaturePlacement}
-              onDeactivateSignature={handleDeactivateSignature}
-              onUpdateDrawSettings={updateDrawSettings}
-              onUndo={undo}
-              onRedo={redo}
-              onSave={enableApplyAction ? handleSaveToSystem : undefined}
-              translationScope={translationScope}
-              allowedSignatureSources={allowedSignatureSources}
-              defaultSignatureSource={defaultSignatureSource}
-            />
-          ),
+          content: renderSettings(),
         });
 
         // Optional step: send the document to others to sign instead.
@@ -276,7 +300,7 @@ export const createStampTool = (config: StampToolConfig) => {
         isCollapsed: base.operation.files.length > 0,
       },
       steps: getSteps(),
-      preview: <SuggestedToolsSection />,
+      preview: showSuggestions ? <SuggestedToolsSection /> : null,
       review: {
         isVisible: false,
         operation: base.operation,

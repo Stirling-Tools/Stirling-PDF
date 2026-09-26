@@ -90,7 +90,10 @@ export const useSavedSignatures = () => {
     storageType === "backend"
       ? MAX_SAVED_SIGNATURES_BACKEND
       : MAX_SAVED_SIGNATURES_LOCALSTORAGE;
-  const isAtCapacity = savedSignatures.length >= maxLimit;
+  const ownCount = savedSignatures.filter(
+    (entry) => entry.scope !== "shared",
+  ).length;
+  const isAtCapacity = ownCount >= maxLimit;
 
   const addSignature = useCallback(
     async (
@@ -106,7 +109,7 @@ export const useSavedSignatures = () => {
         return { success: false, reason: "invalid" };
       }
 
-      if (isAtCapacity) {
+      if (isAtCapacity && scope !== "shared") {
         return { success: false, reason: "limit" };
       }
 
@@ -130,7 +133,7 @@ export const useSavedSignatures = () => {
         return { success: false, reason: "invalid" };
       }
     },
-    [savedSignatures.length, storageType],
+    [isAtCapacity, storageType],
   );
 
   const removeSignature = useCallback(async (id: string) => {
@@ -225,6 +228,7 @@ export const useSavedSignatures = () => {
 
   return {
     savedSignatures,
+    ownCount,
     isAtCapacity,
     maxLimit,
     addSignature,

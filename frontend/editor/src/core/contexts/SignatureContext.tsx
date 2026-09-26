@@ -13,6 +13,12 @@ import type {
   AnnotationAPI,
 } from "@app/components/viewer/viewerTypes";
 
+export interface PlacedSignature {
+  id: string;
+  pageIndex: number;
+  imageSrc?: string;
+}
+
 // Signature state interface
 interface SignatureState {
   // Current signature configuration from the tool
@@ -23,6 +29,7 @@ interface SignatureState {
   signaturesApplied: boolean;
   // Size (in screen units) we want newly placed signatures to use
   placementPreviewSize: { width: number; height: number } | null;
+  placedSignatures: PlacedSignature[];
 }
 
 // Signature actions interface
@@ -42,6 +49,7 @@ interface SignatureActions {
   setPlacementPreviewSize: (
     size: { width: number; height: number } | null,
   ) => void;
+  setPlacedSignatures: (placed: PlacedSignature[]) => void;
 }
 
 // Combined context interface
@@ -62,6 +70,7 @@ const initialState: SignatureState = {
   isPlacementMode: false,
   signaturesApplied: true, // Start as true (no signatures placed yet)
   placementPreviewSize: null,
+  placedSignatures: [],
 };
 
 // Provider component
@@ -174,6 +183,10 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
     [],
   );
 
+  const setPlacedSignatures = useCallback((placed: PlacedSignature[]) => {
+    setState((prev) => ({ ...prev, placedSignatures: placed }));
+  }, []);
+
   // No auto-activation - all modes use manual buttons
 
   const contextValue: SignatureContextValue = {
@@ -194,6 +207,7 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
     getImageData,
     setSignaturesApplied,
     setPlacementPreviewSize,
+    setPlacedSignatures,
   };
 
   return (
