@@ -2,8 +2,13 @@ name: Publish PR cache artifacts
 run-name: "Publish PR cache artifacts - PR #${{ github.event.pull_request.number || 'manual' }}"
 
 on:
-  workflow_call:
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      called-from-build:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   publish:
@@ -21,14 +26,14 @@ jobs:
       - name: Checkout trusted publisher
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: main
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
           persist-credentials: false
 
       - name: Checkout cache publisher
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: Ludy87/cache-the-planet
-          ref: v1.7.0
+          ref: v1.9.0
           path: cache-the-planet
           persist-credentials: false
 
@@ -38,6 +43,7 @@ jobs:
         with:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+        continue-on-error: true
 
       - name: Resolve PR cache artifact names
         id: pr
@@ -109,13 +115,18 @@ jobs:
       - name: Publish isolated PR caches
         if: ${{ steps.pr.outputs.number != '' }}
         env:
-          GITHUB_TOKEN: ${{ steps.setup-bot.outputs.token }}
+          GITHUB_TOKEN: ${{ steps.setup-bot.outputs.token || github.token }}
           SOURCE_ARTIFACT_TOKEN: ${{ github.token }}
           ARTIFACT_RUN_ID: ${{ github.run_id }}
           PR_NUMBER: ${{ steps.pr.outputs.number }}
           EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
           EXPECTED_WORKFLOW: Cache integration save suite
           PR_CACHE_ARTIFACTS_DIR: ${{ github.workspace }}/pr-cache-artifacts
+          CACHE_SFTP_HOST: ${{ secrets.CACHE_SFTP_HOST }}
+          CACHE_SFTP_PORT: ${{ secrets.CACHE_SFTP_PORT || '22' }}
+          CACHE_SFTP_USERNAME: ${{ secrets.CACHE_SFTP_USERNAME }}
+          CACHE_SFTP_PASSWORD: ${{ secrets.CACHE_SFTP_PASSWORD }}
+          CACHE_SFTP_BASE_PATH: ${{ secrets.CACHE_SFTP_BASE_PATH || '/files/cache-the-planet' }}
         working-directory: cache-the-planet
         run: node "$GITHUB_WORKSPACE/.github/scripts/publish-pr-cache-artifacts.js"
 
