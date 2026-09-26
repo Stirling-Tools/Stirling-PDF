@@ -41,6 +41,93 @@ fn get_keyring_entry() -> Result<Entry, String> {
     Ok(entry)
 }
 
+/// The keychain read blocks until its OS prompt is answered, and an unanswered prompt never
+/// returns. Past this bound the caller falls through to the Store rather than hanging the app.
+const KEYRING_READ_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
+static KEYRING_READ_PERMIT: tokio::sync::Semaphore = tokio::sync::Semaphore::const_new(1);
+
+/// None means "no usable keyring value" for every reason - missing, errored, or timed out - so
+/// the caller always has the Store fallback available.
+async fn read_keyring_password(
+    entry: fn() -> Result<Entry, String>,
+    label: &'static str,
+) -> Option<String> {
+    read_keyring_password_with_limit(entry, label, &KEYRING_READ_PERMIT).await
+}
+
+async fn read_keyring_password_with_limit(
+    entry: impl FnOnce() -> Result<Entry, String> + Send + 'static,
+    label: &'static str,
+    semaphore: &'static tokio::sync::Semaphore,
+) -> Option<String> {
+    let Ok(permit) = semaphore.try_acquire() else {
+        log::debug!(
+            "Keyring read already in flight - trying Tauri Store for {}",
+            label
+        );
+        return None;
+    };
+    let (tx, rx) = tokio::sync::oneshot::channel();
+    let worker = std::thread::Builder::new().spawn(move || {
+        // The OS read cannot be cancelled: keep the permit until the worker exits,
+        // even if its caller times out or drops the future.
+        let _permit = permit;
+        let password = match entry() {
+            Ok(entry) => match entry.get_password() {
+                Ok(password) => Some(password),
+                Err(keyring::Error::NoEntry) => {
+                    log::debug!("No {} in keyring, trying Tauri Store", label);
+                    None
+                }
+                Err(e) => {
+                    log::warn!(
+                        "Keyring error reading {}: {} - trying Tauri Store",
+                        label,
+                        e
+                    );
+                    None
+                }
+            },
+            Err(e) => {
+                log::warn!(
+                    "Keyring entry unavailable for {}: {} - trying Tauri Store",
+                    label,
+                    e
+                );
+                None
+            }
+        };
+        let _ = tx.send(password);
+    });
+    if let Err(error) = worker {
+        log::warn!(
+            "Could not start keyring read for {}: {} - trying Tauri Store",
+            label,
+            error
+        );
+        return None;
+    }
+
+    match tokio::time::timeout(KEYRING_READ_TIMEOUT, rx).await {
+        Ok(Ok(Some(password))) => {
+            log::info!("{} retrieved from keyring", label);
+            Some(password)
+        }
+        Ok(Ok(None)) => None,
+        Ok(Err(_)) => {
+            log::warn!(
+                "Keyring read for {} was dropped - trying Tauri Store",
+                label
+            );
+            None
+        }
+        Err(_) => {
+            log::warn!("Keyring read for {} timed out - trying Tauri Store", label);
+            None
+        }
+    }
+}
+
 pub fn get_refresh_token_keyring_entry() -> Result<Entry, String> {
     if std::env::var("STIRLING_PDF_TEST_FORCE_REFRESH_KEYRING_FAIL").is_ok() {
         return Err("Forced keyring failure for tests".to_string());
@@ -133,19 +220,8 @@ pub async fn save_auth_token(app_handle: AppHandle, token: String) -> Result<(),
 pub async fn get_auth_token(app_handle: AppHandle) -> Result<Option<String>, String> {
     // Try keyring first (production / unrestricted environments). Any failure -
     // including entry creation - falls through to the Tauri Store fallback below.
-    match get_keyring_entry() {
-        Ok(entry) => match entry.get_password() {
-            Ok(token) => return Ok(Some(token)),
-            Err(keyring::Error::NoEntry) => {
-                log::debug!("No auth token in keyring, trying Tauri Store");
-            }
-            Err(e) => {
-                log::warn!("Keyring error reading auth token: {} - trying Tauri Store", e);
-            }
-        },
-        Err(e) => {
-            log::warn!("Keyring entry unavailable for auth token: {} - trying Tauri Store", e);
-        }
+    if let Some(token) = read_keyring_password(get_keyring_entry, "auth token").await {
+        return Ok(Some(token));
     }
 
     // Fallback to Tauri Store
@@ -241,22 +317,10 @@ pub async fn save_refresh_token<R: Runtime>(app_handle: AppHandle<R>, token: Str
 pub async fn get_refresh_token<R: Runtime>(app_handle: AppHandle<R>) -> Result<Option<String>, String> {
     // Try keyring first (production / unrestricted environments). Any failure -
     // including entry creation - falls through to the Tauri Store fallback below.
-    match get_refresh_token_keyring_entry() {
-        Ok(entry) => match entry.get_password() {
-            Ok(token) => {
-                log::info!("Refresh token retrieved from keyring");
-                return Ok(Some(token));
-            }
-            Err(keyring::Error::NoEntry) => {
-                log::debug!("No refresh token in keyring, trying Tauri Store");
-            }
-            Err(e) => {
-                log::warn!("Keyring error reading refresh token: {} - trying Tauri Store", e);
-            }
-        },
-        Err(e) => {
-            log::warn!("Keyring entry unavailable for refresh token: {} - trying Tauri Store", e);
-        }
+    if let Some(token) =
+        read_keyring_password(get_refresh_token_keyring_entry, "refresh token").await
+    {
+        return Ok(Some(token));
     }
 
     // Fallback to Tauri Store (dev or restricted environments)
@@ -934,4 +998,74 @@ fn parse_oauth_callback(url_str: &str) -> Result<OAuthCallbackData, String> {
 
     // No authorization code or error found
     Err("No authorization code or error found in OAuth callback".to_string())
+}
+
+#[cfg(test)]
+mod keyring_timeout_tests {
+    use super::*;
+
+    #[tokio::test(start_paused = true)]
+    async fn timed_out_read_holds_the_permit_until_the_worker_exits() {
+        static PERMIT: tokio::sync::Semaphore = tokio::sync::Semaphore::const_new(1);
+        let (release_tx, release_rx) = std::sync::mpsc::channel();
+        let read = read_keyring_password_with_limit(
+            move || {
+                release_rx.recv().unwrap();
+                Err("keyring unavailable".to_string())
+            },
+            "test token",
+            &PERMIT,
+        );
+
+        assert!(read.await.is_none());
+        assert_eq!(PERMIT.available_permits(), 0);
+        for _ in 0..5 {
+            assert!(read_keyring_password_with_limit(
+                || panic!("must not spawn another worker while the first is blocked"),
+                "test token",
+                &PERMIT,
+            )
+            .await
+            .is_none());
+        }
+
+        release_tx.send(()).unwrap();
+        let permit = PERMIT.acquire().await.unwrap();
+        drop(permit);
+        let (started_tx, started_rx) = std::sync::mpsc::channel();
+        assert!(read_keyring_password_with_limit(
+            move || {
+                started_tx.send(()).unwrap();
+                Err("keyring unavailable".to_string())
+            },
+            "test token",
+            &PERMIT,
+        )
+        .await
+        .is_none());
+        started_rx
+            .recv_timeout(std::time::Duration::from_secs(1))
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn returns_a_successful_keyring_read_and_releases_the_permit() {
+        static PERMIT: tokio::sync::Semaphore = tokio::sync::Semaphore::const_new(1);
+        let password = read_keyring_password_with_limit(
+            || {
+                let entry = Entry::new_with_credential(
+                    keyring::mock::default_credential_builder()
+                        .build(None, "test", "token")
+                        .unwrap(),
+                );
+                entry.set_password("stored-token").unwrap();
+                Ok(entry)
+            },
+            "test token",
+            &PERMIT,
+        )
+        .await;
+        assert_eq!(password.as_deref(), Some("stored-token"));
+        assert!(PERMIT.acquire().await.is_ok());
+    }
 }
