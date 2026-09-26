@@ -86,14 +86,21 @@ public class TextFinderUtils {
         return patterns;
     }
 
-    private static String applyWordBoundaries(String originalTerm, String patternString) {
-        if (originalTerm.length() == 1 && Character.isDigit(originalTerm.charAt(0))) {
+    /** Shared whole-word wrapper so the finder and RedactionPipeline never diverge (see F2). */
+    public static String applyWordBoundaries(String originalTerm, String patternString) {
+        // Lookarounds for single/non-word-edge terms (\b no-ops on chars like '&'); \b otherwise.
+        boolean nonWordEdge =
+                originalTerm.length() == 1
+                        || !isWordChar(originalTerm.charAt(0))
+                        || !isWordChar(originalTerm.charAt(originalTerm.length() - 1));
+        if (nonWordEdge) {
             return "(?<![\\w])" + patternString + "(?![\\w])";
-        } else if (originalTerm.length() == 1) {
-            return "(?<![\\w])" + patternString + "(?![\\w])";
-        } else {
-            return "\\b" + patternString + "\\b";
         }
+        return "\\b" + patternString + "\\b";
+    }
+
+    private static boolean isWordChar(char c) {
+        return Character.isLetterOrDigit(c) || c == '_';
     }
 
     public static boolean hasProblematicFonts(PDPage page) {
