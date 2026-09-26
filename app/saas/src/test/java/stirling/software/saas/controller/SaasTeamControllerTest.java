@@ -711,6 +711,42 @@ class SaasTeamControllerTest {
         }
 
         @Test
+        @DisplayName("carries the Supabase id the browser needs to sign the avatar")
+        void exposesSupabaseId() {
+            Team team = team(10L, "Acme");
+            User bob = user(2L, "bob", "bob@x.com");
+            java.util.UUID bobSupabaseId = java.util.UUID.randomUUID();
+            bob.setSupabaseId(bobSupabaseId);
+            when(membershipRepository.findByTeamId(10L))
+                    .thenReturn(List.of(membership(team, bob, TeamRole.MEMBER)));
+
+            ResponseEntity<?> response = controller.getTeamMembers(10L);
+
+            @SuppressWarnings("unchecked")
+            List<SaasTeamController.TeamMemberDTO> dtos =
+                    (List<SaasTeamController.TeamMemberDTO>) response.getBody();
+            assertThat(dtos.get(0).getSupabaseId()).isEqualTo(bobSupabaseId.toString());
+        }
+
+        @Test
+        @DisplayName("a member with no Supabase identity reports a null id")
+        void memberWithoutSupabaseIdIsNull() {
+            Team team = team(10L, "Acme");
+            when(membershipRepository.findByTeamId(10L))
+                    .thenReturn(
+                            List.of(
+                                    membership(
+                                            team, user(2L, "bob", "bob@x.com"), TeamRole.MEMBER)));
+
+            ResponseEntity<?> response = controller.getTeamMembers(10L);
+
+            @SuppressWarnings("unchecked")
+            List<SaasTeamController.TeamMemberDTO> dtos =
+                    (List<SaasTeamController.TeamMemberDTO>) response.getBody();
+            assertThat(dtos.get(0).getSupabaseId()).isNull();
+        }
+
+        @Test
         @DisplayName("repository failure maps to 500")
         void repoFailure_isServerError() {
             when(membershipRepository.findByTeamId(10L)).thenThrow(new RuntimeException("db"));

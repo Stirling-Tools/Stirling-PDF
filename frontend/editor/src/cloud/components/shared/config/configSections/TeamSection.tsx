@@ -9,6 +9,7 @@ import {
   Badge,
   Menu,
   Modal,
+  Avatar,
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
@@ -18,6 +19,7 @@ import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
 import { Icon } from "@app/ui/Icon";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import apiClient from "@app/services/apiClient";
+import { useTeamAvatarUrls } from "@app/hooks/useTeamAvatarUrls";
 
 const TeamSection: React.FC = () => {
   const { t } = useTranslation();
@@ -35,6 +37,8 @@ const TeamSection: React.FC = () => {
     leaveTeam,
     refreshTeams,
   } = useSaaSTeam();
+
+  const avatarUrls = useTeamAvatarUrls(teamMembers);
 
   const [transferTarget, setTransferTarget] = useState<{
     id: number;
@@ -514,9 +518,24 @@ const TeamSection: React.FC = () => {
                 {teamMembers.map((member) => (
                   <Table.Tr key={`member-${member.id}`}>
                     <Table.Td>
-                      <Text size="sm" fw={500}>
-                        {member.username}
-                      </Text>
+                      <Group gap="xs" wrap="nowrap">
+                        <Avatar
+                          size={28}
+                          radius="xl"
+                          src={
+                            member.supabaseId
+                              ? avatarUrls[member.supabaseId]
+                              : undefined
+                          }
+                          alt=""
+                          color="blue"
+                        >
+                          {member.username.charAt(0).toUpperCase()}
+                        </Avatar>
+                        <Text size="sm" fw={500}>
+                          {member.username}
+                        </Text>
+                      </Group>
                     </Table.Td>
                     <Table.Td>
                       <Text size="sm" c="dimmed">

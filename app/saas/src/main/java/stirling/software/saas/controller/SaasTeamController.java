@@ -3,6 +3,7 @@ package stirling.software.saas.controller;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.context.annotation.Profile;
@@ -311,9 +312,7 @@ public class SaasTeamController {
     public ResponseEntity<?> getTeamMembers(@PathVariable Long teamId) {
         try {
             List<TeamMembership> memberships = membershipRepository.findByTeamId(teamId);
-            List<TeamMemberDTO> dtos =
-                    memberships.stream().map(this::toTeamMemberDTO).collect(Collectors.toList());
-            return ResponseEntity.ok(dtos);
+            return ResponseEntity.ok(toTeamMemberDTOs(memberships));
         } catch (Exception e) {
             log.error("Error fetching team members", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -499,14 +498,20 @@ public class SaasTeamController {
                 .orElseThrow(() -> new SecurityException("User not found: " + username));
     }
 
+    private List<TeamMemberDTO> toTeamMemberDTOs(List<TeamMembership> memberships) {
+        return memberships.stream().map(this::toTeamMemberDTO).collect(Collectors.toList());
+    }
+
     private TeamMemberDTO toTeamMemberDTO(TeamMembership membership) {
         User user = membership.getUser();
+        UUID supabaseId = user.getSupabaseId();
         return new TeamMemberDTO(
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),
                 membership.getRole().name(),
-                membership.getAcceptedAt());
+                membership.getAcceptedAt(),
+                supabaseId == null ? null : supabaseId.toString());
     }
 
     private TeamDetailsDTO toTeamDetailsDTO(Team team, boolean isLeader) {
@@ -551,6 +556,13 @@ public class SaasTeamController {
         private final String email;
         private final String role;
         private final LocalDateTime joinedAt;
+
+        /**
+         * The member's Supabase auth id, which is also their avatar's storage path prefix. Null on
+         * accounts with no Supabase identity. Only ever sent to callers the membership check has
+         * already admitted, who can see this person's email on the same row.
+         */
+        private final String supabaseId;
     }
 
     @Data
@@ -673,8 +685,7 @@ public class SaasTeamController {
                             .orElseThrow(() -> new IllegalArgumentException("Team not found"));
 
             List<TeamMembership> memberships = membershipRepository.findByTeamId(teamId);
-            List<TeamMemberDTO> members =
-                    memberships.stream().map(this::toTeamMemberDTO).collect(Collectors.toList());
+            List<TeamMemberDTO> members = toTeamMemberDTOs(memberships);
 
             // Check if current user is team leader
             User currentUser = getCurrentUser();
