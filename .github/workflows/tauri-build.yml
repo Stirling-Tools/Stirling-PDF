@@ -221,7 +221,7 @@ jobs:
           storage: sftp
           multi-cache: |
             cargo:
-              path: ${{ env.CARGO_HOME }}
+              path: .cache/cargo
             gradle-caches:
               path: .cache/gradle-java-25/caches
             gradle-wrapper:
