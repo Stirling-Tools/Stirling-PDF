@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Hidden;
@@ -200,14 +202,27 @@ public class AccountLinkController {
         return ResponseEntity.ok(freeTierUsageService.balance());
     }
 
-    /** Forces an immediate usage sync to SaaS — the same work the daily scheduler does. */
+    /**
+     * Runs an immediate usage sync to SaaS — the same work the daily scheduler does.
+     *
+     * <p>Throttled, because the billing page asks on open and a page can be reloaded: 429 with a
+     * {@code Retry-After} says a recent sync already covers the caller, which is an answer and not
+     * a fault. {@code force} skips the throttle, for an operator asking explicitly and for the
+     * nudge after a checkout, where the point is that the entitlement changed a moment ago.
+     */
     @PostMapping("/sync-now")
-    public ResponseEntity<Void> syncNow() {
+    public ResponseEntity<Void> syncNow(
+            @RequestParam(name = "force", defaultValue = "false") boolean force) {
         UsageSyncService sync = syncServiceProvider.getIfAvailable();
         if (sync == null) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
-        sync.syncNow();
-        return ResponseEntity.noContent().build();
+        UsageSyncService.SyncRequest result = sync.requestSync(force);
+        if (result.ran()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header(HttpHeaders.RETRY_AFTER, String.valueOf(result.retryAfterSeconds()))
+                .build();
     }
 }

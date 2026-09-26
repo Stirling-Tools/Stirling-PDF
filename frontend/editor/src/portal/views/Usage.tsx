@@ -31,6 +31,7 @@ import { useAccountLinkOptional } from "@app/portal/contexts/AccountLinkContext"
 import { usePortalSaasSession } from "@app/portal/hooks/usePortalSaasSession";
 import { useStripePortal } from "@app/portal/hooks/useStripePortal";
 import { useBundleFlowState } from "@app/portal/hooks/useBundleFlowState";
+import { useLocalUsageSync } from "@app/portal/hooks/useLocalUsageSync";
 import { FreePlanView } from "@app/portal/components/billing/FreePlanView";
 import { PaymentSection } from "@app/portal/components/billing/PaymentSection";
 import { InvoicesSection } from "@app/portal/components/billing/InvoicesSection";
@@ -160,6 +161,9 @@ export function Usage({
   // Locally-accrued usage SaaS hasn't billed yet; added to the synced figure so
   // "current usage" reflects work since the last daily sync. Best-effort.
   const hasLocalInstance = localUsersInUse !== undefined;
+  // Opening the page reports that usage rather than only rendering around it, so the
+  // figures the meter owns are the meter's own and not this page's estimate of them.
+  useLocalUsageSync(hasLocalInstance);
   const { data: localUsage = null } = useQuery({
     queryKey: qk.localUsage(),
     queryFn: () => fetchLocalUsage().catch(() => null),
@@ -350,8 +354,10 @@ export function Usage({
           queryClient.setQueryData(qk.wallet(true), w);
           // Nudge the local instance to refresh its gate now so billable work
           // unblocks immediately rather than on its next poll. Fire-and-forget;
-          // a no-op on SaaS (no local instance to sync).
-          if (hasLocalInstance) triggerLocalSync().catch(() => {});
+          // a no-op on SaaS (no local instance to sync). Forced past the throttle:
+          // the subscription landed seconds ago, so a recent sync is exactly the one
+          // that predates it.
+          if (hasLocalInstance) triggerLocalSync(true).catch(() => {});
           return true;
         }
       } catch {

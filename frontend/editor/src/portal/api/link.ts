@@ -1,4 +1,4 @@
-import { apiClient } from "@app/portal/api/http";
+import { apiClient, HttpError } from "@app/portal/api/http";
 import type { LinkedInstanceRow } from "@app/types/linkedInstance";
 
 export type { LinkedInstanceRow };
@@ -71,9 +71,27 @@ export async function unlinkInstance(): Promise<void> {
   await apiClient.local.json<void>(`${BASE}/unlink`, { method: "POST" });
 }
 
-/** Nudge the local backend to sync + refresh its cached entitlement now. */
-export async function triggerLocalSync(): Promise<void> {
-  await apiClient.local.json<void>(`${BASE}/sync-now`, { method: "POST" });
+/**
+ * Nudge the local backend to sync + refresh its cached entitlement now.
+ *
+ * <p>The backend throttles an unforced request, so this resolves false when a recent sync already
+ * covers the caller and nothing new was reported — a reloaded page costs one cheap same-origin
+ * call, not a report. Pass {@code force} for an operator asking explicitly, and after a checkout,
+ * where the entitlement changed a moment ago.
+ *
+ * @returns whether a sync actually ran.
+ */
+export async function triggerLocalSync(force = false): Promise<boolean> {
+  try {
+    await apiClient.local.json<void>(
+      `${BASE}/sync-now${force ? "?force=true" : ""}`,
+      { method: "POST" },
+    );
+    return true;
+  } catch (error) {
+    if (error instanceof HttpError && error.status === 429) return false;
+    throw error;
+  }
 }
 
 /** Where a browser-mediated connect handshake has got to. */

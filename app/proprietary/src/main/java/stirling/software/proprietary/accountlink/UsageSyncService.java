@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -53,6 +54,19 @@ public class UsageSyncService implements SchedulingConfigurer {
     private final ObjectProvider<UserService> users;
     private final UserLicenseSettingsService licenseSettings;
 
+    /**
+     * Serializes syncs to preserve report sequence ordering. A lock rather than {@code
+     * synchronized} so a requested sync can decline to queue behind one already running.
+     */
+    private final ReentrantLock lock = new ReentrantLock();
+
+    /**
+     * When the last sync started, on the monotonic clock so the throttle survives a system clock
+     * that moves. Null until the first one runs; in memory on purpose, a throttle being a bound on
+     * load rather than state worth persisting.
+     */
+    private volatile Long lastStartedNanos;
+
     public UsageSyncService(
             UsageCounterRepository counters,
             AccountLinkSyncStateRepository syncState,
@@ -94,12 +108,79 @@ public class UsageSyncService implements SchedulingConfigurer {
         }
     }
 
+    /** Outcome of a {@link #requestSync}, so a caller can tell a run from a refusal. */
+    public record SyncRequest(boolean ran, long retryAfterSeconds) {}
+
+    /**
+     * Runs a sync on request, declining one that a recent sync already covers.
+     *
+     * <p>The throttle is what keeps a reloaded billing page from turning every load into a report:
+     * the page asks on open, and the answer for the next minute is that the figures it would have
+     * fetched are already there. A sync already under way declines for the same reason, and without
+     * queueing — waiting would hold the request open for the length of both.
+     *
+     * <p>It bounds attempts, not successes. An instance that cannot reach SaaS fails slowly, and
+     * throttling on the outcome would make exactly that case the one a reload could repeat freely.
+     *
+     * @param force runs regardless — for an operator asking explicitly, which is what a "Sync now"
+     *     control sends. {@link #syncNow()} remains the unthrottled call for the scheduler and for
+     *     linking, neither of which is reachable by repetition.
+     */
+    public SyncRequest requestSync(boolean force) {
+        long window = throttleWindowNanos();
+        if (!force) {
+            long remaining = remainingNanos(window);
+            if (remaining > 0) {
+                return new SyncRequest(false, secondsCeil(remaining));
+            }
+        }
+        if (!lock.tryLock()) {
+            return new SyncRequest(false, secondsCeil(window));
+        }
+        try {
+            syncNow();
+        } finally {
+            lock.unlock();
+        }
+        return new SyncRequest(true, 0);
+    }
+
+    private long throttleWindowNanos() {
+        Duration configured = properties.getMetering().getManualSyncThrottle();
+        return configured == null ? 0 : Math.max(0, configured.toNanos());
+    }
+
+    /** Nanos left in the window, or 0 when none is running. Never negative. */
+    private long remainingNanos(long window) {
+        Long started = lastStartedNanos;
+        if (started == null || window <= 0) {
+            return 0;
+        }
+        long remaining = window - (System.nanoTime() - started);
+        return Math.max(0, remaining);
+    }
+
+    /** At least 1, so a live throttle never advertises an immediate retry. */
+    private static long secondsCeil(long nanos) {
+        return Math.max(1, Duration.ofNanos(nanos).plusNanos(999_999_999L).toSeconds());
+    }
+
     /**
      * Reports every period with unsynced usage and refreshes the cached entitlement from the reply.
      * Serializes link, manual and scheduled calls to preserve report sequence ordering. Also
      * reports seats when no credits are pending; no-op when unlinked.
      */
-    public synchronized void syncNow() {
+    public void syncNow() {
+        lock.lock();
+        try {
+            lastStartedNanos = System.nanoTime();
+            runSync();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private void runSync() {
         Optional<DeviceCredential> cred = credentialStore.get();
         if (cred.isEmpty()) {
             return; // not linked
