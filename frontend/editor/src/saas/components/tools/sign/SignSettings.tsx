@@ -4,6 +4,7 @@ import {
   Stack,
   Text,
   Alert,
+  Checkbox,
   Divider,
   Tooltip,
   Group,
@@ -18,6 +19,7 @@ import {
   PLACEMENT_ACTIVATION_DELAY,
   FILE_SWITCH_ACTIVATION_DELAY,
 } from "@app/constants/signConstants";
+import { shouldPausePlacementAfterExit } from "@app/components/tools/sign/placementMode";
 
 // Import the new reusable components
 import { DrawingCanvas } from "@app/components/annotation/shared/DrawingCanvas";
@@ -95,7 +97,13 @@ const SignSettings = ({
   defaultSignatureSource,
 }: SignSettingsProps) => {
   const { t } = useTranslation();
-  const { isPlacementMode, signaturesApplied, historyApiRef } = useSignature();
+  const {
+    isPlacementMode,
+    signaturesApplied,
+    historyApiRef,
+    placeMultiple,
+    setPlaceMultiple,
+  } = useSignature();
   const { activeFileIndex } = useViewer();
   const [historyAvailability, setHistoryAvailability] = useState({
     canUndo: false,
@@ -937,6 +945,31 @@ const SignSettings = ({
     onParameterChange,
   ]);
 
+  // Pausing here stops the auto-activate effect below re-entering placement the
+  // instant the bridge leaves it after a single placement.
+  const wasPlacementModeRef = useRef(isPlacementMode);
+  useEffect(() => {
+    const shouldPause = shouldPausePlacementAfterExit({
+      wasInPlacementMode: wasPlacementModeRef.current,
+      isInPlacementMode: isPlacementMode,
+      placeMultiple,
+      signaturesApplied,
+      placementEnabled: shouldEnablePlacement,
+      alreadyPaused: isPlacementManuallyPaused,
+    });
+    wasPlacementModeRef.current = isPlacementMode;
+
+    if (shouldPause) {
+      setPlacementManuallyPaused(true);
+    }
+  }, [
+    isPlacementMode,
+    placeMultiple,
+    signaturesApplied,
+    shouldEnablePlacement,
+    isPlacementManuallyPaused,
+  ]);
+
   useEffect(() => {
     if (!shouldEnablePlacement) {
       if (isPlacementMode) {
@@ -1339,6 +1372,20 @@ const SignSettings = ({
           />
           <Box style={{ marginLeft: "auto" }}>{placementToggleControl}</Box>
         </Group>
+
+        <Checkbox
+          checked={placeMultiple}
+          onChange={(event) => setPlaceMultiple(event.currentTarget.checked)}
+          label={translate(
+            "mode.placeMultiple",
+            "Stay in placement mode after each placement",
+          )}
+          description={translate(
+            "mode.placeMultipleDesc",
+            "Place several stamps in a row instead of exiting after the first.",
+          )}
+          disabled={disabled}
+        />
 
         <Alert color={placementAlert.color} title={placementAlert.title}>
           <Text size="sm">{placementAlert.message}</Text>
