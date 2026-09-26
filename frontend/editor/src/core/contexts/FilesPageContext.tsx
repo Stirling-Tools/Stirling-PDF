@@ -2,7 +2,6 @@ import React, {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useRef,
   useState,
@@ -35,6 +34,7 @@ import {
 } from "@app/contexts/IndexedDBContext";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { useDiskLinkReconcile } from "@app/hooks/useDiskLinkReconcile";
+import { useCoalescedCallback } from "@app/hooks/useCoalescedCallback";
 import { useFolders } from "@app/contexts/FolderContext";
 import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
 import { useRoutedLibraryViewState } from "@app/components/filesPage/useRoutedLibraryViewState";
@@ -236,9 +236,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
     onOpenFilesDetached,
   ]);
 
-  useEffect(() => {
-    void refresh();
-  }, [refresh, indexedDBRevision]);
+  useCoalescedCallback(refresh, indexedDBRevision);
 
   const fileMap = useMemo(() => {
     const map = new Map<FileId, StirlingFileStub>();

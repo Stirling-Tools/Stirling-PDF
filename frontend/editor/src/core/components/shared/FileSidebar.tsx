@@ -60,6 +60,7 @@ import { alert } from "@app/components/toast";
 import { useBulkAddProgress } from "@app/services/bulkAddProgress";
 import { useIsScrolled } from "@app/hooks/useIsScrolled";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
+import { useCoalescedCallback } from "@app/hooks/useCoalescedCallback";
 import { FolderTreeSidebar } from "@app/components/filesPage/FolderTreeSidebar";
 import { useFilesPage } from "@app/contexts/FilesPageContext";
 import type { FolderId, FolderRecord } from "@app/types/folder";
@@ -267,21 +268,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       }
     }, [indexedDB, state.files.ids, state.files.byId]);
 
-    // Coalesce per-file updates to avoid quadratic IDB scans during imports and processing.
     const indexedDBRevision = useIndexedDBRevision();
-    const lastRefreshAt = useRef(0);
-    useEffect(() => {
-      const REFRESH_COALESCE_MS = 300;
-      const wait = Math.max(
-        0,
-        lastRefreshAt.current + REFRESH_COALESCE_MS - Date.now(),
-      );
-      const timer = window.setTimeout(() => {
-        lastRefreshAt.current = Date.now();
-        void refreshStubs();
-      }, wait);
-      return () => window.clearTimeout(timer);
-    }, [refreshStubs, indexedDBRevision]);
+    useCoalescedCallback(refreshStubs, indexedDBRevision);
 
     // Server copies require a deletion-scope choice; local-only files delete immediately.
     const handleSidebarDelete = useCallback(
