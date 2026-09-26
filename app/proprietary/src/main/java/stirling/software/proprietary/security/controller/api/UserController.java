@@ -170,7 +170,7 @@ public class UserController {
         return userMap;
     }
 
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/change-username")
     @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public ResponseEntity<?> changeUsername(
@@ -230,7 +230,7 @@ public class UserController {
                         "Username changed successfully. Please log in again."));
     }
 
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/change-password-on-login")
     @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public ResponseEntity<?> changePasswordOnLogin(
@@ -306,7 +306,7 @@ public class UserController {
                         "Password changed successfully. Please log in again."));
     }
 
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/change-password")
     @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public ResponseEntity<?> changePassword(
@@ -341,7 +341,7 @@ public class UserController {
                         "Password changed successfully. Please log in again."));
     }
 
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/updateUserSettings")
     /**
      * Updates the user settings based on the provided JSON payload.
@@ -849,7 +849,7 @@ public class UserController {
 
     public record OwnershipTransfer(Long userId) {}
 
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/get-api-key")
     public ResponseEntity<Map<String, String>> getApiKey(Principal principal) {
         if (principal == null) {
@@ -865,7 +865,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of("apiKey", apiKey));
     }
 
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/update-api-key")
     public ResponseEntity<Map<String, String>> updateApiKey(Principal principal) {
         if (principal == null) {
@@ -988,6 +988,7 @@ public class UserController {
         }
     }
 
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication)")
     @PostMapping("/complete-initial-setup")
     public ResponseEntity<?> completeInitialSetup() {
         try {
@@ -1016,6 +1017,7 @@ public class UserController {
     }
 
     // Lists enabled users for the signing picker; 'org' scope = instance-wide, else caller's team.
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication)")
     @GetMapping("/users")
     public ResponseEntity<List<UserSummaryDTO>> listUsers(Principal principal) {
         if (principal == null) {
