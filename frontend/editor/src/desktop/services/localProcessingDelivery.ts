@@ -1,7 +1,14 @@
-import { mkdir, rename, remove, stat, writeFile } from "@tauri-apps/plugin-fs";
+import {
+  mkdir,
+  readDir,
+  rename,
+  remove,
+  stat,
+  writeFile,
+} from "@tauri-apps/plugin-fs";
 import {
   readDiskFile,
-  writeDiskFile,
+  isWithinMount,
   type DiskFileEntry,
 } from "@app/services/localFolderContents";
 import { generateId } from "@app/utils/generateId";
@@ -49,20 +56,53 @@ export async function requireUnchangedProcessingFile(
   }
 }
 
-/** Keeps a recoverable original before any processed output replaces it. */
+async function hasArchivedOriginal(
+  archive: string,
+  path: string,
+): Promise<boolean> {
+  return (await readDir(archive)).some(
+    (entry) =>
+      directoryKey(processingPath(archive, entry.name)) === directoryKey(path),
+  );
+}
+
+/** Publishes the first complete original and preserves it through subsequent edits and runs. */
 export async function archiveProcessingInput(
   directory: string,
   file: File,
 ): Promise<string> {
-  const archive = `${directory}/.stirling-originals`;
+  const archive = processingPath(directory, ".stirling");
+  const path = processingPath(archive, file.name);
+  if (!(await isWithinMount(archive))) {
+    throw new Error("The processing folder is no longer mounted");
+  }
   await mkdir(archive, { recursive: true });
-  const name = await writeDiskFile(
-    archive,
-    `${generateId()}-${file.name}`,
-    file,
+  return navigator.locks.request(
+    `processing-original:${directoryKey(path)}`,
+    async () => {
+      if (await hasArchivedOriginal(archive, path)) {
+        if (!(await stat(path)).isFile)
+          throw new Error("The original is not a file");
+        return path;
+      }
+      // Only a completed write is published as an original; crash leftovers stay hidden.
+      const temporary = processingPath(
+        archive,
+        `.original-${generateId()}.tmp`,
+      );
+      try {
+        await writeFile(temporary, new Uint8Array(await file.arrayBuffer()), {
+          createNew: true,
+        });
+        if (await hasArchivedOriginal(archive, path))
+          throw new Error("An original was created while archiving this file");
+        await rename(temporary, path);
+        return path;
+      } finally {
+        await remove(temporary).catch(() => {});
+      }
+    },
   );
-  if (!name) throw new Error("The processing folder is no longer mounted");
-  return processingPath(archive, name);
 }
 
 /** Stages bytes beside the input before replacing it; a failed write leaves the input intact. */

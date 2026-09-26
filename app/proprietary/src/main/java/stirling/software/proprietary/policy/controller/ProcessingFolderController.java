@@ -384,7 +384,6 @@ public class ProcessingFolderController {
                             files.stream()
                                     .map(f -> FolderIdentities.identity(canonicalDir, permitted, f))
                                     .toList());
-            Path originals = FolderOutputSink.originalsDir(canonicalDir);
             return files.stream()
                     .map(
                             f ->
@@ -394,7 +393,9 @@ public class ProcessingFolderController {
                                                     FolderIdentities.identity(
                                                             canonicalDir, permitted, f)),
                                             Files.isRegularFile(
-                                                    originals.resolve(f.getFileName().toString()))))
+                                                    FolderOutputSink.originalPath(
+                                                            canonicalDir,
+                                                            f.getFileName().toString()))))
                     .filter(Objects::nonNull)
                     .toList();
         } catch (IOException e) {
@@ -572,8 +573,9 @@ public class ProcessingFolderController {
     @Operation(
             summary = "Restore a file's archived original",
             description =
-                    "Moves the pre-processing original kept under .stirling/originals back"
-                            + " over the processed file. The folder is paused first so"
+                    "Restores the pre-processing original kept under .stirling"
+                            + " over the processed file, retaining the backup for future restores."
+                            + " The folder is paused first so"
                             + " nothing claims the restored file, and its ledger row is"
                             + " forgotten — it reads as waiting until processing resumes."
                             + " Disk-backed folders only: storage-backed replacement keeps no"
@@ -598,24 +600,30 @@ public class ProcessingFolderController {
         }
         try {
             Path canonicalDir = FolderIdentities.canonicalDir(permitted);
-            Path archived = FolderOutputSink.originalsDir(canonicalDir).resolve(name);
-            if (!Files.isRegularFile(archived)) {
+            if (!Files.isRegularFile(FolderOutputSink.originalPath(canonicalDir, name))) {
                 throw new ResponseStatusException(
                         HttpStatus.CONFLICT, "'" + name + "' has no original to restore");
             }
             policy = pauseForRevert(policy);
-            // The per-row check below cannot see a run mid-delivery, so restore only once the
-            // machine is fully quiet.
-            if (!policyRunner.quiesced(policy.id())) {
-                throw new ResponseStatusException(
-                        HttpStatus.CONFLICT,
-                        "the folder is processing right now - try again shortly");
+            synchronized (FolderOutputSink.originalLock(canonicalDir)) {
+                Path archived = FolderOutputSink.originalPath(canonicalDir, name);
+                if (!Files.isRegularFile(archived)) {
+                    throw new ResponseStatusException(
+                            HttpStatus.CONFLICT, "'" + name + "' has no original to restore");
+                }
+                // The per-row check below cannot see a run mid-delivery, so restore only once the
+                // machine is fully quiet.
+                if (!policyRunner.quiesced(policy.id())) {
+                    throw new ResponseStatusException(
+                            HttpStatus.CONFLICT,
+                            "the folder is processing right now - try again shortly");
+                }
+                if (!restoreOriginal(policy, permitted, canonicalDir, name)) {
+                    throw new ResponseStatusException(
+                            HttpStatus.CONFLICT, "'" + name + "' is being processed right now");
+                }
+                return toMountedFile(target, null, true);
             }
-            if (!restoreOriginal(policy, permitted, canonicalDir, name)) {
-                throw new ResponseStatusException(
-                        HttpStatus.CONFLICT, "'" + name + "' is being processed right now");
-            }
-            return toMountedFile(target, null, false);
         } catch (IOException e) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_GATEWAY, "Could not restore " + name + ": " + e.getMessage());
@@ -630,9 +638,9 @@ public class ProcessingFolderController {
             summary = "Restore every archived original in the folder",
             description =
                     "Resets the folder: pauses it, cancels its in-flight runs and waits for"
-                            + " them to stop, moves each original kept under"
-                            + " .stirling/originals back over its"
-                            + " processed file, and forgets the whole processed history —"
+                            + " them to stop, copies each original kept under"
+                            + " .stirling back over its"
+                            + " processed file, retains the backups, and forgets the whole processed history —"
                             + " failed files included — so everything reads as waiting"
                             + " until it resumes. Only files of the watched directory itself"
                             + " are touched, and a file mid-run is skipped rather than"
@@ -655,29 +663,22 @@ public class ProcessingFolderController {
             // Wait for claims to settle: clearing the ledger before that lets a late settle
             // re-add a row. A run that outruns this wait leaves its file skipped below.
             policyRunner.awaitQuiesce(policy.id(), Duration.ofSeconds(10));
-            List<String> names = List.of();
-            Path originals = FolderOutputSink.originalsDir(canonicalDir);
-            if (Files.isDirectory(originals)) {
-                try (Stream<Path> entries = Files.list(originals)) {
-                    names =
-                            entries.filter(Files::isRegularFile)
-                                    .map(entry -> entry.getFileName().toString())
-                                    .toList();
+            synchronized (FolderOutputSink.originalLock(canonicalDir)) {
+                List<String> names = FolderOutputSink.originalNames(canonicalDir);
+                int restored = 0;
+                int skipped = 0;
+                for (String name : names) {
+                    if (restoreOriginal(policy, permitted, canonicalDir, name)) {
+                        restored++;
+                    } else {
+                        skipped++;
+                    }
                 }
+                // Done and failed rows alike go, so the folder reads as untouched work; only a
+                // run that outran the quiesce can re-add a row.
+                processedLedger.clearPolicy(policy.id());
+                return new RevertAllOutcome(restored, skipped);
             }
-            int restored = 0;
-            int skipped = 0;
-            for (String name : names) {
-                if (restoreOriginal(policy, permitted, canonicalDir, name)) {
-                    restored++;
-                } else {
-                    skipped++;
-                }
-            }
-            // Done and failed rows alike go, so the folder reads as untouched work; only a
-            // run that outran the quiesce can re-add a row.
-            processedLedger.clearPolicy(policy.id());
-            return new RevertAllOutcome(restored, skipped);
         } catch (IOException e) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_GATEWAY, "Could not restore originals: " + e.getMessage());
@@ -695,8 +696,8 @@ public class ProcessingFolderController {
     }
 
     /**
-     * Move one archived original back and forget its ledger row so the file reads unprocessed.
-     * False when the file is mid-run or the name resolves outside the watched directory.
+     * Restore the archived original without consuming it and forget its ledger row. False when the
+     * file is mid-run or the name resolves outside the watched directory.
      */
     private boolean restoreOriginal(Policy policy, Path permitted, Path canonicalDir, String name)
             throws IOException {
@@ -704,17 +705,26 @@ public class ProcessingFolderController {
         if (!permitted.equals(target.getParent())) {
             return false;
         }
-        Path archived = FolderOutputSink.originalsDir(canonicalDir).resolve(name);
+        Path archived = FolderOutputSink.originalPath(canonicalDir, name);
         String identity = FolderIdentities.identity(canonicalDir, permitted, target);
         ClaimState state = processedLedger.statesFor(policy.id(), List.of(identity)).get(identity);
         if (state != null && state.status() == ProcessedFileStatus.PROCESSING) {
             return false;
         }
-        Files.move(
-                archived,
-                target,
-                StandardCopyOption.ATOMIC_MOVE,
-                StandardCopyOption.REPLACE_EXISTING);
+        FolderOutputSink.clearOriginalExpiry(canonicalDir, name);
+        Path staging = FolderOutputSink.originalsDir(canonicalDir).resolve("tmp");
+        Files.createDirectories(staging);
+        Path pending = Files.createTempFile(staging, "restore-", ".tmp");
+        try {
+            Files.copy(archived, pending, StandardCopyOption.REPLACE_EXISTING);
+            Files.move(
+                    pending,
+                    target,
+                    StandardCopyOption.ATOMIC_MOVE,
+                    StandardCopyOption.REPLACE_EXISTING);
+        } finally {
+            Files.deleteIfExists(pending);
+        }
         processedLedger.forget(policy.id(), identity);
         return true;
     }

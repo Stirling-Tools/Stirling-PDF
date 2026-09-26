@@ -37,6 +37,7 @@ import type {
 } from "@app/services/processingFolderApi";
 import type { BackendPipelineStep } from "@app/services/policyPipeline";
 import { generateId } from "@app/utils/generateId";
+import { reconcileLocalProcessingOriginals } from "@app/services/localProcessingOriginals";
 
 const running = new Map<string, Promise<void>>();
 const cancelled = new Set<string>();
@@ -290,7 +291,10 @@ async function queueLocalProcessingFiles(
 ): Promise<SweepOutcome> {
   const folder = await requireLocalProcessingFolder(id);
   const listing = await listDirectory(folder.directory);
-  const history = await storage.files(id);
+  const history = await reconcileLocalProcessingOriginals(
+    folder,
+    await storage.files(id),
+  );
   const outputs = history.flatMap((entry) => entry.outputs);
   const result: SweepOutcome = {
     runIds: [],
@@ -313,6 +317,7 @@ async function queueLocalProcessingFiles(
     if (
       output ||
       (previous?.run.status === "COMPLETED" &&
+        !previous.restored &&
         sameProcessingFile(previous.input, input))
     ) {
       result.alreadyProcessed++;
@@ -332,10 +337,7 @@ async function queueLocalProcessingFiles(
       folderId: id,
       input,
       outputs: previous?.outputs ?? [],
-      originalPath:
-        previous && sameProcessingFile(previous.input, input)
-          ? previous.originalPath
-          : undefined,
+      originalPath: previous?.originalPath,
       run: {
         runId: `queued:${generateId()}`,
         status: "PENDING",
@@ -379,41 +381,60 @@ export async function deleteLocalProcessingFolder(id: string): Promise<void> {
   cancelled.delete(id);
 }
 
-/** Restores one archived input only if none of this run's outputs were subsequently edited. */
+/** Restores the original over the current input; edited split outputs are never silently deleted. */
 export async function revertLocalProcessingFile(
   id: string,
   name: string,
 ): Promise<void> {
-  const folder = await requireLocalProcessingFolder(id);
-  await storage.saveFolder({ ...folder, enabled: false });
-  const entry = (await storage.files(id)).find(
-    (file) => file.input.name === name,
+  return navigator.locks.request(
+    `processing:${id}`,
+    { ifAvailable: true },
+    async (lock) => {
+      if (!lock)
+        throw new Error(
+          "Wait for processing to finish before restoring this file",
+        );
+      const folder = await requireLocalProcessingFolder(id);
+      await storage.saveFolder({ ...folder, enabled: false });
+      const entry = (await storage.files(id)).find(
+        (file) => file.input.name === name,
+      );
+      if (
+        !entry?.originalPath ||
+        !TERMINAL.has(entry.run.status) ||
+        running.has(id)
+      ) {
+        throw new Error(
+          "Wait for processing to finish before restoring this file",
+        );
+      }
+      for (const output of entry.outputs) {
+        if (directoryKey(output.path) !== directoryKey(entry.input.path))
+          await requireUnchangedProcessingFile(output);
+      }
+      const replacement = await processingFileState(entry.input.path);
+      const restored = await replaceProcessingFile(
+        replacement,
+        await readProcessingOriginal(entry.originalPath),
+      );
+      for (const output of entry.outputs) {
+        if (directoryKey(output.path) !== directoryKey(entry.input.path))
+          await remove(output.path);
+      }
+      await storage.saveFile({
+        ...entry,
+        input: restored,
+        outputs: [],
+        restored: true,
+        serverRunId: undefined,
+        orphanedOriginal: undefined,
+        run: { status: "COMPLETED" },
+      });
+    },
   );
-  if (
-    !entry?.originalPath ||
-    !TERMINAL.has(entry.run.status) ||
-    running.has(id)
-  ) {
-    throw new Error("Wait for processing to finish before restoring this file");
-  }
-  for (const output of entry.outputs)
-    await requireUnchangedProcessingFile(output);
-  const replacement = entry.outputs.find(
-    (output) => output.path === entry.input.path,
-  );
-  if (replacement) {
-    await replaceProcessingFile(
-      replacement,
-      await readProcessingOriginal(entry.originalPath),
-    );
-  }
-  for (const output of entry.outputs) {
-    if (output.path !== entry.input.path) await remove(output.path);
-  }
-  await storage.deleteFile(entry.id);
 }
 
-/** Scans enabled desktop folders while signed in. Each folder keeps at most one active upload. */
+/** Scans while signed in; paused folders still expire orphaned originals under the processing lock. */
 export async function scanLocalProcessingFolders(): Promise<void> {
   for (const folder of await localProcessingFolders()) {
     if (folder.enabled && !running.has(folder.id)) {
@@ -426,6 +447,21 @@ export async function scanLocalProcessingFolders(): Promise<void> {
       )
     ) {
       startDrain(folder.id, false);
+    } else if (!running.has(folder.id)) {
+      await navigator.locks
+        .request(
+          `processing:${folder.id}`,
+          { ifAvailable: true },
+          async (lock) => {
+            if (!lock) return;
+            const current = await requireLocalProcessingFolder(folder.id);
+            await reconcileLocalProcessingOriginals(
+              current,
+              await storage.files(folder.id),
+            );
+          },
+        )
+        .catch(() => {});
     }
   }
 }

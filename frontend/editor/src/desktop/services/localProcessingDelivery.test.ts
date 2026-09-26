@@ -4,11 +4,14 @@ const mocks = vi.hoisted(() => ({
   writeFile: vi.fn(),
   rename: vi.fn(),
   remove: vi.fn(),
+  readDir: vi.fn(),
+  mounted: vi.fn(),
 }));
 vi.mock("@tauri-apps/plugin-fs", () => ({ ...mocks, mkdir: vi.fn() }));
 vi.mock("@app/services/localFolderContents", () => ({
   readDiskFile: vi.fn(),
   writeDiskFile: vi.fn(),
+  isWithinMount: mocks.mounted,
 }));
 vi.mock("@app/services/diskFileSync", () => ({
   beginSelfWrite: vi.fn(),
@@ -17,6 +20,7 @@ vi.mock("@app/services/diskFileSync", () => ({
 import {
   replaceProcessingFile,
   sameProcessingFile,
+  archiveProcessingInput,
 } from "@app/services/localProcessingDelivery";
 
 const input = {
@@ -31,6 +35,140 @@ beforeEach(() => {
   mocks.writeFile.mockResolvedValue(undefined);
   mocks.rename.mockResolvedValue(undefined);
   mocks.remove.mockResolvedValue(undefined);
+  mocks.mounted.mockResolvedValue(true);
+  mocks.readDir.mockResolvedValue([]);
+  const pending = new Map<string, Promise<unknown>>();
+  Object.defineProperty(navigator, "locks", {
+    configurable: true,
+    value: {
+      request: (name: string, callback: () => Promise<unknown>) => {
+        const next = (pending.get(name) ?? Promise.resolve())
+          .catch(() => {})
+          .then(callback);
+        pending.set(name, next);
+        return next;
+      },
+    },
+  });
+});
+
+test("the original is stored directly under .stirling with its own filename", async () => {
+  const file = new File(["original"], "a.pdf");
+  vi.spyOn(file, "arrayBuffer").mockResolvedValue(
+    new TextEncoder().encode("original").buffer,
+  );
+  expect(await archiveProcessingInput("/downloads", file)).toBe(
+    "/downloads/.stirling/a.pdf",
+  );
+  expect(mocks.writeFile).toHaveBeenCalledWith(
+    expect.stringContaining("/downloads/.stirling/.original-"),
+    expect.any(Uint8Array),
+    { createNew: true },
+  );
+  expect(Array.from(mocks.writeFile.mock.calls[0][1])).toEqual(
+    Array.from(new TextEncoder().encode("original")),
+  );
+  expect(mocks.writeFile).toHaveBeenCalledBefore(mocks.rename);
+  expect(mocks.rename).toHaveBeenCalledWith(
+    mocks.writeFile.mock.calls[0][0],
+    "/downloads/.stirling/a.pdf",
+  );
+});
+
+test("an existing original is reused without writing another copy", async () => {
+  mocks.readDir.mockResolvedValue([{ name: "a.pdf" }]);
+  mocks.stat.mockResolvedValue({ isFile: true });
+  expect(
+    await archiveProcessingInput("/downloads", new File(["later"], "a.pdf")),
+  ).toBe("/downloads/.stirling/a.pdf");
+  expect(mocks.writeFile).not.toHaveBeenCalled();
+});
+
+test("changed content cannot overwrite an existing original", async () => {
+  mocks.readDir.mockResolvedValue([{ name: "a.pdf" }]);
+  mocks.stat.mockResolvedValue({
+    isFile: true,
+    size: 10,
+    mtime: new Date(1000),
+  });
+  const file = new File(["new document"], "a.pdf");
+  vi.spyOn(file, "arrayBuffer").mockResolvedValue(
+    new TextEncoder().encode("new document").buffer,
+  );
+
+  expect(await archiveProcessingInput("/downloads", file)).toBe(
+    "/downloads/.stirling/a.pdf",
+  );
+  expect(mocks.writeFile).not.toHaveBeenCalled();
+  expect(mocks.rename).not.toHaveBeenCalled();
+});
+
+test("an unreadable original blocks processing instead of replacing the backup", async () => {
+  mocks.readDir.mockResolvedValue([{ name: "a.pdf" }]);
+  mocks.stat.mockRejectedValueOnce(new Error("Permission denied"));
+
+  await expect(
+    archiveProcessingInput("/downloads", new File(["new"], "a.pdf")),
+  ).rejects.toThrow("Permission denied");
+
+  expect(mocks.writeFile).not.toHaveBeenCalled();
+  expect(mocks.rename).not.toHaveBeenCalled();
+  expect(mocks.remove).not.toHaveBeenCalledWith("/downloads/.stirling/a.pdf");
+});
+
+test("an incomplete backup is removed so a retry can archive the input", async () => {
+  mocks.writeFile.mockRejectedValueOnce(new Error("Disk full"));
+  await expect(
+    archiveProcessingInput("/downloads", new File(["input"], "a.pdf")),
+  ).rejects.toThrow("Disk full");
+  expect(mocks.rename).not.toHaveBeenCalled();
+  expect(mocks.remove).toHaveBeenCalledWith(mocks.writeFile.mock.calls[0][0]);
+  expect(mocks.remove).not.toHaveBeenCalledWith("/downloads/.stirling/a.pdf");
+});
+
+test("a backup created concurrently is never removed", async () => {
+  mocks.readDir
+    .mockResolvedValueOnce([])
+    .mockResolvedValue([{ name: "a.pdf" }]);
+  await expect(
+    archiveProcessingInput("/downloads", new File(["input"], "a.pdf")),
+  ).rejects.toThrow("created while archiving");
+  expect(mocks.rename).not.toHaveBeenCalled();
+  expect(mocks.remove).not.toHaveBeenCalledWith("/downloads/.stirling/a.pdf");
+});
+
+test("concurrent archive requests publish only the first original", async () => {
+  const published = new Set<string>();
+  mocks.readDir.mockImplementation(async () =>
+    [...published].map((path) => ({ name: path.split("/").pop()! })),
+  );
+  mocks.stat.mockResolvedValue({ isFile: true });
+  mocks.rename.mockImplementation(async (_temporary, path) => {
+    published.add(path);
+  });
+  await Promise.all([
+    archiveProcessingInput("/downloads", new File(["first"], "a.pdf")),
+    archiveProcessingInput("/downloads", new File(["later"], "a.pdf")),
+  ]);
+  expect(mocks.writeFile).toHaveBeenCalledOnce();
+  expect(mocks.rename).toHaveBeenCalledOnce();
+});
+
+test("failed publication removes staging without leaving an accepted backup", async () => {
+  mocks.rename.mockRejectedValueOnce(new Error("Publish failed"));
+  await expect(
+    archiveProcessingInput("/downloads", new File(["input"], "a.pdf")),
+  ).rejects.toThrow("Publish failed");
+  expect(mocks.remove).toHaveBeenCalledWith(mocks.writeFile.mock.calls[0][0]);
+  expect(mocks.remove).not.toHaveBeenCalledWith("/downloads/.stirling/a.pdf");
+});
+
+test("unmounted folders cannot create backups", async () => {
+  mocks.mounted.mockResolvedValue(false);
+  await expect(
+    archiveProcessingInput("/downloads", new File(["input"], "a.pdf")),
+  ).rejects.toThrow("no longer mounted");
+  expect(mocks.writeFile).not.toHaveBeenCalled();
 });
 
 test("failed staging leaves the input intact", async () => {

@@ -1,7 +1,10 @@
 package stirling.software.proprietary.policy.output;
 
+import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
+
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,8 +14,11 @@ import java.security.MessageDigest;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.springframework.core.io.Resource;
@@ -54,6 +60,9 @@ public class FolderOutputSink implements PolicyOutputSink {
 
     // Staging entries are renamed away within one delivery; anything older is a crash leftover.
     private static final Duration STALE_TMP_AGE = Duration.ofDays(1);
+    private static final Object[] ORIGINAL_LOCKS =
+            IntStream.range(0, 64).mapToObj(i -> new Object()).toArray();
+    static final String MISSING_ORIGINAL_PREFIX = ".missing-original-";
 
     private final FolderAccessGuard accessGuard;
     private final ProcessedLedger processedLedger;
@@ -129,7 +138,7 @@ public class FolderOutputSink implements PolicyOutputSink {
     /**
      * Stream the output to its staging path. For a recorded delivery (stored policy) the content
      * hash is digested in the same pass, so the ledger gets both version tiers without re-reading a
-     * possibly huge output; ad-hoc runs record nothing and skip the digest entirely.
+     * possibly huge output.
      */
     private static String stage(Resource resource, Path staged, boolean hashed) throws IOException {
         if (!hashed) {
@@ -163,37 +172,9 @@ public class FolderOutputSink implements PolicyOutputSink {
             boolean replace)
             throws IOException {
         if (replace) {
-            Path target = dir.resolve(name);
-            // Archive before the ledger row flips DONE, so a restore that reads DONE finds the
-            // original safe, never mid-move.
-            Path archived = archiveOriginal(dir, target);
-            try {
-                if (delivery.policyId() != null) {
-                    processedLedger.recordOutput(
-                            delivery.policyId(), target.toString(), gate, contentHash);
-                }
-                Files.move(
-                        staged,
-                        target,
-                        StandardCopyOption.ATOMIC_MOVE,
-                        StandardCopyOption.REPLACE_EXISTING);
-            } catch (IOException | RuntimeException failed) {
-                if (archived != null) {
-                    try {
-                        Files.move(archived, target, StandardCopyOption.ATOMIC_MOVE);
-                    } catch (IOException lost) {
-                        log.warn(
-                                "Replace of {} failed and its original could not be put back: {}",
-                                target,
-                                lost.getMessage());
-                    }
-                }
-                if (delivery.policyId() != null) {
-                    processedLedger.forgetOutput(delivery.policyId(), target.toString(), gate);
-                }
-                throw failed;
+            synchronized (originalLock(dir)) {
+                return replaceOriginal(delivery, dir, name, staged, gate, contentHash);
             }
-            return target;
         }
         while (true) {
             Path target = uniqueTarget(dir, name);
@@ -213,22 +194,106 @@ public class FolderOutputSink implements PolicyOutputSink {
         }
     }
 
-    /** Where a directory's pre-processing originals are kept, beside the staging dir. */
-    public static Path originalsDir(Path dir) {
-        return dir.resolve(".stirling").resolve("originals");
+    private Path replaceOriginal(
+            OutputDelivery delivery,
+            Path dir,
+            String name,
+            Path staged,
+            String gate,
+            String contentHash)
+            throws IOException {
+        Path target = dir.resolve(name);
+        // Archive before the ledger row flips DONE, so a restore that reads DONE finds the
+        // original safe, never mid-move.
+        archiveOriginal(dir, target);
+        try {
+            if (delivery.policyId() != null) {
+                processedLedger.recordOutput(
+                        delivery.policyId(), target.toString(), gate, contentHash);
+            }
+            Files.move(
+                    staged,
+                    target,
+                    StandardCopyOption.ATOMIC_MOVE,
+                    StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException | RuntimeException failed) {
+            if (delivery.policyId() != null) {
+                processedLedger.forgetOutput(delivery.policyId(), target.toString(), gate);
+            }
+            throw failed;
+        }
+        return target;
     }
 
     /**
-     * Where a same-name re-drop's original goes once the canonical slot is taken. A subdirectory,
-     * not a numbered sibling: a restore brings back every regular file directly under {@link
-     * #originalsDir}, so a sibling would be restored as a file the watched folder never held.
-     *
-     * <p>Canonical stays with the first original, which is wrong when the user replaced the file
-     * with a different document of the same name; telling that apart needs the previous output's
-     * content hash, which the next claim clears from the ledger row.
+     * Serializes archive, restore and expiry within this JVM; callers supply a canonical directory.
      */
-    private static Path supersededDir(Path dir) {
-        return originalsDir(dir).resolve("superseded");
+    public static Object originalLock(Path canonicalDir) {
+        return ORIGINAL_LOCKS[Math.floorMod(canonicalDir.hashCode(), ORIGINAL_LOCKS.length)];
+    }
+
+    /** A returned or restored file starts a fresh retention period if it is deleted again. */
+    public static void clearOriginalExpiry(Path dir, String name) throws IOException {
+        Files.deleteIfExists(missingOriginalMarker(dir, name));
+    }
+
+    static Path missingOriginalMarker(Path dir, String name) {
+        return metadataPath(dir, name, MISSING_ORIGINAL_PREFIX);
+    }
+
+    private static Path metadataPath(Path dir, String name, String prefix) {
+        String key = java.io.File.separatorChar == '\\' ? name.toLowerCase(Locale.ROOT) : name;
+        return originalsDir(dir)
+                .resolve(prefix + UUID.nameUUIDFromBytes(key.getBytes(StandardCharsets.UTF_8)));
+    }
+
+    /** Originals are direct files here; subdirectories contain internal processing data. */
+    public static Path originalsDir(Path dir) {
+        return dir.resolve(".stirling");
+    }
+
+    /**
+     * Resolves a single filename's original, including backups from the nested archive layout.
+     * Callers must validate that name contains no path components.
+     */
+    public static Path originalPath(Path dir, String name) {
+        Path original = flatOriginalPath(dir, name);
+        Path legacy = originalsDir(dir).resolve("originals").resolve(name);
+        return Files.notExists(original, NOFOLLOW_LINKS) && !Files.notExists(legacy, NOFOLLOW_LINKS)
+                ? legacy
+                : original;
+    }
+
+    private static Path flatOriginalPath(Path dir, String name) {
+        return originalsDir(dir).resolve(reservedName(name) ? ".original-" + name : name);
+    }
+
+    /** Lists restorable filenames, excluding staging files and nested backup history. */
+    public static List<String> originalNames(Path dir) throws IOException {
+        var names = new LinkedHashSet<String>();
+        Path originals = originalsDir(dir);
+        for (Path archive : List.of(originals, originals.resolve("originals"))) {
+            if (!Files.isDirectory(archive)) continue;
+            try (Stream<Path> entries = Files.list(archive)) {
+                entries.filter(Files::isRegularFile)
+                        .map(FolderOutputSink::originalName)
+                        .filter(java.util.Objects::nonNull)
+                        .forEach(names::add);
+            }
+        }
+        return List.copyOf(names);
+    }
+
+    static String originalName(Path archived) {
+        String name = archived.getFileName().toString();
+        if (name.startsWith(".original-") && reservedName(name.substring(10))) {
+            return name.substring(10);
+        }
+        return name.startsWith(".") ? null : name;
+    }
+
+    private static boolean reservedName(String name) {
+        return "tmp".equalsIgnoreCase(name) || "originals".equalsIgnoreCase(name);
     }
 
     /**
@@ -246,34 +311,33 @@ public class FolderOutputSink implements PolicyOutputSink {
         return root;
     }
 
-    /**
-     * Move the target into {@code .stirling/originals} before a replace overwrites it, returning
-     * the archived path, or null when nothing is at the target. Throws if an existing target cannot
-     * be archived, so the caller aborts before overwriting and never destroys an unpreserved
-     * original. With the canonical slot already taken, the kept original stays there and this
-     * content goes to {@link #supersededDir}.
-     *
-     * <p>Plain move, not {@code ATOMIC_MOVE}: the archive is hidden under {@code .stirling} so
-     * needs no atomic visibility, and a plain move survives a cross-device archive dir where {@code
-     * ATOMIC_MOVE} would throw.
-     */
-    private static Path archiveOriginal(Path dir, Path target) throws IOException {
-        if (!Files.exists(target)) {
-            return null;
+    private static void archiveOriginal(Path dir, Path target) throws IOException {
+        clearOriginalExpiry(dir, target.getFileName().toString());
+        if (Files.notExists(target, NOFOLLOW_LINKS)) {
+            return;
         }
         stirlingDir(dir);
-        Path originals = originalsDir(dir);
-        Files.createDirectories(originals);
         String name = target.getFileName().toString();
-        Path archived = originals.resolve(name);
-        if (Files.exists(archived)) {
-            // Kept aside, so the overwrite cannot destroy this content either.
-            Path superseded = supersededDir(dir);
-            Files.createDirectories(superseded);
-            archived = uniqueTarget(superseded, name);
+        Path existing = originalPath(dir, name);
+        Path archived = flatOriginalPath(dir, name);
+        if (!Files.notExists(existing, NOFOLLOW_LINKS)) {
+            if (!Files.isRegularFile(existing, NOFOLLOW_LINKS)) {
+                throw new IOException("Original archive is not a regular file: " + existing);
+            }
+            if (!existing.equals(archived)) {
+                Files.move(existing, archived, StandardCopyOption.ATOMIC_MOVE);
+            }
+            return;
         }
-        Files.move(target, archived);
-        return archived;
+        // Keep the input in place until output publication succeeds; edits never replace this
+        // backup.
+        Path pending = Files.createTempFile(originalsDir(dir).resolve("tmp"), "original-", ".tmp");
+        try {
+            Files.copy(target, pending, StandardCopyOption.REPLACE_EXISTING);
+            Files.move(pending, archived, StandardCopyOption.ATOMIC_MOVE);
+        } finally {
+            Files.deleteIfExists(pending);
+        }
     }
 
     /** Best-effort removal of staging leftovers from crashed deliveries. */
