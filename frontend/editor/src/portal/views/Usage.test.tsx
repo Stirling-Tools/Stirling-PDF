@@ -538,9 +538,7 @@ describe("Usage — link-free wallet renderer", () => {
     renderUsage(<Usage />);
 
     await waitFor(() => expect(fetchWallet).toHaveBeenCalled());
-    expect(
-      screen.queryByRole("button", { name: "License Key" }),
-    ).not.toBeInTheDocument();
+    expect(document.getElementById("ub-license")).toBeNull();
   });
 
   it("places local license management at the end of billing and refreshes after a save", async () => {
@@ -558,10 +556,6 @@ describe("Usage — link-free wallet renderer", () => {
       (section) => section.id,
     );
     expect(sections).toEqual(["ub-plan", "ub-usage", "ub-license"]);
-    const scrollIntoView = vi.fn();
-    document.getElementById("ub-license")!.scrollIntoView = scrollIntoView;
-    fireEvent.click(screen.getByRole("button", { name: "License Key" }));
-    expect(scrollIntoView).toHaveBeenCalled();
     fetchWallet.mockClear();
     fireEvent.click(
       screen.getByRole("button", { name: "Activate local license" }),
@@ -570,7 +564,7 @@ describe("Usage — link-free wallet renderer", () => {
     expect(refreshWalletCache).toHaveBeenCalledTimes(1);
   });
 
-  it("keeps the license section and navigation after payment and invoices", () => {
+  it("keeps the license section after payment and invoices", () => {
     renderUsage(
       <BillingScreen
         wallet={freeWallet}
@@ -585,12 +579,6 @@ describe("Usage — link-free wallet renderer", () => {
         (section) => section.id,
       ),
     ).toEqual(["ub-plan", "ub-usage", "ub-pay", "ub-inv", "ub-license"]);
-    expect(
-      Array.from(
-        document.querySelectorAll(".billing-card__chip"),
-        (chip) => chip.textContent,
-      ),
-    ).toEqual(["Plan", "Usage", "Payment", "Invoices", "License Key"]);
   });
 
   it.each([
@@ -635,12 +623,8 @@ describe("Usage — link-free wallet renderer", () => {
     );
     await screen.findByText("Wallet unavailable");
     expect(screen.getByText("Local license form")).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "License Key" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "Plan" }),
-    ).not.toBeInTheDocument();
+    expect(document.getElementById("ub-license")).not.toBeNull();
+    expect(document.getElementById("ub-plan")).toBeNull();
   });
 
   it("starts procurement from the billing CTA without leaving Usage", async () => {
@@ -692,18 +676,14 @@ describe("Usage — link-free wallet renderer", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("anchors an existing deal before Plan and connects its jump button", async () => {
+  it("anchors an existing deal before Plan", async () => {
     procurement.started = true;
     procurement.stage = "trial";
     fetchWallet.mockResolvedValue({ ...walletOf("free"), role: "leader" });
-    const scroll = vi.fn();
     renderUsage(<Usage />);
     await screen.findByText("The full PDF Editor.");
     const section = screen.getByRole("region", { name: "Procurement" });
-    section.scrollIntoView = scroll;
     expect(section.nextElementSibling?.id).toBe("ub-plan");
-    fireEvent.click(screen.getByRole("button", { name: "Procurement" }));
-    expect(scroll).toHaveBeenCalled();
     expect(
       screen.queryByRole("button", { name: "Get an enterprise quote" }),
     ).not.toBeInTheDocument();
@@ -728,9 +708,7 @@ describe("Usage — link-free wallet renderer", () => {
     expect(
       screen.getByRole("region", { name: "Procurement" }),
     ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "Plan" }),
-    ).not.toBeInTheDocument();
+    expect(document.getElementById("ub-plan")).toBeNull();
   });
 
   it("hides stale purchase controls when the billing session becomes unavailable", async () => {
@@ -750,8 +728,8 @@ describe("Usage — link-free wallet renderer", () => {
     expect(
       screen.queryByRole("button", { name: "Switch on the Processor" }),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Plan" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Usage" })).toBeInTheDocument();
+    expect(document.getElementById("ub-plan")).not.toBeNull();
+    expect(document.getElementById("ub-usage")).not.toBeNull();
   });
 
   it("shows one recovery notice without a separate expired-session banner", async () => {
