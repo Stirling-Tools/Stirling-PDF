@@ -216,7 +216,7 @@ jobs:
 
       - name: Restore cache sftp
         id: cache-cargo
-        uses: Ludy87/cache-the-planet/multi-cache@e78baa5d79afe91e1848d73449922ffaf303c8c4
+        uses: Ludy87/cache-the-planet/multi-cache@8603ad79afba9b644ea7dd095f57c36103147ea6
         with:
           storage: sftp
           multi-cache: |
