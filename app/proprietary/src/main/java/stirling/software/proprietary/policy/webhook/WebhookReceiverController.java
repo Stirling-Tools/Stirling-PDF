@@ -41,7 +41,7 @@ public class WebhookReceiverController {
     private static final String WEBHOOK_TYPE = "webhook";
 
     private final SourceStore sourceStore;
-    private final WebhookSpool spool;
+    private final WebhookDeliveries deliveries;
     private final WebhookTrigger webhookTrigger;
     private final ApplicationProperties applicationProperties;
 
@@ -51,7 +51,11 @@ public class WebhookReceiverController {
             description =
                     "The body is the raw document; sign it with the source's secret and present"
                             + " 'sha256=<hex>' in the X-Stirling-Signature header. Returns 202 once"
-                            + " the document is spooled for the referencing policies.")
+                            + " the document is stored for the referencing policies, which run"
+                            + " asynchronously. A body that presents as a PDF is opened first:"
+                            + " 422 if it needs a password (no pipeline can supply one), 400 if it"
+                            + " cannot be parsed. Either means the document will fail every"
+                            + " policy, so it is refused rather than accepted and parked.")
     public ResponseEntity<WebhookDeliveryResponse> receive(
             @PathVariable String webhookId,
             @RequestHeader(value = SIGNATURE_HEADER, required = false) String signature,
@@ -77,18 +81,33 @@ public class WebhookReceiverController {
         if (body.length == 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty request body");
         }
+        refuseWhatNoPipelineCanRead(filename, body);
 
-        String storedName = stageToSpool(webhookId, filename, body);
+        WebhookDelivery delivery = store(source, filename, request.getContentType(), body);
 
         webhookTrigger.fireForWebhook(webhookId);
         log.info(
                 "Accepted webhook delivery '{}' ({} bytes) for {}",
-                storedName,
+                delivery.originalFilename(),
                 body.length,
                 webhookId);
         return ResponseEntity.accepted()
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(new WebhookDeliveryResponse(true, storedName, body.length));
+                .body(new WebhookDeliveryResponse(true, delivery.originalFilename(), body.length));
+    }
+
+    private static void refuseWhatNoPipelineCanRead(String filename, byte[] body) {
+        switch (InboundDocumentCheck.check(filename, body)) {
+            case PASSWORD_PROTECTED ->
+                    throw new ResponseStatusException(
+                            HttpStatus.UNPROCESSABLE_ENTITY,
+                            "The document is password-protected; remove the password before"
+                                    + " delivering it");
+            case CORRUPT ->
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST, "The document is not a readable PDF");
+            case ACCEPTABLE -> {}
+        }
     }
 
     private Source findWebhookSource(String webhookId) {
@@ -104,14 +123,20 @@ public class WebhookReceiverController {
         return null;
     }
 
-    private String stageToSpool(String webhookId, String filename, byte[] body) {
+    private WebhookDelivery store(Source source, String filename, String contentType, byte[] body) {
         try {
-            return WebhookSpool.displayName(
-                    spool.store(webhookId, filename, body).getFileName().toString());
+            return deliveries.accept(source, filename, contentType, body);
         } catch (IOException e) {
-            log.error("Could not spool webhook delivery for {}: {}", webhookId, e.getMessage());
+            log.error("Could not store webhook delivery for {}: {}", source.id(), e.getMessage());
             throw new ResponseStatusException(
                     HttpStatus.INTERNAL_SERVER_ERROR, "Could not store delivery");
+        } catch (IllegalStateException misconfigured) {
+            // The sender did nothing wrong and should retry once the source is repaired.
+            log.error(
+                    "Webhook delivery for {} refused: {}", source.id(), misconfigured.getMessage());
+            throw new ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "The webhook source cannot store deliveries right now");
         }
     }
 
