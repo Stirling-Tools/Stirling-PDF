@@ -72,6 +72,51 @@ function NonAuthBootstraps() {
   );
 }
 
+function MainRoutes() {
+  return (
+    <Routes>
+      {/* Not the app: no rail over any of these, ever. */}
+      <Route element={<NoAppChrome />}>
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/auth/reset" element={<ResetPassword />} />
+        <Route path="/oauth/consent" element={<OAuthConsent />} />
+        {/* Human half of the self-hosted account-link handshake. It lives on
+            this origin because a customer hostname can never be in the
+            provider's redirect allow-list. Grouped with the pages above: it is
+            an approval step, not the app. */}
+        <Route path="/link" element={<ConnectApprove />} />
+        {/* Shared-file links. Team invites are NOT routed here: on SaaS they
+            are accepted in-app via the Supabase team invitation banner, not the
+            Spring password-based /invite/:token page used by the self-hosted
+            build. */}
+        <Route path="/share/:token" element={<ShareLinkPage />} />
+      </Route>
+      <Route path="/*" element={<Landing />} />
+    </Routes>
+  );
+}
+
+// Everything else needs the auth/backend providers. RootGate routes "/" by role
+// before any of it mounts.
+function MainApp() {
+  return (
+    <RootGate>
+      <AppProviders
+        appConfigProviderProps={{ onConfigLoaded: handleConfigLoaded }}
+      >
+        <AppLayout>
+          <NonAuthBootstraps />
+          <ResumePendingConnect />
+          <MainRoutes />
+          <OnboardingTour />
+        </AppLayout>
+      </AppProviders>
+    </RootGate>
+  );
+}
+
 export default function App() {
   return (
     <Suspense fallback={<LoadingFallback />}>
@@ -102,58 +147,7 @@ export default function App() {
         <Route element={<AppFrame />}>
           {/* The portal: its own top-level shell, before the catch-all. */}
           {getAdminRouteExtensions()}
-
-          {/* Everything else needs the auth/backend providers. RootGate routes "/"
-            by role before any of it mounts. */}
-          <Route
-            path="*"
-            element={
-              <RootGate>
-                <AppProviders
-                  appConfigProviderProps={{
-                    onConfigLoaded: handleConfigLoaded,
-                  }}
-                >
-                  <AppLayout>
-                    <NonAuthBootstraps />
-                    <ResumePendingConnect />
-                    <Routes>
-                      {/* Not the app: no rail over any of these, ever. */}
-                      <Route element={<NoAppChrome />}>
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/signup" element={<Signup />} />
-                        <Route
-                          path="/auth/callback"
-                          element={<AuthCallback />}
-                        />
-                        <Route path="/auth/reset" element={<ResetPassword />} />
-                        <Route
-                          path="/oauth/consent"
-                          element={<OAuthConsent />}
-                        />
-                        {/* Human half of the self-hosted account-link handshake.
-                          It lives on this origin because a customer hostname can
-                          never be in the provider's redirect allow-list. Grouped
-                          with the pages above: it is an approval step, not the
-                          app. */}
-                        <Route path="/link" element={<ConnectApprove />} />
-                        {/* Shared-file links. Team invites are NOT routed here:
-                          on SaaS they are accepted in-app via the Supabase team
-                          invitation banner, not the Spring password-based
-                          /invite/:token page used by the self-hosted build. */}
-                        <Route
-                          path="/share/:token"
-                          element={<ShareLinkPage />}
-                        />
-                      </Route>
-                      <Route path="/*" element={<Landing />} />
-                    </Routes>
-                    <OnboardingTour />
-                  </AppLayout>
-                </AppProviders>
-              </RootGate>
-            }
-          />
+          <Route path="*" element={<MainApp />} />
         </Route>
       </Routes>
     </Suspense>
