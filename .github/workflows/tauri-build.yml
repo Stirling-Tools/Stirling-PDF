@@ -137,8 +137,9 @@ jobs:
         ${{ github.workspace }}/build.gradle
         ${{ github.workspace }}/app/**/build.gradle
         ${{ github.workspace }}/gradle/**/*.gradle
-      GRADLE_CACHE_PATH: |
+      GRADLE_CACHE_PATH_CACHES: |
         ${{ github.workspace }}/.cache/gradle-java-25/caches
+      GRADLE_CACHE_PATH_WRAPPER: |
         ${{ github.workspace }}/.cache/gradle-java-25/wrapper
       GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-25
       CARGO_FILES_TO_HASH: |
@@ -221,12 +222,15 @@ jobs:
           multi-cache: |
             cargo:
               path: ${{ env.CARGO_HOME }}
-            gradle:
-              path: ${{ env.GRADLE_CACHE_PATH }}
+            gradle-caches:
+              path: ${{ env.GRADLE_CACHE_PATH_CACHES }}
+            gradle-wrapper:
+              path: ${{ env.GRADLE_CACHE_PATH_WRAPPER }}
           save-scope: shared
           key: |
             cargo=${{ hashFiles(env.CARGO_FILES_TO_HASH) }}
-            gradle=${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
+            gradle-caches=${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
+            gradle-wrapper=${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
           allow-shared-restore: true
           strict: false
 
