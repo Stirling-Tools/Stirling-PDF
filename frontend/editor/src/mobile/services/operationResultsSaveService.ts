@@ -1,9 +1,12 @@
 import type { FileId } from "@app/types/fileContext";
 import type { OperationSaveContext } from "@core/services/operationResultsSaveService";
 import {
+  downloadFile,
   downloadFromUrl,
   type DownloadResult,
 } from "@app/services/downloadService";
+import { enforceExportPolicies } from "@app/services/policyExport";
+import { zipFileService } from "@app/services/zipFileService";
 // Save through the export gateway so a "run on export" policy enforces before
 // the file leaves the app (no-op when no such policy is active).
 import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
@@ -19,8 +22,10 @@ export type { OperationSaveContext };
  *
  * - one output: save that file through the export-policy gateway, and mark the
  *   workspace copy saved so it stops showing as unsaved;
- * - several outputs: save the single zip the operation already built, which is
- *   what `downloadUrl` points at once there is more than one result.
+ * - several outputs: enforce export policies on each output, then save them as
+ *   one zip. The zip the operation already built is not reused, because its
+ *   entries never went through the policy gateway. Workspace copies are not
+ *   marked saved: the zip is the saved artifact, not any individual file.
  */
 export async function saveOperationResults(
   context: OperationSaveContext,
@@ -45,16 +50,26 @@ export async function saveOperationResults(
     }
   }
 
-  const result = await downloadFromUrl(
+  const outputs = outputFileIds.flatMap((fileId) => {
+    const file = context.getFile(fileId);
+    return file ? [{ file, fileId }] : [];
+  });
+
+  if (outputs.length > 0) {
+    const enforced = await enforceExportPolicies(
+      outputs.map((output) => output.file),
+      outputs.map((output) => output.fileId),
+    );
+    const zipFilename = context.downloadFilename || "download.zip";
+    const { zipFile } = await zipFileService.createZipFromFiles(
+      enforced,
+      zipFilename,
+    );
+    return downloadFile({ data: zipFile, filename: zipFilename });
+  }
+
+  return downloadFromUrl(
     context.downloadUrl,
     context.downloadFilename || "download",
   );
-
-  if (result.savedPath) {
-    for (const fileId of outputFileIds) {
-      context.markSaved(fileId, result.savedPath);
-    }
-  }
-
-  return result;
 }
