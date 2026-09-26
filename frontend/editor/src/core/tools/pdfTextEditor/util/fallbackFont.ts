@@ -5,6 +5,7 @@ import { FontRef } from "@app/tools/pdfTextEditor/model/FontRef";
 import { parseTrueTypeCmap } from "@app/tools/pdfTextEditor/charcode/CmapResolver";
 import { writeUtf16 } from "@app/services/pdfiumService";
 import { BASE_PATH } from "@app/constants/app";
+import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
 
 /** Client-side Unicode fallback font. */
 // BASE_PATH-prefixed: a bare "/fonts/..." 404s on subpath deployments
@@ -136,19 +137,9 @@ export function loadFallbackFontInto(doc: EditorDocument): number {
 
 /** Right edge (PDF points) of an object's visible bbox, or 0 if unmeasurable. */
 function measureRightEdge(m: EditorDocument["module"], ptr: number): number {
-  const l = m.pdfium.wasmExports.malloc(4);
-  const b = m.pdfium.wasmExports.malloc(4);
-  const r = m.pdfium.wasmExports.malloc(4);
-  const t = m.pdfium.wasmExports.malloc(4);
-  try {
-    if (!m.FPDFPageObj_GetBounds(ptr, l, b, r, t)) return 0;
-    return m.pdfium.getValue(r, "float");
-  } finally {
-    m.pdfium.wasmExports.free(l);
-    m.pdfium.wasmExports.free(b);
-    m.pdfium.wasmExports.free(r);
-    m.pdfium.wasmExports.free(t);
-  }
+  const buf = scratchPtr(m, SCRATCH.fallbackL, 16);
+  if (!m.FPDFPageObj_GetBounds(ptr, buf, buf + 4, buf + 8, buf + 12)) return 0;
+  return m.pdfium.getValue(buf + 8, "float");
 }
 
 interface CreateTextObjModule {

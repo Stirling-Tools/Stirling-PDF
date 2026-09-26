@@ -5,6 +5,7 @@ import {
   applyInkState,
   collectMemberPtrs,
 } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
+import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
 
 /** Render modes that paint an outline; 0 is fill-only, 3 is invisible. */
 const FILL_ONLY = 0;
@@ -175,15 +176,11 @@ function readMemberInk(
   } catch {
     /* keep the run-level value */
   }
-  const exports = m.pdfium.wasmExports as unknown as {
-    malloc: (n: number) => number;
-    free: (p: number) => void;
-  };
-  const r = exports.malloc(4);
-  const g = exports.malloc(4);
-  const b = exports.malloc(4);
-  const a = exports.malloc(4);
-  const w = exports.malloc(4);
+  const r = scratchPtr(m, SCRATCH.outlineR, 4);
+  const g = scratchPtr(m, SCRATCH.outlineG, 4);
+  const b = scratchPtr(m, SCRATCH.outlineB, 4);
+  const a = scratchPtr(m, SCRATCH.outlineA, 4);
+  const w = scratchPtr(m, SCRATCH.outlineW, 4);
   try {
     let stroke: RGBA | null = null;
     if (mod.FPDFPageObj_GetStrokeColor?.(ptr, r, g, b, a)) {
@@ -202,12 +199,6 @@ function readMemberInk(
     return { ptr, renderMode, stroke, strokeWidth };
   } catch {
     return { ptr, renderMode, stroke: null, strokeWidth: 0 };
-  } finally {
-    exports.free(r);
-    exports.free(g);
-    exports.free(b);
-    exports.free(a);
-    exports.free(w);
   }
 }
 

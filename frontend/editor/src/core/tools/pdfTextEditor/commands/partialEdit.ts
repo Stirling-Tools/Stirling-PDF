@@ -17,6 +17,7 @@ import {
 } from "@app/tools/pdfTextEditor/util/fontCapability";
 import { writeUtf16 } from "@app/services/pdfiumService";
 import { transformObject } from "@app/tools/pdfTextEditor/util/objectTransform";
+import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
 
 /** Set the text of an EXISTING PDFium text object, preserving its font. */
 export function setObjText(
@@ -41,24 +42,14 @@ function objBoundsLR(
   ptr: number,
   fallbackX: number,
 ): { x: number; right: number } {
-  const l = m.pdfium.wasmExports.malloc(4);
-  const b = m.pdfium.wasmExports.malloc(4);
-  const r = m.pdfium.wasmExports.malloc(4);
-  const t = m.pdfium.wasmExports.malloc(4);
-  try {
-    if (!m.FPDFPageObj_GetBounds(ptr, l, b, r, t)) {
-      return { x: fallbackX, right: fallbackX };
-    }
-    return {
-      x: m.pdfium.getValue(l, "float"),
-      right: m.pdfium.getValue(r, "float"),
-    };
-  } finally {
-    m.pdfium.wasmExports.free(l);
-    m.pdfium.wasmExports.free(b);
-    m.pdfium.wasmExports.free(r);
-    m.pdfium.wasmExports.free(t);
+  const buf = scratchPtr(m, SCRATCH.partialBbox, 16);
+  if (!m.FPDFPageObj_GetBounds(ptr, buf, buf + 4, buf + 8, buf + 12)) {
+    return { x: fallbackX, right: fallbackX };
   }
+  return {
+    x: m.pdfium.getValue(buf, "float"),
+    right: m.pdfium.getValue(buf + 8, "float"),
+  };
 }
 
 // Map freshly-emitted line objects back to the text they carry, building the
