@@ -98,7 +98,7 @@ jobs:
           sftp-username: ${{ secrets.CACHE_SFTP_USERNAME }}
           sftp-password: ${{ secrets.CACHE_SFTP_PASSWORD }}
           sftp-base-path: ${{ secrets.CACHE_SFTP_BASE_PATH || '/files/cache-the-planet' }}
-          cache-name: "gradle-java-${{ env.JAVA_VERSION }}-${{ matrix.flavor }}"
+          cache-name: "gradle-java-${{ env.JAVA_VERSION }}"
           save-scope: shared
           token: ${{ github.token }}
           key: ${{ needs.hash_pr.outputs.cache_key }}
