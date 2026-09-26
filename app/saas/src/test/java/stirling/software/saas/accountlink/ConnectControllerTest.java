@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -132,14 +133,7 @@ class ConnectControllerTest {
 
         // createReauth is the credentialled path; a first link must not reach it.
         org.mockito.Mockito.verify(service, org.mockito.Mockito.never())
-                .createReauth(
-                        anyString(),
-                        anyString(),
-                        anyString(),
-                        anyString(),
-                        any(),
-                        isNull(),
-                        isNull());
+                .createReauth(anyString(), anyString(), anyString(), anyString(), any(), isNull());
     }
 
     @Test
@@ -171,7 +165,7 @@ class ConnectControllerTest {
     }
 
     @Test
-    void reauthLookupAllowsOnlyTheLinkedOwnerToRenew() {
+    void reauthLookupAllowsTheCurrentTeamOwnerToRenew() {
         pendingRequest(ConnectRequest.Mode.REAUTH);
         when(leaderTeams.resolve(auth)).thenReturn(new LeaderTeam(1L, 2L, null));
 
@@ -183,8 +177,8 @@ class ConnectControllerTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"1,3", "99,2", "99,3"})
-    void reauthLookupOffersNoActionsToAnotherAccountOrTeam(Long teamId, Long userId) {
+    @CsvSource({"99,2", "99,3"})
+    void reauthLookupOffersNoActionsToAnotherTeamOwner(Long teamId, Long userId) {
         pendingRequest(ConnectRequest.Mode.REAUTH);
         when(leaderTeams.resolve(auth)).thenReturn(new LeaderTeam(teamId, userId, null));
 
@@ -196,7 +190,7 @@ class ConnectControllerTest {
     }
 
     @Test
-    void reauthRequiresTheLinkedAccountToStillOwnItsTeam() {
+    void reauthRejectsTheFormerOwnerAfterHandover() {
         pendingRequest(ConnectRequest.Mode.REAUTH);
         when(leaderTeams.resolve(auth))
                 .thenReturn(new LeaderTeam(null, null, HttpStatus.FORBIDDEN));
@@ -211,25 +205,24 @@ class ConnectControllerTest {
     }
 
     @Test
-    void reauthCreationUsesTheAuthenticatedInstancesOriginalAccount() {
+    void reauthCreationUsesTheAuthenticatedInstancesTeamWithoutItsOriginalAccount() {
         LinkedInstance instance = new LinkedInstance();
         instance.setTeamId(1L);
-        instance.setCreatedByUserId(2L);
         when(accountLinkService.resolveActiveInstance("device", "secret"))
                 .thenReturn(Optional.of(instance));
-        when(service.createReauth("prod-1", BODY.callbackUrl(), "n", "s", "127.0.0.1", 1L, 2L))
+        when(service.createReauth("prod-1", BODY.callbackUrl(), "n", "s", "127.0.0.1", 1L))
                 .thenReturn(ConnectRequestService.CreateResult.ok("req-1", 1800));
         MockHttpServletRequest request = request("https", "api.example.com", 443);
         request.addHeader(ConnectController.HEADER_DEVICE_ID, "device");
         request.addHeader(ConnectController.HEADER_DEVICE_SECRET, "secret");
 
         assertThat(controller.request(BODY, request).getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        verify(service).createReauth("prod-1", BODY.callbackUrl(), "n", "s", "127.0.0.1", 1L, 2L);
+        verify(service).createReauth("prod-1", BODY.callbackUrl(), "n", "s", "127.0.0.1", 1L);
     }
 
     @ParameterizedTest
-    @CsvSource({"1,3", "99,2", "99,3"})
-    void directRenewalPostsCannotApproveOrDenyForAnotherAccount(Long teamId, Long userId) {
+    @CsvSource({"99,2", "99,3"})
+    void directRenewalPostsCannotApproveOrDenyForAnotherTeam(Long teamId, Long userId) {
         ConnectRequestRepository repo = mock(ConnectRequestRepository.class);
         ConnectRequest row = new ConnectRequest();
         row.setRequestId("req-1");
@@ -268,7 +261,39 @@ class ConnectControllerTest {
                                         false,
                                         mode,
                                         ConnectRequest.Status.PENDING,
-                                        1L,
-                                        2L)));
+                                        1L)));
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void newOwnerCanRenewFreshAndLegacyRequestsWithoutReplacingTheLink(boolean legacy) {
+        var repo = mock(ConnectRequestRepository.class);
+        var row = new ConnectRequest();
+        row.setRequestId("req-1");
+        row.setMode(ConnectRequest.Mode.REAUTH);
+        row.setTeamId(1L);
+        row.setApprovedByUserId(legacy ? 2L : null);
+        row.setCallbackOrigin("https://pdf.example.com");
+        row.setCallbackUrl("https://pdf.example.com/account-link/callback");
+        row.setNonce("nonce");
+        row.setClaimSecretHash(AccountLinkService.sha256Hex("claim-secret"));
+        row.setExpiresAt(LocalDateTime.now().plusMinutes(10));
+        when(repo.findByRequestId("req-1")).thenReturn(Optional.of(row));
+        when(repo.findByRequestIdForUpdate("req-1")).thenReturn(Optional.of(row));
+        when(leaderTeams.resolve(auth)).thenReturn(new LeaderTeam(1L, 3L, null));
+        var realService = new ConnectRequestService(repo, accountLinkService);
+        var realController =
+                new ConnectController(
+                        realService, leaderTeams, accountLinkService, applicationProperties);
+
+        assertThat(realController.view("req-1", auth).getBody().canApprove()).isTrue();
+        assertThat(realController.approve("req-1", auth).getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(row.getApprovedByUserId()).isEqualTo(3L);
+        var claimed = realService.claim("req-1", "claim-secret");
+        assertThat(claimed.outcome()).isEqualTo(ConnectRequestService.ClaimOutcome.CONFIRMED);
+        assertThat(claimed.teamId()).isEqualTo(1L);
+        assertThat(claimed.deviceId()).isNull();
+        assertThat(claimed.deviceSecret()).isNull();
+        org.mockito.Mockito.verifyNoInteractions(accountLinkService);
     }
 }

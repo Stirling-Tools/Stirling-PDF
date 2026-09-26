@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>Owner-only class-wide except {@link #linked()}: everything else is server-scoped, the
  * free-tier meter included. Other users learn of the wall from the {@code reason} on the 402.
+ * Linking and unlinking recheck ownership under the service's lock.
  */
 @Slf4j
 @Hidden

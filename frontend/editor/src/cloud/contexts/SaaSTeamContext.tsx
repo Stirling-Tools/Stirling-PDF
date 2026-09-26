@@ -20,6 +20,7 @@ import { useTeamAuth } from "@app/auth/teamSession";
  */
 
 interface Team {
+  current?: boolean;
   teamId: number;
   name: string;
   teamType: string;
@@ -64,7 +65,10 @@ interface SaaSTeamContextType {
   rejectInvitation: (token: string) => Promise<void>;
   cancelInvitation: (invitationId: number) => Promise<void>;
   removeMember: (memberId: number) => Promise<void>;
-  transferLeadership: (memberId: number) => Promise<void>;
+  transferLeadership: (
+    email: string,
+    expectedLeaderId: number | null,
+  ) => Promise<void>;
   claimLeadership: () => Promise<void>;
   leaveTeam: () => Promise<void>;
   refreshTeams: () => Promise<void>;
@@ -104,19 +108,22 @@ export function SaaSTeamProvider({ children }: { children: ReactNode }) {
 
   const fetchMyTeams = useCallback(async () => {
     if (!canUseTeams) return null;
-
+    setLoading(true);
     try {
       const response = await apiClient.get<Team[]>("/api/v1/team/my", {
         suppressErrorToast: true,
       });
       setTeams(response.data);
 
-      const activeTeam = response.data[0];
+      const activeTeam = response.data.find((team) => team.current);
       setCurrentTeam(activeTeam || null);
       return activeTeam || null;
     } catch (error) {
       console.error("[SaaSTeamContext] Failed to fetch teams:", error);
+      // A failed background poll must not unmount an in-progress transfer or its receipt.
       return null;
+    } finally {
+      setLoading(false);
     }
   }, [canUseTeams]);
 
@@ -196,7 +203,6 @@ export function SaaSTeamProvider({ children }: { children: ReactNode }) {
       setTeamMembers([]);
       setTeamInvitations([]);
     }
-    setLoading(false);
   }, [currentTeam, fetchTeamMembers, fetchTeamInvitations]);
 
   const inviteUser = async (email: string) => {
@@ -264,10 +270,14 @@ export function SaaSTeamProvider({ children }: { children: ReactNode }) {
     await refreshAfterMembershipChange();
   };
 
-  const transferLeadership = async (memberId: number) => {
+  const transferLeadership = async (
+    email: string,
+    expectedLeaderId: number | null,
+  ) => {
     if (!currentTeam) throw new Error("No current team");
     await apiClient.post(
-      `/api/v1/team/${currentTeam.teamId}/members/${memberId}/transfer-leadership`,
+      `/api/v1/team/${currentTeam.teamId}/ownership/transfer`,
+      { email, expectedLeaderId },
     );
     await refreshTeams();
     await fetchTeamMembers(currentTeam.teamId);

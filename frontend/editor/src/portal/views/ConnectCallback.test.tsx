@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { HttpError } from "@app/portal/api/http";
 import type { ReactNode } from "react";
+import { PortalRosterHost } from "@app/portal/components/settings/PortalRosterHost";
 import { PortalSettingsSectionHost } from "@app/portal/components/settings/PortalSettingsSectionHost";
 import { act, render, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
@@ -138,9 +140,13 @@ describe("account-link callback", () => {
     setSession.mockResolvedValue({ error: null });
   });
 
-  it.each(["/settings/billing", "/settings/account-link"])(
+  it.each(["/settings/billing", "/settings/account-link", "/settings/users"])(
     "restores renewal through the settings host at %s",
     async (returnTo) => {
+      const Host =
+        returnTo === "/settings/users"
+          ? PortalRosterHost
+          : PortalSettingsSectionHost;
       rememberConnect({
         ownerId: "owner",
         mode: "reauth",
@@ -159,10 +165,10 @@ describe("account-link callback", () => {
               <Route
                 path={returnTo}
                 element={
-                  <PortalSettingsSectionHost>
+                  <Host>
                     <OutcomeSpy />
                     <div data-testid="settings-destination" />
-                  </PortalSettingsSectionHost>
+                  </Host>
                 }
               />
             </Routes>
@@ -176,7 +182,7 @@ describe("account-link callback", () => {
         access_token: "at",
         refresh_token: "rt",
       });
-      expect(routeState).toBeNull();
+      await waitFor(() => expect(routeState).toBeNull());
     },
   );
 
@@ -360,6 +366,18 @@ describe("account-link callback", () => {
     await waitFor(() => expect(lastOutcome()?.state).toBe("expired"));
     expect(lastOutcome()?.reclaim).toBeUndefined();
   });
+
+  it.each([403, 409])(
+    "does not retry a link rejected after ownership changes (%s)",
+    async (status) => {
+      landOn(`#type=link&nonce=${NONCE}`);
+      completeConnect.mockRejectedValue(new HttpError(status, "Rejected", {}));
+      renderFlow();
+      await waitFor(() => expect(lastOutcome()?.state).toBe("rejected"));
+      expect(lastOutcome()?.reclaim).toBeUndefined();
+      expect(refresh).not.toHaveBeenCalled();
+    },
+  );
 
   it.each(["REJECTED", "EXPIRED", "PENDING", "UNAVAILABLE"])(
     "does not install tokens for a %s handshake",

@@ -30,8 +30,8 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
   const base = useCoreSettingsNav(onLeave);
   const { granted: portalAccess, settled: accessSettled } =
     usePortalAccessState();
-  const { isAdmin, user } = useAuth();
-  const isOwner = isAdmin && user?.orgOwner === true;
+  const { isAdmin, user, loading } = useAuth();
+  const isOwner = isAdmin && !loading && user?.orgOwner === true;
   // Answers to the same admin flag the rest of the nav is built from, not the
   // session's - the two disagree while /me is still in flight.
   const { config } = useAppConfig();
@@ -54,23 +54,31 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
 
   const sections = useMemo(
     () =>
-      portalSections.length === 0
-        ? base.sections
-        : mergeSettingsGroups(
-            base.sections,
-            portalSections,
-            portalSupersededSectionKeys(portalSections),
-          ),
+      mergeSettingsGroups(base.sections, portalSections, [
+        "plan",
+        "adminPlan",
+        ...portalSupersededSectionKeys(portalSections),
+      ]),
     [base.sections, portalSections],
   );
+
+  const portalAliases = { ...PORTAL_SECTION_ALIASES };
+  if (
+    !portalSections.some((group) =>
+      group.items.some((item) => item.key === "billing"),
+    )
+  ) {
+    delete portalAliases.plan;
+    delete portalAliases.adminPlan;
+  }
 
   return {
     ...base,
     sections,
-    pending: !accessSettled,
+    pending: !accessSettled || loading,
     aliases:
       portalSections.length > 0
-        ? { ...base.aliases, ...PORTAL_SECTION_ALIASES }
+        ? { ...base.aliases, ...portalAliases }
         : base.aliases,
   };
 }
