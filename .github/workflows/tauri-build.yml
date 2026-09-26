@@ -226,7 +226,7 @@ jobs:
           save-scope: shared
           key: |
             cargo=${{ hashFiles(env.CARGO_FILES_TO_HASH) }}
-            gradle= ${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
+            gradle=${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
           allow-shared-restore: true
           strict: false
 
