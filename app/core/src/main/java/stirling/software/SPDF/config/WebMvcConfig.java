@@ -3,17 +3,26 @@ package stirling.software.SPDF.config;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.EncodedResourceResolver;
+import org.springframework.web.servlet.resource.HttpResource;
+import org.springframework.web.servlet.resource.ResourceResolver;
+import org.springframework.web.servlet.resource.ResourceResolverChain;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.RequiredArgsConstructor;
 
@@ -53,7 +62,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addResourceLocations(staticPath, "classpath:/static/")
                 .setCacheControl(CacheControl.noStore())
                 .resourceChain(true)
-                .addResolver(new EncodedResourceResolver());
+                .addResolver(new PreferredEncodingResourceResolver());
 
         // 2. Vite fingerprinted assets (immutable)
         // These already have content hashes in filenames (e.g. index-ChAS4tCC.js)
@@ -61,7 +70,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addResourceLocations(staticPath + "assets/", "classpath:/static/assets/")
                 .setCacheControl(IMMUTABLE_ONE_YEAR)
                 .resourceChain(true)
-                .addResolver(new EncodedResourceResolver());
+                .addResolver(new PreferredEncodingResourceResolver());
 
         // 3. Media and fonts (immutable)
         registry.addResourceHandler("/images/**", "/fonts/**")
@@ -72,7 +81,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "classpath:/static/fonts/")
                 .setCacheControl(IMMUTABLE_ONE_YEAR)
                 .resourceChain(true)
-                .addResolver(new EncodedResourceResolver());
+                .addResolver(new PreferredEncodingResourceResolver());
 
         // 4. Branding and stable non-fingerprinted assets (1 day + SWR)
         // Use stale-while-revalidate to improve perceived performance.
@@ -127,7 +136,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                                 .cachePublic()
                                 .staleWhileRevalidate(Duration.ofDays(7)))
                 .resourceChain(true)
-                .addResolver(new EncodedResourceResolver());
+                .addResolver(new PreferredEncodingResourceResolver());
 
         // 5. Catch-all (SPA fallback)
         // Must check with server to ensure index.html is always fresh.
@@ -135,7 +144,86 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addResourceLocations(staticPath, "classpath:/static/")
                 .setCacheControl(NO_CACHE)
                 .resourceChain(true)
-                .addResolver(new EncodedResourceResolver());
+                .addResolver(new PreferredEncodingResourceResolver());
+    }
+
+    /**
+     * Serves the smallest precompressed variant the client accepts, in server preference order
+     * (brotli before gzip). The framework resolver walks the client's Accept-Encoding in the order
+     * sent, and browsers list gzip before br, so the brotli siblings were never selected (Spring
+     * Framework #37210). This applies the preference upstream is adopting in #37213 by asking a
+     * single-coding resolver per coding; remove it when the pinned Spring version carries the fix.
+     * Quality factors are ignored, matching the upstream behavior.
+     */
+    static final class PreferredEncodingResourceResolver implements ResourceResolver {
+
+        private record Coding(String name, EncodedResourceResolver resolver) {}
+
+        private final List<Coding> codings;
+
+        PreferredEncodingResourceResolver() {
+            this.codings =
+                    Stream.of("br", "gzip")
+                            .map(
+                                    name -> {
+                                        EncodedResourceResolver resolver =
+                                                new EncodedResourceResolver();
+                                        resolver.setContentCodings(List.of(name));
+                                        return new Coding(name, resolver);
+                                    })
+                            .toList();
+        }
+
+        @Override
+        public Resource resolveResource(
+                HttpServletRequest request,
+                String requestPath,
+                List<? extends Resource> locations,
+                ResourceResolverChain chain) {
+            if (request != null) {
+                for (Coding coding : this.codings) {
+                    if (!accepts(request, coding.name())) {
+                        continue;
+                    }
+                    Resource resolved =
+                            coding.resolver()
+                                    .resolveResource(request, requestPath, locations, chain);
+                    if (isEncodedWith(resolved, coding.name())) {
+                        return resolved;
+                    }
+                }
+            }
+            return chain.resolveResource(request, requestPath, locations);
+        }
+
+        @Override
+        public String resolveUrlPath(
+                String resourcePath,
+                List<? extends Resource> locations,
+                ResourceResolverChain chain) {
+            return chain.resolveUrlPath(resourcePath, locations);
+        }
+
+        private static boolean accepts(HttpServletRequest request, String coding) {
+            String header = request.getHeader(HttpHeaders.ACCEPT_ENCODING);
+            if (header == null) {
+                return false;
+            }
+            for (String token : header.toLowerCase(Locale.ROOT).split(",")) {
+                if (token.split(";", 2)[0].trim().equals(coding)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static boolean isEncodedWith(Resource resource, String coding) {
+            return resource instanceof HttpResource httpResource
+                    && coding.equals(
+                            httpResource
+                                    .getResponseHeaders()
+                                    .getFirst(HttpHeaders.CONTENT_ENCODING));
+        }
     }
 
     @Override

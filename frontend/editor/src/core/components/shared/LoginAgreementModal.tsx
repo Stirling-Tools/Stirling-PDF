@@ -1,8 +1,17 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  Suspense,
+  lazy,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   Box,
+  Center,
   Divider,
   Group,
+  Loader,
   Modal,
   ScrollArea,
   Stack,
@@ -10,13 +19,18 @@ import {
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import Markdown, { type Components } from "react-markdown";
-import remarkGfm from "remark-gfm";
 import apiClient from "@app/services/apiClient";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useAuth } from "@app/auth/UseSession";
 import { withBasePath } from "@app/constants/app";
 import { Z_INDEX_SIGN_IN_MODAL } from "@app/styles/zIndex";
+
+// The markdown renderer (react-markdown + remark-gfm + micromark, ~120 KB gz)
+// is only needed when an administrator actually configured a disclaimer, so it
+// stays out of the startup graph and loads with the modal body.
+const LoginAgreementBody = lazy(
+  () => import("@app/components/shared/LoginAgreementBody"),
+);
 
 const ACCEPTED_STORAGE_KEY = "loginAgreementAccepted";
 
@@ -54,13 +68,6 @@ function getLoginNonce(loginEnabled: boolean, userId?: string): string {
   if (userId) return `user:${userId}`;
   return "session";
 }
-
-const markdownComponents: Components = {
-  // Strip react-markdown's `node` prop so it isn't spread onto the DOM element.
-  a({ node, ...props }) {
-    return <a {...props} target="_blank" rel="noopener noreferrer" />;
-  },
-};
 
 /**
  * Blocking login agreement / disclaimer shown once per login (and once per app session in
@@ -174,33 +181,38 @@ export default function LoginAgreementModal({
       zIndex={Z_INDEX_SIGN_IN_MODAL}
     >
       <Stack>
-        <ScrollArea.Autosize mah="50vh" type="auto">
-          <Box px="xs">
-            <Markdown
-              remarkPlugins={[remarkGfm]}
-              components={markdownComponents}
-            >
-              {content}
-            </Markdown>
-          </Box>
-        </ScrollArea.Autosize>
-        <Divider />
-        <Group justify="space-between" gap="sm" align="center" wrap="wrap">
-          <Text size="xs" c="dimmed" style={{ flex: 1, minWidth: 0 }}>
-            {t(
-              "loginAgreementProvider",
-              "This notice is provided by your administrator, not Stirling PDF Inc.",
-            )}
-          </Text>
-          <Group gap="sm" wrap="nowrap">
-            <Button variant="secondary" onClick={handleDecline}>
-              {t("loginAgreementDecline", "Decline")}
-            </Button>
-            <Button variant="primary" onClick={handleAccept}>
-              {t("loginAgreementAccept", "Accept")}
-            </Button>
+        {/* The controls share the boundary: acceptance must not be reachable
+            before the agreement text itself has loaded. */}
+        <Suspense
+          fallback={
+            <Center mih="8rem">
+              <Loader size="sm" />
+            </Center>
+          }
+        >
+          <ScrollArea.Autosize mah="50vh" type="auto">
+            <Box px="xs">
+              <LoginAgreementBody content={content} />
+            </Box>
+          </ScrollArea.Autosize>
+          <Divider />
+          <Group justify="space-between" gap="sm" align="center" wrap="wrap">
+            <Text size="xs" c="dimmed" style={{ flex: 1, minWidth: 0 }}>
+              {t(
+                "loginAgreementProvider",
+                "This notice is provided by your administrator, not Stirling PDF Inc.",
+              )}
+            </Text>
+            <Group gap="sm" wrap="nowrap">
+              <Button variant="secondary" onClick={handleDecline}>
+                {t("loginAgreementDecline", "Decline")}
+              </Button>
+              <Button variant="primary" onClick={handleAccept}>
+                {t("loginAgreementAccept", "Accept")}
+              </Button>
+            </Group>
           </Group>
-        </Group>
+        </Suspense>
       </Stack>
     </Modal>
   );

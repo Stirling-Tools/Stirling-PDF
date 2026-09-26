@@ -18,6 +18,10 @@ import {
   useAccountLinkBlock,
 } from "@app/services/accountLinkBlock";
 
+// The notice renders the linking modal through React.lazy; warming it here
+// keeps the first assertion from racing the chunk import.
+await import("@app/components/account-link/EditorLinkModal");
+
 const { alert, begin, auth, get } = vi.hoisted(() => ({
   alert: vi.fn(),
   begin: vi.fn(),
@@ -101,7 +105,9 @@ describe("editor shared account-link modal", () => {
     mount("/editor");
     await act(async () => reportFreeTierExhausted());
     expect(
-      screen.getByRole("dialog", { name: "Keep your workflows running" }),
+      await screen.findByRole("dialog", {
+        name: "Keep your workflows running",
+      }),
     ).toBeTruthy();
     expect(
       screen.getByText("Add more users with a paid Team plan"),
@@ -122,6 +128,7 @@ describe("editor shared account-link modal", () => {
       reportFreeTierExhausted();
       reportFreeTierExhausted();
     });
+    await screen.findByRole("dialog");
     expect(screen.getAllByRole("dialog")).toHaveLength(1);
     expect(alert).not.toHaveBeenCalled();
   });
@@ -138,7 +145,7 @@ describe("editor shared account-link modal", () => {
         }),
       );
       expect(screen.queryByText(/report\.pdf/)).toBeNull();
-      fireEvent.click(screen.getByText("Active pipelines"));
+      fireEvent.click(await screen.findByText("Active pipelines"));
       await screen.findByRole("button", { name: "Open pipeline settings" });
       fireEvent.click(
         screen.getByRole("button", { name: "Open pipeline settings" }),
@@ -161,7 +168,9 @@ describe("editor shared account-link modal", () => {
       }),
     );
     expect(
-      screen.getByText(/Pipeline “Quarterly rotation” stopped after upload/),
+      await screen.findByText(
+        /Pipeline “Quarterly rotation” stopped after upload/,
+      ),
     ).toBeTruthy();
     expect(
       screen.getByRole("dialog", { name: "Ask your server administrator" }),
@@ -173,7 +182,7 @@ describe("editor shared account-link modal", () => {
   it("does not replace a dismissed modal with a toast or reopen it on subsequent failures", async () => {
     const view = mount("/editor");
     await act(async () => reportFreeTierExhausted());
-    fireEvent.click(screen.getByRole("button", { name: "Not now" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Not now" }));
     await act(async () => {
       reportFreeTierExhausted();
       reportFreeTierExhausted();
@@ -188,7 +197,9 @@ describe("editor shared account-link modal", () => {
     mount("/editor");
     await act(async () => reportFreeTierExhausted());
     expect(
-      screen.getByRole("dialog", { name: "Ask your server administrator" }),
+      await screen.findByRole("dialog", {
+        name: "Ask your server administrator",
+      }),
     ).toBeTruthy();
     expect(
       screen.getByRole("button", { name: "Copy message for administrator" }),

@@ -1,13 +1,10 @@
-import { BASE_PATH } from "@app/constants/app";
+import { getFontBaseUrl } from "@app/services/fontBaseUrl";
 import type { FontFallbackConfig } from "@embedpdf/engines";
 import { FontCharset } from "@embedpdf/models";
 
 export function getLocalFontFallbackConfig(): FontFallbackConfig {
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const baseUrl = `${origin}${BASE_PATH}/fonts`;
-
   return {
-    baseUrl,
+    baseUrl: getFontBaseUrl(),
     defaultFont: "NotoSans-Regular.ttf",
     fonts: {
       [FontCharset.ANSI]: "NotoSans-Regular.ttf",

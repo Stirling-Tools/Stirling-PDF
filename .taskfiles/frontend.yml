@@ -1,5 +1,12 @@
 version: '3'
 
+# The precompression pass queues more zlib jobs than the default four-thread
+# pool can keep busy. It has to be set before Node starts: loading the Vite
+# config already touches the pool, so an assignment inside the config is too
+# late.
+env:
+  UV_THREADPOOL_SIZE: "16"
+
 # Tasks operate from the workspace root (frontend/). Editor commands pass
 # `editor` as the vite project root (positional after `build` / before the
 # mode flag) or use `--project editor/...` for tsc — so the editor lives

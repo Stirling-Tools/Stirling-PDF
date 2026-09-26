@@ -302,9 +302,10 @@ tasks.register('copyFrontendAssets', Copy) {
         // Exclude files that conflict with backend static resources
         exclude 'robots.txt'  // Backend already has this
         exclude 'favicon.ico' // Backend already has this
-        // Backend ships its own NotoSans-Regular.ttf here and it is git-tracked;
-        // letting the editor's copy win would dirty the source tree on every build.
-        exclude 'fonts/NotoSans-Regular.ttf'
+        // The raw TTFs are already git-tracked under static/fonts and copied by
+        // processResources; only the precompressed siblings add anything, and
+        // copying the raw set back would dirty the source tree on every build.
+        exclude 'fonts/*.ttf'
     }
     into resourcesStaticDir
     duplicatesStrategy = DuplicatesStrategy.INCLUDE  // Let frontend overwrite when needed
@@ -322,15 +323,19 @@ tasks.register('cleanFrontendAssets', Delete) {
     description = 'Remove previously generated frontend assets from static resources'
     delete generatedFrontendPaths.collect { new File(resourcesStaticDir, it) }
     // Prerendered per-route SPA pages (e.g. compress.html) carry per-tool OG tags and are
-    // copied from the frontend build. Remove stale ones so renamed/removed tools don't linger.
+    // copied from the frontend build. Remove stale ones so renamed/removed tools don't linger,
+    // including the .br/.gz siblings the compression pass writes next to each page.
     // api-landing.html, mobile-upload.html and mobile-sign.html are real backend source files,
     // not generated artifacts.
-    delete fileTree(dir: resourcesStaticDir, includes: ['*.html'], excludes: ['api-landing.html', 'mobile-upload.html', 'mobile-sign.html'])
+    delete fileTree(dir: resourcesStaticDir, includes: ['*.html', '*.html.br', '*.html.gz'], excludes: ['api-landing.html', 'mobile-upload.html', 'mobile-sign.html'])
     // Nested prerendered route pages (e.g. settings/people.html, processor/sources.html)
     delete new File(resourcesStaticDir, 'settings')
     delete new File(resourcesStaticDir, 'processor')
     // Generated SEO sitemap (only emitted when a canonical domain is set at build).
-    delete new File(resourcesStaticDir, 'sitemap.xml')
+    delete fileTree(dir: resourcesStaticDir, includes: ['sitemap.xml', 'sitemap.xml.br', 'sitemap.xml.gz'])
+    // Precompressed siblings of the tracked TTFs; only a frontend build produces
+    // them, and the backend-only JAR (desktop bundles it) serves the raw fonts.
+    delete fileTree(dir: new File(resourcesStaticDir, 'fonts'), includes: ['*.br', '*.gz'])
 }
 
 tasks.register('copyApiLandingPage', Copy) {

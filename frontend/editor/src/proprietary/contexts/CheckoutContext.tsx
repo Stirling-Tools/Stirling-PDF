@@ -31,7 +31,6 @@ import {
   pollTeamCheckout,
 } from "@app/utils/licenseCheckoutUtils";
 import { useLicense } from "@app/contexts/LicenseContext";
-import { isSupabaseConfigured } from "@app/services/supabaseClient";
 import { getPreferredCurrency } from "@app/utils/currencyDetection";
 import {
   usePlanFeatures,
@@ -352,7 +351,10 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
       try {
         setIsLoading(true);
 
-        // Check if Supabase is configured
+        // Loaded on demand: a static import puts the Supabase SDK on the
+        // startup path of every build, including installs that never reach it.
+        const { isSupabaseConfigured } =
+          await import("@app/services/supabaseClient");
         if (!isSupabaseConfigured) {
           throw new Error(
             "Checkout is not available. Supabase is not configured.",

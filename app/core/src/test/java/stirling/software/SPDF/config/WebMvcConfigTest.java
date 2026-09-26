@@ -11,6 +11,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
@@ -19,17 +22,27 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.servlet.config.annotation.CorsRegistration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.resource.HttpResource;
+import org.springframework.web.servlet.resource.ResourceResolverChain;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import stirling.software.common.model.ApplicationProperties;
 
@@ -117,6 +130,44 @@ class WebMvcConfigTest {
                     captor.getAllValues().stream().flatMap(java.util.Arrays::stream).toList();
             assertThat(allPatterns).contains("/**", "/assets/**", "/sw.js");
         }
+
+        @Test
+        @DisplayName("serves fonts as immutable for a year so fallback faces cache")
+        void fontsAreImmutable() {
+            ResourceHandlerRegistry registry = mock(ResourceHandlerRegistry.class);
+            ResourceHandlerRegistration sw =
+                    mock(ResourceHandlerRegistration.class, RETURNS_DEEP_STUBS);
+            ResourceHandlerRegistration assets =
+                    mock(ResourceHandlerRegistration.class, RETURNS_DEEP_STUBS);
+            ResourceHandlerRegistration media =
+                    mock(ResourceHandlerRegistration.class, RETURNS_DEEP_STUBS);
+            ResourceHandlerRegistration branding =
+                    mock(ResourceHandlerRegistration.class, RETURNS_DEEP_STUBS);
+            ResourceHandlerRegistration catchAll =
+                    mock(ResourceHandlerRegistration.class, RETURNS_DEEP_STUBS);
+            when(registry.addResourceHandler(any(String[].class)))
+                    .thenReturn(sw, assets, media, branding, catchAll);
+            // addResourceLocations is the chain link before setCacheControl.
+            when(sw.addResourceLocations(any(String[].class))).thenReturn(sw);
+            when(assets.addResourceLocations(any(String[].class))).thenReturn(assets);
+            when(media.addResourceLocations(any(String[].class))).thenReturn(media);
+            when(branding.addResourceLocations(any(String[].class))).thenReturn(branding);
+            when(catchAll.addResourceLocations(any(String[].class))).thenReturn(catchAll);
+
+            config.addResourceHandlers(registry);
+
+            // Third registration is the media/fonts group; its cache tier is what
+            // keeps a 17 MB CJK fallback face from being re-fetched on every
+            // viewer open.
+            ArgumentCaptor<String[]> patterns = ArgumentCaptor.forClass(String[].class);
+            verify(registry, times(5)).addResourceHandler(patterns.capture());
+            assertThat(patterns.getAllValues().get(2)).contains("/fonts/**");
+
+            ArgumentCaptor<CacheControl> caches = ArgumentCaptor.forClass(CacheControl.class);
+            verify(media).setCacheControl(caches.capture());
+            String header = caches.getValue().getHeaderValue();
+            assertThat(header).contains("max-age=31536000").contains("immutable");
+        }
     }
 
     @Nested
@@ -197,6 +248,85 @@ class WebMvcConfigTest {
             config.addCorsMappings(registry);
 
             verify(registry).addMapping("/**");
+        }
+    }
+
+    @Nested
+    @DisplayName("PreferredEncodingResourceResolver")
+    class PreferredEncodingResourceResolverTest {
+
+        @TempDir Path tempDir;
+
+        private WebMvcConfig.PreferredEncodingResourceResolver resolver;
+
+        @BeforeEach
+        void setUp() throws Exception {
+            resolver = new WebMvcConfig.PreferredEncodingResourceResolver();
+            Files.writeString(tempDir.resolve("app.js"), "plain");
+        }
+
+        @Test
+        @DisplayName("prefers brotli when the client lists gzip first")
+        void prefersBrotli() throws IOException {
+            writeVariants();
+            assertThat(resolve("gzip, deflate, br")).isEqualTo("br");
+        }
+
+        @Test
+        @DisplayName("serves gzip when brotli is not accepted")
+        void servesGzipWhenBrotliNotAccepted() throws IOException {
+            writeVariants();
+            assertThat(resolve("gzip, deflate")).isEqualTo("gzip");
+        }
+
+        @Test
+        @DisplayName("falls back to gzip when the brotli sibling is missing")
+        void fallsBackWhenBrotliSiblingMissing() throws IOException {
+            Files.writeString(tempDir.resolve("app.js.gz"), "gz");
+            assertThat(resolve("gzip, deflate, br")).isEqualTo("gzip");
+        }
+
+        @Test
+        @DisplayName("serves the unencoded resource when no coding is accepted")
+        void servesPlainWhenNoCodingAccepted() {
+            assertThat(resolve("identity")).isNull();
+        }
+
+        private void writeVariants() throws IOException {
+            Files.writeString(tempDir.resolve("app.js.br"), "br");
+            Files.writeString(tempDir.resolve("app.js.gz"), "gz");
+        }
+
+        /** Content-Encoding of the resolved resource, or null when it is unencoded. */
+        private String resolve(String acceptEncoding) {
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.addHeader(HttpHeaders.ACCEPT_ENCODING, acceptEncoding);
+            Resource resource =
+                    resolver.resolveResource(
+                            request,
+                            "app.js",
+                            List.of(new FileSystemResource(tempDir)),
+                            new ResourceResolverChain() {
+                                @Override
+                                public Resource resolveResource(
+                                        HttpServletRequest r,
+                                        String path,
+                                        List<? extends Resource> locations) {
+                                    return new FileSystemResource(tempDir.resolve(path));
+                                }
+
+                                @Override
+                                public String resolveUrlPath(
+                                        String resourceUrlPath,
+                                        List<? extends Resource> locations) {
+                                    return resourceUrlPath;
+                                }
+                            });
+            assertThat(resource).isNotNull();
+            if (resource instanceof HttpResource httpResource) {
+                return httpResource.getResponseHeaders().getFirst(HttpHeaders.CONTENT_ENCODING);
+            }
+            return null;
         }
     }
 }
