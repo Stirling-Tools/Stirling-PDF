@@ -223,12 +223,11 @@ jobs:
             cargo:
               path: ${{ env.CARGO_HOME }}
             gradle-caches:
-              path: ${{ env.GRADLE_CACHE_PATH_CACHES }}
+              path: .cache/gradle-java-25/caches
             gradle-wrapper:
-              path: ${{ env.GRADLE_CACHE_PATH_WRAPPER }}
+              path: .cache/gradle-java-25/wrapper
           save-scope: shared
           key: |
-            cargo=${{ hashFiles(env.CARGO_FILES_TO_HASH) }}
             gradle-caches=${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
             gradle-wrapper=${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
           allow-shared-restore: true
