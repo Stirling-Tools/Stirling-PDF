@@ -81,6 +81,28 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Use GNU tar on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $gitUsrBin = Join-Path $env:ProgramFiles 'Git\usr\bin'
+          $gnuTar = Join-Path $gitUsrBin 'tar.exe'
+
+          if (-not (Test-Path $gnuTar)) {
+            throw "GNU tar not found at $gnuTar"
+          }
+
+          & $gnuTar --version
+          Add-Content -Path $env:GITHUB_PATH -Value $gitUsrBin
+
+      - name: Use GNU tar on macOS
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          brew install gnu-tar
+          echo "$(brew --prefix gnu-tar)/libexec/gnubin" >> "$GITHUB_PATH"
+          tar --version
+
       - name: Restore Gradle cache sftp
         id: cache
         uses: Ludy87/cache-the-planet/multi-cache@8603ad79afba9b644ea7dd095f57c36103147ea6
