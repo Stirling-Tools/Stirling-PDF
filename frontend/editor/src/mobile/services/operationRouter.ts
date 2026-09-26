@@ -40,6 +40,11 @@ export class OperationRouter {
     return this.getBaseUrl();
   }
 
+  /**
+   * The connected server's base URL, without a trailing slash, for every
+   * operation. Throws when no server is chosen, after asking the settings modal
+   * to open on the connection section.
+   */
   async getBaseUrl(_operation?: string): Promise<string> {
     const mode = await connectionModeService.getCurrentMode();
 
@@ -98,6 +103,7 @@ export class OperationRouter {
     return true;
   }
 
+  /** Every request goes to the connected server, so this is true exactly in cloud mode. */
   async willRouteToSaaS(_endpoint: string): Promise<boolean> {
     return (await connectionModeService.getCurrentMode()) === "saas";
   }

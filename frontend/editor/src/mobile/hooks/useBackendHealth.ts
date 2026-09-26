@@ -14,23 +14,6 @@ import {
 } from "@app/services/selfHostedServerMonitor";
 import type { BackendHealthState } from "@app/types/backendHealth";
 
-/**
- * Backend health for the UI (the Run button, the health indicator).
- *
- * On a phone there is no bundled backend, so "the backend" is whichever server
- * the app is connected to. Health therefore follows the connection mode:
- *
- * - Stirling Cloud: reachability of the cloud API (`saasServerMonitor`).
- * - Self-hosted: the existing `selfHostedServerMonitor`, which the app already
- *   starts when it enters that mode. There is no local backend to fall back to,
- *   so an offline server blocks the run.
- * - Not connected (no server chosen, or signed out): blocked, and the reason
- *   says so rather than blaming a backend that was never meant to exist here.
- *
- * Each monitor is only subscribed to in its own mode, so the app polls one
- * server at most and nothing at all while disconnected.
- */
-
 interface MobileBackendHealth extends BackendHealthState {
   checkHealth: () => Promise<boolean>;
 }
@@ -101,6 +84,22 @@ function resolveHealth(
   };
 }
 
+/**
+ * Backend health for the UI (the Run button, the health indicator).
+ *
+ * On a phone there is no bundled backend, so "the backend" is whichever server
+ * the app is connected to. Health therefore follows the connection mode:
+ *
+ * - Stirling Cloud: reachability of the cloud API (`saasServerMonitor`).
+ * - Self-hosted: the existing `selfHostedServerMonitor`, which the app already
+ *   starts when it enters that mode. There is no local backend to fall back to,
+ *   so an offline server blocks the run.
+ * - Not connected (no server chosen, or signed out): blocked, and the reason
+ *   says so rather than blaming a backend that was never meant to exist here.
+ *
+ * Each monitor is only subscribed to in its own mode, so the app polls one
+ * server at most and nothing at all while disconnected.
+ */
 export function useBackendHealth(): MobileBackendHealth {
   const [mode, setMode] = useState<ConnectionMode | null>(null);
   const [saasStatus, setSaasStatus] = useState(

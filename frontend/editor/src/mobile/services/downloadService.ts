@@ -35,6 +35,11 @@ export async function downloadFile(
   return { savedPath: savePath };
 }
 
+/**
+ * Fetch `url` and hand the bytes to the save picker. `localPath` is accepted for
+ * signature parity with desktop and ignored: a phone app cannot write back to a
+ * path it was not just granted by the picker.
+ */
 export async function downloadFromUrl(
   url: string,
   filename: string,

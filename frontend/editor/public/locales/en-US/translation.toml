@@ -5830,6 +5830,8 @@ signedOutBody = "Sign in to run tools on Stirling Cloud or your own server."
 addFiles = "Add files"
 addPrompt = "Add a document to get started"
 noneInStorage = "No files yet. Add one from this device to get started."
+readFailed = "The selected files could not be opened."
+someUnreadable = "Some files could not be opened"
 
 [mobileScanner]
 addMore = "Add More"

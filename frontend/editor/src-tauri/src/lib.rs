@@ -170,6 +170,13 @@ pub fn run() {
 
   builder
     .setup(|app| {
+      #[cfg(mobile)]
+      {
+        use tauri::Manager;
+        if let Ok(dir) = app.path().app_log_dir() {
+          utils::set_log_directory(dir);
+        }
+      }
       add_log("🚀 Tauri app setup started".to_string());
 
       // The main window is built here, not in tauri.conf.json, so its chrome

@@ -1,3 +1,5 @@
+export type BackendStatus = "stopped" | "starting" | "healthy" | "unhealthy";
+
 /**
  * Inert replacement for the desktop bundled-backend service.
  *
@@ -8,9 +10,6 @@
  * public surface so shared desktop code keeps working, but reports the backend
  * as permanently stopped and never alerts.
  */
-
-export type BackendStatus = "stopped" | "starting" | "healthy" | "unhealthy";
-
 export class TauriBackendService {
   private static instance: TauriBackendService;
 
