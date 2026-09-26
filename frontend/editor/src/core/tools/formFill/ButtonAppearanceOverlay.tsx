@@ -15,7 +15,7 @@ import {
   type SignatureFieldAppearance,
 } from "@app/services/pdfiumService";
 import { getDocumentBytes } from "@app/services/documentBytesCache";
-import { documentHasFormFields } from "@app/services/documentFormProbe";
+import { documentHasFormFieldsFor } from "@app/services/documentFormProbe";
 import { runPdfiumScan } from "@app/services/pdfiumScanQueue";
 
 interface ButtonAppearanceOverlayProps {
@@ -27,15 +27,20 @@ interface ButtonAppearanceOverlayProps {
 let _cachedSource: File | Blob | null = null;
 let _cachePromise: Promise<SignatureFieldAppearance[]> | null = null;
 
+/**
+ * Button widget appearances for one source, cached by source identity. The form
+ * probe answers before any bytes are read.
+ */
 async function resolveButtonAppearances(
   source: File | Blob,
 ): Promise<SignatureFieldAppearance[]> {
   if (source === _cachedSource && _cachePromise) return _cachePromise;
   _cachedSource = source;
-  _cachePromise = getDocumentBytes(source).then(async (buf) => {
-    if (!(await documentHasFormFields(buf, source.size))) return [];
+  _cachePromise = (async () => {
+    if (!(await documentHasFormFieldsFor(source))) return [];
+    const buf = await getDocumentBytes(source);
     return runPdfiumScan(() => renderButtonFieldAppearances(buf));
-  });
+  })();
   return _cachePromise;
 }
 function ButtonBitmapCanvas({

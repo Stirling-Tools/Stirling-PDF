@@ -4,9 +4,11 @@ import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { useViewer } from "@app/contexts/ViewerContext";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
 import { SidebarBase } from "@app/components/viewer/SidebarBase";
 import "@app/components/viewer/LayerSidebar.css";
 import {
+  documentHasLayers,
   readPdfLayers,
   applyOCGVisibilityToPdf,
   collectLeafIds,
@@ -51,15 +53,41 @@ export function LayerSidebar({
   // Track whether visibility was set by user interaction (not initial load)
   const userChangedRef = useRef(false);
 
-  // Load layers when the document changes
+  // Cheap detection so the workbench button can offer layers without paying for
+  // the full pdfjs read.
   useEffect(() => {
-    if (!file || !documentCacheKey) {
-      setStatus("idle");
-      setLayers([]);
-      setVisibility({});
-      loadedKeyRef.current = null;
-      userChangedRef.current = false;
+    if (!file) {
       onLayersDetected?.(false);
+      return;
+    }
+    let cancelled = false;
+    void documentHasLayers(file).then((hasLayers) => {
+      if (!cancelled) onLayersDetected?.(hasLayers);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [file, onLayersDetected]);
+
+  // Load layers when the panel opens for a document that has not been read yet.
+  useEffect(() => {
+    if (!file || !documentCacheKey || !visible) {
+      if (!file) {
+        setStatus("idle");
+        setLayers([]);
+        setVisibility({});
+        loadedKeyRef.current = null;
+        userChangedRef.current = false;
+      } else if (loadedKeyRef.current !== documentCacheKey) {
+        // The document changed while the panel was closed; drop the previous
+        // document's list so an early open cannot render or apply it.
+        setStatus("idle");
+        setLayers([]);
+        setVisibility({});
+        setLoadError(null);
+        loadedKeyRef.current = null;
+        userChangedRef.current = false;
+      }
       return;
     }
 
@@ -101,7 +129,6 @@ export function LayerSidebar({
         setVisibility(visMap);
         setStatus("ready");
         loadedKeyRef.current = documentCacheKey;
-        onLayersDetected?.(true);
       })
       .catch((err) => {
         if (cancelled) return;
@@ -109,13 +136,12 @@ export function LayerSidebar({
         setLoadError(
           err instanceof Error ? err.message : "Failed to read PDF layers",
         );
-        onLayersDetected?.(false);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [file, documentCacheKey, onLayersDetected]);
+  }, [file, documentCacheKey, visible]);
 
   // Reset when document changes
   useEffect(() => {
@@ -143,7 +169,7 @@ export function LayerSidebar({
         };
         collectNames(layers);
 
-        const arrayBuffer = await file.arrayBuffer();
+        const arrayBuffer = await getDocumentBytes(file);
         const modifiedBytes = await applyOCGVisibilityToPdf(
           arrayBuffer,
           nameVisibility,

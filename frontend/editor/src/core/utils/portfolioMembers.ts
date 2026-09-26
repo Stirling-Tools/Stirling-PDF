@@ -10,6 +10,10 @@ import {
   decodePDFRawStream,
 } from "@cantoo/pdf-lib";
 import type { PdfAttachmentObject } from "@embedpdf/models";
+import {
+  documentFileKey,
+  getDocumentBytes,
+} from "@app/services/documentBytesCache";
 
 // Reads a portfolio's members from the file's own bytes. The viewer's attachment
 // capability only covers the open document, which stops being the portfolio.
@@ -43,6 +47,8 @@ let cache: { file: File; loaded: Promise<LoadedPortfolio | null> } | null =
 // Every file switch asks whether the document is a portfolio, and most aren't.
 // Remembering the answer avoids reparsing; no document bytes are held.
 const answers = new WeakMap<File, PdfAttachmentObject[] | null>();
+const answersByFileKey = new Map<string, PdfAttachmentObject[] | null>();
+const PORTFOLIO_CACHE_LIMIT = 64;
 
 const decodeText = (value: unknown): string | null => {
   if (
@@ -86,7 +92,7 @@ const collectSpecs = (
 
 const load = async (file: File): Promise<LoadedPortfolio | null> => {
   try {
-    const doc = await PDFDocument.load(await file.arrayBuffer(), {
+    const doc = await PDFDocument.load(await getDocumentBytes(file), {
       ignoreEncryption: true,
       throwOnInvalidObject: false,
       updateMetadata: false,
@@ -101,6 +107,22 @@ const load = async (file: File): Promise<LoadedPortfolio | null> => {
     return { doc, specs, isPortfolio: doc.catalog.get(KEY_COLLECTION) != null };
   } catch {
     return null;
+  }
+};
+
+const remember = (
+  file: File,
+  key: string | null,
+  value: PdfAttachmentObject[] | null,
+): void => {
+  answers.set(file, value);
+  if (!key) return;
+  answersByFileKey.delete(key);
+  answersByFileKey.set(key, value);
+  while (answersByFileKey.size > PORTFOLIO_CACHE_LIMIT) {
+    const oldest = answersByFileKey.keys().next().value;
+    if (oldest === undefined) break;
+    answersByFileKey.delete(oldest);
   }
 };
 
@@ -145,15 +167,27 @@ const streamOf = (
 export async function readPortfolioMembers(
   file: File,
 ): Promise<PdfAttachmentObject[] | null> {
-  const remembered = answers.get(file);
+  const key = await documentFileKey(file);
+  // `has` first: a cached null (not a portfolio) is an answer, not a miss.
+  const remembered = answers.has(file)
+    ? answers.get(file)
+    : key
+      ? answersByFileKey.get(key)
+      : undefined;
   if (remembered !== undefined) return remembered;
 
   const loaded = await open(file);
-  if (!loaded || !loaded.isPortfolio) {
+  if (!loaded) {
+    // A failed read or parse is retryable; it must not be remembered as
+    // "not a portfolio", or the file would never be probed again.
+    if (cache?.file === file) cache = null;
+    return null;
+  }
+  if (!loaded.isPortfolio) {
     // Nothing will ask for this document's bytes again, so drop them rather
     // than pin them until the next file is opened.
     if (cache?.file === file) cache = null;
-    answers.set(file, null);
+    remember(file, key, null);
     return null;
   }
 
@@ -173,7 +207,7 @@ export async function readPortfolioMembers(
     });
   }
   members.sort((a, b) => a.name.localeCompare(b.name));
-  answers.set(file, members);
+  remember(file, key, members);
   return members;
 }
 

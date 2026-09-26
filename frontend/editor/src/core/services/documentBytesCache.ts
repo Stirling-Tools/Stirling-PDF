@@ -10,9 +10,11 @@
  * Callers that need the bytes hold the buffer they were handed; once nothing
  * does, the next call re-reads the Blob.
  *
- * Files are also keyed by name/size/type/mtime: the add path re-wraps the same
- * bytes as fresh `File` objects, so identity alone would read every document
- * once per wrapper. Bare Blobs stay identity-keyed, since they carry no metadata.
+ * Files are also keyed by name/size/type/mtime plus a first/last-64 KB
+ * fingerprint: the add path re-wraps the same bytes as fresh `File` objects, so
+ * identity alone would read every document once per wrapper, and metadata alone
+ * would let two different documents with identical metadata share one entry.
+ * Bare Blobs stay identity-keyed, since they carry no metadata.
  */
 const resolved = new WeakMap<Blob, WeakRef<ArrayBuffer>>();
 const pending = new WeakMap<Blob, Promise<ArrayBuffer>>();
@@ -23,9 +25,66 @@ const resolvedByFileKey = new Map<
 >();
 const pendingByFileKey = new Map<string, Promise<ArrayBuffer>>();
 
-function fileKey(blob: Blob): string | null {
+const FINGERPRINT_WINDOW = 64 * 1024;
+const FNV_OFFSET = 0x811c9dc5;
+const FNV_PRIME = 0x01000193;
+
+const fingerprints = new WeakMap<Blob, Promise<string>>();
+
+function hashInto(hash: number, bytes: Uint8Array): number {
+  let value = hash;
+  for (let i = 0; i < bytes.length; i += 1) {
+    value ^= bytes[i];
+    value = Math.imul(value, FNV_PRIME) >>> 0;
+  }
+  return value;
+}
+
+/**
+ * Cheap content fingerprint: the first and last 64 KB hashed with FNV-1a (the
+ * whole blob when it is smaller). Two small slice reads per Blob, cached by
+ * identity, are what let the shared caches key by content rather than trusting
+ * metadata alone.
+ */
+export function documentFingerprint(blob: Blob): Promise<string> {
+  const cached = fingerprints.get(blob);
+  if (cached) return cached;
+  const promise = (async () => {
+    let hash = FNV_OFFSET;
+    hash = hashInto(
+      hash,
+      new Uint8Array(await blob.slice(0, FINGERPRINT_WINDOW).arrayBuffer()),
+    );
+    if (blob.size > FINGERPRINT_WINDOW) {
+      hash = hashInto(
+        hash,
+        new Uint8Array(
+          await blob
+            .slice(Math.max(0, blob.size - FINGERPRINT_WINDOW), blob.size)
+            .arrayBuffer(),
+        ),
+      );
+    }
+    return hash.toString(16).padStart(8, "0");
+  })().catch((error: unknown) => {
+    // A failed slice read is retryable: drop the memo so the next call reads
+    // again instead of inheriting the rejection.
+    fingerprints.delete(blob);
+    throw error;
+  });
+  fingerprints.set(blob, promise);
+  return promise;
+}
+
+/**
+ * Identity of a File's content for cross-wrapper lookups: name, size, type,
+ * mtime and the fingerprint above. Bare Blobs carry no metadata and return
+ * null.
+ */
+export async function documentFileKey(blob: Blob): Promise<string | null> {
   if (!(blob instanceof File)) return null;
-  return `${blob.name}\u0000${blob.size}\u0000${blob.type}\u0000${blob.lastModified}`;
+  const fingerprint = await documentFingerprint(blob);
+  return `${blob.name}\u0000${blob.size}\u0000${blob.type}\u0000${blob.lastModified}\u0000${fingerprint}`;
 }
 
 function rememberFileKey(key: string, buffer: ArrayBuffer): void {
@@ -42,26 +101,26 @@ function rememberFileKey(key: string, buffer: ArrayBuffer): void {
 }
 
 /** Drops the cached entry, e.g. for a large document whose worker copy is up. */
-export function releaseDocumentBytes(blob: Blob): void {
+export async function releaseDocumentBytes(blob: Blob): Promise<void> {
   resolved.delete(blob);
   pending.delete(blob);
-  const key = fileKey(blob);
+  const key = await documentFileKey(blob);
   if (key) {
     resolvedByFileKey.delete(key);
     pendingByFileKey.delete(key);
   }
 }
 
-export function getDocumentBytes(blob: Blob): Promise<ArrayBuffer> {
+export async function getDocumentBytes(blob: Blob): Promise<ArrayBuffer> {
   const alive = resolved.get(blob)?.deref();
-  if (alive) return Promise.resolve(alive);
+  if (alive) return alive;
 
-  const key = fileKey(blob);
+  const key = await documentFileKey(blob);
   if (key) {
     const shared = resolvedByFileKey.get(key);
     if (shared && shared.size === blob.size) {
       const buffer = shared.ref.deref();
-      if (buffer) return Promise.resolve(buffer);
+      if (buffer) return buffer;
       resolvedByFileKey.delete(key);
     }
     const inFlight = pendingByFileKey.get(key);
