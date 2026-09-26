@@ -47,8 +47,12 @@ import type { IFormDataProvider } from "@app/tools/formFill/providers/types";
 import { PdfBoxFormProvider } from "@app/tools/formFill/providers/PdfBoxFormProvider";
 import { PdfiumFormProvider } from "@app/tools/formFill/providers/PdfiumFormProvider";
 import { fetchSignatureFieldsWithAppearances } from "@app/services/pdfiumService";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
 import { applyFieldEdits } from "@app/tools/formFill/formApi";
-import { mergeSignatureAppearances } from "@app/tools/formFill/formFieldMerge";
+import {
+  mergeSignatureAppearances,
+  mergePageFields,
+} from "@app/tools/formFill/formFieldMerge";
 
 /** Marks a skip report as belonging to whichever document the commit just produced. */
 const PENDING_SKIP_REPORT = "__pending__";
@@ -142,7 +146,8 @@ type Action =
   | { type: "SET_VALIDATION_ERRORS"; errors: Record<string, string> }
   | { type: "CLEAR_VALIDATION_ERROR"; fieldName: string }
   | { type: "MARK_CLEAN" }
-  | { type: "RESET" };
+  | { type: "RESET" }
+  | { type: "MERGE_PAGE_FIELDS"; pageIndex: number; fields: FormField[] };
 
 const initialState: FormFillState = {
   fields: [],
@@ -168,6 +173,8 @@ function reducer(state: FormFillState, action: Action): FormFillState {
         isDirty: false,
       };
     }
+    case "MERGE_PAGE_FIELDS":
+      return { ...state, fields: mergePageFields(state.fields, action.fields) };
     case "FETCH_ERROR":
       return { ...state, loading: false, error: action.error };
     case "MARK_DIRTY":
@@ -206,7 +213,15 @@ function reducer(state: FormFillState, action: Action): FormFillState {
 export interface FormFillContextValue {
   state: FormFillState;
   /** Fetch form fields for the given file using the active provider */
-  fetchFields: (file: File | Blob, fileId?: string) => Promise<void>;
+  fetchFields: (
+    file: File | Blob,
+    fileId?: string,
+    options?: { exhaustive?: boolean },
+  ) => Promise<void>;
+  /** Ensure form fields are loaded for a given page index (on-demand loading) */
+  ensurePageFields?: (pageIndex: number) => Promise<void>;
+  /** Ensure every page's fields are loaded (save-time validation) */
+  ensureAllFields?: () => Promise<void>;
   /** Update a single field value */
   setValue: (fieldName: string, value: string) => void;
   /** Set the currently focused field */
@@ -494,6 +509,12 @@ export function FormFillProvider({
     values: Record<string, string>;
   } | null>(null);
 
+  const loadedPagesRef = useRef<Set<number>>(new Set());
+  /** The fetch currently in flight, so page loads can wait for it. */
+  const fetchInFlightRef = useRef<Promise<void> | null>(null);
+  const isExhaustiveRef = useRef<boolean>(false);
+  const activeFileRef = useRef<File | Blob | null>(null);
+
   const clearEditingState = useCallback(() => {
     setCreationType(null);
     setPendingFields([]);
@@ -508,13 +529,29 @@ export function FormFillProvider({
   }, []);
 
   const fetchFields = useCallback(
-    async (file: File | Blob, fileId?: string) => {
+    (
+      file: File | Blob,
+      fileId?: string,
+      options?: { exhaustive?: boolean },
+    ): Promise<void> => {
       // Increment version so any in-flight fetch for a previous file is discarded.
       // NOTE: setProviderMode() also increments fetchVersionRef to invalidate
       // in-flight fetches when switching providers. This is intentional — the
       // fetch started here captures the NEW version, so stale results are
       // correctly discarded.
       const version = ++fetchVersionRef.current;
+      const previousFile = activeFileRef.current;
+      activeFileRef.current = file;
+      // A save-time exhaustive fetch for the file already on screen keeps the
+      // loaded fields until the full set arrives: a failed load must not leave
+      // validation with an empty list.
+      const keepExisting =
+        options?.exhaustive === true && previousFile === file;
+      if (!options?.exhaustive) {
+        isExhaustiveRef.current = false;
+        loadedPagesRef.current.clear();
+        loadedPagesRef.current.add(0);
+      }
 
       // Staged edits reference the previous document's fields; committing them against a
       // different file would edit the wrong PDF. Checked here, before any await, because
@@ -550,79 +587,109 @@ export function FormFillProvider({
       retainedValuesRef.current = null;
 
       lastKnownFileIdRef.current = fileId ?? null;
-      // Immediately clear previous state so FormFieldOverlay's stale-file guards
-      // prevent rendering fields from a previous document during the fetch.
-      forFileIdRef.current = null;
-      setForFileId(null);
-      valuesStore.reset({});
-      dispatch({ type: "RESET" });
+      if (!keepExisting) {
+        // Immediately clear previous state so FormFieldOverlay's stale-file guards
+        // prevent rendering fields from a previous document during the fetch.
+        forFileIdRef.current = null;
+        setForFileId(null);
+        valuesStore.reset({});
+        dispatch({ type: "RESET" });
+      }
       // Deliberately keeps create/modify state: the viewer re-fetches on provider
       // switch and file load, which must not wipe in-progress edits.
       dispatch({ type: "FETCH_START" });
-      try {
-        // Only pdfbox mode can use them: the bundle is PDFBox's own view of the document.
-        const bundled = bundledFieldsRef.current;
-        bundledFieldsRef.current = null;
-        const usable =
-          bundled &&
-          bundled.size === file.size &&
-          providerModeRef.current === "pdfbox";
-        let fields = usable
-          ? bundled.fields
-          : await providerRef.current.fetchFields(file);
-        // If another fetch or reset happened while we were waiting, discard this result
-        if (fetchVersionRef.current !== version) {
-          console.debug(
-            "[FormFill] Discarding stale fetch result (version mismatch)",
-          );
-          return;
-        }
-
-        // pdfbox returns signature fields without a rendered appearance; merge the
-        // pdfium ones by name, since appending would list a signature twice.
-        if (providerModeRef.current === "pdfbox") {
-          try {
-            // Convert File/Blob to ArrayBuffer for pdfiumService
-            const arrayBuffer = await file.arrayBuffer();
-            const sigFields =
-              await fetchSignatureFieldsWithAppearances(arrayBuffer);
-            if (fetchVersionRef.current !== version) return; // stale check after async
-            fields = mergeSignatureAppearances(fields, sigFields);
-          } catch (e) {
-            console.warn(
-              "[FormFill] Failed to extract signature appearances for pdfbox mode:",
-              e,
-            );
+      const run = (async () => {
+        try {
+          // Only pdfbox mode can use them: the bundle is PDFBox's own view of the document.
+          const bundled = bundledFieldsRef.current;
+          bundledFieldsRef.current = null;
+          const usable =
+            bundled &&
+            bundled.size === file.size &&
+            providerModeRef.current === "pdfbox";
+          const fetchOpts = options?.exhaustive ? {} : { pageIndices: [0] };
+          let fields = usable
+            ? bundled.fields
+            : await providerRef.current.fetchFields(file, fetchOpts);
+          // The pdfium provider reports extraction failures as []; adopting it
+          // over already-loaded fields would wipe them and let validation pass.
+          if (
+            keepExisting &&
+            fields.length === 0 &&
+            fieldsRef.current.length > 0
+          ) {
+            throw new Error("Exhaustive form field load returned no fields");
           }
-        }
+          // If another fetch or reset happened while we were waiting, discard this result
+          if (fetchVersionRef.current !== version) {
+            console.debug(
+              "[FormFill] Discarding stale fetch result (version mismatch)",
+            );
+            return;
+          }
 
-        // Initialise values in the external store
-        const values: Record<string, string> = {};
-        let edited = false;
-        for (const field of fields) {
-          const stored = field.value ?? "";
-          values[field.name] = carried[field.name] ?? stored;
-          edited = edited || values[field.name] !== stored;
+          // pdfbox returns signature fields without a rendered appearance; merge the
+          // pdfium ones by name, since appending would list a signature twice.
+          if (providerModeRef.current === "pdfbox") {
+            try {
+              // Cache-shared read: the pdfium provider path reads the same Blob
+              // through documentBytesCache, so this must not mint a second
+              // full-file copy.
+              const arrayBuffer = await getDocumentBytes(file);
+              const sigFields =
+                await fetchSignatureFieldsWithAppearances(arrayBuffer);
+              if (fetchVersionRef.current !== version) return; // stale check after async
+              fields = mergeSignatureAppearances(fields, sigFields);
+            } catch (e) {
+              console.warn(
+                "[FormFill] Failed to extract signature appearances for pdfbox mode:",
+                e,
+              );
+            }
+          }
+
+          // Initialise values in the external store
+          const values: Record<string, string> = {};
+          let edited = false;
+          for (const field of fields) {
+            const stored = field.value ?? "";
+            values[field.name] = carried[field.name] ?? stored;
+            edited = edited || values[field.name] !== stored;
+          }
+          valuesStore.reset(values);
+          forFileIdRef.current = fileId ?? null;
+          setForFileId(fileId ?? null);
+          // validateForm reads this ref right after the await, before React re-renders.
+          fieldsRef.current = fields;
+          dispatch({ type: "FETCH_SUCCESS", fields });
+          // The full set is adopted, so page-scoped loads have nothing left to add.
+          if (options?.exhaustive || providerModeRef.current === "pdfbox") {
+            isExhaustiveRef.current = true;
+            loadedPagesRef.current.clear();
+          }
+          // After FETCH_SUCCESS, which clears the flag; and only when a value genuinely differs,
+          // or the unsaved-changes prompt cries wolf on every navigation.
+          if (edited) {
+            dispatch({ type: "MARK_DIRTY" });
+          }
+        } catch (err) {
+          // A failed load stays retryable, so the exhaustive flag only lands on success.
+          isExhaustiveRef.current = false;
+          if (fetchVersionRef.current !== version) return; // stale
+          const msg =
+            (isAxiosError<{ message?: string }>(err)
+              ? err.response?.data?.message
+              : undefined) ||
+            (err instanceof Error ? err.message : undefined) ||
+            "Failed to fetch form fields";
+          dispatch({ type: "FETCH_ERROR", error: msg });
         }
-        valuesStore.reset(values);
-        forFileIdRef.current = fileId ?? null;
-        setForFileId(fileId ?? null);
-        dispatch({ type: "FETCH_SUCCESS", fields });
-        // After FETCH_SUCCESS, which clears the flag; and only when a value genuinely differs,
-        // or the unsaved-changes prompt cries wolf on every navigation.
-        if (edited) {
-          dispatch({ type: "MARK_DIRTY" });
-        }
-      } catch (err) {
-        if (fetchVersionRef.current !== version) return; // stale
-        const msg =
-          (isAxiosError<{ message?: string }>(err)
-            ? err.response?.data?.message
-            : undefined) ||
-          (err instanceof Error ? err.message : undefined) ||
-          "Failed to fetch form fields";
-        dispatch({ type: "FETCH_ERROR", error: msg });
-      }
+      })();
+      fetchInFlightRef.current = run;
+      void run.finally(() => {
+        if (fetchInFlightRef.current === run) fetchInFlightRef.current = null;
+      });
+      return run;
     },
     [valuesStore, clearEditingState],
   );
@@ -730,9 +797,98 @@ export function FormFillProvider({
     [valuesStore],
   );
 
+  const ensurePageFields = useCallback(
+    async (pageIndex: number) => {
+      // pdfbox answers with the whole document, so a page request would re-fetch
+      // every field from the backend for each page that scrolls into view.
+      if (providerModeRef.current === "pdfbox") return;
+      // A page request must not race the initial fetch: its MERGE_PAGE_FIELDS
+      // would be replaced by the later FETCH_SUCCESS while the page stays marked
+      // loaded, so wait for the fetch in flight first.
+      const inFlight = fetchInFlightRef.current;
+      if (inFlight) await inFlight.catch(() => {});
+      if (isExhaustiveRef.current || loadedPagesRef.current.has(pageIndex))
+        return;
+      loadedPagesRef.current.add(pageIndex);
+      const file = activeFileRef.current;
+      if (!file) {
+        loadedPagesRef.current.delete(pageIndex);
+        return;
+      }
+      const version = fetchVersionRef.current;
+      try {
+        const pageFields = await providerRef.current.fetchFields(file, {
+          pageIndices: [pageIndex],
+        });
+        if (
+          fetchVersionRef.current !== version ||
+          activeFileRef.current !== file
+        )
+          return;
+        if (pageFields.length > 0) {
+          const previousFields = fieldsRef.current;
+          const mergedFields = mergePageFields(previousFields, pageFields);
+          const previousByName = new Map(
+            previousFields.map((f) => [f.name, f]),
+          );
+          for (const merged of mergedFields) {
+            if (!pageFields.some((f) => f.name === merged.name)) continue;
+            const previous = previousByName.get(merged.name);
+            const stored = valuesStore.values[merged.name];
+            if (stored === undefined) {
+              // The page can render before an exhaustive reload, so its
+              // prefilled values must exist; never overwrite what the user
+              // already typed.
+              valuesStore.setValue(merged.name, merged.value ?? "");
+            } else if (
+              previous &&
+              stored === previous.value &&
+              merged.value !== previous.value
+            ) {
+              // A radio merge reordered the widgets; the user has not touched
+              // the value, so follow the checked widget to its new index.
+              valuesStore.setValue(merged.name, merged.value);
+            }
+          }
+          // Keep the ref in step with the reducer, which merges the same list.
+          fieldsRef.current = mergedFields;
+          dispatch({
+            type: "MERGE_PAGE_FIELDS",
+            pageIndex,
+            fields: pageFields,
+          });
+        }
+      } catch (err) {
+        loadedPagesRef.current.delete(pageIndex);
+        console.warn(
+          `[FormFill] Failed to load fields for page ${pageIndex}:`,
+          err,
+        );
+      }
+    },
+    [dispatch, valuesStore],
+  );
+
+  /**
+   * Load every page's fields when a flow needs the complete set (save-time
+   * required-field validation). Reuses the version-guarded full fetch, which
+   * also invalidates in-flight per-page loads.
+   */
+  const ensureAllFields = useCallback(async () => {
+    if (isExhaustiveRef.current) return;
+    const file = activeFileRef.current;
+    if (!file) return;
+    await fetchFields(file, forFileIdRef.current ?? undefined, {
+      exhaustive: true,
+    });
+  }, [fetchFields]);
+
   const reset = useCallback(() => {
     // Increment version to invalidate any in-flight fetch
     fetchVersionRef.current++;
+    loadedPagesRef.current.clear();
+    isExhaustiveRef.current = false;
+    activeFileRef.current = null;
     forFileIdRef.current = null;
     setForFileId(null);
     valuesStore.reset({});
@@ -937,6 +1093,8 @@ export function FormFillProvider({
     () => ({
       state,
       fetchFields,
+      ensurePageFields,
+      ensureAllFields,
       setValue,
       setActiveField,
       submitForm,
@@ -983,6 +1141,8 @@ export function FormFillProvider({
     [
       state,
       fetchFields,
+      ensurePageFields,
+      ensureAllFields,
       setValue,
       setActiveField,
       submitForm,
