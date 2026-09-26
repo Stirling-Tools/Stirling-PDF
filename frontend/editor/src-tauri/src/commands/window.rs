@@ -45,6 +45,7 @@ pub fn build_main_window(app: &AppHandle) -> Result<WebviewWindow, String> {
         // keep the window above the breakpoint (matches the spawned windows).
         .min_inner_size(1030.0, 600.0)
         .resizable(true)
+        .center()
         .disable_drag_drop_handler();
 
     #[cfg(target_os = "windows")]
