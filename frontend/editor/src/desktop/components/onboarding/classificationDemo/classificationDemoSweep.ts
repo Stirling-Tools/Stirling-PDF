@@ -21,6 +21,7 @@ import type {
 import { LABEL_FAMILIES } from "@app/data/classificationLabels";
 import { accentColor, accentCycleColor } from "@app/utils/accentColors";
 import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
+import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
 
 /** Names this run in the billing audit trail, so onboarding's sweep is distinguishable
  *  from classification on upload. */
@@ -34,8 +35,52 @@ const CLASSIFY_STEP = "/api/v1/ai/tools/classify-and-label";
 export const CLASSIFICATION_DEMO_BATCH_SIZE = 50;
 
 /** Text-reading allowance per document, counted once it is open, so a cold pdf.js worker
- *  is not charged. Opening has its own headroom, so a document's worst case is both. */
+ *  is not charged. {@link DOCUMENT_DEADLINE_MS} bounds it and the open together. */
 export const HEURISTIC_BUDGET_MS = 1000;
+
+/** Longest one document may take across its read, classification and save before the
+ *  sweep moves on without it: a demo that sits on one file longer than this reads as
+ *  frozen. A document at LARGE_PDF_PARSE_LIMIT reads, copies and opens in about 0.25s,
+ *  so this is headroom for a busy machine rather than for size. Deliberately below the
+ *  bounds some steps set themselves (the pdf.js open timeout, the encryption probe
+ *  inside addFiles), so a slow document is given up on rather than waited out. */
+export const DOCUMENT_DEADLINE_MS = 3_000;
+
+/** The session check waits on any in-flight token refresh, a network round trip, so it
+ *  is allowed longer than a step that stays on the device. */
+export const SESSION_CHECK_DEADLINE_MS = 10_000;
+
+/** Documents in a row that ran out of time before the sweep stops. That many means the
+ *  stall is shared, such as a pdf.js worker pool that never frees up, and every document
+ *  left would sit out its whole deadline too. */
+export const MAX_CONSECUTIVE_STALLS = 3;
+
+const TIMED_OUT = Symbol("timed out");
+
+/** Resolves to {@link TIMED_OUT} if `work` has not settled by `deadline` (epoch ms). The
+ *  work keeps running; the warning names the step, so a stall says where it happened. */
+async function beforeDeadline<T>(
+  work: Promise<T>,
+  deadline: number,
+  step: string,
+  subject: string,
+): Promise<T | typeof TIMED_OUT> {
+  const allowedMs = Math.max(0, deadline - Date.now());
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const expiry = new Promise<typeof TIMED_OUT>((resolve) => {
+    timer = setTimeout(() => resolve(TIMED_OUT), allowedMs);
+  });
+  const result = await Promise.race([work, expiry]).finally(() =>
+    clearTimeout(timer),
+  );
+  if (result === TIMED_OUT) {
+    console.warn(
+      `[classificationDemo] ${step} for ${subject} ran out of time; moving on`,
+      { pdfWorkers: pdfWorkerManager.getWorkerStats() },
+    );
+  }
+  return result;
+}
 
 /** Roll-up id used for a document the heuristic could not place. */
 export const UNCLASSIFIED_GROUP_ID = "other";
@@ -143,7 +188,7 @@ export interface ClassificationDemoDeps {
     },
   ) => Promise<StirlingFile[]>;
   onProgress: (progress: ClassificationDemoProgress) => void;
-  /** Polled between files so a user who closes the modal is not left with a running sweep. */
+  /** Polled between files, so Stop or dismissing the demo ends the sweep at the next one. */
   isCancelled?: () => boolean;
 }
 
@@ -234,23 +279,35 @@ function countVerdict(
   counts.set(family.id, group);
 }
 
-/** Classifies one document and stores it; null when it cannot be read at all. The verdict
- *  is written locked, so no policy reclassifies it or escalates it to the AI. */
+interface DocumentResult {
+  /** Null when the document could not be classified, which retires it uncounted. */
+  labels: string[] | null;
+  /** A step ran out of time; see {@link MAX_CONSECUTIVE_STALLS}. */
+  stalled: boolean;
+}
+
+/** Classifies one document and stores it, all by `deadline`. The verdict is written
+ *  locked, so no policy reclassifies it or escalates it to the AI. */
 async function classifyAndAdd(
   file: File,
   deps: ClassificationDemoDeps,
-): Promise<string[] | null> {
-  let verdict: HeuristicResult;
+  deadline: number,
+): Promise<DocumentResult> {
+  let verdict: HeuristicResult | typeof TIMED_OUT;
   try {
-    verdict = await classifyFileHeuristically(file, {
-      budgetMs: HEURISTIC_BUDGET_MS,
-    });
+    verdict = await beforeDeadline(
+      classifyFileHeuristically(file, { budgetMs: HEURISTIC_BUDGET_MS }),
+      deadline,
+      "Classifying",
+      file.name,
+    );
   } catch {
-    return null;
+    return { labels: null, stalled: false };
   }
+  if (verdict === TIMED_OUT) return { labels: null, stalled: true };
   // Storage failing does not invalidate the verdict: the tally still counts the document,
   // it just will not appear in the library.
-  await deps
+  const storing = deps
     .addFiles([file], {
       // The sidebar reads IndexedDB, so this still groups in the library without
       // becoming an open file — nothing selected, user's workspace untouched.
@@ -267,7 +324,8 @@ async function classifyAndAdd(
       },
     })
     .catch(() => []);
-  return verdict.labels;
+  const stored = await beforeDeadline(storing, deadline, "Saving", file.name);
+  return { labels: verdict.labels, stalled: stored === TIMED_OUT };
 }
 
 /** One sweep over `directory`, skipping documents an earlier sweep took on. Reports
@@ -333,24 +391,39 @@ export async function runClassificationDemoSweep(
   // The disk read is a webview-to-Rust round trip and the classification is pdf.js in a
   // worker, so the next document's read overlaps this one's parse instead of waiting.
   let pending = read(0);
+  let consecutiveStalls = 0;
   for (let index = 0; index < batch.length; index += 1) {
     if (deps.isCancelled?.()) break;
-    await requireAutomationSession(session.key);
     const entry = batch[index];
+    // From when the sweep reaches the document, so a read started early by the overlap
+    // below is not charged for the time it spent waiting its turn.
+    const deadline = Date.now() + DOCUMENT_DEADLINE_MS;
     // Recorded before the attempt, so a document that cannot be read is retired rather
     // than offered again by every follow-up batch for the rest of the flow.
     sweptPaths.push(entry.path);
-    const file = await pending;
+    const file = await beforeDeadline(pending, deadline, "Reading", entry.name);
     pending = read(index + 1);
-    if (file) {
-      const labels = await classifyAndAdd(file, deps);
-      if (labels) {
-        processed += 1;
-        countVerdict(counts, labels, unclassifiedName);
-        metered.push({ pages: 0, bytes: entry.sizeBytes });
-      }
+    const result: DocumentResult =
+      file === TIMED_OUT
+        ? { labels: null, stalled: true }
+        : file
+          ? await classifyAndAdd(file, deps, deadline)
+          : { labels: null, stalled: false };
+    if (result.labels) {
+      processed += 1;
+      countVerdict(counts, result.labels, unclassifiedName);
+      metered.push({ pages: 0, bytes: entry.sizeBytes });
     }
+    consecutiveStalls = result.stalled ? consecutiveStalls + 1 : 0;
     report("processing", total);
+    if (consecutiveStalls >= MAX_CONSECUTIVE_STALLS) {
+      // Ends as a finished batch rather than a failure: what was classified is shown and
+      // metered, and the documents not reached stay in `remaining` for a follow-up.
+      console.warn(
+        `[classificationDemo] ${consecutiveStalls} documents in a row ran out of time; stopping the sweep`,
+      );
+      break;
+    }
     // A macrotask, not a microtask: gives the main thread a turn between documents so
     // the app stays responsive while this runs behind it.
     await new Promise((resolve) => setTimeout(resolve));
@@ -359,6 +432,19 @@ export async function runClassificationDemoSweep(
   // One call for the batch rather than per document, matching how the upload path meters
   // a run: the sweep is one automation over many inputs.
   if (metered.length > 0) {
+    // Checked once here rather than per document: nothing before the meter leaves the
+    // device. A session that changed or cannot be confirmed fails the sweep unbilled
+    // rather than charging an account that is no longer signed in.
+    if (
+      (await beforeDeadline(
+        requireAutomationSession(session.key),
+        Date.now() + SESSION_CHECK_DEADLINE_MS,
+        "Checking the session",
+        directory,
+      )) === TIMED_OUT
+    ) {
+      throw new Error("The server session could not be confirmed.");
+    }
     meterAutomationRun(
       {
         automationName: ONBOARDING_METER_NAME,
