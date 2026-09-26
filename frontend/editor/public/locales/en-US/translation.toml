@@ -10696,6 +10696,8 @@ allTools = "Tools"
 automate = "Automate"
 config = "Config"
 files = "Files"
+login = "Login"
+logout = "Logout"
 
 [quickNav]
 account = "Account"
