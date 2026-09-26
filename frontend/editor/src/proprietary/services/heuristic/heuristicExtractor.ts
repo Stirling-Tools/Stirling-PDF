@@ -172,7 +172,10 @@ async function pageTextItems(
     }
   } finally {
     // Tells the worker to stop walking this page. A no-op once the stream is done.
-    void reader.cancel().catch(() => {});
+    // The reason must be an Error: pdf.js asserts it only after the stream is
+    // closed, so a bare cancel() never reaches the worker and every chunk it still
+    // sends throws an uncaught "enqueue into a closed readable stream".
+    void reader.cancel(new Error("Text read stopped")).catch(() => {});
   }
 }
 
