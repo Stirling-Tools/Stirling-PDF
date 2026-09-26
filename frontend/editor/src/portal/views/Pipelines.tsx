@@ -27,6 +27,7 @@ import { PipelineTemplateCard } from "@portal/components/pipelines/PipelineTempl
 import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
 import { useAiEngineEnabled } from "@portal/hooks/useAiEngineEnabled";
 import { useCanManagePolicies } from "@portal/queries/policyPermissions";
+import { useStoreAvailable } from "@portal/hooks/useStoreAvailable";
 import "@portal/views/Pipelines.css";
 
 /**
@@ -39,6 +40,7 @@ export function Pipelines() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
+  const storeAvailable = useStoreAvailable();
 
   const listState = usePipelines();
   const { data: overview } = listState;
@@ -192,13 +194,25 @@ export function Pipelines() {
             {t("portal.pipelines.subtitle")}
           </p>
         </div>
-        <Button
-          fat
-          onClick={openCreate}
-          leftSection={<Icon name="plus" size={"1.125rem"} />}
-        >
-          {t("portal.pipelines.actions.newCustomPipeline")}
-        </Button>
+        <div className="portal-pipelines__head-actions">
+          {storeAvailable && (
+            <Button
+              fat
+              variant="secondary"
+              onClick={() => navigate(toPortalPath(VIEW_PATHS.store))}
+              leftSection={<Icon name="store" size={"1.125rem"} />}
+            >
+              {t("portal.store.browseStore")}
+            </Button>
+          )}
+          <Button
+            fat
+            onClick={openCreate}
+            leftSection={<Icon name="plus" size={"1.125rem"} />}
+          >
+            {t("portal.pipelines.actions.newCustomPipeline")}
+          </Button>
+        </div>
       </header>
 
       {pageError && <Banner tone="danger" description={pageError} />}

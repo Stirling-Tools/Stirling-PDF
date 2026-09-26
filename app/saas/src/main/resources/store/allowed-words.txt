@@ -1,0 +1,12 @@
+# Tokens that must never count as a blocked-word hit even if a blocked list folds onto them.
+# Whole tokens, one per line. The classic place-name and dictionary collisions live here.
+scunthorpe
+penistone
+lightwater
+assist
+assistant
+assess
+assessment
+class
+classic
+classification

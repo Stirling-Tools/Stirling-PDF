@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
-import { ActionIcon, Button, Dropdown, IconPicker, Input } from "@app/ui";
+import { ActionIcon, Button, Chip, Dropdown, IconPicker, Input } from "@app/ui";
+import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { PipelineBlockerTooltip } from "@portal/components/pipelines/PipelineBlockerTooltip";
 import { PIPELINE_ICON_OPTIONS } from "@portal/components/pipelines/pipelineIcon";
 import { EnforceAsPolicyControl } from "@portal/components/pipelines/EnforceAsPolicyControl";
@@ -49,6 +51,11 @@ export interface PipelineEditHeaderProps {
   onReprocess: () => void;
   reprocessing: boolean;
   onDelete: () => void;
+
+  /** Open the Publish to store flow. Omitted when the store is not reachable from this portal. */
+  onPublish?: () => void;
+  /** The store listing this pipeline came from (or was published as); shows the "From the store" link. */
+  storeId?: string | null;
 }
 
 /**
@@ -82,6 +89,8 @@ export function PipelineEditHeader({
   onReprocess,
   reprocessing,
   onDelete,
+  onPublish,
+  storeId,
 }: PipelineEditHeaderProps) {
   const { t } = useTranslation();
   const readOnly = !canManagePolicies;
@@ -171,6 +180,21 @@ export function PipelineEditHeader({
                 <Icon name="pencil" size={"1rem"} />
               </ActionIcon>
             )}
+            {storeId && (
+              <Link
+                to={`${toPortalPath(VIEW_PATHS.store)}/${encodeURIComponent(storeId)}`}
+                className="portal-pipeline-edit-header__store-link"
+              >
+                <Chip
+                  size="xs"
+                  accent="brand"
+                  showDot={false}
+                  leadingIcon={<Icon name="store" size={"0.875rem"} />}
+                >
+                  {t("portal.store.fromStore")}
+                </Chip>
+              </Link>
+            )}
           </>
         )}
       </div>
@@ -231,6 +255,17 @@ export function PipelineEditHeader({
             </ActionIcon>
           </Dropdown.Trigger>
           <Dropdown.Menu>
+            {onPublish && (
+              <>
+                <Dropdown.Item
+                  onSelect={onPublish}
+                  leading={<Icon name="store" size={"1.125rem"} />}
+                >
+                  {t("portal.store.publish.action")}
+                </Dropdown.Item>
+                <Dropdown.Divider />
+              </>
+            )}
             <Dropdown.Item
               onSelect={onReprocess}
               disabled={reprocessing || running || readOnly}
