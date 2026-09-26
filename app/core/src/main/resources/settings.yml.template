@@ -294,6 +294,7 @@ storage:
     linkExpirationDays: 3 # Number of days before share links expire
   signing:
     enabled: false # set to 'true' to enable group signing workflow (requires storage.enabled) [ALPHA]
+    userListScope: org # 'org' lists the whole instance; any other value limits the picker to the caller's team.
   # Encryption at rest for stored files (AES-256, per-team keys). Requires a Pro or
   # Enterprise licence. Key setup, cluster requirements, the encrypt-existing migration,
   # the revocation kill switch and master-key rotation are documented in
@@ -303,7 +304,6 @@ storage:
   encryption:
     enabled: false # set to 'true' to encrypt stored files at rest
     auditReads: true # audit every decrypt of an encrypted file (denied decrypts and key lifecycle events are always audited). NOTE: audit events require an Enterprise licence; encryption itself works on Pro.
-    userListScope: org # Signing user-picker scope: 'org' (default) = whole instance, else caller's team only.
 autoPipeline:
   outputFolder: "" # Output folder for processed pipeline files (leave empty for default)
   fileReadiness:

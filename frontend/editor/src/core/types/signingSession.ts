@@ -1,11 +1,11 @@
 export interface WetSignatureMetadata {
   type: "canvas" | "image" | "text";
-  data: string; // Base64-encoded image data or text content
+  data: string; // Base64 image data URL, including rasterized typed text
   page: number; // Zero-indexed page number
-  x: number; // X coordinate in PDF points
-  y: number; // Y coordinate in PDF points (top-left origin)
-  width: number; // Width in PDF points
-  height: number; // Height in PDF points
+  x: number; // Fraction of page width, from the left
+  y: number; // Fraction of page height, from the top
+  width: number; // Fraction of page width
+  height: number; // Fraction of page height
 }
 
 export interface SessionSummary {
@@ -15,6 +15,7 @@ export interface SessionSummary {
   participantCount: number;
   signedCount: number;
   finalized: boolean;
+  dueDate?: string;
 }
 
 export interface SessionDetail {
@@ -61,6 +62,7 @@ export interface SignRequestSummary {
   createdAt: string;
   dueDate: string;
   myStatus: "PENDING" | "NOTIFIED" | "VIEWED" | "SIGNED" | "DECLINED";
+  finalized?: boolean;
 }
 
 export interface SignRequestDetail {
@@ -71,6 +73,8 @@ export interface SignRequestDetail {
   dueDate: string;
   createdAt: string;
   myStatus: "PENDING" | "NOTIFIED" | "VIEWED" | "SIGNED" | "DECLINED";
+  finalized?: boolean;
+  canSign?: boolean;
   // Signature appearance settings (read-only, configured by owner)
   showSignature?: boolean;
   pageNumber?: number;

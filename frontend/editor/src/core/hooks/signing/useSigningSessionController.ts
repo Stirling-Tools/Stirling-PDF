@@ -145,11 +145,12 @@ export function useSigningSessionController(enabled: boolean) {
     await apiClient.post(
       `/api/v1/security/cert-sign/sign-requests/${sessionId}/sign`,
       certificateData,
+      { suppressErrorToast: true },
     );
     alert({
       alertType: "success",
       title: t("success"),
-      body: t("signRequest.signed", "Document signed successfully"),
+      body: t("signMenu.submitted", "Submitted · awaiting finalization"),
       expandable: false,
       durationMs: 2500,
     });
@@ -296,9 +297,7 @@ export function useSigningSessionController(enabled: boolean) {
         { type: "application/pdf" },
       );
       const canSign =
-        detailResponse.data.myStatus === "PENDING" ||
-        detailResponse.data.myStatus === "NOTIFIED" ||
-        detailResponse.data.myStatus === "VIEWED";
+        detailResponse.data.canSign === true && !detailResponse.data.finalized;
 
       // Leaving the detail view: stop any in-flight detail refresh from applying.
       openDetailSessionIdRef.current = null;

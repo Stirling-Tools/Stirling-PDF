@@ -32,7 +32,9 @@ export function useSigningBadgeState(): { count: number; settled: boolean } {
 
   const incoming = signRequests.filter(
     (request) =>
-      request.myStatus !== "SIGNED" && request.myStatus !== "DECLINED",
+      !request.finalized &&
+      request.myStatus !== "SIGNED" &&
+      request.myStatus !== "DECLINED",
   ).length;
 
   const ownerUpdates = mySessions.filter(

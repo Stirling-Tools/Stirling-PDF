@@ -35,7 +35,7 @@ import stirling.software.proprietary.workflow.dto.CertificateInfo;
 import stirling.software.proprietary.workflow.dto.WorkflowCreationRequest;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
 import stirling.software.proprietary.workflow.service.CertificateSubmissionValidator;
-import stirling.software.proprietary.workflow.service.SigningFinalizationService;
+import stirling.software.proprietary.workflow.service.SigningSessionFinalizationService;
 import stirling.software.proprietary.workflow.service.WorkflowSessionService;
 
 // Direct handler invocations (no MockMvc) for SigningSessionController; previously 0% covered.
@@ -45,7 +45,7 @@ class SigningSessionControllerTest {
 
     @Mock private WorkflowSessionService workflowSessionService;
     @Mock private UserService userService;
-    @Mock private SigningFinalizationService signingFinalizationService;
+    @Mock private SigningSessionFinalizationService signingSessionFinalizationService;
     @Mock private CertificateSubmissionValidator certificateSubmissionValidator;
 
     private SigningSessionController controller;
@@ -56,7 +56,7 @@ class SigningSessionControllerTest {
                 new SigningSessionController(
                         workflowSessionService,
                         userService,
-                        signingFinalizationService,
+                        signingSessionFinalizationService,
                         certificateSubmissionValidator);
     }
 
@@ -128,7 +128,7 @@ class SigningSessionControllerTest {
         void validateCertificate_unauthenticated() {
             assertThat(
                             controller
-                                    .validateCertificate("P12", "pw", null, null, null)
+                                    .validateCertificate("P12", "pw", null, null, null, null, null)
                                     .getStatusCode())
                     .isEqualTo(HttpStatus.UNAUTHORIZED);
         }
@@ -384,24 +384,22 @@ class SigningSessionControllerTest {
             User owner = user("alice");
             WorkflowSession session = ownedSession("s1", owner);
             when(userService.findByUsernameIgnoreCase("alice")).thenReturn(Optional.of(owner));
-            when(workflowSessionService.getSessionWithParticipantsForOwner("s1", owner))
-                    .thenReturn(session);
-            when(workflowSessionService.getOriginalFile("s1")).thenReturn(new byte[] {1});
-            when(signingFinalizationService.finalizeDocument(eq(session), any()))
-                    .thenReturn(new byte[] {2, 3});
+            when(signingSessionFinalizationService.finalizeSession("s1", owner))
+                    .thenReturn(
+                            new SigningSessionFinalizationService.FinalizedDocument(
+                                    new byte[] {2, 3}, "signed.pdf"));
 
             ResponseEntity<byte[]> response = controller.finalizeSession("s1", principal("alice"));
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            verify(workflowSessionService).finalizeSession("s1", owner);
-            verify(workflowSessionService).deleteOriginalFile(session);
+            assertThat(response.getBody()).containsExactly(2, 3);
         }
 
         @Test
         void serviceError_returns500() throws Exception {
             User owner = user("alice");
             when(userService.findByUsernameIgnoreCase("alice")).thenReturn(Optional.of(owner));
-            when(workflowSessionService.getSessionWithParticipantsForOwner("s1", owner))
+            when(signingSessionFinalizationService.finalizeSession("s1", owner))
                     .thenThrow(new RuntimeException("boom"));
 
             assertThat(controller.finalizeSession("s1", principal("alice")).getStatusCode())
@@ -568,7 +566,7 @@ class SigningSessionControllerTest {
     }
 
     @Test
-    @DisplayName("declineSignRequest service error returns 403")
+    @DisplayName("declineSignRequest preserves the service rejection status")
     void declineSignRequest_serviceError() {
         User user = user("alice");
         when(userService.findByUsernameIgnoreCase("alice")).thenReturn(Optional.of(user));
@@ -576,8 +574,11 @@ class SigningSessionControllerTest {
                 .when(workflowSessionService)
                 .declineSignRequest("s1", user);
 
-        assertThat(controller.declineSignRequest("s1", principal("alice")).getStatusCode())
-                .isEqualTo(HttpStatus.FORBIDDEN);
+        org.assertj.core.api.Assertions.assertThatThrownBy(
+                        () -> controller.declineSignRequest("s1", principal("alice")))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     // -------------------------------------------------------------------------
@@ -611,7 +612,13 @@ class SigningSessionControllerTest {
             org.assertj.core.api.Assertions.assertThatThrownBy(
                             () ->
                                     controller.validateCertificate(
-                                            "P12", "pw", null, null, principal("alice")))
+                                            "P12",
+                                            "pw",
+                                            null,
+                                            null,
+                                            null,
+                                            null,
+                                            principal("alice")))
                     .isInstanceOf(ResponseStatusException.class)
                     .extracting(e -> ((ResponseStatusException) e).getStatusCode())
                     .isEqualTo(HttpStatus.BAD_REQUEST);
@@ -625,7 +632,8 @@ class SigningSessionControllerTest {
                     .thenReturn(null);
 
             ResponseEntity<?> response =
-                    controller.validateCertificate("SERVER", null, null, null, principal("alice"));
+                    controller.validateCertificate(
+                            "SERVER", null, null, null, null, null, principal("alice"));
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         }
@@ -646,7 +654,7 @@ class SigningSessionControllerTest {
             ResponseEntity<stirling.software.proprietary.workflow.dto.CertificateValidationResponse>
                     response =
                             controller.validateCertificate(
-                                    "P12", "pw", p12, null, principal("alice"));
+                                    "P12", "pw", p12, null, null, null, principal("alice"));
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody().valid()).isTrue();
@@ -666,7 +674,7 @@ class SigningSessionControllerTest {
             ResponseEntity<stirling.software.proprietary.workflow.dto.CertificateValidationResponse>
                     response =
                             controller.validateCertificate(
-                                    "P12", "wrong", p12, null, principal("alice"));
+                                    "P12", "wrong", p12, null, null, null, principal("alice"));
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody().valid()).isFalse();

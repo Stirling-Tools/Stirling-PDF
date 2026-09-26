@@ -1,4 +1,7 @@
 import { useTranslation } from "react-i18next";
+import { useState } from "react";
+import { SignMenu } from "@app/components/shared/signing/SignMenu";
+import { requestSigningIntent } from "@app/utils/pendingSigningIntent";
 import { useLocation, useNavigate } from "react-router-dom";
 import { QuickNavRailContainer } from "@app/components/shared/quickNav/QuickNavRailContainer";
 import type { QuickNavEntry } from "@app/components/shared/quickNav/QuickNavRailBase";
@@ -32,6 +35,7 @@ export function QuickNavRailHost() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const host = useQuickNavHost();
+  const [signMenuOpen, setSignMenuOpen] = useState(false);
   // Processing folders run on the non-core API server. True on web (served by that backend);
   // on desktop it tracks the signed-in connection, so the entry falls inert until the user
   // signs in to Stirling Cloud or a self-hosted server.
@@ -215,14 +219,39 @@ export function QuickNavRailHost() {
       onClick: () => openTool("automate", "/automate"),
     },
     {
-      id: "sharedSign",
-      label: t("home.sharedSign.title", "Shared Signing"),
+      id: "sign",
+      label: t("signMenu.title", "Sign"),
       icon: <Icon name="pen-tool" size={SIZE} />,
       badge: host?.signingBadge,
       badgeTone: "warning",
-      ...openingTool("sharedSign"),
-      ...unusable("sharedSign"),
-      onClick: () => openTool("sharedSign", "/shared-sign"),
+      current:
+        host?.activeTool === "sign" ||
+        host?.activeTool === "certSign" ||
+        host?.activeTool === "sharedSign",
+      expanded: signMenuOpen,
+      onClick: () => setSignMenuOpen((open) => !open),
+      wrap: (button) => (
+        <SignMenu
+          opened={signMenuOpen}
+          onClose={() => setSignMenuOpen(false)}
+          reasons={host?.toolReasons ?? {}}
+          badge={host?.signingBadge ?? 0}
+          onSelect={(tool, create) => {
+            if (tool === "sharedSign")
+              requestSigningIntent(create ? "create" : "list");
+            openTool(
+              tool,
+              tool === "sharedSign"
+                ? "/shared-sign"
+                : tool === "certSign"
+                  ? "/cert-sign"
+                  : "/sign",
+            );
+          }}
+        >
+          {button}
+        </SignMenu>
+      ),
     },
   ];
 

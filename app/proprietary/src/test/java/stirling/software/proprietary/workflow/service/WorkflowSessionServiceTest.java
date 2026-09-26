@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -26,9 +27,11 @@ import org.springframework.web.server.ResponseStatusException;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Storage;
 import stirling.software.common.model.ApplicationProperties.Storage.Signing;
+import stirling.software.common.service.LicenseServiceInterface;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.crypto.StorageKeyRevokedException;
+import stirling.software.proprietary.storage.model.ShareAccessRole;
 import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.provider.StoredObject;
@@ -57,7 +60,79 @@ class WorkflowSessionServiceTest {
     @Mock private ApplicationProperties applicationProperties;
     @Mock private MetadataEncryptionService metadataEncryptionService;
 
+    @Mock private LicenseServiceInterface licenseService;
+    @Mock private stirling.software.common.service.CustomPDFDocumentFactory pdfDocumentFactory;
     @InjectMocks private WorkflowSessionService service;
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.EnumSource(
+            value = ShareAccessRole.class,
+            names = {"VIEWER", "COMMENTER"})
+    void readOnlyParticipantsCannotSignOrDecline(ShareAccessRole role) {
+        User user = user("reader");
+        WorkflowParticipant participant = pendingParticipant(user);
+        participant.setAccessRole(role);
+        sessionWithParticipant("restricted", participant);
+        assertThatThrownBy(
+                        () -> service.signDocument("restricted", user, new SignDocumentRequest()))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("signing permission");
+        assertThatThrownBy(() -> service.declineSignRequest("restricted", user))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("signing permission");
+        verify(workflowParticipantRepository, never()).save(any());
+    }
+
+    @Test
+    void expiredAccessRejectsSigningDecliningAndDocumentAccess() {
+        User user = user("expired");
+        WorkflowParticipant participant = pendingParticipant(user);
+        participant.setExpiresAt(java.time.LocalDateTime.now().minusSeconds(1));
+        sessionWithParticipant("expired", participant);
+        assertThatThrownBy(() -> service.signDocument("expired", user, new SignDocumentRequest()))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("access expired");
+        assertThatThrownBy(() -> service.declineSignRequest("expired", user))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("access expired");
+        assertThatThrownBy(() -> service.getSignRequestDocument("expired", user))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("access expired");
+        verify(workflowParticipantRepository, never()).save(any());
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"SERVER", "USER_CERT"})
+    void unlicensedManagedSubmissionIsRejectedBeforeStoringSecrets(String certType) {
+        when(licenseService.isRunningProOrHigher()).thenReturn(false);
+        User user = user("unlicensed");
+        sessionWithParticipant("unlicensed", pendingParticipant(user));
+        SignDocumentRequest request = new SignDocumentRequest();
+        request.setCertType(certType);
+        assertThatThrownBy(() -> service.signDocument("unlicensed", user, request))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                .isEqualTo(HttpStatus.FORBIDDEN);
+        verifyNoInteractions(metadataEncryptionService);
+        verify(workflowParticipantRepository, never()).save(any());
+    }
+
+    @Test
+    void advisoryDueDateDoesNotPreventSigning() {
+        User user = user("late");
+        WorkflowParticipant participant = pendingParticipant(user);
+        WorkflowSession session = sessionWithParticipant("late", participant);
+        session.setDueDate("2000-01-01");
+        SignDocumentRequest request = new SignDocumentRequest();
+        request.setCertType("SERVER");
+        service.signDocument("late", user, request);
+        assertThat(participant.getStatus()).isEqualTo(ParticipantStatus.SIGNED);
+    }
+
+    @BeforeEach
+    void licensedInstallation() {
+        lenient().when(licenseService.isRunningProOrHigher()).thenReturn(true);
+    }
 
     // -------------------------------------------------------------------------
     // Helpers
@@ -70,13 +145,20 @@ class WorkflowSessionServiceTest {
         List<WorkflowParticipant> participants = new ArrayList<>();
         participants.add(participant);
         session.setParticipants(participants);
-        when(workflowSessionRepository.findBySessionId(sessionId)).thenReturn(Optional.of(session));
+        participant.setWorkflowSession(session);
+        lenient()
+                .when(workflowSessionRepository.findBySessionIdForUpdate(sessionId))
+                .thenReturn(Optional.of(session));
+        lenient()
+                .when(workflowSessionRepository.findBySessionId(sessionId))
+                .thenReturn(Optional.of(session));
         return session;
     }
 
     private WorkflowParticipant pendingParticipant(User user) {
         WorkflowParticipant p = new WorkflowParticipant();
         p.setUser(user);
+        p.setAccessRole(ShareAccessRole.EDITOR);
         p.setStatus(ParticipantStatus.PENDING);
         return p;
     }
@@ -169,7 +251,9 @@ class WorkflowSessionServiceTest {
                         objectMapper,
                         applicationProperties,
                         realEncryption,
-                        validator);
+                        validator,
+                        licenseService,
+                        pdfDocumentFactory);
 
         User user = user("dave");
         WorkflowParticipant participant = pendingParticipant(user);
@@ -249,7 +333,7 @@ class WorkflowSessionServiceTest {
     // -------------------------------------------------------------------------
 
     @Test
-    void signDocument_throwsBadRequest_whenAlreadySigned() {
+    void signDocument_throwsConflict_whenAlreadySigned() {
         User user = user("dave");
         WorkflowParticipant participant = pendingParticipant(user);
         participant.setStatus(ParticipantStatus.SIGNED);
@@ -261,13 +345,13 @@ class WorkflowSessionServiceTest {
         assertThatThrownBy(() -> service.signDocument("s4", user, req))
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(e -> ((ResponseStatusException) e).getStatusCode())
-                .isEqualTo(HttpStatus.BAD_REQUEST);
+                .isEqualTo(HttpStatus.CONFLICT);
 
         verify(workflowParticipantRepository, never()).save(any());
     }
 
     @Test
-    void signDocument_throwsBadRequest_whenAlreadyDeclined() {
+    void signDocument_throwsConflict_whenAlreadyDeclined() {
         User user = user("eve");
         WorkflowParticipant participant = pendingParticipant(user);
         participant.setStatus(ParticipantStatus.DECLINED);
@@ -279,7 +363,7 @@ class WorkflowSessionServiceTest {
         assertThatThrownBy(() -> service.signDocument("s5", user, req))
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(e -> ((ResponseStatusException) e).getStatusCode())
-                .isEqualTo(HttpStatus.BAD_REQUEST);
+                .isEqualTo(HttpStatus.CONFLICT);
 
         verify(workflowParticipantRepository, never()).save(any());
     }
@@ -361,6 +445,15 @@ class WorkflowSessionServiceTest {
                 new MockMultipartFile("file", "doc.pdf", "application/pdf", new byte[] {1, 2});
         WorkflowCreationRequest request = new WorkflowCreationRequest();
         request.setWorkflowType(WorkflowType.SIGNING);
+        request.setParticipantEmails(List.of("signer@example.test"));
+        when(pdfDocumentFactory.load(
+                        any(org.springframework.web.multipart.MultipartFile.class), eq(true)))
+                .thenAnswer(
+                        invocation -> {
+                            var document = new org.apache.pdfbox.pdmodel.PDDocument();
+                            document.addPage(new org.apache.pdfbox.pdmodel.PDPage());
+                            return document;
+                        });
         request.setDocumentName("My Doc");
 
         StoredObject storedObject =
@@ -396,6 +489,15 @@ class WorkflowSessionServiceTest {
                 new MockMultipartFile("file", "original.pdf", "application/pdf", new byte[] {1});
         WorkflowCreationRequest request = new WorkflowCreationRequest();
         request.setWorkflowType(WorkflowType.SIGNING);
+        request.setParticipantEmails(List.of("signer@example.test"));
+        when(pdfDocumentFactory.load(
+                        any(org.springframework.web.multipart.MultipartFile.class), eq(true)))
+                .thenAnswer(
+                        invocation -> {
+                            var document = new org.apache.pdfbox.pdmodel.PDDocument();
+                            document.addPage(new org.apache.pdfbox.pdmodel.PDPage());
+                            return document;
+                        });
         request.setDocumentName("Custom Name");
 
         when(storageProvider.store(any(), any()))
@@ -427,6 +529,15 @@ class WorkflowSessionServiceTest {
                 new MockMultipartFile("file", "uploaded.pdf", "application/pdf", new byte[] {1});
         WorkflowCreationRequest request = new WorkflowCreationRequest();
         request.setWorkflowType(WorkflowType.SIGNING);
+        request.setParticipantEmails(List.of("signer@example.test"));
+        when(pdfDocumentFactory.load(
+                        any(org.springframework.web.multipart.MultipartFile.class), eq(true)))
+                .thenAnswer(
+                        invocation -> {
+                            var document = new org.apache.pdfbox.pdmodel.PDDocument();
+                            document.addPage(new org.apache.pdfbox.pdmodel.PDPage());
+                            return document;
+                        });
         request.setDocumentName(null);
 
         when(storageProvider.store(any(), any()))
@@ -508,7 +619,8 @@ class WorkflowSessionServiceTest {
         WorkflowSession session = new WorkflowSession();
         session.setSessionId("s3");
         session.setOwner(owner);
-        when(workflowSessionRepository.findBySessionId("s3")).thenReturn(Optional.of(session));
+        when(workflowSessionRepository.findBySessionIdForUpdate("s3"))
+                .thenReturn(Optional.of(session));
 
         service.deleteSession("s3", owner);
 
@@ -533,7 +645,8 @@ class WorkflowSessionServiceTest {
         session.setOwner(owner);
         session.setOriginalFile(originalFile);
         session.setProcessedFile(processedFile);
-        when(workflowSessionRepository.findBySessionId("s3b")).thenReturn(Optional.of(session));
+        when(workflowSessionRepository.findBySessionIdForUpdate("s3b"))
+                .thenReturn(Optional.of(session));
 
         service.deleteSession("s3b", owner);
 
@@ -560,12 +673,13 @@ class WorkflowSessionServiceTest {
         session.setSessionId("s3c");
         session.setOwner(owner);
         session.setFinalized(true);
-        when(workflowSessionRepository.findBySessionId("s3c")).thenReturn(Optional.of(session));
+        when(workflowSessionRepository.findBySessionIdForUpdate("s3c"))
+                .thenReturn(Optional.of(session));
 
         assertThatThrownBy(() -> service.deleteSession("s3c", owner))
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(e -> ((ResponseStatusException) e).getStatusCode())
-                .isEqualTo(HttpStatus.BAD_REQUEST);
+                .isEqualTo(HttpStatus.CONFLICT);
 
         verify(workflowSessionRepository, never()).delete(any());
     }
@@ -582,7 +696,8 @@ class WorkflowSessionServiceTest {
         session.setSessionId("s4");
         session.setOwner(owner);
         session.setOriginalFile(originalFile);
-        when(workflowSessionRepository.findBySessionId("s4")).thenReturn(Optional.of(session));
+        when(workflowSessionRepository.findBySessionIdForUpdate("s4"))
+                .thenReturn(Optional.of(session));
         doThrow(new RuntimeException("storage unavailable"))
                 .when(storageProvider)
                 .delete("key-orig");
@@ -605,7 +720,8 @@ class WorkflowSessionServiceTest {
         WorkflowSession session = new WorkflowSession();
         session.setSessionId("s5");
         session.setOwner(owner);
-        when(workflowSessionRepository.findBySessionId("s5")).thenReturn(Optional.of(session));
+        when(workflowSessionRepository.findBySessionIdForUpdate("s5"))
+                .thenReturn(Optional.of(session));
 
         assertThatThrownBy(() -> service.deleteSession("s5", other))
                 .isInstanceOf(ResponseStatusException.class)

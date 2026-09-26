@@ -1,4 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  requestSigningIntent,
+  usePendingSigningIntent,
+} from "@app/utils/pendingSigningIntent";
 import {
   Alert,
   Badge,
@@ -49,6 +53,14 @@ const SharedSign = (_props: BaseToolProps) => {
   const [showCreate, setShowCreate] = useState(false);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
   const [dueDate, setDueDate] = useState("");
+  const pendingIntent = usePendingSigningIntent();
+  const backToList = controller.backToList;
+  useEffect(() => {
+    if (!pendingIntent) return;
+    backToList();
+    setShowCreate(pendingIntent === "create");
+    requestSigningIntent(null);
+  }, [pendingIntent, backToList]);
 
   // Switching tabs clears filters (the available chips differ per tab).
   const changeTab = (value: Tab) => {
@@ -62,7 +74,7 @@ const SharedSign = (_props: BaseToolProps) => {
     () =>
       sortByRecency([
         ...signRequests
-          .filter((r) => r.myStatus !== "SIGNED" && r.myStatus !== "DECLINED")
+          .filter((r) => !r.finalized)
           .map((r) => ({ ...r, itemType: "signRequest" as const })),
         ...mySessions
           .filter((s) => !s.finalized)
@@ -75,7 +87,7 @@ const SharedSign = (_props: BaseToolProps) => {
     () =>
       sortByRecency([
         ...signRequests
-          .filter((r) => r.myStatus === "SIGNED" || r.myStatus === "DECLINED")
+          .filter((r) => r.finalized)
           .map((r) => ({ ...r, itemType: "signRequest" as const })),
         ...mySessions
           .filter((s) => s.finalized)
@@ -114,9 +126,15 @@ const SharedSign = (_props: BaseToolProps) => {
       };
     }
     const req = item as SignRequestSummary;
+    if (req.finalized) {
+      return { color: "green", label: t("certSign.finalized", "Finalized") };
+    }
     switch (req.myStatus) {
       case "SIGNED":
-        return { color: "green", label: t("certSign.signed", "Signed") };
+        return {
+          color: "blue",
+          label: t("signMenu.submitted", "Submitted · awaiting finalization"),
+        };
       case "DECLINED":
         return { color: "red", label: t("certSign.declined", "Declined") };
       case "VIEWED":
@@ -217,13 +235,8 @@ const SharedSign = (_props: BaseToolProps) => {
       result = result.filter((s) => s.itemType === "mySession");
     }
     if (filters.includes("overdue")) {
-      // Only sign requests carry a dueDate; owned sessions (SessionSummary) don't
-      // expose one in the list payload, so overdue filtering requires a backend change.
       result = result.filter(
-        (s) =>
-          s.itemType === "signRequest" &&
-          Boolean(s.dueDate) &&
-          new Date(s.dueDate).getTime() < now,
+        (s) => Boolean(s.dueDate) && new Date(s.dueDate!).getTime() < now,
       );
     }
     if (filters.includes("signed")) {
@@ -340,12 +353,14 @@ const SharedSign = (_props: BaseToolProps) => {
             const subtitle = parts.join(" • ");
             return (
               <Paper
+                component="button"
+                type="button"
                 key={`${item.itemType}-${item.sessionId}`}
                 withBorder
                 radius="md"
                 p="sm"
                 onClick={() => onItemClick(item)}
-                style={{ cursor: "pointer" }}
+                style={{ cursor: "pointer", textAlign: "left", width: "100%" }}
               >
                 <Group justify="space-between" wrap="nowrap" align="flex-start">
                   <Stack gap={2} style={{ minWidth: 0 }}>

@@ -96,17 +96,6 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
   }, [signControlsVisible]);
 
   const handleOpenCertificateModal = () => {
-    if (previewCount === 0) {
-      alert({
-        alertType: "error",
-        title: t("common.error"),
-        body: t(
-          "certSign.collab.signRequest.noSignatures",
-          "Please place at least one signature on the PDF",
-        ),
-      });
-      return;
-    }
     setCertificateModalOpen(true);
   };
 
@@ -231,8 +220,6 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
 
       await onSign(formData);
       setCertificateModalOpen(false);
-    } catch (error) {
-      console.error("Failed to sign document:", error);
     } finally {
       setSigning(false);
     }
@@ -293,6 +280,21 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
 
       <Divider />
 
+      {!signRequest.finalized && signRequest.myStatus === "SIGNED" && (
+        <Text size="sm">
+          {t("signMenu.submitted", "Submitted · awaiting finalization")}
+        </Text>
+      )}
+
+      {signRequest.finalized && (
+        <Text size="sm">
+          {t(
+            "certSign.collab.signRequest.closed",
+            "This session is finalized. You can view the final document, but no further signatures or declines are accepted.",
+          )}
+        </Text>
+      )}
+
       {canSign && signControlsVisible && (
         <>
           <SignControlsPanel
@@ -300,13 +302,22 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
             onPlacementModeChange={setPlacementMode}
             onSignatureSelected={setSignatureConfig}
             onComplete={handleOpenCertificateModal}
-            canComplete={previewCount > 0}
+            canComplete={true}
             signatureConfig={signatureConfig}
             hasSelectedAnnotation={hasSelectedAnnotation}
             onDeleteSelected={handleDeleteSelected}
           />
           <Divider />
         </>
+      )}
+
+      {canSign && (
+        <Text size="xs" c="dimmed">
+          {t(
+            "signMenu.optionalMarks",
+            "Visible marks are optional. Complete & Sign also works with a certificate alone.",
+          )}
+        </Text>
       )}
 
       <Button
@@ -323,19 +334,18 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
         {t("certSign.collab.signRequest.addToFiles", "Add to Active Files")}
       </Button>
 
-      {signRequest.myStatus !== "SIGNED" &&
-        signRequest.myStatus !== "DECLINED" && (
-          <Button
-            variant="tertiary"
-            accent="danger"
-            leftSection={<Icon name="circle-x" size={20} />}
-            onClick={handleDecline}
-            loading={declining}
-            fullWidth
-          >
-            {t("certSign.collab.signRequest.decline", "Decline Request")}
-          </Button>
-        )}
+      {canSign && (
+        <Button
+          variant="tertiary"
+          accent="danger"
+          leftSection={<Icon name="circle-x" size={20} />}
+          onClick={handleDecline}
+          loading={declining}
+          fullWidth
+        >
+          {t("certSign.collab.signRequest.decline", "Decline Request")}
+        </Button>
+      )}
 
       {canSign && (
         <CertificateConfigModal

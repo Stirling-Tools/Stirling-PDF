@@ -1,5 +1,7 @@
-import { Stack, Text, Divider, Paper } from "@mantine/core";
+import { useState } from "react";
+import { Stack, Text, Divider, Paper, Group } from "@mantine/core";
 import { Button } from "@app/ui/Button";
+import { Modal } from "@app/ui/Modal";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import type { SessionDetail } from "@app/types/signingSession";
@@ -23,7 +25,10 @@ export const SessionActionsPanel: React.FC<SessionActionsPanelProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  const allSigned = session.participants.every((p) => p.status === "SIGNED");
+  const [confirming, setConfirming] = useState(false);
+  const included = session.participants.filter((p) => p.status === "SIGNED");
+  const excluded = session.participants.filter((p) => p.status !== "SIGNED");
+  const allSigned = included.length > 0 && excluded.length === 0;
 
   return (
     <Stack gap="md">
@@ -74,7 +79,8 @@ export const SessionActionsPanel: React.FC<SessionActionsPanelProps> = ({
             leftSection={<Icon name="circle-check" />}
             accent={allSigned ? "success" : "warning"}
             fullWidth
-            onClick={onFinalize}
+            onClick={() => setConfirming(true)}
+            disabled={included.length === 0}
             loading={finalizing}
           >
             {allSigned
@@ -87,6 +93,77 @@ export const SessionActionsPanel: React.FC<SessionActionsPanelProps> = ({
                   "Finalize with Current Signatures",
                 )}
           </Button>
+          {included.length === 0 && (
+            <Text size="sm">
+              {t(
+                "certSign.collab.finalize.requiresSignature",
+                "At least one participant must sign before you can finalize.",
+              )}
+            </Text>
+          )}
+          <Modal
+            open={confirming}
+            onClose={() => setConfirming(false)}
+            title={t(
+              "certSign.collab.finalize.confirmTitle",
+              "Finalize this signing session?",
+            )}
+            footer={
+              <Group justify="flex-end">
+                <Button
+                  variant="secondary"
+                  onClick={() => setConfirming(false)}
+                >
+                  {t("cancel", "Cancel")}
+                </Button>
+                <Button
+                  disabled={included.length === 0}
+                  onClick={() => {
+                    setConfirming(false);
+                    onFinalize();
+                  }}
+                >
+                  {t(
+                    "certSign.collab.finalize.confirmAction",
+                    "Confirm and finalize",
+                  )}
+                </Button>
+              </Group>
+            }
+          >
+            <Stack gap="sm">
+              <Text>
+                {t(
+                  "certSign.collab.finalize.confirmDescription",
+                  "Finalizing closes this session. No more signatures can be submitted.",
+                )}
+              </Text>
+              <Text fw={600}>
+                {t("certSign.collab.finalize.included", "Signatures included")}
+              </Text>
+              {included.map((p) => (
+                <Text key={p.id}>{p.name || p.email}</Text>
+              ))}
+              {excluded.length > 0 && (
+                <>
+                  <Text fw={600}>
+                    {t(
+                      "certSign.collab.finalize.excluded",
+                      "Participants whose signatures will not be included",
+                    )}
+                  </Text>
+                  {excluded.map((p) => (
+                    <Text key={p.id}>
+                      {p.name || p.email} —{" "}
+                      {p.status === "DECLINED"
+                        ? t("certSign.declined", "Declined")
+                        : t("certSign.pending", "Pending")}
+                    </Text>
+                  ))}
+                </>
+              )}
+            </Stack>
+          </Modal>
         </>
       )}
 

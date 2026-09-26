@@ -21,7 +21,10 @@ export default function SharedSigningLauncher() {
     enabled: groupSigningEnabled,
   });
   const pendingCount = signRequests.filter(
-    (req) => req.myStatus !== "SIGNED" && req.myStatus !== "DECLINED",
+    (req) =>
+      !req.finalized &&
+      req.myStatus !== "SIGNED" &&
+      req.myStatus !== "DECLINED",
   ).length;
 
   if (!groupSigningEnabled) return null;

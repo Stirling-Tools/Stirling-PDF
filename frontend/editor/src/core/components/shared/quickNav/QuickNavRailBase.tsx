@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode, type ReactElement, type Ref } from "react";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import "@app/components/shared/quickNav/QuickNavRail.css";
@@ -27,6 +27,8 @@ export interface QuickNavEntry {
   /** Stable guided-tour anchor when it differs from the test hook. */
   tourId?: string;
   onClick: () => void;
+  /** Allows an entry to anchor a popup while retaining the shared rail control. */
+  wrap?: (button: ReactElement<{ onClick: () => void }>) => ReactNode;
 }
 
 export interface QuickNavRailBaseProps {
@@ -50,7 +52,14 @@ export function RailButton({
   testId,
   tourId,
   onClick,
-}: Omit<QuickNavEntry, "id">) {
+  ref,
+  "aria-haspopup": popupRole,
+  "aria-controls": popupControls,
+}: Omit<QuickNavEntry, "id"> & {
+  ref?: Ref<HTMLButtonElement>;
+  "aria-haspopup"?: "menu" | "dialog";
+  "aria-controls"?: string;
+}) {
   return (
     <Tooltip
       content={disabled && reason ? `${label} — ${reason}` : label}
@@ -59,14 +68,19 @@ export function RailButton({
       containerStyle={{ pointerEvents: "none" }}
     >
       <button
+        ref={ref}
         type="button"
         className="quick-nav-rail-item"
         aria-pressed={pressed}
         aria-current={current ? "true" : undefined}
         aria-label={label}
-        aria-haspopup={expanded === undefined ? undefined : "dialog"}
+        aria-haspopup={
+          popupRole ?? (expanded === undefined ? undefined : "dialog")
+        }
         aria-expanded={expanded}
-        aria-controls={expanded === undefined ? undefined : controls}
+        aria-controls={
+          popupControls ?? (expanded === undefined ? undefined : controls)
+        }
         // aria-disabled, not `disabled`: stays focusable, so its tooltip is reachable.
         aria-disabled={disabled || undefined}
         data-testid={testId}
@@ -100,7 +114,13 @@ export function QuickNavRailBase({ groups, footer }: QuickNavRailBaseProps) {
         <div className="quick-nav-rail-group" key={group[0].id}>
           {index > 0 && <hr className="quick-nav-rail-divider" />}
           {group.map((entry) => (
-            <RailButton key={entry.id} {...entry} />
+            <Fragment key={entry.id}>
+              {entry.wrap ? (
+                entry.wrap(<RailButton {...entry} />)
+              ) : (
+                <RailButton {...entry} />
+              )}
+            </Fragment>
           ))}
         </div>
       ))}

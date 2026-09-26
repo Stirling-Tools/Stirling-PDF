@@ -94,6 +94,7 @@ class WorkflowSessionServiceMoreTest {
     private WorkflowParticipant participant(User user, ParticipantStatus status) {
         WorkflowParticipant p = new WorkflowParticipant();
         p.setUser(user);
+        p.setAccessRole(stirling.software.proprietary.storage.model.ShareAccessRole.EDITOR);
         p.setStatus(status);
         return p;
     }
@@ -159,6 +160,8 @@ class WorkflowSessionServiceMoreTest {
             User owner = user("alice", 1L);
             WorkflowSession s = session("s1", owner);
             when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(s));
+            when(workflowSessionRepository.findBySessionIdForUpdate("s1"))
+                    .thenReturn(Optional.of(s));
 
             assertThat(service.getSession("s1")).isSameAs(s);
         }
@@ -222,11 +225,13 @@ class WorkflowSessionServiceMoreTest {
     class AddParticipants {
 
         @Test
-        void inactiveSession_throwsBadRequest() {
+        void inactiveSession_throwsConflict() {
             User owner = user("alice", 1L);
             WorkflowSession s = session("s1", owner);
             s.setFinalized(true); // makes isActive() false
             when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(s));
+            when(workflowSessionRepository.findBySessionIdForUpdate("s1"))
+                    .thenReturn(Optional.of(s));
 
             ParticipantRequest pr = new ParticipantRequest();
             pr.setEmail("p@example.com");
@@ -234,7 +239,7 @@ class WorkflowSessionServiceMoreTest {
             assertThatThrownBy(() -> service.addParticipants("s1", List.of(pr), owner))
                     .isInstanceOf(ResponseStatusException.class)
                     .extracting(e -> ((ResponseStatusException) e).getStatusCode())
-                    .isEqualTo(HttpStatus.BAD_REQUEST);
+                    .isEqualTo(HttpStatus.CONFLICT);
         }
 
         @Test
@@ -243,6 +248,8 @@ class WorkflowSessionServiceMoreTest {
             WorkflowSession s = session("s1", owner);
             s.setStatus(WorkflowStatus.IN_PROGRESS);
             when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(s));
+            when(workflowSessionRepository.findBySessionIdForUpdate("s1"))
+                    .thenReturn(Optional.of(s));
             when(workflowParticipantRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
             ParticipantRequest pr = new ParticipantRequest();
@@ -262,6 +269,8 @@ class WorkflowSessionServiceMoreTest {
             WorkflowSession s = session("s1", owner);
             s.setStatus(WorkflowStatus.IN_PROGRESS);
             when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(s));
+            when(workflowSessionRepository.findBySessionIdForUpdate("s1"))
+                    .thenReturn(Optional.of(s));
 
             ParticipantRequest pr = new ParticipantRequest(); // neither userId nor email
 
@@ -277,6 +286,8 @@ class WorkflowSessionServiceMoreTest {
             WorkflowSession s = session("s1", owner);
             s.setStatus(WorkflowStatus.IN_PROGRESS);
             when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(s));
+            when(workflowSessionRepository.findBySessionIdForUpdate("s1"))
+                    .thenReturn(Optional.of(s));
             when(userRepository.findById(99L)).thenReturn(Optional.empty());
 
             ParticipantRequest pr = new ParticipantRequest();
@@ -302,6 +313,8 @@ class WorkflowSessionServiceMoreTest {
             User owner = user("alice", 1L);
             WorkflowSession s = session("s1", owner);
             when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(s));
+            when(workflowSessionRepository.findBySessionIdForUpdate("s1"))
+                    .thenReturn(Optional.of(s));
             when(workflowParticipantRepository.findById(5L)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> service.removeParticipant("s1", 5L, owner))
@@ -316,6 +329,8 @@ class WorkflowSessionServiceMoreTest {
             WorkflowSession s = session("s1", owner);
             WorkflowSession other = session("s2", owner);
             when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(s));
+            when(workflowSessionRepository.findBySessionIdForUpdate("s1"))
+                    .thenReturn(Optional.of(s));
             WorkflowParticipant p = participant(user("p", 9L), ParticipantStatus.PENDING);
             p.setWorkflowSession(other);
             when(workflowParticipantRepository.findById(5L)).thenReturn(Optional.of(p));
@@ -333,6 +348,8 @@ class WorkflowSessionServiceMoreTest {
             WorkflowParticipant p = participant(user("p", 9L), ParticipantStatus.PENDING);
             s.addParticipant(p);
             when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(s));
+            when(workflowSessionRepository.findBySessionIdForUpdate("s1"))
+                    .thenReturn(Optional.of(s));
             when(workflowParticipantRepository.findById(5L)).thenReturn(Optional.of(p));
 
             service.removeParticipant("s1", 5L, owner);
@@ -403,16 +420,18 @@ class WorkflowSessionServiceMoreTest {
     class FinalizeSession {
 
         @Test
-        void alreadyFinalized_throwsBadRequest() {
+        void alreadyFinalized_throwsConflict() {
             User owner = user("alice", 1L);
             WorkflowSession s = session("s1", owner);
             s.setFinalized(true);
             when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(s));
+            when(workflowSessionRepository.findBySessionIdForUpdate("s1"))
+                    .thenReturn(Optional.of(s));
 
             assertThatThrownBy(() -> service.finalizeSession("s1", owner))
                     .isInstanceOf(ResponseStatusException.class)
                     .extracting(e -> ((ResponseStatusException) e).getStatusCode())
-                    .isEqualTo(HttpStatus.BAD_REQUEST);
+                    .isEqualTo(HttpStatus.CONFLICT);
         }
 
         @Test
@@ -420,6 +439,8 @@ class WorkflowSessionServiceMoreTest {
             User owner = user("alice", 1L);
             WorkflowSession s = session("s1", owner);
             when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(s));
+            when(workflowSessionRepository.findBySessionIdForUpdate("s1"))
+                    .thenReturn(Optional.of(s));
 
             service.finalizeSession("s1", owner);
 
@@ -442,6 +463,8 @@ class WorkflowSessionServiceMoreTest {
             User owner = user("alice", 1L);
             WorkflowSession s = session("s1", owner);
             when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(s));
+            when(workflowSessionRepository.findBySessionIdForUpdate("s1"))
+                    .thenReturn(Optional.of(s));
 
             assertThatThrownBy(() -> service.getProcessedFile("s1", owner))
                     .isInstanceOf(ResponseStatusException.class)
@@ -457,6 +480,8 @@ class WorkflowSessionServiceMoreTest {
             pf.setStorageKey("proc-key");
             s.setProcessedFile(pf);
             when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(s));
+            when(workflowSessionRepository.findBySessionIdForUpdate("s1"))
+                    .thenReturn(Optional.of(s));
             Resource resource = new ByteArrayResource(new byte[] {1, 2, 3});
             when(storageProvider.load("proc-key")).thenReturn(resource);
 
@@ -468,6 +493,8 @@ class WorkflowSessionServiceMoreTest {
             User owner = user("alice", 1L);
             WorkflowSession s = session("s1", owner);
             when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(s));
+            when(workflowSessionRepository.findBySessionIdForUpdate("s1"))
+                    .thenReturn(Optional.of(s));
 
             assertThatThrownBy(() -> service.getOriginalFile("s1"))
                     .isInstanceOf(ResponseStatusException.class)
@@ -483,6 +510,8 @@ class WorkflowSessionServiceMoreTest {
             of.setStorageKey("orig-key");
             s.setOriginalFile(of);
             when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(s));
+            when(workflowSessionRepository.findBySessionIdForUpdate("s1"))
+                    .thenReturn(Optional.of(s));
             Resource resource = new ByteArrayResource(new byte[] {7});
             when(storageProvider.load("orig-key")).thenReturn(resource);
 
@@ -526,10 +555,12 @@ class WorkflowSessionServiceMoreTest {
             WorkflowParticipant p = participant(user, ParticipantStatus.NOTIFIED);
             s.addParticipant(p);
             when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(s));
+            when(workflowSessionRepository.findBySessionIdForUpdate("s1"))
+                    .thenReturn(Optional.of(s));
 
             SignRequestDetailDTO dto = service.getSignRequestDetail("s1", user);
 
-            assertThat(dto.getMyStatus()).isEqualTo(ParticipantStatus.NOTIFIED);
+            assertThat(dto.getMyStatus()).isEqualTo(ParticipantStatus.VIEWED);
             assertThat(p.getStatus()).isEqualTo(ParticipantStatus.VIEWED);
             verify(workflowParticipantRepository).save(p);
         }
@@ -548,6 +579,8 @@ class WorkflowSessionServiceMoreTest {
             WorkflowParticipant p = participant(user, ParticipantStatus.VIEWED);
             s.addParticipant(p);
             when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(s));
+            when(workflowSessionRepository.findBySessionIdForUpdate("s1"))
+                    .thenReturn(Optional.of(s));
 
             SignRequestDetailDTO dto = service.getSignRequestDetail("s1", user);
 
@@ -562,6 +595,8 @@ class WorkflowSessionServiceMoreTest {
             User owner = user("owner", 2L);
             WorkflowSession s = session("s1", owner);
             when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(s));
+            when(workflowSessionRepository.findBySessionIdForUpdate("s1"))
+                    .thenReturn(Optional.of(s));
 
             assertThatThrownBy(() -> service.getSignRequestDetail("s1", intruder))
                     .isInstanceOf(ResponseStatusException.class)
@@ -580,6 +615,8 @@ class WorkflowSessionServiceMoreTest {
             WorkflowParticipant p = participant(user, ParticipantStatus.PENDING);
             s.addParticipant(p);
             when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(s));
+            when(workflowSessionRepository.findBySessionIdForUpdate("s1"))
+                    .thenReturn(Optional.of(s));
             when(storageProvider.load("orig-key"))
                     .thenReturn(new ByteArrayResource(new byte[] {5}));
 
@@ -594,6 +631,8 @@ class WorkflowSessionServiceMoreTest {
             WorkflowParticipant p = participant(user, ParticipantStatus.PENDING);
             s.addParticipant(p);
             when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(s));
+            when(workflowSessionRepository.findBySessionIdForUpdate("s1"))
+                    .thenReturn(Optional.of(s));
 
             assertThatThrownBy(() -> service.getSignRequestDocument("s1", user))
                     .isInstanceOf(ResponseStatusException.class)
@@ -611,18 +650,20 @@ class WorkflowSessionServiceMoreTest {
     class DeclineSignRequest {
 
         @Test
-        void alreadySigned_throwsBadRequest() {
+        void alreadySigned_throwsConflict() {
             User user = user("alice", 1L);
             User owner = user("owner", 2L);
             WorkflowSession s = session("s1", owner);
             WorkflowParticipant p = participant(user, ParticipantStatus.SIGNED);
             s.addParticipant(p);
             when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(s));
+            when(workflowSessionRepository.findBySessionIdForUpdate("s1"))
+                    .thenReturn(Optional.of(s));
 
             assertThatThrownBy(() -> service.declineSignRequest("s1", user))
                     .isInstanceOf(ResponseStatusException.class)
                     .extracting(e -> ((ResponseStatusException) e).getStatusCode())
-                    .isEqualTo(HttpStatus.BAD_REQUEST);
+                    .isEqualTo(HttpStatus.CONFLICT);
 
             verify(workflowParticipantRepository, never()).save(any());
         }
@@ -635,6 +676,8 @@ class WorkflowSessionServiceMoreTest {
             WorkflowParticipant p = participant(user, ParticipantStatus.PENDING);
             s.addParticipant(p);
             when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(s));
+            when(workflowSessionRepository.findBySessionIdForUpdate("s1"))
+                    .thenReturn(Optional.of(s));
 
             service.declineSignRequest("s1", user);
 

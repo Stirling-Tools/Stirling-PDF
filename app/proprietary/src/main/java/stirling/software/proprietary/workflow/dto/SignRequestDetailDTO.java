@@ -18,6 +18,8 @@ public class SignRequestDetailDTO {
     private String dueDate;
     private String createdAt;
     private ParticipantStatus myStatus;
+    private boolean finalized;
+    private boolean canSign;
     // Signature appearance settings (read-only, configured by owner)
     private Boolean showSignature;
     private Integer pageNumber;
