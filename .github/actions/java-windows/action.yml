@@ -38,13 +38,20 @@ runs:
 
         $root = Join-Path $env:RUNNER_TEMP "microsoft-jdk-$($env:JAVA_VERSION)-$architecture"
         $archive = Join-Path $env:RUNNER_TEMP "microsoft-jdk-$($env:JAVA_VERSION)-$architecture.zip"
-        $url = "https://aka.ms/download-jdk-$($env:JAVA_VERSION)-windows-$architecture.zip"
+        $url = "https://aka.ms/download-jdk/microsoft-jdk-$($env:JAVA_VERSION)-windows-$architecture.zip"
         if (-not (Test-Path $root)) {
           if (-not (Test-Path $archive)) {
-            Invoke-WebRequest -Uri $url -OutFile $archive
+            Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $archive
+          }
+          if ((Get-Item $archive).Length -lt 1MB) {
+            throw "Microsoft JDK download is invalid or incomplete: $url"
           }
           New-Item -ItemType Directory -Path $root -Force | Out-Null
-          Expand-Archive -Path $archive -DestinationPath $root -Force
+          try {
+            Expand-Archive -Path $archive -DestinationPath $root -Force
+          } catch {
+            throw "Microsoft JDK download is not a valid ZIP archive: $url"
+          }
         }
 
         $javaHome = Get-ChildItem -Path $root -Directory | Where-Object {
