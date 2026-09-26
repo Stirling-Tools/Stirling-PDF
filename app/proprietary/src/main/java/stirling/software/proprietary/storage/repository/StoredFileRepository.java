@@ -1,5 +1,6 @@
 package stirling.software.proprietary.storage.repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,11 +36,14 @@ public interface StoredFileRepository extends JpaRepository<StoredFile, Long> {
                     + "WHERE f.id = :id")
     Optional<StoredFile> findByIdWithShares(@Param("id") Long id);
 
+    /**
+     * Joins shares to decide access without fetching them, which would return a row per share per
+     * file. Callers needing shares use {@code findByFileIdInWithUser}.
+     */
     @Query(
             "SELECT DISTINCT f FROM StoredFile f "
                     + "LEFT JOIN FETCH f.owner "
-                    + "LEFT JOIN FETCH f.shares s "
-                    + "LEFT JOIN FETCH s.sharedWithUser "
+                    + "LEFT JOIN f.shares s "
                     + "WHERE f.owner = :user "
                     + "OR s.sharedWithUser = :user")
     List<StoredFile> findAccessibleFiles(@Param("user") User user);
@@ -62,6 +66,9 @@ public interface StoredFileRepository extends JpaRepository<StoredFile, Long> {
     List<StoredFile> findAllByOwner(User owner);
 
     List<StoredFile> findAllByFolderIdAndOwner(UUID folderId, User owner);
+
+    /** Files sitting in any of these folders, for callers about to change them all. */
+    List<StoredFile> findAllByFolderIdIn(Collection<UUID> folderIds);
 
     /**
      * A file's folder placement as a plain id. Reads the FK directly so callers outside a
