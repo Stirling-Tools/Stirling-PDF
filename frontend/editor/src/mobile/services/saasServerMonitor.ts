@@ -110,10 +110,16 @@ class SaasServerMonitor {
 
   private async runCheck(): Promise<void> {
     const base = STIRLING_SAAS_BACKEND_API_URL.replace(/\/$/, "");
+    // connectTimeout only bounds the handshake; a response that stalls after
+    // connecting (network handover, captive portal) would otherwise leave
+    // inFlight pending forever and freeze the monitor on its last status.
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
     try {
       const response = await fetch(`${base}/api/v1/info/status`, {
         method: "GET",
         connectTimeout: REQUEST_TIMEOUT_MS,
+        signal: controller.signal,
       });
 
       // 401/403 means the server answered and wants credentials, so it is reachable.
@@ -124,6 +130,8 @@ class SaasServerMonitor {
       }
     } catch {
       this.updateState({ status: "offline", isOnline: false });
+    } finally {
+      clearTimeout(timer);
     }
   }
 
