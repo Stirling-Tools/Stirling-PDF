@@ -3,6 +3,7 @@ package stirling.software.proprietary.security.filter;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -111,10 +112,7 @@ class UserAuthenticationFilterTest {
                             Optional.of(
                                     new ApiKeyAuthentication(
                                             user, "Prod (sk_demo0000)", user.getAuthorities())));
-            when(userService.usernameExistsIgnoreCase("api-user")).thenReturn(true);
-            when(userService.isUserDisabled("api-user")).thenReturn(false);
-            when(sessionPersistentRegistry.getAllSessions(any(), anyBoolean()))
-                    .thenReturn(List.of());
+            when(userService.findByUsernameIgnoreCase("api-user")).thenReturn(Optional.of(user));
 
             filter(true).doFilter(request, response, filterChain);
 
@@ -177,15 +175,16 @@ class UserAuthenticationFilterTest {
             request.setRequestURI("/api/v1/some/protected");
             User user = enabledUser("alice");
             setAuthentication(user, "alice");
-            when(userService.usernameExistsIgnoreCase("alice")).thenReturn(true);
-            when(userService.isUserDisabled("alice")).thenReturn(false);
-            when(sessionPersistentRegistry.getAllSessions(any(), anyBoolean()))
-                    .thenReturn(List.of());
+            when(userService.findByUsernameIgnoreCase("alice")).thenReturn(Optional.of(user));
 
             filter(true).doFilter(request, response, filterChain);
 
             assertThat(filterChain.getRequest()).isSameAs(request);
             assertThat(response.getStatus()).isEqualTo(200);
+            // Sessions are only needed to expire a rejected user, so the happy path must not read
+            // them, and one lookup must answer both existence and enablement.
+            verify(sessionPersistentRegistry, never()).getAllSessions(any(), anyBoolean());
+            verify(userService).findByUsernameIgnoreCase("alice");
         }
 
         @Test
@@ -194,8 +193,7 @@ class UserAuthenticationFilterTest {
             request.setRequestURI("/api/v1/some/protected");
             User user = enabledUser("ghost");
             setAuthentication(user, "ghost");
-            when(userService.usernameExistsIgnoreCase("ghost")).thenReturn(false);
-            when(userService.isUserDisabled("ghost")).thenReturn(false);
+            when(userService.findByUsernameIgnoreCase("ghost")).thenReturn(Optional.empty());
             SessionInformation sessionInfo =
                     new SessionInformation(user, "sess-1", new java.util.Date());
             when(sessionPersistentRegistry.getAllSessions(any(), anyBoolean()))
@@ -215,8 +213,8 @@ class UserAuthenticationFilterTest {
             request.setRequestURI("/api/v1/some/protected");
             User user = enabledUser("blocked");
             setAuthentication(user, "blocked");
-            when(userService.usernameExistsIgnoreCase("blocked")).thenReturn(true);
-            when(userService.isUserDisabled("blocked")).thenReturn(true);
+            user.setEnabled(false);
+            when(userService.findByUsernameIgnoreCase("blocked")).thenReturn(Optional.of(user));
             when(sessionPersistentRegistry.getAllSessions(any(), anyBoolean()))
                     .thenReturn(List.of());
 
