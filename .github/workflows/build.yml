@@ -73,7 +73,7 @@ jobs:
     if: |
       !cancelled() &&
       needs.files-changed.outputs.backend == 'true'
-    needs: [files-changed]
+    needs: [files-changed, gradle-cache-prime]
     permissions:
       actions: read
       contents: write
@@ -203,7 +203,7 @@ jobs:
     if: |
       !cancelled() &&
       needs.files-changed.outputs.tauri == 'true'
-    needs: [files-changed]
+    needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: write
       pull-requests: write

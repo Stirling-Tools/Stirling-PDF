@@ -29,6 +29,7 @@ jobs:
       contents: read
     outputs:
       java_version: ${{ steps.hash.outputs.java_version }}
+      files_hash: ${{ steps.hash.outputs.files_hash}}
       cache_key: ${{ steps.hash.outputs.cache_key }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
@@ -49,15 +50,20 @@ jobs:
         run: |
           HASH="$FILES_HASH"
           echo "java_version=${{ env.JAVA_VERSION }}" >> "$GITHUB_OUTPUT"
+          echo "files_hash=$HASH" >> "$GITHUB_OUTPUT"
           echo "cache_key=gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-${{ env.JAVA_VERSION }}-$HASH" >> "$GITHUB_OUTPUT"
 
   gradle-cache-prime:
     environment:
       name: ci-unsigned
       deployment: false
-    name: Prime shared Gradle cache
+    name: Prime shared Gradle cache - ${{ matrix.platform }}
     needs: hash_pr
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        platform: [windows-latest, windows-11-arm, macos-15, ubuntu-22.04, ubuntu-latest]
+    runs-on: ${{ matrix.platform }}
     timeout-minutes: 10
     permissions:
       contents: write
@@ -89,14 +95,14 @@ jobs:
           sftp-base-path: ${{ secrets.CACHE_SFTP_BASE_PATH || '/files/cache-the-planet' }}
           multi-cache: |
             gradle-caches:
-              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
+              path: .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/caches
             gradle-wrapper:
-              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
+              path: .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/wrapper
           save-scope: shared
           token: ${{ github.token }}
           key: |
-            gradle-caches=${{ hashFiles(env.FILES_TO_HASH) }}
-            gradle-wrapper=${{ hashFiles(env.FILES_TO_HASH) }}
+            gradle-caches=${{ needs.hash_pr.outputs.files_hash }}
+            gradle-wrapper=${{ needs.hash_pr.outputs.files_hash  }}
           allow-shared-restore: true
           strict: false
 
@@ -119,16 +125,16 @@ jobs:
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
-            .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
-            .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
+            .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/caches
+            .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/wrapper
           key: ${{ needs.hash_pr.outputs.cache_key }}
           lookup-only: true
 
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
+      - name: Set up JDK ${{ needs.hash_pr.outputs.java_version }}
         # if: ${{ steps.cache-gradle-restore.outputs.cache-hit != 'true' && steps.cache.outputs.cache-hit != 'true' }}
         uses: ./.github/actions/java
         with:
-          java-version: ${{ env.JAVA_VERSION }}
+          java-version: ${{ needs.hash_pr.outputs.java_version }}
 
       - name: Resolve backend dependencies
         if: ${{ steps.cache-gradle-restore.outputs.cache-hit != 'true' && steps.cache.outputs.cache-hit != 'true' }}
@@ -144,6 +150,6 @@ jobs:
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
-            .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
-            .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
+            .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/caches
+            .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/wrapper
           key: ${{ needs.hash_pr.outputs.cache_key }}
