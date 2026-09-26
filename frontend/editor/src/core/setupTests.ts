@@ -71,14 +71,103 @@ vi.mock("i18next-http-backend", () => ({
 global.URL.createObjectURL = vi.fn(() => "mocked-url");
 global.URL.revokeObjectURL = vi.fn();
 
-// Mock File and Blob API methods that aren't available in jsdom
-if (!globalThis.File.prototype.arrayBuffer) {
-  globalThis.File.prototype.arrayBuffer = function () {
-    // Return a simple ArrayBuffer with some mock data
-    const buffer = new ArrayBuffer(8);
-    const view = new Uint8Array(buffer);
-    view.set([1, 2, 3, 4, 5, 6, 7, 8]);
-    return Promise.resolve(buffer);
+// Mock File and Blob API methods that aren't available in jsdom. jsdom has no
+// Blob.prototype.arrayBuffer, and a FileReader-based polyfill never settles
+// under fake timers unless the test advances the clock, hanging every blob
+// read in timer-frozen tests. Instead the constructor records each blob's
+// bytes (string parts UTF-8 encoded, like a real read would) and slice()
+// narrows them, so arrayBuffer resolves from a microtask with byte-exact
+// content. Blobs from outside the patch (none in practice) keep a FileReader
+// fallback.
+const RealBlob = globalThis.Blob;
+const trackedBlobBytes = new WeakMap<Blob, Uint8Array>();
+
+function concatBlobParts(parts: BlobPart[]): Uint8Array {
+  const arrays: Uint8Array[] = [];
+  for (const part of parts) {
+    if (typeof part === "string") {
+      arrays.push(new TextEncoder().encode(part));
+    } else if (part instanceof ArrayBuffer) {
+      arrays.push(new Uint8Array(part));
+    } else if (ArrayBuffer.isView(part)) {
+      arrays.push(
+        new Uint8Array(part.buffer, part.byteOffset, part.byteLength),
+      );
+    } else if (part instanceof RealBlob) {
+      arrays.push(trackedBlobBytes.get(part) ?? new Uint8Array());
+    }
+  }
+  const total = arrays.reduce((n, a) => n + a.length, 0);
+  const out = new Uint8Array(total);
+  let offset = 0;
+  for (const array of arrays) {
+    out.set(array, offset);
+    offset += array.length;
+  }
+  return out;
+}
+
+if (!RealBlob.prototype.arrayBuffer) {
+  const RealFile = globalThis.File;
+  globalThis.Blob = class extends RealBlob {
+    constructor(parts?: BlobPart[], options?: BlobPropertyBag) {
+      super(parts, options);
+      trackedBlobBytes.set(this, concatBlobParts(parts ?? []));
+    }
+  };
+
+  // new File(...) runs File's own constructor, not Blob's, so track it too;
+  // slices of either derive from the tracked parent below.
+  globalThis.File = class extends RealFile {
+    constructor(parts?: BlobPart[], name?: string, options?: FilePropertyBag) {
+      super(parts ?? [], name ?? "", options);
+      trackedBlobBytes.set(this, concatBlobParts(parts ?? []));
+    }
+  };
+
+  // The native File prototype chains straight to the native Blob prototype,
+  // bypassing the patched one, so `file instanceof Blob` would be false.
+  // Re-parent it: Files keep every native behavior and rejoin the chain.
+  Object.setPrototypeOf(RealFile.prototype, globalThis.Blob.prototype);
+
+  const realSlice = RealBlob.prototype.slice;
+  RealBlob.prototype.slice = function (
+    this: Blob,
+    start?: number,
+    end?: number,
+    contentType?: string,
+  ): Blob {
+    const out = realSlice.call(this, start, end, contentType);
+    const parent = trackedBlobBytes.get(this);
+    if (parent) {
+      const size = parent.length;
+      let from = start ?? 0;
+      let to = end ?? size;
+      if (from < 0) from = Math.max(size + from, 0);
+      else from = Math.min(from, size);
+      if (to < 0) to = Math.max(size + to, 0);
+      else to = Math.min(to, size);
+      trackedBlobBytes.set(
+        out,
+        parent.slice(Math.min(from, to), Math.max(from, to)),
+      );
+    }
+    return out;
+  };
+
+  // Assigned on the real prototype so blobs jsdom itself creates (notably
+  // slice() results, which are native instances) see it too.
+  RealBlob.prototype.arrayBuffer = function () {
+    const tracked = trackedBlobBytes.get(this);
+    if (tracked) {
+      return Promise.resolve(tracked.slice().buffer as ArrayBuffer);
+    }
+    return new Promise<ArrayBuffer>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as ArrayBuffer);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsArrayBuffer(this);
+    });
   };
 }
 

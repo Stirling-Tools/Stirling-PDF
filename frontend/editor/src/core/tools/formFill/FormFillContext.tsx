@@ -47,6 +47,7 @@ import type { IFormDataProvider } from "@app/tools/formFill/providers/types";
 import { PdfBoxFormProvider } from "@app/tools/formFill/providers/PdfBoxFormProvider";
 import { PdfiumFormProvider } from "@app/tools/formFill/providers/PdfiumFormProvider";
 import { fetchSignatureFieldsWithAppearances } from "@app/services/pdfiumService";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
 import { applyFieldEdits } from "@app/tools/formFill/formApi";
 import { mergeSignatureAppearances } from "@app/tools/formFill/formFieldMerge";
 
@@ -582,8 +583,10 @@ export function FormFillProvider({
         // pdfium ones by name, since appending would list a signature twice.
         if (providerModeRef.current === "pdfbox") {
           try {
-            // Convert File/Blob to ArrayBuffer for pdfiumService
-            const arrayBuffer = await file.arrayBuffer();
+            // Cache-shared read: the pdfium provider path reads the same Blob
+            // through documentBytesCache, so this must not mint a second
+            // full-file copy.
+            const arrayBuffer = await getDocumentBytes(file);
             const sigFields =
               await fetchSignatureFieldsWithAppearances(arrayBuffer);
             if (fetchVersionRef.current !== version) return; // stale check after async

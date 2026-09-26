@@ -1,31 +1,44 @@
-import {
-  PDFArray,
-  PDFDict,
-  PDFDocument,
-  PDFHexString,
-  PDFName,
-  PDFNumber,
-  PDFRawStream,
-  PDFString,
-  decodePDFRawStream,
-} from "@cantoo/pdf-lib";
+import type { PDFDict, PDFDocument, PDFRawStream } from "@cantoo/pdf-lib";
 import type { PdfAttachmentObject } from "@embedpdf/models";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
 
 // Reads a portfolio's members from the file's own bytes. The viewer's attachment
 // capability only covers the open document, which stops being the portfolio.
+//
+// pdf-lib (~628kB raw) stays a dynamic import: this module loads with the
+// Viewer, so a static import would block every open on a portfolio-only dep.
 
-const KEY_NAMES = PDFName.of("Names");
-const KEY_KIDS = PDFName.of("Kids");
-const KEY_EMBEDDED_FILES = PDFName.of("EmbeddedFiles");
-const KEY_EF = PDFName.of("EF");
-const KEY_F = PDFName.of("F");
-const KEY_UF = PDFName.of("UF");
-const KEY_DESC = PDFName.of("Desc");
-const KEY_SUBTYPE = PDFName.of("Subtype");
-const KEY_PARAMS = PDFName.of("Params");
-const KEY_SIZE = PDFName.of("Size");
-const KEY_CREATION_DATE = PDFName.of("CreationDate");
-const KEY_COLLECTION = PDFName.of("Collection");
+type PdfLib = typeof import("@cantoo/pdf-lib");
+
+let pdfLibPromise: Promise<PdfLib> | null = null;
+
+const getPdfLib = (): Promise<PdfLib> => {
+  pdfLibPromise ??= import("@cantoo/pdf-lib").then(
+    (lib) => lib,
+    (error: unknown) => {
+      // A chunk-load failure (deploy, network) must stay retryable: drop the
+      // rejection so the next caller imports again instead of inheriting it.
+      pdfLibPromise = null;
+      throw error;
+    },
+  );
+  return pdfLibPromise;
+};
+
+// Key names as plain strings; PDFName.of() is applied at runtime after the
+// dynamic import resolves, so module evaluation stays free of pdf-lib.
+const KEY_NAMES = "Names";
+const KEY_KIDS = "Kids";
+const KEY_EMBEDDED_FILES = "EmbeddedFiles";
+const KEY_EF = "EF";
+const KEY_F = "F";
+const KEY_UF = "UF";
+const KEY_DESC = "Desc";
+const KEY_SUBTYPE = "Subtype";
+const KEY_PARAMS = "Params";
+const KEY_SIZE = "Size";
+const KEY_CREATION_DATE = "CreationDate";
+const KEY_COLLECTION = "Collection";
 
 const MAX_NAME_TREE_DEPTH = 64;
 
@@ -44,11 +57,11 @@ let cache: { file: File; loaded: Promise<LoadedPortfolio | null> } | null =
 // Remembering the answer avoids reparsing; no document bytes are held.
 const answers = new WeakMap<File, PdfAttachmentObject[] | null>();
 
-const decodeText = (value: unknown): string | null => {
+const decodeText = (value: unknown, pdfLib: PdfLib): string | null => {
   if (
-    value instanceof PDFString ||
-    value instanceof PDFHexString ||
-    value instanceof PDFName
+    value instanceof pdfLib.PDFString ||
+    value instanceof pdfLib.PDFHexString ||
+    value instanceof pdfLib.PDFName
   ) {
     return value.decodeText();
   }
@@ -59,34 +72,42 @@ const decodeText = (value: unknown): string | null => {
 const collectSpecs = (
   node: PDFDict | undefined,
   into: Map<string, PDFDict>,
+  pdfLib: PdfLib,
   seen: Set<PDFDict> = new Set(),
   depth = 0,
 ) => {
   if (!node || depth > MAX_NAME_TREE_DEPTH || seen.has(node)) return;
   seen.add(node);
 
-  const names = node.lookupMaybe(KEY_NAMES, PDFArray);
+  const names = node.lookupMaybe(pdfLib.PDFName.of(KEY_NAMES), pdfLib.PDFArray);
   if (names) {
     for (let i = 0; i + 1 < names.size(); i += 2) {
-      const name = decodeText(names.lookup(i));
-      const spec = names.lookupMaybe(i + 1, PDFDict);
+      const name = decodeText(names.lookup(i), pdfLib);
+      const spec = names.lookupMaybe(i + 1, pdfLib.PDFDict);
       if (name && spec) {
         into.set(name, spec);
       }
     }
   }
 
-  const kids = node.lookupMaybe(KEY_KIDS, PDFArray);
+  const kids = node.lookupMaybe(pdfLib.PDFName.of(KEY_KIDS), pdfLib.PDFArray);
   if (kids) {
     for (let i = 0; i < kids.size(); i += 1) {
-      collectSpecs(kids.lookupMaybe(i, PDFDict), into, seen, depth + 1);
+      collectSpecs(
+        kids.lookupMaybe(i, pdfLib.PDFDict),
+        into,
+        pdfLib,
+        seen,
+        depth + 1,
+      );
     }
   }
 };
 
 const load = async (file: File): Promise<LoadedPortfolio | null> => {
   try {
-    const doc = await PDFDocument.load(await file.arrayBuffer(), {
+    const pdfLib = await getPdfLib();
+    const doc = await pdfLib.PDFDocument.load(await getDocumentBytes(file), {
       ignoreEncryption: true,
       throwOnInvalidObject: false,
       updateMetadata: false,
@@ -94,11 +115,16 @@ const load = async (file: File): Promise<LoadedPortfolio | null> => {
     const specs = new Map<string, PDFDict>();
     collectSpecs(
       doc.catalog
-        .lookupMaybe(KEY_NAMES, PDFDict)
-        ?.lookupMaybe(KEY_EMBEDDED_FILES, PDFDict),
+        .lookupMaybe(pdfLib.PDFName.of(KEY_NAMES), pdfLib.PDFDict)
+        ?.lookupMaybe(pdfLib.PDFName.of(KEY_EMBEDDED_FILES), pdfLib.PDFDict),
       specs,
+      pdfLib,
     );
-    return { doc, specs, isPortfolio: doc.catalog.get(KEY_COLLECTION) != null };
+    return {
+      doc,
+      specs,
+      isPortfolio: doc.catalog.get(pdfLib.PDFName.of(KEY_COLLECTION)) != null,
+    };
   } catch {
     return null;
   }
@@ -134,11 +160,13 @@ const parsePdfDate = (value: string | null): Date | undefined => {
 const streamOf = (
   loaded: LoadedPortfolio,
   spec: PDFDict,
+  pdfLib: PdfLib,
 ): PDFRawStream | undefined => {
-  const ef = spec.lookupMaybe(KEY_EF, PDFDict);
-  const ref = ef?.get(KEY_F) ?? ef?.get(KEY_UF);
+  const ef = spec.lookupMaybe(pdfLib.PDFName.of(KEY_EF), pdfLib.PDFDict);
+  const ref =
+    ef?.get(pdfLib.PDFName.of(KEY_F)) ?? ef?.get(pdfLib.PDFName.of(KEY_UF));
   const stream = ref ? loaded.doc.context.lookup(ref) : undefined;
-  return stream instanceof PDFRawStream ? stream : undefined;
+  return stream instanceof pdfLib.PDFRawStream ? stream : undefined;
 };
 
 /** Members shaped like the viewer's attachment objects; null when not a portfolio. */
@@ -159,16 +187,27 @@ export async function readPortfolioMembers(
 
   const members: PdfAttachmentObject[] = [];
   let index = 0;
+  const pdfLib = await getPdfLib();
   for (const [name, spec] of loaded.specs) {
-    const stream = streamOf(loaded, spec);
-    const params = stream?.dict.lookupMaybe(KEY_PARAMS, PDFDict);
+    const stream = streamOf(loaded, spec, pdfLib);
+    const params = stream?.dict.lookupMaybe(
+      pdfLib.PDFName.of(KEY_PARAMS),
+      pdfLib.PDFDict,
+    );
     members.push({
       index: index++,
       name,
-      description: decodeText(spec.get(KEY_DESC)) ?? "",
-      mimeType: decodeText(stream?.dict.get(KEY_SUBTYPE)) ?? "",
-      size: params?.lookupMaybe(KEY_SIZE, PDFNumber)?.asNumber(),
-      creationDate: parsePdfDate(decodeText(params?.get(KEY_CREATION_DATE))),
+      description:
+        decodeText(spec.get(pdfLib.PDFName.of(KEY_DESC)), pdfLib) ?? "",
+      mimeType:
+        decodeText(stream?.dict.get(pdfLib.PDFName.of(KEY_SUBTYPE)), pdfLib) ??
+        "",
+      size: params
+        ?.lookupMaybe(pdfLib.PDFName.of(KEY_SIZE), pdfLib.PDFNumber)
+        ?.asNumber(),
+      creationDate: parsePdfDate(
+        decodeText(params?.get(pdfLib.PDFName.of(KEY_CREATION_DATE)), pdfLib),
+      ),
       checksum: "",
     });
   }
@@ -187,8 +226,9 @@ export async function readPortfolioMemberBytes(
   if (!loaded || !spec) return null;
 
   try {
-    const stream = streamOf(loaded, spec);
-    return stream ? decodePDFRawStream(stream).decode() : null;
+    const pdfLib = await getPdfLib();
+    const stream = streamOf(loaded, spec, pdfLib);
+    return stream ? pdfLib.decodePDFRawStream(stream).decode() : null;
   } catch {
     return null;
   }
