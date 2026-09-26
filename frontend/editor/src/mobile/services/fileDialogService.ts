@@ -4,6 +4,8 @@ import type {
 } from "@core/services/fileDialogService";
 import { createQuickKey } from "@app/types/fileContext";
 import { getDocumentFileDialogFilter } from "@app/utils/fileDialogUtils";
+import i18n from "@app/i18n";
+import { alert } from "@app/components/toast";
 
 export type { FileWithPath, FileDialogOptions };
 
@@ -25,10 +27,17 @@ const MAGIC_NUMBERS: Array<{ bytes: number[]; type: string; ext: string }> = [
   { bytes: [0x50, 0x4b, 0x03, 0x04], type: "application/zip", ext: "zip" },
 ];
 
+/** HTML has no fixed signature, so it is recognised from its leading markup. */
+const HTML_FORMAT = { type: "text/html", ext: "html" };
+const HTML_PREFIX = /^(?:\uFEFF)?\s*(?:<!doctype html|<html[\s>])/i;
+
 function sniffFormat(data: Uint8Array) {
-  return MAGIC_NUMBERS.find((candidate) =>
+  const binary = MAGIC_NUMBERS.find((candidate) =>
     candidate.bytes.every((byte, index) => data[index] === byte),
   );
+  if (binary) return binary;
+  const head = new TextDecoder().decode(data.subarray(0, 512));
+  return HTML_PREFIX.test(head) ? HTML_FORMAT : undefined;
 }
 
 /**
@@ -78,6 +87,7 @@ export async function openFileDialog(
 
     const uris = Array.isArray(selected) ? selected : [selected];
     const filesWithPaths: FileWithPath[] = [];
+    let failedCount = 0;
 
     for (const uri of uris) {
       try {
@@ -95,13 +105,35 @@ export async function openFileDialog(
           quickKey: createQuickKey(file),
         });
       } catch (error) {
+        failedCount += 1;
         console.error("[FileDialog] Failed to read selection:", error);
       }
+    }
+
+    // An empty result means "cancelled" to the caller, so a selection that
+    // could not be read has to surface as an error rather than as nothing.
+    if (filesWithPaths.length === 0) {
+      throw new Error(
+        i18n.t(
+          "mobile.files.readFailed",
+          "The selected files could not be opened.",
+        ),
+      );
+    }
+    if (failedCount > 0) {
+      alert({
+        alertType: "warning",
+        title: i18n.t(
+          "mobile.files.someUnreadable",
+          "Some files could not be opened",
+        ),
+        isPersistentPopup: false,
+      });
     }
 
     return filesWithPaths;
   } catch (error) {
     console.error("[FileDialog] Error:", error);
-    return [];
+    throw error;
   }
 }
