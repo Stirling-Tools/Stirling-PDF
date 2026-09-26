@@ -41,10 +41,14 @@ import org.bouncycastle.tsp.TimeStampRequest;
 import org.bouncycastle.tsp.TimeStampResponse;
 import org.bouncycastle.tsp.TimeStampResponseGenerator;
 import org.bouncycastle.tsp.TimeStampTokenGenerator;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 
 /**
  * Exercises the vendored PDFBox {@link TSAClient}. The TSA HTTP boundary is replaced with a mocked
@@ -278,6 +282,76 @@ class TSAClientTest {
                                             new ByteArrayInputStream("data".getBytes())))
                     .isInstanceOf(IOException.class)
                     .hasMessageContaining("no route");
+        }
+    }
+
+    /**
+     * These exercise a real loopback {@link MockWebServer} instead of a mocked {@link
+     * URLConnection}, because the properties under test - whether a redirect is actually followed,
+     * whether an oversized response is actually read in full - are exactly the behavior a mock
+     * would otherwise have to fake.
+     */
+    @Nested
+    @DisplayName("Security hardening")
+    class SecurityHardening {
+
+        private MockWebServer server;
+
+        @AfterEach
+        void tearDown() throws IOException {
+            if (server != null) {
+                server.shutdown();
+            }
+        }
+
+        @Test
+        @DisplayName("does not follow a redirect from the TSA server (SSRF-by-redirect)")
+        void doesNotFollowRedirect() throws Exception {
+            server = new MockWebServer();
+            server.start();
+            server.enqueue(
+                    new MockResponse()
+                            .setResponseCode(302)
+                            .addHeader("Location", server.url("/should-not-be-hit").toString()));
+
+            TSAClient client =
+                    new TSAClient(
+                            server.url("/tsr").url(),
+                            null,
+                            null,
+                            MessageDigest.getInstance("SHA-256"));
+
+            // A 302 body is not a valid TSA response, so this must fail either way; what matters
+            // is how many requests the server actually received.
+            assertThatThrownBy(
+                    () -> client.getTimeStampToken(new ByteArrayInputStream("hello".getBytes())));
+
+            assertThat(server.getRequestCount())
+                    .as("client must not have followed the redirect to a second URL")
+                    .isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("rejects a response larger than the maximum allowed size")
+        void rejectsOversizedResponse() throws Exception {
+            server = new MockWebServer();
+            server.start();
+            byte[] oversized = new byte[2 * 1024 * 1024]; // 2 MB, over the 1 MB cap
+            server.enqueue(new MockResponse().setBody(new okio.Buffer().write(oversized)));
+
+            TSAClient client =
+                    new TSAClient(
+                            server.url("/tsr").url(),
+                            null,
+                            null,
+                            MessageDigest.getInstance("SHA-256"));
+
+            assertThatThrownBy(
+                            () ->
+                                    client.getTimeStampToken(
+                                            new ByteArrayInputStream("hello".getBytes())))
+                    .isInstanceOf(IOException.class)
+                    .hasMessageContaining("exceeds maximum allowed size");
         }
     }
 
