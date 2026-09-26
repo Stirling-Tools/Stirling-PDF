@@ -2,6 +2,7 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "enables the default permissions",
+  "platforms": ["linux", "macOS", "windows"],
   "windows": ["main", "main-*"],
   "permissions": [
     "core:default",
@@ -16,26 +17,66 @@
     {
       "identifier": "http:allow-fetch",
       "allow": [
-        { "url": "http://*" },
-        { "url": "http://*:*" },
-        { "url": "https://*" },
-        { "url": "https://*:*" },
-        { "url": "http://192.168.*.*" },
-        { "url": "http://192.168.*.*:*" },
-        { "url": "https://192.168.*.*" },
-        { "url": "https://192.168.*.*:*" },
-        { "url": "http://10.*.*.*" },
-        { "url": "http://10.*.*.*:*" },
-        { "url": "https://10.*.*.*" },
-        { "url": "https://10.*.*.*:*" },
-        { "url": "http://172.16.*.*" },
-        { "url": "http://172.16.*.*:*" },
-        { "url": "https://172.16.*.*" },
-        { "url": "https://172.16.*.*:*" },
-        { "url": "http://localhost:*" },
-        { "url": "https://localhost:*" },
-        { "url": "http://127.0.0.1:*" },
-        { "url": "https://127.0.0.1:*" }
+        {
+          "url": "http://*"
+        },
+        {
+          "url": "http://*:*"
+        },
+        {
+          "url": "https://*"
+        },
+        {
+          "url": "https://*:*"
+        },
+        {
+          "url": "http://192.168.*.*"
+        },
+        {
+          "url": "http://192.168.*.*:*"
+        },
+        {
+          "url": "https://192.168.*.*"
+        },
+        {
+          "url": "https://192.168.*.*:*"
+        },
+        {
+          "url": "http://10.*.*.*"
+        },
+        {
+          "url": "http://10.*.*.*:*"
+        },
+        {
+          "url": "https://10.*.*.*"
+        },
+        {
+          "url": "https://10.*.*.*:*"
+        },
+        {
+          "url": "http://172.16.*.*"
+        },
+        {
+          "url": "http://172.16.*.*:*"
+        },
+        {
+          "url": "https://172.16.*.*"
+        },
+        {
+          "url": "https://172.16.*.*:*"
+        },
+        {
+          "url": "http://localhost:*"
+        },
+        {
+          "url": "https://localhost:*"
+        },
+        {
+          "url": "http://127.0.0.1:*"
+        },
+        {
+          "url": "https://127.0.0.1:*"
+        }
       ]
     },
     "http:allow-fetch-cancel",
@@ -43,7 +84,11 @@
     "http:allow-fetch-send",
     {
       "identifier": "fs:allow-read-file",
-      "allow": [{ "path": "**" }]
+      "allow": [
+        {
+          "path": "**"
+        }
+      ]
     },
     {
       "identifier": "fs:allow-read-dir",
@@ -59,7 +104,11 @@
     },
     {
       "identifier": "fs:allow-write-file",
-      "allow": [{ "path": "**" }]
+      "allow": [
+        {
+          "path": "**"
+        }
+      ]
     },
     {
       "identifier": "fs:allow-rename",
@@ -67,7 +116,11 @@
     },
     {
       "identifier": "fs:allow-remove",
-      "allow": [{ "path": "**" }]
+      "allow": [
+        {
+          "path": "**"
+        }
+      ]
     },
     "dialog:default",
     "dialog:allow-message",

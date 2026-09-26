@@ -1,0 +1,71 @@
+version: '3'
+
+# Tauri mobile (iOS / Android). Unlike desktop there is no JLink runtime or
+# backend JAR to bundle: the app always talks to a remote Stirling server.
+
+tasks:
+  prepare:
+    desc: "Prepare mobile build dependencies"
+    deps:
+      - task: ":frontend:prepare"
+        vars: { MODE: mobile }
+
+  ios:init:
+    desc: "Generate the Xcode project for the iOS app"
+    deps: [prepare]
+    dir: editor
+    cmds:
+      - npx tauri ios init
+
+  ios:dev:
+    desc: "Run the iOS app in dev mode (simulator or connected device)"
+    deps: [prepare]
+    ignore_error: true
+    dir: editor
+    vars:
+      DEVICE: '{{.DEVICE | default ""}}'
+    cmds:
+      # DEVICE goes before --host: that flag takes an optional IP, so a device
+      # name after it is parsed as the host address.
+      - npx tauri ios dev{{if .DEVICE}} "{{.DEVICE}}"{{end}} --host
+
+  ios:build:
+    desc: "Build the iOS app (IPA)"
+    deps: [prepare]
+    dir: editor
+    cmds:
+      - npx tauri ios build
+
+  ios:open:
+    desc: "Open the generated Xcode project"
+    dir: editor
+    cmds:
+      - open src-tauri/gen/apple/*.xcodeproj
+
+  android:init:
+    desc: "Generate the Android Studio project for the Android app"
+    deps: [prepare]
+    dir: editor
+    cmds:
+      - npx tauri android init
+
+  android:dev:
+    desc: "Run the Android app in dev mode (emulator or connected device)"
+    deps: [prepare]
+    ignore_error: true
+    dir: editor
+    cmds:
+      - npx tauri android dev --host
+
+  android:build:
+    desc: "Build the Android app (APK/AAB)"
+    deps: [prepare]
+    dir: editor
+    cmds:
+      - npx tauri android build
+
+  clean:
+    desc: "Clean mobile build artifacts"
+    dir: editor
+    cmds:
+      - rm -rf src-tauri/gen/apple/build src-tauri/gen/android/app/build

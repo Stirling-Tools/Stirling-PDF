@@ -30,13 +30,10 @@ tauri-plugin-shell = "2.3.4"
 tauri-plugin-fs = "2.5.0"
 tauri-plugin-dialog = "2.7.0"
 tauri-plugin-http = { version = "2.5.8", features = ["dangerous-settings"] }
-tauri-plugin-single-instance = { version = "2.4.1", features = ["deep-link"] }
 tauri-plugin-store = "2.4.2"
 tauri-plugin-opener = "2.5.3"
 tauri-plugin-deep-link = "2.4.6"
 tauri-plugin-notification = "2.3.3"
-tauri-plugin-updater = "2"
-tauri-plugin-window-state = "2.2.1"
 keyring = { version = "3.6.1", features = ["apple-native", "windows-native"] }
 tokio = { version = "1.50", features = ["time", "sync"] }
 notify = "8.2"
@@ -47,6 +44,13 @@ urlencoding = "2.1"
 sha2 = "0.11"
 base64 = "0.23"
 rand = "0.10"
+
+# Desktop-only plugins: no equivalent exists on iOS/Android (single window,
+# store-managed updates). Gate their use in code with #[cfg(desktop)].
+[target.'cfg(not(any(target_os = "ios", target_os = "android")))'.dependencies]
+tauri-plugin-single-instance = { version = "2.4.1", features = ["deep-link"] }
+tauri-plugin-updater = "2"
+tauri-plugin-window-state = "2.2.1"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.10"
