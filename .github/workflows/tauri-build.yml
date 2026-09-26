@@ -128,15 +128,11 @@ jobs:
     runs-on: ${{ matrix.platform }}
     timeout-minutes: 90
     env:
-      NPM_FILES_TO_HASH: |
-        ${{ github.workspace }}/frontend/package.json
-        ${{ github.workspace }}/frontend/package-lock.json
-      NPM_CONFIG_CACHE: ${{ github.workspace }}/.cache/npm
-      # CARGO_FILES_TO_HASH: |
-      #       ${{ github.workspace }}/frontend/editor/src-tauri/Cargo.toml
-      #       ${{ github.workspace }}/frontend/editor/src-tauri/Cargo.lock
-      # #       ${{ github.workspace }}/frontend/editor/src-tauri/target
-      # CARGO_HOME: ${{ github.workspace }}/.cache/cargo
+      CARGO_FILES_TO_HASH: |
+            ${{ github.workspace }}/frontend/editor/src-tauri/Cargo.toml
+            ${{ github.workspace }}/frontend/editor/src-tauri/Cargo.lock
+      #       ${{ github.workspace }}/frontend/editor/src-tauri/target
+      CARGO_HOME: ${{ github.workspace }}/.cache/cargo
       CACHE_MANIFEST_BRANCH: dev-cache
       CACHE_MANIFEST_PATH: .github/cache-data
       SFTP_HOST: ${{ secrets.CACHE_SFTP_HOST }}
@@ -183,12 +179,12 @@ jobs:
           & $gnuTar --version
           Add-Content -Path $env:GITHUB_PATH -Value $gitUsrBin
 
-      - name: Prepare npm cache directory
+      - name: Prepare cache directory
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force `
-            -Path (Join-Path $env:GITHUB_WORKSPACE '.cache\npm') | Out-Null
+            -Path (Join-Path $env:GITHUB_WORKSPACE '.cache') | Out-Null
 
       - name: Use GNU tar on macOS
         if: runner.os == 'macOS'
@@ -198,71 +194,29 @@ jobs:
           echo "$(brew --prefix gnu-tar)/libexec/gnubin" >> "$GITHUB_PATH"
           tar --version
 
-      # - name: Restore npm cache sftp
-      #   id: cache-npm
-      #   uses: Ludy87/cache-the-planet@9ee814824414cc375eeab77644d19136cf9b440f
-      #   with:
-      #     storage: sftp
-      #     cache-name: npm
-      #     save-scope: shared
-      #     key: ${{ hashFiles(env.NPM_FILES_TO_HASH) }}
-      #     path: ${{ env.NPM_CONFIG_CACHE}}
-      #     allow-shared-restore: true
-      #     strict: false
-
-      # - name: Setup Node.js
-      #   if: ${{ steps.cache-npm.outputs.error == '' }}
-      #   uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-      #   with:
-      #     node-version: 22
-      #     package-manager-cache: false
-
-      # - name: Configure npm cache directory
-      #   if: ${{ steps.cache-npm.outputs.error == '' && runner.os == 'Windows' }}
-      #   shell: pwsh
-      #   run: |
-      #     npm config set cache "$env:GITHUB_WORKSPACE\.cache\npm" --global
-      #     New-Item -ItemType Directory -Force `
-      #       -Path "$env:GITHUB_WORKSPACE\.cache\npm" | Out-Null
-
-      # - name: Configure npm cache directory
-      #   if: ${{ steps.cache-npm.outputs.error == '' && runner.os != 'Windows' }}
-      #   run: npm config set cache "${{ env.NPM_CONFIG_CACHE }}" --global
-
-      # - name: Setup Node.js
-      #   if: ${{ steps.cache-npm.outputs.error }}
-      #   uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-      #   with:
-      #     node-version: 22
-      #     cache: "npm"
-      #     cache-dependency-path: frontend/package-lock.json
-
-      # - name: Restore Cargo cache
-      #   id: cache-cargo
-      #   uses: $/
-      #   with:
-      #     cache-name: cargo
-      #     save-scope: untrusted
-      #     key: ${{ hashFiles('frontend/editor/src-tauri/Cargo.toml', 'frontend/editor/src-tauri/Cargo.lock') }}
-      #     path: |
-      #       .cache/cargo/bin
-      #       .cache/cargo/.crates.toml
-      #       .cache/cargo/.crates2.json
-      #       .cache/cargo/registry
-      #       .cache/cargo/git
-      #       ${{ github.workspace }}/frontend/editor/src-tauri/target
-      #     strict: false
-
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
         with:
           toolchain: stable
           targets: ${{ matrix.platform == 'macos-15' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
+      - name: Restore cargo cache sftp
+        id: cache-cargo
+        uses: Ludy87/cache-the-planet@9ee814824414cc375eeab77644d19136cf9b440f
+        with:
+          storage: sftp
+          cache-name: cargo
+          save-scope: shared
+          key: ${{ hashFiles(env.CARGO_FILES_TO_HASH) }}
+          path: ${{ env.CARGO_HOME}}
+          allow-shared-restore: true
+          strict: false
+
       # Cache the Cargo registry and compiled dependency crates so the build
       # only recompiles the app crate. Written on main; PRs and the merge queue
       # restore from it.
       - name: Cache Rust build
+        if: ${{ steps.cache-cargo.outputs.error }}
         uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
           workspaces: frontend/editor/src-tauri
@@ -278,7 +232,7 @@ jobs:
       # distribution and every dependency. Fall back to the cache the nightly
       # warm run saves for this OS.
       - name: Restore cache Gradle User Home
-        if: inputs.use_shared_cache
+        if: ${{ steps.cache-cargo.outputs.error && inputs.use_shared_cache }}
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
@@ -289,7 +243,7 @@ jobs:
             gradle-tauri-build-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-
 
       - name: Restore cache Gradle
-        if: inputs.use_shared_cache == false
+        if: ${{ steps.cache-cargo.outputs.error && inputs.use_shared_cache == false }}
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
