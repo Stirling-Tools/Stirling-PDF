@@ -36,6 +36,7 @@ import {
 } from "@app/tools/formFill/FormFieldPropertyEditor";
 import { isTextEntryTarget } from "@app/tools/formFill/usePageScale";
 import { SkippedEditsAlert } from "@app/tools/formFill/SkippedEditsAlert";
+import { XfaNotice } from "@app/tools/formFill/XfaNotice";
 import { useFormCommit } from "@app/tools/formFill/useFormCommit";
 import styles from "@app/tools/formFill/FormFill.module.css";
 
@@ -204,6 +205,7 @@ export function FormFieldModifyPanel({
         )}
 
         <SkippedEditsAlert />
+        <XfaNotice file={currentFile} variant="panel" scope="structure" />
 
         {state.fields.length === 0 && !state.loading && (
           <Text size="xs" c="dimmed" ta="center" py="md">

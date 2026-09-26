@@ -47,8 +47,13 @@ import type { IFormDataProvider } from "@app/tools/formFill/providers/types";
 import { PdfBoxFormProvider } from "@app/tools/formFill/providers/PdfBoxFormProvider";
 import { PdfiumFormProvider } from "@app/tools/formFill/providers/PdfiumFormProvider";
 import { fetchSignatureFieldsWithAppearances } from "@app/services/pdfiumService";
-import { applyFieldEdits } from "@app/tools/formFill/formApi";
+import { applyFieldEdits, syncXfaForm } from "@app/tools/formFill/formApi";
 import { mergeSignatureAppearances } from "@app/tools/formFill/formFieldMerge";
+import {
+  classifyXfa,
+  readFormType,
+  type XfaMode,
+} from "@app/tools/formFill/xfa";
 
 /** Marks a skip report as belonging to whichever document the commit just produced. */
 const PENDING_SKIP_REPORT = "__pending__";
@@ -300,6 +305,13 @@ export interface FormFillContextValue {
 
   /** True while a field is being dragged, so Escape handlers elsewhere stand down. */
   dragActiveRef: React.MutableRefObject<boolean>;
+
+  /** What saving a hybrid XFA form does to its XFA half; kept for the whole session. */
+  xfaMode: XfaMode;
+  setXfaMode: (mode: XfaMode) => void;
+  /** A save could not bring the XFA in line, so Acrobat may still show that PDF's old data. */
+  xfaSyncFailed: boolean;
+  clearXfaSyncFailed: () => void;
 }
 
 const FormFillContext = createContext<FormFillContextValue | null>(null);
@@ -464,6 +476,17 @@ export function FormFillProvider({
     deleted: deletedFieldNames,
   };
 
+  const [xfaMode, setXfaMode] = useState<XfaMode>("sync");
+  const xfaModeRef = useRef(xfaMode);
+  xfaModeRef.current = xfaMode;
+  const [xfaSyncFailed, setXfaSyncFailed] = useState(false);
+  const clearXfaSyncFailed = useCallback(() => setXfaSyncFailed(false), []);
+  /**
+   * Size of the PDF the last save or commit produced. The viewer reloads it under a new file id,
+   * so its size is what tells the saved version of this document from a different document.
+   */
+  const savedOutputSizeRef = useRef<number | null>(null);
+
   const [skippedEdits, setSkippedEdits] = useState<SkippedFieldEdit[]>([]);
   const [skippedTotal, setSkippedTotal] = useState(0);
   const clearSkippedEdits = useCallback(() => {
@@ -548,6 +571,15 @@ export function FormFillProvider({
             ? { ...valuesStore.values }
             : {};
       retainedValuesRef.current = null;
+
+      // A different document starts from the safe default; the version a save just produced keeps
+      // the user's choice, and the notice if its sync failed.
+      const savedVersion = savedOutputSizeRef.current === file.size;
+      savedOutputSizeRef.current = null;
+      if (!sameDocument && !savedVersion) {
+        setXfaMode("sync");
+        setXfaSyncFailed(false);
+      }
 
       lastKnownFileIdRef.current = fileId ?? null;
       // Immediately clear previous state so FormFieldOverlay's stale-file guards
@@ -672,17 +704,60 @@ export function FormFillProvider({
     dispatch({ type: "SET_ACTIVE_FIELD", fieldName });
   }, []);
 
+  /**
+   * PDFium fills in the browser and never touches a hybrid form's XFA half, so its output goes to
+   * the backend to be brought in line. Should that fail, the unsynced PDF is still the user's
+   * work, so it is kept and the failure is flagged instead of thrown.
+   */
+  const syncClientSave = useCallback(
+    async (source: File | Blob, filled: Blob, flatten: boolean) => {
+      const mode = xfaModeRef.current;
+      if (mode === "none") return filled;
+      const formType = await readFormType(source);
+      if (classifyXfa(formType, fieldsRef.current.length) !== "hybrid") {
+        return filled;
+      }
+      const changed = fieldsRef.current
+        .filter(
+          (field) => valuesStore.getValue(field.name) !== (field.value ?? ""),
+        )
+        .map((field) => field.name);
+      try {
+        const { blob } = await syncXfaForm(
+          filled,
+          flatten ? "strip" : mode,
+          changed,
+        );
+        setXfaSyncFailed(false);
+        return blob;
+      } catch (error) {
+        console.warn(
+          "[FormFill] XFA sync failed, keeping the unsynced PDF:",
+          error,
+        );
+        setXfaSyncFailed(true);
+        return filled;
+      }
+    },
+    [valuesStore],
+  );
+
   const submitForm = useCallback(
     async (file: File | Blob, flatten = false) => {
-      const blob = await providerRef.current.fillForm(
+      let blob = await providerRef.current.fillForm(
         file,
         valuesStore.values,
         flatten,
+        { xfaMode: xfaModeRef.current },
       );
+      if (providerModeRef.current !== "pdfbox") {
+        blob = await syncClientSave(file, blob, flatten);
+      }
+      savedOutputSizeRef.current = blob.size;
       dispatch({ type: "MARK_CLEAN" });
       return blob;
     },
-    [valuesStore],
+    [valuesStore, syncClientSave],
   );
 
   const setProviderMode = useCallback(
@@ -738,6 +813,9 @@ export function FormFillProvider({
     valuesStore.reset({});
     dispatch({ type: "RESET" });
     clearEditingState();
+    savedOutputSizeRef.current = null;
+    setXfaMode("sync");
+    setXfaSyncFailed(false);
   }, [valuesStore, clearEditingState]);
 
   // --- Mode switching ---
@@ -820,7 +898,12 @@ export function FormFillProvider({
       const definitions: NewFieldDefinition[] = pendingFields.map(
         ({ id: _id, ...rest }) => rest,
       );
-      const result = await applyFieldEdits(file, { add: definitions });
+      const result = await applyFieldEdits(
+        file,
+        { add: definitions },
+        xfaModeRef.current,
+      );
+      savedOutputSizeRef.current = result.blob.size;
       bundledFieldsRef.current = result.fields
         ? { fields: result.fields, size: result.blob.size }
         : null;
@@ -879,10 +962,12 @@ export function FormFillProvider({
       const updates = Object.values(modifiedFields).filter(
         (m) => !deletedFieldNames.includes(m.targetName),
       );
-      const result = await applyFieldEdits(file, {
-        modify: updates,
-        delete: deletedFieldNames,
-      });
+      const result = await applyFieldEdits(
+        file,
+        { modify: updates, delete: deletedFieldNames },
+        xfaModeRef.current,
+      );
+      savedOutputSizeRef.current = result.blob.size;
       bundledFieldsRef.current = result.fields
         ? { fields: result.fields, size: result.blob.size }
         : null;
@@ -979,6 +1064,10 @@ export function FormFillProvider({
       skippedTotal,
       clearSkippedEdits,
       dragActiveRef,
+      xfaMode,
+      setXfaMode,
+      xfaSyncFailed,
+      clearXfaSyncFailed,
     }),
     [
       state,
@@ -1022,6 +1111,9 @@ export function FormFillProvider({
       skippedTotal,
       clearSkippedEdits,
       dragActiveRef,
+      xfaMode,
+      xfaSyncFailed,
+      clearXfaSyncFailed,
     ],
   );
 

@@ -16,6 +16,8 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
+import { XfaNotice } from "@app/tools/formFill/XfaNotice";
+import { useXfaKind } from "@app/tools/formFill/xfa";
 import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
 import { getFormFillFileId } from "@app/types/fileContext";
 
@@ -97,7 +99,13 @@ export function FormSaveBar({
   const hasFields = fields.some(
     (f) => f.type !== "signature" && f.type !== "button",
   );
-  const visible = !isFormFillToolActive && hasFields && !loading && !dismissed;
+  // A dynamic XFA form has no fields to fill here, and the bar is where it says so.
+  const xfaKind = useXfaKind(file, fields.length);
+  const visible =
+    !isFormFillToolActive &&
+    (hasFields || xfaKind === "dynamic") &&
+    !loading &&
+    !dismissed;
 
   return (
     <Transition mounted={visible} transition="slide-down" duration={300}>
@@ -148,17 +156,19 @@ export function FormSaveBar({
                         </Badge>
                       )}
                     </Group>
-                    <Text size="xs" c="dimmed" mt={2}>
-                      {isDirty
-                        ? t(
-                            "viewer.formBar.unsavedDesc",
-                            "You have unsaved changes",
-                          )
-                        : t(
-                            "viewer.formBar.hasFieldsDesc",
-                            "This PDF contains fillable fields",
-                          )}
-                    </Text>
+                    {(isDirty || hasFields) && (
+                      <Text size="xs" c="dimmed" mt={2}>
+                        {isDirty
+                          ? t(
+                              "viewer.formBar.unsavedDesc",
+                              "You have unsaved changes",
+                            )
+                          : t(
+                              "viewer.formBar.hasFieldsDesc",
+                              "This PDF contains fillable fields",
+                            )}
+                      </Text>
+                    )}
                   </div>
                 </Group>
                 <ActionIcon
@@ -170,6 +180,8 @@ export function FormSaveBar({
                   <Icon name="x" size={16} />
                 </ActionIcon>
               </Group>
+
+              <XfaNotice file={file} variant="compact" />
 
               {isDirty && (
                 <Group gap="xs" mt="xs" wrap="wrap">

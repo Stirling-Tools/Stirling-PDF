@@ -9,7 +9,10 @@
  * Used in the dedicated formFill tool mode.
  */
 import type { FormField } from "@app/tools/formFill/types";
-import type { IFormDataProvider } from "@app/tools/formFill/providers/types";
+import type {
+  FillOptions,
+  IFormDataProvider,
+} from "@app/tools/formFill/providers/types";
 import {
   fetchFormFieldsWithCoordinates,
   fillFormFields,
@@ -26,7 +29,8 @@ export class PdfBoxFormProvider implements IFormDataProvider {
     file: File | Blob,
     values: Record<string, string>,
     flatten: boolean,
+    options?: FillOptions,
   ): Promise<Blob> {
-    return fillFormFields(file, values, flatten);
+    return fillFormFields(file, values, flatten, options?.xfaMode);
   }
 }

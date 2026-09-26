@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api.misc;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.Set;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -25,6 +26,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.misc.FlattenRequest;
+import stirling.software.SPDF.service.xfa.XfaEdit;
+import stirling.software.SPDF.service.xfa.XfaInspection;
+import stirling.software.SPDF.service.xfa.XfaMode;
+import stirling.software.SPDF.service.xfa.XfaSyncService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -47,6 +52,7 @@ public class FlattenController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
+    private final XfaSyncService xfaSyncService;
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -67,9 +73,15 @@ public class FlattenController {
             Boolean flattenOnlyForms = request.getFlattenOnlyForms();
 
             if (Boolean.TRUE.equals(flattenOnlyForms)) {
+                XfaInspection xfa = xfaSyncService.inspect(document);
                 PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
                 if (acroForm != null) {
                     acroForm.flatten();
+                }
+                // PDFBox drops a hybrid form's XFA as it flattens; its Reader usage rights,
+                // invalidated by the save, have to go too or Reader warns on open.
+                if (xfa.state() == XfaInspection.State.HYBRID) {
+                    xfaSyncService.apply(document, xfa, XfaMode.STRIP, XfaEdit.STRUCTURE, Set.of());
                 }
                 return WebResponseUtils.pdfDocToWebResponse(
                         document,
