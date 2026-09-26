@@ -1,15 +1,20 @@
 import { useEffect, useRef } from "react";
 import { useDocumentManagerCapability } from "@embedpdf/plugin-document-manager/react";
+import { toEngineDocumentBuffer } from "@app/utils/engineDocumentSource";
 
 interface PendingDocument {
-  buffer: ArrayBuffer;
+  /** Blob sources stream in the worker; ArrayBuffer sources (URL documents)
+   *  are still copied there. */
+  source: Blob | ArrayBuffer;
   name: string;
 }
 
 interface DocumentSwapBridgeProps {
   pending: PendingDocument | null;
-  onSwapped: () => void;
-  onFailed: (error: unknown) => void;
+  /** The source travels with the result so the caller can bind the engine
+   *  document id to the blob it actually opened. */
+  onSwapped: (documentId: string, source: Blob | ArrayBuffer) => void;
+  onFailed: (error: unknown, source: Blob | ArrayBuffer) => void;
 }
 
 /** Activates replacement bytes once loaded, so the mounted document keeps
@@ -31,7 +36,7 @@ export function DocumentSwapBridge({
 
     void documentManager
       .openDocumentBuffer({
-        buffer: pending.buffer,
+        buffer: toEngineDocumentBuffer(pending.source),
         name: pending.name,
         autoActivate: false,
       })
@@ -46,7 +51,7 @@ export function DocumentSwapBridge({
             .closeDocument(response.documentId)
             .toPromise()
             .catch(() => {});
-          if (!cancelled) onFailed(error);
+          if (!cancelled) onFailed(error, pending.source);
           return;
         }
         if (cancelled || generation !== generationRef.current) {
@@ -60,7 +65,7 @@ export function DocumentSwapBridge({
 
         try {
           documentManager.setActiveDocument(response.documentId);
-          onSwapped();
+          onSwapped(response.documentId, pending.source);
           if (previousId && previousId !== response.documentId) {
             // A failed close only leaks a background document until unmount.
             void documentManager
@@ -80,13 +85,15 @@ export function DocumentSwapBridge({
             .closeDocument(response.documentId)
             .toPromise()
             .catch(() => {});
-          if (!cancelled) onFailed(error);
+          if (!cancelled) onFailed(error, pending.source);
         }
       })
       .catch((error) => {
         // A superseded open rejecting must not clear the newer pending
         // document its replacement already queued.
-        if (!cancelled && generation === generationRef.current) onFailed(error);
+        if (!cancelled && generation === generationRef.current) {
+          onFailed(error, pending.source);
+        }
       });
 
     return () => {

@@ -4,7 +4,7 @@ import pdfiumWasmAssetUrl from "@embedpdf/pdfium/pdfium.wasm?url";
 const getWasmUrl = (): string => {
   // In dev, Vite serves the statically-copied asset from the dev server root.
   if (import.meta.env.DEV) {
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const origin = typeof window === "undefined" ? "" : window.location.origin;
     return `${origin}${BASE_PATH}/pdfium/pdfium.wasm`;
   }
 
@@ -19,10 +19,16 @@ const getWasmUrl = (): string => {
 
 export const pdfiumWasmUrl = getWasmUrl();
 
-let resolvePromise: (module: WebAssembly.Module | null) => void;
+interface WasmModuleContainer {
+  module: WebAssembly.Module | null;
+}
+
+let resolvePromise: (container: WasmModuleContainer | null) => void;
 let compilationStarted = false;
 
-export const pdfiumWasmModulePromise = new Promise<WebAssembly.Module | null>(
+/** Resolves null when compilation failed or WebAssembly is unavailable; the
+ *  worker then fetches the wasm URL itself. */
+export const pdfiumWasmModulePromise = new Promise<WasmModuleContainer | null>(
   (resolve) => {
     resolvePromise = resolve;
   },
@@ -66,6 +72,8 @@ export function startEagerWasmCompilation(): void {
   };
 
   compileWithFallback()
-    .then(resolvePromise)
+    .then((module) => {
+      resolvePromise(module ? { module } : null);
+    })
     .catch(() => resolvePromise(null));
 }

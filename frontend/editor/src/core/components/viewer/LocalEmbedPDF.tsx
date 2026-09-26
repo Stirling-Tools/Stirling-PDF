@@ -10,7 +10,8 @@ import React, {
 import { createPluginRegistration, type PluginRegistry } from "@embedpdf/core";
 import type { InitialDocumentOptions } from "@embedpdf/plugin-document-manager";
 import { EmbedPDF, useDocumentState } from "@embedpdf/core/react";
-import { usePdfiumEngine } from "@embedpdf/engines/react";
+import { useLocalPdfiumEngine } from "@app/hooks/useLocalPdfiumEngine";
+import { toEngineDocumentBuffer } from "@app/utils/engineDocumentSource";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 
@@ -88,7 +89,13 @@ import { BookmarkAPIBridge } from "@app/components/viewer/BookmarkAPIBridge";
 import { AttachmentAPIBridge } from "@app/components/viewer/AttachmentAPIBridge";
 import { PrintAPIBridge } from "@app/components/viewer/PrintAPIBridge";
 import { isPdfFile } from "@app/utils/fileUtils";
-import { getDocumentBytes } from "@app/services/documentBytesCache";
+import {
+  beginEngineDocumentOpen,
+  invalidateEngineDocumentProbe,
+  registerEngineDocumentProbe,
+  resolveEngineDocumentOpen,
+  type EngineDocumentProbe,
+} from "@app/services/documentProbeEngine";
 import { documentHasFormFieldsFor } from "@app/services/documentFormProbe";
 import { documentHasLayers } from "@app/components/viewer/layerUtils";
 import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
@@ -120,6 +127,47 @@ import SignatureFieldOverlay from "@app/components/viewer/SignatureFieldOverlay"
 import { CommentsSidebar } from "@app/components/viewer/CommentsSidebar";
 import { CommentAuthorProvider } from "@app/contexts/CommentAuthorContext";
 import { accountService } from "@app/services/accountService";
+
+interface DocumentManagerProbeApi {
+  getActiveDocument?: () => unknown;
+  getActiveDocumentId?: () => string | null;
+  onDocumentOpened?: (cb: () => void) => () => void;
+}
+
+interface EngineDocumentProbeTask<T> {
+  wait: (
+    onResolve: (value: T) => void,
+    onReject: (error: unknown) => void,
+  ) => void;
+}
+
+interface EngineDocumentProbeApi {
+  getDocumentProbe: (
+    documentId: string,
+  ) => EngineDocumentProbeTask<EngineDocumentProbe>;
+  getDocumentLayerVerdict: (
+    documentId: string,
+  ) => EngineDocumentProbeTask<boolean | null>;
+}
+
+/** The local engine patch adds both probe methods; upstream types omit them. */
+function hasEngineDocumentProbe(
+  value: unknown,
+): value is EngineDocumentProbeApi {
+  if (typeof value !== "object" || value === null) return false;
+  const candidate = value as {
+    getDocumentProbe?: unknown;
+    getDocumentLayerVerdict?: unknown;
+  };
+  return (
+    typeof candidate.getDocumentProbe === "function" &&
+    typeof candidate.getDocumentLayerVerdict === "function"
+  );
+}
+
+function engineProbe<T>(task: EngineDocumentProbeTask<T>): Promise<T> {
+  return new Promise<T>((resolve, reject) => task.wait(resolve, reject));
+}
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
@@ -346,6 +394,9 @@ export function LocalEmbedPDF({
   // FileContext produces new File object references for the same file content.
   const fileStableKey =
     fileId ?? (file ? `${(file as File).name}-${file.size}` : null);
+  // The engine streams from the Blob handle: the local engine patch reads 64 KB
+  // blocks through FileReaderSync, so the worker never holds a second copy.
+  const initialSourceRef = useRef<Blob | null>(null);
   const initialBufferRef = useRef<ArrayBuffer | null>(null);
   // Kept so the large-document release can empty the arrays in place: rebuilding
   // the plugin list would re-trigger a document open.
@@ -395,7 +446,7 @@ export function LocalEmbedPDF({
     name: string;
   } | null>(null);
   const [pendingDocument, setPendingDocument] = useState<{
-    buffer: ArrayBuffer;
+    source: Blob | ArrayBuffer;
     name: string;
   } | null>(null);
   const initialDocumentOpenedRef = useRef(false);
@@ -430,32 +481,44 @@ export function LocalEmbedPDF({
     () => setDeletedAnnotationMenu(null),
     [],
   );
-  // Reads bytes on the main thread for the worker; the file path hands the
-  // buffer to the registry, so no blob URL is involved.
+  // The file path hands the engine a Blob handle and lets the worker answer the
+  // form and layer probes, so nothing is read here; URL documents still fetch
+  // their bytes for the replacement path, and the buffer path below serves the
+  // registry when the engine has no document for the file.
   useEffect(() => {
     if (fileStableKey && shouldSkipBytes?.(fileStableKey)) {
       // The live document already shows this save; swapping the bytes would
       // reopen it and lose the scroll position for no visual gain.
+      if (file) resolveEngineDocumentOpen(file, null);
       return;
     }
     let cancelled = false;
     const openDocument = (
-      buffer: ArrayBuffer,
       name: string,
       contentKey: string | null,
+      buffer?: ArrayBuffer,
     ) => {
       // A repeat run for the same content (a rename, a FileContext churn) must
       // not reopen the document.
       if (!contentKey || openedContentKeyRef.current === contentKey) return;
       openedContentKeyRef.current = contentKey;
+      if (file) {
+        invalidateEngineDocumentProbe(file);
+        beginEngineDocumentOpen(file);
+      }
       if (!initialDocumentOpenedRef.current) {
         initialDocumentOpenedRef.current = true;
-        initialBufferRef.current = buffer;
+        initialSourceRef.current = file ?? null;
         setInitialDocument({ name });
         return;
       }
+      const source = file ?? buffer ?? null;
+      if (!source) return;
       // The replacement becomes the live document through the bridge, so the
-      // initial copy is dead weight from here on.
+      // initial copy is dead weight from here on. The source follows it: a
+      // registry rebuild and the probe handshake must target the live
+      // document, not the one the viewer opened first.
+      initialSourceRef.current = file ?? null;
       initialBufferRef.current = null;
       for (const docs of initialDocsArraysRef.current) {
         docs.length = 0;
@@ -466,7 +529,7 @@ export function LocalEmbedPDF({
       if (file && !releasedDocumentUrlRef.current) {
         releasedDocumentUrlRef.current = URL.createObjectURL(file);
       }
-      setPendingDocument({ buffer, name });
+      setPendingDocument({ source, name });
     };
     const fail = (source: string) => (err: unknown) => {
       console.error(
@@ -474,24 +537,20 @@ export function LocalEmbedPDF({
         err,
       );
     };
-    if (file && typeof (file as Blob).arrayBuffer === "function") {
-      getDocumentBytes(file as Blob)
-        .then((buf) => {
-          if (cancelled) return;
-          openDocument(buf, exportFileName, fileStableKey);
-        })
-        .catch(fail("file"));
+    if (file) {
+      openDocument(exportFileName, fileStableKey);
     } else if (url) {
       setPdfUrl(url);
       fetch(url)
         .then((r) => r.arrayBuffer())
         .then((buf) => {
-          if (!cancelled) openDocument(buf, exportFileName, url);
+          if (!cancelled) openDocument(exportFileName, url, buf);
         })
         .catch(fail("url"));
     } else {
       initialDocumentOpenedRef.current = false;
       openedContentKeyRef.current = null;
+      initialSourceRef.current = null;
       initialBufferRef.current = null;
       for (const docs of initialDocsArraysRef.current) {
         docs.length = 0;
@@ -508,19 +567,26 @@ export function LocalEmbedPDF({
 
   const [swapAnnouncement, setSwapAnnouncement] = useState<string | null>(null);
 
-  const handleDocumentSwapped = useCallback(() => {
-    onDocumentSwapped?.();
-    setPendingDocument(null);
-    setSwapAnnouncement(t("viewer.documentUpdated", "Document updated"));
-    setTimeout(() => setSwapAnnouncement(null), 3000);
-  }, [onDocumentSwapped, t]);
+  const handleDocumentSwapped = useCallback(
+    (documentId: string, source: Blob | ArrayBuffer) => {
+      if (source instanceof Blob) {
+        resolveEngineDocumentOpen(source, documentId);
+      }
+      onDocumentSwapped?.();
+      setPendingDocument(null);
+      setSwapAnnouncement(t("viewer.documentUpdated", "Document updated"));
+      setTimeout(() => setSwapAnnouncement(null), 3000);
+    },
+    [onDocumentSwapped, t],
+  );
   const handleDocumentSwapFailed = useCallback(
-    (error: unknown) => {
+    (error: unknown, source: Blob | ArrayBuffer) => {
       // The outgoing document stays active; the replacement never landed.
       console.warn(
         "[LocalEmbedPDF] Replacement document failed to open:",
         error,
       );
+      if (source instanceof Blob) resolveEngineDocumentOpen(source, null);
       onDocumentSwapFailed?.(error);
       setPendingDocument(null);
     },
@@ -545,8 +611,15 @@ export function LocalEmbedPDF({
   const plugins = useMemo(() => {
     if (!initialDocument && !urlPluginsSource) return [];
     const initialDocuments: InitialDocumentOptions[] =
-      initialDocument && initialBufferRef.current
-        ? [{ buffer: initialBufferRef.current, name: initialDocument.name }]
+      initialDocument && initialSourceRef.current
+        ? [
+            {
+              // The engine patch accepts a Blob here and streams it, so the
+              // worker holds a handle plus its block cache, not the document.
+              buffer: toEngineDocumentBuffer(initialSourceRef.current),
+              name: initialDocument.name,
+            },
+          ]
         : initialDocument && releasedDocumentUrlRef.current
           ? [
               {
@@ -557,7 +630,7 @@ export function LocalEmbedPDF({
           : urlPluginsSource
             ? [{ url: urlPluginsSource.url, name: urlPluginsSource.name }]
             : [];
-    if (initialBufferRef.current) {
+    if (initialSourceRef.current) {
       // React may run this memo more than once for the same buffer (StrictMode
       // double render), and each run builds a fresh config array; keep them all
       // so the release below can empty every array that holds the buffer.
@@ -658,10 +731,51 @@ export function LocalEmbedPDF({
 
   const fontFallbackConfig = useMemo(() => getLocalFontFallbackConfig(), []);
 
-  const { engine, isLoading, error } = usePdfiumEngine({
+  const { engine, isLoading, error } = useLocalPdfiumEngine({
     wasmUrl: pdfiumWasmUrl,
     fontFallback: fontFallbackConfig,
   });
+
+  // The engine probe answers form, attachment and layer questions from the open
+  // document. Registration runs during render because child effects (the layers
+  // button) run before this component's effects and must find the runners; the
+  // document id resolves once the engine reports the document active.
+  const probeSource = file ?? null;
+  // The runners read the engine from a ref: child probe effects run before this
+  // component's effect has created the engine, and a StrictMode remount replaces
+  // it, so a probe that waits for the document id must ask the live instance.
+  const engineRef = useRef<typeof engine>(null);
+  useEffect(() => {
+    engineRef.current = engine;
+  }, [engine]);
+  useMemo(() => {
+    if (!probeSource) return null;
+    const probeWith = <T,>(
+      run: (live: EngineDocumentProbeApi) => EngineDocumentProbeTask<T>,
+    ): Promise<T> => {
+      const live = engineRef.current;
+      if (!hasEngineDocumentProbe(live)) {
+        return Promise.reject(new Error("engine has no document probe"));
+      }
+      return engineProbe(run(live));
+    };
+    registerEngineDocumentProbe(
+      probeSource,
+      engine,
+      (documentId) => probeWith((live) => live.getDocumentProbe(documentId)),
+      (documentId) =>
+        probeWith((live) => live.getDocumentLayerVerdict(documentId)),
+    );
+    // After the registration, so a cleared document id leaves a fresh pending
+    // open for callers that ask before the engine reports the new id.
+    beginEngineDocumentOpen(probeSource);
+    return probeSource;
+  }, [probeSource, engine]);
+  // A failed engine must not leave callers waiting on a document that will never
+  // open; they fall back to reading the bytes.
+  useEffect(() => {
+    if (error && probeSource) resolveEngineDocumentOpen(probeSource, null);
+  }, [error, probeSource]);
 
   const [engineTimeout, setEngineTimeout] = useState(false);
   useEffect(() => {
@@ -785,6 +899,37 @@ export function LocalEmbedPDF({
           engine={engine}
           plugins={plugins}
           onInitialized={async (registry: PluginRegistry) => {
+            // Resolve the engine probe target for the initial document: the
+            // layer button and the form overlays ask for the worker's answer
+            // through it, and a null target sends them back to reading bytes.
+            try {
+              const docManager = registry.getPlugin("document-manager");
+              const api = docManager?.provides?.() as
+                | DocumentManagerProbeApi
+                | undefined;
+              const source = initialSourceRef.current ?? probeSource;
+              const documentId = api?.getActiveDocumentId?.() ?? null;
+              if (source && documentId) {
+                resolveEngineDocumentOpen(source, documentId);
+              } else if (api?.onDocumentOpened && source) {
+                documentOpenedUnsubscribeRef.current?.();
+                const unsub = api.onDocumentOpened(() => {
+                  const openedId = api.getActiveDocumentId?.() ?? null;
+                  if (!openedId) return;
+                  unsub?.();
+                  if (documentOpenedUnsubscribeRef.current === unsub) {
+                    documentOpenedUnsubscribeRef.current = null;
+                  }
+                  resolveEngineDocumentOpen(source, openedId);
+                });
+                documentOpenedUnsubscribeRef.current = unsub;
+              } else if (source) {
+                resolveEngineDocumentOpen(source, null);
+              }
+            } catch {
+              if (probeSource) resolveEngineDocumentOpen(probeSource, null);
+            }
+
             // Drop the main-thread copy once the worker has its clone, but only
             // when nothing main-thread can need the bytes afterwards: large
             // files are never opened for thumbnails, and a form-less answer

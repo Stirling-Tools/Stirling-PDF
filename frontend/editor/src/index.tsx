@@ -23,16 +23,10 @@ import { startEagerWasmCompilation } from "@app/services/wasmPrecompiler";
 
 applyDevWorktreeLabel();
 
-if (typeof window !== "undefined") {
-  const scheduleCompilation = () =>
-    requestIdleCallback(() => startEagerWasmCompilation(), { timeout: 2000 });
-
-  if (document.readyState === "complete") {
-    scheduleCompilation();
-  } else {
-    window.addEventListener("load", scheduleCompilation);
-  }
-}
+// Entry-time start: the pdfium binary is the largest eager download and the old
+// <link rel="preload"> was the only thing fetching it this early. Compilation
+// runs off-thread, so this does not block the first render.
+startEagerWasmCompilation();
 
 const container = document.getElementById("root");
 if (!container) {
