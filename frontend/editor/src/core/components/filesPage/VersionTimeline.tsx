@@ -125,7 +125,7 @@ export function VersionTimeline({
       {!hideHeader && (
         <div className="files-page-details-version-timeline-label">
           <Icon name="rotate-ccw-clock" size={20} />
-          <span>{t("filesPage.field.versionHistory", "Version journey")}</span>
+          <span>{t("filesPage.field.versionHistory", "Version history")}</span>
           <span className="files-page-details-version-timeline-count">
             {t("filesPage.versionsCount", "{{count}} versions", {
               count: ordered.length,

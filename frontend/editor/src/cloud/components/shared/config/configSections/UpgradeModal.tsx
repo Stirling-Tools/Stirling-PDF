@@ -302,7 +302,7 @@ function CapStep({
           </span>{" "}
           {t(
             "payg.upgrade.promise.body",
-            "You only pay for automation pipelines, AI tools, and API calls — the work that goes beyond a single click. Edit, merge, split, sign, compress as much as you want, no charge.",
+            "You only pay for automation pipelines, AI tools and API calls. Editing, merging, splitting, signing and compressing are free.",
           )}
         </div>
       </div>
@@ -334,7 +334,7 @@ function CapStep({
         currency={rateCurrency}
         note={t(
           "payg.upgrade.cap.usdNote",
-          "Estimated in USD. You can adjust your cap any time after subscribing — in your own currency.",
+          "Estimated in USD. You can adjust your cap any time after subscribing, in your own currency.",
         )}
       />
 
@@ -347,7 +347,7 @@ function CapStep({
             <strong>
               {t("payg.upgrade.help.automationTitle", "Automation pipelines")}
             </strong>
-            {" — "}
+            {": "}
             {t(
               "payg.upgrade.help.automationBody",
               "chained tools or scheduled runs that don't need clicks",
@@ -355,7 +355,7 @@ function CapStep({
           </li>
           <li>
             <strong>{t("payg.upgrade.help.aiTitle", "AI tools")}</strong>
-            {" — "}
+            {": "}
             {t(
               "payg.upgrade.help.aiBody",
               "summarise, classify, redact, AI-OCR",
@@ -363,7 +363,7 @@ function CapStep({
           </li>
           <li>
             <strong>{t("payg.upgrade.help.apiTitle", "API calls")}</strong>
-            {" — "}
+            {": "}
             {t(
               "payg.upgrade.help.apiBody",
               "programmatic access to any Stirling endpoint",
@@ -373,7 +373,7 @@ function CapStep({
         <div style={{ marginTop: 8, fontStyle: "italic" }}>
           {t(
             "payg.upgrade.help.footnoteUnlimited",
-            "Manual tools — viewing, editing, merging, splitting, signing, watermarking, compressing, manual OCR — are always free, even after your included credits are used. The distinction is the type of work, not where you click.",
+            "Manual tools (viewing, editing, merging, splitting, watermarking, compressing, manual OCR) are always free, even after your included credits are used.",
           )}
         </div>
       </div>

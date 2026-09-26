@@ -39,7 +39,7 @@ false = "False"
 fileChangedOnDisk = "Changed on disk since you edited it"
 fileDiskUnavailable = "Cannot reach the file on disk"
 fileNotSavedToDisk = "Not saved to disk"
-fileOriginalDeleted = "Original deleted - save to keep a copy"
+fileOriginalDeleted = "Original deleted. Save to keep a copy."
 fileSavedToDisk = "File saved to disk"
 fileSelected = "{{filename}}"
 filesSelected = "{{count}} files"
@@ -549,7 +549,7 @@ title = "Target Page Size"
 bullet1 = "1.0 = Original size"
 bullet2 = "0.5 = Half size (50% smaller)"
 bullet3 = "2.0 = Double size (200% larger, may crop)"
-text = "Controls how large or small the content appears on the page. Content is scaled and centred - if scaled content is larger than the page size, it may be cropped."
+text = "Controls how large the content appears on the page. Content is scaled and centred. If it is larger than the page, it may be cropped."
 title = "Scale Factor"
 
 [admin]
@@ -728,7 +728,7 @@ noLanguages = "No tessdata languages found in the configured directory."
 permissionNotice = "The tessdata path is not writable. Downloads will be opened in the browser; please save the .traineddata files manually into the tessdata folder."
 
 [admin.settings.ai]
-description = "Connect Stirling to the Python AI engine, choose its models, and set the guardrails it runs under."
+description = "Connect Stirling to the Python AI engine, choose its models and set its limits."
 managedByCloud = "Managed by Stirling Cloud in this mode."
 managedByCloudShort = "Managed by Stirling Cloud"
 
@@ -785,11 +785,11 @@ note = "Models and provider keys are managed by Stirling Cloud, so those setting
 
 [admin.settings.ai.general.cloud.indexing]
 description = "Every AI tool sends the page text it needs to answer. This decides whether Stirling Cloud may also keep that text, indexed, so later questions can search across the document."
-help = "Off means document questions are unavailable. It does not stop text being sent - only stored."
+help = "Off means document questions are unavailable. Text is still sent, but not stored."
 label = "Let Stirling Cloud keep indexed documents"
 
 [admin.settings.ai.general.cloudNote]
-body = "The reasoning runs on Stirling's infrastructure, billed to the account this server is linked to. There is no container to run and no provider key to hold here. Whatever the AI reads is processed by Stirling Cloud rather than on your own hardware."
+body = "AI runs on Stirling's infrastructure and is billed to the account this server is linked to. Documents the AI reads are processed by Stirling Cloud, not on your own hardware."
 title = "About Stirling Cloud AI"
 
 [admin.settings.ai.general.enabled]
@@ -828,7 +828,7 @@ label = "Long-running timeout (seconds)"
 label = "Where AI runs"
 
 [admin.settings.ai.general.mode.cloud]
-description = "No container, no provider key, no model choice - the work runs on Stirling Cloud and is billed to the account this server is linked to."
+description = "Runs on Stirling Cloud and is billed to the account this server is linked to. No container or provider key needed."
 linkCta = "Connect this server to a Stirling account"
 notLinked = "Link an account first"
 ownerOnly = "Only the organisation owner can link this server to a Stirling account."
@@ -839,13 +839,13 @@ description = "No AI tools anywhere in the app, and nothing leaves this server."
 title = "Off"
 
 [admin.settings.ai.general.mode.self]
-description = "A container you host, pointed at a model provider of your choosing. Your key, your bill, your data path."
+description = "A container you host, connected to a model provider you choose."
 title = "Run your own engine"
 
 [admin.settings.ai.general.note]
 docs = "Set-up guide"
 intro = "A separate container you run next to Stirling. It does the reasoning; Stirling still does every page operation itself. It needs the same"
-outro = "on both containers and a model provider key. Whatever the AI reads is sent to the provider you pick - an Ollama you host keeps every page in-house."
+outro = "on both containers and a model provider key. Documents the AI reads are sent to the provider you choose. Host your own Ollama to keep them in-house."
 title = "About the AI engine"
 
 [admin.settings.ai.general.streamTimeoutSeconds]
@@ -962,7 +962,7 @@ body = "This server could not reach Stirling Cloud. Check the account link and t
 title = "Stirling Cloud unreachable"
 
 [admin.settings.ai.status.cloud.ok]
-body = "Stirling Cloud accepted this server. Nothing to run or patch here."
+body = "Stirling Cloud accepted this server."
 title = "Running on Stirling Cloud"
 
 [admin.settings.ai.status.degraded]
@@ -991,7 +991,7 @@ clickToUpgrade = "Click to view plan details"
 
 [admin.settings.connections]
 connect = "Connect"
-connectedServicesDescription = "Services this server is wired up to. Sign-in providers live under Sign-in & security."
+connectedServicesDescription = "Services this server is connected to. Sign-in providers are under Sign-in & security."
 description = "Configure external authentication providers like OAuth2 and SAML."
 disconnect = "Disconnect"
 disconnected = "Provider disconnected successfully"
@@ -1390,7 +1390,7 @@ description = "URL or filename to impressum (required in some jurisdictions)"
 label = "Impressum"
 
 [admin.settings.legal.loginAgreement]
-defaultLocaleHint = "— used as the fallback when a language has no file."
+defaultLocaleHint = "(used as the fallback when a language has no file)"
 defaultLocaleLink = "Configure the default locale"
 description = "Show a disclaimer users must accept after logging in. The text follows each user's language."
 discardConfirm = "You have unsaved changes that will be lost. Switch language anyway?"
@@ -1469,7 +1469,7 @@ description = "Username for SMTP authentication"
 label = "SMTP Username"
 
 [admin.settings.mcp]
-apikeyNote = "Clients send a Stirling API key in the X-API-KEY header (or Authorization: Bearer <key>). The key maps to its owning Stirling user - only provisioned accounts get in, and actions are audited as that user. Manage keys under Account > API Keys."
+apikeyNote = "Clients send a Stirling API key in the X-API-KEY header (or Authorization: Bearer <key>). Each key maps to its Stirling user, so only provisioned accounts can connect and actions are audited as that user. Manage keys under Account > API Keys."
 description = "Expose Stirling's PDF tools and AI agents to MCP clients over an OAuth-protected endpoint."
 title = "MCP Server"
 
@@ -1498,9 +1498,9 @@ step3 = "The client auto-discovers OAuth from:"
 step3ApiKey = "Send the key in an"
 step3ApiKeyb = "header (or Authorization: Bearer <key>). No OAuth or metadata discovery is used."
 step4 = "Approve the sign-in; the client retries with a token. Tools appear grouped: convert, pages, misc, security, ai."
-step4ApiKey = "Tools appear grouped: convert, pages, misc, security, ai - and every call is audited as the key's owner."
+step4ApiKey = "Tools appear grouped: convert, pages, misc, security, ai. Every call is audited as the key's owner."
 tip = "Tip: register the resource ID as an allowed audience in your IdP. Tested with MCP Inspector and Claude Desktop."
-tipApiKey = "Tip: API-key mode needs no external IdP - simplest for self-host. The key maps to its owning Stirling user."
+tipApiKey = "Tip: API-key mode needs no external IdP, so it is the simplest option for self-hosting."
 title = "Connect an MCP client"
 
 [admin.settings.mcp.issuerUri]
@@ -1513,7 +1513,7 @@ label = "JWKS URL (optional)"
 placeholder = "Auto-discovered from issuer"
 
 [admin.settings.mcp.mode]
-description = "OAuth needs an external IdP. API key uses a Stirling per-user API key (X-API-KEY) - simplest for self-host."
+description = "OAuth needs an external IdP. API key mode uses each user's Stirling API key (X-API-KEY) and is simplest for self-hosting."
 label = "Authentication mode"
 
 [admin.settings.mcp.requireAccount]
@@ -1914,15 +1914,15 @@ message = "You have unsaved changes. Do you want to discard them?"
 title = "Unsaved Changes"
 
 [adminOnboarding]
-adminTools = "Finally, we have advanced administration tools like <strong>Auditing</strong> to track system activity and <strong>Usage Analytics</strong> to monitor how your users interact with the platform."
+adminTools = "<strong>Auditing</strong> tracks system activity and <strong>Usage Analytics</strong> shows how users interact with the platform."
 configButton = "Open <strong>Settings</strong> to access all system configuration and administrative controls."
 connectionsSection = "The <strong>Connections</strong> section supports various login methods including custom SSO and SAML providers like Google and GitHub, plus email integrations for notifications and communications."
-databaseSection = "For advanced production environments, we have settings to allow <strong>external database hookups</strong> so you can integrate with your existing infrastructure."
-settingsOverview = "This is the <strong>Settings Panel</strong>. Admin settings are organised by category for easy navigation."
-systemCustomization = "We have extensive ways to customise the UI: <strong>System Settings</strong> let you change the app name and languages, <strong>Features</strong> allows server certificate management, and <strong>Endpoints</strong> lets you enable or disable specific tools for your users."
+databaseSection = "For production environments, you can connect an <strong>external database</strong> to use your existing infrastructure."
+settingsOverview = "This is the <strong>Settings Panel</strong>. Admin settings are grouped by category."
+systemCustomization = "<strong>System Settings</strong> changes the app name and languages, <strong>Features</strong> manages the server certificate, and <strong>Endpoints</strong> turns tools on or off for your users."
 teamsAndUsers = "Manage <strong>Teams</strong> and individual users here. You can invite new users via email, shareable links, or create custom accounts for them yourself."
-welcome = "Welcome to the <strong>Admin Tour</strong>! Let's explore the powerful enterprise features and settings available to system administrators."
-wrapUp = "That's the admin tour! You've seen the enterprise features that make Stirling PDF a powerful, customisable solution for organisations. You can replay it anytime - just open <strong>Settings</strong> and find it here in the <strong>Tours</strong> section under Help."
+welcome = "Welcome to the <strong>Admin Tour</strong>. It covers the enterprise features and settings available to administrators."
+wrapUp = "That's the end of the admin tour. To replay it, open <strong>Settings</strong> and go to the <strong>Tours</strong> section under Help."
 
 [adminUserSettings]
 admin = "Admin"
@@ -2223,7 +2223,7 @@ high = "Thorough"
 highHint = "Finds more fields, but may add some where none belong."
 label = "Detection sensitivity"
 low = "Strict"
-lowHint = "Only very confident matches - fewer fields, fewer mistakes."
+lowHint = "Only very confident matches. Finds fewer fields but makes fewer mistakes."
 
 [autoFormDetection.settings]
 title = "Settings"
@@ -2348,7 +2348,7 @@ prePublishSanitizationDesc = "Sanitisation workflow that removes all hidden meta
 processImages = "Process Images"
 processImagesDesc = "Converts multiple image files into a single PDF document, then applies OCR technology to extract searchable text from the images."
 securePdfIngestion = "Secure PDF Ingestion"
-securePdfIngestionDesc = "Comprehensive PDF processing workflow that sanitises documents, applies OCR with cleanup, converts to PDF/A format for long-term archival, and optimises file size."
+securePdfIngestionDesc = "Sanitises documents, applies OCR with cleanup, converts to PDF/A for long-term archiving, and reduces file size."
 secureWorkflow = "Security Workflow"
 secureWorkflowDesc = "Secures PDF documents by removing potentially malicious content like JavaScript and embedded files, then adds password protection to prevent unauthorised access. Password is set to 'password' by default."
 
@@ -2500,7 +2500,7 @@ failed = "An error occurred while creating the booklet imposition."
 
 [bookletImposition.flipOnShortEdge]
 label = "Flip on short edge (automatic duplex only)"
-manualNote = "Not needed in manual mode - you flip the stack yourself"
+manualNote = "Not needed in manual mode, where you flip the stack yourself"
 tooltip = "Enable for short-edge duplex printing (automatic duplex only - ignored in manual mode)"
 
 [bookletImposition.gutterSize]
@@ -2523,7 +2523,7 @@ text = "Fine-tune your booklet:"
 title = "Advanced Options"
 
 [bookletImposition.tooltip.description]
-text = "Creates professional booklets by arranging pages in the correct printing order. Your PDF pages are placed 2-up on landscape sheets so when folded and bound, they read in proper sequence like a real book."
+text = "Arranges pages in printing order to make a booklet. Pages are placed 2-up on landscape sheets so they read in order once folded and bound."
 title = "What is Booklet Imposition?"
 
 [bookletImposition.tooltip.example]
@@ -2549,7 +2549,7 @@ bullet1 = "Print double-sided with 'Flip on long edge'"
 bullet2 = "Stack sheets in order, fold in half"
 bullet3 = "Staple or bind along the folded spine"
 bullet4 = "For short-edge printers: Enable 'Flip on short edge' option"
-text = "Follow these steps for perfect booklets:"
+text = "To print and assemble:"
 title = "How to Print & Assemble"
 
 [brickGame]
@@ -2700,7 +2700,7 @@ title = "About Signature Appearance"
 bullet1 = "Provides security without visual changes"
 bullet2 = "Meets legal requirements for digital signing"
 bullet3 = "Doesn't affect document layout or design"
-text = "The signature is added to the PDF for security but won't be visible when viewing the document. Perfect for legal requirements without changing the document's appearance."
+text = "The signature is added to the PDF but isn't visible when viewing it. The document's appearance does not change."
 title = "Invisible Signatures"
 
 [certSign.appearance.tooltip.visible]
@@ -2928,7 +2928,7 @@ expires = "expires"
 listCerts = "List certificates"
 loading = "Reading certificates…"
 noCerts = "No signing certificates found"
-noDriver = "No PKCS#11 driver was detected. Install your token's driver (e.g. OpenSC), then reopen this - or enter the driver path manually below."
+noDriver = "No PKCS#11 driver was detected. Install your token's driver (e.g. OpenSC) and reopen this, or enter the driver path manually below."
 notYetValid = "not yet valid"
 pin = "Token PIN"
 pkcs11Hint = "Select your token's PKCS#11 driver, enter the PIN, then list the certificates on the token."
@@ -2954,15 +2954,15 @@ submit = "Sign PDF"
 
 [certSign.signMode.tooltip.auto]
 text = "Signs with a server <b>self-signed</b> certificate. Same <b>tamper-evident seal</b> and <b>audit trail</b>; typically shows <b>Unverified</b> in viewers."
-title = "Auto - Zero-setup, instant system seal"
-use = "Use when: you need speed and consistent internal identity across reviews and records."
+title = "Auto: server certificate, no setup"
+use = "Use when: you need a quick internal signature with no setup."
 
 [certSign.signMode.tooltip.header]
 title = "About PDF Signatures"
 
 [certSign.signMode.tooltip.manual]
-text = "Use your own certificate files for brand-aligned identity. Can display <b>Trusted</b> when your CA/chain is recognised."
-title = "Manual - Bring your certificate"
+text = "Use your own certificate files. Can display <b>Trusted</b> when your CA/chain is recognised."
+title = "Manual: your own certificate"
 use = "Use for: customer-facing, legal, compliance."
 
 [certSign.signMode.tooltip.overview]
@@ -3515,7 +3515,7 @@ label = "Documents by type: {{summary}}"
 noTypes = "These documents did not match a known type."
 
 [classificationDemo.defaultApp]
-body = "Make Stirling your default PDF app. Every PDF you open, from email, your browser, or your desktop, lands here, ready to read or edit. You can change this any time in Settings."
+body = "Make Stirling your default PDF app so PDFs you open anywhere open here. You can change this any time in Settings."
 cta = "Make Stirling my default"
 title = "Open every PDF in Stirling"
 
@@ -3772,7 +3772,7 @@ desiredSizePlaceholder = "Enter size"
 desiredSizeUnit = "Size unit"
 
 [compress.tooltip.description]
-text = "Compression is an easy way to reduce your file size. Pick File Size to enter a target size and have us adjust quality for you. Pick Quality to set compression strength manually."
+text = "Pick File Size to enter a target size and have us adjust quality for you. Pick Quality to set compression strength manually."
 title = "Description"
 
 [compress.tooltip.grayscale]
@@ -3797,9 +3797,9 @@ tags = "squish,small,tiny"
 
 [config]
 plan = "Plan"
-planDescription = "Your plan, credits and spend limit, and the invoices behind them."
+planDescription = "Your plan, credits, spend limit and invoices."
 team = "Team"
-teamDescription = "Who shares this workspace, and invitations still waiting on an answer."
+teamDescription = "Workspace members and pending invitations."
 
 [config.account.overview]
 confirmDelete = "Delete My Account"
@@ -3842,7 +3842,7 @@ title = "Passwords & Security"
 update = "Update password"
 
 [config.account.upgrade]
-description = "Link your account to preserve your history and access more features!"
+description = "Link your account to keep your history and get more features."
 email = "Email"
 emailPassword = "or enter your email & password"
 emailPlaceholder = "Enter your email"
@@ -3856,7 +3856,7 @@ upgradeButton = "Upgrade Account"
 
 [config.apiKeys]
 copyKeyAriaLabel = "Copy API key"
-description = "Your API key for accessing Stirling's suite of PDF tools. Copy it to your project or refresh to generate a new one."
+description = "Your API key for Stirling PDF tools. Copy it to your project or refresh to generate a new one."
 docsDescription = "Learn more about integrating with Stirling PDF:"
 docsLink = "API Documentation"
 docsTitle = "API Documentation"
@@ -3906,7 +3906,7 @@ label = "Your MCP endpoint"
 
 [config.mcp.setup]
 addTo = "Add to"
-hint = "Pick your client, paste the snippet into the file shown, then restart it. You'll sign in with your Stirling account on first use - no keys to copy."
+hint = "Pick your client, paste the snippet into the file shown, then restart it. You'll sign in with your Stirling account on first use, so there are no keys to copy."
 title = "Connect your AI assistant"
 
 [config.overview]
@@ -4016,9 +4016,9 @@ pdfOptions = "PDF Options"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
 pdfToEpub = "PDF → EPUB"
-pdfUaAltTextNotice = "Images need a written description before a document can be certified. Descriptions are never generated automatically, because an invented one passes the checker while telling a screen-reader user nothing. Any image left without one is reported, and the file comes back tagged but not certified."
+pdfUaAltTextNotice = "Images need a written description before a document can be certified. Descriptions are never generated automatically. Any image without one is reported, and the file comes back tagged but not certified."
 pdfUaAltTextScanFailed = "The images could not be listed. Convert anyway and the response reports what is missing."
-pdfUaAltTextSingleFileOnly = "Descriptions belong to one document: an image is identified by its position, which is a different image in every file. Convert these {{fileCount}} files to tag them, then convert one at a time to describe its images."
+pdfUaAltTextSingleFileOnly = "Image descriptions can only be added to one file at a time. Convert these {{fileCount}} files to tag them, then convert each one on its own to describe its images."
 pdfUaEmbedFonts = "Embed missing fonts"
 pdfUaEmbedFontsHelp = "PDF/UA requires every font to be embedded. Turning this off is faster but usually prevents conformance."
 pdfUaFigureLabel = "Page {{page}} {{kind}}"
@@ -4029,7 +4029,7 @@ pdfUaLanguageHelp = "A BCP-47 tag such as en-GB. Used only when the document doe
 pdfUaNoImagesNeedingText = "No image is missing a description."
 pdfUaOptions = "PDF/UA Options"
 pdfUaOverrideLanguage = "Replace the document's own language"
-pdfUaOverrideLanguageHelp = "Only tick this if the language above is right and the document's own is wrong. Relabelling a document into a language it is not written in makes a screen reader unintelligible."
+pdfUaOverrideLanguageHelp = "Only tick this if the language above is right and the document's own is wrong. A wrong language makes screen readers mispronounce the text."
 pdfUaProfile = "Conformance level"
 pdfUaSignatureWarning = "This PDF is digitally signed. Tagging rewrites the page content the signature covers, so the signature will stop verifying. Convert first, then re-sign."
 pdfUaTitle = "Document title"
@@ -4219,8 +4219,8 @@ body = "\"{{name}}\" has been deleted or moved on disk, so it has been removed f
 title = "File no longer exists"
 
 [desktopFileLink.openDeleted]
-body_one = "\"{{name}}\" no longer exists on disk. It is still open here - saving will ask you for a new location."
-body_other = "{{count}} files no longer exist on disk. They are still open here - saving each one will ask you for a new location."
+body_one = "\"{{name}}\" no longer exists on disk. It is still open here, and saving will ask you for a new location."
+body_other = "{{count}} files no longer exist on disk. They are still open here, and saving each one will ask you for a new location."
 title_one = "File deleted on disk"
 title_other = "Files deleted on disk"
 
@@ -4294,7 +4294,7 @@ confirmRemove = "Remove this bookmark and all of its children?"
 defaultChildTitle = "Child bookmark"
 defaultSiblingTitle = "New bookmark"
 defaultTitle = "New bookmark"
-description = "Add, nest, and reorder bookmarks to craft your PDF outline."
+description = "Add, nest, and reorder bookmarks to build your PDF outline."
 heading = "Bookmark editor"
 pagePreview = "Page {{page}}"
 untitled = "Untitled bookmark"
@@ -4350,7 +4350,7 @@ title = "Bookmarks & outline"
 changeFile = "Change PDF"
 filePrompt = "Select a PDF from your library or upload a new one to begin."
 selectFile = "Select PDF"
-subtitle = "Import bookmarks, build hierarchies, and apply the outline without cramped side panels."
+subtitle = "Import bookmarks, build hierarchies, and apply the outline."
 
 [editTableOfContents.workbench.empty]
 description = "Select the Edit Table of Contents tool to load its workspace."
@@ -4655,7 +4655,7 @@ moveTo = "Move to…"
 newFolder = "New folder"
 newFolderStorageDisabled = "Server folder storage isn't enabled. Ask your admin to turn it on."
 newFolderTabUnavailable = "Switch to All or Cloud to create folders."
-offlineNoFolderEdits = "Server folder sync unavailable - folder changes are disabled. Check sign-in and storage configuration."
+offlineNoFolderEdits = "Server folder sync is unavailable, so folder changes are disabled. Check sign-in and storage configuration."
 open = "Open"
 openVersionInWorkspace = "Open in workspace"
 originFilter = "Filter by source"
@@ -4695,7 +4695,7 @@ versionHistoryEmpty = "This file has no earlier versions."
 versionOrigin = "Original upload"
 versionsCount = "{{count}} versions"
 versionShowHidden = "Show {{count}} earlier versions"
-viewVersionHistory = "Version journey ({{count}})"
+viewVersionHistory = "Version history ({{count}})"
 
 [filesPage.appearance]
 colour = "Colour"
@@ -4723,9 +4723,9 @@ everywhereHint = "Deletes the file from this device and the cloud."
 
 [filesPage.diskLink]
 conflict = "Disk changed"
-conflictHint = "The file on disk changed while you had unsaved edits. Your version is shown - saving will overwrite the one on disk."
+conflictHint = "The file on disk changed while you had unsaved edits. Your version is shown. Saving will overwrite the one on disk."
 orphaned = "Not on disk"
-orphanedHint = "The original at {{path}} is gone. This copy is only here - saving it will ask for a new location."
+orphanedHint = "The original at {{path}} is gone. Saving this copy will ask for a new location."
 unavailable = "Unavailable"
 unavailableHintOffline = "The drive or share this file lives on is not connected. Reconnect it to pick up changes again."
 unavailableHintPermission = "Stirling is not allowed to read this location. Grant access in System Settings to pick up changes again."
@@ -4814,7 +4814,7 @@ modified = "Modified"
 size = "Size"
 totalSize = "Total size"
 type = "Type"
-versionHistory = "Version journey"
+versionHistory = "Version history"
 
 [filesPage.filters]
 activeCount = "{{count}} filters active"
@@ -4869,7 +4869,7 @@ sharedHint = "Shared with you via link"
 active = "Processing folder"
 blockedNeedsConnection = "Sign in to Stirling Cloud or connect a self-hosted server to process folders."
 edit = "Edit processing…"
-nothingToRestore = "No originals to restore — these files are already their originals."
+nothingToRestore = "No originals to restore. These files are already the originals."
 paused = "Processing paused"
 remove = "Remove processing"
 restore = "Restore original"
@@ -4989,9 +4989,9 @@ title = "Flatten Results"
 [flatten.tooltip.description]
 bullet1 = "Text boxes become regular text (can't be edited)"
 bullet2 = "Checkboxes and buttons become pictures"
-bullet3 = "Great for final versions you don't want changed"
+bullet3 = "Use for final versions you don't want changed"
 bullet4 = "Ensures consistent appearance across all devices"
-text = "Flattening makes your PDF non-editable by turning fillable forms and buttons into regular text and images. The PDF will look exactly the same, but no one can change or fill in the forms anymore. Perfect for sharing completed forms, creating final documents for records, or ensuring the PDF looks the same everywhere."
+text = "Flattening turns fillable forms and buttons into regular text and images. The PDF looks the same, but no one can change or fill in the forms."
 title = "What does flattening do?"
 
 [flatten.tooltip.formsOnly]
@@ -5084,7 +5084,7 @@ readOnlyHelp = "Shows a value but stops anyone editing it."
 removeOption = "Remove option"
 required = "Required"
 requiredHelp = "The form cannot be submitted until this field is filled in."
-signatureNote = "Placeholder only - you don't sign here. It marks where a signature belongs so a PDF signer (Adobe Acrobat, a signing service, etc.) places the signature in this spot when the document is signed."
+signatureNote = "Placeholder only. You don't sign here; it marks where a PDF signer (Adobe Acrobat, a signing service, etc.) places the signature when the document is signed."
 tooltip = "Tooltip"
 tooltipHelp = "The hint shown when someone hovers the field in a PDF reader."
 type = "Type"
@@ -5285,7 +5285,7 @@ title = "Sequential Signing"
 dismiss = "Dismiss banner"
 message = "Create a free account to save your work, access more features, and support the project."
 signUp = "Sign Up Free"
-title = "You're using Stirling PDF as a guest!"
+title = "You're using Stirling PDF as a guest"
 
 [home.addAttachments]
 desc = "Add or remove embedded files (attachments) to/from a PDF"
@@ -5459,7 +5459,7 @@ tags = "certificates,import,export,manage certificates,digital certificates,cert
 title = "Manage Certificates"
 
 [home.merge]
-desc = "Easily merge multiple PDFs into one."
+desc = "Merge multiple PDFs into one."
 tags = "combine,join,unite,merge,merge PDFs,combine PDFs,join PDFs,concatenate,append,stitch,combine files,join files,merge documents"
 title = "Merge"
 
@@ -5568,7 +5568,7 @@ tags = "replace colour,invert colour,colour replacement,swap colours,change colo
 title = "Replace & Invert Colour"
 
 [home.rotate]
-desc = "Easily rotate your PDFs."
+desc = "Rotate your PDFs."
 tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "Rotate"
 
@@ -5731,7 +5731,7 @@ automationUnavailable = "Sign in to Stirling Cloud or a self-hosted server to us
 toolUnavailable = "This tool requires an account. Sign in to Stirling Cloud or connect to a self-hosted server to use it."
 
 [localMode.toolPicker]
-message = "Sign in to unlock all tools."
+message = "Sign in to use all tools."
 signIn = "Sign In"
 
 [login]
@@ -5980,8 +5980,8 @@ title = "Authorise access"
 unknownApp = "A third-party application"
 
 [oauthConsent.access]
-actAsYou = "Act as you - everything {{app}} does runs under your account and counts towards your usage"
-tools = "Use your Stirling PDF tools on your behalf - convert, edit, sign, secure and process your documents"
+actAsYou = "Act as you. Everything {{app}} does runs under your account and counts towards your usage"
+tools = "Use your Stirling PDF tools on your behalf to convert, edit, sign, secure and process documents"
 
 [oauthConsent.scope]
 email = "See your email address"
@@ -6051,7 +6051,7 @@ title = "Deskew Pages"
 title = "Advanced OCR Processing"
 
 [ocr.tooltip.advanced.sidecar]
-text = "Generates a separate .txt file alongside the PDF containing all extracted text content for easy access and processing."
+text = "Saves the extracted text as a separate .txt file next to the PDF."
 title = "Create Text File"
 
 [ocr.tooltip.header]
@@ -6082,19 +6082,19 @@ close = "Close"
 cropSettings = "Now that we've selected the file we want crop, we can configure the Crop tool to choose the area that we want to crop the PDF to."
 dialogLabel = "Onboarding"
 fileCheckbox = "Clicking one of the files selects it for processing. You can select multiple files for batch operations."
-fileReplacement = "The modified file will replace the original file in the Workbench automatically, allowing you to easily run it through more tools."
+fileReplacement = "The modified file replaces the original in the Workbench, so you can run it through more tools."
 filesButton = "The <strong>Files</strong> button on the Quick Access bar allows you to upload PDFs to use the tools on."
-fileSources = "You can upload new files or access recent files from here. For the tour, we'll just use a sample file."
+fileSources = "Upload new files or open recent ones here. For the tour, we'll use a sample file."
 finish = "Finish"
 next = "Next"
 pinButton = "You can use the <strong>Pin</strong> button if you'd rather your files stay active after running tools on them."
 results = "After the tool has finished running, the <strong>Review</strong> step will show a preview of the results in this panel, and allow you to undo the operation or download the file. "
 runButton = "Once the tool has been configured, this button allows you to run the tool on all the selected PDFs."
-selectCropTool = "Let's select the <strong>Crop</strong> tool to demonstrate how to use one of the tools."
+selectCropTool = "Select the <strong>Crop</strong> tool to see how a tool works."
 stepOf = "Step {{current}} of {{total}}"
-toolInterface = "This is the <strong>Crop</strong> tool interface. As you can see, there's not much there because we haven't added any PDF files to work with yet."
-workbench = "This is the <strong>Workbench</strong> - the main area where you view and edit your PDFs."
-wrapUp = "You're all set! You can replay this tour anytime - just open <strong>Settings</strong> and find it here in the <strong>Tours</strong> section under Help."
+toolInterface = "This is the <strong>Crop</strong> tool. It's mostly empty because no PDFs have been added yet."
+workbench = "This is the <strong>Workbench</strong>, where you view and edit your PDFs."
+wrapUp = "You can replay this tour from <strong>Settings</strong>, in the <strong>Tours</strong> section under Help."
 
 [onboarding.buttons]
 back = "Back"
@@ -6133,7 +6133,7 @@ title = "Download"
 titleWithOs = "Download for {{osLabel}}"
 
 [onboarding.desktopWelcome]
-body = "There's a whole host of new changes to explore, including <strong>Agent Chat</strong>, automatic document <strong>classification</strong>, and more."
+body = "New in this release: <strong>Agent Chat</strong>, automatic document <strong>classification</strong> and more."
 freeLine = "The editor is now <free>completely free</free>."
 title = "Welcome to Stirling <product>Desktop</product>"
 
@@ -6159,17 +6159,17 @@ title = "Multi-Factor Authentication Setup"
 adminBodyLoginDisabled = "Once you enable login mode, you can manage users, configure settings, and monitor server health. The first <strong>{{freeTierLimit}}</strong> people on your server get to use Stirling free of charge."
 adminBodyLoginEnabled = "As an admin, you can manage users, configure settings, and monitor server health. The first <strong>{{freeTierLimit}}</strong> people on your server get to use Stirling free of charge."
 adminTitle = "Admin Overview"
-userBody = "Invite teammates, assign roles, and keep your documents organised in one secure workspace. Enable login mode whenever you're ready to grow beyond solo use."
+userBody = "Invite teammates, assign roles and share documents in one workspace. Enable login mode to add more users."
 userTitle = "Plan Overview"
 
 [onboarding.processorIntro]
-body = "Stirling now runs <strong>Policies</strong> — automated rules that classify, secure and process every document as it arrives. Set them up and monitor runs in the <strong>Processor</strong>."
+body = "Stirling now runs <strong>Policies</strong>: automated rules that classify, secure and process documents as they arrive. Set them up and monitor runs in the <strong>Processor</strong>."
 cta = "Check out the Processor"
 title = "Check out the Stirling Processor"
 
 [onboarding.saas.freeEditor]
 freeLine = "The editor is now <free>completely free</free>."
-premium = "We've added loads of new features, including <strong>Policies</strong> and <strong>Agent Chat</strong>."
+premium = "New features include <strong>Policies</strong> and <strong>Agent Chat</strong>."
 title = "Welcome to Stirling"
 
 [onboarding.saas.team]
@@ -6190,9 +6190,9 @@ rolePlaceholder = "Confirm your role"
 roleUser = "User"
 
 [onboarding.serverLicense]
-freeBody = "Our <strong>Open-Core</strong> licensing includes <strong>OAuth SSO</strong> and up to <strong>{{freeTierLimit}}</strong> users for free. To scale uninterrupted, we recommend the Stirling Team plan - <strong>100 users</strong> for $99/mo."
+freeBody = "Our <strong>Open-Core</strong> licensing includes <strong>OAuth SSO</strong> and up to <strong>{{freeTierLimit}}</strong> users for free. For more users, the Stirling Team plan covers <strong>100 users</strong> for $99/mo."
 freeTitle = "Server Licence"
-overLimitBody = "Our licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. You have <strong>{{overLimitUserCopy}}</strong> Stirling users. To continue uninterrupted, upgrade to the Stirling Server plan - <strong>unlimited seats</strong>, PDF text editing, and full admin control for $99/server/mo."
+overLimitBody = "Our licensing permits up to <strong>{{freeTierLimit}}</strong> users for free. You have <strong>{{overLimitUserCopy}}</strong> Stirling users. Upgrade to the Stirling Team plan for <strong>100 users</strong>, PDF text editing and full admin control at $99/mo."
 overLimitTitle = "Server Licence Needed"
 seePlans = "See Plans →"
 upgrade = "Upgrade now →"
@@ -6202,7 +6202,7 @@ body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take 
 title = "Tour Overview"
 
 [onboarding.welcomeSlide]
-body = "Stirling PDF is now ready for teams of all sizes. This update includes a new layout, powerful new admin capabilities, and our most requested feature - <strong>Edit Text</strong>."
+body = "This update adds a new layout, new admin tools and our most requested feature, <strong>Edit Text</strong>."
 title = "Welcome to Stirling"
 
 [onboarding.whatsNew]
@@ -6513,14 +6513,14 @@ benefit3Body = "call any Stirling endpoint programmatically"
 benefit3Title = "API access"
 button = "Turn on Processor →"
 reassurance = "No minimum · Set a $0 cap to test · Cancel anytime"
-subtitleWithAllowance = "Keep going past your {{limit}} free PDFs with automation, AI, and the API. Set a monthly ceiling, so you stay in control."
+subtitleWithAllowance = "Keep using automation, AI and the API past your {{limit}} free PDFs. Set a monthly cap to limit spend."
 title = "Turn on the Processor plan"
 
 [payg.free.editor]
 eyebrow = "Editor plan · Always free"
 
 [payg.free.header]
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and run manual OCR as much as you want, wherever you start them."
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
@@ -6549,7 +6549,7 @@ title = "What happens when the cap is reached"
 
 [payg.header]
 eyebrow = "Processor plan · {{start}} – {{end}}"
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and run manual OCR as much as you want, wherever you start them."
 freeLabel = "Always free"
 freeTitle = "Unlimited PDF editing"
 meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
@@ -6569,8 +6569,8 @@ chip = "Prepaid year"
 
 [payg.prepaid.banner]
 exhausted = "Your prepaid capacity is used up; metered billing has resumed. Top up to keep the discount."
-expiring_one = "Your prepaid year ends in {{count}} day. Unused capacity expires — top up to start a fresh year."
-expiring_other = "Your prepaid year ends in {{count}} days. Unused capacity expires — top up to start a fresh year."
+expiring_one = "Your prepaid year ends in {{count}} day. Unused capacity expires. Top up to start a new year."
+expiring_other = "Your prepaid year ends in {{count}} days. Unused capacity expires. Top up to start a new year."
 low = "You're down to {{pct}}% of your prepaid capacity. Top up any time to keep processing uninterrupted."
 
 [payg.prepaid.card]
@@ -6599,7 +6599,7 @@ editorLabel = "PDF Editor"
 login = "Log in"
 manualToolsPromo = "Unlimited free manual PDF tools"
 processorLabel = "PDF Processor"
-processorTitle = "Create an account to unlock the best of Stirling"
+processorTitle = "Create an account to use all of Stirling"
 readerLabel = "PDF Reader"
 
 [payg.spendCapMeter]
@@ -6651,11 +6651,11 @@ apiBody = "programmatic access to any Stirling endpoint"
 apiTitle = "API calls"
 automationBody = "chained tools or scheduled runs that don't need clicks"
 automationTitle = "Automation pipelines"
-footnoteUnlimited = "Manual tools (viewing, editing, merging, splitting, watermarking, compressing, manual OCR) are always free, even after your included credits are used. The distinction is the type of work, not where you click."
+footnoteUnlimited = "Manual tools (viewing, editing, merging, splitting, watermarking, compressing, manual OCR) are always free, even after your included credits are used."
 title = "What we count toward billing"
 
 [payg.upgrade.promise]
-body = "You only pay for automation pipelines, AI tools, and API calls, the work that goes beyond a single click. Edit, merge, split, sign, compress as much as you want, no charge."
+body = "You only pay for automation pipelines, AI tools and API calls. Editing, merging, splitting, signing and compressing are free."
 highlight = "Manual tools stay free, always."
 
 [payg.upgrade.steps]
@@ -6843,7 +6843,7 @@ hint = "Cancel, then Save PDF to keep them in your workspace first."
 title = "Discard unsaved changes?"
 
 [pdfTextEditor.drop]
-hint = "Releases on the editor stage replace any open document."
+hint = "Dropping a PDF here replaces the open document."
 title = "Drop a PDF to open"
 
 [pdfTextEditor.error]
@@ -6884,8 +6884,8 @@ title = "Fonts"
 
 [pdfTextEditor.fonts.compat]
 info = "Existing text edits perfectly. A new character an embedded font doesn't include falls back to a standard font."
-ok = "Every font includes the full alphabet and digits - type freely."
-warnOther = "{{count}} fonts missing some letters or numbers - typing those uses a standard fallback font."
+ok = "Every font includes the full alphabet and digits."
+warnOther = "{{count}} fonts are missing some letters or numbers. Those characters use a standard fallback font."
 
 [pdfTextEditor.fonts.pill]
 info = "Embedded"
@@ -7056,7 +7056,7 @@ pickPrompt = "Pick a PDF from the Files panel on the left to begin editing."
 renderingPreview = "Rendering preview"
 
 [pdfTextEditor.toolbar]
-addTextTooltip = "Add a text box - then click the page"
+addTextTooltip = "Add a text box, then click the page"
 advancedColour = "Advanced colour"
 advancedColourTooltip = "Advanced colour (glyph outline)"
 alignBottom = "Align bottom"
@@ -7107,7 +7107,7 @@ unlock = "Unlock selection"
 unlockTooltip = "Unlock selection - makes it editable again"
 
 [pdfTextEditor.tooltip.alpha]
-text = "This alpha viewer is still evolving-certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
+text = "This alpha viewer is still in development. Some fonts, colours, transparency effects and layout details may shift slightly. Check the generated PDF before sharing."
 title = "Alpha Viewer"
 
 [pdfTextEditor.tooltip.header]
@@ -7283,7 +7283,7 @@ name = "Free"
 [plan.freeLimit]
 cta = "View Processor Plan"
 dismiss = "Maybe Later"
-message = "That's your whole free allowance for automation, AI and the API. Seriously impressive! Keep the momentum going for just pennies a day."
+message = "You've used this month's free allowance for automation, AI and the API. It resets next month, or upgrade now to keep going."
 title = "Woah, {{total}} PDFs Processed!"
 
 [plan.highlights]
@@ -7303,7 +7303,7 @@ usageTrackingPrometheus = "Usage tracking & Prometheus"
 usersIncluded = "100 users included"
 
 [plan.licenseWarning]
-body = "You have {{total}} users but the free tier only supports {{limit}} per server. Upgrade to keep Stirling PDF running smoothly."
+body = "You have {{total}} users but the free tier only supports {{limit}}. Upgrade to add more users."
 cta = "See plans"
 overLimit = "more than {{limit}}"
 title = "Free self-hosted limit reached"
@@ -7320,7 +7320,7 @@ name = "Pro"
 [plan.spendCap]
 cta = "View Spending Limit"
 dismiss = "Not Now"
-message = "You've made the most of this month's cap. That's a load of automation, AI and API work! Bump it up whenever you like to keep going."
+message = "You've reached this month's spend cap. Raise it to keep running automation, AI and API work."
 title = "You're on a Roll!"
 
 [plan.static]
@@ -7659,7 +7659,7 @@ noClientSecret = "Edge function returned no client_secret."
 title = "Turn on the Processor plan"
 
 [portal.billing.checkout.activationSlow]
-body = "Your payment succeeded, but activation is taking a little longer than usual. It'll switch on automatically - close this and it'll appear here shortly."
+body = "Your payment succeeded, but activation is taking longer than usual. It will switch on automatically, so you can close this."
 close = "Close"
 title = "Almost there"
 
@@ -7678,7 +7678,7 @@ note = "Card details collected by Stripe. Stirling never stores PAN or CVC."
 title = "Couldn't start checkout"
 
 [portal.billing.checkout.finalizing]
-body = "Your payment went through. We're switching on metered processing across your linked instances - this usually takes a few seconds."
+body = "Your payment went through. We're switching on metered processing for your linked instances. This usually takes a few seconds."
 hint = "Please keep this window open."
 title = "Activating your Processor plan..."
 
@@ -7716,7 +7716,7 @@ freeSupport = "Community"
 freeUsers = "Up to {{users}}"
 freeUsersUnknown = "A small team"
 freeWhere = "Cloud, desktop or self-hosted"
-lede = "Every plan includes every PDF tool and SSO. What changes is how many people use it, where it runs, and what support you get."
+lede = "Every plan includes every PDF tool and SSO. Plans differ in users, hosting and support."
 open = "Compare plans"
 rowData = "Your data"
 rowHeader = "Feature"
@@ -7749,12 +7749,12 @@ users = "Users"
 
 [portal.billing.enterprise]
 cta = "Get an enterprise quote"
-sub = "Air-gapped deployment, SCIM, data residency, uptime SLAs, and an agreement to match."
+sub = "Air-gapped deployment, SCIM, data residency, uptime SLAs and custom agreements."
 title = "Running Stirling in a regulated environment?"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "Couldn't start checkout"
-noTeamResolved = "No team is resolved on your wallet yet — refresh and try again."
+noTeamResolved = "No team is linked to your wallet yet. Refresh and try again."
 payInvoice = "Pay invoice to complete"
 viewQuote = "View quote"
 
@@ -7941,9 +7941,9 @@ yearValue = "A year of processing"
 adjustLimit = "Adjust limit"
 buyCredits = "Buy credits"
 cancel = "Cancel"
-capControlNote = "Changes apply immediately — raise or lower the ceiling any time."
+capControlNote = "Changes apply immediately. You can raise or lower the ceiling any time."
 capSuffix = "/ month"
-displaySub = "You're only billed for what you process automatically — never past the ceiling."
+displaySub = "You're only billed for what you process automatically, and never past the ceiling."
 editTitle = "Set your monthly ceiling"
 eyebrow = "Spend limit"
 noCap = "no cap"
@@ -8024,7 +8024,7 @@ description = "Send a document out to be signed or notarised."
 label = "E-signature & notarisation"
 
 [portal.connections.categories.storage]
-description = "Where processed documents end up - a bucket, a drive, a ticket or a page."
+description = "Where processed documents go: a bucket, a drive, a ticket or a page."
 label = "File & attach"
 
 [portal.connections.commonFields.accessToken]
@@ -8073,9 +8073,9 @@ save = "Save connection"
 [portal.connections.picker2]
 back = "Change integration"
 heading = "What do you want to connect?"
-noResultsBody = "We do not support it yet - tell us about it and we will look at adding it."
+noResultsBody = "We don't support it yet. Tell us and we'll look at adding it."
 noResultsTitle = "Nothing matches \"{{query}}\""
-searchPlaceholder = "Search integrations - try \"sign\", \"ocr\" or a product name"
+searchPlaceholder = "Search integrations, e.g. \"sign\", \"ocr\" or a product name"
 
 [portal.connections.types.api]
 description = "Call any HTTP API from a policy. You choose the URL, authentication and payload."
@@ -8134,7 +8134,7 @@ label = "Username"
 
 [portal.connections.types.clamav]
 baseUrlPlaceholder = "http://clamav-rest:9000"
-description = "Scan documents for malware on a server you run - nothing leaves your network."
+description = "Scan documents for malware on a server you run. Nothing leaves your network."
 label = "ClamAV (self-hosted)"
 
 [portal.connections.types.cloudmersive]
@@ -8142,7 +8142,7 @@ description = "Virus and content scanning for documents in a policy."
 label = "Cloudmersive"
 
 [portal.connections.types.cloudmersiveadvanced]
-description = "Block documents containing macros, executables, scripts or embedded objects - not just known malware."
+description = "Block documents containing known malware, macros, executables, scripts or embedded objects."
 label = "Cloudmersive Advanced Scan"
 
 [portal.connections.types.confluence]
@@ -8377,8 +8377,8 @@ viewSource = "View source on GitHub"
 codeCaption = "every request"
 eyebrow = "GETTING STARTED"
 lead = "All requests authenticate with a bearer token. Keys are scoped per environment and never expire unless rotated."
-liveKey = "Production keys — billed, rate-limited per your plan."
-testKey = "Sandbox keys — free, return synthetic fixtures."
+liveKey = "Production keys: billed and rate-limited per your plan."
+testKey = "Sandbox keys: free, return synthetic fixtures."
 title = "Authentication"
 
 [portal.docs.components]
@@ -8411,12 +8411,12 @@ title = "Docs unavailable"
 
 [portal.docs.quickstart]
 eyebrow = "GETTING STARTED"
-lead = "Send your first document to a typed endpoint and get structured JSON back in three steps. No model training, no prompt engineering."
+lead = "Send your first document to a typed endpoint and get structured JSON back in three steps."
 title = "Quickstart"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "for copy-paste recipes."
-bodyBeforeLink = "wire the same call into a pipeline to chain validation, redaction, and delivery — or expose it to an agent over MCP. See"
+bodyBeforeLink = "wire the same call into a pipeline to chain validation, redaction and delivery, or expose it to an agent over MCP. See"
 label = "Next:"
 link = "Playbooks"
 
@@ -8425,7 +8425,7 @@ body = "Create a scoped key from the Infrastructure tab. Keys carry rate limits 
 title = "Issue an API key"
 
 [portal.docs.quickstart.step2]
-body = "POST a file to any typed endpoint. The endpoint determines the schema you get back — here, the invoice extractor."
+body = "POST a file to any typed endpoint. The endpoint determines the schema you get back. This example uses the invoice extractor."
 snippetCaption = "extract an invoice"
 title = "Send a document"
 
@@ -8505,8 +8505,8 @@ overview = "Overview"
 requestAccess = "Request access"
 
 [portal.documents.elevation.active]
-description = "Temporary grant — access is logged and time-boxed."
-descriptionFourEyes = "Temporary grant — a peer reviewer was notified (four-eyes)."
+description = "Temporary grant. Access is logged and time-limited."
+descriptionFourEyes = "Temporary grant. A peer reviewer was notified (four-eyes)."
 title = "Access expires in {{time}}"
 
 [portal.documents.elevation.gated]
@@ -8598,7 +8598,7 @@ user = "User"
 [portal.failures.disabled]
 closed = "This failure is already closed."
 noDocument = "This failure was not recorded against a specific document, so there is nothing here to open."
-unattended = "This file was fed by a folder, bucket or webhook, so nobody's browser is holding it to open."
+unattended = "This file came from a folder, bucket or webhook, so there is no open copy to view."
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8886,7 +8886,7 @@ keyNamePlaceholder = "e.g. Production ingest"
 secretKeyCaption = "Secret key"
 secretWarning = "Store this in a secrets manager. Stirling only ever stores a hash, so there is no way to recover it later."
 subtitle = "Give the key a name so you can recognise it later. You can revoke it at any time."
-subtitleCreated = "Copy this secret now — it won't be shown again."
+subtitleCreated = "Copy this secret now. It won't be shown again."
 title = "Create API key"
 titleCreated = "Key created"
 
@@ -9337,8 +9337,8 @@ completed_other = "All {{count}} runs completed."
 empty = "Nothing to run: the sources had no documents to process."
 failed = "Run failed: {{error}}"
 inFlight = "Nothing new to run: documents are still being processed from an earlier run."
-parked_one = "Nothing to run: {{count}} document failed previously and is parked. Fix the cause, then clear history to retry it."
-parked_other = "Nothing to run: {{count}} documents failed previously and are parked. Fix the cause, then clear history to retry them."
+parked_one = "Nothing to run: {{count}} document failed previously and is on hold. Fix the cause, then reprocess the source to retry it."
+parked_other = "Nothing to run: {{count}} documents failed previously and are on hold. Fix the cause, then reprocess the source to retry them."
 running = "Run started; still in progress."
 timeout = "Run is taking longer than expected; it may still finish in the background."
 
@@ -9499,7 +9499,7 @@ validateCompliance = "Validate compliance"
 [portal.policies.operations]
 change = "Change what this step does"
 noResults = "No step matches that. Try a product name, or \"scan\", \"notify\", \"attach\"."
-searchPlaceholder = "Search steps - try \"scan\", \"attach\" or a product name"
+searchPlaceholder = "Search steps, e.g. \"scan\", \"attach\" or a product name"
 
 [portal.policies.operations.bodyMode]
 binary = "Raw file bytes"
@@ -9635,7 +9635,7 @@ label = "Email the document (Mailgun)"
 [portal.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
-note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+note = "The workflow must reply with {\"approved\": true}. Anything else, including a timeout, stops the run and holds the document."
 
 [portal.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
@@ -9657,7 +9657,7 @@ label = "Upload to Nextcloud"
 [portal.policies.operations.presidioAnalyze]
 description = "Your own Presidio server reports the personal data it finds."
 label = "Detect personal data"
-note = "Presidio reads text, not files. Give it the text you want checked — the document itself is not uploaded."
+note = "Presidio reads text, not files. Enter the text to check. The document itself is not uploaded."
 
 [portal.policies.operations.responseMode]
 replace = "Replace the document with the reply"
@@ -9672,7 +9672,7 @@ description = "Tells a channel that the policy handled a document."
 label = "Post a message to Slack"
 
 [portal.policies.operations.splunkEvent]
-description = "Records what the policy did, where your auditors already look."
+description = "Sends a record of what the policy did to Splunk."
 label = "Send an audit event to Splunk"
 
 [portal.policies.operations.sumologicEvent]
@@ -9727,7 +9727,7 @@ desc = "Rewrites the document in the ISO archival format, embedding its fonts an
 label = "Convert to PDF/A for archiving"
 
 [portal.policies.wizard.capability.redact]
-desc = "Finds and blacks out sensitive details — like National Insurance and card numbers — so they can't be read."
+desc = "Finds and blacks out sensitive details, such as National Insurance and card numbers, so they can't be read."
 label = "Redact sensitive information"
 
 [portal.policies.wizard.capability.sanitize]
@@ -9735,7 +9735,7 @@ desc = "Removes hidden JavaScript so nothing can run automatically when the docu
 label = "Strip active content"
 
 [portal.policies.wizard.capability.timestampPdf]
-desc = "Proves the document existed in this exact form at a point in time, using an independent timestamp authority. Only a hash is sent - the document never leaves your server."
+desc = "Proves the document existed in this exact form at a point in time, using an independent timestamp authority. Only a hash is sent. The document stays on your server."
 label = "Add a trusted timestamp"
 
 [portal.policies.wizard.capability.watermark]
@@ -9796,7 +9796,7 @@ description = "Each document is classified first, then delivered to the first ru
 destinationAria = "Destination"
 labelAria = "Document types"
 labelPlaceholder = "Choose document types"
-needsDestination = "Add a destination below first - a rule needs somewhere to send documents to."
+needsDestination = "Add a destination below first, so rules have somewhere to send documents."
 needsSource = "Connect a folder, bucket or webhook for this policy to watch."
 remove = "Remove rule"
 sourceDescription = "Documents arriving here are classified, then sent on by the rules below."
@@ -9865,7 +9865,7 @@ confirm = "I have read and agree to the Stirling Enterprise Agreement."
 docName = "Stirling Enterprise Agreement"
 docSub = "MSA, Order Form, EULA and DPA, combined into one signature."
 download = "Download"
-downloadDraftError = "Could not generate the agreement PDF - the document renderer is unavailable. Please try again shortly or contact support."
+downloadDraftError = "Could not generate the agreement PDF because the document renderer is unavailable. Please try again shortly or contact support."
 downloadError = "Could not download the signed agreement. Please try again."
 legalName = "Legal entity name"
 legalNamePlaceholder = "The legal entity that will sign"
@@ -9912,11 +9912,11 @@ postalCodePlaceholder = "SW1A 1AA"
 posture = "Governance"
 posture_count = "~{{count}} policies"
 posture_essentials = "Essentials"
-posture_essentialsSub = "Classification + Sharing — the defaults"
+posture_essentialsSub = "Classification and Sharing (default)"
 posture_governed = "Governed"
 posture_governedSub = "Adds Security and Routing"
 posture_regulated = "Regulated"
-posture_regulatedSub = "Every category — Compliance, Retention, Ingestion"
+posture_regulatedSub = "Every category: Compliance, Retention, Ingestion"
 qbr = "Quarterly business reviews"
 qbrSub = "Your SE reviews usage and roadmap each quarter"
 region = "County / region"
@@ -10039,13 +10039,13 @@ label = "Trial"
 [portal.procurement.license]
 copied = "Copied"
 copy = "Copy key"
-downloadError = "Could not generate the offline licence file just yet — please try again in a moment."
+downloadError = "Could not generate the offline licence file. Please try again in a moment."
 downloadOffline = "Download offline licence (.lic)"
 hint = "Paste this key into a self-hosted instance to activate it, or keep it for your records. Keep it safe."
 label = "Your licence key"
 subtitle = "Activate a self-hosted instance with this key, or keep it for your records."
 title = "Your licence key"
-trialFileHint = "This is your trial licence file. Once your agreement is in place, come back and download it again — unlike the online licence key, the .lic file won't update on its own."
+trialFileHint = "This is your trial licence file. Download it again once your agreement is in place. Unlike the online licence key, the .lic file does not update itself."
 
 [portal.procurement.link]
 cta = "Link account"
@@ -10059,10 +10059,10 @@ eyebrow = "Live"
 title = "You're live on Stirling Enterprise"
 
 [portal.procurement.milestone]
-downloadError = "Could not download the quote PDF just yet — please try again in a moment."
+downloadError = "Could not download the quote PDF. Please try again in a moment."
 
 [portal.procurement.payment]
-description = "Your quote is accepted and your licence is already active — your team can start right away. Pay the first invoice when you're ready; you can pay or download it here, no email needed."
+description = "Your quote is accepted and your licence is active, so your team can start now. Pay or download the first invoice here when you're ready."
 downloadAgreement = "Download signed agreement"
 downloadInvoice = "Download invoice"
 eyebrow = "Payment"
@@ -10117,7 +10117,7 @@ workEmailPlaceholder = "you@company.com"
 
 [portal.procurement.trial]
 body = "Extending adds 7 days and notifies your solutions engineer."
-bodyMaxed = "You have used all your extensions — talk to your solutions engineer if you need more time."
+bodyMaxed = "You have used all your extensions. Contact your solutions engineer if you need more time."
 cancel = "Cancel trial"
 extend = "Extend 7 days"
 maxed = "Maxed out"
@@ -10373,7 +10373,7 @@ loadErrorTitle = "Couldn't load credit usage"
 resets = "Resets {{date}}"
 
 [portal.usage.sessionExpired]
-body = "Your Stirling account session has expired. Sign in again to view billing — your instance stays linked."
+body = "Your Stirling account session has expired. Sign in again to view billing. Your instance stays linked."
 
 [portal.users]
 title = "Users"
@@ -10400,7 +10400,7 @@ summary = "Limited or web-only access; cannot hold personal configs."
 
 [portal.users.roles.member]
 label = "Member"
-summary = "Regular user — works with shared resources and their own configs."
+summary = "Regular user who works with shared resources and their own configs."
 
 [portal.users.roles.member.permissions]
 0 = "Use the editor and shared integrations"
@@ -10410,7 +10410,7 @@ summary = "Regular user — works with shared resources and their own configs."
 
 [portal.users.roles.team_owner]
 label = "Team owner"
-summary = "Owns a team — manages its members' resources and shared configs."
+summary = "Owns a team and manages its members' resources and shared configs."
 
 [portal.users.roles.team_owner.permissions]
 0 = "Create & manage the team's S3 connections"
@@ -10716,7 +10716,7 @@ config = "Config"
 files = "Files"
 
 [quickNav]
-account = "Account"
+accountSettings = "Account settings"
 docs = "Documentation"
 editor = "Editor"
 home = "Stirling"
@@ -10797,7 +10797,7 @@ title = "Advanced Redaction Settings"
 
 [redact.tooltip.advanced.regex]
 bullet1 = "Example: \\d{4}-\\d{2}-\\d{2} to match any dates in YYYY-MM-DD format"
-bullet2 = "Use with caution - test thoroughly"
+bullet2 = "Test your pattern before relying on it"
 text = "Enable regular expressions for advanced pattern matching. Useful for finding phone numbers, emails, or complex patterns."
 title = "Use Regex"
 
@@ -10824,7 +10824,7 @@ text = "Select text directly on the PDF to mark it for redaction. Click and drag
 title = "Mark Text Tool"
 
 [redact.tooltip.mode.automatic]
-text = "Automatically finds and redacts specified text throughout the document. Perfect for removing consistent sensitive information like names, addresses, or confidential markers."
+text = "Finds and redacts the text you specify throughout the document, such as names, addresses or confidential markers."
 title = "Automatic Redaction"
 
 [redact.tooltip.mode.header]
@@ -11066,7 +11066,7 @@ title = "Convert to CMYK"
 [replaceColor.tooltip.custom]
 bullet1 = "Text colour - Choose the colour for text elements"
 bullet2 = "Background colour - Set the background colour for the document"
-text = "Define your own text and background colours using the colour pickers. Perfect for creating branded documents or specific accessibility requirements."
+text = "Pick your own text and background colours, for example to match branding or meet accessibility needs."
 title = "Custom Colours"
 
 [replaceColor.tooltip.description]
@@ -11210,7 +11210,7 @@ failed = "An error occurred while extracting image scans."
 
 [scannerImageSplit.tooltip]
 headsUp = "Heads-up"
-headsUpDesc = "Overlapping photos or backgrounds very close in colour to the photos can reduce accuracy-try a lighter or darker background and leave more space."
+headsUpDesc = "Overlapping photos, or a background close in colour to the photos, can reduce accuracy. Try a lighter or darker background and leave more space."
 problem1 = "Photos not detected → increase Tolerance to 30-50"
 problem2 = "Too many false detections → increase Minimum Area to 15,000-20,000"
 problem3 = "Crops are too tight → increase Border Size to 5-10"
@@ -11228,7 +11228,7 @@ useCase2 = "Split flatbed batches into separate files"
 useCase3 = "Break collages into individual photos"
 useCase4 = "Pull photos from documents"
 whatThisDoes = "What this does"
-whatThisDoesDesc = "Automatically finds and extracts each photo from a scanned page or composite image-no manual cropping."
+whatThisDoesDesc = "Finds and extracts each photo from a scanned page or composite image, with no manual cropping."
 whenToUse = "When to use"
 
 [ScannerImageSplit.selectText]
@@ -11868,7 +11868,7 @@ title = "Signature Location"
 [signatureSettings.tooltip.logo]
 bullet1 = "Displayed alongside signature and text"
 bullet2 = "Supports PNG, JPG formats"
-bullet3 = "Enhances professional appearance"
+bullet3 = "Useful for branded signatures"
 description = "Add a company logo to visible signatures for branding and authenticity."
 title = "Company Logo"
 
@@ -11986,7 +11986,7 @@ bullet4 = "You can change methods at any time before processing"
 title = "Choose Your Split Method"
 
 [split.methodSelection.tooltip.header]
-text = "Choose how you want to split your PDF document. Each method is optimised for different use cases and document types."
+text = "Choose how you want to split your PDF."
 title = "Split Method Selection"
 
 [split.poster]
@@ -12029,16 +12029,16 @@ title = "Split by Document Count"
 bullet1 = "Enter the number of pages per output file"
 bullet2 = "Last file may have fewer pages if not evenly divisible"
 bullet3 = "Useful for batch processing workflows"
-text = "Create multiple PDFs with a specific number of pages each. Perfect for creating uniform document chunks."
+text = "Create multiple PDFs with a set number of pages each."
 title = "Split by Page Count"
 
 [split.tooltip.byPageDivider]
 bullet1 = "Print divider sheets from the download link"
 bullet2 = "Insert divider sheets between your documents"
 bullet3 = "Scan all documents together as one PDF"
-bullet4 = "Upload - divider pages are automatically detected and removed"
+bullet4 = "Upload the scan. Divider pages are detected and removed automatically."
 bullet5 = "Enable Duplex Mode if scanning both sides of divider sheets"
-text = "Automatically split scanned documents using physical divider sheets with QR codes. Perfect for processing multiple documents scanned together."
+text = "Split a batch of scanned documents using QR code divider sheets placed between them."
 title = "Split by Page Divider"
 
 [split.tooltip.byPages]
@@ -12053,7 +12053,7 @@ bullet1 = "Target Page Size: Choose output paper size (A4, Letter, etc.)"
 bullet2 = "Horizontal/Vertical Divisions: Grid size for splitting"
 bullet3 = "Right-to-Left: Reverse column order for RTL layouts"
 bullet4 = "Print and assemble the pieces to create your poster"
-text = "Split large PDF pages into smaller printable chunks suitable for standard paper sizes. Perfect for creating poster prints from oversized pages."
+text = "Split large pages into pieces that fit standard paper, so you can print them as a poster."
 title = "Split for Poster Print"
 
 [split.tooltip.bySections]
@@ -12067,7 +12067,7 @@ title = "Split by Grid Sections"
 bullet1 = "Use MB for larger files (e.g., 10MB)"
 bullet2 = "Use KB for smaller files (e.g., 500KB)"
 bullet3 = "System will split at page boundaries"
-text = "Create multiple PDFs that don't exceed a specified file size. Ideal for file size limitations or email attachments."
+text = "Create multiple PDFs that each stay under a set file size, for example to fit email attachment limits."
 title = "Split by File Size"
 
 [split.value.docCount]
@@ -12427,7 +12427,7 @@ chooseSidebar = "Use sidebar mode"
 description = "Preview both layouts and decide how you want to explore Stirling PDF tools."
 dismiss = "Maybe later"
 fullscreenDescription = "Browse every tool in a catalogue that covers the workspace until you pick one."
-fullscreenTitle = "Fullscreen mode - (legacy)"
+fullscreenTitle = "Fullscreen mode (legacy)"
 recommended = "Recommended"
 sidebarDescription = "Keep tools alongside your workspace for quick switching."
 sidebarTitle = "Sidebar mode"
@@ -12515,7 +12515,7 @@ urgent = "Urgent"
 attentionBody = "Your admin needs to sign in to see more info. Please contact them immediately."
 attentionBodyAdmin = "Review the licence requirements to keep this server compliant."
 attentionTitle = "This server needs admin attention"
-message = "Get the most out of Stirling PDF with 100 users, PDF text editing, and advanced features"
+message = "Up to 100 users, PDF text editing and more"
 seeInfo = "See info"
 title = "Upgrade to Server Plan"
 upgradeButton = "Upgrade Now"
@@ -12530,7 +12530,7 @@ configureSettings = "Configure Analytics Settings"
 error = "Error loading usage statistics"
 noData = "No data available"
 noDataMessage = "No usage statistics are currently available."
-usageAnalyticsExplanation = "Usage analytics track endpoint requests and tool usage patterns. Combined with the Audit Logging dashboard, you get complete visibility into system activity, performance, and security events."
+usageAnalyticsExplanation = "Usage analytics track endpoint requests and tool usage. Use them with the Audit Logging dashboard to see system activity and security events."
 viewAuditLogs = "View Audit Logs"
 
 [usage.chart]
@@ -12624,7 +12624,7 @@ team = "Team"
 [users.confirm]
 cancelInviteBody = "Cancel the invitation to {{email}}? They won't be able to join with the current link."
 cancelInviteTitle = "Cancel invitation"
-deleteTeamBody = "Delete the {{name}} team? The team must be empty first - move its members to another team, and it can't still own any integration configs."
+deleteTeamBody = "Delete the {{name}} team? First move its members to another team and remove any integration configs it owns."
 deleteTeamTitle = "Delete team"
 disableMfaBody = "Remove {{name}}'s MFA enrolment? They'll set it up again on next login if required."
 disableMfaTitle = "Reset MFA"
@@ -12666,8 +12666,8 @@ methodDirect = "Create account directly"
 methodEmail = "Invite by email"
 password = "Password"
 passwordError = "Password must be at least 8 characters"
-processorDeferred = "Invite sent, but Processor access couldn't be granted yet - set it from the roster once they've joined."
-processorDesc = "The governance surface, run pipelines, agents and the API."
+processorDeferred = "Invite sent, but Processor access couldn't be granted yet. Set it from the roster once they've joined."
+processorDesc = "Run policies, pipelines, agents and the API."
 role = "Role"
 send2 = "Send invite"
 subtitle2 = "They'll get an email to join your Stirling workspace."
@@ -12718,7 +12718,7 @@ title = "Rename team"
 apply = "Reset password"
 confirm = "Confirm password"
 copied = "Copied to clipboard"
-copyHint = "Copy this now - it won't be shown again."
+copyHint = "Copy this now. It won't be shown again."
 email = "Email the user about the reset"
 forceChange = "Require a password change on next login"
 generate = "Generate a secure password"
@@ -12800,7 +12800,7 @@ certExpired = "Certificate expired"
 certRevocationUnknown = "Certificate revocation status unknown"
 certRevoked = "Certificate revoked"
 chainInvalid = "Certificate chain invalid"
-documentModified = "Document modified after signing - content was added outside the signed area"
+documentModified = "Document modified after signing: content was added outside the signed area"
 revocationNotChecked = "Revocation was not checked"
 selfSigned = "Self-signed - signer identity not verified"
 signatureInvalid = "Signature cryptographic check failed"
@@ -13281,14 +13281,14 @@ title = "Watermark Type Selection"
 bullet1 = "Upload any image format"
 bullet2 = "Maintains image quality"
 bullet3 = "Perfect for logos and stamps"
-text = "Use logos, stamps, or any image as a watermark. Great for branding and visual identification."
+text = "Use a logo, stamp, or any image as a watermark."
 title = "Image Watermarks"
 
 [watermark.tooltip.type.text]
 bullet1 = "Customisable fonts and languages"
 bullet2 = "Adjustable colours and transparency"
 bullet3 = "Ideal for legal or branding text"
-text = "Perfect for adding copyright notices, company names, or confidentiality labels. Supports multiple languages and custom colours."
+text = "Add copyright notices, company names, or confidentiality labels. Supports multiple languages and custom colours."
 title = "Text Watermarks"
 
 [watermark.tooltip.wording.header]

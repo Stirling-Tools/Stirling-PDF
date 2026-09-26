@@ -13,7 +13,7 @@ export const useRedactModeTips = (): TooltipContent => {
         title: t("redact.tooltip.mode.automatic.title", "Automatic Redaction"),
         description: t(
           "redact.tooltip.mode.automatic.text",
-          "Automatically finds and redacts specified text throughout the document. Perfect for removing consistent sensitive information like names, SSNs, or confidential markers.",
+          "Finds and redacts the text you specify throughout the document, such as names, addresses or confidential markers.",
         ),
       },
       {
@@ -92,7 +92,7 @@ export const useRedactAdvancedTips = (): TooltipContent => {
           ),
           t(
             "redact.tooltip.advanced.regex.bullet2",
-            "Use with caution - test thoroughly",
+            "Test your pattern before relying on it",
           ),
         ],
       },

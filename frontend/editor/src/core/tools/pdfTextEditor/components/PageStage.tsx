@@ -261,7 +261,7 @@ export function PageStage() {
               <Text size="sm" c="dimmed">
                 {t(
                   "pdfTextEditor.drop.hint",
-                  "Releases on the editor stage replace any open document.",
+                  "Dropping a PDF here replaces the open document.",
                 )}
               </Text>
             </Stack>

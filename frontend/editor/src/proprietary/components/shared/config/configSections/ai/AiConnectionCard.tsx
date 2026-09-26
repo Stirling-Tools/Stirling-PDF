@@ -212,7 +212,7 @@ export function AiConnectionCard({
           )}
           description={t(
             "admin.settings.ai.general.mode.self.description",
-            "A container you host, pointed at a model provider of your choosing. Your key, your bill, your data path.",
+            "A container you host, connected to a model provider you choose.",
           )}
           badge={<PendingBadge show={isFieldPending("enabled")} />}
         >
@@ -362,7 +362,7 @@ export function AiConnectionCard({
           )}
           description={t(
             "admin.settings.ai.general.mode.cloud.description",
-            "No container, no provider key, no model choice - the work runs on Stirling Cloud and is billed to the account this server is linked to.",
+            "Runs on Stirling Cloud and is billed to the account this server is linked to. No container or provider key needed.",
           )}
           badge={
             linked === false ? (
@@ -419,7 +419,7 @@ export function AiConnectionCard({
                 <Text size="sm" c="dimmed" mt={2}>
                   {t(
                     "admin.settings.ai.general.cloud.indexing.help",
-                    "Off means document questions are unavailable. It does not stop text being sent - only stored.",
+                    "Off means document questions are unavailable. Text is still sent, but not stored.",
                   )}
                 </Text>
               </div>

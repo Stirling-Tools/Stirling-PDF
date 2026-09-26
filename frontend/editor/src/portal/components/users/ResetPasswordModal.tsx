@@ -135,7 +135,7 @@ export function ResetPasswordModal({
                 ? t("users.resetPw.copied", "Copied to clipboard")
                 : t(
                     "users.resetPw.copyHint",
-                    "Copy this now - it won't be shown again.",
+                    "Copy this now. It won't be shown again.",
                   )
             }
           >

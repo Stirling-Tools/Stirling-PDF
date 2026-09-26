@@ -47,7 +47,7 @@ export interface SupabaseLoginState {
 
 const NOT_CONFIGURED_KEY = "auth.supabaseUnconfigured";
 const NOT_CONFIGURED_FALLBACK =
-  "Account login is unavailable — Supabase is not configured.";
+  "Account login is unavailable because Supabase is not configured.";
 
 export function useSupabaseLogin(
   options: UseSupabaseLoginOptions = {},

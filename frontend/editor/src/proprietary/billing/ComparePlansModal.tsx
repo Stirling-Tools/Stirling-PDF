@@ -196,7 +196,7 @@ export function ComparePlansModal({
       title={t("portal.billing.compare.title", "Compare plans")}
       subtitle={t(
         "portal.billing.compare.lede",
-        "Every plan includes every PDF tool and SSO. What changes is how many people use it, where it runs, and what support you get.",
+        "Every plan includes every PDF tool and SSO. Plans differ in users, hosting and support.",
       )}
       footer={
         onUpgradeTeam || onExploreEnterprise ? (

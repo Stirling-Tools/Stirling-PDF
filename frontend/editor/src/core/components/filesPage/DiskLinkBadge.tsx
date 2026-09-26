@@ -71,7 +71,7 @@ export function DiskLinkBadge({ file, compact = false }: DiskLinkBadgeProps) {
             icon: <LinkOffIcon style={{ fontSize: "0.85rem" }} />,
             tooltip: t(
               "filesPage.diskLink.orphanedHint",
-              "The original at {{path}} is gone. This copy is only here - saving it will ask for a new location.",
+              "The original at {{path}} is gone. Saving this copy will ask for a new location.",
               { path: file.orphanedFilePath ?? "" },
             ),
           }
@@ -80,7 +80,7 @@ export function DiskLinkBadge({ file, compact = false }: DiskLinkBadgeProps) {
             icon: <SyncProblemIcon style={{ fontSize: "0.85rem" }} />,
             tooltip: t(
               "filesPage.diskLink.conflictHint",
-              "The file on disk changed while you had unsaved edits. Your version is shown - saving will overwrite the one on disk.",
+              "The file on disk changed while you had unsaved edits. Your version is shown. Saving will overwrite the one on disk.",
             ),
           };
 

@@ -362,7 +362,7 @@ export function Users() {
       title: t("users.confirm.deleteTeamTitle", "Delete team"),
       body: t(
         "users.confirm.deleteTeamBody",
-        "Delete the {{name}} team? The team must be empty first - move its members to another team, and it can't still own any integration configs.",
+        "Delete the {{name}} team? First move its members to another team and remove any integration configs it owns.",
         { name: team.name },
       ),
       confirmLabel: t("users.action.deleteTeam", "Delete team"),

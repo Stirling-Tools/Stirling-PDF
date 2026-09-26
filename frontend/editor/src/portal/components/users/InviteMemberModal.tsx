@@ -282,7 +282,7 @@ export function InviteMemberModal({
         onNotice?.(
           t(
             "users.invite.processorDeferred",
-            "Invite sent, but Processor access couldn't be granted yet - set it from the roster once they've joined.",
+            "Invite sent, but Processor access couldn't be granted yet. Set it from the roster once they've joined.",
           ),
         );
       onInvited?.();
@@ -482,7 +482,7 @@ export function InviteMemberModal({
               label={t("users.cap.processor", "Processor")}
               description={t(
                 "users.invite.processorDesc",
-                "The governance surface, run pipelines, agents, and the API.",
+                "Run policies, pipelines, agents and the API.",
               )}
             />
           )}

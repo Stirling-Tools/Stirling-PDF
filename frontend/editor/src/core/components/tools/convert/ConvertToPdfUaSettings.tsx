@@ -164,7 +164,7 @@ const ConvertToPdfUaSettings = ({
         )}
         description={t(
           "convert.pdfUaOverrideLanguageHelp",
-          "Only tick this if the language above is right and the document's own is wrong. Relabelling a document into a language it is not written in makes a screen reader unintelligible.",
+          "Only tick this if the language above is right and the document's own is wrong. A wrong language makes screen readers mispronounce the text.",
         )}
         checked={parameters.pdfUaOptions.overrideLanguage}
         onChange={(event) =>
@@ -204,7 +204,7 @@ const ConvertToPdfUaSettings = ({
         <Text size="sm">
           {t(
             "convert.pdfUaAltTextNotice",
-            "Images need a written description before a document can be certified. Descriptions are never generated automatically, because an invented one passes the checker while telling a screen-reader user nothing. Any image left without one is reported, and the file comes back tagged but not certified.",
+            "Images need a written description before a document can be certified. Descriptions are never generated automatically. Any image without one is reported, and the file comes back tagged but not certified.",
           )}
         </Text>
       </Alert>
@@ -214,7 +214,7 @@ const ConvertToPdfUaSettings = ({
           <Text size="sm">
             {t(
               "convert.pdfUaAltTextSingleFileOnly",
-              "Descriptions belong to one document: an image is identified by its position, which is a different image in every file. Convert these {{fileCount}} files to tag them, then convert one at a time to describe its images.",
+              "Image descriptions can only be added to one file at a time. Convert these {{fileCount}} files to tag them, then convert each one on its own to describe its images.",
               { fileCount: selectedFiles.length },
             )}
           </Text>

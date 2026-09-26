@@ -129,7 +129,7 @@ export function AiStatusCard({ settings }: AiStatusCardProps) {
     ok: cloud
       ? t(
           "admin.settings.ai.status.cloud.ok.body",
-          "Stirling Cloud accepted this server. Nothing to run or patch here.",
+          "Stirling Cloud accepted this server.",
         )
       : t(
           "admin.settings.ai.status.ok.body",

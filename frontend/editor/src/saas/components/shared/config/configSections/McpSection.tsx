@@ -192,7 +192,7 @@ export default function McpSection() {
                 <Text size="xs" c="dimmed">
                   {t(
                     "config.mcp.setup.hint",
-                    "Pick your client, paste the snippet into the file shown, then restart it. You'll sign in with your Stirling account on first use - no keys to copy.",
+                    "Pick your client, paste the snippet into the file shown, then restart it. You'll sign in with your Stirling account on first use, so there are no keys to copy.",
                   )}
                 </Text>
                 <Tabs

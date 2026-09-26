@@ -460,7 +460,7 @@ export default function FileManagerView() {
             folders.setError(
               t(
                 "filesPage.processing.nothingToRestore",
-                "No originals to restore - these files are already their originals.",
+                "No originals to restore. These files are already the originals.",
               ),
             );
           }

@@ -171,7 +171,7 @@ const CAPABILITY_META: Record<
     labelEn: "Redact sensitive information",
     descKey: "portal.policies.wizard.capability.redact.desc",
     descEn:
-      "Finds and blacks out sensitive details — like Social Security and card numbers — so they can't be read.",
+      "Finds and blacks out sensitive details, such as Social Security and card numbers, so they can't be read.",
   },
   sanitize: {
     labelKey: "portal.policies.wizard.capability.sanitize.label",
@@ -186,7 +186,7 @@ const CAPABILITY_META: Record<
     labelEn: "Add a trusted timestamp",
     descKey: "portal.policies.wizard.capability.timestampPdf.desc",
     descEn:
-      "Proves the document existed in this exact form at a point in time, using an independent timestamp authority. Only a hash is sent - the document never leaves your server.",
+      "Proves the document existed in this exact form at a point in time, using an independent timestamp authority. Only a hash is sent. The document stays on your server.",
   },
   watermark: {
     labelKey: "portal.policies.wizard.capability.watermark.label",
