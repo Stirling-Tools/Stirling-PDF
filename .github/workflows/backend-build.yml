@@ -101,7 +101,7 @@ jobs:
           cache-name: "gradle-java-${{ env.JAVA_VERSION }}-${{ matrix.flavor }}"
           save-scope: shared
           token: ${{ github.token }}
-          key: ${{ matrix.flavor}}-${{ needs.hash_pr.outputs.cache_key }}
+          key: ${{ needs.hash_pr.outputs.cache_key }}
           allow-shared-restore: true
           path: |
             .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
