@@ -57,6 +57,24 @@ export const VisibleSignature: Story = {
   ),
 };
 
+/**
+ * With a box already placed. Worth its own story because placing a box must not make the
+ * panel any taller: the reset control is always present, so no extra row appears here to
+ * push the tool's run button off the bottom of the panel.
+ */
+export const BoxPlaced: Story = {
+  render: () => (
+    <SettingsDemo
+      initialParameters={{
+        ...defaultParameters,
+        showSignature: true,
+        name: "Jane Doe",
+        signatureArea: { x: 320, y: 60, width: 200, height: 60 },
+      }}
+    />
+  ),
+};
+
 export const Disabled: Story = {
   render: () => (
     <SettingsDemo
