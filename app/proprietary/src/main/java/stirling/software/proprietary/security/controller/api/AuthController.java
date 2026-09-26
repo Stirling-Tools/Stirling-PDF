@@ -30,6 +30,7 @@ import stirling.software.common.constants.JwtConstants;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.access.service.ResourceAccessService;
 import stirling.software.proprietary.access.service.TeamLeadLookup;
+import stirling.software.proprietary.audit.AuditContext;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
@@ -105,6 +106,9 @@ public class AuthController {
                         .body(Map.of("error", "Username is required"));
             }
 
+            String username = request.getUsername().trim();
+            AuditContext.setAttemptedSubject(httpRequest, username);
+
             if (request.getPassword() == null || request.getPassword().isEmpty()) {
                 log.warn(
                         "Login attempt with null or empty password for user: {}",
@@ -113,7 +117,6 @@ public class AuthController {
                         .body(Map.of("error", "Password is required"));
             }
 
-            String username = request.getUsername().trim();
             String ip = httpRequest.getRemoteAddr();
 
             // Check if account is blocked due to too many failed attempts
@@ -181,6 +184,8 @@ public class AuthController {
                                             "message", "Invalid two-factor code"));
                 }
             }
+
+            AuditContext.setSubject(httpRequest, username);
 
             Map<String, Object> claims = new HashMap<>();
             claims.put("authType", AuthenticationType.WEB.toString());
