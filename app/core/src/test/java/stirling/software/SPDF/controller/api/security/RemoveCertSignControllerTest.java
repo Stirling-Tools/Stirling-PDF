@@ -11,11 +11,22 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.List;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.pdmodel.PDAppearanceContentStream;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceDictionary;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
+import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDNonTerminalField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -191,6 +202,127 @@ class RemoveCertSignControllerTest {
 
             ResponseEntity<Resource> response = removeCertSignController.removeCertSignPDF(request);
             assertNotNull(response.getBody());
+        }
+
+        @Test
+        @DisplayName("Should remove a visible signature without drawing it onto the page")
+        void testRemoveCertSign_VisibleSignatureRemoved() throws Exception {
+            byte[] pdfWithVisibleSig;
+            try (PDDocument doc = new PDDocument()) {
+                PDPage page = new PDPage();
+                doc.addPage(page);
+                PDAcroForm acroForm = new PDAcroForm(doc);
+                doc.getDocumentCatalog().setAcroForm(acroForm);
+                acroForm.setSignaturesExist(true);
+                acroForm.setAppendOnly(true);
+
+                PDSignatureField sigField = new PDSignatureField(acroForm);
+                PDAnnotationWidget widget = sigField.getWidgets().get(0);
+                PDRectangle rect = new PDRectangle(50, 50, 200, 50);
+                widget.setRectangle(rect);
+                widget.setPage(page);
+
+                PDAppearanceStream stream = new PDAppearanceStream(doc);
+                stream.setBBox(new PDRectangle(rect.getWidth(), rect.getHeight()));
+                try (PDAppearanceContentStream cs = new PDAppearanceContentStream(stream)) {
+                    cs.addRect(0, 0, rect.getWidth(), rect.getHeight());
+                    cs.fill();
+                }
+                PDAppearanceDictionary appearance = new PDAppearanceDictionary();
+                appearance.setNormalAppearance(stream);
+                widget.setAppearance(appearance);
+
+                page.getAnnotations().add(widget);
+                acroForm.getFields().add(sigField);
+
+                PDSignature signature = new PDSignature();
+                sigField.setValue(signature);
+                COSDictionary perms = new COSDictionary();
+                perms.setItem(COSName.DOCMDP, signature);
+                doc.getDocumentCatalog().getCOSObject().setItem(COSName.PERMS, perms);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                doc.save(baos);
+                pdfWithVisibleSig = baos.toByteArray();
+            }
+
+            MockMultipartFile pdfFile =
+                    new MockMultipartFile(
+                            "fileInput",
+                            "signed.pdf",
+                            MediaType.APPLICATION_PDF_VALUE,
+                            pdfWithVisibleSig);
+
+            PDFFile request = new PDFFile();
+            request.setFileInput(pdfFile);
+
+            when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                    .thenAnswer(inv -> Loader.loadPDF(pdfWithVisibleSig));
+
+            ResponseEntity<Resource> response = removeCertSignController.removeCertSignPDF(request);
+
+            try (PDDocument result = Loader.loadPDF(drainBody(response))) {
+                PDPage page = result.getPage(0);
+                assertTrue(page.getAnnotations().isEmpty());
+                assertEquals(-1, page.getContents().read(), "page content must stay empty");
+                PDAcroForm acroForm = result.getDocumentCatalog().getAcroForm();
+                assertTrue(acroForm.getFields().isEmpty());
+                assertFalse(acroForm.isSignaturesExist());
+                assertFalse(result.getDocumentCatalog().getCOSObject().containsKey(COSName.PERMS));
+            }
+        }
+
+        @Test
+        @DisplayName("Should remove a signature field nested under a non-terminal field")
+        void testRemoveCertSign_NestedSignatureFieldRemoved() throws Exception {
+            byte[] pdfWithNestedSig;
+            try (PDDocument doc = new PDDocument()) {
+                PDPage page = new PDPage();
+                doc.addPage(page);
+                PDAcroForm acroForm = new PDAcroForm(doc);
+                doc.getDocumentCatalog().setAcroForm(acroForm);
+
+                PDNonTerminalField parent = new PDNonTerminalField(acroForm);
+                parent.setPartialName("signatures");
+                PDSignatureField sigField = new PDSignatureField(acroForm);
+                sigField.getCOSObject().setItem(COSName.PARENT, parent.getCOSObject());
+                parent.setChildren(List.of(sigField));
+                acroForm.getFields().add(parent);
+
+                PDAnnotationWidget widget = sigField.getWidgets().get(0);
+                widget.setRectangle(new PDRectangle(50, 50, 200, 50));
+                widget.setPage(page);
+                page.getAnnotations().add(widget);
+
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                doc.save(baos);
+                pdfWithNestedSig = baos.toByteArray();
+            }
+
+            MockMultipartFile pdfFile =
+                    new MockMultipartFile(
+                            "fileInput",
+                            "signed.pdf",
+                            MediaType.APPLICATION_PDF_VALUE,
+                            pdfWithNestedSig);
+
+            PDFFile request = new PDFFile();
+            request.setFileInput(pdfFile);
+
+            when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                    .thenAnswer(inv -> Loader.loadPDF(pdfWithNestedSig));
+
+            ResponseEntity<Resource> response = removeCertSignController.removeCertSignPDF(request);
+
+            try (PDDocument result = Loader.loadPDF(drainBody(response))) {
+                assertTrue(result.getPage(0).getAnnotations().isEmpty());
+                PDAcroForm acroForm = result.getDocumentCatalog().getAcroForm();
+                // PDFBox leaves a field without /FT and /Kids out of getFields(), so the
+                // parent is checked in the dictionaries.
+                COSArray fields = acroForm.getCOSObject().getCOSArray(COSName.FIELDS);
+                assertEquals(1, fields.size());
+                COSDictionary parent = (COSDictionary) fields.getObject(0);
+                assertEquals(0, parent.getCOSArray(COSName.KIDS).size());
+            }
         }
 
         @Test
