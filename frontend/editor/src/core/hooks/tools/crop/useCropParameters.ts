@@ -14,15 +14,19 @@ import {
   isRectangle,
 } from "@app/utils/cropCoordinates";
 import { DEFAULT_CROP_AREA } from "@app/constants/cropConstants";
+import { validatePageNumbers } from "@app/utils/pageSelection";
 
 export interface CropParameters extends BaseParameters {
   cropArea: Rectangle;
   autoCrop: boolean;
+  /** Pages to crop, e.g. "3", "1,3,5-8" or "all" */
+  pageNumbers: string;
 }
 
 export const defaultParameters: CropParameters = {
   cropArea: DEFAULT_CROP_AREA,
   autoCrop: false,
+  pageNumbers: "all",
 };
 
 export type CropParametersHook = BaseParametersHook<CropParameters> & {
@@ -50,7 +54,13 @@ export type CropParametersHook = BaseParametersHook<CropParameters> & {
 export function validateCropParameters(params: CropParameters): boolean {
   const rect = params.cropArea;
   // Basic validation - coordinates and dimensions must be positive
-  return rect.x >= 0 && rect.y >= 0 && rect.width > 0 && rect.height > 0;
+  return (
+    rect.x >= 0 &&
+    rect.y >= 0 &&
+    rect.width > 0 &&
+    rect.height > 0 &&
+    validatePageNumbers(params.pageNumbers)
+  );
 }
 
 export const useCropParameters = (): CropParametersHook => {

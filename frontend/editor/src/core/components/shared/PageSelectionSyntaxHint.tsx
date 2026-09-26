@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Text } from "@mantine/core";
+import { useDebouncedValue } from "@mantine/hooks";
 import classes from "@app/components/pageEditor/bulkSelectionPanel/BulkSelectionPanel.module.css";
 import { parseSelectionWithDiagnostics } from "@app/utils/bulkselection/parseSelection";
 
@@ -21,9 +22,10 @@ const PageSelectionSyntaxHint = ({
 }: PageSelectionSyntaxHintProps) => {
   const [syntaxError, setSyntaxError] = useState<string | null>(null);
   const { t } = useTranslation();
+  const [debouncedInput] = useDebouncedValue(input, 300);
 
   useEffect(() => {
-    const text = (input || "").trim();
+    const text = (debouncedInput || "").trim();
     if (!text) {
       setSyntaxError(null);
       return;
@@ -50,7 +52,7 @@ const PageSelectionSyntaxHint = ({
         ),
       );
     }
-  }, [input, maxPages]);
+  }, [debouncedInput, maxPages]);
 
   if (!syntaxError) return null;
 

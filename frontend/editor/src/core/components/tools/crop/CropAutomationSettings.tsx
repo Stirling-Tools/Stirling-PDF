@@ -9,6 +9,7 @@ import { Stack } from "@mantine/core";
 import { CropParameters } from "@app/hooks/tools/crop/useCropParameters";
 import { Rectangle } from "@app/utils/cropCoordinates";
 import CropCoordinateInputs from "@app/components/tools/crop/CropCoordinateInputs";
+import CropPageSelection from "@app/components/tools/crop/CropPageSelection";
 
 interface CropAutomationSettingsProps {
   parameters: CropParameters;
@@ -38,6 +39,11 @@ const CropAutomationSettings = ({
 
   return (
     <Stack gap="md">
+      <CropPageSelection
+        value={parameters.pageNumbers ?? "all"}
+        onChange={(value) => onParameterChange("pageNumbers", value)}
+        disabled={disabled}
+      />
       <CropCoordinateInputs
         cropArea={parameters.cropArea}
         onCoordinateChange={handleCoordinateChange}

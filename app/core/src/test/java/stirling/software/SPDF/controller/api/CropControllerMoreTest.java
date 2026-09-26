@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.List;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -139,12 +141,58 @@ class CropControllerMoreTest {
             when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(true);
             // Real document so setCropBox + save() succeed inside the gs branch.
             when(pdfDocumentFactory.load(request)).thenReturn(Loader.loadPDF(file.getBytes()));
+            when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(any(PDDocument.class)))
+                    .thenAnswer(invocation -> new PDDocument());
 
             ProcessExecutor executor = mock(ProcessExecutor.class);
             try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
                 pe.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT))
                         .thenReturn(executor);
-                when(executor.runCommandWithOutputHandling(any())).thenReturn(null);
+                // Identity Ghostscript: the mock copies its input to the -o
+                // path so the merge step reads back a valid document.
+                when(executor.runCommandWithOutputHandling(any()))
+                        .thenAnswer(
+                                invocation -> {
+                                    List<String> command = invocation.getArgument(0);
+                                    Path in = Path.of(command.get(command.size() - 1));
+                                    Path out = Path.of(command.get(command.indexOf("-o") + 1));
+                                    Files.copy(in, out, StandardCopyOption.REPLACE_EXISTING);
+                                    return null;
+                                });
+
+                ResponseEntity<Resource> response = cropController.cropPdf(request);
+
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+                assertThat(response.getBody()).isNotNull();
+                verify(executor).runCommandWithOutputHandling(any());
+            }
+        }
+
+        @Test
+        @DisplayName("Ghostscript processes only selected pages and merges pristine originals")
+        void ghostscriptMergesUnselectedPagesPristine() throws Exception {
+            MockMultipartFile file = pdf(3);
+            CropPdfForm request = form(file, true);
+            request.setPageNumbers("2");
+
+            when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(true);
+            when(pdfDocumentFactory.load(request)).thenReturn(Loader.loadPDF(file.getBytes()));
+            when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(any(PDDocument.class)))
+                    .thenAnswer(invocation -> new PDDocument());
+
+            ProcessExecutor executor = mock(ProcessExecutor.class);
+            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
+                pe.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT))
+                        .thenReturn(executor);
+                when(executor.runCommandWithOutputHandling(any()))
+                        .thenAnswer(
+                                invocation -> {
+                                    List<String> command = invocation.getArgument(0);
+                                    Path in = Path.of(command.get(command.size() - 1));
+                                    Path out = Path.of(command.get(command.indexOf("-o") + 1));
+                                    Files.copy(in, out, StandardCopyOption.REPLACE_EXISTING);
+                                    return null;
+                                });
 
                 ResponseEntity<Resource> response = cropController.cropPdf(request);
 
