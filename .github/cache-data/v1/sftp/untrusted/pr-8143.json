@@ -56,10 +56,17 @@
       "source": "Stirling-Tools/Stirling-PDF",
       "created_by": "Ludy87",
       "size": 323240153
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8143/gradle-caches/linux-x64/4f1c891bb934da906d1e9b1f8af1181adc09ed133026ffa2e93270fdb87380b0/v1": {
+      "object": "sha256:8717ed2dc105e6faa484edc8581eb3f62da0eca799b5683e1555b4fdbf7b2ba3",
+      "updated_at": "2026-09-26T17:09:00.671Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 335482958
     }
   },
   "monitoring": {
-    "window_started_at": "2026-09-24T20:40:29.943Z",
+    "window_started_at": "2026-09-26T17:09:00.671Z",
     "writes": 1
   }
 }
