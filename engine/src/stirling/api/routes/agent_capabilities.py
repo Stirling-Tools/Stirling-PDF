@@ -7,11 +7,12 @@ from typing import Any
 from fastapi import APIRouter
 
 from stirling.api.agent_capabilities import manifest_payload
+from stirling.api.linked_instance import LINKED_INSTANCE
 
 router = APIRouter(prefix="/api/v1/agents", tags=["agents"])
 
 
-@router.get("/capabilities")
+@router.get("/capabilities", openapi_extra=LINKED_INSTANCE)
 def get_capabilities() -> dict[str, Any]:
     """Return the curated agent capabilities manifest.
 

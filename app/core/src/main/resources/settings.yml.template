@@ -12,6 +12,7 @@
 
 security:
   enableLogin: true # set to 'true' to enable login
+  ssoAutoLogin: false
   loginAttemptCount: 5 # lock user account after 5 tries; when using e.g. Fail2Ban you can deactivate the function with -1
   loginResetTimeMinutes: 120 # lock account for 2 hours after x attempts
   loginMethod: all # Accepts values like 'all' and 'normal'(only Login with Username/Password), 'oauth2'(only Login with OAuth2) or 'saml2'(only Login with SAML2)
@@ -92,7 +93,6 @@ premium:
   key: 00000000-0000-0000-0000-000000000000
   enabled: false # Enable license key checks for pro/enterprise features
   proFeatures:
-    ssoAutoLogin: false
     customMetadata:
       autoUpdateMetadata: false
       author: username
@@ -382,11 +382,13 @@ processExecutor:
 
 aiEngine:
   enabled: false # Set to 'true' to enable the AI engine integration
-  url: http://localhost:5001 # URL of the Python AI engine
+  mode: SELF_HOSTED # 'SELF_HOSTED' uses the url below; 'CLOUD' runs AI on Stirling Cloud via the account link
+  url: http://localhost:5001 # URL of the Python AI engine (SELF_HOSTED only)
   timeoutSeconds: 120 # Timeout in seconds for AI engine requests
   longRunningTimeoutSeconds: 600 # Timeout (seconds) for heavy operations like RAG ingestion of large documents
   streamTimeoutSeconds: 1800 # SSE stream timeout (seconds) for long-running orchestrator runs
   pushConfigToEngine: true # Push admin AI config to the engine on startup + save; false = engine stays fully env-controlled
+  cloudDocumentIndexing: false # CLOUD only: let Stirling Cloud keep document text so document questions work
   models:
     provider: anthropic # Model provider: 'anthropic', 'openai', 'ollama', or 'custom' (OpenAI-compatible)
     smartModel: claude-haiku-4-5 # High-quality tier model name (no provider prefix)

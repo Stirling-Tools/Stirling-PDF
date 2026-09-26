@@ -1,6 +1,13 @@
 import { describe, it, expect, vi } from "vitest";
-import { render as baseRender } from "@testing-library/react";
+import {
+  fireEvent,
+  render as baseRender,
+  screen,
+  within,
+} from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
+import { FileGrid } from "@app/components/filesPage/FileGrid";
+import { FileContextProvider } from "@app/contexts/FileContext";
 import type { FileId } from "@app/types/file";
 import type { StirlingFileStub } from "@app/types/fileContext";
 
@@ -38,9 +45,8 @@ const buildStub = (id: string, name: string): StirlingFileStub =>
   }) as StirlingFileStub;
 
 describe("FileGrid item memoization", () => {
-  it("re-renders only the cards whose selection changed", async () => {
-    const { FileGrid } = await import("@app/components/filesPage/FileGrid");
-    const { FileContextProvider } = await import("@app/contexts/FileContext");
+  it("re-renders only the cards whose selection changed", () => {
+    badgeRenders.n = 0;
 
     const files = ["a", "b", "c", "d"].map((id) => buildStub(id, `${id}.pdf`));
     const entries = files.map((file) => ({ kind: "file" as const, file }));
@@ -94,4 +100,66 @@ describe("FileGrid item memoization", () => {
     // The real provider tree and four thumbnail-bearing cards cost seconds to mount,
     // which the default budget cannot absorb alongside the rest of the suite.
   }, 20_000);
+});
+
+describe("FileGrid processing locks", () => {
+  it.each(["grid", "list"] as const)(
+    "disables opening a locked disk file in %s view",
+    async (viewMode) => {
+      const onOpenDiskFile = vi.fn();
+      const entry = {
+        kind: "diskFile" as const,
+        disk: {
+          path: "/processing/report.pdf",
+          name: "report.pdf",
+          sizeBytes: 1_000,
+          lastModified: 0,
+        },
+        diskState: "waiting" as const,
+        processingLocked: true,
+      };
+
+      const view = render(
+        <FileContextProvider>
+          <FileGrid
+            entries={[entry]}
+            selectedFileIds={new Set<FileId>()}
+            viewMode={viewMode}
+            onSelectFile={() => {}}
+            onOpenFolder={() => {}}
+            onOpenFile={() => {}}
+            onOpenDiskFile={onOpenDiskFile}
+            onMoveFiles={() => {}}
+            onMoveFolder={() => {}}
+            onRenameFolder={() => {}}
+            onDeleteFolder={() => {}}
+            onChangeFolderAppearance={() => {}}
+            onRemoveFiles={() => {}}
+            onPromptMoveFiles={() => {}}
+          />
+        </FileContextProvider>,
+      );
+
+      const fileItem = view.container.querySelector(
+        viewMode === "grid"
+          ? ".files-page-card"
+          : ".files-page-list-row:not(.is-header)",
+      );
+      expect(fileItem).not.toBeNull();
+      fireEvent.doubleClick(fileItem!);
+
+      fireEvent.click(
+        within(fileItem as HTMLElement).getByRole("button", {
+          name: /fileMenu|File actions/,
+        }),
+      );
+      const addToWorkspace = await screen.findByRole("menuitem", {
+        name: /addToWorkspace|Add to workspace/,
+      });
+      expect(addToWorkspace).toBeDisabled();
+      fireEvent.click(addToWorkspace);
+
+      expect(onOpenDiskFile).not.toHaveBeenCalled();
+    },
+  );
 });

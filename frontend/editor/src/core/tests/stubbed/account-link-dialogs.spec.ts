@@ -125,21 +125,38 @@ test("dismissing the trial connection prerequisite does not reopen it", async ({
 test("late exhausted-credit responses do not reopen a dismissed dialog", async ({
   page,
 }) => {
-  await page.goto("/processor/pipelines");
-  await expect(
-    page.getByRole("button", { name: "Link Stirling account" }),
-  ).toBeVisible();
-  await page.evaluate(() =>
-    window.dispatchEvent(new Event("stirling:portal-free-tier-exhausted")),
+  await page.route("**/api/v1/account-link/free-tier", (route) =>
+    route.fulfill({
+      json: {
+        grantUnits: 1000,
+        usedUnits: 1000,
+        remainingUnits: 0,
+        periodStart: "2026-09-01T00:00:00",
+        periodEnd: "2026-10-01T00:00:00",
+      },
+    }),
   );
+  await page.route("**/api/v1/policies", (route) =>
+    route.fulfill({
+      status: 402,
+      json: { error: "ACCOUNT_LINK_REQUIRED", reason: "FREE_TIER_EXHAUSTED" },
+    }),
+  );
+  await page.goto("/processor/pipelines");
   await expect(page.getByRole("dialog")).toHaveCount(1);
   await page
     .getByRole("dialog")
     .getByRole("button", { name: "Not now", exact: true })
     .click();
-  await page.evaluate(() =>
-    window.dispatchEvent(new Event("stirling:portal-free-tier-exhausted")),
+  const repeatedFailure = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/v1/policies") && response.status() === 402,
   );
+  await page.reload();
+  await repeatedFailure;
+  await expect(
+    page.getByRole("button", { name: "Link Stirling account" }),
+  ).toBeVisible();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.getByRole("button", { name: "Link Stirling account" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(1);

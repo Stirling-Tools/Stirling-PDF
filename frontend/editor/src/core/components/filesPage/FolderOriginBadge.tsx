@@ -24,6 +24,7 @@ export function FolderOriginBadge({ folder }: { folder: FolderRecord }) {
   return (
     <FileOriginBadge
       origin={kind === "server" ? "cloud" : "local"}
+      onDisk={kind === "local"}
       tooltip={tooltip}
       compact
     />

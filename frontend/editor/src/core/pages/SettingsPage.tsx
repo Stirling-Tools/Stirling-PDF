@@ -6,6 +6,7 @@ import React, {
   Suspense,
 } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import { useSectionHeadings } from "@app/components/settings/useSectionHeadings";
@@ -13,12 +14,12 @@ import { useActiveHeading } from "@app/components/settings/useActiveHeading";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 import { Badge, Tooltip } from "@mantine/core";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { SettingsMobileBackButton } from "@app/components/shared/config/SettingsMobileBackButton";
 import { SettingsNavChevron } from "@app/components/shared/config/SettingsNavChevron";
 import { useSettingsNav } from "@app/components/settings/useSettingsNav";
 import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
 import { useEditorSearchScopes } from "@app/hooks/useSuperSearch";
+import { useTitleBarStrip } from "@app/contexts/TitleBarStripContext";
 import type { NavKey } from "@app/components/shared/config/types";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { useLicenseAlert } from "@app/hooks/useLicenseAlert";
@@ -54,6 +55,8 @@ const SettingsPageInner: React.FC = () => {
   // The same bar as the editor and the processor, so search is one thing
   // everywhere; settings results deep-link straight back into this page.
   const searchScopes = useEditorSearchScopes();
+  // A title-bar strip already hosts the one Super Search; don't add a second here.
+  const strip = useTitleBarStrip();
   const [mobilePane, setMobilePane] = useState<"nav" | "content">(() =>
     sectionFromPath(window.location.pathname) ? "content" : "nav",
   );
@@ -248,10 +251,9 @@ const SettingsPageInner: React.FC = () => {
                         // saying why it is off is reachable by keyboard.
                         aria-disabled={isDisabled || undefined}
                       >
-                        <LocalIcon
-                          icon={item.icon}
-                          width={18}
-                          height={18}
+                        <Icon
+                          name={item.icon}
+                          size={18}
                           className="settings-page__nav-icon"
                         />
                         <span className="settings-page__nav-label">
@@ -268,10 +270,9 @@ const SettingsPageInner: React.FC = () => {
                           </Badge>
                         )}
                         {showPlanWarning && (
-                          <LocalIcon
-                            icon="warning-rounded"
-                            width={14}
-                            height={14}
+                          <Icon
+                            name="triangle-alert"
+                            size={14}
                             className="settings-page__nav-warning"
                           />
                         )}
@@ -329,13 +330,15 @@ const SettingsPageInner: React.FC = () => {
           isMobile && mobilePane !== "content" ? { display: "none" } : undefined
         }
       >
-        <div className="settings-page__search-bar">
-          <SuperSearch
-            inputId="settings-search-input"
-            scopes={searchScopes}
-            dropdownClassName="settings-search-dropdown"
-          />
-        </div>
+        {!strip.enabled && (
+          <div className="settings-page__search-bar">
+            <SuperSearch
+              inputId="settings-search-input"
+              scopes={searchScopes}
+              dropdownClassName="settings-search-dropdown"
+            />
+          </div>
+        )}
         <div className="modal-content-scroll" ref={setContentRef}>
           {isMobile && (
             <div className="settings-page__mobile-bar modal-header">

@@ -8,17 +8,13 @@ import type { FilesPageSortMode } from "@app/contexts/FilesPageContext";
 interface FilesToolbarSortMenuProps {
   value: FilesPageSortMode;
   onChange: (mode: FilesPageSortMode) => void;
+  zIndex?: number;
 }
 
-/**
- * Sort control collapsed to a single icon. The desktop Select needs 160px and
- * still truncated its longest label ("Recent first" → "Recent fi") once the
- * toolbar got tight, so on narrow viewports the options move into a menu where
- * they have room to read in full.
- */
 export function FilesToolbarSortMenu({
   value,
   onChange,
+  zIndex,
 }: FilesToolbarSortMenuProps) {
   const { t } = useTranslation();
 
@@ -44,7 +40,13 @@ export function FilesToolbarSortMenu({
   const current = options.find((o) => o.value === value)?.label ?? "";
 
   return (
-    <Menu shadow="md" width={200} position="bottom-end" withinPortal>
+    <Menu
+      shadow="md"
+      width={200}
+      position="bottom-end"
+      withinPortal
+      zIndex={zIndex}
+    >
       <Menu.Target>
         <div>
           <Tooltip content={`${label} · ${current}`} position="bottom">
