@@ -1,4 +1,5 @@
 import { TeamSubscriptionChange } from "@app/billing/TeamSubscriptionChange";
+import { fetchCheckoutPricing } from "@app/portal/billing/stripe";
 import type { ServerPlan } from "@app/billing/serverPlan";
 import { fleetUsersInUse } from "@app/billing/fleetSeats";
 import {
@@ -13,7 +14,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { Banner, Button } from "@app/ui";
-import { BillingScreen } from "@app/billing";
+import { BillingScreen, KvRow, formatPeriodDate } from "@app/billing";
+import { useLegacySubscriptions } from "@app/hooks/useLegacySubscriptions";
+import { LegacySubscriptionPlan } from "@app/components/shared/config/LegacySubscriptionPlan";
 import { useUI } from "@app/portal/contexts/UIContext";
 import { useProcurement } from "@app/portal/components/procurement/useProcurement";
 import { ControlledDealStatusHero } from "@app/portal/components/procurement/ProcurementBanner";
@@ -81,10 +84,10 @@ export function Usage({
   renderLicenseSection,
 }: UsageProps = {}) {
   const { t } = useTranslation();
+  const legacyBilling = useLegacySubscriptions();
   const queryClient = useQueryClient();
   // The gate renders this page only for a linked instance.
   const walletOptions = walletQuery(true);
-  const walletKey = walletOptions.queryKey!;
   const {
     data: loadedWallet = null,
     isPending: walletPending,
@@ -181,7 +184,7 @@ export function Usage({
     return () => {
       cancelled = true;
     };
-  }, [procurement.data]);
+  }, [procurement.data, refresh]);
   // From fleet-stats, not the wallet. Null when the backend cannot compute it, which omits the row.
   const { data: fleetStats } = useFleetStats();
   const editorsDeployed = fleetStats?.editorsDeployed ?? null;
@@ -258,12 +261,18 @@ export function Usage({
       ? wallet?.team?.usersInUse
       : localUsersInUse;
   const addCapacity = useCallback(() => {
+    const teamId = wallet?.teamId;
     // No email: the only one this instance holds is its local admin record, which is a Spring
     // username and not an address the buyer owns. The checkout asks for one instead.
     void checkout?.openCheckout("server", {
       combinedChoose: true,
       currentLimit: heldLimit,
       minimumSeats: usersInUse ?? undefined,
+      resolveCurrency:
+        teamId != null
+          ? (preferredCurrency) =>
+              fetchCheckoutPricing(teamId, "currency", preferredCurrency)
+          : undefined,
       capacityNotice:
         !serverPlan &&
         !wallet?.team?.held &&
@@ -281,6 +290,7 @@ export function Usage({
     usersInUse,
     serverPlan,
     wallet?.team?.held,
+    wallet?.teamId,
     localUsersInUse,
     localUserLimit,
   ]);
@@ -337,7 +347,7 @@ export function Usage({
         const w = await fetchWallet();
         if (!mounted.current) return false;
         if (w.status === "subscribed") {
-          queryClient.setQueryData(walletKey, w);
+          queryClient.setQueryData(qk.wallet(true), w);
           // Nudge the local instance to refresh its gate now so billable work
           // unblocks immediately rather than on its next poll. Fire-and-forget;
           // a no-op on SaaS (no local instance to sync).
@@ -354,23 +364,57 @@ export function Usage({
     // shows its "almost there" notice rather than the page silently self-healing.
     refresh();
     return false;
-  }, [onWalletLoaded, hasLocalInstance]);
+  }, [queryClient, hasLocalInstance, refresh]);
 
   const enterpriseProcessor = serverPlan?.licenseType === "ENTERPRISE";
   const paying = Boolean(wallet?.processor?.active || wallet?.team?.held);
+  const ownsLegacySubscription = legacyBilling.subscriptions.length > 0;
+  const legacyTeamSubscription = legacyBilling.subscriptions.find(
+    (subscription) => subscription.teamId === wallet?.teamId,
+  );
+  const recordedLegacyAllowance = legacyTeamSubscription?.teamAllowance;
+  // A historical Pro personal team can record one seat; its first invitation grants the free allowance.
+  const legacyTeamAllowance =
+    recordedLegacyAllowance &&
+    legacyTeamSubscription?.plan === "pro" &&
+    recordedLegacyAllowance.maxUsers != null
+      ? {
+          ...recordedLegacyAllowance,
+          maxUsers: Math.max(
+            recordedLegacyAllowance.maxUsers,
+            wallet?.freeUserAllowance ?? 0,
+          ),
+        }
+      : recordedLegacyAllowance;
 
   return (
     <BillingScreen
+      legacyTeamAllowance={legacyTeamAllowance ?? undefined}
+      legacyPlan={
+        legacyBilling.loading ||
+        legacyBilling.loadError ||
+        legacyBilling.subscriptions.length ? (
+          <LegacySubscriptionPlan
+            billing={legacyBilling}
+            walletTeamId={wallet?.teamId ?? undefined}
+          />
+        ) : undefined
+      }
       usersInUse={localUsersInUse}
       userLimit={localUserLimit}
       deviceId={accountLink?.status?.deviceId}
       headerAction={
-        !needsRenewal && paying && wallet?.role === "leader" ? (
+        !needsRenewal &&
+        (ownsLegacySubscription || (paying && wallet?.role === "leader")) ? (
           <Button
             fat
             variant="secondary"
-            onClick={portal.open}
-            disabled={portal.opening}
+            onClick={
+              ownsLegacySubscription ? legacyBilling.openPortal : portal.open
+            }
+            disabled={
+              ownsLegacySubscription ? legacyBilling.opening : portal.opening
+            }
           >
             {t("payment.manageSubscription", "Manage subscription")}
           </Button>
@@ -438,6 +482,20 @@ export function Usage({
               {portal.error}
             </Banner>
           )}
+          {legacyBilling.portalError && (
+            <Banner
+              tone="danger"
+              title={t(
+                "portal.usage.error.openStripePortal",
+                "Couldn't open Stripe portal",
+              )}
+            >
+              {t(
+                "legacyBilling.portalError",
+                "We couldn't open Stripe billing. Please try again.",
+              )}
+            </Banner>
+          )}
         </>
       }
       editorsDeployed={editorsDeployed}
@@ -488,13 +546,41 @@ export function Usage({
           : undefined
       }
       paymentSection={
-        paying && wallet ? (
-          <PaymentSection
-            pendingUnits={localUsage?.totalUnsyncedUnits ?? 0}
-            wallet={wallet}
-            onManage={wallet.role === "leader" ? portal.open : undefined}
-            managing={portal.opening}
-          />
+        paying || ownsLegacySubscription ? (
+          <>
+            {paying && wallet && (
+              <PaymentSection
+                pendingUnits={localUsage?.totalUnsyncedUnits ?? 0}
+                wallet={wallet}
+                onManage={wallet.role === "leader" ? portal.open : undefined}
+                managing={portal.opening}
+              />
+            )}
+            {legacyBilling.subscriptions.map((subscription) => (
+              <KvRow
+                key={subscription.id}
+                label={t("portal.billing.payment.nextInvoice", "Next invoice")}
+                note={
+                  paying || legacyBilling.subscriptions.length > 1
+                    ? subscription.plan === "pro"
+                      ? t("legacyBilling.pro", "Pro (legacy)")
+                      : t("legacyBilling.team", "Team (legacy)")
+                    : undefined
+                }
+                value={
+                  subscription.currentPeriodEnd &&
+                  !Number.isNaN(Date.parse(subscription.currentPeriodEnd))
+                    ? formatPeriodDate(subscription.currentPeriodEnd, {
+                        year: true,
+                      })
+                    : t(
+                        "portal.billing.payment.dateUnavailable",
+                        "Billing date not available yet",
+                      )
+                }
+              />
+            ))}
+          </>
         ) : undefined
       }
       invoicesSection={

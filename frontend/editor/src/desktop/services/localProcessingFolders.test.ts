@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   folders: new Map<string, LocalProcessingFolder>(),
   files: new Map<string, LocalProcessingFile>(),
   connected: true,
+  mountedDirectories: ["/downloads"],
   otherDiskFiles: [] as DiskFileEntry[],
   disk: {
     path: "/downloads/a.pdf",
@@ -24,10 +25,13 @@ const mocks = vi.hoisted(() => ({
   archive: vi.fn(),
 }));
 vi.mock("@tauri-apps/plugin-fs", () => ({ remove: vi.fn() }));
-vi.mock("@app/services/localFolderStorage", () => ({
-  directoryKey: (value: string) => value.replace(/\/$/, ""),
+vi.mock("@app/services/localFolderStorage", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("@app/services/localFolderStorage")
+  >()),
   localFolderStorage: {
-    getAllFolders: async () => [{ directory: "/downloads" }],
+    getAllFolders: async () =>
+      mocks.mountedDirectories.map((directory) => ({ directory })),
   },
 }));
 vi.mock("@app/services/localProcessingFolderStorage", () => ({
@@ -59,7 +63,10 @@ vi.mock("@app/services/serverAutomationSession", () => ({
     if (!mocks.connected || key !== "owner") throw new Error("Sign in");
   },
 }));
-vi.mock("@app/services/localFolderContents", () => ({
+vi.mock("@app/services/localFolderContents", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("@app/services/localFolderContents")
+  >()),
   listDirectory: async () => ({
     files: [{ ...mocks.disk }, ...mocks.otherDiskFiles],
     directories: [],
@@ -104,10 +111,11 @@ function onlyFile() {
 
 describe("desktop processing folder handoff", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     mocks.files.clear();
     mocks.folders.clear();
     mocks.connected = true;
+    mocks.mountedDirectories = ["/downloads"];
     mocks.otherDiskFiles = [];
     mocks.disk = {
       path: "/downloads/a.pdf",
@@ -174,6 +182,91 @@ describe("desktop processing folder handoff", () => {
     await expect(saveLocalProcessingFolder(request)).rejects.toThrow("Sign in");
     expect(mocks.submit).not.toHaveBeenCalled();
     expect(mocks.folders.size).toBe(0);
+  });
+
+  test.each([
+    ["/downloads", "/downloads/invoices"],
+    ["/downloads/", "/downloads/invoices/2026"],
+    ["/downloads", "/downloads/.archive/invoices..2026"],
+    ["C:\\Users\\Reece\\Downloads\\", "c:/users/reece/downloads/invoices"],
+    ["\\\\server\\share\\docs", "//SERVER/share/docs/invoices"],
+    ["C:\\", "c:/invoices"],
+    ["/", "/invoices"],
+  ])(
+    "processes %s's child %s through its parent mount",
+    async (mount, directory) => {
+      mocks.mountedDirectories = [mount];
+      mocks.disk = { ...mocks.disk, path: `${directory}/a.pdf` };
+
+      const folder = await saveLocalProcessingFolder({ ...request, directory });
+      await waitFor(() => expect(onlyFile()?.run.status).toBe("COMPLETED"));
+
+      expect(folder.directory).toBe(directory);
+      expect(mocks.archive).toHaveBeenCalledWith(directory, expect.any(File));
+      expect(onlyFile().run.outputs?.[0].fileName).toBe(`${directory}/a.pdf`);
+      await sweepLocalProcessingFolder(folder.id);
+      expect(mocks.submit).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  test.each(["/downloads-other", "/other", "/Downloads/invoices"])(
+    "rejects processing outside the mounted directory: %s",
+    async (directory) => {
+      await expect(
+        saveLocalProcessingFolder({ ...request, directory }),
+      ).rejects.toThrow("Mount the directory before enabling processing");
+      expect(mocks.submit).not.toHaveBeenCalled();
+      expect(mocks.folders.size).toBe(0);
+    },
+  );
+
+  test.each([
+    ["/downloads/../private", "/downloads"],
+    ["/downloads/./invoices", "/downloads"],
+    ["/downloads/invoices/..", "/downloads"],
+    ["/downloads/.", "/downloads"],
+    ["C:\\Downloads\\..\\private", "C:\\Downloads"],
+    ["C:\\Downloads\\.\\invoices", "C:\\Downloads"],
+    ["c:/downloads\\..\\private", "C:\\Downloads"],
+    ["//server/share/docs/../private", "\\\\server\\share\\docs"],
+    ["\\\\server\\share\\docs\\.\\invoices", "//server/share/docs"],
+  ])(
+    "rejects processing paths with dot segments: %s",
+    async (directory, mount) => {
+      mocks.mountedDirectories = [mount];
+
+      await expect(
+        saveLocalProcessingFolder({ ...request, directory }),
+      ).rejects.toThrow("Mount the directory before enabling processing");
+      expect(mocks.folders.size).toBe(0);
+      expect(mocks.submit).not.toHaveBeenCalled();
+      expect(mocks.archive).not.toHaveBeenCalled();
+      expect(mocks.replace).not.toHaveBeenCalled();
+    },
+  );
+
+  test("unmounting the parent during processing blocks delivery and further sweeps", async () => {
+    const directory = "/downloads/invoices";
+    mocks.disk = { ...mocks.disk, path: `${directory}/a.pdf` };
+    mocks.wait.mockImplementationOnce(async () => {
+      mocks.mountedDirectories = [];
+      return {
+        status: "COMPLETED",
+        stepCount: 1,
+        outputs: [{ fileId: "result", fileName: "a.pdf" }],
+      };
+    });
+
+    const folder = await saveLocalProcessingFolder({ ...request, directory });
+    await waitFor(() => expect(onlyFile()?.run.status).toBe("FAILED"));
+
+    expect(onlyFile().run.error).toBe(
+      "The processing folder is no longer mounted",
+    );
+    expect(mocks.replace).not.toHaveBeenCalled();
+    await expect(sweepLocalProcessingFolder(folder.id)).rejects.toThrow(
+      "The processing folder is no longer mounted",
+    );
   });
 
   test("a file edited while the server works is never overwritten", async () => {

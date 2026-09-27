@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { MemoryRouter } from "react-router-dom";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { it, expect, vi } from "vitest";
 import { MantineProvider } from "@mantine/core";
@@ -47,7 +48,9 @@ it("suspends procurement while connecting and returns to its next action on dism
       >
         <LinkProvider initialState="unlinked">
           <UIProvider>
-            <Flow />
+            <MemoryRouter>
+              <Flow />
+            </MemoryRouter>
           </UIProvider>
         </LinkProvider>
       </QueryClientProvider>

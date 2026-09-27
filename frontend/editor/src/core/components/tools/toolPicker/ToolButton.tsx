@@ -143,7 +143,11 @@ const ToolButton: React.FC<ToolButtonProps> = ({
     </div>
   );
   const buttonIcon = (
-    <ToolIcon icon={tool.icon} opacity={visuallyUnavailable ? 0.25 : 1} />
+    <ToolIcon
+      icon={tool.icon}
+      color="var(--tool-button-fg)"
+      opacity={visuallyUnavailable ? 0.25 : 1}
+    />
   );
   const buttonContent = (
     <div

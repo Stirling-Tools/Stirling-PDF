@@ -237,6 +237,7 @@ export async function reconcileServerFiles(
       const lastModified = Number.isFinite(updatedAtMs)
         ? updatedAtMs
         : Date.now();
+      const createdAtMs = file.createdAt ? Date.parse(file.createdAt) : NaN;
       const id = `server-${file.id}` as FileId;
       serverStubs.push({
         id,
@@ -244,7 +245,7 @@ export async function reconcileServerFiles(
         type: file.contentType || "application/octet-stream",
         size: file.sizeBytes ?? 0,
         lastModified,
-        createdAt: lastModified,
+        createdAt: Number.isFinite(createdAtMs) ? createdAtMs : lastModified,
         isLeaf: true,
         originalFileId: id,
         versionNumber: 1,

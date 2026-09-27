@@ -47,10 +47,7 @@ export function IngestStepConfig({
       {editorInput && (
         <Banner
           tone="info"
-          description={t(
-            "portal.pipelines.builder.ingest.editorPdfOnly",
-            "Editor policies return PDFs only. To export chunks or Markdown, choose a saved input source and a file destination.",
-          )}
+          description={t("portal.pipelines.builder.ingest.editorPdfOnly")}
         />
       )}
       {(!editorInput || !includeOriginal) && (
