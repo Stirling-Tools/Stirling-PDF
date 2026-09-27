@@ -135,14 +135,17 @@ jobs:
           echo "Cache Hit: $CACHE_HIT"
           echo "Cache Error: $CACHE_ERROR"
           echo "cache_hit_gradle_cache=$CACHE_HIT_GRADLE_CACHE" >> "$GITHUB_OUTPUT"
+          echo "cache_hit_gradle_cache: $CACHE_HIT_GRADLE_CACHE"
           echo "cache_hit_gradle_wrapper=$CACHE_HIT_GRADLE_WRAPPER" >> "$GITHUB_OUTPUT"
+          echo "cache_hit_gradle_wrapper: $CACHE_HIT_GRADLE_WRAPPER"
+          echo '${{ toJSON(fromJSON(steps.cache.outputs.cache-results)) }}'
 
       - name: Hit Caches
         id: hit_caches
         shell: bash
         env:
-          GRADLE_CHACHES_RESULT: ${{ fromJSON(steps.cache.outputs.cache-results).gradle-caches.cache-hit }}
-          GRADLE_WRAPPER_RESULT: ${{ fromJSON(steps.cache.outputs.cache-results).gradle-wrapper.cache-hit }}
+          GRADLE_CHACHES_RESULT: ${{ fromJSON(steps.cache.outputs.cache-results)['gradle-caches']['cache-hit'] }}
+          GRADLE_WRAPPER_RESULT: ${{ fromJSON(steps.cache.outputs.cache-results)['gradle-wrapper']['cache-hit'] }}
         run: |
           if [[ "$GRADLE_CACHES_RESULT" == "true" && "$GRADLE_WRAPPER_RESULT" == "true" ]]; then
             echo "cache_hit=true" >> "$GITHUB_OUTPUT"
