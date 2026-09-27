@@ -314,7 +314,7 @@ jobs:
           cache-dependency-glob: |
             engine/pyproject.toml
             engine/uv.lock
-          cache-local-path: .cache/uv
+          cache-local-path: .cache/setup-uv-cache
 
       - name: JaCoCo coverage step summary
         # Only the saas leg posts the JUnit summary - it's a strict
