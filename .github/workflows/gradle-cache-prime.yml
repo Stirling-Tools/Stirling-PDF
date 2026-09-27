@@ -150,6 +150,10 @@ jobs:
             echo "cache_hit=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - run: |
+          "echo cache_hit: ${{ steps.hit_caches.outputs.cache_hit }}"
+          "echo error: ${{ steps.cache.outputs.error }}"
+
       - name: Cache Gradle (lookup-only)
         id: cache-gradle-restore
         if: ${{ steps.cache.outputs.error || steps.hit_caches.outputs.cache_hit != 'true' }}
