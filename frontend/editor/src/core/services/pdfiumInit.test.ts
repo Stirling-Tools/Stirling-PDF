@@ -11,7 +11,7 @@ vi.mock("@embedpdf/pdfium", () => ({ init }));
 
 const wasmModule = vi.hoisted(() => ({}) as WebAssembly.Module);
 vi.mock("@app/services/wasmPrecompiler", () => ({
-  pdfiumWasmModulePromise: Promise.resolve(wasmModule),
+  pdfiumWasmModulePromise: Promise.resolve({ module: wasmModule }),
   startEagerWasmCompilation: () => {},
   pdfiumWasmUrl: "http://localhost/pdfium.wasm",
 }));

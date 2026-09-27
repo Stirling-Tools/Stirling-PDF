@@ -520,10 +520,17 @@ tasks:
   check:
     desc: "Quick quality gate for local development"
     cmds:
+      - task: embedpdf:check
       - task: typecheck
       - task: lint
       - task: format:check
       - task: test
+
+  embedpdf:check:
+    desc: "Fail if the pinned @embedpdf patches are missing"
+    deps: [install]
+    cmds:
+      - npm run check:embedpdf-patch
 
   og:check:
     desc: "Fail if committed OG/social-preview metadata is out of date"
@@ -536,6 +543,7 @@ tasks:
       # Runs first, before prepare regenerates: guards the committed og-metadata.json /
       # ogImageMap.json that the Cloudflare Pages (plain `vite build`) deploy relies on.
       - task: og:check
+      - task: embedpdf:check
       - task: typecheck:all
       - task: lint
       - task: format:check
