@@ -130,7 +130,7 @@ jobs:
           CACHE_READ_ONLY: ${{ steps.cache.outputs.read-only }}
           CACHE_HIT: ${{ steps.cache.outputs.cache-hit }}
           CACHE_ERROR: ${{ steps.cache.outputs.error }}
-          RESULTS: ${{ fromJSON(steps.cache.outputs.cache-results) }}
+          RESULTS: ${{ fromJSON(steps.cache.outputs.cache-results)['gradle-caches']['cache-hit'] }}
         shell: bash
         run: |
           echo "Fork: $CACHE_IS_FORK"
