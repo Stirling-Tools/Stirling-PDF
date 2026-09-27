@@ -235,7 +235,7 @@ export {
       "    __stirlingDocAccess.delete(filePtr);",
       "  }",
       "}",
-      // Worker layer scan handles all documents so main thread never parses for layers.
+      // Worker-first: all sizes scanned; the main thread parses only when the worker verdict is null.
       "const __STIRLING_LAYER_SCAN_BYTES = 0;",
       "const __STIRLING_LAYER_INFLATE_BUDGET = 8388608;",
       "async function __stirlingInflate(bytes, maxBytes) {",
