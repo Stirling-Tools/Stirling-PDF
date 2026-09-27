@@ -142,7 +142,7 @@ jobs:
         ${{ github.workspace }}/frontend/editor/src-tauri/Cargo.toml
         ${{ github.workspace }}/frontend/editor/src-tauri/Cargo.lock
       #       ${{ github.workspace }}/frontend/editor/src-tauri/target
-      # CARGO_HOME: ${{ github.workspace }}/.cache/cargo
+      CARGO_HOME: ${{ github.workspace }}/.cache/cargo
       CACHE_MANIFEST_BRANCH: dev-cache
       CACHE_MANIFEST_PATH: .github/cache-data
       GITHUB_TOKEN: ${{ github.token }}
@@ -207,7 +207,7 @@ jobs:
 
       - name: Restore cache sftp
         id: cache-cargo
-        uses: Ludy87/cache-the-planet/multi-cache@49161e4c6c89a1509929cad9cd0715ccad926d71
+        uses: Ludy87/cache-the-planet/multi-cache@0843a31b087f25509cb24d7ee06f70137c534908
         with:
           storage: github-branch
           manifest-branch: dev-cache

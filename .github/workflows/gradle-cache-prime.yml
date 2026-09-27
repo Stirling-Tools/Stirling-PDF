@@ -101,11 +101,12 @@ jobs:
 
       - name: Restore Gradle cache github-branch
         id: cache
-        uses: Ludy87/cache-the-planet/multi-cache@49161e4c6c89a1509929cad9cd0715ccad926d71
+        uses: Ludy87/cache-the-planet/multi-cache@0843a31b087f25509cb24d7ee06f70137c534908
         with:
           manifest-branch: dev-cache
           manifest-path: .github/cache-data
           storage: github-branch
+          disable-download: true
           multi-cache: |
             gradle-caches:
               path: .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/caches

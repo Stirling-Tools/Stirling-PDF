@@ -101,7 +101,7 @@ jobs:
 
       - name: Restore Gradle cache github-branch
         id: cache
-        uses: Ludy87/cache-the-planet/multi-cache@49161e4c6c89a1509929cad9cd0715ccad926d71
+        uses: Ludy87/cache-the-planet/multi-cache@0843a31b087f25509cb24d7ee06f70137c534908
         with:
           manifest-branch: dev-cache
           manifest-path: .github/cache-data
@@ -145,7 +145,7 @@ jobs:
           path: |
             .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
             .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
-          key: ${{ matrix.flavor}}-${{ needs.hash_pr.outputs.gradle_cache_key }}
+          key: ${{ needs.hash_pr.outputs.gradle_cache_key }}
 
       - name: Set up JDK ${{ matrix.jdk-version }}
         uses: ./.github/actions/java
