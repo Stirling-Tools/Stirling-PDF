@@ -16,6 +16,8 @@
  * would let two different documents with identical metadata share one entry.
  * Bare Blobs stay identity-keyed, since they carry no metadata.
  */
+import { readBlobSlice } from "@app/utils/blobSlice";
+
 const resolved = new WeakMap<Blob, WeakRef<ArrayBuffer>>();
 const pending = new WeakMap<Blob, Promise<ArrayBuffer>>();
 const FILE_KEY_CACHE_LIMIT = 64;
@@ -53,15 +55,15 @@ export function documentFingerprint(blob: Blob): Promise<string> {
     let hash = FNV_OFFSET;
     hash = hashInto(
       hash,
-      new Uint8Array(await blob.slice(0, FINGERPRINT_WINDOW).arrayBuffer()),
+      await readBlobSlice(blob, 0, FINGERPRINT_WINDOW),
     );
     if (blob.size > FINGERPRINT_WINDOW) {
       hash = hashInto(
         hash,
-        new Uint8Array(
-          await blob
-            .slice(Math.max(0, blob.size - FINGERPRINT_WINDOW), blob.size)
-            .arrayBuffer(),
+        await readBlobSlice(
+          blob,
+          Math.max(0, blob.size - FINGERPRINT_WINDOW),
+          blob.size,
         ),
       );
     }
