@@ -17,6 +17,7 @@ import {
   DATABASE_CONFIGS,
 } from "@app/services/indexedDBManager";
 import { alert } from "@app/components/toast";
+import { readBlobSlice } from "@app/utils/blobSlice";
 
 /**
  * Storage record - single source of truth
@@ -141,7 +142,7 @@ export function maintenanceMayRewrite(
  *  it. One byte is enough: what fails is opening the store, not the length. */
 async function blobReadFailure(data: Blob): Promise<unknown> {
   try {
-    await data.slice(0, 1).arrayBuffer();
+    await readBlobSlice(data, 0, 1);
     return null;
   } catch (error) {
     return error ?? new Error("Reading a stored blob's bytes failed");
