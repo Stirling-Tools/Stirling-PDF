@@ -21,6 +21,40 @@ will sit alongside it as siblings. Shared tooling — `package.json`, `node_modu
 `.storybook/`, oxlint, oxfmt — lives at `frontend/` so every app installs
 once and lints with the same config.
 
+## Local `@embedpdf` patches
+
+`@embedpdf/engines` and the `@embedpdf` plugins are pinned and patched locally
+while upstream prepares 3.0. `scripts/ensure-embedpdf-patches.mjs` applies the
+patches from `postinstall`, so a normal install leaves `node_modules` patched.
+The Vite build runs the same script first, so an install that skipped lifecycle
+scripts (`npm ci --ignore-scripts`, packagers) patches or fails loudly instead of
+shipping an unpatched engine. `task frontend:check` (and
+`npm run check:embedpdf-patch`) verifies that every patched anchor is present;
+the scripts are version-anchored and fail loudly on a version bump instead of
+silently skipping a patch.
+
+What the patches change:
+
+- **Engine, worker handoff**: accept a precompiled `WebAssembly.Module` from the
+  main thread instead of re-fetching and recompiling `pdfium.wasm`, transfer
+  whole-buffer render results instead of copying them, and revoke the worker
+  blob URLs the package leaks.
+- **Engine, worker memory**: one pooled bitmap buffer per worker for page
+  renders (`__stirlingScratchStats` on the worker global reports
+  renders/allocs/reuses/bytes), and documents open through `FPDF_FILEACCESS`
+  (`FPDF_LoadCustomDocument`) so PDFium reads 64 KB blocks from the source
+  instead of copying the file into the WASM heap: a Blob streams its ranges
+  directly, while an `ArrayBuffer` input is still served from the worker's
+  copy of it (`__stirlingWorkerHeapBytes()` reports the worker heap and
+  `__stirlingWorkerDocBytes` the document bytes the worker materialized, which
+  is 0 while it streams a Blob).
+- **Plugins**: batched interaction-manager dispatch and cancellation of stale
+  tile renders.
+
+The patch scripts keep their patterns as literal `\n`-escaped anchors because
+the worker source lives inside an escaped string in the bundle; every anchor is
+asserted before a replacement is applied.
+
 ## Environment Variables
 
 The editor's environment variables live in committed `.env` files at

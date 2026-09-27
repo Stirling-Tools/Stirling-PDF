@@ -1,5 +1,6 @@
 import react from "@vitejs/plugin-react-swc";
 import { compression, defineAlgorithm } from "vite-plugin-compression2";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs/promises";
 import path, { resolve } from "node:path";
 import { constants, brotliCompress, gzip } from "node:zlib";
@@ -15,6 +16,22 @@ import { viteStaticCopy } from "vite-plugin-static-copy";
 const gzipPromise = promisify(gzip);
 const brotliPromise = promisify(brotliCompress);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+/** Applies/verifies the pinned @embedpdf patches before any bundle is built, so
+ *  installs that skipped lifecycle scripts and direct `vite build` calls patch
+ *  or fail loudly instead of shipping an unpatched engine. */
+function embedpdfPatchGatePlugin(): PluginOption {
+  return {
+    name: "ensure-embedpdf-patches",
+    buildStart() {
+      execFileSync(
+        process.execPath,
+        [resolve(__dirname, "../scripts/ensure-embedpdf-patches.mjs")],
+        { stdio: "inherit" },
+      );
+    },
+  };
+}
 
 function compressStaticCopyPlugin(): PluginOption {
   return {
@@ -322,6 +339,7 @@ export default defineConfig(async ({ mode, command }) => {
       __DEV_WORKTREE_LABEL__: JSON.stringify(devWorktreeLabel),
     },
     plugins: [
+      embedpdfPatchGatePlugin(),
       iconSvgr(),
       react(),
       ...(runSubpath ? [subpathBareRedirectPlugin(runSubpath)] : []),
@@ -330,6 +348,9 @@ export default defineConfig(async ({ mode, command }) => {
       }),
       compression({
         threshold: 1024,
+        // The default list omits wasm; the pdfium asset is the largest eager
+        // download and /assets/** is served precompressed in production.
+        include: /\.(html|xml|css|json|js|mjs|svg|yaml|yml|toml|wasm)$/,
         exclude: [/\.(png|jpg|jpeg|gif|webp|woff|woff2)$/],
         algorithms: [
           defineAlgorithm("gzip", { level: 9 }),

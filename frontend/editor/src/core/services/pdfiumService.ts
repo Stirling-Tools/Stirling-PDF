@@ -95,7 +95,8 @@ async function initPdfiumModule(): Promise<WrappedPdfiumModule> {
   startEagerWasmCompilation();
 
   const overrides: PdfiumModuleOverrides = { locateFile: () => wasmUrl() };
-  const precompiled = await pdfiumWasmModulePromise;
+  const container = await pdfiumWasmModulePromise;
+  const precompiled = container?.module ?? null;
 
   let reportFailure: (error: unknown) => void = () => {};
   const instantiateFailed = new Promise<never>((_, reject) => {
