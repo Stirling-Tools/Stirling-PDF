@@ -8,39 +8,12 @@
 
 import { fileStorage } from "@app/services/fileStorage";
 import { extractPDFMetadata } from "@app/services/pdfMetadataService";
-import { readBlobSlice } from "@app/utils/blobSlice";
 import type { StirlingFileStub } from "@app/types/fileContext";
 
 export const CLASSIFICATION_METADATA_KEY = "StirlingPDFClassification";
 
 /** Cap the auto-read by size — never pull a multi-GB file into memory for a label. */
 const MAX_READ_BYTES = 25 * 1024 * 1024;
-const CLASSIFICATION_PROBE_BYTES = 64 * 1024;
-
-function containsClassificationMarker(bytes: Uint8Array): boolean {
-  // "StirlingPDFClassification" ASCII bytes
-  const needle = [
-    0x53, 0x74, 0x69, 0x72, 0x6c, 0x69, 0x6e, 0x67, 0x50, 0x44, 0x46, 0x43,
-    0x6c, 0x61, 0x73, 0x73, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f,
-    0x6e,
-  ];
-  outer: for (let i = 0; i <= bytes.length - needle.length; i++) {
-    for (let j = 0; j < needle.length; j++) {
-      if (bytes[i + j] !== needle[j]) continue outer;
-    }
-    return true;
-  }
-  return false;
-}
-
-async function quickProbeClassificationMarker(file: File): Promise<boolean> {
-  const tailStart = Math.max(0, file.size - CLASSIFICATION_PROBE_BYTES);
-  const tailBytes = await readBlobSlice(file, tailStart);
-  if (containsClassificationMarker(tailBytes)) return true;
-  if (tailStart === 0) return false;
-  const headBytes = await readBlobSlice(file, 0, CLASSIFICATION_PROBE_BYTES);
-  return containsClassificationMarker(headBytes);
-}
 
 /**
  * Parse the stored classification JSON (the engine response the classify policy
@@ -67,9 +40,6 @@ export async function readClassificationLabelsFromFile(
   file: File,
 ): Promise<string[] | null> {
   try {
-    if (!(await quickProbeClassificationMarker(file))) {
-      return null;
-    }
     const result = await extractPDFMetadata(file);
     if (!result.success) return null;
     const entry = result.metadata.customMetadata.find(
@@ -102,9 +72,7 @@ export async function readStubClassificationLabels(
   if (inFlight) return inFlight;
 
   const promise = (async () => {
-    const file = await fileStorage
-      .getStirlingFile(stub.id)
-      .catch(() => null);
+    const file = await fileStorage.getStirlingFile(stub.id).catch(() => null);
     if (!file) return null;
     return readClassificationLabelsFromFile(file);
   })();
