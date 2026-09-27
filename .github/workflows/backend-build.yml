@@ -40,6 +40,7 @@ jobs:
     outputs:
       java_version: ${{ steps.hash.outputs.java_version }}
       cache_key: ${{ steps.hash.outputs.cache_key }}
+      files_hash: ${{ steps.hash.outputs.files_hash }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
@@ -59,6 +60,7 @@ jobs:
         run: |
           HASH="$FILES_HASH"
           echo "java_version=${{ env.JAVA_VERSION }}" >> "$GITHUB_OUTPUT"
+          echo "files_hash=$HASH" >> "$GITHUB_OUTPUT"
           echo "cache_key=gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-${{ env.JAVA_VERSION }}-$HASH" >> "$GITHUB_OUTPUT"
   build:
     environment:
@@ -88,19 +90,22 @@ jobs:
 
       - name: Restore Gradle cache sftp
         id: cache
-        uses: Ludy87/cache-the-planet@49161e4c6c89a1509929cad9cd0715ccad926d71
+        uses: Ludy87/cache-the-planet/multi-cache@49161e4c6c89a1509929cad9cd0715ccad926d71
         with:
           manifest-branch: dev-cache
           manifest-path: .github/cache-data
           storage: github-branch
-          cache-name: "gradle-java-${{ env.JAVA_VERSION }}"
+          multi-cache: |
+            gradle-caches:
+              path: .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/caches
+            gradle-wrapper:
+              path: .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/wrapper
           save-scope: shared
           token: ${{ github.token }}
-          key: ${{ needs.hash_pr.outputs.cache_key }}
+          key: |
+            gradle-caches=${{ needs.hash_pr.outputs.files_hash }}
+            gradle-wrapper=${{ needs.hash_pr.outputs.files_hash  }}
           allow-shared-restore: true
-          path: |
-            .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
-            .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
           strict: false
 
       - name: Restore cache Gradle User Home
