@@ -108,6 +108,9 @@ vi.mock("@portal/components/pipelines/DestinationPicker", () => ({
       <button type="button" onClick={() => onEdit(value[0] ?? "")}>
         edit destination
       </button>
+      <button type="button" onClick={() => onChange([])}>
+        clear destination
+      </button>
     </>
   ),
 }));
@@ -897,6 +900,105 @@ describe("PipelineBuilder", () => {
     expect(body.editor).toEqual({ allowed: true, runOn: "upload" });
     // And it needs no destination - results land back in the workspace the file came from.
     expect(body.outputIds).toEqual([]);
+  });
+
+  it("keeps external delivery selected when a saved destination is cleared", async () => {
+    fetchSources.mockResolvedValue({
+      kpis: [],
+      sources: [SOURCE, EDITOR_SOURCE],
+    });
+    fetchPipeline.mockResolvedValue({
+      ...POLICY,
+      inputs: [],
+      editor: { allowed: true, runOn: "upload" },
+      outputIds: ["src-in"],
+      routingRules: [],
+    });
+    renderBuilder("/processor/pipelines/plc-1");
+    await screen.findByLabelText("portal.pipelines.builder.rename");
+    await openOutput();
+    fireEvent.click(await screen.findByText("clear destination"));
+    expect(
+      screen.getByRole("textbox", {
+        name: "portal.policies.wizard.locations.delivery",
+      }),
+    ).toHaveValue("portal.policies.wizard.locations.keepOriginal");
+    expect(screen.getByText("pick output")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "portal.pipelines.composer.save" }),
+    ).toBeDisabled();
+  });
+
+  it("clears hidden routing blockers when returning results to the editor", async () => {
+    HTMLElement.prototype.scrollIntoView = vi.fn();
+    fetchSources.mockResolvedValue({
+      kpis: [],
+      sources: [SOURCE, EDITOR_SOURCE],
+    });
+    fetchPipeline.mockResolvedValue({
+      ...POLICY,
+      inputs: [],
+      editor: { allowed: true, runOn: "upload" },
+      outputIds: ["src-in"],
+      routingRules: [routingRule([])],
+    });
+    renderBuilder("/processor/pipelines/plc-1");
+    await screen.findByLabelText("portal.pipelines.builder.rename");
+    await openOutput();
+    fireEvent.click(
+      screen.getByRole("textbox", {
+        name: "portal.policies.wizard.locations.delivery",
+      }),
+    );
+    fireEvent.click(
+      await screen.findByText(
+        "portal.policies.wizard.locations.returnToEditor",
+      ),
+    );
+    fireEvent.click(screen.getByText("portal.pipelines.composer.save"));
+    await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
+    expect(savePipeline.mock.calls[0][0]).toMatchObject({
+      outputIds: [],
+      routingRules: [],
+    });
+  });
+
+  it("saves a separate destination for an editor copy", async () => {
+    HTMLElement.prototype.scrollIntoView = vi.fn();
+    fetchSources.mockResolvedValue({
+      kpis: [],
+      sources: [SOURCE, EDITOR_SOURCE],
+    });
+    renderBuilder("/processor/pipelines/new");
+    fireEvent.change(
+      await screen.findByLabelText("portal.pipelines.composer.name"),
+      { target: { value: "Copy to archive" } },
+    );
+    await addTool("Compress");
+    await pickInputSource("Editor");
+    await openOutput();
+    fireEvent.click(
+      await screen.findByRole("textbox", {
+        name: "portal.policies.wizard.locations.delivery",
+      }),
+    );
+    fireEvent.click(
+      await screen.findByText("portal.policies.wizard.locations.keepOriginal"),
+    );
+    expect(
+      screen.getByRole("button", {
+        name: "portal.pipelines.composer.create",
+      }),
+    ).toBeDisabled();
+    fireEvent.click(await screen.findByText("pick output"));
+    fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
+    await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
+    expect(savePipeline.mock.calls[0][0]).toMatchObject({
+      editor: { allowed: true, runOn: "upload" },
+      required: false,
+      inputs: [],
+      outputIds: ["src-in"],
+    });
   });
 
   it("blocks a vector route with a file fallback until chunks are prepared", async () => {

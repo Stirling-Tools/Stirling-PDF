@@ -27,7 +27,7 @@ import {
   type ViewerZoomSetting,
 } from "@app/services/preferencesService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { updateService, UpdateSummary } from "@app/services/updateService";
 import UpdateModal from "@app/components/shared/UpdateModal";
 import type {
@@ -210,14 +210,13 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
             onClick={handleDismissBanner}
             aria-label={t("settings.general.enableFeatures.dismiss", "Dismiss")}
           >
-            <LocalIcon icon="close-rounded" width="1rem" height="1rem" />
+            <Icon name="x" size="1rem" />
           </ActionIcon>
           <Stack gap="sm">
             <Group gap="xs">
-              <LocalIcon
-                icon="admin-panel-settings-rounded"
-                width="1.2rem"
-                height="1.2rem"
+              <Icon
+                name="shield-user"
+                size="1.2rem"
                 style={{ color: "var(--c-accent-text)" }}
               />
               <Text
@@ -357,13 +356,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                   onClick={checkForUpdate}
                   loading={checkingUpdate}
                   disabled={!currentVersion}
-                  leftSection={
-                    <LocalIcon
-                      icon="refresh-rounded"
-                      width="1rem"
-                      height="1rem"
-                    />
-                  }
+                  leftSection={<Icon name="refresh-cw" size="1rem" />}
                 >
                   {t(
                     "settings.general.updates.checkForUpdates",
@@ -379,13 +372,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                         : "default"
                     }
                     onClick={() => setUpdateModalOpened(true)}
-                    leftSection={
-                      <LocalIcon
-                        icon="system-update-alt-rounded"
-                        width="1rem"
-                        height="1rem"
-                      />
-                    }
+                    leftSection={<Icon name="square-arrow-down" size="1rem" />}
                   >
                     {t("settings.general.updates.viewDetails", "View Details")}
                   </Button>

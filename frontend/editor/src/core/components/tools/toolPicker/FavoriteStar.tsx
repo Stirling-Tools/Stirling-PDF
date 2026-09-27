@@ -1,7 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import StarRoundedIcon from "@mui/icons-material/StarRounded";
-import StarBorderRoundedIcon from "@mui/icons-material/StarBorderRounded";
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import type { ActionIconSize } from "@app/ui/ActionIcon";
 type FavoriteStarSize = "xs" | ActionIconSize;
@@ -55,15 +54,14 @@ const FavoriteStar: React.FC<FavoriteStarProps> = ({
       }
     >
       {isFavorite ? (
-        <StarRoundedIcon
-          fontSize="inherit"
-          style={{ color: "var(--special-color-favorites)", fontSize: "1rem" }}
+        <Icon
+          name="star"
+          size="1em"
+          filled
+          style={{ color: "var(--special-color-favorites)" }}
         />
       ) : (
-        <StarBorderRoundedIcon
-          fontSize="inherit"
-          style={{ fontSize: "1rem" }}
-        />
+        <Icon name="star" size="1em" />
       )}
     </ActionIcon>
   );

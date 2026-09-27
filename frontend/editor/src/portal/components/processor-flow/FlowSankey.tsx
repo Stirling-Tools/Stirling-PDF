@@ -224,6 +224,7 @@ export function FlowSankey({ sources, outcomes, policies }: FlowSankeyProps) {
 
   return (
     <div className="portal-pf__sankey">
+      {/* icon-lint-disable -- d3 sankey diagram */}
       <svg viewBox={`0 0 ${SW} ${SH}`} width="100%" aria-hidden>
         {wires}
         {bars}
