@@ -6,7 +6,10 @@ describe("readBlobSlice", () => {
     return {
       size: bytes.length,
       slice: (start: number, end?: number) => {
-        const sliced = bytes.slice(start, end !== undefined ? end : bytes.length);
+        const sliced = bytes.slice(
+          start,
+          end !== undefined ? end : bytes.length,
+        );
         return {
           size: sliced.length,
           stream: () =>
@@ -16,7 +19,11 @@ describe("readBlobSlice", () => {
                 controller.close();
               },
             }),
-          arrayBuffer: async () => sliced.buffer.slice(sliced.byteOffset, sliced.byteOffset + sliced.byteLength),
+          arrayBuffer: async () =>
+            sliced.buffer.slice(
+              sliced.byteOffset,
+              sliced.byteOffset + sliced.byteLength,
+            ),
         };
       },
     } as unknown as Blob;
@@ -67,7 +74,8 @@ describe("readBlobSlice", () => {
               controller.close();
             },
           }),
-        arrayBuffer: async () => new Uint8Array([10, 20, 30, 40, 50, 60]).buffer,
+        arrayBuffer: async () =>
+          new Uint8Array([10, 20, 30, 40, 50, 60]).buffer,
       }),
     } as unknown as Blob;
 
@@ -116,7 +124,10 @@ describe("readBlobSlice", () => {
       const start = Math.floor(Math.random() * size);
       const end =
         Math.random() > 0.3
-          ? Math.min(size, start + Math.floor(Math.random() * (size - start + 10)))
+          ? Math.min(
+              size,
+              start + Math.floor(Math.random() * (size - start + 10)),
+            )
           : undefined;
 
       const [actual, expectedBuffer] = await Promise.all([
