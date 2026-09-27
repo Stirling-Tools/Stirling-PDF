@@ -152,7 +152,7 @@ jobs:
 
       - name: Cache Gradle (lookup-only)
         id: cache-gradle-restore
-        if: ${{ steps.cache.outputs.error && steps.hit_caches.outputs.cache_hit != 'true' }}
+        if: ${{ steps.cache.outputs.error || steps.hit_caches.outputs.cache_hit != 'true' }}
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
@@ -163,19 +163,16 @@ jobs:
 
       - name: Set up JDK ${{ needs.hash_pr.outputs.java_version }}
         if: |
-          steps.cache.outputs.error ||
-          (
           steps.cache-gradle-restore.outputs.cache-hit != 'true' &&
           steps.hit_caches.outputs.cache_hit != 'true'
-          )
         uses: ./.github/actions/java
         with:
           java-version: ${{ needs.hash_pr.outputs.java_version }}
 
       - name: Resolve backend dependencies
         if: |
-          steps.cache-gradle-restore.outputs.cache-hit == 'true' ||
-          steps.hit_caches.outputs.cache_hit == 'true'
+          steps.cache-gradle-restore.outputs.cache-hit != 'true' &&
+          steps.hit_caches.outputs.cache_hit != 'true'
         run: ./gradlew :stirling-pdf:classes --no-daemon
         env:
           STIRLING_FLAVOR: saas
@@ -186,7 +183,8 @@ jobs:
       - name: Save cache Gradle User Home
         if: |
           steps.cache.outputs.error &&
-          steps.cache-gradle-restore.outputs.cache-hit != 'true'
+          steps.cache-gradle-restore.outputs.cache-hit != 'true' &&
+          steps.hit_caches.outputs.cache_hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
