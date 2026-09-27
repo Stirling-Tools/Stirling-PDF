@@ -12,18 +12,55 @@ import { pdfiumWasmUrl } from "@app/services/wasmPrecompiler";
 
 export function useViewerEngineWarmUp(): void {
   useEffect(() => {
-    const warmUp = () =>
+    if (typeof window === "undefined") return;
+    let active = true;
+    let didWarmUp = false;
+    const warmUp = () => {
+      if (didWarmUp || !active) return;
+      didWarmUp = true;
       void warmUpViewerEngine({
         wasmUrl: pdfiumWasmUrl,
         fontFallback: getLocalFontFallbackConfig(),
       }).catch(() => {
         // The viewer surfaces the failure; the warm-up only spends the time.
       });
-    const timer = window.setTimeout(warmUp, 10_000);
+    };
+    const win = window as unknown as {
+      requestIdleCallback?: (
+        callback: () => void,
+        options?: { timeout: number },
+      ) => number;
+      cancelIdleCallback?: (handle: number) => void;
+    };
+    let timerHandle: ReturnType<typeof setTimeout> | null = null;
+    let idleHandle: number | null = null;
+    const cancelScheduled = () => {
+      if (timerHandle !== null) {
+        clearTimeout(timerHandle);
+        timerHandle = null;
+      }
+      if (idleHandle !== null) {
+        if (typeof win.cancelIdleCallback === "function") {
+          try {
+            win.cancelIdleCallback(idleHandle);
+          } catch {
+            // Ignored in environments where cancelIdleCallback shim mismatches fake timers.
+          }
+        } else {
+          clearTimeout(idleHandle);
+        }
+        idleHandle = null;
+      }
+    };
     const warmUpEarly = () => {
-      window.clearTimeout(timer);
+      cancelScheduled();
       warmUp();
     };
+    if (typeof win.requestIdleCallback === "function") {
+      idleHandle = win.requestIdleCallback(warmUpEarly, { timeout: 1500 });
+    } else {
+      timerHandle = setTimeout(warmUpEarly, 400);
+    }
     window.addEventListener("dragenter", warmUpEarly, {
       once: true,
       passive: true,
@@ -39,7 +76,8 @@ export function useViewerEngineWarmUp(): void {
     };
     window.addEventListener("focusin", onFocusIn);
     return () => {
-      window.clearTimeout(timer);
+      active = false;
+      cancelScheduled();
       window.removeEventListener("dragenter", warmUpEarly);
       window.removeEventListener("pointerdown", warmUpEarly);
       window.removeEventListener("focusin", onFocusIn);

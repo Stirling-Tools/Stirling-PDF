@@ -13,6 +13,10 @@ import { EmbedPDF, useDocumentState } from "@embedpdf/core/react";
 import { useLocalPdfiumEngine } from "@app/hooks/useLocalPdfiumEngine";
 import type { FileId } from "@app/types/file";
 import { toEngineDocumentBuffer } from "@app/utils/engineDocumentSource";
+import {
+  initScrollVelocityTracker,
+  getVelocityAdaptiveExtraRings,
+} from "@app/utils/scrollVelocityTracker";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 
@@ -268,6 +272,7 @@ interface TileConfig {
  * and BMP stay one localStorage entry away.
  */
 function readTileConfig(): TileConfig {
+  initScrollVelocityTracker();
   const defaults: TileConfig = {
     imageType: "image/jpeg",
     quality: 0.85,
@@ -767,7 +772,9 @@ export function LocalEmbedPDF({
       createPluginRegistration(TilingPluginPackage, {
         tileSize: tileConfig.tileSize,
         overlapPx: 5,
-        extraRings: tileConfig.extraRings,
+        get extraRings() {
+          return getVelocityAdaptiveExtraRings(tileConfig.extraRings);
+        },
       }),
 
       // Register search plugin for text search
