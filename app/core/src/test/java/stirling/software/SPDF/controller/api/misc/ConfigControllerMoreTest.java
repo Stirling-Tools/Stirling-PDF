@@ -155,6 +155,21 @@ class ConfigControllerMoreTest {
         }
 
         @Test
+        void ssoAutoLoginIsReportedWithoutPaidLicense() {
+            licenseService = null;
+            when(applicationContext.containsBean("runningProOrHigher")).thenReturn(true);
+            when(applicationContext.getBean("runningProOrHigher", Boolean.class)).thenReturn(false);
+            when(applicationContext.containsBean("SSOAutoLogin")).thenReturn(true);
+            when(applicationContext.getBean("SSOAutoLogin", Boolean.class)).thenReturn(true);
+
+            Map<String, Object> body =
+                    bodyOf(newController().getAppConfig(mock(HttpServletRequest.class)));
+
+            assertThat(body).containsEntry("runningProOrHigher", false);
+            assertThat(body).containsEntry("SSOAutoLogin", true);
+        }
+
+        @Test
         @DisplayName("includes Google Drive backend settings when enabled")
         void googleDriveEnabled() {
             ApplicationProperties.Premium.ProFeatures.GoogleDrive gd =

@@ -34,8 +34,6 @@ import styles from "@app/components/onboarding/classificationDemo/classification
 interface WalkthroughArgs {
   /** PDFs "in the folder": what is left after the first 50 sizes the follow-up offer. */
   pdfsInFolder: number;
-  /** Free classification runs "left in the wallet": caps the follow-up batch. */
-  freeCredits: number;
   /** Simulated time per document; the live sweep is bound by disk and the heuristic. */
   msPerFile: number;
 }
@@ -48,10 +46,9 @@ interface WalkthroughArgs {
 const meta = {
   title: "Onboarding/Classification Demo",
   parameters: { layout: "fullscreen" },
-  args: { pdfsInFolder: 73, freeCredits: 500, msPerFile: 90 },
+  args: { pdfsInFolder: 73, msPerFile: 90 },
   argTypes: {
     pdfsInFolder: { control: { type: "number", min: 0, max: 2000 } },
-    freeCredits: { control: { type: "number", min: 0, max: 1000 } },
     msPerFile: { control: { type: "number", min: 0, max: 1000 } },
   },
 } satisfies Meta<WalkthroughArgs>;
@@ -62,15 +59,11 @@ type Story = StoryObj<WalkthroughArgs>;
 /**
  * The whole flow, end to end, on a simulated folder. Both buttons on the first slide
  * lead on (the real one asks the OS in between); "Process the rest" runs a second batch
- * and folds it into the chart. Use the controls to change the folder size, the free
- * allowance and the pace.
+ * and folds it into the chart. Use the controls to change the folder size and pace.
  */
 export const Walkthrough: Story = {
   render: (args) => (
-    <WalkthroughDemo
-      key={`${args.pdfsInFolder}-${args.freeCredits}-${args.msPerFile}`}
-      {...args}
-    />
+    <WalkthroughDemo key={`${args.pdfsInFolder}-${args.msPerFile}`} {...args} />
   ),
 };
 
@@ -306,13 +299,11 @@ function CloseCorner({ onClick }: { onClick?: () => void }) {
 function ResultsView({
   groups,
   remaining,
-  batchSize,
   onLeave,
   onContinue,
 }: {
   groups: ClassificationDemoGroupCount[];
   remaining: number;
-  batchSize: number;
   onLeave?: () => void;
   onContinue?: () => void;
 }) {
@@ -320,7 +311,7 @@ function ResultsView({
   const colours = useSliceColours(groups);
   const selected = groups.find((group) => group.id === selectedId) ?? null;
   const total = groups.reduce((sum, group) => sum + group.count, 0);
-  const canContinue = remaining > 0 && batchSize > 0;
+  const canContinue = remaining > 0;
 
   return (
     <div className={styles.view}>
@@ -356,19 +347,13 @@ function ResultsView({
         </div>
 
         <footer className={styles.resultsFooter}>
-          {canContinue && (
-            <FollowUpPanel remaining={remaining} batchSize={batchSize} />
-          )}
+          {canContinue && <FollowUpPanel remaining={remaining} />}
           <div className={styles.viewActions}>
             <Button variant="quiet" accent="neutral" onClick={onLeave}>
               {canContinue ? "Not now" : "Done"}
             </Button>
             {canContinue && (
-              <Button onClick={onContinue}>
-                {batchSize < remaining
-                  ? `Process another ${batchSize}`
-                  : "Process the rest"}
-              </Button>
+              <Button onClick={onContinue}>Process the rest</Button>
             )}
           </div>
         </footer>
@@ -379,24 +364,22 @@ function ResultsView({
 
 /** The finished sweep. Select a slice or a chip to lift it and open its breakdown. */
 export const Results: Story = {
-  render: () => <ResultsView groups={GROUPS} remaining={18} batchSize={18} />,
+  render: () => <ResultsView groups={GROUPS} remaining={18} />,
 };
 
-/** More left in the folder than the free allowance covers, so the offer is a batch. */
-export const ResultsAllowanceCapped: Story = {
-  render: () => <ResultsView groups={GROUPS} remaining={612} batchSize={450} />,
+/** A large folder still offers all remaining documents, with credits managed by the server. */
+export const ResultsLargeFolder: Story = {
+  render: () => <ResultsView groups={GROUPS} remaining={612} />,
 };
 
 /** The folder is fully swept: no follow-up, just Done. */
 export const ResultsNothingLeft: Story = {
-  render: () => <ResultsView groups={GROUPS} remaining={0} batchSize={0} />,
+  render: () => <ResultsView groups={GROUPS} remaining={0} />,
 };
 
 /** A single family draws as a full circle rather than a wedge. */
 export const SingleCategory: Story = {
-  render: () => (
-    <ResultsView groups={[GROUPS[0]]} remaining={0} batchSize={0} />
-  ),
+  render: () => <ResultsView groups={[GROUPS[0]]} remaining={0} />,
 };
 
 /** Every type a single document: bars scale against a floor so they are not all full-width. */
@@ -422,7 +405,6 @@ export const AllSingletons: Story = {
         },
       ]}
       remaining={0}
-      batchSize={0}
     />
   ),
 };
@@ -433,7 +415,6 @@ export const NothingClassified: Story = {
     <ResultsView
       groups={[{ id: "other", name: "Other", count: 12, labels: [] }]}
       remaining={0}
-      batchSize={0}
     />
   ),
 };
@@ -442,11 +423,7 @@ type Stage = "default" | "folder" | "processing" | "results" | "closed";
 
 /** The live flow on a simulated folder: same slides, same view, same merge of a
  *  follow-up batch into the pile, with a timer standing in for disk and heuristic. */
-function WalkthroughDemo({
-  pdfsInFolder,
-  freeCredits,
-  msPerFile,
-}: WalkthroughArgs) {
+function WalkthroughDemo({ pdfsInFolder, msPerFile }: WalkthroughArgs) {
   const [stage, setStage] = useState<Stage>("default");
   const [phase, setPhase] = useState<ClassificationDemoPhase>("reading");
   const [batchTotal, setBatchTotal] = useState(0);
@@ -455,7 +432,6 @@ function WalkthroughDemo({
     null,
   );
   const [swept, setSwept] = useState(0);
-  const [credits, setCredits] = useState(freeCredits);
   const cancelled = useRef(false);
 
   useEffect(
@@ -496,7 +472,6 @@ function WalkthroughDemo({
     await sleep(400);
     if (cancelled.current) return;
     setSwept(swept + total);
-    setCredits((left) => left - total);
     setOutcome((previous) =>
       previous ? mergeOutcomes(previous, tally) : tally,
     );
@@ -514,7 +489,6 @@ function WalkthroughDemo({
     setOutcome(null);
     setBatch(EMPTY_OUTCOME);
     setSwept(0);
-    setCredits(freeCredits);
   };
 
   if (stage === "default") {
@@ -608,14 +582,12 @@ function WalkthroughDemo({
 
   if (stage === "results" && outcome) {
     const remaining = pdfsInFolder - swept;
-    const batchSize = Math.min(remaining, Math.max(credits, 0));
     return (
       <ResultsView
         groups={outcome.groups}
         remaining={remaining}
-        batchSize={batchSize}
         onLeave={close}
-        onContinue={() => void run(batchSize)}
+        onContinue={() => void run(remaining)}
       />
     );
   }

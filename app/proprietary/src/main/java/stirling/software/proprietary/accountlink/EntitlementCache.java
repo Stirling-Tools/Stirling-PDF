@@ -157,8 +157,25 @@ public class EntitlementCache {
     private Snapshot successfulSnapshot(String deviceId, InstanceEntitlement entitlement) {
         Instant now = clock.instant();
         credentialStore.recordEntitlementContact(
-                deviceId, now, entitlement.state() == EntitlementState.REVOKED);
+                deviceId,
+                now,
+                entitlement.state() == EntitlementState.REVOKED,
+                entitlement.fleetUserLimit());
         return new Snapshot(entitlement, now, now, false);
+    }
+
+    /** The current device's persisted allowance is usable only within its offline grace. */
+    public Integer fleetUserLimit() {
+        if (isGraceExpired()) return null;
+        var credential = credentialStore.get();
+        if (credential.isEmpty() || credential.get().isEntitlementRevoked()) return null;
+        if (Objects.equals(snapshotDeviceId, credential.get().getDeviceId())
+                && snapshot.entitlement() != null) {
+            return snapshot.entitlement().state() == EntitlementState.REVOKED
+                    ? null
+                    : snapshot.entitlement().fleetUserLimit();
+        }
+        return credential.get().getFleetUserLimit();
     }
 
     /** Applies across restarts and independently of metering or the presence of cached data. */

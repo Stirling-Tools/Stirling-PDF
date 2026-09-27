@@ -39,6 +39,7 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.saas.accountlink.LinkedInstanceAuthenticationToken;
 import stirling.software.saas.payg.cap.AiToolRoutes;
 import stirling.software.saas.payg.cap.RequiresFeature;
 import stirling.software.saas.payg.charge.ChargeContext;
@@ -511,6 +512,11 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
         // than paying another lookup. Guests carry a raw Jwt, hence the lookup below.
         if (auth.getPrincipal() instanceof User u) {
             return u;
+        }
+        // InstanceAiUsageService meters linked instances; their instance-id principal would only
+        // fail the UUID parse below and log a spurious error per call.
+        if (auth instanceof LinkedInstanceAuthenticationToken) {
+            return null;
         }
         try {
             String supabaseId = AuthenticationUtils.extractSupabaseId(auth);

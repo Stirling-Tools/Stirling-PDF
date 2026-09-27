@@ -17,6 +17,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.nio.file.NoSuchFileException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,6 +38,9 @@ import org.springframework.core.io.ByteArrayResource;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
+import stirling.software.proprietary.failure.FailureKind;
+import stirling.software.proprietary.failure.PolicyFailureRecorder;
+import stirling.software.proprietary.policy.config.FolderAccessDeniedException;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.input.FolderInputSource;
@@ -93,6 +97,7 @@ class PolicyRunnerTest {
                         new ApplicationProperties(),
                         reachableOwners(),
                         databaseLicenseGuard,
+                        mock(PolicyFailureRecorder.class),
                         eventPublisher);
     }
 
@@ -101,6 +106,149 @@ class PolicyRunnerTest {
         when(databaseLicenseGuard.requiresActivation()).thenReturn(true);
         runner.run(policy(List.of(InputSpec.folder("/in"))));
         verifyNoInteractions(folderSource, policyEngine, processedLedger);
+    }
+
+    @Test
+    void anUnreadableFolderIsRecordedForItsOwnerWithoutItsPath() throws Exception {
+        // The detail is read by the whole team's reviewers, not only the folder's owner, and a
+        // filesystem exception's message leads with the folder's location on the operator's disk.
+        PolicyFailureRecorder recorder = mock(PolicyFailureRecorder.class);
+        PolicyRunner recording =
+                new PolicyRunner(
+                        policyEngine,
+                        List.of(folderSource),
+                        sourceStore,
+                        docCounter,
+                        processedLedger,
+                        new ApplicationProperties(),
+                        reachableOwners(),
+                        databaseLicenseGuard,
+                        recorder,
+                        eventPublisher);
+        InputSpec spec = InputSpec.folder("/Users/carol/Payroll");
+        Policy policy = policy(List.of(spec));
+        when(folderSource.supports(spec)).thenReturn(true);
+        when(folderSource.resolve(eq(spec), any()))
+                .thenThrow(
+                        new NoSuchFileException(
+                                "/Users/carol/Payroll", null, "input directory does not exist"));
+
+        recording.run(policy);
+
+        ArgumentCaptor<String> detail = ArgumentCaptor.forClass(String.class);
+        verify(recorder)
+                .recordRunFailureAs(
+                        eq(FailureKind.SOURCE_UNREADABLE),
+                        any(),
+                        eq("p1"),
+                        any(),
+                        eq("owner"),
+                        detail.capture());
+        assertEquals("input directory does not exist", detail.getValue());
+        assertFalse(detail.getValue().contains("/Users/carol"));
+    }
+
+    @Test
+    void aFolderTheServerNoLongerPermitsIsRecordedWithoutNamingIt() throws Exception {
+        // Locked down is one of the three ways a folder stops being readable, and the guard's own
+        // message leads with the path, which is not for the team's reviewers to read.
+        PolicyFailureRecorder recorder = mock(PolicyFailureRecorder.class);
+        PolicyRunner recording =
+                new PolicyRunner(
+                        policyEngine,
+                        List.of(folderSource),
+                        sourceStore,
+                        docCounter,
+                        processedLedger,
+                        new ApplicationProperties(),
+                        reachableOwners(),
+                        databaseLicenseGuard,
+                        recorder,
+                        eventPublisher);
+        InputSpec spec = InputSpec.folder("/Users/carol/Payroll");
+        Policy policy = policy(List.of(spec));
+        when(folderSource.supports(spec)).thenReturn(true);
+        when(folderSource.resolve(eq(spec), any()))
+                .thenThrow(
+                        new FolderAccessDeniedException(
+                                "/Users/carol/Payroll is outside policies.allowedFolderRoots"));
+
+        recording.run(policy);
+
+        ArgumentCaptor<String> detail = ArgumentCaptor.forClass(String.class);
+        verify(recorder)
+                .recordRunFailureAs(
+                        eq(FailureKind.SOURCE_UNREADABLE),
+                        any(),
+                        eq("p1"),
+                        any(),
+                        eq("owner"),
+                        detail.capture());
+        assertFalse(detail.getValue().contains("/Users/carol"));
+    }
+
+    @Test
+    void anUnreadableFolderIsFiledUnderTheSourcesOwnerNotThePolicys() throws Exception {
+        // A team policy can be bound to a folder somebody else set up. The row goes to the person
+        // who can fix the folder, as a document's failure in it would.
+        PolicyFailureRecorder recorder = mock(PolicyFailureRecorder.class);
+        PolicyRunner recording =
+                new PolicyRunner(
+                        policyEngine,
+                        List.of(folderSource),
+                        sourceStore,
+                        docCounter,
+                        processedLedger,
+                        new ApplicationProperties(),
+                        reachableOwners(),
+                        databaseLicenseGuard,
+                        recorder,
+                        eventPublisher);
+        InputSpec spec = InputSpec.folder("/Users/dave/Inbox");
+        Source daves =
+                sourceStore.save(
+                        new Source(null, "src", spec.type(), spec.options(), true, "dave", null));
+        Policy policy = policyReferencing(List.of(daves.id()));
+        when(folderSource.supports(spec)).thenReturn(true);
+        when(folderSource.resolve(eq(spec), any())).thenThrow(new IOException("mount gone"));
+
+        recording.run(policy);
+
+        verify(recorder)
+                .recordRunFailureAs(
+                        eq(FailureKind.SOURCE_UNREADABLE),
+                        any(),
+                        eq("p1"),
+                        eq(daves.id()),
+                        eq("dave"),
+                        any());
+    }
+
+    @Test
+    void aSourceThatBlowsUpIsNotCalledAnUnreadableFolder() throws Exception {
+        // A bug in a source, or a bucket's SDK error, is a RuntimeException. Recording it would
+        // tell the owner their folder cannot be read when nothing about the folder changed.
+        PolicyFailureRecorder recorder = mock(PolicyFailureRecorder.class);
+        PolicyRunner recording =
+                new PolicyRunner(
+                        policyEngine,
+                        List.of(folderSource),
+                        sourceStore,
+                        docCounter,
+                        processedLedger,
+                        new ApplicationProperties(),
+                        reachableOwners(),
+                        databaseLicenseGuard,
+                        recorder,
+                        eventPublisher);
+        InputSpec spec = InputSpec.folder("/Users/carol/Payroll");
+        Policy policy = policy(List.of(spec));
+        when(folderSource.supports(spec)).thenReturn(true);
+        when(folderSource.resolve(eq(spec), any())).thenThrow(new IllegalStateException("boom"));
+
+        recording.run(policy);
+
+        verifyNoInteractions(recorder);
     }
 
     @Test
@@ -134,6 +282,7 @@ class PolicyRunnerTest {
                         org.mockito.Mockito.mock(
                                 stirling.software.proprietary.security.configuration.ee
                                         .DatabaseLicenseGuard.class),
+                        org.mockito.Mockito.mock(PolicyFailureRecorder.class),
                         eventPublisher);
         InputSpec spec = InputSpec.folder("/in");
         Policy policy = policy(List.of(spec));
@@ -534,6 +683,7 @@ class PolicyRunnerTest {
                         org.mockito.Mockito.mock(
                                 stirling.software.proprietary.security.configuration.ee
                                         .DatabaseLicenseGuard.class),
+                        org.mockito.Mockito.mock(PolicyFailureRecorder.class),
                         eventPublisher);
         for (String owner : new String[] {null, "", "deleted-user"}) {
             Source source =
@@ -583,6 +733,7 @@ class PolicyRunnerTest {
                         org.mockito.Mockito.mock(
                                 stirling.software.proprietary.security.configuration.ee
                                         .DatabaseLicenseGuard.class),
+                        org.mockito.Mockito.mock(PolicyFailureRecorder.class),
                         eventPublisher);
 
         SweepOutcome outcome = enforced.run(stranded.withSurface(Policy.SURFACE_PROCESSING_FOLDER));

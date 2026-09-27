@@ -17,7 +17,7 @@ const serverPlanGroup: PlanTierGroup = {
     period: "month",
     features: [],
     highlights: [],
-    lookupKey: "selfhosted:server:monthly",
+    lookupKey: "selfhosted:team:monthly",
   },
   yearly: {
     id: "server-yearly",
@@ -27,7 +27,7 @@ const serverPlanGroup: PlanTierGroup = {
     period: "year",
     features: [],
     highlights: [],
-    lookupKey: "selfhosted:server:yearly",
+    lookupKey: "selfhosted:team:yearly",
   },
   features: [],
   highlights: [],

@@ -17,6 +17,11 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Stream;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -44,6 +49,33 @@ class PdfMarkdownConverterTest {
     private static final double THRESHOLD = 0.95;
 
     @TempDir Path tmp;
+
+    @Test
+    void rebasesASecondLevelHeadingBeforeBuildingItsPath() throws IOException {
+        Path pdf = tmp.resolve("heading.pdf");
+        try (PDDocument document = new PDDocument()) {
+            PDPage page = new PDPage();
+            document.addPage(page);
+            try (PDPageContentStream content = new PDPageContentStream(document, page)) {
+                var font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+                content.beginText();
+                content.setFont(font, 15.6f);
+                content.newLineAtOffset(50, 700);
+                content.showText("Section");
+                content.setFont(font, 12);
+                content.newLineAtOffset(0, -40);
+                content.showText(
+                        "This body text establishes the normal font size for this document.");
+                content.endText();
+            }
+            document.save(pdf.toFile());
+        }
+        try (PdfDocument document = PdfDocument.open(pdf)) {
+            List<MarkdownBlock> blocks = new PdfMarkdownConverter().extractBlocks(document);
+            assertEquals("# Section", blocks.getFirst().markdown());
+            assertEquals(List.of("Section"), blocks.getFirst().headingPath());
+        }
+    }
 
     /** Fixtures that meet the accuracy threshold today and therefore gate CI. */
     static Stream<Arguments> gatedFixtures() {

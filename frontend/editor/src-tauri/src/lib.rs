@@ -1,4 +1,5 @@
 use tauri::{AppHandle, Emitter, Manager, RunEvent, WindowEvent};
+use tauri_plugin_window_state::StateFlags;
 
 mod utils;
 pub mod commands;
@@ -49,6 +50,7 @@ use commands::{
     get_app_version,
     restart_app,
     target_window_label,
+    build_main_window,
     MAIN_WINDOW_LABEL,
 };
 use commands::connection::apply_provisioning_if_present;
@@ -128,7 +130,11 @@ pub fn run() {
     .plugin(tauri_plugin_deep_link::init())
     .plugin(tauri_plugin_notification::init())
     .plugin(tauri_plugin_updater::Builder::new().build())
-    .plugin(tauri_plugin_window_state::Builder::default().build())
+    .plugin(
+      tauri_plugin_window_state::Builder::default()
+        .with_state_flags(StateFlags::all() & !StateFlags::DECORATIONS)
+        .build()
+    )
     .manage(AppConnectionState::default())
     .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
       // Runs in the existing instance when a second launch is attempted
@@ -152,15 +158,15 @@ pub fn run() {
     .setup(|app| {
       add_log("🚀 Tauri app setup started".to_string());
 
-      // Windows: drop the native title bar so the in-app custom title bar
-      // (window controls + drag region) takes over. Runtime toggle because the
-      // main window is defined in tauri.conf.json; spawned windows set it at
-      // build time in window.rs. macOS/Linux keep their native decorations.
-      #[cfg(target_os = "windows")]
-      {
-        if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
-          let _ = window.set_decorations(false);
-        }
+      // The main window is built here, not in tauri.conf.json, so its chrome
+      // (decorations, macOS overlay title bar, traffic-light inset) lives with
+      // the spawned-window chrome in window.rs. Created first so the deep-link
+      // and file-open handling below can target it.
+      if let Err(err) = build_main_window(app.handle()) {
+        add_log(format!("❌ Failed to build main window: {}", err));
+        // No fallback window exists, so abort startup rather than run headless
+        // (on frameless Windows a windowless app has no way to be closed).
+        return Err(err.into());
       }
 
       // Files passed on the command line at first launch load into the main
