@@ -778,9 +778,6 @@ export function LocalEmbedPDF({
   // the scope holding the document bytes; without the unsubscribe they pin it.
   const annotationUnsubscribeRef = useRef<(() => void) | null>(null);
   const documentOpenedUnsubscribeRef = useRef<(() => void) | null>(null);
-
-  // The listeners share the scope holding the document bytes, so they must not
-  // outlive the component.
   useEffect(
     () => () => {
       annotationUnsubscribeRef.current?.();
