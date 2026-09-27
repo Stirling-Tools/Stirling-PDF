@@ -74,6 +74,19 @@ function useRearmOnFileSwitch(armed: boolean, onActivate: () => void) {
   }, [activeFileIndex, armed, onActivate]);
 }
 
+// The viewer can mount after a signature is armed (slow loads), so activate once it is ready.
+function useActivateWhenViewerReady(armed: boolean, onActivate: () => void) {
+  const { isSignatureApiReady, isPlacementMode } = useSignature();
+  const pending = useRef(false);
+  pending.current = armed && !isPlacementMode;
+  const activateRef = useRef(onActivate);
+  activateRef.current = onActivate;
+
+  useEffect(() => {
+    if (isSignatureApiReady && pending.current) activateRef.current();
+  }, [isSignatureApiReady]);
+}
+
 interface SignaturePlacementOptions {
   onParameterChange: <K extends keyof SignParameters>(
     key: K,
@@ -114,6 +127,7 @@ export function useSignaturePlacement({
 
   useEscapeKey(armedKey !== null, stop);
   useRearmOnFileSwitch(armedKey !== null, onActivate);
+  useActivateWhenViewerReady(armedKey !== null, onActivate);
 
   const placingKey = isPlacementMode ? armedKey : null;
 

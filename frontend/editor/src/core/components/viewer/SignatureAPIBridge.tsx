@@ -202,6 +202,7 @@ export const SignatureAPIBridge = forwardRef<
     isPlacementMode,
     placementPreviewSize,
     setSignaturesApplied,
+    setSignatureApiReady,
   } = useSignature();
   const { getZoomState, registerImmediateZoomUpdate } = useViewer();
   const documentReady = useDocumentReady();
@@ -219,6 +220,13 @@ export const SignatureAPIBridge = forwardRef<
       unregister?.();
     };
   }, [getZoomState, registerImmediateZoomUpdate]);
+
+  // Runs after the imperative handle is attached, so callers can use it straight away.
+  const apiReady = Boolean(annotationApi && documentReady);
+  useEffect(() => {
+    setSignatureApiReady(apiReady);
+    return () => setSignatureApiReady(false);
+  }, [apiReady, setSignatureApiReady]);
 
   // When entering sign mode, deactivate any active annotation tool immediately.
   // Only signature-specific tools (signatureInk, stamp) should be usable.
