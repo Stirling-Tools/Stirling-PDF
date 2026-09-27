@@ -191,11 +191,11 @@ describe("shared document lifecycle", () => {
     closeDocAndFreeBuffer(await getPdfiumModule(), doc);
     expect(closeCalls()).toEqual([doc]);
     // The reader re-fetches the module after the reset, so the close must
-    // still free the buffer in the heap that allocated it.
+    // still free what the old instance allocated.
     expect(freeCalls()).toHaveLength(1);
   });
 
-  it("closes an idle shared handle before allocating its replacement", async () => {
+  it("closes an idle shared handle before opening its replacement", async () => {
     const dataA = new ArrayBuffer(16);
     const dataB = new ArrayBuffer(24);
     const docA = await openRawDocumentSafe(dataA);
@@ -204,41 +204,12 @@ describe("shared document lifecycle", () => {
 
     const docB = await openRawDocumentSafe(dataB);
 
-    // A's buffer is freed before B's allocation, so the two never coexist.
+    // A's resources are released before B's are allocated, so the two never
+    // coexist.
     expect(pdfium.state.allocationOrder).toEqual(["free", "malloc"]);
 
     closeDocAndFreeBuffer(await getPdfiumModule(), docB);
     releaseSharedDocument();
-  });
-
-  it("queues the release behind a scan so a late open cannot linger", async () => {
-    const data = new ArrayBuffer(16);
-    const scan = runPdfiumScan(async () => {
-      const doc = await openRawDocumentSafe(data);
-      await Promise.resolve();
-      closeDocAndFreeBuffer(await getPdfiumModule(), doc);
-    });
-    // The file left the workbench while the scan was queued.
-    releaseSharedDocumentWhenIdle();
-    await scan;
-    await runPdfiumScan(async () => undefined);
-
-    expect(closeCalls()).toHaveLength(1);
-  });
-
-  it("queues the release behind a scan so a late open cannot linger", async () => {
-    const data = new ArrayBuffer(16);
-    const scan = runPdfiumScan(async () => {
-      const doc = await openRawDocumentSafe(data);
-      await Promise.resolve();
-      closeDocAndFreeBuffer(await getPdfiumModule(), doc);
-    });
-    // The file left the workbench while the scan was queued.
-    releaseSharedDocumentWhenIdle();
-    await scan;
-    await runPdfiumScan(async () => undefined);
-
-    expect(closeCalls()).toHaveLength(1);
   });
 
   it("queues the release behind a scan so a late open cannot linger", async () => {
