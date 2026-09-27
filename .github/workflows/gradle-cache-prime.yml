@@ -137,9 +137,22 @@ jobs:
           echo "cache_hit_gradle_cache=$CACHE_HIT_GRADLE_CACHE" >> "$GITHUB_OUTPUT"
           echo "cache_hit_gradle_wrapper=$CACHE_HIT_GRADLE_WRAPPER" >> "$GITHUB_OUTPUT"
 
+      - name: Hit Caches
+        id: hit_caches
+        shell: bash
+        env:
+          GRADLE_CHACHES_RESULT: ${{ fromJSON(steps.cache.outputs.cache-results).gradle-caches.cache-hit }}
+          GRADLE_WRAPPER_RESULT: ${{ fromJSON(steps.cache.outputs.cache-results).gradle-wrapper.cache-hit }}
+        run: |
+          if [[ "$GRADLE_CACHES_RESULT" == "true" && "$GRADLE_WRAPPER_RESULT" == "true" ]]; then
+            echo "cache_hit=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "cache_hit=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Cache Gradle (lookup-only)
         id: cache-gradle-restore
-        if: ${{ steps.cache.outputs.error }}
+        if: ${{ steps.cache.outputs.error && steps.hit_caches.outputs.cache_hit != 'true' }}
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
@@ -152,33 +165,32 @@ jobs:
         if: |
           runner.os == 'Windows' &&
           runner.arch == 'ARM64' &&
-          ((steps.display.outputs.cache_hit_gradle_cache != 'true' &&
-          steps.display.outputs.cache_hit_gradle_wrapper != 'true') ||
-          (steps.cache-gradle-restore.outputs.cache-hit != 'true' &&
-          steps.cache.outputs.cache-hit != 'true'))
-        # if: ${{ steps.cache-gradle-restore.outputs.cache-hit != 'true' && steps.cache.outputs.cache-hit != 'true' }}
+          (
+          steps.cache-gradle-restore.outputs.cache-hit != 'true' ||
+          steps.cache.outputs.error ||
+          steps.hit_caches.outputs.cache_hit != 'true'
+          )
         uses: ./.github/actions/java-windows
         with:
           java-version: ${{ needs.hash_pr.outputs.java_version }}
 
       - name: Set up JDK ${{ needs.hash_pr.outputs.java_version }}
         if: |
-          (runner.os != 'Windows' || runner.arch != 'ARM64') &&
-          ((steps.display.outputs.cache_hit_gradle_cache != 'true' &&
-          steps.display.outputs.cache_hit_gradle_wrapper != 'true') ||
-          (steps.cache-gradle-restore.outputs.cache-hit != 'true' &&
-          steps.cache.outputs.cache-hit != 'true'))
-        # if: ${{ steps.cache-gradle-restore.outputs.cache-hit != 'true' && steps.cache.outputs.cache-hit != 'true' }}
+          runner.os != 'Windows' &&
+          runner.arch != 'ARM64' &&
+          (
+          steps.cache-gradle-restore.outputs.cache-hit != 'true' ||
+          steps.cache.outputs.error ||
+          steps.hit_caches.outputs.cache_hit != 'true'
+          )
         uses: ./.github/actions/java
         with:
           java-version: ${{ needs.hash_pr.outputs.java_version }}
 
       - name: Resolve backend dependencies
         if: |
-          (steps.display.outputs.cache_hit_gradle_cache != 'true' &&
-          steps.display.outputs.cache_hit_gradle_wrapper != 'true') ||
-          steps.cache-gradle-restore.outputs.cache-hit != 'true' &&
-          steps.cache.outputs.cache-hit != 'true'
+          steps.cache-gradle-restore.outputs.cache-hit == 'true' ||
+          steps.hit_caches.outputs.cache_hit == 'true'
         run: ./gradlew :stirling-pdf:classes --no-daemon
         env:
           STIRLING_FLAVOR: saas
@@ -189,8 +201,7 @@ jobs:
       - name: Save cache Gradle User Home
         if: |
           steps.cache.outputs.error &&
-          steps.cache-gradle-restore.outputs.cache-hit != 'true' &&
-          steps.cache.outputs.cache-hit != 'true'
+          steps.cache-gradle-restore.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
