@@ -25,23 +25,32 @@ interface ButtonAppearanceOverlayProps {
   pageHeight: number;
 }
 let _cachedSource: File | Blob | null = null;
-let _cachePromise: Promise<SignatureFieldAppearance[]> | null = null;
+const _pageCache = new Map<number, Promise<SignatureFieldAppearance[]>>();
 
 /**
- * Button widget appearances for one source, cached by source identity. The form
- * probe answers before any bytes are read.
+ * Per-page button appearances, cached by source identity: a new source clears
+ * every page, and each page renders only its own widget bitmaps.
  */
-async function resolveButtonAppearances(
+function resolveButtonAppearances(
   source: File | Blob,
+  pageIndex: number,
 ): Promise<SignatureFieldAppearance[]> {
-  if (source === _cachedSource && _cachePromise) return _cachePromise;
-  _cachedSource = source;
-  _cachePromise = (async () => {
+  if (source !== _cachedSource) {
+    _cachedSource = source;
+    _pageCache.clear();
+  }
+  const cached = _pageCache.get(pageIndex);
+  if (cached) return cached;
+
+  const pending = (async () => {
     if (!(await documentHasFormFieldsFor(source))) return [];
     const buf = await getDocumentBytes(source);
-    return runPdfiumScan(() => renderButtonFieldAppearances(buf));
+    return runPdfiumScan(() =>
+      renderButtonFieldAppearances(buf, undefined, [pageIndex]),
+    );
   })();
-  return _cachePromise;
+  _pageCache.set(pageIndex, pending);
+  return pending;
 }
 function ButtonBitmapCanvas({
   imageData,
@@ -87,7 +96,7 @@ function ButtonAppearanceOverlayInner({
       return;
     }
     let cancelled = false;
-    resolveButtonAppearances(pdfSource)
+    resolveButtonAppearances(pdfSource, pageIndex)
       .then((res) => {
         if (!cancelled) setAppearances(res);
       })
@@ -97,14 +106,11 @@ function ButtonAppearanceOverlayInner({
     return () => {
       cancelled = true;
     };
-  }, [pdfSource]);
+  }, [pdfSource, pageIndex]);
 
   const pageAppearances = useMemo(
-    () =>
-      appearances.filter(
-        (a) => a.pageIndex === pageIndex && a.imageData !== null,
-      ),
-    [appearances, pageIndex],
+    () => appearances.filter((a) => a.imageData !== null),
+    [appearances],
   );
 
   if (pageAppearances.length === 0) return null;

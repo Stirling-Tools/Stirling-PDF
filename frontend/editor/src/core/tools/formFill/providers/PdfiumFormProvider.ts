@@ -25,7 +25,7 @@ import type {
   ButtonAction,
 } from "@app/tools/formFill/types";
 import type { IFormDataProvider } from "@app/tools/formFill/providers/types";
-import type { PDFDict } from "@cantoo/pdf-lib";
+import type { PDFDict, PDFDocument } from "@cantoo/pdf-lib";
 
 interface PDFAcroField {
   dict: PDFDict;
@@ -33,6 +33,36 @@ interface PDFAcroField {
 }
 interface PDFFieldInternal {
   acroField?: PDFAcroField;
+}
+
+// One pdf-lib parse per document, shared by the option and button enrichment
+// passes: page-scoped fetches reuse the same buffer, so parsing per page would
+// re-read the whole file on every scrolled page. Failures evict so a later
+// page retries instead of reusing a rejection.
+const parsedEnrichmentDocuments = new WeakMap<
+  ArrayBuffer,
+  Promise<PDFDocument>
+>();
+
+async function loadEnrichmentDocument(data: ArrayBuffer): Promise<PDFDocument> {
+  const cached = parsedEnrichmentDocuments.get(data);
+  if (cached) return cached;
+  const loading = (async () => {
+    const { PDFDocument } = await import("@cantoo/pdf-lib");
+    return PDFDocument.load(data, {
+      ignoreEncryption: true,
+      throwOnInvalidObject: false,
+    });
+  })();
+  parsedEnrichmentDocuments.set(data, loading);
+  try {
+    return await loading;
+  } catch (error) {
+    if (parsedEnrichmentDocuments.get(data) === loading) {
+      parsedEnrichmentDocuments.delete(data);
+    }
+    throw error;
+  }
 }
 import {
   closeDocAndFreeBuffer,
@@ -145,12 +175,15 @@ export class PdfiumFormProvider implements IFormDataProvider {
   /** Provider identifier — kept as 'pdf-lib' for backwards-compatibility. */
   readonly name = "pdf-lib";
 
-  async fetchFields(file: File | Blob): Promise<FormField[]> {
+  async fetchFields(
+    file: File | Blob,
+    options: { pageIndices?: number[] } = {},
+  ): Promise<FormField[]> {
     try {
       if (!(await documentHasFormFieldsFor(file))) return [];
       const arrayBuffer = await getDocumentBytes(file);
       const pdfiumFields = await runPdfiumScan(() =>
-        extractFormFields(arrayBuffer),
+        extractFormFields(arrayBuffer, undefined, options.pageIndices),
       );
 
       // Enrich combo/listbox fields with export/display values from pdf-lib
@@ -203,7 +236,6 @@ export class PdfiumFormProvider implements IFormDataProvider {
 
     try {
       const {
-        PDFDocument,
         PDFName,
         PDFArray,
         PDFString,
@@ -211,10 +243,7 @@ export class PdfiumFormProvider implements IFormDataProvider {
         PDFDropdown,
         PDFOptionList,
       } = await import("@cantoo/pdf-lib");
-      const doc = await PDFDocument.load(data, {
-        ignoreEncryption: true,
-        throwOnInvalidObject: false,
-      });
+      const doc = await loadEnrichmentDocument(data);
       const form = doc.getForm();
 
       const decodeText = (obj: unknown): string => {
@@ -295,19 +324,10 @@ export class PdfiumFormProvider implements IFormDataProvider {
     if (buttons.length === 0) return result;
 
     try {
-      const {
-        PDFDocument,
-        PDFName,
-        PDFString,
-        PDFHexString,
-        PDFDict,
-        PDFNumber,
-      } = await import("@cantoo/pdf-lib");
+      const { PDFName, PDFString, PDFHexString, PDFDict, PDFNumber } =
+        await import("@cantoo/pdf-lib");
 
-      const doc = await PDFDocument.load(data, {
-        ignoreEncryption: true,
-        throwOnInvalidObject: false,
-      });
+      const doc = await loadEnrichmentDocument(data);
       const form = doc.getForm();
 
       const decodeText = (obj: unknown): string | null => {

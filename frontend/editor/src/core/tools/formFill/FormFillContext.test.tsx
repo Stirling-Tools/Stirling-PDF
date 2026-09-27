@@ -9,10 +9,18 @@ import {
   FormFillProvider,
   useFormFill,
 } from "@app/tools/formFill/FormFillContext";
-import type { FieldEditResult } from "@app/tools/formFill/types";
+import { PdfBoxFormProvider } from "@app/tools/formFill/providers/PdfBoxFormProvider";
+import type { FieldEditResult, FormField } from "@app/tools/formFill/types";
+import { allowConsole } from "@app/tests/failOnConsole";
 
 const applyFieldEdits = vi.fn();
-const fetchFields = vi.fn();
+const fetchFields =
+  vi.fn<
+    (
+      file: File | Blob,
+      options?: { pageIndices?: number[] },
+    ) => Promise<FormField[]>
+  >();
 
 vi.mock("@app/tools/formFill/formApi", () => ({
   applyFieldEdits: (...args: unknown[]) => applyFieldEdits(...args),
@@ -20,8 +28,9 @@ vi.mock("@app/tools/formFill/formApi", () => ({
 // Defined inside each factory: vi.mock is hoisted above any module-level binding.
 vi.mock("@app/tools/formFill/providers/PdfBoxFormProvider", () => ({
   PdfBoxFormProvider: class {
-    fetchFields(...args: unknown[]) {
-      return fetchFields(...args);
+    readonly name = "pdfbox";
+    fetchFields(file: File | Blob, options?: { pageIndices?: number[] }) {
+      return fetchFields(file, options);
     }
     fillForm() {
       return Promise.resolve(new Blob());
@@ -30,8 +39,9 @@ vi.mock("@app/tools/formFill/providers/PdfBoxFormProvider", () => ({
 }));
 vi.mock("@app/tools/formFill/providers/PdfiumFormProvider", () => ({
   PdfiumFormProvider: class {
-    fetchFields(...args: unknown[]) {
-      return fetchFields(...args);
+    readonly name = "pdflib";
+    fetchFields(file: File | Blob, options?: { pageIndices?: number[] }) {
+      return fetchFields(file, options);
     }
     fillForm() {
       return Promise.resolve(new Blob());
@@ -46,11 +56,55 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
   <FormFillProvider>{children}</FormFillProvider>
 );
 
+const pdfboxWrapper = ({ children }: { children: React.ReactNode }) => (
+  <FormFillProvider provider={new PdfBoxFormProvider()}>
+    {children}
+  </FormFillProvider>
+);
+
 const blob = () => new Blob(["%PDF-1.4"], { type: "application/pdf" });
 
 function result(skipped: FieldEditResult["skipped"]): FieldEditResult {
   return { blob: blob(), skipped, skippedTotal: skipped.length };
 }
+
+const pageField = (name: string, pageIndex: number): FormField[] => [
+  {
+    name,
+    label: name,
+    type: "text",
+    value: "",
+    options: null,
+    displayOptions: null,
+    required: false,
+    readOnly: false,
+    multiSelect: false,
+    multiline: false,
+    tooltip: null,
+    widgets: [{ pageIndex, x: 1, y: 2, width: 10, height: 10 }],
+  },
+];
+
+const radioField = (
+  name: string,
+  pageIndex: number,
+  value: string,
+): FormField[] => [
+  {
+    name,
+    label: name,
+    type: "radio",
+    value,
+    options: null,
+    displayOptions: null,
+    required: false,
+    readOnly: false,
+    multiSelect: false,
+    multiline: false,
+    tooltip: null,
+    widgets: [{ pageIndex, x: 1, y: 2, width: 10, height: 10 }],
+  },
+];
 
 describe("FormFillContext staged-edit ownership", () => {
   beforeEach(() => {
@@ -272,9 +326,7 @@ describe("FormFillContext value retention", () => {
   beforeEach(() => {
     applyFieldEdits.mockReset();
     fetchFields.mockReset();
-    fetchFields.mockResolvedValue([
-      { name: "who", type: "text", value: "", widgets: [{ pageIndex: 0 }] },
-    ]);
+    fetchFields.mockResolvedValue(pageField("who", 0));
   });
 
   it("keeps what the user typed when the same file is re-fetched", async () => {
@@ -336,5 +388,286 @@ describe("FormFillContext value retention", () => {
     });
 
     expect(hook.current.state.isDirty).toBe(true);
+  });
+});
+
+describe("FormFillContext per-page loading", () => {
+  beforeEach(() => {
+    applyFieldEdits.mockReset();
+    fetchFields.mockReset();
+    fetchFields.mockResolvedValue([]);
+  });
+
+  it("merges on-demand page fields without dropping page 0", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    fetchFields.mockResolvedValueOnce(pageField("first", 0));
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+    fetchFields.mockResolvedValueOnce(pageField("fifth", 5));
+    await act(async () => {
+      await hook.current.ensurePageFields?.(5);
+    });
+
+    expect(hook.current.state.fields.map((f) => f.name).sort()).toEqual([
+      "fifth",
+      "first",
+    ]);
+  });
+
+  it("re-indexes a radio value when a later page sorts ahead of it", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    fetchFields.mockResolvedValueOnce(pageField("first", 0));
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+
+    // Page 5 loads first: its checked widget is index 0 of a one-widget list.
+    fetchFields.mockResolvedValueOnce(radioField("Choice", 5, "0"));
+    await act(async () => {
+      await hook.current.ensurePageFields?.(5);
+    });
+    expect(hook.current.getValue("Choice")).toBe("0");
+
+    // Page 3 arrives later and sorts ahead of page 5: the checked widget is
+    // now index 1, and the stored value must follow it.
+    fetchFields.mockResolvedValueOnce(radioField("Choice", 3, ""));
+    await act(async () => {
+      await hook.current.ensurePageFields?.(3);
+    });
+
+    const choice = hook.current.state.fields.find((f) => f.name === "Choice");
+    expect(choice?.widgets?.map((w) => w.pageIndex)).toEqual([3, 5]);
+    expect(choice?.value).toBe("1");
+    expect(hook.current.getValue("Choice")).toBe("1");
+  });
+
+  it("does not page-fetch when the provider answers with the whole document", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), {
+      wrapper: pdfboxWrapper,
+    });
+    fetchFields.mockResolvedValueOnce(pageField("first", 0));
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+    expect(fetchFields).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      await hook.current.ensurePageFields?.(3);
+    });
+    // pdfbox returns everything in one response, so a page request would be a
+    // second full backend fetch.
+    expect(fetchFields).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps loaded fields when a save-time full load fails, and retries", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    fetchFields.mockResolvedValueOnce(pageField("first", 0));
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+
+    fetchFields.mockRejectedValueOnce(new Error("offline"));
+    await act(async () => {
+      await hook.current.ensureAllFields?.();
+    });
+    expect(hook.current.state.fields.map((f) => f.name)).toEqual(["first"]);
+
+    fetchFields.mockResolvedValueOnce([
+      ...pageField("first", 0),
+      ...pageField("second", 2),
+    ]);
+    await act(async () => {
+      await hook.current.ensureAllFields?.();
+    });
+    expect(hook.current.state.fields.map((f) => f.name).sort()).toEqual([
+      "first",
+      "second",
+    ]);
+  });
+
+  it("treats an empty save-time full load as a failure, not an empty form", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    fetchFields.mockResolvedValueOnce(pageField("first", 0));
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+
+    // The pdfium provider reports extraction failures as an empty list
+    // instead of rejecting, so the context has to treat it as a failure.
+    fetchFields.mockResolvedValueOnce([]);
+    await act(async () => {
+      await hook.current.ensureAllFields?.();
+    });
+
+    expect(hook.current.state.fields.map((f) => f.name)).toEqual(["first"]);
+    expect(hook.current.state.error).toBeTruthy();
+
+    // The failed load stays retryable.
+    fetchFields.mockResolvedValueOnce([
+      ...pageField("first", 0),
+      ...pageField("second", 2),
+    ]);
+    await act(async () => {
+      await hook.current.ensureAllFields?.();
+    });
+    expect(hook.current.state.fields.map((f) => f.name).sort()).toEqual([
+      "first",
+      "second",
+    ]);
+  });
+
+  it("waits for the initial fetch before loading a page", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    let resolveInitial!: (fields: FormField[]) => void;
+    fetchFields.mockReturnValueOnce(
+      new Promise<FormField[]>((resolve) => {
+        resolveInitial = resolve;
+      }),
+    );
+    let initial!: Promise<void>;
+    act(() => {
+      initial = hook.current.fetchFields(blob(), "file-A");
+    });
+    fetchFields.mockResolvedValueOnce(pageField("third", 3));
+    let page!: Promise<void>;
+    act(() => {
+      page = hook.current.ensurePageFields?.(3) ?? Promise.resolve();
+    });
+    expect(fetchFields).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      resolveInitial(pageField("first", 0));
+      await initial;
+      await page;
+    });
+    expect(fetchFields).toHaveBeenCalledTimes(2);
+    expect(fetchFields.mock.calls[1][1]).toEqual({ pageIndices: [3] });
+    expect(hook.current.state.fields.map((f) => f.name).sort()).toEqual([
+      "first",
+      "third",
+    ]);
+  });
+
+  it("initialises values for a field that arrives with its page", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    fetchFields.mockResolvedValueOnce(pageField("first", 0));
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+    fetchFields.mockResolvedValueOnce([
+      { ...pageField("prefilled", 4)[0], value: "hello" },
+    ]);
+    await act(async () => {
+      await hook.current.ensurePageFields?.(4);
+    });
+
+    expect(hook.current.getValue("prefilled")).toBe("hello");
+  });
+
+  it("keeps same-origin widgets apart and orders them by page", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    fetchFields.mockResolvedValueOnce([
+      {
+        ...pageField("group", 0)[0],
+        widgets: [{ pageIndex: 0, x: 1, y: 2, width: 10, height: 10 }],
+      },
+    ]);
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+    fetchFields.mockResolvedValueOnce([
+      {
+        ...pageField("group", 5)[0],
+        widgets: [{ pageIndex: 5, x: 1, y: 2, width: 20, height: 20 }],
+      },
+    ]);
+    await act(async () => {
+      await hook.current.ensurePageFields?.(5);
+    });
+    fetchFields.mockResolvedValueOnce([
+      {
+        ...pageField("group", 2)[0],
+        widgets: [{ pageIndex: 2, x: 1, y: 2, width: 20, height: 20 }],
+      },
+    ]);
+    await act(async () => {
+      await hook.current.ensurePageFields?.(2);
+    });
+
+    const widgets = hook.current.state.fields[0].widgets ?? [];
+    expect(widgets).toHaveLength(3);
+    expect(widgets.map((w) => w.pageIndex)).toEqual([0, 2, 5]);
+  });
+
+  it("discards a per-page load that resolves after a file switch", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+    let resolveSlow!: (v: FormField[]) => void;
+    fetchFields.mockReturnValueOnce(
+      new Promise<FormField[]>((resolve) => {
+        resolveSlow = resolve;
+      }),
+    );
+    let pending!: Promise<void>;
+    act(() => {
+      pending = hook.current.ensurePageFields?.(3) ?? Promise.resolve();
+    });
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-B");
+    });
+    await act(async () => {
+      resolveSlow(pageField("stale", 3));
+      await pending;
+    });
+
+    expect(hook.current.state.fields.map((f) => f.name)).not.toContain("stale");
+  });
+
+  it("retries a failed per-page load on the next request", async () => {
+    allowConsole.warn(/Failed to load fields for page/);
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+    const callsBefore = fetchFields.mock.calls.length;
+    fetchFields.mockRejectedValueOnce(new Error("transient"));
+    await act(async () => {
+      await hook.current.ensurePageFields?.(2);
+    });
+    fetchFields.mockResolvedValueOnce(pageField("second", 2));
+    await act(async () => {
+      await hook.current.ensurePageFields?.(2);
+    });
+
+    expect(fetchFields.mock.calls.length).toBe(callsBefore + 2);
+    expect(hook.current.state.fields.map((f) => f.name)).toContain("second");
+  });
+
+  it("ensureAllFields fetches exhaustively once, then short-circuits", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+    const callsBefore = fetchFields.mock.calls.length;
+    await act(async () => {
+      await hook.current.ensureAllFields?.();
+    });
+
+    const exhaustiveCalls = fetchFields.mock.calls.slice(callsBefore).filter(
+      // Provider-level fetchFields(file, options): an exhaustive fetch is the
+      // one that drops the page-0 filter so every page is scanned.
+      (args) =>
+        (args[1] as { pageIndices?: number[] } | undefined)?.pageIndices ===
+        undefined,
+    );
+    expect(exhaustiveCalls.length).toBe(1);
+
+    await act(async () => {
+      await hook.current.ensureAllFields?.();
+    });
+    expect(fetchFields.mock.calls.length).toBe(callsBefore + 1);
   });
 });

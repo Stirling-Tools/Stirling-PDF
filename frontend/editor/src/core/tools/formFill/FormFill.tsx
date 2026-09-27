@@ -79,6 +79,7 @@ const FormFill = (_props: BaseToolProps) => {
   const {
     state: formState,
     fetchFields,
+    ensureAllFields,
     submitForm,
     setValue,
     setActiveField,
@@ -274,16 +275,28 @@ const FormFill = (_props: BaseToolProps) => {
     if (savingRef.current) return;
     if (!currentFile || !isStirlingFile(currentFile)) return;
 
+    // Taken before the first await: a second click while the exhaustive load
+    // runs would otherwise start a submission of its own.
+    savingRef.current = true;
+    setSaving(true);
+    setSaveError(null);
+
+    // Required-field validation only sees loaded pages; complete the set
+    // first so an unvisited page cannot smuggle an empty required field
+    // through save. Best effort: a failed load still validates what is known.
+    try {
+      await ensureAllFields?.();
+    } catch (err) {
+      console.warn("[FormFill] ensureAllFields before save failed:", err);
+    }
     if (!validateForm()) {
+      savingRef.current = false;
+      setSaving(false);
       setSaveError(
         t("formFill.requiredFieldsError", "Please fill in all required fields"),
       );
       return;
     }
-
-    savingRef.current = true;
-    setSaving(true);
-    setSaveError(null);
 
     try {
       const filledBlob = await submitForm(currentFile, flatten);
