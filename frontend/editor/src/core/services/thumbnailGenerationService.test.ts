@@ -43,6 +43,23 @@ describe("ThumbnailGenerationService - Cache Management", () => {
     );
   });
 
+  it("replaces a cached page without evicting another entry", () => {
+    (service as unknown as { maxCacheSizeBytes: number }).maxCacheSizeBytes =
+      100;
+
+    service.addThumbnailToCache("page-a", "12345678901234567890");
+    service.addThumbnailToCache("page-b", "12345678901234567890");
+
+    // Replacing page-b (40 bytes) must compare 40 against the remaining 40,
+    // not charge both: charging old plus new (80 + 40) evicts page-a.
+    service.addThumbnailToCache("page-b", "abcdefghijklmnopqrst");
+
+    expect(service.getThumbnailFromCache("page-a")).toBe(
+      "12345678901234567890",
+    );
+    expect(service.getCacheStats().sizeBytes).toBe(80);
+  });
+
   it("clears cache completely", () => {
     service.addThumbnailToCache("page-1", "data:thumb");
     service.clearCache();
