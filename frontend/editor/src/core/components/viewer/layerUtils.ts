@@ -72,52 +72,6 @@ export async function documentHasLayers(
 }
 
 /**
- * True when the catalog carries optional content. Building the layer list costs
- * a pdfjs parse of the whole document, so the sidebar gates its button on this
- * cheap catalog probe and reads the list only when the panel opens.
- */
-export function documentHasLayers(
-  file: Blob,
-  bytes?: ArrayBuffer,
-): Promise<boolean> {
-  const byIdentity = layerAnswers.get(file);
-  if (byIdentity) return byIdentity;
-  const key = await documentFileKey(file);
-  const cached = key ? layerAnswersByFileKey.get(key) : undefined;
-  if (cached) return cached;
-
-  const answer = (async () => {
-    const [{ PDFDocument, PDFName }, buffer] = await Promise.all([
-      import("@cantoo/pdf-lib"),
-      bytes ? Promise.resolve(bytes) : getDocumentBytes(file),
-    ]);
-    const doc = await PDFDocument.load(buffer, {
-      ignoreEncryption: true,
-      updateMetadata: false,
-    });
-    return doc.catalog.get(PDFName.of("OCProperties")) !== undefined;
-  })().catch(() => {
-    // A transient import, read or parse failure is not an answer: drop the memo
-    // so the next open retries, and report "no layers" for this attempt only.
-    layerAnswers.delete(file);
-    if (key) layerAnswersByFileKey.delete(key);
-    return false;
-  });
-
-  layerAnswers.set(file, answer);
-  if (key) {
-    layerAnswersByFileKey.delete(key);
-    layerAnswersByFileKey.set(key, answer);
-    while (layerAnswersByFileKey.size > LAYER_CACHE_LIMIT) {
-      const oldest = layerAnswersByFileKey.keys().next().value;
-      if (oldest === undefined) break;
-      layerAnswersByFileKey.delete(oldest);
-    }
-  }
-  return answer;
-}
-
-/**
  * Reads OCG layer info from a PDF file using pdfjs-dist.
  * Returns a flat list of all OCG groups with their names and default visibility.
  */
