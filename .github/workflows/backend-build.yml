@@ -113,7 +113,7 @@ jobs:
         id: hit_caches
         shell: bash
         env:
-          GRADLE_CHACHES_RESULT: ${{ fromJSON(steps.cache.outputs.cache-results).gradle-caches.cache-hit }}
+          GRADLE_CACHES_RESULT: ${{ fromJSON(steps.cache.outputs.cache-results).gradle-caches.cache-hit }}
           GRADLE_WRAPPER_RESULT: ${{ fromJSON(steps.cache.outputs.cache-results).gradle-wrapper.cache-hit }}
         run: |
           if [[ "$GRADLE_CACHES_RESULT" == "true" && "$GRADLE_WRAPPER_RESULT" == "true" ]]; then
