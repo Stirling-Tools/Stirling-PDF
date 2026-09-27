@@ -130,12 +130,14 @@ jobs:
           CACHE_READ_ONLY: ${{ steps.cache.outputs.read-only }}
           CACHE_HIT: ${{ steps.cache.outputs.cache-hit }}
           CACHE_ERROR: ${{ steps.cache.outputs.error }}
+          RESULTS: ${{ fromJSON(steps.cache.outputs.cache-results) }}
         shell: bash
         run: |
           echo "Fork: $CACHE_IS_FORK"
           echo "Read-only: $CACHE_READ_ONLY"
           echo "Cache Hit: $CACHE_HIT"
           echo "Cache Error: $CACHE_ERROR"
+          echo "Results: $RESULTS"
 
       - name: Cache Gradle (lookup-only)
         id: cache-gradle-restore
