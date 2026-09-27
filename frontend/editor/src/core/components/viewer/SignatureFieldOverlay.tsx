@@ -20,6 +20,7 @@ import {
   renderSignatureFieldAppearances,
   extractSignatures,
   type SignatureFieldAppearance,
+  type PdfiumSignature,
 } from "@app/services/pdfiumService";
 
 interface SignatureFieldOverlayProps {
@@ -43,48 +44,57 @@ interface ResolvedSignatureField extends SignatureFieldAppearance {
   time?: string;
 }
 let _cachedSource: File | Blob | null = null;
-let _cachedFields: ResolvedSignatureField[] = [];
-let _cachePromise: Promise<ResolvedSignatureField[]> | null = null;
+const _pageCache = new Map<number, Promise<ResolvedSignatureField[]>>();
+let _signaturesPromise: Promise<PdfiumSignature[]> | null = null;
 
 /**
- * Signature fields for one source, cached by source identity. The form probe
- * answers before any bytes are read, and the signature scan runs once behind a
- * single shared promise.
+ * Per-page signature fields, cached by source identity: a new source clears
+ * every page, one shared scan answers the signatures, and each page renders
+ * only its own appearances.
  */
-async function resolveFields(
+async function resolvePageFields(
   source: File | Blob,
+  pageIndex: number,
 ): Promise<ResolvedSignatureField[]> {
-  if (source === _cachedSource && _cachePromise) return _cachePromise;
-  _cachedSource = source;
+  if (source !== _cachedSource) {
+    _cachedSource = source;
+    _pageCache.clear();
+    _signaturesPromise = null;
+  }
+  const cached = _pageCache.get(pageIndex);
+  if (cached) return cached;
 
-  _cachePromise = (async () => {
+  const pending = (async () => {
     if (!(await documentHasFormFieldsFor(source))) return [];
     const buf = await getDocumentBytes(source);
-    // One main-thread scan at a time, so a second full document copy cannot
-    // be opened while this one runs.
+    // One main-thread scan at a time: the queue also keeps a big document
+    // from being copied into the heap by two scans at once. The promise is
+    // only reused (and stored) while it belongs to this source: a source swap
+    // mid-await must not hand this page the previous document's signatures.
+    let sigPromise = _cachedSource === source ? _signaturesPromise : null;
+    if (!sigPromise) {
+      sigPromise = runPdfiumScan(() => extractSignatures(buf));
+      if (_cachedSource === source) _signaturesPromise = sigPromise;
+    }
+    const signatures = await sigPromise;
     const appearances = await runPdfiumScan(() =>
-      renderSignatureFieldAppearances(buf),
+      renderSignatureFieldAppearances(buf, undefined, [pageIndex]),
     );
-    const signatures = await runPdfiumScan(() => extractSignatures(buf));
 
-    return appearances.map((f, i) => {
-      // Positional correlation is only reliable when both arrays have the same
-      // length — i.e. one signature object per signature field in document order.
-      // When the counts differ we cannot safely attribute reason/time per-field,
-      // so we fall back to a whole-document "is signed" indicator.
-      const exactMatch = appearances.length === signatures.length;
-      const matchedSig = exactMatch ? signatures[i] : undefined;
-      return {
-        ...f,
-        isSigned: exactMatch ? i < signatures.length : signatures.length > 0,
-        reason: matchedSig?.reason,
-        time: matchedSig?.time,
-      };
-    });
+    // A single signature per single field is the one case where reason/time
+    // can be attributed without knowing the document-wide field order, and the
+    // only case where this page's field can be called signed: with several
+    // appearances a document-wide signature does not name which one it covers.
+    const exactMatch = appearances.length === 1 && signatures.length === 1;
+    return appearances.map((f) => ({
+      ...f,
+      isSigned: exactMatch,
+      reason: exactMatch ? signatures[0].reason : undefined,
+      time: exactMatch ? signatures[0].time : undefined,
+    }));
   })();
-
-  _cachedFields = await _cachePromise;
-  return _cachedFields;
+  _pageCache.set(pageIndex, pending);
+  return pending;
 }
 
 function SignatureBitmapCanvas({
@@ -135,7 +145,7 @@ function SignatureFieldOverlayInner({
       return;
     }
     let cancelled = false;
-    resolveFields(pdfSource)
+    resolvePageFields(pdfSource, pageIndex)
       .then((res) => {
         if (!cancelled) setFields(res);
       })
@@ -145,16 +155,13 @@ function SignatureFieldOverlayInner({
     return () => {
       cancelled = true;
     };
-  }, [pdfSource]);
+  }, [pdfSource, pageIndex]);
 
   const pageFields = useMemo(
     // A staged move or delete leaves this bitmap stranded at the original rect, on top of the
     // editor chrome, so it is dropped until the edit is applied and the appearance re-extracted.
-    () =>
-      fields.filter(
-        (f) => f.pageIndex === pageIndex && !staleNames.has(f.fieldName),
-      ),
-    [fields, pageIndex, staleNames],
+    () => fields.filter((f) => !staleNames.has(f.fieldName)),
+    [fields, staleNames],
   );
 
   if (pageFields.length === 0) return null;

@@ -17,7 +17,7 @@
  * handles visual rotation via CSS transforms — same as TilingLayer,
  * AnnotationLayer, and LinkLayer.
  */
-import React, { useCallback, useMemo, memo } from "react";
+import React, { useCallback, useMemo, useEffect, memo } from "react";
 import { useDocumentState } from "@embedpdf/core/react";
 import {
   useFormFill,
@@ -643,7 +643,12 @@ export function FormFieldOverlay({
     state,
     forFileId,
     mode,
+    ensurePageFields,
   } = useFormFill();
+
+  useEffect(() => {
+    ensurePageFields?.(pageIndex);
+  }, [pageIndex, ensurePageFields]);
   // While the editor owns the page the outlines and handles do the interacting; these widgets
   // are here to show what the field looks like, not to be typed into.
   const editing = mode !== "fill";
