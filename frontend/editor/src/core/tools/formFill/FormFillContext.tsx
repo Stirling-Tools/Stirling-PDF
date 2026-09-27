@@ -630,7 +630,10 @@ export function FormFillProvider({
 
           // pdfbox returns signature fields without a rendered appearance; merge the
           // pdfium ones by name, since appending would list a signature twice.
-          if (providerModeRef.current === "pdfbox") {
+          if (
+            providerModeRef.current === "pdfbox" &&
+            fields.some((f) => f.type === "signature")
+          ) {
             try {
               // Cache-shared read: the pdfium provider path reads the same Blob
               // through documentBytesCache, so this must not mint a second
