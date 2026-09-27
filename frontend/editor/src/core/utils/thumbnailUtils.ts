@@ -11,6 +11,7 @@ import {
 } from "@app/utils/pdfiumPageRender";
 import { getDocumentBytes } from "@app/services/documentBytesCache";
 import { readBlobSlice } from "@app/utils/blobSlice";
+import { yieldToMain } from "@app/utils/taskYield";
 
 export interface ThumbnailWithMetadata {
   thumbnail: string; // Always returns a thumbnail (placeholder if needed)
@@ -69,8 +70,8 @@ async function looksEncryptedFromTrailer(file: File): Promise<boolean> {
   return containsEncryptMarker(head);
 }
 
-/** Cap eager page metadata extraction on add/open to 16 pages to keep main-thread tasks under 50ms. */
-const MAX_EAGER_METADATA_PAGES = 16;
+/** Pages read per yield while collecting page metadata, to avoid a long task. */
+const METADATA_YIELD_INTERVAL = 16;
 
 interface PdfiumRenderResult {
   thumbnail: string;
@@ -136,12 +137,15 @@ async function renderPdfThumbnailPdfium(
     ];
 
     if (collectAllPagesMetadata) {
-      const maxPages = Math.min(pageCount, MAX_EAGER_METADATA_PAGES);
-      for (let i = 1; i < maxPages; i++) {
+      // Every page, not a capped prefix: the PageEditor uses these rotations as
+      // its baseline. Yielding keeps a large page count off the long-task list.
+      for (let i = 1; i < pageCount; i++) {
         const meta = await readPdfiumPageMetadata(docPtr, i);
-        if (!meta) continue;
-        pageRotations[i] = meta.rotation;
-        pageDimensions[i] = { width: meta.width, height: meta.height };
+        if (meta) {
+          pageRotations[i] = meta.rotation;
+          pageDimensions[i] = { width: meta.width, height: meta.height };
+        }
+        if (i % METADATA_YIELD_INTERVAL === 0) await yieldToMain();
       }
     }
 
@@ -196,12 +200,15 @@ async function renderPdfThumbnailPairPdfium(
       { width: firstMeta?.width ?? 0, height: firstMeta?.height ?? 0 },
     ];
     if (collectAllPagesMetadata) {
-      const maxPages = Math.min(pageCount, MAX_EAGER_METADATA_PAGES);
-      for (let i = 1; i < maxPages; i++) {
+      // Every page, not a capped prefix: the PageEditor uses these rotations as
+      // its baseline. Yielding keeps a large page count off the long-task list.
+      for (let i = 1; i < pageCount; i++) {
         const meta = await readPdfiumPageMetadata(docPtr, i);
-        if (!meta) continue;
-        pageRotations[i] = meta.rotation;
-        pageDimensions[i] = { width: meta.width, height: meta.height };
+        if (meta) {
+          pageRotations[i] = meta.rotation;
+          pageDimensions[i] = { width: meta.width, height: meta.height };
+        }
+        if (i % METADATA_YIELD_INTERVAL === 0) await yieldToMain();
       }
     }
 
