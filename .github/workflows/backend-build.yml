@@ -80,8 +80,8 @@ jobs:
     timeout-minutes: 30
     env:
       GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}
-      UV_CACHE_DIR: ${{ github.workspace }}/.cache/uv
-      UV_PYTHON_INSTALL_DIR: ${{ github.workspace }}/.cache/uv/python-install
+      UV_CACHE_DIR: ${{ github.workspace }}/.cache/setup-uv-cache
+      UV_PYTHON_INSTALL_DIR: ${{ github.workspace }}/.cache/uv-python-dir
       CACHE_COMPRESSION_LEVEL: 1
     permissions:
       contents: write
@@ -111,14 +111,17 @@ jobs:
               path: .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/caches
             gradle-wrapper:
               path: .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/wrapper
-            uv:
-              path: .cache/uv
+            setup-uv-cache:
+              path: .cache/setup-uv-cache
+            uv-python-dir:
+              path: .cache/uv-python-dir
           save-scope: shared
           token: ${{ github.token }}
           key: |
             gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
             gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash  }}
-            uv=${{ needs.hash_pr.outputs.uv_files_hash }}
+            setup-uv-cache=${{ needs.hash_pr.outputs.uv_files_hash }}
+            uv-python-dir=${{ needs.hash_pr.outputs.uv_files_hash }}
           allow-shared-restore: true
           strict: false
 
