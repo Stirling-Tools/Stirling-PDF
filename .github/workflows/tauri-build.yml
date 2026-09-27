@@ -142,7 +142,7 @@ jobs:
         ${{ github.workspace }}/frontend/editor/src-tauri/Cargo.toml
         ${{ github.workspace }}/frontend/editor/src-tauri/Cargo.lock
       #       ${{ github.workspace }}/frontend/editor/src-tauri/target
-      CARGO_HOME: ${{ github.workspace }}/.cache/cargo
+      # CARGO_HOME: ${{ github.workspace }}/.cache/cargo
       CACHE_MANIFEST_BRANCH: dev-cache
       CACHE_MANIFEST_PATH: .github/cache-data
       SFTP_HOST: ${{ secrets.CACHE_SFTP_HOST }}
@@ -217,7 +217,7 @@ jobs:
           storage: sftp
           multi-cache: |
             cargo:
-              path: .cache/cargo
+              path: ${{ github.env.CARGO_HOME }}
             gradle-caches:
               path: .cache/gradle-java-25/caches
             gradle-wrapper:
