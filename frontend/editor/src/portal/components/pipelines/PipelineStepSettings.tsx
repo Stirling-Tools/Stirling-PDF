@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
-import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
+import { Icon } from "@app/ui/Icon";
 import { Banner, Chip } from "@app/ui";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import { SidebarProvider } from "@app/contexts/SidebarContext";
@@ -15,6 +15,11 @@ import {
 
 import { PolicyExternalApiConfig } from "@portal/components/policies/PolicyExternalApiConfig";
 import { isIntegrationStep } from "@portal/components/pipelines/integrationStep";
+import {
+  isIngestStep,
+  type IngestStepParams,
+} from "@portal/components/pipelines/docparseStep";
+import { IngestStepConfig } from "@portal/components/pipelines/IngestStepConfig";
 import type { ExternalApiStepParams } from "@portal/components/policies/stepOperations";
 import "@portal/components/pipelines/PipelineStepSettings.css";
 
@@ -30,6 +35,7 @@ export type ParamsUpdate =
 
 interface PipelineStepSettingsProps {
   step: WorkingToolStep;
+  editorInput?: boolean;
   registry: Partial<ToolRegistry>;
   onChange: (update: ParamsUpdate) => void;
   /** Stored asset id -> file name, for labelling the supporting-file chips on a reopened pipeline. */
@@ -82,6 +88,7 @@ function storedFileChips(
  * supporting files appear as removable chips above the tool's own settings.
  */
 export function PipelineStepSettings({
+  editorInput = false,
   step,
   registry,
   onChange,
@@ -91,6 +98,18 @@ export function PipelineStepSettings({
   // Hooks first: selecting a different step re-renders this same instance, so an early return
   // above useTranslation would change the hook count between renders and crash.
   const { t } = useTranslation();
+
+  // Same reasoning as the integration branch below: a DocParse step has no registry entry, so
+  // its settings come from its own component rather than a tool's.
+  if (isIngestStep(step)) {
+    return (
+      <IngestStepConfig
+        editorInput={editorInput}
+        parameters={step.params as unknown as IngestStepParams}
+        onChange={(params) => onChange(params as never)}
+      />
+    );
+  }
 
   // An integration step is configured by the operations catalogue, not by a tool's settings UI:
   // it has no registry entry to look one up from.
@@ -153,11 +172,7 @@ export function PipelineStepSettings({
             {chips.map((chip) => (
               <Chip
                 key={chip.field}
-                leadingIcon={
-                  <InsertDriveFileOutlinedIcon
-                    style={{ fontSize: "0.875rem" }}
-                  />
-                }
+                leadingIcon={<Icon name="file" size={"0.875rem"} />}
                 onRemove={() => onClearBinding(chip.field)}
               >
                 {chip.label}

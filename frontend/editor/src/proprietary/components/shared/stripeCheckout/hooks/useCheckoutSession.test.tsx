@@ -32,14 +32,14 @@ import { pollTeamCheckout } from "@app/utils/licenseCheckoutUtils";
 import type { CheckoutState } from "@app/components/shared/stripeCheckout/types/checkout";
 
 const plan = {
-  id: "selfhosted:server:yearly",
+  id: "selfhosted:team:yearly",
   name: "Team",
   price: 0,
   currency: "usd",
   period: "yearly",
   features: [],
   highlights: [],
-  lookupKey: "selfhosted:server:yearly",
+  lookupKey: "selfhosted:team:yearly",
   requiresSeats: false,
 };
 
@@ -108,7 +108,7 @@ describe("useCheckoutSession", () => {
     const request = createSession.mock.calls[0][0];
     expect(request).not.toHaveProperty("email");
     expect(request).toMatchObject({
-      lookupKey: "selfhosted:server:yearly",
+      lookupKey: "selfhosted:team:yearly",
       serverQuantity: 3,
       seatCount: 7,
       installationId: "install-abc",

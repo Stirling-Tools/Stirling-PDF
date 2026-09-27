@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
 import { ClassificationDemoWorkbenchView } from "@app/components/onboarding/classificationDemo/ClassificationDemoWorkbenchView";
 import {
   endClassificationDemo,
@@ -9,7 +10,8 @@ import {
  *  See the core stub for why this is a takeover, not a registered custom view. */
 export function useWorkbenchTakeover(): ReactNode | null {
   const run = useClassificationDemoSession();
-  if (!run) return null;
+  const enabled = usePoliciesEnabled();
+  if (!run || !enabled) return null;
   return (
     <ClassificationDemoWorkbenchView
       data={run}

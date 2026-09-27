@@ -191,17 +191,16 @@ export function PropertiesPopover({
   return (
     <Popover opened={opened} onChange={setOpened} position="bottom" withArrow>
       <Popover.Target>
-        <Tooltip label={t("annotation.properties", "Properties")}>
-          <ActionIcon
-            aria-label={t("annotation.properties", "Properties")}
-            variant="secondary"
-            accent="neutral"
-            size="md"
+        <Tooltip label={t("annotation.properties", "Properties")} withArrow>
+          <button
+            type="button"
+            className="embedpdf-floating-btn"
             onClick={() => setOpened(!opened)}
             disabled={disabled}
+            aria-label={t("annotation.properties", "Properties")}
           >
             <Icon name="sliders-horizontal" size={18} />
-          </ActionIcon>
+          </button>
         </Tooltip>
       </Popover.Target>
       <Popover.Dropdown>

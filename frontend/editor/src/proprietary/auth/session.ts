@@ -1,8 +1,6 @@
-import { supabase } from "@app/services/supabaseClient";
+import { getPortalSaasToken } from "@app/portal/auth/portalSaasSession";
 
-/** The Stirling account token used for checkout, independent of the local server login. */
+/** Checkout uses the account session installed by the validated owner connection flow. */
 export async function getAccessToken(): Promise<string | null> {
-  if (!supabase) return null;
-  const { data } = await supabase.auth.getSession();
-  return data.session?.access_token ?? null;
+  return getPortalSaasToken();
 }

@@ -36,6 +36,7 @@ import stirling.software.proprietary.security.database.repository.UserRepository
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
+import stirling.software.saas.accountlink.FleetSeatService;
 import stirling.software.saas.model.SaasTeamExtensions;
 import stirling.software.saas.payg.api.PaygWalletController.UpdateCapRequest;
 import stirling.software.saas.payg.api.WalletSnapshotResponse.MemberRow;
@@ -76,6 +77,7 @@ class PaygWalletControllerTest {
     @Mock private UserRepository userRepository;
     @Mock private PrepaidBundleService prepaidBundleService;
     @Mock private SaasTeamExtensionsRepository teamExtensionsRepository;
+    @Mock private FleetSeatService fleetSeats;
 
     private PaygWalletController controller;
 
@@ -93,7 +95,8 @@ class PaygWalletControllerTest {
                         userRepository,
                         prepaidBundleService,
                         new UserTeamResolver(memberRepo),
-                        teamExtensionsRepository);
+                        teamExtensionsRepository,
+                        fleetSeats);
     }
 
     /**
@@ -165,7 +168,7 @@ class PaygWalletControllerTest {
         user.setTeam(team);
         when(memberRepo.findByTeamIdAndUserId(team.getId(), 60L))
                 .thenReturn(Optional.of(membership(team, user, TeamRole.MEMBER)));
-        when(memberRepo.countByTeamId(60L)).thenReturn(3L);
+        when(teamExtensionsRepository.fleetUsersInUse(60L)).thenReturn(3L);
         when(billingService.forTeam(60L)).thenReturn(freeBilling(500L));
         when(entitlementService.getSnapshot(60L)).thenReturn(snapshot(0L, 500L));
         stubEmptyLedgerReads(60L);
@@ -190,7 +193,7 @@ class PaygWalletControllerTest {
         user.setTeam(team);
         when(memberRepo.findByTeamIdAndUserId(team.getId(), 62L))
                 .thenReturn(Optional.of(membership(team, user, TeamRole.MEMBER)));
-        when(memberRepo.countByTeamId(62L)).thenReturn(40L);
+        when(teamExtensionsRepository.fleetUsersInUse(62L)).thenReturn(40L);
         SaasTeamExtensions ext = new SaasTeamExtensions();
         ext.setMaxSeats(100);
         when(teamExtensionsRepository.findByTeamId(62L)).thenReturn(Optional.of(ext));
@@ -220,7 +223,7 @@ class PaygWalletControllerTest {
         user.setTeam(team);
         when(memberRepo.findByTeamIdAndUserId(team.getId(), 63L))
                 .thenReturn(Optional.of(membership(team, user, TeamRole.MEMBER)));
-        when(memberRepo.countByTeamId(63L)).thenReturn(2L);
+        when(teamExtensionsRepository.fleetUsersInUse(63L)).thenReturn(2L);
         SaasTeamExtensions ext = new SaasTeamExtensions();
         ext.setMaxSeats(UserLicenseSettingsService.DEFAULT_USER_LIMIT);
         when(teamExtensionsRepository.findByTeamId(63L)).thenReturn(Optional.of(ext));
@@ -248,7 +251,7 @@ class PaygWalletControllerTest {
         user.setTeam(team);
         when(memberRepo.findByTeamIdAndUserId(team.getId(), 61L))
                 .thenReturn(Optional.of(membership(team, user, TeamRole.MEMBER)));
-        when(memberRepo.countByTeamId(61L)).thenReturn(8L);
+        when(teamExtensionsRepository.fleetUsersInUse(61L)).thenReturn(8L);
         when(billingService.forTeam(61L))
                 .thenReturn(subscribedBilling("sub_decoupled", 2500L, 1250L));
         when(entitlementService.getSnapshot(61L)).thenReturn(snapshot(100L, 1250L));

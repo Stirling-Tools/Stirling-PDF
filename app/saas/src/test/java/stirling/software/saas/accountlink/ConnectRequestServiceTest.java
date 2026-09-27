@@ -16,6 +16,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -178,22 +179,24 @@ class ConnectRequestServiceTest {
     }
 
     @Test
-    void createReauth_pinsTheTeamItWasToldByTheCredential() {
+    void createReauth_pinsTheAccountAndTeamFromTheCredential() {
         ConnectRequestService.CreateResult result =
-                service.createReauth(null, CALLBACK, NONCE, CLAIM_SECRET, null, 7L);
+                service.createReauth(null, CALLBACK, NONCE, CLAIM_SECRET, null, 7L, 42L);
 
         assertThat(result.isRejected()).isFalse();
         ArgumentCaptor<ConnectRequest> saved = ArgumentCaptor.forClass(ConnectRequest.class);
         verify(repo).save(saved.capture());
         assertThat(saved.getValue().getMode()).isEqualTo(ConnectRequest.Mode.REAUTH);
         assertThat(saved.getValue().getTeamId()).isEqualTo(7L);
+        assertThat(saved.getValue().getApprovedByUserId()).isEqualTo(42L);
+        assertThat(saved.getValue().getApprovedAt()).isNull();
     }
 
     @Test
     void createReauth_withoutAnAuthenticatedInstanceIsRefused() {
         // The controller passes null when the offered device credential did not authenticate.
         assertThat(
-                        service.createReauth(null, CALLBACK, NONCE, CLAIM_SECRET, null, null)
+                        service.createReauth(null, CALLBACK, NONCE, CLAIM_SECRET, null, null, null)
                                 .rejection())
                 .isEqualTo(CreateRejection.NOT_LINKED);
         verify(repo, never()).save(any());
@@ -218,18 +221,79 @@ class ConnectRequestServiceTest {
         ConnectRequestService.ApproveResult result = service.approve("req", 99L, 42L);
 
         // This is the "signed in to the wrong account" case, and it must not silently rebind.
-        assertThat(result.rejection()).isEqualTo(ConnectRequestService.ApproveRejection.WRONG_TEAM);
+        assertThat(result.rejection())
+                .isEqualTo(ConnectRequestService.ApproveRejection.WRONG_ACCOUNT);
         assertThat(row.getStatus()).isEqualTo(ConnectRequest.Status.PENDING);
         assertThat(row.getTeamId()).isEqualTo(7L);
     }
 
     @Test
-    void approve_acceptsTheTeamTheServerAlreadyBelongsTo() {
+    void approve_acceptsTheOriginalAccountInTheLinkedTeam() {
         ConnectRequest row = reauthPinnedTo(7L);
         when(repo.findByRequestIdForUpdate("req")).thenReturn(Optional.of(row));
 
         assertThat(service.approve("req", 7L, 42L).isRejected()).isFalse();
         assertThat(row.getStatus()).isEqualTo(ConnectRequest.Status.APPROVED);
+    }
+
+    @Test
+    void createReauth_withoutAnOriginalLinkingUserFailsClosed() {
+        assertThat(
+                        service.createReauth(null, CALLBACK, NONCE, CLAIM_SECRET, null, 7L, null)
+                                .rejection())
+                .isEqualTo(CreateRejection.NOT_LINKED);
+        verify(repo, never()).save(any());
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+            value = {"7,43", "99,43", "NULL,42", "7,NULL"},
+            nullValues = "NULL")
+    void approve_rejectsAnotherAccountOrMissingIdentity(Long teamId, Long userId) {
+        ConnectRequest row = reauthPinnedTo(7L);
+        when(repo.findByRequestIdForUpdate("req")).thenReturn(Optional.of(row));
+
+        assertThat(service.approve("req", teamId, userId).rejection())
+                .isEqualTo(ConnectRequestService.ApproveRejection.WRONG_ACCOUNT);
+        assertThat(row.getStatus()).isEqualTo(ConnectRequest.Status.PENDING);
+        assertThat(row.getTeamId()).isEqualTo(7L);
+        assertThat(row.getApprovedByUserId()).isEqualTo(42L);
+        assertThat(row.getApprovedAt()).isNull();
+        verify(repo, never()).save(any());
+        verifyNoInteractions(accountLinkService);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void approve_rejectsLegacyRenewalRequestsWithoutBothPins(boolean missingUser) {
+        ConnectRequest row = reauthPinnedTo(7L);
+        if (missingUser) row.setApprovedByUserId(null);
+        else row.setTeamId(null);
+        when(repo.findByRequestIdForUpdate("req")).thenReturn(Optional.of(row));
+
+        assertThat(service.approve("req", 7L, 42L).rejection())
+                .isEqualTo(ConnectRequestService.ApproveRejection.WRONG_ACCOUNT);
+        assertThat(row.getStatus()).isEqualTo(ConnectRequest.Status.PENDING);
+        verify(repo, never()).save(any());
+    }
+
+    @Test
+    void deny_cannotCancelARenewal() {
+        ConnectRequest row = reauthPinnedTo(7L);
+        when(repo.findByRequestIdForUpdate("req")).thenReturn(Optional.of(row));
+
+        assertThat(service.deny("req")).isFalse();
+        assertThat(row.getStatus()).isEqualTo(ConnectRequest.Status.PENDING);
+        verify(repo, never()).save(any());
+    }
+
+    @Test
+    void deny_stillDeclinesAFirstLink() {
+        ConnectRequest row = pending();
+        when(repo.findByRequestIdForUpdate("req")).thenReturn(Optional.of(row));
+
+        assertThat(service.deny("req")).isTrue();
+        assertThat(row.getStatus()).isEqualTo(ConnectRequest.Status.DENIED);
     }
 
     @Test
@@ -342,6 +406,7 @@ class ConnectRequestServiceTest {
         ConnectRequest row = pending();
         row.setMode(ConnectRequest.Mode.REAUTH);
         row.setTeamId(teamId);
+        row.setApprovedByUserId(42L);
         return row;
     }
 

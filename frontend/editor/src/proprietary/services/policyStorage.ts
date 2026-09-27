@@ -28,6 +28,11 @@ export function rawStoredPolicies(): string | null {
 }
 export const POLICIES_CHANGE_EVENT = "stirling:policies-changed";
 
+/** Clears server-owned policy settings before connecting to another server or account. */
+export function clearPolicies(): void {
+  persist({});
+}
+
 function defaultState(policyKey: string): PolicyState {
   // Unconfigured by default. The backend is the source of truth for what's
   // actually configured + active; this is just the empty local-cache shape.

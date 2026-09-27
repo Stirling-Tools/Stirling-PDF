@@ -25,7 +25,7 @@ import { usedIconsPlugin } from "../editor/scripts/icons/usedIcons.vite.mts";
  * here. Built per pass: the main bundle and the worker bundle each need their own.
  *
  * The plugin picks the first project whose include/exclude covers the importing
- * file. The proprietary project excludes src/desktop, so files under it fall
+ * file. The proprietary project excludes src/desktop and src/cloud, so both fall
  * through to the desktop project and get the desktop→cloud→proprietary→core
  * cascade their own imports need; every other file still resolves as before.
  */

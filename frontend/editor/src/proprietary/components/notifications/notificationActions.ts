@@ -14,8 +14,10 @@ import {
   PORTAL_REVIEW_PATH,
 } from "@app/routes/portalBasename";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
+import { HAS_PORTAL } from "@app/routes/hasPortal";
 import { fileStorage } from "@app/services/fileStorage";
 import { rerunPolicy } from "@app/services/notificationPolicyRetry";
+import { dispatchNotificationAction } from "@app/services/notifications";
 import { isValidToolId, type ToolId } from "@app/types/toolId";
 import type { FileId } from "@app/types/file";
 import {
@@ -28,6 +30,7 @@ import {
   unavailable,
 } from "@app/components/notifications/resolutions";
 import {
+  closesPanelFor,
   type ClientActionOutcome,
   type ClientActionRegistry,
   type ClientActionSpec,
@@ -35,6 +38,7 @@ import {
 } from "@core/components/notifications/notificationActions";
 
 export {
+  closesPanelFor,
   type ClientActionOutcome,
   type ClientActionRegistry,
   type ClientActionSpec,
@@ -203,9 +207,55 @@ export function useNotificationActions(): ClientActionRegistry {
     };
 
     const viewInProcessor: ClientActionSpec = {
-      available: () => true,
+      // Desktop ships the app without the processor, so the destination is not routed there and
+      // the button navigated to nothing.
+      available: () => HAS_PORTAL,
       closesPanel: true,
       run: () => navigate(REVIEW_DESTINATION),
+    };
+
+    const heldByServer = (context: NotificationActionContext) =>
+      context.notification.documentLocation === "SMART_FOLDER";
+
+    // What the server does on this browser's behalf: the document is in a folder this browser
+    // cannot reach, so all the client does is ask, and the row names which file it is about.
+    const askTheServer = (
+      actionId: string,
+      whenItFails: string,
+    ): ClientActionSpec => ({
+      available: heldByServer,
+      run: async (context): Promise<ClientActionOutcome | void> => {
+        const refusal = await dispatchNotificationAction(
+          context.notification.id,
+          actionId,
+        );
+        if (refusal === null) return;
+        // The server's own words where it gave any: only it knows why the folder refused.
+        return { ok: false, message: refusal || whenItFails };
+      },
+    });
+
+    // One id, run by whichever side holds the document: the server resolves it per row, and this
+    // picks the half that can act.
+    const rerunInFolder = askTheServer(
+      "OPEN_IN_TOOL",
+      t(
+        "notifications.retryInFolderFailed",
+        "That document could not be run again just now.",
+      ),
+    );
+    const retry: ClientActionSpec = {
+      available: (context) =>
+        heldByServer(context)
+          ? rerunInFolder.available(context)
+          : openInTool.available(context),
+      // The server's half changes nothing on screen to move to, so the panel stays and shows the
+      // row leave the list; the client's half opens the tool behind it.
+      closesPanel: (context) => !heldByServer(context),
+      run: (context) =>
+        heldByServer(context)
+          ? rerunInFolder.run(context)
+          : openInTool.run(context),
     };
 
     const resolutions = Object.fromEntries(
@@ -216,7 +266,7 @@ export function useNotificationActions(): ClientActionRegistry {
     );
 
     return {
-      OPEN_IN_TOOL: openInTool,
+      OPEN_IN_TOOL: retry,
       ...resolutions,
       VIEW_FILE: viewFile,
       VIEW_IN_PROCESSOR: viewInProcessor,
