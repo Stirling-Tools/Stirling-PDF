@@ -45,11 +45,13 @@ const fileOpens = new Map<FileId, PendingFileOpen>();
 const fileDocumentIds = new Map<FileId, string>();
 const renderers = new Map<string, EngineThumbnailRenderer>();
 
-function trimOldest<K, V>(map: Map<K, V>): void {
+function trimOldest<K, V>(map: Map<K, V>, onEvict?: (value: V) => void): void {
   while (map.size > OPEN_ENTRY_LIMIT) {
     const oldest = map.keys().next().value;
     if (oldest === undefined) break;
+    const value = map.get(oldest);
     map.delete(oldest);
+    if (value !== undefined) onEvict?.(value);
   }
 }
 
@@ -61,7 +63,9 @@ export function beginViewerFileOpen(fileId: FileId): void {
       resolve = res;
     });
     fileOpens.set(fileId, { promise, resolve });
-    trimOldest(fileOpens);
+    // An evicted waiter settles as "no open"; dropping the entry without
+    // resolving would leave its caller awaiting a promise forever.
+    trimOldest(fileOpens, (pending) => pending.resolve(null));
   }
 }
 
@@ -73,6 +77,10 @@ export function resolveViewerFileOpen(
   if (documentId) {
     fileDocumentIds.set(fileId, documentId);
     trimOldest(fileDocumentIds);
+  } else {
+    // A null resolution means the cached id is no longer open (swap or
+    // unmount); serving it later would miss the renderer registry.
+    fileDocumentIds.delete(fileId);
   }
   fileOpens.get(fileId)?.resolve(documentId);
   fileOpens.delete(fileId);
@@ -107,9 +115,21 @@ async function waitForViewerFileOpen(
         announced = true;
         deadline = Date.now() + ENGINE_THUMBNAIL_OPEN_CAP_MS;
       }
-      const documentId = await pending.promise;
+      // A re-announced open has no deadline of its own; race it against the
+      // cap this wait already started, or a hanging open never returns.
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const capped = new Promise<null>((resolve) => {
+        timer = setTimeout(
+          () => resolve(null),
+          Math.max(0, deadline - Date.now()),
+        );
+      });
+      const documentId = await Promise.race([pending.promise, capped]);
+      if (timer !== undefined) clearTimeout(timer);
       if (documentId) return documentId;
-      // The open failed or was abandoned; a retry may still announce.
+      // The open failed or was abandoned; a retry may still announce, but
+      // only while the cap has not elapsed.
+      if (Date.now() >= deadline) return null;
       continue;
     }
     const now = Date.now();

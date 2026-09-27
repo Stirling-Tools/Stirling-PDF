@@ -84,6 +84,55 @@ describe("engineThumbnail", () => {
     await expect(pending).resolves.toBe(DATA_URL);
   });
 
+  it("gives up at the cap when a re-announced open never resolves", async () => {
+    vi.useFakeTimers();
+    try {
+      const id = fileId();
+      beginViewerFileOpen(id);
+      const waiter = getEngineThumbnail(id, 1000);
+      await vi.advanceTimersByTimeAsync(0);
+      resolveViewerFileOpen(id, null);
+      // A retry announces but never reports; the wait must still end.
+      beginViewerFileOpen(id);
+
+      const outcome = await Promise.race([
+        waiter,
+        vi.advanceTimersByTimeAsync(20_000).then(() => "HUNG" as const),
+      ]);
+      expect(outcome).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("settles waiters evicted by the open-entry cap", async () => {
+    vi.useFakeTimers();
+    try {
+      const first = fileId();
+      beginViewerFileOpen(first);
+      const waiter = getEngineThumbnail(first, 1000);
+
+      // Push the first announcement out of the 64-entry map.
+      for (let i = 0; i < 64; i += 1) beginViewerFileOpen(fileId());
+
+      await vi.advanceTimersByTimeAsync(12_500);
+      await expect(waiter).resolves.toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("does not serve a cached id after an open resolves as abandoned", async () => {
+    const id = fileId();
+    const doc = docId();
+    resolveViewerFileOpen(id, doc);
+    registerEngineThumbnailRenderer(doc, async () => DATA_URL);
+    await expect(getEngineThumbnail(id, 0)).resolves.toBe(DATA_URL);
+
+    resolveViewerFileOpen(id, null);
+    await expect(getEngineThumbnail(id, 0)).resolves.toBeNull();
+  });
+
   it("keeps file ids apart", async () => {
     const opened = fileId();
     const other = fileId();
