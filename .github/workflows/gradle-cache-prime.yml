@@ -99,7 +99,7 @@ jobs:
           echo "$(brew --prefix gnu-tar)/libexec/gnubin" >> "$GITHUB_PATH"
           tar --version
 
-      - name: Restore Gradle cache sftp
+      - name: Restore Gradle cache github-branch
         id: cache
         uses: Ludy87/cache-the-planet/multi-cache@49161e4c6c89a1509929cad9cd0715ccad926d71
         with:
@@ -163,27 +163,10 @@ jobs:
 
       - name: Set up JDK ${{ needs.hash_pr.outputs.java_version }}
         if: |
-          runner.os == 'Windows' &&
-          runner.arch == 'ARM64' &&
-          (
-          steps.cache-gradle-restore.outputs.cache-hit != 'true' ||
           steps.cache.outputs.error ||
+          steps.cache-gradle-restore.outputs.cache-hit != 'true' ||
           steps.hit_caches.outputs.cache_hit != 'true'
-          )
         uses: ./.github/actions/java-windows
-        with:
-          java-version: ${{ needs.hash_pr.outputs.java_version }}
-
-      - name: Set up JDK ${{ needs.hash_pr.outputs.java_version }}
-        if: |
-          runner.os != 'Windows' &&
-          runner.arch != 'ARM64' &&
-          (
-          steps.cache-gradle-restore.outputs.cache-hit != 'true' ||
-          steps.cache.outputs.error ||
-          steps.hit_caches.outputs.cache_hit != 'true'
-          )
-        uses: ./.github/actions/java
         with:
           java-version: ${{ needs.hash_pr.outputs.java_version }}
 
