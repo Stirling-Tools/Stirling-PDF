@@ -210,6 +210,8 @@ jobs:
         uses: Ludy87/cache-the-planet/multi-cache@451bd425ce45a8a5194ccd72152a26e56b137782
         with:
           storage: github-branch
+          manifest-branch: dev-cache
+          manifest-path: .github/cache-data
           multi-cache: |
             cargo:
               path: ${{ env.CARGO_HOME }}
