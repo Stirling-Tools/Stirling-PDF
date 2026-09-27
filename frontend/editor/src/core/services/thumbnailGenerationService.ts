@@ -244,20 +244,21 @@ export class ThumbnailGenerationService {
   addThumbnailToCache(pageId: string, thumbnail: string): void {
     const sizeBytes = thumbnail.length * 2; // Rough estimate for base64 string
 
+    // Replace first: the limit must compare the incoming size against the
+    // cache without the entry this call is replacing, or a replacement
+    // evicts more entries than the new size requires.
+    const existing = this.thumbnailCache.get(pageId);
+    if (existing) {
+      this.currentCacheSize -= existing.sizeBytes;
+      this.thumbnailCache.delete(pageId);
+    }
+
     // Enforce cache size limits
     while (
       this.currentCacheSize + sizeBytes > this.maxCacheSizeBytes &&
       this.thumbnailCache.size > 0
     ) {
       this.evictLeastRecentlyUsed();
-    }
-
-    if (this.thumbnailCache.has(pageId)) {
-      const existing = this.thumbnailCache.get(pageId);
-      if (existing) {
-        this.currentCacheSize -= existing.sizeBytes;
-      }
-      this.thumbnailCache.delete(pageId);
     }
 
     this.thumbnailCache.set(pageId, {
