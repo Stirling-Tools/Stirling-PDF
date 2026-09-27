@@ -1,5 +1,6 @@
 import { describe, expect, test, afterEach, beforeEach, vi } from "vitest";
 import "fake-indexeddb/auto";
+import { IDBFactory } from "fake-indexeddb";
 import { expectConsole } from "@app/tests/failOnConsole";
 
 /**
@@ -137,6 +138,9 @@ function loseBackingStoreOnRead(deadReads: number) {
  *  tests must not inherit it from each other. */
 async function freshFileStorage() {
   vi.resetModules();
+  // Each test gets an empty database; records from earlier tests would
+  // otherwise leak into getAllStirlingFileStubs().
+  globalThis.indexedDB = new IDBFactory();
   const [{ fileStorage }, { createStirlingFile, createNewStirlingFileStub }] =
     await Promise.all([
       import("@app/services/fileStorage"),
