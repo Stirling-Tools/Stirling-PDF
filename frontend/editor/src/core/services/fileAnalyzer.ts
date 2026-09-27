@@ -348,7 +348,6 @@ export class FileAnalyzer {
     }
 
     try {
-      // Read first few bytes to check PDF header without arrayBuffer allocation
       const headerBytes = await readBlobSlice(file, 0, 8);
       const headerString = String.fromCharCode(...headerBytes);
 

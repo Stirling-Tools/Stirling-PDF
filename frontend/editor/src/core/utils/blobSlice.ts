@@ -1,8 +1,6 @@
 /**
- * Read a slice of a Blob into a Uint8Array (streamed, arrayBuffer fallback).
- * Streaming only pays past ~64 KB (8 B: 0.007 ms vs 0.003; 64 KB: tied;
- * 1 MB: 0.056 vs 0.084; Node 22, directional). Current probes are all small,
- * so this buys one tested path, not speed.
+ * Read a slice of a Blob into a Uint8Array, streaming the slice where the
+ * platform supports it and falling back to Blob.prototype.arrayBuffer.
  */
 export async function readBlobSlice(
   blob: Blob,

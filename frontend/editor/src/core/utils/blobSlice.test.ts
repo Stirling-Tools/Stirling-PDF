@@ -114,7 +114,7 @@ describe("readBlobSlice", () => {
   });
 
   it("fuzz test: matches slice.arrayBuffer across random sizes and offsets", async () => {
-    // Run 50 random trials with various payload sizes up to 128KB
+    // Run 50 random trials with payload sizes up to 64 KB
     for (let trial = 0; trial < 50; trial++) {
       const size = Math.floor(Math.random() * 65536) + 1;
       const bytes = new Uint8Array(size);
