@@ -14,7 +14,6 @@ import {
 } from "@app/types/fileContext";
 import { FileId, ToolOperation } from "@app/types/file";
 import { generateThumbnailPairWithMetadata } from "@app/utils/thumbnailUtils";
-import { yieldToMain } from "@app/utils/taskYield";
 import { FileLifecycleManager } from "@app/contexts/file/lifecycle";
 import { buildQuickKeySet } from "@app/contexts/file/fileSelectors";
 import { StirlingFile } from "@app/types/fileContext";
@@ -611,7 +610,9 @@ export async function addFiles(
         // until the whole drop is scanned. Awaiting the chunk's writes first means
         // the auto-run finds each file's bytes already committed in storage.
         await Promise.all(chunkWrites);
-        await yieldToMain();
+        // A commit boundary, not a priority yield: React's scheduled work
+        // must run before the next chunk scans, so keep a plain macrotask.
+        await new Promise((resolve) => setTimeout(resolve));
       }
     }
 
