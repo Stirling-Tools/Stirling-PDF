@@ -7,8 +7,30 @@
 //! Two shapes are exposed: a whole page scaled to a width (file-list
 //! thumbnails) and one rectangular region at a pixel scale (viewer tiles).
 
+/// How many page descriptors `pdf_document_info` returns. The strip needs the
+/// first few; a future metadata-first document open would raise this.
+const DOCUMENT_INFO_PAGE_LIMIT: usize = 16;
+
+/// One page's crop-box size in points, rotation normalized to 0/90/180/270.
+#[derive(Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PdfPageInfo {
+    pub width: f64,
+    pub height: f64,
+    pub rotation: u32,
+}
+
+/// Enough to lay pages out before any engine has parsed them.
+#[derive(Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PdfDocumentInfo {
+    pub page_count: usize,
+    pub pages: Vec<PdfPageInfo>,
+}
+
 #[cfg(target_os = "macos")]
 mod macos {
+    use super::{PdfDocumentInfo, PdfPageInfo, DOCUMENT_INFO_PAGE_LIMIT};
     use std::cell::OnceCell;
     use std::path::Path;
     use std::ptr;
@@ -63,6 +85,34 @@ mod macos {
             .recv()
             .map_err(|error| error.to_string())?
             .map(Response::new)
+    }
+
+    /// Page count plus the first pages' crop sizes and rotations, read with
+    /// CoreGraphics. Cheap enough to call on drop (page count and box lookups),
+    /// so the viewer can lay out pages before the engine has parsed anything.
+    #[tauri::command]
+    pub fn pdf_document_info(path: String) -> Result<PdfDocumentInfo, String> {
+        if !Path::new(&path).exists() {
+            return Err(format!("PDF file does not exist: {path}"));
+        }
+        let url =
+            CFURL::from_file_path(&path).ok_or_else(|| format!("Invalid PDF path: {path}"))?;
+        let document = CGPDFDocument::with_url(Some(&url))
+            .ok_or_else(|| format!("CoreGraphics could not open {path}"))?;
+        let page_count = CGPDFDocument::number_of_pages(Some(&document));
+        let mut pages = Vec::with_capacity(page_count.min(DOCUMENT_INFO_PAGE_LIMIT));
+        for page_number in 1..=page_count.min(DOCUMENT_INFO_PAGE_LIMIT) {
+            let page = CGPDFDocument::page(Some(&document), page_number)
+                .ok_or_else(|| format!("CoreGraphics could not read page {page_number}"))?;
+            let crop = CGPDFPage::box_rect(Some(&page), CGPDFBox::CropBox);
+            let rotation = CGPDFPage::rotation_angle(Some(&page));
+            pages.push(PdfPageInfo {
+                width: crop.size.width,
+                height: crop.size.height,
+                rotation: (((rotation % 360) + 360) % 360) as u32,
+            });
+        }
+        Ok(PdfDocumentInfo { page_count, pages })
     }
 
     /// Renders one region of a page at `scale` pixels per point as a JPEG.
@@ -456,6 +506,33 @@ mod macos {
         }
 
         #[test]
+        fn reports_page_count_and_crop_sizes() {
+            let root =
+                Path::new(env!("CARGO_MANIFEST_DIR")).join("../src/core/tests/test-fixtures");
+            let info = super::pdf_document_info(
+                root.join("cropbox-offset.pdf")
+                    .to_string_lossy()
+                    .into_owned(),
+            )
+            .expect("info");
+            assert_eq!(info.page_count, 1);
+            assert_eq!(info.pages.len(), 1);
+            // CropBox [50 30 350 380]: 300x350 points, unrotated.
+            assert_eq!((info.pages[0].width, info.pages[0].height), (300.0, 350.0));
+            assert_eq!(info.pages[0].rotation, 0);
+
+            let many = super::pdf_document_info(
+                root.join("../.perf-local/pages-500.pdf")
+                    .to_string_lossy()
+                    .into_owned(),
+            );
+            if let Ok(many) = many {
+                assert_eq!(many.page_count, 500);
+                assert_eq!(many.pages.len(), super::DOCUMENT_INFO_PAGE_LIMIT);
+            }
+        }
+
+        #[test]
         fn rejects_a_missing_file() {
             let missing = format!("{}.missing", fixture());
             let error =
@@ -679,7 +756,7 @@ mod macos {
 }
 
 #[cfg(target_os = "macos")]
-pub use macos::{render_pdf_page_thumbnail, render_pdf_rect};
+pub use macos::{pdf_document_info, render_pdf_page_thumbnail, render_pdf_rect};
 
 #[cfg(not(target_os = "macos"))]
 #[tauri::command]
@@ -688,6 +765,12 @@ pub fn render_pdf_page_thumbnail(
     _page: u32,
     _max_width: u32,
 ) -> Result<tauri::ipc::Response, String> {
+    Err("Native PDF rendering is not implemented on this platform".to_string())
+}
+
+#[cfg(not(target_os = "macos"))]
+#[tauri::command]
+pub fn pdf_document_info(_path: String) -> Result<PdfDocumentInfo, String> {
     Err("Native PDF rendering is not implemented on this platform".to_string())
 }
 

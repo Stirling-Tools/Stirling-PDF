@@ -7,6 +7,30 @@ export const NATIVE_THUMBNAIL_WIDTH = 240;
 // False on web: page thumbnails come from the engine worker or the local parse.
 export const canRenderNativeThumbnails = false;
 
+/** One page as the OS engine reports it: crop size in points, rotation in degrees. */
+export interface NativePageInfo {
+  width: number;
+  height: number;
+  rotation: number;
+}
+
+/** Page count plus the first pages' geometry, enough to lay pages out. */
+export interface NativeDocumentInfo {
+  pageCount: number;
+  pages: NativePageInfo[];
+}
+
+/**
+ * What the OS engine knows about the document before any parse: page count and
+ * the first pages' crop sizes and rotations. Null when the platform cannot
+ * answer, and the caller waits for the engine instead.
+ */
+export async function renderNativeDocumentInfo(
+  _path: string,
+): Promise<NativeDocumentInfo | null> {
+  return null;
+}
+
 /** One viewer tile: page-space points, crop-box origin at (0, 0). */
 export interface NativePdfRect {
   page: number;
@@ -16,6 +40,18 @@ export interface NativePdfRect {
   height: number;
   /** Pixels per point (viewer zoom x device pixel ratio). */
   scale: number;
+}
+
+/**
+ * Page `page` (1-based) of the PDF at `path` as a JPEG Blob sized close to
+ * `maxWidth`, or null when the platform cannot render it.
+ */
+export async function renderNativePdfPageBlob(
+  _path: string,
+  _page: number,
+  _maxWidth: number,
+): Promise<Blob | null> {
+  return null;
 }
 
 /**

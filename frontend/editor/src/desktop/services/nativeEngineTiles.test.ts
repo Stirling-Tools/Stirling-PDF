@@ -53,6 +53,10 @@ const RECT = {
   size: { width: 300, height: 90 },
 };
 
+/** Fresh document ids per call: the wrapper's tile cache is keyed by them. */
+let docSequence = 0;
+const makeDoc = () => ({ id: `doc-${(docSequence += 1)}` }) as never;
+
 describe("nativeEngineTiles (desktop)", () => {
   beforeEach(() => {
     mocks.nativeBlob = NATIVE_BLOB;
@@ -65,7 +69,7 @@ describe("nativeEngineTiles (desktop)", () => {
     const wrapped = wrapEngineForNativeTiles(engine, () => PATH);
 
     const blob = await wrapped
-      .renderPageRect(undefined as never, makePage(), RECT as never, {
+      .renderPageRect(makeDoc(), makePage(), RECT as never, {
         scaleFactor: 1,
         dpr: 2,
       })
@@ -84,7 +88,7 @@ describe("nativeEngineTiles (desktop)", () => {
     const wrapped = wrapEngineForNativeTiles(engine, () => null);
 
     const blob = await wrapped
-      .renderPageRect(undefined as never, makePage(), RECT as never)
+      .renderPageRect(makeDoc(), makePage(), RECT as never)
       .toPromise();
 
     expect(blob).toBe(ENGINE_BLOB);
@@ -92,17 +96,19 @@ describe("nativeEngineTiles (desktop)", () => {
     expect(renderPageRect).toHaveBeenCalledTimes(1);
   });
 
-  test("keeps rotated pages on the engine", async () => {
+  test("renders rotated pages natively too", async () => {
+    // The engine renders tile rects unrotated (plugin-render never passes a
+    // rotation option); the canvas applies the page rotation, so the native
+    // path follows the same convention.
     const { engine, renderPageRect } = makeEngine();
     const wrapped = wrapEngineForNativeTiles(engine, () => PATH);
 
     const blob = await wrapped
-      .renderPageRect(undefined as never, makePage(90), RECT as never)
+      .renderPageRect(makeDoc(), makePage(90), RECT as never)
       .toPromise();
 
-    expect(blob).toBe(ENGINE_BLOB);
-    expect(mocks.nativeCalls).toHaveLength(0);
-    expect(renderPageRect).toHaveBeenCalledTimes(1);
+    expect(blob).toBe(NATIVE_BLOB);
+    expect(renderPageRect).not.toHaveBeenCalled();
   });
 
   test("falls back when the native render returns nothing", async () => {
@@ -111,11 +117,29 @@ describe("nativeEngineTiles (desktop)", () => {
     const wrapped = wrapEngineForNativeTiles(engine, () => PATH);
 
     const blob = await wrapped
-      .renderPageRect(undefined as never, makePage(), RECT as never)
+      .renderPageRect(makeDoc(), makePage(), RECT as never)
       .toPromise();
 
     expect(blob).toBe(ENGINE_BLOB);
     expect(renderPageRect).toHaveBeenCalledTimes(1);
+  });
+
+  test("serves a repeated tile from cache without a second render", async () => {
+    const { engine, renderPageRect } = makeEngine();
+    const wrapped = wrapEngineForNativeTiles(engine, () => PATH);
+    const doc = makeDoc();
+
+    const first = await wrapped
+      .renderPageRect(doc, makePage(), RECT as never)
+      .toPromise();
+    const second = await wrapped
+      .renderPageRect(doc, makePage(), RECT as never)
+      .toPromise();
+
+    expect(first).toBe(NATIVE_BLOB);
+    expect(second).toBe(first);
+    expect(mocks.nativeCalls).toHaveLength(1);
+    expect(renderPageRect).not.toHaveBeenCalled();
   });
 
   test("the kill switch keeps the engine's own instance", () => {

@@ -9,6 +9,7 @@ import {
 } from "@embedpdf/models";
 import { isTauri } from "@tauri-apps/api/core";
 import { renderNativePdfRectBlob } from "@app/services/nativePdfRender";
+import type { NativePdfRect } from "@core/services/nativePdfRender";
 
 // Shadow of the core identity; @app alias order gives desktop builds this one.
 
@@ -63,6 +64,36 @@ export function wrapEngineForNativeTiles<T extends PdfEngine<Blob>>(
   }) as T;
 }
 
+/**
+ * Tiles the viewer has already fetched, keyed by document id + path + page +
+ * rect + scale. Scrolling back or toggling zoom re-requests identical tiles;
+ * the engine's own task cache is bypassed on this path, so without this every
+ * revisit paid the render and the IPC again. The engine document id is part of
+ * the key, so a reload of changed bytes (new id) never serves stale pixels.
+ * Small and bounded; blobs are cheap to retain at tile sizes.
+ */
+const TILE_CACHE_LIMIT = 128;
+const tileCache = new Map<string, Blob>();
+
+function tileCacheKey(
+  documentId: string,
+  path: string,
+  rect: NativePdfRect,
+): string {
+  return `${documentId}\u0000${path}\u0000${rect.page}\u0000${rect.x},${rect.y},${rect.width},${rect.height}@${rect.scale}`;
+}
+
+function rememberTile(key: string, blob: Blob): Blob {
+  tileCache.delete(key);
+  tileCache.set(key, blob);
+  while (tileCache.size > TILE_CACHE_LIMIT) {
+    const oldest = tileCache.keys().next().value;
+    if (oldest === undefined) break;
+    tileCache.delete(oldest);
+  }
+  return blob;
+}
+
 function renderTileTask(
   engineRenderPageRect: (
     doc: PdfDocumentObject,
@@ -76,9 +107,7 @@ function renderTileTask(
   rect: Rect,
   options?: PdfRenderPageOptions,
 ): PdfTask<Blob> {
-  // Rotated pages measure their tiles in rotated display space, which this
-  // path does not map yet; the engine keeps them.
-  if (!filePath || (page.rotation ?? 0) !== 0) {
+  if (!filePath) {
     return engineRenderPageRect(doc, page, rect, options);
   }
 
@@ -90,7 +119,7 @@ function renderTileTask(
     );
 
   const { width, height } = rect.size;
-  void renderNativePdfRectBlob(filePath, {
+  const nativeRect: NativePdfRect = {
     page: page.index + 1,
     x: rect.origin.x,
     // The tiling plugin measures y from the page top; PDF space is bottom-up.
@@ -98,7 +127,14 @@ function renderTileTask(
     width,
     height,
     scale: (options?.scaleFactor ?? 1) * (options?.dpr ?? 1),
-  }).then(
+  };
+  const cacheKey = tileCacheKey(doc.id, filePath, nativeRect);
+  const cached = tileCache.get(cacheKey);
+  if (cached) {
+    task.resolve(cached);
+    return task;
+  }
+  void renderNativePdfRectBlob(filePath, nativeRect).then(
     (blob) => {
       if (!blob) {
         fallback();
@@ -109,7 +145,7 @@ function renderTileTask(
           `[nativeTiles] page ${page.index + 1} ${Math.round(width)}x${Math.round(height)} native`,
         );
       }
-      task.resolve(blob);
+      task.resolve(rememberTile(cacheKey, blob));
     },
     () => fallback(),
   );
