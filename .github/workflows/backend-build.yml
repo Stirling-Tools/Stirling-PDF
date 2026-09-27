@@ -57,6 +57,7 @@ jobs:
         id: hash
         env:
           FILES_HASH: ${{ hashFiles(env.FILES_TO_HASH) }}
+        shell: bash
         run: |
           HASH="$FILES_HASH"
           echo "java_version=${{ env.JAVA_VERSION }}" >> "$GITHUB_OUTPUT"
@@ -88,19 +89,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Inspect local Gradle cache before restore
-        shell: bash
-        run: |
-          cache_root=".cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}"
-
-          if [ -d "$cache_root" ]; then
-            echo "Cache directory exists: $cache_root"
-            find "$cache_root" -type f | head -20
-            echo "File count: $(find "$cache_root" -type f | wc -l)"
-          else
-            echo "Cache directory does not exist"
-          fi
-
       - name: Restore Gradle cache sftp
         id: cache
         uses: Ludy87/cache-the-planet/multi-cache@49161e4c6c89a1509929cad9cd0715ccad926d71
@@ -121,8 +109,21 @@ jobs:
           allow-shared-restore: true
           strict: false
 
+      - name: Hit Caches
+        id: hit_caches
+        shell: bash
+        env:
+          GRADLE_CHACHES_RESULT: ${{ fromJSON(steps.cache.outputs.cache-results).gradle-caches.cache-hit }}
+          GRADLE_WRAPPER_RESULT: ${{ fromJSON(steps.cache.outputs.cache-results).gradle-wrapper.cache-hit }}
+        run: |
+          if [[ "$GRADLE_CACHES_RESULT" == "true" && "$GRADLE_WRAPPER_RESULT" == "true" ]]; then
+            echo "cache_hit=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "cache_hit=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Restore cache Gradle User Home
-        if: ${{ steps.cache.outputs.error }}
+        if: steps.cache.outputs.error || steps.hit_caches.outputs.cache_hit != 'true'
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
