@@ -9,6 +9,7 @@ import {
   SplitCommand,
 } from "@app/components/pageEditor/commands/pageCommands";
 import type { useFileActions, useFileState } from "@app/contexts/FileContext";
+import { generateProcessedFileMetadata } from "@app/contexts/file/fileActions";
 import { PDFDocument, PDFPage } from "@app/types/pageEditor";
 import { FileId } from "@app/types/file";
 import { StirlingFileStub } from "@app/types/fileContext";
@@ -348,8 +349,17 @@ export const usePageEditorCommands = ({
         const newPages: PDFPage[] = [];
         for (const fileId of addedFileIds) {
           const stub = selectors.getStirlingFileStub(fileId);
-          if (stub?.processedFile?.pages) {
-            const clonedPages = stub.processedFile.pages.map((page, idx) => ({
+          let pages = stub?.processedFile?.pages;
+          if (!pages) {
+            // Files at or above the eager-parse threshold never hydrate on add,
+            // so read their metadata here instead of inserting nothing.
+            const file = selectors.getFile(fileId);
+            pages = file
+              ? (await generateProcessedFileMetadata(file))?.pages
+              : undefined;
+          }
+          if (pages) {
+            const clonedPages = pages.map((page, idx) => ({
               ...page,
               id: `${fileId}-${page.pageNumber ?? idx + 1}`,
               pageNumber: page.pageNumber ?? idx + 1,
