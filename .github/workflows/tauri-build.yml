@@ -145,11 +145,6 @@ jobs:
       # CARGO_HOME: ${{ github.workspace }}/.cache/cargo
       CACHE_MANIFEST_BRANCH: dev-cache
       CACHE_MANIFEST_PATH: .github/cache-data
-      SFTP_HOST: ${{ secrets.CACHE_SFTP_HOST }}
-      SFTP_PORT: ${{ secrets.CACHE_SFTP_PORT }}
-      SFTP_USERNAME: ${{ secrets.CACHE_SFTP_USERNAME }}
-      SFTP_PASSWORD: ${{ secrets.CACHE_SFTP_PASSWORD }}
-      SFTP_BASE_PATH: ${{ secrets.CACHE_SFTP_BASE_PATH || '/files/cache-the-planet' }}
       GITHUB_TOKEN: ${{ github.token }}
       TAURI_BUNDLER_DMG_IGNORE_CI: "true"
       SM_API_KEY: ${{ secrets.SM_API_KEY }}
@@ -214,7 +209,7 @@ jobs:
         id: cache-cargo
         uses: Ludy87/cache-the-planet/multi-cache@451bd425ce45a8a5194ccd72152a26e56b137782
         with:
-          storage: sftp
+          storage: github-branch
           multi-cache: |
             cargo:
               path: ${{ env.CARGO_HOME }}
