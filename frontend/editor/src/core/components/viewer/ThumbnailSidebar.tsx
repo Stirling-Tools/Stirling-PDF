@@ -20,7 +20,12 @@ export function ThumbnailSidebar({
   activeFileId,
 }: ThumbnailSidebarProps) {
   const { t } = useTranslation();
-  const { getScrollState, scrollActions, getThumbnailAPI } = useViewer();
+  const {
+    getScrollState,
+    scrollActions,
+    getThumbnailAPI,
+    registerImmediateScrollUpdate,
+  } = useViewer();
   const [thumbnails, setThumbnails] = useState<{ [key: number]: string }>({});
 
   const scrollState = getScrollState();
@@ -42,6 +47,7 @@ export function ThumbnailSidebar({
   useEffect(() => {
     thumbnailsRef.current = thumbnails;
   }, [thumbnails]);
+  const generatedFileRef = useRef<string | null | undefined>(undefined);
 
   // Clear thumbnails when sidebar closes and revoke blob URLs to prevent memory leaks
   useEffect(() => {
@@ -68,14 +74,26 @@ export function ThumbnailSidebar({
   }, []);
 
   const currentPageRef = useRef(scrollState.currentPage - 1);
+  // Scroll updates arrive through the immediate notifier, not through
+  // re-renders, so the nearest-page pick tracks the page from the
+  // subscription instead of the value captured at mount.
   useEffect(() => {
-    currentPageRef.current = scrollState.currentPage - 1;
-  }, [scrollState.currentPage]);
+    return registerImmediateScrollUpdate((currentPage) => {
+      currentPageRef.current = currentPage - 1;
+    });
+  }, [registerImmediateScrollUpdate]);
 
   // Generate thumbnails when sidebar becomes visible
   useEffect(() => {
     if (!visible || scrollState.totalPages === 0) return;
     if (!thumbnailAPI) return;
+
+    // A file switch revokes the previous thumbnails; drop the ref too, or the
+    // new file's pages are skipped as already rendered.
+    if (generatedFileRef.current !== activeFileId) {
+      thumbnailsRef.current = {};
+      generatedFileRef.current = activeFileId;
+    }
 
     let isCancelled = false;
 
@@ -150,7 +168,7 @@ export function ThumbnailSidebar({
     return () => {
       isCancelled = true;
     };
-  }, [visible, scrollState.totalPages, thumbnailAPI]);
+  }, [visible, scrollState.totalPages, thumbnailAPI, activeFileId]);
 
   const handlePageClick = (pageIndex: number) => {
     const pageNumber = pageIndex + 1; // Convert to 1-based
