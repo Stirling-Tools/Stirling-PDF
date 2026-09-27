@@ -21,7 +21,7 @@ permissions:
 env:
   VERSION: 1
   JAVA_VERSION: 25
-  FILES_TO_HASH: |
+  GRADLE_FILES_TO_HASH: |
     gradle/wrapper/gradle-wrapper.properties
     gradle/libs.versions.toml
     buildSrc/**
@@ -29,6 +29,10 @@ env:
     build.gradle
     app/**/build.gradle
     gradle/**/*.gradle
+  UV_FILES_TO_HASH: |
+    engine/.python-version
+    engine/pyproject.toml
+    engine/uv.lock
 
 jobs:
   hash_pr:
@@ -39,8 +43,9 @@ jobs:
       contents: read
     outputs:
       java_version: ${{ steps.hash.outputs.java_version }}
-      cache_key: ${{ steps.hash.outputs.cache_key }}
-      files_hash: ${{ steps.hash.outputs.files_hash }}
+      gradle_cache_key: ${{ steps.hash.outputs.gradle_cache_key }}
+      gradle_files_hash: ${{ steps.hash.outputs.gradle_files_hash }}
+      uv_files_hash: ${{ steps.hash.outputs.uv_files_hash }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
@@ -56,13 +61,16 @@ jobs:
       - name: Hash Gradle files
         id: hash
         env:
-          FILES_HASH: ${{ hashFiles(env.FILES_TO_HASH) }}
+          GRADLE_FILES_HASH: ${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
+          UV_FILES_HASH: ${{ hashFiles(env.UV_FILES_TO_HASH) }}
         shell: bash
         run: |
-          HASH="$FILES_HASH"
+          GRADLE_HASH="$GRADLE_FILES_HASH"
+          UV_HASH="$UV_FILES_HASH"
           echo "java_version=${{ env.JAVA_VERSION }}" >> "$GITHUB_OUTPUT"
-          echo "files_hash=$HASH" >> "$GITHUB_OUTPUT"
-          echo "cache_key=gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-${{ env.JAVA_VERSION }}-$HASH" >> "$GITHUB_OUTPUT"
+          echo "gradle_files_hash=$GRADLE_HASH" >> "$GITHUB_OUTPUT"
+          echo "uv_files_hash=$UV_HASH" >> "$GITHUB_OUTPUT"
+          echo "gradle_cache_key=gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-${{ env.JAVA_VERSION }}-$GRADLE_HASH" >> "$GITHUB_OUTPUT"
   build:
     environment:
       name: ci-unsigned
@@ -72,6 +80,8 @@ jobs:
     timeout-minutes: 30
     env:
       GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}
+      UV_CACHE_DIR: ${{ github.workspace }}/.cache/uv
+      UV_PYTHON_INSTALL_DIR: ${{ github.workspace }}/.cache/uv/python-install
       CACHE_COMPRESSION_LEVEL: 1
     permissions:
       contents: write
@@ -89,7 +99,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Restore Gradle cache sftp
+      - name: Restore Gradle cache github-branch
         id: cache
         uses: Ludy87/cache-the-planet/multi-cache@49161e4c6c89a1509929cad9cd0715ccad926d71
         with:
@@ -101,11 +111,14 @@ jobs:
               path: .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/caches
             gradle-wrapper:
               path: .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/wrapper
+            uv:
+              path: .cache/uv
           save-scope: shared
           token: ${{ github.token }}
           key: |
-            gradle-caches=${{ needs.hash_pr.outputs.files_hash }}
-            gradle-wrapper=${{ needs.hash_pr.outputs.files_hash  }}
+            gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash  }}
+            uv=${{ needs.hash_pr.outputs.uv_files_hash }}
           allow-shared-restore: true
           strict: false
 
@@ -129,7 +142,7 @@ jobs:
           path: |
             .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
             .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
-          key: ${{ matrix.flavor}}-${{ needs.hash_pr.outputs.cache_key }}
+          key: ${{ matrix.flavor}}-${{ needs.hash_pr.outputs.gradle_cache_key }}
 
       - name: Set up JDK ${{ matrix.jdk-version }}
         uses: ./.github/actions/java
@@ -282,13 +295,23 @@ jobs:
           if-no-files-found: warn
 
       - name: Install uv
-        if: always() && matrix.flavor == 'saas'
+        if: always() && matrix.flavor == 'saas' && steps.hit_caches.outputs.cache_hit != 'true'
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           enable-cache: true
           cache-dependency-glob: |
             engine/pyproject.toml
             engine/uv.lock
+
+      - name: Install uv
+        if: always() && matrix.flavor == 'saas' && steps.hit_caches.outputs.cache_hit == 'true'
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          enable-cache: false
+          cache-dependency-glob: |
+            engine/pyproject.toml
+            engine/uv.lock
+          cache-local-path: .cache/uv
 
       - name: JaCoCo coverage step summary
         # Only the saas leg posts the JUnit summary - it's a strict
