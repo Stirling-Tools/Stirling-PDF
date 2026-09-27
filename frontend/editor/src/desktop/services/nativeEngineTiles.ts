@@ -131,6 +131,9 @@ function renderTileTask(
   const cacheKey = tileCacheKey(doc.id, filePath, nativeRect);
   const cached = tileCache.get(cacheKey);
   if (cached) {
+    // Reinsert at the end: iteration order drives eviction, so hits refresh recency.
+    tileCache.delete(cacheKey);
+    tileCache.set(cacheKey, cached);
     task.resolve(cached);
     return task;
   }
