@@ -10,6 +10,7 @@ import {
 } from "@app/components/pageEditor/commands/pageCommands";
 import type { useFileActions, useFileState } from "@app/contexts/FileContext";
 import { generateProcessedFileMetadata } from "@app/contexts/file/fileActions";
+import { alert } from "@app/components/toast";
 import { PDFDocument, PDFPage } from "@app/types/pageEditor";
 import { FileId } from "@app/types/file";
 import { StirlingFileStub } from "@app/types/fileContext";
@@ -347,6 +348,7 @@ export const usePageEditorCommands = ({
         await new Promise((resolve) => setTimeout(resolve, 100));
 
         const newPages: PDFPage[] = [];
+        const unreadable: string[] = [];
         for (const fileId of addedFileIds) {
           const stub = selectors.getStirlingFileStub(fileId);
           let pages = stub?.processedFile?.pages;
@@ -358,21 +360,34 @@ export const usePageEditorCommands = ({
               ? (await generateProcessedFileMetadata(file))?.pages
               : undefined;
           }
-          if (pages) {
-            const clonedPages = pages.map((page, idx) => ({
-              ...page,
-              id: `${fileId}-${page.pageNumber ?? idx + 1}`,
-              pageNumber: page.pageNumber ?? idx + 1,
-              originalFileId: fileId,
-              originalPageNumber:
-                page.originalPageNumber ?? page.pageNumber ?? idx + 1,
-              rotation: page.rotation ?? 0,
-              thumbnail: page.thumbnail ?? null,
-              selected: false,
-              splitAfter: page.splitAfter ?? false,
-            }));
-            newPages.push(...clonedPages);
+          if (!pages) {
+            // A huge non-linearized PDF has no metadata path here (the prefix
+            // attempt is all this code reads); report the skip, not silence.
+            unreadable.push(stub?.name ?? fileId);
+            continue;
           }
+          const clonedPages = pages.map((page, idx) => ({
+            ...page,
+            id: `${fileId}-${page.pageNumber ?? idx + 1}`,
+            pageNumber: page.pageNumber ?? idx + 1,
+            originalFileId: fileId,
+            originalPageNumber:
+              page.originalPageNumber ?? page.pageNumber ?? idx + 1,
+            rotation: page.rotation ?? 0,
+            thumbnail: page.thumbnail ?? null,
+            selected: false,
+            splitAfter: page.splitAfter ?? false,
+          }));
+          newPages.push(...clonedPages);
+        }
+
+        if (unreadable.length > 0) {
+          alert({
+            alertType: "warning",
+            title: "Some files could not be inserted",
+            body: `${unreadable.join(", ")} could not be read for page data, so no pages were inserted from them.`,
+            expandable: false,
+          });
         }
 
         if (newPages.length > 0) {
