@@ -34,9 +34,13 @@ interface LocalPdfiumEngineOptions {
 let sharedEngine: PdfEngine<Blob> | null = null;
 let sharedEnginePromise: Promise<PdfEngine<Blob>> | null = null;
 let sharedEngineRefs = 0;
+// Bumped on teardown; a creation still waiting on the precompile race must
+// not install itself as shared after the last viewer already left.
+let sharedEngineGeneration = 0;
 
 async function createViewerEngine(
   options: LocalPdfiumEngineOptions,
+  generation: number,
 ): Promise<PdfEngine<Blob>> {
   const { wasmUrl, logger, encoderPoolSize, fontFallback } = options;
   startEagerWasmCompilation();
@@ -53,11 +57,18 @@ async function createViewerEngine(
     engineOptions.wasmModule = precompiled.module;
   }
   const engine = createPdfiumEngine(wasmUrl, engineOptions);
+  if (generation !== sharedEngineGeneration) {
+    // Superseded: nobody owns this engine, so destroy it instead of leaving
+    // its worker alive and letting a later mount replace it.
+    engine.closeAllDocuments?.()?.wait(() => engine.destroy?.(), ignore);
+    throw new Error("viewer engine creation was superseded");
+  }
   sharedEngine = engine;
   return engine;
 }
 
 function destroySharedEngine(): void {
+  sharedEngineGeneration += 1;
   const dying = sharedEngine;
   sharedEngine = null;
   sharedEnginePromise = null;
@@ -71,13 +82,18 @@ function destroySharedEngine(): void {
 export function warmUpViewerEngine(
   options: LocalPdfiumEngineOptions,
 ): Promise<PdfEngine<Blob>> {
-  sharedEnginePromise ??= createViewerEngine(options).catch(
-    (error: unknown) => {
-      // A failed creation must stay retryable: the next caller tries again.
-      sharedEnginePromise = null;
+  if (!sharedEnginePromise) {
+    const generation = sharedEngineGeneration;
+    const creation = createViewerEngine(options, generation);
+    const tracked = creation.catch((error: unknown) => {
+      // A failed or superseded creation must stay retryable, and only the
+      // current attempt may clear the shared promise.
+      if (sharedEnginePromise === tracked) sharedEnginePromise = null;
       throw error;
-    },
-  );
+    });
+    sharedEnginePromise = tracked;
+    return tracked;
+  }
   return sharedEnginePromise;
 }
 

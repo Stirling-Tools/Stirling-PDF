@@ -15,7 +15,12 @@ const engineMocks = vi.hoisted(() => {
     created.push(engine);
     return engine;
   });
-  return { created, createPdfiumEngine };
+  let releaseWasm = () => {};
+  const heldWasm = new Promise<null>((resolve) => {
+    releaseWasm = () => resolve(null);
+  });
+  const state = { holdWasm: false };
+  return { created, createPdfiumEngine, heldWasm, releaseWasm, state };
 });
 
 vi.mock("@embedpdf/engines/pdfium-worker-engine", () => ({
@@ -24,7 +29,11 @@ vi.mock("@embedpdf/engines/pdfium-worker-engine", () => ({
 }));
 
 vi.mock("@app/services/wasmPrecompiler", () => ({
-  pdfiumWasmModulePromise: Promise.resolve(null),
+  get pdfiumWasmModulePromise() {
+    return engineMocks.state.holdWasm
+      ? engineMocks.heldWasm
+      : Promise.resolve(null);
+  },
   startEagerWasmCompilation: vi.fn(),
 }));
 
@@ -42,6 +51,7 @@ describe("useLocalPdfiumEngine", () => {
   beforeEach(() => {
     engineMocks.created.length = 0;
     engineMocks.createPdfiumEngine.mockClear();
+    engineMocks.state.holdWasm = false;
   });
 
   it("shares one engine between the warm-up and the viewer", async () => {
@@ -82,6 +92,30 @@ describe("useLocalPdfiumEngine", () => {
     const fresh = await warmUpViewerEngine(options);
     expect(engineMocks.createPdfiumEngine).toHaveBeenCalledTimes(2);
     expect(fresh).not.toBe(engineMocks.created[0]);
+  });
+
+  it("destroys a creation superseded by teardown instead of installing it", async () => {
+    const { useLocalPdfiumEngine } = await loadModule();
+
+    engineMocks.state.holdWasm = true;
+    const first = renderHook(() => useLocalPdfiumEngine(options));
+    await act(async () => {});
+    expect(engineMocks.createPdfiumEngine).not.toHaveBeenCalled();
+
+    first.unmount();
+    engineMocks.state.holdWasm = false;
+    await act(async () => {
+      engineMocks.releaseWasm();
+    });
+
+    expect(engineMocks.created).toHaveLength(1);
+    expect(engineMocks.created[0].destroy).toHaveBeenCalledTimes(1);
+
+    const second = renderHook(() => useLocalPdfiumEngine(options));
+    await act(async () => {});
+    expect(engineMocks.createPdfiumEngine).toHaveBeenCalledTimes(2);
+    expect(second.result.current.engine).not.toBeNull();
+    second.unmount();
   });
 
   it("keeps the engine while another viewer still holds it", async () => {
