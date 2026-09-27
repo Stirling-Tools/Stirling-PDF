@@ -164,9 +164,11 @@ jobs:
       - name: Set up JDK ${{ needs.hash_pr.outputs.java_version }}
         if: |
           steps.cache.outputs.error ||
-          steps.cache-gradle-restore.outputs.cache-hit != 'true' ||
+          (
+          steps.cache-gradle-restore.outputs.cache-hit != 'true' &&
           steps.hit_caches.outputs.cache_hit != 'true'
-        uses: ./.github/actions/java-windows
+          )
+        uses: ./.github/actions/java
         with:
           java-version: ${{ needs.hash_pr.outputs.java_version }}
 
