@@ -546,6 +546,12 @@ export async function addFiles(
             // here would just duplicate work. Metadata is refreshed after unlock.
             processedFileMetadata = fileStub.processedFile;
           } else {
+            // Hydration owns the page metadata: thumbnail-first arrivals are
+            // image-only, so skip solely when processedFile already landed.
+            const currentStub = stateRef.current.files.byId[fileId];
+            if (currentStub?.thumbnailUrl && currentStub?.processedFile) {
+              return;
+            }
             processedFileMetadata =
               await generateProcessedFileMetadata(targetFile);
             thumbnail = processedFileMetadata?.thumbnailUrl;

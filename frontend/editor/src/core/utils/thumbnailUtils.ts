@@ -10,6 +10,7 @@ import {
   readPdfiumPageMetadata,
 } from "@app/utils/pdfiumPageRender";
 import { getDocumentBytes } from "@app/services/documentBytesCache";
+import { readBlobSlice } from "@app/utils/blobSlice";
 
 export interface ThumbnailWithMetadata {
   thumbnail: string; // Always returns a thumbnail (placeholder if needed)
@@ -61,12 +62,15 @@ export function containsEncryptMarker(bytes: Uint8Array): boolean {
  * false negative leaves it unopenable. */
 async function looksEncryptedFromTrailer(file: File): Promise<boolean> {
   const tailStart = Math.max(0, file.size - ENCRYPT_PROBE_BYTES);
-  const tail = await file.slice(tailStart).arrayBuffer();
-  if (containsEncryptMarker(new Uint8Array(tail))) return true;
+  const tail = await readBlobSlice(file, tailStart);
+  if (containsEncryptMarker(tail)) return true;
   if (tailStart === 0) return false;
-  const head = await file.slice(0, ENCRYPT_PROBE_BYTES).arrayBuffer();
-  return containsEncryptMarker(new Uint8Array(head));
+  const head = await readBlobSlice(file, 0, ENCRYPT_PROBE_BYTES);
+  return containsEncryptMarker(head);
 }
+
+/** Cap eager page metadata extraction on add/open to 16 pages to keep main-thread tasks under 50ms. */
+const MAX_EAGER_METADATA_PAGES = 16;
 
 interface PdfiumRenderResult {
   thumbnail: string;
@@ -132,7 +136,8 @@ async function renderPdfThumbnailPdfium(
     ];
 
     if (collectAllPagesMetadata) {
-      for (let i = 1; i < pageCount; i++) {
+      const maxPages = Math.min(pageCount, MAX_EAGER_METADATA_PAGES);
+      for (let i = 1; i < maxPages; i++) {
         const meta = await readPdfiumPageMetadata(docPtr, i);
         if (!meta) continue;
         pageRotations[i] = meta.rotation;
@@ -191,7 +196,8 @@ async function renderPdfThumbnailPairPdfium(
       { width: firstMeta?.width ?? 0, height: firstMeta?.height ?? 0 },
     ];
     if (collectAllPagesMetadata) {
-      for (let i = 1; i < pageCount; i++) {
+      const maxPages = Math.min(pageCount, MAX_EAGER_METADATA_PAGES);
+      for (let i = 1; i < maxPages; i++) {
         const meta = await readPdfiumPageMetadata(docPtr, i);
         if (!meta) continue;
         pageRotations[i] = meta.rotation;
@@ -258,6 +264,9 @@ export async function generateThumbnailForFile(file: File): Promise<string> {
       // PDFium needs the xref table at the end of the file, so the 2MB
       // chunk can fail to open for PDFs larger than that. Retry with the
       // full buffer before falling back to an empty thumbnail.
+      if (file.size <= LINEARIZED_PREFIX_BYTES) {
+        return "";
+      }
       try {
         const fullArrayBuffer = await getDocumentBytes(file);
         return await generatePDFThumbnail(fullArrayBuffer, scale);
