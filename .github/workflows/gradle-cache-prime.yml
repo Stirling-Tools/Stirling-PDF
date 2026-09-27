@@ -57,13 +57,9 @@ jobs:
     environment:
       name: ci-unsigned
       deployment: false
-    name: Prime shared Gradle cache - ${{ matrix.platform }}
+    name: Prime shared Gradle cache
     needs: hash_pr
-    strategy:
-      fail-fast: true
-      matrix:
-        platform: [windows-latest, windows-11-arm, macos-15, ubuntu-22.04, ubuntu-latest]
-    runs-on: ${{ matrix.platform }}
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: write

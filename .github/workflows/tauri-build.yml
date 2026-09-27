@@ -137,10 +137,6 @@ jobs:
         ${{ github.workspace }}/build.gradle
         ${{ github.workspace }}/app/**/build.gradle
         ${{ github.workspace }}/gradle/**/*.gradle
-      GRADLE_CACHE_PATH_CACHES: |
-        ${{ github.workspace }}/.cache/gradle-java-25/caches
-      GRADLE_CACHE_PATH_WRAPPER: |
-        ${{ github.workspace }}/.cache/gradle-java-25/wrapper
       GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-25
       CARGO_FILES_TO_HASH: |
         ${{ github.workspace }}/frontend/editor/src-tauri/Cargo.toml
@@ -233,6 +229,8 @@ jobs:
             cargo=${{ hashFiles(env.CARGO_FILES_TO_HASH) }}
           allow-shared-restore: true
           strict: false
+          exclude: |
+            .cache/cargo/registry/src/**/examples/*.rsa
 
       # Cache the Cargo registry and compiled dependency crates so the build
       # only recompiles the app crate. Written on main; PRs and the merge queue
