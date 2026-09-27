@@ -23,6 +23,23 @@ describe("yieldToMain", () => {
     }
   });
 
+  it("falls back to setTimeout when scheduler.yield rejects", async () => {
+    const originalScheduler = (globalThis as unknown as { scheduler?: unknown })
+      .scheduler;
+    (globalThis as unknown as { scheduler?: unknown }).scheduler = {
+      yield: vi.fn().mockRejectedValue(new Error("yield failed")),
+    };
+
+    try {
+      const setTimeoutSpy = vi.spyOn(globalThis, "setTimeout");
+      await yieldToMain();
+      expect(setTimeoutSpy).toHaveBeenCalled();
+    } finally {
+      (globalThis as unknown as { scheduler?: unknown }).scheduler =
+        originalScheduler;
+    }
+  });
+
   it("falls back to setTimeout when scheduler is unavailable", async () => {
     const originalScheduler = (globalThis as unknown as { scheduler?: unknown })
       .scheduler;
