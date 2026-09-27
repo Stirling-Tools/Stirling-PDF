@@ -53,10 +53,7 @@ export function documentFingerprint(blob: Blob): Promise<string> {
   if (cached) return cached;
   const promise = (async () => {
     let hash = FNV_OFFSET;
-    hash = hashInto(
-      hash,
-      await readBlobSlice(blob, 0, FINGERPRINT_WINDOW),
-    );
+    hash = hashInto(hash, await readBlobSlice(blob, 0, FINGERPRINT_WINDOW));
     if (blob.size > FINGERPRINT_WINDOW) {
       hash = hashInto(
         hash,
