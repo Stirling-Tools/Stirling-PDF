@@ -1034,9 +1034,7 @@ class FileStorageService {
         );
 
       for (const folderId of folderIds) {
-        const cursorRequest = index.openCursor(
-          IDBKeyRange.only(folderId as string),
-        );
+        const cursorRequest = index.openCursor(IDBKeyRange.only(folderId));
         cursorRequest.onerror = () => reject(cursorRequest.error);
         cursorRequest.onsuccess = (event) => {
           const cursor = (event.target as IDBRequest)
@@ -1072,11 +1070,11 @@ class FileStorageService {
     // share a lineage, so one leaf's delete must not strip another's history.
     const keep = new Set<string>();
     for (const stub of stubs) {
-      if (doomed.has(stub.id as string)) continue;
+      if (doomed.has(stub.id)) continue;
       let cursor = stub.parentFileId as string | undefined;
       while (cursor && !keep.has(cursor)) {
         keep.add(cursor);
-        cursor = byId.get(cursor)?.parentFileId as string | undefined;
+        cursor = byId.get(cursor)?.parentFileId;
       }
     }
 
@@ -1088,7 +1086,7 @@ class FileStorageService {
           doomed.add(cursor);
           orphans.push(cursor as FileId);
         }
-        cursor = byId.get(cursor)?.parentFileId as string | undefined;
+        cursor = byId.get(cursor)?.parentFileId;
       }
     }
     return orphans;

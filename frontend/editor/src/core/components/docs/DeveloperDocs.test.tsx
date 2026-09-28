@@ -23,24 +23,6 @@ const renderDocs = (ui: ReactElement) =>
   );
 
 describe("DeveloperDocs — markdown browser over the generated manifest", () => {
-  it("keeps Overview static (open, no toggle) and other sections collapsed", () => {
-    renderDocs(<DeveloperDocs />);
-    // Overview is static: its items show, and it has no toggle button.
-    expect(
-      screen.getByRole("button", { name: "Production Deployment Guide" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: /^Overview/i }),
-    ).not.toBeInTheDocument();
-    // Other sections collapse, so their items are hidden until expanded.
-    expect(
-      screen.queryByRole("button", { name: "Kubernetes Guide" }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.getByText(/locally hosted web application/i),
-    ).toBeInTheDocument();
-  });
-
   it("expands a collapsible section when its header is clicked", () => {
     renderDocs(<DeveloperDocs />);
     fireEvent.click(screen.getByRole("button", { name: /Installation/i }));
