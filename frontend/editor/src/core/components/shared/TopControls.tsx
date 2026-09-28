@@ -1,10 +1,7 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { Loader } from "@mantine/core";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
-import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import GridViewIcon from "@mui/icons-material/GridView";
-import FolderIcon from "@mui/icons-material/Folder";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import { Icon } from "@app/ui/Icon";
 import { WorkbenchType, isValidWorkbench } from "@app/types/workbench";
 import { PageEditorFileDropdown } from "@app/components/shared/PageEditorFileDropdown";
 import type { CustomWorkbenchViewInstance } from "@app/contexts/ToolWorkflowContext";
@@ -55,11 +52,7 @@ const createViewOptions = (
       />
     ) : (
       <div style={viewOptionStyle}>
-        {switchingTo === "viewer" ? (
-          <Loader size="sm" />
-        ) : (
-          <InsertDriveFileIcon fontSize="medium" />
-        )}
+        {switchingTo === "viewer" ? <Loader size="sm" /> : <Icon name="file" />}
       </div>
     ),
     value: "viewer",
@@ -73,21 +66,21 @@ const createViewOptions = (
   const pageEditorOption = {
     label: showPageEditorDropdown ? (
       <PageEditorFileDropdown
-        files={pageEditorState!.files}
-        onToggleSelection={pageEditorState!.onToggleSelection}
-        onReorder={pageEditorState!.onReorder}
+        files={pageEditorState.files}
+        onToggleSelection={pageEditorState.onToggleSelection}
+        onReorder={pageEditorState.onReorder}
         switchingTo={switchingTo}
         viewOptionStyle={viewOptionStyle}
-        fileColorMap={pageEditorState!.fileColorMap}
-        selectedCount={pageEditorState!.selectedCount}
-        totalCount={pageEditorState!.totalCount}
+        fileColorMap={pageEditorState.fileColorMap}
+        selectedCount={pageEditorState.selectedCount}
+        totalCount={pageEditorState.totalCount}
       />
     ) : (
       <div style={viewOptionStyle}>
         {switchingTo === "pageEditor" ? (
           <Loader size="sm" />
         ) : (
-          <GridViewIcon fontSize="medium" />
+          <Icon name="layout-grid" />
         )}
       </div>
     ),
@@ -100,7 +93,7 @@ const createViewOptions = (
         {switchingTo === "fileEditor" ? (
           <Loader size="sm" />
         ) : (
-          <FolderIcon fontSize="medium" />
+          <Icon name="folder" />
         )}
       </div>
     ),
@@ -113,11 +106,11 @@ const createViewOptions = (
     .filter((view) => view.data != null)
     .map((view) => ({
       label: (
-        <div style={viewOptionStyle as React.CSSProperties}>
+        <div style={viewOptionStyle}>
           {switchingTo === view.workbenchId ? (
             <Loader size="sm" />
           ) : (
-            view.icon || <PictureAsPdfIcon fontSize="medium" />
+            view.icon || <Icon name="file-pdf" />
           )}
           <span>{view.label}</span>
         </div>

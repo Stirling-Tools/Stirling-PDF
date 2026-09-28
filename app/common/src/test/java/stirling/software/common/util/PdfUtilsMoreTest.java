@@ -153,6 +153,52 @@ class PdfUtilsMoreTest {
         }
     }
 
+    @Nested
+    @DisplayName("convertPdfToPdfImage render DPI")
+    class ConvertPdfToPdfImageDpi {
+
+        /** A one-inch-square page, so the embedded image's pixel width is the render DPI. */
+        private PDDocument oneInchPage() {
+            PDDocument doc = new PDDocument();
+            doc.addPage(new PDPage(new PDRectangle(72f, 72f)));
+            return doc;
+        }
+
+        private int embeddedImageWidth(PDDocument doc) throws IOException {
+            PDResources resources = doc.getPage(0).getResources();
+            for (var name : resources.getXObjectNames()) {
+                if (resources.isImageXObject(name)) {
+                    return ((PDImageXObject) resources.getXObject(name)).getWidth();
+                }
+            }
+            throw new IllegalStateException("no image on page");
+        }
+
+        private int renderedWidthWithMaxDpi(int maxDpi) throws IOException {
+            try (PDDocument src = oneInchPage();
+                    MockedStatic<ApplicationContextProvider> ctx =
+                            Mockito.mockStatic(ApplicationContextProvider.class)) {
+                ctx.when(() -> ApplicationContextProvider.getBean(ApplicationProperties.class))
+                        .thenReturn(propsWithMaxDpi(maxDpi));
+                try (PDDocument out = PdfUtils.convertPdfToPdfImage(src)) {
+                    return embeddedImageWidth(out);
+                }
+            }
+        }
+
+        @Test
+        @DisplayName("a high maxDPI does not raise the render resolution above 300")
+        void capsAtPrintQuality() throws IOException {
+            assertThat(renderedWidthWithMaxDpi(500)).isEqualTo(300);
+        }
+
+        @Test
+        @DisplayName("a maxDPI below the target still clamps the render resolution")
+        void respectsLowerCeiling() throws IOException {
+            assertThat(renderedWidthWithMaxDpi(150)).isEqualTo(150);
+        }
+    }
+
     // ---- convertFromPdf with ApplicationProperties present ------------------
 
     @Nested
@@ -286,6 +332,43 @@ class PdfUtilsMoreTest {
                             new MultipartFile[] {tiff}, "fillPage", false, "color", factory);
 
             assertThat(pdfOut).isNotEmpty();
+            try (PDDocument doc = org.apache.pdfbox.Loader.loadPDF(pdfOut)) {
+                assertThat(doc.getNumberOfPages()).isEqualTo(2);
+            }
+        }
+
+        @Test
+        @DisplayName("an extensionless upload with a TIFF content type keeps every frame")
+        void contentTypeTiffKeepsAllFrames() throws IOException {
+            CustomPDFDocumentFactory factory = mock(CustomPDFDocumentFactory.class);
+            when(factory.createNewDocument()).thenReturn(new PDDocument());
+
+            MockMultipartFile tiff =
+                    new MockMultipartFile("file", "scan", "image/tiff", multiFrameTiff());
+
+            byte[] pdfOut =
+                    PdfUtils.imageToPdf(
+                            new MultipartFile[] {tiff}, "fillPage", false, "color", factory);
+
+            try (PDDocument doc = org.apache.pdfbox.Loader.loadPDF(pdfOut)) {
+                assertThat(doc.getNumberOfPages()).isEqualTo(2);
+            }
+        }
+
+        @Test
+        @DisplayName("a TIFF content type carrying parameters is still recognised")
+        void contentTypeWithParametersStillTiff() throws IOException {
+            CustomPDFDocumentFactory factory = mock(CustomPDFDocumentFactory.class);
+            when(factory.createNewDocument()).thenReturn(new PDDocument());
+
+            MockMultipartFile tiff =
+                    new MockMultipartFile(
+                            "file", "scan", "image/tiff; application=foo", multiFrameTiff());
+
+            byte[] pdfOut =
+                    PdfUtils.imageToPdf(
+                            new MultipartFile[] {tiff}, "fillPage", false, "color", factory);
+
             try (PDDocument doc = org.apache.pdfbox.Loader.loadPDF(pdfOut)) {
                 assertThat(doc.getNumberOfPages()).isEqualTo(2);
             }

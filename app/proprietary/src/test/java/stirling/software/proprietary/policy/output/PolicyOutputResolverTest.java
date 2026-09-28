@@ -1,6 +1,7 @@
 package stirling.software.proprietary.policy.output;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
 import java.util.Map;
@@ -17,7 +18,7 @@ import stirling.software.proprietary.policy.source.SourceStore;
 /**
  * Tests for {@link PolicyOutputResolver}: a policy's {@code outputIds} resolve live to the stored
  * sources used as destinations (one spec each), an unreferenced policy keeps its inline output, and
- * a dangling reference falls back to inline delivery rather than failing the run.
+ * an unavailable reference fails the run rather than falling back to inline delivery.
  */
 class PolicyOutputResolverTest {
 
@@ -46,12 +47,31 @@ class PolicyOutputResolverTest {
     }
 
     @Test
-    void whenNoReferencesResolveItFallsBackToInline() {
-        List<OutputSpec> specs =
-                resolver.resolve(policy().withOutputIds(List.of("does-not-exist")));
+    void unavailableDestinationsNeverFallBackToInline() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> resolver.resolve(policy().withOutputIds(List.of("missing"))));
+        Source disabled =
+                sourceStore.save(
+                        new Source(
+                                null,
+                                "Disabled",
+                                "folder",
+                                Map.of("directory", "/out"),
+                                false,
+                                "owner",
+                                null));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> resolver.resolve(policy().withOutputIds(List.of(disabled.id()))));
+    }
 
-        assertEquals(1, specs.size());
-        assertEquals("inline", specs.get(0).type());
+    @Test
+    void oneMissingDestinationRejectsTheWholeDelivery() {
+        Source archive = sourceStore.save(folder("Archive", "/out"));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> resolver.resolve(policy().withOutputIds(List.of(archive.id(), "missing"))));
     }
 
     private static Source folder(String name, String directory) {

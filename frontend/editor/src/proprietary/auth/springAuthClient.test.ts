@@ -12,11 +12,7 @@ import apiClient from "@app/services/apiClient";
 // + oauthNavigation seam, so springAuth routes through the mocks below.
 import "@app/auth/configureSpringAuth";
 import { allowConsole, expectConsole } from "@app/tests/failOnConsole";
-import {
-  AxiosError,
-  type AxiosResponse,
-  type InternalAxiosRequestConfig,
-} from "axios";
+import { AxiosError, type InternalAxiosRequestConfig } from "axios";
 
 // Mock apiClient
 vi.mock("@app/services/apiClient");
@@ -59,7 +55,7 @@ describe("SpringAuthClient", () => {
       vi.mocked(apiClient.get).mockResolvedValueOnce({
         status: 200,
         data: { user: mockUser },
-      } as unknown as AxiosResponse);
+      });
 
       const result = await springAuth.getSession();
 
@@ -176,7 +172,7 @@ describe("SpringAuthClient", () => {
             expires_in: 3600,
           },
         },
-      } as unknown as AxiosResponse);
+      });
 
       // Spy on window.dispatchEvent
       const dispatchEventSpy = vi.spyOn(window, "dispatchEvent");
@@ -235,7 +231,7 @@ describe("SpringAuthClient", () => {
       vi.mocked(apiClient.post).mockResolvedValueOnce({
         status: 200,
         data: {},
-      } as unknown as AxiosResponse);
+      });
 
       const result = await springAuth.signOut();
 
@@ -252,6 +248,9 @@ describe("SpringAuthClient", () => {
       expectConsole.error(/\[SpringAuth\] signOut error/);
       const mockToken = "jwt-to-clear";
       localStorage.setItem("stirling_jwt", mockToken);
+      localStorage.setItem("sb-project-auth-token", "old-saas-session");
+      localStorage.setItem("stirling.portalSaasOwner", "previous-owner");
+      sessionStorage.setItem("stirling.portalConnect", "pending-handoff");
 
       vi.mocked(apiClient.post).mockRejectedValueOnce({
         isAxiosError: true,
@@ -262,6 +261,9 @@ describe("SpringAuthClient", () => {
       const result = await springAuth.signOut();
 
       expect(localStorage.getItem("stirling_jwt")).toBeNull();
+      expect(localStorage.getItem("sb-project-auth-token")).toBeNull();
+      expect(localStorage.getItem("stirling.portalSaasOwner")).toBeNull();
+      expect(sessionStorage.getItem("stirling.portalConnect")).toBeNull();
       expect(result.error).toBeTruthy();
     });
   });
@@ -288,7 +290,7 @@ describe("SpringAuthClient", () => {
             expires_in: 3600,
           },
         },
-      } as unknown as AxiosResponse);
+      });
 
       const result = await springAuth.refreshSession();
 
@@ -375,7 +377,7 @@ describe("SpringAuthClient", () => {
         expect(isSafePostLoginRedirect("")).toBe(false);
         expect(isSafePostLoginRedirect(null)).toBe(false);
         expect(isSafePostLoginRedirect(undefined)).toBe(false);
-        expect(isSafePostLoginRedirect(42 as unknown)).toBe(false);
+        expect(isSafePostLoginRedirect(42)).toBe(false);
       });
 
       it("rejects protocol-relative and absolute URLs (open-redirect guard)", () => {

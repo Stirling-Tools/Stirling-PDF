@@ -1,3 +1,4 @@
+import i18n from "i18next";
 import { alert } from "@app/components/toast";
 
 interface ErrorToastMapping {
@@ -42,18 +43,13 @@ export function showSpecialErrorToast(
 
   for (const mapping of MAPPINGS) {
     if (mapping.regex.test(message)) {
-      // Best-effort translation without hard dependency on i18n config
       let body = mapping.defaultMessage;
-      try {
-        const anyGlobal: any = globalThis as any;
-        const i18next = anyGlobal?.i18next;
-        if (i18next && typeof i18next.t === "function") {
-          body = i18next.t(mapping.i18nKey, {
-            defaultValue: mapping.defaultMessage,
-          });
-        }
-      } catch {
-        /* ignore translation errors */
+      // The app bootstraps this shared i18next singleton at startup; guard in
+      // case a toast fires before that (e.g. tests) so we keep the default copy.
+      if (i18n.isInitialized) {
+        body = i18n.t(mapping.i18nKey, {
+          defaultValue: mapping.defaultMessage,
+        });
       }
       const title = titleForStatus(options?.status);
       alert({

@@ -1,8 +1,7 @@
 import { Stack, Text, Divider, Paper } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import AddIcon from "@mui/icons-material/Add";
+import { Icon } from "@app/ui/Icon";
 import type { SessionDetail } from "@app/types/signingSession";
 
 interface SessionActionsPanelProps {
@@ -59,7 +58,7 @@ export const SessionActionsPanel: React.FC<SessionActionsPanelProps> = ({
           <Divider />
           <Button
             variant="secondary"
-            leftSection={<AddIcon />}
+            leftSection={<Icon name="plus" />}
             onClick={onAddParticipants}
             fullWidth
           >
@@ -72,7 +71,7 @@ export const SessionActionsPanel: React.FC<SessionActionsPanelProps> = ({
           <Divider />
 
           <Button
-            leftSection={<CheckCircleIcon />}
+            leftSection={<Icon name="circle-check" />}
             accent={allSigned ? "success" : "warning"}
             fullWidth
             onClick={onFinalize}
@@ -94,7 +93,7 @@ export const SessionActionsPanel: React.FC<SessionActionsPanelProps> = ({
       {session.finalized && (
         <>
           <Button
-            leftSection={<CheckCircleIcon />}
+            leftSection={<Icon name="circle-check" />}
             fullWidth
             onClick={onLoadSignedPdf}
             loading={loadingPdf}

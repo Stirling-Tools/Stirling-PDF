@@ -16,6 +16,7 @@
 
 /editor/build
 /editor/dist
+/editor/dist-desktop
 
 # misc
 .DS_Store

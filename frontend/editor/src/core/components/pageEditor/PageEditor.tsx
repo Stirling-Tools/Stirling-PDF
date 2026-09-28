@@ -65,6 +65,7 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
     updateCurrentPages,
     savePersistedDocument,
     clearPersistedDocument,
+    contentRevision,
   } = usePageEditor();
 
   const [visiblePageIds, setVisiblePageIds] = useState<string[]>([]);
@@ -194,6 +195,13 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
   const initialDocument = useInitialPageDocument();
   const { document: mergedPdfDocument } = usePageDocument();
 
+  // The undo manager is created below this hook, so the reset is forwarded
+  // through a ref rather than reordering the two.
+  const clearUndoHistoryRef = useRef<() => void>(() => {});
+  const handleDocumentReplaced = useCallback(() => {
+    clearUndoHistoryRef.current();
+  }, []);
+
   const { setEditedDocument, displayDocument, getEditedDocument } =
     useEditedDocumentState({
       initialDocument,
@@ -202,6 +210,8 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
       clearReorderedPages,
       fileOrder,
       updateCurrentPages,
+      contentRevision,
+      onDocumentReplaced: handleDocumentReplaced,
     });
 
   const displayDocumentRef = useRef(displayDocument);
@@ -402,6 +412,7 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
   } = useUndoManagerState({
     setHasUnsavedChanges,
   });
+  clearUndoHistoryRef.current = clearUndoHistory;
 
   const {
     createRotateCommand,

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Stack, Alert } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import CoreGeneralSection from "@core/components/shared/config/configSections/GeneralSection";
+import PreferencesSection from "@core/components/shared/config/configSections/preferences/PreferencesSection";
 import { DefaultAppSettings } from "@app/components/shared/config/configSections/DefaultAppSettings";
 import { useDesktopInstall } from "@app/hooks/useDesktopInstall";
 import { useSaaSMode } from "@app/hooks/useSaaSMode";
@@ -10,6 +10,11 @@ import {
   type UpdateMode,
   type UpdateModeInfo,
 } from "@app/services/desktopUpdateService";
+
+interface GeneralSectionProps {
+  /** Forwarded to the core section; the settings modal header already names it. */
+  hideTitle?: boolean;
+}
 
 /**
  * Desktop extension of GeneralSection.
@@ -20,7 +25,7 @@ import {
  * still rendered but disabled, with a "Managed by administrator" hint, so
  * managed-deployment users can see what policy is in effect.
  */
-const GeneralSection: React.FC = () => {
+const GeneralSection: React.FC<GeneralSectionProps> = () => {
   const { t } = useTranslation();
   const install = useDesktopInstall();
   // In SaaS connection mode the cloud owns app versioning — hide the update
@@ -81,7 +86,6 @@ const GeneralSection: React.FC = () => {
 
   return (
     <Stack gap="lg">
-      <DefaultAppSettings />
       {updateModeError && (
         <Alert
           color="red"
@@ -95,7 +99,8 @@ const GeneralSection: React.FC = () => {
           {updateModeError}
         </Alert>
       )}
-      <CoreGeneralSection
+      <PreferencesSection
+        editorDefaultsSlot={<DefaultAppSettings />}
         hideUpdateSection={
           isSaaSMode ||
           (updateModeInfo.mode === "disabled" && updateModeInfo.locked)

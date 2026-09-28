@@ -107,7 +107,7 @@ function parseCsvFallback(input: string, max: number): Set<number> {
 }
 
 function clampToRange(v: number, min: number, max: number): number {
-  if (!Number.isFinite(v)) return NaN as unknown as number;
+  if (!Number.isFinite(v)) return NaN;
   return Math.min(Math.max(v, min), max);
 }
 
@@ -281,7 +281,7 @@ class ExpressionParser {
     if (!word) return null;
     const lower = word.toLowerCase();
     if (lower === "even" || lower === "odd") {
-      return lower as "even" | "odd";
+      return lower;
     }
     // Not a keyword; rewind
     this.idx = start;

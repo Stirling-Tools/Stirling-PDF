@@ -154,7 +154,8 @@ public class PdfJsonFontService {
             return "otf";
         }
         if (signature == 0x74746366) {
-            return "cff";
+            log.debug("[FONT-DEBUG] TrueType Collection ('ttcf') font program is unsupported");
+            return null;
         }
         return null;
     }
@@ -175,7 +176,8 @@ public class PdfJsonFontService {
             return "otf";
         }
         if (signature == 0x74746366) {
-            return "cff";
+            log.debug("[FONT-DEBUG] TrueType Collection ('ttcf') FontFile2 is unsupported");
+            return null;
         }
         return null;
     }

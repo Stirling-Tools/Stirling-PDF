@@ -1,4 +1,7 @@
-import type React from "react";
+import type {
+  ConfigNavItem as CoreConfigNavItem,
+  ConfigNavSection as CoreConfigNavSection,
+} from "@core/components/shared/config/types";
 import { VALID_NAV_KEYS as CORE_NAV_KEYS } from "@core/components/shared/config/types";
 
 // SaaS adds an "overview" account section and an "mcp" integrations tab. All
@@ -9,20 +12,13 @@ export const VALID_NAV_KEYS = [...CORE_NAV_KEYS, "overview", "mcp"] as const;
 
 export type NavKey = (typeof VALID_NAV_KEYS)[number];
 
-// Mirrors the core shape over the widened saas NavKey union — see the core
-// module for why these live in types rather than configNavSections.
-export interface ConfigNavItem {
+// Core's item over this flavor's widened key union. Derived, not copied: a new
+// field on the core shape must reach every flavor or the shared settings page
+// stops compiling for one of them.
+export interface ConfigNavItem extends Omit<CoreConfigNavItem, "key"> {
   key: NavKey;
-  label: string;
-  icon: string;
-  component: React.ReactNode;
-  disabled?: boolean;
-  disabledTooltip?: string;
-  badge?: string;
-  badgeColor?: string;
 }
 
-export interface ConfigNavSection {
-  title: string;
+export interface ConfigNavSection extends Omit<CoreConfigNavSection, "items"> {
   items: ConfigNavItem[];
 }

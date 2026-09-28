@@ -1,0 +1,127 @@
+/* ---- The card wall: every file in a sweep, lighting up as its run settles. ---- */
+
+.sweep-wall {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: 0.5rem;
+  max-height: 55vh;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.sweep-wall__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-height: 4.4rem;
+  padding: 0.5rem 0.6rem;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-sm, 4px);
+  transition:
+    border-color 0.25s ease,
+    opacity 0.25s ease;
+}
+
+.sweep-wall__card--pending {
+  opacity: 0.65;
+}
+
+.sweep-wall__card--running {
+  border-color: var(--c-primary);
+}
+
+.sweep-wall__card--done {
+  border-color: var(--c-success, var(--c-primary));
+}
+
+.sweep-wall__card--failed {
+  border-color: var(--c-danger-text, var(--c-border-subtle));
+  opacity: 0.8;
+}
+
+.sweep-wall__card-name {
+  font-size: 0.72rem;
+  color: var(--c-text);
+  word-break: break-all;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.sweep-wall__card-status {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 1.15rem;
+  font-size: 0.68rem;
+  color: var(--c-text-muted);
+}
+
+/* Lightweight CSS spinner — the wall can hold a hundred cards, so no widget per card. */
+.sweep-wall__spin {
+  width: 0.7rem;
+  height: 0.7rem;
+  flex: none;
+  border: 2px solid var(--c-border-subtle);
+  border-top-color: var(--c-primary);
+  border-radius: 50%;
+  animation: sweep-wall-spin 0.7s linear infinite;
+}
+
+@keyframes sweep-wall-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* The reveal: the discovered document type, popping in as the run settles. */
+.sweep-wall__chip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid var(--c-primary);
+  border-radius: 999px;
+  color: var(--c-primary);
+  font-size: 0.68rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  animation: sweep-wall-chip-in 0.3s ease;
+}
+
+@keyframes sweep-wall-chip-in {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ---- The one-line strip a working folder raises while a sweep runs. ---- */
+
+.sweep-wall__panel {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.75rem;
+  padding: 0.45rem 0.7rem;
+  background: var(--c-surface-raised, var(--c-surface));
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-sm, 4px);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.sweep-wall__panel-count {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: var(--c-text-muted);
+}

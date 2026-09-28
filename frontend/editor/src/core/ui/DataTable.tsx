@@ -1,4 +1,5 @@
 import { type KeyboardEvent, type ReactNode, useMemo, useState } from "react";
+import { Icon } from "@app/ui/Icon";
 import {
   type ColumnDef,
   createColumnHelper,
@@ -109,20 +110,6 @@ export interface DataTableProps<T> {
   collapseLabels?: { showAll: (total: number) => string; showLess: string };
 }
 
-function ChevronGlyph() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="m9 6 6 6-6 6"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 function SortGlyph() {
   return (
     <svg
@@ -210,7 +197,7 @@ export function DataTable<T extends RowData>({
         renderCell: (row) =>
           (isRowInteractive?.(row) ?? true) ? (
             <span className="sui-datatable__chevron" aria-hidden>
-              <ChevronGlyph />
+              <Icon name="chevron-right" size={16} />
             </span>
           ) : null,
       },

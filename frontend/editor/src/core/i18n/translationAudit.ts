@@ -98,7 +98,6 @@ export const I18N_PROJECTS: TranslationProject[] = [
       // (label maps, role/policy/journey catalogues) and rendered via
       // t(constant), invisible to the static scan.
       /^portal\.documents\.(status|audit)\./,
-      /^portal\.editorAdmin\.status\./,
       /^portal\.components\.(maturity|billingUnit)\./,
       /^portal\.home\.(pipelineTemplates|pipelineStages)\./,
       /^portal\.procurement\.journeySteps\./,
@@ -109,12 +108,20 @@ export const I18N_PROJECTS: TranslationProject[] = [
       // "portal.policies.operations" - the shape heuristic treats that interpolation as one
       // segment, so this whole catalogue-driven family is matched here instead.
       /^portal\.policies\.operations\./,
-      // Policy field labels + option display copy are looked up with keys
-      // derived from catalogue data (t(`policies.field.${key}`),
-      // t(`policyOption.${id}`)) in the PolicyFieldRows and setup wizards —
-      // invisible to the static scan. The raw catalogue value is the fallback.
-      /^policies\.field\./,
-      /^policyOption\./,
+      // Failure-kind copy is keyed off the server's FailureKind enum and arrives as data, so no
+      // frontend source names it. FailureKindTest asserts every kind has copy here.
+      /^portal\.failures\.kind\./,
+      // Server-sent keys rendered with t(thatKey), so nothing in source names them.
+      /^portal\.failures\.disabled\./,
+      /^portal\.failures\.action\./,
+      // A kind's title and description arrive the same way, derived server-side from the kind
+      // id, so adding a kind adds copy that no source file will ever name.
+      /^portal\.failures\.kind\./,
+      // Encryption panel copy keyed by backend enum values: key status, write
+      // state, migration state, and the reason a status read was refused. Each
+      // is t(`...${value}`) where the value comes from the API response.
+      /^portal\.infrastructure\.encryption\.(status|writeState|unavailable)\./,
+      /^portal\.infrastructure\.encryption\.migration\.state\./,
     ],
     minUsedKeys: 100,
     minLocaleKeys: 100,
