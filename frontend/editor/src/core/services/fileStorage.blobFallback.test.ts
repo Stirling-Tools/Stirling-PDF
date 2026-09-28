@@ -365,8 +365,8 @@ describe("orphanedAncestorIds", () => {
   test("takes the superseded versions with the leaf", async () => {
     const { fileStorage } = await freshFileStorage();
     instrumentAdd({ rejectBlobs: false });
-    await store(fileStorage as never, "v1", undefined, false);
-    await store(fileStorage as never, "v2", "v1", true);
+    await store(fileStorage, "v1", undefined, false);
+    await store(fileStorage, "v2", "v1", true);
 
     expect(await fileStorage.orphanedAncestorIds(["v2" as never])).toEqual([
       "v1",
@@ -377,9 +377,9 @@ describe("orphanedAncestorIds", () => {
     const { fileStorage } = await freshFileStorage();
     instrumentAdd({ rejectBlobs: false });
     // Distinct ids: the fake database outlives the module reset between tests.
-    await store(fileStorage as never, "split-root", undefined, false);
-    await store(fileStorage as never, "split-a", "split-root", true);
-    await store(fileStorage as never, "split-b", "split-root", true);
+    await store(fileStorage, "split-root", undefined, false);
+    await store(fileStorage, "split-a", "split-root", true);
+    await store(fileStorage, "split-b", "split-root", true);
 
     // `split-b` still descends from the root, so deleting `split-a` can't strip it.
     expect(await fileStorage.orphanedAncestorIds(["split-a" as never])).toEqual(

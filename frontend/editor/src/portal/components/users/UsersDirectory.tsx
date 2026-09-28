@@ -89,27 +89,20 @@ export function UsersDirectory({
   showGuests = false,
 }: UsersDirectoryProps) {
   const { t } = useTranslation();
-  const roleOptions = useMemo(
-    () => [
-      ...(capabilities.adminRole
-        ? [
-            {
-              value: "admin" as RoleId,
-              label: t("users.role.admin", "Admin"),
-            },
-          ]
-        : []),
-      {
-        value: "team_owner" as RoleId,
-        label: t("users.role.teamOwner", "Team Lead"),
-      },
-      { value: "member" as RoleId, label: t("users.role.member", "Member") },
-      ...(showGuests
-        ? [{ value: "guest" as RoleId, label: t("users.role.guest", "Guest") }]
-        : []),
-    ],
-    [capabilities.adminRole, showGuests, t],
-  );
+  const roleOptions = useMemo(() => {
+    const options: { value: RoleId; label: string }[] = [];
+    if (capabilities.adminRole) {
+      options.push({ value: "admin", label: t("users.role.admin", "Admin") });
+    }
+    options.push(
+      { value: "team_owner", label: t("users.role.teamOwner", "Team Lead") },
+      { value: "member", label: t("users.role.member", "Member") },
+    );
+    if (showGuests) {
+      options.push({ value: "guest", label: t("users.role.guest", "Guest") });
+    }
+    return options;
+  }, [capabilities.adminRole, showGuests, t]);
 
   // The one structural filter, replacing per-team sections: at a hundred people
   // those were ten headings to scroll past, not a shape.
