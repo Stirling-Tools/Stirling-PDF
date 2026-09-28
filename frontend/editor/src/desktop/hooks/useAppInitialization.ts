@@ -5,6 +5,8 @@ import { fileOpenService } from "@app/services/fileOpenService";
 import { useFileManagement } from "@app/contexts/file/fileHooks";
 import { pendingFilePathMappings } from "@app/services/pendingFilePathMappings";
 import { captureDroppedFilePaths } from "@app/services/fileImportPaths";
+import { getDiskFileState } from "@app/services/desktopFileLink";
+import { diskLastModified } from "@app/services/diskFileSync";
 
 /**
  * App initialization hook
@@ -46,8 +48,10 @@ export function useAppInitialization(): void {
           await Promise.all(
             filePaths.map(async (filePath) => {
               try {
-                const fileData =
-                  await fileOpenService.readFileAsArrayBuffer(filePath);
+                const [fileData, disk] = await Promise.all([
+                  fileOpenService.readFileAsArrayBuffer(filePath),
+                  getDiskFileState(filePath),
+                ]);
                 if (!fileData) return null;
 
                 const file = new File(
@@ -55,6 +59,7 @@ export function useAppInitialization(): void {
                   fileData.fileName,
                   {
                     type: "application/pdf",
+                    lastModified: diskLastModified(disk),
                   },
                 );
 
@@ -74,7 +79,12 @@ export function useAppInitialization(): void {
         ).filter((file): file is File => Boolean(file));
 
         if (loadedFiles.length > 0) {
-          await addFiles(loadedFiles, { selectFiles: true });
+          // The name, size and date key would take an identical copy from
+          // another folder for the one already open, and never link it.
+          await addFiles(loadedFiles, {
+            selectFiles: true,
+            allowDuplicates: true,
+          });
 
           console.log(
             `[Desktop] ${loadedFiles.length} opened file(s) added to FileContext`,
