@@ -43,7 +43,7 @@ it("quotes the figures it was given rather than a fixed number", () => {
 it.each([null, 0])(
   "describes the allowance in words when the host reports %s",
   (allowance) => {
-    open({ freeUserLimit: null, freeAllowance: allowance as number | null });
+    open({ freeUserLimit: null, freeAllowance: allowance });
     expect(screen.getByText("A monthly credit allowance")).toBeInTheDocument();
     expect(screen.getByText("A small team")).toBeInTheDocument();
   },
