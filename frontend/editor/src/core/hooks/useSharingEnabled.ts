@@ -8,7 +8,7 @@ export interface SharingEnabledResult {
 
 /**
  * Returns whether file-sharing features are available.
- * Core implementation reads directly from server config.
+ * Core implementation reads server config and turns it off for guests.
  */
 export function useSharingEnabled(): SharingEnabledResult {
   const { config } = useAppConfig();
