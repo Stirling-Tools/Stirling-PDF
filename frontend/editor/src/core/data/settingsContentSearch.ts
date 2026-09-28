@@ -20,8 +20,7 @@ import type { TFunction } from "i18next";
  */
 const SECTION_TRANSLATION_PREFIXES: Partial<Record<string, string[]>> = {
   general: ["settings.general", "settings.hotkeys", "account"],
-  people: ["settings.workspace"],
-  teams: ["settings.workspace", "settings.team"],
+  users: ["settings.workspace", "settings.team", "users", "portal.users"],
   "api-keys": ["settings.developer"],
   connectionMode: ["settings.connection"],
   planBilling: ["settings.planBilling"],

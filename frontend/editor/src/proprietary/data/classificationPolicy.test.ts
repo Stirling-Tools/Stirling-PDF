@@ -58,6 +58,7 @@ describe("orderedRewritingPolicies", () => {
     const mixed = {
       security: rewriter(0),
       inactive: { ...rewriter(1), enabled: false },
+      background: { ...rewriter(6), externalOutput: true },
       notEditor: { ...rewriter(2), runsOnEditor: false },
       onExport: { ...rewriter(3), runOn: "export" },
       unconfigured: { ...rewriter(4), configured: false },

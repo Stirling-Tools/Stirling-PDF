@@ -3,16 +3,19 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/types";
+import {
+  clampRenderScale,
+  fitToWidthScale,
+} from "@app/tools/pdfTextEditor/util/fitToWidth";
 
-const Z_OUT_LIMIT = 0.25;
-const Z_IN_LIMIT = 4;
 const Z_STEP = 0.25;
-const FIT_PAD_PX = 64;
 
 interface Props {
   store: EditorStore;
   renderScale: number;
   pages: PageSnapshot[];
+  fitPaddingPx: number;
+  compact?: boolean;
 }
 
 /**
@@ -21,12 +24,17 @@ interface Props {
  * Anchored to the canvas because it is a view control: it belongs beside what
  * it acts on. Ctrl+wheel on the stage drives the same store field.
  */
-export function ZoomPill({ store, renderScale, pages }: Props) {
+export function ZoomPill({
+  store,
+  renderScale,
+  pages,
+  fitPaddingPx,
+  compact = false,
+}: Props) {
   const { t } = useTranslation();
   const zoomTo = (scale: number) =>
-    store.setRenderScale(
-      +Math.min(Z_IN_LIMIT, Math.max(Z_OUT_LIMIT, scale)).toFixed(2),
-    );
+    store.setRenderScale(clampRenderScale(scale));
+  const inset = compact ? 10 : 18;
 
   return (
     <Group
@@ -36,8 +44,8 @@ export function ZoomPill({ store, renderScale, pages }: Props) {
       data-testid="pdf-editor-zoom-controls"
       style={{
         position: "absolute",
-        right: 18,
-        bottom: 18,
+        right: inset,
+        bottom: inset,
         zIndex: 50,
         borderRadius: 999,
         border: "1px solid var(--mantine-color-default-border)",
@@ -97,8 +105,9 @@ export function ZoomPill({ store, renderScale, pages }: Props) {
           );
           const firstPage = pages[0];
           if (!stage || !firstPage) return;
-          const available = stage.clientWidth - FIT_PAD_PX;
-          zoomTo(available / Math.max(1, firstPage.width));
+          store.setRenderScale(
+            fitToWidthScale(stage.clientWidth, firstPage.width, fitPaddingPx),
+          );
         }}
       >
         {t("pdfTextEditor.zoom.fit", "Fit")}

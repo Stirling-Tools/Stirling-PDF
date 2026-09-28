@@ -6,7 +6,7 @@ import { fetchWallet, type Wallet } from "@portal/api/billing";
 import { useLinkedAccountEmail } from "@portal/hooks/useLinkedAccountEmail";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import "@portal/components/billing/billing.css";
-import "@portal/components/account-link/connect/connect.css";
+import "@app/components/account-link/connect.css";
 
 interface Props {
   /** Closes the dialog first, so a next step does not land behind the overlay. */

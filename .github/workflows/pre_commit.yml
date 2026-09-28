@@ -23,6 +23,8 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
+          # Blobs load lazily; full-history fetch otherwise pulls every branch's files.
+          filter: blob:none
           persist-credentials: false
 
       - name: Install uv

@@ -13,7 +13,7 @@ import {
   List,
 } from "@mantine/core";
 import { alert } from "@app/components/toast";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
 import { useRestartServer } from "@app/components/shared/config/useRestartServer";
 import { useAdminSettings } from "@app/hooks/useAdminSettings";
@@ -107,22 +107,17 @@ export default function AdminPremiumSection() {
           color="blue"
           title={t(
             "admin.settings.premium.movedFeatures.title",
-            "Premium Features Distributed",
+            "Feature Settings",
           )}
-          icon={<LocalIcon icon="info-rounded" width="1rem" height="1rem" />}
+          icon={<Icon name="info" size="1rem" />}
         >
           <Text size="sm">
             {t(
               "admin.settings.premium.movedFeatures.message",
-              "Premium and Enterprise features are now organized in their respective sections:",
+              "Configure authentication and licensed features in their respective sections:",
             )}
           </Text>
           <List mt="xs" size="sm">
-            <List.Item>
-              <Text size="sm" component="span">
-                <strong>SSO Auto Login</strong> (PRO) - Connections
-              </Text>
-            </List.Item>
             <List.Item>
               <Text size="sm" component="span">
                 <Trans

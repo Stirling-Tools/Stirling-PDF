@@ -23,13 +23,12 @@ import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import { isSupabaseConfigured } from "@app/services/supabaseClient";
 
 const AdminPlanSection: React.FC = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { loginEnabled, validateLoginEnabled } = useLoginRequired();
   const { openCheckout } = useCheckout();
   const { licenseInfo } = useLicense();
   const [currency, setCurrency] = useState<string>(() => {
-    // Initialize with auto-detected currency on first render
-    return getPreferredCurrency(i18n.language);
+    return getPreferredCurrency();
   });
   const [useStaticVersion, setUseStaticVersion] = useState(false);
   const { plans, loading, error, refetch } = usePlans(currency);
@@ -184,7 +183,7 @@ const AdminPlanSection: React.FC = () => {
   if (!plans || plans.length === 0) {
     return (
       <SettingsEmptyState
-        icon="star-rounded"
+        icon="star"
         title={t("admin.settings.plan.noData.title", "No plan data")}
       >
         {t(
@@ -199,7 +198,7 @@ const AdminPlanSection: React.FC = () => {
     <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
       {shouldShowLicenseWarning && (
         <AppBanner
-          icon="warning-rounded"
+          icon="triangle-alert"
           tone="warning"
           title={t(
             "plan.licenseWarning.title",
@@ -210,7 +209,7 @@ const AdminPlanSection: React.FC = () => {
             limit: licenseAlert.freeTierLimit,
           })}
           buttonText={t("plan.licenseWarning.cta", "See plans")}
-          buttonIcon="upgrade-rounded"
+          buttonIcon="circle-arrow-up"
           onButtonClick={scrollToPlans}
           dismissible={false}
         />

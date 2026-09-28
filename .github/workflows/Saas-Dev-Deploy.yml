@@ -41,8 +41,6 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
@@ -150,9 +148,10 @@ jobs:
 
             ENGINE_SECRET="$(openssl rand -hex 32)"
             AI_BACKEND_VARS="
-                SYSTEM_AIENGINE_ENABLED: \"true\"
-                SYSTEM_AIENGINE_URL: \"http://saas-engine:5001\"
+                AIENGINE_ENABLED: \"true\"
+                AIENGINE_URL: \"http://saas-engine:5001\"
                 APP_AI_SERVICEBASEURL: \"http://saas-engine:5001\"
+                STIRLING_CLOUD_AI_SHARING_ENABLED: \"true\"
                 STIRLING_ENGINE_SHARED_SECRET: $(yaml "$ENGINE_SECRET")"
             AI_SERVICE="
 

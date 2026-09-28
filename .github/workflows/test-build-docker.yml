@@ -124,22 +124,6 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
 
-      - name: Set base image for this build
-        id: build-params
-        # Pass workflow inputs through env vars rather than expanding `${{ }}`
-        # directly into the shell — defense-in-depth against template injection
-        # if any upstream provider of these values ever becomes less trusted.
-        # GITHUB_EVENT_NAME is already provided by the runner.
-        env:
-          DOCKER_BASE_CHANGED: ${{ inputs.docker-base-changed }}
-        run: |
-          if [ "$GITHUB_EVENT_NAME" = "pull_request" ] && [ "$DOCKER_BASE_CHANGED" = "true" ]; then
-            # Base Dockerfile changed: build against the locally-built base.
-            echo "base_image=stirling-pdf-base:pr-test" >> "$GITHUB_OUTPUT"
-          else
-            echo "base_image=stirlingtools/stirling-pdf-base:latest" >> "$GITHUB_OUTPUT"
-          fi
-
       # Base-changed PRs build the embedded image with the local docker driver
       # so the locally-built stirling-pdf-base:pr-test (in the daemon image
       # store) resolves. A buildx container builder cannot see it and would try
@@ -148,13 +132,13 @@ jobs:
         if: github.event_name == 'pull_request' && inputs.docker-base-changed == 'true'
         run: |
           DOCKER_BUILDKIT=1 docker build \
-            --build-arg BASE_IMAGE=${{ steps.build-params.outputs.base_image }} \
+            --build-arg BASE_IMAGE=stirling-pdf-base:pr-test \
             --file ./${{ matrix.docker-rev }} \
             --tag stirling-pdf-embedded:pr-test \
             .
 
       # PRs that did NOT change the base use the buildx container builder
-      # against the published base image.
+      # against the base image the Dockerfile pins.
       - name: Build ${{ matrix.docker-rev }} (${{ matrix.platform }})
         if: inputs.docker-base-changed != 'true'
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
@@ -168,8 +152,6 @@ jobs:
           # image and PR entries were evicted before the next PR read them.
           cache-from: type=gha,scope=${{ matrix.cache-scope }}
           platforms: ${{ matrix.platform }}
-          build-args: |
-            BASE_IMAGE=${{ steps.build-params.outputs.base_image }}
           provenance: true
           sbom: true
 

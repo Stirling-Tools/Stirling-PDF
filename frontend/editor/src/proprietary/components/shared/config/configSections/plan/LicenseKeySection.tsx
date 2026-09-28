@@ -14,7 +14,7 @@ import { Button } from "@app/ui/Button";
 import { FilePicker } from "@app/ui/FilePicker";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { alert } from "@app/components/toast";
 import { LicenseInfo } from "@app/services/licenseService";
 import licenseService from "@app/services/licenseService";
@@ -124,7 +124,7 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
       <Alert
         variant="light"
         color="blue"
-        icon={<LocalIcon icon="info-rounded" width="1rem" height="1rem" />}
+        icon={<Icon name="info" size="1rem" />}
       >
         <Text size="sm">
           {t(
@@ -139,7 +139,7 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
         <Alert
           variant="light"
           color="red"
-          icon={<LocalIcon icon="warning-rounded" width="1rem" height="1rem" />}
+          icon={<Icon name="triangle-alert" size="1rem" />}
           title={t(
             "admin.settings.premium.key.overwriteWarning.title",
             "⚠️ Warning: Existing License Detected",
@@ -173,9 +173,7 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
         <Alert
           variant="light"
           color="green"
-          icon={
-            <LocalIcon icon="check-circle-rounded" width="1rem" height="1rem" />
-          }
+          icon={<Icon name="circle-check" size="1rem" />}
         >
           <Stack gap="xs">
             <Text size="sm" fw={500}>
@@ -283,13 +281,7 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
                 accept=".lic,.cert"
                 disabled={!loginEnabled || savingLicense}
                 variant="secondary"
-                leftSection={
-                  <LocalIcon
-                    icon="upload-file-rounded"
-                    width="1rem"
-                    height="1rem"
-                  />
-                }
+                leftSection={<Icon name="file-up" size="1rem" />}
               >
                 {licenseFile
                   ? licenseFile.name
@@ -339,12 +331,9 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
       <Button
         variant="tertiary"
         leftSection={
-          <LocalIcon
-            icon={
-              showLicenseKey ? "expand-less-rounded" : "expand-more-rounded"
-            }
-            width="1.25rem"
-            height="1.25rem"
+          <Icon
+            name={showLicenseKey ? "chevron-up" : "chevron-down"}
+            size="1.25rem"
           />
         }
         onClick={() => setShowLicenseKey(!showLicenseKey)}
