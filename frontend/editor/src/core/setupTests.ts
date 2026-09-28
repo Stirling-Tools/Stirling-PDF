@@ -160,7 +160,7 @@ if (!RealBlob.prototype.arrayBuffer) {
   RealBlob.prototype.arrayBuffer = function () {
     const tracked = trackedBlobBytes.get(this);
     if (tracked) {
-      return Promise.resolve(tracked.slice().buffer as ArrayBuffer);
+      return Promise.resolve(tracked.slice().buffer);
     }
     return new Promise<ArrayBuffer>((resolve, reject) => {
       const reader = new FileReader();

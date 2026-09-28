@@ -141,7 +141,7 @@ describe("layerUtils", () => {
         size: copy.byteLength,
         type: "application/pdf",
         slice: (s: number, e?: number) => fixtureBlobSlice(copy, s, e),
-        arrayBuffer: async () => copy.buffer as ArrayBuffer,
+        arrayBuffer: async () => copy.buffer,
       } as unknown as Blob;
     }
 
