@@ -1,4 +1,5 @@
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useAuth } from "@app/auth/UseSession";
 
 export interface SharingEnabledResult {
   sharingEnabled: boolean;
@@ -11,8 +12,11 @@ export interface SharingEnabledResult {
  */
 export function useSharingEnabled(): SharingEnabledResult {
   const { config } = useAppConfig();
+  // Sharing needs server storage, which guests do not have.
+  const { isAnonymous } = useAuth();
   return {
-    sharingEnabled: config?.storageSharingEnabled === true,
-    shareLinksEnabled: config?.storageShareLinksEnabled === true,
+    sharingEnabled: !isAnonymous && config?.storageSharingEnabled === true,
+    shareLinksEnabled:
+      !isAnonymous && config?.storageShareLinksEnabled === true,
   };
 }
