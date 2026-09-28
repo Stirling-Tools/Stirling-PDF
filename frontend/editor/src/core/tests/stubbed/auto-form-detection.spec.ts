@@ -4,7 +4,10 @@ import {
   mockAppApis,
   seedCookieConsent,
 } from "@app/tests/helpers/api-stubs";
-import { SETTINGS_SURFACE } from "@app/tests/helpers/ui-helpers";
+import {
+  SETTINGS_SURFACE,
+  revealPickerTool,
+} from "@app/tests/helpers/ui-helpers";
 
 /**
  * Stubbed coverage for the tool tile (shown even when the endpoint is disabled, so the tool stays
@@ -37,19 +40,6 @@ async function stubModelStatus(page: Page) {
   );
 }
 
-/** Tool categories mount when they near the picker viewport, so scroll to the tile first. */
-async function revealPickerTile(page: Page, toolId: string) {
-  const tile = page.locator(`[data-tour="tool-button-${toolId}"]`);
-  const scroller = page.locator(".tool-picker-scrollable").first();
-  for (let step = 0; step < 20 && (await tile.count()) === 0; step += 1) {
-    await scroller.evaluate((el) => {
-      el.scrollTop = Math.min(el.scrollTop + el.clientHeight, el.scrollHeight);
-    });
-    await page.waitForTimeout(150);
-  }
-  return tile;
-}
-
 test.describe("Auto Form Detection tool", () => {
   test("tile is present even when the model endpoint is disabled", async ({
     page,
@@ -62,7 +52,7 @@ test.describe("Auto Form Detection tool", () => {
     });
     await page.goto("/");
 
-    const tile = await revealPickerTile(page, "autoFormDetection");
+    const tile = await revealPickerTool(page, "autoFormDetection");
     await expect(tile.first()).toBeVisible({ timeout: 10_000 });
   });
 
@@ -77,7 +67,7 @@ test.describe("Auto Form Detection tool", () => {
     });
     await page.goto("/");
 
-    const tile = await revealPickerTile(page, "autoFormDetection");
+    const tile = await revealPickerTool(page, "autoFormDetection");
     await tile.first().click();
     await expect(page).toHaveURL(/auto-form-detection/i);
   });

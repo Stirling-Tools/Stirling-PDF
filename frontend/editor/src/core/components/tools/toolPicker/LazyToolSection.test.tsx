@@ -1,5 +1,12 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
+import { createRef } from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { LazyToolSection } from "@app/components/tools/toolPicker/LazyToolSection";
@@ -7,14 +14,19 @@ import { LazyToolSection } from "@app/components/tools/toolPicker/LazyToolSectio
 class MockIntersectionObserver {
   static instances: MockIntersectionObserver[] = [];
   callback: IntersectionObserverCallback;
+  options?: IntersectionObserverInit;
   observed: Element[] = [];
   disconnected = false;
   root = null;
   rootMargin = "";
   thresholds = [];
 
-  constructor(callback: IntersectionObserverCallback) {
+  constructor(
+    callback: IntersectionObserverCallback,
+    options?: IntersectionObserverInit,
+  ) {
     this.callback = callback;
+    this.options = options;
     MockIntersectionObserver.instances.push(this);
   }
 
@@ -44,7 +56,7 @@ function renderSection(estimatedHeight = 200) {
   return render(
     <MantineProvider>
       <LazyToolSection estimatedHeight={estimatedHeight}>
-        <div>Tool list</div>
+        <a href="#tool">Tool list</a>
       </LazyToolSection>
     </MantineProvider>,
   );
@@ -85,8 +97,57 @@ describe("LazyToolSection", () => {
     expect(MockIntersectionObserver.instances[0].disconnected).toBe(true);
   });
 
+  it("observes against the given scroll root", () => {
+    const rootRef = createRef<HTMLDivElement>();
+    render(
+      <MantineProvider>
+        <div ref={rootRef}>
+          <LazyToolSection estimatedHeight={100} scrollRoot={rootRef}>
+            <a href="#tool">Tool list</a>
+          </LazyToolSection>
+        </div>
+      </MantineProvider>,
+    );
+
+    expect(MockIntersectionObserver.instances[0].options?.root).toBe(
+      rootRef.current,
+    );
+  });
+
+  it("mounts on placeholder focus and moves focus into the section", async () => {
+    const { container } = renderSection();
+    const placeholder = container.querySelector(
+      '[role="button"]',
+    ) as HTMLElement;
+
+    await act(async () => {
+      fireEvent.focus(placeholder);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Tool list")).toBeInTheDocument();
+    });
+    expect(document.activeElement).toBe(screen.getByText("Tool list"));
+  });
+
+  it("mounts on placeholder click", async () => {
+    const { container } = renderSection();
+    const placeholder = container.querySelector(
+      '[role="button"]',
+    ) as HTMLElement;
+
+    await act(async () => {
+      fireEvent.click(placeholder);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Tool list")).toBeInTheDocument();
+    });
+  });
+
   it("mounts immediately when IntersectionObserver is unavailable", () => {
-    global.IntersectionObserver = undefined as unknown as typeof IntersectionObserver;
+    global.IntersectionObserver =
+      undefined as unknown as typeof IntersectionObserver;
 
     renderSection();
 

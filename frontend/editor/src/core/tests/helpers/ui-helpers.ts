@@ -189,3 +189,23 @@ export async function dismissTourTooltip(page: Page): Promise<void> {
     await closeBtn.click();
   }
 }
+
+/**
+ * The tool picker mounts categories when they come near its viewport, so a
+ * tile below the fold is not in the DOM yet. Scroll the picker in steps until
+ * the tile exists, then return it. No-op when the tile is already mounted.
+ */
+export async function revealPickerTool(
+  page: Page,
+  toolId: string,
+): Promise<Locator> {
+  const tile = page.locator(`[data-tour="tool-button-${toolId}"]`);
+  const scroller = page.locator(".tool-picker-scrollable").first();
+  for (let step = 0; step < 20 && (await tile.count()) === 0; step += 1) {
+    await scroller.evaluate((el) => {
+      el.scrollTop = Math.min(el.scrollTop + el.clientHeight, el.scrollHeight);
+    });
+    await page.waitForTimeout(150);
+  }
+  return tile;
+}

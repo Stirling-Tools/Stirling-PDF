@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useRef } from "react";
 import { Box, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
@@ -74,6 +74,9 @@ const ToolPicker = ({
   const { t } = useTranslation();
 
   const { scrolled, scrollRef } = useIsScrolled();
+  // The lazy sections observe against the scroller itself, so they need a
+  // stable ref alongside the callback ref that drives the header divider.
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
 
   const { sections: visibleSections } = useToolSections(filteredTools);
   const { favoriteTools, toolRegistry } = useToolWorkflowData();
@@ -130,7 +133,10 @@ const ToolPicker = ({
         </div>
       )}
       <Box
-        ref={scrollRef}
+        ref={(el: HTMLDivElement | null) => {
+          scrollerRef.current = el;
+          return scrollRef(el);
+        }}
         style={SCROLLABLE_STYLE}
         className="tool-picker-scrollable"
       >
@@ -257,6 +263,10 @@ const ToolPicker = ({
                   <LazyToolSection
                     key={sc.subcategoryId}
                     estimatedHeight={32 + sc.tools.length * 44}
+                    scrollRoot={scrollerRef}
+                    label={toTitleCase(
+                      getSubcategoryLabel(t, sc.subcategoryId),
+                    )}
                   >
                     <Box w="100%">
                       <div style={HEADER_TEXT_STYLE}>
