@@ -729,6 +729,8 @@ permissionNotice = "Jalur tessdata tidak dapat ditulisi. Unduhan akan dibuka di 
 
 [admin.settings.ai]
 description = "Hubungkan Stirling ke mesin AI Python, pilih modelnya, dan atur batasan yang digunakan saat berjalan."
+managedByCloud = "Dikelola oleh Stirling Cloud dalam mode ini."
+managedByCloudShort = "Dikelola oleh Stirling Cloud"
 
 [admin.settings.ai.documents]
 description = "Konfigurasikan model embedding dan pengaturan retrieval yang digunakan untuk menjawab pertanyaan atas dokumen. Diterapkan ke mesin AI saat disimpan."
@@ -771,11 +773,24 @@ label = "Top K"
 [admin.settings.ai.general]
 connection = "Koneksi"
 description = "Hubungkan Stirling ke mesin AI Python dan pilih kemampuan AI mana yang ditampilkan. Perubahan berlaku saat dimulai ulang."
+restartNote = "Perubahan URL atau timeout apa pun berlaku setelah restart."
 title = "Mesin AI"
 
 [admin.settings.ai.general.capabilities]
 description = "Aktifkan atau nonaktifkan fitur AI satu per satu. Fitur yang dinonaktifkan disembunyikan di aplikasi."
 title = "Kemampuan"
+
+[admin.settings.ai.general.cloud]
+note = "Model dan kunci penyedia dikelola oleh Stirling Cloud, jadi pengaturan tersebut tidak berlaku dalam mode ini."
+
+[admin.settings.ai.general.cloud.indexing]
+description = "Setiap alat AI mengirim teks halaman yang dibutuhkan untuk menjawab. Ini menentukan apakah Stirling Cloud juga boleh menyimpan teks tersebut, terindeks, agar pertanyaan berikutnya dapat mencari di seluruh dokumen."
+help = "Nonaktif berarti pertanyaan dokumen tidak tersedia. Ini tidak menghentikan pengiriman teks - hanya penyimpanannya."
+label = "Izinkan Stirling Cloud menyimpan dokumen terindeks"
+
+[admin.settings.ai.general.cloudNote]
+body = "Penalaran berjalan di infrastruktur Stirling, ditagihkan ke akun yang tertaut dengan server ini. Tidak ada container yang perlu dijalankan dan tidak ada kunci penyedia yang perlu disimpan di sini. Apa pun yang dibaca AI diproses oleh Stirling Cloud, bukan di hardware Anda sendiri."
+title = "Tentang Stirling Cloud AI"
 
 [admin.settings.ai.general.enabled]
 description = "Sakelar utama. Saat nonaktif, tidak ada alat AI, agen, atau panggilan mesin yang tersedia."
@@ -809,9 +824,28 @@ label = "Agen komentar PDF"
 description = "Batas waktu untuk operasi agen yang lebih berat seperti pembuatan dokumen."
 label = "Batas waktu proses panjang (detik)"
 
+[admin.settings.ai.general.mode]
+label = "Tempat AI berjalan"
+
+[admin.settings.ai.general.mode.cloud]
+description = "Tanpa container, tanpa kunci penyedia, tanpa pilihan model - pekerjaan berjalan di Stirling Cloud dan ditagihkan ke akun yang tertaut dengan server ini."
+linkCta = "Hubungkan server ini ke akun Stirling"
+notLinked = "Tautkan akun terlebih dahulu"
+ownerOnly = "Hanya pemilik organisasi yang dapat menautkan server ini ke akun Stirling."
+title = "Gunakan Stirling Cloud AI"
+
+[admin.settings.ai.general.mode.off]
+description = "Tidak ada alat AI di mana pun dalam aplikasi, dan tidak ada yang meninggalkan server ini."
+title = "Nonaktif"
+
+[admin.settings.ai.general.mode.self]
+description = "Container yang Anda host, diarahkan ke penyedia model pilihan Anda. Kunci Anda, tagihan Anda, jalur data Anda."
+title = "Jalankan mesin Anda sendiri"
+
 [admin.settings.ai.general.note]
-body = "Mesin AI berjalan sebagai layanan terpisah. Secret bersama miliknya"
-body2 = "diatur melalui variabel environment container. Provider API key dapat dimasukkan di halaman ini atau diberikan sebagai variabel environment mesin; key yang dimasukkan di sini dikirim ke mesin saat disimpan."
+docs = "Panduan penyiapan"
+intro = "Container terpisah yang Anda jalankan di samping Stirling. Ini melakukan penalaran; Stirling tetap melakukan setiap operasi halaman sendiri. Ini membutuhkan"
+outro = "yang sama di kedua container dan kunci penyedia model. Apa pun yang dibaca AI dikirim ke penyedia yang Anda pilih - Ollama yang Anda host menjaga setiap halaman tetap di internal."
 title = "Tentang mesin AI"
 
 [admin.settings.ai.general.streamTimeoutSeconds]
@@ -890,6 +924,67 @@ label = "Model smart"
 body = "Perubahan dikirim ke mesin AI secara otomatis."
 bodyNoPush = "Pengaturan disimpan. Pengaturan akan berlaku saat mesin AI berikutnya mengambil konfigurasinya."
 title = "Pengaturan AI disimpan"
+
+[admin.settings.ai.status]
+capabilities = "Kemampuan"
+capabilitiesValue = "{{on}} dari {{total}} aktif"
+checked = "diperiksa"
+checking = "Memeriksa mesin…"
+description = "Apakah mesin dapat dijangkau, apakah menerima server ini, dan apa yang sedang dijalankannya."
+fastModel = "Model cepat"
+justNow = "baru saja"
+latency = "Waktu respons"
+linkLabel = "Tautan akun"
+minutesAgo = "{{count}}m lalu"
+recheck = "Periksa lagi"
+runningOn = "Berjalan di"
+secondsAgo = "{{count}}s lalu"
+secretLabel = "Rahasia bersama"
+smartModel = "Model cerdas"
+title = "Status"
+url = "URL mesin"
+
+[admin.settings.ai.status.cloud]
+hostDown = "Turun"
+hostLabel = "Stirling.com"
+hostUp = "Aktif"
+name = "Stirling Cloud"
+sharingLabel = "Berbagi AI"
+sharingOff = "Dinonaktifkan"
+sharingOn = "Diaktifkan"
+
+[admin.settings.ai.status.cloud.degraded]
+body = "Stirling Cloud menjawab tetapi menolak server ini. Tautan akun mungkin telah dicabut."
+title = "Stirling Cloud menolak server ini"
+
+[admin.settings.ai.status.cloud.down]
+body = "Server ini tidak dapat menjangkau Stirling Cloud. Periksa tautan akun dan pastikan server ini dapat menjangkau internet."
+title = "Stirling Cloud tidak dapat dijangkau"
+
+[admin.settings.ai.status.cloud.ok]
+body = "Stirling Cloud menerima server ini. Tidak ada yang perlu dijalankan atau ditambal di sini."
+title = "Berjalan di Stirling Cloud"
+
+[admin.settings.ai.status.degraded]
+body = "Mesin menjawab health check tetapi menolak permintaan nyata. Kedua sisi menggunakan rahasia bersama yang berbeda."
+title = "Mesin aktif, tetapi menolak server ini"
+
+[admin.settings.ai.status.down]
+body = "Periksa URL, pastikan container mesin berjalan, dan pastikan Anda sudah restart setelah mengaktifkan AI."
+title = "Mesin tidak dapat dijangkau"
+
+[admin.settings.ai.status.off]
+body = "Pilih cara AI berjalan di bawah, lalu simpan dan restart."
+title = "AI dimatikan"
+
+[admin.settings.ai.status.ok]
+body = "Health check dan permintaan terautentikasi keduanya berhasil."
+title = "Mesin berjalan"
+
+[admin.settings.ai.status.secret]
+no = "Ditolak"
+unknown = "Tidak diketahui"
+yes = "Diterima"
 
 [admin.settings.badge]
 clickToUpgrade = "Klik untuk melihat detail paket"
@@ -4453,6 +4548,7 @@ openFromComputer = "Buka dari komputer"
 openSettings = "Buka pengaturan"
 other = "Lainnya"
 recent = "Terbaru"
+searchFiles = "Cari file"
 uploadFailedBody = "Tidak dapat menambahkan file yang dipilih."
 uploadFailedTitle = "Unggah gagal"
 viewAll = "Lihat semua {{count}} file"
@@ -5827,6 +5923,8 @@ label = "Free credits"
 adoptFailed = "Dokumen telah dibuka kuncinya tetapi tidak dapat dibuka di sini. Coba tool secara langsung."
 empty = "Tidak ada yang perlu dilaporkan."
 handoffUnavailable = "Browser ini tidak mengizinkan pemroses meneruskan dokumen ke editor. Buka dari editor saja."
+inSmartFolder = "Dokumen ini berada di folder pintar, jadi ditangani di server, bukan di sini."
+inSmartFolderNamed = "{{name}} berada di folder pintar, jadi ditangani di server, bukan di sini."
 noDocumentLinked = "Kegagalan ini tidak terkait dengan dokumen tertentu, jadi tidak ada yang dapat dibuka di sini."
 notOnThisDevice = "Dokumen ini tidak ada di perangkat ini, sehingga tidak dapat dibuka di sini."
 occurrences = "{{count}} kali"
@@ -5837,6 +5935,7 @@ repairedRerunNotAdopted = "Dokumen yang diperbaiki berhasil diproses, tetapi has
 repairedRerunUndelivered = "Dokumen telah diperbaiki dan eksekusi ulang kebijakan dimulai, tetapi hasilnya tidak dapat dikirimkan di sini, sehingga kegagalan ini tetap terbuka."
 rerunRejected = "Kebijakan tidak dapat dijalankan lagi saat ini. Coba lagi sebentar lagi."
 rerunUndelivered = "Eksekusi ulang kebijakan dimulai, tetapi hasilnya tidak dapat dikirimkan di sini, sehingga kegagalan ini tetap terbuka."
+retryInFolderFailed = "Dokumen tersebut tidak dapat dijalankan lagi saat ini."
 retryUnavailable = "Dokumen ini tidak lagi dapat dicoba ulang dari browser ini."
 title = "Notifikasi"
 unlockedNotRerun = "Dokumen telah dibuka kuncinya dan dibuka di sini, tetapi kebijakan tidak dapat dijalankan lagi padanya."
@@ -6625,9 +6724,11 @@ title = "Sesuaikan paket Team"
 [payment.capacityStage]
 adjustmentNote = "Stripe akan menampilkan biaya tepatnya, prorata apa pun, dan tanggal penagihan berikutnya sebelum Anda mengonfirmasi. Metode pembayaran tersimpan Anda akan digunakan jika tersedia."
 continue = "Lanjutkan ke pembayaran"
+currencyAtCheckout = "Stripe mengonfirmasi jumlah akhir dan mata uang pembayaran saat checkout."
 customLabel = "Jumlah pengguna"
 dueToday = "Harus dibayar hari ini"
 enterpriseQuote = "Dapatkan penawaran enterprise"
+estimatedTotal = "Total perkiraan"
 lineItem = "Team · {{price}}{{period}} per {{block}} pengguna"
 minimumForCurrentUsers = "Anda memiliki {{users}} pengguna, jadi paket harus mencakup setidaknya {{minimum}}."
 modalTitle = "Upgrade ke {{planName}}"
@@ -6865,6 +6966,25 @@ width = "Lebar"
 widthHint = "Lebar kotak teks mengikuti konten dan pembungkusannya."
 x = "X"
 y = "Y"
+
+[pdfTextEditor.mobile]
+actions = "Tindakan editor"
+addImage = "Gambar"
+addText = "Teks"
+cancel = "Batal"
+delete = "Hapus"
+details = "Detail"
+document = "Dokumen"
+done = "Selesai"
+download = "Simpan dan unduh"
+find = "Temukan"
+lock = "Kunci"
+openPdf = "Buka PDF"
+panelHint = "Pengeditan dilakukan di tampilan Workspace. Ketuk teks pada halaman untuk mengubahnya."
+save = "Simpan"
+style = "Gaya"
+tapToPlace = "Ketuk halaman tempat teks harus ditempatkan"
+unlock = "Buka kunci"
 
 [pdfTextEditor.password]
 cancel = "Batal"
@@ -7574,6 +7694,49 @@ plan = "Paket"
 procurement = "Pengadaan"
 usage = "Penggunaan"
 
+[portal.billing.compare]
+current = "Saat ini"
+enterpriseData = "Residensi data dan SCIM"
+enterpriseName = "Enterprise"
+enterprisePrice = "Sesuai perjanjian Anda"
+enterpriseProcessing = "Berbasis pemakaian atau tetap"
+enterpriseSignIn = "SAML dan audit"
+enterpriseSupport = "SLA uptime, bantuan deployment"
+enterpriseUsers = "Tanpa batas atas"
+enterpriseWhere = "Plus multi-node dan air-gapped"
+exploreEnterprise = "Jelajahi Enterprise"
+freeData = "Tetap di tempat Anda menjalankannya"
+freeName = "Gratis"
+freePrice = "Tanpa kartu, tanpa kedaluwarsa"
+freeProcessing = "{{allowance}} kredit per bulan"
+freeProcessingUnknown = "Jatah kredit bulanan"
+freeSignIn = "Email, Google, dan SSO"
+freeSignInNote = "OAuth2/OIDC"
+freeSupport = "Komunitas"
+freeUsers = "Hingga {{users}}"
+freeUsersUnknown = "Tim kecil"
+freeWhere = "Cloud, desktop, atau self-hosted"
+lede = "Setiap paket mencakup semua alat PDF dan SSO. Yang berubah adalah berapa banyak orang yang menggunakannya, di mana dijalankan, dan dukungan apa yang Anda dapatkan."
+open = "Bandingkan paket"
+rowData = "Data Anda"
+rowHeader = "Fitur"
+rowProcessing = "Pemrosesan"
+rowSignIn = "Masuk"
+rowSupport = "Dukungan"
+rowUsers = "Pengguna"
+rowWhere = "Tempat dijalankan"
+teamData = "Google Drive, database Anda sendiri"
+teamName = "Team"
+teamPrice = "$99/bln per 100 pengguna"
+teamProcessing = "{{allowance}} per bulan, lalu berbasis pemakaian"
+teamProcessingUnknown = "Jatah lebih besar, lalu berbasis pemakaian"
+teamSignIn = "Sama"
+teamSupport = "Email"
+teamUsers = "100 per blok"
+teamWhere = "Cloud, desktop, atau self-hosted"
+title = "Bandingkan paket"
+upgradeTeam = "Upgrade ke Team"
+
 [portal.billing.cycle]
 credits = "Kredit"
 creditsNote = "{{units}} digunakan · termasuk kredit gratis dan prabayar"
@@ -7679,6 +7842,8 @@ payTitle = "Bayar untuk tahun Anda"
 step = "Langkah {{current}} dari {{total}}"
 
 [portal.billing.prepaid.calc]
+currency = "Mata uang penawaran"
+currencyLocked = "Menggunakan mata uang penagihan Stripe Anda yang sudah ada."
 rateUnknown = "Kami akan menampilkan harga tepatnya saat checkout."
 
 [portal.billing.prepaid.consent]
@@ -8481,6 +8646,10 @@ title = "File tidak dapat diperbaiki"
 [portal.failures.kind.inputWrongType]
 description = "File Anda bukan format yang dapat dibuka langkah ini, sehingga proses tidak dapat membacanya."
 title = "Jenis file salah"
+
+[portal.failures.kind.sourceUnreadable]
+description = "Folder pintar Anda tidak dapat dibaca, jadi tidak ada yang diproses di dalamnya."
+title = "Folder tidak dapat dibaca"
 
 [portal.failures.kind.stepCannotRenderPage]
 description = "Sebuah halaman dalam file Anda tidak dapat digambar, sehingga proses tidak dapat selesai."
@@ -12235,6 +12404,7 @@ goBack = "Kembali"
 pdfTools = "Alat PDF"
 placeholder = "Pilih alat untuk memulai"
 premiumFeature = "Fitur premium:"
+searchTools = "Cari alat"
 toolsHeader = "Alat"
 viewAllTools = "Lihat semua alat"
 
@@ -12399,13 +12569,10 @@ visits = "Kunjungan"
 
 [users]
 lastActive = "Terakhir aktif"
-learnMore = "Pelajari selengkapnya tentang peran dan akses."
 locked = "Terkunci"
 ownerSetupRequired = "Pemilik organisasi belum menyelesaikan login pertama. Selesaikan penyiapan atau minta operator server untuk memulihkan kepemilikan sebelum mentransfer kepemilikan."
 roleFor = "Peran untuk {{name}}"
 rowActions = "Tindakan untuk {{name}}"
-showAll = "Tampilkan semua {{count}}"
-showLess = "Tampilkan lebih sedikit"
 subtitle2 = "Orang, tim, dan level akses Anda."
 suspended = "Ditangguhkan"
 teamActions = "Tindakan tim"
@@ -12414,6 +12581,7 @@ you = "(Anda)"
 
 [users.action]
 cancelInvite = "Batalkan undangan"
+createFromDefault = "Buat tim dari Default"
 deleteTeam = "Hapus tim"
 disableMfa = "Reset MFA"
 move = "Pindahkan ke tim"
@@ -12451,6 +12619,7 @@ email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
+team = "Tim"
 
 [users.confirm]
 cancelInviteBody = "Batalkan undangan ke {{email}}? Mereka tidak akan dapat bergabung dengan tautan saat ini."
@@ -12469,15 +12638,12 @@ transferOwnershipTitle = "Transfer kepemilikan organisasi"
 description = "Undang tim Anda untuk mulai berkolaborasi."
 title = "Belum ada anggota"
 
+[users.filters]
+noMatches = "Tidak ada yang cocok dengan filter ini."
+search = "Cari orang"
+
 [users.group]
 addToTeam = "Tambahkan ke tim"
-administrators = "{{count}} administrator"
-guestCount = "{{count}} tamu"
-guests = "Tamu"
-ledBy = "dipimpin oleh {{owner}}"
-org = "Organisasi"
-team = "Tim {{name}}"
-teamMeta = "{{count}} orang"
 
 [users.invite]
 access = "Akses"
@@ -12542,6 +12708,9 @@ title = "Tim baru"
 
 [users.renameTeam]
 apply = "Ganti nama"
+defaultApply = "Buat dan pindahkan"
+defaultDescription = "Default akan tetap tersedia untuk pengguna baru. Semua orang yang saat ini berada di Default akan dipindahkan ke tim baru."
+defaultTitle = "Buat tim dari Default"
 name = "Nama tim"
 title = "Ganti nama tim"
 
@@ -12566,6 +12735,15 @@ guest = "Tamu"
 member = "Anggota"
 orgOwner = "Pemilik Org"
 teamOwner = "Pemilik Tim"
+
+[users.seats]
+full = "Setiap seat berlisensi sedang digunakan. Kosongkan satu, atau naikkan jumlah seat, untuk menambahkan orang lain."
+update = "Perbarui seat"
+
+[users.tabs]
+all = "Semua"
+label = "Filter berdasarkan tim"
+unassigned = "Tanpa tim"
 
 [users.team]
 grantProcessor = "Berikan Processor kepada tim"
@@ -13216,232 +13394,14 @@ submitSignature = "Kirim Tanda Tangan"
 title = "Ruang Kerja"
 
 [workspace.people]
-active = "Aktif"
-activeSession = "Sesi aktif"
-addMembers = "Tambah Anggota"
-admin = "Admin"
-confirmDelete = "Anda yakin ingin menghapus pengguna ini? Tindakan ini tidak dapat dibatalkan."
-confirmUnlock = "Anda yakin ingin membuka kunci akun pengguna ini?"
-deleteUser = "Hapus Pengguna"
-deleteUserError = "Gagal menghapus pengguna"
-deleteUserSuccess = "Pengguna berhasil dihapus"
 description = "Kelola anggota ruang kerja dan izin mereka"
-disable = "Nonaktifkan"
-disabled = "Dinonaktifkan"
-editRole = "Edit Peran"
-enable = "Aktifkan"
-loading = "Memuat orang..."
-locked = "terkunci"
-lockedBadge = "Terkunci"
-loginRequired = "Aktifkan mode login terlebih dahulu"
-memberActions = "Tindakan anggota"
-noMembersFound = "Tidak ada anggota ditemukan"
-ownerLocked = "Transfer kepemilikan organisasi di Pengaturan → Ruang Kerja → Pengguna sebelum mengubah peran atau akun pemilik."
-role = "Peran"
-searchMembers = "Cari anggota..."
-team = "Tim"
-unlockAccount = "Buka Kunci Akun"
-unlockUserError = "Gagal membuka kunci akun pengguna"
-unlockUserSuccess = "Akun pengguna berhasil dibuka kunci"
-user = "Pengguna"
-userInfo = "Info pengguna"
-
-[workspace.people.actions]
-upgrade = "Upgrade"
-
-[workspace.people.addMember]
-authType = "Jenis autentikasi"
-error = "Gagal membuat pengguna"
-forceMFA = "Wajibkan penyiapan MFA pada login berikutnya"
-forcePasswordChange = "Wajibkan ganti kata sandi saat login pertama"
-password = "Kata Sandi"
-passwordPlaceholder = "Masukkan kata sandi"
-passwordRequired = "Kata sandi diperlukan"
-role = "Peran"
-submit = "Tambah Anggota"
-success = "Pengguna berhasil dibuat"
-team = "Tim (Opsional)"
-teamPlaceholder = "Pilih tim"
-username = "Nama Pengguna (Email)"
-usernamePlaceholder = "user@example.com"
-usernameRequired = "Nama pengguna dan kata sandi wajib diisi"
-
-[workspace.people.authType]
-oauth = "OAuth2"
-password = "Kata sandi"
-saml = "SAML2"
-ssoDescription = "Pengguna akan diautentikasi melalui penyedia SSO"
-
-[workspace.people.changePassword]
-action = "Ubah kata sandi"
-confirmPassword = "Konfirmasi kata sandi"
-confirmPlaceholder = "Masukkan ulang kata sandi baru"
-copiedToClipboard = "Kata sandi disalin ke papan klip"
-copyFailed = "Gagal menyalin kata sandi"
-copyTooltip = "Salin ke papan klip"
-emailUnavailable = "Email pengguna ini bukan alamat email yang valid. Notifikasi dinonaktifkan."
-error = "Gagal memperbarui kata sandi"
-forcePasswordChange = "Paksa pengguna mengganti kata sandi saat login berikutnya"
-generatedPreview = "Kata sandi yang dibuat:"
-generateRandom = "Buat kata sandi aman"
-includePassword = "Sertakan kata sandi baru dalam email"
-newPassword = "Kata sandi baru"
-notifyOnly = "Email akan dikirim tanpa kata sandi, memberi tahu pengguna bahwa admin telah mengubahnya."
-passwordMismatch = "Kata sandi tidak cocok"
-passwordRequired = "Silakan masukkan kata sandi baru"
-placeholder = "Masukkan kata sandi baru"
-sendEmail = "Kirim email kepada pengguna tentang perubahan ini"
-smtpDisabled = "Notifikasi email memerlukan SMTP diaktifkan di pengaturan."
-submit = "Perbarui kata sandi"
-subtitle = "Perbarui kata sandi untuk"
-success = "Kata sandi berhasil diperbarui"
-title = "Ubah kata sandi"
-
-[workspace.people.editMember]
-editing = "Editing: <0>{{username}}</0>"
-error = "Gagal memperbarui pengguna"
-role = "Peran"
-submit = "Update User"
-success = "Pengguna berhasil diperbarui"
-team = "Tim (Opsional)"
-teamPlaceholder = "Pilih tim"
-title = "Edit User"
-
-[workspace.people.emailInvite]
-allFailed = "Gagal mengundang pengguna"
-emails = "Alamat Email"
-emailsPlaceholder = "user1@example.com, user2@example.com"
-emailsRequired = "Setidaknya satu alamat email diperlukan"
-error = "Gagal mengirim undangan"
-partialFailure = "Beberapa undangan gagal"
-submit = "Kirim Undangan"
-success = "pengguna berhasil diundang"
-
-[workspace.people.inviteLink]
-copied = "Tautan disalin ke papan klip"
-email = "Alamat Email"
-emailDescription = "Opsional - kosongkan untuk tautan undangan umum yang dapat digunakan siapa pun"
-emailPlaceholder = "user@example.com (opsional)"
-emailSent = "Tautan undangan dihasilkan dan dikirim via email"
-error = "Gagal menghasilkan tautan undangan"
-expiryHours = "Jam Kedaluwarsa"
-generate = "Hasilkan Tautan"
-generated = "Tautan Undangan Dihasilkan"
-sendEmail = "Kirim tautan undangan via email"
-sendEmailDescription = "Jika diaktifkan, tautan undangan akan dikirim ke alamat email yang ditentukan"
-submit = "Hasilkan Tautan Undangan"
-
-[workspace.people.inviteMembers]
-label = "Undang Anggota"
-subtitle = "Ketik atau tempel email di bawah, dipisahkan dengan koma. Ruang kerja Anda akan ditagihkan berdasarkan anggota."
-
-[workspace.people.inviteMode]
-email = "Email"
-emailDisabled = "Undangan email memerlukan konfigurasi SMTP dan mail.enableInvites=true di pengaturan"
-link = "Tautan"
-username = "Nama Pengguna"
 
 [workspace.people.license]
-currentUsage = "Saat ini menggunakan {{current}} dari {{max}} lisensi pengguna"
-fromLicense = "dari lisensi"
-grandfathered = "Grandfathered"
-grandfatheredShort = "{{count}} grandfathered"
-slotsAvailable_one = "{{count}} user slot available"
-slotsAvailable_other = "{{count}} user slots available"
-slotsAvailable_zero = "No slots available"
 users_one = "user"
 users_other = "users"
 
-[workspace.people.mfa]
-adminDisableError = "Gagal menonaktifkan MFA untuk pengguna"
-adminDisableSuccess = "MFA berhasil dinonaktifkan untuk pengguna"
-disableByAdmin = "Nonaktifkan MFA"
-
-[workspace.people.roleDescriptions]
-admin = "Dapat mengelola pengaturan dan mengundang anggota, dengan akses administratif penuh."
-currentRole = "Peran yang ditetapkan saat ini."
-user = "Can view and edit shared files, but cannot manage workspace settings or users."
-
-[workspace.people.toggleEnabled]
-error = "Gagal memperbarui status pengguna"
-success = "Status pengguna berhasil diperbarui"
-
 [workspace.teams]
-addMember = "Tambah Anggota"
-backToTeams = "Kembali ke Tim"
-cannotAddToInternal = "Tidak dapat menambah anggota ke tim Internal"
-cannotDeleteInternal = "Tidak dapat menghapus tim Internal"
-cannotRenameInternal = "Tidak dapat mengganti nama tim Internal"
-confirmDelete = "Anda yakin ingin menghapus tim ini? Tim ini harus kosong untuk dihapus."
-confirmRemove = "Hapus pengguna dari tim ini?"
-createNewTeam = "Buat Tim Baru"
-deleteTeamLabel = "Hapus Tim"
 description = "Kelola tim dan atur anggota ruang kerja"
-loadError = "Gagal memuat detail tim"
-loading = "Memuat tim..."
-loadingDetails = "Memuat rincian tim..."
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
-noMembers = "Tidak ada anggota dalam tim ini"
-noTeamsFound = "Tidak ada tim ditemukan"
-removeMember = "Hapus dari tim"
-removeMemberError = "Gagal menghapus pengguna dari tim"
-removeMemberSuccess = "Pengguna dihapus dari tim"
-renameTeamLabel = "Ganti Nama Tim"
-system = "Sistem"
-teamActions = "Tindakan tim"
-teamName = "Nama Tim"
-teamNotFound = "Tim tidak ditemukan"
-totalMembers = "Total Anggota"
-viewTeam = "Lihat Tim"
-
-[workspace.teams.addMemberToTeam]
-addingTo = "Menambahkan ke"
-currentlyIn = "saat ini di"
-error = "Gagal menambahkan anggota ke tim"
-selectUser = "Pilih Pengguna"
-selectUserPlaceholder = "Pilih pengguna"
-selectUserRequired = "Silakan pilih pengguna"
-submit = "Tambah Anggota"
-success = "Anggota berhasil ditambahkan ke tim"
-title = "Tambah Anggota ke Tim"
-userRequired = "Silakan pilih pengguna"
-willBeMoved = "Catatan: Pengguna ini akan dipindahkan dari tim saat ini ke tim ini."
-
-[workspace.teams.changeTeam]
-changing = "Memindahkan"
-error = "Gagal mengubah tim"
-label = "Ubah Tim"
-selectTeam = "Pilih Tim"
-selectTeamPlaceholder = "Pilih tim"
-selectTeamRequired = "Silakan pilih tim"
-submit = "Ubah Tim"
-success = "Tim berhasil diubah"
-title = "Ubah Tim"
-
-[workspace.teams.createTeam]
-error = "Gagal membuat tim"
-nameRequired = "Nama tim wajib diisi"
-submit = "Buat Tim"
-success = "Tim berhasil dibuat"
-teamName = "Nama Tim"
-teamNamePlaceholder = "Masukkan nama tim"
-title = "Buat Tim Baru"
-
-[workspace.teams.deleteTeam]
-error = "Gagal menghapus tim. Pastikan tim kosong."
-success = "Tim berhasil dihapus"
-
-[workspace.teams.renameTeam]
-error = "Gagal mengganti nama tim"
-nameRequired = "Nama tim wajib diisi"
-newTeamName = "Nama Tim Baru"
-newTeamNamePlaceholder = "Masukkan nama tim baru"
-renaming = "Mengganti nama:"
-submit = "Ganti Nama Tim"
-success = "Tim berhasil diganti nama"
-title = "Ganti Nama Tim"
 
 [zipWarning]
 cancel = "Batal"

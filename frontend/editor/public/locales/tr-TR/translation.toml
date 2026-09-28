@@ -729,6 +729,8 @@ permissionNotice = "tessdata yolu yazılabilir değil. İndirmeler tarayıcıda 
 
 [admin.settings.ai]
 description = "Stirling'i Python AI motoruna bağlayın, modellerini seçin ve altında çalışacağı koruma kurallarını ayarlayın."
+managedByCloud = "Bu modda Stirling Cloud tarafından yönetilir."
+managedByCloudShort = "Stirling Cloud tarafından yönetilir"
 
 [admin.settings.ai.documents]
 description = "Belgeler üzerinden soruları yanıtlamak için kullanılan embedding modelini ve getirme ayarlarını yapılandırın. Kaydedildiğinde AI engine'e uygulanır."
@@ -771,11 +773,24 @@ label = "Top K"
 [admin.settings.ai.general]
 connection = "Bağlantı"
 description = "Stirling'i Python AI engine'e bağlayın ve hangi AI özelliklerinin sunulacağını seçin. Değişiklikler yeniden başlatmada uygulanır."
+restartNote = "URL veya herhangi bir zaman aşımı değişikliği, yeniden başlatmadan sonra etkili olur."
 title = "AI Engine"
 
 [admin.settings.ai.general.capabilities]
 description = "Tek tek AI özelliklerini açın veya kapatın. Devre dışı bırakılan özellikler uygulamada gizlenir."
 title = "Yetenekler"
+
+[admin.settings.ai.general.cloud]
+note = "Modeller ve sağlayıcı anahtarları Stirling Cloud tarafından yönetilir, bu nedenle bu ayarlar bu modda geçerli değildir."
+
+[admin.settings.ai.general.cloud.indexing]
+description = "Her AI aracı, yanıtlamak için ihtiyaç duyduğu sayfa metnini gönderir. Bu, Stirling Cloud'un bu metni daha sonraki soruların belgede arama yapabilmesi için dizine eklenmiş olarak saklayıp saklayamayacağını belirler."
+help = "Kapalı, belge sorularının kullanılamayacağı anlamına gelir. Metnin gönderilmesini durdurmaz - yalnızca saklanmasını durdurur."
+label = "Stirling Cloud'un dizine eklenmiş belgeleri saklamasına izin ver"
+
+[admin.settings.ai.general.cloudNote]
+body = "Akıl yürütme Stirling'in altyapısında çalışır ve bu sunucunun bağlı olduğu hesaba ücretlendirilir. Burada çalıştırılacak konteyner veya tutulacak sağlayıcı anahtarı yoktur. AI'ın okuduğu her şey kendi donanımınız yerine Stirling Cloud tarafından işlenir."
+title = "Stirling Cloud AI hakkında"
 
 [admin.settings.ai.general.enabled]
 description = "Ana anahtar. Kapalıyken hiçbir AI aracı, agent veya engine çağrısı kullanılamaz."
@@ -809,9 +824,28 @@ label = "PDF yorum agent'ı"
 description = "Belge oluşturma gibi daha ağır agent işlemleri için zaman aşımı."
 label = "Uzun süreli zaman aşımı (saniye)"
 
+[admin.settings.ai.general.mode]
+label = "AI nerede çalışır"
+
+[admin.settings.ai.general.mode.cloud]
+description = "Konteyner yok, sağlayıcı anahtarı yok, model seçimi yok - iş Stirling Cloud üzerinde çalışır ve bu sunucunun bağlı olduğu hesaba ücretlendirilir."
+linkCta = "Bu sunucuyu bir Stirling hesabına bağla"
+notLinked = "Önce bir hesap bağlayın"
+ownerOnly = "Yalnızca kuruluş sahibi bu sunucuyu bir Stirling hesabına bağlayabilir."
+title = "Stirling Cloud AI kullan"
+
+[admin.settings.ai.general.mode.off]
+description = "Uygulamanın hiçbir yerinde AI aracı yoktur ve hiçbir şey bu sunucudan ayrılmaz."
+title = "Kapalı"
+
+[admin.settings.ai.general.mode.self]
+description = "Sizin barındırdığınız, seçtiğiniz bir model sağlayıcısına yönlendirilmiş bir konteyner. Sizin anahtarınız, sizin faturanız, sizin veri yolunuz."
+title = "Kendi motorunuzu çalıştırın"
+
 [admin.settings.ai.general.note]
-body = "AI engine ayrı bir hizmet olarak çalışır. Paylaşılan sırrı"
-body2 = "bir container ortam değişkeni aracılığıyla ayarlanır. Sağlayıcı API key'leri bu sayfalara girilebilir veya engine ortam değişkenleri olarak sağlanabilir; buraya girilen key'ler kaydedildiğinde engine'e gönderilir."
+docs = "Kurulum kılavuzu"
+intro = "Stirling'in yanında çalıştırdığınız ayrı bir konteyner. Akıl yürütmeyi o yapar; Stirling tüm sayfa işlemlerini yine kendisi yapar. Aynısını gerektirir"
+outro = "her iki konteynerde ve bir model sağlayıcı anahtarında. AI'ın okuduğu her şey seçtiğiniz sağlayıcıya gönderilir - barındırdığınız bir Ollama her sayfayı kurum içinde tutar."
 title = "AI engine hakkında"
 
 [admin.settings.ai.general.streamTimeoutSeconds]
@@ -890,6 +924,67 @@ label = "Akıllı model"
 body = "Değişiklikler otomatik olarak AI engine'e gönderildi."
 bodyNoPush = "Ayarlar kaydedildi. AI engine yapılandırmasını bir sonraki aldığında uygulanacak."
 title = "AI ayarları kaydedildi"
+
+[admin.settings.ai.status]
+capabilities = "Yetenekler"
+capabilitiesValue = "{{total}} içinden {{on}} açık"
+checked = "kontrol edildi"
+checking = "Motor kontrol ediliyor…"
+description = "Motorun erişilebilir olup olmadığı, bu sunucuyu kabul edip etmediği ve ne çalıştırdığı."
+fastModel = "Hızlı model"
+justNow = "az önce"
+latency = "Yanıt süresi"
+linkLabel = "Hesap bağlantısı"
+minutesAgo = "{{count}} dk önce"
+recheck = "Tekrar kontrol et"
+runningOn = "Çalıştığı yer"
+secondsAgo = "{{count}} sn önce"
+secretLabel = "Paylaşılan gizli anahtar"
+smartModel = "Akıllı model"
+title = "Durum"
+url = "Motor URL"
+
+[admin.settings.ai.status.cloud]
+hostDown = "Kapalı"
+hostLabel = "Stirling.com"
+hostUp = "Açık"
+name = "Stirling Cloud"
+sharingLabel = "AI paylaşımı"
+sharingOff = "Devre dışı"
+sharingOn = "Etkin"
+
+[admin.settings.ai.status.cloud.degraded]
+body = "Stirling Cloud yanıt verdi ancak bu sunucuyu reddetti. Hesap bağlantısı iptal edilmiş olabilir."
+title = "Stirling Cloud bu sunucuyu reddediyor"
+
+[admin.settings.ai.status.cloud.down]
+body = "Bu sunucu Stirling Cloud'a ulaşamadı. Hesap bağlantısını ve bu sunucunun internete erişebildiğini kontrol edin."
+title = "Stirling Cloud'a ulaşılamıyor"
+
+[admin.settings.ai.status.cloud.ok]
+body = "Stirling Cloud bu sunucuyu kabul etti. Burada çalıştırılacak veya yamalanacak bir şey yok."
+title = "Stirling Cloud üzerinde çalışıyor"
+
+[admin.settings.ai.status.degraded]
+body = "Sağlık kontrolüne yanıt verdi ancak gerçek bir isteği reddetti. İki taraf farklı paylaşılan gizli anahtarlar kullanıyor."
+title = "Motor çalışıyor, ancak bu sunucuyu reddediyor"
+
+[admin.settings.ai.status.down]
+body = "URL'yi, motor konteynerinin çalıştığını ve AI'ı etkinleştirdikten sonra yeniden başlattığınızı kontrol edin."
+title = "Motora ulaşılamıyor"
+
+[admin.settings.ai.status.off]
+body = "AI'ın aşağıda nasıl çalışacağını seçin, ardından kaydedip yeniden başlatın."
+title = "AI kapalı"
+
+[admin.settings.ai.status.ok]
+body = "Sağlık kontrolü ve kimliği doğrulanmış bir istek başarıyla tamamlandı."
+title = "Motor çalışıyor"
+
+[admin.settings.ai.status.secret]
+no = "Reddedildi"
+unknown = "Bilinmiyor"
+yes = "Kabul edildi"
 
 [admin.settings.badge]
 clickToUpgrade = "Plan ayrıntılarını görmek için tıklayın"
@@ -4453,6 +4548,7 @@ openFromComputer = "Bilgisayardan aç"
 openSettings = "Ayarları aç"
 other = "Diğer"
 recent = "Son"
+searchFiles = "Dosyalarda ara"
 uploadFailedBody = "Seçilen dosyalar eklenemedi."
 uploadFailedTitle = "Yükleme başarısız"
 viewAll = "{{count}} dosyanın tümünü görüntüle"
@@ -5827,6 +5923,8 @@ label = "Free credits"
 adoptFailed = "Belgenin kilidi açıldı ancak burada açılamadı. Aracı doğrudan deneyin."
 empty = "Bildirilecek bir şey yok."
 handoffUnavailable = "Bu tarayıcı, işleyicinin belgeyi düzenleyiciye aktarmasına izin vermeyecek. Bunun yerine düzenleyiciden açın."
+inSmartFolder = "Bu belge bir akıllı klasörde olduğundan burada değil, sunucuda işlenir."
+inSmartFolderNamed = "{{name}} bir akıllı klasörde olduğundan burada değil, sunucuda işlenir."
 noDocumentLinked = "Bu hata belirli bir belgeyle bağlantılı değil, bu nedenle burada açılacak bir şey yok."
 notOnThisDevice = "Bu belge bu cihazda değil, bu nedenle burada açılamaz."
 occurrences = "{{count}} kez"
@@ -5837,6 +5935,7 @@ repairedRerunNotAdopted = "Onarılan belge işlendi, ancak sonucu burada açıla
 repairedRerunUndelivered = "Belge onarıldı ve politika yeniden çalıştırması başlatıldı, ancak sonucu buraya iletilemiyor; bu nedenle bu hata açık kalır."
 rerunRejected = "Politika şu anda tekrar çalıştırılamadı. Birazdan tekrar deneyin."
 rerunUndelivered = "Politika yeniden çalıştırması başlatıldı, ancak sonucu buraya iletilemiyor; bu nedenle bu hata açık kalır."
+retryInFolderFailed = "Bu belge şu anda tekrar çalıştırılamadı."
 retryUnavailable = "Bu belge artık bu tarayıcıdan yeniden denenemez."
 title = "Bildirimler"
 unlockedNotRerun = "Belgenin kilidi açıldı ve burada açıldı, ancak politika üzerinde tekrar çalıştırılamadı."
@@ -6625,9 +6724,11 @@ title = "Team planını ayarla"
 [payment.capacityStage]
 adjustmentNote = "Stripe, onaylamadan önce tam ücreti, varsa orantılı ücretleri ve bir sonraki faturalandırma tarihinizi gösterecek. Varsa kayıtlı ödeme yönteminiz kullanılacak."
 continue = "Ödemeye devam et"
+currencyAtCheckout = "Stripe, son tutarı ve ödeme para birimini ödeme sırasında onaylar."
 customLabel = "Kullanıcı sayısı"
 dueToday = "Bugün ödenecek"
 enterpriseQuote = "Kurumsal teklif al"
+estimatedTotal = "Tahmini toplam"
 lineItem = "Team · {{block}} kullanıcı başına {{price}}{{period}}"
 minimumForCurrentUsers = "{{users}} kullanıcınız var, bu yüzden plan en az {{minimum}} kişiyi kapsamalı."
 modalTitle = "{{planName}} planına yükselt"
@@ -6865,6 +6966,25 @@ width = "Genişlik"
 widthHint = "Bir metin kutusunun genişliği, içeriğine ve kaydırmasına bağlıdır."
 x = "X"
 y = "Y"
+
+[pdfTextEditor.mobile]
+actions = "Düzenleyici eylemleri"
+addImage = "Görsel"
+addText = "Metin"
+cancel = "İptal"
+delete = "Sil"
+details = "Ayrıntılar"
+document = "Belge"
+done = "Bitti"
+download = "Kaydet ve indir"
+find = "Bul"
+lock = "Kilitle"
+openPdf = "Bir PDF aç"
+panelHint = "Düzenleme, Çalışma Alanı görünümünde gerçekleşir. Değiştirmek için sayfadaki metne dokunun."
+save = "Kaydet"
+style = "Stil"
+tapToPlace = "Metnin gideceği yerde sayfaya dokunun"
+unlock = "Kilidi aç"
 
 [pdfTextEditor.password]
 cancel = "İptal"
@@ -7574,6 +7694,49 @@ plan = "Plan"
 procurement = "Satın alma"
 usage = "Kullanım"
 
+[portal.billing.compare]
+current = "Geçerli"
+enterpriseData = "Veri yerleşimi ve SCIM"
+enterpriseName = "Enterprise"
+enterprisePrice = "Anlaşmanıza göre"
+enterpriseProcessing = "Ölçümlü veya sabit"
+enterpriseSignIn = "SAML ve denetim"
+enterpriseSupport = "Çalışma süresi SLA'ları, dağıtım yardımı"
+enterpriseUsers = "Üst sınır yok"
+enterpriseWhere = "Ayrıca çok düğümlü ve air-gapped"
+exploreEnterprise = "Enterprise'ı keşfet"
+freeData = "Çalıştırdığınız yerde kalır"
+freeName = "Ücretsiz"
+freePrice = "Kart yok, süre sınırı yok"
+freeProcessing = "Ayda {{allowance}} kredi"
+freeProcessingUnknown = "Aylık kredi hakkı"
+freeSignIn = "E-posta, Google ve SSO"
+freeSignInNote = "OAuth2/OIDC"
+freeSupport = "Topluluk"
+freeUsers = "{{users}} kullanıcıya kadar"
+freeUsersUnknown = "Küçük bir ekip"
+freeWhere = "Cloud, masaüstü veya self-hosted"
+lede = "Her plan her PDF aracını ve SSO'yu içerir. Değişen şey, kaç kişinin kullandığı, nerede çalıştığı ve hangi desteği aldığınızdır."
+open = "Planları karşılaştır"
+rowData = "Verileriniz"
+rowHeader = "Özellik"
+rowProcessing = "İşleme"
+rowSignIn = "Oturum açma"
+rowSupport = "Destek"
+rowUsers = "Kullanıcılar"
+rowWhere = "Çalıştığı yer"
+teamData = "Google Drive, kendi veritabanınız"
+teamName = "Ekip"
+teamPrice = "100 kullanıcı başına $99/ay"
+teamProcessing = "Ayda {{allowance}}, sonra ölçümlü"
+teamProcessingUnknown = "Daha büyük bir hak, sonra ölçümlü"
+teamSignIn = "Aynı"
+teamSupport = "E-posta"
+teamUsers = "Blok başına 100"
+teamWhere = "Cloud, masaüstü veya self-hosted"
+title = "Planları karşılaştır"
+upgradeTeam = "Ekip planına yükselt"
+
 [portal.billing.cycle]
 credits = "Krediler"
 creditsNote = "{{units}} kullanıldı · ücretsiz ve ön ödemeli kredileri içerir"
@@ -7679,6 +7842,8 @@ payTitle = "Yılınız için ödeme yapın"
 step = "Adım {{current}} / {{total}}"
 
 [portal.billing.prepaid.calc]
+currency = "Teklif para birimi"
+currencyLocked = "Mevcut Stripe faturalandırma para biriminizi kullanır."
 rateUnknown = "Kesin fiyatı ödeme sırasında göstereceğiz."
 
 [portal.billing.prepaid.consent]
@@ -8481,6 +8646,10 @@ title = "Dosya onarılamadı"
 [portal.failures.kind.inputWrongType]
 description = "Dosyanız bu adımın açabileceği bir formatta değil, bu nedenle çalıştırma dosyayı okuyamadı."
 title = "Yanlış dosya türü"
+
+[portal.failures.kind.sourceUnreadable]
+description = "Akıllı klasörünüz okunamadı, bu nedenle içindeki hiçbir şey işlenmedi."
+title = "Klasör okunamadı"
 
 [portal.failures.kind.stepCannotRenderPage]
 description = "Dosyanızdaki bir sayfa çizilemedi, bu nedenle çalıştırma tamamlanamadı."
@@ -12235,6 +12404,7 @@ goBack = "Geri dön"
 pdfTools = "PDF Araçları"
 placeholder = "Başlamak için bir araç seçin"
 premiumFeature = "Premium özellik:"
+searchTools = "Araçlarda ara"
 toolsHeader = "Araçlar"
 viewAllTools = "Tüm araçları görüntüle"
 
@@ -12399,13 +12569,10 @@ visits = "Ziyaret"
 
 [users]
 lastActive = "Son aktif"
-learnMore = "Roller ve erişim hakkında daha fazla bilgi edinin."
 locked = "Kilitli"
 ownerSetupRequired = "Kuruluş sahibi ilk oturumu tamamlamamış. Sahipliği aktarmadan önce kurulumu tamamlayın veya sunucu operatöründen sahipliği kurtarmasını isteyin."
 roleFor = "{{name}} için rol"
 rowActions = "{{name}} için eylemler"
-showAll = "Tüm {{count}} öğeyi göster"
-showLess = "Daha az göster"
 subtitle2 = "Kişileriniz, takımlarınız ve erişim seviyeleriniz."
 suspended = "Askıya alındı"
 teamActions = "Takım eylemleri"
@@ -12414,6 +12581,7 @@ you = "(siz)"
 
 [users.action]
 cancelInvite = "Davetiyeyi iptal et"
+createFromDefault = "Default'tan ekip oluştur"
 deleteTeam = "Takımı sil"
 disableMfa = "MFA'yı sıfırla"
 move = "Takıma taşı"
@@ -12451,6 +12619,7 @@ email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
+team = "Ekip"
 
 [users.confirm]
 cancelInviteBody = "{{email}} adresine gönderilen davetiye iptal edilsin mi? Mevcut bağlantıyla katılamayacaklar."
@@ -12469,15 +12638,12 @@ transferOwnershipTitle = "Kuruluş sahipliğini aktar"
 description = "İş birliğine başlamak için takımınızı davet edin."
 title = "Henüz üye yok"
 
+[users.filters]
+noMatches = "Bu filtrelerle eşleşen kimse yok."
+search = "Kişilerde ara"
+
 [users.group]
 addToTeam = "Takıma ekle"
-administrators = "{{count}} yönetici"
-guestCount = "{{count}} misafir"
-guests = "Misafirler"
-ledBy = "{{owner}} tarafından yönetiliyor"
-org = "Kuruluş"
-team = "{{name}} takımı"
-teamMeta = "{{count}} kişi"
 
 [users.invite]
 access = "Erişim"
@@ -12542,6 +12708,9 @@ title = "Yeni ekip"
 
 [users.renameTeam]
 apply = "Yeniden adlandır"
+defaultApply = "Oluştur ve taşı"
+defaultDescription = "Default yeni kullanıcılar için kullanılabilir kalacak. Şu anda Default içinde olan herkes yeni ekibe taşınacak."
+defaultTitle = "Default'tan ekip oluştur"
 name = "Ekip adı"
 title = "Ekibi yeniden adlandır"
 
@@ -12566,6 +12735,15 @@ guest = "Misafir"
 member = "Üye"
 orgOwner = "Kuruluş Sahibi"
 teamOwner = "Ekip Sahibi"
+
+[users.seats]
+full = "Lisanslı tüm koltuklar kullanımda. Başka birini eklemek için bir koltuk boşaltın veya koltuk sayısını artırın."
+update = "Koltukları güncelle"
+
+[users.tabs]
+all = "Tümü"
+label = "Ekibe göre filtrele"
+unassigned = "Ekip yok"
 
 [users.team]
 grantProcessor = "Ekibe Processor ver"
@@ -13216,232 +13394,14 @@ submitSignature = "İmzayı gönder"
 title = "Çalışma Alanı"
 
 [workspace.people]
-active = "Aktif"
-activeSession = "Aktif oturum"
-addMembers = "Üye Ekle"
-admin = "Yönetici"
-confirmDelete = "Bu kullanıcıyı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
-confirmUnlock = "Bu kullanıcı hesabının kilidini açmak istediğinizden emin misiniz?"
-deleteUser = "Kullanıcıyı Sil"
-deleteUserError = "Kullanıcı silme başarısız"
-deleteUserSuccess = "Kullanıcı başarıyla silindi"
 description = "Çalışma alanı üyelerini ve izinlerini yönetin"
-disable = "Devre Dışı Bırak"
-disabled = "Devre dışı"
-editRole = "Rolü Düzenle"
-enable = "Etkinleştir"
-loading = "Kişiler yükleniyor..."
-locked = "kilitli"
-lockedBadge = "Kilitli"
-loginRequired = "Önce oturum açma modunu etkinleştirin"
-memberActions = "Üye işlemleri"
-noMembersFound = "Üye bulunamadı"
-ownerLocked = "Sahibin rolünü veya hesabını değiştirmeden önce Ayarlar → Çalışma Alanı → Kullanıcılar bölümünde kuruluş sahipliğini aktarın."
-role = "Rol"
-searchMembers = "Üyeleri ara..."
-team = "Takım"
-unlockAccount = "Hesabın Kilidini Aç"
-unlockUserError = "Kullanıcı hesabının kilidi açılamadı"
-unlockUserSuccess = "Kullanıcı hesabının kilidi başarıyla açıldı"
-user = "Kullanıcı"
-userInfo = "Kullanıcı bilgisi"
-
-[workspace.people.actions]
-upgrade = "Yükselt"
-
-[workspace.people.addMember]
-authType = "Kimlik Doğrulama Türü"
-error = "Kullanıcı oluşturma başarısız"
-forceMFA = "Sonraki oturum açmada MFA kurulumunu zorunlu kıl"
-forcePasswordChange = "İlk oturum açmada parola değişikliğini zorunlu kıl"
-password = "Parola"
-passwordPlaceholder = "Parola girin"
-passwordRequired = "Parola gerekli"
-role = "Rol"
-submit = "Üye Ekle"
-success = "Kullanıcı başarıyla oluşturuldu"
-team = "Takım (İsteğe bağlı)"
-teamPlaceholder = "Bir takım seçin"
-username = "Kullanıcı adı (E-posta)"
-usernamePlaceholder = "user@example.com"
-usernameRequired = "Kullanıcı adı ve parola gereklidir"
-
-[workspace.people.authType]
-oauth = "OAuth2"
-password = "Parola"
-saml = "SAML2"
-ssoDescription = "Kullanıcı SSO sağlayıcısı üzerinden kimlik doğrulayacak"
-
-[workspace.people.changePassword]
-action = "Parolayı değiştir"
-confirmPassword = "Parolayı onayla"
-confirmPlaceholder = "Yeni parolayı tekrar girin"
-copiedToClipboard = "Parola panoya kopyalandı"
-copyFailed = "Parola kopyalanamadı"
-copyTooltip = "Panoya kopyala"
-emailUnavailable = "Bu kullanıcının e-posta adresi geçerli değil. Bildirimler devre dışı."
-error = "Parola güncellenemedi"
-forcePasswordChange = "Kullanıcının bir sonraki girişte parolasını değiştirmesini zorunlu kıl"
-generatedPreview = "Oluşturulan parola:"
-generateRandom = "Güvenli parola oluştur"
-includePassword = "E-postaya yeni parolayı dahil et"
-newPassword = "Yeni parola"
-notifyOnly = "Parola olmadan bir e-posta gönderilecek ve kullanıcıya bir yöneticinin parolayı değiştirdiği bildirilecek."
-passwordMismatch = "Parolalar eşleşmiyor"
-passwordRequired = "Lütfen yeni bir parola girin"
-placeholder = "Yeni bir parola girin"
-sendEmail = "Kullanıcıya bu değişiklik hakkında e-posta gönder"
-smtpDisabled = "E-posta bildirimleri için ayarlarda SMTP'nin etkinleştirilmesi gerekir."
-submit = "Parolayı güncelle"
-subtitle = "Şunun için parolayı güncelle"
-success = "Parola başarıyla güncellendi"
-title = "Parolayı değiştir"
-
-[workspace.people.editMember]
-editing = "Editing: <0>{{username}}</0>"
-error = "Kullanıcı güncellenemedi"
-role = "Rol"
-submit = "Update User"
-success = "Kullanıcı başarıyla güncellendi"
-team = "Takım (İsteğe bağlı)"
-teamPlaceholder = "Bir takım seçin"
-title = "Edit User"
-
-[workspace.people.emailInvite]
-allFailed = "Kullanıcılar davet edilemedi"
-emails = "E-posta Adresleri"
-emailsPlaceholder = "user1@example.com, user2@example.com"
-emailsRequired = "En az bir e-posta adresi gereklidir"
-error = "Davetler gönderilemedi"
-partialFailure = "Bazı davetler başarısız oldu"
-submit = "Davetleri Gönder"
-success = "kullanıcı(lar) başarıyla davet edildi"
-
-[workspace.people.inviteLink]
-copied = "Bağlantı panoya kopyalandı"
-email = "E-posta Adresi"
-emailDescription = "İsteğe bağlı - herkes tarafından kullanılabilecek genel bir davet bağlantısı için boş bırakın"
-emailPlaceholder = "user@example.com (isteğe bağlı)"
-emailSent = "Davet bağlantısı oluşturuldu ve e-posta ile gönderildi"
-error = "Davet bağlantısı oluşturulamadı"
-expiryHours = "Geçerlilik Süresi (Saat)"
-generate = "Bağlantı Oluştur"
-generated = "Davet Bağlantısı Oluşturuldu"
-sendEmail = "Davet bağlantısını e-posta ile gönder"
-sendEmailDescription = "Etkinleştirilirse, davet bağlantısı belirtilen e-posta adresine gönderilecektir"
-submit = "Davet Bağlantısı Oluştur"
-
-[workspace.people.inviteMembers]
-label = "Üye Davet Et"
-subtitle = "Aşağıya e-postaları virgülle ayırarak yazın veya yapıştırın. Çalışma alanınız üye sayısına göre faturalandırılacaktır."
-
-[workspace.people.inviteMode]
-email = "E-posta"
-emailDisabled = "E-posta davetleri, ayarlarda SMTP yapılandırması ve mail.enableInvites=true gerektirir"
-link = "Bağlantı"
-username = "Kullanıcı adı"
 
 [workspace.people.license]
-currentUsage = "Şu anda {{max}} kullanıcı lisansının {{current}}'i kullanılıyor"
-fromLicense = "lisanstan"
-grandfathered = "Kazanılmış Hak"
-grandfatheredShort = "{{count}} kazanılmış hak"
-slotsAvailable_one = "{{count}} user slot available"
-slotsAvailable_other = "{{count}} user slots available"
-slotsAvailable_zero = "No slots available"
 users_one = "user"
 users_other = "users"
 
-[workspace.people.mfa]
-adminDisableError = "Kullanıcı için MFA devre dışı bırakılamadı"
-adminDisableSuccess = "Kullanıcı için MFA başarıyla devre dışı bırakıldı"
-disableByAdmin = "MFA'yı devre dışı bırak"
-
-[workspace.people.roleDescriptions]
-admin = "Ayarları yönetebilir ve üyeleri davet edebilir; tam yönetici erişimine sahiptir."
-currentRole = "Geçerli atanmış rol."
-user = "Can view and edit shared files, but cannot manage workspace settings or users."
-
-[workspace.people.toggleEnabled]
-error = "Kullanıcı durumu güncellenemedi"
-success = "Kullanıcı durumu başarıyla güncellendi"
-
 [workspace.teams]
-addMember = "Üye Ekle"
-backToTeams = "Takımlara Geri Dön"
-cannotAddToInternal = "Internal takımına üye eklenemez"
-cannotDeleteInternal = "Internal takımı silinemez"
-cannotRenameInternal = "Internal takımı yeniden adlandırılamaz"
-confirmDelete = "Bu takımı silmek istediğinizden emin misiniz? Silmek için bu takımın boş olması gerekir."
-confirmRemove = "Kullanıcı bu takımdan kaldırılsın mı?"
-createNewTeam = "Yeni Takım Oluştur"
-deleteTeamLabel = "Takımı Sil"
 description = "Takımları yönetin ve çalışma alanı üyelerini organize edin"
-loadError = "Ekip ayrıntıları yüklenemedi"
-loading = "Takımlar yükleniyor..."
-loadingDetails = "Takım ayrıntıları yükleniyor..."
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
-noMembers = "Bu takımda üye yok"
-noTeamsFound = "Takım bulunamadı"
-removeMember = "Takımdan çıkar"
-removeMemberError = "Kullanıcı takımdan çıkarılamadı"
-removeMemberSuccess = "Kullanıcı takımdan çıkarıldı"
-renameTeamLabel = "Takımı Yeniden Adlandır"
-system = "Sistem"
-teamActions = "Ekip işlemleri"
-teamName = "Takım Adı"
-teamNotFound = "Takım bulunamadı"
-totalMembers = "Toplam Üye"
-viewTeam = "Takımı Görüntüle"
-
-[workspace.teams.addMemberToTeam]
-addingTo = "Şuraya ekleniyor"
-currentlyIn = "şu anda"
-error = "Üye takıma eklenemedi"
-selectUser = "Kullanıcı Seçin"
-selectUserPlaceholder = "Bir kullanıcı seçin"
-selectUserRequired = "Lütfen bir kullanıcı seçin"
-submit = "Üye Ekle"
-success = "Üye başarıyla takıma eklendi"
-title = "Takıma Üye Ekle"
-userRequired = "Lütfen bir kullanıcı seçin"
-willBeMoved = "Not: Bu kullanıcı mevcut takımından bu takıma taşınacaktır."
-
-[workspace.teams.changeTeam]
-changing = "Taşınıyor"
-error = "Takım değiştirilemedi"
-label = "Takımı Değiştir"
-selectTeam = "Takım Seçin"
-selectTeamPlaceholder = "Bir takım seçin"
-selectTeamRequired = "Lütfen bir takım seçin"
-submit = "Takımı Değiştir"
-success = "Takım başarıyla değiştirildi"
-title = "Takımı Değiştir"
-
-[workspace.teams.createTeam]
-error = "Takım oluşturulamadı"
-nameRequired = "Takım adı gereklidir"
-submit = "Takım Oluştur"
-success = "Takım başarıyla oluşturuldu"
-teamName = "Takım Adı"
-teamNamePlaceholder = "Takım adını girin"
-title = "Yeni Takım Oluştur"
-
-[workspace.teams.deleteTeam]
-error = "Takım silinemedi. Takımın boş olduğundan emin olun."
-success = "Takım başarıyla silindi"
-
-[workspace.teams.renameTeam]
-error = "Takım yeniden adlandırılamadı"
-nameRequired = "Takım adı gereklidir"
-newTeamName = "Yeni Takım Adı"
-newTeamNamePlaceholder = "Yeni takım adını girin"
-renaming = "Yeniden adlandırılıyor:"
-submit = "Takımı Yeniden Adlandır"
-success = "Takım başarıyla yeniden adlandırıldı"
-title = "Takımı Yeniden Adlandır"
 
 [zipWarning]
 cancel = "İptal"

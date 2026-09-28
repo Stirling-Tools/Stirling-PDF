@@ -729,6 +729,8 @@ permissionNotice = "tessdata パスに書き込めません。ダウンロード
 
 [admin.settings.ai]
 description = "Stirling を Python AI エンジンに接続し、モデルを選択して、実行時のガードレールを設定します。"
+managedByCloud = "このモードでは Stirling Cloud によって管理されます。"
+managedByCloudShort = "Stirling Cloud によって管理"
 
 [admin.settings.ai.documents]
 description = "ドキュメントに関する質問に回答するために使用する埋め込みモデルと取得設定を構成します。保存すると AI エンジンに適用されます。"
@@ -771,11 +773,24 @@ label = "Top K"
 [admin.settings.ai.general]
 connection = "接続"
 description = "Stirling を Python AI エンジンに接続し、公開する AI 機能を選択します。変更は再起動後に適用されます。"
+restartNote = "URL またはタイムアウトを変更した場合、再起動後に有効になります。"
 title = "AI エンジン"
 
 [admin.settings.ai.general.capabilities]
 description = "個々の AI 機能をオンまたはオフにします。無効化された機能はアプリで非表示になります。"
 title = "機能"
+
+[admin.settings.ai.general.cloud]
+note = "モデルとプロバイダーキーは Stirling Cloud によって管理されるため、このモードではこれらの設定は適用されません。"
+
+[admin.settings.ai.general.cloud.indexing]
+description = "各 AI ツールは、回答に必要なページテキストを送信します。これにより、Stirling Cloud がそのテキストをインデックス付きで保持し、後でドキュメント全体を検索して質問に答えられるようにするかどうかを決定します。"
+help = "オフにすると、ドキュメントへの質問は利用できません。テキストの送信は止まりません。保存のみ停止します。"
+label = "Stirling Cloud にインデックス付きドキュメントの保持を許可する"
+
+[admin.settings.ai.general.cloudNote]
+body = "推論は Stirling のインフラストラクチャ上で実行され、このサーバーにリンクされたアカウントに課金されます。ここで実行するコンテナーも、保持するプロバイダーキーもありません。AI が読み取るものはすべて、お使いのハードウェアではなく Stirling Cloud によって処理されます。"
+title = "Stirling Cloud AI について"
 
 [admin.settings.ai.general.enabled]
 description = "マスタースイッチ。オフの場合、AI ツール、エージェント、エンジン呼び出しは利用できません。"
@@ -809,9 +824,28 @@ label = "PDF コメントエージェント"
 description = "ドキュメント生成など、負荷の高いエージェント操作のタイムアウト。"
 label = "長時間実行タイムアウト（秒）"
 
+[admin.settings.ai.general.mode]
+label = "AI の実行場所"
+
+[admin.settings.ai.general.mode.cloud]
+description = "コンテナーなし、プロバイダーキーなし、モデル選択なし - 処理は Stirling Cloud 上で実行され、このサーバーにリンクされたアカウントに課金されます。"
+linkCta = "このサーバーを Stirling アカウントに接続"
+notLinked = "まずアカウントをリンクしてください"
+ownerOnly = "組織のオーナーのみが、このサーバーを Stirling アカウントにリンクできます。"
+title = "Stirling Cloud AI を使用"
+
+[admin.settings.ai.general.mode.off]
+description = "アプリ内のどこにも AI ツールはなく、このサーバーから何も送信されません。"
+title = "オフ"
+
+[admin.settings.ai.general.mode.self]
+description = "選択したモデルプロバイダーを指定して、自分でホストするコンテナーです。キー、請求、データ経路はすべてあなたのものです。"
+title = "独自のエンジンを実行"
+
 [admin.settings.ai.general.note]
-body = "AI エンジンは別サービスとして実行されます。その共有シークレット"
-body2 = "はコンテナ環境変数で設定されます。プロバイダー API key はこれらのページで入力するか、エンジン環境変数として指定できます。ここで入力した key は保存時にエンジンへ送信されます。"
+docs = "セットアップガイド"
+intro = "Stirling の隣で実行する別個のコンテナーです。推論を行います。Stirling は引き続きすべてのページ操作を自身で行います。両方のコンテナーで同じ"
+outro = "とモデルプロバイダーキーが必要です。AI が読み取るものはすべて、選択したプロバイダーに送信されます。自分でホストする Ollama であれば、すべてのページを社内に保持できます。"
 title = "AI エンジンについて"
 
 [admin.settings.ai.general.streamTimeoutSeconds]
@@ -890,6 +924,67 @@ label = "スマートモデル"
 body = "変更は AI エンジンに自動的に送信されます。"
 bodyNoPush = "設定を保存しました。AI エンジンが次に構成を取得したときに適用されます。"
 title = "AI 設定を保存しました"
+
+[admin.settings.ai.status]
+capabilities = "機能"
+capabilitiesValue = "{{total}} 件中 {{on}} 件がオン"
+checked = "確認済み"
+checking = "エンジンを確認中…"
+description = "エンジンに到達できるか、このサーバーを受け入れるか、何を実行しているかを示します。"
+fastModel = "高速モデル"
+justNow = "たった今"
+latency = "応答時間"
+linkLabel = "アカウントリンク"
+minutesAgo = "{{count}} 分前"
+recheck = "再確認"
+runningOn = "実行先"
+secondsAgo = "{{count}} 秒前"
+secretLabel = "共有シークレット"
+smartModel = "スマートモデル"
+title = "ステータス"
+url = "エンジン URL"
+
+[admin.settings.ai.status.cloud]
+hostDown = "停止中"
+hostLabel = "Stirling.com"
+hostUp = "稼働中"
+name = "Stirling Cloud"
+sharingLabel = "AI 共有"
+sharingOff = "無効"
+sharingOn = "有効"
+
+[admin.settings.ai.status.cloud.degraded]
+body = "Stirling Cloud は応答しましたが、このサーバーを拒否しました。アカウントリンクが取り消された可能性があります。"
+title = "Stirling Cloud がこのサーバーを拒否しています"
+
+[admin.settings.ai.status.cloud.down]
+body = "このサーバーは Stirling Cloud に到達できませんでした。アカウントリンクと、このサーバーがインターネットに接続できることを確認してください。"
+title = "Stirling Cloud に到達できません"
+
+[admin.settings.ai.status.cloud.ok]
+body = "Stirling Cloud はこのサーバーを受け入れました。ここで実行またはパッチ適用するものはありません。"
+title = "Stirling Cloud 上で実行中"
+
+[admin.settings.ai.status.degraded]
+body = "ヘルスチェックには応答しましたが、実際のリクエストは拒否しました。双方で異なる共有シークレットが使用されています。"
+title = "エンジンは起動していますが、このサーバーを拒否しています"
+
+[admin.settings.ai.status.down]
+body = "URL、エンジンコンテナーが実行中であること、AI を有効にした後に再起動したことを確認してください。"
+title = "エンジンに到達できません"
+
+[admin.settings.ai.status.off]
+body = "以下で AI の実行方法を選択し、保存して再起動してください。"
+title = "AI はオフになっています"
+
+[admin.settings.ai.status.ok]
+body = "ヘルスチェックと認証済みリクエストの両方が成功しました。"
+title = "エンジン実行中"
+
+[admin.settings.ai.status.secret]
+no = "拒否されました"
+unknown = "不明"
+yes = "受け入れられました"
 
 [admin.settings.badge]
 clickToUpgrade = "クリックしてプラン詳細を表示"
@@ -4453,6 +4548,7 @@ openFromComputer = "コンピューターから開く"
 openSettings = "設定を開く"
 other = "その他"
 recent = "最近"
+searchFiles = "ファイルを検索"
 uploadFailedBody = "選択したファイルを追加できませんでした。"
 uploadFailedTitle = "Upload に失敗しました"
 viewAll = "{{count}} 個のファイルをすべて表示"
@@ -5827,6 +5923,8 @@ label = "Free credits"
 adoptFailed = "ドキュメントのロックは解除されましたが、ここでは開けませんでした。ツールを直接お試しください。"
 empty = "報告する内容はありません。"
 handoffUnavailable = "このブラウザーでは、プロセッサーからエディターにドキュメントを渡せません。代わりにエディターから開いてください。"
+inSmartFolder = "このドキュメントはスマートフォルダー内にあるため、ここではなくサーバー上で処理されます。"
+inSmartFolderNamed = "{{name}} はスマートフォルダー内にあるため、ここではなくサーバー上で処理されます。"
 noDocumentLinked = "この失敗は特定のドキュメントに関連付けられていないため、ここで開くものはありません。"
 notOnThisDevice = "このドキュメントはこのデバイス上にないため、ここでは開けません。"
 occurrences = "{{count}} 回"
@@ -5837,6 +5935,7 @@ repairedRerunNotAdopted = "修復されたドキュメントは処理されま�
 repairedRerunUndelivered = "ドキュメントは修復され、ポリシーの再実行が開始されましたが、その結果をここに配信できないため、この失敗は未解決のままです。"
 rerunRejected = "現在ポリシーを再実行できませんでした。しばらくしてからもう一度お試しください。"
 rerunUndelivered = "ポリシーの再実行が開始されましたが、その結果をここに配信できないため、この失敗は未解決のままです。"
+retryInFolderFailed = "そのドキュメントは現在再実行できませんでした。"
 retryUnavailable = "このドキュメントは、このブラウザーから再試行できなくなりました。"
 title = "通知"
 unlockedNotRerun = "ドキュメントのロックは解除され、ここで開かれましたが、ポリシーを再度実行できませんでした。"
@@ -6625,9 +6724,11 @@ title = "Team プランを調整"
 [payment.capacityStage]
 adjustmentNote = "確定する前に、Stripe に正確な請求額、日割り調整、次回請求日が表示されます。利用可能な場合は保存済みの支払い方法が使用されます。"
 continue = "支払いに進む"
+currencyAtCheckout = "Stripe がチェックアウト時に最終金額と支払い通貨を確認します。"
 customLabel = "ユーザー数"
 dueToday = "本日のお支払い"
 enterpriseQuote = "エンタープライズ見積もりを取得"
+estimatedTotal = "推定合計"
 lineItem = "Team · {{block}}ユーザーごとに {{price}}{{period}}"
 minimumForCurrentUsers = "{{users}}ユーザーいるため、プランは少なくとも{{minimum}}をカバーする必要があります。"
 modalTitle = "{{planName}} にアップグレード"
@@ -6865,6 +6966,25 @@ width = "幅"
 widthHint = "テキストボックスの幅は、その内容と折り返しに従います。"
 x = "X"
 y = "Y"
+
+[pdfTextEditor.mobile]
+actions = "エディター操作"
+addImage = "画像"
+addText = "テキスト"
+cancel = "キャンセル"
+delete = "削除"
+details = "詳細"
+document = "ドキュメント"
+done = "完了"
+download = "保存してダウンロード"
+find = "検索"
+lock = "ロック"
+openPdf = "PDF を開く"
+panelHint = "編集はワークスペース表示で行います。ページ上のテキストをタップして変更します。"
+save = "保存"
+style = "スタイル"
+tapToPlace = "テキストを配置するページ上の場所をタップしてください"
+unlock = "ロック解除"
 
 [pdfTextEditor.password]
 cancel = "キャンセル"
@@ -7574,6 +7694,49 @@ plan = "プラン"
 procurement = "調達"
 usage = "使用状況"
 
+[portal.billing.compare]
+current = "現在"
+enterpriseData = "データレジデンシーと SCIM"
+enterpriseName = "Enterprise"
+enterprisePrice = "ご契約に基づく"
+enterpriseProcessing = "従量制または定額"
+enterpriseSignIn = "SAML と監査"
+enterpriseSupport = "稼働時間 SLA、デプロイ支援"
+enterpriseUsers = "上限なし"
+enterpriseWhere = "さらにマルチノードとエアギャップ"
+exploreEnterprise = "Enterprise を見る"
+freeData = "実行場所に留まります"
+freeName = "無料"
+freePrice = "カード不要、有効期限なし"
+freeProcessing = "月 {{allowance}} クレジット"
+freeProcessingUnknown = "月間クレジット枠"
+freeSignIn = "メール、Google、SSO"
+freeSignInNote = "OAuth2/OIDC"
+freeSupport = "コミュニティ"
+freeUsers = "最大 {{users}} 人"
+freeUsersUnknown = "小規模チーム"
+freeWhere = "Cloud、デスクトップ、またはセルフホスト"
+lede = "すべてのプランにすべての PDF ツールと SSO が含まれます。変わるのは、利用人数、実行場所、受けられるサポートです。"
+open = "プランを比較"
+rowData = "お客様のデータ"
+rowHeader = "機能"
+rowProcessing = "処理"
+rowSignIn = "サインイン"
+rowSupport = "サポート"
+rowUsers = "ユーザー"
+rowWhere = "実行場所"
+teamData = "Google Drive、お客様のデータベース"
+teamName = "Team"
+teamPrice = "100 ユーザーあたり $99/月"
+teamProcessing = "月 {{allowance}}、その後は従量制"
+teamProcessingUnknown = "より大きな枠、その後は従量制"
+teamSignIn = "同じ"
+teamSupport = "メール"
+teamUsers = "1 ブロックあたり 100 人"
+teamWhere = "Cloud、デスクトップ、またはセルフホスト"
+title = "プランを比較"
+upgradeTeam = "Team にアップグレード"
+
 [portal.billing.cycle]
 credits = "クレジット"
 creditsNote = "{{units}} 使用済み · 無料およびプリペイドクレジットを含む"
@@ -7679,6 +7842,8 @@ payTitle = "1 年分を支払う"
 step = "ステップ {{current}} / {{total}}"
 
 [portal.billing.prepaid.calc]
+currency = "見積もり通貨"
+currencyLocked = "既存の Stripe 請求通貨を使用します。"
 rateUnknown = "チェックアウト時に正確な価格を表示します。"
 
 [portal.billing.prepaid.consent]
@@ -8481,6 +8646,10 @@ title = "ファイルを修復できませんでした"
 [portal.failures.kind.inputWrongType]
 description = "ファイルはこのステップで開ける形式ではないため、実行で読み取れませんでした。"
 title = "間違ったファイルタイプ"
+
+[portal.failures.kind.sourceUnreadable]
+description = "スマートフォルダーを読み取れなかったため、その中のものは処理されませんでした。"
+title = "フォルダーを読み取れませんでした"
 
 [portal.failures.kind.stepCannotRenderPage]
 description = "ファイル内のページを描画できなかったため、実行を完了できませんでした。"
@@ -12235,6 +12404,7 @@ goBack = "戻る"
 pdfTools = "PDF ツール"
 placeholder = "ツールを選択して開始"
 premiumFeature = "プレミアム機能:"
+searchTools = "ツールを検索"
 toolsHeader = "ツール"
 viewAllTools = "すべてのツールを表示"
 
@@ -12399,13 +12569,10 @@ visits = "訪問数"
 
 [users]
 lastActive = "最終アクティブ"
-learnMore = "ロールとアクセスについて詳しく見る。"
 locked = "ロック中"
 ownerSetupRequired = "組織オーナーが初回ログインを完了していません。所有権を移行する前に、セットアップを完了するか、サーバー運用者に所有権の回復を依頼してください。"
 roleFor = "{{name}} のロール"
 rowActions = "{{name}} のアクション"
-showAll = "{{count}}件すべて表示"
-showLess = "表示を減らす"
 subtitle2 = "ユーザー、チーム、アクセスレベル。"
 suspended = "停止中"
 teamActions = "チームアクション"
@@ -12414,6 +12581,7 @@ you = "（あなた）"
 
 [users.action]
 cancelInvite = "招待をキャンセル"
+createFromDefault = "Default からチームを作成"
 deleteTeam = "チームを削除"
 disableMfa = "MFA をリセット"
 move = "チームへ移動"
@@ -12451,6 +12619,7 @@ email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
+team = "チーム"
 
 [users.confirm]
 cancelInviteBody = "{{email}} への招待をキャンセルしますか？現在のリンクでは参加できなくなります。"
@@ -12469,15 +12638,12 @@ transferOwnershipTitle = "組織所有権を移行"
 description = "チームを招待して共同作業を開始しましょう。"
 title = "まだメンバーはいません"
 
+[users.filters]
+noMatches = "このフィルターに一致する人はいません。"
+search = "ユーザーを検索"
+
 [users.group]
 addToTeam = "チームに追加"
-administrators = "{{count}} 人の管理者"
-guestCount = "{{count}}人のゲスト"
-guests = "ゲスト"
-ledBy = "{{owner}} が主導"
-org = "組織"
-team = "{{name}} チーム"
-teamMeta = "{{count}}人"
 
 [users.invite]
 access = "アクセス"
@@ -12542,6 +12708,9 @@ title = "新しいチーム"
 
 [users.renameTeam]
 apply = "名前を変更"
+defaultApply = "作成して移動"
+defaultDescription = "Default は新規ユーザー向けに引き続き利用できます。現在 Default にいる全員が新しいチームに移動されます。"
+defaultTitle = "Default からチームを作成"
 name = "チーム名"
 title = "チーム名を変更"
 
@@ -12566,6 +12735,15 @@ guest = "ゲスト"
 member = "メンバー"
 orgOwner = "組織所有者"
 teamOwner = "チーム所有者"
+
+[users.seats]
+full = "ライセンス済みシートはすべて使用中です。別の人を追加するには、シートを空けるか、シート数を増やしてください。"
+update = "シートを更新"
+
+[users.tabs]
+all = "すべて"
+label = "チームでフィルター"
+unassigned = "チームなし"
 
 [users.team]
 grantProcessor = "チームに Processor を付与"
@@ -13216,232 +13394,14 @@ submitSignature = "署名を送信"
 title = "ワークスペース"
 
 [workspace.people]
-active = "有効"
-activeSession = "アクティブセッション"
-addMembers = "メンバーを追加"
-admin = "管理者"
-confirmDelete = "このユーザーを削除してよろしいですか？この操作は元に戻せません。"
-confirmUnlock = "このユーザーアカウントのロックを解除してよろしいですか？"
-deleteUser = "ユーザーを削除"
-deleteUserError = "ユーザーの削除に失敗しました"
-deleteUserSuccess = "ユーザーを削除しました"
 description = "ワークスペースのメンバーと権限を管理"
-disable = "無効化"
-disabled = "無効"
-editRole = "ロールを編集"
-enable = "有効化"
-loading = "メンバーを読み込み中..."
-locked = "ロック中"
-lockedBadge = "ロック中"
-loginRequired = "先にログインモードを有効にしてください"
-memberActions = "メンバー操作"
-noMembersFound = "メンバーが見つかりません"
-ownerLocked = "オーナーのロールまたはアカウントを変更する前に、設定 → ワークスペース → ユーザー で組織所有権を移行してください。"
-role = "役割"
-searchMembers = "メンバーを検索..."
-team = "チーム"
-unlockAccount = "アカウントのロックを解除"
-unlockUserError = "ユーザーアカウントのロック解除に失敗しました"
-unlockUserSuccess = "ユーザーアカウントのロックを解除しました"
-user = "ユーザー"
-userInfo = "ユーザー情報"
-
-[workspace.people.actions]
-upgrade = "アップグレード"
-
-[workspace.people.addMember]
-authType = "認証タイプ"
-error = "ユーザーの作成に失敗しました"
-forceMFA = "次回ログイン時に MFA の設定を必須にする"
-forcePasswordChange = "初回ログイン時にパスワード変更を強制"
-password = "パスワード"
-passwordPlaceholder = "パスワードを入力"
-passwordRequired = "パスワードは必須です"
-role = "ロール"
-submit = "メンバーを追加"
-success = "ユーザーを作成しました"
-team = "チーム（任意）"
-teamPlaceholder = "チームを選択"
-username = "ユーザー名（メール）"
-usernamePlaceholder = "user@example.com"
-usernameRequired = "ユーザー名とパスワードは必須です"
-
-[workspace.people.authType]
-oauth = "OAuth2"
-password = "パスワード"
-saml = "SAML2"
-ssoDescription = "ユーザーは SSO プロバイダー経由で認証します"
-
-[workspace.people.changePassword]
-action = "パスワードを変更"
-confirmPassword = "パスワードの確認"
-confirmPlaceholder = "新しいパスワードを再入力"
-copiedToClipboard = "パスワードをクリップボードにコピーしました"
-copyFailed = "パスワードのコピーに失敗しました"
-copyTooltip = "クリップボードにコピー"
-emailUnavailable = "このユーザーのメールは有効なメールアドレスではありません。通知は無効です。"
-error = "パスワードの更新に失敗しました"
-forcePasswordChange = "次回ログイン時にユーザーにパスワード変更を強制する"
-generatedPreview = "生成されたパスワード:"
-generateRandom = "安全なパスワードを生成"
-includePassword = "メールに新しいパスワードを含める"
-newPassword = "新しいパスワード"
-notifyOnly = "パスワードを含めずにメールを送信し、管理者が変更したことをユーザーに知らせます。"
-passwordMismatch = "パスワードが一致しません"
-passwordRequired = "新しいパスワードを入力してください"
-placeholder = "新しいパスワードを入力"
-sendEmail = "この変更についてユーザーにメールする"
-smtpDisabled = "メール通知には設定で SMTP を有効にする必要があります。"
-submit = "パスワードを更新"
-subtitle = "のパスワードを更新"
-success = "パスワードを更新しました"
-title = "パスワードを変更"
-
-[workspace.people.editMember]
-editing = "Editing: <0>{{username}}</0>"
-error = "ユーザーの更新に失敗しました"
-role = "ロール"
-submit = "Update User"
-success = "ユーザーを更新しました"
-team = "チーム（任意）"
-teamPlaceholder = "チームを選択"
-title = "Edit User"
-
-[workspace.people.emailInvite]
-allFailed = "ユーザーの招待に失敗しました"
-emails = "メールアドレス"
-emailsPlaceholder = "user1@example.com, user2@example.com"
-emailsRequired = "少なくとも1件のメールアドレスが必要です"
-error = "招待の送信に失敗しました"
-partialFailure = "一部の招待に失敗しました"
-submit = "招待を送信"
-success = "ユーザーを招待しました"
-
-[workspace.people.inviteLink]
-copied = "リンクをクリップボードにコピーしました"
-email = "メールアドレス"
-emailDescription = "任意 - だれでも使える汎用の招待リンクにする場合は空欄のままにしてください"
-emailPlaceholder = "user@example.com（任意）"
-emailSent = "招待リンクを生成し、メールで送信しました"
-error = "招待リンクの生成に失敗しました"
-expiryHours = "有効期限（時間）"
-generate = "リンクを生成"
-generated = "招待リンクを生成しました"
-sendEmail = "招待リンクをメールで送信"
-sendEmailDescription = "有効にすると、指定したメールアドレスに招待リンクを送信します"
-submit = "招待リンクを生成"
-
-[workspace.people.inviteMembers]
-label = "メンバーを招待"
-subtitle = "下にメールアドレスをカンマ区切りで入力または貼り付けてください。メンバー数に応じてワークスペースに課金されます。"
-
-[workspace.people.inviteMode]
-email = "メール"
-emailDisabled = "メール招待には、設定で SMTP の構成と mail.enableInvites=true が必要です"
-link = "リンク"
-username = "ユーザー名"
 
 [workspace.people.license]
-currentUsage = "現在 {{max}} 件中 {{current}} 件のユーザーライセンスを使用"
-fromLicense = "ライセンスから"
-grandfathered = "グランドファーザー特典"
-grandfatheredShort = "{{count}} 件のグランドファーザー特典"
-slotsAvailable_one = "{{count}} user slot available"
-slotsAvailable_other = "{{count}} user slots available"
-slotsAvailable_zero = "No slots available"
 users_one = "user"
 users_other = "users"
 
-[workspace.people.mfa]
-adminDisableError = "ユーザーの MFA を無効化できませんでした"
-adminDisableSuccess = "ユーザーの MFA を無効化しました"
-disableByAdmin = "MFA を無効化"
-
-[workspace.people.roleDescriptions]
-admin = "設定の管理とメンバーの招待が可能。管理者としてのフルアクセス権があります。"
-currentRole = "現在割り当てられているロール。"
-user = "Can view and edit shared files, but cannot manage workspace settings or users."
-
-[workspace.people.toggleEnabled]
-error = "ユーザーのステータスの更新に失敗しました"
-success = "ユーザーのステータスを更新しました"
-
 [workspace.teams]
-addMember = "メンバーを追加"
-backToTeams = "チーム一覧に戻る"
-cannotAddToInternal = "Internal チームにメンバーを追加できません"
-cannotDeleteInternal = "Internal チームは削除できません"
-cannotRenameInternal = "Internal チームの名前は変更できません"
-confirmDelete = "このチームを削除してよろしいですか？削除するにはチームが空である必要があります。"
-confirmRemove = "このチームからユーザーを削除しますか？"
-createNewTeam = "新しいチームを作成"
-deleteTeamLabel = "チームを削除"
 description = "チームを管理し、ワークスペースのメンバーを整理します"
-loadError = "チームの詳細を読み込めませんでした"
-loading = "チームを読み込み中..."
-loadingDetails = "チームの詳細を読み込み中..."
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
-noMembers = "このチームにはメンバーがいません"
-noTeamsFound = "チームが見つかりません"
-removeMember = "チームから削除"
-removeMemberError = "ユーザーのチームからの削除に失敗しました"
-removeMemberSuccess = "ユーザーをチームから削除しました"
-renameTeamLabel = "チーム名を変更"
-system = "システム"
-teamActions = "チーム操作"
-teamName = "チーム名"
-teamNotFound = "チームが見つかりません"
-totalMembers = "メンバー総数"
-viewTeam = "チームを表示"
-
-[workspace.teams.addMemberToTeam]
-addingTo = "追加先"
-currentlyIn = "現在の所属"
-error = "メンバーのチームへの追加に失敗しました"
-selectUser = "ユーザーを選択"
-selectUserPlaceholder = "ユーザーを選択"
-selectUserRequired = "ユーザーを選択してください"
-submit = "メンバーを追加"
-success = "メンバーをチームに追加しました"
-title = "チームにメンバーを追加"
-userRequired = "ユーザーを選択してください"
-willBeMoved = "注: このユーザーは現在のチームからこのチームに移動されます。"
-
-[workspace.teams.changeTeam]
-changing = "移動中"
-error = "チームの変更に失敗しました"
-label = "チームを変更"
-selectTeam = "チームを選択"
-selectTeamPlaceholder = "チームを選択"
-selectTeamRequired = "チームを選択してください"
-submit = "チームを変更"
-success = "チームを変更しました"
-title = "チームを変更"
-
-[workspace.teams.createTeam]
-error = "チームの作成に失敗しました"
-nameRequired = "チーム名は必須です"
-submit = "チームを作成"
-success = "チームを作成しました"
-teamName = "チーム名"
-teamNamePlaceholder = "チーム名を入力"
-title = "新しいチームを作成"
-
-[workspace.teams.deleteTeam]
-error = "チームを削除できませんでした。チームが空であることを確認してください。"
-success = "チームを削除しました"
-
-[workspace.teams.renameTeam]
-error = "チーム名の変更に失敗しました"
-nameRequired = "チーム名は必須です"
-newTeamName = "新しいチーム名"
-newTeamNamePlaceholder = "新しいチーム名を入力"
-renaming = "名前変更中:"
-submit = "チーム名を変更"
-success = "チーム名を変更しました"
-title = "チーム名を変更"
 
 [zipWarning]
 cancel = "キャンセル"

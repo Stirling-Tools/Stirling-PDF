@@ -729,6 +729,8 @@ permissionNotice = "tessdata പാത എഴുതാനാവില്ല. ഡ
 
 [admin.settings.ai]
 description = "Stirling-നെ Python AI engine-നോട് ബന്ധിപ്പിക്കുക, അതിന്റെ മോഡലുകൾ തിരഞ്ഞെടുക്കുക, അത് പ്രവർത്തിക്കുന്ന guardrails സജ്ജമാക്കുക."
+managedByCloud = "ഈ മോഡിൽ Stirling Cloud ആണ് നിയന്ത്രിക്കുന്നത്."
+managedByCloudShort = "Stirling Cloud നിയന്ത്രിക്കുന്നു"
 
 [admin.settings.ai.documents]
 description = "ഡോക്യുമെന്റുകളിലെ ചോദ്യങ്ങൾക്ക് ഉത്തരം നൽകാൻ ഉപയോഗിക്കുന്ന embedding മോഡലും retrieval ക്രമീകരണങ്ങളും കോൺഫിഗർ ചെയ്യുക. സേവ് ചെയ്യുമ്പോൾ AI engine-ന് ബാധകമാകും."
@@ -771,11 +773,24 @@ label = "Top K"
 [admin.settings.ai.general]
 connection = "കണക്ഷൻ"
 description = "Stirling-നെ Python AI engine-ലേക്ക് കണക്റ്റ് ചെയ്ത് ഏത് AI കഴിവുകളാണ് കാണിക്കേണ്ടതെന്ന് തിരഞ്ഞെടുക്കുക. മാറ്റങ്ങൾ restart ചെയ്യുമ്പോൾ ബാധകമാകും."
+restartNote = "URL അല്ലെങ്കിൽ ഏതെങ്കിലും timeout മാറ്റുന്നത് restart കഴിഞ്ഞാൽ പ്രാബല്യത്തിൽ വരും."
 title = "AI Engine"
 
 [admin.settings.ai.general.capabilities]
 description = "ഓരോ AI സവിശേഷതയും ഓൺ അല്ലെങ്കിൽ ഓഫ് ചെയ്യുക. പ്രവർത്തനരഹിതമാക്കിയ സവിശേഷതകൾ app-ൽ മറയ്ക്കും."
 title = "കഴിവുകൾ"
+
+[admin.settings.ai.general.cloud]
+note = "മോഡലുകളും provider keys ഉം Stirling Cloud ആണ് നിയന്ത്രിക്കുന്നത്, അതിനാൽ ഈ മോഡിൽ ആ ക്രമീകരണങ്ങൾ ബാധകമല്ല."
+
+[admin.settings.ai.general.cloud.indexing]
+description = "ഓരോ AI ടൂളും ഉത്തരം നൽകാൻ ആവശ്യമായ പേജ് ടെക്സ്റ്റ് അയയ്ക്കുന്നു. പിന്നീട് വരുന്ന ചോദ്യങ്ങൾക്ക് ഡോക്യുമെന്റിൽ മുഴുവൻ തിരയാൻ കഴിയുന്ന വിധത്തിൽ Stirling Cloud ആ ടെക്സ്റ്റ് സൂചികയാക്കി സൂക്ഷിക്കാമോ എന്ന് ഇത് തീരുമാനിക്കുന്നു."
+help = "Off എന്നത് ഡോക്യുമെന്റ് ചോദ്യങ്ങൾ ലഭ്യമല്ല എന്നാണ്. ഇത് ടെക്സ്റ്റ് അയയ്ക്കുന്നത് നിർത്തില്ല - സംഭരിക്കുന്നത് മാത്രം നിർത്തും."
+label = "സൂചികയാക്കിയ ഡോക്യുമെന്റുകൾ Stirling Cloud സൂക്ഷിക്കാൻ അനുവദിക്കുക"
+
+[admin.settings.ai.general.cloudNote]
+body = "റീസണിംഗ് Stirling-ന്റെ ഇൻഫ്രാസ്ട്രക്ചറിൽ പ്രവർത്തിക്കുന്നു, ഈ server ലിങ്ക് ചെയ്തിരിക്കുന്ന അക്കൗണ്ടിലേക്കാണ് ബിൽ ചെയ്യുന്നത്. ഇവിടെ പ്രവർത്തിപ്പിക്കേണ്ട container ഇല്ല, സൂക്ഷിക്കേണ്ട provider key ഇല്ല. AI വായിക്കുന്നതെല്ലാം നിങ്ങളുടെ സ്വന്തം hardware-ൽ അല്ല, Stirling Cloud ആണ് പ്രോസസ്സ് ചെയ്യുന്നത്."
+title = "Stirling Cloud AI കുറിച്ച്"
 
 [admin.settings.ai.general.enabled]
 description = "പ്രധാന switch. ഓഫ് ആയിരിക്കുമ്പോൾ AI tools, agents, അല്ലെങ്കിൽ engine calls ഒന്നും ലഭ്യമല്ല."
@@ -809,9 +824,28 @@ label = "PDF comment agent"
 description = "ഡോക്യുമെന്റ് generation പോലുള്ള കൂടുതൽ ഭാരമുള്ള agent operations-നുള്ള timeout."
 label = "ദൈർഘ്യമേറിയ timeout (seconds)"
 
+[admin.settings.ai.general.mode]
+label = "AI എവിടെ പ്രവർത്തിക്കുന്നു"
+
+[admin.settings.ai.general.mode.cloud]
+description = "Container ഇല്ല, provider key ഇല്ല, model തിരഞ്ഞെടുക്കൽ ഇല്ല - ജോലി Stirling Cloud-ൽ പ്രവർത്തിക്കുന്നു, ഈ server ലിങ്ക് ചെയ്തിരിക്കുന്ന അക്കൗണ്ടിലേക്കാണ് ബിൽ ചെയ്യുന്നത്."
+linkCta = "ഈ server ഒരു Stirling അക്കൗണ്ടുമായി ബന്ധിപ്പിക്കുക"
+notLinked = "ആദ്യം ഒരു അക്കൗണ്ട് ലിങ്ക് ചെയ്യുക"
+ownerOnly = "organization owner-ന് മാത്രമേ ഈ server ഒരു Stirling അക്കൗണ്ടുമായി ലിങ്ക് ചെയ്യാൻ കഴിയൂ."
+title = "Stirling Cloud AI ഉപയോഗിക്കുക"
+
+[admin.settings.ai.general.mode.off]
+description = "ആപ്പിൽ എവിടെയും AI ടൂളുകൾ ഇല്ല, ഈ server വിട്ട് ഒന്നും പുറത്തേക്ക് പോകുന്നില്ല."
+title = "Off"
+
+[admin.settings.ai.general.mode.self]
+description = "നിങ്ങൾ host ചെയ്യുന്ന, നിങ്ങൾ തിരഞ്ഞെടുക്കുന്ന model provider-ലേക്ക് point ചെയ്ത container. നിങ്ങളുടെ key, നിങ്ങളുടെ bill, നിങ്ങളുടെ data path."
+title = "നിങ്ങളുടെ സ്വന്തം engine പ്രവർത്തിപ്പിക്കുക"
+
 [admin.settings.ai.general.note]
-body = "AI engine ഒരു പ്രത്യേക service ആയി പ്രവർത്തിക്കുന്നു. അതിന്റെ shared secret"
-body2 = "ഒരു container environment variable വഴി സജ്ജീകരിച്ചിരിക്കുന്നു. Provider API keys ഈ പേജുകളിൽ നൽകുകയോ engine environment variables ആയി നൽകുകയോ ചെയ്യാം; ഇവിടെ നൽകിയ keys സേവ് ചെയ്യുമ്പോൾ engine-ലേക്ക് push ചെയ്യും."
+docs = "സജ്ജീകരണ ഗൈഡ്"
+intro = "Stirling-ന് സമീപം നിങ്ങൾ പ്രവർത്തിപ്പിക്കുന്ന വേറൊരു container. അത് reasoning ചെയ്യുന്നു; Stirling ഇപ്പോഴും ഓരോ page operation-വും സ്വയം ചെയ്യുന്നു. ഇതിന് അതേ"
+outro = "രണ്ട് containers-ലും ഒരു model provider key-യും ആവശ്യമാണ്. AI വായിക്കുന്നതെല്ലാം നിങ്ങൾ തിരഞ്ഞെടുക്കുന്ന provider-ലേക്ക് അയയ്ക്കപ്പെടുന്നു - നിങ്ങൾ host ചെയ്യുന്ന Ollama ഓരോ പേജും in-house ആയി നിലനിർത്തും."
 title = "AI engine കുറിച്ച്"
 
 [admin.settings.ai.general.streamTimeoutSeconds]
@@ -890,6 +924,67 @@ label = "Smart model"
 body = "മാറ്റങ്ങൾ സ്വയമേവ AI engine-ലേക്ക് push ചെയ്യും."
 bodyNoPush = "Settings സേവ് ചെയ്തു. AI engine അടുത്ത തവണ configuration എടുക്കുമ്പോൾ അവ ബാധകമാകും."
 title = "AI settings സേവ് ചെയ്തു"
+
+[admin.settings.ai.status]
+capabilities = "ശേഷികൾ"
+capabilitiesValue = "{{total}} ൽ {{on}} on"
+checked = "പരിശോധിച്ചു"
+checking = "engine പരിശോധിക്കുന്നു…"
+description = "engine എത്തിച്ചേരാനാകുമോ, ഇത് ഈ server സ്വീകരിക്കുന്നുണ്ടോ, എന്താണ് പ്രവർത്തിപ്പിക്കുന്നത് എന്നിവ."
+fastModel = "Fast model"
+justNow = "ഇപ്പോഴേ"
+latency = "പ്രതികരണ സമയം"
+linkLabel = "അക്കൗണ്ട് ലിങ്ക്"
+minutesAgo = "{{count}} മിനിറ്റ് മുമ്പ്"
+recheck = "വീണ്ടും പരിശോധിക്കുക"
+runningOn = "പ്രവർത്തിക്കുന്നത്"
+secondsAgo = "{{count}} സെക്കൻഡ് മുമ്പ്"
+secretLabel = "Shared secret"
+smartModel = "Smart model"
+title = "സ്ഥിതി"
+url = "Engine URL"
+
+[admin.settings.ai.status.cloud]
+hostDown = "Down"
+hostLabel = "Stirling.com"
+hostUp = "Up"
+name = "Stirling Cloud"
+sharingLabel = "AI sharing"
+sharingOff = "Disabled"
+sharingOn = "Enabled"
+
+[admin.settings.ai.status.cloud.degraded]
+body = "Stirling Cloud മറുപടി നൽകി, പക്ഷേ ഈ server നിരസിച്ചു. അക്കൗണ്ട് ലിങ്ക് റദ്ദാക്കിയിരിക്കാം."
+title = "Stirling Cloud ഈ server നിരസിക്കുന്നു"
+
+[admin.settings.ai.status.cloud.down]
+body = "ഈ server-ന് Stirling Cloud-ലേക്ക് എത്താനായില്ല. അക്കൗണ്ട് ലിങ്കും ഈ server-ന് internet എത്തുമോ എന്നും പരിശോധിക്കുക."
+title = "Stirling Cloud എത്തിച്ചേരാനാകുന്നില്ല"
+
+[admin.settings.ai.status.cloud.ok]
+body = "Stirling Cloud ഈ server സ്വീകരിച്ചു. ഇവിടെ പ്രവർത്തിപ്പിക്കാനോ patch ചെയ്യാനോ ഒന്നുമില്ല."
+title = "Stirling Cloud-ൽ പ്രവർത്തിക്കുന്നു"
+
+[admin.settings.ai.status.degraded]
+body = "health check-ന് മറുപടി നൽകി, പക്ഷേ യഥാർത്ഥ request നിരസിച്ചു. രണ്ട് വശങ്ങളും വ്യത്യസ്ത shared secrets ഉപയോഗിക്കുന്നു."
+title = "Engine up ആണ്, പക്ഷേ ഈ server നിരസിക്കുന്നു"
+
+[admin.settings.ai.status.down]
+body = "URL, engine container പ്രവർത്തിക്കുന്നുണ്ടോ, AI enable ചെയ്തതിന് ശേഷം restart ചെയ്തിട്ടുണ്ടോ എന്നിവ പരിശോധിക്കുക."
+title = "Engine എത്തിച്ചേരാനാകുന്നില്ല"
+
+[admin.settings.ai.status.off]
+body = "താഴെ AI എങ്ങനെ പ്രവർത്തിക്കണമെന്ന് തിരഞ്ഞെടുക്കുക, തുടർന്ന് save ചെയ്ത് restart ചെയ്യുക."
+title = "AI off ആക്കി"
+
+[admin.settings.ai.status.ok]
+body = "Health check-ഉം authenticated request-ഉം രണ്ടും വിജയിച്ചു."
+title = "Engine പ്രവർത്തിക്കുന്നു"
+
+[admin.settings.ai.status.secret]
+no = "നിരസിച്ചു"
+unknown = "അറിയില്ല"
+yes = "സ്വീകരിച്ചു"
 
 [admin.settings.badge]
 clickToUpgrade = "പ്ലാൻ വിശദാംശങ്ങൾ കാണാൻ ക്ലിക്ക് ചെയ്യുക"
@@ -4453,6 +4548,7 @@ openFromComputer = "കമ്പ്യൂട്ടറിൽ നിന്ന് �
 openSettings = "ക്രമീകരണങ്ങൾ തുറക്കുക"
 other = "മറ്റുള്ളവ"
 recent = "സമീപകാലം"
+searchFiles = "ഫയലുകൾ തിരയുക"
 uploadFailedBody = "തിരഞ്ഞെടുത്ത ഫയലുകൾ ചേർക്കാനായില്ല."
 uploadFailedTitle = "അപ്‌ലോഡ് പരാജയപ്പെട്ടു"
 viewAll = "എല്ലാ {{count}} ഫയലുകളും കാണുക"
@@ -5827,6 +5923,8 @@ label = "Free credits"
 adoptFailed = "ഡോക്യുമെന്റ് അൺലോക്ക് ചെയ്തു, പക്ഷേ ഇവിടെ തുറക്കാനായില്ല. ടൂൾ നേരിട്ട് ശ്രമിക്കുക."
 empty = "റിപ്പോർട്ട് ചെയ്യാൻ ഒന്നുമില്ല."
 handoffUnavailable = "ഈ browser പ്രോസസ്സറിന് ഡോക്യുമെന്റ് എഡിറ്ററിലേക്ക് കൈമാറാൻ അനുവദിക്കില്ല. പകരം എഡിറ്ററിൽ നിന്ന് അത് തുറക്കുക."
+inSmartFolder = "ഈ ഡോക്യുമെന്റ് ഒരു smart folder-ലാണ്, അതിനാൽ ഇവിടെ അല്ല, server-ലാണ് കൈകാര്യം ചെയ്യുന്നത്."
+inSmartFolderNamed = "{{name}} ഒരു smart folder-ലാണ്, അതിനാൽ ഇവിടെ അല്ല, server-ലാണ് കൈകാര്യം ചെയ്യുന്നത്."
 noDocumentLinked = "ഈ പരാജയം ഒരു നിർദ്ദിഷ്ട ഡോക്യുമെന്റുമായി ലിങ്ക് ചെയ്തിട്ടില്ല, അതിനാൽ ഇവിടെ തുറക്കാൻ ഒന്നുമില്ല."
 notOnThisDevice = "ഈ ഡോക്യുമെന്റ് ഈ ഉപകരണത്തിലില്ല, അതിനാൽ ഇവിടെ തുറക്കാൻ കഴിയില്ല."
 occurrences = "{{count}} തവണ"
@@ -5837,6 +5935,7 @@ repairedRerunNotAdopted = "റിപ്പയർ ചെയ്ത ഡോക്യ
 repairedRerunUndelivered = "ഡോക്യുമെന്റ് റിപ്പയർ ചെയ്തു, പോളിസി വീണ്ടും റൺ ആരംഭിച്ചു, പക്ഷേ അതിന്റെ ഫലം ഇവിടെ എത്തിക്കാനാകില്ല, അതിനാൽ ഈ പരാജയം തുറന്ന നിലയിൽ തുടരും."
 rerunRejected = "പോളിസി ഇപ്പോൾ വീണ്ടും റൺ ചെയ്യാനായില്ല. കുറച്ച് കഴിഞ്ഞ് വീണ്ടും ശ്രമിക്കുക."
 rerunUndelivered = "പോളിസി വീണ്ടും റൺ ആരംഭിച്ചു, പക്ഷേ അതിന്റെ ഫലം ഇവിടെ എത്തിക്കാനാകില്ല, അതിനാൽ ഈ പരാജയം തുറന്ന നിലയിൽ തുടരും."
+retryInFolderFailed = "ആ ഡോക്യുമെന്റ് ഇപ്പോൾ വീണ്ടും പ്രവർത്തിപ്പിക്കാൻ കഴിഞ്ഞില്ല."
 retryUnavailable = "ഈ ഡോക്യുമെന്റ് ഇനി ഈ ബ്രൗസറിൽ നിന്ന് വീണ്ടും ശ്രമിക്കാനാകില്ല."
 title = "അറിയിപ്പുകൾ"
 unlockedNotRerun = "ഡോക്യുമെന്റ് അൺലോക്ക് ചെയ്ത് ഇവിടെ തുറന്നു, പക്ഷേ അതിൽ പോളിസി വീണ്ടും റൺ ചെയ്യാനായില്ല."
@@ -6625,9 +6724,11 @@ title = "Team പ്ലാൻ ക്രമീകരിക്കുക"
 [payment.capacityStage]
 adjustmentNote = "നിങ്ങൾ സ്ഥിരീകരിക്കുന്നതിന് മുമ്പ് കൃത്യമായ ചാർജ്, ഏതെങ്കിലും prorations, നിങ്ങളുടെ അടുത്ത ബില്ലിംഗ് തീയതി എന്നിവ Stripe കാണിക്കും. ലഭ്യമെങ്കിൽ നിങ്ങളുടെ സേവ് ചെയ്ത പേയ്‌മെന്റ് രീതി ഉപയോഗിക്കും."
 continue = "പേയ്‌മെന്റിലേക്ക് തുടരുക"
+currencyAtCheckout = "അവസാന തുകയും payment currency-യും checkout-ൽ Stripe സ്ഥിരീകരിക്കും."
 customLabel = "ഉപയോക്താക്കളുടെ എണ്ണം"
 dueToday = "ഇന്ന് അടയ്ക്കേണ്ടത്"
 enterpriseQuote = "enterprise quote നേടുക"
+estimatedTotal = "കണക്കാക്കിയ മൊത്തം"
 lineItem = "Team · {{block}} ഉപയോക്താക്കൾക്ക് {{price}}{{period}}"
 minimumForCurrentUsers = "നിങ്ങൾക്ക് {{users}} ഉപയോക്താക്കളുണ്ട്, അതിനാൽ പ്ലാൻ കുറഞ്ഞത് {{minimum}} കവർ ചെയ്യണം."
 modalTitle = "{{planName}}ലേക്ക് അപ്‌ഗ്രേഡ് ചെയ്യുക"
@@ -6865,6 +6966,25 @@ width = "വീതി"
 widthHint = "ടെക്സ്റ്റ് ബോക്സിന്റെ വീതി അതിന്റെ ഉള്ളടക്കവും wrappingഉം അനുസരിക്കുന്നു."
 x = "X"
 y = "Y"
+
+[pdfTextEditor.mobile]
+actions = "Editor actions"
+addImage = "Image"
+addText = "Text"
+cancel = "റദ്ദാക്കുക"
+delete = "ഇല്ലാതാക്കുക"
+details = "വിശദാംശങ്ങൾ"
+document = "ഡോക്യുമെന്റ്"
+done = "പൂർത്തിയായി"
+download = "Save ചെയ്ത് download ചെയ്യുക"
+find = "കണ്ടെത്തുക"
+lock = "Lock"
+openPdf = "ഒരു PDF തുറക്കുക"
+panelHint = "Editing Workspace view-ൽ നടക്കുന്നു. മാറ്റാൻ പേജിലെ text tap ചെയ്യുക."
+save = "Save"
+style = "Style"
+tapToPlace = "ടെക്സ്റ്റ് പോകേണ്ടിടത്ത് പേജിൽ tap ചെയ്യുക"
+unlock = "Unlock"
 
 [pdfTextEditor.password]
 cancel = "റദ്ദാക്കുക"
@@ -7574,6 +7694,49 @@ plan = "പ്ലാൻ"
 procurement = "Procurement"
 usage = "ഉപയോഗം"
 
+[portal.billing.compare]
+current = "നിലവിലുള്ളത്"
+enterpriseData = "Data residency ഉം SCIM ഉം"
+enterpriseName = "Enterprise"
+enterprisePrice = "നിങ്ങളുടെ കരാർ പ്രകാരം"
+enterpriseProcessing = "Metered അല്ലെങ്കിൽ flat"
+enterpriseSignIn = "SAML ഉം auditing ഉം"
+enterpriseSupport = "Uptime SLAs, deployment സഹായം"
+enterpriseUsers = "പരമാവധി പരിധിയില്ല"
+enterpriseWhere = "കൂടാതെ multi-node ഉം air-gapped ഉം"
+exploreEnterprise = "Enterprise പര്യവേക്ഷണം ചെയ്യുക"
+freeData = "നിങ്ങൾ പ്രവർത്തിപ്പിക്കുന്നിടത്ത് തന്നെ തുടരും"
+freeName = "Free"
+freePrice = "Card ഇല്ല, expiry ഇല്ല"
+freeProcessing = "മാസം {{allowance}} credits"
+freeProcessingUnknown = "മാസാന്ത്യ credit allowance"
+freeSignIn = "Email, Google, SSO"
+freeSignInNote = "OAuth2/OIDC"
+freeSupport = "Community"
+freeUsers = "{{users}} വരെ"
+freeUsersUnknown = "ഒരു ചെറിയ team"
+freeWhere = "Cloud, desktop അല്ലെങ്കിൽ self-hosted"
+lede = "ഓരോ plan-ലും എല്ലാ PDF tool-ുകളും SSO-യും ഉൾപ്പെടുന്നു. മാറുന്നത് എത്ര പേർ ഉപയോഗിക്കുന്നു, എവിടെ പ്രവർത്തിക്കുന്നു, നിങ്ങൾക്ക് ലഭിക്കുന്ന support എന്നിവയാണ്."
+open = "Plans താരതമ്യം ചെയ്യുക"
+rowData = "നിങ്ങളുടെ data"
+rowHeader = "Feature"
+rowProcessing = "Processing"
+rowSignIn = "Sign-in"
+rowSupport = "Support"
+rowUsers = "Users"
+rowWhere = "പ്രവർത്തിക്കുന്ന സ്ഥലം"
+teamData = "Google Drive, നിങ്ങളുടെ സ്വന്തം database"
+teamName = "Team"
+teamPrice = "100 users-ന് $99/mo"
+teamProcessing = "മാസം {{allowance}}, തുടർന്ന് metered"
+teamProcessingUnknown = "കൂടുതൽ allowance, തുടർന്ന് metered"
+teamSignIn = "അതേ"
+teamSupport = "Email"
+teamUsers = "ഒരു block-ിന് 100"
+teamWhere = "Cloud, desktop അല്ലെങ്കിൽ self-hosted"
+title = "Plans താരതമ്യം ചെയ്യുക"
+upgradeTeam = "Team-ലേക്ക് upgrade ചെയ്യുക"
+
 [portal.billing.cycle]
 credits = "ക്രെഡിറ്റുകൾ"
 creditsNote = "{{units}} ഉപയോഗിച്ചു · സൗജന്യവും prepaid ക്രെഡിറ്റുകളും ഉൾപ്പെടുന്നു"
@@ -7679,6 +7842,8 @@ payTitle = "നിങ്ങളുടെ വർഷത്തിനായി പണ
 step = "Step {{current}} of {{total}}"
 
 [portal.billing.prepaid.calc]
+currency = "Quote currency"
+currencyLocked = "നിങ്ങളുടെ നിലവിലുള്ള Stripe billing currency ഉപയോഗിക്കുന്നു."
 rateUnknown = "checkout-ൽ ഞങ്ങൾ കൃത്യമായ വില കാണിക്കും."
 
 [portal.billing.prepaid.consent]
@@ -8481,6 +8646,10 @@ title = "ഫയൽ repair ചെയ്യാനായില്ല"
 [portal.failures.kind.inputWrongType]
 description = "ഈ step തുറക്കാൻ കഴിയുന്ന format അല്ല നിങ്ങളുടെ ഫയൽ, അതിനാൽ run-ന് അത് വായിക്കാനായില്ല."
 title = "തെറ്റായ ഫയൽ തരം"
+
+[portal.failures.kind.sourceUnreadable]
+description = "നിങ്ങളുടെ smart folder വായിക്കാൻ കഴിഞ്ഞില്ല, അതിനാൽ അതിലുള്ള ഒന്നും process ചെയ്തില്ല."
+title = "Folder വായിക്കാൻ കഴിഞ്ഞില്ല"
 
 [portal.failures.kind.stepCannotRenderPage]
 description = "നിങ്ങളുടെ ഫയലിലെ ഒരു page വരയ്ക്കാനായില്ല, അതിനാൽ run പൂർത്തിയാക്കാനായില്ല."
@@ -12235,6 +12404,7 @@ goBack = "തിരികെ പോകുക"
 pdfTools = "PDF ടൂളുകൾ"
 placeholder = "തുടങ്ങാൻ ഒരു ടൂൾ തിരഞ്ഞെടുക്കുക"
 premiumFeature = "പ്രീമിയം ഫീച്ചർ:"
+searchTools = "Tools തിരയുക"
 toolsHeader = "ടൂളുകൾ"
 viewAllTools = "എല്ലാ ടൂളുകളും കാണുക"
 
@@ -12399,13 +12569,10 @@ visits = "സന്ദർശനങ്ങൾ"
 
 [users]
 lastActive = "അവസാനം സജീവമായത്"
-learnMore = "Roles, access എന്നിവയെക്കുറിച്ച് കൂടുതൽ അറിയുക."
 locked = "Locked"
 ownerSetupRequired = "organization owner ആദ്യ login പൂർത്തിയാക്കിയിട്ടില്ല. ownership കൈമാറുന്നതിന് മുമ്പ് setup പൂർത്തിയാക്കുക അല്ലെങ്കിൽ ownership വീണ്ടെടുക്കാൻ server operator-നോട് ചോദിക്കുക."
 roleFor = "{{name}}-നുള്ള role"
 rowActions = "{{name}}-നുള്ള actions"
-showAll = "{{count}} എല്ലാം കാണിക്കുക"
-showLess = "കുറച്ച് കാണിക്കുക"
 subtitle2 = "നിങ്ങളുടെ ആളുകൾ, ടീമുകൾ, access levels."
 suspended = "Suspended"
 teamActions = "Team actions"
@@ -12414,6 +12581,7 @@ you = "(നിങ്ങൾ)"
 
 [users.action]
 cancelInvite = "ക്ഷണം റദ്ദാക്കുക"
+createFromDefault = "Default-ൽ നിന്ന് team സൃഷ്ടിക്കുക"
 deleteTeam = "Team ഇല്ലാതാക്കുക"
 disableMfa = "MFA റീസെറ്റ് ചെയ്യുക"
 move = "Team-ലേക്ക് മാറ്റുക"
@@ -12451,6 +12619,7 @@ email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
+team = "Team"
 
 [users.confirm]
 cancelInviteBody = "{{email}}-ലേക്കുള്ള ക്ഷണം റദ്ദാക്കണോ? നിലവിലെ ലിങ്ക് ഉപയോഗിച്ച് അവർക്ക് ചേരാൻ കഴിയില്ല."
@@ -12469,15 +12638,12 @@ transferOwnershipTitle = "organization ownership കൈമാറുക"
 description = "സഹകരണം തുടങ്ങാൻ നിങ്ങളുടെ ടീമിനെ ക്ഷണിക്കുക."
 title = "ഇതുവരെ members ഇല്ല"
 
+[users.filters]
+noMatches = "ഈ filters-നോട് ആരും പൊരുത്തപ്പെടുന്നില്ല."
+search = "ആളുകളെ തിരയുക"
+
 [users.group]
 addToTeam = "Team-ലേക്ക് ചേർക്കുക"
-administrators = "{{count}} administrators"
-guestCount = "{{count}} guest"
-guests = "Guests"
-ledBy = "{{owner}} നയിക്കുന്നു"
-org = "Organization"
-team = "{{name}} team"
-teamMeta = "{{count}} ആളുകൾ"
 
 [users.invite]
 access = "Access"
@@ -12542,6 +12708,9 @@ title = "പുതിയ ടീം"
 
 [users.renameTeam]
 apply = "പേരുമാറ്റുക"
+defaultApply = "സൃഷ്ടിച്ച് മാറ്റുക"
+defaultDescription = "പുതിയ users-ന് Default ലഭ്യമായിരിക്കും. നിലവിൽ Default-ലുള്ള എല്ലാവരെയും പുതിയ team-ലേക്ക് മാറ്റും."
+defaultTitle = "Default-ൽ നിന്ന് team സൃഷ്ടിക്കുക"
 name = "ടീമിന്റെ പേര്"
 title = "ടീമിന്റെ പേര് മാറ്റുക"
 
@@ -12566,6 +12735,15 @@ guest = "അതിഥി"
 member = "അംഗം"
 orgOwner = "ഓർഗ് ഉടമ"
 teamOwner = "ടീം ഉടമ"
+
+[users.seats]
+full = "ഓരോ licensed seat-ഉം ഉപയോഗത്തിലാണ്. മറ്റാരെയെങ്കിലും ചേർക്കാൻ ഒന്ന് ഒഴിവാക്കുക, അല്ലെങ്കിൽ seat count വർധിപ്പിക്കുക."
+update = "Seats update ചെയ്യുക"
+
+[users.tabs]
+all = "എല്ലാം"
+label = "Team പ്രകാരം filter ചെയ്യുക"
+unassigned = "Team ഇല്ല"
 
 [users.team]
 grantProcessor = "ടീമിന് Processor അനുവദിക്കുക"
@@ -13216,232 +13394,14 @@ submitSignature = "കൈയൊപ്പ് സമർപ്പിക്കുക
 title = "വർക്ക്സ്പേസ്"
 
 [workspace.people]
-active = "സജീവം"
-activeSession = "സജീവ സെഷൻ"
-addMembers = "അംഗങ്ങളെ ചേർക്കുക"
-admin = "അഡ്മിൻ"
-confirmDelete = "ഈ ഉപയോക്താവിനെ ഇല്ലാതാക്കണോ? ഇത് തിരിച്ചെടുക്കാൻ കഴിയില്ല."
-confirmUnlock = "ഈ ഉപയോക്തൃ അക്കൗണ്ട് അൺലോക്ക് ചെയ്യണമെന്ന് നിങ്ങൾക്ക് ഉറപ്പാണോ?"
-deleteUser = "ഉപയോക്താവിനെ ഇല്ലാതാക്കുക"
-deleteUserError = "ഉപയോക്താവിനെ ഇല്ലാതാക്കൽ പരാജയപ്പെട്ടു"
-deleteUserSuccess = "ഉപയോക്താവിനെ വിജയകരമായി ഇല്ലാതാക്കി"
 description = "വർക്ക്സ്പേസിലെ അംഗങ്ങളെയും അവരുടെ അനുമതികളെയും നിയന്ത്രിക്കുക"
-disable = "പ്രവർത്തനരഹിതമാക്കുക"
-disabled = "പ്രവർത്തനരഹിതം"
-editRole = "റോൾ എഡിറ്റ് ചെയ്യുക"
-enable = "പ്രവർത്തനക്ഷമമാക്കുക"
-loading = "അംഗങ്ങളെ ലോഡ് ചെയ്യുന്നു..."
-locked = "ലോക്കുചെയ്തിരിക്കുന്നു"
-lockedBadge = "ലോക്കുചെയ്ത"
-loginRequired = "ആദ്യം ലോഗിൻ മോഡ് പ്രാപ്തമാക്കുക"
-memberActions = "അംഗത്തിന്റെ പ്രവർത്തനങ്ങൾ"
-noMembersFound = "അംഗങ്ങളെ കണ്ടെത്താനായില്ല"
-ownerLocked = "owner-ന്റെ role അല്ലെങ്കിൽ account മാറ്റുന്നതിന് മുമ്പ് Settings → Workspace → Users-ൽ organization ownership കൈമാറുക."
-role = "റോൾ"
-searchMembers = "അംഗങ്ങളെ തിരയുക..."
-team = "ടീം"
-unlockAccount = "അക്കൗണ്ട് അൺലോക്ക് ചെയ്യുക"
-unlockUserError = "ഉപയോക്തൃ അക്കൗണ്ട് അൺലോക്ക് ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു"
-unlockUserSuccess = "ഉപയോക്തൃ അക്കൗണ്ട് വിജയകരമായി അൺലോക്ക് ചെയ്തു"
-user = "ഉപയോക്താവ്"
-userInfo = "ഉപയോക്തൃ വിവരം"
-
-[workspace.people.actions]
-upgrade = "അപ്‌ഗ്രേഡ്"
-
-[workspace.people.addMember]
-authType = "പ്രാമാണീകരണ തരം"
-error = "ഉപയോക്താവിനെ സൃഷ്ടിക്കൽ പരാജയപ്പെട്ടു"
-forceMFA = "അടുത്ത ലോഗിനിൽ MFA ക്രമീകരണം നിർബന്ധിതമാക്കുക"
-forcePasswordChange = "ആദ്യ ലോഗിനിൽ പാസ്‌വേഡ് മാറ്റം നിർബന്ധമാക്കുക"
-password = "പാസ്‌വേഡ്"
-passwordPlaceholder = "പാസ്‌വേഡ് നൽകുക"
-passwordRequired = "പാസ്‌വേഡ് ആവശ്യമാണ്"
-role = "റോൾ"
-submit = "അംഗത്തെ ചേർക്കുക"
-success = "ഉപയോക്താവ് വിജയകരമായി സൃഷ്ടിച്ചു"
-team = "ടീം (ഐച്ഛികം)"
-teamPlaceholder = "ഒരു ടീം തിരഞ്ഞെടുക്കുക"
-username = "യൂസർനെയിം (ഇമെയിൽ)"
-usernamePlaceholder = "user@example.com"
-usernameRequired = "യൂസർനെയിമും പാസ്‌വേഡും ആവശ്യമാണ്"
-
-[workspace.people.authType]
-oauth = "OAuth2"
-password = "പാസ്‌വേഡ്"
-saml = "SAML2"
-ssoDescription = "ഉപയോക്താവ് SSO പ്രൊവൈഡറിലൂടെ പ്രാമാണീകരണം നടത്തും"
-
-[workspace.people.changePassword]
-action = "പാസ്‌വേഡ് മാറ്റുക"
-confirmPassword = "പാസ്‌വേഡ് ശരിവെക്കുക"
-confirmPlaceholder = "പുതിയ പാസ്‌വേഡ് വീണ്ടും നൽകുക"
-copiedToClipboard = "പാസ്‌വേഡ് ക്ലിപ്പ്ബോർഡിലേയ്ക്ക് പകർത്തി"
-copyFailed = "പാസ്‌വേഡ് പകർത്തൽ പരാജയപ്പെട്ടു"
-copyTooltip = "ക്ലിപ്പ്ബോർഡിലേയ്ക്ക് പകർത്തുക"
-emailUnavailable = "ഈ ഉപയോക്താവിന്റെ ഇമെയിൽ ഒരു സാധുവായ ഇമെയിൽ വിലാസമല്ല. അറിയിപ്പുകൾ പ്രവർത്തനരഹിതമാണ്."
-error = "പാസ്‌വേഡ് പുതുക്കൽ പരാജയപ്പെട്ടു"
-forcePasswordChange = "അടുത്ത ലോഗിനിൽ ഉപയോക്താവിനെ പാസ്‌വേഡ് മാറ്റാൻ നിർബന്ധിക്കുക"
-generatedPreview = "സൃഷ്ടിച്ച പാസ്‌വേഡ്:"
-generateRandom = "സുരക്ഷിത പാസ്‌വേഡ് സൃഷ്ടിക്കുക"
-includePassword = "പുതിയ പാസ്‌വേഡ് ഇമെയിലിൽ ഉൾപ്പെടുത്തുക"
-newPassword = "പുതിയ പാസ്‌വേഡ്"
-notifyOnly = "പാസ്‌വേഡ് ഇല്ലാതെ ഒരു ഇമെയിൽ അയയ്ക്കപ്പെടും; അഡ്മിൻ അത് മാറ്റിയതായി ഉപയോക്താവിനെ അറിയിക്കും."
-passwordMismatch = "പാസ്‌വേഡുകൾ പൊരുത്തപ്പെടുന്നില്ല"
-passwordRequired = "ദയവായി ഒരു പുതിയ പാസ്‌വേഡ് നൽകുക"
-placeholder = "ഒരു പുതിയ പാസ്‌വേഡ് നൽകുക"
-sendEmail = "ഈ മാറ്റത്തെക്കുറിച്ച് ഉപയോക്താവിന് ഇമെയിൽ അയയ്ക്കുക"
-smtpDisabled = "ഇമെയിൽ അറിയിപ്പുകൾക്കായി ക്രമീകരണങ്ങളിൽ SMTP സജീവമാക്കണം."
-submit = "പാസ്‌വേഡ് പുതുക്കുക"
-subtitle = "ഇതിനായുള്ള പാസ്‌വേഡ് പുതുക്കുക"
-success = "പാസ്‌വേഡ് വിജയകരമായി പുതുക്കി"
-title = "പാസ്‌വേഡ് മാറ്റുക"
-
-[workspace.people.editMember]
-editing = "Editing: <0>{{username}}</0>"
-error = "ഉപയോക്താവിനെ അപ്‌ഡേറ്റ് ചെയ്യൽ പരാജയപ്പെട്ടു"
-role = "റോൾ"
-submit = "Update User"
-success = "ഉപയോക്താവ് വിജയകരമായി അപ്‌ഡേറ്റ് ചെയ്തു"
-team = "ടീം (ഐച്ഛികം)"
-teamPlaceholder = "ഒരു ടീം തിരഞ്ഞെടുക്കുക"
-title = "Edit User"
-
-[workspace.people.emailInvite]
-allFailed = "ഉപയോക്താക്കളെ ക്ഷണിക്കൽ പരാജയപ്പെട്ടു"
-emails = "ഇമെയിൽ വിലാസങ്ങൾ"
-emailsPlaceholder = "user1@example.com, user2@example.com"
-emailsRequired = "കുറഞ്ഞത് ഒരു ഇമെയിൽ വിലാസമെങ്കിലും ആവശ്യമാണ്"
-error = "ക്ഷണങ്ങൾ അയയ്ക്കൽ പരാജയപ്പെട്ടു"
-partialFailure = "ചില ക്ഷണങ്ങൾ പരാജയപ്പെട്ടു"
-submit = "ക്ഷണങ്ങൾ അയയ്ക്കുക"
-success = "ഉപയോക്താക്കളെ വിജയകരമായി ക്ഷണിച്ചു"
-
-[workspace.people.inviteLink]
-copied = "ലിങ്ക് ക്ലിപ്പ്ബോർഡിലേക്ക് പകർത്തി"
-email = "ഇമെയിൽ വിലാസം"
-emailDescription = "ഐച്ഛികം - ആരും ഉപയോഗിക്കാവുന്ന പൊതുവായ ക്ഷണ ലിങ്കിനായി ശൂന്യമായി വിടുക"
-emailPlaceholder = "user@example.com (ഐച്ഛികം)"
-emailSent = "ക്ഷണ ലിങ്ക് സൃഷ്ടിച്ച് ഇമെയിൽ വഴി അയച്ചു"
-error = "ക്ഷണ ലിങ്ക് സൃഷ്ടിക്കൽ പരാജയപ്പെട്ടു"
-expiryHours = "കാലഹരണ മണിക്കൂറുകൾ"
-generate = "ലിങ്ക് സൃഷ്ടിക്കുക"
-generated = "ക്ഷണ ലിങ്ക് സൃഷ്ടിച്ചു"
-sendEmail = "ക്ഷണ ലിങ്ക് ഇമെയിൽ വഴി അയയ്ക്കുക"
-sendEmailDescription = "പ്രവർത്തനക്ഷമമാക്കിയാൽ, ക്ഷണ ലിങ്ക് നൽകിയ ഇമെയിൽ വിലാസത്തിലേക്ക് അയയ്ക്കും"
-submit = "ക്ഷണ ലിങ്ക് സൃഷ്ടിക്കുക"
-
-[workspace.people.inviteMembers]
-label = "അംഗങ്ങളെ ക്ഷണിക്കുക"
-subtitle = "താഴെ ഇമെയിലുകൾ കോമ ഉപയോഗിച്ച് വേർതിരിച്ച് ടൈപ്പ് ചെയ്യുകയോ പതിക്കുകയോ ചെയ്യുക. നിങ്ങളുടെ വർക്ക്സ്പേസിന് അംഗങ്ങളുടെ അടിസ്ഥാനത്തിൽ ബില്ലിംഗ് നൽകും."
-
-[workspace.people.inviteMode]
-email = "ഇമെയിൽ"
-emailDisabled = "ഇമെയിൽ ക്ഷണങ്ങൾക്ക് SMTP കോൺഫിഗറേഷനും settings ൽ mail.enableInvites=true ഉം ആവശ്യമാണ്"
-link = "ലിങ്ക്"
-username = "യൂസർനെയിം"
 
 [workspace.people.license]
-currentUsage = "ഇപ്പോൾ {{max}} ൽ {{current}} ഉപയോക്തൃ ലൈസൻസുകൾ ഉപയോഗിക്കുന്നു"
-fromLicense = "ലൈസൻസിൽ നിന്ന്"
-grandfathered = "ഗ്രാൻഡ്‌ഫാദേഡ്"
-grandfatheredShort = "{{count}} ഗ്രാൻഡ്‌ഫാദേഡ്"
-slotsAvailable_one = "{{count}} user slot available"
-slotsAvailable_other = "{{count}} user slots available"
-slotsAvailable_zero = "No slots available"
 users_one = "user"
 users_other = "users"
 
-[workspace.people.mfa]
-adminDisableError = "ഉപയോക്താവിനായി MFA പ്രവർത്തനരഹിതമാക്കൽ പരാജയപ്പെട്ടു"
-adminDisableSuccess = "ഉപയോക്താവിനായി MFA വിജയകരമായി പ്രവർത്തനരഹിതമാക്കി"
-disableByAdmin = "MFA പ്രവർത്തനരഹിതമാക്കുക"
-
-[workspace.people.roleDescriptions]
-admin = "പൂർണ്ണ അഡ്മിനിസ്ട്രേറ്റീവ് ആക്സസോടുകൂടി ക്രമീകരണങ്ങളും അംഗ ക്ഷണങ്ങളും നിയന്ത്രിക്കാം."
-currentRole = "നിലവിൽ നിയോഗിച്ചിരിക്കുന്ന പദവി."
-user = "Can view and edit shared files, but cannot manage workspace settings or users."
-
-[workspace.people.toggleEnabled]
-error = "ഉപയോക്താവിന്റെ നില അപ്‌ഡേറ്റ് ചെയ്യൽ പരാജയപ്പെട്ടു"
-success = "ഉപയോക്താവിന്റെ നില വിജയകരമായി അപ്‌ഡേറ്റ് ചെയ്തു"
-
 [workspace.teams]
-addMember = "അംഗത്തെ ചേർക്കുക"
-backToTeams = "ടീങ്ങളിലേക്ക് മടങ്ങുക"
-cannotAddToInternal = "Internal ടീമിലേക്ക് അംഗങ്ങളെ ചേർക്കാൻ കഴിയില്ല"
-cannotDeleteInternal = "Internal ടീമിനെ ഇല്ലാതാക്കാൻ കഴിയില്ല"
-cannotRenameInternal = "Internal ടീമിന്റെ പേര് മാറ്റാൻ കഴിയില്ല"
-confirmDelete = "ഈ ടീമിനെ ഇല്ലാതാക്കണോ? ഇല്ലാതാക്കാൻ ടീം ശൂന്യമാകണം."
-confirmRemove = "ഈ ടീമിൽ നിന്ന് ഉപയോക്താവിനെ നീക്കംചെയ്യണോ?"
-createNewTeam = "പുതിയ ടീം സൃഷ്ടിക്കുക"
-deleteTeamLabel = "ടീം ഇല്ലാതാക്കുക"
 description = "ടീമുകളെ നിയന്ത്രിക്കുകയും വർക്ക്സ്പേസ് അംഗങ്ങളെ ക്രമപ്പെടുത്തിയതാക്കുകയും ചെയ്യുക"
-loadError = "ടീം വിശദാംശങ്ങൾ ലോഡ് ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു"
-loading = "ടീമുകൾ ലോഡ് ചെയ്യുന്നു..."
-loadingDetails = "ടീം വിശദാംശങ്ങൾ ലോഡ് ചെയ്യുന്നു..."
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
-noMembers = "ഈ ടീമിൽ അംഗങ്ങളൊന്നുമില്ല"
-noTeamsFound = "ടീമുകളൊന്നും കണ്ടെത്തിയില്ല"
-removeMember = "ടീമിൽ നിന്ന് നീക്കംചെയ്യുക"
-removeMemberError = "ഉപയോക്താവിനെ ടീമിൽ നിന്ന് നീക്കൽ പരാജയപ്പെട്ടു"
-removeMemberSuccess = "ഉപയോക്താവിനെ ടീമിൽ നിന്ന് നീക്കി"
-renameTeamLabel = "ടീം പുനർനാമകരണം ചെയ്യുക"
-system = "സിസ്റ്റം"
-teamActions = "ടീം പ്രവർത്തനങ്ങൾ"
-teamName = "ടീം പേര്"
-teamNotFound = "ടീം കണ്ടെത്താനായില്ല"
-totalMembers = "ആകെ അംഗങ്ങൾ"
-viewTeam = "ടീം കാണുക"
-
-[workspace.teams.addMemberToTeam]
-addingTo = "ചേർക്കുന്നത്"
-currentlyIn = "ഇപ്പോൾ ഉള്ളത്"
-error = "അംഗത്തെ ടീമിലേക്ക് ചേർക്കൽ പരാജയപ്പെട്ടു"
-selectUser = "ഉപയോക്താവിനെ തിരഞ്ഞെടുക്കുക"
-selectUserPlaceholder = "ഒരു ഉപയോക്താവിനെ തിരഞ്ഞെടുക്കുക"
-selectUserRequired = "ദയവായി ഒരു ഉപയോക്താവിനെ തിരഞ്ഞെടുക്കുക"
-submit = "അംഗത്തെ ചേർക്കുക"
-success = "അംഗത്തെ വിജയകരമായി ടീമിലേക്ക് ചേർത്തു"
-title = "ടീമിലേക്ക് അംഗത്തെ ചേർക്കുക"
-userRequired = "ദയവായി ഒരു ഉപയോക്താവിനെ തിരഞ്ഞെടുക്കുക"
-willBeMoved = "കുറിപ്പ്: ഈ ഉപയോക്താവിനെ അവരുടെ നിലവിലെ ടീമിൽ നിന്ന് ഈ ടീമിലേക്ക് മാറ്റും."
-
-[workspace.teams.changeTeam]
-changing = "മാറ്റുന്നു"
-error = "ടീം മാറ്റൽ പരാജയപ്പെട്ടു"
-label = "ടീം മാറ്റുക"
-selectTeam = "ടീം തിരഞ്ഞെടുക്കുക"
-selectTeamPlaceholder = "ഒരു ടീം തിരഞ്ഞെടുക്കുക"
-selectTeamRequired = "ദയവായി ഒരു ടീമിനെ തിരഞ്ഞെടുക്കുക"
-submit = "ടീം മാറ്റുക"
-success = "ടീം വിജയകരമായി മാറ്റി"
-title = "ടീം മാറ്റുക"
-
-[workspace.teams.createTeam]
-error = "ടീം സൃഷ്ടിക്കൽ പരാജയപ്പെട്ടു"
-nameRequired = "ടീം പേര് ആവശ്യമാണ്"
-submit = "ടീം സൃഷ്ടിക്കുക"
-success = "ടീം വിജയകരമായി സൃഷ്ടിച്ചു"
-teamName = "ടീം പേര്"
-teamNamePlaceholder = "ടീം പേര് നൽകുക"
-title = "പുതിയ ടീം സൃഷ്ടിക്കുക"
-
-[workspace.teams.deleteTeam]
-error = "ടീം ഇല്ലാതാക്കൽ പരാജയപ്പെട്ടു. ടീം ശൂന്യമാണെന്ന് ഉറപ്പാക്കുക."
-success = "ടീം വിജയകരമായി ഇല്ലാതാക്കി"
-
-[workspace.teams.renameTeam]
-error = "ടീം പുനർനാമകരണം പരാജയപ്പെട്ടു"
-nameRequired = "ടീം പേര് ആവശ്യമാണ്"
-newTeamName = "പുതിയ ടീം പേര്"
-newTeamNamePlaceholder = "പുതിയ ടീം പേര് നൽകുക"
-renaming = "പുനർനാമകരണം ചെയ്യുന്നു:"
-submit = "ടീം പുനർനാമകരണം ചെയ്യുക"
-success = "ടീം വിജയകരമായി പുനർനാമകരണം ചെയ്തു"
-title = "ടീം പുനർനാമകരണം ചെയ്യുക"
 
 [zipWarning]
 cancel = "റദ്ദാക്കുക"

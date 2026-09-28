@@ -729,6 +729,8 @@ permissionNotice = "مسار tessdata غير قابل للكتابة. سيتم �
 
 [admin.settings.ai]
 description = "اربط Stirling بمحرك Python AI، واختر نماذجه، واضبط القيود التي يعمل ضمنها."
+managedByCloud = "تتم إدارته بواسطة Stirling Cloud في هذا الوضع."
+managedByCloudShort = "تتم إدارته بواسطة Stirling Cloud"
 
 [admin.settings.ai.documents]
 description = "كوّن نموذج التضمين وإعدادات الاسترجاع المستخدمة للإجابة عن الأسئلة حول المستندات. تُطبّق على محرك AI عند الحفظ."
@@ -771,11 +773,24 @@ label = "Top K"
 [admin.settings.ai.general]
 connection = "الاتصال"
 description = "وصّل Stirling بمحرك Python AI واختر إمكانات AI التي ستُعرض. تُطبّق التغييرات عند إعادة التشغيل."
+restartNote = "يصبح تغيير URL أو أي مهلة نافذًا بعد إعادة التشغيل."
 title = "محرك AI"
 
 [admin.settings.ai.general.capabilities]
 description = "شغّل ميزات AI الفردية أو أوقفها. تُخفى الميزات المعطلة في التطبيق."
 title = "الإمكانات"
+
+[admin.settings.ai.general.cloud]
+note = "تتم إدارة النماذج ومفاتيح المزود بواسطة Stirling Cloud، لذلك لا تنطبق هذه الإعدادات في هذا الوضع."
+
+[admin.settings.ai.general.cloud.indexing]
+description = "ترسل كل أداة ذكاء اصطناعي نص الصفحة الذي تحتاجه للإجابة. يحدد هذا ما إذا كان بإمكان Stirling Cloud أيضًا الاحتفاظ بهذا النص، مفهرسًا، بحيث يمكن للأسئلة اللاحقة البحث في المستند."
+help = "يعني إيقاف التشغيل أن أسئلة المستند غير متاحة. لا يوقف إرسال النص - بل التخزين فقط."
+label = "السماح لـ Stirling Cloud بالاحتفاظ بالمستندات المفهرسة"
+
+[admin.settings.ai.general.cloudNote]
+body = "يعمل الاستدلال على بنية Stirling التحتية، ويتم احتسابه على الحساب المرتبط بهذا الخادم. لا توجد حاوية لتشغيلها ولا مفتاح مزود للاحتفاظ به هنا. أي شيء يقرأه الذكاء الاصطناعي تتم معالجته بواسطة Stirling Cloud بدلًا من أجهزتك الخاصة."
+title = "حول Stirling Cloud AI"
 
 [admin.settings.ai.general.enabled]
 description = "المفتاح الرئيسي. عند إيقافه، لن تتوفر أي أدوات AI أو وكلاء أو استدعاءات للمحرك."
@@ -809,9 +824,28 @@ label = "وكيل تعليقات PDF"
 description = "مهلة عمليات الوكيل الأثقل مثل إنشاء المستندات."
 label = "مهلة العمليات طويلة التشغيل (ثوانٍ)"
 
+[admin.settings.ai.general.mode]
+label = "مكان تشغيل الذكاء الاصطناعي"
+
+[admin.settings.ai.general.mode.cloud]
+description = "لا حاوية، ولا مفتاح مزود، ولا اختيار نموذج - يتم تشغيل العمل على Stirling Cloud ويتم احتسابه على الحساب المرتبط بهذا الخادم."
+linkCta = "ربط هذا الخادم بحساب Stirling"
+notLinked = "اربط حسابًا أولًا"
+ownerOnly = "يمكن لمالك المؤسسة فقط ربط هذا الخادم بحساب Stirling."
+title = "استخدام Stirling Cloud AI"
+
+[admin.settings.ai.general.mode.off]
+description = "لا توجد أدوات ذكاء اصطناعي في أي مكان في التطبيق، ولا يغادر أي شيء هذا الخادم."
+title = "إيقاف"
+
+[admin.settings.ai.general.mode.self]
+description = "حاوية تستضيفها، وموجهة إلى مزود نماذج من اختيارك. مفتاحك، فاتورتك، مسار بياناتك."
+title = "تشغيل محركك الخاص"
+
 [admin.settings.ai.general.note]
-body = "يعمل محرك AI كخدمة منفصلة. السر المشترك الخاص به"
-body2 = "يتم تعيينه عبر متغير بيئة الحاوية. يمكن إدخال مفاتيح API للمزوّد في هذه الصفحات أو توفيرها كمتغيرات بيئة للمحرك؛ تُرسل المفاتيح المدخلة هنا إلى المحرك عند الحفظ."
+docs = "دليل الإعداد"
+intro = "حاوية منفصلة تشغلها بجانب Stirling. تقوم بالاستدلال؛ ولا يزال Stirling ينفذ كل عملية على الصفحات بنفسه. تحتاج إلى نفس"
+outro = "على كلتا الحاويتين ومفتاح مزود نموذج. أي شيء يقرأه الذكاء الاصطناعي يُرسل إلى المزود الذي تختاره - إذا استضفت Ollama بنفسك فسيبقي كل صفحة داخليًا."
 title = "حول محرك AI"
 
 [admin.settings.ai.general.streamTimeoutSeconds]
@@ -890,6 +924,67 @@ label = "النموذج الذكي"
 body = "تُرسل التغييرات إلى محرك AI تلقائيًا."
 bodyNoPush = "تم حفظ الإعدادات. ستُطبّق في المرة القادمة التي يلتقط فيها محرك AI تكوينه."
 title = "تم حفظ إعدادات AI"
+
+[admin.settings.ai.status]
+capabilities = "الإمكانات"
+capabilitiesValue = "{{on}} من {{total}} قيد التشغيل"
+checked = "تم الفحص"
+checking = "جارٍ التحقق من المحرك…"
+description = "ما إذا كان المحرك قابلًا للوصول، وما إذا كان يقبل هذا الخادم، وما الذي يشغله."
+fastModel = "النموذج السريع"
+justNow = "الآن للتو"
+latency = "وقت الاستجابة"
+linkLabel = "ربط الحساب"
+minutesAgo = "منذ {{count}}د"
+recheck = "التحقق مرة أخرى"
+runningOn = "يعمل على"
+secondsAgo = "منذ {{count}}ث"
+secretLabel = "السر المشترك"
+smartModel = "النموذج الذكي"
+title = "الحالة"
+url = "URL المحرك"
+
+[admin.settings.ai.status.cloud]
+hostDown = "متعطل"
+hostLabel = "Stirling.com"
+hostUp = "قيد التشغيل"
+name = "Stirling Cloud"
+sharingLabel = "مشاركة الذكاء الاصطناعي"
+sharingOff = "معطلة"
+sharingOn = "ممكّنة"
+
+[admin.settings.ai.status.cloud.degraded]
+body = "استجاب Stirling Cloud لكنه رفض هذا الخادم. ربما تم إلغاء ربط الحساب."
+title = "Stirling Cloud يرفض هذا الخادم"
+
+[admin.settings.ai.status.cloud.down]
+body = "تعذر على هذا الخادم الوصول إلى Stirling Cloud. تحقق من ربط الحساب ومن أن هذا الخادم يمكنه الوصول إلى الإنترنت."
+title = "لا يمكن الوصول إلى Stirling Cloud"
+
+[admin.settings.ai.status.cloud.ok]
+body = "قبل Stirling Cloud هذا الخادم. لا يوجد ما يلزم تشغيله أو تصحيحه هنا."
+title = "يعمل على Stirling Cloud"
+
+[admin.settings.ai.status.degraded]
+body = "استجاب لفحص الصحة لكنه رفض طلبًا حقيقيًا. يستخدم الطرفان أسرارًا مشتركة مختلفة."
+title = "المحرك يعمل، لكنه يرفض هذا الخادم"
+
+[admin.settings.ai.status.down]
+body = "تحقق من URL، ومن أن حاوية المحرك قيد التشغيل، وأنك أعدت التشغيل بعد تمكين الذكاء الاصطناعي."
+title = "لا يمكن الوصول إلى المحرك"
+
+[admin.settings.ai.status.off]
+body = "اختر أدناه كيفية تشغيل الذكاء الاصطناعي، ثم احفظ وأعد التشغيل."
+title = "تم إيقاف الذكاء الاصطناعي"
+
+[admin.settings.ai.status.ok]
+body = "نجح كل من فحص الصحة وطلب مصادق عليه."
+title = "المحرك يعمل"
+
+[admin.settings.ai.status.secret]
+no = "مرفوض"
+unknown = "غير معروف"
+yes = "مقبول"
 
 [admin.settings.badge]
 clickToUpgrade = "انقر لعرض تفاصيل الخطة"
@@ -4453,6 +4548,7 @@ openFromComputer = "فتح من الكمبيوتر"
 openSettings = "فتح الإعدادات"
 other = "أخرى"
 recent = "الأحدث"
+searchFiles = "البحث عن ملفات"
 uploadFailedBody = "تعذرت إضافة الملفات المحددة."
 uploadFailedTitle = "فشل الرفع"
 viewAll = "عرض كل ملفات {{count}}"
@@ -5827,6 +5923,8 @@ label = "Free credits"
 adoptFailed = "تم إلغاء قفل المستند ولكن تعذر فتحه هنا. جرّب الأداة مباشرة."
 empty = "لا يوجد ما يمكن الإبلاغ عنه."
 handoffUnavailable = "لن يسمح هذا المتصفح للمعالج بتمرير المستند إلى المحرر. افتحه من المحرر بدلًا من ذلك."
+inSmartFolder = "هذا المستند موجود في مجلد ذكي، لذلك تتم معالجته على الخادم بدلًا من هنا."
+inSmartFolderNamed = "{{name}} موجود في مجلد ذكي، لذلك تتم معالجته على الخادم بدلًا من هنا."
 noDocumentLinked = "هذا الفشل غير مرتبط بمستند محدد، لذا لا يوجد ما يمكن فتحه هنا."
 notOnThisDevice = "هذا المستند غير موجود على هذا الجهاز، لذا لا يمكن فتحه هنا."
 occurrences = "{{count}} مرات"
@@ -5837,6 +5935,7 @@ repairedRerunNotAdopted = "تمت معالجة المستند المُصلح، �
 repairedRerunUndelivered = "تم إصلاح المستند وبدأت إعادة تشغيل السياسة، ولكن لا يمكن تسليم نتيجته هنا، لذا يظل هذا الفشل مفتوحًا."
 rerunRejected = "تعذر تشغيل السياسة مرة أخرى الآن. حاول مرة أخرى بعد لحظة."
 rerunUndelivered = "بدأت إعادة تشغيل السياسة، ولكن لا يمكن تسليم نتيجتها هنا، لذا يظل هذا الفشل مفتوحًا."
+retryInFolderFailed = "تعذر تشغيل ذلك المستند مرة أخرى الآن."
 retryUnavailable = "لم يعد بالإمكان إعادة محاولة هذا المستند من هذا المتصفح."
 title = "الإشعارات"
 unlockedNotRerun = "تم إلغاء قفل المستند وفتحه هنا، ولكن تعذر تشغيل السياسة عليه مرة أخرى."
@@ -6625,9 +6724,11 @@ title = "تعديل خطة Team"
 [payment.capacityStage]
 adjustmentNote = "سيعرض Stripe الرسوم الدقيقة وأي تسويات نسبية وتاريخ الفوترة التالي قبل التأكيد. سيتم استخدام طريقة الدفع المحفوظة لديك إذا كانت متاحة."
 continue = "متابعة إلى الدفع"
+currencyAtCheckout = "يؤكد Stripe المبلغ النهائي وعملة الدفع عند إتمام الشراء."
 customLabel = "عدد المستخدمين"
 dueToday = "المستحق اليوم"
 enterpriseQuote = "الحصول على عرض سعر للمؤسسات"
+estimatedTotal = "الإجمالي التقديري"
 lineItem = "Team · {{price}}{{period}} لكل {{block}} مستخدمين"
 minimumForCurrentUsers = "لديك {{users}} مستخدمين، لذلك يجب أن تغطي الخطة {{minimum}} على الأقل."
 modalTitle = "الترقية إلى {{planName}}"
@@ -6865,6 +6966,25 @@ width = "العرض"
 widthHint = "يتبع عرض مربع النص محتواه والالتفاف."
 x = "X"
 y = "Y"
+
+[pdfTextEditor.mobile]
+actions = "إجراءات المحرر"
+addImage = "صورة"
+addText = "نص"
+cancel = "إلغاء"
+delete = "حذف"
+details = "التفاصيل"
+document = "المستند"
+done = "تم"
+download = "حفظ وتنزيل"
+find = "بحث"
+lock = "قفل"
+openPdf = "فتح PDF"
+panelHint = "يتم التحرير في عرض مساحة العمل. اضغط على النص في الصفحة لتغييره."
+save = "حفظ"
+style = "النمط"
+tapToPlace = "اضغط على الصفحة حيث يجب وضع النص"
+unlock = "إلغاء القفل"
 
 [pdfTextEditor.password]
 cancel = "إلغاء"
@@ -7574,6 +7694,49 @@ plan = "الخطة"
 procurement = "المشتريات"
 usage = "الاستخدام"
 
+[portal.billing.compare]
+current = "الحالي"
+enterpriseData = "إقامة البيانات وSCIM"
+enterpriseName = "Enterprise"
+enterprisePrice = "بموجب اتفاقيتك"
+enterpriseProcessing = "محسوبة بالاستخدام أو ثابتة"
+enterpriseSignIn = "SAML والتدقيق"
+enterpriseSupport = "اتفاقيات مستوى الخدمة لوقت التشغيل، ومساعدة في النشر"
+enterpriseUsers = "بلا حد أقصى"
+enterpriseWhere = "بالإضافة إلى تعدد العقد والعزل عن الشبكة"
+exploreEnterprise = "استكشاف Enterprise"
+freeData = "تبقى حيث تقوم بتشغيلها"
+freeName = "Free"
+freePrice = "لا بطاقة، لا انتهاء صلاحية"
+freeProcessing = "{{allowance}} رصيد شهريًا"
+freeProcessingUnknown = "حصة رصيد شهرية"
+freeSignIn = "البريد الإلكتروني، Google وSSO"
+freeSignInNote = "OAuth2/OIDC"
+freeSupport = "المجتمع"
+freeUsers = "حتى {{users}}"
+freeUsersUnknown = "فريق صغير"
+freeWhere = "Cloud أو سطح المكتب أو الاستضافة الذاتية"
+lede = "تتضمن كل خطة كل أدوات PDF وSSO. ما يتغير هو عدد الأشخاص الذين يستخدمونها، ومكان تشغيلها، والدعم الذي تحصل عليه."
+open = "مقارنة الخطط"
+rowData = "بياناتك"
+rowHeader = "الميزة"
+rowProcessing = "المعالجة"
+rowSignIn = "تسجيل الدخول"
+rowSupport = "الدعم"
+rowUsers = "المستخدمون"
+rowWhere = "مكان التشغيل"
+teamData = "Google Drive، قاعدة بياناتك الخاصة"
+teamName = "Team"
+teamPrice = "$99/شهريًا لكل 100 مستخدم"
+teamProcessing = "{{allowance}} شهريًا، ثم محسوبة بالاستخدام"
+teamProcessingUnknown = "حصة أكبر، ثم محسوبة بالاستخدام"
+teamSignIn = "نفس الشيء"
+teamSupport = "البريد الإلكتروني"
+teamUsers = "100 لكل كتلة"
+teamWhere = "Cloud أو سطح المكتب أو الاستضافة الذاتية"
+title = "مقارنة الخطط"
+upgradeTeam = "الترقية إلى Team"
+
 [portal.billing.cycle]
 credits = "الأرصدة"
 creditsNote = "تم استخدام {{units}} · يتضمن الأرصدة المجانية والمدفوعة مسبقًا"
@@ -7679,6 +7842,8 @@ payTitle = "ادفع مقابل سنتك"
 step = "الخطوة {{current}} من {{total}}"
 
 [portal.billing.prepaid.calc]
+currency = "عملة عرض السعر"
+currencyLocked = "يستخدم عملة فوترة Stripe الحالية لديك."
 rateUnknown = "سنعرض السعر الدقيق عند الدفع."
 
 [portal.billing.prepaid.consent]
@@ -8481,6 +8646,10 @@ title = "تعذر إصلاح الملف"
 [portal.failures.kind.inputWrongType]
 description = "ملفك ليس بتنسيق يمكن لهذه الخطوة فتحه، لذلك تعذر على التشغيل قراءته."
 title = "نوع ملف غير صحيح"
+
+[portal.failures.kind.sourceUnreadable]
+description = "تعذرت قراءة مجلدك الذكي، لذلك لم تتم معالجة أي شيء فيه."
+title = "تعذرت قراءة المجلد"
 
 [portal.failures.kind.stepCannotRenderPage]
 description = "تعذر رسم صفحة في ملفك، لذلك تعذر على التشغيل الإكمال."
@@ -12235,6 +12404,7 @@ goBack = "رجوع"
 pdfTools = "أدوات PDF"
 placeholder = "اختر أداة للبدء"
 premiumFeature = "ميزة Premium:"
+searchTools = "البحث عن أدوات"
 toolsHeader = "الأدوات"
 viewAllTools = "عرض كل الأدوات"
 
@@ -12399,13 +12569,10 @@ visits = "الزيارات"
 
 [users]
 lastActive = "آخر نشاط"
-learnMore = "تعرّف على المزيد حول الأدوار والوصول."
 locked = "مقفل"
 ownerSetupRequired = "لم يكمل مالك المؤسسة تسجيل الدخول الأول. أكمل الإعداد أو اطلب من مشغّل الخادم استعادة الملكية قبل نقل الملكية."
 roleFor = "الدور لـ {{name}}"
 rowActions = "إجراءات لـ {{name}}"
-showAll = "عرض كل {{count}}"
-showLess = "عرض أقل"
 subtitle2 = "أفرادك وفرقك ومستويات الوصول."
 suspended = "معلّق"
 teamActions = "إجراءات الفريق"
@@ -12414,6 +12581,7 @@ you = "(أنت)"
 
 [users.action]
 cancelInvite = "إلغاء الدعوة"
+createFromDefault = "إنشاء فريق من Default"
 deleteTeam = "حذف الفريق"
 disableMfa = "إعادة ضبط MFA"
 move = "نقل إلى فريق"
@@ -12451,6 +12619,7 @@ email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
+team = "الفريق"
 
 [users.confirm]
 cancelInviteBody = "إلغاء الدعوة إلى {{email}}؟ لن يتمكنوا من الانضمام باستخدام الرابط الحالي."
@@ -12469,15 +12638,12 @@ transferOwnershipTitle = "نقل ملكية المؤسسة"
 description = "ادعُ فريقك لبدء التعاون."
 title = "لا يوجد أعضاء بعد"
 
+[users.filters]
+noMatches = "لا يوجد أي شخص يطابق هذه المرشحات."
+search = "البحث عن أشخاص"
+
 [users.group]
 addToTeam = "إضافة إلى فريق"
-administrators = "{{count}} مسؤولين"
-guestCount = "{{count}} ضيف"
-guests = "الضيوف"
-ledBy = "بقيادة {{owner}}"
-org = "المؤسسة"
-team = "فريق {{name}}"
-teamMeta = "{{count}} شخص"
 
 [users.invite]
 access = "الوصول"
@@ -12542,6 +12708,9 @@ title = "فريق جديد"
 
 [users.renameTeam]
 apply = "إعادة تسمية"
+defaultApply = "إنشاء ونقل"
+defaultDescription = "سيظل Default متاحًا للمستخدمين الجدد. سيتم نقل كل الموجودين حاليًا في Default إلى الفريق الجديد."
+defaultTitle = "إنشاء فريق من Default"
 name = "اسم الفريق"
 title = "إعادة تسمية الفريق"
 
@@ -12566,6 +12735,15 @@ guest = "ضيف"
 member = "عضو"
 orgOwner = "مالك المؤسسة"
 teamOwner = "مالك الفريق"
+
+[users.seats]
+full = "كل المقاعد المرخصة قيد الاستخدام. حرر مقعدًا، أو ارفع عدد المقاعد، لإضافة أي شخص آخر."
+update = "تحديث المقاعد"
+
+[users.tabs]
+all = "الكل"
+label = "تصفية حسب الفريق"
+unassigned = "بلا فريق"
 
 [users.team]
 grantProcessor = "منح المعالج للفريق"
@@ -13216,232 +13394,14 @@ submitSignature = "إرسال التوقيع"
 title = "مساحة العمل"
 
 [workspace.people]
-active = "نشط"
-activeSession = "جلسة نشطة"
-addMembers = "إضافة أعضاء"
-admin = "مسؤول"
-confirmDelete = "هل أنت متأكد أنك تريد حذف هذا المستخدم؟ لا يمكن التراجع عن هذا الإجراء."
-confirmUnlock = "هل أنت متأكد من أنك تريد فتح قفل حساب هذا المستخدم؟"
-deleteUser = "حذف المستخدم"
-deleteUserError = "فشل حذف المستخدم"
-deleteUserSuccess = "تم حذف المستخدم بنجاح"
 description = "إدارة أعضاء مساحة العمل وأذوناتهم"
-disable = "تعطيل"
-disabled = "معطّل"
-editRole = "تحرير الدور"
-enable = "تمكين"
-loading = "جارٍ تحميل الأشخاص..."
-locked = "مقفل"
-lockedBadge = "مقفل"
-loginRequired = "فعّل وضع تسجيل الدخول أولاً"
-memberActions = "إجراءات العضو"
-noMembersFound = "لم يتم العثور على أعضاء"
-ownerLocked = "انقل ملكية المؤسسة في الإعدادات → مساحة العمل → المستخدمون قبل تغيير دور المالك أو حسابه."
-role = "الدور"
-searchMembers = "ابحث عن الأعضاء..."
-team = "الفريق"
-unlockAccount = "فتح قفل الحساب"
-unlockUserError = "فشل فتح قفل حساب المستخدم"
-unlockUserSuccess = "تم فتح قفل حساب المستخدم بنجاح"
-user = "مستخدم"
-userInfo = "معلومات المستخدم"
-
-[workspace.people.actions]
-upgrade = "ترقية"
-
-[workspace.people.addMember]
-authType = "نوع المصادقة"
-error = "فشل إنشاء المستخدم"
-forceMFA = "فرض إعداد MFA عند تسجيل الدخول التالي"
-forcePasswordChange = "فرض تغيير كلمة المرور عند أول تسجيل دخول"
-password = "كلمة المرور"
-passwordPlaceholder = "أدخل كلمة المرور"
-passwordRequired = "كلمة المرور مطلوبة"
-role = "الدور"
-submit = "إضافة عضو"
-success = "تم إنشاء المستخدم بنجاح"
-team = "الفريق (اختياري)"
-teamPlaceholder = "اختر فريقًا"
-username = "اسم المستخدم (البريد الإلكتروني)"
-usernamePlaceholder = "user@example.com"
-usernameRequired = "اسم المستخدم وكلمة المرور مطلوبان"
-
-[workspace.people.authType]
-oauth = "OAuth2"
-password = "كلمة المرور"
-saml = "SAML2"
-ssoDescription = "سيتم مصادقة المستخدم عبر موفّر SSO"
-
-[workspace.people.changePassword]
-action = "تغيير كلمة المرور"
-confirmPassword = "تأكيد كلمة المرور"
-confirmPlaceholder = "أعد إدخال كلمة المرور الجديدة"
-copiedToClipboard = "تم نسخ كلمة المرور إلى الحافظة"
-copyFailed = "فشل نسخ كلمة المرور"
-copyTooltip = "نسخ إلى الحافظة"
-emailUnavailable = "بريد هذا المستخدم الإلكتروني غير صالح. تم تعطيل الإشعارات."
-error = "فشل تحديث كلمة المرور"
-forcePasswordChange = "إلزام المستخدم بتغيير كلمة المرور عند تسجيل الدخول التالي"
-generatedPreview = "كلمة المرور المُنشأة:"
-generateRandom = "إنشاء كلمة مرور آمنة"
-includePassword = "تضمين كلمة المرور الجديدة في البريد الإلكتروني"
-newPassword = "كلمة مرور جديدة"
-notifyOnly = "سيتم إرسال بريد إلكتروني بدون كلمة المرور لإبلاغ المستخدم بأن المشرف قد غيّرها."
-passwordMismatch = "كلمتا المرور غير متطابقتين"
-passwordRequired = "يرجى إدخال كلمة مرور جديدة"
-placeholder = "أدخل كلمة مرور جديدة"
-sendEmail = "إرسال بريد إلكتروني للمستخدم حول هذا التغيير"
-smtpDisabled = "تتطلب إشعارات البريد الإلكتروني تفعيل SMTP في الإعدادات."
-submit = "تحديث كلمة المرور"
-subtitle = "تحديث كلمة المرور لـ"
-success = "تم تحديث كلمة المرور بنجاح"
-title = "تغيير كلمة المرور"
-
-[workspace.people.editMember]
-editing = "Editing: <0>{{username}}</0>"
-error = "فشل تحديث المستخدم"
-role = "الدور"
-submit = "Update User"
-success = "تم تحديث المستخدم بنجاح"
-team = "الفريق (اختياري)"
-teamPlaceholder = "اختر فريقًا"
-title = "Edit User"
-
-[workspace.people.emailInvite]
-allFailed = "فشلت دعوة المستخدمين"
-emails = "عناوين البريد الإلكتروني"
-emailsPlaceholder = "user1@example.com, user2@example.com"
-emailsRequired = "مطلوب عنوان بريد إلكتروني واحد على الأقل"
-error = "فشل إرسال الدعوات"
-partialFailure = "فشل بعض الدعوات"
-submit = "إرسال الدعوات"
-success = "تمت دعوة المستخدم/المستخدمين بنجاح"
-
-[workspace.people.inviteLink]
-copied = "تم نسخ الرابط إلى الحافظة"
-email = "عنوان البريد الإلكتروني"
-emailDescription = "اختياري — اتركه فارغًا للحصول على رابط دعوة عام يمكن لأي شخص استخدامه"
-emailPlaceholder = "user@example.com (اختياري)"
-emailSent = "تم إنشاء رابط الدعوة وإرساله عبر البريد الإلكتروني"
-error = "فشل إنشاء رابط الدعوة"
-expiryHours = "ساعات الانتهاء"
-generate = "إنشاء الرابط"
-generated = "تم إنشاء رابط الدعوة"
-sendEmail = "إرسال رابط الدعوة عبر البريد الإلكتروني"
-sendEmailDescription = "إذا تم تمكينه، فسيُرسَل رابط الدعوة إلى عنوان البريد الإلكتروني المحدد"
-submit = "إنشاء رابط دعوة"
-
-[workspace.people.inviteMembers]
-label = "دعوة أعضاء"
-subtitle = "اكتب أو الصق عناوين البريد الإلكتروني أدناه مفصولة بفواصل. سيتم احتساب الفوترة لمساحة العمل حسب عدد الأعضاء."
-
-[workspace.people.inviteMode]
-email = "البريد الإلكتروني"
-emailDisabled = "دعوات البريد الإلكتروني تتطلب تهيئة SMTP وضبط mail.enableInvites=true في الإعدادات"
-link = "رابط"
-username = "اسم المستخدم"
 
 [workspace.people.license]
-currentUsage = "تستخدم حالياً {{current}} من {{max}} تراخيص المستخدمين"
-fromLicense = "من الترخيص"
-grandfathered = "موروث"
-grandfatheredShort = "{{count}} موروث"
-slotsAvailable_one = "{{count}} user slot available"
-slotsAvailable_other = "{{count}} user slots available"
-slotsAvailable_zero = "No slots available"
 users_one = "user"
 users_other = "users"
 
-[workspace.people.mfa]
-adminDisableError = "فشل تعطيل MFA للمستخدم"
-adminDisableSuccess = "تم تعطيل MFA بنجاح للمستخدم"
-disableByAdmin = "تعطيل MFA"
-
-[workspace.people.roleDescriptions]
-admin = "يمكنه إدارة الإعدادات ودعوة الأعضاء مع صلاحيات إدارية كاملة."
-currentRole = "الدور المعيّن الحالي."
-user = "Can view and edit shared files, but cannot manage workspace settings or users."
-
-[workspace.people.toggleEnabled]
-error = "فشل تحديث حالة المستخدم"
-success = "تم تحديث حالة المستخدم بنجاح"
-
 [workspace.teams]
-addMember = "إضافة عضو"
-backToTeams = "العودة إلى الفرق"
-cannotAddToInternal = "لا يمكن إضافة أعضاء إلى الفريق الداخلي"
-cannotDeleteInternal = "لا يمكن حذف الفريق الداخلي"
-cannotRenameInternal = "لا يمكن إعادة تسمية الفريق الداخلي"
-confirmDelete = "هل أنت متأكد أنك تريد حذف هذا الفريق؟ يجب أن يكون هذا الفريق فارغاً للحذف."
-confirmRemove = "إزالة المستخدم من هذا الفريق؟"
-createNewTeam = "إنشاء فريق جديد"
-deleteTeamLabel = "حذف الفريق"
 description = "إدارة الفرق وتنظيم أعضاء مساحة العمل"
-loadError = "فشل تحميل تفاصيل الفريق"
-loading = "جارٍ تحميل الفرق..."
-loadingDetails = "جارٍ تحميل تفاصيل الفريق..."
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
-noMembers = "لا يوجد أعضاء في هذا الفريق"
-noTeamsFound = "لم يتم العثور على فرق"
-removeMember = "إزالة من الفريق"
-removeMemberError = "فشل إزالة المستخدم من الفريق"
-removeMemberSuccess = "تمت إزالة المستخدم من الفريق"
-renameTeamLabel = "إعادة تسمية الفريق"
-system = "النظام"
-teamActions = "إجراءات الفريق"
-teamName = "اسم الفريق"
-teamNotFound = "لم يتم العثور على الفريق"
-totalMembers = "إجمالي الأعضاء"
-viewTeam = "عرض الفريق"
-
-[workspace.teams.addMemberToTeam]
-addingTo = "إضافة إلى"
-currentlyIn = "حاليًا في"
-error = "فشل إضافة العضو إلى الفريق"
-selectUser = "حدد مستخدمًا"
-selectUserPlaceholder = "اختر مستخدمًا"
-selectUserRequired = "يرجى تحديد مستخدم"
-submit = "إضافة عضو"
-success = "تمت إضافة العضو إلى الفريق بنجاح"
-title = "إضافة عضو إلى الفريق"
-userRequired = "يرجى تحديد مستخدم"
-willBeMoved = "ملاحظة: سيتم نقل هذا المستخدم من فريقه الحالي إلى هذا الفريق."
-
-[workspace.teams.changeTeam]
-changing = "نقل"
-error = "فشل تغيير الفريق"
-label = "تغيير الفريق"
-selectTeam = "حدد فريقًا"
-selectTeamPlaceholder = "اختر فريقًا"
-selectTeamRequired = "يرجى تحديد فريق"
-submit = "تغيير الفريق"
-success = "تم تغيير الفريق بنجاح"
-title = "تغيير الفريق"
-
-[workspace.teams.createTeam]
-error = "فشل إنشاء الفريق"
-nameRequired = "اسم الفريق مطلوب"
-submit = "إنشاء فريق"
-success = "تم إنشاء الفريق بنجاح"
-teamName = "اسم الفريق"
-teamNamePlaceholder = "أدخل اسم الفريق"
-title = "إنشاء فريق جديد"
-
-[workspace.teams.deleteTeam]
-error = "فشل حذف الفريق. تأكد من أن الفريق فارغ."
-success = "تم حذف الفريق بنجاح"
-
-[workspace.teams.renameTeam]
-error = "فشل إعادة تسمية الفريق"
-nameRequired = "اسم الفريق مطلوب"
-newTeamName = "اسم الفريق الجديد"
-newTeamNamePlaceholder = "أدخل اسم الفريق الجديد"
-renaming = "إعادة تسمية:"
-submit = "إعادة تسمية الفريق"
-success = "تمت إعادة تسمية الفريق بنجاح"
-title = "إعادة تسمية الفريق"
 
 [zipWarning]
 cancel = "إلغاء"

@@ -6,7 +6,7 @@ import { useConnectGate } from "@portal/hooks/useConnectGate";
 import { qk } from "@portal/queries/keys";
 import {
   FREE_TIER_EXHAUSTED_EVENT,
-  clearAccountLinkBlock,
+  clearBlockIfAllowanceRemains,
 } from "@app/services/accountLinkBlock";
 
 /** Admin-only local ledger; refreshes after a block and at rollover without reading a cloud wallet. */
@@ -17,7 +17,11 @@ export function useFreeTierBalance() {
   const enabled = isAdmin && gated && !loading;
   const query = useQuery({
     queryKey: qk.freeTier(),
-    queryFn: fetchFreeTier,
+    queryFn: async ({ signal }) => {
+      const balance = await fetchFreeTier();
+      clearBlockIfAllowanceRemains(balance, signal);
+      return balance;
+    },
     enabled,
     refetchInterval: 60_000,
     retry: false,
@@ -32,26 +36,12 @@ export function useFreeTierBalance() {
     return () => window.removeEventListener(FREE_TIER_EXHAUSTED_EVENT, refresh);
   }, [client, enabled]);
 
-  useEffect(() => {
-    if (
-      enabled &&
-      query.isSuccess &&
-      query.data &&
-      !query.isFetching &&
-      query.data.remainingUnits > 0
-    ) {
-      clearAccountLinkBlock();
-    }
-  }, [
-    enabled,
-    query.data,
-    query.dataUpdatedAt,
-    query.isFetching,
-    query.isSuccess,
-  ]);
-
+  // Named rather than spread: reading every field subscribes the caller to
+  // isFetching too, which flips twice a poll and re-rendered the connect rail
+  // for polls that found the same balance.
   return {
-    ...query,
     data: enabled ? query.data : undefined,
+    isError: query.isError,
+    refetch: query.refetch,
   };
 }

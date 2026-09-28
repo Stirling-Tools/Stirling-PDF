@@ -1,6 +1,14 @@
 # Standalone unoserver image for Stirling-PDF remote UNO mode.
 # Pinned to unoserver 3.7 to match Stirling-PDF's client (avoids wire mismatch).
 
+FROM ubuntu:noble@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517 AS lo-sandbox-build
+RUN apt-get update && apt-get install -y --no-install-recommends gcc libc6-dev && \
+    rm -rf /var/lib/apt/lists/*
+COPY docker/base/lo-sandbox.c /src/lo-sandbox.c
+RUN gcc -O2 -Wall -Wextra -Werror -o /usr/local/bin/lo-sandbox /src/lo-sandbox.c && \
+    strip --strip-unneeded /usr/local/bin/lo-sandbox
+
+
 FROM ubuntu:noble@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517
 
 ARG UNOSERVER_VERSION=3.7
@@ -89,6 +97,23 @@ RUN rm -rf /usr/lib/libreoffice/share/gallery \
            /usr/lib/libreoffice/share/extensions/wiki-publisher \
            /usr/lib/libreoffice/share/extensions/nlpsolver \
            /usr/share/doc/* /usr/share/man/* /usr/share/info/*
+
+COPY --from=lo-sandbox-build /usr/local/bin/lo-sandbox /usr/local/lib/stirling/lo-sandbox
+COPY --chmod=0644 docker/base/stirling-hardening.xcd /usr/lib/libreoffice/share/registry/stirling-hardening.xcd
+COPY docker/base/unoserver-pipe-transport.py /usr/local/lib/stirling/unoserver-pipe-transport.py
+
+RUN set -eux; \
+    chown root:root /usr/local/lib/stirling/lo-sandbox; \
+    chmod 0755 /usr/local/lib/stirling/lo-sandbox; \
+    for name in /usr/bin/soffice /usr/bin/libreoffice /usr/bin/ooffice; do \
+      if [ -e "$name" ] || [ -L "$name" ]; then rm -f "$name"; fi; \
+      cp /usr/local/lib/stirling/lo-sandbox "$name"; \
+      chown root:root "$name"; \
+      chmod 0755 "$name"; \
+    done; \
+    /opt/unoserver-venv/bin/python /usr/local/lib/stirling/unoserver-pipe-transport.py \
+      "$(/opt/unoserver-venv/bin/python -c 'import unoserver, os; print(os.path.dirname(unoserver.__file__))')"; \
+    STIRLING_LO_SANDBOX=off /usr/bin/soffice --version
 
 ARG PUID=1001
 ARG PGID=1001
