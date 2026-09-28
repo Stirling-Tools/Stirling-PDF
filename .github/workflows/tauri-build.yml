@@ -69,7 +69,7 @@ env:
     build.gradle
     app/**/build.gradle
     gradle/**/*.gradle
-  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-${{ env.JAVA_VERSION }}
+  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-25
   CARGO_FILES_TO_HASH: |
     frontend/editor/src-tauri/Cargo.toml
     frontend/editor/src-tauri/Cargo.lock
@@ -287,8 +287,8 @@ jobs:
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
+            .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/caches
+            .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/wrapper
           key: gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
           restore-keys: |
             gradle-tauri-build-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-
@@ -298,8 +298,8 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
+            .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/caches
+            .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/wrapper
           key: gradle-tauri-build-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
           restore-keys: |
             gradle-tauri-build-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-
@@ -812,7 +812,7 @@ jobs:
     environment:
       name: ci-unsigned
       deployment: false
-    needs: determine-matrix
+    needs: [determine-matrix, hash_pr]
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.determine-matrix.outputs.matrix) }}
@@ -859,8 +859,8 @@ jobs:
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
+            .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/caches
+            .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/wrapper
           key: gradle-tauri-build-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
           restore-keys: |
             gradle-tauri-build-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-
