@@ -213,6 +213,14 @@
   box-shadow: var(--shadow-md);
 }
 
+/* Clicks land on the stable box around the page instead: the placeholder is
+   swapped for the image as the thumbnail arrives, and WebKit drops a click
+   whose pressed element has been replaced by the time the button comes up. */
+.thumb,
+.thumbPending {
+  pointer-events: none;
+}
+
 /*
  * A blank page, fitted to its box at its own proportions: whichever of width
  * or height binds first. A quarter turn is applied after layout, so it fits
