@@ -29,8 +29,8 @@ function toCredits(
  * as the stored cache so signup cannot revive a previous account's figures.
  */
 export function useFreeCreditsSummary(): NavFooterCredits | null {
-  const { isAnonymous, loading } = useAuth();
-  const { wallet } = useWallet(!loading && !isAnonymous);
+  const { user, isAnonymous, loading } = useAuth();
+  const { wallet } = useWallet(!loading && !!user && !isAnonymous);
   const [seed, setSeed] = useState(() =>
     isAnonymous ? null : readCachedCredits(),
   );

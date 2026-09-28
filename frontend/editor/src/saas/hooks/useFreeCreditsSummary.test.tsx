@@ -2,7 +2,11 @@ import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useFreeCreditsSummary } from "@app/hooks/useFreeCreditsSummary";
 
-const state = vi.hoisted(() => ({ isAnonymous: true, loading: false }));
+const state = vi.hoisted(() => ({
+  user: { id: "u1" } as { id: string } | null,
+  isAnonymous: true,
+  loading: false,
+}));
 const wallet = vi.hoisted(() => vi.fn(() => ({ wallet: null })));
 const cacheWrite = vi.hoisted(() => vi.fn());
 vi.mock("@app/auth/UseSession", () => ({ useAuth: () => state }));
@@ -14,9 +18,18 @@ vi.mock("@app/services/navFooterCache", () => ({
 
 describe("guest credit display", () => {
   beforeEach(() => {
+    state.user = { id: "u1" };
     state.isAnonymous = true;
     state.loading = false;
     vi.clearAllMocks();
+  });
+
+  it("does not fetch the wallet before anyone is signed in", () => {
+    state.user = null;
+    state.isAnonymous = false;
+    renderHook(useFreeCreditsSummary);
+    expect(wallet).toHaveBeenCalledWith(false);
+    expect(wallet).not.toHaveBeenCalledWith(true);
   });
 
   it("hides stale account credits and stops guest wallet polling", () => {
