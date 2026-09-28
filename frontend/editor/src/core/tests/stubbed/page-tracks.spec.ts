@@ -407,10 +407,14 @@ test.describe("Page Editor tracks", () => {
       timeout: 30_000,
     });
 
-    await rotated
-      .locator("header")
-      .getByRole("button", { name: "Select all pages", exact: true })
+    const header = rotated.locator("header");
+    await header
+      .getByRole("button", { name: "Select All", exact: true })
       .click();
+    // Like the bar's, the track's toggle names what the next click does.
+    await expect(
+      header.getByRole("button", { name: "Deselect All", exact: true }),
+    ).toBeVisible();
     await page.getByRole("button", { name: "Delete Selected Pages" }).click();
 
     await expect(rotated.locator("[data-page-id]")).toHaveCount(0);
@@ -528,7 +532,7 @@ test.describe("Page Editor tracks", () => {
 
     await rotated
       .locator("header")
-      .getByRole("button", { name: "Select pages by number" })
+      .getByRole("button", { name: "Select by Page Numbers" })
       .click();
     await page.getByPlaceholder("1,3,5-10").fill("2-3");
 
@@ -720,6 +724,36 @@ test.describe("Page Editor tracks", () => {
     await expect(
       page.locator('[data-page-id][data-selected="true"]'),
     ).toHaveCount(5);
+  });
+
+  test("the bar's select all toggles, selecting every page then clearing", async ({
+    page,
+  }) => {
+    await openPageEditor(page);
+    const rotated = track(page, "rotated-pages.pdf");
+    await expect(rotated.locator("[data-page-id]")).toHaveCount(4, {
+      timeout: 30_000,
+    });
+    const selected = page.locator('[data-page-id][data-selected="true"]');
+    const bar = page.locator(".workbench-bar");
+    const selectAll = bar.getByRole("button", {
+      name: "Select All",
+      exact: true,
+    });
+    const deselectAll = bar.getByRole("button", {
+      name: "Deselect All",
+      exact: true,
+    });
+
+    await rotated.locator("[data-page-id]").first().click();
+    await expect(deselectAll).toHaveCount(0);
+    await selectAll.click();
+    await expect(selected).toHaveCount(5);
+
+    // With everything selected the same button offers the opposite.
+    await deselectAll.click();
+    await expect(selected).toHaveCount(0);
+    await expect(selectAll).toBeVisible();
   });
 
   test("a bar action applies to every page the clicks accumulated", async ({

@@ -26,8 +26,8 @@ export interface PageTracksBarParams {
   canZoomOut: boolean;
   onZoomIn: () => void;
   onZoomOut: () => void;
-  onSelectAll: () => void;
-  onDeselectAll: () => void;
+  /** Selects every page, or clears the selection when every page is selected. */
+  onToggleSelectAll: () => void;
   /** Page-number selection across every track. */
   numberSelection: Pick<
     SelectByNumberPopoverProps,
@@ -55,8 +55,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
     canZoomOut,
     onZoomIn,
     onZoomOut,
-    onSelectAll,
-    onDeselectAll,
+    onToggleSelectAll,
     numberSelection,
     onRotate,
     onDelete,
@@ -88,6 +87,8 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
 
   const hasPages = totalPages > 0;
   const hasSelection = selectedCount > 0;
+  const allSelected = hasPages && selectedCount === totalPages;
+  const selectAllLabel = allSelected ? labels.deselectAll : labels.selectAll;
 
   const buttons = useMemo<WorkbenchBarButtonWithAction[]>(
     () => [
@@ -127,13 +128,13 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       {
         id: "tracks-select-all",
         icon: <Icon name="select-all" size="1.5rem" />,
-        tooltip: labels.selectAll,
-        ariaLabel: labels.selectAll,
+        tooltip: selectAllLabel,
+        ariaLabel: selectAllLabel,
         section: "top" as const,
         order: 10,
-        disabled: !hasPages || selectedCount === totalPages,
         visible: hasPages,
-        onClick: onSelectAll,
+        active: allSelected,
+        onClick: onToggleSelectAll,
       },
       {
         id: "tracks-select-by-number",
@@ -152,17 +153,6 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
             {...numberSelection}
           />
         ),
-      },
-      {
-        id: "tracks-deselect-all",
-        icon: <Icon name="square" size="1.5rem" />,
-        tooltip: labels.deselectAll,
-        ariaLabel: labels.deselectAll,
-        section: "top" as const,
-        order: 20,
-        disabled: !hasSelection,
-        visible: hasPages,
-        onClick: onDeselectAll,
       },
       {
         id: "tracks-rotate-left",
@@ -264,8 +254,8 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       labels.wrap,
       labels.zoomIn,
       labels.zoomOut,
-      labels.selectAll,
-      labels.deselectAll,
+      selectAllLabel,
+      allSelected,
       labels.selectByNumber,
       labels.rotateLeft,
       labels.rotateRight,
@@ -288,8 +278,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       canZoomOut,
       onZoomIn,
       onZoomOut,
-      onSelectAll,
-      onDeselectAll,
+      onToggleSelectAll,
       numberSelection,
       onRotate,
       onDelete,

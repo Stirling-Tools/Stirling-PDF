@@ -6485,8 +6485,6 @@ title = "No PDF files loaded"
 close = "Close file"
 collapse = "Collapse"
 expand = "Expand"
-selectByNumber = "Select pages by number"
-toggleSelection = "Select all pages"
 
 [pageTracks.wrap]
 label = "Wrap pages"

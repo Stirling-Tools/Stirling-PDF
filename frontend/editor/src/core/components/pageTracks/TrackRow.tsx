@@ -347,6 +347,12 @@ function TrackRowImpl({
     [track.pages, selectedIds],
   );
 
+  const allSelectedInTrack =
+    track.pages.length > 0 && selectedInTrack.length === track.pages.length;
+  const selectAllLabel = allSelectedInTrack
+    ? t("workbenchBar.deselectAll", "Deselect All")
+    : t("workbenchBar.selectAll", "Select All");
+
   const numberedPages = useMemo(
     () =>
       track.pages.map((page, index) => ({
@@ -460,17 +466,11 @@ function TrackRowImpl({
         </Tooltip>
 
         <div className={styles.trackActions}>
-          <Tooltip
-            position="bottom"
-            content={t("pageTracks.track.toggleSelection", "Select all pages")}
-          >
+          <Tooltip position="bottom" content={selectAllLabel}>
             <ActionIcon
               variant="quiet"
               size="sm"
-              aria-label={t(
-                "pageTracks.track.toggleSelection",
-                "Select all pages",
-              )}
+              aria-label={selectAllLabel}
               disabled={track.pages.length === 0}
               onClick={handleSelectTrack}
             >
@@ -478,10 +478,7 @@ function TrackRowImpl({
             </ActionIcon>
           </Tooltip>
           <SelectByNumberPopover
-            label={t(
-              "pageTracks.track.selectByNumber",
-              "Select pages by number",
-            )}
+            label={t("workbenchBar.selectByNumber", "Select by Page Numbers")}
             iconSize="1rem"
             actionSize="sm"
             pages={numberedPages}

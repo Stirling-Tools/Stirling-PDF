@@ -355,6 +355,10 @@ export default function PageTracks() {
   );
 
   const clearSelection = selection.clear;
+  const toggleSelectAll =
+    totalPages > 0 && selection.selectedCount === totalPages
+      ? selection.clear
+      : selection.selectAll;
 
   /**
    * Moves one track before `beforeFileId` (or to the end when null). The
@@ -732,8 +736,7 @@ export default function PageTracks() {
     canZoomOut: zoom > ZOOM_MIN,
     onZoomIn: zoomIn,
     onZoomOut: zoomOut,
-    onSelectAll: selection.selectAll,
-    onDeselectAll: selection.clear,
+    onToggleSelectAll: toggleSelectAll,
     numberSelection,
     onRotate: rotateSelection,
     onDelete: deleteSelection,
