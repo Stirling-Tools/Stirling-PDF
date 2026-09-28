@@ -300,7 +300,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 # Stage 3: Build PDF Tools (QPDF and ImageMagick 7)
 FROM ubuntu:noble@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517 AS pdf-tools-build
 ARG TARGETPLATFORM
-ARG QPDF_VERSION=12.4.0
+ARG QPDF_VERSION=12.4.2
 ARG IM_VERSION=7.1.2-29
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
