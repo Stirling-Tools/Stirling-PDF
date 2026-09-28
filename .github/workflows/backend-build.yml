@@ -99,14 +99,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Restore Gradle cache github-branch
-        id: cache
-        uses: Ludy87/cache-the-planet/multi-cache@1c98bd35df6a8d688f1f8f34a34d1ebbff8b3c8c
-        with:
-          manifest-branch: dev-cache
-          manifest-path: .github/cache-data
-          storage: github-branch
-          multi-cache: |
+
+      - name: Build multi-cache configuration
+        id: cache-config
+        shell: bash
+        run: |
+          if [[ "${{ matrix.flavor }}" == "saas" ]]; then
+            {
+              echo 'multi_cache<<EOF'
+              cat <<'CACHE'
+            cargo:
+              path: ${{ env.CARGO_HOME }}
             gradle-caches:
               path: .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/caches
             gradle-wrapper:
@@ -115,13 +118,45 @@ jobs:
               path: .cache/setup-uv-cache
             uv-python-dir:
               path: .cache/uv-python-dir
+          CACHE
+              echo 'EOF'
+              echo 'cache_key<<EOF'
+              echo 'gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}'
+              echo 'gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}'
+              echo 'setup-uv-cache=${{ needs.hash_pr.outputs.uv_files_hash }}'
+              echo 'uv-python-dir=${{ needs.hash_pr.outputs.uv_files_hash }}'
+              echo 'EOF'
+            } >> "$GITHUB_OUTPUT"
+          else
+            {
+              echo 'multi_cache<<EOF'
+              cat <<'CACHE'
+            cargo:
+              path: ${{ env.CARGO_HOME }}
+            gradle-caches:
+              path: .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/caches
+            gradle-wrapper:
+              path: .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/wrapper
+          CACHE
+              echo 'EOF'
+              echo 'cache_key<<EOF'
+              echo 'gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}'
+              echo 'gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}'
+              echo 'EOF'
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Restore Gradle cache github-branch
+        id: cache
+        uses: Ludy87/cache-the-planet/multi-cache@1c98bd35df6a8d688f1f8f34a34d1ebbff8b3c8c
+        with:
+          manifest-branch: dev-cache
+          manifest-path: .github/cache-data
+          storage: github-branch
+          multi-cache: ${{ steps.cache-config.outputs.multi_cache }}
           save-scope: shared
           token: ${{ github.token }}
-          key: |
-            gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
-            gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash  }}
-            setup-uv-cache=${{ needs.hash_pr.outputs.uv_files_hash }}
-            uv-python-dir=${{ needs.hash_pr.outputs.uv_files_hash }}
+          key: ${{ steps.cache-config.outputs.cache_key }}
           allow-shared-restore: true
           strict: false
 
