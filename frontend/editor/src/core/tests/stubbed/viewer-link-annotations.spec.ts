@@ -29,10 +29,11 @@ test("link annotations render as overlays with no annotation-layer hit boxes", a
     { timeout: 15_000 },
   );
 
-  // The annotation layer used to duplicate every link as an SVG hit box
-  // (~9 extra nodes per link) that LinkLayer already covers. This fixture has
-  // no other annotations or SVG-drawing content, so the page holds zero SVGs.
-  await expect(firstPage.locator("svg")).toHaveCount(0);
+  // Each link keeps exactly one annotation-layer SVG for its underline or
+  // border styling; LinkLayer owns the clickable overlay, so no SVG may carry
+  // a transparent hit rect.
+  await expect(firstPage.locator("svg")).toHaveCount(LINKS_PER_PAGE);
+  await expect(firstPage.locator("svg rect:not([stroke])")).toHaveCount(0);
 });
 
 test("hovering a link overlay still opens the link toolbar", async ({
