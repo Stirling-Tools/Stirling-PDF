@@ -70,6 +70,17 @@ function GapHandle({
       onPointerDown={(event) => event.stopPropagation()}
       onClick={(event) => event.stopPropagation()}
     >
+      <Tooltip content={insertLabel} position="top">
+        <button
+          type="button"
+          className={styles.gapAction}
+          aria-label={insertLabel}
+          data-insert-before={beforePosition}
+          onClick={onInsert}
+        >
+          <Icon name="plus" size="1em" />
+        </button>
+      </Tooltip>
       {onSplit && (
         <Tooltip content={splitLabel} position="top">
           <button
@@ -83,17 +94,6 @@ function GapHandle({
           </button>
         </Tooltip>
       )}
-      <Tooltip content={insertLabel} position="top">
-        <button
-          type="button"
-          className={styles.gapAction}
-          aria-label={insertLabel}
-          data-insert-before={beforePosition}
-          onClick={onInsert}
-        >
-          <Icon name="plus" size="1em" />
-        </button>
-      </Tooltip>
     </div>
   );
 }
