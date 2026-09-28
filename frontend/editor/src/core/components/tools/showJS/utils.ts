@@ -186,7 +186,7 @@ export function tokenizeToLines(
     }
 
     if (isStringDelimiter) {
-      startString(ch as '"' | "'" | "`");
+      startString(ch);
       continue;
     }
 
@@ -312,7 +312,7 @@ export function computeBlocks(
       continue;
     }
     if (isStringDelimiter) {
-      startString(ch as '"' | "'" | "`");
+      startString(ch);
       continue;
     }
     if (isOpenBrace) {

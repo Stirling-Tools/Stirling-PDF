@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
           egress-policy: audit
       - name: Checkout repository
@@ -42,10 +42,9 @@ jobs:
 
       - name: Set up JDK 25
         if: steps.cache-gradle-restore.outputs.cache-hit != 'true'
-        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        uses: ./.github/actions/java
         with:
           java-version: "25"
-          distribution: "temurin"
 
       - name: Resolve backend dependencies
         if: steps.cache-gradle-restore.outputs.cache-hit != 'true'

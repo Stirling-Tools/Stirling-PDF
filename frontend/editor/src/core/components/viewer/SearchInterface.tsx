@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Box, TextInput, Text, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { LocalIcon } from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { ViewerContext } from "@app/contexts/ViewerContext";
 
@@ -213,7 +213,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
           onClick={handleCloseClick}
           aria-label={t("viewer.search.close", "Close search")}
         >
-          <LocalIcon icon="close" width="1rem" height="1rem" />
+          <Icon name="x" size="1rem" />
         </ActionIcon>
       </Group>
 
@@ -237,7 +237,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
                 onClick={handleClearSearch}
                 aria-label={t("viewer.search.clear", "Clear search")}
               >
-                <LocalIcon icon="close" width="0.875rem" height="0.875rem" />
+                <Icon name="x" size="0.875rem" />
               </ActionIcon>
             )
           }
@@ -289,7 +289,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
             disabled={!resultInfo || resultInfo.totalResults === 0}
             aria-label={t("viewer.search.previous", "Previous result")}
           >
-            <LocalIcon icon="keyboard-arrow-up" width="1rem" height="1rem" />
+            <Icon name="chevron-up" size="1rem" />
           </ActionIcon>
           <ActionIcon
             variant="tertiary"
@@ -298,7 +298,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
             disabled={!resultInfo || resultInfo.totalResults === 0}
             aria-label={t("viewer.search.next", "Next result")}
           >
-            <LocalIcon icon="keyboard-arrow-down" width="1rem" height="1rem" />
+            <Icon name="chevron-down" size="1rem" />
           </ActionIcon>
         </Group>
       </Group>

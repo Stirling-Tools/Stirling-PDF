@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -30,17 +31,7 @@ import stirling.software.saas.payg.wallet.WalletPolicy;
  * entitlement hot path and the wallet endpoint read from here, so what the customer sees is what
  * the guard enforces.
  *
- * <p>Two independent meters (design 2026-06-11 — the free allowance is a one-time lifetime grant):
- *
- * <ul>
- *   <li><b>Free grant</b> — one-time, per team. Size from {@code pricing_policy.free_tier_units};
- *       live balance from the {@code payg_team_extensions.free_units_remaining} counter (maintained
- *       by the charge pipeline). Never resets, survives subscribing. Gates un-subscribed teams and
- *       drives the free-vs-paid split.
- *   <li><b>Monthly window + cap</b> — the Stripe subscription period (calendar month otherwise) and
- *       the optional money cap. Govern the subscribed invoice + spending cap only. The per-document
- *       rate is the synced {@code stripe.prices.unit_amount} (PAYG prices are plain per-unit).
- * </ul>
+ * <p>Included credits renew monthly in UTC, independently of the Stripe metered billing window.
  *
  * <p>Cached per team for {@value #CACHE_TTL_SECONDS}s. {@code EntitlementService.invalidate}
  * cascades into {@link #invalidate(Long)} so both caches drop together on cap edits / webhooks.
@@ -133,12 +124,6 @@ public class TeamBillingService {
         // bug this guards against.
         boolean subscribed = subscriptionId != null;
 
-        long freeGrant = resolveGrant(teamId);
-        long freeRemaining =
-                extOpt.map(PaygTeamExtensions::getFreeUnitsRemaining)
-                        .map(Long::longValue)
-                        .orElse(0L);
-
         Optional<SubscriptionBilling> billing =
                 subscriptionId != null
                         ? subscriptionDao.findBilling(subscriptionId)
@@ -147,6 +132,13 @@ public class TeamBillingService {
         LocalDateTime[] window =
                 billing.map(b -> new LocalDateTime[] {b.periodStart(), b.periodEnd()})
                         .orElseGet(TeamBillingService::calendarMonthWindow);
+
+        long freeGrant = resolveGrant(teamId, extOpt.orElse(null));
+        Optional<IncludedAllowance> allowance =
+                extOpt.map(
+                        ext ->
+                                IncludedAllowance.resolve(
+                                        ext, freeGrant, LocalDateTime.now(ZoneOffset.UTC)));
 
         BigDecimal perDocMinor = billing.map(SubscriptionBilling::perDocMinor).orElse(null);
         String currency = billing.map(SubscriptionBilling::currency).orElse(null);
@@ -176,19 +168,33 @@ public class TeamBillingService {
                 subscriptionId,
                 window[0],
                 window[1],
-                freeGrant,
-                freeRemaining,
+                allowance.map(IncludedAllowance::granted).orElse(0L),
+                allowance.map(IncludedAllowance::remaining).orElse(0L),
                 perDocMinor,
                 currency,
                 capMoneyMinor,
-                monthlyCapDocUnits);
+                monthlyCapDocUnits,
+                allowance.map(IncludedAllowance::start).orElse(null),
+                allowance.map(IncludedAllowance::end).orElse(null));
     }
 
-    /** The policy grant size — the "N" denominator for display; the counter is the live balance. */
-    private long resolveGrant(Long teamId) {
+    /** Resolves the target for the locked row, so webhook changes bypass the balance cache. */
+    public long resolveGrant(Long teamId, PaygTeamExtensions ext) {
         try {
             PricingPolicy policy = pricingPolicyService.getEffectivePolicy(teamId);
             Long grant = policy.getFreeTierUnits();
+            if (ext != null && Boolean.TRUE.equals(ext.getTeamCreditsEligible())) {
+                grant = policy.getTeamIncludedUnits();
+                if (grant == null) {
+                    grant = pricingPolicyService.getEffectivePolicy(null).getTeamIncludedUnits();
+                }
+                if (grant == null) {
+                    log.warn(
+                            "Team included-credit allowance missing for team {}; using its free-tier allowance",
+                            teamId);
+                    grant = policy.getFreeTierUnits();
+                }
+            }
             return grant == null ? 0L : grant;
         } catch (RuntimeException e) {
             log.warn("No effective pricing policy for team {}: {}", teamId, e.getMessage());
@@ -198,8 +204,8 @@ public class TeamBillingService {
 
     /**
      * The subscribed monthly paid-document ceiling; {@code null} = uncapped or not subscribed. The
-     * one-time free grant is NOT added here — it's a separate lifetime pool consumed at charge
-     * time. The cap purely limits how many paid documents the team will fund per billing period.
+     * free grant is NOT added here — it's a separate per-period pool consumed at charge time, ahead
+     * of the meter. The cap purely limits how many paid documents the team will fund per period.
      *
      * <ul>
      *   <li>not subscribed → null (the free grant, not a money cap, is what bounds them);
@@ -250,7 +256,7 @@ public class TeamBillingService {
     /**
      * Documents a hypothetical monthly money cap would buy: {@code floor(capMinor / rate)}. Used by
      * the cap editor's live preview and the {@code PATCH /cap} derived write. The free grant is NOT
-     * added — it's a separate one-time pool. Empty when the rate is unknown.
+     * added — it's a separate per-period pool. Empty when the rate is unknown.
      */
     public Optional<Long> docCapForMoney(TeamBillingContext ctx, long capMinor) {
         if (ctx.perDocMinor() == null || ctx.perDocMinor().signum() <= 0) {
@@ -284,7 +290,7 @@ public class TeamBillingService {
      * used when there's no Stripe subscription period to anchor on.
      */
     static LocalDateTime[] calendarMonthWindow() {
-        return calendarMonthWindow(LocalDateTime.now());
+        return calendarMonthWindow(LocalDateTime.now(ZoneOffset.UTC));
     }
 
     /** Test seam — accepts a clock value so tests don't race the calendar boundary. */

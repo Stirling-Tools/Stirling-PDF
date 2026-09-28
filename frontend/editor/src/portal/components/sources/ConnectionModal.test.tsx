@@ -262,7 +262,7 @@ describe("ConnectionModal", () => {
     expect(screen.queryByText("portal.connections.types.s3.label")).toBeNull();
   });
 
-  it("picking a vendor opens its form, and the back link returns to the grid", async () => {
+  it("picking a vendor opens its form, and the header back arrow returns to the grid", async () => {
     render(wrap(<ConnectionModal open onClose={vi.fn()} onSaved={vi.fn()} />));
 
     await userEvent.click(
@@ -280,7 +280,9 @@ describe("ConnectionModal", () => {
       ).toBeInTheDocument(),
     );
 
-    await userEvent.click(screen.getByText("portal.connections.picker2.back"));
+    await userEvent.click(
+      screen.getByRole("button", { name: "portal.connections.picker2.back" }),
+    );
     await waitFor(() =>
       expect(
         screen.getByText("portal.connections.types.s3.label"),

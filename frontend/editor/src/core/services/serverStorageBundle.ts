@@ -124,7 +124,7 @@ export async function buildSharePackage(stubs: StirlingFileStub[]): Promise<{
   const entries: ShareBundleEntry[] = [];
 
   for (const stub of stubs) {
-    const file = await fileStorage.getStirlingFile(stub.id as FileId);
+    const file = await fileStorage.getStirlingFile(stub.id);
     if (!file) {
       throw new Error(`Missing file data for ${stub.name || stub.id}`);
     }

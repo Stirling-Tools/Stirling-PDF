@@ -19,13 +19,7 @@ import React, { useState } from "react";
 import { Alert, Badge, Group, Stack, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useRenderCount } from "@app/hooks/useRenderCount";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import LockIcon from "@mui/icons-material/LockOutlined";
-import CheckIcon from "@mui/icons-material/CheckRounded";
-import HelpOutlineIcon from "@mui/icons-material/HelpOutlineRounded";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMoreRounded";
-import BoltIcon from "@mui/icons-material/BoltRounded";
-import AllInclusiveIcon from "@mui/icons-material/AllInclusiveRounded";
+import { Icon } from "@app/ui/Icon";
 import { alert as showToast } from "@app/components/toast";
 import {
   PrepaidCapacityMeterPanel,
@@ -120,10 +114,10 @@ export function DocHelp() {
         className="payg-help__toggle"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        leftSection={<HelpOutlineIcon sx={{ fontSize: 15 }} />}
+        leftSection={<Icon name="circle-question-mark" size={15} />}
       >
         {t("payg.docHelp.toggle", "What counts as a PDF?")}
-        <ExpandMoreIcon className="payg-help__chevron" sx={{ fontSize: 16 }} />
+        <Icon name="chevron-down" size={16} className="payg-help__chevron" />
       </Button>
       {open && (
         <div className="payg-help__panel">
@@ -456,10 +450,10 @@ function CapReachedHelp() {
         className="payg-help__toggle"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        leftSection={<HelpOutlineIcon sx={{ fontSize: 15 }} />}
+        leftSection={<Icon name="circle-question-mark" size={15} />}
       >
         {t("payg.gates.title", "What happens when the cap is reached")}
-        <ExpandMoreIcon className="payg-help__chevron" sx={{ fontSize: 16 }} />
+        <Icon name="chevron-down" size={16} className="payg-help__chevron" />
       </Button>
       {open && (
         <div className="payg-help__panel">
@@ -468,9 +462,9 @@ function CapReachedHelp() {
               <div className="payg-gate" data-enabled={staysAtCap} key={gate}>
                 <span className="payg-gate__chip">
                   {staysAtCap ? (
-                    <CheckIcon sx={{ fontSize: 18 }} />
+                    <Icon name="check" size={18} />
                   ) : (
-                    <LockIcon sx={{ fontSize: 16 }} />
+                    <Icon name="lock" size={16} />
                   )}
                 </span>
                 <span className="payg-gate__label">{gateLabel(gate, t)}</span>
@@ -660,7 +654,7 @@ function StripePortalLink({
       <Button
         onClick={handleClick}
         loading={loading}
-        rightSection={<OpenInNewIcon sx={{ fontSize: 16 }} />}
+        rightSection={<Icon name="external-link" size={16} />}
         variant="secondary"
       >
         {t("payg.stripe.open", "Open billing portal")}
@@ -780,9 +774,10 @@ const Payg: React.FC<PaygProps> = ({
           <div className="payg-planhead__split">
             <div className="payg-planhead__col">
               <div className="payg-planhead__lbl payg-planhead__lbl--free">
-                <AllInclusiveIcon
+                <Icon
+                  name="infinity"
+                  size={16}
                   className="payg-planhead__lbl-icon"
-                  fontSize="small"
                 />
                 {t("payg.header.freeLabel", "Always free")}
               </div>
@@ -799,9 +794,10 @@ const Payg: React.FC<PaygProps> = ({
 
             <div className="payg-planhead__col payg-planhead__col--meter">
               <div className="payg-planhead__lbl payg-planhead__lbl--meter">
-                <BoltIcon
+                <Icon
+                  name="zap"
+                  size={16}
                   className="payg-planhead__lbl-icon"
-                  fontSize="small"
                 />
                 {t("payg.header.meterLabel", "Metered")}
               </div>

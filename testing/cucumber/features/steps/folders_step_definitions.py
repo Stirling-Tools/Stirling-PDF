@@ -27,7 +27,7 @@ from behave import given, then, when
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 
-BASE_URL = "http://localhost:8080"
+from api_base import BASE_URL
 FOLDERS_URL = f"{BASE_URL}/api/v1/storage/folders"
 FILES_URL = f"{BASE_URL}/api/v1/storage/files"
 HTTP_TIMEOUT = 30

@@ -115,38 +115,6 @@ export interface EditorDeploymentResponse {
 }
 
 /* ──────────────────────────────────────────────────────────────────────── */
-/*  Presentation metadata (lives client-side — product copy, not data)       */
-/* ──────────────────────────────────────────────────────────────────────── */
-
-export interface TargetMeta {
-  tone: "neutral" | "blue" | "purple";
-}
-
-export const TARGET_META: Record<TargetKind, TargetMeta> = {
-  cloud: { tone: "blue" },
-  docker: { tone: "neutral" },
-  kubernetes: { tone: "purple" },
-};
-
-export const INSTANCE_STATUS_TONE: Record<
-  InstanceStatus,
-  "success" | "warning" | "danger" | "info" | "neutral"
-> = {
-  healthy: "success",
-  degraded: "warning",
-  offline: "danger",
-  pairing: "info",
-};
-
-/** Values are i18n keys — render with t(). */
-export const INSTANCE_STATUS_LABEL: Record<InstanceStatus, string> = {
-  healthy: "portal.editorAdmin.status.healthy",
-  degraded: "portal.editorAdmin.status.degraded",
-  offline: "portal.editorAdmin.status.offline",
-  pairing: "portal.editorAdmin.status.pairing",
-};
-
-/* ──────────────────────────────────────────────────────────────────────── */
 /*  Endpoints                                                                */
 /* ──────────────────────────────────────────────────────────────────────── */
 

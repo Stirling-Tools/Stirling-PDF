@@ -583,7 +583,7 @@
 }
 
 /*
- * Wrapper that scales a registry tool icon (LocalIcon, typically 1.5rem/24px)
+ * Wrapper that scales a registry tool icon (typically 1.5rem/24px)
  * down to fit the compact icon slots used by the live indicator and the
  * completed tool list. Transform does not affect layout, so the parent's
  * overflow:hidden clips the un-scaled footprint cleanly.

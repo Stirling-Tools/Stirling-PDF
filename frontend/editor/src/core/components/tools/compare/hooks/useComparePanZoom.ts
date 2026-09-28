@@ -323,7 +323,7 @@ export const useComparePanZoom = ({
       const pages = getPagesForPane(pane);
       const rotation = pages[0]?.rotation ?? 0;
       const normalized = ((rotation % 360) + 360) % 360;
-      return normalized as 0 | 90 | 180 | 270 | number;
+      return normalized;
     },
     [getPagesForPane],
   );
@@ -656,7 +656,7 @@ export const useComparePanZoom = ({
       };
       edgeOverscrollRef.current[pane] = 0;
       lastActivePaneRef.current = pane;
-      (container as HTMLDivElement).style.cursor = "grabbing";
+      container.style.cursor = "grabbing";
     },
     [isPanMode, baseZoom, comparisonZoom, basePan, comparisonPan],
   );
@@ -700,11 +700,7 @@ export const useComparePanZoom = ({
         : comparisonScrollRef.current;
     if (sourceEl) {
       const zoom = drag.source === "base" ? baseZoom : comparisonZoom;
-      (sourceEl as HTMLDivElement).style.cursor = isPanMode
-        ? zoom > 1
-          ? "grab"
-          : "auto"
-        : "";
+      sourceEl.style.cursor = isPanMode ? (zoom > 1 ? "grab" : "auto") : "";
     }
     panDragRef.current.active = false;
     panDragRef.current.source = null;
