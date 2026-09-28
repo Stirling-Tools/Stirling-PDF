@@ -29,9 +29,10 @@ interface SidebarProps {
   onSetGroupingMode: (mode: GroupingMode) => void;
   onSetWidthMode: (mode: WidthMode) => void;
   onSetShowRulers: (show: boolean) => void;
+  initialTab?: SidebarTab;
 }
 
-type TabId = "selected" | "document";
+export type SidebarTab = "selected" | "document";
 
 export function EditorSidebar({
   store,
@@ -44,13 +45,14 @@ export function EditorSidebar({
   onSetGroupingMode,
   onSetWidthMode,
   onSetShowRulers,
+  initialTab = "selected",
 }: SidebarProps) {
   const { t } = useTranslation();
   const controller = useToolbarController(store, state, selection);
   const geometry = useSelectionGeometry(store, state, selection);
   const hasSelection =
     selection.runIds.length > 0 || selection.imageIds.length > 0;
-  const [tab, setTab] = useState<TabId>("selected");
+  const [tab, setTab] = useState<SidebarTab>(initialTab);
 
   // Picking something on the page is a request to see its properties, so the
   // panel follows. Clearing does NOT yank the tab back - a user who opened
@@ -72,7 +74,7 @@ export function EditorSidebar({
   return (
     <Tabs
       value={tab}
-      onChange={(next) => setTab((next as TabId | null) ?? "selected")}
+      onChange={(next) => setTab((next as SidebarTab | null) ?? "selected")}
       data-testid="pdf-editor-sidebar-status"
     >
       <Group
@@ -190,7 +192,10 @@ function useSelectedFontNote(
       return t(
         "pdfTextEditor.inspector.fontGap",
         "{{name}} · missing {{glyphs}} - typing those falls back to Helvetica.",
-        { name: font.name, glyphs: gaps.slice(0, 6).join(" ") },
+        {
+          name: font.name,
+          glyphs: gaps.slice(0, 6).join(" "),
+        },
       );
     }
     // Silent when the font can render anything the user types: a standard

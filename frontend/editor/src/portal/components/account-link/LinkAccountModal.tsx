@@ -1,4 +1,9 @@
 import { useTranslation } from "react-i18next";
+import { useEffect, useRef, type ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
+import { PORTAL_BASENAME } from "@app/routes/portalBasename";
+import { ExhaustedAccountLinkModal } from "@app/components/account-link/ExhaustedAccountLinkModal";
+import type { AccountLinkBlockContext } from "@app/services/accountLinkBlock";
 import { Button } from "@app/ui";
 import { FlowModal } from "@app/portal/components/shared/FlowModal";
 import { StepModalHeader } from "@app/portal/components/shared/StepModalHeader";
@@ -23,6 +28,8 @@ const STEP_ORDER = ["ask", "handoff", "outcome"] as const;
 type StepId = (typeof STEP_ORDER)[number];
 
 interface Props {
+  failureContext?: AccountLinkBlockContext;
+  summary?: ReactNode;
   open: boolean;
   onClose: () => void;
   /** "reauth" only re-establishes the browser session, so it stays one step with no pitch. */
@@ -33,14 +40,21 @@ interface Props {
 
 /** Unmounting on close discards an interrupted handoff before the next attempt. */
 export function LinkAccountModalHost() {
-  const { linkModalOpen, linkModalMode, closeLinkModal, connectOutcome } =
-    useUI();
+  const {
+    linkModalOpen,
+    linkModalMode,
+    linkModalFailureContext,
+    closeLinkModal,
+    connectOutcome,
+  } = useUI();
   const isOwner = useAccountLinkOwner();
-  if (!isOwner || !linkModalOpen) return null;
+  if (!linkModalOpen || (!isOwner && linkModalMode !== "exhausted"))
+    return null;
   return (
     <LinkAccountModal
       open
       mode={linkModalMode}
+      failureContext={linkModalFailureContext}
       onClose={closeLinkModal}
       outcome={connectOutcome}
     />
@@ -56,8 +70,24 @@ export function LinkAccountModal({
   onClose,
   mode = "link",
   outcome = null,
+  summary,
+  failureContext,
 }: Props) {
   const { t } = useTranslation();
+  const isOwner = useAccountLinkOwner();
+  const navigate = useNavigate();
+  const trigger = useRef(document.activeElement);
+  useEffect(
+    () => () => {
+      if (
+        trigger.current instanceof HTMLElement &&
+        trigger.current.isConnected
+      ) {
+        trigger.current.focus({ preventScroll: true });
+      }
+    },
+    [],
+  );
   const reauth =
     mode === "reauth" ||
     (outcome?.state === "linked" && !outcome.sessionRestored);
@@ -87,6 +117,30 @@ export function LinkAccountModal({
           },
         ),
       };
+
+  if (exhausted && !reauth && step === "ask") {
+    return (
+      <ExhaustedAccountLinkModal
+        open={open}
+        onClose={onClose}
+        canLink={isOwner}
+        failureContext={failureContext}
+        onStart={isOwner ? handoff.begin : undefined}
+        onManagePipeline={(id) =>
+          navigate(
+            `${PORTAL_BASENAME}/pipelines${id ? `/${encodeURIComponent(id)}` : ""}`,
+          )
+        }
+      >
+        <ConnectAskStep
+          reauth={false}
+          exhausted
+          error={handoff.error}
+          summary={summary}
+        />
+      </ExhaustedAccountLinkModal>
+    );
+  }
 
   return (
     <FlowModal

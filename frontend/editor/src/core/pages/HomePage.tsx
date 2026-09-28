@@ -61,15 +61,13 @@ import {
   useFilesPage,
 } from "@app/contexts/FilesPageContext";
 import { useFolders } from "@app/contexts/FolderContext";
-import { folderKind } from "@app/types/folder";
-import { useServerFolderBlock } from "@app/hooks/useServerFolderBlock";
 import { useNewFolderFlow } from "@app/hooks/useNewFolderFlow";
 import { NewFolderButton } from "@app/components/filesPage/NewFolderButton";
 import MobileUploadModal from "@app/components/shared/MobileUploadModal";
 import { useLibraryRefresh } from "@app/hooks/useLibraryRefresh";
 import { useAuth } from "@app/auth/UseSession";
 import { canPickDirectory } from "@app/services/directoryPicker";
-import { useFileHandler } from "@app/hooks/useFileHandler";
+import { useLibraryUpload } from "@app/components/filesPage/useLibraryUpload";
 import { useProcessingFolderCreation } from "@app/hooks/useProcessingFolderCreation";
 import { consumeProcessingFolderCreationRequest } from "@app/utils/pendingProcessingFolderCreation";
 import type { FileSidebarProps } from "@app/components/shared/FileSidebar";
@@ -191,19 +189,12 @@ export default function HomePage() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [readerMode, searchInterfaceActions]);
 
-  // Clean slate: no tool, out of the file library and reading.
   const goToDefaultState = useCallback(() => {
     handleBackToTools();
     actions.setWorkbench(getDefaultWorkbenchForFileCount(activeFiles.length));
   }, [handleBackToTools, actions, activeFiles.length]);
 
-  // The library is a view like the viewer and the file editor: which view is on screen
-  // is state, the path says which folder you are in. Each side moves the other on a
-  // transition only: asserting either on every render lets the path re-impose
-  // "myFiles" a render after anything else has set a view.
-
-  // Path moved, so the path is the cause: arrival, back/forward, or a deliberate
-  // navigate. Mount included, which is what seeds a deep link.
+  // Reconcile route and workspace only on transitions, or the old route can undo a view change.
   const derivedFromPath = actions.viewDerivedFromPathRef;
   useEffect(() => {
     if (derivedFromPath.current === location.pathname) return;
@@ -339,7 +330,6 @@ export default function HomePage() {
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
 
-  // The tool picker's own helpers, so the wording can't drift.
   const quickNavToolReasons = useMemo(() => {
     const reasons: QuickNavToolReasons = {};
     for (const id of ["automate", "sharedSign"] as const) {
@@ -424,7 +414,6 @@ export default function HomePage() {
         const offset = activeMobileView === "tools" ? 0 : container.offsetWidth;
         container.scrollTo({ left: offset, behavior: "smooth" });
 
-        // Re-enable scroll listener after animation completes
         setTimeout(() => {
           isProgrammaticScroll.current = false;
         }, 500);
@@ -478,9 +467,16 @@ export default function HomePage() {
     };
   }, [isMobile, dismissSwipeHint]);
 
-  // Automatically switch to workbench when read mode or multiTool is activated in mobile
+  // Full-screen tools own the mobile viewport, so opening one selects the
+  // workbench slide. The text editor is included because it manages its own
+  // state instead of going through the startup-navigation heuristic.
   useEffect(() => {
-    if (isMobile && (readerMode || selectedToolKey === "multiTool")) {
+    if (
+      isMobile &&
+      (readerMode ||
+        selectedToolKey === "multiTool" ||
+        selectedToolKey === "pdfTextEditor")
+    ) {
       setActiveMobileView("workbench");
     }
   }, [isMobile, readerMode, selectedToolKey]);
@@ -496,7 +492,6 @@ export default function HomePage() {
   // When navigating back to tools view in mobile with a workbench-only tool, show tool picker
   useEffect(() => {
     if (isMobile && activeMobileView === "tools" && selectedTool) {
-      // Check if this is a workbench-only tool (has workbench but no component)
       if (selectedTool.workbench && !selectedTool.component) {
         setLeftPanelView("toolPicker");
       }
@@ -545,8 +540,6 @@ export default function HomePage() {
         ? `${baseUrl}${window.location.pathname}`
         : baseUrl,
   });
-
-  // Note: File selection limits are now handled directly by individual tools
 
   return (
     <div className="h-screen overflow-hidden">
@@ -694,7 +687,7 @@ export default function HomePage() {
                     }
                   }}
                 >
-                  <Icon name="workflow" size="1.5rem" />
+                  <Icon name="waypoints" size="1.5rem" />
                   <span className="mobile-bottom-button-label">
                     {t("quickAccess.automate", "Automate")}
                   </span>
@@ -723,7 +716,6 @@ export default function HomePage() {
                 </span>
               </Button>
             </div>
-            <FileManager selectedTool={selectedTool} />
           </div>
         ) : (
           <Group
@@ -754,9 +746,9 @@ export default function HomePage() {
             {wingsMounted && !hideToolPanel && <RightSidebar />}
             {readerMode && <ReaderRail />}
             {readerMode && !strip.enabled && <ReaderSuperSearch />}
-            <FileManager selectedTool={selectedTool} />
           </Group>
         )}
+        <FileManager selectedTool={selectedTool} />
       </FilesPageProvider>
     </div>
   );
@@ -783,9 +775,13 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { t } = useTranslation();
     const filesPage = useFilesPage();
     const folders = useFolders();
-    const { addFiles } = useFileHandler();
-    const { addLocalFolder, createFolderHere, createFolderHereBlockedReason } =
-      useNewFolderFlow();
+    const handleUpload = useLibraryUpload();
+    const {
+      addLocalFolder,
+      createFolderHere,
+      createFolderHereBlockedReason: newFolderDisabledReason,
+      serverFolderBlock,
+    } = useNewFolderFlow();
     const { refreshing, refresh: refreshLibrary } = useLibraryRefresh();
     const { isAnonymous } = useAuth();
     const { config: appConfig } = useAppConfig();
@@ -798,35 +794,6 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
     const signInRequired = isAnonymous
       ? t("filesPage.signInRequired", "Sign in to use cloud storage.")
       : null;
-
-    const handleUpload = useCallback(
-      async (files: File[]) => {
-        const added = await addFiles(files, { skipWorkspaceDispatch: true });
-        await filesPage.refresh();
-        // If the user is inside a cloud folder, place uploads there.
-        if (folders.currentFolderId !== null && added.length > 0) {
-          await filesPage.moveFilesTo(
-            added.map((f) => f.fileId),
-            folders.currentFolderId,
-          );
-        }
-      },
-      [addFiles, filesPage, folders.currentFolderId],
-    );
-
-    // Kind-aware: only a server folder's subfolder needs the server, and a mounted
-    // directory takes no subfolders from here at all.
-    const railCurrentFolder = folders.currentFolderId
-      ? folders.foldersById.get(folders.currentFolderId)
-      : undefined;
-    const railCurrentKind = railCurrentFolder
-      ? folderKind(railCurrentFolder)
-      : null;
-    const serverFolderBlock = useServerFolderBlock();
-    const newFolderDisabledReason =
-      railCurrentKind === "server"
-        ? serverFolderBlock
-        : createFolderHereBlockedReason;
 
     return (
       <>
@@ -843,9 +810,7 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
               disabled: newFolderDisabledReason !== null,
               disabledTooltip: newFolderDisabledReason ?? undefined,
               testId: "files-rail-new-folder",
-              // The same control the library's other surfaces use, so one row
-              // cannot offer less than another: where a folder can go decides
-              // its shape.
+              // Share folder availability rules with the library toolbar.
               render: () => (
                 <NewFolderButton
                   trigger="row"

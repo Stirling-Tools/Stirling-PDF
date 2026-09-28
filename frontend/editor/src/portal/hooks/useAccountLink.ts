@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, useRef } from "react";
+import { clearAccountLinkBlock } from "@app/services/accountLinkBlock";
 import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
 import { errorMessage } from "@app/portal/api/http";
 import { isSaasSupabaseConfigured } from "@app/portal/auth/saasSupabase";
@@ -53,6 +54,7 @@ export function useAccountLink(): UseAccountLink {
         const s = await fetchStatus(force);
         if (request !== statusRequest.current) return;
         setStatus(s);
+        if (s.linked) clearAccountLinkBlock();
         // A linked instance is at least linked-free; subscription comes from the wallet.
         if (s.linked && previousLinked.current !== true)
           applyLinkFacts(true, false);

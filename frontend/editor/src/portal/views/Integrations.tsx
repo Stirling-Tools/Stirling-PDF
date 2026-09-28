@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import { Icon } from "@app/ui/Icon";
 import {
   Banner,
   Button,
@@ -374,7 +373,7 @@ export function Integrations() {
           <Button
             fat
             onClick={() => openCreate("api")}
-            leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
+            leftSection={<Icon name="plus" size={"1.125rem"} />}
           >
             {t("portal.integrations.customApi")}
           </Button>
@@ -415,7 +414,7 @@ export function Integrations() {
         </div>
         <div className="portal-integrations__toolbar-side">
           <label className="portal-integrations__search">
-            <SearchRoundedIcon fontSize="inherit" />
+            <Icon name="search" size="1em" />
             <input
               type="search"
               value={query}

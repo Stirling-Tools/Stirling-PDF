@@ -6,6 +6,7 @@ import React, {
   Suspense,
 } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import { useSectionHeadings } from "@app/components/settings/useSectionHeadings";
@@ -13,7 +14,6 @@ import { useActiveHeading } from "@app/components/settings/useActiveHeading";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 import { Badge, Tooltip } from "@mantine/core";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { SettingsMobileBackButton } from "@app/components/shared/config/SettingsMobileBackButton";
 import { SettingsNavChevron } from "@app/components/shared/config/SettingsNavChevron";
 import { useSettingsNav } from "@app/components/settings/useSettingsNav";
@@ -251,10 +251,9 @@ const SettingsPageInner: React.FC = () => {
                         // saying why it is off is reachable by keyboard.
                         aria-disabled={isDisabled || undefined}
                       >
-                        <LocalIcon
-                          icon={item.icon}
-                          width={18}
-                          height={18}
+                        <Icon
+                          name={item.icon}
+                          size={18}
                           className="settings-page__nav-icon"
                         />
                         <span className="settings-page__nav-label">
@@ -271,10 +270,9 @@ const SettingsPageInner: React.FC = () => {
                           </Badge>
                         )}
                         {showPlanWarning && (
-                          <LocalIcon
-                            icon="warning-rounded"
-                            width={14}
-                            height={14}
+                          <Icon
+                            name="triangle-alert"
+                            size={14}
                             className="settings-page__nav-warning"
                           />
                         )}

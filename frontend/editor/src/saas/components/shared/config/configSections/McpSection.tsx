@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import {
   Stack,
@@ -12,7 +13,6 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { openAppSettings } from "@app/utils/appSettings";
 import { useAuth } from "@app/auth/UseSession";
@@ -44,13 +44,7 @@ function CopyInline({ value, label }: { value: string; label: string }) {
             variant="secondary"
             accent={copied ? "success" : undefined}
             onClick={copy}
-            leftSection={
-              <LocalIcon
-                icon={copied ? "check-rounded" : "content-copy-rounded"}
-                width={14}
-                height={14}
-              />
-            }
+            leftSection={<Icon name={copied ? "check" : "copy"} size={14} />}
           >
             {copied
               ? t("config.mcp.copy.copied", "Copied")
@@ -243,9 +237,7 @@ export default function McpSection() {
             <Alert
               variant="light"
               color="blue"
-              icon={
-                <LocalIcon icon="info-rounded" width="1rem" height="1rem" />
-              }
+              icon={<Icon name="info" size="1rem" />}
             >
               <Group
                 justify="space-between"
@@ -263,9 +255,7 @@ export default function McpSection() {
                   size="sm"
                   variant="secondary"
                   style={{ flexShrink: 0 }}
-                  leftSection={
-                    <LocalIcon icon="key-rounded" width={14} height={14} />
-                  }
+                  leftSection={<Icon name="key" size={14} />}
                   onClick={() => openAppSettings("api-keys")}
                 >
                   {t("config.mcp.viewApiKeys", "View API keys")}

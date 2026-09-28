@@ -30,10 +30,16 @@ public class PolicyRun {
     private final PipelineDefinition definition;
 
     /**
-     * The source's opaque reference to the document this run is about; null for an ad-hoc run or a
-     * source that names no document. Hashed upstream, so never a path or a filename.
+     * The source's reference to the document this run is about, or null when there is none. A
+     * folder source builds it from the canonical path, so it must never reach a response.
      */
     private final String fileIdentity;
+
+    /**
+     * Whose document this run is about: the source's owner for a source-fed run, the triggering
+     * user otherwise. A failure is filed under this person when nobody attended the run.
+     */
+    private final String fileOwner;
 
     /**
      * The user who triggered this run, or null when nothing attended it (a trigger-fired sweep).
@@ -85,13 +91,23 @@ public class PolicyRun {
             PipelineDefinition definition,
             String sourceId,
             String fileIdentity,
-            String triggeringUser) {
+            String triggeringUser,
+            String fileOwner) {
         this.runId = runId;
         this.policyId = policyId;
         this.sourceId = sourceId;
         this.definition = definition;
         this.fileIdentity = fileIdentity;
         this.triggeringUser = triggeringUser;
+        this.fileOwner = fileOwner;
+    }
+
+    /**
+     * Who a failure on this run belongs to: whoever attended it, or the document's owner when
+     * nobody did. Null only when neither is known, which is an install with no accounts.
+     */
+    public String failureActor() {
+        return triggeringUser != null ? triggeringUser : fileOwner;
     }
 
     /** True when results are sent elsewhere and must not replace the editor's input. */
