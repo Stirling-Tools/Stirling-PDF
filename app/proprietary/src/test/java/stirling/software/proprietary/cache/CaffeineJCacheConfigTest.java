@@ -2,6 +2,7 @@ package stirling.software.proprietary.cache;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.net.URI;
 import java.time.Duration;
 import java.util.stream.Stream;
 
@@ -9,6 +10,7 @@ import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.Caching;
 import javax.cache.configuration.CompleteConfiguration;
+import javax.cache.spi.CachingProvider;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -28,6 +30,14 @@ import com.typesafe.config.ConfigFactory;
  * contract.
  */
 class CaffeineJCacheConfigTest {
+
+    /**
+     * Own URI so this test never shares Hibernate's default cache manager: the provider reuses
+     * managers by URI, and closing the shared one would pull it out from under an active
+     * persistence context.
+     */
+    private static final URI TEST_CACHE_MANAGER_URI =
+            URI.create("stirling.software.proprietary.cache.CaffeineJCacheConfigTest");
 
     @Test
     void applicationConfIsOnTheClasspath() {
@@ -67,10 +77,12 @@ class CaffeineJCacheConfigTest {
 
     private static void assertRegionPolicy(
             String region, long maximumSize, Duration expireAfterWrite) {
-        try (CacheManager manager =
+        CachingProvider provider =
                 Caching.getCachingProvider(
-                                "com.github.benmanes.caffeine.jcache.spi.CaffeineCachingProvider")
-                        .getCacheManager()) {
+                        "com.github.benmanes.caffeine.jcache.spi.CaffeineCachingProvider");
+        try (CacheManager manager =
+                provider.getCacheManager(
+                        TEST_CACHE_MANAGER_URI, provider.getDefaultClassLoader())) {
             Cache<?, ?> cache = manager.getCache(region);
             assertThat(cache)
                     .as("region <%s> is created from application.conf", region)
