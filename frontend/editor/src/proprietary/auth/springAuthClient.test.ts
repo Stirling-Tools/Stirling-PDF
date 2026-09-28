@@ -248,6 +248,9 @@ describe("SpringAuthClient", () => {
       expectConsole.error(/\[SpringAuth\] signOut error/);
       const mockToken = "jwt-to-clear";
       localStorage.setItem("stirling_jwt", mockToken);
+      localStorage.setItem("sb-project-auth-token", "old-saas-session");
+      localStorage.setItem("stirling.portalSaasOwner", "previous-owner");
+      sessionStorage.setItem("stirling.portalConnect", "pending-handoff");
 
       vi.mocked(apiClient.post).mockRejectedValueOnce({
         isAxiosError: true,
@@ -258,6 +261,9 @@ describe("SpringAuthClient", () => {
       const result = await springAuth.signOut();
 
       expect(localStorage.getItem("stirling_jwt")).toBeNull();
+      expect(localStorage.getItem("sb-project-auth-token")).toBeNull();
+      expect(localStorage.getItem("stirling.portalSaasOwner")).toBeNull();
+      expect(sessionStorage.getItem("stirling.portalConnect")).toBeNull();
       expect(result.error).toBeTruthy();
     });
   });

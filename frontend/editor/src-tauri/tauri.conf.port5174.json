@@ -1,0 +1,7 @@
+{
+  "identifier": "stirling.pdf.dev.procfolders",
+  "build": {
+    "devUrl": "http://localhost:5174",
+    "beforeDevCommand": "npx vite --mode desktop --port 5174 --strictPort"
+  }
+}

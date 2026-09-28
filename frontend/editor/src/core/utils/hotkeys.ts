@@ -58,6 +58,9 @@ export const isMacLike = (): boolean => {
   );
 };
 
+export const modShortcut = (key: string): string =>
+  isMacLike() ? `⌘${key}` : `Ctrl+${key}`;
+
 export const isModifierCode = (code: string): boolean =>
   MODIFIER_CODES.has(code);
 

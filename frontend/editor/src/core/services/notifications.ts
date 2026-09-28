@@ -12,12 +12,22 @@ export type NotificationOrigin = "TOOL" | "POLICY" | "PIPELINE";
 /** From this reader's point of view. `UNOWNED` is an unattended run: nobody holds the file. */
 export type NotificationOwnership = "MINE" | "THEIRS" | "UNOWNED";
 
+/** How much of the row an action has earned; `promoteActions` turns it into a place. */
+export type NotificationActionSlot = "RESOLUTION" | "SECONDARY" | "OVERFLOW";
+
+/**
+ * Where the document behind a row is. The server decides: this browser cannot tell a file id it
+ * minted from a reference held on a server it has never seen.
+ */
+export type DocumentLocation = "BROWSER" | "SMART_FOLDER" | "UNREACHABLE";
+
 /** `id` is an open string, not a union: the server may know actions this build does not. */
 export interface NotificationActionOffer {
   id: string;
   labelKey: string;
   /** English fallback, for a build with no copy for `labelKey`. */
   defaultLabel: string;
+  slot: NotificationActionSlot;
   /** False renders no button in the bell, and a disabled one in the portal's queue. */
   enabled: boolean;
   disabledReasonKey: string | null;
@@ -36,8 +46,16 @@ export interface AppNotification {
   titleKey: string;
   defaultTitle: string;
   detail: string | null;
-  /** Two id spaces share this field, and `sourceId` says which: see `isResolvableHere`. */
+  /** Only ever an id this browser minted, so it needs no disambiguating: null otherwise. */
   fileId: string | null;
+  /** What to call a document this browser does not hold. The owner's own files only. */
+  documentName: string | null;
+  documentLocation: DocumentLocation;
+  /**
+   * The server keeps this row for the reader: a smart folder's document, or the folder itself
+   * when it could not be read. Shown to a member without a local file; never fixable here.
+   */
+  heldByServer: boolean;
   /** Which folder, bucket or webhook fed the run, and null for an attended one. */
   sourceId: string | null;
   policyId: string | null;
@@ -49,18 +67,82 @@ export interface AppNotification {
 
 interface NotificationsResponse {
   notifications: AppNotification[];
+  viewerReviewsTeam: boolean;
+  viewerKey: string;
 }
 
-/** Newest first. Empty rather than throwing: a bell that cannot load is an empty bell, not an error. */
+export interface FetchedNotifications {
+  notifications: AppNotification[];
+  /** A reviewer keeps rows whose document this browser does not hold; a member does not. */
+  viewerReviewsTeam: boolean;
+  /** Opaque id for the viewer, for scoping read state. Null means the server did not say. */
+  viewerKey: string | null;
+}
+
+/** Newest first. Empty rather than throwing, and defaulting to the least hiding. */
 export async function fetchNotifications(
   limit = 20,
-): Promise<AppNotification[]> {
+): Promise<FetchedNotifications> {
   try {
     const response = await apiClient.get<NotificationsResponse>(
       `${NOTIFICATIONS_PATH}?limit=${limit}`,
+      { suppressErrorToast: true },
     );
-    return response?.data?.notifications ?? [];
+    return {
+      notifications: response?.data?.notifications ?? [],
+      viewerReviewsTeam: response?.data?.viewerReviewsTeam ?? true,
+      viewerKey: response?.data?.viewerKey || null,
+    };
   } catch {
-    return [];
+    return { notifications: [], viewerReviewsTeam: true, viewerKey: null };
+  }
+}
+
+/** Never throws: a refusal is not worth interrupting a user whose document is already fixed. */
+export async function reportNotificationResolved(
+  notificationId: string,
+): Promise<boolean> {
+  try {
+    await apiClient.post(
+      `${NOTIFICATIONS_PATH}/${encodeURIComponent(notificationId)}/resolved`,
+      undefined,
+      { suppressErrorToast: true },
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Run one of a row's server-side actions. The reader pressed a button and is owed an answer, so a
+ * refusal is reported rather than swallowed: null when it worked, the server's reason when not.
+ */
+export async function dispatchNotificationAction(
+  notificationId: string,
+  actionId: string,
+): Promise<string | null> {
+  try {
+    await apiClient.post(
+      `${NOTIFICATIONS_PATH}/${encodeURIComponent(notificationId)}/actions/${encodeURIComponent(actionId)}`,
+      undefined,
+      { suppressErrorToast: true },
+    );
+    return null;
+  } catch (error) {
+    const response = (
+      error as {
+        response?: {
+          status?: number;
+          data?: { detail?: string; title?: string };
+        };
+      }
+    )?.response;
+    // Ids and status only: the row's detail and document name stay out of the console.
+    console.warn(
+      `Notification action ${actionId} on ${notificationId} failed`,
+      response?.status ?? "no response",
+    );
+    return response?.data?.detail ?? response?.data?.title ?? "";
   }
 }

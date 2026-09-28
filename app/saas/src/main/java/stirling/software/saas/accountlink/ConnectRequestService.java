@@ -83,7 +83,16 @@ public class ConnectRequestService {
             String callbackOrigin,
             boolean insecureTransport,
             ConnectRequest.Mode mode,
-            ConnectRequest.Status status) {}
+            ConnectRequest.Status status,
+            Long teamId,
+            Long linkedUserId) {
+        boolean isLinkedAccount(Long callerTeamId, Long callerUserId) {
+            return teamId != null
+                    && linkedUserId != null
+                    && teamId.equals(callerTeamId)
+                    && linkedUserId.equals(callerUserId);
+        }
+    }
 
     /** Where to send the browser once approved, plus the correlator the instance is expecting. */
     public record ApprovalTarget(String callbackUrl, String nonce) {}
@@ -110,7 +119,7 @@ public class ConnectRequestService {
     @Transactional
     public CreateResult create(
             String name, String callbackUrl, String nonce, String claimSecret, String requesterIp) {
-        return create(name, callbackUrl, nonce, claimSecret, requesterIp, null);
+        return create(name, callbackUrl, nonce, claimSecret, requesterIp, null, null);
     }
 
     /**
@@ -124,11 +133,13 @@ public class ConnectRequestService {
             String nonce,
             String claimSecret,
             String requesterIp,
-            Long pinnedTeamId) {
-        if (pinnedTeamId == null) {
+            Long pinnedTeamId,
+            Long pinnedUserId) {
+        if (pinnedTeamId == null || pinnedUserId == null) {
             return CreateResult.rejected(CreateRejection.NOT_LINKED);
         }
-        return create(name, callbackUrl, nonce, claimSecret, requesterIp, pinnedTeamId);
+        return create(
+                name, callbackUrl, nonce, claimSecret, requesterIp, pinnedTeamId, pinnedUserId);
     }
 
     private CreateResult create(
@@ -137,7 +148,8 @@ public class ConnectRequestService {
             String nonce,
             String claimSecret,
             String requesterIp,
-            Long pinnedTeamId) {
+            Long pinnedTeamId,
+            Long pinnedUserId) {
         if (nonce == null || nonce.isBlank() || nonce.length() > MAX_NONCE_LENGTH) {
             return CreateResult.rejected(CreateRejection.BAD_NONCE);
         }
@@ -167,6 +179,7 @@ public class ConnectRequestService {
         request.setMode(
                 pinnedTeamId == null ? ConnectRequest.Mode.LINK : ConnectRequest.Mode.REAUTH);
         request.setTeamId(pinnedTeamId);
+        request.setApprovedByUserId(pinnedUserId);
         request.setRequesterIp(requesterIp);
         request.setExpiresAt(now.plusMinutes(LIFETIME_MINUTES));
         repo.save(request);
@@ -185,23 +198,27 @@ public class ConnectRequestService {
     public Optional<ConnectView> lookup(String requestId) {
         return repo.findByRequestId(requestId)
                 .filter(r -> !r.isExpired(LocalDateTime.now()))
-                .map(
-                        r ->
-                                new ConnectView(
-                                        r.getRequestId(),
-                                        r.getName(),
-                                        r.getCallbackOrigin(),
-                                        !"https".equals(schemeOf(r.getCallbackOrigin())),
-                                        r.getMode(),
-                                        r.getStatus()));
+                .map(ConnectRequestService::viewOf);
+    }
+
+    private static ConnectView viewOf(ConnectRequest request) {
+        return new ConnectView(
+                request.getRequestId(),
+                request.getName(),
+                request.getCallbackOrigin(),
+                !"https".equals(schemeOf(request.getCallbackOrigin())),
+                request.getMode(),
+                request.getStatus(),
+                request.getTeamId(),
+                request.getApprovedByUserId());
     }
 
     /** Why an approval was refused, so the page can say something useful. */
     public enum ApproveRejection {
         /** Unknown, expired, or already settled. */
         UNAVAILABLE,
-        /** The approver's team is not the team this server already belongs to. */
-        WRONG_TEAM
+        /** The approver is not the account and team this server was linked with. */
+        WRONG_ACCOUNT
     }
 
     public record ApproveResult(ApprovalTarget target, ApproveRejection rejection) {
@@ -222,15 +239,9 @@ public class ConnectRequestService {
         if (request.isExpired(now) || request.getStatus() != ConnectRequest.Status.PENDING) {
             return new ApproveResult(null, ApproveRejection.UNAVAILABLE);
         }
-        Long pinned = request.getTeamId();
-        if (pinned != null && !pinned.equals(teamId)) {
-            log.warn(
-                    "Account-link connect: request {} approved by team {} but is pinned to team {};"
-                            + " refusing",
-                    requestId,
-                    teamId,
-                    pinned);
-            return new ApproveResult(null, ApproveRejection.WRONG_TEAM);
+        if (request.getMode() == ConnectRequest.Mode.REAUTH
+                && !viewOf(request).isLinkedAccount(teamId, userId)) {
+            return new ApproveResult(null, ApproveRejection.WRONG_ACCOUNT);
         }
         request.setStatus(ConnectRequest.Status.APPROVED);
         request.setTeamId(teamId);
@@ -254,7 +265,10 @@ public class ConnectRequestService {
             return false;
         }
         ConnectRequest request = found.get();
-        if (request.getStatus() != ConnectRequest.Status.PENDING) {
+        // Renewal is dismissed locally; it must never cancel or change the existing link.
+        if (request.getMode() == ConnectRequest.Mode.REAUTH
+                || request.isExpired(LocalDateTime.now())
+                || request.getStatus() != ConnectRequest.Status.PENDING) {
             return false;
         }
         request.setStatus(ConnectRequest.Status.DENIED);

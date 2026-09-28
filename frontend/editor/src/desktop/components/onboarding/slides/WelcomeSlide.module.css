@@ -1,0 +1,31 @@
+/* Own file, not the SaaS slides' module: this slide lives in core, and importing from
+   cloud/ breaks any build whose @app/* cascade has no cloud layer. */
+
+.lead {
+  display: block;
+}
+
+.line {
+  display: block;
+  margin-top: 10px;
+}
+
+/* Matches the SaaS slides' emphasis treatment, so the two flows read as one product. */
+.highlight {
+  background: linear-gradient(135deg, var(--c-hue-indigo), var(--c-hue-pink));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 700;
+}
+
+/* "Desktop" in the title. Warmer than .highlight and set against the brand hues, so the
+   word reads as the product name rather than as another emphasised phrase. */
+.productWord {
+  background: linear-gradient(100deg, var(--c-hue-violet), var(--c-hue-pink));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* Inherited, so the word keeps the title's own size and weight. */
+  font-weight: inherit;
+}

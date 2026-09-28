@@ -9,12 +9,13 @@ import {
 } from "react";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "@app/auth/UseSession";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { ViewerContext } from "@app/contexts/ViewerContext";
+import { usePortalAccess } from "@app/hooks/usePortalAccess";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { fileStorage } from "@app/services/fileStorage";
@@ -22,7 +23,6 @@ import { FileDocIcon } from "@app/components/shared/FileDocIcon";
 import { getFileDocVariant } from "@app/components/shared/filePreview/getFileTypeIcon";
 import { detectFileExtension } from "@app/utils/fileUtils";
 import { openExternalUrl } from "@app/utils/safeNavigation";
-import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import {
   rankByFuzzy,
   idToWords,
@@ -97,18 +97,21 @@ export function isProcessorGateOpen(gates: SuperSearchGates | null): boolean {
 export function useSuperSearchGates(): SuperSearchGates | null {
   const authState = useAuth();
   const { config } = useAppConfig();
+  // Through the seam, not authState: on SaaS the editor's Supabase session
+  // carries no permission flags, so reading it here hid every processor lane.
+  const portalAccessible = usePortalAccess();
   return useMemo(
     () =>
       config
         ? {
             isAdmin: authState.isAdmin ?? config.isAdmin ?? false,
             loginEnabled: config.enableLogin ?? false,
-            portalAccessible: authState.portalAccess ?? false,
+            portalAccessible,
             isAnonymous: authState.isAnonymous,
             showSettingsWhenNoLogin: config.showSettingsWhenNoLogin ?? true,
           }
         : null,
-    [authState.isAdmin, authState.isAnonymous, authState.portalAccess, config],
+    [authState.isAdmin, authState.isAnonymous, portalAccessible, config],
   );
 }
 
@@ -152,7 +155,9 @@ export function useEditorSearchScopes(): SuperSearchScope[] {
             },
             ...PORTAL_ENTITY_SCOPE_DEFS.filter(
               (def) =>
-                visibleViewIds.has(def.viewId) &&
+                // A settings-hosted entity is reachable wherever the processor is.
+                (def.settingsKey !== undefined ||
+                  visibleViewIds.has(def.viewId)) &&
                 isPortalEntityScopeAccessible(def.id, gates?.isAdmin ?? false),
             ).map((def) => ({
               id: def.id,
@@ -299,17 +304,13 @@ export function rankSettingsResults(
   gates: SuperSearchGates | null,
   openSettings: (section: string, anchor?: string) => void,
   limit = GROUP_RESULT_CEILING,
-  /** Sections the host's settings modal refuses to show (e.g. the portal's
-   * hiddenSectionKeys) — offering them would deep-link into a blank modal. */
-  excludeSections?: readonly string[],
 ): SuperSearchResult[] {
   if (!trimmed) return [];
 
-  // Sections gated like the modal nav. The registry resolves per build
+  // Sections gated like the settings nav. The registry resolves per build
   // (core / proprietary / saas / desktop), so this only ever sees sections
-  // the current build's settings modal can actually show.
+  // the current build's settings page can actually show.
   const visibleSections = SETTINGS_SECTION_REGISTRY.filter((s) => {
-    if (excludeSections?.includes(s.key)) return false;
     // Null gates (config still loading): hide every gated section.
     // requiresLogin keys off the deployment's login *mode*, mirroring the nav
     // builder: with login on the editor is login-walled (an unauthenticated
@@ -327,6 +328,9 @@ export function rankSettingsResults(
     // Account-bound sections mirror the SaaS builder's `!isAnonymous` gate.
     if (s.requiresAccount && (gates ? (gates.isAnonymous ?? false) : true))
       return false;
+    // The processor's own sections mirror its nav builder's portalAccess gate.
+    if (s.requiresPortalAccess && gates?.portalAccessible !== true)
+      return false;
     return true;
   });
   // Row context: the display label of the section the row lives in.
@@ -334,7 +338,7 @@ export function rankSettingsResults(
     visibleSections.map((s) => [s.key, t(s.labelKey, s.labelFallback)]),
   );
 
-  // Row-level entries (deep-link with ?focus=) take priority. Rows for
+  // Row-level entries (deep-link by slug) take priority. Rows for
   // sections this build/user can't open are dropped with them.
   const rowMatches = rankByFuzzy(
     SETTINGS_SEARCH_INDEX.filter((e) => sectionLabelFor.has(e.section)),
@@ -345,12 +349,12 @@ export function rankSettingsResults(
       (e) => e.keywords?.join(" ") ?? "",
     ],
   );
-  const rows = rowMatches.map(({ item, score }) => ({
+  const rows: SuperSearchResult[] = rowMatches.map(({ item, score }) => ({
     key: `setting:${item.section}:${item.anchor}`,
     group: "settings",
     title: t(item.labelKey, item.labelFallback),
     subtitle: sectionLabelFor.get(item.section),
-    iconName: "settings-rounded",
+    iconName: "settings",
     score: score + 1, // nudge rows above bare section matches
     onSelect: () => openSettings(item.section, item.anchor),
   }));
@@ -366,15 +370,17 @@ export function rankSettingsResults(
     (s) => s.labelFallback,
     (s) => s.keywords?.join(" ") ?? "",
   ]);
-  const sections = sectionMatches.map(({ item, score }) => ({
-    key: `setting-section:${item.key}`,
-    group: "settings",
-    title: t(item.labelKey, item.labelFallback),
-    subtitle: groupTitle(item),
-    iconName: "settings-rounded",
-    score,
-    onSelect: () => openSettings(item.key),
-  }));
+  const sections: SuperSearchResult[] = sectionMatches.map(
+    ({ item, score }) => ({
+      key: `setting-section:${item.key}`,
+      group: "settings",
+      title: t(item.labelKey, item.labelFallback),
+      subtitle: groupTitle(item),
+      iconName: "settings",
+      score,
+      onSelect: () => openSettings(item.key),
+    }),
+  );
 
   // Content matches: sections whose rendered copy contains the query, so terms
   // with no curated keyword ("SMTP", a field label) still find their section.
@@ -385,7 +391,7 @@ export function rankSettingsResults(
     ...sectionMatches.map(({ item }) => item.key),
     ...rowMatches.map(({ item }) => item.section),
   ]);
-  const contentMatches =
+  const contentMatches: SuperSearchResult[] =
     trimmed.length < 3
       ? []
       : visibleSections
@@ -401,7 +407,7 @@ export function rankSettingsResults(
                 group: "settings",
                 title: t(s.labelKey, s.labelFallback),
                 subtitle: group ? `${group} · ${snippet}` : snippet,
-                iconName: "settings-rounded",
+                iconName: "settings",
                 // Always below the weakest possible label/keyword match.
                 score: FUZZY_MIN_SCORE - 10,
                 onSelect: () => openSettings(s.key),
@@ -434,9 +440,7 @@ export function rankProcessorResults(
       key: `processor:${item.id}`,
       group: "processor",
       title: t(item.labelKey, item.labelFallback),
-      // Must exist in the bundled Material Symbols set (LocalIcon falls back
-      // to a network fetch for unknown names — blank when self-hosted offline).
-      iconName: "grid-view",
+      iconName: "layout-grid",
       score,
       onSelect: () => selectEntry(item),
     }));
@@ -503,19 +507,6 @@ export function useSuperSearch(
   const trimmed = query.trim();
   const { stubs, loadingFiles } = useMyFilesStubs(active);
   const { scopeEnabled } = useSearchScopeFilter(options);
-  const { pathname } = useLocation();
-
-  // Workbench-bound selections must leave the file manager through the router.
-  // Tool/file selection pins its URL via raw history.pushState, which the
-  // router never observes — so on /files the route keeps re-asserting the
-  // "myFiles" workbench and the selection appears to do nothing. Exit to the
-  // editor's home path: on processor-shipping builds "/" is a role router,
-  // not the editor.
-  const leaveFileManager = useCallback(() => {
-    if (pathname.startsWith("/files")) {
-      navigate(EDITOR_BASENAME);
-    }
-  }, [pathname, navigate]);
 
   // --- Actions -----------------------------------------------------------
   const openFile = useCallback(
@@ -524,14 +515,14 @@ export function useSuperSearch(
         // The file already lives in storage — load it as a stub so its id and
         // metadata are preserved (addFiles would persist a duplicate record).
         await fileActions.addStirlingFileStubs([stub], { selectFiles: true });
+        // Leaving the library is the view changing; HomePage takes the path with it.
         navActions.setWorkbench("viewer");
         viewerRef.current?.setActiveFileId?.(stub.id);
-        leaveFileManager();
       } catch (err) {
         console.error("[SuperSearch] Failed to open file:", stub.name, err);
       }
     },
-    [fileActions, navActions, leaveFileManager],
+    [fileActions, navActions],
   );
 
   const openTool = useCallback(
@@ -555,21 +546,14 @@ export function useSuperSearch(
       } else {
         handleToolSelectForced(id);
       }
-      leaveFileManager();
     },
-    [
-      handleToolSelect,
-      handleToolSelectForced,
-      toolAvailability,
-      toolRegistry,
-      leaveFileManager,
-    ],
+    [handleToolSelect, handleToolSelectForced, toolAvailability, toolRegistry],
   );
 
   const openSettings = useCallback(
     (section: string, anchor?: string) => {
       const path = anchor
-        ? `/settings/${section}?focus=${encodeURIComponent(anchor)}`
+        ? `/settings/${section}#${encodeURIComponent(anchor)}`
         : `/settings/${section}`;
       navigate(path);
     },

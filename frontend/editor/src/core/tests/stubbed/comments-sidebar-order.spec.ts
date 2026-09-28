@@ -18,7 +18,7 @@ test.describe("Comments sidebar - annotation reading order", () => {
   test("annotations on each page are listed in visual reading order", async ({
     page,
   }) => {
-    await page.goto("/read");
+    await page.goto("/");
     await page.waitForLoadState("domcontentloaded");
 
     // Upload the test fixture via the hidden file input (avoids the native
@@ -27,6 +27,10 @@ test.describe("Comments sidebar - annotation reading order", () => {
       .locator('[data-testid="file-input"]')
       .first()
       .setInputFiles(ANNOTATED_PDF);
+
+    // Then into reading, which is a surface of its own: the sidebar that owns
+    // the input above is not on screen once you are in it.
+    await page.getByRole("button", { name: "Reader", exact: true }).click();
 
     // Sanity-check that the page indicator reflects a 3-page document.
     await expect(page.getByText(/\/\s*3/)).toBeVisible({ timeout: 30_000 });

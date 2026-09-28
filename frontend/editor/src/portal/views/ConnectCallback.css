@@ -1,24 +1,13 @@
-/* Account-link callback. A transient page the admin passes through, so it is
-   centred and says one thing rather than trying to be a settings screen. */
+/* Step 3 of the connect flow: what the round trip to Stirling came back with.
+
+   Was a standalone page, centred with its own margins and max-width. It is now a
+   step body inside FlowModal, which already owns the dialog's width, padding and
+   spacing, so this only stacks its own blocks. */
 
 .portal-connect-callback {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  max-width: 30rem;
-  margin: 4rem auto;
-  padding: 0 1rem;
-  text-align: center;
-}
-
-.portal-connect-callback > * {
-  width: 100%;
-}
-
-/* The button is the one thing that should not stretch to the banner's width. */
-.portal-connect-callback button {
-  width: auto;
+  gap: 0.75rem;
 }
 
 .portal-connect-callback p {
@@ -29,4 +18,12 @@
 
 .portal-connect-callback__note {
   font-size: 0.8125rem;
+}
+
+/* Only "working" is centred: a spinner with a line under it, which has nothing to
+   align against. */
+.portal-connect-callback--working {
+  align-items: center;
+  gap: 0.625rem;
+  padding: 1.5rem 0;
 }

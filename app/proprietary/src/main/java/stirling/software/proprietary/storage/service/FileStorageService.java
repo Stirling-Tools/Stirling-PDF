@@ -49,6 +49,7 @@ import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.provider.StoredObject;
 import stirling.software.proprietary.storage.repository.FileShareAccessRepository;
 import stirling.software.proprietary.storage.repository.FileShareRepository;
+import stirling.software.proprietary.storage.repository.FolderRepository;
 import stirling.software.proprietary.storage.repository.StorageCleanupEntryRepository;
 import stirling.software.proprietary.storage.repository.StoredFileRepository;
 
@@ -63,6 +64,7 @@ public class FileStorageService {
             Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$");
 
     private final StoredFileRepository storedFileRepository;
+    private final FolderRepository folderRepository;
     private final FileShareRepository fileShareRepository;
     private final FileShareAccessRepository fileShareAccessRepository;
     private final UserRepository userRepository;
@@ -217,6 +219,16 @@ public class FileStorageService {
             if (auditObject != null) {
                 applyAuditMetadata(existing, auditObject);
             }
+
+            // The entity is often detached (policy runs deliver on worker threads with no open
+            // persistence context), and its lazy folder association is then an unreadable proxy
+            // from a closed session — merging that drops the FK, silently moving the file to the
+            // file-manager root. Re-anchor the placement as a fresh reference, read by plain id.
+            existing.setFolder(
+                    storedFileRepository
+                            .findFolderIdByFileId(existing.getId())
+                            .map(folderRepository::getReferenceById)
+                            .orElse(null));
 
             StoredFile updated;
             try {

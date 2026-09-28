@@ -3,6 +3,10 @@ bootRun {
     enabled = false
 }
 dependencies {
+    // Security-hardening utilities (zip-slip, SSRF, filename sanitization, command injection).
+    // Declared as api here so core + proprietary (which depend on common) get it transitively,
+    // keeping it off modules that don't need it (e.g. saas).
+    api 'io.github.pixee:java-security-toolkit:1.2.3'
     api "com.google.guava:guava:${guavaVersion}"
     api 'org.springframework.boot:spring-boot-starter-webmvc'
     api 'org.springframework.boot:spring-boot-starter-aspectj'
@@ -22,7 +26,10 @@ dependencies {
     api "org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3"
     // Simple Java Mail for EML/MSG parsing (replaces direct Angus Mail usage)
     api 'org.simplejavamail:simple-java-mail:9.3.2'
-    api 'org.simplejavamail:outlook-module:9.3.2' // MSG file support
+    // MSG file support; exclude commons-math3 (only HSSF/formula needs it, MSG parsing doesn't)
+    api('org.simplejavamail:outlook-module:9.3.2') {
+        exclude group: 'org.apache.commons', module: 'commons-math3'
+    }
     api 'jakarta.mail:jakarta.mail-api:2.1.5'
     runtimeOnly 'org.eclipse.angus:angus-mail:2.0.5'
 
@@ -36,12 +43,30 @@ dependencies {
 
     api "com.stirling:jpdfium:${jpdfiumVersion}"
 
-    // -PjpdfiumPlatforms=all|none|<csv of linux-x64,linux-arm64,darwin-x64,darwin-arm64,windows-x64>
-    // 'none' skips natives entirely (windows-arm64 builds, until JPDFium ships that platform).
-    def jpdfiumPlatformsProp = (project.findProperty('jpdfiumPlatforms') ?: 'all').toString().trim()
-    def jpdfiumAllPlatforms = ['linux-x64', 'linux-arm64', 'darwin-x64', 'darwin-arm64', 'windows-x64']
+    // -PjpdfiumPlatforms=auto|all|none|<csv of linux-x64,linux-arm64,linux-musl-x64,linux-musl-arm64,darwin-x64,darwin-arm64,windows-x64> (windows-arm64 natives not published yet)
+    def jpdfiumPlatformsProp = (project.findProperty('jpdfiumPlatforms') ?: 'auto').toString().trim()
+    def jpdfiumAllPlatforms = ['linux-x64', 'linux-arm64', 'linux-musl-x64', 'linux-musl-arm64', 'darwin-x64', 'darwin-arm64', 'windows-x64']
     def jpdfiumPlatforms
-    if (jpdfiumPlatformsProp == 'all') {
+    if (jpdfiumPlatformsProp == 'auto') {
+        def osName = System.getProperty('os.name').toLowerCase()
+        def osArch = System.getProperty('os.arch').toLowerCase()
+        def isArm64 = osArch.contains('aarch64') || osArch.contains('arm64')
+        if (osName.contains('linux')) {
+            jpdfiumPlatforms = isArm64 ? ['linux-arm64'] : ['linux-x64']
+        } else if (osName.contains('mac')) {
+            jpdfiumPlatforms = isArm64 ? ['darwin-arm64'] : ['darwin-x64']
+        } else if (osName.contains('win')) {
+            if (isArm64) {
+                logger.lifecycle("JPDFium natives are not available for windows-arm64; set -PjpdfiumPlatforms=none to skip bundling natives.")
+                jpdfiumPlatforms = []
+            } else {
+                jpdfiumPlatforms = ['windows-x64']
+            }
+        } else {
+            // Fallback: bundle all platforms when host can't be determined
+            jpdfiumPlatforms = jpdfiumAllPlatforms
+        }
+    } else if (jpdfiumPlatformsProp == 'all') {
         jpdfiumPlatforms = jpdfiumAllPlatforms
     } else if (jpdfiumPlatformsProp == 'none') {
         jpdfiumPlatforms = []
@@ -51,7 +76,7 @@ dependencies {
     def jpdfiumInvalid = jpdfiumPlatforms.findAll { !jpdfiumAllPlatforms.contains(it) }
     if (jpdfiumInvalid) {
         throw new GradleException("Unknown jpdfiumPlatforms value(s): ${jpdfiumInvalid.join(', ')}. " +
-                "Valid: ${jpdfiumAllPlatforms.join(', ')}, 'all' or 'none'.")
+                "Valid: ${jpdfiumAllPlatforms.join(', ')}, 'auto', 'all' or 'none'.")
     }
     logger.lifecycle("JPDFium native platforms: ${jpdfiumPlatforms ? jpdfiumPlatforms.join(', ') : 'none'}")
     jpdfiumPlatforms.each { platform ->

@@ -1,174 +1,188 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
+import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
+import { clearAccountLinkBlock } from "@app/services/accountLinkBlock";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { Modal } from "@app/ui";
-import { PORTAL_BASENAME } from "@app/routes/portalBasename";
-import { withBasePath } from "@app/constants/app";
+import { completeConnect, type ConnectPhase } from "@app/portal/api/link";
+import { ensureSaasSupabase } from "@app/portal/auth/saasSupabase";
+import { getSupabaseClient } from "@app/auth/supabase/supabaseClient";
+import { clearAccountLinkSession } from "@app/portal/auth/accountLinkSession";
 import {
-  completeConnect,
-  startConnect,
-  type ConnectPhase,
-} from "@portal/api/link";
-import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
-import { useAccountLinkContext } from "@portal/contexts/AccountLinkContext";
-import {
-  ConnectCallbackView,
-  type ConnectCallbackState,
-} from "@portal/components/account-link/ConnectCallbackView";
-import "@portal/views/ConnectCallback.css";
+  isTerminalSaasAuthError,
+  portalSaasSessionRestored,
+} from "@app/portal/auth/portalSaasSession";
+import type { PendingConnect } from "@app/portal/auth/pendingConnect";
+import { useAccountLinkContext } from "@app/portal/contexts/AccountLinkContext";
+import { useUI } from "@app/portal/contexts/UIContext";
+import { getPortalQueryClient } from "@app/portal/queryClient";
+import type { ConnectCallbackState } from "@app/portal/components/account-link/ConnectCallbackView";
 
-/** What the callback route hands over, read from the URL fragment before stripping it. */
+/** Tokens are consumed once and removed from router history before any network request. */
 export interface AccountLinkReturn {
   type: string | null;
   nonce: string | null;
   accessToken: string | null;
   refreshToken: string | null;
+  pending: PendingConnect | null;
 }
 
 interface LocationState {
   accountLinkReturn?: AccountLinkReturn;
 }
 
-/**
- * Finishes the handshake and reports the outcome, over the portal the admin
- * started from.
- *
- * Mounted alongside the other portal-wide modal rather than being its own route:
- * the result is a step in a task, so the page behind it should still be there.
- */
+/** Owns the validated callback and publishes its outcome to the existing modal. */
 export function ConnectCallbackHost() {
+  const isOwner = useAccountLinkOwner();
   const location = useLocation();
   const navigate = useNavigate();
-  const { t } = useTranslation();
   const { refresh } = useAccountLinkContext();
+  const { publishConnectOutcome } = useUI();
   const handover = (location.state as LocationState | null)?.accountLinkReturn;
-
-  const [state, setState] = useState<ConnectCallbackState | null>(null);
-  const [sessionRestored, setSessionRestored] = useState(false);
-  const nonceRef = useRef<string | null>(null);
-  const startedRef = useRef(false);
-
-  const finish = useCallback(
-    async (nonce: string) => {
-      setState("working");
-      try {
-        const outcome = toViewState((await completeConnect(nonce)).phase);
-        setState(outcome);
-        // The portal read its status on mount, before this existed. Without this
-        // the page behind the modal still says unlinked until a reload.
-        if (outcome === "linked") await refresh();
-      } catch {
-        // Could not reach our own backend. The handshake is still open, so this
-        // is worth another attempt rather than a restart.
-        setState("retry");
-      }
-    },
-    [refresh],
-  );
+  const startedRef = useRef<AccountLinkReturn | null>(null);
+  const publishRef = useRef(publishConnectOutcome);
+  publishRef.current = publishConnectOutcome;
+  const refreshRef = useRef(refresh);
+  refreshRef.current = refresh;
+  const mounted = useRef(false);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   useEffect(() => {
-    if (!handover || startedRef.current) return;
-    startedRef.current = true;
+    if (!handover || startedRef.current === handover) return;
+    startedRef.current = handover;
+    navigate(`${location.pathname}${location.search}`, {
+      replace: true,
+      state: null,
+    });
 
-    const { type, nonce, accessToken, refreshToken } = handover;
-    if (type !== "link" || !nonce) {
-      setState("malformed");
+    if (!isOwner) {
+      handover.accessToken = null;
+      handover.refreshToken = null;
       return;
     }
-    nonceRef.current = nonce;
 
-    void (async () => {
-      if (accessToken && refreshToken) {
-        try {
-          const supabase = ensureSaasSupabase();
-          // Logged, not swallowed: silently this resurfaces later as "session
-          // expired" on the usage page, with nothing tying it back here.
-          if (!supabase) {
-            console.warn(
-              "[account-link] no Supabase client: VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY are not set for this build",
-            );
-          } else {
-            const { error } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken,
-            });
-            if (error) {
-              console.warn("[account-link] setSession failed:", error.message);
-            } else {
-              setSessionRestored(true);
+    const callback = handover;
+    const { type, nonce, pending } = callback;
+    const metadata = {
+      mode: pending?.mode ?? ("link" as const),
+    };
+    if (
+      (type !== "link" && type !== "reauth") ||
+      !nonce ||
+      !pending ||
+      pending.ownerId !== localStorage.getItem("stirling.portalSaasOwner")
+    ) {
+      handover.accessToken = null;
+      handover.refreshToken = null;
+      publishRef.current({
+        ...metadata,
+        state: "malformed",
+        sessionRestored: false,
+      });
+      return;
+    }
+
+    let accepted = false;
+    let busy = false;
+    let cancelled = false;
+    const supabase = ensureSaasSupabase();
+    const current = () =>
+      !cancelled &&
+      mounted.current &&
+      supabase === getSupabaseClient() &&
+      pending.ownerId === localStorage.getItem("stirling.portalSaasOwner");
+    const discardTokens = () => {
+      callback.accessToken = null;
+      callback.refreshToken = null;
+    };
+    const cancel = () => {
+      cancelled = true;
+      discardTokens();
+      if (supabase === getSupabaseClient()) clearAccountLinkSession();
+    };
+    void claim();
+
+    async function claim() {
+      if (busy || !current()) return;
+      busy = true;
+      publishRef.current({
+        ...metadata,
+        state: "working",
+        sessionRestored: false,
+        cancel,
+      });
+      try {
+        if (!accepted) {
+          const state = toViewState((await completeConnect(nonce!)).phase);
+          if (!current()) return;
+          if (state !== "linked") {
+            if (state !== "retry") {
+              discardTokens();
             }
+            publishRef.current({
+              ...metadata,
+              state,
+              sessionRestored: false,
+              reclaim: state === "retry" ? claim : undefined,
+              cancel,
+            });
+            return;
           }
-        } catch (e) {
-          console.warn("[account-link] session hand-off threw:", e);
+          accepted = true;
+          clearAccountLinkBlock();
+          await refreshRef.current();
+          if (!current()) return;
         }
-      } else {
-        console.warn(
-          "[account-link] callback carried no tokens; the approval page had no session to pass",
-        );
+
+        let sessionRestored = false;
+        if (callback.accessToken && callback.refreshToken) {
+          if (!supabase)
+            throw new Error("SaaS authentication is not configured");
+          const { error } = await supabase.auth.setSession({
+            access_token: callback.accessToken,
+            refresh_token: callback.refreshToken,
+          });
+          if (!current()) return;
+          if (error) throw error;
+          sessionRestored = true;
+          portalSaasSessionRestored();
+          void getPortalQueryClient().invalidateQueries();
+        }
+        discardTokens();
+        publishRef.current({ ...metadata, state: "linked", sessionRestored });
+      } catch (error) {
+        if (current() && isTerminalSaasAuthError(error)) {
+          discardTokens();
+          publishRef.current({
+            ...metadata,
+            state: "rejected",
+            sessionRestored: false,
+            cancel,
+          });
+          return;
+        }
+        // A confirmed claim is single-use; retry only session installation after it succeeds.
+        if (current())
+          publishRef.current({
+            ...metadata,
+            state: "retry",
+            sessionRestored: false,
+            reclaim: claim,
+            cancel,
+          });
+      } finally {
+        if (!current()) discardTokens();
+        busy = false;
       }
-      await finish(nonce);
-    })();
-  }, [handover, finish]);
-
-  /**
-   * Retry means different things either side of a still-valid handshake: finish the one we have, or open a new one when it is past saving.
-   */
-  const onRetry = useCallback(() => {
-    if (state === "retry" && nonceRef.current) {
-      void finish(nonceRef.current);
-      return;
     }
-    setState("working");
-    // Same callback the modal sends. Without it the backend falls back to the bare
-    // origin, which drops the app's base path and lands the return on nothing.
-    void startConnect(
-      window.location.hostname,
-      new URL(
-        withBasePath("/account-link/callback"),
-        window.location.origin,
-      ).toString(),
-    )
-      .then((status) => {
-        if (status.authorizeUrl) {
-          window.location.assign(status.authorizeUrl);
-        } else {
-          setState("rejected");
-        }
-      })
-      .catch(() => setState("retry"));
-  }, [state, finish]);
+  }, [handover, navigate, location.pathname, location.search, isOwner]);
 
-  // Drops the handover with it, so a back navigation does not reopen the result.
-  const done = useCallback(() => {
-    setState(null);
-    navigate(PORTAL_BASENAME, { replace: true });
-  }, [navigate]);
-
-  if (!state) return null;
-
-  return (
-    <Modal
-      open
-      onClose={done}
-      width="md"
-      title={t(
-        "portal.accountLink.connect.callback.modalTitle",
-        "Connecting this server",
-      )}
-    >
-      <ConnectCallbackView
-        state={state}
-        sessionRestored={sessionRestored}
-        onRetry={onRetry}
-        onDone={done}
-      />
-    </Modal>
-  );
+  return null;
 }
 
-/**
- * PENDING and UNAVAILABLE collapse into one "try again" state: both mean the handshake is intact but unfinished, which is the same thing to do about it.
- */
 function toViewState(phase: ConnectPhase): ConnectCallbackState {
   switch (phase) {
     case "LINKED":

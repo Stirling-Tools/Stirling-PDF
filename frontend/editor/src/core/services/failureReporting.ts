@@ -64,6 +64,32 @@ function isBlobLike(value: unknown): value is { text: () => Promise<string> } {
   );
 }
 
+/**
+ * Report a failure whose code and wording are already known, for a client that has learned
+ * something new about a document it already reported. Folds on by the server's own dedup.
+ */
+export async function reportKnownFailure(report: {
+  operation: string;
+  errorCode: string;
+  detail: string | null;
+  fileIds?: string[];
+}): Promise<void> {
+  try {
+    await apiClient.post(
+      REPORT_PATH,
+      {
+        operation: report.operation,
+        errorCode: report.errorCode,
+        fileIds: report.fileIds ?? [],
+        detail: report.detail,
+      },
+      { suppressErrorToast: true },
+    );
+  } catch {
+    // Best-effort, as above: the reader already has the refusal on screen.
+  }
+}
+
 export async function reportToolFailure({
   operation,
   error,
@@ -158,15 +184,10 @@ function messageOf(error: unknown): string {
 }
 
 /**
- * A user cancelling is the one failure worth dropping: nothing went wrong and there
- * is nothing for a reviewer to do. `useToolApiCalls` rethrows an axios cancellation
- * as a plain Error with the original as its cause, so both shapes are checked.
- *
- * <p>Everything else is reported, client-side refusals included: an unsupported input
- * format is the same class of problem as the processor rejecting a file type, which
- * is already recorded.
+ * A user cancelling is the one failure worth dropping. Both shapes are checked, since
+ * `useToolApiCalls` rethrows an axios cancellation as an Error with the original as its cause.
  */
-function wasCancelled(error: unknown): boolean {
+export function wasCancelled(error: unknown): boolean {
   const candidate = error as {
     code?: unknown;
     name?: unknown;

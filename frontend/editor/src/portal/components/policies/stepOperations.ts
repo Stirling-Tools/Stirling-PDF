@@ -747,15 +747,6 @@ export function emptyOperationValues(
   return values;
 }
 
-export function operationFormValid(
-  op: StepOperation,
-  values: Record<string, string>,
-): boolean {
-  return (op.fields ?? []).every(
-    (field) => !field.required || (values[field.key] ?? "").trim() !== "",
-  );
-}
-
 /**
  * Turn a chosen operation plus the operator's answers into the parameters the
  * `external-api-call` step takes.
