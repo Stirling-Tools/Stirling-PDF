@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -166,5 +166,49 @@ describe("ThumbnailSidebar", () => {
     expect(global.URL.revokeObjectURL).toHaveBeenCalledWith(
       "blob:http://localhost/test-thumb-blob",
     );
+  });
+
+  it("mounts only a window of rows and generates a bounded cache for large documents", async () => {
+    viewer.scrollState.totalPages = 500;
+    renderSidebar("test-file-1");
+
+    await waitFor(() => {
+      expect(screen.getByAltText("Page 1 thumbnail")).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText("Page 500")).not.toBeInTheDocument();
+    expect(screen.queryByText("Page 100")).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(viewer.renderThumbMock.mock.calls.length).toBeLessThan(40);
+    });
+  });
+
+  it("mounts the rows around the scroll position and drops the far ones", async () => {
+    viewer.scrollState.totalPages = 500;
+    const { container } = renderSidebar("test-file-1");
+
+    await waitFor(() => {
+      expect(screen.getByAltText("Page 1 thumbnail")).toBeInTheDocument();
+    });
+
+    const viewport = container.querySelector(
+      ".mantine-ScrollArea-viewport",
+    ) as HTMLElement;
+    expect(viewport).toBeTruthy();
+    Object.defineProperty(viewport, "clientHeight", {
+      value: 800,
+      configurable: true,
+    });
+    Object.defineProperty(viewport, "scrollTop", {
+      value: 372 * 100,
+      writable: true,
+      configurable: true,
+    });
+    fireEvent.scroll(viewport);
+
+    await waitFor(() => {
+      expect(screen.getByText("Page 101")).toBeInTheDocument();
+    });
+    expect(screen.queryByText("Page 1")).not.toBeInTheDocument();
   });
 });
