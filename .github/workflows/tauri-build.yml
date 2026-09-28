@@ -59,6 +59,26 @@ permissions:
   contents: read
   pull-requests: write
 
+env:
+  JAVA_VERSION: 25
+  GRADLE_FILES_TO_HASH: |
+    gradle/wrapper/gradle-wrapper.properties
+    gradle/libs.versions.toml
+    buildSrc/**
+    settings.gradle
+    build.gradle
+    app/**/build.gradle
+    gradle/**/*.gradle
+  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-${{ env.JAVA_VERSION }}
+  CARGO_FILES_TO_HASH: |
+    frontend/editor/src-tauri/Cargo.toml
+    frontend/editor/src-tauri/Cargo.lock
+  # frontend/editor/src-tauri/target
+  CARGO_HOME: ${{ github.workspace }}/.cache/cargo
+  CACHE_MANIFEST_BRANCH: dev-cache
+  CACHE_MANIFEST_PATH: .github/cache-data
+  GITHUB_TOKEN: ${{ github.token }}
+
 jobs:
   determine-matrix:
     # Only probes APPLE_CERTIFICATE for presence, so it stays on the unrestricted
@@ -112,6 +132,38 @@ jobs:
           JOINED=$(IFS=','; echo "${ENTRIES[*]}")
           echo "matrix={\"include\":[$JOINED]}" >> $GITHUB_OUTPUT
 
+  hash_pr:
+    name: Hash files
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    outputs:
+      java_version: ${{ steps.hash.outputs.java_version }}
+      files_hash: ${{ steps.hash.outputs.files_hash}}
+      cache_key: ${{ steps.hash.outputs.cache_key }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        with:
+          egress-policy: audit
+
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Hash Gradle files
+        id: hash
+        env:
+          FILES_HASH: ${{ hashFiles(env.FILES_TO_HASH) }}
+        run: |
+          HASH="$FILES_HASH"
+          echo "java_version=${{ env.JAVA_VERSION }}" >> "$GITHUB_OUTPUT"
+          echo "files_hash=$HASH" >> "$GITHUB_OUTPUT"
+          echo "cache_key=gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-${{ env.JAVA_VERSION }}-$HASH" >> "$GITHUB_OUTPUT"
+
   build:
     # Windows/GPG signing only runs on main (see the per-step gates below), so only
     # that path needs the reviewer-gated release-signing environment. Everything else
@@ -128,24 +180,6 @@ jobs:
     runs-on: ${{ matrix.platform }}
     timeout-minutes: 90
     env:
-      JAVA_VERSION: 25
-      GRADLE_FILES_TO_HASH: |
-        ${{ github.workspace }}/gradle/wrapper/gradle-wrapper.properties
-        ${{ github.workspace }}/gradle/libs.versions.toml
-        ${{ github.workspace }}/buildSrc/**
-        ${{ github.workspace }}/settings.gradle
-        ${{ github.workspace }}/build.gradle
-        ${{ github.workspace }}/app/**/build.gradle
-        ${{ github.workspace }}/gradle/**/*.gradle
-      GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-25
-      CARGO_FILES_TO_HASH: |
-        ${{ github.workspace }}/frontend/editor/src-tauri/Cargo.toml
-        ${{ github.workspace }}/frontend/editor/src-tauri/Cargo.lock
-      #       ${{ github.workspace }}/frontend/editor/src-tauri/target
-      CARGO_HOME: ${{ github.workspace }}/.cache/cargo
-      CACHE_MANIFEST_BRANCH: dev-cache
-      CACHE_MANIFEST_PATH: .github/cache-data
-      GITHUB_TOKEN: ${{ github.token }}
       TAURI_BUNDLER_DMG_IGNORE_CI: "true"
       SM_API_KEY: ${{ secrets.SM_API_KEY }}
       APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
@@ -216,13 +250,13 @@ jobs:
             cargo:
               path: ${{ env.CARGO_HOME }}
             gradle-caches:
-              path: .cache/gradle-java-25/caches
+              path: .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/caches
             gradle-wrapper:
-              path: .cache/gradle-java-25/wrapper
+              path: .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/wrapper
           save-scope: shared
           key: |
-            gradle-caches=${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
-            gradle-wrapper=${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
+            gradle-caches=${{ needs.hash_pr.outputs.files_hash }}
+            gradle-wrapper=${{ needs.hash_pr.outputs.files_hash  }}
             cargo=${{ hashFiles(env.CARGO_FILES_TO_HASH) }}
           allow-shared-restore: true
           strict: false

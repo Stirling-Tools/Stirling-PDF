@@ -125,21 +125,8 @@ jobs:
           allow-shared-restore: true
           strict: false
 
-      - name: Hit Caches
-        id: hit_caches
-        shell: bash
-        env:
-          GRADLE_CACHES_RESULT: ${{ fromJSON(steps.cache.outputs.cache-results).gradle-caches.cache-hit }}
-          GRADLE_WRAPPER_RESULT: ${{ fromJSON(steps.cache.outputs.cache-results).gradle-wrapper.cache-hit }}
-        run: |
-          if [[ "$GRADLE_CACHES_RESULT" == "true" && "$GRADLE_WRAPPER_RESULT" == "true" ]]; then
-            echo "cache_hit=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "cache_hit=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Restore cache Gradle User Home
-        if: steps.cache.outputs.error || steps.hit_caches.outputs.cache_hit != 'true'
+        if: steps.cache.outputs.error || steps.cache.outputs.cache-hit != 'true'
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
@@ -298,7 +285,7 @@ jobs:
           if-no-files-found: warn
 
       - name: Install uv
-        if: always() && matrix.flavor == 'saas' && steps.hit_caches.outputs.cache_hit != 'true'
+        if: always() && matrix.flavor == 'saas' && steps.cache.outputs.cache-hit != 'true'
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           enable-cache: true
@@ -307,7 +294,7 @@ jobs:
             engine/uv.lock
 
       - name: Install uv
-        if: always() && matrix.flavor == 'saas' && steps.hit_caches.outputs.cache_hit == 'true'
+        if: always() && matrix.flavor == 'saas' && steps.cache.outputs.cache-hit == 'true'
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           enable-cache: false
