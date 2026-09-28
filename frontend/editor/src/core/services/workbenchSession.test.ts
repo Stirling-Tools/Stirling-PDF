@@ -55,10 +55,14 @@ describe("workbench session record", () => {
 });
 
 describe("editor return path", () => {
-  it("is consumed by the first take", () => {
-    saveEditorReturnPath("/compress?x=1");
+  it("captures the live address bar and is consumed by the first take", () => {
+    // The editor writes its tool route via raw history.pushState, so the save
+    // must read window.location, not a lagging router location.
+    window.history.pushState({}, "", "/compress?x=1");
+    saveEditorReturnPath();
     expect(takeEditorReturnPath()).toBe("/compress?x=1");
     expect(takeEditorReturnPath()).toBeNull();
+    window.history.pushState({}, "", "/");
   });
 });
 
@@ -184,8 +188,8 @@ describe("views the restore may reopen", () => {
     expect(isSeedableView("pageEditor")).toBe(true);
   });
 
-  it("leaves URL-owned and tool-owned views alone", () => {
-    // HomePage pins myFiles to /files and bounces it elsewhere; custom views belong to a tool.
+  it("leaves path-seeded and tool-owned views alone", () => {
+    // The library arrives with the path that names the folder; custom views belong to a tool.
     expect(isSeedableView("myFiles")).toBe(false);
     expect(isSeedableView("custom:compare")).toBe(false);
     expect(isSeedableView(undefined)).toBe(false);

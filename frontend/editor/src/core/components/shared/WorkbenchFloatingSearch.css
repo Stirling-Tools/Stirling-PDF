@@ -29,3 +29,9 @@
   input {
   background-color: transparent;
 }
+
+@media (max-width: 48rem) {
+  .workbench-floating-search {
+    padding-right: 3.75rem;
+  }
+}

@@ -10,9 +10,6 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.enumeration.TeamRole;
@@ -37,6 +34,9 @@ import stirling.software.saas.procurement.repository.ProcurementDealRepository;
 import stirling.software.saas.procurement.repository.ProcurementQuoteRepository;
 import stirling.software.saas.service.SaasTeamService;
 import stirling.software.saas.util.LogRedactionUtils;
+
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Orchestrates a linked team's procurement journey: start a (mock-licensed) trial, build a
@@ -707,7 +707,7 @@ public class ProcurementService {
     private String writeLineItems(QuoteBreakdown breakdown) {
         try {
             return OBJECT_MAPPER.writeValueAsString(breakdown.lineItems());
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.warn("[procurement] failed to serialise line items", e);
             return "[]";
         }

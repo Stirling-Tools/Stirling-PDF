@@ -8,12 +8,12 @@ import React, {
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { addEventListenerWithCleanup } from "@app/utils/genericUtils";
 import { useTooltipPosition } from "@app/hooks/useTooltipPosition";
 import { TooltipTip } from "@app/types/tips";
 import { TooltipContent } from "@app/components/shared/tooltip/TooltipContent";
-import { useSidebarContext } from "@app/contexts/SidebarContext";
+import { useOptionalSidebarContext } from "@app/contexts/SidebarContext";
 import { useLogoAssets } from "@app/hooks/useLogoAssets";
 import styles from "@app/components/shared/tooltip/Tooltip.module.css";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
@@ -59,6 +59,29 @@ export interface TooltipProps {
   showCloseButton?: boolean;
 }
 
+/** Split out so only tooltips with a header need the logo and the providers behind it. */
+function TooltipHeader({
+  header,
+}: {
+  header: NonNullable<TooltipProps["header"]>;
+}) {
+  const { tooltipLogo } = useLogoAssets();
+  return (
+    <div className={styles["tooltip-header"]}>
+      <div className={styles["tooltip-logo"]}>
+        {header.logo || (
+          <img
+            src={tooltipLogo}
+            alt="Stirling PDF"
+            style={{ width: "1.4rem", height: "1.4rem", display: "block" }}
+          />
+        )}
+      </div>
+      <span className={styles["tooltip-title"]}>{header.title}</span>
+    </div>
+  );
+}
+
 export const Tooltip: React.FC<TooltipProps> = ({
   sidebarTooltip = false,
   position,
@@ -85,7 +108,6 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const { t } = useTranslation();
   const [internalOpen, setInternalOpen] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
-  const { tooltipLogo } = useLogoAssets();
 
   const triggerRef = useRef<HTMLElement | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
@@ -105,9 +127,9 @@ export const Tooltip: React.FC<TooltipProps> = ({
   }, []);
 
   // Always call the hook unconditionally to satisfy React's rules of hooks.
-  // The context is only used when sidebarTooltip is true.
-  const sidebarContextValue = useSidebarContext();
-  const sidebarContext = sidebarTooltip ? sidebarContextValue : null;
+  // Optional: the plain tooltip renders outside the provider.
+  const sidebarContextValue = useOptionalSidebarContext();
+  const sidebarContext = sidebarTooltip ? (sidebarContextValue ?? null) : null;
 
   const isControlled = controlledOpen !== undefined;
   const open = (isControlled ? !!controlledOpen : internalOpen) && !disabled;
@@ -119,10 +141,10 @@ export const Tooltip: React.FC<TooltipProps> = ({
         typeof document !== "undefined" ? document.documentElement.dir : "ltr";
       const isRTL = htmlDir === "rtl";
       const base = position ?? "right";
-      if (!isRTL) return base as NonNullable<TooltipProps["position"]>;
+      if (!isRTL) return base;
       if (base === "left") return "right";
       if (base === "right") return "left";
-      return base as NonNullable<TooltipProps["position"]>;
+      return base;
     }, [position]);
 
   const setOpen = useCallback(
@@ -361,8 +383,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
         ).ref;
         if (typeof originalRef === "function") originalRef(node);
         else if (originalRef && typeof originalRef === "object")
-          (originalRef as React.MutableRefObject<HTMLElement | null>).current =
-            node;
+          originalRef.current = node;
       },
       "aria-describedby": open ? tooltipIdRef.current : undefined,
       onPointerEnter: handlePointerEnter,
@@ -426,7 +447,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
           title={t("tooltip.close", "Close tooltip")}
           aria-label={t("tooltip.close", "Close tooltip")}
         >
-          <LocalIcon icon="close-rounded" width="1.25rem" height="1.25rem" />
+          <Icon name="x" size="1.25rem" />
         </ActionIcon>
       )}
       {arrow && !sidebarTooltip && (
@@ -443,20 +464,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
           }
         />
       )}
-      {header && (
-        <div className={styles["tooltip-header"]}>
-          <div className={styles["tooltip-logo"]}>
-            {header.logo || (
-              <img
-                src={tooltipLogo}
-                alt="Stirling PDF"
-                style={{ width: "1.4rem", height: "1.4rem", display: "block" }}
-              />
-            )}
-          </div>
-          <span className={styles["tooltip-title"]}>{header.title}</span>
-        </div>
-      )}
+      {header && <TooltipHeader header={header} />}
       <TooltipContent
         content={content}
         tips={tips}

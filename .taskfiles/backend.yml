@@ -15,6 +15,9 @@ version: '3'
 #                  stripping; cmd.exe also requires `.\` (not bare `gradlew.bat`)
 #                  because modern Windows excludes cwd from cmd's search path.
 
+vars:
+  MAXW: '{{if .STIRLING_CHECK_JOBS}} --max-workers={{.STIRLING_CHECK_JOBS}}{{end}}'
+
 tasks:
   dev:
     desc: "Start backend dev server"
@@ -211,18 +214,18 @@ tasks:
   test:
     desc: "Run backend tests"
     cmds:
-      - cmd: cmd /c ".\gradlew.bat test"
+      - cmd: cmd /c ".\gradlew.bat test{{.MAXW}}"
         platforms: [windows]
-      - cmd: ./gradlew test
+      - cmd: ./gradlew test{{.MAXW}}
         platforms: [linux, darwin]
 
   test:force:
     desc: "Run backend tests, ignoring cached results"
     aliases: [test:no-cache]
     cmds:
-      - cmd: cmd /c ".\gradlew.bat cleanTest test --no-build-cache"
+      - cmd: cmd /c ".\gradlew.bat cleanTest test --no-build-cache{{.MAXW}}"
         platforms: [windows]
-      - cmd: ./gradlew cleanTest test --no-build-cache
+      - cmd: ./gradlew cleanTest test --no-build-cache{{.MAXW}}
         platforms: [linux, darwin]
 
   format:
@@ -236,9 +239,9 @@ tasks:
   format:check:
     desc: "Check code formatting"
     cmds:
-      - cmd: cmd /c ".\gradlew.bat spotlessCheck"
+      - cmd: cmd /c ".\gradlew.bat spotlessCheck{{.MAXW}}"
         platforms: [windows]
-      - cmd: ./gradlew spotlessCheck
+      - cmd: ./gradlew spotlessCheck{{.MAXW}}
         platforms: [linux, darwin]
 
   fix:
@@ -299,3 +302,11 @@ tasks:
         platforms: [windows]
       - cmd: ./gradlew clean
         platforms: [linux, darwin]
+
+  reset:
+    desc: "Reset the local backend database and saved settings"
+    cmds:
+      - cmd: rm -f app/core/configs/stirling-pdf-DB-*.db app/core/configs/settings.yml app/core/configs/custom_settings.yml app/core/configs/backup/db/backup_*.sql app/core/configs/db/backup/backup_*.sql
+        platforms: [linux, darwin]
+      - cmd: powershell rm -Force -ErrorAction SilentlyContinue app/core/configs/stirling-pdf-DB-*.db, app/core/configs/settings.yml, app/core/configs/custom_settings.yml, app/core/configs/backup/db/backup_*.sql, app/core/configs/db/backup/backup_*.sql
+        platforms: [windows]

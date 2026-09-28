@@ -1,4 +1,9 @@
-// Pure utility functions for file operations
+import {
+  TOOL_FORMATS,
+  TOOL_FORMAT_EXTENSIONS,
+  type ToolFormat,
+} from "@app/types/toolIO";
+import type { StirlingFileStub } from "@app/types/fileContext";
 
 /**
  * Consolidated file size formatting utility
@@ -107,6 +112,21 @@ export function isPdfFile(
   }
 
   return false;
+}
+
+/**
+ * Uses FileContext's detected password protection when present; no file bytes are read.
+ * Multiple categories can match (for example DOCX is both WORD and EBOOK); unknown files match none.
+ */
+export function getFileFormats(
+  file: Pick<StirlingFileStub, "name" | "type" | "processedFile">,
+): ToolFormat[] {
+  if (file.processedFile?.isEncrypted) return ["PDF_ENCRYPTED"];
+  if (isPdfFile(file)) return ["PDF"];
+  const extension = detectFileExtension(file.name);
+  return TOOL_FORMATS.filter((format) =>
+    TOOL_FORMAT_EXTENSIONS[format].includes(extension),
+  );
 }
 
 export type NonPdfFileType =

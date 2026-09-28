@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.model.TeamCreatedEvent;
+import stirling.software.proprietary.policy.model.EditorConfig;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
@@ -22,7 +23,7 @@ import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.TeamService;
 
 /**
- * Seeds an enabled Classification policy per team; idempotent, skips the internal team. Left
+ * Seeds an enabled Classification pipeline per team; idempotent, skips the internal team. Left
  * unowned: nobody created it, and an owner here would have to name a real user.
  */
 @Slf4j
@@ -32,7 +33,7 @@ public class DefaultClassificationPolicySeeder {
 
     static final String CATEGORY = "classification";
     private static final String CLASSIFY_ENDPOINT = "/api/v1/ai/tools/classify-and-label";
-    private static final String POLICY_NAME = "Classification Policy";
+    private static final String POLICY_NAME = "Classification";
 
     /**
      * Pre-existing seeds used this placeholder, which was never a user; see {@link #repairOwner}.
@@ -47,7 +48,7 @@ public class DefaultClassificationPolicySeeder {
     @EventListener(ApplicationReadyEvent.class)
     public void seedDefaultTeamOnStartup() {
         teamRepository
-                .findByName(TeamService.DEFAULT_TEAM_NAME)
+                .findFirstByNameOrderByIdAsc(TeamService.DEFAULT_TEAM_NAME)
                 .ifPresent(team -> seedIfMissing(team.getId(), team.getName()));
     }
 
@@ -94,13 +95,12 @@ public class DefaultClassificationPolicySeeder {
                 && CATEGORY.equals(policy.output().options().get("categoryId"));
     }
 
-    /** The default Classification policy: classify each upload, versioning the file in place. */
+    /** The default Classification pipeline: classify each upload, versioning the file in place. */
     static Policy defaultPolicy(Long teamId) {
         Map<String, Object> options = new HashMap<>();
         options.put("categoryId", CATEGORY);
-        options.put("runOn", "upload");
         options.put("mode", "new_version");
-        options.put("sources", List.of("editor"));
+        options.put("sources", List.of());
         options.put("scopeTypes", List.of());
         options.put("reviewerEmail", "");
         return new Policy(
@@ -110,9 +110,16 @@ public class DefaultClassificationPolicySeeder {
                 // every consumer of owner already handles its absence.
                 null,
                 true,
+                false,
+                "",
                 List.of(),
                 List.of(new PipelineStep(CLASSIFY_ENDPOINT, Map.of())),
                 new OutputSpec("inline", options),
-                teamId);
+                List.of(),
+                teamId,
+                // Classification runs in the editor on every upload.
+                EditorConfig.onUpload(),
+                Policy.SURFACE_POLICY,
+                List.of());
     }
 }

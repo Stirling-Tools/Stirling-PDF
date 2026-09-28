@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import HomeIcon from "@mui/icons-material/HomeRounded";
+import { Icon } from "@app/ui/Icon";
 import QuickAccessButton from "@app/components/shared/quickAccessBar/QuickAccessButton";
 
 const meta = {
@@ -19,7 +19,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    icon: <HomeIcon sx={{ fontSize: "1.5rem" }} />,
+    icon: <Icon name="house" size={"1.5rem"} />,
     label: "Home",
     isActive: false,
     ariaLabel: "Home",
@@ -28,7 +28,7 @@ export const Default: Story = {
 
 export const Active: Story = {
   args: {
-    icon: <HomeIcon sx={{ fontSize: "1.875rem" }} />,
+    icon: <Icon name="house" size={"1.875rem"} />,
     label: "Home",
     isActive: true,
     ariaLabel: "Home",
@@ -37,7 +37,7 @@ export const Active: Story = {
 
 export const Disabled: Story = {
   args: {
-    icon: <HomeIcon sx={{ fontSize: "1.5rem" }} />,
+    icon: <Icon name="house" size={"1.5rem"} />,
     label: "Home",
     isActive: false,
     ariaLabel: "Home",

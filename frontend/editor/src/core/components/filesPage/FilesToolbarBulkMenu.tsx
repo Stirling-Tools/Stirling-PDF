@@ -1,32 +1,21 @@
 import { Menu } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import DeleteIcon from "@mui/icons-material/Delete";
-import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-
+import { Icon } from "@app/ui/Icon";
 import { Button } from "@app/ui/Button";
 
 interface FilesToolbarBulkMenuProps {
   selectedCount: number;
   onAddToWorkspace: () => void;
-  /** Local-only files in the selection; omit when there are none to upload. */
+  /** Omit when the selection has no files to upload. */
   onSaveToServer?: () => void;
-  /** Set when storage is off - the item stays listed but disabled. */
+  /** Keeps Add to library visible but disabled. */
   saveToServerDisabledReason?: string;
   onShowDetails?: () => void;
-  onMove: () => void;
+  onMove?: () => void;
   onRemove: () => void;
+  onClearSelection: () => void;
 }
 
-/**
- * Bulk actions behind one trigger. The full strip is five buttons wide, which
- * no phone can hold alongside the count and the clear control, so rather than
- * letting the row scroll them off the edge they collapse into a menu where
- * every action keeps its label.
- */
 export function FilesToolbarBulkMenu({
   selectedCount,
   onAddToWorkspace,
@@ -35,6 +24,7 @@ export function FilesToolbarBulkMenu({
   onShowDetails,
   onMove,
   onRemove,
+  onClearSelection,
 }: FilesToolbarBulkMenuProps) {
   const { t } = useTranslation();
 
@@ -50,9 +40,10 @@ export function FilesToolbarBulkMenu({
       <Menu.Target>
         <Button
           size="sm"
-          variant="secondary"
+          variant="tertiary"
+          shape="pill"
           className="files-page-toolbar-bulk-trigger"
-          rightSection={<ExpandMoreIcon sx={{ fontSize: "1.1rem" }} />}
+          rightSection={<Icon name="chevron-down" size={"1.1rem"} />}
           aria-label={t("filesPage.bulkActions", "Actions")}
         >
           {t("filesPage.bulkActions", "Actions")}
@@ -60,38 +51,46 @@ export function FilesToolbarBulkMenu({
       </Menu.Target>
       <Menu.Dropdown>
         <Menu.Item
-          leftSection={<OpenInNewIcon sx={{ fontSize: "1.1rem" }} />}
+          leftSection={<Icon name="external-link" size={"1.1rem"} />}
           onClick={onAddToWorkspace}
         >
           {addLabel}
         </Menu.Item>
         {onSaveToServer && (
           <Menu.Item
-            leftSection={<CloudUploadIcon sx={{ fontSize: "1.1rem" }} />}
+            leftSection={<Icon name="cloud-upload" size={"1.1rem"} />}
             disabled={Boolean(saveToServerDisabledReason)}
             onClick={onSaveToServer}
           >
-            {t("filesPage.saveToServer", "Save to server")}
+            {t("filesPage.addToLibrary", "Add to Stirling library…")}
           </Menu.Item>
         )}
         {onShowDetails && (
           <Menu.Item
-            leftSection={<InfoOutlinedIcon sx={{ fontSize: "1.1rem" }} />}
+            leftSection={<Icon name="info" size={"1.1rem"} />}
             onClick={onShowDetails}
           >
             {t("filesPage.showDetails", "Show details")}
           </Menu.Item>
         )}
+        {onMove && (
+          <Menu.Item
+            leftSection={<Icon name="folder-input" size={"1.1rem"} />}
+            onClick={onMove}
+          >
+            {t("filesPage.moveTo", "Move to…")}
+          </Menu.Item>
+        )}
         <Menu.Item
-          leftSection={<DriveFileMoveIcon sx={{ fontSize: "1.1rem" }} />}
-          onClick={onMove}
+          leftSection={<Icon name="x" size={"1.1rem"} />}
+          onClick={onClearSelection}
         >
-          {t("filesPage.moveTo", "Move to…")}
+          {t("filesPage.clearSelection", "Clear selection")}
         </Menu.Item>
         <Menu.Divider />
         <Menu.Item
           color="red"
-          leftSection={<DeleteIcon sx={{ fontSize: "1.1rem" }} />}
+          leftSection={<Icon name="trash" size={"1.1rem"} />}
           onClick={onRemove}
         >
           {t("filesPage.remove", "Remove")}

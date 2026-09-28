@@ -59,13 +59,17 @@ public class PaygShadowCharge implements Serializable {
     private Integer paygUnits;
 
     /**
-     * How many of {@link #paygUnits} were drawn from the team's one-time free grant at charge time.
-     * The paid (Stripe-metered) portion is {@code paygUnits - freeUnitsConsumed}; a refund restores
-     * this many units to {@code payg_team_extensions.free_units_remaining}. {@code 0} for pre-V19
-     * rows and for jobs that consumed no free units (team's grant already exhausted).
+     * How many of {@link #paygUnits} were drawn from the team's free grant at charge time. The paid
+     * (Stripe-metered) portion is {@code paygUnits - freeUnitsConsumed}; a refund restores this
+     * many units to {@code payg_team_extensions.free_units_remaining}. {@code 0} for pre-V19 rows
+     * and for jobs that drew no free units.
      */
     @Column(name = "free_units_consumed", nullable = false)
     private Integer freeUnitsConsumed = 0;
+
+    /** The term that funded this charge, so a late refund cannot replenish another month. */
+    @Column(name = "included_period_start")
+    private LocalDateTime includedPeriodStart;
 
     /**
      * How many of {@link #paygUnits} were drawn from prepaid bundles (the {@code BOUGHT} bucket) at

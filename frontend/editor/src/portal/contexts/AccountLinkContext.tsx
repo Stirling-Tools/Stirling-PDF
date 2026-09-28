@@ -27,3 +27,8 @@ export function useAccountLinkContext(): UseAccountLink {
   }
   return v;
 }
+
+/** No status reader on SaaS, where instance linking does not apply. */
+export function useAccountLinkOptional(): UseAccountLink | null {
+  return useContext(AccountLinkContext);
+}

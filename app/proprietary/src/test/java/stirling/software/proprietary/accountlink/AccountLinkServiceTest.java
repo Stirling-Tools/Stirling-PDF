@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -40,8 +41,15 @@ class AccountLinkServiceTest {
         stored.setLinkedAt(LocalDateTime.now());
         when(store.get()).thenReturn(Optional.of(stored));
 
-        AccountLinkService.LinkStatus status = service.status();
+        var connection =
+                new EntitlementCache.ConnectionStatus(
+                        "expired", Instant.EPOCH, Instant.EPOCH.plusSeconds(259200));
+        when(cache.connectionStatus()).thenReturn(connection);
+        AccountLinkService.LinkStatus status = service.recheck();
 
+        assertEquals(connection, status.connection());
+        verify(cache).invalidate();
+        verify(cache).current();
         assertTrue(status.linked());
         assertEquals("dev-1", status.deviceId());
         assertEquals(7L, status.teamId());

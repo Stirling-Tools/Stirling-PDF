@@ -64,6 +64,8 @@ interface SaaSTeamContextType {
   rejectInvitation: (token: string) => Promise<void>;
   cancelInvitation: (invitationId: number) => Promise<void>;
   removeMember: (memberId: number) => Promise<void>;
+  transferLeadership: (memberId: number) => Promise<void>;
+  claimLeadership: () => Promise<void>;
   leaveTeam: () => Promise<void>;
   refreshTeams: () => Promise<void>;
 }
@@ -82,6 +84,8 @@ const SaaSTeamContext = createContext<SaaSTeamContextType>({
   rejectInvitation: async () => {},
   cancelInvitation: async () => {},
   removeMember: async () => {},
+  transferLeadership: async () => {},
+  claimLeadership: async () => {},
   leaveTeam: async () => {},
   refreshTeams: async () => {},
 });
@@ -252,6 +256,24 @@ export function SaaSTeamProvider({ children }: { children: ReactNode }) {
     // No need to refresh session/credits: the team leader's status hasn't changed
   };
 
+  const claimLeadership = async () => {
+    if (!currentTeam) throw new Error("No current team");
+    await apiClient.post(`/api/v1/team/${currentTeam.teamId}/claim-leadership`);
+    await refreshTeams();
+    await fetchTeamMembers(currentTeam.teamId);
+    await refreshAfterMembershipChange();
+  };
+
+  const transferLeadership = async (memberId: number) => {
+    if (!currentTeam) throw new Error("No current team");
+    await apiClient.post(
+      `/api/v1/team/${currentTeam.teamId}/members/${memberId}/transfer-leadership`,
+    );
+    await refreshTeams();
+    await fetchTeamMembers(currentTeam.teamId);
+    await refreshAfterMembershipChange();
+  };
+
   const leaveTeam = async () => {
     if (!currentTeam) throw new Error("No current team");
 
@@ -279,6 +301,8 @@ export function SaaSTeamProvider({ children }: { children: ReactNode }) {
         rejectInvitation,
         cancelInvitation,
         removeMember,
+        transferLeadership,
+        claimLeadership,
         leaveTeam,
         refreshTeams,
       }}

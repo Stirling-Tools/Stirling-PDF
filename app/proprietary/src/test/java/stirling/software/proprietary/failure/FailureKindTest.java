@@ -1,6 +1,9 @@
 package stirling.software.proprietary.failure;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static stirling.software.proprietary.failure.FailureActionSlot.OVERFLOW;
+import static stirling.software.proprietary.failure.FailureActionSlot.RESOLUTION;
+import static stirling.software.proprietary.failure.FailureActionSlot.SECONDARY;
 import static stirling.software.proprietary.failure.FailureAudience.ANYONE_WHO_SEES;
 import static stirling.software.proprietary.failure.FailureAudience.OWNER;
 import static stirling.software.proprietary.failure.FailureAudience.TEAM_REVIEWER;
@@ -12,7 +15,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -25,6 +30,10 @@ import org.junit.jupiter.params.provider.EnumSource;
 
 import stirling.software.common.util.ExceptionUtils;
 
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
+
 /**
  * Tests for {@link FailureKind}. Mostly invariants over the whole enum rather than assertions about
  * individual members, so a kind added later cannot be malformed in a way that only shows up as a
@@ -32,11 +41,26 @@ import stirling.software.common.util.ExceptionUtils;
  */
 class FailureKindTest {
 
+    /** Located by walking up, so a test does not depend on the directory Gradle runs it in. */
+    private static Path repoFile(String relative) {
+        for (Path dir = Path.of("").toAbsolutePath(); dir != null; dir = dir.getParent()) {
+            Path candidate = dir.resolve(relative);
+            if (Files.isRegularFile(candidate)) {
+                return candidate;
+            }
+        }
+        throw new IllegalStateException(
+                "No " + relative + " above " + Path.of("").toAbsolutePath());
+    }
+
     /** In full, so a declaration pairing the right action with the wrong audience cannot pass. */
     private static FailureKind.OfferedAction offered(
-            FailureActionId id, FailureAudience audience, String labelKeySuffix) {
+            FailureActionId id,
+            FailureAudience audience,
+            FailureActionSlot slot,
+            String labelKeySuffix) {
         return new FailureKind.OfferedAction(
-                id, "portal.failures.action." + labelKeySuffix, audience);
+                id, "portal.failures.action." + labelKeySuffix, audience, slot);
     }
 
     @Nested
@@ -70,27 +94,6 @@ class FailureKindTest {
             assertThat(kind.getId()).matches("^[A-Z][A-Z0-9_]*$");
         }
 
-        @ParameterizedTest
-        @EnumSource(FailureKind.class)
-        void declaresItsActionsInTheSameOrderAsEveryOtherKind(FailureKind kind) {
-            // Declaration order is display order and the first usable offer is the row's primary,
-            // so
-            // two kinds disagreeing would flip the solid button between rows.
-            List<FailureActionId> ranking =
-                    List.of(
-                            FailureActionId.VIEW_FILE,
-                            FailureActionId.VIEW_IN_PROCESSOR,
-                            FailureActionId.DISMISS);
-
-            List<FailureActionId> declared = kind.getActions();
-            assertThat(ranking)
-                    .as("%s declares an action the shared ranking does not rank", kind.getId())
-                    .containsAll(declared);
-            assertThat(declared)
-                    .as("%s declares its actions out of the shared order", kind.getId())
-                    .isEqualTo(ranking.stream().filter(declared::contains).toList());
-        }
-
         @Test
         void idsAreUnique() {
             Set<String> ids = new HashSet<>();
@@ -121,12 +124,13 @@ class FailureKindTest {
 
         @ParameterizedTest
         @EnumSource(FailureKind.class)
-        void everyOfferSaysWhoItIsFor(FailureKind kind) {
-            // Read per row to decide what a caller is shown, so a null would leak a button.
+        void everyOfferSaysWhoItIsForAndWhereItGoes(FailureKind kind) {
+            // Both decide what a caller is shown, so a missing one places a button by accident.
             for (FailureKind.OfferedAction offer : kind.getOfferedActions()) {
                 assertThat(offer.audience())
                         .as("%s offers %s", kind.getId(), offer.id())
                         .isNotNull();
+                assertThat(offer.slot()).as("%s offers %s", kind.getId(), offer.id()).isNotNull();
             }
         }
 
@@ -136,6 +140,17 @@ class FailureKindTest {
             // The same action twice would be two buttons with one meaning, and labelKeyFor would
             // answer for the first.
             assertThat(kind.getActions()).doesNotHaveDuplicates();
+        }
+
+        @ParameterizedTest
+        @EnumSource(FailureKind.class)
+        void declaresAtMostOneResolution(FailureKind kind) {
+            // Two things that both claim to fix it is a sign of two kinds wearing one id.
+            assertThat(
+                            kind.getOfferedActions().stream()
+                                    .filter(offer -> offer.slot() == FailureActionSlot.RESOLUTION)
+                                    .toList())
+                    .hasSizeLessThanOrEqualTo(1);
         }
 
         @Test
@@ -209,21 +224,13 @@ class FailureKindTest {
         }
 
         private static List<String> readTranslations() {
-            // Located by walking up, so the test does not depend on the directory Gradle runs it
-            // in.
-            Path relative = Path.of("frontend/editor/public/locales/en-US/translation.toml");
-            for (Path dir = Path.of("").toAbsolutePath(); dir != null; dir = dir.getParent()) {
-                Path candidate = dir.resolve(relative);
-                if (Files.isRegularFile(candidate)) {
-                    try {
-                        return Files.readAllLines(candidate, StandardCharsets.UTF_8);
-                    } catch (IOException e) {
-                        throw new UncheckedIOException(e);
-                    }
-                }
+            try {
+                return Files.readAllLines(
+                        repoFile("frontend/editor/public/locales/en-US/translation.toml"),
+                        StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
             }
-            throw new IllegalStateException(
-                    "No " + relative + " above " + Path.of("").toAbsolutePath());
         }
     }
 
@@ -232,16 +239,19 @@ class FailureKindTest {
     class Unknown {
 
         @Test
-        void offersItsOwnerTheirDocumentAndTheRunToWhoeverReviews() {
-            // Nothing here is known to be fixable, so the offers are just the places to look.
+        void offersARetryToItsOwnerAndTheRunToWhoeverReviews() {
+            // No known fix, so the retry is the resolution: these are often one-offs. One offer
+            // wherever the document is; FileRunEventService says per row which side runs it.
             assertThat(FailureKind.UNKNOWN.getOfferedActions())
                     .containsExactly(
-                            offered(FailureActionId.VIEW_FILE, OWNER, "viewFile"),
+                            offered(FailureActionId.OPEN_IN_TOOL, OWNER, RESOLUTION, "openInTool"),
+                            offered(FailureActionId.VIEW_FILE, OWNER, SECONDARY, "viewFile"),
                             offered(
                                     FailureActionId.VIEW_IN_PROCESSOR,
                                     TEAM_REVIEWER,
+                                    OVERFLOW,
                                     "viewInProcessor"),
-                            offered(FailureActionId.DISMISS, ANYONE_WHO_SEES, "dismiss"));
+                            offered(FailureActionId.DISMISS, ANYONE_WHO_SEES, OVERFLOW, "dismiss"));
         }
 
         @Test
@@ -273,13 +283,123 @@ class FailureKindTest {
         void byErrorCodeResolvesTheClaimingKind() {
             assertThat(FailureKind.byErrorCode("E004"))
                     .contains(FailureKind.INPUT_PASSWORD_PROTECTED);
+            assertThat(FailureKind.byErrorCode("E001")).contains(FailureKind.INPUT_CORRUPTED);
+            assertThat(FailureKind.byErrorCode("E002")).contains(FailureKind.INPUT_CORRUPTED);
+        }
+
+        @Test
+        void aBrokenEncryptionIsNotAMissingPassword() {
+            // E003 is reached only once the key was accepted, so no password would help.
+            assertThat(FailureKind.byErrorCode("E003")).contains(FailureKind.INPUT_CORRUPTED);
+            assertThat(FailureKind.INPUT_CORRUPTED.declares(FailureActionId.DECRYPT)).isFalse();
+        }
+
+        @Test
+        void everyCodeAKindClaimsMatchesTheSharedFixture() {
+            // The bell mirrors these in KIND_ERROR_CODES (notificationRetry.ts) to tell one file's
+            // stashed failure from another's, and a Java test cannot read a TypeScript file. Both
+            // sides assert against testing/failure-kind-codes.json instead, so a code added to one
+            // and not the other fails on whichever side was not updated.
+            assertThat(claimedErrorCodes()).isEqualTo(sharedFixtureCodes());
+        }
+
+        /** Kinds claiming nothing are left out, matching what the fixture records. */
+        private static Map<String, List<String>> claimedErrorCodes() {
+            return Stream.of(FailureKind.values())
+                    .filter(kind -> !kind.getErrorCodes().isEmpty())
+                    .collect(
+                            Collectors.toMap(
+                                    FailureKind::getId,
+                                    FailureKind::getErrorCodes,
+                                    (first, second) -> first,
+                                    LinkedHashMap::new));
+        }
+
+        private static Map<String, List<String>> sharedFixtureCodes() {
+            JsonNode kinds;
+            try {
+                kinds =
+                        JsonMapper.builder()
+                                .build()
+                                .readTree(repoFile("testing/failure-kind-codes.json").toFile())
+                                .get("kinds");
+            } catch (JacksonException e) {
+                throw new IllegalStateException("testing/failure-kind-codes.json is not JSON", e);
+            }
+
+            Map<String, List<String>> codes = new LinkedHashMap<>();
+            kinds.propertyStream()
+                    .forEach(
+                            entry ->
+                                    codes.put(
+                                            entry.getKey(),
+                                            entry.getValue()
+                                                    .valueStream()
+                                                    .map(JsonNode::asString)
+                                                    .toList()));
+            return codes;
         }
 
         @Test
         void byErrorCodeIsEmptyForACodeNoKindHasAdoptedYet() {
-            // E001 is PDF_CORRUPTED: a real error code, deliberately not yet a kind.
-            assertThat(FailureKind.byErrorCode("E001")).isEmpty();
+            // E031 is FILE_PROCESSING, the catch-all a step throws when it has nothing more
+            // specific to say. It stays unclaimed on purpose: UNKNOWN describes it accurately and
+            // leads with a retry, which is the right offer for a failure nobody can characterise.
+            assertThat(FailureKind.byErrorCode("E031")).isEmpty();
             assertThat(FailureKind.byErrorCode(null)).isEmpty();
+        }
+
+        @Test
+        void aCodeARetryCouldClearSaysSoRatherThanPermanent() {
+            // E053 is an outright interruption, and E051 is the bucket unrecognised Ghostscript
+            // output falls into, so both are rerunnable. Their kinds lead with the retry.
+            assertThat(FailureKind.byErrorCode("E053"))
+                    .hasValueSatisfying(
+                            kind ->
+                                    assertThat(kind.getRemedy())
+                                            .isEqualTo(FailureRemedy.TRANSIENT));
+            assertThat(FailureKind.byErrorCode("E051"))
+                    .hasValueSatisfying(
+                            kind ->
+                                    assertThat(kind.getActions())
+                                            .first()
+                                            .isEqualTo(FailureActionId.OPEN_IN_TOOL));
+        }
+
+        /**
+         * Codes no kind claims, each with the reason. Anything else the enum names must be claimed:
+         * a coded failure nobody claims lands in the bell as unrecognised.
+         */
+        private static final Map<String, String> UNCLAIMED_ON_PURPOSE =
+                Map.of(
+                        "E031",
+                                "the catch-all a step throws with nothing more specific to say;"
+                                        + " UNKNOWN describes it accurately",
+                        "E071",
+                                "a null argument is a programming error, not something an owner or"
+                                        + " reviewer can act on",
+                        "E080",
+                                "MD5 unavailable is swallowed by its one caller for a fallback hash,"
+                                        + " so it never reaches a run");
+
+        @Test
+        void everyErrorCodeIsClaimedOrLeftUnclaimedForAStatedReason() {
+            Set<String> claimed =
+                    Stream.of(FailureKind.values())
+                            .flatMap(kind -> kind.getErrorCodes().stream())
+                            .collect(Collectors.toSet());
+            List<String> unaccounted =
+                    Arrays.stream(ExceptionUtils.ErrorCode.values())
+                            .filter(code -> !claimed.contains(code.getCode()))
+                            .filter(code -> !UNCLAIMED_ON_PURPOSE.containsKey(code.getCode()))
+                            .map(code -> code.getCode() + " (" + code.name() + ")")
+                            .toList();
+            assertThat(unaccounted)
+                    .as("codes no kind claims; claim them, or list them with a reason")
+                    .isEmpty();
+            assertThat(UNCLAIMED_ON_PURPOSE.keySet())
+                    .as("a reason for a code some kind now claims is stale")
+                    .doesNotContainAnyElementsOf(claimed);
         }
     }
 
@@ -294,16 +414,96 @@ class FailureKindTest {
         }
 
         @Test
-        void offersTheDocumentToItsOwnerAndTheRunToItsReviewer() {
-            // The point of the audiences: only the owner holds the document.
+        void aKindWithSomethingToFixOffersTheFixToItsOwnerAndTheRunToItsReviewer() {
+            // Only the owner has the password, so a reviewer is offered the run and a dismiss.
             assertThat(FailureKind.INPUT_PASSWORD_PROTECTED.getOfferedActions())
                     .containsExactly(
-                            offered(FailureActionId.VIEW_FILE, OWNER, "viewFile"),
+                            offered(FailureActionId.DECRYPT, OWNER, RESOLUTION, "decrypt"),
+                            offered(FailureActionId.VIEW_FILE, OWNER, SECONDARY, "viewFile"),
                             offered(
                                     FailureActionId.VIEW_IN_PROCESSOR,
                                     TEAM_REVIEWER,
+                                    OVERFLOW,
                                     "viewInProcessor"),
-                            offered(FailureActionId.DISMISS, ANYONE_WHO_SEES, "dismiss"));
+                            offered(FailureActionId.OPEN_IN_TOOL, OWNER, OVERFLOW, "openInTool"),
+                            offered(FailureActionId.DISMISS, ANYONE_WHO_SEES, OVERFLOW, "dismiss"));
+        }
+
+        @Test
+        void aRepairableKindNeverPromotesOpenInToolOverTheRepair() {
+            assertThat(FailureKind.INPUT_CORRUPTED.getOfferedActions())
+                    .contains(offered(FailureActionId.REPAIR, OWNER, RESOLUTION, "repair"))
+                    .contains(offered(FailureActionId.OPEN_IN_TOOL, OWNER, OVERFLOW, "openInTool"));
+        }
+
+        @Test
+        void aKindWithNothingToOfferDeclaresNoResolutionRatherThanAWeakOne() {
+            // Zero resolutions is legal, so nothing else would notice one of these quietly
+            // gaining a button. Each is here because no action the client can run would change
+            // the outcome, or because the only one that might is a plain retry, which is an
+            // offer rather than a fix.
+            assertThat(
+                            Stream.of(FailureKind.values())
+                                    .filter(
+                                            kind ->
+                                                    kind.getOfferedActions().stream()
+                                                            .noneMatch(
+                                                                    offer ->
+                                                                            offer.slot()
+                                                                                    == RESOLUTION))
+                                    .toList())
+                    .containsExactlyInAnyOrder(
+                            FailureKind.COMPLIANCE_NOT_MET,
+                            FailureKind.INPUT_UNREPAIRABLE,
+                            FailureKind.INPUT_WRONG_TYPE,
+                            FailureKind.INPUT_UNREADABLE,
+                            FailureKind.INPUT_EMPTY,
+                            FailureKind.INPUT_UNAVAILABLE,
+                            FailureKind.TOOL_NOT_INSTALLED,
+                            FailureKind.SOURCE_UNREADABLE,
+                            FailureKind.STEP_CANNOT_RENDER_PAGE,
+                            FailureKind.STEP_TOOL_FAILED,
+                            FailureKind.STEP_INTERRUPTED,
+                            FailureKind.STEP_PAGE_TOO_LARGE,
+                            FailureKind.STEP_MISCONFIGURED);
+        }
+
+        @Test
+        void unknownsOnlyResolutionIsThePlainRetry() {
+            // The exception to the rule above: an unrecognised failure may well be a one-off.
+            // Other retry-first kinds offer it as an action, a guess rather than the fix.
+            assertThat(
+                            FailureKind.UNKNOWN.getOfferedActions().stream()
+                                    .filter(offer -> offer.slot() == RESOLUTION)
+                                    .map(FailureKind.OfferedAction::id)
+                                    .toList())
+                    .containsExactly(FailureActionId.OPEN_IN_TOOL);
+        }
+
+        @Test
+        void aMissingDocumentOffersNothingThatWouldOpenIt() {
+            assertThat(FailureKind.INPUT_UNAVAILABLE.getOfferedActions())
+                    .containsExactly(
+                            offered(
+                                    FailureActionId.VIEW_IN_PROCESSOR,
+                                    TEAM_REVIEWER,
+                                    OVERFLOW,
+                                    "viewInProcessor"),
+                            offered(FailureActionId.DISMISS, ANYONE_WHO_SEES, OVERFLOW, "dismiss"));
+        }
+
+        @Test
+        void aMissingBinaryIsARunnersProblemNotTheOwners() {
+            // No owner-facing offer at all: the document is fine and a retry fails identically
+            // until someone installs the binary, so the only useful reader is whoever triages.
+            assertThat(FailureKind.TOOL_NOT_INSTALLED.getOfferedActions())
+                    .containsExactly(
+                            offered(
+                                    FailureActionId.VIEW_IN_PROCESSOR,
+                                    TEAM_REVIEWER,
+                                    SECONDARY,
+                                    "viewInProcessor"),
+                            offered(FailureActionId.DISMISS, ANYONE_WHO_SEES, OVERFLOW, "dismiss"));
         }
 
         @Test
@@ -333,10 +533,8 @@ class FailureKindTest {
             assertThat(FailureKind.UNKNOWN.labelKeyFor(FailureActionId.DISMISS))
                     .isEqualTo(FailureKind.genericLabelKey(FailureActionId.DISMISS))
                     .isEqualTo("portal.failures.action.dismiss");
-            assertThat(
-                            FailureKind.INPUT_PASSWORD_PROTECTED.labelKeyFor(
-                                    FailureActionId.VIEW_IN_PROCESSOR))
-                    .isEqualTo("portal.failures.action.viewInProcessor");
+            assertThat(FailureKind.INPUT_PASSWORD_PROTECTED.labelKeyFor(FailureActionId.DECRYPT))
+                    .isEqualTo("portal.failures.action.decrypt");
         }
 
         @Test

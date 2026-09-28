@@ -2,21 +2,27 @@ import { lazy } from "react";
 import type { ReactElement } from "react";
 import { Route } from "react-router-dom";
 import { PORTAL_BASENAME } from "@app/routes/portalBasename";
+import { HAS_PORTAL } from "@app/routes/hasPortal";
 
-const includePortal =
-  import.meta.env.VITE_INCLUDE_PORTAL === "true" || import.meta.env.DEV;
-
-const PortalApp = includePortal
+const PortalApp = HAS_PORTAL
   ? lazy(async () => {
       const m = await import("@portal/PortalApp");
       return { default: m.PortalApp };
     })
   : null;
 
+const ProcurementRedirect = HAS_PORTAL
+  ? lazy(async () => {
+      const m =
+        await import("@portal/components/procurement/ProcurementRedirect");
+      return { default: m.ProcurementRedirect };
+    })
+  : null;
+
 /**
  * Return leg of the account-link handshake, which Stirling redirects to with the admin's session in the URL fragment.
  */
-const ConnectCallback = includePortal
+const ConnectCallback = HAS_PORTAL
   ? lazy(async () => {
       const m = await import("@portal/views/ConnectCallback");
       return { default: m.default };
@@ -25,8 +31,13 @@ const ConnectCallback = includePortal
 
 /** The portal mounts as an admin-only route-set at PORTAL_BASENAME (/processor/*). */
 export function getAdminRouteExtensions(): ReactElement[] {
-  if (!PortalApp || !ConnectCallback) return [];
+  if (!PortalApp || !ConnectCallback || !ProcurementRedirect) return [];
   return [
+    <Route
+      key="procurement"
+      path="/procurement"
+      element={<ProcurementRedirect />}
+    />,
     <Route
       key="portal"
       path={`${PORTAL_BASENAME}/*`}

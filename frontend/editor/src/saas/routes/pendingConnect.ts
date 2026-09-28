@@ -10,7 +10,7 @@
  *
  * Reading does not consume it: the request may be open in another tab, or the page
  * closed and reopened, or the reader mounted twice. Only a recorded decision, or a
- * request that is settled or gone, retires it.
+ * request that is settled or gone, or an explicit dismissal, retires it.
  */
 const KEY = "stirling-pending-connect";
 
