@@ -40,7 +40,7 @@ const UserSelector = ({
   } = useQuery({
     queryKey: qk.users(),
     queryFn: fetchUsers,
-    // The backend refuses to list users to guests.
+    // Guests have no team, so there is nobody to list or invite.
     enabled: !isAnonymous,
   });
 
