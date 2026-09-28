@@ -45,7 +45,7 @@ describe("useNavigationUrlSync — startup-view selections", () => {
   // Writing it to the address turned every visit to /editor into /read.
   it("never writes the URL for the startup-applied tool", () => {
     const { rerender } = renderHook(
-      ({ tool }: { tool: ToolId | null }) => useHarness(tool, "read" as ToolId),
+      ({ tool }: { tool: ToolId | null }) => useHarness(tool, "read"),
       { initialProps: { tool: null as ToolId | null }, wrapper },
     );
     rerender({ tool: "read" as ToolId });
@@ -56,7 +56,7 @@ describe("useNavigationUrlSync — startup-view selections", () => {
   // was consumed on first sight let the second run write /read anyway.
   it("survives a re-run for the same tool", () => {
     const { rerender } = renderHook(
-      ({ tool }: { tool: ToolId | null }) => useHarness(tool, "read" as ToolId),
+      ({ tool }: { tool: ToolId | null }) => useHarness(tool, "read"),
       { initialProps: { tool: null as ToolId | null }, wrapper },
     );
     rerender({ tool: "read" as ToolId });
@@ -67,7 +67,7 @@ describe("useNavigationUrlSync — startup-view selections", () => {
 
   it("still writes the URL when the user picks a different tool", () => {
     const { rerender } = renderHook(
-      ({ tool }: { tool: ToolId | null }) => useHarness(tool, "read" as ToolId),
+      ({ tool }: { tool: ToolId | null }) => useHarness(tool, "read"),
       { initialProps: { tool: null as ToolId | null }, wrapper },
     );
     rerender({ tool: "read" as ToolId });
