@@ -42,10 +42,7 @@ const STANDALONE_COMMENT_SUBTYPES = new Set([
 ]);
 
 function isStandaloneCommentType(type: number | undefined): boolean {
-  return (
-    type !== undefined &&
-    STANDALONE_COMMENT_SUBTYPES.has(type as PdfAnnotationSubtype)
-  );
+  return type !== undefined && STANDALONE_COMMENT_SUBTYPES.has(type);
 }
 
 const ANNOTATE_PANEL_ID = "annotate" as const;
@@ -381,10 +378,7 @@ export function CommentsSidebar({
         );
         if (!pageEl || !ann?.rect) return;
         const zoom = getZoomState?.()?.currentZoom ?? 1;
-        const { origin, size } = ann.rect as {
-          origin: { x: number; y: number };
-          size: { width: number; height: number };
-        };
+        const { origin, size } = ann.rect;
         const flashEl = document.createElement("div");
         // Append to page element so it scrolls with the page (position: absolute relative to page)
         flashEl.style.cssText = `
@@ -695,7 +689,7 @@ export function CommentsSidebar({
   const handleCancelPlacingComment = useCallback(() => {
     // De-arm the textComment tool. The panel's activateAnnotationTool
     // takes the AnnotationToolId "select" to reset to no-tool state.
-    activateAnnotationToolRef.current?.("select" as never);
+    activateAnnotationToolRef.current?.("select");
     setActiveAnnotationToolId(null);
   }, [activateAnnotationToolRef, setActiveAnnotationToolId]);
 
