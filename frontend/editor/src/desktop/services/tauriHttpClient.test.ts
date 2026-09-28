@@ -131,6 +131,29 @@ describe("tauriHttpClient — Content-Type handling", () => {
     expect(fetchMock.mock.calls[0][1].body).toBeInstanceOf(FormData);
   });
 
+  test("sends copies of the FormData's files, never the caller's own", async () => {
+    // Both transports build a Request from the body, and a Request builds a Blob
+    // over each file in it, which Chromium kills the renderer for when that file
+    // came out of IndexedDB.
+    const client = create({ baseURL: "https://api.test" });
+    const stored = new File(["%PDF-1.7"], "stored.pdf", {
+      type: "application/pdf",
+    });
+    const form = new FormData();
+    form.append("fileInput", stored);
+    form.append("pageNumbers", "1-3");
+
+    await client.post("/api/v1/general/rotate-pdf", form);
+
+    const sent = fetchMock.mock.calls[0][1].body as FormData;
+    expect(sent).toBeInstanceOf(FormData);
+    expect(sent).not.toBe(form);
+    const file = sent.get("fileInput") as File;
+    expect(file).not.toBe(stored);
+    expect(file.name).toBe("stored.pdf");
+    expect(sent.get("pageNumbers")).toBe("1-3");
+  });
+
   test("keeps application/json for plain object bodies", async () => {
     const client = create({ baseURL: "https://api.test" });
     await client.post("/api/v1/x", { a: 1 });

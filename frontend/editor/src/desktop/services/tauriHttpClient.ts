@@ -5,6 +5,7 @@ import {
   fetchViaLocalProxy,
   markFastTransportUnavailable,
 } from "@app/services/tauriLocalProxy";
+import { detachedFormData } from "@app/utils/storedBlob";
 
 /**
  * Tauri HTTP Client - wrapper around Tauri's native HTTP client
@@ -219,8 +220,9 @@ class TauriHttpClient {
 
     if (finalConfig.data) {
       if (finalConfig.data instanceof FormData) {
-        // FormData can be passed directly
-        body = finalConfig.data;
+        // Both transports build a Request from it, which builds a Blob over each
+        // file entry: see detachedFormData.
+        body = await detachedFormData(finalConfig.data);
         // Drop any caller-supplied Content-Type so the native fetch generates
         // multipart/form-data WITH its boundary (matches axios's FormData
         // handling). A boundary-less "multipart/form-data" header makes the
