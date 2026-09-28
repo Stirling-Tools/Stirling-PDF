@@ -7,7 +7,7 @@ ARG TARGETPLATFORM
 # Stage 1: Build and strip Calibre
 FROM ubuntu:noble@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517 AS calibre-build
 ARG TARGETPLATFORM
-ARG CALIBRE_VERSION=9.13.0
+ARG CALIBRE_VERSION=9.15.0
 ARG CALIBRE_STRIP_WEBENGINE=false
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -276,7 +276,7 @@ RUN if [ "${CALIBRE_STRIP_WEBENGINE}" = "true" ]; then \
 # Stage 2: Build Ghostscript from source
 FROM ubuntu:noble@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517 AS gs-build
 ARG TARGETPLATFORM
-ARG GS_VERSION=10.07.1
+ARG GS_VERSION=10.08.0
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/tmp/gs-build,id=gs-build-${TARGETPLATFORM:-local} \
