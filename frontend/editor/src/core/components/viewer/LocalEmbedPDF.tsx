@@ -893,8 +893,8 @@ export function LocalEmbedPDF({
         err,
       );
     };
-    if (file && typeof (file as Blob).arrayBuffer === "function") {
-      getDocumentBytes(file as Blob)
+    if (file && typeof file.arrayBuffer === "function") {
+      getDocumentBytes(file)
         .then((buf) => {
           if (cancelled) return;
           openDocument(buf, exportFileName, fileStableKey);
@@ -1194,13 +1194,13 @@ export function LocalEmbedPDF({
     const releaseLargeBuffer = async () => {
       const buf = initialBufferRef.current;
       if (!file || !buf) return;
-      if ((file as Blob).size < LARGE_PDF_PARSE_LIMIT) return;
+      if (file.size < LARGE_PDF_PARSE_LIMIT) return;
       let hasForms: boolean;
       let hasLayers: boolean;
       try {
         [hasForms, hasLayers] = await Promise.all([
-          documentHasFormFieldsFor(file as Blob, buf),
-          documentHasLayers(file as Blob, buf),
+          documentHasFormFieldsFor(file, buf),
+          documentHasLayers(file, buf),
         ]);
       } catch (error) {
         // A failed probe is not an answer: keep the buffer and the
@@ -1252,6 +1252,7 @@ export function LocalEmbedPDF({
     } catch {
       void releaseLargeBuffer();
     }
+
     // v2.0: Use registry.getPlugin() to access plugin APIs
     const annotationPlugin = registry.getPlugin("annotation");
     if (!annotationPlugin || !annotationPlugin.provides) return;
