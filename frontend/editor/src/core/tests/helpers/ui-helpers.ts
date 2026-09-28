@@ -191,21 +191,31 @@ export async function dismissTourTooltip(page: Page): Promise<void> {
 }
 
 /**
- * The tool picker mounts categories when they come near its viewport, so a
- * tile below the fold is not in the DOM yet. Scroll the picker in steps until
- * the tile exists, then return it. No-op when the tile is already mounted.
+ * The tool picker mounts categories when they come near its viewport, so an
+ * offscreen tile or header is not in the DOM yet. Scroll the picker in steps
+ * until the target exists, then return it. No-op when it is already mounted.
  */
-export async function revealPickerTool(
+export async function revealInPicker(
   page: Page,
-  toolId: string,
+  target: Locator,
 ): Promise<Locator> {
-  const tile = page.locator(`[data-tour="tool-button-${toolId}"]`);
   const scroller = page.locator(".tool-picker-scrollable").first();
-  for (let step = 0; step < 20 && (await tile.count()) === 0; step += 1) {
+  for (let step = 0; step < 20 && (await target.count()) === 0; step += 1) {
     await scroller.evaluate((el) => {
       el.scrollTop = Math.min(el.scrollTop + el.clientHeight, el.scrollHeight);
     });
     await page.waitForTimeout(150);
   }
-  return tile;
+  return target;
+}
+
+/** Reveal a tool tile by its tool id, then return it. */
+export async function revealPickerTool(
+  page: Page,
+  toolId: string,
+): Promise<Locator> {
+  return revealInPicker(
+    page,
+    page.locator(`[data-tour="tool-button-${toolId}"]`),
+  );
 }
