@@ -236,11 +236,11 @@ export default function WorkbenchBar({
       let enforced: File[];
       try {
         enforced = await enforceExportPolicies(
-          filesToExport as File[],
+          filesToExport,
           stubs.map((s) => s?.id),
         );
       } catch {
-        enforced = filesToExport as File[];
+        enforced = filesToExport;
         showAlert({
           alertType: "warning",
           title: t("policies.enforcement.exportFailureTitle"),
@@ -392,7 +392,7 @@ export default function WorkbenchBar({
 
       const ariaLabel =
         btn.ariaLabel ||
-        (typeof btn.tooltip === "string" ? (btn.tooltip as string) : btn.id);
+        (typeof btn.tooltip === "string" ? btn.tooltip : btn.id);
       const buttonNode = (
         <ActionIcon
           variant={isActive ? "primary" : "quiet"}
@@ -425,12 +425,12 @@ export default function WorkbenchBar({
           },
         ]),
     {
-      value: "pageEditor" as WorkbenchType,
+      value: "pageEditor",
       label: t("workbenchBar.pageEditor", "Page Editor"),
       icon: <Icon name="layers" size={20} />,
     },
     {
-      value: "fileEditor" as WorkbenchType,
+      value: "fileEditor",
       label: t("workbenchBar.activeFiles", "Active Files"),
       icon: <Icon name="folder" size={20} />,
     },

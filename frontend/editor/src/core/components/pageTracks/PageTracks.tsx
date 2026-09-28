@@ -147,7 +147,7 @@ export default function PageTracks() {
     (previousId: FileId, nextId: FileId) => {
       if (viewTargetRef.current !== previousId) return;
       viewTargetRef.current = nextId;
-      setActiveFileId(nextId as string);
+      setActiveFileId(nextId);
     },
     [setActiveFileId],
   );
@@ -166,7 +166,7 @@ export default function PageTracks() {
   const openInViewer = useCallback(
     (fileId: FileId) => {
       viewTargetRef.current = fileId;
-      setActiveFileId(fileId as string);
+      setActiveFileId(fileId);
       navActions.setWorkbench("viewer");
     },
     [navActions, setActiveFileId],
