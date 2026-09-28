@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import org.hibernate.Session;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.MessageSource;
@@ -33,6 +34,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+
+import jakarta.persistence.EntityManager;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -78,6 +81,7 @@ import stirling.software.proprietary.workflow.service.UserServerCertificateServi
 public class UserService implements UserServiceInterface {
 
     private final UserRepository userRepository;
+    private final EntityManager entityManager;
     private final stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
     private final TeamRepository teamRepository;
     private final AuthorityRepository authorityRepository;
@@ -385,8 +389,11 @@ public class UserService implements UserServiceInterface {
         }
     }
 
+    @Transactional(readOnly = true)
     public Optional<User> findByUsername(String username) {
-        return userRepository.findByUsername(username);
+        User user =
+                entityManager.unwrap(Session.class).bySimpleNaturalId(User.class).load(username);
+        return Optional.ofNullable(user);
     }
 
     /** Resolves a user by Supabase auth UUID; empty for rows with no supabase_id. */

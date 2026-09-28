@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.proxy.HibernateProxy;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -28,6 +30,10 @@ import stirling.software.proprietary.model.Team;
         indexes = @Index(name = "idx_users_team_id", columnList = "team_id"))
 @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "users")
+// Explicit region: the default EntityName##NaturalId contains '#' which the
+// caffeine-jcache provider cannot resolve (it concatenates the name into an
+// unquoted Typesafe Config path, where '#' starts a comment).
+@NaturalIdCache(region = "usersNaturalId")
 @NoArgsConstructor
 @Getter
 @Setter
@@ -41,6 +47,8 @@ public class User implements UserDetails, Serializable {
     @Column(name = "user_id")
     private Long id;
 
+    // Mutable: changeUsername renames users, so the natural-id mapping must follow renames.
+    @NaturalId(mutable = true)
     @Column(name = "username", unique = true)
     private String username;
 

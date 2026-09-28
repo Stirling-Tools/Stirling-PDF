@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,6 +50,8 @@ class HibernateSecondLevelCacheTest {
     @Autowired private TeamRepository teamRepository;
 
     @Autowired private EntityManagerFactory entityManagerFactory;
+
+    @Autowired private EntityManager entityManager;
 
     @Autowired private PlatformTransactionManager transactionManager;
 
@@ -239,6 +242,46 @@ class HibernateSecondLevelCacheTest {
 
         // Check cache does not contain user after explicit eviction
         assertThat(entityManagerFactory.getCache().contains(User.class, userIdRef.get())).isFalse();
+    }
+
+    @Test
+    void testNaturalIdCacheHitOnUsernameLookup() {
+        // Save user in Transaction 1
+        txTemplate.executeWithoutResult(
+                status -> {
+                    User user = new User();
+                    user.setUsername("naturaliduser");
+                    user.setPassword("secret123");
+                    userRepository.save(user);
+                });
+
+        // Resolve by natural ID in Transaction 2 (populates the natural-ID cache)
+        txTemplate.executeWithoutResult(
+                status -> {
+                    User loaded =
+                            entityManager
+                                    .unwrap(Session.class)
+                                    .bySimpleNaturalId(User.class)
+                                    .load("naturaliduser");
+                    assertThat(loaded).isNotNull();
+                    assertThat(loaded.getUsername()).isEqualTo("naturaliduser");
+                });
+
+        long hitsBefore = statistics.getNaturalIdCacheHitCount();
+
+        // Resolve again in Transaction 3 (must HIT the natural-ID cache)
+        txTemplate.executeWithoutResult(
+                status -> {
+                    User loaded =
+                            entityManager
+                                    .unwrap(Session.class)
+                                    .bySimpleNaturalId(User.class)
+                                    .load("naturaliduser");
+                    assertThat(loaded).isNotNull();
+                    assertThat(loaded.getUsername()).isEqualTo("naturaliduser");
+                });
+
+        assertThat(statistics.getNaturalIdCacheHitCount()).isGreaterThan(hitsBefore);
     }
 
     @SpringBootConfiguration

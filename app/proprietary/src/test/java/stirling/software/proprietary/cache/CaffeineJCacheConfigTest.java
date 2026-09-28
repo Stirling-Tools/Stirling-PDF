@@ -50,6 +50,7 @@ class CaffeineJCacheConfigTest {
                 Arguments.of("teams", 1000L, Duration.ofMinutes(15)),
                 Arguments.of("user-license-settings", 2000L, Duration.ofHours(1)),
                 Arguments.of("users", 5000L, Duration.ofMinutes(5)),
+                Arguments.of("usersNaturalId", 5000L, Duration.ofMinutes(5)),
                 Arguments.of("saas-pricing-policies", 100L, Duration.ofSeconds(30)),
                 Arguments.of("saas-legal-consents", 5000L, Duration.ofHours(1)),
                 Arguments.of("saas-subscriptions", 5000L, Duration.ofMinutes(15)),
