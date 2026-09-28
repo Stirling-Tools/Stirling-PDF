@@ -184,6 +184,17 @@ function normalizePageRotation(rotation: number | null | undefined): number {
   return ((Math.round(value) % 4) + 4) % 4;
 }
 
+// The annotation layer draws an SVG hit box per link; LinkLayer already owns
+// link interaction, so the built-in "link" renderer is replaced by a
+// never-matching entry and those boxes are not rendered.
+const HIDE_LINK_ANNOTATIONS = [
+  {
+    id: "link",
+    matches: () => false,
+    render: () => <></>,
+  },
+];
+
 function ViewerPageContainer({
   documentId,
   pageIndex,
@@ -1433,6 +1444,7 @@ export function LocalEmbedPDF({
                                   <AnnotationLayer
                                     documentId={documentId}
                                     pageIndex={pageIndex}
+                                    annotationRenderers={HIDE_LINK_ANNOTATIONS}
                                     selectionOutline={{ color: "#007ACC" }}
                                     selectionMenu={(props) => (
                                       <AnnotationSelectionMenu
