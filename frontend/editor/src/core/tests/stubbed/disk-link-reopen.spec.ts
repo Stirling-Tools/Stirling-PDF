@@ -8,7 +8,9 @@ import {
   setDisk,
 } from "@app/tests/helpers/tauriDiskStub";
 
-/** What opening a file from Explorer stores. */
+/** What opening a file from Explorer stores. Opening one again used to store
+ *  another full copy of it every time, so the library grew by one duplicate
+ *  per double-click. */
 
 const PATH = "C:/Docs/report.pdf";
 const BYTES = Array.from(
@@ -63,11 +65,39 @@ async function openFromExplorer(page: Page, opened = PATH): Promise<void> {
   });
 }
 
+async function reload(page: Page): Promise<void> {
+  await page.reload();
+  await dismissModals(page);
+}
+
 test.beforeEach(async ({ page }) => {
   await installTauri(page);
   await page.goto("/editor");
   await dismissModals(page);
   await setDisk(page, { [PATH]: { bytes: BYTES, modifiedMs: MTIME } });
+});
+
+test("opening an unchanged file again after a reload stores it once", async ({
+  page,
+}) => {
+  await openFromExplorer(page);
+  await expect.poll(() => storedCount(page)).toBe(1);
+
+  await reload(page);
+  await openFromExplorer(page);
+  // Past the point a second copy would have been written.
+  await page.waitForTimeout(1_500);
+  expect(await storedCount(page)).toBe(1);
+});
+
+test("a file that changed on disk since is stored again", async ({ page }) => {
+  await openFromExplorer(page);
+  await expect.poll(() => storedCount(page)).toBe(1);
+
+  await setDisk(page, { [PATH]: { bytes: BYTES, modifiedMs: MTIME + 60_000 } });
+  await reload(page);
+  await openFromExplorer(page);
+  await expect.poll(() => storedCount(page)).toBe(2);
 });
 
 test("an identical copy in another folder is stored as a file of its own", async ({
