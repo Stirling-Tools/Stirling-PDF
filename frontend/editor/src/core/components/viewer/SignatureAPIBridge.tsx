@@ -70,7 +70,7 @@ const extractDataUrl = (
         if (result) return result;
       }
     } else {
-      for (const key of Object.keys(value as Record<string, unknown>)) {
+      for (const key of Object.keys(value)) {
         const result = extractDataUrl(
           (value as Record<string, unknown>)[key],
           depth + 1,
@@ -349,11 +349,11 @@ export const SignatureAPIBridge = forwardRef<
               pageAnnotationsTask
                 .toPromise()
                 .then((pageAnnotations: PdfAnnotationObject[]) => {
-                  const currentAnn = pageAnnotations?.find(
-                    (ann: PdfAnnotationObject) => ann.id === id,
-                  );
-                  const imageSrc = (currentAnn as StampAnnotation | undefined)
-                    ?.imageSrc;
+                  const currentAnn: StampAnnotation | undefined =
+                    pageAnnotations?.find(
+                      (ann: PdfAnnotationObject) => ann.id === id,
+                    );
+                  const imageSrc = currentAnn?.imageSrc;
                   if (typeof imageSrc === "string") {
                     // Ensure the image data is stored in our persistent store
                     storeImageData(id, imageSrc);
@@ -492,11 +492,11 @@ export const SignatureAPIBridge = forwardRef<
           pageAnnotationsTask
             .toPromise()
             .then((pageAnnotations: PdfAnnotationObject[]) => {
-              const annotation = pageAnnotations?.find(
-                (ann: PdfAnnotationObject) => ann.id === annotationId,
-              );
-              const imageSrc = (annotation as StampAnnotation | undefined)
-                ?.imageSrc;
+              const annotation: StampAnnotation | undefined =
+                pageAnnotations?.find(
+                  (ann: PdfAnnotationObject) => ann.id === annotationId,
+                );
+              const imageSrc = annotation?.imageSrc;
               if (
                 annotation &&
                 annotation.type === PdfAnnotationSubtype.STAMP &&
