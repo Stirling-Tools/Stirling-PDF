@@ -17,6 +17,8 @@ import {
   DATABASE_CONFIGS,
 } from "@app/services/indexedDBManager";
 import { alert } from "@app/components/toast";
+import { readBlobSlice } from "@app/utils/blobSlice";
+import { detachedFile, markStoredBlob } from "@app/utils/storedBlob";
 
 /**
  * Storage record - single source of truth
@@ -141,7 +143,7 @@ export function maintenanceMayRewrite(
  *  it. One byte is enough: what fails is opening the store, not the length. */
 async function blobReadFailure(data: Blob): Promise<unknown> {
   try {
-    await data.slice(0, 1).arrayBuffer();
+    await readBlobSlice(data, 0, 1);
     return null;
   } catch (error) {
     return error ?? new Error("Reading a stored blob's bytes failed");
@@ -192,23 +194,43 @@ function withProbeDeadline(
 }
 
 /**
- * The File for a stored record. Re-wrapping a stored blob can cost WebKit the
- * backing handle, so hand it back untouched when its identity fields match.
+ * The stored File itself when its identity fields still match the record.
+ * Re-wrapping a stored blob can cost WebKit the backing handle, so a match is
+ * handed back untouched.
  */
-function fileFromRecord(record: StoredStirlingFileRecord): File {
+function storedFileMatching(record: StoredStirlingFileRecord): File | null {
   const { data } = record;
-  if (
-    data instanceof File &&
+  return data instanceof File &&
     data.name === record.name &&
     data.type === record.type &&
     data.lastModified === record.lastModified
-  ) {
-    return data;
-  }
-  return new File([data], record.name, {
+    ? data
+    : null;
+}
+
+/**
+ * The stored blob wearing the record's identity fields. A File built over it
+ * could get the renderer killed (see storedBlob), and a copy would keep the
+ * open waiting on a read WebKit can leave pending, so the fields are laid over
+ * the stored object itself.
+ */
+function withRecordIdentity(
+  record: StoredStirlingFileRecord,
+  data: Blob,
+): File {
+  const identity = {
+    name: record.name,
     type: record.type,
     lastModified: record.lastModified,
-  });
+  };
+  for (const [key, value] of Object.entries(identity)) {
+    Object.defineProperty(data, key, {
+      value,
+      enumerable: true,
+      configurable: true,
+    });
+  }
+  return data as File;
 }
 
 /**
@@ -612,7 +634,11 @@ class FileStorageService {
       settleOnAbort(transaction, reject);
       const request = transaction.objectStore(this.storeName).get(fileId);
       request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve(request.result);
+      request.onsuccess = () => {
+        const record = request.result as StoredStirlingFileRecord | undefined;
+        if (record?.data instanceof Blob) markStoredBlob(record.data);
+        resolve(record);
+      };
     });
   }
 
@@ -672,7 +698,48 @@ class FileStorageService {
     this.reportIfUnreadable(record);
 
     // Convert to StirlingFile with preserved IDs
-    return createStirlingFile(fileFromRecord(record), record.fileId);
+    return createStirlingFile(this.fileFromRecord(record), record.fileId);
+  }
+
+  /** The File for a stored record. One whose name, type or date has drifted
+   *  from its record (a rename) is also stored again under the current ones, so
+   *  the next read matches. */
+  private fileFromRecord(record: StoredStirlingFileRecord): File {
+    const { data } = record;
+    if (!(data instanceof Blob)) {
+      return new File([data], record.name, {
+        type: record.type,
+        lastModified: record.lastModified,
+      });
+    }
+    const matching = storedFileMatching(record);
+    if (matching) return matching;
+    void this.storeUnderRecordIdentity(record, data);
+    return withRecordIdentity(record, data);
+  }
+
+  /** Out of band, like every probe on the open path: see reportIfUnreadable. */
+  private async storeUnderRecordIdentity(
+    record: StoredStirlingFileRecord,
+    data: Blob,
+  ): Promise<void> {
+    try {
+      // Unreadable or unanswered is reportIfUnreadable's to report.
+      if (await withProbeDeadline(blobReadFailure(data))) return;
+      const renamed = await detachedFile(data, {
+        name: record.name,
+        type: record.type,
+        lastModified: record.lastModified,
+      });
+      await this.updateRecord(record.id, (stored) => {
+        stored.data = renamed;
+      });
+    } catch (error) {
+      console.warn(
+        `[fileStorage] could not store ${record.id} under its current name:`,
+        error,
+      );
+    }
   }
 
   /**
