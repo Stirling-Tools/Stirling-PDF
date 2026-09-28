@@ -140,7 +140,8 @@ jobs:
       contents: read
     outputs:
       java_version: ${{ steps.hash.outputs.java_version }}
-      files_hash: ${{ steps.hash.outputs.files_hash}}
+      gradle_files_hash: ${{ steps.hash.outputs.gradle_files_hash}}
+      cargo_files_hash: ${{ steps.hash.outputs.cargo_files_hash}}
       cache_key: ${{ steps.hash.outputs.cache_key }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
