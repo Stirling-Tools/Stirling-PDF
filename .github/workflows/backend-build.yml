@@ -108,8 +108,6 @@ jobs:
             {
               echo 'multi_cache<<EOF'
               cat <<'CACHE'
-            cargo:
-              path: ${{ env.CARGO_HOME }}
             gradle-caches:
               path: .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/caches
             gradle-wrapper:
@@ -131,8 +129,6 @@ jobs:
             {
               echo 'multi_cache<<EOF'
               cat <<'CACHE'
-            cargo:
-              path: ${{ env.CARGO_HOME }}
             gradle-caches:
               path: .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/caches
             gradle-wrapper:
