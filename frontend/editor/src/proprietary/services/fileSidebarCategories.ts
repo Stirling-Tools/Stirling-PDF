@@ -1,3 +1,4 @@
+import type { IconName } from "@app/ui/Icon";
 // The Files-sidebar categories are a fixed, built-in set shared by everyone (derived from
 // LABEL_FAMILIES) — the team can't create, rename, or re-group them. The only per-user choice is
 // which categories to SHOW or HIDE in the sidebar, kept device-local in localStorage. A hidden
@@ -10,7 +11,7 @@ export interface SidebarCategory {
   /** Stable id (the label family's id). */
   id: string;
   name: string;
-  icon: string;
+  icon: IconName;
   /** Label ids in this category (matches a file's stored classification ids). */
   labelKeys: string[];
   /** Hidden from the sidebar (device-local, personal). */

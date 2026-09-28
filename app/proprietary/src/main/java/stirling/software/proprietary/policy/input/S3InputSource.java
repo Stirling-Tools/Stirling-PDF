@@ -19,6 +19,7 @@ import stirling.software.proprietary.policy.s3.S3Config;
 import stirling.software.proprietary.policy.s3.S3ConnectionPool;
 import stirling.software.proprietary.policy.s3.S3ConnectionResolver;
 import stirling.software.proprietary.policy.s3.S3Identities;
+import stirling.software.proprietary.policy.source.Source;
 
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -86,6 +87,13 @@ public class S3InputSource implements InputSource {
         }
     }
 
+    /** Remote object access uses the source's configured S3 connection, shared by its policies. */
+    @Override
+    public List<ResolvedInput> resolve(Source source, ResolveContext ctx, String policyOwner)
+            throws IOException {
+        return resolve(source.toInputSpec(), ctx);
+    }
+
     @Override
     public List<ResolvedInput> resolve(InputSpec spec, ResolveContext ctx) throws IOException {
         S3Config config = connectionResolver.resolve(spec.options());
@@ -111,6 +119,7 @@ public class S3InputSource implements InputSource {
                         .map(object -> S3Identities.identity(config.bucket(), object.key()))
                         .toList());
 
+        boolean track = "track".equals(String.valueOf(spec.options().get("mode")).trim());
         List<ResolvedInput> work = new ArrayList<>();
         for (S3Object object : objects) {
             String identity = S3Identities.identity(config.bucket(), object.key());
@@ -123,14 +132,15 @@ public class S3InputSource implements InputSource {
                             PolicyInputs.of(List.of(objectResource(client, config, object))),
                             identity,
                             success ->
-                                    completeConsumed(
+                                    complete(
                                             ctx,
                                             client,
                                             config,
                                             object.key(),
                                             identity,
                                             gate,
-                                            success)));
+                                            success,
+                                            track)));
         }
         return work;
     }
@@ -141,16 +151,17 @@ public class S3InputSource implements InputSource {
      * consensus delete. A failed run settles ERROR and never deletes; the DONE row of an object
      * that could not be deleted still stops reprocessing.
      */
-    private void completeConsumed(
+    private void complete(
             ResolveContext ctx,
             S3Client client,
             S3Config config,
             String key,
             String identity,
             String claimGate,
-            boolean success) {
+            boolean success,
+            boolean track) {
         ctx.settle(identity, claimGate, null, success);
-        if (!success) {
+        if (!success || track) {
             return;
         }
         try {

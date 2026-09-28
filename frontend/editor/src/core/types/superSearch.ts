@@ -1,4 +1,5 @@
 import type React from "react";
+import type { IconName } from "@app/ui/Icon";
 
 /**
  * The super search's shared contract: what a results provider returns and the
@@ -17,8 +18,8 @@ export interface SuperSearchResult {
   group: string;
   title: string;
   subtitle?: string;
-  /** LocalIcon name (files/settings); tools provide a React node via `icon`. */
-  iconName?: string;
+  /** Registry icon name (files/settings); tools provide a node via `icon`. */
+  iconName?: IconName;
   icon?: React.ReactNode;
   score: number;
   onSelect: () => void | Promise<void>;
@@ -90,6 +91,8 @@ export interface PortalEntityScopeDef {
     | "portal-sources";
   /** Portal view id the scope targets (visibility check vs the page index). */
   viewId: string;
+  /** Set when the entities now live in a settings section rather than on that page. */
+  settingsKey?: string;
   labelKey: string;
   labelFallback: string;
   aliases: readonly string[];
@@ -106,6 +109,7 @@ export const PORTAL_ENTITY_SCOPE_DEFS: readonly PortalEntityScopeDef[] = [
   {
     id: "portal-users",
     viewId: "users",
+    settingsKey: "users",
     labelKey: "portal.nav.users",
     labelFallback: "Users",
     aliases: ["user", "users", "member", "members"],

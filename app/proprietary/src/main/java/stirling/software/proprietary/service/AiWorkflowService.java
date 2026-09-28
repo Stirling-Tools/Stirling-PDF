@@ -185,6 +185,7 @@ public class AiWorkflowService {
             initialRequest.setConversationHistory(
                     new ArrayList<>(request.getConversationHistory()));
             initialRequest.setEnabledEndpoints(endpointResolver.getEnabledEndpointUrls());
+            initialRequest.setLocale(request.getLocale());
             listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.ANALYZING));
 
             WorkflowState state = new WorkflowState.Pending(initialRequest);
@@ -287,6 +288,7 @@ public class AiWorkflowService {
             nextRequest.setArtifacts(pdfContentExtractor.buildArtifacts(contentResults));
             nextRequest.setResumeWith(response.getResumeWith());
             nextRequest.setEnabledEndpoints(request.getEnabledEndpoints());
+            nextRequest.setLocale(request.getLocale());
             return new WorkflowState.Pending(nextRequest);
         } finally {
             for (LoadedFile lf : loadedFiles) {
@@ -338,6 +340,7 @@ public class AiWorkflowService {
         nextRequest.setFiles(request.getFiles());
         nextRequest.setConversationHistory(request.getConversationHistory());
         nextRequest.setResumeWith(response.getResumeWith());
+        nextRequest.setLocale(request.getLocale());
         return new WorkflowState.Pending(nextRequest);
     }
 
@@ -530,6 +533,7 @@ public class AiWorkflowService {
                                 new PdfContentExtractor.ToolReportArtifact(
                                         result.reportTool(), result.report()));
                 resumeRequest.setResumeWith(resumeWith);
+                resumeRequest.setLocale(previousRequest.getLocale());
                 return new WorkflowState.Pending(resumeRequest);
             }
 
@@ -802,5 +806,6 @@ public class AiWorkflowService {
         private List<WorkflowArtifact> artifacts = new ArrayList<>();
         private String resumeWith;
         private List<String> enabledEndpoints = new ArrayList<>();
+        private String locale;
     }
 }

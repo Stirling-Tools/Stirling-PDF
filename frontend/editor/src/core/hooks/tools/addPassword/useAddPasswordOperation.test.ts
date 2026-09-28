@@ -152,7 +152,7 @@ describe("addPassword mappers", () => {
     // undefined: the settings UI calls keyLength.toString() on it.
     const restored = addPasswordFromApiParams({
       password: "user-pw",
-    } as never);
+    });
     expect(restored.keyLength).toBe(128);
   });
 

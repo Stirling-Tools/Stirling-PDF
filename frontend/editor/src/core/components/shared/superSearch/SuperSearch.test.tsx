@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 
 vi.mock("@app/hooks/useSuperSearch", () => ({
@@ -16,6 +22,7 @@ vi.mock("@app/utils/hotkeys", () => ({
 }));
 
 import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
+import { openSuperSearch } from "@app/components/shared/superSearch/openSuperSearch";
 import type {
   SuperSearchQueryOptions,
   SuperSearchScope,
@@ -84,7 +91,7 @@ function renderSearch(
     <MantineProvider>
       <SuperSearch
         inputId="test-super-search"
-        useResults={useResults as TestUseResultsHook | undefined}
+        useResults={useResults}
         scopes={scopes}
       />
     </MantineProvider>,
@@ -103,7 +110,7 @@ describe("SuperSearch", () => {
       width: 320,
       height: 40,
       toJSON: () => "",
-    } as DOMRect);
+    });
 
     Object.defineProperty(Element.prototype, "scrollIntoView", {
       value: vi.fn(),
@@ -325,6 +332,39 @@ describe("SuperSearch", () => {
       expect(input).toHaveValue("invoice");
       expect(screen.getByText("Policy Match")).toBeInTheDocument();
       expect(screen.getByText("Pipeline Match")).toBeInTheDocument();
+    });
+  });
+
+  it("opens on request with the requested scopes preselected", async () => {
+    // jsdom lays nothing out, so every element would read as off-screen.
+    vi.spyOn(HTMLElement.prototype, "offsetParent", "get").mockReturnValue(
+      document.body,
+    );
+    const useResults = vi.fn<TestUseResultsHook>(() => ({
+      groups: [],
+      flatResults: [],
+      loadingFiles: false,
+    }));
+
+    renderSearch(useResults, TEST_SCOPES);
+
+    const input = screen.getByRole("combobox");
+    act(() => openSuperSearch(["portal-pipelines"]));
+
+    await waitFor(() => {
+      expect(input).toHaveFocus();
+      expect(input).toHaveAttribute("aria-expanded", "true");
+    });
+    expect(screen.getByRole("button", { name: "Pipelines" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: "Policies" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+    expect(useResults).toHaveBeenLastCalledWith("", true, {
+      scopeIds: ["portal-pipelines"],
     });
   });
 

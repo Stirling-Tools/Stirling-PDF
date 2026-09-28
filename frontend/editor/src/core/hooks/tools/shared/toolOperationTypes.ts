@@ -284,7 +284,7 @@ export function defineSingleFileTool<
   return {
     ...config,
     toolType: ToolType.singleFile,
-  } as SingleFileToolOperationConfig<TParams, TEndpoint>;
+  };
 }
 
 /** Multi-file counterpart of {@link defineSingleFileTool}. */
@@ -300,7 +300,7 @@ export function defineMultiFileTool<
   return {
     ...config,
     toolType: ToolType.multiFile,
-  } as MultiFileToolOperationConfig<TParams, TEndpoint>;
+  };
 }
 
 /**
@@ -384,6 +384,12 @@ export interface ToolOperationHook<TParams = void> {
   willUseCloud?: boolean;
 
   // Actions
+  /** Non-empty inputs accepted for the current params, using FileContext's protection metadata.
+   * Operations with their own execution path can omit this to retain their own selection rules. */
+  getEligibleFiles?: (
+    params: TParams,
+    selectedFiles: StirlingFile[],
+  ) => StirlingFile[];
   executeOperation: (
     params: TParams,
     selectedFiles: StirlingFile[],

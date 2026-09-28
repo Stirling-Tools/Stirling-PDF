@@ -14,6 +14,10 @@ import apiClient from "@app/services/apiClient";
 import { getAiBaseUrl } from "@app/services/aiBaseUrl";
 import { getAuthHeaders } from "@app/services/apiClientSetup";
 import { dispatchPaygLimitReached } from "@app/services/usageLimitBridge";
+import {
+  reportAccountLinkBlock,
+  reportFreeTierExhausted,
+} from "@app/services/accountLinkBlock";
 import { createChildStub } from "@app/contexts/file/fileActions";
 import {
   createNewStirlingFileStub,
@@ -402,7 +406,7 @@ const initialState: ChatState = {
 };
 
 export function ChatProvider({ children }: { children: ReactNode }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [state, dispatch] = useReducer(chatReducer, initialState);
   const { files: activeFiles, fileStubs: activeFileStubs } = useAllFiles();
   const { actions: fileActions } = useFileActions();
@@ -422,10 +426,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   // Download a File from the Stirling files endpoint.
   const downloadFile = useCallback(
     async (descriptor: AiWorkflowResultFile): Promise<File> => {
-      // AI result files live on the backend that ran the workflow (the SaaS
-      // engine on desktop), so fetch from the AI base, not the local backend.
+      // AI result files live on the backend that ran the workflow (the connected
+      // server on desktop), so fetch from the AI base, not the local backend.
       const response = await apiClient.get<Blob>(
-        `${getAiBaseUrl()}/api/v1/general/files/${descriptor.fileId}`,
+        `${await getAiBaseUrl()}/api/v1/general/files/${descriptor.fileId}`,
         { responseType: "blob" },
       );
       return new File([response.data], descriptor.fileName, {
@@ -552,6 +556,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       try {
         const formData = new FormData();
         formData.append("userMessage", content);
+        // The engine replies in this language instead of guessing.
+        if (i18n.language) formData.append("locale", i18n.language);
         sourceFiles.forEach((file, i) => {
           formData.append(`fileInputs[${i}].fileInput`, file);
         });
@@ -560,7 +566,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           formData.append(`conversationHistory[${i}].content`, message.content);
         });
         const response = await fetch(
-          `${getAiBaseUrl()}/api/v1/ai/orchestrate/stream`,
+          `${await getAiBaseUrl()}/api/v1/ai/orchestrate/stream`,
           {
             method: "POST",
             body: formData,
@@ -579,7 +585,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             // A 402 carrying a usage-limit sentinel means the agent call itself was gated.
             // Fire the usage-limit modal (free → subscribe, subscribed → raise cap) and show a
             // brief line below — not a generic "engine failed" error.
-            if (response.status === 402 && isPaygLimitCode(code)) {
+            if (reportAccountLinkBlock({ status: response.status, body })) {
+              limitHandled = true;
+            } else if (response.status === 402 && isPaygLimitCode(code)) {
               dispatchPaygLimitReached(
                 typeof body?.subscribed === "boolean" ? body.subscribed : null,
               );
@@ -645,8 +653,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             // result (not via the apiClient interceptor that pops the modal for direct calls).
             // Fire the matching modal and replace the raw "tool failed: 402…" reason with a
             // brief, non-alarming line.
-            const isLimit = isPaygLimitCode(data.errorCode);
-            if (isLimit) {
+            const localLimit = data.errorCode === "FREE_TIER_EXHAUSTED";
+            const isLimit = localLimit || isPaygLimitCode(data.errorCode);
+            if (localLimit) {
+              reportFreeTierExhausted();
+            } else if (isLimit) {
               dispatchPaygLimitReached(data.errorSubscribed ?? null);
             }
             const replyContent = isLimit

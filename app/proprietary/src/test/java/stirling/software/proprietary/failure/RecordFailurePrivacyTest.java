@@ -11,6 +11,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import stirling.software.proprietary.policy.controller.PolicyRunFiles;
+
 /**
  * The privacy contract: a recorded failure carries no document identity of its own. There is no
  * name column and the dedup key is built only from opaque ids, so nothing here derives from what a
@@ -41,16 +43,28 @@ class RecordFailurePrivacyTest {
 
     @Test
     void hasNoFileNameFieldAtAll() {
-        // Structural, not behavioural: if a fileName component is ever added back, this fails.
+        // Structural, not behavioural: if a name component is ever added back, this fails. Not
+        // NotificationView, whose documentName is derived per reader, never stored.
         assertThat(List.of(RecordFailure.class.getRecordComponents()))
                 .extracting(RecordComponent::getName)
-                .doesNotContain("fileName");
+                .doesNotContain("fileName", "documentName");
         assertThat(List.of(FileRunEventEntity.class.getDeclaredFields()))
                 .extracting(Field::getName)
-                .doesNotContain("fileName");
+                .doesNotContain("fileName", "documentName");
+        // The portal's shape, read by reviewers over rows that are not theirs.
         assertThat(List.of(FileRunEventView.class.getRecordComponents()))
                 .extracting(RecordComponent::getName)
-                .doesNotContain("fileName");
+                .doesNotContain("fileName", "documentName");
+    }
+
+    @Test
+    void theRunRequestThatSuppliesADocumentReferenceCarriesNoNameEither() {
+        // The same discipline at the door as in the row: an id and nothing else, or a document name
+        // reaches a table that deliberately has nowhere to put it.
+        assertThat(List.of(PolicyRunFiles.class.getDeclaredFields()))
+                .extracting(Field::getName)
+                .contains("fileId")
+                .doesNotContain("fileName", "documentName", "name");
     }
 
     @Test

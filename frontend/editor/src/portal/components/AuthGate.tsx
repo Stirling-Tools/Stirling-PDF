@@ -1,8 +1,8 @@
 import { type ReactNode } from "react";
+import { Navigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { RequirePortalAccess } from "@app/auth";
 import { Spinner } from "@app/ui";
-import { LoginScreen } from "@portal/components/LoginScreen";
 import { EDITOR_URL } from "@portal/auth/editorUrl";
 
 // Stable module-level ref; RequirePortalAccess calls it from an effect.
@@ -30,9 +30,13 @@ function FullScreenMessage({ children }: { children: ReactNode }) {
 /** Gates the portal: login when signed out, redirect to the editor without portal access. */
 export function AuthGate({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
+  const location = useLocation();
+  const returnTo = encodeURIComponent(
+    location.pathname + location.search + location.hash,
+  );
   return (
     <RequirePortalAccess
-      fallback={<LoginScreen />}
+      fallback={<Navigate to={`/login?from=${returnTo}`} replace />}
       onForbidden={redirectToEditor}
       loading={
         <FullScreenMessage>

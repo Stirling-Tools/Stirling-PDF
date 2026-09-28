@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -189,15 +190,23 @@ class AdminLicenseControllerTest {
             assertThat(body(response)).containsEntry("success", false);
         }
 
+        /**
+         * A Team buyer has no licence key, and this endpoint is how their purchase reaches the tier
+         * in seconds instead of waiting for the next daily sync. Rejecting them on a missing key
+         * would break the whole path.
+         */
         @Test
-        @DisplayName("returns 400 when no license key is configured")
-        void noKey_returnsBadRequest() {
+        @DisplayName("resyncs with no license key, for a Team plan bought on a SaaS account")
+        void noKey_stillResyncs() {
             applicationProperties.getPremium().setKey("   ");
+            when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
 
             ResponseEntity<Map<String, Object>> response = controller.resyncLicense();
 
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-            assertThat(body(response)).containsEntry("success", false);
+            verify(licenseKeyChecker).resyncLicense();
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(body(response)).containsEntry("success", true);
+            assertThat(body(response)).containsEntry("licenseType", "SERVER");
         }
 
         @Test
