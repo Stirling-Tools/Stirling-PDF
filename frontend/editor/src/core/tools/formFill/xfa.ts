@@ -4,11 +4,9 @@
  * detects them in the browser and names the modes a save can apply to the XFA half.
  */
 import { useEffect, useState } from "react";
-import {
-  closeDocAndFreeBuffer,
-  getPdfiumModule,
-  openRawDocumentSafe,
-} from "@app/services/pdfiumService";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
+import { runPdfiumScan } from "@app/services/pdfiumScanQueue";
+import { readRawFormType } from "@app/services/pdfiumService";
 
 /**
  * Opening a document copies all of it into wasm memory. No LiveCycle form is anywhere near this
@@ -49,14 +47,10 @@ export function readFormType(file: Blob): Promise<number> {
 async function probeFormType(file: Blob): Promise<number> {
   if (file.size >= MAX_PROBE_BYTES) return 0;
   try {
-    const m = await getPdfiumModule();
-    if (typeof m.FPDF_GetFormType !== "function") return 0;
-    const docPtr = await openRawDocumentSafe(await file.arrayBuffer());
-    try {
-      return m.FPDF_GetFormType(docPtr);
-    } finally {
-      closeDocAndFreeBuffer(m, docPtr);
-    }
+    // The viewer's copy of the bytes and its one-at-a-time scan queue: wasm
+    // memory never shrinks, so a second open of the document stays paid for.
+    const bytes = await getDocumentBytes(file);
+    return (await runPdfiumScan(() => readRawFormType(bytes))) ?? 0;
   } catch {
     return 0;
   }

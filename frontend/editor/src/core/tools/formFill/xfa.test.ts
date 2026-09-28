@@ -1,13 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { classifyXfa, readFormType } from "@app/tools/formFill/xfa";
 
-const FPDF_GetFormType = vi.fn();
-const openRawDocumentSafe = vi.fn();
+const readRawFormType = vi.fn();
 
 vi.mock("@app/services/pdfiumService", () => ({
-  getPdfiumModule: () => Promise.resolve({ FPDF_GetFormType }),
-  openRawDocumentSafe: (...args: unknown[]) => openRawDocumentSafe(...args),
-  closeDocAndFreeBuffer: () => {},
+  readRawFormType: (...args: unknown[]) => readRawFormType(...args),
 }));
 
 const pdf = () => new Blob(["%PDF-1.7"], { type: "application/pdf" });
@@ -29,22 +26,26 @@ describe("classifyXfa", () => {
 
 describe("readFormType", () => {
   beforeEach(() => {
-    FPDF_GetFormType.mockReset();
-    openRawDocumentSafe.mockReset();
-    openRawDocumentSafe.mockResolvedValue(7);
+    readRawFormType.mockReset();
   });
 
   it("asks PDFium once per document", async () => {
-    FPDF_GetFormType.mockReturnValue(3);
+    readRawFormType.mockResolvedValue(3);
     const file = pdf();
 
     expect(await readFormType(file)).toBe(3);
     expect(await readFormType(file)).toBe(3);
-    expect(FPDF_GetFormType).toHaveBeenCalledTimes(1);
+    expect(readRawFormType).toHaveBeenCalledTimes(1);
   });
 
   it("answers 0 when PDFium cannot open the document", async () => {
-    openRawDocumentSafe.mockRejectedValue(new Error("not a PDF"));
+    readRawFormType.mockRejectedValue(new Error("not a PDF"));
+
+    expect(await readFormType(pdf())).toBe(0);
+  });
+
+  it("answers 0 when the PDFium build cannot read the form type", async () => {
+    readRawFormType.mockResolvedValue(null);
 
     expect(await readFormType(pdf())).toBe(0);
   });
