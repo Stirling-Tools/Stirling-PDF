@@ -73,7 +73,7 @@ async function runsOnPage0(page: Page): Promise<RunInfo[]> {
       });
     }
     return out;
-  }) as Promise<RunInfo[]>;
+  });
 }
 
 interface Clip {
