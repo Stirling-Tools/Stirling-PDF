@@ -659,9 +659,7 @@ describe("FormFillContext per-page loading", () => {
     const exhaustiveCalls = fetchFields.mock.calls.slice(callsBefore).filter(
       // Provider-level fetchFields(file, options): an exhaustive fetch is the
       // one that drops the page-0 filter so every page is scanned.
-      (args) =>
-        (args[1] as { pageIndices?: number[] } | undefined)?.pageIndices ===
-        undefined,
+      (args) => args[1]?.pageIndices === undefined,
     );
     expect(exhaustiveCalls.length).toBe(1);
 
