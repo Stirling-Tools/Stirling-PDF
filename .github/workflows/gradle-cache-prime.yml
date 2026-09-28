@@ -143,7 +143,7 @@ jobs:
 
       - name: Cache Gradle (lookup-only)
         id: cache-gradle-restore
-        if: ${{ steps.cache.outputs.error || steps.cache.outputs.cache-hit != 'true' }}
+        if: ${{ steps.cache.outputs.error }}
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
