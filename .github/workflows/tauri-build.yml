@@ -243,8 +243,12 @@ jobs:
           manifest-branch: dev-cache
           manifest-path: .github/cache-data
           multi-cache: |
-            cargo:
-              path: ${{ env.CARGO_HOME }}
+            cargo-registry:
+              path: ${{ env.CARGO_HOME }}/registry
+            cargo-git:
+              path: ${{ env.CARGO_HOME }}/git
+            cargo-target:
+              path: frontend/editor/src-tauri/target
             gradle-caches:
               path: .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/caches
             gradle-wrapper:
@@ -253,7 +257,9 @@ jobs:
           key: |
             gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
             gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
-            cargo=${{ needs.hash_pr.outputs.cargo_files_hash }}
+            cargo-registry=${{ needs.hash_pr.outputs.cargo_files_hash }}
+            cargo-git=${{ needs.hash_pr.outputs.cargo_files_hash }}
+            cargo-target=${{ needs.hash_pr.outputs.cargo_files_hash }}
           allow-shared-restore: true
           strict: false
 
