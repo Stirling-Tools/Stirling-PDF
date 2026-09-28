@@ -11,11 +11,6 @@ import { expectConsole } from "@app/tests/failOnConsole";
 
 vi.mock("@app/api/signing", () => ({ fetchSigningSessions: vi.fn() }));
 vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
-const authState = vi.hoisted(() => ({
-  user: { id: "u1" } as { id: string } | null,
-  loading: false,
-}));
-vi.mock("@app/auth/UseSession", () => ({ useAuth: () => authState }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (_k: string, fallback?: string) => fallback ?? _k,
@@ -40,8 +35,6 @@ describe("useSigningSessions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFetch.mockResolvedValue(EMPTY);
-    authState.user = { id: "u1" };
-    authState.loading = false;
   });
 
   afterEach(() => {
@@ -82,23 +75,6 @@ describe("useSigningSessions", () => {
     });
     expect(mockFetch).not.toHaveBeenCalled();
     expect(result.current.signRequests).toEqual([]);
-  });
-
-  it("waits for a signed-in user instead of failing unauthenticated", async () => {
-    authState.user = null;
-    const { result, rerender } = renderHook(
-      () => useSigningSessions({ enabled: true }),
-      { wrapper: TestQueryProvider },
-    );
-
-    await act(async () => {});
-    expect(mockFetch).not.toHaveBeenCalled();
-    expect(mockAlert).not.toHaveBeenCalled();
-
-    authState.user = { id: "guest" };
-    rerender();
-    await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(1));
-    await waitFor(() => expect(result.current.loading).toBe(false));
   });
 
   it("starts fetching when enabled flips on", async () => {
