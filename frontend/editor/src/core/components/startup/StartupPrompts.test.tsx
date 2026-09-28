@@ -7,7 +7,15 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+} from "vitest";
 import { MemoryRouter, useNavigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MantineProvider } from "@mantine/core";
@@ -20,10 +28,19 @@ import { AppRoot } from "@app/components/layout/AppRoot";
 import { BannerProvider } from "@app/contexts/BannerContext";
 import type StaticOnboardingSlide from "@app/components/onboarding/StaticOnboardingSlide";
 import type { AccountData } from "@app/services/accountService";
+import type { useAuth } from "@app/auth/UseSession";
 
-const h = vi.hoisted(() => ({
+const h = vi.hoisted<{
+  auth: Pick<ReturnType<typeof useAuth>, "user" | "loading" | "isAnonymous"> & {
+    signOut: Mock;
+  };
+  get: Mock;
+  post: Mock;
+  logout: Mock;
+  tracking: Mock;
+}>(() => ({
   auth: {
-    user: { id: "admin" } as { id: string } | null,
+    user: { id: "admin" },
     loading: false,
     isAnonymous: false,
     signOut: vi.fn(),
