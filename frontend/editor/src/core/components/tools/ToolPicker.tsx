@@ -10,6 +10,7 @@ import { useFavoriteToolItems } from "@app/hooks/tools/useFavoriteToolItems";
 import NoToolsFound from "@app/components/tools/shared/NoToolsFound";
 import { renderToolButtons } from "@app/components/tools/shared/renderToolButtons";
 import ToolButton from "@app/components/tools/toolPicker/ToolButton";
+import { LazyToolSection } from "@app/components/tools/toolPicker/LazyToolSection";
 import { useToolWorkflowData } from "@app/contexts/ToolWorkflowContext";
 import { useSigningBadgeCount } from "@app/hooks/signing/useSigningBadgeCount";
 import { useIsScrolled } from "@app/hooks/useIsScrolled";
@@ -253,21 +254,26 @@ const ToolPicker = ({
               )}
               {allSection &&
                 allSection.subcategories.map((sc: SubcategoryGroup) => (
-                  <Box key={sc.subcategoryId} w="100%">
-                    <div style={HEADER_TEXT_STYLE}>
-                      {toTitleCase(getSubcategoryLabel(t, sc.subcategoryId))}
-                    </div>
-                    {renderToolButtons(
-                      t,
-                      sc,
-                      selectedToolKey,
-                      onSelect,
-                      false,
-                      false,
-                      undefined,
-                      true,
-                    )}
-                  </Box>
+                  <LazyToolSection
+                    key={sc.subcategoryId}
+                    estimatedHeight={32 + sc.tools.length * 44}
+                  >
+                    <Box w="100%">
+                      <div style={HEADER_TEXT_STYLE}>
+                        {toTitleCase(getSubcategoryLabel(t, sc.subcategoryId))}
+                      </div>
+                      {renderToolButtons(
+                        t,
+                        sc,
+                        selectedToolKey,
+                        onSelect,
+                        false,
+                        false,
+                        undefined,
+                        true,
+                      )}
+                    </Box>
+                  </LazyToolSection>
                 ))}
             </Stack>
 
