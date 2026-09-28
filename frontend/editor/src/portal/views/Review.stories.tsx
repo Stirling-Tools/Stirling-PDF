@@ -38,7 +38,7 @@ export const ViewingError: Story = {
   play: async ({ canvas, userEvent }) => {
     await canvas.findAllByText("Password-protected document");
     await userEvent.click(
-      (await canvas.findAllByRole("button", { name: "More options" }))[0]!,
+      (await canvas.findAllByRole("button", { name: "More options" }))[0],
     );
     await userEvent.click(
       await screen.findByRole("menuitem", { name: "View error" }),
