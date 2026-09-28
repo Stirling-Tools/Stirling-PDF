@@ -55,10 +55,7 @@ import {
   AnnotationLayer,
   AnnotationPluginPackage,
 } from "@embedpdf/plugin-annotation/react";
-import type {
-  AnnotationTool,
-  AnnotationEvent,
-} from "@embedpdf/plugin-annotation";
+import type { AnnotationEvent } from "@embedpdf/plugin-annotation";
 import { PdfAnnotationSubtype } from "@embedpdf/models";
 import type { PdfAnnotationObject, Rect } from "@embedpdf/models";
 import {
@@ -350,7 +347,7 @@ export function LocalEmbedPDF({
   // Keyed by fileStableKey to avoid recomputing on every FileContext re-render.
   const exportFileName = useMemo(() => {
     if (fileName) return fileName;
-    if (file && "name" in file) return (file as File).name;
+    if (file && "name" in file) return file.name;
     if (url) return url.split("/").pop()?.split("?")[0] || "document.pdf";
     return "document.pdf";
   }, [fileStableKey, fileName, url]);
@@ -434,8 +431,8 @@ export function LocalEmbedPDF({
         err,
       );
     };
-    if (file && typeof (file as Blob).arrayBuffer === "function") {
-      (file as Blob)
+    if (file && typeof file.arrayBuffer === "function") {
+      file
         .arrayBuffer()
         .then((buf) => {
           if (cancelled) return;
@@ -787,7 +784,7 @@ export function LocalEmbedPDF({
               const ensureTool = (tool: LooseAnnotationTool) => {
                 const existing = annotationApi.getTool?.(tool.id);
                 if (!existing) {
-                  annotationApi.addTool(tool as unknown as AnnotationTool);
+                  annotationApi.addTool(tool);
                 }
               };
 
