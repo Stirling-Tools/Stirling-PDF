@@ -155,18 +155,16 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
 
-      - name: Hash Gradle files
+      - name: Hash Gradle and Cargo files
         id: hash
         env:
-          GRADLE_FILES_TO_HASH: ${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
-          CARGO_FILES_TO_HASH: ${{ hashFiles(env.CARGO_FILES_TO_HASH) }}
+          GRADLE_HASH: ${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
+          CARGO_HASH: ${{ hashFiles(env.CARGO_FILES_TO_HASH) }}
         run: |
-          GRADLE_HASH="$GRADLE_FILES_TO_HASH"
-          CARGO_HASH="$CARGO_FILES_TO_HASH"
           echo "java_version=${{ env.JAVA_VERSION }}" >> "$GITHUB_OUTPUT"
           echo "gradle_files_hash=$GRADLE_HASH" >> "$GITHUB_OUTPUT"
           echo "cargo_files_hash=$CARGO_HASH" >> "$GITHUB_OUTPUT"
-          echo "cache_key=gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-${{ env.JAVA_VERSION }}-$HASH" >> "$GITHUB_OUTPUT"
+          echo "cache_key=gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-${{ env.JAVA_VERSION }}-$GRADLE_HASH" >> "$GITHUB_OUTPUT"
 
   build:
     # Windows/GPG signing only runs on main (see the per-step gates below), so only
