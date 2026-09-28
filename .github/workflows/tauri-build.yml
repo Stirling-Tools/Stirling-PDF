@@ -157,11 +157,14 @@ jobs:
       - name: Hash Gradle files
         id: hash
         env:
-          FILES_HASH: ${{ hashFiles(env.FILES_TO_HASH) }}
+          GRADLE_FILES_TO_HASH: ${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
+          CARGO_FILES_TO_HASH: ${{ hashFiles(env.CARGO_FILES_TO_HASH) }}
         run: |
-          HASH="$FILES_HASH"
+          GRADLE_HASH="$GRADLE_FILES_TO_HASH"
+          CARGO_HASH="$CARGO_FILES_TO_HASH"
           echo "java_version=${{ env.JAVA_VERSION }}" >> "$GITHUB_OUTPUT"
-          echo "files_hash=$HASH" >> "$GITHUB_OUTPUT"
+          echo "gradle_files_hash=$GRADLE_HASH" >> "$GITHUB_OUTPUT"
+          echo "cargo_files_hash=$CARGO_HASH" >> "$GITHUB_OUTPUT"
           echo "cache_key=gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-${{ env.JAVA_VERSION }}-$HASH" >> "$GITHUB_OUTPUT"
 
   build:
@@ -255,9 +258,9 @@ jobs:
               path: .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/wrapper
           save-scope: shared
           key: |
-            gradle-caches=${{ needs.hash_pr.outputs.files_hash }}
-            gradle-wrapper=${{ needs.hash_pr.outputs.files_hash  }}
-            cargo=${{ hashFiles(env.CARGO_FILES_TO_HASH) }}
+            gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            cargo=${{ needs.hash_pr.outputs.cargo_files_hash }}
           allow-shared-restore: true
           strict: false
           exclude: |
