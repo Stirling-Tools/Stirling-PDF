@@ -308,6 +308,7 @@ class MetadataControllerTest {
         params.put("Author", "ShouldBeIgnored");
         params.put("Title", "ShouldBeIgnored");
         params.put("Subject", "ShouldBeIgnored");
+        params.put("async", "ShouldBeIgnored");
 
         MetadataRequest request = new MetadataRequest();
         request.setFileInput(mockFile);
@@ -322,6 +323,7 @@ class MetadataControllerTest {
         verify(mockInfo, never()).setCustomMetadataValue(eq("Author"), any());
         verify(mockInfo, never()).setCustomMetadataValue(eq("Title"), any());
         verify(mockInfo, never()).setCustomMetadataValue(eq("Subject"), any());
+        verify(mockInfo, never()).setCustomMetadataValue(eq("async"), any());
     }
 
     @Test

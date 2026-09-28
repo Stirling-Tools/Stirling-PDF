@@ -63,7 +63,8 @@ public class MetadataController {
                     "trapped",
                     "deleteall",
                     "fileinput",
-                    "allrequestparams");
+                    "allrequestparams",
+                    "async");
 
     /**
      * Info fields PDFBox manages as first-class properties. A custom key that matches one
