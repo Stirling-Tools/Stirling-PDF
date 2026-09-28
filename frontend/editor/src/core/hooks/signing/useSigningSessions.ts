@@ -40,7 +40,8 @@ export const useSigningSessions = (
     useQuery({
       queryKey: qk.signingSessions(user?.id ?? null),
       queryFn: fetchSigningSessions,
-      enabled: enabled && !authLoading,
+      // Without a signed-in user the request can only 401.
+      enabled: enabled && !authLoading && !!user,
       staleTime: 0,
       refetchInterval: autoRefreshInterval > 0 ? autoRefreshInterval : false,
       refetchIntervalInBackground: false,
