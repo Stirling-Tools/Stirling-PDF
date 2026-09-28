@@ -2,12 +2,20 @@ import { renderHook } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { useFleetStatsAccess } from "@portal/hooks/useFleetStatsAccess";
 
-const state = vi.hoisted(() => ({
+const state = vi.hoisted<{
+  auth: {
+    loading: boolean;
+    error: Error | null;
+    session: object | null;
+    user: { id: string } | null;
+    isAnonymous: boolean;
+  };
+}>(() => ({
   auth: {
     loading: false,
-    error: null as Error | null,
-    session: {} as object | null,
-    user: { id: "member" } as { id: string } | null,
+    error: null,
+    session: {},
+    user: { id: "member" },
     isAnonymous: false,
   },
 }));
