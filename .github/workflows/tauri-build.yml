@@ -237,7 +237,7 @@ jobs:
 
       - name: Restore cache sftp
         id: cache-cargo
-        uses: Ludy87/cache-the-planet/multi-cache@1c98bd35df6a8d688f1f8f34a34d1ebbff8b3c8c
+        uses: Ludy87/cache-the-planet/multi-cache@9b53ad9c0be1a6ea517a92497d0ff2144aecb8ac
         with:
           storage: github-branch
           manifest-branch: dev-cache
@@ -256,8 +256,6 @@ jobs:
             cargo=${{ needs.hash_pr.outputs.cargo_files_hash }}
           allow-shared-restore: true
           strict: false
-          exclude: |
-            .cache/cargo/registry/src/**/examples/*.rsa
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
