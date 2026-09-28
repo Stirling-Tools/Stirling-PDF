@@ -235,12 +235,6 @@ jobs:
           echo "$(brew --prefix gnu-tar)/libexec/gnubin" >> "$GITHUB_PATH"
           tar --version
 
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
-        with:
-          toolchain: stable
-          targets: ${{ matrix.platform == 'macos-15' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
-
       - name: Restore cache sftp
         id: cache-cargo
         uses: Ludy87/cache-the-planet/multi-cache@1c98bd35df6a8d688f1f8f34a34d1ebbff8b3c8c
@@ -264,6 +258,12 @@ jobs:
           strict: false
           exclude: |
             .cache/cargo/registry/src/**/examples/*.rsa
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
+        with:
+          toolchain: stable
+          targets: ${{ matrix.platform == 'macos-15' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       # Cache the Cargo registry and compiled dependency crates so the build
       # only recompiles the app crate. Written on main; PRs and the merge queue
