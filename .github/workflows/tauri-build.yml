@@ -173,7 +173,7 @@ jobs:
     # approval or branch restriction.
     environment:
       name: ${{ (inputs.sign && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))) && 'release-signing' || 'ci-signing' }}
-    needs: determine-matrix
+    needs: [determine-matrix, hash_pr]
     permissions:
       contents: write
     strategy:
