@@ -274,7 +274,7 @@ function shouldStrandedReset(
   for (let i = 0; i < 50 && cursor; i++) {
     if (removedSet.has(cursor)) return true;
     const node = byId.get(cursor);
-    cursor = (node?.parentFolderId ?? null) as FolderId | null;
+    cursor = node?.parentFolderId ?? null;
   }
   return false;
 }

@@ -16,10 +16,7 @@ const meta = {
 export default meta;
 
 type LegacyEntry = { viewBox: string; body: string };
-const legacy = legacyGlyphs as {
-  mui: Record<string, LegacyEntry>;
-  materialSymbols: Record<string, LegacyEntry>;
-};
+const legacy = legacyGlyphs;
 
 function LegacyGlyph({ entry }: { entry: LegacyEntry }) {
   return (
