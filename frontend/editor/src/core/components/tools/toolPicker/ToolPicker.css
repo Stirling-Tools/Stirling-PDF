@@ -65,6 +65,12 @@
    so height = icon/label only and rows sit tight against each other. */
 .tool-button {
   font-size: 0.875rem;
+  /* Shared by the row's icon and label; dark mode matches the viewer bar icons. */
+  --tool-button-fg: var(--c-text-muted);
+}
+
+[data-mantine-color-scheme="dark"] .tool-button {
+  --tool-button-fg: color-mix(in srgb, var(--c-text) 80%, var(--c-surface));
 }
 
 .tool-button.sui-btn.mantine-Button-root {
@@ -74,6 +80,7 @@
 .tool-button .mantine-Button-label {
   font-size: 0.84rem;
   font-weight: 500;
+  color: var(--tool-button-fg);
   /* ≥1.4 so the overflow:hidden label box contains glyph descenders (g/y/p);
      row height is icon-bound (~24px) so this doesn't change row size. */
   line-height: 1.4;

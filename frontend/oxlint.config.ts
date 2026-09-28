@@ -74,6 +74,9 @@ const modernGlobals: OxlintGlobals = {
 
 export default defineConfig({
   plugins: ["typescript", "import"],
+  options: {
+    typeAware: true,
+  },
   categories: {
     correctness: "off",
   },
@@ -188,6 +191,7 @@ export default defineConfig({
     "typescript/no-non-null-asserted-optional-chain": "error",
     "typescript/no-require-imports": "error",
     "typescript/no-this-alias": "error",
+    "typescript/no-unnecessary-type-assertion": "error",
     "typescript/no-unnecessary-type-constraint": "error",
     "typescript/no-unsafe-declaration-merging": "error",
     "typescript/no-unsafe-function-type": "error",
