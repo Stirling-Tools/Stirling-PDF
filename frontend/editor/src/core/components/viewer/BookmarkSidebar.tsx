@@ -13,7 +13,7 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useFileContext } from "@app/contexts/FileContext";
-import { isStirlingFile, type FileId } from "@app/types/fileContext";
+import { isStirlingFile } from "@app/types/fileContext";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import apiClient from "@app/services/apiClient";
 import { openExternalTab } from "@app/platform/openExternalTab";
@@ -375,9 +375,7 @@ export const BookmarkSidebar = ({
       ? allFiles.find((f) => isStirlingFile(f) && f.fileId === activeFileId)
       : (allFiles[activeFileIndex] ?? allFiles[0]);
     const resolvedFileId =
-      resolvedFile && isStirlingFile(resolvedFile)
-        ? (resolvedFile.fileId as FileId)
-        : null;
+      resolvedFile && isStirlingFile(resolvedFile) ? resolvedFile.fileId : null;
     if (!resolvedFileId) {
       handleFallbackToTool();
       return;
