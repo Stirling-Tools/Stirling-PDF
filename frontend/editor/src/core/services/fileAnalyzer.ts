@@ -3,6 +3,8 @@ import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
 import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 
+import { readBlobSlice } from "@app/utils/blobSlice";
+
 // Bounded window scanned at each end of the PDF for an /Encrypt entry. The
 // trailer sits at the tail; linearized files also keep a first-page trailer at
 // the head. Sliced, so a multi-GB file is never read into memory.
@@ -12,8 +14,8 @@ const ENCRYPT_PROBE_BYTES = 64 * 1024;
 const PROBE_TIMEOUT = "pdf-probe-timeout";
 const PROBE_TIMEOUT_MS = 30_000;
 
-function bufferHasEncryptMarker(buffer: ArrayBuffer): boolean {
-  const view = new Uint8Array(buffer);
+function bufferHasEncryptMarker(buffer: Uint8Array | ArrayBuffer): boolean {
+  const view = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
   // "/Encrypt" as ASCII bytes
   const needle = [0x2f, 0x45, 0x6e, 0x63, 0x72, 0x79, 0x70, 0x74];
   outer: for (let i = 0; i <= view.length - needle.length; i++) {
@@ -27,12 +29,12 @@ function bufferHasEncryptMarker(buffer: ArrayBuffer): boolean {
 
 async function hasEncryptMarker(file: File): Promise<boolean> {
   const tailStart = Math.max(0, file.size - ENCRYPT_PROBE_BYTES);
-  if (bufferHasEncryptMarker(await file.slice(tailStart).arrayBuffer())) {
+  if (bufferHasEncryptMarker(await readBlobSlice(file, tailStart))) {
     return true;
   }
   if (tailStart === 0) return false;
   return bufferHasEncryptMarker(
-    await file.slice(0, ENCRYPT_PROBE_BYTES).arrayBuffer(),
+    await readBlobSlice(file, 0, ENCRYPT_PROBE_BYTES),
   );
 }
 
@@ -346,9 +348,7 @@ export class FileAnalyzer {
     }
 
     try {
-      // Read first few bytes to check PDF header
-      const header = file.slice(0, 8);
-      const headerBytes = new Uint8Array(await header.arrayBuffer());
+      const headerBytes = await readBlobSlice(file, 0, 8);
       const headerString = String.fromCharCode(...headerBytes);
 
       return headerString.startsWith("%PDF-");
