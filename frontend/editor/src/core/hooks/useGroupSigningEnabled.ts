@@ -3,7 +3,7 @@ import { useAuth } from "@app/auth/UseSession";
 
 /**
  * Returns whether the shared (group) signing feature is available.
- * Core implementation reads directly from server config.
+ * Core implementation reads server config and turns it off for guests.
  */
 export function useGroupSigningEnabled(): boolean {
   return useGroupSigningState().enabled;

@@ -11667,6 +11667,8 @@ filterSigned = "Signed"
 fromOwner = "From {{owner}}"
 newRequest = "Request signatures"
 signedCount = "{{signed}}/{{total}} signed"
+signInRequiredBody = "Sign in to request signatures and see requests sent to you."
+signInRequiredTitle = "Sign in required"
 
 [sharedSign.empty]
 active = "No pending sign requests or active sessions"
