@@ -336,7 +336,12 @@ async function postDocuments(
   }
 
   // Restored from IndexedDB, which WebKit uploads as an empty body unless wrapped.
-  return postFiles(endpoint, params, files.map(uploadableFile), password);
+  return postFiles(
+    endpoint,
+    params,
+    await Promise.all(files.map(uploadableFile)),
+    password,
+  );
 }
 
 /** The one place any of this reaches the network, so a password has a single path out. */
