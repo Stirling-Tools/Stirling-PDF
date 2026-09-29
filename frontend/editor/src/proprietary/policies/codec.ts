@@ -78,6 +78,7 @@ export function toWirePolicy(state: PolicyDecodedState): WirePolicy {
   return {
     id: state.id,
     name: state.name,
+    icon: state.icon,
     owner: "",
     enabled: state.enabled,
     required: state.required,
@@ -109,9 +110,7 @@ export function fromWirePolicy(policy: WirePolicy): PolicyDecodedState {
   const policyKey = str(raw.categoryId);
   // Selection = display metadata ∪ bound inputs, so policies saved before
   // inputs were emitted (sources only in options) still round-trip complete.
-  const optionSources = Array.isArray(raw.sources)
-    ? (raw.sources as string[])
-    : [];
+  const optionSources = Array.isArray(raw.sources) ? raw.sources : [];
   const inputs = policy.inputs ?? [];
   const sources = [
     ...new Set([...optionSources, ...inputs.map((i) => i.sourceId)]),
@@ -119,6 +118,7 @@ export function fromWirePolicy(policy: WirePolicy): PolicyDecodedState {
   return {
     id: policy.id,
     name: policy.name,
+    icon: policy.icon,
     enabled: policy.enabled,
     required: policy.required ?? false,
     policyKey,

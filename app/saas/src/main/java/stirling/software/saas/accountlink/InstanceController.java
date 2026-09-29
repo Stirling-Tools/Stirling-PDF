@@ -64,6 +64,7 @@ public class InstanceController {
     private final InstanceUsageIngestService usageIngestService;
     private final LinkedInstanceRepository linkedInstanceRepository;
     private final SaasTeamExtensionsRepository teamExtensionsRepository;
+    private final FleetSeatService fleetSeats;
 
     public InstanceController(
             EntitlementService entitlementService,
@@ -73,8 +74,10 @@ public class InstanceController {
             InstanceUsageIngestService usageIngestService,
             LinkedInstanceRepository linkedInstanceRepository,
             SaasTeamExtensionsRepository teamExtensionsRepository,
-            PrepaidBundleService prepaidBundleService) {
+            PrepaidBundleService prepaidBundleService,
+            FleetSeatService fleetSeats) {
         this.prepaidBundleService = prepaidBundleService;
+        this.fleetSeats = fleetSeats;
         this.entitlementService = entitlementService;
         this.billingService = billingService;
         this.accountLinkService = accountLinkService;
@@ -109,7 +112,8 @@ public class InstanceController {
             LocalDateTime periodStart,
             LocalDateTime periodEnd,
             int automationStepLimit,
-            long prepaidRemainingUnits) {}
+            long prepaidRemainingUnits,
+            Integer fleetUserLimit) {}
 
     @GetMapping("/whoami")
     @PreAuthorize("hasRole('LINKED_INSTANCE')")
@@ -148,12 +152,20 @@ public class InstanceController {
         // it must reflect a just-changed subscription/cap at once (the flip is a DB-function write
         // with no Java event to invalidate on).
         entitlementService.invalidate(token.getTeamId());
-        return ResponseEntity.ok(buildEntitlement(token.getTeamId()));
+        return ResponseEntity.ok(buildEntitlement(token.getTeamId(), token.getInstanceId()));
     }
 
     /** Body for {@code POST /sync}: the instance's cumulative units per category this period. */
     public record UsageSyncRequest(
-            long syncSeq, LocalDateTime periodStart, CategoryUnits cumulativeUnits) {
+            long syncSeq,
+            LocalDateTime periodStart,
+            CategoryUnits cumulativeUnits,
+            Integer seatCount) {
+        public UsageSyncRequest(
+                long syncSeq, LocalDateTime periodStart, CategoryUnits cumulativeUnits) {
+            this(syncSeq, periodStart, cumulativeUnits, null);
+        }
+
         public record CategoryUnits(long api, long ai, long automation) {}
     }
 
@@ -171,50 +183,58 @@ public class InstanceController {
         if (!(auth instanceof LinkedInstanceAuthenticationToken token)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        if (req == null || req.periodStart() == null || req.cumulativeUnits() == null) {
+        if (req == null
+                || (req.seatCount() != null && req.seatCount() < 0)
+                || (req.periodStart() == null) != (req.cumulativeUnits() == null)
+                || (req.periodStart() == null && req.seatCount() == null)) {
             return ResponseEntity.badRequest().build();
         }
         Long teamId = token.getTeamId();
-        // periodStart is the dedup/regression partition key, so bound a fabricated value to the
-        // snapshot window (current or immediately-prior period, never future).
-        EntitlementSnapshot snap = entitlementService.getSnapshot(teamId);
-        LocalDateTime reported = req.periodStart();
-        if (!reported.isBefore(snap.periodEnd())
-                || reported.isBefore(snap.periodStart().minusMonths(1))) {
-            log.warn(
-                    "Instance sync for team {} reported implausible periodStart {} (authoritative"
-                            + " {}..{}); rejecting.",
+        if (req.periodStart() != null) {
+            // periodStart is the dedup/regression partition key, so bound a fabricated value to the
+            // snapshot window (current or immediately-prior period, never future).
+            EntitlementSnapshot snap = entitlementService.getSnapshot(teamId);
+            LocalDateTime reported = req.periodStart();
+            if (!reported.isBefore(snap.periodEnd())
+                    || reported.isBefore(snap.periodStart().minusMonths(1))) {
+                log.warn(
+                        "Instance sync for team {} reported implausible periodStart {} (authoritative"
+                                + " {}..{}); rejecting.",
+                        teamId,
+                        reported,
+                        snap.periodStart(),
+                        snap.periodEnd());
+                return ResponseEntity.badRequest().build();
+            }
+            // Attribute the charge to the admin who linked the instance (the device credential
+            // carries
+            // no user). Null is tolerated by the ingest service (it skips + retries next sync).
+            Long actorUserId =
+                    linkedInstanceRepository
+                            .findById(token.getInstanceId())
+                            .map(LinkedInstance::getCreatedByUserId)
+                            .orElse(null);
+            UsageSyncRequest.CategoryUnits c = req.cumulativeUnits();
+            usageIngestService.ingest(
                     teamId,
-                    reported,
-                    snap.periodStart(),
-                    snap.periodEnd());
-            return ResponseEntity.badRequest().build();
+                    actorUserId,
+                    req.syncSeq(),
+                    req.periodStart(),
+                    Map.of(
+                            BillingCategory.API, c.api(),
+                            BillingCategory.AI, c.ai(),
+                            BillingCategory.AUTOMATION, c.automation()));
         }
-        // Attribute the charge to the admin who linked the instance (the device credential carries
-        // no user). Null is tolerated by the ingest service (it skips + retries next sync).
-        Long actorUserId =
-                linkedInstanceRepository
-                        .findById(token.getInstanceId())
-                        .map(LinkedInstance::getCreatedByUserId)
-                        .orElse(null);
-        UsageSyncRequest.CategoryUnits c = req.cumulativeUnits();
-        usageIngestService.ingest(
-                teamId,
-                actorUserId,
-                req.syncSeq(),
-                req.periodStart(),
-                Map.of(
-                        BillingCategory.API, c.api(),
-                        BillingCategory.AI, c.ai(),
-                        BillingCategory.AUTOMATION, c.automation()));
+        if (req.seatCount() != null)
+            fleetSeats.report(teamId, token.getInstanceId(), req.seatCount());
         // Drop the cache so the buildEntitlement below (and the portal's next read) reflect the
         // just-charged delta + moved free-grant balance now, not after the TTL.
         entitlementService.invalidate(teamId);
-        return ResponseEntity.ok(buildEntitlement(teamId));
+        return ResponseEntity.ok(buildEntitlement(teamId, token.getInstanceId()));
     }
 
     /** The entitlement view shared by {@code GET /entitlement} and the {@code /sync} response. */
-    private EntitlementResponse buildEntitlement(Long teamId) {
+    private EntitlementResponse buildEntitlement(Long teamId, Long instanceId) {
         // Same composition the FE wallet uses: billing facts (subscription, free pool) from
         // TeamBillingService, period spend/cap + state from the entitlement snapshot, plus the
         // unit-calc policy + period the instance needs to meter locally.
@@ -236,7 +256,8 @@ public class InstanceController {
                 snap.periodStart(),
                 snap.periodEnd(),
                 policy.resolveStepLimit(JobSource.PIPELINE),
-                prepaidBundleService.prepaidRemainingUnits(teamId));
+                prepaidBundleService.prepaidRemainingUnits(teamId),
+                fleetSeats.allowance(teamId, instanceId));
     }
 
     /**

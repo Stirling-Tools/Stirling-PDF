@@ -2,16 +2,18 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner, Button } from "@app/ui";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useAccountLinkOptional } from "@portal/contexts/AccountLinkContext";
+import { useAccountLinkOptional } from "@app/portal/contexts/AccountLinkContext";
 
-/** Shows the server's cloud-access deadline and refreshes feature visibility when it changes. */
-export function AccountConnectionNotice() {
-  const { t } = useTranslation();
+import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
+import { usePortalSaasSession } from "@app/portal/hooks/usePortalSaasSession";
+import { useUI } from "@app/portal/contexts/UIContext";
+
+/** Keep feature availability current without placing a notice on local pages. */
+export function AccountConnectionRefresh() {
   const link = useAccountLinkOptional();
   const { refetch } = useAppConfig();
   const state = link?.status?.connection?.state;
   const previous = useRef(state);
-  const [checking, setChecking] = useState(false);
   useEffect(() => {
     if (previous.current && previous.current !== state) {
       void refetch();
@@ -19,14 +21,34 @@ export function AccountConnectionNotice() {
     }
     previous.current = state;
   }, [state, refetch]);
-  if (!link || !state || state === "connected" || state === "unlinked")
+  return null;
+}
+
+/** Contextual server-connection status for the owner's account and billing pages. */
+export function AccountConnectionNotice() {
+  const { t } = useTranslation();
+  const link = useAccountLinkOptional();
+  const isOwner = useAccountLinkOwner();
+  const { required } = usePortalSaasSession();
+  const { linkModalOpen } = useUI();
+  const [checking, setChecking] = useState(false);
+  const state = link?.status?.connection?.state;
+  if (
+    !isOwner ||
+    required ||
+    linkModalOpen ||
+    !link ||
+    !state ||
+    state === "connected" ||
+    state === "unlinked"
+  )
     return null;
   const expired = state === "expired";
   const revoked = state === "revoked";
   const deadline = link.status?.connection?.offlineAccessUntil;
   return (
     <Banner
-      tone={expired || revoked ? "danger" : "warning"}
+      tone={expired || revoked ? "danger" : "neutral"}
       title={
         expired
           ? t(

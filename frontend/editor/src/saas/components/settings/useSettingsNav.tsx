@@ -13,7 +13,7 @@ import type { SettingsNav } from "@app/components/settings/settingsNavTypes";
 import {
   buildPortalSettingsSections,
   PORTAL_SECTION_ALIASES,
-  PORTAL_SUPERSEDED_SECTION_KEYS,
+  portalSupersededSectionKeys,
 } from "@app/components/settings/portalSettingsNav";
 import { mergeSettingsGroups } from "@app/components/settings/mergeSettingsGroups";
 import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
@@ -65,7 +65,7 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
                   "settings.connectedInstances.title",
                   "Connected instances",
                 ),
-                icon: "link-rounded",
+                icon: "link",
                 fullBleed: true,
                 component: (
                   <Suspense fallback={<LoadingFallback />}>
@@ -85,7 +85,11 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
       includeAudit: true,
     });
     if (portal.length === 0) return own;
-    return mergeSettingsGroups(own, portal, PORTAL_SUPERSEDED_SECTION_KEYS);
+    return mergeSettingsGroups(
+      own,
+      portal,
+      portalSupersededSectionKeys(portal),
+    );
   }, [
     openLogoutConfirm,
     isAnonymous,

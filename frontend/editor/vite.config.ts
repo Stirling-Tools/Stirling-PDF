@@ -251,7 +251,7 @@ export default defineConfig(async ({ mode, command }) => {
   const flavor = (process.env.STIRLING_FLAVOR ?? "").toLowerCase();
   const flavorMode: BuildMode | null =
     flavor === "core" || flavor === "proprietary" || flavor === "saas"
-      ? (flavor as BuildMode)
+      ? flavor
       : null;
   const effectiveMode: BuildMode =
     explicitMode ??
@@ -431,7 +431,7 @@ export default defineConfig(async ({ mode, command }) => {
       },
       rollupOptions: {
         output: {
-          manualChunks(id) {
+          manualChunks(id: string) {
             if (id.includes("material-symbols-icons.json"))
               return "vendor-iconset";
             if (id.includes("node_modules")) {

@@ -123,6 +123,7 @@ describe("auto-run queue-rejection retry", () => {
       "backend-1",
       [{ size: 1234 }],
       "file-1",
+      "background",
     );
     expect(getRun("run-1")).toBeUndefined();
     expect(getRun("run-2")?.status).toBe("RUNNING");

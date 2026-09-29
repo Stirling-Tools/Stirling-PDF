@@ -23,11 +23,12 @@ class EntitlementOfflineTest {
         doAnswer(
                         inv -> {
                             device.setLastEntitlementSuccessAt(inv.getArgument(1));
+                            device.setFleetUserLimit(inv.getArgument(3));
                             device.setEntitlementRevoked(inv.getArgument(2));
                             return null;
                         })
                 .when(store)
-                .recordEntitlementContact(eq("device"), any(), anyBoolean());
+                .recordEntitlementContact(eq("device"), any(), anyBoolean(), any());
         var client = mock(AccountLinkClient.class);
         when(client.fetchEntitlement("device", "secret"))
                 .thenThrow(new AccountLinkClient.RevokedException(401));
@@ -65,10 +66,11 @@ class EntitlementOfflineTest {
         doAnswer(
                         inv -> {
                             device.setLastEntitlementSuccessAt(inv.getArgument(1));
+                            device.setFleetUserLimit(inv.getArgument(3));
                             return null;
                         })
                 .when(store)
-                .recordEntitlementContact(eq("device"), any(), anyBoolean());
+                .recordEntitlementContact(eq("device"), any(), anyBoolean(), any());
         AccountLinkClient client = mock(AccountLinkClient.class);
         AccountLinkProperties properties = new AccountLinkProperties();
         InstanceEntitlement paid =
@@ -119,5 +121,33 @@ class EntitlementOfflineTest {
         device.setDeviceId("replacement");
         assertThat(cache.current()).isEmpty();
         assertThat(cache.isGraceExpired()).isTrue();
+    }
+
+    @Test
+    void persistedFleetAllowanceSurvivesRestartButNotExpiryOrRevocation() {
+        Instant start = Instant.parse("2026-09-15T10:00:00Z");
+        Clock clock = mock(Clock.class);
+        when(clock.instant()).thenReturn(start);
+        var device = new DeviceCredential();
+        device.setDeviceId("device");
+        device.setDeviceSecret("secret");
+        device.setLastEntitlementSuccessAt(start);
+        device.setFleetUserLimit(17);
+        var store = mock(DeviceCredentialStore.class);
+        when(store.get()).thenReturn(Optional.of(device));
+        var client = mock(AccountLinkClient.class);
+        var cache = new EntitlementCache(store, client, new AccountLinkProperties(), clock);
+        assertThat(cache.current()).isEmpty();
+        assertThat(cache.fleetUserLimit()).isEqualTo(17);
+        when(clock.instant()).thenReturn(start.plus(Duration.ofDays(3)));
+        assertThat(cache.fleetUserLimit()).isNull();
+        cache.accept(
+                "device",
+                new InstanceEntitlement(
+                        true, 0, 0, null, EntitlementState.OK, null, null, null, 100, 10, 0L, 23));
+        assertThat(cache.fleetUserLimit()).isEqualTo(23);
+        cache.accept(
+                "device", new InstanceEntitlement(false, 0, 0, null, EntitlementState.REVOKED));
+        assertThat(cache.fleetUserLimit()).isNull();
     }
 }

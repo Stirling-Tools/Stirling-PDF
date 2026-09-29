@@ -36,8 +36,8 @@ export function StepModalHeader({
   total?: number;
   /** Pre-translated "Step 2 of 3"; omitted renders no badge. */
   stepLabel?: string;
-  /** Show the Stirling wordmark instead of a plain heading, for flows that stand alone. */
-  brand?: boolean;
+  /** True uses the wordmark; a string supplies a translated flow identity above the step title. */
+  brand?: boolean | string;
   /** Extra class on the root, so a host modal can own its own padding. */
   className?: string;
   closeLabel?: string;
@@ -50,7 +50,11 @@ export function StepModalHeader({
   return (
     <div className={`portal-stepmodal__head ${className ?? ""}`.trim()}>
       <div className="portal-stepmodal__head-top">
-        {brand ? (
+        {typeof brand === "string" ? (
+          <div className="portal-stepmodal__ident">
+            <h3 className="portal-stepmodal__flow-title">{brand}</h3>
+          </div>
+        ) : brand ? (
           <div className="portal-stepmodal__brand">
             {/* `wordmark`, not `wordmark-light-only`: theme.css hides the former in dark mode and
                 has no rule for the latter, so both used to render at once. */}

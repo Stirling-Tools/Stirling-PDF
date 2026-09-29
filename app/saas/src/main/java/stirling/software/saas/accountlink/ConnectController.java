@@ -97,11 +97,8 @@ public class ConnectController {
 
         ConnectRequestService.CreateResult result;
         if (reauthRequested) {
-            Long pinnedTeamId =
-                    accountLinkService
-                            .resolveActiveInstance(deviceId, deviceSecret)
-                            .map(LinkedInstance::getTeamId)
-                            .orElse(null);
+            Optional<LinkedInstance> instance =
+                    accountLinkService.resolveActiveInstance(deviceId, deviceSecret);
             result =
                     service.createReauth(
                             body.name(),
@@ -109,7 +106,8 @@ public class ConnectController {
                             body.nonce(),
                             body.claimSecret(),
                             clientIp(http),
-                            pinnedTeamId);
+                            instance.map(LinkedInstance::getTeamId).orElse(null),
+                            instance.map(LinkedInstance::getCreatedByUserId).orElse(null));
         } else {
             result =
                     service.create(
@@ -189,11 +187,14 @@ public class ConnectController {
         return service.lookup(requestId)
                 .map(
                         v -> {
-                            boolean canDeny = !leaderTeams.resolve(auth).isError();
+                            LeaderTeam caller = leaderTeams.resolve(auth);
+                            boolean reauth = v.mode() == ConnectRequest.Mode.REAUTH;
                             boolean canApprove =
-                                    v.mode() == ConnectRequest.Mode.REAUTH
-                                            ? !leaderTeams.resolveMember(auth).isError()
-                                            : canDeny;
+                                    !caller.isError()
+                                            && (!reauth
+                                                    || v.isLinkedAccount(
+                                                            caller.teamId(), caller.userId()));
+                            boolean canDeny = !reauth && !caller.isError();
                             return ResponseEntity.ok(
                                     new ViewResponse(
                                             v.requestId(),
@@ -216,8 +217,7 @@ public class ConnectController {
         if (view.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        boolean reauth = view.get().mode() == ConnectRequest.Mode.REAUTH;
-        LeaderTeam lt = reauth ? leaderTeams.resolveMember(auth) : leaderTeams.resolve(auth);
+        LeaderTeam lt = leaderTeams.resolve(auth);
         if (lt.isError()) {
             return ResponseEntity.status(lt.error()).build();
         }
@@ -227,9 +227,9 @@ public class ConnectController {
             return switch (result.rejection()) {
                 // Named separately so the page can say "you are signed in to a different account"
                 // rather than implying the request itself was bad.
-                case WRONG_TEAM ->
+                case WRONG_ACCOUNT ->
                         ResponseEntity.status(HttpStatus.CONFLICT)
-                                .body(Map.of("error", "WRONG_TEAM"));
+                                .body(Map.of("error", "WRONG_ACCOUNT"));
                 case UNAVAILABLE -> ResponseEntity.notFound().build();
             };
         }

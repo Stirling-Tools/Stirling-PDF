@@ -30,7 +30,9 @@ export interface PolicyRunRecord {
   stepCount?: number;
   /** Output files (downloadable via /api/v1/general/files/{id}) once done. */
   outputs: { fileId: string; fileName: string }[];
-  /** True once ALL outputs have been imported into the workspace. */
+  /** Snapshotted by the server: external results must never enter the workspace. */
+  externalOutput?: boolean;
+  /** True once delivery has been handled. */
   imported?: boolean;
   /** Output fileIds already imported — tracked per-file so a partial failure
    *  retries only the missing ones and never re-adds the ones that succeeded. */

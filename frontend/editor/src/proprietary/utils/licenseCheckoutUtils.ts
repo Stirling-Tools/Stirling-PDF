@@ -20,6 +20,10 @@ export async function pollTeamCheckout(
     if (config.isMounted && !config.isMounted()) return { success: false };
     try {
       const purchasedUsers = await verifyTeamCheckout(sessionId, quantity);
+      if (purchasedUsers != null && typeof purchasedUsers === "object") {
+        config.onStatusChange?.("ready");
+        return { success: true, scheduledAt: purchasedUsers.effectiveAt };
+      }
       if (purchasedUsers != null) {
         if (!(await requiresLocalTeamActivation())) {
           config.onStatusChange?.("ready");
@@ -172,6 +176,7 @@ export async function pollLicenseKeyWithBackoff(
  */
 export interface LicenseActivationResult {
   success: boolean;
+  scheduledAt?: number;
   licenseType?: string;
   licenseInfo?: LicenseInfo;
   error?: string;

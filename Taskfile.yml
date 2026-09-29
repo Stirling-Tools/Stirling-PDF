@@ -168,6 +168,7 @@ tasks:
         vars:
           PORT: '{{.APP_FRONTEND_PORT}}'
           BACKEND_URL: 'http://localhost:{{.APP_BACKEND_PORT}}'
+          SAAS_BASE_URL: 'http://localhost:{{.SAAS_BACKEND_PORT}}'
           OPEN: "true"
       - task: linked:_ready
         vars:
@@ -348,4 +349,5 @@ tasks:
       - task: backend:clean
       - task: frontend:clean
       - task: engine:clean
+      - task: desktop:clean
       - task: pre-commit:clean

@@ -2,15 +2,11 @@ import React, { useEffect } from "react";
 import { Modal, Text, Group } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import licenseService from "@app/services/licenseService";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
-import {
-  CheckoutStage,
-  StripeCheckoutProps,
-} from "@app/components/shared/stripeCheckout/types/checkout";
-import { StepModalHeader } from "@app/components/shared/StepModalHeader";
+import { StripeCheckoutProps } from "@app/components/shared/stripeCheckout/types/checkout";
 import { getModalTitle } from "@app/components/shared/stripeCheckout/utils/checkoutUtils";
 import { calculateSavings } from "@app/components/shared/stripeCheckout/utils/savingsCalculator";
 import { useCheckoutState } from "@app/components/shared/stripeCheckout/hooks/useCheckoutState";
@@ -49,6 +45,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   minimumSeats = 1,
   combinedChoose: requestedCombinedChoose = false,
   currentLimit = null,
+  capacityNotice,
   onSuccess,
   onError,
   onLicenseActivated,
@@ -222,35 +219,25 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
       // The period cards select rather than navigate, and capacity supplies the single continue.
       case "choose":
         return (
-          <>
-            <PlanSelectionStage
-              planGroup={planGroup}
-              minimumSeats={minimumSeats}
-              savings={savings}
-              selectedPeriod={checkoutState.selectedPeriod}
-              onSelectPlan={(period) => {
-                checkoutState.setSelectedPeriod(period);
-                if (sellsCapacity) {
-                  checkoutState.setServerQuantity(
-                    Math.max(
-                      blocksForUsers(minimumCapacity),
-                      checkoutState.serverQuantity || 1,
-                    ),
-                  );
-                }
-              }}
-            />
-            {sellsCapacity && (
-              <CapacityStage
-                selectedPlan={checkoutState.selectedPlan}
-                serverQuantity={checkoutState.serverQuantity}
-                setServerQuantity={checkoutState.setServerQuantity}
-                currentUsers={minimumSeats}
-                currentLimit={currentLimit}
-                onContinue={() => navigation.goToStage("payment")}
+          <CapacityStage
+            selectedPlan={checkoutState.selectedPlan}
+            serverQuantity={checkoutState.serverQuantity}
+            setServerQuantity={checkoutState.setServerQuantity}
+            currentUsers={minimumSeats}
+            currentLimit={currentLimit}
+            capacityNotice={capacityNotice}
+            periodPicker={
+              <PlanSelectionStage
+                compact
+                planGroup={planGroup}
+                minimumSeats={minimumSeats}
+                savings={savings}
+                selectedPeriod={checkoutState.selectedPeriod}
+                onSelectPlan={checkoutState.setSelectedPeriod}
               />
-            )}
-          </>
+            }
+            onContinue={() => navigation.goToStage("payment")}
+          />
         );
 
       case "plan-selection":
@@ -271,6 +258,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
             setServerQuantity={checkoutState.setServerQuantity}
             currentUsers={minimumSeats}
             currentLimit={currentLimit}
+            capacityNotice={capacityNotice}
             onContinue={() => navigation.goToStage("payment")}
           />
         );
@@ -309,97 +297,56 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   };
 
   const canGoBack = checkoutState.stageHistory.length > 0;
-  // The combined flow wears the stepped chrome, counting the pages it actually walks. The separate
-  // walk keeps its own title, because a step count would be a lie about how many pages it has.
-  const steppedPath: CheckoutStage[] | null = combinedChoose
-    ? ["choose", "payment"]
-    : null;
-  const steppedIndex = steppedPath
-    ? steppedPath.indexOf(checkoutState.state.currentStage)
-    : -1;
-  const steppedStep = steppedIndex >= 0 ? steppedIndex + 1 : null;
 
   return (
     <Modal
       opened={opened}
       onClose={handleClose}
       title={
-        steppedStep ? undefined : (
-          <Group gap="sm" wrap="nowrap">
-            {canGoBack && (
-              <ActionIcon
-                variant="tertiary"
-                size="lg"
-                disabled={checkoutState.state.loading}
-                onClick={navigation.goBack}
-                aria-label={t("common.back", "Back")}
-              >
-                <LocalIcon icon="arrow-back" width={20} height={20} />
-              </ActionIcon>
-            )}
-            <Text fw={600} size="lg">
-              {getModalTitle(
-                checkoutState.state.currentStage,
-                planGroup.name,
-                t,
-              )}
-            </Text>
-          </Group>
-        )
+        <Group gap="sm" wrap="nowrap">
+          {canGoBack && (
+            <ActionIcon
+              variant="tertiary"
+              size="lg"
+              disabled={checkoutState.state.loading}
+              onClick={navigation.goBack}
+              aria-label={t("common.back", "Back")}
+            >
+              <Icon name="arrow-left" size={20} />
+            </ActionIcon>
+          )}
+          <Text fw={600} size="lg">
+            {combinedChoose
+              ? currentLimit != null
+                ? t("payment.adjustTeam.title", "Adjust Team plan")
+                : t("payment.upgradeTeam.title", "Upgrade to Team")
+              : getModalTitle(
+                  checkoutState.state.currentStage,
+                  planGroup.name,
+                  t,
+                )}
+          </Text>
+        </Group>
       }
-      size={isMobile ? "100%" : 980}
+      size={isMobile ? "100%" : combinedChoose ? 500 : 980}
       centered
       radius="lg"
-      withCloseButton={!steppedStep}
+      withCloseButton
       closeOnEscape={true}
       closeOnClickOutside={false}
       fullScreen={isMobile}
       zIndex={Z_INDEX_OVER_CONFIG_MODAL}
       styles={{
-        body: {},
+        header: combinedChoose
+          ? { borderBottom: 0, padding: "1.25rem 1.25rem 0.25rem" }
+          : undefined,
+        body: combinedChoose ? { padding: "0 1.25rem 1.25rem" } : undefined,
+        close: combinedChoose ? { borderRadius: "50%" } : undefined,
         content: {
           maxHeight: "95vh",
         },
       }}
     >
-      {steppedStep && (
-        <StepModalHeader
-          title={
-            currentLimit != null
-              ? t("payment.addCapacity.title", "Add capacity")
-              : t("payment.upgradeTeam.title", "Upgrade to Team")
-          }
-          subtitle={
-            currentLimit != null
-              ? t(
-                  "payment.addCapacity.currently",
-                  "Currently up to {{users}} users",
-                  { users: currentLimit },
-                )
-              : undefined
-          }
-          step={steppedStep}
-          total={steppedPath?.length ?? 0}
-          stepLabel={t("payment.stepOf", "Step {{n}} of {{total}}", {
-            n: steppedStep,
-            total: steppedPath?.length ?? 0,
-          })}
-          aside={
-            canGoBack ? (
-              <ActionIcon
-                variant="tertiary"
-                size="lg"
-                disabled={checkoutState.state.loading}
-                onClick={navigation.goBack}
-                aria-label={t("common.back", "Back")}
-              >
-                <LocalIcon icon="arrow-back" width={20} height={20} />
-              </ActionIcon>
-            ) : undefined
-          }
-          onClose={handleClose}
-        />
-      )}
       {renderContent()}
     </Modal>
   );

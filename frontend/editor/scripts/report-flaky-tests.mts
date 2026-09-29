@@ -1,23 +1,11 @@
 // Reads a Playwright JSON report and surfaces "flaky" tests (tests that
-// failed at least once, then passed on retry) in GitHub Actions WITHOUT
-// failing the job:
+// failed at least once, then passed on retry) in GitHub Actions:
 //   - emits one ::warning:: workflow command per flaky test, so the run and
 //     PR show a yellow warning triangle + count, and the annotation links to
 //     the test's source line
 //   - appends a summary table to the job summary ($GITHUB_STEP_SUMMARY)
-//
-// A green-but-flaky job is otherwise invisible (Playwright exits 0 once a
-// retry passes), which lets flakes accrete unnoticed. This makes them visible
-// without turning them into hard failures.
-//
-// Run: `npx tsx editor/scripts/report-flaky-tests.mts <results.json> [more.json...]`
-//      (a single path is also read from PLAYWRIGHT_JSON_OUTPUT_FILE). Multiple
-//      reports are merged + de-duplicated, so a job that runs Playwright in
-//      several segments (e.g. the enterprise OAuth/SAML/license phases) can
-//      pass one report per phase. A missing report or zero flaky tests is a
-//      silent no-op, so it is safe to run with `if: always()` after any
-//      Playwright step.
 
+import { execFileSync } from "child_process";
 import { appendFileSync, existsSync, readFileSync } from "fs";
 import { isAbsolute, join, relative } from "path";
 import type { JSONReport, JSONReportSuite } from "@playwright/test/reporter";
@@ -26,6 +14,72 @@ interface FlakyTest {
   file: string;
   line: number;
   title: string;
+}
+
+// Added/changed line ranges on the new side of `base...HEAD`, per repo-relative
+// path, so a flaky test's declaration line can be tested for "this PR wrote it".
+type ChangedLines = Map<string, Array<[number, number]>>;
+
+// Parses `git diff --unified=0` hunk headers (`@@ -a,b +c,d @@`) for the given
+// files into new-side line ranges. Whitespace-only churn is ignored so a
+// reindent alone does not brand every test in the file as new. Fails open: a
+// git error yields no ranges, so a broken diff warns rather than blocks.
+function computeChangedLines(
+  baseSha: string,
+  workspace: string,
+  files: string[],
+): ChangedLines {
+  const ranges: ChangedLines = new Map();
+  if (files.length === 0) return ranges;
+  let diff: string;
+  try {
+    diff = execFileSync(
+      "git",
+      [
+        // A container checkout is often owned by a different uid than the
+        // process, which otherwise trips git's dubious-ownership guard.
+        "-c",
+        `safe.directory=${workspace}`,
+        "diff",
+        "-w",
+        "--unified=0",
+        "--diff-filter=AMR",
+        `${baseSha}...HEAD`,
+        "--",
+        ...files,
+      ],
+      { cwd: workspace, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
+    );
+  } catch (error) {
+    process.stdout.write(
+      `::warning title=Flaky gate::could not diff against ${baseSha}; new-flake gate skipped (${error instanceof Error ? error.message : String(error)})\n`,
+    );
+    return ranges;
+  }
+  let current: string | null = null;
+  for (const rawLine of diff.split("\n")) {
+    if (rawLine.startsWith("+++ ")) {
+      // "+++ b/path", or "+++ /dev/null" for a deletion (no new side).
+      const path = rawLine.slice(4).replace(/^b\//, "");
+      current = path === "/dev/null" ? null : path;
+      if (current && !ranges.has(current)) ranges.set(current, []);
+      continue;
+    }
+    if (!current || !rawLine.startsWith("@@")) continue;
+    const match = /\+(\d+)(?:,(\d+))?/.exec(rawLine);
+    if (!match) continue;
+    const start = Number(match[1]);
+    const count = match[2] === undefined ? 1 : Number(match[2]);
+    // count 0 is a pure deletion: nothing added on the new side.
+    if (count > 0) ranges.get(current)?.push([start, start + count - 1]);
+  }
+  return ranges;
+}
+
+function isNewlyIntroduced(test: FlakyTest, changed: ChangedLines): boolean {
+  return (changed.get(test.file) ?? []).some(
+    ([start, end]) => test.line >= start && test.line <= end,
+  );
 }
 
 // Playwright records each test's outcome as expected|unexpected|flaky|skipped.
@@ -64,9 +118,9 @@ function collectFlaky(
   return flaky;
 }
 
-// Deliberately no process.exit() calls: every path falls through to a natural
-// exit(0). This step must never fail the job, and it keeps CI green even when
-// the report is missing or clean.
+// Exits non-zero only for a flake this PR introduced (strict mode below);
+// every other path falls through to exit(0), so a missing or clean report, or
+// a run with no base to diff against, keeps CI green.
 function main(): void {
   // Accept one or more report paths: a job may run Playwright in several
   // segments, each writing its own report (the enterprise job does this for
@@ -107,6 +161,24 @@ function main(): void {
     );
   }
 
+  // Strict gate: on a PR (FLAKY_STRICT_BASE_SHA = the base commit), a flake the
+  // PR itself introduced becomes an ::error:: and fails the job. Without a base
+  // to diff against nothing is newly introduced, so the gate is inert.
+  const baseSha = process.env.FLAKY_STRICT_BASE_SHA;
+  const changed = baseSha
+    ? computeChangedLines(baseSha, workspace, [
+        ...new Set(flaky.map((f) => f.file).filter(Boolean)),
+      ])
+    : (new Map() as ChangedLines);
+  const introduced = flaky.filter((f) => isNewlyIntroduced(f, changed));
+
+  for (const f of introduced) {
+    const loc = f.file ? `file=${f.file},line=${f.line},` : "";
+    process.stdout.write(
+      `::error ${loc}title=New flaky test::${f.title} was introduced by this change and passed only on retry; make it deterministic before merging\n`,
+    );
+  }
+
   const summaryPath = process.env.GITHUB_STEP_SUMMARY;
   if (summaryPath) {
     const plural = flaky.length === 1 ? "" : "s";
@@ -115,12 +187,25 @@ function main(): void {
       "",
       "These passed, but not on the first attempt. Worth fixing before they turn into hard failures.",
       "",
-      "| Test | Location |",
-      "| --- | --- |",
-      ...flaky.map((f) => `| ${f.title} | \`${f.file || "?"}:${f.line}\` |`),
+      "| Test | Location | Introduced here |",
+      "| --- | --- | --- |",
+      ...flaky.map(
+        (f) =>
+          `| ${f.title} | \`${f.file || "?"}:${f.line}\` | ${introduced.includes(f) ? ":x: yes" : "no"} |`,
+      ),
       "",
     ];
+    if (introduced.length > 0) {
+      lines.push(
+        `**${introduced.length} of these ${introduced.length === 1 ? "was" : "were"} introduced by this change and fail the check.** A test must pass on the first attempt.`,
+        "",
+      );
+    }
     appendFileSync(summaryPath, lines.join("\n") + "\n");
+  }
+
+  if (introduced.length > 0) {
+    process.exitCode = 1;
   }
 }
 
