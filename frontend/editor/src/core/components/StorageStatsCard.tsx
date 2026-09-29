@@ -1,8 +1,8 @@
 import React from "react";
-import { Card, Group, Text, Button, Progress } from "@mantine/core";
+import { Card, Group, Text, Progress } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import StorageIcon from "@mui/icons-material/Storage";
-import DeleteIcon from "@mui/icons-material/Delete";
+import { Icon } from "@app/ui/Icon";
 import { StorageStats } from "@app/services/fileStorage";
 import { formatFileSize } from "@app/utils/fileUtils";
 import { getStorageUsagePercent } from "@app/utils/storageUtils";
@@ -29,7 +29,7 @@ const StorageStatsCard: React.FC<StorageStatsCardProps> = ({
   return (
     <Card withBorder p="sm" mb="md" style={{ width: "90%", maxWidth: 600 }}>
       <Group align="center" gap="md">
-        <StorageIcon />
+        <Icon name="server" />
         <div style={{ flex: 1 }}>
           <Text size="sm" fw={500}>
             {t("fileManager.storage", "Storage")}:{" "}
@@ -38,6 +38,7 @@ const StorageStatsCard: React.FC<StorageStatsCardProps> = ({
           </Text>
           {storageStats.quota && (
             <Progress
+              aria-label={t("fileManager.storageUsed", "Storage used")}
               value={storageUsagePercent}
               color={
                 storageUsagePercent > 80
@@ -58,21 +59,16 @@ const StorageStatsCard: React.FC<StorageStatsCardProps> = ({
         <Group gap="xs">
           {filesCount > 0 && (
             <Button
-              variant="light"
-              color="red"
-              size="xs"
+              variant="secondary"
+              accent="danger"
+              size="sm"
               onClick={onClearAll}
-              leftSection={<DeleteIcon style={{ fontSize: 16 }} />}
+              leftSection={<Icon name="trash" size={16} />}
             >
               {t("fileManager.clearAll", "Clear All")}
             </Button>
           )}
-          <Button
-            variant="light"
-            color="blue"
-            size="xs"
-            onClick={onReloadFiles}
-          >
+          <Button variant="secondary" size="sm" onClick={onReloadFiles}>
             Reload Files
           </Button>
         </Group>

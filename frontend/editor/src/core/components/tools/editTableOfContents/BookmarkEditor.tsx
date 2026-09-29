@@ -1,9 +1,7 @@
 import { Fragment, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  ActionIcon,
   Badge,
-  Button,
   Flex,
   Group,
   NumberInput,
@@ -13,12 +11,14 @@ import {
   TextInput,
   Tooltip,
 } from "@mantine/core";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import {
   BookmarkNode,
   createBookmarkNode,
 } from "@app/utils/editTableOfContents";
 
+import { Icon } from "@app/ui/Icon";
 interface BookmarkEditorProps {
   bookmarks: BookmarkNode[];
   onChange: (bookmarks: BookmarkNode[]) => void;
@@ -208,9 +208,7 @@ export default function BookmarkEditor({
 
   const renderBookmark = (bookmark: BookmarkNode, level = 0) => {
     const hasChildren = bookmark.children.length > 0;
-    const chevronIcon = bookmark.expanded
-      ? "expand-more-rounded"
-      : "chevron-right-rounded";
+    const chevronIcon = bookmark.expanded ? "chevron-down" : "chevron-right";
 
     return (
       <Paper
@@ -219,16 +217,16 @@ export default function BookmarkEditor({
         withBorder
         p="md"
         style={{
-          borderColor: "var(--border-default)",
-          background: level === 0 ? "var(--bg-surface)" : "var(--bg-muted)",
+          borderColor: "var(--c-border)",
+          background:
+            level === 0 ? "var(--c-surface)" : "var(--c-surface-sunken)",
         }}
       >
         <Stack gap="sm">
           <Flex align="flex-start" justify="space-between" gap="md">
             <Group gap="sm" align="flex-start">
               <ActionIcon
-                variant="subtle"
-                color="gray"
+                variant="tertiary"
                 onMouseDown={(e) => {
                   e.preventDefault();
                   if (hasChildren) handleToggle(bookmark.id);
@@ -240,7 +238,7 @@ export default function BookmarkEditor({
                 )}
                 style={{ marginTop: 4 }}
               >
-                <LocalIcon icon={chevronIcon} />
+                <Icon name={chevronIcon} size="1em" />
               </ActionIcon>
               <Stack gap={2}>
                 <Group gap="xs" align="center">
@@ -272,15 +270,19 @@ export default function BookmarkEditor({
                 )}
               >
                 <ActionIcon
-                  variant="subtle"
-                  color="green"
+                  variant="tertiary"
+                  accent="success"
                   onMouseDown={(e) => {
                     e.preventDefault();
                     handleAddChild(bookmark.id);
                   }}
                   disabled={disabled}
+                  aria-label={t(
+                    "editTableOfContents.editor.actions.addChild",
+                    "Add child bookmark",
+                  )}
                 >
-                  <LocalIcon icon="subdirectory-arrow-right-rounded" />
+                  <Icon name="corner-down-right" size="1em" />
                 </ActionIcon>
               </Tooltip>
               <Tooltip
@@ -290,15 +292,18 @@ export default function BookmarkEditor({
                 )}
               >
                 <ActionIcon
-                  variant="subtle"
-                  color="blue"
+                  variant="tertiary"
                   onMouseDown={(e) => {
                     e.preventDefault();
                     handleAddSibling(bookmark.id);
                   }}
                   disabled={disabled}
+                  aria-label={t(
+                    "editTableOfContents.editor.actions.addSibling",
+                    "Add sibling bookmark",
+                  )}
                 >
-                  <LocalIcon icon="add-rounded" />
+                  <Icon name="plus" size="1em" />
                 </ActionIcon>
               </Tooltip>
               <Tooltip
@@ -308,15 +313,19 @@ export default function BookmarkEditor({
                 )}
               >
                 <ActionIcon
-                  variant="subtle"
-                  color="red"
+                  variant="tertiary"
+                  accent="danger"
                   onMouseDown={(e) => {
                     e.preventDefault();
                     handleRemove(bookmark.id);
                   }}
                   disabled={disabled}
+                  aria-label={t(
+                    "editTableOfContents.editor.actions.remove",
+                    "Remove bookmark",
+                  )}
                 >
-                  <LocalIcon icon="delete-rounded" />
+                  <Icon name="trash" size="1em" />
                 </ActionIcon>
               </Tooltip>
             </Group>
@@ -370,7 +379,7 @@ export default function BookmarkEditor({
             <Stack
               gap="sm"
               pl="lg"
-              style={{ borderLeft: "1px solid var(--border-default)" }}
+              style={{ borderLeft: "1px solid var(--c-border)" }}
             >
               {bookmark.children.map((child) => (
                 <Fragment key={child.id}>
@@ -399,9 +408,8 @@ export default function BookmarkEditor({
           </Text>
         </div>
         <Button
-          variant="default"
-          color="blue"
-          leftSection={<LocalIcon icon="bookmark-add-rounded" />}
+          variant="secondary"
+          leftSection={<Icon name="bookmark-plus" size="1em" />}
           onMouseDown={(e) => {
             e.preventDefault();
             handleAddTopLevel();
@@ -418,10 +426,7 @@ export default function BookmarkEditor({
       {bookmarks.length === 0 ? (
         <Paper withBorder radius="md" ta="center" py="xl">
           <Stack gap="xs" align="center" px="lg">
-            <LocalIcon
-              icon="bookmark-add-rounded"
-              style={{ fontSize: "2.25rem" }}
-            />
+            <Icon name="bookmark-plus" size="2.25rem" />
             <Text fw={600}>
               {t("editTableOfContents.editor.empty.title", "No bookmarks yet")}
             </Text>
@@ -432,9 +437,8 @@ export default function BookmarkEditor({
               )}
             </Text>
             <Button
-              variant="subtle"
-              color="blue"
-              leftSection={<LocalIcon icon="add-rounded" />}
+              variant="tertiary"
+              leftSection={<Icon name="plus" size="1em" />}
               onMouseDown={(e) => {
                 e.preventDefault();
                 handleAddTopLevel();

@@ -21,6 +21,11 @@ import stirling.software.SPDF.model.api.security.PDFPasswordRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
+import stirling.software.common.model.tool.ToolIOCase;
+import stirling.software.common.model.tool.ToolIOWhen;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -39,11 +44,14 @@ public class PasswordController {
             value = "/remove-password",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(
+            accepts = {ToolFormat.PDF, ToolFormat.PDF_ENCRYPTED},
+            produces = ToolFormat.PDF)
     @Operation(
             summary = "Remove password from a PDF file",
             description =
                     "This endpoint removes the password from a protected PDF file. Users need to"
-                            + " provide the existing password. Input:PDF Output:PDF Type:SISO")
+                            + " provide the existing password.")
     public ResponseEntity<Resource> removePassword(@ModelAttribute PDFPasswordRequest request)
             throws IOException {
         MultipartFile fileInput = request.getFileInput();
@@ -71,12 +79,21 @@ public class PasswordController {
             value = "/add-password",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(
+            produces = ToolFormat.PDF_ENCRYPTED,
+            cases =
+                    @ToolIOCase(
+                            when = {
+                                @ToolIOWhen(param = "password", matches = ""),
+                                @ToolIOWhen(param = "ownerPassword", matches = "")
+                            },
+                            produces = ToolFormat.PDF,
+                            arity = ToolArity.SISO))
     @Operation(
             summary = "Add password to a PDF file",
             description =
                     "This endpoint adds password protection to a PDF file. Users can specify a set"
-                            + " of permissions that should be applied to the file. Input:PDF"
-                            + " Output:PDF")
+                            + " of permissions that should be applied to the file.")
     public ResponseEntity<Resource> addPassword(@ModelAttribute AddPasswordRequest request)
             throws IOException {
         MultipartFile fileInput = request.getFileInput();
@@ -107,15 +124,15 @@ public class PasswordController {
             StandardProtectionPolicy spp =
                     new StandardProtectionPolicy(ownerPassword, password, ap);
 
-            if ((ownerPassword != null && ownerPassword.length() > 0)
-                    || (password != null && password.length() > 0)) {
+            if ((ownerPassword != null && !ownerPassword.isEmpty())
+                    || (password != null && !password.isEmpty())) {
                 spp.setEncryptionKeyLength(keyLength);
             }
             spp.setPermissions(ap);
             document.protect(spp);
 
-            if ((ownerPassword == null || ownerPassword.length() == 0)
-                    && (password == null || password.length() == 0))
+            if ((ownerPassword == null || ownerPassword.isEmpty())
+                    && (password == null || password.isEmpty()))
                 return WebResponseUtils.pdfDocToWebResponse(
                         document,
                         GeneralUtils.generateFilename(

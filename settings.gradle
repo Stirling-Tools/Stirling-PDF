@@ -23,29 +23,6 @@ plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
 }
 
-// Depot remote build cache. Silently no-ops when DEPOT_TOKEN is absent
-// (local dev without depot login, and fork PRs where GitHub hides secrets),
-// so contributors without Depot access still build fine on local cache only.
-buildCache {
-    def depotToken = System.getenv('DEPOT_TOKEN')
-    local {
-        enabled = true
-    }
-    if (depotToken) {
-        remote(HttpBuildCache) {
-            url = 'https://cache.depot.dev'
-            enabled = true
-            // Only CI runs push to the shared cache; dev laptops pull-only
-            // so a misconfigured local task can't poison everyone else.
-            push = System.getenv('CI') == 'true'
-            credentials {
-                username = ''
-                password = depotToken
-            }
-        }
-    }
-}
-
 rootProject.name = 'Stirling PDF'
 
 // Flavors: core | proprietary (default) | saas.

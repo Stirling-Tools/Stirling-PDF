@@ -11,10 +11,12 @@ import {
 } from "@app/hooks/tools/shared/toolOperationTypes";
 import { zipFileService } from "@app/services/zipFileService";
 import { processResponse } from "@app/utils/toolResponseProcessor";
+import { extractErrorMessage } from "@app/utils/toolErrorHandler";
+import { type AutomationConfig } from "@app/types/automation";
 
 export const processMultiFileResponse = async (
   responseData: Blob,
-  responseHeaders: any,
+  responseHeaders: Record<string, unknown>,
   files: File[],
   filePrefix: string,
   preserveBackendFilename?: boolean,
@@ -65,7 +67,6 @@ const executeApiRequest = async (
 ): Promise<File[]> => {
   const response = await apiClient.post(endpoint, formData, {
     responseType: "blob",
-    timeout: AUTOMATION_CONSTANTS.OPERATION_TIMEOUT,
   });
 
   return await processMultiFileResponse(
@@ -88,12 +89,17 @@ const executeSingleFileOperation = async (
 ): Promise<File[]> => {
   const resultFiles: File[] = [];
 
-  for (const file of files) {
-    const endpoint =
-      typeof config.endpoint === "function"
-        ? config.endpoint(parameters)
-        : config.endpoint;
+  const endpoint =
+    typeof config.endpoint === "function"
+      ? config.endpoint(parameters)
+      : config.endpoint;
+  if (!endpoint) {
+    throw new Error(
+      "This operation has no backend endpoint and cannot be executed directly.",
+    );
+  }
 
+  for (const file of files) {
     const formData = config.buildFormData(parameters, file);
 
     const processedFiles = await executeApiRequest(
@@ -122,6 +128,11 @@ const executeMultiFileOperation = async (
     typeof config.endpoint === "function"
       ? config.endpoint(parameters)
       : config.endpoint;
+  if (!endpoint) {
+    throw new Error(
+      "This operation has no backend endpoint and cannot be executed directly.",
+    );
+  }
 
   const formData = config.buildFormData(parameters, files);
 
@@ -193,10 +204,10 @@ export const executeToolOperationWithPrefix = async (
         filePrefix,
       );
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error(`❌ ${operationName} failed:`, error);
     throw new Error(
-      `${operationName} operation failed: ${error.response?.data || error.message}`,
+      `${operationName} operation failed: ${extractErrorMessage(error)}`,
       {
         cause: error,
       },
@@ -208,7 +219,7 @@ export const executeToolOperationWithPrefix = async (
  * Execute an entire automation sequence
  */
 export const executeAutomationSequence = async (
-  automation: any,
+  automation: AutomationConfig,
   initialFiles: File[],
   toolRegistry: ToolRegistry,
   onStepStart?: (stepIndex: number, operationName: string) => void,
@@ -251,9 +262,9 @@ export const executeAutomationSequence = async (
       );
       currentFiles = resultFiles;
       onStepComplete?.(i, resultFiles);
-    } catch (error: any) {
+    } catch (error) {
       console.error(`❌ Step ${i + 1} failed:`, error);
-      onStepError?.(i, error.message);
+      onStepError?.(i, error instanceof Error ? error.message : String(error));
       throw error;
     }
   }

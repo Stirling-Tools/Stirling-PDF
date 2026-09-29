@@ -1,7 +1,8 @@
 import React from "react";
-import { Anchor, Button, Group, Paper, Stack, Text } from "@mantine/core";
+import { Anchor, Group, Paper, Stack, Text } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useFooterInfo } from "@app/hooks/useFooterInfo";
 import { useCookieConsent } from "@app/hooks/useCookieConsent";
@@ -27,9 +28,7 @@ const LegalSection: React.FC = () => {
   const cookiePolicy = config?.cookiePolicy ?? footerInfo?.cookiePolicy;
   const impressum = config?.impressum ?? footerInfo?.impressum;
 
-  const { showCookiePreferences } = useCookieConsent({
-    analyticsEnabled: analyticsEnabled === true,
-  });
+  const { showCookiePreferences } = useCookieConsent();
 
   const isValidLink = (link?: string) => link && link.trim().length > 0;
 
@@ -87,7 +86,7 @@ const LegalSection: React.FC = () => {
     >
       <Group gap={6} wrap="nowrap">
         {link.label}
-        <LocalIcon icon="open-in-new-rounded" width="0.9rem" height="0.9rem" />
+        <Icon name="external-link" size="0.9rem" />
       </Group>
     </Anchor>
   );
@@ -126,7 +125,7 @@ const LegalSection: React.FC = () => {
               </Text>
             </div>
             <Button
-              variant="default"
+              variant="secondary"
               size="sm"
               id="cookieBanner"
               onClick={showCookiePreferences}

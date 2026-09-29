@@ -4,13 +4,12 @@ import {
   Stack,
   ColorPicker as MantineColorPicker,
   Group,
-  Button,
   ColorSwatch,
   Slider,
   Text,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-
+import { Button } from "@app/ui/Button";
 interface ColorPickerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -52,6 +51,13 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
           format="hex"
           value={selectedColor}
           onChange={onColorChange}
+          // The saturation area and hue bar are role="slider" divs; these are
+          // their only accessible names.
+          saturationLabel={t(
+            "colorPicker.saturation",
+            "Saturation and brightness",
+          )}
+          hueLabel={t("colorPicker.hue", "Hue")}
           swatches={[
             "#000000",
             "#0066cc",
@@ -74,6 +80,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
               max={100}
               value={opacity}
               onChange={onOpacityChange}
+              thumbLabel={resolvedOpacityLabel}
               marks={[
                 { value: 25, label: "25%" },
                 { value: 50, label: "50%" },

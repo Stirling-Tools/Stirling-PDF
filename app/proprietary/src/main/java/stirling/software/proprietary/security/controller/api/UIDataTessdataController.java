@@ -3,6 +3,7 @@ package stirling.software.proprietary.security.controller.api;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -150,7 +151,7 @@ public class UIDataTessdataController {
     protected boolean downloadLanguageFile(String safeLang, Path targetFile, String downloadUrl) {
         HttpURLConnection connection = null;
         try {
-            URL url = new URL(downloadUrl);
+            URL url = URI.create(downloadUrl).toURL();
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.setRequestProperty("User-Agent", "Stirling-PDF-App");
@@ -199,7 +200,7 @@ public class UIDataTessdataController {
         String apiUrl = "https://api.github.com/repos/tesseract-ocr/tessdata/contents";
         HttpURLConnection connection = null;
         try {
-            URL url = new URL(apiUrl);
+            URL url = URI.create(apiUrl).toURL();
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.setRequestProperty("User-Agent", "Stirling-PDF-App");

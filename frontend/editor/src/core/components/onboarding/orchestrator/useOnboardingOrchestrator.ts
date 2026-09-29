@@ -16,7 +16,6 @@ import {
   markOnboardingCompleted,
   migrateFromLegacyPreferences,
 } from "@app/components/onboarding/orchestrator/onboardingStorage";
-import { accountService } from "@app/services/accountService";
 import { useBypassOnboarding } from "@app/components/onboarding/useBypassOnboarding";
 
 const AUTH_ROUTES = ["/login", "/signup", "/auth", "/invite"];
@@ -41,13 +40,10 @@ function getInitialRuntimeState(
   try {
     const tourRequested =
       sessionStorage.getItem(SESSION_TOUR_REQUESTED) === "true";
-    const sessionTourType = sessionStorage.getItem(SESSION_TOUR_TYPE);
+    // Any stored tour id is accepted (validated against the registry at render);
+    // fall back to the default tour type when absent.
     const tourType =
-      sessionTourType === "admin" ||
-      sessionTourType === "tools" ||
-      sessionTourType === "whatsnew"
-        ? sessionTourType
-        : "whatsnew";
+      sessionStorage.getItem(SESSION_TOUR_TYPE) ?? baseState.tourType;
     const selectedRole = sessionStorage.getItem(SESSION_SELECTED_ROLE) as
       | "admin"
       | "user"
@@ -101,21 +97,6 @@ function clearRuntimeStateSession(): void {
     sessionStorage.removeItem(SESSION_SELECTED_ROLE);
   } catch {
     // Ignore errors
-  }
-}
-
-function parseMfaRequired(settings: string | null | undefined): boolean {
-  if (!settings) return false;
-
-  try {
-    const parsed = JSON.parse(settings) as { mfaRequired?: string };
-    return parsed.mfaRequired?.toLowerCase() === "true";
-  } catch (error) {
-    console.warn(
-      "[useOnboardingOrchestrator] Failed to parse account settings JSON:",
-      error,
-    );
-    return false;
   }
 }
 
@@ -183,6 +164,7 @@ export function useOnboardingOrchestrator(
   );
   const [isPaused, setIsPaused] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [manuallyStarted, setManuallyStarted] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(-1);
   const migrationDone = useRef(false);
   const initialIndexSet = useRef(false);
@@ -206,9 +188,7 @@ export function useOnboardingOrchestrator(
         isOverLimit: serverExperience.overFreeTierLimit ?? false,
         requiresLicense:
           !serverExperience.hasPaidLicense &&
-          (serverExperience.overFreeTierLimit === true ||
-            (serverExperience.effectiveIsAdmin &&
-              serverExperience.userCountResolved)),
+          serverExperience.overFreeTierLimit === true,
       },
     }));
   }, [
@@ -220,37 +200,6 @@ export function useOnboardingOrchestrator(
     serverExperience.effectiveIsAdmin,
     serverExperience.userCountResolved,
   ]);
-
-  useEffect(() => {
-    const checkFirstLogin = async () => {
-      if (config?.enableLogin !== true || !hasAuthToken()) return;
-
-      try {
-        const [accountData, loginPageData] = await Promise.all([
-          accountService.getAccountData(),
-          accountService.getLoginPageData(),
-        ]);
-
-        setRuntimeState((prev) => ({
-          ...prev,
-          requiresPasswordChange: accountData.changeCredsFlag,
-          firstLoginUsername: accountData.username,
-          usingDefaultCredentials: loginPageData.showDefaultCredentials,
-          requiresMfaSetup: parseMfaRequired(accountData.settings),
-        }));
-      } catch (error) {
-        console.log(
-          "[OnboardingOrchestrator] Failed to fetch account data for onboarding runtime state:",
-          error,
-        );
-        // Account endpoint failed - user not logged in or security disabled
-      }
-    };
-
-    if (!configLoading) {
-      checkFirstLogin();
-    }
-  }, [config?.enableLogin, configLoading]);
 
   const isOnAuthRoute = AUTH_ROUTES.some((route) =>
     location.pathname.startsWith(route),
@@ -289,23 +238,8 @@ export function useOnboardingOrchestrator(
   useEffect(() => {
     if (configLoading || !adminStatusResolved) return;
 
-    // If there are no steps to show, mark initialized/completed baseline
-    if (activeFlow.length === 0) {
-      setCurrentStepIndex(0);
-      initialIndexSet.current = true;
-      return;
-    }
-
-    // If onboarding has been completed, don't show it
-    if (isOnboardingCompleted()) {
-      setCurrentStepIndex(activeFlow.length);
-      initialIndexSet.current = true;
-      return;
-    }
-
-    // Start from the beginning
     if (!initialIndexSet.current) {
-      setCurrentStepIndex(0);
+      setCurrentStepIndex(activeFlow.length);
       initialIndexSet.current = true;
     }
   }, [activeFlow, configLoading, adminStatusResolved]);
@@ -326,6 +260,7 @@ export function useOnboardingOrchestrator(
     !isPaused &&
     !isComplete &&
     isInitialized &&
+    manuallyStarted &&
     currentStep !== null;
   const isLoading =
     configLoading ||
@@ -389,6 +324,7 @@ export function useOnboardingOrchestrator(
       if (index !== -1) {
         setCurrentStepIndex(index);
         setIsPaused(false);
+        setManuallyStarted(true);
       }
     },
     [activeFlow],

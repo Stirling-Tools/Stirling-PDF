@@ -8,9 +8,17 @@ import {
 import { isEmptyOutput } from "@app/services/errorUtils";
 import type { ProcessingProgress } from "@app/hooks/tools/shared/useToolState";
 import type { StirlingFile, FileId } from "@app/types/fileContext";
+import { isSignupRequiredError } from "@app/utils/toolErrorHandler";
+
+/** An input that did not survive the batch, with the error it failed on. */
+export interface FailedInput {
+  fileId: FileId;
+  name: string;
+  error: unknown;
+}
 
 export interface ApiCallsConfig<TParams = void> {
-  endpoint: string | ((params: TParams) => string);
+  endpoint: string | null | ((params: TParams) => string | null);
   buildFormData: (params: TParams, file: File) => FormData;
   filePrefix?: string;
   responseHandler?: ResponseHandler;
@@ -28,14 +36,36 @@ export const useToolApiCalls = <TParams = void>() => {
       onProgress: (progress: ProcessingProgress) => void,
       onStatus: (status: string) => void,
       markFileError?: (fileId: FileId) => void,
-    ): Promise<{ outputFiles: File[]; successSourceIds: FileId[] }> => {
+    ): Promise<{
+      outputFiles: File[];
+      successSourceIds: FileId[];
+      failedInputs: FailedInput[];
+      unprocessedSourceIds: FileId[];
+    }> => {
       const processedFiles: File[] = [];
       const successSourceIds: FileId[] = [];
+      // Kept with their errors: a batch where only some inputs fail still owes the caller a
+      // report for each one, and it cannot derive the kind without the error.
+      const failedInputs: FailedInput[] = [];
+      const unprocessedSourceIds: FileId[] = [];
       const failedFiles: string[] = [];
       const total = validFiles.length;
 
       // Create cancel token for this operation
       cancelTokenRef.current = axios.CancelToken.source();
+
+      // Params are the same for every file, so resolve the endpoint once. A null
+      // endpoint means the tool has no backend call (e.g. client-side tools) and
+      // should never reach here, so fail loudly rather than POST to null.
+      const endpoint =
+        typeof config.endpoint === "function"
+          ? config.endpoint(params)
+          : config.endpoint;
+      if (!endpoint) {
+        throw new Error(
+          "This operation has no backend endpoint and cannot be executed directly.",
+        );
+      }
 
       for (let i = 0; i < validFiles.length; i++) {
         const file = validFiles[i];
@@ -51,10 +81,6 @@ export const useToolApiCalls = <TParams = void>() => {
 
         try {
           const formData = config.buildFormData(params, file);
-          const endpoint =
-            typeof config.endpoint === "function"
-              ? config.endpoint(params)
-              : config.endpoint;
           console.debug("[processFiles] POST", { endpoint, name: file.name });
           const response = await apiClient.post(endpoint, formData, {
             responseType: "blob",
@@ -80,6 +106,11 @@ export const useToolApiCalls = <TParams = void>() => {
               name: file.name,
             });
             failedFiles.push(file.name);
+            failedInputs.push({
+              fileId: file.fileId,
+              name: file.name,
+              error: new Error(`${endpoint} returned an empty output`),
+            });
             try {
               markFileError?.(file.fileId);
             } catch (e) {
@@ -95,11 +126,19 @@ export const useToolApiCalls = <TParams = void>() => {
             produced: responseFiles.length,
           });
         } catch (error) {
+          if (isSignupRequiredError(error)) {
+            if (processedFiles.length === 0) throw error;
+            unprocessedSourceIds.push(
+              ...validFiles.slice(i).map((input) => input.fileId),
+            );
+            break;
+          }
           if (axios.isCancel(error)) {
             throw new Error("Operation was cancelled", { cause: error });
           }
           console.error("[processFiles] Failed", { name: file.name, error });
           failedFiles.push(file.name);
+          failedInputs.push({ fileId: file.fileId, name: file.name, error });
           // mark errored file so UI can highlight
           try {
             markFileError?.(file.fileId);
@@ -131,7 +170,12 @@ export const useToolApiCalls = <TParams = void>() => {
         outputs: processedFiles.length,
         failed: failedFiles.length,
       });
-      return { outputFiles: processedFiles, successSourceIds };
+      return {
+        outputFiles: processedFiles,
+        successSourceIds,
+        failedInputs,
+        unprocessedSourceIds,
+      };
     },
     [],
   );

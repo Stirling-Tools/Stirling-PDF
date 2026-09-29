@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Button, Stack, Text, Paper } from "@mantine/core";
+import { Stack, Text, Paper } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import AddIcon from "@mui/icons-material/Add";
-import CancelIcon from "@mui/icons-material/Cancel";
+import { Icon } from "@app/ui/Icon";
 import {
   SignatureTypeSelector,
   SignatureType,
@@ -107,7 +107,7 @@ export const AddSignaturesStep: React.FC<AddSignaturesStepProps> = ({
 
           {!placementMode ? (
             <Button
-              leftSection={<AddIcon />}
+              leftSection={<Icon name="plus" />}
               onClick={handlePlaceSignature}
               disabled={!hasSignature || disabled}
             >
@@ -118,11 +118,11 @@ export const AddSignaturesStep: React.FC<AddSignaturesStepProps> = ({
             </Button>
           ) : (
             <Button
-              leftSection={<CancelIcon />}
+              variant="secondary"
+              accent="danger"
+              leftSection={<Icon name="circle-x" />}
               onClick={onCancelPlacement}
               disabled={disabled}
-              variant="light"
-              color="red"
             >
               {t(
                 "certSign.collab.signRequest.steps.cancelPlacement",
@@ -134,7 +134,7 @@ export const AddSignaturesStep: React.FC<AddSignaturesStepProps> = ({
       </Paper>
 
       {placementMode && (
-        <Text size="xs" c="blue" ta="center">
+        <Text size="xs" c="var(--c-accent-text)" ta="center">
           {t(
             "certSign.collab.signRequest.steps.clickMultipleTimes",
             "Click on the PDF multiple times to place signatures. Drag any signature to move or resize it.",

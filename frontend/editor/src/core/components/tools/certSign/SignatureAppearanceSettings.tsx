@@ -1,10 +1,14 @@
-import { Stack, Text, Button, TextInput, NumberInput } from "@mantine/core";
+import { Stack, Text, TextInput, NumberInput } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { CertSignParameters } from "@app/hooks/tools/certSign/useCertSignParameters";
 
 interface SignatureAppearanceSettingsProps {
   parameters: CertSignParameters;
-  onParameterChange: (key: keyof CertSignParameters, value: any) => void;
+  onParameterChange: <K extends keyof CertSignParameters>(
+    key: K,
+    value: CertSignParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
@@ -21,8 +25,8 @@ const SignatureAppearanceSettings = ({
       <Stack gap="sm">
         <div style={{ display: "flex", gap: "4px" }}>
           <Button
-            variant={!parameters.showSignature ? "filled" : "outline"}
-            color={!parameters.showSignature ? "blue" : "var(--text-muted)"}
+            accent={!parameters.showSignature ? "default" : "neutral"}
+            variant={!parameters.showSignature ? "primary" : "secondary"}
             onClick={() => onParameterChange("showSignature", false)}
             disabled={disabled}
             style={{
@@ -43,8 +47,8 @@ const SignatureAppearanceSettings = ({
             </div>
           </Button>
           <Button
-            variant={parameters.showSignature ? "filled" : "outline"}
-            color={parameters.showSignature ? "blue" : "var(--text-muted)"}
+            accent={parameters.showSignature ? "default" : "neutral"}
+            variant={parameters.showSignature ? "primary" : "secondary"}
             onClick={() => onParameterChange("showSignature", true)}
             disabled={disabled}
             style={{
@@ -100,7 +104,12 @@ const SignatureAppearanceSettings = ({
           <NumberInput
             label={t("certSign.pageNumber", "Page Number")}
             value={parameters.pageNumber}
-            onChange={(value) => onParameterChange("pageNumber", value || 1)}
+            onChange={(value) =>
+              onParameterChange(
+                "pageNumber",
+                typeof value === "number" ? value : 1,
+              )
+            }
             min={1}
             disabled={disabled}
           />
@@ -110,8 +119,8 @@ const SignatureAppearanceSettings = ({
             </Text>
             <div style={{ display: "flex", gap: "4px" }}>
               <Button
-                variant={!parameters.showLogo ? "filled" : "outline"}
-                color={!parameters.showLogo ? "blue" : "var(--text-muted)"}
+                accent={!parameters.showLogo ? "default" : "neutral"}
+                variant={!parameters.showLogo ? "primary" : "secondary"}
                 onClick={() => onParameterChange("showLogo", false)}
                 disabled={disabled}
                 style={{
@@ -132,8 +141,8 @@ const SignatureAppearanceSettings = ({
                 </div>
               </Button>
               <Button
-                variant={parameters.showLogo ? "filled" : "outline"}
-                color={parameters.showLogo ? "blue" : "var(--text-muted)"}
+                accent={parameters.showLogo ? "default" : "neutral"}
+                variant={parameters.showLogo ? "primary" : "secondary"}
                 onClick={() => onParameterChange("showLogo", true)}
                 disabled={disabled}
                 style={{

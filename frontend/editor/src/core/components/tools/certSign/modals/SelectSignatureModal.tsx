@@ -1,23 +1,12 @@
-import {
-  Modal,
-  Stack,
-  Button,
-  Text,
-  Group,
-  Box,
-  ActionIcon,
-  UnstyledButton,
-} from "@mantine/core";
+import { Modal, Stack, Text, Group, Box } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import {
   useSavedSignatures,
   SavedSignature,
 } from "@app/hooks/tools/sign/useSavedSignatures";
-import DrawIcon from "@mui/icons-material/Draw";
-import TextFieldsIcon from "@mui/icons-material/TextFields";
-import ImageIcon from "@mui/icons-material/Image";
-import CloseIcon from "@mui/icons-material/Close";
-
+import { Icon } from "@app/ui/Icon";
 interface SelectSignatureModalProps {
   opened: boolean;
   onClose: () => void;
@@ -136,7 +125,9 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
                     overflow: "hidden",
                   }}
                 >
-                  <UnstyledButton
+                  <Button
+                    variant="tertiary"
+                    hover={false}
                     onClick={() => {
                       onSignatureSelected(sig);
                       onClose();
@@ -144,10 +135,10 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
                     style={{ flex: 1, padding: "12px" }}
                   >
                     {renderSignaturePreview(sig)}
-                  </UnstyledButton>
+                  </Button>
                   <ActionIcon
-                    color="red"
-                    variant="subtle"
+                    variant="tertiary"
+                    accent="danger"
                     size="sm"
                     onClick={() => removeSignature(sig.id)}
                     aria-label={t(
@@ -156,7 +147,7 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
                     )}
                     style={{ margin: "0 6px" }}
                   >
-                    <CloseIcon sx={{ fontSize: "1rem" }} />
+                    <Icon name="x" size={"1rem"} />
                   </ActionIcon>
                 </Group>
               ))}
@@ -177,8 +168,8 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
 
         <Group grow>
           <Button
-            variant="outline"
-            leftSection={<DrawIcon />}
+            variant="secondary"
+            leftSection={<Icon name="pen-tool" />}
             onClick={() => {
               onCreateNew("canvas");
               onClose();
@@ -187,8 +178,8 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
             {t("certSign.collab.signRequest.modeTabs.draw", "Draw")}
           </Button>
           <Button
-            variant="outline"
-            leftSection={<TextFieldsIcon />}
+            variant="secondary"
+            leftSection={<Icon name="type" />}
             onClick={() => {
               onCreateNew("text");
               onClose();
@@ -197,8 +188,8 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
             {t("certSign.collab.signRequest.modeTabs.text", "Type")}
           </Button>
           <Button
-            variant="outline"
-            leftSection={<ImageIcon />}
+            variant="secondary"
+            leftSection={<Icon name="image" />}
             onClick={() => {
               onCreateNew("image");
               onClose();

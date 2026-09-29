@@ -3,8 +3,13 @@
   "compilerOptions": {
     "paths": {
       "@app/*": ["../../src/proprietary/*", "../../src/core/*"],
-      "@core/*": ["../../src/core/*"],
-      "@shared/*": ["../../../shared/*"]
+      "@app/portal/*": [
+        "../../src/proprietary/portal/*",
+        "../../src/core/portal/*",
+        "../../src/portal/*"
+      ],
+      "@portal/*": ["../../src/portal/*"],
+      "@core/*": ["../../src/core/*"]
     }
   },
   "include": [

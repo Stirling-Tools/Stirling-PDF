@@ -1,16 +1,9 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Alert,
-  Button,
-  Divider,
-  FileButton,
-  Stack,
-  Switch,
-  Text,
-  Tooltip,
-} from "@mantine/core";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Alert, Divider, Stack, Switch, Text, Tooltip } from "@mantine/core";
+import { Button as DSButton } from "@app/ui/Button";
+import { FilePicker } from "@app/ui/FilePicker";
+import { Icon } from "@app/ui/Icon";
 import { BookmarkNode } from "@app/utils/editTableOfContents";
 
 interface EditTableOfContentsSettingsProps {
@@ -87,17 +80,16 @@ export default function EditTableOfContentsSettings({
       </Stack>
 
       <Stack gap="sm">
-        <Button
-          variant="light"
-          leftSection={<LocalIcon icon="folder-rounded" />}
+        <DSButton
+          variant="secondary"
+          leftSection={<Icon name="folder" size="1em" />}
           onClick={onSelectFiles}
           fullWidth
         >
           {selectedFileName
             ? t("editTableOfContents.workbench.changeFile", "Change PDF")
             : t("editTableOfContents.workbench.selectFile", "Select PDF")}
-        </Button>
-
+        </DSButton>
         <Tooltip
           label={
             !selectedFileName
@@ -109,36 +101,27 @@ export default function EditTableOfContentsSettings({
           }
           disabled={Boolean(selectedFileName)}
         >
-          <Button
-            variant="default"
-            leftSection={<LocalIcon icon="picture-as-pdf-rounded" />}
+          <DSButton
+            variant="secondary"
+            leftSection={<Icon name="file-text" size="1em" />}
             onClick={onLoadFromPdf}
             loading={isLoading}
             disabled={disabled || !selectedFileName}
             fullWidth
           >
             {t("editTableOfContents.actions.loadFromPdf", "Load from PDF")}
-          </Button>
+          </DSButton>
         </Tooltip>
-
-        <FileButton
+        <FilePicker
           onChange={(file) => file && onImportJson(file)}
           accept="application/json"
           disabled={disabled}
+          variant="secondary"
+          leftSection={<Icon name="upload" size="1em" />}
+          fullWidth
         >
-          {(props) => (
-            <Button
-              {...props}
-              variant="default"
-              leftSection={<LocalIcon icon="upload-rounded" />}
-              disabled={disabled}
-              fullWidth
-            >
-              {t("editTableOfContents.actions.importJson", "Import JSON")}
-            </Button>
-          )}
-        </FileButton>
-
+          {t("editTableOfContents.actions.importJson", "Import JSON")}
+        </FilePicker>
         <Tooltip
           label={
             canReadClipboard
@@ -150,9 +133,9 @@ export default function EditTableOfContentsSettings({
           }
           disabled={canReadClipboard}
         >
-          <Button
-            variant="default"
-            leftSection={<LocalIcon icon="content-paste-rounded" />}
+          <DSButton
+            variant="secondary"
+            leftSection={<Icon name="clipboard" size="1em" />}
             onClick={onImportClipboard}
             disabled={disabled || !canReadClipboard}
             fullWidth
@@ -161,7 +144,7 @@ export default function EditTableOfContentsSettings({
               "editTableOfContents.actions.importClipboard",
               "Paste from clipboard",
             )}
-          </Button>
+          </DSButton>
         </Tooltip>
       </Stack>
 
@@ -169,7 +152,7 @@ export default function EditTableOfContentsSettings({
         <Alert
           color="red"
           radius="md"
-          icon={<LocalIcon icon="error-outline-rounded" />}
+          icon={<Icon name="circle-alert" size="1em" />}
         >
           {loadError}
         </Alert>
@@ -184,16 +167,15 @@ export default function EditTableOfContentsSettings({
       </Stack>
 
       <Stack gap="sm">
-        <Button
-          variant="default"
-          leftSection={<LocalIcon icon="download-rounded" />}
+        <DSButton
+          variant="secondary"
+          leftSection={<Icon name="download" size="1em" />}
           onClick={onExportJson}
           disabled={disabled || bookmarks.length === 0}
           fullWidth
         >
           {t("editTableOfContents.actions.exportJson", "Download JSON")}
-        </Button>
-
+        </DSButton>
         <Tooltip
           label={
             canWriteClipboard
@@ -205,9 +187,9 @@ export default function EditTableOfContentsSettings({
           }
           disabled={canWriteClipboard}
         >
-          <Button
-            variant="default"
-            leftSection={<LocalIcon icon="content-copy-rounded" />}
+          <DSButton
+            variant="secondary"
+            leftSection={<Icon name="copy" size="1em" />}
             onClick={onExportClipboard}
             disabled={disabled || bookmarks.length === 0 || !canWriteClipboard}
             fullWidth
@@ -216,7 +198,7 @@ export default function EditTableOfContentsSettings({
               "editTableOfContents.actions.exportClipboard",
               "Copy to clipboard",
             )}
-          </Button>
+          </DSButton>
         </Tooltip>
       </Stack>
 

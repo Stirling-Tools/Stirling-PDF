@@ -1,7 +1,8 @@
 import { oauthProviders } from "@app/constants/authProviders";
 import { useTranslation } from "@app/hooks/useTranslation";
 import { Tooltip } from "@app/components/shared/Tooltip";
-import { oauthIconUrl } from "@shared/auth/ui/oauthIcons";
+import { Button } from "@app/ui/Button";
+import { oauthIconUrl } from "@app/auth/ui/oauthIcons";
 
 // Exports for compatibility with proprietary code
 export const DEBUG_SHOW_ALL_PROVIDERS = false;
@@ -38,7 +39,8 @@ export default function OAuthButtons({
             content={`${t("login.signInWith", "Sign in with")} ${p.label}`}
             position="top"
           >
-            <button
+            <Button
+              variant="secondary"
               onClick={() => onProviderClick(p.id as "github" | "google")}
               disabled={isSubmitting || p.isDisabled}
               className="oauth-button-icon"
@@ -47,9 +49,9 @@ export default function OAuthButtons({
               <img
                 src={oauthIconUrl(p.file)}
                 alt={p.label}
-                className={`oauth-icon-small ${p.isDisabled ? "opacity-20" : ""}`}
+                className={`oauth-icon-small oauth-icon--${p.id} ${p.isDisabled ? "opacity-20" : ""}`}
               />
-            </button>
+            </Button>
           </Tooltip>
         ))}
       </div>
@@ -65,7 +67,8 @@ export default function OAuthButtons({
             content={`${t("login.signInWith", "Sign in with")} ${p.label}`}
             position="top"
           >
-            <button
+            <Button
+              variant="secondary"
               onClick={() => onProviderClick(p.id as "github" | "google")}
               disabled={isSubmitting || p.isDisabled}
               className="oauth-button-grid"
@@ -74,9 +77,9 @@ export default function OAuthButtons({
               <img
                 src={oauthIconUrl(p.file)}
                 alt={p.label}
-                className={`oauth-icon-medium ${p.isDisabled ? "opacity-20" : ""}`}
+                className={`oauth-icon-medium oauth-icon--${p.id} ${p.isDisabled ? "opacity-20" : ""}`}
               />
-            </button>
+            </Button>
           </Tooltip>
         ))}
       </div>
@@ -87,8 +90,9 @@ export default function OAuthButtons({
     return (
       <div className="oauth-container-fullwidth">
         {oauthProviders.map((p) => (
-          <button
+          <Button
             key={p.id}
+            variant="secondary"
             onClick={() => onProviderClick(p.id as "github" | "google")}
             disabled={isSubmitting || p.isDisabled}
             className="oauth-button-fullwidth"
@@ -98,7 +102,7 @@ export default function OAuthButtons({
               <img
                 src={oauthIconUrl(p.file)}
                 alt={p.label}
-                className={`oauth-icon-medium ${p.isDisabled ? "opacity-20" : ""}`}
+                className={`oauth-icon-medium oauth-icon--${p.id} ${p.isDisabled ? "opacity-20" : ""}`}
                 style={{ marginRight: "0.5rem", flexShrink: 0 }}
               />
               <span className="oauth-btn-label">
@@ -106,7 +110,7 @@ export default function OAuthButtons({
                 {p.label}
               </span>
             </span>
-          </button>
+          </Button>
         ))}
       </div>
     );
@@ -115,8 +119,9 @@ export default function OAuthButtons({
   return (
     <div className="oauth-container-vertical">
       {oauthProviders.map((p) => (
-        <button
+        <Button
           key={p.id}
+          variant="secondary"
           onClick={() => onProviderClick(p.id as "github" | "google")}
           disabled={isSubmitting || p.isDisabled}
           className="oauth-button-vertical"
@@ -125,10 +130,10 @@ export default function OAuthButtons({
           <img
             src={oauthIconUrl(p.file)}
             alt={p.label}
-            className={`oauth-icon-tiny ${p.isDisabled ? "opacity-20" : ""}`}
+            className={`oauth-icon-tiny oauth-icon--${p.id} ${p.isDisabled ? "opacity-20" : ""}`}
           />
           {p.label}
-        </button>
+        </Button>
       ))}
     </div>
   );

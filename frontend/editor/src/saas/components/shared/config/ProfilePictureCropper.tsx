@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { Modal, Button, Stack, Slider, Alert, Text, Box } from "@mantine/core";
+import { Modal, Stack, Slider, Alert, Text, Box } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import Cropper from "react-easy-crop";
 import { getCroppedImage, type Area } from "@app/utils/cropImage";
@@ -143,7 +144,7 @@ export const ProfilePictureCropper: React.FC<ProfilePictureCropperProps> = ({
     >
       <Stack gap="md">
         {error && (
-          <Alert color="red" title="Error">
+          <Alert color="red" title={t("common.error", "Error")}>
             {error}
           </Alert>
         )}
@@ -156,6 +157,9 @@ export const ProfilePictureCropper: React.FC<ProfilePictureCropperProps> = ({
               crop={crop}
               zoom={zoom}
               aspect={1}
+              // Every surface draws the result as a circle, so frame one: a square
+              // guide hands back corners that are then cropped away.
+              cropShape="round"
               onCropChange={onCropChange}
               onZoomChange={onZoomChange}
               onCropComplete={onCropCompleteCallback}
@@ -182,7 +186,7 @@ export const ProfilePictureCropper: React.FC<ProfilePictureCropperProps> = ({
         <div
           style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}
         >
-          <Button variant="subtle" onClick={onClose} disabled={processing}>
+          <Button variant="tertiary" onClick={onClose} disabled={processing}>
             {t("common.cancel", "Cancel")}
           </Button>
           <Button onClick={handleSave} loading={processing}>

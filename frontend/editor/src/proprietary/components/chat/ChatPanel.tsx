@@ -10,7 +10,6 @@ import { renderMarkdown } from "@app/components/viewer/nonpdf/MarkdownRenderer";
 import { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import {
-  ActionIcon,
   Box,
   Collapse,
   Group,
@@ -19,17 +18,10 @@ import {
   Stack,
   Text,
   Textarea,
-  UnstyledButton,
 } from "@mantine/core";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
-import BuildOutlinedIcon from "@mui/icons-material/BuildOutlined";
-import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { Icon } from "@app/ui/Icon";
 import {
   useChat,
   AiWorkflowPhase,
@@ -41,8 +33,9 @@ import {
 import { formatRelativeTime } from "@app/utils/timeUtils";
 import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
 import { StirlingLogoAnimated } from "@app/components/agents/StirlingLogoAnimated";
-import { StirlingLogoOutline } from "@app/components/agents/StirlingLogoOutline";
-import { PanelHeader } from "@shared/components/PanelHeader";
+import { BrandMark } from "@app/components/shared/BrandMark";
+import { Logo } from "@app/ui/Logo";
+import { PanelHeader } from "@app/ui/PanelHeader";
 import { ChatQuickActions } from "@app/components/chat/ChatQuickActions";
 import "@app/components/chat/ChatPanel.css";
 
@@ -163,15 +156,15 @@ function progressStepIcon(
     if (registryIcon) {
       return <span className="chat-step-icon-scaled">{registryIcon}</span>;
     }
-    return <BuildOutlinedIcon sx={{ fontSize: 17 }} />;
+    return <Icon name="wrench" size={17} />;
   }
   if (
     progress.phase === AiWorkflowPhase.EXTRACTING_CONTENT ||
     progress.phase === AiWorkflowPhase.ENGINE_PROGRESS
   ) {
-    return <ArticleOutlinedIcon sx={{ fontSize: 17 }} />;
+    return <Icon name="file-text" size={17} />;
   }
-  return <CloudOutlinedIcon sx={{ fontSize: 17 }} />;
+  return <Icon name="cloud" size={17} />;
 }
 
 /**
@@ -266,22 +259,25 @@ function CompletedProgressLogDropdown({
 
   return (
     <div className="chat-completed-log">
-      <UnstyledButton
+      <Button
+        type="button"
+        variant="tertiary"
+        hover={false}
         className="chat-completed-log__toggle"
         onClick={() => setExpanded((v) => !v)}
         aria-expanded={expanded}
       >
         <Group gap={4} wrap="nowrap" align="center">
           {expanded ? (
-            <ExpandLessIcon sx={{ fontSize: 12 }} />
+            <Icon name="chevron-up" size={12} />
           ) : (
-            <ExpandMoreIcon sx={{ fontSize: 12 }} />
+            <Icon name="chevron-down" size={12} />
           )}
           <Text size="xs" c="dimmed">
             {label}
           </Text>
         </Group>
-      </UnstyledButton>
+      </Button>
       <Collapse in={expanded}>
         <ol className="chat-completed-log__tools">
           {toolSteps.map((step, i) => {
@@ -333,14 +329,16 @@ function ChatMessageBubble({
 
   const actions = (
     <div className="chat-message-actions">
-      <button
+      <ActionIcon
         type="button"
+        variant="tertiary"
         className={`chat-message-action-btn${copied ? " chat-message-action-btn--active" : ""}`}
         onClick={handleCopy}
         title={t("chat.actions.copy", "Copy message")}
+        aria-label={t("chat.actions.copy", "Copy message")}
       >
-        <ContentCopyIcon sx={{ fontSize: 13 }} />
-      </button>
+        <Icon name="copy" size={13} />
+      </ActionIcon>
       <span className="chat-message-timestamp">
         {formatRelativeTime(timestamp, t)}
       </span>
@@ -469,8 +467,14 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
   return (
     <Box className="chat-panel chat-panel--embedded">
       <PanelHeader
-        icon={<StirlingLogoOutline size={16} />}
-        title={t("agents.stirling_name", "Stirling")}
+        icon={<BrandMark height="26px" className="chat-panel__header-mark" />}
+        title={
+          <Logo
+            variant="textOnly"
+            textHeight="17px"
+            alt={t("agents.stirling_name", "Stirling")}
+          />
+        }
         loading={isLoading}
         className="chat-panel__header"
         barClassName="chat-panel__agent-pill-vt"
@@ -478,7 +482,7 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
         menuItems={[
           {
             key: "clear-chat",
-            icon: <DeleteSweepIcon sx={{ fontSize: 18 }} />,
+            icon: <Icon name="trash" size={18} />,
             label: t("chat.header.clearChat", "Clear chat"),
             onClick: clearChat,
             disabled: messages.length === 0 && !isLoading,
@@ -490,10 +494,7 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
 
       {showQuickActions && (
         <div className="chat-panel-disclaimer chat-panel-disclaimer--banner">
-          <InfoOutlinedIcon
-            className="chat-panel-disclaimer__icon"
-            sx={{ fontSize: 18 }}
-          />
+          <Icon name="info" size={18} className="chat-panel-disclaimer__icon" />
           <span>{disclaimerText}</span>
         </div>
       )}
@@ -540,10 +541,7 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
 
       {!showQuickActions && (
         <div className="chat-panel-disclaimer chat-panel-disclaimer--inline">
-          <InfoOutlinedIcon
-            className="chat-panel-disclaimer__icon"
-            sx={{ fontSize: 13 }}
-          />
+          <Icon name="info" size={13} className="chat-panel-disclaimer__icon" />
           <span>{disclaimerText}</span>
         </div>
       )}
@@ -551,15 +549,12 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
       <div className="chat-panel-input">
         <ActionIcon
           className="chat-panel-input__send"
-          variant="filled"
-          color="blue"
-          radius="xl"
           size="sm"
           onClick={() => handleSend()}
           disabled={!input.trim() || isLoading}
           aria-label={t("chat.input.send", "Send message")}
         >
-          <ArrowUpwardIcon sx={{ fontSize: 16 }} />
+          <Icon name="arrow-up" size={16} />
         </ActionIcon>
         <Textarea
           ref={inputRef}

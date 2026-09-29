@@ -5,13 +5,11 @@ import React, {
   useMemo,
   useEffect,
 } from "react";
-import { ActionIcon, CheckboxIndicator } from "@mantine/core";
+import { CheckboxIndicator } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
-import PushPinIcon from "@mui/icons-material/PushPin";
-import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
-import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
+import { Icon } from "@app/ui/Icon";
 import {
   draggable,
   dropTargetForElements,
@@ -68,7 +66,6 @@ const FileThumbnail = ({
   const { t } = useTranslation();
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
-  const DownloadOutlinedIcon = icons.download;
   const { pinFile, unpinFile, isFilePinned, activeFiles } = useFileContext();
 
   // ---- Drag state ----
@@ -239,7 +236,7 @@ const FileThumbnail = ({
             <CheckboxIndicator
               checked={isSelected}
               onChange={() => onToggleFile(file.id)}
-              color="var(--checkbox-checked-bg)"
+              color="var(--c-primary)"
             />
           ) : (
             <div className={styles.unsupportedPill}>
@@ -259,14 +256,14 @@ const FileThumbnail = ({
         {/* Kebab menu */}
         <ActionIcon
           aria-label={t("moreOptions", "More options")}
-          variant="subtle"
+          variant="tertiary"
           className={styles.kebab}
           onClick={(e) => {
             e.stopPropagation();
             setShowActions((v) => !v);
           }}
         >
-          <MoreVertIcon fontSize="small" />
+          <Icon name="ellipsis-vertical" size={20} />
         </ActionIcon>
       </div>
 
@@ -277,8 +274,12 @@ const FileThumbnail = ({
           style={{ width: actionsWidth }}
           onClick={(e) => e.stopPropagation()}
         >
-          <button
+          <Button
+            variant="tertiary"
+            justify="start"
+            fullWidth
             className={styles.actionRow}
+            leftSection={<Icon name="pin" size={20} filled={isPinned} />}
             onClick={() => {
               if (actualFile) {
                 if (isPinned) {
@@ -292,38 +293,36 @@ const FileThumbnail = ({
               setShowActions(false);
             }}
           >
-            {isPinned ? (
-              <PushPinIcon fontSize="small" />
-            ) : (
-              <PushPinOutlinedIcon fontSize="small" />
-            )}
-            <span>{isPinned ? t("unpin", "Unpin") : t("pin", "Pin")}</span>
-          </button>
-
-          <button
+            {isPinned ? t("unpin", "Unpin") : t("pin", "Pin")}
+          </Button>
+          <Button
+            variant="tertiary"
+            justify="start"
+            fullWidth
             className={styles.actionRow}
+            leftSection={<Icon name={icons.download} size={20} />}
             onClick={() => {
               downloadSelectedFile();
               setShowActions(false);
             }}
           >
-            <DownloadOutlinedIcon fontSize="small" />
-            <span>{terminology.download}</span>
-          </button>
-
+            {terminology.download}
+          </Button>
           <div className={styles.actionsDivider} />
-
-          <button
+          <Button
+            variant="tertiary"
+            justify="start"
+            fullWidth
             className={`${styles.actionRow} ${styles.actionDanger}`}
+            leftSection={<Icon name="trash" size={20} />}
             onClick={() => {
               onDeleteFile(file.id);
               onSetStatus(`Deleted ${file.name}`);
               setShowActions(false);
             }}
           >
-            <DeleteOutlineIcon fontSize="small" />
-            <span>{t("delete", "Delete")}</span>
-          </button>
+            {t("delete", "Delete")}
+          </Button>
         </div>
       )}
 
@@ -362,7 +361,7 @@ const FileThumbnail = ({
                   objectFit: "contain",
                   borderRadius: 0,
                   background: "#ffffff",
-                  border: "1px solid var(--border-default)",
+                  border: "1px solid var(--c-border)",
                   display: "block",
                   marginLeft: "auto",
                   marginRight: "auto",
@@ -376,13 +375,13 @@ const FileThumbnail = ({
         {/* Pin indicator (bottom-left) */}
         {isPinned && (
           <span className={styles.pinIndicator} aria-hidden>
-            <PushPinIcon fontSize="small" />
+            <Icon name="pin" size={20} filled />
           </span>
         )}
 
         {/* Drag handle (span wrapper so we can attach a ref reliably) */}
         <span ref={handleRef} className={styles.dragHandle} aria-hidden>
-          <DragIndicatorIcon fontSize="small" />
+          <Icon name="grip-vertical" size={20} />
         </span>
       </div>
     </div>

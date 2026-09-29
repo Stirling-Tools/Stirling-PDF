@@ -4,15 +4,16 @@ import {
   Select,
   Stack,
   ColorInput,
-  Button,
   Slider,
   Text,
   NumberInput,
 } from "@mantine/core";
 import { AddStampParameters } from "@app/components/tools/addStamp/useAddStampParameters";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import styles from "@app/components/tools/addStamp/StampPreview.module.css";
 import { Tooltip } from "@app/components/shared/Tooltip";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface StampPositionFormattingSettingsProps {
@@ -55,19 +56,17 @@ const StampPositionFormattingSettings = ({
               return (
                 <Button
                   key={idx}
-                  variant={selected ? "filled" : "outline"}
+                  variant={selected ? "primary" : "secondary"}
                   onClick={() => {
                     onParameterChange("position", idx);
                     // Ensure we're using grid positioning, not custom overrides
-                    onParameterChange("overrideX", -1 as any);
-                    onParameterChange("overrideY", -1 as any);
+                    onParameterChange("overrideX", -1);
+                    onParameterChange("overrideY", -1);
                   }}
                   disabled={disabled}
-                  styles={{
-                    root: {
-                      height: "50px",
-                      padding: "0",
-                    },
+                  style={{
+                    height: "50px",
+                    padding: 0,
                   }}
                 >
                   {idx}
@@ -83,33 +82,31 @@ const StampPositionFormattingSettings = ({
           content={t("AddStampRequest.rotation", "Rotation")}
           position="top"
         >
-          <Button
+          <ActionIcon
+            aria-label={t("AddStampRequest.rotation", "Rotation")}
             variant={
-              parameters._activePill === "rotation" ? "filled" : "outline"
+              parameters._activePill === "rotation" ? "primary" : "secondary"
             }
             className="flex-1"
             onClick={() => onParameterChange("_activePill", "rotation")}
           >
-            <LocalIcon
-              icon="rotate-right-rounded"
-              width="1.1rem"
-              height="1.1rem"
-            />
-          </Button>
+            <Icon name="rotate-cw" size="1.1rem" />
+          </ActionIcon>
         </Tooltip>
         <Tooltip
           content={t("AddStampRequest.opacity", "Opacity")}
           position="top"
         >
-          <Button
+          <ActionIcon
+            aria-label={t("AddStampRequest.opacity", "Opacity")}
             variant={
-              parameters._activePill === "opacity" ? "filled" : "outline"
+              parameters._activePill === "opacity" ? "primary" : "secondary"
             }
             className="flex-1"
             onClick={() => onParameterChange("_activePill", "opacity")}
           >
-            <LocalIcon icon="opacity" width="1.1rem" height="1.1rem" />
-          </Button>
+            <Icon name="droplet" size="1.1rem" />
+          </ActionIcon>
         </Tooltip>
         <Tooltip
           content={
@@ -119,19 +116,20 @@ const StampPositionFormattingSettings = ({
           }
           position="top"
         >
-          <Button
+          <ActionIcon
+            aria-label={
+              parameters.stampType === "image"
+                ? t("AddStampRequest.imageSize", "Image Size")
+                : t("AddStampRequest.fontSize", "Font Size")
+            }
             variant={
-              parameters._activePill === "fontSize" ? "filled" : "outline"
+              parameters._activePill === "fontSize" ? "primary" : "secondary"
             }
             className="flex-1"
             onClick={() => onParameterChange("_activePill", "fontSize")}
           >
-            <LocalIcon
-              icon="zoom-in-map-rounded"
-              width="1.1rem"
-              height="1.1rem"
-            />
-          </Button>
+            <Icon name="shrink" size="1.1rem" />
+          </ActionIcon>
         </Tooltip>
       </div>
 
@@ -161,7 +159,7 @@ const StampPositionFormattingSettings = ({
             />
             <Slider
               value={parameters.fontSize}
-              onChange={(v) => onParameterChange("fontSize", v as number)}
+              onChange={(v) => onParameterChange("fontSize", v)}
               min={1}
               max={400}
               step={1}
@@ -192,7 +190,7 @@ const StampPositionFormattingSettings = ({
             />
             <Slider
               value={parameters.rotation}
-              onChange={(v) => onParameterChange("rotation", v as number)}
+              onChange={(v) => onParameterChange("rotation", v)}
               min={-180}
               max={180}
               step={1}
@@ -221,7 +219,7 @@ const StampPositionFormattingSettings = ({
             />
             <Slider
               value={parameters.opacity}
-              onChange={(v) => onParameterChange("opacity", v as number)}
+              onChange={(v) => onParameterChange("opacity", v)}
               min={0}
               max={100}
               step={1}
@@ -251,7 +249,10 @@ const StampPositionFormattingSettings = ({
           label={t("AddStampRequest.margin", "Margin")}
           value={parameters.customMargin}
           onChange={(v) =>
-            onParameterChange("customMargin", (v as any) || "medium")
+            onParameterChange(
+              "customMargin",
+              (v as AddStampParameters["customMargin"]) || "medium",
+            )
           }
           data={[
             { value: "small", label: t("margin.small", "Small") },

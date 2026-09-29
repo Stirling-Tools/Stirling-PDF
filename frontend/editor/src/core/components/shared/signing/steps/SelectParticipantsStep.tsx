@@ -1,6 +1,7 @@
-import { Button, Stack, Text, Group } from "@mantine/core";
+import { Stack, Text, Group } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { Icon } from "@app/ui/Icon";
 import UserSelector from "@app/components/shared/UserSelector";
 
 interface SelectParticipantsStepProps {
@@ -53,9 +54,9 @@ export const SelectParticipantsStep: React.FC<SelectParticipantsStepProps> = ({
 
       <Group gap="sm">
         <Button
-          variant="default"
+          variant="secondary"
           onClick={onBack}
-          leftSection={<ArrowBackIcon sx={{ fontSize: 16 }} />}
+          leftSection={<Icon name="arrow-left" size={16} />}
         >
           {t("groupSigning.steps.back", "Back")}
         </Button>
@@ -64,10 +65,7 @@ export const SelectParticipantsStep: React.FC<SelectParticipantsStepProps> = ({
           disabled={!hasParticipants || disabled}
           style={{ flex: 1 }}
         >
-          {t(
-            "groupSigning.steps.selectParticipants.continue",
-            "Continue to Signature Settings",
-          )}
+          {t("groupSigning.steps.selectParticipants.continue", "Continue")}
         </Button>
       </Group>
     </Stack>

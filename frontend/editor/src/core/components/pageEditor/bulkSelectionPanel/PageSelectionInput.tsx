@@ -1,6 +1,7 @@
-import { TextInput, Button, Text, Flex, Switch } from "@mantine/core";
+import { TextInput, Text, Flex, Switch } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { usePageSelectionTips } from "@app/components/tooltips/usePageSelectionTips";
 import classes from "@app/components/pageEditor/bulkSelectionPanel/BulkSelectionPanel.module.css";
@@ -39,11 +40,10 @@ const PageSelectionInput = ({
           tips={pageSelectionTips.tips}
         >
           <Flex onClick={(e) => e.stopPropagation()} align="center" gap="xs">
-            <LocalIcon
-              icon="gpp-maybe-outline-rounded"
-              width="1rem"
-              height="1rem"
-              style={{ color: "var(--text-instruction)" }}
+            <Icon
+              name="shield-alert"
+              size="1rem"
+              style={{ color: "var(--c-accent-fg)" }}
             />
             <Text>
               {t("bulkSelection.pageSelection.title", "Page Selection")}
@@ -52,7 +52,7 @@ const PageSelectionInput = ({
         </Tooltip>
         {typeof advancedOpened === "boolean" && (
           <Flex align="center" gap="xs">
-            <Text size="sm" c="var(--text-secondary)">
+            <Text size="sm" c="var(--c-text-muted)">
               {t("bulkSelection.advanced.title", "Advanced")}
             </Text>
             <Switch
@@ -77,20 +77,15 @@ const PageSelectionInput = ({
         placeholder="1,3,5-10"
         rightSection={
           csvInput && (
-            <Button
-              variant="subtle"
-              size="xs"
+            <ActionIcon
+              variant="tertiary"
+              accent="neutral"
+              size="sm"
               onClick={onClear}
-              style={{
-                color: "var(--text-muted)",
-                minWidth: "auto",
-                width: "24px",
-                height: "24px",
-                padding: 0,
-              }}
+              aria-label={t("clear", "Clear")}
             >
-              ×
-            </Button>
+              &times;
+            </ActionIcon>
           )
         }
         onKeyDown={(e) => e.key === "Enter" && onUpdatePagesFromCSV()}

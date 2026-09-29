@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -13,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -63,6 +65,7 @@ public class ApplicationProperties {
     private Ui ui = new Ui();
     private Endpoints endpoints = new Endpoints();
     private Metrics metrics = new Metrics();
+    private ToolRecommendations toolRecommendations = new ToolRecommendations();
     private AutomaticallyGenerated automaticallyGenerated = new AutomaticallyGenerated();
 
     private Mail mail = new Mail();
@@ -77,10 +80,31 @@ public class ApplicationProperties {
     private ProcessExecutor processExecutor = new ProcessExecutor();
     private PdfEditor pdfEditor = new PdfEditor();
     private AiEngine aiEngine = new AiEngine();
+    private FormDetection formDetection = new FormDetection();
+    private Docparse docparse = new Docparse();
     private Mcp mcp = new Mcp();
     private InternalApi internalApi = new InternalApi();
     private Cluster cluster = new Cluster();
     private Policies policies = new Policies();
+
+    @PostConstruct
+    public void migrateSsoAutoLoginFromEnvironment() {
+        migrateSsoAutoLoginFromEnvironment(java.lang.System.getenv());
+    }
+
+    void migrateSsoAutoLoginFromEnvironment(Map<String, String> environment) {
+        for (String key :
+                List.of(
+                        "SECURITY_SSOAUTOLOGIN",
+                        "PREMIUM_PROFEATURES_SSOAUTOLOGIN",
+                        "ENTERPRISEEDITION_SSOAUTOLOGIN")) {
+            String value = environment.get(key);
+            if (value != null) {
+                security.setSsoAutoLogin(Boolean.parseBoolean(value));
+                return;
+            }
+        }
+    }
 
     @Bean
     public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
@@ -207,20 +231,32 @@ public class ApplicationProperties {
     @Data
     public static class Policies {
         /**
-         * Master switch for the policy + sources subsystem (the PAYG-metered automation surface).
-         */
-        private boolean enabled = false;
-
-        /**
          * Absolute directories that policy folder input sources and output sinks may read from or
-         * write to. Empty (the default) disables folder access entirely, so a policy can never be
-         * pointed at an arbitrary server path. Stirling's own config directory is always
-         * off-limits, and folder access is always disabled in SaaS mode regardless of this list.
+         * write to. Empty (the default) disables folder access except to implicitly defined
+         * folders, such as server storage folders (if enabled) and the pipeline watched folders.
+         * Stirling's own config directory is always off-limits, and folder access is always
+         * disabled in SaaS mode regardless of this list. Processing folders let every authenticated
+         * user, not only team leaders, read and replace files under these roots.
          */
         private List<String> allowedFolderRoots = new java.util.ArrayList<>();
 
+        /**
+         * How many of one sweep's runs may execute at once; further runs queue, visible as pending.
+         * A folder dispatched all at once piles up at the pipeline's slowest tool and nothing
+         * visibly finishes until the end, so the cap keeps completions arriving steadily. The
+         * default suits API-bound pipelines; turn it down for a heavyweight local engine, 0 =
+         * unbounded.
+         */
+        private int sweepConcurrency = 6;
+
         /** How often (seconds) the schedule trigger checks for policies whose schedule is due. */
         private long scheduleSweepSeconds = 60;
+
+        /**
+         * Seconds between safety-net sweeps of server processing folders; minimum one second.
+         * Placement sweeps the folder itself, so this only catches what this instance never saw.
+         */
+        private long storageFolderSweepSeconds = 60;
 
         /**
          * How often (seconds) the folder-watch trigger reconciles its watch registrations and
@@ -246,6 +282,52 @@ public class ApplicationProperties {
          * and paused runs are kept regardless of age.
          */
         private int runExpiryMinutes = 30;
+
+        /**
+         * Whether a policy S3 source's custom endpoint may resolve to a loopback, link-local, or
+         * private address. Off by default so a user-supplied endpoint cannot be pointed at internal
+         * services (e.g. the cloud metadata address); enable for a self-hosted MinIO or other
+         * in-network object store.
+         */
+        private boolean allowPrivateS3Endpoints = false;
+
+        /**
+         * Whether a network source's host (SFTP, FTP, or SMB) may resolve to a loopback,
+         * link-local, or private address. Off by default so a connection cannot be pointed at
+         * internal services; enable for an on-network file server (e.g. an internal SFTP drop or a
+         * Samba share).
+         */
+        private boolean allowPrivateNetworkSources = false;
+
+        /**
+         * Hostnames (exact, case-insensitive) that a network source may use even when they resolve
+         * to a private or local address and {@code allowPrivateNetworkSources} is off. Lets shared
+         * infra allow one named on-prem file server without opening every internal host.
+         */
+        private List<String> allowedPrivateNetworkHosts = new java.util.ArrayList<>();
+
+        /**
+         * Whether an API/Purview/ConsignO integration's base URL may resolve to a loopback,
+         * link-local, or private address. Off by default: unlike S3 connections, any user may
+         * create one of these, so without this gate a user could point a connection at the cloud
+         * metadata address and have the server fetch it for them. Enable only when integrations
+         * genuinely live inside the network (e.g. an on-prem ConsignO or an internal API gateway).
+         */
+        private boolean allowPrivateApiEndpoints = false;
+
+        /**
+         * Whether administrators may define their own API integrations - a free-form base URL,
+         * path, body and headers - as opposed to only using the built-in vendor presets (Purview,
+         * ConsignO, S3). On by default, and admin-only regardless: a custom integration can point
+         * the server at any host, so it is authoring power, not self-serve.
+         *
+         * <p>Turning this off stops new custom integrations being created or edited. Ones that
+         * already exist keep running, because a policy that silently stopped calling out would be a
+         * worse surprise than one that keeps working; disable the connection itself to stop it.
+         */
+        private boolean allowCustomApiIntegrations = true;
+
+        private long webhookMaxBytes = 104857600L;
     }
 
     @Data
@@ -291,6 +373,10 @@ public class ApplicationProperties {
     @Data
     public static class AiEngine {
         private boolean enabled = false;
+
+        /** {@code SELF_HOSTED} calls {@link #url}; {@code CLOUD} runs AI on Stirling Cloud. */
+        private AiEngineMode mode = AiEngineMode.SELF_HOSTED;
+
         private String url = "http://localhost:5001";
         private int timeoutSeconds = 120;
 
@@ -300,6 +386,152 @@ public class ApplicationProperties {
          * explicitly requests it via {@code AiEngineClient.postWithTimeout}.
          */
         private int longRunningTimeoutSeconds = 600;
+
+        /** Timeout (seconds) for the SSE stream held open by long-running orchestrator runs. */
+        private int streamTimeoutSeconds = 1800;
+
+        /**
+         * Whether the processor pushes settings-derived AI config to the engine on startup/save.
+         * Pin false for env-driven deployments (SaaS) to keep the engine env-controlled.
+         */
+        private boolean pushConfigToEngine = true;
+
+        /** Model + provider selection, forwarded to the engine per-request. */
+        private Models models = new Models();
+
+        /** Retrieval-augmented-generation (RAG) knobs, forwarded to the engine per-request. */
+        private Rag rag = new Rag();
+
+        /** Request size / cost guardrails. */
+        private Limits limits = new Limits();
+
+        /** Per-capability on/off switches so an admin can disable individual AI tools. */
+        private Features features = new Features();
+
+        /**
+         * Cloud mode only: whether Stirling Cloud may keep document text for later questions. AI
+         * tools send page text either way, so this controls retention, not what leaves the server.
+         */
+        private boolean cloudDocumentIndexing = false;
+
+        /**
+         * Stirling Cloud's API host; blank uses the account-link host, the only one the device
+         * credential is valid for. Not in settings.yml: set it via env or custom_settings.yml.
+         */
+        private String cloudBaseUrl = "";
+
+        public enum AiEngineMode {
+            SELF_HOSTED,
+            CLOUD
+        }
+
+        @Data
+        public static class Models {
+            /** Provider driving the model strings: 'anthropic', 'openai', 'ollama', or 'custom'. */
+            private String provider = "anthropic";
+
+            /** High-quality tier model name (without provider prefix), e.g. 'claude-haiku-4-5'. */
+            private String smartModel = "claude-haiku-4-5";
+
+            /** Cheap/fast tier model name (without provider prefix). */
+            private String fastModel = "claude-haiku-4-5";
+
+            private int smartMaxTokens = 8192;
+            private int fastMaxTokens = 2048;
+
+            /**
+             * API key for the selected provider (secret; masked). Empty means the engine uses its
+             * own env credential (e.g. ANTHROPIC_API_KEY).
+             */
+            private String apiKey = "";
+
+            /**
+             * OpenAI-compatible base URL for 'ollama' / 'custom' providers (e.g.
+             * http://ollama:11434/v1). Ignored for anthropic/openai. SSRF-sensitive - admin only.
+             */
+            private String baseUrl = "";
+        }
+
+        @Data
+        public static class Rag {
+            /**
+             * Embedding provider: 'voyageai', 'openai', 'ollama', or 'custom' (OpenAI-compatible).
+             */
+            private String embeddingProvider = "voyageai";
+
+            /** Embedding model name (without provider prefix), e.g. 'voyage-4'. */
+            private String embeddingModel = "voyage-4";
+
+            /**
+             * Secret API key for the embedding provider; masked + env-overridable like
+             * models.apiKey.
+             */
+            private String embeddingApiKey = "";
+
+            /**
+             * OpenAI-compatible base URL for 'ollama' / 'custom' embedding providers (e.g.
+             * http://ollama:11434/v1). Ignored for voyageai/openai. SSRF-sensitive - admin only.
+             */
+            private String embeddingBaseUrl = "";
+
+            /** How many chunks retrieval returns per search. */
+            private int topK = 20;
+
+            /** Per-run cap on knowledge-search tool calls before the agent must answer. */
+            private int maxSearches = 5;
+        }
+
+        @Data
+        public static class Limits {
+            private int maxPages = 200;
+            private int maxCharacters = 200000;
+
+            /** Process-wide cap on concurrent model API calls (engine restart to apply). */
+            private int modelMaxConcurrency = 32;
+        }
+
+        @Data
+        public static class Features {
+            private boolean chat = true;
+            private boolean documentQuestions = true;
+            private boolean createPdf = true;
+            private boolean mathAuditor = true;
+            private boolean pdfComment = true;
+            private boolean classify = true;
+        }
+    }
+
+    /**
+     * Auto Form Detection settings. The model itself is downloaded on demand by an admin (see
+     * {@code /api/v1/form/form-detection-model/*}); only lightweight pointers are persisted here.
+     */
+    @Data
+    public static class FormDetection {
+        /** Master on/off switch for the whole feature (admin-controlled). */
+        private boolean enabled = true;
+
+        /** Id of the installed model; blank means none installed. */
+        private String activeModelId = "";
+
+        /** Optional override dir; blank uses {@code <configs>/models/form-detection}. */
+        private String modelDir = "";
+
+        /**
+         * Read-only dir of image-baked models, activated on startup when none is active and read in
+         * place rather than copied. Blank disables seeding.
+         */
+        private String preinstalledModelDir = "";
+    }
+
+    /**
+     * DocParse settings (top-level {@code docparse.*}): document understanding for ingestion
+     * pipelines.
+     */
+    @Data
+    public static class Docparse {
+
+        /** Master switch; hides the DocParse endpoints when false. */
+        private boolean enabled = true;
     }
 
     /**
@@ -399,11 +631,7 @@ public class ApplicationProperties {
         }
     }
 
-    /**
-     * Cluster backplane configuration. All keys live under the top-level {@code cluster.*} prefix
-     * (e.g. env var {@code CLUSTER_ENABLED}). The master switch is {@link #enabled} and defaults to
-     * off; when off the in-process backplane is wired and no other cluster keys are required.
-     */
+    /** Cluster backplane config, bound under the top-level {@code cluster.*} prefix. */
     @Data
     public static class Cluster {
 
@@ -414,20 +642,24 @@ public class ApplicationProperties {
         private String backplane = "inprocess";
 
         /**
-         * Transient cluster job-artifact store selector. Valid values: {@code local} | {@code s3}.
-         *
-         * <p>This is distinct from {@code storage.provider}, which selects the backend for
-         * persistent user-uploaded files. The two switches exist because the user-facing storage
-         * feature is optional ({@code storage.enabled=false} is common) but every multi-node
-         * cluster still needs a shared artifact store to serve cross-node downloads. Both
-         * implementations share credentials from {@code storage.s3.*} when set to {@code s3}.
+         * {@code local} | {@code s3}. Distinct from {@code storage.provider} (persistent uploads);
+         * shares the {@code storage.s3.*} credentials when set to {@code s3}.
          */
         private String artifactStore = "local";
 
         private Valkey valkey = new Valkey();
         private Node node = new Node();
 
+        // A bare 'valkey:' key in settings.yml binds null; re-seed rather than hand one back.
+        public Valkey getValkey() {
+            if (valkey == null) {
+                valkey = new Valkey();
+            }
+            return valkey;
+        }
+
         private transient String cachedNodeId;
+        private transient String cachedNodeName;
 
         public NodeRole resolvedRole() {
             if (node == null || node.getRole() == null) {
@@ -451,6 +683,38 @@ public class ApplicationProperties {
             return cachedNodeId;
         }
 
+        /**
+         * Stable per-node label for CLIENT SETNAME: {@code cluster.node.id}, else hostname, else
+         * {@link #resolvedNodeId()}. The first two survive a restart; the UUID fallback does not.
+         */
+        // No lock unlike resolvedNodeId: a hostname race recomputes the same value, not a new id.
+        public String resolvedNodeName() {
+            if (node != null && node.getId() != null && !node.getId().isBlank()) {
+                return node.getId();
+            }
+            if (cachedNodeName == null) {
+                cachedNodeName = localHostname();
+            }
+            return cachedNodeName != null ? cachedNodeName : resolvedNodeId();
+        }
+
+        // Hostname resolution depends on DNS and can throw; a missing name must never fail startup.
+        private static String localHostname() {
+            String env = java.lang.System.getenv("HOSTNAME");
+            if (env == null || env.isBlank()) {
+                env = java.lang.System.getenv("COMPUTERNAME");
+            }
+            if (env != null && !env.isBlank()) {
+                return env.trim();
+            }
+            try {
+                String host = InetAddress.getLocalHost().getHostName();
+                return host != null && !host.isBlank() ? host.trim() : null;
+            } catch (Exception ex) {
+                return null;
+            }
+        }
+
         public enum NodeRole {
             WEB,
             WORKER,
@@ -460,20 +724,200 @@ public class ApplicationProperties {
         @Data
         public static class Valkey {
             /**
-             * {@code redis://host:6379} or {@code rediss://...} for TLS. Required when cluster mode
-             * is on and backplane is valkey.
+             * {@code redis://} or {@code rediss://} URL; read ONLY in standalone mode. Excluded
+             * from toString because it can carry userinfo credentials.
              */
-            private String url = "";
+            @ToString.Exclude private String url = "";
 
+            /**
+             * {@code standalone} | {@code sentinel} | {@code cluster}; blank auto-resolves (see
+             * {@link #resolvedMode()}). {@code url} is read only in standalone mode.
+             */
+            private String mode = "";
+
+            /** Data-node username; overrides any userinfo in {@link #url}. */
+            private String username = "";
+
+            /** Data-node password; overrides any userinfo in {@link #url}. */
+            @ToString.Exclude private String password = "";
+
+            /** Valkey Cluster seed nodes as {@code host:port}. Read only when mode is cluster. */
+            private List<String> nodes = new ArrayList<>();
+
+            /** Max MOVED/ASK redirects the cluster client follows before failing a command. */
+            private int maxRedirects = 3;
+
+            /**
+             * Periodic cluster topology refresh interval in milliseconds. Adaptive refresh on
+             * MOVED/ASK/reconnect is always on; this is the backstop when no redirect is seen.
+             */
+            private long topologyRefreshMs = 30000;
+
+            /**
+             * CLIENT SETNAME applied to every connection so Valkey monitoring can attribute load to
+             * a node. Blank (default) = {@code stirling-} + {@code Cluster.resolvedNodeName()}.
+             */
+            private String clientName = "";
+
+            /**
+             * Per-command timeout in milliseconds. Bounds every backplane call so a slow or
+             * partitioned Valkey cannot stall request threads.
+             */
+            private long commandTimeoutMs = 2000;
+
+            private Sentinel sentinel = new Sentinel();
             private Tls tls = new Tls();
+            private Pool pool = new Pool();
+
+            // A bare 'sentinel:'/'tls:'/'pool:'/'nodes:' key in settings.yml binds null. Re-seed
+            // the default here so no call site has to guard, and none can forget to.
+            public Sentinel getSentinel() {
+                if (sentinel == null) {
+                    sentinel = new Sentinel();
+                }
+                return sentinel;
+            }
+
+            public Tls getTls() {
+                if (tls == null) {
+                    tls = new Tls();
+                }
+                return tls;
+            }
+
+            public Pool getPool() {
+                if (pool == null) {
+                    pool = new Pool();
+                }
+                return pool;
+            }
+
+            public List<String> getNodes() {
+                if (nodes == null) {
+                    nodes = new ArrayList<>();
+                }
+                return nodes;
+            }
+
+            /**
+             * Explicit {@link #mode} wins; blank infers SENTINEL from sentinel.master, CLUSTER from
+             * nodes, else STANDALONE, and throws when both are set (ambiguous).
+             */
+            public ValkeyMode resolvedMode() {
+                if (mode != null && !mode.isBlank()) {
+                    try {
+                        return ValkeyMode.valueOf(mode.trim().toUpperCase(Locale.ROOT));
+                    } catch (IllegalArgumentException ex) {
+                        throw new IllegalStateException(
+                                "cluster.valkey.mode has unknown value '"
+                                        + mode
+                                        + "'. Valid values: standalone | sentinel | cluster.",
+                                ex);
+                    }
+                }
+                String master = getSentinel().getMaster();
+                boolean sentinelConfigured = master != null && !master.isBlank();
+                boolean clusterConfigured = !getNodes().isEmpty();
+                if (sentinelConfigured && clusterConfigured) {
+                    throw new IllegalStateException(
+                            "cluster.valkey.mode is not set but both"
+                                    + " cluster.valkey.sentinel.master and cluster.valkey.nodes are"
+                                    + " configured. Set cluster.valkey.mode explicitly to"
+                                    + " 'sentinel' or 'cluster'.");
+                }
+                if (sentinelConfigured) {
+                    return ValkeyMode.SENTINEL;
+                }
+                if (clusterConfigured) {
+                    return ValkeyMode.CLUSTER;
+                }
+                return ValkeyMode.STANDALONE;
+            }
+
+            public enum ValkeyMode {
+                STANDALONE,
+                SENTINEL,
+                CLUSTER
+            }
+
+            @Data
+            public static class Sentinel {
+                /** Monitored primary name, i.e. the name in {@code sentinel monitor <name> ...}. */
+                private String master = "";
+
+                /** Sentinel endpoints as {@code host:port}; sentinel's default port is 26379. */
+                private List<String> nodes = new ArrayList<>();
+
+                /** Username for the SENTINEL connections. Separate from the data-node username. */
+                private String username = "";
+
+                /**
+                 * Password for the SENTINEL connections. Separate from the data-node password -
+                 * setting only {@code cluster.valkey.password} does NOT authenticate to sentinels.
+                 */
+                @ToString.Exclude private String password = "";
+
+                // A bare 'nodes:' key binds null.
+                public List<String> getNodes() {
+                    if (nodes == null) {
+                        nodes = new ArrayList<>();
+                    }
+                    return nodes;
+                }
+            }
 
             @Data
             public static class Tls {
+                /**
+                 * Force TLS. Required in sentinel/cluster mode, which have no {@code rediss://} URL
+                 * to carry the scheme; in standalone it is OR-ed with the scheme, never overridden.
+                 */
+                private boolean enabled = false;
+
                 /**
                  * When {@code true}, skip Valkey/Redis TLS certificate verification (dev/test
                  * only). Leave {@code false} in production.
                  */
                 private boolean skipCertVerification = false;
+            }
+
+            @Data
+            public static class Pool {
+                /**
+                 * Pooling for dedicated connections. Backplane traffic multiplexes over the shared
+                 * native connection, so the pool backs only that one connection today.
+                 */
+                private boolean enabled = true;
+
+                /**
+                 * Max pooled connections; at least 2, one is held by the shared native connection.
+                 * Headroom for a future dedicated path - raising it changes no current throughput.
+                 */
+                private int maxActive = 16;
+
+                /** Max idle connections kept in the pool. Keep equal to maxActive. */
+                private int maxIdle = 16;
+
+                /**
+                 * Connections kept warm. Default 0: backplane traffic runs on the shared native
+                 * connection, so warm pooled sockets would idle unused on every node.
+                 */
+                private int minIdle = 0;
+
+                /**
+                 * Max wait for a pooled connection. Never 0/negative: negative blocks forever and
+                 * defeats commandTimeoutMs, 0 fails the borrow instantly once the pool is drained.
+                 */
+                private long maxWaitMillis = 2000;
+
+                /** Idle-evictor interval. minIdle is only honoured while the evictor runs. */
+                private long timeBetweenEvictionRunsMillis = 30000;
+
+                /**
+                 * Validate on borrow. Cheap (no round trip - Lettuce checks isOpen) but it only
+                 * rejects explicitly closed connections; a disconnected, reconnecting one is open.
+                 */
+                private boolean testOnBorrow = true;
             }
         }
 
@@ -532,6 +976,7 @@ public class ApplicationProperties {
     @Data
     public static class Security {
         private boolean enableLogin;
+        private boolean ssoAutoLogin;
         private InitialLogin initialLogin = new InitialLogin();
         private OAUTH2 oauth2 = new OAUTH2();
         private SAML2 saml2 = new SAML2();
@@ -595,7 +1040,7 @@ public class ApplicationProperties {
         public static class SAML2 {
             private String provider;
             private Boolean enabled = false;
-            private Boolean autoCreateUser = false;
+            private Boolean autoCreateUser = true;
             private Boolean blockRegistration = false;
             private String registrationId = "stirling";
 
@@ -672,7 +1117,7 @@ public class ApplicationProperties {
             private String issuer;
             private String clientId;
             @ToString.Exclude private String clientSecret;
-            private Boolean autoCreateUser = false;
+            private Boolean autoCreateUser = true;
             private Boolean blockRegistration = false;
             private String useAsUsername;
             private Collection<String> scopes = new ArrayList<>();
@@ -743,7 +1188,6 @@ public class ApplicationProperties {
         @Data
         public static class Jwt {
             private boolean enableKeystore = true;
-            private boolean enableKeyRotation = false;
             private boolean enableKeyCleanup = true;
 
             /**
@@ -847,8 +1291,8 @@ public class ApplicationProperties {
             @Data
             public static class Trust {
                 private boolean serverAsAnchor = true;
-                private boolean useSystemTrust = false;
-                private boolean useMozillaBundle = false;
+                private boolean useSystemTrust = true;
+                private boolean useMozillaBundle = true;
                 private boolean useAATL = false;
                 private boolean useEUTL = false;
             }
@@ -891,10 +1335,11 @@ public class ApplicationProperties {
         private Boolean enableAnalytics;
         private Boolean enablePosthog;
         private Boolean enableScarf;
-        private Boolean enableDesktopInstallSlide;
+        private Boolean enableDesktopInstallSlide = true;
+        private boolean enableEasterEggs = true;
         private Datasource datasource;
         private boolean disableSanitize;
-        private int maxDPI;
+        private int maxDPI = 500;
         private boolean enableUrlToPDF;
         private Html html = new Html();
         private CustomPaths customPaths = new CustomPaths();
@@ -908,8 +1353,11 @@ public class ApplicationProperties {
         private String frontendUrl; // Frontend URL for invite email links (e.g.
 
         // 'https://app.example.com'). If not set, falls back to backendUrl.
-        private boolean enableMobileScanner = false; // Enable mobile phone QR code upload feature
+        private boolean enableMobileScanner = true; // Enable mobile phone QR code upload feature
+        private boolean enableMobileSignature =
+                true; // Enable drawing signatures on a phone via QR code
         private MobileScannerSettings mobileScannerSettings = new MobileScannerSettings();
+        private ServerCertificate serverCertificate = new ServerCertificate();
 
         @Data
         public static class MobileScannerSettings {
@@ -917,6 +1365,16 @@ public class ApplicationProperties {
             private String imageResolution = "full"; // Options: "full", "reduced"
             private String pageFormat = "A4"; // Options: "keep", "A4", "letter"
             private boolean stretchToFit = false; // Whether to stretch image to fill page
+        }
+
+        @Data
+        public static class ServerCertificate {
+            private boolean enabled =
+                    true; // Enable server-side "Sign with Stirling-PDF" certificate
+            private String organizationName = "Stirling PDF Inc";
+            private int validity = 365; // Certificate validity in days
+            private boolean regenerateOnStartup =
+                    false; // Generate a new certificate on each startup
         }
 
         public boolean isAnalyticsEnabled() {
@@ -943,6 +1401,27 @@ public class ApplicationProperties {
         private Quotas quotas = new Quotas();
         private Sharing sharing = new Sharing();
         private Signing signing = new Signing();
+        private Encryption encryption = new Encryption();
+
+        /**
+         * Encryption at rest for stored files (Pro/Enterprise). Enabling encrypts new writes;
+         * disabling later only stops encrypting new writes — existing encrypted files keep
+         * decrypting as long as the key material is present. The master key is resolved like the
+         * credential key: {@code stirling.security.fileEncryptionKey} property, {@code
+         * STIRLING_FILE_ENCRYPTION_KEY} env var, or an auto-generated {@code file-encryption.key}
+         * in the config directory.
+         */
+        @Data
+        public static class Encryption {
+            private boolean enabled = false;
+
+            /**
+             * Emit an audit event for every decrypt of an encrypted blob. Compliance reviewers
+             * (HIPAA) expect read audit, so it defaults on; busy multi-user installs can disable.
+             * Denied decrypts and key lifecycle events are always audited regardless.
+             */
+            private boolean auditReads = true;
+        }
 
         @Data
         public static class Local {
@@ -1003,7 +1482,7 @@ public class ApplicationProperties {
         @Data
         public static class Sharing {
             private boolean enabled = false;
-            private boolean linkEnabled = false;
+            private boolean linkEnabled = true;
             private boolean emailEnabled = false;
             private int linkExpirationDays = 3;
         }
@@ -1145,21 +1624,12 @@ public class ApplicationProperties {
     public static class Ui {
         private String appNameNavbar;
         private List<String> languages;
-        private String logoStyle = "classic"; // Options: "classic" (default) or "modern"
         private boolean defaultHideUnavailableTools = false;
         private boolean defaultHideUnavailableConversions = false;
         private HideDisabledTools hideDisabledTools = new HideDisabledTools();
 
         public String getAppNameNavbar() {
             return appNameNavbar != null && !appNameNavbar.trim().isEmpty() ? appNameNavbar : null;
-        }
-
-        public String getLogoStyle() {
-            // Validate and return either "modern" or "classic"
-            if ("modern".equalsIgnoreCase(logoStyle)) {
-                return "modern";
-            }
-            return "classic"; // default
         }
 
         @Data
@@ -1177,7 +1647,37 @@ public class ApplicationProperties {
 
     @Data
     public static class Metrics {
-        private boolean enabled;
+        private boolean enabled = true;
+    }
+
+    @Data
+    public static class ToolRecommendations {
+        private boolean enabled = true;
+        // How long usage and workflow rollups are kept before the retention sweep removes them.
+        private int retentionDays = 180;
+        // Scoring lookback window; events in the recent window count double.
+        private int windowDays = 30;
+        private int recentWindowDays = 7;
+
+        // The getters below clamp rather than reject: a mistyped window should narrow the ranking,
+        // never stop the app booting.
+
+        public int getWindowDays() {
+            return Math.max(1, windowDays);
+        }
+
+        /** Beyond the scoring window every event would be "recent", which says nothing. */
+        public int getRecentWindowDays() {
+            return Math.min(Math.max(0, recentWindowDays), getWindowDays());
+        }
+
+        /**
+         * Zero or less disables the sweep. Otherwise it never runs inside the scoring window, so
+         * retention cannot delete the days the ranking is still reading.
+         */
+        public int getRetentionDays() {
+            return retentionDays <= 0 ? retentionDays : Math.max(retentionDays, getWindowDays());
+        }
     }
 
     @Data
@@ -1229,7 +1729,7 @@ public class ApplicationProperties {
         private boolean enableInvites = false;
         private int inviteLinkExpiryHours = 72; // Default: 72 hours (3 days)
         private String host;
-        private int port;
+        private int port = 587;
         private String username;
         @ToString.Exclude private String password;
         private String from;
@@ -1256,10 +1756,10 @@ public class ApplicationProperties {
         @ToString.Exclude private String botToken;
         private String botUsername;
         private String pipelineInboxFolder = "telegram";
-        private Boolean customFolderSuffix = false;
-        private Boolean enableAllowUserIDs = false;
+        private Boolean customFolderSuffix = true;
+        private Boolean enableAllowUserIDs = true;
         private List<Long> allowUserIDs = new ArrayList<>();
-        private Boolean enableAllowChannelIDs = false;
+        private Boolean enableAllowChannelIDs = true;
         private List<Long> allowChannelIDs = new ArrayList<>();
         private long processingTimeoutSeconds = 180;
         private long pollingIntervalMillis = 2000;
@@ -1346,12 +1846,23 @@ public class ApplicationProperties {
         private boolean enabled;
         @ToString.Exclude private String key;
         private int maxUsers;
+
+        /**
+         * Servers purchased, and the users each one grants. Both come from licence metadata and are
+         * presentation only: {@code maxUsers} is the limit that is actually enforced. They exist so
+         * the UI can say "2 servers, 100 users each" rather than a bare 200, and so the
+         * add-capacity flow knows what a single additional server buys. Zero means the licence
+         * predates the cap and carries no server breakdown.
+         */
+        private int serverQuantity;
+
+        private int userBlockSize;
+
         private ProFeatures proFeatures = new ProFeatures();
         private EnterpriseFeatures enterpriseFeatures = new EnterpriseFeatures();
 
         @Data
         public static class ProFeatures {
-            private boolean ssoAutoLogin;
             private boolean database;
             private CustomMetadata customMetadata = new CustomMetadata();
             private GoogleDrive googleDrive = new GoogleDrive();

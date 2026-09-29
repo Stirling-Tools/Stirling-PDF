@@ -1,7 +1,6 @@
 // Centralized z-index constants for new usages added in this branch.
 // Keep values identical to their original inline usages.
 
-export const Z_INDEX_FULLSCREEN_SURFACE = 1000;
 export const Z_INDEX_OVER_FULLSCREEN_SURFACE = 1300;
 export const Z_ANALYTICS_MODAL = 1301;
 // Config/Settings modal - should appear above analytics modal when navigating from onboarding
@@ -32,8 +31,11 @@ export const Z_INDEX_DRAG_BADGE = 1001;
 // Modal that appears on top of config modal (e.g., restart confirmation, update modal)
 export const Z_INDEX_OVER_CONFIG_MODAL = 2000;
 
-// Cookie-consent banner — above the chat FAB (1050), below all modals and onboarding; reaches CSS via --z-index-cookie-consent
+// Reaches CSS via --z-index-cookie-consent.
 export const Z_INDEX_COOKIE_CONSENT_BANNER = 1060;
+// Onboarding sits below the cookie banner alone: the two are on screen together on first
+// launch, and the banner was being dimmed and blocked by the card's overlay.
+export const Z_INDEX_ONBOARDING_CARD = 1040;
 // Cookie-consent preferences dialog — above the config modal it opens from; reaches CSS via --z-index-cookie-preferences
 export const Z_INDEX_COOKIE_PREFERENCES_MODAL = 1450;
 
@@ -45,8 +47,6 @@ export const Z_INDEX_VIEWER_FLOATING_MENU = 10000;
 
 export const Z_INDEX_TOAST = 10001;
 
-// Signature preview overlays inside the PDF viewer
-export const Z_INDEX_SIGNATURE_DRAG_BLOCKER = 999;
 export const Z_INDEX_SIGNATURE_OVERLAY = 1000;
 export const Z_INDEX_SIGNATURE_OVERLAY_HANDLE = 1001;
 export const Z_INDEX_SIGNATURE_OVERLAY_DELETE = 1002;

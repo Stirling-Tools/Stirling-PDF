@@ -41,6 +41,7 @@ import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamRepository;
+import stirling.software.proprietary.security.service.ApiKeyAuthenticationService.ApiKeyAuthentication;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 import stirling.software.proprietary.storage.repository.FileShareAccessRepository;
 import stirling.software.proprietary.storage.repository.FileShareRepository;
@@ -71,6 +72,15 @@ class UserServiceMoreTest {
     @Mock private FileShareRepository fileShareRepository;
     @Mock private FileShareAccessRepository fileShareAccessRepository;
 
+    @Mock
+    private stirling.software.proprietary.integration.repository.IntegrationConfigRepository
+            integrationConfigRepository;
+
+    @Mock private TeamMembershipService teamMembershipService;
+    @Mock private ApiKeyAuthenticationService apiKeyAuthenticationService;
+
+    @org.mockito.Mock private stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
+
     @InjectMocks private UserService userService;
 
     @AfterEach
@@ -93,7 +103,8 @@ class UserServiceMoreTest {
         void getAuthenticationValid() {
             User u = user("api");
             u.addAuthority(new Authority("ROLE_USER", u));
-            when(userRepository.findByApiKey("k")).thenReturn(Optional.of(u));
+            when(apiKeyAuthenticationService.authenticate("k"))
+                    .thenReturn(Optional.of(new ApiKeyAuthentication(u, null, u.getAuthorities())));
 
             assertThat(userService.getAuthentication("k")).isNotNull();
         }
@@ -101,7 +112,7 @@ class UserServiceMoreTest {
         @Test
         @DisplayName("getAuthentication throws when key is unknown")
         void getAuthenticationInvalid() {
-            when(userRepository.findByApiKey("bad")).thenReturn(Optional.empty());
+            when(apiKeyAuthenticationService.authenticate("bad")).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> userService.getAuthentication("bad"))
                     .isInstanceOf(UsernameNotFoundException.class);
@@ -249,7 +260,8 @@ class UserServiceMoreTest {
             User u = user("p");
             Team defaultTeam = new Team();
             defaultTeam.setName("Default");
-            when(teamRepository.findByName("Default")).thenReturn(Optional.of(defaultTeam));
+            when(teamRepository.findFirstByNameOrderByIdAsc("Default"))
+                    .thenReturn(Optional.of(defaultTeam));
 
             userService.changeUserTeam(u, null);
 

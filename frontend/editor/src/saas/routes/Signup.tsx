@@ -5,13 +5,15 @@ import { useAuth } from "@app/auth/UseSession";
 import { useTranslation } from "@app/hooks/useTranslation";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import { getBaseUrl, withBasePath } from "@app/constants/app";
+import { rememberPendingDestination } from "@app/services/pendingDestination";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
-import "@shared/auth/ui/auth.css";
+import "@app/auth/ui/auth.css";
 import "@app/routes/authShared/saas-auth.css";
 import { alert } from "@app/components/toast";
+import { Button } from "@app/ui/Button";
 
 // Import signup components
-import ErrorMessage from "@shared/auth/ui/ErrorMessage";
+import ErrorMessage from "@app/auth/ui/ErrorMessage";
 import OAuthButtons from "@app/routes/login/OAuthButtons";
 import SignupForm from "@app/routes/signup/SignupForm";
 import {
@@ -19,7 +21,7 @@ import {
   SignupFieldErrors,
 } from "@app/routes/signup/SignupFormValidation";
 import { useAuthService } from "@app/routes/signup/AuthService";
-import loginHeader from "@shared/assets/login/LoginLightModeHeader.svg";
+import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -28,13 +30,24 @@ export default function Signup() {
   const { t } = useTranslation();
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showEmailForm, setShowEmailForm] = useState(false);
   const [name, setName] = useState(undefined as string | undefined);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [agree, setAgree] = useState(true);
   const [fieldErrors, setFieldErrors] = useState<SignupFieldErrors>({});
+
+  // Stashed rather than threaded onward: Supabase builds the confirmation link and
+  // it cannot carry a `next`.
+  useEffect(() => {
+    try {
+      rememberPendingDestination(
+        new URL(window.location.href).searchParams.get("next"),
+      );
+    } catch (_) {
+      // Unparseable URL; the visitor just lands on the default.
+    }
+  }, []);
 
   // Check if we were redirected here with an auto-auth error
   useEffect(() => {
@@ -95,19 +108,18 @@ export default function Signup() {
 
   const baseUrl = getBaseUrl();
 
-  // Set document meta
   useDocumentMeta({
     title: `${t("signup.title", "Create an account")} - Stirling PDF`,
     description: t(
       "app.description",
-      "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "A free, private PDF editor you can run on any infrastructure.",
     ),
     ogTitle: `${t("signup.title", "Create an account")} - Stirling PDF`,
     ogDescription: t(
       "app.description",
-      "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "A free, private PDF editor you can run on any infrastructure.",
     ),
-    ogImage: `${baseUrl}/og_images/home.png`,
+    ogImage: `${baseUrl}/og_images/saas/app.png`,
     ogUrl: `${window.location.origin}${window.location.pathname}`,
   });
 
@@ -181,7 +193,7 @@ export default function Signup() {
   };
 
   return (
-    <AuthLayout isEmailFormExpanded={showEmailForm}>
+    <AuthLayout>
       {/* Centered logo */}
       <div className="auth-logo-block">
         <img
@@ -208,67 +220,26 @@ export default function Signup() {
         />
       </div>
 
-      {/* Email & Password button */}
-      <button
-        type="button"
-        disabled={isSigningUp}
-        onClick={() => setShowEmailForm((v) => !v)}
-        className={`oauth-button-fullwidth auth-expandable-trigger ${showEmailForm ? "auth-expandable-trigger--active" : ""}`}
-        style={{ marginTop: "2.5rem", marginBottom: "0.75rem" }}
-      >
-        <span className="oauth-btn-group">
-          <span className="auth-at-icon">@</span>
-          <span className="oauth-btn-label">{`${t("signup.signUpWith", "Sign up with")} email`}</span>
-        </span>
-      </button>
-
-      {/* Email form — animated expand */}
-      <div
-        className={`auth-expand-grid ${showEmailForm ? "auth-expand-grid--open" : ""}`}
-      >
-        <div className="auth-expand-inner">
-          <div style={{ paddingBottom: "0.5rem" }}>
-            <SignupForm
-              name={name}
-              email={email}
-              password={password}
-              confirmPassword={confirmPassword}
-              agree={agree}
-              setName={setName}
-              setEmail={setEmail}
-              setPassword={setPassword}
-              setConfirmPassword={setConfirmPassword}
-              setAgree={setAgree}
-              onSubmit={handleSignUp}
-              isSubmitting={isSigningUp}
-              fieldErrors={fieldErrors}
-            />
-          </div>
-        </div>
+      {/* Sign-up form — always visible (no expander toggle) */}
+      <div style={{ marginTop: "2.5rem", paddingBottom: "0.5rem" }}>
+        <SignupForm
+          name={name}
+          email={email}
+          password={password}
+          confirmPassword={confirmPassword}
+          agree={agree}
+          setName={setName}
+          setEmail={setEmail}
+          setPassword={setPassword}
+          setConfirmPassword={setConfirmPassword}
+          setAgree={setAgree}
+          onSubmit={handleSignUp}
+          isSubmitting={isSigningUp}
+          fieldErrors={fieldErrors}
+        />
       </div>
 
-      {/* Skip */}
-      <div style={{ textAlign: "center", margin: "1rem 0" }}>
-        <button
-          type="button"
-          onClick={handleAnonymousSignIn}
-          disabled={isSigningUp}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            fontSize: "1rem",
-            fontWeight: 700,
-            color: "#000000",
-          }}
-        >
-          {isSigningUp
-            ? t("login.signingIn", "Signing in...")
-            : `${t("signup.skip", "Skip")} →`}
-        </button>
-      </div>
-
-      {/* Bottom */}
+      {/* Already have an account — pushed to the bottom */}
       <div
         style={{
           textAlign: "center",
@@ -276,19 +247,40 @@ export default function Signup() {
           paddingTop: "1rem",
         }}
       >
-        <button
-          type="button"
+        <Button
+          variant="tertiary"
           onClick={() => navigate("/login")}
           style={{
             background: "none",
             border: "none",
             cursor: "pointer",
             fontSize: "0.875rem",
-            color: "#9ca3af",
+            color: "var(--c-accent-text)",
           }}
         >
           {t("signup.alreadyHaveAccount", "I already have an account")}
-        </button>
+        </Button>
+      </div>
+
+      {/* Skip — small + muted, at the very bottom */}
+      <div style={{ textAlign: "center", margin: "0.5rem 0 0.25rem" }}>
+        <Button
+          variant="tertiary"
+          onClick={handleAnonymousSignIn}
+          disabled={isSigningUp}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            fontSize: "0.8125rem",
+            fontWeight: 500,
+            color: "var(--c-text-subtle)",
+          }}
+        >
+          {isSigningUp
+            ? t("login.signingIn", "Signing in...")
+            : `${t("signup.skip", "Skip")} →`}
+        </Button>
       </div>
     </AuthLayout>
   );

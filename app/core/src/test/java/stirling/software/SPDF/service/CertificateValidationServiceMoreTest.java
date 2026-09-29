@@ -89,9 +89,13 @@ class CertificateValidationServiceMoreTest {
     }
 
     private static ApplicationProperties defaultProps() {
-        // Real POJO defaults: trust all off, revocation "none".
+        // Test baseline: every trust source explicitly off so each test enables only what it
+        // exercises (the shipped POJO defaults now enable system + Mozilla trust).
         ApplicationProperties props = new ApplicationProperties();
-        props.getSecurity().getValidation().getTrust().setServerAsAnchor(false);
+        var trust = props.getSecurity().getValidation().getTrust();
+        trust.setServerAsAnchor(false);
+        trust.setUseSystemTrust(false);
+        trust.setUseMozillaBundle(false);
         return props;
     }
 

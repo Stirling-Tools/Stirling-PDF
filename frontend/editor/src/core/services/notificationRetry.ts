@@ -1,0 +1,594 @@
+import apiClient from "@app/services/apiClient";
+import { fileStorage } from "@app/services/fileStorage";
+import {
+  indexedDBManager,
+  type DatabaseConfig,
+} from "@app/services/indexedDBManager";
+import { zipFileService } from "@app/services/zipFileService";
+import {
+  REMOVE_PASSWORD_ENDPOINT,
+  REPAIR_ENDPOINT,
+} from "@app/constants/toolEndpoints";
+import type { FileId } from "@app/types/file";
+import { uploadableFile } from "@app/utils/uploadableFile";
+
+/** What the bell needs to retry a reported failure. The server keeps none of it. */
+export interface RetryPayload {
+  operation: string;
+  endpoint: string;
+  /**
+   * The request body as the tool would post it, not the tool's own parameter model. A tool's UI
+   * names its settings for the user and maps them to the API's names on the way out, so the two
+   * differ freely: compress offers a compression level and posts an optimise level. Replaying
+   * the UI shape would send fields the server ignores and silently run the defaults instead.
+   */
+  params: Record<string, unknown>;
+  fileIds: string[];
+  /** Whether the endpoint takes the whole batch in one call, or one file per call. */
+  multiFile: boolean;
+  /** The failure's error code, so a stash can be matched to the row's kind. */
+  errorCode: string | null;
+  /**
+   * Whether replaying this stash would run something other than what failed, because a secret
+   * was dropped from it or because the tool exposes no mapping to its request body. A resolution
+   * must not re-run on those terms; the plain retry, which opens the tool, still can.
+   */
+  replayUnfaithful: boolean;
+  recordedAt: number;
+}
+
+/**
+ * Mirrors the codes each `FailureKind` claims, server-side. Both copies are asserted against
+ * `testing/failure-kind-codes.json`, here and in `FailureKindTest`, so a code added to one side
+ * alone fails on the other.
+ *
+ * Exported for that conformance test: nothing else should read it, since a kind the server sends
+ * is an open string and `stashMatchesKind` already answers the only question worth asking.
+ */
+export const KIND_ERROR_CODES: Record<string, readonly string[]> = {
+  INPUT_PASSWORD_PROTECTED: ["E004"],
+  INPUT_CORRUPTED: ["E001", "E002", "E003"],
+  INPUT_UNREPAIRABLE: ["E076"],
+  COMPLIANCE_NOT_MET: ["E074"],
+  INPUT_WRONG_TYPE: ["E006", "E014", "E018", "E061", "E075"],
+  INPUT_UNREADABLE: ["E010", "E015", "E021", "E034"],
+  INPUT_EMPTY: ["E005", "E012", "E016", "E020", "E032"],
+  INPUT_UNAVAILABLE: ["E030", "E033"],
+  TOOL_NOT_INSTALLED: ["E042", "E062", "E063", "E064"],
+  STEP_CANNOT_RENDER_PAGE: ["E054"],
+  STEP_TOOL_FAILED: ["E044", "E051", "E052", "E060"],
+  STEP_INTERRUPTED: ["E053"],
+  STEP_PAGE_TOO_LARGE: ["E081"],
+  STEP_MISCONFIGURED: ["E040", "E041", "E043", "E050", "E070", "E072"],
+};
+
+/** Every code any kind claims, so an unclaimed one can be recognised as belonging to UNKNOWN. */
+const CLAIMED_CODES = new Set(Object.values(KIND_ERROR_CODES).flat());
+
+/** Whether `kindId` is the kind `errorCode` belongs to, so a caller can spot a changed verdict. */
+export function kindClaims(kindId: string, errorCode: string): boolean {
+  const claimed = KIND_ERROR_CODES[kindId];
+  return claimed ? claimed.includes(errorCode) : !CLAIMED_CODES.has(errorCode);
+}
+
+/** Whether the one stash a file carries is the failure this row describes. */
+export function stashMatchesKind(
+  kindId: string,
+  payload: RetryPayload,
+): boolean {
+  const claimed = KIND_ERROR_CODES[kindId];
+  if (claimed) {
+    return payload.errorCode !== null && claimed.includes(payload.errorCode);
+  }
+  return payload.errorCode === null || !CLAIMED_CODES.has(payload.errorCode);
+}
+
+/** Its own database: the files schema is at v9, and this hint is safe to lose. */
+const RETRY_DB_CONFIG: DatabaseConfig = {
+  name: "stirling-pdf-retry",
+  version: 1,
+  stores: [{ name: "retryPayloads", keyPath: "fileId" }],
+};
+
+const STORE_NAME = "retryPayloads";
+
+/**
+ * Capped, oldest evicted first, so the stash cannot grow for the origin's lifetime. A batch that
+ * exceeds this on its own is kept whole: the failure a user is looking at outranks the cap.
+ */
+const MAX_RETAINED_PAYLOADS = 25;
+
+/** One record per file involved, so a retry can be found from any of them. */
+interface StoredRetryRecord extends RetryPayload {
+  fileId: string;
+}
+
+/** Stripped on the way in: remove-password submits its password as a parameter. */
+const SECRET_FIELD = /pass(word|phrase)|secret|token|credential/i;
+
+/**
+ * Never rejects: a browser refusing IndexedDB costs the retry button, not a second error.
+ *
+ * `paramsMapped` says whether `params` is the tool's request body or merely its UI model, which
+ * the caller knows and this cannot infer. False marks the stash unfaithful rather than refusing
+ * it, so the row keeps the plain retry even where nothing may re-run on its behalf.
+ */
+export async function stashRetryPayload(
+  payload: Omit<RetryPayload, "replayUnfaithful"> & { paramsMapped: boolean },
+): Promise<void> {
+  try {
+    const fileIds = payload.fileIds.filter(isUsableId);
+    if (!payload.operation.trim() || fileIds.length === 0) return;
+
+    const { paramsMapped, ...rest } = payload;
+    const record = {
+      ...rest,
+      fileIds,
+      params: withoutSecrets(payload.params),
+      replayUnfaithful: !paramsMapped || containsSecret(payload.params),
+    };
+
+    await writeRecords(fileIds.map((fileId) => ({ ...record, fileId })));
+  } catch {
+    // Nothing to recover: the bell simply offers no retry for this failure.
+  }
+}
+
+/** The most recent operation that failed on this file, or null when nothing is stashed. */
+export async function loadRetryPayload(
+  fileId: string | null,
+): Promise<RetryPayload | null> {
+  if (!isUsableId(fileId)) return null;
+
+  let record: StoredRetryRecord | undefined;
+  try {
+    record = await readRecord(fileId);
+  } catch {
+    return null;
+  }
+  if (!record) return null;
+
+  // An older shape is unusable rather than half-usable: a retry needs somewhere to go.
+  if (!record.operation || !record.endpoint) return null;
+
+  return {
+    operation: record.operation,
+    endpoint: record.endpoint,
+    params: record.params ?? {},
+    fileIds: record.fileIds ?? [fileId],
+    // Older records predate these fields; every default fails closed. A record written before
+    // params were mapped holds the UI shape, so assuming it unfaithful is not merely cautious:
+    // it is what those records are. Only the automatic re-run is withheld, not the plain retry.
+    multiFile: record.multiFile ?? false,
+    errorCode: record.errorCode ?? null,
+    replayUnfaithful: record.replayUnfaithful ?? true,
+    recordedAt: record.recordedAt,
+  };
+}
+
+/**
+ * Drop the stash for a file whose failure is resolved. Never rejects: a record left behind is
+ * stale, not harmful, and it would be evicted eventually anyway.
+ */
+export async function clearRetryPayload(fileId: string | null): Promise<void> {
+  if (!isUsableId(fileId)) return;
+  try {
+    await deleteRecord(fileId);
+  } catch {
+    // The retry it describes has already happened, so nothing reads it again.
+  }
+}
+
+/** Whether the document is still in this browser, which decides whether a retry can run. */
+export async function hasLocalFile(fileId: string | null): Promise<boolean> {
+  if (!isUsableId(fileId)) return false;
+
+  try {
+    const stub = await fileStorage.getStirlingFileStub(fileId as FileId);
+    return stub !== null;
+  } catch {
+    return false;
+  }
+}
+
+/** A file the retry produced, handed back for the caller to adopt. */
+export interface RetryOutputFile {
+  blob: Blob;
+  filename: string;
+}
+
+/** Why a retry could not run; `serverMessage` means the message is the server's own words. */
+export type RetryFailure = "notRetryable" | "fileMissing" | "serverMessage";
+
+/** What a retry call comes back with. `files` only ever on success. */
+export interface RetryOutcome {
+  ok: boolean;
+  reason?: RetryFailure;
+  message?: string | null;
+  /** The server's code for the refusal, so a caller can tell a permanent one from a retryable. */
+  errorCode?: string | null;
+  files?: RetryOutputFile[];
+}
+
+/** Unlock a held document for a failure with no stashed operation, e.g. a policy run. */
+export async function unlockLocalDocument(
+  fileId: string,
+  password: string,
+): Promise<RetryOutcome> {
+  return postDocuments(REMOVE_PASSWORD_ENDPOINT, {}, [fileId], password);
+}
+
+/** The inputs a retry of `payload` would send: the whole batch, or the one document named. */
+export function retryInputIds(
+  payload: RetryPayload,
+  forFileId: string | null = null,
+): string[] {
+  const ids = payload.multiFile
+    ? payload.fileIds
+    : [
+        forFileId && payload.fileIds.includes(forFileId)
+          ? forFileId
+          : payload.fileIds[0],
+      ];
+  return ids.filter(isUsableId);
+}
+
+/** Re-runs the stashed operation: `forFileId` alone, or the whole batch for a multi-file endpoint. */
+export async function retryWithPassword(
+  payload: RetryPayload,
+  password: string,
+  forFileId: string | null = null,
+): Promise<RetryOutcome> {
+  if (!payload.endpoint) {
+    return { ok: false, reason: "notRetryable", message: null };
+  }
+
+  return postDocuments(
+    payload.endpoint,
+    payload.params,
+    retryInputIds(payload, forFileId),
+    password,
+  );
+}
+
+/** One document's repair, paired back to the id it was repaired from. */
+export interface RepairedDocument {
+  fileId: string;
+  file: RetryOutputFile;
+}
+
+/**
+ * As {@link RetryOutcome}, but the outputs stay paired to their inputs for versioning.
+ * `repaired` is only ever present on success.
+ */
+export interface RepairOutcome {
+  ok: boolean;
+  reason?: RetryFailure;
+  message?: string | null;
+  /** The server's code for the refusal, so a caller can tell a permanent one from a retryable. */
+  errorCode?: string | null;
+  repaired?: RepairedDocument[];
+}
+
+/**
+ * Rewrites each held document through the repair tool. All or nothing: a re-run whose batch
+ * still holds one unrepaired input fails exactly as it did before, so a partial result is not
+ * worth adopting.
+ */
+export async function repairDocuments(
+  fileIds: readonly string[],
+): Promise<RepairOutcome> {
+  const usable = fileIds.filter(isUsableId);
+  if (usable.length === 0) {
+    return { ok: false, reason: "fileMissing", message: null };
+  }
+
+  const repaired: RepairedDocument[] = [];
+  // The endpoint takes one document and answers with one, so a batch is one call per file.
+  for (const fileId of usable) {
+    const outcome = await postDocuments(REPAIR_ENDPOINT, {}, [fileId], null);
+    if (!outcome.ok) {
+      return {
+        ok: false,
+        reason: outcome.reason,
+        message: outcome.message,
+        errorCode: outcome.errorCode,
+      };
+    }
+    const file = outcome.files?.[0];
+    if (!file) return { ok: false, reason: "notRetryable", message: null };
+    repaired.push({ fileId, file });
+  }
+  return { ok: true, repaired };
+}
+
+/** Re-runs the stashed operation over documents this browser has just produced. */
+export async function retryWithFiles(
+  payload: RetryPayload,
+  files: File[],
+): Promise<RetryOutcome> {
+  if (!payload.endpoint) {
+    return { ok: false, reason: "notRetryable", message: null };
+  }
+  if (files.length === 0) {
+    return { ok: false, reason: "fileMissing", message: null };
+  }
+  return postFiles(payload.endpoint, payload.params, files, null);
+}
+
+async function postDocuments(
+  endpoint: string,
+  params: Record<string, unknown>,
+  requestedFileIds: (string | null | undefined)[],
+  password: string | null,
+): Promise<RetryOutcome> {
+  const fileIds = requestedFileIds.filter(isUsableId);
+  let files: File[] = [];
+  try {
+    files = await fileStorage.getStirlingFiles(fileIds as FileId[]);
+  } catch {
+    files = [];
+  }
+
+  // getStirlingFiles drops what it cannot find, so a short result means an input is gone.
+  if (files.length === 0 || files.length !== fileIds.length) {
+    return { ok: false, reason: "fileMissing", message: null };
+  }
+
+  // Restored from IndexedDB, which WebKit uploads as an empty body unless wrapped.
+  return postFiles(endpoint, params, files.map(uploadableFile), password);
+}
+
+/** The one place any of this reaches the network, so a password has a single path out. */
+async function postFiles(
+  endpoint: string,
+  params: Record<string, unknown>,
+  files: File[],
+  password: string | null,
+): Promise<RetryOutcome> {
+  try {
+    const formData = toFormData(params, files);
+    if (password !== null) formData.append("password", password);
+    const response = await apiClient.post<Blob>(endpoint, formData, {
+      responseType: "blob",
+    });
+    return {
+      ok: true,
+      files: await asOutputFiles(
+        response.data,
+        filenameOf(response.headers, files[0].name),
+      ),
+    };
+  } catch (error) {
+    const said = await serverFailureOf(error);
+    return { ok: false, reason: "serverMessage", ...said };
+  }
+}
+
+/** A multi-output run answers with a ZIP, which must not land in the workbench as one PDF. */
+async function asOutputFiles(
+  blob: Blob,
+  filename: string,
+): Promise<RetryOutputFile[]> {
+  if (await zipFileService.isZipResponse(blob)) {
+    const extracted = await zipFileService.extractPdfFiles(
+      new File([blob], filename),
+    );
+    if (extracted.success && extracted.extractedFiles.length > 0) {
+      return extracted.extractedFiles.map((file) => ({
+        blob: file,
+        filename: file.name,
+      }));
+    }
+  }
+  return [{ blob, filename }];
+}
+
+/** Falls back to the input's name, so an unnamed blob is not adopted as "blob". */
+function filenameOf(headers: unknown, fallback: string): string {
+  const disposition = (headers as Record<string, unknown> | undefined)?.[
+    "content-disposition"
+  ];
+  if (typeof disposition !== "string") return fallback;
+
+  // filename* (RFC 5987) wins over plain filename: that is how a non-ASCII name arrives.
+  const encoded = /filename\*=(?:UTF-8'')?([^;]+)/i.exec(disposition)?.[1];
+  const plain = /filename="?([^";]+)"?/i.exec(disposition)?.[1];
+  const name = encoded ?? plain;
+  if (!name) return fallback;
+
+  try {
+    return decodeURIComponent(name.trim().replace(/^"|"$/g, "")) || fallback;
+  } catch {
+    // A malformed escape is not worth failing an otherwise successful retry over.
+    return name.trim().replace(/^"|"$/g, "") || fallback;
+  }
+}
+
+function isUsableId(fileId: string | null | undefined): fileId is string {
+  return typeof fileId === "string" && fileId.trim() !== "";
+}
+
+/** Not `objectToFormData`: that is typed to the generated union and throws on a stashed record. */
+function toFormData(params: Record<string, unknown>, files: File[]): FormData {
+  const formData = new FormData();
+
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined || value === null) continue;
+    if (Array.isArray(value)) {
+      for (const item of value) formData.append(key, asField(item));
+    } else {
+      formData.append(key, asField(value));
+    }
+  }
+
+  for (const file of files) formData.append("fileInput", file);
+
+  return formData;
+}
+
+function asField(value: unknown): string {
+  return typeof value === "object" ? JSON.stringify(value) : `${value}`;
+}
+
+/** Far above any real tool's nesting; exists so a cyclic object cannot exhaust the stack. */
+const MAX_PARAM_DEPTH = 20;
+
+/** Stands in for a subtree too deep to walk. */
+const TOO_DEEP = "[nested too deeply to store]";
+
+/** Secrets dropped at any depth; past the limit the subtree is replaced, never returned unseen. */
+function withoutSecrets(
+  value: Record<string, unknown>,
+): Record<string, unknown>;
+function withoutSecrets(value: unknown): unknown;
+function withoutSecrets(value: unknown): unknown {
+  return prunedBelow(value, 0);
+}
+
+/** Whether {@link withoutSecrets} would drop anything: the same walk, answering rather than pruning. */
+function containsSecret(value: unknown, depth = 0): boolean {
+  if (depth >= MAX_PARAM_DEPTH) return false;
+  if (Array.isArray(value)) {
+    return value.some((item) => containsSecret(item, depth + 1));
+  }
+  if (value === null || typeof value !== "object") return false;
+  return Object.entries(value).some(
+    ([key, nested]) =>
+      SECRET_FIELD.test(key) || containsSecret(nested, depth + 1),
+  );
+}
+
+function prunedBelow(value: unknown, depth: number): unknown {
+  if (depth >= MAX_PARAM_DEPTH) return TOO_DEEP;
+  if (Array.isArray(value))
+    return value.map((item) => prunedBelow(item, depth + 1));
+  if (value === null || typeof value !== "object") return value;
+
+  const kept: Record<string, unknown> = {};
+  for (const [key, nested] of Object.entries(value)) {
+    if (SECRET_FIELD.test(key)) continue;
+    kept[key] = prunedBelow(nested, depth + 1);
+  }
+  return kept;
+}
+
+/**
+ * What the server said and why, or nulls when it said nothing usable. Never carries the password.
+ * These calls ask for a blob, so an error body arrives as one and has to be read to be understood.
+ */
+async function serverFailureOf(
+  error: unknown,
+): Promise<{ message: string | null; errorCode: string | null }> {
+  const body = (error as { response?: { data?: unknown } })?.response?.data;
+
+  const text = body instanceof Blob ? await textOf(body) : body;
+  if (typeof text === "string" && text.trim() !== "") {
+    return { message: detailOf(text) ?? text, errorCode: errorCodeOf(text) };
+  }
+
+  const message = (error as { message?: unknown })?.message;
+  return {
+    message:
+      typeof message === "string" && message.trim() !== "" ? message : null,
+    errorCode: null,
+  };
+}
+
+/** Via FileReader, which jsdom implements and `Blob.text` it does not. Null rather than throwing. */
+function textOf(blob: Blob): Promise<string | null> {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => resolve(null);
+    reader.readAsText(blob);
+  });
+}
+
+/**
+ * What a JSON error body says, or null when the text is not one. Two shapes reach here: Problem
+ * Details from a handler, and `{"error": ...}` from a job that failed.
+ */
+function detailOf(text: string): string | null {
+  try {
+    const body = JSON.parse(text) as { detail?: unknown; error?: unknown };
+    const said = typeof body.detail === "string" ? body.detail : body.error;
+    return typeof said === "string" && said.trim() !== "" ? said : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The error code a JSON body carries, for a caller deciding what the row may still offer. */
+function errorCodeOf(text: string): string | null {
+  try {
+    const code = (JSON.parse(text) as { errorCode?: unknown }).errorCode;
+    return typeof code === "string" && code.trim() !== "" ? code : null;
+  } catch {
+    return null;
+  }
+}
+
+async function writeRecords(records: StoredRetryRecord[]): Promise<void> {
+  const db = await indexedDBManager.openDatabase(RETRY_DB_CONFIG);
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([STORE_NAME], "readwrite");
+    const store = transaction.objectStore(STORE_NAME);
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error);
+    transaction.onabort = () =>
+      reject(transaction.error ?? new Error("Retry stash transaction aborted"));
+
+    // put, not add: last write wins per fileId, matching the server's dedup.
+    for (const record of records) store.put(record);
+
+    // Evicted in the same transaction, so two concurrent stashes cannot both see room.
+    const justWritten = new Set(records.map((record) => record.fileId));
+    const all = store.getAll();
+    all.onsuccess = () => {
+      const stored = (all.result ?? []) as StoredRetryRecord[];
+      const excess = stored.length - MAX_RETAINED_PAYLOADS;
+      if (excess <= 0) return;
+      stored
+        // One multi-file failure writes a record per file under one recordedAt, so evicting by
+        // time alone would drop arbitrary members of the batch that just landed. The fileId
+        // breaks the tie, and this batch is exempt: it is the failure with a row on screen.
+        .filter((record) => !justWritten.has(record.fileId))
+        .sort(
+          (a, b) =>
+            a.recordedAt - b.recordedAt || a.fileId.localeCompare(b.fileId),
+        )
+        .slice(0, excess)
+        .forEach((record) => store.delete(record.fileId));
+    };
+    all.onerror = () => reject(all.error);
+  });
+}
+
+async function deleteRecord(fileId: string): Promise<void> {
+  const db = await indexedDBManager.openDatabase(RETRY_DB_CONFIG);
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([STORE_NAME], "readwrite");
+    transaction.objectStore(STORE_NAME).delete(fileId);
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error);
+    transaction.onabort = () =>
+      reject(transaction.error ?? new Error("Retry stash delete aborted"));
+  });
+}
+
+async function readRecord(
+  fileId: string,
+): Promise<StoredRetryRecord | undefined> {
+  const db = await indexedDBManager.openDatabase(RETRY_DB_CONFIG);
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([STORE_NAME], "readonly");
+    const request = transaction.objectStore(STORE_NAME).get(fileId);
+    request.onsuccess = () =>
+      resolve(request.result as StoredRetryRecord | undefined);
+    request.onerror = () => reject(request.error);
+  });
+}

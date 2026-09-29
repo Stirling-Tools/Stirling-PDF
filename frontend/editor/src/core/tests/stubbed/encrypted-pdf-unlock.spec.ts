@@ -21,8 +21,9 @@ import { test, expect, type Page } from "@playwright/test";
 import path from "path";
 import fs from "fs";
 import { mockAppApis } from "@app/tests/helpers/api-stubs";
+import { suppressNativeFilePicker } from "@app/tests/helpers/ui-helpers";
 
-const FIXTURES_DIR = path.join(__dirname, "../test-fixtures");
+const FIXTURES_DIR = path.join(import.meta.dirname, "../test-fixtures");
 const ENCRYPTED_PDF = path.join(FIXTURES_DIR, "encrypted.pdf");
 
 const FAKE_UNLOCKED_PDF = Buffer.from(
@@ -63,8 +64,10 @@ function mockRemovePasswordWrongPassword(page: Page) {
 }
 
 async function uploadEncryptedFile(page: Page, filePath: string) {
+  // `files-button`'s native picker is mocked globally
+  // (suppressNativeFilePicker), so the click is safe cross-browser; set the
+  // files on the hidden input directly.
   await page.getByTestId("files-button").click();
-  // No modal flow - `files-button` triggers the native picker directly.
   await page.locator('[data-testid="file-input"]').setInputFiles(filePath);
 }
 
@@ -72,10 +75,29 @@ const MODAL_TITLE = "Remove password to continue";
 const PASSWORD_PLACEHOLDER = "Enter the PDF password";
 const UNLOCK_BUTTON_TEXT = "Unlock & Continue";
 
+/**
+ * Fill the password field and wait until the modal has registered it: the
+ * unlock button is disabled while the password is empty, so its becoming enabled
+ * proves the value landed in state. Retried because on WebKit the modal can
+ * remount mid open-transition and drop a one-shot fill, leaving it disabled.
+ */
+async function fillPassword(page: Page, password: string): Promise<void> {
+  const field = page.getByPlaceholder(PASSWORD_PLACEHOLDER);
+  const unlock = page.getByRole("button", { name: UNLOCK_BUTTON_TEXT });
+  await expect(async () => {
+    await field.fill(password);
+    await expect(unlock).toBeEnabled({ timeout: 1_000 });
+  }).toPass({ timeout: 15_000 });
+}
+
 test.describe.configure({ mode: "serial" });
 
 test.describe("Encrypted PDF Unlock Modal", () => {
   test.beforeEach(async ({ page }) => {
+    // Raw @playwright/test fixture: install the picker suppression directly so
+    // the files-button click is intercepted cross-browser (firefox/webkit
+    // otherwise leak the native dialog onto the host and close the page).
+    suppressNativeFilePicker(page);
     await mockAppApis(page);
     await page.goto("/?bypassOnboarding=true");
     await page.waitForSelector('[data-testid="files-button"]', {
@@ -107,7 +129,7 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     await uploadEncryptedFile(page, ENCRYPTED_PDF);
     await expect(page.getByText(MODAL_TITLE)).toBeVisible({ timeout: 10000 });
 
-    await page.getByPlaceholder(PASSWORD_PLACEHOLDER).fill("testpass123");
+    await fillPassword(page, "testpass123");
     await page.getByRole("button", { name: UNLOCK_BUTTON_TEXT }).click();
 
     await expect(page.getByText(MODAL_TITLE)).toBeHidden({ timeout: 10000 });
@@ -124,7 +146,7 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     await uploadEncryptedFile(page, ENCRYPTED_PDF);
     await expect(page.getByText(MODAL_TITLE)).toBeVisible({ timeout: 10000 });
 
-    await page.getByPlaceholder(PASSWORD_PLACEHOLDER).fill("wrongpassword");
+    await fillPassword(page, "wrongpassword");
     await page.getByRole("button", { name: UNLOCK_BUTTON_TEXT }).click();
 
     await expect(page.getByText("Incorrect password")).toBeVisible({
@@ -141,9 +163,8 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     await uploadEncryptedFile(page, ENCRYPTED_PDF);
     await expect(page.getByText(MODAL_TITLE)).toBeVisible({ timeout: 10000 });
 
-    const passwordInput = page.getByPlaceholder(PASSWORD_PLACEHOLDER);
-    await passwordInput.fill("testpass123");
-    await passwordInput.press("Enter");
+    await fillPassword(page, "testpass123");
+    await page.getByPlaceholder(PASSWORD_PLACEHOLDER).press("Enter");
 
     await expect(page.getByText(MODAL_TITLE)).toBeHidden({ timeout: 10000 });
   });
@@ -153,8 +174,9 @@ test.describe("Encrypted PDF Unlock Modal", () => {
   }) => {
     await mockRemovePasswordSuccess(page);
 
+    // `files-button`'s native picker is mocked globally; click it, then set
+    // the files on the hidden input directly.
     await page.getByTestId("files-button").click();
-    // No modal flow - `files-button` triggers the native picker directly.
     await page.locator('[data-testid="file-input"]').setInputFiles([
       {
         name: "encrypted-a.pdf",
@@ -177,7 +199,7 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     const unlockAllBtn = page.getByRole("button", { name: /Use for all/ });
     await expect(unlockAllBtn).toBeVisible({ timeout: 20000 });
 
-    await page.getByPlaceholder(PASSWORD_PLACEHOLDER).fill("testpass123");
+    await fillPassword(page, "testpass123");
     await unlockAllBtn.click();
 
     await expect(page.getByText(MODAL_TITLE)).toBeHidden({ timeout: 15000 });

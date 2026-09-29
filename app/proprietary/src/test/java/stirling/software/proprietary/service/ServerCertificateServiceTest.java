@@ -25,6 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
 
@@ -48,7 +49,7 @@ class ServerCertificateServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new ServerCertificateService(licenseKeyChecker);
+        service = new ServerCertificateService(licenseKeyChecker, new ApplicationProperties());
         // default: feature enabled, validity 365, org Stirling-PDF, no regenerate
         ReflectionTestUtils.setField(service, "enabled", true);
         ReflectionTestUtils.setField(service, "organizationName", "Stirling-PDF");
@@ -64,15 +65,11 @@ class ServerCertificateServiceTest {
     }
 
     private void grantProLicense() {
-        lenient()
-                .when(licenseKeyChecker.getPremiumLicenseEnabledResult())
-                .thenReturn(License.SERVER);
+        lenient().when(licenseKeyChecker.premiumTier()).thenReturn(License.SERVER);
     }
 
     private void denyLicense() {
-        lenient()
-                .when(licenseKeyChecker.getPremiumLicenseEnabledResult())
-                .thenReturn(License.NORMAL);
+        lenient().when(licenseKeyChecker.premiumTier()).thenReturn(License.NORMAL);
     }
 
     // -------------------------------------------------------------------------
@@ -90,7 +87,7 @@ class ServerCertificateServiceTest {
         @Test
         @DisplayName("true when feature flag on and license is ENTERPRISE")
         void enabledWithEnterpriseLicense() {
-            when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+            when(licenseKeyChecker.premiumTier()).thenReturn(License.ENTERPRISE);
             assertThat(service.isEnabled()).isTrue();
         }
 

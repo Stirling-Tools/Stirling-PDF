@@ -30,7 +30,7 @@ from stirling.contracts.pdf_comments import (
 )
 from stirling.logging import Pretty
 from stirling.models import ApiModel
-from stirling.services import AppRuntime
+from stirling.services import AppRuntime, language_directive
 
 logger = logging.getLogger(__name__)
 
@@ -160,6 +160,8 @@ class PdfCommentAgent:
         ]
         for index, chunk in enumerate(request.chunks):
             lines.append(f"[{index}] page={chunk.page + 1} text={json.dumps(chunk.text)}")
+        # Last, after the untrusted chunk text.
+        lines.append(f"\n{language_directive()}")
         return "\n".join(lines)
 
     @staticmethod

@@ -1,8 +1,8 @@
 import React from "react";
-import { Box, ActionIcon } from "@mantine/core";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-
+import { Box } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { Icon } from "@app/ui/Icon";
 export interface NavigationArrowsProps {
   onPrevious: () => void;
   onNext: () => void;
@@ -16,6 +16,7 @@ const NavigationArrows: React.FC<NavigationArrowsProps> = ({
   disabled = false,
   children,
 }) => {
+  const { t } = useTranslation();
   const navigationArrowStyle = {
     position: "absolute" as const,
     top: "50%",
@@ -27,17 +28,17 @@ const NavigationArrows: React.FC<NavigationArrowsProps> = ({
     <Box style={{ position: "relative", width: "100%", height: "100%" }}>
       {/* Left Navigation Arrow */}
       <ActionIcon
-        variant="light"
+        variant="secondary"
         size="sm"
         onClick={onPrevious}
-        color="blue"
         disabled={disabled}
+        aria-label={t("common.previous", "Previous")}
         style={{
           ...navigationArrowStyle,
           left: "0",
         }}
       >
-        <ChevronLeftIcon />
+        <Icon name="chevron-left" />
       </ActionIcon>
 
       {/* Content */}
@@ -55,17 +56,17 @@ const NavigationArrows: React.FC<NavigationArrowsProps> = ({
 
       {/* Right Navigation Arrow */}
       <ActionIcon
-        variant="light"
+        variant="secondary"
         size="sm"
         onClick={onNext}
-        color="blue"
         disabled={disabled}
+        aria-label={t("common.next", "Next")}
         style={{
           ...navigationArrowStyle,
           right: "0",
         }}
       >
-        <ChevronRightIcon />
+        <Icon name="chevron-right" />
       </ActionIcon>
     </Box>
   );

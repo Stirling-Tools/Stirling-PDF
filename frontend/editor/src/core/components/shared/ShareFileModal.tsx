@@ -3,15 +3,14 @@ import {
   Modal,
   Stack,
   Text,
-  Button,
   Group,
   Alert,
   TextInput,
   Paper,
   Select,
 } from "@mantine/core";
-import LinkIcon from "@mui/icons-material/Link";
-import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
+import { Button } from "@app/ui/Button";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 
 import apiClient from "@app/services/apiClient";
@@ -165,7 +164,7 @@ const ShareFileModal: React.FC<ShareFileModalProps> = ({
       if (onUploaded) {
         await onUploaded();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to generate share link:", error);
       setErrorMessage(
         t(
@@ -253,11 +252,9 @@ const ShareFileModal: React.FC<ShareFileModalProps> = ({
                 label={t("storageShare.linkLabel", "Share link")}
                 rightSection={
                   <Button
-                    variant="subtle"
-                    size="xs"
-                    leftSection={
-                      <ContentCopyRoundedIcon style={{ fontSize: 16 }} />
-                    }
+                    variant="tertiary"
+                    size="sm"
+                    leftSection={<Icon name="copy" size={16} />}
                     onClick={handleCopyLink}
                   >
                     {t("storageShare.copy", "Copy")}
@@ -307,11 +304,11 @@ const ShareFileModal: React.FC<ShareFileModalProps> = ({
         </Paper>
 
         <Group justify="flex-end" gap="sm">
-          <Button variant="default" onClick={onClose} disabled={isWorking}>
+          <Button variant="secondary" onClick={onClose} disabled={isWorking}>
             {t("cancel", "Cancel")}
           </Button>
           <Button
-            leftSection={<LinkIcon style={{ fontSize: 18 }} />}
+            leftSection={<Icon name="link" size={18} />}
             onClick={handleGenerateLink}
             loading={isWorking}
             disabled={!shareLinksEnabled}

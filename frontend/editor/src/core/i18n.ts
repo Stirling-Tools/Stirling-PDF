@@ -1,7 +1,7 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
-import TomlBackend from "@shared/i18n/tomlBackend";
+import TomlBackend from "@app/i18n/tomlBackend";
 import {
   supportedLanguages,
   rtlLanguages,
@@ -10,10 +10,10 @@ import {
   normalizeLanguageCode,
   toUnderscoreFormat,
   toUnderscoreLanguages,
-} from "@shared/i18n/languages";
+} from "@app/i18n/languages";
 
 // Language metadata and code helpers are shared with the portal via
-// @shared/i18n. Re-export them so existing `@app/i18n` consumers are unchanged.
+// @app/i18n. Re-export them so existing `@app/i18n` consumers are unchanged.
 export {
   supportedLanguages,
   rtlLanguages,
@@ -36,7 +36,7 @@ i18n
     debug: process.env.NODE_ENV === "development",
 
     // Ensure synchronous loading to prevent timing issues
-    initImmediate: false,
+    initAsync: false,
 
     interpolation: {
       escapeValue: false, // React already escapes values
@@ -102,7 +102,7 @@ function getCurrentSourcePriority(): LanguageSource {
   const sourceStr = localStorage.getItem(I18N_STORAGE_KEYS.LANGUAGE_SOURCE);
   const sourceNum = sourceStr ? parseInt(sourceStr, 10) : null;
   return sourceNum !== null && !isNaN(sourceNum)
-    ? (sourceNum as LanguageSource)
+    ? sourceNum
     : LanguageSource.Fallback;
 }
 
@@ -205,5 +205,9 @@ function applyDefaultLocale(defaultLocale: string) {
   // Apply server default (respects user choice if already set)
   setLanguageWithPriority(defaultLocale, LanguageSource.ServerDefault);
 }
+
+// Non-React modules off the hydration path (diskFileSync's toasts) read the
+// translator from globalThis; the ESM build does not register itself.
+(globalThis as Record<string, unknown>).i18next = i18n;
 
 export default i18n;

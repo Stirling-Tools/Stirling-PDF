@@ -3,6 +3,28 @@ export interface AnnotationRect {
   size: { width: number; height: number };
 }
 
+/** Signature preview overlay placed on a PDF page; position/size are FRACTIONS (0–1) of the rendered page. */
+export interface SignaturePreview {
+  id: string;
+  pageIndex: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  signatureData: string; // Base64 PNG image
+  signatureType: "canvas" | "image" | "text";
+  color?: string; // Per-participant color (rgb(...) string); falls back to default blue
+  participantName?: string; // Shown in tooltip on hover
+}
+
+/** Imperative API for managing signature preview overlays in the shared viewer. */
+export interface SignatureOverlayAPI {
+  getSignaturePreviews: () => SignaturePreview[];
+  clearPreviews: () => void;
+  deleteSelected: () => void;
+  hasSelected: () => boolean;
+}
+
 export interface ClearDocumentAnnotationsResult {
   available: boolean;
   cleared: boolean;
@@ -23,7 +45,7 @@ export interface SignatureAPI {
   deleteAnnotation: (annotationId: string, pageIndex: number) => void;
   updateDrawSettings: (color: string, size: number) => void;
   deactivateTools: () => void;
-  getPageAnnotations: (pageIndex: number) => Promise<any[]>;
+  getPageAnnotations: (pageIndex: number) => Promise<unknown[]>;
   moveAnnotation?: (
     pageIndex: number,
     annotationId: string,
@@ -138,6 +160,8 @@ export interface AnnotationObject {
   backgroundColor?: string;
   textColor?: string;
   opacity?: number;
+  strokeOpacity?: number;
+  fillOpacity?: number;
   strokeWidth?: number;
   borderWidth?: number;
   lineWidth?: number;
@@ -198,4 +222,12 @@ export interface AnnotationToolOptions {
     | "locked"
     | "toggleNoView"
   )[];
+}
+
+/** Screen anchor of the selection menu, retained by a delete so an undo menu can sit in its place. */
+export interface AnnotationMenuAnchor {
+  annotationId: string;
+  pageIndex: number;
+  top: number;
+  left: number;
 }

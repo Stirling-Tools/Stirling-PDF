@@ -1,0 +1,37 @@
+/* Category show/hide list (Files-sidebar visibility picker). */
+.category-visibility {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.category-visibility-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.25rem;
+  padding: 0 var(--space-1);
+}
+.category-visibility-icon {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  color: var(--c-text-muted);
+}
+.category-visibility-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.875rem;
+  color: var(--c-text);
+}
+.category-visibility-count {
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+}
+/* Hidden categories read as dimmed until re-shown. */
+.category-visibility-row--hidden .category-visibility-icon,
+.category-visibility-row--hidden .category-visibility-name,
+.category-visibility-row--hidden .category-visibility-count {
+  opacity: 0.5;
+}

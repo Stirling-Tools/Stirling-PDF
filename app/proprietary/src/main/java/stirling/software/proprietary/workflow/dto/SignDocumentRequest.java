@@ -32,6 +32,7 @@ public class SignDocumentRequest {
     private String password;
     private MultipartFile privateKeyFile;
     private MultipartFile certFile;
+    private MultipartFile jksFile;
 
     // Signature metadata (participant can override owner defaults)
     private String reason; // Participant's reason for signing

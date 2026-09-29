@@ -3,7 +3,6 @@ import {
   Alert,
   Badge,
   Box,
-  Button,
   Divider,
   Group,
   Paper,
@@ -11,6 +10,7 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useHotkeys } from "@app/contexts/HotkeyContext";
@@ -98,7 +98,7 @@ const HotkeysSection: React.FC = () => {
       event.preventDefault();
       event.stopPropagation();
 
-      const binding = eventToBinding(event as KeyboardEvent);
+      const binding = eventToBinding(event);
       if (!binding) {
         const osKey = isMac ? "mac" : "windows";
         setError(t(`settings.hotkeys.errorModifier.${osKey}`));
@@ -116,7 +116,7 @@ const HotkeysSection: React.FC = () => {
         const conflictKey = conflictEntry[0];
         const conflictTool =
           conflictKey in toolRegistry
-            ? toolRegistry[conflictKey as ToolId]?.name
+            ? toolRegistry[conflictKey]?.name
             : conflictKey;
         setError(
           t(
@@ -146,19 +146,8 @@ const HotkeysSection: React.FC = () => {
 
   return (
     <Stack gap="lg">
-      <div>
-        <Text fw={600} size="lg">
-          {t("settings.hotkeys.title", "Keyboard Shortcuts")}
-        </Text>
-        <Text size="sm" c="dimmed">
-          {t(
-            "settings.hotkeys.description",
-            'Customize keyboard shortcuts for quick tool access. Click "Change shortcut" and press a new key combination. Press Esc to cancel.',
-          )}
-        </Text>
-      </div>
-
       <TextInput
+        id="setting-hotkeys-search"
         placeholder={t("settings.hotkeys.searchPlaceholder", "Search tools...")}
         value={searchQuery}
         onChange={(event) => setSearchQuery(event.currentTarget.value)}
@@ -215,9 +204,8 @@ const HotkeysSection: React.FC = () => {
 
                       <Group gap="xs">
                         <Button
-                          size="xs"
-                          variant={isEditing ? "filled" : "default"}
-                          color={isEditing ? "blue" : undefined}
+                          size="sm"
+                          variant={isEditing ? "primary" : "secondary"}
                           onClick={() => handleStartCapture(toolId)}
                         >
                           {isEditing
@@ -228,8 +216,8 @@ const HotkeysSection: React.FC = () => {
                             : t("settings.hotkeys.change", "Change shortcut")}
                         </Button>
                         <Button
-                          size="xs"
-                          variant="subtle"
+                          size="sm"
+                          variant="tertiary"
                           disabled={bindingEquals(
                             currentBinding,
                             defaultBinding,

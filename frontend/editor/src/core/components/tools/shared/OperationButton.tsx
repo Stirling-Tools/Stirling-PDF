@@ -1,5 +1,6 @@
-import { Button, Box } from "@mantine/core";
+import { Box } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { Button, type ButtonVariant, type ButtonAccent } from "@app/ui/Button";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { useBackendHealth } from "@app/hooks/useBackendHealth";
 import { CloudBadge } from "@app/components/shared/CloudBadge";
@@ -22,6 +23,26 @@ export interface OperationButtonProps {
   "data-testid"?: string;
   "data-tour"?: string;
 }
+
+export const operationButtonVariantMap: Record<
+  NonNullable<OperationButtonProps["variant"]>,
+  ButtonVariant
+> = {
+  filled: "primary",
+  outline: "secondary",
+  subtle: "tertiary",
+};
+
+export const operationButtonAccentMap: Record<string, ButtonAccent> = {
+  gray: "neutral",
+  grey: "neutral",
+  blue: "default",
+  red: "danger",
+  green: "success",
+  yellow: "warning",
+  violet: "premium",
+  grape: "premium",
+};
 
 const OperationButton = ({
   onClick,
@@ -77,31 +98,29 @@ const OperationButton = ({
       ? (reasonTooltip[disabledReason] ?? null)
       : null;
 
+  const sharedVariant: ButtonVariant =
+    operationButtonVariantMap[variant] ?? "primary";
+  const sharedAccent: ButtonAccent =
+    operationButtonAccentMap[color] ?? "default";
+
   const button = (
     <Button
       type={type}
       onClick={onClick}
       fullWidth={fullWidth || !!tooltipLabel}
-      mr={tooltipLabel ? 0 : "md"}
-      ml={tooltipLabel ? 0 : "md"}
-      mt={tooltipLabel ? 0 : mt}
       loading={isLoading}
       disabled={combinedDisabled}
-      variant={variant}
-      color={color}
+      variant={sharedVariant}
+      accent={sharedAccent}
       data-testid={dataTestId}
       data-tour={dataTour}
-      style={{ minHeight: "2.5rem", height: "auto", position: "relative" }}
-      styles={{
-        label: {
-          whiteSpace: "normal",
-          textAlign: "center",
-          lineHeight: 1.2,
-        },
-        inner: {
-          paddingTop: "0.25rem",
-          paddingBottom: "0.25rem",
-        },
+      style={{
+        minHeight: "2.5rem",
+        height: "auto",
+        position: "relative",
+        marginLeft: tooltipLabel ? 0 : "1rem",
+        marginRight: tooltipLabel ? 0 : "1rem",
+        marginTop: tooltipLabel ? 0 : `var(--mantine-spacing-${mt})`,
       }}
     >
       {isLoading

@@ -1,6 +1,10 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
-import { useAddPasswordOperation } from "@app/hooks/tools/addPassword/useAddPasswordOperation";
+import {
+  addPasswordFromApiParams,
+  addPasswordToApiParams,
+  useAddPasswordOperation,
+} from "@app/hooks/tools/addPassword/useAddPasswordOperation";
 import type { AddPasswordFullParameters } from "@app/hooks/tools/addPassword/useAddPasswordParameters";
 
 // Mock the useToolOperation hook
@@ -139,5 +143,59 @@ describe("useAddPasswordOperation", () => {
 
     const callArgs = getToolConfig();
     expect(callArgs[property]).toBe(expectedValue);
+  });
+});
+
+describe("addPassword mappers", () => {
+  test("falls back to the default key length when the stored step omits it", () => {
+    // A pipeline step saved without keyLength must not deserialize to
+    // undefined: the settings UI calls keyLength.toString() on it.
+    const restored = addPasswordFromApiParams({
+      password: "user-pw",
+    });
+    expect(restored.keyLength).toBe(128);
+  });
+
+  test("round-trips backend params, including the flattened permissions", () => {
+    // Baseline differs from the configured values so the round trip fails if
+    // fromApiParams drops a field instead of reconstructing it.
+    const baseline: AddPasswordFullParameters = {
+      password: "",
+      ownerPassword: "",
+      keyLength: 40,
+      permissions: {
+        preventAssembly: false,
+        preventExtractContent: false,
+        preventExtractForAccessibility: false,
+        preventFillInForm: false,
+        preventModify: false,
+        preventModifyAnnotations: false,
+        preventPrinting: false,
+        preventPrintingFaithful: false,
+      },
+    };
+    const configured: AddPasswordFullParameters = {
+      password: "user-pw",
+      ownerPassword: "owner-pw",
+      keyLength: 128,
+      permissions: {
+        preventAssembly: true,
+        preventExtractContent: false,
+        preventExtractForAccessibility: true,
+        preventFillInForm: false,
+        preventModify: true,
+        preventModifyAnnotations: false,
+        preventPrinting: true,
+        preventPrintingFaithful: false,
+      },
+    };
+
+    const api = addPasswordToApiParams(configured);
+    const roundTripped = addPasswordToApiParams({
+      ...baseline,
+      ...addPasswordFromApiParams(api),
+    });
+
+    expect(roundTripped).toEqual(api);
   });
 });

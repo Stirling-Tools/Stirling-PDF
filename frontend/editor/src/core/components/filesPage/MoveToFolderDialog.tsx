@@ -1,9 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  ActionIcon,
   Alert,
-  Button,
   Group,
   Modal,
   Stack,
@@ -11,13 +9,9 @@ import {
   TextInput,
   Tooltip,
 } from "@mantine/core";
-import HomeIcon from "@mui/icons-material/Home";
-import FolderIcon from "@mui/icons-material/Folder";
-import FolderOpenIcon from "@mui/icons-material/FolderOpen";
-import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
-import CloseIcon from "@mui/icons-material/Close";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined";
-
+import { Icon } from "@app/ui/Icon";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { FolderId, FolderRecord, ROOT_FOLDER_ID } from "@app/types/folder";
 
 interface MoveToFolderDialogProps {
@@ -48,12 +42,10 @@ export function MoveToFolderDialog({
   const [target, setTarget] = useState<FolderId | null>(initialFolderId);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Inline create-folder state; revealed by the toggle.
   const [creatingFolder, setCreatingFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [creating, setCreating] = useState(false);
 
-  // Reset when reopening with a new initial.
   React.useEffect(() => {
     if (opened) {
       setTarget(initialFolderId);
@@ -65,7 +57,6 @@ export function MoveToFolderDialog({
     }
   }, [opened, initialFolderId]);
 
-  /** Single-pass build of parent index, depths, and blocked descendants. */
   const { depthById, blocked, treeOrder } = useMemo(() => {
     const byParent = new Map<FolderId | null, FolderRecord[]>();
     for (const folder of folders) {
@@ -79,7 +70,6 @@ export function MoveToFolderDialog({
       );
     }
 
-    // Pre-order DFS; truncates past MAX_TREE_DEPTH to prevent stack overflow.
     const MAX_TREE_DEPTH = 50;
     const order: FolderRecord[] = [];
     const depths = new Map<FolderId, number>();
@@ -128,14 +118,14 @@ export function MoveToFolderDialog({
         </Text>
         <div
           style={{
-            border: "1px solid var(--border-subtle)",
+            border: "1px solid var(--c-border-subtle)",
             borderRadius: "0.5rem",
             maxHeight: "20rem",
             overflowY: "auto",
           }}
         >
           <FolderPick
-            label={t("filesPage.allFiles", "All files")}
+            label={t("filesPage.allFiles", "Stirling library")}
             isActive={target === ROOT_FOLDER_ID}
             disabled={false}
             depth={0}
@@ -154,7 +144,6 @@ export function MoveToFolderDialog({
             />
           ))}
         </div>
-        {/* Inline Create new folder; new folder becomes the move target. */}
         {onCreateFolder &&
           (() => {
             const trimmedName = newFolderName.trim();
@@ -165,7 +154,6 @@ export function MoveToFolderDialog({
               try {
                 const created = await onCreateFolder(
                   trimmedName,
-                  // ROOT becomes null parent.
                   target === ROOT_FOLDER_ID ? null : target,
                 );
                 setTarget(created.id);
@@ -222,14 +210,12 @@ export function MoveToFolderDialog({
                 >
                   {t("filesPage.moveDialog.newFolderCreate", "Create")}
                 </Button>
-                {/* X collapses the inline create row only. */}
                 <Tooltip
                   label={t("filesPage.moveDialog.newFolderCancel", "Discard")}
                   withinPortal
                 >
                   <ActionIcon
-                    variant="subtle"
-                    color="gray"
+                    variant="tertiary"
                     size="lg"
                     onClick={handleCancel}
                     disabled={creating}
@@ -238,20 +224,20 @@ export function MoveToFolderDialog({
                       "Discard",
                     )}
                   >
-                    <CloseIcon fontSize="small" />
+                    &times;
                   </ActionIcon>
                 </Tooltip>
               </Group>
             ) : (
               <Button
-                variant="subtle"
+                variant="tertiary"
                 size="sm"
-                leftSection={<CreateNewFolderIcon fontSize="small" />}
+                leftSection={<Icon name="folder-plus" size={20} />}
                 onClick={() => {
                   setCreatingFolder(true);
                   setNewFolderName("");
                 }}
-                styles={{ root: { alignSelf: "flex-start" } }}
+                style={{ alignSelf: "flex-start" }}
                 data-testid="move-dialog-create-folder-toggle"
               >
                 {t(
@@ -264,7 +250,7 @@ export function MoveToFolderDialog({
         {error && (
           <Alert
             color="red"
-            icon={<ErrorOutlineIcon fontSize="small" />}
+            icon={<Icon name="circle-alert" size={20} />}
             variant="light"
             role="alert"
           >
@@ -272,11 +258,12 @@ export function MoveToFolderDialog({
           </Alert>
         )}
         <Group justify="flex-end">
-          <Button variant="default" onClick={onClose} disabled={submitting}>
+          <Button variant="secondary" onClick={onClose} disabled={submitting}>
             {t("filesPage.moveDialog.cancel", "Cancel")}
           </Button>
           <Button
             loading={submitting}
+            disabled={creating || (target !== null && blocked.has(target))}
             onClick={async () => {
               setSubmitting(true);
               setError(null);
@@ -325,35 +312,35 @@ function FolderPick({
   onPick,
 }: FolderPickProps) {
   return (
-    <button
-      type="button"
+    <Button
+      variant="tertiary"
+      justify="start"
+      fullWidth
       onClick={onPick}
       disabled={disabled}
+      leftSection={
+        isRoot ? (
+          <Icon name="house" size={20} />
+        ) : isActive ? (
+          <Icon name="folder-open" size={20} style={{ color }} />
+        ) : (
+          <Icon name="folder" size={20} style={{ color }} />
+        )
+      }
       style={{
-        all: "unset",
         cursor: disabled ? "not-allowed" : "pointer",
         opacity: disabled ? 0.45 : 1,
-        display: "flex",
-        alignItems: "center",
         gap: "0.5rem",
         padding: `0.4rem 0.75rem 0.4rem ${0.75 + depth * 0.85}rem`,
-        width: "100%",
-        background: isActive ? "var(--hover-bg)" : "transparent",
-        borderBottom: "1px solid var(--border-subtle)",
+        background: isActive ? "var(--c-hover)" : "transparent",
+        borderBottom: "1px solid var(--c-border-subtle)",
         boxSizing: "border-box",
         fontWeight: isActive ? 600 : 400,
       }}
     >
-      {isRoot ? (
-        <HomeIcon fontSize="small" />
-      ) : isActive ? (
-        <FolderOpenIcon fontSize="small" style={{ color }} />
-      ) : (
-        <FolderIcon fontSize="small" style={{ color }} />
-      )}
       <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
         {label}
       </span>
-    </button>
+    </Button>
   );
 }

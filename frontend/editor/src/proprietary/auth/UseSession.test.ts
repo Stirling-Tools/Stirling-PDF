@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { TFunction } from "i18next";
-import type { User } from "@shared/auth/spring/springAuthClient";
+import type { User } from "@app/auth/spring/springAuthClient";
 import { deriveDisplayName } from "@app/auth/UseSession";
 
 // Stub t() that returns the fallback string. The real i18next instance

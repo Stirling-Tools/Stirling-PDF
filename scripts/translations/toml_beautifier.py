@@ -4,13 +4,13 @@ TOML Beautifier and Structure Fixer for Stirling PDF Frontend
 Restructures translation TOML files to match en-US structure and key order exactly.
 """
 
-import sys
-from pathlib import Path
-from typing import Dict, Any, List
 import argparse
-from collections import OrderedDict
-
+import sys
 import tomllib
+from collections import OrderedDict
+from pathlib import Path
+from typing import Any
+
 import tomli_w
 
 
@@ -20,7 +20,7 @@ class TOMLBeautifier:
         self.golden_truth_file = self.locales_dir / "en-US" / "translation.toml"
         self.golden_structure = self._load_toml(self.golden_truth_file)
 
-    def _load_toml(self, file_path: Path) -> Dict:
+    def _load_toml(self, file_path: Path) -> dict:
         """Load TOML file with error handling."""
         try:
             with open(file_path, "rb") as f:
@@ -32,7 +32,7 @@ class TOMLBeautifier:
             print(f"Error: Invalid TOML in {file_path}: {e}")
             sys.exit(1)
 
-    def _save_toml(self, data: Dict, file_path: Path, backup: bool = False) -> None:
+    def _save_toml(self, data: dict, file_path: Path, backup: bool = False) -> None:
         """Save TOML file with proper formatting."""
         if backup and file_path.exists():
             backup_path = file_path.with_suffix(".backup.restructured.toml")
@@ -44,9 +44,7 @@ class TOMLBeautifier:
         with open(file_path, "wb") as f:
             tomli_w.dump(data, f)
 
-    def _flatten_dict(
-        self, d: Dict, parent_key: str = "", separator: str = "."
-    ) -> Dict[str, Any]:
+    def _flatten_dict(self, d: dict, parent_key: str = "", separator: str = ".") -> dict[str, Any]:
         """Flatten nested dictionary into dot-notation keys."""
         items = []
         for k, v in d.items():
@@ -57,9 +55,7 @@ class TOMLBeautifier:
                 items.append((new_key, v))
         return dict(items)
 
-    def _rebuild_structure(
-        self, flat_dict: Dict[str, Any], reference_structure: Dict
-    ) -> Dict:
+    def _rebuild_structure(self, flat_dict: dict[str, Any], reference_structure: dict) -> dict:
         """Rebuild nested structure based on reference structure and available translations."""
 
         def build_recursive(ref_obj: Any, current_path: str = "") -> Any:
@@ -94,7 +90,7 @@ class TOMLBeautifier:
 
         return build_recursive(reference_structure) or OrderedDict()
 
-    def restructure_translation_file(self, target_file: Path) -> Dict[str, Any]:
+    def restructure_translation_file(self, target_file: Path) -> dict[str, Any]:
         """Restructure a translation file to match en-US structure exactly."""
         if not target_file.exists():
             print(f"Error: Target file does not exist: {target_file}")
@@ -111,9 +107,7 @@ class TOMLBeautifier:
 
         return restructured
 
-    def beautify_and_restructure(
-        self, target_file: Path, backup: bool = False
-    ) -> Dict[str, Any]:
+    def beautify_and_restructure(self, target_file: Path, backup: bool = False) -> dict[str, Any]:
         """Main function to beautify and restructure a translation file."""
         lang_code = target_file.parent.name
         print(f"Restructuring {lang_code} translation file...")
@@ -135,18 +129,16 @@ class TOMLBeautifier:
             "language": lang_code,
             "total_reference_keys": total_keys,
             "preserved_keys": preserved_keys,
-            "structure_match": self._compare_structures(
-                self.golden_structure, restructured_data
-            ),
+            "structure_match": self._compare_structures(self.golden_structure, restructured_data),
         }
 
         print(f"Restructured {lang_code}: {preserved_keys}/{total_keys} keys preserved")
         return result
 
-    def _compare_structures(self, ref: Dict, target: Dict) -> Dict[str, bool]:
+    def _compare_structures(self, ref: dict, target: dict) -> dict[str, bool]:
         """Compare structures between reference and target."""
 
-        def compare_recursive(r: Any, t: Any, path: str = "") -> List[str]:
+        def compare_recursive(r: Any, t: Any, path: str = "") -> list[str]:
             issues = []
 
             if isinstance(r, dict) and isinstance(t, dict):
@@ -157,9 +149,7 @@ class TOMLBeautifier:
                 missing_sections = ref_keys - target_keys
                 if missing_sections:
                     for section in missing_sections:
-                        issues.append(
-                            f"Missing section: {path}.{section}" if path else section
-                        )
+                        issues.append(f"Missing section: {path}.{section}" if path else section)
 
                 # Recurse into common sections
                 for key in ref_keys & target_keys:
@@ -176,11 +166,11 @@ class TOMLBeautifier:
             "total_issues": len(issues),
         }
 
-    def validate_key_order(self, target_file: Path) -> Dict[str, Any]:
+    def validate_key_order(self, target_file: Path) -> dict[str, Any]:
         """Validate that keys appear in the same order as en-US."""
         target_data = self._load_toml(target_file)
 
-        def get_key_order(obj: Dict, path: str = "") -> List[str]:
+        def get_key_order(obj: dict, path: str = "") -> list[str]:
             keys = []
             for key in obj.keys():
                 new_path = f"{path}.{key}" if path else key
@@ -195,19 +185,14 @@ class TOMLBeautifier:
         # Find common keys and check their relative order
         common_keys = set(golden_order) & set(target_order)
 
-        golden_indices = {
-            key: idx for idx, key in enumerate(golden_order) if key in common_keys
-        }
-        target_indices = {
-            key: idx for idx, key in enumerate(target_order) if key in common_keys
-        }
+        golden_indices = {key: idx for idx, key in enumerate(golden_order) if key in common_keys}
+        target_indices = {key: idx for idx, key in enumerate(target_order) if key in common_keys}
 
         order_preserved = all(
             golden_indices[key1] < golden_indices[key2]
             for key1 in common_keys
             for key2 in common_keys
-            if golden_indices[key1] < golden_indices[key2]
-            and target_indices[key1] < target_indices[key2]
+            if golden_indices[key1] < golden_indices[key2] and target_indices[key1] < target_indices[key2]
         )
 
         return {
@@ -229,12 +214,8 @@ def main():
         help="Path to locales directory",
     )
     parser.add_argument("--language", help="Restructure specific language only")
-    parser.add_argument(
-        "--all-languages", action="store_true", help="Restructure all language files"
-    )
-    parser.add_argument(
-        "--backup", action="store_true", help="Create backup files before modifying"
-    )
+    parser.add_argument("--all-languages", action="store_true", help="Restructure all language files")
+    parser.add_argument("--backup", action="store_true", help="Create backup files before modifying")
     parser.add_argument(
         "--validate-only",
         action="store_true",
@@ -255,21 +236,13 @@ def main():
             order_result = beautifier.validate_key_order(target_file)
             print(f"Key order validation for {args.language}:")
             print(f"  Order preserved: {order_result['order_preserved']}")
-            print(
-                f"  Common keys: {order_result['common_keys_count']}/{order_result['golden_keys_count']}"
-            )
+            print(f"  Common keys: {order_result['common_keys_count']}/{order_result['golden_keys_count']}")
         else:
-            result = beautifier.beautify_and_restructure(
-                target_file, backup=args.backup
-            )
+            result = beautifier.beautify_and_restructure(target_file, backup=args.backup)
             print(f"\nResults for {result['language']}:")
-            print(
-                f"  Keys preserved: {result['preserved_keys']}/{result['total_reference_keys']}"
-            )
+            print(f"  Keys preserved: {result['preserved_keys']}/{result['total_reference_keys']}")
             if result["structure_match"]["total_issues"] > 0:
-                print(
-                    f"  Structure issues: {result['structure_match']['total_issues']}"
-                )
+                print(f"  Structure issues: {result['structure_match']['total_issues']}")
                 for issue in result["structure_match"]["issues"]:
                     print(f"    - {issue}")
 
@@ -281,13 +254,9 @@ def main():
                 if translation_file.exists():
                     if args.validate_only:
                         order_result = beautifier.validate_key_order(translation_file)
-                        print(
-                            f"{lang_dir.name}: Order preserved = {order_result['order_preserved']}"
-                        )
+                        print(f"{lang_dir.name}: Order preserved = {order_result['order_preserved']}")
                     else:
-                        result = beautifier.beautify_and_restructure(
-                            translation_file, backup=args.backup
-                        )
+                        result = beautifier.beautify_and_restructure(translation_file, backup=args.backup)
                         results.append(result)
 
         if not args.validate_only and results:

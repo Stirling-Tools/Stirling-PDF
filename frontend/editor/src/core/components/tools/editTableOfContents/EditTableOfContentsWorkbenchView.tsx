@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Box, Button, Card, Divider, Group, Stack, Text } from "@mantine/core";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Box, Card, Divider, Group, Stack, Text } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { Icon } from "@app/ui/Icon";
 import { BookmarkNode } from "@app/utils/editTableOfContents";
 import ErrorNotification from "@app/components/tools/shared/ErrorNotification";
 import ResultsPreview from "@app/components/tools/shared/ResultsPreview";
@@ -99,7 +100,7 @@ const EditTableOfContentsWorkbenchView = ({
         width: "100%",
         height: "100%",
         overflowY: "auto",
-        background: "var(--bg-raised)",
+        background: "var(--c-surface-raised)",
       }}
     >
       <Stack gap="xl" maw={1200} mx="auto">
@@ -120,8 +121,8 @@ const EditTableOfContentsWorkbenchView = ({
           radius="md"
           p="xl"
           style={{
-            backgroundColor: "var(--bg-surface)",
-            borderColor: "var(--border-default)",
+            backgroundColor: "var(--c-surface)",
+            borderColor: "var(--c-border)",
             boxShadow: "var(--shadow-md)",
           }}
         >
@@ -149,8 +150,7 @@ const EditTableOfContentsWorkbenchView = ({
             <Divider />
             <Group justify="flex-end">
               <Button
-                leftSection={<LocalIcon icon="menu-book-rounded" />}
-                color="blue"
+                leftSection={<Icon name="book-open" size="1em" />}
                 onClick={onExecute}
                 disabled={isExecuteDisabled}
                 loading={isExecuting}
@@ -167,8 +167,8 @@ const EditTableOfContentsWorkbenchView = ({
             radius="md"
             p="xl"
             style={{
-              backgroundColor: "var(--bg-surface)",
-              borderColor: "var(--border-default)",
+              backgroundColor: "var(--c-surface)",
+              borderColor: "var(--c-border)",
               boxShadow: "var(--shadow-md)",
             }}
           >
@@ -201,7 +201,7 @@ const EditTableOfContentsWorkbenchView = ({
               <Group justify="flex-end" gap="sm">
                 {downloadUrl && (
                   <Button
-                    leftSection={<LocalIcon icon="download-rounded" />}
+                    leftSection={<Icon name="download" size="1em" />}
                     onClick={() =>
                       downloadFromUrl(
                         downloadUrl,
@@ -213,8 +213,8 @@ const EditTableOfContentsWorkbenchView = ({
                   </Button>
                 )}
                 <Button
-                  variant="outline"
-                  leftSection={<LocalIcon icon="rotate-left" />}
+                  variant="secondary"
+                  leftSection={<Icon name="rotate-ccw" size="1em" />}
                   onClick={onUndo}
                   disabled={isExecuting}
                 >

@@ -1,5 +1,4 @@
 import {
-  ActionIcon,
   Tooltip,
   Popover,
   Stack,
@@ -9,7 +8,8 @@ import {
 } from "@mantine/core";
 import { useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import ColorizeIcon from "@mui/icons-material/Colorize";
+import { Icon } from "@app/ui/Icon";
+import { ActionIcon } from "@app/ui/ActionIcon";
 
 // safari and firefox do not support the eye dropper API, only edge, chrome and opera do.
 // the button is hidden in the UI if the API is not supported.
@@ -64,29 +64,16 @@ export function ColorControl({
       withinPortal
     >
       <Popover.Target>
-        <Tooltip label={label}>
-          <ActionIcon
-            variant="subtle"
-            color="gray"
-            size="md"
+        <Tooltip label={label} withArrow>
+          <button
+            type="button"
+            className="embedpdf-floating-btn"
             onClick={() => setOpened(!opened)}
             disabled={disabled}
-            styles={{
-              root: {
-                flexShrink: 0,
-                backgroundColor: "var(--bg-raised)",
-                border: "1px solid var(--border-default)",
-                color: "var(--text-secondary)",
-                "&:hover": {
-                  backgroundColor: "var(--hover-bg)",
-                  borderColor: "var(--border-strong)",
-                  color: "var(--text-primary)",
-                },
-              },
-            }}
+            aria-label={label}
           >
             <ColorSwatch color={localColor} size={18} />
-          </ActionIcon>
+          </button>
         </Tooltip>
       </Popover.Target>
       <Popover.Dropdown>
@@ -117,13 +104,16 @@ export function ColorControl({
                 label={t("color.eyeDropper.tooltip", "Pick colour from screen")}
               >
                 <ActionIcon
-                  variant="subtle"
-                  color="gray"
+                  aria-label={t(
+                    "color.eyeDropper.tooltip",
+                    "Pick colour from screen",
+                  )}
+                  variant="tertiary"
+                  accent="neutral"
                   size="sm"
                   onClick={handleEyeDropper}
-                  style={{ color: "var(--text-primary)" }}
                 >
-                  <ColorizeIcon style={{ fontSize: 16 }} />
+                  <Icon name="pipette" size={16} />
                 </ActionIcon>
               </Tooltip>
             </Group>

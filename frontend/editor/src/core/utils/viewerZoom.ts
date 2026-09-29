@@ -160,8 +160,12 @@ export function useFitWidthResize({
       }
 
       timeoutId = window.setTimeout(() => {
-        requestFitWidthRef.current?.();
-        onDebouncedResizeRef.current?.();
+        try {
+          requestFitWidthRef.current?.();
+          onDebouncedResizeRef.current?.();
+        } catch {
+          // Ignore resize calculations if document is transitioning or not yet initialized
+        }
       }, debounceMs);
     };
 

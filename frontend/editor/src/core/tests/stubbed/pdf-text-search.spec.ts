@@ -1,7 +1,10 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import path from "path";
 
-const SAMPLE_PDF = path.join(__dirname, "../test-fixtures/sample.pdf");
+const SAMPLE_PDF = path.join(
+  import.meta.dirname,
+  "../test-fixtures/sample.pdf",
+);
 
 /**
  * The reader/viewer exposes an in-PDF text search via CustomSearchLayer.
@@ -13,13 +16,24 @@ test.describe("Reader - in-document text search", () => {
   test("search input is reachable from the reader and accepts a query", async ({
     page,
   }) => {
-    await page.goto("/read");
+    await page.goto("/");
     await page.waitForLoadState("domcontentloaded");
 
-    // Upload a PDF first so the reader has content. `files-button` now
-    // triggers the native picker directly - no modal flow involved.
+    // Upload a PDF first so the reader has content. The `files-button` native
+    // picker is mocked globally (suppressNativeFilePicker), so the click is
+    // safe cross-browser; set the files on the hidden input directly.
     await page.getByTestId("files-button").click();
     await page.locator('[data-testid="file-input"]').setInputFiles(SAMPLE_PDF);
+
+    // The rail takes its controls from the viewer, so the document has to be
+    // open before reading has a search to reach.
+    await expect(page.getByText(/\/\s*\d+/).first()).toBeVisible({
+      timeout: 30_000,
+    });
+
+    // Then into reading, which is a surface of its own: the sidebar that
+    // carries the upload control above is not on screen once you are in it.
+    await page.getByRole("button", { name: "Reader", exact: true }).click();
 
     // The WorkbenchBar exposes a "Search PDF" button (aria-label="Search PDF")
     // that opens a Popover with the in-document search input.

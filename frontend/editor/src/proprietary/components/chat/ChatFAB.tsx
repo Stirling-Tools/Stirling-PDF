@@ -1,4 +1,10 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useCallback,
+} from "react";
 import {
   createTheme,
   MantineProvider,
@@ -7,11 +13,12 @@ import {
 } from "@mantine/core";
 import { Rnd } from "react-rnd";
 import { useTranslation } from "react-i18next";
-import { ChatFABButton } from "@shared/components/ChatFABButton";
-import { ChatFABWindow } from "@shared/components/ChatFABWindow";
+import { ChatFABButton } from "@app/ui/ChatFABButton";
+import { ChatFABWindow } from "@app/ui/ChatFABWindow";
 import { ChatPanel } from "@app/components/chat/ChatPanel";
 import { useChat } from "@app/components/chat/ChatContext";
 import { useAiEngineEnabled } from "@app/hooks/useAiEngineEnabled";
+import { useChatAccess } from "@app/hooks/useChatAccess";
 import { Z_INDEX_CHAT_FAB_OVERLAY } from "@app/styles/zIndex";
 import {
   PANEL_WIDTH_PX,
@@ -45,6 +52,7 @@ export function ChatFAB() {
   // Desktop sources this from the SaaS backend (cloud kill switch); web reads it
   // from the local app-config. Either way the AI engine drives FAB visibility.
   const enabled = useAiEngineEnabled();
+  const requestChatAccess = useChatAccess();
 
   // Scope the panel's nested MantineProvider to this ref; unscoped it writes
   // its color scheme onto <html> and overrides the whole app's theme.
@@ -68,6 +76,13 @@ export function ChatFAB() {
   }, [isLoading]);
 
   const overlayRef = useRef<HTMLDivElement>(null);
+  // Separate bounds element inset by FAB_GAP_PX — react-rnd enforces this
+  // during both drag and resize, keeping the panel off the overlay edges.
+  const [boundsEl, setBoundsEl] = useState<HTMLDivElement | null>(null);
+  const boundsRef = useCallback(
+    (el: HTMLDivElement | null) => setBoundsEl(el),
+    [],
+  );
   const [rndPos, setRndPos] = useState<{ x: number; y: number } | null>(null);
   const [rndSize, setRndSize] = useState({
     width: PANEL_WIDTH_PX,
@@ -102,8 +117,7 @@ export function ChatFAB() {
     const pos = getDefaultPos();
     if (pos) setRndPos(pos);
   }, [enabled]);
-
-  // bounds="parent" only clamps during active drag/resize; ResizeObserver keeps position valid when the overlay changes size.
+  // ResizeObserver keeps position valid when the overlay changes size (e.g. window resize, sidebar toggle).
   useEffect(() => {
     if (!enabled) return;
     const el = overlayRef.current;
@@ -170,10 +184,13 @@ export function ChatFAB() {
       className="chat-fab-overlay"
       style={{ zIndex: Z_INDEX_CHAT_FAB_OVERLAY }}
     >
+      {/* Inset boundary element — react-rnd uses this to constrain drag+resize */}
+      <div ref={boundsRef} className="chat-fab-bounds" />
       {/* Trigger button — fades out while panel is open */}
       <ChatFABButton
         className={`chat-fab-trigger${isOpen ? " chat-fab-trigger--hidden" : ""}`}
         onClick={() => {
+          if (!requestChatAccess()) return;
           // Fallback: ensure a position exists before opening, in case the
           // layout effect measured before the overlay was laid out.
           if (rndPos === null) {
@@ -185,19 +202,19 @@ export function ChatFAB() {
         }}
         aria-label={t("chat.fab.open", "Open Stirling AI assistant")}
         aria-expanded={isOpen}
-        isLoading={isLoading}
+        loading={isLoading}
         showTick={hasUnviewedResult && !isLoading}
       />
 
       {/* Draggable / resizable panel */}
-      {rndPos !== null && (
+      {rndPos !== null && boundsEl !== null && (
         <Rnd
           className="chat-fab-panel-rnd"
           position={rndPos}
           size={rndSize}
           minWidth={PANEL_MIN_WIDTH_PX}
           minHeight={PANEL_MIN_HEIGHT_PX}
-          bounds="parent"
+          bounds={boundsEl}
           enableResizing={true}
           // Drag from the header; cancel keeps buttons inside it clickable
           dragHandleClassName="chat-panel__header"

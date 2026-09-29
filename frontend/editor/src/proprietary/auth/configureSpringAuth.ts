@@ -10,7 +10,7 @@
 import type { AxiosInstance } from "axios";
 import apiClient from "@app/services/apiClient";
 import { BASE_PATH } from "@app/constants/app";
-import { configureSpringAuth } from "@shared/auth/config";
+import { configureSpringAuth } from "@app/auth/config";
 import {
   clearPlatformAuthAfterSignOut,
   clearPlatformAuthOnLoginInit,
@@ -29,6 +29,7 @@ configureSpringAuth({
   // which is API-compatible with axios but not nominally an AxiosInstance -
   // matches the existing `as unknown as AxiosInstance` bridge in
   // desktop/services/apiClient.ts. Harmless no-op for the web (axios) build.
+  // oxlint-disable-next-line typescript/no-unnecessary-type-assertion -- apiClient is not an AxiosInstance in the desktop build
   http: apiClient as unknown as AxiosInstance,
   basePath: BASE_PATH,
   platform: {

@@ -1,23 +1,12 @@
-import {
-  ActionIcon,
-  Tooltip,
-  Popover,
-  Stack,
-  Slider,
-  Text,
-  Group,
-  Button,
-} from "@mantine/core";
+import { Tooltip, Popover, Stack, Slider, Text, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useState } from "react";
 import type { TrackedAnnotation } from "@embedpdf/plugin-annotation";
 import type { PdfAnnotationObject } from "@embedpdf/models";
 import type { AnnotationPatch } from "@app/components/viewer/viewerTypes";
-import TuneIcon from "@mui/icons-material/Tune";
-import FormatAlignLeftIcon from "@mui/icons-material/FormatAlignLeft";
-import FormatAlignCenterIcon from "@mui/icons-material/FormatAlignCenter";
-import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
-
+import { Icon } from "@app/ui/Icon";
 export type PropertiesAnnotationType = "text" | "note" | "shape";
 
 interface PropertiesPopoverProps {
@@ -44,9 +33,8 @@ export function PropertiesPopover({
     strokeWidth?: number;
   }
 
-  const obj = annotation?.object as
-    | (PdfAnnotationObject & AnnotationObjectProps)
-    | undefined;
+  const obj: (PdfAnnotationObject & AnnotationObjectProps) | undefined =
+    annotation?.object;
 
   // Get current values
   const fontSize = obj?.fontSize ?? 14;
@@ -106,25 +94,28 @@ export function PropertiesPopover({
         </Text>
         <Group gap="xs">
           <ActionIcon
-            variant={currentAlign === "left" ? "filled" : "default"}
+            aria-label={t("annotation.alignLeft", "Align left")}
+            variant={currentAlign === "left" ? "primary" : "secondary"}
             onClick={() => onUpdate({ textAlign: 0 })}
             size="md"
           >
-            <FormatAlignLeftIcon style={{ fontSize: 18 }} />
+            <Icon name="text-align-start" size={18} />
           </ActionIcon>
           <ActionIcon
-            variant={currentAlign === "center" ? "filled" : "default"}
+            aria-label={t("annotation.alignCenter", "Align center")}
+            variant={currentAlign === "center" ? "primary" : "secondary"}
             onClick={() => onUpdate({ textAlign: 1 })}
             size="md"
           >
-            <FormatAlignCenterIcon style={{ fontSize: 18 }} />
+            <Icon name="text-align-center" size={18} />
           </ActionIcon>
           <ActionIcon
-            variant={currentAlign === "right" ? "filled" : "default"}
+            aria-label={t("annotation.alignRight", "Align right")}
+            variant={currentAlign === "right" ? "primary" : "secondary"}
             onClick={() => onUpdate({ textAlign: 2 })}
             size="md"
           >
-            <FormatAlignRightIcon style={{ fontSize: 18 }} />
+            <Icon name="text-align-end" size={18} />
           </ActionIcon>
         </Group>
       </div>
@@ -176,8 +167,8 @@ export function PropertiesPopover({
             />
           </div>
           <Button
-            size="xs"
-            variant={!borderVisible ? "filled" : "light"}
+            size="sm"
+            variant={!borderVisible ? "primary" : "secondary"}
             onClick={() => {
               const newValue = borderVisible ? 0 : 1;
               onUpdate({
@@ -199,29 +190,16 @@ export function PropertiesPopover({
   return (
     <Popover opened={opened} onChange={setOpened} position="bottom" withArrow>
       <Popover.Target>
-        <Tooltip label={t("annotation.properties", "Properties")}>
-          <ActionIcon
-            variant="subtle"
-            color="gray"
-            size="md"
+        <Tooltip label={t("annotation.properties", "Properties")} withArrow>
+          <button
+            type="button"
+            className="embedpdf-floating-btn"
             onClick={() => setOpened(!opened)}
             disabled={disabled}
-            styles={{
-              root: {
-                flexShrink: 0,
-                backgroundColor: "var(--bg-raised)",
-                border: "1px solid var(--border-default)",
-                color: "var(--text-secondary)",
-                "&:hover": {
-                  backgroundColor: "var(--hover-bg)",
-                  borderColor: "var(--border-strong)",
-                  color: "var(--text-primary)",
-                },
-              },
-            }}
+            aria-label={t("annotation.properties", "Properties")}
           >
-            <TuneIcon style={{ fontSize: 18 }} />
-          </ActionIcon>
+            <Icon name="sliders-horizontal" size={18} />
+          </button>
         </Tooltip>
       </Popover.Target>
       <Popover.Dropdown>

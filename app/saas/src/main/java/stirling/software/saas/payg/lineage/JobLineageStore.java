@@ -34,6 +34,19 @@ public interface JobLineageStore {
     Optional<LineageMatch> findOpenJobForSignatures(
             Long userId, Set<LineageSignature> candidates, Duration workflowWindow);
 
+    /**
+     * Run-scoped variant: as {@link #findOpenJobForSignatures(Long, Set, Duration)} but
+     * additionally constrained to open jobs whose {@code run_id} equals {@code runId}. Lineage
+     * joins are scoped to a single automation run, so a pipeline's sub-steps group into one charge
+     * while two separate runs on identical bytes stay distinct. The default delegates to the
+     * unscoped lookup (for test doubles that don't model run ids); the production store overrides
+     * it with a filtered query.
+     */
+    default Optional<LineageMatch> findOpenJobForSignatures(
+            Long userId, Set<LineageSignature> candidates, Duration workflowWindow, String runId) {
+        return findOpenJobForSignatures(userId, candidates, workflowWindow);
+    }
+
     /** Deletes records created before {@code cutoff}. Returns the number of rows removed. */
     int pruneOlderThan(Instant cutoff);
 }

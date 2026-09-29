@@ -1,16 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
-import {
-  Paper,
-  Group,
-  Text,
-  ActionIcon,
-  UnstyledButton,
-  Popover,
-  List,
-  ScrollArea,
-} from "@mantine/core";
+import { Paper, Group, Text, Popover, List, ScrollArea } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useConversionCloudStatus } from "@app/hooks/useConversionCloudStatus";
 import {
@@ -224,10 +217,9 @@ export function SelfHostedOfflineBanner() {
           wrap="nowrap"
           style={{ minWidth: 0, flex: 1 }}
         >
-          <LocalIcon
-            icon="warning-rounded"
-            width="1rem"
-            height="1rem"
+          <Icon
+            name="triangle-alert"
+            size="1rem"
             style={{ color: BANNER_ICON, flexShrink: 0 }}
           />
           <Text
@@ -260,7 +252,8 @@ export function SelfHostedOfflineBanner() {
             width={260}
           >
             <Popover.Target>
-              <UnstyledButton
+              <Button
+                variant="tertiary"
                 onClick={() => setExpanded((e) => !e)}
                 style={{
                   color: BANNER_LINK,
@@ -279,7 +272,7 @@ export function SelfHostedOfflineBanner() {
                       "selfHosted.offline.showTools",
                       "View unavailable tools ▾",
                     )}
-              </UnstyledButton>
+              </Button>
             </Popover.Target>
             <Popover.Dropdown p="xs">
               <ScrollArea.Autosize mah={300}>
@@ -293,13 +286,13 @@ export function SelfHostedOfflineBanner() {
           </Popover>
         )}
         <ActionIcon
-          variant="subtle"
-          size="xs"
+          variant="tertiary"
+          size="sm"
           onClick={() => setDismissed(true)}
           aria-label={t("close", "Close")}
           style={{ color: BANNER_TEXT }}
         >
-          <LocalIcon icon="close-rounded" width="0.8rem" height="0.8rem" />
+          <Icon name="x" size="0.8rem" />
         </ActionIcon>
       </Group>
     </Paper>

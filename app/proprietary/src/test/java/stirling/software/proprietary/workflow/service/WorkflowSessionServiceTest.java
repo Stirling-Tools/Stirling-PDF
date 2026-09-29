@@ -28,6 +28,7 @@ import stirling.software.common.model.ApplicationProperties.Storage;
 import stirling.software.common.model.ApplicationProperties.Storage.Signing;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.storage.crypto.StorageKeyRevokedException;
 import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.provider.StoredObject;
@@ -142,6 +143,76 @@ class WorkflowSessionServiceTest {
         // Raw password must not be stored — only the encrypted form
         assertThat(cert.get("password")).isEqualTo("enc:secret");
         assertThat(cert.get("password")).isNotEqualTo("secret");
+    }
+
+    @Test
+    void signDocument_encryptsUploadedKeystoreBytesAtRest() throws Exception {
+        // Use a REAL encryption service (not a mock) so we verify the persisted keystore is
+        // genuinely AES-256-GCM encrypted, not merely base64-encoded.
+        ApplicationProperties.AutomaticallyGenerated generated =
+                new ApplicationProperties.AutomaticallyGenerated();
+        generated.setKey("test-encryption-key-for-unit-tests-only");
+        ApplicationProperties realProps = new ApplicationProperties();
+        realProps.setAutomaticallyGenerated(generated);
+        MetadataEncryptionService realEncryption = new MetadataEncryptionService(realProps);
+
+        // Validator is exercised by the real flow but its result is irrelevant here, so stub it.
+        CertificateSubmissionValidator validator = mock(CertificateSubmissionValidator.class);
+
+        WorkflowSessionService svc =
+                new WorkflowSessionService(
+                        workflowSessionRepository,
+                        workflowParticipantRepository,
+                        storedFileRepository,
+                        userRepository,
+                        storageProvider,
+                        objectMapper,
+                        applicationProperties,
+                        realEncryption,
+                        validator);
+
+        User user = user("dave");
+        WorkflowParticipant participant = pendingParticipant(user);
+        sessionWithParticipant("s7", participant);
+        when(workflowParticipantRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        byte[] p12Bytes;
+        try (var in = getClass().getResourceAsStream("/test-certs/valid-test.p12")) {
+            assertThat(in).as("valid-test.p12 fixture present").isNotNull();
+            p12Bytes = in.readAllBytes();
+        }
+
+        SignDocumentRequest req = new SignDocumentRequest();
+        req.setCertType("PKCS12");
+        req.setPassword("changeit");
+        req.setP12File(
+                new MockMultipartFile(
+                        "p12File", "valid-test.p12", "application/x-pkcs12", p12Bytes));
+
+        svc.signDocument("s7", user, req);
+
+        ArgumentCaptor<WorkflowParticipant> captor =
+                ArgumentCaptor.forClass(WorkflowParticipant.class);
+        verify(workflowParticipantRepository).save(captor.capture());
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> cert =
+                (Map<String, Object>)
+                        captor.getValue().getParticipantMetadata().get("certificateSubmission");
+        String storedKeystore = (String) cert.get("p12Keystore");
+
+        // 1. Stored keystore is encrypted (enc: prefix), not plaintext base64.
+        assertThat(storedKeystore).startsWith(MetadataEncryptionService.ENC_PREFIX);
+        assertThat(storedKeystore)
+                .as("must not be the plain base64 of the keystore")
+                .isNotEqualTo(java.util.Base64.getEncoder().encodeToString(p12Bytes));
+
+        // 2. The raw keystore bytes must not appear anywhere in the stored value.
+        assertThat(storedKeystore)
+                .doesNotContain(java.util.Base64.getEncoder().encodeToString(p12Bytes));
+
+        // 3. It round-trips back to the exact original keystore bytes.
+        assertThat(realEncryption.decryptBytes(storedKeystore)).isEqualTo(p12Bytes);
     }
 
     @Test
@@ -568,5 +639,47 @@ class WorkflowSessionServiceTest {
                 .thenReturn(List.of());
 
         assertThat(service.listUserSessions(owner)).isEmpty();
+    }
+
+    // -------------------------------------------------------------------------
+    // revoked encryption keys (storage encryption kill switch)
+    // -------------------------------------------------------------------------
+
+    @Test
+    void getOriginalFile_revokedEncryptionKey_isForbiddenNotServerError() throws Exception {
+        WorkflowSession session = new WorkflowSession();
+        StoredFile original = new StoredFile();
+        original.setStorageKey("1/original");
+        session.setOriginalFile(original);
+        when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(session));
+        when(storageProvider.load("1/original"))
+                .thenThrow(new StorageKeyRevokedException("key disabled"));
+
+        assertThatThrownBy(() -> service.getOriginalFile("s1"))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(
+                        e ->
+                                assertThat(((ResponseStatusException) e).getStatusCode())
+                                        .isEqualTo(HttpStatus.FORBIDDEN));
+    }
+
+    @Test
+    void getSignRequestDocument_revokedEncryptionKey_isForbiddenNotServerError() throws Exception {
+        User participantUser = user("bob");
+        WorkflowSession session = sessionWithParticipant("s2", pendingParticipant(participantUser));
+        StoredFile original = new StoredFile();
+        original.setStorageKey("1/sign-me");
+        session.setOriginalFile(original);
+        when(storageProvider.load("1/sign-me"))
+                .thenThrow(new StorageKeyRevokedException("key disabled"));
+
+        // This path wraps the read in catch(IOException) -> 500; the revocation must not be
+        // swallowed by it, because StorageKeyRevokedException IS an IOException.
+        assertThatThrownBy(() -> service.getSignRequestDocument("s2", participantUser))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(
+                        e ->
+                                assertThat(((ResponseStatusException) e).getStatusCode())
+                                        .isEqualTo(HttpStatus.FORBIDDEN));
     }
 }

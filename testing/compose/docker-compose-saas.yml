@@ -1,8 +1,9 @@
 services:
   # ---------------------------------------------------------------------
-  # Postgres holding the stirling_pdf schema. Flyway migrates V1-V13 on
-  # backend startup against this DB. Exposed on host port 5433 so the
-  # cucumber harness can connect via psycopg from features/steps/payg_*.
+  # Postgres holding the stirling_pdf schema, built by Hibernate
+  # ddl-auto=create-drop when the backend starts (see below). Exposed on
+  # host port 5433 so the cucumber harness can connect via psycopg from
+  # features/steps/payg_*.
   # ---------------------------------------------------------------------
   postgres-saas:
     image: postgres:17-alpine
@@ -69,14 +70,11 @@ services:
       SAAS_DB_PASSWORD: "postgres"
       SAAS_DB_PROJECT_REF: "disabled"
 
-      # The saas Flyway migrations assume `users` and `teams` already exist
-      # (V2 ALTERs `users`; V5 references `teams(id)`) because in production
-      # those tables are provisioned by Supabase before Stirling starts. On
-      # a clean test postgres they don't exist, so we disable Flyway and let
-      # Hibernate's `ddl-auto=create-drop` build the full schema from the
-      # entity graph. The default-pricing-policy row that V12 seeds in
-      # production is re-seeded by testing/compose/payg/saas-seed.sql.
-      SPRING_FLYWAY_ENABLED: "false"
+      # On a clean test postgres the Supabase-provisioned `users`/`teams`
+      # tables don't exist, so we let Hibernate's `ddl-auto=create-drop`
+      # build the full schema from the entity graph. The default-pricing-
+      # policy row (seeded in production by the Supabase migrations) is
+      # re-seeded here by testing/compose/payg/saas-seed.sql.
       SPRING_JPA_HIBERNATE_DDL_AUTO: "create-drop"
 
       # Disable Supabase JWT enforcement for the test profile. The

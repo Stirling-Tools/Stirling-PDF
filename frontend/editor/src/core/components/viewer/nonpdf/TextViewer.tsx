@@ -93,6 +93,10 @@ export function TextViewer({ file, isMarkdown }: TextViewerProps) {
               margin: "0 auto",
               padding: "20px 28px",
               background: "#ffffff",
+              // The rendered page is a white sheet in either scheme, so its
+              // copy takes a fixed dark ink rather than inheriting the theme's,
+              // which would be near-white here.
+              color: "var(--c-text-on-light)",
               borderRadius: 6,
             }}
           >
@@ -122,7 +126,7 @@ export function TextViewer({ file, isMarkdown }: TextViewerProps) {
                       paddingRight: 16,
                       paddingLeft: 4,
                       textAlign: "right",
-                      color: "var(--mantine-color-gray-5)",
+                      color: "var(--c-text-muted)",
                       userSelect: "none",
                       borderRight: "1px solid var(--mantine-color-gray-2)",
                       minWidth: `${String(lines.length).length + 1}ch`,

@@ -1,4 +1,5 @@
-import { Button, Text, Group, Divider } from "@mantine/core";
+import { Text, Group, Divider } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import classes from "@app/components/pageEditor/bulkSelectionPanel/BulkSelectionPanel.module.css";
 import { LogicalOperator } from "@app/utils/bulkselection/selectionBuilders";
@@ -16,13 +17,13 @@ const OperatorsSection = ({
 
   return (
     <div>
-      <Text size="xs" c="var(--text-muted)" fw={500} mb="xs">
+      <Text size="xs" c="var(--c-text-subtle)" fw={500} mb="xs">
         {t("bulkSelection.keywords.title", "Keywords")}:
       </Text>
       <Group gap="sm" wrap="nowrap">
         <Button
           size="sm"
-          variant="outline"
+          variant="secondary"
           className={classes.operatorChip}
           onClick={() => onInsertOperator("and")}
           disabled={!csvInput.trim()}
@@ -37,7 +38,7 @@ const OperatorsSection = ({
         </Button>
         <Button
           size="sm"
-          variant="outline"
+          variant="secondary"
           className={classes.operatorChip}
           onClick={() => onInsertOperator("or")}
           disabled={!csvInput.trim()}
@@ -52,7 +53,7 @@ const OperatorsSection = ({
         </Button>
         <Button
           size="sm"
-          variant="outline"
+          variant="secondary"
           className={classes.operatorChip}
           onClick={() => onInsertOperator("not")}
           disabled={!csvInput.trim()}
@@ -70,7 +71,7 @@ const OperatorsSection = ({
       <Group gap="sm" wrap="nowrap">
         <Button
           size="sm"
-          variant="outline"
+          variant="secondary"
           className={classes.operatorChip}
           onClick={() => onInsertOperator("even")}
           title={t(
@@ -84,7 +85,7 @@ const OperatorsSection = ({
         </Button>
         <Button
           size="sm"
-          variant="outline"
+          variant="secondary"
           className={classes.operatorChip}
           onClick={() => onInsertOperator("odd")}
           title={t(

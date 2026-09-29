@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   Anchor,
-  Button,
   Group,
   Loader,
   Paper,
@@ -12,9 +12,8 @@ import {
   Stack,
   Text,
   Textarea,
-  Tooltip,
 } from "@mantine/core";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import { Button } from "@app/ui/Button";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import apiClient from "@app/services/apiClient";
@@ -167,25 +166,12 @@ export default function LoginAgreementEditor({
               <span>
                 {t("admin.settings.legal.loginAgreement.language", "Language")}
               </span>
-              <Tooltip
-                multiline
-                w={300}
-                withArrow
-                withinPortal
-                zIndex={Z_INDEX_OVER_CONFIG_MODAL}
+              <InfoTooltip
                 label={t(
                   "admin.settings.legal.loginAgreement.languageHelp",
                   "Each language has its own file. If a user's language has no file, the agreement falls back to the default locale's file, then to the fallback text.",
                 )}
-              >
-                <InfoOutlinedIcon
-                  style={{
-                    fontSize: 15,
-                    cursor: "help",
-                    color: "var(--mantine-color-dimmed)",
-                  }}
-                />
-              </Tooltip>
+              />
             </Group>
           }
           data={languageOptions}
@@ -201,6 +187,7 @@ export default function LoginAgreementEditor({
           style={{ flex: 1, maxWidth: 340 }}
         />
         <Button
+          variant="primary"
           onClick={handleSave}
           loading={saving}
           disabled={disabled || loading || loadFailed || !dirty}
@@ -268,7 +255,7 @@ export default function LoginAgreementEditor({
 
       {loading && <Loader size="xs" />}
       {loadFailed && !loading && (
-        <Text size="xs" c="red">
+        <Text size="xs" c="var(--color-red-dark)">
           {t(
             "admin.settings.legal.loginAgreement.loadError",
             "Failed to load the agreement for {{locale}}. Switch language and back to retry.",

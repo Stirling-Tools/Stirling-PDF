@@ -1,7 +1,14 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
-import { useChangePermissionsOperation } from "@app/hooks/tools/changePermissions/useChangePermissionsOperation";
-import type { ChangePermissionsParameters } from "@app/hooks/tools/changePermissions/useChangePermissionsParameters";
+import {
+  changePermissionsFromApiParams,
+  changePermissionsToApiParams,
+  useChangePermissionsOperation,
+} from "@app/hooks/tools/changePermissions/useChangePermissionsOperation";
+import {
+  type ChangePermissionsParameters,
+  defaultParameters,
+} from "@app/hooks/tools/changePermissions/useChangePermissionsParameters";
 
 // Mock the useToolOperation hook
 vi.mock("../shared/useToolOperation", async () => {
@@ -139,5 +146,28 @@ describe("useChangePermissionsOperation", () => {
 
     const callArgs = getToolConfig();
     expect(callArgs[property]).toBe(expectedValue);
+  });
+});
+
+describe("changePermissions mappers", () => {
+  test("round-trips backend params", () => {
+    const configured: ChangePermissionsParameters = {
+      preventAssembly: true,
+      preventExtractContent: false,
+      preventExtractForAccessibility: true,
+      preventFillInForm: false,
+      preventModify: true,
+      preventModifyAnnotations: false,
+      preventPrinting: true,
+      preventPrintingFaithful: false,
+    };
+
+    const api = changePermissionsToApiParams(configured);
+    const roundTripped = changePermissionsToApiParams({
+      ...defaultParameters,
+      ...changePermissionsFromApiParams(api),
+    });
+
+    expect(roundTripped).toEqual(api);
   });
 });

@@ -1,9 +1,8 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Text, Stack, Group, ActionIcon } from "@mantine/core";
-import SettingsIcon from "@mui/icons-material/Settings";
-import CloseIcon from "@mui/icons-material/Close";
-import AddCircleOutline from "@mui/icons-material/AddCircleOutlined";
+import { Text, Stack, Group } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { Icon } from "@app/ui/Icon";
 import { AutomationTool } from "@app/types/automation";
 import { ToolRegistry } from "@app/data/toolsTaxonomy";
 import { ToolId } from "@app/types/toolId";
@@ -75,26 +74,32 @@ export default function ToolList({
                   tool.operation && !tool.configured ? "0" : "1px",
               }}
             >
-              {/* Delete X in top right - only show for tools after the first 2 */}
+              {/* Delete X - centered vertically, anchored right */}
               {index > 1 && (
                 <ActionIcon
-                  variant="subtle"
-                  size="xs"
+                  variant="tertiary"
+                  size="sm"
+                  hover={false}
                   onClick={() => onToolRemove(index)}
+                  aria-label={t(
+                    "automate.creation.tools.remove",
+                    "Remove tool",
+                  )}
                   title={t("automate.creation.tools.remove", "Remove tool")}
                   style={{
                     position: "absolute",
-                    top: "4px",
-                    right: "4px",
+                    top: "50%",
+                    right: "8px",
+                    transform: "translateY(-50%)",
                     zIndex: 1,
                     color: "var(--mantine-color-gray-6)",
                   }}
                 >
-                  <CloseIcon style={{ fontSize: 16 }} />
+                  <Icon name="x" size={16} />
                 </ActionIcon>
               )}
 
-              <div style={{ paddingRight: "1.25rem" }}>
+              <div>
                 {/* Tool Selection Dropdown with inline settings cog */}
                 <Group gap="xs" align="center" wrap="nowrap">
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -113,16 +118,20 @@ export default function ToolList({
                   {/* Settings cog - only show if tool is selected, aligned right */}
                   {tool.operation && (
                     <ActionIcon
-                      variant="subtle"
+                      variant="tertiary"
                       size="sm"
                       onClick={() => onToolConfigure(index)}
+                      aria-label={t(
+                        "automate.creation.tools.configure",
+                        "Configure tool",
+                      )}
                       title={t(
                         "automate.creation.tools.configure",
                         "Configure tool",
                       )}
                       style={{ color: "var(--mantine-color-gray-6)" }}
                     >
-                      <SettingsIcon style={{ fontSize: 16 }} />
+                      <Icon name="settings" size={16} />
                     </ActionIcon>
                   )}
                 </Group>
@@ -137,7 +146,7 @@ export default function ToolList({
                   borderTop: "none",
                   borderRadius:
                     "0 0 var(--mantine-radius-lg) var(--mantine-radius-lg)",
-                  backgroundColor: "var(--active-bg)",
+                  backgroundColor: "var(--c-active)",
                   padding: "var(--mantine-spacing-xs)",
                 }}
               >
@@ -178,7 +187,7 @@ export default function ToolList({
         >
           <AutomationEntry
             title={t("automate.creation.tools.addTool", "Add Tool")}
-            badgeIcon={AddCircleOutline}
+            badgeIcon="circle-plus"
             operations={[]}
             onClick={onToolAdd}
             keepIconColor={true}

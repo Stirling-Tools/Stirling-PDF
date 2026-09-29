@@ -12,12 +12,12 @@
 }
 
 .tool-picker-scrollable::-webkit-scrollbar-thumb {
-  background-color: var(--mantine-color-gray-4);
+  background-color: var(--c-border);
   border-radius: 0.1875rem;
 }
 
 .tool-picker-scrollable::-webkit-scrollbar-thumb:hover {
-  background-color: var(--mantine-color-gray-5);
+  background-color: var(--c-border-strong);
 }
 
 .search-input {
@@ -28,7 +28,7 @@
   text-transform: uppercase;
   padding-bottom: 0.5rem;
   font-size: 0.75rem;
-  color: var(--tool-subcategory-text-color);
+  color: var(--c-text-subtle);
   /* Align the text with tool labels to account for icon gutter */
   padding-left: 1rem;
 }
@@ -44,38 +44,46 @@
   text-transform: uppercase;
   font-weight: 600;
   font-size: 0.75rem;
-  color: var(--tool-subcategory-text-color);
+  color: var(--c-text-subtle);
   white-space: nowrap;
   overflow: visible;
 }
 
 .tool-subcategory-row-rule {
   height: 1px;
-  background-color: var(--tool-subcategory-rule-color);
+  background-color: var(--c-border-subtle);
   flex: 1 1 auto;
 }
 
-/* Selected tool highlight — theme-aware via CSS variable */
+/* Selected tool highlight — theme-aware via the adaptive --c-active token */
 :root {
-  --tool-button-selected-bg: var(--mantine-color-gray-2);
+  --tool-button-selected-bg: var(--c-active);
 }
 
-[data-mantine-color-scheme="dark"] {
-  --tool-button-selected-bg: var(--mantine-color-dark-4);
-}
-
-/* Compact tool buttons */
+/* Compact tool buttons (padding via the Button `p`/`py` props).
+   List rows hug their content — drop the shared Button's min-height floor
+   so height = icon/label only and rows sit tight against each other. */
 .tool-button {
   font-size: 0.875rem;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-  padding-left: 0.5rem;
+  /* Shared by the row's icon and label; dark mode matches the viewer bar icons. */
+  --tool-button-fg: var(--c-text-muted);
+}
+
+[data-mantine-color-scheme="dark"] .tool-button {
+  --tool-button-fg: color-mix(in srgb, var(--c-text) 80%, var(--c-surface));
+}
+
+.tool-button.sui-btn.mantine-Button-root {
+  min-height: 0;
 }
 
 .tool-button .mantine-Button-label {
   font-size: 0.84rem;
   font-weight: 500;
-  line-height: 1.2;
+  color: var(--tool-button-fg);
+  /* ≥1.4 so the overflow:hidden label box contains glyph descenders (g/y/p);
+     row height is icon-bound (~24px) so this doesn't change row size. */
+  line-height: 1.4;
 }
 
 .tool-button-icon {
@@ -90,7 +98,8 @@
 
 .tool-button-star {
   position: absolute;
-  top: 0.35rem;
+  top: 50%;
+  transform: translateY(-50%);
   right: 0.35rem;
   opacity: 0;
   transition: opacity 0.2s ease;
@@ -120,12 +129,6 @@
   padding: 0.5rem var(--mantine-spacing-sm) var(--mantine-spacing-sm);
 }
 
-.tool-picker__compact .tool-button {
-  padding-top: 0.65rem;
-  padding-bottom: 0.65rem;
-  height: auto;
-}
-
 .tool-picker__compact .tool-button .mantine-Button-label {
   align-items: center;
 }
@@ -138,4 +141,20 @@
 
 .tool-picker__view-all {
   margin-top: 0.75rem;
+}
+
+/* The rule only appears once rows scroll beneath the header, so a list at
+   rest has no line separating nothing. Stacked over the scroller, whose
+   negative top margin would otherwise paint rows over the rule. */
+.tool-picker__header {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  background: var(--c-surface);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.12s ease;
+}
+
+.tool-picker__header[data-scrolled] {
+  border-bottom-color: var(--c-border-subtle);
 }

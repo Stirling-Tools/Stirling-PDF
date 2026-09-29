@@ -1,5 +1,6 @@
 package stirling.software.saas.payg.api;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -19,6 +20,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,15 +32,19 @@ import jakarta.validation.constraints.Min;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.model.enumeration.TeamRole;
+import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
-import stirling.software.saas.model.TeamMembership;
+import stirling.software.proprietary.security.repository.TeamMembershipRepository;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
+import stirling.software.saas.accountlink.FleetSeatService;
+import stirling.software.saas.model.SaasTeamExtensions;
 import stirling.software.saas.payg.api.WalletSnapshotResponse.ActivityRow;
 import stirling.software.saas.payg.api.WalletSnapshotResponse.CategoryBreakdown;
 import stirling.software.saas.payg.api.WalletSnapshotResponse.MemberRow;
 import stirling.software.saas.payg.billing.TeamBillingContext;
 import stirling.software.saas.payg.billing.TeamBillingService;
+import stirling.software.saas.payg.bundle.PrepaidBundleService;
 import stirling.software.saas.payg.entitlement.EntitlementService;
 import stirling.software.saas.payg.entitlement.EntitlementSnapshot;
 import stirling.software.saas.payg.model.BillingCategory;
@@ -50,7 +56,8 @@ import stirling.software.saas.payg.repository.WalletLedgerRepository;
 import stirling.software.saas.payg.repository.WalletPolicyRepository;
 import stirling.software.saas.payg.wallet.WalletLedgerEntry;
 import stirling.software.saas.payg.wallet.WalletPolicy;
-import stirling.software.saas.repository.TeamMembershipRepository;
+import stirling.software.saas.repository.SaasTeamExtensionsRepository;
+import stirling.software.saas.security.UserTeamResolver;
 import stirling.software.saas.util.AuthenticationUtils;
 
 /**
@@ -85,13 +92,15 @@ public class PaygWalletController {
     static final String STATUS_SUBSCRIBED = "subscribed";
     static final String ROLE_LEADER = "leader";
     static final String ROLE_MEMBER = "member";
+    static final String BILLING_MODE_PREPAID = "prepaid";
+    static final String BILLING_MODE_PAYG = "payg";
 
     /**
      * Placeholder ceiling for the team-less empty snapshot only (authenticated caller without a
      * membership — shouldn't happen post-migration). Teams always get the live {@code
      * pricing_policy.free_tier_units} grant via {@link TeamBillingService}.
      */
-    private static final int FREE_TIER_LIMIT_UNITS_FALLBACK = 500;
+    private static final int FREE_TIER_LIMIT_UNITS_FALLBACK = 1000;
 
     private static final DateTimeFormatter ISO_DATE = DateTimeFormatter.ISO_LOCAL_DATE;
 
@@ -103,6 +112,10 @@ public class PaygWalletController {
     private final WalletLedgerRepository ledgerRepo;
     private final PaygShadowChargeRepository shadowRepo;
     private final UserRepository userRepository;
+    private final PrepaidBundleService prepaidBundleService;
+    private final UserTeamResolver userTeamResolver;
+    private final SaasTeamExtensionsRepository teamExtensionsRepository;
+    private final FleetSeatService fleetSeats;
 
     public PaygWalletController(
             EntitlementService entitlementService,
@@ -112,7 +125,12 @@ public class PaygWalletController {
             WalletPolicyRepository policyRepo,
             WalletLedgerRepository ledgerRepo,
             PaygShadowChargeRepository shadowRepo,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            PrepaidBundleService prepaidBundleService,
+            UserTeamResolver userTeamResolver,
+            SaasTeamExtensionsRepository teamExtensionsRepository,
+            FleetSeatService fleetSeats) {
+        this.fleetSeats = fleetSeats;
         this.entitlementService = Objects.requireNonNull(entitlementService, "entitlementService");
         this.billingService = Objects.requireNonNull(billingService, "billingService");
         this.memberRepo = Objects.requireNonNull(memberRepo, "memberRepo");
@@ -121,12 +139,14 @@ public class PaygWalletController {
         this.ledgerRepo = Objects.requireNonNull(ledgerRepo, "ledgerRepo");
         this.shadowRepo = Objects.requireNonNull(shadowRepo, "shadowRepo");
         this.userRepository = Objects.requireNonNull(userRepository, "userRepository");
+        this.prepaidBundleService =
+                Objects.requireNonNull(prepaidBundleService, "prepaidBundleService");
+        this.userTeamResolver = Objects.requireNonNull(userTeamResolver, "userTeamResolver");
+        this.teamExtensionsRepository =
+                Objects.requireNonNull(teamExtensionsRepository, "teamExtensionsRepository");
     }
 
-    // ---------------------------------------------------------------------------------------
-    // GET /wallet — the single FE fetch
-    // ---------------------------------------------------------------------------------------
-
+    /** The single wallet fetch the frontend makes; every figure on the Plan page comes from it. */
     @GetMapping("/wallet")
     @PreAuthorize("isAuthenticated()")
     @Transactional(readOnly = true)
@@ -139,17 +159,20 @@ public class PaygWalletController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        Optional<TeamMembership> primary = primaryMembership(user.getId());
-        if (primary.isEmpty()) {
+        if (AuthenticationUtils.isAnonymous(auth)
+                || "ANONYMOUS".equalsIgnoreCase(user.getAuthenticationType())) {
+            return ResponseEntity.ok(emptySnapshot(0));
+        }
+
+        Optional<Long> resolvedTeam = userTeamResolver.teamId(user);
+        if (resolvedTeam.isEmpty()) {
             // Authenticated user without a team — shouldn't happen post-migration, but we don't
             // want to 500. Return a free-tier-shaped empty snapshot so the FE renders the gated UI
             // rather than blowing up on a null body.
-            return ResponseEntity.ok(emptySnapshot());
+            return ResponseEntity.ok(emptySnapshot(FREE_TIER_LIMIT_UNITS_FALLBACK));
         }
-
-        TeamMembership membership = primary.get();
-        Long teamId = membership.getTeam().getId();
-        boolean isLeader = membership.getRole() == TeamRole.LEADER;
+        Long teamId = resolvedTeam.get();
+        boolean isLeader = userTeamResolver.isLeader(user);
 
         // Billing facts (window, free allowance, per-doc rate, doc cap) and the entitlement
         // snapshot (period spend over that window) share the same composition service, so what
@@ -158,6 +181,9 @@ public class PaygWalletController {
         EntitlementSnapshot snap = entitlementService.getSnapshot(teamId);
 
         String status = billing.subscribed() ? STATUS_SUBSCRIBED : STATUS_FREE;
+        WalletSnapshotResponse.ProcessorHolding processor =
+                new WalletSnapshotResponse.ProcessorHolding(billing.subscribed());
+        WalletSnapshotResponse.TeamHolding team = teamHolding(teamId, isLeader);
 
         boolean noCap = billing.subscribed() && billing.capMoneyMinor() == null;
         Integer capMajor =
@@ -166,13 +192,14 @@ public class PaygWalletController {
                         : null;
 
         // Per-state by construction (see EntitlementService.computeSnapshot): free team → spend is
-        // lifetime free used, cap is the grant size; subscribed → spend is this month's net
-        // billable
-        // docs, cap is the monthly paid-doc ceiling (null = uncapped).
+        // this period's free used, cap is the period grant size; subscribed → spend is this
+        // period's net billable docs, cap is the monthly paid-doc ceiling (null = uncapped).
         int spend = clampToInt(snap.periodSpendUnits());
         Integer limit = snap.periodCapUnits() != null ? clampToInt(snap.periodCapUnits()) : null;
 
-        CategoryBreakdown breakdown = buildBreakdown(teamId, snap.periodStart(), snap.periodEnd());
+        BreakdownPair breakdowns = buildBreakdowns(teamId, snap.periodStart(), snap.periodEnd());
+        UsageAnalytics analytics =
+                buildUsageAnalytics(teamId, snap.periodStart(), snap.periodEnd());
 
         // Estimated bill = paid (Stripe-metered) docs this period × rate — the free portion was
         // already netted out at charge time, so this is the metered total, not spend − grant.
@@ -184,10 +211,30 @@ public class PaygWalletController {
                         ? buildMemberRows(teamId, snap.periodStart(), snap.periodEnd())
                         : List.of();
 
+        // Prepaid bundles, aggregated across the team's in-term pools. Drawn ahead of the meter and
+        // kept out of the spend cap, so they're a separate dimension from the metered spend above.
+        PrepaidBundleService.PrepaidSummary prepaid = prepaidBundleService.summarize(teamId);
+        long prepaidRemaining = prepaid == null ? 0L : prepaid.unitsRemaining();
+        long prepaidTotal = prepaid == null ? 0L : prepaid.unitsTotal();
+        String prepaidExpiresAt =
+                prepaid == null || prepaid.expiresAt() == null
+                        ? null
+                        : ISO_DATE.format(prepaid.expiresAt().toLocalDate());
+        // Prepaid while pools still have units to draw; once exhausted the meter is live again.
+        String billingMode = prepaidRemaining > 0 ? BILLING_MODE_PREPAID : BILLING_MODE_PAYG;
+
+        // Per-credit rate for the bundle calculator — the bundle:processor price, NOT the metered
+        // per-doc rate. Resolved in the team's currency (USD fallback), null when the price is
+        // unsynced.
+        BigDecimal bundleRatePerCreditMinor =
+                billingService.resolveBundleRatePerCreditMinor(billing.currency());
+
         WalletSnapshotResponse body =
                 new WalletSnapshotResponse(
                         teamId,
                         status,
+                        team,
+                        processor,
                         isLeader ? ROLE_LEADER : ROLE_MEMBER,
                         ISO_DATE.format(snap.periodStart().toLocalDate()),
                         ISO_DATE.format(snap.periodEnd().toLocalDate()),
@@ -195,6 +242,7 @@ public class PaygWalletController {
                         limit,
                         clampToInt(billing.freeGrantUnits()),
                         clampToInt(billing.freeRemainingUnits()),
+                        UserLicenseSettingsService.DEFAULT_USER_LIMIT,
                         billing.perDocMinor(),
                         billing.currency(),
                         estimatedBill,
@@ -202,28 +250,93 @@ public class PaygWalletController {
                         noCap,
                         billing.subscriptionId(),
                         spend,
-                        breakdown,
+                        breakdowns.units(),
                         members,
-                        buildActivity(teamId));
+                        buildActivity(teamId),
+                        breakdowns.docs(),
+                        analytics.docsProcessed(),
+                        analytics.uniquePdfs(),
+                        analytics.sizeMultiplierPdfs(),
+                        prepaidRemaining,
+                        prepaidTotal,
+                        prepaidExpiresAt,
+                        billingMode,
+                        bundleRatePerCreditMinor,
+                        billing.includedPeriodStart() == null
+                                ? null
+                                : billing.includedPeriodStart().toLocalDate().toString(),
+                        billing.includedPeriodEnd() == null
+                                ? null
+                                : billing.includedPeriodEnd().toLocalDate().toString());
         return ResponseEntity.ok(body);
     }
 
-    private CategoryBreakdown buildBreakdown(
+    /**
+     * The team's user-capacity holding. The cap is written from the Team subscription, so a team
+     * holds Team exactly when {@link SaasTeamExtensions#licensedUsers()} states one.
+     */
+    private WalletSnapshotResponse.TeamHolding teamHolding(Long teamId, boolean isLeader) {
+        Long fleetUsers = teamExtensionsRepository.fleetUsersInUse(teamId);
+        int usersInUse =
+                Math.toIntExact(fleetUsers == null ? memberRepo.countByTeamId(teamId) : fleetUsers);
+        Integer licensed =
+                teamExtensionsRepository
+                        .findByTeamId(teamId)
+                        .map(SaasTeamExtensions::licensedUsers)
+                        .orElse(null);
+        return new WalletSnapshotResponse.TeamHolding(
+                licensed != null,
+                licensed,
+                usersInUse,
+                fleetUsers != null,
+                isLeader ? fleetSeats.breakdown(teamId) : null);
+    }
+
+    /** Per-category size-scaled units + input-file counts for the same window. */
+    private record BreakdownPair(CategoryBreakdown units, CategoryBreakdown docs) {}
+
+    /** Period usage analytics: total input files, unique PDFs, and size-multiplier files. */
+    private record UsageAnalytics(int docsProcessed, int uniquePdfs, int sizeMultiplierPdfs) {}
+
+    private BreakdownPair buildBreakdowns(
             Long teamId, LocalDateTime periodStart, LocalDateTime periodEnd) {
-        Map<BillingCategory, Long> byCategory = new HashMap<>();
+        Map<BillingCategory, Long> units = new HashMap<>();
+        Map<BillingCategory, Long> docs = new HashMap<>();
         for (Object[] row :
-                ledgerRepo.sumPeriodAmountByCategory(
+                ledgerRepo.sumPeriodByCategoryWithDocs(
                         teamId, LedgerEntryType.DEBIT, periodStart, periodEnd)) {
-            if (row.length >= 2
-                    && row[0] instanceof BillingCategory cat
-                    && row[1] instanceof Number n) {
-                byCategory.put(cat, n.longValue());
+            if (row.length >= 3 && row[0] instanceof BillingCategory cat) {
+                if (row[1] instanceof Number u) {
+                    units.put(cat, u.longValue());
+                }
+                if (row[2] instanceof Number d) {
+                    docs.put(cat, d.longValue());
+                }
             }
         }
+        return new BreakdownPair(categoryBreakdown(units), categoryBreakdown(docs));
+    }
+
+    private static CategoryBreakdown categoryBreakdown(Map<BillingCategory, Long> byCategory) {
         return new CategoryBreakdown(
                 clampToInt(byCategory.getOrDefault(BillingCategory.API, 0L)),
                 clampToInt(byCategory.getOrDefault(BillingCategory.AI, 0L)),
                 clampToInt(byCategory.getOrDefault(BillingCategory.AUTOMATION, 0L)));
+    }
+
+    private UsageAnalytics buildUsageAnalytics(
+            Long teamId, LocalDateTime periodStart, LocalDateTime periodEnd) {
+        List<Object[]> rows =
+                ledgerRepo.periodUsageAnalytics(
+                        teamId, LedgerEntryType.DEBIT, periodStart, periodEnd);
+        Object[] row = rows.isEmpty() ? null : rows.get(0);
+        return new UsageAnalytics(analyticsInt(row, 0), analyticsInt(row, 1), analyticsInt(row, 2));
+    }
+
+    private static int analyticsInt(Object[] row, int idx) {
+        return row != null && row.length > idx && row[idx] instanceof Number n
+                ? clampToInt(n.longValue())
+                : 0;
     }
 
     /**
@@ -261,10 +374,7 @@ public class PaygWalletController {
         };
     }
 
-    // ---------------------------------------------------------------------------------------
-    // PATCH /cap — leader-only, cap is application-layer, no Stripe call
-    // ---------------------------------------------------------------------------------------
-
+    /** Leader-only. The cap is enforced in the application layer; Stripe is never called. */
     @PatchMapping("/cap")
     @PreAuthorize("isAuthenticated()")
     @Transactional
@@ -276,16 +386,15 @@ public class PaygWalletController {
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        Optional<TeamMembership> primary = primaryMembership(user.getId());
-        if (primary.isEmpty()) {
-            // No team → can't have a wallet to cap.
+        Optional<Long> resolvedTeam = userTeamResolver.teamId(user);
+        if (resolvedTeam.isEmpty()) {
+            // No team, so no wallet to cap.
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        TeamMembership membership = primary.get();
-        if (membership.getRole() != TeamRole.LEADER) {
+        if (!userTeamResolver.isLeader(user)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        Long teamId = membership.getTeam().getId();
+        Long teamId = resolvedTeam.get();
 
         WalletPolicy policy =
                 policyRepo
@@ -328,13 +437,25 @@ public class PaygWalletController {
     /** Request body for {@link #updateCap}. */
     public record UpdateCapRequest(@Min(0) int capUsd, boolean noCap) {}
 
-    // ---------------------------------------------------------------------------------------
-    // Helpers
-    // ---------------------------------------------------------------------------------------
-
-    private Optional<TeamMembership> primaryMembership(Long userId) {
-        List<TeamMembership> rows = memberRepo.findPrimaryMembership(userId);
-        return rows.isEmpty() ? Optional.empty() : Optional.of(rows.get(0));
+    /**
+     * Drops the caller's team snapshot + billing cache so the next {@code GET /wallet} reflects a
+     * billing state that just changed out-of-band. The subscription flip is written by a Postgres
+     * function ({@code payg_link_subscription}) with no Java event to invalidate on, so a client
+     * that knows a change just happened — the portal while finalizing a checkout — pokes the cache
+     * here rather than waiting out the ~30s TTL. Team-scoped to the caller: a client can only
+     * refresh its own team, and a no-team caller is a cheap no-op.
+     */
+    @PostMapping("/wallet/refresh")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> refreshWallet(Authentication auth) {
+        User user;
+        try {
+            user = AuthenticationUtils.getCurrentUser(auth, userRepository);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        userTeamResolver.teamId(user).ifPresent(entitlementService::invalidate);
+        return ResponseEntity.noContent().build();
     }
 
     private List<MemberRow> buildMemberRows(
@@ -398,18 +519,21 @@ public class PaygWalletController {
         return (int) v;
     }
 
-    private WalletSnapshotResponse emptySnapshot() {
+    private WalletSnapshotResponse emptySnapshot(int allowance) {
         LocalDateTime[] window = currentMonthWindow();
         return new WalletSnapshotResponse(
                 null, // teamId — unknown when the caller has no team membership
                 STATUS_FREE,
+                new WalletSnapshotResponse.TeamHolding(false, null, 0),
+                new WalletSnapshotResponse.ProcessorHolding(false),
                 ROLE_MEMBER,
                 ISO_DATE.format(window[0].toLocalDate()),
                 ISO_DATE.format(window[1].toLocalDate()),
                 0,
-                FREE_TIER_LIMIT_UNITS_FALLBACK,
-                FREE_TIER_LIMIT_UNITS_FALLBACK,
-                FREE_TIER_LIMIT_UNITS_FALLBACK,
+                allowance,
+                allowance,
+                allowance,
+                UserLicenseSettingsService.DEFAULT_USER_LIMIT,
                 null,
                 null,
                 null,
@@ -419,6 +543,17 @@ public class PaygWalletController {
                 0,
                 new CategoryBreakdown(0, 0, 0),
                 List.of(),
-                Collections.emptyList());
+                Collections.emptyList(),
+                new CategoryBreakdown(0, 0, 0),
+                0,
+                0,
+                0,
+                0L,
+                0L,
+                null,
+                BILLING_MODE_PAYG,
+                null,
+                null,
+                null);
     }
 }

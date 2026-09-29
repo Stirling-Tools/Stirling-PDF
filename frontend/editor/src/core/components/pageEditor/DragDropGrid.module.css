@@ -28,15 +28,15 @@
 
 .selectionBox {
   position: absolute;
-  border: 2px dashed #3b82f6;
-  background-color: rgba(59, 130, 246, 0.1);
+  border: 2px dashed var(--c-primary);
+  background-color: color-mix(in srgb, var(--c-primary) 10%, transparent);
   pointer-events: none;
 }
 
 .dropIndicator {
   position: absolute;
   width: 4px;
-  background-color: rgba(96, 165, 250, 0.8);
+  background-color: color-mix(in srgb, var(--c-primary) 80%, transparent);
   border-radius: 2px;
   pointer-events: none;
 }
@@ -50,8 +50,8 @@
   position: absolute;
   top: -8px;
   right: -8px;
-  background-color: #3b82f6;
-  color: #ffffff;
+  background-color: var(--c-primary);
+  color: var(--c-text-on-primary);
   border-radius: 50%;
   width: 32px;
   height: 32px;

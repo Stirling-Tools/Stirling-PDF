@@ -15,6 +15,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.cluster.DistributedLock;
 
+/**
+ * Valkey-backed {@link DistributedLock}; single-key throughout, so cluster-safe. NOT Redlock: a
+ * failover can grant the same lock twice, so treat {@code renew() == false} as lost and abort.
+ */
 @Component
 @RequiredArgsConstructor
 @ConditionalOnValkeyBackplane
@@ -64,9 +68,8 @@ public class ValkeyDistributedLock implements DistributedLock {
                 return;
             }
             released = true;
-            // Swallow + log: LockHandle is AutoCloseable, so release() runs from close() inside
-            // try-with-resources. An uncaught Valkey error here would mask the body's exception.
-            // The lease TTL-expires anyway, so a failed explicit release is safe.
+            // Swallow: release() runs from close(), so throwing would mask the body's exception.
+            // The lease TTL-expires anyway.
             try {
                 template.execute(RELEASE_SCRIPT, Collections.singletonList(key), value);
             } catch (RuntimeException ex) {

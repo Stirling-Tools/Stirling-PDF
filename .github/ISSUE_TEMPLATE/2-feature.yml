@@ -67,6 +67,13 @@ body:
       description: |
         If you have any additional information, comments, or resources you think would support or be relevant to your feature request, include them here.
 
+  - type: textarea
+    id: sample-files
+    attributes:
+      label: Example Files
+      description: |
+        If the feature request depends on specific PDFs or other example files, attach them here when available. Remove any sensitive information before sharing.
+
   - type: checkboxes
     id: search-confirmation
     attributes:

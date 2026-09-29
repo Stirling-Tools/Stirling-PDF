@@ -1,11 +1,12 @@
 import { Menu } from "@mantine/core";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { useOpenInNewWindow } from "@app/extensions/openInNewWindow";
 
 interface OpenInNewWindowMenuItemProps {
   file: StirlingFileStub;
+  disabled?: boolean;
 }
 
 /**
@@ -15,6 +16,7 @@ interface OpenInNewWindowMenuItemProps {
  */
 export function OpenInNewWindowMenuItem({
   file,
+  disabled = false,
 }: OpenInNewWindowMenuItemProps) {
   const { t } = useTranslation();
   const { canOpenInNewWindow, openInNewWindow } = useOpenInNewWindow();
@@ -23,10 +25,11 @@ export function OpenInNewWindowMenuItem({
 
   return (
     <Menu.Item
-      leftSection={<OpenInNewIcon fontSize="small" />}
+      disabled={disabled}
+      leftSection={<Icon name="external-link" size={20} />}
       onClick={(e) => {
         e.stopPropagation();
-        openInNewWindow(file);
+        if (!disabled) openInNewWindow(file);
       }}
     >
       {t("openInNewWindow", "Open in new window")}

@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Alert, Button, Group, Modal, Radio, Stack, Text } from "@mantine/core";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined";
+import { Alert, Group, Modal, Radio, Stack, Text } from "@mantine/core";
+import { Icon } from "@app/ui/Icon";
+import { Button } from "@app/ui/Button";
 
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { DeleteScope } from "@app/services/serverStorageDelete";
@@ -155,7 +156,7 @@ export function DeleteFilesDialog({
         {error && (
           <Alert
             color="red"
-            icon={<ErrorOutlineIcon fontSize="small" />}
+            icon={<Icon name="circle-alert" size={20} />}
             variant="light"
             role="alert"
           >
@@ -164,11 +165,11 @@ export function DeleteFilesDialog({
         )}
 
         <Group justify="flex-end">
-          <Button variant="default" onClick={onClose} disabled={submitting}>
+          <Button variant="secondary" onClick={onClose} disabled={submitting}>
             {t("filesPage.cancel", "Cancel")}
           </Button>
           <Button
-            color="red"
+            accent="danger"
             loading={submitting}
             onClick={() => runConfirm(showChoice ? scope : fixedScope)}
           >
