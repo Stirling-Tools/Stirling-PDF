@@ -158,13 +158,20 @@ fn run(install: Handle) -> Result<(), String> {
     }
     let total_bytes: u64 = jobs.iter().map(|(_, a, _)| a.size.max(1)).sum();
 
+    // The runtime's own folder and the one above it are the levels an ordinary
+    // user could have made before the install ran, so both are checked, before
+    // creating them and after.
+    let base = request.target.parent().ok_or("the target has no parent")?;
+    refuse_redirects(base, &request.target)?;
     fs::create_dir_all(&request.target).map_err(|e| format!("{}: {e}", request.target.display()))?;
+    refuse_redirects(base, &request.target)?;
 
     let mut ticks_spent = 0i32;
     for (name, artifact, is_engine) in jobs {
         msi::action_data(install, &format!("Downloading {name}"));
 
         let temp = request.target.join(format!(".incoming-{}", sanitise(&name)));
+        refuse_redirects(&request.target, &temp)?;
         let bytes = download(&artifact, &temp, install)
             .map_err(|e| format!("{name}: {e}"))?;
 
@@ -322,6 +329,7 @@ fn expand_engine(archive: &Path, target: &Path) -> Result<(), String> {
         return Err("the archive has too many files".into());
     }
 
+    refuse_reparse_point(target)?;
     let root = target.canonicalize().map_err(|e| format!("{e}"))?;
     let mut expanded: u64 = 0;
 
@@ -329,6 +337,7 @@ fn expand_engine(archive: &Path, target: &Path) -> Result<(), String> {
         let mut entry = zip.by_index(index).map_err(|e| format!("{e}"))?;
         let name = entry.name().to_string();
         let destination = resolve_inside(&root, &name)?;
+        refuse_redirects(&root, &destination)?;
 
         if entry.is_dir() {
             fs::create_dir_all(&destination).map_err(|e| format!("{e}"))?;
@@ -363,12 +372,52 @@ fn install_model(temp: &Path, target: &Path, artifact: &Artifact, label: &str) -
         .filter(|name| name.ends_with(".traineddata"))
         .ok_or_else(|| format!("{label}: the catalogue URL does not name a .traineddata file"))?;
 
-    let tessdata = target.join("tessdata");
+    refuse_reparse_point(target)?;
+    let root = target.canonicalize().map_err(|e| format!("{e}"))?;
+    let tessdata = root.join("tessdata");
+    refuse_redirects(&root, &tessdata)?;
     fs::create_dir_all(&tessdata).map_err(|e| format!("{e}"))?;
-    let root = tessdata.canonicalize().map_err(|e| format!("{e}"))?;
-    let destination = resolve_inside(&root, file_name)?;
+    let destination = resolve_inside(&tessdata, file_name)?;
+    refuse_redirects(&root, &destination)?;
     fs::rename(temp, &destination).map_err(|e| format!("{e}"))?;
     Ok(())
+}
+
+/// Refuses `path` when it, or any directory between `root` and it, is a reparse
+/// point.
+///
+/// This action runs as SYSTEM, and ordinary users can create entries on the
+/// way: anywhere under ProgramData by default, and in tessdata on purpose. A
+/// junction planted there carries the write wherever it points, and
+/// `resolve_inside` only reads the text of the path. Checked before each
+/// write; one swapped in between the check and the write is left to the ACLs
+/// the installer sets.
+fn refuse_redirects(root: &Path, path: &Path) -> Result<(), String> {
+    let relative = path
+        .strip_prefix(root)
+        .map_err(|_| format!("{} is outside {}", path.display(), root.display()))?;
+    let mut current = root.to_path_buf();
+    refuse_reparse_point(&current)?;
+    for component in relative.components() {
+        current.push(component);
+        refuse_reparse_point(&current)?;
+    }
+    Ok(())
+}
+
+fn refuse_reparse_point(path: &Path) -> Result<(), String> {
+    use std::os::windows::fs::MetadataExt;
+    const FILE_ATTRIBUTE_REPARSE_POINT: u32 = 0x400;
+
+    match fs::symlink_metadata(path) {
+        Ok(meta) if meta.file_attributes() & FILE_ATTRIBUTE_REPARSE_POINT != 0 => Err(format!(
+            "refusing to write through a link: {}",
+            path.display()
+        )),
+        Ok(_) => Ok(()),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(e) => Err(format!("{}: {e}", path.display())),
+    }
 }
 
 /// Joins an untrusted relative name onto a trusted root and proves the result
@@ -497,6 +546,115 @@ mod tests {
             11
         );
         assert_eq!(fs::read(&target).unwrap(), b"model bytes");
+    }
+
+    /// What an ordinary user can make in a directory they may write to: an entry
+    /// that leads somewhere else. A junction needs no privilege, unlike a symlink.
+    fn junction(link: &Path, target: &Path) {
+        let made = std::process::Command::new("cmd")
+            .args(["/C", "mklink", "/J"])
+            .arg(link)
+            .arg(target)
+            .output()
+            .expect("cmd should run");
+        assert!(
+            made.status.success(),
+            "{}",
+            String::from_utf8_lossy(&made.stderr)
+        );
+    }
+
+    fn engine_archive(path: &Path) {
+        let mut zip = zip::ZipWriter::new(File::create(path).unwrap());
+        let stored = zip::write::SimpleFileOptions::default()
+            .compression_method(zip::CompressionMethod::Stored);
+        zip.start_file("tessdata/configs/pdf", stored).unwrap();
+        zip.write_all(b"tessedit_create_pdf 1\n").unwrap();
+        zip.finish().unwrap();
+    }
+
+    #[test]
+    fn the_engine_expands_into_a_plain_folder() {
+        let dir = scratch_dir("engine-plain");
+        let root = dir.join("tesseract");
+        fs::create_dir_all(&root).unwrap();
+        let archive = dir.join("engine.zip");
+        engine_archive(&archive);
+
+        expand_engine(&archive, &root).expect("a plain folder takes the engine");
+        assert!(root.join("tessdata").join("configs").join("pdf").is_file());
+    }
+
+    #[test]
+    fn a_language_installs_into_a_plain_folder() {
+        let dir = scratch_dir("model-plain");
+        let root = dir.join("tesseract");
+        fs::create_dir_all(&root).unwrap();
+        let temp = root.join(".incoming-eng");
+        fs::write(&temp, b"model bytes").unwrap();
+        let artifact = Artifact {
+            url: "https://example.invalid/eng.traineddata".into(),
+            size: 11,
+            sha256: String::new(),
+            name: None,
+        };
+
+        install_model(&temp, &root, &artifact, "eng").expect("a plain folder takes the model");
+        assert!(root.join("tessdata").join("eng.traineddata").is_file());
+    }
+
+    #[test]
+    fn the_runtime_folder_may_not_be_a_junction() {
+        let dir = scratch_dir("root-junction");
+        let elsewhere = dir.join("elsewhere");
+        fs::create_dir_all(&elsewhere).unwrap();
+        let root = dir.join("tesseract");
+        junction(&root, &elsewhere);
+
+        assert!(refuse_redirects(&dir, &root).is_err());
+        assert!(refuse_redirects(&dir, &dir.join("not-yet-created")).is_ok());
+    }
+
+    #[test]
+    fn the_engine_is_not_written_through_a_junction() {
+        let dir = scratch_dir("engine-junction");
+        let root = dir.join("tesseract");
+        let elsewhere = dir.join("elsewhere");
+        fs::create_dir_all(root.join("tessdata")).unwrap();
+        fs::create_dir_all(&elsewhere).unwrap();
+        junction(&root.join("tessdata").join("configs"), &elsewhere);
+        let archive = dir.join("engine.zip");
+        engine_archive(&archive);
+
+        assert!(expand_engine(&archive, &root).is_err());
+        assert!(
+            !elsewhere.join("pdf").exists(),
+            "the write escaped the root"
+        );
+    }
+
+    #[test]
+    fn a_language_is_not_installed_through_a_junction() {
+        let dir = scratch_dir("model-junction");
+        let root = dir.join("tesseract");
+        let elsewhere = dir.join("elsewhere");
+        fs::create_dir_all(&root).unwrap();
+        fs::create_dir_all(&elsewhere).unwrap();
+        junction(&root.join("tessdata"), &elsewhere);
+        let temp = root.join(".incoming-eng");
+        fs::write(&temp, b"model bytes").unwrap();
+        let artifact = Artifact {
+            url: "https://example.invalid/eng.traineddata".into(),
+            size: 11,
+            sha256: String::new(),
+            name: None,
+        };
+
+        assert!(install_model(&temp, &root, &artifact, "eng").is_err());
+        assert!(
+            !elsewhere.join("eng.traineddata").exists(),
+            "the write escaped the root"
+        );
     }
 
     #[test]
