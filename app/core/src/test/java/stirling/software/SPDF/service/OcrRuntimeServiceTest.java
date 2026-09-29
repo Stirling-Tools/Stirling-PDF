@@ -152,11 +152,87 @@ class OcrRuntimeServiceTest {
                 server.stop(0);
             }
         }
+
+        /**
+         * A real request starts over https, so this rule is what keeps a redirect from dropping to
+         * plain http. Tested from http to file:, which needs no certificate to set up.
+         */
+        @Test
+        @Timeout(20)
+        @DisplayName("a redirect keeps the scheme the request started with")
+        void refusesARedirectThatChangesScheme() throws Exception {
+            Path elsewhere = fileWith("elsewhere.txt", "not for the network");
+            HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+            server.createContext(
+                    "/start",
+                    exchange -> {
+                        exchange.getResponseHeaders().add("Location", fileUrl(elsewhere));
+                        exchange.sendResponseHeaders(302, -1);
+                        exchange.close();
+                    });
+            server.start();
+            try {
+                OcrRuntimeService svc = new OcrRuntimeService(new ApplicationProperties());
+                URI start =
+                        URI.create("http://127.0.0.1:" + server.getAddress().getPort() + "/start");
+
+                IOException e = assertThrows(IOException.class, () -> svc.open(start).close());
+                assertTrue(e.getMessage().contains("redirect"), e.getMessage());
+            } finally {
+                server.stop(0);
+            }
+        }
     }
 
     @Nested
     @DisplayName("download")
     class Download {
+
+        /**
+         * Local artefacts come from a local catalogue: the offline mirror these tests stand for.
+         */
+        @BeforeEach
+        void useALocalCatalogue() {
+            ApplicationProperties properties = new ApplicationProperties();
+            properties
+                    .getSystem()
+                    .getOcr()
+                    .setManifestUrl(fileUrl(tmp.resolve("ocr-manifest.json")));
+            service = new OcrRuntimeService(properties);
+        }
+
+        @Test
+        @DisplayName("an https catalogue may not name a local file")
+        void aRemoteCatalogueMayNotNameALocalFile() throws IOException {
+            Path source = fileWith("local.bin", "tesseract");
+            OcrArtifact artifact =
+                    new OcrArtifact(
+                            fileUrl(source), Files.size(source), sha256(source), "5.4.0", "engine");
+            // The default catalogue is the https release.
+            OcrRuntimeService remote = new OcrRuntimeService(new ApplicationProperties());
+            Path target = tmp.resolve("out.bin");
+
+            assertThrows(IOException.class, () -> remote.download(artifact, target, "engine"));
+            assertFalse(Files.exists(target));
+        }
+
+        @Test
+        @DisplayName("a catalogue on this disk may not name a file on another machine's share")
+        void aLocalCatalogueMayNotNameAnotherMachinesShare() {
+            OcrArtifact artifact =
+                    new OcrArtifact(
+                            "file://mirror.invalid/share/eng.traineddata",
+                            11,
+                            "0".repeat(64),
+                            null,
+                            "eng");
+
+            IOException e =
+                    assertThrows(
+                            IOException.class,
+                            () -> service.download(artifact, tmp.resolve("out.bin"), "eng"));
+            assertTrue(e.getMessage().startsWith("Only a catalogue"), e.getMessage());
+        }
 
         @Test
         @DisplayName("accepts a file whose SHA-256 matches the catalogue")

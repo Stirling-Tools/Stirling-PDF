@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
@@ -461,6 +462,7 @@ public class OcrRuntimeService {
             throw new IOException("The OCR catalogue lists " + label + " without a SHA-256");
         }
         URI uri = validatedUri(artifact.url());
+        requireLocalFileFromLocalCatalogue(uri);
         progress.set(new Progress(label, 0, artifact.size()));
         long written = 0;
         // Copied in chunks rather than with Files.copy so the byte count can be
@@ -497,18 +499,36 @@ public class OcrRuntimeService {
     }
 
     /**
-     * Only https and local files are accepted.
-     *
-     * <p>Plain http would let whoever can rewrite the traffic rewrite the manifest and the digests
-     * it contains in the same breath, which makes the checksum theatre rather than a check.
+     * A catalogue may name a local file only when it is itself a local file on the same disk or
+     * share: the offline mirror. From an https catalogue, a {@code file:} artefact would have the
+     * server read whatever path it named, or open a connection to another machine's share.
      */
+    private void requireLocalFileFromLocalCatalogue(URI artefact) throws IOException {
+        if (!"file".equalsIgnoreCase(artefact.getScheme())) {
+            return;
+        }
+        URI catalogue = validatedUri(manifestUrl());
+        boolean sameMirror =
+                "file".equalsIgnoreCase(catalogue.getScheme())
+                        && Objects.equals(authorityOf(catalogue), authorityOf(artefact));
+        if (!sameMirror) {
+            throw new IOException(
+                    "Only a catalogue that is itself a local file may name local files, and only on"
+                            + " its own disk or share: "
+                            + artefact);
+        }
+    }
+
+    private static String authorityOf(URI uri) {
+        return uri.getAuthority() == null ? null : uri.getAuthority().toLowerCase(Locale.ROOT);
+    }
+
     /**
      * Refuses to fetch an artefact aimed somewhere the server should not reach.
      *
-     * <p>The install endpoints are deliberately not admin-only, so on a self-hosted server any user
-     * can trigger a download. Without this, a catalogue could point the server at loopback or at a
-     * cloud metadata address and use it as a probe - the classic SSRF shape, and what Aikido
-     * flagged on this code.
+     * <p>The server makes these requests itself. Without this, a catalogue could point it at
+     * loopback or at a cloud metadata address and use it as a probe - the classic SSRF shape, and
+     * what Aikido flagged on this code.
      *
      * <p>A flat ban on private addresses would break the thing this feature exists for, though: an
      * air-gapped or corporate install points {@code system.ocr.manifestUrl} at an internal mirror,
@@ -573,6 +593,12 @@ public class OcrRuntimeService {
         }
     }
 
+    /**
+     * Only https and local files are accepted.
+     *
+     * <p>Plain http would let whoever can rewrite the traffic rewrite the manifest and the digests
+     * it contains in the same breath, which makes the checksum theatre rather than a check.
+     */
     static URI validatedUri(String url) throws IOException {
         if (url == null || url.isBlank()) {
             throw new IOException("No OCR catalogue address configured");
@@ -622,6 +648,12 @@ public class OcrRuntimeService {
                 URI next = redirectTarget(response, current);
                 if (next != null) {
                     response.body().close();
+                    // validatedUri admits the first hop only; a hop to plain http, or to file:,
+                    // would slip past it and past the host check above, which reads https alone.
+                    if (!sameScheme(uri, next)) {
+                        throw new IOException(
+                                "Refusing a redirect from " + uri.getScheme() + " to " + next);
+                    }
                     current = next;
                     continue;
                 }
@@ -638,6 +670,10 @@ public class OcrRuntimeService {
             Thread.currentThread().interrupt();
             throw new IOException("Interrupted fetching " + uri, e);
         }
+    }
+
+    private static boolean sameScheme(URI first, URI next) {
+        return first.getScheme() != null && first.getScheme().equalsIgnoreCase(next.getScheme());
     }
 
     /** The next hop for a redirect response, or {@code null} when this is the final answer. */
