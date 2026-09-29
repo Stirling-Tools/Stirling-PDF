@@ -4,12 +4,13 @@ Wrap raw CFF/Type1C data (extracted from PDFs) as OpenType-CFF for web compatibi
 Builds proper Unicode cmap from PDF ToUnicode data.
 """
 
-import sys
 import re
-from pathlib import Path
+import sys
 from io import BytesIO
-from fontTools.ttLib import TTFont, newTable
+from pathlib import Path
+
 from fontTools.cffLib import CFFFontSet
+from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._c_m_a_p import cmap_format_4, cmap_format_12
 from fontTools.ttLib.tables._n_a_m_e import NameRecord
 from fontTools.ttLib.tables.O_S_2f_2 import Panose
@@ -117,15 +118,11 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
 
         # Get glyph names
         if hasattr(cff_font, "charset") and cff_font.charset is not None:
-            glyph_order = [".notdef"] + [
-                name for name in cff_font.charset if name != ".notdef"
-            ]
+            glyph_order = [".notdef"] + [name for name in cff_font.charset if name != ".notdef"]
         else:
             # Fallback to CharStrings keys
             charstrings = cff_font.CharStrings
-            glyph_order = [".notdef"] + [
-                name for name in charstrings.keys() if name != ".notdef"
-            ]
+            glyph_order = [".notdef"] + [name for name in charstrings.keys() if name != ".notdef"]
 
         otf.setGlyphOrder(glyph_order)
 
@@ -139,9 +136,7 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
 
         # Get defaults from CFF Private dict
         private_dict = getattr(cff_font, "Private", None)
-        default_width = (
-            getattr(private_dict, "defaultWidthX", 500) if private_dict else 500
-        )
+        default_width = getattr(private_dict, "defaultWidthX", 500) if private_dict else 500
 
         # Calculate bounding box, widths, and LSBs
         x_min = 0
@@ -280,9 +275,7 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
 
             # For CID fonts: glyph names are "cid00123" (5-digit zero-padded)
             # For non-CID fonts: glyph names vary but GID == array index
-            is_cid_font = any(
-                gn.startswith("cid") for gn in glyph_order[1:6]
-            )  # Check first few non-.notdef glyphs
+            is_cid_font = any(gn.startswith("cid") for gn in glyph_order[1:6])  # Check first few non-.notdef glyphs
 
             for gid, unicode_val in gid_to_unicode.items():
                 if unicode_val > 0:
@@ -355,14 +348,10 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
         cmap4_mac.cmap = {cp: gn for cp, gn in unicode_to_glyph.items() if cp <= 0xFFFF}
         cmap_tables.append(cmap4_mac)
 
-        cmap.tables = [t for t in cmap_tables if t.cmap] or [
-            cmap4_win
-        ]  # Ensure at least one
+        cmap.tables = [t for t in cmap_tables if t.cmap] or [cmap4_win]  # Ensure at least one
         otf["cmap"] = cmap
 
-        print(
-            f"Built cmap with {len(unicode_to_glyph)} Unicode mappings", file=sys.stderr
-        )
+        print(f"Built cmap with {len(unicode_to_glyph)} Unicode mappings", file=sys.stderr)
 
         # === Create OS/2 table with correct metrics ===
         os2 = newTable("OS/2")
@@ -515,9 +504,7 @@ Examples:
     # Add named arguments
     parser.add_argument("--input", dest="input_file", help="Input CFF file path")
     parser.add_argument("--output", dest="output_file", help="Output OTF file path")
-    parser.add_argument(
-        "--to-unicode", dest="tounicode_file", help="ToUnicode mapping file path"
-    )
+    parser.add_argument("--to-unicode", dest="tounicode_file", help="ToUnicode mapping file path")
 
     # Add positional arguments for backward compatibility
     parser.add_argument("input_pos", nargs="?", help="Input CFF file (positional)")

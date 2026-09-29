@@ -1,12 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
-import {
-  DocumentsIcon,
-  DownloadIcon,
-  PoliciesIcon,
-  UsersIcon,
-} from "@portal/components/icons";
+import { Icon } from "@app/ui/Icon";
 import { money } from "@portal/components/procurement/format";
 import {
   buildQuote,
@@ -16,6 +11,7 @@ import {
 } from "@portal/api/procurement";
 import { LegalDocumentModal } from "@portal/components/procurement/ProcurementExtras";
 import { StepModalHeader } from "@portal/components/shared/StepModalHeader";
+import "@portal/theme/surface.css";
 import "@portal/views/Procurement.css";
 
 const STEPS = ["volume", "plan", "details", "review"] as const;
@@ -216,7 +212,7 @@ export function QuoteBuilder({
       <div className="portal-qb__body">
         {step === 0 && (
           <Step
-            icon={<DocumentsIcon size={22} />}
+            icon={<Icon name="file-text" size={22} />}
             title={t("portal.procurement.builder.s1Title")}
             sub={t("portal.procurement.builder.s1Sub")}
           >
@@ -292,7 +288,7 @@ export function QuoteBuilder({
 
         {step === 1 && (
           <Step
-            icon={<PoliciesIcon size={22} />}
+            icon={<Icon name="shield-check" size={22} />}
             title={t("portal.procurement.builder.s2Title")}
             sub={t("portal.procurement.builder.s2Sub")}
           >
@@ -368,7 +364,7 @@ export function QuoteBuilder({
 
         {step === 2 && (
           <Step
-            icon={<UsersIcon size={22} />}
+            icon={<Icon name="users" size={22} />}
             title={t("portal.procurement.builder.s3Title")}
             sub={t("portal.procurement.builder.s3Sub")}
           >
@@ -526,7 +522,7 @@ export function QuoteBuilder({
             PDF and the Stripe quote exactly. */}
         {step === REVIEW_STEP && issued && (
           <div className="portal-qb__papertray">
-            <div className="portal-qb__paper">
+            <div className="portal-surface portal-qb__paper">
               <div className="portal-qb__paper-head">
                 <div>
                   <div className="portal-qb__paper-brand">Stirling PDF</div>
@@ -551,7 +547,7 @@ export function QuoteBuilder({
                     variant="tertiary"
                     size="sm"
                     className="portal-qb__paper-download"
-                    leftSection={<DownloadIcon size={14} />}
+                    leftSection={<Icon name="download" size={14} />}
                     loading={downloading}
                     onClick={onDownload}
                   >

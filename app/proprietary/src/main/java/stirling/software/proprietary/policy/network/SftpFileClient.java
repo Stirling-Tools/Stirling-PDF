@@ -65,7 +65,7 @@ final class SftpFileClient implements RemoteFileClient {
             }
             Session session = jsch.getSession(config.username(), config.host(), config.port());
             if (config.password() != null) {
-                session.setPassword(config.password());
+                session.setPassword(config.password().getBytes(StandardCharsets.UTF_8));
             }
             if (config.hostKeyFingerprint() != null) {
                 // Pinned key: only the configured fingerprint is ever accepted.

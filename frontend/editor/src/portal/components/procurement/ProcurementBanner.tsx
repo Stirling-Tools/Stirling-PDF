@@ -1,21 +1,23 @@
-import { useView } from "@portal/contexts/ViewContext";
+import { useUI } from "@portal/contexts/UIContext";
 import { DealStatusHero } from "@portal/components/procurement/DealStatusHero";
 import type { ProcurementController } from "@portal/components/procurement/useProcurement";
 
 /**
- * The deal-status hero, wired to a shared ProcurementController. Rendered as the Home hero card's
- * footer once a deal is underway; assumes an active deal (controller.data present).
+ * The deal-status hero and the dialogs must share the same controller instance.
  */
 export function ControlledDealStatusHero({
   controller,
+  readOnly = false,
 }: {
   controller: ProcurementController;
+  readOnly?: boolean;
 }) {
-  const { setActiveView } = useView();
+  const { openSettings } = useUI();
   if (!controller.data) return null;
   return (
     <DealStatusHero
       snapshot={controller.data}
+      readOnly={readOnly}
       busy={controller.busy}
       canSchedule={controller.isLinked}
       onExpand={() =>
@@ -26,7 +28,7 @@ export function ControlledDealStatusHero({
       }
       onAcceptQuote={() => void controller.onAcceptQuote()}
       onLicense={() => controller.setExtra("license")}
-      onInvite={() => setActiveView("users")}
+      onInvite={() => openSettings("users")}
       onSchedule={() => controller.setExtra("schedule")}
       onManageTrial={() => controller.setExtra("trial")}
       onDocuments={() => controller.setExtra("documents")}

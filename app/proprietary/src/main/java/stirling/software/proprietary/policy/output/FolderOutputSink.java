@@ -45,6 +45,13 @@ public class FolderOutputSink implements PolicyOutputSink {
     static final String TYPE = FolderAccessGuard.FOLDER_TYPE;
     static final String DIRECTORY_OPTION = "directory";
 
+    /**
+     * When set, an output overwrites the same-named file instead of picking a unique name.
+     * Processing folders use it to process in place: the watched file becomes its result, and the
+     * ledger row recorded at the result's version keeps the sweep from re-claiming it.
+     */
+    static final String REPLACE_OPTION = "replace";
+
     // Staging entries are renamed away within one delivery; anything older is a crash leftover.
     private static final Duration STALE_TMP_AGE = Duration.ofDays(1);
 
@@ -72,20 +79,37 @@ public class FolderOutputSink implements PolicyOutputSink {
         Path targetDir = accessGuard.requirePermitted(directoryOf(spec));
         Files.createDirectories(targetDir);
         Path canonicalDir = FolderIdentities.canonicalDir(targetDir);
-        Path tmpDir = canonicalDir.resolve(".stirling").resolve("tmp");
+        Path tmpDir = stirlingDir(canonicalDir).resolve("tmp");
         Files.createDirectories(tmpDir);
         sweepStaleTmp(tmpDir);
 
+        boolean replace = Boolean.parseBoolean(String.valueOf(spec.options().get(REPLACE_OPTION)));
+        // In place means the input's name: a renaming step must not drop its result beside the
+        // watched file. One-in-one-out only; a splitting pipeline lands its outputs alongside.
+        String inputName =
+                delivery.inputs().primary().size() == 1
+                        ? delivery.inputs().primary().get(0).getFilename()
+                        : null;
+        boolean replaceInPlace = replace && outputs.size() == 1 && inputName != null;
         List<ResultFile> results = new ArrayList<>();
         for (int i = 0; i < outputs.size(); i++) {
             Resource resource = outputs.get(i);
-            String name = OutputNames.safeName(resource.getFilename(), i);
+            String name =
+                    OutputNames.safeName(replaceInPlace ? inputName : resource.getFilename(), i);
             Path staged = tmpDir.resolve(UUID.randomUUID().toString());
             String contentHash = stage(resource, staged, delivery.policyId() != null);
             long size = Files.size(staged);
             // Size and mtime survive the rename.
             String gate = FolderIdentities.statGate(staged);
-            Path target = moveIntoPlace(delivery, canonicalDir, name, staged, gate, contentHash);
+            Path target =
+                    moveIntoPlace(
+                            delivery,
+                            canonicalDir,
+                            name,
+                            staged,
+                            gate,
+                            contentHash,
+                            replaceInPlace);
             String contentType =
                     MediaTypeFactory.getMediaType(name)
                             .orElse(MediaType.APPLICATION_OCTET_STREAM)
@@ -135,8 +159,42 @@ public class FolderOutputSink implements PolicyOutputSink {
             String name,
             Path staged,
             String gate,
-            String contentHash)
+            String contentHash,
+            boolean replace)
             throws IOException {
+        if (replace) {
+            Path target = dir.resolve(name);
+            // Archive before the ledger row flips DONE, so a restore that reads DONE finds the
+            // original safe, never mid-move.
+            Path archived = archiveOriginal(dir, target);
+            try {
+                if (delivery.policyId() != null) {
+                    processedLedger.recordOutput(
+                            delivery.policyId(), target.toString(), gate, contentHash);
+                }
+                Files.move(
+                        staged,
+                        target,
+                        StandardCopyOption.ATOMIC_MOVE,
+                        StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException | RuntimeException failed) {
+                if (archived != null) {
+                    try {
+                        Files.move(archived, target, StandardCopyOption.ATOMIC_MOVE);
+                    } catch (IOException lost) {
+                        log.warn(
+                                "Replace of {} failed and its original could not be put back: {}",
+                                target,
+                                lost.getMessage());
+                    }
+                }
+                if (delivery.policyId() != null) {
+                    processedLedger.forgetOutput(delivery.policyId(), target.toString(), gate);
+                }
+                throw failed;
+            }
+            return target;
+        }
         while (true) {
             Path target = uniqueTarget(dir, name);
             if (delivery.policyId() != null) {
@@ -153,6 +211,69 @@ public class FolderOutputSink implements PolicyOutputSink {
                 log.debug("Output name {} taken concurrently; re-picking", target);
             }
         }
+    }
+
+    /** Where a directory's pre-processing originals are kept, beside the staging dir. */
+    public static Path originalsDir(Path dir) {
+        return dir.resolve(".stirling").resolve("originals");
+    }
+
+    /**
+     * Where a same-name re-drop's original goes once the canonical slot is taken. A subdirectory,
+     * not a numbered sibling: a restore brings back every regular file directly under {@link
+     * #originalsDir}, so a sibling would be restored as a file the watched folder never held.
+     *
+     * <p>Canonical stays with the first original, which is wrong when the user replaced the file
+     * with a different document of the same name; telling that apart needs the previous output's
+     * content hash, which the next claim clears from the ledger row.
+     */
+    private static Path supersededDir(Path dir) {
+        return originalsDir(dir).resolve("superseded");
+    }
+
+    /**
+     * The folder's workspace root, created hidden: a dot prefix for POSIX and the app's own
+     * listings, plus the DOS attribute for Explorer where the filesystem has one.
+     */
+    private static Path stirlingDir(Path dir) throws IOException {
+        Path root = dir.resolve(".stirling");
+        Files.createDirectories(root);
+        try {
+            Files.setAttribute(root, "dos:hidden", true);
+        } catch (UnsupportedOperationException | IOException e) {
+            // Not a DOS filesystem; the dot prefix already hides it there.
+        }
+        return root;
+    }
+
+    /**
+     * Move the target into {@code .stirling/originals} before a replace overwrites it, returning
+     * the archived path, or null when nothing is at the target. Throws if an existing target cannot
+     * be archived, so the caller aborts before overwriting and never destroys an unpreserved
+     * original. With the canonical slot already taken, the kept original stays there and this
+     * content goes to {@link #supersededDir}.
+     *
+     * <p>Plain move, not {@code ATOMIC_MOVE}: the archive is hidden under {@code .stirling} so
+     * needs no atomic visibility, and a plain move survives a cross-device archive dir where {@code
+     * ATOMIC_MOVE} would throw.
+     */
+    private static Path archiveOriginal(Path dir, Path target) throws IOException {
+        if (!Files.exists(target)) {
+            return null;
+        }
+        stirlingDir(dir);
+        Path originals = originalsDir(dir);
+        Files.createDirectories(originals);
+        String name = target.getFileName().toString();
+        Path archived = originals.resolve(name);
+        if (Files.exists(archived)) {
+            // Kept aside, so the overwrite cannot destroy this content either.
+            Path superseded = supersededDir(dir);
+            Files.createDirectories(superseded);
+            archived = uniqueTarget(superseded, name);
+        }
+        Files.move(target, archived);
+        return archived;
     }
 
     /** Best-effort removal of staging leftovers from crashed deliveries. */

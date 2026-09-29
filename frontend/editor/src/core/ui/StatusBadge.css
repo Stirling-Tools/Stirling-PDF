@@ -68,7 +68,7 @@
   --sui-status-c: var(--color-red-dark);
 }
 .sui-status--info {
-  --sui-status-c: var(--c-primary-hover);
+  --sui-status-c: var(--c-accent-text);
 }
 .sui-status--purple {
   --sui-status-c: var(--color-purple-dark);

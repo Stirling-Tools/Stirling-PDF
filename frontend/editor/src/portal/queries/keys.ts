@@ -1,4 +1,6 @@
 import type { Tier } from "@portal/contexts/TierContext";
+import type { FileRunEventScope } from "@portal/api/fileRunEvents";
+import { pipelineQueryKeys } from "@app/policies/queryKeys";
 
 /**
  * The portal's TanStack Query keys, in one place. Convention:
@@ -10,15 +12,27 @@ import type { Tier } from "@portal/contexts/TierContext";
  */
 export const qk = {
   // Tier-independent
-  policiesList: () => ["portal", "policies", "list"] as const,
+  ...pipelineQueryKeys,
   policyRuns: () => ["portal", "policies", "runs"] as const,
   sources: () => ["portal", "sources"] as const,
-  pipelines: () => ["portal", "pipelines"] as const,
+  policyPermissions: () => ["portal", "policies", "permissions"] as const,
   fleetStats: () => ["portal", "fleetStats"] as const,
   appConfig: () => ["portal", "appConfig"] as const,
+  freeTier: () => ["portal", "freeTier"] as const,
+  /** Storage-encryption migration progress, polled while a run is active. */
+  encryptionMigration: () => ["portal", "encryptionMigration"] as const,
+  /** Usage accrued on this instance since the last sync; self-hosted only. */
+  localUsage: () => ["portal", "localUsage"] as const,
+  // Keyed on scope: the open queue and the closed one are different reads.
+  fileRunEvents: (scope: FileRunEventScope) =>
+    ["portal", "fileRunEvents", scope] as const,
+  /** Prefix matching both scopes, for invalidating the pair. */
+  fileRunEventsAll: () => ["portal", "fileRunEvents"] as const,
   // Keyed on linkage: an unlinked account has no deal to read, so linking must not
   // serve the unlinked (null) snapshot back from cache.
   procurement: (linked: boolean) => ["portal", "procurement", linked] as const,
+  // Same reasoning: an unlinked instance has no wallet in the cloud.
+  wallet: (linked: boolean) => ["portal", "wallet", linked] as const,
 
   // Tier-dependent
   documents: (tier: Tier) => ["portal", "documents", tier] as const,

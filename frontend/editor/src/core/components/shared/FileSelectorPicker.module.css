@@ -134,7 +134,7 @@
 }
 
 .slimTabUpload:hover:not(:disabled) {
-  color: var(--mantine-color-blue-filled);
+  color: var(--c-accent-text);
   background: color-mix(in srgb, var(--mantine-color-blue-1) 35%, transparent);
 }
 

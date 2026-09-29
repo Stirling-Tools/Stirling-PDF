@@ -2,7 +2,7 @@
  * Account-link fixtures. Types live in api/link.ts (the backend contract);
  * this module only builds fake data for Storybook and tests.
  *
- * "Mode A" combined billing: a self-hosted instance links the org's SaaS account
+ * Combined billing: a self-hosted instance links the org's SaaS account
  * so its unattended calls bill against the org wallet. Two surfaces:
  *
  *   - THIS instance: the local backend (`POST /api/v1/account-link/link`,

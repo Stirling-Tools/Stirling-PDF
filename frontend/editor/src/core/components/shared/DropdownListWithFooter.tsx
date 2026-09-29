@@ -9,8 +9,7 @@ import {
   TextInput,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
-import SearchIcon from "@mui/icons-material/Search";
+import { Icon } from "@app/ui/Icon";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 export interface DropdownItem {
@@ -56,7 +55,7 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
   value,
   onChange,
   items,
-  placeholder = "Select option",
+  placeholder,
   disabled = false,
   label,
   header,
@@ -73,6 +72,7 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
   zIndex = Z_INDEX_AUTOMATE_DROPDOWN,
 }) => {
   const { t } = useTranslation();
+  const resolvedPlaceholder = placeholder ?? t("dropdownList.selectOption");
   const [searchTerm, setSearchTerm] = useState("");
 
   const isMultiValue = Array.isArray(value);
@@ -101,7 +101,7 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
 
   const getDisplayText = () => {
     if (selectedValues.length === 0) {
-      return placeholder;
+      return resolvedPlaceholder;
     } else if (selectedValues.length === 1) {
       const selectedItem = items.find(
         (item) => item.value === selectedValues[0],
@@ -134,7 +134,11 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
         zIndex={zIndex}
       >
         <Popover.Target>
+          {/* A real button: Popover.Target stamps aria-haspopup/aria-expanded on
+              its child, and those are only permitted on an actual control. */}
           <Box
+            component="button"
+            type="button"
             style={{
               border:
                 "light-dark(1px solid var(--mantine-color-gray-3), 1px solid var(--mantine-color-dark-4))",
@@ -142,6 +146,9 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
               padding: "8px 12px",
               backgroundColor:
                 "light-dark(var(--mantine-color-white), var(--mantine-color-dark-6))",
+              color: "inherit",
+              textAlign: "left",
+              width: "100%",
               opacity: disabled ? 0.6 : 1,
               cursor: disabled ? "not-allowed" : "pointer",
               minHeight: "36px",
@@ -153,9 +160,10 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
             <Text size="sm" style={{ flex: 1 }}>
               {getDisplayText()}
             </Text>
-            <UnfoldMoreIcon
+            <Icon
+              name="chevrons-up-down"
+              size={"1rem"}
               style={{
-                fontSize: "1rem",
                 color:
                   "light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-2))",
               }}
@@ -189,7 +197,7 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
                   placeholder={t("dropdownList.searchPlaceholder", "Search...")}
                   value={searchTerm}
                   onChange={handleSearchChange}
-                  leftSection={<SearchIcon style={{ fontSize: "1rem" }} />}
+                  leftSection={<Icon name="search" size={"1rem"} />}
                   size="sm"
                   style={{ width: "100%" }}
                 />
@@ -201,8 +209,8 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
                 <Box style={{ padding: "12px", textAlign: "center" }}>
                   <Text size="sm" c="dimmed">
                     {searchable && searchTerm
-                      ? "No results found"
-                      : "No items available"}
+                      ? t("dropdownList.noResults")
+                      : t("dropdownList.noItems")}
                   </Text>
                 </Box>
               ) : (

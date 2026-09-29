@@ -7,6 +7,12 @@ body {
   overscroll-behavior: none;
 }
 
+/* Give the mount node an explicit height so full-height layouts can size against
+   it with percentages. */
+#root {
+  height: 100%;
+}
+
 body {
   font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
@@ -62,7 +68,7 @@ code {
 }
 
 .stirling-link {
-  color: var(--mantine-color-blue-6);
+  color: var(--c-accent-text);
   text-decoration: none;
   font-weight: 500;
   transition: color 0.2s ease;

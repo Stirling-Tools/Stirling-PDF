@@ -10,10 +10,14 @@ interface EncryptedPdfUnlockModalProps {
   password: string;
   errorMessage?: string | null;
   isProcessing: boolean;
-  remainingCount: number;
+  /** How many other locked files are queued behind this one. Omit where there is only ever one. */
+  remainingCount?: number;
+  /** Confirm wording, where the caller's own reads better than the default. */
+  confirmLabel?: string;
   onPasswordChange: (value: string) => void;
   onUnlock: () => void;
-  onUnlockAll: () => void;
+  /** Only needed alongside a non-zero {@link EncryptedPdfUnlockModalProps.remainingCount}. */
+  onUnlockAll?: () => void;
   onSkip: () => void;
 }
 
@@ -23,7 +27,8 @@ const EncryptedPdfUnlockModal = ({
   password,
   errorMessage,
   isProcessing,
-  remainingCount,
+  remainingCount = 0,
+  confirmLabel,
   onPasswordChange,
   onUnlock,
   onUnlockAll,
@@ -73,7 +78,7 @@ const EncryptedPdfUnlockModal = ({
             autoFocus
           />
           {errorMessage ? (
-            <Text c="red" size="sm">
+            <Text c="var(--color-red-dark)" size="sm" role="alert">
               {errorMessage}
             </Text>
           ) : null}
@@ -89,7 +94,7 @@ const EncryptedPdfUnlockModal = ({
             {t("encryptedPdfUnlock.skip", "Skip for now")}
           </Button>
           <Group gap="xs">
-            {remainingCount > 0 && (
+            {remainingCount > 0 && onUnlockAll && (
               <Button
                 variant="secondary"
                 onClick={onUnlockAll}
@@ -106,7 +111,8 @@ const EncryptedPdfUnlockModal = ({
               loading={isProcessing}
               disabled={password.trim().length === 0}
             >
-              {t("encryptedPdfUnlock.unlock", "Unlock & Continue")}
+              {confirmLabel ??
+                t("encryptedPdfUnlock.unlock", "Unlock & Continue")}
             </Button>
           </Group>
         </Group>

@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import AppsIcon from "@mui/icons-material/AppsRounded";
+import { Icon } from "@app/ui/Icon";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import {
   useNavigationState,
@@ -65,7 +65,9 @@ const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({
   return (
     <div className="mt-4 mb-2">
       <QuickAccessButton
-        icon={<AppsIcon sx={{ fontSize: isActive ? "1.875rem" : "1.5rem" }} />}
+        icon={
+          <Icon name="layout-grid" size={isActive ? "1.875rem" : "1.5rem"} />
+        }
         label={t("quickAccess.allTools", "Tools")}
         isActive={isActive}
         onClick={handleNavClick}

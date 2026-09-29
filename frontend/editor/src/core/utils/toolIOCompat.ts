@@ -14,6 +14,8 @@ import {
   type ToolIOSpec,
   type ToolIOTable,
 } from "@app/types/toolIO";
+import { detectFileExtension, getFileFormats } from "@app/utils/fileUtils";
+import type { StirlingFileStub } from "@app/types/fileContext";
 
 export type ToolDiagnosticSeverity = "ERROR" | "WARN" | "INFO";
 
@@ -102,12 +104,18 @@ export function resolveOutput(
   for (const rule of spec.cases ?? []) {
     let allHold = true;
     for (const condition of rule.when) {
-      if (!parameters || !(condition.param in parameters)) {
+      let raw: unknown;
+      if (parameters && condition.param in parameters) {
+        raw = parameters[condition.param];
+      } else if (condition.default !== undefined) {
+        // The caller omitted it, so it takes the endpoint's default.
+        raw = condition.default;
+      } else {
         sawUnknownParam = true;
         allHold = false;
         continue;
       }
-      const value = normalise(parameters[condition.param]);
+      const value = normalise(raw);
       allHold &&= condition.matches.some((match) => normalise(match) === value);
     }
     if (allHold) {
@@ -251,6 +259,27 @@ export function toolAcceptsFormat(
 ): boolean {
   const spec = toolIOFor(operation, toolIO);
   return spec ? acceptsFormat(spec, format) : true;
+}
+
+/**
+ * Uses detected encryption and endpoint input restrictions. Encrypted PDFs require declared support;
+ * undeclared endpoints keep their own validation for other inputs.
+ */
+export function toolAcceptsFile(
+  operation: string | undefined,
+  file: Pick<StirlingFileStub, "name" | "type" | "processedFile">,
+): boolean {
+  const spec = operation ? toolIOFor(operation) : undefined;
+  const formats = getFileFormats(file);
+  if (
+    formats.includes("PDF_ENCRYPTED") &&
+    (!spec || !acceptsFormat(spec, "PDF_ENCRYPTED"))
+  )
+    return false;
+  if (!spec || spec.accepts.includes("ANY")) return true;
+  if (spec.inputExtensions)
+    return spec.inputExtensions.includes(detectFileExtension(file.name));
+  return formats.some((format) => acceptsFormat(spec, format));
 }
 
 export function hasBlockingDiagnostics(diagnostics: ToolDiagnostic[]): boolean {

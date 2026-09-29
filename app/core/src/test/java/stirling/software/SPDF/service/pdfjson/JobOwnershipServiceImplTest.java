@@ -25,6 +25,29 @@ class JobOwnershipServiceImplTest {
         field.set(service, userService);
     }
 
+    @Test
+    void explicitOwnerScopesABackgroundJobWithoutAnAuthenticatedCaller() {
+        assertEquals("alice:job", service.createScopedJobKey("job", "alice"));
+        verifyNoInteractions(userService);
+    }
+
+    @Test
+    void explicitOwnerDoesNotUseTheTriggeringUser() {
+        when(userService.getCurrentUsername()).thenReturn("bob");
+        String key = service.createScopedJobKey("job", "alice");
+        assertThrows(SecurityException.class, () -> service.validateJobAccess(key));
+        when(userService.getCurrentUsername()).thenReturn("alice");
+        assertTrue(service.validateJobAccess(key));
+    }
+
+    @Test
+    void explicitOwnershipRejectsMissingAndAnonymousOwners() {
+        for (String owner : new String[] {null, "", "  ", "anonymousUser"}) {
+            assertThrows(
+                    IllegalArgumentException.class, () -> service.createScopedJobKey("job", owner));
+        }
+    }
+
     // --- getCurrentUserId tests ---
 
     @Test

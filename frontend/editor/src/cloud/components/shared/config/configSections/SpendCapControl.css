@@ -10,7 +10,7 @@
 
 .scc {
   --scc-accent: var(--c-primary);
-  --scc-accent-text: var(--c-primary);
+  --scc-accent-text: var(--c-accent-text);
   --scc-accent-soft: color-mix(in srgb, var(--c-primary) 12%, transparent);
   --scc-accent-border: color-mix(in srgb, var(--c-primary) 25%, transparent);
   --scc-chip-bg: var(--c-surface-sunken);
@@ -24,7 +24,7 @@
 [data-mantine-color-scheme="dark"] .scc {
   /* Chip surface/border track the neutral --c-* tokens (base rule); only the
      brand-azure accent is tuned brighter for dark. */
-  --scc-accent-text: var(--c-primary);
+  --scc-accent-text: var(--c-accent-text);
   --scc-accent-soft: color-mix(in srgb, var(--c-primary) 16%, transparent);
 }
 

@@ -12,7 +12,20 @@
    itself, so it only plays where the bar actually enters from off-screen —
    mirroring the workbench top bar's 280ms ease, upwards instead of downwards. */
 .pdf-viewer-toolbar-dock {
+  container-type: inline-size;
   animation: pdf-viewer-toolbar-in 280ms ease both;
+}
+
+@container (max-width: 38rem) {
+  .pdf-viewer-toolbar-zoom-slider {
+    display: none;
+  }
+}
+
+@container (max-width: 34rem) {
+  .pdf-viewer-toolbar-wide-only {
+    display: none;
+  }
 }
 
 @keyframes pdf-viewer-toolbar-in {
@@ -32,4 +45,13 @@
   .pdf-viewer-toolbar-dock {
     animation: none;
   }
+}
+
+/* The rails' hairline divider, horizontal bar orientation. */
+.pdf-viewer-toolbar__divider {
+  width: 1px;
+  height: 1.25rem;
+  background: var(--c-border-subtle);
+  flex-shrink: 0;
+  margin: 0 0.25rem;
 }

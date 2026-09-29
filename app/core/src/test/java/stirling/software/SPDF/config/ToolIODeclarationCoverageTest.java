@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.model.tool.ToolIOSpec;
+import stirling.software.common.service.ToolIOParameterDefaults;
 
 /**
  * Every document-transforming endpoint must declare its I/O, or it becomes a hole in the
@@ -44,7 +45,10 @@ class ToolIODeclarationCoverageTest {
                     "/api/v1/security/",
                     "/api/v1/convert/",
                     "/api/v1/filter/",
-                    "/api/v1/integration/");
+                    "/api/v1/integration/",
+                    // Just this corner of /api/v1/form/: the only endpoint there that takes a
+                    // document and returns one, so the only one a chain can contain.
+                    "/api/v1/form/form-detection/");
 
     /**
      * Not document transforms, so nothing to declare. A path exempts everything nested under it.
@@ -56,11 +60,16 @@ class ToolIODeclarationCoverageTest {
                     // documents.
                     "/api/v1/convert/pdf/text-editor",
                     "/api/v1/convert/text-editor/pdf",
+                    // Charcode lookup for the v2 editor: returns glyph mappings, not a document.
+                    "/api/v1/general/pdf-text-editor",
                     // Signing sessions, certificate checks and hardware token enumeration; the
                     // signing tool itself is /api/v1/security/cert-sign, which is declared.
                     "/api/v1/security/cert-sign/sessions",
                     "/api/v1/security/cert-sign/validate-certificate",
-                    "/api/v1/security/cert-sign/hardware");
+                    "/api/v1/security/cert-sign/hardware",
+                    // Releases finished jobs and their stored files; server maintenance, takes and
+                    // returns no document.
+                    "/api/v1/general/jobs/cleanup");
 
     private record Scan(Set<String> required, Map<String, ToolIOSpec> declared) {}
 
@@ -234,6 +243,32 @@ class ToolIODeclarationCoverageTest {
     }
 
     @Test
+    void anAbsentParameterResolvesToItsRequestModelDefault() {
+        // A pipeline step often omits a parameter a case branches on. The default is read from the
+        // request model, so the output resolves anyway instead of coming back uncertain.
+
+        // Auto Rotate never sends dryRun; its default (false) means the JSON branch cannot fire.
+        assertEquals(
+                ToolFormat.PDF,
+                spec("/api/v1/misc/auto-rotate-pdf").resolveOutput(Map.of()).format());
+        assertTrue(spec("/api/v1/misc/auto-rotate-pdf").resolveOutput(Map.of()).certain());
+
+        // Change Permissions posts to add-password with no password fields; both default to blank,
+        // so the unencrypted branch fires and it is not mistaken for producing an encrypted PDF.
+        assertEquals(
+                ToolFormat.PDF,
+                spec("/api/v1/security/add-password").resolveOutput(Map.of()).format());
+        assertTrue(spec("/api/v1/security/add-password").resolveOutput(Map.of()).certain());
+    }
+
+    @Test
+    void aRequiredParameterWithNoDefaultStaysUncertainWhenAbsent() {
+        // pdf/text branches on outputFormat, which is required with no default. Absent, its output
+        // is genuinely txt-or-rtf-dependent, so it must remain uncertain rather than assume TEXT.
+        assertFalse(spec("/api/v1/convert/pdf/text").resolveOutput(Map.of()).certain());
+    }
+
+    @Test
     void onlyRemovePasswordAcceptsAnEncryptedDocument() {
         assertTrue(
                 spec("/api/v1/security/remove-password").acceptsFormat(ToolFormat.PDF_ENCRYPTED));
@@ -288,7 +323,11 @@ class ToolIODeclarationCoverageTest {
                     }
                     required.add(full);
                     if (declaration != null) {
-                        declared.put(full, ToolIOSpec.from(declaration));
+                        declared.put(
+                                full,
+                                ToolIOSpec.from(
+                                        declaration,
+                                        param -> ToolIOParameterDefaults.resolve(method, param)));
                     }
                 }
             }

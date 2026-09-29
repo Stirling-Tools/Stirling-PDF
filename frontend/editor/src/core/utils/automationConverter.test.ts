@@ -35,7 +35,7 @@ const registry = {
   // Dynamic endpoint — endpoint depends on parameters.
   convert: {
     operationConfig: {
-      endpoint: (params: Record<string, any>) =>
+      endpoint: (params: Record<string, string>) =>
         `/api/v1/convert/${params.fromExtension}-to-${params.toExtension}`,
     },
   },
@@ -130,7 +130,7 @@ describe("automationConverter", () => {
         compress: {
           operationConfig: {
             endpoint: "/api/v1/misc/compress-pdf",
-            toApiParams: (p: Record<string, any>) => ({
+            toApiParams: (p: Record<string, string>) => ({
               optimizeLevel: p.compressionLevel,
             }),
           },
@@ -250,7 +250,7 @@ describe("automationConverter", () => {
         compress: {
           operationConfig: {
             endpoint: "/api/v1/misc/compress-pdf",
-            toApiParams: (p: Record<string, any>) => ({
+            toApiParams: (p: Record<string, string>) => ({
               optimizeLevel: p.compressionLevel,
             }),
           },
@@ -278,7 +278,7 @@ describe("automationConverter", () => {
         ...registry,
         splitLike: {
           operationConfig: {
-            endpoint: (p: Record<string, any>) =>
+            endpoint: (p: Record<string, string>) =>
               p.method === "size"
                 ? "/api/v1/general/split-by-size"
                 : "/api/v1/general/split-pages",

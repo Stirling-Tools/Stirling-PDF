@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { Stack, Text, Select, ColorInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ReplaceColorParameters } from "@app/hooks/tools/replaceColor/useReplaceColorParameters";
@@ -18,6 +19,10 @@ const ReplaceColorSettings = ({
   disabled = false,
 }: ReplaceColorSettingsProps) => {
   const { t } = useTranslation();
+  const operationLabelId = useId();
+  const highContrastLabelId = useId();
+  const textColorLabelId = useId();
+  const backgroundColorLabelId = useId();
 
   const replaceAndInvertOptions = [
     {
@@ -60,10 +65,11 @@ const ReplaceColorSettings = ({
   return (
     <Stack gap="md">
       <Stack gap="xs">
-        <Text size="sm" fw={500}>
+        <Text id={operationLabelId} size="sm" fw={500}>
           {t("replaceColor.labels.colourOperation", "Colour operation")}
         </Text>
         <Select
+          aria-labelledby={operationLabelId}
           value={parameters.replaceAndInvertOption}
           onChange={(value) =>
             value &&
@@ -83,10 +89,11 @@ const ReplaceColorSettings = ({
 
       {parameters.replaceAndInvertOption === "HIGH_CONTRAST_COLOR" && (
         <Stack gap="xs">
-          <Text size="sm" fw={500}>
+          <Text id={highContrastLabelId} size="sm" fw={500}>
             {t("replace-color.selectText.5", "High contrast color options")}
           </Text>
           <Select
+            aria-labelledby={highContrastLabelId}
             value={parameters.highContrastColorCombination}
             onChange={(value) =>
               value &&
@@ -108,10 +115,11 @@ const ReplaceColorSettings = ({
       {parameters.replaceAndInvertOption === "CUSTOM_COLOR" && (
         <>
           <Stack gap="xs">
-            <Text size="sm" fw={500}>
+            <Text id={textColorLabelId} size="sm" fw={500}>
               {t("replace-color.selectText.10", "Choose text Color")}
             </Text>
             <ColorInput
+              aria-labelledby={textColorLabelId}
               value={parameters.textColor}
               onChange={(value) => onParameterChange("textColor", value)}
               format="hex"
@@ -124,10 +132,11 @@ const ReplaceColorSettings = ({
           </Stack>
 
           <Stack gap="xs">
-            <Text size="sm" fw={500}>
+            <Text id={backgroundColorLabelId} size="sm" fw={500}>
               {t("replace-color.selectText.11", "Choose background Color")}
             </Text>
             <ColorInput
+              aria-labelledby={backgroundColorLabelId}
               value={parameters.backGroundColor}
               onChange={(value) => onParameterChange("backGroundColor", value)}
               format="hex"

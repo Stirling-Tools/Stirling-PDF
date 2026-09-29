@@ -10,7 +10,10 @@ import {
 } from "vitest";
 import { setupServer } from "msw/node";
 import { http, HttpResponse } from "msw";
-import { createPortalQueryClient } from "@portal/queryClient";
+import {
+  getPortalQueryClient,
+  resetPortalQueryClient,
+} from "@portal/queryClient";
 import { qk } from "@portal/queries/keys";
 import { usersBackend } from "@app/portal/usersBackend";
 
@@ -35,6 +38,7 @@ vi.mock("@app/auth/supabase/supabaseClient", () => ({
 // The portal test project's @app points at proprietary; resolve the flavor seam
 // to the real SaaS backend (same approach as Users.saas.test).
 vi.mock("@app/portal/usersBackend", async () => ({
+  // oxlint-disable-next-line no-restricted-imports -- resolve the real SaaS module past the mocked @app alias
   usersBackend: (await import("../../saas/portal/usersBackend")).usersBackend,
 }));
 
@@ -67,9 +71,12 @@ beforeEach(() => {
   teamName = "Old name";
 });
 
+// The client outlives a mount now, so each case starts from a cold one.
+beforeEach(resetPortalQueryClient);
+
 describe("SaaS /team/my resolution cache", () => {
   it("dedupes within staleTime but re-resolves after invalidation", async () => {
-    const client = createPortalQueryClient();
+    const client = getPortalQueryClient();
 
     // Two resolves within staleTime → one network call (the collapse).
     expect((await usersBackend.fetchTeams())[0]?.name).toBe("Old name");

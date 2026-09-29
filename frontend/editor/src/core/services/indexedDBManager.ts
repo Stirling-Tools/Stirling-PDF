@@ -19,6 +19,11 @@ export interface DatabaseConfig {
   }[];
 }
 
+/** How long to wait out another connection before failing an open with something
+ *  the user can act on. Rejecting does NOT cancel the request, so a connection
+ *  that arrives later is closed rather than held. */
+const BLOCKED_GRACE_MS = 5000;
+
 class IndexedDBManager {
   private static instance: IndexedDBManager;
   private databases = new Map<string, IDBDatabase>();
@@ -47,6 +52,26 @@ class IndexedDBManager {
       return existingPromise;
     }
 
+    // Registered BEFORE anything async. A map written after a yield point can't
+    // dedupe callers racing into it in the same tick, so every context that opened
+    // this database during boot got its own connection - and per spec only the
+    // FIRST request ever receives `blocked`, leaving the rest waiting on an event
+    // that never comes.
+    const initPromise = this.openWithRecovery(config);
+    this.initPromises.set(config.name, initPromise);
+
+    try {
+      const db = await initPromise;
+      this.databases.set(config.name, db);
+      return db;
+    } catch (error) {
+      this.initPromises.delete(config.name);
+      throw error;
+    }
+  }
+
+  /** The v6/v7 wipe, kept off {@link openDatabase}'s synchronous registration path. */
+  private async openWithRecovery(config: DatabaseConfig): Promise<IDBDatabase> {
     // SaaS lineage shipped a v6 and a v7 of stirling-pdf-files whose
     // upgrade paths corrupted records (separate cursor walks racing in
     // one versionchange transaction). The SaaS build wipes those
@@ -64,18 +89,7 @@ class IndexedDBManager {
         await this.deleteDatabase(config.name);
       }
     }
-
-    const initPromise = this.performDatabaseInit(config);
-    this.initPromises.set(config.name, initPromise);
-
-    try {
-      const db = await initPromise;
-      this.databases.set(config.name, db);
-      return db;
-    } catch (error) {
-      this.initPromises.delete(config.name);
-      throw error;
-    }
+    return this.performDatabaseInit(config);
   }
 
   private performDatabaseInit(config: DatabaseConfig): Promise<IDBDatabase> {
@@ -83,14 +97,59 @@ class IndexedDBManager {
       console.log(`Opening IndexedDB: ${config.name} v${config.version}`);
       const request = indexedDB.open(config.name, config.version);
 
+      // A blocked upgrade fires `blocked` and then NOTHING - no success, no error -
+      // until the other connection goes away. Unguarded, the promise never settles
+      // and every awaiting caller hangs with nothing in the console.
+      let settled = false;
+      let blockedTimer: ReturnType<typeof setTimeout> | undefined;
+
+      request.onblocked = () => {
+        console.warn(
+          `Opening ${config.name} is blocked by another connection (another tab on an older version?). ` +
+            `Giving up in ${BLOCKED_GRACE_MS}ms if it doesn't yield.`,
+        );
+        blockedTimer = setTimeout(() => {
+          if (settled) return;
+          settled = true;
+          reject(
+            new Error(
+              `Opening ${config.name} was blocked by another connection for ${BLOCKED_GRACE_MS}ms. ` +
+                "Close other tabs of this app and reload.",
+            ),
+          );
+        }, BLOCKED_GRACE_MS);
+      };
+
       request.onerror = () => {
+        clearTimeout(blockedTimer);
+        if (settled) return;
+        settled = true;
         console.error(`Failed to open ${config.name}:`, request.error);
         reject(request.error);
       };
 
       request.onsuccess = () => {
+        clearTimeout(blockedTimer);
         const db = request.result;
+        // We already gave up waiting: close it rather than hold a handle nobody
+        // awaits, or we become the next tab's blocker.
+        if (settled) {
+          db.close();
+          return;
+        }
+        settled = true;
         console.log(`Successfully opened ${config.name}`);
+
+        // Another tab wants a newer schema. Forget BEFORE closing: a cached but
+        // closed handle is worse than none, because every transaction on it throws.
+        db.onversionchange = () => {
+          console.warn(
+            `${config.name}: another tab requested a version change; closing this connection`,
+          );
+          this.databases.delete(config.name);
+          this.initPromises.delete(config.name);
+          db.close();
+        };
 
         // Set up close handler to clean up our references
         db.onclose = () => {
@@ -329,9 +388,36 @@ class IndexedDBManager {
 
     return new Promise((resolve, reject) => {
       const deleteRequest = indexedDB.deleteDatabase(name);
+      // A delete blocks exactly like an upgrade, and this one is awaited on the
+      // files open path - so an unguarded block hangs the whole storage layer.
+      let settled = false;
+      let blockedTimer: ReturnType<typeof setTimeout> | undefined;
 
-      deleteRequest.onerror = () => reject(deleteRequest.error);
+      deleteRequest.onblocked = () => {
+        console.warn(
+          `Deleting ${name} is blocked by another connection; giving up in ${BLOCKED_GRACE_MS}ms.`,
+        );
+        blockedTimer = setTimeout(() => {
+          if (settled) return;
+          settled = true;
+          reject(
+            new Error(
+              `Deleting ${name} was blocked by another connection for ${BLOCKED_GRACE_MS}ms.`,
+            ),
+          );
+        }, BLOCKED_GRACE_MS);
+      };
+
+      deleteRequest.onerror = () => {
+        clearTimeout(blockedTimer);
+        if (settled) return;
+        settled = true;
+        reject(deleteRequest.error);
+      };
       deleteRequest.onsuccess = () => {
+        clearTimeout(blockedTimer);
+        if (settled) return;
+        settled = true;
         console.log(`Deleted database: ${name}`);
         resolve();
       };
@@ -343,17 +429,32 @@ class IndexedDBManager {
    */
   async getDatabaseVersion(name: string): Promise<number | null> {
     return new Promise((resolve) => {
+      // This probe runs BEFORE the guarded open, and a versionless open can be
+      // delayed indefinitely by another tab mid-versionchange. Unknown after the
+      // grace period beats hanging every storage consumer: the real open that
+      // follows has its own blocked guard and a message the user can act on.
+      const giveUp = setTimeout(() => {
+        console.warn(
+          `Version probe for ${name} did not answer in ${BLOCKED_GRACE_MS}ms; proceeding without it.`,
+        );
+        resolve(null);
+      }, BLOCKED_GRACE_MS);
       const request = indexedDB.open(name);
       request.onsuccess = () => {
+        clearTimeout(giveUp);
         const db = request.result;
         const version = db.version;
         db.close();
         resolve(version);
       };
-      request.onerror = () => resolve(null);
+      request.onerror = () => {
+        clearTimeout(giveUp);
+        resolve(null);
+      };
       request.onupgradeneeded = () => {
         // Cancel the upgrade
         request.transaction?.abort();
+        clearTimeout(giveUp);
         resolve(null);
       };
     });
@@ -364,7 +465,9 @@ class IndexedDBManager {
 export const DATABASE_CONFIGS = {
   FILES: {
     name: "stirling-pdf-files",
-    version: 9,
+    // v10 existed briefly with only one of the two browser-folder stores; v11 declares
+    // both, so every v10 profile upgrades to a full schema.
+    version: 11,
     stores: [
       {
         name: "files",
@@ -380,6 +483,27 @@ export const DATABASE_CONFIGS = {
       },
       {
         name: "folders",
+        keyPath: "id",
+        indexes: [
+          {
+            name: "parentFolderId",
+            keyPath: "parentFolderId",
+            unique: false,
+          },
+          { name: "name", keyPath: "name", unique: false },
+          { name: "createdAt", keyPath: "createdAt", unique: false },
+        ],
+      },
+      {
+        name: "local_folders",
+        keyPath: "id",
+        indexes: [{ name: "name", keyPath: "name", unique: false }],
+      },
+      // Browser-owned folders (kind "virtual"), deliberately a separate store from
+      // `folders`: that one is a cache the server sync wipes wholesale on every pull,
+      // and these rows have no server copy to be restored from.
+      {
+        name: "virtual_folders",
         keyPath: "id",
         indexes: [
           {

@@ -119,7 +119,7 @@
 /* Preview disclaimer */
 .previewDisclaimer {
   margin-top: 8px;
-  opacity: 0.7;
+  color: var(--c-text-muted);
   font-size: 12px;
 }
 

@@ -24,6 +24,11 @@ public interface JobOwnershipService {
     String createScopedJobKey(String jobId);
 
     /**
+     * Scope a job to an owner resolved by trusted server code, independently of the current caller.
+     */
+    String createScopedJobKey(String jobId, String owner);
+
+    /**
      * Validate that the current user has access to the given job.
      *
      * @param scopedJobKey the scoped job key to validate

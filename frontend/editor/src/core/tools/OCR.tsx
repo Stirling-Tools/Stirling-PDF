@@ -88,7 +88,9 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   return createToolFlow({
     files: {
-      selectedFiles,
+      selectedFiles:
+        ocrOperation.getEligibleFiles?.(ocrParams.parameters, selectedFiles) ??
+        selectedFiles,
       isCollapsed: hasResults,
     },
     steps: [

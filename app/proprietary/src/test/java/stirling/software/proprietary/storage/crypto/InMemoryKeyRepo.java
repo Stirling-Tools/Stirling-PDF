@@ -1,15 +1,19 @@
 package stirling.software.proprietary.storage.crypto;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.springframework.data.domain.Sort;
 
 import stirling.software.proprietary.storage.model.FileEncryptionKey;
 import stirling.software.proprietary.storage.repository.FileEncryptionKeyRepository;
@@ -38,14 +42,17 @@ public final class InMemoryKeyRepo {
                         });
         when(mock.findById(any(UUID.class)))
                 .thenAnswer(inv -> Optional.ofNullable(rows.get(inv.<UUID>getArgument(0))));
-        when(mock.findFirstByScopeTypeAndScopeIdAndStatus(any(), anyLong(), any()))
+        when(mock.findFirstByScopeTypeAndScopeIdAndStatusOrderByKeyVersionDesc(
+                        any(), anyLong(), any()))
                 .thenAnswer(
                         inv ->
                                 rows.values().stream()
                                         .filter(r -> r.getScopeType() == inv.getArgument(0))
                                         .filter(r -> r.getScopeId() == inv.<Long>getArgument(1))
                                         .filter(r -> r.getStatus() == inv.getArgument(2))
-                                        .findFirst());
+                                        .max(
+                                                Comparator.comparingInt(
+                                                        FileEncryptionKey::getKeyVersion)));
         when(mock.findFirstByScopeTypeAndScopeIdOrderByKeyVersionDesc(any(), anyLong()))
                 .thenAnswer(
                         inv ->
@@ -62,5 +69,34 @@ public final class InMemoryKeyRepo {
                                         .filter(r -> r.getStatus() == inv.getArgument(0))
                                         .findFirst());
         when(mock.count()).thenAnswer(inv -> (long) rows.size());
+        when(mock.findAll()).thenAnswer(inv -> List.copyOf(rows.values()));
+        when(mock.countByMasterKeyVersionLessThan(anyInt()))
+                .thenAnswer(
+                        inv ->
+                                rows.values().stream()
+                                        .filter(
+                                                r ->
+                                                        r.getMasterKeyVersion()
+                                                                < inv.<Integer>getArgument(0))
+                                        .count());
+        when(mock.findByMasterKeyVersionLessThan(anyInt()))
+                .thenAnswer(
+                        inv ->
+                                rows.values().stream()
+                                        .filter(
+                                                r ->
+                                                        r.getMasterKeyVersion()
+                                                                < inv.<Integer>getArgument(0))
+                                        .toList());
+        when(mock.countByMasterKeyVersionGreaterThan(anyInt()))
+                .thenAnswer(
+                        inv ->
+                                rows.values().stream()
+                                        .filter(
+                                                r ->
+                                                        r.getMasterKeyVersion()
+                                                                > inv.<Integer>getArgument(0))
+                                        .count());
+        when(mock.findAll(any(Sort.class))).thenAnswer(inv -> List.copyOf(rows.values()));
     }
 }

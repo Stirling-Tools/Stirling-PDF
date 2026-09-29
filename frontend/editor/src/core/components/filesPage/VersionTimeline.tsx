@@ -1,23 +1,15 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Badge, Menu } from "@mantine/core";
+import { Badge, Group, Menu, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import DeleteIcon from "@mui/icons-material/Delete";
-import DownloadIcon from "@mui/icons-material/Download";
-import HistoryIcon from "@mui/icons-material/History";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-
+import { Icon } from "@app/ui/Icon";
 import { FileId, ToolOperation } from "@app/types/file";
-import { ToolId } from "@app/types/toolId";
+import { toolOperationLabel } from "@app/utils/toolOperationLabel";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { formatFileSize, getFileDate } from "@app/utils/fileUtils";
 import { downloadFileFromStorage } from "@app/utils/downloadUtils";
-import ToolChain from "@app/components/shared/ToolChain";
 
-/** Small label/value row; shared with FileDetailsPanel. */
 export function DetailField({
   label,
   value,
@@ -26,14 +18,35 @@ export function DetailField({
   value: string;
 }) {
   return (
-    <div className="files-page-details-field">
-      <span className="files-page-details-field-label">{label}</span>
-      <span className="files-page-details-field-value">{value}</span>
+    <div
+      className="files-page-details-field"
+      style={{
+        display: "flex",
+        gap: "0.5rem",
+        alignItems: "baseline",
+        wordBreak: "break-all",
+      }}
+    >
+      <span
+        className="files-page-details-field-label"
+        style={{
+          fontWeight: 500,
+          color: "var(--c-text-subtle)",
+          flexShrink: 0,
+        }}
+      >
+        {label}:
+      </span>
+      <span
+        className="files-page-details-field-value"
+        style={{ fontWeight: 600, color: "var(--c-text)" }}
+      >
+        {value}
+      </span>
     </div>
   );
 }
 
-/** Tool that produced `version` from `prior`; null for v1. */
 function deltaToolFor(
   version: StirlingFileStub,
   prior: StirlingFileStub | null,
@@ -44,24 +57,22 @@ function deltaToolFor(
   return curr[priorLen] ?? null;
 }
 
-/** Translated tool name via `home.{toolId}.title`. */
-function ToolLabel({ toolId }: { toolId: ToolId }) {
+function ToolLabel({ operation }: { operation: ToolOperation }) {
   const { t } = useTranslation();
-  return <span>{t(`home.${toolId}.title`, toolId)}</span>;
+  return <span>{toolOperationLabel(operation, t)}</span>;
 }
 
 export interface VersionTimelineProps {
-  /** Chain sorted oldest-first. */
+  onPickVersion?: (file: StirlingFileStub) => void;
   chain: StirlingFileStub[];
-  /** Currently selected version. */
   currentId: FileId;
-  onAddToWorkspace: (fileIds: FileId[]) => void;
-  onRemove: (fileIds: FileId[]) => void;
+  onAddToWorkspace?: (fileIds: FileId[]) => void;
+  onRemove?: (fileIds: FileId[]) => void;
   hideHeader?: boolean;
 }
 
-/** Version timeline with per-row tool deltas and collapse-when-long. */
 export function VersionTimeline({
+  onPickVersion,
   chain,
   currentId,
   onAddToWorkspace,
@@ -69,10 +80,8 @@ export function VersionTimeline({
   hideHeader = false,
 }: VersionTimelineProps) {
   const { t } = useTranslation();
-  const [expandedIds, setExpandedIds] = useState<Set<FileId>>(new Set());
   const [showAllCollapsed, setShowAllCollapsed] = useState(false);
 
-  // Newest-first ordering.
   const ordered = useMemo(
     () =>
       [...chain].sort(
@@ -81,7 +90,6 @@ export function VersionTimeline({
     [chain],
   );
 
-  // Index by versionNumber for prior-version lookup.
   const byVersionNumber = useMemo(() => {
     const map = new Map<number, StirlingFileStub>();
     for (const v of chain) {
@@ -90,7 +98,6 @@ export function VersionTimeline({
     return map;
   }, [chain]);
 
-  // Collapse middle when long: 3 newest + ellipsis + 2 oldest.
   const COLLAPSE_THRESHOLD = 6;
   const collapsible = ordered.length > COLLAPSE_THRESHOLD;
   type Row =
@@ -101,32 +108,23 @@ export function VersionTimeline({
       };
   const rows: Row[] = useMemo(() => {
     if (!collapsible || showAllCollapsed) {
-      return ordered.map((v) => ({ kind: "version", version: v }) as Row);
+      return ordered.map<Row>((v) => ({ kind: "version", version: v }));
     }
     const head = ordered
       .slice(0, 3)
-      .map((v) => ({ kind: "version", version: v }) as Row);
+      .map<Row>((v) => ({ kind: "version", version: v }));
     const tail = ordered
       .slice(-2)
-      .map((v) => ({ kind: "version", version: v }) as Row);
+      .map<Row>((v) => ({ kind: "version", version: v }));
     const hidden = ordered.length - 5;
     return [...head, { kind: "ellipsis", hidden }, ...tail];
   }, [collapsible, showAllCollapsed, ordered]);
-
-  const toggleExpand = (id: FileId) => {
-    setExpandedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
 
   return (
     <div className="files-page-details-version-timeline">
       {!hideHeader && (
         <div className="files-page-details-version-timeline-label">
-          <HistoryIcon fontSize="small" />
+          <Icon name="rotate-ccw-clock" size={20} />
           <span>{t("filesPage.field.versionHistory", "Version journey")}</span>
           <span className="files-page-details-version-timeline-count">
             {t("filesPage.versionsCount", "{{count}} versions", {
@@ -135,7 +133,10 @@ export function VersionTimeline({
           </span>
         </div>
       )}
-      <ol className="files-page-details-version-timeline-list">
+      <ul
+        className="files-page-details-version-timeline-list"
+        style={{ listStyle: "none", padding: 0, margin: 0 }}
+      >
         {rows.map((row, idx) => {
           const isLast = idx === rows.length - 1;
           if (row.kind === "ellipsis") {
@@ -143,6 +144,7 @@ export function VersionTimeline({
               <li
                 key="ellipsis"
                 className="files-page-details-version-timeline-ellipsis"
+                style={{ listStyle: "none" }}
               >
                 <div className="files-page-details-version-timeline-rail">
                   <span className="files-page-details-version-timeline-rail-dot is-ellipsis" />
@@ -152,7 +154,7 @@ export function VersionTimeline({
                 </div>
                 <Button
                   variant="tertiary"
-                  className="files-page-details-version-timeline-ellipsis-btn"
+                  size="sm"
                   onClick={() => setShowAllCollapsed(true)}
                 >
                   {t(
@@ -166,15 +168,18 @@ export function VersionTimeline({
           }
           const v = row.version;
           const isActive = v.id === currentId;
-          const isExpanded = expandedIds.has(v.id);
           const prior = byVersionNumber.get((v.versionNumber ?? 1) - 1) ?? null;
           const delta = deltaToolFor(v, prior);
+          const isOriginal = (v.versionNumber ?? 1) === 1;
+          const nameChanged = prior ? prior.name !== v.name : false;
+
           return (
             <li
               key={v.id}
               className={`files-page-details-version-timeline-row${
                 isActive ? " is-active" : ""
               }`}
+              style={{ listStyle: "none" }}
             >
               <div className="files-page-details-version-timeline-rail">
                 <span
@@ -187,131 +192,142 @@ export function VersionTimeline({
                 )}
               </div>
               <div className="files-page-details-version-timeline-body">
-                <Button
-                  variant="tertiary"
-                  className="files-page-details-version-timeline-summary"
-                  onClick={() => toggleExpand(v.id)}
-                  aria-expanded={isExpanded}
-                  leftSection={
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "0.75rem",
+                    width: "100%",
+                  }}
+                >
+                  <Group
+                    gap="sm"
+                    align="center"
+                    style={{ flex: 1, minWidth: 0, flexWrap: "nowrap" }}
+                  >
                     <Badge
                       size="xs"
-                      variant={isActive ? "filled" : "outline"}
-                      color="blue"
+                      variant={isActive ? "filled" : "light"}
+                      styles={
+                        isActive
+                          ? {
+                              root: {
+                                backgroundColor: "var(--c-accent-solid)",
+                              },
+                              label: { color: "var(--c-text-on-primary)" },
+                            }
+                          : undefined
+                      }
                     >
                       v{v.versionNumber ?? 1}
                     </Badge>
-                  }
-                  rightSection={
-                    <KeyboardArrowDownIcon
-                      className={`files-page-details-version-timeline-chevron${
-                        isExpanded ? " is-expanded" : ""
-                      }`}
-                      fontSize="small"
-                    />
-                  }
-                >
-                  {delta ? (
-                    <span className="files-page-details-version-timeline-delta">
-                      <ToolLabel toolId={delta.toolId} />
-                    </span>
-                  ) : (
-                    <span className="files-page-details-version-timeline-delta is-origin">
-                      {t("filesPage.versionOrigin", "Original upload")}
-                    </span>
+                    <Text
+                      fw={600}
+                      size="sm"
+                      truncate
+                      style={{ color: "var(--c-text)" }}
+                    >
+                      {delta ? (
+                        <ToolLabel operation={delta} />
+                      ) : (
+                        t("filesPage.versionOrigin", "Original upload")
+                      )}
+                    </Text>
+                  </Group>
+
+                  {onPickVersion && (
+                    <ActionIcon
+                      variant="tertiary"
+                      aria-label={t(
+                        "filePicker.selectVersion",
+                        "Select version {{version}}",
+                        { version: v.versionNumber },
+                      )}
+                      onClick={() => onPickVersion(v)}
+                    >
+                      <Icon name="plus" size={20} />
+                    </ActionIcon>
                   )}
-                </Button>
-                <div className="files-page-details-version-timeline-meta-line">
-                  <span>{formatFileSize(v.size)}</span>
-                  {v.lastModified ? (
-                    <>
-                      <span>·</span>
-                      <span>
-                        {getFileDate({ lastModified: v.lastModified })}
-                      </span>
-                    </>
-                  ) : null}
-                  {/* Kebab on every row - the original/active version also
-                      needs download + open-in-workspace. */}
-                  <span className="files-page-details-version-timeline-spacer" />
-                  <Menu position="bottom-end" withinPortal shadow="md">
-                    <Menu.Target>
-                      <ActionIcon
-                        variant="tertiary"
-                        size="sm"
-                        aria-label={t(
-                          "filesPage.versionActions",
-                          "Version actions",
-                        )}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <MoreVertIcon fontSize="small" />
-                      </ActionIcon>
-                    </Menu.Target>
-                    <Menu.Dropdown>
-                      <Menu.Item
-                        leftSection={<OpenInNewIcon fontSize="small" />}
-                        onClick={() => onAddToWorkspace([v.id])}
-                      >
-                        {t(
-                          "filesPage.openVersionInWorkspace",
-                          "Open in workspace",
-                        )}
-                      </Menu.Item>
-                      <Menu.Item
-                        leftSection={<DownloadIcon fontSize="small" />}
-                        onClick={() => {
-                          void downloadFileFromStorage(v);
-                        }}
-                      >
-                        {t(
-                          "filesPage.downloadVersion",
-                          "Download this version",
-                        )}
-                      </Menu.Item>
-                      <Menu.Divider />
-                      <Menu.Item
-                        color="red"
-                        leftSection={<DeleteIcon fontSize="small" />}
-                        onClick={() => onRemove([v.id])}
-                      >
-                        {t("filesPage.removeVersion", "Remove this version")}
-                      </Menu.Item>
-                    </Menu.Dropdown>
-                  </Menu>
-                </div>
-                {isExpanded && (
-                  // Filename + full cumulative tool chain.
-                  <div className="files-page-details-version-timeline-expanded">
-                    <DetailField
-                      label={t("filesPage.field.name", "Name")}
-                      value={v.name}
-                    />
-                    {v.toolHistory && v.toolHistory.length > 0 && (
-                      <div className="files-page-details-version-timeline-toolchain">
-                        <span className="files-page-details-version-timeline-toolchain-label">
-                          {t(
-                            "filesPage.field.toolHistoryAtVersion",
-                            "Cumulative tool chain",
+                  {!isActive && !onPickVersion && (
+                    <Menu position="bottom-end" withinPortal shadow="md">
+                      <Menu.Target>
+                        <ActionIcon
+                          variant="tertiary"
+                          size="sm"
+                          aria-label={t(
+                            "filesPage.versionActions",
+                            "Version actions",
                           )}
-                        </span>
-                        <ToolChain
-                          toolChain={v.toolHistory}
-                          displayStyle="badges"
-                          size="xs"
-                        />
-                      </div>
-                    )}
-                  </div>
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Icon name="ellipsis-vertical" size={20} />
+                        </ActionIcon>
+                      </Menu.Target>
+                      <Menu.Dropdown>
+                        <Menu.Item
+                          leftSection={<Icon name="external-link" size={20} />}
+                          onClick={() => onAddToWorkspace?.([v.id])}
+                        >
+                          {t(
+                            "filesPage.openVersionInWorkspace",
+                            "Open in workspace",
+                          )}
+                        </Menu.Item>
+                        <Menu.Item
+                          leftSection={<Icon name="download" size={20} />}
+                          onClick={() => {
+                            void downloadFileFromStorage(v);
+                          }}
+                        >
+                          {t(
+                            "filesPage.downloadVersion",
+                            "Download this version",
+                          )}
+                        </Menu.Item>
+                        <Menu.Divider />
+                        <Menu.Item
+                          color="red"
+                          leftSection={<Icon name="trash" size={20} />}
+                          onClick={() => onRemove?.([v.id])}
+                        >
+                          {t("filesPage.removeVersion", "Remove this version")}
+                        </Menu.Item>
+                      </Menu.Dropdown>
+                    </Menu>
+                  )}
+                </div>
+
+                <Text size="xs" c="dimmed" style={{ marginTop: "0.15rem" }}>
+                  {formatFileSize(v.size)}
+                  {v.lastModified && (
+                    <> · {getFileDate({ lastModified: v.lastModified })}</>
+                  )}
+                </Text>
+
+                {(isOriginal || nameChanged) && (
+                  <Text
+                    size="xs"
+                    c="dimmed"
+                    style={{ wordBreak: "break-all", marginTop: "0.2rem" }}
+                  >
+                    {nameChanged
+                      ? `${t("filesPage.renamed", "Renamed")}: `
+                      : `${t("filesPage.file", "File")}: `}
+                    <span style={{ color: "var(--c-text)", fontWeight: 500 }}>
+                      {v.name}
+                    </span>
+                  </Text>
                 )}
               </div>
             </li>
           );
         })}
-      </ol>
+      </ul>
       {collapsible && showAllCollapsed && (
         <Button
           variant="tertiary"
-          className="files-page-details-version-timeline-collapse-btn"
+          size="sm"
           onClick={() => setShowAllCollapsed(false)}
         >
           {t("filesPage.versionCollapse", "Collapse middle versions")}

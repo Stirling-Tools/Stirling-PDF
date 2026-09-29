@@ -14,6 +14,14 @@ import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
  * Run with: npx vitest run --config .storybook/vitest.config.ts
  */
 export default defineConfig({
+  // Forwards the SCAN_THEME env var into the browser bundle, where preview.tsx
+  // uses it to pin the theme global for the whole run. The Storybook dev/build
+  // pipeline never sets it, so the toolbar default stays "light" there.
+  define: {
+    "import.meta.env.VITE_SCAN_THEME": JSON.stringify(
+      process.env.SCAN_THEME ?? "",
+    ),
+  },
   optimizeDeps: {
     // Pre-scan every story + the preview so Vite discovers the story set's large
     // dep surface (embedpdf plugins, @mui icons, …) in one pass up front.
