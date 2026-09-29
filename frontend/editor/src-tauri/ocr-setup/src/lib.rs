@@ -22,6 +22,7 @@ mod msi;
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::{Component, Path, PathBuf};
+use std::sync::OnceLock;
 use std::time::Duration;
 
 use serde::Deserialize;
@@ -235,11 +236,20 @@ fn open(url: &str, timeout: Duration) -> Result<Box<dyn Read>, String> {
         let file = File::open(&path).map_err(|e| format!("{}: {e}", path.display()))?;
         return Ok(Box::new(file));
     }
-    let response = ureq::get(url)
+    let response = agent()
+        .get(url)
         .timeout(timeout)
         .call()
         .map_err(|e| format!("{e}"))?;
     Ok(Box::new(response.into_reader()))
+}
+
+/// Every network request goes through this agent. `https_only` also holds on
+/// the redirects it follows, which the check on the address the catalogue gave
+/// cannot reach: an https catalogue could otherwise answer 302 to plain http.
+fn agent() -> &'static ureq::Agent {
+    static AGENT: OnceLock<ureq::Agent> = OnceLock::new();
+    AGENT.get_or_init(|| ureq::AgentBuilder::new().https_only(true).build())
 }
 
 /// https or a local file only.
@@ -415,6 +425,22 @@ mod tests {
         assert!(resolve_inside(root, "C:\\Windows\\System32\\evil.dll").is_err());
         assert!(resolve_inside(root, "").is_err());
         assert!(resolve_inside(root, "tessdata/configs/pdf").is_ok());
+    }
+
+    #[test]
+    fn the_agent_refuses_plain_http() {
+        // The address the catalogue gives is checked before the first request,
+        // but a redirect is followed inside the agent, so the agent is what has
+        // to refuse http. Nothing listens on port 9: the refusal comes first.
+        let error = agent()
+            .get("http://127.0.0.1:9/")
+            .call()
+            .expect_err("plain http must never be fetched");
+        assert_eq!(
+            error.kind(),
+            ureq::ErrorKind::InsecureRequestHttpsOnly,
+            "{error}"
+        );
     }
 
     #[test]
