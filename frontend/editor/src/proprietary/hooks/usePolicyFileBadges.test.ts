@@ -116,6 +116,16 @@ describe("buildPolicyBadgeMap — badge follows the document onto derived files"
   });
 });
 
+it("shows external delivery as background activity without gating file actions", () => {
+  const map = buildPolicyBadgeMap(
+    [run({ status: "RUNNING", externalOutput: true, outputFileIds: [] })],
+    [{ id: "in" }],
+    labels,
+  );
+  expect(map.get("in")?.[0].background).toBe(true);
+  expect(map.get("in")?.[0].enforcing).toBeUndefined();
+});
+
 describe("buildPolicyBadgeMap — in-flight indicators", () => {
   const enforcingOn = (
     map: Map<string, { enforcing?: boolean }[]>,

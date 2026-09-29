@@ -14,7 +14,7 @@ engine = [
     "pgvector>=0.5.0",
     "posthog>=7.38.3",
     "psycopg[binary,pool]>=3.3.4",
-    "pydantic>=2.13.4",
+    "pydantic>=2.13.5",
     # <2 cap: 1.99.0 patches CVE-2026-46678; 2.0 is an untested major migration.
     # Explicit extras: the `pydantic-ai` meta-package pulls all 20 providers (~230MB).
     # No `voyageai` extra either; stirling.documents.voyage speaks its API directly.

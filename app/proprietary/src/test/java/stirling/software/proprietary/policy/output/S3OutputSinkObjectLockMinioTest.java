@@ -17,6 +17,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.testcontainers.containers.MinIOContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.job.ResultFile;
@@ -56,7 +57,9 @@ class S3OutputSinkObjectLockMinioTest {
 
     @Container
     static MinIOContainer minio =
-            new MinIOContainer("minio/minio:latest")
+            new MinIOContainer(
+                            DockerImageName.parse("pgsty/silo:RELEASE.2026-09-03T13-18-01Z")
+                                    .asCompatibleSubstituteFor("minio/minio"))
                     .withUserName(ACCESS_KEY)
                     .withPassword(SECRET_KEY);
 

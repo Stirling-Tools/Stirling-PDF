@@ -200,3 +200,30 @@ describe("saas usersBackend — mutations hit SaasTeamController", () => {
     server.events.removeAllListeners();
   });
 });
+
+it("keeps the active shared team after leadership is transferred", async () => {
+  server.use(
+    http.get("*/api/v1/team/my", () =>
+      HttpResponse.json([
+        {
+          teamId: 71,
+          name: "Personal",
+          isLeader: true,
+          isPersonal: true,
+          current: false,
+          currentUserId: 99,
+        },
+        {
+          teamId: 72,
+          name: "Active shared team",
+          isLeader: false,
+          isPersonal: false,
+          current: true,
+          currentUserId: 99,
+        },
+      ]),
+    ),
+  );
+  const teams = await usersBackend.fetchTeams();
+  expect(teams.map((team) => team.id)).toEqual([72]);
+});

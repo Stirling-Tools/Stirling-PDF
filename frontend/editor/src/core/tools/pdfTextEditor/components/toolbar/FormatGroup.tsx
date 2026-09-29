@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Icon } from "@app/ui/Icon";
 import {
   ColorInput,
   Group,
@@ -9,9 +10,6 @@ import {
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
-import FormatItalicIcon from "@mui/icons-material/FormatItalic";
-import TuneIcon from "@mui/icons-material/TuneOutlined";
-import TextFieldsIcon from "@mui/icons-material/TextFields";
 import { parseCssColor, toCssHex } from "@app/tools/pdfTextEditor/model/Color";
 import { familyOf } from "@app/tools/pdfTextEditor/util/fontFamily";
 import { FontFamilySelect } from "@app/tools/pdfTextEditor/components/FontFamilySelect";
@@ -20,7 +18,12 @@ import {
   type Controller,
 } from "@app/tools/pdfTextEditor/components/toolbar/toolbarShared";
 
-export function FormatGroup({ controller }: { controller: Controller }) {
+interface FormatGroupProps {
+  controller: Controller;
+  touch?: boolean;
+}
+
+export function FormatGroup({ controller, touch = false }: FormatGroupProps) {
   const { t } = useTranslation();
   const {
     state,
@@ -39,6 +42,8 @@ export function FormatGroup({ controller }: { controller: Controller }) {
   const outlineHex = state.stroke ? toCssHex(state.stroke) : "#000000";
   const outlineWidth = state.strokeWidth ?? 0;
   const fontFamily = state.fontFamily ? familyOf(state.fontFamily) : null;
+  const inputSize = touch ? "lg" : "xs";
+  const buttonSize = touch ? "xl" : "sm";
 
   return (
     <>
@@ -46,10 +51,11 @@ export function FormatGroup({ controller }: { controller: Controller }) {
         value={fontFamily}
         onChange={onChangeFontFamily}
         mixed={state.mixed.fontFamily}
+        touch={touch}
       />
       <NumberInput
-        size="xs"
-        w={76}
+        size={inputSize}
+        w={touch ? 104 : 76}
         min={4}
         max={144}
         decimalScale={1}
@@ -72,8 +78,8 @@ export function FormatGroup({ controller }: { controller: Controller }) {
         style={NO_SHRINK}
       />
       <ColorInput
-        size="xs"
-        w={fillPickerOpen ? 116 : 74}
+        size={inputSize}
+        w={touch ? (fillPickerOpen ? 150 : 96) : fillPickerOpen ? 116 : 74}
         withEyeDropper={false}
         styles={{
           section: { pointerEvents: "none" },
@@ -129,14 +135,14 @@ export function FormatGroup({ controller }: { controller: Controller }) {
             <Button
               variant={outlineWidth > 0 ? "primary" : "tertiary"}
               accent={outlineWidth > 0 ? "default" : "neutral"}
-              size="sm"
+              size={buttonSize}
               aria-label={t(
                 "pdfTextEditor.toolbar.advancedColour",
                 "Advanced colour",
               )}
               data-testid="pdf-editor-colour-advanced"
               style={NO_SHRINK}
-              leftSection={<TuneIcon fontSize="small" />}
+              leftSection={<Icon name="sliders-horizontal" size={20} />}
             />
           </Tooltip>
         </Popover.Target>
@@ -193,13 +199,13 @@ export function FormatGroup({ controller }: { controller: Controller }) {
         <Button
           variant={state.italic ? "primary" : "tertiary"}
           accent={state.italic ? "default" : "neutral"}
-          size="sm"
+          size={buttonSize}
           onClick={onToggleItalic}
           disabled={!state.canItalic}
           aria-label={t("pdfTextEditor.toolbar.italic", "Italic")}
           data-testid="pdf-editor-italic"
           style={NO_SHRINK}
-          leftSection={<FormatItalicIcon fontSize="small" />}
+          leftSection={<Icon name="italic" size={20} />}
         />
       </Tooltip>
       <Menu shadow="md" position="bottom-start" withinPortal>
@@ -213,11 +219,11 @@ export function FormatGroup({ controller }: { controller: Controller }) {
             <Button
               variant="tertiary"
               accent="neutral"
-              size="sm"
+              size={buttonSize}
               aria-label={t("pdfTextEditor.toolbar.changeCase", "Change case")}
               data-testid="pdf-editor-change-case"
               style={NO_SHRINK}
-              leftSection={<TextFieldsIcon fontSize="small" />}
+              leftSection={<Icon name="type" size={20} />}
             />
           </Tooltip>
         </Menu.Target>

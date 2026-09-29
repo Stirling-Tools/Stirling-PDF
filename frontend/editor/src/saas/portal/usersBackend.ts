@@ -34,6 +34,8 @@ interface TeamDetailsDTO {
   seatsUsed: number;
   maxSeats: number;
   isLeader: boolean;
+  current?: boolean;
+  currentUserId?: number;
 }
 
 interface TeamMemberDTO {
@@ -98,6 +100,9 @@ async function resolveTeam(): Promise<TeamDetailsDTO | null> {
     ? await client.fetchQuery({ queryKey: qk.teamMy(), queryFn: fetchMy })
     : await fetchMy();
   if (!teams || teams.length === 0) return null;
+  if (teams.some((t) => t.current !== undefined)) {
+    return teams.find((t) => t.current) ?? null;
+  }
   return (
     teams.find((t) => t.isLeader && !t.isPersonal) ??
     teams.find((t) => t.isLeader) ??
@@ -120,11 +125,10 @@ function toMember(dto: TeamMemberDTO, team: TeamDetailsDTO): Member {
     teamLead: isLeader,
     teamId: team.teamId,
     teamName: team.name,
-    // The portal Users page is leader-only on SaaS, so when the viewer leads this
-    // team the LEADER row is them; mark it self so self-remove is disabled (leaving
-    // is a separate flow). Guarded on team.isLeader so a non-leader fallback view
-    // doesn't mislabel someone else's row as self.
-    isSelf: isLeader && team.isLeader,
+    isSelf:
+      team.currentUserId !== undefined
+        ? dto.id === team.currentUserId
+        : isLeader && team.isLeader,
     // Leaders hold portal (processor) access via the role-based default policy;
     // members don't by default. Drives the roster's access chip.
     canAccessPortal: isLeader,

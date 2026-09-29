@@ -1,6 +1,6 @@
 import apiClient from "@app/services/apiClient";
+import { stripeAmountToMajor } from "@app/utils/stripeCurrency";
 import { supabase, isSupabaseConfigured } from "@app/services/supabaseClient";
-import { getCheckoutMode } from "@app/utils/protocolDetection";
 import type {
   PlanFeaturesMap,
   PlanHighlightsMap,
@@ -34,24 +34,6 @@ export interface PlanTierGroup {
 
 export interface PlansResponse {
   plans: PlanTier[];
-}
-
-export interface CheckoutSessionRequest {
-  lookup_key: string; // Stripe lookup key (e.g., 'selfhosted:server:monthly')
-  installation_id?: string; // Installation ID from backend (MAC-based fingerprint)
-  current_license_key?: string; // Current license key for upgrades
-  requires_seats?: boolean; // Whether to add adjustable seat pricing
-  seat_count?: number; // Initial number of seats for enterprise plans (user can adjust in Stripe UI)
-  server_quantity?: number; // Blocks of users to buy; the Stripe line item counts these
-  email?: string; // Customer email for checkout pre-fill
-  successUrl?: string;
-  cancelUrl?: string;
-}
-
-export interface CheckoutSessionResponse {
-  clientSecret: string;
-  sessionId: string;
-  url?: string; // URL for hosted checkout (when not using HTTPS)
 }
 
 export interface BillingPortalResponse {
@@ -98,8 +80,8 @@ const getCurrencySymbol = (currency: string): string => {
 
 // Self-hosted plan lookup keys
 const SELF_HOSTED_LOOKUP_KEYS = [
-  "selfhosted:server:monthly",
-  "selfhosted:server:yearly",
+  "selfhosted:team:monthly",
+  "selfhosted:team:yearly",
   "selfhosted:enterpriseseat:monthly",
   "selfhosted:enterpriseseat:yearly",
 ];
@@ -117,6 +99,8 @@ const licenseService = {
     planFeatures: PlanFeaturesMap,
     planHighlights: PlanHighlightsMap,
     currency: string = "usd",
+    currencyLocked = false,
+    tier?: "server" | "enterprise",
   ): Promise<PlansResponse> {
     try {
       // Check if Supabase is configured
@@ -139,7 +123,12 @@ const licenseService = {
         missing: string[];
       }>("stripe-price-lookup", {
         body: {
-          lookup_keys: SELF_HOSTED_LOOKUP_KEYS,
+          lookup_keys:
+            tier === "server"
+              ? SELF_HOSTED_LOOKUP_KEYS.filter((key) =>
+                  key.startsWith("selfhosted:team:"),
+                )
+              : SELF_HOSTED_LOOKUP_KEYS,
           currency,
         },
       });
@@ -168,71 +157,83 @@ const licenseService = {
         { unit_amount: number; currency: string }
       >();
       for (const [lookupKey, priceData] of Object.entries(data.prices)) {
+        if (currencyLocked && priceData.currency !== currency) {
+          throw new Error(
+            `The plan is not configured for ${currency.toUpperCase()}.`,
+          );
+        }
         priceMap.set(lookupKey, {
           unit_amount: priceData.unit_amount,
           currency: priceData.currency,
         });
       }
 
-      const currencySymbol = getCurrencySymbol(currency);
+      const currencySymbol = getCurrencySymbol("usd");
+      const priceCurrency = (key: string) =>
+        getCurrencySymbol(priceMap.get(key)?.currency ?? "usd");
 
       // Helper to get price info
       const getPriceInfo = (lookupKey: string, fallback: number = 0) => {
         const priceData = priceMap.get(lookupKey);
-        return priceData ? priceData.unit_amount / 100 : fallback;
+        return priceData
+          ? stripeAmountToMajor(priceData.unit_amount, priceData.currency)
+          : fallback;
       };
 
       // Build plan tiers
       const plans: PlanTier[] = [
         {
-          id: "selfhosted:server:monthly",
-          lookupKey: "selfhosted:server:monthly",
+          id: "selfhosted:team:monthly",
+          lookupKey: "selfhosted:team:monthly",
           name: "Team - Monthly",
-          price: getPriceInfo("selfhosted:server:monthly"),
-          currency: currencySymbol,
+          price: getPriceInfo("selfhosted:team:monthly"),
+          currency: priceCurrency("selfhosted:team:monthly"),
           period: "/month",
           popular: false,
           features: planFeatures.SERVER,
           highlights: planHighlights.SERVER_MONTHLY,
         },
         {
-          id: "selfhosted:server:yearly",
-          lookupKey: "selfhosted:server:yearly",
+          id: "selfhosted:team:yearly",
+          lookupKey: "selfhosted:team:yearly",
           name: "Team - Yearly",
-          price: getPriceInfo("selfhosted:server:yearly"),
-          currency: currencySymbol,
+          price: getPriceInfo("selfhosted:team:yearly"),
+          currency: priceCurrency("selfhosted:team:yearly"),
           period: "/year",
           popular: true,
           features: planFeatures.SERVER,
           highlights: planHighlights.SERVER_YEARLY,
         },
-        {
-          id: "selfhosted:enterprise:monthly",
-          lookupKey: "selfhosted:server:monthly",
-          name: "Enterprise - Monthly",
-          price: getPriceInfo("selfhosted:server:monthly"),
-          seatPrice: getPriceInfo("selfhosted:enterpriseseat:monthly"),
-          currency: currencySymbol,
-          period: "/month",
-          popular: false,
-          requiresSeats: true,
-          features: planFeatures.ENTERPRISE,
-          highlights: planHighlights.ENTERPRISE_MONTHLY,
-        },
-        {
-          id: "selfhosted:enterprise:yearly",
-          lookupKey: "selfhosted:server:yearly",
-          name: "Enterprise - Yearly",
-          price: getPriceInfo("selfhosted:server:yearly"),
-          seatPrice: getPriceInfo("selfhosted:enterpriseseat:yearly"),
-          currency: currencySymbol,
-          period: "/year",
-          popular: false,
-          requiresSeats: true,
-          features: planFeatures.ENTERPRISE,
-          highlights: planHighlights.ENTERPRISE_YEARLY,
-        },
       ];
+      if (tier !== "server")
+        plans.push(
+          {
+            id: "selfhosted:enterprise:monthly",
+            lookupKey: "selfhosted:team:monthly",
+            name: "Enterprise - Monthly",
+            price: getPriceInfo("selfhosted:team:monthly"),
+            seatPrice: getPriceInfo("selfhosted:enterpriseseat:monthly"),
+            currency: priceCurrency("selfhosted:team:monthly"),
+            period: "/month",
+            popular: false,
+            requiresSeats: true,
+            features: planFeatures.ENTERPRISE,
+            highlights: planHighlights.ENTERPRISE_MONTHLY,
+          },
+          {
+            id: "selfhosted:enterprise:yearly",
+            lookupKey: "selfhosted:team:yearly",
+            name: "Enterprise - Yearly",
+            price: getPriceInfo("selfhosted:team:yearly"),
+            seatPrice: getPriceInfo("selfhosted:enterpriseseat:yearly"),
+            currency: priceCurrency("selfhosted:team:yearly"),
+            period: "/year",
+            popular: false,
+            requiresSeats: true,
+            features: planFeatures.ENTERPRISE,
+            highlights: planHighlights.ENTERPRISE_YEARLY,
+          },
+        );
 
       // Filter out plans with missing prices (price === 0 means Stripe price not found)
       const validPlans = plans.filter((plan) => plan.price > 0);
@@ -290,10 +291,10 @@ const licenseService = {
 
     // Server tier
     const serverMonthly = plans.find(
-      (p) => p.lookupKey === "selfhosted:server:monthly",
+      (p) => p.lookupKey === "selfhosted:team:monthly",
     );
     const serverYearly = plans.find(
-      (p) => p.lookupKey === "selfhosted:server:yearly",
+      (p) => p.lookupKey === "selfhosted:team:yearly",
     );
     if (serverMonthly || serverYearly) {
       groups.push({
@@ -327,53 +328,6 @@ const licenseService = {
     }
 
     return groups;
-  },
-
-  /**
-   * Create a Stripe checkout session for upgrading
-   */
-  async createCheckoutSession(
-    request: CheckoutSessionRequest,
-  ): Promise<CheckoutSessionResponse> {
-    // Check if Supabase is configured
-    if (!isSupabaseConfigured || !supabase) {
-      throw new Error("Supabase is not configured. Checkout is not available.");
-    }
-
-    // Detect if HTTPS is available to determine checkout mode
-    const checkoutMode = getCheckoutMode();
-    const baseUrl = window.location.origin;
-    const settingsUrl = `${baseUrl}/settings/adminPlan`;
-
-    const { data, error } = await supabase.functions.invoke("create-checkout", {
-      body: {
-        self_hosted: true,
-        lookup_key: request.lookup_key,
-        installation_id: request.installation_id,
-        current_license_key: request.current_license_key,
-        requires_seats: request.requires_seats,
-        seat_count: request.seat_count || 1,
-        server_quantity: request.server_quantity || 1,
-        email: request.email,
-        callback_base_url: baseUrl,
-        ui_mode: checkoutMode,
-        // For hosted checkout, provide success/cancel URLs
-        success_url:
-          checkoutMode === "hosted"
-            ? `${settingsUrl}?session_id={CHECKOUT_SESSION_ID}&payment_status=success`
-            : undefined,
-        cancel_url:
-          checkoutMode === "hosted"
-            ? `${settingsUrl}?payment_status=canceled`
-            : undefined,
-      },
-    });
-
-    if (error) {
-      throw new Error(`Failed to create checkout session: ${error.message}`);
-    }
-
-    return data as CheckoutSessionResponse;
   },
 
   /**

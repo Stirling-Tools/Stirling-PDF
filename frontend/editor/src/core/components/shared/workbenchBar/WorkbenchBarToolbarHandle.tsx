@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import { Icon } from "@app/ui/Icon";
 import { Button } from "@app/ui/Button";
 
 interface WorkbenchBarToolbarHandleProps {
@@ -41,9 +40,9 @@ export default function WorkbenchBarToolbarHandle({
         }
         leftSection={
           expanded ? (
-            <KeyboardArrowUpIcon sx={{ fontSize: "1.25rem" }} />
+            <Icon name="chevron-up" size={"1.25rem"} />
           ) : (
-            <KeyboardArrowDownIcon sx={{ fontSize: "1.25rem" }} />
+            <Icon name="chevron-down" size={"1.25rem"} />
           )
         }
       />
@@ -61,7 +60,7 @@ export default function WorkbenchBarToolbarHandle({
       aria-expanded
       aria-label={t("workbenchBar.hideToolbar", "Hide toolbar")}
       title={t("workbenchBar.hideToolbar", "Hide toolbar")}
-      leftSection={<KeyboardArrowUpIcon sx={{ fontSize: "1rem" }} />}
+      leftSection={<Icon name="chevron-up" size={"1rem"} />}
     />
   );
 }

@@ -15,7 +15,6 @@ export function SidebarProvider({ children }: SidebarProviderProps) {
   const quickAccessRef = useRef<HTMLDivElement>(null);
   const toolPanelRef = useRef<HTMLDivElement>(null);
 
-  const [sidebarsVisible, setSidebarsVisible] = useState(true);
   const [leftPanelView, setLeftPanelView] = useState<
     "toolPicker" | "toolContent"
   >("toolPicker");
@@ -23,11 +22,10 @@ export function SidebarProvider({ children }: SidebarProviderProps) {
 
   const sidebarState: SidebarState = useMemo(
     () => ({
-      sidebarsVisible,
       leftPanelView,
       readerMode,
     }),
-    [sidebarsVisible, leftPanelView, readerMode],
+    [leftPanelView, readerMode],
   );
 
   const sidebarRefs: SidebarRefs = useMemo(
@@ -42,17 +40,10 @@ export function SidebarProvider({ children }: SidebarProviderProps) {
     () => ({
       sidebarState,
       sidebarRefs,
-      setSidebarsVisible,
       setLeftPanelView,
       setReaderMode,
     }),
-    [
-      sidebarState,
-      sidebarRefs,
-      setSidebarsVisible,
-      setLeftPanelView,
-      setReaderMode,
-    ],
+    [sidebarState, sidebarRefs, setLeftPanelView, setReaderMode],
   );
 
   return (

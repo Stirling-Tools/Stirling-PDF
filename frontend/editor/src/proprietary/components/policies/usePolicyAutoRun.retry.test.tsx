@@ -28,7 +28,10 @@ vi.mock("@app/services/policyApi", () => ({
   resolvePolicyRunTarget: () => "saas",
 }));
 vi.mock("@app/services/fileStorage", () => ({
-  fileStorage: { getStirlingFile: vi.fn(), getStirlingFileStub: vi.fn() },
+  fileStorage: {
+    getStirlingFile: vi.fn(),
+    getStirlingFileStub: vi.fn().mockResolvedValue(null),
+  },
 }));
 vi.mock("@app/contexts/IndexedDBContext", () => ({
   useIndexedDB: () => ({ bumpRevision: vi.fn() }),
@@ -120,6 +123,7 @@ describe("auto-run queue-rejection retry", () => {
       "backend-1",
       [{ size: 1234 }],
       "file-1",
+      "background",
     );
     expect(getRun("run-1")).toBeUndefined();
     expect(getRun("run-2")?.status).toBe("RUNNING");

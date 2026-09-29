@@ -369,12 +369,10 @@ describe("BrickGame", () => {
       ["fast", 0.85],
       ["reverse", 0.97],
     ])("runs the %s effect when that drop is caught", (kind, roll) => {
-      alwaysDrop(roll as number);
+      alwaysDrop(roll);
       const harness = setup();
       harness.game.act();
-      expect(
-        peak(harness, (s) => effectSeconds(s, kind as string)),
-      ).toBeGreaterThan(0);
+      expect(peak(harness, (s) => effectSeconds(s, kind))).toBeGreaterThan(0);
     });
 
     it("clears the board's effects when a ball is conceded", () => {

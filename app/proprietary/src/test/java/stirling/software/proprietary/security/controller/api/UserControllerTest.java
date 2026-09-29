@@ -80,6 +80,8 @@ class UserControllerTest {
                         licenseSettingsService,
                         loginAttemptService,
                         teamMembershipService,
+                        org.mockito.Mockito.mock(
+                                stirling.software.proprietary.service.OrgOwnerService.class),
                         loginLandingService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
@@ -112,7 +114,7 @@ class UserControllerTest {
         when(userService.usernameExistsIgnoreCase("new@example.com")).thenReturn(false);
         when(userService.isUsernameValid("new@example.com")).thenReturn(true);
         when(licenseSettingsService.wouldExceedLimit(1)).thenReturn(false);
-        when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME))
+        when(teamRepository.findFirstByNameOrderByIdAsc(TeamService.DEFAULT_TEAM_NAME))
                 .thenReturn(Optional.of(defaultTeam));
 
         User savedUser = new User();

@@ -1,12 +1,24 @@
 # Standalone unoserver image for Stirling-PDF remote UNO mode.
 # Pinned to unoserver 3.7 to match Stirling-PDF's client (avoids wire mismatch).
 
+FROM ubuntu:noble@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517 AS lo-sandbox-build
+RUN apt-get update && apt-get install -y --no-install-recommends gcc libc6-dev && \
+    rm -rf /var/lib/apt/lists/*
+COPY docker/base/lo-sandbox.c /src/lo-sandbox.c
+RUN gcc -O2 -Wall -Wextra -Werror -o /usr/local/bin/lo-sandbox /src/lo-sandbox.c && \
+    strip --strip-unneeded /usr/local/bin/lo-sandbox
+
+
 FROM ubuntu:noble@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517
 
 ARG UNOSERVER_VERSION=3.7
 # ~120 MB of CJK fonts — opt-in.
 ARG INSTALL_CJK_FONTS=false
 
+# UNOSERVER_IDLE_TIMEOUT_SECONDS=0 keeps idle shutdown off. A positive value only
+# works when something sharing /tmp/uno-last-used writes a fresh timestamp (the
+# embedded Stirling container does); a standalone unoserver has no wake source
+# and would stay stopped while still reporting healthy.
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
@@ -15,7 +27,14 @@ ENV DEBIAN_FRONTEND=noninteractive \
     UNOSERVER_INTERFACE=0.0.0.0 \
     UNOSERVER_CONVERSION_TIMEOUT=1800 \
     UNOSERVER_RECYCLE_INTERVAL_SECONDS=0 \
-    UNOSERVER_PROFILE_DIR=/var/lib/unoserver/profile
+    UNOSERVER_IDLE_TIMEOUT_SECONDS=0 \
+    UNOSERVER_PROFILE_DIR=/var/lib/unoserver/profile \
+    SAL_USE_VCLPLUGIN=svp \
+    SAL_DISABLE_PRINTERLIST=1 \
+    OOO_FORCE_DESKTOP=none \
+    SAL_LOG="-WARN-INFO" \
+    MALLOC_ARENA_MAX=2 \
+    DBUS_SESSION_BUS_ADDRESS=/dev/null
 
 RUN set -eux; \
     apt-get update; \
@@ -78,6 +97,23 @@ RUN rm -rf /usr/lib/libreoffice/share/gallery \
            /usr/lib/libreoffice/share/extensions/wiki-publisher \
            /usr/lib/libreoffice/share/extensions/nlpsolver \
            /usr/share/doc/* /usr/share/man/* /usr/share/info/*
+
+COPY --from=lo-sandbox-build /usr/local/bin/lo-sandbox /usr/local/lib/stirling/lo-sandbox
+COPY --chmod=0644 docker/base/stirling-hardening.xcd /usr/lib/libreoffice/share/registry/stirling-hardening.xcd
+COPY docker/base/unoserver-pipe-transport.py /usr/local/lib/stirling/unoserver-pipe-transport.py
+
+RUN set -eux; \
+    chown root:root /usr/local/lib/stirling/lo-sandbox; \
+    chmod 0755 /usr/local/lib/stirling/lo-sandbox; \
+    for name in /usr/bin/soffice /usr/bin/libreoffice /usr/bin/ooffice; do \
+      if [ -e "$name" ] || [ -L "$name" ]; then rm -f "$name"; fi; \
+      cp /usr/local/lib/stirling/lo-sandbox "$name"; \
+      chown root:root "$name"; \
+      chmod 0755 "$name"; \
+    done; \
+    /opt/unoserver-venv/bin/python /usr/local/lib/stirling/unoserver-pipe-transport.py \
+      "$(/opt/unoserver-venv/bin/python -c 'import unoserver, os; print(os.path.dirname(unoserver.__file__))')"; \
+    STIRLING_LO_SANDBOX=off /usr/bin/soffice --version
 
 ARG PUID=1001
 ARG PGID=1001

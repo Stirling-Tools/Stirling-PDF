@@ -71,11 +71,15 @@ const appMounted = () => screen.queryByTestId("app") !== null;
 describe("RootGate", () => {
   beforeEach(() => {
     h.get.mockReset();
+    window.localStorage.setItem("stirling_jwt", "test-token");
     // The portal only exists in some builds; the decision is a no-op without it.
     vi.stubEnv("VITE_INCLUDE_PORTAL", "true");
     vi.stubEnv("VITE_LOGIN_LANDING_MODE", "dynamic");
   });
-  afterEach(() => vi.unstubAllEnvs());
+  afterEach(() => {
+    window.localStorage.removeItem("stirling_jwt");
+    vi.unstubAllEnvs();
+  });
 
   it("renders the app untouched on every path but /", async () => {
     backend({ portalAccess: true, loginLandingView: "processor" });
@@ -111,6 +115,14 @@ describe("RootGate", () => {
     renderAt("/");
     await waitFor(() => expect(appMounted()).toBe(true));
     expect(at()).toBe("/");
+  });
+
+  it("leaves a visitor with no token on / without a network request", async () => {
+    window.localStorage.removeItem("stirling_jwt");
+    renderAt("/");
+    await waitFor(() => expect(appMounted()).toBe(true));
+    expect(at()).toBe("/");
+    expect(h.get).not.toHaveBeenCalled();
   });
 
   it("survives StrictMode's double-invoke", async () => {

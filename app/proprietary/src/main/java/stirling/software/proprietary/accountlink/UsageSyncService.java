@@ -6,7 +6,9 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.config.FixedDelayTask;
@@ -16,6 +18,8 @@ import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.billing.BillingCategory;
+import stirling.software.proprietary.security.service.UserService;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
 
 /**
  * Daily usage sender for combined billing. Reports each period's cumulative per-category usage to
@@ -31,8 +35,9 @@ import stirling.software.proprietary.billing.BillingCategory;
 @Service
 @Profile("!saas")
 @ConditionalOnProperty(
-        name = "stirling.billing.account-link.metering.enabled",
-        havingValue = "true")
+        name = "stirling.billing.account-link.enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class UsageSyncService implements SchedulingConfigurer {
 
     // First run waits out startup churn; then every interval.
@@ -44,6 +49,9 @@ public class UsageSyncService implements SchedulingConfigurer {
     private final AccountLinkClient client;
     private final EntitlementCache entitlementCache;
     private final AccountLinkProperties properties;
+    private final ApplicationEventPublisher events;
+    private final ObjectProvider<UserService> users;
+    private final UserLicenseSettingsService licenseSettings;
 
     public UsageSyncService(
             UsageCounterRepository counters,
@@ -51,13 +59,19 @@ public class UsageSyncService implements SchedulingConfigurer {
             DeviceCredentialStore credentialStore,
             AccountLinkClient client,
             EntitlementCache entitlementCache,
-            AccountLinkProperties properties) {
+            AccountLinkProperties properties,
+            ApplicationEventPublisher events,
+            ObjectProvider<UserService> users,
+            UserLicenseSettingsService licenseSettings) {
         this.counters = counters;
         this.syncState = syncState;
         this.credentialStore = credentialStore;
         this.client = client;
         this.entitlementCache = entitlementCache;
         this.properties = properties;
+        this.events = events;
+        this.users = users;
+        this.licenseSettings = licenseSettings;
     }
 
     /**
@@ -82,47 +96,63 @@ public class UsageSyncService implements SchedulingConfigurer {
 
     /**
      * Reports every period with unsynced usage and refreshes the cached entitlement from the reply.
-     * Single daily caller (non-reentrant {@code fixedDelay}), so no internal locking. No-op when
-     * unlinked or when nothing is pending.
+     * Serializes link, manual and scheduled calls to preserve report sequence ordering. Also
+     * reports seats when no credits are pending; no-op when unlinked.
      */
-    public void syncNow() {
+    public synchronized void syncNow() {
         Optional<DeviceCredential> cred = credentialStore.get();
         if (cred.isEmpty()) {
             return; // not linked
         }
-        List<LocalDateTime> periods = counters.findPeriodsWithUnsyncedUsage();
-        if (periods.isEmpty()) {
-            // Nothing to report, but a sync is also our cue to pick up an out-of-band entitlement
-            // change (e.g. the admin just subscribed) that otherwise wouldn't surface until the
-            // cache TTL lapses. Force an immediate refresh so the gate reflects the new plan now.
-            entitlementCache.invalidate();
-            entitlementCache.current();
-            return;
-        }
+        UserService localUsers = users.getIfAvailable();
+        if (localUsers == null) return;
+        int seatCount =
+                licenseSettings.hasLicenseKeyPaidTier()
+                        ? 0
+                        : Math.toIntExact(localUsers.getTotalUsersCount());
+        List<LocalDateTime> periods =
+                properties.getMetering().isEnabled()
+                        ? counters.findPeriodsWithUnsyncedUsage()
+                        : List.of();
         InstanceEntitlement latest = null;
         try {
+            if (periods.isEmpty()) {
+                latest =
+                        client.reportUsage(
+                                cred.get().getDeviceId(),
+                                cred.get().getDeviceSecret(),
+                                0,
+                                null,
+                                0,
+                                0,
+                                0,
+                                seatCount);
+            }
             for (LocalDateTime period : periods) {
-                InstanceEntitlement fresh = syncPeriod(cred.get(), period);
+                InstanceEntitlement fresh = syncPeriod(cred.get(), period, seatCount);
                 if (fresh != null) {
                     latest = fresh;
                 }
             }
         } catch (AccountLinkClient.RevokedException e) {
-            // Authoritative deny — stop reporting; the entitlement cache blocks billable work on
-            // its
-            // own next refresh, so we don't synthesise the blocked state here.
-            log.info(
-                    "Usage sync denied (HTTP {}); credential revoked/invalid — gate blocks on next"
-                            + " refresh",
-                    e.status());
+            entitlementCache.accept(
+                    cred.get().getDeviceId(),
+                    new InstanceEntitlement(false, 0, 0, 0L, EntitlementState.REVOKED));
+            events.publishEvent(new EntitlementRefreshedEvent());
             return;
         }
         // Adopt the freshest entitlement the sync returned, saving the cache a redundant fetch.
-        entitlementCache.accept(latest);
+        entitlementCache.accept(cred.get().getDeviceId(), latest);
+        if (latest != null) {
+            // Only when a reply actually arrived. accept() no-ops on null, so announcing a refresh
+            // here would tell listeners the plan had been re-read when every period had failed.
+            events.publishEvent(new EntitlementRefreshedEvent());
+        }
     }
 
     /** Reports one period; returns the fresh entitlement, or null on a transport/server failure. */
-    private InstanceEntitlement syncPeriod(DeviceCredential cred, LocalDateTime period) {
+    private InstanceEntitlement syncPeriod(
+            DeviceCredential cred, LocalDateTime period, int seatCount) {
         EnumMap<BillingCategory, Long> cumulative = new EnumMap<>(BillingCategory.class);
         for (UsageCounter c : counters.findByPeriodStart(period)) {
             BillingCategory cat = c.billingCategory();
@@ -140,7 +170,8 @@ public class UsageSyncService implements SchedulingConfigurer {
                         period,
                         cumulative.getOrDefault(BillingCategory.API, 0L),
                         cumulative.getOrDefault(BillingCategory.AI, 0L),
-                        cumulative.getOrDefault(BillingCategory.AUTOMATION, 0L));
+                        cumulative.getOrDefault(BillingCategory.AUTOMATION, 0L),
+                        seatCount);
         if (fresh == null) {
             // Transport/server failure: leave the synced markers untouched. The burned seq is
             // harmless (seqs need only be monotonic) and the delta bills on the next successful
