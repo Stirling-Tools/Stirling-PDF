@@ -2,10 +2,10 @@ import { describe, expect, test, vi, afterEach } from "vitest";
 import { allowConsole } from "@app/tests/failOnConsole";
 
 /**
- * Contract for the eager pdfium wasm bootstrap: it must start at most once,
- * fall back when compileStreaming is unavailable/failing, and must not inject
- * a <link rel="preload"> (WebKit does not reuse it for compileStreaming and
- * downloaded the 4.6 MB binary twice).
+ * Contract for the eager pdfium wasm bootstrap: it starts at most once, fetches
+ * the binary and compiles the buffer, resolves null on failure instead of
+ * throwing, and never injects a <link rel="preload"> (WebKit downloaded the
+ * 4.6 MB binary twice when it did).
  */
 
 afterEach(() => {
@@ -25,8 +25,7 @@ describe("wasmPrecompiler", () => {
     expect(link).toBeNull();
   });
 
-  test("falls back to ArrayBuffer compile and runs once", async () => {
-    allowConsole.warn(/compileStreaming failed/);
+  test("fetches the wasm and compiles the buffer once", async () => {
     const fetchMock = vi.fn(async () => ({
       ok: true,
       status: 200,
@@ -34,12 +33,8 @@ describe("wasmPrecompiler", () => {
       arrayBuffer: async () => new ArrayBuffer(8),
     }));
     vi.stubGlobal("fetch", fetchMock);
-    const compileSpy = vi
-      .spyOn(WebAssembly, "compile")
-      .mockResolvedValue({} as WebAssembly.Module);
-    vi.spyOn(WebAssembly, "compileStreaming").mockRejectedValue(
-      new Error("no streaming"),
-    );
+    const compileSpy = vi.spyOn(WebAssembly, "compile").mockResolvedValue({});
+    const streamingSpy = vi.spyOn(WebAssembly, "compileStreaming");
 
     const { startEagerWasmCompilation, pdfiumWasmModulePromise } =
       await loadFresh();
@@ -50,11 +45,11 @@ describe("wasmPrecompiler", () => {
       module: expect.anything(),
     });
     expect(compileSpy).toHaveBeenCalledTimes(1);
-    expect(fetchMock).toHaveBeenCalledTimes(2); // streaming attempt + fallback fetch
+    expect(streamingSpy).not.toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   test("resolves null when compilation fails instead of throwing", async () => {
-    allowConsole.warn(/compileStreaming failed/);
     allowConsole.warn(/WASM compilation failed/);
     vi.stubGlobal(
       "fetch",
