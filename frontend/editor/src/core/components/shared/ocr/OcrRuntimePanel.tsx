@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Alert, Checkbox, Loader, ScrollArea, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
@@ -42,18 +48,24 @@ const OcrRuntimePanel: React.FC<OcrRuntimePanelProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [restartRequired, setRestartRequired] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  // Reopening the dialog can start a request while the last one is still out,
+  // and the older answer may come back second. Only the latest is applied.
+  const latestRequest = useRef(0);
 
   const refresh = useCallback(async () => {
+    const request = ++latestRequest.current;
     setLoading(true);
     setError(null);
     try {
       const next = await getOcrRuntimeStatus();
+      if (request !== latestRequest.current) return;
       setStatus(next);
       setSelected(new Set(next.installedLanguages));
     } catch (e) {
+      if (request !== latestRequest.current) return;
       setError(e instanceof Error ? e.message : String(e));
     } finally {
-      setLoading(false);
+      if (request === latestRequest.current) setLoading(false);
     }
   }, []);
 
