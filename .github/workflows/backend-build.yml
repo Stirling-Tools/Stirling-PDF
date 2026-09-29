@@ -142,13 +142,14 @@ jobs:
             } >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Restore Gradle cache github-branch
+      - name: Restore Gradle cache github-artifact
         id: cache
-        uses: Ludy87/cache-the-planet/multi-cache@cabcf5bef812b3b6a432f184c7f49c2875c34475
+        uses: Ludy87/cache-the-planet/multi-cache@ea30c17fdfc6b1e7eb3b9aebfd75f040e43d597b
         with:
           manifest-branch: dev-cache
           manifest-path: .github/cache-data
-          storage: github-branch
+          artifact-retention-days: 1
+          storage: github-artifact
           multi-cache: ${{ steps.cache-config.outputs.multi_cache }}
           save-scope: shared
           token: ${{ github.token }}
