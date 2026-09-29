@@ -623,5 +623,41 @@ class OcrRuntimeServiceTest {
             // Absent sections must not blow up: a catalogue with no extras is perfectly valid.
             assertTrue(loaded.extras().isEmpty());
         }
+
+        private OcrRuntimeService serviceReading(Path manifest) {
+            ApplicationProperties properties = new ApplicationProperties();
+            properties.getSystem().getOcr().setManifestUrl(fileUrl(manifest));
+            return new OcrRuntimeService(properties);
+        }
+
+        /**
+         * The status endpoint turns an IOException into "catalogue unreachable" and nothing else.
+         */
+        @Test
+        @DisplayName("a page that is not JSON, as a captive portal serves, is an IOException")
+        void refusesAPageThatIsNotJson() throws IOException {
+            Path page = fileWith("portal.json", "<html><body>Sign in to the wifi</body></html>");
+
+            assertThrows(IOException.class, () -> serviceReading(page).loadManifest());
+        }
+
+        @Test
+        @DisplayName("a catalogue that is JSON null is refused rather than cached")
+        void refusesNull() throws IOException {
+            Path empty = fileWith("null.json", "null");
+
+            assertThrows(IOException.class, () -> serviceReading(empty).loadManifest());
+        }
+
+        @Test
+        @DisplayName("a catalogue past the size cap is refused, however well formed")
+        void refusesAnOversizedCatalogue() throws IOException {
+            Path huge =
+                    fileWith(
+                            "huge.json",
+                            "{" + " ".repeat(OcrRuntimeService.MAX_MANIFEST_BYTES) + "}");
+
+            assertThrows(IOException.class, () -> serviceReading(huge).loadManifest());
+        }
     }
 }

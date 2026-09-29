@@ -37,6 +37,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.ChecksumUtils;
 import stirling.software.common.util.GeneralUtils;
 
+import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
 /**
@@ -85,6 +86,9 @@ public class OcrRuntimeService {
 
     private static final long MAX_EXPANDED_BYTES = 700L * 1024 * 1024;
     private static final int MAX_ENTRIES = 5_000;
+
+    /** The real catalogue is about 57 KB; the installer's action applies the same ceiling. */
+    static final int MAX_MANIFEST_BYTES = 4 * 1024 * 1024;
 
     /** Redirect hops allowed. A GitHub release asset takes exactly one. */
     private static final int MAX_REDIRECTS = 5;
@@ -225,9 +229,24 @@ public class OcrRuntimeService {
             return cached.manifest();
         }
         URI uri = validatedUri(url);
-        OcrManifest manifest;
+        byte[] body;
         try (InputStream in = open(uri)) {
-            manifest = objectMapper.readValue(in.readAllBytes(), OcrManifest.class);
+            body = in.readNBytes(MAX_MANIFEST_BYTES + 1);
+        }
+        if (body.length > MAX_MANIFEST_BYTES) {
+            throw new IOException(
+                    "The OCR catalogue is larger than " + MAX_MANIFEST_BYTES + " bytes");
+        }
+        OcrManifest manifest;
+        try {
+            manifest = objectMapper.readValue(body, OcrManifest.class);
+        } catch (JacksonException e) {
+            // Jackson 3 reports a malformed document unchecked. Callers treat an IOException as
+            // "catalogue unreachable", and a captive portal's HTML page is exactly that.
+            throw new IOException("The OCR catalogue is not valid JSON: " + e.getMessage(), e);
+        }
+        if (manifest == null) {
+            throw new IOException("The OCR catalogue is empty");
         }
         manifestCache.set(new CachedManifest(url, manifest, System.nanoTime()));
         return manifest;
