@@ -1,5 +1,5 @@
 import React from "react";
-import { Paper, Text, Group } from "@mantine/core";
+import { Paper, Text, Group, Stack } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { useDefaultApp } from "@app/hooks/useDefaultApp";
@@ -10,37 +10,42 @@ export const DefaultAppSettings: React.FC = () => {
 
   return (
     <Paper withBorder p="md" radius="md">
-      <Group justify="space-between" align="center">
-        <div>
-          <Text fw={500} size="sm">
-            {t("settings.general.defaultPdfEditor", "Default PDF editor")}
-          </Text>
-          <Text size="xs" c="dimmed" mt={4}>
-            {isDefault === true
-              ? t(
-                  "settings.general.defaultPdfEditorActive",
-                  "Stirling PDF is your default PDF editor",
-                )
-              : isDefault === false
+      <Stack gap="md">
+        <Group justify="space-between" align="center">
+          <div>
+            <Text fw={500} size="sm">
+              {t("settings.general.defaultPdfEditor", "Default PDF editor")}
+            </Text>
+            <Text size="xs" c="dimmed" mt={4}>
+              {isDefault === true
                 ? t(
-                    "settings.general.defaultPdfEditorInactive",
-                    "Another application is set as default",
+                    "settings.general.defaultPdfEditorActive",
+                    "Stirling PDF is your default PDF editor",
                   )
-                : t("settings.general.defaultPdfEditorChecking", "Checking...")}
-          </Text>
-        </div>
-        <Button
-          variant={isDefault ? "secondary" : "primary"}
-          size="sm"
-          onClick={handleSetDefault}
-          loading={isLoading}
-          disabled={isDefault === true}
-        >
-          {isDefault
-            ? t("settings.general.defaultPdfEditorSet", "Already Default")
-            : t("settings.general.setAsDefault", "Set as Default")}
-        </Button>
-      </Group>
+                : isDefault === false
+                  ? t(
+                      "settings.general.defaultPdfEditorInactive",
+                      "Another application is set as default",
+                    )
+                  : t(
+                      "settings.general.defaultPdfEditorChecking",
+                      "Checking...",
+                    )}
+            </Text>
+          </div>
+          <Button
+            variant={isDefault ? "secondary" : "primary"}
+            size="sm"
+            onClick={handleSetDefault}
+            loading={isLoading}
+            disabled={isDefault === true}
+          >
+            {isDefault
+              ? t("settings.general.defaultPdfEditorSet", "Already Default")
+              : t("settings.general.setAsDefault", "Set as Default")}
+          </Button>
+        </Group>
+      </Stack>
     </Paper>
   );
 };

@@ -1,176 +1,94 @@
-/**
- * The Classification policy's team-labels control, shown in its Edit-Settings
- * view: a compact summary (count + chips) with an Expand button that opens the
- * fat {@link LabelsEditorModal}. Team-shared; only users who can configure
- * policies may edit it. Owns the editable draft and the load/save/import/export
- * wiring via {@link useClassificationLabels}.
- */
+// Read-only view of the classification vocabulary shown in the policy wizard: a fixed, built-in
+// set shared across the whole team, browsable by expanding a category.
 
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import OpenInFullIcon from "@mui/icons-material/OpenInFull";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import { Card } from "@app/ui/Card";
-import { Button } from "@app/ui/Button";
-import { Chip } from "@app/ui/Chip";
-import { Banner } from "@app/ui/Banner";
-import { useClassificationLabels } from "@app/hooks/useClassificationLabels";
-import { LabelsEditorModal } from "@app/components/policies/LabelsEditorModal";
-import {
-  downloadLabels,
-  parseLabelsFile,
-  validateLabels,
-} from "@app/services/labelsFile";
+import { Icon } from "@app/ui/Icon";
+import { Button, Card, Chip } from "@app/ui";
 import {
   DEFAULT_CLASSIFICATION_LABELS,
-  type ClassificationLabel,
+  LABEL_FAMILIES,
 } from "@app/data/classificationLabels";
-import "@app/components/policies/LabelsEditor.css";
+import "@app/components/policies/ClassificationLabelsSection.css";
 
-/** Chips shown in the collapsed team summary before it gets noisy. */
-const SUMMARY_CHIP_COUNT = 12;
-
-interface ClassificationLabelsSectionProps {
-  canConfigure: boolean;
-}
-
-export function ClassificationLabelsSection({
-  canConfigure,
-}: ClassificationLabelsSectionProps) {
+export function ClassificationLabelsSection() {
   const { t } = useTranslation();
-  const { teamLabels, isCustom, loading, saving, error, saveTeam } =
-    useClassificationLabels(true);
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
 
-  const [draft, setDraft] = useState<ClassificationLabel[]>(teamLabels);
-  const [open, setOpen] = useState(false);
-  const [localError, setLocalError] = useState<string | null>(null);
-
-  // Sync the draft to server truth whenever it changes (load / save / reset).
-  // Local edits don't change `teamLabels`, so this never clobbers them mid-edit.
-  useEffect(() => setDraft(teamLabels), [teamLabels]);
-
-  const dirty = useMemo(
-    () => JSON.stringify(draft) !== JSON.stringify(teamLabels),
-    [draft, teamLabels],
-  );
-
-  const close = () => {
-    setDraft(teamLabels);
-    setLocalError(null);
-    setOpen(false);
-  };
-
-  const onImportFile = (file: File) => {
-    setLocalError(null);
-    void parseLabelsFile(file)
-      .then(setDraft)
-      .catch((e: unknown) =>
-        setLocalError(
-          e instanceof Error
-            ? e.message
-            : t("policies.labels.importError", "Couldn't import that file."),
-        ),
-      );
-  };
-
-  const onSave = () => {
-    const errors = validateLabels({ labels: draft });
-    if (errors.length > 0) {
-      setLocalError(errors[0]);
-      return;
-    }
-    setLocalError(null);
-    void saveTeam(draft).then(() => setOpen(false));
-  };
+  const toggle = (id: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
 
   return (
-    <div className="labels-summary">
-      <p className="pol-section-label">
-        {t("policies.labels.sectionLabel", "Classification labels")}
-      </p>
-      <Card>
-        {loading ? (
-          <span className="labels-empty">{t("loading", "Loading…")}</span>
-        ) : (
-          <div className="labels-summary">
-            <div className="labels-summary-stats">
-              <span>
-                <strong>{teamLabels.length}</strong>{" "}
-                {t("policies.labels.teamCount", "team labels")}
-              </span>
-            </div>
-            <div className="labels-chips">
-              {teamLabels.slice(0, SUMMARY_CHIP_COUNT).map((label) => (
-                <Chip key={label.id} accent="neutral" size="sm">
-                  {label.name}
-                </Chip>
-              ))}
-              {teamLabels.length > SUMMARY_CHIP_COUNT && (
-                <Chip accent="neutral" size="sm">
-                  +{teamLabels.length - SUMMARY_CHIP_COUNT}
-                </Chip>
-              )}
-            </div>
-            <span className="labels-summary-note">
-              {isCustom
-                ? t("policies.labels.customNote", "Customized for your team.")
-                : t(
-                    "policies.labels.defaultNote",
-                    "Using the built-in default, shared with your team.",
-                  )}
-            </span>
-            <Button
-              variant="secondary"
-              size="sm"
-              leftSection={<OpenInFullIcon sx={{ fontSize: "1rem" }} />}
-              onClick={() => setOpen(true)}
-              style={{ alignSelf: "flex-start" }}
-            >
-              {canConfigure
-                ? t("policies.labels.edit", "Edit labels")
-                : t("policies.labels.view", "View labels")}
-            </Button>
-          </div>
-        )}
-      </Card>
+    <Card>
+      <div className="classification-summary">
+        <div className="classification-summary-stats">
+          <span>
+            <strong>{DEFAULT_CLASSIFICATION_LABELS.length}</strong>{" "}
+            {t("policies.labels.labelCount", "labels")}
+          </span>
+          <span>
+            <strong>{LABEL_FAMILIES.length}</strong>{" "}
+            {t("policies.labels.categoryCount", "categories")}
+          </span>
+        </div>
 
-      {!canConfigure && (
-        <Banner
-          tone="neutral"
-          icon={<LockOutlinedIcon sx={{ fontSize: "1rem" }} />}
-          description={t(
-            "policies.labels.managedNote",
-            "Team labels are managed by your team leader.",
+        <ul className="classification-categories">
+          {LABEL_FAMILIES.map((family) => {
+            const open = expanded.has(family.id);
+            return (
+              <li key={family.id} className="classification-category">
+                <Button
+                  variant="quiet"
+                  fullWidth
+                  justify="between"
+                  className="classification-category-header"
+                  aria-expanded={open}
+                  onClick={() => toggle(family.id)}
+                  leftSection={
+                    <span className="classification-category-lead">
+                      {open ? (
+                        <Icon name="chevron-down" size={"1.1rem"} />
+                      ) : (
+                        <Icon name="chevron-right" size={"1.1rem"} />
+                      )}
+                      <Icon name={family.icon} size="1.1rem" />
+                      <span className="classification-category-name">
+                        {t(`classification.families.${family.id}`, family.name)}
+                      </span>
+                    </span>
+                  }
+                  rightSection={
+                    <span className="classification-category-count">
+                      {family.labels.length}
+                    </span>
+                  }
+                />
+                {open && (
+                  <div className="classification-category-labels">
+                    {family.labels.map((label) => (
+                      <Chip key={label.id} accent="neutral" size="sm">
+                        {t(`classification.labels.${label.id}`, label.name)}
+                      </Chip>
+                    ))}
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+
+        <span className="classification-summary-note">
+          {t(
+            "policies.labels.sharedNote",
+            "These labels are built in and shared across your whole team.",
           )}
-        />
-      )}
-
-      {error && !open && <Banner tone="danger" description={error} />}
-
-      <LabelsEditorModal
-        open={open}
-        onClose={close}
-        draft={draft}
-        onDraftChange={setDraft}
-        onImportFile={onImportFile}
-        onExport={() => downloadLabels(draft)}
-        onReset={() => {
-          // Stage the built-in default into the draft — reversible via Cancel,
-          // only persisted on Save (no immediate destructive server delete).
-          setLocalError(null);
-          setDraft(DEFAULT_CLASSIFICATION_LABELS);
-        }}
-        onClear={() => {
-          // Stage an empty list to build from scratch — also reversible until Save.
-          setLocalError(null);
-          setDraft([]);
-        }}
-        onSave={onSave}
-        dirty={dirty}
-        saving={saving}
-        readOnly={!canConfigure}
-        error={localError ?? error}
-      />
-    </div>
+        </span>
+      </div>
+    </Card>
   );
 }

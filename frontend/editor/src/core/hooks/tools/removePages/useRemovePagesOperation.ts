@@ -10,6 +10,7 @@ import {
 } from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
+  validateRemovePagesParameters,
   RemovePagesParameters,
   defaultParameters,
 } from "@app/hooks/tools/removePages/useRemovePagesParameters";
@@ -42,6 +43,7 @@ export const buildRemovePagesFormData = (
   objectToFormData(removePagesToApiParams(parameters), { fileInput: file });
 
 export const removePagesOperationConfig = defineSingleFileTool({
+  validateParams: validateRemovePagesParameters,
   buildFormData: buildRemovePagesFormData,
   toApiParams: removePagesToApiParams,
   fromApiParams: removePagesFromApiParams,

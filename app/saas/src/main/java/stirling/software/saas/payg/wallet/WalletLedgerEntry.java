@@ -87,9 +87,13 @@ public class WalletLedgerEntry implements Serializable {
     private Integer docCount = 1;
 
     /**
-     * SHA-256 of this entry's input file set; {@code COUNT(DISTINCT ...)} over a period gives
-     * unique PDFs processed. {@code null} for aggregate/system entries (grants, linked-instance
-     * sync) that don't map to a single document set.
+     * SHA-256 of this entry's input file <em>set</em> (the charge's whole input list, sorted).
+     * {@code COUNT(DISTINCT ...)} over a period approximates unique PDFs processed. Exact within a
+     * run (a file's chain/split steps share the run's charge, so one fingerprint), and for the
+     * single-input common case; but the <em>same</em> file reused across different groupings — e.g.
+     * standalone, then later merged as {A,B} — yields different set-fingerprints and is counted
+     * once per grouping. {@code null} for aggregate/system entries (grants, linked-instance sync)
+     * that don't map to a single document set.
      */
     @Column(name = "document_fingerprint", length = 64)
     private String documentFingerprint;

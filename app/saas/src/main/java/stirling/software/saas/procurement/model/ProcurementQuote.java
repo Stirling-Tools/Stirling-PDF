@@ -47,7 +47,11 @@ public class ProcurementQuote implements Serializable {
     @Column(name = "deal_id", nullable = false)
     private Long dealId;
 
-    @Column(name = "quote_number", nullable = false, length = 64)
+    /**
+     * Stripe's quote number, the deal's one buyer-facing reference. Null until the quote is issued:
+     * Stripe assigns it at finalisation, and the issue edge function writes it back then.
+     */
+    @Column(name = "quote_number", length = 64)
     private String quoteNumber;
 
     @Column(name = "status", nullable = false, length = 24)

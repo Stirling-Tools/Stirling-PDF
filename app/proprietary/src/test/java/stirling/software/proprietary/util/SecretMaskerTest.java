@@ -104,6 +104,17 @@ class SecretMaskerTest {
         }
 
         @Test
+        @DisplayName("should mask camelCase signingSecret despite no word boundary")
+        void shouldMaskCamelCaseSigningSecret() {
+            Map<String, Object> input = Map.of("signingSecret", "shh", "webhookId", "whk_abc");
+
+            Map<String, Object> result = SecretMasker.mask(input);
+
+            assertEquals(SecretMasker.REDACTED, result.get("signingSecret"));
+            assertEquals("whk_abc", result.get("webhookId"));
+        }
+
+        @Test
         @DisplayName("should mask nested map sensitive keys")
         void shouldMaskNestedMapSensitiveKeys() {
             Map<String, Object> input =

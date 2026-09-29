@@ -1,7 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { type OAuthProvider } from "@app/auth/spring/oauthTypes";
 import { Button as DSButton } from "@app/ui/Button";
-import { oauthIconUrl, GENERIC_PROVIDER_ICON } from "@app/auth/ui/oauthIcons";
+import { GENERIC_PROVIDER_ICON } from "@app/auth/ui/oauthIcons";
+import { ProviderMark } from "@app/auth/ui/ProviderMark";
 
 // Debug flag to show all providers for UI testing
 // Set to true to see all SSO options regardless of backend configuration
@@ -24,6 +25,8 @@ export const oauthProviderConfig: Record<
 };
 
 // Icon URLs + GENERIC_PROVIDER_ICON come from the shared oauthIcons resolver.
+// Every provider icon is decorative (alt=""): the button it sits in already
+// names the provider, so alt text would only repeat that name.
 
 interface OAuthButtonsProps {
   onProviderClick: (provider: OAuthProvider) => void;
@@ -114,11 +117,7 @@ export default function OAuthButtons({
               aria-label={`${t("login.signInWith", "Sign in with")} ${p.label}`}
               variant="tertiary"
             >
-              <img
-                src={oauthIconUrl(p.file)}
-                alt={p.label}
-                className="oauth-icon-small"
-              />
+              <ProviderMark file={p.file} className="oauth-icon-small" />
             </DSButton>
           </div>
         ))}
@@ -140,11 +139,7 @@ export default function OAuthButtons({
               aria-label={`${t("login.signInWith", "Sign in with")} ${p.label}`}
               variant="tertiary"
             >
-              <img
-                src={oauthIconUrl(p.file)}
-                alt={p.label}
-                className="oauth-icon-medium"
-              />
+              <ProviderMark file={p.file} className="oauth-icon-medium" />
             </DSButton>
           </div>
         ))}
@@ -167,9 +162,8 @@ export default function OAuthButtons({
             aria-label={ctaPrefix ? `${ctaPrefix} ${p.label}` : p.label}
           >
             <span className="oauth-btn-group">
-              <img
-                src={oauthIconUrl(p.file)}
-                alt={p.label}
+              <ProviderMark
+                file={p.file}
                 className={`oauth-icon-medium oauth-icon--${p.providerId}`}
                 style={{ marginRight: "0.5rem", flexShrink: 0 }}
               />
@@ -208,11 +202,7 @@ export default function OAuthButtons({
           >
             <span className="oauth-button-left">
               <span className="oauth-icon-wrapper">
-                <img
-                  src={oauthIconUrl(p.file)}
-                  alt={p.label}
-                  className="oauth-icon-tiny"
-                />
+                <ProviderMark file={p.file} className="oauth-icon-tiny" />
               </span>
               <span className="oauth-button-text">
                 {ctaPrefix ? `${ctaPrefix} ${p.label}` : p.label}

@@ -1,12 +1,7 @@
 package stirling.software.SPDF.service;
 
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -24,28 +19,26 @@ import stirling.software.SPDF.SPDFApplication;
 import stirling.software.SPDF.model.ApiEndpoint;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.service.UserServiceInterface;
-import stirling.software.common.util.RegexPatternUtils;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
+/**
+ * Validates a request's parameters against the OpenAPI spec.
+ *
+ * <p>Input and output types are no longer read from here: they are declared with {@code @ToolIO}
+ * and served by {@code ToolIORegistry}, which reads the annotations directly rather than parsing
+ * them back out of the description prose.
+ */
 @Service
 @Slf4j
-public class ApiDocService implements stirling.software.common.service.ToolMetadataService {
-
-    // Matches a bare "Output:ZIP" declaration (i.e. ZIP is not followed by "-" or "/").
-    // Bare ZIP means the archive itself is the deliverable (e.g. get-attachments), so it
-    // should not be auto-unpacked. Wrapper forms like Output:ZIP-PDF or Output:IMAGE/ZIP
-    // use ZIP as transport for multiple typed results and are safe to unpack.
-    private static final Pattern BARE_ZIP_OUTPUT =
-            Pattern.compile("Output\\s*:\\s*ZIP(?![-/])", Pattern.CASE_INSENSITIVE);
+public class ApiDocService {
 
     private final Map<String, ApiEndpoint> apiDocumentation = new HashMap<>();
 
     private final ServletContext servletContext;
     private final UserServiceInterface userService;
     private final ObjectMapper objectMapper;
-    Map<String, List<String>> outputToFileTypes = new HashMap<>();
     JsonNode apiDocsJsonRootNode;
 
     public ApiDocService(
@@ -61,52 +54,6 @@ public class ApiDocService implements stirling.software.common.service.ToolMetad
         String contextPath = servletContext.getContextPath();
         String port = SPDFApplication.getStaticPort();
         return "http://localhost:" + port + contextPath + "/v1/api-docs";
-    }
-
-    @Override
-    public List<String> getExtensionTypes(boolean output, String operationName) {
-        if (outputToFileTypes.isEmpty()) {
-            outputToFileTypes.put("PDF", List.of("pdf"));
-            outputToFileTypes.put(
-                    "IMAGE",
-                    Arrays.asList(
-                            "png", "jpg", "jpeg", "gif", "webp", "bmp", "tif", "tiff", "svg", "psd",
-                            "ai", "eps"));
-            outputToFileTypes.put(
-                    "ZIP",
-                    Arrays.asList("zip", "rar", "7z", "tar", "gz", "bz2", "xz", "lz", "lzma", "z"));
-            outputToFileTypes.put("WORD", Arrays.asList("doc", "docx", "odt", "rtf"));
-            outputToFileTypes.put("CSV", List.of("csv"));
-            outputToFileTypes.put("JS", Arrays.asList("js", "jsx"));
-            outputToFileTypes.put("HTML", Arrays.asList("html", "htm", "xhtml"));
-            outputToFileTypes.put("JSON", List.of("json"));
-            outputToFileTypes.put("TXT", Arrays.asList("txt", "text", "md", "markdown"));
-            outputToFileTypes.put("PPT", Arrays.asList("ppt", "pptx", "odp"));
-            outputToFileTypes.put("XML", Arrays.asList("xml", "xsd", "xsl"));
-            outputToFileTypes.put(
-                    "BOOK", Arrays.asList("epub", "mobi", "azw3", "fb2", "txt", "docx"));
-            // type.
-        }
-        if (apiDocsJsonRootNode == null || apiDocumentation.isEmpty()) {
-            loadApiDocumentation();
-        }
-        if (!apiDocumentation.containsKey(operationName)) {
-            return null;
-        }
-        ApiEndpoint endpoint = apiDocumentation.get(operationName);
-        String description = endpoint.getDescription();
-        Matcher matcher =
-                (output
-                                ? RegexPatternUtils.getInstance().getApiDocOutputTypePattern()
-                                : RegexPatternUtils.getInstance().getApiDocInputTypePattern())
-                        .matcher(description);
-        while (matcher.find()) {
-            String type = matcher.group(1).toUpperCase(Locale.ROOT);
-            if (outputToFileTypes.containsKey(type)) {
-                return outputToFileTypes.get(type);
-            }
-        }
-        return null;
     }
 
     private String getApiKeyForUser() {
@@ -157,55 +104,4 @@ public class ApiDocService implements stirling.software.common.service.ToolMetad
         ApiEndpoint endpoint = apiDocumentation.get(operationName);
         return endpoint.areParametersValid(parameters);
     }
-
-    @Override
-    public boolean isMultiInput(String operationName) {
-        if (apiDocsJsonRootNode == null || apiDocumentation.isEmpty()) {
-            loadApiDocumentation();
-        }
-        if (!apiDocumentation.containsKey(operationName)) {
-            return false;
-        }
-        ApiEndpoint endpoint = apiDocumentation.get(operationName);
-        String description = endpoint.getDescription();
-        Matcher matcher =
-                RegexPatternUtils.getInstance().getApiDocTypePattern().matcher(description);
-        if (matcher.find()) {
-            String type = matcher.group(1);
-            return type.startsWith("MI");
-        }
-        return false;
-    }
-
-    @Override
-    public boolean shouldUnpackZipResponse(String operationName) {
-        if (apiDocsJsonRootNode == null || apiDocumentation.isEmpty()) {
-            loadApiDocumentation();
-        }
-        if (!apiDocumentation.containsKey(operationName)) {
-            return false;
-        }
-        ApiEndpoint endpoint = apiDocumentation.get(operationName);
-        String description = endpoint.getDescription();
-        Matcher typeMatcher =
-                RegexPatternUtils.getInstance().getApiDocTypePattern().matcher(description);
-        if (typeMatcher.find()) {
-            String type = typeMatcher.group(1);
-            // Multi-output endpoints (SIMO/MIMO) return a ZIP of their outputs.
-            if (type.endsWith("MO")) {
-                return true;
-            }
-        }
-        Matcher outputMatcher =
-                RegexPatternUtils.getInstance().getApiDocOutputTypePattern().matcher(description);
-        if (outputMatcher.find()) {
-            String output = outputMatcher.group(1).toUpperCase(Locale.ROOT);
-            if (output.startsWith("ZIP")) {
-                // Bare "Output:ZIP" is a single-archive deliverable, not a transport.
-                return !BARE_ZIP_OUTPUT.matcher(description).find();
-            }
-        }
-        return false;
-    }
 }
-// Model class for API Endpoint

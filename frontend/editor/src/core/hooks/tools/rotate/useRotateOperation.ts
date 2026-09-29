@@ -10,6 +10,7 @@ import {
 } from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
+  validateRotateParameters,
   RotateParameters,
   defaultParameters,
   normalizeAngle,
@@ -44,6 +45,7 @@ export const buildRotateFormData = (
 
 // Static configuration object
 export const rotateOperationConfig = defineSingleFileTool({
+  validateParams: validateRotateParameters,
   buildFormData: buildRotateFormData,
   toApiParams: rotateToApiParams,
   fromApiParams: rotateFromApiParams,

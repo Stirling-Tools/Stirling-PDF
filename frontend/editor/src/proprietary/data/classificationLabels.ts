@@ -1,14 +1,15 @@
-// Default classification labels. The SOURCE OF TRUTH is the co-located static
-// JSON (`classificationLabels.json`), imported here and shaped into typed
-// objects — edit THAT file, not this one. This is the ONLY copy of the label
-// data: it seeds a team's editable set and drives the sidebar's grouping,
-// icons, and display names. Neither the backend nor the engine keeps a copy.
+import type { IconName } from "@app/ui/Icon";
+// Classification labels. The SOURCE OF TRUTH is the co-located static JSON
+// (`classificationLabels.json`), imported here and shaped into typed objects —
+// edit THAT file, not this one. It's a fixed, built-in vocabulary shared by
+// everyone (no per-team customization); it drives the sidebar's grouping, icons,
+// and display names.
 //
-// NOTE: this is only the built-in default vocabulary. A team's own
-// (admin-editable) labels live in the backend store and are what the backend
-// sends to the engine per classify request — the engine holds no vocabulary of
-// its own. Edits to a team's set reach Python on the next run, independent of
-// this file.
+// The backend keeps a SECOND copy of this list
+// (`app/proprietary/src/main/resources/classification/classification-labels.json`)
+// which it sends to the engine per classify request (the engine holds no
+// vocabulary of its own). The two copies must not drift — `classificationLabels.drift.test.ts`
+// guards that. When you edit the labels here, update the backend copy too.
 //
 // `labels` is the flat set: each has a stable `id` (slug — the value on the wire,
 // in storage and keyed on) and a human `name` (display, translatable via
@@ -24,8 +25,8 @@ export interface ClassificationLabel {
   id: string;
   /** Human display name; the en-US default for `classification.labels.<id>`. */
   name: string;
-  /** Material Symbols icon key (see `labelIcons.ts`). */
-  icon?: string;
+  /** Registry icon name (see `labelIcons.ts`). */
+  icon?: IconName;
 }
 
 export interface LabelFamily {
@@ -33,8 +34,8 @@ export interface LabelFamily {
   id: string;
   /** Group header text shown in the sidebar and the group picker. */
   name: string;
-  /** Material Symbols icon key (see `labelIcons.ts`). */
-  icon: string;
+  /** Registry icon name (see `labelIcons.ts`). */
+  icon: IconName;
   /** The built-in labels this family rolls up in the sidebar. */
   labels: ClassificationLabel[];
 }
@@ -43,7 +44,7 @@ export interface LabelFamily {
  *  presentational family grouping (which references labels by id). */
 interface LabelsFile {
   labels: ClassificationLabel[];
-  families: { id: string; name: string; icon: string; labelIds: string[] }[];
+  families: { id: string; name: string; icon: IconName; labelIds: string[] }[];
 }
 
 const data = labelsData as LabelsFile;

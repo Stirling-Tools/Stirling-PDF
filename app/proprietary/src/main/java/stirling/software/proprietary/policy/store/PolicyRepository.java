@@ -6,15 +6,17 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import jakarta.persistence.LockModeType;
 
-@Repository
 public interface PolicyRepository extends JpaRepository<PolicyEntity, String> {
 
-    /** Enabled policies of a given trigger type, for background triggers to activate. */
-    List<PolicyEntity> findByTriggerTypeAndEnabledTrue(String triggerType);
+    /**
+     * Enabled policies, for background triggers to scan for inputs of their trigger type. Which
+     * inputs (and their trigger types) a policy carries lives in the JSON blob, so the type filter
+     * is applied after parsing rather than in SQL.
+     */
+    List<PolicyEntity> findByEnabledTrue();
 
     /**
      * Policies belonging to a team, in run order (ascending {@code sortOrder}; a null order sorts
@@ -30,6 +32,14 @@ public interface PolicyRepository extends JpaRepository<PolicyEntity, String> {
     /** All policies in run order — used when team scoping is off (login-disabled). */
     @Query("select p from PolicyEntity p order by coalesce(p.sortOrder, 0) asc, p.id asc")
     List<PolicyEntity> findAllOrdered();
+
+    /**
+     * Whether any policy's stored JSON mentions this id. Matched against the raw column rather than
+     * parsed steps so a row we can't deserialize still protects the assets it references; asset ids
+     * are UUIDs, so a substring false positive only ever means "keep".
+     */
+    @Query("select count(p) > 0 from PolicyEntity p where p.policyJson like concat('%', :id, '%')")
+    boolean anyMentioning(@Param("id") String id);
 
     /**
      * The team's policy rows, locked for the transaction (SELECT … FOR UPDATE). Appending a new

@@ -1,0 +1,181 @@
+{
+  "version": 2,
+  "language": "sl",
+  "labels": [
+    {
+      "id": "invoice",
+      "phrases": [
+        { "text": "račun", "weight": 24, "where": "title" },
+        { "text": "davek na dodano vrednost", "weight": 8 }
+      ]
+    },
+    {
+      "id": "financial-statement",
+      "phrases": [{ "text": "bilanca stanja", "weight": 12 }]
+    },
+    {
+      "id": "contract",
+      "phrases": [{ "text": "pogodba", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "employment-contract",
+      "phrases": [
+        { "text": "pogodba o zaposlitvi", "weight": 24, "where": "title" }
+      ]
+    },
+    {
+      "id": "nda",
+      "phrases": [
+        {
+          "text": "pogodba o nerazkritju informacij",
+          "weight": 24,
+          "where": "title"
+        }
+      ]
+    },
+    {
+      "id": "privacy-policy",
+      "phrases": [{ "text": "splošna uredba o varstvu podatkov", "weight": 10 }]
+    },
+    {
+      "id": "will",
+      "phrases": [{ "text": "oporoka", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "cover-letter",
+      "phrases": [
+        { "text": "motivacijsko pismo", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "reference-letter",
+      "phrases": [{ "text": "priporočilo", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "job-description",
+      "phrases": [
+        { "text": "opis delovnega mesta", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "certificate",
+      "phrases": [{ "text": "diploma", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "patent",
+      "phrases": [{ "text": "patent", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "prescription",
+      "phrases": [
+        { "text": "zdravniški recept", "weight": 20, "where": "title" },
+        { "text": "farmacija", "weight": 10 }
+      ]
+    },
+    {
+      "id": "immunization-record",
+      "phrases": [{ "text": "cepljenje", "weight": 12 }]
+    },
+    {
+      "id": "safety-data-sheet",
+      "phrases": [{ "text": "varnostni list", "weight": 24, "where": "title" }]
+    },
+    {
+      "id": "press-release",
+      "phrases": [
+        { "text": "izjava za javnost", "weight": 22, "where": "title" }
+      ]
+    },
+    {
+      "id": "business-plan",
+      "phrases": [{ "text": "poslovni načrt", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "white-paper",
+      "phrases": [{ "text": "bela knjiga", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "recipe",
+      "phrases": [{ "text": "kuharski recept", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "report",
+      "phrases": [{ "text": "poročilo", "weight": 8, "where": "title" }]
+    },
+    {
+      "id": "property-listing",
+      "phrases": [{ "text": "nepremičnina", "weight": 8 }]
+    },
+    {
+      "id": "subscription-confirmation",
+      "phrases": [{ "text": "abonma", "weight": 10 }]
+    },
+    {
+      "id": "email-thread",
+      "phrases": [{ "text": "elektronska pošta", "weight": 8 }]
+    },
+    {
+      "id": "magazine-article",
+      "phrases": [{ "text": "revija", "weight": 10 }]
+    },
+    {
+      "id": "performance-review",
+      "phrases": [{ "text": "letni razgovor", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "consent-form",
+      "phrases": [
+        { "text": "informirano soglasje", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "discharge-summary",
+      "phrases": [{ "text": "hospitalizacija", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "lab-report",
+      "phrases": [{ "text": "laboratorijska diagnostika", "weight": 12 }]
+    },
+    {
+      "id": "safety-procedure",
+      "phrases": [{ "text": "varnost in zdravje pri delu", "weight": 10 }]
+    },
+    {
+      "id": "api-documentation",
+      "phrases": [{ "text": "vmesnik za namensko programiranje", "weight": 8 }]
+    },
+    {
+      "id": "budget",
+      "phrases": [{ "text": "proračun", "weight": 14, "where": "title" }]
+    },
+    {
+      "id": "application-form",
+      "phrases": [
+        { "text": "prijava na delovno mesto", "weight": 14, "where": "title" }
+      ]
+    },
+    {
+      "id": "organization-chart",
+      "phrases": [
+        { "text": "organizacijska shema", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "case-study",
+      "phrases": [{ "text": "študija primera", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "investment-summary",
+      "phrases": [{ "text": "investicija", "weight": 8 }]
+    },
+    {
+      "id": "appraisal-report",
+      "phrases": [
+        { "text": "cenitev nepremičnin", "weight": 18, "where": "title" }
+      ]
+    }
+  ],
+  "patterns": {
+    "references": [{ "pattern": "bibliografija" }]
+  }
+}

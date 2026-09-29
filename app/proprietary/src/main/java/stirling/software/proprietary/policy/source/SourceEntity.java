@@ -12,7 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import stirling.software.proprietary.integration.crypto.LenientEncryptedStringConverter;
+import stirling.software.proprietary.integration.crypto.LegacyDecryptStringConverter;
 
 /**
  * JPA row for a {@link Source}. The whole source lives as JSON in {@code sourceJson} (authoritative
@@ -48,9 +48,9 @@ public class SourceEntity implements Serializable {
     @Column(name = "enabled")
     private boolean enabled;
 
-    // Encrypted at rest: source options carry user-supplied credentials (e.g. an S3 secret
-    // access key). Lenient so rows written before encryption shipped still load.
-    @Convert(converter = LenientEncryptedStringConverter.class)
+    // Plaintext at rest: the S3 credentials that used to live here now sit in a referenced
+    // IntegrationConfig connection (still encrypted). Decrypts legacy ciphertext on read.
+    @Convert(converter = LegacyDecryptStringConverter.class)
     @Column(name = "source_json", columnDefinition = "text")
     private String sourceJson;
 }

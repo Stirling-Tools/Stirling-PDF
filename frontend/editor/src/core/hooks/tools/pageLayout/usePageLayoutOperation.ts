@@ -10,6 +10,7 @@ import {
 } from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
+  validatePageLayoutParameters,
   PageLayoutParameters,
   defaultParameters,
 } from "@app/hooks/tools/pageLayout/usePageLayoutParameters";
@@ -68,6 +69,7 @@ export const buildPageLayoutFormData = (
   objectToFormData(pageLayoutToApiParams(parameters), { fileInput: file });
 
 export const pageLayoutOperationConfig = defineSingleFileTool({
+  validateParams: validatePageLayoutParameters,
   buildFormData: buildPageLayoutFormData,
   toApiParams: pageLayoutToApiParams,
   fromApiParams: pageLayoutFromApiParams,

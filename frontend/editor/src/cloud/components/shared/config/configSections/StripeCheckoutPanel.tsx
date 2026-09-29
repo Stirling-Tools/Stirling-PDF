@@ -89,7 +89,7 @@ export interface StripeCheckoutPanelProps {
    * other than via this hint).
    */
   teamId: number;
-  /** Currency lower-case 3-letter ISO (e.g. {@code "gbp"}). Selects the Stripe Price. */
+  /** Display currency; Stripe resolves the customer's payment currency. */
   currency?: string;
   /** Cap in USD; null means no cap. Tracked locally; set on the wallet via PATCH after subscription. */
   capUsd: number | null;
@@ -114,7 +114,7 @@ function getStripe(publishableKey: string): Promise<Stripe | null> {
 
 const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
   teamId,
-  currency = "gbp",
+  currency = "usd",
   // capUsd is part of the props contract but intentionally unused here — the cap is set
   // application-side via PATCH /payg/cap after the subscription lands, not during checkout.
   onComplete,

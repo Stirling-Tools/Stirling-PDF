@@ -53,7 +53,7 @@ test.describe("Login agreement modal", () => {
     page,
   }) => {
     await setUpLoggedIn(page);
-    await page.goto("/");
+    await page.goto("/editor");
 
     await expect(
       page.getByText("Login Agreement", { exact: true }).first(),
@@ -69,7 +69,7 @@ test.describe("Login agreement modal", () => {
 
   test("Escape does not dismiss the modal (blocking)", async ({ page }) => {
     await setUpLoggedIn(page);
-    await page.goto("/");
+    await page.goto("/editor");
     await expect(
       page.getByRole("heading", { name: "Test Disclaimer" }),
     ).toBeVisible({ timeout: 15_000 });
@@ -85,7 +85,7 @@ test.describe("Login agreement modal", () => {
     page,
   }) => {
     await setUpLoggedIn(page);
-    await page.goto("/");
+    await page.goto("/editor");
     await expect(
       page.getByRole("heading", { name: "Test Disclaimer" }),
     ).toBeVisible({ timeout: 15_000 });
@@ -104,7 +104,7 @@ test.describe("Login agreement modal", () => {
 
   test("does not show when the feature is disabled", async ({ page }) => {
     await setUpLoggedIn(page, { enabled: false, content: "" });
-    await page.goto("/");
+    await page.goto("/editor");
     // App is usable; modal never appears.
     await page.waitForTimeout(1500);
     await expect(
@@ -117,7 +117,7 @@ test.describe("Login agreement modal", () => {
     await skipOnboarding(page);
     await mockAppApis(page, { enableLogin: false });
     await stubDisclaimer(page, { showInAnonymousMode: true });
-    await page.goto("/");
+    await page.goto("/editor");
 
     await expect(
       page.getByRole("heading", { name: "Test Disclaimer" }),
@@ -129,7 +129,7 @@ test.describe("Login agreement modal", () => {
     await skipOnboarding(page);
     await mockAppApis(page, { enableLogin: false });
     await stubDisclaimer(page, { showInAnonymousMode: false });
-    await page.goto("/");
+    await page.goto("/editor");
 
     await page.waitForTimeout(1500);
     await expect(

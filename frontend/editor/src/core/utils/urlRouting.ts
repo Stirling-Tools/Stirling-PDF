@@ -10,21 +10,27 @@ import {
   getToolWorkbench,
   getToolUrlPath,
 } from "@app/data/toolsTaxonomy";
-import { firePixel } from "@app/utils/scarfTracking";
 import { URL_TO_TOOL_MAP } from "@app/utils/urlMapping";
-import { BASE_PATH, withBasePath } from "@app/constants/app";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 
 /**
- * Parse the current URL to extract tool routing information
+ * An address as the router states it: app-relative, BASE_PATH already off.
+ *
+ * Everything here works in these terms rather than reading window.location. The
+ * two disagree for a tick during a history move, and an effect that navigates on
+ * the wrong one loops.
  */
-export function parseToolRoute(registry: ToolRegistry): ToolRoute {
-  const fullPath = window.location.pathname;
-  // Remove base path to get app-relative path
-  const path =
-    BASE_PATH && fullPath.startsWith(BASE_PATH)
-      ? fullPath.slice(BASE_PATH.length) || "/"
-      : fullPath;
-  const searchParams = new URLSearchParams(window.location.search);
+export interface RouteLocation {
+  pathname: string;
+  search: string;
+}
+
+export function parseToolRoute(
+  registry: ToolRegistry,
+  location: RouteLocation,
+): ToolRoute {
+  const path = location.pathname;
+  const searchParams = new URLSearchParams(location.search);
 
   // First, check URL mapping for multiple URL aliases
   const mappedToolId = URL_TO_TOOL_MAP[path];
@@ -65,63 +71,37 @@ export function parseToolRoute(registry: ToolRegistry): ToolRoute {
 }
 
 /**
- * Update URL and fire analytics pixel
+ * Where the address should move to, or null when it already says this. The result
+ * is app-relative, which is what navigate() wants: <BrowserRouter basename> puts
+ * BASE_PATH back on, so a target carrying it already arrives doubled.
  */
-function updateUrl(
-  newPath: string,
-  searchParams: URLSearchParams,
-  replace: boolean = false,
-): void {
-  const currentPath = window.location.pathname;
+function routeTarget(path: string, from: RouteLocation): string | null {
+  const searchParams = new URLSearchParams(from.search);
+  // The path names the tool, so the query form of it never survives a move.
+  searchParams.delete("tool");
   const queryString = searchParams.toString();
-  const fullUrl = newPath + (queryString ? `?${queryString}` : "");
+  const search = queryString ? `?${queryString}` : "";
 
-  // Only update URL and fire pixel if something actually changed
-  if (
-    currentPath !== newPath ||
-    window.location.search !== (queryString ? `?${queryString}` : "")
-  ) {
-    if (replace) {
-      window.history.replaceState(null, "", fullUrl);
-    } else {
-      window.history.pushState(null, "", fullUrl);
-    }
-    firePixel(newPath);
-  }
+  if (from.pathname === path && from.search === search) return null;
+  return `${path}${search}`;
 }
 
-/**
- * Update the URL to reflect the current tool selection
- */
-export function updateToolRoute(
+/** Where the address should move to for this tool selection. */
+export function toolRoute(
   toolId: ToolId,
   registry: ToolRegistry,
-  replace: boolean = false,
-): void {
-  const tool = registry[toolId];
-  if (!tool) {
+  from: RouteLocation,
+): string | null {
+  if (!registry[toolId]) {
     console.warn(`Tool ${toolId} not found in registry`);
-    return;
+    return null;
   }
-
-  const toolPath = getToolUrlPath(toolId);
-  const newPath = withBasePath(toolPath);
-  const searchParams = new URLSearchParams(window.location.search);
-
-  // Remove tool query parameter since we're using path-based routing
-  searchParams.delete("tool");
-
-  updateUrl(newPath, searchParams, replace);
+  return routeTarget(getToolUrlPath(toolId), from);
 }
 
-/**
- * Clear tool routing and return to home page
- */
-export function clearToolRoute(replace: boolean = false): void {
-  const searchParams = new URLSearchParams(window.location.search);
-  searchParams.delete("tool");
-
-  updateUrl(withBasePath("/"), searchParams, replace);
+/** Where the address should move to with no tool open ("/" is the role router). */
+export function editorHomeRoute(from: RouteLocation): string | null {
+  return routeTarget(EDITOR_BASENAME, from);
 }
 
 /**

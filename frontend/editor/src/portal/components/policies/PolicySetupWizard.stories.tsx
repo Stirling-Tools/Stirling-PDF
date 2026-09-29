@@ -8,6 +8,10 @@ import {
 import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
 
 const security = POLICY_CATEGORIES.find((c) => c.id === "security")!;
+const classification = POLICY_CATEGORIES.find(
+  (c) => c.id === "classification",
+)!;
+const compliance = POLICY_CATEGORIES.find((c) => c.id === "compliance")!;
 
 const meta: Meta<typeof PolicySetupWizard> = {
   title: "Portal/Policies/PolicySetupWizard",
@@ -44,6 +48,31 @@ export const Edit: Story = {
       category: security,
       config: POLICY_CONFIG.security,
       policy: decorateForStory("security"),
+    },
+  },
+};
+
+/** Classification: the workflow step shows the team label editor, not tool toggles. */
+export const Classification: Story = {
+  args: {
+    entry: {
+      category: classification,
+      config: POLICY_CONFIG.classification,
+      policy: null,
+    },
+  },
+};
+
+/**
+ * Compliance: the longest preset chain, and the only one whose steps carry inline settings of
+ * their own (the archival profile and the gate's standard/verdict).
+ */
+export const Compliance: Story = {
+  args: {
+    entry: {
+      category: compliance,
+      config: POLICY_CONFIG.compliance,
+      policy: null,
     },
   },
 };

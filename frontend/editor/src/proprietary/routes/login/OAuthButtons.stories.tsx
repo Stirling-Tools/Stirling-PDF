@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import OAuthButtons from "@app/auth/ui/OAuthButtons";
 import "@app/auth/ui/auth.css";
 

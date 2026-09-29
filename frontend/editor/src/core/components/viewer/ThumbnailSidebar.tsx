@@ -4,8 +4,7 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
-import LocalIcon from "@app/components/shared/LocalIcon";
-import ViewListIcon from "@mui/icons-material/ViewList";
+import { Icon } from "@app/ui/Icon";
 import "@app/components/viewer/SidebarBase.css";
 
 interface ThumbnailSidebarProps {
@@ -172,7 +171,7 @@ export function ThumbnailSidebar({
           <div className="sidebar-base__header">
             <div className="sidebar-base__header-title">
               <span className="sidebar-base__header-icon">
-                <ViewListIcon fontSize="small" />
+                <Icon name="list" size={20} />
               </span>
               <Text
                 fw={600}
@@ -198,7 +197,7 @@ export function ThumbnailSidebar({
                 "Close thumbnails sidebar",
               )}
             >
-              <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
+              <Icon name="x" size="1.1rem" />
             </ActionIcon>
           </div>
           {/* Thumbnails Container */}
@@ -238,7 +237,7 @@ export function ThumbnailSidebar({
                       onMouseEnter={(e) => {
                         if (scrollState.currentPage !== pageIndex + 1) {
                           e.currentTarget.style.backgroundColor =
-                            "var(--hover-bg)";
+                            "var(--c-hover)";
                         }
                       }}
                       onMouseLeave={(e) => {
@@ -259,7 +258,7 @@ export function ThumbnailSidebar({
                               height: "auto",
                               borderRadius: "4px",
                               boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-                              border: "1px solid var(--border-subtle)",
+                              border: "1px solid var(--c-border-subtle)",
                             }}
                           />
                         </PrivateContent>
@@ -285,13 +284,13 @@ export function ThumbnailSidebar({
                           style={{
                             width: "11.5rem",
                             height: "15rem",
-                            backgroundColor: "var(--bg-muted)",
-                            border: "1px solid var(--border-subtle)",
+                            backgroundColor: "var(--c-surface-sunken)",
+                            border: "1px solid var(--c-border-subtle)",
                             borderRadius: "4px",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            color: "var(--text-muted)",
+                            color: "var(--c-text-subtle)",
                             fontSize: "12px",
                           }}
                         >
@@ -307,7 +306,7 @@ export function ThumbnailSidebar({
                           color:
                             scrollState.currentPage === pageIndex + 1
                               ? "var(--color-primary-500)"
-                              : "var(--text-muted)",
+                              : "var(--c-text-subtle)",
                         }}
                       >
                         Page {pageIndex + 1}

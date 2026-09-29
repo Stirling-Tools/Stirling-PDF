@@ -17,7 +17,8 @@ public record SourceView(
         List<DetailRow> config,
         long docsTotal,
         long docs24h,
-        long docs30d) {
+        long docs30d,
+        String webhookPath) {
 
     /** A policy that references this source. */
     public record PolicyRef(String id, String name) {}

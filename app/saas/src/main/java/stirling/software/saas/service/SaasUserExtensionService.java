@@ -52,6 +52,21 @@ public class SaasUserExtensionService {
                 .orElse(null);
     }
 
+    /** The user's durable home team id (the team they fall back to), or null if unset. */
+    public Long getHomeTeamId(User user) {
+        return repository
+                .findByUserId(user.getId())
+                .map(SaasUserExtensions::getHomeTeamId)
+                .orElse(null);
+    }
+
+    @Transactional
+    public void setHomeTeamId(User user, Long homeTeamId) {
+        SaasUserExtensions ext = getOrCreate(user);
+        ext.setHomeTeamId(homeTeamId);
+        repository.save(ext);
+    }
+
     /** Idempotent first-use marker. Records the first time this user's API key fired a request. */
     @Transactional
     public void trackApiKeyFirstUse(User user) {

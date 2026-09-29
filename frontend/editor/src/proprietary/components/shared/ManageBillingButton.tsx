@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import licenseService from "@app/services/licenseService";
+import { useLicense } from "@app/contexts/LicenseContext";
+import { isSupabaseConfigured, supabase } from "@app/services/supabaseClient";
 import { alert } from "@app/components/toast";
 
 interface ManageBillingButtonProps {
@@ -13,24 +15,25 @@ export const ManageBillingButton: React.FC<ManageBillingButtonProps> = ({
 }) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
+  const { licenseInfo } = useLicense();
+  const licenseKey = licenseInfo?.licenseKey?.trim();
+  if (
+    !isSupabaseConfigured ||
+    !supabase ||
+    !licenseInfo?.enabled ||
+    !licenseKey ||
+    licenseKey.startsWith("file:") ||
+    licenseKey === "00000000-0000-0000-0000-000000000000"
+  )
+    return null;
 
   const handleClick = async () => {
     try {
       setLoading(true);
 
-      // Get current license key for authentication
-      const licenseInfo = await licenseService.getLicenseInfo();
-
-      if (!licenseInfo.licenseKey) {
-        throw new Error(
-          "No license key found. Please activate a license first.",
-        );
-      }
-
-      // Create billing portal session with license key
       const response = await licenseService.createBillingPortalSession(
         returnUrl,
-        licenseInfo.licenseKey,
+        licenseKey,
       );
 
       // Open billing portal in new tab

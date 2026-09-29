@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -24,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Service
-@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class JpaProcessedLedger implements ProcessedLedger {
 
     private static final int STAMP_CHUNK = 500;
@@ -118,6 +116,28 @@ public class JpaProcessedLedger implements ProcessedLedger {
             return false;
         }
         return repository.reclaimAtNewContent(policyId, identityHash, gate, hash, now) > 0;
+    }
+
+    @Override
+    public boolean reclaimFailed(String policyId, String identity, String gate) {
+        return repository.retryErrorAtGate(
+                        policyId, IdentityHasher.identityHash(identity), gate, nowMillis.get())
+                > 0;
+    }
+
+    @Override
+    public boolean forgetFailure(String policyId, String identity) {
+        return repository.deleteFailure(policyId, IdentityHasher.identityHash(identity)) > 0;
+    }
+
+    @Override
+    public boolean forget(String policyId, String identity) {
+        return repository.deleteSettled(policyId, IdentityHasher.identityHash(identity)) > 0;
+    }
+
+    @Override
+    public boolean anyInFlight(String policyId) {
+        return repository.existsByPolicyIdAndStatus(policyId, ProcessedFileStatus.PROCESSING);
     }
 
     @Override

@@ -2,8 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Menu } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-
+import { Icon } from "@app/ui/Icon";
 export interface OSOption {
   label: string;
   url: string;
@@ -115,7 +114,7 @@ export const DesktopInstallTitle: React.FC<DesktopInstallTitleProps> = ({
               padding: 0,
             }}
           >
-            <ExpandMoreIcon fontSize="small" />
+            <Icon name="chevron-down" size={20} />
           </ActionIcon>
         </Menu.Target>
         <Menu.Dropdown>
@@ -129,9 +128,9 @@ export const DesktopInstallTitle: React.FC<DesktopInstallTitleProps> = ({
                 leftSection={iconKey ? <OsIcon os={iconKey} /> : undefined}
                 style={{
                   backgroundColor: isSelected
-                    ? "var(--bg-muted, #f1f5f9)"
+                    ? "var(--c-surface-sunken, #f1f5f9)"
                     : "transparent",
-                  color: "var(--onboarding-title, #0f172a)",
+                  color: "var(--c-text, #0f172a)",
                   fontWeight: isSelected ? 600 : 500,
                 }}
               >

@@ -17,12 +17,12 @@
      own padding-block); horizontal stays in the shorthand. */
   --sui-btn-py: 1rem; /* 16px (md) */
   padding: 1rem 1rem; /* 16px */
-  border: 1px solid var(--auth-input-border-light-only);
+  border: 1px solid var(--auth-input-border);
   border-radius: 0.75rem; /* 12px */
-  background-color: var(--auth-card-bg-light-only);
+  background-color: var(--auth-card-bg);
   font-size: 1rem; /* 16px */
   font-weight: 500;
-  color: var(--auth-text-primary-light-only);
+  color: var(--auth-text-primary);
   cursor: pointer;
   gap: 0.75rem; /* 12px */
   font-family: inherit;
@@ -30,7 +30,7 @@
 }
 
 .oauth-button-vertical-desktop:hover:not(:disabled) {
-  background-color: var(--bg-raised);
+  background-color: var(--c-surface-raised);
 }
 
 .oauth-button-vertical-desktop:disabled {
@@ -39,7 +39,7 @@
 }
 
 .oauth-button-vertical-desktop:focus-visible {
-  outline: 2px solid var(--auth-border-focus-light-only);
+  outline: 2px solid var(--auth-border-focus);
   outline-offset: 2px;
 }
 

@@ -14,8 +14,11 @@
 
 import { AxiosError, type AxiosRequestConfig } from "axios";
 import { getSpringAuthConfig } from "@app/auth/config";
+import { JWT_STORAGE_KEY } from "@app/auth/httpClient";
 import { type OAuthProvider } from "@app/auth/spring/oauthTypes";
 import { resetOAuthState } from "@app/auth/spring/oauthStorage";
+import { isSafePostLoginRedirect } from "@app/services/postLoginRedirect";
+import { clearSupabaseSession } from "@app/auth/supabase/supabaseClient";
 import type {
   AuthUser as User,
   AuthSession as Session,
@@ -100,23 +103,10 @@ function persistRedirectPath(path: string): void {
   }
 }
 
-// Same-origin relative path, not pointing at auth plumbing. Rejects protocol-relative
-// URLs to guard against open-redirect abuse if the stored value is tampered with.
-export function isSafePostLoginRedirect(path: unknown): path is string {
-  if (typeof path !== "string" || path.length === 0) return false;
-  if (!path.startsWith("/") || path.startsWith("//")) return false;
-  if (path.startsWith("/\\")) return false;
-  const lowered = path.toLowerCase();
-  if (
-    lowered.startsWith("/login") ||
-    lowered.startsWith("/auth/") ||
-    lowered.startsWith("/oauth2") ||
-    lowered.startsWith("/saml2")
-  ) {
-    return false;
-  }
-  return true;
-}
+// The safe-return-path rule lives in the shared @app/services/postLoginRedirect
+// extension point (proprietary override adds the Spring SSO routes). Re-exported
+// here so existing importers via @app/auth keep resolving it.
+export { isSafePostLoginRedirect };
 
 export function setPostLoginRedirectPath(
   path: string | null | undefined,
@@ -292,7 +282,7 @@ class SpringAuthClient {
   }> {
     try {
       // Get JWT from localStorage
-      let token = localStorage.getItem("stirling_jwt");
+      let token = localStorage.getItem(JWT_STORAGE_KEY);
 
       if (!token) {
         // console.debug('[SpringAuth] getSession: No JWT in localStorage');
@@ -304,13 +294,13 @@ class SpringAuthClient {
         if (tokenExpiry.expiresIn <= this.DESKTOP_SAAS_REFRESH_EARLY_SECONDS) {
           const refreshed = await platform().refreshPlatformSession();
           if (!refreshed) {
-            localStorage.removeItem("stirling_jwt");
+            localStorage.removeItem(JWT_STORAGE_KEY);
             return { data: { session: null }, error: null };
           }
 
-          const refreshedToken = localStorage.getItem("stirling_jwt");
+          const refreshedToken = localStorage.getItem(JWT_STORAGE_KEY);
           if (!refreshedToken) {
-            localStorage.removeItem("stirling_jwt");
+            localStorage.removeItem(JWT_STORAGE_KEY);
             return { data: { session: null }, error: null };
           }
 
@@ -319,7 +309,7 @@ class SpringAuthClient {
         }
 
         if (tokenExpiry.expiresIn <= 0) {
-          localStorage.removeItem("stirling_jwt");
+          localStorage.removeItem(JWT_STORAGE_KEY);
           return { data: { session: null }, error: null };
         }
 
@@ -384,7 +374,7 @@ class SpringAuthClient {
         if (!refreshResult.error && refreshResult.data.session) {
           return refreshResult;
         }
-        localStorage.removeItem("stirling_jwt");
+        localStorage.removeItem(JWT_STORAGE_KEY);
         return { data: { session: null }, error: null };
       }
 
@@ -423,7 +413,7 @@ class SpringAuthClient {
       const token = data.session.access_token;
 
       // Store JWT in localStorage
-      localStorage.setItem("stirling_jwt", token);
+      localStorage.setItem(JWT_STORAGE_KEY, token);
       // console.log('[SpringAuth] JWT stored in localStorage');
 
       // Sync token to platform-specific storage (Tauri store for desktop)
@@ -475,41 +465,6 @@ class SpringAuthClient {
   }
 
   /**
-   * Sign up new user
-   */
-  async signUp(credentials: {
-    email: string;
-    password: string;
-    options?: { data?: { full_name?: string }; emailRedirectTo?: string };
-  }): Promise<AuthResponse> {
-    try {
-      const response = await http().post(
-        "/api/v1/user/register",
-        {
-          username: credentials.email,
-          password: credentials.password,
-        },
-        {
-          withCredentials: true,
-        },
-      );
-
-      const data = response.data;
-
-      // Note: Spring backend auto-confirms users (no email verification)
-      // Return user but no session (user needs to login)
-      return { user: data.user, session: null, error: null };
-    } catch (error: unknown) {
-      console.error("[SpringAuth] signUp error:", error);
-      return {
-        user: null,
-        session: null,
-        error: { message: getErrorMessage(error, "Registration failed") },
-      };
-    }
-  }
-
-  /**
    * Sign in with OAuth/SAML provider (GitHub, Google, Authentik, etc.)
    * This redirects to the Spring OAuth2/SAML2 authorization endpoint
    *
@@ -550,6 +505,15 @@ class SpringAuthClient {
    */
   async signOut(): Promise<{ error: AuthError | null }> {
     try {
+      clearSupabaseSession();
+      localStorage.removeItem("stirling.portalSaasOwner");
+      sessionStorage.removeItem("stirling.portalConnect");
+      Array.from({ length: localStorage.length }, (_, i) => localStorage.key(i))
+        .filter(
+          (key): key is string =>
+            key !== null && (key.startsWith("sb-") || key.includes("supabase")),
+        )
+        .forEach((key) => localStorage.removeItem(key));
       if (typeof window !== "undefined") {
         window.sessionStorage.setItem(
           "stirling_sso_auto_login_logged_out",
@@ -577,12 +541,8 @@ class SpringAuthClient {
       }
 
       // Clean up local storage
-      localStorage.removeItem("stirling_jwt");
+      localStorage.removeItem(JWT_STORAGE_KEY);
       try {
-        Object.keys(localStorage)
-          .filter((key) => key.startsWith("sb-") || key.includes("supabase"))
-          .forEach((key) => localStorage.removeItem(key));
-
         // Clear any cached OAuth redirect/session state
         resetOAuthState();
       } catch (err) {
@@ -622,7 +582,7 @@ class SpringAuthClient {
     } catch (error: unknown) {
       console.error("[SpringAuth] signOut error:", error);
       // Still remove token even if backend call fails
-      localStorage.removeItem("stirling_jwt");
+      localStorage.removeItem(JWT_STORAGE_KEY);
       try {
         await platform().clearPlatformAuthAfterSignOut();
       } catch (cleanupError) {
@@ -654,7 +614,7 @@ class SpringAuthClient {
       if (await platform().isDesktopSaaSAuthMode()) {
         const refreshed = await platform().refreshPlatformSession();
         if (!refreshed) {
-          localStorage.removeItem("stirling_jwt");
+          localStorage.removeItem(JWT_STORAGE_KEY);
           return {
             data: { session: null },
             error: { message: "Token refresh failed - please log in again" },
@@ -672,7 +632,7 @@ class SpringAuthClient {
         }
 
         // Calculate adaptive intervals for desktop SaaS mode
-        const token = localStorage.getItem("stirling_jwt");
+        const token = localStorage.getItem(JWT_STORAGE_KEY);
         if (token) {
           this.calculateAdaptiveIntervals(token);
         }
@@ -698,7 +658,7 @@ class SpringAuthClient {
       const token = data.session.access_token;
 
       // Update local storage with new token
-      localStorage.setItem("stirling_jwt", token);
+      localStorage.setItem(JWT_STORAGE_KEY, token);
 
       // Sync token to platform-specific storage (Tauri store for desktop)
       await platform().savePlatformToken(token);
@@ -720,7 +680,7 @@ class SpringAuthClient {
 
       return { data: { session }, error: null };
     } catch (error: unknown) {
-      localStorage.removeItem("stirling_jwt");
+      localStorage.removeItem(JWT_STORAGE_KEY);
 
       // 401/403 means the refresh token is no longer valid - normal expired
       // state, not an error worth surfacing. Other statuses (network, backend

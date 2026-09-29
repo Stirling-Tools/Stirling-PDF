@@ -32,8 +32,8 @@ const ScrollableCodeBlock: React.FC<ScrollableCodeBlockProps> = ({
       block
       style={{
         whiteSpace: "pre-wrap",
-        backgroundColor: "var(--bg-raised)",
-        color: "var(--text-primary)",
+        backgroundColor: "var(--c-surface-raised)",
+        color: "var(--c-text)",
         maxHeight,
         overflowY: "auto",
       }}

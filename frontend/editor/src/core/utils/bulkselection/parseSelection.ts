@@ -10,7 +10,7 @@
     primary      := "(" expression ")" | range | progression | keyword | number
     range        := number "-" number    // inclusive
     progression  := k ["*"] "n" (("+" | "-") c)?   // k >= 1, c any integer, n starts at 0
-    keyword      := "even" | "odd"
+    keyword      := "even" | "odd" | "all"
     number       := digits (>= 1)
 
     Precedence: "!" (NOT) > "&"/"and" (AND) > "," "|" "or" (OR)
@@ -107,7 +107,7 @@ function parseCsvFallback(input: string, max: number): Set<number> {
 }
 
 function clampToRange(v: number, min: number, max: number): number {
-  if (!Number.isFinite(v)) return NaN as unknown as number;
+  if (!Number.isFinite(v)) return NaN;
   return Math.min(Math.max(v, min), max);
 }
 
@@ -206,11 +206,12 @@ class ExpressionParser {
       return inner;
     }
 
-    // Keywords: even / odd
+    // Keywords: even / odd / all
     const keyword = this.tryReadKeyword();
     if (keyword) {
       if (keyword === "even") return this.buildEven();
       if (keyword === "odd") return this.buildOdd();
+      if (keyword === "all") return this.buildAll();
     }
 
     // Progression: k n ( +/- c )?
@@ -275,13 +276,19 @@ class ExpressionParser {
     return this.buildProgression(2, -1);
   }
 
-  private tryReadKeyword(): "even" | "odd" | null {
+  private buildAll(): Set<number> {
+    const set = new Set<number>();
+    for (let i = 1; i <= this.max; i++) set.add(i);
+    return set;
+  }
+
+  private tryReadKeyword(): "even" | "odd" | "all" | null {
     const start = this.idx;
     const word = this.readWord();
     if (!word) return null;
     const lower = word.toLowerCase();
-    if (lower === "even" || lower === "odd") {
-      return lower as "even" | "odd";
+    if (lower === "even" || lower === "odd" || lower === "all") {
+      return lower;
     }
     // Not a keyword; rewind
     this.idx = start;

@@ -1,13 +1,17 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { resolveLandingPath } from "@app/utils/loginLanding";
 import { useTranslation } from "react-i18next";
 import {
   consumePostLoginRedirectPath,
   springAuth,
 } from "@app/auth/spring/springAuthClient";
-import { markLoginLandingPending } from "@app/utils/loginLanding";
 import { handleAuthCallbackSuccess } from "@app/extensions/authCallback";
-import styles from "@app/routes/AuthCallback.module.css";
+import { AuthShell } from "@app/auth/ui/AuthShell";
+import { Spinner } from "@app/ui/Spinner";
+import { withBasePath } from "@app/constants/app";
+import "@app/auth/ui/auth.css";
+import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
 import i18n from "@app/i18n";
 
 /**
@@ -96,10 +100,10 @@ export default function AuthCallback() {
         // This prevents infinite render loop when coming from cross-domain SAML redirect
         await new Promise((resolve) => setTimeout(resolve, 100));
 
-        const target = consumePostLoginRedirectPath() ?? "/";
-        // Fresh OAuth/SSO login with no explicit destination: let the role-based
-        // landing route processor users.
-        if (target === "/") markLoginLandingPending();
+        // No explicit destination: land processor users on the processor and
+        // everyone else on the editor.
+        const target =
+          consumePostLoginRedirectPath() ?? (await resolveLandingPath());
         console.info(
           `[AuthCallback] Authenticated ${data.session.user.username} in ${elapsed()}, navigating to ${target}`,
         );
@@ -125,25 +129,39 @@ export default function AuthCallback() {
   }, []); // Empty deps - only run once on mount. navigate is stable, processingRef prevents double execution
 
   return (
-    <div className={styles.page}>
-      <div className={styles.card}>
-        <div className={`${styles.icon} ${styles.iconNeutral}`}>...</div>
-        <div className={styles.title}>
-          {t("auth.callback.completing", "Completing authentication")}
-        </div>
-        <div className={styles.message}>
-          {t(
-            "auth.callback.pleaseWait",
-            "Please wait while we finish signing you in.",
-          )}
-        </div>
-        <div className={styles.loadingExtra}>
-          {t(
-            "auth.callback.windowMayClose",
-            "You can close this window once it completes.",
-          )}
-        </div>
+    <AuthShell>
+      <div className="auth-logo-block">
+        <img
+          src={loginHeader}
+          alt="Stirling PDF"
+          className="auth-logo-header auth-logo-header--light"
+        />
+        <img
+          src={withBasePath("/modern-logo/LoginDarkModeHeader.svg")}
+          alt="Stirling PDF"
+          className="auth-logo-header auth-logo-header--dark"
+        />
       </div>
-    </div>
+      <h1 className="login-title" style={{ textAlign: "center" }}>
+        {t("auth.callback.completing", "Completing authentication")}
+      </h1>
+      <p className="login-subtitle" style={{ textAlign: "center" }}>
+        {t(
+          "auth.callback.pleaseWait",
+          "Please wait while we finish signing you in.",
+        )}
+      </p>
+      <div
+        style={{ display: "flex", justifyContent: "center", margin: "1rem 0" }}
+      >
+        <Spinner size="md" />
+      </div>
+      <p className="login-subtitle" style={{ textAlign: "center" }}>
+        {t(
+          "auth.callback.windowMayClose",
+          "You can close this window once it completes.",
+        )}
+      </p>
+    </AuthShell>
   );
 }

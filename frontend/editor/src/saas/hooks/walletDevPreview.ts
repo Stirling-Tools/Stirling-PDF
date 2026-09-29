@@ -47,20 +47,21 @@ function buildDevPreviewWallet(role: WalletRole): Wallet {
   return {
     teamId: null,
     status: subscribed ? "subscribed" : "free",
+    team: { held: false, licensedUsers: null, usersInUse: 1 },
+    processor: { active: subscribed },
     role,
     billingPeriodStart: isoDay(periodStart),
     billingPeriodEnd: isoDay(periodEnd),
     billableUsed: 62,
-    billableLimit: subscribed ? 1250 : 500,
-    freeAllowance: 500,
-    // One-time grant: a free team has used 62 of 500 (438 left); the dev
-    // subscribed team is shown with its grant fully spent (kept across the
-    // subscribe — it just no longer gates them).
-    freeRemaining: subscribed ? 0 : 438,
+    billableLimit: subscribed ? 1250 : 1000,
+    freeUserAllowance: 5,
+    freeAllowance: 1000,
+    freeRemaining: subscribed ? 0 : 938,
     // Free teams also carry a rate now — the backend resolves it from the
     // default policy's USD Price so the upgrade-flow cap estimate ("≈ N paid
     // PDFs/month") can render before subscribing. Mirror that here.
     pricePerDocMinor: 2,
+    bundleRatePerCreditMinor: 1,
     currency: "usd",
     estimatedBillMinor: subscribed ? 0 : null,
     capUsd: subscribed ? 25 : null,
@@ -72,6 +73,12 @@ function buildDevPreviewWallet(role: WalletRole): Wallet {
     docsProcessedThisPeriod: 50,
     uniquePdfsThisPeriod: 48,
     sizeMultiplierPdfsThisPeriod: 8,
+    // Illustrative prepaid bundle so the /dev/payg-preview route can design the
+    // prepaid-capacity card + banner (drawn ahead of the meter, outside the cap).
+    billingMode: "prepaid",
+    prepaidUnitsRemaining: 78_000,
+    prepaidUnitsTotal: 120_000,
+    prepaidExpiresAt: "2027-03-01",
     categoryDocs: { api: 18, ai: 14, automation: 18 },
     // Wave 1 backend (PR #6574) returns a per-category breakdown so the
     // hero panel can split AI / automation / API. Use realistic but

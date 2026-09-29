@@ -1,6 +1,6 @@
 .sui-progress {
   width: 100%;
-  background: var(--color-usage-track);
+  background: var(--c-border);
   border-radius: 62.4375rem;
   overflow: hidden;
 }

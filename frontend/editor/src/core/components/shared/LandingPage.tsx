@@ -1,18 +1,18 @@
 import React, { useState } from "react";
 import { Container } from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
-import { useTranslation } from "react-i18next";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import MobileUploadModal from "@app/components/shared/MobileUploadModal";
 import { openFilesFromDisk } from "@app/services/openFilesFromDisk";
-import { LandingDocumentStack } from "@app/components/shared/LandingDocumentStack";
+import { Logo } from "@app/ui/Logo";
 import { LandingActions } from "@app/components/shared/LandingActions";
+import { useDropzoneFiles } from "@app/hooks/useDropzoneFiles";
 import "@app/components/shared/LandingPage.css";
 
 const LandingPage = () => {
-  const { t } = useTranslation();
   const { addFiles } = useFileHandler();
+  const getDropzoneFiles = useDropzoneFiles();
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const terminology = useFileActionTerminology();
   const [mobileUploadModalOpen, setMobileUploadModalOpen] = useState(false);
@@ -59,6 +59,8 @@ const LandingPage = () => {
         onDrop={handleFileDrop}
         multiple
         activateOnClick={false}
+        useFsAccessApi={false}
+        getFilesFromEvent={getDropzoneFiles}
         enablePointerEvents
         aria-label={terminology.dropFilesHere}
         className="landing-dropzone flex min-h-0 flex-1 cursor-default flex-col items-center justify-center border-none bg-transparent px-4 py-8 shadow-none outline-none"
@@ -77,17 +79,24 @@ const LandingPage = () => {
           },
         }}
       >
-        <LandingDocumentStack />
-
-        <h3 className="landing-title">
-          {t("landing.workbenchEmptyStateHero", "Drop a PDF anywhere")}
-        </h3>
-        <LandingActions
-          fileInputRef={fileInputRef}
-          onUploadClick={() => void handleNativeUploadClick()}
-          onMobileUploadClick={() => setMobileUploadModalOpen(true)}
-          onFileSelect={handleFileSelect}
+        <Logo
+          variant="iconAndText"
+          orientation="vertical"
+          iconHeight="5rem"
+          textHeight="2.5rem"
+          gap="1rem"
+          className="landing-logo-enter"
+          style={{ marginBottom: "2.5rem" }}
         />
+
+        <div className="landing-actions-enter">
+          <LandingActions
+            fileInputRef={fileInputRef}
+            onUploadClick={() => void handleNativeUploadClick()}
+            onMobileUploadClick={() => setMobileUploadModalOpen(true)}
+            onFileSelect={handleFileSelect}
+          />
+        </div>
       </Dropzone>
 
       <MobileUploadModal

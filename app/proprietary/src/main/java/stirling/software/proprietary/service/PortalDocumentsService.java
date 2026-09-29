@@ -65,12 +65,13 @@ public class PortalDocumentsService {
             // "API". The automation marker distinguishes a policy-run step from real API traffic.
             boolean automation = isAutomation(data);
             String policyName = asString(data.get("policyName"));
+            String origin = asString(data.get("__origin"));
             String source =
                     automation
                             ? (policyName != null && !policyName.isBlank()
                                     ? "Policy: " + policyName
                                     : "Policy automation")
-                            : sourceLabel(asString(data.get("__origin")));
+                            : sourceLabel(origin, asString(data.get("__apiKeyLabel")));
             String product = automation ? "Automation" : productLabel(source);
             String action = prettyTool(path);
             boolean failed = isFailure(data);
@@ -173,9 +174,12 @@ public class PortalDocumentsService {
         return code instanceof Number n && n.intValue() >= 400;
     }
 
-    private static String sourceLabel(String origin) {
+    private static String sourceLabel(String origin, String apiKeyLabel) {
         if ("API".equals(origin)) {
-            return "API integration";
+            // Attribute to the specific named key when known, else the generic API channel.
+            return apiKeyLabel != null && !apiKeyLabel.isBlank()
+                    ? "API key · " + apiKeyLabel
+                    : "API integration";
         }
         if ("SYSTEM".equals(origin)) {
             return "System";
@@ -184,7 +188,8 @@ public class PortalDocumentsService {
     }
 
     private static String productLabel(String source) {
-        return "API integration".equals(source) ? "API" : "Editor";
+        // Covers both the generic "API integration" and per-key "API key · <label>" sources.
+        return source != null && source.startsWith("API") ? "API" : "Editor";
     }
 
     private static boolean isAutomation(Map<String, Object> data) {

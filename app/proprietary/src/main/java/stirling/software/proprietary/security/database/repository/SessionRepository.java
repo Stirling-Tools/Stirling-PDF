@@ -7,13 +7,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import jakarta.transaction.Transactional;
 
 import stirling.software.proprietary.security.model.SessionEntity;
 
-@Repository
 public interface SessionRepository extends JpaRepository<SessionEntity, String> {
     List<SessionEntity> findByPrincipalName(String principalName);
 
@@ -45,4 +43,29 @@ public interface SessionRepository extends JpaRepository<SessionEntity, String> 
                     + "WHERE u.team.id = :teamId "
                     + "GROUP BY u.username")
     List<Object[]> findLatestSessionByTeamId(@Param("teamId") Long teamId);
+
+    /** Latest request instant per principal. */
+    @Query(
+            "SELECT s.principalName, MAX(s.lastRequest) FROM SessionEntity s GROUP BY s.principalName")
+    List<Object[]> findLatestRequestPerPrincipal();
+
+    /** Principals with a live (non-expired, within-window) session. */
+    @Query(
+            "SELECT DISTINCT s.principalName FROM SessionEntity s "
+                    + "WHERE s.expired = false AND s.lastRequest > :cutoff")
+    List<String> findActivePrincipalsSince(@Param("cutoff") Instant cutoff);
+
+    /** Flag timed-out sessions as expired. */
+    @Modifying
+    @Transactional
+    @Query(
+            "UPDATE SessionEntity s SET s.expired = true "
+                    + "WHERE s.expired = false AND s.lastRequest < :cutoff")
+    int expireOlderThan(@Param("cutoff") Instant cutoff);
+
+    /** Purge long-expired sessions to bound table growth. */
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM SessionEntity s WHERE s.expired = true AND s.lastRequest < :cutoff")
+    int deleteExpiredOlderThan(@Param("cutoff") Instant cutoff);
 }

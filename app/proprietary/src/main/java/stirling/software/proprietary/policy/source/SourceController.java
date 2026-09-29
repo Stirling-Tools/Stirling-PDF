@@ -2,12 +2,14 @@ package stirling.software.proprietary.policy.source;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,11 +25,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.policy.config.FolderAccessDeniedException;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
 import stirling.software.proprietary.util.SecretMasker;
@@ -43,8 +47,16 @@ import stirling.software.proprietary.util.SecretMasker;
 @Hidden
 @RequiredArgsConstructor
 @Tag(name = "Sources", description = "Reusable policy input connections")
-@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class SourceController {
+
+    /**
+     * Machine-readable marker on the error body when a folder source is rejected for pointing
+     * outside the allowed roots. The admin portal keys off this to offer a link straight to the
+     * Folder Access settings rather than only showing the message.
+     */
+    public static final String FOLDER_ACCESS_DENIED_CODE = "folderAccessDenied";
+
+    private static final String WEBHOOK_TYPE = "webhook";
 
     private final SourceStore sourceStore;
     private final SourceAccessGuard sourceAccessGuard;
@@ -55,6 +67,7 @@ public class SourceController {
     private final PolicyTriggerManager policyTriggerManager;
     private final ApplicationProperties applicationProperties;
     private final List<InputSource> inputSources;
+    private final List<PolicyOutputSink> outputSinks;
 
     @GetMapping
     @Operation(
@@ -109,9 +122,14 @@ public class SourceController {
     public ResponseEntity<Source> save(@RequestBody Source source) {
         requireSourceEditingAllowed();
         requireNotEditor(source.id(), source.type());
-        Source owned = withStoredSecrets(resolveOwnership(source));
+        boolean isCreate = source.id() == null || source.id().isBlank();
+        Source owned = withPreparedOptions(withStoredSecrets(resolveOwnership(source)), isCreate);
         try {
             validateConfig(owned);
+        } catch (FolderAccessDeniedException e) {
+            // Surfaced with a machine-readable code by handleFolderAccessDenied so the portal can
+            // link to the Folder Access settings; don't flatten it into a plain 400 here.
+            throw e;
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
@@ -119,7 +137,7 @@ public class SourceController {
         // An edited folder source can change which directory needs watching, so re-sync trigger
         // registrations now instead of waiting for the next reconcile.
         policyTriggerManager.notifyPoliciesChanged();
-        return ResponseEntity.ok(withMaskedSecrets(saved));
+        return ResponseEntity.ok(revealOnCreate(saved, isCreate));
     }
 
     @DeleteMapping("/{sourceId}")
@@ -146,6 +164,22 @@ public class SourceController {
         }
         sourceStore.delete(sourceId);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * A folder source was rejected for pointing outside the allowed roots. Return a 400 carrying
+     * {@link #FOLDER_ACCESS_DENIED_CODE} so the portal can offer a link to the Folder Access
+     * settings, while other guard rejections (SaaS mode, the protected config dir) fall through to
+     * the global handler as plain 400s the admin can't fix by editing the allowlist.
+     */
+    @ExceptionHandler(FolderAccessDeniedException.class)
+    public ResponseEntity<ProblemDetail> handleFolderAccessDenied(FolderAccessDeniedException ex) {
+        ProblemDetail problem =
+                ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problem.setProperty("code", FOLDER_ACCESS_DENIED_CODE);
+        return ResponseEntity.badRequest()
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .body(problem);
     }
 
     /**
@@ -221,12 +255,38 @@ public class SourceController {
     /** Validate the config against the bean that handles the source's type, as the engine will. */
     private void validateConfig(Source source) {
         InputSpec spec = source.toInputSpec();
-        inputSources.stream()
-                .filter(inputSource -> inputSource.supports(spec))
+        Optional<InputSource> input = inputSourceFor(spec);
+        if (input.isPresent()) {
+            input.get().validate(spec);
+            return;
+        }
+        outputSinks.stream()
+                .filter(sink -> sink.supports(source.toOutputSpec()))
                 .findFirst()
                 .orElseThrow(
                         () -> new IllegalArgumentException("unknown source type: " + source.type()))
-                .validate(spec);
+                .validate(source.toOutputSpec());
+    }
+
+    private Source withPreparedOptions(Source source, boolean isCreate) {
+        InputSpec spec = source.toInputSpec();
+        InputSource input = inputSourceFor(spec).orElse(null);
+        if (input == null) {
+            return source;
+        }
+        Map<String, Object> prepared = input.prepareOptionsForSave(source.options(), isCreate);
+        return prepared == null ? source : withOptions(source, prepared);
+    }
+
+    private static Source revealOnCreate(Source saved, boolean isCreate) {
+        if (isCreate && WEBHOOK_TYPE.equals(saved.type())) {
+            return saved;
+        }
+        return withMaskedSecrets(saved);
+    }
+
+    private Optional<InputSource> inputSourceFor(InputSpec spec) {
+        return inputSources.stream().filter(input -> input.supports(spec)).findFirst();
     }
 
     /**
@@ -256,10 +316,20 @@ public class SourceController {
         }
     }
 
-    /** Names of the caller's visible policies that reference the given source. */
+    /**
+     * Names of the caller's visible policies that reference the given source - as an input ({@code
+     * sourceIds}) or as any destination it can deliver to ({@link Policy#allOutputIds()}: the
+     * fallback output and every routing rule's destination), so a location in use any of those ways
+     * is protected from deletion. A routing destination has to be covered here: dropping it would
+     * leave the rule unresolvable at run time, and the documents it claimed would go to the
+     * fallback destination instead.
+     */
     private List<String> referencingPolicyNames(String sourceId) {
         return policyAccessGuard.visibleFrom(policyStore).stream()
-                .filter(policy -> policy.sourceIds().contains(sourceId))
+                .filter(
+                        policy ->
+                                policy.sourceIds().contains(sourceId)
+                                        || policy.allOutputIds().contains(sourceId))
                 .map(Policy::name)
                 .toList();
     }

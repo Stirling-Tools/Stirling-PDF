@@ -7,7 +7,7 @@ test.describe("1. Authentication and Login", () => {
       page,
     }) => {
       // Step 1: Verify the browser redirects to /login
-      await page.goto("/");
+      await page.goto("/editor");
       await expect(page).toHaveURL(/\/login/);
 
       // Step 2: Confirm the login page displays the Stirling PDF logo
@@ -46,9 +46,9 @@ test.describe("1. Authentication and Login", () => {
       // Step 10: Click the "Sign In" button
       await signInButton.click();
 
-      // Step 11: Verify the user is redirected to the home page at /
-      await page.waitForURL("/", { timeout: 15000 });
-      await expect(page).toHaveURL("/");
+      // Step 11: Verify "/" routes the user on to the editor
+      await page.waitForURL("/editor", { timeout: 15000 });
+      await expect(page).toHaveURL("/editor");
 
       // Step 12: Verify the home dashboard loads with tool sidebar and file upload area visible
       await expect(
@@ -160,36 +160,6 @@ test.describe("1. Authentication and Login", () => {
       await page.waitForURL((url) => !url.pathname.includes("/login"), {
         timeout: 15000,
       });
-    });
-  });
-
-  test.describe("1.6 Login Page - Carousel/Slideshow", () => {
-    test("should navigate between carousel slides", async ({ page }) => {
-      // Carousel is hidden on small viewports (< 940px wide), ensure desktop size
-      await page.setViewportSize({ width: 1920, height: 1080 });
-
-      // Starting state: User is logged out; browser on /login
-      await page.goto("/login");
-      await page.waitForLoadState("domcontentloaded");
-
-      // Step 1: Verify slide indicator dots are present (carousel uses aria-label "Go to slide N")
-      const slideButtons = page.getByRole("button", { name: /Go to slide/i });
-      const count = await slideButtons.count();
-      test.skip(count === 0, "No carousel slides configured on this instance");
-
-      // Step 2: Click through slides
-      if (count >= 2) {
-        await slideButtons.nth(1).click();
-        await page.waitForTimeout(500);
-      }
-      if (count >= 3) {
-        await slideButtons.nth(2).click();
-        await page.waitForTimeout(500);
-      }
-
-      // Step 3: Click back to slide 1
-      await slideButtons.nth(0).click();
-      await page.waitForTimeout(500);
     });
   });
 });

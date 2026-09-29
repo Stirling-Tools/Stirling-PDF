@@ -3,12 +3,12 @@ import { PdfiumFont, PdfiumPage } from "@app/services/pdfiumDocBuilder";
 import { SignatureValidationSignature } from "@app/types/validateSignature";
 import { drawFieldBox } from "@app/hooks/tools/validateSignature/outputtedPDFSections/FieldBoxSection";
 import { drawStatusBadge } from "@app/hooks/tools/validateSignature/outputtedPDFSections/StatusBadgeSection";
-import {
-  computeSignatureStatus,
-  statusKindToPdfColor,
-} from "@app/hooks/tools/validateSignature/utils/signatureStatus";
+import { computeSignatureStatus } from "@app/hooks/tools/validateSignature/utils/signatureStatus";
 import { formatDate } from "@app/hooks/tools/validateSignature/utils/pdfText";
-import { colorPalette } from "@app/hooks/tools/validateSignature/utils/pdfPalette";
+import {
+  colorPalette,
+  statusKindToPdfColor,
+} from "@app/hooks/tools/validateSignature/utils/pdfPalette";
 
 interface DrawSignatureSectionOptions {
   page: PdfiumPage;
