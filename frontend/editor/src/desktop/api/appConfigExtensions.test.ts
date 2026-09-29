@@ -78,4 +78,27 @@ describe("applyDeviceCapabilities - hardware signing is answered by this machine
       }),
     ).resolves.toEqual({ enableLogin: true, hardwareSigningAvailable: false });
   });
+
+  test("a capability call that never answers does not hold up the config", async () => {
+    vi.useFakeTimers();
+    try {
+      getHardwareSigningCapabilities.mockReturnValue(new Promise(() => {}));
+      let settled: unknown;
+      void applyDeviceCapabilities({
+        enableLogin: true,
+        hardwareSigningAvailable: false,
+      }).then((config) => {
+        settled = config;
+      });
+
+      await vi.advanceTimersByTimeAsync(5000);
+
+      expect(settled).toEqual({
+        enableLogin: true,
+        hardwareSigningAvailable: false,
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

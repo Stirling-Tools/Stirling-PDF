@@ -1,6 +1,9 @@
 import { getHardwareSigningCapabilities } from "@app/services/hardwareSigningService";
 import type { AppConfig } from "@app/types/appConfig";
 
+/** Ample for a backend that is up; the config load waits on it. */
+const CAPABILITIES_TIMEOUT_MS = 5000;
+
 /**
  * Re-answers `hardwareSigningAvailable` from the machine the app is running on.
  *
@@ -17,13 +20,25 @@ import type { AppConfig } from "@app/types/appConfig";
  * sent it: those describe the deployment, and there the server is the authority.
  *
  * A failure is not worth breaking startup for - the config still loads, and
- * hardware signing simply stays as the backend reported it.
+ * hardware signing simply stays as the backend reported it. Nor is a slow
+ * answer: the desktop HTTP client applies no timeout of its own, so the wait is
+ * bounded here. DesktopConfigSync refetches the config, and so asks again, once
+ * the bundled backend is healthy.
  */
 export async function applyDeviceCapabilities(
   config: AppConfig,
 ): Promise<AppConfig> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
-    const capabilities = await getHardwareSigningCapabilities();
+    const capabilities = await Promise.race([
+      getHardwareSigningCapabilities(),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error("No answer from the local backend")),
+          CAPABILITIES_TIMEOUT_MS,
+        );
+      }),
+    ]);
     return { ...config, hardwareSigningAvailable: capabilities.desktop };
   } catch (error) {
     console.debug(
@@ -31,5 +46,7 @@ export async function applyDeviceCapabilities(
       error,
     );
     return config;
+  } finally {
+    clearTimeout(timer);
   }
 }
