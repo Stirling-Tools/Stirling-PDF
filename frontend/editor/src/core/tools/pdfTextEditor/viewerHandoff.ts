@@ -82,3 +82,75 @@ export function takePendingEditorScroll(): PendingEditorScroll | null {
   pendingScroll = null;
   return next;
 }
+
+/** One viewer-rendered page covering the editor load underneath it. */
+export interface EditorPoster {
+  fileId: string | null;
+  fileKey: string | null;
+  objectUrl: string;
+  /** 0-based page index the bitmap shows. */
+  pageIndex: number;
+}
+
+let poster: EditorPoster | null = null;
+let pendingPoster: EditorPoster | null = null;
+
+function revokeUrl(url: string): void {
+  if (typeof URL !== "undefined" && typeof URL.revokeObjectURL === "function") {
+    URL.revokeObjectURL(url);
+  }
+}
+
+/** Stash the viewer bitmap, dropping (and freeing) any previous one. */
+export function stageEditorPoster(next: EditorPoster | null): void {
+  if (poster) revokeUrl(poster.objectUrl);
+  poster = next;
+}
+
+/** Take the stashed bitmap only when it shows the file being loaded. */
+export function takeEditorPoster(
+  fileId?: string | null,
+  fileKey?: string | null,
+): EditorPoster | null {
+  if (!poster) return null;
+  const match =
+    (fileId && poster.fileId && fileId === poster.fileId) ||
+    (fileKey && poster.fileKey && fileKey === poster.fileKey);
+  if (!match) return null;
+  const next = poster;
+  poster = null;
+  return next;
+}
+
+/** Drop an unmatched bitmap so it cannot leak into a later load. */
+export function discardEditorPoster(): void {
+  if (poster) revokeUrl(poster.objectUrl);
+  poster = null;
+}
+
+/** Approved bitmap the stage may show; the loader already matched the file. */
+export function stagePendingPoster(next: EditorPoster | null): void {
+  if (pendingPoster) revokeUrl(pendingPoster.objectUrl);
+  pendingPoster = next;
+}
+
+/** Take the approved bitmap exactly once. */
+export function takePendingPoster(): EditorPoster | null {
+  const next = pendingPoster;
+  pendingPoster = null;
+  return next;
+}
+
+/** Scroll fraction per open document, surviving a canvas remount. */
+const editorScrollMemory = new WeakMap<object, number>();
+
+/** Remember where the document was left, as a fraction so a resize between
+ * visits still lands near the spot. */
+export function rememberEditorScroll(doc: object, fraction: number): void {
+  if (Number.isFinite(fraction)) editorScrollMemory.set(doc, fraction);
+}
+
+/** Fraction left at, or null when this document was never open here. */
+export function recallEditorScroll(doc: object): number | null {
+  return editorScrollMemory.get(doc) ?? null;
+}

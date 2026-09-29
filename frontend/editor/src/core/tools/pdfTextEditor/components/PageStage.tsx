@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Box,
   Center,
@@ -29,14 +29,31 @@ import { ReflowWrapCommand } from "@app/tools/pdfTextEditor/commands/ReflowWrapC
 import { InsertTextCommand } from "@app/tools/pdfTextEditor/commands/InsertTextCommand";
 import { MoveTextRunCommand } from "@app/tools/pdfTextEditor/commands/MoveTextRunCommand";
 import { SetImageTransformCommand } from "@app/tools/pdfTextEditor/commands/SetImageTransformCommand";
-import { takePendingEditorScroll } from "@app/tools/pdfTextEditor/viewerHandoff";
-import type { PendingEditorScroll } from "@app/tools/pdfTextEditor/viewerHandoff";
+import {
+  recallEditorScroll,
+  rememberEditorScroll,
+  takePendingEditorScroll,
+  takePendingPoster,
+  type EditorPoster,
+} from "@app/tools/pdfTextEditor/viewerHandoff";
 import type { SelectionState } from "@app/tools/pdfTextEditor/types";
 
 const DEFAULT_SCALE = 1.5;
 const DESKTOP_FIT_PAD_PX = 64;
 const MOBILE_FIT_PAD_PX = 16;
 const SCROLL_RESTORE_FRAMES = 30;
+// Bitmap renders asynchronously; poll briefly while nothing painted yet.
+const POSTER_POLL_MS = 250;
+const POSTER_POLLS = 4;
+// Never trap the user behind a bitmap that cannot paint underneath.
+const POSTER_MAX_MS = 4000;
+const POSTER_FADE_MS = 200;
+
+/** Where the stage must land: the carried page fraction, or a remembered
+ * scroll fraction for a document whose canvas remounted. */
+type ScrollRestoreTarget =
+  | { kind: "page"; page: number; offsetFraction: number }
+  | { kind: "fraction"; fraction: number };
 
 /** Editor ScrollArea viewport. Mantine sets inline overflowY scroll with no
  * marker attribute (ScrollAreaViewport.mjs), so scan overflow, not classes. */
@@ -130,24 +147,124 @@ export function PageStage() {
   }, [isMobile, firstPageWidth, store]);
 
   // Claim the scroll target the loader staged from the viewer handoff, once
-  // per document. A fraction keeps it valid across the zoom change.
-  const pendingScrollTargetRef = useRef<PendingEditorScroll | null>(null);
+  // per document. A fraction keeps it valid across the zoom change. Without
+  // a staged target, fall back to where this document was left before its
+  // canvas unmounted.
+  const pendingScrollTargetRef = useRef<ScrollRestoreTarget | null>(null);
   const scrollDocRef = useRef<object | null>(null);
+  // Viewer bitmap covering the load; null once the real pages paint.
+  const [poster, setPoster] = useState<EditorPoster | null>(null);
+  const [posterFading, setPosterFading] = useState(false);
+  const posterRef = useRef<EditorPoster | null>(null);
+  const posterTimersRef = useRef<number[]>([]);
+  const later = useCallback((ms: number, fn: () => void) => {
+    posterTimersRef.current.push(window.setTimeout(fn, ms));
+  }, []);
+  // Single teardown, in order: stop timers, free an in-flight bitmap, drop
+  // its state so a remount never shows a revoked URL.
+  useEffect(
+    () => () => {
+      for (const id of posterTimersRef.current) window.clearTimeout(id);
+      posterTimersRef.current = [];
+      const current = posterRef.current;
+      posterRef.current = null;
+      setPoster(null);
+      setPosterFading(false);
+      if (current) {
+        try {
+          URL.revokeObjectURL(current.objectUrl);
+        } catch {
+          /* bitmap already freed */
+        }
+      }
+    },
+    [],
+  );
+  const dismissPoster = useCallback(() => {
+    const current = posterRef.current;
+    if (!current) return;
+    posterRef.current = null;
+    setPosterFading(true);
+    later(POSTER_FADE_MS, () => {
+      setPoster(null);
+      setPosterFading(false);
+      try {
+        URL.revokeObjectURL(current.objectUrl);
+      } catch {
+        /* bitmap already freed */
+      }
+    });
+  }, [later]);
+  const handlePaintedPage = useCallback(
+    (pageIndex: number) => {
+      if (posterRef.current?.pageIndex === pageIndex) dismissPoster();
+    },
+    [dismissPoster],
+  );
   useEffect(() => {
     const doc = store.document;
     if (!doc || state.pages.length === 0) return;
     if (scrollDocRef.current === doc) return;
     scrollDocRef.current = doc;
-    pendingScrollTargetRef.current = takePendingEditorScroll();
-  }, [store, state.pages.length, state.hasDocument]);
+    const staged = takePendingEditorScroll();
+    if (staged) {
+      pendingScrollTargetRef.current = {
+        kind: "page",
+        page: staged.page,
+        offsetFraction: staged.offsetFraction,
+      };
+    } else {
+      const fraction = recallEditorScroll(doc);
+      pendingScrollTargetRef.current =
+        fraction === null ? null : { kind: "fraction", fraction };
+    }
+    setPosterFading(false);
+    const approved = takePendingPoster();
+    if (approved) {
+      posterRef.current = approved;
+      setPoster(approved);
+      later(POSTER_MAX_MS, () => dismissPoster());
+    } else {
+      let polls = 0;
+      const poll = () => {
+        if (posterRef.current || store.getState().firstPageRendered) return;
+        const late = takePendingPoster();
+        if (late) {
+          posterRef.current = late;
+          setPoster(late);
+          later(POSTER_MAX_MS, () => dismissPoster());
+        } else if (++polls < POSTER_POLLS) {
+          later(POSTER_POLL_MS, poll);
+        }
+      };
+      later(POSTER_POLL_MS, poll);
+    }
+  }, [store, state.pages.length, state.hasDocument, dismissPoster]);
+
+  // Remember the position on unmount so a warm remount lands back on it.
+  useEffect(() => {
+    const doc = store.document;
+    if (!doc) return;
+    return () => {
+      const stage = document.querySelector<HTMLElement>(
+        '[data-testid="pdf-editor-stage"]',
+      );
+      const scroller = findEditorScroller(stage);
+      if (scroller && scroller.scrollHeight > 0) {
+        rememberEditorScroll(doc, scroller.scrollTop / scroller.scrollHeight);
+      }
+    };
+  }, [store]);
 
   // Land the carried reading position before the user notices the top. Holds
   // briefly while bitmaps paint; user scroll intent releases it immediately.
   useEffect(() => {
     const target = pendingScrollTargetRef.current;
     if (!target || state.pages.length === 0) return;
-    const pageCount = state.pages.length;
-    const pageIndex = Math.min(Math.max(1, target.page), pageCount) - 1;
+    const pageIndex =
+      target.kind === "page"
+        ? Math.min(Math.max(1, target.page), state.pages.length) - 1
+        : null;
     let cancelled = false;
     let frames = 0;
     let scroller: HTMLElement | null = null;
@@ -156,23 +273,24 @@ export function PageStage() {
       cancelled = true;
       pendingScrollTargetRef.current = null;
     };
+    const retry = () => {
+      if (++frames < SCROLL_RESTORE_FRAMES) {
+        requestAnimationFrame(apply);
+      } else {
+        release?.();
+        pendingScrollTargetRef.current = null;
+      }
+    };
     const apply = () => {
       if (cancelled) return;
-      const pageEl = document.querySelector<HTMLElement>(
-        `[data-testid="pdf-editor-page-${pageIndex}"]`,
-      );
       if (!scroller) {
         const stage = document.querySelector<HTMLElement>(
           '[data-testid="pdf-editor-stage"]',
         );
         scroller = findEditorScroller(stage);
       }
-      if (!pageEl || !scroller || pageEl.clientHeight === 0) {
-        if (++frames < SCROLL_RESTORE_FRAMES) {
-          requestAnimationFrame(apply);
-        } else {
-          pendingScrollTargetRef.current = null;
-        }
+      if (!scroller || scroller.scrollHeight === 0) {
+        retry();
         return;
       }
       if (!release) {
@@ -180,29 +298,40 @@ export function PageStage() {
         for (const name of events) {
           scroller.addEventListener(name, onIntent, { passive: true });
         }
+        const held = scroller;
         release = () => {
           for (const name of events) {
-            scroller?.removeEventListener(name, onIntent);
+            held.removeEventListener(name, onIntent);
           }
         };
       }
-      const pageTop =
-        pageEl.getBoundingClientRect().top -
-        scroller.getBoundingClientRect().top +
-        scroller.scrollTop;
-      const next = pageTop + target.offsetFraction * pageEl.clientHeight;
-      scroller.scrollTop = Math.max(0, next);
+      let next: number | null = null;
+      if (target.kind === "fraction") {
+        next = target.fraction * scroller.scrollHeight;
+      } else {
+        const pageEl = document.querySelector<HTMLElement>(
+          `[data-testid="pdf-editor-page-${pageIndex}"]`,
+        );
+        if (!pageEl || pageEl.clientHeight === 0) {
+          retry();
+          return;
+        }
+        const pageTop =
+          pageEl.getBoundingClientRect().top -
+          scroller.getBoundingClientRect().top +
+          scroller.scrollTop;
+        next = Math.max(
+          0,
+          pageTop + target.offsetFraction * pageEl.clientHeight,
+        );
+      }
+      scroller.scrollTop = next;
       if (Math.abs(scroller.scrollTop - next) <= 2) {
         release?.();
         pendingScrollTargetRef.current = null;
         return;
       }
-      if (++frames < SCROLL_RESTORE_FRAMES) {
-        requestAnimationFrame(apply);
-      } else {
-        release?.();
-        pendingScrollTargetRef.current = null;
-      }
+      retry();
     };
     requestAnimationFrame(apply);
     return () => {
@@ -415,6 +544,38 @@ export function PageStage() {
           </Box>
         )}
         <MarqueeSelector store={store} />
+        {poster && (
+          <Box
+            pos="absolute"
+            top={0}
+            left={0}
+            right={0}
+            bottom={0}
+            data-testid="pdf-editor-poster"
+            style={{
+              zIndex: 90,
+              pointerEvents: "none",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "var(--mantine-color-body)",
+              opacity: posterFading ? 0 : 1,
+              transition: "opacity 200ms ease",
+            }}
+          >
+            <img
+              src={poster.objectUrl}
+              alt=""
+              draggable={false}
+              onError={() => dismissPoster()}
+              style={{
+                maxWidth: "100%",
+                maxHeight: "100%",
+                boxShadow: "0 0 4px rgba(0,0,0,0.2)",
+              }}
+            />
+          </Box>
+        )}
         <ScrollArea h="100%" type="auto" data-testid="pdf-editor-stage">
           <Box
             py={isMobile ? "sm" : "lg"}
@@ -496,6 +657,7 @@ export function PageStage() {
                     }
                     onFirstRendered={(pageIndex) => {
                       if (pageIndex === 0) store.markFirstPageRendered();
+                      handlePaintedPage(pageIndex);
                     }}
                   />
                 ) : null,

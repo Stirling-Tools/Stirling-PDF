@@ -1,9 +1,16 @@
 import { describe, expect, it } from "vitest";
 import {
   captureTextEditorHandoff,
+  discardEditorPoster,
   matchTextEditorHandoff,
+  recallEditorScroll,
+  rememberEditorScroll,
+  stageEditorPoster,
   stagePendingEditorScroll,
+  stagePendingPoster,
+  takeEditorPoster,
   takePendingEditorScroll,
+  takePendingPoster,
 } from "@app/tools/pdfTextEditor/viewerHandoff";
 
 // Each test captures under a unique identity, so no test can read another's
@@ -65,5 +72,60 @@ describe("viewerHandoff", () => {
       offsetFraction: 0.25,
     });
     expect(takePendingEditorScroll()).toBeNull();
+  });
+
+  it("hands a poster out only for its file", () => {
+    stageEditorPoster({
+      fileId: "poster-file",
+      fileKey: "poster-file|k",
+      objectUrl: "blob:poster-file",
+      pageIndex: 4,
+    });
+    expect(takeEditorPoster("other", "nope")).toBeNull();
+    expect(takeEditorPoster("poster-file", "x")).toEqual({
+      fileId: "poster-file",
+      fileKey: "poster-file|k",
+      objectUrl: "blob:poster-file",
+      pageIndex: 4,
+    });
+    expect(takeEditorPoster("poster-file", "poster-file|k")).toBeNull();
+  });
+
+  it("drops a stale poster so it cannot leak into a later load", () => {
+    stageEditorPoster({
+      fileId: "stale-file",
+      fileKey: "stale-file",
+      objectUrl: "blob:stale-file",
+      pageIndex: 0,
+    });
+    discardEditorPoster();
+    expect(takeEditorPoster("stale-file", "stale-file")).toBeNull();
+  });
+
+  it("replaces a pending poster instead of stacking bitmaps", () => {
+    stagePendingPoster({
+      fileId: "pending-file",
+      fileKey: "pending-file",
+      objectUrl: "blob:pending-first",
+      pageIndex: 0,
+    });
+    stagePendingPoster({
+      fileId: "pending-file",
+      fileKey: "pending-file",
+      objectUrl: "blob:pending-second",
+      pageIndex: 1,
+    });
+    expect(takePendingPoster()?.objectUrl).toBe("blob:pending-second");
+    expect(takePendingPoster()).toBeNull();
+  });
+
+  it("remembers the scroll fraction per document", () => {
+    const first = {};
+    const second = {};
+    rememberEditorScroll(first, 0.4);
+    expect(recallEditorScroll(first)).toBeCloseTo(0.4, 5);
+    expect(recallEditorScroll(second)).toBeNull();
+    rememberEditorScroll(first, Number.NaN);
+    expect(recallEditorScroll(first)).toBeCloseTo(0.4, 5);
   });
 });

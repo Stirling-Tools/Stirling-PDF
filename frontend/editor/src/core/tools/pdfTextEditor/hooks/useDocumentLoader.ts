@@ -8,10 +8,13 @@ import {
 import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/types";
 import {
+  discardEditorPoster,
   handoffFileId,
   handoffFileKey,
   matchTextEditorHandoff,
   stagePendingEditorScroll,
+  stagePendingPoster,
+  takeEditorPoster,
 } from "@app/tools/pdfTextEditor/viewerHandoff";
 
 const EAGER_PAGE_LIMIT = 5;
@@ -57,11 +60,12 @@ export function useDocumentLoader(store: EditorStore) {
 
         // Entering from the normal viewer carries its zoom and reading
         // position; apply before the first paint so no 150%-jump is visible.
+        // A viewer bitmap for this file covers the load; anything else is
+        // stale and must not leak into a later document.
         try {
-          const h = matchTextEditorHandoff(
-            handoffFileId(file),
-            handoffFileKey(file),
-          );
+          const fileId = handoffFileId(file);
+          const fileKey = handoffFileKey(file);
+          const h = matchTextEditorHandoff(fileId, fileKey);
           if (h) {
             store.setRenderScale(h.zoomScale);
             stagePendingEditorScroll({
@@ -70,6 +74,12 @@ export function useDocumentLoader(store: EditorStore) {
             });
           } else {
             stagePendingEditorScroll(null);
+          }
+          const poster = takeEditorPoster(fileId, fileKey);
+          if (poster) {
+            stagePendingPoster(poster);
+          } else {
+            discardEditorPoster();
           }
         } catch {
           /* handoff is best-effort; the 150% default still stands */

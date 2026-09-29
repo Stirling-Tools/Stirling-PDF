@@ -61,7 +61,10 @@ import { useMeasurementManager } from "@app/hooks/useMeasurementManager";
 import { ScaleCalibrationDialog } from "@app/components/viewer/ScaleCalibrationDialog";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
 import { alert } from "@app/components/toast";
-import { captureTextEditorHandoff } from "@app/tools/pdfTextEditor/viewerHandoff";
+import {
+  captureTextEditorHandoff,
+  stageEditorPoster,
+} from "@app/tools/pdfTextEditor/viewerHandoff";
 
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -140,6 +143,7 @@ const EmbedPdfViewerContent = ({
     searchInterfaceActions,
     registerImmediateZoomUpdate,
     registerImmediateScrollUpdate,
+    getThumbnailAPI,
     zoomActions,
     scrollActions,
     panActions: _panActions,
@@ -759,6 +763,8 @@ const EmbedPdfViewerContent = ({
   handoffFileKeyRef.current = currentFileId;
   const viewerGettersRef = useRef({ getZoomState, getScrollState });
   viewerGettersRef.current = { getZoomState, getScrollState };
+  const thumbnailApiRef = useRef(getThumbnailAPI);
+  thumbnailApiRef.current = getThumbnailAPI;
   const publishTextEditorHandoff = useCallback(() => {
     if (previewFile) return;
     const fileId = handoffFileIdRef.current;
@@ -810,9 +816,51 @@ const EmbedPdfViewerContent = ({
     scrollState.currentPage,
   ]);
 
+  // One bitmap of the page being read, staged so the editor shows real
+  // pixels instead of an empty stage while its own engine parses.
+  const captureEditorPoster = useCallback(() => {
+    if (previewFile) return;
+    const fileId = handoffFileIdRef.current;
+    const fileKey = handoffFileKeyRef.current;
+    if (!fileId && !fileKey) return;
+    let pageIndex = 0;
+    let scale = 1;
+    const zoom = viewerGettersRef.current.getZoomState();
+    if (
+      typeof zoom.currentZoom === "number" &&
+      Number.isFinite(zoom.currentZoom)
+    ) {
+      scale = zoom.currentZoom;
+    }
+    const scrolled = viewerGettersRef.current.getScrollState().currentPage;
+    if (scrolled > 0) pageIndex = scrolled - 1;
+    const task = thumbnailApiRef.current()?.renderThumb(pageIndex, scale);
+    if (!task) return;
+    task.toPromise().then(
+      (blob: Blob | null) => {
+        if (!blob || blob.size === 0) return;
+        let objectUrl: string | null = null;
+        try {
+          objectUrl = URL.createObjectURL(blob);
+        } catch {
+          return;
+        }
+        if (objectUrl) {
+          stageEditorPoster({ fileId, fileKey, objectUrl, pageIndex });
+        }
+      },
+      () => {
+        /* the loading pill covers a missing poster */
+      },
+    );
+  }, [previewFile]);
+
   useEffect(() => {
-    if (selectedTool === "pdfTextEditor") publishTextEditorHandoff();
-  }, [selectedTool, publishTextEditorHandoff]);
+    if (selectedTool === "pdfTextEditor") {
+      publishTextEditorHandoff();
+      captureEditorPoster();
+    }
+  }, [selectedTool, publishTextEditorHandoff, captureEditorPoster]);
 
   useEffect(() => {
     const offZoom = registerImmediateZoomUpdate(() =>
