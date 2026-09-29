@@ -54,6 +54,8 @@ const HardwareCertificateModal = ({
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
 
+  // The table shows rows in this order until a header is clicked; a defaultSort
+  // would replace it and could put an expired certificate first.
   const rows = useMemo(
     () => certs.filter((cert) => matches(cert, query)).sort(byUsefulness),
     [certs, query],
@@ -159,7 +161,6 @@ const HardwareCertificateModal = ({
             // knowing it is there and unusable beats wondering where it went - but not offered.
             isRowInteractive={isUsable}
             rowAffordance="chevron"
-            defaultSort={{ key: "name" }}
             empty={
               <Text size="sm" c="dimmed">
                 {t(
