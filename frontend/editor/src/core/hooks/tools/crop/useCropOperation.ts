@@ -10,6 +10,7 @@ import {
 } from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
+  validateCropParameters,
   CropParameters,
   defaultParameters,
 } from "@app/hooks/tools/crop/useCropParameters";
@@ -24,6 +25,7 @@ type CropApiParams = ToolApiParams[typeof ENDPOINT];
 export const cropToApiParams = (parameters: CropParameters): CropApiParams => {
   const apiParams: CropApiParams = {
     autoCrop: parameters.autoCrop,
+    pageNumbers: parameters.pageNumbers,
   };
 
   if (!parameters.autoCrop) {
@@ -43,6 +45,7 @@ export const cropFromApiParams = (
   apiParams: CropApiParams,
 ): Partial<CropParameters> => ({
   autoCrop: apiParams.autoCrop ?? defaultParameters.autoCrop,
+  pageNumbers: apiParams.pageNumbers ?? defaultParameters.pageNumbers,
   cropArea: {
     x: apiParams.x ?? DEFAULT_CROP_AREA.x,
     y: apiParams.y ?? DEFAULT_CROP_AREA.y,
@@ -60,6 +63,7 @@ export const buildCropFormData = (
 
 // Static configuration object
 export const cropOperationConfig = defineSingleFileTool({
+  validateParams: validateCropParameters,
   buildFormData: buildCropFormData,
   toApiParams: cropToApiParams,
   fromApiParams: cropFromApiParams,

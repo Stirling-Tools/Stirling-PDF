@@ -1,0 +1,5 @@
+.sui-nav-surface {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-nav);
+}

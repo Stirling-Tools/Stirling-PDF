@@ -14,12 +14,13 @@ import {
   Z_INDEX_DROP_INDICATOR,
   Z_INDEX_DRAG_BADGE,
 } from "@app/styles/zIndex";
-import { LocalIcon } from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import {
   DndContext,
   DragEndEvent,
   DragStartEvent,
   DragOverlay,
+  DraggableAttributes,
   useSensor,
   useSensors,
   PointerSensor,
@@ -27,6 +28,10 @@ import {
   useDraggable,
   useDroppable,
 } from "@dnd-kit/core";
+
+export type DragHandleProps = DraggableAttributes & {
+  ref: React.RefCallback<HTMLElement>;
+} & Record<string, unknown>;
 
 interface DragDropItem {
   id: string;
@@ -51,7 +56,7 @@ interface DragDropGridProps<T extends DragDropItem> {
     clearBoxSelection: () => void,
     activeDragIds: string[],
     justMoved: boolean,
-    dragHandleProps?: any,
+    dragHandleProps?: DragHandleProps,
     zoomLevel?: number,
   ) => React.ReactNode;
   getThumbnailData?: (
@@ -232,7 +237,7 @@ interface DraggableItemProps<T extends DragDropItem> {
     clearBoxSelection: () => void,
     activeDragIds: string[],
     justMoved: boolean,
-    dragHandleProps?: any,
+    dragHandleProps?: DragHandleProps,
     zoomLevel?: number,
   ) => React.ReactNode;
   zoomLevel: number;
@@ -253,7 +258,7 @@ const DraggableItemInner = <T extends DragDropItem>({
   zoomLevel,
 }: DraggableItemProps<T>) => {
   const isPlaceholder = Boolean(item.isPlaceholder);
-  const pageNumber = (item as any).pageNumber ?? index + 1;
+  const pageNumber = item.pageNumber ?? index + 1;
   const {
     attributes,
     listeners,
@@ -1010,7 +1015,7 @@ const DragDropGrid = <T extends DragDropItem>({
                   color: "var(--mantine-color-dimmed)",
                 }}
               >
-                <LocalIcon icon="description" width="3rem" height="3rem" />
+                <Icon name="file-text" size="3rem" />
               </div>
             )}
           </div>

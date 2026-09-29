@@ -31,10 +31,10 @@ export const CORE_REGULAR_TOOL_IDS = [
   "ocr",
   "addImage",
   "rotate",
+  "autoRotate",
   "annotate",
   "scannerImageSplit",
   "editTableOfContents",
-  "scannerEffect",
   "autoRename",
   "pageLayout",
   "scalePages",
@@ -49,11 +49,13 @@ export const CORE_REGULAR_TOOL_IDS = [
   "removeCertSign",
   "unlockPDFForms",
   "compress",
+  "classify",
   "extractPages",
   "reorganizePages",
   "extractImages",
   "addStamp",
   "addAttachments",
+  "createPortfolio",
   "changeMetadata",
   "overlayPdfs",
   "getPdfInfo",
@@ -64,6 +66,7 @@ export const CORE_REGULAR_TOOL_IDS = [
   "bookletImposition",
   "pdfTextEditor",
   "formFill",
+  "autoFormDetection",
 ] as const;
 
 export const CORE_SUPER_TOOL_IDS = ["multiTool", "read", "automate"] as const;

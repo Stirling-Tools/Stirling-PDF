@@ -21,6 +21,8 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -52,12 +54,13 @@ public class RepairController {
             value = "/repair",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Repair a PDF file",
             description =
-                    "This endpoint repairs a given PDF file by running Ghostscript (primary), qpdf (fallback), or PDFBox (if no external tools available). The PDF is"
-                            + " first saved to a temporary location, repaired, read back, and then"
-                            + " returned as a response. Input:PDF Output:PDF Type:SISO")
+                    "This endpoint repairs a given PDF file by running Ghostscript (primary), qpdf"
+                            + " (fallback), or PDFBox (if no external tools available). The PDF is first saved"
+                            + " to a temporary location, repaired, read back, and then returned as a response.")
     public ResponseEntity<Resource> repairPdf(@ModelAttribute PDFFile file)
             throws IOException, InterruptedException {
         MultipartFile inputFile = file.getFileInput();
@@ -97,17 +100,25 @@ public class RepairController {
             if (!repairSuccess && isQpdfEnabled()) {
                 List<String> qpdfCommand = new ArrayList<>();
                 qpdfCommand.add("qpdf");
-                qpdfCommand.add("--replace-input"); // Automatically fixes problems it can
+                // No --replace-input: it edits the input in place and takes no output path, so
+                // passing one made every fallback die before qpdf read a byte.
                 qpdfCommand.add("--qdf"); // Linearizes and normalizes PDF structure
                 qpdfCommand.add("--object-streams=disable"); // Can help with some corruptions
                 qpdfCommand.add(tempInputFile.getPath().toString());
                 qpdfCommand.add(tempOutputFile.getPath().toString());
 
-                ProcessExecutorResult qpdfResult =
-                        ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
-                                .runCommandWithOutputHandling(qpdfCommand);
+                try {
+                    ProcessExecutorResult qpdfResult =
+                            ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
+                                    .runCommandWithOutputHandling(qpdfCommand);
 
-                repairSuccess = true;
+                    // qpdf exits 3 for warnings it recovered from, which is a repaired file.
+                    repairSuccess = qpdfResult.getRc() == 0 || qpdfResult.getRc() == 3;
+                } catch (IOException | RuntimeException e) {
+                    // A non-zero exit throws rather than returning, and its stderr names temp
+                    // paths. An interrupt is left to propagate: a cancelled job is not a refusal.
+                    log.warn("QPDF repair failed: ", e);
+                }
             }
 
             // Use PDFBox as last resort if no external tools are available
@@ -119,9 +130,9 @@ public class RepairController {
                         repairSuccess = true;
                     }
                 } else {
-                    throw ExceptionUtils.createFileProcessingException(
-                            "PDF repair",
-                            new IOException("PDF repair failed with available tools"));
+                    // Coded, so the caller can say why rather than showing a bare 500: every tool
+                    // present has tried this document and declined it.
+                    throw ExceptionUtils.createPdfUnrepairableException();
                 }
             }
 

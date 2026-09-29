@@ -1,4 +1,5 @@
 import { rgb } from "@app/services/pdfiumDocBuilder";
+import type { SignatureStatusKind } from "@app/hooks/tools/validateSignature/utils/signatureStatus";
 
 type RgbTuple = [number, number, number];
 
@@ -92,4 +93,17 @@ export const colorPalette = {
     "--pdf-light-neutral",
     defaultLightPalette.neutral,
   ),
+};
+
+export const statusKindToPdfColor = (kind: SignatureStatusKind) => {
+  switch (kind) {
+    case "valid":
+      return colorPalette.success;
+    case "warning":
+      return colorPalette.warning;
+    case "invalid":
+      return colorPalette.danger;
+    default:
+      return colorPalette.neutral;
+  }
 };

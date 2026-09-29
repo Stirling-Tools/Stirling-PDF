@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 
 interface AdminTourOrchestrationContextType {
   // State management
@@ -40,8 +41,8 @@ export const AdminTourOrchestrationProvider: React.FC<{
       savedLocationRef.current,
     );
 
-    // Navigate back to saved location or home
-    const targetPath = savedLocationRef.current || "/";
+    // Navigate back to saved location or the editor
+    const targetPath = savedLocationRef.current || EDITOR_BASENAME;
     navigate(targetPath, { replace: true });
 
     savedLocationRef.current = "";
@@ -53,8 +54,8 @@ export const AdminTourOrchestrationProvider: React.FC<{
   }, [navigate]);
 
   const closeConfigModal = useCallback(() => {
-    // Navigate back to home to close the modal
-    navigate("/", { replace: true });
+    // Navigate back to the editor to close the modal
+    navigate(EDITOR_BASENAME, { replace: true });
   }, [navigate]);
 
   const navigateToSection = useCallback(

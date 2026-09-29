@@ -12,6 +12,7 @@ import {
 } from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
+  validateSplitParameters,
   SplitParameters,
   defaultParameters,
 } from "@app/hooks/tools/split/useSplitParameters";
@@ -172,11 +173,14 @@ export const getSplitEndpoint = (parameters: SplitParameters): SplitEndpoint =>
 
 // Static configuration object
 export const splitOperationConfig = defineSingleFileTool({
+  validateParams: validateSplitParameters,
   buildFormData: buildSplitFormData,
   toApiParams: splitToApiParams,
   fromApiParams: splitFromApiParams,
   operationType: "split",
   endpoint: getSplitEndpoint,
+  // Full routing set: a stored step maps back to Split though its `method` selector is frontend-only.
+  endpoints: Array.from(new Set(Object.values(SPLIT_ENDPOINTS))),
   defaultParameters,
 });
 

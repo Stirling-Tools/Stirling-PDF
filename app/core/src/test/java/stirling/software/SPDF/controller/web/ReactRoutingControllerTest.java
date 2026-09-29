@@ -4,12 +4,26 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
 import java.lang.reflect.Field;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.Ordered;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.servlet.function.EntityResponse;
+import org.springframework.web.servlet.function.HandlerFunction;
+import org.springframework.web.servlet.function.RouterFunction;
+import org.springframework.web.servlet.function.ServerRequest;
+import org.springframework.web.servlet.function.ServerResponse;
+import org.springframework.web.servlet.function.support.RouterFunctionMapping;
+import org.springframework.web.util.ServletRequestPathUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -156,10 +170,23 @@ class ReactRoutingControllerTest {
     // --- forwarding routes ---
 
     @Test
-    void forwardRootPaths_servesIndexHtml() throws Exception {
+    void forwardRootPaths_noPrerenderedFile_fallsBackToIndexHtml() throws Exception {
         controller.init();
 
-        ResponseEntity<String> response = controller.forwardRootPaths(request);
+        // No prerendered compress.html on the test classpath -> generic shell.
+        ResponseEntity<String> response = controller.forwardRootPaths(request, "compress");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody().contains("Stirling PDF"));
+    }
+
+    @Test
+    void forwardRootPaths_unsafeSegment_fallsBackToIndexHtml() throws Exception {
+        controller.init();
+
+        // A dotted segment must never be turned into a file lookup.
+        ResponseEntity<String> response = controller.forwardRootPaths(request, "e.tag");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -169,10 +196,123 @@ class ReactRoutingControllerTest {
     void forwardNestedPaths_servesIndexHtml() throws Exception {
         controller.init();
 
-        ResponseEntity<String> response = controller.forwardNestedPaths(request);
+        ResponseEntity<String> response =
+                controller.forwardNestedPaths(request, "settings", "people");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
+    }
+
+    @Test
+    void forwardRootPaths_prerenderedFile_servesItAndCachesIt() throws Exception {
+        controller.init();
+
+        // static/prerender-test.html is a test-resource fixture on the classpath.
+        ResponseEntity<String> response = controller.forwardRootPaths(request, "prerender-test");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody().contains("<title>Prerender Test - Stirling PDF</title>"));
+        // context path applied on the way out, then memoised under the route key
+        assertTrue(response.getBody().contains("window.STIRLING_PDF_API_BASE_URL"));
+        assertEquals(Set.of("prerender-test"), prerenderedCache().keySet());
+    }
+
+    @Test
+    void forwardPaths_unknownRoutes_neverGrowTheCache() throws Exception {
+        controller.init();
+
+        for (int i = 0; i < 100; i++) {
+            controller.forwardRootPaths(request, "not-a-route-" + i);
+            controller.forwardNestedPaths(request, "not-a-route-" + i, "child-" + i);
+        }
+
+        // An unrouted path must not be able to allocate a cache entry.
+        assertTrue(prerenderedCache().isEmpty());
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, String> prerenderedCache() throws Exception {
+        Field field = ReactRoutingController.class.getDeclaredField("prerenderedCache");
+        field.setAccessible(true);
+        return (Map<String, String>) field.get(controller);
+    }
+
+    // --- deep-link SPA fallback (router function) ---
+
+    @Test
+    void isSpaFallbackRoute_acceptsDeepSpaPaths() {
+        assertTrue(ReactRoutingController.isSpaFallbackRoute("/processor/pipelines/new"));
+        assertTrue(ReactRoutingController.isSpaFallbackRoute("/processor/pipelines/123/runs/456"));
+        assertTrue(ReactRoutingController.isSpaFallbackRoute("/workflow/sign/some-token"));
+        assertTrue(ReactRoutingController.isSpaFallbackRoute("/processor/pipelines/new/"));
+        // "pipelines" must not be swallowed by the "pipeline" exclusion
+        assertTrue(ReactRoutingController.isSpaFallbackRoute("/pipelines"));
+    }
+
+    @Test
+    void isSpaFallbackRoute_rejectsBackendStaticAndFilePaths() {
+        assertFalse(ReactRoutingController.isSpaFallbackRoute("/api/v1/some/endpoint"));
+        assertFalse(ReactRoutingController.isSpaFallbackRoute("/pipeline"));
+        assertFalse(ReactRoutingController.isSpaFallbackRoute("/pipeline/anything"));
+        assertFalse(ReactRoutingController.isSpaFallbackRoute("/assets/deep/path"));
+        assertFalse(ReactRoutingController.isSpaFallbackRoute("/processor/pipelines/file.js"));
+        assertFalse(ReactRoutingController.isSpaFallbackRoute("/branding/sub/logo.png"));
+        assertFalse(ReactRoutingController.isSpaFallbackRoute("/"));
+        assertFalse(ReactRoutingController.isSpaFallbackRoute(""));
+        assertFalse(ReactRoutingController.isSpaFallbackRoute(null));
+    }
+
+    @Test
+    void spaDeepLinkFallback_servesIndexForDeepRoute() throws Exception {
+        controller.init();
+        RouterFunction<ServerResponse> router = routerOf(controller.spaDeepLinkFallbackMapping());
+
+        ServerRequest deepRequest = serverRequest("GET", "/processor/pipelines/new");
+        Optional<HandlerFunction<ServerResponse>> handler = router.route(deepRequest);
+        assertTrue(handler.isPresent());
+
+        ServerResponse response = handler.get().handle(deepRequest);
+        assertEquals(HttpStatus.OK, response.statusCode());
+        assertInstanceOf(EntityResponse.class, response);
+        Object body = ((EntityResponse<?>) response).entity();
+        assertTrue(body.toString().contains("Stirling PDF"));
+    }
+
+    @Test
+    void spaDeepLinkFallback_ignoresApiFilesAndNonGet() {
+        controller.init();
+        RouterFunction<ServerResponse> router = routerOf(controller.spaDeepLinkFallbackMapping());
+
+        assertTrue(router.route(serverRequest("GET", "/api/v1/policies/run")).isEmpty());
+        assertTrue(router.route(serverRequest("GET", "/branding/sub/logo.png")).isEmpty());
+        assertTrue(router.route(serverRequest("POST", "/processor/pipelines/new")).isEmpty());
+    }
+
+    @Test
+    void spaDeepLinkFallback_runsAfterControllersAndBeforeResources() {
+        controller.init();
+        int order = controller.spaDeepLinkFallbackMapping().getOrder();
+
+        // A catch-all denylist is only safe below every annotated controller; Spring's own
+        // RouterFunctionMapping sits at -1, which would shadow /v1/api-docs, /error and friends.
+        assertTrue(order > 0, "SPA fallback must run after annotated controllers");
+        assertTrue(
+                order < Ordered.LOWEST_PRECEDENCE - 1,
+                "SPA fallback must run before the static-resource chain");
+    }
+
+    private static RouterFunction<ServerResponse> routerOf(RouterFunctionMapping mapping) {
+        @SuppressWarnings("unchecked")
+        RouterFunction<ServerResponse> router =
+                (RouterFunction<ServerResponse>) mapping.getRouterFunction();
+        return router;
+    }
+
+    private static ServerRequest serverRequest(String method, String uri) {
+        MockHttpServletRequest servletRequest = new MockHttpServletRequest(method, uri);
+        ServletRequestPathUtils.parseAndCache(servletRequest);
+        return ServerRequest.create(servletRequest, List.of(new StringHttpMessageConverter()));
     }
 
     // --- context path handling ---

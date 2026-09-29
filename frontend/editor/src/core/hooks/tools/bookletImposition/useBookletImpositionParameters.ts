@@ -29,13 +29,19 @@ export const defaultParameters: BookletImpositionParameters = {
 export type BookletImpositionParametersHook =
   BaseParametersHook<BookletImpositionParameters>;
 
+/** Whether these parameters are complete enough to run. Shared by the tool's settings
+ * hook and its operationConfig, so the editor and the pipeline builder agree. */
+export function validateBookletImpositionParameters(
+  params: BookletImpositionParameters,
+): boolean {
+  return params.pagesPerSheet === 2;
+}
+
 export const useBookletImpositionParameters =
   (): BookletImpositionParametersHook => {
     return useBaseParameters({
       defaultParameters,
       endpointName: "booklet-imposition",
-      validateFn: (params) => {
-        return params.pagesPerSheet === 2;
-      },
+      validateFn: validateBookletImpositionParameters,
     });
   };

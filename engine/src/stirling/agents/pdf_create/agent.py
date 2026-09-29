@@ -10,7 +10,7 @@ Flow:
   4. SectionWriterAgents (smart_model) run in parallel via asyncio.gather.
      Each returns a WrittenSections with fully populated DocumentSection objects.
   5. The assembler collects sections in plan order → GeneratedDocument.
-  6. Jinja renders the document to HTML. The LLM never writes HTML.
+  6. The assembled document is emitted as structured fields. The LLM never writes HTML.
 
 The planner is split into two calls (meta then sections) so each LLM output schema
 stays small enough for grammar compilation on all model tiers including Haiku.
@@ -22,9 +22,7 @@ import asyncio
 import logging
 import re
 from dataclasses import dataclass
-from pathlib import Path
 
-from jinja2 import Environment, FileSystemLoader
 from pydantic_ai import Agent
 from pydantic_ai.output import NativeOutput
 
@@ -47,11 +45,9 @@ from stirling.contracts.pdf_create import (
     WrittenSections,
 )
 from stirling.models.agent_tool_models import AgentToolId, CreatePdfFromHtmlAgentParams
-from stirling.services import AppRuntime
+from stirling.services import AppRuntime, language_directive
 
 logger = logging.getLogger(__name__)
-
-_TEMPLATES_DIR = Path(__file__).parent / "templates"
 
 # ── Token budget ──────────────────────────────────────────────────────────────────────────────────
 
@@ -166,10 +162,13 @@ Analyse the user's request and produce a DocumentMeta with:
   document, if the user provides one. Leave empty if the user provides no such context.
 
 - style_primary_color: accent and heading colour. Set ONLY when the user explicitly names a
-  colour or colour scheme (e.g. "make it red", "use navy blue"). Use CSS named colours
-  (e.g. "magenta", "navy", "crimson") or hex values. Leave null if no colour is stated.
-- style_background_color: page background colour. Set only if explicitly requested.
-- style_body_text_color: body text colour. Set only if explicitly requested.
+  colour or colour scheme (e.g. "make it red", "use navy blue"). Express it as a 6-digit hex
+  code in #RRGGBB format (map any named colour to its hex value yourself, e.g. "navy" →
+  "#000080"). No other format is accepted. Leave null if no colour is stated.
+- style_background_color: page background colour, same #RRGGBB format. Set only if explicitly
+  requested.
+- style_body_text_color: body text colour, same #RRGGBB format. Set only if explicitly
+  requested.
 
 - cannot_do_reason: set this ONLY when the request is not asking to create a document at all
   (e.g. a question, a greeting, an edit request to an existing document). Never set it
@@ -261,6 +260,7 @@ def _build_sections_prompt(meta: DocumentMeta, user_request: str, history: str) 
 
     lines.append(f"\nConversation history:\n{history}")
     lines.append(f"\nUser request: {user_request}")
+    lines.append(f"\n{language_directive()}")
     return "\n".join(lines)
 
 
@@ -293,19 +293,11 @@ def _build_writer_prompt(plan: DocumentPlan, chunk: _Chunk) -> str:
         for point in s.key_points:
             lines.append(f"  - {point}")
 
+    lines.append(f"\n{language_directive()}")
     return "\n".join(lines)
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────────────────────────
-
-
-def _build_jinja_env() -> Environment:
-    return Environment(
-        loader=FileSystemLoader(str(_TEMPLATES_DIR)),
-        autoescape=True,
-        trim_blocks=True,
-        lstrip_blocks=True,
-    )
 
 
 def _safe_filename(title: str) -> str:
@@ -320,7 +312,6 @@ def _safe_filename(title: str) -> str:
 class PdfCreateAgent:
     def __init__(self, runtime: AppRuntime) -> None:
         self.runtime = runtime
-        self._jinja_env = _build_jinja_env()
 
         self._meta_planner: Agent[None, DocumentMeta] = Agent(
             model=runtime.smart_model,
@@ -349,6 +340,7 @@ class PdfCreateAgent:
         # ── Phase 1: plan meta ─────────────────────────────────────────────────
         logger.info("[pdf-create] phase 1/6: planning document meta")
         meta_prompt = f"Conversation history:\n{history}\n\nUser request: {request.user_message}"
+        meta_prompt += f"\n\n{language_directive()}"
         meta_result = await self._meta_planner.run(meta_prompt)
         meta = meta_result.output
 
@@ -401,14 +393,12 @@ class PdfCreateAgent:
             sections=all_sections,
         )
 
-        # ── Phase 6: render ────────────────────────────────────────────────────
-        logger.info("[pdf-create] phase 6/6: rendering HTML")
-        html = self._render(doc)
+        # ── Phase 6: emit ──────────────────────────────────────────────────────
         filename = _safe_filename(plan.title)
         logger.info(
-            "[pdf-create] done — filename=%r html_bytes=%d",
+            "[pdf-create] done — filename=%r sections=%d",
             filename,
-            len(html),
+            len(all_sections),
         )
 
         return EditPlanResponse(
@@ -417,7 +407,7 @@ class PdfCreateAgent:
                 ToolOperationStep(
                     tool=AgentToolId.CREATE_PDF_FROM_HTML_AGENT,
                     parameters=CreatePdfFromHtmlAgentParams(
-                        html_content=html,
+                        document=doc.model_dump_json(),
                         filename=filename,
                     ),
                 )
@@ -437,7 +427,3 @@ class PdfCreateAgent:
             len(result.output.sections),
         )
         return result.output
-
-    def _render(self, doc: GeneratedDocument) -> str:
-        template = self._jinja_env.get_template("document.html.jinja2")
-        return template.render(doc=doc)

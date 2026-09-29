@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Button } from "@app/ui/Button";
+import { useTranslation } from "react-i18next";
 import "@app/ui/CodeBlock.css";
 
 export type CodeLang =
@@ -33,6 +34,7 @@ export function CodeBlock({
   maxHeight = 400,
   className,
 }: CodeBlockProps) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
   async function copy() {
@@ -64,11 +66,19 @@ export function CodeBlock({
             onClick={copy}
             aria-label="Copy code"
           >
-            {copied ? "Copied" : "Copy"}
+            {copied ? t("common.copied", "Copied!") : t("common.copy", "Copy")}
           </Button>
         )}
       </div>
-      <pre className="sui-code__pre" style={{ maxHeight }}>
+      {/* Focusable and named: long samples scroll, and a scrollable region needs
+          to be reachable by keyboard to be scrolled at all. */}
+      <pre
+        className="sui-code__pre"
+        style={{ maxHeight }}
+        tabIndex={0}
+        role="group"
+        aria-label={t("common.codeSample", "Code sample")}
+      >
         <code>{code}</code>
       </pre>
     </div>

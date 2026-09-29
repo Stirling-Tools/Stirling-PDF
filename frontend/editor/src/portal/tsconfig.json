@@ -3,10 +3,15 @@
   "compilerOptions": {
     "paths": {
       "@app/*": [
-        "../../src/portal/*",
         "../../src/cloud/*",
         "../../src/proprietary/*",
         "../../src/core/*"
+      ],
+      "@app/portal/*": [
+        "../../src/cloud/portal/*",
+        "../../src/proprietary/portal/*",
+        "../../src/core/portal/*",
+        "../../src/portal/*"
       ],
       "@portal/*": ["../../src/portal/*"],
       "@cloud/*": ["../../src/cloud/*"],

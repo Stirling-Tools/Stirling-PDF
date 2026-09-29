@@ -11,8 +11,7 @@ import { ToolId } from "@app/types/toolId";
 import { useToolSections } from "@app/hooks/useToolSections";
 import NoToolsFound from "@app/components/tools/shared/NoToolsFound";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import StarRoundedIcon from "@mui/icons-material/StarRounded";
-import ThumbUpRoundedIcon from "@mui/icons-material/ThumbUpRounded";
+import { Icon } from "@app/ui/Icon";
 import Badge from "@app/components/shared/Badge";
 import "@app/components/tools/ToolPanel.css";
 import DetailedToolItem from "@app/components/tools/fullscreen/DetailedToolItem";
@@ -58,8 +57,8 @@ const FullscreenToolList = ({
   );
   const recommendedItems = useMemo(() => {
     if (!quickSection)
-      return [] as Array<{ id: string; tool: ToolRegistryEntry }>;
-    const items: Array<{ id: string; tool: ToolRegistryEntry }> = [];
+      return [] as Array<{ id: ToolId; tool: ToolRegistryEntry }>;
+    const items: Array<{ id: ToolId; tool: ToolRegistryEntry }> = [];
     quickSection.subcategories.forEach((sc) =>
       sc.tools.forEach((t) => items.push(t)),
     );
@@ -108,7 +107,7 @@ const FullscreenToolList = ({
         window.open(tool.link, "_blank", "noopener,noreferrer");
         return;
       }
-      onSelect(id as ToolId);
+      onSelect(id);
     };
 
     if (showDescriptions) {
@@ -155,7 +154,7 @@ const FullscreenToolList = ({
                     }}
                     aria-hidden
                   >
-                    <StarRoundedIcon />
+                    <Icon name="star" filled />
                   </span>
                   <Text size="sm" fw={600} tt="uppercase" lts={0.5} c="dimmed">
                     {t("toolPanel.fullscreen.favorites", "Favourites")}
@@ -201,7 +200,7 @@ const FullscreenToolList = ({
                     }}
                     aria-hidden
                   >
-                    <ThumbUpRoundedIcon />
+                    <Icon name="thumbs-up" />
                   </span>
                   <Text size="sm" fw={600} tt="uppercase" lts={0.5} c="dimmed">
                     {t("toolPanel.fullscreen.recommended", "Recommended")}
@@ -217,13 +216,13 @@ const FullscreenToolList = ({
               </header>
               {showDescriptions ? (
                 <div className="tool-panel__fullscreen-grid tool-panel__fullscreen-grid--detailed">
-                  {recommendedItems.map((item: any) =>
+                  {recommendedItems.map((item) =>
                     renderToolItem(item.id, item.tool),
                   )}
                 </div>
               ) : (
                 <div className="tool-panel__fullscreen-list">
-                  {recommendedItems.map((item: any) =>
+                  {recommendedItems.map((item) =>
                     renderToolItem(item.id, item.tool),
                   )}
                 </div>
@@ -274,15 +273,11 @@ const FullscreenToolList = ({
 
             {showDescriptions ? (
               <div className="tool-panel__fullscreen-grid tool-panel__fullscreen-grid--detailed">
-                {tools.map(({ id, tool }) =>
-                  renderToolItem(id as ToolId, tool),
-                )}
+                {tools.map(({ id, tool }) => renderToolItem(id, tool))}
               </div>
             ) : (
               <div className="tool-panel__fullscreen-list">
-                {tools.map(({ id, tool }) =>
-                  renderToolItem(id as ToolId, tool),
-                )}
+                {tools.map(({ id, tool }) => renderToolItem(id, tool))}
               </div>
             )}
           </section>

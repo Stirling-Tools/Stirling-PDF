@@ -1,10 +1,21 @@
 import {
+  TOOL_ENDPOINTS,
   type ToolApiParams,
   type ToolApiRequest,
   type ToolEndpoint,
 } from "@app/types/toolApiTypes";
 
 export type { ToolApiParams, ToolApiRequest, ToolEndpoint };
+
+const TOOL_ENDPOINT_SET: ReadonlySet<string> = new Set(TOOL_ENDPOINTS);
+
+/**
+ * Runtime check that a string is one of the generated tool endpoints, so callers can narrow an
+ * arbitrary endpoint path to {@link ToolEndpoint} against the real supported set rather than casting.
+ */
+export function isToolEndpoint(value: string): value is ToolEndpoint {
+  return TOOL_ENDPOINT_SET.has(value);
+}
 
 /**
  * Mapping for tools that take only a file and have no request parameters (their
@@ -36,26 +47,28 @@ function appendPrimitive(
     formData.append(key, value);
   } else if (typeof value === "number" || typeof value === "boolean") {
     formData.append(key, `${value}`);
+  } else if (typeof Blob !== "undefined" && value instanceof Blob) {
+    // A File upload (models type binary params as File): send it as the file part, not stringified.
+    formData.append(key, value);
   } else {
-    // A non-primitive here means a mapper produced a value the backend cannot
-    // receive as a form field. Fail loudly rather than silently drop it:
-    // structured fields must be JSON-encoded in the mapper, and Files passed via
-    // the `files` argument.
+    // Any other non-primitive means a mapper produced a value the backend cannot receive as a form
+    // field. Fail loudly rather than silently drop it: structured fields must be JSON-encoded first.
     throw new Error(
       `objectToFormData: field "${key}" has an unsupported value of type ` +
-        `"${typeof value}"; expected a string, number, or boolean.`,
+        `"${typeof value}"; expected a string, number, boolean, or File.`,
     );
   }
 }
 
 /**
  * Serialize a backend request model (the output of a `toApiParams` function)
- * into multipart FormData: primitives become string fields, arrays become
- * repeated fields, and `undefined`/`null` are omitted. Files are appended
- * separately via `files`, keeping file plumbing out of the parameter mapper.
+ * into multipart FormData: primitives become string fields, `File` values become
+ * file parts, arrays become repeated fields, and `undefined`/`null` are omitted.
+ * Extra files may still be passed via `files` (the primary `fileInput`, or a
+ * field the mapper doesn't carry).
  *
- * Throws if a field holds a non-primitive value, since that cannot be sent as a
- * form field: structured fields must be JSON-encoded by the mapper.
+ * Throws if a field holds any other non-primitive value, since that cannot be
+ * sent as a form field: structured fields must be JSON-encoded by the mapper.
  */
 export function objectToFormData(
   params: ToolApiRequest,

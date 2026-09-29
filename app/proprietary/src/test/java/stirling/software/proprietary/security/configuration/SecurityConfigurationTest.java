@@ -29,6 +29,7 @@ import stirling.software.proprietary.security.database.repository.PersistentLogi
 import stirling.software.proprietary.security.filter.IPRateLimitingFilter;
 import stirling.software.proprietary.security.filter.JwtAuthenticationFilter;
 import stirling.software.proprietary.security.filter.UserAuthenticationFilter;
+import stirling.software.proprietary.security.service.ApiKeyAuthenticationService;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
@@ -160,7 +161,9 @@ class SecurityConfigurationTest {
         @Test
         @DisplayName("jwtAuthenticationFilter is created")
         void jwtAuthenticationFilter() {
-            JwtAuthenticationFilter filter = newConfig(true).jwtAuthenticationFilter();
+            JwtAuthenticationFilter filter =
+                    newConfig(true)
+                            .jwtAuthenticationFilter(mock(ApiKeyAuthenticationService.class));
             assertThat(filter).isNotNull();
         }
 

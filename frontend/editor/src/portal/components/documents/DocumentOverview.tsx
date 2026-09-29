@@ -4,9 +4,8 @@ import {
   DOCUMENT_STATUS_LABEL,
   type ReviewDocument,
 } from "@portal/api/documents";
-import { confidencePct } from "@portal/components/documents/format";
 
-/** Key fields for the selected document — status, source, confidence. */
+/** Key fields for the selected document - product, action, user, status. */
 export function DocumentOverview({ doc }: { doc: ReviewDocument }) {
   const { t } = useTranslation();
   return (
@@ -14,23 +13,27 @@ export function DocumentOverview({ doc }: { doc: ReviewDocument }) {
       <div className="portal-documents__stat-grid">
         <StatTile
           label={t("portal.documents.overview.status")}
-          value={DOCUMENT_STATUS_LABEL[doc.status]}
+          value={t(DOCUMENT_STATUS_LABEL[doc.status])}
+        />
+        <StatTile
+          label={t("portal.documents.overview.product")}
+          value={doc.product}
+        />
+        <StatTile
+          label={t("portal.documents.overview.action")}
+          value={
+            doc.product === "Editor" || !doc.action
+              ? t("portal.documents.table.editorAction")
+              : doc.action
+          }
+        />
+        <StatTile
+          label={t("portal.documents.overview.user")}
+          value={doc.user || "-"}
         />
         <StatTile
           label={t("portal.documents.overview.type")}
           value={doc.type}
-        />
-        <StatTile
-          label={t("portal.documents.overview.confidence")}
-          value={confidencePct(doc.confidence)}
-        />
-        <StatTile
-          label={t("portal.documents.overview.fieldsExtracted")}
-          value={doc.fieldsExtracted}
-        />
-        <StatTile
-          label={t("portal.documents.overview.source")}
-          value={doc.source}
         />
         <StatTile
           label={t("portal.documents.overview.received")}

@@ -1,5 +1,6 @@
 package stirling.software.proprietary.security.controller.api;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -14,11 +15,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.api.TeamApi;
+import stirling.software.proprietary.access.model.PrincipalType;
+import stirling.software.proprietary.access.repository.ResourceGrantRepository;
+import stirling.software.proprietary.integration.repository.IntegrationConfigRepository;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.config.PremiumEndpoint;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamRepository;
+import stirling.software.proprietary.security.service.TeamMembershipService;
 import stirling.software.proprietary.security.service.TeamService;
 
 @TeamApi
@@ -29,6 +34,9 @@ public class TeamController {
 
     private final TeamRepository teamRepository;
     private final UserRepository userRepository;
+    private final ResourceGrantRepository resourceGrantRepository;
+    private final IntegrationConfigRepository integrationConfigRepository;
+    private final TeamMembershipService teamMembershipService;
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/create")
@@ -45,6 +53,7 @@ public class TeamController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/rename")
+    @Transactional
     public ResponseEntity<?> renameTeam(
             @RequestParam("teamId") Long teamId, @RequestParam("newName") String newName) {
         Optional<Team> existing = teamRepository.findById(teamId);
@@ -64,6 +73,26 @@ public class TeamController {
                     .body(Map.of("error", "Cannot rename Internal team."));
         }
 
+        if (team.getName().equals(TeamService.DEFAULT_TEAM_NAME)) {
+            Team replacement = new Team();
+            replacement.setName(newName);
+            replacement = teamRepository.save(replacement);
+
+            List<User> members = userRepository.findAllByTeam(team);
+            for (User member : members) {
+                member.setTeam(replacement);
+            }
+            userRepository.saveAll(members);
+            members.forEach(teamMembershipService::syncMembership);
+
+            return ResponseEntity.ok(
+                    Map.of(
+                            "message",
+                            "Team created and Default members moved successfully",
+                            "teamId",
+                            replacement.getId()));
+        }
+
         team.setName(newName);
         teamRepository.save(team);
         return ResponseEntity.ok(Map.of("message", "Team renamed successfully"));
@@ -81,10 +110,10 @@ public class TeamController {
 
         Team team = teamOpt.get();
 
-        // Prevent deleting the Internal team
-        if (team.getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
+        if (TeamService.INTERNAL_TEAM_NAME.equals(team.getName())
+                || TeamService.DEFAULT_TEAM_NAME.equals(team.getName())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "Cannot delete Internal team."));
+                    .body(Map.of("error", "Cannot delete " + team.getName() + " team."));
         }
 
         long memberCount = userRepository.countByTeam(team);
@@ -96,8 +125,70 @@ public class TeamController {
                                     "Team must be empty before deletion. Please remove all members first."));
         }
 
+        if (integrationConfigRepository.existsByOwnerTeam_Id(teamId)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(
+                            Map.of(
+                                    "error",
+                                    "Team still owns integration configurations. Delete or reassign them first."));
+        }
+
+        // Team grants and membership rows would dangle once the team row is gone
+        resourceGrantRepository.deleteByPrincipalTypeAndPrincipalId(PrincipalType.TEAM, teamId);
+        teamMembershipService.deleteAllForTeam(teamId);
         teamRepository.delete(team);
         return ResponseEntity.ok(Map.of("message", "Team deleted successfully"));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/setOwner")
+    @Transactional
+    public ResponseEntity<?> setTeamOwner(
+            @RequestParam("teamId") Long teamId, @RequestParam("userId") Long userId) {
+        return mutateOwner(teamId, userId, true);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/removeOwner")
+    @Transactional
+    public ResponseEntity<?> removeTeamOwner(
+            @RequestParam("teamId") Long teamId, @RequestParam("userId") Long userId) {
+        return mutateOwner(teamId, userId, false);
+    }
+
+    private ResponseEntity<?> mutateOwner(Long teamId, Long userId, boolean owner) {
+        Optional<Team> teamOpt = teamRepository.findById(teamId);
+        if (teamOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Team not found."));
+        }
+        Team team = teamOpt.get();
+
+        // System teams have no owners
+        if (TeamService.INTERNAL_TEAM_NAME.equals(team.getName())
+                || TeamService.DEFAULT_TEAM_NAME.equals(team.getName())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "System teams cannot have owners."));
+        }
+
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "User not found."));
+        }
+        User user = userOpt.get();
+
+        if (user.getTeam() == null || !user.getTeam().getId().equals(teamId)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "User must be a member of the team."));
+        }
+
+        if (owner) {
+            teamMembershipService.setOwner(team, user);
+            return ResponseEntity.ok(Map.of("message", "Team owner assigned successfully"));
+        }
+        teamMembershipService.removeOwner(team, user);
+        return ResponseEntity.ok(Map.of("message", "Team owner removed successfully"));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -138,6 +229,7 @@ public class TeamController {
         // Assign user to team
         user.setTeam(team);
         userRepository.save(user);
+        teamMembershipService.syncMembership(user);
 
         return ResponseEntity.ok(Map.of("message", "User added to team successfully"));
     }

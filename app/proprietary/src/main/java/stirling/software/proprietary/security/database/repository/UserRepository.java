@@ -1,22 +1,27 @@
 package stirling.software.proprietary.security.database.repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.model.User;
 
-@Repository
 public interface UserRepository extends JpaRepository<User, Long> {
+    @Query(
+            "SELECT u FROM User u JOIN u.authorities a WHERE a.authority = 'ROLE_ADMIN' AND (u.enabled IS NULL OR u.enabled = true) ORDER BY u.id ASC")
+    List<User> findEnabledAdminsByIdAsc();
+
     Optional<User> findByUsernameIgnoreCase(String username);
 
     @Query("FROM User u LEFT JOIN FETCH u.settings where upper(u.username) = upper(:username)")
@@ -43,11 +48,30 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query(value = "SELECT u FROM User u LEFT JOIN FETCH u.team")
     List<User> findAllWithTeam();
 
+    /** All users with team + authorities fetched (DISTINCT dedupes the collection join). */
+    @EntityGraph(attributePaths = {"team", "authorities"})
+    @Query("SELECT DISTINCT u FROM User u")
+    List<User> findAllWithTeamAndAuthorities();
+
+    /** (userId, key, value) settings rows for the given users. */
+    @Query("SELECT u.id, KEY(s), VALUE(s) FROM User u JOIN u.settings s WHERE u.id IN :ids")
+    List<Object[]> findSettingsByUserIds(@Param("ids") Collection<Long> ids);
+
     @Query(
             "SELECT u FROM User u JOIN FETCH u.authorities JOIN FETCH u.team WHERE u.team.id = :teamId")
     List<User> findAllByTeamId(@Param("teamId") Long teamId);
 
+    /** Usernames alone, ordered and limited by the database, for callers that need no entities. */
+    @Query(
+            "SELECT u.username FROM User u WHERE u.team.id IN :teamIds AND u.username IS NOT NULL"
+                    + " ORDER BY u.username")
+    List<String> findUsernamesByTeamIds(
+            @Param("teamIds") Collection<Long> teamIds, Pageable pageable);
+
     long countByTeam(Team team);
+
+    /** Count real users, excluding a reserved username such as the internal API user. */
+    long countByUsernameNot(String username);
 
     List<User> findAllByTeam(Team team);
 

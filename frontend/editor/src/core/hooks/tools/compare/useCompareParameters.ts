@@ -26,15 +26,20 @@ export const defaultParameters: CompareParameters = {
 
 export type CompareParametersHook = BaseParametersHook<CompareParameters>;
 
+/** Whether these parameters are complete enough to run. Shared by the tool's settings hook
+ * and its operationConfig, so the editor and the pipeline builder agree. */
+export function validateCompareParameters(params: CompareParameters): boolean {
+  return Boolean(
+    params.baseFileId &&
+    params.comparisonFileId &&
+    params.baseFileId !== params.comparisonFileId,
+  );
+}
+
 export const useCompareParameters = (): CompareParametersHook => {
   return useBaseParameters({
     defaultParameters,
     endpointName: "compare",
-    validateFn: (params) =>
-      Boolean(
-        params.baseFileId &&
-        params.comparisonFileId &&
-        params.baseFileId !== params.comparisonFileId,
-      ),
+    validateFn: validateCompareParameters,
   });
 };

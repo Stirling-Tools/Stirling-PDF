@@ -84,7 +84,7 @@ export function DocumentDrawer({ doc, onClose }: DocumentDrawerProps) {
       <div className="portal-documents__drawer">
         <div className="portal-documents__drawer-status">
           <StatusBadge tone={DOCUMENT_STATUS_TONE[doc.status]} size="sm">
-            {DOCUMENT_STATUS_LABEL[doc.status]}
+            {t(DOCUMENT_STATUS_LABEL[doc.status])}
           </StatusBadge>
         </div>
 

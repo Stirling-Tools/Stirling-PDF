@@ -8,20 +8,25 @@ import {
   Rectangle,
   PDFBounds,
   constrainCropAreaToPDF,
+  createDefaultCropArea,
   createFullPDFCropArea,
   roundCropArea,
   isRectangle,
 } from "@app/utils/cropCoordinates";
 import { DEFAULT_CROP_AREA } from "@app/constants/cropConstants";
+import { validatePageNumbers } from "@app/utils/pageSelection";
 
 export interface CropParameters extends BaseParameters {
   cropArea: Rectangle;
   autoCrop: boolean;
+  /** Pages to crop, e.g. "3", "1,3,5-8" or "all" */
+  pageNumbers: string;
 }
 
 export const defaultParameters: CropParameters = {
   cropArea: DEFAULT_CROP_AREA,
   autoCrop: false,
+  pageNumbers: "all",
 };
 
 export type CropParametersHook = BaseParametersHook<CropParameters> & {
@@ -29,6 +34,8 @@ export type CropParametersHook = BaseParametersHook<CropParameters> & {
   setCropArea: (cropArea: Rectangle, pdfBounds?: PDFBounds) => void;
   /** Get current crop area as CropArea object */
   getCropArea: () => Rectangle;
+  /** Reset to default inset crop area inside PDF bounds */
+  resetToDefaultCropArea: (pdfBounds: PDFBounds) => void;
   /** Reset to full PDF dimensions */
   resetToFullPDF: (pdfBounds: PDFBounds) => void;
   /** Check if current crop area is valid for the PDF */
@@ -42,15 +49,25 @@ export type CropParametersHook = BaseParametersHook<CropParameters> & {
   ) => void;
 };
 
+/** Whether these parameters are complete enough to run. Shared by the tool's settings
+ * hook and its operationConfig, so the editor and the pipeline builder agree. */
+export function validateCropParameters(params: CropParameters): boolean {
+  const rect = params.cropArea;
+  // Basic validation - coordinates and dimensions must be positive
+  return (
+    rect.x >= 0 &&
+    rect.y >= 0 &&
+    rect.width > 0 &&
+    rect.height > 0 &&
+    validatePageNumbers(params.pageNumbers)
+  );
+}
+
 export const useCropParameters = (): CropParametersHook => {
   const baseHook = useBaseParameters({
     defaultParameters,
     endpointName: "crop",
-    validateFn: (params) => {
-      const rect = params.cropArea;
-      // Basic validation - coordinates and dimensions must be positive
-      return rect.x >= 0 && rect.y >= 0 && rect.width > 0 && rect.height > 0;
-    },
+    validateFn: validateCropParameters,
   });
 
   // Get current crop area as CropArea object
@@ -72,6 +89,15 @@ export const useCropParameters = (): CropParametersHook => {
     [baseHook],
   );
 
+  // Reset to default crop area inside PDF bounds (10% inset)
+  const resetToDefaultCropArea = useCallback(
+    (pdfBounds: PDFBounds) => {
+      const defaultCropArea = createDefaultCropArea(pdfBounds);
+      setCropArea(defaultCropArea);
+    },
+    [setCropArea],
+  );
+
   // Reset to cover entire PDF
   const resetToFullPDF = useCallback(
     (pdfBounds: PDFBounds) => {
@@ -81,31 +107,11 @@ export const useCropParameters = (): CropParametersHook => {
     [setCropArea],
   );
 
-  // Check if current crop area is valid for the given PDF bounds
+  // Check if current crop area is valid (dimensions must be non-zero; out-of-bounds coordinates clamp automatically)
   const isCropAreaValid = useCallback(
-    (pdfBounds?: PDFBounds): boolean => {
+    (_pdfBounds?: PDFBounds): boolean => {
       const cropArea = getCropArea();
-
-      // Basic validation
-      if (
-        cropArea.x < 0 ||
-        cropArea.y < 0 ||
-        cropArea.width <= 0 ||
-        cropArea.height <= 0
-      ) {
-        return false;
-      }
-
-      // PDF bounds validation if provided
-      if (pdfBounds) {
-        const tolerance = 0.01; // Small tolerance for floating point precision
-        return (
-          cropArea.x + cropArea.width <= pdfBounds.actualWidth + tolerance &&
-          cropArea.y + cropArea.height <= pdfBounds.actualHeight + tolerance
-        );
-      }
-
-      return true;
+      return cropArea.width > 0 && cropArea.height > 0;
     },
     [getCropArea],
   );
@@ -170,6 +176,7 @@ export const useCropParameters = (): CropParametersHook => {
     validateParameters: () => validateParameters(),
     setCropArea,
     getCropArea,
+    resetToDefaultCropArea,
     resetToFullPDF,
     isCropAreaValid,
     isFullPDFCrop,

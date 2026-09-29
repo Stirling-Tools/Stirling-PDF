@@ -51,14 +51,28 @@ const meta: Meta<typeof SourcesTable> = {
   title: "Portal/Sources/SourcesTable",
   component: SourcesTable,
   parameters: { layout: "padded" },
-  args: { sources: SOURCES, expandedId: null, onRowClick: () => {} },
+  args: { sources: SOURCES, onRowClick: () => {} },
 };
 export default meta;
 type Story = StoryObj<typeof SourcesTable>;
 
 export const Default: Story = {};
 
-/** A row with an open detail panel rotates its caret. */
-export const RowExpanded: Story = {
-  args: { expandedId: SOURCES[0].id },
+export const OnlyEditorSource: Story = {
+  args: {
+    sources: [
+      {
+        id: "src-editor",
+        name: "Editor",
+        type: "editor",
+        status: "active",
+        referenceCount: 1,
+        referencingPolicies: [],
+        config: [],
+        docsTotal: 0,
+        docs24h: 0,
+        docs30d: 0,
+      },
+    ],
+  },
 };

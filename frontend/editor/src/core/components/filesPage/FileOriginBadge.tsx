@@ -1,16 +1,15 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mantine/core";
-import ComputerIcon from "@mui/icons-material/Computer";
-import CloudDoneIcon from "@mui/icons-material/CloudDone";
-import GroupIcon from "@mui/icons-material/Group";
-
+import { Icon } from "@app/ui/Icon";
 import { FileOrigin } from "@app/components/filesPage/fileOrigin";
 
 interface FileOriginBadgeProps {
   origin: FileOrigin;
+  onDisk?: boolean;
   /** Compact (icon-only) vs full (icon + text). */
   compact?: boolean;
+  tooltip?: string;
 }
 
 const styles = {
@@ -27,25 +26,25 @@ const styles = {
     lineHeight: 1.2,
   },
   local: {
-    background:
-      "color-mix(in srgb, var(--text-muted, #6b7280) 16%, transparent)",
-    color: "var(--text-secondary)",
+    background: "color-mix(in srgb, var(--c-text-subtle) 16%, transparent)",
+    color: "var(--c-text-muted)",
   },
   cloud: {
-    background:
-      "color-mix(in srgb, var(--accent-interactive, #6366f1) 16%, transparent)",
-    color: "var(--accent-interactive, #6366f1)",
+    background: "color-mix(in srgb, var(--c-primary) 16%, transparent)",
+    color: "var(--c-accent-text)",
   },
   shared: {
     background:
-      "color-mix(in srgb, var(--mantine-color-orange-6, #f97316) 16%, transparent)",
-    color: "var(--mantine-color-orange-6, #f97316)",
+      "color-mix(in srgb, var(--mantine-color-orange-6) 16%, transparent)",
+    color: "var(--color-amber-dark)",
   },
 };
 
 export function FileOriginBadge({
   origin,
+  onDisk = false,
   compact = false,
+  tooltip,
 }: FileOriginBadgeProps) {
   const { t } = useTranslation();
 
@@ -54,7 +53,7 @@ export function FileOriginBadge({
       case "cloud":
         return {
           label: t("filesPage.origin.cloud", "Cloud"),
-          icon: <CloudDoneIcon style={{ fontSize: "0.85rem" }} />,
+          icon: <Icon name="cloud-check" size={"0.85rem"} />,
           style: styles.cloud,
           tooltip: t(
             "filesPage.origin.cloudHint",
@@ -64,7 +63,7 @@ export function FileOriginBadge({
       case "shared-with-me":
         return {
           label: t("filesPage.origin.shared", "Shared"),
-          icon: <GroupIcon style={{ fontSize: "0.85rem" }} />,
+          icon: <Icon name="users" size={"0.85rem"} />,
           style: styles.shared,
           tooltip: t("filesPage.origin.sharedHint", "Shared with you via link"),
         };
@@ -72,12 +71,13 @@ export function FileOriginBadge({
       default:
         return {
           label: t("filesPage.origin.local", "Local"),
-          icon: <ComputerIcon style={{ fontSize: "0.85rem" }} />,
-          style: styles.local,
-          tooltip: t(
-            "filesPage.origin.localHint",
-            "Only stored in this browser",
+          icon: (
+            <Icon name={onDisk ? "monitor" : "cloud-off"} size={"0.85rem"} />
           ),
+          style: styles.local,
+          tooltip: onDisk
+            ? t("filesPage.origin.diskFileHint", "Stored on your computer")
+            : t("filesPage.origin.localHint", "Not backed up"),
         };
     }
   })();
@@ -90,7 +90,7 @@ export function FileOriginBadge({
   );
 
   return (
-    <Tooltip label={config.tooltip} withinPortal>
+    <Tooltip label={tooltip ?? config.tooltip} withinPortal>
       {badge}
     </Tooltip>
   );

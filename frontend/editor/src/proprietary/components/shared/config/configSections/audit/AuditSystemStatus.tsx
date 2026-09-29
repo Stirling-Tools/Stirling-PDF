@@ -92,7 +92,6 @@ const AuditSystemStatus: React.FC<AuditSystemStatusProps> = ({ status }) => {
                   style={{
                     marginLeft: "0.5rem",
                     fontSize: "0.75rem",
-                    opacity: 0.7,
                   }}
                 >
                   (
@@ -115,7 +114,6 @@ const AuditSystemStatus: React.FC<AuditSystemStatusProps> = ({ status }) => {
                   style={{
                     marginLeft: "0.5rem",
                     fontSize: "0.75rem",
-                    opacity: 0.7,
                   }}
                 >
                   (

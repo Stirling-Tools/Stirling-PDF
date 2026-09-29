@@ -1,9 +1,10 @@
 import { useEffect } from "react";
 import { PolicyPiiField } from "@app/components/policies/PolicyPiiField";
+import type { RedactParameters } from "@app/hooks/tools/redact/useRedactParameters";
 
 interface PolicyRedactConfigProps {
-  parameters: Record<string, unknown>;
-  onChange: (parameters: Record<string, unknown>) => void;
+  parameters: RedactParameters;
+  onChange: (parameters: RedactParameters) => void;
   disabled?: boolean;
 }
 

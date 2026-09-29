@@ -285,13 +285,13 @@ class FormUtilsMoreTest {
         }
 
         @Test
-        void widgetOutOfBoundsYieldsNullCoordinateEntry() throws IOException {
+        void widgetOutOfBoundsStillReportsItsCoordinates() throws IOException {
             try (PDDocument doc = new PDDocument()) {
                 SetupDocument setup = createBasicDocument(doc);
                 PDTextField text = new PDTextField(setup.acroForm());
                 text.setPartialName("offpage");
-                // Far below the page origin -> finalY exceeds bounds -> createWidgetCoordinates
-                // returns null, which is still added to the per-field widget list.
+                // Off the page is legal PDF; dropping it would leave the user unable to drag it
+                // back.
                 attachWidget(setup, text, new PDRectangle(50, -5000, 200, 20));
 
                 List<FormFieldWithCoordinates> fields =
@@ -301,7 +301,8 @@ class FormUtilsMoreTest {
                         fields.get(0).getWidgets();
                 assertNotNull(widgets);
                 assertEquals(1, widgets.size());
-                assertNull(widgets.get(0));
+                assertNotNull(widgets.get(0), "a null entry here crashes sorting and the overlay");
+                assertEquals(50f, widgets.get(0).getX(), 0.01f);
             }
         }
 
@@ -476,8 +477,18 @@ class FormUtilsMoreTest {
                                 "combobox",
                                 null,
                                 null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
                                 List.of("One", "Two"),
                                 "One",
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
                                 null);
 
                 FormUtils.modifyFormFields(doc, List.of(mod));
@@ -505,10 +516,20 @@ class FormUtilsMoreTest {
                                 null,
                                 "listbox", // same type -> in-place path
                                 null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
                                 Boolean.TRUE,
                                 List.of("X", "Y", "Z"),
                                 null,
-                                "Choose items");
+                                "Choose items",
+                                null,
+                                null,
+                                null,
+                                null,
+                                null);
 
                 FormUtils.modifyFormFields(doc, List.of(mod));
 
@@ -529,7 +550,25 @@ class FormUtilsMoreTest {
 
                 FormUtils.ModifyFormFieldDefinition mod =
                         new FormUtils.ModifyFormFieldDefinition(
-                                "keep", null, null, "bogusType", null, null, null, null, null);
+                                "keep",
+                                null,
+                                null,
+                                "bogusType",
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null);
 
                 FormUtils.modifyFormFields(doc, List.of(mod));
                 // The field is preserved unchanged because the target type is unsupported.
@@ -554,7 +593,8 @@ class FormUtilsMoreTest {
                 // Rename beta -> alpha; should be uniquified to avoid the collision.
                 FormUtils.ModifyFormFieldDefinition mod =
                         new FormUtils.ModifyFormFieldDefinition(
-                                "beta", "alpha", null, null, null, null, null, null, null);
+                                "beta", "alpha", null, null, null, null, null, null, null, null,
+                                null, null, null, null, null, null, null, null, null);
 
                 FormUtils.modifyFormFields(doc, List.of(mod));
 
@@ -575,7 +615,8 @@ class FormUtilsMoreTest {
                 doc.addPage(new PDPage());
                 FormUtils.ModifyFormFieldDefinition mod =
                         new FormUtils.ModifyFormFieldDefinition(
-                                "x", null, null, null, null, null, null, null, null);
+                                "x", null, null, null, null, null, null, null, null, null, null,
+                                null, null, null, null, null, null, null, null);
                 FormUtils.modifyFormFields(doc, List.of(mod));
             }
         }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { defaultAppService } from "@app/services/defaultAppService";
 import { alert } from "@app/components/toast";
@@ -8,18 +8,18 @@ export const useDefaultApp = () => {
   const [isDefault, setIsDefault] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    checkDefaultStatus();
-  }, []);
-
-  const checkDefaultStatus = async () => {
+  const checkDefaultStatus = useCallback(async () => {
     try {
       const status = await defaultAppService.isDefaultPdfHandler();
       setIsDefault(status);
     } catch (error) {
       console.error("Failed to check default status:", error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    void checkDefaultStatus();
+  }, [checkDefaultStatus]);
 
   const handleSetDefault = async () => {
     setIsLoading(true);

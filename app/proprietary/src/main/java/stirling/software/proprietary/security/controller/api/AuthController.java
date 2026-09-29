@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.constants.JwtConstants;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.access.service.ResourceAccessService;
+import stirling.software.proprietary.access.service.TeamLeadLookup;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
@@ -40,6 +41,7 @@ import stirling.software.proprietary.security.model.exception.AuthenticationFail
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
+import stirling.software.proprietary.security.service.LoginLandingService;
 import stirling.software.proprietary.security.service.MfaService;
 import stirling.software.proprietary.security.service.RefreshRateLimitService;
 import stirling.software.proprietary.security.service.TotpService;
@@ -66,6 +68,9 @@ public class AuthController {
     private final ApplicationProperties applicationProperties;
     private final AiUserDataService aiUserDataService;
     private final ResourceAccessService resourceAccessService;
+    private final TeamLeadLookup teamLeadLookup;
+    private final stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
+    private final LoginLandingService loginLandingService;
 
     /**
      * Login endpoint - replaces Supabase signInWithPassword
@@ -265,8 +270,11 @@ public class AuthController {
                         .body(Map.of("error", "Not authenticated"));
             }
 
-            UserDetails userDetails = (UserDetails) auth.getPrincipal();
-            User user = (User) userDetails;
+            // Anonymous SaaS sessions carry a raw Jwt principal; treat them as unauthenticated
+            if (!(auth.getPrincipal() instanceof User user)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Not authenticated"));
+            }
 
             return ResponseEntity.ok(Map.of("user", buildUserResponse(user)));
 
@@ -631,6 +639,14 @@ public class AuthController {
         userMap.put("role", user.getRolesAsString());
         userMap.put("enabled", user.isEnabled());
         userMap.put("portalAccess", resourceAccessService.canAccessPortal(user));
+        userMap.put("teamLead", teamLeadLookup.isAnyTeamLeader(user));
+        userMap.put("orgOwner", orgOwnerService.isOwner(user.getId()));
+        userMap.put("loginLandingView", loginLandingService.getLandingView(user).value());
+        // Expose the caller's team so non-admin team owners can scope their own team's resources.
+        if (user.getTeam() != null) {
+            userMap.put(
+                    "team", Map.of("id", user.getTeam().getId(), "name", user.getTeam().getName()));
+        }
         userMap.put(
                 "authenticationType",
                 user.getAuthenticationType()); // Expose authentication type for SSO detection
@@ -692,17 +708,18 @@ public class AuthController {
     }
 
     private long extractEpochMillis(Object claimValue) {
-        if (claimValue == null) {
-            return -1L;
-        }
-
-        if (claimValue instanceof java.util.Date date) {
-            return date.getTime();
-        }
-
-        if (claimValue instanceof Number number) {
-            long epochSeconds = number.longValue();
-            return epochSeconds * 1000L;
+        switch (claimValue) {
+            case null -> {
+                return -1L;
+            }
+            case java.util.Date date -> {
+                return date.getTime();
+            }
+            case Number number -> {
+                long epochSeconds = number.longValue();
+                return epochSeconds * 1000L;
+            }
+            default -> {}
         }
 
         return -1L;

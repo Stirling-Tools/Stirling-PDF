@@ -1,0 +1,52 @@
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  FlowModal — the flows' deltas on top of the shared Modal (sui-modal)     */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+/* The shared Modal owns the backdrop, panel, header band and dismissal chrome. Only the flows'
+   own density and width live here, so a procurement dialog cannot drift from a billing one.
+   Every rule below pairs .portal-flowmodal with a sui-modal class so it outranks the base rule
+   regardless of which stylesheet the bundler emits first. */
+
+.portal-flowmodal {
+  /* The shell's horizontal inset, published so content that has to bleed out to the panel's edges
+     (see the quote builder's footer) reads it rather than hard-coding a copy that silently drifts.
+     Mirrors .sui-modal__body's padding. */
+  --flowmodal-inset: 1.125rem;
+  --flowmodal-body-end: 1.125rem;
+}
+
+/* The takeover needs the room for its quote tables, and Calendly's two-pane layout collapses into a
+   tall scrolling single column below roughly 680px of inner width. Sits between the shared lg
+   (48rem) and xl (64rem), so it is set here rather than bent into a shared token. */
+.sui-modal.portal-flowmodal--lg {
+  max-width: 52rem;
+}
+
+/* A flow's header is a slot, not a string: it carries its own heading, step badge and subtitle, each
+   with its own type. Neutralise the base title wrapper's weight and size so those children inherit
+   nothing from it — it is 600, which would otherwise render every flow subtitle semibold.
+   Colour is deliberately NOT inherited here: the panel sets none, so `inherit` reached past it to the
+   document and dropped the header below the contrast floor. */
+.portal-flowmodal .sui-modal__title {
+  font-size: inherit;
+  font-weight: 400;
+  color: var(--c-text);
+}
+
+/* The flows stack blocks down the body and space them evenly; the base modal leaves spacing to its
+   content. Text stays at full contrast rather than the base body's muted grey. */
+.portal-flowmodal .sui-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  color: var(--c-text);
+  /* So a step that fills the dialog's height (the agreement's document) can shrink to it: without
+     this a flex child refuses to go below its content height and overflows instead. */
+  min-height: 0;
+}
+
+/* One space-between row, so a step passes its two ends as siblings (Back on the left, Continue on
+   the right) instead of the base modal's right-aligned button cluster. */
+.portal-flowmodal .sui-modal__footer {
+  justify-content: space-between;
+}

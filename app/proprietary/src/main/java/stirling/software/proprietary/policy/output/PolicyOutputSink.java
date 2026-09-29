@@ -7,6 +7,7 @@ import org.springframework.core.io.Resource;
 
 import stirling.software.common.model.job.ResultFile;
 import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.PipelineStep;
 
 /**
  * Delivers a finished run's outputs to a destination, returning {@link ResultFile} descriptors for
@@ -24,7 +25,10 @@ public interface PolicyOutputSink {
     /** Throws {@link IllegalArgumentException} on bad config. Called on save to fail fast. */
     default void validate(OutputSpec spec) {}
 
+    /** Validate the final step's output against this destination's input contract. */
+    default void validatePipeline(OutputSpec spec, List<PipelineStep> steps) {}
+
     /** Persist/deliver the output files and return their descriptors. */
-    List<ResultFile> deliver(String runId, List<Resource> outputs, OutputSpec spec)
+    List<ResultFile> deliver(OutputDelivery delivery, List<Resource> outputs, OutputSpec spec)
             throws IOException;
 }

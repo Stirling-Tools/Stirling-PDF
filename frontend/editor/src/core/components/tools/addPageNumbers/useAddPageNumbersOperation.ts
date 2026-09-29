@@ -12,6 +12,7 @@ import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
   AddPageNumbersParameters,
   defaultParameters,
+  validateAddPageNumbersParameters,
 } from "@app/components/tools/addPageNumbers/useAddPageNumbersParameters";
 
 const ENDPOINT = "/api/v1/misc/add-page-numbers" satisfies ToolEndpoint;
@@ -74,6 +75,7 @@ export const buildAddPageNumbersFormData = (
   objectToFormData(addPageNumbersToApiParams(parameters), { fileInput: file });
 
 export const addPageNumbersOperationConfig = defineSingleFileTool({
+  validateParams: validateAddPageNumbersParameters,
   buildFormData: buildAddPageNumbersFormData,
   toApiParams: addPageNumbersToApiParams,
   fromApiParams: addPageNumbersFromApiParams,

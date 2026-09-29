@@ -1,6 +1,7 @@
 export type OnboardingStepId =
   | "first-login"
   | "welcome"
+  | "processor-intro"
   | "desktop-install"
   | "security-check"
   | "admin-overview"
@@ -15,7 +16,8 @@ export type OnboardingStepType = "modal-slide" | "tool-prompt";
 export interface OnboardingRuntimeState {
   selectedRole: "admin" | "user" | null;
   tourRequested: boolean;
-  tourType: "admin" | "tools" | "whatsnew";
+  // Open key into the tour registry (see tourRegistry.ts).
+  tourType: string;
   isDesktopApp: boolean;
   desktopSlideEnabled: boolean;
   analyticsNotConfigured: boolean;
@@ -44,6 +46,7 @@ export interface OnboardingStep {
   slideId?:
     | "first-login"
     | "welcome"
+    | "processor-intro"
     | "desktop-install"
     | "security-check"
     | "admin-overview"
@@ -76,17 +79,18 @@ export const DEFAULT_RUNTIME_STATE: OnboardingRuntimeState = {
 
 export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
-    id: "first-login",
-    type: "modal-slide",
-    slideId: "first-login",
-    condition: (ctx) => ctx.requiresPasswordChange,
-  },
-  {
     id: "welcome",
     type: "modal-slide",
     slideId: "welcome",
     // Desktop has its own onboarding modal (DesktopOnboardingModal)
     condition: (ctx) => !ctx.isDesktopApp,
+  },
+  {
+    id: "processor-intro",
+    type: "modal-slide",
+    slideId: "processor-intro",
+    // Admins can manage policies in the portal/processor; regular users can't.
+    condition: (ctx) => ctx.effectiveIsAdmin,
   },
   {
     id: "admin-overview",
@@ -101,17 +105,6 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     condition: (ctx) => !ctx.isDesktopApp && ctx.desktopSlideEnabled,
   },
   {
-    id: "security-check",
-    type: "modal-slide",
-    slideId: "security-check",
-    condition: () => false,
-  },
-  {
-    id: "tool-layout",
-    type: "tool-prompt",
-    condition: () => false,
-  },
-  {
     id: "tour-overview",
     type: "modal-slide",
     slideId: "tour-overview",
@@ -124,12 +117,6 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     slideId: "server-license",
     condition: (ctx) =>
       ctx.effectiveIsAdmin && ctx.licenseNotice.requiresLicense,
-  },
-  {
-    id: "mfa-setup",
-    type: "modal-slide",
-    slideId: "mfa-setup",
-    condition: (ctx) => ctx.requiresMfaSetup,
   },
 ];
 

@@ -325,11 +325,8 @@ class RegexPatternUtilsMoreTest {
         }
 
         @Test
-        void pageModeAndApiDocPatterns() {
+        void pageModePattern() {
             assertTrue(utils.getPageModePattern().matcher("a/b").find());
-            assertTrue(utils.getApiDocOutputTypePattern().matcher("Output: PDF").find());
-            assertTrue(utils.getApiDocInputTypePattern().matcher("Input: PDF").find());
-            assertTrue(utils.getApiDocTypePattern().matcher("Type: WEB").find());
         }
 
         @Test

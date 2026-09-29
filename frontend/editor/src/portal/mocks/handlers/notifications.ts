@@ -1,5 +1,6 @@
 import { http, HttpResponse, delay } from "msw";
-import { NOTIFICATIONS, type Notification } from "@portal/mocks/notifications";
+import type { Notification } from "@portal/api/notifications";
+import { NOTIFICATIONS } from "@portal/mocks/notifications";
 
 let store: Notification[] = [...NOTIFICATIONS];
 

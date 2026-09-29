@@ -30,12 +30,16 @@ export const defaultParameters: AddPageNumbersParameters = {
 export type AddPageNumbersParametersHook =
   BaseParametersHook<AddPageNumbersParameters>;
 
+export function validateAddPageNumbersParameters(
+  params: AddPageNumbersParameters,
+): boolean {
+  return params.fontSize > 0 && params.startingNumber > 0;
+}
+
 export const useAddPageNumbersParameters = (): AddPageNumbersParametersHook => {
   return useBaseParameters<AddPageNumbersParameters>({
     defaultParameters,
     endpointName: "add-page-numbers",
-    validateFn: (params): boolean => {
-      return params.fontSize > 0 && params.startingNumber > 0;
-    },
+    validateFn: validateAddPageNumbersParameters,
   });
 };

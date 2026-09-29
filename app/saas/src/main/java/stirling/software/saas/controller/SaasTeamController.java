@@ -20,15 +20,15 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.api.TeamApi;
 import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.saas.model.TeamInvitation;
-import stirling.software.saas.model.TeamMembership;
 import stirling.software.saas.repository.TeamInvitationRepository;
-import stirling.software.saas.repository.TeamMembershipRepository;
 import stirling.software.saas.security.TeamSecurityExpressions;
 import stirling.software.saas.service.SaasTeamExtensionService;
 import stirling.software.saas.service.SaasTeamService;
@@ -44,6 +44,7 @@ public class SaasTeamController {
     private final UserRepository userRepository;
     private final TeamService teamService;
     private final SaasTeamService saasTeamService;
+    private final stirling.software.saas.service.SaasOwnershipService ownershipService;
     private final SaasTeamExtensionService saasTeamExtensionService;
     private final TeamMembershipRepository membershipRepository;
     private final TeamInvitationRepository invitationRepository;
@@ -274,12 +275,25 @@ public class SaasTeamController {
             List<TeamDetailsDTO> dtos =
                     memberships.stream()
                             .map(
-                                    m ->
-                                            toTeamDetailsDTO(
-                                                    m.getTeam(),
-                                                    m.getRole()
-                                                            == stirling.software.common.model
-                                                                    .enumeration.TeamRole.LEADER))
+                                    m -> {
+                                        TeamDetailsDTO dto =
+                                                toTeamDetailsDTO(
+                                                        m.getTeam(),
+                                                        m.getRole()
+                                                                == stirling.software.common.model
+                                                                        .enumeration.TeamRole
+                                                                        .LEADER);
+                                        dto.setCurrent(
+                                                currentUser.getTeam() != null
+                                                        && m.getTeam()
+                                                                .getId()
+                                                                .equals(
+                                                                        currentUser
+                                                                                .getTeam()
+                                                                                .getId()));
+                                        dto.setCurrentUserId(currentUser.getId());
+                                        return dto;
+                                    })
                             .collect(Collectors.toList());
 
             log.info("[TEAM-FETCH] Returning {} teams to client", dtos.size());
@@ -321,6 +335,23 @@ public class SaasTeamController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to fetch invitations"));
         }
+    }
+
+    @PostMapping("/{teamId}/claim-leadership")
+    @PreAuthorize("@teamSecurity.isTeamMember(#teamId)")
+    public ResponseEntity<?> claimLeadership(@PathVariable Long teamId) {
+        User caller = getCurrentUser();
+        ownershipService.transfer(teamId, caller.getId(), caller);
+        return ResponseEntity.ok(Map.of("message", "Team ownership recovered."));
+    }
+
+    /** Members may recover an ownerless team only by claiming it themselves. */
+    @PostMapping("/{teamId}/members/{memberId}/transfer-leadership")
+    @PreAuthorize("@teamSecurity.isTeamMember(#teamId)")
+    public ResponseEntity<?> transferLeadership(
+            @PathVariable Long teamId, @PathVariable Long memberId) {
+        ownershipService.transfer(teamId, memberId, getCurrentUser());
+        return ResponseEntity.ok(Map.of("message", "Team ownership transferred."));
     }
 
     /** Remove team member (team leader only) */
@@ -533,6 +564,8 @@ public class SaasTeamController {
         private final Integer seatsUsed;
         private final Integer maxSeats;
         private final Boolean isLeader;
+        private Boolean current;
+        private Long currentUserId;
     }
 
     @Data

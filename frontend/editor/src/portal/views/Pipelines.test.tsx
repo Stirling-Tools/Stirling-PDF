@@ -5,47 +5,62 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { MantineProvider } from "@mantine/core";
-import { MemoryRouter } from "react-router-dom";
-import { HttpError } from "@portal/api/http";
+import { PortalTestProviders } from "@portal/test/TestQueryProvider";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
+import type { PipelinesOverviewResponse, Policy } from "@portal/api/pipelines";
+import { parseSimplePolicy } from "@portal/api/policies";
+import { Pipelines } from "@portal/views/Pipelines";
+
+/** The builder route: shows the draft handed in navigation state, so the Customise hand-off can be
+ * asserted without rendering the real builder. */
+function DraftProbe() {
+  const draft = (useLocation().state as { draft?: Policy } | null)?.draft;
+  return (
+    <div>
+      pipeline page
+      <span data-testid="draft-icon">{draft?.icon ?? ""}</span>
+      <span data-testid="draft-name">{draft?.name ?? ""}</span>
+      <span data-testid="draft-enabled">{String(draft?.enabled ?? "")}</span>
+    </div>
+  );
+}
 
 const render = (
   ui: Parameters<typeof baseRender>[0],
   options?: Parameters<typeof baseRender>[1],
-) => baseRender(ui, { wrapper: MantineProvider, ...options });
-import type { PipelinesOverviewResponse, Policy } from "@portal/api/pipelines";
-import type { SourcesResponse } from "@portal/api/sources";
-import { Pipelines } from "@portal/views/Pipelines";
+) => baseRender(ui, { wrapper: PortalTestProviders, ...options });
 
-// Deterministic i18n: keys returned verbatim, so assertions are stable without
-// the async TOML backend.
+// Deterministic i18n: keys returned verbatim. initReactI18next/Trans are exported too because the
+// unified page pulls in modules (the policy wizard/catalogue) that reference them at import time.
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string) => key,
     i18n: { changeLanguage: vi.fn() },
   }),
+  initReactI18next: { type: "3rdParty", init: () => {} },
+  Trans: (props: { children?: unknown }) => props.children,
 }));
 
 const fetchPipelines = vi.fn();
 const fetchPipeline = vi.fn();
-const savePipeline = vi.fn();
-const deletePipeline = vi.fn();
-const fetchTriggers = vi.fn();
-const triggerPipeline = vi.fn();
-const fetchRun = vi.fn();
+const fetchPolicyPermissions = vi.fn();
 vi.mock("@portal/api/pipelines", () => ({
+  fetchTriggers: () => Promise.resolve([]),
   fetchPipelines: () => fetchPipelines(),
   fetchPipeline: (id: string) => fetchPipeline(id),
-  savePipeline: (policy: unknown) => savePipeline(policy),
-  deletePipeline: (id: string) => deletePipeline(id),
-  fetchTriggers: () => fetchTriggers(),
-  triggerPipeline: (id: string) => triggerPipeline(id),
-  fetchRun: (runId: string) => fetchRun(runId),
+  fetchPolicyPermissions: () => fetchPolicyPermissions(),
 }));
 
-const fetchSources = vi.fn();
-vi.mock("@portal/api/sources", () => ({
-  fetchSources: () => fetchSources(),
+// Spy the wizard's save without stubbing the rest of the module (parseSimplePolicy et al. stay real).
+const savePolicy = vi.fn();
+vi.mock("@portal/api/policies", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@portal/api/policies")>();
+  return { ...actual, savePolicy: (body: unknown) => savePolicy(body) };
+});
+
+const usePoliciesOverview = vi.fn();
+vi.mock("@portal/queries/policies", () => ({
+  usePoliciesOverview: () => usePoliciesOverview(),
 }));
 
 const RESPONSE: PipelinesOverviewResponse = {
@@ -59,6 +74,8 @@ const RESPONSE: PipelinesOverviewResponse = {
       id: "plc-redaction",
       name: "Redaction sweep",
       enabled: true,
+      required: false,
+      icon: "security",
       status: "active",
       trigger: "schedule",
       sources: [{ id: "src-claims", name: "Claims intake" }],
@@ -66,55 +83,20 @@ const RESPONSE: PipelinesOverviewResponse = {
       output: "inline",
       owner: "security@acme.com",
     },
-    {
-      id: "plc-archive",
-      name: "Archive compressor",
-      enabled: true,
-      status: "active",
-      trigger: "manual",
-      sources: [],
-      steps: ["/api/v1/misc/compress-pdf"],
-      output: "folder",
-      owner: "data@acme.com",
-    },
   ],
 };
 
-const RAW_REDACTION: Policy = {
-  id: "plc-redaction",
-  name: "Redaction sweep",
-  enabled: true,
-  trigger: {
-    type: "schedule",
-    options: { schedule: { type: "every", count: 6, unit: "HOURS" } },
-  },
-  sourceIds: ["src-claims"],
-  steps: [{ operation: "/api/v1/security/auto-redact", parameters: {} }],
-  output: { type: "inline", options: {} },
-};
-
-const SOURCES: SourcesResponse = {
-  kpis: [],
-  sources: [
-    {
-      id: "src-claims",
-      name: "Claims intake",
-      type: "folder",
-      status: "active",
-      referenceCount: 1,
-      referencingPolicies: [],
-      config: [],
-      docsTotal: 0,
-      docs24h: 0,
-      docs30d: 0,
-    },
-  ],
-};
-
-function renderView() {
+function renderView(initial = "/processor/pipelines") {
   return render(
-    <MemoryRouter>
-      <Pipelines />
+    <MemoryRouter initialEntries={[initial]}>
+      <Routes>
+        <Route path="/processor/pipelines" element={<Pipelines />} />
+        <Route
+          path="/processor/pipelines/new"
+          element={<div>builder new</div>}
+        />
+        <Route path="/processor/pipelines/:id" element={<DraftProbe />} />
+      </Routes>
     </MemoryRouter>,
   );
 }
@@ -122,139 +104,252 @@ function renderView() {
 describe("Pipelines view", () => {
   beforeEach(() => {
     fetchPipelines.mockReset();
+    fetchPipelines.mockResolvedValue(RESPONSE);
     fetchPipeline.mockReset();
-    savePipeline.mockReset();
-    deletePipeline.mockReset();
-    fetchSources.mockReset();
-    fetchTriggers.mockReset();
-    triggerPipeline.mockReset();
-    fetchRun.mockReset();
-    // The composer loads the trigger registry on open; default to none.
-    fetchTriggers.mockResolvedValue([]);
-  });
-
-  it("surfaces the inline error message when a delete fails", async () => {
-    fetchPipelines.mockResolvedValue(RESPONSE);
-    deletePipeline.mockRejectedValue(
-      new HttpError(500, "Server Error", {
-        detail: "Could not delete pipeline",
-      }),
-    );
-
-    renderView();
-
-    fireEvent.click(await screen.findByText("Redaction sweep"));
-    fireEvent.click(await screen.findByText("portal.pipelines.detail.delete"));
-    fireEvent.click(await screen.findByText("portal.pipelines.delete.confirm"));
-
-    await waitFor(() => {
-      expect(deletePipeline).toHaveBeenCalledWith("plc-redaction");
+    // A plain pipeline (no template origin) - parseSimplePolicy returns null, so the row opens the
+    // full builder page.
+    fetchPipeline.mockResolvedValue({
+      id: "plc-redaction",
+      name: "Redaction sweep",
+      enabled: true,
+      inputs: [],
+      steps: [{ operation: "/api/v1/security/auto-redact", parameters: {} }],
+      output: { type: "inline", options: {} },
+      outputIds: [],
     });
-    expect(
-      await screen.findByText("Could not delete pipeline"),
-    ).toBeInTheDocument();
-  });
-
-  it("pauses a pipeline by re-saving it with enabled flipped off", async () => {
-    fetchPipelines.mockResolvedValue(RESPONSE);
-    fetchPipeline.mockResolvedValue(RAW_REDACTION);
-    savePipeline.mockResolvedValue({});
-
-    renderView();
-
-    fireEvent.click(await screen.findByText("Redaction sweep"));
-    fireEvent.click(await screen.findByText("portal.pipelines.detail.pause"));
-
-    await waitFor(() => {
-      expect(savePipeline).toHaveBeenCalledTimes(1);
-    });
-    expect(fetchPipeline).toHaveBeenCalledWith("plc-redaction");
-    expect(savePipeline).toHaveBeenCalledWith(
-      expect.objectContaining({ id: "plc-redaction", enabled: false }),
-    );
-  });
-
-  it("runs a pipeline now and reports success inline", async () => {
-    fetchPipelines.mockResolvedValue(RESPONSE);
-    triggerPipeline.mockResolvedValue(["run-1"]);
-    fetchRun.mockResolvedValue({
-      runId: "run-1",
-      policyId: "plc-redaction",
-      status: "COMPLETED",
-      currentStep: 1,
-      stepCount: 1,
+    savePolicy.mockReset();
+    savePolicy.mockResolvedValue(undefined);
+    fetchPolicyPermissions.mockReset();
+    fetchPolicyPermissions.mockResolvedValue({ canManagePolicies: true });
+    usePoliciesOverview.mockReturnValue({
+      data: null,
+      loading: false,
       error: null,
-      errorCode: null,
-      createdAt: 0,
     });
-
-    renderView();
-
-    fireEvent.click(await screen.findByText("Redaction sweep"));
-    fireEvent.click(await screen.findByText("portal.pipelines.detail.run"));
-
-    await waitFor(() => {
-      expect(triggerPipeline).toHaveBeenCalledWith("plc-redaction");
-    });
-    expect(
-      await screen.findByText("portal.pipelines.run.completed"),
-    ).toBeInTheDocument();
   });
 
-  it("surfaces an execution failure from a manual run", async () => {
-    fetchPipelines.mockResolvedValue(RESPONSE);
-    triggerPipeline.mockResolvedValue(["run-1"]);
-    fetchRun.mockResolvedValue({
-      runId: "run-1",
-      policyId: "plc-redaction",
-      status: "FAILED",
-      currentStep: 1,
-      stepCount: 1,
-      error: "step 1 blew up",
-      errorCode: null,
-      createdAt: 0,
-    });
+  /** A template-representable, currently-paused policy. */
+  const pausedPolicy: Policy = {
+    id: "plc-redaction",
+    name: "Redaction sweep",
+    enabled: false,
+    required: false,
+    icon: "shield",
+    inputs: [],
+    steps: [{ operation: "/api/v1/security/auto-redact", parameters: {} }],
+    output: { type: "inline", options: { categoryId: "security" } },
+    outputIds: [],
+    editor: { allowed: true, runOn: "upload" },
+  };
 
+  it("opens the builder when creating a pipeline", async () => {
     renderView();
-
-    fireEvent.click(await screen.findByText("Redaction sweep"));
-    fireEvent.click(await screen.findByText("portal.pipelines.detail.run"));
-
-    expect(
-      await screen.findByText("portal.pipelines.run.failed"),
-    ).toBeInTheDocument();
-  });
-
-  it("creates a pipeline with the chosen name and chained operation", async () => {
-    fetchPipelines.mockResolvedValue(RESPONSE);
-    fetchSources.mockResolvedValue(SOURCES);
-    savePipeline.mockResolvedValue({});
-
-    renderView();
-
-    // Wait for the table so the initial fetch has settled, then open the composer.
     await screen.findByText("Redaction sweep");
-    fireEvent.click(screen.getByText("portal.pipelines.actions.newPipeline"));
-
-    fireEvent.change(await screen.findByRole("textbox"), {
-      target: { value: "Nightly compress" },
-    });
-    // Operation palette chip labels are derived from the endpoint path.
-    fireEvent.click(await screen.findByText("+ Compress"));
-    fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
-
-    await waitFor(() => {
-      expect(savePipeline).toHaveBeenCalledTimes(1);
-    });
-    expect(savePipeline).toHaveBeenCalledWith(
-      expect.objectContaining({
-        name: "Nightly compress",
-        trigger: null,
-        output: expect.objectContaining({ type: "inline" }),
-        steps: [
-          expect.objectContaining({ operation: "/api/v1/misc/compress-pdf" }),
-        ],
-      }),
+    fireEvent.click(
+      screen.getByText("portal.pipelines.actions.newCustomPipeline"),
     );
+    expect(await screen.findByText("builder new")).toBeInTheDocument();
+  });
+
+  it("opens the full builder when a plain pipeline row is clicked", async () => {
+    renderView();
+    fireEvent.click(await screen.findByText("Redaction sweep"));
+    expect(await screen.findByText("pipeline page")).toBeInTheDocument();
+  });
+
+  it("opens template settings directly without the usage details modal", async () => {
+    fetchPipeline.mockResolvedValue(pausedPolicy);
+
+    renderView();
+    fireEvent.click(await screen.findByText("Redaction sweep"));
+
+    expect(
+      await screen.findByText("portal.policies.wizard.actions.saveChanges"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("portal.policies.detail.recentActivity"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("portal.policies.stats.docsEnforced"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("opens settings directly for an existing template setup link", async () => {
+    usePoliciesOverview.mockReturnValue({
+      data: { catalogue: [parseSimplePolicy(pausedPolicy, [])] },
+      loading: false,
+      error: null,
+    });
+
+    renderView("/processor/pipelines?setup=security");
+
+    expect(
+      await screen.findByText("portal.policies.wizard.actions.saveChanges"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("portal.policies.detail.recentActivity"),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText("portal.policies.wizard.actions.cancel"));
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+  });
+
+  it("opens the full builder for a template with custom pipeline steps", async () => {
+    fetchPipeline.mockResolvedValue({
+      ...pausedPolicy,
+      steps: [{ operation: "/api/v1/misc/compress-pdf", parameters: {} }],
+    });
+
+    renderView();
+    fireEvent.click(await screen.findByText("Redaction sweep"));
+
+    expect(await screen.findByText("pipeline page")).toBeInTheDocument();
+  });
+
+  it("keeps the custom icon and name when customising from the wizard", async () => {
+    const policy = {
+      id: "plc-redaction",
+      name: "My custom redaction",
+      enabled: true,
+      required: false,
+      icon: "shield",
+      inputs: [],
+      steps: [{ operation: "/api/v1/security/auto-redact", parameters: {} }],
+      output: { type: "inline", options: { categoryId: "security" } },
+      outputIds: [],
+      editor: { allowed: true, runOn: "export" },
+    };
+    fetchPipeline.mockResolvedValue(policy);
+
+    renderView();
+    fireEvent.click(await screen.findByText("Redaction sweep"));
+    fireEvent.click(
+      await screen.findByText("portal.policies.wizard.actions.customise"),
+    ); // hand off to the builder
+
+    // The draft carried into the builder keeps the stored icon and name, not the category default.
+    expect(await screen.findByTestId("draft-icon")).toHaveTextContent("shield");
+    expect(screen.getByTestId("draft-name")).toHaveTextContent(
+      "My custom redaction",
+    );
+  });
+
+  it("keeps a paused policy paused when saved from the wizard", async () => {
+    fetchPipeline.mockResolvedValue(pausedPolicy);
+
+    renderView();
+    fireEvent.click(await screen.findByText("Redaction sweep"));
+    fireEvent.click(
+      await screen.findByText("portal.policies.wizard.actions.saveChanges"),
+    );
+
+    await waitFor(() => expect(savePolicy).toHaveBeenCalled());
+    // The wizard has no enabled control, so a save must not silently re-enable a paused policy.
+    expect(savePolicy.mock.calls[0][0]).toMatchObject({ enabled: false });
+  });
+
+  it("keeps a paused policy paused when customising from the wizard", async () => {
+    fetchPipeline.mockResolvedValue(pausedPolicy);
+
+    renderView();
+    fireEvent.click(await screen.findByText("Redaction sweep"));
+    fireEvent.click(
+      await screen.findByText("portal.policies.wizard.actions.customise"),
+    ); // hand off to the builder
+
+    expect(await screen.findByTestId("draft-enabled")).toHaveTextContent(
+      "false",
+    );
+  });
+
+  it("prevents a non-manager from saving template settings", async () => {
+    fetchPolicyPermissions.mockResolvedValue({ canManagePolicies: false });
+    fetchPipeline.mockResolvedValue({
+      id: "plc-redaction",
+      name: "Redaction sweep",
+      enabled: true,
+      required: true,
+      icon: "shield",
+      inputs: [],
+      steps: [{ operation: "/api/v1/security/auto-redact", parameters: {} }],
+      output: { type: "inline", options: { categoryId: "security" } },
+      outputIds: [],
+      editor: { allowed: true, runOn: "upload" },
+    });
+
+    renderView();
+    fireEvent.click(await screen.findByText("Redaction sweep"));
+
+    const save = await screen.findByRole("button", {
+      name: "portal.policies.wizard.actions.saveChanges",
+    });
+    expect(save).toBeDisabled();
+    fireEvent.click(save);
+    expect(savePolicy).not.toHaveBeenCalled();
+  });
+
+  it("prevents saving while the permission check is still loading", async () => {
+    // A check that never settles: canManage stays fail-closed false, isLoading stays true.
+    fetchPolicyPermissions.mockReset();
+    fetchPolicyPermissions.mockReturnValue(new Promise(() => {}));
+    fetchPipeline.mockResolvedValue({
+      id: "plc-redaction",
+      name: "Redaction sweep",
+      enabled: true,
+      required: true,
+      icon: "shield",
+      inputs: [],
+      steps: [{ operation: "/api/v1/security/auto-redact", parameters: {} }],
+      output: { type: "inline", options: { categoryId: "security" } },
+      outputIds: [],
+      editor: { allowed: true, runOn: "upload" },
+    });
+
+    renderView();
+    fireEvent.click(await screen.findByText("Redaction sweep"));
+
+    expect(
+      await screen.findByRole("button", {
+        name: "portal.policies.wizard.actions.saveChanges",
+      }),
+    ).toBeDisabled();
+  });
+
+  it("warns with a retry when the permission check fails, instead of locking silently", async () => {
+    fetchPolicyPermissions.mockReset();
+    fetchPolicyPermissions.mockRejectedValueOnce(new Error("boom"));
+    fetchPolicyPermissions.mockResolvedValue({ canManagePolicies: true });
+
+    renderView();
+    expect(
+      await screen.findByText("portal.pipelines.permissionsUnavailable"),
+    ).toBeInTheDocument();
+
+    // Retry refetches; on success the warning clears.
+    fireEvent.click(screen.getByText("portal.pipelines.permissionsRetry"));
+    await waitFor(() =>
+      expect(
+        screen.queryByText("portal.pipelines.permissionsUnavailable"),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
+  it("shows create + connect-source CTAs when empty", async () => {
+    fetchPipelines.mockResolvedValue({
+      kpis: [
+        { value: 0, description: "" },
+        { value: 0, description: "" },
+        { value: 0, description: "" },
+      ],
+      pipelines: [],
+    });
+    renderView();
+    expect(
+      await screen.findByText("portal.pipelines.empty.title"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("portal.pipelines.empty.connectSource"),
+    ).toBeInTheDocument();
   });
 });

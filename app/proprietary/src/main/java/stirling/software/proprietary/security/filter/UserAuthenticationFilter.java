@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Profile;
@@ -33,6 +34,8 @@ import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
+import stirling.software.proprietary.security.service.ApiKeyAuthenticationService;
+import stirling.software.proprietary.security.service.ApiKeyAuthenticationService.ApiKeyAuthentication;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 
@@ -41,18 +44,24 @@ import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 @Profile("!saas")
 public class UserAuthenticationFilter extends OncePerRequestFilter {
 
+    /** MDC key carrying the resolved key's label into audit events for the processor feed. */
+    public static final String API_KEY_LABEL_MDC = ApiKeyAuthenticationService.AUDIT_LABEL_MDC_KEY;
+
     private final ApplicationProperties.Security securityProp;
     private final UserService userService;
+    private final ApiKeyAuthenticationService apiKeyAuthenticationService;
     private final SessionPersistentRegistry sessionPersistentRegistry;
     private final boolean loginEnabledValue;
 
     public UserAuthenticationFilter(
             @Lazy ApplicationProperties.Security securityProp,
             @Lazy UserService userService,
+            ApiKeyAuthenticationService apiKeyAuthenticationService,
             SessionPersistentRegistry sessionPersistentRegistry,
             @Qualifier("loginEnabled") boolean loginEnabledValue) {
         this.securityProp = securityProp;
         this.userService = userService;
+        this.apiKeyAuthenticationService = apiKeyAuthenticationService;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
         this.loginEnabledValue = loginEnabledValue;
     }
@@ -61,6 +70,14 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+
+        // Start each request clean so a pooled thread can't inherit a prior request's key label -
+        // but keep a label an upstream filter (JwtAuthenticationFilter) already set for a request
+        // it API-key-authenticated, otherwise per-key attribution is lost on the JWT path.
+        if (!(SecurityContextHolder.getContext().getAuthentication()
+                instanceof ApiKeyAuthenticationToken)) {
+            MDC.remove(API_KEY_LABEL_MDC);
+        }
 
         if (!loginEnabledValue) {
             // If login is not enabled, just pass all requests without authentication
@@ -89,18 +106,23 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             String apiKey = request.getHeader("X-API-KEY");
             if (apiKey != null && !apiKey.trim().isEmpty()) {
                 try {
-                    // Use API key to authenticate. This requires you to have an authentication
-                    // provider for API keys.
-                    Optional<User> user = userService.getUserByApiKey(apiKey);
-                    if (user.isEmpty()) {
+                    // Resolves the multi-key table then the legacy key, records usage, and yields a
+                    // per-key label for the processor's document-source attribution.
+                    Optional<ApiKeyAuthentication> resolved =
+                            apiKeyAuthenticationService.authenticate(apiKey);
+                    if (resolved.isEmpty()) {
                         response.setStatus(HttpStatus.UNAUTHORIZED.value());
                         response.getWriter().write("Invalid API Key.");
                         return;
                     }
+                    User user = resolved.get().user();
                     authentication =
                             new ApiKeyAuthenticationToken(
-                                    user.get(), apiKey, user.get().getAuthorities());
+                                    user, apiKey, resolved.get().authorities());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
+                    if (resolved.get().auditLabel() != null) {
+                        MDC.put(API_KEY_LABEL_MDC, resolved.get().auditLabel());
+                    }
                 } catch (AuthenticationException e) {
                     // If API key authentication fails, deny the request
                     response.setStatus(HttpStatus.UNAUTHORIZED.value());

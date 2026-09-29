@@ -200,8 +200,8 @@ public class VeraPDFService {
 
         try (PDFAParser detectionParser =
                 Foundries.defaultInstance().createParser(new ByteArrayInputStream(pdfBytes))) {
-            declaredFlavour = detectionParser.getFlavour();
-            detectedFlavours = detectionParser.getFlavours();
+            detectedFlavours = detectedFlavours(detectionParser);
+            declaredFlavour = firstFlavour(detectedFlavours);
         }
 
         // For PDF/A flavours, we need to validate first to check if PDF/A identification exists in
@@ -285,6 +285,8 @@ public class VeraPDFService {
             }
         }
 
+        // Never force PDF/UA here - it flags every ordinary document as non-compliant and doubles
+        // verify cost; /accessibility-report checks PDF/UA on demand.
         if (!hasPdfaDeclaration) {
             results.add(createNoPdfaDeclarationResult());
         }
@@ -299,7 +301,7 @@ public class VeraPDFService {
                     Foundries.defaultInstance()
                             .createParser(new ByteArrayInputStream(pdfBytes), flavour)) {
 
-                PDFAFlavour parserDeclared = parser.getFlavour();
+                PDFAFlavour parserDeclared = firstFlavour(detectedFlavours(parser));
                 PDFAValidator validator =
                         Foundries.defaultInstance().createValidator(flavour, false);
                 ValidationResult result = validator.validate(parser);
@@ -322,7 +324,19 @@ public class VeraPDFService {
     }
 
     private static boolean isPdfaFlavour(PDFAFlavour flavour) {
-        return PDFFlavours.isFlavourFamily(flavour, PDFAFlavour.SpecificationFamily.PDF_A);
+        return flavour != null
+                && PDFFlavours.isFlavourFamily(flavour, PDFAFlavour.SpecificationFamily.PDF_A);
+    }
+
+    // veraPDF 1.30+ returns an empty flavour list for non-PDF/A files, where getFlavour() throws
+    private static List<PDFAFlavour> detectedFlavours(PDFAParser parser) {
+        List<PDFAFlavour> flavours = parser.getFlavours();
+        return flavours != null ? flavours : List.of();
+    }
+
+    // null means "no PDF/A flavour detected" rather than an error
+    private static PDFAFlavour firstFlavour(List<PDFAFlavour> flavours) {
+        return flavours.isEmpty() ? null : flavours.get(0);
     }
 
     private static String formatStandardDisplay(

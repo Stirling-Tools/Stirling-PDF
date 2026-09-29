@@ -17,12 +17,12 @@ public interface ToolMetadataService {
     List<String> getExtensionTypes(boolean output, String operationPath);
 
     /**
-     * Returns true when the endpoint's ZIP response is a transport for multiple typed results and
-     * should be unpacked: multi-output endpoints (Type:SIMO / Type:MIMO) and wrapper declarations
-     * such as {@code Output:ZIP-PDF} or {@code Output:IMAGE/ZIP}.
+     * Returns true when the endpoint's ZIP response is a transport for several results and should
+     * be unpacked, which is exactly the multi-output endpoints (a {@code SIMO} or {@code MIMO}
+     * arity).
      *
-     * <p>Returns false for a bare {@code Output:ZIP} (e.g. {@code get-attachments}), where the
-     * archive itself is the deliverable and should be kept packed.
+     * <p>Returns false for an endpoint whose declared output is an archive in its own right (for
+     * example {@code extract-attachments}), where unpacking would discard the deliverable.
      */
     boolean shouldUnpackZipResponse(String operationPath);
 }

@@ -72,7 +72,6 @@ export const TOOL_CREDIT_COSTS: Partial<Record<ToolId, number>> = {
   pageLayout: CREDIT_COSTS.MEDIUM,
   redact: CREDIT_COSTS.MEDIUM,
   removeCertSign: CREDIT_COSTS.MEDIUM,
-  scannerEffect: CREDIT_COSTS.MEDIUM,
   replaceColor: CREDIT_COSTS.MEDIUM,
   annotate: CREDIT_COSTS.MEDIUM,
   formFill: CREDIT_COSTS.MEDIUM,

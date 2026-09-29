@@ -3,9 +3,11 @@
  *
  * ## Domains
  *
- *   apiClient.local           Same-origin (vite proxy → this instance's local
- *                             Stirling backend on :8080). Spring admin bearer
- *                             (`stirling_jwt` from @app/auth) auto-attached.
+ *   apiClient.local           This instance's backend, via the localBackend seam.
+ *                             Self-hosted: same-origin (vite proxy → local Stirling
+ *                             backend on :8080), Spring admin bearer. SaaS: there is
+ *                             no separate local instance, so it targets the one SaaS
+ *                             backend with the Supabase JWT (same as .saas).
  *                             USE FOR: actions on this instance —
  *                             /api/v1/account-link/{status,link,unlink}, etc.
  *
@@ -39,18 +41,31 @@
  * entitlement calls. It never enters the portal — the browser is the human
  * admin and uses the Supabase JWT for SaaS reads. Don't add it here.
  */
-import { clearStoredToken, getStoredToken } from "@app/auth";
-import { getSupabaseClient } from "@app/auth/supabase/supabaseClient";
-import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
+import type { AccountLinkBlockContext } from "@app/services/accountLinkBlock";
+import { withPortalSaasSession } from "@app/portal/auth/portalSaasSession";
+import { reportAccountLinkBlock } from "@app/portal/services/accountLinkBlock";
+export { SaasSessionRequiredError } from "@app/portal/auth/portalSaasSession";
+import { resolveDemoResponse } from "@app/portal/api/demoData";
+import { saasApiBase } from "@app/portal/api/saasApiBase";
+import {
+  localAuthHeader,
+  localBaseUrl,
+  onLocalUnauthorized,
+} from "@app/portal/api/localBackend";
+import { localFetch } from "@app/portal/localTransport";
 
-/** Read the SaaS base URL at call time so tests can stub it via vi.stubEnv. */
+/**
+ * SaaS base URL via the flavor seam: self-hosted reads VITE_SAAS_API_URL (a
+ * separate cloud backend); the SaaS build reuses the editor's single
+ * VITE_API_BASE_URL (in SaaS everything is the SaaS backend). {@code null} means
+ * not configured — a self-hosted-only state; the SaaS seam never returns null.
+ */
 function saasBaseUrl(): string | null {
-  const raw = import.meta.env.VITE_SAAS_API_URL;
-  if (!raw) return null;
-  return raw.replace(/\/+$/, "");
+  return saasApiBase();
 }
 
 export interface HttpRequestOptions {
+  accountLinkBlockContext?: AccountLinkBlockContext;
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
   /** Extra headers; Content-Type and Accept are set automatically. */
@@ -80,16 +95,6 @@ export class SaasUnconfiguredError extends Error {
   }
 }
 
-/** Thrown by apiClient.saas.* when the admin has no SaaS session yet. */
-export class SaasNotLinkedError extends Error {
-  constructor() {
-    super(
-      "No SaaS session — admin must link an account before attended SaaS reads.",
-    );
-    this.name = "SaasNotLinkedError";
-  }
-}
-
 /**
  * Best-effort human-readable message from a thrown error: unwraps an
  * {@link HttpError}'s ProblemDetail-ish body (`detail` / `message` / `error`)
@@ -112,7 +117,10 @@ export function errorMessage(error: unknown): string {
 // Shared response handler
 // ────────────────────────────────────────────────────────────────────────────
 
-async function unwrap<T>(res: Response): Promise<T> {
+async function unwrap<T>(
+  res: Response,
+  context?: AccountLinkBlockContext,
+): Promise<T> {
   if (!res.ok) {
     let body: unknown = null;
     try {
@@ -120,7 +128,12 @@ async function unwrap<T>(res: Response): Promise<T> {
     } catch {
       // ignore — non-JSON error response
     }
-    throw new HttpError(res.status, res.statusText, body);
+    const error = new HttpError(res.status, res.statusText, body);
+    // The instance's entitlement gate answers a spent free grant here, and the prompt it raises is
+    // the actionable surface. Reported for every domain rather than only the local one because the
+    // classifier keys on a sentinel only the local backend sends, so a SaaS 402 cannot reach it.
+    reportAccountLinkBlock(error, context);
+    throw error;
   }
   // 204 / empty-body responses have nothing to parse.
   if (res.status === 204 || res.headers.get("Content-Length") === "0") {
@@ -131,74 +144,184 @@ async function unwrap<T>(res: Response): Promise<T> {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// local — same-origin Stirling backend, Spring admin bearer
+// local — this instance's backend, via the localBackend seam (base URL + auth).
+// Self-hosted: same-origin + Spring bearer. SaaS: the SaaS backend + Supabase JWT.
 // ────────────────────────────────────────────────────────────────────────────
-
-function localAuthHeader(): Record<string, string> {
-  const token = getStoredToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
 
 async function localJson<T>(
   path: string,
   options: HttpRequestOptions = {},
 ): Promise<T> {
-  const res = await fetch(path, {
+  const demo = await resolveDemoResponse(
+    new URL(`${localBaseUrl()}${path}`, window.location.origin),
+    options,
+  );
+  if (demo) return unwrap<T>(demo, options.accountLinkBlockContext);
+  const res = await localFetch(`${localBaseUrl()}${path}`, {
     method: options.method ?? "GET",
     headers: {
       Accept: "application/json",
       ...(options.body !== undefined
         ? { "Content-Type": "application/json" }
         : {}),
-      ...localAuthHeader(),
+      ...(await localAuthHeader()),
       ...options.headers,
     },
     body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
     signal: options.signal,
   });
   if (res.status === 401) {
-    // Stale or invalid JWT — clear it so the auth provider re-initialises and
-    // shows the login screen rather than leaving the user stuck with a banner.
-    clearStoredToken();
-    window.dispatchEvent(new CustomEvent("jwt-available"));
+    // Stale/invalid credential — let the flavor decide (self-hosted clears the
+    // Spring token to re-show login; SaaS lets the auth boundary handle it).
+    onLocalUnauthorized();
+  }
+  return unwrap<T>(res, options.accountLinkBlockContext);
+}
+
+/** GET returning a binary Blob (e.g. a CSV/JSON export download), via the
+ * localBackend seam — same base + auth as localJson (SaaS backend + Supabase JWT
+ * on SaaS, same-origin + Spring bearer self-hosted). */
+async function localBlob(
+  path: string,
+  options: HttpRequestOptions = {},
+): Promise<Blob> {
+  const res = await localFetch(`${localBaseUrl()}${path}`, {
+    method: options.method ?? "GET",
+    headers: { ...(await localAuthHeader()), ...options.headers },
+    signal: options.signal,
+  });
+  if (res.status === 401) {
+    onLocalUnauthorized();
+  }
+  if (!res.ok) throw new HttpError(res.status, res.statusText, null);
+  return res.blob();
+}
+
+/** POST an application/x-www-form-urlencoded body (Spring @RequestParam endpoints),
+ * via the localBackend seam — same base + auth as localJson. */
+async function localForm<T>(
+  path: string,
+  params: Record<string, string>,
+  method: "POST" | "PUT" | "DELETE" = "POST",
+): Promise<T> {
+  const res = await localFetch(`${localBaseUrl()}${path}`, {
+    method,
+    headers: { Accept: "application/json", ...(await localAuthHeader()) },
+    body: new URLSearchParams(params),
+  });
+  if (res.status === 401) {
+    onLocalUnauthorized();
   }
   return unwrap<T>(res);
+}
+
+/** POST a multipart/form-data body (file uploads), via the localBackend seam. The Content-Type is
+ * deliberately left unset so the browser writes it with the multipart boundary. */
+async function localMultipart<T>(
+  path: string,
+  body: FormData,
+  context?: AccountLinkBlockContext,
+): Promise<T> {
+  const res = await localFetch(`${localBaseUrl()}${path}`, {
+    method: "POST",
+    headers: { Accept: "application/json", ...(await localAuthHeader()) },
+    body,
+  });
+  if (res.status === 401) {
+    onLocalUnauthorized();
+  }
+  return unwrap<T>(res, context);
 }
 
 // ────────────────────────────────────────────────────────────────────────────
 // saas — hosted SaaS Java, admin's Supabase JWT
 // ────────────────────────────────────────────────────────────────────────────
 
-async function getSaasAccessToken(): Promise<string | null> {
-  ensureSaasSupabase();
-  const supabase = getSupabaseClient();
-  if (!supabase) return null;
-  const { data } = await supabase.auth.getSession();
-  return data.session?.access_token ?? null;
-}
-
 async function saasJson<T>(
   path: string,
   options: HttpRequestOptions = {},
 ): Promise<T> {
+  // Resolved before the config/session gates so demo data works on an
+  // unlinked or unconfigured org. http://saas.mock is the origin the SaaS
+  // handlers are written against (same one Storybook injects).
+  const demo = await resolveDemoResponse(
+    new URL(path, "http://saas.mock"),
+    options,
+  );
+  if (demo) return unwrap<T>(demo);
   const base = saasBaseUrl();
-  if (!base) throw new SaasUnconfiguredError();
-  const token = await getSaasAccessToken();
-  if (!token) throw new SaasNotLinkedError();
-  const res = await fetch(`${base}${path}`, {
-    method: options.method ?? "GET",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${token}`,
-      ...(options.body !== undefined
-        ? { "Content-Type": "application/json" }
-        : {}),
-      ...options.headers,
-    },
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-    signal: options.signal,
-  });
+  // null = unset (self-hosted, no VITE_SAAS_API_URL). "" is same-origin (SaaS) — valid.
+  if (base === null) throw new SaasUnconfiguredError();
+  const res = await withPortalSaasSession(
+    (token) =>
+      fetch(`${base}${path}`, {
+        method: options.method ?? "GET",
+        headers: {
+          Accept: "application/json",
+          ...(options.body !== undefined
+            ? { "Content-Type": "application/json" }
+            : {}),
+          ...options.headers,
+          Authorization: `Bearer ${token}`,
+        },
+        body:
+          options.body !== undefined ? JSON.stringify(options.body) : undefined,
+        signal: options.signal,
+      }),
+    (response) => response.status === 401,
+    !options.method || options.method === "GET",
+  );
   return unwrap<T>(res);
+}
+
+/** Fetch a plain-text SaaS response (e.g. a downloadable licence file). Throws on a non-2xx. */
+async function saasText(
+  path: string,
+  options: HttpRequestOptions = {},
+): Promise<string> {
+  const base = saasBaseUrl();
+  // null = unset (self-hosted, no VITE_SAAS_API_URL). "" is same-origin (SaaS) — valid.
+  if (base === null) throw new SaasUnconfiguredError();
+  const res = await withPortalSaasSession(
+    (token) =>
+      fetch(`${base}${path}`, {
+        method: options.method ?? "GET",
+        headers: {
+          Accept: "text/plain",
+          ...options.headers,
+          Authorization: `Bearer ${token}`,
+        },
+        signal: options.signal,
+      }),
+    (response) => response.status === 401,
+    !options.method || options.method === "GET",
+  );
+  if (!res.ok) {
+    throw new HttpError(res.status, res.statusText, null);
+  }
+  return res.text();
+}
+
+/** SaaS GET returning a binary Blob, with the Supabase JWT attached. */
+async function saasBlob(
+  path: string,
+  options: HttpRequestOptions = {},
+): Promise<Blob> {
+  const base = saasBaseUrl();
+  // Same-origin SaaS resolves to "" (falsy); only null means unconfigured.
+  if (base === null) throw new SaasUnconfiguredError();
+  const res = await withPortalSaasSession(
+    (token) =>
+      fetch(`${base}${path}`, {
+        method: options.method ?? "GET",
+        headers: { ...options.headers, Authorization: `Bearer ${token}` },
+        signal: options.signal,
+      }),
+    (response) => response.status === 401,
+    !options.method || options.method === "GET",
+  );
+  if (!res.ok) throw new HttpError(res.status, res.statusText, null);
+  return res.blob();
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -209,11 +332,14 @@ export const apiClient = {
   /** Local backend (this instance). Spring admin bearer auto-attached. */
   local: {
     json: localJson,
+    form: localForm,
+    multipart: localMultipart,
+    blob: localBlob,
   },
   /** Hosted SaaS Java. Admin's Supabase JWT auto-attached. */
   saas: {
     json: saasJson,
-    /** True when VITE_SAAS_API_URL is set. Doesn't check session liveness. */
-    isConfigured: (): boolean => Boolean(saasBaseUrl()),
+    text: saasText,
+    blob: saasBlob,
   },
 } as const;

@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { isAxiosError } from "axios";
 import apiClient from "@app/services/apiClient";
-import frontendLicenses from "../../../../../assets/3rdPartyLicenses.json"; // eslint-disable-line no-restricted-imports -- asset lives outside @app alias root
+import frontendLicenses from "../../../../../assets/3rdPartyLicenses.json"; // oxlint-disable-line no-restricted-imports -- asset lives outside @app alias root
 
 interface Dependency {
   moduleName?: string;
@@ -27,16 +27,13 @@ interface LicensesResponse {
 }
 
 interface LicensesSectionBodyProps {
-  title: string;
-  description: string;
   dependencies: Dependency[];
 }
 
-function LicensesSectionBody({
-  title,
-  description,
-  dependencies,
-}: LicensesSectionBodyProps) {
+const getModuleUrl = (dependency: Dependency) =>
+  dependency.moduleUrl || dependency.moduleLicenseUrl;
+
+function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
   const { t } = useTranslation();
   const sortedDependencies = useMemo(
     () =>
@@ -57,15 +54,6 @@ function LicensesSectionBody({
     <Stack gap="lg">
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
-          <div>
-            <Text fw={600} size="sm">
-              {title}
-            </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              {description}
-            </Text>
-          </div>
-
           <Group justify="space-between" align="center">
             <div>
               <Text fw={600} size="sm">
@@ -106,9 +94,9 @@ function LicensesSectionBody({
                 sortedDependencies.map((dependency) => (
                   <Table.Tr key={getDependencyKey(dependency)}>
                     <Table.Td>
-                      {dependency.moduleUrl ? (
+                      {getModuleUrl(dependency) ? (
                         <Anchor
-                          href={dependency.moduleUrl}
+                          href={getModuleUrl(dependency)}
                           target="_blank"
                           rel="noopener noreferrer"
                         >
@@ -198,36 +186,14 @@ export function BackendThirdPartyLicensesSection() {
     );
   }
 
-  return (
-    <LicensesSectionBody
-      title={t("settings.licenses.backendTitle", "Backend 3rd Party Licenses")}
-      description={t(
-        "settings.licenses.backendDescription",
-        "Licenses for backend dependencies bundled with this server.",
-      )}
-      dependencies={dependencies}
-    />
-  );
+  return <LicensesSectionBody dependencies={dependencies} />;
 }
 
 export function FrontendThirdPartyLicensesSection() {
-  const { t } = useTranslation();
   const dependencies =
     (frontendLicenses as LicensesResponse).dependencies ?? [];
 
-  return (
-    <LicensesSectionBody
-      title={t(
-        "settings.licenses.frontendTitle",
-        "Frontend 3rd Party Licenses",
-      )}
-      description={t(
-        "settings.licenses.frontendDescription",
-        "Licenses for frontend dependencies bundled into the release build.",
-      )}
-      dependencies={dependencies}
-    />
-  );
+  return <LicensesSectionBody dependencies={dependencies} />;
 }
 
 export default function ThirdPartyLicensesSection() {

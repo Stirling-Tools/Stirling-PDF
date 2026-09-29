@@ -2,6 +2,8 @@ package stirling.software.SPDF.controller.api;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.List;
 
 import org.apache.pdfbox.multipdf.LayerUtility;
@@ -16,6 +18,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -27,6 +30,8 @@ import stirling.software.SPDF.model.api.general.CropPdfForm;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -127,15 +132,27 @@ public class CropController {
         return endpointConfiguration.isGroupEnabled("Ghostscript");
     }
 
+    private static BitSet pageSelection(CropPdfForm request, PDDocument document) {
+        BitSet selected = new BitSet(document.getNumberOfPages());
+        request.getPageNumbersList(document, false).forEach(selected::set);
+        String pageNumbers = request.getPageNumbers();
+        if (selected.isEmpty() && pageNumbers != null && !pageNumbers.isBlank()) {
+            throw new IllegalArgumentException(
+                    "pageNumbers '" + pageNumbers + "' does not select any page");
+        }
+        return selected;
+    }
+
     @AutoJobPostMapping(
             value = "/crop",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Crops a PDF document",
             description =
                     "This operation takes an input PDF file and crops it according to the given"
-                            + " coordinates. Input:PDF Output:PDF Type:SISO")
+                            + " coordinates.")
     public ResponseEntity<Resource> cropPdf(@ModelAttribute CropPdfForm request)
             throws IOException {
         if (request.isAutoCrop()) {
@@ -166,8 +183,15 @@ public class CropController {
                 PDFRenderer renderer = new PDFRenderer(sourceDocument);
                 renderer.setSubsamplingAllowed(true); // Enable subsampling to reduce memory usage
                 LayerUtility layerUtility = new LayerUtility(newDocument);
+                BitSet pagesToCrop = pageSelection(request, sourceDocument);
 
                 for (int i = 0; i < sourceDocument.getNumberOfPages(); i++) {
+                    if (!pagesToCrop.get(i)) {
+                        PDPage imported = newDocument.importPage(sourceDocument.getPage(i));
+                        imported.setResources(sourceDocument.getPage(i).getResources());
+                        continue;
+                    }
+
                     PDPage sourcePage = sourceDocument.getPage(i);
                     PDRectangle mediaBox = sourcePage.getMediaBox();
 
@@ -219,8 +243,15 @@ public class CropController {
                     pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
                 int totalPages = sourceDocument.getNumberOfPages();
                 LayerUtility layerUtility = new LayerUtility(newDocument);
+                BitSet pagesToCrop = pageSelection(request, sourceDocument);
 
                 for (int i = 0; i < totalPages; i++) {
+                    if (!pagesToCrop.get(i)) {
+                        PDPage imported = newDocument.importPage(sourceDocument.getPage(i));
+                        imported.setResources(sourceDocument.getPage(i).getResources());
+                        continue;
+                    }
+
                     PDPage sourcePage = sourceDocument.getPage(i);
 
                     // Create a new page with the size of the source page
@@ -269,11 +300,13 @@ public class CropController {
 
     private ResponseEntity<Resource> cropWithGhostscript(@ModelAttribute CropPdfForm request)
             throws IOException {
-        TempFile tempInputFile = null;
-        TempFile tempOutputFile = null;
-
         try (PDDocument sourceDocument = pdfDocumentFactory.load(request)) {
-            for (int i = 0; i < sourceDocument.getNumberOfPages(); i++) {
+            BitSet pagesToCrop = pageSelection(request, sourceDocument);
+            int totalPages = sourceDocument.getNumberOfPages();
+            for (int i = 0; i < totalPages; i++) {
+                if (!pagesToCrop.get(i)) {
+                    continue;
+                }
                 PDPage page = sourceDocument.getPage(i);
                 PDRectangle cropBox =
                         new PDRectangle(
@@ -284,13 +317,78 @@ public class CropController {
                 page.setCropBox(cropBox);
             }
 
-            tempInputFile = tempFileManager.createManagedTempFile(PDF_EXTENSION);
-            tempOutputFile = tempFileManager.createManagedTempFile(PDF_EXTENSION);
+            MultipartFile fileInput = request.getFileInput();
+            String sourceName =
+                    fileInput != null ? fileInput.getOriginalFilename() : request.getFileId();
+            String outputFilename = GeneralUtils.generateFilename(sourceName, "_cropped.pdf");
 
-            // Save the source document with crop boxes
-            sourceDocument.save(tempInputFile.getFile());
+            List<Integer> selected = new ArrayList<>();
+            for (int i = 0; i < totalPages; i++) {
+                if (pagesToCrop.get(i)) {
+                    selected.add(i);
+                }
+            }
 
-            // Execute Ghostscript to process the crop boxes
+            // Ghostscript only ever sees the selected pages: unselected pages
+            // merge back pristine, so a document-wide re-distill can never
+            // alter their geometry or content.
+            TempFile croppedFile = null;
+            PDDocument croppedDocument = null;
+            try {
+                if (!selected.isEmpty()) {
+                    try (PDDocument selectedDocument = new PDDocument()) {
+                        for (int pageIndex : selected) {
+                            selectedDocument.importPage(sourceDocument.getPage(pageIndex));
+                        }
+                        croppedFile = runGhostscriptDocument(selectedDocument);
+                    }
+                    croppedDocument = org.apache.pdfbox.Loader.loadPDF(croppedFile.getFile());
+                    if (croppedDocument.getNumberOfPages() != selected.size()) {
+                        throw new IOException(
+                                "Ghostscript returned "
+                                        + croppedDocument.getNumberOfPages()
+                                        + " pages for "
+                                        + selected.size()
+                                        + " selected pages");
+                    }
+                }
+
+                try (PDDocument mergedDocument =
+                        pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
+                    int ghostscriptIndex = 0;
+                    for (int i = 0; i < totalPages; i++) {
+                        if (pagesToCrop.get(i)) {
+                            mergedDocument.importPage(croppedDocument.getPage(ghostscriptIndex++));
+                        } else {
+                            PDPage imported = mergedDocument.importPage(sourceDocument.getPage(i));
+                            imported.setResources(sourceDocument.getPage(i).getResources());
+                        }
+                    }
+                    return WebResponseUtils.pdfDocToWebResponse(
+                            mergedDocument, outputFilename, tempFileManager);
+                } finally {
+                    if (croppedDocument != null) {
+                        croppedDocument.close();
+                    }
+                }
+            } finally {
+                if (croppedFile != null) {
+                    croppedFile.close();
+                }
+            }
+        }
+    }
+
+    /**
+     * Saves the given document and runs Ghostscript over it with the per-page crop boxes applied.
+     * The caller owns the returned file.
+     */
+    private TempFile runGhostscriptDocument(PDDocument document) throws IOException {
+        TempFile tempInputFile = tempFileManager.createManagedTempFile(PDF_EXTENSION);
+        TempFile tempOutputFile = tempFileManager.createManagedTempFile(PDF_EXTENSION);
+        try {
+            document.save(tempInputFile.getFile());
+
             ProcessExecutor processExecutor =
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT);
             List<String> command =
@@ -301,23 +399,18 @@ public class CropController {
                             "-o",
                             tempOutputFile.getAbsolutePath(),
                             tempInputFile.getAbsolutePath());
-
-            processExecutor.runCommandWithOutputHandling(command);
+            try {
+                processExecutor.runCommandWithOutputHandling(command);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw ExceptionUtils.createProcessingInterruptedException("Ghostscript", e);
+            }
 
             TempFile out = tempOutputFile;
-            tempOutputFile = null; // ownership transferred to response Resource
-            return WebResponseUtils.pdfFileToWebResponse(
-                    out,
-                    GeneralUtils.generateFilename(
-                            request.getFileInput().getOriginalFilename(), "_cropped.pdf"));
-
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw ExceptionUtils.createProcessingInterruptedException("Ghostscript", e);
+            tempOutputFile = null; // ownership transferred to the caller
+            return out;
         } finally {
-            if (tempInputFile != null) {
-                tempInputFile.close();
-            }
+            tempInputFile.close();
             if (tempOutputFile != null) {
                 tempOutputFile.close();
             }

@@ -1,42 +1,57 @@
 /**
- * Auto-run controller: every enabled policy enforces on every uploaded
- * file. Watches the session's files and, for each (active policy × not-yet-run
- * file), fires a real backend run (`POST /api/v1/policies/{id}/run`) and polls it
- * to completion, recording progress in {@link policyRunStore} for the activity
- * feed.
- *
- * Headless — call it from {@link PolicyAutoRunController}, which is mounted once
- * wherever the editor is open so enforcement happens regardless of whether the
- * policy panel is on screen. Each (policy, file) pair runs exactly once (tracked
- * in the run store), so re-renders and remounts don't re-fire.
+ * Headless auto-run controller: one backend run per (policy, file), fired exactly once and polled.
+ * Policies sharing a trigger run as an ordered chain so their effects accumulate.
  */
 
-import { useCallback, useEffect, useRef } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+} from "react";
 import {
   useAllFiles,
   useFileManagement,
   useFileContext,
 } from "@app/contexts/FileContext";
 import { fileStorage } from "@app/services/fileStorage";
+import { refreshNotificationsNow } from "@app/hooks/useNotifications";
+import {
+  isAwaitingUnlock,
+  pendingUnlocksVersion,
+  subscribeToPendingUnlocks,
+} from "@app/services/pendingUnlocks";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
-import { POLICIES_ENABLED } from "@app/constants/featureFlags";
 import i18n from "@app/i18n";
 import {
-  runStoredPolicy,
   getPolicyRun,
   listPolicyRuns,
   downloadPolicyOutput,
-  resolvePolicyRunTarget,
 } from "@app/services/policyApi";
 import type {
   PolicyRunStatus,
   PolicyRunView,
 } from "@app/services/policyPipeline";
 import { dispatchPaygLimitReached } from "@app/services/usageLimitBridge";
+import { reportFreeTierExhausted } from "@app/services/accountLinkBlock";
+import {
+  dispatchableFileId,
+  type DispatchableFileId,
+} from "@app/components/policies/policyLocalPass";
 import type { FileId } from "@app/types/file";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
+import { readClassificationLabelsFromFile } from "@app/services/fileClassification";
+import {
+  orderedRewritingPolicies,
+  policyDeliversOutputFiles,
+} from "@app/data/classificationPolicy";
+import { runPolicyOnFile } from "@app/services/policyDispatch";
+import { policyCreditContext } from "@app/services/policyCreditContext";
+import { policyAcceptsFile } from "@app/services/policyInput";
+import { splitFileName } from "@app/utils/fileUtils";
 import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
-import type { PoliciesByCategory } from "@app/types/policies";
+import type { PoliciesByKey } from "@app/types/policies";
 import { usePolicies } from "@app/hooks/usePolicies";
 import {
   addReconciledRun,
@@ -44,7 +59,6 @@ import {
   getRun,
   isDispatched,
   markDispatched,
-  recordRunStart,
   removeRun,
   updateRun,
   usePolicyRuns,
@@ -54,10 +68,12 @@ import {
 /** Status poll cadence. */
 const POLL_MS = 2000;
 
-/** The server aborts any single tool step that runs longer than its internal-API
- *  read timeout, then fails the run — so a run can legitimately stay in flight
- *  for up to this long per step. The client must keep polling at least that long,
- *  or it abandons a run the server is still working on (which reads as a hang). */
+/** First poll fires early so a fresh run shows real progress quickly instead of
+ *  sitting on an indeterminate spinner for a full poll interval. */
+const FIRST_POLL_MS = 500;
+
+/** Server's per-step abort budget - poll at least this long per step, or we abandon
+ *  a run the server is still working on. */
 const STEP_TIMEOUT_MS = 300_000;
 
 /** Slack on top of the per-step budget: queueing before the first step starts and
@@ -77,11 +93,8 @@ const POLICY_QUEUE_FULL = "POLICY_QUEUE_FULL";
 const MAX_QUEUE_RETRIES = 5;
 const QUEUE_RETRY_BASE_MS = 4000;
 
-/** Consecutive "run not found" responses before giving up. The run state lives
- *  in memory on the server, so a restart or a second instance behind the load
- *  balancer makes a live run's status return 404 — and it won't come back. We
- *  tolerate a brief blip (e.g. a poll racing a just-dispatched run, or one hop
- *  to an instance that hasn't seen it) then fail, rather than polling forever. */
+/** Consecutive 404s before failing. Run state is in-memory server-side, so a restart
+ *  or a hop to another instance loses it permanently - tolerate a blip, not forever. */
 const MAX_NOT_FOUND = 3;
 
 /** A 404 (run status gone, or output file gone), across the web (axios) and
@@ -104,11 +117,17 @@ function failRun(runId: string, message: string): void {
   updateRun(runId, { status: "FAILED", error: message, errorCode: null });
 }
 
-/** How long to wait for an upload's bytes to land in IndexedDB before giving up
- *  (20 × 250ms ≈ 5s). The stub can surface in the file list a beat before its
- *  bytes are committed, so a too-eager fetch would otherwise miss the file. */
-const FILE_WAIT_TRIES = 20;
-const FILE_WAIT_MS = 250;
+/** A policy that changed nothing completes with no output; left unimported its badge
+ *  and blocking overlay spin forever. */
+export function finishedWithNothingToDeliver(run: PolicyRunRecord): boolean {
+  return (
+    run.status === "COMPLETED" &&
+    !run.imported &&
+    (run.outputs?.length ?? 0) === 0 &&
+    // An annotating policy settles on labels, not an output file.
+    policyDeliversOutputFiles(run.policyKey)
+  );
+}
 
 function isTerminal(status: PolicyRunStatus): boolean {
   return (
@@ -120,26 +139,45 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export function usePolicyAutoRun(): void {
   const { fileStubs } = useAllFiles();
-  const { addFiles } = useFileManagement();
+  const { addFiles, updateStirlingFileStub } = useFileManagement();
   const { consumeFiles } = useFileContext();
   const { bumpRevision } = useIndexedDB();
   const { policies } = usePolicies();
   const runs = usePolicyRuns();
-  // Keys (run ids / dispatch keys) currently in flight, so the effects never
-  // double-fire across re-renders while their first async step is pending.
+  // Read in the import effect via ref, not as a dependency: delivery mutates fileStubs,
+  // so depending on them would re-fire the effect on its own delivery (infinite cascade).
+  const fileStubsRef = useRef(fileStubs);
+  fileStubsRef.current = fileStubs;
+  // Keys in flight, so effects never double-fire across re-renders while async work pends.
   const polling = useRef<Set<string>>(new Set());
   const importing = useRef<Set<string>>(new Set());
   const dispatching = useRef<Set<string>>(new Set());
   // Reconcile against the backend exactly once per mount.
   const reconciled = useRef(false);
 
-  // A policy's tool calls run server-side, so a usage-limit 402 never reaches the apiClient
-  // interceptor (and thus never pops the modal that direct calls get). The backend surfaces the
-  // limit sentinel on the run's errorCode; when a run we polled finishes blocked, broadcast a
-  // window event. A saas-layer listener (which can read the wallet + open the modal — this
-  // proprietary hook can't import the saas modal API) decides free-limit vs spend-cap. Dedupe per
-  // run so a folder-watch burst opens the modal once, not once per file.
+  // Server-side runs never hit the apiClient 402 interceptor, so we broadcast the limit
+  // sentinel for a saas listener to open the modal. Deduped per run.
   const firedLimitModal = useRef<Set<string>>(new Set());
+
+  // The file-producing upload policies this engine dispatches and chains, in run order, so effects
+  // accumulate instead of racing to fork the same version. Annotating policies (classification) are
+  // absent by design: they run themselves (local pass, then AI escalation), so the engine never sees
+  // their two ways to run.
+  const orderedUploadPolicyKeys = useMemo(
+    () => orderedRewritingPolicies(policies),
+    [policies],
+  );
+
+  // Chain-continuations handled this session, so the next policy fires once per run.
+  const chained = useRef<Set<string>>(new Set());
+
+  // Answering a prompt has to re-run the dispatch effect, or a released file waits for the
+  // next unrelated render to be picked up.
+  const unlocksVersion = useSyncExternalStore(
+    subscribeToPendingUnlocks,
+    pendingUnlocksVersion,
+    pendingUnlocksVersion,
+  );
 
   // Latest policies, read from inside the stable retry callback (which has no deps).
   const policiesRef = useRef(policies);
@@ -148,18 +186,16 @@ export function usePolicyAutoRun(): void {
   // eventually gives up. Survives the run-id changing on each retry; reset on any real outcome.
   const queueRetries = useRef<Map<string, number>>(new Map());
 
-  // A queue-rejected run is just backpressure — drop the rejected record and fire a fresh run in
-  // its place after a growing backoff (one feed row, not a new one per attempt). Once the budget is
-  // spent, leave the last failure standing so the activity feed offers a manual Retry.
+  // Queue rejection is backpressure: replace the record with a fresh run after a backoff, so the
+  // feed keeps one row. Budget spent, leave the failure standing for a manual Retry.
   const scheduleQueueRetry = useCallback((runId: string) => {
     const rec = getRun(runId);
     if (!rec) return;
-    // A run rediscovered from the server (reconciled) has no local input fileId, so it can't be
-    // re-dispatched; leave it failed rather than spinning on a file we can't resolve.
+    // A reconciled run has no local fileId to re-dispatch; leave it failed.
     if (!rec.fileId) return;
-    const key = dispatchKey(rec.categoryId, rec.fileId);
+    const key = dispatchKey(rec.policyKey, rec.fileId);
     const attempts = queueRetries.current.get(key) ?? 0;
-    const backendId = policiesRef.current[rec.categoryId]?.backendId;
+    const backendId = policiesRef.current[rec.policyKey]?.backendId;
     if (attempts >= MAX_QUEUE_RETRIES || !backendId) {
       queueRetries.current.delete(key);
       return;
@@ -170,11 +206,15 @@ export function usePolicyAutoRun(): void {
     setTimeout(
       () => {
         removeRun(runId);
+        // Retrying an existing run: a locked file never produced one, and
+        // runPolicyOnFile re-checks the persisted stub regardless.
         void runPolicyOnFile(
-          rec.categoryId,
+          rec.policyKey,
           backendId,
-          rec.fileId as FileId,
+          rec.fileId as DispatchableFileId,
           rec.fileName,
+          false,
+          rec.externalOutput,
         );
       },
       QUEUE_RETRY_BASE_MS * 2 ** attempts,
@@ -192,10 +232,19 @@ export function usePolicyAutoRun(): void {
       const finished = getRun(view.runId);
       if (finished) {
         queueRetries.current.delete(
-          dispatchKey(finished.categoryId, finished.fileId),
+          dispatchKey(finished.policyKey, finished.fileId),
         );
       }
+      // Read now rather than leaving them a poll interval to hear about their own upload.
+      if (view.status === "FAILED") refreshNotificationsNow();
       const code = view.errorCode;
+      if (code === "FREE_TIER_EXHAUSTED") {
+        if (!firedLimitModal.current.has(view.runId)) {
+          firedLimitModal.current.add(view.runId);
+          reportFreeTierExhausted(policyCreditContext(view.policyId));
+        }
+        return;
+      }
       if (code !== "PAYG_LIMIT_REACHED" && code !== "FEATURE_DEGRADED") return;
       if (firedLimitModal.current.has(view.runId)) return;
       firedLimitModal.current.add(view.runId);
@@ -204,56 +253,115 @@ export function usePolicyAutoRun(): void {
     [scheduleQueueRetry],
   );
 
-  // Dispatch: for each active policy × each session file not yet run, fire a run.
+  // Fire only the first compatible rewriting policy per file; the chaining
+  // effect below runs the rest on each previous output. Background deliveries
+  // independently receive the original upload.
   useEffect(() => {
-    if (!POLICIES_ENABLED) return;
-    const active = Object.entries(policies).filter(
-      ([, s]) =>
-        s.configured &&
-        s.status === "active" &&
-        s.backendId &&
-        // Only enforce in the editor when the policy includes "editor" as a source.
-        // runOn is an editor-specific parameter: "upload" fires here, "export" fires
-        // at export time via policyExport. Non-editor sources have their own triggers.
-        (!s.sources ||
-          s.sources.length === 0 ||
-          s.sources.includes("editor")) &&
-        (s.runOn ?? "upload") === "upload",
-    );
-    for (const [categoryId, s] of active) {
-      for (const stub of fileStubs) {
-        // Input-mode policies enforce only on files that actually entered the
-        // system as an upload — not on files a tool/automation produced in-app
-        // (versioned edits or independent artifacts like convert/split/merge).
-        // Those are enforced only by export-mode policies, at export time.
-        if (stub.derivedFromTool) continue;
-        const key = dispatchKey(categoryId, stub.id);
-        // Skip if already run (persisted) or a dispatch is in flight — the
-        // in-memory guard prevents double-firing during the async wait.
-        if (isDispatched(categoryId, stub.id) || dispatching.current.has(key)) {
+    const backgroundPolicyKeys = Object.entries(policies)
+      .filter(
+        ([, policy]) =>
+          policy.configured &&
+          policy.enabled &&
+          policy.runsOnEditor &&
+          policy.externalOutput &&
+          (policy.runOn ?? "upload") === "upload",
+      )
+      .map(([key]) => key);
+    const candidateKeys = [
+      ...new Set([...orderedUploadPolicyKeys, ...backgroundPolicyKeys]),
+    ];
+    // An older cache has no input metadata; wait for reconciliation to preserve the team's order.
+    if (candidateKeys.some((key) => policies[key].firstOperation === undefined))
+      return;
+    for (const stub of fileStubs) {
+      // Input-mode policies cover uploads only; tool-produced files are left to
+      // export-mode policies at export time.
+      if (stub.derivedFromTool) continue;
+      // Null when the classification is locked, i.e. produced outside the policy system.
+      const target = dispatchableFileId(stub);
+      if (!target) continue;
+      // Held while the unlock prompt is open: the run would fail on a document the user is
+      // about to decrypt, bill for it, and leave a row about a version soon replaced. Skipping
+      // the prompt releases it, so a document nobody unlocks still records its failure.
+      if (isAwaitingUnlock(stub.id)) continue;
+      const firstPolicyKey = orderedUploadPolicyKeys.find((key) =>
+        policyAcceptsFile(policies[key], stub),
+      );
+      const keys = [
+        ...new Set(
+          [
+            firstPolicyKey,
+            ...backgroundPolicyKeys.filter((key) =>
+              policyAcceptsFile(policies[key], stub),
+            ),
+          ].filter((key): key is string => Boolean(key)),
+        ),
+      ];
+      for (const policyKey of keys) {
+        const policy = policies[policyKey];
+        if (!policy?.backendId) continue;
+        const key = dispatchKey(policyKey, stub.id);
+        // Skip if already run (persisted) or in flight - the in-memory guard covers the async wait.
+        if (isDispatched(policyKey, stub.id) || dispatching.current.has(key)) {
           continue;
         }
         dispatching.current.add(key);
         void runPolicyOnFile(
-          categoryId,
-          s.backendId as string,
-          stub.id,
+          policyKey,
+          policy.backendId,
+          target,
           stub.name,
+          false,
+          policy.externalOutput,
         )
           .catch(() => {
-            // runPolicyOnFile handles its own failures; this is just a backstop
-            // so an unexpected rejection never becomes an unhandled rejection.
+            // Backstop: runPolicyOnFile handles its own failures.
           })
           .finally(() => dispatching.current.delete(key));
       }
     }
-  }, [fileStubs, policies]);
+  }, [fileStubs, policies, orderedUploadPolicyKeys, unlocksVersion]);
 
-  // Poll each in-flight run to a terminal state.
+  // Once a run's output lands, fire the next upload policy on it - success only, once per
+  // run. isDispatched guards re-dispatch across reloads.
   useEffect(() => {
-    if (!POLICIES_ENABLED) return;
     for (const run of runs) {
-      if (isTerminal(run.status) || polling.current.has(run.runId)) continue;
+      if (run.status !== "COMPLETED" || !run.imported || run.externalOutput)
+        continue;
+      if (chained.current.has(run.runId)) continue;
+      const index = orderedUploadPolicyKeys.indexOf(run.policyKey);
+      const remainingKeys =
+        index < 0 ? [] : orderedUploadPolicyKeys.slice(index + 1);
+      if (
+        remainingKeys.some((key) => policies[key].firstOperation === undefined)
+      )
+        continue;
+      const outputIds = run.outputFileIds ?? [];
+      if (remainingKeys.length === 0 || outputIds.length === 0) {
+        // End of the chain (or nothing to chain onto): don't revisit this run.
+        chained.current.add(run.runId);
+        continue;
+      }
+      chained.current.add(run.runId);
+      void chainUploadPolicies(
+        outputIds,
+        remainingKeys,
+        policies,
+        fileStubsRef.current,
+      ).catch(() => chained.current.delete(run.runId));
+    }
+  }, [runs, policies, orderedUploadPolicyKeys]);
+
+  // Poll each in-flight run to a terminal state. A browser-local run (the classification heuristic's
+  // first pass) has no server run behind it, so polling it 404s and would flip its success to FAILED.
+  useEffect(() => {
+    for (const run of runs) {
+      if (
+        run.browserLocal ||
+        isTerminal(run.status) ||
+        polling.current.has(run.runId)
+      )
+        continue;
       polling.current.add(run.runId);
       void poll(run.runId, onRunFinished).finally(() =>
         polling.current.delete(run.runId),
@@ -261,45 +369,79 @@ export function usePolicyAutoRun(): void {
     }
   }, [runs, onRunFinished]);
 
-  // Import each completed run's outputs into the workspace (each output once),
-  // so the enforced file appears in the app rather than only on the backend.
+  // Import each completed run's outputs once, so the enforced file appears in the app.
   useEffect(() => {
-    if (!POLICIES_ENABLED) return;
     for (const run of runs) {
+      const deliversFiles = policyDeliversOutputFiles(run.policyKey);
       if (
         run.status !== "COMPLETED" ||
         run.imported ||
-        !run.outputs?.length ||
         importing.current.has(run.runId)
       ) {
         continue;
       }
+      if (run.externalOutput) {
+        updateRun(run.runId, {
+          imported: true,
+          outputFileIds: run.fileId ? [run.fileId] : [],
+        });
+        continue;
+      }
+      if (finishedWithNothingToDeliver(run)) {
+        updateRun(run.runId, { imported: true });
+        continue;
+      }
       importing.current.add(run.runId);
-      // Honour the policy's output mode: a new file, or a new version of the
-      // input file it ran on (needs that input's stub, still in the workspace).
-      const outputMode = policies[run.categoryId]?.outputMode ?? "new_version";
-      const outputName = policies[run.categoryId]?.outputName ?? "";
-      const outputNamePosition = policies[run.categoryId]?.outputNamePosition;
-      const parentStub = fileStubs.find((s) => (s.id as string) === run.fileId);
+      // An annotating policy writes labels onto the current leaf; no version fork.
+      if (!deliversFiles) {
+        // Resolved at write time, not snapshotted: a tool run during the async parse can fork
+        // a new leaf, and a stale id would no-op and lose the labels.
+        void importClassificationLabels(
+          run,
+          () =>
+            classificationLabelTargetStubs(run.fileId, fileStubsRef.current),
+          {
+            updateStirlingFileStub,
+            bumpRevision,
+          },
+        ).finally(() => importing.current.delete(run.runId));
+        continue;
+      }
+      // Output mode: a new file, or a new version of the input (needs its stub in the workspace).
+      const outputMode = policies[run.policyKey]?.outputMode ?? "new_version";
+      const outputName = policies[run.policyKey]?.outputName ?? "";
+      const outputNamePosition = policies[run.policyKey]?.outputNamePosition;
+      const parentStub = fileStubsRef.current.find(
+        (s) => (s.id as string) === run.fileId,
+      );
       void importOutputs(run, {
         addFiles,
         consumeFiles,
+        policyName: policies[run.policyKey]?.name,
+        updateStirlingFileStub,
         bumpRevision,
         outputMode,
         outputName,
         outputNamePosition,
         parentStub,
+        firstUploadPolicyKey: orderedUploadPolicyKeys[0],
       }).finally(() => importing.current.delete(run.runId));
     }
-  }, [runs, addFiles, consumeFiles, policies, fileStubs]);
+    // NB: fileStubs is read via a ref, not a dependency, so a delivery's own workspace
+    // mutation can't re-trigger this effect.
+  }, [
+    runs,
+    addFiles,
+    consumeFiles,
+    updateStirlingFileStub,
+    policies,
+    orderedUploadPolicyKeys,
+  ]);
 
-  // Reconcile against the backend on load. The server owns runs (durable, user-scoped),
-  // so a run started before this client recorded it, or before a refresh/crash, is
-  // rediscovered here; the poll + import effects above then collect its outputs rather
-  // than leaving them orphaned. Waits until policies are known so server runs can be
-  // attributed to their category.
+  // The server owns runs, so rediscover any this client never recorded and let the effects
+  // above collect their outputs. Waits for policies so runs can be attributed to a category.
   useEffect(() => {
-    if (!POLICIES_ENABLED || reconciled.current) return;
+    if (reconciled.current) return;
     if (Object.keys(policies).length === 0) return;
     reconciled.current = true;
     void reconcileServerRuns(policies);
@@ -309,31 +451,39 @@ export function usePolicyAutoRun(): void {
 interface ImportContext {
   addFiles: (
     files: File[],
-    options?: { skipUploadTracking?: boolean },
+    options?: { skipUploadTracking?: boolean; derivedFromTool?: boolean },
   ) => Promise<StirlingFile[]>;
   consumeFiles: (
     inputFileIds: FileId[],
     outputs: StirlingFile[],
     stubs: StirlingFileStub[],
+    options?: { silent?: boolean },
   ) => Promise<unknown>;
+  /** Patch a workspace stub in place (used to stamp a new-file output's category). */
+  updateStirlingFileStub: (
+    fileId: FileId,
+    updates: Partial<StirlingFileStub>,
+  ) => void;
   /** Bump the IndexedDB revision so the file views re-read after a storage-only version write. */
   bumpRevision: () => void;
   /** "new_file" adds the output as a separate file; "new_version" versions the input. */
   outputMode: "new_file" | "new_version";
+  /** The policy's name, shown in version history instead of the generic "automate" tool. */
+  policyName?: string;
   /** Rename rule. Empty → keep the input's filename. */
   outputName: string;
-  /** Where the rename is applied: before ("prefix") or after ("suffix") the
-   *  base filename. Defaults to "suffix" when absent. */
+  /** Rename position around the base filename; defaults to "suffix" when absent. */
   outputNamePosition?: "prefix" | "suffix" | "auto-number";
   /** The input file's stub — required to version it; absent if it's been removed. */
   parentStub: StirlingFileStub | undefined;
+  /** The only policy the dispatch effect fires; every output is marked dispatched for it
+   *  so a downstream output is never mistaken for a fresh upload and re-enforced. */
+  firstUploadPolicyKey: string | undefined;
 }
 
 /**
- * Pull the caller's server-side runs and fold them into the local store. For a run we already
- * track, patch its status/outputs (preserving local import progress + attribution); for one we
- * don't, adopt it so the poll/import effects pick it up. Server-excluded ad-hoc runs and runs we
- * can't map to a configured category are skipped.
+ * Fold server-side runs into the local store: patch tracked ones, adopt untracked ones for feed
+ * visibility only. Unmappable and ad-hoc runs are skipped.
  */
 function applyOutputName(
   inputFileName: string,
@@ -343,15 +493,39 @@ function applyOutputName(
   const dot = inputFileName.lastIndexOf(".");
   const base = dot > 0 ? inputFileName.slice(0, dot) : inputFileName;
   const ext = dot > 0 ? inputFileName.slice(dot) : "";
-  if (position === "suffix") return `${base}_${outputName}${ext}`;
-  if (position === "prefix") return `${outputName}_${base}${ext}`;
-  // auto-number requires dedup state not available here — fall back to suffix.
-  return `${base}_${outputName}${ext}`;
+  // auto-number needs dedup state not available here, so it falls back to suffix.
+  return position === "prefix"
+    ? `${outputName}_${base}${ext}`
+    : `${base}_${outputName}${ext}`;
 }
 
-async function reconcileServerRuns(
-  policies: PoliciesByCategory,
+async function chainUploadPolicies(
+  outputIds: string[],
+  remainingKeys: string[],
+  policies: PoliciesByKey,
+  stubs: StirlingFileStub[],
 ): Promise<void> {
+  await Promise.all(
+    outputIds.map(async (outputId) => {
+      // Converters and splitters can produce different types, so each output needs its own match.
+      const stub =
+        stubs.find((s) => s.id === outputId) ??
+        (await fileStorage.getStirlingFileStub(outputId as FileId));
+      if (!stub) return;
+      const target = dispatchableFileId(stub);
+      if (!target) return;
+      const nextPolicyKey = remainingKeys.find((key) =>
+        policyAcceptsFile(policies[key], stub),
+      );
+      if (!nextPolicyKey || isDispatched(nextPolicyKey, stub.id)) return;
+      const backendId = policies[nextPolicyKey]?.backendId;
+      if (!backendId) return;
+      await runPolicyOnFile(nextPolicyKey, backendId, target, stub.name, true);
+    }),
+  );
+}
+
+async function reconcileServerRuns(policies: PoliciesByKey): Promise<void> {
   let serverRuns;
   try {
     serverRuns = await listPolicyRuns();
@@ -363,37 +537,41 @@ async function reconcileServerRuns(
     updateRun(view.runId, {
       status: view.status,
       outputs: view.outputs,
+      ...(view.externalOutput === undefined
+        ? {}
+        : { externalOutput: view.externalOutput }),
       error: view.error,
     });
     // No-ops if already tracked, so this only adopts runs we'd otherwise have lost.
-    const categoryId = categoryForPolicy(view.policyId, policies);
-    if (!categoryId) continue;
+    const policyKey = policyKeyForBackendId(view.policyId, policies);
+    if (!policyKey) continue;
     addReconciledRun({
       runId: view.runId,
-      categoryId,
-      // No local input link: a run rediscovered purely from the server (never recorded by this
-      // client) can't be tied back to a workspace/storage file, so its output is delivered as a
-      // new file rather than a version, and it isn't retried. The recorded-run path (real fileId)
-      // covers the common refresh case; this only bites true orphans (storage wipe / other device).
+      policyKey,
+      // Server-only run: never recorded here, so it can't be tied to a file (and isn't retried).
       fileId: "",
       fileName: view.outputs[0]?.fileName ?? "",
       fileSize: 0,
-      // Rediscovered from the SaaS run registry (listPolicyRuns), so its outputs
-      // live on the cloud backend.
+      // From the SaaS run registry, so its outputs live on the cloud backend.
       target: "saas",
       status: view.status,
       outputs: view.outputs,
+      ...(view.externalOutput === undefined
+        ? {}
+        : { externalOutput: view.externalOutput }),
       error: view.error,
+      // Adopted for feed visibility ONLY, never delivery: else a completed run evicted from the capped store gets re-adopted every refresh and re-delivered as a new file (no fileId → no parent), opening phantom duplicates forever. Client-recorded runs (real fileId) still deliver.
+      imported: true,
       // Use the server's creation time, not now, so a rediscovered run shows its real age.
       startedAt: view.createdAt,
     });
   }
 }
 
-/** The category whose configured policy produced this run, if any. */
-function categoryForPolicy(
+/** The key of the configured policy that produced this run, if any. */
+function policyKeyForBackendId(
   policyId: string | null,
-  policies: PoliciesByCategory,
+  policies: PoliciesByKey,
 ): string | undefined {
   if (!policyId) return undefined;
   return Object.entries(policies).find(
@@ -401,17 +579,122 @@ function categoryForPolicy(
   )?.[0];
 }
 
+interface ClassificationImportContext {
+  updateStirlingFileStub: (
+    fileId: FileId,
+    updates: Partial<StirlingFileStub>,
+  ) => void;
+  bumpRevision: () => void;
+}
+
+/** The run's file plus live descendants, so an edit during the run (which forks a new leaf)
+ *  still shows the tags. Empty once the document has left the workspace. */
+export function classificationLabelTargetStubs(
+  runFileId: string,
+  stubs: ReadonlyArray<StirlingFileStub>,
+): StirlingFileStub[] {
+  return stubs.filter(
+    (s) =>
+      (s.id as string) === runFileId ||
+      s.parentFileId === runFileId ||
+      s.sourceFileIds?.includes(runFileId as FileId),
+  );
+}
+
+/** Label-read attempts and backoff. Retried HERE because the import effect only re-runs on
+ *  run-store changes, so bailing out would leave the file's "running" pill spinning. */
+const LABEL_READ_ATTEMPTS = 3;
+const LABEL_READ_RETRY_MS = 2000;
+
 /**
- * Fetch a completed run's not-yet-imported output files and deliver them to the
- * workspace. Per-output, via allSettled: each output is tracked once delivered,
- * so a partial failure retries only the missing files on a later tick and the
- * ones that succeeded are never added twice. `imported` flips true only once
- * every output has landed.
- *
- * Delivery honours the policy's output mode: "new_version" replaces the input
- * file with a versioned child (its history chain), "new_file" adds the output
- * as a standalone file. Versioning falls back to a new file if the input is
- * gone (no parent stub).
+ * Read labels from a completed run's output PDF: a 404 means it aged out and is skipped, other
+ * failures retry with backoff. Null means no labels to apply, so the caller settles the run.
+ */
+async function readRunLabels(run: PolicyRunRecord): Promise<string[] | null> {
+  for (let attempt = 0; attempt < LABEL_READ_ATTEMPTS; attempt++) {
+    if (attempt > 0) await delay(LABEL_READ_RETRY_MS * attempt);
+    let transientFailure = false;
+    for (const out of run.outputs) {
+      try {
+        const blob = await downloadPolicyOutput(out.fileId, run.target);
+        const file = new File([blob], out.fileName ?? run.fileName, {
+          type: blob.type || "application/pdf",
+        });
+        const labels = await readClassificationLabelsFromFile(file);
+        if (labels && labels.length > 0) return labels;
+      } catch (err) {
+        if (!isNotFoundError(err)) transientFailure = true;
+      }
+    }
+    // Every output was read (or had aged out): there are no labels to apply.
+    if (!transientFailure) return null;
+  }
+  // Out of attempts: settle unlabelled rather than spin forever - the badge stays, tags don't.
+  return null;
+}
+
+/**
+ * Stamp `labels` in place (workspace + storage) - tags only, no versioned child. Two passes
+ * because a consume racing the first would strand its target and lose the labels.
+ */
+async function stampClassificationLabels(
+  labels: string[],
+  resolveTargets: () => StirlingFileStub[],
+  ctx: ClassificationImportContext,
+): Promise<FileId[]> {
+  const updates = { classificationLabels: labels };
+  const tagged = new Set<FileId>();
+
+  for (let pass = 0; pass < 2; pass++) {
+    // Resolve and stamp synchronously so no consume lands in between; a consume after the
+    // stamp is safe, as the reducer carries the labels onto the new leaf.
+    const fresh = resolveTargets().filter((s) => !tagged.has(s.id));
+    for (const stub of fresh) {
+      tagged.add(stub.id);
+      ctx.updateStirlingFileStub(stub.id, updates);
+    }
+
+    let mutated = false;
+    for (const stub of fresh) {
+      if (await fileStorage.updateFileMetadata(stub.id, updates))
+        mutated = true;
+    }
+    if (mutated) ctx.bumpRevision();
+
+    // Yield a macrotask so React processes this pass's stamps before the next re-resolves.
+    if (pass === 0) await new Promise((resolve) => setTimeout(resolve));
+  }
+  return Array.from(tagged);
+}
+
+/** Deliver a classification run: read its labels and tag the live document. Nothing is versioned. */
+async function importClassificationLabels(
+  run: PolicyRunRecord,
+  resolveTargets: () => StirlingFileStub[],
+  ctx: ClassificationImportContext,
+): Promise<void> {
+  if (resolveTargets().length === 0) {
+    // The document left the workspace - nothing to tag.
+    updateRun(run.runId, { imported: true });
+    return;
+  }
+  const labels = await readRunLabels(run);
+  const targetIds =
+    labels && labels.length > 0
+      ? await stampClassificationLabels(labels, resolveTargets, ctx)
+      : [];
+  // Settle either way so it stops re-importing. outputFileIds are the TAGGED files, so their
+  // badge persists; safe to chain-key on, as classification is always last.
+  updateRun(run.runId, {
+    imported: true,
+    importedFileIds: run.outputs.map((o) => o.fileId),
+    outputFileIds: targetIds,
+  });
+}
+
+/**
+ * Deliver a run's outputs per-output, so a partial failure retries only the missing files and
+ * successes are never added twice. Honours the output mode; versioning needs the parent stub.
  */
 async function importOutputs(
   run: PolicyRunRecord,
@@ -424,9 +707,8 @@ async function importOutputs(
     return;
   }
 
-  // Keep the input's original filename unless a rename rule is set — without a
-  // rule the backend's auto-suffixed name (e.g. "_watermarked_sanitized") would
-  // otherwise rename every output.
+  // Keep the input's filename unless a rename rule is set, else the backend's auto-suffixed
+  // name renames every output.
   const targetName = ctx.outputName
     ? applyOutputName(
         run.fileName,
@@ -437,10 +719,13 @@ async function importOutputs(
   const settled = await Promise.allSettled(
     pending.map(async (out) => {
       const blob = await downloadPolicyOutput(out.fileId, run.target);
+      const [base, inputExtension] = splitFileName(targetName);
+      const [, outputExtension] = splitFileName(out.fileName);
       return {
         fileId: out.fileId,
-        file: new File([blob], targetName ?? out.fileName ?? run.fileName, {
-          type: blob.type || "application/pdf",
+        // Conversions must retain the output extension so later policies see the resulting type.
+        file: new File([blob], base + (outputExtension || inputExtension), {
+          type: blob.type,
         }),
       };
     }),
@@ -473,6 +758,22 @@ async function importOutputs(
     return; // transient/mixed: retry the lot later; permanent: already failed.
   }
 
+  // Mark a delivered output as already-handled so the auto-run never re-enforces
+  // a policy on its own output. Covers the producing policy AND the first upload
+  // policy (the only one the dispatch effect fires) — without the latter, a
+  // downstream policy's output looks like a fresh upload and the first policy
+  // re-runs on it, versioning/duplicating endlessly. Forward chaining is
+  // unaffected: it only ever fires categories AFTER the producer, never the first.
+  const markHandled = (id: string) => {
+    markDispatched(run.policyKey, id);
+    if (
+      ctx.firstUploadPolicyKey &&
+      ctx.firstUploadPolicyKey !== run.policyKey
+    ) {
+      markDispatched(ctx.firstUploadPolicyKey, id);
+    }
+  };
+
   // Deliver, then mark exactly those imported. If delivery throws we don't mark
   // them, so they retry (without having been added).
   const files = fetched.map((f) => f.file);
@@ -489,6 +790,22 @@ async function importOutputs(
         (await fileStorage.getStirlingFileStub(run.fileId as FileId)) ??
         undefined)
       : undefined;
+
+  // Resolve each output's classification labels and put them ON the stub, so
+  // they ride through consume/persist to BOTH the workspace and storage — and
+  // every later version inherits them (createChildStub + the CONSUME_FILES
+  // reducer). This keeps files in their label groups instead of flashing into
+  // "Other" and waiting on a PDF re-read when a 2nd policy or a tool runs.
+  // Prefer the input's carried-forward labels (cheap) and only read the
+  // freshly-labelled file when there's nothing to inherit (the classification
+  // origin) — so a 60-file batch doesn't re-read every downstream output.
+  const parentLabels = parentStub?.classificationLabels;
+  const resolveLabels = async (file: File) =>
+    // Inherit the parent's verdict
+    (Array.isArray(parentLabels) ? parentLabels : undefined) ??
+    (await readClassificationLabelsFromFile(file)) ??
+    undefined;
+
   if (parentStub) {
     // Replace the input file with a versioned child (preserves its history).
     // The version records "automate" as its origin tool — a policy is a
@@ -497,30 +814,89 @@ async function importOutputs(
       files,
       parentStub,
       "automate",
+      ctx.policyName,
     );
-    // Mark the outputs handled BEFORE adding them, so the auto-run never enforces
-    // the policy on its own output — that would version endlessly in a loop.
-    for (const s of stubs) markDispatched(run.categoryId, s.id);
-    deliveredIds = stubs.map((s) => s.id as string);
+    // Transitive provenance for the PERSISTED record, mirroring what the
+    // CONSUME_FILES reducer computes for workspace state: the output derives
+    // from its input plus everything that input derived from. Without this the
+    // stored lineage misses intermediate hops, and a closed file's policy
+    // badges can't resolve past the most recent run in a 3+-policy chain.
+    const lineage = Array.from(
+      new Set([run.fileId as FileId, ...(parentStub.sourceFileIds ?? [])]),
+    );
+    // Stamp each output stub with: the resolved labels (createChildStub already
+    // inherited the parent's; this also captures the classification origin,
+    // where the parent had none but the labelled file does), the transitive
+    // lineage, and derivedFromTool — the durable cross-session guard that stops
+    // the auto-run ever re-enforcing a policy on its own output (survives a
+    // localStorage wipe / a different device, unlike the dispatched markers).
+    const categorized = await Promise.all(
+      stubs.map(async (s, i) => {
+        const labels = await resolveLabels(files[i]);
+        return {
+          ...s,
+          sourceFileIds: lineage,
+          derivedFromTool: true,
+          ...(labels ? { classificationLabels: labels } : {}),
+        };
+      }),
+    );
+    // Mark the outputs handled BEFORE adding them (belt-and-suspenders session
+    // guard on top of derivedFromTool) so the auto-run never enforces the policy
+    // on its own output — that would version endlessly in a loop.
+    for (const s of categorized) markHandled(s.id);
+    deliveredIds = categorized.map((s) => s.id as string);
     if (ctx.parentStub) {
-      // Input is in the active workspace: version it there (workspace + storage).
-      await ctx.consumeFiles([run.fileId as FileId], stirlingFiles, stubs);
+      // Input is in the active workspace: version it in place, silently — the
+      // output replaces the input in the same slot without being auto-selected,
+      // reordered to the top, or opened in the viewer. The category rides on the
+      // stub, so it lands in the right group instantly (no re-read, no flicker).
+      await ctx.consumeFiles(
+        [run.fileId as FileId],
+        stirlingFiles,
+        categorized,
+        { silent: true },
+      );
     } else {
       // Input is only in storage (run recovered after a reload): version it at the
       // storage layer, then refresh the file views.
       await fileStorage.persistVersionedOutputs(
         [run.fileId as FileId],
         stirlingFiles,
-        stubs,
+        categorized,
       );
       ctx.bumpRevision();
     }
   } else {
-    const added = await ctx.addFiles(files, { skipUploadTracking: true });
-    // Same loop-guard for new-file output: the produced file is a new workspace
-    // file the auto-run would otherwise re-enforce indefinitely.
-    for (const f of added) markDispatched(run.categoryId, f.fileId);
+    // derivedFromTool prevents the auto-run from ever re-enforcing this output,
+    // even if the dispatched list is cleared (localStorage wipe / different device).
+    const added = await ctx.addFiles(files, {
+      skipUploadTracking: true,
+      derivedFromTool: true,
+    });
+    // Belt-and-suspenders session guard on top of derivedFromTool.
+    for (const f of added) markHandled(f.fileId);
     deliveredIds = added.map((f) => f.fileId as string);
+    // Mark each new-file output as tool-derived (the versioned path gets this from the
+    // CONSUME_FILES reducer; the addFiles path doesn't). This is the real loop guard: the dispatch
+    // effect skips `derivedFromTool` files, so a policy output is never re-enforced as a fresh
+    // upload regardless of how upload policies are later reordered — unlike per-(category,file)
+    // markers keyed to whichever policy is currently first. Also stamp labels so it lands in the
+    // right sidebar group immediately (a new file has no parent to inherit from).
+    let mutated = false;
+    await Promise.all(
+      added.map(async (f, i) => {
+        const labels = await resolveLabels(files[i]);
+        const updates = {
+          derivedFromTool: true,
+          ...(labels ? { classificationLabels: labels } : {}),
+        };
+        ctx.updateStirlingFileStub(f.fileId, updates);
+        const ok = await fileStorage.updateFileMetadata(f.fileId, updates);
+        if (ok) mutated = true;
+      }),
+    );
+    if (mutated) ctx.bumpRevision();
   }
   const importedFileIds = [...done, ...fetched.map((f) => f.fileId)];
   const imported = run.outputs.every((out) =>
@@ -546,64 +922,6 @@ async function importOutputs(
 }
 
 /**
- * Resolve the file's bytes, fire a backend run, and record it. Exported so the
- * activity feed's Retry action can re-run a policy on a previously-failed file.
- */
-export async function runPolicyOnFile(
-  categoryId: string,
-  backendId: string,
-  fileId: FileId,
-  fileName: string,
-): Promise<void> {
-  // A freshly-uploaded file's bytes are written to IndexedDB asynchronously, so
-  // its stub can appear in the file list a beat before getStirlingFile resolves
-  // it. Wait briefly rather than bail — and DON'T mark dispatched until we hold
-  // the file, or a too-early miss would skip enforcement on that file forever.
-  // (The caller's in-flight guard prevents double-dispatch during this wait.)
-  // A transient IndexedDB error is treated as a miss (not a throw), so it retries
-  // and then marks dispatched rather than rejecting into a hot re-dispatch loop.
-  const tryGetFile = async (): Promise<StirlingFile | null> => {
-    try {
-      return await fileStorage.getStirlingFile(fileId);
-    } catch {
-      return null;
-    }
-  };
-  let file = await tryGetFile();
-  for (let i = 0; i < FILE_WAIT_TRIES && !file; i++) {
-    await delay(FILE_WAIT_MS);
-    file = await tryGetFile();
-  }
-  if (!file) {
-    // File genuinely gone (removed before it could run) — mark so we don't loop.
-    markDispatched(categoryId, fileId);
-    return;
-  }
-  try {
-    const target = resolvePolicyRunTarget();
-    const runId = await runStoredPolicy(backendId, [file]);
-    // recordRunStart marks this (policy, file) dispatched as it records the run.
-    recordRunStart({
-      runId,
-      categoryId,
-      fileId,
-      fileName,
-      fileSize: file.size,
-      target,
-      status: "PENDING",
-      outputs: [],
-      error: null,
-      startedAt: Date.now(),
-    });
-  } catch {
-    // Dispatch failed (offline / backend error). Mark dispatched so we don't hammer;
-    // the absent run simply won't appear in the activity feed. If the backend did
-    // start a run we never recorded, reconcileServerRuns rediscovers it.
-    markDispatched(categoryId, fileId);
-  }
-}
-
-/**
  * Poll a run's status until it reaches a terminal state (or the budget). Calls {@code onTerminal} once
  * with the final view when it terminates — the caller uses that to pop the usage-limit modal when a
  * run was blocked. Only runs polled this session fire it (terminal runs aren't re-polled), so a
@@ -620,8 +938,10 @@ export async function poll(
   // would quit while a long step is still legitimately running.
   let budgetMs = DEFAULT_STEP_COUNT * STEP_TIMEOUT_MS + POLL_GRACE_MS;
   const startedAt = Date.now();
+  let nextDelayMs = FIRST_POLL_MS;
   while (Date.now() - startedAt < budgetMs) {
-    await delay(POLL_MS);
+    await delay(nextDelayMs);
+    nextDelayMs = POLL_MS;
     let view;
     try {
       view = await getPolicyRun(runId);
@@ -654,6 +974,9 @@ export async function poll(
       currentStep: view.currentStep,
       stepCount: view.stepCount,
       outputs: view.outputs,
+      ...(view.externalOutput === undefined
+        ? {}
+        : { externalOutput: view.externalOutput }),
       error: view.error,
       errorCode: view.errorCode ?? null,
     });

@@ -25,16 +25,28 @@ class DatabaseConfigTest {
 
     @BeforeEach
     void setUp() {
-        databaseConfig = new DatabaseConfig(datasource, true);
+        databaseConfig = new DatabaseConfig(datasource);
     }
 
     @Test
-    void testDataSource_whenRunningEEIsFalse() throws UnsupportedProviderException {
-        databaseConfig = new DatabaseConfig(datasource, false);
-
-        var result = databaseConfig.dataSource();
-
-        assertInstanceOf(DataSource.class, result);
+    void configuredDatabaseRetainsExistingDataWithoutAnInstalledKey() throws Exception {
+        String url = "jdbc:h2:mem:team-parity;DB_CLOSE_DELAY=-1";
+        try (var connection = java.sql.DriverManager.getConnection(url, "sa", "");
+                var statement = connection.createStatement()) {
+            statement.execute("CREATE TABLE existing_users (name VARCHAR(40))");
+            statement.execute("INSERT INTO existing_users VALUES ('existing-admin')");
+        }
+        when(datasource.isEnableCustomDatabase()).thenReturn(true);
+        when(datasource.getCustomDatabaseUrl()).thenReturn(url);
+        when(datasource.getUsername()).thenReturn("sa");
+        when(datasource.getPassword()).thenReturn("");
+        try (var pool = (com.zaxxer.hikari.HikariDataSource) databaseConfig.dataSource();
+                var connection = pool.getConnection();
+                var statement = connection.createStatement();
+                var rows = statement.executeQuery("SELECT name FROM existing_users")) {
+            assertTrue(rows.next());
+            assertEquals("existing-admin", rows.getString(1));
+        }
     }
 
     @Test
@@ -55,7 +67,9 @@ class DatabaseConfigTest {
 
         var result = databaseConfig.dataSource();
 
-        assertInstanceOf(DataSource.class, result);
+        assertEquals(
+                "jdbc:postgresql://mockUrl",
+                ((com.zaxxer.hikari.HikariDataSource) result).getJdbcUrl());
     }
 
     @Test

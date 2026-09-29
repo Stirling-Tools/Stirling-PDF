@@ -1,8 +1,17 @@
 import { describe, expect, test } from "vitest";
 import {
+  isToolEndpoint,
   objectToFormData,
   type ToolApiParams,
 } from "@app/hooks/tools/shared/toolApiMapping";
+
+describe("isToolEndpoint", () => {
+  test("accepts a generated endpoint and rejects an unknown path", () => {
+    expect(isToolEndpoint("/api/v1/misc/compress-pdf")).toBe(true);
+    expect(isToolEndpoint("/api/v1/misc/not-a-real-tool")).toBe(false);
+    expect(isToolEndpoint("")).toBe(false);
+  });
+});
 
 describe("objectToFormData", () => {
   test("serializes primitive fields to string form values", () => {
@@ -32,12 +41,13 @@ describe("objectToFormData", () => {
   });
 
   test("expands arrays into repeated fields", () => {
-    const request: ToolApiParams["/api/v1/misc/add-attachments"] = {
-      attachments: ["a.png", "b.png", "c.png"],
+    const request: ToolApiParams["/api/v1/misc/ocr-pdf"] = {
+      ocrType: "Normal",
+      languages: ["eng", "fra", "deu"],
     };
     const formData = objectToFormData(request);
 
-    expect(formData.getAll("attachments")).toEqual(["a.png", "b.png", "c.png"]);
+    expect(formData.getAll("languages")).toEqual(["eng", "fra", "deu"]);
   });
 
   test("throws on a non-primitive field value rather than dropping it", () => {
@@ -59,6 +69,18 @@ describe("objectToFormData", () => {
 
     expect(formData.get("fileInput")).toBe(file);
     expect(formData.get("optimizeLevel")).toBe("5");
+  });
+
+  test("sends a File-valued model field as a file part, not stringified", () => {
+    const stamp = new File(["s"], "stamp.png", { type: "image/png" });
+    const request: ToolApiParams["/api/v1/misc/add-stamp"] = {
+      stampType: "image",
+      stampImage: stamp,
+    };
+    const formData = objectToFormData(request);
+
+    expect(formData.get("stampImage")).toBe(stamp);
+    expect(formData.get("stampType")).toBe("image");
   });
 
   test("appends multiple files under the same field name", () => {

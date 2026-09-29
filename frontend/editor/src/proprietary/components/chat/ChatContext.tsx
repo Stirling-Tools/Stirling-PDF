@@ -14,6 +14,10 @@ import apiClient from "@app/services/apiClient";
 import { getAiBaseUrl } from "@app/services/aiBaseUrl";
 import { getAuthHeaders } from "@app/services/apiClientSetup";
 import { dispatchPaygLimitReached } from "@app/services/usageLimitBridge";
+import {
+  reportAccountLinkBlock,
+  reportFreeTierExhausted,
+} from "@app/services/accountLinkBlock";
 import { createChildStub } from "@app/contexts/file/fileActions";
 import {
   createNewStirlingFileStub,
@@ -162,6 +166,11 @@ interface AiWorkflowResultFile {
   fileId: string;
   fileName: string;
   contentType: string;
+  /**
+   * Index into the files we sent that this output was derived from, or null/undefined when it has
+   * no single source (merge, generated file). Used to replace that input in place as a new version.
+   */
+  sourceIndex?: number | null;
 }
 
 interface AiWorkflowResponse {
@@ -397,7 +406,7 @@ const initialState: ChatState = {
 };
 
 export function ChatProvider({ children }: { children: ReactNode }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [state, dispatch] = useReducer(chatReducer, initialState);
   const { files: activeFiles, fileStubs: activeFileStubs } = useAllFiles();
   const { actions: fileActions } = useFileActions();
@@ -417,10 +426,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   // Download a File from the Stirling files endpoint.
   const downloadFile = useCallback(
     async (descriptor: AiWorkflowResultFile): Promise<File> => {
-      // AI result files live on the backend that ran the workflow (the SaaS
-      // engine on desktop), so fetch from the AI base, not the local backend.
+      // AI result files live on the backend that ran the workflow (the connected
+      // server on desktop), so fetch from the AI base, not the local backend.
       const response = await apiClient.get<Blob>(
-        `${getAiBaseUrl()}/api/v1/general/files/${descriptor.fileId}`,
+        `${await getAiBaseUrl()}/api/v1/general/files/${descriptor.fileId}`,
         { responseType: "blob" },
       );
       return new File([response.data], descriptor.fileName, {
@@ -432,9 +441,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
   // Import the files produced by an AI workflow result into FileContext.
   //
-  // If the workflow produced the same number of outputs as inputs, map each output to its
-  // corresponding input as a new version in the same chain. Otherwise (merge, split, etc.)
-  // add the outputs as new root files.
+  // Each output carries a sourceIndex telling us which input it came from. An input that produced
+  // exactly one output is replaced in place as a new version of that file; everything else (merge,
+  // split, generated files, or an input that produced nothing) is added as a fresh root and leaves
+  // the original files untouched — we never remove or deselect a file the workflow didn't clearly
+  // transform 1:1.
   const importResultFile = useCallback(
     async (
       result: AiWorkflowResponse,
@@ -456,27 +467,43 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       const files = await Promise.all(descriptors.map(downloadFile));
 
       if (sourceStubs.length > 0) {
-        // Always consume the inputs so merge/split inputs are removed from the workbench.
-        // For 1:1 operations (rotate, compress) the outputs carry the version chain; for
-        // merge/split they're fresh roots.
         const operation: ToolOperation = {
           toolId: "ai-workflow",
           timestamp: Date.now(),
         };
-        const isVersionMapping = files.length === sourceStubs.length;
-        const stubs = files.map((file, i) =>
-          isVersionMapping
-            ? createChildStub(sourceStubs[i], operation, file)
-            : createNewStirlingFileStub(file),
-        );
+        // Resolve each output to the input it came from (sourceIndex, from the backend).
+        const sourceForOutput = descriptors.map((descriptor) => {
+          const idx = descriptor.sourceIndex;
+          return typeof idx === "number" && idx >= 0 && idx < sourceStubs.length
+            ? sourceStubs[idx]
+            : null;
+        });
+        // Only replace a source in place when it maps to exactly one output (a clean 1:1 transform).
+        // A split (one input → many outputs) or a source shared by several outputs stays a set of
+        // fresh roots so we don't collapse them onto one version chain.
+        const outputsPerSource = new Map<StirlingFileStub["id"], number>();
+        for (const source of sourceForOutput) {
+          if (source) {
+            outputsPerSource.set(
+              source.id,
+              (outputsPerSource.get(source.id) ?? 0) + 1,
+            );
+          }
+        }
+        const consumedIds: StirlingFileStub["id"][] = [];
+        const stubs = files.map((file, i) => {
+          const source = sourceForOutput[i];
+          if (source && outputsPerSource.get(source.id) === 1) {
+            consumedIds.push(source.id);
+            return createChildStub(source, operation, file);
+          }
+          return createNewStirlingFileStub(file);
+        });
         const stirlingFiles = files.map((file, i) =>
           createStirlingFile(file, stubs[i].id),
         );
-        await fileActions.consumeFiles(
-          sourceStubs.map((s) => s.id),
-          stirlingFiles,
-          stubs,
-        );
+        // Consume only the inputs we actually versioned; unrelated files are left in place.
+        await fileActions.consumeFiles(consumedIds, stirlingFiles, stubs);
       } else {
         // No inputs: pass raw files so addFiles assigns consistent IDs. Pre-assigning stub IDs
         // here would cause a fileId mismatch in filesRef, making getFiles() clone the file
@@ -529,6 +556,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       try {
         const formData = new FormData();
         formData.append("userMessage", content);
+        // The engine replies in this language instead of guessing.
+        if (i18n.language) formData.append("locale", i18n.language);
         sourceFiles.forEach((file, i) => {
           formData.append(`fileInputs[${i}].fileInput`, file);
         });
@@ -537,7 +566,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           formData.append(`conversationHistory[${i}].content`, message.content);
         });
         const response = await fetch(
-          `${getAiBaseUrl()}/api/v1/ai/orchestrate/stream`,
+          `${await getAiBaseUrl()}/api/v1/ai/orchestrate/stream`,
           {
             method: "POST",
             body: formData,
@@ -556,7 +585,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             // A 402 carrying a usage-limit sentinel means the agent call itself was gated.
             // Fire the usage-limit modal (free → subscribe, subscribed → raise cap) and show a
             // brief line below — not a generic "engine failed" error.
-            if (response.status === 402 && isPaygLimitCode(code)) {
+            if (reportAccountLinkBlock({ status: response.status, body })) {
+              limitHandled = true;
+            } else if (response.status === 402 && isPaygLimitCode(code)) {
               dispatchPaygLimitReached(
                 typeof body?.subscribed === "boolean" ? body.subscribed : null,
               );
@@ -622,8 +653,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             // result (not via the apiClient interceptor that pops the modal for direct calls).
             // Fire the matching modal and replace the raw "tool failed: 402…" reason with a
             // brief, non-alarming line.
-            const isLimit = isPaygLimitCode(data.errorCode);
-            if (isLimit) {
+            const localLimit = data.errorCode === "FREE_TIER_EXHAUSTED";
+            const isLimit = localLimit || isPaygLimitCode(data.errorCode);
+            if (localLimit) {
+              reportFreeTierExhausted();
+            } else if (isLimit) {
               dispatchPaygLimitReached(data.errorSubscribed ?? null);
             }
             const replyContent = isLimit

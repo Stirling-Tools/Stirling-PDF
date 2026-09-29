@@ -17,11 +17,14 @@ import lombok.NoArgsConstructor;
 import stirling.software.proprietary.billing.BillingCategory;
 
 /**
- * Durable per-(billing period, category) cumulative usage counter for combined-billing "Mode A".
- * Each successful billable op increments its row; the daily sync reports the cumulative totals and
- * SaaS bills the delta since the last sync. The cumulative model is idempotent (a resend bills
- * nothing) and tamper-evident (a counter that drops is a signal). One row per {@code (period_start,
+ * Durable per-(billing period, category) cumulative usage counter for combined billing. Each
+ * successful billable op increments its row; the daily sync reports the cumulative totals and SaaS
+ * bills the delta since the last sync. The cumulative model is idempotent (a resend bills nothing)
+ * and tamper-evident (a counter that drops is a signal). One row per {@code (period_start,
  * category)}, auto-created by Hibernate; only the flag-gated {@link UsageMeterService} writes it.
+ *
+ * <p>The cloud ledger only. An unlinked instance's own free-tier usage lives in {@link
+ * FreeTierUsageCounter}, which the sync cannot see — that is what keeps the two independent.
  */
 @Entity
 @Table(
