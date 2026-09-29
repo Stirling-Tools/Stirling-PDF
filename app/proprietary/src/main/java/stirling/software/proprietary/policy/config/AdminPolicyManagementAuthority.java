@@ -27,6 +27,11 @@ public class AdminPolicyManagementAuthority implements PolicyManagementAuthority
     }
 
     @Override
+    public boolean canTriggerPolicies() {
+        return userService.isCurrentUserAdmin();
+    }
+
+    @Override
     public Long currentUserTeamId() {
         String username = userService.getCurrentUsername();
         if (username == null) {

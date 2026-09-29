@@ -1,8 +1,10 @@
 import { useEffect, type ReactNode } from "react";
 import { AuthProvider } from "@app/auth";
 import { useAuth } from "@app/auth/context";
+import { AuthProvider as SaasSessionProvider } from "@app/auth/UseSession";
 import { Spinner } from "@app/ui";
-import { withBasePath } from "@app/constants/app";
+import { stripBasePath, withBasePath } from "@app/constants/app";
+import { rememberPendingDestination } from "@app/services/pendingDestination";
 import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
 import { EDITOR_URL } from "@portal/auth/editorUrl";
 
@@ -50,10 +52,20 @@ function SaasPortalGate({ children }: { children: ReactNode }) {
       : isAnonymous || !portalAccess
         ? EDITOR_URL
         : null;
+  const bouncingToLogin = !settling && !session;
 
   useEffect(() => {
-    if (redirectTo) window.location.href = redirectTo;
-  }, [redirectTo]);
+    if (!redirectTo) return;
+    // A full page load, so the attempted path cannot ride along in router state.
+    // Only on the sign-in bounce: an account without portal access is not one
+    // sign-in away from this page.
+    if (bouncingToLogin) {
+      rememberPendingDestination(
+        `${stripBasePath(window.location.pathname)}${window.location.search}${window.location.hash}`,
+      );
+    }
+    window.location.href = redirectTo;
+  }, [redirectTo, bouncingToLogin]);
 
   if (settling || redirectTo) {
     return (
@@ -68,6 +80,12 @@ function SaasPortalGate({ children }: { children: ReactNode }) {
 /**
  * SaaS override of the portal auth boundary: authenticate against the SaaS Supabase
  * project (inheriting the editor's session) instead of the self-hosted Spring login.
+ *
+ * Two providers, because the Processor mounts outside the editor's AppProviders (it
+ * is a sibling route, not a child). The unified AuthProvider is what gates entry;
+ * the saas session provider is what the saas-layer hooks read - profile picture,
+ * display name, pro status - so without it every one of them sees an unmounted
+ * context and reports nothing. Both read the same persisted session.
  */
 export function PortalAuthBoundary({ children }: { children: ReactNode }) {
   // Configure the shared Supabase client (SaaS project) synchronously here, before
@@ -77,8 +95,10 @@ export function PortalAuthBoundary({ children }: { children: ReactNode }) {
   // signed into the editor is picked up from the persisted session (no second login).
   ensureSaasSupabase();
   return (
-    <AuthProvider mode="supabase">
-      <SaasPortalGate>{children}</SaasPortalGate>
-    </AuthProvider>
+    <SaasSessionProvider>
+      <AuthProvider mode="supabase">
+        <SaasPortalGate>{children}</SaasPortalGate>
+      </AuthProvider>
+    </SaasSessionProvider>
   );
 }

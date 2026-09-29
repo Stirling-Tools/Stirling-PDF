@@ -19,9 +19,9 @@ import argparse
 import json
 import math
 import sys
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 from fontTools.fontBuilder import FontBuilder
 from fontTools.misc.fixedTools import otRound
@@ -29,17 +29,16 @@ from fontTools.pens.cu2quPen import Cu2QuPen
 from fontTools.pens.t2CharStringPen import T2CharStringPen
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 
-
-Command = Dict[str, object]
-Matrix = Tuple[float, float, float, float, float, float]
+Command = dict[str, object]
+Matrix = tuple[float, float, float, float, float, float]
 
 
 @dataclass
 class GlyphSource:
     name: str
     width: float
-    unicode: Optional[int]
-    char_code: Optional[int]
+    unicode: int | None
+    char_code: int | None
     outline: Sequence[Command]
 
 
@@ -48,34 +47,20 @@ class GlyphBuildResult:
     name: str
     width: int
     charstring: object
-    ttf_glyph: Optional[object]
-    unicode: Optional[int]
-    char_code: Optional[int]
-    bounds: Optional[Tuple[float, float, float, float]]
+    ttf_glyph: object | None
+    unicode: int | None
+    char_code: int | None
+    bounds: tuple[float, float, float, float] | None
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Synthesize fonts from Type3 glyph JSON."
-    )
-    parser.add_argument(
-        "--input", required=True, help="Path to glyph JSON emitted by the backend"
-    )
-    parser.add_argument(
-        "--otf-output", required=True, help="Destination path for the CFF/OTF font"
-    )
-    parser.add_argument(
-        "--ttf-output", help="Optional destination path for a TrueType font"
-    )
-    parser.add_argument(
-        "--family-name", default="Type3 Synth", help="Family name for the output"
-    )
-    parser.add_argument(
-        "--style-name", default="Regular", help="Style name for the output"
-    )
-    parser.add_argument(
-        "--units-per-em", type=int, default=1000, help="Units per EM value"
-    )
+    parser = argparse.ArgumentParser(description="Synthesize fonts from Type3 glyph JSON.")
+    parser.add_argument("--input", required=True, help="Path to glyph JSON emitted by the backend")
+    parser.add_argument("--otf-output", required=True, help="Destination path for the CFF/OTF font")
+    parser.add_argument("--ttf-output", help="Optional destination path for a TrueType font")
+    parser.add_argument("--family-name", default="Type3 Synth", help="Family name for the output")
+    parser.add_argument("--style-name", default="Regular", help="Style name for the output")
+    parser.add_argument("--units-per-em", type=int, default=1000, help="Units per EM value")
     parser.add_argument(
         "--cu2qu-error",
         type=float,
@@ -85,7 +70,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def load_json(path: Path) -> Dict[str, object]:
+def load_json(path: Path) -> dict[str, object]:
     try:
         with path.open("r", encoding="utf-8") as handle:
             return json.load(handle)
@@ -94,7 +79,7 @@ def load_json(path: Path) -> Dict[str, object]:
         sys.exit(2)
 
 
-def parse_font_matrix(rows: Optional[Iterable[Iterable[float]]]) -> Matrix:
+def parse_font_matrix(rows: Iterable[Iterable[float]] | None) -> Matrix:
     """
     Retrieve the raw 2×3 FontMatrix entries for diagnostics. Type3 glyph
     outlines in our extractor are emitted in their native coordinate system, so
@@ -102,7 +87,7 @@ def parse_font_matrix(rows: Optional[Iterable[Iterable[float]]]) -> Matrix:
     """
     if not rows:
         return (1.0, 0.0, 0.0, 1.0, 0.0, 0.0)
-    values: List[List[float]] = []
+    values: list[list[float]] = []
     for row in rows:
         try:
             values.append([float(col) for col in row])
@@ -132,10 +117,10 @@ def resolve_width(raw_width: float, default: int) -> int:
 
 
 def quadratic_to_cubic(
-    current: Tuple[float, float],
-    ctrl: Tuple[float, float],
-    end: Tuple[float, float],
-) -> Tuple[Tuple[float, float], Tuple[float, float], Tuple[float, float]]:
+    current: tuple[float, float],
+    ctrl: tuple[float, float],
+    end: tuple[float, float],
+) -> tuple[tuple[float, float], tuple[float, float], tuple[float, float]]:
     """
     Convert a quadratic Bézier segment to cubic control points.
     """
@@ -150,9 +135,9 @@ def quadratic_to_cubic(
     return c1, c2, end
 
 
-def iterate_glyphs(data: Dict[str, object]) -> List[GlyphSource]:
+def iterate_glyphs(data: dict[str, object]) -> list[GlyphSource]:
     glyph_records = data.get("glyphs") or []
-    sources: List[GlyphSource] = []
+    sources: list[GlyphSource] = []
     for index, record in enumerate(glyph_records, start=1):
         if not isinstance(record, dict):
             continue
@@ -170,9 +155,7 @@ def iterate_glyphs(data: Dict[str, object]) -> List[GlyphSource]:
             char_code_value = record.get("code")
         if not isinstance(char_code_value, int):
             char_code_value = record.get("charCodeRaw")
-        if not isinstance(char_code_value, int) or not (
-            0 <= char_code_value <= 0x10FFFF
-        ):
+        if not isinstance(char_code_value, int) or not (0 <= char_code_value <= 0x10FFFF):
             char_code_value = None
         outline = record.get("outline")
         if not isinstance(outline, list):
@@ -192,19 +175,19 @@ def iterate_glyphs(data: Dict[str, object]) -> List[GlyphSource]:
 def build_cff_charstring(
     glyph: GlyphSource,
     width: int,
-) -> Tuple[object, Optional[Tuple[float, float, float, float]]]:
+) -> tuple[object, tuple[float, float, float, float] | None]:
     pen = T2CharStringPen(width=width, glyphSet=None)
     bounds = [math.inf, math.inf, -math.inf, -math.inf]
 
-    def update_bounds(point: Tuple[float, float]) -> None:
+    def update_bounds(point: tuple[float, float]) -> None:
         x, y = point
         bounds[0] = min(bounds[0], x)
         bounds[1] = min(bounds[1], y)
         bounds[2] = max(bounds[2], x)
         bounds[3] = max(bounds[3], y)
 
-    current: Optional[Tuple[float, float]] = None
-    start_point: Optional[Tuple[float, float]] = None
+    current: tuple[float, float] | None = None
+    start_point: tuple[float, float] | None = None
     open_path = False
 
     for command in glyph.outline:
@@ -278,7 +261,7 @@ def build_cff_charstring(
     return charstring, bbox
 
 
-def build_ttf_glyph(glyph: GlyphSource, max_error: float) -> Optional[object]:
+def build_ttf_glyph(glyph: GlyphSource, max_error: float) -> object | None:
     pen = TTGlyphPen(glyphSet=None)
     draw_pen = Cu2QuPen(pen, max_error, reverse_direction=False)
 
@@ -321,9 +304,9 @@ def build_ttf_glyph(glyph: GlyphSource, max_error: float) -> Optional[object]:
 
 
 def synthesise_fonts(
-    data: Dict[str, object],
+    data: dict[str, object],
     otf_output: Path,
-    ttf_output: Optional[Path],
+    ttf_output: Path | None,
     family_name: str,
     style_name: str,
     units_per_em: int,
@@ -332,7 +315,7 @@ def synthesise_fonts(
     _font_matrix = parse_font_matrix(data.get("fontMatrix"))
     glyphs = iterate_glyphs(data)
 
-    results: List[GlyphBuildResult] = []
+    results: list[GlyphBuildResult] = []
     global_y_min = math.inf
     global_y_max = -math.inf
 
@@ -377,7 +360,7 @@ def synthesise_fonts(
     horizontal_metrics = {result.name: (result.width, 0) for result in results}
     horizontal_metrics[".notdef"] = (default_width, 0)
 
-    cmap: Dict[int, str] = {}
+    cmap: dict[int, str] = {}
     next_private = 0xF000
     for result in results:
         code_point = result.unicode
@@ -433,7 +416,7 @@ def synthesise_fonts(
     if ttf_output is None:
         return
 
-    glyph_objects: Dict[str, object] = {}
+    glyph_objects: dict[str, object] = {}
     empty_pen = TTGlyphPen(None)
     empty_pen.moveTo((0, 0))
     empty_pen.lineTo((0, 0))

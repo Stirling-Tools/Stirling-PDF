@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { Tooltip } from "@mantine/core";
-import AutorenewIcon from "@mui/icons-material/Autorenew";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import {
   POLICY_IN_FLIGHT_STATUSES,
   type PolicyRunRecord,
 } from "@app/components/policies/policyRunStore";
 import { policyAccentVar } from "@app/components/policies/policyStatus";
+import { isEnforcedPolicy } from "@app/services/policyStorage";
 import { PolicyEnforcingOverlay } from "@app/components/shared/PolicyEnforcingOverlay";
 import "@app/components/shared/PolicyBadges.css";
 
@@ -42,7 +43,11 @@ export function PolicyEnforcementOverlay({ runs }: Props) {
     // per-file policy badges, larger) so the user can read the PDF.
     return (
       <Tooltip
-        label={t("policy.enforcingTitle", "Enforcing policy…")}
+        label={
+          isEnforcedPolicy(inFlight.policyKey)
+            ? t("policy.enforcingPolicyTitle", "Enforcing policy...")
+            : t("policy.enforcingPipelineTitle", "Enforcing pipeline...")
+        }
         position="left"
         withArrow
       >
@@ -55,10 +60,10 @@ export function PolicyEnforcementOverlay({ runs }: Props) {
             // close button there, and the badge must never swallow its clicks.
             right: 56,
             zIndex: 1100,
-            color: policyAccentVar(inFlight.categoryId),
+            color: policyAccentVar(inFlight.policyKey),
           }}
         >
-          <AutorenewIcon style={{ fontSize: 16 }} />
+          <Icon name="refresh-cw" size={16} />
         </span>
       </Tooltip>
     );
@@ -70,8 +75,8 @@ export function PolicyEnforcementOverlay({ runs }: Props) {
       zIndex={1100}
       progress={progress}
       onDismiss={() => setDismissed(true)}
-      accentVar={policyAccentVar(inFlight.categoryId)}
-      categoryId={inFlight.categoryId}
+      accentVar={policyAccentVar(inFlight.policyKey)}
+      policyKey={inFlight.policyKey}
     />
   );
 }

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse } from "msw";
 import { AuditExportModal } from "@portal/components/infrastructure/AuditExportModal";
-import "@portal/views/Infrastructure.css";
+import "@portal/components/infrastructure/infrastructure.css";
 
 /**
  * Export modal for the Infrastructure → Audit tab. Rendered always-open here.

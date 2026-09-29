@@ -3,6 +3,7 @@ package stirling.software.saas.usage;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
@@ -19,12 +20,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
-import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.model.api.usage.FleetUsageStats;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
+import stirling.software.saas.security.UserTeamResolver;
 import stirling.software.saas.util.AuthenticationUtils;
 
 /**
@@ -34,13 +35,14 @@ import stirling.software.saas.util.AuthenticationUtils;
  *
  * <ul>
  *   <li>editorsDeployed — number of team members ({@code team_memberships}), not seat limits;
- *   <li>activeThisMonth — distinct members with a free-UI ("WEB", non-{@code UI_DATA}) audit event
- *       in the last 30 days, clamped to a subset of deployed;
- *   <li>pdfsProcessed — the team's cumulative free-UI PDF/file operations.
+ *   <li>activeThisMonth — distinct members with a free-UI document operation in the last 30 days,
+ *       clamped to a subset of deployed;
+ *   <li>pdfsProcessed — the team's free-UI PDF/file operations in the last 30 days of retained
+ *       history.
  * </ul>
  *
  * <p>Team resolution + membership mirror {@code PaygWalletController}. Audit-derived figures are
- * null (rendered "N/A") when EE auditing is below STANDARD. Cost is always $0 (client literal).
+ * null (rendered "N/A") when document recording is disabled or below BASIC.
  */
 @Slf4j
 @RestController
@@ -53,6 +55,7 @@ public class SaasFleetUsageController {
 
     private final UserRepository userRepository;
     private final TeamMembershipRepository memberRepo;
+    private final UserTeamResolver userTeamResolver;
     private final PersistentAuditEventRepository auditRepository;
     private final AuditConfigurationProperties auditConfig;
 
@@ -67,13 +70,13 @@ public class SaasFleetUsageController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        List<TeamMembership> primary = memberRepo.findPrimaryMembership(user.getId());
-        if (primary.isEmpty()) {
+        Optional<Long> resolvedTeam = userTeamResolver.teamId(user);
+        if (resolvedTeam.isEmpty()) {
             // Authenticated caller without a team — shouldn't happen post-migration; report an
             // empty fleet rather than 500.
             return ResponseEntity.ok(new FleetUsageStats(0L, null, null));
         }
-        Long teamId = primary.get(0).getTeam().getId();
+        Long teamId = resolvedTeam.get();
 
         List<String> members =
                 memberRepo.findByTeamId(teamId).stream()
@@ -82,18 +85,18 @@ public class SaasFleetUsageController {
         Long deployed = (long) members.size();
 
         // Guard the empty IN-list (invalid JPQL) as well as the audit-level gate.
-        boolean auditOn = !members.isEmpty() && auditConfig.isLevelEnabled(AuditLevel.STANDARD);
+        boolean auditOn = !members.isEmpty() && auditConfig.isLevelEnabled(AuditLevel.BASIC);
         Instant since = Instant.now().minus(30, ChronoUnit.DAYS);
         Long active =
                 auditOn
                         ? auditRepository
-                                .countDistinctPrincipalsBySourceExcludingTypeAndPrincipalInAfter(
-                                        "WEB", "UI_DATA", members, since)
+                                .countDistinctPrincipalsBySourceAndTypeInAndPrincipalInAfter(
+                                        "WEB", PDF_TYPES, members, since)
                         : null;
         Long pdfs =
                 auditOn
                         ? auditRepository.countByTypeInAndSourceAndPrincipalInAndTimestampAfter(
-                                PDF_TYPES, "WEB", members, Instant.EPOCH)
+                                PDF_TYPES, "WEB", members, since)
                         : null;
         if (active != null && active > deployed) {
             active = deployed; // active editors are a subset of those deployed

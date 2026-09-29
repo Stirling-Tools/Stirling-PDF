@@ -6,13 +6,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.LicenseServiceInterface;
+import stirling.software.common.service.PdfaLevelAServiceInterface;
 
 @Service
 @Slf4j
@@ -46,17 +50,22 @@ public class EndpointConfiguration {
     private final ApplicationProperties applicationProperties;
     @Getter private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
     private Map<String, Set<String>> endpointGroups = new ConcurrentHashMap<>();
-    private Set<String> disabledGroups = new HashSet<>();
+    private Set<String> disabledGroups = ConcurrentHashMap.newKeySet();
     private Map<String, DisableReason> endpointDisableReasons = new ConcurrentHashMap<>();
     private Map<String, DisableReason> groupDisableReasons = new ConcurrentHashMap<>();
     private Map<String, Set<String>> endpointAlternatives = new ConcurrentHashMap<>();
     private final boolean runningProOrHigher;
+    @Autowired @Lazy private LicenseServiceInterface licenseService;
+    private final boolean pdfUaAvailable;
 
     public EndpointConfiguration(
             ApplicationProperties applicationProperties,
-            @Qualifier("runningProOrHigher") boolean runningProOrHigher) {
+            @Qualifier("runningProOrHigher") boolean runningProOrHigher,
+            @Autowired(required = false) PdfaLevelAServiceInterface pdfaLevelAService) {
         this.applicationProperties = applicationProperties;
         this.runningProOrHigher = runningProOrHigher;
+        // The PDF/UA tagger ships in the proprietary module, and so do its endpoints.
+        this.pdfUaAvailable = pdfaLevelAService != null;
         init();
         processEnvironmentConfigs();
     }
@@ -123,6 +132,10 @@ public class EndpointConfiguration {
         if (endpoint.startsWith("/")) {
             endpoint = endpoint.substring(1);
         }
+        if (endpointGroups.getOrDefault("enterprise", Set.of()).contains(endpoint)
+                && !hasPaidPlan()) {
+            return false;
+        }
 
         // Rule 1: Explicit flag wins - if disabled via disableEndpoint(), stay disabled
         Boolean explicitStatus = endpointStatuses.get(endpoint);
@@ -182,6 +195,7 @@ public class EndpointConfiguration {
     }
 
     public boolean isGroupEnabled(String group) {
+        if ("enterprise".equals(group) && !hasPaidPlan()) return false;
         // Rule 1: If group is explicitly disabled, it stays disabled
         if (disabledGroups.contains(group)) {
             log.debug("isGroupEnabled('{}') -> false (explicitly disabled)", group);
@@ -356,6 +370,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Convert", "pdf-to-img");
         addEndpointToGroup("Convert", "img-to-pdf");
         addEndpointToGroup("Convert", "pdf-to-pdfa");
+        addEndpointToGroup("Convert", "pdf-to-ua");
         addEndpointToGroup("Convert", "file-to-pdf");
         addEndpointToGroup("Convert", "pdf-to-word");
         addEndpointToGroup("Convert", "pdf-to-presentation");
@@ -395,6 +410,8 @@ public class EndpointConfiguration {
         // Backend-only endpoints (not in frontend tool registry endpoints)
         addEndpointToGroup("Security", "redact");
         addEndpointToGroup("Security", "verify-pdf");
+        addEndpointToGroup("Security", "accessibility-report");
+        addEndpointToGroup("Security", "validate-compliance");
         addEndpointToGroup("Security", "sign");
 
         // Adding endpoints to "Other" group
@@ -433,6 +450,9 @@ public class EndpointConfiguration {
         addEndpointToGroup("Automation", "handleData");
         addEndpointToGroup("Automation", "automate"); // Alias for handleData (user-friendly name)
         addEndpointToGroup("Automation", "pipeline");
+
+        // Adding endpoints to "DocParse" group (ingestion: chunk + index + export)
+        addEndpointToGroup("DocParse", "ingest");
 
         // Adding endpoints to "DeveloperTools" group
         addEndpointToGroup("DeveloperTools", "show-javascript");
@@ -529,6 +549,9 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "json-to-pdf");
         addEndpointToGroup("Java", "pdf-to-video");
         addEndpointToGroup("Java", "verify-pdf");
+        addEndpointToGroup("Java", "pdf-to-ua");
+        addEndpointToGroup("Java", "accessibility-report");
+        addEndpointToGroup("Java", "validate-compliance");
         addEndpointToGroup("Java", "flatten");
         addEndpointToGroup("Java", "unlock-pdf-forms");
         addEndpointToGroup("Java", "validate-signature");
@@ -537,6 +560,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "pdf-to-epub");
         addEndpointToGroup("Java", "eml-to-pdf");
         addEndpointToGroup("Java", "handleData");
+        addEndpointToGroup("Java", "form-detection");
         addEndpointToGroup("rar", "pdf-to-cbr");
 
         // Javascript
@@ -600,6 +624,9 @@ public class EndpointConfiguration {
 
         // veraPDF dependent endpoints
         addEndpointToGroup("veraPDF", "verify-pdf");
+        addEndpointToGroup("veraPDF", "pdf-to-ua");
+        addEndpointToGroup("veraPDF", "accessibility-report");
+        addEndpointToGroup("veraPDF", "validate-compliance");
 
         // Pdftohtml dependent endpoints
         addEndpointToGroup("Pdftohtml", "pdf-to-html");
@@ -626,9 +653,15 @@ public class EndpointConfiguration {
                 }
             }
         }
-        if (!runningProOrHigher) {
-            disableGroup("enterprise");
+
+        if (!pdfUaAvailable) {
+            disableEndpoint("pdf-to-ua");
+            disableEndpoint("accessibility-report");
         }
+
+        // Only FormDetectionModelManager (proprietary) can enable this; default it off so a core
+        // build does not advertise a tool whose controller is not on the classpath.
+        disableEndpoint("form-detection", DisableReason.DEPENDENCY);
 
         if (!applicationProperties.getSystem().isEnableUrlToPDF()) {
             disableEndpoint("url-to-pdf");
@@ -643,6 +676,10 @@ public class EndpointConfiguration {
         return endpointGroups.values().stream()
                 .flatMap(Set::stream)
                 .collect(java.util.stream.Collectors.toSet());
+    }
+
+    private boolean hasPaidPlan() {
+        return licenseService == null ? runningProOrHigher : licenseService.isRunningProOrHigher();
     }
 
     private boolean isToolGroup(String group) {

@@ -1,11 +1,32 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Extraction } from "@portal/api/documents";
 import { documentsFor } from "@portal/mocks/documents";
 import { DocumentExtractions } from "@portal/components/documents/DocumentExtractions";
 import "@portal/views/Documents.css";
 
 const ALL = documentsFor("enterprise");
-const NON_SENSITIVE = ALL.find((d) => !d.sensitive)!;
-const SENSITIVE = ALL.find((d) => d.sensitive)!;
+
+// The mock documents ship without extractions, so seed a realistic set here -
+// a spread of confidence levels so the table (and its confidence sort) is
+// actually reviewable.
+const EXTRACTIONS: Extraction[] = [
+  { field: "Counterparty", value: "Acme Services LLC", confidence: 0.98 },
+  { field: "Effective date", value: "2026-01-14", confidence: 0.94 },
+  { field: "Contract value", value: "$248,000.00", confidence: 0.87 },
+  { field: "Governing law", value: "Delaware", confidence: 0.72 },
+  { field: "Auto-renewal", value: "Yes (12 months)", confidence: 0.55 },
+];
+
+const NON_SENSITIVE = {
+  ...ALL.find((d) => !d.sensitive)!,
+  extractions: EXTRACTIONS,
+  fieldsExtracted: EXTRACTIONS.length,
+};
+const SENSITIVE = {
+  ...ALL.find((d) => d.sensitive)!,
+  extractions: EXTRACTIONS,
+  fieldsExtracted: EXTRACTIONS.length,
+};
 
 const meta: Meta<typeof DocumentExtractions> = {
   title: "Portal/Documents/DocumentExtractions",
@@ -23,7 +44,7 @@ const meta: Meta<typeof DocumentExtractions> = {
 export default meta;
 type Story = StoryObj<typeof DocumentExtractions>;
 
-/** No extraction data exists yet - the table shows its empty state. */
+/** Extracted fields with a mix of confidence levels; click a header to sort. */
 export const Default: Story = {};
 
 /** Sensitive doc with no active grant — content stays masked. */
@@ -34,4 +55,11 @@ export const Masked: Story = {
 /** Same sensitive doc once a timed elevation is active. */
 export const Unlocked: Story = {
   args: { doc: SENSITIVE, unlocked: true },
+};
+
+/** No extraction data yet — the empty state. */
+export const Empty: Story = {
+  args: {
+    doc: { ...NON_SENSITIVE, extractions: [], fieldsExtracted: 0 },
+  },
 };

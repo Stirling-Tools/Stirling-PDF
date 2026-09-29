@@ -12,6 +12,7 @@ import {
   type AuthUser,
   type AuthTranslate,
 } from "@app/auth/types";
+import { suspendWorkbenchSession } from "@app/services/workbenchSession";
 
 /**
  * Strip the configured base path so route comparisons work under subpath
@@ -97,6 +98,11 @@ export function SpringAuthProvider({
   const signOut = useCallback(async () => {
     try {
       setError(null);
+      // Signing out is deliberate, unlike an identity check that merely failed: drop the
+      // workbench record here and stop recording, so the teardown that follows cannot
+      // write it back for whoever signs in next.
+      suspendWorkbenchSession();
+
       const { error } = await springAuth.signOut();
 
       // Always clear the in-memory session: springAuth.signOut() removes the

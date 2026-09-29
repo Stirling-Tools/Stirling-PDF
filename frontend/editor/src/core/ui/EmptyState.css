@@ -22,7 +22,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 
 .sui-empty__title {

@@ -46,12 +46,24 @@
   height: 2.5rem;
   font-size: 1rem;
 }
+/* Account-settings hero disc. */
+.sui-avatar--xl {
+  width: 4.5rem;
+  height: 4.5rem;
+  font-size: 1.75rem;
+}
 
 .sui-avatar__img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+/* Ground for a picture, which brings its own. Opaque uploads cover it entirely;
+   a logo with an alpha channel gets the app surface rather than a tone. */
+.sui-avatar--image {
+  background: var(--c-surface);
 }
 
 .sui-avatar--blue {

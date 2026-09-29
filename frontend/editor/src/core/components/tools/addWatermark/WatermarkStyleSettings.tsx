@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { Stack, Text, NumberInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddWatermarkParameters } from "@app/hooks/tools/addWatermark/useAddWatermarkParameters";
@@ -17,22 +18,25 @@ const WatermarkStyleSettings = ({
   disabled = false,
 }: WatermarkStyleSettingsProps) => {
   const { t } = useTranslation();
+  const rotationLabelId = useId();
+  const opacityLabelId = useId();
+  const widthLabelId = useId();
+  const heightLabelId = useId();
 
   return (
     <Stack gap="md">
       {/* Appearance Settings */}
       <Stack gap="sm">
-        <Text size="sm" fw={500}>
+        <Text id={rotationLabelId} size="sm" fw={500}>
           {t("watermark.settings.rotation", "Rotation (degrees)")}
         </Text>
         <NumberInput
+          aria-labelledby={rotationLabelId}
           value={parameters.rotation}
           onChange={(value) =>
             onParameterChange(
               "rotation",
-              typeof value === "number"
-                ? value
-                : parseInt(value as string, 10) || 0,
+              typeof value === "number" ? value : parseInt(value, 10) || 0,
             )
           }
           min={-360}
@@ -40,17 +44,16 @@ const WatermarkStyleSettings = ({
           disabled={disabled}
         />
 
-        <Text size="sm" fw={500}>
+        <Text id={opacityLabelId} size="sm" fw={500}>
           {t("watermark.settings.opacity", "Opacity (%)")}
         </Text>
         <NumberInput
+          aria-labelledby={opacityLabelId}
           value={parameters.opacity}
           onChange={(value) =>
             onParameterChange(
               "opacity",
-              typeof value === "number"
-                ? value
-                : parseInt(value as string, 10) || 50,
+              typeof value === "number" ? value : parseInt(value, 10) || 50,
             )
           }
           min={0}
@@ -61,17 +64,16 @@ const WatermarkStyleSettings = ({
 
       {/* Spacing Settings */}
       <Stack gap="sm">
-        <Text size="sm" fw={500}>
+        <Text id={widthLabelId} size="sm" fw={500}>
           {t("watermark.settings.spacing.width", "Width Spacing")}
         </Text>
         <NumberInput
+          aria-labelledby={widthLabelId}
           value={parameters.widthSpacer}
           onChange={(value) =>
             onParameterChange(
               "widthSpacer",
-              typeof value === "number"
-                ? value
-                : parseInt(value as string, 10) || 50,
+              typeof value === "number" ? value : parseInt(value, 10) || 50,
             )
           }
           min={0}
@@ -79,17 +81,16 @@ const WatermarkStyleSettings = ({
           disabled={disabled}
         />
 
-        <Text size="sm" fw={500}>
+        <Text id={heightLabelId} size="sm" fw={500}>
           {t("watermark.settings.spacing.height", "Height Spacing")}
         </Text>
         <NumberInput
+          aria-labelledby={heightLabelId}
           value={parameters.heightSpacer}
           onChange={(value) =>
             onParameterChange(
               "heightSpacer",
-              typeof value === "number"
-                ? value
-                : parseInt(value as string, 10) || 50,
+              typeof value === "number" ? value : parseInt(value, 10) || 50,
             )
           }
           min={0}

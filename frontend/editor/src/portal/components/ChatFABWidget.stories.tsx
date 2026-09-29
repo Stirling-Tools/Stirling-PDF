@@ -55,7 +55,7 @@ function MockChatContent({
           alignItems: "center",
           justifyContent: "space-between",
           padding: "14px 16px 10px",
-          borderBottom: "1px solid var(--c-border, #e3e8ee)",
+          borderBottom: "1px solid var(--c-border)",
           flexShrink: 0,
         }}
       >
@@ -65,7 +65,7 @@ function MockChatContent({
           shape="circle"
           onClick={onClose}
           aria-label="Close chat"
-          style={{ color: "var(--c-text-subtle, #64748b)" }}
+          style={{ color: "var(--c-text-subtle)" }}
         >
           ✕
         </Button>
@@ -90,8 +90,8 @@ function MockChatContent({
               maxWidth: "82%",
               background:
                 m.role === "user"
-                  ? "#3b82f6"
-                  : "var(--c-surface-sunken, #f3f4f6)",
+                  ? "var(--c-accent-solid)"
+                  : "var(--c-surface-sunken)",
               color: m.role === "user" ? "#fff" : "inherit",
               borderRadius: 10,
               padding: "8px 12px",
@@ -108,17 +108,17 @@ function MockChatContent({
       <div
         style={{
           padding: "10px 12px 14px",
-          borderTop: "1px solid var(--c-border, #e3e8ee)",
+          borderTop: "1px solid var(--c-border)",
           flexShrink: 0,
         }}
       >
         <div
           style={{
-            background: "var(--c-surface-sunken, #f3f4f6)",
+            background: "var(--c-surface-sunken)",
             borderRadius: 10,
             padding: "8px 12px",
             fontSize: 13,
-            color: "var(--c-text-subtle, #64748b)",
+            color: "var(--c-text-subtle)",
           }}
         >
           What do you want to do?
@@ -149,7 +149,7 @@ function ChatFABWidgetDemo({
         width: "100%",
         height: "100%",
         overflow: "hidden",
-        background: "var(--c-bg, #f8f9fb)",
+        background: "var(--c-bg)",
       }}
     >
       {/* FAB button */}
@@ -249,7 +249,9 @@ function ChatFABFullFlowDemo() {
               padding: "4px 10px",
               borderRadius: 6,
               background:
-                step === s ? "#3b82f6" : "var(--c-surface-sunken, #f3f4f6)",
+                step === s
+                  ? "var(--c-accent-solid)"
+                  : "var(--c-surface-sunken)",
               color: step === s ? "#fff" : "inherit",
               fontWeight: step === s ? 600 : 400,
             }}

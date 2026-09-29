@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Card, CodeBlock, StatusBadge } from "@app/ui";
 import type { Sdk, SdkStatus } from "@portal/api/docs";
-import { DocsSection } from "@portal/components/docs/DocsSection";
+import { DocsSection } from "@core/components/docs/DocsSection";
 
 /** GA clients carry no badge; only non-stable maturity is called out. */
 const STATUS_BADGE: Partial<
@@ -32,7 +32,7 @@ export function SdksSection({ sdks }: { sdks: Sdk[] }) {
                 <span className="portal-docs__sdk-icon" aria-hidden>
                   {sdk.icon}
                 </span>
-                <h3 className="portal-docs__sdk-name">{sdk.name}</h3>
+                <h2 className="portal-docs__sdk-name">{sdk.name}</h2>
                 {badge && (
                   <StatusBadge tone={badge.tone} size="sm">
                     {t(badge.labelKey)}

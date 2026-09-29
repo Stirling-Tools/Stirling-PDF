@@ -183,6 +183,20 @@ export function fileContextReducer(
       const remainingIds = state.files.ids.filter(
         (id) => !fileIds.includes(id),
       );
+      // Clear selections that reference removed files
+      const validSelectedFileIds = state.ui.selectedFileIds.filter(
+        (id) => !fileIds.includes(id),
+      );
+
+      // Deleting a library file that was never in the workbench removes nothing
+      // here, and must not re-render every file and UI consumer.
+      const removedFromWorkbench =
+        remainingIds.length !== state.files.ids.length ||
+        fileIds.some((id) => id in state.files.byId);
+      const deselected =
+        validSelectedFileIds.length !== state.ui.selectedFileIds.length;
+      if (!removedFromWorkbench && !deselected) return state;
+
       const newById = { ...state.files.byId };
 
       // Remove files from state (resource cleanup handled by lifecycle manager)
@@ -190,21 +204,14 @@ export function fileContextReducer(
         delete newById[id];
       });
 
-      // Clear selections that reference removed files
-      const validSelectedFileIds = state.ui.selectedFileIds.filter(
-        (id) => !fileIds.includes(id),
-      );
-
       return {
         ...state,
-        files: {
-          ids: remainingIds,
-          byId: newById,
-        },
-        ui: {
-          ...state.ui,
-          selectedFileIds: validSelectedFileIds,
-        },
+        files: removedFromWorkbench
+          ? { ids: remainingIds, byId: newById }
+          : state.files,
+        ui: deselected
+          ? { ...state.ui, selectedFileIds: validSelectedFileIds }
+          : state.ui,
       };
     }
 
@@ -379,14 +386,19 @@ export function fileContextReducer(
         ),
       );
 
-      // Carry the document's classification labels forward across the edit: any
+      // Carry the document's classification verdict forward across the edit: any
       // tool that versions/derives a classified file keeps it in its label
       // groups instead of dropping to "Other" and waiting on a PDF re-read.
-      // Inherited from the first input that has any; an output that already
-      // carries its own (e.g. a fresh classify result) keeps them.
-      const inheritedLabels = inputFileIds
-        .map((id) => state.files.byId[id]?.classificationLabels)
-        .find((labels) => labels && labels.length > 0);
+      // Inherited together with that verdict's confidence - the escalation
+      // decision (localVerdictNeedsEscalation) is about the document, not about
+      // which step produced the current bytes, so it must survive the version
+      // boundary. An output that already carries its own verdict (e.g. a fresh
+      // classify result) keeps it.
+      const inputStubs = inputFileIds.map((id) => state.files.byId[id]);
+      const verdictDonor =
+        inputStubs.find(
+          (s) => s?.classificationLabels && s.classificationLabels.length > 0,
+        ) ?? inputStubs.find((s) => s?.classificationLabels !== undefined);
 
       // Mark every consume output as tool-produced (the single chokepoint for
       // both versioned edits and independent artifacts like convert/split/merge)
@@ -397,7 +409,14 @@ export function fileContextReducer(
         ...stub,
         derivedFromTool: true,
         sourceFileIds,
-        classificationLabels: stub.classificationLabels ?? inheritedLabels,
+        ...(stub.classificationLabels === undefined && verdictDonor
+          ? {
+              classificationLabels: verdictDonor.classificationLabels,
+              classificationConfidence:
+                stub.classificationConfidence ??
+                verdictDonor.classificationConfidence,
+            }
+          : {}),
       }));
 
       // Silent (background enforcement): replace inputs in their existing grid

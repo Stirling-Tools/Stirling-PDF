@@ -382,9 +382,7 @@ def make_converter(mapping: dict[str, str]):
         return lambda text: (text, [])
     # Longest-first so multi-word/longer forms win; \b ensures whole words.
     pattern = re.compile(
-        r"\b("
-        + "|".join(re.escape(w) for w in sorted(mapping, key=len, reverse=True))
-        + r")\b",
+        r"\b(" + "|".join(re.escape(w) for w in sorted(mapping, key=len, reverse=True)) + r")\b",
         re.IGNORECASE,
     )
 
@@ -509,9 +507,7 @@ def parse_structured(
             continue
         kv = KV_RE.match(s)
         if kv:
-            (top if section == "" else sections[section]).append(
-                (kv.group(1), kv.group(2))
-            )
+            (top if section == "" else sections[section]).append((kv.group(1), kv.group(2)))
     return top, order, sections
 
 
@@ -563,9 +559,7 @@ def sync_en_us(dry_run: bool) -> int:
         # en-US-only keys that belong to this (shared) section
         for k, v in us_sections.get(name, []):
             if k not in gb_section_keys:
-                _insert_ci(
-                    merged, (k, uk_to_us_convert(v)[0]), lambda kv: kv[0].lower()
-                )
+                _insert_ci(merged, (k, uk_to_us_convert(v)[0]), lambda kv: kv[0].lower())
         out_sections.append((name, merged))
 
     # en-US-only sections (absent from en-GB): insert by ci header order
@@ -595,9 +589,7 @@ def sync_en_us(dry_run: bool) -> int:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument(
-        "--dry-run", action="store_true", help="report changes without writing"
-    )
+    ap.add_argument("--dry-run", action="store_true", help="report changes without writing")
     args = ap.parse_args()
 
     if not EN_US.exists() or not EN_GB.exists():

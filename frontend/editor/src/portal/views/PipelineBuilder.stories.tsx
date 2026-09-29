@@ -22,10 +22,21 @@ function withRoute(path: string) {
 const meta: Meta<typeof PipelineBuilder> = {
   title: "Portal/Views/PipelineBuilder",
   component: PipelineBuilder,
-  parameters: { layout: "padded" },
-  // The builder reads the tool registry (for step labels + settings UIs), so
-  // it needs this provider to render at all.
+  parameters: { layout: "fullscreen" },
   decorators: [
+    // The builder sizes itself against the shell's view - a fixed-height, non-scrolling box - which
+    // is what lets it cap its columns instead of lengthening the page. Given an auto-height parent
+    // its `height: 100%` resolves to nothing and the cap silently stops applying, so the story has
+    // to honour that contract or it reviews a layout the app never renders.
+    // Matches .portal-shell__view: a definite height with `auto` overflow, so the capped desktop
+    // layout has something to size against and the stacked layout can still scroll.
+    (Story) => (
+      <div style={{ height: "100dvh", overflowY: "auto" }}>
+        <Story />
+      </div>
+    ),
+    // The builder reads the tool registry (for step labels + settings UIs), so
+    // it needs this provider to render at all.
     (Story) => (
       <ToolRegistryProvider>
         <Story />
@@ -44,4 +55,13 @@ export const Default: Story = {
 /** Editing a seeded pipeline: pre-filled name, sources, trigger and steps. */
 export const Edit: Story = {
   decorators: [withRoute("/processor/pipelines/plc-redaction")],
+};
+
+/**
+ * A chain taller than the page. The graph column scrolls on its own so the header and the inspector
+ * stay where they are - if the page scrolled instead, selecting a step near the end of the chain
+ * would carry its settings off-screen.
+ */
+export const LongChain: Story = {
+  decorators: [withRoute("/processor/pipelines/plc-long")],
 };

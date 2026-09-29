@@ -204,7 +204,21 @@ export const isPointInThumbnail = (
 };
 
 /**
- * Create a default crop area that covers the entire PDF
+ * Create a default crop area inside PDF bounds (10% inset from each edge, centered)
+ */
+export const createDefaultCropArea = (pdfBounds: PDFBounds): Rectangle => {
+  const insetX = pdfBounds.actualWidth * 0.1;
+  const insetY = pdfBounds.actualHeight * 0.1;
+  return {
+    x: Math.round(insetX * 10) / 10,
+    y: Math.round(insetY * 10) / 10,
+    width: Math.round((pdfBounds.actualWidth - insetX * 2) * 10) / 10,
+    height: Math.round((pdfBounds.actualHeight - insetY * 2) * 10) / 10,
+  };
+};
+
+/**
+ * Create a crop area that covers the entire PDF
  */
 export const createFullPDFCropArea = (pdfBounds: PDFBounds): Rectangle => {
   return {

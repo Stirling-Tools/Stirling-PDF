@@ -19,7 +19,7 @@ import type { Team } from "@portal/api/teams";
 // Prove the gating against the real flavor capability files. The portal vitest
 // project resolves @app to proprietary and has no @saas alias, so the SaaS set is
 // reached by path; the self-hosted set uses the @proprietary alias.
-// eslint-disable-next-line no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 import { usersCapabilities as saasCaps } from "../../../saas/portal/usersCapabilities";
 import { usersCapabilities as selfHostedCaps } from "@proprietary/portal/usersCapabilities";
 
@@ -36,16 +36,32 @@ const MEMBER: Member = {
 };
 const TEAMS: Team[] = [{ id: 1, name: "Acme", userCount: 1, owners: [] }];
 
-function renderDirectory(caps: typeof saasCaps, teams: Team[] = TEAMS) {
+// Label and count are separate spans, so the accessible name may or may not
+// carry a space between them depending on the accname implementation.
+function teamTab(label: string, count: number) {
+  return screen.getByRole("button", {
+    name: new RegExp(`^${label}\\s*${count}$`),
+  });
+}
+
+function renderDirectory(
+  caps: typeof saasCaps,
+  teams: Team[] = TEAMS,
+  members: Member[] = [MEMBER],
+  onTransferOwnership = vi.fn(),
+  onChangeRole = vi.fn(),
+  seatsFull = false,
+) {
   const onRemove = vi.fn();
   render(
     <MantineProvider>
       <UsersDirectory
-        members={[MEMBER]}
+        members={members}
         teams={teams}
         capabilities={caps}
+        seatsFull={seatsFull}
         processorTeamIds={new Set()}
-        onChangeRole={vi.fn()}
+        onChangeRole={onChangeRole}
         onGrantProcessor={vi.fn()}
         onRevokeProcessor={vi.fn()}
         onGrantTeamProcessor={vi.fn()}
@@ -57,6 +73,7 @@ function renderDirectory(caps: typeof saasCaps, teams: Team[] = TEAMS) {
         onUnlock={vi.fn()}
         onDisableMfa={vi.fn()}
         onRemove={onRemove}
+        onTransferOwnership={onTransferOwnership}
         onRenameTeam={vi.fn()}
         onDeleteTeam={vi.fn()}
       />
@@ -87,11 +104,114 @@ describe("UsersDirectory — remove action gating", () => {
       { id: 1, name: "My Team", userCount: 1, owners: [], isPersonal: true },
     ];
     renderDirectory(saasCaps, personalTeam);
-    // No team-header kebab at all (rename is the only would-be item on SaaS).
+    fireEvent.click(teamTab("My Team", 1));
+    // No team kebab at all (rename is the only would-be item on SaaS).
     expect(
       screen.queryByRole("button", { name: "Team actions" }),
     ).not.toBeInTheDocument();
     expect(screen.queryByText("Rename team")).not.toBeInTheDocument();
+  });
+
+  it("offers to create a team from the self-hosted Default team", async () => {
+    renderDirectory(selfHostedCaps, [
+      { id: 1, name: "Default", userCount: 1, owners: [] },
+    ]);
+    fireEvent.click(teamTab("Default", 1));
+    fireEvent.click(screen.getByRole("button", { name: "Team actions" }));
+
+    expect(
+      await screen.findByText("Create team from Default"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Delete team")).not.toBeInTheDocument();
+  });
+
+  it("offers a team with no members yet, so its first member can be added", () => {
+    renderDirectory(selfHostedCaps, [
+      ...TEAMS,
+      { id: 2, name: "Brand new", userCount: 0, owners: [] },
+    ]);
+
+    const tab = teamTab("Brand new", 0);
+    expect(screen.queryByText("Add to team")).not.toBeInTheDocument();
+    fireEvent.click(tab);
+    expect(screen.getByText("Add to team")).toBeInTheDocument();
+  });
+
+  it("blocks 'Add to team' once every licensed seat is taken", () => {
+    renderDirectory(selfHostedCaps, TEAMS, [MEMBER], vi.fn(), vi.fn(), true);
+    fireEvent.click(teamTab("Acme", 1));
+    expect(screen.getByText("Add to team").closest("button")).toBeDisabled();
+  });
+});
+
+describe("UsersDirectory — team strip", () => {
+  it("hides identity and status columns that contain no distinct values", () => {
+    const emailOnlyMember = {
+      ...MEMBER,
+      name: MEMBER.email,
+    };
+    renderDirectory(selfHostedCaps, TEAMS, [emailOnlyMember]);
+
+    expect(
+      screen.queryByRole("columnheader", { name: "Email" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("columnheader", { name: "Status" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows identity and status columns when they carry information", () => {
+    renderDirectory(selfHostedCaps, TEAMS, [
+      { ...MEMBER, status: "suspended" },
+    ]);
+    expect(screen.getByRole("columnheader", { name: "Email" })).toBeVisible();
+    expect(screen.getByRole("columnheader", { name: "Status" })).toBeVisible();
+  });
+
+  it("narrows the flat roster to the selected team", () => {
+    const other: Member = {
+      ...MEMBER,
+      id: "3",
+      name: "Tom",
+      email: "tom@acme.com",
+      teamId: 2,
+      teamName: "Brand new",
+    };
+    render(
+      <MantineProvider>
+        <UsersDirectory
+          members={[MEMBER, other]}
+          teams={[
+            ...TEAMS,
+            { id: 2, name: "Brand new", userCount: 1, owners: [] },
+          ]}
+          capabilities={selfHostedCaps}
+          processorTeamIds={new Set()}
+          onChangeRole={vi.fn()}
+          onGrantProcessor={vi.fn()}
+          onRevokeProcessor={vi.fn()}
+          onGrantTeamProcessor={vi.fn()}
+          onRevokeTeamProcessor={vi.fn()}
+          onAddToTeam={vi.fn()}
+          onResetPassword={vi.fn()}
+          onMoveToTeam={vi.fn()}
+          onToggleEnabled={vi.fn()}
+          onUnlock={vi.fn()}
+          onDisableMfa={vi.fn()}
+          onRemove={vi.fn()}
+          onRenameTeam={vi.fn()}
+          onDeleteTeam={vi.fn()}
+        />
+      </MantineProvider>,
+    );
+
+    expect(teamTab("All", 2)).toBeInTheDocument();
+    expect(screen.getByText("Priya")).toBeInTheDocument();
+    expect(screen.getByText("Tom")).toBeInTheDocument();
+
+    fireEvent.click(teamTab("Acme", 1));
+    expect(screen.getByText("Priya")).toBeInTheDocument();
+    expect(screen.queryByText("Tom")).not.toBeInTheDocument();
   });
 });
 
@@ -107,4 +227,146 @@ describe("flavor capabilities — invitations + remove scope", () => {
     expect(selfHostedCaps.manageInvitations).toBe(false);
     expect(selfHostedCaps.removeScope).toBe("org");
   });
+});
+
+const OWNER: Member = {
+  ...MEMBER,
+  id: "1",
+  name: "Owner",
+  username: "owner",
+  role: "admin",
+  orgOwner: true,
+  isSelf: true,
+};
+
+it("presents ownership as the selected role and confirms a transfer from the role dropdown", () => {
+  const transfer = vi.fn();
+  const changeRole = vi.fn();
+  renderDirectory(selfHostedCaps, TEAMS, [OWNER, MEMBER], transfer, changeRole);
+  expect(screen.getByRole("textbox", { name: "Role for Owner" })).toHaveValue(
+    "Org Owner",
+  );
+  expect(
+    screen.getByRole("textbox", { name: "Role for Owner" }),
+  ).toHaveAttribute("readonly");
+  fireEvent.click(screen.getByRole("textbox", { name: "Role for Priya" }));
+  fireEvent.click(screen.getByRole("option", { name: "Org Owner" }));
+  expect(transfer).toHaveBeenCalledWith(MEMBER);
+  expect(changeRole).not.toHaveBeenCalled();
+  expect(screen.getByRole("textbox", { name: "Role for Priya" })).toHaveValue(
+    "Member",
+  );
+});
+
+it("protects the owner when viewed by a second admin", () => {
+  renderDirectory(selfHostedCaps, TEAMS, [
+    { ...OWNER, isSelf: false },
+    { ...MEMBER, role: "admin", isSelf: true },
+  ]);
+  fireEvent.click(screen.getByRole("button", { name: "Actions for Owner" }));
+  expect(
+    screen.queryByRole("menuitem", { name: "Transfer ownership" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.getByRole("menuitem", { name: "Reset password" }),
+  ).toBeDisabled();
+  expect(screen.getByRole("menuitem", { name: "Move to team" })).toBeDisabled();
+  expect(screen.getByRole("menuitem", { name: "Suspend" })).toBeDisabled();
+  expect(
+    screen.getByRole("menuitem", { name: "Remove from org" }),
+  ).toBeDisabled();
+});
+
+it.each([
+  { isFirstLogin: true },
+  { status: "suspended" as const },
+  { locked: true },
+])("does not offer ownership to an ineligible recipient: %j", (state) => {
+  renderDirectory(selfHostedCaps, TEAMS, [OWNER, { ...MEMBER, ...state }]);
+  fireEvent.click(screen.getByRole("textbox", { name: "Role for Priya" }));
+  expect(
+    screen.queryByRole("option", { name: "Org Owner" }),
+  ).not.toBeInTheDocument();
+});
+
+it("does not offer ownership in another admin's role dropdown", () => {
+  renderDirectory(selfHostedCaps, TEAMS, [{ ...OWNER, isSelf: false }, MEMBER]);
+  fireEvent.click(screen.getByRole("textbox", { name: "Role for Priya" }));
+  expect(
+    screen.queryByRole("option", { name: "Org Owner" }),
+  ).not.toBeInTheDocument();
+});
+
+it("offers Team Lead as a team-scoped role rather than a capability", () => {
+  const changeRole = vi.fn();
+  renderDirectory(selfHostedCaps, TEAMS, [OWNER, MEMBER], vi.fn(), changeRole);
+  fireEvent.click(screen.getByRole("textbox", { name: "Role for Priya" }));
+  fireEvent.click(screen.getByRole("option", { name: "Team Lead" }));
+  expect(changeRole).toHaveBeenCalledWith(MEMBER, "team_owner");
+});
+
+it("offers SaaS ownership transfer in the shared settings roster", () => {
+  const transfer = vi.fn();
+  renderDirectory(
+    saasCaps,
+    [{ ...TEAMS[0], isPersonal: false }],
+    [{ ...OWNER, role: "team_owner", orgOwner: false, teamLead: true }, MEMBER],
+    transfer,
+  );
+  fireEvent.click(screen.getByRole("textbox", { name: "Role for Priya" }));
+  fireEvent.click(screen.getByRole("option", { name: "Org Owner" }));
+  expect(transfer).toHaveBeenCalledWith(MEMBER);
+});
+
+describe("read-only role visibility", () => {
+  it("keeps the owner visible to members after transfer without allowing changes", () => {
+    const owner = {
+      ...MEMBER,
+      id: "1",
+      name: "Alex",
+      role: "team_owner" as const,
+      teamLead: true,
+    };
+    const viewer = { ...MEMBER, isSelf: true };
+    const transfer = vi.fn();
+    renderDirectory(
+      {
+        ...saasCaps,
+        changeRole: false,
+        transferOwnership: false,
+        removeMember: false,
+      },
+      TEAMS,
+      [owner, viewer],
+      transfer,
+    );
+    expect(screen.getByRole("textbox", { name: "Role for Alex" })).toHaveValue(
+      "Org Owner",
+    );
+    expect(
+      screen.getByRole("textbox", { name: "Role for Alex" }),
+    ).toHaveAttribute("readonly");
+    expect(screen.getByRole("textbox", { name: "Role for Priya" })).toHaveValue(
+      "Member",
+    );
+    expect(transfer).not.toHaveBeenCalled();
+  });
+});
+
+it("keeps self-hosted Admin and Team Lead labels readable without editing rights", () => {
+  const members = [
+    { ...MEMBER, id: "1", name: "Admin", role: "admin" as const },
+    { ...MEMBER, name: "Lead", role: "team_owner" as const, teamLead: true },
+  ];
+  renderDirectory(
+    { ...selfHostedCaps, changeRole: false, transferOwnership: false },
+    TEAMS,
+    members,
+  );
+  expect(screen.getByRole("textbox", { name: "Role for Admin" })).toHaveValue(
+    "Admin",
+  );
+  expect(screen.getByRole("textbox", { name: "Role for Lead" })).toHaveValue(
+    "Team Lead",
+  );
 });
