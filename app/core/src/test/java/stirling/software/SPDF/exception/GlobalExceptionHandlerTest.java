@@ -35,6 +35,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ExceptionUtils.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -158,6 +159,18 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<ProblemDetail> resp = handler.handlePdfPassword(ex, request);
         assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
         assertEquals("E001", resp.getBody().getProperties().get("errorCode"));
+    }
+
+    @Test
+    void wrappedPasswordFailureNamesTheLockedInputsInTheResponse() {
+        PdfPasswordException failure =
+                ExceptionUtils.createPdfPasswordException(
+                        "file 2, file 3", new IOException("password is incorrect"));
+        ResponseEntity<ProblemDetail> resp =
+                handler.handleRuntimeException(
+                        new RuntimeException("job failed", failure), request);
+        assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
+        assertTrue(resp.getBody().getDetail().contains("(file 2, file 3)"));
     }
 
     // ---- GhostscriptException ----
