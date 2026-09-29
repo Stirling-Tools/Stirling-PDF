@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
@@ -15,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -355,7 +357,7 @@ public class AttachmentController {
                     for (String delName : opsData.getDeletions()) {
                         try {
                             pdfAttachmentService.deleteAttachment(document, delName);
-                        } catch (Exception e) {
+                        } catch (IOException | RuntimeException e) {
                             log.warn("Batch deletion of '{}' skipped: {}", delName, e.getMessage());
                         }
                     }
@@ -366,7 +368,7 @@ public class AttachmentController {
                             try {
                                 pdfAttachmentService.renameAttachment(
                                         document, renameOp.getOldName(), renameOp.getNewName());
-                            } catch (Exception e) {
+                            } catch (IOException | RuntimeException e) {
                                 log.warn(
                                         "Batch rename from '{}' to '{}' skipped: {}",
                                         renameOp.getOldName(),
@@ -394,7 +396,7 @@ public class AttachmentController {
 
             if (convertToPdfA3b) {
                 byte[] pdfaBytes = convertPDFToPDFA.convertPDDocumentToPDFA(document, "pdfa-3b");
-                try (PDDocument pdfaDocument = org.apache.pdfbox.Loader.loadPDF(pdfaBytes)) {
+                try (PDDocument pdfaDocument = Loader.loadPDF(pdfaBytes)) {
                     convertPDFToPDFA.ensureEmbeddedFileCompliance(pdfaDocument);
                     ConvertPDFToPDFA.fixType1FontCharSet(pdfaDocument);
                     String outputFilename = baseFileName + "_attachments_modified_PDFA-3b.pdf";
@@ -413,13 +415,13 @@ public class AttachmentController {
         }
     }
 
-    @lombok.Data
+    @Data
     public static class BatchOpsData {
         private List<RenameOp> renames;
         private List<String> deletions;
     }
 
-    @lombok.Data
+    @Data
     public static class RenameOp {
         private String oldName;
         private String newName;
