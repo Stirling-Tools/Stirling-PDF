@@ -74,6 +74,8 @@ linked_instance.instance_id
 linked_instance.last_seen_at
 linked_instance.name
 linked_instance.revoked_at
+linked_instance.seat_count
+linked_instance.seats_reported_at
 linked_instance.team_id
 payg_instance_usage.category
 payg_instance_usage.id
@@ -103,6 +105,7 @@ payg_shadow_charge.billing_category
 payg_shadow_charge.bundle_units_consumed
 payg_shadow_charge.diff_pct
 payg_shadow_charge.free_units_consumed
+payg_shadow_charge.included_period_start
 payg_shadow_charge.job_id
 payg_shadow_charge.job_source
 payg_shadow_charge.legacy_credits_charged
@@ -115,11 +118,14 @@ payg_shadow_charge.shadow_id
 payg_shadow_charge.status
 payg_shadow_charge.team_id
 payg_team_extensions.created_at
+payg_team_extensions.free_units_granted
+payg_team_extensions.free_units_period_end
 payg_team_extensions.free_units_period_start
 payg_team_extensions.free_units_remaining
 payg_team_extensions.payg_subscription_id
 payg_team_extensions.pricing_policy_id
 payg_team_extensions.stripe_customer_id
+payg_team_extensions.team_credits_eligible
 payg_team_extensions.team_id
 payg_team_extensions.updated_at
 payg_team_extensions.version
@@ -140,6 +146,7 @@ pricing_policy.is_default
 pricing_policy.min_charge_units
 pricing_policy.notes
 pricing_policy.policy_id
+pricing_policy.team_included_units
 pricing_policy.version
 processing_job.charged_cents
 processing_job.charged_units
