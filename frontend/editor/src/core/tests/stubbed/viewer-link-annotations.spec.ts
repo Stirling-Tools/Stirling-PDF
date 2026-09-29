@@ -51,3 +51,27 @@ test("hovering a link overlay still opens the link toolbar", async ({
   await expect(toolbar.locator(".pdf-link-toolbar-btn--delete")).toBeVisible();
   await expect(toolbar.locator(".pdf-link-toolbar-btn--go")).toBeVisible();
 });
+
+test("annotation editing selects a link instead of navigating", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  const popups: string[] = [];
+  page.on("popup", (popup) => popups.push(popup.url()));
+
+  // The annotate tool turns annotation editing on, so the overlay must route
+  // the click to selection; outside it the same click follows the link.
+  await page.goto("/annotate");
+  await page.locator('input[type="file"]').first().setInputFiles(LINK_PDF);
+  const firstPage = page.locator('[data-page-index="0"]').first();
+  await expect(firstPage).toBeVisible({ timeout: 30_000 });
+
+  const overlay = firstPage.locator(".pdf-link-overlay").first();
+  await expect(overlay).toBeAttached({ timeout: 15_000 });
+  await overlay.click();
+
+  await expect(
+    page.locator("[data-annotation-selection-menu]").first(),
+  ).toBeVisible({ timeout: 10_000 });
+  expect(popups).toHaveLength(0);
+});

@@ -120,6 +120,7 @@ import { ButtonAppearanceOverlay } from "@app/tools/formFill/ButtonAppearanceOve
 import SignatureFieldOverlay from "@app/components/viewer/SignatureFieldOverlay";
 import { CommentsSidebar } from "@app/components/viewer/CommentsSidebar";
 import { CommentAuthorProvider } from "@app/contexts/CommentAuthorContext";
+import { useViewer } from "@app/contexts/ViewerContext";
 import { accountService } from "@app/services/accountService";
 
 interface LocalEmbedPDFProps {
@@ -583,6 +584,7 @@ function PageLayers({
   onAnnotationMenuAnchor,
   signatureOverlay,
 }: PageGeometry & PageLayerOptions) {
+  const { isAnnotationMode } = useViewer();
   return (
     <>
       <PageTiles
@@ -621,7 +623,11 @@ function PageLayers({
         onAnnotationMenuAnchor={onAnnotationMenuAnchor}
       />
       {/* LinkLayer: uses EmbedPDF annotation state for link rendering */}
-      <LinkLayer documentId={documentId} pageIndex={pageIndex} />
+      <LinkLayer
+        documentId={documentId}
+        pageIndex={pageIndex}
+        selectionActive={isAnnotationMode}
+      />
       {/* Signature preview overlay (opt-in; off by default) */}
       {signatureOverlay && (
         <SignaturePreviewLayer
