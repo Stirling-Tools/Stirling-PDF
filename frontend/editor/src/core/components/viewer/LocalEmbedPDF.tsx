@@ -829,12 +829,17 @@ export function LocalEmbedPDF({
   // the scope holding the document bytes; without the unsubscribe they pin it.
   const annotationUnsubscribeRef = useRef<(() => void) | null>(null);
   const documentOpenedUnsubscribeRef = useRef<(() => void) | null>(null);
+  // The release listener gets its own ref: the probe block above subscribes
+  // first, and sharing one ref would unsubscribe the probe before it fires.
+  const releaseOpenedUnsubscribeRef = useRef<(() => void) | null>(null);
   useEffect(
     () => () => {
       annotationUnsubscribeRef.current?.();
       annotationUnsubscribeRef.current = null;
       documentOpenedUnsubscribeRef.current?.();
       documentOpenedUnsubscribeRef.current = null;
+      releaseOpenedUnsubscribeRef.current?.();
+      releaseOpenedUnsubscribeRef.current = null;
     },
     [],
   );
@@ -1379,15 +1384,15 @@ export function LocalEmbedPDF({
         if (docManagerApi.getActiveDocument?.()) {
           void releaseLargeBuffer();
         } else if (docManagerApi.onDocumentOpened) {
-          documentOpenedUnsubscribeRef.current?.();
+          releaseOpenedUnsubscribeRef.current?.();
           const unsub = docManagerApi.onDocumentOpened(() => {
             unsub?.();
-            if (documentOpenedUnsubscribeRef.current === unsub) {
-              documentOpenedUnsubscribeRef.current = null;
+            if (releaseOpenedUnsubscribeRef.current === unsub) {
+              releaseOpenedUnsubscribeRef.current = null;
             }
             void releaseLargeBuffer();
           });
-          documentOpenedUnsubscribeRef.current = unsub;
+          releaseOpenedUnsubscribeRef.current = unsub;
         } else {
           void releaseLargeBuffer();
         }
