@@ -39,18 +39,9 @@ export function startEagerWasmCompilation(): void {
 
   const compileWithFallback = async (): Promise<WebAssembly.Module | null> => {
     try {
-      if (typeof WebAssembly.compileStreaming === "function") {
-        try {
-          return await WebAssembly.compileStreaming(fetch(pdfiumWasmUrl));
-        } catch (streamingErr) {
-          console.warn(
-            "WASM compileStreaming failed, falling back to ArrayBuffer:",
-            streamingErr,
-          );
-        }
-      }
-
-      // compileStreaming requires application/wasm MIME; fall back to ArrayBuffer if the server or proxy serves octet-stream.
+      // Fetch before compiling rather than handing `compileStreaming` a pending
+      // fetch: WebKit can cancel that streaming response and surface the
+      // cancellation as an uncaught "access control checks" error.
       const res = await fetch(pdfiumWasmUrl);
       if (!res.ok) {
         throw new Error(
