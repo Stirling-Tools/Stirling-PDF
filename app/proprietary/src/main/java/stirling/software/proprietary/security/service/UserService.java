@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import org.hibernate.KeyType;
 import org.hibernate.Session;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.ObjectProvider;
@@ -391,8 +392,7 @@ public class UserService implements UserServiceInterface {
 
     @Transactional(readOnly = true)
     public Optional<User> findByUsername(String username) {
-        User user =
-                entityManager.unwrap(Session.class).bySimpleNaturalId(User.class).load(username);
+        User user = entityManager.unwrap(Session.class).find(User.class, username, KeyType.NATURAL);
         return Optional.ofNullable(user);
     }
 

@@ -14,8 +14,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.hibernate.KeyType;
 import org.hibernate.Session;
-import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -166,11 +166,9 @@ class UserServiceMoreTest {
         @DisplayName("usernameExists true when found")
         void usernameExists() {
             User found = user("a");
-            SimpleNaturalIdLoadAccess<User> naturalIdLoad = mock(SimpleNaturalIdLoadAccess.class);
             Session session = mock(Session.class);
             when(entityManager.unwrap(Session.class)).thenReturn(session);
-            when(session.bySimpleNaturalId(User.class)).thenReturn(naturalIdLoad);
-            when(naturalIdLoad.load("a")).thenReturn(found);
+            when(session.find(User.class, "a", KeyType.NATURAL)).thenReturn(found);
             assertThat(userService.usernameExists("a")).isTrue();
         }
 

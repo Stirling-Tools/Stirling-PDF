@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.hibernate.KeyType;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
@@ -261,8 +262,7 @@ class HibernateSecondLevelCacheTest {
                     User loaded =
                             entityManager
                                     .unwrap(Session.class)
-                                    .bySimpleNaturalId(User.class)
-                                    .load("naturaliduser");
+                                    .find(User.class, "naturaliduser", KeyType.NATURAL);
                     assertThat(loaded).isNotNull();
                     assertThat(loaded.getUsername()).isEqualTo("naturaliduser");
                 });
@@ -275,8 +275,7 @@ class HibernateSecondLevelCacheTest {
                     User loaded =
                             entityManager
                                     .unwrap(Session.class)
-                                    .bySimpleNaturalId(User.class)
-                                    .load("naturaliduser");
+                                    .find(User.class, "naturaliduser", KeyType.NATURAL);
                     assertThat(loaded).isNotNull();
                     assertThat(loaded.getUsername()).isEqualTo("naturaliduser");
                 });
