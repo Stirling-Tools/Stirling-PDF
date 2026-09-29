@@ -38,6 +38,11 @@ const FileManagerView = lazy(
   () => import("@app/components/filesPage/FileManagerView"),
 );
 
+// Workbench id of the PDF text editor's canvas view. Duplicated from
+// PdfTextEditor (importing it would pull the editor bundle into this chunk),
+// so the two literals must stay in sync.
+const TEXT_EDITOR_WORKBENCH_ID = "custom:pdfTextEditor";
+
 // No props needed - component uses contexts directly
 export default function Workbench() {
   // A flow that owns the canvas outright (desktop onboarding's Downloads sweep).
@@ -137,6 +142,59 @@ export default function Workbench() {
     // workbench happens to be, so navigation underneath it cannot surface.
     if (takeover) return takeover;
 
+    // Text edit keeps the viewer mounted behind it: hidden but laid out, so
+    // the engine survives the switch and returning shows the live document
+    // instead of a reload. Both branches below render the viewer at the same
+    // tree position, which is what preserves the instance across the switch.
+    const textEditorView = customWorkbenchViews.find(
+      (view) =>
+        view.workbenchId === TEXT_EDITOR_WORKBENCH_ID && view.data != null,
+    );
+    const textEditorTakeover =
+      currentView === TEXT_EDITOR_WORKBENCH_ID &&
+      !!textEditorView &&
+      activeFiles.length > 0 &&
+      !previewFile &&
+      !signingOverlay?.file;
+    if (textEditorTakeover && textEditorView) {
+      const CustomComponent = textEditorView.component;
+      return (
+        <>
+          <Box
+            aria-hidden="true"
+            data-testid="viewer-keep-alive"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              visibility: "hidden",
+              zIndex: 0,
+            }}
+          >
+            <Viewer
+              previewFile={previewFile}
+              onClose={handlePreviewClose}
+              suspended
+            />
+          </Box>
+          <Box
+            style={{
+              position: "relative",
+              zIndex: 1,
+              flex: 1,
+              minHeight: 0,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <CustomComponent data={textEditorView.data} />
+          </Box>
+        </>
+      );
+    }
+
     // Check if we're showing a custom workbench first
     // Custom workbenches may not require files in FileContext (e.g., sign request workbench)
     if (!isBaseWorkbench(currentView)) {
@@ -211,8 +269,23 @@ export default function Workbench() {
         );
 
       case "viewer":
+        if (previewFile) {
+          return (
+            <Viewer previewFile={previewFile} onClose={handlePreviewClose} />
+          );
+        }
+        // Same tree position as the text-edit takeover above: display
+        // contents keeps layout identical to the unwrapped viewer, and the
+        // shared position is what preserves the instance across the switch.
         return (
-          <Viewer previewFile={previewFile} onClose={handlePreviewClose} />
+          <>
+            <Box
+              data-testid="viewer-keep-alive"
+              style={{ display: "contents" }}
+            >
+              <Viewer previewFile={previewFile} onClose={handlePreviewClose} />
+            </Box>
+          </>
         );
 
       case "pageEditor":

@@ -21,6 +21,8 @@ import { HtmlViewer } from "@app/components/viewer/nonpdf/HtmlViewer";
 export interface ViewerProps {
   onClose?: () => void;
   previewFile?: File | null;
+  /** Mounted behind another workbench view: keep state, take no input. */
+  suspended?: boolean;
 }
 
 export interface NonPdfViewerProps extends ViewerProps {

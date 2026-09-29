@@ -78,6 +78,8 @@ export interface EmbedPdfViewerProps {
   signatureOverlayApiRef?: React.RefObject<SignatureOverlayAPI | null>;
   /** Viewer is showing the pinned portfolio panel; don't render a second one. */
   portfolioPinned?: boolean;
+  /** Kept mounted behind another workbench view: keep state, take no input. */
+  suspended?: boolean;
 }
 
 /** Cache identity of a document, not of the file holding it: a disk reload
@@ -119,6 +121,7 @@ const EmbedPdfViewerContent = ({
   onSignaturePreviewsChange,
   signatureOverlayApiRef,
   portfolioPinned,
+  suspended = false,
 }: EmbedPdfViewerProps) => {
   const { t } = useTranslation();
   const viewerRef = React.useRef<HTMLDivElement>(null);
@@ -839,8 +842,10 @@ const EmbedPdfViewerContent = ({
   const policyEnforcingRef = useRef(false);
   policyEnforcingRef.current = policyEnforcing;
 
-  // Handle keyboard shortcuts
+  // Handle keyboard shortcuts. Suspended while another workbench view owns
+  // the canvas, so editor keystrokes never reach the hidden viewer.
   useEffect(() => {
+    if (suspended) return;
     const handleKeyDown = (event: KeyboardEvent) => {
       const mod = event.ctrlKey || event.metaKey;
 
@@ -978,6 +983,7 @@ const EmbedPdfViewerContent = ({
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [
+    suspended,
     isViewerHovered,
     isSearchInterfaceVisible,
     zoomActions,
