@@ -3,9 +3,7 @@ import { Group, Text, Stack, Select } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import SortIcon from "@mui/icons-material/Sort";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import { Icon } from "@app/ui/Icon";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface MergeFileSorterProps {
@@ -84,14 +82,14 @@ const MergeFileSorter: React.FC<MergeFileSorterProps> = ({
                 : t("merge.sortBy.descending", "Descending")
             }
           >
-            {ascending ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />}
+            {ascending ? <Icon name="arrow-up" /> : <Icon name="arrow-down" />}
           </ActionIcon>
         </Group>
 
         <Button
           variant="secondary"
           size="sm"
-          leftSection={<SortIcon />}
+          leftSection={<Icon name="list-sort-descending" />}
           onClick={handleSort}
           disabled={disabled}
           fullWidth

@@ -206,4 +206,8 @@ function applyDefaultLocale(defaultLocale: string) {
   setLanguageWithPriority(defaultLocale, LanguageSource.ServerDefault);
 }
 
+// Non-React modules off the hydration path (diskFileSync's toasts) read the
+// translator from globalThis; the ESM build does not register itself.
+(globalThis as Record<string, unknown>).i18next = i18n;
+
 export default i18n;

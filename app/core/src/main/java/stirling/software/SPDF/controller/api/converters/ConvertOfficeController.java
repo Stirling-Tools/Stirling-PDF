@@ -218,8 +218,6 @@ public class ConvertOfficeController {
     public ResponseEntity<Resource> processFileToPDF(@ModelAttribute GeneralFile generalFile)
             throws Exception {
         MultipartFile inputFile = generalFile.getFileInput();
-        // unused but can start server instance if startup time is to long
-        // LibreOfficeListener.getInstance().start();
         File file = null;
         TempFile tempOut = null;
         try {

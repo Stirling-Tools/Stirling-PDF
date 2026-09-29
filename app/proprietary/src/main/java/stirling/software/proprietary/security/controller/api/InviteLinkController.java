@@ -108,24 +108,21 @@ public class InviteLinkController {
                 }
             }
 
-            // Check license limits
-            if (applicationProperties.getPremium().isEnabled()) {
-                long currentUserCount = userService.getTotalUsersCount();
-                long activeInvites = inviteTokenRepository.countActiveInvites(LocalDateTime.now());
-                int maxUsers = userLicenseSettingsService.calculateMaxAllowedUsers();
+            long currentUserCount = userService.getTotalUsersCount();
+            long activeInvites = inviteTokenRepository.countActiveInvites(LocalDateTime.now());
+            int maxUsers = userLicenseSettingsService.calculateMaxAllowedUsers();
 
-                if (currentUserCount + activeInvites >= maxUsers) {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                            .body(
-                                    Map.of(
-                                            "error",
-                                            "License limit reached ("
-                                                    + (currentUserCount + activeInvites)
-                                                    + "/"
-                                                    + maxUsers
-                                                    + " users). Contact your administrator to"
-                                                    + " upgrade your license."));
-                }
+            if (currentUserCount + activeInvites >= maxUsers) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(
+                                Map.of(
+                                        "error",
+                                        "License limit reached ("
+                                                + (currentUserCount + activeInvites)
+                                                + "/"
+                                                + maxUsers
+                                                + " users). Contact your administrator to"
+                                                + " upgrade your license."));
             }
 
             // Validate role
@@ -144,7 +141,9 @@ public class InviteLinkController {
             Long effectiveTeamId = teamId;
             if (effectiveTeamId == null) {
                 Team defaultTeam =
-                        teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME).orElse(null);
+                        teamRepository
+                                .findFirstByNameOrderByIdAsc(TeamService.DEFAULT_TEAM_NAME)
+                                .orElse(null);
                 if (defaultTeam != null) {
                     effectiveTeamId = defaultTeam.getId();
                 }

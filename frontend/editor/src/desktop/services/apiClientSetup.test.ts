@@ -2,6 +2,7 @@ import type { AxiosInstance } from "axios";
 import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
 import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
 import { expectConsole } from "@app/tests/failOnConsole";
+import { alert } from "@app/components/toast";
 
 // Exercise the error-interceptor logic against a hand-rolled axios-like
 // client; transitive imports are mocked out so this is a pure unit test.
@@ -114,6 +115,39 @@ async function triggerErrorInterceptor(
   // The interceptor re-rejects after handling; swallow it.
   await Promise.resolve(handler(error)).catch(() => {});
 }
+
+describe("desktop apiClientSetup - 403 handling", () => {
+  beforeEach(() => {
+    vi.mocked(alert).mockClear();
+  });
+
+  test("a 403 stays quiet when the caller opted out per request", async () => {
+    const { client, handlers } = makeMockClient();
+    setupApiInterceptors(client as unknown as AxiosInstance);
+
+    await triggerErrorInterceptor(handlers, {
+      response: { status: 403 },
+      config: {
+        url: "/api/v1/policies/classify/meter",
+        suppressErrorToast: true,
+      },
+    });
+
+    expect(alert).not.toHaveBeenCalled();
+  });
+
+  test("leaves permission toasts to the HTTP error handler", async () => {
+    const { client, handlers } = makeMockClient();
+    setupApiInterceptors(client as unknown as AxiosInstance);
+
+    await triggerErrorInterceptor(handlers, {
+      response: { status: 403 },
+      config: { url: "/api/v1/general/merge-pdfs" },
+    });
+
+    expect(alert).not.toHaveBeenCalled();
+  });
+});
 
 describe("desktop apiClientSetup - 401 silent-path", () => {
   let events: Event[];
@@ -233,6 +267,19 @@ describe("desktop request interceptor - auth for SaaS-backend requests", () => {
       headers: {},
     });
     expect(result.headers.Authorization).toBeUndefined();
+  });
+
+  test("rejects routing failures before a request can reach the default backend", async () => {
+    vi.mocked(operationRouter.getBaseUrl).mockRejectedValueOnce(
+      new Error("Sign in required"),
+    );
+    await expect(
+      runRequestInterceptor({
+        url: "/api/v1/policies/run",
+        method: "post",
+        headers: {},
+      }),
+    ).rejects.toThrow("Sign in required");
   });
 });
 

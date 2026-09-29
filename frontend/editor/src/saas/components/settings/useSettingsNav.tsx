@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { Suspense, lazy, useCallback, useMemo, useState } from "react";
 import { Modal, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
@@ -13,9 +13,15 @@ import type { SettingsNav } from "@app/components/settings/settingsNavTypes";
 import {
   buildPortalSettingsSections,
   PORTAL_SECTION_ALIASES,
-  PORTAL_SUPERSEDED_SECTION_KEYS,
+  portalSupersededSectionKeys,
 } from "@app/components/settings/portalSettingsNav";
 import { mergeSettingsGroups } from "@app/components/settings/mergeSettingsGroups";
+import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
+import { LoadingFallback } from "@app/components/shared/LoadingFallback";
+
+const ConnectedInstancesSection = lazy(
+  () => import("@app/components/settings/ConnectedInstancesSection"),
+);
 
 export type { SettingsNav };
 
@@ -29,6 +35,7 @@ export type { SettingsNav };
 export function useSettingsNav(onLeave: () => void): SettingsNav {
   const { t } = useTranslation();
   const { signOut, user } = useAuth();
+  const { isTeamLeader, loading: teamLoading } = useSaaSTeam();
   // Not from useAuth: the editor's Supabase context never carries permission
   // flags, so only this seam knows. The processor has its own auth context.
   const { granted: portalAccess, settled: accessSettled } =
@@ -38,19 +45,60 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
   const isAnonymous = user ? isUserAnonymous(user) : false;
 
   const sections = useMemo(() => {
-    const own = createSaasConfigNavSections(Overview, openLogoutConfirm, {
+    let own = createSaasConfigNavSections(Overview, openLogoutConfirm, {
       isAnonymous,
       t,
       onRequestClose: onLeave,
     });
+    if (isTeamLeader && !teamLoading && !isAnonymous) {
+      own = mergeSettingsGroups(
+        own,
+        [
+          {
+            id: "workspace",
+            title: t("settings.workspace.title", "Workspace"),
+            mergeAt: "append",
+            items: [
+              {
+                key: "account-link",
+                label: t(
+                  "settings.connectedInstances.title",
+                  "Connected instances",
+                ),
+                icon: "link",
+                fullBleed: true,
+                component: (
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ConnectedInstancesSection />
+                  </Suspense>
+                ),
+              },
+            ],
+          },
+        ],
+        [],
+      );
+    }
     if (!portalAccess) return own;
     const portal = buildPortalSettingsSections(t, {
       includeAccountLink: false,
       includeAudit: true,
     });
     if (portal.length === 0) return own;
-    return mergeSettingsGroups(own, portal, PORTAL_SUPERSEDED_SECTION_KEYS);
-  }, [openLogoutConfirm, isAnonymous, t, onLeave, portalAccess]);
+    return mergeSettingsGroups(
+      own,
+      portal,
+      portalSupersededSectionKeys(portal),
+    );
+  }, [
+    openLogoutConfirm,
+    isAnonymous,
+    t,
+    onLeave,
+    portalAccess,
+    isTeamLeader,
+    teamLoading,
+  ]);
 
   const overlay = (
     <Modal
@@ -90,6 +138,6 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
     sections,
     overlay,
     aliases: portalAccess ? PORTAL_SECTION_ALIASES : undefined,
-    pending: !accessSettled,
+    pending: !accessSettled || teamLoading,
   };
 }

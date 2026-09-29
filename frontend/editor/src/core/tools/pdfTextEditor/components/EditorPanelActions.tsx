@@ -1,9 +1,7 @@
 import { Box, Group, Tooltip } from "@mantine/core";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
-import DownloadIcon from "@mui/icons-material/FileDownloadOutlined";
-import SearchIcon from "@mui/icons-material/SearchOutlined";
-import HelpIcon from "@mui/icons-material/HelpOutlineOutlined";
 import { EditorFileSwitcher } from "@app/tools/pdfTextEditor/components/EditorFileSwitcher";
 import type { FileId } from "@app/types/file";
 import { modShortcut } from "@app/utils/hotkeys";
@@ -85,7 +83,7 @@ export function EditorPanelActions({
             onClick={onDownload}
             data-testid="pdf-editor-download"
             aria-label={t("pdfTextEditor.download", "Download")}
-            leftSection={<DownloadIcon fontSize="small" />}
+            leftSection={<Icon name="download" size={20} />}
           />
         </Tooltip>
         {compact && (
@@ -103,7 +101,7 @@ export function EditorPanelActions({
                   "pdfTextEditor.settings.find",
                   "Find in document",
                 )}
-                leftSection={<SearchIcon fontSize="small" />}
+                leftSection={<Icon name="search" size={20} />}
               />
             </Tooltip>
             <Tooltip
@@ -119,7 +117,7 @@ export function EditorPanelActions({
                   "pdfTextEditor.help.ariaLabel",
                   "Keyboard shortcuts",
                 )}
-                leftSection={<HelpIcon fontSize="small" />}
+                leftSection={<Icon name="circle-question-mark" size={20} />}
               />
             </Tooltip>
           </>

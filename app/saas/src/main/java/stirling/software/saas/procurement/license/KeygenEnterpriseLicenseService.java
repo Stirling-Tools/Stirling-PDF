@@ -16,12 +16,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
-
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.saas.procurement.config.KeygenConfigurationProperties;
+
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Real {@link EnterpriseLicenseService}: manages the team's enterprise licence directly against the

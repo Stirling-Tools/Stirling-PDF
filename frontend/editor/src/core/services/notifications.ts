@@ -15,6 +15,12 @@ export type NotificationOwnership = "MINE" | "THEIRS" | "UNOWNED";
 /** How much of the row an action has earned; `promoteActions` turns it into a place. */
 export type NotificationActionSlot = "RESOLUTION" | "SECONDARY" | "OVERFLOW";
 
+/**
+ * Where the document behind a row is. The server decides: this browser cannot tell a file id it
+ * minted from a reference held on a server it has never seen.
+ */
+export type DocumentLocation = "BROWSER" | "SMART_FOLDER" | "UNREACHABLE";
+
 /** `id` is an open string, not a union: the server may know actions this build does not. */
 export interface NotificationActionOffer {
   id: string;
@@ -40,8 +46,16 @@ export interface AppNotification {
   titleKey: string;
   defaultTitle: string;
   detail: string | null;
-  /** Two id spaces share this field, and `sourceId` says which: see `isResolvableHere`. */
+  /** Only ever an id this browser minted, so it needs no disambiguating: null otherwise. */
   fileId: string | null;
+  /** What to call a document this browser does not hold. The owner's own files only. */
+  documentName: string | null;
+  documentLocation: DocumentLocation;
+  /**
+   * The server keeps this row for the reader: a smart folder's document, or the folder itself
+   * when it could not be read. Shown to a member without a local file; never fixable here.
+   */
+  heldByServer: boolean;
   /** Which folder, bucket or webhook fed the run, and null for an attended one. */
   sourceId: string | null;
   policyId: string | null;
@@ -72,6 +86,7 @@ export async function fetchNotifications(
   try {
     const response = await apiClient.get<NotificationsResponse>(
       `${NOTIFICATIONS_PATH}?limit=${limit}`,
+      { suppressErrorToast: true },
     );
     return {
       notifications: response?.data?.notifications ?? [],
@@ -90,9 +105,44 @@ export async function reportNotificationResolved(
   try {
     await apiClient.post(
       `${NOTIFICATIONS_PATH}/${encodeURIComponent(notificationId)}/resolved`,
+      undefined,
+      { suppressErrorToast: true },
     );
     return true;
   } catch {
     return false;
+  }
+}
+
+/**
+ * Run one of a row's server-side actions. The reader pressed a button and is owed an answer, so a
+ * refusal is reported rather than swallowed: null when it worked, the server's reason when not.
+ */
+export async function dispatchNotificationAction(
+  notificationId: string,
+  actionId: string,
+): Promise<string | null> {
+  try {
+    await apiClient.post(
+      `${NOTIFICATIONS_PATH}/${encodeURIComponent(notificationId)}/actions/${encodeURIComponent(actionId)}`,
+      undefined,
+      { suppressErrorToast: true },
+    );
+    return null;
+  } catch (error) {
+    const response = (
+      error as {
+        response?: {
+          status?: number;
+          data?: { detail?: string; title?: string };
+        };
+      }
+    )?.response;
+    // Ids and status only: the row's detail and document name stay out of the console.
+    console.warn(
+      `Notification action ${actionId} on ${notificationId} failed`,
+      response?.status ?? "no response",
+    );
+    return response?.data?.detail ?? response?.data?.title ?? "";
   }
 }

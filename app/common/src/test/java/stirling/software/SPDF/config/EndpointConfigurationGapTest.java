@@ -478,7 +478,7 @@ class EndpointConfigurationGapTest {
         @DisplayName("non-pro build disables the enterprise group")
         void nonProDisablesEnterprise() {
             EndpointConfiguration config = build(false);
-            assertTrue(config.getDisabledGroups().contains("enterprise"));
+            assertFalse(config.isGroupEnabled("enterprise"));
         }
 
         @Test

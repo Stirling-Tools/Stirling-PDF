@@ -1,18 +1,24 @@
-// Client-side classification entry point: load rules, extract the PDF, classify.
+// Client-side classification entry point: extract the PDF, then classify it.
 
+import i18n from "i18next";
+import { classifyHeuristic } from "@app/services/heuristic/heuristicEngine";
 import {
-  ensureRulesLoaded,
-  classifyHeuristic,
-} from "@app/services/heuristic/heuristicEngine";
-import { extractHeuristicDoc } from "@app/services/heuristic/heuristicExtractor";
+  extractHeuristicDoc,
+  type ExtractOptions,
+} from "@app/services/heuristic/heuristicExtractor";
 import type { HeuristicResult } from "@app/services/heuristic/types";
 
-/** Classify a file in the browser. Throws if extraction fails (unreadable / non-PDF). */
+/** Classify a file in the browser. Throws if extraction fails: unreadable, non-PDF, or a
+ *  `budgetMs` that runs out before any text is read. */
 export async function classifyFileHeuristically(
   file: File,
-  opts?: { explain?: boolean },
+  opts?: { explain?: boolean } & ExtractOptions,
 ): Promise<HeuristicResult> {
-  await ensureRulesLoaded();
-  const doc = await extractHeuristicDoc(file, file.name);
-  return classifyHeuristic(doc, opts);
+  const doc = await extractHeuristicDoc(file, file.name, {
+    budgetMs: opts?.budgetMs,
+  });
+  return classifyHeuristic(doc, {
+    explain: opts?.explain,
+    localeHint: i18n.language ?? undefined,
+  });
 }

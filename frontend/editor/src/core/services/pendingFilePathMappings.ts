@@ -1,3 +1,5 @@
-// Module-level storage for file path mappings (quickKey -> localFilePath)
-// Used to pass file paths from Tauri file dialog to FileManagerContext
-export const pendingFilePathMappings = new Map<string, string>();
+/** Import provenance follows the File instance: metadata keys can collide across folders. */
+export const pendingFilePathMappings = new WeakMap<
+  File,
+  string | Promise<string | undefined>
+>();

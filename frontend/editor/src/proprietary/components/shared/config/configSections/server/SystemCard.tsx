@@ -6,14 +6,11 @@ import {
   TextInput,
   Stack,
   Paper,
-  Text,
   Group,
   MultiSelect,
   Select,
 } from "@mantine/core";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
-import { usePreferences } from "@app/contexts/PreferencesContext";
 import {
   normalizeLanguageCode,
   supportedLanguages,
@@ -31,7 +28,6 @@ export function SystemCard({
   loginEnabled,
 }: GeneralCardProps) {
   const { t } = useTranslation();
-  const { preferences, updatePreference } = usePreferences();
 
   const languageOptions = useMemo(
     () =>
@@ -73,31 +69,6 @@ export function SystemCard({
     );
   }, [selectedLanguages, languageOptions]);
 
-  // Show the server setting when loaded (for admin config), otherwise show user's preference
-  // Note: User's preference in localStorage is separate and takes precedence in the app via useLogoVariant hook
-  const logoStyleValue = loginEnabled
-    ? (settings.ui?.logoStyle ?? preferences.logoVariant ?? "modern")
-    : (preferences.logoVariant ?? "modern");
-
-  const handleLogoStyleChange = (value: string) => {
-    const nextValue = value === "classic" ? "classic" : "modern";
-
-    // Only update local settings state - don't update the actual preference until save
-    // When login is disabled, update preference immediately since there's no server to save to
-    if (!loginEnabled) {
-      updatePreference("logoVariant", nextValue);
-      return;
-    }
-
-    setSettings({
-      ...settings,
-      ui: {
-        ...settings.ui,
-        logoStyle: nextValue,
-      },
-    });
-  };
-
   return (
     <Paper withBorder p="md" radius="md">
       <Stack gap="md">
@@ -129,79 +100,6 @@ export function SystemCard({
             }
             placeholder="Stirling PDF"
             disabled={!loginEnabled}
-          />
-        </div>
-
-        <div>
-          <Text component="div" size="sm" fw={500} mb={4}>
-            <Group gap="xs">
-              <span>
-                {t("admin.settings.general.logoStyle.label", "Logo Style")}
-              </span>
-              <PendingBadge show={isFieldPending("ui.logoStyle")} />
-              <InfoTooltip
-                label={t(
-                  "admin.settings.general.logoStyle.description",
-                  "Choose between the modern minimalist logo or the classic S icon",
-                )}
-              />
-            </Group>
-          </Text>
-          <SegmentedControl
-            value={logoStyleValue}
-            onChange={handleLogoStyleChange}
-            options={[
-              {
-                value: "classic",
-                label: (
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                      padding: "0.25rem 0",
-                    }}
-                  >
-                    <img
-                      src="classic-logo/favicon.ico"
-                      alt={t(
-                        "admin.settings.general.logoStyle.classicAlt",
-                        "Classic logo",
-                      )}
-                      style={{ width: "24px", height: "24px" }}
-                    />
-                    <span>
-                      {t("admin.settings.general.logoStyle.classic", "Classic")}
-                    </span>
-                  </div>
-                ),
-              },
-              {
-                value: "modern",
-                label: (
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                      padding: "0.25rem 0",
-                    }}
-                  >
-                    <img
-                      src="modern-logo/StirlingPDFLogoNoTextLight.svg"
-                      alt={t(
-                        "admin.settings.general.logoStyle.modernAlt",
-                        "Modern logo",
-                      )}
-                      style={{ width: "24px", height: "24px" }}
-                    />
-                    <span>
-                      {t("admin.settings.general.logoStyle.modern", "Modern")}
-                    </span>
-                  </div>
-                ),
-              },
-            ]}
           />
         </div>
 

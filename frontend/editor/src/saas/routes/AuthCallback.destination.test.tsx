@@ -53,7 +53,7 @@ beforeEach(() => {
 
 describe("AuthCallback destination", () => {
   it("prefers an explicit next over anything remembered", async () => {
-    rememberPendingDestination("/processor/procurement");
+    rememberPendingDestination("/procurement");
     await arriveAtCallback("?next=%2Fprocessor%2Fusers");
     expect(landedOn()).toBe("/processor/users");
   });
@@ -65,15 +65,15 @@ describe("AuthCallback destination", () => {
 
   it("prefers a pending connect request over a remembered destination", async () => {
     rememberPendingConnect("req-1");
-    rememberPendingDestination("/processor/procurement");
+    rememberPendingDestination("/procurement");
     await arriveAtCallback();
     expect(landedOn()).toBe("/link?request=req-1");
   });
 
   it("uses a remembered destination when the URL carries nothing", async () => {
-    rememberPendingDestination("/processor/procurement");
+    rememberPendingDestination("/procurement");
     await arriveAtCallback();
-    expect(landedOn()).toBe("/processor/procurement");
+    expect(landedOn()).toBe("/procurement");
   });
 
   it("falls back to the role-based landing when nothing is remembered", async () => {
@@ -87,7 +87,7 @@ describe("AuthCallback destination", () => {
   });
 
   it("claims the remembered destination even when an explicit next wins", async () => {
-    rememberPendingDestination("/processor/procurement");
+    rememberPendingDestination("/procurement");
     await arriveAtCallback("?next=%2Fprocessor%2Fusers");
     expect(landedOn()).toBe("/processor/users");
 
@@ -99,7 +99,7 @@ describe("AuthCallback destination", () => {
 
   it("claims it even when a pending connect request wins", async () => {
     rememberPendingConnect("req-1");
-    rememberPendingDestination("/processor/procurement");
+    rememberPendingDestination("/procurement");
     await arriveAtCallback();
     expect(landedOn()).toBe("/link?request=req-1");
 

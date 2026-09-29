@@ -1,9 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Text, Checkbox, Stack, Loader, Tooltip } from "@mantine/core";
-import LayersIcon from "@mui/icons-material/Layers";
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { useTranslation } from "react-i18next";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { SidebarBase } from "@app/components/viewer/SidebarBase";
@@ -320,7 +318,7 @@ export function LayerSidebar({
             aria-label={t("viewer.layers.showAll", "Show all layers")}
             title={t("viewer.layers.showAll", "Show all layers")}
           >
-            <VisibilityIcon sx={{ fontSize: "1rem" }} />
+            <Icon name="eye" size={"1rem"} />
           </ActionIcon>
           <ActionIcon
             variant="tertiary"
@@ -330,7 +328,7 @@ export function LayerSidebar({
             aria-label={t("viewer.layers.hideAll", "Hide all layers")}
             title={t("viewer.layers.hideAll", "Hide all layers")}
           >
-            <VisibilityOffIcon sx={{ fontSize: "1rem" }} />
+            <Icon name="eye-off" size={"1rem"} />
           </ActionIcon>
         </>
       )}
@@ -341,7 +339,7 @@ export function LayerSidebar({
     <SidebarBase
       className="layer-sidebar"
       title={t("viewer.layers.title", "Layers")}
-      icon={<LayersIcon fontSize="small" />}
+      icon={<Icon name="layers" size={20} />}
       rightOffset={`${rightOffset}rem`}
       visible={visible}
       onClose={toggleLayerSidebar}

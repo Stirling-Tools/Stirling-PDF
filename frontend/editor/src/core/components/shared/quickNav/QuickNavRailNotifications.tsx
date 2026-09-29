@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { RailButton } from "@app/components/shared/quickNav/QuickNavRailBase";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useNotificationsAvailable } from "@app/components/notifications/useNotificationsAvailable";
@@ -34,13 +34,7 @@ function MountedRailNotifications({
     <span data-notifications-trigger>
       <RailButton
         label={t("quickNav.notifications", "Notifications")}
-        icon={
-          <LocalIcon
-            icon="notifications-outline-rounded"
-            width="1.125rem"
-            height="1.125rem"
-          />
-        }
+        icon={<Icon name="bell" size="1.125rem" />}
         badge={unreadCount}
         expanded={Boolean(open)}
         controls={NOTIFICATIONS_PANEL_ID}

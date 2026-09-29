@@ -50,6 +50,7 @@ import stirling.software.proprietary.policy.output.InlineOutputSink;
 import stirling.software.proprietary.policy.output.PolicyOutputResolver;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
+import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
 import tools.jackson.databind.json.JsonMapper;
@@ -96,7 +97,8 @@ class PolicyFailureOwnershipTest {
                                 List.of(new AcknowledgeAction(store), new DismissAction(store))),
                         authority,
                         userService,
-                        props);
+                        props,
+                        policyStore);
 
         PolicyFailureRecorder recorder =
                 new PolicyFailureRecorder(
@@ -122,7 +124,7 @@ class PolicyFailureOwnershipTest {
                         new PolicyAssetResolver(new InProcessPolicyAssetStore()));
 
         lenient()
-                .when(jobOwnershipService.createScopedJobKey(anyString()))
+                .when(jobOwnershipService.createScopedJobKey(anyString(), any()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
         lenient().when(resourceMonitor.shouldQueueJob(anyInt())).thenReturn(false);
         lenient().when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
@@ -156,7 +158,11 @@ class PolicyFailureOwnershipTest {
                             sharedPolicy(),
                             PolicyInputs.of(List.of(pdf())),
                             PolicyProgressListener.NOOP,
-                            sourceId,
+                            sourceId == null
+                                    ? null
+                                    : new Source(
+                                            sourceId, "Input", "folder", Map.of(), true, "carol",
+                                            TEAM),
                             fileIdentity)
                     .completion()
                     .get(10, TimeUnit.SECONDS);
@@ -242,22 +248,25 @@ class PolicyFailureOwnershipTest {
     class UnattendedSweep {
 
         @Test
-        void theRowIsOwnedByNobodySoTheReviewerInheritsTheOwnerActions() throws Exception {
+        void theRowBelongsToWhoeverOwnsTheSourceRatherThanToNobody() throws Exception {
+            // Nobody attended it, but the documents are still somebody's. Filed under no actor the
+            // row reached a team leader and nobody else, never the person watching the folder.
             runAndFail(null, "src-watched-folder", "file-hash-1");
 
-            FileRunEvent unattended = asReviewer("alice");
-            assertThat(service.ownershipOf(unattended)).isEqualTo(Ownership.UNOWNED);
-            // No browser holds this document, so the offer is stated and disabled, not dropped.
-            assertThat(offeredTo(unattended)).contains(FailureActionId.VIEW_FILE);
-            assertThat(service.availableActions(unattended))
-                    .filteredOn(action -> action.id() == FailureActionId.VIEW_FILE)
-                    .singleElement()
-                    .satisfies(
-                            action -> {
-                                assertThat(action.enabled()).isFalse();
-                                assertThat(action.disabledReasonKey())
-                                        .isEqualTo("portal.failures.disabled.unattended");
-                            });
+            assertThat(service.ownershipOf(asMember("carol"))).isEqualTo(Ownership.MINE);
+        }
+
+        @Test
+        void aReviewerWhoIsNotItsOwnerGetsTheReviewersActionsOnly() throws Exception {
+            // The owner actions follow the owner. That is what keeps a leader from being offered
+            // the button that runs a file in a folder belonging to someone else.
+            runAndFail(null, "src-watched-folder", "file-hash-1");
+
+            FileRunEvent theirs = asReviewer("alice");
+            assertThat(service.ownershipOf(theirs)).isEqualTo(Ownership.THEIRS);
+            assertThat(offeredTo(theirs))
+                    .contains(FailureActionId.VIEW_IN_PROCESSOR, FailureActionId.DISMISS)
+                    .doesNotContain(FailureActionId.VIEW_FILE, FailureActionId.OPEN_IN_TOOL);
         }
 
         @Test

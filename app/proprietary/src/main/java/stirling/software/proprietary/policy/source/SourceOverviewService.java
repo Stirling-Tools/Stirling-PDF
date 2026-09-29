@@ -126,14 +126,15 @@ public class SourceOverviewService {
 
     /**
      * Policies referencing each source id, across the caller's visible policies. A source counts
-     * whether a policy reads from it ({@code sourceIds}) or writes to it ({@code outputId}); a
-     * policy that does both counts once.
+     * whether a policy reads from it ({@code sourceIds}) or writes to it ({@link
+     * Policy#allOutputIds()}, which covers a routing rule's destination as well as the fallback
+     * output); a policy that does both counts once.
      */
     private static Map<String, List<Policy>> referencesBySource(List<Policy> policies) {
         Map<String, List<Policy>> bySource = new HashMap<>();
         for (Policy policy : policies) {
             Set<String> referenced = new LinkedHashSet<>(policy.sourceIds());
-            referenced.addAll(policy.outputIds());
+            referenced.addAll(policy.allOutputIds());
             for (String sourceId : referenced) {
                 bySource.computeIfAbsent(sourceId, key -> new ArrayList<>()).add(policy);
             }

@@ -76,6 +76,12 @@ export class ConnectionModeService {
     return this.currentConfig?.mode ?? null;
   }
 
+  /** The server already in memory, or null before the first load. Synchronous so
+   *  callers that build a URL inline (raw fetch, template string) can reach it. */
+  getCachedServerConfig(): ServerConfig | null {
+    return this.currentConfig?.server_config ?? null;
+  }
+
   async getServerConfig(): Promise<ServerConfig | null> {
     const config = await this.getCurrentConfig();
     return config.server_config;

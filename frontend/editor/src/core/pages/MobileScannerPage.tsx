@@ -15,13 +15,7 @@ import { Button as DSButton } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { LogoIcon } from "@app/components/shared/LogoIcon";
 import { Wordmark } from "@app/components/shared/Wordmark";
-import ErrorRoundedIcon from "@mui/icons-material/ErrorRounded";
-import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
-import PhotoCameraRoundedIcon from "@mui/icons-material/PhotoCameraRounded";
-import UploadRoundedIcon from "@mui/icons-material/UploadRounded";
-import AddPhotoAlternateRoundedIcon from "@mui/icons-material/AddPhotoAlternateRounded";
-import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
-import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import { Icon } from "@app/ui/Icon";
 import {
   loadJscanify,
   type JscanifyCornerPoints,
@@ -921,8 +915,10 @@ export default function MobileScannerPage() {
           textAlign: "center",
         }}
       >
-        <CheckCircleRoundedIcon
-          style={{ fontSize: "4rem", color: "var(--mantine-color-green-6)" }}
+        <Icon
+          name="circle-check"
+          size={"4rem"}
+          style={{ color: "var(--mantine-color-green-6)" }}
         />
         <Text size="xl" fw="bold" mt="md">
           {t("mobileScanner.uploadSuccess", "Upload Successful!")}
@@ -1030,7 +1026,7 @@ export default function MobileScannerPage() {
             color="red"
             radius={0}
             py={4}
-            icon={<ErrorRoundedIcon style={{ fontSize: "1.1rem" }} />}
+            icon={<Icon name="circle-alert" size={"1.1rem"} />}
             onClose={() => setUploadError(null)}
             withCloseButton
             closeButtonLabel={t("mobileScanner.dismiss", "Dismiss")}
@@ -1044,7 +1040,7 @@ export default function MobileScannerPage() {
             color="orange"
             radius={0}
             py={4}
-            icon={<InfoRoundedIcon style={{ fontSize: "1.1rem" }} />}
+            icon={<Icon name="info" size={"1.1rem"} />}
             onClose={() => setCameraError(null)}
             withCloseButton
             closeButtonLabel={t("mobileScanner.dismiss", "Dismiss")}
@@ -1168,11 +1164,10 @@ export default function MobileScannerPage() {
                 {
                   key: "camera",
                   icon: (
-                    <PhotoCameraRoundedIcon
-                      style={{
-                        fontSize: FLUID.icon,
-                        color: "var(--c-accent-text)",
-                      }}
+                    <Icon
+                      name="camera"
+                      size={FLUID.icon}
+                      style={{ color: "var(--c-accent-text)" }}
                     />
                   ),
                   title: t("mobileScanner.camera", "Camera"),
@@ -1188,11 +1183,10 @@ export default function MobileScannerPage() {
                 {
                   key: "file",
                   icon: (
-                    <UploadRoundedIcon
-                      style={{
-                        fontSize: FLUID.icon,
-                        color: "var(--mantine-color-green-6)",
-                      }}
+                    <Icon
+                      name="upload"
+                      size={FLUID.icon}
+                      style={{ color: "var(--mantine-color-green-6)" }}
                     />
                   ),
                   title: t("mobileScanner.fileUpload", "File Upload"),
@@ -1349,11 +1343,10 @@ export default function MobileScannerPage() {
               }}
             >
               <Stack align="center" gap={FLUID.gap} style={{ minHeight: 0 }}>
-                <UploadRoundedIcon
-                  style={{
-                    fontSize: FLUID.icon,
-                    color: "var(--mantine-color-gray-5)",
-                  }}
+                <Icon
+                  name="upload"
+                  size={FLUID.icon}
+                  style={{ color: "var(--mantine-color-gray-5)" }}
                 />
                 <Text fw={600} ta="center" style={{ fontSize: FLUID.title }}>
                   {t(
@@ -1510,7 +1503,7 @@ export default function MobileScannerPage() {
                   accent="danger"
                   size={buttonSize}
                   onClick={removeSelected}
-                  leftSection={<DeleteOutlineRoundedIcon />}
+                  leftSection={<Icon name="trash" />}
                 >
                   {mode === "camera"
                     ? t("mobileScanner.retake", "Retake")
@@ -1526,9 +1519,9 @@ export default function MobileScannerPage() {
                   }
                   leftSection={
                     mode === "camera" ? (
-                      <PhotoCameraRoundedIcon />
+                      <Icon name="camera" />
                     ) : (
-                      <AddPhotoAlternateRoundedIcon />
+                      <Icon name="image-plus" />
                     )
                   }
                 >
@@ -1552,7 +1545,7 @@ export default function MobileScannerPage() {
                   size={buttonSize}
                   variant={canUpload ? "secondary" : "primary"}
                   onClick={openFilePicker}
-                  leftSection={<AddPhotoAlternateRoundedIcon />}
+                  leftSection={<Icon name="image-plus" />}
                 >
                   {t("mobileScanner.selectImages", "Select Images")}
                 </DSButton>

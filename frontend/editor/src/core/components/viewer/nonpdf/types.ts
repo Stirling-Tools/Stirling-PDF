@@ -1,10 +1,5 @@
 import React from "react";
-import ImageIcon from "@mui/icons-material/Image";
-import TableChartIcon from "@mui/icons-material/TableChart";
-import ArticleIcon from "@mui/icons-material/Article";
-import CodeIcon from "@mui/icons-material/Code";
-import DataObjectIcon from "@mui/icons-material/DataObject";
-import HtmlIcon from "@mui/icons-material/Html";
+import { Icon } from "@app/ui/Icon";
 
 import type { NonPdfFileType } from "@app/utils/fileUtils";
 
@@ -35,37 +30,37 @@ export function getFileTypeMeta(
     case "image":
       return {
         label: "Image",
-        icon: React.createElement(ImageIcon, { fontSize: "small" }),
+        icon: React.createElement(Icon, { name: "image", size: 20 }),
         ...BADGE_COLORS,
       };
     case "csv":
       return {
         label: "Spreadsheet",
-        icon: React.createElement(TableChartIcon, { fontSize: "small" }),
+        icon: React.createElement(Icon, { name: "table", size: 20 }),
         ...BADGE_COLORS,
       };
     case "json":
       return {
         label: "JSON",
-        icon: React.createElement(DataObjectIcon, { fontSize: "small" }),
+        icon: React.createElement(Icon, { name: "braces", size: 20 }),
         ...BADGE_COLORS,
       };
     case "markdown":
       return {
         label: "Markdown",
-        icon: React.createElement(CodeIcon, { fontSize: "small" }),
+        icon: React.createElement(Icon, { name: "code", size: 20 }),
         ...BADGE_COLORS,
       };
     case "html":
       return {
         label: "HTML",
-        icon: React.createElement(HtmlIcon, { fontSize: "small" }),
+        icon: React.createElement(Icon, { name: "file-html", size: 20 }),
         ...BADGE_COLORS,
       };
     case "text":
       return {
         label: "Text",
-        icon: React.createElement(ArticleIcon, { fontSize: "small" }),
+        icon: React.createElement(Icon, { name: "file-text", size: 20 }),
         ...BADGE_COLORS,
       };
     default: {
@@ -74,7 +69,7 @@ export function getFileTypeMeta(
       const label = ext || "File";
       return {
         label,
-        icon: React.createElement(ArticleIcon, { fontSize: "small" }),
+        icon: React.createElement(Icon, { name: "file-text", size: 20 }),
         ...BADGE_COLORS,
       };
     }

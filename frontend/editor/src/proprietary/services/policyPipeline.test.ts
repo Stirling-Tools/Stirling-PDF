@@ -37,9 +37,22 @@ const backendPolicy: BackendPolicy = {
 };
 
 describe("fromBackendPolicy", () => {
+  it("does not admit an unknown first endpoint for automatic enforcement", () => {
+    const decoded = fromBackendPolicy({
+      ...backendPolicy,
+      steps: [
+        { operation: "/unknown", parameters: {} },
+        ...backendPolicy.steps,
+      ],
+    });
+
+    expect(decoded.firstOperation).toBeNull();
+  });
+
   it("decodes a stored policy's output.options bag into frontend settings", () => {
     const decoded = fromBackendPolicy(backendPolicy);
     expect(decoded.id).toBe("p1");
+    expect(decoded.firstOperation).toBe("/api/v1/misc/compress-pdf");
     expect(decoded.policyKey).toBe("security");
     expect(decoded.enabled).toBe(true);
     expect(decoded.sources).toEqual([]);

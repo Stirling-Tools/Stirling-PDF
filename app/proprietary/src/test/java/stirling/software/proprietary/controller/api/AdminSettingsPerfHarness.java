@@ -224,7 +224,9 @@ class AdminSettingsPerfHarness {
                 mock(MfaService.class),
                 loginAttemptService,
                 resourceAccessService,
-                mock(InviteTokenRepository.class));
+                mock(InviteTokenRepository.class),
+                org.mockito.Mockito.mock(
+                        stirling.software.proprietary.service.OrgOwnerService.class));
     }
 
     Authentication adminAuth() {

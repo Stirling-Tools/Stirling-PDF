@@ -42,6 +42,7 @@ import { createFileSelectors } from "@app/contexts/file/fileSelectors";
 import {
   addFiles,
   addStirlingFileStubs,
+  reconcileOpenFilesAt,
   consumeFiles,
   undoConsumeFiles,
   createFileActions,
@@ -287,6 +288,13 @@ function FileContextInner({
         derivedFromTool?: boolean;
         /** Folder every added file is born into (see AddFileOptions). */
         folderId?: string;
+        /** Classification computed outside the policy system (see AddFileOptions). */
+        presetClassification?: {
+          labels: string[];
+          confidence: StirlingFileStub["classificationConfidence"];
+        };
+        /** Bytes and stub only, no thumbnail parse (see AddFileOptions). */
+        skipMetadataHydration?: boolean;
       },
     ): Promise<StirlingFile[]> => {
       const stirlingFiles = await addFiles(
@@ -383,6 +391,12 @@ function FileContextInner({
 
       return result;
     },
+    [],
+  );
+
+  const reconcileOpenFilesAction = useCallback(
+    (locations: string[]) =>
+      reconcileOpenFilesAt(locations, stateRef, filesRef, lifecycleManager),
     [],
   );
 
@@ -636,6 +650,7 @@ function FileContextInner({
       addFiles: addRawFiles,
       addFilesWithOptions,
       addStirlingFileStubs: addStirlingFileStubsAction,
+      reconcileOpenFiles: reconcileOpenFilesAction,
       removeFiles: async (fileIds: FileId[], deleteFromStorage?: boolean) => {
         // Remove from memory and cleanup resources
         lifecycleManager.removeFiles(fileIds, stateRef);
@@ -702,6 +717,7 @@ function FileContextInner({
       baseActions,
       addRawFiles,
       addStirlingFileStubsAction,
+      reconcileOpenFilesAction,
       lifecycleManager,
       setHasUnsavedChanges,
       consumeFilesWrapper,
