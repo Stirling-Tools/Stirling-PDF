@@ -105,6 +105,10 @@ system:
     manifestUrl: "" # empty uses the default; set it to use a mirror or work offline
 ```
 
+A catalogue served over https may name https addresses only. A local one - a
+`file:` address on a disk or a share - may also name files on that same disk or
+share, which is how an offline mirror is laid out.
+
 The runtime lands next to the application's own data, so adding a language never
 needs administrator rights.
 
