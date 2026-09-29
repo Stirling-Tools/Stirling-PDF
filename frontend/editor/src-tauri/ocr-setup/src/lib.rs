@@ -22,6 +22,7 @@ mod msi;
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::{Component, Path, PathBuf};
+use std::time::Duration;
 
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
@@ -33,6 +34,8 @@ use msi::Handle;
 const MAX_ARCHIVE_BYTES: u64 = 300 * 1024 * 1024;
 const MAX_EXPANDED_BYTES: u64 = 700 * 1024 * 1024;
 const MAX_ENTRIES: usize = 5_000;
+/// The real catalogue is a few kilobytes; the backend applies the same ceiling.
+const MAX_MANIFEST_BYTES: u64 = 4 * 1024 * 1024;
 
 /// The bar is driven in ticks; bytes would overflow the installer's i32.
 const TICKS: i32 = 1_000;
@@ -206,14 +209,37 @@ fn platform_key() -> String {
 }
 
 fn fetch_manifest(url: &str) -> Result<Manifest, String> {
-    require_secure(url)?;
-    let body = ureq::get(url)
-        .timeout(std::time::Duration::from_secs(30))
-        .call()
+    let mut body = String::new();
+    open(url, Duration::from_secs(30))
         .map_err(|e| format!("fetching the catalogue: {e}"))?
-        .into_string()
+        .take(MAX_MANIFEST_BYTES + 1)
+        .read_to_string(&mut body)
         .map_err(|e| format!("reading the catalogue: {e}"))?;
+    if body.len() as u64 > MAX_MANIFEST_BYTES {
+        return Err("the catalogue is larger than the size cap".into());
+    }
     serde_json::from_str(&body).map_err(|e| format!("parsing the catalogue: {e}"))
+}
+
+/// Opens a catalogue or an artefact: a local file for an offline mirror, https
+/// for everything else. ureq has no transport for `file:`, so that scheme is
+/// read from disk and never handed to it.
+fn open(url: &str, timeout: Duration) -> Result<Box<dyn Read>, String> {
+    require_secure(url)?;
+    let url = url.trim();
+    if url.to_ascii_lowercase().starts_with("file:") {
+        let path = url::Url::parse(url)
+            .ok()
+            .and_then(|parsed| parsed.to_file_path().ok())
+            .ok_or_else(|| format!("not a usable file address: {url}"))?;
+        let file = File::open(&path).map_err(|e| format!("{}: {e}", path.display()))?;
+        return Ok(Box::new(file));
+    }
+    let response = ureq::get(url)
+        .timeout(timeout)
+        .call()
+        .map_err(|e| format!("{e}"))?;
+    Ok(Box::new(response.into_reader()))
 }
 
 /// https or a local file only.
@@ -234,14 +260,8 @@ fn download(artifact: &Artifact, target: &Path, install: Handle) -> Result<u64, 
     if artifact.sha256.trim().is_empty() {
         return Err("the catalogue lists it without a SHA-256".into());
     }
-    require_secure(&artifact.url)?;
 
-    let response = ureq::get(&artifact.url)
-        .timeout(std::time::Duration::from_secs(600))
-        .call()
-        .map_err(|e| format!("{e}"))?;
-
-    let mut reader = response.into_reader().take(MAX_ARCHIVE_BYTES + 1);
+    let mut reader = open(&artifact.url, Duration::from_secs(600))?.take(MAX_ARCHIVE_BYTES + 1);
     let mut file = File::create(target).map_err(|e| format!("{}: {e}", target.display()))?;
     let mut hasher = Sha256::new();
     let mut buffer = vec![0u8; 64 * 1024];
@@ -402,6 +422,55 @@ mod tests {
         assert!(require_secure("http://example.invalid/manifest.json").is_err());
         assert!(require_secure("https://example.invalid/manifest.json").is_ok());
         assert!(require_secure("file:///C:/mirror/manifest.json").is_ok());
+    }
+
+    /// A `file:` address for a path, the way an offline mirror names one.
+    fn file_url(path: &Path) -> String {
+        url::Url::from_file_path(path)
+            .expect("an absolute path")
+            .to_string()
+    }
+
+    fn scratch_dir(name: &str) -> PathBuf {
+        let dir =
+            std::env::temp_dir().join(format!("stirling-ocr-setup-{name}-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).expect("a scratch directory");
+        dir
+    }
+
+    #[test]
+    fn reads_a_catalogue_from_a_file_address() {
+        let dir = scratch_dir("catalogue");
+        let manifest = dir.join("ocr-manifest.json");
+        fs::write(
+            &manifest,
+            r#"{"engine":{"windows-x86_64":{"url":"file:///C:/mirror/engine.zip","sha256":"00"}}}"#,
+        )
+        .unwrap();
+
+        let parsed = fetch_manifest(&file_url(&manifest)).expect("a local catalogue should load");
+        assert!(parsed.engine.contains_key("windows-x86_64"));
+    }
+
+    #[test]
+    fn copies_and_verifies_an_artefact_from_a_file_address() {
+        let dir = scratch_dir("artefact");
+        let source = dir.join("eng.traineddata");
+        fs::write(&source, b"model bytes").unwrap();
+        let artifact = Artifact {
+            url: file_url(&source),
+            size: 11,
+            sha256: hex(&Sha256::digest(b"model bytes")),
+            name: None,
+        };
+        let target = dir.join(".incoming-eng");
+
+        assert_eq!(
+            download(&artifact, &target, 0).expect("a local artefact should copy"),
+            11
+        );
+        assert_eq!(fs::read(&target).unwrap(), b"model bytes");
     }
 
     #[test]
