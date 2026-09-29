@@ -251,7 +251,7 @@ export default defineConfig(async ({ mode, command }) => {
   const flavor = (process.env.STIRLING_FLAVOR ?? "").toLowerCase();
   const flavorMode: BuildMode | null =
     flavor === "core" || flavor === "proprietary" || flavor === "saas"
-      ? (flavor as BuildMode)
+      ? flavor
       : null;
   const effectiveMode: BuildMode =
     explicitMode ??
@@ -380,13 +380,9 @@ export default defineConfig(async ({ mode, command }) => {
             dest: "pdfjs/standard_fonts",
           },
           {
-            // Brand assets live in core; the editor serves them by URL per
-            // variant, so copy each set to the /{variant}-logo path its
-            // manifests, index.html and useLogoAssets resolve against.
-            src: "src/core/assets/brand/classic-logo/*",
-            dest: "classic-logo",
-          },
-          {
+            // Brand assets live in core; the editor serves them by URL, so
+            // copy the set to the /modern-logo path its manifest, index.html
+            // and useLogoAssets resolve against.
             src: "src/core/assets/brand/modern-logo/*",
             dest: "modern-logo",
           },
@@ -427,9 +423,15 @@ export default defineConfig(async ({ mode, command }) => {
     },
     build: {
       target: "esnext",
+      modulePreload: {
+        // Lazy chunks can import the entry again. An upfront link lets Vite reuse
+        // its preload instead of fetching an already-running module in WebKit.
+        resolveDependencies: (filename, deps, { hostType }) =>
+          hostType === "html" ? [filename, ...deps] : deps,
+      },
       rollupOptions: {
         output: {
-          manualChunks(id) {
+          manualChunks(id: string) {
             if (id.includes("material-symbols-icons.json"))
               return "vendor-iconset";
             if (id.includes("node_modules")) {

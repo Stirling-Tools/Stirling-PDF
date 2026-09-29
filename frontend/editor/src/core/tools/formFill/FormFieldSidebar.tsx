@@ -165,10 +165,12 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
                             className={styles.fieldTypeIcon}
                             style={{
                               color: `var(--mantine-color-${FIELD_TYPE_COLOR[field.type]}-6)`,
-                              fontSize: "0.875rem",
                             }}
                           >
-                            {FIELD_TYPE_ICON[field.type]}
+                            <Icon
+                              name={FIELD_TYPE_ICON[field.type]}
+                              size={14}
+                            />
                           </span>
                         </Tooltip>
                         <span className={styles.fieldName}>

@@ -15,6 +15,9 @@ import {
 import fs from "node:fs";
 import path from "node:path";
 
+// Reads the library as cards, so it asks for the grid.
+test.use({ filesViewMode: "grid" });
+
 // The three ways an external edit could still cost the user work, driven through
 // the real desktop build rather than asserted on the units underneath it.
 // Needs `vite --mode desktop`: on any other build desktopFileLinkingSupported is

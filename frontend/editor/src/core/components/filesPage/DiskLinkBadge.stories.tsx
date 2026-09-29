@@ -24,7 +24,7 @@ function stub(overrides: Partial<StirlingFileStub>): StirlingFileStub {
     originalFileId: "story-file",
     versionNumber: 1,
     ...overrides,
-  } as StirlingFileStub;
+  };
 }
 
 /** Its original was deleted or moved; this copy is the only one left. */

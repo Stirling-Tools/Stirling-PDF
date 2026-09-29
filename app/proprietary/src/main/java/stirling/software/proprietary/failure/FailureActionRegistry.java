@@ -17,8 +17,8 @@ import lombok.extern.slf4j.Slf4j;
  * point: because kinds declare action ids as data, one could name an action nobody implements,
  * which would otherwise show up as a button that 400s rather than as a failed boot.
  *
- * <p>Only {@link FailureActionId.Execution#SERVER} ids belong here: a bean for a client action is
- * refused, because dispatch could never reach it.
+ * <p>Only ids the server can ever run belong here; a bean for a client-only action is refused. An
+ * action the server runs for some documents still needs one, for the rows that reach it.
  */
 @Slf4j
 @Service
@@ -28,7 +28,7 @@ public class FailureActionRegistry {
 
     public FailureActionRegistry(List<FailureAction> actions) {
         for (FailureAction action : actions) {
-            if (!action.id().runsOnServer()) {
+            if (!action.id().canRunOnServer()) {
                 throw new IllegalStateException(
                         "Action "
                                 + action.id()
@@ -57,7 +57,7 @@ public class FailureActionRegistry {
                         .flatMap(
                                 kind ->
                                         kind.getActions().stream()
-                                                .filter(FailureActionId::runsOnServer)
+                                                .filter(FailureActionId::canRunOnServer)
                                                 .filter(action -> !byId.containsKey(action))
                                                 .map(action -> kind.getId() + " -> " + action))
                         .toList();

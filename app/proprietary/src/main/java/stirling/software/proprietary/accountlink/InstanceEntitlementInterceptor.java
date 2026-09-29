@@ -31,6 +31,7 @@ import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.jpdfium.PdfDocument;
+import stirling.software.proprietary.billing.AiCallRecord;
 import stirling.software.proprietary.billing.BillingCategory;
 import stirling.software.proprietary.billing.DocumentUnitCalculator;
 import stirling.software.proprietary.billing.DocumentUnitCalculator.FileSize;
@@ -40,8 +41,9 @@ import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 
 /**
  * Request-time gate + meter for combined billing. {@code preHandle} blocks billable (API / AI /
- * automation) work once the applicable allowance is spent; Enterprise licenses and manual tools
- * pass through. {@code afterCompletion} costs the op and accrues it.
+ * automation) work once the applicable allowance is spent. Manual tools, Enterprise licenses and
+ * direct PDF tool API calls covered by Server licenses pass through. {@code afterCompletion} costs
+ * the op and accrues it unless the Server license includes it.
  *
  * <p>The ledger follows the gate's own reason rather than re-deriving linked-ness, so the two
  * cannot disagree. Only the cloud one sits behind {@code …metering.enabled}: with it off a linked
@@ -102,9 +104,9 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
             // rather than after its first tool. It carries no automation header itself (category
             // BYPASSED), so it's gated here but metered only via its dispatched sub-steps - keeping
             // the BYPASSED meter category avoids double-counting.
-            boolean billable =
-                    category != BillingCategory.BYPASSED || PolicyRunRoutes.matches(request);
-            decision = gate.evaluate(billable);
+            boolean policyRun = PolicyRunRoutes.matches(request);
+            boolean billable = category != BillingCategory.BYPASSED || policyRun;
+            decision = gate.evaluate(billable, category == BillingCategory.API && !policyRun);
         } catch (RuntimeException e) {
             // Fail open: an inability to resolve entitlement (e.g. a DB or SaaS blip) must never
             // turn into a hard block on billable work.
@@ -123,7 +125,11 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
                 .write(
                         "{\"error\":\"ACCOUNT_LINK_REQUIRED\",\"reason\":\""
                                 + decision.reason().name()
-                                + "\"}");
+                                + "\""
+                                + (decision.reason() == GateDecision.Reason.GRACE_EXPIRED
+                                        ? ",\"message\":\"Cloud processing is paused because this server's offline allowance expired. Ask an administrator to restore its Stirling Cloud connection.\""
+                                        : "")
+                                + "}");
         return false;
     }
 
@@ -181,8 +187,17 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
                 || category == BillingCategory.BYPASSED) {
             return;
         }
+        // Bill AI only when this server's own engine ran: Stirling Cloud bills its own work, and a
+        // route that never reached an engine did none.
+        if (category == BillingCategory.AI
+                && !AiCallRecord.ranLocally(request.getAttribute(AiCallRecord.attributeName()))) {
+            return;
+        }
         try {
             Object reason = request.getAttribute(ATTR_REASON);
+            if (reason == GateDecision.Reason.SERVER_LICENSE) {
+                return;
+            }
             if (reason == GateDecision.Reason.FREE_TIER
                     || reason == GateDecision.Reason.ENTERPRISE_LICENSE) {
                 MeteredOp op = measure(request, UnitCalcPolicy.DEFAULT);

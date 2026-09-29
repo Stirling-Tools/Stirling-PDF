@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { useOpenedFile } from "@app/hooks/useOpenedFile";
 import { fileOpenService } from "@app/services/fileOpenService";
 import { useFileManagement } from "@app/contexts/file/fileHooks";
-import { createQuickKey } from "@app/types/fileContext";
-import { getDiskFileState } from "@app/services/desktopFileLink";
+import { pendingFilePathMappings } from "@app/services/pendingFilePathMappings";
+import { captureDroppedFilePaths } from "@app/services/fileImportPaths";
 
 /**
  * App initialization hook
@@ -12,8 +13,15 @@ import { getDiskFileState } from "@app/services/desktopFileLink";
  * - Handles files opened with the app (adds directly to FileContext)
  */
 export function useAppInitialization(): void {
+  useEffect(captureDroppedFilePaths, []);
+  // macOS captures dropped paths via a native swizzle installed against the live
+  // webview; no-op on other platforms.
+  useEffect(() => {
+    void invoke("install_drag_capture").catch(() => {});
+  }, []);
+
   // Get file management actions
-  const { addFiles, updateStirlingFileStub } = useFileManagement();
+  const { addFiles } = useFileManagement();
 
   // Handle files opened with app (Tauri mode)
   const {
@@ -51,12 +59,8 @@ export function useAppInitialization(): void {
                 );
 
                 console.log("[Desktop] Loaded file:", fileData.fileName);
-
-                return {
-                  file,
-                  filePath,
-                  quickKey: createQuickKey(file),
-                };
+                pendingFilePathMappings.set(file, filePath);
+                return file;
               } catch (error) {
                 console.error(
                   "[Desktop] Failed to load file:",
@@ -67,38 +71,10 @@ export function useAppInitialization(): void {
               }
             }),
           )
-        ).filter(
-          (
-            entry,
-          ): entry is { file: File; filePath: string; quickKey: string } =>
-            Boolean(entry),
-        );
+        ).filter((file): file is File => Boolean(file));
 
         if (loadedFiles.length > 0) {
-          const filesArray = loadedFiles.map((entry) => entry.file);
-          const quickKeyToPath = new Map(
-            loadedFiles.map((entry) => [entry.quickKey, entry.filePath]),
-          );
-
-          const addedFiles = await addFiles(filesArray, { selectFiles: true });
-          // Path is stamped after addFiles stores records, so the link survives restart.
-          // The baseline goes too, or the next open sees a false external change.
-          await Promise.all(
-            addedFiles.map(async (file) => {
-              const localFilePath = quickKeyToPath.get(file.quickKey);
-              if (!localFilePath) return;
-              const state = await getDiskFileState(localFilePath);
-              updateStirlingFileStub(file.fileId, {
-                localFilePath,
-                ...(state.availability === "present"
-                  ? {
-                      diskSyncedSize: state.size,
-                      diskSyncedModifiedMs: state.modifiedMs,
-                    }
-                  : {}),
-              });
-            }),
-          );
+          await addFiles(loadedFiles, { selectFiles: true });
 
           console.log(
             `[Desktop] ${loadedFiles.length} opened file(s) added to FileContext`,
@@ -110,13 +86,7 @@ export function useAppInitialization(): void {
     };
 
     loadOpenedFiles();
-  }, [
-    openedFilePaths,
-    openedFileLoading,
-    addFiles,
-    updateStirlingFileStub,
-    consumeOpenedFilePaths,
-  ]);
+  }, [openedFilePaths, openedFileLoading, addFiles, consumeOpenedFilePaths]);
 }
 
 export function useSetupCompletion(): (completed: boolean) => void {

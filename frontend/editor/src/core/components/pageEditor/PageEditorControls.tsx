@@ -2,6 +2,7 @@ import { Tooltip } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
+import styles from "@app/components/pageEditor/PageEditorControls.module.css";
 
 interface PageEditorControlsProps {
   // Close/Reset functions
@@ -92,46 +93,13 @@ const PageEditorControls = ({
   };
 
   return (
-    <div
-      style={{
-        position: "sticky",
-        left: 0,
-        right: 0,
-        bottom: 0,
-        zIndex: 50,
-        display: "flex",
-        justifyContent: "center",
-        pointerEvents: "none",
-        background: "transparent",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          borderTopLeftRadius: 16,
-          borderTopRightRadius: 16,
-          borderBottomLeftRadius: 0,
-          borderBottomRightRadius: 0,
-          boxShadow: "0 -2px 8px rgba(0,0,0,0.04)",
-          backgroundColor: "var(--c-bg-raised)",
-          border: "1px solid var(--c-border)",
-          borderRadius: "16px 16px 0 0",
-          pointerEvents: "auto",
-          minWidth: 360,
-          maxWidth: 700,
-          flexWrap: "wrap",
-          justifyContent: "center",
-          padding: "1rem",
-          paddingBottom: "1rem",
-        }}
-      >
+    <div className={styles.dock}>
+      <div className={styles.bar}>
         {/* Undo/Redo */}
         <Tooltip label={t("pageEditor.toolbar.undo", "Undo")}>
           <ActionIcon
             variant="tertiary"
-            size="lg"
+            size="md"
             onClick={onUndo}
             disabled={!canUndo}
             aria-label={t("pageEditor.toolbar.undo", "Undo")}
@@ -142,7 +110,7 @@ const PageEditorControls = ({
         <Tooltip label={t("pageEditor.toolbar.redo", "Redo")}>
           <ActionIcon
             variant="tertiary"
-            size="lg"
+            size="md"
             onClick={onRedo}
             disabled={!canRedo}
             aria-label={t("pageEditor.toolbar.redo", "Redo")}
@@ -151,14 +119,7 @@ const PageEditorControls = ({
           </ActionIcon>
         </Tooltip>
 
-        <div
-          style={{
-            width: 1,
-            height: 28,
-            backgroundColor: "var(--mantine-color-gray-3)",
-            margin: "0 8px",
-          }}
-        />
+        <div className={styles.divider} />
 
         {/* Page Operations */}
         <Tooltip
@@ -166,7 +127,7 @@ const PageEditorControls = ({
         >
           <ActionIcon
             variant="tertiary"
-            size="lg"
+            size="md"
             onClick={() => onRotate("left")}
             disabled={selectedPageIds.length === 0}
             aria-label={t(
@@ -182,7 +143,7 @@ const PageEditorControls = ({
         >
           <ActionIcon
             variant="tertiary"
-            size="lg"
+            size="md"
             onClick={() => onRotate("right")}
             disabled={selectedPageIds.length === 0}
             aria-label={t(
@@ -196,7 +157,7 @@ const PageEditorControls = ({
         <Tooltip label={t("pageEditor.toolbar.delete", "Delete Selected")}>
           <ActionIcon
             variant="tertiary"
-            size="lg"
+            size="md"
             onClick={onDelete}
             disabled={selectedPageIds.length === 0}
             aria-label={t("pageEditor.toolbar.delete", "Delete Selected")}
@@ -207,7 +168,7 @@ const PageEditorControls = ({
         <Tooltip label={getSplitTooltip()}>
           <ActionIcon
             variant="tertiary"
-            size="lg"
+            size="md"
             onClick={onSplit}
             disabled={selectedPageIds.length === 0}
             aria-label={getSplitTooltip()}
@@ -218,7 +179,7 @@ const PageEditorControls = ({
         <Tooltip label={getPageBreakTooltip()}>
           <ActionIcon
             variant="tertiary"
-            size="lg"
+            size="md"
             onClick={onPageBreak}
             disabled={selectedPageIds.length === 0}
             aria-label={getPageBreakTooltip()}

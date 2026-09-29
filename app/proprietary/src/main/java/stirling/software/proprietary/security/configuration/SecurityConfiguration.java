@@ -236,7 +236,7 @@ public class SecurityConfiguration {
         http.securityMatcher("/saml2/**", "/login/saml2/**");
 
         SessionCreationPolicy sessionPolicy =
-                (securityProperties.isSaml2Active() && runningProOrHigher)
+                securityProperties.isSaml2Active()
                         ? SessionCreationPolicy.IF_REQUIRED
                         : SessionCreationPolicy.STATELESS;
 
@@ -429,7 +429,7 @@ public class SecurityConfiguration {
                                         .permitAll());
             }
             // Handle SAML
-            if (securityProperties.isSaml2Active() && runningProOrHigher) {
+            if (securityProperties.isSaml2Active()) {
                 OpenSaml5AuthenticationProvider authenticationProvider =
                         new OpenSaml5AuthenticationProvider();
                 authenticationProvider.setResponseAuthenticationConverter(

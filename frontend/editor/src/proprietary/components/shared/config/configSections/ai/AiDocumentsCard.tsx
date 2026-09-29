@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Icon } from "@app/ui/Icon";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
 import {
   TextInput,
@@ -12,7 +13,6 @@ import {
   Group,
   Alert,
 } from "@mantine/core";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import {
@@ -263,7 +263,7 @@ export function AiDocumentsCard({
             "admin.settings.ai.documents.reindexNote.title",
             "Re-index required",
           )}
-          icon={<LocalIcon icon="warning-rounded" width="1rem" height="1rem" />}
+          icon={<Icon name="triangle-alert" size="1rem" />}
         >
           <Text size="xs">
             {t(

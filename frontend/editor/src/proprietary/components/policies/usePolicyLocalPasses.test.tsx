@@ -81,7 +81,11 @@ vi.mock("@app/services/fileStorage", () => ({
   },
 }));
 vi.mock("@app/services/heuristic/heuristicClassification", () => ({
-  classifyFileHeuristically: (file: File) => mocks.classify(file),
+  classifyFileHeuristically: async (file: File) => ({
+    language: "en",
+    packs: ["en"],
+    ...(await mocks.classify(file)),
+  }),
 }));
 vi.mock("@app/services/automationMeter", () => ({
   meterAutomationRun: (payload: unknown) => mocks.meter(payload),

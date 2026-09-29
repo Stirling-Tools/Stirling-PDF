@@ -300,7 +300,10 @@ export function FormFieldModifyPanel({
                               display: "flex",
                             }}
                           >
-                            {FIELD_TYPE_ICON[field.type]}
+                            <Icon
+                              name={FIELD_TYPE_ICON[field.type]}
+                              size={16}
+                            />
                           </span>
                           <Text
                             size="xs"

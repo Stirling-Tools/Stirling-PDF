@@ -1,5 +1,6 @@
 package stirling.software.saas.payg.stripe;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -26,6 +27,40 @@ public class StripeCustomerDetailsDao {
 
     /** Either field may be null. */
     public record CustomerDetails(String companyName, String invoiceEmail) {}
+
+    /** The next renewal for one subscription, independent of the wallet's usage window. */
+    public record UpcomingInvoice(String subscriptionId, String description, Instant date) {}
+
+    /** Empty when subscription dates have not synced; never substitutes a grant reset date. */
+    public List<UpcomingInvoice> findUpcomingInvoices(String customerId) {
+        if (customerId == null || customerId.isBlank()) return List.of();
+        try {
+            return jdbcTemplate.query(
+                    """
+                    SELECT s.id, string_agg(DISTINCT product.name, ' + ') AS description,
+                           COALESCE(MIN(si.current_period_end), s.current_period_end) AS period_end
+                    FROM stripe.subscriptions s
+                    LEFT JOIN stripe.subscription_items si ON si.subscription = s.id
+                      AND COALESCE(si.deleted, false) = false
+                    LEFT JOIN stripe.prices p ON p.id = si.price
+                    LEFT JOIN stripe.products product ON product.id = p.product
+                    WHERE s.customer = ? AND s.status IN ('active', 'trialing')
+                      AND COALESCE(s.cancel_at_period_end, false) = false
+                    GROUP BY s.id, s.current_period_end
+                    HAVING COALESCE(MIN(si.current_period_end), s.current_period_end) IS NOT NULL
+                    ORDER BY period_end, s.id
+                    """,
+                    (rs, i) ->
+                            new UpcomingInvoice(
+                                    rs.getString("id"),
+                                    rs.getString("description"),
+                                    Instant.ofEpochSecond(rs.getLong("period_end"))),
+                    customerId);
+        } catch (DataAccessException e) {
+            log.warn("Stripe renewal dates unavailable for customer {}", customerId);
+            return List.of();
+        }
+    }
 
     private static final String QUERY =
             "SELECT c.name AS name, c.email AS email FROM stripe.customers c WHERE c.id = ?";

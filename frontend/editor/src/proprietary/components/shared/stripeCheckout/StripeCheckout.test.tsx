@@ -24,7 +24,12 @@ const service = vi.hoisted(() => ({
 vi.mock("@app/services/licenseService", () => ({ default: service }));
 vi.mock("@app/hooks/useIsMobile", () => ({ useIsMobile: () => false }));
 vi.mock("@mantine/core", () => ({
-  Modal: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  Modal: ({ children, title }: { children: ReactNode; title?: ReactNode }) => (
+    <div>
+      {title}
+      {children}
+    </div>
+  ),
   Text: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   Group: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
@@ -88,14 +93,17 @@ vi.mock(
 vi.mock("@app/components/shared/stripeCheckout/stages/CapacityStage", () => ({
   CapacityStage: ({
     serverQuantity,
+    periodPicker,
     currentLimit,
     onContinue,
   }: {
     serverQuantity: number;
+    periodPicker?: ReactNode;
     currentLimit: number;
     onContinue: () => void;
   }) => (
     <div>
+      {periodPicker}
       Capacity: {serverQuantity} blocks; current: {currentLimit}
       <button onClick={onContinue}>Continue to payment</button>
     </div>
@@ -150,7 +158,9 @@ describe("capacity checkout entry", () => {
       expect(screen.queryByText("Buyer email")).not.toBeInTheDocument();
     },
   );
-  it("still asks a free user for their billing email", async () => {
+  // The free user is the case that changed: this lane mints the checkout as their Stirling
+  // account, so the address comes from the team's billing owner and nobody is asked for one.
+  it("does not ask a free user for a billing email either", async () => {
     service.getLicenseInfo.mockResolvedValue({ licenseType: "NORMAL" });
     render(
       <StripeCheckout
@@ -158,18 +168,6 @@ describe("capacity checkout entry", () => {
         onClose={() => {}}
         planGroup={planGroup}
         combinedChoose
-      />,
-    );
-    expect(await screen.findByText("Buyer email")).toBeInTheDocument();
-  });
-  it("seeds required capacity when the caller supplies an email", async () => {
-    render(
-      <StripeCheckout
-        opened
-        onClose={() => {}}
-        planGroup={planGroup}
-        combinedChoose
-        initialEmail="buyer@example.test"
         minimumSeats={250}
         currentLimit={300}
       />,
@@ -177,12 +175,15 @@ describe("capacity checkout entry", () => {
     expect(
       await screen.findByText("Capacity: 3 blocks; current: 300"),
     ).toBeInTheDocument();
-    expect(service.getLicenseInfo).not.toHaveBeenCalled();
+    expect(screen.getByText("Billing period")).toBeInTheDocument();
+    expect(screen.queryByText("Buyer email")).not.toBeInTheDocument();
   });
 });
 
 describe("combined checkout for plans without capacity", () => {
-  it.each(["supplied email", "existing license", "email entry"])(
+  // Two entry paths now, not three: the licence only decides whether an upgrade key travels with
+  // the purchase, never whether an address is collected first.
+  it.each(["existing license", "no license"])(
     "reaches payment from %s",
     async (entry) => {
       service.getLicenseInfo.mockResolvedValue(
@@ -196,18 +197,8 @@ describe("combined checkout for plans without capacity", () => {
           onClose={() => {}}
           planGroup={{ ...planGroup, tier: "enterprise" }}
           combinedChoose
-          initialEmail={
-            entry === "supplied email" ? "buyer@example.test" : undefined
-          }
         />,
       );
-      if (entry === "email entry") {
-        await screen.findByText("Buyer email");
-        fireEvent.change(screen.getByLabelText("Email"), {
-          target: { value: "buyer@example.test" },
-        });
-        fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-      }
       fireEvent.click(await screen.findByRole("button", { name: "Monthly" }));
       expect(await screen.findByText("Payment details")).toBeInTheDocument();
       expect(screen.queryByText(/Capacity:/)).not.toBeInTheDocument();
@@ -222,7 +213,6 @@ it("starts at held capacity and lets payment return to those choices", async () 
       onClose={() => {}}
       planGroup={planGroup}
       combinedChoose
-      initialEmail="buyer@example.test"
       minimumSeats={40}
       currentLimit={300}
     />,

@@ -34,7 +34,8 @@ public class PdfErrorUtils {
     private static boolean isCorruptedPdfError(String message) {
         if (message == null) return false;
 
-        // Check for common corruption indicators
+        // Structural damage only: a failed decryption is matched by isEncryptionError, and
+        // listing it here too let whichever check ran first decide the kind.
         return message.contains("Missing root object specification")
                 || message.contains("Header doesn't contain versioninfo")
                 || message.contains("Expected trailer")
@@ -47,9 +48,6 @@ public class PdfErrorUtils {
                 || message.contains("ICCBased colorspace array must have a stream")
                 || message.contains("1-based index not found")
                 || message.contains("Invalid dictionary, found:")
-                || message.contains("AES initialization vector not fully read")
-                || message.contains("BadPaddingException")
-                || message.contains("Given final block not properly padded")
                 || message.contains("End-of-File, expected line");
     }
 }

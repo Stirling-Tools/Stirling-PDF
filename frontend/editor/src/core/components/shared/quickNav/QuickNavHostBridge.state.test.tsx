@@ -2,6 +2,7 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { useAuth } from "@app/auth/UseSession";
 import { AppConfigProvider } from "@app/contexts/AppConfigContext";
 import {
   QuickNavHostProvider,
@@ -12,10 +13,10 @@ import { fetchSigningSessions, type SigningSessions } from "@app/api/signing";
 import { alert } from "@app/components/toast";
 import { expectConsole } from "@app/tests/failOnConsole";
 
-const { auth, access } = vi.hoisted(() => ({
-  auth: { user: { id: "ada" } as { id: string } | null, loading: false },
-  access: { granted: true, settled: true },
-}));
+const auth = vi.hoisted<Pick<ReturnType<typeof useAuth>, "user" | "loading">>(
+  () => ({ user: { id: "ada" }, loading: false }),
+);
+const access = vi.hoisted(() => ({ granted: true, settled: true }));
 
 vi.mock("@app/auth/UseSession", () => ({
   useAuth: () => ({

@@ -99,6 +99,12 @@ export interface BillingDetails {
   present: boolean;
   companyName: string | null;
   invoiceEmail: string | null;
+  /** Per-subscription renewal dates; absent until supported by the hosted backend. */
+  upcomingInvoices?: Array<{
+    subscriptionId: string;
+    description: string | null;
+    date: string;
+  }>;
 }
 
 export async function fetchBillingDetails(): Promise<BillingDetails> {

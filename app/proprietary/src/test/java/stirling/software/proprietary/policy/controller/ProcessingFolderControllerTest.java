@@ -5,8 +5,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -59,6 +62,7 @@ import stirling.software.proprietary.policy.source.SourceAccessGuard;
 import stirling.software.proprietary.policy.store.InProcessPolicyStore;
 import stirling.software.proprietary.policy.trigger.PolicyTrigger;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
+import stirling.software.proprietary.policy.trigger.StorageFolderTrigger;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.storage.model.Folder;
@@ -164,7 +168,10 @@ class ProcessingFolderControllerTest {
         lenient().when(diskFolderSink.supports(any())).thenReturn(true);
         PolicyValidator validator =
                 new PolicyValidator(
-                        List.of(folderWatchTrigger),
+                        List.of(
+                                folderWatchTrigger,
+                                new StorageFolderTrigger(
+                                        policyStore, sourceStore, policyRunner, properties)),
                         List.of(
                                 new StorageFolderInputSource(
                                         storedFileRepository,
@@ -202,6 +209,116 @@ class ProcessingFolderControllerTest {
                         folderAccessGuard,
                         new SourceAccessGuard(userService, properties, policyManagementAuthority),
                         properties);
+    }
+
+    @Test
+    void aDestinationRefusesAPipelineItCannotDeliver() {
+        Source destination =
+                sourceStore.save(
+                        new Source(
+                                null,
+                                "Corpus",
+                                "folder",
+                                Map.of("directory", tempDir.toString()),
+                                true,
+                                "reece",
+                                3L));
+        var baseline = request(null, "new_version");
+        // Stubbed on the request's own steps: the sink has to see them, not an empty list.
+        doThrow(new IllegalArgumentException("requires a final AI ingestion step"))
+                .when(diskFolderSink)
+                .validatePipeline(any(), eq(baseline.steps()));
+        var unsupported =
+                new ProcessingFolderController.SaveProcessingFolderRequest(
+                        null,
+                        FOLDER_ID.toString(),
+                        null,
+                        true,
+                        baseline.steps(),
+                        Map.of(),
+                        List.of(destination.id()),
+                        List.of());
+        assertThatThrownBy(() -> controller.save(unsupported))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("AI ingestion step");
+        assertThat(policyStore.all()).isEmpty();
+    }
+
+    @Test
+    void aRoutedDestinationValidatesTheFoldersPipelineOutput() {
+        Source routed =
+                sourceStore.save(
+                        new Source(
+                                null,
+                                "Invoices",
+                                "folder",
+                                Map.of("directory", tempDir.toString()),
+                                true,
+                                "reece",
+                                3L));
+        var routes =
+                List.of(
+                        new RoutingRule(
+                                new Condition.MatchesAny(
+                                        new ConditionInput.DocumentField("document.extension"),
+                                        List.of("pdf")),
+                                routed.id()));
+        var baseline = request(null, "new_version");
+        var created =
+                controller
+                        .save(
+                                new ProcessingFolderController.SaveProcessingFolderRequest(
+                                        null,
+                                        FOLDER_ID.toString(),
+                                        null,
+                                        true,
+                                        baseline.steps(),
+                                        Map.of("categoryId", "routing"),
+                                        List.of(),
+                                        routes))
+                        .getBody();
+        assertThat(created.routingRules()).isEqualTo(routes);
+        verify(diskFolderSink, atLeastOnce())
+                .validatePipeline(routed.toOutputSpec(), baseline.steps());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void aDisabledDestinationIsRefusedWhileThereIsStillACallerToTellAboutIt(boolean routeOnly) {
+        Source destination =
+                sourceStore.save(
+                        new Source(
+                                null,
+                                "Paused corpus",
+                                "folder",
+                                Map.of("directory", tempDir.toString()),
+                                false,
+                                "reece",
+                                3L));
+        var baseline = request(null, "new_version");
+        var paused =
+                new ProcessingFolderController.SaveProcessingFolderRequest(
+                        null,
+                        FOLDER_ID.toString(),
+                        null,
+                        true,
+                        baseline.steps(),
+                        Map.of(),
+                        routeOnly ? List.of() : List.of(destination.id()),
+                        routeOnly
+                                ? List.of(
+                                        new RoutingRule(
+                                                new Condition.MatchesAny(
+                                                        new ConditionInput.DocumentField(
+                                                                "document.extension"),
+                                                        List.of("pdf")),
+                                                destination.id()))
+                                : List.of());
+        assertThatThrownBy(() -> controller.save(paused))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("disabled");
+        assertThat(policyStore.all()).isEmpty();
+        verify(diskFolderSink, never()).validatePipeline(any(), any());
     }
 
     @Test
@@ -344,6 +461,41 @@ class ProcessingFolderControllerTest {
         verify(policyRunner, timeout(2000)).run(stored, SweepKind.USER);
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void rejectsIncompatibleFallbackAndRoutingDestinationsBeforeSaving(boolean routed) {
+        Source destination =
+                sourceStore.save(
+                        new Source(null, "Vectors", "vectordb", Map.of(), true, "reece", 3L));
+        var baseline = request(null, "new_version");
+        doThrow(new IllegalArgumentException("chunks required"))
+                .when(diskFolderSink)
+                .validatePipeline(destination.toOutputSpec(), baseline.steps());
+        var routes =
+                List.of(
+                        new RoutingRule(
+                                new Condition.MatchesAny(
+                                        new ConditionInput.DocumentField("classification.labels"),
+                                        List.of("invoice")),
+                                destination.id()));
+        var request =
+                new ProcessingFolderController.SaveProcessingFolderRequest(
+                        null,
+                        FOLDER_ID.toString(),
+                        null,
+                        true,
+                        baseline.steps(),
+                        Map.of(),
+                        routed ? List.of() : List.of(destination.id()),
+                        routed ? routes : List.of());
+
+        assertThatThrownBy(() -> controller.save(request))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("chunks required");
+        assertThat(policyStore.all()).isEmpty();
+        assertThat(sourceStore.all()).hasSize(1);
+    }
+
     @Test
     void aForeignOutputFolderIdIsOverriddenWithTheOwnedSourceFolder() {
         // The caller owns FOLDER_ID but points output at someone else's folder.
@@ -368,6 +520,60 @@ class ProcessingFolderControllerTest {
         assertThat(stored.output().options())
                 .containsEntry("folderId", FOLDER_ID.toString())
                 .doesNotContainValue(foreign);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void aNullFinalStepIsRejectedBeforeCreatingTheFolderPair(boolean onDisk) {
+        var malformed =
+                new ProcessingFolderController.SaveProcessingFolderRequest(
+                        null,
+                        onDisk ? null : FOLDER_ID.toString(),
+                        onDisk ? tempDir.toString() : null,
+                        true,
+                        Stream.of((PipelineStep) null).toList(),
+                        Map.of());
+
+        assertThatThrownBy(() -> controller.save(malformed))
+                .isInstanceOfSatisfying(
+                        ResponseStatusException.class,
+                        error ->
+                                assertThat(error.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST))
+                .hasMessageContaining("Pipeline steps must not be null");
+        assertThat(policyStore.all()).isEmpty();
+        assertThat(sourceStore.all()).isEmpty();
+        verifyNoInteractions(policyRunner);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"exportChunksJsonl", "exportMarkdown"})
+    void corpusExportsPreserveOriginalsInStorageAndOnDisk(String exportFlag) {
+        var steps =
+                List.of(
+                        new PipelineStep(
+                                "/api/v1/docparse/ingest",
+                                Map.of("index", false, exportFlag, true),
+                                Map.of()));
+        var stored =
+                controller
+                        .save(
+                                new ProcessingFolderController.SaveProcessingFolderRequest(
+                                        null,
+                                        FOLDER_ID.toString(),
+                                        null,
+                                        true,
+                                        steps,
+                                        Map.of("mode", "new_version")))
+                        .getBody();
+        assertThat(stored.output()).containsEntry("mode", "new_file");
+
+        var disk =
+                controller
+                        .save(
+                                new ProcessingFolderController.SaveProcessingFolderRequest(
+                                        null, null, tempDir.toString(), true, steps, Map.of()))
+                        .getBody();
+        assertThat(disk.output()).containsEntry("replace", false);
     }
 
     @Test
@@ -477,10 +683,11 @@ class ProcessingFolderControllerTest {
     }
 
     @Test
-    void aStorageFolderStaysManualUntilTheArrivalTriggerExists() {
+    void aStorageFolderAutomaticallyProcessesArrivals() {
         var view = controller.save(request(null, "new_version")).getBody();
 
-        assertThat(policyStore.get(view.id()).orElseThrow().inputs().get(0).trigger()).isNull();
+        assertThat(policyStore.get(view.id()).orElseThrow().inputs().get(0).trigger().type())
+                .isEqualTo("storage-folder-watch");
     }
 
     @Test

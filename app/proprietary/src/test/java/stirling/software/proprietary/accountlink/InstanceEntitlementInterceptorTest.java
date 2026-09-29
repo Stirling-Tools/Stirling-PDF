@@ -41,11 +41,14 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.mock.web.MockMultipartHttpServletRequest;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.method.HandlerMethod;
 
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
+import stirling.software.proprietary.billing.AiCallRecord;
 import stirling.software.proprietary.billing.BillingCategory;
 import stirling.software.proprietary.billing.UnitCalcPolicy;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
@@ -78,9 +81,68 @@ class InstanceEntitlementInterceptorTest {
                         new Object());
     }
 
+    /** Records an engine call as AiEngineClient does; AI metering keys off it, not the mode. */
+    private static void engineCalled(
+            jakarta.servlet.http.HttpServletRequest request, AiCallRecord.Where where) {
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+        try {
+            AiCallRecord.record(where);
+        } finally {
+            RequestContextHolder.resetRequestAttributes();
+        }
+    }
+
+    @Test
+    void includedServerApiSkipsBothCreditLedgers() throws Exception {
+        when(gate.evaluate(true, true))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.SERVER_LICENSE));
+        authenticateWithApiKey();
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        MockMultipartHttpServletRequest request = fileRequest("/api/v1/general/merge");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        assertTrue(interceptor.preHandle(request, response, toolHandler()));
+        interceptor.afterCompletion(request, response, toolHandler(), null);
+
+        verifyNoInteractions(
+                meterProvider, freeTierUsageService, entitlementCache, tempFileManager);
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "/api/v1/policies/run",
+                "/api/v1/policies/42/trigger",
+                "/api/v1/ai/tools/summarize"
+            })
+    void processorRoutesCannotUseTheApiLicenceExemption(String path) throws Exception {
+        when(gate.evaluate(true, false))
+                .thenReturn(GateDecision.block(GateDecision.Reason.FREE_TIER_EXHAUSTED));
+        authenticateWithApiKey();
+
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        assertFalse(
+                interceptor()
+                        .preHandle(
+                                new MockHttpServletRequest("POST", path), response, toolHandler()));
+        assertEquals(402, response.getStatus());
+    }
+
+    @Test
+    void internalProcessorToolStepCannotUseTheApiLicenceExemption() throws Exception {
+        when(gate.evaluate(true, false))
+                .thenReturn(GateDecision.block(GateDecision.Reason.FREE_TIER_EXHAUSTED));
+        authenticateWithApiKey();
+        MockHttpServletRequest request =
+                new MockHttpServletRequest("POST", "/api/v1/general/merge");
+        request.addHeader("X-Stirling-Automation", "true");
+
+        assertFalse(interceptor().preHandle(request, new MockHttpServletResponse(), toolHandler()));
+    }
+
     @Test
     void allowsWhenGateAllows() throws Exception {
-        when(gate.evaluate(anyBoolean()))
+        when(gate.evaluate(anyBoolean(), anyBoolean()))
                 .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
         MockHttpServletResponse response = new MockHttpServletResponse();
 
@@ -90,7 +152,7 @@ class InstanceEntitlementInterceptorTest {
 
     @Test
     void blocksWith402AndTheTerminalReasonWhenGateBlocks() throws Exception {
-        when(gate.evaluate(anyBoolean()))
+        when(gate.evaluate(anyBoolean(), anyBoolean()))
                 .thenReturn(GateDecision.block(GateDecision.Reason.FREE_TIER_EXHAUSTED));
         MockHttpServletResponse response = new MockHttpServletResponse();
 
@@ -103,7 +165,7 @@ class InstanceEntitlementInterceptorTest {
 
     @Test
     void enterpriseProcessingWithoutFilesDoesNotAccrueUsage() throws Exception {
-        when(gate.evaluate(anyBoolean()))
+        when(gate.evaluate(anyBoolean(), anyBoolean()))
                 .thenReturn(GateDecision.allow(GateDecision.Reason.ENTERPRISE_LICENSE));
         InstanceEntitlementInterceptor interceptor = interceptor();
         MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/v1/ai/tools/x");
@@ -119,12 +181,13 @@ class InstanceEntitlementInterceptorTest {
             value = GateDecision.Reason.class,
             names = {"FREE_TIER", "ENTERPRISE_LICENSE"})
     void metersLocallyWithoutConsultingCloudBilling(GateDecision.Reason reason) throws Exception {
-        when(gate.evaluate(anyBoolean())).thenReturn(GateDecision.allow(reason));
+        when(gate.evaluate(anyBoolean(), anyBoolean())).thenReturn(GateDecision.allow(reason));
 
         InstanceEntitlementInterceptor interceptor = interceptor();
         MockMultipartHttpServletRequest req = fileRequest("/api/v1/ai/tools/x");
         MockHttpServletResponse resp = new MockHttpServletResponse();
         interceptor.preHandle(req, resp, new Object());
+        engineCalled(req, AiCallRecord.Where.LOCAL);
         interceptor.afterCompletion(req, resp, new Object(), null);
 
         verify(freeTierUsageService).accrue(eq(BillingCategory.AI), eq(1L), isNull());
@@ -133,7 +196,7 @@ class InstanceEntitlementInterceptorTest {
 
     @Test
     void freeTierAutomationUsesTheSourceDocumentKey() throws Exception {
-        when(gate.evaluate(anyBoolean()))
+        when(gate.evaluate(anyBoolean(), anyBoolean()))
                 .thenReturn(GateDecision.allow(GateDecision.Reason.FREE_TIER));
         InstanceEntitlementInterceptor interceptor = interceptor();
         MockMultipartHttpServletRequest req = fileRequest("/api/v1/general/rotate-pdf");
@@ -151,7 +214,7 @@ class InstanceEntitlementInterceptorTest {
 
     @Test
     void freeTierDoesNotMeterFilelessWork() throws Exception {
-        when(gate.evaluate(anyBoolean()))
+        when(gate.evaluate(anyBoolean(), anyBoolean()))
                 .thenReturn(GateDecision.allow(GateDecision.Reason.FREE_TIER));
         InstanceEntitlementInterceptor interceptor = interceptor();
         MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/ai/tools/x");
@@ -165,7 +228,7 @@ class InstanceEntitlementInterceptorTest {
 
     @Test
     void manualToolNeverReachesEitherLedger() throws Exception {
-        when(gate.evaluate(anyBoolean()))
+        when(gate.evaluate(anyBoolean(), anyBoolean()))
                 .thenReturn(GateDecision.allow(GateDecision.Reason.MANUAL_FREE));
 
         InstanceEntitlementInterceptor interceptor = interceptor();
@@ -179,7 +242,7 @@ class InstanceEntitlementInterceptorTest {
 
     @Test
     void blockedFreeTierRequestAccruesNothing() throws Exception {
-        when(gate.evaluate(anyBoolean()))
+        when(gate.evaluate(anyBoolean(), anyBoolean()))
                 .thenReturn(GateDecision.block(GateDecision.Reason.FREE_TIER_EXHAUSTED));
 
         InstanceEntitlementInterceptor interceptor = interceptor();
@@ -194,7 +257,7 @@ class InstanceEntitlementInterceptorTest {
     @Test
     void failsOpenWhenGateThrows() throws Exception {
         // A DB / SaaS blip while resolving entitlement must never hard-block billable work.
-        when(gate.evaluate(anyBoolean()))
+        when(gate.evaluate(anyBoolean(), anyBoolean()))
                 .thenThrow(new RuntimeException("entitlement source down"));
         MockHttpServletResponse response = new MockHttpServletResponse();
 
@@ -204,7 +267,7 @@ class InstanceEntitlementInterceptorTest {
 
     @Test
     void metersSuccessfulBillableOp() throws Exception {
-        when(gate.evaluate(anyBoolean()))
+        when(gate.evaluate(anyBoolean(), anyBoolean()))
                 .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
         UsageMeterService meter = mock(UsageMeterService.class);
         when(meterProvider.getIfAvailable()).thenReturn(meter);
@@ -216,6 +279,7 @@ class InstanceEntitlementInterceptorTest {
         MockMultipartHttpServletRequest req = fileRequest("/api/v1/ai/tools/x");
         MockHttpServletResponse resp = new MockHttpServletResponse();
         interceptor.preHandle(req, resp, new Object()); // stashes AI category
+        engineCalled(req, AiCallRecord.Where.LOCAL);
         interceptor.afterCompletion(req, resp, new Object(), null);
 
         // A tiny non-PDF input bills the 1-unit byte floor; a standalone op has a null key.
@@ -223,10 +287,44 @@ class InstanceEntitlementInterceptorTest {
     }
 
     @Test
+    void doesNotMeterAiThatStirlingCloudAlreadyBilled() throws Exception {
+        // Stirling Cloud billed this on success; metering it here too would charge twice.
+        when(gate.evaluate(anyBoolean(), anyBoolean()))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        MockMultipartHttpServletRequest req = fileRequest("/api/v1/ai/tools/x");
+        MockHttpServletResponse resp = new MockHttpServletResponse();
+        interceptor.preHandle(req, resp, new Object());
+        engineCalled(req, AiCallRecord.Where.REMOTE);
+        interceptor.afterCompletion(req, resp, new Object(), null);
+
+        // Nothing downstream is even consulted: the skip happens before any meter is resolved.
+        verify(meterProvider, never()).getIfAvailable();
+        verifyNoInteractions(freeTierUsageService);
+    }
+
+    @Test
+    void doesNotMeterAnAiRouteThatNeverCalledTheEngine() throws Exception {
+        // e.g. a document that already carries a verdict: no engine call, so nothing to bill.
+        when(gate.evaluate(anyBoolean(), anyBoolean()))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        MockMultipartHttpServletRequest req = fileRequest("/api/v1/ai/tools/x");
+        MockHttpServletResponse resp = new MockHttpServletResponse();
+        interceptor.preHandle(req, resp, new Object());
+        // No engineCalled(...) on purpose: the route returned without reaching the engine.
+        interceptor.afterCompletion(req, resp, new Object(), null);
+
+        // Nothing downstream is even consulted: the skip happens before any meter is resolved.
+        verify(meterProvider, never()).getIfAvailable();
+        verifyNoInteractions(freeTierUsageService);
+    }
+
+    @Test
     void doesNotMeterFilelessBillableOp() throws Exception {
         // A billable op with no document (no multipart file) is not metered - matching SaaS, which
         // short-circuits a request that carries no file.
-        when(gate.evaluate(anyBoolean()))
+        when(gate.evaluate(anyBoolean(), anyBoolean()))
                 .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
         UsageMeterService meter = mock(UsageMeterService.class);
         when(meterProvider.getIfAvailable()).thenReturn(meter);
@@ -238,6 +336,7 @@ class InstanceEntitlementInterceptorTest {
         MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/ai/tools/x");
         MockHttpServletResponse resp = new MockHttpServletResponse();
         interceptor.preHandle(req, resp, new Object());
+        engineCalled(req, AiCallRecord.Where.LOCAL);
         interceptor.afterCompletion(req, resp, new Object(), null);
 
         verify(meter, never()).accrue(any(), any(), anyLong(), any(), eq(10));
@@ -245,7 +344,7 @@ class InstanceEntitlementInterceptorTest {
 
     @Test
     void metersPdfByPageCountNotJustBytes(@TempDir Path tmp) throws Exception {
-        when(gate.evaluate(anyBoolean()))
+        when(gate.evaluate(anyBoolean(), anyBoolean()))
                 .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
         UsageMeterService meter = mock(UsageMeterService.class);
         when(meterProvider.getIfAvailable()).thenReturn(meter);
@@ -266,6 +365,7 @@ class InstanceEntitlementInterceptorTest {
         req.addFile(new MockMultipartFile("file", "doc.pdf", "application/pdf", fivePagePdf()));
         MockHttpServletResponse resp = new MockHttpServletResponse();
         interceptor.preHandle(req, resp, new Object());
+        engineCalled(req, AiCallRecord.Where.LOCAL);
         interceptor.afterCompletion(req, resp, new Object(), null);
 
         // 5 pages, and a null key: a standalone op (no run) is its own charge - never deduped.
@@ -277,7 +377,7 @@ class InstanceEntitlementInterceptorTest {
         // A standalone op (no run id) has a null key, so identical calls each accrue - matching
         // SaaS, which never groups a call outside a run ("charge per API call"). The old
         // input-signature window wrongly collapsed these on the instance.
-        when(gate.evaluate(anyBoolean()))
+        when(gate.evaluate(anyBoolean(), anyBoolean()))
                 .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
         UsageMeterService meter = mock(UsageMeterService.class);
         when(meterProvider.getIfAvailable()).thenReturn(meter);
@@ -300,7 +400,7 @@ class InstanceEntitlementInterceptorTest {
 
     @Test
     void doesNotMeterWhenMeteringSwitchOff() throws Exception {
-        when(gate.evaluate(anyBoolean()))
+        when(gate.evaluate(anyBoolean(), anyBoolean()))
                 .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
         when(meterProvider.getIfAvailable()).thenReturn(null); // metering.enabled = false
 
@@ -308,6 +408,7 @@ class InstanceEntitlementInterceptorTest {
         MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/ai/tools/x");
         MockHttpServletResponse resp = new MockHttpServletResponse();
         interceptor.preHandle(req, resp, new Object());
+        engineCalled(req, AiCallRecord.Where.LOCAL);
         interceptor.afterCompletion(req, resp, new Object(), null);
 
         // Meter absent → no entitlement lookup, no accrual.
@@ -318,7 +419,7 @@ class InstanceEntitlementInterceptorTest {
     void gatesPolicyRunUpFrontEvenWithoutAutomationHeader() throws Exception {
         // The policy /run call carries no automation header, but must be blocked up front (not
         // after its first tool) when the allowance is spent.
-        when(gate.evaluate(anyBoolean()))
+        when(gate.evaluate(anyBoolean(), anyBoolean()))
                 .thenReturn(GateDecision.block(GateDecision.Reason.FREE_TIER_EXHAUSTED));
 
         InstanceEntitlementInterceptor interceptor = interceptor();
@@ -329,14 +430,14 @@ class InstanceEntitlementInterceptorTest {
         assertFalse(interceptor.preHandle(req, resp, new Object()));
         assertEquals(HttpStatus.PAYMENT_REQUIRED.value(), resp.getStatus());
         assertTrue(resp.getContentAsString().contains("ACCOUNT_LINK_REQUIRED"));
-        verify(gate).evaluate(true); // gated as billable despite no automation header
+        verify(gate).evaluate(true, false); // gated as billable despite no automation header
     }
 
     @Test
     void doesNotMeterThePolicyRunEndpointItself() throws Exception {
         // Gated up front, but metered only via its dispatched tool sub-steps (category BYPASSED
         // here), so the /run request itself never accrues usage.
-        when(gate.evaluate(anyBoolean()))
+        when(gate.evaluate(anyBoolean(), anyBoolean()))
                 .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
 
         InstanceEntitlementInterceptor interceptor = interceptor();
@@ -351,7 +452,7 @@ class InstanceEntitlementInterceptorTest {
 
     @Test
     void billsApiKeyToolCallAsApi() throws Exception {
-        when(gate.evaluate(anyBoolean()))
+        when(gate.evaluate(anyBoolean(), anyBoolean()))
                 .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
         UsageMeterService meter = mock(UsageMeterService.class);
         when(meterProvider.getIfAvailable()).thenReturn(meter);
@@ -373,7 +474,7 @@ class InstanceEntitlementInterceptorTest {
     void doesNotBillApiKeyCallToNonToolEndpoint() throws Exception {
         // Matches SaaS: an API-key call to a non-tool endpoint (no @AutoJobPostMapping) is not
         // billed. Only tool operations count as API usage.
-        when(gate.evaluate(anyBoolean()))
+        when(gate.evaluate(anyBoolean(), anyBoolean()))
                 .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
         authenticateWithApiKey();
 
@@ -389,7 +490,7 @@ class InstanceEntitlementInterceptorTest {
 
     @Test
     void policyRunSubStepsAccrueUnderTheSharedRunId() throws Exception {
-        when(gate.evaluate(anyBoolean()))
+        when(gate.evaluate(anyBoolean(), anyBoolean()))
                 .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
         UsageMeterService meter = mock(UsageMeterService.class);
         when(meterProvider.getIfAvailable()).thenReturn(meter);
@@ -408,7 +509,8 @@ class InstanceEntitlementInterceptorTest {
                                         period,
                                         period.plusMonths(1),
                                         null,
-                                        20)));
+                                        20,
+                                        0L)));
 
         InstanceEntitlementInterceptor interceptor = interceptor();
         for (int step = 0; step < 3; step++) {
@@ -455,7 +557,7 @@ class InstanceEntitlementInterceptorTest {
         // be
         // able to group its separate calls into one charge: the run id keys the meter only on a
         // genuine internal dispatch, so here the op falls back to its standalone null key.
-        when(gate.evaluate(anyBoolean()))
+        when(gate.evaluate(anyBoolean(), anyBoolean()))
                 .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
         UsageMeterService meter = mock(UsageMeterService.class);
         when(meterProvider.getIfAvailable()).thenReturn(meter);
@@ -480,7 +582,7 @@ class InstanceEntitlementInterceptorTest {
         // own
         // key: the meter collapses a document's steps but bills the documents separately (matching
         // SaaS per-document lineage), rather than collapsing the whole run to a single charge.
-        when(gate.evaluate(anyBoolean()))
+        when(gate.evaluate(anyBoolean(), anyBoolean()))
                 .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
         UsageMeterService meter = mock(UsageMeterService.class);
         when(meterProvider.getIfAvailable()).thenReturn(meter);

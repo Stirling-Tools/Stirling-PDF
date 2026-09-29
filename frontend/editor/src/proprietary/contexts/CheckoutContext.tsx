@@ -4,6 +4,7 @@ import React, {
   useState,
   useCallback,
   useEffect,
+  useRef,
   lazy,
   Suspense,
   ReactNode,
@@ -27,6 +28,7 @@ import {
   pollLicenseKeyWithBackoff,
   activateLicenseKey,
   resyncExistingLicense,
+  pollTeamCheckout,
 } from "@app/utils/licenseCheckoutUtils";
 import { useLicense } from "@app/contexts/LicenseContext";
 import { isSupabaseConfigured } from "@app/services/supabaseClient";
@@ -37,21 +39,22 @@ import {
 } from "@app/constants/planConstants";
 
 export interface CheckoutOptions {
+  /** Resolves the linked customer's currency using the caller's billing session. */
+  resolveCurrency?: (preferredCurrency: string) => Promise<{
+    currency: string;
+    currencyLocked: boolean;
+  }>;
   minimumSeats?: number; // Override calculated seats for enterprise
-  currency?: string; // Optional currency override (auto-detected from locale)
+  currency?: string; // Explicit display currency; checkout localization is handled by Stripe
   onSuccess?: (sessionId: string) => void; // Callback after successful payment
   onError?: (error: string) => void; // Callback on error
-  /**
-   * Supplying it skips the email step. No caller does today: the only address a self-hosted
-   * instance holds is its Spring username. #7945 removes the step instead, by buying as the
-   * signed-in account.
-   */
-  email?: string;
   /** Put the period and capacity choices on one page rather than walking them separately. */
   combinedChoose?: boolean;
   /** Users the current plan covers. Its presence is what makes this "add capacity", not a first
    * upgrade, so the capacity step states the delta. */
   currentLimit?: number | null;
+  /** Present only for a self-hosted server above its actual allowance. */
+  capacityNotice?: { users: number; limit: number };
 }
 
 interface CheckoutContextValue {
@@ -77,7 +80,7 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
   children,
   defaultCurrency,
 }) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { refetchLicense } = useLicense();
   const planFeatures = usePlanFeatures();
   const planHighlights = usePlanHighlights();
@@ -87,8 +90,7 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
     useState<PlanTierGroup | null>(null);
   const [minimumSeats, setMinimumSeats] = useState<number>(1);
   const [currentCurrency, setCurrentCurrency] = useState(() => {
-    // Use provided default or auto-detect from locale
-    return defaultCurrency || getPreferredCurrency(i18n.language);
+    return defaultCurrency || getPreferredCurrency();
   });
   const [currentOptions, setCurrentOptions] = useState<CheckoutOptions>({});
   const [hostedCheckoutSuccess, setHostedCheckoutSuccess] = useState<{
@@ -99,31 +101,33 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
   // Lazy-loaded plans state (no fetch on mount)
   const [plans, setPlans] = useState<PlanTier[]>([]);
   const [plansLoaded, setPlansLoaded] = useState(false);
-  const [plansLoading, setPlansLoading] = useState(false);
+  const openingCheckout = useRef(false);
 
   // Lazy fetch plans only when needed
   const fetchPlansIfNeeded = useCallback(
-    async (currency: string) => {
-      // Don't fetch if already loading
-      if (plansLoading) return;
-
+    async (
+      currency: string,
+      currencyLocked = false,
+      tier?: "server" | "enterprise",
+    ) => {
       try {
-        setPlansLoading(true);
         const response = await licenseService.getPlans(
           planFeatures,
           planHighlights,
           currency,
+          currencyLocked,
+          tier,
         );
         setPlans(response.plans);
         setPlansLoaded(true);
+        return response.plans;
       } catch (error) {
         console.error("Failed to fetch plans:", error);
-        // Don't block - let components handle the error
-      } finally {
-        setPlansLoading(false);
+        setPlansLoaded(false);
+        return [];
       }
     },
-    [plansLoading, planFeatures, planHighlights],
+    [planFeatures, planHighlights],
   );
 
   const refetchPlans = useCallback(() => {
@@ -144,6 +148,36 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
         // Clear URL parameters
         window.history.replaceState({}, "", window.location.pathname);
 
+        if (urlParams.get("checkout_kind") === "team") {
+          const result = await pollTeamCheckout(
+            sessionId,
+            Number(urlParams.get("team_quantity")) || 1,
+          );
+          await refetchLicense();
+          refetchPlans();
+          window.dispatchEvent(new Event("stirling:billing-updated"));
+          alert({
+            alertType: result.success ? "success" : "warning",
+            title: result.scheduledAt
+              ? t(
+                  "payment.teamScheduled",
+                  "Your Team change is scheduled for {{date}}. Your current capacity stays active until then.",
+                  {
+                    date: new Date(
+                      result.scheduledAt * 1000,
+                    ).toLocaleDateString(),
+                  },
+                )
+              : result.success
+                ? t("payment.teamActivated", "Your Team capacity is active")
+                : t(
+                    "payment.teamPending",
+                    "Your Team purchase is still processing. Refresh this page shortly.",
+                  ),
+          });
+          return;
+        }
+
         // Fetch current license info to determine upgrade vs new
         let licenseInfo: LicenseInfo | null = null;
         try {
@@ -152,13 +186,17 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
           console.warn("Could not fetch license info:", err);
         }
 
+        // Always resync, whichever branch follows. A cloud Team purchase mints no licence key,
+        // so the upgrade branch never runs for one and the new-subscription branch polls for a key
+        // that will not arrive. This is what moves the tier in seconds: it drops the cached
+        // entitlement and re-reads the linked team's plan, instead of leaving the purchase to be
+        // noticed on the next daily sync.
+        const activation = await resyncExistingLicense();
+
         // Check if this is an upgrade or new subscription
         // Only treat as upgrade if there's a valid PRO/ENTERPRISE license (not NORMAL/free tier)
         if (licenseInfo?.licenseType && licenseInfo.licenseType !== "NORMAL") {
-          // UPGRADE: Resync existing license with Keygen
           console.log("Upgrade detected - resyncing existing license");
-
-          const activation = await resyncExistingLicense();
 
           if (activation.success) {
             console.log(
@@ -309,6 +347,8 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
 
   const openCheckout = useCallback(
     async (tier: "server" | "enterprise", options: CheckoutOptions = {}) => {
+      if (openingCheckout.current) return;
+      openingCheckout.current = true;
       try {
         setIsLoading(true);
 
@@ -319,29 +359,34 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
           );
         }
 
-        // Update currency if provided
-        const currency = options.currency || currentCurrency;
+        const preferredCurrency =
+          options.currency || defaultCurrency || getPreferredCurrency();
+        const pricing = await options.resolveCurrency?.(preferredCurrency);
+        const currency = pricing?.currency ?? preferredCurrency;
         if (currency !== currentCurrency) {
           setCurrentCurrency(currency);
         }
 
-        // Fetch plans if not already loaded
-        if (!plansLoaded) {
-          await fetchPlansIfNeeded(currency);
-        }
+        const availablePlans = await fetchPlansIfNeeded(
+          currency,
+          pricing?.currencyLocked,
+          tier,
+        );
 
         // Fetch license info and user data for seat calculations
         let licenseInfo: LicenseInfo | null = null;
         let totalUsers = 0;
 
         try {
-          const [licenseData, userData] = await Promise.all([
-            licenseService.getLicenseInfo(),
-            userManagementService.getUsers(),
-          ]);
+          if (tier === "enterprise" && !options.minimumSeats) {
+            const [licenseData, userData] = await Promise.all([
+              licenseService.getLicenseInfo(),
+              userManagementService.getUsers(),
+            ]);
 
-          licenseInfo = licenseData;
-          totalUsers = userData.totalUsers || 0;
+            licenseInfo = licenseData;
+            totalUsers = userData.totalUsers || 0;
+          }
         } catch (err) {
           console.warn(
             "Could not fetch license/user info, proceeding with defaults:",
@@ -373,7 +418,7 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
         }
 
         // Find the plan group for the requested tier
-        const planGroups = licenseService.groupPlansByTier(plans);
+        const planGroups = licenseService.groupPlansByTier(availablePlans);
         const planGroup = planGroups.find((pg) => pg.tier === tier);
 
         if (!planGroup) {
@@ -389,12 +434,14 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
         const errorMessage =
           err instanceof Error ? err.message : "Failed to open checkout";
         console.error("Error opening checkout:", errorMessage);
+        alert({ alertType: "error", title: errorMessage });
         options.onError?.(errorMessage);
       } finally {
+        openingCheckout.current = false;
         setIsLoading(false);
       }
     },
-    [currentCurrency, plans, plansLoaded, fetchPlansIfNeeded],
+    [currentCurrency, defaultCurrency, fetchPlansIfNeeded],
   );
 
   const closeCheckout = useCallback(() => {
@@ -457,9 +504,9 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
             onClose={closeCheckout}
             planGroup={selectedPlanGroup}
             minimumSeats={minimumSeats}
-            initialEmail={currentOptions.email}
             combinedChoose={currentOptions.combinedChoose}
             currentLimit={currentOptions.currentLimit ?? null}
+            capacityNotice={currentOptions.capacityNotice}
             onSuccess={handlePaymentSuccess}
             onError={handlePaymentError}
             onLicenseActivated={handleLicenseActivated}

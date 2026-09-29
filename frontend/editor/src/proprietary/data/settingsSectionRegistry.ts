@@ -37,20 +37,26 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     groupLabelFallback: "Preferences",
   },
   // --- Workspace ---
+  // One roster in every build, listed unconditionally. Carries the words the
+  // retired People and Teams sections were found by.
   {
-    key: "people",
-    labelKey: "settings.workspace.people",
-    labelFallback: "People",
-    keywords: ["members", "users", "invite", "add member", "roles"],
-    adminArea: true,
-    groupLabelKey: "settings.workspace.title",
-    groupLabelFallback: "Workspace",
-  },
-  {
-    key: "teams",
-    labelKey: "settings.workspace.teams",
-    labelFallback: "Teams",
-    keywords: ["team", "group", "create team"],
+    key: "users",
+    labelKey: "portal.nav.users",
+    labelFallback: "Users",
+    keywords: [
+      "users",
+      "people",
+      "members",
+      "roster",
+      "invite",
+      "add member",
+      "roles",
+      "teams",
+      "team",
+      "group",
+      "create team",
+      "processor access",
+    ],
     adminArea: true,
     groupLabelKey: "settings.workspace.title",
     groupLabelFallback: "Workspace",
@@ -181,24 +187,6 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
   // enter it. ---
   ...(HAS_PORTAL
     ? ([
-        {
-          key: "users",
-          labelKey: "portal.nav.users",
-          labelFallback: "Users",
-          keywords: [
-            "users",
-            "members",
-            "roster",
-            "invite",
-            "roles",
-            "teams",
-            "processor access",
-          ],
-          adminArea: true,
-          requiresPortalAccess: true,
-          groupLabelKey: "settings.workspace.title",
-          groupLabelFallback: "Workspace",
-        },
         {
           key: "billing",
           labelKey: "portal.nav.usage",

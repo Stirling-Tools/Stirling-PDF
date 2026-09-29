@@ -1,11 +1,15 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { cleanup, render, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
-import { useFreeCreditsSummary } from "@portal/hooks/useFreeCreditsSummary";
+import { LinkProvider, type LinkState } from "@app/portal/contexts/LinkContext";
+import { useFreeCreditsSummary } from "@app/portal/hooks/useFreeCreditsSummary";
 
+const ownership = vi.hoisted(() => ({ isOwner: true }));
+vi.mock("@app/portal/hooks/useAccountLinkOwner", () => ({
+  useAccountLinkOwner: () => ownership.isOwner,
+}));
 const fetchWallet = vi.fn();
-vi.mock("@portal/api/billing", () => ({
+vi.mock("@app/portal/api/billing", () => ({
   fetchWallet: () => fetchWallet(),
 }));
 
@@ -18,10 +22,12 @@ function Probe() {
   );
 }
 
-function renderFor(initialState: LinkState) {
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
+function renderFor(initialState: LinkState, queryClient?: QueryClient) {
+  const client =
+    queryClient ??
+    new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
   return render(
     <QueryClientProvider client={client}>
       <LinkProvider initialState={initialState}>
@@ -35,6 +41,7 @@ describe("useFreeCreditsSummary (self-hosted) — wallet behind the link gate", 
   beforeEach(() => {
     // The figures persist across mounts now, so isolate the suite from itself.
     localStorage.clear();
+    ownership.isOwner = true;
     fetchWallet.mockReset();
     fetchWallet.mockResolvedValue({
       status: "free",
@@ -55,23 +62,30 @@ describe("useFreeCreditsSummary (self-hosted) — wallet behind the link gate", 
   });
 
   it("hides the meter once the team subscribes", async () => {
-    // A paying team's headline number is spend against its cap, so a paying team
-    // would otherwise sit on a spent meter forever.
+    const previous = renderFor("linked-free");
+    await waitFor(() => expect(previous.textContent).toBe("247/500"));
+    cleanup();
     fetchWallet.mockResolvedValue({
       status: "subscribed",
       freeRemaining: 0,
       freeAllowance: 500,
     });
     const el = renderFor("linked-subscribed");
-    // The row holds its space while the wallet loads, then drops once the
-    // answer says this team is paying.
+    expect(el.textContent).toBe("247/500");
     await waitFor(() => expect(el.textContent).toBe("none"));
   });
 
   it("hides the meter when the wallet read fails", async () => {
     fetchWallet.mockRejectedValue(new Error("saas unreachable"));
-    const el = renderFor("linked-subscribed");
-    await waitFor(() => expect(el.textContent).toBe("none"));
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const el = renderFor("linked-subscribed", client);
+    await waitFor(() =>
+      expect(client.getQueryCache().getAll()[0]?.state.status).toBe("error"),
+    );
+    expect(fetchWallet).toHaveBeenCalledOnce();
+    expect(el.textContent).toBe("none");
   });
 
   it("ignores cached figures once the instance is unlinked", async () => {
@@ -84,6 +98,16 @@ describe("useFreeCreditsSummary (self-hosted) — wallet behind the link gate", 
     fetchWallet.mockClear();
     const unlinked = renderFor("unlinked");
     expect(unlinked.textContent).toBe("none");
+    expect(fetchWallet).not.toHaveBeenCalled();
+  });
+
+  it("hides cached owner figures and makes no wallet call for a non-owner", async () => {
+    const owner = renderFor("linked-free");
+    await waitFor(() => expect(owner.textContent).toBe("247/500"));
+    cleanup();
+    ownership.isOwner = false;
+    fetchWallet.mockClear();
+    expect(renderFor("linked-free").textContent).toBe("none");
     expect(fetchWallet).not.toHaveBeenCalled();
   });
 

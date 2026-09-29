@@ -1,18 +1,25 @@
 package stirling.software.proprietary.policy.engine;
 
 import java.io.IOException;
+import java.nio.file.FileSystemException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.failure.FailureKind;
+import stirling.software.proprietary.failure.PolicyFailureRecorder;
+import stirling.software.proprietary.policy.config.FolderAccessDeniedException;
+import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.input.ResolvedInput;
@@ -29,6 +36,7 @@ import stirling.software.proprietary.policy.source.EditorSource;
 import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceDocCounter;
 import stirling.software.proprietary.policy.source.SourceStore;
+import stirling.software.proprietary.security.configuration.ee.DatabaseLicenseGuard;
 
 /**
  * Turns a policy's referenced sources into runs: each {@code sourceId} is resolved live to its
@@ -48,6 +56,9 @@ public class PolicyRunner {
     private final ProcessedLedger processedLedger;
     private final ApplicationProperties applicationProperties;
     private final PolicyAccessGuard policyAccessGuard;
+    private final DatabaseLicenseGuard databaseLicenseGuard;
+    private final PolicyFailureRecorder failureRecorder;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * One admission gate per sweep: every run is visible immediately, but only this many execute at
@@ -103,6 +114,9 @@ public class PolicyRunner {
      */
     private SweepOutcome run(
             Policy policy, List<PipelineInput> inputs, SweepKind sweep, String target) {
+        if (databaseLicenseGuard.requiresActivation()) {
+            return new SweepOutcome(List.of(), 0, 0, 0, 0, 0);
+        }
         if (policyAccessGuard.isOrphaned(policy)) {
             // Reachable by nobody, so nobody could stop it: running would replace files in place
             // in a folder no user can list, pause, revert, or delete.
@@ -119,12 +133,13 @@ public class PolicyRunner {
             // folder outputs are pruned instead of accumulating until the policy is deleted.
             runIds.add(
                     startRun(
-                            policy,
-                            null,
-                            null,
-                            PolicyInputs.of(List.of()),
-                            unused -> {},
-                            admission));
+                                    policy,
+                                    null,
+                                    null,
+                                    PolicyInputs.of(List.of()),
+                                    unused -> {},
+                                    admission)
+                            .runId());
         }
         for (PipelineInput input : inputs) {
             String sourceId = input.sourceId();
@@ -178,6 +193,7 @@ public class PolicyRunner {
             PolicyInputs inputs,
             PolicyProgressListener listener,
             String documentReference) {
+        requireDatabaseAccess();
         PolicyRunHandle handle =
                 policyEngine.runPolicy(policy, inputs, listener, null, documentReference);
         docCounter.record(EditorSource.counterKey(policy.teamId()), inputs.primary().size());
@@ -187,7 +203,15 @@ public class PolicyRunner {
     /** Run an ad-hoc pipeline with no stored policy (AI/Automate one-offs). */
     public PolicyRunHandle runAdHoc(
             PipelineDefinition definition, PolicyInputs inputs, PolicyProgressListener listener) {
+        requireDatabaseAccess();
         return policyEngine.submit(definition, inputs, listener);
+    }
+
+    private void requireDatabaseAccess() {
+        if (databaseLicenseGuard.requiresActivation()) {
+            throw new IllegalStateException(
+                    "Link a paid Team account or install a Server licence before processing");
+        }
     }
 
     /** Whether nothing of the policy is running or mid-settle — safe to move its files. */
@@ -198,6 +222,16 @@ public class PolicyRunner {
     /** Cancel every non-terminal run of the policy (see {@link PolicyEngine#cancelAllFor}). */
     public int cancelRuns(String policyId) {
         return policyEngine.cancelAllFor(policyId);
+    }
+
+    private static String unreadableFolderReason(Exception e) {
+        if (e instanceof FolderAccessDeniedException) {
+            return "The folder is outside the roots this server permits";
+        }
+        if (e instanceof FileSystemException fs && fs.getReason() != null) {
+            return fs.getReason();
+        }
+        return "The folder could not be listed";
     }
 
     /**
@@ -250,27 +284,87 @@ public class PolicyRunner {
                     spec.type(),
                     policy.id(),
                     e.getMessage());
+            // Recorded, not just logged, for a disk folder that could not be listed or that the
+            // server's allowlist now refuses: its owner would otherwise never hear that the folder
+            // stopped working, and only they can fix it. A bucket's SDK error or a bug in a source
+            // is neither, so it stays a log line. The reason without the path: reviewers across
+            // the team read this, and the guard's own message names the folder.
+            boolean folderUnreadable =
+                    FolderAccessGuard.FOLDER_TYPE.equals(spec.type())
+                            && (e instanceof IOException
+                                    || e instanceof FolderAccessDeniedException);
+            if (folderUnreadable) {
+                // The source's owner, as a document failure is filed under: a team policy can be
+                // bound to a folder somebody else set up, and that person is the one who can fix
+                // it.
+                failureRecorder.recordRunFailureAs(
+                        FailureKind.SOURCE_UNREADABLE,
+                        null,
+                        policy.id(),
+                        storedSource.id(),
+                        storedSource.owner(),
+                        unreadableFolderReason(e));
+            }
             context.vetoCleanup();
             return List.of();
         }
         List<String> runIds = new ArrayList<>();
+        List<CompletableFuture<PolicyRun>> completions = new ArrayList<>();
         long docsFed = 0;
         for (ResolvedInput unit : work) {
-            runIds.add(
+            PolicyRunHandle handle =
                     startRun(
                             policy,
                             storedSource,
                             unit.fileIdentity(),
                             unit.inputs(),
                             unit.onComplete(),
-                            admission));
+                            admission);
+            runIds.add(handle.runId());
+            completions.add(
+                    handle.completion()
+                            .handle(
+                                    (run, error) -> {
+                                        if (error != null) {
+                                            log.warn(
+                                                    "Could not finish run {} in source batch {} for policy {}",
+                                                    handle.runId(),
+                                                    storedSource.id(),
+                                                    policy.id(),
+                                                    error);
+                                            return null;
+                                        }
+                                        return run;
+                                    }));
             docsFed += unit.inputs().primary().size();
+        }
+        if (!completions.isEmpty()) {
+            CompletableFuture.allOf(completions.toArray(CompletableFuture[]::new))
+                    .thenRun(
+                            () -> {
+                                if (completions.stream()
+                                        .map(CompletableFuture::join)
+                                        .anyMatch(PolicyRunner::madeProgress)) {
+                                    eventPublisher.publishEvent(
+                                            new SourceBatchSettledEvent(
+                                                    policy.id(), storedSource.id()));
+                                }
+                            })
+                    .exceptionally(
+                            error -> {
+                                log.warn(
+                                        "Could not finish source batch {} for policy {}",
+                                        storedSource.id(),
+                                        policy.id(),
+                                        error);
+                                return null;
+                            });
         }
         docCounter.record(storedSource.id(), docsFed);
         return runIds;
     }
 
-    private String startRun(
+    private PolicyRunHandle startRun(
             Policy policy,
             Source source,
             String fileIdentity,
@@ -278,6 +372,7 @@ public class PolicyRunner {
             Consumer<Boolean> onComplete,
             Semaphore admission) {
         log.info("Running policy {} ({})", policy.id(), policy.name());
+        requireDatabaseAccess();
         PolicyRunHandle handle =
                 policyEngine.runPolicy(
                         policy,
@@ -286,29 +381,36 @@ public class PolicyRunner {
                         source,
                         fileIdentity,
                         admission);
-        handle.completion()
-                .whenComplete(
-                        (run, throwable) -> {
-                            boolean cancelled =
-                                    run != null && run.getStatus() == PolicyRunStatus.CANCELLED;
-                            boolean neverAdmitted =
-                                    run != null
-                                            && PolicyEngine.QUEUE_FULL_CODE.equals(
-                                                    run.getErrorCode());
-                            if (cancelled || neverAdmitted) {
-                                // Neither is a verdict on the file: cancellation is the
-                                // user's intent, and queue-full means nothing was attempted.
-                                // Settle, then drop the row, so the file reads as queued and
-                                // the next sweep takes it again.
-                                onComplete.accept(false);
-                                if (fileIdentity != null) {
-                                    processedLedger.forget(policy.id(), fileIdentity);
-                                }
-                                return;
-                            }
-                            onComplete.accept(succeeded(run, throwable));
-                        });
-        return handle.runId();
+        CompletableFuture<PolicyRun> settled =
+                handle.completion()
+                        .whenComplete(
+                                (run, throwable) -> {
+                                    boolean cancelled =
+                                            run != null
+                                                    && run.getStatus() == PolicyRunStatus.CANCELLED;
+                                    boolean neverAdmitted =
+                                            run != null
+                                                    && PolicyEngine.QUEUE_FULL_CODE.equals(
+                                                            run.getErrorCode());
+                                    if (cancelled || neverAdmitted) {
+                                        // Neither cancellation nor queue rejection is a verdict
+                                        // on the file; a later sweep may claim it again.
+                                        onComplete.accept(false);
+                                        if (fileIdentity != null) {
+                                            processedLedger.forget(policy.id(), fileIdentity);
+                                        }
+                                        return;
+                                    }
+                                    onComplete.accept(succeeded(run, throwable));
+                                });
+        return new PolicyRunHandle(handle.runId(), settled);
+    }
+
+    private static boolean madeProgress(PolicyRun run) {
+        return run != null
+                && (run.getStatus() == PolicyRunStatus.COMPLETED
+                        || run.getStatus() == PolicyRunStatus.FAILED)
+                && !PolicyEngine.QUEUE_FULL_CODE.equals(run.getErrorCode());
     }
 
     private static boolean succeeded(PolicyRun run, Throwable throwable) {

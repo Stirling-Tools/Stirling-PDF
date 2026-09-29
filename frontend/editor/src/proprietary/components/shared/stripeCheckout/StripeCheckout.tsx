@@ -2,25 +2,17 @@ import React, { useEffect } from "react";
 import { Modal, Text, Group } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import licenseService from "@app/services/licenseService";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
-import {
-  CheckoutStage,
-  StripeCheckoutProps,
-} from "@app/components/shared/stripeCheckout/types/checkout";
-import { StepModalHeader } from "@app/components/shared/StepModalHeader";
-import {
-  validateEmail,
-  getModalTitle,
-} from "@app/components/shared/stripeCheckout/utils/checkoutUtils";
+import { StripeCheckoutProps } from "@app/components/shared/stripeCheckout/types/checkout";
+import { getModalTitle } from "@app/components/shared/stripeCheckout/utils/checkoutUtils";
 import { calculateSavings } from "@app/components/shared/stripeCheckout/utils/savingsCalculator";
 import { useCheckoutState } from "@app/components/shared/stripeCheckout/hooks/useCheckoutState";
 import { useCheckoutNavigation } from "@app/components/shared/stripeCheckout/hooks/useCheckoutNavigation";
 import { useLicensePolling } from "@app/components/shared/stripeCheckout/hooks/useLicensePolling";
 import { useCheckoutSession } from "@app/components/shared/stripeCheckout/hooks/useCheckoutSession";
-import { EmailStage } from "@app/components/shared/stripeCheckout/stages/EmailStage";
 import { PlanSelectionStage } from "@app/components/shared/stripeCheckout/stages/PlanSelectionStage";
 import { CapacityStage } from "@app/components/shared/stripeCheckout/stages/CapacityStage";
 import { blocksForUsers } from "@app/components/shared/stripeCheckout/utils/capacity";
@@ -51,9 +43,9 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   onClose,
   planGroup,
   minimumSeats = 1,
-  initialEmail,
   combinedChoose: requestedCombinedChoose = false,
   currentLimit = null,
+  capacityNotice,
   onSuccess,
   onError,
   onLicenseActivated,
@@ -100,33 +92,12 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
     onSuccess,
     onError,
     onLicenseActivated,
+    undefined,
+    () => checkoutState.isMountedRef.current,
   );
 
   // Calculate savings
   const savings = calculateSavings(planGroup, minimumSeats);
-
-  // Email submission handler
-  const handleEmailSubmit = () => {
-    const validation = validateEmail(checkoutState.emailInput);
-    if (validation.valid) {
-      checkoutState.setState((prev) => ({
-        ...prev,
-        email: checkoutState.emailInput,
-      }));
-      if (combinedChoose) {
-        // Arrive on the capacity an installation already needs rather than on a blocked minimum,
-        // the same seeding the separate walk does when a period is picked.
-        if (sellsCapacity) {
-          checkoutState.setServerQuantity(blocksForUsers(minimumCapacity));
-        }
-        navigation.goToStage("choose");
-      } else {
-        navigation.goToStage("plan-selection");
-      }
-    } else {
-      checkoutState.setEmailError(validation.error);
-    }
-  };
 
   // Plan selection handler
   const handlePlanSelect = (period: "monthly" | "yearly") => {
@@ -142,6 +113,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
 
   // Close handler
   const handleClose = () => {
+    checkoutState.isMountedRef.current = false;
     // Clear any active polling
     if (checkoutState.pollingTimeoutRef.current) {
       clearTimeout(checkoutState.pollingTimeoutRef.current);
@@ -168,6 +140,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   // Initialize stage based on existing license
   useEffect(() => {
     if (!opened) return;
+    checkoutState.isMountedRef.current = true;
 
     // Handle hosted checkout success - open directly to success state
     if (hostedCheckoutSuccess) {
@@ -187,50 +160,29 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
       return;
     }
 
-    // Check for existing license to skip email stage
-    const checkExistingLicense = async () => {
+    // Only installed licence upgrades need the previous key; Team belongs to the cloud account.
+    const openOnFirstChoice = async () => {
+      const landing = combinedChoose ? "choose" : "plan-selection";
       try {
-        // A caller that already holds the email (a linked instance does, from the account link)
-        // never needs to be asked for it, whatever the licence says.
         if (combinedChoose && sellsCapacity)
           checkoutState.setServerQuantity(blocksForUsers(minimumCapacity));
-        if (initialEmail) {
-          checkoutState.setEmailInput(initialEmail);
-          checkoutState.setState((prev) => ({
-            ...prev,
-            email: initialEmail,
-            currentStage: combinedChoose ? "choose" : "plan-selection",
-            loading: false,
-          }));
-          return;
-        }
-
-        const licenseInfo = await licenseService.getLicenseInfo();
-        // Only skip email if license is PRO or ENTERPRISE (not NORMAL/free tier)
+        const licenseInfo = sellsCapacity
+          ? null
+          : await licenseService.getLicenseInfo();
         if (licenseInfo?.licenseType && licenseInfo.licenseType !== "NORMAL") {
-          // Has valid premium license - skip email stage
-          console.log("Valid premium license detected - skipping email stage");
           checkoutState.setCurrentLicenseKey(licenseInfo.licenseKey || null);
-          checkoutState.setState({
-            currentStage: combinedChoose ? "choose" : "plan-selection",
-            loading: false,
-          });
-        } else {
-          // No valid premium license - start at email stage
-          checkoutState.setState({ currentStage: "email", loading: false });
         }
       } catch (error) {
+        // An unreadable licence only costs the upgrade metadata, so the purchase still proceeds.
         console.warn("Could not check for existing license:", error);
-        // Default to email stage if check fails
-        checkoutState.setState({ currentStage: "email", loading: false });
       }
+      checkoutState.setState({ currentStage: landing, loading: false });
     };
 
-    checkExistingLicense();
+    openOnFirstChoice();
   }, [
     opened,
     hostedCheckoutSuccess,
-    initialEmail,
     combinedChoose,
     sellsCapacity,
     minimumCapacity,
@@ -263,49 +215,29 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
     // Don't block checkout - hosted mode works without publishable key
     // The checkout will automatically redirect to Stripe hosted page if key is missing
     switch (checkoutState.state.currentStage) {
-      case "email":
-        return (
-          <EmailStage
-            emailInput={checkoutState.emailInput}
-            setEmailInput={checkoutState.setEmailInput}
-            emailError={checkoutState.emailError}
-            onSubmit={handleEmailSubmit}
-          />
-        );
-
       // Page 1 of 2: both choices at once, which is how the design puts them in front of a buyer.
       // The period cards select rather than navigate, and capacity supplies the single continue.
       case "choose":
         return (
-          <>
-            <PlanSelectionStage
-              planGroup={planGroup}
-              minimumSeats={minimumSeats}
-              savings={savings}
-              selectedPeriod={checkoutState.selectedPeriod}
-              onSelectPlan={(period) => {
-                checkoutState.setSelectedPeriod(period);
-                if (sellsCapacity) {
-                  checkoutState.setServerQuantity(
-                    Math.max(
-                      blocksForUsers(minimumCapacity),
-                      checkoutState.serverQuantity || 1,
-                    ),
-                  );
-                }
-              }}
-            />
-            {sellsCapacity && (
-              <CapacityStage
-                selectedPlan={checkoutState.selectedPlan}
-                serverQuantity={checkoutState.serverQuantity}
-                setServerQuantity={checkoutState.setServerQuantity}
-                currentUsers={minimumSeats}
-                currentLimit={currentLimit}
-                onContinue={() => navigation.goToStage("payment")}
+          <CapacityStage
+            selectedPlan={checkoutState.selectedPlan}
+            serverQuantity={checkoutState.serverQuantity}
+            setServerQuantity={checkoutState.setServerQuantity}
+            currentUsers={minimumSeats}
+            currentLimit={currentLimit}
+            capacityNotice={capacityNotice}
+            periodPicker={
+              <PlanSelectionStage
+                compact
+                planGroup={planGroup}
+                minimumSeats={minimumSeats}
+                savings={savings}
+                selectedPeriod={checkoutState.selectedPeriod}
+                onSelectPlan={checkoutState.setSelectedPeriod}
               />
-            )}
-          </>
+            }
+            onContinue={() => navigation.goToStage("payment")}
+          />
         );
 
       case "plan-selection":
@@ -326,6 +258,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
             setServerQuantity={checkoutState.setServerQuantity}
             currentUsers={minimumSeats}
             currentLimit={currentLimit}
+            capacityNotice={capacityNotice}
             onContinue={() => navigation.goToStage("payment")}
           />
         );
@@ -342,6 +275,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
       case "success":
         return (
           <SuccessStage
+            isTeam={sellsCapacity}
             pollingStatus={checkoutState.pollingStatus}
             currentLicenseKey={checkoutState.currentLicenseKey}
             licenseKey={checkoutState.licenseKey}
@@ -363,104 +297,56 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   };
 
   const canGoBack = checkoutState.stageHistory.length > 0;
-  // The combined flow wears the stepped chrome, counting the pages it actually walks: the email
-  // page only when the caller supplied no address. The separate walk keeps its own title, because
-  // a step count would be a lie about how many pages it has.
-  const steppedPath: CheckoutStage[] | null = combinedChoose
-    ? [
-        ...(initialEmail || checkoutState.currentLicenseKey
-          ? []
-          : (["email"] as CheckoutStage[])),
-        "choose",
-        "payment",
-      ]
-    : null;
-  const steppedIndex = steppedPath
-    ? steppedPath.indexOf(checkoutState.state.currentStage)
-    : -1;
-  const steppedStep = steppedIndex >= 0 ? steppedIndex + 1 : null;
 
   return (
     <Modal
       opened={opened}
       onClose={handleClose}
       title={
-        steppedStep ? undefined : (
-          <Group gap="sm" wrap="nowrap">
-            {canGoBack && (
-              <ActionIcon
-                variant="tertiary"
-                size="lg"
-                disabled={checkoutState.state.loading}
-                onClick={navigation.goBack}
-                aria-label={t("common.back", "Back")}
-              >
-                <LocalIcon icon="arrow-back" width={20} height={20} />
-              </ActionIcon>
-            )}
-            <Text fw={600} size="lg">
-              {getModalTitle(
-                checkoutState.state.currentStage,
-                planGroup.name,
-                t,
-              )}
-            </Text>
-          </Group>
-        )
+        <Group gap="sm" wrap="nowrap">
+          {canGoBack && (
+            <ActionIcon
+              variant="tertiary"
+              size="lg"
+              disabled={checkoutState.state.loading}
+              onClick={navigation.goBack}
+              aria-label={t("common.back", "Back")}
+            >
+              <Icon name="arrow-left" size={20} />
+            </ActionIcon>
+          )}
+          <Text fw={600} size="lg">
+            {combinedChoose
+              ? currentLimit != null
+                ? t("payment.adjustTeam.title", "Adjust Team plan")
+                : t("payment.upgradeTeam.title", "Upgrade to Team")
+              : getModalTitle(
+                  checkoutState.state.currentStage,
+                  planGroup.name,
+                  t,
+                )}
+          </Text>
+        </Group>
       }
-      size={isMobile ? "100%" : 980}
+      size={isMobile ? "100%" : combinedChoose ? 500 : 980}
       centered
       radius="lg"
-      withCloseButton={!steppedStep}
+      withCloseButton
       closeOnEscape={true}
       closeOnClickOutside={false}
       fullScreen={isMobile}
       zIndex={Z_INDEX_OVER_CONFIG_MODAL}
       styles={{
-        body: {},
+        header: combinedChoose
+          ? { borderBottom: 0, padding: "1.25rem 1.25rem 0.25rem" }
+          : undefined,
+        body: combinedChoose ? { padding: "0 1.25rem 1.25rem" } : undefined,
+        close: combinedChoose ? { borderRadius: "50%" } : undefined,
         content: {
           maxHeight: "95vh",
         },
       }}
     >
-      {steppedStep && (
-        <StepModalHeader
-          title={
-            currentLimit != null
-              ? t("payment.addCapacity.title", "Add capacity")
-              : t("payment.upgradeTeam.title", "Upgrade to Team")
-          }
-          subtitle={
-            currentLimit != null
-              ? t(
-                  "payment.addCapacity.currently",
-                  "Currently up to {{users}} users",
-                  { users: currentLimit },
-                )
-              : undefined
-          }
-          step={steppedStep}
-          total={steppedPath?.length ?? 0}
-          stepLabel={t("payment.stepOf", "Step {{n}} of {{total}}", {
-            n: steppedStep,
-            total: steppedPath?.length ?? 0,
-          })}
-          aside={
-            canGoBack ? (
-              <ActionIcon
-                variant="tertiary"
-                size="lg"
-                disabled={checkoutState.state.loading}
-                onClick={navigation.goBack}
-                aria-label={t("common.back", "Back")}
-              >
-                <LocalIcon icon="arrow-back" width={20} height={20} />
-              </ActionIcon>
-            ) : undefined
-          }
-          onClose={handleClose}
-        />
-      )}
       {renderContent()}
     </Modal>
   );
