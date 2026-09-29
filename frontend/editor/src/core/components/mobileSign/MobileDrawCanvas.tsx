@@ -139,9 +139,9 @@ export const MobileDrawCanvas = forwardRef<
     // where the per-frame synthetic event alone would drop curvature.
     const events =
       "getCoalescedEvents" in e.nativeEvent
-        ? (e.nativeEvent as PointerEvent).getCoalescedEvents()
+        ? e.nativeEvent.getCoalescedEvents()
         : [e.nativeEvent as PointerEvent];
-    const rect = (e.currentTarget as HTMLCanvasElement).getBoundingClientRect();
+    const rect = e.currentTarget.getBoundingClientRect();
     for (const ev of events) {
       stroke.points.push({
         x: ev.clientX - rect.left,

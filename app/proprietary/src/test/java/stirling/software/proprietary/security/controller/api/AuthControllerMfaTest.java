@@ -56,6 +56,8 @@ class AuthControllerMfaTest {
     @Mock private MfaService mfaService;
     @Mock private TotpService totpService;
 
+    @org.mockito.Mock private stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
+
     @InjectMocks private AuthController authController;
 
     @BeforeEach

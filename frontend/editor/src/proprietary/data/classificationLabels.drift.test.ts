@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { describe, it, expect } from "vitest";
 import { DEFAULT_CLASSIFICATION_LABELS } from "@app/data/classificationLabels";
+import { isIconName } from "@app/ui/Icon";
 
 // The classifier vocabulary is bundled in TWO places that must not drift:
 //  - this frontend JSON (source of truth for sidebar categories + display names)
@@ -49,6 +50,17 @@ describe("classification label vocabulary (frontend ↔ backend)", () => {
         name: label.name,
         icon: label.icon ?? null,
       });
+    }
+  });
+
+  // The JSON is cast to IconName, not checked, so a typo here is invisible to
+  // tsc and only surfaces when the label is rendered.
+  it("only uses icon names the registry can render", () => {
+    for (const label of frontend) {
+      if (label.icon !== undefined)
+        expect(isIconName(label.icon), `"${label.icon}" on "${label.id}"`).toBe(
+          true,
+        );
     }
   });
 });

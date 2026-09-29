@@ -491,7 +491,7 @@ class OCRControllerMoreTest {
             request.setOcrRenderType("bogus");
 
             assertThatThrownBy(() -> ocrController.processPdfWithOCR(request))
-                    .isInstanceOf(IOException.class);
+                    .isInstanceOf(IllegalArgumentException.class);
             verify(runtimePathConfig, never()).getTessDataPath();
         }
 

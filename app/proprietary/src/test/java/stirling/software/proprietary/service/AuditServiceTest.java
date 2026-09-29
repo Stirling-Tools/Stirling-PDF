@@ -167,6 +167,42 @@ class AuditServiceTest {
         }
 
         @Test
+        @DisplayName("records document-processing events even without EE (Documents feed)")
+        void recordsDocumentEventsWithoutEE() {
+            AuditService nonEe =
+                    new AuditService(
+                            repository, auditConfig, false, pdfDocumentFactory, jwtService);
+            authenticateAs("alice");
+
+            nonEe.audit(AuditEventType.PDF_PROCESS, new HashMap<>(), AuditLevel.BASIC);
+            nonEe.audit(AuditEventType.FILE_OPERATION, new HashMap<>(), AuditLevel.BASIC);
+
+            org.mockito.ArgumentCaptor<AuditEvent> captor =
+                    org.mockito.ArgumentCaptor.forClass(AuditEvent.class);
+            verify(repository, org.mockito.Mockito.times(2)).add(captor.capture());
+            assertThat(captor.getAllValues())
+                    .extracting(AuditEvent::getType)
+                    .containsExactly(
+                            AuditEventType.PDF_PROCESS.name(),
+                            AuditEventType.FILE_OPERATION.name());
+        }
+
+        @Test
+        @DisplayName("type-aware shouldAudit lets doc events through without EE, blocks others")
+        void typeAwareShouldAuditWithoutEE() throws Exception {
+            AuditService nonEe =
+                    new AuditService(
+                            repository, auditConfig, false, pdfDocumentFactory, jwtService);
+            Method m = Object.class.getMethod("toString");
+
+            assertThat(nonEe.shouldAudit(AuditEventType.PDF_PROCESS, m, auditConfig)).isTrue();
+            assertThat(nonEe.shouldAudit(AuditEventType.FILE_OPERATION, m, auditConfig)).isTrue();
+            assertThat(nonEe.shouldAudit(AuditEventType.USER_LOGIN, m, auditConfig)).isFalse();
+            // With EE, non-doc events at/under the configured level audit too.
+            assertThat(service.shouldAudit(AuditEventType.USER_LOGIN, m, auditConfig)).isTrue();
+        }
+
+        @Test
         @DisplayName("skips when audit disabled")
         void skipsWhenDisabled() {
             AuditService disabled =

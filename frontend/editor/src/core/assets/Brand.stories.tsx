@@ -7,11 +7,6 @@ import modernMarkLight from "@app/assets/brand/modern-logo/StirlingPDFLogoNoText
 import modernBlack from "@app/assets/brand/modern-logo/StirlingPDFLogoBlackText.svg";
 import modernWhite from "@app/assets/brand/modern-logo/StirlingPDFLogoWhiteText.svg";
 import modernGrey from "@app/assets/brand/modern-logo/StirlingPDFLogoGreyText.svg";
-import classicMarkDark from "@app/assets/brand/classic-logo/StirlingPDFLogoNoTextDark.svg";
-import classicMarkLight from "@app/assets/brand/classic-logo/StirlingPDFLogoNoTextLight.svg";
-import classicBlack from "@app/assets/brand/classic-logo/StirlingPDFLogoBlackText.svg";
-import classicWhite from "@app/assets/brand/classic-logo/StirlingPDFLogoWhiteText.svg";
-import classicGrey from "@app/assets/brand/classic-logo/StirlingPDFLogoGreyText.svg";
 
 // Fixed swatch so the light-on-dark mark variant previews on a dark
 // surface in either theme.
@@ -31,18 +26,6 @@ const SETS: VariantSet[] = [
       { label: "BlackText", src: modernBlack },
       { label: "GreyText", src: modernGrey },
       { label: "WhiteText", src: modernWhite, onDark: true },
-    ],
-  },
-  {
-    variant: "classic",
-    mark: [
-      { label: "NoTextDark", src: classicMarkDark },
-      { label: "NoTextLight", src: classicMarkLight, onDark: true },
-    ],
-    wordmark: [
-      { label: "BlackText", src: classicBlack },
-      { label: "GreyText", src: classicGrey },
-      { label: "WhiteText", src: classicWhite, onDark: true },
     ],
   },
 ];

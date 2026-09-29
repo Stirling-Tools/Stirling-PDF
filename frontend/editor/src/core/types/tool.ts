@@ -1,5 +1,4 @@
 import React from "react";
-import { ToolOperationHook } from "@app/hooks/tools/shared/toolOperationTypes";
 
 export type MaxFiles = number; // 1=single, >1=limited, -1=unlimited
 export type ToolCategory =
@@ -27,13 +26,13 @@ export interface AutomationCapableTool {
    * Static method that returns the operation hook for this tool.
    * This enables automation to execute the tool programmatically.
    */
-  tool: () => () => ToolOperationHook<any>;
+  tool: () => () => unknown;
 
   /**
    * Static method that returns the default parameters for this tool.
    * This enables automation creation to initialize tools with proper defaults.
    */
-  getDefaultParameters: () => any;
+  getDefaultParameters: () => unknown;
 }
 
 /**
@@ -61,7 +60,7 @@ export interface ToolResult {
   files?: File[];
   error?: string;
   downloadUrl?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ToolConfiguration {

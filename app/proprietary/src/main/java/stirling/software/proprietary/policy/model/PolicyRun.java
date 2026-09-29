@@ -30,10 +30,16 @@ public class PolicyRun {
     private final PipelineDefinition definition;
 
     /**
-     * The source's opaque reference to the document this run is about; null for an ad-hoc run or a
-     * source that names no document. Hashed upstream, so never a path or a filename.
+     * The source's reference to the document this run is about, or null when there is none. A
+     * folder source builds it from the canonical path, so it must never reach a response.
      */
     private final String fileIdentity;
+
+    /**
+     * Whose document this run is about: the source's owner for a source-fed run, the triggering
+     * user otherwise. A failure is filed under this person when nobody attended the run.
+     */
+    private final String fileOwner;
 
     /**
      * The user who triggered this run, or null when nothing attended it (a trigger-fired sweep).
@@ -46,6 +52,9 @@ public class PolicyRun {
     private final Instant createdAt = Instant.now();
 
     private volatile PolicyRunStatus status = PolicyRunStatus.PENDING;
+
+    /** Set once delivery starts; a delivering run can no longer be cancelled. */
+    private boolean delivering;
 
     /** 1-based index of the step currently running (0 before the run starts). */
     private volatile int currentStep = 0;
@@ -82,22 +91,44 @@ public class PolicyRun {
             PipelineDefinition definition,
             String sourceId,
             String fileIdentity,
-            String triggeringUser) {
+            String triggeringUser,
+            String fileOwner) {
         this.runId = runId;
         this.policyId = policyId;
         this.sourceId = sourceId;
         this.definition = definition;
         this.fileIdentity = fileIdentity;
         this.triggeringUser = triggeringUser;
+        this.fileOwner = fileOwner;
+    }
+
+    /**
+     * Who a failure on this run belongs to: whoever attended it, or the document's owner when
+     * nobody did. Null only when neither is known, which is an install with no accounts.
+     */
+    public String failureActor() {
+        return triggeringUser != null ? triggeringUser : fileOwner;
+    }
+
+    /** True when results are sent elsewhere and must not replace the editor's input. */
+    public boolean externalOutput() {
+        return definition.outputs().stream().anyMatch(output -> !"inline".equals(output.type()))
+                || definition.routing().stream()
+                        .anyMatch(route -> !"inline".equals(route.destination().type()));
     }
 
     public int stepCount() {
         return definition.steps().size();
     }
 
-    public synchronized void markRunning() {
+    /** Marks the run running; false when already cancelled, so the task must not start. */
+    public synchronized boolean markRunning() {
+        if (status.isTerminal()) {
+            return false;
+        }
         this.status = PolicyRunStatus.RUNNING;
         touch();
+        return true;
     }
 
     public synchronized void enterStep(int oneBasedStepIndex) {
@@ -106,12 +137,18 @@ public class PolicyRun {
     }
 
     public synchronized void complete(List<ResultFile> resultFiles) {
+        if (status == PolicyRunStatus.CANCELLED) {
+            return; // cancellation is sticky: a cancelled run never reports success
+        }
         this.outputs = resultFiles == null ? List.of() : List.copyOf(resultFiles);
         this.status = PolicyRunStatus.COMPLETED;
         touch();
     }
 
     public synchronized void fail(String message) {
+        if (status == PolicyRunStatus.CANCELLED) {
+            return; // sticky through a late failure too
+        }
         this.error = message;
         this.status = PolicyRunStatus.FAILED;
         touch();
@@ -129,14 +166,30 @@ public class PolicyRun {
     }
 
     public synchronized void waitForInput(WaitState wait) {
+        if (status == PolicyRunStatus.CANCELLED) {
+            return; // a cancelled run does not park waiting for anyone
+        }
         this.waitState = wait;
         this.status = PolicyRunStatus.WAITING_FOR_INPUT;
         touch();
     }
 
-    /** Cancels unless already terminal; returns whether it transitioned. */
+    /**
+     * Claim the delivery phase: false when already cancelled, so the results must be discarded.
+     * Once claimed, {@link #cancel()} refuses — a run writing its outputs finishes them, and a
+     * revert's quiesce waits for it instead of racing the writes.
+     */
+    public synchronized boolean beginDelivery() {
+        if (status == PolicyRunStatus.CANCELLED) {
+            return false;
+        }
+        this.delivering = true;
+        return true;
+    }
+
+    /** Cancels unless already terminal or delivering; returns whether it transitioned. */
     public synchronized boolean cancel() {
-        if (status.isTerminal()) {
+        if (status.isTerminal() || delivering) {
             return false;
         }
         this.status = PolicyRunStatus.CANCELLED;

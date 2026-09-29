@@ -1,7 +1,16 @@
 package stirling.software.proprietary.failure;
 
-import static stirling.software.proprietary.failure.FailureActionId.ACKNOWLEDGE;
+import static stirling.software.proprietary.failure.FailureActionId.DECRYPT;
 import static stirling.software.proprietary.failure.FailureActionId.DISMISS;
+import static stirling.software.proprietary.failure.FailureActionId.OPEN_IN_TOOL;
+import static stirling.software.proprietary.failure.FailureActionId.REPAIR;
+import static stirling.software.proprietary.failure.FailureActionId.VIEW_FILE;
+import static stirling.software.proprietary.failure.FailureActionId.VIEW_IN_PROCESSOR;
+import static stirling.software.proprietary.failure.FailureActionSlot.OVERFLOW;
+import static stirling.software.proprietary.failure.FailureActionSlot.SECONDARY;
+import static stirling.software.proprietary.failure.FailureAudience.ANYONE_WHO_SEES;
+import static stirling.software.proprietary.failure.FailureAudience.OWNER;
+import static stirling.software.proprietary.failure.FailureAudience.TEAM_REVIEWER;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -17,16 +26,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 
 /**
- * The registry of failure kinds, described as data: a stable id, i18n keys and an English fallback
- * like {@code ExceptionUtils.ErrorCode}, plus the facets a review surface needs.
- *
- * <p>Actions are declared here but implemented in {@link FailureAction} beans resolved by id, so a
- * new kind ships as a registry entry plus copy. Two members today: {@link #UNKNOWN} gives every
- * failed run a record, and kinds get promoted out of it as production shows what occurs.
- *
- * <p>A kind offers an acknowledgement only where there is something to acknowledge <em>doing</em>.
- * With nothing to fix, "seen it" and "clear it" are the same decision, so the row offers only the
- * one that clears it.
+ * The registry of failure kinds as data: id, i18n keys, English fallback, plus the facets a review
+ * surface needs. A new kind ships as an entry plus copy; each offer says who it is for and where.
  */
 @Getter
 public enum FailureKind {
@@ -37,8 +38,240 @@ public enum FailureKind {
             FailureScope.FILE,
             errorCodes("E004"),
             fallback("This document is password-protected, so the pipeline could not read it."),
-            offer(ACKNOWLEDGE),
-            offer(DISMISS, "dismissSkipFile")),
+            // The password is the fix; the owner's own document is the runner-up.
+            resolution(DECRYPT, OWNER),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(OPEN_IN_TOOL, OWNER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /**
+     * E003 rides along. PDFBox swallows every decryption failure during lazy dereference, so it is
+     * not expected to render; claiming it only guarantees a known code never lands on {@link
+     * #UNKNOWN} if that ever changes.
+     */
+    INPUT_CORRUPTED(
+            FailureStage.INPUT,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_FILE_FIX,
+            FailureScope.FILE,
+            errorCodes("E001", "E002", "E003"),
+            fallback("This document is damaged, so the pipeline could not read it."),
+            // Opening the tool is offered but not promoted: the same bytes fail the same way, so
+            // it only helps when the upload itself truncated them.
+            resolution(REPAIR, OWNER),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(OPEN_IN_TOOL, OWNER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    COMPLIANCE_NOT_MET(
+            FailureStage.BLOCKED,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_FILE_FIX,
+            FailureScope.FILE,
+            errorCodes("E074"),
+            fallback("This document did not meet the compliance standard the policy checks for."),
+            // No automated fix: the document itself has to change, so looking at it leads.
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /**
+     * Damage the repair tools have already declined, so the row stops offering a fix that has been
+     * tried and refused.
+     */
+    INPUT_UNREPAIRABLE(
+            FailureStage.INPUT,
+            FailureSeverity.ERROR,
+            FailureRemedy.PERMANENT,
+            FailureScope.FILE,
+            errorCodes("E076"),
+            fallback("This document is damaged beyond what the repair tools can fix."),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /**
+     * The format checks a tool runs before it reads anything: a PDF tool handed a .docx, a comic
+     * reader handed something that is not the archive it names.
+     */
+    INPUT_WRONG_TYPE(
+            FailureStage.INPUT,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_FILE_FIX,
+            FailureScope.FILE,
+            errorCodes("E006", "E014", "E018", "E061", "E075"),
+            fallback("This document is not a format the step can open, so it could not be read."),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(OPEN_IN_TOOL, OWNER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /**
+     * The file is the type it claims and still will not open: an unopenable RAR or ZIP, an EML that
+     * will not parse, image bytes no decoder accepts.
+     *
+     * <p>Deliberately does not offer REPAIR despite reading like {@link #INPUT_CORRUPTED}. Repair
+     * is a PDF tool and none of these codes comes from a PDF.
+     */
+    INPUT_UNREADABLE(
+            FailureStage.INPUT,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_FILE_FIX,
+            FailureScope.FILE,
+            errorCodes("E010", "E015", "E021", "E034"),
+            fallback("This document could not be opened, so the pipeline could not read it."),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(OPEN_IN_TOOL, OWNER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /** Opened fine and holds nothing to work on: no pages, no images, no bytes. */
+    INPUT_EMPTY(
+            FailureStage.INPUT,
+            FailureSeverity.ERROR,
+            FailureRemedy.PERMANENT,
+            FailureScope.FILE,
+            errorCodes("E005", "E012", "E016", "E020", "E032"),
+            fallback("This document has no content in it, so there was nothing to work on."),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(OPEN_IN_TOOL, OWNER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /**
+     * The run never got hold of the document: the id resolves to nothing, or the upload arrived
+     * with no name to address it by.
+     */
+    INPUT_UNAVAILABLE(
+            FailureStage.INPUT,
+            FailureSeverity.ERROR,
+            FailureRemedy.PERMANENT,
+            FailureScope.FILE,
+            errorCodes("E030", "E033"),
+            fallback("The document behind this run could not be reached, so it was not processed."),
+            // No VIEW_FILE and no OPEN_IN_TOOL: both would open a tool on a document that is not
+            // there, which is the failure itself.
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /**
+     * A binary the step shells out to is absent from this deployment. Scoped to the server, not the
+     * file, because it fails every run that reaches the step and one incident says that better than
+     * one per document.
+     */
+    TOOL_NOT_INSTALLED(
+            FailureStage.INTERNAL,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_SERVER_FIX,
+            FailureScope.SERVER,
+            // E080 (MD5 unavailable) is deliberately not claimed: its one thrower has no throws
+            // clause and its caller swallows it for a fallback hash, so it cannot reach a run.
+            errorCodes("E042", "E062", "E063", "E064"),
+            fallback("This server is missing software the step needs, so it could not be run."),
+            // Nothing for an owner to press: their document is fine, and a retry fails the same
+            // way until someone installs the binary.
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, SECONDARY),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /**
+     * A source could not be listed at all: a folder unplugged, renamed or locked down. Scoped to
+     * the source, so a week-long outage is one incident. Claims no error code.
+     */
+    SOURCE_UNREADABLE(
+            FailureStage.INPUT,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_CONFIG_FIX,
+            FailureScope.SOURCE,
+            noErrorCodes(),
+            fallback("This folder could not be read, so nothing in it was processed."),
+            // No document to view: the sweep never got as far as one. Fixing it means fixing the
+            // folder, which happens outside Stirling.
+            global(VIEW_IN_PROCESSOR, OWNER, SECONDARY),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /**
+     * Ghostscript reached a page it could not draw, which its output names. Only that recognised
+     * failure belongs here; the bucket Ghostscript output falls into otherwise is STEP_TOOL_FAILED.
+     */
+    STEP_CANNOT_RENDER_PAGE(
+            FailureStage.INTERNAL,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_FILE_FIX,
+            FailureScope.FILE,
+            errorCodes("E054"),
+            fallback(
+                    "A page in this document could not be drawn, so the pipeline could not finish."),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(OPEN_IN_TOOL, OWNER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /**
+     * A tool the step shells out to ran and did not deliver: OCRmyPDF or qpdf exited non-zero,
+     * LibreOffice produced no PDF/A. E051 is also the bucket unrecognised Ghostscript output falls
+     * into, so it carries killed processes and full disks too; the retry offered first clears
+     * those.
+     */
+    STEP_TOOL_FAILED(
+            FailureStage.INTERNAL,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_FILE_FIX,
+            FailureScope.FILE,
+            errorCodes("E044", "E051", "E052", "E060"),
+            fallback("A tool this step relies on could not process this document."),
+            global(OPEN_IN_TOOL, OWNER, SECONDARY),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /** The thread running the step was interrupted: a shutdown or a cancel, not the document. */
+    STEP_INTERRUPTED(
+            FailureStage.INTERNAL,
+            FailureSeverity.ERROR,
+            FailureRemedy.TRANSIENT,
+            FailureScope.FILE,
+            errorCodes("E053"),
+            fallback(
+                    "This step was stopped before it finished, so the document was not processed."),
+            global(OPEN_IN_TOOL, OWNER, SECONDARY),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /**
+     * A page ran the renderer out of memory at the requested resolution. The page's size and the
+     * step's DPI decide it together, so one oversized page fails while its neighbours succeed.
+     */
+    STEP_PAGE_TOO_LARGE(
+            FailureStage.INTERNAL,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_CONFIG_FIX,
+            FailureScope.FILE,
+            errorCodes("E081"),
+            fallback(
+                    "A page in this document was too large to render at the requested resolution."),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /**
+     * The step's settings, not the document, were refused: no OCR language, an unparseable page
+     * size. Scoped to the policy, since every document it reaches fails identically until the step
+     * is edited, and one incident says that best.
+     */
+    STEP_MISCONFIGURED(
+            FailureStage.INTERNAL,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_CONFIG_FIX,
+            FailureScope.POLICY,
+            errorCodes("E040", "E041", "E043", "E050", "E070", "E072"),
+            fallback("This step's settings are not valid, so it could not run."),
+            // Nothing for an owner to press: their document is fine, and only whoever can edit the
+            // policy can change the settings.
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, SECONDARY),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
 
     UNKNOWN(
             FailureStage.INTERNAL,
@@ -47,7 +280,11 @@ public enum FailureKind {
             FailureScope.RUN,
             noErrorCodes(),
             fallback("This run failed for a reason Stirling does not yet recognise."),
-            offer(DISMISS));
+            // No known fix to declare, so a plain retry leads: these are often one-offs.
+            resolution(OPEN_IN_TOOL, OWNER),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW));
 
     private static final String KEY_PREFIX = "portal.failures.kind.";
     private static final String ACTION_KEY_PREFIX = "portal.failures.action.";
@@ -94,23 +331,37 @@ public enum FailureKind {
         this.offers = List.of(offers);
     }
 
-    /**
-     * One action this kind offers, with the key to label it by. One ordered list rather than ids
-     * plus a parallel map of overrides, which could disagree with each other.
-     *
-     * @param labelKeySuffix key under {@code portal.failures.action.}, or null for the generic
-     *     label
-     */
-    private record Offer(FailureActionId id, String labelKeySuffix) {}
+    /** One ordered list, not parallel maps of audiences, slots and labels that could disagree. */
+    private record Offer(
+            FailureActionId id,
+            FailureAudience audience,
+            FailureActionSlot slot,
+            String labelKeySuffix) {}
 
-    /** An action labelled by this kind's own wording, where the generic label reads badly. */
-    private static Offer offer(FailureActionId id, String labelKeySuffix) {
-        return new Offer(id, labelKeySuffix);
+    /** The action that fixes this kind. One per kind: needing two would make it two kinds. */
+    private static Offer resolution(FailureActionId id, FailureAudience audience) {
+        return new Offer(id, audience, FailureActionSlot.RESOLUTION, null);
     }
 
-    /** An action labelled by the shared wording for that action. */
-    private static Offer offer(FailureActionId id) {
-        return new Offer(id, null);
+    /** As {@link #resolution(FailureActionId, FailureAudience)}, with this kind's own wording. */
+    private static Offer resolution(
+            FailureActionId id, FailureAudience audience, String labelKeySuffix) {
+        return new Offer(id, audience, FailureActionSlot.RESOLUTION, labelKeySuffix);
+    }
+
+    /** Not this kind's fix: an offer any kind can make, with the shared wording. */
+    private static Offer global(
+            FailureActionId id, FailureAudience audience, FailureActionSlot slot) {
+        return new Offer(id, audience, slot, null);
+    }
+
+    /** As above, with this kind's own wording where the shared one reads badly. */
+    private static Offer global(
+            FailureActionId id,
+            FailureAudience audience,
+            FailureActionSlot slot,
+            String labelKeySuffix) {
+        return new Offer(id, audience, slot, labelKeySuffix);
     }
 
     /**
@@ -148,6 +399,26 @@ public enum FailureKind {
     public List<FailureActionId> getActions() {
         return offers.stream().map(Offer::id).toList();
     }
+
+    /** What this kind offers, in declaration order, each with label and placement resolved. */
+    public List<OfferedAction> getOfferedActions() {
+        return offers.stream()
+                .map(
+                        offer ->
+                                new OfferedAction(
+                                        offer.id(),
+                                        labelKeyFor(offer.id()),
+                                        offer.audience(),
+                                        offer.slot()))
+                .toList();
+    }
+
+    /** One action as a kind declares it: what to call it, who it is for, where it wants to sit. */
+    public record OfferedAction(
+            FailureActionId id,
+            String labelKey,
+            FailureAudience audience,
+            FailureActionSlot slot) {}
 
     /** Whether this kind offers {@code action}. The dispatch guard: see {@code FailureActionId}. */
     public boolean declares(FailureActionId action) {

@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import stirling.software.proprietary.workflow.dto.ParticipantResponse;
 import stirling.software.proprietary.workflow.dto.WetSignatureMetadata;
 import stirling.software.proprietary.workflow.dto.WorkflowSessionResponse;
 import stirling.software.proprietary.workflow.model.WorkflowParticipant;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
+
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Utility class for mapping workflow entities to DTOs. Centralizes conversion logic for consistent

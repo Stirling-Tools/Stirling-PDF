@@ -13,11 +13,15 @@ import apiClient from "@app/services/apiClient";
  * at a time, via `onFileReceived`.
  */
 
+interface MobileScannerFile {
+  filename: string;
+  contentType?: string;
+}
+
 // Generate a cryptographically secure UUID v4-like session ID
 function generateSessionId(): string {
   // Use Web Crypto API for cryptographically secure random values
-  const cryptoObj =
-    typeof crypto !== "undefined" ? crypto : (window as any).crypto;
+  const cryptoObj = typeof crypto !== "undefined" ? crypto : window.crypto;
 
   if (cryptoObj && typeof cryptoObj.getRandomValues === "function") {
     const bytes = new Uint8Array(16);
@@ -144,7 +148,7 @@ export function useMobileTransferSession({
 
       // Download only files we haven't processed yet
       const newFiles = files.filter(
-        (f: any) => !processedFiles.current.has(f.filename),
+        (f: MobileScannerFile) => !processedFiles.current.has(f.filename),
       );
       if (newFiles.length === 0) return;
 
