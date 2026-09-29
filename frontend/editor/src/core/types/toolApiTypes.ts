@@ -422,6 +422,10 @@ export interface CropPdfForm {
    */
   height?: number;
   /**
+   * Pages to crop (e.g. '1, 3, 5-8' or 'all'). Omit or leave blank for all pages.
+   */
+  pageNumbers?: string;
+  /**
    * Whether to remove text outside the crop area (keeps images)
    */
   removeDataOutsideCrop?: boolean;
