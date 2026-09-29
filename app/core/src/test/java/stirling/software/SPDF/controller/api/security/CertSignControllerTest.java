@@ -392,6 +392,38 @@ class CertSignControllerTest {
         }
     }
 
+    /** Declared as PNG, but not an image: rejected up front instead of signing an empty file. */
+    @Test
+    void rejectsALogoThatCannotBeRead() {
+        SignPDFWithCertRequest request = boxedRequest(pdfBytes, false);
+        request.setShowLogo(true);
+        request.setLogoImage(
+                new MockMultipartFile(
+                        "logoImage", "logo.png", "image/png", "not an image".getBytes()));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> certSignController.signPDFWithCert(request, httpRequest));
+    }
+
+    @Test
+    void signsWithAReadableLogo() throws Exception {
+        java.awt.image.BufferedImage image =
+                new java.awt.image.BufferedImage(4, 4, java.awt.image.BufferedImage.TYPE_INT_RGB);
+        ByteArrayOutputStream png = new ByteArrayOutputStream();
+        javax.imageio.ImageIO.write(image, "png", png);
+        SignPDFWithCertRequest request = boxedRequest(pdfBytes, false);
+        request.setShowLogo(true);
+        request.setLogoImage(
+                new MockMultipartFile("logoImage", "logo.png", "image/png", png.toByteArray()));
+
+        byte[] signed = drainBody(certSignController.signPDFWithCert(request, httpRequest));
+
+        try (PDDocument doc = Loader.loadPDF(signed)) {
+            assertEquals(1, doc.getSignatureDictionaries().size());
+        }
+    }
+
     private static byte[] twoPagePdf() throws java.io.IOException {
         try (PDDocument doc = new PDDocument()) {
             doc.addPage(new PDPage(PDRectangle.A4));

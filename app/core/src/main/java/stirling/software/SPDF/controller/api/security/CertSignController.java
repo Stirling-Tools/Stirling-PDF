@@ -435,14 +435,20 @@ public class CertSignController {
                     "Invalid argument: {0}",
                     "signature logo - only PNG and JPEG images are supported");
         }
-        return new SignatureLogoPlacement.Logo(logoImage.getBytes(), logoPosition);
+        byte[] bytes = logoImage.getBytes();
+        // Embedded the way the signature will embed it: a failure there is swallowed by sign(),
+        // which then returns an unsigned, empty file.
+        try (PDDocument probe = new PDDocument()) {
+            PDImageXObject.createFromByteArray(probe, bytes, "signatureLogo");
+        } catch (IOException | RuntimeException e) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid argument: {0}",
+                    "signature logo - the image could not be read");
+        }
+        return new SignatureLogoPlacement.Logo(bytes, logoPosition);
     }
 
-    /**
-     * PDFBox reads the image from its bytes, so the declared type is only a hint - but rejecting an
-     * obviously wrong upload here gives the user a clear message instead of a decoding failure
-     * halfway through signing.
-     */
     /**
      * Pairs each selected attribute with the label the caller wants drawn for it.
      *
@@ -463,6 +469,10 @@ public class CertSignController {
         return zipped;
     }
 
+    /**
+     * The declared type only turns away an upload that does not even claim to be PNG or JPEG, with
+     * a clear message; {@link #readLogo} then checks the bytes themselves.
+     */
     private boolean isSupportedLogoType(MultipartFile logoImage) {
         String contentType = logoImage.getContentType();
         if (contentType != null) {
