@@ -7055,7 +7055,6 @@ loadingDocument = "Loading document"
 loadingProgress = "Loading progress"
 noDocument = "No document loaded."
 pickPrompt = "Pick a PDF from the Files panel on the left to begin editing."
-renderingPreview = "Rendering preview"
 
 [pdfTextEditor.toolbar]
 addTextTooltip = "Add a text box - then click the page"

@@ -7,6 +7,12 @@ import {
 } from "@app/services/pdfiumService";
 import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/types";
+import {
+  handoffFileId,
+  handoffFileKey,
+  matchTextEditorHandoff,
+  stagePendingEditorScroll,
+} from "@app/tools/pdfTextEditor/viewerHandoff";
 
 const EAGER_PAGE_LIMIT = 5;
 
@@ -48,6 +54,26 @@ export function useDocumentLoader(store: EditorStore) {
           return;
         }
         await store.setDocument(doc);
+
+        // Entering from the normal viewer carries its zoom and reading
+        // position; apply before the first paint so no 150%-jump is visible.
+        try {
+          const h = matchTextEditorHandoff(
+            handoffFileId(file),
+            handoffFileKey(file),
+          );
+          if (h) {
+            store.setRenderScale(h.zoomScale);
+            stagePendingEditorScroll({
+              page: h.page,
+              offsetFraction: h.offsetFraction,
+            });
+          } else {
+            stagePendingEditorScroll(null);
+          }
+        } catch {
+          /* handoff is best-effort; the 150% default still stands */
+        }
 
         const total = doc.pageCount;
         const eager = Math.min(EAGER_PAGE_LIMIT, total);

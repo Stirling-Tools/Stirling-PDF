@@ -14,8 +14,10 @@ if (import.meta.hot) {
   });
 }
 
-/** Grace period before a fully-unmounted editor frees its PDFium document. */
-const DISPOSE_GRACE_MS = 1500;
+/** Grace period before a fully-unmounted editor frees its PDFium document. Long
+ * enough that flipping between the viewer and the editor reuses the warm
+ * document instead of reparsing. */
+const DISPOSE_GRACE_MS = 30_000;
 
 /** Returns the singleton editor store, plus the current view state. */
 export function useEditorStore(): {

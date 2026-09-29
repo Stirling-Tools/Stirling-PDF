@@ -305,7 +305,10 @@ export class EditorStore {
     this.bakedDirty = false;
     this.selection.clear();
     this._pendingPasswordFile = null;
-    this.state = INITIAL;
+    // Keep the last zoom: reopening after the dispose grace must not jump
+    // back to 150% when the user briefly visited the normal viewer.
+    const renderScale = this.state.renderScale;
+    this.state = { ...INITIAL, renderScale };
     this.notify();
   }
 

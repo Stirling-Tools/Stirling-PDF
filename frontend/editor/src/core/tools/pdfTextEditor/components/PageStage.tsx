@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   Box,
   Center,
+  Group,
   Loader,
   Progress,
   ScrollArea,
@@ -28,11 +29,28 @@ import { ReflowWrapCommand } from "@app/tools/pdfTextEditor/commands/ReflowWrapC
 import { InsertTextCommand } from "@app/tools/pdfTextEditor/commands/InsertTextCommand";
 import { MoveTextRunCommand } from "@app/tools/pdfTextEditor/commands/MoveTextRunCommand";
 import { SetImageTransformCommand } from "@app/tools/pdfTextEditor/commands/SetImageTransformCommand";
+import { takePendingEditorScroll } from "@app/tools/pdfTextEditor/viewerHandoff";
+import type { PendingEditorScroll } from "@app/tools/pdfTextEditor/viewerHandoff";
 import type { SelectionState } from "@app/tools/pdfTextEditor/types";
 
 const DEFAULT_SCALE = 1.5;
 const DESKTOP_FIT_PAD_PX = 64;
 const MOBILE_FIT_PAD_PX = 16;
+const SCROLL_RESTORE_FRAMES = 30;
+
+/** Editor ScrollArea viewport. Mantine sets inline overflowY scroll with no
+ * marker attribute (ScrollAreaViewport.mjs), so scan overflow, not classes. */
+function findEditorScroller(stage: HTMLElement | null): HTMLElement | null {
+  if (!stage) return null;
+  const candidates = stage.querySelectorAll<HTMLElement>("div");
+  for (const el of candidates) {
+    if (el.scrollHeight > el.clientHeight + 5) {
+      const overflow = getComputedStyle(el).overflowY;
+      if (/auto|scroll|overlay/.test(overflow)) return el;
+    }
+  }
+  return null;
+}
 
 // Custom workbench view: the contextual formatting toolbar as a bar across the
 // top, then the scrollable pages stack with editable overlays beneath.
@@ -111,6 +129,88 @@ export function PageStage() {
     return () => observer.disconnect();
   }, [isMobile, firstPageWidth, store]);
 
+  // Claim the scroll target the loader staged from the viewer handoff, once
+  // per document. A fraction keeps it valid across the zoom change.
+  const pendingScrollTargetRef = useRef<PendingEditorScroll | null>(null);
+  const scrollDocRef = useRef<object | null>(null);
+  useEffect(() => {
+    const doc = store.document;
+    if (!doc || state.pages.length === 0) return;
+    if (scrollDocRef.current === doc) return;
+    scrollDocRef.current = doc;
+    pendingScrollTargetRef.current = takePendingEditorScroll();
+  }, [store, state.pages.length, state.hasDocument]);
+
+  // Land the carried reading position before the user notices the top. Holds
+  // briefly while bitmaps paint; user scroll intent releases it immediately.
+  useEffect(() => {
+    const target = pendingScrollTargetRef.current;
+    if (!target || state.pages.length === 0) return;
+    const pageCount = state.pages.length;
+    const pageIndex = Math.min(Math.max(1, target.page), pageCount) - 1;
+    let cancelled = false;
+    let frames = 0;
+    let scroller: HTMLElement | null = null;
+    let release: (() => void) | null = null;
+    const onIntent = () => {
+      cancelled = true;
+      pendingScrollTargetRef.current = null;
+    };
+    const apply = () => {
+      if (cancelled) return;
+      const pageEl = document.querySelector<HTMLElement>(
+        `[data-testid="pdf-editor-page-${pageIndex}"]`,
+      );
+      if (!scroller) {
+        const stage = document.querySelector<HTMLElement>(
+          '[data-testid="pdf-editor-stage"]',
+        );
+        scroller = findEditorScroller(stage);
+      }
+      if (!pageEl || !scroller || pageEl.clientHeight === 0) {
+        if (++frames < SCROLL_RESTORE_FRAMES) {
+          requestAnimationFrame(apply);
+        } else {
+          pendingScrollTargetRef.current = null;
+        }
+        return;
+      }
+      if (!release) {
+        const events = ["wheel", "touchstart", "pointerdown", "keydown"];
+        for (const name of events) {
+          scroller.addEventListener(name, onIntent, { passive: true });
+        }
+        release = () => {
+          for (const name of events) {
+            scroller?.removeEventListener(name, onIntent);
+          }
+        };
+      }
+      const pageTop =
+        pageEl.getBoundingClientRect().top -
+        scroller.getBoundingClientRect().top +
+        scroller.scrollTop;
+      const next = pageTop + target.offsetFraction * pageEl.clientHeight;
+      scroller.scrollTop = Math.max(0, next);
+      if (Math.abs(scroller.scrollTop - next) <= 2) {
+        release?.();
+        pendingScrollTargetRef.current = null;
+        return;
+      }
+      if (++frames < SCROLL_RESTORE_FRAMES) {
+        requestAnimationFrame(apply);
+      } else {
+        release?.();
+        pendingScrollTargetRef.current = null;
+      }
+    };
+    requestAnimationFrame(apply);
+    return () => {
+      cancelled = true;
+      release?.();
+    };
+  }, [state.pages.length]);
+
   const topBar = isMobile ? (
     <MobileEditorTopBar
       controller={controller}
@@ -175,18 +275,15 @@ export function PageStage() {
     );
   }
 
-  // Loading overlay is layered on TOP of the pages stack: PageView's
-  // IntersectionObserver only fires when PageView is mounted.
-  const showLoading =
-    state.loading || (state.hasDocument && !state.firstPageRendered);
+  // Non-blocking progress pill: pages stay mounted and paint progressively
+  // underneath, so entering from the viewer shows the same position settling
+  // in rather than a white flash followed by a jump.
+  const showLoading = state.loading;
   const p = state.progress;
   const percent =
     p && p.total > 0 ? Math.round((p.current / p.total) * 100) : null;
   const stageLabel =
-    p?.stage ??
-    (state.hasDocument
-      ? t("pdfTextEditor.stage.renderingPreview", "Rendering preview")
-      : t("pdfTextEditor.stage.loadingDocument", "Loading document"));
+    p?.stage ?? t("pdfTextEditor.stage.loadingDocument", "Loading document");
 
   return (
     <Stack gap={0} h="100%" style={{ overflow: "hidden" }}>
@@ -268,25 +365,32 @@ export function PageStage() {
           </Center>
         )}
         {showLoading && (
-          <Center
+          <Box
             pos="absolute"
-            top={0}
-            left={0}
-            right={0}
-            bottom={0}
+            top={12}
+            left="50%"
             style={{
-              background: "rgba(255,255,255,0.9)",
+              transform: "translateX(-50%)",
               zIndex: 100,
+              pointerEvents: "none",
+              borderRadius: 999,
+              border: "1px solid var(--mantine-color-default-border)",
+              background: "var(--mantine-color-body)",
+              boxShadow: "0 3px 14px rgba(0, 0, 0, 0.14)",
+              padding: "8px 16px",
+              maxWidth: "min(420px, 90%)",
             }}
             data-testid="pdf-editor-stage-loading"
           >
-            <Stack align="center" gap="sm" w={320}>
-              <Loader size="md" />
-              <Text fw={500}>{stageLabel}</Text>
+            <Group gap="sm" wrap="nowrap">
+              <Loader size="xs" />
+              <Text size="sm" fw={500} style={{ whiteSpace: "nowrap" }}>
+                {stageLabel}
+              </Text>
               {percent !== null ? (
                 <Progress
                   value={percent}
-                  w="100%"
+                  w={80}
                   size="sm"
                   data-testid="pdf-editor-load-progress"
                   aria-label={t(
@@ -298,7 +402,7 @@ export function PageStage() {
                 <Progress
                   value={100}
                   animated
-                  w="100%"
+                  w={80}
                   size="sm"
                   data-testid="pdf-editor-load-progress"
                   aria-label={t(
@@ -307,13 +411,8 @@ export function PageStage() {
                   )}
                 />
               )}
-              {p && p.total > 0 && (
-                <Text size="xs" c="dimmed">
-                  {p.current} / {p.total}
-                </Text>
-              )}
-            </Stack>
-          </Center>
+            </Group>
+          </Box>
         )}
         <MarqueeSelector store={store} />
         <ScrollArea h="100%" type="auto" data-testid="pdf-editor-stage">

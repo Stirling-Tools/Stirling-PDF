@@ -61,6 +61,7 @@ import { useMeasurementManager } from "@app/hooks/useMeasurementManager";
 import { ScaleCalibrationDialog } from "@app/components/viewer/ScaleCalibrationDialog";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
 import { alert } from "@app/components/toast";
+import { captureTextEditorHandoff } from "@app/tools/pdfTextEditor/viewerHandoff";
 
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -134,6 +135,8 @@ const EmbedPdfViewerContent = ({
     isCommentsSidebarVisible,
     isSearchInterfaceVisible,
     searchInterfaceActions,
+    registerImmediateZoomUpdate,
+    registerImmediateScrollUpdate,
     zoomActions,
     scrollActions,
     panActions: _panActions,
@@ -744,6 +747,86 @@ const EmbedPdfViewerContent = ({
     onZoomIn: zoomActions.zoomIn,
     onZoomOut: zoomActions.zoomOut,
   });
+
+  // The text editor owns a separate engine and zoom state, so it reads this
+  // handoff before its first paint and keeps the reading position.
+  const handoffFileIdRef = useRef<string | null>(null);
+  const handoffFileKeyRef = useRef<string | null>(null);
+  handoffFileIdRef.current = currentFileStableId;
+  handoffFileKeyRef.current = currentFileId;
+  const viewerGettersRef = useRef({ getZoomState, getScrollState });
+  viewerGettersRef.current = { getZoomState, getScrollState };
+  const publishTextEditorHandoff = useCallback(() => {
+    if (previewFile) return;
+    const fileId = handoffFileIdRef.current;
+    const fileKey = handoffFileKeyRef.current;
+    if (!fileId && !fileKey) return;
+    const zoom = viewerGettersRef.current.getZoomState();
+    const zoomScale =
+      typeof zoom.currentZoom === "number" && Number.isFinite(zoom.currentZoom)
+        ? zoom.currentZoom
+        : null;
+    let page = lastKnownScrollPageRef.current;
+    const scrolled = viewerGettersRef.current.getScrollState().currentPage;
+    if (scrolled > 0) page = scrolled;
+    if (!zoomScale || page < 1) return;
+    let offsetFraction = 0;
+    try {
+      const el = document.querySelector<HTMLElement>(
+        `[data-page-index="${page - 1}"]`,
+      );
+      const scroller = findScrollableAncestor(el);
+      if (el && scroller && el.clientHeight > 0) {
+        const pageTop =
+          el.getBoundingClientRect().top -
+          scroller.getBoundingClientRect().top +
+          scroller.scrollTop;
+        offsetFraction = Math.min(
+          1,
+          Math.max(0, (scroller.scrollTop - pageTop) / el.clientHeight),
+        );
+      }
+    } catch {
+      /* DOM read is best-effort; page-level restore still helps */
+    }
+    captureTextEditorHandoff({
+      fileId,
+      fileKey,
+      zoomScale,
+      page,
+      offsetFraction,
+    });
+  }, [previewFile]);
+
+  useEffect(() => {
+    publishTextEditorHandoff();
+  }, [
+    publishTextEditorHandoff,
+    activeFileId,
+    currentFileId,
+    scrollState.currentPage,
+  ]);
+
+  useEffect(() => {
+    if (selectedTool === "pdfTextEditor") publishTextEditorHandoff();
+  }, [selectedTool, publishTextEditorHandoff]);
+
+  useEffect(() => {
+    const offZoom = registerImmediateZoomUpdate(() =>
+      publishTextEditorHandoff(),
+    );
+    const offScroll = registerImmediateScrollUpdate(() =>
+      publishTextEditorHandoff(),
+    );
+    return () => {
+      offZoom();
+      offScroll();
+    };
+  }, [
+    registerImmediateZoomUpdate,
+    registerImmediateScrollUpdate,
+    publishTextEditorHandoff,
+  ]);
 
   const viewerKeyCommand = useViewerKeyCommand();
 
