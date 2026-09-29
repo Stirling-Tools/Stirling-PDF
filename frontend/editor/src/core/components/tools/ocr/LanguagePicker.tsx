@@ -48,12 +48,17 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
   const [installedRevision, setInstalledRevision] = useState(0);
 
   useEffect(() => {
+    // Each change below starts another fetch while an earlier one may still be
+    // out, and a list that comes back late must not replace a newer one.
+    let superseded = false;
+
     // Fetch available languages from backend
     const fetchLanguages = async () => {
       try {
         const { data } = await apiClient.get<{ languages: string[] }>(
           languagesEndpoint,
         );
+        if (superseded) return;
 
         const displayNames =
           typeof Intl.DisplayNames !== "undefined"
@@ -90,6 +95,7 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
 
         setAvailableLanguages(languageOptions);
       } catch (error) {
+        if (superseded) return;
         console.error("[LanguagePicker] Fetch failed with error:", error);
         console.error("[LanguagePicker] Error details:", {
           name: error instanceof Error ? error.name : "Unknown",
@@ -97,11 +103,14 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
           stack: error instanceof Error ? error.stack : undefined,
         });
       } finally {
-        setIsLoadingLanguages(false);
+        if (!superseded) setIsLoadingLanguages(false);
       }
     };
 
     fetchLanguages();
+    return () => {
+      superseded = true;
+    };
   }, [languagesEndpoint, i18n.language, t, installedRevision]);
 
   // Auto-fill OCR language based on browser language when languages are loaded
