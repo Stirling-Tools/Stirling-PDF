@@ -2,12 +2,7 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Group, Text, Menu, Box } from "@mantine/core";
 import { Button as SharedButton } from "@app/ui/Button";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import DownloadIcon from "@mui/icons-material/Download";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
+import { Icon, type IconName } from "@app/ui/Icon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { ToolIcon } from "@app/components/shared/ToolIcon";
 import { ToolRegistry } from "@app/data/toolsTaxonomy";
@@ -19,7 +14,7 @@ interface AutomationEntryProps {
   /** Optional description for tooltip */
   description?: string;
   /** MUI Icon component for the badge */
-  badgeIcon?: React.ComponentType<any>;
+  badgeIcon?: IconName;
   /** Array of tool operation names in the workflow */
   operations: string[];
   /** Click handler */
@@ -47,7 +42,7 @@ interface AutomationEntryProps {
 export default function AutomationEntry({
   title,
   description,
-  badgeIcon: BadgeIcon,
+  badgeIcon,
   operations,
   onClick,
   keepIconColor = false,
@@ -135,9 +130,9 @@ export default function AutomationEntry({
 
   const buttonContent = (
     <>
-      {BadgeIcon && (
+      {badgeIcon && (
         <ToolIcon
-          icon={<BadgeIcon />}
+          icon={<Icon name={badgeIcon} />}
           {...(keepIconColor && {
             color: "var(--mantine-primary-color-filled)",
           })}
@@ -191,11 +186,9 @@ export default function AutomationEntry({
         className="tool-button"
         style={{
           borderRadius: 0,
-          color: "var(--tools-text-and-icon-color)",
+          color: "var(--c-text)",
           overflow: "visible",
-          backgroundColor: shouldShowMenu
-            ? "var(--automation-entry-hover-bg)"
-            : undefined,
+          backgroundColor: shouldShowMenu ? "var(--c-hover)" : undefined,
         }}
       >
         {buttonContent}
@@ -209,7 +202,7 @@ export default function AutomationEntry({
         >
           <Menu.Target>
             <SharedButton
-              leftSection={<MoreVertIcon style={{ fontSize: 20 }} />}
+              leftSection={<Icon name="ellipsis-vertical" size={20} />}
               variant="tertiary"
               accent="neutral"
               size="md"
@@ -235,7 +228,7 @@ export default function AutomationEntry({
           <Menu.Dropdown>
             {onImport && (
               <Menu.Item
-                leftSection={<UploadFileIcon style={{ fontSize: 16 }} />}
+                leftSection={<Icon name="file-up" size={16} />}
                 onClick={(e) => {
                   e.stopPropagation();
                   onImport();
@@ -246,7 +239,7 @@ export default function AutomationEntry({
             )}
             {onCopy && (
               <Menu.Item
-                leftSection={<ContentCopyIcon style={{ fontSize: 16 }} />}
+                leftSection={<Icon name="copy" size={16} />}
                 onClick={(e) => {
                   e.stopPropagation();
                   onCopy();
@@ -257,7 +250,7 @@ export default function AutomationEntry({
             )}
             {onEdit && (
               <Menu.Item
-                leftSection={<EditIcon style={{ fontSize: 16 }} />}
+                leftSection={<Icon name="pencil" size={16} />}
                 onClick={(e) => {
                   e.stopPropagation();
                   onEdit();
@@ -268,7 +261,7 @@ export default function AutomationEntry({
             )}
             {onExportAutomation && (
               <Menu.Item
-                leftSection={<DownloadIcon style={{ fontSize: 16 }} />}
+                leftSection={<Icon name="download" size={16} />}
                 onClick={(e) => {
                   e.stopPropagation();
                   onExportAutomation();
@@ -279,7 +272,7 @@ export default function AutomationEntry({
             )}
             {onExportFolderScan && (
               <Menu.Item
-                leftSection={<DownloadIcon style={{ fontSize: 16 }} />}
+                leftSection={<Icon name="download" size={16} />}
                 onClick={(e) => {
                   e.stopPropagation();
                   onExportFolderScan();
@@ -293,7 +286,7 @@ export default function AutomationEntry({
             )}
             {onDelete && (
               <Menu.Item
-                leftSection={<DeleteIcon style={{ fontSize: 16 }} />}
+                leftSection={<Icon name="trash" size={16} />}
                 onClick={(e) => {
                   e.stopPropagation();
                   onDelete();

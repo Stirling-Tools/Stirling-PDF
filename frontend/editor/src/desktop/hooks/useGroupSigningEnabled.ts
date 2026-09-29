@@ -6,11 +6,18 @@ import { useSelfHostedAuth } from "@app/hooks/useSelfHostedAuth";
  * an authenticated session. Returns false in SaaS/local mode or when logged out.
  */
 export function useGroupSigningEnabled(): boolean {
-  const { config } = useAppConfig();
-  const { isSelfHosted, isAuthenticated } = useSelfHostedAuth();
-  return (
-    isSelfHosted &&
-    isAuthenticated &&
-    config?.storageGroupSigningEnabled === true
-  );
+  return useGroupSigningState().enabled;
+}
+
+/** Waits for desktop mode, authentication and config before confirming availability. */
+export function useGroupSigningState(): { enabled: boolean; settled: boolean } {
+  const { config, loading: configLoading } = useAppConfig();
+  const { isSelfHosted, isAuthenticated, loading } = useSelfHostedAuth();
+  return {
+    enabled:
+      isSelfHosted &&
+      isAuthenticated &&
+      config?.storageGroupSigningEnabled === true,
+    settled: !loading && !configLoading,
+  };
 }

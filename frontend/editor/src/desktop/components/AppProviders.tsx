@@ -1,10 +1,14 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { AppProviders as ProprietaryAppProviders } from "@proprietary/components/AppProviders";
 import { DesktopConfigSync } from "@app/components/DesktopConfigSync";
+import { DesktopQueryCacheReset } from "@app/components/DesktopQueryCacheReset";
 import { DesktopBannerInitializer } from "@app/components/DesktopBannerInitializer";
 import { SaveShortcutListener } from "@app/components/SaveShortcutListener";
+import { LocalProcessingFolders } from "@app/components/LocalProcessingFolders";
+import { DiskConflictHost } from "@app/components/shared/DiskConflictHost";
 import { DesktopOnboardingModal } from "@app/components/DesktopOnboardingModal";
 import { DesktopSaasOnboardingBootstrap } from "@app/components/DesktopSaasOnboardingBootstrap";
+import { ClassificationBackgroundRunner } from "@app/components/onboarding/classificationDemo/ClassificationBackgroundRunner";
 import UsageLimitModalHost from "@app/components/UsageLimitModalHost";
 import { SignInModal } from "@app/components/SignInModal";
 import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
@@ -61,11 +65,30 @@ export function AppProviders({ children }: { children: ReactNode }) {
   // tree to remount without a full page reload (avoids Windows WebView2 freeze on window.location.reload()).
   const [appKey, setAppKey] = useState(0);
   const hasLoadedInitialMode = useRef(false);
+  // The mode the current appKey reflects. A same-mode notify (e.g. "continue without
+  // signing in" re-selecting local while already local) must not remount the provider
+  // tree - that resets DesktopOnboardingModal mid-flow and re-shows the welcome slide.
+  const lastAppliedMode = useRef<"saas" | "selfhosted" | "local" | null>(null);
+
+  // Files dropped outside a dropzone must never navigate the webview to the
+  // file (Linux WebKit renders the PDF fullscreen and orphans the app UI).
+  // Dropzone-level handlers run before these window-level listeners, so
+  // in-app drag & drop is unaffected.
+  useEffect(() => {
+    const preventNavigation = (e: DragEvent) => e.preventDefault();
+    window.addEventListener("dragover", preventNavigation);
+    window.addEventListener("drop", preventNavigation);
+    return () => {
+      window.removeEventListener("dragover", preventNavigation);
+      window.removeEventListener("drop", preventNavigation);
+    };
+  }, []);
 
   // Load connection mode on mount and subscribe to future changes
   useEffect(() => {
     void connectionModeService.getCurrentMode().then((mode) => {
       setConnectionMode(mode);
+      lastAppliedMode.current = mode;
       hasLoadedInitialMode.current = true;
     });
 
@@ -78,7 +101,15 @@ export function AppProviders({ children }: { children: ReactNode }) {
       // SaaS providers and remounting mid-wizard resets authChecked, navigating away.
       // Switching FROM selfhosted TO saas DOES trigger a remount (mode !== 'selfhosted')
       // which is intentional — the SaaS provider tree needs fresh state after login.
-      if (hasLoadedInitialMode.current && config.mode !== "selfhosted") {
+      // Only on a real transition: a same-mode notify has nothing to reset, and
+      // remounting would tear down an in-flight modal (e.g. onboarding sign-in).
+      const modeChanged = lastAppliedMode.current !== config.mode;
+      lastAppliedMode.current = config.mode;
+      if (
+        hasLoadedInitialMode.current &&
+        modeChanged &&
+        config.mode !== "selfhosted"
+      ) {
         setAppKey((k) => k + 1);
       }
     });
@@ -311,7 +342,11 @@ export function AppProviders({ children }: { children: ReactNode }) {
           autoFetch: false,
         }}
       >
-        <div style={{ minHeight: "100vh" }} />
+        {/* Also here: the auth check below switches mode pre-authChecked. */}
+        <DesktopQueryCacheReset />
+        {/* The title-bar strip (window controls) comes from AppFrame, which wraps
+            this loading branch too; here we just fill the space below it. */}
+        <div style={{ height: "100%" }} />
         {updatePopupModal}
       </ProprietaryAppProviders>
     );
@@ -336,16 +371,20 @@ export function AppProviders({ children }: { children: ReactNode }) {
             window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT)),
         }}
       >
+        <DesktopQueryCacheReset />
         <SaaSTeamProvider key={appKey}>
           <DesktopConfigSync />
           <DesktopBannerInitializer />
           <SaveShortcutListener />
+          <LocalProcessingFolders />
+          <DiskConflictHost />
           {children}
           {/* Desktop onboarding modal: welcome slide → sign-in slide, shown once on first launch */}
           <DesktopOnboardingModal />
           {/* SaaS product onboarding (cloud flow, minus the desktop-download slide),
               shown once after a SaaS sign-in. Mirrors saas's OnboardingBootstrap. */}
           <DesktopSaasOnboardingBootstrap connectionMode={connectionMode} />
+          <ClassificationBackgroundRunner />
           {/* Always-mounted host for the PAYG usage-limit modals (free-limit /
               spend-cap). Resolves to the cloud implementation via @app; listens
               for both the imperative open events (direct-call 402s) and the

@@ -50,7 +50,7 @@ export function Tabs<K extends string = string>({
       aria-label={ariaLabel}
     >
       {items.map((item) => {
-        const isActive = item.key === activeKey;
+        const isActive = item.key === activeKey && !item.disabled;
         const styleVars =
           isActive && item.accentColor
             ? ({ "--sui-tab-accent": item.accentColor } as React.CSSProperties)
@@ -61,13 +61,17 @@ export function Tabs<K extends string = string>({
             type="button"
             aria-pressed={isActive}
             disabled={item.disabled}
+            aria-disabled={item.disabled || undefined}
             className={
               "sui-tabs__tab" +
               (isActive ? " is-active" : "") +
               (item.disabled ? " is-disabled" : "")
             }
             style={styleVars}
-            onClick={() => onChange(item.key)}
+            onClick={() => {
+              if (item.disabled) return;
+              onChange(item.key);
+            }}
           >
             {item.dotColor && (
               <span

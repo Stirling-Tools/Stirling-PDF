@@ -1,15 +1,22 @@
 package stirling.software.proprietary.policy.input;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -19,30 +26,32 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.util.FileReadinessChecker;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
+import stirling.software.proprietary.policy.ledger.FolderIdentities;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.PolicyInputs;
+import stirling.software.proprietary.policy.source.Source;
 
 /**
- * Reads input files from a directory; each ready file is its own unit of work so one failure does
- * not affect the others.
- *
- * <p>Mode option: "consume" (default) claims each file by moving it into {@code
- * .stirling/processing} then routes it to {@code .stirling/done} or {@code .stirling/error}, so
- * each file runs once; "snapshot" reads without moving, so every run sees the full set. Readiness
- * is checked first so files mid-write are skipped.
+ * Reads input files from a directory; each ready file is its own unit of work, claimed through the
+ * {@link ResolveContext} ledger rather than moved aside, so nothing accumulates in a work
+ * directory. Options: "mode" is "consume" (default: a processed file is removed once every policy
+ * that claimed it has settled successfully and it is still the version that ran; failures stay in
+ * place and are not retried until they change), "track" (the same claim-once-per-version tracking
+ * with no removal, for a directory the user owns and expects to stay intact - their Downloads, a
+ * scanner drop), or "snapshot" (stateless, every run sees the full set); "recursive" descends into
+ * subdirectories; "identity" is "stat" (default, any size/mtime change is a new version) or "hash"
+ * (content-verified, so a touch does not reprocess); "extensions" restricts the sweep to files with
+ * one of the given suffixes (dot optional, case-insensitive) - anything else in the directory is
+ * entirely out of scope, not a skipped failure. Hidden files and directories, including the legacy
+ * {@code .stirling} work dir, are never picked up, and files mid-write are skipped by the readiness
+ * check.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class FolderInputSource implements InputSource {
 
     private static final String TYPE = FolderAccessGuard.FOLDER_TYPE;
-    // Bookkeeping lives under one hidden dir so the watched folder stays tidy.
-    private static final String WORK_SUBDIR = ".stirling";
-    private static final String PROCESSING_SUBDIR = "processing";
-    private static final String DONE_SUBDIR = "done";
-    private static final String ERROR_SUBDIR = "error";
 
     private final FileReadinessChecker readinessChecker;
     private final FolderAccessGuard accessGuard;
@@ -67,71 +76,314 @@ public class FolderInputSource implements InputSource {
         return List.of(FolderConfig.from(spec.options()).directory());
     }
 
+    /** Filesystem permissions follow the installation's {@link FolderAccessGuard}. */
     @Override
-    public List<ResolvedInput> resolve(InputSpec spec) throws IOException {
+    public List<ResolvedInput> resolve(Source source, ResolveContext ctx, String policyOwner)
+            throws IOException {
+        return resolve(source.toInputSpec(), ctx);
+    }
+
+    @Override
+    public List<ResolvedInput> resolve(InputSpec spec, ResolveContext ctx) throws IOException {
         FolderConfig config = FolderConfig.from(spec.options());
         Path inputDir = accessGuard.requirePermitted(config.directory());
         if (!Files.isDirectory(inputDir)) {
-            log.debug("Folder input dir does not exist: {}", inputDir);
-            return List.of();
+            // Fail rather than return empty: an unmounted drive must read as "could not list",
+            // which vetoes the sweep's presence cleanup, not as "verifiably no files", which
+            // would wipe the policy's history and reprocess everything on remount.
+            throw new NoSuchFileException(
+                    inputDir.toString(), null, "input directory does not exist");
+        }
+        Path canonicalDir = FolderIdentities.canonicalDir(inputDir);
+        List<Path> present = listFiles(inputDir, config.recursive());
+        // Filtered before anything observes the listing: an out-of-scope file is invisible to the
+        // ledger and the sweep alike, so it neither burns the sweep limit nor parks as a failure.
+        if (!config.extensions().isEmpty()) {
+            present.removeIf(
+                    file ->
+                            config.extensions().stream()
+                                    .noneMatch(
+                                            ext ->
+                                                    file.getFileName()
+                                                            .toString()
+                                                            .toLowerCase(Locale.ROOT)
+                                                            .endsWith(ext)));
+        }
+        // Newest first: a capped sweep must spend its budget on what the user most recently added,
+        // not on whichever old files sort first. Unreadable mtimes sort oldest and are taken last.
+        present.sort(Comparator.comparingLong(FolderInputSource::mtimeForOrdering).reversed());
+
+        if (config.snapshot()) {
+            List<ResolvedInput> work = new ArrayList<>();
+            for (Path file : present) {
+                if (readinessChecker.isReady(file)) {
+                    work.add(ResolvedInput.of(PolicyInputs.of(List.of(fileResource(file)))));
+                }
+            }
+            return work;
         }
 
-        List<Path> ready = new ArrayList<>();
-        try (Stream<Path> entries = Files.list(inputDir)) {
-            entries.filter(Files::isRegularFile)
-                    .filter(readinessChecker::isReady)
-                    .forEach(ready::add);
-        }
+        ctx.reportPresent(
+                present.stream()
+                        .map(file -> FolderIdentities.identity(canonicalDir, inputDir, file))
+                        .toList());
 
         List<ResolvedInput> work = new ArrayList<>();
-        for (Path file : ready) {
-            if (config.snapshot()) {
-                work.add(ResolvedInput.of(PolicyInputs.of(List.of(fileResource(file)))));
-            } else {
-                Path claimed = claim(inputDir, file);
-                if (claimed == null) {
-                    continue; // another sweep/process grabbed it
-                }
-                work.add(
-                        new ResolvedInput(
-                                PolicyInputs.of(List.of(fileResource(claimed))),
-                                success -> route(inputDir, claimed, success)));
+        for (Path file : present) {
+            // "limit" caps how much one sweep takes on, not what it observes: the full listing is
+            // reported above, and files beyond the cap keep their rows for later sweeps.
+            if (config.limit() > 0 && work.size() >= config.limit()) {
+                log.debug(
+                        "Folder {} has more ready files than this sweep's limit of {}; the rest"
+                                + " follow on later sweeps",
+                        inputDir,
+                        config.limit());
+                break;
             }
+            if (!readinessChecker.isReady(file)) {
+                continue;
+            }
+            String identity = FolderIdentities.identity(canonicalDir, inputDir, file);
+            MemoizedContentHash contentHash =
+                    config.hashIdentity() ? new MemoizedContentHash(file) : null;
+            String gate;
+            boolean claimed;
+            try {
+                gate = FolderIdentities.statGate(file);
+                claimed = ctx.claim(identity, gate, contentHash);
+            } catch (IOException | UncheckedIOException e) {
+                log.debug("Could not read {} for its version: {}", file, e.getMessage());
+                continue; // vanished or unreadable mid-sweep; the next sweep sees the truth
+            }
+            if (!claimed) {
+                continue;
+            }
+            String claimedGate = gate;
+            work.add(
+                    ResolvedInput.forFile(
+                            PolicyInputs.of(List.of(fileResource(file))),
+                            identity,
+                            success -> {
+                                if (config.track()) {
+                                    completeTracked(
+                                            ctx,
+                                            identity,
+                                            file,
+                                            claimedGate,
+                                            contentHash,
+                                            config.hashIdentity(),
+                                            success);
+                                    return;
+                                }
+                                completeConsumed(
+                                        ctx, identity, file, claimedGate, contentHash, success);
+                            }));
         }
+        // Within the batch, smallest first: the sweep's first results should appear within
+        // seconds of it starting, not after its largest document.
+        work.sort(Comparator.comparingLong(FolderInputSource::workSize));
         return work;
     }
 
-    // Atomic move into processing/: only one sweep can win the claim, the rest see the file gone.
-    private Path claim(Path inputDir, Path file) {
+    /**
+     * Settle a tracked file at its post-run version. Track mode never removes the input, so an
+     * in-place pipeline has replaced the file with its own output by now: settling the claimed gate
+     * would leave the folder reprocessing that output forever.
+     *
+     * <p>The content hash is re-read for the same reason. Settling null here would leave the
+     * verification tier blind for the rest of the file's life - every later metadata-only bump (a
+     * touch, an rsync, a backup restore) would then fail the {@code hash.equals(stored)} check
+     * against a null and reprocess an unchanged document, which is exactly what {@code identity:
+     * hash} is chosen to prevent.
+     */
+    private static void completeTracked(
+            ResolveContext ctx,
+            String identity,
+            Path file,
+            String claimedGate,
+            MemoizedContentHash contentHash,
+            boolean hashIdentity,
+            boolean success) {
+        if (!success) {
+            ctx.settle(identity, claimedGate, claimedHash(file, claimedGate, contentHash), success);
+            return;
+        }
+        // Hash before gate: a file changed between the two then reads as an older gate carrying
+        // newer content, so the next sweep reprocesses. The reverse order could skip a real edit.
+        String finalHash = hashIdentity ? currentHash(file) : null;
+        ctx.settle(identity, currentGate(file, claimedGate), finalHash, true);
+    }
+
+    /** The file's content hash as it is now; null when it cannot be read. */
+    private static String currentHash(Path file) {
         try {
-            Path processingDir = workDir(inputDir, PROCESSING_SUBDIR);
-            Files.createDirectories(processingDir);
-            Path claimed = uniqueTarget(processingDir, file.getFileName().toString());
-            Files.move(file, claimed, StandardCopyOption.ATOMIC_MOVE);
-            return claimed;
-        } catch (IOException e) {
-            log.debug("Could not claim {}: {}", file, e.getMessage());
+            return FolderIdentities.contentHash(file);
+        } catch (IOException | UncheckedIOException e) {
+            log.debug("Could not hash {} at settle: {}", file, e.getMessage());
             return null;
         }
     }
 
-    private void route(Path inputDir, Path claimed, boolean success) {
-        String subdir = success ? DONE_SUBDIR : ERROR_SUBDIR;
+    /** The file's stat gate as it is now; the claimed gate when it cannot be read. */
+    private static String currentGate(Path file, String claimedGate) {
         try {
-            Path destDir = workDir(inputDir, subdir);
-            Files.createDirectories(destDir);
-            Files.move(
-                    claimed,
-                    uniqueTarget(destDir, claimed.getFileName().toString()),
-                    StandardCopyOption.ATOMIC_MOVE);
-        } catch (IOException e) {
-            log.warn(
-                    "Could not move processed input {} to {}: {}", claimed, subdir, e.getMessage());
+            return FolderIdentities.statGate(file);
+        } catch (IOException gone) {
+            return claimedGate;
         }
     }
 
-    private static Path workDir(Path inputDir, String subdir) {
-        return inputDir.resolve(WORK_SUBDIR).resolve(subdir);
+    /**
+     * Settle at the version this run claimed - never a re-read, so a file replaced mid-run reads as
+     * a new unclaimed version next sweep instead of being marked processed. Then remove the input
+     * only when it is still the processed version (a mid-run replacement must survive) and every
+     * policy that claimed it has settled DONE, so co-watching policies all read the original and
+     * one failure parks the file for everyone. A failed run settles ERROR and never deletes; the
+     * DONE row of a file that could not be deleted still stops reprocessing.
+     */
+    private static void completeConsumed(
+            ResolveContext ctx,
+            String identity,
+            Path file,
+            String claimGate,
+            MemoizedContentHash contentHash,
+            boolean success) {
+        ctx.settle(identity, claimGate, claimedHash(file, claimGate, contentHash), success);
+        if (!success) {
+            return;
+        }
+        try {
+            if (FolderIdentities.statGate(file).equals(claimGate) && ctx.allSettledDone(identity)) {
+                Files.deleteIfExists(file);
+            }
+        } catch (NoSuchFileException alreadyGone) {
+            // Removed by the user or a co-watching policy's own consensus delete: nothing to do.
+        } catch (IOException e) {
+            log.warn("Could not remove consumed input {}: {}", file, e.getMessage());
+        }
+    }
+
+    /**
+     * The claimed version's content hash: the value computed during the claim when the ledger
+     * consulted the verifier, else computed now while the file is still at the claimed gate (so the
+     * hash describes what actually ran), else null. Always null in stat mode.
+     */
+    private static String claimedHash(Path file, String claimGate, MemoizedContentHash hash) {
+        if (hash == null) {
+            return null;
+        }
+        String computed = hash.valueIfComputed();
+        if (computed != null) {
+            return computed;
+        }
+        try {
+            if (FolderIdentities.statGate(file).equals(claimGate)) {
+                return hash.get();
+            }
+        } catch (IOException | UncheckedIOException e) {
+            log.debug("Could not hash {} at settle: {}", file, e.getMessage());
+        }
+        return null;
+    }
+
+    /** Lazy verification tier: invoked at most once by the ledger, retained for the settle. */
+    private static final class MemoizedContentHash implements Supplier<String> {
+
+        private final Path file;
+        private volatile String value;
+
+        private MemoizedContentHash(Path file) {
+            this.file = file;
+        }
+
+        @Override
+        public String get() {
+            if (value == null) {
+                try {
+                    value = FolderIdentities.contentHash(file);
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            }
+            return value;
+        }
+
+        String valueIfComputed() {
+            return value;
+        }
+    }
+
+    /** Every non-hidden regular file in the source, readable or not. */
+    /** The file's mtime for selection ordering; unreadable sorts oldest, taken last. */
+    private static long mtimeForOrdering(Path file) {
+        try {
+            return Files.getLastModifiedTime(file).toMillis();
+        } catch (IOException e) {
+            return Long.MIN_VALUE;
+        }
+    }
+
+    /** A claimed unit's primary size, for run ordering; unknown sorts last. */
+    private static long workSize(ResolvedInput unit) {
+        try {
+            return unit.inputs().primary().isEmpty()
+                    ? Long.MAX_VALUE
+                    : unit.inputs().primary().get(0).contentLength();
+        } catch (IOException e) {
+            return Long.MAX_VALUE;
+        }
+    }
+
+    private static List<Path> listFiles(Path inputDir, boolean recursive) throws IOException {
+        List<Path> files = new ArrayList<>();
+        if (!recursive) {
+            try (Stream<Path> entries = Files.list(inputDir)) {
+                entries.filter(Files::isRegularFile)
+                        .filter(file -> !hidden(file))
+                        .forEach(files::add);
+            }
+            return files;
+        }
+        // Hidden subtrees are pruned wholesale; symlinked directories are not followed.
+        Files.walkFileTree(
+                inputDir,
+                new SimpleFileVisitor<>() {
+                    @Override
+                    public FileVisitResult preVisitDirectory(
+                            Path dir, BasicFileAttributes attributes) {
+                        if (!dir.equals(inputDir) && hidden(dir)) {
+                            return FileVisitResult.SKIP_SUBTREE;
+                        }
+                        return FileVisitResult.CONTINUE;
+                    }
+
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) {
+                        if (attributes.isRegularFile() && !hidden(file)) {
+                            files.add(file);
+                        }
+                        return FileVisitResult.CONTINUE;
+                    }
+
+                    @Override
+                    public FileVisitResult visitFileFailed(Path file, IOException e) {
+                        log.debug("Skipping unreadable entry {}: {}", file, e.getMessage());
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
+        return files;
+    }
+
+    private static boolean hidden(Path path) {
+        Path name = path.getFileName();
+        if (name != null && name.toString().startsWith(".")) {
+            return true;
+        }
+        try {
+            return Files.isHidden(path);
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     private static Resource fileResource(Path path) {
@@ -144,27 +396,25 @@ public class FolderInputSource implements InputSource {
         };
     }
 
-    private static Path uniqueTarget(Path dir, String filename) {
-        Path candidate = dir.resolve(filename);
-        if (!Files.exists(candidate)) {
-            return candidate;
-        }
-        int dot = filename.lastIndexOf('.');
-        String base = dot < 0 ? filename : filename.substring(0, dot);
-        String ext = dot < 0 ? "" : filename.substring(dot);
-        for (int n = 1; ; n++) {
-            Path next = dir.resolve(base + " (" + n + ")" + ext);
-            if (!Files.exists(next)) {
-                return next;
-            }
-        }
-    }
-
-    record FolderConfig(Path directory, boolean snapshot) {
+    record FolderConfig(
+            Path directory,
+            boolean snapshot,
+            boolean track,
+            boolean recursive,
+            boolean hashIdentity,
+            int limit,
+            List<String> extensions) {
 
         private static final String DIRECTORY_OPTION = "directory";
         private static final String MODE_OPTION = "mode";
         private static final String MODE_SNAPSHOT = "snapshot";
+        private static final String MODE_TRACK = "track";
+        private static final String RECURSIVE_OPTION = "recursive";
+        private static final String IDENTITY_OPTION = "identity";
+        private static final String IDENTITY_STAT = "stat";
+        private static final String IDENTITY_HASH = "hash";
+        private static final String LIMIT_OPTION = "limit";
+        private static final String EXTENSIONS_OPTION = "extensions";
 
         static FolderConfig from(Map<String, Object> options) {
             Object directory = options.get(DIRECTORY_OPTION);
@@ -173,7 +423,39 @@ public class FolderInputSource implements InputSource {
             }
             Object mode = options.get(MODE_OPTION);
             boolean snapshot = mode != null && MODE_SNAPSHOT.equals(mode.toString());
-            return new FolderConfig(Path.of(directory.toString()), snapshot);
+            boolean track = mode != null && MODE_TRACK.equals(mode.toString());
+            Object recursive = options.get(RECURSIVE_OPTION);
+            boolean recurse = recursive != null && Boolean.parseBoolean(recursive.toString());
+            Object identity = options.get(IDENTITY_OPTION);
+            boolean hash = identity != null && IDENTITY_HASH.equals(identity.toString());
+            if (identity != null
+                    && !IDENTITY_STAT.equals(identity.toString())
+                    && !IDENTITY_HASH.equals(identity.toString())) {
+                throw new IllegalArgumentException(
+                        "folder input 'identity' must be 'stat' or 'hash'");
+            }
+            Object limit = options.get(LIMIT_OPTION);
+            int max = 0;
+            if (limit != null && !limit.toString().isBlank()) {
+                try {
+                    max = Math.max(0, Integer.parseInt(limit.toString().trim()));
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("folder input 'limit' must be a number", e);
+                }
+            }
+            List<String> extensions = List.of();
+            if (options.get(EXTENSIONS_OPTION) instanceof Collection<?> values) {
+                extensions =
+                        values.stream()
+                                .map(String::valueOf)
+                                .map(String::trim)
+                                .filter(value -> !value.isEmpty())
+                                .map(value -> value.startsWith(".") ? value : "." + value)
+                                .map(value -> value.toLowerCase(Locale.ROOT))
+                                .toList();
+            }
+            return new FolderConfig(
+                    Path.of(directory.toString()), snapshot, track, recurse, hash, max, extensions);
         }
     }
 }

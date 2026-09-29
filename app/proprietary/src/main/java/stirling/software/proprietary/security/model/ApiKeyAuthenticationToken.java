@@ -5,6 +5,7 @@ import java.util.Collection;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 
+/** Authentication produced from an {@code X-API-KEY} header; runs as the key's owner. */
 public class ApiKeyAuthenticationToken extends AbstractAuthenticationToken {
 
     private final Object principal;

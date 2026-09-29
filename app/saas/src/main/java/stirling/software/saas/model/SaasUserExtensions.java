@@ -7,6 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.domain.Persistable;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,6 +17,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -37,7 +39,7 @@ import stirling.software.proprietary.security.model.User;
 @NoArgsConstructor
 @Getter
 @Setter
-public class SaasUserExtensions implements Serializable {
+public class SaasUserExtensions implements Serializable, Persistable<Long> {
 
     private static final long serialVersionUID = 1L;
 
@@ -57,6 +59,11 @@ public class SaasUserExtensions implements Serializable {
     @Column(name = "api_key_first_used_at")
     private LocalDateTime apiKeyFirstUsedAt;
 
+    // Durable "home team" the user returns to when leaving a joined team; distinct from the
+    // active users.team_id. Plain id (not a @ManyToOne) to avoid an eager Team load. Nullable.
+    @Column(name = "home_team_id")
+    private Long homeTeamId;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -74,5 +81,18 @@ public class SaasUserExtensions implements Serializable {
 
     public boolean isMeteredBillingEnabled() {
         return Boolean.TRUE.equals(hasMeteredBillingEnabled);
+    }
+
+    @Override
+    public Long getId() {
+        return userId;
+    }
+
+    // Decided on the timestamp, not the id: the constructor pre-sets the @MapsId id, so an
+    // id-based check would route a new row to merge() and fail with "null identifier".
+    @Override
+    @Transient
+    public boolean isNew() {
+        return createdAt == null;
     }
 }

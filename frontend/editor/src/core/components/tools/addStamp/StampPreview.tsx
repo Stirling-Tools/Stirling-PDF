@@ -12,6 +12,7 @@ import {
 import styles from "@app/components/tools/addStamp/StampPreview.module.css";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { Button } from "@app/ui/Button";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   parameters: AddStampParameters;
@@ -29,6 +30,7 @@ export default function StampPreview({
   file,
   showQuickGrid,
 }: Props) {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState<{
     width: number;
@@ -170,11 +172,12 @@ export default function StampPreview({
     bottomPx: number;
   } | null>(null);
   useEffect(() => {
-    const itemStyle = style.item as any;
+    const itemStyle = style.item;
     if (!itemStyle || containerSize.width <= 0 || containerSize.height <= 0)
       return;
 
-    const parse = (v: any) => parseFloat(String(v).replace("px", "")) || 0;
+    const parse = (v: string | number | undefined) =>
+      parseFloat(String(v).replace("px", "")) || 0;
     const leftPx = parse(itemStyle.left);
     const bottomPx = parse(itemStyle.bottom);
     const widthPx = parse(itemStyle.width);
@@ -206,8 +209,8 @@ export default function StampPreview({
       const newLeftPts = Math.max(0, Math.min(maxLeftPx, newLeftPx)) / scaleX;
       const newBottomPts =
         Math.max(0, Math.min(maxBottomPx, newBottomPx)) / scaleY;
-      onParameterChange("overrideX", newLeftPts as any);
-      onParameterChange("overrideY", newBottomPts as any);
+      onParameterChange("overrideX", newLeftPts);
+      onParameterChange("overrideY", newBottomPts);
     }
 
     prevDimsRef.current = {
@@ -247,7 +250,7 @@ export default function StampPreview({
     if (pageWidth <= 0 || pageHeight <= 0) return;
 
     // Recompute current x,y from style (so that we start from visual position)
-    const itemStyle = style.item as any;
+    const itemStyle = style.item;
     const leftPx = parseFloat(String(itemStyle.left).replace("px", "")) || 0;
     const bottomPx =
       parseFloat(String(itemStyle.bottom).replace("px", "")) || 0;
@@ -263,11 +266,11 @@ export default function StampPreview({
       const maxBottomPx = Math.max(0, pageHeight - heightPx);
       onParameterChange(
         "overrideX",
-        (Math.max(0, Math.min(maxLeftPx, leftPx)) / scaleX) as any,
+        Math.max(0, Math.min(maxLeftPx, leftPx)) / scaleX,
       );
       onParameterChange(
         "overrideY",
-        (Math.max(0, Math.min(maxBottomPx, bottomPx)) / scaleY) as any,
+        Math.max(0, Math.min(maxBottomPx, bottomPx)) / scaleY,
       );
     }
   };
@@ -279,7 +282,7 @@ export default function StampPreview({
     e.preventDefault();
     ensureOverrides();
 
-    const item = style.item as any;
+    const item = style.item;
     const left = parseFloat(String(item.left).replace("px", "")) || 0;
     const bottom = parseFloat(String(item.bottom).replace("px", "")) || 0;
     const width =
@@ -334,8 +337,8 @@ export default function StampPreview({
       const scaleY = containerSize.height / heightPts;
       const newLeftPts = newLeftPx / scaleX;
       const newBottomPts = newBottomPx / scaleY;
-      onParameterChange("overrideX", newLeftPts as any);
-      onParameterChange("overrideY", newBottomPts as any);
+      onParameterChange("overrideX", newLeftPts);
+      onParameterChange("overrideY", newBottomPts);
     }
 
     if (drag.type === "resize") {
@@ -344,13 +347,13 @@ export default function StampPreview({
       const scaleY = containerSize.height / heightPts;
       const newHeightPx = Math.max(1, drag.initHeight + (y - drag.startY));
       const newHeightPts = newHeightPx / scaleY;
-      onParameterChange("fontSize", newHeightPts as any);
+      onParameterChange("fontSize", newHeightPts);
     }
 
     if (drag.type === "rotate") {
       const angle =
         Math.atan2(y - drag.centerY, x - drag.centerX) * (180 / Math.PI);
-      onParameterChange("rotation", angle as any);
+      onParameterChange("rotation", angle);
     }
   };
 
@@ -366,12 +369,14 @@ export default function StampPreview({
     <div>
       <div className={styles.previewHeader}>
         <div className={styles.divider} />
-        <div className={styles.previewLabel}>Preview Stamp</div>
+        <div className={styles.previewLabel}>
+          {t("addStamp.preview", "Preview Stamp")}
+        </div>
       </div>
       <div
         ref={containerRef}
         className={`${styles.container} ${styles.containerBorder} ${pageThumbnail ? styles.containerWithThumbnail : styles.containerWithoutThumbnail}`}
-        style={style.container as React.CSSProperties}
+        style={style.container}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
       >
@@ -388,7 +393,8 @@ export default function StampPreview({
         {parameters.stampType === "text" && (
           <div
             className={`${styles.stampItem} ${styles.stampItemGridMode}`}
-            style={style.item as React.CSSProperties}
+            style={style.item}
+            data-user-content-preview=""
           >
             {(parameters.stampText || "").split("\n").map((line, idx) => (
               <span
@@ -409,7 +415,7 @@ export default function StampPreview({
         {parameters.stampType === "image" && imageMeta && (
           <div
             className={`${styles.stampItem} ${showQuickGrid ? styles.stampItemGridMode : styles.stampItemDraggable}`}
-            style={style.item as React.CSSProperties}
+            style={style.item}
             onPointerDown={(e) => handlePointerDown(e, "move")}
           >
             <img
@@ -436,9 +442,9 @@ export default function StampPreview({
                   className={`${styles.gridTile} ${selected || hoverTile === idx ? styles.gridTileSelected : ""} ${hoverTile === idx ? styles.gridTileHovered : ""}`}
                   onClick={() => {
                     // Clear overrides to use grid positioning and set position
-                    onParameterChange("overrideX", -1 as any);
-                    onParameterChange("overrideY", -1 as any);
-                    onParameterChange("position", idx as any);
+                    onParameterChange("overrideX", -1);
+                    onParameterChange("overrideY", -1);
+                    onParameterChange("position", idx);
                   }}
                   onMouseEnter={() => setHoverTile(idx)}
                   onMouseLeave={() => setHoverTile(null)}

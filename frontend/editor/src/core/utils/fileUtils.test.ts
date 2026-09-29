@@ -4,9 +4,28 @@ import {
   detectFileExtension,
   formatFileSize,
   detectNonPdfFileType,
+  getFileFormats,
 } from "@app/utils/fileUtils";
 
 describe("fileUtils", () => {
+  it("classifies using existing PDF detection, stored protection and overlapping backend categories", () => {
+    expect(
+      getFileFormats({ name: "download", type: "application/pdf" }),
+    ).toEqual(["PDF"]);
+    expect(getFileFormats({ name: "document.PDF", type: "" })).toEqual(["PDF"]);
+    expect(getFileFormats({ name: "document.docx", type: "" })).toEqual([
+      "WORD",
+      "EBOOK",
+    ]);
+    expect(getFileFormats({ name: "unknown", type: "" })).toEqual([]);
+    expect(
+      getFileFormats({
+        name: "document.pdf",
+        type: "",
+        processedFile: { pages: [], isEncrypted: true },
+      }),
+    ).toEqual(["PDF_ENCRYPTED"]);
+  });
   describe("isPdfFile", () => {
     it("should return true for PDF files with correct MIME type", () => {
       const pdfFile = new File(["content"], "document.pdf", {

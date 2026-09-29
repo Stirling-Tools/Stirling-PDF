@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import CompareRoundedIcon from "@mui/icons-material/CompareRounded";
-import CloseIcon from "@mui/icons-material/Close";
+import { Icon } from "@app/ui/Icon";
 import { Box, Group, Stack, Text, Modal } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import SwapVertRoundedIcon from "@mui/icons-material/SwapVertRounded";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
@@ -26,6 +24,7 @@ import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbn
 import type { CompareWorkbenchData } from "@app/types/compare";
 import { getDefaultWorkbench } from "@app/types/workbench";
 import { truncateCenter } from "@app/utils/textUtils";
+import { registerPolicyFileUsage } from "@app/services/policyBlockRegistry";
 import {
   FileSelectorPicker as PopoverFileSelector,
   FileSelectorResult,
@@ -59,16 +58,20 @@ const Compare = (props: BaseToolProps) => {
   const operation = base.operation as CompareOperationHook;
   const params = base.params.parameters;
 
-  const compareIcon = useMemo(
-    () => <CompareRoundedIcon fontSize="small" />,
-    [],
-  );
+  const compareIcon = useMemo(() => <Icon name="columns-2" size={20} />, []);
   const [swapConfirmOpen, setSwapConfirmOpen] = useState(false);
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
 
   // Slot state — files loaded directly for comparison, never added to workbench
   const [baseSlot, setBaseSlot] = useState<FileSelectorResult | null>(null);
   const [compSlot, setCompSlot] = useState<FileSelectorResult | null>(null);
+  useEffect(
+    () =>
+      registerPolicyFileUsage(
+        [baseSlot, compSlot].flatMap((slot) => (slot ? [slot.stub] : [])),
+      ),
+    [baseSlot, compSlot],
+  );
 
   // Sync params fileIds from slots (needed for operation result matching)
   useEffect(() => {
@@ -175,8 +178,8 @@ const Compare = (props: BaseToolProps) => {
   );
 
   useEffect(() => {
-    const baseFileId = params.baseFileId as FileId | null;
-    const comparisonFileId = params.comparisonFileId as FileId | null;
+    const baseFileId = params.baseFileId;
+    const comparisonFileId = params.comparisonFileId;
 
     if (!baseFileId || !comparisonFileId) {
       lastProcessedAtRef.current = null;
@@ -357,10 +360,10 @@ const Compare = (props: BaseToolProps) => {
             data-slot-state="filled"
             data-slot-filename={stub?.name}
             style={{
-              border: "1px solid var(--border-default)",
+              border: "1px solid var(--c-border)",
               borderRadius: "var(--radius-md)",
               padding: "0.75rem 1rem",
-              background: "var(--bg-surface)",
+              background: "var(--c-surface)",
               width: "100%",
               minHeight: "9rem",
               position: "relative",
@@ -378,7 +381,7 @@ const Compare = (props: BaseToolProps) => {
               onClick={() => clearSlot(role)}
               aria-label={t("compare.clearSlot", "Remove file")}
             >
-              <CloseIcon fontSize="small" />
+              <Icon name="x" size={20} />
             </ActionIcon>
             <Group align="flex-start" wrap="nowrap" gap="md">
               <Box style={{ alignSelf: "center" }}>
@@ -437,9 +440,7 @@ const Compare = (props: BaseToolProps) => {
                       : "Select the edited PDF",
                   )
             }
-            excludeIds={
-              otherSlot ? [otherSlot.stirlingFile.fileId as string] : []
-            }
+            excludeIds={otherSlot ? [otherSlot.stirlingFile.fileId] : []}
             disabled={isDisabled}
             onSelect={(result: FileSelectorResult) => {
               if (role === "base") setBaseSlot(result);
@@ -498,32 +499,27 @@ const Compare = (props: BaseToolProps) => {
               {t("compare.original.label", "Original PDF")}
             </Text>
 
-            <div className="compare-step-selection__thumbs-row">
-              <Stack gap="sm" className="compare-step-selection__thumbs-col">
-                {renderSlot("base")}
-                <Text fw={700} size="sm" style={{ margin: 0 }}>
-                  {t("compare.edited.label", "Edited PDF")}
-                </Text>
-                {renderSlot("comparison")}
-              </Stack>
+            <Stack gap="sm" className="compare-step-selection__thumbs-col">
+              {renderSlot("base")}
 
               {hasBothSelected && (
                 <Button
-                  className="compare-step-selection__swap"
+                  variant="secondary"
+                  size="sm"
                   onClick={handleSwap}
                   disabled={base.operation.isLoading}
-                  aria-label={t("compare.swap.label", "Swap")}
+                  leftSection={<Icon name="arrow-up-down" size={20} />}
+                  style={{ alignSelf: "center" }}
                 >
-                  <SwapVertRoundedIcon
-                    className="compare-step-selection__swap-icon"
-                    fontSize="inherit"
-                  />
-                  <span className="compare-step-selection__swap-label">
-                    {t("compare.swap.label", "Swap")}
-                  </span>
+                  {t("compare.swap.label", "Swap")}
                 </Button>
               )}
-            </div>
+
+              <Text fw={700} size="sm" style={{ margin: 0 }}>
+                {t("compare.edited.label", "Edited PDF")}
+              </Text>
+              {renderSlot("comparison")}
+            </Stack>
 
             <Modal
               opened={swapConfirmOpen}

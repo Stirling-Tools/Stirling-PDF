@@ -34,6 +34,14 @@
     },
     {
       "moduleName": ".*",
+      "moduleLicense": "Revised BSD"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "ISC"
+    },
+    {
+      "moduleName": ".*",
       "moduleLicense": "MIT"
     },
     {
@@ -47,6 +55,10 @@
     {
       "moduleName": ".*",
       "moduleLicense": "MIT-0"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "MIT license"
     },
     {
       "moduleName": "com.github.jai-imageio:jai-imageio-core",
@@ -145,6 +157,14 @@
       "moduleLicense": "GNU GENERAL PUBLIC LICENSE, Version 2 + Classpath Exception"
     },
     {
+      "moduleName": ".*",
+      "moduleLicense": "GNU Lesser Public License"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "The GNU Lesser General Public License"
+    },
+    {
       "moduleName": "com.martiansoftware:jsap",
       "moduleLicense": "LGPL"
     },
@@ -207,6 +227,10 @@
     {
       "moduleName": ".*",
       "moduleLicense": "The W3C License"
+    },
+    {
+      "moduleName": "com.google.re2j:re2j",
+      "moduleLicense": "Go License"
     },
     {
       "moduleName": ".*",

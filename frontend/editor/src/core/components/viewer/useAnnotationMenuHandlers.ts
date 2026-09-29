@@ -14,6 +14,8 @@ import type {
   AnnotationPatch,
 } from "@app/components/viewer/viewerTypes";
 import type { ScrollActions } from "@app/contexts/viewer/viewerActions";
+import { openExternalTab } from "@app/platform/openExternalTab";
+import { getExternalHref } from "@app/utils/externalUrl";
 
 export type AnnotationType =
   | "textMarkup"
@@ -74,7 +76,6 @@ interface UseAnnotationMenuHandlersParams {
 
 export interface AnnotationMenuState {
   annotationType: AnnotationType;
-  menuWidth: number;
   obj: AnnotationObject | undefined;
   annotationId: string | undefined;
   firstLinkTarget: FirstLinkTarget | null;
@@ -160,10 +161,7 @@ export function useAnnotationMenuHandlers({
     const toolId = (annotation?.object as AnnotationObject | undefined)
       ?.customData?.toolId;
 
-    if (
-      type !== undefined &&
-      TEXT_MARKUP_SUBTYPES.includes(type as PdfAnnotationSubtype)
-    )
+    if (type !== undefined && TEXT_MARKUP_SUBTYPES.includes(type))
       return "textMarkup";
     if (type === PdfAnnotationSubtype.INK)
       return toolId === "inkHighlighter" ? "inkHighlighter" : "ink";
@@ -179,36 +177,11 @@ export function useAnnotationMenuHandlers({
     )
       return "comment";
     if (type === PdfAnnotationSubtype.FREETEXT) return "note";
-    if (
-      type !== undefined &&
-      SHAPE_SUBTYPES.includes(type as PdfAnnotationSubtype)
-    )
-      return "shape";
-    if (
-      type !== undefined &&
-      LINE_SUBTYPES.includes(type as PdfAnnotationSubtype)
-    )
-      return "line";
+    if (type !== undefined && SHAPE_SUBTYPES.includes(type)) return "shape";
+    if (type !== undefined && LINE_SUBTYPES.includes(type)) return "line";
     if (type === PdfAnnotationSubtype.STAMP) return "stamp";
     return "unknown";
   }, [annotation]);
-
-  const menuWidth = useMemo((): number => {
-    switch (annotationType) {
-      case "stamp":
-        return 80;
-      case "inkHighlighter":
-      case "comment":
-      case "textMarkup":
-      case "text":
-      case "note":
-        return 280;
-      case "shape":
-        return 200;
-      default:
-        return 260;
-    }
-  }, [annotationType]);
 
   const hasCommentContent = (obj?.contents ?? "").trim().length > 0;
   const isInSidebar =
@@ -221,10 +194,7 @@ export function useAnnotationMenuHandlers({
     const type = obj.type;
     if (type === PdfAnnotationSubtype.FREETEXT)
       return obj.textColor || obj.color || "#000000";
-    if (
-      type !== undefined &&
-      STROKE_COLOR_SUBTYPES.includes(type as PdfAnnotationSubtype)
-    )
+    if (type !== undefined && STROKE_COLOR_SUBTYPES.includes(type))
       return obj.strokeColor || obj.color || "#000000";
     return obj.color || obj.strokeColor || "#000000";
   })();
@@ -296,18 +266,12 @@ export function useAnnotationMenuHandlers({
         patch.contents = obj?.contents ?? "";
       } else {
         patch.color = color;
-        if (
-          type !== undefined &&
-          TEXT_MARKUP_SUBTYPES.includes(type as PdfAnnotationSubtype)
-        ) {
+        if (type !== undefined && TEXT_MARKUP_SUBTYPES.includes(type)) {
           patch.strokeColor = color;
           patch.fillColor = color;
           patch.opacity = obj?.opacity ?? 1;
         }
-        if (
-          type !== undefined &&
-          LINE_SUBTYPES.includes(type as PdfAnnotationSubtype)
-        ) {
+        if (type !== undefined && LINE_SUBTYPES.includes(type)) {
           patch.strokeColor = color;
           patch.strokeWidth = obj?.strokeWidth ?? obj?.lineWidth ?? 2;
           patch.lineWidth = obj?.lineWidth ?? obj?.strokeWidth ?? 2;
@@ -370,7 +334,15 @@ export function useAnnotationMenuHandlers({
   const onGoToLink = useCallback(() => {
     if (!firstLinkTarget) return;
     if (firstLinkTarget.type === "uri") {
-      window.open(firstLinkTarget.uri, "_blank", "noopener,noreferrer");
+      const href = getExternalHref(firstLinkTarget.uri);
+      if (href) {
+        void openExternalTab(href);
+      } else {
+        console.warn(
+          "[useAnnotationMenuHandlers] Blocked unsafe URL:",
+          firstLinkTarget.uri,
+        );
+      }
     } else {
       scrollActions.scrollToPage(firstLinkTarget.pageIndex + 1);
     }
@@ -446,7 +418,6 @@ export function useAnnotationMenuHandlers({
 
   return {
     annotationType,
-    menuWidth,
     obj,
     annotationId,
     firstLinkTarget,

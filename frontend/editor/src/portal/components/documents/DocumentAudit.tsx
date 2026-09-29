@@ -24,7 +24,7 @@ export function DocumentAudit({ doc }: { doc: ReviewDocument }) {
           <div className="portal-documents__timeline-body">
             <div className="portal-documents__timeline-head">
               <StatusBadge tone={DOC_AUDIT_TONE[event.kind]} size="sm">
-                {DOC_AUDIT_LABEL[event.kind]}
+                {t(DOC_AUDIT_LABEL[event.kind])}
               </StatusBadge>
               <span className="portal-documents__timeline-time">
                 {event.time}

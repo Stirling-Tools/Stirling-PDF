@@ -1,15 +1,8 @@
 import { useRef, useEffect } from "react";
-import { Modal, Text, Group, Stack } from "@mantine/core";
-import { Button } from "@app/ui/Button";
 import { useNavigationGuard } from "@app/contexts/NavigationContext";
-import { useTranslation } from "react-i18next";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlined";
-import { Z_INDEX_TOAST } from "@app/styles/zIndex";
+import { UnsavedChangesDialog } from "@app/components/shared/UnsavedChangesDialog";
 
 const NavigationWarningModal = () => {
-  const { t } = useTranslation();
   const {
     showNavigationWarning,
     hasUnsavedChanges,
@@ -72,123 +65,19 @@ const NavigationWarningModal = () => {
   const hasApply = !!handlers?.onApplyAndContinue;
   const hasExport = !!handlers?.onExportAndContinue;
 
-  const BUTTON_WIDTH = "12rem";
-
   // Only show modal if there are unsaved changes AND there's an actual pending navigation
   if (!hasUnsavedChanges || !pendingNavigation) {
     return null;
   }
 
   return (
-    <Modal
+    <UnsavedChangesDialog
       opened={showNavigationWarning}
-      onClose={handleKeepWorking}
-      title={t("unsavedChangesTitle", "Unsaved Changes")}
-      centered
-      size="auto"
-      closeOnClickOutside={true}
-      closeOnEscape={true}
-      zIndex={Z_INDEX_TOAST}
-    >
-      <Stack>
-        <Stack ta="center" p="md">
-          <Text size="md" fw="300">
-            {t("unsavedChanges", "You have unsaved changes to your PDF.")}
-          </Text>
-          <Text size="lg" fw="500">
-            {t("areYouSure", "Are you sure you want to leave?")}
-          </Text>
-        </Stack>
-
-        {/* Desktop layout: 2 groups side by side */}
-        <Group justify="space-between" gap="xl" visibleFrom="md">
-          <Group gap="sm">
-            <Button
-              variant="secondary"
-              accent="neutral"
-              onClick={handleKeepWorking}
-              style={{
-                width: BUTTON_WIDTH,
-              }}
-              leftSection={<ArrowBackIcon fontSize="small" />}
-            >
-              {t("keepWorking", "Keep Working")}
-            </Button>
-          </Group>
-          <Group gap="sm">
-            <Button
-              accent="danger"
-              onClick={handleDiscardChanges}
-              style={{
-                width: BUTTON_WIDTH,
-              }}
-              leftSection={<DeleteOutlineIcon fontSize="small" />}
-            >
-              {t("discardChanges", "Discard Changes")}
-            </Button>
-            {hasApply && (
-              <Button
-                onClick={handleApplyAndContinue}
-                style={{ width: BUTTON_WIDTH }}
-                leftSection={<CheckCircleOutlineIcon fontSize="small" />}
-              >
-                {t("applyAndContinue", "Apply & Leave")}
-              </Button>
-            )}
-            {hasExport && (
-              <Button
-                onClick={handleExportAndContinue}
-                style={{ width: BUTTON_WIDTH }}
-                leftSection={<CheckCircleOutlineIcon fontSize="small" />}
-              >
-                {t("exportAndContinue", "Export & Leave")}
-              </Button>
-            )}
-          </Group>
-        </Group>
-
-        {/* Mobile layout: centered stack of 4 buttons */}
-        <Stack align="center" gap="sm" hiddenFrom="md">
-          <Button
-            variant="secondary"
-            accent="neutral"
-            onClick={handleKeepWorking}
-            style={{ width: BUTTON_WIDTH }}
-            leftSection={<ArrowBackIcon fontSize="small" />}
-          >
-            {t("keepWorking", "Keep Working")}
-          </Button>
-          <Button
-            accent="danger"
-            onClick={handleDiscardChanges}
-            style={{
-              width: BUTTON_WIDTH,
-            }}
-            leftSection={<DeleteOutlineIcon fontSize="small" />}
-          >
-            {t("discardChanges", "Discard Changes")}
-          </Button>
-          {hasApply && (
-            <Button
-              onClick={handleApplyAndContinue}
-              style={{ width: BUTTON_WIDTH }}
-              leftSection={<CheckCircleOutlineIcon fontSize="small" />}
-            >
-              {t("applyAndContinue", "Apply & Leave")}
-            </Button>
-          )}
-          {hasExport && (
-            <Button
-              onClick={handleExportAndContinue}
-              style={{ width: BUTTON_WIDTH }}
-              leftSection={<CheckCircleOutlineIcon fontSize="small" />}
-            >
-              {t("exportAndContinue", "Export & Leave")}
-            </Button>
-          )}
-        </Stack>
-      </Stack>
-    </Modal>
+      onKeepWorking={handleKeepWorking}
+      onDiscard={handleDiscardChanges}
+      onSave={hasApply ? handleApplyAndContinue : undefined}
+      onExport={hasExport ? handleExportAndContinue : undefined}
+    />
   );
 };
 

@@ -33,6 +33,15 @@ type Story = StoryObj<typeof Banner>;
 /** Flip tone / title / description / action / onDismiss in controls. */
 export const Playground: Story = {};
 
+/** Success tone - added as a Storybook-preview workflow example. */
+export const Success: Story = {
+  args: {
+    tone: "success",
+    title: "All clear",
+    description: "Every document passed validation.",
+  },
+};
+
 export const WithAction: Story = {
   args: {
     tone: "warning",

@@ -21,12 +21,7 @@ import {
   UnstyledButton,
   List,
 } from "@mantine/core";
-import SendIcon from "@mui/icons-material/Send";
-import StopIcon from "@mui/icons-material/Stop";
-import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutlined";
-import CloseIcon from "@mui/icons-material/Close";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import { Icon } from "@app/ui/Icon";
 import {
   useChat,
   AiWorkflowPhase,
@@ -150,9 +145,9 @@ function ToolsUsedBlock({
       >
         <Group gap={4} wrap="nowrap">
           {expanded ? (
-            <ExpandLessIcon sx={{ fontSize: 14 }} />
+            <Icon name="chevron-up" size={14} />
           ) : (
-            <ExpandMoreIcon sx={{ fontSize: 14 }} />
+            <Icon name="chevron-down" size={14} />
           )}
           <Text size="xs" c="dimmed">
             {label}
@@ -270,7 +265,7 @@ export function ChatPanel(_props: ChatPanelProps = {}) {
           onClick={toggleOpen}
           aria-label="Open chat"
         >
-          <ChatBubbleOutlineIcon sx={{ fontSize: 24 }} />
+          <Icon name="message-square" size={24} />
         </ActionIcon>
       )}
 
@@ -281,7 +276,7 @@ export function ChatPanel(_props: ChatPanelProps = {}) {
             {/* Header */}
             <div className="chat-panel-header">
               <Text fw={600} size="sm">
-                AI Assistant
+                {t("chat.header.assistant")}
               </Text>
               <ActionIcon
                 variant="subtle"
@@ -289,7 +284,7 @@ export function ChatPanel(_props: ChatPanelProps = {}) {
                 onClick={toggleOpen}
                 aria-label="Close chat"
               >
-                <CloseIcon sx={{ fontSize: 16 }} />
+                <Icon name="x" size={16} />
               </ActionIcon>
             </div>
 
@@ -298,8 +293,7 @@ export function ChatPanel(_props: ChatPanelProps = {}) {
               <Stack gap="sm" p="sm">
                 {messages.length === 0 && (
                   <Text size="sm" c="dimmed" ta="center" py="xl">
-                    Ask a question about your documents or get help with PDF
-                    tools.
+                    {t("chat.emptyState.text")}
                   </Text>
                 )}
                 {messages.map((msg) => (
@@ -337,7 +331,7 @@ export function ChatPanel(_props: ChatPanelProps = {}) {
             <div className="chat-panel-input">
               <TextInput
                 ref={inputRef}
-                placeholder="Type a message..."
+                placeholder={t("chat.input.placeholder")}
                 value={input}
                 onChange={(e) => setInput(e.currentTarget.value)}
                 onKeyDown={handleKeyDown}
@@ -351,7 +345,7 @@ export function ChatPanel(_props: ChatPanelProps = {}) {
                       onClick={cancelMessage}
                       aria-label="Stop generating"
                     >
-                      <StopIcon sx={{ fontSize: 14 }} />
+                      <Icon name="square" size={14} />
                     </ActionIcon>
                   ) : (
                     <ActionIcon
@@ -362,7 +356,7 @@ export function ChatPanel(_props: ChatPanelProps = {}) {
                       disabled={!input.trim()}
                       aria-label="Send message"
                     >
-                      <SendIcon sx={{ fontSize: 14 }} />
+                      <Icon name="send" size={14} />
                     </ActionIcon>
                   )
                 }

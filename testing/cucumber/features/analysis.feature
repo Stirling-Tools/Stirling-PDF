@@ -15,6 +15,7 @@ Feature: Analysis API Endpoints
         Given I generate a PDF file as "fileInput"
         And the pdf contains <pages> pages
         When I send the API request to the endpoint "/api/v1/analysis/page-count"
+        And this operation is run 5 times in parallel
         Then the response status code should be 200
         And the response content type should be "application/json"
         And the response file should have size greater than 0
@@ -35,6 +36,7 @@ Feature: Analysis API Endpoints
         Given I generate a PDF file as "fileInput"
         And the pdf contains 4 pages
         When I send the API request to the endpoint "/api/v1/analysis/basic-info"
+        And this operation is run 5 times in parallel
         Then the response status code should be 200
         And the response content type should be "application/json"
         And the response file should have size greater than 0
@@ -66,6 +68,7 @@ Feature: Analysis API Endpoints
         Given I generate a PDF file as "fileInput"
         And the pdf contains 2 pages
         When I send the API request to the endpoint "/api/v1/analysis/document-properties"
+        And this operation is run 5 times in parallel
         Then the response status code should be 200
         And the response content type should be "application/json"
         And the response file should have size greater than 0
@@ -104,6 +107,7 @@ Feature: Analysis API Endpoints
         Given I generate a PDF file as "fileInput"
         And the pdf contains 2 pages with random text
         When I send the API request to the endpoint "/api/v1/analysis/page-dimensions"
+        And this operation is run 5 times in parallel
         Then the response status code should be 200
         And the response content type should be "application/json"
         And the response file should have size greater than 0
@@ -118,6 +122,7 @@ Feature: Analysis API Endpoints
         Given I generate a PDF file as "fileInput"
         And the pdf contains 2 pages
         When I send the API request to the endpoint "/api/v1/analysis/form-fields"
+        And this operation is run 5 times in parallel
         Then the response status code should be 200
         And the response content type should be "application/json"
         And the response file should have size greater than 0
@@ -141,6 +146,7 @@ Feature: Analysis API Endpoints
         Given I generate a PDF file as "fileInput"
         And the pdf contains 2 pages
         When I send the API request to the endpoint "/api/v1/analysis/annotation-info"
+        And this operation is run 5 times in parallel
         Then the response status code should be 200
         And the response content type should be "application/json"
         And the response file should have size greater than 0
@@ -164,6 +170,7 @@ Feature: Analysis API Endpoints
         Given I generate a PDF file as "fileInput"
         And the pdf contains 2 pages
         When I send the API request to the endpoint "/api/v1/analysis/font-info"
+        And this operation is run 5 times in parallel
         Then the response status code should be 200
         And the response content type should be "application/json"
         And the response file should have size greater than 0
@@ -187,6 +194,7 @@ Feature: Analysis API Endpoints
         Given I generate a PDF file as "fileInput"
         And the pdf contains 2 pages
         When I send the API request to the endpoint "/api/v1/analysis/security-info"
+        And this operation is run 5 times in parallel
         Then the response status code should be 200
         And the response content type should be "application/json"
         And the response file should have size greater than 0

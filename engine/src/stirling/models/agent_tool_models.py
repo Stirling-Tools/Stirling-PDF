@@ -29,7 +29,7 @@ class PdfCommentAgentParams(ApiModel):
 
 
 class CreatePdfFromHtmlAgentParams(ApiModel):
-    html_content: str
+    document: str
     filename: str = Field(pattern=r"^.+\.pdf$")
 
 

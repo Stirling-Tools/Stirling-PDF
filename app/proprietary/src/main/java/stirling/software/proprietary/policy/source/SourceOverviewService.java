@@ -3,17 +3,20 @@ package stirling.software.proprietary.policy.source;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
+import stirling.software.proprietary.policy.controller.ProcessingFolderController;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.PolicyStore;
+import stirling.software.proprietary.util.SecretMasker;
 
 /**
  * Builds the Sources overview: every persisted source the caller's team owns, shown exactly once,
@@ -23,7 +26,6 @@ import stirling.software.proprietary.policy.store.PolicyStore;
  */
 @Service
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class SourceOverviewService {
 
     private final SourceStore sourceStore;
@@ -33,14 +35,22 @@ public class SourceOverviewService {
     private final SourceDocCounter docCounter;
 
     public SourcesResponse overview() {
-        List<Source> sources = sourceAccessGuard.visibleFrom(sourceStore);
+        // Processing folders (source + policy pairs) are the editor's own surface, served by
+        // ProcessingFolderController; the portal's sources/pipelines views never see them.
+        List<Source> sources =
+                sourceAccessGuard.visibleFrom(sourceStore).stream()
+                        .filter(
+                                source ->
+                                        !ProcessingFolderController.SOURCE_TYPE.equals(
+                                                source.type()))
+                        .toList();
         List<Policy> policies = policyAccessGuard.visibleFrom(policyStore);
 
         Map<String, List<Policy>> referencesBySource = referencesBySource(policies);
         Map<String, DocStats> docStats =
                 docCounter.statsFor(sources.stream().map(Source::id).toList());
 
-        List<SourceView> views =
+        List<SourceView> persisted =
                 sources.stream()
                         .map(
                                 source ->
@@ -55,7 +65,13 @@ public class SourceOverviewService {
                                         .thenComparing(SourceView::name))
                         .toList();
 
-        return new SourcesResponse(buildKpis(views), views);
+        // The editor is a built-in source: always present and pinned first. The KPI strip counts
+        // only the connections a team configures, so the editor is left out of the KPIs.
+        List<SourceView> views = new ArrayList<>();
+        views.add(editorView(policies));
+        views.addAll(persisted);
+
+        return new SourcesResponse(buildKpis(persisted), views);
     }
 
     /**
@@ -66,11 +82,60 @@ public class SourceOverviewService {
         return docCounter.dailySeriesFor(sourceId);
     }
 
-    /** Policies referencing each source id, across the caller's visible policies. */
+    /** The 30-day daily editor document series (oldest first) for the caller's team. */
+    public List<Long> editorDailySeries() {
+        return docCounter.dailySeriesFor(
+                EditorSource.counterKey(sourceAccessGuard.currentTeamId()));
+    }
+
+    /**
+     * The always-present editor row. It has no stored config; its documents are those the team has
+     * processed by running policies from the editor, and it is "used by" every policy that targets
+     * the editor as its source.
+     */
+    private SourceView editorView(List<Policy> policies) {
+        String key = EditorSource.counterKey(sourceAccessGuard.currentTeamId());
+        DocStats docs = docCounter.statsFor(List.of(key)).getOrDefault(key, DocStats.ZERO);
+        List<SourceView.PolicyRef> refs =
+                policies.stream()
+                        .filter(SourceOverviewService::runsFromEditor)
+                        .map(policy -> new SourceView.PolicyRef(policy.id(), policy.name()))
+                        .toList();
+        return new SourceView(
+                EditorSource.ID,
+                "Editor",
+                EditorSource.TYPE,
+                "active",
+                refs.size(),
+                refs,
+                List.of(),
+                docs.total(),
+                docs.last24h(),
+                docs.last30d(),
+                null);
+    }
+
+    /**
+     * Whether a policy runs from the editor. Read from the policy's first-class {@link
+     * stirling.software.proprietary.policy.model.EditorConfig}, never inferred from a sources list
+     * (the editor is not a real source).
+     */
+    private static boolean runsFromEditor(Policy policy) {
+        return policy.editor().allowed();
+    }
+
+    /**
+     * Policies referencing each source id, across the caller's visible policies. A source counts
+     * whether a policy reads from it ({@code sourceIds}) or writes to it ({@link
+     * Policy#allOutputIds()}, which covers a routing rule's destination as well as the fallback
+     * output); a policy that does both counts once.
+     */
     private static Map<String, List<Policy>> referencesBySource(List<Policy> policies) {
         Map<String, List<Policy>> bySource = new HashMap<>();
         for (Policy policy : policies) {
-            for (String sourceId : policy.sourceIds()) {
+            Set<String> referenced = new LinkedHashSet<>(policy.sourceIds());
+            referenced.addAll(policy.allOutputIds());
+            for (String sourceId : referenced) {
                 bySource.computeIfAbsent(sourceId, key -> new ArrayList<>()).add(policy);
             }
         }
@@ -93,7 +158,16 @@ public class SourceOverviewService {
                 configRows(source),
                 docs.total(),
                 docs.last24h(),
-                docs.last30d());
+                docs.last30d(),
+                webhookPath(source));
+    }
+
+    private static String webhookPath(Source source) {
+        if (!"webhook".equals(source.type())) {
+            return null;
+        }
+        Object webhookId = source.options().get("webhookId");
+        return webhookId == null ? null : "/api/v1/webhooks/" + webhookId;
     }
 
     /** A disabled (paused) source reads as "disabled"; an unreferenced one reads as "unused". */
@@ -104,13 +178,18 @@ public class SourceOverviewService {
         return referenceCount == 0 ? "unused" : "active";
     }
 
-    /** Generic key/value view of the source's config - works for any source type. */
+    /**
+     * Generic key/value view of the source's config - works for any source type. Secret-bearing
+     * options (e.g. an S3 secret access key) are redacted, not omitted, so the overview still shows
+     * that a credential is configured.
+     */
     private static List<SourceView.DetailRow> configRows(Source source) {
-        return source.options().entrySet().stream()
+        Map<String, Object> masked = SecretMasker.mask(source.options());
+        return source.options().keySet().stream()
                 .map(
-                        entry ->
+                        key ->
                                 new SourceView.DetailRow(
-                                        humanize(entry.getKey()), String.valueOf(entry.getValue())))
+                                        humanize(key), String.valueOf(masked.get(key))))
                 .toList();
     }
 

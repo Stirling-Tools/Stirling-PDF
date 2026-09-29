@@ -10,6 +10,7 @@ import {
 } from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
+  validateCompressParameters,
   CompressParameters,
   defaultParameters,
 } from "@app/hooks/tools/compress/useCompressParameters";
@@ -91,6 +92,7 @@ export const buildCompressFormData = (
 
 // Static configuration object
 export const compressOperationConfig = defineSingleFileTool({
+  validateParams: validateCompressParameters,
   buildFormData: buildCompressFormData,
   toApiParams: compressToApiParams,
   fromApiParams: compressFromApiParams,

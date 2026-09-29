@@ -7,6 +7,7 @@ export type IconBadgeAccent =
   | "green"
   | "amber"
   | "red"
+  | "orange"
   | "neutral";
 
 export interface IconBadgeProps {

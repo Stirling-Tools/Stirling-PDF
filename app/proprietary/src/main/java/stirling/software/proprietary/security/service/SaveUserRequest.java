@@ -28,6 +28,7 @@ import stirling.software.proprietary.security.model.AuthenticationType;
  *   <li>mfaEnabled: false
  *   <li>mfaSecret: null
  *   <li>mfaLastUsedStep: null
+ *   <li>bypassUserLimit: false
  * </ul>
  */
 @Getter
@@ -47,4 +48,15 @@ public class SaveUserRequest {
     @Builder.Default private final boolean mfaEnabled = false;
     @Builder.Default private final String mfaSecret = null;
     @Builder.Default private final Long mfaLastUsedStep = null;
+
+    /**
+     * Skips the licence user-limit guard in {@code UserService.saveUserCore}. Reserved for accounts
+     * the installation cannot function without: the bootstrap admin and {@code INTERNAL_API_USER},
+     * both created by {@code InitialSecuritySetup} before anyone can log in. The internal API user
+     * in particular is excluded from {@code getTotalUsersCount()}, so counting its creation against
+     * the limit would strand an installation that is already at its cap.
+     *
+     * <p>Never set this on a path that creates a real person's account.
+     */
+    @Builder.Default private final boolean bypassUserLimit = false;
 }

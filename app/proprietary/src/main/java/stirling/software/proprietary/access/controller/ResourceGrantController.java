@@ -25,7 +25,9 @@ import stirling.software.proprietary.access.model.PrincipalType;
 import stirling.software.proprietary.access.model.ResourceGrant;
 import stirling.software.proprietary.access.model.ResourceType;
 import stirling.software.proprietary.access.service.ResourceAccessService;
+import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.repository.TeamRepository;
 
 /** Admin endpoints to grant/revoke access to gated resources (the portal, integration configs). */
 @RestController
@@ -36,12 +38,22 @@ import stirling.software.proprietary.security.model.User;
 public class ResourceGrantController {
 
     private final ResourceAccessService accessService;
+    private final UserRepository userRepository;
+    private final TeamRepository teamRepository;
 
     @GetMapping("/grants")
     public ResponseEntity<?> list(
             @RequestParam ResourceType resourceType,
             @RequestParam(required = false, defaultValue = "") String resourceId) {
         List<ResourceGrant> grants = accessService.listGrants(resourceType, resourceId);
+        return ResponseEntity.ok(grants.stream().map(this::toDto).toList());
+    }
+
+    @GetMapping("/grants/by-principal")
+    public ResponseEntity<?> listByPrincipal(
+            @RequestParam PrincipalType principalType, @RequestParam Long principalId) {
+        List<ResourceGrant> grants =
+                accessService.listGrantsForPrincipal(principalType, principalId);
         return ResponseEntity.ok(grants.stream().map(this::toDto).toList());
     }
 
@@ -57,17 +69,26 @@ public class ResourceGrantController {
                                     "error",
                                     "resourceType, principalType and principalId are required"));
         }
+        // PORTAL is a singleton (empty resourceId); every other type must name a resource.
+        boolean portal = request.resourceType() == ResourceType.PORTAL;
+        if (!portal && (request.resourceId() == null || request.resourceId().isBlank())) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "resourceId is required for " + request.resourceType()));
+        }
+        Long principalId = request.principalId();
+        String principalError = validatePrincipalExists(request.principalType(), principalId);
+        if (principalError != null) {
+            return ResponseEntity.badRequest().body(Map.of("error", principalError));
+        }
         AccessPermission permission =
                 request.permission() == null ? AccessPermission.USE : request.permission();
-        // PORTAL is a singleton resource; its grants always target the whole type.
-        String resourceId =
-                request.resourceType() == ResourceType.PORTAL ? "" : request.resourceId();
+        String resourceId = portal ? "" : request.resourceId();
         ResourceGrant grant =
                 accessService.grant(
                         request.resourceType(),
                         resourceId,
                         request.principalType(),
-                        request.principalId(),
+                        principalId,
                         permission,
                         admin);
         return ResponseEntity.ok(toDto(grant));
@@ -77,6 +98,14 @@ public class ResourceGrantController {
     public ResponseEntity<?> delete(@PathVariable Long id) {
         accessService.revoke(id);
         return ResponseEntity.ok(Map.of("message", "Grant revoked"));
+    }
+
+    // Rejects grants to nonexistent principals (dead rows otherwise).
+    private String validatePrincipalExists(PrincipalType type, Long id) {
+        return switch (type) {
+            case USER -> userRepository.existsById(id) ? null : "User " + id + " does not exist";
+            case TEAM -> teamRepository.existsById(id) ? null : "Team " + id + " does not exist";
+        };
     }
 
     private Map<String, Object> toDto(ResourceGrant g) {

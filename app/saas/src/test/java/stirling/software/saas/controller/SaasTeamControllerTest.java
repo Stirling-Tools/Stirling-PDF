@@ -36,8 +36,10 @@ import stirling.software.common.model.enumeration.InvitationStatus;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.enumeration.TeamRole;
 import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
@@ -45,9 +47,7 @@ import stirling.software.saas.controller.SaasTeamController.InviteUserRequest;
 import stirling.software.saas.controller.SaasTeamController.RenameTeamRequest;
 import stirling.software.saas.controller.SaasTeamController.UpdateSeatsRequest;
 import stirling.software.saas.model.TeamInvitation;
-import stirling.software.saas.model.TeamMembership;
 import stirling.software.saas.repository.TeamInvitationRepository;
-import stirling.software.saas.repository.TeamMembershipRepository;
 import stirling.software.saas.security.TeamSecurityExpressions;
 import stirling.software.saas.service.SaasTeamExtensionService;
 import stirling.software.saas.service.SaasTeamService;
@@ -79,6 +79,8 @@ class SaasTeamControllerTest {
     @Mock private TeamInvitationRepository invitationRepository;
     @Mock private UserService userService;
     @Mock private TeamSecurityExpressions teamSecurityExpressions;
+
+    @org.mockito.Mock private stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
 
     @InjectMocks private SaasTeamController controller;
 
@@ -600,6 +602,7 @@ class SaasTeamControllerTest {
         void existingPersonalTeam_noMigration() {
             stubCurrentUser();
             Team personal = team(1L, "My Team");
+            currentUser.setTeam(personal);
             when(membershipRepository.findByUserId(currentUser.getId()))
                     .thenReturn(List.of(membership(personal, currentUser, TeamRole.LEADER)));
             when(saasTeamExtensionService.isPersonal(personal)).thenReturn(true);
@@ -612,6 +615,10 @@ class SaasTeamControllerTest {
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             verify(saasTeamService, never()).createPersonalTeam(any());
+            @SuppressWarnings("unchecked")
+            var dtos = (List<SaasTeamController.TeamDetailsDTO>) response.getBody();
+            assertThat(dtos.getFirst().getCurrent()).isTrue();
+            assertThat(dtos.getFirst().getCurrentUserId()).isEqualTo(currentUser.getId());
         }
 
         @Test

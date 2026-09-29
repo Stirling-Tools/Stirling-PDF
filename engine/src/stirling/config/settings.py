@@ -25,6 +25,9 @@ class AppSettings(BaseSettings):
 
     smart_model_name: str = Field(validation_alias="STIRLING_SMART_MODEL")
     fast_model_name: str = Field(validation_alias="STIRLING_FAST_MODEL")
+    # Provider backing the active chat models; empty for env/native, 'ollama'/'custom' by push.
+    # Agents read it to pick a tool-compatible output strategy since local models block tools under native json-schema.
+    chat_provider: str = Field(default="")
     smart_model_max_tokens: int = Field(validation_alias="STIRLING_SMART_MODEL_MAX_TOKENS")
     fast_model_max_tokens: int = Field(validation_alias="STIRLING_FAST_MODEL_MAX_TOKENS")
     # Process-wide ceiling on concurrent model API calls, shared by both model
@@ -47,6 +50,10 @@ class AppSettings(BaseSettings):
     rag_chunk_overlap: int = Field(validation_alias="STIRLING_RAG_CHUNK_OVERLAP")
     rag_default_top_k: int = Field(validation_alias="STIRLING_RAG_TOP_K")
     rag_max_searches: int = Field(validation_alias="STIRLING_RAG_MAX_SEARCHES")
+
+    # How many of the catalogue's operations the edit planner is shown. The full list
+    # overruns a local model's context; 0 disables ranking and shows every operation.
+    planner_shortlist_size: int = Field(default=20, validation_alias="STIRLING_PLANNER_SHORTLIST_SIZE")
     documents_reaper_interval_seconds: int = Field(
         default=900,
         validation_alias="STIRLING_DOCUMENTS_REAPER_INTERVAL_SECONDS",
@@ -122,6 +129,15 @@ class AppSettings(BaseSettings):
     # unless engine_require_auth is set, in which case the engine fails closed (503).
     engine_shared_secret: str = Field(default="", validation_alias="STIRLING_ENGINE_SHARED_SECRET")
     engine_require_auth: bool = Field(default=False, validation_alias="STIRLING_ENGINE_REQUIRE_AUTH")
+
+    # When true, the Java processor may push admin AI settings to POST /api/v1/config at startup.
+    # Turn off in env-driven deployments so the environment is the single source of truth.
+    allow_config_push: bool = Field(default=True, validation_alias="STIRLING_ALLOW_CONFIG_PUSH")
+    # How often each worker polls the shared config cache; bounds how long the pool can disagree on the active model.
+    config_cache_poll_interval_seconds: int = Field(
+        default=15,
+        validation_alias="STIRLING_CONFIG_CACHE_POLL_INTERVAL_SECONDS",
+    )
 
 
 def _configure_logging(level_name: str, log_file: str, http_debug: bool) -> None:

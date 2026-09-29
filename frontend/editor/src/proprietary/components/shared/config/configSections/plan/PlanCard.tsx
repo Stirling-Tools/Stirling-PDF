@@ -144,7 +144,7 @@ const PlanCard: React.FC<PlanCardProps> = ({
               </Text>
               <Text size="sm" c="dimmed" mt="xs">
                 {t("plan.perMonth", "/month")}{" "}
-                {t("plan.withServer", "+ Server Plan")}
+                {t("plan.withServer", "+ Team plan")}
               </Text>
             </>
           ) : (
@@ -176,7 +176,7 @@ const PlanCard: React.FC<PlanCardProps> = ({
             isCurrentTier &&
             currentLicenseInfo &&
             currentLicenseInfo.maxUsers > 0 && (
-              <Text size="sm" c="green" fw={500} ta="center">
+              <Text size="sm" c="var(--color-green-dark)" fw={500} ta="center">
                 {t("plan.licensedSeats", "Licensed: {{count}} seats", {
                   count: currentLicenseInfo.maxUsers,
                 })}
@@ -185,7 +185,7 @@ const PlanCard: React.FC<PlanCardProps> = ({
 
           {/* Single Upgrade Button */}
           <Tooltip
-            label={t("plan.enterprise.requiresServer", "Requires Server plan")}
+            label={t("plan.enterprise.requiresServer", "Requires Team plan")}
             disabled={!isEnterpriseBlockedForFree}
             position="top"
             withArrow

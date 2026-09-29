@@ -274,7 +274,7 @@ class PaygChargeInterceptorTest {
     }
 
     @Test
-    void afterCompletion_4xx_appendsFailedStepNoRefundNoOutputs() throws Exception {
+    void afterCompletion_4xx_opened_refundsAndNeverMeters() throws Exception {
         authenticateWithApiKey(makeUser(7L, 42L));
         UUID jobId = UUID.randomUUID();
         when(chargeService.openProcess(any(), anyList()))
@@ -288,13 +288,34 @@ class PaygChargeInterceptorTest {
         interceptor.preHandle(req, res, handlerMethodForFakeController());
         interceptor.afterCompletion(req, res, handlerMethodForFakeController(), null);
 
-        verify(chargeService, never()).markFirstStepFailed(any(), any());
+        // Errored work is never charged: the opener is refunded, and it never meters.
+        verify(chargeService).markFirstStepFailed(eq(jobId), eq("first-step-4xx:422"));
         verify(chargeService, never()).decrementStepCount(any());
         verify(jobService, never()).recordOutput(any(), any());
         verify(jobService)
                 .appendStep(eq(jobId), any(), eq(JobStepStatus.FAILED), any(), any(), eq("422"));
-        // 4xx is a full charge (customer paid for the attempt), so it still meters.
-        verify(chargeService).meterJobUsage(jobId);
+        assertThat(meterRegistry.counter("payg.filter.refunds").count()).isEqualTo(1.0);
+        verify(chargeService, never()).meterJobUsage(any());
+    }
+
+    @Test
+    void afterCompletion_4xx_joined_callsDecrementStepCount() throws Exception {
+        authenticateWithApiKey(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 0, ChargeOutcome.Disposition.JOINED));
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        res.setStatus(422);
+
+        interceptor.preHandle(req, res, handlerMethodForFakeController());
+        interceptor.afterCompletion(req, res, handlerMethodForFakeController(), null);
+
+        verify(chargeService).decrementStepCount(jobId);
+        verify(chargeService, never()).markFirstStepFailed(any(), any());
+        verify(chargeService, never()).meterJobUsage(any());
     }
 
     @Test
@@ -432,6 +453,52 @@ class PaygChargeInterceptorTest {
         verify(chargeService).openProcess(ctxCaptor.capture(), anyList());
         assertThat(ctxCaptor.getValue().source())
                 .isEqualTo(stirling.software.saas.payg.model.JobSource.PIPELINE);
+    }
+
+    @Test
+    void preHandle_runId_honouredOnlyWithAutomationHeader() throws Exception {
+        // An internal dispatch carries BOTH X-Stirling-Automation and X-Stirling-Run-Id, so the
+        // run id flows onto the ChargeContext (sub-steps of one run group into a single charge).
+        authenticateWithApiKey(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
+        org.mockito.ArgumentCaptor<stirling.software.saas.payg.charge.ChargeContext> ctxCaptor =
+                org.mockito.ArgumentCaptor.forClass(
+                        stirling.software.saas.payg.charge.ChargeContext.class);
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+        req.addHeader("X-Stirling-Automation", "true");
+        req.addHeader("X-Stirling-Run-Id", "run-abc");
+
+        interceptor.preHandle(req, new MockHttpServletResponse(), handlerMethodForFakeController());
+
+        verify(chargeService).openProcess(ctxCaptor.capture(), anyList());
+        assertThat(ctxCaptor.getValue().runId()).isEqualTo("run-abc");
+    }
+
+    @Test
+    void preHandle_runIdWithoutAutomationHeader_isIgnored() throws Exception {
+        // A raw external API call that sets X-Stirling-Run-Id on its own must NOT be able to group
+        // charges — the run id is dropped so each call stays its own charge ("charge per API
+        // call").
+        authenticateWithApiKey(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
+        org.mockito.ArgumentCaptor<stirling.software.saas.payg.charge.ChargeContext> ctxCaptor =
+                org.mockito.ArgumentCaptor.forClass(
+                        stirling.software.saas.payg.charge.ChargeContext.class);
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+        req.addHeader("X-Stirling-Run-Id", "run-spoofed");
+
+        interceptor.preHandle(req, new MockHttpServletResponse(), handlerMethodForFakeController());
+
+        verify(chargeService).openProcess(ctxCaptor.capture(), anyList());
+        assertThat(ctxCaptor.getValue().runId()).isNull();
     }
 
     // --- BillingCategory categorisation + bypass fast-path -------------------------------------
@@ -677,6 +744,32 @@ class PaygChargeInterceptorTest {
 
         assertThat(cont).isTrue();
         verify(chargeService, never()).openProcess(any(), anyList());
+    }
+
+    @Test
+    void preHandle_plainRouteWithAutomationHeader_isAutomation() throws Exception {
+        // A policy/pipeline sub-step to an unannotated proprietary tool (e.g. an integration step)
+        // carries X-Stirling-Automation: true. It must be in scope and billed AUTOMATION, matching
+        // self-hosted, which bills by the header regardless of annotation.
+        authenticateWithUser(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
+        org.mockito.ArgumentCaptor<stirling.software.saas.payg.charge.ChargeContext> ctxCaptor =
+                org.mockito.ArgumentCaptor.forClass(
+                        stirling.software.saas.payg.charge.ChargeContext.class);
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        req.setRequestURI("/api/v1/integration/external-api-call");
+        req.addFile(
+                new MockMultipartFile("fileInput", "x.pdf", "application/pdf", "abc".getBytes()));
+        req.addHeader("X-Stirling-Automation", "true");
+
+        interceptor.preHandle(req, new MockHttpServletResponse(), handlerMethodForPlain());
+
+        verify(chargeService).openProcess(ctxCaptor.capture(), anyList());
+        assertThat(ctxCaptor.getValue().billingCategory())
+                .isEqualTo(stirling.software.saas.payg.model.BillingCategory.AUTOMATION);
     }
 
     // --- helpers --------------------------------------------------------------------------------

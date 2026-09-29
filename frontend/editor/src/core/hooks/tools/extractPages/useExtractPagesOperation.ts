@@ -7,6 +7,7 @@ import {
 } from "@app/hooks/tools/shared/useToolOperation";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
+  validateExtractPagesParameters,
   ExtractPagesParameters,
   defaultParameters,
 } from "@app/hooks/tools/extractPages/useExtractPagesParameters";
@@ -34,6 +35,7 @@ async function resolveSelectionToCsv(
 }
 
 export const extractPagesOperationConfig = defineCustomTool({
+  validateParams: validateExtractPagesParameters,
   operationType: "extractPages",
   customProcessor: async (
     parameters: ExtractPagesParameters,

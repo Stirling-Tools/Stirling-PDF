@@ -5,28 +5,50 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
  * already-subscribed-redirect vs neither-secret-nor-url mapping, the mock flag,
  * unconfigured Supabase, and the portal-session path.
  */
-const { getClient, invoke } = vi.hoisted(() => ({
+const { getClient, invoke, rpc } = vi.hoisted(() => ({
   getClient: vi.fn(),
   invoke: vi.fn(),
+  rpc: vi.fn(),
 }));
 
-vi.mock("@portal/auth/saasSupabase", () => ({ ensureSaasSupabase: vi.fn() }));
+vi.mock("@app/portal/auth/saasSupabase", () => ({
+  ensureSaasSupabase: vi.fn(),
+}));
 vi.mock("@app/auth/supabase/supabaseClient", () => ({
   getSupabaseClient: () => getClient(),
   configureSupabase: vi.fn(),
 }));
 
 import {
+  acceptBundleStripeQuote,
+  cancelBundleQuote,
+  createBundleStripeQuote,
   createCheckoutSession,
   createPortalSession,
+  fetchBundleQuotePdf,
+  fetchBundlePricing,
+  fetchCheckoutPricing,
+  finalizeBundleInvoice,
+  getLatestBundleQuote,
   StripeFunctionError,
-} from "@portal/billing/stripe";
+  upsertBundleQuote,
+} from "@app/portal/billing/stripe";
+import { SaasSessionRequiredError } from "@app/portal/auth/portalSaasSession";
 
 const req = { teamId: 1, successUrl: "s", cancelUrl: "c" } as const;
 
 beforeEach(() => {
   invoke.mockReset();
-  getClient.mockReset().mockReturnValue({ functions: { invoke } });
+  rpc.mockReset();
+  getClient.mockReset().mockReturnValue({
+    functions: { invoke },
+    rpc,
+    auth: {
+      getSession: async () => ({
+        data: { session: { access_token: "billing-token" } },
+      }),
+    },
+  });
 });
 afterEach(() => vi.restoreAllMocks());
 
@@ -41,7 +63,6 @@ describe("createCheckoutSession", () => {
       clientSecret: "cs_123",
       redirectUrl: null,
       alreadySubscribed: false,
-      mock: false,
     });
   });
 
@@ -58,14 +79,6 @@ describe("createCheckoutSession", () => {
     expect(s.alreadySubscribed).toBe(true);
     expect(s.redirectUrl).toBe("https://portal");
     expect(s.clientSecret).toBeNull();
-  });
-
-  it("flags a mock client secret", async () => {
-    invoke.mockResolvedValue({
-      data: { success: true, client_secret: "cs_mock_abc" },
-      error: null,
-    });
-    expect((await createCheckoutSession(req)).mock).toBe(true);
   });
 
   it("throws when success is false", async () => {
@@ -91,6 +104,313 @@ describe("createCheckoutSession", () => {
   });
 });
 
+describe("createBundleStripeQuote", () => {
+  it("sends team_id + quote_id (+ po_number) and maps the Stripe quote handles", async () => {
+    invoke.mockResolvedValue({
+      data: {
+        success: true,
+        stripe_quote_id: "qt_1",
+        stripe_quote_number: "QT-0007",
+      },
+      error: null,
+    });
+    const q = await createBundleStripeQuote({
+      teamId: 1,
+      quoteId: 7,
+      poNumber: "PO-9",
+    });
+    expect(q).toEqual({ stripeQuoteId: "qt_1", stripeQuoteNumber: "QT-0007" });
+    const [name, opts] = invoke.mock.calls[0];
+    expect(name).toBe("create-payg-bundle-quote");
+    expect(opts.body).toMatchObject({
+      team_id: 1,
+      quote_id: 7,
+      po_number: "PO-9",
+    });
+  });
+
+  it("throws when the edge fn reports failure", async () => {
+    invoke.mockResolvedValue({
+      data: { success: false, error: "bundle_pricing_not_configured" },
+      error: null,
+    });
+    await expect(
+      createBundleStripeQuote({ teamId: 1, quoteId: 7 }),
+    ).rejects.toThrow(/bundle_pricing_not_configured/);
+  });
+});
+
+describe("acceptBundleStripeQuote", () => {
+  it("maps the invoice response and sends quote_id", async () => {
+    invoke.mockResolvedValue({
+      data: {
+        success: true,
+        invoice_id: "in_1",
+        hosted_invoice_url: "https://pay/in_1",
+        invoice_pdf: "https://pdf/in_1",
+        status: "open",
+      },
+      error: null,
+    });
+    const inv = await acceptBundleStripeQuote({ teamId: 1, quoteId: 7 });
+    expect(inv).toEqual({
+      invoiceId: "in_1",
+      hostedInvoiceUrl: "https://pay/in_1",
+      invoicePdf: "https://pdf/in_1",
+      status: "open",
+    });
+    const [name, opts] = invoke.mock.calls[0];
+    expect(name).toBe("accept-payg-bundle-quote");
+    expect(opts.body).toMatchObject({ team_id: 1, quote_id: 7 });
+  });
+
+  it("throws when the edge fn reports failure", async () => {
+    invoke.mockResolvedValue({
+      data: { success: false, error: "quote_not_issued" },
+      error: null,
+    });
+    await expect(
+      acceptBundleStripeQuote({ teamId: 1, quoteId: 7 }),
+    ).rejects.toThrow(/quote_not_issued/);
+  });
+});
+
+describe("cancelBundleQuote", () => {
+  it("sends team_id + quote_id and resolves on success", async () => {
+    invoke.mockResolvedValue({ data: { success: true }, error: null });
+    await cancelBundleQuote({ teamId: 1, quoteId: 7 });
+    const [name, opts] = invoke.mock.calls[0];
+    expect(name).toBe("cancel-payg-bundle-quote");
+    expect(opts.body).toMatchObject({ team_id: 1, quote_id: 7 });
+  });
+
+  it("throws when the edge fn reports failure (e.g. already paid)", async () => {
+    invoke.mockResolvedValue({
+      data: { success: false, error: "invoice_already_paid" },
+      error: null,
+    });
+    await expect(cancelBundleQuote({ teamId: 1, quoteId: 7 })).rejects.toThrow(
+      /invoice_already_paid/,
+    );
+  });
+});
+
+describe("fetchBundleQuotePdf", () => {
+  it("returns the PDF blob from the GET route", async () => {
+    const blob = new Blob(["%PDF"], { type: "application/pdf" });
+    invoke.mockResolvedValue({ data: blob, error: null });
+    const out = await fetchBundleQuotePdf(7);
+    expect(out).toBe(blob);
+    const [name, opts] = invoke.mock.calls[0];
+    expect(name).toBe("create-payg-bundle-quote?quote_id=7");
+    expect(opts.method).toBe("GET");
+  });
+
+  it("throws when the response is not a file", async () => {
+    invoke.mockResolvedValue({ data: { success: false }, error: null });
+    await expect(fetchBundleQuotePdf(7)).rejects.toBeInstanceOf(
+      StripeFunctionError,
+    );
+  });
+});
+
+describe("upsertBundleQuote", () => {
+  const quoteInput = {
+    teamId: 1,
+    users: 25,
+    posturePolicies: 4,
+    sizeMult: 1.2,
+    pipelineMult: 1,
+    provisionedMonthlyVolume: 10000,
+    poolCredits: 576000,
+    priceMinor: 480000,
+    currency: "usd",
+    consented: true,
+    eulaVersion: "2026-07-draft",
+  } as const;
+
+  it("does not replay a quote mutation after a 401", async () => {
+    rpc.mockResolvedValue({
+      data: null,
+      error: { message: "expired" },
+      status: 401,
+    });
+    await expect(upsertBundleQuote(quoteInput)).rejects.toBeInstanceOf(
+      SaasSessionRequiredError,
+    );
+    expect(rpc).toHaveBeenCalledOnce();
+  });
+
+  it("maps the RPC row and sends p_* args (create — no p_quote_id)", async () => {
+    rpc.mockResolvedValue({
+      data: [
+        {
+          quote_id: 7,
+          status: "issued",
+          valid_until: "2026-08-16T00:00:00Z",
+        },
+      ],
+      error: null,
+    });
+    const q = await upsertBundleQuote(quoteInput);
+    expect(q).toEqual({
+      quoteId: 7,
+      status: "issued",
+      validUntil: "2026-08-16T00:00:00Z",
+    });
+    const [fn, args] = rpc.mock.calls[0];
+    expect(fn).toBe("payg_upsert_bundle_quote");
+    expect(args).toMatchObject({
+      p_team_id: 1,
+      p_posture_policies: 4,
+      p_size_mult: 1.2,
+      p_pipeline_mult: 1,
+      p_pool_credits: 576000,
+      p_users: 25,
+      p_price_minor: 480000,
+      p_currency: "usd",
+      p_consented: true,
+      p_eula_version: "2026-07-draft",
+    });
+    expect(args).not.toHaveProperty("p_quote_id");
+  });
+
+  it("passes p_quote_id when editing an existing quote", async () => {
+    rpc.mockResolvedValue({
+      data: [{ quote_id: 7, status: "issued", valid_until: "x" }],
+      error: null,
+    });
+    await upsertBundleQuote({ ...quoteInput, quoteId: 7 });
+    expect(rpc.mock.calls[0][1]).toMatchObject({ p_quote_id: 7 });
+  });
+
+  it("throws a StripeFunctionError (with code) on an RPC error", async () => {
+    rpc.mockResolvedValue({
+      data: null,
+      error: { message: "not a leader", code: "42501" },
+    });
+    const err = await upsertBundleQuote(quoteInput).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(StripeFunctionError);
+    expect((err as StripeFunctionError).code).toBe("42501");
+  });
+});
+
+it("renews once when reading a saved quote returns 401", async () => {
+  const refreshSession = vi
+    .fn()
+    .mockResolvedValue({ data: { session: { access_token: "renewed" } } });
+  getClient.mockReturnValue({
+    rpc,
+    auth: {
+      getSession: vi
+        .fn()
+        .mockResolvedValue({ data: { session: { access_token: "old" } } }),
+      refreshSession,
+    },
+  });
+  rpc
+    .mockResolvedValueOnce({
+      data: null,
+      error: { message: "expired" },
+      status: 401,
+    })
+    .mockResolvedValueOnce({ data: [], error: null, status: 200 });
+  await expect(getLatestBundleQuote(1)).resolves.toBeNull();
+  expect(refreshSession).toHaveBeenCalledOnce();
+  expect(rpc).toHaveBeenCalledTimes(2);
+});
+
+describe("finalizeBundleInvoice", () => {
+  it("maps the invoice response and sends quote_id (+ optional po_number)", async () => {
+    invoke.mockResolvedValue({
+      data: {
+        success: true,
+        invoice_id: "in_1",
+        hosted_invoice_url: "https://pay/in_1",
+        invoice_pdf: "https://pdf/in_1",
+        status: "open",
+      },
+      error: null,
+    });
+    const inv = await finalizeBundleInvoice({
+      teamId: 1,
+      quoteId: 7,
+      poNumber: "PO-9",
+    });
+    expect(inv).toEqual({
+      invoiceId: "in_1",
+      hostedInvoiceUrl: "https://pay/in_1",
+      invoicePdf: "https://pdf/in_1",
+      status: "open",
+    });
+    const [name, opts] = invoke.mock.calls[0];
+    expect(name).toBe("finalize-payg-bundle-invoice");
+    expect(opts.body).toMatchObject({
+      team_id: 1,
+      quote_id: 7,
+      po_number: "PO-9",
+    });
+  });
+
+  it("throws when the edge fn reports failure", async () => {
+    invoke.mockResolvedValue({
+      data: { success: false, error: "quote_not_accepted" },
+      error: null,
+    });
+    await expect(
+      finalizeBundleInvoice({ teamId: 1, quoteId: 7 }),
+    ).rejects.toThrow(/quote_not_accepted/);
+  });
+});
+
+describe("getLatestBundleQuote", () => {
+  it("maps the latest open quote row (numeric size_mult coerced)", async () => {
+    rpc.mockResolvedValue({
+      data: [
+        {
+          quote_id: 7,
+          users: 25,
+          posture_policies: 4,
+          size_mult: "1.2",
+          pipeline_mult: 1,
+          pool_credits: 576000,
+          price_minor: 480000,
+          currency: "usd",
+          consented_at: "2026-07-17T00:00:00Z",
+          stripe_quote_id: "qt_1",
+          stripe_quote_number: "QT-0007",
+          stripe_ref: "in_1",
+          valid_until: "2026-08-16T00:00:00Z",
+        },
+      ],
+      error: null,
+    });
+    const q = await getLatestBundleQuote(1);
+    expect(q).toEqual({
+      quoteId: 7,
+      users: 25,
+      posturePolicies: 4,
+      sizeMult: 1.2,
+      pipelineMult: 1,
+      poolCredits: 576000,
+      priceMinor: 480000,
+      currency: "usd",
+      consentedAt: "2026-07-17T00:00:00Z",
+      stripeQuoteId: "qt_1",
+      stripeQuoteNumber: "QT-0007",
+      stripeRef: "in_1",
+      validUntil: "2026-08-16T00:00:00Z",
+    });
+    expect(rpc.mock.calls[0][0]).toBe("payg_get_latest_bundle_quote");
+    expect(rpc.mock.calls[0][1]).toEqual({ p_team_id: 1 });
+  });
+
+  it("returns null when the team has no open quote", async () => {
+    rpc.mockResolvedValue({ data: [], error: null });
+    expect(await getLatestBundleQuote(1)).toBeNull();
+  });
+});
+
 describe("createPortalSession", () => {
   it("returns the portal URL", async () => {
     invoke.mockResolvedValue({
@@ -110,5 +430,175 @@ describe("createPortalSession", () => {
     await expect(
       createPortalSession({ teamId: 1, returnUrl: "r" }),
     ).rejects.toBeInstanceOf(StripeFunctionError);
+  });
+});
+
+it("reads Stripe's billing currency and fractional credit rate before prepay", async () => {
+  invoke.mockResolvedValue({
+    data: { success: true, currency: "gbp", unit_amount_minor: 0.75 },
+    error: null,
+  });
+  expect(await fetchBundlePricing(42)).toEqual({
+    currency: "gbp",
+    unitAmountMinor: 0.75,
+    availableCurrencies: ["gbp"],
+    currencyLocked: true,
+  });
+  expect(invoke).toHaveBeenCalledWith("create-payg-bundle-quote", {
+    body: { team_id: 42, preview: true },
+    headers: { Authorization: "Bearer billing-token" },
+  });
+});
+
+it.each([
+  { currency: "GBP" },
+  { currency: "not-a-currency" },
+  { currency: ["usd"] },
+  { currency: 123 },
+  { available_currencies: "usd" },
+  { available_currencies: {} },
+  { available_currencies: ["usd", "GBP"] },
+  { available_currencies: ["usd", null] },
+  { available_currencies: [["usd"]] },
+  { unit_amount_minor: "1" },
+  { unit_amount_minor: 0 },
+  { unit_amount_minor: Infinity },
+])("rejects malformed bundle pricing: %j", async (invalidFields) => {
+  invoke.mockResolvedValue({
+    data: {
+      success: true,
+      currency: "usd",
+      unit_amount_minor: 1,
+      ...invalidFields,
+    },
+    error: null,
+  });
+  await expect(fetchBundlePricing(42)).rejects.toThrow(
+    "Bundle pricing is unavailable.",
+  );
+});
+
+it("requests a chosen quote currency without setting a Checkout currency", async () => {
+  invoke.mockResolvedValue({
+    data: {
+      success: true,
+      currency: "eur",
+      unit_amount_minor: 0.9,
+      available_currencies: ["usd", "eur"],
+      currency_locked: false,
+    },
+    error: null,
+  });
+  expect(await fetchBundlePricing(42, "eur")).toEqual({
+    currency: "eur",
+    unitAmountMinor: 0.9,
+    availableCurrencies: ["usd", "eur"],
+    currencyLocked: false,
+  });
+  expect(invoke).toHaveBeenCalledWith("create-payg-bundle-quote", {
+    body: { team_id: 42, preview: true, currency: "eur" },
+    headers: { Authorization: "Bearer billing-token" },
+  });
+});
+
+it("uses the minted quote's currency and total instead of the estimate", async () => {
+  invoke.mockResolvedValue({
+    data: {
+      success: true,
+      stripe_quote_id: "qt_1",
+      currency: "gbp",
+      amount_subtotal: 12000,
+      amount_total: 10000,
+    },
+    error: null,
+  });
+  expect(
+    await createBundleStripeQuote({ teamId: 42, quoteId: 7 }),
+  ).toMatchObject({
+    currency: "gbp",
+    amountSubtotal: 12000,
+    amountTotal: 10000,
+  });
+});
+
+it("shows Stripe's error details when a quote request fails", async () => {
+  invoke.mockResolvedValue({
+    data: null,
+    error: {
+      message: "Edge Function returned a non-2xx status code",
+      context: new Response(
+        JSON.stringify({
+          error: "quote_creation_failed",
+          stripe_error: "Currency mismatch",
+        }),
+        { status: 500 },
+      ),
+    },
+  });
+  await expect(
+    createBundleStripeQuote({ teamId: 42, quoteId: 7 }),
+  ).rejects.toMatchObject({
+    code: "quote_creation_failed",
+    message: "Currency mismatch",
+  });
+});
+
+describe("checkout pricing preview", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    vi.stubGlobal("navigator", { languages: ["en-GB"] });
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    localStorage.clear();
+  });
+  it.each([
+    [null, "gbp"],
+    ["aud", "aud"],
+  ])(
+    "uses browser detection unless a manual preference exists (%s)",
+    async (manual, expected) => {
+      if (manual) localStorage.setItem("explicitPricingCurrency", manual);
+      invoke.mockResolvedValue({
+        data: {
+          success: true,
+          currency: expected,
+          currency_locked: false,
+          unit_amount_minor: 2,
+        },
+        error: null,
+      });
+      expect(await fetchCheckoutPricing(42, "processor")).toEqual({
+        currency: expected,
+        currencyLocked: false,
+        unitAmountMinor: 2,
+      });
+      expect(invoke).toHaveBeenCalledWith(
+        "create-checkout-session",
+        expect.objectContaining({
+          body: { team_id: 42, preview: "processor", currency: expected },
+        }),
+      );
+    },
+  );
+  it("accepts the customer's confirmed currency over browser and manual preference", async () => {
+    localStorage.setItem("explicitPricingCurrency", "aud");
+    invoke.mockResolvedValue({
+      data: { success: true, currency: "usd", currency_locked: true },
+      error: null,
+    });
+    expect(await fetchCheckoutPricing(42, "currency")).toMatchObject({
+      currency: "usd",
+      currencyLocked: true,
+    });
+  });
+  it("rejects a malformed rate instead of substituting the USD wallet rate", async () => {
+    invoke.mockResolvedValue({
+      data: { success: true, currency: "gbp", currency_locked: false },
+      error: null,
+    });
+    await expect(fetchCheckoutPricing(42, "processor")).rejects.toThrow(
+      "Couldn't load checkout pricing",
+    );
   });
 });

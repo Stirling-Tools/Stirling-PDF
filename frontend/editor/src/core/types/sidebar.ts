@@ -1,5 +1,4 @@
 export interface SidebarState {
-  sidebarsVisible: boolean;
   leftPanelView: "toolPicker" | "toolContent";
   readerMode: boolean;
 }
@@ -19,7 +18,6 @@ export interface SidebarInfo {
 export interface SidebarContextValue {
   sidebarState: SidebarState;
   sidebarRefs: SidebarRefs;
-  setSidebarsVisible: React.Dispatch<React.SetStateAction<boolean>>;
   setLeftPanelView: React.Dispatch<
     React.SetStateAction<"toolPicker" | "toolContent">
   >;

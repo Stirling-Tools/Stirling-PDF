@@ -59,16 +59,20 @@ export function SourcesIcon(props: IconProps) {
   );
 }
 
+/**
+ * A pipeline as a route: two waypoints joined by a winding path. Shared so the sidebar nav and the
+ * pipelines table's default row icon render the exact same glyph (see pipelineIcon).
+ */
+export const PIPELINE_ROUTE_GLYPH = (
+  <>
+    <circle cx="5" cy="19" r="2" />
+    <circle cx="19" cy="5" r="2" />
+    <path d="M11 19h5.5a3.5 3.5 0 0 0 0 -7h-8a3.5 3.5 0 0 1 0 -7h4.5" />
+  </>
+);
+
 export function PipelinesIcon(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <rect x="3" y="3" width="6" height="6" rx="1" />
-      <rect x="15" y="3" width="6" height="6" rx="1" />
-      <rect x="9" y="15" width="6" height="6" rx="1" />
-      <path d="M6 9v3a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9" />
-      <path d="M12 14v1" />
-    </Svg>
-  );
+  return <Svg {...props}>{PIPELINE_ROUTE_GLYPH}</Svg>;
 }
 
 export function DocumentsIcon(props: IconProps) {
@@ -79,6 +83,17 @@ export function DocumentsIcon(props: IconProps) {
       <line x1="8" y1="13" x2="16" y2="13" />
       <line x1="8" y1="17" x2="16" y2="17" />
       <line x1="8" y1="9" x2="10" y2="9" />
+    </Svg>
+  );
+}
+
+/** A checklist, not a warning sign: the tab is a queue to work through, not an alert. */
+export function ReviewIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M9 4H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2" />
+      <rect x="9" y="2" width="6" height="4" rx="1" />
+      <polyline points="9 13 11 15 15 11" />
     </Svg>
   );
 }
@@ -128,6 +143,16 @@ export function SearchIcon(props: IconProps) {
     <Svg {...props}>
       <circle cx="11" cy="11" r="7" />
       <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </Svg>
+  );
+}
+
+export function MenuIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <line x1="4" y1="7" x2="20" y2="7" />
+      <line x1="4" y1="12" x2="20" y2="12" />
+      <line x1="4" y1="17" x2="20" y2="17" />
     </Svg>
   );
 }
@@ -221,29 +246,6 @@ export function PoliciesIcon(props: IconProps) {
   );
 }
 
-export function ComponentsIcon(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <rect x="3" y="3" width="7" height="7" rx="1" />
-      <rect x="14" y="3" width="7" height="7" rx="1" />
-      <rect x="3" y="14" width="7" height="7" rx="1" />
-      <rect x="14" y="14" width="7" height="7" rx="1" />
-    </Svg>
-  );
-}
-
-export function AgentBuilderIcon(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <rect x="3" y="11" width="18" height="10" rx="2" />
-      <circle cx="12" cy="5" r="2" />
-      <path d="M12 7v4" />
-      <line x1="8" y1="16" x2="8" y2="16" />
-      <line x1="16" y1="16" x2="16" y2="16" />
-    </Svg>
-  );
-}
-
 export function ProcurementIcon(props: IconProps) {
   return (
     <Svg {...props}>
@@ -254,11 +256,91 @@ export function ProcurementIcon(props: IconProps) {
   );
 }
 
+export function DownloadIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </Svg>
+  );
+}
+
 export function LinkIcon(props: IconProps) {
   return (
     <Svg {...props}>
       <path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
       <path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+    </Svg>
+  );
+}
+
+export function LockIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect x="3" y="11" width="18" height="11" rx="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </Svg>
+  );
+}
+
+export function UserPlusIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <line x1="19" y1="8" x2="19" y2="14" />
+      <line x1="22" y1="11" x2="16" y2="11" />
+    </Svg>
+  );
+}
+
+export function ExternalLinkIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+      <polyline points="15 3 21 3 21 9" />
+      <line x1="10" y1="14" x2="21" y2="3" />
+    </Svg>
+  );
+}
+
+export function IntegrationsIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M9 7V2.5" />
+      <path d="M15 7V2.5" />
+      <path d="M6.5 7h11v3.5a5.5 5.5 0 0 1-11 0z" />
+      <path d="M12 16v2a3 3 0 0 1-3 3H7" />
+    </Svg>
+  );
+}
+
+export function CalendarIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <line x1="8" y1="3" x2="8" y2="7" />
+      <line x1="16" y1="3" x2="16" y2="7" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+    </Svg>
+  );
+}
+
+export function KeyIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="8" cy="16" r="5" />
+      <line x1="11.6" y1="12.4" x2="21" y2="3" />
+      <line x1="17" y1="7" x2="20" y2="10" />
+    </Svg>
+  );
+}
+
+export function CheckIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <polyline points="4,12.5 9.5,18 20,6.5" />
     </Svg>
   );
 }

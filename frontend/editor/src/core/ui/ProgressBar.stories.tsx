@@ -6,7 +6,12 @@ const meta: Meta<typeof ProgressBar> = {
   component: ProgressBar,
   tags: ["autodocs"],
   parameters: { layout: "padded" },
-  args: { value: 0.5, height: 6, thresholded: false },
+  args: {
+    value: 0.5,
+    height: 6,
+    thresholded: false,
+    label: "Docs processed",
+  },
   argTypes: {
     value: { control: { type: "range", min: 0, max: 1, step: 0.01 } },
     height: { control: { type: "number" } },
@@ -42,7 +47,7 @@ export const ThresholdLadder: Story = {
           <span style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>
             {Math.round(v * 100)}%
           </span>
-          <ProgressBar value={v} thresholded />
+          <ProgressBar value={v} thresholded label="Docs processed" />
         </div>
       ))}
     </div>
@@ -56,9 +61,9 @@ export const InContext_UsageMeter: Story = {
         style={{
           width: "16rem",
           padding: 14,
-          border: "1px solid var(--color-border)",
+          border: "1px solid var(--c-border)",
           borderRadius: 8,
-          background: "var(--color-surface)",
+          background: "var(--c-surface)",
         }}
       >
         <S />
@@ -75,8 +80,8 @@ export const InContext_UsageMeter: Story = {
           marginBottom: 6,
         }}
       >
-        <span style={{ color: "var(--color-text-4)" }}>Docs processed</span>
-        <span style={{ color: "var(--color-text-2)", fontWeight: 500 }}>
+        <span style={{ color: "var(--c-text-subtle)" }}>Docs processed</span>
+        <span style={{ color: "var(--c-text-muted)", fontWeight: 500 }}>
           412 / 500
         </span>
       </div>

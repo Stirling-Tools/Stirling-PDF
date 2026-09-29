@@ -1,9 +1,8 @@
 // Theme constants and utilities
 
-// Stored theme preference. "system" follows the OS.
 export type ThemeMode = "light" | "dark" | "system";
 
-// The concrete scheme applied to the UI.
+// The concrete light/dark base applied to Mantine + the neutral ramp.
 export type ColorScheme = "light" | "dark";
 
 // Detect the OS theme preference. Never throws: if the environment can't be
@@ -24,12 +23,13 @@ export function getSystemTheme(): ColorScheme {
   }
 }
 
-// Resolve a theme preference to a concrete light/dark scheme.
-// Falls back to systemScheme for unrecognised values (e.g. stale "rainbow").
+// Resolve the theme MODE to the concrete light/dark base Mantine uses.
+// "system" follows the OS; anything unrecognised falls back to it too.
 export function resolveColorScheme(
   mode: ThemeMode,
   systemScheme: ColorScheme,
 ): ColorScheme {
-  if (mode === "light" || mode === "dark") return mode;
+  if (mode === "light") return "light";
+  if (mode === "dark") return "dark";
   return systemScheme;
 }

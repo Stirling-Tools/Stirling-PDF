@@ -119,19 +119,6 @@ function findLineBoundaries(
   };
 }
 
-function setSelectionRange(
-  selPlugin: any,
-  documentId: string,
-  pageIndex: number,
-  startIndex: number,
-  endIndex: number,
-): void {
-  selPlugin.clearSelection(documentId);
-  selPlugin.beginSelection(documentId, pageIndex, startIndex);
-  selPlugin.updateSelection(documentId, pageIndex, endIndex);
-  selPlugin.endSelection(documentId);
-}
-
 /**
  * Handles text selection with standard PDF viewer behaviors:
  * - Double-click to select a whole word
@@ -154,7 +141,7 @@ export function TextSelectionHandler({
     if (!selPlugin || !selCapability || !imCapability) return;
 
     const handlers = {
-      onDoubleClick: (pos: Position, _evt: any, modeId: string) => {
+      onDoubleClick: (pos: Position, _evt: unknown, modeId: string) => {
         if (
           Date.now() - tripleClickTimeRef.current <
           TRIPLE_CLICK_TIME_THRESHOLD
@@ -176,7 +163,28 @@ export function TextSelectionHandler({
 
         const localIndex = g - run.charStart;
 
-        const plugin = selPlugin as any;
+        // getCoreDocument and the WASM engine are plugin internals not exposed
+        // on the public capability; reach them structurally.
+        const plugin = selPlugin as unknown as {
+          getCoreDocument: (
+            documentId: string,
+          ) => { document?: unknown } | null | undefined;
+          engine: {
+            getTextSlices: (
+              document: unknown,
+              slices: {
+                pageIndex: number;
+                charIndex: number;
+                charCount: number;
+              }[],
+            ) => {
+              wait: (
+                onOk: (texts: string[]) => void,
+                onErr: () => void,
+              ) => void;
+            };
+          };
+        };
         try {
           const coreDoc = plugin.getCoreDocument(documentId);
           if (!coreDoc?.document) return;
@@ -203,12 +211,18 @@ export function TextSelectionHandler({
                 y: pos.y,
               };
 
-              setSelectionRange(
-                selPlugin,
+              selCapability.setSelection(
+                {
+                  start: {
+                    page: pageIndex,
+                    index: run.charStart + boundaries.start,
+                  },
+                  end: {
+                    page: pageIndex,
+                    index: run.charStart + boundaries.end,
+                  },
+                },
                 documentId,
-                pageIndex,
-                run.charStart + boundaries.start,
-                run.charStart + boundaries.end,
               );
             },
             () => {
@@ -220,7 +234,7 @@ export function TextSelectionHandler({
         }
       },
 
-      onClick: (pos: Position, _evt: any, modeId: string) => {
+      onClick: (pos: Position, _evt: unknown, modeId: string) => {
         const dbl = lastDblClickRef.current;
         if (!dbl) return;
 
@@ -250,12 +264,12 @@ export function TextSelectionHandler({
           tripleClickTimeRef.current = now;
           lastDblClickRef.current = null;
 
-          setSelectionRange(
-            selPlugin,
+          selCapability.setSelection(
+            {
+              start: { page: pageIndex, index: line.start },
+              end: { page: pageIndex, index: line.end },
+            },
             documentId,
-            pageIndex,
-            line.start,
-            line.end,
           );
         }
       },

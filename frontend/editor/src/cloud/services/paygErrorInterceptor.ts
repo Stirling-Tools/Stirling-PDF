@@ -4,7 +4,7 @@
  *
  * <ul>
  *   <li>{@code 402 FEATURE_DEGRADED} — an authenticated (JWT/web) team hit a
- *       billable feature it no longer has: a free team that spent its one-time
+ *       billable feature it no longer has: a free team that spent this period's
  *       allowance, or a subscribed team over its monthly spending cap. Which
  *       one is told by the {@code subscribed} field on the body.</li>
  *   <li>{@code 402 PAYG_LIMIT_REACHED} — same situation reached via an API key
@@ -45,6 +45,24 @@ export type PaygErrorKind =
 export interface PaygSignupRequiredDetail {
   /** Category that triggered the gate — {@code AI}, {@code AUTOMATION}, or {@code API}. */
   category: string | null;
+}
+
+/** Decodes JSON entitlement errors from file downloads before the session-refresh interceptor. */
+export async function normalizePaygError(error: unknown): Promise<void> {
+  if (!error || typeof error !== "object") return;
+  const response = (error as { response?: { status?: number; data?: unknown } })
+    .response;
+  if (!response || (response.status !== 401 && response.status !== 402)) return;
+  const data = response.data;
+  try {
+    if (data instanceof Blob && data.size <= 65_536) {
+      response.data = JSON.parse(await data.text());
+    } else if (typeof data === "string" && data.length <= 65_536) {
+      response.data = JSON.parse(data);
+    }
+  } catch {
+    // Non-JSON failures still belong to the normal HTTP error handler.
+  }
 }
 
 /**
@@ -138,7 +156,9 @@ export function handlePaygError(kind: PaygErrorKind, error: unknown): void {
     try {
       window.dispatchEvent(
         new CustomEvent<PaygSignupRequiredDetail>("payg:signupRequired", {
-          detail: { category },
+          detail: {
+            category,
+          },
         }),
       );
     } catch {

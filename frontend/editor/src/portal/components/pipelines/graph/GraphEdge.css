@@ -1,0 +1,180 @@
+/**
+ * One wire between two nodes, plus its insert affordance. The graph positions it; the wire is a
+ * 1px rule centred on the column with a filled arrowhead at the arriving end.
+ */
+
+.portal-graph-edge {
+  position: absolute;
+  /* A wide drop target: the wire is a thin line, but a dragged step can be released anywhere across
+     the row, so the whole band between the nodes catches it. `left` is the column centre, so pull
+     back by half to keep the band centred on it. Line, insert and warning are placed absolutely
+     within. */
+  width: 16rem;
+  transform: translateX(-50%);
+  --edge-color: var(--c-border-strong);
+}
+
+.portal-graph-edge__line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: var(--edge-color);
+}
+
+/**
+ * Arrowhead at the arriving end, so the chain reads as directed.
+ */
+.portal-graph-edge__line::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 0;
+  transform: translateX(-50%);
+  border-left: 0.1875rem solid transparent;
+  border-right: 0.1875rem solid transparent;
+  border-top: 0.3125rem solid var(--edge-color);
+}
+
+/* Insert: the shared ActionIcon restyled to a small dot beside the wire (not on top of it, where it
+   hid the line). Hidden at rest - a solid plus on every wire reads as busy - and revealed only when
+   the pointer is over this wire's drop band (see the reveal rule below). When shown it is solid, not
+   faint: off to one side on the canvas it needs a real border and glyph to be seen at all. */
+.portal-graph-edge__insert.sui-ai {
+  position: absolute;
+  top: 50%;
+  /* Beside the wire: the column centre is 50%, nudge clear of the line and centre on the row. */
+  left: 50%;
+  transform: translate(0.6rem, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  min-width: 1.25rem;
+  min-height: 1.25rem;
+  border: 1px solid var(--c-border-strong);
+  background: var(--c-surface);
+  color: var(--c-text-muted);
+  opacity: 0;
+  transition:
+    opacity var(--motion-fast),
+    color var(--motion-fast),
+    border-color var(--motion-fast),
+    background var(--motion-fast);
+}
+
+/* Optically centre the glyph in the circle: MUI's Add icon carries a hair of bottom bias. */
+.portal-graph-edge__insert.sui-ai svg {
+  display: block;
+}
+
+/* On a warning wire the insert sits just past the pill, out of flow so the pill stays centred on the
+   wire whether or not the insert is showing (it reveals on hover like every other wire's). */
+.portal-graph-edge__note .portal-graph-edge__insert.sui-ai {
+  left: 100%;
+  margin-left: 0.375rem;
+  transform: translateY(-50%);
+}
+
+/* Reveal the insert when the pointer is anywhere in this wire's drop band, or it has keyboard focus.
+   Revealing is not highlighting: it comes in at its resting weight and only goes primary once the
+   pointer is on the button itself (below) - not from anywhere in the wide band. */
+.portal-graph-edge:hover .portal-graph-edge__insert.sui-ai,
+.portal-graph-edge__insert.sui-ai:focus-visible {
+  opacity: 1;
+}
+
+.portal-graph-edge__insert.sui-ai:hover,
+.portal-graph-edge__insert.sui-ai:focus-visible {
+  color: var(--c-accent-fg, var(--c-primary));
+  border-color: var(--c-primary);
+}
+
+/* A wire with no slot of its own (either side of the placeholder): line only. */
+.portal-graph-edge.is-plain {
+  --edge-color: var(--c-border-subtle);
+}
+
+/**
+ * The pairing does not make much sense. Advisory: the wire still accepts drops and the chain still
+ * runs - the order stays the user's choice.
+ */
+.portal-graph-edge.has-warning {
+  --edge-color: var(--c-warning);
+}
+
+/* The note and its insert ride together, centred on the wire, so a warned pairing keeps a way to
+   take a fixing step between its ends. Grows to its content and may overhang the band, which the
+   wider graph column absorbs. */
+.portal-graph-edge__note {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.portal-graph-edge__warning {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.0625rem 0.375rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--c-warning);
+  /* Matches the shared Banner's warning treatment: tinted ground, amber border and glyph, ordinary
+     text. Amber words would not clear 4.5:1 at this size, and the tint is what makes the neutral
+     text read as part of a warning rather than as stray body copy. */
+  background: color-mix(in srgb, var(--c-warning) 12%, var(--c-surface));
+  color: var(--c-text);
+  font-size: 0.6875rem;
+  line-height: 1.4;
+}
+
+.portal-graph-edge__warning svg {
+  color: var(--c-warning);
+  flex: none;
+}
+
+/* A blocking pairing: the chain cannot run in this order, so it must not read as the same gentle
+   advice as an odd-but-workable one. Same shape, danger tone - including the wire and its head,
+   which follow --edge-color. */
+.portal-graph-edge.is-blocking {
+  --edge-color: var(--c-danger);
+}
+
+.portal-graph-edge.is-blocking .portal-graph-edge__warning {
+  border-color: var(--c-danger);
+  background: color-mix(in srgb, var(--c-danger) 12%, var(--c-surface));
+}
+
+.portal-graph-edge.is-blocking .portal-graph-edge__warning svg {
+  color: var(--c-danger);
+}
+
+.portal-graph-edge__warning-label {
+  white-space: nowrap;
+}
+
+/* While a step is being dragged, the insert is beside the point - the wire itself is the target -
+   and it would only clutter the row and collide with the drag hint. Hide it until the drag ends.
+   The wire itself stays at rest until the step is actually over it: lighting every wire the moment
+   a drag starts is noise, not a cue. */
+.portal-graph-edge.is-available .portal-graph-edge__insert.sui-ai {
+  display: none;
+}
+
+/* The step is over this wire and would land here on release: only then does the wire go primary. */
+.portal-graph-edge.is-over {
+  --edge-color: var(--c-primary);
+}
+
+.portal-graph-edge.is-over .portal-graph-edge__line {
+  width: 2px;
+}
