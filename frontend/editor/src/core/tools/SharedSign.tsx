@@ -13,8 +13,7 @@ import { Button } from "@app/ui/Button";
 import { Chip } from "@app/ui/Chip";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
-import AddIcon from "@mui/icons-material/Add";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { Icon } from "@app/ui/Icon";
 import type { BaseToolProps } from "@app/types/tool";
 import { useGroupSigningEnabled } from "@app/hooks/useGroupSigningEnabled";
 import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
@@ -129,9 +128,9 @@ const SharedSign = (_props: BaseToolProps) => {
 
   const onItemClick = (item: SessionItem) => {
     if (item.itemType === "signRequest") {
-      void controller.openSignRequest(item as SignRequestSummary);
+      void controller.openSignRequest(item);
     } else {
-      void controller.openSession(item as SessionSummary);
+      void controller.openSession(item);
     }
   };
 
@@ -166,7 +165,7 @@ const SharedSign = (_props: BaseToolProps) => {
           <Button
             variant="tertiary"
             size="sm"
-            leftSection={<ArrowBackIcon sx={{ fontSize: "1rem" }} />}
+            leftSection={<Icon name="arrow-left" size={"1rem"} />}
             onClick={() => setShowCreate(false)}
           >
             {t("sharedSign.backToSessions", "Back to sessions")}
@@ -247,7 +246,7 @@ const SharedSign = (_props: BaseToolProps) => {
       <SegmentedControl
         fullWidth
         value={tab}
-        onChange={(value) => changeTab(value as Tab)}
+        onChange={(value) => changeTab(value)}
         options={[
           { label: t("sharedSign.tab.active", "Active"), value: "active" },
           {
@@ -259,7 +258,7 @@ const SharedSign = (_props: BaseToolProps) => {
 
       <Button
         variant="tertiary"
-        leftSection={<AddIcon sx={{ fontSize: "1.1rem" }} />}
+        leftSection={<Icon name="plus" size={"1.1rem"} />}
         onClick={() => setShowCreate(true)}
       >
         {t("sharedSign.newRequest", "Request signatures")}

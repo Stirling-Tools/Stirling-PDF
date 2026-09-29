@@ -1,10 +1,7 @@
 import { Stack, Text, List, Group, Badge } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import PendingIcon from "@mui/icons-material/Pending";
-import CancelIcon from "@mui/icons-material/Cancel";
-import DeleteIcon from "@mui/icons-material/Delete";
+import { Icon } from "@app/ui/Icon";
 import type { ParticipantInfo } from "@app/types/signingSession";
 import { getFileColor } from "@app/components/pageEditor/fileColors";
 
@@ -23,10 +20,12 @@ export const ParticipantListPanel: React.FC<ParticipantListPanelProps> = ({
 
   const getIcon = (status: string) => {
     if (status === "SIGNED")
-      return <CheckCircleIcon sx={{ color: "green", fontSize: "1rem" }} />;
+      return (
+        <Icon name="circle-check" size={"1rem"} style={{ color: "green" }} />
+      );
     if (status === "DECLINED")
-      return <CancelIcon sx={{ color: "red", fontSize: "1rem" }} />;
-    return <PendingIcon sx={{ color: "orange", fontSize: "1rem" }} />;
+      return <Icon name="circle-x" size={"1rem"} style={{ color: "red" }} />;
+    return <Icon name="clock" size={"1rem"} style={{ color: "orange" }} />;
   };
 
   const getColor = (status: string) => {
@@ -97,7 +96,7 @@ export const ParticipantListPanel: React.FC<ParticipantListPanelProps> = ({
                       "Remove",
                     )}
                   >
-                    <DeleteIcon sx={{ fontSize: "1rem" }} />
+                    <Icon name="trash" size={"1rem"} />
                   </ActionIcon>
                 )}
               </Group>

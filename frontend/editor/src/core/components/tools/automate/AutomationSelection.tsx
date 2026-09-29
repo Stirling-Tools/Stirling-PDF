@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Title, Stack, Divider } from "@mantine/core";
-import AddCircleOutline from "@mui/icons-material/AddCircleOutlined";
-import SettingsIcon from "@mui/icons-material/Settings";
 import AutomationEntry from "@app/components/tools/automate/AutomationEntry";
 import AutomationImportModal from "@app/components/tools/automate/AutomationImportModal";
 import { useSuggestedAutomations } from "@app/hooks/tools/automate/useSuggestedAutomations";
 import { AutomationConfig, SuggestedAutomation } from "@app/types/automation";
 import { iconMap } from "@app/components/tools/automate/iconMap";
+import { iconKeyForSuggestedAutomation } from "@app/components/tools/automate/suggestedAutomationIcon";
 import { ToolRegistry } from "@app/data/toolsTaxonomy";
 import {
   downloadAutomationConfig,
@@ -98,7 +97,7 @@ export default function AutomationSelection({
             "automate.selection.createNew.title",
             "Create New Automation",
           )}
-          badgeIcon={AddCircleOutline}
+          badgeIcon="circle-plus"
           operations={[]}
           onClick={onCreateNew}
           keepIconColor={true}
@@ -108,15 +107,15 @@ export default function AutomationSelection({
         />
         {/* Saved Automations */}
         {savedAutomations.map((automation) => {
-          const IconComponent = automation.icon
-            ? iconMap[automation.icon as keyof typeof iconMap]
-            : SettingsIcon;
+          const badge = automation.icon
+            ? iconMap[automation.icon]
+            : iconMap.SettingsIcon;
           return (
             <AutomationEntry
               key={automation.id}
               title={automation.name}
               description={automation.description}
-              badgeIcon={IconComponent || SettingsIcon}
+              badgeIcon={badge ?? iconMap.SettingsIcon}
               operations={automation.operations.map((op) =>
                 typeof op === "string" ? op : op.operation,
               )}
@@ -153,7 +152,15 @@ export default function AutomationSelection({
                 description={automation.description}
                 badgeIcon={automation.icon}
                 operations={automation.operations.map((op) => op.operation)}
-                onClick={() => onRun(automation)}
+                // Suggested automations carry a component icon for display; the
+                // run path is typed for saved configs, which store an icon by
+                // name, so convert it to keep the icon if the run is saved.
+                onClick={() =>
+                  onRun({
+                    ...automation,
+                    icon: iconKeyForSuggestedAutomation(automation.id),
+                  })
+                }
                 showMenu={true}
                 onCopy={() => onCopyFromSuggested(automation)}
                 toolRegistry={toolRegistry}

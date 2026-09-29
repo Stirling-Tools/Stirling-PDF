@@ -1,5 +1,7 @@
 import type { UsersBackend } from "@portal/api/usersBackend";
 import { apiClient } from "@portal/api/http";
+import { tryGetPortalQueryClient } from "@portal/queryClient";
+import { qk } from "@portal/queries/keys";
 import {
   ROLES,
   type AdminAuthConfig,
@@ -32,6 +34,8 @@ interface TeamDetailsDTO {
   seatsUsed: number;
   maxSeats: number;
   isLeader: boolean;
+  current?: boolean;
+  currentUserId?: number;
 }
 
 interface TeamMemberDTO {
@@ -57,9 +61,16 @@ interface InvitationDTO {
 /** No last-activity signal on the team endpoints, so the column reads a dash. */
 const NO_ACTIVITY = "-";
 
-/** 0 / huge sentinel seat values mean "no limit". */
+/** Mirrors `UserLicenseSettingsService.DEFAULT_USER_LIMIT`; keep the two in step. */
+const FREE_USER_ALLOWANCE = 5;
+
+/**
+ * Users the team is allowed, or null when `maxSeats` holds no purchased allowance. Must agree with
+ * `SaasTeamExtensions.licensedUsers()`: a team on the free allowance has no limit to show, and the
+ * unlimited sentinel is never a number.
+ */
 function normalizeSeatLimit(max: number | undefined): number | null {
-  if (!max || max <= 0 || max >= 100000) return null;
+  if (!max || max <= FREE_USER_ALLOWANCE || max >= 2147483647) return null;
   return max;
 }
 
@@ -76,8 +87,22 @@ function isExpired(iso: string | undefined): boolean {
  * no teams at all.
  */
 async function resolveTeam(): Promise<TeamDetailsDTO | null> {
-  const teams = await apiClient.local.json<TeamDetailsDTO[]>("/api/v1/team/my");
+  const fetchMy = () =>
+    apiClient.local.json<TeamDetailsDTO[]>("/api/v1/team/my");
+  // fetchUsers and fetchTeams both resolve the team; share one /team/my via the
+  // query cache. fetchQuery (not ensureQueryData) so the shared entry honours
+  // both staleTime — two callers in one mount dedupe to a single request — AND
+  // invalidation: refresh() invalidates qk.teamMy(), so the next resolve after a
+  // rename/remove refetches instead of returning the stale team. Falls back to a
+  // direct fetch when no portal client is mounted (e.g. a unit test).
+  const client = tryGetPortalQueryClient();
+  const teams = client
+    ? await client.fetchQuery({ queryKey: qk.teamMy(), queryFn: fetchMy })
+    : await fetchMy();
   if (!teams || teams.length === 0) return null;
+  if (teams.some((t) => t.current !== undefined)) {
+    return teams.find((t) => t.current) ?? null;
+  }
   return (
     teams.find((t) => t.isLeader && !t.isPersonal) ??
     teams.find((t) => t.isLeader) ??
@@ -91,18 +116,19 @@ function toMember(dto: TeamMemberDTO, team: TeamDetailsDTO): Member {
   const role: RoleId = isLeader ? "team_owner" : "member";
   return {
     id: String(dto.id),
-    name: dto.username,
+    // An invited member may have no username yet; their email is the only name
+    // the roster can show.
+    name: dto.username ?? dto.email,
     email: dto.email ?? dto.username,
     username: dto.username,
     role,
     teamLead: isLeader,
     teamId: team.teamId,
     teamName: team.name,
-    // The portal Users page is leader-only on SaaS, so when the viewer leads this
-    // team the LEADER row is them; mark it self so self-remove is disabled (leaving
-    // is a separate flow). Guarded on team.isLeader so a non-leader fallback view
-    // doesn't mislabel someone else's row as self.
-    isSelf: isLeader && team.isLeader,
+    isSelf:
+      team.currentUserId !== undefined
+        ? dto.id === team.currentUserId
+        : isLeader && team.isLeader,
     // Leaders hold portal (processor) access via the role-based default policy;
     // members don't by default. Drives the roster's access chip.
     canAccessPortal: isLeader,

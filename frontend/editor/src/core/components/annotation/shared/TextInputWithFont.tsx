@@ -227,7 +227,7 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
                     width: 24,
                     height: 24,
                     backgroundColor: textColor,
-                    border: "1px solid #ccc",
+                    border: "1px solid var(--c-border)",
                     borderRadius: 4,
                     cursor: disabled ? "default" : "pointer",
                   }}

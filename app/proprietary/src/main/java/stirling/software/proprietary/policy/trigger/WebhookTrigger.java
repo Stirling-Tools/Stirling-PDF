@@ -13,7 +13,9 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.SweepKind;
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.PolicyBinding;
 import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
@@ -50,15 +52,14 @@ public class WebhookTrigger implements PolicyTrigger {
     }
 
     @Override
-    public void validate(Policy policy) {
-        boolean hasWebhookSource =
-                policy.sourceIds().stream()
-                        .map(sourceStore::get)
-                        .flatMap(java.util.Optional::stream)
-                        .anyMatch(source -> WEBHOOK_SOURCE_TYPE.equals(source.type()));
-        if (!hasWebhookSource) {
-            throw new IllegalArgumentException(
-                    "webhook trigger requires at least one webhook input source");
+    public void validate(Policy policy, PipelineInput input) {
+        boolean isWebhookSource =
+                sourceStore
+                        .get(input.sourceId())
+                        .filter(source -> WEBHOOK_SOURCE_TYPE.equals(source.type()))
+                        .isPresent();
+        if (!isWebhookSource) {
+            throw new IllegalArgumentException("webhook trigger requires a webhook input source");
         }
     }
 
@@ -83,29 +84,38 @@ public class WebhookTrigger implements PolicyTrigger {
         }
     }
 
+    /** Fire every webhook input fed by this webhook, pulling only that input's source. */
     public void fireForWebhook(String webhookId) {
-        for (Policy policy : policyStore.findByTriggerType(TYPE)) {
-            if (!referencesWebhook(policy, webhookId)) {
+        for (PolicyBinding binding : policyStore.findBindingsByTriggerType(TYPE)) {
+            if (!referencesWebhook(binding.input(), webhookId)) {
                 continue;
             }
             try {
-                log.debug("Webhook policy {} ({}) saw a delivery", policy.id(), policy.name());
-                policyRunner.run(policy, SweepKind.LIGHT);
+                log.debug(
+                        "Webhook input {}/{} saw a delivery",
+                        binding.policy().id(),
+                        binding.input().sourceId());
+                policyRunner.runInput(binding.policy(), binding.input(), SweepKind.LIGHT);
             } catch (RuntimeException e) {
-                log.warn("Webhook run failed for policy {}: {}", policy.id(), e.getMessage());
+                log.warn(
+                        "Webhook run failed for input {}/{}: {}",
+                        binding.policy().id(),
+                        binding.input().sourceId(),
+                        e.getMessage());
             }
         }
     }
 
     private void safeReconcile() {
         try {
-            for (Policy policy : policyStore.findByTriggerType(TYPE)) {
+            for (PolicyBinding binding : policyStore.findBindingsByTriggerType(TYPE)) {
                 try {
-                    policyRunner.run(policy);
+                    policyRunner.runInput(binding.policy(), binding.input(), SweepKind.FULL);
                 } catch (RuntimeException e) {
                     log.warn(
-                            "Webhook reconcile run failed for policy {}: {}",
-                            policy.id(),
+                            "Webhook reconcile run failed for input {}/{}: {}",
+                            binding.policy().id(),
+                            binding.input().sourceId(),
                             e.getMessage());
                 }
             }
@@ -114,17 +124,13 @@ public class WebhookTrigger implements PolicyTrigger {
         }
     }
 
-    private boolean referencesWebhook(Policy policy, String webhookId) {
-        for (String sourceId : policy.sourceIds()) {
-            Source source = sourceStore.get(sourceId).orElse(null);
-            if (source == null || !WEBHOOK_SOURCE_TYPE.equals(source.type())) {
-                continue;
-            }
-            Object configured = source.options().get(WebhookConfig.WEBHOOK_ID_OPTION);
-            if (configured != null && configured.toString().equals(webhookId)) {
-                return true;
-            }
+    /** Whether this input draws from the webhook source the delivery arrived on. */
+    private boolean referencesWebhook(PipelineInput input, String webhookId) {
+        Source source = sourceStore.get(input.sourceId()).orElse(null);
+        if (source == null || !WEBHOOK_SOURCE_TYPE.equals(source.type())) {
+            return false;
         }
-        return false;
+        Object configured = source.options().get(WebhookConfig.WEBHOOK_ID_OPTION);
+        return configured != null && configured.toString().equals(webhookId);
     }
 }

@@ -30,6 +30,9 @@ import stirling.software.SPDF.model.api.SplitPagesRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.FormUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -52,13 +55,13 @@ public class SplitPDFController {
             value = "/split-pages",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @MultiFileResponse
+    @ToolIO(produces = ToolFormat.PDF, arity = ToolArity.SIMO)
     @Operation(
             summary = "Split a PDF file into separate documents",
             description =
                     "This endpoint splits a given PDF file into separate documents based on the"
-                            + " specified page numbers or ranges. Users can specify pages using"
-                            + " individual numbers, ranges, or 'all' for every page. Input:PDF"
-                            + " Output:PDF Type:SIMO")
+                            + " specified page numbers or ranges. Users can specify pages using individual"
+                            + " numbers, ranges, or 'all' for every page.")
     public ResponseEntity<Resource> splitPdf(@ModelAttribute SplitPagesRequest request)
             throws IOException {
 

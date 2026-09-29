@@ -64,12 +64,15 @@ const invoices = http.get("*/api/v1/payg/invoices", () =>
 const meta: Meta<typeof SubscribedPlanView> = {
   title: "Portal/Billing/SubscribedPlanView",
   component: SubscribedPlanView,
-  parameters: { layout: "padded", msw: { handlers: [card, invoices] } },
+  parameters: {
+    layout: "padded",
+    msw: { handlers: [card, invoices] },
+  },
 };
 export default meta;
 type Story = StoryObj<typeof SubscribedPlanView>;
 
-/** The full Processor-plan dashboard — leader, within cap. */
+/** Leader, within cap: the view holds only dialogs, so it renders nothing at rest. */
 export const Leader: Story = { args: { wallet: subscribedWallet } };
 
 /** Approaching the cap — surfaces the over-cap warning banner + projection. */

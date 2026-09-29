@@ -279,4 +279,3 @@ export interface PdfInfoReportData {
 }
 
 export const INFO_JSON_FILENAME = "response.json";
-export const INFO_PDF_FILENAME = "pdf-information-report.pdf";

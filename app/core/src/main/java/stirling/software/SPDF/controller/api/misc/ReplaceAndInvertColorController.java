@@ -20,6 +20,8 @@ import stirling.software.SPDF.service.misc.ReplaceAndInvertColorService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -36,11 +38,13 @@ public class ReplaceAndInvertColorController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             value = "/replace-invert-pdf",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Replace-Invert Color PDF",
             description =
-                    "This endpoint accepts a PDF file and provides options to invert all colors, replace"
-                            + " text and background colors, or convert to CMYK color space for printing. Input:PDF Output:PDF Type:SISO")
+                    "This endpoint accepts a PDF file and provides options to invert all colors,"
+                            + " replace text and background colors, or convert to CMYK color space for"
+                            + " printing.")
     public ResponseEntity<Resource> replaceAndInvertColor(
             @ModelAttribute ReplaceAndInvertColorRequest request) throws IOException {
 

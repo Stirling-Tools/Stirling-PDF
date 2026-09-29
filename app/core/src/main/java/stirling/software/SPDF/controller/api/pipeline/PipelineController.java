@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -37,7 +38,12 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.DatabindException;
 import tools.jackson.databind.ObjectMapper;
 
+/** Absent from the desktop bundle for the same reason as {@link PipelineDirectoryProcessor}. */
 @PipelineApi
+@ConditionalOnProperty(
+        name = "STIRLING_PDF_TAURI_MODE",
+        havingValue = "false",
+        matchIfMissing = true)
 @Slf4j
 @RequiredArgsConstructor
 public class PipelineController {
@@ -59,8 +65,7 @@ public class PipelineController {
             summary = "Execute automated PDF processing pipeline",
             description =
                     "This endpoint processes multiple PDF files through a configurable pipeline of operations. "
-                            + "Users provide files and a JSON configuration defining the sequence of operations to perform. "
-                            + "Input:PDF Output:PDF/ZIP Type:MIMO")
+                            + "Users provide files and a JSON configuration defining the sequence of operations to perform.")
     public ResponseEntity<Resource> handleData(@ModelAttribute HandleDataRequest request)
             throws DatabindException, JacksonException {
         MultipartFile[] files = request.getFileInput();

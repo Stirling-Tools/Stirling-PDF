@@ -4,7 +4,10 @@
  * policy - the catalogue can't reference an untyped operation.
  */
 
-import { describeToolOperation } from "@app/hooks/tools/shared/toolOperationDescriptor";
+import {
+  describeToolOperation,
+  type BidirectionalToolConfig,
+} from "@app/hooks/tools/shared/toolOperationDescriptor";
 import { redactOperationConfig } from "@app/hooks/tools/redact/useRedactOperation";
 import { sanitizeOperationConfig } from "@app/hooks/tools/sanitize/useSanitizeOperation";
 import { timestampPdfOperationConfig } from "@app/hooks/tools/timestampPdf/useTimestampPdfOperation";
@@ -12,6 +15,11 @@ import { addWatermarkOperationConfig } from "@app/hooks/tools/addWatermark/useAd
 import { ocrOperationConfig } from "@app/hooks/tools/ocr/useOCROperation";
 import { flattenOperationConfig } from "@app/hooks/tools/flatten/useFlattenOperation";
 import { compressOperationConfig } from "@app/hooks/tools/compress/useCompressOperation";
+import {
+  INGEST_ENDPOINT,
+  ingestOperationConfig,
+} from "@app/policies/ingestOperation";
+import { pdfaOperationConfig } from "@app/policies/pdfaOperation";
 import type { ToolEndpoint } from "@app/types/toolApiTypes";
 import type { WirePipelineStep } from "@app/policies/types";
 
@@ -22,9 +30,24 @@ import type { WirePipelineStep } from "@app/policies/types";
  */
 export type AiPolicyEndpoint = "/api/v1/ai/tools/classify-and-label";
 
-/** An AI tool usable in a policy — the AI-endpoint analogue of a standard tool descriptor. */
+/**
+ * Endpoints for third-party integration steps. Excluded from the generated {@link ToolEndpoint}
+ * union for the same reason as the AI tools: `/api/v1/integration/` is not one of the tool
+ * namespaces the generator reads.
+ */
+export type IntegrationPolicyEndpoint =
+  | "/api/v1/integration/external-api-call"
+  | "/api/v1/integration/purview-apply-label"
+  | "/api/v1/integration/purview-read-label";
+
+/** An endpoint typed here rather than by the generator. */
+export type UntypedPolicyEndpoint =
+  | AiPolicyEndpoint
+  | IntegrationPolicyEndpoint;
+
+/** A tool usable in a policy whose endpoint isn't in the generated union. */
 export interface AiToolDescriptor<TParams> {
-  readonly endpoint: AiPolicyEndpoint;
+  readonly endpoint: UntypedPolicyEndpoint;
   readonly defaultParameters: TParams;
   toApi(params: TParams): Record<string, unknown>;
   fromApi(api: Record<string, unknown>): TParams;
@@ -44,6 +67,50 @@ export function describeAiToolOperation(
     fromApi: () => ({}),
   };
 }
+
+/**
+ * Describe an integration step. Unlike AI tools these carry real parameters, so each supplies its
+ * own defaults; every one of them needs a `connectionId` naming the stored connection that holds
+ * the endpoint and credentials. Values cross the wire as form fields, hence the string round-trip.
+ */
+function describeIntegrationOperation<TParams extends Record<string, string>>(
+  endpoint: IntegrationPolicyEndpoint,
+  defaultParameters: TParams,
+): AiToolDescriptor<TParams> {
+  return {
+    endpoint,
+    defaultParameters,
+    // Drop blanks rather than send empty fields: the backend distinguishes "absent" from
+    // "empty" for optional params like `path` and `labelName`.
+    toApi: (params) =>
+      Object.fromEntries(
+        Object.entries(params).filter(([, value]) => value !== ""),
+      ),
+    fromApi: (api) => {
+      const out = { ...defaultParameters } as Record<string, string>;
+      for (const key of Object.keys(defaultParameters)) {
+        const value = api[key];
+        if (value !== undefined && value !== null) out[key] = String(value);
+      }
+      return out as TParams;
+    },
+  };
+}
+
+const COMPLIANCE_CHECK_ENDPOINT =
+  "/api/v1/security/validate-compliance" satisfies ToolEndpoint;
+
+// Annotated rather than inferred, as pdfaOperationConfig is: an unannotated object literal widens
+// `endpoint` to string, which no longer satisfies describeToolOperation's `CE extends ToolEndpoint`.
+const complianceCheckOperationConfig: BidirectionalToolConfig<
+  Record<string, never>,
+  typeof COMPLIANCE_CHECK_ENDPOINT
+> = {
+  endpoint: COMPLIANCE_CHECK_ENDPOINT,
+  defaultParameters: {},
+  toApiParams: () => ({}),
+  fromApiParams: () => ({}),
+};
 
 export const POLICY_OPERATIONS = {
   redact: describeToolOperation(
@@ -73,7 +140,63 @@ export const POLICY_OPERATIONS = {
     "/api/v1/misc/compress-pdf",
     compressOperationConfig,
   ),
+  // Long-term archival format: embeds fonts and colour profiles so the document still renders the
+  // same decades from now, which is what a retention or archival requirement actually asks for.
+  pdfa: describeToolOperation("/api/v1/convert/pdf/pdfa", pdfaOperationConfig),
+  // The gate: no options, so a stored step carries nothing that could drift.
+  complianceCheck: describeToolOperation(
+    "/api/v1/security/validate-compliance",
+    complianceCheckOperationConfig,
+  ),
   classify: describeAiToolOperation("/api/v1/ai/tools/classify-and-label"),
+  ingest: describeToolOperation(INGEST_ENDPOINT, ingestOperationConfig),
+  purviewApplyLabel: describeIntegrationOperation(
+    "/api/v1/integration/purview-apply-label",
+    {
+      connectionId: "",
+      labelId: "",
+      labelName: "",
+      method: "STANDARD",
+    },
+  ),
+  purviewReadLabel: describeIntegrationOperation(
+    "/api/v1/integration/purview-read-label",
+    { connectionId: "" },
+  ),
+  externalApiCall: describeIntegrationOperation(
+    "/api/v1/integration/external-api-call",
+    {
+      connectionId: "",
+      path: "",
+      method: "POST",
+      // multipart | json | binary — how the document reaches the API.
+      bodyMode: "multipart",
+      fileFieldName: "file",
+      // Default to leaving the document alone; `replace` opts in to the response becoming it.
+      responseMode: "report",
+      // For `replace`, where the document actually is: inline (leave both blank), behind a URL in
+      // the response body / a header, and/or inside a returned archive.
+      resultUrlPath: "",
+      resultUrlHeader: "",
+      responseSelect: "",
+      // A dotted path into the JSON response that must be true, or the step fails: the scan gate.
+      requireTrue: "",
+      // JSON objects whose values may reference {{document.*}}, {{classification.*}},
+      // {{sensitivityLabel.*}} and {{run.*}}.
+      fields: "",
+      headers: "",
+      // A vendor-shaped JSON body; wins over bodyMode/fields when set. {{document.base64}}
+      // carries the file, for APIs that nest it inside a JSON document.
+      bodyTemplate: "",
+      includeContext: "false",
+      includeFile: "true",
+      // Which catalogue entry the operator chose, and their answers to its fields. Persisted so a
+      // saved step reopens on the same operation rather than back at the picker; JSON-encoded to
+      // keep every step parameter a flat string, as `fields` and `headers` already are.
+      operationId: "",
+      operationValues: "",
+    },
+  ),
 } as const;
 
 export type PolicyToolId = keyof typeof POLICY_OPERATIONS;
@@ -97,8 +220,8 @@ const TOOL_ID_BY_ENDPOINT = new Map<string, PolicyToolId>(
   POLICY_TOOL_IDS.map((id) => [POLICY_OPERATIONS[id].endpoint, id]),
 );
 
-/** A policy step's endpoint: a standard {@link ToolEndpoint} or an {@link AiPolicyEndpoint}. */
-export type PolicyEndpoint = ToolEndpoint | AiPolicyEndpoint;
+/** A policy step's endpoint: a generated {@link ToolEndpoint} or one typed here. */
+export type PolicyEndpoint = ToolEndpoint | UntypedPolicyEndpoint;
 
 export function policyEndpoint(toolId: PolicyToolId): PolicyEndpoint {
   return POLICY_OPERATIONS[toolId].endpoint;

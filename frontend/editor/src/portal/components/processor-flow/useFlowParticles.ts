@@ -134,13 +134,10 @@ export function useFlowParticles({
         for (let i = 0; i < meanInterval.length; i++) {
           if (!Number.isFinite(meanInterval[i]) || !g.srcs[i]) continue;
           if (now >= nextEmit[i] && particles.length < MAX_PARTICLES) {
-            const c = document.createElementNS(
-              NS,
-              "circle",
-            ) as SVGCircleElement;
+            const c = document.createElementNS(NS, "circle");
             c.setAttribute("r", "2.5");
             c.setAttribute("opacity", "0.75");
-            c.style.fill = "var(--color-blue)";
+            c.style.fill = "var(--c-primary)";
             pg.appendChild(c);
             particles.push({
               el: c,
@@ -219,7 +216,7 @@ export function useFlowParticles({
               p.phase = 2;
               p.t = 0;
               p.el.style.fill =
-                OUTCOME_FILL[outcomeKeys[p.out]] ?? "var(--color-blue)";
+                OUTCOME_FILL[outcomeKeys[p.out]] ?? "var(--c-primary)";
               p.el.setAttribute("r", "2.5");
               p.el.setAttribute("opacity", "0.75");
             }

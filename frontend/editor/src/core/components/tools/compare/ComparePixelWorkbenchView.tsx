@@ -170,7 +170,7 @@ const ComparePixelWorkbenchView = ({
         <SegmentedControl
           size="sm"
           value={viewMode}
-          onChange={(value) => setViewMode(value as PixelViewMode)}
+          onChange={(value) => setViewMode(value)}
           options={[
             {
               value: "side-by-side",
@@ -188,7 +188,7 @@ const ComparePixelWorkbenchView = ({
       {result.warnings.length > 0 && (
         <Stack gap={4}>
           {result.warnings.map((w, i) => (
-            <Text key={i} size="xs" c="yellow.7">
+            <Text key={i} size="xs" c="var(--color-amber-dark)">
               {w}
             </Text>
           ))}

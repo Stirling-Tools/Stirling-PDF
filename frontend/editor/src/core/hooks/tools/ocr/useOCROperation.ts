@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   OCRParameters,
   defaultParameters,
+  validateOCRParameters,
 } from "@app/hooks/tools/ocr/useOCRParameters";
 import {
   useToolOperation,
@@ -152,6 +153,7 @@ export const ocrResponseHandler = async (
 
 // Static configuration object (without t function dependencies)
 export const ocrOperationConfig = defineSingleFileTool({
+  validateParams: validateOCRParameters,
   buildFormData: buildOCRFormData,
   toApiParams: ocrToApiParams,
   fromApiParams: ocrFromApiParams,
@@ -177,13 +179,15 @@ export const useOCROperation = () => {
   const ocrConfig: ToolOperationConfig<OCRParameters> = {
     ...ocrOperationConfig,
     responseHandler,
-    getErrorMessage: (error) =>
-      error.message?.includes("OCR tools") &&
-      error.message?.includes("not installed")
+    getErrorMessage: (error) => {
+      const message = (error as { message?: string }).message;
+      return message?.includes("OCR tools") &&
+        message?.includes("not installed")
         ? "OCR tools (OCRmyPDF or Tesseract) are not installed on the server. Use the standard or fat Docker image instead of ultra-lite, or install OCR tools manually."
         : createStandardErrorHandler(
             t("ocr.error.failed", "OCR operation failed"),
-          )(error),
+          )(error);
+    },
   };
 
   return useToolOperation(ocrConfig);

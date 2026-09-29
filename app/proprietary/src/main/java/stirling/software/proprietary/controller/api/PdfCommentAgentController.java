@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.proprietary.service.AiFeatureGate;
 import stirling.software.proprietary.service.AiToolResponseHeaders;
 import stirling.software.proprietary.service.PdfCommentAgentOrchestrator;
 import stirling.software.proprietary.service.PdfCommentAgentOrchestrator.AnnotatedPdf;
@@ -49,6 +50,7 @@ public class PdfCommentAgentController {
     private static final Pattern NEWLINE_PATTERN = Pattern.compile("[\\r\\n]");
     private final PdfCommentAgentOrchestrator orchestrator;
     private final ObjectMapper objectMapper;
+    private final AiFeatureGate aiFeatureGate;
 
     @PostMapping(
             value = "/pdf-comment-agent",
@@ -65,8 +67,6 @@ public class PdfCommentAgentController {
 
                     The annotated PDF is streamed back in the response body with
                     Content-Type: application/pdf.
-
-                    Input: PDF + prompt  Output: PDF  Type: SISO
                     """)
     public ResponseEntity<Resource> pdfCommentAgent(
             @Parameter(description = "The PDF document to annotate", required = true)
@@ -79,6 +79,7 @@ public class PdfCommentAgentController {
                     @RequestParam("prompt")
                     String prompt)
             throws IOException {
+        aiFeatureGate.requirePdfComment();
 
         String originalFilename = fileInput.getOriginalFilename();
         String safeName =

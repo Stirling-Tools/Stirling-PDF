@@ -35,9 +35,7 @@ export default function Footer({
   const finalCookiePolicy = cookiePolicy ?? footerInfo?.cookiePolicy;
   const finalImpressum = impressum ?? footerInfo?.impressum;
 
-  const { showCookiePreferences } = useCookieConsent({
-    analyticsEnabled: finalAnalyticsEnabled,
-  });
+  const { showCookiePreferences } = useCookieConsent();
 
   // Default URLs
   const defaultTermsUrl = "https://www.stirling.com/terms";
@@ -54,8 +52,8 @@ export default function Footer({
     <div
       style={{
         height: "var(--footer-height)",
-        backgroundColor: "var(--bg-surface)",
-        borderTop: "1px solid var(--border-subtle)",
+        backgroundColor: "var(--c-surface)",
+        borderTop: "1px solid var(--c-border-subtle)",
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",

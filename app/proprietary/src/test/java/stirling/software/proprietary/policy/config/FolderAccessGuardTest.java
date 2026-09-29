@@ -13,9 +13,11 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.core.env.StandardEnvironment;
 
 import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
 import stirling.software.proprietary.policy.source.Source;
@@ -27,16 +29,51 @@ import stirling.software.proprietary.policy.source.SourceStore;
  */
 class FolderAccessGuardTest {
 
+    private static final String TAURI_MODE_PROPERTY = "STIRLING_PDF_TAURI_MODE";
+
     @TempDir Path tempDir;
 
     private final SourceStore sourceStore = new InProcessSourceStore();
 
     private FolderAccessGuard guard(List<String> allowedRoots, String... activeProfiles) {
         ApplicationProperties properties = new ApplicationProperties();
+        properties.getSecurity().setEnableLogin(true);
         properties.getPolicies().setAllowedFolderRoots(allowedRoots);
         StandardEnvironment environment = new StandardEnvironment();
         environment.setActiveProfiles(activeProfiles);
-        return new FolderAccessGuard(properties, environment, sourceStore);
+        return new FolderAccessGuard(
+                properties, new RuntimePathConfig(properties), environment, sourceStore);
+    }
+
+    private FolderAccessGuard guardWithStorage(
+            List<String> allowedRoots, boolean storageEnabled, String provider, String basePath) {
+        ApplicationProperties properties = new ApplicationProperties();
+        properties.getSecurity().setEnableLogin(true);
+        properties.getPolicies().setAllowedFolderRoots(allowedRoots);
+        ApplicationProperties.Storage storage = properties.getStorage();
+        storage.setEnabled(storageEnabled);
+        storage.setProvider(provider);
+        storage.getLocal().setBasePath(basePath);
+        return new FolderAccessGuard(
+                properties,
+                new RuntimePathConfig(properties),
+                new StandardEnvironment(),
+                sourceStore);
+    }
+
+    private FolderAccessGuard guardWithWatchedFolder(String watchedDir) {
+        ApplicationProperties properties = new ApplicationProperties();
+        properties.getSecurity().setEnableLogin(true);
+        properties
+                .getSystem()
+                .getCustomPaths()
+                .getPipeline()
+                .setWatchedFoldersDirs(List.of(watchedDir));
+        return new FolderAccessGuard(
+                properties,
+                new RuntimePathConfig(properties),
+                new StandardEnvironment(),
+                sourceStore);
     }
 
     @Test
@@ -50,8 +87,9 @@ class FolderAccessGuardTest {
     @Test
     void rejectsADirectoryOutsideEveryAllowedRoot() {
         FolderAccessGuard guard = guard(List.of(tempDir.toString()));
+        // FolderAccessDeniedException (not the base type): the admin can fix this in settings.
         assertThrows(
-                IllegalArgumentException.class,
+                FolderAccessDeniedException.class,
                 () -> guard.requirePermitted(tempDir.resolveSibling("elsewhere")));
     }
 
@@ -59,14 +97,104 @@ class FolderAccessGuardTest {
     void rejectsTraversalThatWalksOutOfAnAllowedRoot() {
         FolderAccessGuard guard = guard(List.of(tempDir.toString()));
         assertThrows(
-                IllegalArgumentException.class,
+                FolderAccessDeniedException.class,
                 () -> guard.requirePermitted(tempDir.resolve("..").resolve("escaped")));
+    }
+
+    @Test
+    void deniesAnUnlistedDirectoryOnAServerWithLoginOff() {
+        // Login off does not mean "desktop": a self-hosted server runs this way by default, and
+        // there every caller is unauthenticated, so the allowlist is all that stands between them
+        // and the filesystem.
+        assertThrows(
+                FolderAccessDeniedException.class,
+                () -> guardWithLoginOff().requirePermitted(tempDir));
+    }
+
+    @Test
+    void permitsAnyDirectoryInTheDesktopBundle() {
+        withDesktopBundle(
+                () ->
+                        assertEquals(
+                                tempDir.toAbsolutePath().normalize(),
+                                guardWithLoginOff().requirePermitted(tempDir)));
+    }
+
+    @Test
+    void permitsAnyDirectoryInTheDesktopBundleWithLoginOn() {
+        // Signing in identifies the operator rather than demoting them: the desktop bundle is the
+        // whole trust claim, so a login-enabled install still reaches the operator's own files.
+        withDesktopBundle(
+                () ->
+                        assertEquals(
+                                tempDir.toAbsolutePath().normalize(),
+                                guard(List.of()).requirePermitted(tempDir)));
+    }
+
+    private FolderAccessGuard guardWithLoginOff() {
+        ApplicationProperties properties = new ApplicationProperties();
+        return new FolderAccessGuard(
+                properties,
+                new RuntimePathConfig(properties),
+                new StandardEnvironment(),
+                sourceStore);
+    }
+
+    /** Runs the body with the flag the desktop sidecar sets, restoring whatever was there. */
+    private static void withDesktopBundle(Runnable body) {
+        String previous = System.getProperty(TAURI_MODE_PROPERTY);
+        System.setProperty(TAURI_MODE_PROPERTY, "true");
+        try {
+            body.run();
+        } finally {
+            if (previous == null) {
+                System.clearProperty(TAURI_MODE_PROPERTY);
+            } else {
+                System.setProperty(TAURI_MODE_PROPERTY, previous);
+            }
+        }
     }
 
     @Test
     void rejectsEverythingWhenNoRootsAreConfigured() {
         FolderAccessGuard guard = guard(List.of());
-        assertThrows(IllegalArgumentException.class, () -> guard.requirePermitted(tempDir));
+        assertThrows(FolderAccessDeniedException.class, () -> guard.requirePermitted(tempDir));
+    }
+
+    @Test
+    void permitsTheLocalServerStorageDirectoryEvenWithNoConfiguredRoots() {
+        Path storageBase = tempDir.resolve("storage");
+        FolderAccessGuard guard =
+                guardWithStorage(List.of(), true, "local", storageBase.toString());
+        Path within = storageBase.resolve("inbox");
+
+        assertEquals(within.toAbsolutePath().normalize(), guard.requirePermitted(within));
+    }
+
+    @Test
+    void ignoresServerStorageWhenTheStorageFeatureIsDisabled() {
+        Path storageBase = tempDir.resolve("storage");
+        FolderAccessGuard guard =
+                guardWithStorage(List.of(), false, "local", storageBase.toString());
+
+        assertThrows(IllegalArgumentException.class, () -> guard.requirePermitted(storageBase));
+    }
+
+    @Test
+    void ignoresServerStorageWhenTheProviderIsNotLocal() {
+        Path storageBase = tempDir.resolve("storage");
+        FolderAccessGuard guard = guardWithStorage(List.of(), true, "s3", storageBase.toString());
+
+        assertThrows(IllegalArgumentException.class, () -> guard.requirePermitted(storageBase));
+    }
+
+    @Test
+    void permitsPipelineWatchedFoldersEvenWithNoConfiguredRoots() {
+        Path watched = tempDir.resolve("watched");
+        FolderAccessGuard guard = guardWithWatchedFolder(watched.toString());
+        Path within = watched.resolve("inbox");
+
+        assertEquals(within.toAbsolutePath().normalize(), guard.requirePermitted(within));
     }
 
     @Test
@@ -76,15 +204,21 @@ class FolderAccessGuardTest {
         // Allow the config dir's parent, so only the protected-path rule can reject it.
         FolderAccessGuard guard = guard(List.of(configDir.getParent().toString()));
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> guard.requirePermitted(configDir.resolve("settings.yml")));
+        // Not a FolderAccessDeniedException: editing the allowlist can't unprotect the config dir.
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> guard.requirePermitted(configDir.resolve("settings.yml")));
+        assertFalse(ex instanceof FolderAccessDeniedException);
     }
 
     @Test
     void refusesAllFolderAccessUnderTheSaasProfile() {
         FolderAccessGuard guard = guard(List.of(tempDir.toString()), "saas");
-        assertThrows(IllegalArgumentException.class, () -> guard.requirePermitted(tempDir));
+        // Not a FolderAccessDeniedException: SaaS has no folder allowlist to point the admin at.
+        IllegalArgumentException ex =
+                assertThrows(IllegalArgumentException.class, () -> guard.requirePermitted(tempDir));
+        assertFalse(ex instanceof FolderAccessDeniedException);
     }
 
     @Test
@@ -115,6 +249,13 @@ class FolderAccessGuardTest {
                                                                 null))
                                                 .id())
                         .toList();
-        return new Policy("p1", "p", "owner", true, null, sourceIds, List.of(), output);
+        return new Policy(
+                "p1",
+                "p",
+                "owner",
+                true,
+                sourceIds.stream().map(PipelineInput::manual).toList(),
+                List.of(),
+                output);
     }
 }

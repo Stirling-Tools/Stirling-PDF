@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { NavItem } from "@app/ui/NavItem";
 import { SectionDivider } from "@app/ui/SectionDivider";
 
-function Dot({ color = "var(--color-blue)" }: { color?: string }) {
+function Dot({ color = "var(--c-primary)" }: { color?: string }) {
   return (
     <span
       style={{
@@ -29,9 +29,9 @@ const meta: Meta<typeof NavItem> = {
       <div
         style={{
           width: "15rem",
-          background: "var(--color-sidebar-bg)",
+          background: "var(--c-bg-raised)",
           padding: 10,
-          border: "1px solid var(--color-sidebar-border)",
+          border: "1px solid var(--c-border)",
           borderRadius: 6,
         }}
       >
@@ -55,8 +55,8 @@ export const WithTrailingBadge: Story = {
       <span
         style={{
           fontSize: 11,
-          color: "var(--color-blue)",
-          background: "var(--color-blue-light)",
+          color: "var(--c-primary)",
+          background: "var(--c-primary-tint)",
           padding: "1px 6px",
           borderRadius: 10,
         }}

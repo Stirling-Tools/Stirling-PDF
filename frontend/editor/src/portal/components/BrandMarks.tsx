@@ -1,0 +1,47 @@
+import type { CSSProperties } from "react";
+import { Icon, isIconName, type IconName } from "@app/ui/Icon";
+
+/** Ids whose registry name differs from the id itself. */
+const ID_ALIASES: Record<string, IconName> = {
+  email: "mail",
+  smb: "hard-drive",
+  vectordb: "database",
+};
+
+/** Unknown connector types get a neutral plug rather than nothing. */
+const FALLBACK: IconName = "plug";
+
+export function markName(id: string): IconName {
+  if (Object.hasOwn(ID_ALIASES, id)) return ID_ALIASES[id];
+  return isIconName(id) ? id : FALLBACK;
+}
+
+interface BrandMarkProps {
+  id: string;
+  size?: number | string;
+  /** Renders the mark in the current text colour instead of its brand colours,
+   * for lists where it sits among stroke icons. */
+  colorless?: boolean;
+  className?: string;
+  style?: CSSProperties;
+}
+
+/** Brand mark for an integration, connector or source type. Geometry lives in
+ * core/icons/svg/; this only resolves an id to a registry name. */
+export function BrandMark({
+  id,
+  size = 20,
+  colorless = false,
+  className,
+  style,
+}: BrandMarkProps) {
+  return (
+    <Icon
+      name={markName(id)}
+      size={size}
+      colorless={colorless}
+      className={className}
+      style={style}
+    />
+  );
+}

@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { SettingsFieldLabel } from "@app/components/shared/config/SettingsFieldLabel";
 import {
   Collapse,
   Alert,
@@ -12,7 +14,7 @@ import { Button } from "@app/ui/Button";
 import { FilePicker } from "@app/ui/FilePicker";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { alert } from "@app/components/toast";
 import { LicenseInfo } from "@app/services/licenseService";
 import licenseService from "@app/services/licenseService";
@@ -21,10 +23,16 @@ import { useLoginRequired } from "@app/hooks/useLoginRequired";
 
 interface LicenseKeySectionProps {
   currentLicenseInfo?: LicenseInfo;
+  /** Form-only presentation for hosts that supply their own dialog. */
+  presentation?: "disclosure" | "form";
+  /** Refresh any host-owned entitlement views after the license context has updated. */
+  onSaved?: () => void;
 }
 
 const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
   currentLicenseInfo,
+  presentation = "disclosure",
+  onSaved,
 }) => {
   const { t } = useTranslation();
   const { refetchLicense } = useLicense();
@@ -67,6 +75,7 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
       if (response.success) {
         // Refresh license context to update all components
         await refetchLicense();
+        onSaved?.();
 
         const successMessage =
           inputMethod === "file"
@@ -110,17 +119,221 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
     }
   };
 
+  const form = (
+    <Stack gap="md">
+      <Alert
+        variant="light"
+        color="blue"
+        icon={<Icon name="info" size="1rem" />}
+      >
+        <Text size="sm">
+          {t(
+            "admin.settings.premium.licenseKey.info",
+            "If you have a license key or certificate file from a direct purchase, you can enter it here to activate premium or enterprise features.",
+          )}
+        </Text>
+      </Alert>
+
+      {/* Severe warning if license already exists */}
+      {currentLicenseInfo?.licenseKey && (
+        <Alert
+          variant="light"
+          color="red"
+          icon={<Icon name="triangle-alert" size="1rem" />}
+          title={t(
+            "admin.settings.premium.key.overwriteWarning.title",
+            "⚠️ Warning: Existing License Detected",
+          )}
+        >
+          <Stack gap="xs">
+            <Text size="sm" fw={600}>
+              {t(
+                "admin.settings.premium.key.overwriteWarning.line1",
+                "Overwriting your current license key cannot be undone.",
+              )}
+            </Text>
+            <Text size="sm">
+              {t(
+                "admin.settings.premium.key.overwriteWarning.line2",
+                "Your previous license will be permanently lost unless you have backed it up elsewhere.",
+              )}
+            </Text>
+            <Text size="sm" fw={500}>
+              {t(
+                "admin.settings.premium.key.overwriteWarning.line3",
+                "Important: Keep license keys private and secure. Never share them publicly.",
+              )}
+            </Text>
+          </Stack>
+        </Alert>
+      )}
+
+      {/* Show current license source */}
+      {currentLicenseInfo?.licenseKey && (
+        <Alert
+          variant="light"
+          color="green"
+          icon={<Icon name="circle-check" size="1rem" />}
+        >
+          <Stack gap="xs">
+            <Text size="sm" fw={500}>
+              {t(
+                "admin.settings.premium.currentLicense.title",
+                "Active License",
+              )}
+            </Text>
+            <Text size="xs">
+              {currentLicenseInfo.licenseKey.startsWith("file:")
+                ? t(
+                    "admin.settings.premium.currentLicense.file",
+                    "Source: License file ({{path}})",
+                    {
+                      path: currentLicenseInfo.licenseKey.substring(5),
+                    },
+                  )
+                : t(
+                    "admin.settings.premium.currentLicense.key",
+                    "Source: License key",
+                  )}
+            </Text>
+            <Text size="xs">
+              {t(
+                "admin.settings.premium.currentLicense.type",
+                "Type: {{type}}",
+                {
+                  type: currentLicenseInfo.licenseType,
+                },
+              )}
+            </Text>
+          </Stack>
+        </Alert>
+      )}
+
+      {/* Input method selector */}
+      <SegmentedControl
+        value={inputMethod}
+        onChange={(value) => {
+          setInputMethod(value);
+          // Clear opposite input when switching
+          if (value === "text") setLicenseFile(null);
+          if (value === "file") setLicenseKeyInput("");
+        }}
+        options={[
+          {
+            label: t("admin.settings.premium.inputMethod.text", "License Key"),
+            value: "text",
+            disabled: !loginEnabled || savingLicense,
+          },
+          {
+            label: t(
+              "admin.settings.premium.inputMethod.file",
+              "Certificate File",
+            ),
+            value: "file",
+            disabled: !loginEnabled || savingLicense,
+          },
+        ]}
+      />
+
+      {/* Input area */}
+      <Paper withBorder p="md" radius="md">
+        <Stack gap="md">
+          {inputMethod === "text" ? (
+            /* Text input */
+            <TextInput
+              label={
+                <SettingsFieldLabel
+                  info={t(
+                    "admin.settings.premium.key.description",
+                    "Enter your premium or enterprise license key. Premium features will be automatically enabled when a key is provided.",
+                  )}
+                >
+                  {t("admin.settings.premium.key.label", "License Key")}
+                </SettingsFieldLabel>
+              }
+              value={licenseKeyInput}
+              onChange={(e) => setLicenseKeyInput(e.target.value)}
+              placeholder={
+                (presentation === "disclosure"
+                  ? currentLicenseInfo?.licenseKey
+                  : undefined) || "00000000-0000-0000-0000-000000000000"
+              }
+              type="password"
+              disabled={!loginEnabled || savingLicense}
+            />
+          ) : (
+            /* File upload */
+            <div>
+              <Text size="sm" fw={500} mb="xs">
+                {t(
+                  "admin.settings.premium.file.label",
+                  "License Certificate File",
+                )}{" "}
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.premium.file.description",
+                    "Upload your .lic or .cert license file",
+                  )}
+                />
+              </Text>
+              <FilePicker
+                onChange={setLicenseFile}
+                accept=".lic,.cert"
+                disabled={!loginEnabled || savingLicense}
+                variant="secondary"
+                leftSection={<Icon name="file-up" size="1rem" />}
+              >
+                {licenseFile
+                  ? licenseFile.name
+                  : t(
+                      "admin.settings.premium.file.choose",
+                      "Choose License File",
+                    )}
+              </FilePicker>
+              {licenseFile && (
+                <Text size="xs" c="dimmed" mt="xs">
+                  {t(
+                    "admin.settings.premium.file.selected",
+                    "Selected: {{filename}} ({{size}})",
+                    {
+                      filename: licenseFile.name,
+                      size: (licenseFile.size / 1024).toFixed(2) + " KB",
+                    },
+                  )}
+                </Text>
+              )}
+            </div>
+          )}
+
+          <Group justify="flex-end">
+            <Button
+              onClick={handleSaveLicense}
+              loading={savingLicense}
+              size="sm"
+              disabled={
+                !loginEnabled ||
+                (inputMethod === "text" && !licenseKeyInput.trim()) ||
+                (inputMethod === "file" && !licenseFile)
+              }
+            >
+              {t("admin.settings.save", "Save Changes")}
+            </Button>
+          </Group>
+        </Stack>
+      </Paper>
+    </Stack>
+  );
+
+  if (presentation === "form") return form;
+
   return (
     <div>
       <Button
         variant="tertiary"
         leftSection={
-          <LocalIcon
-            icon={
-              showLicenseKey ? "expand-less-rounded" : "expand-more-rounded"
-            }
-            width="1.25rem"
-            height="1.25rem"
+          <Icon
+            name={showLicenseKey ? "chevron-up" : "chevron-down"}
+            size="1.25rem"
           />
         }
         onClick={() => setShowLicenseKey(!showLicenseKey)}
@@ -132,219 +345,7 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
       </Button>
 
       <Collapse in={showLicenseKey} mt="md">
-        <Stack gap="md">
-          <Alert
-            variant="light"
-            color="blue"
-            icon={<LocalIcon icon="info-rounded" width="1rem" height="1rem" />}
-          >
-            <Text size="sm">
-              {t(
-                "admin.settings.premium.licenseKey.info",
-                "If you have a license key or certificate file from a direct purchase, you can enter it here to activate premium or enterprise features.",
-              )}
-            </Text>
-          </Alert>
-
-          {/* Severe warning if license already exists */}
-          {currentLicenseInfo?.licenseKey && (
-            <Alert
-              variant="light"
-              color="red"
-              icon={
-                <LocalIcon icon="warning-rounded" width="1rem" height="1rem" />
-              }
-              title={t(
-                "admin.settings.premium.key.overwriteWarning.title",
-                "⚠️ Warning: Existing License Detected",
-              )}
-            >
-              <Stack gap="xs">
-                <Text size="sm" fw={600}>
-                  {t(
-                    "admin.settings.premium.key.overwriteWarning.line1",
-                    "Overwriting your current license key cannot be undone.",
-                  )}
-                </Text>
-                <Text size="sm">
-                  {t(
-                    "admin.settings.premium.key.overwriteWarning.line2",
-                    "Your previous license will be permanently lost unless you have backed it up elsewhere.",
-                  )}
-                </Text>
-                <Text size="sm" fw={500}>
-                  {t(
-                    "admin.settings.premium.key.overwriteWarning.line3",
-                    "Important: Keep license keys private and secure. Never share them publicly.",
-                  )}
-                </Text>
-              </Stack>
-            </Alert>
-          )}
-
-          {/* Show current license source */}
-          {currentLicenseInfo?.licenseKey && (
-            <Alert
-              variant="light"
-              color="green"
-              icon={
-                <LocalIcon
-                  icon="check-circle-rounded"
-                  width="1rem"
-                  height="1rem"
-                />
-              }
-            >
-              <Stack gap="xs">
-                <Text size="sm" fw={500}>
-                  {t(
-                    "admin.settings.premium.currentLicense.title",
-                    "Active License",
-                  )}
-                </Text>
-                <Text size="xs">
-                  {currentLicenseInfo.licenseKey.startsWith("file:")
-                    ? t(
-                        "admin.settings.premium.currentLicense.file",
-                        "Source: License file ({{path}})",
-                        {
-                          path: currentLicenseInfo.licenseKey.substring(5),
-                        },
-                      )
-                    : t(
-                        "admin.settings.premium.currentLicense.key",
-                        "Source: License key",
-                      )}
-                </Text>
-                <Text size="xs">
-                  {t(
-                    "admin.settings.premium.currentLicense.type",
-                    "Type: {{type}}",
-                    {
-                      type: currentLicenseInfo.licenseType,
-                    },
-                  )}
-                </Text>
-              </Stack>
-            </Alert>
-          )}
-
-          {/* Input method selector */}
-          <SegmentedControl
-            value={inputMethod}
-            onChange={(value) => {
-              setInputMethod(value as "text" | "file");
-              // Clear opposite input when switching
-              if (value === "text") setLicenseFile(null);
-              if (value === "file") setLicenseKeyInput("");
-            }}
-            options={[
-              {
-                label: t(
-                  "admin.settings.premium.inputMethod.text",
-                  "License Key",
-                ),
-                value: "text",
-                disabled: !loginEnabled || savingLicense,
-              },
-              {
-                label: t(
-                  "admin.settings.premium.inputMethod.file",
-                  "Certificate File",
-                ),
-                value: "file",
-                disabled: !loginEnabled || savingLicense,
-              },
-            ]}
-          />
-
-          {/* Input area */}
-          <Paper withBorder p="md" radius="md">
-            <Stack gap="md">
-              {inputMethod === "text" ? (
-                /* Text input */
-                <TextInput
-                  label={t("admin.settings.premium.key.label", "License Key")}
-                  description={t(
-                    "admin.settings.premium.key.description",
-                    "Enter your premium or enterprise license key. Premium features will be automatically enabled when a key is provided.",
-                  )}
-                  value={licenseKeyInput}
-                  onChange={(e) => setLicenseKeyInput(e.target.value)}
-                  placeholder={
-                    currentLicenseInfo?.licenseKey ||
-                    "00000000-0000-0000-0000-000000000000"
-                  }
-                  type="password"
-                  disabled={!loginEnabled || savingLicense}
-                />
-              ) : (
-                /* File upload */
-                <div>
-                  <Text size="sm" fw={500} mb="xs">
-                    {t(
-                      "admin.settings.premium.file.label",
-                      "License Certificate File",
-                    )}
-                  </Text>
-                  <Text size="xs" c="dimmed" mb="md">
-                    {t(
-                      "admin.settings.premium.file.description",
-                      "Upload your .lic or .cert license file",
-                    )}
-                  </Text>
-                  <FilePicker
-                    onChange={setLicenseFile}
-                    accept=".lic,.cert"
-                    disabled={!loginEnabled || savingLicense}
-                    variant="secondary"
-                    leftSection={
-                      <LocalIcon
-                        icon="upload-file-rounded"
-                        width="1rem"
-                        height="1rem"
-                      />
-                    }
-                  >
-                    {licenseFile
-                      ? licenseFile.name
-                      : t(
-                          "admin.settings.premium.file.choose",
-                          "Choose License File",
-                        )}
-                  </FilePicker>
-                  {licenseFile && (
-                    <Text size="xs" c="dimmed" mt="xs">
-                      {t(
-                        "admin.settings.premium.file.selected",
-                        "Selected: {{filename}} ({{size}})",
-                        {
-                          filename: licenseFile.name,
-                          size: (licenseFile.size / 1024).toFixed(2) + " KB",
-                        },
-                      )}
-                    </Text>
-                  )}
-                </div>
-              )}
-
-              <Group justify="flex-end">
-                <Button
-                  onClick={handleSaveLicense}
-                  loading={savingLicense}
-                  size="sm"
-                  disabled={
-                    !loginEnabled ||
-                    (inputMethod === "text" && !licenseKeyInput.trim()) ||
-                    (inputMethod === "file" && !licenseFile)
-                  }
-                >
-                  {t("admin.settings.save", "Save Changes")}
-                </Button>
-              </Group>
-            </Stack>
-          </Paper>
-        </Stack>
+        {form}
       </Collapse>
     </div>
   );

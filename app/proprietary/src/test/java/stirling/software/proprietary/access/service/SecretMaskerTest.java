@@ -78,6 +78,48 @@ class SecretMaskerTest {
     }
 
     @Test
+    void maskRedactsEveryHeaderValueRegardlessOfName() {
+        Map<String, Object> headers = new LinkedHashMap<>();
+        headers.put("X-API-Key", "real-secret"); // name carries no secret hint
+        headers.put("Ocp-Apim-Subscription-Key", "abc123");
+        headers.put("Content-Type", "application/json");
+        Map<String, Object> config = new LinkedHashMap<>();
+        config.put("baseUrl", "https://api.example");
+        config.put("headers", headers);
+
+        Map<String, Object> masked = masker.mask(config);
+
+        assertThat(masked.get("baseUrl")).isEqualTo("https://api.example");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> maskedHeaders = (Map<String, Object>) masked.get("headers");
+        assertThat(maskedHeaders.get("X-API-Key")).isEqualTo(SecretMasker.MASK);
+        assertThat(maskedHeaders.get("Ocp-Apim-Subscription-Key")).isEqualTo(SecretMasker.MASK);
+        assertThat(maskedHeaders.get("Content-Type")).isEqualTo(SecretMasker.MASK);
+    }
+
+    @Test
+    void mergeRestoresRedactedHeaderValuesFromStored() {
+        Map<String, Object> storedHeaders = new LinkedHashMap<>();
+        storedHeaders.put("X-API-Key", "REAL");
+        storedHeaders.put("Content-Type", "application/json");
+        Map<String, Object> stored = new LinkedHashMap<>();
+        stored.put("headers", storedHeaders);
+
+        Map<String, Object> incomingHeaders = new LinkedHashMap<>();
+        incomingHeaders.put("X-API-Key", SecretMasker.MASK); // untouched secret comes back masked
+        incomingHeaders.put("Content-Type", "text/plain"); // genuinely edited
+        Map<String, Object> incoming = new LinkedHashMap<>();
+        incoming.put("headers", incomingHeaders);
+
+        Map<String, Object> merged = masker.merge(stored, incoming);
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> mergedHeaders = (Map<String, Object>) merged.get("headers");
+        assertThat(mergedHeaders.get("X-API-Key")).isEqualTo("REAL"); // restored, not "********"
+        assertThat(mergedHeaders.get("Content-Type")).isEqualTo("text/plain"); // updated
+    }
+
+    @Test
     void deeplyNestedInputIsBoundedNotOverflowing() {
         // Build a structure far deeper than the recursion cap.
         Map<String, Object> root = new LinkedHashMap<>();

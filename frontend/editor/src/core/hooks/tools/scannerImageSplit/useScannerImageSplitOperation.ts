@@ -12,6 +12,7 @@ import {
 } from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
+  validateScannerImageSplitParameters,
   ScannerImageSplitParameters,
   defaultParameters,
 } from "@app/hooks/tools/scannerImageSplit/useScannerImageSplitParameters";
@@ -55,6 +56,7 @@ export const buildScannerImageSplitFormData = (
 
 // Static configuration object
 export const scannerImageSplitOperationConfig = defineSingleFileTool({
+  validateParams: validateScannerImageSplitParameters,
   buildFormData: buildScannerImageSplitFormData,
   toApiParams: scannerImageSplitToApiParams,
   fromApiParams: scannerImageSplitFromApiParams,

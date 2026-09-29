@@ -7,6 +7,7 @@ Feature: Attachments API Validation
         And the pdf contains 2 pages with random text
         And I also generate a PDF file as "attachments"
         When I send the API request to the endpoint "/api/v1/misc/add-attachments"
+        And this operation is run 5 times in parallel
         Then the response status code should be 200
         And the response content type should be "application/pdf"
         And the response file should have size greater than 0
@@ -30,6 +31,7 @@ Feature: Attachments API Validation
         And the pdf contains 2 pages
         And the pdf has an attachment named "test_doc.txt"
         When I send the API request to the endpoint "/api/v1/misc/list-attachments"
+        And this operation is run 5 times in parallel
         Then the response status code should be 200
         And the response content type should be "application/json"
         And the response file should have size greater than 0
@@ -49,6 +51,7 @@ Feature: Attachments API Validation
         And the pdf contains 2 pages
         And the pdf has an attachment named "report.txt"
         When I send the API request to the endpoint "/api/v1/misc/extract-attachments"
+        And this operation is run 5 times in parallel
         Then the response status code should be 200
         And the response file should have size greater than 0
 
@@ -62,6 +65,7 @@ Feature: Attachments API Validation
             | attachmentName | original.txt |
             | newName        | renamed.txt  |
         When I send the API request to the endpoint "/api/v1/misc/rename-attachment"
+        And this operation is run 5 times in parallel
         Then the response status code should be 200
         And the response content type should be "application/pdf"
         And the response file should have size greater than 0
@@ -76,6 +80,7 @@ Feature: Attachments API Validation
             | parameter      | value          |
             | attachmentName | to_delete.txt  |
         When I send the API request to the endpoint "/api/v1/misc/delete-attachment"
+        And this operation is run 5 times in parallel
         Then the response status code should be 200
         And the response content type should be "application/pdf"
         And the response file should have size greater than 0

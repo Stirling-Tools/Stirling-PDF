@@ -7,11 +7,11 @@ import { useInputAria } from "@app/ui/ariaForwarding";
 import "@app/ui/MantineForms.css";
 
 const SUI_INPUT_VARS = {
-  "--input-bg": "var(--color-surface)",
-  "--input-bd": "var(--color-border-input)",
-  "--input-bd-focus": "var(--color-blue)",
+  "--input-bg": "var(--c-input-bg)",
+  "--input-bd": "var(--c-border)",
+  "--input-bd-focus": "var(--c-primary)",
   "--input-radius": "var(--radius-md)",
-  "--input-color": "var(--color-text-1)",
+  "--input-color": "var(--c-text)",
   "--input-placeholder-color": "var(--color-text-placeholder)",
   "--input-height-sm": "1.75rem",
   "--input-height-md": "2.25rem",
@@ -46,6 +46,7 @@ export interface SelectProps {
   id?: string;
   name?: string;
   "aria-label"?: string;
+  "aria-labelledby"?: string;
   "aria-invalid"?: boolean;
   "aria-describedby"?: string;
   required?: boolean;
@@ -74,6 +75,7 @@ type PassthroughProps = Omit<
     | "id"
     | "name"
     | "aria-label"
+    | "aria-labelledby"
     | "aria-describedby"
     | "required"
     | "disabled"
@@ -106,6 +108,7 @@ export function Select({
   id,
   name,
   "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   "aria-invalid": ariaInvalid,
   "aria-describedby": ariaDescribedBy,
   required,
@@ -128,6 +131,7 @@ export function Select({
     id,
     name,
     "aria-label": ariaLabel,
+    "aria-labelledby": ariaLabelledBy,
     "aria-describedby": ariaDescribedBy,
     required,
     disabled,
@@ -146,7 +150,10 @@ export function Select({
       // required sets the input attribute only; FormField renders the asterisk.
       withAsterisk={false}
       ref={inputRef}
-      classNames={{ wrapper: "sui-mantine-wrapper" }}
+      classNames={{
+        wrapper: "sui-mantine-wrapper",
+        dropdown: "sui-mantine-dropdown",
+      }}
       styles={{ wrapper: SUI_INPUT_VARS }}
       {...passthroughProps}
     />

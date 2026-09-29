@@ -22,7 +22,10 @@ import {
 
 interface HardwareCertificateSettingsProps {
   parameters: CertSignParameters;
-  onParameterChange: (key: keyof CertSignParameters, value: any) => void;
+  onParameterChange: <K extends keyof CertSignParameters>(
+    key: K,
+    value: CertSignParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
@@ -176,16 +179,20 @@ const HardwareCertificateSettings = ({
     setError(null);
     listWindowsCertificates()
       .then(applyCerts)
-      .catch((e: any) =>
+      .catch((e) => {
+        const err = e as {
+          response?: { data?: { message?: string } };
+          message?: string;
+        };
         setError(
-          e?.response?.data?.message ||
-            e?.message ||
+          err?.response?.data?.message ||
+            err?.message ||
             t(
               "certSign.hardware.windowsLoadError",
               "Could not read the Windows certificate store",
             ),
-        ),
-      )
+        );
+      })
       .finally(() => setLoading(false));
   }, [applyCerts, t]);
 
@@ -221,16 +228,20 @@ const HardwareCertificateSettings = ({
       pin: parameters.password,
     })
       .then(applyCerts)
-      .catch((e: any) =>
+      .catch((e) => {
+        const err = e as {
+          response?: { data?: { message?: string } };
+          message?: string;
+        };
         setError(
-          e?.response?.data?.message ||
-            e?.message ||
+          err?.response?.data?.message ||
+            err?.message ||
             t(
               "certSign.hardware.pkcs11LoadError",
               "Could not read certificates from the token. Check the PIN and driver.",
             ),
-        ),
-      )
+        );
+      })
       .finally(() => setLoading(false));
   }, [
     applyCerts,

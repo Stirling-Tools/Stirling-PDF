@@ -1,16 +1,17 @@
 package stirling.software.proprietary.controller.api;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,17 +29,22 @@ import jakarta.validation.Valid;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.job.ResultFile;
 import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.service.TaskManager;
 import stirling.software.common.service.UserServiceInterface;
+import stirling.software.proprietary.model.api.ai.AiEngineStatus;
 import stirling.software.proprietary.model.api.ai.AiWorkflowProgressEvent;
 import stirling.software.proprietary.model.api.ai.AiWorkflowRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResultFile;
 import stirling.software.proprietary.service.AiEngineClient;
 import stirling.software.proprietary.service.AiEngineEndpointResolver;
+import stirling.software.proprietary.service.AiEngineRouter;
+import stirling.software.proprietary.service.AiFeatureGate;
 import stirling.software.proprietary.service.AiWorkflowService;
+import stirling.software.proprietary.service.CloudStatusProbe;
 
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
@@ -53,6 +59,9 @@ import tools.jackson.databind.node.ObjectNode;
 @Tag(name = "AI Engine", description = "Endpoints for AI-powered PDF workflows")
 public class AiEngineController {
 
+    /** Per probe, connect included, so a hung engine cannot hold a request for minutes. */
+    static final Duration PROBE_TIMEOUT = Duration.ofSeconds(5);
+
     private final AiEngineClient aiEngineClient;
     private final AiWorkflowService aiWorkflowService;
     private final ObjectMapper objectMapper;
@@ -60,15 +69,17 @@ public class AiEngineController {
     private final TaskManager taskManager;
     private final JobOwnershipService jobOwnershipService;
     private final AiEngineEndpointResolver endpointResolver;
+    private final AiFeatureGate aiFeatureGate;
     private final UserServiceInterface userService;
+    private final ApplicationProperties applicationProperties;
+    private final AiEngineRouter aiEngineRouter;
+    private final CloudStatusProbe cloudStatusProbe;
 
     /**
-     * SSE emitter timeout. Long enough to accommodate multi-gigabyte PDF workflows (OCR on a
-     * 1000-page scan, splitting a huge PDF, etc.) without the emitter completing out from under the
-     * executor. Configurable via {@code stirling.ai.streamTimeoutMs}.
+     * SSE emitter timeout (ms), long enough for multi-gigabyte PDF workflows without completing out
+     * from under the executor. Derived from {@code aiEngine.streamTimeoutSeconds}.
      */
-    @Value("${stirling.ai.streamTimeoutMs:1800000}")
-    private long streamTimeoutMs;
+    private final long streamTimeoutMs;
 
     public AiEngineController(
             AiEngineClient aiEngineClient,
@@ -78,6 +89,10 @@ public class AiEngineController {
             TaskManager taskManager,
             JobOwnershipService jobOwnershipService,
             AiEngineEndpointResolver endpointResolver,
+            AiFeatureGate aiFeatureGate,
+            ApplicationProperties applicationProperties,
+            AiEngineRouter aiEngineRouter,
+            CloudStatusProbe cloudStatusProbe,
             @Autowired(required = false) UserServiceInterface userService) {
         this.aiEngineClient = aiEngineClient;
         this.aiWorkflowService = aiWorkflowService;
@@ -86,7 +101,13 @@ public class AiEngineController {
         this.taskManager = taskManager;
         this.jobOwnershipService = jobOwnershipService;
         this.endpointResolver = endpointResolver;
+        this.aiFeatureGate = aiFeatureGate;
         this.userService = userService;
+        this.applicationProperties = applicationProperties;
+        this.aiEngineRouter = aiEngineRouter;
+        this.cloudStatusProbe = cloudStatusProbe;
+        this.streamTimeoutMs =
+                applicationProperties.getAiEngine().getStreamTimeoutSeconds() * 1000L;
     }
 
     private String currentUserId() {
@@ -98,8 +119,128 @@ public class AiEngineController {
             summary = "AI engine health check",
             description = "Returns the health status of the AI engine including configured models")
     public ResponseEntity<String> health() throws IOException {
-        String response = aiEngineClient.get("/health", currentUserId());
+        String response = aiEngineClient.get("/health", currentUserId(), PROBE_TIMEOUT);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
+    }
+
+    /**
+     * Also probes a secret-gated route: the engine's {@code /health} skips the shared-secret check,
+     * so it stays green while real calls get 401. Admin-only, as each call makes 2-4 requests.
+     */
+    @GetMapping("/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(
+            summary = "AI engine status",
+            description =
+                    "Reachability, round-trip time, the models in use, and whether the engine"
+                            + " accepted this server's shared secret.")
+    public AiEngineStatus status() {
+        ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
+        if (!config.isEnabled()) {
+            return AiEngineStatus.builder().enabled(false).reachable(false).build();
+        }
+
+        AiEngineStatus.AiEngineStatusBuilder status = AiEngineStatus.builder().enabled(true);
+        String userId = currentUserId();
+
+        // Asked first: a cloud outage or sharing being off explains any failure that follows.
+        if (aiEngineRouter.isCloudMode()) {
+            boolean cloudUp = cloudStatusProbe.isUp();
+            status.cloudUp(cloudUp);
+            if (!cloudUp) {
+                return status.reachable(false)
+                        .cloudSharingEnabled(null)
+                        .error("Stirling Cloud is not responding.")
+                        .build();
+            }
+            Boolean sharing = probeCloudSharing(userId);
+            status.cloudSharingEnabled(sharing);
+            if (Boolean.FALSE.equals(sharing)) {
+                return status.reachable(false)
+                        .error("Stirling Cloud AI sharing is switched off for linked servers.")
+                        .build();
+            }
+        }
+
+        long startedAt = System.nanoTime();
+        String health;
+        try {
+            health = aiEngineClient.get("/health", userId, PROBE_TIMEOUT);
+        } catch (IOException | RuntimeException e) {
+            return status.reachable(false).error(describeFailure(e)).build();
+        }
+        status.reachable(true)
+                .latencyMs(Duration.ofNanos(System.nanoTime() - startedAt).toMillis());
+
+        try {
+            JsonNode body = objectMapper.readTree(health);
+            status.smartModel(textOrNull(body, "smartModel"))
+                    .fastModel(textOrNull(body, "fastModel"));
+        } catch (JacksonException e) {
+            log.debug("AI engine health returned a body we could not parse", e);
+        }
+
+        status.authenticated(probeAuthentication(userId, status));
+        return status.build();
+    }
+
+    /**
+     * @return false only when the gateway said so; null when it could not be asked
+     */
+    private Boolean probeCloudSharing(String userId) {
+        try {
+            JsonNode body =
+                    objectMapper.readTree(aiEngineClient.get("/status", userId, PROBE_TIMEOUT));
+            JsonNode enabled = body.path("sharingEnabled");
+            return enabled.isBoolean() ? enabled.asBoolean() : null;
+        } catch (IOException | RuntimeException e) {
+            log.debug("Cloud AI sharing probe failed", e);
+            return null;
+        }
+    }
+
+    /**
+     * @return true if accepted, false if rejected, null if the probe failed for another reason
+     */
+    private Boolean probeAuthentication(
+            String userId, AiEngineStatus.AiEngineStatusBuilder status) {
+        try {
+            aiEngineClient.get("/api/v1/agents/capabilities", userId, PROBE_TIMEOUT);
+            return true;
+        } catch (AiEngineClient.EngineRejectedCredentials e) {
+            status.error(
+                    aiEngineRouter.isCloudMode()
+                            ? "Stirling Cloud rejected this server's link credential."
+                            : "The engine rejected this server's shared secret.");
+            return false;
+        } catch (ResponseStatusException e) {
+            int code = e.getStatusCode().value();
+            String reason = e.getReason();
+            // Engine 5xx arrive as 502, so its fail-closed 503 survives only in the message.
+            if (code == HttpStatus.BAD_GATEWAY.value()
+                    && reason != null
+                    && reason.endsWith("503")) {
+                status.error("The engine requires a shared secret but none is configured on it.");
+                return false;
+            }
+            log.debug("AI engine capabilities probe returned {}", code);
+            return null;
+        } catch (IOException | RuntimeException e) {
+            log.debug("AI engine capabilities probe failed", e);
+            return null;
+        }
+    }
+
+    private static String textOrNull(JsonNode body, String field) {
+        JsonNode value = body.path(field);
+        return value.isTextual() ? value.asText() : null;
+    }
+
+    private static String describeFailure(Exception e) {
+        if (e instanceof ResponseStatusException rse && rse.getReason() != null) {
+            return rse.getReason();
+        }
+        return e.getMessage();
     }
 
     @PostMapping(value = "/orchestrate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -111,6 +252,7 @@ public class AiEngineController {
                             + " system and downloadable via GET /api/v1/general/files/{fileId}.")
     public AiWorkflowResponse orchestrate(@Valid @ModelAttribute AiWorkflowRequest request)
             throws IOException {
+        aiFeatureGate.requireConversationalWorkflow();
         AiWorkflowResponse result = aiWorkflowService.orchestrate(request);
         registerFileResultAsJob(result);
         return result;
@@ -123,6 +265,7 @@ public class AiEngineController {
                     "Accepts a PDF upload and a user message, returns SSE events with progress"
                             + " updates followed by the final AI workflow result")
     public SseEmitter orchestrateStream(@Valid @ModelAttribute AiWorkflowRequest request) {
+        aiFeatureGate.requireConversationalWorkflow();
         SseEmitter emitter = new SseEmitter(streamTimeoutMs);
 
         emitter.onTimeout(
@@ -246,6 +389,8 @@ public class AiEngineController {
                     "Sends a user message to the PDF edit agent which returns a structured plan"
                             + " of tool operations to perform")
     public ResponseEntity<String> pdfEdit(@RequestBody String requestBody) throws IOException {
+        // Same gate as /orchestrate: edit agent is a model call on the same conversational surface.
+        aiFeatureGate.requireConversationalWorkflow();
         JsonNode parsed = parseJson(requestBody);
         if (!parsed.isObject()) {
             throw new ResponseStatusException(

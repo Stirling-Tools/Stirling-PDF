@@ -35,9 +35,8 @@ interface AuthorizationDetails {
   };
 }
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
-const SUPABASE_KEY = import.meta.env
-  .VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY as string;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
 
 async function gotrue(
   path: string,

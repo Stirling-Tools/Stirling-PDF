@@ -31,6 +31,8 @@ import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.GeneralFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CustomHtmlSanitizer;
 import stirling.software.common.util.ExceptionUtils;
@@ -209,16 +211,13 @@ public class ConvertOfficeController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             value = "/file/pdf",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @ToolIO(accepts = ToolFormat.ANY, produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert a file to a PDF using LibreOffice",
-            description =
-                    "This endpoint converts a given file to a PDF using LibreOffice API  Input:ANY"
-                            + " Output:PDF Type:SISO")
+            description = "This endpoint converts a given file to a PDF using LibreOffice API")
     public ResponseEntity<Resource> processFileToPDF(@ModelAttribute GeneralFile generalFile)
             throws Exception {
         MultipartFile inputFile = generalFile.getFileInput();
-        // unused but can start server instance if startup time is to long
-        // LibreOfficeListener.getInstance().start();
         File file = null;
         TempFile tempOut = null;
         try {

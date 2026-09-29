@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.model.api.ai.Verdict;
+import stirling.software.proprietary.service.AiFeatureGate;
 import stirling.software.proprietary.service.AiToolInputValidator;
 import stirling.software.proprietary.service.MathAuditorOrchestrator;
 
@@ -49,6 +50,7 @@ public class MathAuditorAgentController {
 
     private static final Pattern NEWLINE_PATTERN = Pattern.compile("[\\r\\n]");
     private final MathAuditorOrchestrator orchestrator;
+    private final AiFeatureGate aiFeatureGate;
 
     @PostMapping(value = "/math-auditor-agent", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
@@ -66,8 +68,6 @@ public class MathAuditorAgentController {
                     Returns a JSON Verdict describing every discrepancy found. How the Verdict is
                     presented to the end user (chat answer, PDF annotations, etc.) is up to the
                     caller.
-
-                    Input: PDF  Output: JSON  Type: SISO
                     """)
     public ResponseEntity<Verdict> mathAuditorAgent(
             @Parameter(description = "The PDF document to audit", required = true)
@@ -79,6 +79,7 @@ public class MathAuditorAgentController {
                                             + " ignored (default: 0.01)")
                     @RequestParam(value = "tolerance", defaultValue = "0.01")
                     BigDecimal tolerance) {
+        aiFeatureGate.requireMathAuditor();
 
         AiToolInputValidator.validatePdfUpload(fileInput);
         if (tolerance.compareTo(BigDecimal.ZERO) < 0) {

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse, delay } from "msw";
 import { AuditTab } from "@portal/components/infrastructure/AuditTab";
-import "@portal/views/Infrastructure.css";
+import "@portal/components/infrastructure/infrastructure.css";
 
 const meta: Meta<typeof AuditTab> = {
   title: "Portal/Infrastructure/AuditTab",
@@ -42,7 +42,13 @@ export const Empty: Story = {
       handlers: [
         http.get("*/api/v1/proprietary/ui-data/infrastructure/audit-log", () =>
           HttpResponse.json({
-            summary: { totalEvents: 0, processing: 0, elevation: 0, config: 0 },
+            summary: {
+              totalEvents: 0,
+              policy: 0,
+              processing: 0,
+              elevation: 0,
+              config: 0,
+            },
             events: [],
             fullServer: true,
           }),
@@ -74,7 +80,13 @@ export const TeamLeadScoped: Story = {
       handlers: [
         http.get("*/api/v1/proprietary/ui-data/infrastructure/audit-log", () =>
           HttpResponse.json({
-            summary: { totalEvents: 4, processing: 2, elevation: 0, config: 1 },
+            summary: {
+              totalEvents: 4,
+              policy: 0,
+              processing: 2,
+              elevation: 0,
+              config: 1,
+            },
             events: [
               {
                 id: "9102",

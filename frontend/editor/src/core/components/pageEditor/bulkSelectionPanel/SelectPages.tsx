@@ -50,7 +50,7 @@ const SelectPages = ({
 
   return (
     <div className={classes.advancedCard}>
-      <Text size="sm" fw={600} c="var(--text-secondary)" mb="xs">
+      <Text size="sm" fw={600} c="var(--c-text-muted)" mb="xs">
         {title}
       </Text>
       {error && (

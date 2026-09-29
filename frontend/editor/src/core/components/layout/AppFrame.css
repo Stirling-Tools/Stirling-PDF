@@ -1,0 +1,18 @@
+/* ========== APP FRAME ========== */
+/* The rail's column, then whichever app is mounted, so a switch changes only the app. */
+.app-frame {
+  display: flex;
+  height: 100vh;
+  height: 100dvh; /* track mobile browser chrome */
+  overflow: hidden;
+  background-color: var(--c-bg);
+}
+
+/* min-width: 0 so the app shrinks instead of forcing the frame past the window. */
+.app-frame__content {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+}
+
+/* The rail hides itself below the mobile breakpoint - see QuickNavRailContainer.css. */
