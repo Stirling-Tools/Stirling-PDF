@@ -1,10 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Stack, Paper, Text, Group, Badge } from "@mantine/core";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import CheckIcon from "@mui/icons-material/Check";
-import CloseIcon from "@mui/icons-material/Close";
-
+import { Icon } from "@app/ui/Icon";
 interface SignatureSettingsDisplayProps {
   showSignature: boolean;
   pageNumber?: number | null;
@@ -33,11 +29,10 @@ const SignatureSettingsDisplay = ({
             <Group gap="xs">
               {showSignature ? (
                 <>
-                  <VisibilityIcon
-                    style={{
-                      fontSize: "16px",
-                      color: "var(--mantine-color-green-6)",
-                    }}
+                  <Icon
+                    name="eye"
+                    size={"16px"}
+                    style={{ color: "var(--mantine-color-green-6)" }}
                   />
                   <Badge size="sm" color="green" variant="light">
                     {t("certSign.appearance.visible", "Visible")}
@@ -45,11 +40,10 @@ const SignatureSettingsDisplay = ({
                 </>
               ) : (
                 <>
-                  <VisibilityOffIcon
-                    style={{
-                      fontSize: "16px",
-                      color: "var(--mantine-color-gray-6)",
-                    }}
+                  <Icon
+                    name="eye-off"
+                    size={"16px"}
+                    style={{ color: "var(--mantine-color-gray-6)" }}
                   />
                   <Badge size="sm" color="gray" variant="light">
                     {t("certSign.appearance.invisible", "Invisible")}
@@ -101,11 +95,10 @@ const SignatureSettingsDisplay = ({
                 <Group gap="xs">
                   {showLogo ? (
                     <>
-                      <CheckIcon
-                        style={{
-                          fontSize: "16px",
-                          color: "var(--mantine-color-green-6)",
-                        }}
+                      <Icon
+                        name="check"
+                        size={"16px"}
+                        style={{ color: "var(--mantine-color-green-6)" }}
                       />
                       <Badge size="sm" color="green" variant="light">
                         {t("certSign.showLogo", "Show Logo")}
@@ -113,11 +106,10 @@ const SignatureSettingsDisplay = ({
                     </>
                   ) : (
                     <>
-                      <CloseIcon
-                        style={{
-                          fontSize: "16px",
-                          color: "var(--mantine-color-gray-6)",
-                        }}
+                      <Icon
+                        name="x"
+                        size={"16px"}
+                        style={{ color: "var(--mantine-color-gray-6)" }}
                       />
                       <Badge size="sm" color="gray" variant="light">
                         {t("certSign.noLogo", "No Logo")}

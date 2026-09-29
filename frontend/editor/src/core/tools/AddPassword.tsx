@@ -78,7 +78,11 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   return createToolFlow({
     files: {
-      selectedFiles,
+      selectedFiles:
+        addPasswordOperation.getEligibleFiles?.(
+          addPasswordParams.fullParameters,
+          selectedFiles,
+        ) ?? selectedFiles,
       isCollapsed: hasResults,
     },
     steps: [

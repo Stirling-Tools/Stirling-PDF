@@ -130,7 +130,7 @@ Object.defineProperty(globalThis, "crypto", {
         }
         return array;
       }),
-  } as unknown as Crypto,
+  },
   writable: true,
   configurable: true,
 });

@@ -14,6 +14,7 @@ import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.cluster.FileStore;
+import stirling.software.common.util.ExceptionUtils;
 
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.exception.SdkException;
@@ -107,7 +108,7 @@ public class S3FileStore implements FileStore, AutoCloseable {
             ResponseInputStream<GetObjectResponse> stream = s3Client.getObject(request);
             return new BufferedInputStream(stream);
         } catch (NoSuchKeyException e) {
-            throw new IOException("File not found with ID: " + fileId, e);
+            throw ExceptionUtils.createFileNotFoundException(fileId, e);
         } catch (SdkException e) {
             throw new IOException("Failed to load object from S3", e);
         }
@@ -121,7 +122,7 @@ public class S3FileStore implements FileStore, AutoCloseable {
         try (ResponseInputStream<GetObjectResponse> stream = s3Client.getObject(request)) {
             return stream.readAllBytes();
         } catch (NoSuchKeyException e) {
-            throw new IOException("File not found with ID: " + fileId, e);
+            throw ExceptionUtils.createFileNotFoundException(fileId, e);
         } catch (SdkException e) {
             throw new IOException("Failed to load object from S3", e);
         }
@@ -136,10 +137,10 @@ public class S3FileStore implements FileStore, AutoCloseable {
             HeadObjectResponse response = s3Client.headObject(request);
             return Optional.ofNullable(response.contentLength()).orElse(0L);
         } catch (NoSuchKeyException e) {
-            throw new IOException("File not found with ID: " + fileId, e);
+            throw ExceptionUtils.createFileNotFoundException(fileId, e);
         } catch (S3Exception e) {
             if (e.statusCode() == 404) {
-                throw new IOException("File not found with ID: " + fileId, e);
+                throw ExceptionUtils.createFileNotFoundException(fileId, e);
             }
             throw new IOException("Failed to head object in S3", e);
         } catch (SdkException e) {

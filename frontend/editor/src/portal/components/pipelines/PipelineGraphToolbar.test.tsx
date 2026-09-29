@@ -46,6 +46,24 @@ describe("PipelineGraphToolbar", () => {
     expect(handlers.onTest).toHaveBeenCalledWith(file);
   });
 
+  it("clears the picker after a test so the same file can be chosen again", () => {
+    renderToolbar();
+    const file = new File(["x"], "claim.pdf", { type: "application/pdf" });
+    const input = document.querySelector<HTMLInputElement>(
+      'input[type="file"]',
+    ) as HTMLInputElement;
+    const setValue = vi.fn();
+    Object.defineProperty(input, "value", {
+      configurable: true,
+      get: () => "",
+      set: setValue,
+    });
+
+    fireEvent.change(input, { target: { files: [file] } });
+
+    expect(setValue).toHaveBeenCalledWith("");
+  });
+
   it("will not offer a test run on a chain with no steps", () => {
     renderToolbar({ stepCount: 0 });
     expect(

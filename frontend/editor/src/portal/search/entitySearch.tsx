@@ -22,17 +22,12 @@ import type { Member } from "@portal/api/users";
 // endpoints, SaaS the invitation-based team endpoints (the admin ones 403
 // there for the always-ROLE_USER sessions).
 import { usersBackend } from "@app/portal/usersBackend";
-import {
-  DocsIcon,
-  PipelinesIcon,
-  PoliciesIcon,
-  SourcesIcon,
-  UsersIcon,
-} from "@portal/components/icons";
+import { Icon } from "@app/ui/Icon";
 import type { Tier } from "@portal/contexts/TierContext";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
-import { allDocs, loadDocsNav } from "@portal/docs/manifest/registry";
-import { searchDocs, toPlainText, type SearchDoc } from "@portal/docs/search";
+import { DOCS_PATH } from "@app/routes/docsRoute";
+import { allDocs, loadDocsNav } from "@core/docs/manifest/registry";
+import { searchDocs, toPlainText, type SearchDoc } from "@core/docs/search";
 
 /**
  * The Processor's entity search: users, policies, pipelines and sources,
@@ -122,9 +117,9 @@ export function rankDocsResults(
         .map((seg) => seg.text)
         .join("")
         .trim() || result.sectionLabel,
-    icon: <DocsIcon />,
+    icon: <Icon name="book-open" size={18} />,
     score: result.score,
-    onSelect: () => navigate(`${toPortalPath(VIEW_PATHS.docs)}#${result.id}`),
+    onSelect: () => navigate(`${DOCS_PATH}#${result.id}`),
   }));
 }
 
@@ -208,7 +203,7 @@ export function rankPortalPolicyResults(
   entries: CatalogueEntry[],
   trimmed: string,
   t: Translate,
-  openPolicy: (categoryId: string) => void,
+  openPolicy: (policyKey: string) => void,
   limit = ENTITY_GROUP_LIMIT,
 ): SuperSearchResult[] {
   return rankByFuzzy(
@@ -226,7 +221,7 @@ export function rankPortalPolicyResults(
       group: "portal-policies",
       title: policyResultTitle(item, t),
       subtitle: t(item.category.desc),
-      icon: <PoliciesIcon />,
+      icon: <Icon name="shield-check" size={18} />,
       score,
       onSelect: () => openPolicy(item.category.id),
     }));
@@ -250,7 +245,7 @@ export function rankPortalPipelineResults(
       group: "portal-pipelines",
       title: item.name,
       subtitle: item.trigger,
-      icon: <PipelinesIcon />,
+      icon: <Icon name="workflow" size={18} />,
       score,
       onSelect: () => openPipeline(item.id),
     }));
@@ -291,12 +286,10 @@ export function buildProcessorEntityGroups(
           group: "portal-users",
           title: item.name,
           subtitle: item.email,
-          icon: <UsersIcon />,
+          icon: <Icon name="users" size={18} />,
           score,
           onSelect: () =>
-            navigate(
-              `${toPortalPath(VIEW_PATHS.users)}?member=${encodeURIComponent(item.id)}`,
-            ),
+            navigate(`/settings/users?member=${encodeURIComponent(item.id)}`),
         }))
     : [];
   if (users.length > 0) {
@@ -312,9 +305,9 @@ export function buildProcessorEntityGroups(
         entities.policies,
         trimmed,
         t,
-        (categoryId) =>
+        (policyKey) =>
           navigate(
-            `${toPortalPath(VIEW_PATHS.policies)}?category=${encodeURIComponent(categoryId)}`,
+            `${toPortalPath(VIEW_PATHS.pipelines)}?setup=${encodeURIComponent(policyKey)}`,
           ),
         ENTITY_GROUP_LIMIT,
       )
@@ -363,7 +356,7 @@ export function buildProcessorEntityGroups(
           group: "portal-sources",
           title: item.name,
           subtitle: item.type,
-          icon: <SourcesIcon />,
+          icon: <Icon name="plug" size={18} />,
           score,
           onSelect: () =>
             navigate(`${toPortalPath(VIEW_PATHS.sources)}/${item.id}`),

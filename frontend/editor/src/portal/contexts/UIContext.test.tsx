@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { act, render } from "@testing-library/react";
-import { UIProvider, useUI } from "@portal/contexts/UIContext";
+import { UIProvider, useUI } from "@app/portal/contexts/UIContext";
 
 /**
  * The context value is memoised, so every piece of state it exposes has to appear in the memo's
@@ -33,6 +33,16 @@ function probe() {
 }
 
 describe("UIContext — the trial-setup signal reaches consumers", () => {
+  it("opens banner prompts without a previous pipeline failure context", () => {
+    const p = probe();
+    const cause = { pipelineId: "rotate", trigger: "upload" as const };
+    act(() => p.api.openLinkModal("exhausted", cause));
+    expect(p.api.linkModalFailureContext).toEqual(cause);
+    act(() => p.api.closeLinkModal());
+    act(() => p.api.openLinkModal("exhausted"));
+    expect(p.api.linkModalOpen).toBe(true);
+    expect(p.api.linkModalFailureContext).toBeUndefined();
+  });
   it("re-renders consumers when the request is raised and cleared", () => {
     const p = probe();
     expect(p.api.trialSetupRequested).toBe(false);
@@ -44,4 +54,29 @@ describe("UIContext — the trial-setup signal reaches consumers", () => {
     act(() => p.api.clearTrialSetupRequest());
     expect(p.api.trialSetupRequested).toBe(false);
   });
+});
+
+it("does not replace an active renewal with concurrent exhausted-credit prompts", () => {
+  const p = probe();
+  act(() => {
+    p.api.openLinkModal("reauth");
+    p.api.openLinkModal("exhausted");
+  });
+  expect(p.api.linkModalMode).toBe("reauth");
+  const cancel = vi.fn();
+  act(() =>
+    p.api.publishConnectOutcome({
+      mode: "reauth",
+      state: "working",
+      sessionRestored: false,
+      cancel,
+    }),
+  );
+  act(() => p.api.openLinkModal("exhausted"));
+  expect(p.api.connectOutcome?.state).toBe("working");
+  act(() => p.api.closeLinkModal());
+  expect(cancel).toHaveBeenCalledOnce();
+  act(() => p.api.openLinkModal("link"));
+  expect(p.api.linkModalMode).toBe("link");
+  expect(p.api.connectOutcome).toBeNull();
 });

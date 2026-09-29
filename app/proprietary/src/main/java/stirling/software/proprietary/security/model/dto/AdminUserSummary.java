@@ -53,6 +53,8 @@ public class AdminUserSummary {
     @Schema(description = "Whether the user owns (leads) any team")
     private boolean teamLead;
 
+    private boolean orgOwner;
+
     @Schema(
             description =
                     "Whether the user may access the portal, per the server-side access policy")

@@ -31,6 +31,7 @@ import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
 import stirling.software.proprietary.util.SecretMasker;
@@ -66,6 +67,7 @@ public class SourceController {
     private final PolicyTriggerManager policyTriggerManager;
     private final ApplicationProperties applicationProperties;
     private final List<InputSource> inputSources;
+    private final List<PolicyOutputSink> outputSinks;
 
     @GetMapping
     @Operation(
@@ -253,10 +255,17 @@ public class SourceController {
     /** Validate the config against the bean that handles the source's type, as the engine will. */
     private void validateConfig(Source source) {
         InputSpec spec = source.toInputSpec();
-        inputSourceFor(spec)
+        Optional<InputSource> input = inputSourceFor(spec);
+        if (input.isPresent()) {
+            input.get().validate(spec);
+            return;
+        }
+        outputSinks.stream()
+                .filter(sink -> sink.supports(source.toOutputSpec()))
+                .findFirst()
                 .orElseThrow(
                         () -> new IllegalArgumentException("unknown source type: " + source.type()))
-                .validate(spec);
+                .validate(source.toOutputSpec());
     }
 
     private Source withPreparedOptions(Source source, boolean isCreate) {
@@ -309,15 +318,18 @@ public class SourceController {
 
     /**
      * Names of the caller's visible policies that reference the given source - as an input ({@code
-     * sourceIds}) or as their output destination ({@code outputId}), so a location in use either
-     * way is protected from deletion.
+     * sourceIds}) or as any destination it can deliver to ({@link Policy#allOutputIds()}: the
+     * fallback output and every routing rule's destination), so a location in use any of those ways
+     * is protected from deletion. A routing destination has to be covered here: dropping it would
+     * leave the rule unresolvable at run time, and the documents it claimed would go to the
+     * fallback destination instead.
      */
     private List<String> referencingPolicyNames(String sourceId) {
         return policyAccessGuard.visibleFrom(policyStore).stream()
                 .filter(
                         policy ->
                                 policy.sourceIds().contains(sourceId)
-                                        || policy.outputIds().contains(sourceId))
+                                        || policy.allOutputIds().contains(sourceId))
                 .map(Policy::name)
                 .toList();
     }

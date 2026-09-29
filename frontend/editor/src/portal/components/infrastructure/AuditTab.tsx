@@ -26,9 +26,13 @@ import {
   AUDIT_STATUS_LABEL,
   AUDIT_TONE,
 } from "@portal/components/infrastructure/infraFormat";
+import "@portal/components/infrastructure/infrastructure.css";
 
 type AuditFilter = "all" | AuditCategory;
 
+// Enterprise-only: the Infrastructure view disables this tab for non-enterprise
+// instances, so this component only ever renders when entitled. The backend still
+// scopes the log to admins / team leads (403 -> forbidden state below).
 export function AuditTab() {
   const { t } = useTranslation();
   const { tier } = useTier();

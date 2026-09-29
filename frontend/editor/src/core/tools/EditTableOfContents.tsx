@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { downloadFile } from "@app/services/downloadService";
-import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
+import { Icon } from "@app/ui/Icon";
 import { alert } from "@app/components/toast";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import EditTableOfContentsWorkbenchView, {
@@ -77,7 +77,7 @@ const EditTableOfContents = (props: BaseToolProps) => {
 
   const WORKBENCH_VIEW_ID = "editTableOfContentsWorkbench";
   const WORKBENCH_ID = "custom:editTableOfContents" as const;
-  const viewIcon = useMemo(() => <MenuBookRoundedIcon fontSize="small" />, []);
+  const viewIcon = useMemo(() => <Icon name="book-open" size={20} />, []);
 
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoadingBookmarks, setIsLoadingBookmarks] = useState(false);

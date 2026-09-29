@@ -9,6 +9,7 @@ from stirling.agents import PdfEditAgent, PdfEditParameterSelector, PdfEditPlanS
 from stirling.agents.pdf_edit import PdfEditNeedContentSelection, PdfEditPlanOutput
 from stirling.contracts import (
     AiFile,
+    ConversationMessage,
     EditCannotDoResponse,
     EditClarificationRequest,
     EditPlanResponse,
@@ -144,7 +145,7 @@ def test_selection_prompt_says_nothing_about_output_formats(runtime: AppRuntime)
     # Compatibility is only raised once a plan has actually failed, so the operation list stays
     # about what each tool does. Leaking format hints here re-inflates an already large prompt.
     agent = StubPdfEditAgent(runtime, _ANY_SELECTION)
-    prompt = agent._build_selection_prompt(PdfEditRequest(user_message="anything", files=[]), list(OPERATIONS), [])
+    prompt = agent._build_selection_prompt(PdfEditRequest(user_message="anything", files=[]), list(OPERATIONS))
     assert "outputs:" not in prompt
     assert "IMAGE (several files)" not in prompt
 
@@ -156,7 +157,6 @@ def test_repair_prompt_offers_reorder_or_telling_the_user(runtime: AppRuntime) -
     prompt = agent._build_selection_prompt(
         PdfEditRequest(user_message="anything", files=[]),
         list(OPERATIONS),
-        [],
         "step 3 (SANITIZE_PDF) accepts PDF but the previous step produces IMAGE.",
     )
     assert "SANITIZE_PDF" in prompt
@@ -398,6 +398,10 @@ async def test_pdf_edit_selection_agent_excludes_need_content_from_schema_when_n
     assert PdfEditNeedContentSelection not in _agent_output_types(cannot_request)
 
 
+def _agent_system_prompt(agent: object) -> str:
+    return "".join(getattr(getattr(agent, "agent"), "_system_prompts", ()))
+
+
 def _agent_output_types(agent: object) -> list[type]:
     native = getattr(getattr(agent, "agent"), "output_type")
     return list(getattr(native, "outputs", []))
@@ -494,11 +498,13 @@ def test_pdf_edit_selection_prompt_includes_unavailable_operations(runtime: AppR
     )
     supported, unavailable = agent._classify_operations(request)
 
-    prompt = agent._build_selection_prompt(request, supported, unavailable)
+    selection_agent = agent._build_selection_agent(supported, unavailable, allow_need_content=False)
+    system_prompt = "".join(selection_agent.agent._system_prompts)
+    prompt = agent._build_selection_prompt(request, supported)
 
-    assert "Unavailable operations" in prompt
-    assert "OCR_PDF" in prompt
-    assert ToolEndpoint.OCR_PDF.value in prompt
+    assert "NOT currently available" in system_prompt
+    assert "OCR_PDF" in system_prompt
+    assert "OCR_PDF" not in prompt
 
 
 @pytest.mark.anyio
@@ -695,3 +701,82 @@ async def test_pdf_edit_agent_composes_edit_text_with_other_operations(runtime: 
     ]
     assert isinstance(response.steps[0].parameters, EditTextParams)
     assert isinstance(response.steps[1].parameters, RotatePdfParams)
+
+
+class RecordingShortlist:
+    """Stands in for the runtime shortlist: the test suite has no reachable embedding provider."""
+
+    def __init__(self, selection: list[ToolEndpoint]) -> None:
+        self.selection = selection
+        self.calls: list[tuple[str, list[ToolEndpoint], int]] = []
+
+    async def select(self, query: str, operations: list[ToolEndpoint], limit: int) -> list[ToolEndpoint]:
+        self.calls.append((query, list(operations), limit))
+        return self.selection
+
+
+@pytest.mark.anyio
+async def test_pdf_edit_agent_shows_the_planner_only_the_shortlisted_operations(
+    runtime: AppRuntime,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from stirling.agents.pdf_edit import PdfEditSelectionAgent
+
+    agent = PdfEditAgent(runtime)
+    narrowed = [ToolEndpoint.ROTATE_PDF, ToolEndpoint.ADD_WATERMARK]
+    agent.shortlist = RecordingShortlist(narrowed)
+    recorded: list[tuple[PdfEditSelectionAgent, str]] = []
+
+    async def record(self: PdfEditSelectionAgent, prompt: str) -> PdfEditPlanOutput:
+        recorded.append((self, prompt))
+        return _ANY_SELECTION
+
+    monkeypatch.setattr(PdfEditSelectionAgent, "select", record)
+
+    await agent._select_plan(PdfEditRequest(user_message="Rotate it."), list(OPERATIONS), [])
+
+    selection_agent, user_prompt = recorded[0]
+    system_prompt = _agent_system_prompt(selection_agent)
+    for operation in narrowed:
+        assert operation.name in system_prompt
+        assert f"- {operation.name} " in user_prompt
+    assert ToolEndpoint.SPLIT_PAGES.name not in system_prompt
+    assert ToolEndpoint.SPLIT_PAGES.name not in user_prompt
+
+
+@pytest.mark.anyio
+async def test_pdf_edit_agent_ranks_operations_against_the_conversation_not_just_the_last_message(
+    runtime: AppRuntime,
+) -> None:
+    from stirling.agents.pdf_edit import PdfEditSelectionAgent
+
+    agent = PdfEditAgent(runtime)
+    shortlist = RecordingShortlist([ToolEndpoint.ADD_WATERMARK])
+    agent.shortlist = shortlist
+
+    def record(
+        supported_operations: Iterable[ToolEndpoint],
+        unavailable_operations: Iterable[ToolEndpoint],
+        *,
+        allow_need_content: bool,
+    ) -> PdfEditSelectionAgent:
+        raise _StopSelectionError()
+
+    agent._build_selection_agent = record
+
+    request = PdfEditRequest(
+        user_message="do the same to the other file",
+        conversation_history=[ConversationMessage(role="user", content="add a watermark saying DRAFT")],
+    )
+    with pytest.raises(_StopSelectionError):
+        await agent._select_plan(request, list(OPERATIONS), [])
+
+    query, operations, limit = shortlist.calls[0]
+    assert "watermark" in query
+    assert query.endswith("do the same to the other file")
+    assert operations == list(OPERATIONS)
+    assert limit == runtime.settings.planner_shortlist_size
+
+
+def test_pdf_edit_agents_share_the_runtime_shortlist(runtime: AppRuntime) -> None:
+    assert PdfEditAgent(runtime).shortlist is PdfEditAgent(runtime).shortlist is runtime.operation_shortlist

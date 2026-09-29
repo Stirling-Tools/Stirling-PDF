@@ -1,9 +1,6 @@
 import React from "react";
 import { Menu, Loader, Group, Text, Checkbox } from "@mantine/core";
-import { LocalIcon } from "@app/components/shared/LocalIcon";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
-import AddIcon from "@mui/icons-material/Add";
+import { Icon } from "@app/ui/Icon";
 import FitText from "@app/components/shared/FitText";
 import { getFileColorWithOpacity } from "@app/components/pageEditor/fileColors";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
@@ -101,18 +98,16 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
         }}
         onMouseEnter={(e) => {
           if (!isDragging) {
-            (e.currentTarget as HTMLDivElement).style.backgroundColor =
-              "rgba(0, 0, 0, 0.05)";
-            (e.currentTarget as HTMLDivElement).style.borderLeftColor =
-              fileColorBorderHover;
+            e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.05)";
+            e.currentTarget.style.borderLeftColor = fileColorBorderHover;
           }
         }}
         onMouseLeave={(e) => {
           if (!isDragging) {
-            (e.currentTarget as HTMLDivElement).style.backgroundColor =
-              file.isSelected ? "rgba(0, 0, 0, 0.05)" : "transparent";
-            (e.currentTarget as HTMLDivElement).style.borderLeftColor =
-              fileColorBorder;
+            e.currentTarget.style.backgroundColor = file.isSelected
+              ? "rgba(0, 0, 0, 0.05)"
+              : "transparent";
+            e.currentTarget.style.borderLeftColor = fileColorBorder;
           }
         }}
       >
@@ -125,7 +120,7 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
               color: "var(--mantine-color-dimmed)",
             }}
           >
-            <DragIndicatorIcon fontSize="small" />
+            <Icon name="grip-vertical" size={20} />
           </div>
           <Checkbox
             checked={file.isSelected}
@@ -187,16 +182,12 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
           {switchingTo === "pageEditor" ? (
             <Loader size="xs" />
           ) : (
-            <LocalIcon
-              icon="dashboard-customize-rounded"
-              width="1.4rem"
-              height="1.4rem"
-            />
+            <Icon name="layout-dashboard" size="1.4rem" />
           )}
           <span className="ph-no-capture">
             {selectedCount}/{totalCount} files selected
           </span>
-          <KeyboardArrowDownIcon fontSize="small" />
+          <Icon name="chevron-down" size={20} />
         </div>
       </Menu.Target>
       <Menu.Dropdown
@@ -211,7 +202,7 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
         }}
       >
         {files.map((file, index) => {
-          const colorIndex = fileColorMap.get(file.fileId as string) ?? 0;
+          const colorIndex = fileColorMap.get(file.fileId) ?? 0;
 
           return (
             <FileMenuItem
@@ -240,17 +231,16 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
             transition: "background-color 0.15s ease",
           }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLDivElement).style.backgroundColor =
-              "rgba(59, 130, 246, 0.25)";
+            e.currentTarget.style.backgroundColor = "rgba(59, 130, 246, 0.25)";
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLDivElement).style.backgroundColor =
-              "transparent";
+            e.currentTarget.style.backgroundColor = "transparent";
           }}
         >
           <Group gap="xs" style={{ width: "100%" }}>
-            <AddIcon
-              fontSize="small"
+            <Icon
+              name="plus"
+              size={20}
               style={{ color: "var(--mantine-color-text)" }}
             />
             <Text
