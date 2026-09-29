@@ -50,10 +50,9 @@ export function describeToolOperation<
     // A dynamic tool's mapper is typed against the union; narrow to this endpoint (sound - the
     // runtime mapper produces this endpoint's model).
     toApi: (params) => toApiParams(params) as ToolApiParams[E],
-    fromApi: (api) =>
-      ({
-        ...defaultParameters,
-        ...fromApiParams(api as ToolApiParams[CE]),
-      }) as TParams,
+    fromApi: (api) => ({
+      ...defaultParameters,
+      ...fromApiParams(api),
+    }),
   };
 }

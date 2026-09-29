@@ -17,6 +17,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
@@ -158,6 +159,9 @@ public class FontEmbeddingService {
             if (after.getNumberOfPages() != before.getNumberOfPages()) {
                 return false;
             }
+            if (lostText(before, after)) {
+                return false;
+            }
             long beforeBytes = contentBytes(before);
             long afterBytes = contentBytes(after);
             if (beforeBytes == 0) {
@@ -167,6 +171,45 @@ public class FontEmbeddingService {
         } catch (IOException e) {
             log.debug("Could not compare documents after embedding: {}", e.getMessage());
             return false;
+        }
+    }
+
+    /**
+     * Fraction of the original's extracted text a rewrite must still carry. The embedder re-encodes
+     * text, so a few characters either way mean nothing; a tenth of the document going missing is
+     * content loss.
+     */
+    private static final double TEXT_RETENTION_FLOOR = 0.9;
+
+    /**
+     * True when the rewrite dropped a meaningful share of the document's text.
+     *
+     * <p>Content-stream bytes cannot answer this on their own: the embedder recompresses, so they
+     * move for reasons unrelated to the page keeping its content. An 80-page document measured here
+     * came back with each page truncated to its first half - 422070 characters down to 211230 -
+     * while its content streams stayed well inside the byte ratio below.
+     *
+     * <p>Growth is not loss: flattening a widget annotation into the page legitimately adds text.
+     * Only a shortfall fails.
+     */
+    private static boolean lostText(PDDocument before, PDDocument after) {
+        String textBefore = extractText(before);
+        String textAfter = extractText(after);
+        if (textBefore == null || textAfter == null || textBefore.isBlank()) {
+            return false;
+        }
+        return textAfter.length() < textBefore.length() * TEXT_RETENTION_FLOOR;
+    }
+
+    /** Extracted text, or null when the document cannot be read - never a partial read. */
+    private static String extractText(PDDocument document) {
+        try {
+            PDFTextStripper stripper = new PDFTextStripper();
+            stripper.setSortByPosition(false);
+            return stripper.getText(document);
+        } catch (IOException | RuntimeException e) {
+            log.debug("Could not extract text while checking the rewrite: {}", e.getMessage());
+            return null;
         }
     }
 

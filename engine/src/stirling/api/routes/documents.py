@@ -6,6 +6,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 
 from stirling.api.dependencies import get_document_service, require_user_id
+from stirling.api.linked_instance import LINKED_INSTANCE
 from stirling.contracts import (
     DeleteDocumentResponse,
     IngestDocumentRequest,
@@ -19,7 +20,7 @@ router = APIRouter(prefix="/api/v1/documents", tags=["documents"])
 logger = logging.getLogger(__name__)
 
 
-@router.post("", response_model=IngestDocumentResponse)
+@router.post("", response_model=IngestDocumentResponse, openapi_extra=LINKED_INSTANCE)
 async def ingest_document(
     request: IngestDocumentRequest,
     documents: Annotated[DocumentService, Depends(get_document_service)],
@@ -66,7 +67,7 @@ async def delete_document(
     return DeleteDocumentResponse(document_id=document_id, deleted=existed)
 
 
-@router.delete("/by-owner", response_model=PurgeOwnerResponse)
+@router.delete("/by-owner", response_model=PurgeOwnerResponse, openapi_extra=LINKED_INSTANCE)
 async def purge_caller_documents(
     documents: Annotated[DocumentService, Depends(get_document_service)],
     user_id: Annotated[UserId, Depends(require_user_id)],

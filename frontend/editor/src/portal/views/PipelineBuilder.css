@@ -131,8 +131,12 @@
   font-size: 1.125rem;
 }
 
+/* Tool icons arrive pre-sized from the registry (1.5rem) and brand marks at their own size, so
+   the slot sizes whatever it is given to its font-size and the column reads as one set. */
 .portal-pipelines__picker-icon svg {
   display: block;
+  width: 1em;
+  height: 1em;
 }
 
 /* Name over its optional note - a two-line item, so the note reads as a sub-line rather than
@@ -191,6 +195,18 @@
 
 /* A quiet way into the chosen source's own settings, beside its dropdown. */
 .portal-builder__input-row .portal-builder__source-edit {
+  color: var(--c-text-subtle);
+}
+
+/* A field label that carries an info icon explaining the choice. */
+.portal-builder__label-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  cursor: help;
+}
+
+.portal-builder__label-hint svg {
   color: var(--c-text-subtle);
 }
 

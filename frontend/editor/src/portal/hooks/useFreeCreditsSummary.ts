@@ -1,8 +1,8 @@
+import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useLink } from "@portal/contexts/LinkContext";
-import { fetchWallet } from "@portal/api/billing";
-import { qk } from "@portal/queries/keys";
+import { useLink } from "@app/portal/contexts/LinkContext";
+import { walletQuery } from "@app/portal/queries/wallet";
 import {
   readCachedCredits,
   writeCachedCredits,
@@ -26,18 +26,19 @@ import { type NavFooterCredits } from "@app/components/shared/navFooter/NavFoote
  * since the wallet lives in the cloud even when the instance doesn't. Gated on
  * linkage: an unlinked instance has no wallet to read.
  *
- * Free teams only, matching the editor and the Plan page. The grant is a
- * lifetime pool that survives subscribing, so a paying team would otherwise sit
- * on a permanent "0 of 500" in red; their usage lives on Usage & Billing.
+ * Free teams only, matching the editor and the Plan page: a payer's headline
+ * number is spend against cap, and their usage lives on Usage & Billing.
  */
 export function useFreeCreditsSummary(): NavFooterCredits | null {
   const { isLinked } = useLink();
-  // Shared query key, so the footer rides the same cached snapshot as any other
-  // wallet reader rather than adding a fetch per mount.
+  // Shared definition, not just a shared key: per-observer options are resolved
+  // per-observer, so differing retry or interval settings here would make the
+  // behaviour depend on which reader happened to fetch.
+  const isOwner = useAccountLinkOwner();
+  const canRead = isLinked && isOwner;
   const { data: wallet } = useQuery({
-    queryKey: qk.wallet(isLinked),
-    queryFn: fetchWallet,
-    enabled: isLinked,
+    ...walletQuery(isLinked),
+    enabled: canRead,
   });
   // Shared with the editor's seam, so crossing between the two apps shows the
   // figures the other one last saw rather than re-fetching into an empty row.
@@ -52,14 +53,14 @@ export function useFreeCreditsSummary(): NavFooterCredits | null {
   useEffect(() => {
     // Only once linked: an unlinked instance never asks, so it has no answer of
     // its own and must not overwrite what the editor recorded.
-    if (isLinked && live !== undefined) writeCachedCredits(live);
+    if (canRead && live !== undefined) writeCachedCredits(live);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wallet, isLinked]);
+  }, [wallet, canRead]);
 
   // Linkage gates the seed as well as the fetch. The cache outlives an unlink
   // — nothing refetches or rewrites it once the instance stops asking — so
   // without this an unlinked instance would keep showing the figures from when
   // it was linked, indefinitely.
-  if (!isLinked) return null;
+  if (!canRead) return null;
   return (live !== undefined ? live : seed) ?? null;
 }

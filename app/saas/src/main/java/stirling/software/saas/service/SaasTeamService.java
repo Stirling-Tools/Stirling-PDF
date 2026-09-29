@@ -21,6 +21,7 @@ import stirling.software.proprietary.security.database.repository.UserRepository
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
 import stirling.software.saas.accountlink.LinkedInstanceRepository;
 import stirling.software.saas.billing.repository.BillingSubscriptionRepository;
 import stirling.software.saas.config.SupabaseConfigurationProperties;
@@ -35,6 +36,7 @@ import stirling.software.saas.repository.TeamInvitationRepository;
 @Slf4j
 public class SaasTeamService {
 
+    private final jakarta.persistence.EntityManager entityManager;
     private final TeamRepository teamRepository;
     private final TeamMembershipRepository membershipRepository;
     private final TeamInvitationRepository invitationRepository;
@@ -126,7 +128,12 @@ public class SaasTeamService {
         Team savedTeam = teamRepository.save(team);
 
         saasTeamExtensionService.setPersonal(savedTeam, true);
-        saasTeamExtensionService.setSeats(savedTeam, 1, 1);
+        // The free allowance, not 1: a linked instance reads this number as its own ceiling, so
+        // a 1 here would refuse every user it tried to create.
+        saasTeamExtensionService.setSeats(
+                savedTeam,
+                UserLicenseSettingsService.DEFAULT_USER_LIMIT,
+                UserLicenseSettingsService.DEFAULT_USER_LIMIT);
         saasTeamExtensionService.setCreatedByUserId(savedTeam, user.getId());
         saasTeamExtensionsRepository.incrementSeatsUsed(savedTeam.getId());
 
@@ -189,16 +196,24 @@ public class SaasTeamService {
      */
     private void returnUserToHome(User user) {
         Long homeId = resolveHomeTeamId(user);
-        Team home = homeId == null ? null : teamRepository.findById(homeId).orElse(null);
+        Team home = homeId == null ? null : teamRepository.lockById(homeId).orElse(null);
         if (home == null) {
             createPersonalTeam(user);
             return;
         }
         if (membershipRepository.findByTeamIdAndUserId(home.getId(), user.getId()).isEmpty()) {
+            // A former founder must not be re-added to the shared team they just left.
+            if (!saasTeamExtensionService.isPersonal(home)) {
+                createPersonalTeam(user);
+                return;
+            }
             TeamMembership membership = new TeamMembership();
             membership.setTeam(home);
             membership.setUser(user);
-            membership.setRole(TeamRole.LEADER);
+            membership.setRole(
+                    membershipRepository.countByTeamIdAndRole(home.getId(), TeamRole.LEADER) == 0
+                            ? TeamRole.LEADER
+                            : TeamRole.MEMBER);
             membership.setInvitedAt(LocalDateTime.now());
             membership.setAcceptedAt(LocalDateTime.now());
             membershipRepository.save(membership);
@@ -243,8 +258,11 @@ public class SaasTeamService {
                     team.getName(),
                     inviter.getUsername());
             saasTeamExtensionService.setPersonal(team, false);
-            // Unlimited seats once converted to standard
-            saasTeamExtensionService.setSeats(team, Integer.MAX_VALUE, Integer.MAX_VALUE);
+            int capacity =
+                    Math.max(
+                            UserLicenseSettingsService.DEFAULT_USER_LIMIT,
+                            saasTeamExtensionService.getMaxSeats(team));
+            saasTeamExtensionService.setSeats(team, capacity, capacity);
         }
 
         // Validate: team can invite (not personal, has available seats)
@@ -468,6 +486,7 @@ public class SaasTeamService {
      */
     @Transactional
     public void removeTeamMember(Long teamId, Long memberUserId, User remover) {
+        teamRepository.lockById(teamId).orElseThrow();
         // Validate: remover is team leader
         TeamMembership removerMembership =
                 membershipRepository
@@ -475,6 +494,7 @@ public class SaasTeamService {
                         .orElseThrow(
                                 () -> new SecurityException("You are not a member of this team"));
 
+        entityManager.refresh(removerMembership);
         if (!removerMembership.isLeader()) {
             throw new SecurityException("Only team leaders can remove members");
         }
@@ -519,8 +539,8 @@ public class SaasTeamService {
      * membership and its wallet) rather than deleting it, so a plain team is never orphaned. The
      * only real hazard is a team the user is the <em>last</em> leader of that still carries live
      * billing: an active paid/PAYG subscription, or a non-revoked linked self-hosted instance
-     * ("Mode A"). Those block the join until the plan is cancelled / leadership transferred /
-     * instances revoked. An unpaid, unlinked team (personal or shared) no longer blocks.
+     * (combined billing). Those block the join until the plan is cancelled / leadership transferred
+     * / instances revoked. An unpaid, unlinked team (personal or shared) no longer blocks.
      *
      * <p>The home team and the team being joined are excluded: neither is left by the join (home is
      * parked, the joined team is kept), so their live billing cannot be stranded.
@@ -565,12 +585,14 @@ public class SaasTeamService {
      */
     @Transactional
     public void leaveTeam(Long teamId, User user) {
+        teamRepository.lockById(teamId).orElseThrow();
         TeamMembership membership =
                 membershipRepository
                         .findByTeamIdAndUserId(teamId, user.getId())
                         .orElseThrow(
                                 () -> new IllegalArgumentException("Not a member of this team"));
 
+        entityManager.refresh(membership);
         // Cannot leave if you're the only leader
         if (membership.isLeader()) {
             List<TeamMembership> leaders =
@@ -732,6 +754,7 @@ public class SaasTeamService {
      */
     @Transactional
     public void updateTeamSeats(Long teamId, Integer maxSeats) {
+        teamRepository.lockById(teamId).orElseThrow();
         if (maxSeats == null || maxSeats < 1) {
             throw new IllegalArgumentException("maxSeats must be at least 1");
         }
@@ -741,87 +764,7 @@ public class SaasTeamService {
                         .findById(teamId)
                         .orElseThrow(() -> new IllegalArgumentException("Team not found"));
 
-        // Handle seat reduction: automatically remove excess members if reducing below current
-        // usage
-        int currentSeatsUsed = saasTeamExtensionService.getSeatsUsed(team);
-        int currentMaxSeats = saasTeamExtensionService.getMaxSeats(team);
-        if (maxSeats < currentSeatsUsed) {
-            int excessMembers = currentSeatsUsed - maxSeats;
-            log.warn(
-                    "Team {} reducing seats from {} to {} with {} current members. Removing {} excess members.",
-                    teamId,
-                    currentMaxSeats,
-                    maxSeats,
-                    currentSeatsUsed,
-                    excessMembers);
-
-            // Get all team members, sorted by priority (non-leaders first, most recently joined
-            // first)
-            List<TeamMembership> allMembers = membershipRepository.findByTeamId(teamId);
-
-            // Sort: MEMBER role first (non-leaders), then by accepted date descending (most recent
-            // first)
-            List<TeamMembership> membersToRemove =
-                    allMembers.stream()
-                            .sorted(
-                                    (m1, m2) -> {
-                                        // Leaders (LEADER role) come last (lower priority for
-                                        // removal)
-                                        if (m1.getRole() != m2.getRole()) {
-                                            return m1.getRole() == TeamRole.LEADER ? 1 : -1;
-                                        }
-                                        // Among same role, remove most recently joined first
-                                        // (descending accepted date)
-                                        LocalDateTime date1 =
-                                                m1.getAcceptedAt() != null
-                                                        ? m1.getAcceptedAt()
-                                                        : m1.getInvitedAt();
-                                        LocalDateTime date2 =
-                                                m2.getAcceptedAt() != null
-                                                        ? m2.getAcceptedAt()
-                                                        : m2.getInvitedAt();
-                                        if (date1 == null && date2 == null) return 0;
-                                        if (date1 == null) return 1;
-                                        if (date2 == null) return -1;
-                                        return date2.compareTo(
-                                                date1); // Descending (most recent first)
-                                    })
-                            .limit(excessMembers)
-                            .collect(java.util.stream.Collectors.toList());
-
-            // Remove excess members
-            for (TeamMembership membership : membersToRemove) {
-                User userToRemove = membership.getUser();
-                log.info(
-                        "Removing user {} ({}) from team {} due to seat reduction",
-                        userToRemove.getId(),
-                        userToRemove.getUsername(),
-                        teamId);
-
-                // Delete membership
-                membershipRepository.delete(membership);
-
-                // Atomically decrement seats_used count (prevents race condition)
-                saasTeamExtensionsRepository.decrementSeatsUsed(teamId);
-
-                // Return the evicted user to their durable home team.
-                returnUserToHome(userToRemove);
-
-                // Downgrade user to FREE tier
-                downgradeUserToFree(userToRemove);
-
-                log.info(
-                        "User {} removed from team {} and migrated to personal team due to seat reduction",
-                        userToRemove.getId(),
-                        teamId);
-            }
-
-            log.info(
-                    "Completed seat reduction for team {}: removed {} members",
-                    teamId,
-                    excessMembers);
-        }
-
+        // A reduction blocks future admissions; existing memberships remain intact.
         saasTeamExtensionService.setSeats(team, maxSeats, maxSeats);
 
         // Personal team with maxSeats > 1 is really a standard team.
@@ -834,7 +777,9 @@ public class SaasTeamService {
                     maxSeats);
         }
         // Revert to personal when downgrading to 1 seat
-        else if (!wasPersonal && maxSeats == 1) {
+        else if (!wasPersonal
+                && maxSeats == 1
+                && saasTeamExtensionService.getSeatsUsed(team) <= 1) {
             saasTeamExtensionService.setPersonal(team, true);
             log.info("Team {} converted from STANDARD to PERSONAL (maxSeats reduced to 1)", teamId);
         }

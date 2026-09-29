@@ -7,6 +7,7 @@ import org.slf4j.MDC;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -64,7 +65,7 @@ public class AuditWebFilter extends OncePerRequestFilter {
             if (auth != null && auth.getAuthorities() != null) {
                 String roles =
                         auth.getAuthorities().stream()
-                                .map(a -> a.getAuthority())
+                                .map(GrantedAuthority::getAuthority)
                                 .reduce((a, b) -> a + "," + b)
                                 .orElse("");
                 MDC.put("userRoles", roles);

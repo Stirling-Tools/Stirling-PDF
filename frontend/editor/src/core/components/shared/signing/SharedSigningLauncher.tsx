@@ -1,7 +1,7 @@
 import { Badge, Stack, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
+import { Icon } from "@app/ui/Icon";
 import { useGroupSigningEnabled } from "@app/hooks/useGroupSigningEnabled";
 import { useSigningSessions } from "@app/hooks/signing/useSigningSessions";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
@@ -37,7 +37,7 @@ export default function SharedSigningLauncher() {
       <Button
         fullWidth
         variant="tertiary"
-        leftSection={<GroupAddOutlinedIcon sx={{ fontSize: "1.1rem" }} />}
+        leftSection={<Icon name="users-plus" size={"1.1rem"} />}
         rightSection={
           pendingCount > 0 ? (
             <Badge size="sm" circle variant="filled" color="red">

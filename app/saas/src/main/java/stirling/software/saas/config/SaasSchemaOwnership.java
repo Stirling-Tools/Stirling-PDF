@@ -41,6 +41,7 @@ public final class SaasSchemaOwnership {
      */
     public static final Set<String> MIGRATION_OWNED =
             Set.of(
+                    "account_link_connect_request",
                     "ai_create_sessions",
                     "audit_events",
                     "authorities",
@@ -78,7 +79,10 @@ public final class SaasSchemaOwnership {
      */
     public static final Set<String> HIBERNATE_MANAGED =
             Set.of(
+                    "account_link_connect_state",
                     "account_link_device_credential",
+                    "account_link_free_tier_period",
+                    "account_link_free_tier_usage",
                     "account_link_metered_signature",
                     "account_link_sync_state",
                     "account_link_usage_counter",
@@ -103,7 +107,10 @@ public final class SaasSchemaOwnership {
                     "storage_cleanup_entries",
                     "stored_file_blobs",
                     "stored_files",
+                    "tool_chain_stats",
+                    "tool_usage_stats",
                     "user_license_settings",
+                    "org_owner",
                     "user_server_certificates",
                     "workflow_participants",
                     "workflow_sessions");

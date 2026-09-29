@@ -1,3 +1,4 @@
+import { Icon } from "@app/ui/Icon";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, Select } from "@app/ui";
@@ -83,21 +84,26 @@ export function ConnectionPicker({
     };
   }, [integrationType, presetId]);
 
+  const openCreate = () => (onCreateNew ? onCreateNew() : setModalOpen(true));
+  const showSelect = (connections?.length ?? 0) > 0 || Boolean(value);
+
   return (
     <div className="portal-sources__connection-picker">
-      <Select
-        value={value || null}
-        placeholder={t("portal.connections.picker.placeholder")}
-        options={(connections ?? []).map((connection) => ({
-          value: String(connection.id),
-          label: connection.name,
-        }))}
-        onChange={(selected) => onChange(selected ?? "")}
-      />
+      {showSelect && (
+        <Select
+          value={value || null}
+          placeholder={t("portal.connections.picker.placeholder")}
+          options={(connections ?? []).map((connection) => ({
+            value: String(connection.id),
+            label: connection.name,
+          }))}
+          onChange={(selected) => onChange(selected ?? "")}
+        />
+      )}
       <Button
-        variant="tertiary"
-        size="sm"
-        onClick={() => (onCreateNew ? onCreateNew() : setModalOpen(true))}
+        variant="secondary"
+        leftSection={<Icon name="plus" size="1em" />}
+        onClick={openCreate}
       >
         {t("portal.connections.picker.createNew")}
       </Button>

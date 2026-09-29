@@ -35,7 +35,7 @@ public class AuditConfigurationProperties {
 
         // Ensure level is within valid bounds (0-3)
         int configLevel = auditConfig.getLevel();
-        this.level = Math.min(Math.max(configLevel, 0), 3);
+        this.level = Math.clamp(configLevel, 0, 3);
 
         // Retention days (0 means infinite)
         this.retentionDays = auditConfig.getRetentionDays();

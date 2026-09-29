@@ -266,11 +266,17 @@
   color: var(--c-text-subtle);
 }
 
+/* An action row sizes the column, it does not squeeze into it: without nowrap +
+   no-shrink the labels wrap and a long one is clipped mid-word. */
 .sui-dtc__actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  flex-wrap: nowrap;
   gap: 0.25rem;
+}
+.sui-dtc__actions > * {
+  flex-shrink: 0;
 }
 .sui-dtc__menu-item--danger {
   color: var(--c-danger);

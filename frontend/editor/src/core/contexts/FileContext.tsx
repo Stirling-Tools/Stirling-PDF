@@ -42,6 +42,7 @@ import { createFileSelectors } from "@app/contexts/file/fileSelectors";
 import {
   addFiles,
   addStirlingFileStubs,
+  reconcileOpenFilesAt,
   consumeFiles,
   undoConsumeFiles,
   createFileActions,
@@ -66,8 +67,10 @@ import { useTranslation } from "react-i18next";
 import { alert } from "@app/components/toast";
 import { buildRemovePasswordFormData } from "@app/hooks/tools/removePassword/buildRemovePasswordFormData";
 import type { RemovePasswordParameters } from "@app/hooks/tools/removePassword/useRemovePasswordParameters";
+import { useResolutionContinuation } from "@app/hooks/tools/shared/useResolutionContinuation";
 import apiClient from "@app/services/apiClient";
 import { reportFilesRemoved } from "@app/services/failureReporting";
+import { setPendingUnlocks } from "@app/services/pendingUnlocks";
 import { processResponse } from "@app/utils/toolResponseProcessor";
 import { ToolOperation } from "@app/types/file";
 import { handlePasswordError } from "@app/utils/toolErrorHandler";
@@ -114,6 +117,7 @@ function FileContextInner({
   }
   const lifecycleManager = lifecycleManagerRef.current;
   const { t } = useTranslation();
+  const continueResolutions = useResolutionContinuation();
 
   const [encryptedQueue, setEncryptedQueue] = useState<FileId[]>([]);
   const [activeEncryptedFileId, setActiveEncryptedFileId] =
@@ -182,6 +186,21 @@ function FileContextInner({
       setActiveEncryptedFileId(null);
     }
   }, [activeEncryptedFileId, state.files.ids]);
+
+  // Published so an upload policy holds off until the user has answered the prompt: running now
+  // would fail on a document they are about to decrypt, and leave a row about a version that no
+  // longer exists once they have.
+  useEffect(() => {
+    setPendingUnlocks(
+      activeEncryptedFileId
+        ? [activeEncryptedFileId, ...encryptedQueue]
+        : encryptedQueue,
+    );
+  }, [activeEncryptedFileId, encryptedQueue]);
+
+  // The store outlives this provider, and a hold nobody can answer would stall the file's policy
+  // for the rest of the session. Its own effect, so a change of prompt does not clear and re-set.
+  useEffect(() => () => setPendingUnlocks([]), []);
 
   useEffect(() => {
     setUnlockPassword("");
@@ -267,6 +286,15 @@ function FileContextInner({
         skipWorkspaceDispatch?: boolean;
         skipUploadTracking?: boolean;
         derivedFromTool?: boolean;
+        /** Folder every added file is born into (see AddFileOptions). */
+        folderId?: string;
+        /** Classification computed outside the policy system (see AddFileOptions). */
+        presetClassification?: {
+          labels: string[];
+          confidence: StirlingFileStub["classificationConfidence"];
+        };
+        /** Bytes and stub only, no thumbnail parse (see AddFileOptions). */
+        skipMetadataHydration?: boolean;
       },
     ): Promise<StirlingFile[]> => {
       const stirlingFiles = await addFiles(
@@ -366,6 +394,12 @@ function FileContextInner({
     [],
   );
 
+  const reconcileOpenFilesAction = useCallback(
+    (locations: string[]) =>
+      reconcileOpenFilesAt(locations, stateRef, filesRef, lifecycleManager),
+    [],
+  );
+
   // Action creators
   const baseActions = useMemo(() => createFileActions(dispatch), []);
 
@@ -448,8 +482,17 @@ function FileContextInner({
       );
 
       await consumeFilesWrapper([fileId], [stirlingUnlockedFile], [childStub]);
+
+      // The modal is the remove-password tool by another door, so it resolves the same.
+      continueResolutions({
+        operation: "removePassword",
+        inputFileIds: [fileId],
+        outputs: [
+          { file: unlockedFile, fileId: childStub.id, sourceFileId: fileId },
+        ],
+      });
     },
-    [consumeFilesWrapper, t],
+    [consumeFilesWrapper, continueResolutions, t],
   );
 
   const handleUnlockSubmit = useCallback(async () => {
@@ -607,13 +650,16 @@ function FileContextInner({
       addFiles: addRawFiles,
       addFilesWithOptions,
       addStirlingFileStubs: addStirlingFileStubsAction,
+      reconcileOpenFiles: reconcileOpenFilesAction,
       removeFiles: async (fileIds: FileId[], deleteFromStorage?: boolean) => {
         // Remove from memory and cleanup resources
         lifecycleManager.removeFiles(fileIds, stateRef);
 
-        // Any failure recorded against these stops needing attention: the document is gone.
-        // Fire-and-forget, so a server that cannot be told never blocks the delete.
-        void reportFilesRemoved(fileIds);
+        // Only a real delete closes a failure: most callers pass false and mean "take it out of the
+        // workbench", leaving the document, and its failures, very much alive.
+        if (deleteFromStorage !== false) {
+          void reportFilesRemoved(fileIds);
+        }
 
         // Remove from IndexedDB if enabled
         if (indexedDB && enablePersistence && deleteFromStorage !== false) {
@@ -671,6 +717,7 @@ function FileContextInner({
       baseActions,
       addRawFiles,
       addStirlingFileStubsAction,
+      reconcileOpenFilesAction,
       lifecycleManager,
       setHasUnsavedChanges,
       consumeFilesWrapper,

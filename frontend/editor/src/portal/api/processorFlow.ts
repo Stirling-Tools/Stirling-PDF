@@ -80,7 +80,7 @@ function buildPolicies(
   const decoded = wirePolicies.map(fromWirePolicy);
 
   return POLICY_CATEGORIES.map((cat) => {
-    const dp = decoded.find((p) => p.categoryId === cat.id);
+    const dp = decoded.find((p) => p.policyKey === cat.id);
     const configured = Boolean(dp?.enabled);
     const state: FlowPolicyState = configured
       ? "active"

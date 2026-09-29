@@ -28,6 +28,7 @@ from stirling.documents import (
     PgVectorStore,
     SqliteVecStore,
 )
+from stirling.services.operation_shortlist import OperationShortlist
 
 logger = logging.getLogger(__name__)
 
@@ -147,6 +148,7 @@ class AppRuntime:
     fast_model: Model
     smart_model: Model
     documents: DocumentService
+    operation_shortlist: OperationShortlist
 
     @property
     def fast_model_settings(self) -> ModelSettings:
@@ -212,6 +214,7 @@ def build_runtime(
     fast_model: Model | None = None,
     smart_model: Model | None = None,
     embedder: EmbeddingService | None = None,
+    operation_shortlist: OperationShortlist | None = None,
 ) -> AppRuntime:
     """Assemble the shared runtime; the keyword args let a config-push reuse the live store and inject built models."""
     fast = fast_model if fast_model is not None else _build_model(settings.fast_model_name)
@@ -222,11 +225,17 @@ def build_runtime(
     # One semaphore across both tiers: the cap protects the provider account
     # and process resources, which the tiers share.
     model_semaphore = asyncio.Semaphore(settings.model_max_concurrency)
+    document_service = documents if documents is not None else _build_documents(settings, embedder)
     return AppRuntime(
         settings=settings,
         fast_model=ConcurrencyLimitedModel(fast, model_semaphore),
         smart_model=ConcurrencyLimitedModel(smart, model_semaphore),
-        documents=documents if documents is not None else _build_documents(settings, embedder),
+        documents=document_service,
+        operation_shortlist=(
+            operation_shortlist
+            if operation_shortlist is not None
+            else OperationShortlist(lambda: document_service.embedder)
+        ),
     )
 
 

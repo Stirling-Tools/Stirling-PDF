@@ -64,7 +64,7 @@ public class IntegrationConfigService {
                 && scope == OwnerScope.USER
                 && !ownership.isAdmin(currentUser)) {
             throw forbidden(
-                    "S3 and network connections can only be created by administrators or team"
+                    "Storage connections can only be created by administrators or team"
                             + " owners");
         }
         requireCustomApiAllowed(cfg.getIntegrationType(), currentUser);
@@ -152,7 +152,9 @@ public class IntegrationConfigService {
 
     /** Types holding shared host credentials, restricted to admins/team owners like S3. */
     private static boolean isInfrastructureType(IntegrationType type) {
-        return type == IntegrationType.S3 || type == IntegrationType.NETWORK;
+        return type == IntegrationType.S3
+                || type == IntegrationType.NETWORK
+                || type == IntegrationType.VECTOR_DB;
     }
 
     /** Whether this caller may author custom API integrations, for the UI to offer or hide it. */
@@ -166,6 +168,9 @@ public class IntegrationConfigService {
         IntegrationConfig cfg = load(id);
         if (!ownership.canManage(TYPE, cfg, currentUser)) {
             throw forbidden("You cannot manage this integration");
+        }
+        if (cfg.isLocked() && !ownership.isAdmin(currentUser)) {
+            throw forbidden("This integration is locked by an administrator");
         }
         // Refuse to pull a connection out from under whatever still references it.
         List<String> usages =

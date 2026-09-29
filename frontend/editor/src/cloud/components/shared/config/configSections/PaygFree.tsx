@@ -9,14 +9,13 @@
  * watermarks, compression — are unmetered, no matter where they're triggered
  * from. The distinction is the <em>type of work</em> (manual tool vs
  * automation / AI / API), not where the click happens, because automation and
- * AI also have UI surfaces. The one-time free grant (default 500) applies
- * <em>only</em> to the three billable categories — it is a lifetime allowance,
- * not a monthly one, and a team keeps any unused portion after subscribing.
+ * AI also have UI surfaces. The free grant applies <em>only</em> to the three
+ * billable categories, and resets each billing period.
  *
  * <p>Layout: a slim <b>Editor plan</b> card (always-free tools only — no dates,
  * no metered split) on top, then a single <b>Processor plan</b> card that
- * two-columns the upgrade pitch + benefits (left) against the one-time free
- * meter stacked over the call-to-action (right).
+ * two-columns the upgrade pitch + benefits (left) against the free-grant meter
+ * stacked over the call-to-action (right).
  *
  * <p>Two variants:
  *   - {@link PaygFreeLeader} — the right column's CTA opens the upgrade modal.
@@ -26,10 +25,7 @@
 import React, { useState } from "react";
 import { Stack } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import BoltIcon from "@mui/icons-material/BoltRounded";
-import AllInclusiveIcon from "@mui/icons-material/AllInclusiveRounded";
-import CheckIcon from "@mui/icons-material/CheckRounded";
-import LockIcon from "@mui/icons-material/LockOutlined";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { useRenderCount } from "@app/hooks/useRenderCount";
 import { useWallet } from "@app/hooks/useWallet";
@@ -47,8 +43,6 @@ import {
   type FreeSnapshot,
 } from "@app/components/shared/config/configSections/usageMeters";
 
-// ─── Editor plan card (always-free tools only) ────────────────────────────
-
 interface EditorPlanCardProps {
   /** Role pill text on the right. */
   pill: string;
@@ -58,8 +52,8 @@ interface EditorPlanCardProps {
 
 /**
  * The top card: the free Editor plan. Manual tools only, no billing window —
- * the one-time grant lives in the Processor card below, so there's no period
- * to show here.
+ * the metered grant lives in the Processor card below, so there's no period to
+ * show here.
  */
 function EditorPlanCard({ pill, leader }: EditorPlanCardProps) {
   const { t } = useTranslation();
@@ -67,10 +61,7 @@ function EditorPlanCard({ pill, leader }: EditorPlanCardProps) {
     <div className="payg-planhead paygf-editorcard">
       <div className="payg-planhead__top">
         <span className="payg-planhead__lbl payg-planhead__lbl--free paygf-editorcard__eyebrow">
-          <AllInclusiveIcon
-            className="payg-planhead__lbl-icon"
-            fontSize="small"
-          />
+          <Icon name="infinity" size={16} className="payg-planhead__lbl-icon" />
           {t("payg.free.editor.eyebrow", "Editor plan · Always free")}
         </span>
         <span
@@ -93,8 +84,6 @@ function EditorPlanCard({ pill, leader }: EditorPlanCardProps) {
   );
 }
 
-// ─── Processor plan card (two-column: pitch + benefits | meter + CTA) ──────
-
 interface ProcessorCardProps {
   snap: FreeSnapshot;
   /** Leaders get the live CTA; members get the ask-owner note. */
@@ -108,7 +97,7 @@ function ProcessorCard({ snap, isLeader, onTurnOn }: ProcessorCardProps) {
   return (
     <div className="paygf-cta paygf-proc">
       <span className="paygf-proc__eyebrow">
-        <BoltIcon className="payg-planhead__lbl-icon" fontSize="small" />
+        <Icon name="zap" size={16} className="payg-planhead__lbl-icon" />
         {t("payg.free.proc.eyebrow", "Processor plan · metered")}
       </span>
 
@@ -119,7 +108,7 @@ function ProcessorCard({ snap, isLeader, onTurnOn }: ProcessorCardProps) {
           </h3>
           <p className="paygf-cta__subtitle">
             {t(
-              "payg.free.cta.subtitle",
+              "payg.free.cta.subtitleWithAllowance",
               "Keep going past your {{limit}} free PDFs with automation, AI, and the API. Set a monthly ceiling, so you stay in control.",
               { limit: snap.billableLimit.toLocaleString() },
             )}
@@ -127,7 +116,7 @@ function ProcessorCard({ snap, isLeader, onTurnOn }: ProcessorCardProps) {
 
           <ul className="paygf-cta__benefits paygf-proc__benefits">
             <li>
-              <CheckIcon className="paygf-cta__check" fontSize="small" />
+              <Icon name="check" size={20} className="paygf-cta__check" />
               <span>
                 <strong>
                   {t("payg.free.cta.benefit1Title", "Automation pipelines")}
@@ -140,7 +129,7 @@ function ProcessorCard({ snap, isLeader, onTurnOn }: ProcessorCardProps) {
               </span>
             </li>
             <li>
-              <CheckIcon className="paygf-cta__check" fontSize="small" />
+              <Icon name="check" size={20} className="paygf-cta__check" />
               <span>
                 <strong>{t("payg.free.cta.benefit2Title", "AI tools")}</strong>
                 {": "}
@@ -151,7 +140,7 @@ function ProcessorCard({ snap, isLeader, onTurnOn }: ProcessorCardProps) {
               </span>
             </li>
             <li>
-              <CheckIcon className="paygf-cta__check" fontSize="small" />
+              <Icon name="check" size={20} className="paygf-cta__check" />
               <span>
                 <strong>
                   {t("payg.free.cta.benefit3Title", "API access")}
@@ -189,9 +178,10 @@ function ProcessorCard({ snap, isLeader, onTurnOn }: ProcessorCardProps) {
             </>
           ) : (
             <div className="paygf-proc__membernote">
-              <LockIcon
+              <Icon
+                name="lock"
+                size={18}
                 className="paygf-proc__membernote-icon"
-                fontSize="small"
               />
               <span>
                 {t(
@@ -206,8 +196,6 @@ function ProcessorCard({ snap, isLeader, onTurnOn }: ProcessorCardProps) {
     </div>
   );
 }
-
-// ─── Free LEADER ──────────────────────────────────────────────────────────
 
 export interface PaygFreeLeaderProps {
   /**
@@ -225,6 +213,8 @@ function PaygFreeLeaderInner({ onUpgraded }: PaygFreeLeaderProps = {}) {
   const snap = useFreeSnapshot();
   const { wallet } = useWallet();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
+
+  if (!snap) return null;
 
   return (
     <div className="payg">
@@ -265,12 +255,12 @@ function PaygFreeLeaderInner({ onUpgraded }: PaygFreeLeaderProps = {}) {
   );
 }
 
-// ─── Free MEMBER ──────────────────────────────────────────────────────────
-
 function PaygFreeMemberInner() {
   useRenderCount("PaygFreeMember");
   const { t } = useTranslation();
   const snap = useFreeSnapshot();
+
+  if (!snap) return null;
 
   return (
     <div className="payg">

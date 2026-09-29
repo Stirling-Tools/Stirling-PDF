@@ -166,6 +166,14 @@ PROCESS_EXECUTOR_AUTO_UNO_SERVER: "false"
 - ❌ Slightly higher network overhead
 - ❌ More complex configuration
 
+## Idle Shutdown
+
+Remote UNO servers must keep `UNOSERVER_IDLE_TIMEOUT_SECONDS=0` (the image
+default). A positive value stops the server after that many idle seconds and
+only restarts it when something writes a fresh timestamp to
+`/tmp/uno-last-used`; the Stirling container writes that file only for its own
+local endpoints, so an idle-stopped remote server has no wake source.
+
 ## Advanced Configuration
 
 ### HTTPS UNO Servers
