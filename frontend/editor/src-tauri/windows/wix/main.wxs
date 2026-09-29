@@ -27,9 +27,11 @@
             Manufacturer="{{manufacturer}}"
             Version="{{version}}">
 
+        <!-- 500 for the MsiLockPermissionsEx table the OCR folders' permissions
+             use; Windows Installer 5.0 ships with every Windows Tauri supports. -->
         <Package Id="*"
                  Keywords="Installer"
-                 InstallerVersion="450"
+                 InstallerVersion="500"
                  Languages="0"
                  Compressed="yes"
                  InstallScope="perMachine"
