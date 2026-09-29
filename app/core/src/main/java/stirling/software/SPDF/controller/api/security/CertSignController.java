@@ -195,18 +195,23 @@ public class CertSignController {
             if (Boolean.TRUE.equals(markAllPages)
                     && Boolean.TRUE.equals(showSignature)
                     && box != null) {
-                int stamped =
-                        SignatureMarkStamper.stampOtherPages(
-                                doc,
-                                pageNumber != null ? pageNumber : 0,
-                                box,
-                                instance.displayFields(signature, visibleAttributes),
-                                instance.effectiveLogo(showLogo));
-                log.info(
-                        "Stamped the signature mark on {} page(s); only page {} carries the"
-                                + " signature itself",
-                        stamped,
-                        (pageNumber != null ? pageNumber : 0) + 1);
+                if (!doc.getSignatureDictionaries().isEmpty()) {
+                    // The earlier signature would see the marks as page changes made after it.
+                    log.warn("The document is already signed; the other pages are left unmarked");
+                } else {
+                    int stamped =
+                            SignatureMarkStamper.stampOtherPages(
+                                    doc,
+                                    pageNumber != null ? pageNumber : 0,
+                                    box,
+                                    instance.displayFields(signature, visibleAttributes),
+                                    instance.effectiveLogo(showLogo));
+                    log.info(
+                            "Stamped the signature mark on {} page(s); only page {} carries the"
+                                    + " signature itself",
+                            stamped,
+                            (pageNumber != null ? pageNumber : 0) + 1);
+                }
             }
 
             if (Boolean.TRUE.equals(showSignature)) {

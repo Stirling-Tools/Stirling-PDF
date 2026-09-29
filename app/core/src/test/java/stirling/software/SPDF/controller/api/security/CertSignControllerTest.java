@@ -359,6 +359,74 @@ class CertSignControllerTest {
     }
 
     @Test
+    void marksTheOtherPagesOfAnUnsignedDocument() throws Exception {
+        byte[] signed =
+                drainBody(
+                        certSignController.signPDFWithCert(
+                                boxedRequest(twoPagePdf(), true), httpRequest));
+
+        try (PDDocument doc = Loader.loadPDF(signed)) {
+            // The mark's link back to the signed page.
+            assertEquals(1, doc.getPage(1).getAnnotations().size());
+        }
+    }
+
+    /**
+     * A countersignature leaves the other pages alone: marks written in its revision change page
+     * content the earlier signature covers, and validators report that as a modification.
+     */
+    @Test
+    void doesNotMarkThePagesOfAnAlreadySignedDocument() throws Exception {
+        byte[] once =
+                drainBody(
+                        certSignController.signPDFWithCert(
+                                boxedRequest(twoPagePdf(), false), httpRequest));
+
+        byte[] twice =
+                drainBody(
+                        certSignController.signPDFWithCert(boxedRequest(once, true), httpRequest));
+
+        try (PDDocument doc = Loader.loadPDF(twice)) {
+            assertEquals(2, doc.getSignatureDictionaries().size());
+            assertEquals(0, doc.getPage(1).getAnnotations().size());
+        }
+    }
+
+    private static byte[] twoPagePdf() throws java.io.IOException {
+        try (PDDocument doc = new PDDocument()) {
+            doc.addPage(new PDPage(PDRectangle.A4));
+            doc.addPage(new PDPage(PDRectangle.A4));
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            doc.save(baos);
+            return baos.toByteArray();
+        }
+    }
+
+    /** A visible signature in a drawn box on the first page. */
+    private SignPDFWithCertRequest boxedRequest(byte[] pdf, boolean markAllPages) {
+        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
+        request.setFileInput(
+                new MockMultipartFile(
+                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdf));
+        request.setCertType("PKCS12");
+        request.setP12File(
+                new MockMultipartFile(
+                        "p12File", "test-cert.p12", "application/x-pkcs12", p12Bytes));
+        request.setPassword("password");
+        request.setShowSignature(true);
+        request.setShowLogo(false);
+        request.setReason("test");
+        request.setName("tester");
+        request.setPageNumber(1);
+        request.setSignatureX(20f);
+        request.setSignatureY(20f);
+        request.setSignatureWidth(200f);
+        request.setSignatureHeight(60f);
+        request.setMarkAllPages(markAllPages);
+        return request;
+    }
+
+    @Test
     void testSignPdfWithMissingPkcs12FileThrowsError() {
         MockMultipartFile pdfFile =
                 new MockMultipartFile(
