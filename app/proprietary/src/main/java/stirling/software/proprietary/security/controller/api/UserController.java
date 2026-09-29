@@ -10,6 +10,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -66,6 +67,8 @@ import stirling.software.proprietary.service.UserLicenseSettingsService;
 public class UserController {
 
     private static final String LOGIN_MESSAGETYPE_CREDSUPDATED = "/login?messageType=credsUpdated";
+    // Striped per-account locks so two resends cannot mail a password a later rotation voided.
+    private static final ReentrantLock[] RESEND_LOCKS = newResendLocks(16);
     private final UserService userService;
     private final SessionPersistentRegistry sessionRegistry;
     private final ApplicationProperties applicationProperties;
@@ -295,9 +298,8 @@ public class UserController {
         }
         // Set flags before changing password so they're saved together
         user.setForcePasswordChange(false);
-        userService.changePassword(user, newPassword);
-        userService.changeFirstUse(user, false);
-        userService.clearInvitePending(user);
+        user.setFirstLogin(false);
+        userService.changePasswordAndClearInvite(user, newPassword);
         // Logout using Spring's utility
         new SecurityContextLogoutHandler().logout(request, response, null);
         return ResponseEntity.ok(
@@ -332,8 +334,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "incorrectPassword", "message", "Incorrect password"));
         }
-        userService.changePassword(user, newPassword);
-        userService.clearInvitePending(user);
+        userService.changePasswordAndClearInvite(user, newPassword);
         // Logout using Spring's utility
         new SecurityContextLogoutHandler().logout(request, response, null);
         return ResponseEntity.ok(
@@ -671,6 +672,17 @@ public class UserController {
                     .body(Map.of("error", "Cannot resend your own invitation."));
         }
 
+        ReentrantLock lock = resendLockFor(username);
+        lock.lock();
+        try {
+            return resendInviteLocked(username, request);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private ResponseEntity<?> resendInviteLocked(String username, HttpServletRequest request)
+            throws SQLException, UnsupportedProviderException {
         Optional<User> userOpt = userService.findByUsernameIgnoreCaseWithSettings(username);
         if (userOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -725,6 +737,19 @@ public class UserController {
         }
 
         return ResponseEntity.ok(Map.of("message", "Invitation resent to " + user.getUsername()));
+    }
+
+    private static ReentrantLock[] newResendLocks(int count) {
+        ReentrantLock[] locks = new ReentrantLock[count];
+        for (int i = 0; i < count; i++) {
+            locks[i] = new ReentrantLock();
+        }
+        return locks;
+    }
+
+    private static ReentrantLock resendLockFor(String username) {
+        int hash = username.toLowerCase(Locale.ROOT).hashCode() & Integer.MAX_VALUE;
+        return RESEND_LOCKS[hash % RESEND_LOCKS.length];
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -833,9 +858,8 @@ public class UserController {
 
         // Set force password change flag before changing password so both are saved together
         user.setForcePasswordChange(forcePasswordChange);
-        userService.changePassword(user, finalPassword);
         // An admin reset is an out-of-band handover, so the invite may no longer be re-issued.
-        userService.clearInvitePending(user);
+        userService.changePasswordAndClearInvite(user, finalPassword);
 
         // Invalidate all active sessions to force reauthentication
         userService.invalidateUserSessions(username);

@@ -450,10 +450,26 @@ public class UserService implements UserServiceInterface {
     @Transactional(rollbackFor = Exception.class)
     public void changePassword(User user, String newPassword)
             throws SQLException, UnsupportedProviderException {
+        savePassword(user, newPassword);
+        exportAfterCommit();
+    }
+
+    // One transaction, so a resend can never rotate a password its owner chose. Deletes the row
+    // directly: callers hold the user with its settings collection unloaded.
+    @Transactional(rollbackFor = Exception.class)
+    public void changePasswordAndClearInvite(User user, String newPassword)
+            throws SQLException, UnsupportedProviderException {
+        savePassword(user, newPassword);
+        if (user.getId() != null) {
+            userRepository.deleteSettingsByUserIdAndKeys(user.getId(), List.of(INVITE_PENDING_KEY));
+        }
+        exportAfterCommit();
+    }
+
+    private void savePassword(User user, String newPassword) {
         orgOwnerService.protect(user.getId(), true);
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
-        exportAfterCommit();
     }
 
     public void changeFirstUse(User user, boolean firstUse)
@@ -461,22 +477,6 @@ public class UserService implements UserServiceInterface {
         user.setFirstLogin(firstUse);
         userRepository.save(user);
         databaseService.exportDatabase();
-    }
-
-    /**
-     * Retires the invite marker once its owner has set a password of their own, so the invitation
-     * can no longer be re-issued against a live credential. Deletes the row directly rather than
-     * mutating {@code user.settings}: callers hold a user loaded without its settings, whose
-     * collection cannot be touched outside the session that loaded it. Call it after any {@code
-     * save} of the same user, or that save will write the stale collection back.
-     */
-    @Transactional
-    public void clearInvitePending(User user) throws SQLException, UnsupportedProviderException {
-        if (user == null || user.getId() == null) {
-            return;
-        }
-        userRepository.deleteSettingsByUserIdAndKeys(user.getId(), List.of(INVITE_PENDING_KEY));
-        exportAfterCommit();
     }
 
     /** Whether one user's {@code user_settings} rows carry a live invite marker. */

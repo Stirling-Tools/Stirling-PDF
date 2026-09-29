@@ -196,7 +196,8 @@ class UserServiceTest {
         when(userRepository.save(any(User.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
         Team defaultTeam = new Team();
-        when(teamRepository.findByName("Default")).thenReturn(Optional.of(defaultTeam));
+        when(teamRepository.findFirstByNameOrderByIdAsc("Default"))
+                .thenReturn(Optional.of(defaultTeam));
 
         userService.saveUserCore(
                 SaveUserRequest.builder()
@@ -495,7 +496,7 @@ class UserServiceTest {
     @CsvSource({
         "username, true", "password, true", "role, true", "enabled, true",
         "username, false", "password, false", "role, false", "enabled, false",
-        "invite, true", "invite, false"
+        "passwordAndInvite, true", "passwordAndInvite, false"
     })
     void userMutationExportsOnlyAfterSuccessfulCommit(String mutation, boolean commit)
             throws Exception {
@@ -513,8 +514,9 @@ class UserServiceTest {
                     userService.changeRole(user, Role.ADMIN.getRoleId());
                 }
                 case "enabled" -> userService.changeUserEnabled(user, false);
-                case "invite" -> {
-                    userService.clearInvitePending(user);
+                case "passwordAndInvite" -> {
+                    userService.changePasswordAndClearInvite(user, "replacement");
+                    verify(userRepository).save(user);
                     verify(userRepository)
                             .deleteSettingsByUserIdAndKeys(
                                     user.getId(), List.of(UserService.INVITE_PENDING_KEY));

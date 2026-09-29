@@ -1,10 +1,10 @@
 package stirling.software.proprietary.security.controller.api;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -20,7 +20,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -148,9 +147,7 @@ class UserControllerMoreTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message").value("credsUpdated"));
 
-            var order = inOrder(userService);
-            order.verify(userService).changePassword(u, "new");
-            order.verify(userService).clearInvitePending(u);
+            verify(userService).changePasswordAndClearInvite(u, "new");
         }
     }
 
@@ -207,8 +204,9 @@ class UserControllerMoreTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message").value("credsUpdated"));
 
-            verify(userService).changePassword(u, "new");
-            verify(userService).changeFirstUse(u, false);
+            verify(userService).changePasswordAndClearInvite(u, "new");
+            assertFalse(u.isFirstLogin());
+            assertFalse(u.isForcePasswordChange());
         }
 
         @Test
@@ -227,11 +225,9 @@ class UserControllerMoreTest {
                                     .param("confirmPassword", "new"))
                     .andExpect(status().isOk());
 
-            InOrder order = inOrder(userService);
-            order.verify(userService).changePassword(u, "new");
-            // After the saves: clearInvitePending deletes the row behind Hibernate's back, so a
-            // later save of the same user would write the stale collection straight back.
-            order.verify(userService).clearInvitePending(u);
+            // One transaction, so the new password never commits with the marker still set.
+            verify(userService).changePasswordAndClearInvite(u, "new");
+            verify(userService, never()).changePassword(any(), any());
         }
     }
 
@@ -410,7 +406,7 @@ class UserControllerMoreTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message").value("User password updated successfully"));
 
-            verify(userService).changePassword(target, "newpass");
+            verify(userService).changePasswordAndClearInvite(target, "newpass");
             verify(userService).invalidateUserSessions("bob");
         }
 
@@ -428,9 +424,8 @@ class UserControllerMoreTest {
                                     .param("newPassword", "newpass"))
                     .andExpect(status().isOk());
 
-            InOrder order = inOrder(userService);
-            order.verify(userService).changePassword(target, "newpass");
-            order.verify(userService).clearInvitePending(target);
+            verify(userService).changePasswordAndClearInvite(target, "newpass");
+            verify(userService, never()).changePassword(any(), any());
         }
     }
 
@@ -549,7 +544,7 @@ class UserControllerMoreTest {
             Team defaultTeam = new Team();
             defaultTeam.setId(1L);
             defaultTeam.setName(TeamService.DEFAULT_TEAM_NAME);
-            when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME))
+            when(teamRepository.findFirstByNameOrderByIdAsc(TeamService.DEFAULT_TEAM_NAME))
                     .thenReturn(Optional.of(defaultTeam));
             doThrow(new MessagingException("connection refused"))
                     .when(emailService)
@@ -564,6 +559,10 @@ class UserControllerMoreTest {
                     .andExpect(jsonPath("$.deliveredCount").value(0))
                     .andExpect(jsonPath("$.undelivered[0]").value("new@ex.com"))
                     .andExpect(jsonPath("$.warning").exists());
+
+            ArgumentCaptor<SaveUserRequest> saved = ArgumentCaptor.forClass(SaveUserRequest.class);
+            verify(userService).saveUserCore(saved.capture());
+            assertTrue(saved.getValue().isInvitePending());
         }
     }
 
@@ -666,9 +665,12 @@ class UserControllerMoreTest {
                                     .param("username", "bob@ex.com"))
                     .andExpect(status().isOk());
 
-            verify(userService).changePassword(eq(target), any());
+            ArgumentCaptor<String> stored = ArgumentCaptor.forClass(String.class);
+            verify(userService).changePassword(eq(target), stored.capture());
             verify(userService).invalidateUserSessions("bob@ex.com");
-            verify(emailService).sendInviteEmail(eq("bob@ex.com"), eq("bob@ex.com"), any(), any());
+            verify(emailService)
+                    .sendInviteEmail(
+                            eq("bob@ex.com"), eq("bob@ex.com"), eq(stored.getValue()), any());
         }
 
         @Test

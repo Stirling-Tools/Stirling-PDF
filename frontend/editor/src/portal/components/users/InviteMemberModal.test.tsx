@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
 
@@ -199,6 +199,7 @@ describe("InviteMemberModal — direct account creation", () => {
 
 describe("InviteMemberModal - email invite notices", () => {
   it("preserves delivery and partial-failure warnings when Processor access is deferred", async () => {
+    const user = userEvent.setup();
     const onNotice = vi.fn();
     const onClose = vi.fn();
     vi.mocked(usersBackend.inviteMember).mockResolvedValueOnce({
@@ -213,11 +214,12 @@ describe("InviteMemberModal - email invite notices", () => {
       onNotice,
       onClose,
     });
-    fireEvent.change(screen.getByPlaceholderText("name@company.com"), {
-      target: { value: "priya@acme.com" },
-    });
-    fireEvent.click(screen.getByRole("checkbox", { name: /^Processor/ }));
-    fireEvent.click(screen.getByRole("button", { name: "Send invite" }));
+    await user.type(
+      screen.getByPlaceholderText("name@company.com"),
+      "priya@acme.com",
+    );
+    await user.click(screen.getByRole("checkbox", { name: /^Processor/ }));
+    await user.click(screen.getByRole("button", { name: "Send invite" }));
 
     await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
     expect(onNotice).toHaveBeenCalledOnce();
